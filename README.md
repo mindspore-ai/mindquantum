@@ -30,8 +30,8 @@ MindQuantum is a quantum machine learning framework developed by [MindSpore](htt
 
 ### Confirming System Environment Information
 
-- Check the hardware platform is Linux CPU with avx supported.
-- Refer to [MindQuantum Installation Guide](https://www.mindspore.cn/install/en), install MindSpore.
+- The hardware platform should be Linux CPU with avx supported.
+- Refer to [MindQuantum Installation Guide](https://www.mindspore.cn/install/en), install MindSpore, version 1.2.0 or later is required.
 - See [setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py) for the remaining dependencies.
 
 ### Install by Source Code
