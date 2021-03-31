@@ -193,7 +193,7 @@ class ParameterGate(NoneParameterGate, BasicGate):
             BasicGate.__init__(self, name, True)
             if coeff is None:
                 warnings.warn("Parameter gate without parameters specified, \
-                    automatically set it to c1")
+automatically set it to c1.")
                 self.coeff = PR({'c1': 1})
             elif not isinstance(coeff, (list, tuple, str, dict, PR)):
                 raise TypeError("Excepted str, list or tuple for coeff, \

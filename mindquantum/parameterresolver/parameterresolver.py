@@ -55,7 +55,7 @@ class ParameterResolver(dict):
                         type(k)))
             if not isinstance(v, _num_type):
                 raise TypeError(
-                    "Require a real number, but get {}, which is {}!".format(
+                    "Require a number, but get {}, which is {}!".format(
                         v, type(v)))
         super(ParameterResolver, self).__init__(data)
         self.no_grad_parameters = set()
@@ -78,7 +78,7 @@ class ParameterResolver(dict):
         if isinstance(keys, str):
             if not isinstance(values, _num_type):
                 raise TypeError(
-                    "Parameter value should be a real number, but get {}, which is {}!"
+                    "Parameter value should be a number, but get {}, which is {}!"
                     .format(values, type(values)))
             super().__setitem__(keys, values)
             self.requires_grad_parameters.add(keys)
@@ -93,6 +93,34 @@ class ParameterResolver(dict):
             raise TypeError(
                 "Parameter name should be a string, but get {}!".format(
                     type(keys)))
+
+    def __add__(self, pr):
+        """
+        Add a parameter resolver with other parameter.
+
+        Returns:
+            :class:`mindquantum.parameterresolver.ParameterResolver`
+
+        Args:
+            pr (ParameterResolver): The parameter resolver need to add.
+
+        Examples:
+            >>> pr1 = ParameterResolver({'a': 1})
+            >>> pr2 = ParameterResolver({'a': 2, 'b': 3})
+            >>> pr1 + pr2
+            3*a + 3*b
+        """
+        if not isinstance(pr, ParameterResolver):
+            raise ValueError(
+                'Require a parameter resolver, but get {}.'.format(type(pr)))
+        res = self * 1
+        pr = pr * 1
+        for k, v in pr.items():
+            if k in res:
+                res[k] += v
+                pr[k] = res[k]
+        res.update(pr)
+        return res
 
     def __imul__(self, num):
         """
@@ -340,11 +368,31 @@ resolver and not require grad in other parameter resolver ".format(conflict))
             res += sp.Symbol(k) * v
         return res
 
-    def __str__(self):
-        return str(self.expression())
+    def combination(self, pr):
+        """
+        Apply linear combination between this parameter resolver with input pr.
 
-    def __repr__(self):
-        return str(self.expression())
+        Args:
+            pr (Union[dict, ParameterResolver]): The parameter resolver you
+                want to do linear combination.
+
+        Returns:
+            number.Numbers, the combination result.
+
+        >>> pr1 = ParameterResolver({'a': 1, 'b': 2})
+        >>> pr2 = ParameterResolver({'a': 2, 'b': 3})
+        >>> pr1.combination(pr2)
+        """
+        if not isinstance(pr, (ParameterResolver, dict)):
+            raise ValueError(
+                'Require a parameter resolver or a dict, but get {}.'.format(
+                    type(pr)))
+        res = 0
+        for k, v in self.items():
+            if k not in pr:
+                raise KeyError('{} not in input parameter resolver'.format(k))
+            res += v * pr[k]
+        return res
 
 
 def _check_pr_type(pr):
@@ -353,4 +401,4 @@ def _check_pr_type(pr):
             type(pr)))
 
 
-_num_type = (int, float, np.int32, np.int64, np.float32, np.float64)
+_num_type = (int, float, complex, np.int32, np.int64, np.float32, np.float64)
