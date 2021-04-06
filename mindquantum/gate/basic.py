@@ -207,17 +207,18 @@ but get {}".format(type(coeff)))
                     self.coeff = PR(deepcopy(coeff))
                 else:
                     self.coeff = PR(dict(zip(coeff, [1 for i in coeff])))
+            self.str = self.str + "({})".format(self.coeff.expression())
 
     def generate_description(self):
         BasicGate.generate_description(self)
         if self.isparameter:
             self.str = self.str[:len(
-                self.name) + 1] + ' '.join(self.coeff.keys())\
+                self.name) + 1] + str(self.coeff.expression())\
                 + '|' + self.str[len(self.name) + 1:]
         else:
             self.str = self.str[:len(
                 self.name) + 1] + str(round(self.coeff, 3))\
-                + ',' + self.str[len(self.name) + 1:]
+                + '|' + self.str[len(self.name) + 1:]
 
     @abstractmethod
     def matrix(self, *paras_out):

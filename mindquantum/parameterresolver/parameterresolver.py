@@ -17,6 +17,7 @@
 from collections.abc import Iterable
 from copy import deepcopy
 import numpy as np
+import sympy as sp
 
 
 class ParameterResolver(dict):
@@ -82,8 +83,10 @@ class ParameterResolver(dict):
             super().__setitem__(keys, values)
             self.requires_grad_parameters.add(keys)
         elif isinstance(keys, Iterable):
-            assert isinstance(values, Iterable)
-            assert len(keys) == len(values)
+            if not isinstance(values, Iterable):
+                raise ValueError("Values should be iterable.")
+            if len(values) != len(keys):
+                raise ValueError("Size of keys and values do not match.")
             for i, k in enumerate(keys):
                 self.__setitem__(k, values[i])
         else:
@@ -330,6 +333,18 @@ resolver and not require grad in other parameter resolver ".format(conflict))
             m_data['gate_requires_grad'].append(
                 k in self.requires_grad_parameters)
         return m_data
+
+    def expression(self):
+        res = 0
+        for k, v in self.items():
+            res += sp.Symbol(k) * v
+        return res
+
+    def __str__(self):
+        return str(self.expression())
+
+    def __repr__(self):
+        return str(self.expression())
 
 
 def _check_pr_type(pr):
