@@ -24,6 +24,18 @@ def _check_circuit(circuit, msg):
             msg, type(circuit)))
 
 
+def _check_non_parameterized_circuit(circuit: Circuit):
+    if not isinstance(circuit, Circuit):
+        raise TypeError(
+            "Requires a non parameterized quantum circuit, but get {}!".format(
+                type(circuit)))
+    for g in circuit:
+        if g.isparameter:
+            raise ValueError(
+                "Requires a non parameterized quantum circuit, but {} is parameterized gate!"
+                .format(g))
+
+
 def _check_type_or_iterable_type(inputs, require, msg):
     if not isinstance(inputs, Iterable):
         if not isinstance(inputs, require):
