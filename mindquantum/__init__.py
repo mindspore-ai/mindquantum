@@ -15,6 +15,9 @@
 """.. MindQuantum package."""
 
 import os
+import warnings
+
+from . import ops
 from . import circuit
 from . import engine
 from . import gate
@@ -38,6 +41,7 @@ total_num_core = os.cpu_count()
 omp_num_threads = os.environ.get('OMP_NUM_THREADS')
 if omp_num_threads is None:
     omp_num_threads = total_num_core
-print('[NOTE] Current simulator thread is {}. If your simulation is slow, \
-set OMP_NUM_THREADS to a appropriate number accroding to your model.'.format(
-    omp_num_threads))
+warnings.warn(
+    "[NOTE] Current simulator thread is {}. If your simulation is slow, \
+set OMP_NUM_THREADS to a appropriate number according to your model.".format(
+        omp_num_threads))
