@@ -59,6 +59,14 @@ def test_circuit():
     }
 
 
+def test_circuit_apply():
+    circuit = Circuit()
+    circuit += G.RX('a').on(0, 1)
+    circuit += G.H.on(0)
+    circuit = circuit.apply_value({'a': 0.2})
+    circuit_exp = Circuit([G.RX(0.2).on(0, 1), G.H.on(0)])
+    assert circuit == circuit_exp
+
 def test_pauli_word_to_circuits():
     circ = pauli_word_to_circuits(QubitOperator('Z0 Y1'))
     assert circ == Circuit([G.Z.on(0), G.Y.on(1)])
@@ -85,7 +93,8 @@ def test_decompose_single_term_time_evolution():
 
 
 def test_generate_uccsd():
-    circ, init_amp, para_name, ham, n_q, n_e = generate_uccsd('./tests/st/LiH.hdf5')
+    circ, init_amp, para_name, ham, n_q, n_e = generate_uccsd(
+        './tests/st/LiH.hdf5')
     assert len(circ) == 4416
     assert circ[2000] == G.X.on(9, 8)
     assert np.allclose(init_amp[-5], 0.001687182323430231)

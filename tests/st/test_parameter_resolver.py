@@ -43,3 +43,9 @@ def test_parameter_resolve():
     assert sum(mindspore_data['gate_coeff']) == 51.0
     assert sum(mindspore_data['gate_requires_grad']) == 6
     assert ''.join(mindspore_data['gate_params_names']) == 'abcdef'
+
+
+def test_parameter_resolve_combination():
+    pr1 = PR({'a': 1})
+    pr2 = PR({'a': 2, 'b': 3})
+    assert pr1.combination(pr2) == 2

@@ -134,10 +134,8 @@ class MindQuantumLayer(nn.Cell):
         param_names = []
         param_names.extend(self.encoder_params_names)
         param_names.extend(self.ansatz_params_names)
-        evol = generate_evolution_operator(param_names, circuit, hams)
+        evol = generate_evolution_operator(circuit, param_names, hams)
         state = evol(data)
-        state = state.asnumpy()
-        state = state[:, 0] + state[:, 1] * 1j
         return state
 
     def construct(self, x):

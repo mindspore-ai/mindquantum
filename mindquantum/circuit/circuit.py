@@ -245,6 +245,53 @@ class Circuit(list):
         pr *= 0
         return pr
 
+    @property
+    def para_name(self):
+        """
+        Get the parameter name of this circuit.
+
+        Returns:
+            list[str], a list that contains the parameter name.
+
+        Examples:
+            >>> from mindquantum.gate import RX
+            >>> from mindquantum.circuit import Circuit
+            >>> circuit = Circuit(RX({'a': 1, 'b': 2}).on(0))
+            >>> circuit.para_name
+            ['a', 'b']
+        """
+        return self.parameter_resolver().para_name
+
+    def apply_value(self, pr):
+        """
+        Convert this circuit to a non parameterized circuit with parameter you input.
+
+        Args:
+            pr (Union[dict, ParameterResolver]): parameters you want to apply into this circuit.
+
+        Returns:
+            Circuit, a non parameterized circuit.
+
+        Examples:
+            >>> from mindquantum.gate import X, RX
+            >>> from mindquantum.circuit import Circuit
+            >>> circuit = Circuit()
+            >>> circuit += X.on(0)
+            >>> circuit += RX({'a': 2}).on(0)
+            >>> circuit = circuit.apply_value({'a': 1.5})
+            >>> circuit
+            X(0)
+            RX(3.0|0)
+        """
+        circuit = Circuit()
+        for gate in self:
+            if not gate.isparameter:
+                circuit += gate
+            else:
+                circuit += gate.__class__(gate.coeff.combination(pr)).on(
+                    gate.obj_qubits, gate.ctrl_qubits)
+        return circuit
+
     def mindspore_data(self):
         """
         Serialize the circuit. The result can be used by QNN operators.

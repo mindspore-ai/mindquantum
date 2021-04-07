@@ -14,14 +14,16 @@
 # ============================================================================
 """Mindspore quantum simulator evolution operator."""
 
+import numpy as np
 from projectq.ops import QubitOperator
+from mindspore import Tensor
 from mindspore.ops.primitive import PrimitiveWithInfer
 from mindspore.ops.primitive import prim_attr_register
 from mindspore._checkparam import Validator as validator
 from mindspore.common import dtype as mstype
-from mindquantum.circuit import Circuit
 from mindquantum.gate import Hamiltonian
 from ._check_qnn_input import _check_circuit
+from ._check_qnn_input import _check_non_parameterized_circuit
 from ._check_qnn_input import _check_type_or_iterable_type
 from ._check_qnn_input import _check_parameters_of_circuit
 
@@ -74,17 +76,32 @@ equal to 1, but got {}.".format(len(param_data)))
                                                       self.name)
         return param_data
 
+    def __call__(self, tmp=None):
+        if tmp is None:
+            if self.param_names:
+                raise ValueError(
+                    "Parameterized circuit shuold have parameter input.")
+            tmp = Tensor(np.array([0]).astype(np.float32))
+        state = super().__call__(tmp)
+        state = state.asnumpy()
+        state = state[:, 0] + state[:, 1] * 1j
+        return state
 
-def generate_evolution_operator(param_names, circuit: Circuit, hams=None):
+
+def generate_evolution_operator(circuit, param_names=None, hams=None):
     """
     A method to generate a parameterized quantum circuit simulation operator.
 
     Args:
-        param_names (list[str]): The list of parameter names.
         circuit (Circuit): The whole circuit combined with
-            encoder circuit and ansatz circuit.
+            encoder circuit and ansatz circuit, can be a parameterized circuit
+            or a non parameterized circuit.
+        param_names (list[str]): The list of parameter names, if None, than the
+            circuit should be a non parameterized circuit, otherwise, param_names will
+            be take from circuit. Default: None.
         hams (Union[Hamiltonian, list[Hamiltonian]]): The measurement
-            hamiltonian.
+            hamiltonian. If None, than no hamiltonians will be applied on the
+            final quantum state. Default: None.
 
     Returns:
         Evolution, A parameterized quantum circuit simulator operator supported by mindspore framework.
@@ -95,16 +112,19 @@ def generate_evolution_operator(param_names, circuit: Circuit, hams=None):
         >>> import mindquantum.gate as G
         >>> from mindquantum import Circuit
         >>> circ = Circuit(G.RX('a').on(0))
-        >>> evol = generate_evolution_operator(['a'], circ)
+        >>> evol = generate_evolution_operator(circ, ['a'])
         >>> state = evol(Tensor(np.array([0.5]).astype(np.float32)))
-        >>> state = state.asnumpy()
-        >>> state = state[:, 0] + 1j * state[:, 1]
         array([0.9689124+0.j        , 0.       -0.24740396j], dtype=complex64)
         >>> G.RX(0.5).matrix()[:, 0]
         array([0.96891242+0.j        , 0.        -0.24740396j])
     """
-    _check_circuit(circuit, 'circuit')
-    _check_parameters_of_circuit([], param_names, circuit)
+    if param_names is None:
+        param_names = circuit.parameter_resolver().para_name
+    if not param_names:
+        _check_non_parameterized_circuit(circuit)
+    else:
+        _check_circuit(circuit, 'circuit')
+        _check_parameters_of_circuit([], param_names, circuit)
     if hams is not None:
         _check_type_or_iterable_type(hams, Hamiltonian, 'Hamiltonian')
     if circuit.n_qubits == -1:
@@ -121,7 +141,8 @@ def generate_evolution_operator(param_names, circuit: Circuit, hams=None):
                     ham_ms_data[k] = [v]
                 else:
                     ham_ms_data[k].append(v)
-    return Evolution(circuit.n_qubits,
+    evol = Evolution(circuit.n_qubits,
                      param_names=param_names,
                      **circuit.mindspore_data(),
                      **ham_ms_data)
+    return evol

@@ -79,8 +79,17 @@ def test_generate_pqc_operator():
 
 def test_generate_evolution_operator():
     circ = Circuit(G.RX('a').on(0))
-    evol = generate_evolution_operator(['a'], circ)
-    state = evol(ms.Tensor(np.array([0.5]).astype(np.float32)))
-    state = state.asnumpy()
-    state = state[:, 0] + 1j * state[:, 1]
-    assert np.allclose(state, G.RX(0.5).matrix()[:, 0])
+    data = ms.Tensor(np.array([0.5]).astype(np.float32))
+
+    evol = generate_evolution_operator(circ, ['a'])
+    state1 = evol(data)
+
+    evol = generate_evolution_operator(circ)
+    state2 = evol(data)
+
+    circ = circ.apply_value({'a': 0.5})
+    evol = generate_evolution_operator(circ)
+    state3 = evol()
+    assert np.allclose(state1, G.RX(0.5).matrix()[:, 0])
+    assert np.allclose(state2, G.RX(0.5).matrix()[:, 0])
+    assert np.allclose(state3, G.RX(0.5).matrix()[:, 0])
