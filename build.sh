@@ -47,4 +47,4 @@ mv ${BASEPATH}/dist/*whl ${OUTPUT_PATH}
 write_checksum
 
 
-echo "------Successfully created mindarmour package------"
+echo "------Successfully created mindquantum package------"
