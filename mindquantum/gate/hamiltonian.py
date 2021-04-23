@@ -16,6 +16,7 @@
 
 from projectq.ops import QubitOperator as pq_operator
 from openfermion.ops import QubitOperator as of_operator
+from mindquantum.ops import QubitOperator as hiq_operator
 
 
 class Hamiltonian:
@@ -26,7 +27,7 @@ class Hamiltonian:
         hamiltonian (QubitOperator): The pauli word qubit operator.
 
     Examples:
-        >>> from projectq.ops import QubitOperator
+        >>> from mindquantum.ops import QubitOperator
         >>> ham = Hamiltonian(QubitOperator('Z0 Y1', 0.3))
         >>> ham.mindspore_data()
         {'hams_pauli_coeff': [0.3],
@@ -34,7 +35,8 @@ class Hamiltonian:
          'hams_pauli_qubit': [[0, 1]]}
     """
     def __init__(self, hamiltonian):
-        if not isinstance(hamiltonian, (pq_operator, of_operator)):
+        if not isinstance(hamiltonian,
+                          (pq_operator, of_operator, hiq_operator)):
             raise TypeError("Require a QubitOperator, but get {}!".format(
                 type(hamiltonian)))
         self.hamiltonian = hamiltonian

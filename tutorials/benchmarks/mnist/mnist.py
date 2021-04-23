@@ -30,7 +30,7 @@ from mindspore import Model
 from mindspore.train.callback import Callback
 from mindquantum import Circuit, X, Z, H, XX, ZZ, Hamiltonian, RX
 from mindquantum.nn import MindQuantumLayer
-from projectq.ops import QubitOperator
+from mindquantum.ops import QubitOperator
 
 
 class FPSMonitor(Callback):

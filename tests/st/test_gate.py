@@ -14,7 +14,7 @@
 # ============================================================================
 """Test gate."""
 
-from projectq.ops import QubitOperator
+from mindquantum.ops import QubitOperator
 import qutip as qt
 import numpy as np
 from mindquantum.gate import Hamiltonian

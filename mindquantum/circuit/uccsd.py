@@ -18,10 +18,12 @@ from collections import OrderedDict as ordict
 import itertools
 import numpy as np
 from openfermion.chem import MolecularData
-from openfermion.ops import FermionOperator
-from openfermion.utils.indexing import down_index
-from openfermion.utils.indexing import up_index
-from openfermion.transforms import jordan_wigner
+from mindquantum.ops import FermionOperator
+from mindquantum.utils import down_index
+from mindquantum.utils import up_index
+from mindquantum.utils import get_fermion_operator
+from mindquantum.hiqfermion.transforms import Transform
+from mindquantum.third_party.interaction_operator import InteractionOperator
 from mindquantum.gate import RX
 from mindquantum.gate import H
 from mindquantum.gate import X
@@ -158,7 +160,7 @@ def _transform2pauli(fermion_ansatz):
     """
     out = ordict()
     for i in fermion_ansatz:
-        qubit_generator = jordan_wigner(i[0])
+        qubit_generator = Transform(i[0]).jordan_wigner()
         if qubit_generator.terms != {}:
             for key, term in qubit_generator.terms.items():
                 if key not in out:
@@ -198,7 +200,7 @@ def decompose_single_term_time_evolution(term, para):
         Circuit, a quantum circuit.
 
     Example:
-        >>> from projectq.ops import QubitOperator
+        >>> from mindquantum.ops import QubitOperator
         >>> ham = QubitOperator('X0 Y1')
         >>> circuit = decompose_single_term_time_evolution(ham, {'a':1})
         >>> print(circuit)
@@ -274,7 +276,10 @@ def generate_uccsd(filename, th=0):
     fermion_ansatz, parameters = _para_uccsd_singlet_generator(mol, th)
     pauli_ansatz = _transform2pauli(fermion_ansatz)
     uccsd_circuit = _pauli2circuit(pauli_ansatz)
-    qubit_hamiltonian = jordan_wigner(mol.get_molecular_hamiltonian())
+    ham_of = mol.get_molecular_hamiltonian()
+    inter_ops = InteractionOperator(*ham_of.n_body_tensors.values())
+    ham_hiq = get_fermion_operator(inter_ops)
+    qubit_hamiltonian = Transform(ham_hiq).jordan_wigner()
     qubit_hamiltonian.compress()
 
     parameters_name = list(parameters.keys())

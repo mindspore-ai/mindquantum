@@ -14,7 +14,7 @@
 # ============================================================================
 """Test mindquantum."""
 
-from projectq.ops import QubitOperator
+from mindquantum.ops import QubitOperator
 import numpy as np
 import mindspore as ms
 import mindquantum.gate as G
