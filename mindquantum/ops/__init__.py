@@ -16,7 +16,8 @@
 
 from .fermion_operator import FermionOperator
 from .qubit_operator import QubitOperator
+from .polynomial_tensor import PolynomialTensor
 
-__all__ = ['FermionOperator', 'QubitOperator']
+__all__ = ['FermionOperator', 'QubitOperator', 'PolynomialTensor']
 
 __all__.sort()

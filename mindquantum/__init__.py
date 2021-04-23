@@ -24,6 +24,7 @@ from . import gate
 from . import nn
 from . import parameterresolver
 from . import utils
+from . import hiqfermion
 from .circuit import *
 from .gate import *
 from .parameterresolver import *
