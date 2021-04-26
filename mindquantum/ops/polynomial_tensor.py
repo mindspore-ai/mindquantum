@@ -460,10 +460,6 @@ class PolynomialTensor:
         """ For compatibility with Python 2. """
         return self.__truediv__(divisor)
 
-    def rotate_basis(self, u):
-        """This is to do if necessary"""
-        raise NotImplementedError
-
     def __iter__(self):
         """Iterate over non-zero elements in the PolynomialTensor."""
         def sort_key(key):

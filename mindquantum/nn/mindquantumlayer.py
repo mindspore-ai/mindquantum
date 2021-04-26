@@ -62,7 +62,7 @@ class MindQuantumLayer(nn.Cell):
         ``CPU``
 
     Examples:
-        >>> from projectq.ops import QubitOperator
+        >>> from mindquantum.ops import QubitOperator
         >>> from mindquantum.nn import MindQuantumLayer
         >>> from mindquantum import Circuit, Hamiltonian
         >>> import mindquantum.gate as G

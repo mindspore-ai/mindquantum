@@ -15,7 +15,7 @@
 """Mindspore quantum simulator evolution operator."""
 
 import numpy as np
-from projectq.ops import QubitOperator
+from mindquantum.ops import QubitOperator
 from mindspore import Tensor
 from mindspore.ops.primitive import PrimitiveWithInfer
 from mindspore.ops.primitive import prim_attr_register

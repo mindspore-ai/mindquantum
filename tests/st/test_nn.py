@@ -16,7 +16,7 @@
 
 import numpy as np
 import mindspore as ms
-from projectq.ops import QubitOperator
+from mindquantum.ops import QubitOperator
 import mindquantum.gate as G
 import mindquantum as mq
 from mindquantum import Hamiltonian

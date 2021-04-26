@@ -135,7 +135,7 @@ def generate_pqc_operator(encoder_params_names,
         PQC, A parameterized quantum circuit simulator operator supported by mindspore framework.
 
     Examples:
-        >>> from projectq.ops import QubitOperator
+        >>> from mindquantum.ops import QubitOperator
         >>> from mindquantum import Circuit
         >>> import mindquantum.gate as G
         >>> encoder_circ = Circuit([G.RX('a').on(0)])

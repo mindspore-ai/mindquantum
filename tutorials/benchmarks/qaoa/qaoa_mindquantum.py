@@ -19,7 +19,7 @@ from _parse_args import parser
 args = parser.parse_args()
 os.environ['OMP_NUM_THREADS'] = str(args.omp_num_threads)
 import numpy as np
-from openfermion.ops import QubitOperator
+from mindquantum.ops import QubitOperator
 import mindspore.context as context
 import mindspore.dataset as ds
 import mindspore.nn as nn

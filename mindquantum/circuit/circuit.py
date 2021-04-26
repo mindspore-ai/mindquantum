@@ -19,6 +19,7 @@ from typing import List
 import numpy as np
 from projectq.ops import QubitOperator as pq_operator
 from openfermion.ops import QubitOperator as of_operator
+from mindquantum.ops import QubitOperator as hiq_operator
 from mindquantum.gate import BasicGate
 from mindquantum.gate import I
 from mindquantum.gate import X
@@ -336,13 +337,13 @@ def pauli_word_to_circuits(qubitops):
         Circuit, a quantum circuit.
 
     Examples:
-        >>> from openfermion.ops import QubitOperator
+        >>> from mindquantum.ops import QubitOperator
         >>> qubitops = QubitOperator('X0 Y1')
         >>> pauli_word_to_circuits(qubitops)
         X(0)
         Y(1)
     """
-    if not isinstance(qubitops, (pq_operator, of_operator, Hamiltonian)):
+    if not isinstance(qubitops, (pq_operator, of_operator, hiq_operator, Hamiltonian)):
         raise TypeError(
             "Require a QubitOperator or a Hamiltonian, but get {}!".format(
                 type(qubitops)))
