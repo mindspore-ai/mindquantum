@@ -15,12 +15,15 @@
 """Quantum neural networks operators and cells."""
 
 from .pqc import generate_pqc_operator, PQC
-from .mindquantumlayer import MindQuantumLayer
+from .mindquantum_layer import MindQuantumLayer
 from .evolution import generate_evolution_operator, Evolution
+from .mindquantum_ansatz_only_layer import MindQuantumAnsatzOnlyLayer
+from .mindquantum_ansatz_only_layer import MindQuantumAnsatzOnlyOperator
 
 __all__ = [
     "generate_pqc_operator", "PQC", "MindQuantumLayer",
-    "generate_evolution_operator", "Evolution"
+    "generate_evolution_operator", "Evolution", "MindQuantumAnsatzOnlyLayer",
+    "MindQuantumAnsatzOnlyOperator"
 ]
 
 __all__.sort()

@@ -20,10 +20,12 @@ from mindquantum.ops import QubitOperator
 import mindquantum.gate as G
 import mindquantum as mq
 from mindquantum import Hamiltonian
-from mindquantum.nn.mindquantumlayer import MindQuantumLayer
+from mindquantum.nn import MindQuantumLayer
 from mindquantum.circuit import Circuit
 from mindquantum.engine import circuit_generator
 from mindquantum.nn import generate_evolution_operator
+from mindquantum.nn import MindQuantumAnsatzOnlyOperator
+from mindquantum.nn import MindQuantumAnsatzOnlyLayer
 
 
 def test_mindquantumlayer():
@@ -93,3 +95,28 @@ def test_generate_evolution_operator():
     assert np.allclose(state1, G.RX(0.5).matrix()[:, 0])
     assert np.allclose(state2, G.RX(0.5).matrix()[:, 0])
     assert np.allclose(state3, G.RX(0.5).matrix()[:, 0])
+
+
+def test_mindquantum_ansatz_only_ops():
+    circ = Circuit(G.RX('a').on(0))
+    data = ms.Tensor(np.array([0.5]).astype(np.float32))
+    ham = Hamiltonian(QubitOperator('Z0'))
+    evol = MindQuantumAnsatzOnlyOperator(circ.para_name, circ, ham)
+    output = evol(data)
+    assert np.allclose(output.asnumpy(), [[8.77582550e-01]])
+
+
+def test_mindquantum_ansatz_only_layer():
+    circuit = Circuit(
+        [G.H.on(0),
+         G.RZ(0.4).on(0),
+         G.RX('a').on(0),
+         G.RY('b').on(0)])
+    ham = Hamiltonian(QubitOperator('Z0'))
+    init = ms.Tensor(np.array([0, 0]).astype(np.float32))
+    net = MindQuantumAnsatzOnlyLayer(circuit.para_name, circuit, ham, init)
+    opti = ms.nn.Adam(net.trainable_params(), learning_rate=0.8)
+    train_net = ms.nn.TrainOneStepCell(net, opti)
+    for i in range(1000):
+        train_net()
+    assert np.allclose(net().asnumpy(), [-1])

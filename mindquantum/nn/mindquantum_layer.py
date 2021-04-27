@@ -113,16 +113,14 @@ class MindQuantumLayer(nn.Cell):
                 by encode circuit and ansatz circuit. If None, the circuit for
                 train will be used. Default: None.
             hams (list[Hamiltonian]): Hamiltonian or a
-                list of Hamiltonian for measurement. If None, the hamiltonians
-                for train will be used. Default: None.
+                list of Hamiltonian for measurement. If None, no hamiltonians
+                will be used. Default: None.
 
         Returns:
             numpy.ndarray: the final quantum state.
         """
         if circuit is None:
             circuit = self.circuit
-        if hams is None:
-            hams = self.hams
         if ansatz_data is None:
             ansatz_data = self.weight
         if len(encoder_data.shape) != 1:
