@@ -53,7 +53,7 @@ p = 4
 ITR = 120
 LR = 0.1
 
-ham = 0
+ham = QubitOperator()
 for (v, u) in E:
     ham += QubitOperator('Z{} Z{}'.format(v, u), -1.0)
 ham = Hamiltonian(ham)
