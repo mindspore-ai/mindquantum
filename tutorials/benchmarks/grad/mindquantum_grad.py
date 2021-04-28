@@ -19,7 +19,7 @@ from _parse_args import parser
 args = parser.parse_args()
 os.environ['OMP_NUM_THREADS'] = str(args.omp_num_threads)
 import numpy as np
-from hiqfermion.ops import QubitOperator
+from mindquantum.ops import QubitOperator
 from mindquantum import Circuit, X, H, XX, ZZ, RX, Hamiltonian
 from mindquantum.nn import generate_pqc_operator
 import mindspore.context as context
