@@ -394,6 +394,38 @@ resolver and not require grad in other parameter resolver ".format(conflict))
             res += v * pr[k]
         return res
 
+    @property
+    def real(self):
+        """
+        Get the real part of this parameter resolver
+
+        Examples:
+            >>> from mindquantum.parameterresolver import ParameterResolver as PR
+            >>> pr = PR({'a': 1.2 + 1.3j})
+            >>> pr.real()
+            {'a': 1.2}
+        """
+        out = 1 * self
+        for k, v in self.items():
+            out[k] = np.real(v)
+        return out
+
+    @property
+    def imag(self):
+        """
+        Get the real part of this parameter resolver
+
+        Examples:
+            >>> from mindquantum.parameterresolver import ParameterResolver as PR
+            >>> pr = PR({'a': 1.2 + 1.3j})
+            >>> pr.imag()
+            {'a': 1.3}
+        """
+        out = 1 * self
+        for k, v in self.items():
+            out[k] = np.imag(v)
+        return out
+
 
 def _check_pr_type(pr):
     if not isinstance(pr, ParameterResolver):

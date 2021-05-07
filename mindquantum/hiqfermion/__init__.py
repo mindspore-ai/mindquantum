@@ -15,3 +15,4 @@
 """HiQFermion module"""
 
 from . import transforms
+from . import ucc

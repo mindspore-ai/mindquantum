@@ -47,11 +47,11 @@ class BasicGate():
 
     def generate_description(self):
         """Description generator."""
-        if self.ctrl_qubits:
+        if hasattr(self, 'ctrl_qubits') and self.ctrl_qubits:
             obj_str = ' '.join([str(i) for i in self.obj_qubits])
             ctrl_str = ' '.join([str(i) for i in self.ctrl_qubits])
             self.str = "{}({} <-: {})".format(self.name, obj_str, ctrl_str)
-        else:
+        elif hasattr(self, 'obj_qubits'):
             self.str = "{}({})".format(
                 self.name, ' '.join([str(i) for i in self.obj_qubits]))
 
@@ -82,36 +82,32 @@ class BasicGate():
             >>> x.ctrl_qubits
             [0, 1]
         """
-        obj_qubits_old = deepcopy(obj_qubits)
-        ctrl_qubits_old = deepcopy(ctrl_qubits)
+        new = deepcopy(self)
 
         if isinstance(obj_qubits, int):
-            self.obj_qubits = [obj_qubits]
+            new.obj_qubits = [obj_qubits]
             _check_qubit_id(obj_qubits)
         elif isinstance(obj_qubits, Iterable):
             for i in obj_qubits:
                 _check_qubit_id(i)
-            self.obj_qubits = list(obj_qubits)
+            new.obj_qubits = list(obj_qubits)
         else:
             raise TypeError("Excepted int, list or tuple for \
                 obj_qubits, but get {}".format(type(obj_qubits)))
         if ctrl_qubits is None:
-            self.ctrl_qubits = []
+            new.ctrl_qubits = []
         else:
             if isinstance(ctrl_qubits, int):
-                self.ctrl_qubits = [ctrl_qubits]
+                new.ctrl_qubits = [ctrl_qubits]
                 _check_qubit_id(ctrl_qubits)
             elif isinstance(ctrl_qubits, Iterable):
                 for i in ctrl_qubits:
                     _check_qubit_id(i)
-                self.ctrl_qubits = list(ctrl_qubits)
+                new.ctrl_qubits = list(ctrl_qubits)
             else:
                 raise TypeError("Excepted int, list or tuple for \
                     ctrl_qubits, but get {}".format(type(obj_qubits)))
-        new = deepcopy(self)
         new.generate_description()
-        self.obj_qubits = obj_qubits_old
-        self.ctrl_qubits = ctrl_qubits_old
         return new
 
     def requires_grad(self):
@@ -211,14 +207,20 @@ but get {}".format(type(coeff)))
 
     def generate_description(self):
         BasicGate.generate_description(self)
-        if self.isparameter:
-            self.str = self.str[:len(
-                self.name) + 1] + str(self.coeff.expression())\
-                + '|' + self.str[len(self.name) + 1:]
+        if not hasattr(self, 'obj_qubits'):
+            if self.isparameter:
+                self.str = f'{self.name}({self.coeff.expression()})'
+            else:
+                self.str = f'{self.name}({round(self.coeff, 3)})'
         else:
-            self.str = self.str[:len(
-                self.name) + 1] + str(round(self.coeff, 3))\
-                + '|' + self.str[len(self.name) + 1:]
+            if self.isparameter:
+                self.str = self.str[:len(
+                    self.name) + 1] + str(self.coeff.expression())\
+                    + '|' + self.str[len(self.name) + 1:]
+            else:
+                self.str = self.str[:len(
+                    self.name) + 1] + str(round(self.coeff, 3))\
+                    + '|' + self.str[len(self.name) + 1:]
 
     @abstractmethod
     def matrix(self, *paras_out):
@@ -263,14 +265,16 @@ but get {}".format(type(coeff)))
         """
         All parameters requires grad.
         """
-        self.coeff.requires_grad()
+        if self.isparameter:
+            self.coeff.requires_grad()
         return self
 
     def no_grad(self):
         """
         All parameters do not need grad.
         """
-        self.coeff.no_grad()
+        if self.isparameter:
+            self.coeff.no_grad()
         return self
 
     def requires_grad_part(self, names):

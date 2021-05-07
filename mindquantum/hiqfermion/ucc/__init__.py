@@ -12,22 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""
-Circuit.
+"""Quantum unitary coupled cluster."""
 
-Quantum circuit module.
-"""
-
-from .circuit import Circuit
-from .circuit import pauli_word_to_circuits
-from .module_circuit import UN, SwapParts
-from .uccsd import generate_uccsd
-from .uccsd import decompose_single_term_time_evolution
-from .time_evolution import TimeEvolution
+from mindquantum.third_party.unitary_cc import uccsd_singlet_generator
+from mindquantum.third_party.unitary_cc import uccsd_singlet_get_packed_amplitudes
+from .qubit_hamiltonian import get_qubit_hamiltonian
 
 __all__ = [
-    'Circuit', 'pauli_word_to_circuits', 'UN', 'SwapParts', 'generate_uccsd',
-    'decompose_single_term_time_evolution', 'TimeEvolution'
+    'uccsd_singlet_generator', 'uccsd_singlet_get_packed_amplitudes',
+    'get_qubit_hamiltonian'
 ]
 
 __all__.sort()

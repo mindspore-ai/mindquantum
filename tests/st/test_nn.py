@@ -20,6 +20,7 @@ from mindquantum.ops import QubitOperator
 import mindquantum.gate as G
 import mindquantum as mq
 from mindquantum import Hamiltonian
+from mindquantum import Projector
 from mindquantum.nn import MindQuantumLayer
 from mindquantum.circuit import Circuit
 from mindquantum.engine import circuit_generator
@@ -45,6 +46,18 @@ def test_mindquantumlayer():
     assert round(float(res.asnumpy()[0, 0]), 6) == round(float(0.9949919), 6)
     state = net.final_state(encoder_data[0])
     assert np.allclose(state[0], 9.9375761e-01 + 1.2387493e-05j)
+
+
+def test_generate_evolution_operator_state():
+    a, b = 0.3, 0.5
+    circ = Circuit([G.RX('a').on(0), G.RX('b').on(1)])
+    data = ms.Tensor(np.array([a, b]).astype(np.float32))
+    evol = generate_evolution_operator(circ)
+    state = evol(data)
+
+    state_exp = [0.9580325796404553, -0.14479246283091116j,
+                 -0.2446258794777393j, -0.036971585637570345]
+    assert np.allclose(state, state_exp)
 
 
 def test_generate_pqc_operator():
@@ -120,3 +133,15 @@ def test_mindquantum_ansatz_only_layer():
     for i in range(1000):
         train_net()
     assert np.allclose(net().asnumpy(), [-1])
+
+
+def test_pqc_with_projector():
+    circ = Circuit([G.RX('a').on(0), G.RX('b').on(0)])
+    proj = Projector('0')
+    ansatz_data = np.array([0.1]).astype(np.float32)
+    encoder_data = np.array([[0]]).astype(np.float32)
+    net = MindQuantumLayer(['a'], ['b'],
+                           circ,
+                           proj,
+                           weight_init=ms.Tensor(ansatz_data))
+    assert np.allclose(net(ms.Tensor(encoder_data)).asnumpy(), [[0.99750208]])
