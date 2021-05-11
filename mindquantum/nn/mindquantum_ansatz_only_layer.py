@@ -31,13 +31,13 @@ class MindQuantumAnsatzOnlyOperator(MindQuantumLayer):
             The order of this parameters is the same as the order of trainable
             parameters.
         circuit (Circuit): The ansatz circuit.
-        hams (list[Hamiltonian]): Hamiltonian or a list of
-            Hamiltonian for measurement.
+        measurements (Union[Hamiltonian, list[Hamiltonian], Projector, list[Projector]]):
+            Hamiltonian or a list of Hamiltonian for measurement.
         n_threads (int): Number of threads for data parallel. Default: 1.
 
     Inputs:
         - **input** (Tensor) - Tensor of shape :math:`(E_{in}, )`,
-        where :math:`E_{in}` is the number of parameters in ansatz circuit.
+            where :math:`E_{in}` is the number of parameters in ansatz circuit.
 
     Outputs:
         Tensor of shape :math:`(1, 1)`.
@@ -59,9 +59,9 @@ class MindQuantumAnsatzOnlyOperator(MindQuantumLayer):
         Tensor(shape=[1, 1], dtype=Float32, value=
         [[ 8.77582550e-01]])
     """
-    def __init__(self, param_names, circuit, hams, n_threads=1):
+    def __init__(self, param_names, circuit, measurements, n_threads=1):
         super(MindQuantumAnsatzOnlyOperator,
-              self).__init__([], param_names, circuit, hams, 'normal',
+              self).__init__([], param_names, circuit, measurements, 'normal',
                              n_threads)
         self.fake_data = Tensor(np.array([[0]]).astype(np.float32))
         del self.weight
@@ -83,8 +83,8 @@ class MindQuantumAnsatzOnlyLayer(MindQuantumLayer):
             The order of this parameters is the same as the order of trainable
             parameters.
         circuit (Circuit): The ansatz circuit.
-        hams (list[Hamiltonian]): Hamiltonian or a list of
-            Hamiltonian for measurement.
+        measurements (Union[Hamiltonian, list[Hamiltonian], Projector, list[Projector]]):
+            Hamiltonian or a list of Hamiltonian for measurement.
         weight_init (Union[Tensor, str, Initializer, numbers.Number]): The
             trainable weight_init parameter. The dtype is same as input x. The
             values of str refer to the function `initializer`.
@@ -125,11 +125,11 @@ class MindQuantumAnsatzOnlyLayer(MindQuantumLayer):
     def __init__(self,
                  param_names,
                  circuit,
-                 hams,
+                 measurements,
                  weight_init='normal',
                  n_threads=1):
         super(MindQuantumAnsatzOnlyLayer,
-              self).__init__([], param_names, circuit, hams, weight_init,
+              self).__init__([], param_names, circuit, measurements, weight_init,
                              n_threads)
         self.fake_data = Tensor(np.array([[0]]).astype(np.float32))
 
@@ -137,16 +137,18 @@ class MindQuantumAnsatzOnlyLayer(MindQuantumLayer):
         x, _, _ = self.pqc(self.fake_data, self.weight)
         return x
 
-    def final_state(self, ham=None):
+    def final_state(self, measurements=None):
         """
         Get the quantum state after evolution.
 
         Args:
-            hams (Hamiltonian): Hamiltonian for measurement. If None, no hamiltonians
+            measurements (Hamiltonian): Hamiltonian for measurement. If None, no hamiltonians
                 will be used. Default: None.
 
         Returns:
             numpy.ndarray: the final quantum state.
         """
         fake_data = Tensor(np.array([]).astype(np.float32))
-        return super().final_state(fake_data, self.weight, hams=ham)
+        return super().final_state(fake_data,
+                                   self.weight,
+                                   measurements=measurements)

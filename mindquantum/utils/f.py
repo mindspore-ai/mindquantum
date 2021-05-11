@@ -108,3 +108,68 @@ def random_state(shapes, norm_axis=0, comp=True, seed=None):
     if norm_axis is False:
         return out
     return normalize(out, axis=norm_axis)
+
+
+def _index_to_bitstring(index, n, big_end=False):
+    """Transfor the index to bitstring"""
+    s = bin(index)[2:].zfill(n)
+    if big_end:
+        return s[::-1]
+    return s
+
+
+def _common_exp(num, tol=1e-7):
+    """common expressions."""
+    if num == 0:
+        return num
+    s2 = np.sqrt(2)
+    s3 = np.sqrt(3)
+    s5 = np.sqrt(5)
+    com = {2: s2, 3: s3, 5: s5}
+    for i, j in com.items():
+        tmp_num = (j / num)
+        ceil = np.ceil(tmp_num)
+        floor = np.floor(tmp_num)
+        if np.abs(tmp_num - ceil) < tol or np.abs(tmp_num - floor) < tol:
+            frac = int(1 / (num / j))
+            if frac > 0:
+                return f'√{i}/{frac}'
+            return f'-√{i}/{-frac}'
+    return num
+
+
+def ket_string(state, tol=1e-7):
+    """
+    Get the ket format of the quantum state.
+
+    Args:
+        state (numpy.ndarray): The input quantum state.
+        tol (float): The ignore tolence for small amplitude.
+
+    Returns:
+        str, the ket format of the quantum state.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.utils import ket_string
+        >>> state = np.array([1, -1j])/np.sqrt(2)
+        >>> print('\n'.join(ket_string(state)))
+        √2/2¦0⟩
+        -√2/2j¦1⟩
+    """
+    n = int(np.log2(len(state)))
+    if len(state) < 2 and len(state) != (1 << n):
+        raise ValueError("Invalid state size!")
+    s = []
+    for index, i in enumerate(state):
+        b = _index_to_bitstring(index, n)
+        if np.abs(i) < tol:
+            continue
+        if np.abs(np.real(i)) < tol:
+            s.append(f'{_common_exp(np.imag(i), tol)}j¦{b}⟩')
+            continue
+        if np.abs(np.imag(i)) < tol:
+            s.append(f'{_common_exp(np.real(i), tol)}¦{b}⟩')
+            continue
+        s.append(f'{i}¦{b}⟩')
+    return s

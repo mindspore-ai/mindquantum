@@ -17,7 +17,6 @@ This module serves as the base class for FermionOperator and QubitOperator.
 This module, we cite and refactor the code in Fermilib and OpenFermion
 licensed under Apache 2.0 license.
 """
-import re
 import copy
 from abc import ABCMeta, abstractmethod
 import numpy as np
@@ -124,31 +123,6 @@ class _Operator(metaclass=ABCMeta):
     @abstractmethod
     def _parse_string(self, terms_string):
         raise NotImplementedError
-
-    def _parse_long_string(self, long_string, coefficient=1.0):
-        """parse long string"""
-        pattern = r'(.*?)\[(.*?)\]'
-        for match in re.findall(pattern, long_string):
-            coef_string = re.sub(r"\s+", "", match[0])
-            if coef_string.strip() == '+':
-                coef = 1.0
-            elif coef_string.strip() == '-':
-                coef = -1.0
-            elif coef_string == ' ':
-                coef = 1.0
-            else:
-                try:
-                    coef = sp.parsing.sympy_parser.parse_expr(coef_string)
-                except ValueError:
-                    raise ValueError(
-                        'Invalid coefficient {}.'.format(coef_string))
-
-            coef *= coefficient
-            term = self._parse_string(match[1])
-            if term in self.terms:
-                self.terms[term] += coef
-            else:
-                self.terms[term] = coef
 
     def _parse_sequence(self, terms):
         """parse sequence."""

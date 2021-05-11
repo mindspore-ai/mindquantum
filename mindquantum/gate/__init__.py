@@ -47,13 +47,14 @@ from .basicgate import XX
 from .basicgate import YY
 from .basicgate import ZZ
 from .hamiltonian import Hamiltonian
+from .projector import Projector
 
 
 __all__ = [
     'BasicGate', 'IntrinsicOneParaGate', 'NoneParameterGate', 'ParameterGate',
     'H', 'CNOT', 'X', 'Y', 'Z', 'I', 'S', 'Power', 'SWAP', 'UnivMathGate',
     'RX', 'RY', 'RZ', 'PhaseShift', 'XX', 'YY', 'ZZ', 'Hamiltonian', 'IGate',
-    'XGate', 'YGate', 'ZGate', 'HGate', 'SWAPGate', 'CNOTGate'
+    'XGate', 'YGate', 'ZGate', 'HGate', 'SWAPGate', 'CNOTGate', 'Projector'
 ]
 
 __all__.sort()

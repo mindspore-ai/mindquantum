@@ -22,6 +22,14 @@ import mindquantum.gate as G
 from mindquantum.circuit import pauli_word_to_circuits
 from mindquantum.circuit import decompose_single_term_time_evolution
 from mindquantum.circuit import UN, SwapParts, generate_uccsd
+from mindquantum.circuit import TimeEvolution
+
+
+def test_time_evolution():
+    h = QubitOperator('Z0 Z1', 'p')
+    circ = TimeEvolution(h).circuit
+    circ_exp = Circuit([G.X.on(1, 0), G.RZ({'p': 2}).on(1), G.X.on(1, 0)])
+    assert circ == circ_exp
 
 
 def test_circuit():
@@ -66,6 +74,7 @@ def test_circuit_apply():
     circuit = circuit.apply_value({'a': 0.2})
     circuit_exp = Circuit([G.RX(0.2).on(0, 1), G.H.on(0)])
     assert circuit == circuit_exp
+
 
 def test_pauli_word_to_circuits():
     circ = pauli_word_to_circuits(QubitOperator('Z0 Y1'))

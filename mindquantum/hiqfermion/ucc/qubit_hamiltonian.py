@@ -12,22 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""
-Circuit.
+"""Get qubit hamiltonian"""
 
-Quantum circuit module.
-"""
+from mindquantum.ops import InteractionOperator
+from mindquantum.utils import get_fermion_operator
+from mindquantum.hiqfermion.transforms import Transform
 
-from .circuit import Circuit
-from .circuit import pauli_word_to_circuits
-from .module_circuit import UN, SwapParts
-from .uccsd import generate_uccsd
-from .uccsd import decompose_single_term_time_evolution
-from .time_evolution import TimeEvolution
+def get_qubit_hamiltonian(mol):
+    """
+    Get the qubit hamiltonian of a molecular data.
 
-__all__ = [
-    'Circuit', 'pauli_word_to_circuits', 'UN', 'SwapParts', 'generate_uccsd',
-    'decompose_single_term_time_evolution', 'TimeEvolution'
-]
-
-__all__.sort()
+    Args:
+        mol (MolecularData): molecular data.
+    """
+    m_ham = mol.get_molecular_hamiltonian()
+    int_ham = InteractionOperator(*(m_ham.n_body_tensors.values()))
+    f_ham = get_fermion_operator(int_ham)
+    q_ham = Transform(f_ham).jordan_wigner()
+    return q_ham

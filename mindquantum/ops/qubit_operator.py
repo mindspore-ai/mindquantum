@@ -174,6 +174,28 @@ class QubitOperator(_Operator):
             terms_to_tuple = sorted(terms_to_tuple, key=lambda item: item[0])
         return tuple(terms_to_tuple)
 
+    @property
+    def real(self):
+        """
+        Convert the coeff to its real part.
+        """
+        out = QubitOperator()
+
+        for k, v in self.terms.items():
+            out.terms[k] = v.real
+        return out
+
+    @property
+    def imag(self):
+        """
+        Convert the coeff to its imag part.
+        """
+        out = QubitOperator()
+
+        for k, v in self.terms.items():
+            out.terms[k] = v.imag
+        return out
+
     def _simplify(self, terms, coefficient=1.0):
         r""" Simplify the list by using the commuation and
         anti-commutation relationship.

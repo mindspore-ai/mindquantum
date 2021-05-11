@@ -42,8 +42,8 @@ class MindQuantumLayer(nn.Cell):
             parameters.
         circuit (Circuit): Quantum circuit construct by
             encode circuit and ansatz circuit.
-        hams (list[Hamiltonian]): Hamiltonian or a list of
-            Hamiltonian for measurement.
+        measurements (Union[Hamiltonian, list[Hamiltonian], Projector, list[Projector]]):
+            Hamiltonian or a list of Hamiltonian for measurement.
         weight_init (Union[Tensor, str, Initializer, numbers.Number]): The
             trainable weight_init parameter. The dtype is same as input x. The
             values of str refer to the function `initializer`.
@@ -79,12 +79,12 @@ class MindQuantumLayer(nn.Cell):
                  encoder_params_names,
                  ansatz_params_names,
                  circuit,
-                 hams,
+                 measurements,
                  weight_init='normal',
                  n_threads=1):
         super(MindQuantumLayer, self).__init__()
         self.circuit = circuit
-        self.hams = hams
+        self.measurements = measurements
         self.encoder_params_names = encoder_params_names
         self.ansatz_params_names = ansatz_params_names
         self.weight = Parameter(initializer(weight_init,
@@ -93,14 +93,14 @@ class MindQuantumLayer(nn.Cell):
         self.pqc = generate_pqc_operator(encoder_params_names,
                                          ansatz_params_names,
                                          circuit,
-                                         hams,
+                                         measurements,
                                          n_threads=n_threads)
 
     def final_state(self,
                     encoder_data,
                     ansatz_data=None,
                     circuit=None,
-                    hams=None):
+                    measurements=None):
         """
         Get the quantum state after evolution.
 
@@ -112,7 +112,7 @@ class MindQuantumLayer(nn.Cell):
             circuit (Circuit): Quantum circuit construct
                 by encode circuit and ansatz circuit. If None, the circuit for
                 train will be used. Default: None.
-            hams (list[Hamiltonian]): Hamiltonian or a
+            measurements (list[Hamiltonian]): Hamiltonian or a
                 list of Hamiltonian for measurement. If None, no hamiltonians
                 will be used. Default: None.
 
@@ -132,7 +132,7 @@ class MindQuantumLayer(nn.Cell):
         param_names = []
         param_names.extend(self.encoder_params_names)
         param_names.extend(self.ansatz_params_names)
-        evol = generate_evolution_operator(circuit, param_names, hams)
+        evol = generate_evolution_operator(circuit, param_names, measurements)
         state = evol(data)
         return state
 

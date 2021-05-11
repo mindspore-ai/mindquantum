@@ -16,6 +16,7 @@
 
 from collections.abc import Iterable
 from typing import List
+import copy
 import numpy as np
 from projectq.ops import QubitOperator as pq_operator
 from openfermion.ops import QubitOperator as of_operator
@@ -26,6 +27,7 @@ from mindquantum.gate import X
 from mindquantum.gate import Y
 from mindquantum.gate import Z
 from mindquantum.gate import Hamiltonian
+import mindquantum.gate as G
 from mindquantum.gate.basic import _check_gate_type
 from mindquantum.utils import bprint
 from mindquantum.parameterresolver import ParameterResolver as PR
@@ -116,7 +118,13 @@ class Circuit(list):
         return self
 
     def __mul__(self, num):
-        return Circuit(super().__mul__(num))
+        if not isinstance(num, int):
+            raise TypeError(
+                f'{type(num)} object cannot be interpreted as an integer')
+        out = Circuit()
+        for _ in range(num):
+            out += copy.deepcopy(self)
+        return out
 
     def __rmul__(self, num):
         return self.__mul__(num)
@@ -154,6 +162,7 @@ class Circuit(list):
         """
         for gate in self:
             gate.no_grad()
+        return self
 
     def requires_grad(self):
         """
@@ -161,6 +170,7 @@ class Circuit(list):
         """
         for gate in self:
             gate.requires_grad()
+        return self
 
     def __str__(self):
         return '\n'.join(repr(i) for i in self)
@@ -289,8 +299,12 @@ class Circuit(list):
             if not gate.isparameter:
                 circuit += gate
             else:
-                circuit += gate.__class__(gate.coeff.combination(pr)).on(
-                    gate.obj_qubits, gate.ctrl_qubits)
+                if set(gate.coeff.para_name).issubset(pr):
+                    coeff = gate.coeff.combination(pr)
+                else:
+                    coeff = 1 * gate.coeff
+                circuit += gate.__class__(coeff).on(gate.obj_qubits,
+                                                    gate.ctrl_qubits)
         return circuit
 
     def mindspore_data(self):
@@ -325,6 +339,71 @@ class Circuit(list):
             m_data['gate_ctrl_qubits'].append(gate.ctrl_qubits)
         return m_data
 
+    def h(self, obj_qubits, ctrl_qubits=None):
+        """Add a hadamard gate."""
+        self.append(G.H.on(obj_qubits, ctrl_qubits))
+        return self
+
+    def x(self, obj_qubits, ctrl_qubits=None):
+        """Add a X gate."""
+        self.append(G.X.on(obj_qubits, ctrl_qubits))
+        return self
+
+    def y(self, obj_qubits, ctrl_qubits=None):
+        """Add a Y gate."""
+        self.append(G.Y.on(obj_qubits, ctrl_qubits))
+        return self
+
+    def z(self, obj_qubits, ctrl_qubits=None):
+        """Add a Z gate."""
+        self.append(G.Z.on(obj_qubits, ctrl_qubits))
+        return self
+
+    def s(self, obj_qubits, ctrl_qubits=None):
+        """Add a S gate."""
+        self.append(G.S.on(obj_qubits, ctrl_qubits))
+        return self
+
+    def swap(self, obj_qubits, ctrl_qubits=None):
+        """Add a SWAP gate."""
+        self.append(G.SWAP.on(obj_qubits, ctrl_qubits))
+        return self
+
+    def rx(self, para, obj_qubits, ctrl_qubits=None):
+        """Add a RX gate."""
+        self.append(G.RX(para).on(obj_qubits, ctrl_qubits))
+        return self
+
+    def ry(self, para, obj_qubits, ctrl_qubits=None):
+        """Add a RY gate."""
+        self.append(G.RY(para).on(obj_qubits, ctrl_qubits))
+        return self
+
+    def rz(self, para, obj_qubits, ctrl_qubits=None):
+        """Add a RZ gate."""
+        self.append(G.RZ(para).on(obj_qubits, ctrl_qubits))
+        return self
+
+    def phase_shift(self, para, obj_qubits, ctrl_qubits=None):
+        """Add a Phase Shift gate."""
+        self.append(G.PhaseShift(para).on(obj_qubits, ctrl_qubits))
+        return self
+
+    def xx(self, para, obj_qubits, ctrl_qubits=None):
+        """Add a XX gate."""
+        self.append(G.XX(para).on(obj_qubits, ctrl_qubits))
+        return self
+
+    def yy(self, para, obj_qubits, ctrl_qubits=None):
+        """Add a YY gate."""
+        self.append(G.YY(para).on(obj_qubits, ctrl_qubits))
+        return self
+
+    def zz(self, para, obj_qubits, ctrl_qubits=None):
+        """Add a ZZ gate."""
+        self.append(G.ZZ(para).on(obj_qubits, ctrl_qubits))
+        return self
+
 
 def pauli_word_to_circuits(qubitops):
     """
@@ -343,7 +422,8 @@ def pauli_word_to_circuits(qubitops):
         X(0)
         Y(1)
     """
-    if not isinstance(qubitops, (pq_operator, of_operator, hiq_operator, Hamiltonian)):
+    if not isinstance(qubitops,
+                      (pq_operator, of_operator, hiq_operator, Hamiltonian)):
         raise TypeError(
             "Require a QubitOperator or a Hamiltonian, but get {}!".format(
                 type(qubitops)))

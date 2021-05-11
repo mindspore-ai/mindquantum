@@ -129,7 +129,7 @@ class FermionOperator(_Operator):
                         operator, self.operators))
             if index < 0:
                 raise ValueError("Invalid index {}.The qubit index should be\
-                    nonnegative integer"                                        .format(self.operators))
+                    non negative integer".format(self.operators))
             terms_to_tuple.append(
                 (index, map_operator_to_integer_rep(operator)))
             # check the commutate terms with same index in the list and
@@ -183,6 +183,28 @@ class FermionOperator(_Operator):
 
     def __repr__(self):
         return str(self)
+
+    @property
+    def imag(self):
+        """
+        Convert the coeff to its imag part.
+        """
+        out = FermionOperator()
+
+        for k, v in self.terms.items():
+            out.terms[k] = v.imag
+        return out
+
+    @property
+    def real(self):
+        """
+        Convert the coeff to its imag part.
+        """
+        out = FermionOperator()
+
+        for k, v in self.terms.items():
+            out.terms[k] = v.real
+        return out
 
     def normal_ordered(self):
         """Return the normal ordered form of the Fermion Operator.

@@ -22,6 +22,8 @@ from mindspore.ops._grad.grad_base import bprop_getters
 import mindspore.ops as P
 from mindquantum.circuit import Circuit
 from mindquantum.gate import Hamiltonian
+from mindquantum.gate import Projector
+from mindquantum.ops import QubitOperator
 from ._check_qnn_input import _check_type_or_iterable_type
 from ._check_qnn_input import _check_circuit
 from ._check_qnn_input import _check_parameters_of_circuit
@@ -47,6 +49,8 @@ class PQC(PrimitiveWithInfer):
         - **hams_pauli_coeff** (list[list[float]]) - Coefficient of pauli words.
         - **hams_pauli_word** (list[list[list[str]]]) - Pauli words.
         - **hams_pauli_qubit** (list[list[list[int]]]) - The qubit that pauli matrix act on.
+        - **is_projector** (bool) - Whether the measurement operator is a subspace bitstring measurement.
+        - **projectors** (Union[str, list[str]]) - The projector bitstrings.
         - **n_threads** (int) - Thread to evaluate input data.
 
     Outputs:
@@ -62,12 +66,15 @@ class PQC(PrimitiveWithInfer):
                  gate_names, gate_matrix, gate_obj_qubits, gate_ctrl_qubits,
                  gate_params_names, gate_coeff, gate_requires_grad,
                  hams_pauli_coeff, hams_pauli_word, hams_pauli_qubit,
-                 n_threads):
+                 is_projector, projectors, n_threads):
         """Initialize PQC"""
         self.init_prim_io_names(
             inputs=['encoder_data', 'ansatz_data'],
             outputs=['results', 'encoder_gradient', 'ansatz_gradient'])
-        self.n_hams = len(hams_pauli_coeff)
+        if is_projector:
+            self.n_meas = len(projectors)
+        else:
+            self.n_meas = len(hams_pauli_coeff)
 
     def check_shape_size(self, encoder_data, ansatz_data):
         if len(encoder_data) != 2:
@@ -81,10 +88,10 @@ equal to 1, but got {}.".format(len(ansatz_data)))
 
     def infer_shape(self, encoder_data, ansatz_data):
         self.check_shape_size(encoder_data, ansatz_data)
-        return [encoder_data[0], self.n_hams], [
-            encoder_data[0], self.n_hams,
+        return [encoder_data[0], self.n_meas], [
+            encoder_data[0], self.n_meas,
             len(self.encoder_params_names)
-        ], [encoder_data[0], self.n_hams,
+        ], [encoder_data[0], self.n_meas,
             len(self.ansatz_params_names)]
 
     def infer_dtype(self, encoder_data, ansatz_data):
@@ -115,7 +122,7 @@ def bprop_pqc(self):
 def generate_pqc_operator(encoder_params_names,
                           ansatz_params_names,
                           circuit: Circuit,
-                          hams,
+                          measurements,
                           n_threads=1):
     """
     A method to generate a parameterized quantum circuit simulation operator.
@@ -127,8 +134,8 @@ def generate_pqc_operator(encoder_params_names,
             circuit.
         circuit (Circuit): The whole circuit combined with
             encoder circuit and ansatz circuit.
-        hams (Union[Hamiltonian, list[Hamiltonian]]): The measurement
-            hamiltonian.
+        measurements (Union[Hamiltonian, list[Hamiltonian], Projector, list[Projector]]): The measurement
+            operators, would be hamiltonians or projectors.
         n_threads (int): Number of threads for data parallelize.
 
     Returns:
@@ -145,7 +152,8 @@ def generate_pqc_operator(encoder_params_names,
         >>> pqc = generate_pqc_operator(['a'], ['b'], circ, ham)
     """
     _check_circuit(circuit, 'Circuit')
-    _check_type_or_iterable_type(hams, Hamiltonian, 'Hamiltonian')
+    _check_type_or_iterable_type(measurements, (Hamiltonian, Projector),
+                                 'Hamiltonian or Projector')
     _check_parameters_of_circuit(encoder_params_names, ansatz_params_names,
                                  circuit)
     if not isinstance(n_threads, int) or n_threads <= 0:
@@ -153,8 +161,21 @@ def generate_pqc_operator(encoder_params_names,
             "n_threads requires a positive int, but get {}".format(n_threads))
     if circuit.n_qubits == -1:
         circuit.summary(False)
-    if isinstance(hams, Hamiltonian):
-        hams = [hams]
+    is_projector = False
+    if isinstance(measurements, (Projector, Hamiltonian)):
+        measurements = [measurements]
+    hams = [Hamiltonian(QubitOperator())]
+    pros = [Projector('')]
+    if isinstance(measurements[0], Hamiltonian):
+        hams = measurements
+    if isinstance(measurements[0], Projector):
+        for pro in measurements:
+            if pro.n_qubits != circuit.n_qubits:
+                raise ValueError(
+                    f"The qubit of projector {pro} not match with quantum circuit."
+                )
+        is_projector = True
+        pros = measurements
     ham_ms_data = {}
     for ham in hams:
         for k, v in ham.mindspore_data().items():
@@ -162,9 +183,18 @@ def generate_pqc_operator(encoder_params_names,
                 ham_ms_data[k] = [v]
             else:
                 ham_ms_data[k].append(v)
+    proj_ms_data = {}
+    for pro in pros:
+        for k, v in pro.mindspore_data().items():
+            if k not in proj_ms_data:
+                proj_ms_data[k] = [v]
+            else:
+                proj_ms_data[k].append(v)
     return PQC(circuit.n_qubits,
                encoder_params_names=encoder_params_names,
                ansatz_params_names=ansatz_params_names,
                **circuit.mindspore_data(),
                **ham_ms_data,
+               is_projector=is_projector,
+               **proj_ms_data,
                n_threads=n_threads)
