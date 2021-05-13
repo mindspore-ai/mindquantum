@@ -153,7 +153,7 @@ def ket_string(state, tol=1e-7):
         >>> import numpy as np
         >>> from mindquantum.utils import ket_string
         >>> state = np.array([1, -1j])/np.sqrt(2)
-        >>> print('\n'.join(ket_string(state)))
+        >>> print('\\n'.join(ket_string(state)))
         √2/2¦0⟩
         -√2/2j¦1⟩
     """
