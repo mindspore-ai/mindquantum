@@ -15,6 +15,7 @@
 """Module circuit"""
 
 from collections.abc import Iterable
+import numpy as np
 from mindquantum.gate import BasicGate
 from mindquantum.gate import SWAP
 from mindquantum.gate.basic import _check_gate_type
@@ -88,3 +89,33 @@ class SwapParts(Circuit):
             raise Exception("Swap part should be iterable!")
         maps = [[a[i], b[i]] for i in range(len(a))]
         Circuit.__init__(self, UN(SWAP, maps, maps_ctrl))
+
+
+class U3(Circuit):
+    """
+    This circuit represent arbitrary single qubit gate.
+
+    Args:
+        a (Union[number.Numbers, dict, ParameterResoler]): First parameter for U3 circuit.
+        b (Union[number.Numbers, dict, ParameterResoler]): Second parameter for U3 circuit.
+        c (Union[number.Numbers, dict, ParameterResoler]): Third parameter for U3 circuit.
+        obj_qubit (int): Which qubit the U3 circuit will act on.
+
+    Examples:
+        >>> U3('a','b','c')
+        RZ(a|0)
+        RX(-1.571|0)
+        RZ(b|0)
+        RX(1.571|0)
+        RZ(c|0)
+    """
+    def __init__(self, a, b, c, obj_qubit=None):
+        if obj_qubit is None:
+            obj_qubit = 0
+        circ = Circuit()
+        circ.rz(a, obj_qubit)
+        circ.rx(-np.pi / 2, obj_qubit)
+        circ.rz(b, obj_qubit)
+        circ.rx(np.pi / 2, obj_qubit)
+        circ.rz(c, obj_qubit)
+        Circuit.__init__(self, circ)

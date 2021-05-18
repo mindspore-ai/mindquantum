@@ -20,14 +20,28 @@ Quantum circuit module.
 
 from .circuit import Circuit
 from .circuit import pauli_word_to_circuits
-from .module_circuit import UN, SwapParts
+from .module_circuit import UN, SwapParts, U3
 from .uccsd import generate_uccsd
 from .uccsd import decompose_single_term_time_evolution
 from .time_evolution import TimeEvolution
+from .high_level_ops import controlled
+from .high_level_ops import dagger
+from .high_level_ops import apply
+from .high_level_ops import add_prefix
+from .high_level_ops import change_param_name
+from .high_level_ops import A
+from .high_level_ops import AP
+from .high_level_ops import C
+from .high_level_ops import CPN
+from .high_level_ops import D
+from .state_evolution import StateEvolution
+from .quantum_fourier import qft
 
 __all__ = [
     'Circuit', 'pauli_word_to_circuits', 'UN', 'SwapParts', 'generate_uccsd',
-    'decompose_single_term_time_evolution', 'TimeEvolution'
+    'decompose_single_term_time_evolution', 'TimeEvolution', 'U3',
+    'controlled', 'dagger', 'apply', 'add_prefix', 'change_param_name', 'CPN',
+    'AP', 'A', 'C', 'D', 'StateEvolution', 'qft'
 ]
 
 __all__.sort()

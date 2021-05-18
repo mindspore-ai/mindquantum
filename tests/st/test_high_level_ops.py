@@ -16,13 +16,13 @@
 
 import numpy as np
 from mindquantum import Circuit, X, H, RX
-from mindquantum.highlevel import controlled as C
-from mindquantum.highlevel import dagger as D
-from mindquantum.highlevel import apply as A
-from mindquantum.highlevel import AP
-from mindquantum.highlevel import CPN
-from mindquantum.highlevel import StateEvolution
-from mindquantum.highlevel import qft
+from mindquantum.circuit import controlled as C
+from mindquantum.circuit import dagger as D
+from mindquantum.circuit import apply as A
+from mindquantum.circuit import AP
+from mindquantum.circuit import CPN
+from mindquantum.circuit import StateEvolution
+from mindquantum.circuit import qft
 
 
 def test_apply():
