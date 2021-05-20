@@ -41,8 +41,8 @@ def qft(qubits):
         qubits (list[int]): Qubits you want to apply quantum fourier transform.
 
     Examples:
-        >>> from mindquantum.highlevel import qft
-        >>> from mindquantum.highlevel import StateEvolution
+        >>> from mindquantum.circuit import qft
+        >>> from mindquantum.circuit import StateEvolution
         >>> print(StateEvolution(qft([0, 1])).final_state(ket=True))
         0.5¦00⟩
         0.5¦01⟩

@@ -25,6 +25,7 @@ from mindquantum.utils import normalize
 from mindquantum.utils import ket_string
 from mindquantum.circuit import Circuit
 
+
 def _generate_n_qubits_index(n_qubits):
     out = []
     for i in range(1 << n_qubits):
@@ -40,8 +41,8 @@ class StateEvolution:
         circuit (Circuit): The circuit that you want to do evolution.
 
     Examples:
-        >>> from mindquantum.highlevel import StateEvolution
-        >>> from mindquantum.highlevel import qft
+        >>> from mindquantum.circuit import StateEvolution
+        >>> from mindquantum.circuit import qft
         >>> print(StateEvolution(qft([0, 1])).final_state(ket=True))
         0.5¦00⟩
         0.5¦01⟩
@@ -50,7 +51,9 @@ class StateEvolution:
     """
     def __init__(self, circuit):
         if not isinstance(circuit, Circuit):
-            raise TypeError(f'Input circuit should be a quantum circuit, but get {type(circuit)}')
+            raise TypeError(
+                f'Input circuit should be a quantum circuit, but get {type(circuit)}'
+            )
         self.circuit = circuit
         self.circuit.summary(False)
         self.evol = generate_evolution_operator(self.circuit)
@@ -108,8 +111,8 @@ class StateEvolution:
             dict, a dict with key as bit string and value as number of samples.
 
         Examples:
-            >>> from mindquantum.highlevel import StateEvolution
-            >>> from mindquantum.highlevel import qft
+            >>> from mindquantum.circuit import StateEvolution
+            >>> from mindquantum.circuit import qft
             >>> import numpy as np
             >>> np.random.seed(42)
             >>> StateEvolution(qft([0, 1])).sampling(100)
