@@ -62,7 +62,7 @@ def controlled(circuit_fn):
             or a function that can generate a quantum circuit.
 
     Examples:
-        >>> from mindquantum.highlevel import qft, controlled
+        >>> from mindquantum.circuit import qft, controlled
         >>> u1 = qft([0, 1])
         >>> u2 = controlled(u1)
         >>> u3 = controlled(qft)
@@ -103,7 +103,7 @@ def dagger(circuit_fn):
             or a function that can generate a quantum circuit.
 
     Examples:
-        >>> from mindquantum.highlevel import qft, dagger
+        >>> from mindquantum.circuit import qft, dagger
         >>> u1 = qft([0, 1])
         >>> u2 = dagger(u1)
         >>> u3 = dagger(qft)
@@ -166,7 +166,7 @@ def apply(circuit_fn, qubits):
         qubits (list[int]): The new qubits that you want to apply.
 
     Examples:
-        >>> from mindquantum.highlevel import qft, apply
+        >>> from mindquantum.circuit import qft, apply
         >>> u1 = qft([0, 1])
         >>> u2 = apply(u1, [1, 2])
         >>> u3 = apply(qft, [1, 2])
@@ -229,7 +229,7 @@ def add_prefix(circuit_fn, prefix):
         prefix (str): The prefix you want to add to every parameters.
 
     Examples:
-        >>> from mindquantum.highlevel import qft, add_prefix
+        >>> from mindquantum.circuit import qft, add_prefix
         >>> from mindquantum import RX, H, Circuit
         >>> u = lambda qubit: Circuit([H.on(0), RX('a').on(qubit)])
         >>> u1 = u(0)
@@ -286,7 +286,7 @@ def change_param_name(circuit_fn, name_map):
         name_map (dict): The parameter name mapping dict.
 
     Examples:
-        >>> from mindquantum.highlevel import qft, change_param_name
+        >>> from mindquantum.circuit import qft, change_param_name
         >>> from mindquantum import RX, H, Circuit
         >>> u = lambda qubit: Circuit([H.on(0), RX('a').on(qubit)])
         >>> u1 = u(0)
