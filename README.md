@@ -10,6 +10,7 @@
     - [Install by Source Code](#install-by-source-code)
     - [Install by pip](#install-by-pip)
 - [Verifying Successful Installation](#verifying-successful-installation)
+- [Install with Docker](#install-with-docker)
 - [Note](#Note)
 - [Quick Start](#quick-start)
 - [Docs](#docs)
@@ -56,7 +57,7 @@ python setup.py install --user
 pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/1.2.0-rc1/MindQuantum/ubuntu_x86/mindquantum-0.1.0-py3-none-any.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
-> - When the network is connected, dependency items are automatically downloaded during .whl package installation. (For details about other dependency items, see [setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py)). In other cases, you need to manually install dependency items. 
+> - When the network is connected, dependency items are automatically downloaded during .whl package installation. (For details about other dependency items, see [setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py)). In other cases, you need to manually install dependency items.
 
 ## Verifying Successful Installation
 
@@ -66,9 +67,13 @@ Successfully installed, if there is no error message such as No module named 'mi
 python -c 'import mindquantum'
 ```
 
+## Install with Docker
+
+Mac or Windows users can install MindQuantum through Docker. Please refer to [Docker installation guide](./install_with_docker.md)
+
 ## Note
 
-Please set the parallel core number before runing MindQuantum scripts. For example, if you want to set the parallel core number to 4, please run the command below:
+Please set the parallel core number before running MindQuantum scripts. For example, if you want to set the parallel core number to 4, please run the command below:
 
 ```bash
 export OMP_NUM_THREADS=4

@@ -10,6 +10,7 @@
     - [源码安装](#源码安装)
     - [pip安装](#pip安装)
 - [验证是否成功安装](#验证是否成功安装)
+- [Docker安装](#docker安装)
 - [注意事项](#注意事项)
 - [快速入门](#快速入门)
 - [文档](#文档)
@@ -65,6 +66,11 @@ pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/1.2.0-rc1/MindQu
 ```bash
 python -c 'import mindquantum'
 ```
+
+## Docker安装
+
+通过Docker也可以在Mac系统或者Windows系统中使用Minduantum。具体参考[Docker安装指南](./install_with_docker.md).
+
 ## 注意事项
 
 运行代码前请设置量子模拟器运行时并行内核数，例如设置并行内核数为4，可运行如下代码：
