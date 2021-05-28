@@ -109,10 +109,6 @@ def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):
         conserves spin.
 
     Args:
-        packed_amplitudes(list): List storing the unique single
-            and double excitation amplitudes for a singlet UCCSD operator.
-            The ordering lists unique single excitations before double
-            excitations.
         n_qubits(int): Number of spin-orbitals used to represent the system,
             which also corresponds to number of qubits in a non-compact map.
         n_electrons(int): Number of electrons in the physical system.

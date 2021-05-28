@@ -34,11 +34,10 @@ class Transform:
     to fermionic one, it is initialized by QubitOperator,
     returns FermionOperator.
 
-     Args:
-        operator: The input FermionOperator.
-                  Note for the reverse Jordan-Wigner transform,
-                  the input should be QubitOperator.
-
+    Args:
+        operator (Union[FermionOperator, QubitOperator]): The input
+            FermionOperator or QubitOperator that need to do transform.
+        n_qubits (int): The total qubits of this operator. Default: None
     Examples:
         >>> from mindquantum.ops import FermionOperator
         >>> op1 = FermionOperator('1^')
@@ -63,6 +62,10 @@ class Transform:
         0.5 [X0 Z1] +
         -0.5j [Y0 X2]
 
+        >>> op2 = FermionOperator('1^', 'a')
+        >>> Transform(op2).jordan_wigner()
+        0.5*a [Z0 X1] +
+        -0.5*I*a [Z0 Y1]
     """
     def __init__(self, operator, n_qubits=None):
         if not isinstance(operator, (FermionOperator, QubitOperator)):

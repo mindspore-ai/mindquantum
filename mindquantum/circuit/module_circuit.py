@@ -96,9 +96,9 @@ class U3(Circuit):
     This circuit represent arbitrary single qubit gate.
 
     Args:
-        a (Union[number.Numbers, dict, ParameterResoler]): First parameter for U3 circuit.
-        b (Union[number.Numbers, dict, ParameterResoler]): Second parameter for U3 circuit.
-        c (Union[number.Numbers, dict, ParameterResoler]): Third parameter for U3 circuit.
+        a (Union[number.Numbers, dict, ParameterResolver]): First parameter for U3 circuit.
+        b (Union[number.Numbers, dict, ParameterResolver]): Second parameter for U3 circuit.
+        c (Union[number.Numbers, dict, ParameterResolver]): Third parameter for U3 circuit.
         obj_qubit (int): Which qubit the U3 circuit will act on.
 
     Examples:
