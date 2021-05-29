@@ -31,13 +31,13 @@ class TimeEvolution:
 
     Note:
         The hamiltonian should be a parameterized or non parameterized
-            QubitOperator. If the QubitOperator has multiple terms, the
-            first order trotter decomposition will be used.
+        QubitOperator. If the QubitOperator has multiple terms, the
+        first order trotter decomposition will be used.
 
     Args:
         ops (QubitOperator): The qubit operator hamiltonian, could be parameterized or
             non parameterized.
-        time (Union[number.Number, dict, ParameterResolver]): The evolution time,
+        time (Union[numbers.Number, dict, ParameterResolver]): The evolution time,
             could be a number or a parameter resolver. If None, the time will be set to 1.
             Default: None.
 

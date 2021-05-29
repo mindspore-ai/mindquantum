@@ -363,10 +363,40 @@ resolver and not require grad in other parameter resolver ".format(conflict))
         return m_data
 
     def expression(self):
+        """
+        Get the expression of this parameter resolver.
+
+        Returns:
+            sympy.Expr
+
+        Examples:
+            >>> from mindquantum.parameterresolver import ParameterResolver as PR
+            >>> pr = PR({'a' : 2, 'b' : 0.3})
+            >>> pr.expression()
+            2*a + 0.3*b
+        """
         res = 0
         for k, v in self.items():
             res += sp.Symbol(k) * v
         return res
+
+    def conjugate(self):
+        """
+        Get the conjugate of the parameter resolver.
+
+        Returns:
+            ParameterResolver
+
+        Examples:
+            >>> from mindquantum.parameterresolver import ParameterResolver as PR
+            >>> pr = PR({'a' : 1, 'b': 1j})
+            >>> pr.conjugate().expression()
+            a - 1.0*I*b
+        """
+        out = 1 * self
+        for k, v in out.items():
+            out[k] = np.conj(v)
+        return out
 
     def combination(self, pr):
         """

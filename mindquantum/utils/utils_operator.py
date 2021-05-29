@@ -150,7 +150,7 @@ def normal_ordered(fermion_operator):
 
     Args:
         fermion_operator(FermionOperator): Only Fermion type Operator has
-        such forms.
+            such forms.
 
     Returns:
         FermionOperator, the normal_ordered FermionOperator.
@@ -158,9 +158,9 @@ def normal_ordered(fermion_operator):
     Examples:
         >>> from mindquantum.ops import FermionOperator
         >>> from mindquantum.utils import normal_ordered
-        >>> op = FermionOperator("3 4^")
+        >>> op = FermionOperator("3 4^", 'a')
         >>> normal_ordered(op)
-        -1.0 [4^ 3]
+        -a [4^ 3]
     """
     ordered_op = FermionOperator()
     for term, coeff in fermion_operator.terms.items():
@@ -189,10 +189,10 @@ def number_operator(n_modes=None, mode=None, coefficient=1.):
     Return a fermionic number operator for the reverse_jordan_wigner transform.
 
     Args:
-        n_modes (int): The number of modes in the system.
+        n_modes (int): The number of modes in the system. Default: None.
         mode (int, optional): The mode on which to return the number
-            operator. If None, return total number operator on all sites.
-        coefficient (float): The coefficient of the term.
+            operator. If None, return total number operator on all sites. Default: None.
+        coefficient (float): The coefficient of the term. Default: 1.
 
     Returns:
         operator (FermionOperator)
@@ -220,7 +220,22 @@ def number_operator(n_modes=None, mode=None, coefficient=1.):
 
 
 def hermitian_conjugated(operator):
-    """Return Hermitian conjugate of FermionOperator or QubitOperator."""
+    """
+    Return Hermitian conjugate of FermionOperator or QubitOperator.
+
+    Args:
+        operator (Union[FermionOperator, QubitOperator]): The input operator.
+
+    Returns:
+        operator (Union[FermionOperator, QubitOperator]), the hermitian form of the input operator.
+
+    Examples:
+        >>> from mindquantum.ops import QubitOperator
+        >>> from mindquantum.utils import hermitian_conjugated
+        >>> q = QubitOperator('X0', {'a' : 2j})
+        >>> hermitian_conjugated(q)
+        -2.0*I*a [X0]
+    """
     # Handle FermionOperator
     if isinstance(operator, FermionOperator):
         conjugate_operator = FermionOperator()
@@ -246,18 +261,28 @@ def hermitian_conjugated(operator):
 
 def up_index(index):
     """
-    The index order,
-    by default we set the spinless orbits as even-odd-even-odd (0,1,2,3,...).
-    The spin_up orbitals (alpha orbitals) with index even,
-    while spin_down orbitals is (beta) with index odd.
+    The index order, by default we set the spinless orbits as
+    even-odd-even-odd (0,1,2,3,...). The spin_up orbitals (alpha orbitals) with index even.
+
+    Args:
+        index (int), orbital index.
+
+    Returns:
+        int, up index.
     """
     return 2 * index
 
 
 def down_index(index):
     """
-    The index order,
-    by default we set the spinless orbits as even-odd-even-odd (0,1,2,3,...)
+    The index order, by default we set the spinless orbits as
+    even-odd-even-odd (0,1,2,3,...). The spin_down orbitals is (beta) with index odd.
+
+    Args:
+        index (int), orbital index.
+
+    Returns:
+        int, down index.
     """
     return 2 * index + 1
 
