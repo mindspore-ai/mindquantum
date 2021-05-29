@@ -16,6 +16,7 @@
 
 import numpy as np
 from mindspore import Tensor
+from mindquantum.circuit import Circuit
 from .mindquantum_layer import MindQuantumLayer
 
 
@@ -69,6 +70,18 @@ class MindQuantumAnsatzOnlyOperator(MindQuantumLayer):
     def construct(self, data):
         x, _, _ = self.pqc(self.fake_data, data)
         return x
+
+
+def _add_dummy_encoder(circ):
+    """add a dummy parameterized gate"""
+    para_name = circ.para_name
+    index = 0
+    while True:
+        name = f'_d_{index}'
+        if name not in para_name:
+            dummy_circ = Circuit().rx(name, 0).no_grad()
+            return dummy_circ + circ, name
+        index += 1
 
 
 class MindQuantumAnsatzOnlyLayer(MindQuantumLayer):
@@ -128,9 +141,10 @@ class MindQuantumAnsatzOnlyLayer(MindQuantumLayer):
                  measurements,
                  weight_init='normal',
                  n_threads=1):
+        circuit, dummy_para = _add_dummy_encoder(circuit)
         super(MindQuantumAnsatzOnlyLayer,
-              self).__init__([], param_names, circuit, measurements, weight_init,
-                             n_threads)
+              self).__init__([dummy_para], param_names, circuit, measurements,
+                             weight_init, n_threads)
         self.fake_data = Tensor(np.array([[0]]).astype(np.float32))
 
     def construct(self):
