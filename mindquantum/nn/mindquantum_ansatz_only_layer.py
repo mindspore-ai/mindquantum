@@ -131,7 +131,7 @@ class MindQuantumAnsatzOnlyLayer(MindQuantumLayer):
         >>> net()
         Tensor(shape=[1, 1], dtype=Float32, value=
         [[-1.00000000e+00]])
-        >>> net.weight.asnunmpy()
+        >>> net.weight.asnumpy()
         array([-4.712389 ,  1.9707963], dtype=float32)
 
     """

@@ -39,7 +39,7 @@ class Projector:
     The string format would be '01II'.
 
     Note:
-        The first qubit is at the left end of string format and bra and ket.
+        The lower index qubit is at the right end of string format of bra and ket.
 
     Args:
         proj (str): The string format of the projector.
