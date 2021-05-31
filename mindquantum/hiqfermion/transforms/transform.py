@@ -45,16 +45,16 @@ class Transform:
         1.0 [1^]
 
         >>> from mindquantum.hiqfermion.transforms.transform import Transform
-        >>> op_transfrom = Transform(op1)
-        >>> op_transfrom.jordan_wigner()
+        >>> op_transform = Transform(op1)
+        >>> op_transform.jordan_wigner()
         0.5 [Z0 X1] +
         -0.5j [Z0 Y1]
 
-        >>> op_transfrom.parity()
+        >>> op_transform.parity()
         0.5 [Z0 X1] +
         -0.5j [Y1]
 
-        >>> op_transfrom.bravyi_kitaev()
+        >>> op_transform.bravyi_kitaev()
         0.5 [Z0 X1] +
         -0.5j [Y1]
 
