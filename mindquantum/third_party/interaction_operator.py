@@ -63,6 +63,7 @@ class InteractionOperator(PolynomialTensor):
     def unique_iter(self, complex_valued=False):
         r"""
         Iterate all terms that are not in the same symmetry group.
+
         Four point symmetry:
             1. pq = qp.
             2. pqrs = srqp = qpsr = rspq.
