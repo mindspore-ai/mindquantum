@@ -107,7 +107,7 @@ class ParameterResolver(dict):
         Examples:
             >>> pr1 = ParameterResolver({'a': 1})
             >>> pr2 = ParameterResolver({'a': 2, 'b': 3})
-            >>> pr1 + pr2
+            >>> (pr1 + pr2).expression()
             3*a + 3*b
         """
         if not isinstance(pr, ParameterResolver):
@@ -121,6 +121,24 @@ class ParameterResolver(dict):
                 pr[k] = res[k]
         res.update(pr)
         return res
+
+    def __sub__(self, pr):
+        """
+        Subtraction a parameter resolver with other parameter.
+
+        Returns:
+            :class:`mindquantum.parameterresolver.ParameterResolver`
+
+        Args:
+            pr (ParameterResolver): The parameter resolver need to subtract.
+
+        Examples:
+            >>> pr1 = ParameterResolver({'a': 1})
+            >>> pr2 = ParameterResolver({'a': 2, 'b': 3})
+            >>> (pr1 - pr2).expression()
+            -a - 3*b
+        """
+        return self + (-1 * pr)
 
     def __imul__(self, num):
         """
