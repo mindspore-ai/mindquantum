@@ -44,8 +44,8 @@ def _check_valid_fermion_operator_term(term):
 
 class FermionOperator(_Operator):
     r"""
-    The Fermion Operator such as  FermionOperator(' 4^ 3 9 3^ ')
-    are used to represent a_4^\dagger a_3 a_9 a_3^\dagger
+    The Fermion Operator such as FermionOperator(' 4^ 3 9 3^ ')
+    are used to represent :math:`a_4^\dagger a_3 a_9 a_3^\dagger`.
     These are the Basic Operators to describe a fermionic system,
     such as a Molecular system.
     The FermionOperator are follows the anti-commutation relationship.
@@ -59,25 +59,20 @@ class FermionOperator(_Operator):
         >>> a_p_dagger = FermionOperator('1^')
         >>> a_p_dagger
         1.0 [1^]
-
         >>> a_q = FermionOperator('0')
         >>> a_q
         1.0 [0]
-
         >>> zero= FermionOperator()
         >>> 0
-
         >>> identity= FermionOperator('')
         >>> 1.0 []
-
-        # check with coefficient
+        >>> # check with coefficient
         >>> para_op = FermionOperator('0 1^', 'x')
         x [0 1^]
         >>> para_dt = {'x':2}
         >>> op = para_op.subs(para_dt)
         >>> op
         2 [0 1^]
-
     """
 
     __hash__ = None

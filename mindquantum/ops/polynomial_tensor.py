@@ -37,8 +37,8 @@ class PolynomialTensor:
     in a tensor form.
     For instance, in a molecular Hamiltonian (degree 4 polynomial) which
     conserves particle number, there are only three kinds of terms,
-    namely constant term, single excitation a^\dagger_p a_q and
-    double excitation terms a^\dagger_p a^\dagger_q a_r a_s,
+    namely constant term, single excitation :math:`a^\dagger_p a_q` and
+    double excitation terms :math:`a^\dagger_p a^\dagger_q a_r a_s`,
     and their corresponding coefficients can be stored in an scalar,
     n_qubits x n_qubits matrix and
     n_qubits x n_qubits x n_qubits x n_qubits matrix.
@@ -56,10 +56,11 @@ class PolynomialTensor:
         array, and n_body_tensors[(1,1,0,0)]
         would return a (n_qubits x n_qubits x n_qubits x n_qubits) numpy array
         and those constant and array represent the coefficients of terms of
-        the form identity, a^\dagger_p a_q, a^\dagger_p a^\dagger_q a_r a_s,
-        respectively.
+        the form identity, :math:`a^\dagger_p a_q`,
+        :math:`a^\dagger_p a^\dagger_q a_r a_s`, respectively.
 
-    Note here '1' represent a^\dagger, while '0' represent a.
+    Note:
+        Here '1' represents :math:`a^\dagger`, while '0' represent :math:`a`.
 
     Examples:
         >>> import numpy as np
@@ -81,31 +82,25 @@ class PolynomialTensor:
         ((1, 1), (0, 1), (1, 0), (1, 0)) 1
         ((1, 1), (1, 1), (0, 0), (0, 0)) 1
         ((1, 1), (1, 1), (1, 0), (1, 0)) 1
-        # get the constant
+        >>> # get the constant
         >>> poly_op.constant
         1
-        # set the constant
+        >>> # set the constant
         >>> poly_op.constant = 2
         >>> poly_op.constant
         2
-
         >>> poly_op.n_qubits
-        >>> 2
-
+        2
         >>> poly_op.one_body_tensor
         array([[1, 0],
                [0, 1]])
         >>> poly_op.two_body_tensor
         array([[[[1, 0],
                  [0, 1]],
-
                 [[1, 0],
                  [0, 1]]],
-
-
                [[[1, 0],
                  [0, 1]],
-
                  [[1, 0],
                   [0, 1]]]])
     """
