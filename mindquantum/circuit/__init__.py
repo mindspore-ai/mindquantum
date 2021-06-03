@@ -38,10 +38,8 @@ from .state_evolution import StateEvolution
 from .quantum_fourier import qft
 
 __all__ = [
-    'Circuit', 'pauli_word_to_circuits', 'UN', 'SwapParts', 'generate_uccsd',
-    'decompose_single_term_time_evolution', 'TimeEvolution', 'U3',
-    'controlled', 'dagger', 'apply', 'add_prefix', 'change_param_name', 'CPN',
-    'AP', 'A', 'C', 'D', 'StateEvolution', 'qft'
+    'Circuit', 'StateEvolution', 'TimeEvolution', 'U3', 'UN', 'SwapParts',
+    'qft', 'pauli_word_to_circuits', 'decompose_single_term_time_evolution',
+    'generate_uccsd', 'controlled', 'dagger', 'apply', 'add_prefix',
+    'change_param_name', 'C', 'D', 'A', 'AP', 'CPN'
 ]
-
-__all__.sort()
