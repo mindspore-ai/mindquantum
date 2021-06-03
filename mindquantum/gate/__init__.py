@@ -53,8 +53,7 @@ from .projector import Projector
 __all__ = [
     'BasicGate', 'IntrinsicOneParaGate', 'NoneParameterGate', 'ParameterGate',
     'H', 'CNOT', 'X', 'Y', 'Z', 'I', 'S', 'Power', 'SWAP', 'UnivMathGate',
-    'RX', 'RY', 'RZ', 'PhaseShift', 'XX', 'YY', 'ZZ', 'Hamiltonian', 'IGate',
-    'XGate', 'YGate', 'ZGate', 'HGate', 'SWAPGate', 'CNOTGate', 'Projector'
+    'RX', 'RY', 'RZ', 'PhaseShift', 'XX', 'YY', 'ZZ', 'IGate', 'XGate',
+    'YGate', 'ZGate', 'HGate', 'SWAPGate', 'CNOTGate', 'Hamiltonian',
+    'Projector'
 ]
-
-__all__.sort()
