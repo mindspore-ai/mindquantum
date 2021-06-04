@@ -18,7 +18,8 @@ from mindquantum.ops import QubitOperator
 import numpy as np
 import mindspore as ms
 import mindquantum.gate as G
-from mindquantum.nn import MindQuantumLayer
+from mindquantum.nn import MindQuantumLayer, MindQuantumAnsatzOnlyLayer
+from mindquantum.circuit import generate_uccsd
 from mindquantum import Circuit, Hamiltonian
 
 
@@ -35,3 +36,33 @@ def test_mindquantumlayer_forward():
     encoder_data = ms.Tensor(np.array([[0.5]]).astype(np.float32))
     res = net(encoder_data)
     assert round(float(res.asnumpy()[0, 0]), 3) == 0.878
+
+
+def test_vqe_convergence():
+    ms.context.set_context(mode=ms.context.GRAPH_MODE, device_target="CPU")
+    ansatz_circuit, \
+        init_amplitudes, \
+        ansatz_parameter_names, \
+        hamiltonian_qubitop, \
+        n_qubits, n_electrons = generate_uccsd(
+            './tests/st/LiH.hdf5', th=-1)
+    hf_circuit = Circuit([G.X.on(i) for i in range(n_electrons)])
+    vqe_circuit = hf_circuit + ansatz_circuit
+    molecule_pqcnet = MindQuantumAnsatzOnlyLayer(
+        ansatz_parameter_names, vqe_circuit,
+        Hamiltonian(hamiltonian_qubitop.real))
+    optimizer = ms.nn.Adagrad(
+        molecule_pqcnet.trainable_params(), learning_rate=4e-2)
+    train_pqcnet = ms.nn.TrainOneStepCell(molecule_pqcnet, optimizer)
+    eps = 1e-8
+    energy_diff = 1.
+    energy_last = 1.
+    iter_idx = 0
+    iter_max = 150
+    while (abs(energy_diff) > eps) and (iter_idx < iter_max):
+        energy_i = train_pqcnet().asnumpy()
+        energy_diff = energy_last - energy_i
+        energy_last = energy_i
+        iter_idx += 1
+
+    assert round(energy_i.item(), 3) == -7.564
