@@ -69,7 +69,7 @@ python -c 'import mindquantum'
 
 ## Docker安装
 
-通过Docker也可以在Mac系统或者Windows系统中使用Minduantum。具体参考[Docker安装指南](./install_with_docker.md).
+通过Docker也可以在Mac系统或者Windows系统中使用Mindquantum。具体参考[Docker安装指南](./install_with_docker.md).
 
 ## 注意事项
 

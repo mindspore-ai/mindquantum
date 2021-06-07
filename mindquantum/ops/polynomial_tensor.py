@@ -49,15 +49,15 @@ class PolynomialTensor:
 
     Args:
         n_body_tensors(dict): A dictionary storing the tensors describing
-        n-body interactions. The keys are tuples that indicate the
-        type of tensor.
-        For instance, n_body_tensors[()] would return a constant,
-        while a n_body_tensors[(1, 0)] would be an (n_qubits x n_qubits) numpy
-        array, and n_body_tensors[(1,1,0,0)]
-        would return a (n_qubits x n_qubits x n_qubits x n_qubits) numpy array
-        and those constant and array represent the coefficients of terms of
-        the form identity, :math:`a^\dagger_p a_q`,
-        :math:`a^\dagger_p a^\dagger_q a_r a_s`, respectively.
+            n-body interactions. The keys are tuples that indicate the
+            type of tensor.
+            For instance, n_body_tensors[()] would return a constant,
+            while a n_body_tensors[(1, 0)] would be an (n_qubits x n_qubits) numpy
+            array, and n_body_tensors[(1,1,0,0)]
+            would return a (n_qubits x n_qubits x n_qubits x n_qubits) numpy array
+            and those constant and array represent the coefficients of terms of
+            the form identity, :math:`a^\dagger_p a_q`,
+            :math:`a^\dagger_p a^\dagger_q a_r a_s`, respectively.
 
     Note:
         Here '1' represents :math:`a^\dagger`, while '0' represent :math:`a`.
