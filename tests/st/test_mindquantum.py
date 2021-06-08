@@ -47,7 +47,7 @@ def test_vqe_convergence():
         ansatz_parameter_names, \
         hamiltonian_qubitop, \
         n_qubits, n_electrons = generate_uccsd(
-            './tests/st/LiH.hdf5', th=-1)
+            './tests/st/H4.hdf5', th=-1)
     hf_circuit = Circuit([G.X.on(i) for i in range(n_electrons)])
     vqe_circuit = hf_circuit + ansatz_circuit
     molecule_pqcnet = MindQuantumAnsatzOnlyLayer(
@@ -60,11 +60,11 @@ def test_vqe_convergence():
     energy_diff = 1.
     energy_last = 1.
     iter_idx = 0
-    iter_max = 150
+    iter_max = 100
     while (abs(energy_diff) > eps) and (iter_idx < iter_max):
         energy_i = train_pqcnet().asnumpy()
         energy_diff = energy_last - energy_i
         energy_last = energy_i
         iter_idx += 1
 
-    assert round(energy_i.item(), 3) == -7.564
+    assert round(energy_i.item(), 3) == -2.166
