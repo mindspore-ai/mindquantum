@@ -38,30 +38,26 @@ class Transform:
         operator (Union[FermionOperator, QubitOperator]): The input
             FermionOperator or QubitOperator that need to do transform.
         n_qubits (int): The total qubits of this operator. Default: None
+
     Examples:
         >>> from mindquantum.ops import FermionOperator
         >>> op1 = FermionOperator('1^')
         >>> op1
         1.0 [1^]
-
         >>> from mindquantum.hiqfermion.transforms.transform import Transform
         >>> op_transform = Transform(op1)
         >>> op_transform.jordan_wigner()
         0.5 [Z0 X1] +
         -0.5j [Z0 Y1]
-
         >>> op_transform.parity()
         0.5 [Z0 X1] +
         -0.5j [Y1]
-
         >>> op_transform.bravyi_kitaev()
         0.5 [Z0 X1] +
         -0.5j [Y1]
-
         >>> op_transform.ternary_tree()
         0.5 [X0 Z1] +
         -0.5j [Y0 X2]
-
         >>> op2 = FermionOperator('1^', 'a')
         >>> Transform(op2).jordan_wigner()
         0.5*a [Z0 X1] +
@@ -92,7 +88,7 @@ class Transform:
 
             a-> \sigma^{+}_{j} X \sigma^{Z}_{j-1}...\sigma^{Z}_{0},
 
-        where the \sigma_{+}= \sigma^{X} + i \sigma^{Y} and \sigma_{-} = \sigma^{X} - i\sigma^{Y} is the
+        where the :math:`\sigma_{+}= \sigma^{X} + i \sigma^{Y} and \sigma_{-} = \sigma^{X} - i\sigma^{Y}` is the
         Pauli spin raising and lowring operator.
         """
         if not isinstance(self.operator, FermionOperator):
@@ -125,21 +121,23 @@ class Transform:
         The parity transform
         stores the initial occupation number nonlocally.
         with the formular:
-             |f_{M−1}, f_{M−2}, . . . , f_0\rangle → |q_{M−1}, q_{M−2}, . . . , q_0\rangle
+            :math:`|f_{M−1}, f_{M−2}, . . . , f_0\rangle → |q_{M−1}, q_{M−2}, . . . , q_0\rangle`
         ,
-        where q_{m} = |(\sum{i,0,m-1}f_{i}) mod 2 \rangle.
-        basically, this formular could be write as this,
-            p_{i} = \sum{\pi_{n}_{i,j}} f_{j},
-        where \pi_{n} is the N X N square matrix,
-        N is the total qubit number. The operator changes follows the following equation as：
+        where :math:`q_{m} = |(\sum{i,0,m-1}f_{i}) mod 2 \rangle`.
+        Basically, this formular could be write as this,
+            :math:`p_{i} = \sum{\pi_{n}_{i,j}} f_{j}`,
+        where :math:`\pi_{n}` is the N X N square matrix,
+        N is the total qubit number. The operator changes follows the following equation as:
 
-        a\dagger_{j}->\frac{1}{2} {\sigma^{X}_{N} X ...\sigma^{X}_{j+1} X \sigma^{X}{j} X \sigma^{Z}_{j-1}
-            - i*sigma^{X}_{N} X ...\sigma^{X}_{j+1} X \sigma^{Y}{j} X \sigma^{Z}_{j-1}
+        .. math::
+
+            a\dagger_{j}->\frac{1}{2} {\sigma^{X}_{N} X ...\sigma^{X}_{j+1} X \sigma^{X}{j} X \sigma^{Z}_{j-1}
+                - i*sigma^{X}_{N} X ...\sigma^{X}_{j+1} X \sigma^{Y}{j} X \sigma^{Z}_{j-1}
+                }
+
+            a_{j}->\frac{1}{2} {\sigma^{X}_{N} X ...\sigma^{X}_{j+1} X \sigma^{X}{j} X \sigma^{Z}_{j-1}
+            + i*sigma^{X}_{N} X ...\sigma^{X}_{j+1} X \sigma^{Y}{j} X \sigma^{Z}_{j-1}
             }
-
-        a_{j}->\frac{1}{2} {\sigma^{X}_{N} X ...\sigma^{X}_{j+1} X \sigma^{X}{j} X \sigma^{Z}_{j-1}
-        + i*sigma^{X}_{N} X ...\sigma^{X}_{j+1} X \sigma^{Y}{j} X \sigma^{Z}_{j-1}
-        }
         """
         if not isinstance(self.operator, FermionOperator):
             raise TypeError(
@@ -179,8 +177,8 @@ class Transform:
         set of adjacent orbitals with index less than j.
         For the occupation transformation, we follow the
         formular:
-            b_{i} = \sum{\beta_{n}_{i,j}} f_{j}
-        where \beta_{n} is the N X N square matrix,
+            :math:`b_{i} = \sum{\beta_{n}_{i,j}} f_{j}`
+        where :math:`\beta_{n}` is the N X N square matrix,
         N is the total qubit number.
         The qubits index are divide into three sets,
         the parity set, the update set and flip set.
@@ -236,8 +234,8 @@ class Transform:
         Implementation from arxiv:1712.00446.
 
         Note that only hermitian operators of form
-            constant + \sum_{p, q} h_{p, q} a^\dagger_p a_q +
-                \sum_{p, q, r, s} h_{p, q, r, s} a^\dagger_p a^\dagger_q a_r a_s
+            :math:`constant + \sum_{p, q} h_{p, q} a^\dagger_p a_q +
+                \sum_{p, q, r, s} h_{p, q, r, s} a^\dagger_p a^\dagger_q a_r a_s`
         can be transformed.
         """
         if not isinstance(self.operator, FermionOperator):
@@ -477,6 +475,7 @@ def _transform_ladder_operator(ladder_operator, x1, y1, z1, x2, y2, z2):
         lists or sets of indices of qubits,
         to which corresponding Pauli gates are applied.
         These lists (sets) are defined for each transform.
+
     Returns:
         QubitOperator
     """
