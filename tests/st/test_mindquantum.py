@@ -14,6 +14,8 @@
 # ============================================================================
 """Test mindquantum."""
 
+import os
+os.environ['OMP_NUM_THREADS'] = '8'
 from mindquantum.ops import QubitOperator
 import numpy as np
 import mindspore as ms
@@ -51,8 +53,8 @@ def test_vqe_convergence():
     molecule_pqcnet = MindQuantumAnsatzOnlyLayer(
         ansatz_parameter_names, vqe_circuit,
         Hamiltonian(hamiltonian_qubitop.real))
-    optimizer = ms.nn.Adagrad(
-        molecule_pqcnet.trainable_params(), learning_rate=4e-2)
+    optimizer = ms.nn.Adagrad(molecule_pqcnet.trainable_params(),
+                              learning_rate=4e-2)
     train_pqcnet = ms.nn.TrainOneStepCell(molecule_pqcnet, optimizer)
     eps = 1e-8
     energy_diff = 1.
