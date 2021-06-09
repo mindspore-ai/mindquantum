@@ -84,9 +84,9 @@ class Transform:
 
         .. math::
 
-            a\dagger_{j}-> \sigma^{-}_{j} X \sigma^{Z}_{j-1}...\sigma^{Z}_{0}
+            a^\dagger_{j}-> \sigma^{-}_{j} X \sigma^{Z}_{j-1}...\sigma^{Z}_{0}
 
-            a-> \sigma^{+}_{j} X \sigma^{Z}_{j-1}...\sigma^{Z}_{0},
+            a_{j}-> \sigma^{+}_{j} X \sigma^{Z}_{j-1}...\sigma^{Z}_{0},
 
         where the :math:`\sigma_{+}= \sigma^{X} + i \sigma^{Y} and \sigma_{-} = \sigma^{X} - i\sigma^{Y}` is the
         Pauli spin raising and lowring operator.
@@ -121,17 +121,20 @@ class Transform:
         The parity transform
         stores the initial occupation number nonlocally.
         with the formular:
-            :math:`|f_{M−1}, f_{M−2}, . . . , f_0\rangle → |q_{M−1}, q_{M−2}, . . . , q_0\rangle`
-        ,
+
+            :math:`|f_{M−1}, f_{M−2}, . . . , f_0\rangle → |q_{M−1}, q_{M−2}, . . . , q_0\rangle`,
+
         where :math:`q_{m} = |(\sum{i,0,m-1}f_{i}) mod 2 \rangle`.
         Basically, this formular could be write as this,
+
             :math:`p_{i} = \sum{\pi_{n}_{i,j}} f_{j}`,
+
         where :math:`\pi_{n}` is the N X N square matrix,
         N is the total qubit number. The operator changes follows the following equation as:
 
         .. math::
 
-            a\dagger_{j}->\frac{1}{2} {\sigma^{X}_{N} X ...\sigma^{X}_{j+1} X \sigma^{X}{j} X \sigma^{Z}_{j-1}
+            a^\dagger_{j}->\frac{1}{2} {\sigma^{X}_{N} X ...\sigma^{X}_{j+1} X \sigma^{X}{j} X \sigma^{Z}_{j-1}
                 - i*sigma^{X}_{N} X ...\sigma^{X}_{j+1} X \sigma^{Y}{j} X \sigma^{Z}_{j-1}
                 }
 
@@ -177,7 +180,9 @@ class Transform:
         set of adjacent orbitals with index less than j.
         For the occupation transformation, we follow the
         formular:
+
             :math:`b_{i} = \sum{\beta_{n}_{i,j}} f_{j}`
+
         where :math:`\beta_{n}` is the N X N square matrix,
         N is the total qubit number.
         The qubits index are divide into three sets,
@@ -234,8 +239,12 @@ class Transform:
         Implementation from arxiv:1712.00446.
 
         Note that only hermitian operators of form
-            :math:`constant + \sum_{p, q} h_{p, q} a^\dagger_p a_q +
-                \sum_{p, q, r, s} h_{p, q, r, s} a^\dagger_p a^\dagger_q a_r a_s`
+
+        .. math::
+
+            constant + \sum_{p, q} h_{p, q} a^\dagger_p a_q +
+                \sum_{p, q, r, s} h_{p, q, r, s} a^\dagger_p a^\dagger_q a_r a_s
+
         can be transformed.
         """
         if not isinstance(self.operator, FermionOperator):
@@ -464,9 +473,13 @@ def _get_qubit_index(p, l):
 
 def _transform_ladder_operator(ladder_operator, x1, y1, z1, x2, y2, z2):
     r"""
-    Makes transformation to qubits for a, a\dagger operators:
-    a = 1/2 X(x1) Y(y1) Z (z1)+ i/2 X(x2) Y(y2) Z(z2)
-    a\dagger = 1/2 X(x1) Y(y1) Z (z1)- i/2 X(x2) Y(y2) Z(z2)
+    Makes transformation to qubits for :math:`a`, :math:`a^\dagger` operators:
+
+    .. math::
+
+        a = 1/2 X(x1) Y(y1) Z (z1)+ i/2 X(x2) Y(y2) Z(z2)
+
+        a^\dagger = 1/2 X(x1) Y(y1) Z (z1)- i/2 X(x2) Y(y2) Z(z2)
 
     Args:
         ladder_operator (tuple[int, int]): the ladder operator
