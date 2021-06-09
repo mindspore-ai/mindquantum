@@ -104,9 +104,9 @@ def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):
     """Create a singlet UCCSD generator for a system with n_electrons
 
     This function generates a FermionOperator for a UCCSD generator designed
-        to act on a single reference state consisting of n_qubits spin orbitals
-        and n_electrons electrons, that is a spin singlet operator, meaning it
-        conserves spin.
+    to act on a single reference state consisting of n_qubits spin orbitals
+    and n_electrons electrons, that is a spin singlet operator, meaning it
+    conserves spin.
 
     Args:
         n_qubits(int): Number of spin-orbitals used to represent the system,
