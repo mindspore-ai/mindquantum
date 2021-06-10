@@ -16,5 +16,6 @@
 
 from ._ansatz import Ansatz
 from .max_cut import MaxCutAnsatz
+from .hardware_efficient import HardwareEfficientAnsatz
 
-__all__ = ['Ansatz', 'MaxCutAnsatz']
+__all__ = ['Ansatz', 'MaxCutAnsatz', 'HardwareEfficientAnsatz']
