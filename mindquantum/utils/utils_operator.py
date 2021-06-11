@@ -16,6 +16,7 @@
 
 from mindquantum.ops.fermion_operator import FermionOperator
 from mindquantum.ops.qubit_operator import QubitOperator
+from mindquantum.ops.qubit_excitation_operator import QubitExcitationOperator
 from mindquantum.ops.polynomial_tensor import PolynomialTensor
 
 
@@ -28,7 +29,8 @@ def count_qubits(operator):
         In some case, we need to remove the unused index.
 
     Args:
-        operator (Union[FermionOperator, QubitOperator]): FermionOperator or QubitOperator.
+        operator (Union[FermionOperator, QubitOperator, QubitExcitationOperator]):
+            FermionOperator or QubitOperator or QubitExcitationOperator.
 
     Returns:
         num_qubits (int): The minimum number of qubits on which operator acts.
@@ -48,7 +50,7 @@ def count_qubits(operator):
         2
     """
     # Handle FermionOperator.
-    if isinstance(operator, (FermionOperator, QubitOperator)):
+    if isinstance(operator, (FermionOperator, QubitOperator, QubitExcitationOperator)):
         num_qubits = 0
         for term in operator.terms:
             # a tuple compose of single (qubit_index,operator) subterms
@@ -72,9 +74,9 @@ def commutator(left_operator, right_operator):
     Compute the commutator of two operators.
 
     Args:
-        left_operator (Union[FermionOperator, QubitOperator]):
+        left_operator (Union[FermionOperator, QubitOperator, QubitExcitationOperator]):
             FermionOperator or QubitOperator.
-        right_operator (Union[FermionOperator, QubitOperator]):
+        right_operator (Union[FermionOperator, QubitOperator, QubitExcitationOperator]):
             FermionOperator or QubitOperator.
 
     Raises:
@@ -93,9 +95,9 @@ def commutator(left_operator, right_operator):
     if not isinstance(left_operator, type(right_operator)):
         raise TypeError('operator_a and operator_b are not of the same type.')
 
-    if not isinstance(left_operator, (QubitOperator, FermionOperator)):
+    if not isinstance(left_operator, (QubitOperator, FermionOperator, QubitExcitationOperator)):
         raise TypeError(
-            "Operator should be either QubitOperator or FermionOperator")
+            "Operator should be QubitOperator, FermionOperator or QubitExcitationOperator.")
 
     result = left_operator * right_operator
     result -= right_operator * left_operator
@@ -162,6 +164,8 @@ def normal_ordered(fermion_operator):
         >>> normal_ordered(op)
         -a [4^ 3]
     """
+    if not isinstance(fermion_operator, FermionOperator):
+        raise ValueError("The operator should be FermionOperator!")
     ordered_op = FermionOperator()
     for term, coeff in fermion_operator.terms.items():
         ordered_op += _normal_ordered_term(term, coeff)
@@ -224,10 +228,12 @@ def hermitian_conjugated(operator):
     Return Hermitian conjugate of FermionOperator or QubitOperator.
 
     Args:
-        operator (Union[FermionOperator, QubitOperator]): The input operator.
+        operator (Union[FermionOperator, QubitOperator, QubitExcitationOperator]):
+            The input operator.
 
     Returns:
-        operator (Union[FermionOperator, QubitOperator]), the hermitian form of the input operator.
+        operator (Union[FermionOperator, QubitOperator, QubitExcitationOperator]),
+            the hermitian form of the input operator.
 
     Examples:
         >>> from mindquantum.ops import QubitOperator
@@ -248,6 +254,12 @@ def hermitian_conjugated(operator):
     # Handle QubitOperator
     elif isinstance(operator, QubitOperator):
         conjugate_operator = QubitOperator()
+        for term, coefficient in operator.terms.items():
+            conjugate_operator.terms[term] = coefficient.conjugate()
+
+    # Handle QubitExcitationOperator
+    elif isinstance(operator, QubitExcitationOperator):
+        conjugate_operator = QubitExcitationOperator()
         for term, coefficient in operator.terms.items():
             conjugate_operator.terms[term] = coefficient.conjugate()
 

@@ -18,10 +18,11 @@ from mindquantum.third_party.interaction_operator import InteractionOperator
 from .fermion_operator import FermionOperator
 from .qubit_operator import QubitOperator
 from .polynomial_tensor import PolynomialTensor
+from .qubit_excitation_operator import QubitExcitationOperator
 
 __all__ = [
     'FermionOperator', 'QubitOperator', 'PolynomialTensor',
-    'InteractionOperator'
+    'InteractionOperator', 'QubitExcitationOperator'
 ]
 
 __all__.sort()
