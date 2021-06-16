@@ -109,3 +109,10 @@ def test_qubit_ops_subs():
     q = QubitOperator('X0', 'b') + QubitOperator('X0', 'a')
     q = q.subs({'a': 1, 'b': 2})
     assert str(q) == '3 [X0] '
+
+
+def test_qubit_ops_sub():
+    q1 = QubitOperator('X0')
+    q2 = QubitOperator('Y0')
+    q = QubitOperator('X0') + QubitOperator('Y0', -1)
+    assert str(q1 - q2) == '1.0 [X0] +\n-1.0 [Y0] '
