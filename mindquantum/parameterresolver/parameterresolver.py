@@ -140,6 +140,20 @@ class ParameterResolver(dict):
         """
         return self + (-1 * pr)
 
+    def __neg__(self):
+        """
+        Get the negative version of this parameter resolver.
+
+        Returns:
+            ParameterResolver, the negative version.
+
+        Examples:
+            >>> pr1 = ParameterResolver({'a': 1})
+            >>> (-pr1).expression()
+            -a
+        """
+        return -1 * pr
+
     def __imul__(self, num):
         """
         Parameter support inplace multiply.
