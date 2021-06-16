@@ -152,7 +152,7 @@ class ParameterResolver(dict):
             >>> (-pr1).expression()
             -a
         """
-        return -1 * pr
+        return -1 * self
 
     def __imul__(self, num):
         """
