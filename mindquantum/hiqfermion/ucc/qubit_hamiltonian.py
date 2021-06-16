@@ -19,7 +19,7 @@ from mindquantum.utils import get_fermion_operator
 from mindquantum.hiqfermion.transforms import Transform
 
 def get_qubit_hamiltonian(mol):
-    """
+    r"""
     Get the qubit hamiltonian of a molecular data.
 
     Args:

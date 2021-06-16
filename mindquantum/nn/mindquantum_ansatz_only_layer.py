@@ -38,7 +38,7 @@ class MindQuantumAnsatzOnlyOperator(MindQuantumLayer):
 
     Inputs:
         - **input** (Tensor) - Tensor of shape :math:`(E_{in}, )`,
-            where :math:`E_{in}` is the number of parameters in ansatz circuit.
+          where :math:`E_{in}` is the number of parameters in ansatz circuit.
 
     Outputs:
         Tensor of shape :math:`(1, 1)`.

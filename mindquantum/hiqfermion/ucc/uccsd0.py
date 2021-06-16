@@ -262,36 +262,36 @@ def uccsd0_singlet_generator(n_qubits, n_electrons, anti_hermitian=True,
             that uses CCD0 ansatz.
 
     Examples:
-    >>> from mindquantum.hiqfermion.ucc.uccsd0 import uccsd0_singlet_generator
-    >>> uccsd0_singlet_generator(4, 2)
-    -1.0*d0_s_0 [0^ 2] +
-    2.0*d0_d_0 [1^ 0^ 3 2] +
-    -1.0*d0_s_0 [1^ 3] +
-    1.0*d0_s_0 [2^ 0] +
-    1.0*d0_s_0 [3^ 1] +
-    -2.0*d0_d_0 [3^ 2^ 1 0]
-    >>> uccsd0_singlet_generator(4, 2, generalized=True)
-    1.0*d0_s_0 - 1.0*d0_s_1 [0^ 2] +
-    1.0*d0_d_0 [1^ 0^ 2 1] +
-    -1.0*d0_d_0 [1^ 0^ 3 0] +
-    -2.0*d0_d_1 [1^ 0^ 3 2] +
-    1.0*d0_s_0 - 1.0*d0_s_1 [1^ 3] +
-    -1.0*d0_s_0 + 1.0*d0_s_1 [2^ 0] +
-    -1.0*d0_d_0 [2^ 1^ 1 0] +
-    1.0*d0_d_2 [2^ 1^ 3 2] +
-    1.0*d0_d_0 [3^ 0^ 1 0] +
-    -1.0*d0_d_2 [3^ 0^ 3 2] +
-    -1.0*d0_s_0 + 1.0*d0_s_1 [3^ 1] +
-    2.0*d0_d_1 [3^ 2^ 1 0] +
-    -1.0*d0_d_2 [3^ 2^ 2 1] +
-    1.0*d0_d_2 [3^ 2^ 3 0]
-    >>> uccsd0_singlet_generator(6, 2, occ_orb=[0], vir_orb=[1])
-    -1.0*d0_s_0 [0^ 2] +
-    2.0*d0_d_0 [1^ 0^ 3 2] +
-    -1.0*d0_s_0 [1^ 3] +
-    1.0*d0_s_0 [2^ 0] +
-    1.0*d0_s_0 [3^ 1] +
-    -2.0*d0_d_0 [3^ 2^ 1 0]
+        >>> from mindquantum.hiqfermion.ucc.uccsd0 import uccsd0_singlet_generator
+        >>> uccsd0_singlet_generator(4, 2)
+        -1.0*d0_s_0 [0^ 2] +
+        2.0*d0_d_0 [1^ 0^ 3 2] +
+        -1.0*d0_s_0 [1^ 3] +
+        1.0*d0_s_0 [2^ 0] +
+        1.0*d0_s_0 [3^ 1] +
+        -2.0*d0_d_0 [3^ 2^ 1 0]
+        >>> uccsd0_singlet_generator(4, 2, generalized=True)
+        1.0*d0_s_0 - 1.0*d0_s_1 [0^ 2] +
+        1.0*d0_d_0 [1^ 0^ 2 1] +
+        -1.0*d0_d_0 [1^ 0^ 3 0] +
+        -2.0*d0_d_1 [1^ 0^ 3 2] +
+        1.0*d0_s_0 - 1.0*d0_s_1 [1^ 3] +
+        -1.0*d0_s_0 + 1.0*d0_s_1 [2^ 0] +
+        -1.0*d0_d_0 [2^ 1^ 1 0] +
+        1.0*d0_d_2 [2^ 1^ 3 2] +
+        1.0*d0_d_0 [3^ 0^ 1 0] +
+        -1.0*d0_d_2 [3^ 0^ 3 2] +
+        -1.0*d0_s_0 + 1.0*d0_s_1 [3^ 1] +
+        2.0*d0_d_1 [3^ 2^ 1 0] +
+        -1.0*d0_d_2 [3^ 2^ 2 1] +
+        1.0*d0_d_2 [3^ 2^ 3 0]
+        >>> uccsd0_singlet_generator(6, 2, occ_orb=[0], vir_orb=[1])
+        -1.0*d0_s_0 [0^ 2] +
+        2.0*d0_d_0 [1^ 0^ 3 2] +
+        -1.0*d0_s_0 [1^ 3] +
+        1.0*d0_s_0 [2^ 0] +
+        1.0*d0_s_0 [3^ 1] +
+        -2.0*d0_d_0 [3^ 2^ 1 0]
 
     Note:
         Manually assigned occ_orb or vir_orb are indices of spatial orbitals

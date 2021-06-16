@@ -85,8 +85,7 @@ class QubitOperator(_Operator):
     operator, thus requires the coefficients of all terms must be real.
 
     QubitOperator has the following attributes set as follows:
-        operators = ('X', 'Y', 'Z')
-        different_indices_commute = True
+    operators = ('X', 'Y', 'Z'), different_indices_commute = True.
 
     Args:
         term (str): The input term of qubit operator.
@@ -102,15 +101,12 @@ class QubitOperator(_Operator):
         >>> ham2 += 0.6 * QubitOperator('X0 Y3')
         >>> ham2
         1.1 [X0 Y3]
-
         >>> ham3 = QubitOperator('')
         >>> ham3
         1.0 []
-
         >>> ham_para = QubitOperator('X0 Y3', 'x')
         >>> ham_para
         x [X0 Y3]
-
         >>> ham_para.subs({'x':1.2})
         1.2 [X0 Y3]
     """
