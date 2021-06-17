@@ -17,5 +17,7 @@
 from ._ansatz import Ansatz
 from .max_cut import MaxCutAnsatz
 from .hardware_efficient import HardwareEfficientAnsatz
+from .unitary_cc import UCCAnsatz
 
-__all__ = ['Ansatz', 'MaxCutAnsatz', 'HardwareEfficientAnsatz']
+__all__ = ['Ansatz', 'MaxCutAnsatz', 'HardwareEfficientAnsatz',
+           "UCCAnsatz"]

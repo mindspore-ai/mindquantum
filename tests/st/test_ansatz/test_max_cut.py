@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Text max_cut"""
+"""Test max_cut"""
 
 import os
 os.environ['OMP_NUM_THREADS'] = '8'
