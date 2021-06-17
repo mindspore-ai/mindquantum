@@ -258,8 +258,7 @@ def uccsd0_singlet_generator(n_qubits, n_electrons, anti_hermitian=True,
             do not distinguish occupied or virtual orbitals (UCCGSD).
 
     Returns:
-        generator_uccsd0(FermionOperator): Generator of the UCCSD operators
-            that uses CCD0 ansatz.
+        generator_uccsd0(FermionOperator): Generator of the UCCSD operators that uses CCD0 ansatz.
 
     Examples:
         >>> from mindquantum.hiqfermion.ucc.uccsd0 import uccsd0_singlet_generator
@@ -318,7 +317,7 @@ but get {}.".format(type(anti_hermitian)))
         _check_int_list(vir_orb, "virtual orbitals")
     if not isinstance(generalized, bool):
         raise ValueError("The parameter generalized should be bool, \
-but get {}.".format(type(anti_hermitian)))
+but get {}.".format(type(generalized)))
 
     if n_qubits % 2 != 0:
         raise ValueError('The total number of qubits (spin-orbitals) \
