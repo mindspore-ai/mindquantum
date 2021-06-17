@@ -277,10 +277,10 @@ def up_index(index):
     even-odd-even-odd (0,1,2,3,...). The spin_up orbitals (alpha orbitals) with index even.
 
     Args:
-        index (int), orbital index.
+        index (int): spatial orbital index.
 
     Returns:
-        int, up index.
+        An integer that is the index of the associated spin-up orbital.
     """
     return 2 * index
 
@@ -291,10 +291,10 @@ def down_index(index):
     even-odd-even-odd (0,1,2,3,...). The spin_down orbitals is (beta) with index odd.
 
     Args:
-        index (int), orbital index.
+        index (int): spatial orbital index.
 
     Returns:
-        int, down index.
+        An integer that is the index of the associated spin-down orbital.
     """
     return 2 * index + 1
 

@@ -122,12 +122,16 @@ class Transform:
         stores the initial occupation number nonlocally.
         with the formular:
 
-            :math:`|f_{M−1}, f_{M−2}, . . . , f_0\rangle → |q_{M−1}, q_{M−2}, . . . , q_0\rangle`,
+        ..math::
+
+            |f_{M−1}, f_{M−2}, . . . , f_0\rangle → |q_{M−1}, q_{M−2}, . . . , q_0\rangle,
 
         where :math:`q_{m} = |(\sum{i,0,m-1}f_{i}) mod 2 \rangle`.
-        Basically, this formular could be write as this,
+        Basically, this formular could be written as this,
 
-            :math:`p_{i} = \sum{\pi_{n}_{i,j}} f_{j}`,
+        ..math::
+
+            p_{i} = \sum{[\pi_{n}]_{i,j}} f_{j},
 
         where :math:`\pi_{n}` is the N X N square matrix,
         N is the total qubit number. The operator changes follows the following equation as:
@@ -181,7 +185,9 @@ class Transform:
         For the occupation transformation, we follow the
         formular:
 
-            :math:`b_{i} = \sum{\beta_{n}_{i,j}} f_{j}`
+        ..math::
+
+            b_{i} = \sum{[\beta_{n}]_{i,j}} f_{j}
 
         where :math:`\beta_{n}` is the N X N square matrix,
         N is the total qubit number.
