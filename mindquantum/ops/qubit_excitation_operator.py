@@ -168,6 +168,14 @@ class QubitExcitationOperator(_Operator):
         for sub_term in terms:
             index = int(sub_term[0])
             operator = sub_term[1:]
+            # Handle such cases: 10^, 100^, ...
+            if len(sub_term) >= 2:
+                if '^' in sub_term:
+                    operator = '^'
+                    index = int(sub_term[:sub_term.index(operator)])
+                else:
+                    operator = ''
+                    index = int(sub_term)
 
             if operator not in self.operators:
                 raise ValueError(

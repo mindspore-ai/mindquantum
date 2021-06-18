@@ -18,10 +18,11 @@ from mindquantum.third_party.unitary_cc import uccsd_singlet_generator
 from mindquantum.third_party.unitary_cc import uccsd_singlet_get_packed_amplitudes
 from .qubit_hamiltonian import get_qubit_hamiltonian
 from .uccsd0 import uccsd0_singlet_generator
+from .quccsd import quccsd_generator
 
 __all__ = [
     'uccsd_singlet_generator', 'uccsd_singlet_get_packed_amplitudes',
-    'get_qubit_hamiltonian', 'uccsd0_singlet_generator'
+    'get_qubit_hamiltonian', 'uccsd0_singlet_generator', 'quccsd_generator'
 ]
 
 __all__.sort()

@@ -18,6 +18,7 @@ from ._ansatz import Ansatz
 from .max_cut import MaxCutAnsatz
 from .hardware_efficient import HardwareEfficientAnsatz
 from .unitary_cc import UCCAnsatz
+from .qubit_ucc import QubitUCCAnsatz
 
 __all__ = ['Ansatz', 'MaxCutAnsatz', 'HardwareEfficientAnsatz',
-           "UCCAnsatz"]
+           "UCCAnsatz", "QubitUCCAnsatz"]

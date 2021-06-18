@@ -96,7 +96,7 @@ but get {}.".format(type(n_qubits)))
 but get {}.".format(type(n_electrons)))
         if isinstance(n_electrons, int) and n_electrons > n_qubits:
             raise ValueError("The number of electrons must be smaller than \
-the number of qubtis (spin-orbitals) in the ansatz!")
+the number of qubits (spin-orbitals) in the ansatz!")
         if occ_orb is not None:
             _check_int_list(occ_orb, "occupied orbitals")
         if vir_orb is not None:

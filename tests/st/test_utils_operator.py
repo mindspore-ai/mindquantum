@@ -87,6 +87,6 @@ def test_hermitian_conjugated():
     fer_op2 = FermionOperator("2^ 1")
     assert hermitian_conjugated(fer_op1) == fer_op2
 
-    qubit_exc_op1 = QubitExcitationOperator(((4, 1), (1, 0)), 2.j)
-    qubit_exc_op2 = QubitExcitationOperator(((4, 1), (1, 0)), -2.j)
+    qubit_exc_op1 = QubitExcitationOperator(((4, 1), (1, 0)), 2.j).normal_ordered()
+    qubit_exc_op2 = QubitExcitationOperator(((4, 0), (1, 1)), -2.j).normal_ordered()
     assert hermitian_conjugated(qubit_exc_op1) == qubit_exc_op2
