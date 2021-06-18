@@ -227,8 +227,7 @@ def spin_adapted_t2(creation_list, annihilation_list):
     if len(creation_list) != 2 or len(annihilation_list) != 2:
         raise ValueError("T2 excitations take exactly 2 indices for both \
 creation and annihilation operators, but get {} and {} indices.".format(
-    len(creation_list), len(annihilation_list)
-        ))
+    len(creation_list), len(annihilation_list)))
 
     p = creation_list[0]
     r = annihilation_list[0]
@@ -240,7 +239,7 @@ creation and annihilation operators, but get {} and {} indices.".format(
     return tpqrs_list
 
 
-def uccsd0_singlet_generator(n_qubits, n_electrons, anti_hermitian=True,
+def uccsd0_singlet_generator(n_qubits=None, n_electrons=None, anti_hermitian=True,
                              occ_orb=None, vir_orb=None, generalized=False):
     r"""
     Generate UCCSD operators using CCD0 ansatz for molecular systems.
@@ -302,10 +301,10 @@ def uccsd0_singlet_generator(n_qubits, n_electrons, anti_hermitian=True,
         :math:`a_{7}^{\dagger} a_{0}` involves not only the 0th and 7th
         qubit, but also the 1st, 2nd, ... 6th qubit.
     """
-    if not isinstance(n_qubits, int):
+    if n_qubits is not None and not isinstance(n_qubits, int):
         raise ValueError("The number of qubits should be integer, \
 but get {}.".format(type(n_qubits)))
-    if not isinstance(n_electrons, int):
+    if n_electrons is not None and not isinstance(n_electrons, int):
         raise ValueError("The number of electrons should be integer, \
 but get {}.".format(type(n_electrons)))
     if not isinstance(anti_hermitian, bool):
@@ -319,15 +318,21 @@ but get {}.".format(type(anti_hermitian)))
         raise ValueError("The parameter generalized should be bool, \
 but get {}.".format(type(generalized)))
 
-    if n_qubits % 2 != 0:
-        raise ValueError('The total number of qubits (spin-orbitals) \
+    occ_indices = []
+    vir_indices = []
+    n_orb = 0
+    n_orb_occ = 0
+    n_orb_vir = 0
+    if n_qubits is not None:
+        if n_qubits % 2 != 0:
+            raise ValueError('The total number of qubits (spin-orbitals) \
 should be even.')
-
-    n_orb = n_qubits // 2
-    n_orb_occ = int(numpy.ceil(n_electrons / 2))
-    n_orb_vir = n_orb - n_orb_occ
-    occ_indices = [i for i in range(n_orb_occ)]
-    vir_indices = [i + n_orb_occ for i in range(n_orb_vir)]
+        n_orb = n_qubits // 2
+    if n_electrons is not None:
+        n_orb_occ = int(numpy.ceil(n_electrons / 2))
+        n_orb_vir = n_orb - n_orb_occ
+        occ_indices = [i for i in range(n_orb_occ)]
+        vir_indices = [i + n_orb_occ for i in range(n_orb_vir)]
     warn_flag = False
     if occ_orb is not None:
         if len(set(occ_orb)) != len(occ_orb):
@@ -343,19 +348,27 @@ should be even.')
         vir_indices = vir_orb
     if set(occ_indices).intersection(vir_indices):
         raise ValueError("Occupied and virtual orbitals should be different!")
-    max_idx = list(set(occ_indices + vir_indices))[-1]
+    indices_tot = occ_indices + vir_indices
+    max_idx = 0
+    if set(indices_tot):
+        max_idx = max(set(indices_tot))
     n_orb = max(n_orb, max_idx)
     if warn_flag:
         warnings.warn("[Note] Override n_qubits and n_electrons with manually \
 set occ_orb and vir_orb. Handle with caution!")
 
     if generalized:
-        indices_tot = occ_indices + vir_indices
         occ_indices = indices_tot
         vir_indices = indices_tot
 
     n_occ = len(occ_indices)
+    if n_occ == 0:
+        warnings.warn("The number of occupied orbitals is zero. Ansatz may \
+contain no parameters.")
     n_vir = len(vir_indices)
+    if n_vir == 0:
+        warnings.warn("The number of virtual orbitals is zero. Ansatz may \
+contain no parameters.")
 
     generator_uccsd0_singles = FermionOperator()
     generator_uccsd0_doubles = FermionOperator()

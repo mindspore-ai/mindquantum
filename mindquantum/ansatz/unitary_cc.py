@@ -83,16 +83,20 @@ class UCCAnsatz(Ansatz):
 
     """
 
-    def __init__(self, n_qubits, n_electrons,
+    def __init__(self, n_qubits=None,
+                 n_electrons=None,
                  occ_orb=None, vir_orb=None,
                  generalized=False,
                  trotter_step=1):
-        if not isinstance(n_qubits, int):
+        if n_qubits is not None and not isinstance(n_qubits, int):
             raise ValueError("The number of qubits should be integer, \
 but get {}.".format(type(n_qubits)))
-        if not isinstance(n_electrons, int):
+        if n_electrons is not None and not isinstance(n_electrons, int):
             raise ValueError("The number of electrons should be integer, \
 but get {}.".format(type(n_electrons)))
+        if isinstance(n_electrons, int) and n_electrons > n_qubits:
+            raise ValueError("The number of electrons must be smaller than \
+the number of qubtis (spin-orbitals) in the ansatz!")
         if occ_orb is not None:
             _check_int_list(occ_orb, "occupied orbitals")
         if vir_orb is not None:
@@ -124,4 +128,15 @@ but get {}.".format(type(generalized)))
             # Modify parameter names
             uccsd0_circuit_modified = add_prefix(uccsd0_circuit, "t_" + str(trotter_idx))
             ansatz_circuit += uccsd0_circuit_modified
+        n_qubits_circuit = 0
+        if list(ansatz_circuit):
+            ansatz_circuit.summary(show=False)
+            n_qubits_circuit = ansatz_circuit.n_qubits
+        # If the ansatz's n_qubits is not set by user, use n_qubits_circuit.
+        if self.n_qubits is None:
+            self.n_qubits = n_qubits_circuit
+        if self.n_qubits < n_qubits_circuit:
+            raise ValueError("The number of qubits in the ansatz circuit {} is larger than \
+the input n_qubits {}! Please check input parameters such as occ_orb, etc.".format(
+        n_qubits_circuit, n_qubits))
         self._circuit = ansatz_circuit
