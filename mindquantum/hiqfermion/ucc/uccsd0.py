@@ -307,6 +307,9 @@ but get {}.".format(type(n_qubits)))
     if n_electrons is not None and not isinstance(n_electrons, int):
         raise ValueError("The number of electrons should be integer, \
 but get {}.".format(type(n_electrons)))
+    if isinstance(n_electrons, int) and n_electrons > n_qubits:
+        raise ValueError("The number of electrons must be smaller than \
+the number of qubits (spin-orbitals) in the ansatz!")
     if not isinstance(anti_hermitian, bool):
         raise ValueError("The parameter anti_hermitian should be bool, \
 but get {}.".format(type(anti_hermitian)))

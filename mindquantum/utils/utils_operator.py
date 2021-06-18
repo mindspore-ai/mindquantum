@@ -261,7 +261,10 @@ def hermitian_conjugated(operator):
     elif isinstance(operator, QubitExcitationOperator):
         conjugate_operator = QubitExcitationOperator()
         for term, coefficient in operator.terms.items():
-            conjugate_operator.terms[term] = coefficient.conjugate()
+            # reverse the order and change the action from 0(1) to 1(0)
+            conjugate_term = tuple([(index, 1 - op)
+                                    for (index, op) in reversed(term)])
+            conjugate_operator.terms[conjugate_term] = coefficient.conjugate()
 
     # Unsupported type
     else:
