@@ -322,13 +322,13 @@ class IntrinsicOneParaGate(ParameterGate):
 
     def hermitian(self):
         """
-        Get the mermitian gate of this parameterized gate.
+        Get the hermitian gate of this parameterized gate.
 
         Note:
             We only set the coeff to -coeff.
         """
         hermitian_gate = deepcopy(self)
-
+        hermitian_gate.coeff = 1 * self.coeff
         if isinstance(self.coeff, PR):
             hermitian_gate.coeff *= -1
         else:
