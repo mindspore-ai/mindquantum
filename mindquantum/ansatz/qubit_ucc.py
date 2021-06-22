@@ -54,6 +54,11 @@ class QubitUCCAnsatz(Ansatz):
     Args:
         n_qubits (int): The number of qubits (spin-orbitals) in the simulation.
         n_electrons (int): The number of electrons of the given molecule.
+        occ_orb(list): Indices of manually assigned occupied spatial orbitals.
+        vir_orb(list): Indices of manually assigned virtual spatial orbitals.
+        generalized(bool): Whether to use generalized excitations which
+            do not distinguish occupied or virtual orbitals (qUCCGSD). Currently,
+            generalized=True is not allowed since the theory needs verification.
         trotter_step (int): The number of Trotter steps. Default is one. It is
             recommended to set a value larger than or equal to 2 to achieve a
             good accuracy.
@@ -96,6 +101,7 @@ class QubitUCCAnsatz(Ansatz):
 
     Note:
         The Hartree-Fock circuit is not included.
+        Currently, generalized=True is not allowed since the theory needs verification.
         Reference: Yordan S. Yordanov et al. Phys. Rev. A, 102, 062612 (2020)
     """
     def __init__(self,
