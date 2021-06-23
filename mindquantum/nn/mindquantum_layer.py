@@ -87,14 +87,14 @@ class MindQuantumLayer(nn.Cell):
         self.measurements = measurements
         self.encoder_params_names = encoder_params_names
         self.ansatz_params_names = ansatz_params_names
-        self.weight = Parameter(initializer(weight_init,
-                                            len(ansatz_params_names)),
-                                name="weight")
         self.pqc = generate_pqc_operator(encoder_params_names,
                                          ansatz_params_names,
                                          circuit,
                                          measurements,
                                          n_threads=n_threads)
+        self.weight = Parameter(initializer(weight_init,
+                                            len(ansatz_params_names)),
+                                name="weight")
 
     def final_state(self,
                     encoder_data,

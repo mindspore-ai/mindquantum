@@ -43,7 +43,7 @@ class HGate(NoneParameterGate):
 
     .. math::
 
-        H=\frac{1}{2}\begin{pmatrix}1&1\\1&-1\end{pmatrix}
+        {\rm H}=\frac{1}{\sqrt{2}}\begin{pmatrix}1&1\\1&-1\end{pmatrix}
 
     More usage, please see :class:`mindquantum.gate.XGate`.
     """
@@ -62,7 +62,7 @@ class IGate(NoneParameterGate):
 
     .. math::
 
-        H=\begin{pmatrix}1&0\\0&1\end{pmatrix}
+        {\rm I}=\begin{pmatrix}1&0\\0&1\end{pmatrix}
 
     More usage, please see :class:`mindquantum.gate.XGate`.
     """
@@ -81,7 +81,7 @@ class XGate(NoneParameterGate):
 
     .. math::
 
-        H=\begin{pmatrix}0&1\\1&0\end{pmatrix}
+        {\rm X}=\begin{pmatrix}0&1\\1&0\end{pmatrix}
 
     Note:
         For simplicity, you can do power operator on pauli gate (only works
@@ -135,7 +135,7 @@ class YGate(NoneParameterGate):
 
     .. math::
 
-        H=\frac{1}{2}\begin{pmatrix}0&-i\\i&0\end{pmatrix}
+        {\rm Y}=\begin{pmatrix}0&-i\\i&0\end{pmatrix}
 
     More usage, please see :class:`mindquantum.gate.XGate`.
     """
@@ -166,7 +166,7 @@ class ZGate(NoneParameterGate):
 
     .. math::
 
-        H=\begin{pmatrix}1&0\\0&-1\end{pmatrix}
+        {\rm Z}=\begin{pmatrix}1&0\\0&-1\end{pmatrix}
 
     More usage, please see :class:`mindquantum.gate.XGate`.
     """
@@ -231,7 +231,7 @@ class RX(IntrinsicOneParaGate):
 
     .. math::
 
-        RX=\begin{pmatrix}\cos(\theta/2)&-i\sin(\theta/2)\\
+        {\rm RX}=\begin{pmatrix}\cos(\theta/2)&-i\sin(\theta/2)\\
                        -i\sin(\theta/2)&\cos(\theta/2)\end{pmatrix}
 
     The rotation gate can be initialized in three different ways.
@@ -299,7 +299,7 @@ class RZ(IntrinsicOneParaGate):
 
     .. math::
 
-        RZ=\begin{pmatrix}\exp(-i\theta/2)&0\\
+        {\rm RZ}=\begin{pmatrix}\exp(-i\theta/2)&0\\
                          0&\exp(i\theta/2)\end{pmatrix}
 
     More usage, please see :class:`mindquantum.gate.RX`.
@@ -326,7 +326,7 @@ class RY(IntrinsicOneParaGate):
 
     .. math::
 
-        RY=\begin{pmatrix}\cos(\theta/2)&-\sin(\theta/2)\\
+        {\rm RY}=\begin{pmatrix}\cos(\theta/2)&-\sin(\theta/2)\\
                          \sin(\theta/2)&\cos(\theta/2)\end{pmatrix}
 
     More usage, please see :class:`mindquantum.gate.RX`.
@@ -354,7 +354,7 @@ class PhaseShift(IntrinsicOneParaGate):
 
     .. math::
 
-        RX=\begin{pmatrix}1&0\\
+        {\rm PhaseShift}=\begin{pmatrix}1&0\\
                          0&\exp(i\theta)\end{pmatrix}
 
     More usage, please see :class:`mindquantum.gate.RX`.
@@ -379,7 +379,7 @@ class XX(IntrinsicOneParaGate):
 
     .. math::
 
-        XX_\theta=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_x\otimes\sigma_x
+        {\rm XX_\theta}=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_x\otimes\sigma_x
 
     More usage, please see :class:`mindquantum.gate.RX`.
     """
@@ -411,7 +411,7 @@ class YY(IntrinsicOneParaGate):
 
     .. math::
 
-        YY_\theta=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_y\otimes\sigma_y
+        {\rm YY_\theta}=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_y\otimes\sigma_y
 
     More usage, please see :class:`mindquantum.gate.RX`.
     """
@@ -443,7 +443,7 @@ class ZZ(IntrinsicOneParaGate):
 
     .. math::
 
-        ZZ_\theta=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_Z\otimes\sigma_Z
+        {\rm ZZ_\theta}=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_Z\otimes\sigma_Z
 
     More usage, please see :class:`mindquantum.gate.RX`.
     """
