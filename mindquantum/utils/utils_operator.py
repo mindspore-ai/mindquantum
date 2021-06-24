@@ -55,11 +55,10 @@ def count_qubits(operator):
         for term in operator.terms:
             # a tuple compose of single (qubit_index,operator) subterms
             if term == ():
-                num_qubits = 1
-                return num_qubits
-
-            qubit_indix, _ = zip(*term)
-            num_qubits = max(max(qubit_indix) + 1,
+                qubit_index = (0,)
+            else:
+                qubit_index, _ = zip(*term)
+            num_qubits = max(max(qubit_index) + 1,
                              num_qubits)  # index start with 0
         return num_qubits
 

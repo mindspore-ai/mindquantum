@@ -21,9 +21,10 @@ from mindspore.common import dtype as mstype
 from mindspore.ops._grad.grad_base import bprop_getters
 import mindspore.ops as P
 from mindquantum.circuit import Circuit
-from mindquantum.gate import Hamiltonian
+from mindquantum.gate import Hamiltonian, IGate
 from mindquantum.gate import Projector
 from mindquantum.ops import QubitOperator
+from mindquantum.utils import count_qubits
 from ._check_qnn_input import _check_type_or_iterable_type
 from ._check_qnn_input import _check_circuit
 from ._check_qnn_input import _check_parameters_of_circuit
@@ -168,6 +169,10 @@ def generate_pqc_operator(encoder_params_names,
     pros = [Projector('')]
     if isinstance(measurements[0], Hamiltonian):
         hams = measurements
+        n_qubits_ham = count_qubits(hams[0].hamiltonian)
+        if n_qubits_ham > circuit.n_qubits:
+            circuit += IGate().on(n_qubits_ham - 1)
+            circuit.summary(False)
     if isinstance(measurements[0], Projector):
         for pro in measurements:
             if pro.n_qubits != circuit.n_qubits:
