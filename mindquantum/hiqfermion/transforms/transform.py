@@ -122,14 +122,14 @@ class Transform:
         stores the initial occupation number nonlocally.
         with the formular:
 
-        ..math::
+        .. math::
 
             |f_{M−1}, f_{M−2}, . . . , f_0\rangle → |q_{M−1}, q_{M−2}, . . . , q_0\rangle,
 
         where :math:`q_{m} = |(\sum{i,0,m-1}f_{i}) mod 2 \rangle`.
         Basically, this formular could be written as this,
 
-        ..math::
+        .. math::
 
             p_{i} = \sum{[\pi_{n}]_{i,j}} f_{j},
 

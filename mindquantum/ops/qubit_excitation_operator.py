@@ -115,8 +115,8 @@ class QubitExcitationOperator(_Operator):
         Convert the Qubit excitation operator to the equivalent Qubit operator.
 
         Returns:
-            qubit_operator(QubitOperator): The corresponding QubitOperator
-                according to the definition of Qubit excitation operators.
+            qubit_operator(QubitOperator), The corresponding QubitOperator
+            according to the definition of Qubit excitation operators.
 
         Examples:
             >>> from mindquantum.ops import QubitExcitationOperator
@@ -268,7 +268,7 @@ class QubitExcitationOperator(_Operator):
         Returns:
             QubitExcitationOperator, the normal ordered operator.
 
-        Exmples:
+        Examples:
             >>> from mindquantum.ops import QubitExcitationOperator
             >>> op = QubitExcitationOperator("7 1^")
             >>> op

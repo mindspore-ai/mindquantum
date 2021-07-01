@@ -117,7 +117,7 @@ class MindQuantumLayer(nn.Cell):
                 will be used. Default: None.
 
         Returns:
-            numpy.ndarray: the final quantum state.
+            numpy.ndarray, the final quantum state.
         """
         if circuit is None:
             circuit = self.circuit

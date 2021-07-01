@@ -160,7 +160,7 @@ class MindQuantumAnsatzOnlyLayer(MindQuantumLayer):
                 will be used. Default: None.
 
         Returns:
-            numpy.ndarray: the final quantum state.
+            numpy.ndarray, the final quantum state.
         """
         fake_data = Tensor(np.array([]).astype(np.float32))
         return super().final_state(fake_data,

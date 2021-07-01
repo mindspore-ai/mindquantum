@@ -234,7 +234,7 @@ class PolynomialTensor:
             addend (PolynomialTensor): The addend.
 
         Returns:
-            sum (PolynomialTensor): Mutated self.
+            sum (PolynomialTensor), Mutated self.
 
         Raises:
             TypeError: Cannot add invalid addend type.
@@ -265,7 +265,7 @@ class PolynomialTensor:
             added(PolynomialTensor): The addend.
 
         Returns:
-            sum (PolynomialTensor): un-mutated self, but has new instance
+            sum (PolynomialTensor), un-mutated self, but has new instance
 
         Raises：
             TypeError: Cannot add invalid operator type.
@@ -288,7 +288,7 @@ class PolynomialTensor:
             subtractend (PolynomialTensor): subtractend.
 
         Returns:
-            subtract (PolynomialTensor): Mutated self.
+            subtract (PolynomialTensor), Mutated self.
 
         Raises:
             TypeError: Cannot sub invalid addend type.
@@ -319,7 +319,7 @@ class PolynomialTensor:
             subtractend(PolynomialTensor): The subtractend.
 
         Returns:
-            subtractend (PolynomialTensor): un-mutated self,
+            subtractend (PolynomialTensor), un-mutated self,
             but has new instance
 
         Raises：
@@ -336,7 +336,7 @@ class PolynomialTensor:
         terms (same operator).
 
         Args:
-                multiplier(complex, float, or PolynomialTensor): multiplier
+            multiplier(complex, float, or PolynomialTensor): multiplier
 
         Returns:
             products(PolynomialTensor)
@@ -382,7 +382,7 @@ class PolynomialTensor:
             multiplier (PolynomialTensor): The multiplier to multiply.
 
         Returns:
-            multiply (PolynomialTensor): un-Mutated self.
+            multiply (PolynomialTensor), un-Mutated self.
 
         Raises:
             TypeError: Cannot multiply invalid type.
