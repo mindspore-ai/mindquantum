@@ -33,7 +33,7 @@ def count_qubits(operator):
             FermionOperator or QubitOperator or QubitExcitationOperator.
 
     Returns:
-        num_qubits (int): The minimum number of qubits on which operator acts.
+        num_qubits (int), The minimum number of qubits on which operator acts.
 
     Raises:
        TypeError: Operator of invalid type.
@@ -107,7 +107,7 @@ def _normal_ordered_term(term, coefficient):
     r"""
     return the normal order order of a fermion operator with
     larger index and creation operator in front.
-    eg. a_4\dagger a3_\dagger a_2 a_1.
+    eg. :math:`a_4\dagger a3_\dagger a_2 a_1`.
     """
     term = list(term)
     ordered_term = FermionOperator()
@@ -175,7 +175,7 @@ def get_fermion_operator(operator):
     """Convert the tensor (PolynomialTensor) to FermionOperator.
 
     Returns:
-        fermion_operator: An instance of the FermionOperator class.
+        fermion_operator, An instance of the FermionOperator class.
     """
     fermion_operator = FermionOperator()
 
@@ -232,7 +232,7 @@ def hermitian_conjugated(operator):
 
     Returns:
         operator (Union[FermionOperator, QubitOperator, QubitExcitationOperator]),
-            the hermitian form of the input operator.
+        the hermitian form of the input operator.
 
     Examples:
         >>> from mindquantum.ops import QubitOperator
@@ -309,7 +309,7 @@ def sz_operator(n_spatial_orbitals):
         n_spatial_orbitals (int): number of spatial orbitals (n_qubits // 2).
 
     Returns:
-        operator (FermionOperator): corresponding to the sz operator over
+        operator (FermionOperator), corresponding to the sz operator over
         n_spatial_orbitals.
 
     Note:

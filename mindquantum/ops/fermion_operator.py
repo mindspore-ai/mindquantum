@@ -233,7 +233,7 @@ def _normal_ordered_term(term, coefficient):
     r"""Return the normal ordered term of the FermionOperator with high index
     and creation operator in front.
 
-    eg. a_3\dagger a_2\dagger a_1 a_0
+    eg. :math:`a_3\dagger a_2\dagger a_1 a_0`
 
     """
     term = list(term)

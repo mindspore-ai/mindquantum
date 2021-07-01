@@ -34,22 +34,23 @@ class InteractionOperator(PolynomialTensor):
     and parity. In this module, the stored coefficient could be represented the
     molecualr Hamiltonians througth the FermionOperator class.
 
-    Notes:
+    Note:
         The operators stored in this class has the form:
+        .. math::
 
-        constant + \sum_{p, q} h_[p, q] a^\dagger_p a_q +
-        \sum_{p, q, r, s} h_[p, q, r, s] a^\dagger_p a^\dagger_q a_r a_s.
+            constant + \sum_{p, q} h_[p, q] a^\dagger_p a_q +
+            \sum_{p, q, r, s} h_[p, q, r, s] a^\dagger_p a^\dagger_q a_r a_s.
 
     Args:
         constant (number.Numbers): A constant term in the operator given as a
                 float. For instance, the nuclear repulsion energy.
         one_body_tensor (numpy.array): The coefficients of the one-body terms (h[p, q]).
             This is an n_qubits x n_qubits numpy array of floats. By default we
-            store the numpy array with keys: a^\dagger_p a_q (1,0).
+            store the numpy array with keys: :math:`a^\dagger_p a_q` (1,0).
         two_body_tensor (numpy.array): The coefficients of the two-body terms
             (h[p, q, r, s]). This is an n_qubits x n_qubits x n_qubits x
             n_qubits numpy array of floats.By default we store the numpy array
-            with keys: a^\dagger_p a^\dagger_q a_r a_s (1, 1, 0, 0).
+            with keys: :math:`a^\dagger_p a^\dagger_q a_r a_s` (1, 1, 0, 0).
     """
     def __init__(self, constant, one_body_tensor, two_body_tensor):
         # make sure only non-zero tensor elements exist in the normal-ordered

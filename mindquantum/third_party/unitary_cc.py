@@ -39,10 +39,10 @@ def uccsd_singlet_get_packed_amplitudes(single_amplitudes, double_amplitudes,
         n_electrons(int): Number of electrons in the physical system.
 
     Returns:
-        packed_amplitudes(list): List storing the unique single
-            and double excitation amplitudes for a singlet UCCSD operator.
-            The ordering lists unique single excitations before double
-            excitations.
+        packed_amplitudes(list), List storing the unique single
+        and double excitation amplitudes for a singlet UCCSD operator.
+        The ordering lists unique single excitations before double
+        excitations.
     """
     n_spatial_orbitals = n_qubits // 2
     n_occupied = int(numpy.ceil(n_electrons / 2))
@@ -116,8 +116,8 @@ def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):
             rather than unitary variant, primarily for testing
 
     Returns:
-        generator(FermionOperator): Generator of the UCCSD operator that
-            builds the UCCSD wavefunction.
+        generator(FermionOperator), Generator of the UCCSD operator that
+        builds the UCCSD wavefunction.
     """
     if n_qubits % 2 != 0:
         raise ValueError('The total number of spin-orbitals should be even.')

@@ -243,7 +243,7 @@ class _Operator(metaclass=ABCMeta):
             operator (QubitOperator): The operator to add.
 
         Returns:
-            sum (QubitOperator): Mutated self.
+            sum (QubitOperator), Mutated self.
 
         Raises:
             TypeError: Cannot add invalid operator type.
