@@ -119,7 +119,7 @@ def _normal_ordered_term(term, coefficient):
             # a\dagger operator
             if not left_sub_term[1] and right_sub_term[1]:
                 term[j], term[j - 1] = left_sub_term, right_sub_term
-                coefficient *= -1
+                coefficient = coefficient * -1
                 # If indice are same, employ the anti-commutation relationship
                 # And generate the new term
                 if left_sub_term[0] == right_sub_term[0]:
@@ -134,7 +134,7 @@ def _normal_ordered_term(term, coefficient):
                 # Swap them if same operator but lower index on left
                 if left_sub_term[0] < right_sub_term[0]:
                     term[j], term[j - 1] = left_sub_term, right_sub_term
-                    coefficient *= -1
+                    coefficient = coefficient * -1
 
     # Add the term and return.
     ordered_term += FermionOperator(tuple(term), coefficient)
