@@ -353,7 +353,7 @@ class IntrinsicOneParaGate(ParameterGate):
             you don't need any parameters to get this matrix.
 
         Returns:
-            np.array, Return the numpy array of the matrix.
+            numpy.ndarray, Return the numpy array of the matrix.
 
         Examples:
             >>> rx1 = RX(0)

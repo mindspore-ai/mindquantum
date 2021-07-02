@@ -29,6 +29,7 @@ from mindquantum.gate import H
 from mindquantum.gate import X
 from mindquantum.gate import RZ
 from mindquantum.gate import RY
+from mindquantum.parameterresolver import ParameterResolver
 from .circuit import Circuit
 
 
@@ -194,7 +195,7 @@ def decompose_single_term_time_evolution(term, para):
     Args:
         term (tuple, QubitOperator): the hamiltonian term of just the
             evolution qubit operator.
-        para (dict): the parameters of evolution operator.
+        para (Union[dict, number.Numbers]): the parameters of evolution operator.
 
     Returns:
         Circuit, a quantum circuit.
@@ -241,7 +242,10 @@ def decompose_single_term_time_evolution(term, para):
 
         for i in range(len(term) - 1):
             out.append(X.on(term[i + 1][0], term[i][0]))
-        out.append(RZ({i: 2 * j for i, j in para.items()}).on(term[-1][0]))
+        if isinstance(para, (dict, ParameterResolver)):
+            out.append(RZ({i: 2 * j for i, j in para.items()}).on(term[-1][0]))
+        else:
+            out.append(RZ(2 * para).on(term[-1][0]))
         for i in range(len(out) - 1)[::-1]:
             if i in rxs:
                 out.append(RX(np.pi * 3.5).on(out[i].obj_qubits))

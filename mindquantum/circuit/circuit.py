@@ -262,7 +262,7 @@ class Circuit(list):
         Get the parameter name of this circuit.
 
         Returns:
-            list[str], a list that contains the parameter name.
+            list, a list that contains the parameter name.
 
         Examples:
             >>> from mindquantum.gate import RX
