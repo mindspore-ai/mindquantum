@@ -111,6 +111,7 @@ def generate_evolution_operator(circuit, param_names=None, hams=None):
         >>> from mindspore import Tensor
         >>> import mindquantum.gate as G
         >>> from mindquantum import Circuit
+        >>> from mindquantum.nn import generate_evolution_operator
         >>> circ = Circuit(G.RX('a').on(0))
         >>> evol = generate_evolution_operator(circ, ['a'])
         >>> state = evol(Tensor(np.array([0.5]).astype(np.float32)))

@@ -40,16 +40,17 @@ def bprint(strings: list,
 
     Args:
         strings (list[str]): Information you want to output.
-        align (str): The align char alone vertal direction.
-        title (str): The title of this information block.
-        v_around (str): Vertical boundary char.
-        h_around (str): horizontal boundary char.
-        fill_char (str): Empty space fill with this char.
+        align (str): The align char alone vertal direction. Default: ":".
+        title (str): The title of this information block. Default: "".
+        v_around (str): Vertical boundary char. Default: "=".
+        h_around (str): horizontal boundary char. Default: "|".
+        fill_char (str): Empty space fill with this char. Default: " ".
 
     Returns:
-        list(str), Formatted string.
+        list, a list of formatted string.
 
     Examples:
+        >>> from mindquantum.utils import bprint
         >>> title='Info of Bob'
         >>> o = bprint(['Name:Bob', 'Age:17', 'Nationality:China'],
         >>>     title=title)

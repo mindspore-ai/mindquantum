@@ -43,14 +43,8 @@ def _pij(i: int, j: int):
     ib = i * 2 + 1
     ja = j * 2 + 0
     jb = j * 2 + 1
-    term1 = FermionOperator(
-        ((ja, 0), (ib, 0)),
-        1.0
-    )
-    term2 = FermionOperator(
-        ((ia, 0), (jb, 0)),
-        1.0
-    )
+    term1 = FermionOperator(((ja, 0), (ib, 0)), 1.0)
+    term2 = FermionOperator(((ia, 0), (jb, 0)), 1.0)
     return numpy.sqrt(0.5) * (term1 + term2)
 
 
@@ -71,10 +65,7 @@ def _qij_plus(i: int, j: int):
     """
     ia = i * 2 + 0
     ja = j * 2 + 0
-    term = FermionOperator(
-        ((ja, 0), (ia, 0)),
-        1.0
-    )
+    term = FermionOperator(((ja, 0), (ia, 0)), 1.0)
     return term
 
 
@@ -86,10 +77,7 @@ def _qij_minus(i: int, j: int):
     """
     ib = i * 2 + 1
     jb = j * 2 + 1
-    term = FermionOperator(
-        ((jb, 0), (ib, 0)),
-        1.0
-    )
+    term = FermionOperator(((jb, 0), (ib, 0)), 1.0)
     return term
 
 
@@ -103,14 +91,8 @@ def _qij_0(i: int, j: int):
     ib = i * 2 + 1
     ja = j * 2 + 0
     jb = j * 2 + 1
-    term1 = FermionOperator(
-        ((ja, 0), (ib, 0)),
-        1.0
-    )
-    term2 = FermionOperator(
-        ((ia, 0), (jb, 0)),
-        1.0
-    )
+    term1 = FermionOperator(((ja, 0), (ib, 0)), 1.0)
+    term2 = FermionOperator(((ia, 0), (jb, 0)), 1.0)
     return numpy.sqrt(0.5) * (term1 - term2)
 
 
@@ -225,9 +207,9 @@ def spin_adapted_t2(creation_list, annihilation_list):
     _check_int_list(annihilation_list, "annihilation operators")
 
     if len(creation_list) != 2 or len(annihilation_list) != 2:
-        raise ValueError("T2 excitations take exactly 2 indices for both \
-creation and annihilation operators, but get {} and {} indices.".format(
-    len(creation_list), len(annihilation_list)))
+        raise ValueError(f"T2 excitations take exactly 2 indices for both \
+creation and annihilation operators, \
+but get {len(creation_list)} and {len(annihilation_list)} indices.")
 
     p = creation_list[0]
     r = annihilation_list[0]
@@ -239,25 +221,39 @@ creation and annihilation operators, but get {} and {} indices.".format(
     return tpqrs_list
 
 
-def uccsd0_singlet_generator(n_qubits=None, n_electrons=None, anti_hermitian=True,
-                             occ_orb=None, vir_orb=None, generalized=False):
+def uccsd0_singlet_generator(n_qubits=None,
+                             n_electrons=None,
+                             anti_hermitian=True,
+                             occ_orb=None,
+                             vir_orb=None,
+                             generalized=False):
     r"""
     Generate UCCSD operators using CCD0 ansatz for molecular systems.
 
+    Note:
+        Manually assigned occ_orb or vir_orb are indices of spatial orbitals
+        instead of spin-orbitals. They will override n_electrons and
+        n_qubits. This is to some degree similar to the active space,
+        therefore can reduce the number of variational parameters. However, it
+        may not reduce the number of required qubits, since Fermion
+        excitation operators are non-local, i.e.,
+        :math:`a_{7}^{\dagger} a_{0}` involves not only the 0th and 7th
+        qubit, but also the 1st, 2nd, ... 6th qubit.
+
     Args:
-        n_qubits(int): Number of qubits (spin-orbitals).
-        n_electrons(int): Number of electrons (occupied spin-orbitals).
+        n_qubits(int): Number of qubits (spin-orbitals). Default: None.
+        n_electrons(int): Number of electrons (occupied spin-orbitals). Default: None.
         anti_hermitian(bool): Whether to subtract the hermitian conjugate
-            to form anti-Hermitian operators.
+            to form anti-Hermitian operators. Default: True.
         occ_orb(list): Indices of manually assigned occupied spatial
-            orbitals.
+            orbitals. Default: None.
         vir_orb(list): Indices of manually assigned virtual spatial
-            orbitals.
+            orbitals. Default: None.
         generalized(bool): Whether to use generalized excitations which
-            do not distinguish occupied or virtual orbitals (UCCGSD).
+            do not distinguish occupied or virtual orbitals (UCCGSD). Default: False.
 
     Returns:
-        generator_uccsd0(FermionOperator): Generator of the UCCSD operators that uses CCD0 ansatz.
+        FermionOperator, Generator of the UCCSD operators that uses CCD0 ansatz.
 
     Examples:
         >>> from mindquantum.hiqfermion.ucc.uccsd0 import uccsd0_singlet_generator
@@ -290,16 +286,6 @@ def uccsd0_singlet_generator(n_qubits=None, n_electrons=None, anti_hermitian=Tru
         1.0*d0_s_0 [2^ 0] +
         1.0*d0_s_0 [3^ 1] +
         -2.0*d0_d_0 [3^ 2^ 1 0]
-
-    Note:
-        Manually assigned occ_orb or vir_orb are indices of spatial orbitals
-        instead of spin-orbitals. They will override n_electrons and
-        n_qubits. This is to some degree similar to the active space,
-        therefore can reduce the number of variational parameters. However, it
-        may not reduce the number of required qubits, since Fermion
-        excitation operators are non-local, i.e.,
-        :math:`a_{7}^{\dagger} a_{0}` involves not only the 0th and 7th
-        qubit, but also the 1st, 2nd, ... 6th qubit.
     """
     if n_qubits is not None and not isinstance(n_qubits, int):
         raise ValueError("The number of qubits should be integer, \

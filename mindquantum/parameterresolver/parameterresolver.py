@@ -32,6 +32,7 @@ class ParameterResolver(dict):
         data (dict): initial parameter names and its values.
 
     Examples:
+        >>> from mindquantum import ParameterResolver
         >>> pr = ParameterResolver({'a': 0.3})
         >>> pr['b'] = 0.5
         >>> pr.no_grad_part('a')
@@ -99,12 +100,13 @@ class ParameterResolver(dict):
         Add a parameter resolver with other parameter.
 
         Returns:
-            :class:`mindquantum.parameterresolver.ParameterResolver`
+            ParameterResolver, parameter resolver after adding.
 
         Args:
             pr (ParameterResolver): The parameter resolver need to add.
 
         Examples:
+            >>> from mindquantum import ParameterResolver
             >>> pr1 = ParameterResolver({'a': 1})
             >>> pr2 = ParameterResolver({'a': 2, 'b': 3})
             >>> (pr1 + pr2).expression()
@@ -220,9 +222,10 @@ class ParameterResolver(dict):
         Get the parameters name.
 
         Returns:
-            list[str], Parameters name.
+            list, a list of parameters name.
 
         Examples:
+            >>> from mindquantum import ParameterResolver
             >>> pr = ParameterResolver({'a': 1, 'b': 2})
             >>> pr.para_name
             ['a', 'b']
@@ -235,9 +238,10 @@ class ParameterResolver(dict):
         Get the parameters value.
 
         Returns:
-            list[float], Parameters value.
+            list, a list of parameters value.
 
         Examples:
+            >>> from mindquantum import ParameterResolver
             >>> pr = ParameterResolver({'a': 1, 'b': 2})
             >>> pr.para_value
             [1, 2]
@@ -247,12 +251,13 @@ class ParameterResolver(dict):
     def requires_grad(self):
         """
         Set all parameters of this parameter resolver to require gradient
-        calculation.
+        calculation. Inplace operation.
 
         Returns:
-            :class:`mindquantum.parameterresolver.ParameterResolver`
+            ParameterResolver, the parameter resolver itself.
 
         Examples:
+            >>> from mindquantum import ParameterResolver
             >>> pr = ParameterResolver({'a': 1, 'b': 2})
             >>> pr.no_grad_part('a')
             >>> pr.requires_grad()
@@ -265,12 +270,13 @@ class ParameterResolver(dict):
 
     def no_grad(self):
         """
-        Set all parameters to not require gradient calculation.
+        Set all parameters to not require gradient calculation. Inplace operation.
 
         Returns:
-            :class:`mindquantum.parameterresolver.ParameterResolver`
+            ParameterResolver, the parameter resolver itself.
 
         Examples:
+            >>> from mindquantum import ParameterResolver
             >>> pr = ParameterResolver({'a': 1, 'b': 2})
             >>> pr.no_grad()
             >>> pr.requires_grad_parameters
@@ -282,15 +288,16 @@ class ParameterResolver(dict):
 
     def requires_grad_part(self, *names):
         """
-        Set part of parameters that requires grad.
+        Set part of parameters that requires grad. Inplace operation.
 
         Args:
             names (tuple[str]): Parameters that requires grad.
 
         Returns:
-            :class:`mindquantum.parameterresolver.ParameterResolver`
+            ParameterResolver, the parameter resolver itself.
 
         Examples:
+            >>> from mindquantum import ParameterResolver
             >>> pr = ParameterResolver({'a': 1, 'b': 2})
             >>> pr.no_grad()
             >>> pr.requires_grad_part('a')
@@ -319,9 +326,10 @@ class ParameterResolver(dict):
             names (tuple[str]): Parameters that not requires grad.
 
         Returns:
-            :class:`mindquantum.parameterresolver.ParameterResolver`
+            ParameterResolver, the parameter resolver itself.
 
         Examples:
+            >>> from mindquantum import ParameterResolver
             >>> pr = ParameterResolver({'a': 1, 'b': 2})
             >>> pr.no_grad_part('a')
             >>> pr.requires_grad_parameters
@@ -346,14 +354,14 @@ class ParameterResolver(dict):
         Update this parameter resolver with other parameter resolver.
 
         Args:
-            others (:class:`mindquantum.parameterresolver.ParameterResolver`):
-                other parameter resolver.
+            others (ParameterResolver): other parameter resolver.
 
         Raises:
             ValueError: If some parameters require grad and not require grad in
                 other parameter resolver and vise versa.
 
         Examples:
+            >>> from mindquantum import ParameterResolver
             >>> pr1 = ParameterResolver({'a': 1})
             >>> pr2 = ParameterResolver({'b': 2})
             >>> pr2.no_grad()
@@ -399,7 +407,7 @@ resolver and not require grad in other parameter resolver ".format(conflict))
         Get the expression of this parameter resolver.
 
         Returns:
-            sympy.Expr
+            sympy.Expr, the symbol expression of this parameter resolver.
 
         Examples:
             >>> from mindquantum.parameterresolver import ParameterResolver as PR
@@ -417,7 +425,7 @@ resolver and not require grad in other parameter resolver ".format(conflict))
         Get the conjugate of the parameter resolver.
 
         Returns:
-            ParameterResolver
+            ParameterResolver, the conjugate version of this parameter resolver.
 
         Examples:
             >>> from mindquantum.parameterresolver import ParameterResolver as PR
@@ -441,6 +449,8 @@ resolver and not require grad in other parameter resolver ".format(conflict))
         Returns:
             number.Numbers, the combination result.
 
+        Examples:
+        >>> from mindquantum import ParameterResolver
         >>> pr1 = ParameterResolver({'a': 1, 'b': 2})
         >>> pr2 = ParameterResolver({'a': 2, 'b': 3})
         >>> pr1.combination(pr2)
@@ -461,6 +471,9 @@ resolver and not require grad in other parameter resolver ".format(conflict))
         """
         Get the real part of this parameter resolver
 
+        Returns:
+            ParameterResolver, the real part of this parameter resolver.
+
         Examples:
             >>> from mindquantum.parameterresolver import ParameterResolver as PR
             >>> pr = PR({'a': 1.2 + 1.3j})
@@ -476,6 +489,9 @@ resolver and not require grad in other parameter resolver ".format(conflict))
     def imag(self):
         """
         Get the real part of this parameter resolver
+
+        Returns:
+            ParameterResolver, the image part of this parameter resolver.
 
         Examples:
             >>> from mindquantum.parameterresolver import ParameterResolver as PR

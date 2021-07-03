@@ -84,12 +84,15 @@ class Transform:
 
         .. math::
 
-            a^\dagger_{j}-> \sigma^{-}_{j} X \sigma^{Z}_{j-1}...\sigma^{Z}_{0}
+            a^\dagger_{j}\rightarrow \sigma^{-}_{j} X \prod_{i=0}^{j-1}\sigma^{Z}_{i}
 
-            a_{j}-> \sigma^{+}_{j} X \sigma^{Z}_{j-1}...\sigma^{Z}_{0},
+            a_{j}\rightarrow \sigma^{+}_{j} X \prod_{i=0}^{j-1}\sigma^{Z}_{i},
 
-        where the :math:`\sigma_{+}= \sigma^{X} + i \sigma^{Y} and \sigma_{-} = \sigma^{X} - i\sigma^{Y}` is the
+        where the :math:`\sigma_{+}= \sigma^{X} + i \sigma^{Y}` and :math:`\sigma_{-} = \sigma^{X} - i\sigma^{Y}` is the
         Pauli spin raising and lowring operator.
+
+        Returns:
+            QubitOperator, qubit operator after jordan_wigner transformation.
         """
         if not isinstance(self.operator, FermionOperator):
             raise TypeError(
@@ -124,27 +127,33 @@ class Transform:
 
         .. math::
 
-            |f_{M−1}, f_{M−2}, . . . , f_0\rangle → |q_{M−1}, q_{M−2}, . . . , q_0\rangle,
+            \left|f_{M−1}, f_{M−2},\cdots, f_0\right> → \left|q_{M−1}, q_{M−2},\cdots, q_0\right>,
 
-        where :math:`q_{m} = |(\sum{i,0,m-1}f_{i}) mod 2 \rangle`.
+        where
+
+        .. math::
+
+            q_{m} = \left|\left(\sum_{i=0}^{m-1}f_{i}\right) mod\ 2 \right>
+
         Basically, this formular could be written as this,
 
         .. math::
 
             p_{i} = \sum{[\pi_{n}]_{i,j}} f_{j},
 
-        where :math:`\pi_{n}` is the N X N square matrix,
-        N is the total qubit number. The operator changes follows the following equation as:
+        where :math:`\pi_{n}` is the :math:`N\times N` square matrix,
+        :math:`N` is the total qubit number. The operator changes follows the following equation as:
 
         .. math::
 
-            a^\dagger_{j}->\frac{1}{2} {\sigma^{X}_{N} X ...\sigma^{X}_{j+1} X \sigma^{X}{j} X \sigma^{Z}_{j-1}
-                - i*sigma^{X}_{N} X ...\sigma^{X}_{j+1} X \sigma^{Y}{j} X \sigma^{Z}_{j-1}
-                }
+            a^\dagger_{j}\rightarrow\frac{1}{2}\left(\prod_{i=j+1}^N
+            \left(\sigma_i^X X\right)\right)\left( \sigma^{X}_{j}-i\sigma_j^Y\right) X \sigma^{Z}_{j-1}
 
-            a_{j}->\frac{1}{2} {\sigma^{X}_{N} X ...\sigma^{X}_{j+1} X \sigma^{X}{j} X \sigma^{Z}_{j-1}
-            + i*sigma^{X}_{N} X ...\sigma^{X}_{j+1} X \sigma^{Y}{j} X \sigma^{Z}_{j-1}
-            }
+            a_{j}\rightarrow\frac{1}{2}\left(\prod_{i=j+1}^N
+            \left(\sigma_i^X X\right)\right)\left( \sigma^{X}_{j}+i\sigma_j^Y\right) X \sigma^{Z}_{j-1}
+
+        Returns:
+            QubitOperator, qubits operator after parity transformation.
         """
         if not isinstance(self.operator, FermionOperator):
             raise TypeError(
@@ -177,40 +186,44 @@ class Transform:
         The Bravyi-Kitaev basis is a middle between Jordan-Wigner
         and parity transform. That is, it balances the locality of occupation and parity information
         for improved simulation efficiency. In this scheme, qubits store the parity
-        of a set of 2^x orbitals, where x ≥ 0. A qubit of index j always
-        stores orbital j.
-        For even values of j, this is the only orbital
-        that it stores, but for odd values of j, it also stores a certain
-        set of adjacent orbitals with index less than j.
+        of a set of :math:`2^x` orbitals, where :math:`x \ge 0`. A qubit of index j always
+        stores orbital :math:`j`.
+        For even values of :math:`j`, this is the only orbital
+        that it stores, but for odd values of :math:`j`, it also stores a certain
+        set of adjacent orbitals with index less than :math:`j`.
         For the occupation transformation, we follow the
         formular:
 
         ..math::
 
-            b_{i} = \sum{[\beta_{n}]_{i,j}} f_{j}
+            b_{i} = \sum{[\beta_{n}]_{i,j}} f_{j},
 
-        where :math:`\beta_{n}` is the N X N square matrix,
-        N is the total qubit number.
+        where :math:`\beta_{n}` is the :math:`N\times N` square matrix,
+        :math:`N` is the total qubit number.
         The qubits index are divide into three sets,
         the parity set, the update set and flip set.
         The parity of this set of qubits has
-        the same parity as the set of orbitals with index less than j,
+        the same parity as the set of orbitals with index less than :math:`j`,
         and so we will call this set of qubit indices the "parity set" of
-        index j, or P(j).
+        index :math:`j`, or :math:`P(j)`.
 
-        the update set of index j, or U(j) contains the set of qubits (other than
-        qubit j) that must be updated when the occupation of orbital j
+        the update set of index :math:`j`, or :math:`U(j)` contains the set of qubits (other than
+        qubit :math:`j`) that must be updated when the occupation of orbital :math:`j`
         This is the set of qubits in the Bravyi-Kitaev basis that store a
-        partial sum including orbital j.
-        the flip set of index j, or F(j) contains the set of BravyiKitaev qubits determines
-        whether qubit j has the same parity or inverted parity with respect to orbital j.
+        partial sum including orbital :math:`j`.
+        the flip set of index :math:`j`, or :math:`F(j)` contains the set of BravyiKitaev qubits determines
+        whether qubit :math:`j` has the same parity or inverted parity with
+        respect to orbital :math:`j`.
 
         Please see some detail explanation in the paper (THE JOURNAL OF
         CHEMICAL PHYSICS 137, 224109 (2012)).
 
-        Implementation from arXiv:quant-ph/0003137 and
+        Implementation from https://arxiv.org/pdf/quant-ph/0003137.pdf and
         "A New Data Structure for Cumulative Frequency Tables"
         by Peter M. Fenwick.
+
+        Returns:
+            QubitOperator, qubit operator after bravyi_kitaev transformation.
         """
         if not isinstance(self.operator, FermionOperator):
             raise TypeError(
@@ -242,16 +255,19 @@ class Transform:
     def bravyi_kitaev_superfast(self):
         r"""
         Apply Bravyi-Kitaev Superfast transform.
-        Implementation from arxiv:1712.00446.
+        Implementation from https://arxiv.org/pdf/1712.00446.pdf
 
         Note that only hermitian operators of form
 
         .. math::
 
-            constant + \sum_{p, q} h_{p, q} a^\dagger_p a_q +
+            C + \sum_{p, q} h_{p, q} a^\dagger_p a_q +
                 \sum_{p, q, r, s} h_{p, q, r, s} a^\dagger_p a^\dagger_q a_r a_s
 
-        can be transformed.
+        where :math:`C` is a constant, be transformed.
+
+        Returns:
+            QubitOperator, qubit operator after bravyi_kitaev_superfast.
         """
         if not isinstance(self.operator, FermionOperator):
             raise TypeError(
@@ -356,7 +372,10 @@ class Transform:
     def ternary_tree(self):
         """
         Apply Ternary tree transform.
-        Implementation from arxiv:1910.10746.
+        Implementation from https://arxiv.org/pdf/1910.10746.pdf.
+
+        Returns:
+            QubitOperator, qubit operator after ternary_tree transformation.
         """
         h = floor(log(2 * self.n_qubits + 1, 3))
         d = self.n_qubits - (3**h - 1) // 2
@@ -412,6 +431,9 @@ class Transform:
     def reversed_jordan_wigner(self):
         """
         Apply reversed Jordan-Wigner transform.
+
+        Returns:
+            FermionOperator, fermion operator after reversed_jordan_wigner transformation.
         """
         if not isinstance(self.operator, QubitOperator):
             raise TypeError(

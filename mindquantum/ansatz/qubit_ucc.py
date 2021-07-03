@@ -14,7 +14,6 @@
 # ============================================================================
 """Qubit unitary coupled-cluster ansatz."""
 
-
 import warnings
 import itertools
 
@@ -51,17 +50,22 @@ class QubitUCCAnsatz(Ansatz):
     Trotterization. Also, the accuracy is greatly improved despite that the
     number of variational parameters is increased.
 
+    Note:
+        The Hartree-Fock circuit is not included.
+        Currently, generalized=True is not allowed since the theory needs verification.
+        Reference: Yordan S. Yordanov et al. Phys. Rev. A, 102, 062612 (2020)
+
     Args:
-        n_qubits (int): The number of qubits (spin-orbitals) in the simulation.
-        n_electrons (int): The number of electrons of the given molecule.
-        occ_orb(list): Indices of manually assigned occupied spatial orbitals.
-        vir_orb(list): Indices of manually assigned virtual spatial orbitals.
+        n_qubits (int): The number of qubits (spin-orbitals) in the simulation. Default: None.
+        n_electrons (int): The number of electrons of the given molecule. Default: None.
+        occ_orb(list): Indices of manually assigned occupied spatial orbitals. Default: None.
+        vir_orb(list): Indices of manually assigned virtual spatial orbitals. Default: None.
         generalized(bool): Whether to use generalized excitations which
             do not distinguish occupied or virtual orbitals (qUCCGSD). Currently,
-            generalized=True is not allowed since the theory needs verification.
+            generalized=True is not allowed since the theory needs verification. Default: False.
         trotter_step (int): The number of Trotter steps. Default is one. It is
             recommended to set a value larger than or equal to 2 to achieve a
-            good accuracy.
+            good accuracy. Default: 1.
 
     Examples:
         >>> from mindquantum.ansatz import QubitUCCAnsatz
@@ -98,11 +102,6 @@ class QubitUCCAnsatz(Ansatz):
         1.0*t_0_q_d_3 [Q5^ Q4^ Q3 Q0] , -1.0*t_0_q_d_4 [Q3^ Q1^ Q5 Q4] +
         1.0*t_0_q_d_4 [Q5^ Q4^ Q3 Q1] , -1.0*t_0_q_d_5 [Q3^ Q2^ Q5 Q4] +
         1.0*t_0_q_d_5 [Q5^ Q4^ Q3 Q2] ]
-
-    Note:
-        The Hartree-Fock circuit is not included.
-        Currently, generalized=True is not allowed since the theory needs verification.
-        Reference: Yordan S. Yordanov et al. Phys. Rev. A, 102, 062612 (2020)
     """
     def __init__(self,
                  n_qubits=None,
@@ -136,10 +135,8 @@ but get {}.".format(type(generalized)))
         if not isinstance(trotter_step, int) or trotter_step < 1:
             raise ValueError("Trotter step must be a positive integer!")
         # n_qubits is also need for _implement()
-        super().__init__("Qubit UCC", n_qubits,
-                         n_qubits, n_electrons,
-                         occ_orb, vir_orb,
-                         generalized, trotter_step)
+        super().__init__("Qubit UCC", n_qubits, n_qubits, n_electrons, occ_orb,
+                         vir_orb, generalized, trotter_step)
 
     def _single_qubit_excitation_circuit(self, i, k, theta):
         """
@@ -199,25 +196,29 @@ should be even.')
         warn_flag = False
         if occ_orb is not None:
             if len(set(occ_orb)) != len(occ_orb):
-                raise ValueError("Indices for occupied orbitals should be unique!")
+                raise ValueError(
+                    "Indices for occupied orbitals should be unique!")
             warn_flag = True
             n_orb_occ = len(occ_orb)
             occ_indices = occ_orb
         if vir_orb is not None:
             if len(set(vir_orb)) != len(vir_orb):
-                raise ValueError("Indices for virtual orbitals should be unique!")
+                raise ValueError(
+                    "Indices for virtual orbitals should be unique!")
             warn_flag = True
             n_orb_vir = len(vir_orb)
             vir_indices = vir_orb
         if set(occ_indices).intersection(vir_indices):
-            raise ValueError("Occupied and virtual orbitals should be different!")
+            raise ValueError(
+                "Occupied and virtual orbitals should be different!")
         indices_tot = occ_indices + vir_indices
         max_idx = 0
         if set(indices_tot):
             max_idx = max(set(indices_tot))
         n_orb = max(n_orb, max_idx)
         if warn_flag:
-            warnings.warn("[Note] Override n_qubits and n_electrons with manually \
+            warnings.warn(
+                "[Note] Override n_qubits and n_electrons with manually \
 set occ_orb and vir_orb. Handle with caution!")
 
         if generalized:
@@ -226,7 +227,8 @@ set occ_orb and vir_orb. Handle with caution!")
 
         n_occ = len(occ_indices)
         if n_occ == 0:
-            warnings.warn("The number of occupied orbitals is zero. Ansatz may \
+            warnings.warn(
+                "The number of occupied orbitals is zero. Ansatz may \
 contain no parameters.")
         n_vir = len(vir_indices)
         if n_vir == 0:
@@ -257,7 +259,8 @@ contain no parameters.")
         generator_quccsd_doubles = []
         for trotter_idx in range(trotter_step):
             singles_counter = 0
-            for (p, q) in itertools.product(vir_indices_spin, occ_indices_spin):
+            for (p, q) in itertools.product(vir_indices_spin,
+                                            occ_indices_spin):
                 coeff_s = PR({f't_{trotter_idx}_q_s_{singles_counter}': 1})
                 q_pq = QubitExcitationOperator(((p, 1), (q, 0)), 1.)
                 q_pq = q_pq - hermitian_conjugated(q_pq)
@@ -267,7 +270,8 @@ contain no parameters.")
                     # from different Trottered steps.
                     if trotter_idx == 0:
                         generator_quccsd_singles.append(q_pq * coeff_s)
-                    ansatz_circuit += self._single_qubit_excitation_circuit(q, p, coeff_s)
+                    ansatz_circuit += self._single_qubit_excitation_circuit(
+                        q, p, coeff_s)
                     singles_counter += 1
 
             doubles_counter = 0
@@ -279,7 +283,8 @@ contain no parameters.")
                 p = vir_indices_spin[p_idx]
                 q = vir_indices_spin[q_idx]
                 for rs_counter, (r_idx, s_idx) in enumerate(
-                        itertools.product(range(n_occ_spin), range(n_occ_spin))):
+                        itertools.product(range(n_occ_spin),
+                                          range(n_occ_spin))):
                     # Only take half of the loop to avoid repeated excitations
                     if s_idx > r_idx:
                         continue
@@ -297,7 +302,8 @@ contain no parameters.")
                         # from different Trottered steps.
                         if trotter_idx == 0:
                             generator_quccsd_doubles.append(q_pqrs * coeff_d)
-                        ansatz_circuit += self._double_qubit_excitation_circuit(r, s, p, q, coeff_d)
+                        ansatz_circuit += self._double_qubit_excitation_circuit(
+                            r, s, p, q, coeff_d)
                         doubles_counter += 1
         n_qubits_circuit = 0
         if list(ansatz_circuit):
@@ -307,8 +313,9 @@ contain no parameters.")
         if self.n_qubits is None:
             self.n_qubits = n_qubits_circuit
         if self.n_qubits < n_qubits_circuit:
-            raise ValueError("The number of qubits in the ansatz circuit {} is larger than \
-the input n_qubits {}! Please check input parameters such as occ_orb, etc.".format(
-        n_qubits_circuit, n_qubits))
+            raise ValueError(
+                "The number of qubits in the ansatz circuit {} is larger than \
+the input n_qubits {}! Please check input parameters such as occ_orb, etc.".
+                format(n_qubits_circuit, n_qubits))
         self._circuit = ansatz_circuit
         self.operator_pool = generator_quccsd_singles + generator_quccsd_doubles

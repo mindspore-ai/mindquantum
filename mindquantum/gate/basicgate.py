@@ -92,6 +92,7 @@ class XGate(NoneParameterGate):
             X^\theta = RX(\theta\pi)
 
     Examples:
+        >>> from mindquantum.gate import X
         >>> x1 = X.on(0)
         >>> cnot = X.on(0, 1)
         >>> print(x1)
@@ -198,6 +199,7 @@ class UnivMathGate(NoneParameterGate):
     More usage, please see :class:`mindquantum.gate.XGate`.
 
     Examples:
+        >>> from mindquantum.gate import UnivMathGate
         >>> x_mat=np.array([[0,1],[1,0]])
         >>> X_gate=UnivMathGate('X',x_mat)
         >>> x1=X_gate.on(0,1)
@@ -214,7 +216,11 @@ class UnivMathGate(NoneParameterGate):
 
 
 class SWAPGate(NoneParameterGate):
-    """SWAP gate that swap two different qubits."""
+    """
+    SWAP gate that swap two different qubits.
+
+    More usage, please see :class:`mindquantum.gate.XGate`.
+    """
     def __init__(self):
         NoneParameterGate.__init__(self, 'SWAP')
         self.matrix_value = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0],
@@ -256,6 +262,8 @@ class RX(IntrinsicOneParaGate):
         coeff (Union[int, float, str, dict]): the parameters of parameterized gate, see above for detail explanation.
 
     Examples:
+        >>> from mindquantum.gate import RX
+        >>> import numpy as np
         >>> rx1 = RX(0.5)
         >>> np.round(rx1.matrix(), 2)
         array([[0.97+0.j  , 0.  -0.25j],
@@ -473,7 +481,7 @@ class Power(NoneParameterGate):
 
     Args:
         gates (:class:`mindquantum.gate.NoneParameterGate`): The basic gate you need to apply power operator.
-        t (int, float): The exponenet.
+        t (int, float): The exponenet. Default: 0.5.
 
     Examples:
         >>> rx1 = RX(0.5)

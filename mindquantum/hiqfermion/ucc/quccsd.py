@@ -33,25 +33,34 @@ but get {}.".format(str(name), type(input_list)))
 but get {}.".format(str(name), type(i)))
 
 
-def quccsd_generator(n_qubits=None, n_electrons=None, anti_hermitian=True,
-                     occ_orb=None, vir_orb=None, generalized=False):
+def quccsd_generator(n_qubits=None,
+                     n_electrons=None,
+                     anti_hermitian=True,
+                     occ_orb=None,
+                     vir_orb=None,
+                     generalized=False):
     r"""
     Generate qubit-UCCSD (qUCCSD) ansatz using qubit-excitation operators.
 
+    Note:
+        Currently, unrestricted version is implemented, i.e., excitations from the
+        same spatial-orbital but with different spins will use distinct variational
+        parameters.
+
     Args:
-        n_qubits(int): Number of qubits (spin-orbitals).
-        n_electrons(int): Number of electrons (occupied spin-orbitals).
+        n_qubits(int): Number of qubits (spin-orbitals). Default: None.
+        n_electrons(int): Number of electrons (occupied spin-orbitals). Default: None.
         anti_hermitian(bool): Whether to subtract the hermitian conjugate
-            to form anti-Hermitian operators.
+            to form anti-Hermitian operators. Default: True.
         occ_orb(list): Indices of manually assigned occupied spatial
-            orbitals.
+            orbitals. Default: None.
         vir_orb(list): Indices of manually assigned virtual spatial
-            orbitals.
+            orbitals. Default: None.
         generalized(bool): Whether to use generalized excitations which
-            do not distinguish occupied or virtual orbitals (qUCCGSD).
+            do not distinguish occupied or virtual orbitals (qUCCGSD). Default: False.
 
     Returns:
-        generator_quccsd(QubitExcitationOperator): Generator of the qUCCSD operators.
+        QubitExcitationOperator: Generator of the qUCCSD operators.
 
     Examples:
         >>> from mindquantum.hiqfermion.ucc import quccsd_generator
@@ -76,11 +85,6 @@ def quccsd_generator(n_qubits=None, n_electrons=None, anti_hermitian=True,
         0.25*I*q_d_12 + 0.25*I*q_d_5 + 0.5*I*q_s_0 - 0.5*I*q_s_3 [X0 Y1] +
         -0.125*I*q_d_4 + 0.125*I*q_d_7 - 0.125*I*q_d_9 [X0 Y1 X2 X3] +
         0.125*I*q_d_4 + 0.125*I*q_d_7 - 0.125*I*q_d_9 [X0 Y1 Y2 Y3] +
-
-    Note:
-        Currently, unrestricted version is implemented, i.e., excitations from the
-        same spatial-orbital but with different spins will use distinct variational
-        parameters.
     """
     if n_qubits is not None and not isinstance(n_qubits, int):
         raise ValueError("The number of qubits should be integer, \
@@ -203,8 +207,8 @@ contain no parameters.")
             if generalized and pq_counter > rs_counter:
                 continue
             coeff_d = PR({f'q_d_{doubles_counter}': 1})
-            q_pqrs = QubitExcitationOperator(
-                ((p, 1), (q, 1), (r, 0), (s, 0)), 1.)
+            q_pqrs = QubitExcitationOperator(((p, 1), (q, 1), (r, 0), (s, 0)),
+                                             1.)
             if anti_hermitian:
                 q_pqrs = q_pqrs - hermitian_conjugated(q_pqrs)
             q_pqrs = q_pqrs.normal_ordered()

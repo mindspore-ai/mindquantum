@@ -88,12 +88,13 @@ class QubitOperator(_Operator):
     operators = ('X', 'Y', 'Z'), different_indices_commute = True.
 
     Args:
-        term (str): The input term of qubit operator.
+        term (str): The input term of qubit operator. Default: None.
         coefficient (Union[numbers.Number, str, ParameterResolver]): The
             coefficient of this qubit operator, could be a number or a variable
-            represent by a string or a symbol or a parameter resolver.
+            represent by a string or a symbol or a parameter resolver. Default: 1.0.
 
     Examples:
+        >>> from mindquantum.ops import QubitOperator
         >>> ham = ((QubitOperator('X0 Y3', 0.5)
                     + 0.6 * QubitOperator('X0 Y3')))
         # Equivalently
@@ -174,6 +175,16 @@ class QubitOperator(_Operator):
     def real(self):
         """
         Convert the coeff to its real part.
+
+        Returns:
+            QubitOperator, the real part of this qubit operator.
+
+        Examples:
+            >>> from mindquantum.ops import QubitOperator
+            >>> f = QubitOperator('X0', 1 + 2j) + QubitOperator('Y0', 'a')
+            >>> f.real.compress()
+            1.0 [X0] +
+            a [Y0]
         """
         out = QubitOperator()
 
@@ -185,6 +196,15 @@ class QubitOperator(_Operator):
     def imag(self):
         """
         Convert the coeff to its imag part.
+
+        Returns:
+            QubitOperator, the imag part of this qubit operator.
+
+        Examples:
+            >>> from mindquantum.ops import QubitOperator
+            >>> f = QubitOperator('X0', 1 + 2j) + QubitOperator('Y0', 'a')
+            >>> f.imag.compress()
+            2.0 [X0]
         """
         out = QubitOperator()
 
