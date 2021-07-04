@@ -18,12 +18,16 @@ from mindquantum.ops import InteractionOperator
 from mindquantum.utils import get_fermion_operator
 from mindquantum.hiqfermion.transforms import Transform
 
+
 def get_qubit_hamiltonian(mol):
     r"""
     Get the qubit hamiltonian of a molecular data.
 
     Args:
         mol (MolecularData): molecular data.
+
+    Returns:
+        QubitOperator, qubit operator of this molecular.
     """
     m_ham = mol.get_molecular_hamiltonian()
     int_ham = InteractionOperator(*(m_ham.n_body_tensors.values()))

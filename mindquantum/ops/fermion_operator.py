@@ -51,11 +51,12 @@ class FermionOperator(_Operator):
     The FermionOperator are follows the anti-commutation relationship.
 
     Args:
-        terms (str): The input term of fermion operator.
+        terms (str): The input term of fermion operator. Default: None.
         coefficient (Union[numbers.Number, str, ParameterResolver]): The
-            coefficient for the corresponding single operators
+            coefficient for the corresponding single operators Default: 1.0.
 
     Examples:
+        >>> from mindquantum.ops import QubitOperator
         >>> a_p_dagger = FermionOperator('1^')
         >>> a_p_dagger
         1.0 [1^]
@@ -191,6 +192,15 @@ class FermionOperator(_Operator):
     def imag(self):
         """
         Convert the coeff to its imag part.
+
+        Returns:
+            FermionOperator, the imag part of this fermion operator.
+
+        Examples:
+            >>> from mindquantum.ops import FermionOperator
+            >>> f = FermionOperator('0', 1 + 2j) + FermionOperator('0^', 'a')
+            >>> f.imag.compress()
+            2.0 [0]
         """
         out = FermionOperator()
 
@@ -201,7 +211,17 @@ class FermionOperator(_Operator):
     @property
     def real(self):
         """
-        Convert the coeff to its imag part.
+        Convert the coeff to its real part.
+
+        Returns:
+            FermionOperator, the real part of this fermion operator.
+
+        Examples:
+            >>> from mindquantum.ops import FermionOperator
+            >>> f = FermionOperator('0', 1 + 2j) + FermionOperator('0^', 'a')
+            >>> f.real.compress()
+            1.0 [0] +
+            a [0^]
         """
         out = FermionOperator()
 
@@ -216,6 +236,7 @@ class FermionOperator(_Operator):
             FermionOperator, the normal ordered FermionOperator.
 
         Exmples:
+            >>> from mindquantum.ops import FermionOperator
             >>> origin = FermionOperator('0 1^')
             >>> origin
             1.0 [0 1^]

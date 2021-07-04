@@ -55,12 +55,14 @@ class MaxCutAnsatz(Ansatz):
     please refers to https://arxiv.org/pdf/1411.4028.pdf.
 
     .. math::
+
         U(\beta, \gamma) = e^{-\beta_pH_b}e^{-\gamma_pH_c}
         \cdots e^{-\beta_0H_b}e^{-\gamma_0H_c}H^{\otimes n}
 
     Where,
 
     .. math::
+
         H_b = \sum_{i\in n}X_{i}, H_c = \sum_{(i,j)\in C}Z_iZ_j
 
     Here :math:`n` is the set of nodes and :math:`C` is the set of
@@ -69,7 +71,7 @@ class MaxCutAnsatz(Ansatz):
     Args:
         graph (list[tuple[int]]): The graph structure. Every element of graph
             is a edge that constructed by two nodes.
-        depth (int): The depth of max cut ansatz.
+        depth (int): The depth of max cut ansatz. Default: 1.
 
     Examples:
         >>> from mindquantum.ansatz import MaxCutAnsatz

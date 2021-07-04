@@ -137,7 +137,7 @@ def generate_pqc_operator(encoder_params_names,
             encoder circuit and ansatz circuit.
         measurements (Union[Hamiltonian, list[Hamiltonian], Projector, list[Projector]]): The measurement
             operators, would be hamiltonians or projectors.
-        n_threads (int): Number of threads for data parallelize.
+        n_threads (int): Number of threads for data parallelize. Default: 1.
 
     Returns:
         PQC, A parameterized quantum circuit simulator operator supported by mindspore framework.

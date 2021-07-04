@@ -40,8 +40,8 @@ class PolynomialTensor:
     namely constant term, single excitation :math:`a^\dagger_p a_q` and
     double excitation terms :math:`a^\dagger_p a^\dagger_q a_r a_s`,
     and their corresponding coefficients can be stored in an scalar,
-    n_qubits x n_qubits matrix and
-    n_qubits x n_qubits x n_qubits x n_qubits matrix.
+    :math:`n_\text{qubits}\times n_\text{qubits}` matrix and
+    :math:`n_\text{qubits}\times n_\text{qubits} n_\text{qubits}\times n_\text{qubits}` matrix.
     Note that each tensor must have an even number of dimensions due to
     the parity conservation.
     Much of the functionality of this class is similar to that of
@@ -52,12 +52,15 @@ class PolynomialTensor:
             n-body interactions. The keys are tuples that indicate the
             type of tensor.
             For instance, n_body_tensors[()] would return a constant,
-            while a n_body_tensors[(1, 0)] would be an (n_qubits x n_qubits) numpy
+            while a n_body_tensors[(1, 0)] would be an
+            :math:`n_\text{qubits}\times n_\text{qubits}` numpy
             array, and n_body_tensors[(1,1,0,0)]
-            would return a (n_qubits x n_qubits x n_qubits x n_qubits) numpy array
+            would return a
+            :math:`n_\text{qubits}\times n_\text{qubits} n_\text{qubits}\times n_\text{qubits}`
+            numpy array
             and those constant and array represent the coefficients of terms of
             the form identity, :math:`a^\dagger_p a_q`,
-            :math:`a^\dagger_p a^\dagger_q a_r a_s`, respectively.
+            :math:`a^\dagger_p a^\dagger_q a_r a_s`, respectively. Default: None.
 
     Note:
         Here '1' represents :math:`a^\dagger`, while '0' represent :math:`a`.

@@ -29,20 +29,31 @@ def uccsd_singlet_get_packed_amplitudes(single_amplitudes, double_amplitudes,
     `uccsd_singlet_generator`.
 
     Args:
-        single_amplitudes(ndarray): [NxN] array storing single excitation
-            amplitudes corresponding to t[i,j] * (a_i^\dagger a_j - H.C.)
-        double_amplitudes(ndarray): [NxNxNxN] array storing double
+        single_amplitudes(ndarray): :math:`N\times N` array storing single excitation
+            amplitudes corresponding to :math:`t_{i,j} * (a_i^\dagger a_j - \text{H.C.})`
+        double_amplitudes(ndarray): :math:`N\times N\times N\times N` array storing double
             excitation amplitudes corresponding to
-            t[i,j,k,l] * (a_i^\dagger a_j a_k^\dagger a_l - H.C.)
+            :math:`t_{i,j,k,l} * (a_i^\dagger a_j a_k^\dagger a_l - \text{H.C.})`
         n_qubits(int): Number of spin-orbitals used to represent the system,
             which also corresponds to number of qubits in a non-compact map.
         n_electrons(int): Number of electrons in the physical system.
 
     Returns:
-        packed_amplitudes(list), List storing the unique single
+        ParameterResolver, List storing the unique single
         and double excitation amplitudes for a singlet UCCSD operator.
         The ordering lists unique single excitations before double
         excitations.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.hiqfermion.ucc import uccsd_singlet_get_packed_amplitudes
+        >>> n_qubits, n_electrons = 4, 2
+        >>> np.random.seed(42)
+        >>> ccsd_single_amps = np.random.random((4, 4))
+        >>> ccsd_double_amps = np.random.random((4, 4, 4, 4))
+        >>> uccsd_singlet_get_packed_amplitudes(ccsd_single_amps, ccsd_double_amps,
+        ...                                     n_qubits, n_electrons)
+        {'s_0': 0.6011150117432088, 'd1_0': 0.7616196153287176}
     """
     n_spatial_orbitals = n_qubits // 2
     n_occupied = int(numpy.ceil(n_electrons / 2))
@@ -116,8 +127,20 @@ def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):
             rather than unitary variant, primarily for testing
 
     Returns:
-        generator(FermionOperator), Generator of the UCCSD operator that
+        FermionOperator, Generator of the UCCSD operator that
         builds the UCCSD wavefunction.
+
+    Examples:
+        >>> from mindquantum.hiqfermion.ucc import uccsd_singlet_generator
+        >>> uccsd_singlet_generator(4, 2)
+        -s_0 [0^ 2] +
+        -d1_0 [0^ 2 1^ 3] +
+        -s_0 [1^ 3] +
+        -d1_0 [1^ 3 0^ 2] +
+        s_0 [2^ 0] +
+        d1_0 [2^ 0 3^ 1] +
+        s_0 [3^ 1] +
+        d1_0 [3^ 1 2^ 0]
     """
     if n_qubits % 2 != 0:
         raise ValueError('The total number of spin-orbitals should be even.')

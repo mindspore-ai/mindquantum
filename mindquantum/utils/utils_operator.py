@@ -33,7 +33,7 @@ def count_qubits(operator):
             FermionOperator or QubitOperator or QubitExcitationOperator.
 
     Returns:
-        num_qubits (int), The minimum number of qubits on which operator acts.
+        int, The minimum number of qubits on which operator acts.
 
     Raises:
        TypeError: Operator of invalid type.
@@ -147,7 +147,7 @@ def normal_ordered(fermion_operator):
     By convention, normal ordering implies terms are ordered
     from highest mode index (on left) to lowest (on right).
     Also, creation operators come first then follows the annihilation operator.
-    e.g 3 4^ -> - 4^ 3.
+    e.g 3 4^ :math:`\rightarrow` - 4^ 3.
 
     Args:
         fermion_operator(FermionOperator): Only Fermion type Operator has
@@ -198,7 +198,7 @@ def number_operator(n_modes=None, mode=None, coefficient=1.):
         coefficient (float): The coefficient of the term. Default: 1.
 
     Returns:
-        operator (FermionOperator)
+        FermionOperator, a fermionic number operator for the reverse_jordan_wigner transform.
 
     Examples:
         >>> from mindquantum.ops import FermionOperator
@@ -283,6 +283,11 @@ def up_index(index):
 
     Returns:
         An integer that is the index of the associated spin-up orbital.
+
+    Examples:
+        >>> from mindquantum.utils import up_index
+        >>> up_index(1)
+        2
     """
     return 2 * index
 
@@ -290,13 +295,18 @@ def up_index(index):
 def down_index(index):
     """
     The index order, by default we set the spinless orbits as
-    even-odd-even-odd (0,1,2,3,...). The spin_down orbitals is (beta) with index odd.
+    even-odd-even-odd (0,1,2,3,...). The spin_down orbitals (beta orbital) with index odd.
 
     Args:
         index (int): spatial orbital index.
 
     Returns:
         An integer that is the index of the associated spin-down orbital.
+
+    Examples:
+        >>> from mindquantum.utils import down_index
+        >>> down_index(1)
+        3
     """
     return 2 * index + 1
 
@@ -309,7 +319,7 @@ def sz_operator(n_spatial_orbitals):
         n_spatial_orbitals (int): number of spatial orbitals (n_qubits // 2).
 
     Returns:
-        operator (FermionOperator), corresponding to the sz operator over
+        FermionOperator, corresponding to the sz operator over
         n_spatial_orbitals.
 
     Note:

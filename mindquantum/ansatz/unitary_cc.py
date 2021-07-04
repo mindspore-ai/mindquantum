@@ -35,20 +35,26 @@ class UCCAnsatz(Ansatz):
     The unitary coupled-cluster ansatz for molecular simulations.
 
     ..math::
+
         U(\vec{\theta}) = \prod_{j=1}^{N(N\ge1)}{\prod_{i=0}^{N_{j}}{\exp{(\theta_{i}\hat{\tau}_{i})}}}
 
     where :math:`\hat{\tau}` are anti-Hermitian operators.
 
+    Note:
+        Currently, the circuit is construncted using JW transformation.
+        In addition, the reference state wave function (Hartree-Fock) will NOT be
+        included.
+
     Args:
-        n_qubits(int): Number of qubits (spin-orbitals).
-        n_electrons(int): Number of electrons (occupied spin-orbitals).
+        n_qubits(int): Number of qubits (spin-orbitals). Default: None.
+        n_electrons(int): Number of electrons (occupied spin-orbitals). Default: None.
         occ_orb(list): Indices of manually assigned occupied spatial
-            orbitals, for ansatz construction only.
+            orbitals, for ansatz construction only. Default: None.
         vir_orb(list): Indices of manually assigned virtual spatial
-            orbitals, for ansatz construction only.
+            orbitals, for ansatz construction only. Default: None.
         generalized(bool): Whether to use generalized excitations which
-            do not distinguish occupied or virtual orbitals (UCCGSD).
-        trotter_step(int): The order of Trotterization step.
+            do not distinguish occupied or virtual orbitals (UCCGSD). Default: False.
+        trotter_step(int): The order of Trotterization step. Default: 1.
 
     Examples:
         >>> from mindquantum.ansatz import UCCAnsatz
@@ -75,17 +81,12 @@ class UCCAnsatz(Ansatz):
         H(4)
         RX(10.996|2)
         H(2)
-
-    Note:
-        Currently, the circuit is construncted using JW transformation.
-        In addition, the reference state wave function (Hartree-Fock) will NOT be
-        included.
-
     """
-
-    def __init__(self, n_qubits=None,
+    def __init__(self,
+                 n_qubits=None,
                  n_electrons=None,
-                 occ_orb=None, vir_orb=None,
+                 occ_orb=None,
+                 vir_orb=None,
                  generalized=False,
                  trotter_step=1):
         if n_qubits is not None and not isinstance(n_qubits, int):
@@ -107,26 +108,26 @@ but get {}.".format(type(generalized)))
         if not isinstance(trotter_step, int) or trotter_step < 1:
             raise ValueError("Trotter step must be a positive integer!")
 
-        super().__init__("Unitary CC", n_qubits,
-                         n_qubits, n_electrons,
-                         occ_orb, vir_orb,
-                         generalized, trotter_step)
+        super().__init__("Unitary CC", n_qubits, n_qubits, n_electrons,
+                         occ_orb, vir_orb, generalized, trotter_step)
 
-    def _implement(self, n_qubits, n_electrons,
-                   occ_orb=None, vir_orb=None,
+    def _implement(self,
+                   n_qubits,
+                   n_electrons,
+                   occ_orb=None,
+                   vir_orb=None,
                    generalized=False,
                    trotter_step=1):
         """Implement the UCC ansatz using uccsd0"""
         ansatz_circuit = Circuit()
         for trotter_idx in range(trotter_step):
             uccsd0_fermion_op = uccsd0_singlet_generator(
-                n_qubits, n_electrons, True,
-                occ_orb, vir_orb, generalized)
+                n_qubits, n_electrons, True, occ_orb, vir_orb, generalized)
             uccsd0_circuit = TimeEvolution(
-                Transform(uccsd0_fermion_op).jordan_wigner().imag, 1
-            ).circuit
+                Transform(uccsd0_fermion_op).jordan_wigner().imag, 1).circuit
             # Modify parameter names
-            uccsd0_circuit_modified = add_prefix(uccsd0_circuit, "t_" + str(trotter_idx))
+            uccsd0_circuit_modified = add_prefix(uccsd0_circuit,
+                                                 "t_" + str(trotter_idx))
             ansatz_circuit += uccsd0_circuit_modified
         n_qubits_circuit = 0
         if list(ansatz_circuit):
@@ -136,7 +137,8 @@ but get {}.".format(type(generalized)))
         if self.n_qubits is None:
             self.n_qubits = n_qubits_circuit
         if self.n_qubits < n_qubits_circuit:
-            raise ValueError("The number of qubits in the ansatz circuit {} is larger than \
-the input n_qubits {}! Please check input parameters such as occ_orb, etc.".format(
-        n_qubits_circuit, n_qubits))
+            raise ValueError(
+                "The number of qubits in the ansatz circuit {} is larger than \
+the input n_qubits {}! Please check input parameters such as occ_orb, etc.".
+                format(n_qubits_circuit, n_qubits))
         self._circuit = ansatz_circuit

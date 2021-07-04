@@ -27,7 +27,8 @@ from .utils_operator import (number_operator, normal_ordered, count_qubits,
 __all__ = [
     'bprint', 'mod', 'normalize', 'random_state', 'number_operator',
     'normal_ordered', 'commutator', 'up_index', 'down_index', 'sz_operator',
-    'hermitian_conjugated', 'ket_string'
+    'hermitian_conjugated', 'ket_string', 'get_fermion_operator',
+    'count_qubits'
 ]
 
 __all__.sort()

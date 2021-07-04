@@ -23,7 +23,13 @@ from mindquantum.parameterresolver import ParameterResolver as PR
 
 
 class BasicGate():
-    """BasicGate is the base class of all gaets."""
+    """
+    BasicGate is the base class of all gaets.
+
+    Args:
+        name (str): the name of this gate.
+        isparameter (bool): whether this is a parameterized gate.
+    """
     def __init__(self, name, isparameter=False):
         if not isinstance(name, str):
             raise TypeError("Excepted string for gate name, get {}".format(
@@ -66,12 +72,13 @@ class BasicGate():
 
         Args:
             obj_qubits (int, list[int]): Specific which qubits the gate act on.
-            ctrl_qubits (int, list[int]): Specific the control qbits. Defaults to None.
+            ctrl_qubits (int, list[int]): Specific the control qbits. Default, None.
 
         Returns:
             Gate, Return a new gate.
 
         Examples:
+            >>> from mindquantum.gate import X
             >>> x = X.on(1)
             >>> x.obj_qubits
             [1]
@@ -151,7 +158,12 @@ class BasicGate():
 
 
 class NoneParameterGate(BasicGate):
-    """The basic class of gate that is not parametrized."""
+    """
+    The basic class of gate that is not parametrized.
+
+    Args:
+        name (str): The name of the this gate.
+    """
     def __init__(self, name):
         BasicGate.__init__(self, name, False)
         self.coeff = None
@@ -179,7 +191,14 @@ class NoneParameterGate(BasicGate):
 
 
 class ParameterGate(NoneParameterGate, BasicGate):
-    """The basic class of gate that is parameterized."""
+    """
+    The basic class of gate that is parameterized.
+
+    Args:
+        name (str): the name of this gate.
+        coeff (Union[dict, ParameterResolver]): the coefficients of
+            this parameterized gate.
+    """
     def __init__(self, name, coeff=None):
         if isinstance(coeff, (int, float, complex)):
             NoneParameterGate.__init__(self, name)
@@ -263,7 +282,11 @@ but get {}".format(type(coeff)))
 
     def requires_grad(self):
         """
-        All parameters requires grad.
+        All parameters requires grad. Inplace operation.
+
+        Returns:
+            BaseGate, a parameterized gate with all parameters need to
+                update gradient.
         """
         if self.isparameter:
             self.coeff.requires_grad()
@@ -271,7 +294,11 @@ but get {}".format(type(coeff)))
 
     def no_grad(self):
         """
-        All parameters do not need grad.
+        All parameters do not need grad. Inplace operation.
+
+        Returns:
+            BaseGate, a parameterized gate with all parameters not need to
+                update gradient.
         """
         if self.isparameter:
             self.coeff.no_grad()
@@ -279,20 +306,26 @@ but get {}".format(type(coeff)))
 
     def requires_grad_part(self, names):
         """
-        Set certain parameters that need grad.
+        Set certain parameters that need grad. Inplace operation.
 
         Args:
             names (tuple[str]): Parameters that requires grad.
+
+        Returns:
+            BaseGate, with some part of parameters need to update gradient.
         """
         self.coeff.requires_grad_part(names)
         return self
 
     def no_grad_part(self, names):
         """
-        Set certain parameters that not need grad.
+        Set certain parameters that not need grad. Inplace operation.
 
         Args:
             names (tuple[str]): Parameters that not requires grad.
+
+        Returns:
+            BaseGate, with some part of parameters not need to update gradient.
         """
         self.coeff.no_grad_part(names)
         return self
@@ -307,7 +340,12 @@ class IntrinsicOneParaGate(ParameterGate):
         A parameterized gate can also be a non parameterized gate, if the
         parameter you send in is only a number.
 
+    Args:
+        name (str): the name of this parameterized gate.
+        coeff (Union[dict, ParameterResolver]): the parameter of this gate. Default: Nnoe.
+
     Examples:
+        >>> from mindquantum.gate import RX
         >>> rx1 = RX(1.2)
         >>> rx1
         RX(1.2)
@@ -322,10 +360,16 @@ class IntrinsicOneParaGate(ParameterGate):
 
     def hermitian(self):
         """
-        Get the hermitian gate of this parameterized gate.
+        Get the hermitian gate of this parameterized gate. Not inplace operation.
 
         Note:
             We only set the coeff to -coeff.
+
+        Examples:
+            >>> from mindquantum import RX
+            >>> rx = RX({'a': 1+2j})
+            >>> rx.hermitian()
+            RX(a*(-1.0 - 2.0*I))
         """
         hermitian_gate = deepcopy(self)
         hermitian_gate.coeff = 1 * self.coeff
@@ -356,6 +400,7 @@ class IntrinsicOneParaGate(ParameterGate):
             numpy.ndarray, Return the numpy array of the matrix.
 
         Examples:
+            >>> from mindquantum.gate import RX
             >>> rx1 = RX(0)
             >>> rx1.matrix()
             array([[1.+0.j, 0.-0.j],
@@ -383,7 +428,7 @@ class IntrinsicOneParaGate(ParameterGate):
 
         Args:
             about_what (str, optional): Specific the differential is about
-                which parameter. Defaults to None.
+                which parameter. Default: None.
 
         Returns:
             numpy.ndarray, Return the numpy array of the differential matrix.

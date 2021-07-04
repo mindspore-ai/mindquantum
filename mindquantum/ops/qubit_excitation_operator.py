@@ -59,9 +59,9 @@ class QubitExcitationOperator(_Operator):
     corresponding Fermion excitation operators.
 
     Args:
-        terms (str): The input term of qubit excitation operator.
+        terms (str): The input term of qubit excitation operator. Default: None.
         coefficient (Union[numbers.Number, str, ParameterResolver]): The
-            coefficient for the corresponding single operators
+            coefficient for the corresponding single operators Default: 1.0.
 
     Examples:
         >>> from mindquantum.hiqfermion.transforms import Transform
@@ -115,7 +115,7 @@ class QubitExcitationOperator(_Operator):
         Convert the Qubit excitation operator to the equivalent Qubit operator.
 
         Returns:
-            qubit_operator(QubitOperator), The corresponding QubitOperator
+            QubitOperator, The corresponding QubitOperator
             according to the definition of Qubit excitation operators.
 
         Examples:
@@ -180,8 +180,8 @@ class QubitExcitationOperator(_Operator):
             if operator not in self.operators:
                 raise ValueError(
                     'Invalid type of operator {}.'
-                    'The Qubit excitation operator should be one of this {}'.format(
-                        operator, self.operators))
+                    'The Qubit excitation operator should be one of this {}'.
+                    format(operator, self.operators))
             if index < 0:
                 raise ValueError("Invalid index {}.The qubit index should be\
                     non negative integer".format(self.operators))
@@ -244,6 +244,16 @@ class QubitExcitationOperator(_Operator):
     def imag(self):
         """
         Convert the coeff to its imag part.
+
+        Returns:
+            QubitExcitationOperator, the image part of this qubit excitation operator.
+
+        Examples:
+            >>> from mindquantum.ops import QubitExcitationOperator
+            >>> f = QubitExcitationOperator(((1, 0),), 1 + 2j)
+            >>> f += QubitExcitationOperator(((1, 1),), 'a')
+            >>> f.imag.compress()
+            2.0 [Q1^]
         """
         out = QubitExcitationOperator()
 
@@ -255,6 +265,17 @@ class QubitExcitationOperator(_Operator):
     def real(self):
         """
         Convert the coeff to its imag part.
+
+        Returns:
+            QubitExcitationOperator, the real part of this qubit excitation operator.
+
+        Examples:
+            >>> from mindquantum.ops import QubitExcitationOperator
+            >>> f = QubitExcitationOperator(((1, 0),), 1 + 2j)
+            >>> f += QubitExcitationOperator(((1, 1),), 'a')
+            >>> f.real.compress()
+            1.0 [Q1] +
+            a [Q1^]
         """
         out = QubitExcitationOperator()
 
@@ -307,8 +328,7 @@ def _normal_ordered_term(term, coefficient):
                 # And generate the new term
                 if left_sub_term[0] == right_sub_term[0]:
                     new_term = term[:(j - 1)] + term[(j + 1):]
-                    ordered_term += _normal_ordered_term(
-                        new_term, coefficient)
+                    ordered_term += _normal_ordered_term(new_term, coefficient)
             elif left_sub_term[1] == right_sub_term[1]:
                 # If indice are same, evaluate it to zero.
                 if left_sub_term[0] == right_sub_term[0]:

@@ -30,12 +30,13 @@ def mod(vec_in, axis=0):
 
     Args:
         vec_in (Union[list[number], numpy.ndarray]): The vector you want to calculate mod.
-        axis (int): Along which axis you want to calculate mod.
+        axis (int): Along which axis you want to calculate mod. Default: 0.
 
     Returns:
         numpy.ndarray, The mod of input vector.
 
     Examples:
+        >>> from mindquantum.utils import mod
         >>> vec_in = np.array([[1, 2, 3], [4, 5, 6]])
         >>> mod(vec_in)
         array([[4.12310563, 5.38516481, 6.70820393]])
@@ -55,12 +56,13 @@ def normalize(vec_in, axis=0):
     Args:
         vec_in (Union[list[number], numpy.ndarray]): Vector you want to
             normalize.
-        axis (int): Along which axis you want to normalize your vector.
+        axis (int): Along which axis you want to normalize your vector. Default: 0.
 
     Returns:
         numpy.ndarray, Vector after normalization.
 
     Examples:
+        >>> from mindquantum.utils import normalize
         >>> vec_in = np.array([[1, 2, 3], [4, 5, 6]])
         >>> normalize(vec_in)
         array([[0.24253563, 0.37139068, 0.4472136 ],
@@ -75,22 +77,22 @@ def normalize(vec_in, axis=0):
 
 
 def random_state(shapes, norm_axis=0, comp=True, seed=None):
-    """
+    r"""
     Generate some random quantum state.
 
     Args:
         shapes (tuple): shapes = (m, n) means m quantum states with each state
-            formed by log2(n) qubits.
-        norm_axis (int): which axis you want to apply normalization. Default,
-            0
+            formed by :math:`\log_2(n)` qubits.
+        norm_axis (int): which axis you want to apply normalization. Default: 0.
         comp (bool): if `True`, each amplitude of the quantum state will be a
-            complex number.
-        seed (int): the random seed.
+            complex number. Default: True.
+        seed (int): the random seed. Default: None.
 
     Returns:
         numpy.ndarray, A normalized random quantum state.
 
     Examples:
+        >>> from mindquantum.utils import random_state
         >>> random_state((2, 2), seed=42)
         array([[0.44644744+0.18597239j, 0.66614846+0.10930256j],
                [0.87252821+0.06923499j, 0.41946926+0.60691409j]])
@@ -144,7 +146,7 @@ def ket_string(state, tol=1e-7):
 
     Args:
         state (numpy.ndarray): The input quantum state.
-        tol (float): The ignore tolence for small amplitude.
+        tol (float): The ignore tolence for small amplitude. Default: 1e-7.
 
     Returns:
         str, the ket format of the quantum state.
