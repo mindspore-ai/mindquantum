@@ -44,7 +44,6 @@ def count_qubits(operator):
         >>> qubit_op = QubitOperator("X1 Y2")
         >>> count_qubits(qubit_op)
         3
-
         >>> fer_op = FermionOperator("1^")
         >>> count_qubits(fer_op)
         2
@@ -142,7 +141,7 @@ def _normal_ordered_term(term, coefficient):
 
 
 def normal_ordered(fermion_operator):
-    """
+    r"""
     Calculate and return the normal order of the FermionOperator.
     By convention, normal ordering implies terms are ordered
     from highest mode index (on left) to lowest (on right).

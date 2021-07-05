@@ -270,7 +270,7 @@ class PolynomialTensor:
         Returns:
             sum (PolynomialTensor), un-mutated self, but has new instance
 
-        Raises：
+        Raises:
             TypeError: Cannot add invalid operator type.
         """
         sum_addend = copy.deepcopy(self)
@@ -325,7 +325,7 @@ class PolynomialTensor:
             subtractend (PolynomialTensor), un-mutated self,
             but has new instance
 
-        Raises：
+        Raises:
             TypeError: Cannot sub invalid operator type.
         """
         subend = copy.deepcopy(self)
