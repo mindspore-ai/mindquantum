@@ -56,7 +56,7 @@ class FermionOperator(_Operator):
             coefficient for the corresponding single operators Default: 1.0.
 
     Examples:
-        >>> from mindquantum.ops import QubitOperator
+        >>> from mindquantum.ops import FermionOperator
         >>> a_p_dagger = FermionOperator('1^')
         >>> a_p_dagger
         1.0 [1^]

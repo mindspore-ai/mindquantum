@@ -34,7 +34,7 @@ class UCCAnsatz(Ansatz):
     r"""
     The unitary coupled-cluster ansatz for molecular simulations.
 
-    ..math::
+    .. math::
 
         U(\vec{\theta}) = \prod_{j=1}^{N(N\ge1)}{\prod_{i=0}^{N_{j}}{\exp{(\theta_{i}\hat{\tau}_{i})}}}
 

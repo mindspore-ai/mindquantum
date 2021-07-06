@@ -59,7 +59,7 @@ for (v, u) in E:
 ham = Hamiltonian(ham)
 
 circ = circuit_qaoa(p)
-ansatz_name = circ.parameter_resolver().para_name
+ansatz_name = circ.para_name
 net = MindQuantumLayer(['null'], ansatz_name, RX('null').on(0) + circ, ham)
 train_loader = ds.NumpySlicesDataset({
     'x': np.array([[0]]).astype(np.float32),

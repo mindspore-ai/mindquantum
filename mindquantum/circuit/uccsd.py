@@ -195,7 +195,7 @@ def decompose_single_term_time_evolution(term, para):
     Args:
         term (tuple, QubitOperator): the hamiltonian term of just the
             evolution qubit operator.
-        para (Union[dict, number.Numbers]): the parameters of evolution operator.
+        para (Union[dict, numbers.Number]): the parameters of evolution operator.
 
     Returns:
         Circuit, a quantum circuit.

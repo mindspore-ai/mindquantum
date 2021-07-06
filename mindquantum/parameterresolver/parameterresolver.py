@@ -29,7 +29,7 @@ class ParameterResolver(dict):
     operator can only calculate gradient of these parameters.
 
     Args:
-        data (dict): initial parameter names and its values.
+        data (dict): initial parameter names and its values. Default: None.
 
     Examples:
         >>> from mindquantum import ParameterResolver
@@ -447,7 +447,7 @@ resolver and not require grad in other parameter resolver ".format(conflict))
                 want to do linear combination.
 
         Returns:
-            number.Numbers, the combination result.
+            numbers.Number, the combination result.
 
         Examples:
         >>> from mindquantum import ParameterResolver

@@ -65,7 +65,7 @@ class Circuit(list):
     Args:
         gates (BasicGate, list[BasicGate]): You can
             initialize the quantum circuit by a single quantum gate or a
-            list of gates.
+            list of gates. gates: None.
 
 
     Examples:
@@ -184,7 +184,11 @@ class Circuit(list):
         gate number, non-parameterized gate number, parameterized gate number
         and the total parameters.
 
+        Args:
+            show (bool): whether to show the information. Default: True.
+
         Examples:
+            >>> from mindquantum import Circuit, RX, H
             >>> circuit = Circuit([RX('a').on(1), H.on(1), RX('b').on(0)])
             >>> circuit.summary()
             ========Circuit Summary========

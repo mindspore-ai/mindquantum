@@ -198,6 +198,10 @@ class UnivMathGate(NoneParameterGate):
 
     More usage, please see :class:`mindquantum.gate.XGate`.
 
+    Args:
+        name (str): the name of this gate.
+        mat (np.ndarray): the matrix value of this gate.
+
     Examples:
         >>> from mindquantum.gate import UnivMathGate
         >>> x_mat=np.array([[0,1],[1,0]])
@@ -259,7 +263,8 @@ class RX(IntrinsicOneParaGate):
         RX(a+2b)
 
     Args:
-        coeff (Union[int, float, str, dict]): the parameters of parameterized gate, see above for detail explanation.
+        coeff (Union[int, float, str, dict]): the parameters of
+            parameterized gate, see above for detail explanation. Default: None.
 
     Examples:
         >>> from mindquantum.gate import RX
@@ -484,6 +489,8 @@ class Power(NoneParameterGate):
         t (int, float): The exponenet. Default: 0.5.
 
     Examples:
+        >>> from mindquantum import Power
+        >>> import numpy as np
         >>> rx1 = RX(0.5)
         >>> rx2 = RX(1)
         >>> assert np.all(np.isclose(Power(rx2,0.5).matrix(), rx1.matrix()))

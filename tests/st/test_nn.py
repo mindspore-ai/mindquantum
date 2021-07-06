@@ -128,7 +128,7 @@ def test_mindquantum_ansatz_only_layer():
     ham = Hamiltonian(QubitOperator('Z0'))
     init = ms.Tensor(np.array([0, 0]).astype(np.float32))
     net = MindQuantumAnsatzOnlyLayer(circuit.para_name, circuit, ham, init)
-    opti = ms.nn.Adam(net.trainable_params(), learning_rate=0.8)
+    opti = ms.nn.Adagrad(net.trainable_params(), learning_rate=0.8)
     train_net = ms.nn.TrainOneStepCell(net, opti)
     for i in range(1000):
         train_net()

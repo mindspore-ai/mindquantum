@@ -29,7 +29,7 @@ def mod(vec_in, axis=0):
     Calculate the mod of input vectors.
 
     Args:
-        vec_in (Union[list[number], numpy.ndarray]): The vector you want to calculate mod.
+        vec_in (Union[list[numbers.Number], numpy.ndarray]): The vector you want to calculate mod.
         axis (int): Along which axis you want to calculate mod. Default: 0.
 
     Returns:

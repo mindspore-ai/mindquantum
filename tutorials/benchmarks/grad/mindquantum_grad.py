@@ -75,7 +75,7 @@ x_train_bin, y_train_nocon, x_test_bin, y_test_nocon = data['arr_0'], data[
 x_train_circ = [convert_to_circuit(x, range(1, n_qubits)) for x in x_train_bin]
 
 ansatz, ham = create_quantum_model(n_qubits)
-model_para_names = ansatz.parameter_resolver().para_name
+model_para_names = ansatz.para_name
 ops = generate_pqc_operator(model_para_names, ['null'],
                             RX('null').on(0) + ansatz,
                             ham,
@@ -85,7 +85,7 @@ t0 = time.time()
 eval_time = []
 for x in tqdm.tqdm(x_train_circ[:args.num_sampling]):
     eval_time.append(time.time())
-    ops(Tensor(np.random.normal(size=(1, 16)).astype(np.float32)),
+    ops(Tensor(np.random.normal(size=(1, 32)).astype(np.float32)),
         Tensor(np.array([0]).astype(np.float32)))
     eval_time[-1] = time.time() - eval_time[-1]
 eval_time = np.sort(eval_time[1:])

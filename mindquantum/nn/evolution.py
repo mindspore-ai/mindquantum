@@ -120,7 +120,7 @@ def generate_evolution_operator(circuit, param_names=None, hams=None):
         array([0.96891242+0.j        , 0.        -0.24740396j])
     """
     if param_names is None:
-        param_names = circuit.parameter_resolver().para_name
+        param_names = circuit.para_name
     if not param_names:
         _check_non_parameterized_circuit(circuit)
     else:

@@ -27,6 +27,7 @@ class TimeEvolution:
     The time evolution operator will do the following evolution:
 
     .. math::
+
         \left|\varphi(t)\right>=e^{-itH}\left|\varphi(0)\right>
 
     Note:
