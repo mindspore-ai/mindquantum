@@ -67,8 +67,8 @@ class StateEvolution:
             param (Union[Tensor, numpy.ndarray, ParameterResolver, dict]): The
                 parameter for the parameterized quantum circuit. If None, the
                 quantum circuit should be a non parameterized quantum circuit.
-                Defaults: None.
-            ket (bool): Whether to print the final state in ket format.
+                Default: None.
+            ket (bool): Whether to print the final state in ket format. Default: False.
 
         Returns:
             numpy.ndarray, the final state in numpy array format.
@@ -100,12 +100,12 @@ class StateEvolution:
         Sampling the bit string based on the final state.
 
         Args:
-            shots (int): How many samples you want to get. Defaults: 1.
+            shots (int): How many samples you want to get. Default: 1.
             param (Union[Tensor, numpy.ndarray, ParameterResolver, dict]): The
                 parameter for the parameterized quantum circuit. If None, the
                 quantum circuit should be a non parameterized quantum circuit.
-                Defaults: None.
-            show (bool): Whether to show the sampling result in bar plot.
+                Default: None.
+            show (bool): Whether to show the sampling result in bar plot. Default: False.
 
         Returns:
             dict, a dict with key as bit string and value as number of samples.

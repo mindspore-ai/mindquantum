@@ -14,6 +14,8 @@
 #   limitations under the License.
 """This module provide some useful function related to operators"""
 
+import projectq.ops as pjops
+import openfermion.ops as ofops
 from mindquantum.ops.fermion_operator import FermionOperator
 from mindquantum.ops.qubit_operator import QubitOperator
 from mindquantum.ops.qubit_excitation_operator import QubitExcitationOperator
@@ -49,7 +51,10 @@ def count_qubits(operator):
         2
     """
     # Handle FermionOperator.
-    if isinstance(operator, (FermionOperator, QubitOperator, QubitExcitationOperator)):
+    valueable_type = (FermionOperator, QubitOperator, QubitExcitationOperator,
+                      ofops.FermionOperator, ofops.QubitOperator,
+                      pjops.QubitOperator)
+    if isinstance(operator, valueable_type):
         num_qubits = 0
         for term in operator.terms:
             # a tuple compose of single (qubit_index,operator) subterms
@@ -92,10 +97,11 @@ def commutator(left_operator, right_operator):
     """
     if not isinstance(left_operator, type(right_operator)):
         raise TypeError('operator_a and operator_b are not of the same type.')
-
-    if not isinstance(left_operator, (QubitOperator, FermionOperator, QubitExcitationOperator)):
+    valueable_type = (QubitOperator, FermionOperator, QubitExcitationOperator)
+    if not isinstance(left_operator, valueable_type):
         raise TypeError(
-            "Operator should be QubitOperator, FermionOperator or QubitExcitationOperator.")
+            "Operator should be QubitOperator, FermionOperator or QubitExcitationOperator."
+        )
 
     result = left_operator * right_operator
     result -= right_operator * left_operator

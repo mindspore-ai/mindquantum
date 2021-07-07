@@ -169,8 +169,8 @@ if __name__ == '__main__':
     ansatz, read_out = create_quantum_model(n)
     encoder_circuit = encoder_circuit_builder(range(1, n))
     encoder_circuit.no_grad()
-    encoder_names = encoder_circuit.parameter_resolver().para_name
-    ansatz_names = ansatz.parameter_resolver().para_name
+    encoder_names = encoder_circuit.para_name
+    ansatz_names = ansatz.para_name
     ham = Hamiltonian(QubitOperator('Z0'))
 
     mql = MindQuantumLayer(encoder_names,

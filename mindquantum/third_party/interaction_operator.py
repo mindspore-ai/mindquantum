@@ -39,18 +39,18 @@ class InteractionOperator(PolynomialTensor):
 
         .. math::
 
-            C + \sum_{p, q} h_[p, q] a^\dagger_p a_q +
-            \sum_{p, q, r, s} h_[p, q, r, s] a^\dagger_p a^\dagger_q a_r a_s.
+            C + \sum_{p, q} h_{[p, q]} a^\dagger_p a_q +
+            \sum_{p, q, r, s} h_{[p, q, r, s]} a^\dagger_p a^\dagger_q a_r a_s.
 
         Where :math:`C` is a constant.
 
     Args:
-        constant (number.Numbers): A constant term in the operator given as a
+        constant (numbers.Number): A constant term in the operator given as a
                 float. For instance, the nuclear repulsion energy.
-        one_body_tensor (numpy.array): The coefficients of the one-body terms (h[p, q]).
+        one_body_tensor (numpy.ndarray): The coefficients of the one-body terms (h[p, q]).
             This is an :math:`n_\text{qubits}\times n_\text{qubits}` numpy array of floats.
             By default we store the numpy array with keys: :math:`a^\dagger_p a_q` (1,0).
-        two_body_tensor (numpy.array): The coefficients of the two-body terms
+        two_body_tensor (numpy.ndarray): The coefficients of the two-body terms
             (h[p, q, r, s]). This is an
             :math:`n_\text{qubits}\times n_\text{qubits}\times n_\text{qubits}\times n_\text{qubits}`
             numpy array of floats.By default we store the numpy array

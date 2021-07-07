@@ -61,9 +61,10 @@ class MindQuantumAnsatzOnlyOperator(MindQuantumLayer):
         [[ 8.77582550e-01]])
     """
     def __init__(self, param_names, circuit, measurements, n_threads=1):
+        circuit, dummy_para = _add_dummy_encoder(circuit)
         super(MindQuantumAnsatzOnlyOperator,
-              self).__init__([], param_names, circuit, measurements, 'normal',
-                             n_threads)
+              self).__init__([dummy_para], param_names, circuit, measurements,
+                             'normal', n_threads)
         self.fake_data = Tensor(np.array([[0]]).astype(np.float32))
         del self.weight
 

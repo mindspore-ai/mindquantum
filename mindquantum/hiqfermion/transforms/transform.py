@@ -194,7 +194,7 @@ class Transform:
         For the occupation transformation, we follow the
         formular:
 
-        ..math::
+        .. math::
 
             b_{i} = \sum{[\beta_{n}]_{i,j}} f_{j},
 

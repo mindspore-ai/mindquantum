@@ -68,7 +68,7 @@ def _check_parameters_of_circuit(encoder_params_names, ansatz_params_names,
     all_names = []
     all_names.extend(encoder_params_names)
     all_names.extend(ansatz_params_names)
-    circ_names = circuit.parameter_resolver().para_name
+    circ_names = circuit.para_name
     if not set(all_names) == set(circ_names):
         raise ValueError(
             "Parameter names you input not match with parameters in circuit.")

@@ -29,9 +29,9 @@ def uccsd_singlet_get_packed_amplitudes(single_amplitudes, double_amplitudes,
     `uccsd_singlet_generator`.
 
     Args:
-        single_amplitudes(ndarray): :math:`N\times N` array storing single excitation
+        single_amplitudes(numpy.ndarray): :math:`N\times N` array storing single excitation
             amplitudes corresponding to :math:`t_{i,j} * (a_i^\dagger a_j - \text{H.C.})`
-        double_amplitudes(ndarray): :math:`N\times N\times N\times N` array storing double
+        double_amplitudes(numpy.ndarray): :math:`N\times N\times N\times N` array storing double
             excitation amplitudes corresponding to
             :math:`t_{i,j,k,l} * (a_i^\dagger a_j a_k^\dagger a_l - \text{H.C.})`
         n_qubits(int): Number of spin-orbitals used to represent the system,
@@ -123,7 +123,7 @@ def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):
         n_qubits(int): Number of spin-orbitals used to represent the system,
             which also corresponds to number of qubits in a non-compact map.
         n_electrons(int): Number of electrons in the physical system.
-        anti_hermitian(Bool): Flag to generate only normal CCSD operator
+        anti_hermitian(bool): Flag to generate only normal CCSD operator
             rather than unitary variant, primarily for testing
 
     Returns:

@@ -28,6 +28,7 @@ class Hamiltonian:
 
     Examples:
         >>> from mindquantum.ops import QubitOperator
+        >>> from mindquantum import Hamiltonian
         >>> ham = Hamiltonian(QubitOperator('Z0 Y1', 0.3))
         >>> ham.mindspore_data()
         {'hams_pauli_coeff': [0.3],

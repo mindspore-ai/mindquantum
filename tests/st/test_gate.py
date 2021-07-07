@@ -14,6 +14,7 @@
 # ============================================================================
 """Test gate."""
 
+import pytest
 from mindquantum.ops import QubitOperator
 import qutip as qt
 import numpy as np
@@ -60,15 +61,15 @@ def test_phase_shift():
 def test_trap_ion_gate():
     angle = 0.5
     xx = [
-        G.XX("angle").on(0), lambda angle:
+        G.XX("angle").on((0, 1)), lambda angle:
         (-1j * angle * qt.tensor(qt.sigmax(), qt.sigmax())).expm()
     ]
     yy = [
-        G.YY("angle").on(0), lambda angle:
+        G.YY("angle").on((0, 1)), lambda angle:
         (-1j * angle * qt.tensor(qt.sigmay(), qt.sigmay())).expm()
     ]
     zz = [
-        G.ZZ("angle").on(0), lambda angle:
+        G.ZZ("angle").on((0, 1)), lambda angle:
         (-1j * angle * qt.tensor(qt.sigmaz(), qt.sigmaz())).expm()
     ]
     for g in [xx, yy, zz]:
@@ -116,3 +117,23 @@ def test_swap():
 def test_univ_mat_gate():
     mat = np.random.uniform(size=(2, 2))
     assert np.allclose(G.UnivMathGate('univ', mat).matrix(), mat)
+
+
+def test_gate_obj_mismatch():
+    with pytest.raises(Exception, match=r"requires \d+ qubits"):
+        G.X((0, 1))
+    with pytest.raises(Exception, match=r"requires \d+ qubits"):
+        G.RX('a').on((1, 2), 0)
+    with pytest.raises(Exception, match=r"requires \d+ qubits"):
+        G.RX(1).on((1, 2), 0)
+    with pytest.raises(Exception, match=r"requires \d+ qubits"):
+        G.ZZ('a').on(1, 0)
+
+
+def test_gate_obj_ctrl_overlap():
+    with pytest.raises(Exception, match=r"cannot have same qubits"):
+        G.X(1, 1)
+    with pytest.raises(Exception, match=r"cannot have same qubits"):
+        G.ZZ('a').on((0, 1), (1, 2))
+    with pytest.raises(Exception, match=r"cannot have same qubits"):
+        G.RX('a').on(1, (1, 2))

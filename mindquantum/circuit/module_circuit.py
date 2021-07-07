@@ -29,12 +29,13 @@ class UN(Circuit):
     Args:
         gate (BasicGate): A quantum gate.
         maps_obj (Union[int, list[int]]): Objective qubits.
-        maps_ctrl (Union[int, list[int]]): Control qubits.
+        maps_ctrl (Union[int, list[int]]): Control qubits. Default: None.
 
     Returns:
         Circuit, Return a quantum circuit.
 
     Examples:
+        >>> from mindquantum import UN
         >>> circuit1 = UN(X, maps_obj = [0, 1], maps_ctrl = [2, 3])
         >>> print(circuit1)
         X(0 <-: 2)
@@ -80,6 +81,7 @@ class SwapParts(Circuit):
             different qubits or just no control qubit. Default: None.
 
     Examples:
+        >>> from mindquantum import SwapParts
         >>> SwapParts([1, 2], [3, 4], 0)
         SWAP(1 3 <-: 0)
         SWAP(2 4 <-: 0)
@@ -96,12 +98,13 @@ class U3(Circuit):
     This circuit represent arbitrary single qubit gate.
 
     Args:
-        a (Union[number.Numbers, dict, ParameterResolver]): First parameter for U3 circuit.
-        b (Union[number.Numbers, dict, ParameterResolver]): Second parameter for U3 circuit.
-        c (Union[number.Numbers, dict, ParameterResolver]): Third parameter for U3 circuit.
-        obj_qubit (int): Which qubit the U3 circuit will act on.
+        a (Union[numbers.Number, dict, ParameterResolver]): First parameter for U3 circuit.
+        b (Union[numbers.Number, dict, ParameterResolver]): Second parameter for U3 circuit.
+        c (Union[numbers.Number, dict, ParameterResolver]): Third parameter for U3 circuit.
+        obj_qubit (int): Which qubit the U3 circuit will act on. Default: None.
 
     Examples:
+        >>> from mindquantum import U3
         >>> U3('a','b','c')
         RZ(a|0)
         RX(-1.571|0)

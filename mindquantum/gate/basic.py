@@ -28,7 +28,7 @@ class BasicGate():
 
     Args:
         name (str): the name of this gate.
-        isparameter (bool): whether this is a parameterized gate.
+        isparameter (bool): whether this is a parameterized gate. Default: False.
     """
     def __init__(self, name, isparameter=False):
         if not isinstance(name, str):
@@ -115,6 +115,8 @@ class BasicGate():
                 raise TypeError("Excepted int, list or tuple for \
                     ctrl_qubits, but get {}".format(type(obj_qubits)))
         new.generate_description()
+        new.check_obj_qubits()
+        _check_obj_and_ctrl_qubits(new.obj_qubits, new.ctrl_qubits)
         return new
 
     def requires_grad(self):
@@ -122,6 +124,10 @@ class BasicGate():
 
     def no_grad(self):
         return self
+
+    @abstractmethod
+    def check_obj_qubits(self):
+        """Check obj qubit number"""
 
     def __str__(self):
         return self.str
@@ -189,6 +195,15 @@ class NoneParameterGate(BasicGate):
     def __call__(self, obj_qubits, ctrl_qubits=None):
         return self.on(obj_qubits, ctrl_qubits)
 
+    def check_obj_qubits(self):
+        """Check obj qubit number"""
+        n_qubits_exp = np.log2(len(self.matrix_value)).astype(int)
+        n_qubits = len(self.obj_qubits)
+        if n_qubits_exp != n_qubits:
+            raise ValueError(
+                f"obj_qubits of {self.name} requires {n_qubits_exp} qubits, but get {n_qubits}"
+            )
+
 
 class ParameterGate(NoneParameterGate, BasicGate):
     """
@@ -197,7 +212,7 @@ class ParameterGate(NoneParameterGate, BasicGate):
     Args:
         name (str): the name of this gate.
         coeff (Union[dict, ParameterResolver]): the coefficients of
-            this parameterized gate.
+            this parameterized gate. Default: None.
     """
     def __init__(self, name, coeff=None):
         if isinstance(coeff, (int, float, complex)):
@@ -298,7 +313,7 @@ but get {}".format(type(coeff)))
 
         Returns:
             BaseGate, a parameterized gate with all parameters not need to
-                update gradient.
+            update gradient.
         """
         if self.isparameter:
             self.coeff.no_grad()
@@ -396,6 +411,9 @@ class IntrinsicOneParaGate(ParameterGate):
             If the parameterized gate convert to non parameterized gate, then
             you don't need any parameters to get this matrix.
 
+        Args:
+            paras_out (Union[dict, ParameterResolver]): Parameters of this gate.
+
         Returns:
             numpy.ndarray, Return the numpy array of the matrix.
 
@@ -427,13 +445,15 @@ class IntrinsicOneParaGate(ParameterGate):
         The differential form of this parameterized gate.
 
         Args:
-            about_what (str, optional): Specific the differential is about
+            paras_out (Union[dict, ParameterResolver]): Parameters of this gate.
+            about_what (str): Specific the differential is about
                 which parameter. Default: None.
 
         Returns:
             numpy.ndarray, Return the numpy array of the differential matrix.
 
         Examples:
+            >>> from mindquantum import RX
             >>> rx = RX('a')
             >>> np.round(rx.diff_matrix({'a' : 2}), 2)
             array([[-0.42+0.j  ,  0.  -0.27j],
@@ -456,6 +476,15 @@ class IntrinsicOneParaGate(ParameterGate):
             return self.coeff[about_what] * self._diff_matrix(theta)
         raise Exception("Not a parameterized gate!")
 
+    def check_obj_qubits(self):
+        """Check obj qubit number"""
+        n_qubits = len(self.obj_qubits)
+        n_qubits_exp = np.log2(len(self._matrix(0))).astype(int)
+        if n_qubits_exp != n_qubits:
+            raise ValueError(
+                f"obj_qubits of {self.name} requires {n_qubits_exp} qubits, but get {n_qubits}"
+            )
+
 
 def _check_gate_type(gate):
     if not isinstance(gate, BasicGate):
@@ -471,3 +500,12 @@ def _check_qubit_id(qubit_id):
     if qubit_id < 0:
         raise ValueError(
             "Qubit should be non negative int, but get {}!".format(qubit_id))
+
+
+def _check_obj_and_ctrl_qubits(obj_qubits, ctrl_qubits):
+    if set(obj_qubits) & set(ctrl_qubits):
+        raise ValueError("obj_qubits and ctrl_qubits cannot have same qubits.")
+    if len(set(obj_qubits)) != len(obj_qubits):
+        raise ValueError("obj_qubits cannot have same qubits")
+    if len(set(ctrl_qubits)) != len(ctrl_qubits):
+        raise ValueError("ctrl_qubits cannot have same qubits")

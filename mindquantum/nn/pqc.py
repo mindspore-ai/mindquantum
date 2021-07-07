@@ -78,6 +78,7 @@ class PQC(PrimitiveWithInfer):
             self.n_meas = len(hams_pauli_coeff)
 
     def check_shape_size(self, encoder_data, ansatz_data):
+        """check shape size"""
         if len(encoder_data) != 2:
             raise ValueError(
                 "PQC input encoder_data should have dimension size \
@@ -86,6 +87,14 @@ equal to 2, but got {}.".format(len(encoder_data)))
             raise ValueError(
                 "PQC input ansatz_data should have dimension size \
 equal to 1, but got {}.".format(len(ansatz_data)))
+        if encoder_data[1] != len(self.encoder_params_names):
+            raise ValueError(
+                f'Input encoder_data length {encoder_data[1]} \
+mismatch with circuit encoder parameter number {len(self.encoder_params_names)}')
+        if ansatz_data[0] != len(self.ansatz_params_names):
+            raise ValueError(
+                f'Input ansatz_data length {ansatz_data[1]} \
+mismatch with circuit ansatz parameter number {len(self.ansatz_params_names)}')
 
     def infer_shape(self, encoder_data, ansatz_data):
         self.check_shape_size(encoder_data, ansatz_data)
@@ -146,6 +155,7 @@ def generate_pqc_operator(encoder_params_names,
         >>> from mindquantum.ops import QubitOperator
         >>> from mindquantum import Circuit
         >>> import mindquantum.gate as G
+        >>> from mindquantum.nn import generate_pqc_operator
         >>> encoder_circ = Circuit([G.RX('a').on(0)])
         >>> ansatz_circ = Circuit([G.RY('b').on(0)])
         >>> circ = encoder_circ + ansatz_circ
