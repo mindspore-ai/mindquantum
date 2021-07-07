@@ -33,9 +33,9 @@ def test_projector_checked_by_evo():
     a, b, c = 0.3, 0.5, 0.9
     data = ms.Tensor(np.array([a, b, c]).astype(np.float32))
     state = evo(data)
-    proj = Projector('I10')
+    proj = [Projector('I10'), Projector('I10')]
     poi = [int(i, 2) for i in ['010', '110']]
     pqc = MindQuantumAnsatzOnlyOperator(circ.para_name, circ, proj)
     pob = pqc(data)
     pob_exp = np.sum(np.abs(state[poi])**2)
-    assert np.allclose(pob.asnumpy(), [[pob_exp]])
+    assert np.allclose(pob.asnumpy(), [[pob_exp], [pob_exp]])
