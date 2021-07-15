@@ -83,7 +83,7 @@ export OMP_NUM_THREADS=4
 
 ## 快速入门
 
-关于如何快速搭建参数化量子线路和量子神经网络，并进行训练，请点击查看[MindQuantum使用教程](https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/quantum_neural_network.html)
+关于如何快速搭建参数化量子线路和量子神经网络，并进行训练，请点击查看[MindQuantum使用教程](https://www.mindspore.cn/mindquantum/docs/zh-CN/r0.2/index.html)
 
 ## 文档
 
