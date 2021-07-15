@@ -83,7 +83,7 @@ For large servers, please set the number of parallel kernels appropriately accor
 
 ## Quick Start
 
-For more details about how to build a parameterized quantum circuit and a quantum neural network and how to train these models, see the [MindQuantum Tutorial](https://www.mindspore.cn/tutorial/training/en/master/advanced_use/quantum_neural_network.html).
+For more details about how to build a parameterized quantum circuit and a quantum neural network and how to train these models, see the [MindQuantum Tutorial](https://www.mindspore.cn/mindquantum/docs/en/master/index.html).
 
 ## Docs
 
