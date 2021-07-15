@@ -2,7 +2,7 @@
 
 Initial release of MindQuantum.
 
-### Major Features and Improvements（卢家乐）
+### Major Features and Improvements
 
 * Parameterized FermionOperator and QubitOperator for quantum chemistry
 * Different kinds of transformation between FermionOperator and QubitOperator
