@@ -21,24 +21,18 @@ from setuptools import find_packages
 from setuptools.command.egg_info import egg_info
 from setuptools.command.build_py import build_py
 
-version = '0.2.0'
 cur_dir = os.path.dirname(os.path.realpath(__file__))
 pkg_dir = os.path.join(cur_dir, 'build')
 
 
-def write_version(file):
-    file.write("__version__ = '{}'\n".format(version))
-
-
-def build_depends():
+def read_version():
     """generate python file"""
     version_file = os.path.join(cur_dir, 'mindquantum/', 'version.py')
-    with open(version_file, 'w') as f:
-        write_version(f)
+    with open(version_file, 'r') as f:
+        version_ = f.readlines()[-1].strip().split()[-1][1:-1]
+    return version_
 
-
-build_depends()
-
+version = read_version()
 
 def update_permissions(path):
     """
