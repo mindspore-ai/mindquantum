@@ -15,7 +15,6 @@
 """Test circuit."""
 
 from mindquantum.ops import QubitOperator
-import qutip as qt
 import numpy as np
 from mindquantum import Circuit
 import mindquantum.gate as G
@@ -95,10 +94,6 @@ def test_decompose_single_term_time_evolution():
     circ = decompose_single_term_time_evolution(QubitOperator('Z0 Z1'),
                                                 {'a': 1})
     assert circ == Circuit([G.X.on(1, 0), G.RZ({'a': 2}).on(1), G.X.on(1, 0)])
-    cnot = qt.qip.operations.cnot(control=0, target=1)
-    rz = qt.tensor(qt.identity(2), qt.qip.operations.rz(2))
-    assert cnot * rz * cnot == (-1j *
-                                qt.tensor(qt.sigmaz(), qt.sigmaz())).expm()
 
 
 def test_generate_uccsd():
