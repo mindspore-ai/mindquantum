@@ -13,7 +13,6 @@ __pycache__/
 build
 *.egg-info
 dist
-version.py
 local_script/
 output
 .ipynb_checkpoints
