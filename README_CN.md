@@ -9,6 +9,8 @@
     - [确认系统环境信息](#确认系统环境信息)
     - [源码安装](#源码安装)
     - [pip安装](#pip安装)
+        - [安装MindSpore](#安装mindspore)
+        - [安装MindQuantum](#安装mindquantum)
 - [验证是否成功安装](#验证是否成功安装)
 - [Docker安装](#docker安装)
 - [注意事项](#注意事项)
@@ -53,8 +55,18 @@ MindQuantum是结合MindSpore和HiQ开发的量子机器学习框架，支持多
 
 ### pip安装
 
+#### 安装MindSpore
+
 ```bash
-pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/1.2.0-rc1/MindQuantum/ubuntu_x86/mindquantum-0.1.0-py3-none-any.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install https://hiq.huaweicloud.com/download/mindspore/cpu/x86_64/mindspore-1.3.0-cp38-cp38-linux_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+> - 请根据本机的python版本选择合适的安装包，如本机为python 3.7，则可将上面命令中的`cp38-cp38`修改为`cp37-cp37`。
+
+#### 安装MindQuantum
+
+```bash
+pip install https://hiq.huaweicloud.com/download/mindquantum/any/mindquantum-0.2.0-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
 > - 在联网状态下，安装whl包时会自动下载MindQuantum安装包的依赖项（依赖项详情参见[setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py)），其余情况需自行安装。

@@ -16,8 +16,8 @@
 
 import pytest
 from mindquantum.ops import QubitOperator
-import qutip as qt
 import numpy as np
+from scipy.linalg import expm
 from mindquantum.gate import Hamiltonian
 import mindquantum.gate as G
 
@@ -35,70 +35,107 @@ def test_hamiltonian():
 
 def test_rotate_pauli():
     gates = {
-        'rx': [G.RX('angle').on(0), qt.qip.operations.rx],
-        'ry': [G.RY('angle').on(0), qt.qip.operations.ry],
-        'rz': [G.RZ('angle').on(0), qt.qip.operations.rz]
+        'rx': [
+            G.RX('angle').on(0), lambda phi: np.array([[
+                np.cos(phi / 2), -1j * np.sin(phi / 2)
+            ], [-1j * np.sin(phi / 2), np.cos(phi / 2)]])
+        ],
+        'ry': [
+            G.RY('angle').on(0),
+            lambda phi: np.array([[np.cos(phi / 2), -np.sin(
+                phi / 2)], [np.sin(phi / 2), np.cos(phi / 2)]])
+        ],
+        'rz': [
+            G.RZ('angle').on(0),
+            lambda phi: np.array([[np.exp(-1j * phi / 2), 0],
+                                  [0, np.exp(1j * phi / 2)]])
+        ]
     }
     angle = 0.5
     for name, rs in gates.items():
         assert np.allclose(rs[0].matrix({'angle': angle}),
-                           rs[1](angle).data.toarray())
+                           rs[1](angle))
         assert np.allclose(rs[0].diff_matrix({'angle': angle}),
-                           0.5 * rs[1](angle + np.pi).data.toarray())
+                           0.5 * rs[1](angle + np.pi))
         assert np.allclose(rs[0].hermitian().matrix({'angle': angle}),
-                           rs[1](-angle).data.toarray())
+                           rs[1](-angle))
         assert np.allclose(rs[0].hermitian().diff_matrix({'angle': angle}),
-                           0.5 * rs[1](-angle - np.pi).data.toarray())
+                           0.5 * rs[1](-angle - np.pi))
 
 
 def test_phase_shift():
     angle = 0.5
-    assert np.allclose(
-        G.PhaseShift(angle).matrix(),
-        qt.qip.operations.phasegate(angle).data.toarray())
+    f = lambda theta: np.array([[1, 0], [0, np.exp(1.0j * theta)]])
+    assert np.allclose(G.PhaseShift(angle).matrix(), f(angle))
 
 
 def test_trap_ion_gate():
     angle = 0.5
     xx = [
-        G.XX("angle").on((0, 1)), lambda angle:
-        (-1j * angle * qt.tensor(qt.sigmax(), qt.sigmax())).expm()
+        G.XX("angle").on((0, 1)), lambda angle: expm(-1j * angle * np.array(
+            [[0. + 0.j, 0. + 0.j, 0. + 0.j, 1. + 0.j],
+             [0. + 0.j, 0. + 0.j, 1. + 0.j, 0. + 0.j],
+             [0. + 0.j, 1. + 0.j, 0. + 0.j, 0. + 0.j],
+             [1. + 0.j, 0. + 0.j, 0. + 0.j, 0. + 0.j]]))
     ]
     yy = [
-        G.YY("angle").on((0, 1)), lambda angle:
-        (-1j * angle * qt.tensor(qt.sigmay(), qt.sigmay())).expm()
+        G.YY("angle").on((0, 1)), lambda angle: expm(-1j * angle * np.array(
+            [[0. + 0.j, 0. + 0.j, 0. + 0.j, -1. + 0.j],
+             [0. + 0.j, 0. + 0.j, 1. + 0.j, 0. + 0.j],
+             [0. + 0.j, 1. + 0.j, 0. + 0.j, 0. + 0.j],
+             [-1. + 0.j, 0. + 0.j, 0. + 0.j, 0. + 0.j]]))
     ]
     zz = [
-        G.ZZ("angle").on((0, 1)), lambda angle:
-        (-1j * angle * qt.tensor(qt.sigmaz(), qt.sigmaz())).expm()
+        G.ZZ("angle").on((0, 1)), lambda angle: expm(-1j * angle * np.array([[
+            1., 0., 0., 0.
+        ], [0., -1., 0., 0.], [0., 0., -1., 0.], [0., 0., 0., 1.]]))
     ]
     for g in [xx, yy, zz]:
         assert np.allclose(g[0].matrix({'angle': angle}),
-                           g[1](angle).data.toarray())
+                           g[1](angle))
         assert np.allclose(g[0].diff_matrix({'angle': angle}),
-                           g[1](angle + np.pi / 2).data.toarray())
+                           g[1](angle + np.pi / 2))
 
 
 def test_pauli_gate():
     gates = {
-        'X': [G.X, qt.sigmax(), qt.qip.operations.rx],
-        'Y': [G.Y, qt.sigmay(), qt.qip.operations.ry],
-        'Z': [G.Z, qt.sigmaz(), qt.qip.operations.rz]
+        'X': [
+            G.X,
+            np.array([[0. + 0.j, 1. + 0.j], [1. + 0.j, 0. + 0.j]]),
+            lambda phi: np.array([[np.cos(phi / 2), -1j * np.sin(phi / 2)],
+                                  [-1j * np.sin(phi / 2),
+                                   np.cos(phi / 2)]])
+        ],
+        'Y': [
+            G.Y,
+            np.array([[0. + 0.j, 0. - 1.j], [0. + 1.j, 0. + 0.j]]),
+            lambda phi: np.array([[np.cos(phi / 2), -np.sin(
+                phi / 2)], [np.sin(phi / 2), np.cos(phi / 2)]])
+        ],
+        'Z': [
+            G.Z,
+            np.array([[1. + 0.j, 0. + 0.j], [0. + 0.j, -1. + 0.j]]),
+            lambda phi: np.array([[np.exp(-1j * phi / 2), 0],
+                                  [0, np.exp(1j * phi / 2)]])
+        ]
     }
     angle = 0.5
     for name, ps in gates.items():
-        assert np.allclose(ps[0].matrix(), ps[1].data.toarray())
+        assert np.allclose(ps[0].matrix(), ps[1])
         assert np.allclose((ps[0]**angle).matrix(),
-                           ps[2](angle * np.pi).data.toarray())
+                           ps[2](angle * np.pi))
 
 
 def test_identity():
-    assert np.allclose(G.I.matrix(), qt.identity(2).data.toarray())
+    assert np.allclose(G.I.matrix(),
+                       np.array([[1. + 0.j, 0. + 0.j], [0. + 0.j, 1. + 0.j]]))
 
 
 def test_hadamard():
-    assert np.allclose(G.H.matrix(),
-                       qt.qip.operations.hadamard_transform(1).data.toarray())
+    assert np.allclose(
+        G.H.matrix(),
+        np.array([[0.70710678 + 0.j, 0.70710678 + 0.j],
+                  [0.70710678 + 0.j, -0.70710678 + 0.j]]))
 
 
 def test_power():
@@ -110,8 +147,12 @@ def test_power():
 
 
 def test_swap():
-    assert np.allclose(G.SWAP.matrix(),
-                       qt.qip.operations.swap().data.toarray())
+    assert np.allclose(
+        G.SWAP.matrix(),
+        np.array([[1. + 0.j, 0. + 0.j, 0. + 0.j, 0. + 0.j],
+                  [0. + 0.j, 0. + 0.j, 1. + 0.j, 0. + 0.j],
+                  [0. + 0.j, 1. + 0.j, 0. + 0.j, 0. + 0.j],
+                  [0. + 0.j, 0. + 0.j, 0. + 0.j, 1. + 0.j]]))
 
 
 def test_univ_mat_gate():

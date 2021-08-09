@@ -9,6 +9,8 @@
     - [Confirming System Environment Information](#confirming-system-environment-information)
     - [Install by Source Code](#install-by-source-code)
     - [Install by pip](#install-by-pip)
+        - [Install MindSpore](#install-mindspore)
+        - [Install MindQuantum](#install-mindquantum)
 - [Verifying Successful Installation](#verifying-successful-installation)
 - [Install with Docker](#install-with-docker)
 - [Note](#Note)
@@ -53,8 +55,16 @@ python setup.py install --user
 
 ### Install by pip
 
+#### Install MindSpore
+
 ```bash
-pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/1.2.0-rc1/MindQuantum/ubuntu_x86/mindquantum-0.1.0-py3-none-any.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install https://hiq.huaweicloud.com/download/mindspore/cpu/x86_64/mindspore-1.3.0-cp38-cp38-linux_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+#### Install MindQuantum
+
+```bash
+pip install https://hiq.huaweicloud.com/download/mindquantum/any/mindquantum-0.2.0-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
 > - When the network is connected, dependency items are automatically downloaded during .whl package installation. (For details about other dependency items, see [setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py)). In other cases, you need to manually install dependency items.

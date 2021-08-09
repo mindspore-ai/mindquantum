@@ -122,4 +122,14 @@ class CircuitEngine:
         return deco
 
 
-circuit_generator = CircuitEngine().generator
+def circuit_generator(n_qubits, *args, **kwds):
+    """
+        Generate quantum circuit as projectq style.
+
+        Args:
+            n_qubits (int): qubit number of quantum circuit.
+
+        Note:
+            More information please refers to :class:`CircuitEngine.generator`.
+    """
+    return CircuitEngine().generator(n_qubits, *args, **kwds)
