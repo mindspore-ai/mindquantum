@@ -19,6 +19,6 @@ from .circuitengine import CircuitEngine
 from .circuitengine import circuit_generator
 
 
-__all__ = ['BasicQubit', 'CircuitEngine']
+__all__ = ['BasicQubit', 'CircuitEngine', 'circuit_generator']
 
 __all__.sort()

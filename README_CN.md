@@ -7,10 +7,11 @@
 - [MindQuantum介绍](#mindquantum介绍)
 - [安装教程](#安装教程)
     - [确认系统环境信息](#确认系统环境信息)
-    - [源码安装](#源码安装)
     - [pip安装](#pip安装)
         - [安装MindSpore](#安装mindspore)
         - [安装MindQuantum](#安装mindquantum)
+    - [源码安装](#源码安装)
+- [API](#api)
 - [验证是否成功安装](#验证是否成功安装)
 - [Docker安装](#docker安装)
 - [注意事项](#注意事项)
@@ -25,7 +26,7 @@
 
 ## MindQuantum介绍
 
-MindQuantum是结合MindSpore和HiQ开发的量子机器学习框架，支持多种量子神经网络的训练和推理。得益于华为HiQ团队的量子计算模拟器和MindSpore高性能自动微分能力，MindQuantum能够高效处理量子机器学习、量子化学模拟和量子优化等问题，性能达到业界[TOP1](https://gitee.com/mindspore/mindquantum/tree/master/tutorials/benchmarks)，为广大的科研人员、老师和学生提供了快速设计和验证量子机器学习算法的高效平台。
+MindQuantum是基于华为开源自研AI框架MindSpore开发的高性能量子-经典混合计算框架，能高效的生成多种变分量子线路，支持量子模拟、量子组合优化、量子机器学习等NISQ算法，性能达到业界[领先水平](https://gitee.com/mindspore/mindquantum/tree/master/tutorials/benchmarks)。结合HiQ量子计算云平台，MindQuantum可以作为广大的科研人员、老师和学生快速设计和体验量子计算的高效解决方案。
 
 <img src="docs/MindQuantum-architecture.png" alt="MindQuantum Architecture" width="600"/>
 
@@ -36,22 +37,6 @@ MindQuantum是结合MindSpore和HiQ开发的量子机器学习框架，支持多
 - 硬件平台确认为Linux系统下的CPU，并支持avx指令集。
 - 参考[MindSpore安装指南](https://www.mindspore.cn/install)，完成MindSpore的安装，要求至少1.2.0版本。
 - 其余依赖请参见[setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py)
-
-### 源码安装
-
-1. 从代码仓下载源码
-
-    ```bash
-    cd ~
-    git clone https://gitee.com/mindspore/mindquantum.git
-    ```
-
-2. 编译安装MindQuantum
-
-    ```bash
-    cd ~/mindquantum
-    python setup.py install --user
-    ```
 
 ### pip安装
 
@@ -70,6 +55,26 @@ pip install https://hiq.huaweicloud.com/download/mindquantum/any/mindquantum-0.2
 ```
 
 > - 在联网状态下，安装whl包时会自动下载MindQuantum安装包的依赖项（依赖项详情参见[setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py)），其余情况需自行安装。
+
+### 源码安装
+
+1. 从代码仓下载源码
+
+    ```bash
+    cd ~
+    git clone https://gitee.com/mindspore/mindquantum.git
+    ```
+
+2. 编译安装MindQuantum
+
+    ```bash
+    cd ~/mindquantum
+    python setup.py install --user
+    ```
+
+## API
+
+MindQuantum API文档请查看[文档链接](https://www.mindspore.cn/mindquantum/api/zh-CN/master/index.html)
 
 ## 验证是否成功安装
 
