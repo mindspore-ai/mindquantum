@@ -307,7 +307,6 @@ contain no parameters.")
                         doubles_counter += 1
         n_qubits_circuit = 0
         if list(ansatz_circuit):
-            ansatz_circuit.summary(show=False)
             n_qubits_circuit = ansatz_circuit.n_qubits
         # If the ansatz's n_qubits is not set by user, use n_qubits_circuit.
         if self.n_qubits is None:

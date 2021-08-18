@@ -38,7 +38,6 @@ def test_circuit():
     circuit2 = Circuit([G.X.on(0, 1)])
     circuit3 = circuit1 + circuit2
     assert len(circuit3) == 3
-    circuit3.summary(False)
     assert circuit3.n_qubits == 2
     circuit3.insert(0, G.H.on(0))
     assert circuit3[0] == G.H(0)

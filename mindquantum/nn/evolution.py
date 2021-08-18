@@ -128,8 +128,6 @@ def generate_evolution_operator(circuit, param_names=None, hams=None):
         _check_parameters_of_circuit([], param_names, circuit)
     if hams is not None:
         _check_type_or_iterable_type(hams, Hamiltonian, 'Hamiltonian')
-    if circuit.n_qubits == -1:
-        circuit.summary(False)
     if isinstance(hams, Hamiltonian):
         hams = [hams]
     if hams is None:

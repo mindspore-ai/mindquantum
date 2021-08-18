@@ -170,8 +170,6 @@ def generate_pqc_operator(encoder_params_names,
     if not isinstance(n_threads, int) or n_threads <= 0:
         raise TypeError(
             "n_threads requires a positive int, but get {}".format(n_threads))
-    if circuit.n_qubits == -1:
-        circuit.summary(False)
     is_projector = False
     if isinstance(measurements, (Projector, Hamiltonian)):
         measurements = [measurements]
@@ -182,7 +180,6 @@ def generate_pqc_operator(encoder_params_names,
         n_qubits_ham = count_qubits(hams[0].hamiltonian)
         if n_qubits_ham > circuit.n_qubits:
             circuit += IGate().on(n_qubits_ham - 1)
-            circuit.summary(False)
     if isinstance(measurements[0], Projector):
         for pro in measurements:
             if pro.n_qubits != circuit.n_qubits:
