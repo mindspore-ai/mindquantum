@@ -147,11 +147,13 @@ def _apply_circuit(circ, qubits):
             f"Can not apply a {len(old_qubits)} qubits unit to {len(qubits)} qubits circuit."
         )
     qubits_map = dict(zip(old_qubits, qubits))
-    out = circ * 1
-    for g in out:
+    out = Circuit()
+    for g in circ:
+        g = copy.deepcopy(g)
         g.obj_qubits = [qubits_map[i] for i in g.obj_qubits]
         g.ctrl_qubits = [qubits_map[i] for i in g.ctrl_qubits]
         g.generate_description()
+        out += g
     return out
 
 
@@ -207,14 +209,16 @@ def apply(circuit_fn, qubits):
 
 def _add_prefix(circ, prefix):
     """Add prefix to every parameters in circuit."""
-    out = circ * 1
-    for g in out:
+    out = Circuit()
+    for g in circ:
+        g = copy.deepcopy(g)
         if g.isparameter:
             pr = PR()
             for k, v in g.coeff.items():
                 pr[f'{prefix}_{k}'] = v
             g.coeff = pr
             g.generate_description()
+        out += g
     return out
 
 
@@ -262,8 +266,9 @@ def add_prefix(circuit_fn, prefix):
 
 def _change_param_name(circ, name_map):
     """Change the parameter of circuit according to the name map."""
-    out = circ * 1
-    for g in out:
+    out = Circuit()
+    for g in circ:
+        g = copy.deepcopy(g)
         if g.isparameter:
             pr = PR()
             for k, v in g.coeff.items():
@@ -272,6 +277,7 @@ def _change_param_name(circ, name_map):
                 pr[name_map[k]] = v
             g.coeff = pr
             g.generate_description()
+        out += g
     return out
 
 

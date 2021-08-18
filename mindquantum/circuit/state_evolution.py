@@ -55,7 +55,6 @@ class StateEvolution:
                 f'Input circuit should be a quantum circuit, but get {type(circuit)}'
             )
         self.circuit = circuit
-        self.circuit.summary(False)
         self.evol = generate_evolution_operator(self.circuit)
         self.index = _generate_n_qubits_index(self.circuit.n_qubits)
 

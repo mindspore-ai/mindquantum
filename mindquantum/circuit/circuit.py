@@ -54,6 +54,86 @@ def _two_dim_array_to_list(data):
     return [out_real, out_imag]
 
 
+class CollectionMap:
+    """A collection container."""
+    def __init__(self):
+        self.map = {}
+
+    def __str__(self):
+        return self.map.__str__()
+
+    def __repr__(self):
+        return self.map.__repr__()
+
+    def collect(self, keys):
+        """collect items"""
+        if not isinstance(keys, list):
+            keys = [keys]
+        for k in keys:
+            if k not in self.map:
+                self.map[k] = 1
+            else:
+                self.map[k] += 1
+
+    def delete(self, keys):
+        """delete items"""
+        if not isinstance(keys, list):
+            keys = [keys]
+        for k in keys:
+            if k in self.map:
+                if self.map[k] == 1:
+                    self.map.pop(k)
+                else:
+                    self.map[k] -= 1
+
+    def num(self, k):
+        """items count number"""
+        if k not in self.map:
+            return 0
+        return self.map[k]
+
+    def keys(self):
+        """All items list"""
+        return list(self.map.keys())
+
+    @property
+    def size(self):
+        """number of items"""
+        return len(self.map)
+
+    def __len__(self):
+        return self.size
+
+    def merge(self, other):
+        """merge with other collection container"""
+        for k, v in other.map.items():
+            if k in self.map:
+                self.map[k] += v
+            else:
+                self.map[k] = v
+
+    def unmerge(self, other):
+        """delete with other collection container"""
+        for k, v in other.map.items():
+            if k in self.map:
+                if self.map[k] <= v:
+                    self.map.pop(k)
+                else:
+                    self.map[k] -= v
+
+    def __copy__(self):
+        """copy this container"""
+        out = CollectionMap()
+        out.merge(self)
+        return out
+
+    def __deepcopy__(self, memo):
+        """deepcopy this container"""
+        out = CollectionMap()
+        out.merge(self)
+        return out
+
+
 class Circuit(list):
     """
     The quantum circuit module.
@@ -88,20 +168,41 @@ class Circuit(list):
     """
     def __init__(self, gates=None):
         list.__init__([])
-        self.all_qubits = set()
-        self.all_paras = set()
-        self.n_qubits = -1
+        self.all_qubits = CollectionMap()
+        self.all_paras = CollectionMap()
         if gates is not None:
             if isinstance(gates, Iterable):
-                for gate in gates:
-                    _check_gate_type(gate)
                 self.extend(gates)
             else:
-                _check_gate_type(gates)
                 self.append(gates)
 
+    def append(self, gate):
+        """Append a gate."""
+        _check_gate_type(gate)
+        super().append(gate)
+        self.all_qubits.collect(gate.obj_qubits)
+        self.all_qubits.collect(gate.ctrl_qubits)
+        if gate.isparameter:
+            self.all_paras.collect(list(gate.coeff.keys()))
+
+    def extend(self, gates):
+        """Extend a circuit."""
+        if isinstance(gates, Circuit):
+            super().extend(gates)
+            self.all_qubits.merge(gates.all_qubits)
+            self.all_paras.merge(gates.all_paras)
+        else:
+            for gate in gates:
+                self.append(gate)
+
     def __add__(self, gates):
-        return Circuit(super().__add__(Circuit(gates)))
+        out = Circuit()
+        out.extend(self)
+        if isinstance(gates, BasicGate):
+            out.append(gates)
+        else:
+            out.extend(gates)
+        return out
 
     def __radd__(self, gates):
         return Circuit(gates) + self
@@ -126,12 +227,33 @@ class Circuit(list):
             out += copy.deepcopy(self)
         return out
 
+    def __deepcopy__(self, memo):
+        res = Circuit()
+        for gate in self:
+            res.append(copy.deepcopy(gate))
+        return res
+
+    def __copy__(self):
+        res = Circuit()
+        for gate in self:
+            res.append(copy.deepcopy(gate))
+        return res
+
     def __rmul__(self, num):
         return self.__mul__(num)
 
     def __setitem__(self, k, v):
         _check_gate_type(v)
+        old_v = self[k]
+        self.all_qubits.delete(old_v.obj_qubits)
+        self.all_qubits.delete(old_v.ctrl_qubits)
+        if old_v.isparameter:
+            self.all_paras.delete(list(old_v.coeff.keys()))
         super().__setitem__(k, v)
+        self.all_qubits.collect(v.obj_qubits)
+        self.all_qubits.collect(v.ctrl_qubits)
+        if v.isparameter:
+            self.all_paras.collect(list(v.coeff.keys()))
 
     def __getitem__(self, sliced):
         if isinstance(sliced, int):
@@ -148,10 +270,18 @@ class Circuit(list):
         """
         if isinstance(gates, BasicGate):
             super().insert(index, gates)
+            self.all_qubits.collect(gates.obj_qubits)
+            self.all_qubits.collect(gates.ctrl_qubits)
+            if gates.isparameter:
+                self.all_paras.collect(list(gates.coeff.keys()))
         elif isinstance(gates, Iterable):
             for gate in gates[::-1]:
                 _check_gate_type(gate)
                 self.insert(index, gate)
+                self.all_qubits.collect(gate.obj_qubits)
+                self.all_qubits.collect(gate.ctrl_qubits)
+                if gate.isparameter:
+                    self.all_paras.collect(list(gate.coeff.keys()))
         else:
             raise TypeError("Unsupported type for quantum gate: {}".format(
                 type(gates)))
@@ -178,6 +308,10 @@ class Circuit(list):
     def __repr__(self):
         return self.__str__()
 
+    @property
+    def n_qubits(self):
+        return max(self.all_qubits.keys()) + 1
+
     def summary(self, show=True):
         """
         Print the information about current circuit, including block number,
@@ -201,24 +335,18 @@ class Circuit(list):
         """
         self.num_non_para_gate = 0
         self.num_para_gate = 0
-        self.all_paras = set()
-        self.all_qubits = set()
         for gate in self:
             if gate.isparameter:
                 self.num_para_gate += 1
-                self.all_paras.update(gate.coeff)
             else:
                 self.num_non_para_gate += 1
-            self.all_qubits.update(gate.obj_qubits)
-            self.all_qubits.update(gate.ctrl_qubits)
-        self.n_qubits = max(self.all_qubits) + 1
         if show:
             info = bprint([
                 'Total number of gates: {}.'.format(self.num_para_gate +
                                                     self.num_non_para_gate),
                 'Parameter gates: {}.'.format(self.num_para_gate),
                 'with {} parameters are: {}{}'.format(
-                    len(self.all_paras), ', '.join(list(self.all_paras)[:10]),
+                    len(self.all_paras), ', '.join(self.all_paras.keys()[:10]),
                     ('.' if len(self.all_paras) <= 10 else '...')),
                 'Number qubit of circuit: {}'.format(self.n_qubits)
             ],
@@ -253,10 +381,7 @@ class Circuit(list):
         Returns:
             ParameterResolver, the parameter resolver of the whole circuit.
         """
-        pr = PR()
-        for gate in self:
-            if gate.isparameter:
-                pr.update(gate.coeff)
+        pr = PR(self.all_paras.map)
         pr *= 0
         return pr
 
@@ -275,7 +400,7 @@ class Circuit(list):
             >>> circuit.para_name
             ['a', 'b']
         """
-        return self.parameter_resolver().para_name
+        return list(self.all_paras.keys())
 
     def apply_value(self, pr):
         """
