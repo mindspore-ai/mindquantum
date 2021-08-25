@@ -2,12 +2,12 @@ import numpy as np
 from openfermion.chem import MolecularData
 from openfermionpyscf import run_pyscf
 import mindquantum as mq
-from mindquantum import Circuit, X, RX, Hamiltonian
-from mindquantum.circuit import generate_uccsd
+from mindquantum.circuit import generate_uccsd, Circuit
+from mindquantum.gate import X, RX, Hamiltonian
 from mindquantum.nn import generate_pqc_operator
 import mindspore as ms
 import mindspore.context as context
-from mindspore.common.parameter import Parameter
+from mindspore import Parameter
 from mindspore.common.initializer import initializer
 
 context.set_context(mode=context.GRAPH_MODE, device_target="CPU")
@@ -90,7 +90,7 @@ from mindquantum.hiqfermion.transforms import Transform
 from mindquantum.hiqfermion.ucc import get_qubit_hamiltonian
 from mindquantum.hiqfermion.ucc import uccsd_singlet_generator, uccsd_singlet_get_packed_amplitudes
 from mindquantum.circuit import TimeEvolution
-from mindquantum.nn.mindquantum_ansatz_only_layer import MindQuantumAnsatzOnlyLayer
+from mindquantum.nn import MindQuantumAnsatzOnlyLayer
 
 hamiltonian_QubitOp = get_qubit_hamiltonian(molecule_of)
 

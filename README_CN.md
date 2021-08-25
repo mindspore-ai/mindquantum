@@ -46,7 +46,7 @@ MindQuantum是基于华为开源自研AI框架MindSpore开发的高性能量子-
 pip install https://hiq.huaweicloud.com/download/mindspore/cpu/x86_64/mindspore-1.3.0-cp38-cp38-linux_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
-> - 请根据本机的python版本选择合适的安装包，如本机为python 3.7，则可将上面命令中的`cp38-cp38`修改为`cp37-cp37`。
+> - 请根据本机的python版本选择合适的安装包，如本机为python 3.7，则可将上面命令中的`cp38-cp38`修改为`cp37-cp37m`。
 
 #### 安装MindQuantum
 

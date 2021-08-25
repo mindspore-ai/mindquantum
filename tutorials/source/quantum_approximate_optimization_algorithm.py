@@ -1,4 +1,5 @@
-from mindquantum import Circuit, Hamiltonian, UN, H, ZZ, RX, StateEvolution
+from mindquantum.gate import Hamiltonian, H, ZZ, RX
+from mindquantum.circuit import Circuit, StateEvolution, UN
 from mindquantum.nn import MindQuantumAnsatzOnlyLayer
 from mindquantum.ops import QubitOperator
 import networkx as nx
