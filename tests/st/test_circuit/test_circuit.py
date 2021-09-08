@@ -80,7 +80,7 @@ def test_pauli_word_to_circuits():
 
 
 def test_un():
-    circ = UN(G.X, [3, 4, 5], [0, 1, 2])
+    circ = UN(G.X, [3, 4, 5], maps_ctrl=[0, 1, 2])
     assert circ[-1] == G.X.on(5, 2)
 
 

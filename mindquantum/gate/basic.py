@@ -486,10 +486,16 @@ class IntrinsicOneParaGate(ParameterGate):
             )
 
 
+def _is_gate_class(gate_class):
+    if not hasattr(gate_class, 'isparameter'):
+        return issubclass(gate_class, BasicGate)
+    return isinstance(gate_class, BasicGate)
+
+
 def _check_gate_type(gate):
-    if not isinstance(gate, BasicGate):
-        raise TypeError("Require a quantum gate, but get {}".format(
-            type(gate)))
+    msg = "Require a quantum gate, but get {}".format(type(gate))
+    if not _is_gate_class(gate):
+        raise TypeError(msg)
 
 
 def _check_qubit_id(qubit_id):
