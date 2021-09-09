@@ -59,12 +59,12 @@ class HardwareEfficientAnsatz(Ansatz):
             the entanglemtn gate will be act on any two qbuits. Besides, you can specific which two
             qubits you want to do entanglement by setting the entangle_mapping to a list of two qubits
             tuple. Default: "linear".
-        depth (int): The depth of ansatz. Default: 1.
+        depth (int): Repeat the entanglement gate layer and single_rot_gate_seq in depth times. Default: 1.
 
     Examples:
         >>> from mindquantum.ansatz import HardwareEfficientAnsatz
         >>> from mindquantum import RY, RZ, Z
-        >>> hea = HardwareEfficientAnsatz(3, [RY, RZ], Z, [(0, 1), (0, 2)])
+        >>> hea = HardwareEfficientAnsatz(3, [RY, RZ], Z, [(1, 0), (2, 0)])
         >>> hea.circuit
         RY(d0_n0_0|0)
         RZ(d0_n0_1|0)
@@ -132,6 +132,7 @@ or a list of tuple of the qubits that the entanglement gate act on.")
                     raise TypeError(
                         f"Element of entangle_mapping need a tuple, but get {type(i)}"
                     )
+            entangle_mapping = [(j, i) for i, j in entangle_mapping]
         else:
             raise ValueError("entangle_mapping can only be 'all', 'linear', \
 or a list of tuple of the qubits that the entanglement gate act on.")
