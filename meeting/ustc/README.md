@@ -9,3 +9,12 @@
 ```bash
 pip install mindquantum-0.3.0-py3-none-any.whl
 ```
+
+- 更新cmake，如有需要
+```bash
+cd ~
+git clone https://gitee.com/donghufeng/cmake_mirror.git
+cd cmake_mirror
+./install.sh
+source ~/.bashrc
+```
