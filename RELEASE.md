@@ -1,6 +1,6 @@
-# MindQuantum 0.2.0 Release Notes
+# MindQuantum 0.2.0 
 
-Initial release of MindQuantum.
+## MindQuantum 0.2.0 Release Notes
 
 ### Major Features and Improvements
 
@@ -19,8 +19,9 @@ yufan, wengwenkang, xuxusheng, wanzidong, yankang, lujiale, fanyi, zhangwengang,
 
 Contributions of any kind are welcome!
 
+# MindQuantum 0.1.0 
 
-# MindQuantum 0.1.0 Release Notes
+## MindQuantum 0.1.0 Release Notes
 
 Initial release of MindQuantum.
 
