@@ -1,0 +1,98 @@
+[build-system]
+requires = ["setuptools>=42", "wheel", "pybind11>=2.6.0", "setuptools_scm[toml]>=3.4"]
+build-backend = "setuptools.build_meta"
+
+# ==============================================================================
+
+[tool.black]
+    line-length = 120
+    target-version = ['py36','py37','py38']
+    skip-string-normalization = true
+
+
+[tool.check-manifest]
+    ignore = [
+    'PKG-INFO',
+    '*.egg-info',
+    '*.egg-info/*',
+    'setup.cfg',
+    '.hgtags',
+    '.hgsigs',
+    '.hgignore',
+    '.gitignore',
+    '.bzrignore',
+    '.gitattributes',
+    '.github/*',
+    '.travis.yml',
+    '*.mo',
+    '.clang-tidy',
+    '.clang-format',
+    '.gitmodules',
+    'requirements.txt',
+    'requirements_tests.txt',
+    'VERSION.txt',
+    '.editorconfig',
+    '*.yml',
+    '*.yaml',
+    'docs/*',
+    'docs/images/*',
+    'tests/*',
+    ]
+
+
+
+[tool.coverage]
+    [tool.coverage.run]
+        omit = [
+            '*_test.py',
+            '*_fixtures.py'
+        ]
+
+
+[tool.pylint]
+    [tool.pylint.master]
+    ignore-patterns = [
+        '.*_test.py',
+        '.*_fixtures.py',
+    ]
+
+    extension-pkg-whitelist = [
+    ]
+    extension-pkg-allow-list = [
+    ]
+
+    [tool.pylint.basic]
+    good-names = []
+
+    [tool.pylint.format]
+    max-line-length = 120
+
+    [tool.pylint.messages_control]
+    disable = [
+         'no-name-in-module',  # due to dynamic importing of symbols
+         'fixme'
+    ]
+
+
+# [tool.pytest.ini_options]
+
+# minversion = '6.0'
+# addopts = '-pno:warnings'
+# testpaths = ['mindquantum']
+# norecursedirs = 'third_party'
+# mock_use_standalone_module = true
+
+[tool.isort]
+
+profile = "black"
+
+
+[tool.setuptools_scm]
+write_to = 'VERSION.txt'
+write_to_template = '{version}'
+local_scheme = 'no-local-version'
+fallback_version = '0.3.0'
+
+
+[tool.yapf]
+column_limit = 120
