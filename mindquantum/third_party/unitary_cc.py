@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #   Copyright 2017 The OpenFermion Developers.
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -15,9 +16,8 @@
 import itertools
 
 import numpy
-from mindquantum.ops import FermionOperator
 from openfermion.utils.indexing import down_index, up_index
-from mindquantum.parameterresolver import ParameterResolver as PR
+from mindquantum.core.parameterresolver import ParameterResolver as PR
 
 
 def uccsd_singlet_get_packed_amplitudes(single_amplitudes, double_amplitudes,
@@ -142,6 +142,7 @@ def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):
         s_0 [3^ 1] +
         d1_0 [3^ 1 2^ 0]
     """
+    from mindquantum.core.operators import FermionOperator
     if n_qubits % 2 != 0:
         raise ValueError('The total number of spin-orbitals should be even.')
 
