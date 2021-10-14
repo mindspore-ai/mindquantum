@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,21 +16,20 @@
 import time
 import os
 from _parse_args import parser
-
 args = parser.parse_args()
 os.environ['OMP_NUM_THREADS'] = str(args.omp_num_threads)
 import numpy as np
+from mindquantum.ops import QubitOperator
 import mindspore.context as context
 import mindspore.dataset as ds
 import mindspore.nn as nn
-from mindquantum.core import QubitOperator
-from mindquantum.core import Hamiltonian
-from mindquantum.core import Circuit
-from mindquantum.core import RX, X, RZ, H
-from mindquantum.core import UN
-from mindquantum.simulator import Simulator
-from mindquantum.framework import MQAnsatzOnlyLayer
-context.set_context(mode=context.PYNATIVE_MODE, device_target="CPU")
+from mindspore import Model
+from mindspore.train.callback import LossMonitor
+from mindquantum import Hamiltonian
+from mindquantum import Circuit
+from mindquantum import RX, X, RZ, H
+from mindquantum.circuit import UN
+from mindquantum.nn import MindQuantumLayer
 
 
 def circuit_qaoa(p):
@@ -61,18 +59,25 @@ for (v, u) in E:
 ham = Hamiltonian(ham)
 
 circ = circuit_qaoa(p)
-ansatz_name = circ.params_name
-net = MQAnsatzOnlyLayer(
-    Simulator('projectq', circ.n_qubits).get_expectation_with_grad(ham, circ))
+ansatz_name = circ.para_name
+net = MindQuantumLayer(['null'], ansatz_name, RX('null').on(0) + circ, ham)
 train_loader = ds.NumpySlicesDataset({
     'x': np.array([[0]]).astype(np.float32),
     'y': np.array([0]).astype(np.float32)
 }).batch(1)
 
+
+class Loss(nn.MSELoss):
+    """Loss"""
+    def construct(self, base, target):
+        return self.get_loss(-base)
+
+
+context.set_context(mode=context.GRAPH_MODE, device_target="CPU")
+net_loss = Loss()
 net_opt = nn.Adam(net.trainable_params(), learning_rate=LR)
-train_net = nn.TrainOneStepCell(net, net_opt)
+model = Model(net, net_loss, net_opt)
 t0 = time.time()
-for i in range(ITR):
-    train_net()
+model.train(ITR, train_loader, callbacks=[LossMonitor()])
 t1 = time.time()
 print('Total time for mindquantum :{}'.format(t1 - t0))

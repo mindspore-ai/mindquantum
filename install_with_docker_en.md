@@ -44,7 +44,7 @@ After entering the MindSpore container according to the above steps, to test whe
 ```python
 import numpy as np
 import mindspore.context as context
-import mindspore.operators as ops
+import mindspore.ops as ops
 from mindspore import Tensor
 
 context.set_context(mode=context.PYNATIVE_MODE, device_target="CPU")

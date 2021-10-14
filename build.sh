@@ -13,18 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -e
+
 BASEPATH=$(cd "$(dirname $0)"; pwd)
 OUTPUT_PATH="${BASEPATH}/output"
-if command -v python3 >/dev/null 2>&1; then
-    PYTHON=python3
-elif command -v python >/dev/null 2>&1; then
-    PYTHON=python3
-else
-    echo 'Unable to locate python or python3!' 1>&2
-    exit 1
-fi
-
-# ==============================================================================
+PYTHON=$(which python3)
 
 mk_new_dir() {
     local create_dir="$1"  # the target to make
@@ -36,21 +29,22 @@ mk_new_dir() {
     mkdir -pv "${create_dir}"
 }
 
+write_checksum() {
+    cd "$OUTPUT_PATH" || exit
+    PACKAGE_LIST=$(ls mindquantum-*.whl) || exit
+    for PACKAGE_NAME in $PACKAGE_LIST; do
+        echo $PACKAGE_NAME
+        sha256sum -b "$PACKAGE_NAME" >"$PACKAGE_NAME.sha256"
+    done
+}
 
-# ==============================================================================
-
-set -e
-
-cd ${BASEPATH}
 mk_new_dir "${OUTPUT_PATH}"
 
-args=(--set ENABLE_PROJECTQ --unset ENABLE_QUEST)
+${PYTHON} ${BASEPATH}/setup.py bdist_wheel
 
-if [[ $1 = "gpu" ]]; then
-    args+=(--set ENABLE_CUDA --unset MULTITHREADED --set VERBOSE_CMAKE)
-fi
+mv ${BASEPATH}/dist/*whl ${OUTPUT_PATH}
 
-${PYTHON} ${BASEPATH}/setup.py bdist_wheel -d ${OUTPUT_PATH} "${args[@]}"
+write_checksum
 
 
 echo "------Successfully created mindquantum package------"

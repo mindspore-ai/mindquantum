@@ -2,7 +2,7 @@
 
 These scripts are going to test the performance between MindQuantum and TensorFlow Quantum on mnist dataset.
 
-Please install TensorFlow Quantum before running these scripts.
+Please install TensorFlow Quantum before runing these scripts.
 
 ## MindQuantum
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,17 +16,17 @@
 import time
 import os
 from _parse_args import parser
-
 args = parser.parse_args()
 os.environ['OMP_NUM_THREADS'] = str(args.omp_num_threads)
 import numpy as np
-from mindquantum.core import QubitOperator
-from mindquantum.core import Circuit, X, H, XX, ZZ, Hamiltonian
-from mindquantum.simulator import Simulator
+from mindquantum.ops import QubitOperator
+from mindquantum import Circuit, X, H, XX, ZZ, RX, Hamiltonian
+from mindquantum.nn import generate_pqc_operator
 import mindspore.context as context
+from mindspore import Tensor
 import tqdm
 
-context.set_context(mode=context.PYNATIVE_MODE, device_target="CPU")
+context.set_context(mode=context.GRAPH_MODE, device_target="CPU")
 
 
 class CircuitLayerBuilder():
@@ -43,12 +42,7 @@ class CircuitLayerBuilder():
 
 
 def convert_to_circuit(image, data_qubits=None):
-    """
-    convert_to_circuit
-
-    Returns:
-        Circuit
-    """
+    """convert_to_circuit"""
     values = np.ndarray.flatten(image)
     if data_qubits is None:
         data_qubits = range(len(values))
@@ -61,12 +55,7 @@ def convert_to_circuit(image, data_qubits=None):
 
 
 def create_quantum_model(n_qubits):
-    """
-    Create QNN.
-
-    Returns:
-        tuple
-    """
+    """Create QNN."""
     data_qubits = range(1, n_qubits)
     readout = 0
     c = Circuit()
@@ -86,15 +75,18 @@ x_train_bin, y_train_nocon, x_test_bin, y_test_nocon = data['arr_0'], data[
 x_train_circ = [convert_to_circuit(x, range(1, n_qubits)) for x in x_train_bin]
 
 ansatz, ham = create_quantum_model(n_qubits)
-model_params_names = ansatz.params_name
-ops = Simulator('projectq', ansatz.n_qubits).get_expectation_with_grad(
-    ham, ansatz, parallel_worker=args.parallel_worker)
+model_para_names = ansatz.para_name
+ops = generate_pqc_operator(model_para_names, ['null'],
+                            RX('null').on(0) + ansatz,
+                            ham,
+                            n_threads=args.parallel_worker)
 
 t0 = time.time()
 eval_time = []
 for x in tqdm.tqdm(x_train_circ[:args.num_sampling]):
     eval_time.append(time.time())
-    ops(np.random.normal(size=32))
+    ops(Tensor(np.random.normal(size=(1, 32)).astype(np.float32)),
+        Tensor(np.array([0]).astype(np.float32)))
     eval_time[-1] = time.time() - eval_time[-1]
 eval_time = np.sort(eval_time[1:])
 t1 = time.time()

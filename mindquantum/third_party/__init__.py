@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #   Copyright 2017 The OpenFermion Developers
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +12,3 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-"""Third-party modules for MindQuantum."""
-
-# Allow extending this namespace.
-from .unitary_cc import uccsd_singlet_get_packed_amplitudes
-from .unitary_cc import uccsd_singlet_generator

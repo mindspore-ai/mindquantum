@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,7 @@
 # ============================================================================
 """Simple engine to generate parameterized quantum circuit."""
 
-from mindquantum.core.circuit import Circuit
+from mindquantum.circuit import Circuit
 
 
 class BasicQubit:
@@ -102,7 +101,7 @@ class CircuitEngine:
             n_qubits (int): qubit number of quantum circuit.
 
         Examples:
-            >>> import mindquantum.core.gates as G
+            >>> import mindquantum.gate as G
             >>> from mindquantum.engine import circuit_generator
             >>> @circuit_generator(2,prefix='p')
             >>> def ansatz(qubits, prefix):
@@ -112,7 +111,7 @@ class CircuitEngine:
             X(1 <-: 0)
             RX(p_0|1)
             >>> print(type(ansatz))
-            <class 'mindquantum.core.circuit.circuit.Circuit'>
+            <class 'mindquantum.circuit.circuit.Circuit'>
         """
         def deco(fn):
             eng = CircuitEngine()

@@ -5,9 +5,7 @@
 .vscode
 __pycache__/
 *.pyc
-*.pyd
 *.so
-*.dylib
 *.so.*
 *.o
 *.out
@@ -20,6 +18,3 @@ output
 .ipynb_checkpoints
 somas_meta
 analyze_fail.dat
-VERSION.txt
-requirements.txt
-.eggs

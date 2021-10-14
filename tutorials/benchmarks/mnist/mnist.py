@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,11 +18,9 @@ import time
 import os
 import numpy as np
 from _parse_args import parser
-
 args = parser.parse_args()
 os.environ['OMP_NUM_THREADS'] = str(args.omp_num_threads)
 
-import mindspore as ms
 import mindspore.context as context
 import mindspore.dataset as ds
 from mindspore.ops import operations as P
@@ -31,10 +28,9 @@ from mindspore import Tensor
 from mindspore import nn
 from mindspore import Model
 from mindspore.train.callback import Callback
-from mindquantum.core import Circuit, X, Z, H, XX, ZZ, Hamiltonian, RX, QubitOperator
-from mindquantum.framework import MQLayer
-from mindquantum.simulator import Simulator
-ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
+from mindquantum import Circuit, X, Z, H, XX, ZZ, Hamiltonian, RX
+from mindquantum.nn import MindQuantumLayer
+from mindquantum.ops import QubitOperator
 
 
 class FPSMonitor(Callback):
@@ -85,12 +81,7 @@ class MnistNet(nn.Cell):
 
 
 def encoder_circuit_builder(n_qubits_range, prefix='encoder'):
-    """
-    RX encoder circuit.
-
-    Returns:
-        Circuit
-    """
+    """RX encoder circuit."""
     c = Circuit()
     for i in n_qubits_range:
         c += RX('{}_{}'.format(prefix, i)).on(i)
@@ -111,12 +102,7 @@ class CircuitLayerBuilder():
 
 
 def create_quantum_model(n_qubits):
-    """
-    Create QNN.
-
-    Returns:
-        tuple
-    """
+    """Create QNN."""
     data_qubits = range(1, n_qubits)
     readout = 0
     c = Circuit()
@@ -130,12 +116,7 @@ def create_quantum_model(n_qubits):
 
 
 def binary_encoder(image, n_qubits=None):
-    """
-    Input a binary image into data supported by RX encoder.
-
-    Returns:
-        numbers.Number
-    """
+    """Input a binary image into data supported by RX encoder."""
     values = np.ndarray.flatten(image)
     if n_qubits is None:
         n_qubits = len(values)
@@ -144,12 +125,7 @@ def binary_encoder(image, n_qubits=None):
 
 def generate_dataset(data_file_path, n_qubits, sampling_num, batch_num,
                      eval_size_num):
-    """
-    Generate train and test dataset.
-
-    Returns:
-        Dataset
-    """
+    """Generate train and test dataset."""
     data = np.load(data_file_path)
     x_train_bin, y_train_nocon, x_test_bin, y_test_nocon = data['arr_0'], data[
         'arr_1'], data['arr_2'], data['arr_3']
@@ -180,6 +156,7 @@ def generate_dataset(data_file_path, n_qubits, sampling_num, batch_num,
 
 
 if __name__ == '__main__':
+    context.set_context(mode=context.GRAPH_MODE, device_target="CPU")
     n = 17
     num_sampling = args.num_sampling
     eval_size = 100
@@ -192,16 +169,16 @@ if __name__ == '__main__':
     ansatz, read_out = create_quantum_model(n)
     encoder_circuit = encoder_circuit_builder(range(1, n))
     encoder_circuit.no_grad()
-    encoder_names = encoder_circuit.params_name
-    ansatz_names = ansatz.params_name
+    encoder_names = encoder_circuit.para_name
+    ansatz_names = ansatz.para_name
     ham = Hamiltonian(QubitOperator('Z0'))
 
-    circ = encoder_circuit + ansatz
-    sim = Simulator('projectq', circ.n_qubits)
-    grad_ops = sim.get_expectation_with_grad(ham, circ, None, encoder_names,
-                                             ansatz_names, parallel_worker)
-    mql = MQLayer(grad_ops, 'normal')
-
+    mql = MindQuantumLayer(encoder_names,
+                           ansatz_names,
+                           encoder_circuit + ansatz,
+                           ham,
+                           weight_init='normal',
+                           n_threads=parallel_worker)
     mnist_net = MnistNet(mql)
     net_loss = Hinge()
     net_opt = nn.Adam(mnist_net.trainable_params())
