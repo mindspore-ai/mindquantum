@@ -13,3 +13,11 @@ https://gitee.com/donghufeng/mindquantum_latest_version/blob/master/Linux/dev/20
 ```bash
 pip install mindquantum-0.1.dev273-cp37-cp37m-linux_x86_64.whl
 ```
+
+## 生成自己的体验文件
+
+运行如下命令，并将命令中的`your_name`换为你的名字。此命令会复制课堂任务文件，并以你的名字结尾重命名，此举避免提交PR时冲突
+
+```bash
+./copy.sh your_name
+```
