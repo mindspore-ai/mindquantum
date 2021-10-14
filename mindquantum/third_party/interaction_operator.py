@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #   Copyright 2017 The OpenFermion Developers.
 #   Licensed under the Apache License, Version 2.0 (the "License");
 
@@ -23,7 +22,7 @@ Hamiltonian. It can be further used to construct the molecular Hamiltonian.
 # Note this module, we did not modify much of the OpenFermion file
 
 import itertools
-from mindquantum.core.operators.polynomial_tensor import PolynomialTensor
+from mindquantum.ops.polynomial_tensor import PolynomialTensor
 
 
 class InteractionOperator(PolynomialTensor):
@@ -33,7 +32,7 @@ class InteractionOperator(PolynomialTensor):
 
     The Hamiltonian including one-body and two-body terms which conserve spin
     and parity. In this module, the stored coefficient could be represented the
-    molecular Hamiltonians through the FermionOperator class.
+    molecualr Hamiltonians througth the FermionOperator class.
 
     Note:
         The operators stored in this class has the form:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,5 +18,7 @@ from .circuitengine import BasicQubit
 from .circuitengine import CircuitEngine
 from .circuitengine import circuit_generator
 
-__all__ = ["BasicQubit", "CircuitEngine", "circuit_generator"]
+
+__all__ = ['BasicQubit', 'CircuitEngine', 'circuit_generator']
+
 __all__.sort()

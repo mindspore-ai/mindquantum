@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,13 +15,21 @@
 """Test utils."""
 
 import numpy as np
-from mindquantum.utils import f
+from mindquantum.utils import bprint, f
+
+
+def test_beauty_print():
+    """Test beauty print"""
+    o = bprint(['Age:17', 'Name:Bob'], title='Info of Bob')
+    o_exp = [
+        '|===Info of Bob===|', '|     Age :17     |', '|     Name:Bob    |',
+        '==================='
+    ]
+    assert o == o_exp
 
 
 def test_mod():
-    """
-    Description: Test mod
-    Expectation: xxx"""
+    """Test mod"""
     mod_0 = f.mod([[1 + 1j, 0.5 + 0.5j], [0.5 + 1j, 0.5 + 0.5j]])
     mod_1 = f.mod([[1 + 1j, 0.5 + 0.5j], [0.5 + 1j, 0.5 + 0.5j]], axis=1)
     assert round(np.real(mod_1[0, 0]), 5) == round(1.58113883, 5)
@@ -30,17 +37,13 @@ def test_mod():
 
 
 def test_normalize():
-    """
-    Description: Test normalize
-    Expectation: xxx"""
+    """Test normalize"""
     norm = np.real((f.normalize([[1 + 1j, 0.5 + 0.5j], [0.5 + 1j,
                                                         0.5 + 0.5j]]))[0, 0])
     assert round(norm, 5) == round(0.5547002, 5)
 
 
 def test_random_state():
-    """
-    Description: Test random state
-    Expectation: xxx"""
+    """Test random state"""
     assert round(np.real(f.random_state((2, 4), seed=55)[0, 0]),
                  5) == round(0.16926417, 5)

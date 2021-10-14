@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,42 +16,34 @@
 
 import os
 import warnings
-import sys
 
-from . import core
-from .core import gates
-from .core import operators
+from . import ops
+from . import circuit
 from . import engine
-from . import framework
+from . import gate
+from . import nn
+from . import parameterresolver
 from . import utils
-from . import algorithm
-from . import simulator
-from . import io
-from .core import *
-from .algorithm import *
-from .utils import *
-from .simulator import *
-from .framework import *
-from .io import *
+from . import hiqfermion
+from . import ansatz
+from .circuit import *
+from .gate import *
+from .parameterresolver import *
+from .version import __version__
 
+__version_info__ = tuple(__version__.split('.'))
 
-if sys.version_info < (3, 8):  # pragma: no cover
-    from importlib_metadata import version, PackageNotFoundError
-else:  # pragma: no cover
-    from importlib.metadata import version, PackageNotFoundError
-
-try:
-    __version__ = version("mindquantum")
-    __version_info__ = tuple(__version__.split('.'))
-    __all__ = ['__version__', '__version_info__']
-except PackageNotFoundError:
-    __all__ = []
-
-
-__all__.extend(core.__all__)
-__all__.extend(algorithm.__all__)
-__all__.extend(utils.__all__)
-__all__.extend(simulator.__all__)
-__all__.extend(framework.__all__)
-__all__.extend(io.__all__)
+__all__ = ['__version__', '__version_info__']
+__all__.extend(circuit.__all__)
+__all__.extend(gate.__all__)
+__all__.extend(parameterresolver.__all__)
 __all__.sort()
+
+total_num_core = os.cpu_count()
+omp_num_threads = os.environ.get('OMP_NUM_THREADS')
+if omp_num_threads is None:
+    omp_num_threads = total_num_core
+warnings.warn(
+    "[NOTE] Current simulator thread is {}. If your simulation is slow, \
+set OMP_NUM_THREADS to a appropriate number according to your model.".format(
+        omp_num_threads))
