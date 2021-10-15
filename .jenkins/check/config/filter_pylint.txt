@@ -1,0 +1,43 @@
+# MindQuantum
+"mindquantum"                                                                          "ungrouped-imports"
+"mindquantum"                                                                          "bad-whitespace"
+"mindquantum/mindquantum/framework"                                                    "unused-argument"
+"mindquantum/mindquantum/framework"                                                    "arguments-differ"
+"mindquantum/setup.py"                                                                 "invalid-name"
+"mindquantum/setup.py"                                                                 "missing-docstring"
+"mindquantum/setup.py"                                                                 "wrong-import-order"
+"mindquantum/mindquantum/framework/_check_qnn_input.py"                                "duplicate-string-formatting-argument"
+"mindquantum/mindquantum/core/ops/_base_operator.py"                                   "bare-except"
+"mindquantum/mindquantum/algorithm/nisq"                                               "arguments-differ"
+"mindquantum/mindquantum/core/circuit/circuit.py"                                      "redefined-outer-name"
+"mindquantum/mindquantum/core/circuit/circuit.py"                                      "invalid-name"
+
+# Tests
+"mindquantum/tests/st"                                                                 "missing-docstring"
+"mindquantum/tests/st"                                                                 "unused-variable"
+"mindquantum/tests/st"                                                                 "len-as-condition"
+"mindquantum/tests/ut"                                                                 "missing-docstring"
+"mindquantum/tests/st"                                                                 "wrong-import-position"
+"mindquantum/tests/st"                                                                 "protected-access"
+
+# Benchmarks
+"mindquantum/tutorials/benchmarks"                                                      "wrong-import-position"
+"mindquantum/tutorials/benchmarks"                                                      "redefined-outer-name"
+"mindquantum/tutorials/benchmarks"                                                      "protected-access"
+"mindquantum/tutorials/benchmarks"                                                      "missing-docstring"
+"mindquantum/tutorials/benchmarks"                                                      "unused-argument"
+
+# Tutorials
+"mindquantum/tutorials"                                                                 "missing-docstring"
+"mindquantum/tutorials"                                                                 "wrong-import-position"
+"mindquantum/tutorials"                                                                 "unused-argument"
+"mindquantum/tutorials"                                                                 "redefined-outer-name"
+"mindquantum/tutorials"                                                                 "pointless-statement"
+"mindquantum/tutorials"                                                                 "reimported"
+"mindquantum/tutorials"                                                                 "expression-not-assigned"
+"mindquantum/tutorials"                                                                 "function-redefined"
+"mindquantum/tutorials"                                                                 "unused-variable"
+"mindquantum/tutorials"                                                                 "len-as-condition"
+"mindquantum/tutorials"                                                                 "superfluous-parens"
+"mindquantum/tutorials"                                                                 "invalid-name"
+"mindquantum/tutorials"                                                                 "unused-import"
