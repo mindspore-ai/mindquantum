@@ -20,7 +20,7 @@ __all__ = []
 try:
     import mindspore
     from .layer import MQAnsatzOnlyLayer
-    from .layer import MQN2AnsatzOnlyOps
+    from .layer import MQN2AnsatzOnlyLayer
     from .layer import MQLayer
     from .layer import MQN2Layer
     from .operations import MQOps
@@ -30,13 +30,10 @@ try:
     from .operations import MQEncoderOnlyOps
     from .operations import MQN2EncoderOnlyOps
     __all__.extend([
-        "MQAnsatzOnlyLayer", "MQN2AnsatzOnlyOps", "MQLayer", "MQN2Layer",
-        "MQOps", "MQN2Ops", "MQAnsatzOnlyOps", "MQN2AnsatzOnlyOps",
-        "MQEncoderOnlyOps", "MQN2EncoderOnlyOps"
+        "MQAnsatzOnlyLayer", "MQN2AnsatzOnlyLayer", "MQLayer", "MQN2Layer", "MQOps", "MQN2Ops", "MQAnsatzOnlyOps",
+        "MQN2AnsatzOnlyOps", "MQEncoderOnlyOps", "MQN2EncoderOnlyOps"
     ])
 except ImportError:
-    warnings.warn(
-        "MindSpore not installed, you may not be able to use hybrid quantum classical neural network."
-    )
+    warnings.warn("MindSpore not installed, you may not be able to use hybrid quantum classical neural network.")
 
 __all__.sort()

@@ -1,0 +1,12 @@
+unusedFunction
+missingInclude
+missingReturn
+
+unusedStructMember:mindquantum/src/core/type.h:79
+unusedStructMember:mindquantum/src/core/type.h:80
+unusedStructMember:mindquantum/src/core/type.h:81
+unusedStructMember:mindquantum/src/core/type.h:82
+unusedStructMember:mindquantum/src/core/type.h:83
+unusedStructMember:mindquantum/src/core/type.h:84
+
+objectIndex:mindquantum/src/core/utils.h:87

@@ -59,9 +59,7 @@ class Simulator:
         if backend not in SUPPORTED_SIMULATOR:
             raise ValueError(f"backend {backend} not supported!")
         if not isinstance(n_qubits, int) or n_qubits < 0:
-            raise ValueError(
-                f"n_qubits of simulator should be a non negative int, but get {n_qubits}"
-            )
+            raise ValueError(f"n_qubits of simulator should be a non negative int, but get {n_qubits}")
         if not isinstance(seed, int) or seed < 0 or seed > 2**32 - 1:
             raise ValueError(f"seed must be between 0 and 2**32 - 1")
         self.backend = backend
@@ -115,13 +113,13 @@ class Simulator:
         if self.backend == 'projectq':
             self.sim.run()
 
-    def apply_gate(self, gate, parameter_resolver=None):
+    def apply_gate(self, gate, pr=None):
         """
         Apply a gate on this simulator, can be a quantum gate or a measurement operator
 
         Args:
             gate (BasicGate): The gate you want to apply.
-            parameter_resolver (Union[numbers.Number, numpy.ndarray, ParameterResolver]): The
+            pr (Union[numbers.Number, numpy.ndarray, ParameterResolver]): The
                 parameter for parameterized gate. Default: None.
 
         Returns:
@@ -142,31 +140,26 @@ class Simulator:
             array([0.+0.j, 1.+0.j])
         """
         if not isinstance(gate, BasicGate):
-            raise TypeError(
-                f"gate requires a quantum gate, but get {type(gate)}")
+            raise TypeError(f"gate requires a quantum gate, but get {type(gate)}")
         if not isinstance(gate, BarrierGate):
             if isinstance(gate, Measure):
                 return self.sim.apply_measure(gate.get_cpp_obj())
-            if parameter_resolver is None:
+            if pr is None:
                 if gate.parameterized:
-                    raise ValueError(
-                        "apply a parameterized gate needs a parameter_resolver"
-                    )
+                    raise ValueError("apply a parameterized gate needs a parameter_resolver")
                 self.sim.apply_gate(gate.get_cpp_obj())
             else:
-                parameter_resolver = _check_and_generate_pr_type(
-                    parameter_resolver, gate.coeff.params_name)
-                self.sim.apply_gate(gate.get_cpp_obj(),
-                                    parameter_resolver.get_cpp_obj(), False)
+                pr = _check_and_generate_pr_type(pr, gate.coeff.params_name)
+                self.sim.apply_gate(gate.get_cpp_obj(), pr.get_cpp_obj(), False)
         return None
 
-    def apply_circuit(self, circuit, parameter_resolver=None):
+    def apply_circuit(self, circuit, pr=None):
         """
         Apply a circuit on this simulator.
 
         Args:
             circuit (Circuit): The quantum circuit you want to apply on this simulator.
-            parameter_resolver (Union[ParameterResolver, dict, numpy.ndarray]): The
+            pr (Union[ParameterResolver, dict, numpy.ndarray]): The
                 parameter resolver for this circuit. If the circuit is not parameterized,
                 this arg should be None. Default: None.
 
@@ -197,53 +190,38 @@ class Simulator:
             {'11': 1}
         """
         if not isinstance(circuit, Circuit):
-            raise TypeError(
-                f"circuit must be Circuit, but get {type(Circuit)}")
+            raise TypeError(f"circuit must be Circuit, but get {type(Circuit)}")
         if circuit.has_measure:
             res = MeasureResult()
             res.add_measure(circuit.all_measures.keys())
-        if parameter_resolver is None:
+        if pr is None:
             if circuit.params_name:
-                raise ValueError(
-                    "Applying a parameterized circuit needs a parameter_resolver"
-                )
+                raise ValueError("Applying a parameterized circuit needs a parameter_resolver")
             if circuit.has_measure:
-                parameter_resolver = ParameterResolver()
+                pr = ParameterResolver()
                 samples = np.array(
-                    self.sim.apply_circuit_with_measure(
-                        circuit.get_cpp_obj(),
-                        parameter_resolver.get_cpp_obj(),
-                        res.keys_map)).reshape((1, -1))
+                    self.sim.apply_circuit_with_measure(circuit.get_cpp_obj(), pr.get_cpp_obj(), res.keys_map)).reshape(
+                        (1, -1))
                 res.collect_data(samples)
                 return res
             self.sim.apply_circuit(circuit.get_cpp_obj())
         else:
-            if not isinstance(parameter_resolver,
-                              (ParameterResolver, dict, np.ndarray)):
-                raise TypeError(
-                    f"parameter_resolver requires a ParameterResolver, but get {type(parameter_resolver)}"
-                )
-            if isinstance(parameter_resolver, dict):
-                parameter_resolver = ParameterResolver(parameter_resolver)
-            if isinstance(parameter_resolver, np.ndarray):
-                if len(parameter_resolver.shape
-                       ) != 1 or parameter_resolver.shape[0] != len(
-                           circuit.params_name):
-                    raise ValueError(
-                        f"size of parameters input ({parameter_resolver.shape}) not\
+            if not isinstance(pr, (ParameterResolver, dict, np.ndarray)):
+                raise TypeError(f"parameter_resolver requires a ParameterResolver, but get {type(pr)}")
+            if isinstance(pr, dict):
+                pr = ParameterResolver(pr)
+            if isinstance(pr, np.ndarray):
+                if len(pr.shape) != 1 or pr.shape[0] != len(circuit.params_name):
+                    raise ValueError(f"size of parameters input ({pr.shape}) not\
 match with circuit parameters ({len(circuit.params_name)}, )")
-                parameter_resolver = ParameterResolver(
-                    dict(zip(circuit.params_name, parameter_resolver)))
+                pr = ParameterResolver(dict(zip(circuit.params_name, pr)))
             if circuit.has_measure:
                 samples = np.array(
-                    self.sim.apply_circuit_with_measure(
-                        circuit.get_cpp_obj(),
-                        parameter_resolver.get_cpp_obj(),
-                        res.keys_map)).reshape((1, -1))
+                    self.sim.apply_circuit_with_measure(circuit.get_cpp_obj(), pr.get_cpp_obj(), res.keys_map)).reshape(
+                        (1, -1))
                 res.collect_data(samples)
                 return res
-            self.sim.apply_circuit(circuit.get_cpp_obj(),
-                                   parameter_resolver.get_cpp_obj())
+            self.sim.apply_circuit(circuit.get_cpp_obj(), pr.get_cpp_obj())
         return None
 
     def sampling(self, circuit, pr=None, shots=1, seed=None):
@@ -286,17 +264,12 @@ match with circuit parameters ({len(circuit.params_name)}, )")
             {'000': 17, '011': 8, '100': 49, '111': 26}
         """
         if not isinstance(circuit, Circuit):
-            raise TypeError(
-                f"sampling circuit need a quantum circuit but get {type(circuit)}"
-            )
+            raise TypeError(f"sampling circuit need a quantum circuit but get {type(circuit)}")
         if not isinstance(shots, int) or shots < 0:
-            raise ValueError(
-                f"sampling shot should be non negative int, but get {shots}")
+            raise ValueError(f"sampling shot should be non negative int, but get {shots}")
         if circuit.parameterized:
             if pr is None:
-                raise ValueError(
-                    "Sampling a parameterized circuit need a ParameterResolver"
-                )
+                raise ValueError("Sampling a parameterized circuit need a ParameterResolver")
             pr = ParameterResolver(pr)
         else:
             pr = ParameterResolver()
@@ -306,9 +279,8 @@ match with circuit parameters ({len(circuit.params_name)}, )")
             raise ValueError(f"seed must be between 0 and 2**23 - 1")
         res = MeasureResult()
         res.add_measure(circuit.all_measures.keys())
-        samples = np.array(
-            self.sim.sampling(circuit.get_cpp_obj(), pr.get_cpp_obj(), shots,
-                              res.keys_map, seed)).reshape((shots, -1))
+        samples = np.array(self.sim.sampling(circuit.get_cpp_obj(), pr.get_cpp_obj(), shots, res.keys_map,
+                                             seed)).reshape((shots, -1))
         res.collect_data(samples)
         return res
 
@@ -333,7 +305,7 @@ match with circuit parameters ({len(circuit.params_name)}, )")
             >>> sim.get_qs()
             array([0.70710678+0.j, 0.70710678+0.j])
             >>> ham1 = Hamiltonian(QubitOperator('Z0'))
-            sim.apply_hamiltonian(ham1)
+            >>> sim.apply_hamiltonian(ham1)
             >>> sim.get_qs()
             array([ 0.70710678+0.j, -0.70710678+0.j])
 
@@ -345,13 +317,10 @@ match with circuit parameters ({len(circuit.params_name)}, )")
         """
 
         if not isinstance(hamiltonian, Hamiltonian):
-            raise TypeError(
-                f"hamiltonian requires a Hamiltonian, but got {type(hamiltonian)}"
-            )
+            raise TypeError(f"hamiltonian requires a Hamiltonian, but got {type(hamiltonian)}")
         if hamiltonian.how_to != MODE['origin']:
             if hamiltonian.n_qubits != self.n_qubits:
-                raise ValueError(
-                    f"Hamiltonian qubits is {hamiltonian.n_qubits}, not match \
+                raise ValueError(f"Hamiltonian qubits is {hamiltonian.n_qubits}, not match \
 with simulator qubits number {self.n_qubits}")
         self.sim.apply_hamiltonian(hamiltonian.get_cpp_obj())
 
@@ -380,13 +349,10 @@ with simulator qubits number {self.n_qubits}")
             (0.36235775447667357+0j)
         """
         if not isinstance(hamiltonian, Hamiltonian):
-            raise TypeError(
-                f"hamiltonian requires a Hamiltonian, but got {type(hamiltonian)}"
-            )
+            raise TypeError(f"hamiltonian requires a Hamiltonian, but got {type(hamiltonian)}")
         if hamiltonian.how_to != MODE['origin']:
             if hamiltonian.n_qubits != self.n_qubits:
-                raise ValueError(
-                    f"Hamiltonian qubits is {hamiltonian.n_qubits}, not match \
+                raise ValueError(f"Hamiltonian qubits is {hamiltonian.n_qubits}, not match \
 with simulator qubits number {self.n_qubits}")
         return self.sim.get_expectation(hamiltonian.get_cpp_obj())
 
@@ -427,19 +393,15 @@ with simulator qubits number {self.n_qubits}")
             array([0.70710678+0.j, 0.70710678+0.j])
         """
         if not isinstance(vec, np.ndarray):
-            raise TypeError(
-                f"quantum state must be a ndarray, but get {type(vec)}")
+            raise TypeError(f"quantum state must be a ndarray, but get {type(vec)}")
         if len(vec.shape) != 1:
-            raise ValueError(
-                f"vec requires a 1-dimensional array, but get {vec.shape}")
+            raise ValueError(f"vec requires a 1-dimensional array, but get {vec.shape}")
         n_qubits = np.log2(vec.shape[0])
         if n_qubits % 1 != 0:
             raise ValueError(f"vec size {vec.shape[0]} is not power of 2")
         n_qubits = int(n_qubits)
         if self.n_qubits != n_qubits:
-            raise ValueError(
-                f"{n_qubits} qubits vec does not match with simulation qubits ({self.n_qubits})"
-            )
+            raise ValueError(f"{n_qubits} qubits vec does not match with simulation qubits ({self.n_qubits})")
         self.sim.set_qs(vec / np.sqrt(np.sum(np.abs(vec)**2)))
 
     def get_expectation_with_grad(self,
@@ -492,41 +454,27 @@ with simulator qubits number {self.n_qubits}")
         if isinstance(hams, Hamiltonian):
             hams = [hams]
         elif not isinstance(hams, list):
-            raise ValueError(
-                f"hams requires a Hamiltonian or a list of Hamiltonian, but get {type(hams)}"
-            )
+            raise ValueError(f"hams requires a Hamiltonian or a list of Hamiltonian, but get {type(hams)}")
         if not isinstance(circ_right, Circuit):
-            raise ValueError(
-                f"Quantum circuit need a Circuit, but get {type(circ_right)}")
+            raise ValueError(f"Quantum circuit need a Circuit, but get {type(circ_right)}")
         if circ_left is not None and not isinstance(circ_left, Circuit):
-            raise ValueError(
-                f"Quantum circuit need a Circuit, but get {type(circ_left)}")
+            raise ValueError(f"Quantum circuit need a Circuit, but get {type(circ_left)}")
         if circ_left is None:
             circ_left = Circuit()
         if circ_left.has_measure or circ_right.has_measure:
-            raise ValueError(
-                "circuit for variational algorithm cannot have measure gate")
-        if parallel_worker is not None and not isinstance(
-                parallel_worker, int):
-            raise ValueError(
-                f"parallel_worker need a integer, but get {type(parallel_worker)}"
-            )
+            raise ValueError("circuit for variational algorithm cannot have measure gate")
+        if parallel_worker is not None and not isinstance(parallel_worker, int):
+            raise ValueError(f"parallel_worker need a integer, but get {type(parallel_worker)}")
         if encoder_params_name is None and ansatz_params_name is None:
             encoder_params_name = []
             ansatz_params_name = [i for i in circ_right.params_name]
             for i in circ_left.params_name:
                 if i not in ansatz_params_name:
                     ansatz_params_name.append(i)
-        if encoder_params_name is not None and not isinstance(
-                encoder_params_name, list):
-            raise ValueError(
-                f"encoder_params_name requires a list of str, but get {type(encoder_params_name)}"
-            )
-        if ansatz_params_name is not None and not isinstance(
-                ansatz_params_name, list):
-            raise ValueError(
-                f"ansatz_params_name requires a list of str, but get {type(ansatz_params_name)}"
-            )
+        if encoder_params_name is not None and not isinstance(encoder_params_name, list):
+            raise ValueError(f"encoder_params_name requires a list of str, but get {type(encoder_params_name)}")
+        if ansatz_params_name is not None and not isinstance(ansatz_params_name, list):
+            raise ValueError(f"ansatz_params_name requires a list of str, but get {type(ansatz_params_name)}")
         if encoder_params_name is None:
             encoder_params_name = []
         if ansatz_params_name is None:
@@ -534,9 +482,7 @@ with simulator qubits number {self.n_qubits}")
         s1 = set(circ_right.params_name) | set(circ_left.params_name)
         s2 = set(encoder_params_name) | set(ansatz_params_name)
         if s1 - s2 or s2 - s1:
-            raise ValueError(
-                "encoder_params_name and ansatz_params_name are different with circuit parameters"
-            )
+            raise ValueError("encoder_params_name and ansatz_params_name are different with circuit parameters")
         version = "both"
         if not ansatz_params_name:
             version = "encoder"
@@ -551,38 +497,34 @@ with simulator qubits number {self.n_qubits}")
             if version == "both":
                 _check_encoder(inputs[0], len(encoder_params_name))
                 _check_ansatz(inputs[1], len(ansatz_params_name))
-                batch_threads, mea_threads = _thread_balance(
-                    inputs[0].shape[0], len(hams), parallel_worker)
+                batch_threads, mea_threads = _thread_balance(inputs[0].shape[0], len(hams), parallel_worker)
                 inputs0 = inputs[0]
                 inputs1 = inputs[1]
             if version == "encoder":
                 _check_encoder(inputs[0], len(encoder_params_name))
-                batch_threads, mea_threads = _thread_balance(
-                    inputs[0].shape[0], len(hams), parallel_worker)
+                batch_threads, mea_threads = _thread_balance(inputs[0].shape[0], len(hams), parallel_worker)
                 inputs0 = inputs[0]
                 inputs1 = np.array([])
             if version == "ansatz":
                 _check_ansatz(inputs[0], len(ansatz_params_name))
-                batch_threads, mea_threads = _thread_balance(
-                    1, len(hams), parallel_worker)
+                batch_threads, mea_threads = _thread_balance(1, len(hams), parallel_worker)
                 inputs0 = np.array([[]])
                 inputs1 = inputs[0]
             if circ_left:
-                f_g1_g2 = self.sim.non_hermitian_measure_with_grad(
-                    [i.get_cpp_obj() for i in hams],
-                    [i.get_cpp_obj(hermitian=True) for i in hams],
-                    circ_right.get_cpp_obj(),
-                    circ_right.get_cpp_obj(hermitian=True),
-                    circ_left.get_cpp_obj(),
-                    circ_left.get_cpp_obj(hermitian=True), inputs0, inputs1,
-                    encoder_params_name, ansatz_params_name, batch_threads,
-                    mea_threads)
+                f_g1_g2 = self.sim.non_hermitian_measure_with_grad([i.get_cpp_obj() for i in hams],
+                                                                   [i.get_cpp_obj(hermitian=True) for i in hams],
+                                                                   circ_right.get_cpp_obj(),
+                                                                   circ_right.get_cpp_obj(hermitian=True),
+                                                                   circ_left.get_cpp_obj(),
+                                                                   circ_left.get_cpp_obj(hermitian=True), inputs0,
+                                                                   inputs1, encoder_params_name, ansatz_params_name,
+                                                                   batch_threads, mea_threads)
             else:
-                f_g1_g2 = self.sim.hermitian_measure_with_grad(
-                    [i.get_cpp_obj() for i in hams], circ_right.get_cpp_obj(),
-                    circ_right.get_cpp_obj(hermitian=True), inputs0, inputs1,
-                    encoder_params_name, ansatz_params_name, batch_threads,
-                    mea_threads)
+                f_g1_g2 = self.sim.hermitian_measure_with_grad([i.get_cpp_obj()
+                                                                for i in hams], circ_right.get_cpp_obj(),
+                                                               circ_right.get_cpp_obj(hermitian=True), inputs0, inputs1,
+                                                               encoder_params_name, ansatz_params_name, batch_threads,
+                                                               mea_threads)
             res = np.array(f_g1_g2)
             if version == 'both':
                 f = res[:, :, 0]
@@ -593,8 +535,7 @@ with simulator qubits number {self.n_qubits}")
             g = res[:, :, 1:]
             return f, g
 
-        grad_wrapper = GradOpsWrapper(grad_ops, hams, circ_right, circ_left,
-                                      encoder_params_name, ansatz_params_name,
+        grad_wrapper = GradOpsWrapper(grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name,
                                       parallel_worker)
         s = f'{self.n_qubits} qubit' + ('' if self.n_qubits == 1 else 's')
         s += f' {self.backend} VQA Operator'
@@ -604,28 +545,24 @@ with simulator qubits number {self.n_qubits}")
 
 def _check_encoder(data, encoder_params_size):
     if not isinstance(data, np.ndarray):
-        raise ValueError(
-            f"encoder parameters need numpy array, but get {type(data)}")
+        raise ValueError(f"encoder parameters need numpy array, but get {type(data)}")
     data_shape = data.shape
     if len(data_shape) != 2:
         raise ValueError("encoder data requires a two dimension numpy array")
     if data_shape[1] != encoder_params_size:
-        raise ValueError(
-            f"encoder parameters size do not match with encoder parameters name,\
+        raise ValueError(f"encoder parameters size do not match with encoder parameters name,\
 need {encoder_params_size} but get {data_shape[1]}.")
 
 
 def _check_ansatz(data, ansatz_params_size):
     """check ansatz"""
     if not isinstance(data, np.ndarray):
-        raise ValueError(
-            f"ansatz parameters need numpy array, but get {type(data)}")
+        raise ValueError(f"ansatz parameters need numpy array, but get {type(data)}")
     data_shape = data.shape
     if len(data_shape) != 1:
         raise ValueError("ansatz data requires a one dimension numpy array")
     if data_shape[0] != ansatz_params_size:
-        raise ValueError(
-            f"ansatz parameters size do not match with ansatz parameters name,\
+        raise ValueError(f"ansatz parameters size do not match with ansatz parameters name,\
 need {ansatz_params_size} but get {data_shape[0]}")
 
 
@@ -661,8 +598,7 @@ class GradOpsWrapper:
         ansatz_params_name (list[str]): The ansatz parameters name.
         parallel_worker (int): The number of parallel worker to run the batch.
     """
-    def __init__(self, grad_ops, hams, circ_right, circ_left,
-                 encoder_params_name, ansatz_params_name, parallel_worker):
+    def __init__(self, grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name, parallel_worker):
         self.grad_ops = grad_ops
         self.hams = hams
         self.circ_right = circ_right

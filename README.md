@@ -50,7 +50,9 @@ git clone https://gitee.com/mindspore/mindquantum.git
 
 ```bash
 cd ~/mindquantum
-python setup.py install --user
+bash build.sh
+cd output
+pip install mindquantum-*.whl
 ```
 
 ### Install by pip

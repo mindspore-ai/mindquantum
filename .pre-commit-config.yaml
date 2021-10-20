@@ -1,0 +1,153 @@
+# To use:
+#
+#     pre-commit run -a
+#
+# Or:
+#
+#     pre-commit install  # (runs every time you commit in git)
+#
+# To update this file:
+#
+#     pre-commit autoupdate
+#
+# See https://github.com/pre-commit/pre-commit
+
+---
+
+ci:
+  skip: [check-manifest]
+
+exclude: >-
+  (?x)^(
+    .*/kernel[0-9]+\.hpp|
+    third_party/patch/.*
+  )$
+
+repos:
+  - repo: meta
+    hooks:
+      - id: check-useless-excludes
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-yaml
+      - id: check-toml
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+      - id: fix-encoding-pragma
+
+  # Changes tabs to spaces
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.1.10
+    hooks:
+      - id: remove-tabs
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.1.0
+    hooks:
+      - id: codespell
+        files: (.*mindquantum/.*)
+        args: [-q, '7', -S, '.git,third_party', -I, .codespell.allow]
+
+  - repo: https://github.com/cheshirekow/cmake-format-precommit
+    rev: v0.6.13
+    hooks:
+      - id: cmake-format
+        additional_dependencies: [pyyaml]
+      - id: cmake-lint
+        exclude: ^(cmake/Modules/.*)$
+        additional_dependencies: [pyyaml]
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.9.3
+    hooks:
+      - id: isort
+        name: isort (python)
+
+  - repo: https://github.com/psf/black
+    rev: 21.9b0
+    hooks:
+      - id: black
+        language_version: python3
+        # This is a slow hook, so only run this if --hook-stage manual is passed
+        stages: [manual]
+
+  - repo: https://gitlab.com/PyCQA/flake8
+    rev: 3.9.2
+    hooks:
+      - id: flake8
+        name: flake8-strict
+        exclude: (test_.*\.py)$
+        additional_dependencies: [flake8-comprehensions, flake8-breakpoint,
+                                  flake8-eradicate, flake8-mutable, pep8-naming,
+                                  flake8-docstrings, flake8-secure-coding-standard]
+      - id: flake8
+        name: flake8-test-files
+        files: (.test_*\.py)$
+        additional_dependencies: [flake8-comprehensions, flake8-breakpoint,
+                                  flake8-eradicate, flake8-mutable]
+
+  - repo: https://github.com/pre-commit/mirrors-pylint
+    rev: v3.0.0a4
+    hooks:
+      - id: pylint
+        name: pylint-strict
+        exclude: (test_.*\.py)$
+        args: [--score=n, --load-plugins=pylint_secure_coding_standard]
+        # This is a slow hook, so only run this if --hook-stage manual is passed
+        stages: [manual]
+        additional_dependencies: [pybind11>=2.6, numpy, scipy, projectq, openfermion, sympy, matplotlib, rich,
+                                  pylint-secure-coding-standard]
+      - id: pylint
+        name: pylint-test-files
+        files: ^(test_.*\.py)$
+        args: ['--score=n']
+        # This is a slow hook, so only run this if --hook-stage manual is passed
+        stages: [manual]
+        additional_dependencies: [pybind11>=2.6, numpy, scipy, projectq, openfermion, sympy, matplotlib, rich]
+
+  - repo: https://github.com/mgedmin/check-manifest
+    rev: '0.47'
+    hooks:
+      - id: check-manifest
+        additional_dependencies: ['setuptools-scm[toml]', 'pybind11>=2.6']
+
+  - repo: https://github.com/Takishima/cmake-pre-commit-hooks/
+    rev: v1.4.0
+    hooks:
+      - id: clang-format
+        args: [-i]
+      - id: clang-tidy
+        stages: [manual]
+        args: [-Bbuild, -B.pre-commit-build]
+        exclude: >-
+          (?x)^(
+            .*/kernel[0-9]+\.hpp|
+            .*third_party/.*|
+            .*\.cu
+          )$
+
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: v1.3.4
+    hooks:
+      - id: cppcheck
+        args: [--force,
+               --inline-suppr,
+               --std=c++17,
+               --language=c++,
+               --suppressions-list=.cppcheck.suppressions]
+      - id: cpplint
+        args: [--root=src,
+                '--extensions=cxx,cu,hh,cpp,hxx,cuh,h++,cc,c,hpp,c++,h,tpp,txx,cl',
+               '--filter=-build/header_guard,-build/c++11',
+               --quiet,
+               --repository=mindquantum,
+               --linelength=120,
+               --recursive]

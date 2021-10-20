@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,21 +15,11 @@
 # ============================================================================
 """Utils"""
 
-from .beauty_print import bprint
 from .f import mod
 from .f import normalize
 from .f import random_state
 from .f import ket_string
-from .utils_operator import (number_operator, normal_ordered, count_qubits,
-                             commutator, get_fermion_operator,
-                             hermitian_conjugated, up_index, down_index,
-                             sz_operator)
+from .f import random_circuit
 
-__all__ = [
-    'bprint', 'mod', 'normalize', 'random_state', 'number_operator',
-    'normal_ordered', 'commutator', 'up_index', 'down_index', 'sz_operator',
-    'hermitian_conjugated', 'ket_string', 'get_fermion_operator',
-    'count_qubits'
-]
-
+__all__ = ['mod', 'normalize', 'random_state', 'ket_string', 'random_circuit']
 __all__.sort()
