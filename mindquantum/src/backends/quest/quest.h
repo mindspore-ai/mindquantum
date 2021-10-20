@@ -162,13 +162,9 @@ struct Quest {
             Quest::ApplyGate(gate);
         }
     }
-    // TODO(unknown):
-    // Stuff.🔥🔥🔥🔥🔥《模拟器开发》↪️开发quest模拟器的测量算符操作逻辑，GPU和CPU都需通过
     unsigned ApplyMeasure(const BasicGate<T> &gate) {
     }
 
-    // TODO(unknown):
-    // Stuff.🔥🔥🔥🔥🔥《模拟器开发》↪️开发quest模拟器的采样方法逻辑，GPU和CPU都需通过
     VT<unsigned> Sampling(const VT<BasicGate<T>> &circ, const ParameterResolver<T> &pr, size_t shots,
                           const MST<size_t> &key_map, unsigned seed) {
     }
@@ -257,8 +253,6 @@ struct Quest {
                 // if (herm_circ[j].ctrl_qubits_.size() == 0) {
                 gi = Complex2Complex<T>(calcInnerProduct(sim_left.qubits, sim_right_tmp.qubits));
                 // } else {
-                // TODO(unknown):
-                // Stuff.🔥🔥🔥🔥🔥《模拟器开发》↪️当含参门有控制位时如何进行内积运算
                 //   gi = ComplexInnerProductWithControl<T, calc_type>(sim_left.vec_,
                 //   sim_right_tmp.vec_, static_cast<Index>(len_),
                 //                                                     GetControlMask(herm_circ[j].ctrl_qubits_));
