@@ -44,7 +44,7 @@ docker run -it swr.cn-south-1.myhuaweicloud.com/mindspore/mindspore-cpu:{tag} /b
 ```python
 import numpy as np
 import mindspore.context as context
-import mindspore.ops as ops
+import mindspore.operators as ops
 from mindspore import Tensor
 
 context.set_context(mode=context.PYNATIVE_MODE, device_target="CPU")

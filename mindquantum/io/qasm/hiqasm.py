@@ -21,10 +21,7 @@ from .openqasm import u3
 HIQASM_GATE_SET = {
     '0.1': {
         'np': ['X', 'Y', 'Z', 'S', 'T', 'H', 'CNOT', 'CZ', 'ISWAP', 'CCNOT'],
-        'p': [
-            'RX', 'RY', 'RZ', 'U', 'CRX', 'CRY', 'CRZ', 'XX', 'YY', 'ZZ',
-            'CCRX', 'CCRY', 'CCRZ'
-        ],
+        'p': ['RX', 'RY', 'RZ', 'U', 'CRX', 'CRY', 'CRZ', 'XX', 'YY', 'ZZ', 'CCRX', 'CCRY', 'CCRZ'],
     }
 }
 
@@ -41,22 +38,28 @@ def random_hiqasm(n_qubits, gate_num, version='0.1', seed=42):
 
     Returns:
         str, quantum in HIQASM format.
+
+    Examples:
+        >>> from mindquantum.io.qasm import random_hiqasm
+        >>> from mindquantum.io.qasm import HiQASM
+        >>> hiqasm_str = random_hiqasm(2, 5)
+        >>> hiqasm = HiQASM()
+        >>> circuit = hiqasm.from_string(hiqasm_str)
+        >>> circuit
+        q0: ──RZ(-2.513)────RZ(-3.012)────RX(0.738)────M(k0)───────────
+                                              │
+        q1: ──────S───────────────────────────●──────────Z──────M(k1)──
     """
     if not isinstance(n_qubits, (int, np.int64)) or n_qubits < 1:
-        raise ValueError(
-            f'qubit number should be a non negative int, but get {n_qubits}.')
+        raise ValueError(f'qubit number should be a non negative int, but get {n_qubits}.')
     if not isinstance(gate_num, (int, np.int64)) or gate_num < 1:
-        raise ValueError(
-            f'gate number should be a non negative int, but get {n_qubits}.')
+        raise ValueError(f'gate number should be a non negative int, but get {n_qubits}.')
     np.random.seed(seed)
     gate_set = HIQASM_GATE_SET[version]
     np_set = gate_set['np']
     p_set = gate_set['p']
     if version == '0.1':
-        qasm = [
-            '# HIQASM 0.1', '# Instruction stdins', '',
-            f'ALLOCATE q {n_qubits}', 'RESET q'
-        ]
+        qasm = ['# HIQASM 0.1', '# Instruction stdins', '', f'ALLOCATE q {n_qubits}', 'RESET q']
         if n_qubits == 1:
             np_set = np_set[:6]
             p_set = p_set[:4]
@@ -80,14 +83,11 @@ def random_hiqasm(n_qubits, gate_num, version='0.1', seed=42):
             elif gate == 'U':
                 qasm.append('U q[{}] {},{},{}'.format(qidx[0], *pval))
             elif gate in ['CRX', 'CRY', 'CRZ', 'XX', 'YY', 'ZZ']:
-                qasm.append('{} q[{}],q[{}] {}'.format(gate, *qidx[:2],
-                                                       pval[0]))
+                qasm.append('{} q[{}],q[{}] {}'.format(gate, *qidx[:2], pval[0]))
             elif gate in ['CCRX', 'CCRY', 'CCRZ']:
-                qasm.append('{} q[{}],q[{}],q[{}] {}'.format(
-                    gate, *qidx[:3], pval[0]))
+                qasm.append('{} q[{}],q[{}],q[{}] {}'.format(gate, *qidx[:3], pval[0]))
             else:
-                raise NotImplementedError(
-                    f"gate {gate} not implement in HIQASM {version}")
+                raise NotImplementedError(f"gate {gate} not implement in HIQASM {version}")
         qasm.append('MEASURE q')
         qasm.append('DEALLOCATE q')
         qasm.append('')
@@ -98,13 +98,28 @@ def random_hiqasm(n_qubits, gate_num, version='0.1', seed=42):
 class HiQASM:
     """
     Convert a circuit to hiqasm format.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.io.qasm import HiQASM
+        >>> from mindquantum.core import Circuit
+        >>> circuit = Circuit().rx(0.3, 0).z(0, 1).zz(np.pi, [0, 1])
+        >>> hiqasm = HiQASM()
+        >>> circuit_str = hiqasm.to_string(circuit)
+        >>> print(circuit_str[68: 80])
+        CZ q[1],q[0]
+        >>> circuit_2 = hiqasm.from_string(circuit_str)
+        >>> circuit_2
+        q0: ──RX(3/10)────Z────ZZ(π)──
+                          │      │
+        q1: ──────────────●────ZZ(π)──
     """
     def __init__(self):
         from mindquantum import Circuit
         self.circuit = Circuit()
         self.cmds = []
 
-    def filter(self, cmds):
+    def _filter(self, cmds):
         """filter empty cmds and head."""
         out = []
         version = None
@@ -113,7 +128,7 @@ class HiQASM:
             cmd = cmd.strip()
             if not cmd:
                 continue
-            if startswithany(cmd, '#', 'ALLOCATE', 'RESET', 'DEALLOCATE'):
+            if _startswithany(cmd, '#', 'ALLOCATE', 'RESET', 'DEALLOCATE'):
                 if cmd.startswith('# HIQASM'):
                     version = cmd.split(' ')[-1]
                 if cmd.startswith('ALLOCATE q '):
@@ -131,36 +146,25 @@ class HiQASM:
         from mindquantum import gates as G
         if version == '0.1':
             if circuit.parameterized:
-                raise ValueError(
-                    "Cannot convert parameterized circuit to HIQASM")
+                raise ValueError("Cannot convert parameterized circuit to HIQASM")
             self.circuit = circuit
-            self.cmds = [
-                f"# HIQASM {version}", "# Instruction stdins", "",
-                f'ALLOCATE q {circuit.n_qubits}', 'RESET q'
-            ]
+            self.cmds = [f"# HIQASM {version}", "# Instruction stdins", "", f'ALLOCATE q {circuit.n_qubits}', 'RESET q']
             for gate in circuit:
                 ctrl_qubits = gate.ctrl_qubits
                 n_ctrl_qubits = len(ctrl_qubits)
                 obj_qubits = gate.obj_qubits
                 n_obj_qubits = len(obj_qubits)
                 if n_ctrl_qubits > 2:
-                    raise ValueError(
-                        f"HIQASM do not support more than two control qubits gate: {gate}"
-                    )
+                    raise ValueError(f"HIQASM do not support more than two control qubits gate: {gate}")
                 if n_obj_qubits > 2:
-                    raise ValueError(
-                        f"HIQASM do not support more than two object qubit gate: {gate}"
-                    )
-                if self._to_string_non_parametric(gate, ctrl_qubits,
-                                                  obj_qubits, version):
+                    raise ValueError(f"HIQASM do not support more than two object qubit gate: {gate}")
+                if self._to_string_non_parametric(gate, ctrl_qubits, obj_qubits, version):
                     pass
-                elif self._to_string_parametric(gate, ctrl_qubits, obj_qubits,
-                                                version):
+                elif self._to_string_parametric(gate, ctrl_qubits, obj_qubits, version):
                     pass
                 elif isinstance(gate, G.ISWAPGate):
                     if n_ctrl_qubits == 0:
-                        self.cmds.append(
-                            f'ISWAP q[{obj_qubits[0]}],q[{obj_qubits[1]}]')
+                        self.cmds.append(f'ISWAP q[{obj_qubits[0]}],q[{obj_qubits[1]}]')
                     else:
                         _not_implement(version, gate)
                 elif isinstance(gate, G.Measure):
@@ -176,8 +180,7 @@ class HiQASM:
             raise NotImplementedError
         return '\n'.join(self.cmds)
 
-    def _to_string_non_parametric(self, gate, ctrl_qubits, obj_qubits,
-                                  version):
+    def _to_string_non_parametric(self, gate, ctrl_qubits, obj_qubits, version):
         """Conversion of simple gates to string"""
         from mindquantum.core import gates as G
         n_ctrl_qubits = len(ctrl_qubits)
@@ -186,12 +189,9 @@ class HiQASM:
             if n_ctrl_qubits == 0:
                 self.cmds.append(f'X q[{obj_qubits[0]}]')
             elif n_ctrl_qubits == 1:
-                self.cmds.append(
-                    f'CNOT q[{ctrl_qubits[0]}],q[{obj_qubits[0]}]')
+                self.cmds.append(f'CNOT q[{ctrl_qubits[0]}],q[{obj_qubits[0]}]')
             elif n_ctrl_qubits == 2:
-                self.cmd.append(
-                    f'CCNOT q[{ctrl_qubits[0]}],q[{ctrl_qubits[1]}],q[{obj_qubits[0]}]'
-                )
+                self.cmd.append(f'CCNOT q[{ctrl_qubits[0]}],q[{ctrl_qubits[1]}],q[{obj_qubits[0]}]')
             else:
                 _not_implement(version, gate)
         elif isinstance(gate, G.YGate):
@@ -236,23 +236,17 @@ class HiQASM:
 
         if isinstance(gate, (G.RX, G.RY, G.RZ)):
             if n_ctrl_qubits == 0:
-                self.cmds.append(
-                    f'{gate.name} q[{obj_qubits[0]}] {gate.coeff}')
+                self.cmds.append(f'{gate.name} q[{obj_qubits[0]}] {gate.coeff}')
             elif n_ctrl_qubits == 1:
-                self.cmds.append(
-                    f'C{gate.name} q[{ctrl_qubits[0]}],q[{obj_qubits[0]}] {gate.coeff}'
-                )
+                self.cmds.append(f'C{gate.name} q[{ctrl_qubits[0]}],q[{obj_qubits[0]}] {gate.coeff}')
             elif n_ctrl_qubits == 2:
                 self.cmds.append(
-                    f'CC{gate.name} q[{ctrl_qubits[0]}],q[{ctrl_qubits[1]}],q[{obj_qubits[0]}] {gate.coeff}'
-                )
+                    f'CC{gate.name} q[{ctrl_qubits[0]}],q[{ctrl_qubits[1]}],q[{obj_qubits[0]}] {gate.coeff}')
             else:
                 _not_implement(version, gate)
         elif isinstance(gate, (G.XX, G.YY, G.ZZ)):
             if n_ctrl_qubits == 0:
-                self.cmds.append(
-                    f'{gate.name} q[{obj_qubits[0]}],q[{obj_qubits[1]}] {gate.coeff}'
-                )
+                self.cmds.append(f'{gate.name} q[{obj_qubits[0]}],q[{obj_qubits[1]}] {gate.coeff}')
             else:
                 _not_implement(version, gate)
         else:
@@ -262,7 +256,7 @@ class HiQASM:
     def from_string(self, string):
         """Read a hiqasm string"""
         cmds = string.split('\n')
-        self.cmds, version, n_qubits = self.filter(cmds)
+        self.cmds, version, n_qubits = self._filter(cmds)
         if version == '0.1':
             self.trans_v01(self.cmds, n_qubits)
         else:
@@ -318,12 +312,10 @@ class HiQASM:
             elif cmd.startswith('MEASURE '):
                 q = _find_qubit_id(cmd)
                 if q:
-                    self.circuit.measure(f'k{self.circuit.all_measures.size}',
-                                         q[0])
+                    self.circuit.measure(f'k{self.circuit.all_measures.size}', q[0])
                 else:
                     for midx in range(n_qubits):
-                        self.circuit.measure(
-                            f'k{self.circuit.all_measures.size}', midx)
+                        self.circuit.measure(f'k{self.circuit.all_measures.size}', midx)
             elif self._trans_v01_single_qubit(cmd, q[0]):
                 pass
             else:
@@ -362,7 +354,7 @@ def _extr_parameter(cmd):
     return [float(i) for i in cmd.split(' ')[-1].split(',')]
 
 
-def startswithany(cmd, *s):
+def _startswithany(cmd, *s):
     """Checkout whether cmd starts with any string in s"""
     for i in s:
         if cmd.startswith(i):
@@ -373,7 +365,3 @@ def startswithany(cmd, *s):
 def _not_implement(version, gate):
     """not implement error"""
     raise ValueError(f'{gate} not implement in HIQASM {version}')
-
-
-if __name__ == '__main__':
-    print(random_hiqasm(1, 10))

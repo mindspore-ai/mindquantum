@@ -168,13 +168,13 @@ class OpenQASM:
         """
         with open(file_name, 'r') as f:
             cmds = f.readlines()
-        self.cmds, version = self.filter(cmds)
+        self.cmds, version = self._filter(cmds)
         if version == '2.0':
-            self.trans_v2(self.cmds)
+            self._trans_v2(self.cmds)
         else:
             raise ValueError(f"OPENQASM {version} not implement yet")
 
-    def filter(self, cmds):
+    def _filter(self, cmds):
         """
         filter empty cmds and head.
         """
@@ -191,7 +191,7 @@ class OpenQASM:
                 out.append(cmd[:-1])
         return out, version
 
-    def trans_v2(self, cmds):
+    def _trans_v2(self, cmds):
         """
         trans method for openqasm version 2
         """

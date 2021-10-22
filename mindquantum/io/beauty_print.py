@@ -51,7 +51,7 @@ def bprint(strings: list,
         list, a list of formatted string.
 
     Examples:
-        >>> from mindquantum.utils import bprint
+        >>> from mindquantum.io import bprint
         >>> title='Info of Bob'
         >>> o = bprint(['Name:Bob', 'Age:17', 'Nationality:China'],
         >>>     title=title)

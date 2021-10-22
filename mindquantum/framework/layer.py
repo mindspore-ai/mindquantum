@@ -212,6 +212,7 @@ class MQN2AnsatzOnlyLayer(nn.Cell):
         >>> from mindquantum import Circuit, Hamiltonian, QubitOperator
         >>> from mindquantum import Simulator, MQN2AnsatzOnlyLayer
         >>> import mindspore as ms
+        >>> ms.set_seed(43)
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
         >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0)
         >>> ham = Hamiltonian(QubitOperator('Z0'))
@@ -223,9 +224,9 @@ class MQN2AnsatzOnlyLayer(nn.Cell):
         >>> for i in range(100):
         ...     train_net()
         >>> net.weight.asnumpy()
-        array([-0.07705432,  1.5723164 ], dtype=float32)
+        array([ 0.05957536, -1.5686935 ], dtype=float32)
         >>> net()
-        Tensor(shape=[1], dtype=Float32, value= [ 1.36920235e-08])
+        Tensor(shape=[1], dtype=Float32, value= [ 1.56753845e-08])
     """
     def __init__(self, expectation_with_grad, weight='normal'):
         super(MQN2AnsatzOnlyLayer, self).__init__()
