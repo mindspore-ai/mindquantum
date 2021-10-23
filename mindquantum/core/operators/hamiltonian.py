@@ -39,6 +39,7 @@ class Hamiltonian:
     """
     def __init__(self, hamiltonian):
         from mindquantum.core.operators import QubitOperator as hiq_operator
+        from mindquantum.core.operators.utils import count_qubits
         support_type = (pq_operator, of_operator, hiq_operator, sp.csr_matrix)
         if not isinstance(hamiltonian, support_type):
             raise TypeError("Require a QubitOperator or a csr_matrix, but get {}!".format(type(hamiltonian)))
@@ -56,7 +57,7 @@ class Hamiltonian:
             self.hamiltonian = hamiltonian
             self.sparse_mat = sp.csr_matrix(np.eye(2, dtype=np.complex64))
             self.how_to = MODE['origin']
-            self.n_qubits = None
+            self.n_qubits = count_qubits(hamiltonian)
         self.ham_termlist = [(i, j) for i, j in self.hamiltonian.terms.items()]
 
     def __str__(self):
@@ -75,6 +76,8 @@ class Hamiltonian:
         """
         if EDOM[self.how_to] != 'origin':
             raise ValueError('Already a sparse hamiltonian.')
+        if n_qubits < self.n_qubits:
+            raise ValueError(f"Can not sparse a {self.n_qubits} qubits hamiltonian to {n_qubits} hamiltonian.")
         self.n_qubits = n_qubits
         self.how_to = MODE['backend']
         return self

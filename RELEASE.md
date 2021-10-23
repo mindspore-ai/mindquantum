@@ -1,6 +1,6 @@
-# MindQuantum 0.3.0
+# MindQuantum 0.5.0
 
-## MindQuantum 0.3.0 Release Notes
+## MindQuantum 0.5.0 Release Notes
 
 ### Major Features and Improvements
 
@@ -14,7 +14,7 @@ We unified the abbreviations of some nouns in MindQuantum.
 
 <table>
 <tr>
-<td style="text-align:center"> 0.2.0 </td> <td style="text-align:center"> 0.3.0 </td>
+<td style="text-align:center"> 0.3.1 </td> <td style="text-align:center"> 0.5.0 </td>
 </tr>
 <tr>
 <td>
@@ -44,7 +44,7 @@ True
 
 <table>
 <tr>
-<td style="text-align:center"> 0.2.0 </td> <td style="text-align:center"> 0.3.0 </td>
+<td style="text-align:center"> 0.3.1 </td> <td style="text-align:center"> 0.5.0 </td>
 </tr>
 <tr>
 <td>
@@ -94,6 +94,286 @@ The new API was shown as below.
 8. `MQN2Layer`
 9. `MQAnsatzOnlyLayer`
 10. `MQN2AnsatzOnlyLayer`
+
+The above modules are placed in `mindquantum.framework`.
+
+#### Removed
+
+Due to the duplication of functions, we deleted some APIs.
+
+- `mindquantum.circuit.StateEvolution`
+
+#### New feature
+
+New gates are shown as below.
+
+- `mindquantum.core.SGate`
+- `mindquantum.core.TGate`
+
+Measurement on certain qubits are now supported. The related APIs are shown as below.
+
+- `mindquantum.core.Measure`
+- `mindquantum.core.MeasureResult`
+
+Displaying a circuit in text format is now supported.
+
+- `mindquantum.io.brick_model`
+- `mindquantum.io.measure_text_drawer`
+
+QASM is now supported.
+
+- `mindquantum.io.OpenQASM`
+- `mindquantum.io.random_hiqasm`
+- `mindquantum.io.HiQASM`
+
+Simulator is now separated from MindSpore backend. Now you can easily to use a simulator.
+
+- `mindquantum.simulator.Simulator`
+
+### Refactoring
+
+For improving MindQuantum's package structure, we did some refactoring on MindQuantum.
+
+<table>
+<tr>
+<td style="text-align:center"> old </td> <td style="text-align:center"> new </td>
+</tr>
+<tr><td>
+
+`mindquantum.gate.Hamiltonian`
+</td><td>
+
+`mindquantum.core.operations.Hamiltonian`
+</td></tr>
+<tr><td>
+
+`mindquantum.gate.Projector`
+</td><td>
+
+`mindquantum.core.operations.Projector`
+</td></tr>
+<tr><td>
+
+`mindquantum.circuit.qft`
+</td><td>
+
+`mindquantum.algorithm.library.qft`
+</td></tr>
+<tr><td>
+
+`mindquantum.circuit.generate_uccsd`
+</td><td>
+
+`mindquantum.algorithm.nisq.chem.generate_uccsd`
+</td></tr>
+<tr><td>
+
+`mindquantum.circuit.TimeEvolution`
+</td><td>
+
+`mindquantum.core.operations.TimeEvolution`
+</td></tr>
+<tr><td>
+
+`mindquantum.utils.count_qubits`
+</td><td>
+
+`mindquantum.core.operations.count_qubits`
+</td></tr>
+<tr><td>
+
+`mindquantum.utils.commutator`
+</td><td>
+
+`mindquantum.core.operations.commutator`
+</td></tr><tr><td>
+
+`mindquantum.utils.normal_ordered`
+</td><td>
+
+`mindquantum.core.operations.normal_ordered`
+</td></tr><tr><td>
+
+`mindquantum.utils.get_fermion_operator`
+</td><td>
+
+`mindquantum.core.operations.get_fermion_operator`
+</td></tr><tr><td>
+
+`mindquantum.utils.number_operator`
+</td><td>
+
+`mindquantum.core.operations.number_operator`
+</td></tr><tr><td>
+
+`mindquantum.utils.hermitian_conjugated`
+</td><td>
+
+`mindquantum.core.operations.hermitian_conjugated`
+</td></tr><tr><td>
+
+`mindquantum.utils.up_index`
+</td><td>
+
+`mindquantum.core.operations.up_index`
+</td></tr><tr><td>
+
+`mindquantum.utils.down_index`
+</td><td>
+
+`mindquantum.core.operations.down_index`
+</td></tr><tr><td>
+
+`mindquantum.utils.sz_operator`
+</td><td>
+
+`mindquantum.core.operations.sz_operator`
+</td></tr>
+<tr><td>
+
+`mindquantum.ansatz.Ansatz`</td><td>
+
+`mindquantum.algorithm.nisq.Ansatz`
+</td></tr>
+<tr><td>
+
+`mindquantum.ansatz.MaxCutAnsatz`
+</td><td>
+
+`mindquantum.algorithm.nisq.qaoa.MaxCutAnsatz`
+</td></tr>
+<tr><td>
+
+`mindquantum.ansatz.Max2SATAnsatz`
+</td><td>
+
+`mindquantum.algorithm.nisq.qaoa.Max2SATAnsatz`
+</td></tr>
+<tr><td>
+
+`mindquantum.ansatz.HardwareEfficientAnsatz`
+</td><td>
+
+`mindquantum.algorithm.nisq.chem.HardwareEfficientAnsatz`
+</td></tr>
+<tr><td>
+
+`mindquantum.ansatz.QubitUCCAnsatz`
+</td><td>
+
+`mindquantum.algorithm.nisq.chem.QubitUCCAnsatz`
+</td></tr>
+<tr><td>
+
+`mindquantum.ansatz.UCCAnsatz`
+</td><td>
+
+`mindquantum.algorithm.nisq.chem.UCCAnsatz`
+</td></tr>
+<tr><td>
+
+`mindquantum.hiqfermion.Transform`
+</td><td>
+
+`mindquantum.algorithm.nisq.chem.Transform`
+</td></tr>
+<tr><td>
+
+`mindquantum.hiqfermion.get_qubit_hamiltonian`
+</td><td>
+
+`mindquantum.algorithm.nisq.chem.get_qubit_hamiltonian`
+</td></tr>
+<tr><td>
+
+`mindquantum.hiqfermion.uccsd_singlet_generator`
+</td><td>
+
+`mindquantum.algorithm.nisq.chem.uccsd_singlet_generator`
+</td></tr>
+<tr><td>
+
+`mindquantum.hiqfermion.uccsd_singlet_get_packed_amplitudes`
+</td><td>
+
+`mindquantum.algorithm.nisq.chem.uccsd_singlet_get_packed_amplitudes`
+</td></tr>
+<tr><td>
+
+`mindquantum.hiqfermion.uccsd0_singlet_generator`
+</td><td>
+
+`mindquantum.algorithm.nisq.chem.uccsd0_singlet_generator`
+</td></tr>
+<tr><td>
+
+`mindquantum.hiqfermion.quccsd_generator`
+</td><td>
+
+`mindquantum.algorithm.nisq.chem.quccsd_generator`
+</td></tr>
+<tr><td>
+
+`mindquantum.utils.bprint`
+</td><td>
+
+`mindquantum.io.bprint`
+</td></tr>
+<tr><td>
+
+`mindquantum.circuit`
+</td><td>
+
+`mindquantum.core.circuit`
+</td></tr>
+<tr><td>
+
+`mindquantum.gate`
+</td><td>
+
+`mindquantum.core.gates`
+</td></tr>
+<tr><td>
+
+`mindquantum.ops`
+</td><td>
+
+`mindquantum.core.operations`
+</td></tr>
+<tr><td>
+
+`mindquantum.parameterresolver`
+</td><td>
+
+`mindquantum.core.parameterresolver`
+</td></tr>
+<tr><td></td><td></td></tr>
+</table>
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+yufan, wengwenkang, xuxusheng, Damien Ngyuen, zhouxu, wangzidong, yankang, lujiale, zhangzhenghai, fanyi, zhangwengang, wangkaisheng, zhoufeng, wangsiyuan, gongxiaoqing, chengxianbin, sunxiyin, wenwenkang, lvdingshun, cuijiangyu, chendiqing, zhangkai, Zotov Yuriy, liqin, zengjinglin, cuixiaopeng.
+
+Contributions of any kind are welcome!
+
+## MindQuantum 0.3.1 Release Notes
+
+### Major Features and Improvements
+
+- Three tutorials have been rewritten to make them easier to read
+- Circuit information such as qubit number, parameters will update immediately after you add gate
+- The UN operator now support parameterized gate
+- New ansatz that solving max 2 sat problem now are supported
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+yufan, wengwenkang, xuxusheng, wangzidong, yangkang, lujiale, fanyi, zhangwengang, wangkaisheng, zhoufeng, wangsiyuan, gongxiaoqing, chengxianbin, sunxiyin, wenwenkang, lvdingshun, cuijiangyu, chendiqing, zhangkai, Damien Ngyuen, Zotov Yuriy, liqin, zengjinglin, cuixiaopeng.
+
+Contributions of any kind are welcome!
 
 ## MindQuantum 0.2.0 Release Notes
 
