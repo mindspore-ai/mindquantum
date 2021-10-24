@@ -142,6 +142,9 @@ class Simulator:
         if not isinstance(gate, BasicGate):
             raise TypeError(f"gate requires a quantum gate, but get {type(gate)}")
         if not isinstance(gate, BarrierGate):
+            gate_max = max(max(gate.obj_qubits, gate.ctrl_qubits))
+            if self.n_qubits < gate_max:
+                raise ValueError(f"qubits of gate {gate} is higher than simulator qubits.")
             if isinstance(gate, Measure):
                 return self.sim.apply_measure(gate.get_cpp_obj())
             if pr is None:
@@ -191,6 +194,8 @@ class Simulator:
         """
         if not isinstance(circuit, Circuit):
             raise TypeError(f"circuit must be Circuit, but get {type(Circuit)}")
+        if self.n_qubits < circuit.n_qubits:
+            raise ValueError(f"Circuit has {circuit.n_qubits} qubits, which is more than simulator qubits.")
         if circuit.has_measure:
             res = MeasureResult()
             res.add_measure(circuit.all_measures.keys())
@@ -265,6 +270,8 @@ match with circuit parameters ({len(circuit.params_name)}, )")
         """
         if not isinstance(circuit, Circuit):
             raise TypeError(f"sampling circuit need a quantum circuit but get {type(circuit)}")
+        if self.n_qubits < circuit.n_qubits:
+            raise ValueError(f"Circuit has {circuit.n_qubits} qubits, which is more than simulator qubits.")
         if not isinstance(shots, int) or shots < 0:
             raise ValueError(f"sampling shot should be non negative int, but get {shots}")
         if circuit.parameterized:
@@ -318,10 +325,7 @@ match with circuit parameters ({len(circuit.params_name)}, )")
 
         if not isinstance(hamiltonian, Hamiltonian):
             raise TypeError(f"hamiltonian requires a Hamiltonian, but got {type(hamiltonian)}")
-        if hamiltonian.how_to != MODE['origin']:
-            if hamiltonian.n_qubits != self.n_qubits:
-                raise ValueError(f"Hamiltonian qubits is {hamiltonian.n_qubits}, not match \
-with simulator qubits number {self.n_qubits}")
+        _check_hamiltonian_qubits_number(hamiltonian, self.n_qubits)
         self.sim.apply_hamiltonian(hamiltonian.get_cpp_obj())
 
     def get_expectation(self, hamiltonian):
@@ -350,10 +354,7 @@ with simulator qubits number {self.n_qubits}")
         """
         if not isinstance(hamiltonian, Hamiltonian):
             raise TypeError(f"hamiltonian requires a Hamiltonian, but got {type(hamiltonian)}")
-        if hamiltonian.how_to != MODE['origin']:
-            if hamiltonian.n_qubits != self.n_qubits:
-                raise ValueError(f"Hamiltonian qubits is {hamiltonian.n_qubits}, not match \
-with simulator qubits number {self.n_qubits}")
+        _check_hamiltonian_qubits_number(hamiltonian, self.n_qubits)
         return self.sim.get_expectation(hamiltonian.get_cpp_obj())
 
     def get_qs(self, ket=False):
@@ -455,6 +456,10 @@ with simulator qubits number {self.n_qubits}")
             hams = [hams]
         elif not isinstance(hams, list):
             raise ValueError(f"hams requires a Hamiltonian or a list of Hamiltonian, but get {type(hams)}")
+        for h_tmp in hams:
+            if not isinstance(h_tmp, Hamiltonian):
+                raise TypeError(f"hams's element should be a Hamiltonian, but get {type(h_tmp)}")
+            _check_hamiltonian_qubits_number(h_tmp, self.n_qubits)
         if not isinstance(circ_right, Circuit):
             raise ValueError(f"Quantum circuit need a Circuit, but get {type(circ_right)}")
         if circ_left is not None and not isinstance(circ_left, Circuit):
@@ -483,6 +488,9 @@ with simulator qubits number {self.n_qubits}")
         s2 = set(encoder_params_name) | set(ansatz_params_name)
         if s1 - s2 or s2 - s1:
             raise ValueError("encoder_params_name and ansatz_params_name are different with circuit parameters")
+        circ_n_qubits = max(circ_left.n_qubits, circ_right.n_qubits)
+        if self.n_qubits < circ_n_qubits:
+            raise ValueError(f"Simulator has {self.n_qubits} qubits, but circuit has {circ_n_qubits} qubits.")
         version = "both"
         if not ansatz_params_name:
             version = "encoder"
@@ -581,6 +589,17 @@ def _thread_balance(n_prs, n_meas, parallel_worker):
             mea_threads = min(n_meas, parallel_worker)
             batch_threads = min(n_prs, max(1, parallel_worker // mea_threads))
     return batch_threads, mea_threads
+
+
+def _check_hamiltonian_qubits_number(hamiltonian, sim_qubits):
+    """check hamiltonian qubits number"""
+    if hamiltonian.how_to != MODE['origin']:
+        if hamiltonian.n_qubits != sim_qubits:
+            raise ValueError(f"Hamiltonian qubits is {hamiltonian.n_qubits}, not match \
+with simulator qubits number {sim_qubits}")
+    else:
+        if hamiltonian.n_qubits > sim_qubits:
+            raise ValueError(f"Hamiltonian qubits is {hamiltonian.n_qubits}, which is bigger than simulator qubits.")
 
 
 class GradOpsWrapper:
