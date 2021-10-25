@@ -63,5 +63,5 @@ def measure_text_drawer(res):
         state += (box_high if v == max_shot else box_low) * _trans(
             v / res.shots, max_size, max_prop)
         s.append(state)
-        s.append(' ' * len(ket_exp) + vline + ' ' * max_size)
+        s.append(' ' * len(ket_exp) + vline)
     return s

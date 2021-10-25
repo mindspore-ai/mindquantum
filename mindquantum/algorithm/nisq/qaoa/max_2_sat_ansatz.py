@@ -86,10 +86,8 @@ class Max2SATAnsatz(Ansatz):
         >>> clauses = [(2, -3)]
         >>> max2sat = Max2SATAnsatz(clauses, 1)
         >>> max2sat.circuit
-        q0: ─────────────────────────────────────────────────────────────────────
-
-        q1: ──H────RZ(0.5*beta_0)─────●───────────────────────●────RX(alpha_0)──
-                                       │                       │
+        q1: ──H─────RZ(0.5*beta_0)────●───────────────────────●────RX(alpha_0)──
+                                      │                       │
         q2: ──H────RZ(-0.5*beta_0)────X────RZ(-0.5*beta_0)────X────RX(alpha_0)──
 
         >>> max2sat.hamiltonian

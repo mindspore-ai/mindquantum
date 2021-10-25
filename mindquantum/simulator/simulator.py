@@ -31,7 +31,12 @@ SUPPORTED_SIMULATOR = ['projectq']
 
 
 def get_supported_simulator():
-    """Get simulator name that supported by MindQuantum """
+    """
+    Get simulator name that supported by MindQuantum.
+
+    Returns:
+        list, The supported simulator list.
+    """
     return SUPPORTED_SIMULATOR
 
 
@@ -406,12 +411,12 @@ match with circuit parameters ({len(circuit.params_name)}, )")
         self.sim.set_qs(vec / np.sqrt(np.sum(np.abs(vec)**2)))
 
     def get_expectation_with_grad(self,
-                                  hams: Hamiltonian,
-                                  circ_right: Circuit,
-                                  circ_left: Circuit = None,
+                                  hams,
+                                  circ_right,
+                                  circ_left=None,
                                   encoder_params_name=None,
                                   ansatz_params_name=None,
-                                  parallel_worker: int = None):
+                                  parallel_worker=None):
         r"""
         Get a function that return the forward value and gradient w.r.t circuit parameters.
         This method is designed to calculate the expectation and its gradient shown as below.

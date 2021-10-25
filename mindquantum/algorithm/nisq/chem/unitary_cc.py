@@ -72,29 +72,11 @@ class UCCAnsatz(Ansatz):
         >>> len(params_list)
         48
         >>> circuit[-10:]
-        q0: ──────────────────────────────────────────────────────────────────────────
-
-        q1: ──────────────────────────────────────────────────────────────────────────
-
-        q2: ──────────────────────────────────────────────────────────────────────────
-
-        q3: ──────────────────────────────────────────────────────────────────────────
-
-        q4: ──────────────────────────────────────────────────────────────────────────
-
         q5: ──●────RX(7π/2)───────H───────●────────────────────────────●───────H──────
-              │                           │                            │
-        q6: ──┼───────────────────────────┼────────────────────────────┼──────────────
               │                           │                            │
         q7: ──X───────H────────RX(π/2)────X────RZ(-0.5*t_1_d0_d_17)────X────RX(7π/2)──
     """
-    def __init__(self,
-                 n_qubits=None,
-                 n_electrons=None,
-                 occ_orb=None,
-                 vir_orb=None,
-                 generalized=False,
-                 trotter_step=1):
+    def __init__(self, n_qubits=None, n_electrons=None, occ_orb=None, vir_orb=None, generalized=False, trotter_step=1):
         if n_qubits is not None and not isinstance(n_qubits, int):
             raise ValueError("The number of qubits should be integer, \
 but get {}.".format(type(n_qubits)))
@@ -114,26 +96,16 @@ but get {}.".format(type(generalized)))
         if not isinstance(trotter_step, int) or trotter_step < 1:
             raise ValueError("Trotter step must be a positive integer!")
 
-        super().__init__("Unitary CC", n_qubits, n_qubits, n_electrons,
-                         occ_orb, vir_orb, generalized, trotter_step)
+        super().__init__("Unitary CC", n_qubits, n_qubits, n_electrons, occ_orb, vir_orb, generalized, trotter_step)
 
-    def _implement(self,
-                   n_qubits,
-                   n_electrons,
-                   occ_orb=None,
-                   vir_orb=None,
-                   generalized=False,
-                   trotter_step=1):
+    def _implement(self, n_qubits, n_electrons, occ_orb=None, vir_orb=None, generalized=False, trotter_step=1):
         """Implement the UCC ansatz using uccsd0"""
         ansatz_circuit = Circuit()
         for trotter_idx in range(trotter_step):
-            uccsd0_fermion_op = uccsd0_singlet_generator(
-                n_qubits, n_electrons, True, occ_orb, vir_orb, generalized)
-            uccsd0_circuit = TimeEvolution(
-                Transform(uccsd0_fermion_op).jordan_wigner().imag, 1).circuit
+            uccsd0_fermion_op = uccsd0_singlet_generator(n_qubits, n_electrons, True, occ_orb, vir_orb, generalized)
+            uccsd0_circuit = TimeEvolution(Transform(uccsd0_fermion_op).jordan_wigner().imag, 1).circuit
             # Modify parameter names
-            uccsd0_circuit_modified = add_prefix(uccsd0_circuit,
-                                                 "t_" + str(trotter_idx))
+            uccsd0_circuit_modified = add_prefix(uccsd0_circuit, "t_" + str(trotter_idx))
             ansatz_circuit += uccsd0_circuit_modified
         n_qubits_circuit = 0
         if list(ansatz_circuit):
@@ -142,8 +114,6 @@ but get {}.".format(type(generalized)))
         if self.n_qubits is None:
             self.n_qubits = n_qubits_circuit
         if self.n_qubits < n_qubits_circuit:
-            raise ValueError(
-                "The number of qubits in the ansatz circuit {} is larger than \
-the input n_qubits {}! Please check input parameters such as occ_orb, etc.".
-                format(n_qubits_circuit, n_qubits))
+            raise ValueError("The number of qubits in the ansatz circuit {} is larger than \
+the input n_qubits {}! Please check input parameters such as occ_orb, etc.".format(n_qubits_circuit, n_qubits))
         self._circuit = ansatz_circuit
