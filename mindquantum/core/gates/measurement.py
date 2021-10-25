@@ -205,6 +205,9 @@ class MeasureResult:
         """
         Add a measurement gate into this measurement result container. Measure key
         should be unique in this measurement result container.
+
+        Args:
+            measure (Union[Iterable, Measure]): One or more measure gates.
         """
         if not isinstance(measure, Iterable):
             measure = [measure]

@@ -20,7 +20,7 @@ from copy import deepcopy
 import numpy as np
 import sympy as sp
 from mindquantum import mqbackend as mb
-
+from mindquantum.utils.type_value_check import _num_type
 
 class ParameterResolver(dict):
     """
@@ -427,6 +427,7 @@ resolver and not require grad in other parameter resolver ".format(conflict))
             >>> pr1 = ParameterResolver({'a': 1, 'b': 2})
             >>> pr2 = ParameterResolver({'a': 2, 'b': 3})
             >>> pr1.combination(pr2)
+            8
         """
         if not isinstance(pr, (ParameterResolver, dict)):
             raise ValueError('Require a parameter resolver or a dict, but get {}.'.format(type(pr)))
@@ -479,23 +480,3 @@ resolver and not require grad in other parameter resolver ".format(conflict))
 def _check_pr_type(pr):
     if not isinstance(pr, ParameterResolver):
         raise TypeError("Require a ParameterResolver, but get {}".format(type(pr)))
-
-
-def _check_and_generate_pr_type(pr, names: list):
-    """_check_and_generate_pr_type"""
-    if isinstance(pr, _num_type):
-        if len(names) != 1:
-            raise ValueError(f"number of given parameters value is less than parameters ({len(names)})")
-        pr = np.array([pr])
-    if not isinstance(pr, ParameterResolver) and not isinstance(pr, np.ndarray):
-        raise TypeError(f"parameter requires a parameter resolver or a numpy array, but get type{type(pr)}")
-
-    if isinstance(pr, np.ndarray):
-        if len(pr) != len(names) or len(pr.shape) != 1:
-            raise ValueError(f"given parameter value size ({pr.shape}) not match with parameter size ({len(names)})")
-        pr = ParameterResolver(dict(zip(names, pr)))
-
-    return pr
-
-
-_num_type = (int, float, complex, np.int32, np.int64, np.float32, np.float64)

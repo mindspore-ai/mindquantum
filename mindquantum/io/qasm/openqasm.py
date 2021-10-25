@@ -97,9 +97,27 @@ class OpenQASM:
 
     def to_string(self, circuit, version="2.0"):
         """
-        Convert circuit to different version of openqasm
+        Convert circuit to hiqasm.
+
+        Args:
+            circuit (Circuit): The quantum circuit you want to translated to openqasm.
+            version (str): The HiQASM version you want to use. Default: '2.0'.
+
+        Returns:
+            str, The HiQASM format of input circuit.
+
+        Raises:
+            TypeError: if circuit is not a Circuit.
+            TypeError: if version is not a str.
+            NotImplementedError: if openqasm version not implement.
+            ValueError: if gate not implement in this version.
         """
-        import mindquantum.core.gates as G
+        from mindquantum import gates as G
+        from mindquantum.core import Circuit
+        if not isinstance(circuit, Circuit):
+            raise TypeError(f"circuit requires Circuit, but get {type(circuit)}.")
+        if not isinstance(version, str):
+            raise TypeError(f"version requires a str, but get {type(version)}")
         single_np = [G.XGate, G.YGate, G.ZGate]
         single_p = [G.RX, G.RY, G.RZ, G.PhaseShift]
         double_np = [G.SWAPGate, G.CNOTGate]
@@ -111,14 +129,12 @@ class OpenQASM:
             for gate in self.circuit:
                 if isgateinstance(gate, (single_np, single_p)):
                     if len(gate.ctrl_qubits) > 1:
-                        raise ValueError(
-                            f"Multiple control for gate {gate} not implement")
+                        raise ValueError(f"Multiple control for gate {gate} not implement")
                     if isgateinstance(gate, single_np):
                         obj = gate.obj_qubits[0]
                         if gate.ctrl_qubits:
                             ctrl = gate.ctrl_qubits[0]
-                            self.cmds.append(
-                                f"c{gate.name.lower()} q[{ctrl}],q[{obj}];")
+                            self.cmds.append(f"c{gate.name.lower()} q[{ctrl}],q[{obj}];")
                         else:
                             self.cmds.append(f"{gate.name.lower()} q[{obj}];")
                     else:
@@ -126,16 +142,12 @@ class OpenQASM:
                         p = gate.coeff
                         if gate.ctrl_qubits:
                             ctrl = gate.ctrl_qubits[0]
-                            self.cmds.append(
-                                f"c{gate.name.lower()}({p}) q[{ctrl}],q[{obj}];"
-                            )
+                            self.cmds.append(f"c{gate.name.lower()}({p}) q[{ctrl}],q[{obj}];")
                         else:
-                            self.cmds.append(
-                                f"{gate.name.lower()}({p}) q[{obj}];")
+                            self.cmds.append(f"{gate.name.lower()}({p}) q[{obj}];")
                 if isgateinstance(gate, (double_np, double_p)):
                     if gate.ctrl_qubits:
-                        raise ValueError(
-                            f"control two qubits gate {gate} not implement")
+                        raise ValueError(f"control two qubits gate {gate} not implement")
                     if isgateinstance(gate, double_np):
                         obj = gate.obj_qubits
                         if isinstance(gate, G.SWAPGate):
@@ -147,16 +159,31 @@ class OpenQASM:
                     else:
                         obj = gate.obj_qubits
                         p = gate.coeff
-                        self.cmds.append(
-                            f"{gate.name.lower()}({p}) q[{obj[0]}],q[{obj[1]}];"
-                        )
+                        self.cmds.append(f"{gate.name.lower()}({p}) q[{obj[0]}],q[{obj[1]}];")
             return self.cmds
-        raise ValueError(f"openqasm version {version} not implement")
+        raise NotImplementedError(f"openqasm version {version} not implement")
 
     def to_file(self, file_name, circuit, version="2.0"):
         """
-        Convert circuit to different version of openqasm and save into a file.
+        Convert a quantum circuit to openqasm format and save in file.
+
+        Args:
+            file_name (str): The file name you want to save the openqasm file.
+            circuit (Circuit): The Circuit you want to convert.
+            version (str): The version of openqasm. Default: '2.0'.
+
+        Raises:
+            TypeError: if `file_name` is not a str.
+            TypeError: if `circuit` is not a Circuit.
+            TypeError: if `version` is not a str.
         """
+        from mindquantum.core import Circuit
+        if not isinstance(file_name, str):
+            raise TypeError(f'file_name requires a str, but get {type(file_name)}')
+        if not isinstance(circuit, Circuit):
+            raise TypeError(f"circuit requires a Circuit, but get {type(circuit)}")
+        if not isinstance(version, str):
+            raise TypeError(f'version requires a str, but get {type(version)}')
         self.to_string(circuit, version)
         with open(file_name, 'w') as f:
             f.writelines("\n".join(self.cmds))
@@ -164,7 +191,13 @@ class OpenQASM:
 
     def from_file(self, file_name):
         """
-        Read a openqasm file
+        Read a openqasm file.
+
+        Args:
+            file_name (str): The path of file that stored quantum circuit in openqasm format.
+
+        Returns:
+            Circuit, the quantum circuit translated from openqasm file.
         """
         with open(file_name, 'r') as f:
             cmds = f.readlines()
@@ -182,8 +215,7 @@ class OpenQASM:
         version = None
         for cmd in cmds:
             cmd = cmd.strip()
-            if not cmd or cmd.startswith('//') or cmd.startswith(
-                    'include') or cmd.startswith("qreg"):
+            if not cmd or cmd.startswith('//') or cmd.startswith('include') or cmd.startswith("qreg"):
                 pass
             elif cmd.startswith('OPENQASM'):
                 version = cmd.split(' ')[-1][:-1]
@@ -219,7 +251,6 @@ class OpenQASM:
             elif cmd.startswith("u3("):
                 self.circuit += u3(*_extr_parameter(cmd), q[0])
             elif cmd.startswith("cu1("):
-                self.circuit += controlled(u1(_extr_parameter(cmd),
-                                              q[1]))(q[0])
+                self.circuit += controlled(u1(_extr_parameter(cmd), q[1]))(q[0])
             else:
                 raise ValueError(f"transfer cmd {cmd} not implement yet!")

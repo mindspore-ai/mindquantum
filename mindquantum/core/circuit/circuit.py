@@ -25,6 +25,7 @@ from mindquantum.core.gates.basic import _check_gate_type
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 from mindquantum.io import bprint
 from mindquantum.io.display import brick_model
+from mindquantum.utils.type_value_check import _check_input_type
 from .utils import apply
 
 GateSeq = List[G.BasicGate]
@@ -192,7 +193,12 @@ class Circuit(list):
         self.has_cpp_obj = False
 
     def append(self, gate):
-        """Append a gate."""
+        """
+        Append a gate.
+
+        Args:
+            gate (BasicGate): The gate you want to append.
+        """
         _check_gate_type(gate)
         if isinstance(gate, G.Measure):
             self.all_measures.collect_only_one(gate, f'measure key {gate.key} already exist.')
@@ -204,7 +210,12 @@ class Circuit(list):
         self.has_cpp_obj = False
 
     def extend(self, gates):
-        """Extend a circuit."""
+        """
+        Extend a circuit.
+
+        Args:
+            gates (Union[Circuit, list[BasicGate]]), A `Circuit` or a list of `BasicGate` you want to extend.
+        """
         if isinstance(gates, Circuit):
             self.all_measures.merge_only_one(gates.all_measures, "Measure already exist.")
             self.all_qubits.merge(gates.all_qubits)
@@ -283,7 +294,7 @@ class Circuit(list):
         return Circuit(super().__getitem__(sliced))
 
     @property
-    def has_measure(self):
+    def has_measure_gate(self):
         return self.all_measures.size != 0
 
     @property
@@ -381,7 +392,9 @@ class Circuit(list):
         from mindquantum.io.display._config import CIRCUIT_HTML_FORMAT
         from mindquantum.io.display._config import _CIRCUIT_STYLE
         console = Console(record=True)
-        s = brick_model(self)
+        circ = self.compress()
+        s = brick_model(circ, sorted(self.all_qubits.map))
+        s = '\n'.join(s)
         console.width = len(s)
         with console.capture() as _:
             console.print(s, style=_CIRCUIT_STYLE['style'], width=len(s))
@@ -557,7 +570,12 @@ class Circuit(list):
         return circ
 
     def get_cpp_obj(self, hermitian=False):
-        """Get cpp obj of circuit."""
+        """
+        Get cpp obj of circuit.
+
+        Args:
+            hermitian (bool): Whether to get cpp object of this circuit in hermitian version. Default: False.
+        """
         if not self.has_cpp_obj:
             self.has_cpp_obj = True
             self.cpp_obj = [i.get_cpp_obj() for i in self if not isinstance(i, G.BarrierGate)]
@@ -570,72 +588,163 @@ class Circuit(list):
         raise ValueError("Circuit does not generate cpp obj yet.")
 
     def h(self, obj_qubits, ctrl_qubits=None):
-        """Add a hadamard gate."""
+        """
+        Add a hadamard gate.
+
+        Args:
+            obj_qubits (Union[int, list[int]]): The object qubits of `H` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `H` gate. Default: None.
+        """
         self.append(G.H.on(obj_qubits, ctrl_qubits))
         return self
 
     def x(self, obj_qubits, ctrl_qubits=None):
-        """Add a X gate."""
+        """
+        Add a X gate.
+
+        Args:
+            obj_qubits (Union[int, list[int]]): The object qubits of `X` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `X` gate. Default: None.
+        """
         self.append(G.X.on(obj_qubits, ctrl_qubits))
         return self
 
     def y(self, obj_qubits, ctrl_qubits=None):
-        """Add a Y gate."""
+        """
+        Add a Y gate.
+
+        Args:
+            obj_qubits (Union[int, list[int]]): The object qubits of `Y` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `Y` gate. Default: None.
+        """
         self.append(G.Y.on(obj_qubits, ctrl_qubits))
         return self
 
     def z(self, obj_qubits, ctrl_qubits=None):
-        """Add a Z gate."""
+        """
+        Add a Z gate.
+
+        Args:
+            obj_qubits (Union[int, list[int]]): The object qubits of `Z` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `Z` gate. Default: None.
+        """
         self.append(G.Z.on(obj_qubits, ctrl_qubits))
         return self
 
     def s(self, obj_qubits, ctrl_qubits=None):
-        """Add a S gate."""
+        """
+        Add a S gate.
+
+        Args:
+            obj_qubits (Union[int, list[int]]): The object qubits of `S` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `S` gate. Default: None.
+        """
         self.append(G.S.on(obj_qubits, ctrl_qubits))
         return self
 
     def swap(self, obj_qubits, ctrl_qubits=None):
-        """Add a SWAP gate."""
+        """
+        Add a SWAP gate.
+
+        Args:
+            obj_qubits (Union[int, list[int]]): The object qubits of `SWAP` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `SWAP` gate. Default: None.
+        """
         self.append(G.SWAP.on(obj_qubits, ctrl_qubits))
         return self
 
     def rx(self, para, obj_qubits, ctrl_qubits=None):
-        """Add a RX gate."""
+        """
+        Add a RX gate.
+
+        Args:
+            para (Union[dict, ParameterResolver]): The parameter for `RX` gate.
+            obj_qubits (Union[int, list[int]]): The object qubits of `RX` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `RX` gate. Default: None.
+        """
         self.append(G.RX(para).on(obj_qubits, ctrl_qubits))
         return self
 
     def ry(self, para, obj_qubits, ctrl_qubits=None):
-        """Add a RY gate."""
+        """
+        Add a RY gate.
+
+        Args:
+            para (Union[dict, ParameterResolver]): The parameter for `RY` gate.
+            obj_qubits (Union[int, list[int]]): The object qubits of `RY` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `RY` gate. Default: None.
+        """
         self.append(G.RY(para).on(obj_qubits, ctrl_qubits))
         return self
 
     def rz(self, para, obj_qubits, ctrl_qubits=None):
-        """Add a RZ gate."""
+        """
+        Add a RZ gate.
+
+        Args:
+            para (Union[dict, ParameterResolver]): The parameter for `RZ` gate.
+            obj_qubits (Union[int, list[int]]): The object qubits of `RZ` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `RZ` gate. Default: None.
+        """
         self.append(G.RZ(para).on(obj_qubits, ctrl_qubits))
         return self
 
     def phase_shift(self, para, obj_qubits, ctrl_qubits=None):
-        """Add a Phase Shift gate."""
+        """
+        Add a Phase Shift gate.
+
+        Args:
+            para (Union[dict, ParameterResolver]): The parameter for `PhaseShift` gate.
+            obj_qubits (Union[int, list[int]]): The object qubits of `PhaseShift` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `PhaseShift` gate. Default: None."""
         self.append(G.PhaseShift(para).on(obj_qubits, ctrl_qubits))
         return self
 
     def xx(self, para, obj_qubits, ctrl_qubits=None):
-        """Add a XX gate."""
+        """
+        Add a XX gate.
+
+        Args:
+            para (Union[dict, ParameterResolver]): The parameter for `XX` gate.
+            obj_qubits (Union[int, list[int]]): The object qubits of `XX` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `XX` gate. Default: None.
+        """
         self.append(G.XX(para).on(obj_qubits, ctrl_qubits))
         return self
 
     def yy(self, para, obj_qubits, ctrl_qubits=None):
-        """Add a YY gate."""
+        """
+        Add a YY gate.
+
+        Args:
+            para (Union[dict, ParameterResolver]): The parameter for `YY` gate.
+            obj_qubits (Union[int, list[int]]): The object qubits of `YY` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `YY` gate. Default: None.
+        """
         self.append(G.YY(para).on(obj_qubits, ctrl_qubits))
         return self
 
     def zz(self, para, obj_qubits, ctrl_qubits=None):
-        """Add a ZZ gate."""
+        """
+        Add a ZZ gate.
+
+        Args:
+            para (Union[dict, ParameterResolver]): The parameter for `ZZ` gate.
+            obj_qubits (Union[int, list[int]]): The object qubits of `ZZ` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `ZZ` gate. Default: None.
+        """
         self.append(G.ZZ(para).on(obj_qubits, ctrl_qubits))
         return self
 
     def measure(self, key, obj_qubit=None):
-        """Add a measure gate."""
+        """
+        Add a measure gate.
+
+        Args:
+            key (Union[int, str]): If `obj_qubit` is None, then `key` should be a int and means which qubit to measure,
+                otherwise, `key` should be a str and means the name of this measure gate.
+            obj_qubit (int): Which qubit to measure. Default: None.
+        """
         if obj_qubit is None:
             self.append(G.Measure().on(key))
         else:
@@ -643,14 +752,25 @@ class Circuit(list):
         return self
 
     def measure_all(self, subfix=None):
-        """Measure all qubits"""
+        """
+        Measure all qubits
+
+        Args:
+            subfix (str): The subfix string you want to add to the name of measure gate.
+        """
         for i in range(self.n_qubits):
             s = f"q{i}" if subfix is None else f"q{i}_{subfix}"
             self += G.Measure(s).on(i)
         return self
 
     def barrier(self, show=True):
-        """Add a barrier."""
+        """
+        Add a barrier.
+
+        Args:
+            show (bool): Whether show barrier or not. Default: True.
+        """
+        _check_input_type('show', bool, show)
         self.append(G.BarrierGate(show))
         return self
 
@@ -658,12 +778,27 @@ class Circuit(list):
         """
         Map a quantum gate to different objective qubits and control qubits.
         Please refers to UN.
+
+        Args:
+            gate (BasicBage): The BasicGate you want to map.
+            map_obj (Union[int, list[int]]): object qubits.
+            maps_ctrl (Union[int, list[int]]): control qubits. Default: None.
         """
         from mindquantum import UN
         self += UN(gate, maps_obj, maps_ctrl)
         return self
 
     def get_qs(self, backend='projectq', pr=None, ket=False, seed=42):
+        """
+        Get the final quantum state of this circuit.
+
+        Args:
+            backend (str): Which backend you want to use. Default: 'projectq'.
+            pr (Union[numbers.Number, ParameterResolver, dict, numpy.ndarray]): The parameter of this circuit,
+                if this circuit is parameterized. Default: None.
+            ket (str): Whether to return the quantum state in ket format. Default: False.
+            seed (int): The random seed of simulator.
+        """
         from mindquantum import Simulator
         sim = Simulator(backend, self.n_qubits, seed)
         sim.apply_circuit(self, pr)

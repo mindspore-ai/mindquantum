@@ -142,8 +142,28 @@ class HiQASM:
         return out, version, n_qubits
 
     def to_string(self, circuit, version='0.1'):
-        """Convert circuit to hiqasm"""
+        """
+        Convert circuit to hiqasm.
+
+        Args:
+            circuit (Circuit): The quantum circuit you want to translated to HiQASM.
+            version (str): The HiQASM version you want to use. Default: '0.1'.
+
+        Returns:
+            str, The HiQASM format of input circuit.
+
+        Raises:
+            TypeError: if `circuit` is not a Circuit.
+            TypeError: if `version` is not a str.
+            NotImplementedError: if HiQASM version not implement.
+            ValueError: if gate not implement in this version.
+        """
         from mindquantum import gates as G
+        from mindquantum.core import Circuit
+        if not isinstance(circuit, Circuit):
+            raise TypeError(f"circuit requires Circuit, but get {type(circuit)}.")
+        if not isinstance(version, str):
+            raise TypeError(f"version requires a str, but get {type(version)}")
         if version == '0.1':
             if circuit.parameterized:
                 raise ValueError("Cannot convert parameterized circuit to HIQASM")
@@ -254,29 +274,65 @@ class HiQASM:
         return True
 
     def from_string(self, string):
-        """Read a hiqasm string"""
+        """
+        Read a hiqasm string
+
+        Args:
+            string (str): The HiQASM string of a Circuit.
+
+        Returns:
+            Circuit, The quantum circuit translated from HiQASM string.
+        """
         cmds = string.split('\n')
         self.cmds, version, n_qubits = self._filter(cmds)
         if version == '0.1':
-            self.trans_v01(self.cmds, n_qubits)
+            self._trans_v01(self.cmds, n_qubits)
         else:
             raise ValueError(f'HIQASM {version} not implement yet')
         return self.circuit
 
     def from_file(self, file_name):
-        """Read a hiqasm file"""
+        """
+        Read a hiqasm file.
+
+        Args:
+            file_name (str): The path of file that stored quantum circuit in HiQASM format.
+
+        Returns:
+            Circuit, the quantum circuit translated from HiQASM file.
+        """
         with open(file_name, 'r') as f:
             cmds = f.readlines()
         self.from_string('\n'.join(cmds))
         return self.circuit
 
     def to_file(self, file_name, circuit, version='0.1'):
+        """
+        Convert a quantum circuit to HiQASM format and save in file.
+
+        Args:
+            file_name (str): The file name you want to save the HiQASM file.
+            circuit (Circuit): The Circuit you want to convert.
+            version (str): The version of HiQASM. Default: '0.1'.
+
+        Raises:
+            TypeError: if `file_name` is not a str.
+            TypeError: if `circuit` is not a Circuit.
+            TypeError: if `version` is not a str.
+        """
+        from mindquantum.core import Circuit
+        if not isinstance(file_name, str):
+            raise TypeError(f'file_name requires a str, but get {type(file_name)}')
+        if not isinstance(circuit, Circuit):
+            raise TypeError(f"circuit requires a Circuit, but get {type(circuit)}")
+        if not isinstance(version, str):
+            raise TypeError(f'version requires a str, but get {type(version)}')
         cs = self.to_string(circuit, version)
         with open(file_name, 'w') as f:
             f.writelines(cs)
         print(f"write circuit to {file_name} finished!")
 
-    def trans_v01(self, cmds, n_qubits):
+    def _trans_v01(self, cmds, n_qubits):
         """Trans method for hiqasm version 0.1"""
         from mindquantum import Circuit
         import mindquantum.core.gates as G

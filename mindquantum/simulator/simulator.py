@@ -20,12 +20,15 @@ from mindquantum.core.circuit import Circuit
 from mindquantum.core.operators import Hamiltonian
 from mindquantum.core.operators.hamiltonian import MODE
 from mindquantum.core.parameterresolver import ParameterResolver
-from mindquantum.core.parameterresolver.parameterresolver import _check_and_generate_pr_type
 from mindquantum.core.gates import MeasureResult
 from mindquantum.core.gates import Measure
 from mindquantum.core.gates import BarrierGate
 from mindquantum.utils import ket_string
 from mindquantum import mqbackend as mb
+from mindquantum.utils.type_value_check import _check_input_type
+from mindquantum.utils.type_value_check import _check_value_should_not_less
+from mindquantum.utils.type_value_check import _check_value_should_between_close_set
+from mindquantum.utils.type_value_check import _check_and_generate_pr_type
 
 SUPPORTED_SIMULATOR = ['projectq']
 
@@ -50,6 +53,14 @@ class Simulator:
         n_qubits (int): number of quantum simulator.
         seed (int): the random seed for this simulator. Default: 42.
 
+    Raises:
+        TypeError: if `backend` is not str.
+        TypeError: if `n_qubits` is not int.
+        TypeError: if `seed` is not int.
+        ValueError: if `backend` is not supported.
+        ValueError: if `n_qubits` is negative.
+        ValueError: if `seed` is less than 0 or great than 2**23 - 1.
+
     Examples:
         >>> from mindquantum import Simulator
         >>> from mindquantum import qft
@@ -59,14 +70,13 @@ class Simulator:
         array([0.5+0.j, 0.5+0.j, 0.5+0.j, 0.5+0.j])
     """
     def __init__(self, backend, n_qubits, seed=42):
-        if not isinstance(backend, str):
-            raise TypeError(f"backend need a string, but get {type(backend)}")
+        _check_input_type('backend', str, backend)
+        _check_input_type('n_qubits', int, n_qubits)
+        _check_value_should_not_less('n_qubits', 0, n_qubits)
+        _check_input_type('seed', int, seed)
+        _check_value_should_between_close_set('seed', 0, 2**23 - 1, seed)
         if backend not in SUPPORTED_SIMULATOR:
             raise ValueError(f"backend {backend} not supported!")
-        if not isinstance(n_qubits, int) or n_qubits < 0:
-            raise ValueError(f"n_qubits of simulator should be a non negative int, but get {n_qubits}")
-        if not isinstance(seed, int) or seed < 0 or seed > 2**32 - 1:
-            raise ValueError(f"seed must be between 0 and 2**32 - 1")
         self.backend = backend
         self.seed = seed
         self.n_qubits = n_qubits
@@ -124,12 +134,18 @@ class Simulator:
 
         Args:
             gate (BasicGate): The gate you want to apply.
-            pr (Union[numbers.Number, numpy.ndarray, ParameterResolver]): The
+            pr (Union[numbers.Number, numpy.ndarray, ParameterResolver, list]): The
                 parameter for parameterized gate. Default: None.
 
         Returns:
             int or None, if the gate if a measure gate, then return a collapsed state, Otherwise
             return None.
+
+        Raises:
+            TypeError: if `gate` is not a BasicGate.
+            ValueError: if any qubit of `gate` is higher than simulator qubits.
+            ValueError: if `gate` is parameterized, but no parameter supplied.
+            TypeError: the `pr` is not a ParameterResolver if `gate` is parameterized.
 
         Examples:
             >>> import numpy as np
@@ -144,8 +160,7 @@ class Simulator:
             >>> sim.get_qs()
             array([0.+0.j, 1.+0.j])
         """
-        if not isinstance(gate, BasicGate):
-            raise TypeError(f"gate requires a quantum gate, but get {type(gate)}")
+        _check_input_type('gate', BasicGate, gate)
         if not isinstance(gate, BarrierGate):
             gate_max = max(max(gate.obj_qubits, gate.ctrl_qubits))
             if self.n_qubits < gate_max:
@@ -167,7 +182,7 @@ class Simulator:
 
         Args:
             circuit (Circuit): The quantum circuit you want to apply on this simulator.
-            pr (Union[ParameterResolver, dict, numpy.ndarray]): The
+            pr (Union[ParameterResolver, dict, numpy.ndarray, list, numbers.Number]): The
                 parameter resolver for this circuit. If the circuit is not parameterized,
                 this arg should be None. Default: None.
 
@@ -197,41 +212,28 @@ class Simulator:
                        │
             {'11': 1}
         """
-        if not isinstance(circuit, Circuit):
-            raise TypeError(f"circuit must be Circuit, but get {type(Circuit)}")
+        _check_input_type('circuit', Circuit, circuit)
         if self.n_qubits < circuit.n_qubits:
             raise ValueError(f"Circuit has {circuit.n_qubits} qubits, which is more than simulator qubits.")
-        if circuit.has_measure:
+        if circuit.has_measure_gate:
             res = MeasureResult()
             res.add_measure(circuit.all_measures.keys())
-        if pr is None:
-            if circuit.params_name:
+        if circuit.params_name:
+            if pr is None:
                 raise ValueError("Applying a parameterized circuit needs a parameter_resolver")
-            if circuit.has_measure:
-                pr = ParameterResolver()
-                samples = np.array(
-                    self.sim.apply_circuit_with_measure(circuit.get_cpp_obj(), pr.get_cpp_obj(), res.keys_map)).reshape(
-                        (1, -1))
-                res.collect_data(samples)
-                return res
-            self.sim.apply_circuit(circuit.get_cpp_obj())
+            pr = _check_and_generate_pr_type(pr, circuit.params_name)
         else:
-            if not isinstance(pr, (ParameterResolver, dict, np.ndarray)):
-                raise TypeError(f"parameter_resolver requires a ParameterResolver, but get {type(pr)}")
-            if isinstance(pr, dict):
-                pr = ParameterResolver(pr)
-            if isinstance(pr, np.ndarray):
-                if len(pr.shape) != 1 or pr.shape[0] != len(circuit.params_name):
-                    raise ValueError(f"size of parameters input ({pr.shape}) not\
-match with circuit parameters ({len(circuit.params_name)}, )")
-                pr = ParameterResolver(dict(zip(circuit.params_name, pr)))
-            if circuit.has_measure:
-                samples = np.array(
-                    self.sim.apply_circuit_with_measure(circuit.get_cpp_obj(), pr.get_cpp_obj(), res.keys_map)).reshape(
-                        (1, -1))
-                res.collect_data(samples)
-                return res
+            pr = ParameterResolver()
+        if circuit.has_measure_gate:
+            samples = np.array(
+                self.sim.apply_circuit_with_measure(circuit.get_cpp_obj(), pr.get_cpp_obj(), res.keys_map))
+            samples = samples.reshape((1, -1))
+            res.collect_data(samples)
+            return res
+        if circuit.params_name:
             self.sim.apply_circuit(circuit.get_cpp_obj(), pr.get_cpp_obj())
+        else:
+            self.sim.apply_circuit(circuit.get_cpp_obj())
         return None
 
     def sampling(self, circuit, pr=None, shots=1, seed=None):
@@ -328,8 +330,7 @@ match with circuit parameters ({len(circuit.params_name)}, )")
             array([1.+0.j, 3.+0.j])
         """
 
-        if not isinstance(hamiltonian, Hamiltonian):
-            raise TypeError(f"hamiltonian requires a Hamiltonian, but got {type(hamiltonian)}")
+        _check_input_type('hamiltonian', Hamiltonian, hamiltonian)
         _check_hamiltonian_qubits_number(hamiltonian, self.n_qubits)
         self.sim.apply_hamiltonian(hamiltonian.get_cpp_obj())
 
@@ -365,6 +366,10 @@ match with circuit parameters ({len(circuit.params_name)}, )")
     def get_qs(self, ket=False):
         """
         Get current quantum state of this simulator.
+
+        Args:
+            ket (bool): Whether to return the quantum state in ket format or not.
+                Default: False.
 
         Returns:
             numpy.ndarray, the current quantum state.
@@ -471,7 +476,7 @@ match with circuit parameters ({len(circuit.params_name)}, )")
             raise ValueError(f"Quantum circuit need a Circuit, but get {type(circ_left)}")
         if circ_left is None:
             circ_left = Circuit()
-        if circ_left.has_measure or circ_right.has_measure:
+        if circ_left.has_measure_gate or circ_right.has_measure_gate:
             raise ValueError("circuit for variational algorithm cannot have measure gate")
         if parallel_worker is not None and not isinstance(parallel_worker, int):
             raise ValueError(f"parallel_worker need a integer, but get {type(parallel_worker)}")
@@ -636,7 +641,12 @@ class GradOpsWrapper:
         return self.grad_ops(*args)
 
     def set_str(self, s):
-        """Set expression for gradient operator."""
+        """
+        Set expression for gradient operator.
+
+        Args:
+            s (str): The string of QNN operator.
+        """
         self.str = s
 
 
