@@ -423,10 +423,10 @@ resolver and not require grad in other parameter resolver ".format(conflict))
             numbers.Number, the combination result.
 
         Examples:
-        >>> from mindquantum import ParameterResolver
-        >>> pr1 = ParameterResolver({'a': 1, 'b': 2})
-        >>> pr2 = ParameterResolver({'a': 2, 'b': 3})
-        >>> pr1.combination(pr2)
+            >>> from mindquantum import ParameterResolver
+            >>> pr1 = ParameterResolver({'a': 1, 'b': 2})
+            >>> pr2 = ParameterResolver({'a': 2, 'b': 3})
+            >>> pr1.combination(pr2)
         """
         if not isinstance(pr, (ParameterResolver, dict)):
             raise ValueError('Require a parameter resolver or a dict, but get {}.'.format(type(pr)))

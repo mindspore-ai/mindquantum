@@ -25,6 +25,7 @@ from mindquantum.core.gates.basic import _check_gate_type
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 from mindquantum.io import bprint
 from mindquantum.io.display import brick_model
+from .utils import apply
 
 GateSeq = List[G.BasicGate]
 
@@ -337,12 +338,36 @@ class Circuit(list):
         self.has_cpp_obj = False
         return self
 
+    def compress(self):
+        r"""
+        Remove all unused qubits, and map qubits to `range(n_qubits)`.
+
+        Examples:
+            >>> from mindquantum import qft
+            >>> qft([0, 2, 4])
+            q0: ──H────PS(π/2)────PS(π/4)─────────────────────────@──
+                          │          │                            │
+            q2: ──────────●──────────┼───────H────PS(π/2)─────────┼──
+                                     │               │            │
+            q4: ─────────────────────●───────────────●───────H────@──
+            >>> qft([0, 2, 4]).compress()
+            q0: ──H────PS(π/2)────PS(π/4)─────────────────────────@──
+                          │          │                            │
+            q1: ──────────●──────────┼───────H────PS(π/2)─────────┼──
+                                     │               │            │
+            q2: ─────────────────────●───────────────●───────H────@──
+        """
+        circ = apply(self, list(range(len(self.all_qubits))))
+        return circ
+
     def __str__(self):
         return self.__repr__()
 
     def __repr__(self):
         from mindquantum.io.display._config import _CIRCUIT_STYLE
-        s = brick_model(self)
+        circ = self.compress()
+        s = brick_model(circ, sorted(self.all_qubits.map))
+        s = '\n'.join(s)
         console = Console(record=True)
         if not console.is_jupyter:
             console.width = len(s)
@@ -508,19 +533,19 @@ class Circuit(list):
         Remove all measure gate on some certain qubits.
 
         Args:
-            qubit (Union[int, List[int]]): The qubits you want to remove measure.
+            qubit (Union[int, list[int]]): The qubits you want to remove measure.
 
         Examples:
             >>> from mindquantum import UN, H, Measure
-            >>> circ = UN(H, 3).measure_all()
+            >>> circ = UN(H, 3).x(0, 1).x(1, 2).measure_all()
             >>> circ += H.on(0)
             >>> circ += Measure('q0_1').on(0)
             >>> circ.remove_measure_on_qubits(0)
-            q0: ──H──────H────
-
-            q1: ──H────M(q1)──
-
-            q2: ──H────M(q2)──
+            q0: ──H────X────H───────────
+                       │
+            q1: ──H────●────X────M(q1)──
+                            │
+            q2: ──H─────────●────M(q2)──
         """
         if not isinstance(qubits, list):
             qubits = [qubits]

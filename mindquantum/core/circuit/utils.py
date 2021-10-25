@@ -306,7 +306,6 @@ def apply(circuit_fn, qubits):
     Raises:
         TypeError: If qubits is not a list.
         ValueError: If any element of qubits is negative.
-        ValueError: If qubits is not in ascending order.
         TypeError: If circuit_fn is not Circuit or can not return a Circuit.
 
     Returns:
@@ -316,21 +315,17 @@ def apply(circuit_fn, qubits):
         >>> from mindquantum.algorithm.library import qft
         >>> from mindquantum.core.circuit import apply
         >>> u1 = qft([0, 1])
-        >>> u2 = apply(u1, [1, 2])
-        >>> u3 = apply(qft, [1, 2])
+        >>> u2 = apply(u1, [1, 0])
+        >>> u3 = apply(qft, [1, 0])
         >>> u3 = u3([0, 1])
         >>> u2
-        q0: ──────────────────────────
-
-        q1: ──H────PS(π/2)─────────@──
+        q0: ──────────●───────H────@──
                       │            │
-        q2: ──────────●───────H────@──
+        q1: ──H────PS(π/2)─────────@──
         >>> u3
-        q0: ──────────────────────────
-
-        q1: ──H────PS(π/2)─────────@──
+        q0: ──────────●───────H────@──
                       │            │
-        q2: ──────────●───────H────@──
+        q1: ──H────PS(π/2)─────────@──
     """
     from mindquantum.core import Circuit
     if not isinstance(qubits, list):
@@ -339,8 +334,6 @@ def apply(circuit_fn, qubits):
         for index, q in enumerate(qubits[1:]):
             if q < 0 or qubits[index] < 0:
                 raise ValueError(f"Qubit index can not negative!")
-            if q <= qubits[index]:
-                raise ValueError(f"Qubits should be in ascending order!")
     if isinstance(circuit_fn, (FunctionType, MethodType)):
 
         def wrapper(*arg, **keywords):

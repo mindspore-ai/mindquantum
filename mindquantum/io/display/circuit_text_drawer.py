@@ -27,10 +27,12 @@ def _get_qubit_range(gate):
     return out
 
 
-def brick_model(circ):
+def brick_model(circ, qubits_name=None):
     """Split a circuit into layers."""
     from mindquantum import gates as G
     n = circ.n_qubits
+    if qubits_name is None:
+        qubits_name = list(range(n))
     v_n = _text_drawer_config['v_n']
     blocks = []
     qubit_hight = np.zeros(n, dtype=int)
@@ -48,7 +50,7 @@ def brick_model(circ):
     res = {}
     max_q = 0
     for i in range(n):
-        res[i * (v_n + 1)] = f'q{i}: '
+        res[i * (v_n + 1)] = f'q{qubits_name[i]}: '
         max_q = max(max_q, len(res[i * (v_n + 1)]))
     for i in range(n):
         res[i * (v_n + 1)] = res[i * (v_n + 1)].ljust(max_q, ' ')
@@ -58,7 +60,7 @@ def brick_model(circ):
     for block in blocks:
         for k, v in block.items():
             res[k] += v
-    return '\n'.join([res[i] for i in range((n - 1) * (v_n + 1) + 1)])
+    return [res[i].rstrip() for i in range((n - 1) * (v_n + 1) + 1)]
 
 
 def _single_gate_drawer(gate):
@@ -81,20 +83,17 @@ def _single_gate_drawer(gate):
         if gate.hermitian_property == HERMITIAN_PROPERTIES['do_hermitian']:
             if gate.daggered:
                 main_text += _dm
-    main_text = _text_drawer_config['edge'] + main_text + _text_drawer_config[
-        'edge']
+    main_text = _text_drawer_config['edge'] + main_text + _text_drawer_config['edge']
     res = {}
     for i in gate.obj_qubits:
         res[i] = main_text
     if isinstance(gate, G.SWAPGate):
         max_idx = max(gate.obj_qubits)
         lower_txt = _text_drawer_config['swap_mask'][1]
-        res[max_idx] = _text_drawer_config[
-            'edge'] + lower_txt + _text_drawer_config['edge']
+        res[max_idx] = _text_drawer_config['edge'] + lower_txt + _text_drawer_config['edge']
     for i in gate.ctrl_qubits:
         res[i] = _text_drawer_config['ctrl_mask']
-        res[i] = res[i].center(len(main_text),
-                               _text_drawer_config['circ_line'])
+        res[i] = res[i].center(len(main_text), _text_drawer_config['circ_line'])
     res['len'] = len(main_text)
     return res
 
@@ -121,8 +120,7 @@ def _single_block_drawer(block, n_qubits):
                 text_gates[ind] = text_gate[q]
             else:
                 text_gates[ind] = _text_drawer_config['cross_mask']
-                text_gates[ind] = text_gates[ind].center(
-                    text_gate['len'], _text_drawer_config['circ_line'])
+                text_gates[ind] = text_gates[ind].center(text_gate['len'], _text_drawer_config['circ_line'])
         for q in range(min(qrange), max(qrange)):
             for i in range(v_n):
                 ind = q * (v_n + 1) + i + 1
@@ -132,8 +130,7 @@ def _single_block_drawer(block, n_qubits):
     for k, v in text_gates.items():
         if len(v) != max_l:
             if k % (v_n + 1) == 0:
-                text_gates[k] = text_gates[k].center(
-                    max_l, _text_drawer_config['circ_line'])
+                text_gates[k] = text_gates[k].center(max_l, _text_drawer_config['circ_line'])
             else:
                 text_gates[k] = text_gates[k].center(max_l, ' ')
     for i in range((n_qubits - 1) * v_n + n_qubits):

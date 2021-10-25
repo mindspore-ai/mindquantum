@@ -25,7 +25,7 @@ class MQOps(nn.Cell):
     """
     MindQuantum operator that get the expectation of a hamiltonian on a quantum
     state evaluated by a parameterized quantum circuit (PQC). This PQC should contains
-    a encoder circuit and an ansatz circuit. This ops is PYNATIVE_MODE supported only.
+    a encoder circuit and an ansatz circuit. This ops is `PYNATIVE_MODE` supported only.
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
@@ -88,16 +88,14 @@ class MQOps(nn.Cell):
         dout = dout.asnumpy()
         enc_grad = np.einsum('smp,sm->sp', self.g_enc, dout)
         ans_grad = np.einsum('smp,sm->p', self.g_ans, dout)
-        return ms.Tensor(enc_grad,
-                         dtype=ms.float32), ms.Tensor(ans_grad,
-                                                      dtype=ms.float32)
+        return ms.Tensor(enc_grad, dtype=ms.float32), ms.Tensor(ans_grad, dtype=ms.float32)
 
 
 class MQN2Ops(nn.Cell):
     r"""
     MindQuantum operator that get the square of absolute value of expectation of a hamiltonian
     on a quantum state evaluated by a parameterized quantum circuit (PQC). This PQC should contains
-    a encoder circuit and an ansatz circuit. This ops is PYNATIVE_MODE supported only.
+    a encoder circuit and an ansatz circuit. This ops is `PYNATIVE_MODE` supported only.
 
     .. math:
 
@@ -163,20 +161,16 @@ class MQN2Ops(nn.Cell):
 
     def bprop(self, enc_data, ans_data, out, dout):
         dout = dout.asnumpy()
-        enc_grad = 2 * np.real(
-            np.einsum('smp,sm,sm->sp', self.g_enc, dout, np.conj(self.f)))
-        ans_grad = 2 * np.real(
-            np.einsum('smp,sm,sm->p', self.g_ans, dout, np.conj(self.f)))
-        return ms.Tensor(enc_grad,
-                         dtype=ms.float32), ms.Tensor(ans_grad,
-                                                      dtype=ms.float32)
+        enc_grad = 2 * np.real(np.einsum('smp,sm,sm->sp', self.g_enc, dout, np.conj(self.f)))
+        ans_grad = 2 * np.real(np.einsum('smp,sm,sm->p', self.g_ans, dout, np.conj(self.f)))
+        return ms.Tensor(enc_grad, dtype=ms.float32), ms.Tensor(ans_grad, dtype=ms.float32)
 
 
 class MQAnsatzOnlyOps(nn.Cell):
     r"""
     MindQuantum operator that get the expectation of a hamiltonian
     on a quantum state evaluated by a parameterized quantum circuit (PQC). This PQC should
-    contains an ansatz circuit only. This ops is PYNATIVE_MODE supported only.
+    contains an ansatz circuit only. This ops is `PYNATIVE_MODE` supported only.
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
@@ -237,7 +231,7 @@ class MQN2AnsatzOnlyOps(nn.Cell):
     r"""
     MindQuantum operator that get the square of absolute value of expectation of a hamiltonian
     on a quantum state evaluated by a parameterized quantum circuit (PQC). This PQC should
-    contains an ansatz circuit only. This ops is PYNATIVE_MODE supported only.
+    contains an ansatz circuit only. This ops is `PYNATIVE_MODE` supported only.
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
@@ -291,8 +285,7 @@ class MQN2AnsatzOnlyOps(nn.Cell):
 
     def bprop(self, x, out, dout):
         dout = dout.asnumpy()
-        grad = 2 * np.real(
-            np.einsum('m,m,mp->p', np.conj(self.f), dout, self.g))
+        grad = 2 * np.real(np.einsum('m,m,mp->p', np.conj(self.f), dout, self.g))
         return ms.Tensor(grad, dtype=ms.float32)
 
 
@@ -300,7 +293,7 @@ class MQEncoderOnlyOps(nn.Cell):
     r"""
     MindQuantum operator that get the expectation of a hamiltonian
     on a quantum state evaluated by a parameterized quantum circuit (PQC). This PQC should
-    contains a encoder circuit only. This ops is PYNATIVE_MODE supported only.
+    contains a encoder circuit only. This ops is `PYNATIVE_MODE` supported only.
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
@@ -364,7 +357,7 @@ class MQN2EncoderOnlyOps(nn.Cell):
     r"""
     MindQuantum operator that get the square of absolute value of expectation of a hamiltonian
     on a quantum state evaluated by a parameterized quantum circuit (PQC). This PQC should
-    contains a encoder circuit only. This ops is PYNATIVE_MODE supported only.
+    contains a encoder circuit only. This ops is `PYNATIVE_MODE` supported only.
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
@@ -421,22 +414,17 @@ class MQN2EncoderOnlyOps(nn.Cell):
 
     def bprop(self, x, out, dout):
         dout = dout.asnumpy()
-        grad = 2 * np.real(
-            np.einsum('smp,sm,sm->sp', self.g, dout, np.conj(self.f)))
+        grad = 2 * np.real(np.einsum('smp,sm,sm->sp', self.g, dout, np.conj(self.f)))
         return ms.Tensor(grad, dtype=ms.float32)
 
 
 def _mode_check(self):
     if context.get_context('mode') != context.PYNATIVE_MODE:
-        raise RuntimeError(
-            f'{self.__class__} is PYNATIVE_MODE supported only. Run command below to set context\n\
+        raise RuntimeError(f'{self.__class__} is `PYNATIVE_MODE` supported only. Run command below to set context\n\
     import mindspore as ms\n\
-    ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")'
-        )
+    ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")')
 
 
 def _check_grad_ops(expectation_with_grad):
     if not isinstance(expectation_with_grad, GradOpsWrapper):
-        raise ValueError(
-            f'expectation_with_grad requires a GradOpsWrapper, but get {type(expectation_with_grad)}'
-        )
+        raise ValueError(f'expectation_with_grad requires a GradOpsWrapper, but get {type(expectation_with_grad)}')
