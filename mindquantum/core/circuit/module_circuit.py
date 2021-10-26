@@ -36,7 +36,7 @@ class UN(Circuit):
         Circuit, Return a quantum circuit.
 
     Examples:
-        >>> from mindquantum.core import UN
+        >>> from mindquantum.core import UN, X
         >>> circuit1 = UN(X, maps_obj = [0, 1], maps_ctrl = [2, 3])
         >>> print(circuit1)
         q0: ──X───────
@@ -47,15 +47,15 @@ class UN(Circuit):
                    │
         q3: ───────●──
         >>> from mindquantum.core import SWAP
-        >>> circuit2 = UN(SWAP, maps_obj =[[0, 1], [2, 3]])
+        >>> circuit2 = UN(SWAP, maps_obj =[[0, 1], [2, 3]]).x(2, 1)
         >>> print(circuit2)
-        q0: ──@──
+        q0: ──@───────
               │
-        q1: ──@──
-
-        q2: ──@──
+        q1: ──@────●──
+                   │
+        q2: ──@────X──
               │
-        q3: ──@──
+        q3: ──@───────
     """
     def __init__(self, gate: BasicGate, maps_obj, maps_ctrl=None):
         _check_gate_type(gate)

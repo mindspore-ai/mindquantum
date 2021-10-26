@@ -180,6 +180,9 @@ def normal_ordered(fermion_operator):
 def get_fermion_operator(operator):
     """Convert the tensor (PolynomialTensor) to FermionOperator.
 
+    Args:
+        operator (PolynomialTensor): The `PolynomialTensor` you want to convert to `FermionOperator`.
+
     Returns:
         fermion_operator, An instance of the FermionOperator class.
     """

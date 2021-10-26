@@ -83,7 +83,12 @@ class Hamiltonian:
         return self
 
     def get_cpp_obj(self, hermitian=False):
-        """get_cpp_obj"""
+        """
+        get_cpp_obj
+
+        Args:
+            hermitian (bool): Whether to get the cpp object of this hamiltonian in hermitian version.
+        """
         if not hermitian:
             if not hasattr(self, 'ham_cpp'):
                 if self.how_to == MODE['origin']:

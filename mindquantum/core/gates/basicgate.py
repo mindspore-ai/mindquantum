@@ -22,6 +22,7 @@ import projectq.ops as pjops
 from scipy.linalg import fractional_matrix_power
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 from mindquantum import mqbackend as mb
+from mindquantum.utils.type_value_check import _check_input_type
 from .basic import HERMITIAN_PROPERTIES
 from .basic import IntrinsicOneParaGate
 from .basic import NoneParameterGate
@@ -30,8 +31,15 @@ from .basic import NoneParameterGate
 class BarrierGate(NoneParameterGate):
     """
     BARRIER gate do nothing but set a barrier for drawing circuit.
+
+    Args:
+        show (bool): whether show this barrier gate. Default: True.
+
+    Raises:
+        TypeError: if `show` is not bool.
     """
     def __init__(self, show=True):
+        _check_input_type('show', bool, show)
         NoneParameterGate.__init__(self, 'BARRIER')
         self.show = show
 
@@ -405,7 +413,7 @@ class RX(IntrinsicOneParaGate):
         RX(a+2b)
 
     Args:
-        coeff (Union[int, float, str, dict]): the parameters of
+        coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation. Default: None.
 
     Examples:
@@ -457,6 +465,10 @@ class RZ(IntrinsicOneParaGate):
         {\rm RZ}=\begin{pmatrix}\exp(-i\theta/2)&0\\
                          0&\exp(i\theta/2)\end{pmatrix}
 
+    Args:
+        coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation. Default: None.
+
     More usage, please see :class:`mindquantum.core.gates.RX`.
     """
     def __init__(self, coeff=None):
@@ -483,6 +495,10 @@ class RY(IntrinsicOneParaGate):
 
         {\rm RY}=\begin{pmatrix}\cos(\theta/2)&-\sin(\theta/2)\\
                          \sin(\theta/2)&\cos(\theta/2)\end{pmatrix}
+
+    Args:
+        coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation. Default: None.
 
     More usage, please see :class:`mindquantum.core.gates.RX`.
     """
@@ -511,6 +527,10 @@ class PhaseShift(IntrinsicOneParaGate):
 
         {\rm PhaseShift}=\begin{pmatrix}1&0\\
                          0&\exp(i\theta)\end{pmatrix}
+
+    Args:
+        coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation. Default: None.
 
     More usage, please see :class:`mindquantum.core.gates.RX`.
     """
@@ -598,6 +618,10 @@ class XX(IntrinsicOneParaGate):
 
         {\rm XX_\theta}=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_x\otimes\sigma_x
 
+    Args:
+        coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation. Default: None.
+
     More usage, please see :class:`mindquantum.core.gates.RX`.
     """
     def __init__(self, coeff=None):
@@ -630,6 +654,10 @@ class YY(IntrinsicOneParaGate):
 
         {\rm YY_\theta}=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_y\otimes\sigma_y
 
+    Args:
+        coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation. Default: None.
+
     More usage, please see :class:`mindquantum.core.gates.RX`.
     """
     def __init__(self, coeff=None):
@@ -661,6 +689,10 @@ class ZZ(IntrinsicOneParaGate):
     .. math::
 
         {\rm ZZ_\theta}=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_Z\otimes\sigma_Z
+
+    Args:
+        coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation. Default: None.
 
     More usage, please see :class:`mindquantum.core.gates.RX`.
     """

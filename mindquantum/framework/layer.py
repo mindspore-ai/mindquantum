@@ -32,6 +32,8 @@ class MQLayer(nn.Cell):
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
             ansatz data and return the expectation value and gradient value of parameters
             respect to expectation.
+        weight (Union[Tensor, str, Initializer, numbers.Number]): The trainable weight parameter or ansatz circuit.
+            Default: 'normal'.
 
     Inputs:
         - **enc_data** (Tensor) - Tensor of encoder data that you want to encode into quantum state.
@@ -90,6 +92,8 @@ class MQN2Layer(nn.Cell):
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
             ansatz data and return the square of absolute value of expectation value and
             gradient value of parameters respect to expectation.
+        weight (Union[Tensor, str, Initializer, numbers.Number]): The trainable weight parameter or ansatz circuit.
+            Default: 'normal'.
 
     Inputs:
         - **enc_data** (Tensor) - Tensor of encoder data that you want to encode into quantum state.
@@ -147,6 +151,8 @@ class MQAnsatzOnlyLayer(nn.Cell):
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
             ansatz data and return the expectation value and gradient value of parameters
             respect to expectation.
+        weight (Union[Tensor, str, Initializer, numbers.Number]): The trainable weight parameter or ansatz circuit.
+            Default: 'normal'.
 
     Outputs:
         Tensor, The expectation value of the hamiltonian.
@@ -197,6 +203,8 @@ class MQN2AnsatzOnlyLayer(nn.Cell):
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
             ansatz data and return the expectation value and gradient value of parameters
             respect to expectation.
+        weight (Union[Tensor, str, Initializer, numbers.Number]): The trainable weight parameter or ansatz circuit.
+            Default: 'normal'.
 
     Inputs:
         - **enc_data** (Tensor) - Tensor of encoder data that you want to encode into quantum state.

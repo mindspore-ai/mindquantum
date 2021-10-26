@@ -17,12 +17,30 @@
 
 import fractions
 import numpy as np
+from .type_value_check import _check_input_type
+from .type_value_check import _check_value_should_not_less
+from .type_value_check import _check_value_should_between_close_set
 
 
 def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=42):
-    """Generate a random circuit"""
+    """
+    Generate a random circuit.
+
+    Args:
+        n_qubits (int)
+    """
     from mindquantum import Circuit
     import mindquantum.core.gates as G
+    _check_input_type('n_qubits', int, n_qubits)
+    _check_input_type('gate_num', int, gate_num)
+    _check_input_type('sd_rate', float, sd_rate)
+    _check_input_type('ctrl_rate', float, ctrl_rate)
+    _check_input_type('seed', int, seed)
+    _check_value_should_not_less('n_qubits', 1, n_qubits)
+    _check_value_should_not_less('gate_num', 1, gate_num)
+    _check_value_should_between_close_set('sd_rate', 0, 1, sd_rate)
+    _check_value_should_between_close_set('ctrl_rate', 0, 1, ctrl_rate)
+    _check_value_should_between_close_set('seed', 0, 2**32 - 1, seed)
     if n_qubits == 1:
         sd_rate = 1
         ctrl_rate = 0
