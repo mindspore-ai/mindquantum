@@ -27,7 +27,18 @@ def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=42):
     Generate a random circuit.
 
     Args:
-        n_qubits (int)
+        n_qubits (int): Number of qubits of random circuit.
+        gate_num (int): Number of gates in random circuit.
+        sd_rate (float): The rate of single qubit gate and double qubits gates.
+        ctrl_rate (float): The possibility that a gate has a control qubit.
+        seed (int): Random seed to generate random circuit.
+
+    Examples:
+        >>> from mindquantum.utils import random_circuit
+        >>> random_circuit(3, 4, 0.5, 0.5, 100)
+        q1: ──Z────RX(0.944)────────●────────RX(-0.858)──
+              │        │            │            │
+        q2: ──●────────●────────RZ(-2.42)────────●───────
     """
     from mindquantum import Circuit
     import mindquantum.core.gates as G

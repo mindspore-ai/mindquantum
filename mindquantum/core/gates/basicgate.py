@@ -368,7 +368,7 @@ class SWAPGate(NoneParameterGate):
 
 class ISWAPGate(NoneParameterGate):
     r"""
-    ISWAP gate that swap two different qubits and phase
+    ISWAP gate that swap two different qubits and phase the
     :math:`\left|01\right>` and :math:`\left|10\right>` amplitudes by
     :math:`i`.
 
@@ -458,7 +458,7 @@ class RX(IntrinsicOneParaGate):
 
 class RZ(IntrinsicOneParaGate):
     r"""
-    Rotation gate around z-axis.
+    Rotation gate around z-axis. More usage, please see :class:`mindquantum.core.gates.RX`.
 
     .. math::
 
@@ -468,8 +468,6 @@ class RZ(IntrinsicOneParaGate):
     Args:
         coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation. Default: None.
-
-    More usage, please see :class:`mindquantum.core.gates.RX`.
     """
     def __init__(self, coeff=None):
         IntrinsicOneParaGate.__init__(self, 'RZ', coeff)
@@ -489,7 +487,7 @@ class RZ(IntrinsicOneParaGate):
 
 class RY(IntrinsicOneParaGate):
     r"""
-    Rotation gate around z-axis.
+    Rotation gate around y-axis. More usage, please see :class:`mindquantum.core.gates.RX`.
 
     .. math::
 
@@ -499,8 +497,6 @@ class RY(IntrinsicOneParaGate):
     Args:
         coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation. Default: None.
-
-    More usage, please see :class:`mindquantum.core.gates.RX`.
     """
     def __init__(self, coeff=None):
         IntrinsicOneParaGate.__init__(self, 'RY', coeff)
@@ -521,7 +517,7 @@ class RY(IntrinsicOneParaGate):
 
 class PhaseShift(IntrinsicOneParaGate):
     r"""
-    Phase shift gate.
+    Phase shift gate. More usage, please see :class:`mindquantum.core.gates.RX`.
 
     .. math::
 
@@ -531,8 +527,6 @@ class PhaseShift(IntrinsicOneParaGate):
     Args:
         coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation. Default: None.
-
-    More usage, please see :class:`mindquantum.core.gates.RX`.
     """
     def __init__(self, coeff=None):
         IntrinsicOneParaGate.__init__(self, 'PS', coeff)
@@ -553,7 +547,7 @@ class SGate(PhaseShift):
     S gate with matrix as :
 
     .. math::
-        {\rm X}=\begin{pmatrix}1&0\\0&i\end{pmatrix}
+        {\rm S}=\begin{pmatrix}1&0\\0&i\end{pmatrix}
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
@@ -584,7 +578,7 @@ class TGate(PhaseShift):
     T gate with matrix as :
 
     .. math::
-        {\rm X}=\begin{pmatrix}1&0\\0&(1+i)/sqrt(2)\end{pmatrix}
+        {\rm T}=\begin{pmatrix}1&0\\0&(1+i)/\sqrt(2)\end{pmatrix}
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
@@ -612,7 +606,7 @@ class TGate(PhaseShift):
 
 class XX(IntrinsicOneParaGate):
     r"""
-    Ising XX gate.
+    Ising XX gate. More usage, please see :class:`mindquantum.core.gates.RX`.
 
     .. math::
 
@@ -621,8 +615,6 @@ class XX(IntrinsicOneParaGate):
     Args:
         coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation. Default: None.
-
-    More usage, please see :class:`mindquantum.core.gates.RX`.
     """
     def __init__(self, coeff=None):
         IntrinsicOneParaGate.__init__(self, 'XX', coeff)
@@ -648,7 +640,7 @@ class XX(IntrinsicOneParaGate):
 
 class YY(IntrinsicOneParaGate):
     r"""
-    Ising YY  gate.
+    Ising YY  gate. More usage, please see :class:`mindquantum.core.gates.RX`.
 
     .. math::
 
@@ -657,8 +649,6 @@ class YY(IntrinsicOneParaGate):
     Args:
         coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation. Default: None.
-
-    More usage, please see :class:`mindquantum.core.gates.RX`.
     """
     def __init__(self, coeff=None):
         IntrinsicOneParaGate.__init__(self, 'YY', coeff)
@@ -684,7 +674,7 @@ class YY(IntrinsicOneParaGate):
 
 class ZZ(IntrinsicOneParaGate):
     r"""
-    Ising ZZ  gate.
+    Ising ZZ  gate. More usage, please see :class:`mindquantum.core.gates.RX`.
 
     .. math::
 
@@ -693,8 +683,6 @@ class ZZ(IntrinsicOneParaGate):
     Args:
         coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation. Default: None.
-
-    More usage, please see :class:`mindquantum.core.gates.RX`.
     """
     def __init__(self, coeff=None):
         IntrinsicOneParaGate.__init__(self, 'ZZ', coeff)
