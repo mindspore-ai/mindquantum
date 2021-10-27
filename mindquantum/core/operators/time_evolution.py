@@ -28,7 +28,7 @@ class TimeEvolution:
 
     .. math::
 
-        \left|\varphi(t)\right>=e^{-itH}\left|\varphi(0)\right>
+        \left|\varphi(t)\right>=e^{-iHt}\left|\varphi(0)\right>
 
     Note:
         The hamiltonian should be a parameterized or non parameterized
