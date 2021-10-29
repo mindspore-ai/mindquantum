@@ -103,6 +103,13 @@ Due to the duplication of functions, we deleted some APIs.
 
 - `mindquantum.circuit.StateEvolution`
 
+The following APIs have been remoted.
+
+- `mindquantum.core.operators.Hamiltonian.mindspore_data`
+- `mindquantum.core.operators.Projector.mindspore_data`
+- `mindquantum.core.circuit.Circuit.mindspore_data`
+- `mindquantum.core.parameterresolver.ParameterResolver.mindspore_data`
+
 #### New feature
 
 New gates are shown as below.
@@ -143,14 +150,14 @@ For improving MindQuantum's package structure, we did some refactoring on MindQu
 `mindquantum.gate.Hamiltonian`
 </td><td>
 
-`mindquantum.core.operations.Hamiltonian`
+`mindquantum.core.operators.Hamiltonian`
 </td></tr>
 <tr><td>
 
 `mindquantum.gate.Projector`
 </td><td>
 
-`mindquantum.core.operations.Projector`
+`mindquantum.core.operators.Projector`
 </td></tr>
 <tr><td>
 
@@ -171,63 +178,63 @@ For improving MindQuantum's package structure, we did some refactoring on MindQu
 `mindquantum.circuit.TimeEvolution`
 </td><td>
 
-`mindquantum.core.operations.TimeEvolution`
+`mindquantum.core.operators.TimeEvolution`
 </td></tr>
 <tr><td>
 
 `mindquantum.utils.count_qubits`
 </td><td>
 
-`mindquantum.core.operations.count_qubits`
+`mindquantum.core.operators.count_qubits`
 </td></tr>
 <tr><td>
 
 `mindquantum.utils.commutator`
 </td><td>
 
-`mindquantum.core.operations.commutator`
+`mindquantum.core.operators.commutator`
 </td></tr><tr><td>
 
 `mindquantum.utils.normal_ordered`
 </td><td>
 
-`mindquantum.core.operations.normal_ordered`
+`mindquantum.core.operators.normal_ordered`
 </td></tr><tr><td>
 
 `mindquantum.utils.get_fermion_operator`
 </td><td>
 
-`mindquantum.core.operations.get_fermion_operator`
+`mindquantum.core.operators.get_fermion_operator`
 </td></tr><tr><td>
 
 `mindquantum.utils.number_operator`
 </td><td>
 
-`mindquantum.core.operations.number_operator`
+`mindquantum.core.operators.number_operator`
 </td></tr><tr><td>
 
 `mindquantum.utils.hermitian_conjugated`
 </td><td>
 
-`mindquantum.core.operations.hermitian_conjugated`
+`mindquantum.core.operators.hermitian_conjugated`
 </td></tr><tr><td>
 
 `mindquantum.utils.up_index`
 </td><td>
 
-`mindquantum.core.operations.up_index`
+`mindquantum.core.operators.up_index`
 </td></tr><tr><td>
 
 `mindquantum.utils.down_index`
 </td><td>
 
-`mindquantum.core.operations.down_index`
+`mindquantum.core.operators.down_index`
 </td></tr><tr><td>
 
 `mindquantum.utils.sz_operator`
 </td><td>
 
-`mindquantum.core.operations.sz_operator`
+`mindquantum.core.operators.sz_operator`
 </td></tr>
 <tr><td>
 
@@ -338,7 +345,7 @@ For improving MindQuantum's package structure, we did some refactoring on MindQu
 `mindquantum.ops`
 </td><td>
 
-`mindquantum.core.operations`
+`mindquantum.core.operators`
 </td></tr>
 <tr><td>
 
