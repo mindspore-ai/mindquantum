@@ -60,6 +60,16 @@ endif()
 
 # ------------------------------------------------------------------------------
 
+if(ENABLE_STACK_PROTECTION)
+  test_link_option(
+    _stack_protection
+    LANGS CXX DPCXX
+    FLAGS "-fstack-protector-all"
+    AUTO_ADD_LO VERBATIM)
+endif()
+
+# ------------------------------------------------------------------------------
+
 if(ENABLE_RUNPATH)
   if(LINKER_DTAGS)
     test_link_option(
