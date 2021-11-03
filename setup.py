@@ -156,9 +156,9 @@ def get_extra_cmake_options():
             sys.argv.remove(arg)
             continue
 
-    # If no explicit CMake Generator specification, prefer Ninja on Windows
-    if (not has_generator) and (platform.system() == "Windows") and shutil.which("ninja"):
-        _cmake_extra_options += ['-G', "Ninja"]
+    # If no explicit CMake Generator specification, prefer MinGW Makefiles on Windows
+    if (not has_generator) and (platform.system() == "Windows"):
+        _cmake_extra_options += ['-G', "MinGW Makefiles"]
 
     return _cmake_extra_options
 
