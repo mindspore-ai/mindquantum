@@ -96,8 +96,8 @@ print(dict(zip(ansatz.params_name, net.trainable_params()[0].asnumpy())))
 
 ### 确认系统环境信息
 
-- 硬件平台确认为Linux系统下的CPU，并支持avx指令集。
-- 参考[MindSpore安装指南](https://www.mindspore.cn/install)，完成MindSpore的安装，要求至少1.2.0版本。
+- 硬件平台确认为Linux系统下的CPU，并支持avx2指令集。
+- 参考[MindSpore安装指南](https://www.mindspore.cn/install)，完成MindSpore的安装，要求至少1.3.0版本。
 - 其余依赖请参见[setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py)
 
 ### pip安装
