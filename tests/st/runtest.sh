@@ -23,7 +23,7 @@ ST_PATH="$PROJECT_DIR/tests/st"
 run_test() {
     echo "Start to run test."
     cd "$PROJECT_DIR" || exit
-    pytest "$ST_PATH"
+    python -m pytest "$ST_PATH"
     echo "Test all use cases success."
 }
 

@@ -5,6 +5,10 @@
 <!-- TOC --->
 
 - [What is MindQuantum](#what-is-mindquantum)
+- [First experience](#first-experience)
+    - [Build parameterized quantum circuit](#build-parameterized-quantum-circuit)
+    - [Train quantum neural network](#train-quantum-neural-network)
+- [API](#api)
 - [Installation](#installation)
     - [Confirming System Environment Information](#confirming-system-environment-information)
     - [Install by Source Code](#install-by-source-code)
@@ -25,16 +29,74 @@
 
 ## What is MindQuantum
 
-MindQuantum is a quantum machine learning framework developed by [MindSpore](https://www.mindspore.cn/en) and [HiQ](https://hiq.huaweicloud.com/), that can be used to build and train different quantum neural networks. Thanks to the powerful algorithm of quantum software group of Huawei and High-performance automatic differentiation ability of MindSpore, MindQuantum can efficiently handle problems such as quantum chemical simulation and quantum approximation optimization with [TOP1](https://gitee.com/mindspore/mindquantum/tree/master/tutorials/benchmarks) performance, which provides an efficient platform for researchers, teachers and students to quickly design and verify quantum machine learning algorithms.
-
+MindQuantum is a general quantum computing framework developed by [MindSpore](https://www.mindspore.cn/en) and [HiQ](https://hiq.huaweicloud.com/), that can be used to build and train different quantum neural networks. Thanks to the powerful algorithm of quantum software group of Huawei and High-performance automatic differentiation ability of MindSpore, MindQuantum can efficiently handle problems such as  quantum machine learning, quantum chemistry simulation, and quantum optimization, which provides an efficient platform for researchers, teachers and students to quickly design and verify quantum machine learning algorithms.
 <img src="docs/MindQuantum-architecture_EN.png" alt="MindQuantum Architecture" width="600"/>
+
+## First experience
+
+### Build parameterized quantum circuit
+
+The below example shows how to build a parameterized quantum circuit.
+
+```python
+from mindquantum import *
+import numpy as np
+encoder = Circuit().h(0).rx({'a0': 2}, 0).ry('a1', 1)
+print(encoder)
+print(encoder.get_qs(pr={'a0': np.pi/2, 'a1': np.pi/2}, ket=True))
+```
+
+Then you will get,
+
+```bash
+q0: ────H───────RX(2*a0)──
+
+q1: ──RY(a1)──────────────
+
+-1/2j¦00⟩
+-1/2j¦01⟩
+-1/2j¦10⟩
+-1/2j¦11⟩
+```
+
+### Train quantum neural network
+
+```python
+ansatz = CPN(encoder.hermitian(), {'a0': 'b0', 'a1': 'b1'})
+sim = Simulator('projectq', 2)
+ham = Hamiltonian(-QubitOperator('Z0 Z1'))
+grad_ops = sim.get_expectation_with_grad(ham,
+                                         encoder + ansatz,
+                                         encoder_params_name=encoder.params_name,
+                                         ansatz_params_name=ansatz.params_name)
+
+import mindspore as ms
+ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
+net = MQLayer(grad_ops)
+encoder_data = ms.Tensor(np.array([[np.pi/2, np.pi/2]]))
+opti = ms.nn.Adam(net.trainable_params(), learning_rate=0.1)
+train_net = ms.nn.TrainOneStepCell(net, opti)
+for i in range(100):
+    train_net(encoder_data)
+print(dict(zip(ansatz.params_name, net.trainable_params()[0].asnumpy())))
+```
+
+The trained parameters are,
+
+```bash
+{'b1': 1.5720831, 'b0': 0.006396801}
+```
+
+## API
+
+For more API, please refers to [MindQuantum API](https://www.mindspore.cn/mindquantum/api/zh-CN/master/index.html)
 
 ## Installation
 
 ### Confirming System Environment Information
 
-- The hardware platform should be Linux CPU with avx supported.
-- Refer to [MindQuantum Installation Guide](https://www.mindspore.cn/install/en), install MindSpore, version 1.2.0 or later is required.
+- The hardware platform should be Linux CPU with avx2 supported.
+- Refer to [MindQuantum Installation Guide](https://www.mindspore.cn/install/en), install MindSpore, version 1.3.0 or later is required.
 - See [setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py) for the remaining dependencies.
 
 ### Install by Source Code
@@ -65,10 +127,19 @@ pip install https://hiq.huaweicloud.com/download/mindspore/cpu/x86_64/mindspore-
 
 #### Install MindQuantum
 
+- Linux
+
 ```bash
-pip install https://hiq.huaweicloud.com/download/mindquantum/any/mindquantum-0.2.0-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install https://hiq.huaweicloud.com/download/mindquantum/newest/linux/mindquantum-master-cp37-cp37m-linux_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
+- Windows
+
+```bash
+pip install https://hiq.huaweicloud.com/download/mindquantum/newest/windows/mindquantum-master-cp37-cp37m-win_amd64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+> - Change `cp37-cp37m` to `cp38-cp38` or `cp39-cp39` according to your python version.
 > - When the network is connected, dependency items are automatically downloaded during .whl package installation. (For details about other dependency items, see [setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py)). In other cases, you need to manually install dependency items.
 
 ## Verifying Successful Installation

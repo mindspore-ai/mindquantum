@@ -58,8 +58,13 @@ class TimeEvolution:
         q1: ───────X────RZ(2*b)────X────RX(π/2)────X────RZ(2*a)────X────RX(7π/2)──
     """
     def __init__(self, ops: QubitOperator, time=None):
+        from mindquantum.utils.type_value_check import _num_type
         if time is None:
             time = 1
+        if not isinstance(time, _num_type):
+            if not isinstance(time, (dict, ParameterResolver)):
+                raise TypeError(f"time requires a number or a dict or a ParameterResolver, but get {type(time)}")
+            time = ParameterResolver(time)
         self.time = time
         if isinstance(time, dict):
             self.time = ParameterResolver(time)

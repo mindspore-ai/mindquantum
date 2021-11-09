@@ -20,6 +20,8 @@ import numpy as np
 from projectq.ops import QubitOperator as pq_operator
 from openfermion.ops import QubitOperator as of_operator
 
+from mindquantum.core.parameterresolver.parameterresolver import ParameterResolver
+
 
 def decompose_single_term_time_evolution(term, para):
     """
@@ -56,6 +58,7 @@ def decompose_single_term_time_evolution(term, para):
     from mindquantum import gates as G
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.parameterresolver import ParameterResolver as PR
+    from mindquantum.utils.type_value_check import _num_type
     if not isinstance(term, tuple):
         try:
             if len(term.terms) != 1:
@@ -64,6 +67,10 @@ def decompose_single_term_time_evolution(term, para):
             term = list(term.terms.keys())[0]
         except TypeError:
             raise TypeError("Not supported type:{}".format(type(term)))
+    if not isinstance(para, _num_type):
+        if not isinstance(para, (dict, ParameterResolver)):
+            raise TypeError(f'para requiers a number or a dict or a ParameterResolver, but get {type(para)}')
+        para = ParameterResolver(para)
 
     out = []
     term = sorted(term)
