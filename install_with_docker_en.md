@@ -44,7 +44,7 @@ After entering the MindSpore container according to the above steps, to test whe
 ```python
 import numpy as np
 import mindspore.context as context
-import mindspore.operators as ops
+import mindspore.ops as ops
 from mindspore import Tensor
 
 context.set_context(mode=context.PYNATIVE_MODE, device_target="CPU")
@@ -57,17 +57,17 @@ print(ops.add(x, y))
 When the code runs successfully, it will output:
 
 ```text
-[[[ 2.  2.  2.  2.],
-[ 2.  2.  2.  2.],
-[ 2.  2.  2.  2.]],
+[[[[2. 2. 2. 2.]
+   [2. 2. 2. 2.]
+   [2. 2. 2. 2.]]
 
-[[ 2.  2.  2.  2.],
-[ 2.  2.  2.  2.],
-[ 2.  2.  2.  2.]],
+  [[2. 2. 2. 2.]
+   [2. 2. 2. 2.]
+   [2. 2. 2. 2.]]
 
-[[ 2.  2.  2.  2.],
-[ 2.  2.  2.  2.],
-[ 2.  2.  2.  2.]]]
+  [[2. 2. 2. 2.]
+   [2. 2. 2. 2.]
+   [2. 2. 2. 2.]]]]
 ```
 
 At this point, you have successfully installed the MindSpore CPU version by Docker.
@@ -95,7 +95,7 @@ At this point, you have successfully installed the MindSpore CPU version by Dock
     **Install by pip:**
 
     ```shell
-    pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/1.2.0-rc1/MindQuantum/ubuntu_x86/mindquantum-0.1.0-py3-none-any.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
+    pip install https://hiq.huaweicloud.com/download/mindquantum/newest/linux/mindquantum-master-cp37-cp37m-linux_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
     ```
 
 ### MindQuantum Installation Verification

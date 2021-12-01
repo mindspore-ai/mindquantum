@@ -122,6 +122,9 @@ class XGate(NoneParameterGate):
 
         {\rm X}=\begin{pmatrix}0&1\\1&0\end{pmatrix}
 
+    For simplicity, we define ```X``` as a instance of ```XGate()```. For more
+    redefine, please refer the functional table below.
+
     Note:
         For simplicity, you can do power operator on pauli gate (only works
         for pauli gate at this time). The rules is set below as:
