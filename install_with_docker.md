@@ -23,7 +23,7 @@
 docker pull swr.cn-south-1.myhuaweicloud.com/mindspore/mindspore-cpu:{tag}
 ```
 
-其中{tag}对应上述表格中的标签。
+其中{tag}为x.y.z或者devel或者runtime，具体请参考MindSpore的docker[安装指南](https://www.mindspore.cn/install)
 
 ### 运行MindSpore镜像
 
@@ -33,18 +33,18 @@ docker pull swr.cn-south-1.myhuaweicloud.com/mindspore/mindspore-cpu:{tag}
 docker run -it swr.cn-south-1.myhuaweicloud.com/mindspore/mindspore-cpu:{tag} /bin/bash
 ```
 
-其中{tag}对应上述表格中的标签。
+其中{tag}与上述tag保持一直。
 
 ### 验证Mindspore是否安装成功
 
-- 如果你安装的是指定版本x.y.z的容器。
+- 如果你安装的是指定版本x.y.z的容器，执行如下步骤。
 
 按照上述步骤进入MindSpore容器后，测试Docker是否正常工作，请运行下面的Python代码并检查输出：
 
 ```python
 import numpy as np
 import mindspore.context as context
-import mindspore.operators as ops
+import mindspore.ops as ops
 from mindspore import Tensor
 
 context.set_context(mode=context.PYNATIVE_MODE, device_target="CPU")
@@ -57,17 +57,17 @@ print(ops.add(x, y))
 代码成功运行时会输出：
 
 ```python
-[[[ 2.  2.  2.  2.],
-[ 2.  2.  2.  2.],
-[ 2.  2.  2.  2.]],
+[[[[2. 2. 2. 2.]
+   [2. 2. 2. 2.]
+   [2. 2. 2. 2.]]
 
-[[ 2.  2.  2.  2.],
-[ 2.  2.  2.  2.],
-[ 2.  2.  2.  2.]],
+  [[2. 2. 2. 2.]
+   [2. 2. 2. 2.]
+   [2. 2. 2. 2.]]
 
-[[ 2.  2.  2.  2.],
-[ 2.  2.  2.  2.],
-[ 2.  2.  2.  2.]]]
+  [[2. 2. 2. 2.]
+   [2. 2. 2. 2.]
+   [2. 2. 2. 2.]]]]
 ```
 
 至此，你已经成功通过Docker方式安装了MindSpore CPU版本。
@@ -95,7 +95,7 @@ print(ops.add(x, y))
     **pip安装：**
 
     ```shell
-    pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/1.2.0-rc1/MindQuantum/ubuntu_x86/mindquantum-0.1.0-py3-none-any.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
+    pip install https://hiq.huaweicloud.com/download/mindquantum/newest/linux/mindquantum-master-cp37-cp37m-linux_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
     ```
 
 ### 验证MindQuantum是否安装成功

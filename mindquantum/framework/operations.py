@@ -17,8 +17,27 @@
 import numpy as np
 import mindspore as ms
 from mindspore import context
+from mindspore.ops import operations as P
 import mindspore.nn as nn
+from mindspore.ops.primitive import constexpr
 from mindquantum.simulator import GradOpsWrapper
+
+
+@constexpr
+def check_enc_input_shape(data, x, enc_len):
+    if not isinstance(data, ms.Tensor):
+        raise TypeError(f"Encoder parameter requires a Tensor but get {type(data)}")
+    if len(x) != 2 or x[1] != enc_len:
+        raise ValueError(f'Encoder data requires a two dimension Tensor with second' +
+                         f' dimension should be {enc_len}, but get shape {x}')
+
+
+@constexpr
+def check_ans_input_shape(data, x, ans_len):
+    if not isinstance(data, ms.Tensor):
+        raise TypeError(f"Ansatz parameter requires a Tensor but get {type(data)}")
+    if len(x) != 1 or x[0] != ans_len:
+        raise ValueError(f'Ansatz data requires a one dimension Tensor with shape {ans_len} ' + f'but get {x}')
 
 
 class MQOps(nn.Cell):
@@ -71,11 +90,14 @@ class MQOps(nn.Cell):
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
+        self.shape_ops = P.Shape()
 
     def extend_repr(self):
         return self.expectation_with_grad.str
 
     def construct(self, enc_data, ans_data):
+        check_enc_input_shape(enc_data, self.shape_ops(enc_data), len(self.expectation_with_grad.encoder_params_name))
+        check_ans_input_shape(ans_data, self.shape_ops(ans_data), len(self.expectation_with_grad.ansatz_params_name))
         enc_data = enc_data.asnumpy()
         ans_data = ans_data.asnumpy()
         f, g_enc, g_ans = self.expectation_with_grad(enc_data, ans_data)
@@ -145,11 +167,15 @@ class MQN2Ops(nn.Cell):
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
+        self.shape_ops = P.Shape()
 
     def extend_repr(self):
         return self.expectation_with_grad.str
 
     def construct(self, enc_data, ans_data):
+        """construct"""
+        check_enc_input_shape(enc_data, self.shape_ops(enc_data), len(self.expectation_with_grad.encoder_params_name))
+        check_ans_input_shape(ans_data, self.shape_ops(ans_data), len(self.expectation_with_grad.ansatz_params_name))
         enc_data = enc_data.asnumpy()
         ans_data = ans_data.asnumpy()
         f, g_enc, g_ans = self.expectation_with_grad(enc_data, ans_data)
@@ -210,11 +236,13 @@ class MQAnsatzOnlyOps(nn.Cell):
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
+        self.shape_ops = P.Shape()
 
     def extend_repr(self):
         return self.expectation_with_grad.str
 
     def construct(self, x):
+        check_ans_input_shape(x, self.shape_ops(x), len(self.expectation_with_grad.ansatz_params_name))
         x = x.asnumpy()
         f, g = self.expectation_with_grad(x)
         f = ms.Tensor(np.real(f[0]), dtype=ms.float32)
@@ -271,11 +299,13 @@ class MQN2AnsatzOnlyOps(nn.Cell):
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
+        self.shape_ops = P.Shape()
 
     def extend_repr(self):
         return self.expectation_with_grad.str
 
     def construct(self, x):
+        check_ans_input_shape(x, self.shape_ops(x), len(self.expectation_with_grad.ansatz_params_name))
         x = x.asnumpy()
         f, g = self.expectation_with_grad(x)
         self.f = f[0]
@@ -336,11 +366,13 @@ class MQEncoderOnlyOps(nn.Cell):
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
+        self.shape_ops = P.Shape()
 
     def extend_repr(self):
         return self.expectation_with_grad.str
 
     def construct(self, x):
+        check_enc_input_shape(x, self.shape_ops(x), len(self.expectation_with_grad.encoder_params_name))
         x = x.asnumpy()
         f, g = self.expectation_with_grad(x)
         f = ms.Tensor(np.real(f), dtype=ms.float32)
@@ -400,11 +432,13 @@ class MQN2EncoderOnlyOps(nn.Cell):
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
+        self.shape_ops = P.Shape()
 
     def extend_repr(self):
         return self.expectation_with_grad.str
 
     def construct(self, x):
+        check_enc_input_shape(x, self.shape_ops(x), len(self.expectation_with_grad.encoder_params_name))
         x = x.asnumpy()
         f, g = self.expectation_with_grad(x)
         self.f = f

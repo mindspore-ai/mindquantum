@@ -41,6 +41,10 @@ class MQLayer(nn.Cell):
     Outputs:
         Tensor, The expectation value of the hamiltonian.
 
+    Raises:
+        ValueError: If length of shape of `weight` is not equal to 1 and shape[0] of `weight`
+                    is not equal to `weight_size`.
+
     Supported Platforms:
         ``GPU``, ``CPU``
 
@@ -72,12 +76,11 @@ class MQLayer(nn.Cell):
     def __init__(self, expectation_with_grad, weight='normal'):
         super(MQLayer, self).__init__()
         self.evolution = MQOps(expectation_with_grad)
-        weight_size = len(
-            self.evolution.expectation_with_grad.ansatz_params_name)
-        self.weight = Parameter(initializer(weight,
-                                            weight_size,
-                                            dtype=ms.float32),
-                                name='ansatz_weight')
+        weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
+        if isinstance(weight, ms.Tensor):
+            if weight.ndim != 1 or weight.shape[0] != weight_size:
+                raise ValueError("Weight init shape error.")
+        self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self, x):
         return self.evolution(x, self.weight)
@@ -100,6 +103,10 @@ class MQN2Layer(nn.Cell):
 
     Outputs:
         Tensor, The square of absolute value of expectation value of the hamiltonian.
+
+    Raises:
+        ValueError: If length of shape of `weight` is not equal to 1 and shape[0] of `weight`
+                    is not equal to `weight_size`.
 
     Supported Platforms:
         ``GPU``, ``CPU``
@@ -132,12 +139,11 @@ class MQN2Layer(nn.Cell):
     def __init__(self, expectation_with_grad, weight='normal'):
         super(MQN2Layer, self).__init__()
         self.evolution = MQN2Ops(expectation_with_grad)
-        weight_size = len(
-            self.evolution.expectation_with_grad.ansatz_params_name)
-        self.weight = Parameter(initializer(weight,
-                                            weight_size,
-                                            dtype=ms.float32),
-                                name='ansatz_weight')
+        weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
+        if isinstance(weight, ms.Tensor):
+            if weight.ndim != 1 or weight.shape[0] != weight_size:
+                raise ValueError("Weight init shape error.")
+        self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self, x):
         return self.evolution(x, self.weight)
@@ -156,6 +162,10 @@ class MQAnsatzOnlyLayer(nn.Cell):
 
     Outputs:
         Tensor, The expectation value of the hamiltonian.
+
+    Raises:
+        ValueError: If length of shape of `weight` is not equal to 1 and shape[0] of `weight`
+                    is not equal to `weight_size`.
 
     Supported Platforms:
         ``GPU``, ``CPU``
@@ -183,12 +193,11 @@ class MQAnsatzOnlyLayer(nn.Cell):
     def __init__(self, expectation_with_grad, weight='normal'):
         super(MQAnsatzOnlyLayer, self).__init__()
         self.evolution = MQAnsatzOnlyOps(expectation_with_grad)
-        weight_size = len(
-            self.evolution.expectation_with_grad.ansatz_params_name)
-        self.weight = Parameter(initializer(weight,
-                                            weight_size,
-                                            dtype=ms.float32),
-                                name='ansatz_weight')
+        weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
+        if isinstance(weight, ms.Tensor):
+            if weight.ndim != 1 or weight.shape[0] != weight_size:
+                raise ValueError("Weight init shape error.")
+        self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self):
         return self.evolution(self.weight)
@@ -211,6 +220,10 @@ class MQN2AnsatzOnlyLayer(nn.Cell):
 
     Outputs:
         Tensor, The expectation value of the hamiltonian.
+
+    Raises:
+        ValueError: If length of shape of `weight` is not equal to 1 and shape[0] of `weight`
+                    is not equal to `weight_size`.
 
     Supported Platforms:
         ``GPU``, ``CPU``
@@ -239,12 +252,11 @@ class MQN2AnsatzOnlyLayer(nn.Cell):
     def __init__(self, expectation_with_grad, weight='normal'):
         super(MQN2AnsatzOnlyLayer, self).__init__()
         self.evolution = MQN2AnsatzOnlyOps(expectation_with_grad)
-        weight_size = len(
-            self.evolution.expectation_with_grad.ansatz_params_name)
-        self.weight = Parameter(initializer(weight,
-                                            weight_size,
-                                            dtype=ms.float32),
-                                name='ansatz_weight')
+        weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
+        if isinstance(weight, ms.Tensor):
+            if weight.ndim != 1 or weight.shape[0] != weight_size:
+                raise ValueError("Weight init shape error.")
+        self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self):
         return self.evolution(self.weight)
