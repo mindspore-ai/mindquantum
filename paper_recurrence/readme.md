@@ -32,11 +32,9 @@
 
 ## 代码提交路径
 
-将你的代码按照赛题组格式要求提交到`mindquantum`仓`research`分支的[**paper_recurrence**](https://gitee.com/mindspore/mindquantum/tree/research/paper_recurrence)文件夹的`xxx`文件夹内，`xxx`文件夹命名格式如下：
+- 初赛作品提交：将代码和文档按照**paperid_username_for_example**格式要求提交到mindquantum仓research分支的**paper_recurrence/paperid_username**。**paperid**为论文的序号，**username**为参赛者用户名。
 
-`paperid_username`
-
-其中`paperid`为论文的序号，`username`为你的参赛用户名，例如: `1_donghufeng`.
+- 决赛作品提交：决赛入围者须在决赛答辩前三天完成代码更新和答辩PPT上传。答辩PPT上传到mindquantum仓research分支的**paper_recurrence/paperid_username**目录。
 
 ## 评分标准
 
