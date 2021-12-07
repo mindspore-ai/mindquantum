@@ -4,11 +4,13 @@ import os
 
 # initialize json files
 def initdata(mole):
-    meta = {"transformation": "jordan_wigner",
-            "optimizer": "bfgs",
-            "simulator": "mindspore",
-            "package": "mindquantum",
-            "mol_name": mole}
+    meta = {
+        "transformation": "jordan_wigner",
+        "optimizer": "bfgs",
+        "simulator": "mindspore",
+        "package": "mindquantum",
+        "mol_name": mole
+    }
 
     energies = {
         "meta": meta,
@@ -43,17 +45,24 @@ def initdata(mole):
         }
     }
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-              r'data/mindquantum_energies_{}.json'.format(mole)), 'w+', newline='') as f:
+                           r'data/mindquantum_energies_{}.json'.format(mole)),
+              'w+',
+              newline='') as f:
         b = json.dumps(energies)
         f.write(b)
 
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-              r'data/mindquantum_times_{}.json'.format(mole)), 'w+', newline='') as f:
+                           r'data/mindquantum_times_{}.json'.format(mole)),
+              'w+',
+              newline='') as f:
         b = json.dumps(times)
         f.write(b)
 
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-              r'data/mindquantum_parameters_{}.json'.format(mole)), 'w+', newline='') as f:
+    with open(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         r'data/mindquantum_parameters_{}.json'.format(mole)),
+            'w+',
+            newline='') as f:
         b = json.dumps(parameters)
         f.write(b)
 
@@ -68,18 +77,27 @@ def savedata(mole_name, results, method, init=False):
             [i][2] should be time being used, [i][3] should be parameter number
         method(string): 
     '''
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-              r'data/mindquantum_energies_{}.json'.format(mole_name)), 'r+', newline='') as f:
+    with open(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            r'data/mindquantum_energies_{}.json'.format(mole_name)),
+              'r+',
+              newline='') as f:
         data = f.read()
         energies = json.loads(data)
 
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-              r'data/mindquantum_times_{}.json'.format(mole_name)), 'r+', newline='') as f:
+    with open(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         r'data/mindquantum_times_{}.json'.format(mole_name)),
+            'r+',
+            newline='') as f:
         data = f.read()
         times = json.loads(data)
 
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-              r'data/mindquantum_parameters_{}.json'.format(mole_name)), 'r+', newline='') as f:
+    with open(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            r'data/mindquantum_parameters_{}.json'.format(mole_name)),
+              'r+',
+              newline='') as f:
         data = f.read()
         parameters = json.loads(data)
 
@@ -97,18 +115,27 @@ def savedata(mole_name, results, method, init=False):
         times["times"][method].append(results[i][2])
         parameters["parameters"][method].append(results[i][3])
 
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-              r'data/mindquantum_energies_{}.json'.format(mole_name)), 'w+', newline='') as f:
+    with open(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            r'data/mindquantum_energies_{}.json'.format(mole_name)),
+              'w+',
+              newline='') as f:
         b = json.dumps(energies)
         f.write(b)
 
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-              r'data/mindquantum_times_{}.json'.format(mole_name)), 'w+', newline='') as f:
+    with open(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         r'data/mindquantum_times_{}.json'.format(mole_name)),
+            'w+',
+            newline='') as f:
         b = json.dumps(times)
         f.write(b)
 
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-              r'data/mindquantum_parameters_{}.json'.format(mole_name)), 'w+', newline='') as f:
+    with open(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            r'data/mindquantum_parameters_{}.json'.format(mole_name)),
+              'w+',
+              newline='') as f:
         b = json.dumps(parameters)
         f.write(b)
 
@@ -120,52 +147,80 @@ def rounddata(mole_name):
     Args:
         mole_name (string): molecule name
     '''
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-              r'data/mindquantum_energies_{}.json'.format(mole_name)), 'r+', newline='') as f:
+    with open(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            r'data/mindquantum_energies_{}.json'.format(mole_name)),
+              'r+',
+              newline='') as f:
         data = f.read()
         energies = json.loads(data)
 
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-              r'data/mindquantum_times_{}.json'.format(mole_name)), 'r+', newline='') as f:
+    with open(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         r'data/mindquantum_times_{}.json'.format(mole_name)),
+            'r+',
+            newline='') as f:
         data = f.read()
         times = json.loads(data)
 
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-              r'data/mindquantum_parameters_{}.json'.format(mole_name)), 'r+', newline='') as f:
+    with open(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            r'data/mindquantum_parameters_{}.json'.format(mole_name)),
+              'r+',
+              newline='') as f:
         data = f.read()
         parameters = json.loads(data)
 
     for terms in energies["energies"]:
-        energies["energies"][terms] = [round(num, 6) for num in energies["energies"][terms]]
+        energies["energies"][terms] = [
+            round(num, 6) for num in energies["energies"][terms]
+        ]
         print(energies["energies"][terms])
 
     for terms in times["times"]:
-        times["times"][terms] = [round(num, 3) for num in times["times"][terms]]
+        times["times"][terms] = [
+            round(num, 3) for num in times["times"][terms]
+        ]
         print(times["times"][terms])
 
     for terms in parameters["parameters"]:
-        parameters["parameters"][terms] = [round(num, 0) for num in parameters["parameters"][terms]]
+        parameters["parameters"][terms] = [
+            round(num, 0) for num in parameters["parameters"][terms]
+        ]
         print(parameters["parameters"][terms])
 
-    energies["bond_lengths"] = [round(num, 1) for num in energies["bond_lengths"]]
+    energies["bond_lengths"] = [
+        round(num, 1) for num in energies["bond_lengths"]
+    ]
     times["bond_lengths"] = [round(num, 1) for num in times["bond_lengths"]]
-    parameters["bond_lengths"] = [round(num, 1) for num in parameters["bond_lengths"]]
+    parameters["bond_lengths"] = [
+        round(num, 1) for num in parameters["bond_lengths"]
+    ]
     print(energies["bond_lengths"])
     print(times["bond_lengths"])
     print(parameters["bond_lengths"])
 
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-              r'data/mindquantum_energies_{}.json'.format(mole_name)), 'w+', newline='') as f:
+    with open(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            r'data/mindquantum_energies_{}.json'.format(mole_name)),
+              'w+',
+              newline='') as f:
         b = json.dumps(energies)
         f.write(b)
 
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-              r'data/mindquantum_times_{}.json'.format(mole_name)), 'w+', newline='') as f:
+    with open(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         r'data/mindquantum_times_{}.json'.format(mole_name)),
+            'w+',
+            newline='') as f:
         b = json.dumps(times)
         f.write(b)
 
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-              r'data/mindquantum_parameters_{}.json'.format(mole_name)), 'w+', newline='') as f:
+    with open(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            r'data/mindquantum_parameters_{}.json'.format(mole_name)),
+              'w+',
+              newline='') as f:
         b = json.dumps(parameters)
         f.write(b)
 

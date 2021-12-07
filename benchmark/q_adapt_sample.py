@@ -1,11 +1,8 @@
 import os
 os.environ['OMP_NUM_THREADS'] = '4'
 import time
-import gc
-import json
-from pool import singlet_SD, pauli_pool, singlet_GSD
+from pool import singlet_SD, pauli_pool
 from qubit_adaptive import QubitAdaptive
-from data import initdata, savedata
 import mole
 from multiprocessing import Pool as ThreadPool
 

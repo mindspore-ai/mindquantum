@@ -1,25 +1,21 @@
 import os
+
 os.environ['OMP_NUM_THREADS'] = '4'
-import mindspore as ms
-from mindspore import Tensor
-from openfermion.utils import count_qubits
-from mindquantum.circuit import Circuit
-from mindquantum.gate import Hamiltonian, RX, RY, RZ, X
-from mindquantum.nn import generate_pqc_operator
-from mindquantum.ansatz import UCCAnsatz
-from q_ham import q_ham_producer
+import time
 import numpy as np
 from scipy.optimize import minimize
-import time
-
-ms.context.set_context(mode=ms.context.GRAPH_MODE, device_target="CPU")
+from openfermion.utils import count_qubits
+from mindquantum.simulator.simulator import Simulator
+from mindquantum import Circuit
+from mindquantum.core import Hamiltonian, RX, RY, RZ, X
+from mindquantum.algorithm.nisq.chem import UCCAnsatz
+from q_ham import q_ham_producer
 
 
 def energy_obj(n_paras, mol_pqc):
-    encoder_data = Tensor(np.array([[0]]).astype(np.float32))
-    ansatz_data = Tensor(np.array(n_paras).astype(np.float32))
-    e, _, grad = mol_pqc(encoder_data, ansatz_data)
-    return e.asnumpy()[0, 0], grad.asnumpy()[0, 0]
+    ansatz_data = np.array(n_paras)
+    e, grad = mol_pqc(ansatz_data)
+    return np.real(e[0, 0]), np.real(grad[0, 0])
 
 
 # step 1: load qubit hamiltonian form openfermion or hiqfermion
@@ -38,6 +34,8 @@ transform = 'jordan_wigner'
 n_qubits,n_electrons, \
 hf_energy, ccsd_energy, \
 fci_energy, q_ham = q_ham_producer(geometry, basis, charge, multiplicity, transform)
+sparsed_q_ham = Hamiltonian(q_ham)
+sparsed_q_ham.sparse(n_qubits)
 
 start = time.time()
 # step 2: constructe UCC ansatz circuit
@@ -57,16 +55,15 @@ total_circuit = initial_circuit + uccsd0_circuit
 # summary for the circuit
 print(total_circuit.summary())
 # a list of string for all parameters
-print(total_circuit.para_name)
+print(total_circuit.params_name)
 
 # step 3: objective function
 # generate a circuit that have right number of qubits
-total_pqc = generate_pqc_operator(["null"], total_circuit.para_name, \
-                                RX("null").on(count_qubits(q_ham)-1) + total_circuit, \
-                                Hamiltonian(q_ham))
+total_pqc = Simulator('projectq', n_qubits).get_expectation_with_grad(
+    sparsed_q_ham, total_circuit)
 
 # step 4: optimization step.
-n_paras = [0.0 for j in range(len(total_circuit.para_name))]
+n_paras = [0.0 for j in range(len(total_circuit.params_name))]
 res = minimize(energy_obj,
                n_paras,
                args=(total_pqc, ),
@@ -76,7 +73,7 @@ res = minimize(energy_obj,
 print("VQE energy with UCCSD0 ansatz:{}".format(float(res.fun)))
 print("Corresponding parameters:{}".format(res.x.tolist()))
 n_paras = res.x.tolist()
-n_p = len(total_circuit.para_name)
+n_p = len(total_circuit.params_name)
 print(n_p)
 
 t_cost = time.time() - start
@@ -85,4 +82,3 @@ print("HF energy:{}".format(hf_energy))
 print("CCSD energy:{}".format(ccsd_energy))
 print("FCI energy:{}".format(fci_energy))
 print("Time consumed:{}".format(t_cost))
-

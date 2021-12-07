@@ -1,13 +1,14 @@
 import os
-os.environ['OMP_NUM_THREADS'] = '4'
-from multiprocessing import Pool as ThreadPool
-import time
-import gc
-from adapt_vqe import AdaptVqe
-from pool import singlet_SD, pauli_pool, singlet_GSD
-from data import initdata, savedata
-import mole
 
+os.environ['OMP_NUM_THREADS'] = '4'
+import gc
+import time
+from multiprocessing import Pool as ThreadPool
+
+import mole
+from adapt_vqe import AdaptVqe
+from data import initdata, savedata
+from pool import singlet_SD, pauli_pool, singlet_GSD
 """
     n_orb: total spatial orbital
     n_occ: occupied spatial orbital
@@ -28,7 +29,8 @@ pool.generate_operators()
 collection_of_ferops = pool.fermi_ops
 
 print('-------------generate fermion pool-------------')
-print('Num of fermionic operator in the pool:{}'.format(len(collection_of_ferops)))
+print('Num of fermionic operator in the pool:{}'.format(
+    len(collection_of_ferops)))
 
 #bond_lengths = [ 0.1*i+1.7 for i in range(4)]
 bond_lengths = [3.0]
@@ -38,24 +40,25 @@ for bond_len in bond_lengths:
     geometry = getattr(mole, 'get_{}_geo'.format(mole_name))(bond_len)
 
     start = time.time()
-    adapt = AdaptVqe(mole_name, geometry, basis, charge, multiplicity, collection_of_ferops)
+    adapt = AdaptVqe(mole_name, geometry, basis, charge, multiplicity,
+                     collection_of_ferops)
 
-    adapt.opti_process(maxiter=100, adapt_thresh=1e-2) # Set optimizaiton max iteration and gradient threshold
+    adapt.opti_process(
+        maxiter=100, adapt_thresh=1e-2
+    )  # Set optimizaiton max iteration and gradient threshold
 
     energy = float(adapt.step_energies[-1])
     n_paras = len(adapt.step_energies)
     # time cost
-    t_cost = time.time()-start 
+    t_cost = time.time() - start
     results.append([bond_len, energy, t_cost, n_paras])
     del adapt
     gc.collect()
     print(results)
-
 """ pool = ThreadPool(processes = 10)
 results = pool.map(process, bond_lengths)
 pool.close()
 pool.join() """
-
 ''' Save the data to json file
 '''
 

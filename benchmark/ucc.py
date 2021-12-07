@@ -2,13 +2,13 @@ from collections import OrderedDict as ordict
 import itertools
 import numpy as np
 from openfermion.chem import MolecularData
-from mindquantum.ops import FermionOperator
-from mindquantum.utils import down_index, up_index, get_fermion_operator, normal_ordered
-from mindquantum.hiqfermion.transforms import Transform
+from mindquantum.core import FermionOperator
+from mindquantum.core import down_index, up_index, get_fermion_operator, normal_ordered
+from mindquantum.algorithm import Transform
 from mindquantum.third_party.interaction_operator import InteractionOperator
-from mindquantum.gate import RX, H, X, RZ, RY
-from mindquantum.circuit import Circuit, TimeEvolution
-from mindquantum.parameterresolver import ParameterResolver as PR
+from mindquantum.core import RX, H, X, RZ, RY
+from mindquantum.core import Circuit, TimeEvolution
+from mindquantum.core import ParameterResolver as PR
 
 
 def upccgsd_generator_circuit(mol, k=1, anti_hermitian=True):

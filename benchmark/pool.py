@@ -1,7 +1,7 @@
-from mindquantum.ops import FermionOperator, QubitOperator
-from mindquantum.utils import hermitian_conjugated, normal_ordered
 import numpy as np
-from mindquantum.hiqfermion.transforms.transform import Transform
+from mindquantum.core.operators import FermionOperator, QubitOperator
+from mindquantum.core.operators import hermitian_conjugated, normal_ordered
+from mindquantum.algorithm.nisq.chem import Transform
 
 
 def check_operator_requirement(ferop):
