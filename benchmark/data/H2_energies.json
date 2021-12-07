@@ -1,0 +1,1 @@
+{"meta": {"transformation": "jordan_wigner", "optimizer": "bfgs", "simulator": "projectq", "package": "openfermion", "mol_name": "H2"}, "bond_lengths": [0.8, 0.8, 0.8], "energies": {"Hartree-Fock": [12.3, 12.3, 12.3], "full-CI": [], "1-UpCCGSD": []}}
