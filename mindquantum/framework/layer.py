@@ -32,8 +32,13 @@ class MQLayer(nn.Cell):
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
             ansatz data and return the expectation value and gradient value of parameters
             respect to expectation.
-        weight (Union[Tensor, str, Initializer, numbers.Number]): The trainable weight parameter or ansatz circuit.
-            Default: 'normal'.
+        weight (Union[Tensor, str, Initializer, numbers.Number]): Initializer for the
+            convolution kernel. It can be a Tensor, a string, an Initializer or a number.
+            When a string is specified, values from 'TruncatedNormal', 'Normal', 'Uniform',
+            'HeUniform' and 'XavierUniform' distributions as well as constant 'One' and 'Zero'
+            distributions are possible. Alias 'xavier_uniform', 'he_uniform', 'ones' and
+            'zeros' are acceptable. Uppercase and lowercase are both acceptable. Refer to
+            the values of Initializer for more details. Default: 'normal'.
 
     Inputs:
         - **enc_data** (Tensor) - Tensor of encoder data that you want to encode into quantum state.
@@ -79,7 +84,7 @@ class MQLayer(nn.Cell):
         weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
         if isinstance(weight, ms.Tensor):
             if weight.ndim != 1 or weight.shape[0] != weight_size:
-                raise ValueError("Weight init shape error.")
+                raise ValueError(f"Weight init shape error, required ({weight_size}, ).")
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self, x):
@@ -95,8 +100,13 @@ class MQN2Layer(nn.Cell):
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
             ansatz data and return the square of absolute value of expectation value and
             gradient value of parameters respect to expectation.
-        weight (Union[Tensor, str, Initializer, numbers.Number]): The trainable weight parameter or ansatz circuit.
-            Default: 'normal'.
+        weight (Union[Tensor, str, Initializer, numbers.Number]): Initializer for the
+            convolution kernel. It can be a Tensor, a string, an Initializer or a number.
+            When a string is specified, values from 'TruncatedNormal', 'Normal', 'Uniform',
+            'HeUniform' and 'XavierUniform' distributions as well as constant 'One' and 'Zero'
+            distributions are possible. Alias 'xavier_uniform', 'he_uniform', 'ones' and
+            'zeros' are acceptable. Uppercase and lowercase are both acceptable. Refer to
+            the values of Initializer for more details. Default: 'normal'.
 
     Inputs:
         - **enc_data** (Tensor) - Tensor of encoder data that you want to encode into quantum state.
@@ -142,7 +152,7 @@ class MQN2Layer(nn.Cell):
         weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
         if isinstance(weight, ms.Tensor):
             if weight.ndim != 1 or weight.shape[0] != weight_size:
-                raise ValueError("Weight init shape error.")
+                raise ValueError(f"Weight init shape error, required ({weight_size}, ).")
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self, x):
@@ -157,8 +167,13 @@ class MQAnsatzOnlyLayer(nn.Cell):
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
             ansatz data and return the expectation value and gradient value of parameters
             respect to expectation.
-        weight (Union[Tensor, str, Initializer, numbers.Number]): The trainable weight parameter or ansatz circuit.
-            Default: 'normal'.
+        weight (Union[Tensor, str, Initializer, numbers.Number]): Initializer for the
+            convolution kernel. It can be a Tensor, a string, an Initializer or a number.
+            When a string is specified, values from 'TruncatedNormal', 'Normal', 'Uniform',
+            'HeUniform' and 'XavierUniform' distributions as well as constant 'One' and 'Zero'
+            distributions are possible. Alias 'xavier_uniform', 'he_uniform', 'ones' and
+            'zeros' are acceptable. Uppercase and lowercase are both acceptable. Refer to
+            the values of Initializer for more details. Default: 'normal'.
 
     Outputs:
         Tensor, The expectation value of the hamiltonian.
@@ -196,7 +211,7 @@ class MQAnsatzOnlyLayer(nn.Cell):
         weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
         if isinstance(weight, ms.Tensor):
             if weight.ndim != 1 or weight.shape[0] != weight_size:
-                raise ValueError("Weight init shape error.")
+                raise ValueError(f"Weight init shape error, required ({weight_size}, ).")
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self):
@@ -212,8 +227,13 @@ class MQN2AnsatzOnlyLayer(nn.Cell):
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
             ansatz data and return the expectation value and gradient value of parameters
             respect to expectation.
-        weight (Union[Tensor, str, Initializer, numbers.Number]): The trainable weight parameter or ansatz circuit.
-            Default: 'normal'.
+        weight (Union[Tensor, str, Initializer, numbers.Number]): Initializer for the
+            convolution kernel. It can be a Tensor, a string, an Initializer or a number.
+            When a string is specified, values from 'TruncatedNormal', 'Normal', 'Uniform',
+            'HeUniform' and 'XavierUniform' distributions as well as constant 'One' and 'Zero'
+            distributions are possible. Alias 'xavier_uniform', 'he_uniform', 'ones' and
+            'zeros' are acceptable. Uppercase and lowercase are both acceptable. Refer to
+            the values of Initializer for more details. Default: 'normal'.
 
     Inputs:
         - **enc_data** (Tensor) - Tensor of encoder data that you want to encode into quantum state.
@@ -255,7 +275,7 @@ class MQN2AnsatzOnlyLayer(nn.Cell):
         weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
         if isinstance(weight, ms.Tensor):
             if weight.ndim != 1 or weight.shape[0] != weight_size:
-                raise ValueError("Weight init shape error.")
+                raise ValueError(f"Weight init shape error, required ({weight_size}, ).")
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self):
