@@ -114,18 +114,13 @@ The following APIs have been remoted.
 
 New gates are shown as below.
 
-- `mindquantum.core.SGate`
-- `mindquantum.core.TGate`
+- `mindquantum.core.gates.SGate`
+- `mindquantum.core.gates.TGate`
 
 Measurement on certain qubits are now supported. The related APIs are shown as below.
 
-- `mindquantum.core.Measure`
-- `mindquantum.core.MeasureResult`
-
-Displaying a circuit in text format is now supported.
-
-- `mindquantum.io.brick_model`
-- `mindquantum.io.measure_text_drawer`
+- `mindquantum.core.gates.Measure`
+- `mindquantum.core.gates.MeasureResult`
 
 QASM is now supported.
 

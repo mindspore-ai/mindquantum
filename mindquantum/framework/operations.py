@@ -52,8 +52,11 @@ class MQOps(nn.Cell):
             respect to expectation.
 
     Inputs:
-        - **enc_data** (Tensor) - Tensor of encoder data that you want to encode into quantum state.
-        - **ans_data** (Tensor) - Tensor for ansatz circuit.
+        - **enc_data** (Tensor) - Tensor of encoder data with shape :math:`(N, M)` that
+            you want to encode into quantum state, where :math:`N` means the batch size
+            and :math:`M` means the number of encoder parameters.
+        - **ans_data** (Tensor) - Tensor with shape :math:`N` for ansatz circuit,
+            where :math:`N` means the number of ansatz parameters.
 
     Outputs:
         Tensor, The expectation value of the hamiltonian.
@@ -121,7 +124,7 @@ class MQN2Ops(nn.Cell):
 
     .. math:
 
-        O = \left|\left<0\right| U^\dagger_l H U_\r\left|0\right>\right|^2
+        O = \left|\left<0\right| U^\dagger_l H U_r\left|0\right>\right|^2
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
@@ -129,8 +132,11 @@ class MQN2Ops(nn.Cell):
             gradient value of parameters respect to expectation.
 
     Inputs:
-        - **enc_data** (Tensor) - Tensor of encoder data that you want to encode into quantum state.
-        - **ans_data** (Tensor) - Tensor for ansatz circuit.
+        - **enc_data** (Tensor) - Tensor of encoder data with shape :math:`(N, M)` that
+            you want to encode into quantum state, where :math:`N` means the batch size
+            and :math:`M` means the number of encoder parameters.
+        - **ans_data** (Tensor) - Tensor with shape :math:`N` for ansatz circuit,
+            where :math:`N` means the number of ansatz parameters.
 
     Outputs:
         Tensor, The square of absolute value of expectation value of the hamiltonian.
@@ -204,7 +210,8 @@ class MQAnsatzOnlyOps(nn.Cell):
             respect to expectation.
 
     Inputs:
-        - **ans_data** (Tensor) - Tensor for ansatz circuit.
+        - **ans_data** (Tensor) - Tensor with shape :math:`N` for ansatz circuit,
+            where :math:`N` means the number of ansatz parameters.
 
     Outputs:
         Tensor, The expectation value of the hamiltonian.
@@ -267,7 +274,8 @@ class MQN2AnsatzOnlyOps(nn.Cell):
             gradient value of parameters respect to expectation.
 
     Inputs:
-        - **ans_data** (Tensor) - Tensor for ansatz circuit.
+        - **ans_data** (Tensor) - Tensor with shape :math:`N` for ansatz circuit,
+            where :math:`N` means the number of ansatz parameters.
 
     Outputs:
         Tensor, The square of absolute value of expectation value of the hamiltonian.
@@ -331,7 +339,9 @@ class MQEncoderOnlyOps(nn.Cell):
             respect to expectation.
 
     Inputs:
-        - **ans_data** (Tensor) - Tensor of encoder data that you want to encode into quantum state.
+        - **enc_data** (Tensor) - Tensor of encoder data with shape :math:`(N, M)` that
+            you want to encode into quantum state, where :math:`N` means the batch size
+            and :math:`M` means the number of encoder parameters.
 
     Outputs:
         Tensor, The expectation value of the hamiltonian.
@@ -397,7 +407,8 @@ class MQN2EncoderOnlyOps(nn.Cell):
             gradient value of parameters respect to expectation.
 
     Inputs:
-        - **ans_data** (Tensor) - Tensor of encoder data that you want to encode into quantum state.
+        - **ans_data** (Tensor) - Tensor with shape :math:`N` for ansatz circuit,
+            where :math:`N` means the number of ansatz parameters.
 
     Outputs:
         Tensor, The square of absolute value of expectation value of the hamiltonian.
@@ -461,4 +472,4 @@ def _mode_check(self):
 
 def _check_grad_ops(expectation_with_grad):
     if not isinstance(expectation_with_grad, GradOpsWrapper):
-        raise ValueError(f'expectation_with_grad requires a GradOpsWrapper, but get {type(expectation_with_grad)}')
+        raise TypeError(f'expectation_with_grad requires a GradOpsWrapper, but get {type(expectation_with_grad)}')

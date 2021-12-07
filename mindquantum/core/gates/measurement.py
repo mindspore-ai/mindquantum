@@ -77,6 +77,8 @@ class Measure(NoneParameterGate):
         array([0.5 , 0.  , 0.25, 0.25])
     """
     def __init__(self, name=""):
+        if not isinstance(name, str):
+            raise TypeError(f"name of Measure should be a string, but get {type(name)}")
         self.key = name
         NoneParameterGate.__init__(self, name)
         self.name = 'M'
@@ -136,7 +138,7 @@ class Measure(NoneParameterGate):
         if obj_qubits is None:
             raise ValueError("The object qubit of measurement can not be none")
         if not isinstance(obj_qubits, int):
-            raise ValueError("The object qubit of measurement must be a \
+            raise TypeError("The object qubit of measurement must be a \
 non-negative integer referring to its index number")
         if obj_qubits < 0:
             raise ValueError("The object qubit of measurement must be a \
@@ -157,6 +159,8 @@ non-negative integer referring to its index number")
 
     def hermitian(self):
         """Hermitian gate of measure return its self"""
+        if not self.obj_qubits:
+            raise ValueError("Measurement should apply on some qubit first.")
         return self.__class__(self.key).on(self.obj_qubits[0])
 
     def check_obj_qubits(self):
