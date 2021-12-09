@@ -84,7 +84,7 @@ class MQLayer(nn.Cell):
         weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
         if isinstance(weight, ms.Tensor):
             if weight.ndim != 1 or weight.shape[0] != weight_size:
-                raise ValueError(f"Weight init shape error, required ({weight_size}, ).")
+                raise ValueError(f"Weight init shape error, required ({weight_size}, ), but get f{weight.shape}.")
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self, x):
@@ -152,7 +152,7 @@ class MQN2Layer(nn.Cell):
         weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
         if isinstance(weight, ms.Tensor):
             if weight.ndim != 1 or weight.shape[0] != weight_size:
-                raise ValueError(f"Weight init shape error, required ({weight_size}, ).")
+                raise ValueError(f"Weight init shape error, required ({weight_size}, ), but get f{weight.shape}.")
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self, x):
@@ -211,7 +211,7 @@ class MQAnsatzOnlyLayer(nn.Cell):
         weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
         if isinstance(weight, ms.Tensor):
             if weight.ndim != 1 or weight.shape[0] != weight_size:
-                raise ValueError(f"Weight init shape error, required ({weight_size}, ).")
+                raise ValueError(f"Weight init shape error, required ({weight_size}, ), but get f{weight.shape}.")
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self):
@@ -275,7 +275,7 @@ class MQN2AnsatzOnlyLayer(nn.Cell):
         weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
         if isinstance(weight, ms.Tensor):
             if weight.ndim != 1 or weight.shape[0] != weight_size:
-                raise ValueError(f"Weight init shape error, required ({weight_size}, ).")
+                raise ValueError(f"Weight init shape error, required ({weight_size}, ), but get f{weight.shape}.")
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self):

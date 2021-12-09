@@ -89,6 +89,16 @@ def isgateinstance(gate, gates):
 class OpenQASM:
     """
     Convert a circuit to openqasm format
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.io.qasm import OpenQASM
+        >>> from mindquantum.core import Circuit
+        >>> circuit = Circuit().rx(0.3, 0).z(0, 1).zz(np.pi, [0, 1])
+        >>> openqasm = OpenQASM()
+        >>> circuit_str = openqasm.to_string(circuit)
+        >>> circuit_str[47:60]
+        'rx(0.3) q[0];'
     """
     def __init__(self):
         from mindquantum import Circuit
@@ -160,8 +170,9 @@ class OpenQASM:
                         obj = gate.obj_qubits
                         p = gate.coeff
                         self.cmds.append(f"{gate.name.lower()}({p}) q[{obj[0]}],q[{obj[1]}];")
-            return self.cmds
-        raise NotImplementedError(f"openqasm version {version} not implement")
+        else:
+            raise NotImplementedError(f"openqasm version {version} not implement")
+        return '\n'.join(self.cmds)
 
     def to_file(self, file_name, circuit, version="2.0"):
         """
@@ -184,9 +195,9 @@ class OpenQASM:
             raise TypeError(f"circuit requires a Circuit, but get {type(circuit)}")
         if not isinstance(version, str):
             raise TypeError(f'version requires a str, but get {type(version)}')
-        self.to_string(circuit, version)
+        cs = self.to_string(circuit, version)
         with open(file_name, 'w') as f:
-            f.writelines("\n".join(self.cmds))
+            f.writelines(cs)
         print(f"write circuit to {file_name} finished!")
 
     def from_file(self, file_name):

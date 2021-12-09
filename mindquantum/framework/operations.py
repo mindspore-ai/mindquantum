@@ -124,7 +124,7 @@ class MQN2Ops(nn.Cell):
 
     .. math:
 
-        O = \left|\left<0\right| U^\dagger_l H U_r\left|0\right>\right|^2
+        O = |\left<0\right| U^\dagger_l H U_r\left|0\right>|^2
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
@@ -179,7 +179,6 @@ class MQN2Ops(nn.Cell):
         return self.expectation_with_grad.str
 
     def construct(self, enc_data, ans_data):
-        """construct"""
         check_enc_input_shape(enc_data, self.shape_ops(enc_data), len(self.expectation_with_grad.encoder_params_name))
         check_ans_input_shape(ans_data, self.shape_ops(ans_data), len(self.expectation_with_grad.ansatz_params_name))
         enc_data = enc_data.asnumpy()

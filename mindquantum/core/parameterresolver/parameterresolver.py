@@ -48,7 +48,7 @@ class ParameterResolver(dict):
         if data is None:
             data = {}
         if not isinstance(data, (dict, ParameterResolver)):
-            raise TypeError("Require a dict or a ParameterResolver, but get {}!".format(type(data)))
+            raise TypeError("Data require a dict or a ParameterResolver, but get {}!".format(type(data)))
         for k, v in data.items():
             if not isinstance(k, str):
                 raise TypeError("Parameter name should be a string, but get {}!".format(type(k)))

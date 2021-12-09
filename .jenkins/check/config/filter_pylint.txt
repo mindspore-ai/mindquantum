@@ -11,6 +11,7 @@
 "mindquantum/mindquantum/algorithm/nisq"                                               "arguments-differ"
 "mindquantum/mindquantum/core/circuit/circuit.py"                                      "redefined-outer-name"
 "mindquantum/mindquantum/core/circuit/circuit.py"                                      "invalid-name"
+"mindquantum/mindquantum/framework"                                                    "missing-docstring"
 
 # Tests
 "mindquantum/tests/st"                                                                 "missing-docstring"
