@@ -76,7 +76,7 @@ class Simulator:
         _check_input_type('seed', int, seed)
         _check_value_should_between_close_set('seed', 0, 2**23 - 1, seed)
         if backend not in SUPPORTED_SIMULATOR:
-            raise ValueError(f"backend {backend} not supported!")
+            raise ValueError(f"backend {backend} not supported, now we support {SUPPORTED_SIMULATOR}!")
         self.backend = backend
         self.seed = seed
         self.n_qubits = n_qubits
@@ -279,11 +279,15 @@ class Simulator:
             raise TypeError(f"sampling circuit need a quantum circuit but get {type(circuit)}")
         if self.n_qubits < circuit.n_qubits:
             raise ValueError(f"Circuit has {circuit.n_qubits} qubits, which is more than simulator qubits.")
-        if not isinstance(shots, int) or shots < 0:
-            raise ValueError(f"sampling shot should be non negative int, but get {shots}")
+        if not isinstance(shots, int):
+            raise TypeError(f"sampling shots should be int, but get {type(shots)}")
+        if shots < 0:
+            raise ValueError(f"sampling shots should be non negative int, but get {shots}")
         if circuit.parameterized:
             if pr is None:
                 raise ValueError("Sampling a parameterized circuit need a ParameterResolver")
+            if not isinstance(pr, (dict, ParameterResolver)):
+                raise TypeError("pr require a dict or a ParameterResolver, but get {}!".format(type(pr)))
             pr = ParameterResolver(pr)
         else:
             pr = ParameterResolver()
@@ -381,12 +385,14 @@ class Simulator:
             >>> sim.get_qs()
             array([0.5+0.j, 0.5+0.j, 0.5+0.j, 0.5+0.j])
         """
+        if not isinstance(ket, bool):
+            raise TypeError(f"ket requires a bool, but get {type(ket)}")
         state = np.array(self.sim.get_qs())
         if ket:
             return '\n'.join(ket_string(state))
         return state
 
-    def set_qs(self, vec):
+    def set_qs(self, quantum_state):
         """
         Set quantum state for this simulation.
 
@@ -403,17 +409,17 @@ class Simulator:
             >>> sim.get_qs()
             array([0.70710678+0.j, 0.70710678+0.j])
         """
-        if not isinstance(vec, np.ndarray):
-            raise TypeError(f"quantum state must be a ndarray, but get {type(vec)}")
-        if len(vec.shape) != 1:
-            raise ValueError(f"vec requires a 1-dimensional array, but get {vec.shape}")
-        n_qubits = np.log2(vec.shape[0])
+        if not isinstance(quantum_state, np.ndarray):
+            raise TypeError(f"quantum state must be a ndarray, but get {type(quantum_state)}")
+        if len(quantum_state.shape) != 1:
+            raise ValueError(f"vec requires a 1-dimensional array, but get {quantum_state.shape}")
+        n_qubits = np.log2(quantum_state.shape[0])
         if n_qubits % 1 != 0:
-            raise ValueError(f"vec size {vec.shape[0]} is not power of 2")
+            raise ValueError(f"vec size {quantum_state.shape[0]} is not power of 2")
         n_qubits = int(n_qubits)
         if self.n_qubits != n_qubits:
             raise ValueError(f"{n_qubits} qubits vec does not match with simulation qubits ({self.n_qubits})")
-        self.sim.set_qs(vec / np.sqrt(np.sum(np.abs(vec)**2)))
+        self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state)**2)))
 
     def get_expectation_with_grad(self,
                                   hams,
@@ -455,7 +461,7 @@ class Simulator:
             >>> from mindquantum import Simulator, Hamiltonian
             >>> from mindquantum import Circuit
             >>> from mindquantum.core.operators import QubitOperator
-            >>> circ = Circuit().ry('a', 1)
+            >>> circ = Circuit().ry('a', 0)
             >>> ham = Hamiltonian(QubitOperator('Z0'))
             >>> sim = Simulator('projectq', 1)
             >>> grad_ops = sim.get_expectation_with_grad(ham, circ)

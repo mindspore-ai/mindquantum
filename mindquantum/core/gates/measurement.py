@@ -17,6 +17,8 @@
 from collections.abc import Iterable
 import numpy as np
 from rich.console import Console
+from mindquantum.utils.type_value_check import _check_input_type
+from mindquantum.utils.type_value_check import _check_value_should_not_less
 from mindquantum import mqbackend as mb
 from mindquantum.io.display import measure_text_drawer
 from .basic import NoneParameterGate
@@ -28,7 +30,7 @@ class Measure(NoneParameterGate):
 
     Args:
         name (str): The key of this measurement gate. In a quantum circuit, the
-            key of different measurement gate should be unique.
+            key of different measurement gate should be unique. Default: ""
 
     Examples:
         >>> import numpy as np
@@ -77,8 +79,7 @@ class Measure(NoneParameterGate):
         array([0.5 , 0.  , 0.25, 0.25])
     """
     def __init__(self, name=""):
-        if not isinstance(name, str):
-            raise TypeError(f"name of Measure should be a string, but get {type(name)}")
+        _check_input_type('name', str, name)
         self.key = name
         NoneParameterGate.__init__(self, name)
         self.name = 'M'
@@ -107,7 +108,7 @@ class Measure(NoneParameterGate):
 
         Args:
             obj_qubits (int): A non negative int that referring to its index number.
-            ctrl_qubits (int): Should be None for measure gate.
+            ctrl_qubits (int): Should be None for measure gate. Default: None.
 
         Examples:
             >>> from mindquantum import Circuit, Measure
@@ -137,12 +138,8 @@ class Measure(NoneParameterGate):
             raise ValueError("Measure gate can not have control qubit")
         if obj_qubits is None:
             raise ValueError("The object qubit of measurement can not be none")
-        if not isinstance(obj_qubits, int):
-            raise TypeError("The object qubit of measurement must be a \
-non-negative integer referring to its index number")
-        if obj_qubits < 0:
-            raise ValueError("The object qubit of measurement must be a \
-non-negative integer referring to its index number")
+        _check_input_type('obj_qubits', int, obj_qubits)
+        _check_value_should_not_less('obj_qubits', 0, obj_qubits)
         new_gate = Measure(self.key)
         new_gate.obj_qubits = [obj_qubits]
         if not new_gate.key:
