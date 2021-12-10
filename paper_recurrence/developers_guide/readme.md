@@ -1,27 +1,5 @@
 量子计算论文复现大赛开发指南
 
-# 活动报名和领取云资源券
-
-1.  访问大赛平台网址，点击右上角**“立即报名”**按钮报名。若没有华为云账号，请先注册华为云账号，并完成个人实名认证。
-
-    <https://competition.huaweicloud.com/information/1000041627/introduction>
-
-2.  报名成功后刷新大赛页面会弹出云资源券，点击**“领取”**。
-
-    ![](media/62770e4c22327494294bfaa0411f5df8.png)
-
-    如果在报名后没有领取，也可以在大赛页面“云资源获取”里领取。
-
-    ![](media/80b764de60169a1e661512b891c9cedd.png)
-
-3.  领取成功后可点击**“查看我的优惠券”**或者进入个人账户**“费用中心”**可以查看领取的券，领取了之后使用华为云资源（本次大赛只用于ModelArts和OBS资源）。
-
-    [https://account.huaweicloud.com/usercenter/?region=cn-north-4&locale=zh-cn\#/userindex/coupons](https://account.huaweicloud.com/usercenter/?region=cn-north-4&locale=zh-cn#/userindex/coupons)
-
-![](media/4857265b01872c0e7fd97e2517e686b4.png)
-
-说明：2021年12月份报名的参赛者，页面领取的代金券有效期到2021年12月31号，到期后请发邮件申请代金券（[hiqinfo1@huawei.com](mailto:hiqinfo1@huawei.com)），邮件需要注明华为云账号和ID（[点击此处](https://console.huaweicloud.com/iam/?region=cn-north-1&locale=zh-cn#/mine/apiCredential)查看华为云账号信息）。
-
 # Watch & Star & Fork代码仓
 
 1.  注册并登录Gitee，访问MindQuantum主仓库<https://gitee.com/mindspore/mindquantum>
