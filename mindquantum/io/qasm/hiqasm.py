@@ -16,6 +16,7 @@
 """hiqqasm"""
 import numpy as np
 from mindquantum.utils.type_value_check import _check_input_type
+from mindquantum.utils.type_value_check import _check_int_type
 from mindquantum.utils.type_value_check import _check_value_should_not_less
 from mindquantum.utils.type_value_check import _check_value_should_between_close_set
 
@@ -54,12 +55,12 @@ def random_hiqasm(n_qubits, gate_num, version='0.1', seed=42):
                                               │
         q1: ──────S───────────────────────────●──────────Z──────M(k1)──
     """
-    _check_input_type("n_qubits", (int, np.int64), n_qubits)
+    _check_int_type("n_qubits", n_qubits)
     _check_value_should_not_less("n_qubits", 0, n_qubits)
-    _check_input_type("gate_num", (int, np.int64), gate_num)
+    _check_int_type("gate_num", gate_num)
     _check_value_should_not_less("gate_num", 0, gate_num)
     _check_input_type("verrsion", str, version)
-    _check_input_type('seed', int, seed)
+    _check_int_type("seed", seed)
     _check_value_should_between_close_set('seed', 0, 2**23 - 1, seed)
     np.random.seed(seed)
     gate_set = HIQASM_GATE_SET[version]

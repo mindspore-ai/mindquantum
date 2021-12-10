@@ -18,6 +18,7 @@ from collections.abc import Iterable
 import numpy as np
 from rich.console import Console
 from mindquantum.utils.type_value_check import _check_input_type
+from mindquantum.utils.type_value_check import _check_int_type
 from mindquantum.utils.type_value_check import _check_value_should_not_less
 from mindquantum import mqbackend as mb
 from mindquantum.io.display import measure_text_drawer
@@ -138,7 +139,7 @@ class Measure(NoneParameterGate):
             raise ValueError("Measure gate can not have control qubit")
         if obj_qubits is None:
             raise ValueError("The object qubit of measurement can not be none")
-        _check_input_type('obj_qubits', int, obj_qubits)
+        _check_int_type('obj_qubits', obj_qubits)
         _check_value_should_not_less('obj_qubits', 0, obj_qubits)
         new_gate = Measure(self.key)
         new_gate.obj_qubits = [obj_qubits]

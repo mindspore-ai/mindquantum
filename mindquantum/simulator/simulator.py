@@ -26,6 +26,7 @@ from mindquantum.core.gates import BarrierGate
 from mindquantum.utils import ket_string
 from mindquantum import mqbackend as mb
 from mindquantum.utils.type_value_check import _check_input_type
+from mindquantum.utils.type_value_check import _check_int_type
 from mindquantum.utils.type_value_check import _check_value_should_not_less
 from mindquantum.utils.type_value_check import _check_value_should_between_close_set
 from mindquantum.utils.type_value_check import _check_and_generate_pr_type
@@ -71,9 +72,9 @@ class Simulator:
     """
     def __init__(self, backend, n_qubits, seed=42):
         _check_input_type('backend', str, backend)
-        _check_input_type('n_qubits', int, n_qubits)
+        _check_int_type('n_qubits', n_qubits)
         _check_value_should_not_less('n_qubits', 0, n_qubits)
-        _check_input_type('seed', int, seed)
+        _check_int_type('seed', seed)
         _check_value_should_between_close_set('seed', 0, 2**23 - 1, seed)
         if backend not in SUPPORTED_SIMULATOR:
             raise ValueError(f"backend {backend} not supported, now we support {SUPPORTED_SIMULATOR}!")
