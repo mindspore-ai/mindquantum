@@ -97,11 +97,11 @@
 
     1.  如果没有看到“保存镜像”按钮，请邮件反馈（[hiqinfo1@huawei.com](mailto:hiqinfo1@huawei.com)）问题，邮件需要注明华为云账号和ID（[点击此处](https://console.huaweicloud.com/iam/?region=cn-north-1&locale=zh-cn#/mine/apiCredential)查看华为云账号信息）。
 
-# Jupter Notebook开发准备
+# Jupyter Notebook开发准备
 
-## 进入Jupter Notebook开发环境
+## 进入Jupyter Notebook开发环境
 
-点击Notebook实例的**“打开”**按钮，进入Jupter Notebook开发环境。
+点击Notebook实例的**“打开”**按钮，进入Jupyter Notebook开发环境。
 
 ![](media/83f1acc75d91fcb01f586c3cfbaef376.png)
 
@@ -119,11 +119,11 @@
 
 ![](media/1346157d1202a3db4a053b8ed2d9fa76.png)
 
-1.  在Jupter Notebook的Launcher界面选择Other下的**“Terminal”**，打开命令行终端。
+1.  在Jupyter Notebook的Launcher界面选择Other下的**“Terminal”**，打开命令行终端。
 
     ![](media/32a102a19a10577d6c4bc09ea6fc1b67.png)
 
-2.  ModelArts Jupter
+2.  ModelArts Jupyter
     Notebook默认工作目录是work目录，克隆代码仓前需要先切换到work目录（/home/ma-user/work），在Terminal界面输入如下命令。
 
 sh-4.4\$**pwd**
@@ -163,7 +163,7 @@ https://hiq.huaweicloud.com/download/mindquantum/newest/linux/mindquantum-master
 
 sh-4.4\$**python -c 'import mindquantum'**
 
-# Jupter Notebook开发体验
+# Jupyter Notebook开发体验
 
 首次开发可以参考
 “通过量子神经网络对鸢尾花进行分类”教程进行开发学习（点击菜单栏下的上传按钮导入样例进行开发/调测体验）。
@@ -172,11 +172,11 @@ sh-4.4\$**python -c 'import mindquantum'**
 
 ![](media/173d0680d6bc2d635c751e3e1f7c61dc.png)
 
-# 使用Jupter Notebook复现论文并提交到代码仓
+# 使用Jupyter Notebook复现论文并提交到代码仓
 
 ## 切换到research分支
 
-在Jupter Notebook的Terminal里执行如下命令从master分支切换到research分支。
+在Jupyter Notebook的Terminal里执行如下命令从master分支切换到research分支。
 
 sh-4.4\$**git branch -l**
 
@@ -227,8 +227,8 @@ sh-4.4\$**cp -r paperid_username_for_example/ 1_xxx**
 
 ![](media/a305fb230313f0876097423dcb810211.png)
 
-开发者可以把本地开发调试完的代码拷贝或者导入到ModelArts的Jupter
-Notebook，大赛评委会对Jupter Notebook提交的内容和运行结果进行验收。
+开发者可以把本地开发调试完的代码拷贝或者导入到ModelArts的Jupyter
+Notebook，大赛评委会对Jupyter Notebook提交的内容和运行结果进行验收。
 
 ## 提交代码仓
 
