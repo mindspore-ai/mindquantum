@@ -20,24 +20,21 @@ import numpy as np
 from mindquantum.core.gates import BasicGate, X
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.circuit.utils import AP, A
+from mindquantum.utils.type_value_check import _check_int_type
+from mindquantum.utils.type_value_check import _check_value_should_not_less
 from .._ansatz import Ansatz
 
 
 def _check_single_rot_gate_seq(single_rot_gate_seq):
     """check single rotation gate seq"""
     if not isinstance(single_rot_gate_seq, list):
-        raise TypeError(
-            f"single_rot_gate_seq requires a list, but get {type(single_rot_gate_seq)}"
-        )
+        raise TypeError(f"single_rot_gate_seq requires a list, but get {type(single_rot_gate_seq)}")
     for gate in single_rot_gate_seq:
         if not issubclass(gate, BasicGate):
-            raise ValueError(
-                f"single rotation gate require a parameterized gate, but get {gate}"
-            )
+            raise ValueError(f"single rotation gate require a parameterized gate, but get {gate}")
         gate_shape = gate(0).matrix().shape
         if gate_shape[0] != 2 or gate_shape[1] != 2:
-            raise ValueError(
-                f"single rotation gate should be a one qubit gate.")
+            raise ValueError(f"single rotation gate should be a one qubit gate.")
 
 
 class HardwareEfficientAnsatz(Ansatz):
@@ -75,25 +72,15 @@ class HardwareEfficientAnsatz(Ansatz):
         q2: ──RY(d0_n2_0)────RZ(d0_n2_1)─────────Z────RY(d1_n2_0)────RZ(d1_n2_1)──
 
     """
-    def __init__(self,
-                 n_qubits,
-                 single_rot_gate_seq,
-                 entangle_gate=X,
-                 entangle_mapping='linear',
-                 depth=1):
+    def __init__(self, n_qubits, single_rot_gate_seq, entangle_gate=X, entangle_mapping='linear', depth=1):
         _check_single_rot_gate_seq(single_rot_gate_seq)
-        if not isinstance(depth, int) or depth <= 0:
-            raise ValueError(f"depth requires a positive int, but get {depth}")
-        if not isinstance(entangle_gate,
-                          BasicGate) or entangle_gate.parameterized:
-            raise ValueError(
-                f"entangle gate requires a non parameterized gate, but get {entangle_gate}"
-            )
-        super().__init__('Hardware Efficient', n_qubits, single_rot_gate_seq,
-                         entangle_gate, entangle_mapping, depth)
+        _check_int_type('depth', depth)
+        _check_value_should_not_less('depth', 1, depth)
+        if not isinstance(entangle_gate, BasicGate) or entangle_gate.parameterized:
+            raise ValueError(f"entangle gate requires a non parameterized gate, but get {entangle_gate}")
+        super().__init__('Hardware Efficient', n_qubits, single_rot_gate_seq, entangle_gate, entangle_mapping, depth)
 
-    def _implement(self, single_rot_gate_seq, entangle_gate, entangle_mapping,
-                   depth):
+    def _implement(self, single_rot_gate_seq, entangle_gate, entangle_mapping, depth):
         """Implement of hardware efficient ansatz"""
         entangle_mapping = self._get_entangle_mapping(entangle_mapping)
         circ = Circuit()
@@ -119,13 +106,9 @@ or a list of tuple of the qubits that the entanglement gate act on.")
             for i in entangle_mapping:
                 if isinstance(i, tuple):
                     if len(i) != 2:
-                        raise ValueError(
-                            f"entanglement only act on two qubits, but get {i}"
-                        )
+                        raise ValueError(f"entanglement only act on two qubits, but get {i}")
                 else:
-                    raise TypeError(
-                        f"Element of entangle_mapping need a tuple, but get {type(i)}"
-                    )
+                    raise TypeError(f"Element of entangle_mapping need a tuple, but get {type(i)}")
         else:
             raise ValueError("entangle_mapping can only be 'all', 'linear', \
 or a list of tuple of the qubits that the entanglement gate act on.")
@@ -141,8 +124,7 @@ or a list of tuple of the qubits that the entanglement gate act on.")
             elif gate_qubit == 2:
                 circ += entangle_gate.on(qs)
             else:
-                raise ValueError(
-                    f"Entangle gate can only be a controlled single qubit gate \
+                raise ValueError(f"Entangle gate can only be a controlled single qubit gate \
 or two qubits gate, but get {gate_qubit} qubits gate.")
         return circ
 

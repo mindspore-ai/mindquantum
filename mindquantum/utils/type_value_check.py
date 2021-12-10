@@ -25,6 +25,12 @@ def _check_input_type(arg_msg, require_type, arg):
         raise TypeError(f"{arg_msg} requires a {require_type}, but get {type(arg)}")
 
 
+def _check_int_type(args_msg, arg):
+    """check int type"""
+    if not isinstance(arg, (int, np.int64)) or isinstance(arg, bool):
+        raise TypeError(f"{args_msg} requires a int, but get {type(arg)}")
+
+
 def _check_value_should_not_less(arg_msg, require_value, arg):
     """check value should not less"""
     if arg < require_value:
