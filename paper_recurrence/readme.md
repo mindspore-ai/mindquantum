@@ -12,6 +12,8 @@
 
 ## 量子计算论文复现大赛开发指南
 
+![量子计算论文复现大赛开发指南](https://gitee.com/mindspore/mindquantum/tree/research/paper_recurrence/developers_guide)
+
 ## 可选论文
 
 1. xxx
