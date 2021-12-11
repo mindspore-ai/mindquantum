@@ -21,21 +21,21 @@
 
 ![](media/16eb87e287b40e44827c72d7b1dca82c.png)
 
-1.  **Fork** MindSpore的主仓到个人空间（欢迎**Watch**和**Star**）。
+3.  **Fork** MindSpore的主仓到个人空间（欢迎**Watch**和**Star**）。
 
 <https://gitee.com/mindspore/mindspore>
 
-# Notebook环境准备
+# ModelArts Notebook环境准备
 
 1.  登录华为云服务官网（www.huaweicloud.com），若没有华为云账号，请先注册华为云账号，并完成个人实名认证。
 
-2.  进入ModelArts页面（官网首页–\>产品–\>人工智能），点击**“管理控制台”**。
+2.  进入ModelArts页面（官网首页–\>产品–\>人工智能），点击**管理控制台**。
 
     <https://www.huaweicloud.com/product/modelarts.html>
 
     ![](media/34daffcdaac37763b2c7cb8359aad52b.png)
 
-3.  进入控制台，选择 **“北京四”**环境（推荐使用）。
+3.  进入控制台，选择 **北京四**环境（推荐使用）。
 
 [https://console.huaweicloud.com/modelarts/?region=cn-north-4\#/dashboard](https://console.huaweicloud.com/modelarts/?region=cn-north-4#/dashboard)
 
@@ -45,18 +45,18 @@
 
 ![](media/61fa84a050f3d21157ed5b3dd14abaf7.png)
 
-首次使用如果没有配置访问授权，打开Notebook开发环境后会提示需要先获取依赖服务的授权。点击**“此处”**进行访问授权配置。
+首次使用如果没有配置访问授权，打开Notebook开发环境后会提示需要先获取依赖服务的授权。点击**此处**进行访问授权配置。
 
 ![](media/2ac0cf90b1133d717f9f0c2b804f6330.png)
 
 ## 创建Notebook
 
-1.  在进行算法开发前，需要先创建Notebook实例，在实例里进行开发。点击左侧“**开发环境**”
-    –\>**“Notebook”**–\>**“创建”**进行实例创建。
+1.  在进行算法开发前，需要先创建Notebook实例，在实例里进行开发。点击左侧**开发环境**
+    –\>**Notebook**–\>**创建**进行实例创建。
 
 ![](media/65a98b6c2a2232043afc10d60a9c8fb2.png)
 
-1.  创建实例时选择公共镜像**“mindquantum0.3.1-mindspore1.3.0-ubuntu18.04”**；资源池为**“公共资源池”**；类型为**“CPU”**，有两种规格可选，推荐使用2核8GB；存储配置为“默认存储”，参数配置完后点击底下的“立即创建”，实例就创建好了。
+1.  创建实例时选择公共镜像**mindquantum0.3.1-mindspore1.3.0-ubuntu18.04**；资源池为**公共资源池**；类型为**CPU**，有两种规格可选，推荐使用2核8GB；存储配置为**默认存储**，参数配置完后点击底下的**立即创建**，实例就创建好了。
 
 ![](media/e125fa83f9fad72d775daa6c4a608cad.png)
 
@@ -66,12 +66,12 @@
 
 ## 保存Notebook里的镜像
 
-可以点击操作**“更多”**--\>**“保存镜像”**
+可以点击操作**更多**--\>**保存镜像**
 将镜像保存下来，重新启动时从镜像启动，不需要重新安装。![](media/e015102b3b874cc267a1a411c655a872.png)
 
 说明：
 
-1.  如未保存镜像，实例重新后需要重新安装MindQuantum最新安装包（参考本文“安装mindquantum-master包”）。
+1.  如未保存镜像，实例重新后需要重新安装MindQuantum最新安装包（参考本文**安装mindquantum-master包**）。
 
     1.  如果没有看到“保存镜像”按钮，请邮件反馈（[hiqinfo1@huawei.com](mailto:hiqinfo1@huawei.com)）问题，邮件需要注明华为云账号和ID（[点击此处](https://console.huaweicloud.com/iam/?region=cn-north-1&locale=zh-cn#/mine/apiCredential)查看华为云账号信息）。
 
@@ -79,7 +79,7 @@
 
 ## 进入Jupyter Notebook开发环境
 
-点击Notebook实例的**“打开”**按钮，进入Jupyter Notebook开发环境。
+点击Notebook实例的**打开**按钮，进入Jupyter Notebook开发环境。
 
 ![](media/83f1acc75d91fcb01f586c3cfbaef376.png)
 
@@ -97,7 +97,7 @@
 
 ![](media/1346157d1202a3db4a053b8ed2d9fa76.png)
 
-1.  在Jupyter Notebook的Launcher界面选择Other下的**“Terminal”**，打开命令行终端。
+1.  在Jupyter Notebook的Launcher界面选择Other下的**Terminal**，打开命令行终端。
 
     ![](media/32a102a19a10577d6c4bc09ea6fc1b67.png)
 
@@ -155,8 +155,13 @@ sh-4.4\$**python -c 'import mindquantum'**
 ## 切换到research分支
 
 在Jupyter Notebook的Terminal里执行如下命令从master分支切换到research分支。
+sh-4.4\$**cd mindquantum/**
 
-sh-4.4\$**git branch -l**
+sh-4.4\$**pwd**
+
+/home/ma-user/work/mindquantum
+
+sh-4.4\$**git branch**
 
 \* master
 
@@ -168,7 +173,9 @@ Branch 'research' set up to track remote branch 'research' from 'origin'.
 
 Switched to a new branch 'research'
 
-sh-4.4\$**git branch -l**
+sh-4.4\$**git branch**
+
+\ master
 
 \* research
 
@@ -197,7 +204,7 @@ sh-4.4\$**cp -r paperid_username_for_example/ 1_xxx**
 
 进入个人文件夹，开发者参照文件夹目录和文件格式开发。
 
-双机main.ipynb文件，在弹出的对话框中选择Kernel**“MindQuantum”**，就可以进行开发了。
+双机main.ipynb文件，在弹出的对话框中选择Kernel**MindQuantum**，就可以进行开发了。
 
 ![](media/b7033c25aaa65d62a5c8630ea37825fc.png)
 
