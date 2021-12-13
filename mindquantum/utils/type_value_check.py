@@ -19,6 +19,12 @@ import numpy as np
 _num_type = (int, float, complex, np.int32, np.int64, np.float32, np.float64)
 
 
+def _check_seed(seed):
+    """check seed"""
+    _check_int_type("seed", seed)
+    _check_value_should_between_close_set("seed", 0, 2**23, seed)
+
+
 def _check_input_type(arg_msg, require_type, arg):
     """check input type"""
     if not isinstance(arg, require_type):
@@ -28,7 +34,7 @@ def _check_input_type(arg_msg, require_type, arg):
 def _check_int_type(args_msg, arg):
     """check int type"""
     if not isinstance(arg, (int, np.int64)) or isinstance(arg, bool):
-        raise TypeError(f"{args_msg} requires a int, but get {type(arg)}")
+        raise TypeError(f"{args_msg} requires an int, but get {type(arg)}")
 
 
 def _check_value_should_not_less(arg_msg, require_value, arg):

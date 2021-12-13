@@ -18,8 +18,7 @@ import numpy as np
 from mindquantum.utils.type_value_check import _check_input_type
 from mindquantum.utils.type_value_check import _check_int_type
 from mindquantum.utils.type_value_check import _check_value_should_not_less
-from mindquantum.utils.type_value_check import _check_value_should_between_close_set
-
+from mindquantum.utils.type_value_check import _check_seed
 from .openqasm import _find_qubit_id
 from .openqasm import u3
 
@@ -56,13 +55,14 @@ def random_hiqasm(n_qubits, gate_num, version='0.1', seed=42):
         q1: ──────S───────────────────────────●──────────Z──────M(k1)──
     """
     _check_int_type("n_qubits", n_qubits)
-    _check_value_should_not_less("n_qubits", 0, n_qubits)
+    _check_value_should_not_less("n_qubits", 1, n_qubits)
     _check_int_type("gate_num", gate_num)
-    _check_value_should_not_less("gate_num", 0, gate_num)
-    _check_input_type("verrsion", str, version)
-    _check_int_type("seed", seed)
-    _check_value_should_between_close_set('seed', 0, 2**23 - 1, seed)
+    _check_value_should_not_less("gate_num", 1, gate_num)
+    _check_input_type("version", str, version)
+    _check_seed(seed)
     np.random.seed(seed)
+    if version not in HIQASM_GATE_SET:
+        raise NotImplementedError(f"version of {version} not implement yet!")
     gate_set = HIQASM_GATE_SET[version]
     np_set = gate_set['np']
     p_set = gate_set['p']
