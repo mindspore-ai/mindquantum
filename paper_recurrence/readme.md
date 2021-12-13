@@ -29,9 +29,7 @@
 
 ## 代码提交路径
 
-- 初赛作品提交：将代码和文档按照**paperid_username_for_example**格式要求提交到mindquantum仓research分支的**paper_recurrence/paperid_username**。**paperid**为论文的序号，**username**为参赛者用户名。
-
-- 决赛作品提交：决赛入围者须在决赛答辩前三天完成代码更新和答辩PPT上传。答辩PPT上传到mindquantum仓research分支的**paper_recurrence/paperid_username**目录。
+- 初赛作品提交：将代码和文档按照**paperid_username_for_example**格式要求提交到mindquantum仓research分支的**paper_recurrence/paperid_username**。**paperid**为论文的序号，**username**为参赛者华为云账号名。
 
 ## 评分标准
 
