@@ -47,7 +47,7 @@ class MQLayer(nn.Cell):
         Tensor, The expectation value of the hamiltonian.
 
     Raises:
-        ValueError: If length of shape of `weight` is not equal to 1 and shape[0] of `weight`
+        ValueError: If length of shape of `weight` is not equal to 1 or shape[0] of `weight`
                     is not equal to `weight_size`.
 
     Supported Platforms:
@@ -84,7 +84,7 @@ class MQLayer(nn.Cell):
         weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
         if isinstance(weight, ms.Tensor):
             if weight.ndim != 1 or weight.shape[0] != weight_size:
-                raise ValueError(f"Weight init shape error, required ({weight_size}, ), but get f{weight.shape}.")
+                raise ValueError(f"Weight init shape error, required ({weight_size}, ), but get {weight.shape}.")
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self, x):

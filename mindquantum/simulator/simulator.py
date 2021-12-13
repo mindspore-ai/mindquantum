@@ -28,8 +28,8 @@ from mindquantum import mqbackend as mb
 from mindquantum.utils.type_value_check import _check_input_type
 from mindquantum.utils.type_value_check import _check_int_type
 from mindquantum.utils.type_value_check import _check_value_should_not_less
-from mindquantum.utils.type_value_check import _check_value_should_between_close_set
 from mindquantum.utils.type_value_check import _check_and_generate_pr_type
+from mindquantum.utils.type_value_check import _check_seed
 
 SUPPORTED_SIMULATOR = ['projectq']
 
@@ -74,8 +74,7 @@ class Simulator:
         _check_input_type('backend', str, backend)
         _check_int_type('n_qubits', n_qubits)
         _check_value_should_not_less('n_qubits', 0, n_qubits)
-        _check_int_type('seed', seed)
-        _check_value_should_between_close_set('seed', 0, 2**23 - 1, seed)
+        _check_seed(seed)
         if backend not in SUPPORTED_SIMULATOR:
             raise ValueError(f"backend {backend} not supported, now we support {SUPPORTED_SIMULATOR}!")
         self.backend = backend
@@ -276,14 +275,11 @@ class Simulator:
                               │
             {'000': 17, '011': 8, '100': 49, '111': 26}
         """
-        if not isinstance(circuit, Circuit):
-            raise TypeError(f"sampling circuit need a quantum circuit but get {type(circuit)}")
+        _check_input_type("circuit", Circuit, circuit)
         if self.n_qubits < circuit.n_qubits:
             raise ValueError(f"Circuit has {circuit.n_qubits} qubits, which is more than simulator qubits.")
-        if not isinstance(shots, int):
-            raise TypeError(f"sampling shots should be int, but get {type(shots)}")
-        if shots < 0:
-            raise ValueError(f"sampling shots should be non negative int, but get {shots}")
+        _check_int_type("sampling shots", shots)
+        _check_value_should_not_less("sampling shots", 1, shots)
         if circuit.parameterized:
             if pr is None:
                 raise ValueError("Sampling a parameterized circuit need a ParameterResolver")
@@ -294,8 +290,8 @@ class Simulator:
             pr = ParameterResolver()
         if seed is None:
             seed = self.seed
-        elif not isinstance(seed, int) or seed < 0 or seed > 2**23 - 1:
-            raise ValueError(f"seed must be between 0 and 2**23 - 1")
+        else:
+            _check_seed(seed)
         res = MeasureResult()
         res.add_measure(circuit.all_measures.keys())
         samples = np.array(self.sim.sampling(circuit.get_cpp_obj(), pr.get_cpp_obj(), shots, res.keys_map,
@@ -398,7 +394,7 @@ class Simulator:
         Set quantum state for this simulation.
 
         Args:
-            vec (numpy.ndarray): the quantum state that you want.
+            quantum_state (numpy.ndarray): the quantum state that you want.
 
         Examples:
             >>> from mindquantum import Simulator
@@ -448,11 +444,11 @@ class Simulator:
                 :math:`U_r`. Default: None.
             encoder_params_name (list[str]): To specific which parameters belongs to encoder,
                 that will encoder the input data into quantum state. The encoder data
-                can be a batch.
+                can be a batch. Default: None.
             ansatz_params_name (list[str]): To specific which parameters belongs to ansatz,
-                that will be trained during training.
+                that will be trained during training. Default: None.
             parallel_worker (int): The parallel worker numbers. The parallel workers can handle
-                batch in parallel threads.
+                batch in parallel threads. Default: None.
 
         Returns:
             GradOpsWrapper, a grad ops wrapper than contains information to generate this grad ops.
@@ -472,35 +468,31 @@ class Simulator:
         if isinstance(hams, Hamiltonian):
             hams = [hams]
         elif not isinstance(hams, list):
-            raise ValueError(f"hams requires a Hamiltonian or a list of Hamiltonian, but get {type(hams)}")
+            raise TypeError(f"hams requires a Hamiltonian or a list of Hamiltonian, but get {type(hams)}")
         for h_tmp in hams:
-            if not isinstance(h_tmp, Hamiltonian):
-                raise TypeError(f"hams's element should be a Hamiltonian, but get {type(h_tmp)}")
+            _check_input_type("hams's element", Hamiltonian, h_tmp)
             _check_hamiltonian_qubits_number(h_tmp, self.n_qubits)
-        if not isinstance(circ_right, Circuit):
-            raise ValueError(f"Quantum circuit need a Circuit, but get {type(circ_right)}")
-        if circ_left is not None and not isinstance(circ_left, Circuit):
-            raise ValueError(f"Quantum circuit need a Circuit, but get {type(circ_left)}")
+        _check_input_type("circuit_right", Circuit, circ_right)
+        if circ_left is not None:
+            _check_input_type("circuit_left", Circuit, circ_left)
         if circ_left is None:
             circ_left = Circuit()
         if circ_left.has_measure_gate or circ_right.has_measure_gate:
             raise ValueError("circuit for variational algorithm cannot have measure gate")
-        if parallel_worker is not None and not isinstance(parallel_worker, int):
-            raise ValueError(f"parallel_worker need a integer, but get {type(parallel_worker)}")
+        if parallel_worker is not None:
+            _check_int_type("parallel_worker", parallel_worker)
         if encoder_params_name is None and ansatz_params_name is None:
             encoder_params_name = []
             ansatz_params_name = [i for i in circ_right.params_name]
             for i in circ_left.params_name:
                 if i not in ansatz_params_name:
                     ansatz_params_name.append(i)
-        if encoder_params_name is not None and not isinstance(encoder_params_name, list):
-            raise ValueError(f"encoder_params_name requires a list of str, but get {type(encoder_params_name)}")
-        if ansatz_params_name is not None and not isinstance(ansatz_params_name, list):
-            raise ValueError(f"ansatz_params_name requires a list of str, but get {type(ansatz_params_name)}")
         if encoder_params_name is None:
             encoder_params_name = []
         if ansatz_params_name is None:
             ansatz_params_name = []
+        _check_input_type("encoder_params_name", list, encoder_params_name)
+        _check_input_type("ansatz_params_name", list, ansatz_params_name)
         s1 = set(circ_right.params_name) | set(circ_left.params_name)
         s2 = set(encoder_params_name) | set(ansatz_params_name)
         if s1 - s2 or s2 - s1:
@@ -576,7 +568,7 @@ def _check_encoder(data, encoder_params_size):
         raise ValueError("encoder data requires a two dimension numpy array")
     if data_shape[1] != encoder_params_size:
         raise ValueError(f"encoder parameters size do not match with encoder parameters name,\
-need {encoder_params_size} but get {data_shape[1]}.")
+need {encoder_params_size} but get {data_shape[1]}."                                                    )
 
 
 def _check_ansatz(data, ansatz_params_size):
@@ -588,7 +580,7 @@ def _check_ansatz(data, ansatz_params_size):
         raise ValueError("ansatz data requires a one dimension numpy array")
     if data_shape[0] != ansatz_params_size:
         raise ValueError(f"ansatz parameters size do not match with ansatz parameters name,\
-need {ansatz_params_size} but get {data_shape[0]}")
+need {ansatz_params_size} but get {data_shape[0]}"                                                  )
 
 
 def _thread_balance(n_prs, n_meas, parallel_worker):
@@ -613,7 +605,7 @@ def _check_hamiltonian_qubits_number(hamiltonian, sim_qubits):
     if hamiltonian.how_to != MODE['origin']:
         if hamiltonian.n_qubits != sim_qubits:
             raise ValueError(f"Hamiltonian qubits is {hamiltonian.n_qubits}, not match \
-with simulator qubits number {sim_qubits}")
+with simulator qubits number {sim_qubits}"                                          )
     else:
         if hamiltonian.n_qubits > sim_qubits:
             raise ValueError(f"Hamiltonian qubits is {hamiltonian.n_qubits}, which is bigger than simulator qubits.")
