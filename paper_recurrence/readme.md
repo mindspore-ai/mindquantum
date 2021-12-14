@@ -16,8 +16,7 @@
 
 ## 可选论文
 
-1. xxx
-2. xxx
+[https://competition.huaweicloud.com/information/1000041627/circumstance](https://competition.huaweicloud.com/information/1000041627/circumstance)
 
 ## 代码要求
 
