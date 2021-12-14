@@ -66,7 +66,7 @@
 
     ![](media/463fc9fbab2cb7edcede6925856b1d05.png)
 
-    注意：本次大赛给每位参赛者发放相同额度的云资源券，由于8U32GB费用较高，使用时间相应减少，优先使用默认配置2U8GB资源。
+    注意：本次大赛给每位参赛者发放相同额度的云资源券，由于8核32GB费用较高，使用时间相应减少，优先使用默认配置2核8GB资源。
 
 ## 保存Notebook里的镜像
    
@@ -78,7 +78,7 @@
 
    1.  如未保存镜像，实例重新后需要重新安装MindQuantum最新安装包（参考本文**安装mindquantum-master包**）。
 
-   2.  如果没有看到“保存镜像”按钮，请邮件反馈（[hiqinfo1@huawei.com](mailto:hiqinfo1@huawei.com)）问题，邮件需要注明华为云账号和ID（[点击此处](https://console.huaweicloud.com/iam/?region=cn-north-1&locale=zh-cn#/mine/apiCredential)查看华为云账号信息）。
+   2.  如果没有看到“保存镜像”按钮，请邮件反馈（[hiqinfo1@huawei.com](mailto:hiqinfo1@huawei.com)）问题，邮件需要注明华为云账号信息，包括IAM用户名/账号名/IAM用户ID/账号ID（[点击此处](https://console.huaweicloud.com/iam/?region=cn-north-1&locale=zh-cn#/mine/apiCredential)查看华为云账号信息）。
 
 # Jupyter Notebook开发准备
 
@@ -201,7 +201,7 @@ paperid_username_for_example readme.md
 
 sh-4.4\$**cp -r paperid_username_for_example/ 1_xxx**
 
-（举例：1为论文序号，xxx为华为云账号昵称）
+（举例：1为论文序号，xxx为华为云账号名）
 
 点击刷新图标，就可以在左侧目录看到新建的个人文件夹。
 
