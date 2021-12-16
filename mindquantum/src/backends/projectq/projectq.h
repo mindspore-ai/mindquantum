@@ -153,8 +153,11 @@ class Projectq : public Simulator {
                           const MST<size_t> &key_map, unsigned seed) {
         auto key_size = key_map.size();
         VT<unsigned> res(shots * key_size);
+        RndEngine rnd_eng = RndEngine(seed);
+        std::uniform_real_distribution<double> dist(1.0, (1 << 20) * 1.0);
+        std::function<double()> rng = std::bind(dist, std::ref(rnd_eng));
         for (size_t i = 0; i < shots; i++) {
-            Projectq<T> sim = Projectq<T>(seed + i, n_qubits_, vec_);
+            Projectq<T> sim = Projectq<T>(static_cast<unsigned>(rng()), n_qubits_, vec_);
             auto res0 = sim.ApplyCircuitWithMeasure(circ, pr, key_map);
             for (size_t j = 0; j < key_size; j++) {
                 res[i * key_size + j] = res0[j];
