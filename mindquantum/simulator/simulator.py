@@ -284,7 +284,7 @@ class Simulator:
             if pr is None:
                 raise ValueError("Sampling a parameterized circuit need a ParameterResolver")
             if not isinstance(pr, (dict, ParameterResolver)):
-                raise TypeError("pr require a dict or a ParameterResolver, but get {}!".format(type(pr)))
+                raise TypeError("pr requires a dict or a ParameterResolver, but get {}!".format(type(pr)))
             pr = ParameterResolver(pr)
         else:
             pr = ParameterResolver()
@@ -422,6 +422,7 @@ class Simulator:
                                   hams,
                                   circ_right,
                                   circ_left=None,
+                                  simulator_left=None,
                                   encoder_params_name=None,
                                   ansatz_params_name=None,
                                   parallel_worker=None):
@@ -431,10 +432,11 @@ class Simulator:
 
         .. math::
 
-            E = \left<\psi\right|U_l^\dagger H U_r \left|\psi\right>
+            E = \left<\varphi\right|U_l^\dagger H U_r \left|\psi\right>
 
         where :math:`U_l` is circ_left, :math:`U_r` is circ_right, :math:`H` is hams
-        and :math:`\left|\psi\right>` is the current quantum state of this simulator.
+        and :math:`\left|\psi\right>` is the current quantum state of this simulator,
+        and :math:`\left|\varphi\right>` is the quantum state of `simulator_left`.
 
         Args:
             hams (Hamiltonian): The hamiltonian that need to get expectation.
@@ -442,6 +444,9 @@ class Simulator:
             circ_left (Circuit): The :math:`U_l` circuit described above. By default, this circuit
                 will be none, and in this situation, :math:`U_l` will be equals to
                 :math:`U_r`. Default: None.
+            simulator_left (Simulator): The simulator that contains :math:`\left|\varphi\right>`. If
+                None, then :math:`\left|\varphi\right>` is assumed to be equals to :math:`\left|\psi\right>`.
+                Default: None.
             encoder_params_name (list[str]): To specific which parameters belongs to encoder,
                 that will encoder the input data into quantum state. The encoder data
                 can be a batch. Default: None.
@@ -464,6 +469,16 @@ class Simulator:
             >>> grad_ops = sim.get_expectation_with_grad(ham, circ)
             >>> grad_ops(np.array([1.0]))
             (array([[0.54030231+0.j]]), array([[[-0.84147098+0.j]]]))
+            >>> sim1 = Simulator('projectq', 1)
+            >>> prep_circ = Circuit().h(0)
+            >>> ansatz = Circuit().ry('a', 0).rz('b', 0).ry('c', 0)
+            >>> sim1.apply_circuit(prep_circ)
+            >>> sim2 = Simulator('projectq', 1)
+            >>> ham = Hamiltonian(QubitOperator(""))
+            >>> grad_ops = sim2.get_expectation_with_grad(ham, ansatz, Circuit(), simulator_left=sim1)
+            >>> f, g = grad_ops(np.array([7.902762e-01, 2.139225e-04, 7.795934e-01]))
+            >>> f
+            array([[0.99999989-7.52279618e-05j]])
         """
         if isinstance(hams, Hamiltonian):
             hams = [hams]
@@ -472,11 +487,24 @@ class Simulator:
         for h_tmp in hams:
             _check_input_type("hams's element", Hamiltonian, h_tmp)
             _check_hamiltonian_qubits_number(h_tmp, self.n_qubits)
-        _check_input_type("circuit_right", Circuit, circ_right)
+        _check_input_type("circ_right", Circuit, circ_right)
+        non_hermitian = False
         if circ_left is not None:
-            _check_input_type("circuit_left", Circuit, circ_left)
+            _check_input_type("circ_left", Circuit, circ_left)
+            non_hermitian = True
+        if simulator_left is not None:
+            _check_input_type("simulator_left", Simulator, simulator_left)
+            if self.backend != simulator_left.backend:
+                raise ValueError(f"simulator_left should have the same backend as this simulator, \
+which is {self.backend}, but get {simulator_left.backend}")
+            if self.n_qubits != simulator_left.n_qubits:
+                raise ValueError(f"simulator_left should have the same n_qubits as this simulator, \
+which is {self.n_qubits}, but get {simulator_left.n_qubits}")
+            non_hermitian = True
+        if non_hermitian and simulator_left is None:
+            simulator_left = self
         if circ_left is None:
-            circ_left = Circuit()
+            circ_left = circ_right
         if circ_left.has_measure_gate or circ_right.has_measure_gate:
             raise ValueError("circuit for variational algorithm cannot have measure gate")
         if parallel_worker is not None:
@@ -527,15 +555,15 @@ class Simulator:
                 batch_threads, mea_threads = _thread_balance(1, len(hams), parallel_worker)
                 inputs0 = np.array([[]])
                 inputs1 = inputs[0]
-            if circ_left:
+            if non_hermitian:
                 f_g1_g2 = self.sim.non_hermitian_measure_with_grad([i.get_cpp_obj() for i in hams],
                                                                    [i.get_cpp_obj(hermitian=True) for i in hams],
-                                                                   circ_right.get_cpp_obj(),
-                                                                   circ_right.get_cpp_obj(hermitian=True),
                                                                    circ_left.get_cpp_obj(),
-                                                                   circ_left.get_cpp_obj(hermitian=True), inputs0,
+                                                                   circ_left.get_cpp_obj(hermitian=True),
+                                                                   circ_right.get_cpp_obj(),
+                                                                   circ_right.get_cpp_obj(hermitian=True), inputs0,
                                                                    inputs1, encoder_params_name, ansatz_params_name,
-                                                                   batch_threads, mea_threads)
+                                                                   batch_threads, mea_threads, simulator_left.sim)
             else:
                 f_g1_g2 = self.sim.hermitian_measure_with_grad([i.get_cpp_obj()
                                                                 for i in hams], circ_right.get_cpp_obj(),
@@ -568,7 +596,7 @@ def _check_encoder(data, encoder_params_size):
         raise ValueError("encoder data requires a two dimension numpy array")
     if data_shape[1] != encoder_params_size:
         raise ValueError(f"encoder parameters size do not match with encoder parameters name,\
-need {encoder_params_size} but get {data_shape[1]}."                                                    )
+need {encoder_params_size} but get {data_shape[1]}.")
 
 
 def _check_ansatz(data, ansatz_params_size):
@@ -580,7 +608,7 @@ def _check_ansatz(data, ansatz_params_size):
         raise ValueError("ansatz data requires a one dimension numpy array")
     if data_shape[0] != ansatz_params_size:
         raise ValueError(f"ansatz parameters size do not match with ansatz parameters name,\
-need {ansatz_params_size} but get {data_shape[0]}"                                                  )
+need {ansatz_params_size} but get {data_shape[0]}")
 
 
 def _thread_balance(n_prs, n_meas, parallel_worker):
@@ -605,7 +633,7 @@ def _check_hamiltonian_qubits_number(hamiltonian, sim_qubits):
     if hamiltonian.how_to != MODE['origin']:
         if hamiltonian.n_qubits != sim_qubits:
             raise ValueError(f"Hamiltonian qubits is {hamiltonian.n_qubits}, not match \
-with simulator qubits number {sim_qubits}"                                          )
+with simulator qubits number {sim_qubits}")
     else:
         if hamiltonian.n_qubits > sim_qubits:
             raise ValueError(f"Hamiltonian qubits is {hamiltonian.n_qubits}, which is bigger than simulator qubits.")

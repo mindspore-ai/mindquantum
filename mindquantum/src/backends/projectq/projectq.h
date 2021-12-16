@@ -357,7 +357,7 @@ class Projectq : public Simulator {
                                               const VT<BasicGate<T>> &left_circ, const VT<BasicGate<T>> &herm_left_circ,
                                               const VT<BasicGate<T>> &right_circ,
                                               const VT<BasicGate<T>> &herm_right_circ, const ParameterResolver<T> &pr,
-                                              const MST<size_t> &p_map, size_t mea_threads) {
+                                              const MST<size_t> &p_map, size_t mea_threads, const StateVector varphi) {
         auto n_hams = hams.size();
         auto n_params = pr.data_.size();
         VT<VT<CT<T>>> output;
@@ -369,7 +369,7 @@ class Projectq : public Simulator {
         }
         Projectq<T> sim = Projectq<T>(1, n_qubits_, vec_);
         sim.ApplyCircuit(right_circ, pr);
-        Projectq<T> sim2 = Projectq<T>(1, n_qubits_, vec_);
+        Projectq<T> sim2 = Projectq<T>(1, n_qubits_, varphi);
         sim2.ApplyCircuit(left_circ, pr);
         if (n_hams == 1) {
             auto f_g1 = sim2.RightSizeGrad(sim.vec_, sim2.vec_, herm_hams[0], left_circ, herm_left_circ, pr, p_map);
@@ -411,13 +411,12 @@ class Projectq : public Simulator {
         return output;
     }
 
-    VT<VT<VT<CT<T>>>> NonHermitianMeasureWithGrad(const VT<Hamiltonian<T>> &hams, const VT<Hamiltonian<T>> &herm_hams,
-                                                  const VT<BasicGate<T>> &left_circ,
-                                                  const VT<BasicGate<T>> &herm_left_circ,
-                                                  const VT<BasicGate<T>> &right_circ,
-                                                  const VT<BasicGate<T>> &herm_right_circ, const VVT<T> &enc_data,
-                                                  const VT<T> &ans_data, const VS &enc_name, const VS &ans_name,
-                                                  size_t batch_threads, size_t mea_threads) {
+    VT<VT<VT<CT<T>>>> NonHermitianMeasureWithGrad(
+        const VT<Hamiltonian<T>> &hams, const VT<Hamiltonian<T>> &herm_hams, const VT<BasicGate<T>> &left_circ,
+        const VT<BasicGate<T>> &herm_left_circ, const VT<BasicGate<T>> &right_circ,
+        const VT<BasicGate<T>> &herm_right_circ, const VVT<T> &enc_data, const VT<T> &ans_data, const VS &enc_name,
+        const VS &ans_name, size_t batch_threads, size_t mea_threads, const Projectq<T> &simulator_left) {
+        StateVector varphi = simulator_left.vec_;
         auto n_hams = hams.size();
         auto n_prs = enc_data.size();
         auto n_params = enc_name.size() + ans_name.size();
@@ -443,7 +442,7 @@ class Projectq : public Simulator {
             pr.SetData(enc_data[0], enc_name);
             pr.SetData(ans_data, ans_name);
             output[0] = NonHermitianMeasureWithGrad(hams, herm_hams, left_circ, herm_left_circ, right_circ,
-                                                    herm_right_circ, pr, p_map, mea_threads);
+                                                    herm_right_circ, pr, p_map, mea_threads, varphi);
         } else {
             std::vector<std::thread> tasks;
             tasks.reserve(batch_threads);
@@ -462,7 +461,7 @@ class Projectq : public Simulator {
                         pr.SetData(enc_data[n], enc_name);
                         pr.SetData(ans_data, ans_name);
                         auto f_g = NonHermitianMeasureWithGrad(hams, herm_hams, left_circ, herm_left_circ, right_circ,
-                                                               herm_right_circ, pr, p_map, mea_threads);
+                                                               herm_right_circ, pr, p_map, mea_threads, varphi);
                         output[n] = f_g;
                     }
                 };
@@ -475,11 +474,24 @@ class Projectq : public Simulator {
         return output;
     }
 
-    void PrintInfo() {
+    void PrintInfo() const {
         std::cout << n_qubits_ << " qubits simulator with currently quantum state at:" << std::endl;
         for (unsigned i = 0; i < (len_ >> 1); i++) {
             std::cout << "(" << vec_[2 * i] << ", " << vec_[2 * i + 1] << ")" << std::endl;
         }
+    }
+
+    VVT<CT<calc_type>> GetCircuitMatrix(const VT<BasicGate<T>> &circ, const ParameterResolver<T> &pr) {
+        VVT<CT<calc_type>> out((1 << n_qubits_));
+#pragma omp parallel for schedule(static)
+        for (size_t i = 0; i < (1UL << n_qubits_); i++) {
+            Projectq<T> sim = Projectq<T>(0, n_qubits_);
+            sim.vec_[0] = 0;
+            sim.vec_[2 * i] = 1;
+            sim.ApplyCircuit(circ, pr);
+            out[i] = sim.cheat();
+        }
+        return out;
     }
 };
 }  // namespace projectq

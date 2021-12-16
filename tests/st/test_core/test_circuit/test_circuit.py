@@ -40,6 +40,17 @@ def test_circuit_qubits_grad():
     assert len(circuit3.parameter_resolver()) == 1
 
 
+def test_get_matrix():
+    """
+    test
+    Description:
+    Expectation:
+    """
+    circ = Circuit().ry('a', 0).rz('b', 0).ry('c', 0)
+    m = circ.matrix(np.array([7.902762e-01, 2.139225e-04, 7.795934e-01]))
+    assert np.allclose(m[0, 0], 0.70743435 - 1.06959724e-04j)
+
+
 def test_circuit_apply():
     """
     Description: Test apply value to parameterized circuit

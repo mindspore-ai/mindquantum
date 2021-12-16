@@ -23,9 +23,11 @@ from rich.console import Console
 import mindquantum.core.gates as G
 from mindquantum.core.gates.basic import _check_gate_type
 from mindquantum.core.parameterresolver import ParameterResolver as PR
+from mindquantum.core.parameterresolver.parameterresolver import ParameterResolver
 from mindquantum.io import bprint
 from mindquantum.io.display import brick_model
 from mindquantum.utils.type_value_check import _check_input_type
+from mindquantum.utils.type_value_check import _check_and_generate_pr_type
 from .utils import apply
 
 GateSeq = List[G.BasicGate]
@@ -492,6 +494,30 @@ class Circuit(list):
             ['a', 'b']
         """
         return list(self.all_paras.keys())
+
+    def matrix(self, pr=None, backend='projectq'):
+        """
+        Get the matrix of this circuit.
+
+        Examples:
+            >>> from mindquantum.core import Circuit
+            >>> circuit = Circuit().rx('a',0).h(0)
+            >>> circuit.matrix({'a': 1.0})
+            array([[ 0.62054458-0.33900505j,  0.62054458-0.33900505j],
+                [ 0.62054458+0.33900505j, -0.62054458-0.33900505j]])
+
+        Returns:
+            numpy.ndarray, two dimensional complex matrix of this circuit.
+        """
+        if pr is None:
+            pr = ParameterResolver()
+        pr = _check_and_generate_pr_type(pr, self.params_name)
+        if self.has_measure_gate:
+            raise ValueError("This circuit cannot have measurement gate.")
+        from mindquantum.simulator import Simulator
+        sim = Simulator(backend, self.n_qubits)
+        m = np.array(sim.sim.get_circuit_matrix(self.get_cpp_obj(), pr.get_cpp_obj())).T
+        return m
 
     def apply_value(self, pr):
         """
