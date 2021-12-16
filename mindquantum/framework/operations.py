@@ -122,9 +122,9 @@ class MQN2Ops(nn.Cell):
     on a quantum state evaluated by a parameterized quantum circuit (PQC). This PQC should contains
     a encoder circuit and an ansatz circuit. This ops is `PYNATIVE_MODE` supported only.
 
-    .. math:
+    .. math::
 
-        O = |\left<0\right| U^\dagger_l H U_r\left|0\right>|^2
+        O = \left|\left<varphi\right| U^\dagger_l H U_r\left|\psi\right>\right|^2
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and

@@ -106,9 +106,9 @@ def _test_non_hermitian_grad_ops(virtual_qc):
     f, g = grad_ops(np.array([1.2, 2.3]))
     f = f[0, 0]
     g = g[0, 0]
-    f_exp = np.exp(-1j * 2.3 / 2) * np.cos(1.2 / 2)
-    g1 = -0.5 * np.exp(-1j * 2.3 / 2) * np.sin(1.2 / 2)
-    g2 = -1j / 2 * np.exp(-1j * 2.3 / 2) * np.cos(1.2 / 2)
+    f_exp = np.exp(1j * 2.3 / 2) * np.cos(1.2 / 2)
+    g1 = -0.5 * np.exp(1j * 2.3 / 2) * np.sin(1.2 / 2)
+    g2 = 1j / 2 * np.exp(1j * 2.3 / 2) * np.cos(1.2 / 2)
     assert np.allclose(f, f_exp)
     assert np.allclose(g, np.array([g1, g2]))
 
@@ -205,6 +205,23 @@ def _test_optimization_with_custom_gate(virtual_qc):
     assert np.allclose(train1().asnumpy(), train2().asnumpy())
 
 
+def _test_fid():
+    """
+    test
+    Description:
+    Expectation:
+    """
+    sim1 = Simulator('projectq', 1)
+    prep_circ = Circuit().h(0)
+    ansatz = Circuit().ry('a', 0).rz('b', 0).ry('c', 0)
+    sim1.apply_circuit(prep_circ)
+    sim2 = Simulator('projectq', 1)
+    ham = Hamiltonian(QubitOperator(""))
+    grad_ops = sim2.get_expectation_with_grad(ham, ansatz, Circuit(), simulator_left=sim1)
+    f, _ = grad_ops(np.array([7.902762e-01, 2.139225e-04, 7.795934e-01]))
+    assert np.allclose(np.abs(f), np.array([1]))
+
+
 def test_virtual_quantum_computer():
     """
     test virtual quantum computer
@@ -220,3 +237,4 @@ def test_virtual_quantum_computer():
         _test_non_hermitian_grad_ops(virtual_qc)
         _test_all_gate_with_simulator(virtual_qc)
         _test_optimization_with_custom_gate(virtual_qc)
+        _test_fid()

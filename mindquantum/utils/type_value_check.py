@@ -59,6 +59,8 @@ def _check_and_generate_pr_type(pr, names=None):
     _check_input_type('parameter', (ParameterResolver, np.ndarray, list, dict), pr)
     if isinstance(pr, dict):
         pr = ParameterResolver(pr)
+        if len(pr) != len(names):
+            raise ValueError(f"given parameter value size ({len(pr)}) not match with parameter size ({len(names)})")
     elif isinstance(pr, (np.ndarray, list)):
         pr = np.array(pr)
         if len(pr) != len(names) or len(pr.shape) != 1:
