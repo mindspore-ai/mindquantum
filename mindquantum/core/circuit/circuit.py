@@ -495,9 +495,15 @@ class Circuit(list):
         """
         return list(self.all_paras.keys())
 
-    def matrix(self, pr=None, backend='projectq'):
+    def matrix(self, pr=None, big_end=False, backend='projectq'):
         """
         Get the matrix of this circuit.
+
+        Args:
+            pr (ParameterResolver, dict, numpy.ndarray, list, numbers.Number): The parameter
+                resolver for parameterized quantum circuit. Default: None.
+            big_end (bool): The low index qubit is place in the end or not. Default: False.
+            backend (str): The backend to do simulation. Default: 'projectq'.
 
         Examples:
             >>> from mindquantum.core import Circuit
@@ -509,6 +515,11 @@ class Circuit(list):
         Returns:
             numpy.ndarray, two dimensional complex matrix of this circuit.
         """
+        _check_input_type('big_end', bool, big_end)
+        if big_end:
+            circ = apply(self, list(range(self.n_qubits))[::-1])
+        else:
+            circ = self
         if pr is None:
             pr = ParameterResolver()
         pr = _check_and_generate_pr_type(pr, self.params_name)
@@ -516,7 +527,7 @@ class Circuit(list):
             raise ValueError("This circuit cannot have measurement gate.")
         from mindquantum.simulator import Simulator
         sim = Simulator(backend, self.n_qubits)
-        m = np.array(sim.sim.get_circuit_matrix(self.get_cpp_obj(), pr.get_cpp_obj())).T
+        m = np.array(sim.sim.get_circuit_matrix(circ.get_cpp_obj(), pr.get_cpp_obj())).T
         return m
 
     def apply_value(self, pr):
