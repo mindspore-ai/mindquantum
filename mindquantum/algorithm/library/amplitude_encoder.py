@@ -1,38 +1,22 @@
 # -*- coding: utf-8 -*-
-
 # Copyright 2021 Huawei Technologies Co., Ltd
-
 #
-
 # Licensed under the Apache License, Version 2.0 (the "License");
-
 # you may not use this file except in compliance with the License.
-
 # You may obtain a copy of the License at
-
 #
-
 # http://www.apache.org/licenses/LICENSE-2.0
-
 #
-
 # Unless required by applicable law or agreed to in writing, software
-
 # distributed under the License is distributed on an "AS IS" BASIS,
-
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-
 # See the License for the specific language governing permissions and
-
 # limitations under the License.
-
 # ============================================================================
-
 '''Amplitude encoder for quantum machine learning'''
 
 import math
-from mindquantum.core.circuit import Circuit
-from mindquantum.core.parameterresolver import ParameterResolver
+from mindquantum.core import Circuit, ParameterResolver, X, RY
 
 def controlled_gate(circuit, gate, tqubit, cqubits, zero_qubit):
     '''
@@ -63,16 +47,16 @@ def amplitude_encoder(x):
         x (list[double]): the vector of data you want to encode, which should be normalized
 
     Examples:
-        >>>from mindquantum.algorithm.library import amplitude_encoder
-        >>>from mindquantum.simulator import Simulator
-        >>>sim = Simulator('projectq', 8)
-        >>>encoder, parameterResolver = amplitude_encoder([0.5, 0.5, 0.5, 0.5])
-        >>>sim.apply_circuit(encoder, parameterResolver)
-        >>>print(sim.get_qs(True))
+        >>> from mindquantum.algorithm.library import amplitude_encoder
+        >>> from mindquantum.simulator import Simulator
+        >>> sim = Simulator('projectq', 8)
+        >>> encoder, parameterResolver = amplitude_encoder([0.5, 0.5, 0.5, 0.5])
+        >>> sim.apply_circuit(encoder, parameterResolver)
+        >>> print(sim.get_qs(True))
         1/4¦00000000⟩
-        1/4¦10000000⟩
-        1/4¦01000000⟩
-        1/4¦11000000⟩
+        1/4¦00000001⟩
+        1/4¦00000010⟩
+        1/4¦00000011⟩
     '''
     while 2 ** int(math.log2(len(x))) != len(x):
         x.append(0)
