@@ -31,8 +31,8 @@
 '''Amplitude encoder for quantum machine learning'''
 
 import math
-from mindquantum.core import Circuit
-from mindquantum import ParameterResolver
+from mindquantum.core.circuit import Circuit
+from mindquantum.core.parameterresolver import ParameterResolver
 
 def controlled_gate(circuit, gate, tqubit, cqubits, zero_qubit):
     '''
