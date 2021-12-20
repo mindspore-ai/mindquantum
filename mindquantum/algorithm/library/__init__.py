@@ -16,7 +16,8 @@
 """Circuit library"""
 
 from .quantum_fourier import qft
+from .amplitude_encoder import amplitude_encoder
 
-__all__ = ['qft']
+__all__ = ['qft', 'amplitude_encoder']
 
 __all__.sort()
