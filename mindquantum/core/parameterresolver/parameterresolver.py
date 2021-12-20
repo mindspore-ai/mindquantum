@@ -34,7 +34,7 @@ class ParameterResolver(dict):
         data (dict): initial parameter names and its values. Default: None.
 
     Examples:
-        >>> from mindquantum import ParameterResolver
+        >>> from mindquantum.core import ParameterResolver
         >>> pr = ParameterResolver({'a': 0.3})
         >>> pr['b'] = 0.5
         >>> pr.no_grad_part('a')
