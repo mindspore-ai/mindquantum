@@ -27,6 +27,9 @@
 # limitations under the License.
 
 # ============================================================================
+
+'''Amplitude encoder for quantum machine learning'''
+
 import math
 from mindquantum.core import Circuit
 from mindquantum import ParameterResolver
