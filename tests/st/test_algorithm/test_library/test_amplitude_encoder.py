@@ -18,7 +18,11 @@ from mindquantum.algorithm import amplitude_encoder
 from mindquantum.simulator import Simulator
 
 def test_amplitude_encoder():
-    '''test for amplitude encoder'''
+    '''
+    Feature: amplitude_encoder
+    Description:
+    Expectation:
+    '''
     sim = Simulator('projectq', 3)
     circuit, params = amplitude_encoder([0.5, 0.5, 0.5, 0.5], 3)
     sim.apply_circuit(circuit, params)
