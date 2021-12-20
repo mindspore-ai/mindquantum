@@ -37,7 +37,7 @@ def controlled_gate(circuit, gate, tqubit, cqubits, zero_qubit):
         if cqubits[i] < 0 or (cqubits[i] == 0 and zero_qubit == 0):
             circuit += X.on(abs(cqubits[i]))
 
-def amplitude_encoder(x):
+def amplitude_encoder(x, n_qubits):
     '''
     Quantum circuit for amplitude encoding
 
@@ -47,21 +47,30 @@ def amplitude_encoder(x):
 
     Args:
         x (list[double] or numpy.array(list[double]): the vector of data you want to encode, which should be normalized
+        n_qubits (int): the number of qubits of the encoder circuit
 
     Examples:
         >>> from mindquantum.algorithm.library import amplitude_encoder
         >>> from mindquantum.simulator import Simulator
         >>> sim = Simulator('projectq', 8)
-        >>> encoder, parameterResolver = amplitude_encoder([0.5, 0.5, 0.5, 0.5])
+        >>> encoder, parameterResolver = amplitude_encoder([0.5, 0.5, 0.5, 0.5], 8)
         >>> sim.apply_circuit(encoder, parameterResolver)
         >>> print(sim.get_qs(True))
         1/4¦00000000⟩
-        1/4¦00000001⟩
-        1/4¦00000010⟩
-        1/4¦00000011⟩
+        1/4¦01000000⟩
+        1/4¦10000000⟩
+        1/4¦11000000⟩
+        >>> sim.reset()
+        >>> encoder, parameterResolver = amplitude_encoder([0, 0, 0.5, 0.5, 0.5, 0.5], 8)
+        >>> sim.apply_circuit(encoder, parameterResolver)
+        >>> print(sim.get_qs(True))
+        1/4¦00100000⟩
+        1/4¦01000000⟩
+        1/4¦10100000⟩
+        1/4¦11000000⟩
     '''
     _check_input_type('amplitude_encoder', (np.ndarray, list), x)
-    while 2 ** int(math.log2(len(x))) != len(x):
+    while 2 ** n_qubits != len(x):
         x.append(0)
 
     c = Circuit()
