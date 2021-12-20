@@ -56,18 +56,18 @@ def amplitude_encoder(x, n_qubits):
         >>> encoder, parameterResolver = amplitude_encoder([0.5, 0.5, 0.5, 0.5], 8)
         >>> sim.apply_circuit(encoder, parameterResolver)
         >>> print(sim.get_qs(True))
-        1/4¦00000000⟩
-        1/4¦01000000⟩
-        1/4¦10000000⟩
-        1/4¦11000000⟩
+        1/2¦00000000⟩
+        1/2¦01000000⟩
+        1/2¦10000000⟩
+        1/2¦11000000⟩
         >>> sim.reset()
         >>> encoder, parameterResolver = amplitude_encoder([0, 0, 0.5, 0.5, 0.5, 0.5], 8)
         >>> sim.apply_circuit(encoder, parameterResolver)
         >>> print(sim.get_qs(True))
-        1/4¦00100000⟩
-        1/4¦01000000⟩
-        1/4¦10100000⟩
-        1/4¦11000000⟩
+        1/2¦00100000⟩
+        1/2¦01000000⟩
+        1/2¦10100000⟩
+        1/2¦11000000⟩
     '''
     _check_input_type('amplitude_encoder', (np.ndarray, list), x)
     while 2 ** n_qubits != len(x):
