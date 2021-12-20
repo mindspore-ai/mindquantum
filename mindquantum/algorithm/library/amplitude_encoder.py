@@ -16,6 +16,8 @@
 '''Amplitude encoder for quantum machine learning'''
 
 import math
+import numpy as np
+from mindquantum.utils.type_value_check import _check_input_type
 from mindquantum.core import Circuit, ParameterResolver, X, RY
 
 def controlled_gate(circuit, gate, tqubit, cqubits, zero_qubit):
@@ -44,7 +46,7 @@ def amplitude_encoder(x):
         the vector should be normalized
 
     Args:
-        x (list[double]): the vector of data you want to encode, which should be normalized
+        x (list[double] or numpy.array(list[double]): the vector of data you want to encode, which should be normalized
 
     Examples:
         >>> from mindquantum.algorithm.library import amplitude_encoder
@@ -58,6 +60,7 @@ def amplitude_encoder(x):
         1/4¦00000010⟩
         1/4¦00000011⟩
     '''
+    _check_input_type('amplitude_encoder', (np.ndarray, list), x)
     while 2 ** int(math.log2(len(x))) != len(x):
         x.append(0)
 
