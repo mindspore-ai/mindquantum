@@ -34,6 +34,7 @@ from mindspore.train.callback import Callback
 from mindquantum.core import Circuit, X, Z, H, XX, ZZ, Hamiltonian, RX, QubitOperator
 from mindquantum.framework import MQLayer
 from mindquantum.simulator import Simulator
+
 ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 
 
@@ -55,8 +56,7 @@ class FPSMonitor(Callback):
         run_context.original_args()
         if self.times.size > 0:
             self.times[-1] = time.time() - self.times[-1]
-            print("\rAverage: {:.6}ms/step".format(self.times.mean() * 1000),
-                  end="")
+            print("\rAverage: {:.6}ms/step".format(self.times.mean() * 1000), end="")
 
 
 class Hinge(nn.MSELoss):
@@ -142,8 +142,7 @@ def binary_encoder(image, n_qubits=None):
     return values[:n_qubits] * np.pi
 
 
-def generate_dataset(data_file_path, n_qubits, sampling_num, batch_num,
-                     eval_size_num):
+def generate_dataset(data_file_path, n_qubits, sampling_num, batch_num, eval_size_num):
     """
     Generate train and test dataset.
 
@@ -151,31 +150,24 @@ def generate_dataset(data_file_path, n_qubits, sampling_num, batch_num,
         Dataset
     """
     data = np.load(data_file_path)
-    x_train_bin, y_train_nocon, x_test_bin, y_test_nocon = data['arr_0'], data[
-        'arr_1'], data['arr_2'], data['arr_3']
-    x_train_encoder = np.array([
-        binary_encoder(x, n_qubits - 1) for x in x_train_bin
-    ]).astype(np.float32)
-    x_test_encoder = np.array([
-        binary_encoder(x, n_qubits - 1) for x in x_test_bin
-    ]).astype(np.float32)
+    x_train_bin, y_train_nocon, x_test_bin, y_test_nocon = data['arr_0'], data['arr_1'], data['arr_2'], data['arr_3']
+    x_train_encoder = np.array([binary_encoder(x, n_qubits - 1) for x in x_train_bin]).astype(np.float32)
+    x_test_encoder = np.array([binary_encoder(x, n_qubits - 1) for x in x_test_bin]).astype(np.float32)
     y_train_nocon = np.array(y_train_nocon).astype(np.int32)[:, None]
     y_test_nocon = np.array(y_test_nocon).astype(np.int32)[:, None]
     y_train_nocon = y_train_nocon * 2 - 1
     y_test_nocon = y_test_nocon * 2 - 1
-    train = ds.NumpySlicesDataset(
-        {
-            "image": x_train_encoder[:sampling_num],
-            "label": y_train_nocon[:sampling_num]
-        },
-        shuffle=False).batch(batch_num)
+    train = ds.NumpySlicesDataset({
+        "image": x_train_encoder[:sampling_num],
+        "label": y_train_nocon[:sampling_num]
+    },
+                                  shuffle=False).batch(batch_num)
 
-    test = ds.NumpySlicesDataset(
-        {
-            "image": x_test_encoder[:eval_size_num],
-            "label": y_test_nocon[:eval_size_num]
-        },
-        shuffle=False).batch(eval_size_num)
+    test = ds.NumpySlicesDataset({
+        "image": x_test_encoder[:eval_size_num],
+        "label": y_test_nocon[:eval_size_num]
+    },
+                                 shuffle=False).batch(eval_size_num)
     return train, test
 
 
@@ -187,8 +179,7 @@ if __name__ == '__main__':
     parallel_worker = args.parallel_worker
     epochs = 3
     file_path = './mnist_resize.npz'
-    train_loader, test_loader = generate_dataset(file_path, n, num_sampling,
-                                                 batchs, eval_size)
+    train_loader, test_loader = generate_dataset(file_path, n, num_sampling, batchs, eval_size)
     ansatz, read_out = create_quantum_model(n)
     encoder_circuit = encoder_circuit_builder(range(1, n))
     encoder_circuit.no_grad()
@@ -198,8 +189,7 @@ if __name__ == '__main__':
 
     circ = encoder_circuit + ansatz
     sim = Simulator('projectq', circ.n_qubits)
-    grad_ops = sim.get_expectation_with_grad(ham, circ, None, encoder_names,
-                                             ansatz_names, parallel_worker)
+    grad_ops = sim.get_expectation_with_grad(ham, circ, None, None, encoder_names, ansatz_names, parallel_worker)
     mql = MQLayer(grad_ops, 'normal')
 
     mnist_net = MnistNet(mql)
@@ -210,10 +200,8 @@ if __name__ == '__main__':
     t0 = time.time()
     model.train(epochs, train_loader, callbacks=[fps])
     t1 = time.time()
-    print(
-        "\nNum sampling:{}\nBatchs:{}\nParallel worker:{}\nOMP THREADS:{}\nTotal time: {}s"
-        .format(args.num_sampling, args.batchs, args.parallel_worker,
-                args.omp_num_threads, t1 - t0))
+    print("\nNum sampling:{}\nBatchs:{}\nParallel worker:{}\nOMP THREADS:{}\nTotal time: {}s".format(
+        args.num_sampling, args.batchs, args.parallel_worker, args.omp_num_threads, t1 - t0))
     res = np.array([])
     for train_x, train_y in train_loader:
         y_pred = mnist_net(train_x)
