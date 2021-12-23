@@ -68,18 +68,6 @@
 
     注意：本次大赛给每位参赛者发放相同额度的云资源券，由于8核32GB费用较高，使用时间相应减少，优先使用默认配置2核8GB资源。
 
-## 保存Notebook里的镜像
-   
-   可以点击操作**更多**–\>**保存镜像**，将镜像保存下来，重新启动时从镜像启动，不需要重新安装。  
-
-   ![](media/e015102b3b874cc267a1a411c655a872.png)
-
-   说明：
-
-   1.  如未保存镜像，实例重新后需要重新安装MindQuantum最新安装包（参考本文**安装mindquantum-master包**）。
-
-   2.  如果没有看到“保存镜像”按钮，请邮件反馈（[hiqinfo1@huawei.com](mailto:hiqinfo1@huawei.com)）问题，邮件需要注明华为云账号信息，包括IAM用户名/账号名/IAM用户ID/账号ID（[点击此处](https://console.huaweicloud.com/iam/?region=cn-north-1&locale=zh-cn#/mine/apiCredential)查看华为云账号信息）。
-
 # Jupyter Notebook开发准备
 
 ## 进入Jupyter Notebook开发环境
