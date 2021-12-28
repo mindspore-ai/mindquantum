@@ -20,6 +20,5 @@ output
 .ipynb_checkpoints
 somas_meta
 analyze_fail.dat
-VERSION.txt
 requirements.txt
 .eggs

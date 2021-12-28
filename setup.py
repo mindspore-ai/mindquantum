@@ -497,8 +497,8 @@ if __name__ == '__main__':
     remove_tree(os.path.join(cur_dir, 'output'))
     cmake_extra_options.extend(get_extra_cmake_options())
     setuptools.setup(
-        use_scm_version={'local_scheme': 'no-local-version'},
-        setup_requires=['setuptools_scm'],
+        # use_scm_version={'local_scheme': 'no-local-version'},
+        # setup_requires=['setuptools_scm'],
         cmdclass={
             'build_ext': CMakeBuildExt,
             'clean': Clean,
