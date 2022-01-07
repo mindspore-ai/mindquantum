@@ -356,7 +356,7 @@ For improving MindQuantum's package structure, we did some refactoring on MindQu
 
 Thanks goes to these wonderful people:
 
-yufan, wengwenkang, xuxusheng, Damien Ngyuen, zhouxu, wangzidong, yankang, lujiale, zhangzhenghai, fanyi, zhangwengang, wangkaisheng, zhoufeng, wangsiyuan, gongxiaoqing, chengxianbin, sunxiyin, wenwenkang, lvdingshun, cuijiangyu, chendiqing, zhangkai, Zotov Yuriy, liqin, zengjinglin, cuixiaopeng.
+yufan, wengwenkang, xuxusheng, Damien Ngyuen, zhouxu, wangzidong, yangkang, lujiale, zhangzhenghai, fanyi, zhangwengang, wangkaisheng, zhoufeng, wangsiyuan, gongxiaoqing, chengxianbin, sunxiyin, wenwenkang, lvdingshun, cuijiangyu, chendiqing, zhangkai, Zotov Yuriy, liqin, zengjinglin, cuixiaopeng.
 
 Contributions of any kind are welcome!
 
@@ -392,7 +392,7 @@ Contributions of any kind are welcome!
 
 Thanks goes to these wonderful people:
 
-yufan, wengwenkang, xuxusheng, wanzidong, yankang, lujiale, fanyi, zhangwengang, wangkaisheng, zhoufeng, wangsiyuan, gongxiaoqing, chengxianbin, sunxiyin, wenwenkang, lvdingshun, cuijiangyu, chendiqing, zhangkai, Damien Ngyuen, Zotov Yuriy, liqin, zengjinglin, cuixiaopeng.
+yufan, wengwenkang, xuxusheng, wangzidong, yangkang, lujiale, fanyi, zhangwengang, wangkaisheng, zhoufeng, wangsiyuan, gongxiaoqing, chengxianbin, sunxiyin, wenwenkang, lvdingshun, cuijiangyu, chendiqing, zhangkai, Damien Ngyuen, Zotov Yuriy, liqin, zengjinglin, cuixiaopeng.
 
 Contributions of any kind are welcome!
 
@@ -413,6 +413,6 @@ Initial release of MindQuantum.
 
 Thanks goes to these wonderful people:
 
-yufan, wengwenkang, xuxusheng, wanzidong, yankang, lujiale, wangkaisheng, zhoufeng, wangsiyuan, gongxiaoqing, chengxianbin, sunxiyin, wenwenkang, lvdingshun, cuijiangyu, chendiqing, zhangkai, Damien Ngyuen, Zotov Yuriy, liqin, zengjinglin, cuixiaopeng.
+yufan, wengwenkang, xuxusheng, wangzidong, yangkang, lujiale, wangkaisheng, zhoufeng, wangsiyuan, gongxiaoqing, chengxianbin, sunxiyin, wenwenkang, lvdingshun, cuijiangyu, chendiqing, zhangkai, Damien Ngyuen, Zotov Yuriy, liqin, zengjinglin, cuixiaopeng.
 
 Contributions of any kind are welcome!
