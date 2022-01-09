@@ -1,6 +1,13 @@
 ### 量子计算论文复现大赛开发指南
 
 
+# CloudIDE开发指南
+
+开发者可使用如下链接进行论文复现开发，不需要领取云资源券。
+
+<https://gitee.com/dorothy20212021/mindquantum/blob/research/MindQuantum%E5%BC%80%E6%BA%90%E6%B4%BB%E5%8A%A8%E6%8C%87%E5%AF%BC/readme.md>
+
+
 # Watch & Star & Fork代码仓
 
 1.  注册并登录Gitee，访问MindQuantum主仓库。
