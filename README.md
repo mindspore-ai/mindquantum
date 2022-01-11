@@ -89,7 +89,7 @@ The trained parameters are,
 
 ## API
 
-For more API, please refers to [MindQuantum API](https://www.mindspore.cn/mindquantum/api/zh-CN/master/index.html)
+For more API, please refers to [MindQuantum API](https://www.mindspore.cn/mindquantum/docs/en/master/mindquantum.core.html)
 
 ## Installation
 

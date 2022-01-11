@@ -90,7 +90,7 @@ print(dict(zip(ansatz.params_name, net.trainable_params()[0].asnumpy())))
 
 ## API
 
-对于上述示例所涉及API和其他更多用法，请查看MindQuantum API文档[文档链接](https://www.mindspore.cn/mindquantum/api/zh-CN/master/index.html)
+对于上述示例所涉及API和其他更多用法，请查看MindQuantum API文档[文档链接](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.html)
 
 ## 安装教程
 
