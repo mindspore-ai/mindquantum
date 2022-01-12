@@ -332,7 +332,7 @@ but get {}".format(type(coeff)))
 
         Returns:
             BasicGate, a parameterized gate with all parameters need to
-                update gradient.
+            update gradient.
         """
         if self.parameterized:
             self.coeff.requires_grad()

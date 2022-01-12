@@ -304,7 +304,7 @@ class Simulator:
         Apply hamiltonian to a simulator, this hamiltonian can be
         hermitian or non hermitian.
 
-        Notes:
+        Note:
             The quantum state may be not a normalized quantum state after apply hamiltonian.
 
         Args:
