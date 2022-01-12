@@ -63,6 +63,8 @@ def test_number_operator():
     check_str = '1.0 [0^ 0] +\n1.0 [1^ 1] +\n1.0 [2^ 2] '
     assert str(number_operator(nmode)) == check_str
 
+    check_str2 = '1.0 [3^ 3] '
+    assert str(number_operator(None, nmode)) == check_str2
 
 def test_up_index():
     """This is for labelling the spin-orbital index with spin alpha"""

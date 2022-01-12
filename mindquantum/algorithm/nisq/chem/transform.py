@@ -452,7 +452,7 @@ class Transform:
                     # Handle Pauli Z.
                     if pauli_operator[1] == 'Z':
                         transformed_pauli = FermionOperator(
-                            ()) + number_operator(self.n_qubits,
+                            ()) + number_operator(None,
                                                   pauli_operator[0], -2.)
 
                     # Handle Pauli X and Y.

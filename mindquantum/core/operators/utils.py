@@ -217,10 +217,13 @@ def number_operator(n_modes=None, mode=None, coefficient=1.):
         1.0 [0^ 0] +
         1.0 [1^ 1] +
         1.0 [2^ 2]
+        >>> mode = 3
+        >>> number_operator(None, mode)
+        1.0 [3^ 3]
     """
-    if (mode is None and n_modes is None) or (mode and n_modes):
+    if (mode is None and n_modes is None) or (not mode is None and not n_modes is None):
         raise ValueError(
-            "Please provide the correct value of n_modes and mode.")
+            "Please provide only one parameter between n_modes and mode.")
 
     operator = FermionOperator()
     if mode is None:
