@@ -53,10 +53,10 @@ class MQOps(nn.Cell):
 
     Inputs:
         - **enc_data** (Tensor) - Tensor of encoder data with shape :math:`(N, M)` that
-            you want to encode into quantum state, where :math:`N` means the batch size
-            and :math:`M` means the number of encoder parameters.
+          you want to encode into quantum state, where :math:`N` means the batch size
+          and :math:`M` means the number of encoder parameters.
         - **ans_data** (Tensor) - Tensor with shape :math:`N` for ansatz circuit,
-            where :math:`N` means the number of ansatz parameters.
+          where :math:`N` means the number of ansatz parameters.
 
     Outputs:
         Tensor, The expectation value of the hamiltonian.
@@ -133,10 +133,10 @@ class MQN2Ops(nn.Cell):
 
     Inputs:
         - **enc_data** (Tensor) - Tensor of encoder data with shape :math:`(N, M)` that
-            you want to encode into quantum state, where :math:`N` means the batch size
-            and :math:`M` means the number of encoder parameters.
+          you want to encode into quantum state, where :math:`N` means the batch size
+          and :math:`M` means the number of encoder parameters.
         - **ans_data** (Tensor) - Tensor with shape :math:`N` for ansatz circuit,
-            where :math:`N` means the number of ansatz parameters.
+          where :math:`N` means the number of ansatz parameters.
 
     Outputs:
         Tensor, The square of absolute value of expectation value of the hamiltonian.
@@ -210,7 +210,7 @@ class MQAnsatzOnlyOps(nn.Cell):
 
     Inputs:
         - **ans_data** (Tensor) - Tensor with shape :math:`N` for ansatz circuit,
-            where :math:`N` means the number of ansatz parameters.
+          where :math:`N` means the number of ansatz parameters.
 
     Outputs:
         Tensor, The expectation value of the hamiltonian.
@@ -274,7 +274,7 @@ class MQN2AnsatzOnlyOps(nn.Cell):
 
     Inputs:
         - **ans_data** (Tensor) - Tensor with shape :math:`N` for ansatz circuit,
-            where :math:`N` means the number of ansatz parameters.
+          where :math:`N` means the number of ansatz parameters.
 
     Outputs:
         Tensor, The square of absolute value of expectation value of the hamiltonian.
@@ -339,8 +339,8 @@ class MQEncoderOnlyOps(nn.Cell):
 
     Inputs:
         - **enc_data** (Tensor) - Tensor of encoder data with shape :math:`(N, M)` that
-            you want to encode into quantum state, where :math:`N` means the batch size
-            and :math:`M` means the number of encoder parameters.
+          you want to encode into quantum state, where :math:`N` means the batch size
+          and :math:`M` means the number of encoder parameters.
 
     Outputs:
         Tensor, The expectation value of the hamiltonian.
@@ -407,7 +407,7 @@ class MQN2EncoderOnlyOps(nn.Cell):
 
     Inputs:
         - **ans_data** (Tensor) - Tensor with shape :math:`N` for ansatz circuit,
-            where :math:`N` means the number of ansatz parameters.
+          where :math:`N` means the number of ansatz parameters.
 
     Outputs:
         Tensor, The square of absolute value of expectation value of the hamiltonian.
