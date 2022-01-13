@@ -225,7 +225,7 @@ class FermionOperator(_Operator):
         Returns:
             FermionOperator, the normal ordered FermionOperator.
 
-        Exmples:
+        Examples:
             >>> from mindquantum.core.operators import FermionOperator
             >>> origin = FermionOperator('0 1^')
             >>> origin
