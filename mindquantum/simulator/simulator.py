@@ -247,7 +247,8 @@ class Simulator:
                 resolver for this circuit, if this circuit is a parameterized circuit.
                 Default: None.
             shots (int): How many shots you want to sampling this circuit. Default: 1
-            seed (int): Random seed for random sampling. Default: None.
+            seed (int): Random seed for random sampling. If None, seed will be a random
+                int number. Default: None.
 
         Returns:
             MeasureResult, the measure result of sampling.
@@ -289,7 +290,7 @@ class Simulator:
         else:
             pr = ParameterResolver()
         if seed is None:
-            seed = self.seed
+            seed = int(np.random.randint(1,2<<20))
         else:
             _check_seed(seed)
         res = MeasureResult()
