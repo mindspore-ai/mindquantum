@@ -124,7 +124,7 @@ class MQN2Ops(nn.Cell):
 
     .. math::
 
-        O = \left|\left<varphi\right| U^\dagger_l H U_r\left|\psi\right>\right|^2
+        O = \left|\left<\varphi\right| U^\dagger_l H U_r\left|\psi\right>\right|^2
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
