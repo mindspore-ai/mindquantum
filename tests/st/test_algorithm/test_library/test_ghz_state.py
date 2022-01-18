@@ -13,14 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Circuit library"""
+"""General GHZ State"""
 
-from .quantum_fourier import qft
-from .amplitude_encoder import amplitude_encoder
-from .general_w_state import general_w_state
-from .general_ghz_state import general_ghz_state
-from .bitphaseflip_operator import bitphaseflip_operator
+import numpy as np
+from mindquantum.algorithm.library import general_ghz_state
 
-__all__ = ['qft', 'amplitude_encoder', 'general_w_state', 'general_ghz_state', 'bitphaseflip_operator']
 
-__all__.sort()
+def test_general_ghz_state():
+    """
+    Description: Test general_ghz_state
+    Expectation:
+    """
+    qs = general_ghz_state(range(3)).get_qs()
+    qs_exp = 1 / np.sqrt(2) * np.array([1, 0, 0, 0, 0, 0, 0, 1])
+    assert np.allclose(qs, qs_exp)

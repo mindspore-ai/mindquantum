@@ -13,14 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Circuit library"""
+"""Test iqp_encoding"""
 
-from .quantum_fourier import qft
-from .amplitude_encoder import amplitude_encoder
-from .general_w_state import general_w_state
-from .general_ghz_state import general_ghz_state
-from .bitphaseflip_operator import bitphaseflip_operator
+import numpy as np
+from mindquantum.algorithm.nisq.qnn import IQPEncoding
 
-__all__ = ['qft', 'amplitude_encoder', 'general_w_state', 'general_ghz_state', 'bitphaseflip_operator']
-
-__all__.sort()
+def test_general_iqp_encoding():
+    """
+    Description: Test general_iqp_encoding
+    Expectation:
+    """
+    iqp = IQPEncoding(2)
+    a = np.array([0, 0])
+    qs = iqp.circuit.get_qs(pr=iqp.data_preparation(a))
+    qs_exp = 1 / 2 * np.array([1, 1, 1, 1])
+    assert np.allclose(qs, qs_exp)

@@ -13,14 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Circuit library"""
+"""Algorithm for IQP Encoding"""
+from .iqp_encoding import IQPEncoding
 
-from .quantum_fourier import qft
-from .amplitude_encoder import amplitude_encoder
-from .general_w_state import general_w_state
-from .general_ghz_state import general_ghz_state
-from .bitphaseflip_operator import bitphaseflip_operator
-
-__all__ = ['qft', 'amplitude_encoder', 'general_w_state', 'general_ghz_state', 'bitphaseflip_operator']
-
-__all__.sort()
+__all__ = ['IQPEncoding']

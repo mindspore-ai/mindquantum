@@ -14,7 +14,7 @@
 # limitations under the License.
 # ============================================================================
 '''test for amplitude encoder'''
-from mindquantum.algorithm import amplitude_encoder
+from mindquantum.algorithm.library import amplitude_encoder
 from mindquantum.simulator import Simulator
 
 def test_amplitude_encoder():
