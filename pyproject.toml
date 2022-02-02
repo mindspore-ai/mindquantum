@@ -1,7 +1,8 @@
 [build-system]
 # requires = ["setuptools>=42", "wheel", "pybind11>=2.6.0", "setuptools_scm[toml]>=3.4"]
 requires = ["setuptools>=42", "wheel", "pybind11>=2.6.0"]
-build-backend = "setuptools.build_meta"
+build-backend = "backend"
+backend-path = ["_build"]
 
 # ==============================================================================
 
@@ -97,3 +98,31 @@ profile = "black"
 
 [tool.yapf]
 column_limit = 120
+
+
+[tool.cibuildwheel]
+
+archs = ['auto64']
+build-frontend = 'build'
+build-verbosity = 1
+skip = 'pp* *-musllinux*'
+environment = { MQ_CI_BUILD='1', OMP_NUM_THREADS='1' }
+
+before-test = [
+    'cd {package}',
+    'python setup.py gen_reqfile',
+    'python -m pip install -r requirements.txt --only-binary :all:',
+]
+
+test-command = 'python {package}/tests/quick_test.py'
+
+# Normal options, etc.
+manylinux-x86_64-image = 'manylinux2014'
+
+[[tool.cibuildwheel.overrides]]
+select = 'cp36-*'
+manylinux-x86_64-image = 'manylinux1'
+
+[[tool.cibuildwheel.overrides]]
+select = 'cp3{7,8,9}-*'
+manylinux-x86_64-image = 'manylinux2010'

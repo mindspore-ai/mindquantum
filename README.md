@@ -164,6 +164,10 @@ export OMP_NUM_THREADS=4
 
 For large servers, please set the number of parallel kernels appropriately according to the size of the model to achieve optimal results.
 
+## Building binary wheels
+
+If you would like to build some binary wheels for redistribution, please have a look to our [binary wheel building guide](./build_binary_wheels.md)
+
 ## Quick Start
 
 For more details about how to build a parameterized quantum circuit and a quantum neural network and how to train these models, see the [MindQuantum Tutorial](https://www.mindspore.cn/mindquantum/docs/en/master/index.html).
