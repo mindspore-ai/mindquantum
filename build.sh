@@ -42,7 +42,6 @@ mk_new_dir() {
 set -e
 
 cd ${BASEPATH}
-mk_new_dir "${OUTPUT_PATH}"
 
 args=(--set ENABLE_PROJECTQ --unset ENABLE_QUEST)
 
@@ -50,7 +49,15 @@ if [[ $1 = "gpu" ]]; then
     args+=(--set ENABLE_CUDA --unset MULTITHREADED --set VERBOSE_CMAKE)
 fi
 
-${PYTHON} ${BASEPATH}/setup.py bdist_wheel -d ${OUTPUT_PATH} "${args[@]}"
+fixed_args=()
+for arg in "${args[@]}"; do
+    fixed_args+=(-C--global-option=$arg)
+done
+
+${PYTHON} -m build -w "${fixed_args[@]}"
+
+mk_new_dir "${OUTPUT_PATH}"
+mv -v dist/* "${OUTPUT_PATH}"
 
 
 echo "------Successfully created mindquantum package------"
