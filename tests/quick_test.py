@@ -14,6 +14,8 @@
 # limitations under the License.
 # ============================================================================
 
+"""Basic functionality test module."""
+
 # NB: This file is mainly used to perform quick installation tests when building Python binary wheels
 
 import numpy as np
@@ -24,13 +26,15 @@ from mindquantum.simulator import Simulator
 
 
 @circuit_generator(2)
-def encoder(qubits):
+def encoder(qubits):  # pylint: disable=expression-not-assigned
+    """Generate an encoder circuit."""
     RY('a') | qubits[0]
     RY('b') | qubits[1]
 
 
 @circuit_generator(2)
-def ansatz(qubits):
+def ansatz(qubits):  # pylint: disable=expression-not-assigned
+    """Generate an Ansatz."""
     X | (qubits[0], qubits[1])
     RX('p1') | qubits[0]
     RX('p2') | qubits[1]
