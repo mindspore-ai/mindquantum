@@ -26,15 +26,17 @@ from mindquantum.simulator import Simulator
 
 
 @circuit_generator(2)
-def encoder(qubits):  # pylint: disable=expression-not-assigned
+def encoder(qubits):
     """Generate an encoder circuit."""
+    # pylint: disable=expression-not-assigned
     RY('a') | qubits[0]
     RY('b') | qubits[1]
 
 
 @circuit_generator(2)
-def ansatz(qubits):  # pylint: disable=expression-not-assigned
+def ansatz(qubits):
     """Generate an Ansatz."""
+    # pylint: disable=expression-not-assigned,pointless-statement
     X | (qubits[0], qubits[1])
     RX('p1') | qubits[0]
     RX('p2') | qubits[1]
