@@ -12,37 +12,6 @@ backend-path = ["_build"]
     skip-string-normalization = true
 
 
-[tool.check-manifest]
-    ignore = [
-    'PKG-INFO',
-    '*.egg-info',
-    '*.egg-info/*',
-    'setup.cfg',
-    '.hgtags',
-    '.hgsigs',
-    '.hgignore',
-    '.gitignore',
-    '.bzrignore',
-    '.gitattributes',
-    '.github/*',
-    '.travis.yml',
-    '*.mo',
-    '.clang-tidy',
-    '.clang-format',
-    '.gitmodules',
-    'requirements.txt',
-    'requirements_tests.txt',
-    'VERSION.txt',
-    '.editorconfig',
-    '*.yml',
-    '*.yaml',
-    'docs/*',
-    'docs/images/*',
-    'tests/*',
-    ]
-
-
-
 [tool.coverage]
     [tool.coverage.run]
         omit = [
