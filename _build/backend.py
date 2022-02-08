@@ -16,10 +16,11 @@
 
 """Custom build backend."""
 
+import distutils.log
+import hashlib
 import os
 import platform
 import sys
-import distutils.log
 
 import setuptools.build_meta
 
@@ -41,11 +42,34 @@ def get_requires_for_build_wheel(config_settings=None):
     return requirements
 
 
+def generate_digest_file(fname):
+    name = os.path.basename(fname)
+    sha256_hash = hashlib.sha256()
+    with open(fname, 'rb') as f:
+        # Read and update hash string value in blocks of 1M
+        for byte_block in iter(lambda: f.read(1 << 20), b""):
+            sha256_hash.update(byte_block)
+
+    with open(f'{fname}.sha256', 'w') as f:
+        f.write(f'{sha256_hash.hexdigest()} {name}\n')
+
+
+def build_sdist(sdist_directory, config_settings=None):
+    name = setuptools.build_meta.build_sdist(sdist_directory=sdist_directory, config_settings=config_settings)
+    generate_digest_file(os.path.join(sdist_directory, name))
+    return name
+
+
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     """Build a wheel from this project."""
     name = setuptools.build_meta.build_wheel(
         wheel_directory=wheel_directory, config_settings=config_settings, metadata_directory=metadata_directory
     )
+
+    name_full = os.path.join(wheel_directory, name)
+
+    # ==========================================================================
+    # Delocate the wheel if requested
 
     delocate_wheel = int(os.environ.get('MQ_DELOCATE_WHEEL', False))
     if delocate_wheel and platform.system() == 'Linux':
@@ -69,7 +93,7 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
                 plat,
                 '-w',
                 wheel_directory,
-                os.path.join(wheel_directory, name),
+                name_full,
             ]
 
             distutils.log.info('Calling ' + ' '.join(sys.argv))
@@ -81,14 +105,16 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
             raise RuntimeError('Cannot delocate wheel on Linux without the `auditwheel` package installed!') from err
     elif delocate_wheel and platform.system() == 'Darwin':
         try:
-            from delocate.cmd import delocate_wheel  # pylint: disable=import-outside-toplevel
+            from delocate.cmd import (
+                delocate_wheel,  # pylint: disable=import-outside-toplevel
+            )
 
             argv = sys.argv
             sys.argv = [
                 'delocate-wheel',
                 '-v',
                 '--require-archs={platform.machine()}',
-                os.path.join(wheel_directory, name),
+                name_full,
             ]
 
             distutils.log.info('Calling ' + ' '.join(sys.argv))
@@ -99,4 +125,10 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
             raise RuntimeError('Cannot delocate wheel on MacOS without the `delocate` package installed!') from err
     elif delocate_wheel:
         raise RuntimeError(f'Do not know how to delocate wheels on {platform.system()}')
+
+    # ==========================================================================
+    # Calculate the SHA256 of the wheel
+
+    generate_digest_file(name_full)
+
     return name
