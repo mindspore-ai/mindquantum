@@ -16,8 +16,8 @@
 @title mindquantum_build
 
 SET BASE_PATH=%CD%
-SET BUILD_PATH=%BASE_PATH%/build
-SET OUTPUT=%BASE_PATH%/output
+SET BUILD_PATH=%BASE_PATH%\build
+SET OUTPUT=%BASE_PATH%\output
 
 IF NOT EXIST "%BUILD_PATH%" (
     md "build"
@@ -47,5 +47,5 @@ IF NOT EXIST "%OUTPUT%" (
     md "output"
 )
 
-move -y %BASE_PATH%/dist/* %OUTPUT%
+move /Y %BASE_PATH%\dist\* %OUTPUT%
 echo ------Successfully created mindquantum package------
