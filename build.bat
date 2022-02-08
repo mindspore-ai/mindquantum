@@ -23,14 +23,29 @@ IF NOT EXIST "%BUILD_PATH%" (
     md "build"
 )
 
+rem ============================================================================
+
 cd %BASE_PATH%
 
-python -m pip install --user build
+rem -----------------------------------------------------------------------------
+rem Create a virtual environment for building the wheel
 
+python -m venv venv
+venv\Scripts\activate.bat
+python -m pip install -U pip setuptools build
+
+rem ============================================================================
+rem Build the wheels
+
+echo python -m build -w -C--global-option=--set -C--global-option=ENABLE_PROJECTQ -C--global-option=--unset -C--global-option=ENABLE_QUEST %*
 python -m build -w -C--global-option=--set -C--global-option=ENABLE_PROJECTQ -C--global-option=--unset -C--global-option=ENABLE_QUEST %*
+
+rem -----------------------------------------------------------------------------
+rem Move the wheels to the output directory
 
 IF NOT EXIST "%OUTPUT%" (
     md "output"
 )
 
 move -y %BASE_PATH%/dist/* %OUTPUT%
+echo ------Successfully created mindquantum package------

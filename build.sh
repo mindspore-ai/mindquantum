@@ -25,11 +25,6 @@ else
 fi
 
 # ==============================================================================
-# Make sure that the `build` package is installed
-
-$PYTHON -m pip install --user build
-
-# ==============================================================================
 
 mk_new_dir() {
     local create_dir="$1"  # the target to make
@@ -48,6 +43,16 @@ set -e
 
 cd "${BASEPATH}"
 
+# ------------------------------------------------------------------------------
+# Create a virtual environment for building the wheel
+
+$PYTHON -m venv venv
+source venv/bin/activate
+$PYTHON -m pip install -U pip setuptools build
+
+# ------------------------------------------------------------------------------
+# Setup arguments for build
+
 args=(--set ENABLE_PROJECTQ --unset ENABLE_QUEST)
 
 if [[ $1 = "gpu" ]]; then
@@ -59,7 +64,14 @@ for arg in "${args[@]}"; do
     fixed_args+=("-C--global-option=$arg")
 done
 
+# ------------------------------------------------------------------------------
+# Build the wheels
+
+echo ${PYTHON} -m build -w "${fixed_args[*]}"
 ${PYTHON} -m build -w "${fixed_args[@]}"
+
+# ------------------------------------------------------------------------------
+# Move the wheels to the output directory
 
 mk_new_dir "${OUTPUT_PATH}"
 mv -v dist/* "${OUTPUT_PATH}"
