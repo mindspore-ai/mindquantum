@@ -48,7 +48,7 @@ cd "${BASEPATH}"
 
 $PYTHON -m venv venv
 source venv/bin/activate
-$PYTHON -m pip install -U pip setuptools build
+$PYTHON -m pip install -U pip setuptools build pybind11
 
 # ------------------------------------------------------------------------------
 # Setup arguments for build

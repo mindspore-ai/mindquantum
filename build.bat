@@ -32,7 +32,7 @@ rem Create a virtual environment for building the wheel
 
 python -m venv venv
 call venv\Scripts\activate.bat
-python -m pip install -U pip setuptools build
+python -m pip install -U pip setuptools build pybind11
 
 rem ============================================================================
 rem Build the wheels
