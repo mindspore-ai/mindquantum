@@ -24,4 +24,10 @@ IF NOT EXIST "%BUILD_PATH%" (
 )
 
 cd %BASE_PATH%
-python %BASE_PATH%/setup.py bdist_wheel -d %OUTPUT% --set ENABLE_PROJECTQ --unset ENABLE_QUEST %*
+python -m build -w -C--global-option=--set -C--global-option=ENABLE_PROJECTQ -C--global-option=--unset -C--global-option=ENABLE_QUEST %*
+
+IF NOT EXIST "%OUTPUT%" (
+    md "output"
+)
+
+move -y %BASE_PATH%/dist/* %OUTPUT%
