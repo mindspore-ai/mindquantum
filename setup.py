@@ -151,58 +151,65 @@ def get_extra_cmake_options():
 # ==============================================================================
 
 
-def get_python_executable():
-    """Retrieve the path to the Python executable."""
+def get_executable(exec_name):
+    """Try to locate an executable in a Python virtual environment."""
     try:
         root_path = os.environ['VIRTUAL_ENV']
         python = os.path.basename(sys.executable)
-        python_path = os.path.join(root_path, python)
-        if os.path.exists(python_path):
-            return python_path
-        return os.path.join(root_path, 'bin', python)
     except KeyError:
-        return sys.executable
+        root_path, python = os.path.split(sys.executable)
+
+    exec_name = os.path.basename(exec_name)
+
+    distutils.log.info(f'trying to locate {exec_name} in {root_path}')
+
+    search_paths = [root_path, os.path.join(root_path, 'bin'), os.path.join(root_path, 'Scripts')]
+
+    # First try executing the program directly
+    for base_path in search_paths:
+        try:
+            cmd = os.path.join(base_path, exec_name)
+            with fdopen(os.devnull, 'w') as devnull:
+                subprocess.check_call([cmd, '--version'], stdout=devnull, stderr=devnull)
+        except (OSError, subprocess.CalledProcessError):
+            distutils.log.info(f'  failed in {base_path}')
+        else:
+            distutils.log.info(f'  command found: {cmd}')
+            return cmd
+
+    # That did not work: try calling it through Python
+    for base_path in search_paths:
+        try:
+            cmd = [python, os.path.join(base_path, exec_name)]
+            with fdopen(os.devnull, 'w') as devnull:
+                subprocess.check_call(cmd + ['--version'], stdout=devnull, stderr=devnull)
+        except (OSError, subprocess.CalledProcessError):
+            distutils.log.info(f'  failed in {base_path}')
+        else:
+            distutils.log.info(f'  command found: {cmd}')
+            return cmd
+
+    distutils.log.info(f'  command *not* found!')
+    return None
+
+
+def get_python_executable():
+    """Retrieve the path to the Python executable."""
+    return get_executable(sys.executable)
 
 
 def get_cmake_command():
     """Retrieve the path to the CMake executable."""
-    with fdopen(os.devnull, 'w') as devnull:
-        try:
+    try:
+        with fdopen(os.devnull, 'w') as devnull:
             subprocess.check_call(['cmake', '--version'], stdout=devnull, stderr=devnull)
-            return ['cmake']
-        except (OSError, subprocess.CalledProcessError):
-            pass
+        return 'cmake'
+    except (OSError, subprocess.CalledProcessError):
+        pass
 
-        # CMake not in PATH, should have installed Python CMake module
-        # -> try to find out where it is
-        try:
-            root_path = os.environ['VIRTUAL_ENV']
-            python = os.path.basename(sys.executable)
-        except KeyError:
-            root_path, python = os.path.split(sys.executable)
-
-        search_paths = [root_path, os.path.join(root_path, 'bin'), os.path.join(root_path, 'Scripts')]
-
-        # First try executing CMake directly
-        for base_path in search_paths:
-            try:
-                cmake_cmd = os.path.join(base_path, 'cmake')
-                subprocess.check_call([cmake_cmd, '--version'], stdout=devnull, stderr=devnull)
-                return [cmake_cmd]
-            except (OSError, subprocess.CalledProcessError):
-                pass
-
-        # That did not work: try calling it through Python
-        for base_path in search_paths:
-            try:
-                cmake_cmd = [python, os.path.join(base_path, 'cmake')]
-                subprocess.check_call(cmake_cmd + ['--version'], stdout=devnull, stderr=devnull)
-                return cmake_cmd
-            except (OSError, subprocess.CalledProcessError):
-                pass
-
-    # Nothing worked -> give up!
-    return None
+    # CMake not in PATH, should have installed the Python CMake module
+    # -> try to find out where it is
+    return get_executable('cmake')
 
 
 # ==============================================================================
@@ -267,9 +274,10 @@ class CMakeBuildExt(build_ext):
         if on_rtd:
             important_msgs('skipping CMake build on ReadTheDocs')
             return
-        self.cmake_cmd = get_cmake_command()
-        if self.cmake_cmd is None:
+        cmake_cmd = get_cmake_command()
+        if cmake_cmd is None:
             raise RuntimeError('Unable to locate the CMake command!')
+        self.cmake_cmd = [cmake_cmd]
         distutils.log.info('using cmake command: ' + ' '.join(self.cmake_cmd))
 
         self.configure_extensions()
