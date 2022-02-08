@@ -20,7 +20,6 @@ import contextlib
 import copy
 import distutils.log
 import errno
-import hashlib
 import itertools
 import multiprocessing
 import os
@@ -89,20 +88,6 @@ def remove_tree(directory):
     if os.path.exists(directory):
         distutils.log.info(f'Removing {directory} (and everything under it)')
         shutil.rmtree(directory, ignore_errors=False, onerror=remove_read_only)
-
-
-def write_checksum():
-    """Rename Python wheels on Windows."""
-    if os.path.exists(os.path.join(cur_dir, 'output')):
-        whl = os.listdir(os.path.join(cur_dir, 'output'))
-        if whl:
-            whl_name = os.path.join(cur_dir, 'output', whl[0])
-            with open(whl_name, 'rb') as f:
-                sha256obj = hashlib.sha256()
-                sha256obj.update(f.read())
-                hash_value = sha256obj.hexdigest()
-            with open(whl_name + '.sha256', 'w') as f:
-                f.writelines(f'{hash_value} *{whl[0]}')
 
 
 def important_msgs(*msgs):
@@ -506,5 +491,3 @@ if __name__ == '__main__':
         },
         ext_modules=ext_modules,
     )
-
-    write_checksum()
