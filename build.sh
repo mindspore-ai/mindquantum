@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-BASEPATH=$(cd "$(dirname $0)"; pwd)
+BASEPATH=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 OUTPUT_PATH="${BASEPATH}/output"
 if command -v python3 >/dev/null 2>&1; then
     PYTHON=python3
@@ -41,7 +41,7 @@ mk_new_dir() {
 
 set -e
 
-cd ${BASEPATH}
+cd "${BASEPATH}"
 
 args=(--set ENABLE_PROJECTQ --unset ENABLE_QUEST)
 
@@ -51,7 +51,7 @@ fi
 
 fixed_args=()
 for arg in "${args[@]}"; do
-    fixed_args+=(-C--global-option=$arg)
+    fixed_args+=("-C--global-option=$arg")
 done
 
 ${PYTHON} -m build -w "${fixed_args[@]}"
