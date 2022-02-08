@@ -189,7 +189,7 @@ def get_executable(exec_name):
             distutils.log.info(f'  command found: {cmd}')
             return cmd
 
-    distutils.log.info(f'  command *not* found!')
+    distutils.log.info('  command *not* found!')
     return None
 
 
