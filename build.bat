@@ -24,6 +24,9 @@ IF NOT EXIST "%BUILD_PATH%" (
 )
 
 cd %BASE_PATH%
+
+python -m pip install --user build
+
 python -m build -w -C--global-option=--set -C--global-option=ENABLE_PROJECTQ -C--global-option=--unset -C--global-option=ENABLE_QUEST %*
 
 IF NOT EXIST "%OUTPUT%" (

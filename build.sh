@@ -25,6 +25,11 @@ else
 fi
 
 # ==============================================================================
+# Make sure that the `build` package is installed
+
+$PYTHON -m pip install --user build
+
+# ==============================================================================
 
 mk_new_dir() {
     local create_dir="$1"  # the target to make
