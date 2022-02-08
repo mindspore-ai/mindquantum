@@ -13,14 +13,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Circuit library"""
+"""General GHZ State."""
 
-from .quantum_fourier import qft
-from .amplitude_encoder import amplitude_encoder
-from .general_w_state import general_w_state
-from .general_ghz_state import general_ghz_state
-from .bitphaseflip_operator import bitphaseflip_operator
+from mindquantum.core.gates import X, H
+from mindquantum.core.circuit import Circuit
 
-__all__ = ['qft', 'amplitude_encoder', 'general_w_state', 'general_ghz_state', 'bitphaseflip_operator']
 
-__all__.sort()
+def general_ghz_state(qubits):
+    """
+    General GHZ State.
+
+    Args:
+        qubits (list[int]): Qubits you want to apply general GHZ state.
+
+    Examples:
+        >>> from mindquantum.algorithm.library import general_ghz_state
+        >>> print(general_ghz_state(range(3)).get_qs(ket=True))
+        √2/2¦000⟩
+        √2/2¦111⟩
+    """
+    circuit = Circuit()
+
+    for i in range(len(qubits)):
+        if i == 0:
+            circuit += H.on(qubits[i])
+        else:
+            circuit += X.on(qubits[i], qubits[i - 1])
+
+    return circuit

@@ -18,10 +18,13 @@
 from ._ansatz import Ansatz
 from . import chem
 from . import qaoa
+from . import qnn
 from .chem import *
 from .qaoa import *
+from .qnn import *
 
 __all__ = ['Ansatz']
 __all__.extend(chem.__all__)
 __all__.extend(qaoa.__all__)
+__all__.extend(qnn.__all__)
 __all__.sort()

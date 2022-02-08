@@ -13,14 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Circuit library"""
+"""Bitphaseflip operator."""
 
-from .quantum_fourier import qft
-from .amplitude_encoder import amplitude_encoder
-from .general_w_state import general_w_state
-from .general_ghz_state import general_ghz_state
-from .bitphaseflip_operator import bitphaseflip_operator
+import numpy as np
+from mindquantum import UN, H
+from mindquantum.core.circuit import Circuit
+from mindquantum.algorithm.library import bitphaseflip_operator
 
-__all__ = ['qft', 'amplitude_encoder', 'general_w_state', 'general_ghz_state', 'bitphaseflip_operator']
 
-__all__.sort()
+def test_bitphaseflip_operator():
+    """
+    Description: Test bitphaseflip_operator
+    Expectation:
+    """
+    circuit = Circuit()
+    circuit += UN(H, 3)
+    circuit += bitphaseflip_operator([2], 3)
+    circuit = circuit.get_qs()
+    qs_exp = 1 / np.sqrt(8) * np.array([1, 1, -1, 1, 1, 1, 1, 1])
+    assert np.allclose(circuit, qs_exp)
