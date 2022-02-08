@@ -31,7 +31,7 @@ rem ----------------------------------------------------------------------------
 rem Create a virtual environment for building the wheel
 
 python -m venv venv
-venv\Scripts\activate.bat
+call venv\Scripts\activate.bat
 python -m pip install -U pip setuptools build
 
 rem ============================================================================
