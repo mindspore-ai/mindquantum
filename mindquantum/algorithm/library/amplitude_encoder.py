@@ -101,7 +101,7 @@ def amplitude_encoder(x, n_qubits):
         if tree[(i - 1) // 2] > 1e-10:
             amp_0 = tree[i] / tree[(i - 1) // 2]
             theta = 2 * math.acos(amp_0)
-            if tree[i + 1] < 0 and math.sin(theta / 2) > 0:
+            if tree[i + 1] < 0 < math.sin(theta / 2):
                 theta = -theta
         num[f'alpha{cnt}'] = theta
         controlled_gate(c, RY(f'alpha{cnt}'), len(tmp), controls, (0 if tmp and tmp[0] == -1 else 1))
