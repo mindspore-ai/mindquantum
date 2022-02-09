@@ -31,7 +31,16 @@ def test_amplitude_encoder():
     assert abs(st[2].real - 0.5) < 1e-10
     assert abs(st[4].real - 0.5) < 1e-10
     assert abs(st[6].real - 0.5) < 1e-10
+    circuit, params = amplitude_encoder([0.5, 0.5, 0.5, 0.5], 3)
+    sim.reset()
+    sim.apply_circuit(circuit, params)
+    st = sim.get_qs(False)
+    assert abs(st[0].real - 0.5) < 1e-10
+    assert abs(st[2].real - 0.5) < 1e-10
+    assert abs(st[4].real - 0.5) < 1e-10
+    assert abs(st[6].real - 0.5) < 1e-10
     circuit, params = amplitude_encoder([0.5, -0.5, 0.5, 0.5], 3)
+    sim.reset()
     sim.apply_circuit(circuit, params)
     st = sim.get_qs(False)
     assert abs(st[0].real - 0.5) < 1e-10
