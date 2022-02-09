@@ -17,11 +17,12 @@
 
 from mindquantum.core.gates import X, H
 from mindquantum.core.circuit import Circuit
+from mindquantum.utils.type_value_check import _check_input_type
 
 
 def general_ghz_state(qubits):
     """
-    General GHZ State.
+    Circuit that prepare a general GHZ State based on zero state.
 
     Args:
         qubits (list[int]): Qubits you want to apply general GHZ state.
@@ -31,7 +32,14 @@ def general_ghz_state(qubits):
         >>> print(general_ghz_state(range(3)).get_qs(ket=True))
         √2/2¦000⟩
         √2/2¦111⟩
+        >>> print(general_ghz_state([1, 2]).get_qs(ket=True))
+        √2/2¦000⟩
+        √2/2¦110⟩
+
+    Returns:
+        Circuit, circuit that can prepare ghz state.
     """
+    _check_input_type('qubits', (list, range), qubits)
     circuit = Circuit()
 
     for i in range(len(qubits)):

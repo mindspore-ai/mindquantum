@@ -14,6 +14,7 @@
 # limitations under the License.
 # ============================================================================
 """type and value check helper"""
+import numbers
 import numpy as np
 
 _num_type = (int, float, complex, np.int32, np.int64, np.float32, np.float64)
@@ -68,3 +69,8 @@ def _check_and_generate_pr_type(pr, names=None):
         pr = ParameterResolver(dict(zip(names, pr)))
 
     return pr
+
+def _check_number_type(arg_msg, arg):
+    """check number type"""
+    if not isinstance(arg, numbers.Number):
+        raise TypeError(f"{arg_msg} requires a number, but get {type(arg)}")

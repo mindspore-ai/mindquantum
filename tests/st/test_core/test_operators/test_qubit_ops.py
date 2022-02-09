@@ -59,11 +59,8 @@ def test_qubit_ops_num_coeff():
     q12 = QubitOperator('Z1 Z2') + 1e-4 * QubitOperator('X1 Z2')
     q13 = QubitOperator('Z3 X2') + 1e-5 * QubitOperator('X1 Y2')
     q14 = q12 * q13
-    assert str(
-        q14
-    ) == '0.0001j [X1 Y2 Z3] +\n(1e-05-0j) [Y1 X2] +\n1j [Z1 Y2 Z3] +\n-1e-09j [X2] '
-    assert str(q14.compress()
-               ) == '0.0001j [X1 Y2 Z3] +\n1e-05 [Y1 X2] +\n1j [Z1 Y2 Z3] '
+    assert str(q14) == '0.0001j [X1 Y2 Z3] +\n(1e-05-0j) [Y1 X2] +\n1j [Z1 Y2 Z3] +\n-1e-09j [X2] '
+    assert str(q14.compress()) == '0.0001j [X1 Y2 Z3] +\n1e-05 [Y1 X2] +\n1j [Z1 Y2 Z3] '
 
     iden = QubitOperator('')
     assert str(iden) == '1.0 [] '
@@ -104,9 +101,7 @@ def test_qubit_ops_symbol_coeff():
     q12 = QubitOperator('Z1 Z2') + 1e-4 * QubitOperator('X1 Z2')
     q13 = QubitOperator('Z3 X2') + 1e-5 * QubitOperator('X1 Y2', 'b')
     q14 = q12 * q13
-    assert str(
-        q14
-    ) == '0.0001j [X1 Y2 Z3] +\n1.0e-5*b [Y1 X2] +\n1j [Z1 Y2 Z3] +\n-1.0e-9*I*b [X2] '
+    assert str(q14) == '0.0001j [X1 Y2 Z3] +\n1.0e-5*b [Y1 X2] +\n1j [Z1 Y2 Z3] +\n-1.0e-9*I*b [X2] '
     assert str(q14.compress()) == str(q14)
 
     ham = ((QubitOperator('X0 Y3', 'a') + 'a' * QubitOperator('X0 Y3')))
@@ -133,3 +128,12 @@ def test_qubit_ops_sub():
     q2 = QubitOperator('Y0')
     q = QubitOperator('X0') + QubitOperator('Y0', -1)
     assert str(q1 - q2) == '1.0 [X0] +\n-1.0 [Y0] '
+
+
+def test_fermion_operator_iter():
+    """
+    Description: Test fermion operator iter
+    Expectation:
+    """
+    a = QubitOperator('X0 Y1') + QubitOperator('Z2 X3', {"a": -3})
+    assert a == sum(list(a))

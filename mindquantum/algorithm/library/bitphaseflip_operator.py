@@ -19,35 +19,36 @@ from mindquantum.core.gates import Z
 from mindquantum.core.circuit import Circuit
 
 
-def bitphaseflip_operator(phase_inversion_qubit, n_qubits):
+def bitphaseflip_operator(phase_inversion_index, n_qubits):
     """
-    This operator could flip the phase of qubits that you set.
+    This operator generate a circuit that can flip the sign of any calculation bases.
 
     Args:
-        phase_inversion_qubit (list[int]): Qubits you want to flip phase.
+        phase_inversion_index (list[int]): Index of calculation bases want to flip phase.
         n_qubits (int): Total number of qubits.
 
     Examples:
         >>> from mindquantum.core.circuit import Circuit
         >>> from mindquantum import UN, H, Z
         >>> from mindquantum.algorithm.library import bitphaseflip_operator
-
         >>> circuit = Circuit()
         >>> circuit += UN(H, 3)
-        >>> circuit += bitphaseflip_operator([2], 3)
-        >>> circuit.get_qs()
+        >>> circuit += bitphaseflip_operator([1, 3], 3)
         >>> print(circuit.get_qs(ket=True))
         √2/4¦000⟩
-        √2/4¦001⟩
-        -√2/4¦010⟩
-        √2/4¦011⟩
+        -√2/4¦001⟩
+        √2/4¦010⟩
+        -√2/4¦011⟩
         √2/4¦100⟩
         √2/4¦101⟩
         √2/4¦110⟩
         √2/4¦111⟩
+
+    Returns:
+        Circuit, the bit phase flip circuit.
     """
     s = [1 for i in range(1 << n_qubits)]
-    for i in phase_inversion_qubit:
+    for i in phase_inversion_index:
         s[i] = -1
     if s[0] == -1:
         for i in range(len(s)):

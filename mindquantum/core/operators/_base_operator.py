@@ -18,6 +18,7 @@ This module serves as the base class for FermionOperator and QubitOperator.
 This module, we cite and refactor the code in Fermilib and OpenFermion
 licensed under Apache 2.0 license.
 """
+import numbers
 import copy
 from abc import ABCMeta, abstractmethod
 import numpy as np
@@ -26,8 +27,7 @@ from mindquantum.core.parameterresolver import ParameterResolver as PR
 
 EQ_TOLERANCE = 1e-8
 
-_validate_coeff_type_num = (int, float, complex, np.int32, np.int64,
-                            np.float32, np.float64)
+_validate_coeff_type_num = (int, float, complex, np.int32, np.int64, np.float32, np.float64)
 _validate_coeff_type_var = (str, PR, dict)
 _validate_coeff_type = (_validate_coeff_type_num, _validate_coeff_type_var)
 
@@ -85,8 +85,8 @@ class _Operator(metaclass=ABCMeta):
         """initialize a empty class"""
         if not isinstance(coefficient, _validate_coeff_type):
             raise ValueError(
-                "Coefficient must be a numeric type or a string or a ParameterResolver, but get {}."
-                .format(type(coefficient)))
+                "Coefficient must be a numeric type or a string or a ParameterResolver, but get {}.".format(
+                    type(coefficient)))
 
         self.terms = {}
         self.operators = None
@@ -146,14 +146,10 @@ class _Operator(metaclass=ABCMeta):
 
         index, operator = term
         if operator not in self.operators:
-            raise ValueError(
-                "Invalid operator {}. Valid operator should be {}".format(
-                    term, self.operators))
+            raise ValueError("Invalid operator {}. Valid operator should be {}".format(term, self.operators))
 
         if not isinstance(index, int) or (index < 0):
-            raise ValueError(
-                'Invalid index {} in term. Index should be non-negative'.
-                format(index))
+            raise ValueError('Invalid index {} in term. Index should be non-negative'.format(index))
 
     @abstractmethod
     def _simplify(self, terms, coefficient=1.0):
@@ -172,15 +168,12 @@ class _Operator(metaclass=ABCMeta):
             for left_operator, left_coeff in self.terms.items():
                 for right_operator, right_coeff in multiplier.terms.items():
                     new_operator = left_operator + right_operator
-                    if isinstance(left_coeff, PR) and isinstance(
-                            right_coeff, PR):
-                        raise ValueError(
-                            "Can not multiply two parameterized operator.")
+                    if isinstance(left_coeff, PR) and isinstance(right_coeff, PR):
+                        raise ValueError("Can not multiply two parameterized operator.")
                     new_coeff = left_coeff * right_coeff
                     # Need to simplify the new_operator by using the
                     # commutation and anti_commutation relationship
-                    new_coeff, new_terms = self._simplify(
-                        new_operator, new_coeff)
+                    new_coeff, new_terms = self._simplify(new_operator, new_coeff)
                     # Update the product_results:
                     if new_terms in product_results:
                         product_results[new_terms] += new_coeff
@@ -189,8 +182,7 @@ class _Operator(metaclass=ABCMeta):
                     # compress
             self.terms = product_results
             return self
-        raise TypeError('Cannot multiply invalid operator type to {}.'.format(
-            type(self)))
+        raise TypeError('Cannot multiply invalid operator type to {}.'.format(type(self)))
 
     def __mul__(self, multiplier):
         if isinstance(multiplier, (*_validate_coeff_type, type(self))):
@@ -198,30 +190,24 @@ class _Operator(metaclass=ABCMeta):
             product_results *= multiplier
             return product_results
 
-        raise TypeError('Cannot multiply invalid operator type to {}.'.format(
-            type(self)))
+        raise TypeError('Cannot multiply invalid operator type to {}.'.format(type(self)))
 
     def __rmul__(self, multiplier):
         if isinstance(multiplier, _validate_coeff_type):
             return self * multiplier
 
-        raise TypeError('Cannot multiply invalid operator type to {}.'.format(
-            type(self)))
+        raise TypeError('Cannot multiply invalid operator type to {}.'.format(type(self)))
 
     def __truediv__(self, divisor):
         if isinstance(divisor, (int, float, complex)) and divisor != 0:
             return self * (1. / divisor)
-        raise TypeError(
-            'Cannot divide the {} by non_numeric type or the divisor is 0.'.
-            format(type(self)))
+        raise TypeError('Cannot divide the {} by non_numeric type or the divisor is 0.'.format(type(self)))
 
     def __itruediv__(self, divisor):
         if isinstance(divisor, (int, float, complex)) and divisor != 0:
             self *= (1. / divisor)
             return self
-        raise TypeError(
-            'Cannot divide the {} by non_numeric type or the divisor is 0.'.
-            format(type(self)))
+        raise TypeError('Cannot divide the {} by non_numeric type or the divisor is 0.'.format(type(self)))
 
     def __neg__(self):
         return self * (-1)
@@ -233,15 +219,13 @@ class _Operator(metaclass=ABCMeta):
                 exponential_results *= self
             return exponential_results
 
-        raise ValueError(
-            'exponent must be a non-negative int, but was {} {}'.format(
-                type(exponent), repr(exponent)))
+        raise ValueError('exponent must be a non-negative int, but was {} {}'.format(type(exponent), repr(exponent)))
 
     def __iadd__(self, operator):
         """In-place method for += addition of QubitOperator.
 
         Args:
-            operator (QubitOperator): The operator to add.
+            operator (QubitOperator, numbers.Number): The operator or a number to add.
 
         Returns:
             sum (QubitOperator), Mutated self.
@@ -261,13 +245,19 @@ class _Operator(metaclass=ABCMeta):
                 else:
                     if self.terms[term].expression() == 0:
                         self.terms.pop(term)
+        elif isinstance(operator, numbers.Number):
+            self += operator * self.__class__("")
         else:
-            raise TypeError('Cannot add invalid operator type to {}.'.format(
-                type(self)))
+            raise TypeError('Cannot add invalid operator type to {}.'.format(type(self)))
 
         return self
 
     def __add__(self, operator):
+        sum_operator = copy.deepcopy(self)
+        sum_operator += operator
+        return sum_operator
+
+    def __radd__(self, operator):
         sum_operator = copy.deepcopy(self)
         sum_operator += operator
         return sum_operator
@@ -285,9 +275,12 @@ class _Operator(metaclass=ABCMeta):
                 else:
                     if self.terms[term].expression() == 0:
                         self.terms.pop(term)
+        elif isinstance(operator, numbers.Number):
+            substract_operator = copy.deepcopy(self)
+            substract_operator -= operator * self.__class__("")
+            return substract_operator
         else:
-            raise TypeError('Cannot sub invalid operator type to {}.'.format(
-                type(self)))
+            raise TypeError('Cannot sub invalid operator type to {}.'.format(type(self)))
 
         return self
 
@@ -296,11 +289,12 @@ class _Operator(metaclass=ABCMeta):
         substract_operator -= operator
         return substract_operator
 
+    def __rsub__(self, operator):
+        return operator + (-1) * self
+
     def __eq__(self, other):
         if not isinstance(self, type(other)):
-            raise TypeError(
-                'Cannot compare invalid operator type {} to {}.'.format(
-                    type(other), type(self)))
+            raise TypeError('Cannot compare invalid operator type {} to {}.'.format(type(other), type(self)))
         # terms which are in both Operator:
         tmp_self = self.compress()
         tmp_other = other.compress()
@@ -310,19 +304,14 @@ class _Operator(metaclass=ABCMeta):
             left = tmp_self.terms[term]
             right = tmp_other.terms[term]
             if not isinstance(left, PR) and not isinstance(right, PR):
-                if not abs(left - right) <= max(
-                        EQ_TOLERANCE,
-                        EQ_TOLERANCE * max(abs(left), abs(right))):
+                if not abs(left - right) <= max(EQ_TOLERANCE, EQ_TOLERANCE * max(abs(left), abs(right))):
                     return False
                 return True
             if isinstance(left, PR) and isinstance(right, PR):
                 return left == right
-            raise ValueError(
-                "Can not compare a parameterized operator with a non parameterized operator."
-            )
+            raise ValueError("Can not compare a parameterized operator with a non parameterized operator.")
         # check if there is any term only in one Operator, return false
-        for term in set(tmp_self.terms).symmetric_difference(
-                set(tmp_other.terms)):
+        for term in set(tmp_self.terms).symmetric_difference(set(tmp_other.terms)):
             if term:
                 return False
         return True
@@ -397,12 +386,10 @@ class _Operator(metaclass=ABCMeta):
         return len(self.terms)
 
     def __iter__(self):
-        return iter(self.terms)
-
-    def __next__(self):
-        term, coef = next(self.iter)
-        return self.__class__(term, coef)
-
-    def next(self):
-        """return the next elements in this Operator"""
-        return self.__next__()
+        if len(self.terms.items()) > 1:
+            for term, coeff in self.terms.items():
+                yield self.__class__(term, coeff)
+        else:
+            for term, coeff in self.terms.items():
+                for k in term:
+                    yield self.__class__((k, ), 1)
