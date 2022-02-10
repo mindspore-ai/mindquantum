@@ -59,6 +59,12 @@ if [[ $1 = "gpu" ]]; then
     args+=(--set ENABLE_CUDA --unset MULTITHREADED --set VERBOSE_CMAKE)
 fi
 
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # Potentially could be lowered to 10.9
+    # (10.13 minimum for full C++17)
+    args+=(--plat-name macosx_10_13_$(uname -m))
+fi
+
 fixed_args=()
 for arg in "${args[@]}"; do
     fixed_args+=("-C--global-option=$arg")
