@@ -91,7 +91,17 @@ class MaxCutAnsatz(Ansatz):
         -0.5 [Z0 Z1] +
         -0.5 [Z0 Z2] +
         -0.5 [Z1 Z2]
+        >>> maxcut.hamiltonian
+        >>> partitions = maxcut.get_partition(5, np.array([4, 1]))
+        >>> for i in partitions:
+        >>>     print(f'partition: left: {i[0]}, right: {i[1]}, cut value: {maxcut.get_cut_value(i)}')
+        partition: left: [2], right: [0, 1], cut value: 2
+        partition: left: [0, 1], right: [2], cut value: 2
+        partition: left: [0], right: [1, 2], cut value: 2
+        partition: left: [0, 1, 2], right: [], cut value: 0
+        partition: left: [], right: [0, 1, 2], cut value: 0
     """
+
     def __init__(self, graph, depth=1):
         if not isinstance(depth, int):
             raise TypeError(f"depth requires a int, but get {type(depth)}")
@@ -130,6 +140,35 @@ class MaxCutAnsatz(Ansatz):
             qo += (QubitOperator('') -
                    QubitOperator(f'Z{node[0]} Z{node[1]}')) / 2
         return qo
+
+    def get_partition(self, max_n, weight):
+        """Get the partitions of this max cut problem ."""
+        sim = Simulator('projectq', self._circuit.n_qubits)
+        sim.apply_circuit(self._circuit, weight)
+        qs = sim.get_qs()
+        idxs = np.argpartition(np.abs(qs), -max_n)[-max_n:]
+        partitions = [bin(i)[2:].zfill(self._circuit.n_qubits)[::-1] for i in idxs]
+        res = []
+        for partition in partitions:
+            left = []
+            right = []
+            for i, j in enumerate(partition):
+                if j == '0':
+                    left.append(i)
+                else:
+                    right.append(i)
+            res.append([left, right])
+        return res
+
+    def get_cut_value(self, partition):
+        """Get the cut values of partitions."""
+        cut_value = 0
+        for edge in self.graph:
+            node_left, node_right = edge
+            if (node_left in partition[0] and node_right in partition[1]
+                    or node_left in partition[1] and node_right in partition[0]):
+                cut_value += 1
+        return cut_value
 
     def _implement(self, graph, depth):
         """Implement of max cut ansatz."""
