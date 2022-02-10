@@ -62,6 +62,10 @@ def build_sdist(sdist_directory, config_settings=None):
 
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     """Build a wheel from this project."""
+    if platform.system() == 'Darwin' and ('-p' not in config_settings['--global-option'] and '--plat-name' not in config_settings['--global-option']):
+        os.environ.setdefault('MACOSX_DEPLOYMENT_TARGET', '10.13')
+        os.environ.setdefault('_PYTHON_HOST_PLATFORM', f'macosx-10.13-{platform.machine()}')
+
     name = setuptools.build_meta.build_wheel(
         wheel_directory=wheel_directory, config_settings=config_settings, metadata_directory=metadata_directory
     )
