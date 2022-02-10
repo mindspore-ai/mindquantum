@@ -68,7 +68,7 @@ done
 # Build the wheels
 
 echo ${PYTHON} -m build -w "${fixed_args[*]}"
-${PYTHON} -m build -w "${fixed_args[@]}"
+${PYTHON} -m build -w "${fixed_args[@]}" "$@"
 
 # ------------------------------------------------------------------------------
 # Move the wheels to the output directory
