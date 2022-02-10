@@ -62,7 +62,7 @@ fi
 if [[ "$OSTYPE" == "darwin"* ]]; then
     # Potentially could be lowered to 10.9
     # (10.13 minimum for full C++17)
-    args+=(--plat-name macosx_10_13_$(uname -m))
+    args+=(--plat-name macosx_10_13_"$(uname -m)")
 fi
 
 fixed_args=()
