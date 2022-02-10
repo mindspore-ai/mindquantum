@@ -23,9 +23,11 @@ from mindquantum.utils.type_value_check import _check_input_type
 from mindquantum.utils.type_value_check import _check_int_type
 from mindquantum.utils.type_value_check import _check_value_should_not_less
 
+
 def _check_intrinsconeparagate(msg, gate_type):
     if not issubclass(gate_type, IntrinsicOneParaGate):
         raise TypeError(f"{msg} requires a type of {IntrinsicOneParaGate}, but get {gate_type}")
+
 
 class IQPEncoding(Ansatz):
     """
@@ -58,6 +60,7 @@ class IQPEncoding(Ansatz):
                 0.02500938+0.35266773j,  0.02500938+0.35266773j,
                 0.31027229+0.16950252j,  0.31027229+0.16950252j])
     """
+
     def __init__(self, n_feature, first_rotation_gate=RZ, second_rotation_gate=RZ, num_repeats=1):
         _check_int_type("n_feature", n_feature)
         _check_value_should_not_less("n_feature", 1, n_feature)
@@ -80,13 +83,28 @@ class IQPEncoding(Ansatz):
             repeat_unit += self.first_rotation_gate(f'alpha{i}').on(i)
         for i in range(1, self.n_feature):
             repeat_unit += X.on(i, i - 1)
-            repeat_unit += self.first_rotation_gate(f'alpha{i - 1} * alpha{i}').on(i)
+            repeat_unit += self.second_rotation_gate(f'alpha{i - 1} * alpha{i}').on(i)
             repeat_unit += X.on(i, i - 1)
         repeat_unit += BARRIER
         self._circuit += repeat_unit * self.num_repeats
 
     def data_preparation(self, data):
-        """Prepare data."""
+        r"""
+        The IQPEncoding ansatz provide a ansatz to encode classical data into quantum state.
+        This method will prepare the classical data into suitable dimension for IQPEncoding.
+        Suppose the origin data has :math:`n` features, then the output data will have :math:`2n-1` features,
+        with first :math:`n` features keep the same and for :math:`m > n`,
+
+        .. math::
+
+            \text{data}_m = \text{data}_{m - n} * \text{data}_{m - n - 1}
+
+        Args:
+            data ([list, numpy.ndarray]): The classical data need to encode with IQPEncoding ansatz.
+
+        Returns:
+            numpy.ndarray, the prepared data that is suitable for this ansatz.
+        """
         _check_input_type("data", (list, np.ndarray), data)
         if isinstance(data, list):
             data = np.array(data)

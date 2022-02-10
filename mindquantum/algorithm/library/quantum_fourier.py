@@ -18,7 +18,7 @@
 import numpy as np
 from mindquantum.core.gates import H, PhaseShift
 from mindquantum.core.circuit import SwapParts, Circuit
-
+from mindquantum.utils.type_value_check import _check_input_type
 
 def _rn(k):
     return PhaseShift(2 * np.pi / 2**k)
@@ -48,7 +48,11 @@ def qft(qubits):
         1/2¦01⟩
         1/2¦10⟩
         1/2¦11⟩
+
+    Returns:
+        Circuit, circuit that can do fourier transform.
     """
+    _check_input_type('qubits', (list, range), qubits)
     c = Circuit()
     n_qubits = len(qubits)
     for i in range(n_qubits):

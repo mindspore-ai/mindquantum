@@ -18,6 +18,7 @@
 import numpy as np
 from mindquantum.core.gates import X, RY
 from mindquantum.core.circuit import Circuit
+from mindquantum.utils.type_value_check import _check_input_type
 
 
 def general_w_state(qubits):
@@ -36,7 +37,11 @@ def general_w_state(qubits):
         0.5773502691896257¦001⟩
         0.5773502691896258¦010⟩
         0.5773502691896257¦100⟩
+
+    Returns:
+        Circuit, circuit that can prepare w state.
     """
+    _check_input_type('qubits', (list, range), qubits)
     circuit = Circuit()
 
     for i in range(len(qubits) - 1):

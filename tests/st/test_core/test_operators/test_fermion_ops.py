@@ -121,8 +121,7 @@ def test_constant():
     Expectation:
     """
     # test constant
-    w1 = FermionOperator('4^ 3 9 3^') + 6.0 * FermionOperator(
-        '2 3^') + 2.0 * FermionOperator('')
+    w1 = FermionOperator('4^ 3 9 3^') + 6.0 * FermionOperator('2 3^') + 2.0 * FermionOperator('')
     assert w1.constant == 2.0
 
 
@@ -147,3 +146,12 @@ def test_eq():
     """
     a = FermionOperator('0 1^', 'x')
     assert a.subs({'x': 1}) == FermionOperator('0 1^')
+
+
+def test_fermion_operator_iter():
+    """
+    Description: Test fermion operator iter
+    Expectation:
+    """
+    a = FermionOperator('0 1^') + FermionOperator('2^ 3', {"a": -3})
+    assert a == sum(list(a))

@@ -1,4 +1,119 @@
-# MindQuantum 0.5.0
+# MindQuantum 0.6.0
+
+## MindQuantum 0.6.0 Release Notes
+
+### Major Features and Improvements
+
+#### Better iteration supported for `QubitOperator` and `FermionOperator`
+
+> The following example will be demonstrated with `QubitOperator`
+
+- Iter multiple terms `QubitOperator`
+
+```python
+>>> ops = QubitOperator('X0 Y1', 1) + QubitOperator('Z2 X3', {'a': 3})
+
+>>> for idx, o in enumerate(ops):
+>>>     print(f'Term {idx}: {o}')
+```
+
+You will get each term of this operator,
+
+```bash
+Term 0: 1 [X0 Y1]
+Term 1: 3*a [Z2 X3]
+```
+
+- Iter single term `QubitOperator`
+
+```python
+>>> ops = QubitOperator('X0 Y1', 2)
+
+>>> for idx, o in enumerate(ops):
+>>>     print(f'Word {idx}: {o}')
+```
+
+You will get each word of this operator with coefficient set to identity,
+
+```bash
+Word 0: 1 [X0]
+Word 1: 1 [Y1]
+```
+
+### More built-in circuit supported
+
+- [**general_w_state**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarygeneral-w-state): circuit that can prepare a w state.
+- [**general_ghz_state**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarygeneral-ghz-state): circuit that can prepare a ghz state.
+- [**bitphaseflip_operator**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarybitphaseflip-operator): circuit that can flip the sign of one or multiple calculation base.
+- [**amplitude_encoder**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.library.html#mindquantumalgorithmlibraryamplitude-encoder): circuit that can encode classical number into quantum amplitude.
+
+### Richer circuit operation supported
+
+For origin circuit,
+
+```python
+>>> circuit = Circuit().z(0).rx('a', 1, 0).y(1)
+```
+
+```bash
+q0: ──Z──────●─────────
+             │
+q1: ───────RX(a)────Y──
+```
+
+- Add a integer to a circuit will shift the qubit index.
+
+```python
+>>> circuit + 2
+```
+
+```bash
+q2: ──Z──────●─────────
+             │
+q3: ───────RX(a)────Y──
+```
+
+```python
+>>> 1 - circuit
+```
+
+```bash
+q0: ───────RX(a)────Y──
+             │
+q1: ──Z──────●─────────
+```
+
+- Add a string to a circuit will add prefix to every parameters in this circuit.
+
+```python
+>>> 'l1' + circuit
+```
+
+```bash
+q0: ──Z───────●───────────
+              │
+q1: ───────RX(l1_a)────Y──
+```
+
+- Reverse circuit qubits, the circuit will be flipped upside down.
+
+```python
+>>> circuit.reverse_qubits()
+```
+
+```bash
+q0: ───────RX(a)────Y──
+             │
+q1: ──Z──────●─────────
+```
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+yufan, wengwenkang, xuxusheng, wangzidong, yangkang, lujiale, fanyi, zhangwengang, wangkaisheng, zhoufeng, wangsiyuan, gongxiaoqing, chengxianbin, sunxiyin, wenwenkang, lvdingshun, cuijiangyu, chendiqing, zhangkai, Damien Ngyuen, Zotov Yuriy, liqin, zengjinglin, cuixiaopeng.
+
+Contributions of any kind are welcome!
 
 ## MindQuantum 0.5.0 Release Notes
 
