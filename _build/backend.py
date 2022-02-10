@@ -113,7 +113,7 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
             sys.argv = [
                 'delocate-wheel',
                 '-v',
-                '--require-archs={platform.machine()}',
+                f'--require-archs={platform.machine()}',
                 name_full,
             ]
 
