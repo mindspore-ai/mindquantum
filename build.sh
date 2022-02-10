@@ -60,7 +60,6 @@ fi
 
 $PYTHON -m pip install -U "${pkgs[@]}"
 
-
 # ------------------------------------------------------------------------------
 # Setup arguments for build
 
@@ -78,8 +77,8 @@ done
 # ------------------------------------------------------------------------------
 # Build the wheels
 
-echo ${PYTHON} -m build -w "${fixed_args[*]}" "$@"
-${PYTHON} -m build -w "${fixed_args[@]}" "$@"
+echo MQ_DELOCATE_WHEEL=1 ${PYTHON} -m build -w "${fixed_args[*]}" "$@"
+MQ_DELOCATE_WHEEL=1 ${PYTHON} -m build -w "${fixed_args[@]}" "$@"
 
 # ------------------------------------------------------------------------------
 # Move the wheels to the output directory
