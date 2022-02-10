@@ -17,11 +17,16 @@
 #ifndef MINDQUANTUM_UTILS_H_
 #define MINDQUANTUM_UTILS_H_
 
+#include <stdint.h>
 #ifdef ENABLE_OPENMP
 #    include <omp.h>
 #endif  // ENABLE_OPENMP  // NOLINT
 
-#include <x86intrin.h>
+#ifdef _MSC_VER
+#    include <intrin.h>
+#else
+#    include <x86intrin.h>
+#endif  // _MSC_VER
 
 #include <complex>
 #include <ctime>
@@ -74,18 +79,31 @@ Index GetControlMask(const VT<Index> &ctrls);
 
 PauliMask GetPauliMask(const VT<PauliWord> &pws);
 
-// inline int CountOne(uint32_t n) { return __popcntd(n); }
-// inline int CountOne(uint64_t n) { return __popcntq(n);}
-inline int CountOne(uint32_t n) {
+#ifdef _MSC_VER
+inline uint32_t CountOne(uint32_t n) {
+    return __popcnt(n);
+}
+inline uint64_t CountOne(uint64_t n) {
+    return __popcnt64(n);
+}
+inline uint32_t CountOne(int32_t n) {
+    return CountOne(uint32_t(n));
+}
+inline uint64_t CountOne(int64_t n) {
+    return CountOne(uint64_t(n));
+}
+#else
+inline uint32_t CountOne(uint32_t n) {
     int result;
     asm("popcnt %1,%0" : "=r"(result) : "r"(n));
     return result;
 }
 
-inline int CountOne(int64_t n) {
+inline uint64_t CountOne(int64_t n) {
     uint32_t *p = reinterpret_cast<uint32_t *>(&n);
     return CountOne(p[0]) + CountOne(p[1]);
 }
+#endif  // _MSC_VER
 
 // inline int CountOne(uint64_t n) {
 //   uint8_t *p = reinterpret_cast<uint8_t *>(&n);

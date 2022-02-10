@@ -1,6 +1,6 @@
-diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/intrin/kernel1.hpp ProjectQ-0.5.1_new/projectq/backends/_sim/_cppkernels/intrin/kernel1.hpp
---- ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/intrin/kernel1.hpp	2020-06-05 21:07:57.000000000 +0800
-+++ ProjectQ-0.5.1_new/projectq/backends/_sim/_cppkernels/intrin/kernel1.hpp	2021-04-19 18:04:05.541802882 +0800
+diff -ruNx alignedallocator.hpp original/projectq/backends/_sim/_cppkernels/intrin/kernel1.hpp patched/projectq/backends/_sim/_cppkernels/intrin/kernel1.hpp
+--- original/projectq/backends/_sim/_cppkernels/intrin/kernel1.hpp	2020-06-05 15:07:57.000000000 +0200
++++ patched/projectq/backends/_sim/_cppkernels/intrin/kernel1.hpp	2022-02-08 19:17:47.492721800 +0100
 @@ -17,18 +17,18 @@
  {
      __m256d v[2];
@@ -25,9 +25,27 @@ diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/intrin/kerne
      std::size_t d0 = 1UL << id0;
  
      __m256d mm[] = {load(&m[0][0], &m[1][0]), load(&m[0][1], &m[1][1])};
-diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/intrin/kernel2.hpp ProjectQ-0.5.1_new/projectq/backends/_sim/_cppkernels/intrin/kernel2.hpp
---- ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/intrin/kernel2.hpp	2020-06-05 21:07:57.000000000 +0800
-+++ ProjectQ-0.5.1_new/projectq/backends/_sim/_cppkernels/intrin/kernel2.hpp	2021-04-19 18:04:05.541802882 +0800
+@@ -44,7 +44,7 @@
+ 
+     if (ctrlmask == 0){
+         #pragma omp for collapse(LOOP_COLLAPSE1) schedule(static)
+-        for (std::size_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
++        for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
+             for (std::size_t i1 = 0; i1 < dsorted[0]; ++i1){
+                 kernel_core(psi, i0 + i1, d0, mm, mmt);
+             }
+@@ -52,7 +52,7 @@
+     }
+     else{
+         #pragma omp for collapse(LOOP_COLLAPSE1) schedule(static)
+-        for (std::size_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
++        for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
+             for (std::size_t i1 = 0; i1 < dsorted[0]; ++i1){
+                 if (((i0 + i1)&ctrlmask) == ctrlmask)
+                     kernel_core(psi, i0 + i1, d0, mm, mmt);
+diff -ruNx alignedallocator.hpp original/projectq/backends/_sim/_cppkernels/intrin/kernel2.hpp patched/projectq/backends/_sim/_cppkernels/intrin/kernel2.hpp
+--- original/projectq/backends/_sim/_cppkernels/intrin/kernel2.hpp	2020-06-05 15:07:57.000000000 +0200
++++ patched/projectq/backends/_sim/_cppkernels/intrin/kernel2.hpp	2022-02-08 19:17:41.316252100 +0100
 @@ -17,21 +17,21 @@
  {
      __m256d v[4];
@@ -58,9 +76,35 @@ diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/intrin/kerne
      std::size_t d0 = 1UL << id0;
      std::size_t d1 = 1UL << id1;
  
-diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/intrin/kernel3.hpp ProjectQ-0.5.1_new/projectq/backends/_sim/_cppkernels/intrin/kernel3.hpp
---- ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/intrin/kernel3.hpp	2020-06-05 21:07:57.000000000 +0800
-+++ ProjectQ-0.5.1_new/projectq/backends/_sim/_cppkernels/intrin/kernel3.hpp	2021-04-19 18:04:05.541802882 +0800
+@@ -49,9 +49,9 @@
+ 
+     if (ctrlmask == 0){
+         #pragma omp for collapse(LOOP_COLLAPSE2) schedule(static)
+-        for (std::size_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
+-            for (std::size_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]){
+-                for (std::size_t i2 = 0; i2 < dsorted[1]; ++i2){
++        for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
++            for (omp::idx_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]){
++                for (omp::idx_t i2 = 0; i2 < dsorted[1]; ++i2){
+                     kernel_core(psi, i0 + i1 + i2, d0, d1, mm, mmt);
+                 }
+             }
+@@ -59,9 +59,9 @@
+     }
+     else{
+         #pragma omp for collapse(LOOP_COLLAPSE2) schedule(static)
+-        for (std::size_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
+-            for (std::size_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]){
+-                for (std::size_t i2 = 0; i2 < dsorted[1]; ++i2){
++        for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
++            for (omp::idx_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]){
++                for (omp::idx_t i2 = 0; i2 < dsorted[1]; ++i2){
+                     if (((i0 + i1 + i2)&ctrlmask) == ctrlmask)
+                         kernel_core(psi, i0 + i1 + i2, d0, d1, mm, mmt);
+                 }
+diff -ruNx alignedallocator.hpp original/projectq/backends/_sim/_cppkernels/intrin/kernel3.hpp patched/projectq/backends/_sim/_cppkernels/intrin/kernel3.hpp
+--- original/projectq/backends/_sim/_cppkernels/intrin/kernel3.hpp	2020-06-05 15:07:57.000000000 +0200
++++ patched/projectq/backends/_sim/_cppkernels/intrin/kernel3.hpp	2022-02-08 19:14:10.301241000 +0100
 @@ -17,10 +17,10 @@
  {
      __m256d v[4];
@@ -111,9 +155,39 @@ diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/intrin/kerne
      std::size_t d0 = 1UL << id0;
      std::size_t d1 = 1UL << id1;
      std::size_t d2 = 1UL << id2;
-diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/intrin/kernel4.hpp ProjectQ-0.5.1_new/projectq/backends/_sim/_cppkernels/intrin/kernel4.hpp
---- ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/intrin/kernel4.hpp	2020-06-05 21:07:57.000000000 +0800
-+++ ProjectQ-0.5.1_new/projectq/backends/_sim/_cppkernels/intrin/kernel4.hpp	2021-04-19 18:04:05.541802882 +0800
+@@ -64,10 +64,10 @@
+ 
+     if (ctrlmask == 0){
+         #pragma omp for collapse(LOOP_COLLAPSE3) schedule(static)
+-        for (std::size_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
+-            for (std::size_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]){
+-                for (std::size_t i2 = 0; i2 < dsorted[1]; i2 += 2 * dsorted[2]){
+-                    for (std::size_t i3 = 0; i3 < dsorted[2]; ++i3){
++        for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
++            for (omp::idx_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]){
++                for (omp::idx_t i2 = 0; i2 < dsorted[1]; i2 += 2 * dsorted[2]){
++                    for (omp::idx_t i3 = 0; i3 < dsorted[2]; ++i3){
+                         kernel_core(psi, i0 + i1 + i2 + i3, d0, d1, d2, mm, mmt);
+                     }
+                 }
+@@ -76,10 +76,10 @@
+     }
+     else{
+         #pragma omp for collapse(LOOP_COLLAPSE3) schedule(static)
+-        for (std::size_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
+-            for (std::size_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]){
+-                for (std::size_t i2 = 0; i2 < dsorted[1]; i2 += 2 * dsorted[2]){
+-                    for (std::size_t i3 = 0; i3 < dsorted[2]; ++i3){
++        for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
++            for (omp::idx_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]){
++                for (omp::idx_t i2 = 0; i2 < dsorted[1]; i2 += 2 * dsorted[2]){
++                    for (omp::idx_t i3 = 0; i3 < dsorted[2]; ++i3){
+                         if (((i0 + i1 + i2 + i3)&ctrlmask) == ctrlmask)
+                             kernel_core(psi, i0 + i1 + i2 + i3, d0, d1, d2, mm, mmt);
+                     }
+diff -ruNx alignedallocator.hpp original/projectq/backends/_sim/_cppkernels/intrin/kernel4.hpp patched/projectq/backends/_sim/_cppkernels/intrin/kernel4.hpp
+--- original/projectq/backends/_sim/_cppkernels/intrin/kernel4.hpp	2020-06-05 15:07:57.000000000 +0200
++++ patched/projectq/backends/_sim/_cppkernels/intrin/kernel4.hpp	2022-02-08 19:17:35.207743600 +0100
 @@ -17,10 +17,10 @@
  {
      __m256d v[4];
@@ -202,9 +276,43 @@ diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/intrin/kerne
      std::size_t d0 = 1UL << id0;
      std::size_t d1 = 1UL << id1;
      std::size_t d2 = 1UL << id2;
-diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/intrin/kernel5.hpp ProjectQ-0.5.1_new/projectq/backends/_sim/_cppkernels/intrin/kernel5.hpp
---- ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/intrin/kernel5.hpp	2020-06-05 21:07:57.000000000 +0800
-+++ ProjectQ-0.5.1_new/projectq/backends/_sim/_cppkernels/intrin/kernel5.hpp	2021-04-19 18:04:05.541802882 +0800
+@@ -101,11 +101,11 @@
+ 
+     if (ctrlmask == 0){
+         #pragma omp for collapse(LOOP_COLLAPSE4) schedule(static)
+-        for (std::size_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
+-            for (std::size_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]){
+-                for (std::size_t i2 = 0; i2 < dsorted[1]; i2 += 2 * dsorted[2]){
+-                    for (std::size_t i3 = 0; i3 < dsorted[2]; i3 += 2 * dsorted[3]){
+-                        for (std::size_t i4 = 0; i4 < dsorted[3]; ++i4){
++        for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
++            for (omp::idx_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]){
++                for (omp::idx_t i2 = 0; i2 < dsorted[1]; i2 += 2 * dsorted[2]){
++                    for (omp::idx_t i3 = 0; i3 < dsorted[2]; i3 += 2 * dsorted[3]){
++                        for (omp::idx_t i4 = 0; i4 < dsorted[3]; ++i4){
+                             kernel_core(psi, i0 + i1 + i2 + i3 + i4, d0, d1, d2, d3, mm, mmt);
+                         }
+                     }
+@@ -115,11 +115,11 @@
+     }
+     else{
+         #pragma omp for collapse(LOOP_COLLAPSE4) schedule(static)
+-        for (std::size_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
+-            for (std::size_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]){
+-                for (std::size_t i2 = 0; i2 < dsorted[1]; i2 += 2 * dsorted[2]){
+-                    for (std::size_t i3 = 0; i3 < dsorted[2]; i3 += 2 * dsorted[3]){
+-                        for (std::size_t i4 = 0; i4 < dsorted[3]; ++i4){
++        for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
++            for (omp::idx_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]){
++                for (omp::idx_t i2 = 0; i2 < dsorted[1]; i2 += 2 * dsorted[2]){
++                    for (omp::idx_t i3 = 0; i3 < dsorted[2]; i3 += 2 * dsorted[3]){
++                        for (omp::idx_t i4 = 0; i4 < dsorted[3]; ++i4){
+                             if (((i0 + i1 + i2 + i3 + i4)&ctrlmask) == ctrlmask)
+                                 kernel_core(psi, i0 + i1 + i2 + i3 + i4, d0, d1, d2, d3, mm, mmt);
+                         }
+diff -ruNx alignedallocator.hpp original/projectq/backends/_sim/_cppkernels/intrin/kernel5.hpp patched/projectq/backends/_sim/_cppkernels/intrin/kernel5.hpp
+--- original/projectq/backends/_sim/_cppkernels/intrin/kernel5.hpp	2020-06-05 15:07:57.000000000 +0200
++++ patched/projectq/backends/_sim/_cppkernels/intrin/kernel5.hpp	2022-02-08 19:14:24.233743800 +0100
 @@ -17,10 +17,10 @@
  {
      __m256d v[4];
@@ -369,9 +477,76 @@ diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/intrin/kerne
      std::size_t d0 = 1UL << id0;
      std::size_t d1 = 1UL << id1;
      std::size_t d2 = 1UL << id2;
-diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/simulator.hpp ProjectQ-0.5.1_new/projectq/backends/_sim/_cppkernels/simulator.hpp
---- ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/simulator.hpp	2020-06-05 21:07:57.000000000 +0800
-+++ ProjectQ-0.5.1_new/projectq/backends/_sim/_cppkernels/simulator.hpp	2021-04-20 11:46:27.115554725 +0800
+@@ -222,12 +222,12 @@
+ 
+     if (ctrlmask == 0){
+         #pragma omp for collapse(LOOP_COLLAPSE5) schedule(static)
+-        for (std::size_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
+-            for (std::size_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]){
+-                for (std::size_t i2 = 0; i2 < dsorted[1]; i2 += 2 * dsorted[2]){
+-                    for (std::size_t i3 = 0; i3 < dsorted[2]; i3 += 2 * dsorted[3]){
+-                        for (std::size_t i4 = 0; i4 < dsorted[3]; i4 += 2 * dsorted[4]){
+-                            for (std::size_t i5 = 0; i5 < dsorted[4]; ++i5){
++        for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
++            for (omp::idx_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]){
++                for (omp::idx_t i2 = 0; i2 < dsorted[1]; i2 += 2 * dsorted[2]){
++                    for (omp::idx_t i3 = 0; i3 < dsorted[2]; i3 += 2 * dsorted[3]){
++                        for (omp::idx_t i4 = 0; i4 < dsorted[3]; i4 += 2 * dsorted[4]){
++                            for (omp::idx_t i5 = 0; i5 < dsorted[4]; ++i5){
+                                 kernel_core(psi, i0 + i1 + i2 + i3 + i4 + i5, d0, d1, d2, d3, d4, mm, mmt);
+                             }
+                         }
+@@ -238,12 +238,12 @@
+     }
+     else{
+         #pragma omp for collapse(LOOP_COLLAPSE5) schedule(static)
+-        for (std::size_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
+-            for (std::size_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]){
+-                for (std::size_t i2 = 0; i2 < dsorted[1]; i2 += 2 * dsorted[2]){
+-                    for (std::size_t i3 = 0; i3 < dsorted[2]; i3 += 2 * dsorted[3]){
+-                        for (std::size_t i4 = 0; i4 < dsorted[3]; i4 += 2 * dsorted[4]){
+-                            for (std::size_t i5 = 0; i5 < dsorted[4]; ++i5){
++        for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
++            for (omp::idx_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]){
++                for (omp::idx_t i2 = 0; i2 < dsorted[1]; i2 += 2 * dsorted[2]){
++                    for (omp::idx_t i3 = 0; i3 < dsorted[2]; i3 += 2 * dsorted[3]){
++                        for (omp::idx_t i4 = 0; i4 < dsorted[3]; i4 += 2 * dsorted[4]){
++                            for (omp::idx_t i5 = 0; i5 < dsorted[4]; ++i5){
+                                 if (((i0 + i1 + i2 + i3 + i4 + i5)&ctrlmask) == ctrlmask)
+                                     kernel_core(psi, i0 + i1 + i2 + i3 + i4 + i5, d0, d1, d2, d3, d4, mm, mmt);
+                             }
+diff -ruNx alignedallocator.hpp original/projectq/backends/_sim/_cppkernels/intrin/kernels.hpp patched/projectq/backends/_sim/_cppkernels/intrin/kernels.hpp
+--- original/projectq/backends/_sim/_cppkernels/intrin/kernels.hpp	2020-06-05 15:07:57.000000000 +0200
++++ patched/projectq/backends/_sim/_cppkernels/intrin/kernels.hpp	2022-02-08 19:18:01.809906200 +0100
+@@ -20,6 +20,7 @@
+ #include <algorithm>
+ #include "cintrin.hpp"
+ #include "alignedallocator.hpp"
++#include "../omp_compat.hpp"
+ 
+ #define LOOP_COLLAPSE1 2
+ #define LOOP_COLLAPSE2 3
+diff -ruNx alignedallocator.hpp original/projectq/backends/_sim/_cppkernels/omp_compat.hpp patched/projectq/backends/_sim/_cppkernels/omp_compat.hpp
+--- original/projectq/backends/_sim/_cppkernels/omp_compat.hpp	1970-01-01 01:00:00.000000000 +0100
++++ patched/projectq/backends/_sim/_cppkernels/omp_compat.hpp	2022-02-08 17:50:05.344973100 +0100
+@@ -0,0 +1,14 @@
++#ifndef OMP_COMPAT_HPP
++#define OMP_COMPAT_HPP
++
++#include <stdint.h>
++
++namespace omp {
++#ifdef _MSC_VER
++typedef int64_t idx_t;
++#else
++typedef uint64_t idx_t;
++#endif // _MSC_VER
++}  // omp
++
++#endif // OMP_COMPAT_HPP
+diff -ruNx alignedallocator.hpp original/projectq/backends/_sim/_cppkernels/simulator.hpp patched/projectq/backends/_sim/_cppkernels/simulator.hpp
+--- original/projectq/backends/_sim/_cppkernels/simulator.hpp	2020-06-05 15:07:57.000000000 +0200
++++ patched/projectq/backends/_sim/_cppkernels/simulator.hpp	2022-02-08 19:18:53.558466800 +0100
 @@ -18,11 +18,7 @@
  #include <vector>
  #include <complex>
@@ -649,7 +824,7 @@ diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/simulator.hp
 +        StateVector current_state = (StateVector)malloc(len_ *sizeof(calc_type));
  #pragma omp parallel for schedule(static)
 -        for (std::size_t i = 0; i < vec_.size(); ++i)
-+        for (std::size_t i = 0; i < len_; ++i)
++        for (omp::idx_t i = 0; i < len_; ++i)
            current_state[i] = vec_[i];
  
          for (auto const& term : td){
@@ -662,7 +837,7 @@ diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/simulator.hp
 -                auto const b1 = -std::imag(current_state[i]);
 -                auto const a2 = std::real(vec_[i]);
 -                auto const b2 = std::imag(vec_[i]);
-+            for (std::size_t i = 0; i < (len_ >> 1); ++i){
++            for (omp::idx_t i = 0; i < (len_ >> 1); ++i){
 +                auto const a1 = current_state[2 * i];
 +                auto const b1 = -current_state[2 * i + 1];
 +                auto const a2 = vec_[2 * i];
@@ -697,7 +872,7 @@ diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/simulator.hp
  #pragma omp parallel for schedule(static)
 -        for (std::size_t i = 0; i < vec_.size(); ++i){
 -          new_state[i] = 0;
-+        for (std::size_t i = 0; i < len_; ++i){
++        for (omp::idx_t i = 0; i < len_; ++i){
            current_state[i] = vec_[i];
          }
          for (auto const& term : td){
@@ -707,7 +882,7 @@ diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/simulator.hp
 -            for (std::size_t i = 0; i < vec_.size(); ++i){
 -                new_state[i] += coefficient * vec_[i];
 -                vec_[i] = current_state[i];
-+            for (std::size_t i = 0; i < (len_ >> 1); ++i){
++            for (omp::idx_t i = 0; i < (len_ >> 1); ++i){
 +                new_state[2 * i] += coefficient.real() * vec_[2 * i] - coefficient.imag() * vec_[2 * i + 1];
 +                new_state[2 * i + 1] += coefficient.real() * vec_[2 * i + 1] + coefficient.imag() * vec_[2 * i];
 +                vec_[2 * i] = current_state[2 * i];
@@ -781,7 +956,7 @@ diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/simulator.hp
                      apply_term(tup.first, ids, {});
                      #pragma omp parallel for schedule(static)
 -                    for (std::size_t j = 0; j < vec_.size(); ++j){
-+                    for (std::size_t j = 0; j < len_; ++j){
++                    for (omp::idx_t j = 0; j < len_; ++j){
                          update[j] += vec_[j] * tup.second;
                          vec_[j] = current_state[j];
                      }
@@ -791,7 +966,7 @@ diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/simulator.hp
 -                for (std::size_t j = 0; j < vec_.size(); ++j){
 -                    update[j] *= coeff;
 -                    vec_[j] = update[j];
-+                for (std::size_t j = 0; j < (len_ >> 1); ++j){
++                for (omp::idx_t j = 0; j < (len_ >> 1); ++j){
 +                    complex_type tmp(update[2 * j], update[2 * j + 1]);
 +                    tmp *= coeff;
 +                    update[2 * j] *= std::real(tmp);
@@ -821,7 +996,7 @@ diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/simulator.hp
 -                if ((j & ctrlmask) == ctrlmask)
 -                    output_state[j] *= correction;
 -                vec_[j] = output_state[j];
-+            for (std::size_t j = 0; j < (len_ >>1); ++j){
++            for (omp::idx_t j = 0; j < (len_ >>1); ++j){
 +                if ((j & ctrlmask) == ctrlmask){
 +                    complex_type tmp(output_state[2 * j], output_state[2 * j + 1]);
 +                    tmp *= correction;
@@ -935,7 +1110,7 @@ diff --color -aur ProjectQ-0.5.1/projectq/backends/_sim/_cppkernels/simulator.hp
 +    inline StateVector copy(StateVector source, unsigned len){
 +    StateVector result = (StateVector)malloc(len * sizeof(calc_type));
 +#pragma omp parallel for schedule(static)
-+    for (std::size_t i = 0; i < len; ++i) {
++    for (omp::idx_t i = 0; i < len; ++i) {
 +      result[i] = source[i];
      }
 +    return result;

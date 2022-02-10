@@ -197,7 +197,7 @@ function(check_link_flags lang var_prefix)
     set(_separate_options TRUE)
     list(REMOVE_AT _wrapper_flag -1)
   endif()
-  string(REPLACE ";" " " _wrapper_flag ${_wrapper_flag})
+  string(REPLACE ";" " " _wrapper_flag "${_wrapper_flag}")
 
   foreach(_flag_list ${CHECK_LF_UNPARSED_ARGUMENTS})
     separate_arguments(_flag_list)

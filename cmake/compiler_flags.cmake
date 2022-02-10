@@ -47,12 +47,40 @@ endif()
 
 # ------------------------------------------------------------------------------
 
+if(WIN32)
+  test_compile_option(
+    _compile_win32_flags
+    LANGS CXX
+    FLAGS "/Zc:__cplusplus"
+    AUTO_ADD_CO
+  )
+endif()
+
+# ------------------------------------------------------------------------------
+
 test_compile_option(
   _compile_flags_release
   LANGS CXX DPCXX
   FLAGS "-ffast-math /fp:fast -fast" "-O3 /Ox"
   AUTO_ADD_CO
-  GENEX "$<AND:$<OR:$<CONFIG:RELEASE>,$<CONFIG:RELWITHDEBINFO>>,$<COMPILE_LANGUAGE:@lang@>>")
+  GENEX "$<AND:$<OR:$<CONFIG:RELEASE>,$<CONFIG:RELWITHDEBINFO>>,$<COMPILE_LANGUAGE:@lang@>>"
+)
+
+# --------------------------------------
+
+if(X86_64)
+  test_compile_option(
+    _intrin_flag
+    LANGS CXX DPCXX
+    FLAGS "-mavx2 -xCORE-AVX2 /QxCORE-AVX2 /arch:AVX2"
+  )
+elseif(AARCH64)
+  test_compile_option(
+    _intrin_flag
+    LANGS CXX DPCXX
+    FLAGS "-march=armv8.5-a -march=armv8.4-a -march=armv8.3-a -march=armv8.2-a"
+  )
+endif()
 
 # --------------------------------------
 

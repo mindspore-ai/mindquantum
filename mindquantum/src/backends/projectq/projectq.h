@@ -32,6 +32,15 @@
 #include "projectq/backends/_sim/_cppkernels/simulator.hpp"
 
 namespace mindquantum {
+
+namespace omp {
+#ifdef _MSC_VER
+typedef int64_t idx_t;
+#else
+typedef uint64_t idx_t;
+#endif  // _MSC_VER
+}  // namespace omp
+
 namespace projectq {
 template <typename T>
 class Projectq : public Simulator {
@@ -119,7 +128,7 @@ class Projectq : public Simulator {
         unsigned collapse = (static_cast<unsigned>(rng_() > zero_amps) << qubit);
         auto norm = (collapse == 0) ? sqrt(zero_amps) : sqrt(1 - zero_amps);
 #pragma omp parallel for schedule(static)
-        for (unsigned i = 0; i < (len_ >> 1); i++) {
+        for (omp::idx_t i = 0; i < (len_ >> 1); i++) {
             if ((i & mask) == collapse) {
                 vec_[2 * i] /= norm;
                 vec_[2 * i + 1] /= norm;
@@ -487,7 +496,7 @@ class Projectq : public Simulator {
     VVT<CT<calc_type>> GetCircuitMatrix(const VT<BasicGate<T>> &circ, const ParameterResolver<T> &pr) {
         VVT<CT<calc_type>> out((1 << n_qubits_));
 #pragma omp parallel for schedule(static)
-        for (size_t i = 0; i < (1UL << n_qubits_); i++) {
+        for (omp::idx_t i = 0; i < (1UL << n_qubits_); i++) {
             Projectq<T> sim = Projectq<T>(0, n_qubits_);
             sim.vec_[0] = 0;
             sim.vec_[2 * i] = 1;
