@@ -354,7 +354,7 @@ class CMakeBuildExt(build_ext):
         """Build a single C/C++ extension using CMake."""
         distutils.log.info(f' Building {ext.pymod} '.center(80, '-'))
         distutils.log.info(
-            'CMake command: {" ".join(self.cmake_cmd + ["--build", ".", "--target", ext.target] + self.build_args)}'
+            f'CMake command: {" ".join(self.cmake_cmd + ["--build", ".", "--target", ext.target] + self.build_args)}'
         )
         distutils.log.info(f'   cwd: {self._get_temp_dir(ext.src_dir)}')
         try:
