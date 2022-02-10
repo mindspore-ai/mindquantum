@@ -48,7 +48,18 @@ cd "${BASEPATH}"
 
 $PYTHON -m venv venv
 source venv/bin/activate
-$PYTHON -m pip install -U pip setuptools wheel build pybind11
+
+
+pkgs=(pip setuptools wheel build pybind11)
+
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    pkgs+=(auditwheel)
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    pkgs+=(delocate)
+fi
+
+$PYTHON -m pip install -U "${pkgs[@]}"
+
 
 # ------------------------------------------------------------------------------
 # Setup arguments for build
