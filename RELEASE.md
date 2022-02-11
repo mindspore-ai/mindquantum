@@ -107,6 +107,11 @@ q0: ───────RX(a)────Y──
 q1: ──Z──────●─────────
 ```
 
+### Feature enhancement
+
+- `MaxCutAnsatz`: [**get_partition**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.html#mindquantumalgorithmnisqmaxcutansatzget-partition)
+- `MaxCutAnsatz`: [**get_cut_value**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.html#mindquantumalgorithmnisqmaxcutansatzget-cut-value)
+
 ### Contributors
 
 Thanks goes to these wonderful people:

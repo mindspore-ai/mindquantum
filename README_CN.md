@@ -1,29 +1,40 @@
 # MindQuantum
 
+[![API](https://badg.vercel.app/badge/MQ/API?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.html)
+[![Tutorial](https://badg.vercel.app/badge/MQ/Tutorial?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/zh-CN/master/parameterized_quantum_circuit.html)
+[![Tutorial](https://badg.vercel.app/gitee/open-issues/mindspore/mindquantum?scale=1.3)](https://gitee.com/mindspore/mindquantum/issues)
+[![Tutorial](https://badg.vercel.app/gitee/stars/mindspore/mindquantum?scale=1.3&color=purple)](https://gitee.com/mindspore/mindquantum)
+[![Tutorial](https://badg.vercel.app/gitee/forks/mindspore/mindquantum?scale=1.3&color=purple)](https://gitee.com/mindspore/mindquantum)
+[![Release](https://badg.vercel.app/gitee/release/mindspore/mindquantum?scale=1.3)](https://gitee.com/mindspore/mindquantum/releases)
+[![LICENSE](https://badg.vercel.app/gitee/license/mindspore/mindquantum?scale=1.3)](https://github.com/mindspore-ai/mindquantum/blob/master/LICENSE)
+[![PRs Welcome](https://badg.vercel.app/badge/PRs/Welcome?scale=1.3)](https://gitee.com/mindspore/mindquantum/pulls)
+
 [View English](./README.md)
 
 <!-- TOC --->
 
-- [MindQuantum介绍](#mindquantum介绍)
-- [初体验](#初体验)
-    - [搭建参数化量子线路](#搭建参数化量子线路)
-    - [训练量子神经网络](#训练量子神经网络)
-- [API](#api)
-- [安装教程](#安装教程)
-    - [确认系统环境信息](#确认系统环境信息)
-    - [pip安装](#pip安装)
-        - [安装MindSpore](#安装mindspore)
-        - [安装MindQuantum](#安装mindquantum)
-    - [源码安装](#源码安装)
-- [验证是否成功安装](#验证是否成功安装)
-- [Docker安装](#docker安装)
-- [注意事项FAQ](#注意事项faq)
-- [快速入门](#快速入门)
-- [文档](#文档)
-- [社区](#社区)
-    - [治理](#治理)
-- [贡献](#贡献)
-- [许可证](#许可证)
+- [MindQuantum](#mindquantum)
+    - [MindQuantum介绍](#mindquantum介绍)
+    - [初体验](#初体验)
+        - [搭建参数化量子线路](#搭建参数化量子线路)
+        - [训练量子神经网络](#训练量子神经网络)
+    - [案例教程](#案例教程)
+    - [API](#api)
+    - [安装教程](#安装教程)
+        - [确认系统环境信息](#确认系统环境信息)
+        - [pip安装](#pip安装)
+            - [安装MindSpore](#安装mindspore)
+            - [安装MindQuantum](#安装mindquantum)
+        - [源码安装](#源码安装)
+    - [验证是否成功安装](#验证是否成功安装)
+    - [Docker安装](#docker安装)
+    - [注意事项FAQ](#注意事项faq)
+    - [快速入门](#快速入门)
+    - [文档](#文档)
+    - [社区](#社区)
+        - [治理](#治理)
+    - [贡献](#贡献)
+    - [许可证](#许可证)
 
 <!-- /TOC -->
 
@@ -88,6 +99,27 @@ print(dict(zip(ansatz.params_name, net.trainable_params()[0].asnumpy())))
 {'b1': 1.5720831, 'b0': 0.006396801}
 ```
 
+## 案例教程
+
+1. 基础使用指南
+
+    - [变分量子线路](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/parameterized_quantum_circuit.html)
+    - [量子神经网络初体验](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/initial_experience_of_quantum_neural_network.html)
+    - [变分量子线路梯度计算进阶](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/get_gradient_of_PQC_with_mindquantum.html)
+
+2. 变分量子算法
+
+    - [通过量子神经网络对鸢尾花进行分类](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/classification_of_iris_by_qnn.html)
+    - [量子近似优化算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/quantum_approximate_optimization_algorithm.html)
+    - [量子神经网络在自然语言处理中的应用](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/qnn_for_nlp.html)
+    - [在量子化学计算中应用量子变分求解器](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/vqe_for_quantum_chemistry.html)
+
+3. 通用量子算法
+
+    - [量子相位估计算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/quantum_phase_estimation.html)
+    - [基于MindQuantum的Grover搜索算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/grover_search_algorithm.html)
+    - [基于MindQuantum的Shor算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/shor_algorithm.html)
+
 ## API
 
 对于上述示例所涉及API和其他更多用法，请查看MindQuantum API文档[文档链接](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.html)
@@ -96,15 +128,15 @@ print(dict(zip(ansatz.params_name, net.trainable_params()[0].asnumpy())))
 
 ### 确认系统环境信息
 
-- 硬件平台确认为Linux系统下的CPU，并支持avx2指令集。
-- 参考[MindSpore安装指南](https://www.mindspore.cn/install)，完成MindSpore的安装，要求至少1.3.0版本。
+- 硬件平台支持avx2指令集。
+- 参考[MindSpore安装指南](https://www.mindspore.cn/install)，完成MindSpore的安装，要求至少1.4.0版本。
 - 其余依赖请参见[setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py)
 
 ### pip安装
 
 #### 安装MindSpore
 
-请根据MindSpore官网[安装指南](https://www.mindspore.cn/install)，安装1.3.0及以上版本的MindSpore。
+请根据MindSpore官网[安装指南](https://www.mindspore.cn/install)，安装1.4.0及以上版本的MindSpore。
 
 #### 安装MindQuantum
 

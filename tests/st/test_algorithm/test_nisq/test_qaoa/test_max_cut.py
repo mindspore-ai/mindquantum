@@ -41,4 +41,7 @@ def test_max_cut():
     train_net = ms.nn.TrainOneStepCell(net, opti)
     for i in range(50):
         cut = -train_net().asnumpy()[0]
+    partition = maxcut.get_partition(3, net.weight.asnumpy())[0]
+    assert partition[0] == [0, 1, 3] or partition[1] == [0, 1, 3]
+    assert maxcut.get_cut_value([[0, 1], [2, 3, 4]]) == 2
     assert np.allclose(round(cut, 3), 4.831)

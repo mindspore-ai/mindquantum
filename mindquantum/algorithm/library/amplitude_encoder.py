@@ -53,20 +53,20 @@ def amplitude_encoder(x, n_qubits):
         >>> from mindquantum.algorithm.library import amplitude_encoder
         >>> from mindquantum.simulator import Simulator
         >>> sim = Simulator('projectq', 8)
-        >>> encoder, parameterResolver = amplitude_encoder([0.5, 0.5, 0.5, 0.5], 8)
+        >>> encoder, parameterResolver = amplitude_encoder([0.5, -0.5, 0.5, 0.5], 8)
         >>> sim.apply_circuit(encoder, parameterResolver)
         >>> print(sim.get_qs(True))
         1/2¦00000000⟩
-        1/2¦01000000⟩
+        -1/2¦01000000⟩
         1/2¦10000000⟩
         1/2¦11000000⟩
         >>> sim.reset()
-        >>> encoder, parameterResolver = amplitude_encoder([0, 0, 0.5, 0.5, 0.5, 0.5], 8)
+        >>> encoder, parameterResolver = amplitude_encoder([0, 0, 0.5, 0.5, -0.5, 0.5], 8)
         >>> sim.apply_circuit(encoder, parameterResolver)
         >>> print(sim.get_qs(True))
         1/2¦00100000⟩
         1/2¦01000000⟩
-        1/2¦10100000⟩
+        -1/2¦10100000⟩
         1/2¦11000000⟩
     '''
     _check_input_type('amplitude_encoder', (np.ndarray, list), x)
@@ -107,4 +107,4 @@ def amplitude_encoder(x, n_qubits):
         controlled_gate(c, RY(f'alpha{cnt}'), len(tmp), controls, (0 if tmp and tmp[0] == -1 else 1))
         cnt += 1
 
-    return c, ParameterResolver(num)
+    return c.reverse_qubits(), ParameterResolver(num)
