@@ -1,29 +1,40 @@
 # MindQuantum
 
+[![API](https://badg.vercel.app/badge/MQ/API?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.html)
+[![Tutorial](https://badg.vercel.app/badge/MQ/Tutorial?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/en/master/parameterized_quantum_circuit.html)
+[![Tutorial](https://badg.vercel.app/gitee/open-issues/mindspore/mindquantum?scale=1.3)](https://gitee.com/mindspore/mindquantum/issues)
+[![Tutorial](https://badg.vercel.app/gitee/stars/mindspore/mindquantum?scale=1.3&color=purple)](https://gitee.com/mindspore/mindquantum)
+[![Tutorial](https://badg.vercel.app/gitee/forks/mindspore/mindquantum?scale=1.3&color=purple)](https://gitee.com/mindspore/mindquantum)
+[![Release](https://badg.vercel.app/gitee/release/mindspore/mindquantum?scale=1.3)](https://gitee.com/mindspore/mindquantum/releases)
+[![LICENSE](https://badg.vercel.app/gitee/license/mindspore/mindquantum?scale=1.3)](https://github.com/mindspore-ai/mindquantum/blob/master/LICENSE)
+[![PRs Welcome](https://badg.vercel.app/badge/PRs/Welcome?scale=1.3)](https://gitee.com/mindspore/mindquantum/pulls)
+
 [查看中文](./README_CN.md)
 
 <!-- TOC --->
 
-- [What is MindQuantum](#what-is-mindquantum)
-- [First experience](#first-experience)
-    - [Build parameterized quantum circuit](#build-parameterized-quantum-circuit)
-    - [Train quantum neural network](#train-quantum-neural-network)
-- [API](#api)
-- [Installation](#installation)
-    - [Confirming System Environment Information](#confirming-system-environment-information)
-    - [Install by Source Code](#install-by-source-code)
-    - [Install by pip](#install-by-pip)
-        - [Install MindSpore](#install-mindspore)
-        - [Install MindQuantum](#install-mindquantum)
-- [Verifying Successful Installation](#verifying-successful-installation)
-- [Install with Docker](#install-with-docker)
-- [Note](#Note)
-- [Quick Start](#quick-start)
-- [Docs](#docs)
-- [Community](#community)
-    - [Governance](#governance)
-- [Contributing](#contributing)
-- [License](#license)
+- [MindQuantum](#mindquantum)
+    - [What is MindQuantum](#what-is-mindquantum)
+    - [First experience](#first-experience)
+        - [Build parameterized quantum circuit](#build-parameterized-quantum-circuit)
+        - [Train quantum neural network](#train-quantum-neural-network)
+    - [Tutorials](#tutorials)
+    - [API](#api)
+    - [Installation](#installation)
+        - [Confirming System Environment Information](#confirming-system-environment-information)
+        - [Install by Source Code](#install-by-source-code)
+        - [Install by pip](#install-by-pip)
+            - [Install MindSpore](#install-mindspore)
+            - [Install MindQuantum](#install-mindquantum)
+    - [Verifying Successful Installation](#verifying-successful-installation)
+    - [Install with Docker](#install-with-docker)
+    - [Note](#note)
+    - [Quick Start](#quick-start)
+    - [Docs](#docs)
+    - [Community](#community)
+        - [Governance](#governance)
+    - [Contributing](#contributing)
+    - [License](#license)
 
 <!-- /TOC -->
 
@@ -87,6 +98,18 @@ The trained parameters are,
 {'b1': 1.5720831, 'b0': 0.006396801}
 ```
 
+## Tutorials
+
+1. Basic usage
+
+    - [Variational Quantum Circuit](https://mindspore.cn/mindquantum/docs/en/master/parameterized_quantum_circuit.html)
+
+2. Variational quantum algorithm
+
+    - [Quantum Approximate Optimization Algorithm](https://mindspore.cn/mindquantum/docs/en/master/quantum_approximate_optimization_algorithm.html)
+    - [The Application of Quantum Neural Network in NLP](https://mindspore.cn/mindquantum/docs/en/master/qnn_for_nlp.html)
+    - [VQE Application in Quantum Chemistry Computing](https://mindspore.cn/mindquantum/docs/en/master/vqe_for_quantum_chemistry.html)
+
 ## API
 
 For more API, please refers to [MindQuantum API](https://www.mindspore.cn/mindquantum/docs/en/master/mindquantum.core.html)
@@ -95,8 +118,8 @@ For more API, please refers to [MindQuantum API](https://www.mindspore.cn/mindqu
 
 ### Confirming System Environment Information
 
-- The hardware platform should be Linux CPU with avx2 supported.
-- Refer to [MindQuantum Installation Guide](https://www.mindspore.cn/install/en), install MindSpore, version 1.3.0 or later is required.
+- The hardware platform should be CPU with avx2 supported.
+- Refer to [MindQuantum Installation Guide](https://www.mindspore.cn/install/en), install MindSpore, version 1.4.0 or later is required.
 - See [setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py) for the remaining dependencies.
 
 ### Install by Source Code
@@ -121,9 +144,7 @@ pip install mindquantum-*.whl
 
 #### Install MindSpore
 
-```bash
-pip install https://hiq.huaweicloud.com/download/mindspore/cpu/x86_64/mindspore-1.3.0-cp38-cp38-linux_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
-```
+Please refers to [MindSpore installation guide](https://www.mindspore.cn/install) to install MindSpore that at least 1.4.0 version.
 
 #### Install MindQuantum
 
