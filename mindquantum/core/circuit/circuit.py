@@ -29,6 +29,7 @@ from mindquantum.io.display import brick_model
 from mindquantum.utils.type_value_check import _check_input_type
 from mindquantum.utils.type_value_check import _check_and_generate_pr_type
 from .utils import apply
+from .utils import add_prefix
 
 GateSeq = List[G.BasicGate]
 
@@ -52,6 +53,7 @@ def _two_dim_array_to_list(data):
 
 class CollectionMap:
     """A collection container."""
+
     def __init__(self):
         self.map = {}
 
@@ -182,6 +184,7 @@ class Circuit(list):
                                 │
         q1: ────────────────────●──
     """
+
     def __init__(self, gates=None):
         list.__init__([])
         self.all_qubits = CollectionMap()
@@ -231,13 +234,19 @@ class Circuit(list):
     def __add__(self, gates):
         out = Circuit()
         out.extend(self)
-        if isinstance(gates, G.BasicGate):
+        if isinstance(gates, int):
+            out = apply(self, [gates + i for i in sorted(self.all_qubits.keys())])
+        elif isinstance(gates, G.BasicGate):
             out.append(gates)
+        elif isinstance(gates, str):
+            out = add_prefix(self, gates)
         else:
             out.extend(gates)
         return out
 
     def __radd__(self, gates):
+        if isinstance(gates, (int, str)):
+            return self + gates
         return Circuit(gates) + self
 
     def __iadd__(self, gates):
@@ -245,9 +254,19 @@ class Circuit(list):
             self.append(gates)
         elif isinstance(gates, Circuit):
             self.extend(gates)
+        elif isinstance(gates, (int, str)):
+            self = self + gates  #pylint: disable=self-cls-assignment
         else:
             raise TypeError("Require a quantum gate or a quantum circuit, but get {}.".format(type(gates)))
         return self
+
+    def __sub__(self, shift_value):
+        _check_input_type('shift_value', int, shift_value)
+        return self + (-shift_value)
+
+    def __rsub__(self, shift_value):
+        _check_input_type('shift_value', int, shift_value)
+        return apply(self, [shift_value - i for i in sorted(self.all_qubits.keys())])
 
     def __mul__(self, num):
         if not isinstance(num, int):
@@ -841,5 +860,26 @@ class Circuit(list):
         sim.apply_circuit(self, pr)
         return sim.get_qs(ket)
 
+    def reverse_qubits(self):
+        """
+        Flip the circuit to big endian.
+
+        Examples:
+            >>> from mindquantum.core import Circuit
+            >>> circ = Circuit().h(0).x(2, 0).y(3)
+            >>> circ
+            q0: ──H────●──
+                       │
+            q2: ───────X──
+
+            q3: ──Y───────
+            >>> circ.reverse_qubits()
+            q0: ──Y───────
+
+            q1: ───────X──
+                       │
+            q3: ──H────●──
+        """
+        return self.n_qubits - 1 - self
 
 __all__ = ['Circuit']

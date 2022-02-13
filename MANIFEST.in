@@ -1,0 +1,14 @@
+include *.txt
+include NOTICE
+
+recursive-include _build *.py
+recursive-include cmake *.cmake
+recursive-include tests *.txt* *.py *.hpp *.cpp *.hdf5 *.sh
+recursive-include third_party *.patch*
+recursive-include mindquantum *.txt *.h *.hpp *.cc *.cpp
+
+
+exclude .clang-format *.yaml *.allow *.bat *.md *.sh *.suppressions
+prune docs
+prune .jenkins
+prune tutorials

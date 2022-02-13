@@ -82,7 +82,13 @@ if(DEFINED PYTHON_EXECUTABLE)
   set(Python_EXECUTABLE ${PYTHON_EXECUTABLE}) # cmake-lint: disable=C0103
 endif()
 
-find_package(Python 3.5 COMPONENTS Interpreter Development)
+set(_python_find_args Python 3.5.0 COMPONENTS Interpreter)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
+  list(APPEND _python_find_args Development.Module)
+else()
+  list(APPEND _python_find_args Development)
+endif()
+find_package(${_python_find_args})
 
 # NB: This should be removed for CMake >= 3.16
 if(NOT Python_FOUND)
@@ -102,7 +108,7 @@ if(NOT Python_FOUND)
     OUTPUT_VARIABLE _python_version)
   string(STRIP "${_python_version}" Python_VERSION)
 
-  if(Python_VERSION VERSION_LESS 3.6)
+  if(Python_VERSION VERSION_LESS 3.6.0)
     message(FATAL_ERROR "Cannot use Python ${Python_VERSION} (${Python_EXECUTABLE}): version too old!")
   endif()
 

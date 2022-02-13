@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-BASEPATH=$(cd "$(dirname $0)"; pwd)
+BASEPATH=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 OUTPUT_PATH="${BASEPATH}/output"
 if command -v python3 >/dev/null 2>&1; then
     PYTHON=python3
@@ -41,8 +41,28 @@ mk_new_dir() {
 
 set -e
 
-cd ${BASEPATH}
-mk_new_dir "${OUTPUT_PATH}"
+cd "${BASEPATH}"
+
+# ------------------------------------------------------------------------------
+# Create a virtual environment for building the wheel
+
+$PYTHON -m venv venv
+source venv/bin/activate
+
+
+pkgs=(pip setuptools wheel build pybind11)
+
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    pkgs+=(auditwheel)
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    pkgs+=(delocate)
+fi
+
+$PYTHON -m pip install -U "${pkgs[@]}"
+
+
+# ------------------------------------------------------------------------------
+# Setup arguments for build
 
 args=(--set ENABLE_PROJECTQ --unset ENABLE_QUEST)
 
@@ -50,7 +70,22 @@ if [[ $1 = "gpu" ]]; then
     args+=(--set ENABLE_CUDA --unset MULTITHREADED --set VERBOSE_CMAKE)
 fi
 
-${PYTHON} ${BASEPATH}/setup.py bdist_wheel -d ${OUTPUT_PATH} "${args[@]}"
+fixed_args=()
+for arg in "${args[@]}"; do
+    fixed_args+=("-C--global-option=$arg")
+done
+
+# ------------------------------------------------------------------------------
+# Build the wheels
+
+echo ${PYTHON} -m build -w "${fixed_args[*]}" "$@"
+${PYTHON} -m build -w "${fixed_args[@]}" "$@"
+
+# ------------------------------------------------------------------------------
+# Move the wheels to the output directory
+
+mk_new_dir "${OUTPUT_PATH}"
+mv -v dist/* "${OUTPUT_PATH}"
 
 
 echo "------Successfully created mindquantum package------"

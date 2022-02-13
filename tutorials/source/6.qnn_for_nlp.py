@@ -26,8 +26,7 @@ def GenerateWordDictAndSample(corpus, window=2):
     return word_dict, sampling
 
 
-word_dict, sample = GenerateWordDictAndSample(
-    "I love natural language processing")
+word_dict, sample = GenerateWordDictAndSample("I love natural language processing")
 print(word_dict)
 print('word dict size: ', len(word_dict))
 print('samples: ', sample)
@@ -81,8 +80,7 @@ def GenerateTrainData(sample, word_dict):
             label_array = [int(i) * np.pi for i in label_bin]
             data_x[-1].extend(label_array)
         data_y.append(word_dict[center])
-    return np.array(data_x).astype(np.float32), np.array(data_y).astype(
-        np.int32)
+    return np.array(data_x).astype(np.float32), np.array(data_y).astype(np.int32)
 
 
 GenerateTrainData(sample, word_dict)
@@ -133,17 +131,17 @@ def QEmbedding(num_embedding, embedding_dim, window, layers, n_threads):
         circ += ansatz
         encoder_param_name.extend(encoder.params_name)
         ansatz_param_name.extend(ansatz.params_name)
-    grad_ops = Simulator('projectq', circ.n_qubits).get_expectation_with_grad(
-        hams, circ, None, encoder_param_name, ansatz_param_name, n_threads)
+    grad_ops = Simulator('projectq',
+                         circ.n_qubits).get_expectation_with_grad(hams, circ, None, None, encoder_param_name,
+                                                                  ansatz_param_name, n_threads)
     return MQLayer(grad_ops)
 
 
 class CBOW(nn.Cell):
-    def __init__(self, num_embedding, embedding_dim, window, layers, n_threads,
-                 hidden_dim):
+
+    def __init__(self, num_embedding, embedding_dim, window, layers, n_threads, hidden_dim):
         super(CBOW, self).__init__()
-        self.embedding = QEmbedding(num_embedding, embedding_dim, window,
-                                    layers, n_threads)
+        self.embedding = QEmbedding(num_embedding, embedding_dim, window, layers, n_threads)
         self.dense1 = nn.Dense(embedding_dim, hidden_dim)
         self.dense2 = nn.Dense(hidden_dim, num_embedding)
         self.relu = ops.ReLU()
@@ -157,6 +155,7 @@ class CBOW(nn.Cell):
 
 
 class LossMonitorWithCollection(LossMonitor):
+
     def __init__(self, per_print_times=1):
         super(LossMonitorWithCollection, self).__init__(per_print_times)
         self.loss = []
@@ -182,25 +181,21 @@ class LossMonitorWithCollection(LossMonitor):
         loss = cb_params.net_outputs
 
         if isinstance(loss, (tuple, list)):
-            if isinstance(loss[0], Tensor) and isinstance(
-                    loss[0].asnumpy(), np.ndarray):
+            if isinstance(loss[0], Tensor) and isinstance(loss[0].asnumpy(), np.ndarray):
                 loss = loss[0]
 
         if isinstance(loss, Tensor) and isinstance(loss.asnumpy(), np.ndarray):
             loss = np.mean(loss.asnumpy())
 
-        cur_step_in_epoch = (cb_params.cur_step_num -
-                             1) % cb_params.batch_num + 1
+        cur_step_in_epoch = (cb_params.cur_step_num - 1) % cb_params.batch_num + 1
 
         if isinstance(loss, float) and (np.isnan(loss) or np.isinf(loss)):
-            raise ValueError(
-                "epoch: {} step: {}. Invalid loss, terminating training.".
-                format(cb_params.cur_epoch_num, cur_step_in_epoch))
+            raise ValueError("epoch: {} step: {}. Invalid loss, terminating training.".format(
+                cb_params.cur_epoch_num, cur_step_in_epoch))
         self.loss.append(loss)
         if self._per_print_times != 0 and cb_params.cur_step_num % self._per_print_times == 0:
             print("\repoch: %+3s step: %+3s time: %5.5s, loss is %5.5s" %
-                  (cb_params.cur_epoch_num, cur_step_in_epoch,
-                   time.time() - self.epoch_begin_time, loss),
+                  (cb_params.cur_epoch_num, cur_step_in_epoch, time.time() - self.epoch_begin_time, loss),
                   flush=True,
                   end='')
 
@@ -208,6 +203,7 @@ class LossMonitorWithCollection(LossMonitor):
 import mindspore as ms
 from mindspore import context
 from mindspore import Tensor
+
 context.set_context(mode=context.PYNATIVE_MODE, device_target="CPU")
 corpus = """We are about to study the idea of a computational process.
 Computational processes are abstract beings that inhabit computers.
@@ -223,20 +219,13 @@ hidden_dim = 128
 word_dict, sample = GenerateWordDictAndSample(corpus, window=window_size)
 train_x, train_y = GenerateTrainData(sample, word_dict)
 
-train_loader = ds.NumpySlicesDataset({
-    "around": train_x,
-    "center": train_y
-},
-                                     shuffle=False).batch(3)
+train_loader = ds.NumpySlicesDataset({"around": train_x, "center": train_y}, shuffle=False).batch(3)
 net = CBOW(len(word_dict), embedding_dim, window_size, 3, 4, hidden_dim)
 net_loss = nn.SoftmaxCrossEntropyWithLogits(sparse=True, reduction='mean')
 net_opt = nn.Momentum(net.trainable_params(), 0.01, 0.9)
 loss_monitor = LossMonitorWithCollection(500)
 model = Model(net, net_loss, net_opt)
-model.train(350,
-            train_loader,
-            callbacks=[loss_monitor],
-            dataset_sink_mode=False)
+model.train(350, train_loader, callbacks=[loss_monitor], dataset_sink_mode=False)
 
 import matplotlib.pyplot as plt
 
@@ -249,6 +238,7 @@ net.embedding.weight.asnumpy()
 
 
 class CBOWClassical(nn.Cell):
+
     def __init__(self, num_embedding, embedding_dim, window, hidden_dim):
         super(CBOWClassical, self).__init__()
         self.dim = 2 * window * embedding_dim
@@ -282,20 +272,13 @@ print("train_y shape: ", train_y.shape)
 
 context.set_context(mode=context.GRAPH_MODE, device_target="CPU")
 
-train_loader = ds.NumpySlicesDataset({
-    "around": train_x,
-    "center": train_y
-},
-                                     shuffle=False).batch(3)
+train_loader = ds.NumpySlicesDataset({"around": train_x, "center": train_y}, shuffle=False).batch(3)
 net = CBOWClassical(len(word_dict), embedding_dim, window_size, hidden_dim)
 net_loss = nn.SoftmaxCrossEntropyWithLogits(sparse=True, reduction='mean')
 net_opt = nn.Momentum(net.trainable_params(), 0.01, 0.9)
 loss_monitor = LossMonitorWithCollection(500)
 model = Model(net, net_loss, net_opt)
-model.train(350,
-            train_loader,
-            callbacks=[loss_monitor],
-            dataset_sink_mode=False)
+model.train(350, train_loader, callbacks=[loss_monitor], dataset_sink_mode=False)
 
 import matplotlib.pyplot as plt
 

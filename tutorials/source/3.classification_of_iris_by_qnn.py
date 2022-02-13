@@ -22,12 +22,7 @@ print(y.shape)
 
 import matplotlib.pyplot as plt
 
-feature_name = {
-    0: 'sepal length',
-    1: 'sepal width',
-    2: 'petal length',
-    3: 'petal width'
-}
+feature_name = {0: 'sepal length', 1: 'sepal width', 2: 'petal length', 3: 'petal width'}
 axes = plt.figure(figsize=(23, 23)).subplots(4, 4)
 
 colormap = {0: 'r', 1: 'g'}
@@ -48,11 +43,7 @@ print(X.shape)
 
 from sklearn.model_selection import train_test_split
 
-X_train, X_test, y_train, y_test = train_test_split(X,
-                                                    y,
-                                                    test_size=0.2,
-                                                    random_state=0,
-                                                    shuffle=True)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0, shuffle=True)
 
 print(X_train.shape)
 print(X_test.shape)
@@ -79,10 +70,7 @@ encoder
 from mindquantum.algorithm import HardwareEfficientAnsatz
 from mindquantum.core import RY
 
-ansatz = HardwareEfficientAnsatz(4,
-                                 single_rot_gate_seq=[RY],
-                                 entangle_gate=X,
-                                 depth=3).circuit
+ansatz = HardwareEfficientAnsatz(4, single_rot_gate_seq=[RY], entangle_gate=X, depth=3).circuit
 ansatz.summary()
 ansatz
 
@@ -105,9 +93,8 @@ ms.set_seed(1)
 sim = Simulator('projectq', circuit.n_qubits)
 grad_ops = sim.get_expectation_with_grad(hams,
                                          circuit,
-                                         None,
-                                         encoder.params_name,
-                                         ansatz.params_name,
+                                         encoder_params_name=encoder.params_name,
+                                         ansatz_params_name=ansatz.params_name,
                                          parallel_worker=5)
 QuantumNet = MQLayer(grad_ops)
 QuantumNet
@@ -123,36 +110,26 @@ opti = Adam(QuantumNet.trainable_params(), learning_rate=0.1)
 
 model = Model(QuantumNet, loss, opti, metrics={'Acc': Accuracy()})
 
-train_loader = NumpySlicesDataset({
-    'features': X_train,
-    'labels': y_train
-},
-                                  shuffle=False).batch(5)
-test_loader = NumpySlicesDataset({
-    'features': X_test,
-    'labels': y_test
-}).batch(5)
+train_loader = NumpySlicesDataset({'features': X_train, 'labels': y_train}, shuffle=False).batch(5)
+test_loader = NumpySlicesDataset({'features': X_test, 'labels': y_test}).batch(5)
 
 
 class StepAcc(Callback):
+
     def __init__(self, model, test_loader):
         self.model = model
         self.test_loader = test_loader
         self.acc = []
 
     def step_end(self, run_context):
-        self.acc.append(
-            self.model.eval(self.test_loader, dataset_sink_mode=False)['Acc'])
+        self.acc.append(self.model.eval(self.test_loader, dataset_sink_mode=False)['Acc'])
 
 
 monitor = LossMonitor(16)
 
 acc = StepAcc(model, test_loader)
 
-model.train(20,
-            train_loader,
-            callbacks=[monitor, acc],
-            dataset_sink_mode=False)
+model.train(20, train_loader, callbacks=[monitor, acc], dataset_sink_mode=False)
 
 plt.plot(acc.acc)
 plt.title('Statistics of accuracy', fontsize=20)

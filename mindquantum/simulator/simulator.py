@@ -85,7 +85,7 @@ class Simulator:
 
     def __str__(self):
         state = self.get_qs()
-        s = f"{self.backend} simulator with {self.n_qubits} qubit{'s' if self.n_qubits > 1 else ''}."
+        s = f"{self.backend} simulator with {self.n_qubits} qubit{'s' if self.n_qubits > 1 else ''} (little endian)."
         s += f"\nCurrent quantum state:\n"
         if self.n_qubits < 4:
             s += '\n'.join(ket_string(state))
@@ -305,7 +305,7 @@ class Simulator:
         Apply hamiltonian to a simulator, this hamiltonian can be
         hermitian or non hermitian.
 
-        Notes:
+        Note:
             The quantum state may be not a normalized quantum state after apply hamiltonian.
 
         Args:
