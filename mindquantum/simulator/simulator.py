@@ -290,7 +290,7 @@ class Simulator:
         else:
             pr = ParameterResolver()
         if seed is None:
-            seed = int(np.random.randint(1,2<<20))
+            seed = int(np.random.randint(1, 2 << 20))
         else:
             _check_seed(seed)
         res = MeasureResult()
@@ -522,6 +522,10 @@ which is {self.n_qubits}, but get {simulator_left.n_qubits}")
             ansatz_params_name = []
         _check_input_type("encoder_params_name", list, encoder_params_name)
         _check_input_type("ansatz_params_name", list, ansatz_params_name)
+        for i in encoder_params_name:
+            _check_input_type("Element of encoder_params_name", str, i)
+        for i in ansatz_params_name:
+            _check_input_type("Element of ansatz_params_name", str, i)
         s1 = set(circ_right.params_name) | set(circ_left.params_name)
         s2 = set(encoder_params_name) | set(ansatz_params_name)
         if s1 - s2 or s2 - s1:
