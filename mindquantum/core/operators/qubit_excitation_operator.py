@@ -241,7 +241,7 @@ class QubitExcitationOperator(_Operator):
             >>> f = QubitExcitationOperator(((1, 0),), 1 + 2j)
             >>> f += QubitExcitationOperator(((1, 1),), 'a')
             >>> f.imag.compress()
-            2.0 [Q1^]
+            2.0 [Q1]
         """
         out = QubitExcitationOperator()
 
@@ -252,7 +252,7 @@ class QubitExcitationOperator(_Operator):
     @property
     def real(self):
         """
-        Convert the coeff to its imag part.
+        Convert the coeff to its real part.
 
         Returns:
             QubitExcitationOperator, the real part of this qubit excitation operator.

@@ -22,6 +22,7 @@ import sympy as sp
 from mindquantum import mqbackend as mb
 from mindquantum.utils.type_value_check import _num_type
 
+
 class ParameterResolver(dict):
     """
     A ParameterRsolver can set the parameter of parameterized quantum gate or
@@ -38,12 +39,14 @@ class ParameterResolver(dict):
         >>> pr = ParameterResolver({'a': 0.3})
         >>> pr['b'] = 0.5
         >>> pr.no_grad_part('a')
+        {'a': 0.3, 'b': 0.5}
         >>> pr *= 2
         >>> pr
         {'a': 0.6, 'b': 1.0}
         >>> pr.no_grad_parameters
         {'a'}
     """
+
     def __init__(self, data=None):
         if data is None:
             data = {}
@@ -260,7 +263,9 @@ class ParameterResolver(dict):
             >>> from mindquantum import ParameterResolver
             >>> pr = ParameterResolver({'a': 1, 'b': 2})
             >>> pr.no_grad_part('a')
+            {'a': 1, 'b': 2}
             >>> pr.requires_grad()
+            {'a': 1, 'b': 2}
             >>> pr.requires_grad_parameters
             {'a', 'b'}
         """
@@ -279,6 +284,7 @@ class ParameterResolver(dict):
             >>> from mindquantum import ParameterResolver
             >>> pr = ParameterResolver({'a': 1, 'b': 2})
             >>> pr.no_grad()
+            {'a': 1, 'b': 2}
             >>> pr.requires_grad_parameters
             set()
         """
@@ -300,7 +306,9 @@ class ParameterResolver(dict):
             >>> from mindquantum import ParameterResolver
             >>> pr = ParameterResolver({'a': 1, 'b': 2})
             >>> pr.no_grad()
+            {'a': 1, 'b': 2}
             >>> pr.requires_grad_part('a')
+            {'a': 1, 'b': 2}
             >>> pr.requires_grad_parameters
             {'a'}
         """
@@ -329,6 +337,7 @@ class ParameterResolver(dict):
             >>> from mindquantum import ParameterResolver
             >>> pr = ParameterResolver({'a': 1, 'b': 2})
             >>> pr.no_grad_part('a')
+            {'a': 1, 'b': 2}
             >>> pr.requires_grad_parameters
             {'b'}
         """
@@ -359,6 +368,7 @@ class ParameterResolver(dict):
             >>> pr1 = ParameterResolver({'a': 1})
             >>> pr2 = ParameterResolver({'b': 2})
             >>> pr2.no_grad()
+            {'b': 2}
             >>> pr1.update(pr2)
             >>> pr1
             {'a': 1, 'b': 2}
@@ -449,7 +459,7 @@ resolver and not require grad in other parameter resolver ".format(conflict))
         Examples:
             >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> pr = PR({'a': 1.2 + 1.3j})
-            >>> pr.real()
+            >>> pr.real
             {'a': 1.2}
         """
         out = 1 * self
@@ -468,7 +478,7 @@ resolver and not require grad in other parameter resolver ".format(conflict))
         Examples:
             >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> pr = PR({'a': 1.2 + 1.3j})
-            >>> pr.imag()
+            >>> pr.imag
             {'a': 1.3}
         """
         out = 1 * self

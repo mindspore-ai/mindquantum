@@ -58,6 +58,7 @@ class MQLayer(nn.Cell):
         >>> from mindquantum import Circuit, Hamiltonian, QubitOperator
         >>> from mindquantum import Simulator, MQLayer
         >>> import mindspore as ms
+        >>> ms.set_seed(42)
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
         >>> enc = Circuit().ry('a', 0)
         >>> ans = Circuit().h(0).rx('b', 0)
@@ -73,10 +74,10 @@ class MQLayer(nn.Cell):
         >>> for i in range(100):
         ...     train_net(enc_data)
         >>> net.weight.asnumpy()
-        array([-3.1424556], dtype=float32)
+        array([3.1423748], dtype=float32)
         >>> net(enc_data)
         Tensor(shape=[1, 1], dtype=Float32, value=
-        [[-9.98333767e-02]])
+        [[-9.98333842e-02]])
     """
     def __init__(self, expectation_with_grad, weight='normal'):
         super(MQLayer, self).__init__()
@@ -126,6 +127,7 @@ class MQN2Layer(nn.Cell):
         >>> from mindquantum import Circuit, Hamiltonian, QubitOperator
         >>> from mindquantum import Simulator, MQN2Layer
         >>> import mindspore as ms
+        >>> ms.set_seed(42)
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
         >>> enc = Circuit().ry('a', 0)
         >>> ans = Circuit().h(0).rx('b', 0)
@@ -141,10 +143,10 @@ class MQN2Layer(nn.Cell):
         >>> for i in range(100):
         ...     train_net(enc_data)
         >>> net.weight.asnumpy()
-        array([-1.56476], dtype=float32)
+        array([1.5646162], dtype=float32)
         >>> net(enc_data)
         Tensor(shape=[1, 1], dtype=Float32, value=
-        [[ 3.63158676e-07]])
+        [[ 3.80662982e-07]])
     """
     def __init__(self, expectation_with_grad, weight='normal'):
         super(MQN2Layer, self).__init__()
@@ -190,6 +192,7 @@ class MQAnsatzOnlyLayer(nn.Cell):
         >>> from mindquantum import Circuit, Hamiltonian, QubitOperator
         >>> from mindquantum import Simulator, MQAnsatzOnlyLayer
         >>> import mindspore as ms
+        >>> ms.set_seed(42)
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
         >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0)
         >>> ham = Hamiltonian(QubitOperator('Z0'))
@@ -201,9 +204,9 @@ class MQAnsatzOnlyLayer(nn.Cell):
         >>> for i in range(100):
         ...     train_net()
         >>> net.weight.asnumpy()
-        array([-1.5724511e+00,  1.3100551e-04], dtype=float32)
+        array([-1.5720805e+00,  1.7390326e-04], dtype=float32)
         >>> net()
-        Tensor(shape=[1], dtype=Float32, value= [-9.99998629e-01])
+        Tensor(shape=[1], dtype=Float32, value= [-9.99999166e-01])
     """
     def __init__(self, expectation_with_grad, weight='normal'):
         super(MQAnsatzOnlyLayer, self).__init__()
@@ -265,9 +268,9 @@ class MQN2AnsatzOnlyLayer(nn.Cell):
         >>> for i in range(100):
         ...     train_net()
         >>> net.weight.asnumpy()
-        array([ 0.05957536, -1.5686935 ], dtype=float32)
+        array([ 0.05957557, -1.5686936 ], dtype=float32)
         >>> net()
-        Tensor(shape=[1], dtype=Float32, value= [ 1.56753845e-08])
+        Tensor(shape=[1], dtype=Float32, value= [ 1.56737148e-08])
     """
     def __init__(self, expectation_with_grad, weight='normal'):
         super(MQN2AnsatzOnlyLayer, self).__init__()

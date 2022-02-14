@@ -70,6 +70,7 @@ class Simulator:
         >>> sim.get_qs()
         array([0.5+0.j, 0.5+0.j, 0.5+0.j, 0.5+0.j])
     """
+
     def __init__(self, backend, n_qubits, seed=42):
         _check_input_type('backend', str, backend)
         _check_int_type('n_qubits', n_qubits)
@@ -266,15 +267,15 @@ class Simulator:
             shots: 100
             Keys: q1 q0_1 q0_0│0.00   0.122       0.245       0.367        0.49       0.612
             ──────────────────┼───────────┴───────────┴───────────┴───────────┴───────────┴
-                           000│▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+                           000│▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
                               │
-                           011│▒▒▒▒▒▒▒
+                           011│▒▒▒▒▒▒▒▒▒
                               │
                            100│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
                               │
-                           111│▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+                           111│▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
                               │
-            {'000': 17, '011': 8, '100': 49, '111': 26}
+            {'000': 18, '011': 9, '100': 49, '111': 24}
         """
         _check_input_type("circuit", Circuit, circuit)
         if self.n_qubits < circuit.n_qubits:
@@ -659,6 +660,7 @@ class GradOpsWrapper:
         ansatz_params_name (list[str]): The ansatz parameters name.
         parallel_worker (int): The number of parallel worker to run the batch.
     """
+
     def __init__(self, grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name, parallel_worker):
         self.grad_ops = grad_ops
         self.hams = hams

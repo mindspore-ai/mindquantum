@@ -122,13 +122,14 @@ def pauli_word_to_circuits(qubitops):
         ValueError: If qubitops has more than one pauliwords.
 
     Examples:
+        >>> from mindquantum.core import X
         >>> from mindquantum.core.operators import QubitOperator
         >>> from mindquantum.core.circuit import pauli_word_to_circuits
         >>> qubitops = QubitOperator('X0 Y1')
-        >>> pauli_word_to_circuits(qubitops)
-        q0: ──X──
-
-        q1: ──Y──
+        >>> pauli_word_to_circuits(qubitops) + X(1, 0)
+        q0: ──X────●──
+                   │
+        q1: ──Y────X──
     """
     from mindquantum import gates as G
     from mindquantum import operators as ops
