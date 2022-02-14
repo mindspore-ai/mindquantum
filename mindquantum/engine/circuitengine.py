@@ -105,9 +105,9 @@ class CircuitEngine:
             >>> import mindquantum.core.gates as G
             >>> from mindquantum.engine import circuit_generator
             >>> @circuit_generator(2,prefix='p')
-            >>> def ansatz(qubits, prefix):
-            >>>     G.X | (qubits[0], qubits[1])
-            >>>     G.RX(prefix+'_0') | qubits[1]
+            ... def ansatz(qubits, prefix):
+            ...     G.X | (qubits[0], qubits[1])
+            ...     G.RX(prefix+'_0') | qubits[1]
             >>> print(ansatz)
             q0: ──●─────────────
                   │

@@ -54,9 +54,9 @@ def bprint(strings: list,
         >>> from mindquantum.io import bprint
         >>> title='Info of Bob'
         >>> o = bprint(['Name:Bob', 'Age:17', 'Nationality:China'],
-        >>>     title=title)
+        ...     title=title)
         >>> for i in o:
-        >>>     print(i)
+        ...     print(i)
         ====Info of Bob====
         |Name       :Bob  |
         |Age        :17   |

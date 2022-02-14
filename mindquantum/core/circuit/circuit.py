@@ -441,13 +441,12 @@ class Circuit(list):
             >>> from mindquantum import Circuit, RX, H
             >>> circuit = Circuit([RX('a').on(1), H.on(1), RX('b').on(0)])
             >>> circuit.summary()
-            ========Circuit Summary========
-            |Total number of gates:3.     |
-            |Blocks               :1.     |
-            |Non parameter gates  :1.     |
-            |Parameter gates      :2.     |
-            |with 2 parameters are: b, a. |
-            ===============================
+            =========Circuit Summary=========
+            |Total number of gates  : 3.    |
+            |Parameter gates        : 2.    |
+            |with 2 parameters are  : a, b. |
+            |Number qubit of circuit: 2     |
+            =================================
         """
         self.num_non_para_gate = 0
         self.num_para_gate = 0
@@ -472,6 +471,8 @@ class Circuit(list):
         Get the hermitian of this quantum circuit.
 
         Examples:
+            >>> from mindquantum.core import Circuit
+            >>> from mindquantum.core import RX
             >>> circ = Circuit(RX({'a': 0.2}).on(0))
             >>> herm_circ = circ.hermitian()
             >>> herm_circ[0].coeff
@@ -866,19 +867,19 @@ class Circuit(list):
 
         Examples:
             >>> from mindquantum.core import Circuit
-            >>> circ = Circuit().h(0).x(2, 0).y(3)
+            >>> circ = Circuit().h(0).x(2, 0).y(3).x(3, 2)
             >>> circ
-            q0: ──H────●──
+            q0: ──H────●───────
                        │
-            q2: ───────X──
-
-            q3: ──Y───────
+            q2: ───────X────●──
+                            │
+            q3: ──Y─────────X──
             >>> circ.reverse_qubits()
-            q0: ──Y───────
-
-            q1: ───────X──
+            q0: ──Y─────────X──
+                            │
+            q1: ───────X────●──
                        │
-            q3: ──H────●──
+            q3: ──H────●───────
         """
         return self.n_qubits - 1 - self
 
