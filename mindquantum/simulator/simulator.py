@@ -199,7 +199,7 @@ class Simulator:
             >>> sim.apply_circuit(Circuit().un(H, 2))
             >>> sim.apply_circuit(Circuit().ry('a', 0).ry('b', 1), np.array([1.1, 2.2]))
             >>> sim
-            projectq simulator with 2 qubits.
+            projectq simulator with 2 qubits  (little endian).
             Current quantum state:
             -0.0721702531972066¦00⟩
             -0.30090405886869676¦01⟩
@@ -277,6 +277,8 @@ class Simulator:
                               │
             {'000': 18, '011': 9, '100': 49, '111': 24}
         """
+        if not circuit.all_measures.map:
+            raise ValueError("circuit must have at least one measurement gate.")
         _check_input_type("circuit", Circuit, circuit)
         if self.n_qubits < circuit.n_qubits:
             raise ValueError(f"Circuit has {circuit.n_qubits} qubits, which is more than simulator qubits.")
@@ -296,8 +298,14 @@ class Simulator:
             _check_seed(seed)
         res = MeasureResult()
         res.add_measure(circuit.all_measures.keys())
-        samples = np.array(self.sim.sampling(circuit.get_cpp_obj(), pr.get_cpp_obj(), shots, res.keys_map,
-                                             seed)).reshape((shots, -1))
+        sim = self
+        if circuit.is_measure_end:
+            sim = Simulator(self.backend, self.n_qubits, self.seed)
+            sim.set_qs(self.get_qs())
+            sim.apply_circuit(circuit.remove_measure(), pr)
+            circuit = Circuit(circuit.all_measures.keys())
+        samples = np.array(sim.sim.sampling(circuit.get_cpp_obj(), pr.get_cpp_obj(), shots, res.keys_map,
+                                            seed)).reshape((shots, -1))
         res.collect_data(samples)
         return res
 
