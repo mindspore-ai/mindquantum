@@ -48,7 +48,7 @@ class Measure(NoneParameterGate):
         >>> sim = Simulator('projectq', circ.n_qubits)
         >>> sim.apply_circuit(Circuit().h(0).x(1, 0))
         >>> sim
-        projectq simulator with 2 qubits.
+        projectq simulator with 2 qubits (little endian).
         Current quantum state:
         √2/2¦00⟩
         √2/2¦11⟩
@@ -65,13 +65,13 @@ class Measure(NoneParameterGate):
                    │
         {'00': 993, '10': 506, '11': 501}
         >>> sim
-        projectq simulator with 2 qubits.
+        projectq simulator with 2 qubits (little endian).
         Current quantum state:
         √2/2¦00⟩
         √2/2¦11⟩
         >>> sim.apply_circuit(circ[:-2])
         >>> sim
-        projectq simulator with 2 qubits.
+        projectq simulator with 2 qubits (little endian).
         Current quantum state:
         √2/2¦00⟩
         (√2/4-√2/4j)¦10⟩
@@ -132,7 +132,7 @@ class Measure(NoneParameterGate):
                        │
             {'11': 1}
             >>> sim
-            projectq simulator with 2 qubits.
+            projectq simulator with 2 qubits  (little endian).
             Current quantum state:
             1¦11⟩
         """

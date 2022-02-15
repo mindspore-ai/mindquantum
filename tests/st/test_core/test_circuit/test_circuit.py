@@ -77,3 +77,18 @@ def test_evolution_state():
     state = s.get_qs()
     state_exp = [0.9580325796404553, -0.14479246283091116j, -0.2446258794777393j, -0.036971585637570345]
     assert np.allclose(state, state_exp)
+
+
+def test_is_measure_end():
+    """
+    test
+    Description:
+    Expectation:
+    """
+    circ1 = Circuit().x(0)
+    assert circ1.is_measure_end
+    circ1 += G.Measure().on(0)
+    circ1 += G.BARRIER
+    assert circ1.is_measure_end
+    circ1 += G.X.on(0, 1)
+    assert not circ1.is_measure_end

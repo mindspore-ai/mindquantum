@@ -550,6 +550,27 @@ class Circuit(list):
         m = np.array(sim.sim.get_circuit_matrix(circ.get_cpp_obj(), pr.get_cpp_obj())).T
         return m
 
+    @property
+    def is_measure_end(self):
+        """
+        Check whether the circuit is end with measurement gate: there is at most one measurement
+        gate that act on each qubit, and this measurement gate should be at end of gate serial of
+        this qubit.
+
+        Returns:
+            bool, whether the circuit is end with measurement.
+        """
+        circ = self.remove_barrier()
+        high = [0 for i in range(self.n_qubits)]
+        for gate in circ:
+            for idx in set(gate.obj_qubits + gate.ctrl_qubits):
+                high[idx]+=1
+            if isinstance(gate, G.Measure):
+                m_idx = gate.obj_qubits[0]
+                if high[m_idx]!=self.all_qubits.map[m_idx]:
+                    return False
+        return True
+
     def apply_value(self, pr):
         """
         Convert this circuit to a non parameterized circuit with parameter you input.
@@ -882,5 +903,6 @@ class Circuit(list):
             q3: ──H────●───────
         """
         return self.n_qubits - 1 - self
+
 
 __all__ = ['Circuit']
