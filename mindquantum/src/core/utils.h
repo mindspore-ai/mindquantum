@@ -29,6 +29,7 @@
 #endif  // _MSC_VER
 
 #include <complex>
+#include <cstdlib>
 #include <ctime>
 #include <map>
 #include <numeric>

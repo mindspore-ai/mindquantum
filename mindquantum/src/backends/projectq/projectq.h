@@ -17,7 +17,6 @@
 #define MINDQUANTUM_BACKENDS_PROJECTQ_PROJECTQ_H_
 
 #include <cmath>
-
 #include <functional>
 #include <random>
 #include <string>
@@ -25,8 +24,8 @@
 #include <vector>
 
 #include "backends/projectq/projectq_utils.h"
-#include "core/utils.h"
 #include "gate/basic_gate.h"
+#include "gate/gates.h"
 #include "hamiltonian/hamiltonian.h"
 #include "pr/parameter_resolver.h"
 #include "projectq/backends/_sim/_cppkernels/simulator.hpp"
@@ -99,8 +98,25 @@ class Projectq : public Simulator {
     }
 
     void ApplyGate(const BasicGate<T> &gate) {
-        Projectq::apply_controlled_gate(MCast<T>(gate.base_matrix_.matrix_), VCast(gate.obj_qubits_),
-                                        VCast(gate.ctrl_qubits_));
+        if (gate.is_channel_) {  // gate is constructed be like: BasicGate(cPL, true, px, py, pz)
+            VT<BasicGate<T>> gate_list_ = {XGate<T>, YGate<T>, ZGate<T>, IGate<T>};
+            double r = static_cast<double>(rng_());
+            //            std::cout << "r = " << r << std::endl;
+            auto it = std::lower_bound(gate.cumulative_probs_.begin(), gate.cumulative_probs_.end(), r);
+            size_t gate_index;
+            if (it != gate.cumulative_probs_.begin()) {
+                gate_index = std::distance(gate.cumulative_probs_.begin(), it) - 1;
+            } else {
+                gate_index = 0;
+            }
+            BasicGate<T> gate_ = gate_list_[gate_index];  // Select the gate to execute according to r.
+                                                          //            std::cout << gate_.name_ << std::endl;
+            Projectq::apply_controlled_gate(MCast<T>(gate_.base_matrix_.matrix_), VCast(gate_.obj_qubits_),
+                                            VCast(gate_.ctrl_qubits_));
+        } else {
+            Projectq::apply_controlled_gate(MCast<T>(gate.base_matrix_.matrix_), VCast(gate.obj_qubits_),
+                                            VCast(gate.ctrl_qubits_));
+        }
     }
 
     void ApplyGate(const BasicGate<T> &gate, const ParameterResolver<T> &pr, bool diff = false) {

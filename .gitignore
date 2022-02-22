@@ -15,11 +15,11 @@ __pycache__/
 *.gch
 build
 *.egg-info
-dist
-local_script/
 output
+local_script/
 .ipynb_checkpoints
 somas_meta
 analyze_fail.dat
 requirements.txt
 .eggs
+cmake-build-debug

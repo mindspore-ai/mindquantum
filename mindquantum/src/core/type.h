@@ -136,5 +136,8 @@ const char gPS[] = "PS";
 const char gXX[] = "XX";
 const char gYY[] = "YY";
 const char gZZ[] = "ZZ";
+const char cPL[] = "PL";    // Pauli channel
+const char cAD[] = "AD";    // amplitude damping channel
+const char cPD[] = "PD";    // phase damping channel
 }  // namespace mindquantum
 #endif  // MINDQUANTUM_TYPE_H_

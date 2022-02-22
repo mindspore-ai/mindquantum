@@ -17,6 +17,7 @@
 #ifndef MINDQUANTUM_GATE_basic_gate_H_
 #define MINDQUANTUM_GATE_basic_gate_H_
 #include <functional>
+#include <initializer_list>
 #include <string>
 
 #include "core/utils.h"
@@ -63,6 +64,12 @@ struct BasicGate {
     std::function<Dim2Matrix<T>(T)> param_diff_matrix_;
     // Dim2Matrix<T> (*param_matrix_)(T para);
     // Dim2Matrix<T> (*param_diff_matrix_)(T para);
+
+    bool is_channel_ = false;
+    VT<BasicGate<T>> gate_list_;
+    VT<T> probs_;
+    VT<T> cumulative_probs_;
+
     void PrintInfo() {
         if (!daggered_) {
             std::cout << "Gate name: " << name_ << std::endl;
@@ -99,6 +106,16 @@ struct BasicGate {
     }
     BasicGate(bool parameterized, const std::string& name, int64_t hermitian_prop, Dim2Matrix<T> base_matrix)
         : parameterized_(parameterized), name_(name), hermitian_prop_(hermitian_prop), base_matrix_(base_matrix) {
+    }
+    BasicGate(const std::string& name, bool is_channel, T px, T py, T pz)  // for quantum channel
+        : name_(name), is_channel_(is_channel) {
+        probs_ = VT<T>{px, py, pz, 1 - px - py - pz};
+        T sum = 0.;
+        cumulative_probs_.push_back(sum);
+        for (auto it = probs_.begin(); it != probs_.end(); it++) {
+            sum += *it;
+            cumulative_probs_.push_back(sum);
+        }
     }
     BasicGate(bool parameterized, const std::string& name, int64_t hermitian_prop,
               Dim2Matrix<T> (*param_matrix)(T para), Dim2Matrix<T> (*param_diff_matrix)(T para))

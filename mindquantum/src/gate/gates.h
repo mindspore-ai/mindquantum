@@ -212,6 +212,8 @@ BasicGate<T> GetGateByName(const std::string& name) {
         out = YYGate<T>;
     } else if (name == gZZ) {
         out = ZZGate<T>;
+        //    } else if (name == cPL) {
+        //        out = PauliChannel<T>;
     } else {
         auto msg = name + " not implement in backend!";
         throw std::invalid_argument(msg);

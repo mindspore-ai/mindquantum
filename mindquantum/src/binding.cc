@@ -58,12 +58,13 @@ PYBIND11_MODULE(mqbackend, m) {
     // matrix
     py::class_<Dim2Matrix<MT>, std::shared_ptr<Dim2Matrix<MT>>>(m, "dim2matrix")
         .def(py::init<>())
-        .def(py::init<const VVT<CT<MT>> &>());
-
+        .def(py::init<const VVT<CT<MT>> &>())
+        .def("PrintInfo", &Dim2Matrix<MT>::PrintInfo);
     // basic gate
     py::class_<BasicGate<MT>, std::shared_ptr<BasicGate<MT>>>(m, "basic_gate")
         .def(py::init<>())
         .def(py::init<bool, std::string, int64_t, Dim2Matrix<MT>>())
+        .def(py::init<std::string, bool, MT, MT, MT>())
         .def(py::init<std::string, int64_t, py::object, py::object>())
         .def("PrintInfo", &BasicGate<MT>::PrintInfo)
         .def("apply_value", &BasicGate<MT>::ApplyValue)
@@ -72,8 +73,13 @@ PYBIND11_MODULE(mqbackend, m) {
         .def_readwrite("params", &BasicGate<MT>::params_)
         .def_readwrite("daggered", &BasicGate<MT>::daggered_)
         .def_readwrite("applied_value", &BasicGate<MT>::applied_value_)
+        .def_readwrite("is_measure", &BasicGate<MT>::is_measure_)
         .def_readwrite("base_matrix", &BasicGate<MT>::base_matrix_)
-        .def_readwrite("hermitian_prop", &BasicGate<MT>::hermitian_prop_);
+        .def_readwrite("hermitian_prop", &BasicGate<MT>::hermitian_prop_)
+        .def_readwrite("is_channel", &BasicGate<MT>::is_channel_)
+        .def_readwrite("gate_list", &BasicGate<MT>::gate_list_)
+        .def_readwrite("probs", &BasicGate<MT>::probs_)
+        .def_readwrite("cumulative_probs", &BasicGate<MT>::cumulative_probs_);
     m.def("get_gate_by_name", &GetGateByName<MT>);
     m.def("get_measure_gate", &GetMeasureGate<MT>);
     // parameter resolver
