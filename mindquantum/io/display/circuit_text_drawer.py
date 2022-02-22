@@ -24,6 +24,8 @@ def _get_qubit_range(gate):
     out = []
     out.extend(gate.obj_qubits)
     out.extend(gate.ctrl_qubits)
+    if not out:
+        raise ValueError(f"{gate.name} gate should apply to certain qubit first.")
     return out
 
 

@@ -40,7 +40,6 @@ class BasicGate():
         name (str): the name of this gate.
         parameterized (bool): whether this is a parameterized gate. Default: False.
     """
-
     def __init__(self, name, parameterized=False):
         if not isinstance(name, str):
             raise TypeError("Excepted string for gate name, get {}".format(type(name)))
@@ -109,7 +108,7 @@ class BasicGate():
         """
         new = deepcopy(self)
 
-        if isinstance(obj_qubits, int):
+        if isinstance(obj_qubits, (int, np.int64)):
             new.obj_qubits = [obj_qubits]
             _check_qubit_id(obj_qubits)
         elif isinstance(obj_qubits, Iterable):
@@ -122,7 +121,7 @@ class BasicGate():
         if ctrl_qubits is None:
             new.ctrl_qubits = []
         else:
-            if isinstance(ctrl_qubits, int):
+            if isinstance(ctrl_qubits, (int, np.int64)):
                 new.ctrl_qubits = [ctrl_qubits]
                 _check_qubit_id(ctrl_qubits)
             elif isinstance(ctrl_qubits, Iterable):
@@ -188,7 +187,6 @@ class NoneParameterGate(BasicGate):
     Args:
         name (str): The name of the this gate.
     """
-
     def __init__(self, name):
         BasicGate.__init__(self, name, False)
         self.coeff = None
@@ -248,7 +246,6 @@ class ParameterGate(NoneParameterGate, BasicGate):
         coeff (Union[dict, ParameterResolver]): the coefficients of
             this parameterized gate. Default: None.
     """
-
     def __init__(self, name, coeff=None):
         if isinstance(coeff, numbers.Number):
             NoneParameterGate.__init__(self, name)
@@ -405,7 +402,6 @@ class IntrinsicOneParaGate(ParameterGate):
         >>> rx2.linearcombination(rx2.coeff,{'a' : 3})
         1.5
     """
-
     def __init__(self, name, coeff=None):
         ParameterGate.__init__(self, name, coeff)
         self.hermitian_property = HERMITIAN_PROPERTIES['params_opposite']
@@ -540,7 +536,7 @@ def _check_gate_type(gate):
 
 
 def _check_qubit_id(qubit_id):
-    if not isinstance(qubit_id, int):
+    if not isinstance(qubit_id, (int, np.int64)):
         raise TypeError("Qubit should be a non negative int, but get {}!".format(type(qubit_id)))
     if qubit_id < 0:
         raise ValueError("Qubit should be non negative int, but get {}!".format(qubit_id))
