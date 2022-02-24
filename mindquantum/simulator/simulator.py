@@ -52,7 +52,8 @@ class Simulator:
         backend (str): which backend you want. The supported backend can be found
             in SUPPORTED_SIMULATOR
         n_qubits (int): number of quantum simulator.
-        seed (int): the random seed for this simulator. Default: 42.
+        seed (int): the random seed for this simulator, if None, seed will generate
+            by `numpy.random.randint`. Default: None.
 
     Raises:
         TypeError: if `backend` is not str.
@@ -70,11 +71,12 @@ class Simulator:
         >>> sim.get_qs()
         array([0.5+0.j, 0.5+0.j, 0.5+0.j, 0.5+0.j])
     """
-
-    def __init__(self, backend, n_qubits, seed=42):
+    def __init__(self, backend, n_qubits, seed=None):
         _check_input_type('backend', str, backend)
         _check_int_type('n_qubits', n_qubits)
         _check_value_should_not_less('n_qubits', 0, n_qubits)
+        if seed is None:
+            seed = np.random.randint(1, 2**23)
         _check_seed(seed)
         if backend not in SUPPORTED_SIMULATOR:
             raise ValueError(f"backend {backend} not supported, now we support {SUPPORTED_SIMULATOR}!")
@@ -668,7 +670,6 @@ class GradOpsWrapper:
         ansatz_params_name (list[str]): The ansatz parameters name.
         parallel_worker (int): The number of parallel worker to run the batch.
     """
-
     def __init__(self, grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name, parallel_worker):
         self.grad_ops = grad_ops
         self.hams = hams
