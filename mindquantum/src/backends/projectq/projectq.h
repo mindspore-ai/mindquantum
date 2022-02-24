@@ -111,8 +111,8 @@ class Projectq : public Simulator {
             }
             BasicGate<T> gate_ = gate_list_[gate_index];  // Select the gate to execute according to r.
                                                           //            std::cout << gate_.name_ << std::endl;
-            Projectq::apply_controlled_gate(MCast<T>(gate_.base_matrix_.matrix_), VCast(gate_.obj_qubits_),
-                                            VCast(gate_.ctrl_qubits_));
+            Projectq::apply_controlled_gate(MCast<T>(gate_.base_matrix_.matrix_), VCast(gate.obj_qubits_),
+                                            VCast(gate.ctrl_qubits_));
         } else {
             Projectq::apply_controlled_gate(MCast<T>(gate.base_matrix_.matrix_), VCast(gate.obj_qubits_),
                                             VCast(gate.ctrl_qubits_));
