@@ -49,7 +49,6 @@ On MacOS, cibuildwheel will install the official Python distribution on your sys
 
 On Windows, cibuildwheel will install the official Python distribution using NuGet on your system before building the binary wheel. This makes running the script on your development machine not appropriate unless you understand what you are doing.
 
-
 ### On your local machine
 
 If you do not want to rely on the `cibuildwheel` machinery (e.g. on MacOS) you can also automatically call `auditwheel` or `delocate` after building the wheel by specifying the `MQ_DELOCATE_WHEEL` environment variable, like so:

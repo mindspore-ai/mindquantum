@@ -33,7 +33,7 @@ from setuptools.command.build_ext import build_ext
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
-from _build.utils import fdopen, get_cmake_command, get_executable, remove_tree
+from _build.utils import fdopen, get_cmake_command, get_executable, remove_tree  # pylint: disable=wrong-import-position
 
 # ==============================================================================
 # Helper variables

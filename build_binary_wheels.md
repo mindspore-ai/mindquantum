@@ -8,7 +8,7 @@
 
 为了生成MindQuantum的二进制轮子，我们推荐你使用Pypa的`build`包。
 
-``bash
+```bash
 cd mindquantum
 python3 -m build .
 ```
@@ -19,18 +19,18 @@ python3 -m build .
 
 为了确保所有需要的外部库依赖都包含在二进制轮子文件中，你可以指示二进制轮子的构建过程来_delocate_产生的轮子。在实践中，这意味着通过将外部（共享）库直接集成到二进制轮子中来消除对你系统中的任何依赖。
 
-###使用cibuildwheel
+### 使用cibuildwheel
 
 这是构建二进制轮子的首选方式，因为它依赖于Docker镜像（仅在Linux上）或MacOS和Windows上的标准Python发行版。
 
-``bash
+```bash
 cd mindquantum
 python3 -m cibuildwheel .
 ```
 
 如果`cibuildwheel`不能自动检测你的平台，或者你想在MacOS上构建Linux wheel，你可能需要指定你的平台。
 
-``bash
+```bash
 cd mindquantum
 python3 -m cibuildwheel --platform linux .
 ```
@@ -49,12 +49,11 @@ python3 -m cibuildwheel --platform linux .
 
 在 Windows 上，cibuildwheel 将在构建二进制轮子之前使用 NuGet 在你的系统上安装官方 Python 发行版。这使得在你的开发机器上运行该脚本不合适，除非你明白你在做什么。
 
-
-###在你的本地机器上
+### 在你的本地机器上
 
 如果你不想依赖`cibuildwheel`机器(例如在MacOS上)，你也可以通过指定`MQ_DELOCATE_WHEEL`环境变量在构建轮子后自动调用`auditwheel`或`delocate`，像这样。
 
-``bash
+```bash
 cd mindquantum
 MQ_DELOCATE_WHEEL=1 python3 -m build .
 ```
