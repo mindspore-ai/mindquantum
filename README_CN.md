@@ -211,6 +211,10 @@ export OMP_NUM_THREADS=4
 
 更多注意事项请查看[FAQ页面](https://gitee.com/mindspore/mindquantum/blob/master/tutorials/0.frequently_asked_questions.ipynb)。
 
+## 构建二进制轮子
+
+如果你想建立一些二进制轮子用于再分配，请看看我们的[二进制轮子建立指南](./build_binary_wheels.md)
+
 ## 快速入门
 
 关于如何快速搭建参数化量子线路和量子神经网络，并进行训练，请点击查看[MindQuantum使用教程](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/index.html)
