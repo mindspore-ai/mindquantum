@@ -80,7 +80,7 @@ environment = { MQ_CI_BUILD='1', OMP_NUM_THREADS='1' }
 before-test = [
     'cd {package}',
     'python setup.py gen_reqfile',
-    'python -m pip install -r requirements.txt --only-binary :all:',
+    'python -m pip install -r requirements.txt --prefer-binary',
 ]
 
 test-command = 'python {package}/tests/quick_test.py'
@@ -89,9 +89,5 @@ test-command = 'python {package}/tests/quick_test.py'
 manylinux-x86_64-image = 'manylinux2014'
 
 [[tool.cibuildwheel.overrides]]
-select = 'cp36-*'
-manylinux-x86_64-image = 'manylinux1'
-
-[[tool.cibuildwheel.overrides]]
-select = 'cp3{7,8,9}-*'
+select = 'cp3{6,7,8,9}-*'
 manylinux-x86_64-image = 'manylinux2010'

@@ -24,6 +24,8 @@ import sys
 
 import setuptools.build_meta
 
+from utils import get_cmake_command
+
 build_sdist = setuptools.build_meta.build_sdist
 prepare_metadata_for_build_wheel = setuptools.build_meta.prepare_metadata_for_build_wheel
 get_requires_for_build_sdist = setuptools.build_meta.get_requires_for_build_sdist
@@ -32,6 +34,9 @@ get_requires_for_build_sdist = setuptools.build_meta.get_requires_for_build_sdis
 def get_requires_for_build_wheel(config_settings=None):
     """Identify packages required for building a wheel."""
     requirements = setuptools.build_meta.get_requires_for_build_wheel(config_settings=config_settings)
+
+    if get_cmake_command() is None:
+        requirements.append('cmake')
 
     delocate_wheel = int(os.environ.get('MQ_DELOCATE_WHEEL', False))
     if delocate_wheel:
@@ -62,7 +67,9 @@ def build_sdist(sdist_directory, config_settings=None):
 
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     """Build a wheel from this project."""
-    if platform.system() == 'Darwin' and ('-p' not in config_settings['--global-option'] and '--plat-name' not in config_settings['--global-option']):
+    if platform.system() == 'Darwin' and (
+        '-p' not in config_settings['--global-option'] and '--plat-name' not in config_settings['--global-option']
+    ):
         os.environ.setdefault('MACOSX_DEPLOYMENT_TARGET', '10.13')
         os.environ.setdefault('_PYTHON_HOST_PLATFORM', f'macosx-10.13-{platform.machine()}')
 
