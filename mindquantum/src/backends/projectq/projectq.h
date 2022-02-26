@@ -17,6 +17,7 @@
 #define MINDQUANTUM_BACKENDS_PROJECTQ_PROJECTQ_H_
 
 #include <cmath>
+
 #include <functional>
 #include <random>
 #include <string>
@@ -44,6 +45,7 @@ namespace projectq {
 template <typename T>
 class Projectq : public Simulator {
  private:
+    unsigned seed;
     unsigned n_qubits_;
     VT<unsigned> ordering_;
     unsigned len_;
@@ -51,7 +53,7 @@ class Projectq : public Simulator {
     std::function<double()> rng_;
 
  public:
-    Projectq() : Simulator(1, 1), n_qubits_(1), rnd_eng_(1) {
+    Projectq() : Simulator(1, 1), n_qubits_(1), rnd_eng_(1), seed(1) {
         for (unsigned i = 0; i < n_qubits_; i++) {
             ordering_.push_back(i);
         }
@@ -60,7 +62,7 @@ class Projectq : public Simulator {
         rng_ = std::bind(dist, std::ref(rnd_eng_));
     }
 
-    Projectq(unsigned seed, unsigned N) : Simulator(seed, N), n_qubits_(N), rnd_eng_(seed) {
+    Projectq(unsigned seed, unsigned N) : Simulator(seed, N), n_qubits_(N), rnd_eng_(seed), seed(seed) {
         for (unsigned i = 0; i < n_qubits_; i++) {
             ordering_.push_back(i);
         }
@@ -68,7 +70,7 @@ class Projectq : public Simulator {
         std::uniform_real_distribution<double> dist(0., 1.);
         rng_ = std::bind(dist, std::ref(rnd_eng_));
     }
-    Projectq(unsigned seed, unsigned N, calc_type *vec) : Simulator(seed, N), n_qubits_(N), rnd_eng_(seed) {
+    Projectq(unsigned seed, unsigned N, calc_type *vec) : Simulator(seed, N), n_qubits_(N), rnd_eng_(seed), seed(seed) {
         for (unsigned i = 0; i < n_qubits_; i++) {
             ordering_.push_back(i);
         }
@@ -224,11 +226,11 @@ class Projectq : public Simulator {
                             const VT<BasicGate<T>> &circ, const VT<BasicGate<T>> &herm_circ,
                             const ParameterResolver<T> &pr, const MST<size_t> &p_map) {
         VT<CT<T>> f_g(p_map.size() + 1, 0);
-        Projectq<T> sim_left = Projectq<T>(1, n_qubits_, left_vec);
+        Projectq<T> sim_left = Projectq<T>(this->seed, n_qubits_, left_vec);
         sim_left.ApplyHamiltonian(ham);
         f_g[0] = ComplexInnerProduct<T, calc_type>(sim_left.vec_, right_vec, static_cast<Index>(len_));
-        Projectq<T> sim_right = Projectq<T>(1, n_qubits_, right_vec);
-        Projectq<T> sim_right_tmp = Projectq<T>(1, n_qubits_);
+        Projectq<T> sim_right = Projectq<T>(this->seed, n_qubits_, right_vec);
+        Projectq<T> sim_right_tmp = Projectq<T>(this->seed, n_qubits_);
         for (size_t j = 0; j < circ.size(); j++) {
             if ((!herm_circ[j].parameterized_) || (herm_circ[j].params_.requires_grad_parameters_.size() == 0)) {
                 if (herm_circ[j].parameterized_) {
@@ -263,7 +265,7 @@ class Projectq : public Simulator {
     }
 
     CT<T> GetExpectation(const Hamiltonian<T> &ham) {
-        Projectq<T> sim = Projectq<T>(1, n_qubits_, vec_);
+        Projectq<T> sim = Projectq<T>(this->seed, n_qubits_, vec_);
         sim.ApplyHamiltonian(ham);
         auto out = ComplexInnerProduct<T, calc_type>(sim.vec_, vec_, static_cast<Index>(len_));
         return out;
@@ -282,7 +284,7 @@ class Projectq : public Simulator {
             }
         }
 
-        Projectq<T> sim = Projectq<T>(1, n_qubits_, vec_);
+        Projectq<T> sim = Projectq<T>(this->seed, n_qubits_, vec_);
         sim.ApplyCircuit(circ, pr);
         if (n_hams == 1) {
             auto f_g = sim.RightSizeGrad(sim.vec_, sim.vec_, hams[0], circ, herm_circ, pr, p_map);
@@ -395,9 +397,9 @@ class Projectq : public Simulator {
                 output[i].push_back({0, 0});
             }
         }
-        Projectq<T> sim = Projectq<T>(1, n_qubits_, vec_);
+        Projectq<T> sim = Projectq<T>(this->seed, n_qubits_, vec_);
         sim.ApplyCircuit(right_circ, pr);
-        Projectq<T> sim2 = Projectq<T>(1, n_qubits_, varphi);
+        Projectq<T> sim2 = Projectq<T>(this->seed, n_qubits_, varphi);
         sim2.ApplyCircuit(left_circ, pr);
         if (n_hams == 1) {
             auto f_g1 = sim2.RightSizeGrad(sim.vec_, sim2.vec_, herm_hams[0], left_circ, herm_left_circ, pr, p_map);
@@ -513,7 +515,7 @@ class Projectq : public Simulator {
         VVT<CT<calc_type>> out((1 << n_qubits_));
 #pragma omp parallel for schedule(static)
         for (omp::idx_t i = 0; i < (1UL << n_qubits_); i++) {
-            Projectq<T> sim = Projectq<T>(0, n_qubits_);
+            Projectq<T> sim = Projectq<T>(this->seed, n_qubits_);
             sim.vec_[0] = 0;
             sim.vec_[2 * i] = 1;
             sim.ApplyCircuit(circ, pr);

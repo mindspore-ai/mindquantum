@@ -53,7 +53,6 @@ def _two_dim_array_to_list(data):
 
 class CollectionMap:
     """A collection container."""
-
     def __init__(self):
         self.map = {}
 
@@ -184,12 +183,12 @@ class Circuit(list):
                                 │
         q1: ────────────────────●──
     """
-
     def __init__(self, gates=None):
         list.__init__([])
         self.all_qubits = CollectionMap()
         self.all_paras = CollectionMap()
         self.all_measures = CollectionMap()
+        self.all_noises = CollectionMap()
         if gates is not None:
             if isinstance(gates, Iterable):
                 self.extend(gates)
@@ -207,6 +206,8 @@ class Circuit(list):
         _check_gate_type(gate)
         if isinstance(gate, G.Measure):
             self.all_measures.collect_only_one(gate, f'measure key {gate.key} already exist.')
+        if isinstance(gate, G.PauliChannel):
+            self.all_noises.collect(gate.name)
         self.all_qubits.collect(gate.obj_qubits)
         self.all_qubits.collect(gate.ctrl_qubits)
         if gate.parameterized:
@@ -225,6 +226,7 @@ class Circuit(list):
             self.all_measures.merge_only_one(gates.all_measures, "Measure already exist.")
             self.all_qubits.merge(gates.all_qubits)
             self.all_paras.merge(gates.all_paras)
+            self.all_noises.merge(gates.all_noises)
             super().extend(gates)
         else:
             for gate in gates:
@@ -300,6 +302,8 @@ class Circuit(list):
             self.all_paras.delete(list(old_v.coeff.keys()))
         if isinstance(old_v, G.Measure):
             self.all_measures.delete(old_v)
+        if isinstance(old_v, G.PauliChannel):
+            self.all_noises.delete(old_v.name)
         super().__setitem__(k, v)
         self.all_qubits.collect(v.obj_qubits)
         self.all_qubits.collect(v.ctrl_qubits)
@@ -307,6 +311,8 @@ class Circuit(list):
             self.all_paras.collect(list(v.coeff.keys()))
         if isinstance(v, G.Measure):
             self.all_measures.collect_only_one(v, f'measure key {v.key} already exist.')
+        if isinstance(v, G.PauliChannel):
+            self.all_noises.collect(v.name)
         self.has_cpp_obj = False
 
     def __getitem__(self, sliced):
@@ -316,11 +322,33 @@ class Circuit(list):
 
     @property
     def has_measure_gate(self):
+        """
+        To check whether this circuit has measure gate.
+
+        Returns:
+            bool, whether this circuit has measure gate.
+        """
         return self.all_measures.size != 0
 
     @property
     def parameterized(self):
+        """
+        To check whether this circuit is a parameterized quantum circuit.
+
+        Returns:
+            bool, whether this circuit is a parameterized quantum circuit.
+        """
         return self.all_paras.size != 0
+
+    @property
+    def is_noise_circuit(self):
+        """
+        To check whether this circuit has pauli channel.
+
+        Returns:
+            bool, whether this circuit has pauli channel.
+        """
+        return self.all_noises.size != 0
 
     def insert(self, index, gates):
         """
@@ -515,7 +543,7 @@ class Circuit(list):
         """
         return list(self.all_paras.keys())
 
-    def matrix(self, pr=None, big_end=False, backend='projectq'):
+    def matrix(self, pr=None, big_end=False, backend='projectq', seed=None):
         """
         Get the matrix of this circuit.
 
@@ -524,6 +552,7 @@ class Circuit(list):
                 resolver for parameterized quantum circuit. Default: None.
             big_end (bool): The low index qubit is place in the end or not. Default: False.
             backend (str): The backend to do simulation. Default: 'projectq'.
+            seed (int): The random to generate circuit matrix, if the circuit has noise channel.
 
         Examples:
             >>> from mindquantum.core import Circuit
@@ -546,14 +575,14 @@ class Circuit(list):
         if self.has_measure_gate:
             raise ValueError("This circuit cannot have measurement gate.")
         from mindquantum.simulator import Simulator
-        sim = Simulator(backend, self.n_qubits)
+        sim = Simulator(backend, self.n_qubits, seed=seed)
         m = np.array(sim.sim.get_circuit_matrix(circ.get_cpp_obj(), pr.get_cpp_obj())).T
         return m
 
     @property
     def is_measure_end(self):
         """
-        Check whether the circuit is end with measurement gate: there is at most one measurement
+        Check whether the circuit is end with measurement gate that there is at most one measurement
         gate that act on each qubit, and this measurement gate should be at end of gate serial of
         this qubit.
 
@@ -564,10 +593,10 @@ class Circuit(list):
         high = [0 for i in range(self.n_qubits)]
         for gate in circ:
             for idx in set(gate.obj_qubits + gate.ctrl_qubits):
-                high[idx]+=1
+                high[idx] += 1
             if isinstance(gate, G.Measure):
                 m_idx = gate.obj_qubits[0]
-                if high[m_idx]!=self.all_qubits.map[m_idx]:
+                if high[m_idx] != self.all_qubits.map[m_idx]:
                     return False
         return True
 
