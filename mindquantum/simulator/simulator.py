@@ -301,7 +301,7 @@ class Simulator:
         res = MeasureResult()
         res.add_measure(circuit.all_measures.keys())
         sim = self
-        if circuit.is_measure_end:
+        if circuit.is_measure_end and not circuit.is_noise_circuit:
             sim = Simulator(self.backend, self.n_qubits, self.seed)
             sim.set_qs(self.get_qs())
             sim.apply_circuit(circuit.remove_measure(), pr)

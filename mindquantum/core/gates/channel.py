@@ -46,32 +46,42 @@ class PauliChannel(NoneParameterGate):
         >>> from mindquantum.core.gates import PauliChannel
         >>> from mindquantum.core.circuit import Circuit
         >>> circ = Circuit()
-        >>> circ += PauliChannel(0.2, 0.1, 0.1).on(0)
-        >>> circ += PauliChannel(0, 0.05, 0).on(1, 0)
+        >>> circ += PauliChannel(0.8, 0.1, 0.1).on(0)
+        >>> circ += PauliChannel(0, 0.05, 0.9).on(1, 0)
+        >>> circ.measure_all()
         >>> print(circ)
-        q0: ──PC────●───
+        q0: ──PC────●─────M(q0)──
                     │
-        q1: ────────PC──
+        q1: ────────PC────M(q1)──
+        >>> from mindquantum.simulator import Simulator
+        >>> sim = Simulator('projectq', 2)
+        >>> sim.sampling(circ, shots=1000, seed=42)
+        shots: 1000
+        Keys: q1 q0│0.00     0.2         0.4         0.6         0.8         1.0
+        ───────────┼───────────┴───────────┴───────────┴───────────┴───────────┴
+                 00│▒▒▒▒▒▒▒
+                   │
+                 01│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+                   │
+                 11│▒▒▒
+                   │
+        {'00': 101, '01': 862, '11': 37}
     """
     def __init__(self, px: float, py: float, pz: float):
         NoneParameterGate.__init__(self, 'PC')
         self.matrix_value = np.array([[1, 0], [0, 1]])  # matrix value cannot be None, so I have to use identity matrix
         if not isinstance(px, (int, float)):
-            raise TypeError(
-                "Unsupported type for px, get {}.".format(type(px)))
+            raise TypeError("Unsupported type for px, get {}.".format(type(px)))
         if not isinstance(py, (int, float)):
-            raise TypeError(
-                "Unsupported type for py, get {}.".format(type(py)))
+            raise TypeError("Unsupported type for py, get {}.".format(type(py)))
         if not isinstance(pz, (int, float)):
-            raise TypeError(
-                "Unsupported type for pz, get {}.".format(type(pz)))
+            raise TypeError("Unsupported type for pz, get {}.".format(type(pz)))
         if 0 <= px + py + pz <= 1:
             self.px = px
             self.py = py
             self.pz = pz
         else:
-            raise ValueError(
-                "Required total probability P = px + py + pz ∈ [0,1].")
+            raise ValueError("Required total probability P = px + py + pz ∈ [0,1].")
 
     def get_cpp_obj(self):
         cpp_gate = mb.basic_gate('PL', True, self.px, self.py, self.pz)
@@ -221,6 +231,6 @@ class DepolarizingChannel(PauliChannel):
         q1: ────────DC──
     """
     def __init__(self, p: float):
-        PauliChannel.__init__(self, p/3, p/3, p/3)
+        PauliChannel.__init__(self, p / 3, p / 3, p / 3)
         self.name = 'DC'
         self.str = self.name
