@@ -173,7 +173,7 @@ python -c 'import mindquantum'
 
 ## Install with Docker
 
-Mac or Windows users can install MindQuantum through Docker. Please refer to [Docker installation guide](./install_with_docker.md)
+Mac or Windows users can install MindQuantum through Docker. Please refer to [Docker installation guide](./install_with_docker_en.md)
 
 ## Note
 
@@ -187,7 +187,7 @@ For large servers, please set the number of parallel kernels appropriately accor
 
 ## Building binary wheels
 
-If you would like to build some binary wheels for redistribution, please have a look to our [binary wheel building guide](./build_binary_wheels.md)
+If you would like to build some binary wheels for redistribution, please have a look to our [binary wheel building guide](./build_binary_wheels_en.md)
 
 ## Quick Start
 

@@ -16,16 +16,12 @@
 
 """Setup.py file."""
 
-import contextlib
 import copy
 import distutils.log
-import errno
 import itertools
 import multiprocessing
 import os
 import platform
-import shutil
-import stat
 import subprocess
 import sys
 from distutils.cmd import Command
@@ -34,6 +30,10 @@ from distutils.file_util import copy_file
 
 import setuptools
 from setuptools.command.build_ext import build_ext
+
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+
+from _build.utils import fdopen, get_cmake_command, get_executable, remove_tree  # pylint: disable=wrong-import-position
 
 # ==============================================================================
 # Helper variables
@@ -45,49 +45,6 @@ cmake_extra_options = []
 
 # ==============================================================================
 # Helper functions and classes
-
-
-@contextlib.contextmanager
-def fdopen(fname, mode, perms=0o644):  # pragma: no cover
-    """
-    Context manager for opening files with correct permissions.
-
-    Args:
-        fname (str): Path to file to open for reading/writing
-        mode (str): Mode in which the file is opened (see help for builtin `open()`)
-        perms (int): Permission mask (see help for `os.open()`)
-    """
-    if 'r' in mode:
-        flags = os.O_RDONLY
-    elif 'w' in mode:
-        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
-    elif 'a' in mode:
-        flags = os.O_WRONLY | os.O_CREAT
-    else:
-        raise RuntimeError(f'Unsupported mode: {mode}')
-
-    file_object = open(os.open(fname, flags, perms), mode=mode, encoding='utf-8')
-
-    try:
-        yield file_object
-    finally:
-        file_object.close()
-
-
-def remove_tree(directory):
-    """Remove a directory and its subdirectories."""
-
-    def remove_read_only(func, path, exc_info):
-        excvalue = exc_info[1]
-        if func in (os.rmdir, os.remove) and excvalue.errno == errno.EACCES:
-            os.chmod(path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-            func(path)
-        else:
-            raise exc_info[0].with_traceback(exc_info[1], exc_info[2])
-
-    if os.path.exists(directory):
-        distutils.log.info(f'Removing {directory} (and everything under it)')
-        shutil.rmtree(directory, ignore_errors=False, onerror=remove_read_only)
 
 
 def important_msgs(*msgs):
@@ -151,65 +108,9 @@ def get_extra_cmake_options():
 # ==============================================================================
 
 
-def get_executable(exec_name):
-    """Try to locate an executable in a Python virtual environment."""
-    try:
-        root_path = os.environ['VIRTUAL_ENV']
-        python = os.path.basename(sys.executable)
-    except KeyError:
-        root_path, python = os.path.split(sys.executable)
-
-    exec_name = os.path.basename(exec_name)
-
-    distutils.log.info(f'trying to locate {exec_name} in {root_path}')
-
-    search_paths = [root_path, os.path.join(root_path, 'bin'), os.path.join(root_path, 'Scripts')]
-
-    # First try executing the program directly
-    for base_path in search_paths:
-        try:
-            cmd = os.path.join(base_path, exec_name)
-            with fdopen(os.devnull, 'w') as devnull:
-                subprocess.check_call([cmd, '--version'], stdout=devnull, stderr=devnull)
-        except (OSError, subprocess.CalledProcessError):
-            distutils.log.info(f'  failed in {base_path}')
-        else:
-            distutils.log.info(f'  command found: {cmd}')
-            return cmd
-
-    # That did not work: try calling it through Python
-    for base_path in search_paths:
-        try:
-            cmd = [python, os.path.join(base_path, exec_name)]
-            with fdopen(os.devnull, 'w') as devnull:
-                subprocess.check_call(cmd + ['--version'], stdout=devnull, stderr=devnull)
-        except (OSError, subprocess.CalledProcessError):
-            distutils.log.info(f'  failed in {base_path}')
-        else:
-            distutils.log.info(f'  command found: {cmd}')
-            return cmd
-
-    distutils.log.info('  command *not* found!')
-    return None
-
-
 def get_python_executable():
     """Retrieve the path to the Python executable."""
     return get_executable(sys.executable)
-
-
-def get_cmake_command():
-    """Retrieve the path to the CMake executable."""
-    try:
-        with fdopen(os.devnull, 'w') as devnull:
-            subprocess.check_call(['cmake', '--version'], stdout=devnull, stderr=devnull)
-        return 'cmake'
-    except (OSError, subprocess.CalledProcessError):
-        pass
-
-    # CMake not in PATH, should have installed the Python CMake module
-    # -> try to find out where it is
-    return get_executable('cmake')
 
 
 # ==============================================================================
