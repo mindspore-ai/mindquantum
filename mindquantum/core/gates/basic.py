@@ -34,7 +34,7 @@ HERMITIAN_PROPERTIES = {
 
 class BasicGate():
     """
-    BasicGate is the base class of all gaets.
+    BasicGate is the base class of all gates.
 
     Args:
         name (str): the name of this gate.

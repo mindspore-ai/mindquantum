@@ -58,6 +58,11 @@ from .basicgate import CNOT
 from .basicgate import BARRIER
 from .measurement import Measure
 from .measurement import MeasureResult
+from .channel import PauliChannel
+from .channel import BitFlipChannel
+from .channel import PhaseFlipChannel
+from .channel import BitPhaseFlipChannel
+from .channel import DepolarizingChannel
 
 __all__ = [
     "BasicGate", "NoneParameterGate", "ParameterGate", "IntrinsicOneParaGate",
@@ -65,7 +70,8 @@ __all__ = [
     "XGate", "YGate", "ZGate", "gene_univ_parameterized_gate", "UnivMathGate",
     "SWAPGate", "ISWAPGate", "RX", "RY", "RZ", "PhaseShift", "SGate", "TGate",
     "XX", "YY", "ZZ", "Power", "I", "X", "Y", "Z", "H", "S", "T", "SWAP",
-    "ISWAP", "CNOT", "BARRIER", "Measure", "MeasureResult"
+    "ISWAP", "CNOT", "BARRIER", "Measure", "MeasureResult", "PauliChannel",
+    "BitFlipChannel", "PhaseFlipChannel", "BitPhaseFlipChannel", "DepolarizingChannel"
 ]
 
 __all__.sort()
