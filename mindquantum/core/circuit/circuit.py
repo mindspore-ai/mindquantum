@@ -237,7 +237,8 @@ class Circuit(list):
         out = Circuit()
         out.extend(self)
         if isinstance(gates, int):
-            out = apply(self, [gates + i for i in sorted(self.all_qubits.keys())])
+            if gates != 0:
+                out = apply(self, [gates + i for i in sorted(self.all_qubits.keys())])
         elif isinstance(gates, G.BasicGate):
             out.append(gates)
         elif isinstance(gates, str):
@@ -895,7 +896,7 @@ class Circuit(list):
         self += UN(gate, maps_obj, maps_ctrl)
         return self
 
-    def get_qs(self, backend='projectq', pr=None, ket=False, seed=42):
+    def get_qs(self, backend='projectq', pr=None, ket=False, seed=None):
         """
         Get the final quantum state of this circuit.
 
@@ -904,7 +905,7 @@ class Circuit(list):
             pr (Union[numbers.Number, ParameterResolver, dict, numpy.ndarray]): The parameter of this circuit,
                 if this circuit is parameterized. Default: None.
             ket (str): Whether to return the quantum state in ket format. Default: False.
-            seed (int): The random seed of simulator.
+            seed (int): The random seed of simulator. Default: None
         """
         from mindquantum import Simulator
         sim = Simulator(backend, self.n_qubits, seed)
