@@ -92,3 +92,19 @@ def test_is_measure_end():
     assert circ1.is_measure_end
     circ1 += G.X.on(0, 1)
     assert not circ1.is_measure_end
+
+
+def test_circuit_operator():
+    """
+    test
+    Description:
+    Expectation:
+    """
+    template = Circuit([G.X.on(1, 0), G.RX('a').on(1), G.X.on(1, 0)])
+    circ = sum([template + i + f'l{i}' for i in range(3)])
+    circ_exp = Circuit()
+    for i in range(3):
+        circ_exp += G.X.on(i + 1, i)
+        circ_exp += G.RX(f'l{i}_a').on(i + 1)
+        circ_exp += G.X.on(i + 1, i)
+    assert circ == circ_exp
