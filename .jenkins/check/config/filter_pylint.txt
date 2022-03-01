@@ -12,6 +12,7 @@
 "mindquantum/mindquantum/core/circuit/circuit.py"                                      "redefined-outer-name"
 "mindquantum/mindquantum/core/circuit/circuit.py"                                      "invalid-name"
 "mindquantum/mindquantum/framework"                                                    "missing-docstring"
+"mindquantum/mindquantum/io/display/circuit_svg_drawer.py"                             "abstract-method"
 
 # Tests
 "mindquantum/tests/st"                                                                 "missing-docstring"

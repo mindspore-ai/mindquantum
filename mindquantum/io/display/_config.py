@@ -48,9 +48,36 @@ _text_drawer_config = {
     'barrier': '‖'
 }
 
-_text_drawer_config['edge'] = _text_drawer_config[
-    'circ_line'] * _text_drawer_config['edge_num']
+_text_drawer_config['edge'] = _text_drawer_config['circ_line'] * _text_drawer_config['edge_num']
 
 _CIRCUIT_STYLE = {'style': 'blue bold'}
 _MEA_RES_STYLE = {'style': 'yellow'}
 _DAGGER_MASK = '†'
+
+_svg_config = {
+    'circuit_line_stroke': '#adb0b8',
+    'circuit_line_stroke_width': 1,
+    'circuit_line_distance': 60,
+    'gate_v_distance': 20,
+    'gate_size': 40,
+    'gate_rad': 4,
+    'gate_blue': '#5e7ce0',
+    'gate_yellow': '#fac209',
+    'gate_red': '#ff7272',
+    'gate_light_blue': '#16acff',
+    'gate_name_color': '#ffffff',
+    'gate_name_font_size': 20,
+    'gate_name_font_family': 'Arial',
+    'qubit_name_color': '#252b3a',
+    'qubit_line_distance': 15,
+    'qubit_font_size': 16,
+    'gate_start_distance': 24,
+    'padding_x': 20,
+    'padding_y': 10,
+    'obj_dot_r': 4,
+    'ctrl_dot_r': 4,
+    'ctrl_line_stroke_width': 3,
+    'cnot_cross_size': 28,
+    'swap_icon_ratio': 0.6,
+    'barrier_width': 20
+}
