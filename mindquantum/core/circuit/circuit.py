@@ -888,7 +888,7 @@ class Circuit(list):
         Please refers to UN.
 
         Args:
-            gate (BasicBage): The BasicGate you want to map.
+            gate (BasicGate): The BasicGate you want to map.
             map_obj (Union[int, list[int]]): object qubits.
             maps_ctrl (Union[int, list[int]]): control qubits. Default: None.
         """
@@ -933,6 +933,13 @@ class Circuit(list):
             q3: ──H────●───────
         """
         return self.n_qubits - 1 - self
+
+    def svg(self):
+        """
+        Display current quantum circuit into SVG picture in jupyter notebook.
+        """
+        from mindquantum.io.display.circuit_svg_drawer import SVGCircuit
+        return SVGCircuit(self)
 
 
 __all__ = ['Circuit']
