@@ -934,12 +934,30 @@ class Circuit(list):
         """
         return self.n_qubits - 1 - self
 
-    def svg(self):
+    def svg(self, style=None):
         """
         Display current quantum circuit into SVG picture in jupyter notebook.
+
+        Args:
+            style (dict, str): the style to set svg circuit. Currently, we support
+                'official', 'light' and 'dark'. Default: None.
         """
         from mindquantum.io.display.circuit_svg_drawer import SVGCircuit
-        return SVGCircuit(self)
+        from mindquantum.io.display._config import _svg_config_dark
+        from mindquantum.io.display._config import _svg_config_light
+        from mindquantum.io.display._config import _svg_config_official
+        supported_style = {
+            'official': _svg_config_official,
+            'dark': _svg_config_dark,
+            'light': _svg_config_light,
+        }
+        if style is None:
+            style = _svg_config_dark
+        if isinstance(style, str):
+            if style not in supported_style:
+                raise ValueError(f"Style not found, currently we support {list(supported_style.keys())}")
+            style = supported_style[style]
+        return SVGCircuit(self, style)
 
 
 __all__ = ['Circuit']
