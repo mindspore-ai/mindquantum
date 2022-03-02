@@ -113,6 +113,12 @@ q1: ──Z──────●─────────
 - `MaxCutAnsatz`: [**get_cut_value**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.html#mindquantumalgorithmnisqmaxcutansatzget-cut-value)
 - `Circuit`: [**is_measure_end**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.circuit.html#mindquantumcorecircuitcircuitis-measure-end)
 
+### SVG supported
+
+The quantum circuit build by mindquantum now can be showd by SVG in jupyter notebook, just call `svg()` of any `Circuit`.
+
+![circuit_svg](https://gitee.com/mindspore/mindquantum/raw/master/docs/circuit_svg.png)
+
 ### Contributors
 
 Thanks goes to these wonderful people:
