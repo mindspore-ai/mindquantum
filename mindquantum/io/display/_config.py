@@ -226,7 +226,7 @@ _svg_config_light = {
     # for measure gate
     'measure_fill': '#ffffff',
     'measure_fill_opacity': 1,
-    'measure_stroke': '#ffffff',
+    'measure_stroke': '#f38064',
     'measure_icon_color': '#e92734',
     'measure_arc_stroke_width': 3,
     'measure_icon_scale': 0.8,

@@ -71,6 +71,15 @@ q1: ──RY(a1)──────────────
 -1/2j¦11⟩
 ```
 
+在jupyter notebook中，也可通过线路的`svg()`接口来以svg格式绘制量子线路图（更有`dark`和`light`模式可选）
+
+```python
+circuit = (qft(range(3)) + BarrierGate(True)).measure_all()
+circuit.svg()
+```
+
+<img src="https://gitee.com/mindspore/mindquantum/raw/master/docs/circuit_svg.png" alt="Circuit SVG" width="600"/>
+
 ### 训练量子神经网络
 
 ```python

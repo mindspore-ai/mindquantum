@@ -70,6 +70,15 @@ q1: ──RY(a1)──────────────
 -1/2j¦11⟩
 ```
 
+In jupyter notebook, we can just call `svg()` of any circuit to display the circuit in svg picture (`dark` and `light` mode are also supported).
+
+```python
+circuit = (qft(range(3)) + BarrierGate(True)).measure_all()
+circuit.svg()
+```
+
+<img src="https://gitee.com/mindspore/mindquantum/raw/master/docs/circuit_svg.png" alt="Circuit SVG" width="600"/>
+
 ### Train quantum neural network
 
 ```python

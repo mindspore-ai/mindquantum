@@ -952,7 +952,7 @@ class Circuit(list):
             'light': _svg_config_light,
         }
         if style is None:
-            style = _svg_config_dark
+            style = _svg_config_official
         if isinstance(style, str):
             if style not in supported_style:
                 raise ValueError(f"Style not found, currently we support {list(supported_style.keys())}")
