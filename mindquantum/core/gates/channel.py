@@ -105,7 +105,7 @@ class BitFlipChannel(PauliChannel):
 
     .. math::
 
-        \epsilon(\rho) = (1 - p)\rho + P X \rho X
+        \epsilon(\rho) = (1 - P)\rho + P X \rho X
 
     where ρ is quantum state as density matrix type; P is the probability of applying an additional X gate.
 
@@ -140,7 +140,7 @@ class PhaseFlipChannel(PauliChannel):
 
     .. math::
 
-        \epsilon(\rho) = (1 - p)\rho + P Z \rho Z
+        \epsilon(\rho) = (1 - P)\rho + P Z \rho Z
 
     where ρ is quantum state as density matrix type; P is the probability of applying an additional Z gate.
 
@@ -176,7 +176,7 @@ class BitPhaseFlipChannel(PauliChannel):
 
     .. math::
 
-        \epsilon(\rho) = (1 - p)\rho + P Y \rho Y
+        \epsilon(\rho) = (1 - P)\rho + P Y \rho Y
 
     where ρ is quantum state as density matrix type; P is the probability of applying an additional Y gate.
 

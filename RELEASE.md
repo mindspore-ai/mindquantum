@@ -119,6 +119,16 @@ The quantum circuit build by mindquantum now can be showd by SVG in jupyter note
 
 ![circuit_svg](https://gitee.com/mindspore/mindquantum/raw/master/docs/circuit_svg.png)
 
+### Noise simulator supported
+
+In This version, we can simulate a quantum circuit in noise simulator just by adding different noise channels. The following are supported channels:
+
+- [`PauliChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatespaulichannel)
+- [`BitFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatesbitflipchannel)
+- [`PhaseFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatesphaseflipchannel)
+- [`BitPhaseFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatesbitphaseflipchannel)
+- [`DepolarizingChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatesdepolarizingchannel)
+
 ### Contributors
 
 Thanks goes to these wonderful people:
