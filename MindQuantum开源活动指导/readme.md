@@ -2,7 +2,8 @@
 
 - [MindQuantum开源活动指导](#mindquantum开源活动指导)
   - [准备阶段](#准备阶段)
-    - [开通HiQ量子CloudIDE服务](#开通hiq量子cloudide服务)
+    - [登录HiQ量子计算云服务](#登录hiq量子计算云服务)
+	- [CloudIDE使用指南](#cloudide使用指南)
     - [Watch & Star & Fork代码仓](#watch--star--fork代码仓)
     - [导入MindQuantum的代码仓](#导入mindquantum的代码仓)
     - [开发示例](#开发示例)
@@ -16,52 +17,73 @@
 
 ![](./images/1.png)
 
-- MindQuantum开源活动指导视频
+基于HiQ量子计算云服务和MindQuantum开源量子计算框架开发算法。
 
-[https://www.bilibili.com/video/BV1mu411d7ET](https://www.bilibili.com/video/BV1mu411d7ET)
+### 登录HiQ量子计算云服务
 
-### 开通HiQ量子CloudIDE服务
+点击HiQ量子计算云服务链接（进入 HiQ 官网 ，点击右上角【新版】按钮）跳转至登录入口（华为云账号登录，若没有华为云账号，请先注册华为云账号并实名认证）
 
-1. 点击HiQ官网首页https://hiq.huaweicloud.com ，点击按钮进入CloudIDE官网。(Mindquantum目前在linux安装比较方便，而且量子仿真比较消耗计算资源，所以用户可以选择华为云上的量子计算集成开发环境IDE) 
+![](https://hiq.huaweicloud.com/hiq_assets/hiq_news_images/doc/1.png)
 
-![](images/2.png)
+![](https://hiq.huaweicloud.com/hiq_assets/hiq_news_images/doc/2.png)
 
-2. 登录华为云服务平台，若没有华为云账号，请先注册华为云账号，并完成个人实名认证）。
-3. 进入CloudIDE官网后，点击【立即体验】按钮
+### CloudIDE使用指南
 
-![](./images/3.png)
+1. 创建 HiQ 实例
 
-4. 新注册的华为云账号没有开通CloudIDE服务，请点击【开通服务】按钮。如已经开通CloudIDE服务可以跳转到【新建HiQ Quantum Computing IDE实例】
+点击【新建实例】按钮，进入实例参数配置界面。
 
-![](./images/4.png)
+![](https://hiq.huaweicloud.com/hiq_assets/hiq_news_images/doc/3.png)
 
-5. 勾选同意，点击【立即开通】按钮。这里只是对CloudIDE服务的收费说明，HiQ实例使用x86架构，可以免费创建使用。没有实名制的华为云账号会开通失败，请根据指引进行账号实名制操作，实名制完成以后退出账号重新登录，然后重新开通CloudIDE服务。
+2. 基础配置
 
-![](./images/5.png)
+实例名称：默认随机分配，可点击修改，名称以字母数字开头和结尾，长度介于 3~20 个字符。
+描述：不能包含&、<>、/、’、”字符，长度介于 0~100 之间。
+基础配置：使用 x86CPU 架构、2U8G、5GB 存储容量。
+自动休眠：默认自动休眠时长为 1 小时，可选择 1 小时和 24 小时（若实例长时间无操作，将自动休眠），
+请点击【下一步】按钮，进入工程配置界面。
 
-6. 点击右上角【立即使用】按钮。
+![](https://hiq.huaweicloud.com/hiq_assets/hiq_news_images/doc/4.png)
 
-![](./images/6.png)
+3. 工程配置
 
-7. 选择“我的IDE”，点击【新建实例】按钮。
+来源：默认选择样例工程，CloudIDE 内置 MindQuantum、HiQSimulator 等多种样例代码供学习使用。
+名称：默认随机分配，可点击修改，需输入数字或字母，长度介于 3~20 字符。
+请点击【确定】按钮，进入编程界面。
 
-![](./images/7.png)
+![](https://hiq.huaweicloud.com/hiq_assets/hiq_news_images/doc/5.png)
 
-8. 请输入实例名称，选择HiQ Quantum Computing技术栈，点击下一步。HiQ实例使用x86架构，您可以根据需求，选择创建不同存储容量(5GB、10GB、20GB)的实例，并且设置实例自动休眠时长，实例无操作一段时间后，将会自动休眠。
+4. 体验编程
 
-![](./images/8.png)
+（1）新建文件
+方法一：点击左上角  ，选择 文件 > 新建文件，输入文件名称.py，点击【确定】按钮。
 
-9. 请输入工程名，点击确定。这里默认选择HiQ的样例工程，实例将内置MindQuantum的样例代码供您学习使用。
+![](https://hiq.huaweicloud.com/hiq_assets/hiq_news_images/doc/6.png)
 
-![](./images/9.png)
+方法二：点击上方 ，输入文件名称.py，点击【确定】按钮。
 
-10. 进入HiQ实例，开始体验量子计算编程。
+![](https://hiq.huaweicloud.com/hiq_assets/hiq_news_images/doc/7.png)
 
-![](./images/10.png)
+（2）运行文件
 
-如果提前已经建好实例，再次打开页面直接点击运行按钮如下图。
+在插件中运行的任务可以保存和查看，操作步骤如下：
 
-![](./images/11.png)
+打开终端 Terminal
+
+方法一：使用Ctrl + `快捷键。
+
+方法二：点击上方  ，新建终端。
+
+![](https://hiq.huaweicloud.com/hiq_assets/hiq_news_images/doc/8.png)
+
+保存结果
+
+选择需要需要运行文件，右键 > 在终端中打开，输入命令python3 文件名 >> 结果文件名，回车，运行后的结果将会保存在结果文件里，可在左侧资源管理器查看。
+
+![](https://hiq.huaweicloud.com/hiq_assets/hiq_news_images/doc/9.png)
+
+![](https://hiq.huaweicloud.com/hiq_assets/hiq_news_images/doc/10.png)
+
 
 ### Watch & Star & Fork代码仓
 
@@ -132,6 +154,10 @@ pip install https://hiq.huaweicloud.com/download/mindquantum/newest/linux/mindqu
 7. 签署CLA。对于第一次参与MindQuantum开源开发的同学，在评论区会发现没有签署CLA。请进入签署页面，选择sign individual cla，并根据gitee上的个人信息，填写签署信息，完成CLA的签署。回到PR页面，在评论区回复 /check-cla，检查cla是否签署完成，如果没有，则需稍等片刻。签署完后，提交PR过程结束。
 
 ![](./images/26.png)
+
+- MindQuantum开源活动指导视频
+
+[https://www.bilibili.com/video/BV1mu411d7ET](https://www.bilibili.com/video/BV1mu411d7ET)
 
 ## 参与开源互动热身
 
