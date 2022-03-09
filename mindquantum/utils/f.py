@@ -23,7 +23,7 @@ from .type_value_check import _check_value_should_not_less
 from .type_value_check import _check_value_should_between_close_set
 
 
-def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=42):
+def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=None):
     """
     Generate a random circuit.
 
@@ -47,6 +47,8 @@ def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=42):
     _check_int_type('gate_num', gate_num)
     _check_input_type('sd_rate', float, sd_rate)
     _check_input_type('ctrl_rate', float, ctrl_rate)
+    if seed is None:
+        seed = np.random.randint(1, 2**23)
     _check_int_type('seed', seed)
     _check_value_should_not_less('n_qubits', 1, n_qubits)
     _check_value_should_not_less('gate_num', 1, gate_num)

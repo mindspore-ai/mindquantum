@@ -34,6 +34,7 @@
     - [社区](#社区)
         - [治理](#治理)
     - [贡献](#贡献)
+    - [引用MindQuantum](#引用mindquantum)
     - [许可证](#许可证)
 
 <!-- /TOC -->
@@ -241,6 +242,20 @@ export OMP_NUM_THREADS=4
 ## 贡献
 
 欢迎参与贡献。更多详情，请参阅我们的[贡献者Wiki](https://gitee.com/mindspore/mindspore/blob/master/CONTRIBUTING.md)。
+
+## 引用MindQuantum
+
+当您用MindQuantum进行科学研究是，请引用：
+
+```bash
+@misc{mq_2021,
+    author      = {MindQuantum Developer},
+    title       = {MindQuantum, version 0.5.0},
+    month       = {March},
+    year        = {2021},
+    url         = {https://gitee.com/mindspore/mindquantum}
+}
+```
 
 ## 许可证
 

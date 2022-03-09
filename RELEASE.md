@@ -29,7 +29,7 @@ Term 1: 3*a [Z2 X3]
 ```python
 >>> ops = QubitOperator('X0 Y1', 2)
 
->>> for idx, o in enumerate(ops):
+>>> for idx, o in enumerate(ops.singlet()):
 >>>     print(f'Word {idx}: {o}')
 ```
 

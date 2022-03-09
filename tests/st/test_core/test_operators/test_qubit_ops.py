@@ -133,7 +133,13 @@ def test_qubit_ops_sub():
 def test_fermion_operator_iter():
     """
     Description: Test fermion operator iter
-    Expectation:
+    Expectation: success.
     """
     a = QubitOperator('X0 Y1') + QubitOperator('Z2 X3', {"a": -3})
     assert a == sum(list(a))
+    b = QubitOperator("X0 Y1")
+    b_exp = [QubitOperator("X0"), QubitOperator("Y1")]
+    for idx, o in enumerate(b.singlet()):
+        assert o == b_exp[idx]
+    assert b.singlet_coeff() == 1
+    assert b.is_singlet
