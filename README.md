@@ -34,6 +34,7 @@
     - [Community](#community)
         - [Governance](#governance)
     - [Contributing](#contributing)
+    - [How to cite](#how-to-cite)
     - [License](#license)
 
 <!-- /TOC -->
@@ -215,6 +216,20 @@ Check out how MindSpore Open Governance [works](<https://gitee.com/mindspore/com
 ## Contributing
 
 Welcome contributions. See our [Contributor Wiki](https://gitee.com/mindspore/mindspore/blob/master/CONTRIBUTING.md) for more details.
+
+## How to cite
+
+When using MindQuantum for research, please cite:
+
+```bash
+@misc{mq_2021,
+    author      = {MindQuantum Developer},
+    title       = {MindQuantum, version 0.5.0},
+    month       = {March},
+    year        = {2021},
+    url         = {https://gitee.com/mindspore/mindquantum}
+}
+```
 
 ## License
 

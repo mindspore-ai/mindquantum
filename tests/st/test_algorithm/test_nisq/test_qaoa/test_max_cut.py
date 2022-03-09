@@ -29,6 +29,10 @@ ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 
 
 def test_max_cut():
+    """
+    Description: test maxcut ansatz.
+    Expectation: success.
+    """
     graph = [(0, 1), (1, 2), (2, 3), (3, 4), (1, 4)]
     depth = 3
     maxcut = MaxCutAnsatz(graph, depth)

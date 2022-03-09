@@ -57,17 +57,17 @@ def amplitude_encoder(x, n_qubits):
         >>> sim.apply_circuit(encoder, parameterResolver)
         >>> print(sim.get_qs(True))
         1/2¦00000000⟩
-        -1/2¦01000000⟩
-        1/2¦10000000⟩
-        1/2¦11000000⟩
+        -1/2¦00000001⟩
+        1/2¦00000010⟩
+        1/2¦00000011⟩
         >>> sim.reset()
         >>> encoder, parameterResolver = amplitude_encoder([0, 0, 0.5, 0.5, -0.5, 0.5], 8)
         >>> sim.apply_circuit(encoder, parameterResolver)
         >>> print(sim.get_qs(True))
-        1/2¦00100000⟩
-        1/2¦01000000⟩
-        -1/2¦10100000⟩
-        1/2¦11000000⟩
+        1/2¦00000010⟩
+        1/2¦00000011⟩
+        -1/2¦00000100⟩
+        1/2¦00000101⟩
     '''
     _check_input_type('amplitude_encoder', (np.ndarray, list), x)
     if isinstance(x, np.ndarray):

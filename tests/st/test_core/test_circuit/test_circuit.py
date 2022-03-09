@@ -97,8 +97,8 @@ def test_is_measure_end():
 def test_circuit_operator():
     """
     test
-    Description:
-    Expectation:
+    Description: test sum of circuit and shift qubit and add prefix of parameters.
+    Expectation: success.
     """
     template = Circuit([G.X.on(1, 0), G.RX('a').on(1), G.X.on(1, 0)])
     circ = sum([template + i + f'l{i}' for i in range(3)])

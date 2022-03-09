@@ -386,10 +386,60 @@ class _Operator(metaclass=ABCMeta):
         return len(self.terms)
 
     def __iter__(self):
-        if len(self.terms.items()) > 1:
-            for term, coeff in self.terms.items():
-                yield self.__class__(term, coeff)
-        else:
-            for term, coeff in self.terms.items():
-                for k in term:
-                    yield self.__class__((k, ), 1)
+        for term, coeff in self.terms.items():
+            yield self.__class__(term, coeff)
+
+    @property
+    def is_singlet(self):
+        """
+        To verify whether this operator has only one term.
+
+        Returns:
+            bool, whether this operator has only one term.
+        """
+        return len(self.terms) == 1
+
+    def singlet(self):
+        """
+        Split the single string operator into every word.
+
+        Raises:
+            RuntimeError: if the size of terms is not equal to 1.
+
+        Returns:
+            list(_Operator): The split word of the string.
+
+        Examples:
+            >>> from mindquantum import QubitOperator
+            >>> ops = QubitOperator("X0 Y1", 1)
+            >>> print(ops.singlet())
+            [1 [X0] , 1 [Y1] ]
+        """
+        if not self.is_singlet:
+            raise RuntimeError(f"terms size should be equal to 1, but get {len(self.terms)} terms.")
+        words = []
+        for term, _ in self.terms.items():
+            for k in term:
+                words.append(self.__class__((k, ), 1))
+        return words
+
+    def singlet_coeff(self):
+        """
+        Get the coefficient of this operator, if the operator has only one term.
+
+        Raises:
+            RuntimeError: if the size of terms is not equal to 1.
+
+        Returns:
+            ParameterResolver: the coefficient of this single string operator.
+
+        Examples:
+            >>> from mindquantum import QubitOperator
+            >>> ops = QubitOperator("X0 Y1", "a")
+            >>> print(ops.singlet_coeff())
+            {'a': 1}
+        """
+        if not self.is_singlet:
+            raise RuntimeError(f"terms size should be equal to 1, but get {len(self.terms)} terms.")
+        for i in self.terms.values():
+            return i

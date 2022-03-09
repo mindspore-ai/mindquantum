@@ -151,7 +151,13 @@ def test_eq():
 def test_fermion_operator_iter():
     """
     Description: Test fermion operator iter
-    Expectation:
+    Expectation: success.
     """
     a = FermionOperator('0 1^') + FermionOperator('2^ 3', {"a": -3})
     assert a == sum(list(a))
+    b = FermionOperator('0 1^')
+    b_exp = [FermionOperator('0'), FermionOperator('1^')]
+    for idx, o in enumerate(b.singlet()):
+        assert o == b_exp[idx]
+    assert b.singlet_coeff() == 1
+    assert b.is_singlet

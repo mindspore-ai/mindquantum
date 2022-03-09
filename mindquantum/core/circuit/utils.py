@@ -171,7 +171,7 @@ def _add_ctrl_qubits(circ, ctrl_qubits):
         intersection = ctrl_qubits.intersection(set(gate.obj_qubits))
         if intersection:
             raise ValueError(
-                f"Qubit {intersection} in ctrl_qubits {ctrl_qubits} already used n obj_qubits of gate {gate}")
+                f"Qubit {intersection} in ctrl_qubits {ctrl_qubits} already used in obj_qubits of gate {gate}")
         curr_ctrl = set(gate.ctrl_qubits)
         curr_ctrl = list(curr_ctrl.union(ctrl_qubits))
         curr_ctrl.sort()

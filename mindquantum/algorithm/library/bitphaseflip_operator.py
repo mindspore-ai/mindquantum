@@ -17,6 +17,7 @@
 
 from mindquantum.core.gates import Z
 from mindquantum.core.circuit import Circuit
+from mindquantum.utils.type_value_check import _check_input_type
 
 
 def bitphaseflip_operator(phase_inversion_index, n_qubits):
@@ -47,6 +48,8 @@ def bitphaseflip_operator(phase_inversion_index, n_qubits):
     Returns:
         Circuit, the bit phase flip circuit.
     """
+    _check_input_type('n_qubits', int, n_qubits)
+    _check_input_type('phase_inversion_index', (list, range), phase_inversion_index)
     s = [1 for i in range(1 << n_qubits)]
     for i in phase_inversion_index:
         s[i] = -1
