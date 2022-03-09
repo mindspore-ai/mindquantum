@@ -70,7 +70,35 @@ def _check_and_generate_pr_type(pr, names=None):
 
     return pr
 
+
 def _check_number_type(arg_msg, arg):
     """check number type"""
     if not isinstance(arg, numbers.Number):
         raise TypeError(f"{arg_msg} requires a number, but get {type(arg)}")
+
+
+def _check_gate_type(gate):
+    from mindquantum.core.gates import BasicGate
+    if not isinstance(gate, BasicGate):
+        raise TypeError("Require a quantum gate, but get {}".format(type(gate)))
+
+def _check_gate_has_obj(gate):
+    from mindquantum.core.gates import BarrierGate
+    if not isinstance(gate,BarrierGate):
+        if not gate.obj_qubits:
+            raise ValueError("Gate shuould act on some qubits first.")
+
+def _check_qubit_id(qubit_id):
+    if not isinstance(qubit_id, (int, np.int64)):
+        raise TypeError("Qubit should be a non negative int, but get {}!".format(type(qubit_id)))
+    if qubit_id < 0:
+        raise ValueError("Qubit should be non negative int, but get {}!".format(qubit_id))
+
+
+def _check_obj_and_ctrl_qubits(obj_qubits, ctrl_qubits):
+    if set(obj_qubits) & set(ctrl_qubits):
+        raise ValueError("obj_qubits and ctrl_qubits cannot have same qubits.")
+    if len(set(obj_qubits)) != len(obj_qubits):
+        raise ValueError("obj_qubits cannot have same qubits")
+    if len(set(ctrl_qubits)) != len(ctrl_qubits):
+        raise ValueError("ctrl_qubits cannot have same qubits")
