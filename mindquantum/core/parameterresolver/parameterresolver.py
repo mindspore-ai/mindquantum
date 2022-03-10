@@ -15,6 +15,7 @@
 # ============================================================================
 """Parameter resolver."""
 
+import json
 from collections.abc import Iterable
 from copy import deepcopy
 import numpy as np
@@ -485,6 +486,100 @@ resolver and not require grad in other parameter resolver ".format(conflict))
         for k, v in self.items():
             out[k] = np.imag(v)
         return out
+
+    def dumps(self, indent = 4):
+        '''
+        Dump ParameterResolver into JSON(JavaScript Object Notation)
+
+        Returns:
+            string(JSON), the JSON of ParameterResolver
+
+        Examples:
+            >>> from mindquantum.core.parameterresolver import ParameterResolver
+            >>> pr = ParameterResolver({'a': 1, 'b': 2, 'c': 3, 'd': 4})
+            >>> pr.no_grad_part('a', 'b')
+            >>> print(pr.dumps())
+            {
+                "a": 1,
+                "b": 2,
+                "c": 3,
+                "d": 4,
+                "__class__": "ParameterResolver",
+                "__module__": "parameterresolver",
+                "no_grad_parameters": [
+                    "a",
+                    "b"
+                ]
+            }
+        '''
+        dic = dict(zip(self.params_name, self.para_value))
+        dic['__class__'] = self.__class__.__name__
+        dic['__module__'] = self.__module__
+
+        dic['no_grad_parameters'] = list()
+        for j in self.no_grad_parameters:
+            dic["no_grad_parameters"].append(j)
+        dic["no_grad_parameters"].sort()
+
+        return json.dumps(dic, indent = indent)
+
+
+    @staticmethod
+    def loads(strs):
+        '''
+        Load JSON(JavaScript Object Notation) into FermionOperator
+
+        Returns:
+            FermionOperator, the FermionOperator load from strings
+
+        Examples:
+            >>> from mindquantum.core.parameterresolver import ParameterResolver
+            >>> strings = """
+                {
+                    "a": 1,
+                    "b": 2,
+                    "c": 3,
+                    "d": 4,
+                    "__class__": "ParameterResolver",
+                    "__module__": "parameterresolver",
+                    "no_grad_parameters": [
+                        "a",
+                        "b"
+                    ]
+                }
+                """
+            >>> obj = ParameterResolver.loads(string)
+            >>> print(obj)
+            {'a': 1, 'b': 2, 'c': 3, 'd': 4}
+            >>> print('requires_grad_parameters is:', obj.requires_grad_parameters)
+            requires_grad_parameters is: {'c', 'd'}
+            >>> print('no_grad_parameters is :', obj.no_grad_parameters)
+            no_grad_parameters is : {'b', 'a'}
+        '''
+        dic = json.loads(strs)
+
+        if '__class__' in dic:
+            class_name = dic.pop('__class__')
+
+            if class_name == 'ParameterResolver':
+                module_name = dic.pop('__module__')
+                module = __import__(module_name)
+                class_ = getattr(module, class_name)
+                no_grad_parameters_list = dic.pop('no_grad_parameters')
+
+                args = dic
+                p = class_(args)
+
+                for i in no_grad_parameters_list:
+                    p.no_grad_part(str(i))
+
+            else:
+                raise TypeError("Require a ParameterResolver class, but get {} class".format(class_name))
+
+        else:
+            raise ValueError("Expect a '__class__' in strings, but not found")
+
+        return p
 
 
 def _check_pr_type(pr):

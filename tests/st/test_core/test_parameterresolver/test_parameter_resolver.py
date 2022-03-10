@@ -42,6 +42,19 @@ def test_parameter_resolve():
     assert not pr.no_grad_parameters
 
 
+def test_parameter_resolve_dumps_and_loads():
+    '''
+    Description: Test pr dumps to json and json loads to pr
+    Expectation:
+    '''
+    pr = PR({'a': 1, 'b': 2, 'c': 3, 'd': 4})
+    pr.no_grad_part('a', 'b')
+
+    string = pr.dumps()
+    obj = PR.loads(string)
+    assert obj == pr
+
+
 def test_parameter_resolve_combination():
     """
     Description: Test pr combination

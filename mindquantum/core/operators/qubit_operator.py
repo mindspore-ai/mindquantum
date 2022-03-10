@@ -19,6 +19,8 @@
 #   Apache 2.0 license.
 """This is the module for the Qubit Operator. """
 
+import json
+import ast
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 from ._base_operator import _Operator
 
@@ -293,6 +295,102 @@ class QubitOperator(_Operator):
 
     def __repr__(self):
         return str(self)
+
+    def dumps(self, indent = 4):
+        '''
+        Dump QubitOperator into JSON(JavaScript Object Notation)
+
+        Returns:
+            JSON(strings), the JSON strings of QubitOperator
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> ops = QubitOperator('X0 Y1', 1.2) + QubitOperator('Z0 X1', {'a': 2.1})
+            >>> print(ops.dumps())
+            {
+                "((0, 'X'), (1, 'Y'))": "1.2",
+                "((0, 'Z'), (1, 'X'))": "{\"a\": 2.1, \"__class__\": \"ParameterResolver\", \
+                    \"__module__\": \"parameterresolver.parameterresolver\", \"no_grad_parameters\": []}",
+                "__class__": "QubitOperator",
+                "__module__": "operators.qubit_operator"
+            }
+        '''
+        d = self.terms
+
+        # Convert key type from tuple into str
+        key_list = list(d.keys())
+        for i, k in enumerate(key_list):
+            key_list[i] = k.__str__()
+
+        # Convert value type from complex/ParameterResolver into str
+        value_list = list(d.values())
+        for j, v in enumerate(value_list):
+            if isinstance(v, (complex, int, float)):
+                value_list[j] = str(v)
+            elif isinstance(v, PR):
+                value_list[j] = (v.dumps(None))
+            else:
+                raise ValueError("Coefficient must be a complex/int/float type or a ParameterResolver, \
+                    but get {}.".format(type(v)))
+
+        dic = dict(zip(key_list, value_list))
+        dic['__class__'] = self.__class__.__name__
+        dic['__module__'] = self.__module__
+
+        return json.dumps(dic, indent = indent)
+
+
+    @staticmethod
+    def loads(strs):
+        '''
+        Load JSON(JavaScript Object Notation) into QubitOperator
+
+        Returns:
+            FermionOperator, the QubitOperator load from strings
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> strings = """{"((0, 'X'), (1, 'Y'))": 1.2, "((0, 'Z'), (1, 'X'))": {"a": 2.1}, \
+                "__class__": "QubitOperator", "__module__": "__main__"}"""
+            >>> obj = QubitOperator.loads(strings)
+            >>> print(obj)
+            1.2 [X0 Y1] + 2.1*a [Z0 X1]
+        '''
+        dic = json.loads(strs)
+        if '__class__' in dic:
+            class_name = dic.pop('__class__')
+            if class_name == 'QubitOperator':
+                module_name = dic.pop('__module__')
+                module = __import__(module_name)
+                class_ = getattr(module, class_name)
+
+                # Convert key type from str into tuple
+                key_list = list(dic.keys())
+                for i, k in enumerate(key_list):
+                    key_list[i] = tuple(ast.literal_eval(k))
+
+                # Convert value type from str into ParameterResolver/complex
+                value_list = list(dic.values())
+                for j, v in enumerate(value_list):
+                    if isinstance(v, str):
+                        if '__class__' in v:
+                            value_list[j] = PR.loads(v)
+                        else:
+                            value_list[j] = complex(v)
+
+                terms = dict(zip(key_list, value_list))
+
+                q_op = QubitOperator()
+                for key, value in terms.items():
+                    q_op += class_(key, value)
+
+            else:
+                raise TypeError("Require a QubitOperator class, but get {} class".format(class_name))
+
+        else:
+            raise ValueError("Expect a '__class__' in strings, but not found")
+
+        return q_op
 
 
 __all__ = ['QubitOperator']
