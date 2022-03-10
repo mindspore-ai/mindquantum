@@ -61,9 +61,13 @@ class Hamiltonian:
         self.ham_termlist = [(i, j) for i, j in self.hamiltonian.terms.items()]
 
     def __str__(self):
+        if self.how_to == MODE['frontend']:
+            return self.sparse_mat.__str__()
         return self.hamiltonian.__str__()
 
     def __repr__(self):
+        if self.how_to == MODE['frontend']:
+            return self.sparse_mat.__str__()
         return self.hamiltonian.__repr__()
 
     def sparse(self, n_qubits=1):
