@@ -21,13 +21,14 @@ import copy
 import numpy as np
 from rich.console import Console
 import mindquantum.core.gates as G
-from mindquantum.core.gates.basic import _check_gate_type
+from mindquantum.utils.type_value_check import _check_gate_type
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 from mindquantum.core.parameterresolver.parameterresolver import ParameterResolver
 from mindquantum.io import bprint
 from mindquantum.io.display import brick_model
 from mindquantum.utils.type_value_check import _check_input_type
 from mindquantum.utils.type_value_check import _check_and_generate_pr_type
+from mindquantum.utils.type_value_check import _check_gate_has_obj
 from .utils import apply
 from .utils import add_prefix
 
@@ -204,6 +205,7 @@ class Circuit(list):
             gate (BasicGate): The gate you want to append.
         """
         _check_gate_type(gate)
+        _check_gate_has_obj(gate)
         if isinstance(gate, G.Measure):
             self.all_measures.collect_only_one(gate, f'measure key {gate.key} already exist.')
         if isinstance(gate, G.PauliChannel):
@@ -296,6 +298,7 @@ class Circuit(list):
 
     def __setitem__(self, k, v):
         _check_gate_type(v)
+        _check_gate_has_obj(v)
         old_v = self[k]
         self.all_qubits.delete(old_v.obj_qubits)
         self.all_qubits.delete(old_v.ctrl_qubits)
@@ -360,6 +363,8 @@ class Circuit(list):
             gates (Union[BasicGate, list[BasicGate]]): Gates you need to insert.
         """
         if isinstance(gates, G.BasicGate):
+            _check_gate_has_obj(gates)
+            _check_gate_type(gates)
             super().insert(index, gates)
             self.all_qubits.collect(gates.obj_qubits)
             self.all_qubits.collect(gates.ctrl_qubits)
@@ -369,7 +374,6 @@ class Circuit(list):
                 self.all_measures.collect_only_one(gates, f'measure key {gates.key} already exist.')
         elif isinstance(gates, Iterable):
             for gate in gates[::-1]:
-                _check_gate_type(gate)
                 self.insert(index, gate)
                 self.all_qubits.collect(gate.obj_qubits)
                 self.all_qubits.collect(gate.ctrl_qubits)

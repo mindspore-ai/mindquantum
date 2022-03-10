@@ -500,9 +500,13 @@ class Simulator:
             _check_input_type("hams's element", Hamiltonian, h_tmp)
             _check_hamiltonian_qubits_number(h_tmp, self.n_qubits)
         _check_input_type("circ_right", Circuit, circ_right)
+        if circ_right.is_noise_circuit:
+            raise ValueError("noise circuit not support yet.")
         non_hermitian = False
         if circ_left is not None:
             _check_input_type("circ_left", Circuit, circ_left)
+            if circ_left.is_noise_circuit:
+                raise ValueError("noise circuit not support yet.")
             non_hermitian = True
         if simulator_left is not None:
             _check_input_type("simulator_left", Simulator, simulator_left)

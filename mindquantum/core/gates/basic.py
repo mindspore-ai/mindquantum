@@ -24,6 +24,9 @@ import numpy as np
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 from mindquantum.utils.f import _common_exp
 from mindquantum import mqbackend as mb
+from mindquantum.utils.type_value_check import _check_gate_type
+from mindquantum.utils.type_value_check import _check_qubit_id
+from mindquantum.utils.type_value_check import _check_obj_and_ctrl_qubits
 
 HERMITIAN_PROPERTIES = {
     'self_hermitian': 0,  # the hermitian of this gate is its self
@@ -528,24 +531,3 @@ class IntrinsicOneParaGate(ParameterGate):
         self.n_qubits = n_qubits_exp
         if n_qubits_exp != n_qubits:
             raise ValueError(f"obj_qubits of {self.name} requires {n_qubits_exp} qubits, but get {n_qubits}")
-
-
-def _check_gate_type(gate):
-    if not isinstance(gate, BasicGate):
-        raise TypeError("Require a quantum gate, but get {}".format(type(gate)))
-
-
-def _check_qubit_id(qubit_id):
-    if not isinstance(qubit_id, (int, np.int64)):
-        raise TypeError("Qubit should be a non negative int, but get {}!".format(type(qubit_id)))
-    if qubit_id < 0:
-        raise ValueError("Qubit should be non negative int, but get {}!".format(qubit_id))
-
-
-def _check_obj_and_ctrl_qubits(obj_qubits, ctrl_qubits):
-    if set(obj_qubits) & set(ctrl_qubits):
-        raise ValueError("obj_qubits and ctrl_qubits cannot have same qubits.")
-    if len(set(obj_qubits)) != len(obj_qubits):
-        raise ValueError("obj_qubits cannot have same qubits")
-    if len(set(ctrl_qubits)) != len(ctrl_qubits):
-        raise ValueError("ctrl_qubits cannot have same qubits")
