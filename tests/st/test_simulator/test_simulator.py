@@ -15,6 +15,7 @@
 # ============================================================================
 """Test simulator."""
 import numpy as np
+from scipy.sparse import csr_matrix
 import mindspore as ms
 import mindquantum.core.operators as ops
 from mindquantum.simulator.simulator import Simulator
@@ -238,3 +239,18 @@ def test_virtual_quantum_computer():
         _test_all_gate_with_simulator(virtual_qc)
         _test_optimization_with_custom_gate(virtual_qc)
         _test_fid()
+
+def test_non_hermitian_grad_ops():
+    """
+    Description: test non hermitian grad ops
+    Expectation: success.
+    """
+    c1 = Circuit([G.RX('a').on(0)])
+    c2 = Circuit([G.RY('b').on(0)])
+    ham = Hamiltonian(csr_matrix([[1, 2], [3, 4]]))
+    sim = Simulator('projectq', 1)
+    grad_ops = sim.get_expectation_with_grad(ham, c2, c1)
+    f, _ = grad_ops(np.array([1, 2]))
+    f_exp = np.conj(G.RX(2).matrix().T) @ ham.sparse_mat.toarray() @ G.RY(1).matrix()
+    f_exp = f_exp[0, 0]
+    assert np.allclose(f, f_exp)
