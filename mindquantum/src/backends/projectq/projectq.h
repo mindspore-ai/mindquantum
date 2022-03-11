@@ -402,8 +402,8 @@ class Projectq : public Simulator {
         Projectq<T> sim2 = Projectq<T>(this->seed, n_qubits_, varphi);
         sim2.ApplyCircuit(left_circ, pr);
         if (n_hams == 1) {
-            auto f_g1 = sim2.RightSizeGrad(sim.vec_, sim2.vec_, herm_hams[0], left_circ, herm_left_circ, pr, p_map);
-            auto f_g2 = sim.RightSizeGrad(sim2.vec_, sim.vec_, hams[0], right_circ, herm_right_circ, pr, p_map);
+            auto f_g1 = sim2.RightSizeGrad(sim.vec_, sim2.vec_, hams[0], left_circ, herm_left_circ, pr, p_map);
+            auto f_g2 = sim.RightSizeGrad(sim2.vec_, sim.vec_, herm_hams[0], right_circ, herm_right_circ, pr, p_map);
             for (size_t g = 1; g < n_params + 1; g++) {
                 f_g2[g] += std::conj(f_g1[g]);
             }
@@ -422,10 +422,10 @@ class Projectq : public Simulator {
                 }
                 auto task = [&, start, end]() {
                     for (size_t n = start; n < end; n++) {
-                        auto f_g1 = sim2.RightSizeGrad(sim.vec_, sim2.vec_, herm_hams[n], left_circ, herm_left_circ, pr,
+                        auto f_g1 = sim2.RightSizeGrad(sim.vec_, sim2.vec_, hams[n], left_circ, herm_left_circ, pr,
                                                        p_map);
-                        auto f_g2 = sim.RightSizeGrad(sim2.vec_, sim.vec_, hams[n], right_circ, herm_right_circ, pr,
-                                                      p_map);
+                        auto f_g2 = sim.RightSizeGrad(sim2.vec_, sim.vec_, herm_hams[n], right_circ, herm_right_circ,
+                                                      pr, p_map);
                         for (size_t g = 1; g < n_params + 1; g++) {
                             f_g2[g] += std::conj(f_g1[g]);
                         }
