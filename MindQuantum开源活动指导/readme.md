@@ -21,7 +21,7 @@
 
 ### 登录HiQ量子计算云服务
 
-点击HiQ量子计算云服务链接（进入 HiQ 官网 ，点击右上角【新版】按钮）跳转至登录入口（华为云账号登录，若没有华为云账号，请先注册华为云账号并实名认证）
+点击HiQ量子计算云服务[https://hiq.huaweicloud.com/portal/home](https://hiq.huaweicloud.com/portal/home)链接（进入 HiQ 官网[https://hiq.huaweicloud.com/](https://hiq.huaweicloud.com/) ，点击右上角【新版】按钮）跳转至登录入口（华为云账号登录，若没有华为云账号，请先注册华为云账号并实名认证）
 
 ![](https://hiq.huaweicloud.com/hiq_assets/hiq_news_images/doc/1.png)
 
