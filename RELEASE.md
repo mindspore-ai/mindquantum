@@ -11,6 +11,7 @@
 - Iter multiple terms `QubitOperator`
 
 ```python
+>>> from mindquantum.core.operators import QubitOperator
 >>> ops = QubitOperator('X0 Y1', 1) + QubitOperator('Z2 X3', {'a': 3})
 
 >>> for idx, o in enumerate(ops):
@@ -52,6 +53,7 @@ Word 1: 1 [Y1]
 For origin circuit,
 
 ```python
+>>> from mindquantum.core.circuit import Circuit
 >>> circuit = Circuit().z(0).rx('a', 1, 0).y(1)
 ```
 
@@ -61,38 +63,17 @@ q0: ──Z──────●─────────
 q1: ───────RX(a)────Y──
 ```
 
-- Add a integer to a circuit will shift the qubit index.
+- `shift` operator will shift the qubit index.
 
 ```python
->>> circuit + 2
+from mindquantum.core.circuit import shift
+>>> shift(circuit, 2)
 ```
 
 ```bash
 q2: ──Z──────●─────────
              │
 q3: ───────RX(a)────Y──
-```
-
-```python
->>> 1 - circuit
-```
-
-```bash
-q0: ───────RX(a)────Y──
-             │
-q1: ──Z──────●─────────
-```
-
-- Add a string to a circuit will add prefix to every parameters in this circuit.
-
-```python
->>> 'l1' + circuit
-```
-
-```bash
-q0: ──Z───────●───────────
-              │
-q1: ───────RX(l1_a)────Y──
 ```
 
 - Reverse circuit qubits, the circuit will be flipped upside down.
@@ -116,6 +97,13 @@ q1: ──Z──────●─────────
 ### SVG supported
 
 The quantum circuit build by mindquantum now can be showd by SVG in jupyter notebook, just call `svg()` of any `Circuit`.
+
+```python
+>>> from mindquantum import *
+
+>>> circuit = (qft(range(3)) + BarrierGate(True)).measure_all()
+>>> circuit.svg()
+```
 
 ![circuit_svg](https://gitee.com/mindspore/mindquantum/raw/master/docs/circuit_svg.png)
 
