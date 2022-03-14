@@ -15,6 +15,8 @@
 # ============================================================================
 """This module is generated the Fermion Operator"""
 
+import json
+import ast
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 from ._base_operator import _Operator
 
@@ -238,6 +240,104 @@ class FermionOperator(_Operator):
         for term, coeff in self.terms.items():
             ordered_op += _normal_ordered_term(term, coeff)
         return ordered_op
+
+    def dumps(self, indent = 4):
+        '''
+        Dump FermionOperator into JSON(JavaScript Object Notation)
+
+        Returns:
+            JSON(str), the JSON strings of FermionOperator
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> f = FermionOperator('0', 1 + 2j) + FermionOperator('0^', 'a')
+            >>> print(f.dumps())
+            {
+                "((0, 0),)": "(1+2j)",
+                "((0, 1),)": "{\"a\": 1, \"__class__\": \"ParameterResolver\", \"__module__\": \
+                    \"parameterresolver.parameterresolver\", \"no_grad_parameters\": []}",
+                "__class__": "FermionOperator",
+                "__module__": "operators.fermion_operator"
+            }
+        '''
+
+        d = self.terms
+
+        # Convert key type from tuple to str
+        key_list = list(d.keys())
+        for i, k in enumerate(key_list):
+            if isinstance(k, tuple):
+                key_list[i] = k.__str__()
+
+        # Convert value type from complex/PR into str
+        value_list = list(d.values())
+        for j, v in enumerate(value_list):
+            if isinstance(v, (complex, int, float)):
+                value_list[j] = str(v)
+            elif isinstance(v, PR):
+                value_list[j] = (v.dumps(None))
+            else:
+                raise ValueError("Coefficient must be a complex/int/float type or a ParameterResolver, \
+                    but get {}.".format(type(v)))
+
+        dic = dict(zip(key_list, value_list))
+        dic['__class__'] = self.__class__.__name__
+        dic['__module__'] = self.__module__
+
+        return json.dumps(dic, indent = indent)
+
+
+    @staticmethod
+    def loads(strs):
+        '''
+        Load JSON(JavaScript Object Notation) into FermionOperator
+
+        Returns:
+            FermionOperator, the FermionOperator load from strings
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> strings == '{"((0, 0),)": "(1+2j)", "((0, 1),)": {"a": 1}, \
+                "__class__": "FermionOperator", "__module__": "__main__"}'
+            >>> obj = FermionOperator.loads(strings)
+            >>> print(obj)
+            (1+2j) [0] + a [0^]
+        '''
+        dic = json.loads(strs)
+        if '__class__' in dic:
+            class_name = dic.pop('__class__')
+            if class_name == 'FermionOperator':
+                module_name = dic.pop('__module__')
+                module = __import__(module_name)
+                class_ = getattr(module, class_name)
+
+                # Convert key type from str into tuple
+                key_list = list(dic.keys())
+                for i, k in enumerate(key_list):
+                    key_list[i] = tuple(ast.literal_eval(k))
+
+                # Convert value type from str into ParameterResolver/complex
+                value_list = list(dic.values())
+                for j, v in enumerate(value_list):
+                    if isinstance(v, str):
+                        if '__class__' in v:
+                            value_list[j] = PR.loads(v)
+                        else:
+                            value_list[j] = complex(v)
+
+                terms = dict(zip(key_list, value_list))
+
+                f_op = FermionOperator()
+                for key, value in terms.items():
+                    f_op += class_(key, value)
+
+            else:
+                raise TypeError("Require a FermionOperator class, but get {} class".format(class_name))
+
+        else:
+            raise ValueError("Expect a '__class__' in strings, but not found")
+
+        return f_op
 
 
 def _normal_ordered_term(term, coefficient):

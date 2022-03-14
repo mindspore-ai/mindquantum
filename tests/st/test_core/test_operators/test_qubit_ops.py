@@ -138,8 +138,13 @@ def test_fermion_operator_iter():
     a = QubitOperator('X0 Y1') + QubitOperator('Z2 X3', {"a": -3})
     assert a == sum(list(a))
     b = QubitOperator("X0 Y1")
-    b_exp = [QubitOperator("X0"), QubitOperator("Y1")]
-    for idx, o in enumerate(b.singlet()):
-        assert o == b_exp[idx]
-    assert b.singlet_coeff() == 1
-    assert b.is_singlet
+
+def test_qubit_ops_dumps_and_loads():
+    """
+    Description: Test qubit operator dumps to json and json loads to qubit operator
+    Expectation:
+    """
+    ops = QubitOperator('X0 Y1', 1.2) + QubitOperator('Z0 X1', {'a': 2.1})
+    strings = ops.dumps()
+    obj = QubitOperator.loads(strings)
+    assert obj == ops

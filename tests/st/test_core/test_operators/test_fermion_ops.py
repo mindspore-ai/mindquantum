@@ -161,3 +161,14 @@ def test_fermion_operator_iter():
         assert o == b_exp[idx]
     assert b.singlet_coeff() == 1
     assert b.is_singlet
+
+
+def test_dumps_and_loads():
+    """
+    Description: Test fermion operator dumps to json and json loads to fermion operator
+    Expectation:
+    """
+    f = FermionOperator('0', 1 + 2j) + FermionOperator('0^', 'a')
+    strings = f.dumps()
+    obj = FermionOperator.loads(strings)
+    assert obj == f
