@@ -147,4 +147,4 @@ def test_qubit_ops_dumps_and_loads():
     ops = QubitOperator('X0 Y1', 1.2) + QubitOperator('Z0 X1', {'a': 2.1})
     strings = ops.dumps()
     obj = QubitOperator.loads(strings)
-    assert obj == ops        
+    assert obj == ops
