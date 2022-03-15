@@ -70,6 +70,7 @@ def amplitude_encoder(x, n_qubits):
         1/2¦00000101⟩
     '''
     _check_input_type('amplitude_encoder', (np.ndarray, list), x)
+    _check_input_type('n_qubits', (int), n_qubits)
     if isinstance(x, np.ndarray):
         x = x.tolist()
     if len(x) > 2 ** n_qubits:

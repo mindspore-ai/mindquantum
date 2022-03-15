@@ -21,6 +21,7 @@ from projectq.ops import QubitOperator as pq_operator
 from openfermion.ops import QubitOperator as of_operator
 
 from mindquantum.core.parameterresolver.parameterresolver import ParameterResolver
+from mindquantum.utils.type_value_check import _check_input_type
 
 
 def decompose_single_term_time_evolution(term, para):
@@ -419,6 +420,36 @@ def add_prefix(circuit_fn, prefix):
     if isinstance(circuit_fn, Circuit):
         return _add_prefix(circuit_fn, prefix)
     raise TypeError("circuit_fn need a circuit or a function that can generate a circuit.")
+
+
+def shift(circ, p):
+    """
+    Shift the qubit range of the given circuit.
+
+    Args:
+        circ (circuit): The circuit that you want to do shift operator.
+        p (int): The qubit distance you want to shift.
+
+    Examples:
+        >>> from mindquantum.core.circuit import shift
+        >>> from mindquantum.core.circuit import Circuit
+        >>> circ = Circuit().x(1, 0)
+        >>> circ
+        q0: ──●──
+              │
+        q1: ──X──
+        >>> shift(circ, 1)
+        q1: ──●──
+              │
+        q2: ──X──
+
+    Returns:
+        Circuit, the shifted circuit.
+    """
+    from mindquantum.core import Circuit
+    _check_input_type('circ', Circuit, circ)
+    _check_input_type('p', int, p)
+    return apply(circ, [i + p for i in sorted(circ.all_qubits.keys())])
 
 
 def _change_param_name(circ, name_map):

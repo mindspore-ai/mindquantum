@@ -28,6 +28,7 @@ from .utils import dagger
 from .utils import apply
 from .utils import add_prefix
 from .utils import change_param_name
+from .utils import shift
 from .utils import C
 from .utils import A
 from .utils import D
@@ -37,6 +38,7 @@ from .utils import CPN
 __all__ = [
     'Circuit', 'U3', 'UN', 'SwapParts', 'C', 'A', 'D', 'AP', 'CPN',
     'decompose_single_term_time_evolution', 'pauli_word_to_circuits',
-    'controlled', 'dagger', 'apply', 'add_prefix', 'change_param_name'
+    'controlled', 'dagger', 'apply', 'add_prefix', 'change_param_name',
+    'shift'
 ]
 __all__.sort()
