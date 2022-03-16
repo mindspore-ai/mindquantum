@@ -22,6 +22,7 @@
 import json
 import ast
 from mindquantum.core.parameterresolver import ParameterResolver as PR
+from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
 from ._base_operator import _Operator
 
 EQ_TOLERANCE = 1e-8
@@ -52,26 +53,19 @@ def _check_valid_qubit_operator_term(term):
     """Check valid qubit operator term."""
     if term is not None and term != '':
         if not isinstance(term, (str, tuple)):
-            raise ValueError(
-                'Qubit operator requires a string or a tuple, but get {}'.
-                format(type(term)))
+            raise ValueError('Qubit operator requires a string or a tuple, but get {}'.format(type(term)))
 
         operators = ('X', 'Y', 'Z')
         if isinstance(term, str):
             terms = term.split(' ')
             for t in terms:
-                if len(t) < 2 or t[0].upper(
-                ) not in operators or not t[1:].isdigit():
+                if len(t) < 2 or t[0].upper() not in operators or not t[1:].isdigit():
                     if t:
-                        raise ValueError(
-                            'Invalid qubit operator term {}.'.format(t))
+                        raise ValueError('Invalid qubit operator term {}.'.format(t))
         if isinstance(term, tuple):
             for t in term:
-                if len(t) != 2 or not isinstance(
-                        t[0],
-                        int) or t[0] < 0 or t[1].upper() not in operators:
-                    raise ValueError(
-                        'Invalid qubit operator term {}.'.format(t))
+                if len(t) != 2 or not isinstance(t[0], int) or t[0] < 0 or t[1].upper() not in operators:
+                    raise ValueError('Invalid qubit operator term {}.'.format(t))
 
 
 class QubitOperator(_Operator):
@@ -161,10 +155,8 @@ class QubitOperator(_Operator):
             operator = sub_term[0]
             index = sub_term[1:]
             if operator.upper() not in self.operators:
-                raise ValueError(
-                    'Invalid type of operator {}.'
-                    'The Qubit Pauli operator should be one of this {}'.format(
-                        operator, self.operators))
+                raise ValueError('Invalid type of operator {}.'
+                                 'The Qubit Pauli operator should be one of this {}'.format(operator, self.operators))
             if not index.isdigit() or int(index) < 0:
                 raise ValueError("Invalid index {}.The qubit index should be\
                     nonnegative integer".format(self.operators))
@@ -242,11 +234,9 @@ class QubitOperator(_Operator):
         for right_term in terms[1:]:
             left_index, left_operator = left_term
             right_index, right_operator = right_term
-            left_operator, right_operator = left_operator.upper(
-            ), right_operator.upper()
+            left_operator, right_operator = left_operator.upper(), right_operator.upper()
             if left_index == right_index:
-                new_coefficient, new_operator = _PAULI_OPERATOR_PRODUCTS[(
-                    left_operator, right_operator)]
+                new_coefficient, new_operator = _PAULI_OPERATOR_PRODUCTS[(left_operator, right_operator)]
                 left_term = (left_index, new_operator)
                 coefficient *= new_coefficient
 
@@ -296,9 +286,13 @@ class QubitOperator(_Operator):
     def __repr__(self):
         return str(self)
 
-    def dumps(self, indent = 4):
+    def dumps(self, indent=4):
         '''
         Dump QubitOperator into JSON(JavaScript Object Notation)
+
+        Args:
+            indent (int): Then JSON array elements and object members will be
+                pretty-printed with that indent level. Default: 4.
 
         Returns:
             JSON(strings), the JSON strings of QubitOperator
@@ -315,6 +309,8 @@ class QubitOperator(_Operator):
                 "__module__": "operators.qubit_operator"
             }
         '''
+        if indent is not None:
+            _check_int_type('indent', indent)
         d = self.terms
 
         # Convert key type from tuple into str
@@ -337,13 +333,15 @@ class QubitOperator(_Operator):
         dic['__class__'] = self.__class__.__name__
         dic['__module__'] = self.__module__
 
-        return json.dumps(dic, indent = indent)
-
+        return json.dumps(dic, indent=indent)
 
     @staticmethod
     def loads(strs):
         '''
         Load JSON(JavaScript Object Notation) into QubitOperator
+
+        Args:
+            strs (str): The dumped qubit operator string.
 
         Returns:
             FermionOperator, the QubitOperator load from strings
@@ -356,6 +354,7 @@ class QubitOperator(_Operator):
             >>> print(obj)
             1.2 [X0 Y1] + 2.1*a [Z0 X1]
         '''
+        _check_input_type('strs', str, strs)
         dic = json.loads(strs)
         if '__class__' in dic:
             class_name = dic.pop('__class__')
