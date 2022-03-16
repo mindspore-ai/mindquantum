@@ -29,7 +29,7 @@
 
 2. 使用**VQSVD**算法将MNIST中的一张图片大小从28\*28压缩至8*8
 
-   <img src="https://gitee.com/mindspore/mindquantum/raw/research/paper_recurrence/38_lolo1222/figure/MNIST_32.png" alt="MNIST_32" style="zoom:750%;" />![compress](.\figure\compress.png)
+   <img src="https://gitee.com/mindspore/mindquantum/raw/research/paper_recurrence/38_lolo1222/figure/MNIST_32.png" alt="MNIST_32" style="zoom:750%;" />![compress](https://gitee.com/mindspore/mindquantum/raw/research/paper_recurrence/38_lolo1222/figure/compress.png)
 
 ## 创新点
 
