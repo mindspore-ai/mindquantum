@@ -19,17 +19,17 @@
 3. 读出最大化时参数值 $\alpha^ \star$ 和 $\beta^\star$ ，计算出 $U(\alpha^\star)$ 和 $V(\beta^\star)$
 4. 输出结果：奇异值 ${m_1, \cdots, m_r}$和奇异矩阵  $U(\alpha^\star)$ 和 $V(\beta^\star)$
 
-![VQSVD steps](.\figure\QSVD.png)
+![VQSVD steps](https://gitee.com/mindspore/mindquantum/raw/research/paper_recurrence/38_lolo1222/figure/QSVD.png)
 
 ## 主要结果
 
 1. 对随机生成的 8×8 复数矩阵作**VQSVD**，进行矩阵压缩，作出误差分析，并与**SVD**的误差对比
 
-   ![loss](.\figure\loss.png)![error](.\figure\error.png)
+   ![loss](https://gitee.com/mindspore/mindquantum/raw/research/paper_recurrence/38_lolo1222/figure/loss.png)![error](https://gitee.com/mindspore/mindquantum/raw/research/paper_recurrence/38_lolo1222/figure/error.png)
 
 2. 使用**VQSVD**算法将MNIST中的一张图片大小从28\*28压缩至8*8
 
-   <img src=".\figure\MNIST_32.png" alt="MNIST_32" style="zoom:750%;" />![compress](.\figure\compress.png)
+   <img src="https://gitee.com/mindspore/mindquantum/raw/research/paper_recurrence/38_lolo1222/figure/MNIST_32.png" alt="MNIST_32" style="zoom:750%;" />![compress](.\figure\compress.png)
 
 ## 创新点
 
