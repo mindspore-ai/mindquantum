@@ -22,6 +22,8 @@ import numpy as np
 import sympy as sp
 from mindquantum import mqbackend as mb
 from mindquantum.utils.type_value_check import _num_type
+from mindquantum.utils.type_value_check import _check_input_type
+from mindquantum.utils.type_value_check import _check_int_type
 
 
 class ParameterResolver(dict):
@@ -47,7 +49,6 @@ class ParameterResolver(dict):
         >>> pr.no_grad_parameters
         {'a'}
     """
-
     def __init__(self, data=None):
         if data is None:
             data = {}
@@ -487,9 +488,13 @@ resolver and not require grad in other parameter resolver ".format(conflict))
             out[k] = np.imag(v)
         return out
 
-    def dumps(self, indent = 4):
+    def dumps(self, indent=4):
         '''
         Dump ParameterResolver into JSON(JavaScript Object Notation)
+
+        Args:
+            indent (int): Then JSON array elements and object members will be
+                pretty-printed with that indent level. Default: 4.
 
         Returns:
             string(JSON), the JSON of ParameterResolver
@@ -512,6 +517,8 @@ resolver and not require grad in other parameter resolver ".format(conflict))
                 ]
             }
         '''
+        if indent is not None:
+            _check_int_type('indent', indent)
         dic = dict(zip(self.params_name, self.para_value))
         dic['__class__'] = self.__class__.__name__
         dic['__module__'] = self.__module__
@@ -521,13 +528,15 @@ resolver and not require grad in other parameter resolver ".format(conflict))
             dic["no_grad_parameters"].append(j)
         dic["no_grad_parameters"].sort()
 
-        return json.dumps(dic, indent = indent)
-
+        return json.dumps(dic, indent=indent)
 
     @staticmethod
     def loads(strs):
         '''
         Load JSON(JavaScript Object Notation) into FermionOperator
+
+        Args:
+            strs (str): The dumped parameter resolver string.
 
         Returns:
             FermionOperator, the FermionOperator load from strings
@@ -556,6 +565,7 @@ resolver and not require grad in other parameter resolver ".format(conflict))
             >>> print('no_grad_parameters is :', obj.no_grad_parameters)
             no_grad_parameters is : {'b', 'a'}
         '''
+        _check_input_type('strs', str, strs)
         dic = json.loads(strs)
 
         if '__class__' in dic:

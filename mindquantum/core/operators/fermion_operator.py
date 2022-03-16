@@ -18,6 +18,7 @@
 import json
 import ast
 from mindquantum.core.parameterresolver import ParameterResolver as PR
+from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
 from ._base_operator import _Operator
 
 
@@ -241,12 +242,16 @@ class FermionOperator(_Operator):
             ordered_op += _normal_ordered_term(term, coeff)
         return ordered_op
 
-    def dumps(self, indent = 4):
+    def dumps(self, indent=4):
         '''
         Dump FermionOperator into JSON(JavaScript Object Notation)
 
+        Args:
+            indent (int): Then JSON array elements and object members will be
+                pretty-printed with that indent level. Default: 4.
+
         Returns:
-            JSON(str), the JSON strings of FermionOperator
+            JSON (str), the JSON strings of FermionOperator
 
         Examples:
             >>> from mindquantum.core.operators import FermionOperator
@@ -260,7 +265,8 @@ class FermionOperator(_Operator):
                 "__module__": "operators.fermion_operator"
             }
         '''
-
+        if indent is not None:
+            _check_int_type('indent', indent)
         d = self.terms
 
         # Convert key type from tuple to str
@@ -284,13 +290,15 @@ class FermionOperator(_Operator):
         dic['__class__'] = self.__class__.__name__
         dic['__module__'] = self.__module__
 
-        return json.dumps(dic, indent = indent)
-
+        return json.dumps(dic, indent=indent)
 
     @staticmethod
     def loads(strs):
         '''
         Load JSON(JavaScript Object Notation) into FermionOperator
+
+        Args:
+            strs (str): The dumped fermion operator string.
 
         Returns:
             FermionOperator, the FermionOperator load from strings
@@ -303,6 +311,7 @@ class FermionOperator(_Operator):
             >>> print(obj)
             (1+2j) [0] + a [0^]
         '''
+        _check_input_type('strs', str, strs)
         dic = json.loads(strs)
         if '__class__' in dic:
             class_name = dic.pop('__class__')
