@@ -17,23 +17,27 @@
 """Setup.py file."""
 
 import copy
-import distutils.log
 import itertools
+import logging
 import multiprocessing
 import os
 import platform
+import shutil
 import subprocess
 import sys
-from distutils.cmd import Command
 from distutils.command.clean import clean
-from distutils.file_util import copy_file
 
 import setuptools
 from setuptools.command.build_ext import build_ext
 
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+sys.path.append(os.path.realpath(os.path.dirname(__file__)))
 
-from _build.utils import fdopen, get_cmake_command, get_executable, remove_tree  # pylint: disable=wrong-import-position
+from _build.utils import (  # pylint: disable=wrong-import-position
+    fdopen,
+    get_cmake_command,
+    get_executable,
+    remove_tree,
+)
 
 # ==============================================================================
 # Helper variables
@@ -179,7 +183,7 @@ class CMakeBuildExt(build_ext):
         if cmake_cmd is None:
             raise RuntimeError('Unable to locate the CMake command!')
         self.cmake_cmd = [cmake_cmd]
-        distutils.log.info('using cmake command: ' + ' '.join(self.cmake_cmd))
+        logging.info('using cmake command: %s', ' '.join(self.cmake_cmd))
 
         self.configure_extensions()
         build_ext.build_extensions(self)
@@ -241,23 +245,23 @@ class CMakeBuildExt(build_ext):
         if not os.path.exists(build_temp):
             os.makedirs(build_temp)
 
-        distutils.log.info(f' Configuring from {src_dir} '.center(80, '-'))
-        distutils.log.info(f'CMake command: {" ".join(self.cmake_cmd + [src_dir] + args)}')
-        distutils.log.info(f'   cwd: {build_temp}')
+        logging.info(' Configuring from %s '.center(80, '-'), src_dir)
+        logging.info('CMake command: %s', " ".join(self.cmake_cmd + [src_dir] + args))
+        logging.info('   cwd: %s', build_temp)
         try:
             subprocess.check_call(self.cmake_cmd + [src_dir] + args, cwd=build_temp, env=env)
         except ext_errors as err:
             raise BuildFailed() from err
         finally:
-            distutils.log.info(f' End configuring from {src_dir} '.center(80, '-'))
+            logging.info(' End configuring from %s '.center(80, '-'), src_dir)
 
     def build_extension(self, ext):
         """Build a single C/C++ extension using CMake."""
-        distutils.log.info(f' Building {ext.pymod} '.center(80, '-'))
-        distutils.log.info(
-            f'CMake command: {" ".join(self.cmake_cmd + ["--build", ".", "--target", ext.target] + self.build_args)}'
+        logging.info(f' Building {ext.pymod} '.center(80, '-'))
+        logging.info(
+            'CMake command: %s', " ".join(self.cmake_cmd + ["--build", ".", "--target", ext.target] + self.build_args)
         )
-        distutils.log.info(f'   cwd: {self._get_temp_dir(ext.src_dir)}')
+        logging.info('   cwd: %s', self._get_temp_dir(ext.src_dir))
         try:
             subprocess.check_call(
                 self.cmake_cmd + ['--build', '.', '--target', ext.target] + self.build_args,
@@ -266,9 +270,9 @@ class CMakeBuildExt(build_ext):
         except ext_errors as err:
             if not ext.optional:
                 raise BuildFailed() from err
-            distutils.log.info(f'Failed to compile optional extension {ext.target} (not an error)')
+            logging.info('Failed to compile optional extension %s (not an error)', ext.target)
         finally:
-            distutils.log.info(f' End building {ext.pymod} '.center(80, '-'))
+            logging.info(' End building %s '.center(80, '-'), ext.pymod)
 
     def copy_extensions_to_source(self):
         """Copy the extensions."""
@@ -288,9 +292,12 @@ class CMakeBuildExt(build_ext):
             # that the right extensions for the current Python/platform are
             # used.
             if os.path.exists(src_filename) or not ext.optional:
-                copy_file(src_filename, dest_filename, verbose=self.verbose, dry_run=self.dry_run)
-                if ext._needs_stub:
-                    self.write_stub(package_dir or os.curdir, ext, True)
+                if self.dry_run or self.verbose:
+                    logging.info('copy %s -> %s', src_filename, dest_filename)
+                if not self.dry_run:
+                    shutil.copyfile(src_filename, dest_filename)
+                    if ext._needs_stub:
+                        self.write_stub(package_dir or os.curdir, ext, True)
 
     def get_outputs(self):
         """
@@ -298,7 +305,6 @@ class CMakeBuildExt(build_ext):
 
         Mainly defined to properly handle optional extensions.
         """
-        self.check_extensions_list(self.extensions)
         outputs = []
         for ext in self.extensions:
             if os.path.exists(self.get_ext_fullpath(ext.name)) or not ext.optional:
@@ -330,7 +336,7 @@ class Clean(clean):
 # ==============================================================================
 
 
-class GenerateRequirementFile(Command):
+class GenerateRequirementFile(setuptools.Command):
     """A custom command to list the dependencies of the current."""
 
     description = 'List the dependencies of the current package'

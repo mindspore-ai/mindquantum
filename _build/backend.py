@@ -16,14 +16,13 @@
 
 """Custom build backend."""
 
-import distutils.log
 import hashlib
+import logging
 import os
 import platform
 import sys
 
 import setuptools.build_meta
-
 from utils import get_cmake_command
 
 build_sdist = setuptools.build_meta.build_sdist
@@ -48,18 +47,20 @@ def get_requires_for_build_wheel(config_settings=None):
 
 
 def generate_digest_file(fname):
+    """Generate a SHA256 digest file for the wheels."""
     name = os.path.basename(fname)
     sha256_hash = hashlib.sha256()
-    with open(fname, 'rb') as f:
+    with open(fname, 'rb') as wheel_file:
         # Read and update hash string value in blocks of 1M
-        for byte_block in iter(lambda: f.read(1 << 20), b""):
+        for byte_block in iter(lambda: wheel_file.read(1 << 20), b""):
             sha256_hash.update(byte_block)
 
-    with open(f'{fname}.sha256', 'w') as f:
-        f.write(f'{sha256_hash.hexdigest()} {name}\n')
+    with open(f'{fname}.sha256', 'w') as digest_file:
+        digest_file.write(f'{sha256_hash.hexdigest()} {name}\n')
 
 
 def build_sdist(sdist_directory, config_settings=None):
+    """Build a source distribution."""
     name = setuptools.build_meta.build_sdist(sdist_directory=sdist_directory, config_settings=config_settings)
     generate_digest_file(os.path.join(sdist_directory, name))
     return name
@@ -107,7 +108,7 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
                 name_full,
             ]
 
-            distutils.log.info('Calling ' + ' '.join(sys.argv))
+            logging.info('Calling %s', ' '.join(sys.argv))
 
             auditwheel.main.main()
 
@@ -116,8 +117,8 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
             raise RuntimeError('Cannot delocate wheel on Linux without the `auditwheel` package installed!') from err
     elif delocate_wheel and platform.system() == 'Darwin':
         try:
-            from delocate.cmd import (
-                delocate_wheel,  # pylint: disable=import-outside-toplevel
+            from delocate.cmd import (  # pylint: disable=import-outside-toplevel
+                delocate_wheel,
             )
 
             argv = sys.argv
@@ -128,7 +129,7 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
                 name_full,
             ]
 
-            distutils.log.info('Calling ' + ' '.join(sys.argv))
+            logging.info('Calling %s', ' '.join(sys.argv))
             delocate_wheel.main()
 
             sys.argv = argv

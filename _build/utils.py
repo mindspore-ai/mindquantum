@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #   Copyright 2022 <Huawei Technologies Co., Ltd>
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +16,8 @@
 """Helper functions for building MindQuantum."""
 
 import contextlib
-import distutils.log
 import errno
+import logging
 import os
 import shutil
 import stat
@@ -68,7 +69,7 @@ def remove_tree(directory):
             raise exc_info[0].with_traceback(exc_info[1], exc_info[2])
 
     if os.path.exists(directory):
-        distutils.log.info(f'Removing {directory} (and everything under it)')
+        logging.info('Removing %s (and everything under it)', directory)
         shutil.rmtree(directory, ignore_errors=False, onerror=remove_read_only)
 
 
@@ -85,7 +86,7 @@ def get_executable(exec_name):
 
     exec_name = os.path.basename(exec_name)
 
-    distutils.log.info(f'trying to locate {exec_name} in {root_path}')
+    logging.info('trying to locate %s in %s', exec_name, root_path)
 
     search_paths = [root_path, os.path.join(root_path, 'bin'), os.path.join(root_path, 'Scripts')]
 
@@ -96,9 +97,9 @@ def get_executable(exec_name):
             with fdopen(os.devnull, 'w') as devnull:
                 subprocess.check_call([cmd, '--version'], stdout=devnull, stderr=devnull)
         except (OSError, subprocess.CalledProcessError):
-            distutils.log.info(f'  failed in {base_path}')
+            logging.info('  failed in %s', base_path)
         else:
-            distutils.log.info(f'  command found: {cmd}')
+            logging.info('  command found:%s', cmd)
             return cmd
 
     # That did not work: try calling it through Python
@@ -108,12 +109,12 @@ def get_executable(exec_name):
             with fdopen(os.devnull, 'w') as devnull:
                 subprocess.check_call(cmd + ['--version'], stdout=devnull, stderr=devnull)
         except (OSError, subprocess.CalledProcessError):
-            distutils.log.info(f'  failed in {base_path}')
+            logging.info('  failed in %s', base_path)
         else:
-            distutils.log.info(f'  command found: {cmd}')
+            logging.info('  command found: %s', cmd)
             return cmd
 
-    distutils.log.info('  command *not* found!')
+    logging.info('  command *not* found!')
     return None
 
 
