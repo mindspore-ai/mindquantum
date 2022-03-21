@@ -64,7 +64,7 @@ def decompose_single_term_time_evolution(term, para):
         try:
             if len(term.terms) != 1:
                 raise ValueError("Only work for single term time \
-                    evolution operator, but get {}".format(len(term)))
+evolution operator, but get {}".format(len(term)))
             term = list(term.terms.keys())[0]
         except TypeError:
             raise TypeError("Not supported type:{}".format(type(term)))
@@ -76,6 +76,8 @@ def decompose_single_term_time_evolution(term, para):
     out = []
     term = sorted(term)
     rxs = []
+    if not term:
+        raise ValueError("Get constant hamiltonian, please use GlobalPhase gate and give the obj_qubit by yourself.")
     if len(term) == 1:  # single pauli operator
         if term[0][1] == 'X':
             out.append(G.RX(para * 2).on(term[0][0]))

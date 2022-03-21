@@ -112,6 +112,17 @@ BasicGate<T> RZGate = {
     }};
 
 template <typename T>
+BasicGate<T> GPGate = {true, gGP, PARAMSOPPOSITE,
+                       [](T theta) {
+                           return Dim2Matrix<T>{{{{COS1_2(2 * theta), -SIN1_2(2 * theta)}, {0, 0}},
+                                                 {{0, 0}, {COS1_2(2 * theta), -SIN1_2(2 * theta)}}}};
+                       },
+                       [](T theta) {
+                           return Dim2Matrix<T>{{{{-SIN1_2(2 * theta), -COS1_2(2 * theta)}, {0, 0}},
+                                                 {{0, 0}, {-SIN1_2(2 * theta), -COS1_2(2 * theta)}}}};
+                       }};
+
+template <typename T>
 BasicGate<T> PSGate = {true, gPS, PARAMSOPPOSITE,
                        [](T theta) {
                            return Dim2Matrix<T>{{{{1, 0}, {0, 0}}, {{0, 0}, {COS1_2(2 * theta), SIN1_2(2 * theta)}}}};
@@ -214,6 +225,8 @@ BasicGate<T> GetGateByName(const std::string& name) {
         out = ZZGate<T>;
         //    } else if (name == cPL) {
         //        out = PauliChannel<T>;
+    } else if (name == gGP) {
+        out = GPGate<T>;
     } else {
         auto msg = name + " not implement in backend!";
         throw std::invalid_argument(msg);

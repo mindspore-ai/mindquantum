@@ -54,10 +54,29 @@ _CIRCUIT_STYLE = {'style': 'blue bold'}
 _MEA_RES_STYLE = {'style': 'yellow'}
 _DAGGER_MASK = '†'
 
+_svg_measure_config_official = {
+    "table_box_line_width": 1,
+    "table_box_line_stroke": "#adb0b8",
+    "table_box_w": 400,
+    "vline_width": 1,
+    "vline_stroke": "#dfe1e6",
+    "v_dis": 60,
+    "stick_len": 7,
+    "n_stick": 6,
+    "first_color": "#16acff",
+    "second_color": "#5e7ce0",
+    "label_fontsize": 12,
+    "label_fontcolor": "#575d6c",
+    "rec_h": 24,
+    "anim_time": 0.3,
+    "max_color": "#fac209",
+    "background": "#ffffff",
+}
+
 _svg_config_official = {
     'gate_start_distance': 24,
-    'padding_x': 20,
-    'padding_y': 10,
+    'padding_x': 0,
+    'padding_y': 0,
     'swap_icon_ratio': 0.6,
     'background': '#ffffff',
     # for qubit
@@ -118,8 +137,8 @@ _svg_config_official = {
 
 _svg_config_dark = {
     'gate_start_distance': 24,
-    'padding_x': 20,
-    'padding_y': 10,
+    'padding_x': 0,
+    'padding_y': 0,
     'swap_icon_ratio': 0.6,
     'background': '#180835',
     # for qubit
@@ -180,8 +199,8 @@ _svg_config_dark = {
 
 _svg_config_light = {
     'gate_start_distance': 24,
-    'padding_x': 20,
-    'padding_y': 10,
+    'padding_x': 0,
+    'padding_y': 0,
     'swap_icon_ratio': 0.6,
     'background': '#ffffff',
     # for qubit

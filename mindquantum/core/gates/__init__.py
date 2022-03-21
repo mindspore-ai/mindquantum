@@ -38,6 +38,7 @@ from .basicgate import ISWAPGate
 from .basicgate import RX
 from .basicgate import RY
 from .basicgate import RZ
+from .basicgate import GlobalPhase
 from .basicgate import PhaseShift
 from .basicgate import SGate
 from .basicgate import TGate
@@ -71,7 +72,8 @@ __all__ = [
     "SWAPGate", "ISWAPGate", "RX", "RY", "RZ", "PhaseShift", "SGate", "TGate",
     "XX", "YY", "ZZ", "Power", "I", "X", "Y", "Z", "H", "S", "T", "SWAP",
     "ISWAP", "CNOT", "BARRIER", "Measure", "MeasureResult", "PauliChannel",
-    "BitFlipChannel", "PhaseFlipChannel", "BitPhaseFlipChannel", "DepolarizingChannel"
+    "BitFlipChannel", "PhaseFlipChannel", "BitPhaseFlipChannel", "DepolarizingChannel",
+    "GlobalPhase"
 ]
 
 __all__.sort()

@@ -38,6 +38,7 @@ class BarrierGate(NoneParameterGate):
     Raises:
         TypeError: if `show` is not bool.
     """
+
     def __init__(self, show=True):
         _check_input_type('show', bool, show)
         NoneParameterGate.__init__(self, 'BARRIER')
@@ -59,6 +60,7 @@ class CNOTGate(NoneParameterGate):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
+
     def __init__(self):
         NoneParameterGate.__init__(self, 'CNOT')
         self.matrix_value = X.matrix_value
@@ -86,6 +88,7 @@ class HGate(NoneParameterGate):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
+
     def __init__(self):
         NoneParameterGate.__init__(self, 'H')
         self.matrix_value = np.array([[1, 1], [1, -1]]) / np.sqrt(2)
@@ -105,6 +108,7 @@ class IGate(NoneParameterGate):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
+
     def __init__(self):
         NoneParameterGate.__init__(self, 'I')
         self.matrix_value = np.array([[1, 0], [0, 1]])
@@ -151,6 +155,7 @@ class XGate(NoneParameterGate):
         >>> (x1**{'a' : 2}).coeff
         {'a': 6.283185307179586}
     """
+
     def __init__(self):
         NoneParameterGate.__init__(self, 'X')
         self.matrix_value = np.array([[0, 1], [1, 0]])
@@ -164,8 +169,7 @@ class XGate(NoneParameterGate):
             return RX(np.pi * coeff)
         if isinstance(coeff, dict):
             return RX({i: np.pi * j for i, j in coeff.items()})
-        raise TypeError(
-            "Unsupported type for parameters, get {}.".format(coeff))
+        raise TypeError("Unsupported type for parameters, get {}.".format(coeff))
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
@@ -182,6 +186,7 @@ class YGate(NoneParameterGate):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
+
     def __init__(self):
         NoneParameterGate.__init__(self, 'Y')
         self.matrix_value = np.array([[0, -1j], [1j, 0]])
@@ -195,8 +200,7 @@ class YGate(NoneParameterGate):
             return RY(np.pi * coeff)
         if isinstance(coeff, dict):
             return RY({i: np.pi * j for i, j in coeff.items()})
-        raise TypeError(
-            "Unsupported type for parameters, get {}.".format(coeff))
+        raise TypeError("Unsupported type for parameters, get {}.".format(coeff))
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
@@ -213,6 +217,7 @@ class ZGate(NoneParameterGate):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
+
     def __init__(self):
         NoneParameterGate.__init__(self, 'Z')
         self.matrix_value = np.array([[1, 0], [0, -1]])
@@ -226,16 +231,14 @@ class ZGate(NoneParameterGate):
             return RZ(np.pi * coeff)
         if isinstance(coeff, dict):
             return RZ({i: np.pi * j for i, j in coeff.items()})
-        raise TypeError(
-            "Unsupported type for parameters, get {}.".format(coeff))
+        raise TypeError("Unsupported type for parameters, get {}.".format(coeff))
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
         self.projectq_gate = pjops.Z
 
 
-def gene_univ_parameterized_gate(name, matrix_generator,
-                                 diff_matrix_generator):
+def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
     """
     Generate a customer parameterized gate based on the single parameter defined
     unitary matrix.
@@ -275,6 +278,7 @@ def gene_univ_parameterized_gate(name, matrix_generator,
 
     class _UnivParameterizedGate(IntrinsicOneParaGate):
         """The customer parameterized gate."""
+
         def __init__(self, coeff):
             IntrinsicOneParaGate.__init__(self, name, coeff)
             self.matrix_generator = matrix_generator
@@ -299,8 +303,7 @@ def gene_univ_parameterized_gate(name, matrix_generator,
             return hermitian_gate
 
         def get_cpp_obj(self):
-            cpp_gate = mb.basic_gate(self.name, self.hermitian_property,
-                                     self._matrix, self._diff_matrix)
+            cpp_gate = mb.basic_gate(self.name, self.hermitian_property, self._matrix, self._diff_matrix)
             cpp_gate.daggered = self.daggered
             cpp_gate.obj_qubits = self.obj_qubits
             cpp_gate.ctrl_qubits = self.ctrl_qubits
@@ -334,6 +337,7 @@ class UnivMathGate(NoneParameterGate):
         >>> print(x1)
         X(0 <-: 1)
     """
+
     def __init__(self, name, mat):
         NoneParameterGate.__init__(self, name)
         self.matrix_value = mat
@@ -345,8 +349,7 @@ class UnivMathGate(NoneParameterGate):
 
     def get_cpp_obj(self):
         mat = mb.dim2matrix(self.matrix())
-        cpp_gate = mb.basic_gate(False, self.name, self.hermitian_property,
-                                 mat)
+        cpp_gate = mb.basic_gate(False, self.name, self.hermitian_property, mat)
         cpp_gate.daggered = self.daggered
         cpp_gate.obj_qubits = self.obj_qubits
         cpp_gate.ctrl_qubits = self.ctrl_qubits
@@ -359,10 +362,10 @@ class SWAPGate(NoneParameterGate):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
+
     def __init__(self):
         NoneParameterGate.__init__(self, 'SWAP')
-        self.matrix_value = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0],
-                                      [0, 0, 0, 1]])
+        self.matrix_value = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
@@ -377,11 +380,11 @@ class ISWAPGate(NoneParameterGate):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
+
     def __init__(self):
         NoneParameterGate.__init__(self, 'ISWAP')
         self.hermitian_property = HERMITIAN_PROPERTIES['do_hermitian']
-        self.matrix_value = np.array([[1, 0, 0, 0], [0, 0, 1j, 0],
-                                      [0, 1j, 0, 0], [0, 0, 0, 1]])
+        self.matrix_value = np.array([[1, 0, 0, 0], [0, 0, 1j, 0], [0, 1j, 0, 0], [0, 0, 0, 1]])
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
@@ -442,13 +445,12 @@ class RX(IntrinsicOneParaGate):
         >>> rx3.coeff
         {'a': 0.2, 'b': 0.5}
     """
+
     def __init__(self, coeff=None):
         IntrinsicOneParaGate.__init__(self, 'RX', coeff)
 
     def _matrix(self, theta):
-        return np.array([[np.cos(theta / 2), -1j * np.sin(theta / 2)],
-                         [-1j * np.sin(theta / 2),
-                          np.cos(theta / 2)]])
+        return np.array([[np.cos(theta / 2), -1j * np.sin(theta / 2)], [-1j * np.sin(theta / 2), np.cos(theta / 2)]])
 
     def _diff_matrix(self, theta):
         return 0.5 * np.array([[-np.sin(theta / 2), -1j * np.cos(theta / 2)],
@@ -472,16 +474,15 @@ class RZ(IntrinsicOneParaGate):
         coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation. Default: None.
     """
+
     def __init__(self, coeff=None):
         IntrinsicOneParaGate.__init__(self, 'RZ', coeff)
 
     def _matrix(self, theta):
-        return np.array([[np.exp(-1j * theta / 2), 0],
-                         [0, np.exp(1j * theta / 2)]])
+        return np.array([[np.exp(-1j * theta / 2), 0], [0, np.exp(1j * theta / 2)]])
 
     def _diff_matrix(self, theta):
-        return 0.5j * np.array([[-np.exp(-1j * theta / 2), 0],
-                                [0, np.exp(1j * theta / 2)]])
+        return 0.5j * np.array([[-np.exp(-1j * theta / 2), 0], [0, np.exp(1j * theta / 2)]])
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
@@ -501,21 +502,47 @@ class RY(IntrinsicOneParaGate):
         coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation. Default: None.
     """
+
     def __init__(self, coeff=None):
         IntrinsicOneParaGate.__init__(self, 'RY', coeff)
 
     def _matrix(self, theta):
-        return np.array([[np.cos(theta / 2), -np.sin(theta / 2)],
-                         [np.sin(theta / 2),
-                          np.cos(theta / 2)]])
+        return np.array([[np.cos(theta / 2), -np.sin(theta / 2)], [np.sin(theta / 2), np.cos(theta / 2)]])
 
     def _diff_matrix(self, theta):
-        return 0.5 * np.array([[-np.sin(theta / 2), -np.cos(theta / 2)],
-                               [np.cos(theta / 2), -np.sin(theta / 2)]])
+        return 0.5 * np.array([[-np.sin(theta / 2), -np.cos(theta / 2)], [np.cos(theta / 2), -np.sin(theta / 2)]])
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
         self.projectq_gate = pjops.Ry(self.coeff)
+
+
+class GlobalPhase(IntrinsicOneParaGate):
+    r"""
+    Global phase gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    .. math::
+
+        {\rm GlobalPhase}=\begin{pmatrix}\exp(-i\theta)&0\\
+                        0&\exp(-i\theta)\end{pmatrix}
+
+    Args:
+        coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation. Default: None.
+    """
+
+    def __init__(self, coeff=None):
+        IntrinsicOneParaGate.__init__(self, 'GP', coeff)
+
+    def _matrix(self, theta):
+        return np.exp(-1j * theta) * np.identity(2)
+
+    def _diff_matrix(self, theta):
+        return -1j * np.exp(-1j * theta) * np.identity(2)
+
+    def define_projectq_gate(self):
+        """Define the corresponded projectq gate."""
+        self.projectq_gate = None
 
 
 class PhaseShift(IntrinsicOneParaGate):
@@ -531,6 +558,7 @@ class PhaseShift(IntrinsicOneParaGate):
         coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation. Default: None.
     """
+
     def __init__(self, coeff=None):
         IntrinsicOneParaGate.__init__(self, 'PS', coeff)
 
@@ -554,6 +582,7 @@ class SGate(PhaseShift):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
+
     def __init__(self):
         PhaseShift.__init__(self, np.pi / 2)
         self.name = 'S'
@@ -564,16 +593,14 @@ class SGate(PhaseShift):
         PhaseShift.generate_description(self)
         idx = self.str.find('|')
         if idx != -1:
-            self.str = self.name + ('†(' if self.daggered else
-                                    '(') + self.str[idx + 1:]
+            self.str = self.name + ('†(' if self.daggered else '(') + self.str[idx + 1:]
         else:
             self.str = self.name + ('†' if self.daggered else '')
 
     def get_cpp_obj(self):
         f = -1 if self.daggered else 1
         f = f * np.pi / 2
-        return PhaseShift(f).on(self.obj_qubits,
-                                self.ctrl_qubits).get_cpp_obj()
+        return PhaseShift(f).on(self.obj_qubits, self.ctrl_qubits).get_cpp_obj()
 
 
 class TGate(PhaseShift):
@@ -585,6 +612,7 @@ class TGate(PhaseShift):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
+
     def __init__(self):
         PhaseShift.__init__(self, np.pi / 4)
         self.name = 'T'
@@ -595,16 +623,14 @@ class TGate(PhaseShift):
         PhaseShift.generate_description(self)
         idx = self.str.find('|')
         if idx != -1:
-            self.str = self.name + ('†(' if self.daggered else
-                                    '(') + self.str[idx + 1:]
+            self.str = self.name + ('†(' if self.daggered else '(') + self.str[idx + 1:]
         else:
             self.str = self.name + ('†' if self.daggered else '')
 
     def get_cpp_obj(self):
         f = -1 if self.daggered else 1
         f = f * np.pi / 4
-        return PhaseShift(f).on(self.obj_qubits,
-                                self.ctrl_qubits).get_cpp_obj()
+        return PhaseShift(f).on(self.obj_qubits, self.ctrl_qubits).get_cpp_obj()
 
 
 class XX(IntrinsicOneParaGate):
@@ -619,22 +645,18 @@ class XX(IntrinsicOneParaGate):
         coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation. Default: None.
     """
+
     def __init__(self, coeff=None):
         IntrinsicOneParaGate.__init__(self, 'XX', coeff)
 
     def _matrix(self, theta):
-        return np.array([[np.cos(theta), 0, 0, -1j * np.sin(theta)],
-                         [0, np.cos(theta), -1j * np.sin(theta), 0],
-                         [0, -1j * np.sin(theta),
-                          np.cos(theta), 0],
-                         [-1j * np.sin(theta), 0, 0,
-                          np.cos(theta)]])
+        return np.array([[np.cos(theta), 0, 0, -1j * np.sin(theta)], [0, np.cos(theta), -1j * np.sin(theta), 0],
+                         [0, -1j * np.sin(theta), np.cos(theta), 0], [-1j * np.sin(theta), 0, 0,
+                                                                      np.cos(theta)]])
 
     def _diff_matrix(self, theta):
-        return np.array([[-np.sin(theta), 0, 0, -1j * np.cos(theta)],
-                         [0, -np.sin(theta), -1j * np.cos(theta), 0],
-                         [0, -1j * np.cos(theta), -np.sin(theta), 0],
-                         [-1j * np.cos(theta), 0, 0, -np.sin(theta)]])
+        return np.array([[-np.sin(theta), 0, 0, -1j * np.cos(theta)], [0, -np.sin(theta), -1j * np.cos(theta), 0],
+                         [0, -1j * np.cos(theta), -np.sin(theta), 0], [-1j * np.cos(theta), 0, 0, -np.sin(theta)]])
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
@@ -653,22 +675,18 @@ class YY(IntrinsicOneParaGate):
         coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation. Default: None.
     """
+
     def __init__(self, coeff=None):
         IntrinsicOneParaGate.__init__(self, 'YY', coeff)
 
     def _matrix(self, theta):
-        return np.array([[np.cos(theta), 0, 0, 1j * np.sin(theta)],
-                         [0, np.cos(theta), -1j * np.sin(theta), 0],
-                         [0, -1j * np.sin(theta),
-                          np.cos(theta), 0],
-                         [1j * np.sin(theta), 0, 0,
-                          np.cos(theta)]])
+        return np.array([[np.cos(theta), 0, 0, 1j * np.sin(theta)], [0, np.cos(theta), -1j * np.sin(theta), 0],
+                         [0, -1j * np.sin(theta), np.cos(theta), 0], [1j * np.sin(theta), 0, 0,
+                                                                      np.cos(theta)]])
 
     def _diff_matrix(self, theta):
-        return np.array([[-np.sin(theta), 0, 0, 1j * np.cos(theta)],
-                         [0, -np.sin(theta), -1j * np.cos(theta), 0],
-                         [0, -1j * np.cos(theta), -np.sin(theta), 0],
-                         [1j * np.cos(theta), 0, 0, -np.sin(theta)]])
+        return np.array([[-np.sin(theta), 0, 0, 1j * np.cos(theta)], [0, -np.sin(theta), -1j * np.cos(theta), 0],
+                         [0, -1j * np.cos(theta), -np.sin(theta), 0], [1j * np.cos(theta), 0, 0, -np.sin(theta)]])
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
@@ -687,20 +705,18 @@ class ZZ(IntrinsicOneParaGate):
         coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation. Default: None.
     """
+
     def __init__(self, coeff=None):
         IntrinsicOneParaGate.__init__(self, 'ZZ', coeff)
 
     def _matrix(self, theta):
-        return np.array([[np.exp(-1j * theta), 0, 0, 0],
-                         [0, np.exp(1j * theta), 0, 0],
-                         [0, 0, np.exp(1j * theta), 0],
+        return np.array([[np.exp(-1j * theta), 0, 0, 0], [0, np.exp(1j * theta), 0, 0], [0, 0,
+                                                                                         np.exp(1j * theta), 0],
                          [0, 0, 0, np.exp(-1j * theta)]])
 
     def _diff_matrix(self, theta):
-        return -1j * np.array([[np.exp(-1j * theta), 0, 0, 0],
-                               [0, -np.exp(1j * theta), 0, 0],
-                               [0, 0, -np.exp(1j * theta), 0],
-                               [0, 0, 0, np.exp(-1j * theta)]])
+        return -1j * np.array([[np.exp(-1j * theta), 0, 0, 0], [0, -np.exp(1j * theta), 0, 0],
+                               [0, 0, -np.exp(1j * theta), 0], [0, 0, 0, np.exp(-1j * theta)]])
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
@@ -722,9 +738,9 @@ class Power(NoneParameterGate):
         >>> rx2 = RX(1)
         >>> assert np.all(np.isclose(Power(rx2,0.5).matrix(), rx1.matrix()))
     """
+
     def __init__(self, gate: NoneParameterGate, t=0.5):
-        NoneParameterGate.__init__(self,
-                                   '{}^{}'.format(gate.name, round(t, 2)))
+        NoneParameterGate.__init__(self, '{}^{}'.format(gate.name, round(t, 2)))
         self.matrix_value = fractional_matrix_power(gate.matrix(), t)
         self.hermitian_property = HERMITIAN_PROPERTIES['do_hermitian']
 
@@ -734,8 +750,7 @@ class Power(NoneParameterGate):
 
     def get_cpp_obj(self):
         mat = mb.dim2matrix(self.matrix())
-        cpp_gate = mb.basic_gate(False, self.name, self.hermitian_property,
-                                 mat)
+        cpp_gate = mb.basic_gate(False, self.name, self.hermitian_property, mat)
         cpp_gate.daggered = self.daggered
         cpp_gate.obj_qubits = self.obj_qubits
         cpp_gate.ctrl_qubits = self.ctrl_qubits
