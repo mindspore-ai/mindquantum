@@ -21,6 +21,8 @@
 
 import json
 import ast
+import numpy as np
+from scipy.sparse import kron, csr_matrix
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
 from ._base_operator import _Operator
@@ -164,6 +166,51 @@ class QubitOperator(_Operator):
             terms_to_tuple.append((int(index), operator))
             terms_to_tuple = sorted(terms_to_tuple, key=lambda item: item[0])
         return tuple(terms_to_tuple)
+
+    def matrix(self, n_qubits=None):
+        """
+        Convert this qubit operator to csr_matrix.
+
+        Args:
+            n_qubits (int): The total qubit of final matrix. If None, the value will be
+                the maximum local qubit number. Default: None.
+        """
+        from mindquantum import X, Y, Z, I
+        pauli_map = {
+            'X': csr_matrix(X.matrix().astype(np.complex128)),
+            'Y': csr_matrix(Y.matrix().astype(np.complex128)),
+            'Z': csr_matrix(Z.matrix().astype(np.complex128)),
+            'I': csr_matrix(I.matrix().astype(np.complex128)),
+        }
+        if not self.terms:
+            raise ValueError("Cannot convert empty qubit operator to matrix")
+        n_qubits_local = 0
+        for term in self.terms:
+            for idx, _ in term:
+                n_qubits_local = max(n_qubits_local, idx + 1)
+        if n_qubits_local == 0 and n_qubits is None:
+            raise ValueError("You should specific n_qubits for converting a identity qubit operator.")
+        if n_qubits is None:
+            n_qubits = n_qubits_local
+        _check_int_type("n_qubits", n_qubits)
+        if n_qubits < n_qubits_local:
+            raise ValueError(
+                f"Given n_qubits {n_qubits} is small than qubit of qubit operator, which is {n_qubits_local}.")
+        out = 0
+        for term, coeff in self.terms.items():
+            if isinstance(coeff, PR):
+                raise RuntimeError("Cannot convert a parameterized qubit operator to matrix.")
+            if not term:
+                out += csr_matrix(np.identity(2**n_qubits, dtype=np.complex128)) * coeff
+            else:
+                tmp = np.array([1], dtype=np.complex128) * coeff
+                total = [pauli_map['I'] for _ in range(n_qubits)]
+                for idx, s in term:
+                    total[idx] = pauli_map[s]
+                for i in total:
+                    tmp = kron(i, tmp)
+                out += tmp
+        return out
 
     @property
     def real(self):
