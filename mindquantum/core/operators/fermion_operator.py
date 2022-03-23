@@ -17,9 +17,49 @@
 
 import json
 import ast
+from functools import lru_cache
+import numpy as np
+from scipy.sparse import csr_matrix
+from scipy.sparse import kron
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
 from ._base_operator import _Operator
+
+
+@lru_cache()
+def _n_sz(n):
+    if n == 0:
+        return csr_matrix(np.array([1]), dtype=np.complex128)
+    tmp = [csr_matrix(np.array([[1, 0], [0, -1]], dtype=np.complex128)) for _ in range(n)]
+    for i in tmp[1:]:
+        tmp[0] = kron(tmp[0], i)
+    return tmp[0]
+
+
+@lru_cache()
+def _n_identity(n):
+    """n_identity"""
+    if n == 0:
+        return csr_matrix(np.array([1]), dtype=np.complex128)
+    tmp = [csr_matrix(np.array([[1, 0], [0, 1]], dtype=np.complex128)) for _ in range(n)]
+    for i in tmp[1:]:
+        tmp[0] = kron(tmp[0], i)
+    return tmp[0]
+
+
+@lru_cache()
+def _single_fermion_word(idx, dag, n_qubits):
+    """single_fermion_word"""
+    m = csr_matrix(np.array([[0, 1], [0, 0]], dtype=np.complex128))
+    if dag:
+        m = csr_matrix(np.array([[0, 0], [1, 0]], dtype=np.complex128))
+    return kron(_n_identity(n_qubits - 1 - idx), kron(m, _n_sz(idx)))
+
+
+@lru_cache()
+def _two_fermion_word(idx1, dag1, idx2, dag2, n_qubits):
+    """two_fermion_word"""
+    return _single_fermion_word(idx1, dag1, n_qubits) * _single_fermion_word(idx2, dag2, n_qubits)
 
 
 def _check_valid_fermion_operator_term(term):
@@ -180,6 +220,50 @@ class FermionOperator(_Operator):
 
     def __repr__(self):
         return str(self)
+
+    def matrix(self, n_qubits=None):
+        """
+        Convert this fermion operator to csr_matrix under jordan_wigner mapping.
+
+        Args:
+            n_qubits (int): The total qubit of final matrix. If None, the value will be
+                the maximum local qubit number. Default: None.
+        """
+        from mindquantum.core.operators.utils import count_qubits
+        if not self.terms:
+            raise ValueError("Cannot convert empty fermion operator to matrix")
+        n_qubits_local = count_qubits(self)
+        if n_qubits_local == 0 and n_qubits is None:
+            raise ValueError("You should specific n_qubits for converting a identity fermion operator.")
+        if n_qubits is None:
+            n_qubits = n_qubits_local
+        _check_int_type("n_qubits", n_qubits)
+        if n_qubits < n_qubits_local:
+            raise ValueError(
+                f"Given n_qubits {n_qubits} is small than qubit of fermion operator, which is {n_qubits_local}.")
+        out = 0
+        for term, coeff in self.terms.items():
+            if isinstance(coeff, PR):
+                raise RuntimeError("Cannot convert a parameterized fermion operator to matrix.")
+            if not term:
+                out += csr_matrix(np.identity(2**n_qubits, dtype=np.complex128)) * coeff
+            else:
+                tmp = 1
+                group = [[]]
+                for idx, dag in term:
+                    if len(group[-1]) < 4:
+                        group[-1].append(idx)
+                        group[-1].append(dag)
+                    if len(group[-1]) == 4:
+                        group.append([])
+                for g in group:
+                    if g:
+                        if len(g) == 4:
+                            tmp *= _two_fermion_word(g[0], g[1], g[2], g[3], n_qubits)
+                        else:
+                            tmp *= _single_fermion_word(g[0], g[1], n_qubits)
+                out += tmp * coeff
+        return out
 
     @property
     def imag(self):
