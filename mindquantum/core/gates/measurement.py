@@ -79,7 +79,6 @@ class Measure(NoneParameterGate):
         >>> np.abs(sim.get_qs())**2
         array([0.5 , 0.  , 0.25, 0.25])
     """
-
     def __init__(self, name=""):
         _check_input_type('name', str, name)
         self.key = name
@@ -197,7 +196,6 @@ class MeasureResult:
         >>> res.data
         {'00': 230, '01': 254, '10': 257, '11': 259}
     """
-
     def __init__(self):
         self.measures = []
         self.keys = []
@@ -332,3 +330,25 @@ be objects of class 'Measurement' ")
             console.print(s, style=_MEA_RES_STYLE['style'])
         s = console.export_html(code_format=MEA_HTML_FORMAT, inline_styles=True)
         return '\n'.join(s.split('\n')[1:])
+
+    def svg(self, style=None):
+        """
+        Display current measurement result into SVG picture in jupyter notebook.
+
+        Args:
+            style (dict, str): the style to set svg style. Currently, we support
+                'official'. Default: None.
+        """
+        from mindquantum.io.display.measure_res_svg_drawer import SVGMeasure
+        from mindquantum.io.display._config import _svg_measure_config_official
+        supported_style = {
+            'official': _svg_measure_config_official,
+        }
+        if style is None:
+            style = _svg_measure_config_official
+        if isinstance(style, str):
+            if style not in supported_style:
+                raise ValueError(f"Style not found, currently we support {list(supported_style.keys())}")
+            style = supported_style[style]
+        svg = SVGMeasure(self, style)
+        return svg

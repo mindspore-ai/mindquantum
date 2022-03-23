@@ -132,6 +132,7 @@ const char gISWAP[] = "ISWAP";
 const char gRX[] = "RX";
 const char gRY[] = "RY";
 const char gRZ[] = "RZ";
+const char gGP[] = "GP";
 const char gPS[] = "PS";
 const char gXX[] = "XX";
 const char gYY[] = "YY";
