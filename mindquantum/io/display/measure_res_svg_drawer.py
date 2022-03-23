@@ -15,6 +15,7 @@
 # ============================================================================
 """SVG module."""
 #%%
+import time
 import numpy as np
 from mindquantum.io.display.circuit_svg_drawer import BaseComponent
 from mindquantum.io.display.circuit_svg_drawer import Rect, Line, SVGContainer, Text, super_align
@@ -22,6 +23,7 @@ from mindquantum.io.display.circuit_svg_drawer import Rect, Line, SVGContainer, 
 
 class AnimationSVG(BaseComponent):
     """Animation a svg property."""
+
     def __init__(self, svg_id, attr, v_from, v_to, dur, spline=None):
         super().__init__('animate')
         self.id = svg_id
@@ -72,6 +74,7 @@ class AnimationSVG(BaseComponent):
 
 class SVGMeasure(SVGContainer):
     """SVG object of measure result."""
+
     def __init__(self, res, style):
         super().__init__()
         self.style = style
@@ -114,7 +117,7 @@ class SVGMeasure(SVGContainer):
         val_axis.stroke(self.style['table_box_line_stroke'])
         val_axis.stroke_width(self.style['table_box_line_width'])
         h_axis.add(val_axis)
-        box_h = self.style['v_dis'] * (len(self.res.data) + 0.5)
+        box_h = self.style['bar_dis'] * (len(self.res.data) + 0.5)
         for i, t in enumerate(np.linspace(0, self.max_val, self.style['n_stick'])):
             text = Text(i * self.style['v_dis'] + self.style['table_box_line_width'] * 2,
                         self.style['stick_len'] - self.style['table_box_line_width'] * 2, f'{round(t, 3)}')
@@ -140,17 +143,17 @@ class SVGMeasure(SVGContainer):
             stick.fill(self.style['label_fontcolor'])
             stick.font_size(self.style['label_fontsize'])
             stick.text_anchor('end')
-            stick.shift(-self.style['vline_width'] * 2 - self.style['stick_len'], (idx + 1) * self.style['v_dis'])
+            stick.shift(-self.style['vline_width'] * 2 - self.style['stick_len'], (idx + 1) * self.style['bar_dis'])
             line = Line(-self.style['stick_len'], 0, 0, 0)
             line.stroke(self.style['table_box_line_stroke'])
             line.stroke_width(self.style['table_box_line_width'])
-            line.shift(0, (idx + 1) * self.style['v_dis'])
+            line.shift(0, (idx + 1) * self.style['bar_dis'])
             h_axis.add(stick)
             h_axis.add(line)
             bar = Rect(0, 0, self.f * n / self.res.shots, self.style['rec_h'])
-            bar.shift(0, (idx + 1) * self.style['v_dis'] - self.style['rec_h'] / 2)
+            bar.shift(0, (idx + 1) * self.style['bar_dis'] - self.style['rec_h'] / 2)
             h_axis.add(bar)
-            bar.svg_id(f"bar_{idx}")
+            bar.svg_id(f"bar_{idx}_{time.time_ns()}")
             if idx % 2:
                 bar.fill(self.style['first_color'])
             else:
@@ -164,9 +167,9 @@ class SVGMeasure(SVGContainer):
                 max_bar_animations.add(anim)
             text = Text(0, 0, str(n))
             text.text_anchor('start')
-            text.shift(bar.right + 10, (idx + 1) * self.style['v_dis'])
+            text.shift(bar.right + 10, (idx + 1) * self.style['bar_dis'])
             text.fill(self.style['label_fontcolor'])
-            text.svg_id(f"bar_text_{idx}")
+            text.svg_id(f"bar_text_{idx}_{time.time_ns()}")
             text.fill_opacity("0")
             anim = AnimationSVG(text.get('id'), 'fill-opacity', 0, 1, self.style['anim_time'] / 2)
             anim.prop['begin'] = f"{self.style['anim_time']}s"
