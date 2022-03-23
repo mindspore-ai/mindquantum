@@ -61,6 +61,7 @@ _svg_measure_config_official = {
     "vline_width": 1,
     "vline_stroke": "#dfe1e6",
     "v_dis": 60,
+    "bar_dis": 30,
     "stick_len": 7,
     "n_stick": 6,
     "first_color": "#16acff",
