@@ -114,7 +114,7 @@ from mindquantum.core import X, Y, Z, H, RX, RY, RZ   # 导入量子门H, X, Y, 
 
 ![](./images/cloudide-run.png)
 
-2. 编写量子线路代码
+2. 编写量子线路代码，拷贝代码并运行，操作同上
 
 ```bash
 print('Gate name:', X)
@@ -179,7 +179,7 @@ encoder.summary()                        # 总结Encoder量子线路
 
 通过CloudIDE提交修改到远程个人仓，点击面板左边的源代码控制标签页，在点击加号，将需要修改的文件暂存起来，在上方输入框内填写提交信息。
 
-![](./images/cloudide-commit message.png)
+![](./images/cloudide-commit-message.png)
 
 
 点击左下角的同步按钮，将CloudIDE中的更改提交到自己的远程仓库中。远程仓库也能看到相应的更新。
