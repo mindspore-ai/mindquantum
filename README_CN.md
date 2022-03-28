@@ -29,6 +29,7 @@
     - [验证是否成功安装](#验证是否成功安装)
     - [Docker安装](#docker安装)
     - [注意事项FAQ](#注意事项faq)
+    - [构建二进制whl包](#构建二进制whl包)
     - [快速入门](#快速入门)
     - [文档](#文档)
     - [社区](#社区)
@@ -227,9 +228,9 @@ export OMP_NUM_THREADS=4
 
 更多注意事项请查看[FAQ页面](https://gitee.com/mindspore/mindquantum/blob/master/tutorials/0.frequently_asked_questions.ipynb)。
 
-## 构建二进制轮子
+## 构建二进制whl包
 
-如果你想建立一些二进制轮子用于再分配，请看看我们的[二进制轮子建立指南](./build_binary_wheels.md)
+如果你想构建用于分发的二进制whl包，请参考[二进制whl包构建指南](./build_binary_wheels.md)
 
 ## 快速入门
 
