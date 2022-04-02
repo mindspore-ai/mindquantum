@@ -22,7 +22,7 @@
 
 1. 登录Gitee官网
 
-访问Gitee官网[https://gitee.com/signup](https://gitee.com/signup)并登录，如未注册Gitee账号，需要先注册账号。
+访问Gitee官网[https://gitee.com/login](https://gitee.com/login)并登录，如未注册Gitee账号，需要先注册账号。
 
 2. Fork MindQuantum的主仓到个人空间
 
@@ -43,17 +43,17 @@
 
 点击HiQ量子计算云服务[https://hiq.huaweicloud.com/portal/home](https://hiq.huaweicloud.com/portal/home) 链接跳转至登录入口（华为云账号登录，若没有华为云账号，请先注册华为云账号并实名认证）
 
-![](https://hiq.huaweicloud.com/hiq_assets/hiq_news_images/doc/1.png)
+![](https://hiq.huaweicloud.com/document/media/CloudPlatrorm/overview.png)
 
 
 ### 新建CloudIDE实例
 
 新建CloudIDE实例[https://hiq.huaweicloud.com/portal/programming/cloudide](https://hiq.huaweicloud.com/portal/programming/cloudide)。 选择默认参数创建即可。
 
-![](https://hiq.huaweicloud.com/hiq_assets/hiq_news_images/doc/3.png)
+![](https://hiq.huaweicloud.com/document/media/cloudide/instance.png)
 
 
-### 导入MIndQuantum代码仓
+### 导入MindQuantum代码仓
 
 1. 在菜单中选择“文件/导入项目”
 
@@ -73,7 +73,7 @@
 
 5. 打开终端
 
-![](https://hiq.huaweicloud.com/hiq_assets/hiq_news_images/doc/8.png)
+![](https://hiq.huaweicloud.com/document/media/cloudide/newterminal.png)
 
 6. 将如下命令 复制粘贴到CloudIDE的Terminal终端里面，安装最新版本mindquantum。
 
@@ -101,7 +101,7 @@ git config --global user.email"you@example.com"
 
 在左侧目录树创建或者选择存放代码的文件夹，新建一个Jupyter Notebook(.ipynb)文件。
 
-![](https://hiq.huaweicloud.com/hiq_assets/hiq_news_images/doc/6.png)
+![](https://hiq.huaweicloud.com/document/media/cloudide/newfile.png)
 
 2. 导入数据包
 
