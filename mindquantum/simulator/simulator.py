@@ -131,7 +131,7 @@ class Simulator:
         if self.backend == 'projectq':
             self.sim.run()
 
-    def apply_gate(self, gate, pr=None):
+    def apply_gate(self, gate, pr=None, diff=False):
         """
         Apply a gate on this simulator, can be a quantum gate or a measurement operator
 
@@ -139,6 +139,7 @@ class Simulator:
             gate (BasicGate): The gate you want to apply.
             pr (Union[numbers.Number, numpy.ndarray, ParameterResolver, list]): The
                 parameter for parameterized gate. Default: None.
+            diff (bool): Whether to apply the derivative gate on this simulator. Default: False.
 
         Returns:
             int or None, if the gate if a measure gate, then return a collapsed state, Otherwise
@@ -176,7 +177,7 @@ class Simulator:
                 self.sim.apply_gate(gate.get_cpp_obj())
             else:
                 pr = _check_and_generate_pr_type(pr, gate.coeff.params_name)
-                self.sim.apply_gate(gate.get_cpp_obj(), pr.get_cpp_obj(), False)
+                self.sim.apply_gate(gate.get_cpp_obj(), pr.get_cpp_obj(), diff)
         return None
 
     def apply_circuit(self, circuit, pr=None):
@@ -697,4 +698,8 @@ class GradOpsWrapper:
         self.str = s
 
 
-__all__ = ['Simulator', 'get_supported_simulator', 'GradOpsWrapper']
+def inner_product(bra: Simulator, ket: Simulator):
+    return mb.inner_product(bra.sim, bra.sim)
+
+
+__all__ = ['Simulator', 'get_supported_simulator', 'GradOpsWrapper', 'inner_product']
