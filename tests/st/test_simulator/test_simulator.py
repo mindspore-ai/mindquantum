@@ -25,6 +25,7 @@ from mindquantum.algorithm import qft
 from mindquantum.framework.layer import MQAnsatzOnlyLayer
 from mindquantum import ParameterResolver as PR
 from mindquantum import Circuit, Hamiltonian, QubitOperator
+from mindquantum.simulator import inner_product
 
 
 def _test_init_reset(virtual_qc):
@@ -255,3 +256,33 @@ def test_non_hermitian_grad_ops():
     f_exp = np.conj(G.RX(2).matrix().T) @ ham.sparse_mat.toarray() @ G.RY(1).matrix()
     f_exp = f_exp[0, 0]
     assert np.allclose(f, f_exp)
+
+
+def test_inner_product():
+    """
+    Description: test inner product of two simulator
+    Expectation: success.
+    """
+    sim1 = Simulator('projectq', 1)
+    sim1.apply_gate(G.RX(1.2).on(0))
+    sim2 = Simulator('projectq', 1)
+    sim2.apply_gate(G.RY(2.1).on(0))
+    val_exp = np.vdot(sim1.get_qs(), sim2.get_qs())
+    val = inner_product(sim1, sim2)
+    assert np.allclose(val_exp, val)
+
+
+def test_copy():
+    """
+    Description: test copy a simulator
+    Expectation: success.
+    """
+    sim = Simulator('projectq', 1)
+    sim.apply_gate(G.RX(1).on(0))
+    sim.flush()
+    sim2 = sim.copy()
+    sim2.apply_gate(G.RX(-1).on(0))
+    sim.reset()
+    qs1 = sim.get_qs()
+    qs2 = sim2.get_qs()
+    assert np.allclose(qs1, qs2)

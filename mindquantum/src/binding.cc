@@ -44,6 +44,7 @@ using mindquantum::sparse::SparseHamiltonian;
 using mindquantum::sparse::TransposeCsrHdMatrix;
 
 #ifdef ENABLE_PROJECTQ
+using mindquantum::projectq::InnerProduct;
 using mindquantum::projectq::Projectq;
 #endif
 
@@ -148,6 +149,7 @@ PYBIND11_MODULE(mqbackend, m) {
         .def("get_qs", &Projectq<MT>::cheat)
         .def("set_qs", &Projectq<MT>::SetState)
         .def("get_circuit_matrix", &Projectq<MT>::GetCircuitMatrix)
+        .def("copy", &Projectq<MT>::Copy)
         .def("hermitian_measure_with_grad",
              py::overload_cast<const VT<Hamiltonian<MT>> &, const VT<BasicGate<MT>> &, const VT<BasicGate<MT>> &,
                                const VVT<MT> &, const VT<MT> &, const VS &, const VS &, size_t, size_t>(
@@ -157,6 +159,7 @@ PYBIND11_MODULE(mqbackend, m) {
                                const VT<BasicGate<MT>> &, const VT<BasicGate<MT>> &, const VT<BasicGate<MT>> &,
                                const VVT<MT> &, const VT<MT> &, const VS &, const VS &, size_t, size_t,
                                const Projectq<MT> &>(&Projectq<MT>::NonHermitianMeasureWithGrad));
+    m.def("cpu_projectq_inner_product", &InnerProduct<MT>);
 #endif
 
 #ifdef ENABLE_QUEST

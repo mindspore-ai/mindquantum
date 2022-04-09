@@ -19,6 +19,7 @@
 #include <cmath>
 
 #include <functional>
+#include <memory>
 #include <random>
 #include <string>
 #include <thread>
@@ -126,6 +127,16 @@ class Projectq : public Simulator {
         if (diff) {
             Projectq::apply_controlled_gate(MCast<T>(gate.param_diff_matrix_(theta).matrix_), VCast(gate.obj_qubits_),
                                             VCast(gate.ctrl_qubits_));
+            if (gate.ctrl_qubits_.size() != 0) {
+                auto ctrl_mask = GetControlMask(gate.ctrl_qubits_);
+#pragma omp parallel for schedule(static)
+                for (Index i = 0; i < (len_ >> 1); i++) {
+                    if ((i & ctrl_mask) != ctrl_mask) {
+                        this->vec_[2 * i] = 0;
+                        this->vec_[2 * i + 1] = 0;
+                    }
+                }
+            }
         } else {
             Projectq::apply_controlled_gate(MCast<T>(gate.param_matrix_(theta).matrix_), VCast(gate.obj_qubits_),
                                             VCast(gate.ctrl_qubits_));
@@ -523,7 +534,22 @@ class Projectq : public Simulator {
         }
         return out;
     }
+
+    auto GetLen() const {
+        return this->len_;
+    }
+
+    std::shared_ptr<Projectq<T>> Copy() {
+        return std::make_shared<Projectq<T>>(this->seed, n_qubits_, vec_);
+    }
 };
+
+template <typename T>
+CT<T> InnerProduct(const Projectq<T> &bra, const Projectq<T> &ket) {
+    auto res = ComplexInnerProduct<T, Simulator::calc_type>(bra.vec_, ket.vec_, bra.GetLen());
+    return res;
+}
+
 }  // namespace projectq
 }  // namespace mindquantum
 #endif  // MINDQUANTUM_BACKENDS_PROJECTQ_PROJECTQ_H_
