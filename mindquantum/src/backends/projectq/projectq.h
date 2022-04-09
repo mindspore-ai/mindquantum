@@ -19,6 +19,7 @@
 #include <cmath>
 
 #include <functional>
+#include <memory>
 #include <random>
 #include <string>
 #include <thread>
@@ -534,13 +535,17 @@ class Projectq : public Simulator {
         return out;
     }
 
-    auto GetLen() {
+    auto GetLen() const {
         return this->len_;
+    }
+
+    std::shared_ptr<Projectq<T>> Copy() {
+        return std::make_shared<Projectq<T>>(this->seed, n_qubits_, vec_);
     }
 };
 
 template <typename T>
-CT<T> InnerProduct(Projectq<T> &bra, Projectq<T> &ket) {
+CT<T> InnerProduct(const Projectq<T> &bra, const Projectq<T> &ket) {
     auto res = ComplexInnerProduct<T, Simulator::calc_type>(bra.vec_, ket.vec_, bra.GetLen());
     return res;
 }

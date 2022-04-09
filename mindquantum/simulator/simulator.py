@@ -86,6 +86,29 @@ class Simulator:
         if backend == 'projectq':
             self.sim = mb.projectq(seed, n_qubits)
 
+    def copy(self):
+        """
+        Copy this simulator.
+
+        Returns:
+            Simulator, a copy version of this simulator.
+
+        Examples:
+            >>> from mindquantum import RX, Simulator
+            >>> sim = Simulator('projectq', 1)
+            >>> sim.apply_gate(RX(1).on(0))
+            >>> sim.flush()
+            >>> sim2 = sim.copy()
+            >>> sim2.apply_gate(RX(-1).on(0))
+            >>> sim2
+            projectq simulator with 1 qubit (little endian).
+            Current quantum state:
+            1¦0⟩
+        """
+        sim = Simulator(self.backend, self.n_qubits, self.seed)
+        sim.sim = self.sim.copy()
+        return sim
+
     def __str__(self):
         state = self.get_qs()
         s = f"{self.backend} simulator with {self.n_qubits} qubit{'s' if self.n_qubits > 1 else ''} (little endian)."
@@ -698,8 +721,38 @@ class GradOpsWrapper:
         self.str = s
 
 
-def inner_product(bra: Simulator, ket: Simulator):
-    return mb.inner_product(bra.sim, bra.sim)
+def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
+    """
+    Calculate the inner product of two state that in the given simulator.
+
+    Args:
+        bra_simulator (Simulator): The simulator that serve as bra state.
+        ket_simulator (Simulator): The simulator that serve as ket state.
+
+    Returns:
+        numbers.Number, the inner product of two quantum state.
+
+    Examples:
+        >>> from mindquantum import RX, RY, Simulator
+        >>> from mindquantum.simulator import inner_product
+        >>> bra_simulator = Simulator('projectq', 1)
+        >>> bra_simulator.apply_gate(RY(1.2).on(0))
+        >>> ket_simulator = Simulator('projectq', 1)
+        >>> ket_simulator.apply_gate(RX(2.3).on(0))
+        >>> inner_product(bra_simulator, ket_simulator)
+    """
+    _check_input_type('bra_simulator', Simulator, bra_simulator)
+    _check_input_type('ket_simulator', Simulator, ket_simulator)
+    if bra_simulator.n_qubits != ket_simulator.n_qubits:
+        raise ValueError(f"Two simulator should have same quantum state, \
+but get {bra_simulator.n_qubits} and {ket_simulator.n_qubits}.")
+    if bra_simulator.backend != ket_simulator.backend:
+        raise ValueError(f"The backend of two simulator should be same.")
+    if bra_simulator.backend == 'projectq' and ket_simulator.backend == 'projectq':
+        bra_simulator.flush()
+        ket_simulator.flush()
+        return mb.cpu_projectq_inner_product(bra_simulator.sim, ket_simulator.sim)
+    raise ValueError(f"backend for {bra_simulator.backend} not implement.")
 
 
 __all__ = ['Simulator', 'get_supported_simulator', 'GradOpsWrapper', 'inner_product']
