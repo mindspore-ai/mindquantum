@@ -6,7 +6,7 @@
 
 ### 主要特性和增强
 
-####  `QubitOperator` 和`FermionOperator`的迭代器功能增强
+#### `QubitOperator`和`FermionOperator`的迭代器功能增强
 
 - 对多项费米子或玻色子算符迭代，可得到每一项
 
