@@ -1,5 +1,7 @@
 # MindQuantum 0.6.0
 
+[查看中文](./RELEASE_CN.md)
+
 ## MindQuantum 0.6.0 Release Notes
 
 ### Major Features and Improvements
