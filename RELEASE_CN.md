@@ -1,4 +1,4 @@
-# MindQuantum 0.6.0
+# MindQuantum Release Notes
 
 [View English](./RELEASE.md)
 
