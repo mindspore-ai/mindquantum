@@ -259,3 +259,20 @@ _svg_config_light = {
     'barrier_fill': '#8a744d',
     'barrier_opacity': 0.95
 }
+
+_bloch_drawer_config = {
+    'radius': 1,
+    'ca_width': 1,
+    'ca_color': 'gray',
+    'sp_alpha': 0.2,
+    'sp_color': 'silver',
+    'sp_width': 1,
+    'arr_color': 'red',
+    'arr_width': 3,
+    'arr_size': 0.1,
+    'arr_alpha': False,
+    'label': ['x', 'y', 'z'],
+    'label_size': 20,
+    'label_color': 'black',
+    'ax_offset': (0, 0),
+}
