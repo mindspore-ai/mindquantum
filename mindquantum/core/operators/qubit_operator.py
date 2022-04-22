@@ -138,6 +138,18 @@ class QubitOperator(_Operator):
             self.gates_number += n_local_operator
         return self.gates_number
 
+    def to_openfermion(self):
+        """Convert qubit operator to openfermion format"""
+        from openfermion import QubitOperator as oqo
+        terms = {}
+        for k, v in self.terms.items():
+            if not v.is_const():
+                raise ValueError("Cannot convert parameteized fermion operator to openfermion format")
+            terms[k] = v.const
+        of = oqo()
+        of.terms = terms
+        return of
+
     def _parse_string(self, terms_string):
         """Parse a term given as a string type
 
@@ -198,8 +210,9 @@ class QubitOperator(_Operator):
                 f"Given n_qubits {n_qubits} is small than qubit of qubit operator, which is {n_qubits_local}.")
         out = 0
         for term, coeff in self.terms.items():
-            if isinstance(coeff, PR):
+            if not coeff.is_const():
                 raise RuntimeError("Cannot convert a parameterized qubit operator to matrix.")
+            coeff = coeff.const
             if not term:
                 out += csr_matrix(np.identity(2**n_qubits, dtype=np.complex128)) * coeff
             else:

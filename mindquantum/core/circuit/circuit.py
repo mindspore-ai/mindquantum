@@ -512,7 +512,8 @@ class Circuit(list):
             ParameterResolver, the parameter resolver of the whole circuit.
         """
         pr = PR(self.all_paras.map)
-        pr *= 0
+        for k in pr.keys():
+            pr[k] = 1
         return pr
 
     @property

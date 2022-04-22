@@ -13,6 +13,11 @@
 "mindquantum/mindquantum/core/circuit/circuit.py"                                      "invalid-name"
 "mindquantum/mindquantum/framework"                                                    "missing-docstring"
 "mindquantum/mindquantum/io/display/circuit_svg_drawer.py"                             "abstract-method"
+"mindquantum/mindquantum/core/gates"                                                   "abstract-method"
+"mindquantum/mindquantum/core/gates"                                                   "unused-argument"
+"mindquantum/mindquantum/config/config.py"                                             "invalid-name"
+"mindquantum/mindquantum/core/gates/basicgate.py"                                      "arguments-differ"
+"mindquantum/mindquantum/core/gates/basic.py"                                          "arguments-differ"
 
 # Tests
 "mindquantum/tests/st"                                                                 "missing-docstring"

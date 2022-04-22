@@ -58,7 +58,11 @@ class Hamiltonian:
             self.sparse_mat = sp.csr_matrix(np.eye(2, dtype=np.complex64))
             self.how_to = MODE['origin']
             self.n_qubits = count_qubits(hamiltonian)
-        self.ham_termlist = [(i, j) for i, j in self.hamiltonian.terms.items()]
+        self.ham_termlist=[]
+        for i,j in self.hamiltonian.terms.items():
+            if not j.is_const():
+                raise ValueError("Hamiltonian cannot be parameterized.")
+            self.ham_termlist.append((i,j.const))
 
     def __str__(self):
         if self.how_to == MODE['frontend']:

@@ -15,12 +15,11 @@
 # ============================================================================
 """Quantum channel."""
 
-import numpy as np
 from mindquantum import mqbackend as mb
-from .basic import NoneParameterGate
+from mindquantum.core.gates.basic import NoneParameterGate, SelfHermitianGate
 
 
-class PauliChannel(NoneParameterGate):
+class PauliChannel(NoneParameterGate, SelfHermitianGate):
     r"""
     Quantum channel that express the incoherent noise in quantum computing.
 
@@ -67,9 +66,12 @@ class PauliChannel(NoneParameterGate):
                    │
         {'00': 101, '01': 862, '11': 37}
     """
-    def __init__(self, px: float, py: float, pz: float):
-        NoneParameterGate.__init__(self, 'PC')
-        self.matrix_value = np.array([[1, 0], [0, 1]])  # matrix value cannot be None, so I have to use identity matrix
+    def __init__(self, px: float, py: float, pz: float, **kwargs):
+        if 'name' not in kwargs:
+            kwargs['name'] = 'PC'
+        kwargs['n_qubits'] = 1
+        NoneParameterGate.__init__(self, **kwargs)
+        SelfHermitianGate.__init__(self, **kwargs)
         if not isinstance(px, (int, float)):
             raise TypeError("Unsupported type for px, get {}.".format(type(px)))
         if not isinstance(py, (int, float)):
@@ -82,6 +84,13 @@ class PauliChannel(NoneParameterGate):
             self.pz = pz
         else:
             raise ValueError("Required total probability P = px + py + pz ∈ [0,1].")
+
+    def __extra_prop__(self):
+        prop = super().__extra_prop__()
+        prop['px'] = self.px
+        prop['py'] = self.py
+        prop['pz'] = self.pz
+        return prop
 
     def get_cpp_obj(self):
         cpp_gate = mb.basic_gate('PL', True, self.px, self.py, self.pz)
@@ -123,10 +132,19 @@ class BitFlipChannel(PauliChannel):
                       │
         q1: ─────────BFC──
     """
-    def __init__(self, p: float):
-        PauliChannel.__init__(self, p, 0, 0)
-        self.name = 'BFC'
-        self.str = self.name
+    def __init__(self, p: float, **kwargs):
+        kwargs['name'] = 'BFC'
+        kwargs['n_qubits'] = 1
+        kwargs['px'] = p
+        kwargs['py'] = 0
+        kwargs['pz'] = 0
+        PauliChannel.__init__(self, **kwargs)
+        self.p = p
+
+    def __extra_prop__(self):
+        prop = super().__extra_prop__()
+        prop['p'] = self.p
+        return prop
 
 
 class PhaseFlipChannel(PauliChannel):
@@ -158,10 +176,19 @@ class PhaseFlipChannel(PauliChannel):
                       │
         q1: ─────────PFC──
     """
-    def __init__(self, p: float):
-        PauliChannel.__init__(self, 0, 0, p)
-        self.name = 'PFC'
-        self.str = self.name
+    def __init__(self, p: float, **kwargs):
+        kwargs['name'] = 'PFC'
+        kwargs['n_qubits'] = 1
+        kwargs['px'] = 0
+        kwargs['py'] = 0
+        kwargs['pz'] = p
+        PauliChannel.__init__(self, **kwargs)
+        self.p = p
+
+    def __extra_prop__(self):
+        prop = super().__extra_prop__()
+        prop['p'] = self.p
+        return prop
 
 
 class BitPhaseFlipChannel(PauliChannel):
@@ -194,10 +221,19 @@ class BitPhaseFlipChannel(PauliChannel):
                        │
         q1: ──────────BPFC──
     """
-    def __init__(self, p: float):
-        PauliChannel.__init__(self, 0, p, 0)
-        self.name = 'BPFC'
-        self.str = self.name
+    def __init__(self, p: float, **kwargs):
+        kwargs['name'] = 'BPFC'
+        kwargs['n_qubits'] = 1
+        kwargs['px'] = 0
+        kwargs['py'] = p
+        kwargs['pz'] = 0
+        PauliChannel.__init__(self, **kwargs)
+        self.p = p
+
+    def __extra_prop__(self):
+        prop = super().__extra_prop__()
+        prop['p'] = self.p
+        return prop
 
 
 class DepolarizingChannel(PauliChannel):
@@ -230,7 +266,16 @@ class DepolarizingChannel(PauliChannel):
                     │
         q1: ────────DC──
     """
-    def __init__(self, p: float):
-        PauliChannel.__init__(self, p / 3, p / 3, p / 3)
-        self.name = 'DC'
-        self.str = self.name
+    def __init__(self, p: float, **kwargs):
+        kwargs['name'] = 'DC'
+        kwargs['n_qubits'] = 1
+        kwargs['px'] = p / 3
+        kwargs['py'] = p / 3
+        kwargs['pz'] = p / 3
+        PauliChannel.__init__(self, **kwargs)
+        self.p = p
+
+    def __extra_prop__(self):
+        prop = super().__extra_prop__()
+        prop['p'] = self.p
+        return prop

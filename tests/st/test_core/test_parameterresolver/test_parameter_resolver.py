@@ -33,7 +33,7 @@ def test_parameter_resolve():
     pr_tmp.no_grad()
     pr.update(pr_tmp)
     assert pr.params_name == ['a', 'b', 'c', 'd', 'e', 'f']
-    assert pr.para_value == [4.0, 8.0, 12.0, 16.0, 5.0, 6.0]
+    assert list(pr.para_value) == [4.0, 8.0, 12.0, 16.0, 5.0, 6.0]
     pr.requires_grad_part('e')
     pr.no_grad_part('b')
     assert pr.requires_grad_parameters == {'a', 'c', 'd', 'e'}

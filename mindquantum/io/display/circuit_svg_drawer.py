@@ -19,9 +19,8 @@ import copy
 import numpy as np
 
 from mindquantum.io.display._config import _DAGGER_MASK
-from mindquantum.utils.f import _common_exp
 from mindquantum.core.gates import CNOTGate, BarrierGate, Measure, SWAPGate, XGate
-from mindquantum.core.gates import IntrinsicOneParaGate, TGate, SGate
+from mindquantum.core.gates import ParameterGate, TGate, SGate
 from mindquantum.core.circuit import Circuit
 from mindquantum.utils.type_value_check import _check_input_type
 
@@ -765,7 +764,7 @@ class SVGBasicGate(SVGContainer):
     def __init__(self, g, svg_config):
         super().__init__()
         self.svg_config = svg_config
-        self.name = g.str[:g.str.find('(')]
+        self.name = g.__str_in_svg__()
         self.has_dag_mask = False
         if self.name.endswith(_DAGGER_MASK):
             self.name = self.name[:-1]
@@ -915,7 +914,7 @@ class SVGCNOTGate(SVGBasicGate):
         self.move_to_create_qubit()
 
 
-class SVGIntrinsicOneParaGate(SVGBasicGate):
+class SVGParameterGate(SVGBasicGate):
     """SVG for parameterized gate."""
     def __init__(self, gate, svg_config):
         super().__init__(gate, svg_config)
@@ -930,9 +929,9 @@ class SVGIntrinsicOneParaGate(SVGBasicGate):
         if gate.parameterized:
             coeff_str = f'{gate.coeff.expression()}'
         else:
-            coeff_str = f'{_common_exp(gate.coeff)}'
-            if coeff_str == str(gate.coeff):
-                coeff_str = str(round(gate.coeff, 4))
+            coeff_str = f'{gate.coeff.expression()}'
+            if coeff_str == str(gate.coeff.const):
+                coeff_str = str(round(gate.coeff.const, 4))
 
         self.coeff_text = self.create_name_text(coeff_str)
         self.coeff_text.shift(0, self.rect1.get('height') / 2 + self.svg_config['gate_size'] * 0.3)
@@ -993,11 +992,9 @@ class SVGCircuit(SVGContainer):
                 gate_container.add(SVGCNOTGate(g, svg_config))
             elif isinstance(g, SWAPGate):
                 gate_container.add(SVGSWAPGate(g, svg_config))
-            elif isinstance(g, IntrinsicOneParaGate) and not isinstance(g, (TGate, SGate)):
-                gate_container.add(SVGIntrinsicOneParaGate(g, svg_config))
+            elif isinstance(g, ParameterGate) and not isinstance(g, (TGate, SGate)):
+                gate_container.add(SVGParameterGate(g, svg_config))
             else:
-                name = g.str
-                name = name[:name.find('(')]
                 gate_container.add(SVGGate(g, svg_config))
         circ_len = gate_container.right - gate_container.left + 2 * self.svg_config['gate_start_distance']
         for i in range(circuit.n_qubits):

@@ -25,11 +25,11 @@ def test_fermion_ops_num_coeff():
     """
     # check the creation operator
     a_p_dagger = FermionOperator('1^')
-    assert str(a_p_dagger) == '1.0 [1^] '
+    assert str(a_p_dagger) == '1 [1^] '
 
     # check the annihilation operator
     a_q = FermionOperator('0')
-    assert str(a_q) == '1.0 [0] '
+    assert str(a_q) == '1 [0] '
 
     # check zero operator
     zero = FermionOperator()
@@ -37,7 +37,7 @@ def test_fermion_ops_num_coeff():
 
     # check identity operator
     identity = FermionOperator('')
-    assert str(identity) == '1.0 [] '
+    assert str(identity) == '1 [] '
 
 
 def test_power():
@@ -79,11 +79,11 @@ def test_multiplier():
 
     # Test right divide
     new = origin / 2.0
-    assert str(new) == '1.0 [0 1^] '
+    assert str(new) == '1 [0 1^] '
 
     # Test in-place divide
     origin /= 2
-    assert str(origin) == '1.0 [0 1^] '
+    assert str(origin) == '1 [0 1^] '
 
 
 def test_add_sub():
@@ -95,7 +95,7 @@ def test_add_sub():
     w1 = FermionOperator(' 4^ 3 9 3^ ') + 4 * FermionOperator(' 2 ')
     w2 = 4 * FermionOperator(' 2 ')
     w1 -= w2
-    assert str(w1) == '1.0 [4^ 3 9 3^] '
+    assert str(w1) == '1 [4^ 3 9 3^] '
 
 
 def test_compress():

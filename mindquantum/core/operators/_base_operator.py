@@ -92,11 +92,17 @@ class _Operator(metaclass=ABCMeta):
         self.operators = None
         self.terms_number = 0
         self.qubit_type = None
-        self.coefficient = coefficient
         if isinstance(coefficient, str):
-            self.coefficient = PR({self.coefficient: 1})
-        if isinstance(coefficient, dict):
-            self.coefficient = PR(coefficient)
+            self.coefficient = PR({coefficient: 1})
+        elif isinstance(coefficient, dict):
+            self.coefficient = PR()
+            for k, v in coefficient.items():
+                self.coefficient[k] = v
+        elif isinstance(coefficient, PR):
+            self.coefficient = coefficient
+        elif isinstance(coefficient, numbers.Number):
+            self.coefficient = PR()
+            self.coefficient.const = coefficient
         if term is None:
             self.terms = {}
 
@@ -107,8 +113,7 @@ class _Operator(metaclass=ABCMeta):
         """
         res = copy.deepcopy(self)
         for i in res.terms:
-            if isinstance(res.terms[i], PR):
-                res.terms[i] = res.terms[i].combination(paras)
+            res.terms[i] = res.terms[i].combination(paras)
         return res
 
     def _parse_term(self, term):
@@ -168,8 +173,6 @@ class _Operator(metaclass=ABCMeta):
             for left_operator, left_coeff in self.terms.items():
                 for right_operator, right_coeff in multiplier.terms.items():
                     new_operator = left_operator + right_operator
-                    if isinstance(left_coeff, PR) and isinstance(right_coeff, PR):
-                        raise ValueError("Can not multiply two parameterized operator.")
                     new_coeff = left_coeff * right_coeff
                     # Need to simplify the new_operator by using the
                     # commutation and anti_commutation relationship
@@ -243,7 +246,7 @@ class _Operator(metaclass=ABCMeta):
                     if abs(self.terms[term]) < EQ_TOLERANCE:
                         self.terms.pop(term)
                 else:
-                    if self.terms[term].expression() == 0:
+                    if not self.terms[term]:
                         self.terms.pop(term)
         elif isinstance(operator, numbers.Number):
             self += operator * self.__class__("")
@@ -273,7 +276,7 @@ class _Operator(metaclass=ABCMeta):
                     if abs(self.terms[term]) < EQ_TOLERANCE:
                         self.terms.pop(term)
                 else:
-                    if self.terms[term].expression() == 0:
+                    if not self.terms[term]:
                         self.terms.pop(term)
         elif isinstance(operator, numbers.Number):
             substract_operator = copy.deepcopy(self)
@@ -351,13 +354,15 @@ class _Operator(metaclass=ABCMeta):
         for term in self.terms:
             # Remove small imaginary and real parts
             coeff = self.terms[term]
-            if not isinstance(coeff, PR):
+            if coeff.is_const():
+                coeff = coeff.const
                 if abs(coeff) > abs_tol:
                     if abs(complex(coeff).imag) <= abs_tol:
                         coeff = coeff.real
                     elif abs(complex(coeff).real) <= abs_tol:
                         coeff = 1j * coeff.imag
-                    new_terms[term] = coeff
+                    new_terms[term] = PR()
+                    new_terms[term].const = coeff
             elif coeff.expression() != 0:
                 new_terms[term] = coeff
         self.terms = new_terms

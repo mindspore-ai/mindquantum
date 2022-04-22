@@ -13,72 +13,62 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Basic quantum gate."""
+"""Basic module for quantum gate."""
 
-from types import FunctionType, MethodType
-from copy import deepcopy
 import numpy as np
-import projectq.ops as pjops
 from scipy.linalg import fractional_matrix_power
 from mindquantum.core.parameterresolver import ParameterResolver as PR
+from mindquantum.utils.f import is_power_of_two
+from mindquantum.config.config import _GLOBAL_MAT_VALUE
+from mindquantum.core.gates.basic import NoneParamNonHermMat
+from mindquantum.core.gates.basic import NoneParamSelfHermMat
+from mindquantum.core.gates.basic import PauliGate
+from mindquantum.core.gates.basic import RotSelfHermMat
+from mindquantum.core.gates.basic import FunctionalGate
+from mindquantum.core.gates.basic import ParameterOppsGate
+from mindquantum.core.gates.basic import ParamNonHerm
+from mindquantum.core.gates.basic import PauliStringGate
 from mindquantum import mqbackend as mb
-from mindquantum.utils.type_value_check import _check_input_type
-from .basic import HERMITIAN_PROPERTIES
-from .basic import IntrinsicOneParaGate
-from .basic import NoneParameterGate
 
 
-class BarrierGate(NoneParameterGate):
-    """
-    BARRIER gate do nothing but set a barrier for drawing circuit.
-
-    Args:
-        show (bool): whether show this barrier gate. Default: True.
-
-    Raises:
-        TypeError: if `show` is not bool.
-    """
-
-    def __init__(self, show=True):
-        _check_input_type('show', bool, show)
-        NoneParameterGate.__init__(self, 'BARRIER')
-        self.show = show
-
-    def get_cpp_obj(self):
-        return None
-
-    def hermitian(self):
-        return BarrierGate(self.show)
-
-    def on(self, obj_qubits, ctrl_qubits=None):
-        raise NotImplementedError
-
-
-class CNOTGate(NoneParameterGate):
+class UnivMathGate(NoneParamNonHermMat):
     r"""
-    Control-X gate.
+    Universal math gate.
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
+
+    Args:
+        name (str): the name of this gate.
+        mat (np.ndarray): the matrix value of this gate.
+
+    Examples:
+        >>> from mindquantum.core.gates import UnivMathGate
+        >>> x_mat=np.array([[0,1],[1,0]])
+        >>> X_gate=UnivMathGate('X',x_mat)
+        >>> x1=X_gate.on(0,1)
+        >>> print(x1)
+        X(0 <-: 1)
     """
+    def __init__(self, name, matrix_value):
+        if len(matrix_value.shape) != 2:
+            raise ValueError(f"matrix_value require shape of 2, but get shape of {matrix_value.shape}")
+        if matrix_value.shape[0] != matrix_value.shape[1]:
+            raise ValueError(f"matrix_value need a square matrix, but get shape {matrix_value.shape}")
+        if not is_power_of_two(matrix_value.shape[0]):
+            raise ValueError(f"Dimension of matrix_value need should be power of 2, but get {matrix_value.shape[0]}")
+        n_qubits = int(np.log2(matrix_value.shape[0]))
+        super().__init__(name=name, n_qubits=n_qubits, matrix_value=matrix_value)
 
-    def __init__(self):
-        NoneParameterGate.__init__(self, 'CNOT')
-        self.matrix_value = X.matrix_value
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = pjops.CNOT
-
-    def on(self, obj_qubits, ctrl_qubits=None):
-        out = super(CNOTGate, self).on(obj_qubits, ctrl_qubits)
-        if ctrl_qubits is None:
-            raise ValueError("A control qubit is needed for CNOT gate!")
-        out.ctrl_qubits = []
-        out.obj_qubits = [obj_qubits, ctrl_qubits]
-        return out
+    def get_cpp_obj(self):
+        mat = mb.dim2matrix(self.matrix())
+        cpp_gate = mb.basic_gate(False, self.name, 1, mat)
+        cpp_gate.daggered = self.hermitianed
+        cpp_gate.obj_qubits = self.obj_qubits
+        cpp_gate.ctrl_qubits = self.ctrl_qubits
+        return cpp_gate
 
 
-class HGate(NoneParameterGate):
+class HGate(NoneParamSelfHermMat):
     r"""
     Hadamard gate with matrix as:
 
@@ -88,37 +78,15 @@ class HGate(NoneParameterGate):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
-
     def __init__(self):
-        NoneParameterGate.__init__(self, 'H')
-        self.matrix_value = np.array([[1, 1], [1, -1]]) / np.sqrt(2)
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = pjops.H
-
-
-class IGate(NoneParameterGate):
-    r"""
-    Identity gate with matrix as:
-
-    .. math::
-
-        {\rm I}=\begin{pmatrix}1&0\\0&1\end{pmatrix}
-
-    More usage, please see :class:`mindquantum.core.gates.XGate`.
-    """
-
-    def __init__(self):
-        NoneParameterGate.__init__(self, 'I')
-        self.matrix_value = np.array([[1, 0], [0, 1]])
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = None
+        super().__init__(
+            name='H',
+            n_qubits=1,
+            matrix_value=_GLOBAL_MAT_VALUE['H'],
+        )
 
 
-class XGate(NoneParameterGate):
+class XGate(PauliGate):
     r"""
     Pauli X gate with matrix as:
 
@@ -151,32 +119,19 @@ class XGate(NoneParameterGate):
         >>> x1**2
         RX(2π)
         >>> (x1**'a').coeff
-        {'a': 3.141592653589793}
+        {'a': 3.141592653589793}, const: 0.0
         >>> (x1**{'a' : 2}).coeff
-        {'a': 6.283185307179586}
+        {'a': 6.283185307179586}, const: 0.0
     """
-
     def __init__(self):
-        NoneParameterGate.__init__(self, 'X')
-        self.matrix_value = np.array([[0, 1], [1, 0]])
-
-    def __pow__(self, coeff):
-        if isinstance(coeff, (float, int, complex)):
-            return RX(coeff * np.pi)
-        if isinstance(coeff, str):
-            return RX({coeff: np.pi})
-        if isinstance(coeff, PR):
-            return RX(np.pi * coeff)
-        if isinstance(coeff, dict):
-            return RX({i: np.pi * j for i, j in coeff.items()})
-        raise TypeError("Unsupported type for parameters, get {}.".format(coeff))
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = pjops.X
+        super().__init__(
+            name='X',
+            n_qubits=1,
+            matrix_value=_GLOBAL_MAT_VALUE['X'],
+        )
 
 
-class YGate(NoneParameterGate):
+class YGate(PauliGate):
     r"""
     Pauli Y gate with matrix as:
 
@@ -186,28 +141,15 @@ class YGate(NoneParameterGate):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
-
     def __init__(self):
-        NoneParameterGate.__init__(self, 'Y')
-        self.matrix_value = np.array([[0, -1j], [1j, 0]])
-
-    def __pow__(self, coeff):
-        if isinstance(coeff, (float, int, complex)):
-            return RY(coeff * np.pi)
-        if isinstance(coeff, str):
-            return RY({coeff: np.pi})
-        if isinstance(coeff, PR):
-            return RY(np.pi * coeff)
-        if isinstance(coeff, dict):
-            return RY({i: np.pi * j for i, j in coeff.items()})
-        raise TypeError("Unsupported type for parameters, get {}.".format(coeff))
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = pjops.Y
+        super().__init__(
+            name='Y',
+            n_qubits=1,
+            matrix_value=_GLOBAL_MAT_VALUE['Y'],
+        )
 
 
-class ZGate(NoneParameterGate):
+class ZGate(PauliGate):
     r"""
     Pauli Z gate with matrix as:
 
@@ -217,162 +159,71 @@ class ZGate(NoneParameterGate):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
-
     def __init__(self):
-        NoneParameterGate.__init__(self, 'Z')
-        self.matrix_value = np.array([[1, 0], [0, -1]])
-
-    def __pow__(self, coeff):
-        if isinstance(coeff, (float, int, complex)):
-            return RZ(coeff * np.pi)
-        if isinstance(coeff, str):
-            return RZ({coeff: np.pi})
-        if isinstance(coeff, PR):
-            return RZ(np.pi * coeff)
-        if isinstance(coeff, dict):
-            return RZ({i: np.pi * j for i, j in coeff.items()})
-        raise TypeError("Unsupported type for parameters, get {}.".format(coeff))
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = pjops.Z
+        super().__init__(
+            name='Z',
+            n_qubits=1,
+            matrix_value=_GLOBAL_MAT_VALUE['Z'],
+        )
 
 
-def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
-    """
-    Generate a customer parameterized gate based on the single parameter defined
-    unitary matrix.
-
-    Args:
-        name (str): The name of this gate.
-        matrix_generator (Union[FunctionType, MethodType]): A function or a method that
-            take exactly one argument to generate a unitary matrix.
-        diff_matrix_generator (Union[FunctionType, MethodType]): A function or a method
-            that take exactly one argument to generate the derivative of this unitary matrix.
-
-    Returns:
-        _UnivParameterizedGate, a customer parameterized gate.
-
-    Examples:
-        >>> import numpy as np
-        >>> from mindquantum import gene_univ_parameterized_gate
-        >>> from mindquantum import Simulator, Circuit
-        >>> def matrix(theta):
-        ...     return np.array([[np.exp(1j * theta), 0],
-        ...                      [0, np.exp(-1j * theta)]])
-        >>> def diff_matrix(theta):
-        ...     return 1j*np.array([[np.exp(1j * theta), 0],
-        ...                         [0, -np.exp(-1j * theta)]])
-        >>> TestGate = gene_univ_parameterized_gate('Test', matrix, diff_matrix)
-        >>> circ = Circuit().h(0)
-        >>> circ += TestGate('a').on(0)
-        >>> circ
-        q0: ──H────Test(a)──
-        >>> circ.get_qs(pr={'a': 1.2})
-        array([0.25622563+0.65905116j, 0.25622563-0.65905116j])
-    """
-    if not isinstance(matrix_generator, (FunctionType, MethodType)):
-        raise ValueError('matrix_generator requires a function or a method.')
-    if not isinstance(diff_matrix_generator, (FunctionType, MethodType)):
-        raise ValueError('matrix_generator requires a function or a method.')
-
-    class _UnivParameterizedGate(IntrinsicOneParaGate):
-        """The customer parameterized gate."""
-
-        def __init__(self, coeff):
-            IntrinsicOneParaGate.__init__(self, name, coeff)
-            self.matrix_generator = matrix_generator
-            self.diff_matrix_generator = diff_matrix_generator
-            self.hermitian_property = HERMITIAN_PROPERTIES['do_hermitian']
-
-        def _matrix(self, theta):
-            if self.daggered:
-                return np.conj(self.matrix_generator(theta)).T
-            return self.matrix_generator(theta)
-
-        def _diff_matrix(self, theta):
-            if self.daggered:
-                return np.conj(self.matrix_generator(theta)).T
-            return self.diff_matrix_generator(theta)
-
-        def hermitian(self):
-            hermitian_gate = deepcopy(self)
-            hermitian_gate.daggered = not hermitian_gate.daggered
-            hermitian_gate.coeff = 1 * self.coeff
-            hermitian_gate.generate_description()
-            return hermitian_gate
-
-        def get_cpp_obj(self):
-            cpp_gate = mb.basic_gate(self.name, self.hermitian_property, self._matrix, self._diff_matrix)
-            cpp_gate.daggered = self.daggered
-            cpp_gate.obj_qubits = self.obj_qubits
-            cpp_gate.ctrl_qubits = self.ctrl_qubits
-            if not self.parameterized:
-                cpp_gate.apply_value(self.coeff)
-            else:
-                cpp_gate.params = self.coeff.get_cpp_obj()
-            return cpp_gate
-
-        def define_projectq_gate(self):
-            raise NotImplementedError
-
-    return _UnivParameterizedGate
-
-
-class UnivMathGate(NoneParameterGate):
+class IGate(PauliGate):
     r"""
-    Universal math gate.
+    Identity gate with matrix as:
+
+    .. math::
+
+        {\rm I}=\begin{pmatrix}1&0\\0&1\end{pmatrix}
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
-
-    Args:
-        name (str): the name of this gate.
-        mat (np.ndarray): the matrix value of this gate.
-
-    Examples:
-        >>> from mindquantum.core.gates import UnivMathGate
-        >>> x_mat=np.array([[0,1],[1,0]])
-        >>> X_gate=UnivMathGate('X',x_mat)
-        >>> x1=X_gate.on(0,1)
-        >>> print(x1)
-        X(0 <-: 1)
     """
-
-    def __init__(self, name, mat):
-        NoneParameterGate.__init__(self, name)
-        self.matrix_value = mat
-        self.hermitian_property = HERMITIAN_PROPERTIES['do_hermitian']
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = None
-
-    def get_cpp_obj(self):
-        mat = mb.dim2matrix(self.matrix())
-        cpp_gate = mb.basic_gate(False, self.name, self.hermitian_property, mat)
-        cpp_gate.daggered = self.daggered
-        cpp_gate.obj_qubits = self.obj_qubits
-        cpp_gate.ctrl_qubits = self.ctrl_qubits
-        return cpp_gate
+    def __init__(self):
+        super().__init__(
+            name='I',
+            n_qubits=1,
+            matrix_value=_GLOBAL_MAT_VALUE['I'],
+        )
 
 
-class SWAPGate(NoneParameterGate):
+class CNOTGate(NoneParamSelfHermMat):
+    r"""
+    Control-X gate.
+
+    More usage, please see :class:`mindquantum.core.gates.XGate`.
+    """
+    def __init__(self):
+        super().__init__(
+            name='CNOT',
+            n_qubits=2,
+            matrix_value=_GLOBAL_MAT_VALUE['CNOT'],
+        )
+
+    def on(self, obj_qubits, ctrl_qubits=None):
+        if ctrl_qubits is None:
+            raise ValueError("A control qubit is needed for CNOT gate!")
+        if isinstance(ctrl_qubits, (int, np.int64)):
+            ctrl_qubits = [ctrl_qubits]
+        elif not isinstance(ctrl_qubits, list) or not ctrl_qubits:
+            raise ValueError(f"ctrl_qubits requires a list, but get {type(ctrl_qubits)}")
+        out = super().on([obj_qubits, ctrl_qubits[0]], ctrl_qubits[1:])
+        return out
+
+
+class SWAPGate(NoneParamSelfHermMat):
     """
     SWAP gate that swap two different qubits.
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
-
     def __init__(self):
-        NoneParameterGate.__init__(self, 'SWAP')
-        self.matrix_value = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])
+        super().__init__(
+            name='SWAP',
+            n_qubits=2,
+            matrix_value=_GLOBAL_MAT_VALUE['SWAP'],
+        )
 
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = pjops.Swap
 
-
-class ISWAPGate(NoneParameterGate):
+class ISWAPGate(NoneParamNonHermMat):
     r"""
     ISWAP gate that swap two different qubits and phase the
     :math:`\left|01\right>` and :math:`\left|10\right>` amplitudes by
@@ -380,18 +231,49 @@ class ISWAPGate(NoneParameterGate):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
-
     def __init__(self):
-        NoneParameterGate.__init__(self, 'ISWAP')
-        self.hermitian_property = HERMITIAN_PROPERTIES['do_hermitian']
-        self.matrix_value = np.array([[1, 0, 0, 0], [0, 0, 1j, 0], [0, 1j, 0, 0], [0, 0, 0, 1]])
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = pjops.Swap
+        super().__init__(
+            name='ISWAP',
+            n_qubits=2,
+            matrix_value=_GLOBAL_MAT_VALUE['ISWAP'],
+        )
 
 
-class RX(IntrinsicOneParaGate):
+class TGate(NoneParamNonHermMat):
+    r"""
+    T gate with matrix as :
+
+    .. math::
+        {\rm T}=\begin{pmatrix}1&0\\0&(1+i)/\sqrt(2)\end{pmatrix}
+
+    More usage, please see :class:`mindquantum.core.gates.XGate`.
+    """
+    def __init__(self):
+        super().__init__(
+            name='T',
+            n_qubits=1,
+            matrix_value=_GLOBAL_MAT_VALUE['T'],
+        )
+
+
+class SGate(NoneParamNonHermMat):
+    r"""
+    S gate with matrix as :
+
+    .. math::
+        {\rm S}=\begin{pmatrix}1&0\\0&i\end{pmatrix}
+
+    More usage, please see :class:`mindquantum.core.gates.XGate`.
+    """
+    def __init__(self):
+        super().__init__(
+            name='S',
+            n_qubits=1,
+            matrix_value=_GLOBAL_MAT_VALUE['S'],
+        )
+
+
+class RX(RotSelfHermMat):
     r"""
     Rotation gate around x-axis.
 
@@ -445,51 +327,16 @@ class RX(IntrinsicOneParaGate):
         >>> rx3.coeff
         {'a': 0.2, 'b': 0.5}
     """
-
-    def __init__(self, coeff=None):
-        IntrinsicOneParaGate.__init__(self, 'RX', coeff)
-
-    def _matrix(self, theta):
-        return np.array([[np.cos(theta / 2), -1j * np.sin(theta / 2)], [-1j * np.sin(theta / 2), np.cos(theta / 2)]])
-
-    def _diff_matrix(self, theta):
-        return 0.5 * np.array([[-np.sin(theta / 2), -1j * np.cos(theta / 2)],
-                               [-1j * np.cos(theta / 2), -np.sin(theta / 2)]])
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = pjops.Rx(self.coeff)
+    def __init__(self, pr):
+        super().__init__(
+            pr=PR(pr),
+            name='RX',
+            n_qubits=1,
+            core=XGate(),
+        )
 
 
-class RZ(IntrinsicOneParaGate):
-    r"""
-    Rotation gate around z-axis. More usage, please see :class:`mindquantum.core.gates.RX`.
-
-    .. math::
-
-        {\rm RZ}=\begin{pmatrix}\exp(-i\theta/2)&0\\
-                         0&\exp(i\theta/2)\end{pmatrix}
-
-    Args:
-        coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
-            parameterized gate, see above for detail explanation. Default: None.
-    """
-
-    def __init__(self, coeff=None):
-        IntrinsicOneParaGate.__init__(self, 'RZ', coeff)
-
-    def _matrix(self, theta):
-        return np.array([[np.exp(-1j * theta / 2), 0], [0, np.exp(1j * theta / 2)]])
-
-    def _diff_matrix(self, theta):
-        return 0.5j * np.array([[-np.exp(-1j * theta / 2), 0], [0, np.exp(1j * theta / 2)]])
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = pjops.Rz(self.coeff)
-
-
-class RY(IntrinsicOneParaGate):
+class RY(RotSelfHermMat):
     r"""
     Rotation gate around y-axis. More usage, please see :class:`mindquantum.core.gates.RX`.
 
@@ -502,22 +349,128 @@ class RY(IntrinsicOneParaGate):
         coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation. Default: None.
     """
-
-    def __init__(self, coeff=None):
-        IntrinsicOneParaGate.__init__(self, 'RY', coeff)
-
-    def _matrix(self, theta):
-        return np.array([[np.cos(theta / 2), -np.sin(theta / 2)], [np.sin(theta / 2), np.cos(theta / 2)]])
-
-    def _diff_matrix(self, theta):
-        return 0.5 * np.array([[-np.sin(theta / 2), -np.cos(theta / 2)], [np.cos(theta / 2), -np.sin(theta / 2)]])
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = pjops.Ry(self.coeff)
+    def __init__(self, pr):
+        super().__init__(
+            pr=PR(pr),
+            name='RY',
+            n_qubits=1,
+            core=YGate(),
+        )
 
 
-class GlobalPhase(IntrinsicOneParaGate):
+class RZ(RotSelfHermMat):
+    r"""
+    Rotation gate around z-axis. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    .. math::
+
+        {\rm RZ}=\begin{pmatrix}\exp(-i\theta/2)&0\\
+                         0&\exp(i\theta/2)\end{pmatrix}
+
+    Args:
+        coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation. Default: None.
+    """
+    def __init__(self, pr):
+        super().__init__(
+            pr=PR(pr),
+            name='RZ',
+            n_qubits=1,
+            core=ZGate(),
+        )
+
+
+class ZZ(RotSelfHermMat):
+    r"""
+    Ising ZZ  gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    .. math::
+
+        {\rm ZZ_\theta}=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_Z\otimes\sigma_Z
+
+    Args:
+        coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation. Default: None.
+    """
+    def __init__(self, pr):
+        super().__init__(
+            pr=PR(pr),
+            name='ZZ',
+            n_qubits=2,
+            core=PauliStringGate([Z, Z]),
+        )
+
+    def matrix(self, pr=None, frac=1):
+        return super().matrix(pr, frac)
+
+    def diff_matrix(self, pr=None, about_what=None, frac=1):
+        return super().diff_matrix(pr, about_what, frac)
+
+
+class XX(RotSelfHermMat):
+    r"""
+    Ising XX gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    .. math::
+
+        {\rm XX_\theta}=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_x\otimes\sigma_x
+
+    Args:
+        coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation. Default: None.
+    """
+    def __init__(self, pr):
+        super().__init__(
+            pr=PR(pr),
+            name='XX',
+            n_qubits=2,
+            core=PauliStringGate([X, X]),
+        )
+
+    def matrix(self, pr=None, frac=1):
+        return super().matrix(pr, frac)
+
+    def diff_matrix(self, pr=None, about_what=None, frac=1):
+        return super().diff_matrix(pr, about_what, frac)
+
+
+class YY(RotSelfHermMat):
+    r"""
+    Ising YY  gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    .. math::
+
+        {\rm YY_\theta}=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_y\otimes\sigma_y
+
+    Args:
+        coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation. Default: None.
+    """
+    def __init__(self, pr):
+        super().__init__(
+            pr=PR(pr),
+            name='YY',
+            n_qubits=2,
+            core=PauliStringGate([Y, Y]),
+        )
+
+    def matrix(self, pr=None, frac=1):
+        return super().matrix(pr, frac)
+
+    def diff_matrix(self, pr=None, about_what=None, frac=1):
+        return super().diff_matrix(pr, about_what, frac)
+
+
+class BarrierGate(FunctionalGate):
+    def __init__(self, show=True):
+        super().__init__(name='BARRIER', n_qubits=0)
+        self.show = show
+
+    def on(self, obj_qubits, ctrl_qubits=None):
+        raise RuntimeError("Cannot call on for BarrierGate.")
+
+
+class GlobalPhase(RotSelfHermMat):
     r"""
     Global phase gate. More usage, please see :class:`mindquantum.core.gates.RX`.
 
@@ -530,22 +483,25 @@ class GlobalPhase(IntrinsicOneParaGate):
         coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation. Default: None.
     """
+    def __init__(self, pr):
+        super().__init__(
+            pr=PR(pr),
+            name='GP',
+            n_qubits=1,
+            core=IGate(),
+        )
 
-    def __init__(self, coeff=None):
-        IntrinsicOneParaGate.__init__(self, 'GP', coeff)
+    def matrix(self, pr=None, **kwargs):
+        return RotSelfHermMat.matrix(self, pr, 1)
 
-    def _matrix(self, theta):
-        return np.exp(-1j * theta) * np.identity(2)
-
-    def _diff_matrix(self, theta):
-        return -1j * np.exp(-1j * theta) * np.identity(2)
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = None
+    def diff_matrix(self, pr=None, about_what=None, **kwargs):
+        return RotSelfHermMat.diff_matrix(self, pr, about_what, 1)
 
 
-class PhaseShift(IntrinsicOneParaGate):
+BARRIER = BarrierGate(show=False)
+
+
+class PhaseShift(ParameterOppsGate):
     r"""
     Phase shift gate. More usage, please see :class:`mindquantum.core.gates.RX`.
 
@@ -558,172 +514,46 @@ class PhaseShift(IntrinsicOneParaGate):
         coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation. Default: None.
     """
+    def __init__(self, pr):
+        super().__init__(
+            pr=PR(pr),
+            name='PS',
+            n_qubits=1,
+        )
 
-    def __init__(self, coeff=None):
-        IntrinsicOneParaGate.__init__(self, 'PS', coeff)
-
-    def _matrix(self, theta):
-        return np.array([[1, 0], [0, np.exp(1j * theta)]])
-
-    def _diff_matrix(self, theta):
-        return np.array([[0, 0], [0, 1j * np.exp(1j * theta)]])
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = pjops.R
-
-
-class SGate(PhaseShift):
-    r"""
-    S gate with matrix as :
-
-    .. math::
-        {\rm S}=\begin{pmatrix}1&0\\0&i\end{pmatrix}
-
-    More usage, please see :class:`mindquantum.core.gates.XGate`.
-    """
-
-    def __init__(self):
-        PhaseShift.__init__(self, np.pi / 2)
-        self.name = 'S'
-        self.str = self.name
-        self.hermitian_property = HERMITIAN_PROPERTIES['do_hermitian']
-
-    def generate_description(self):
-        PhaseShift.generate_description(self)
-        idx = self.str.find('|')
-        if idx != -1:
-            self.str = self.name + ('†(' if self.daggered else '(') + self.str[idx + 1:]
+    def matrix(self, pr=None):
+        """
+        Get the matrix of this none parameterized gate.
+        """
+        val = 0
+        if self.coeff.is_const():
+            val = self.coeff.const
         else:
-            self.str = self.name + ('†' if self.daggered else '')
+            new_pr = self.coeff.combination(pr)
+            if not new_pr.is_const():
+                raise ValueError("The parameter is not set completed.")
+            val = new_pr.const
+        return np.array([[1, 0], [0, np.exp(1j * val)]])
 
-    def get_cpp_obj(self):
-        f = -1 if self.daggered else 1
-        f = f * np.pi / 2
-        return PhaseShift(f).on(self.obj_qubits, self.ctrl_qubits).get_cpp_obj()
-
-
-class TGate(PhaseShift):
-    r"""
-    T gate with matrix as :
-
-    .. math::
-        {\rm T}=\begin{pmatrix}1&0\\0&(1+i)/\sqrt(2)\end{pmatrix}
-
-    More usage, please see :class:`mindquantum.core.gates.XGate`.
-    """
-
-    def __init__(self):
-        PhaseShift.__init__(self, np.pi / 4)
-        self.name = 'T'
-        self.str = self.name
-        self.hermitian_property = HERMITIAN_PROPERTIES['do_hermitian']
-
-    def generate_description(self):
-        PhaseShift.generate_description(self)
-        idx = self.str.find('|')
-        if idx != -1:
-            self.str = self.name + ('†(' if self.daggered else '(') + self.str[idx + 1:]
-        else:
-            self.str = self.name + ('†' if self.daggered else '')
-
-    def get_cpp_obj(self):
-        f = -1 if self.daggered else 1
-        f = f * np.pi / 4
-        return PhaseShift(f).on(self.obj_qubits, self.ctrl_qubits).get_cpp_obj()
+    def diff_matrix(self, pr=None, about_what=None):
+        """
+        Get the  matrix of this none parameterized gate.
+        """
+        if self.coeff.is_const():
+            return np.zeros((2, 2))
+        new_pr = self.coeff.combination(pr)
+        if not new_pr.is_const():
+            raise ValueError("The parameter is not set completed.")
+        val = new_pr.const
+        if about_what is None:
+            if len(self.coeff) != 1:
+                raise ValueError(f"Should specific which parameter are going to do derivation.")
+            for i in self.coeff:
+                about_what = i
+        return np.array([[0, 0], [0, 1j * self.coeff[about_what] * np.exp(1j * val)]])
 
 
-class XX(IntrinsicOneParaGate):
-    r"""
-    Ising XX gate. More usage, please see :class:`mindquantum.core.gates.RX`.
-
-    .. math::
-
-        {\rm XX_\theta}=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_x\otimes\sigma_x
-
-    Args:
-        coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
-            parameterized gate, see above for detail explanation. Default: None.
-    """
-
-    def __init__(self, coeff=None):
-        IntrinsicOneParaGate.__init__(self, 'XX', coeff)
-
-    def _matrix(self, theta):
-        return np.array([[np.cos(theta), 0, 0, -1j * np.sin(theta)], [0, np.cos(theta), -1j * np.sin(theta), 0],
-                         [0, -1j * np.sin(theta), np.cos(theta), 0], [-1j * np.sin(theta), 0, 0,
-                                                                      np.cos(theta)]])
-
-    def _diff_matrix(self, theta):
-        return np.array([[-np.sin(theta), 0, 0, -1j * np.cos(theta)], [0, -np.sin(theta), -1j * np.cos(theta), 0],
-                         [0, -1j * np.cos(theta), -np.sin(theta), 0], [-1j * np.cos(theta), 0, 0, -np.sin(theta)]])
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = None
-
-
-class YY(IntrinsicOneParaGate):
-    r"""
-    Ising YY  gate. More usage, please see :class:`mindquantum.core.gates.RX`.
-
-    .. math::
-
-        {\rm YY_\theta}=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_y\otimes\sigma_y
-
-    Args:
-        coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
-            parameterized gate, see above for detail explanation. Default: None.
-    """
-
-    def __init__(self, coeff=None):
-        IntrinsicOneParaGate.__init__(self, 'YY', coeff)
-
-    def _matrix(self, theta):
-        return np.array([[np.cos(theta), 0, 0, 1j * np.sin(theta)], [0, np.cos(theta), -1j * np.sin(theta), 0],
-                         [0, -1j * np.sin(theta), np.cos(theta), 0], [1j * np.sin(theta), 0, 0,
-                                                                      np.cos(theta)]])
-
-    def _diff_matrix(self, theta):
-        return np.array([[-np.sin(theta), 0, 0, 1j * np.cos(theta)], [0, -np.sin(theta), -1j * np.cos(theta), 0],
-                         [0, -1j * np.cos(theta), -np.sin(theta), 0], [1j * np.cos(theta), 0, 0, -np.sin(theta)]])
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = None
-
-
-class ZZ(IntrinsicOneParaGate):
-    r"""
-    Ising ZZ  gate. More usage, please see :class:`mindquantum.core.gates.RX`.
-
-    .. math::
-
-        {\rm ZZ_\theta}=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_Z\otimes\sigma_Z
-
-    Args:
-        coeff (Union[int, float, str, dict, ParameterResolver]): the parameters of
-            parameterized gate, see above for detail explanation. Default: None.
-    """
-
-    def __init__(self, coeff=None):
-        IntrinsicOneParaGate.__init__(self, 'ZZ', coeff)
-
-    def _matrix(self, theta):
-        return np.array([[np.exp(-1j * theta), 0, 0, 0], [0, np.exp(1j * theta), 0, 0], [0, 0,
-                                                                                         np.exp(1j * theta), 0],
-                         [0, 0, 0, np.exp(-1j * theta)]])
-
-    def _diff_matrix(self, theta):
-        return -1j * np.array([[np.exp(-1j * theta), 0, 0, 0], [0, -np.exp(1j * theta), 0, 0],
-                               [0, 0, -np.exp(1j * theta), 0], [0, 0, 0, np.exp(-1j * theta)]])
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = None
-
-
-class Power(NoneParameterGate):
+class Power(NoneParamNonHermMat):
     r"""
     Power operator on a non parameterized gate.
 
@@ -738,33 +568,101 @@ class Power(NoneParameterGate):
         >>> rx2 = RX(1)
         >>> assert np.all(np.isclose(Power(rx2,0.5).matrix(), rx1.matrix()))
     """
-
-    def __init__(self, gate: NoneParameterGate, t=0.5):
-        NoneParameterGate.__init__(self, '{}^{}'.format(gate.name, round(t, 2)))
-        self.matrix_value = fractional_matrix_power(gate.matrix(), t)
-        self.hermitian_property = HERMITIAN_PROPERTIES['do_hermitian']
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = None
+    def __init__(self, gate, t=0.5):
+        name = f'{gate}^{t}'
+        n_qubits = gate.n_qubits
+        matrix_value = fractional_matrix_power(gate.matrix(), t)
+        super().__init__(
+            name=name,
+            n_qubits=n_qubits,
+            matrix_value=matrix_value,
+        )
+        self.gate = gate
+        self.t = t
 
     def get_cpp_obj(self):
         mat = mb.dim2matrix(self.matrix())
-        cpp_gate = mb.basic_gate(False, self.name, self.hermitian_property, mat)
-        cpp_gate.daggered = self.daggered
+        cpp_gate = mb.basic_gate(False, self.name, 1, mat)
+        cpp_gate.daggered = self.hermitianed
         cpp_gate.obj_qubits = self.obj_qubits
         cpp_gate.ctrl_qubits = self.ctrl_qubits
         return cpp_gate
 
 
-I = IGate()
+def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
+    """
+    Generate a customer parameterized gate based on the single parameter defined
+    unitary matrix.
+
+    Args:
+        name (str): The name of this gate.
+        matrix_generator (Union[FunctionType, MethodType]): A function or a method that
+            take exactly one argument to generate a unitary matrix.
+        diff_matrix_generator (Union[FunctionType, MethodType]): A function or a method
+            that take exactly one argument to generate the derivative of this unitary matrix.
+
+    Returns:
+        _ParamNonHerm, a customer parameterized gate.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum import gene_univ_parameterized_gate
+        >>> from mindquantum import Simulator, Circuit
+        >>> def matrix(theta):
+        ...     return np.array([[np.exp(1j * theta), 0],
+        ...                      [0, np.exp(-1j * theta)]])
+        >>> def diff_matrix(theta):
+        ...     return 1j*np.array([[np.exp(1j * theta), 0],
+        ...                         [0, -np.exp(-1j * theta)]])
+        >>> TestGate = gene_univ_parameterized_gate('Test', matrix, diff_matrix)
+        >>> circ = Circuit().h(0)
+        >>> circ += TestGate('a').on(0)
+        >>> circ
+        q0: ──H────Test(a)──
+        >>> circ.get_qs(pr={'a': 1.2})
+        array([0.25622563+0.65905116j, 0.25622563-0.65905116j])
+    """
+    m = matrix_generator(0)
+    n_qubits = int(np.log2(m.shape[0]))
+
+    class _ParamNonHerm(ParamNonHerm):
+        """The customer parameterized gate."""
+        def __init__(self, pr):
+            super().__init__(pr=PR(pr),
+                             name=name,
+                             n_qubits=n_qubits,
+                             matrix_generator=matrix_generator,
+                             diff_matrix_generator=diff_matrix_generator)
+
+        def get_cpp_obj(self):
+            if not self.hermitianed:
+                cpp_gate = mb.basic_gate(self.name, 1, self.matrix_generator, self.diff_matrix_generator)
+            else:
+                cpp_gate = mb.basic_gate(
+                    self.name,
+                    1,
+                    lambda x: np.conj(self.matrix_generator(x).T),
+                    lambda x: np.conj(self.diff_matrix_generator(x).T),
+                )
+            cpp_gate.daggered = self.hermitianed
+            cpp_gate.obj_qubits = self.obj_qubits
+            cpp_gate.ctrl_qubits = self.ctrl_qubits
+            if not self.parameterized:
+                cpp_gate.apply_value(self.coeff.const)
+            else:
+                cpp_gate.params = self.coeff.get_cpp_obj()
+            return cpp_gate
+
+    return _ParamNonHerm
+
+
 X = XGate()
 Y = YGate()
 Z = ZGate()
+I = IGate()
 H = HGate()
-S = SGate()
 T = TGate()
-SWAP = SWAPGate()
-ISWAP = ISWAPGate()
+S = SGate()
 CNOT = CNOTGate()
-BARRIER = BarrierGate(show=False)
+ISWAP = ISWAPGate()
+SWAP = SWAPGate()

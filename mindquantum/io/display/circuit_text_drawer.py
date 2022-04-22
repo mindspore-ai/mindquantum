@@ -16,7 +16,6 @@
 """Text draw a circuit"""
 import numpy as np
 from ._config import _text_drawer_config
-from ._config import _DAGGER_MASK as _dm
 
 
 def _get_qubit_range(gate):
@@ -68,23 +67,11 @@ def brick_model(circ, qubits_name=None):
 def _single_gate_drawer(gate):
     """_single_gate_drawer"""
     from mindquantum import gates as G
-    from mindquantum.core.gates.basic import HERMITIAN_PROPERTIES
     if isinstance(gate, G.CNOTGate):
         gate = G.X.on(*gate.obj_qubits)
-    main_text = gate.name
+    main_text = gate.__str_in_circ__()
     if isinstance(gate, G.SWAPGate):
         main_text = _text_drawer_config['swap_mask'][0]
-    elif issubclass(gate.__class__, G.ParameterGate):
-        if isinstance(gate, (G.SGate, G.TGate)):
-            main_text = gate.name + ('†' if gate.daggered else '')
-        else:
-            main_text = str(gate.__class__(gate.coeff))
-    elif isinstance(gate, G.Measure):
-        main_text = f"{gate.name}({gate.key})"
-    elif isinstance(gate, G.NoneParameterGate):
-        if gate.hermitian_property == HERMITIAN_PROPERTIES['do_hermitian']:
-            if gate.daggered:
-                main_text += _dm
     main_text = _text_drawer_config['edge'] + main_text + _text_drawer_config['edge']
     res = {}
     for i in gate.obj_qubits:

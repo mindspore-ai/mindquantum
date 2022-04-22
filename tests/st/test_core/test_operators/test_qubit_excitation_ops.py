@@ -25,11 +25,11 @@ def test_qubit_excitation_ops_num_coeff():
     Expectation:
     """
     a_p_dagger = QubitExcitationOperator('1^')
-    assert str(a_p_dagger) == '1.0 [Q1^] '
+    assert str(a_p_dagger) == '1 [Q1^] '
 
     # check the annihilation operator
     a_q = QubitExcitationOperator('0')
-    assert str(a_q) == '1.0 [Q0] '
+    assert str(a_q) == '1 [Q0] '
 
     # check zero operator
     zero = QubitExcitationOperator()
@@ -37,7 +37,7 @@ def test_qubit_excitation_ops_num_coeff():
 
     # check identity operator
     identity = QubitExcitationOperator('')
-    assert str(identity) == '1.0 [] '
+    assert str(identity) == '1 [] '
 
 
 def test_power():
@@ -79,11 +79,11 @@ def test_multiplier():
 
     # Test right divide
     new = origin / 2.0
-    assert str(new) == '1.0 [Q0 Q1^] '
+    assert str(new) == '1 [Q0 Q1^] '
 
     # Test in-place divide
     origin /= 2
-    assert str(origin) == '1.0 [Q0 Q1^] '
+    assert str(origin) == '1 [Q0 Q1^] '
 
 
 def test_add_sub():
@@ -96,7 +96,7 @@ def test_add_sub():
         4 * QubitExcitationOperator(' 2 ')
     w2 = 4 * QubitExcitationOperator(' 2 ')
     w1 -= w2
-    assert str(w1) == '1.0 [Q4^ Q3 Q9 Q3^] '
+    assert str(w1) == '1 [Q4^ Q3 Q9 Q3^] '
 
 
 def test_compress():
