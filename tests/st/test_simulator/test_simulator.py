@@ -116,6 +116,9 @@ def _test_non_hermitian_grad_ops(virtual_qc):
 
 
 def generate_test_circuit():
+    tmpg = G.RX('a')
+    rx_matrix_generator = lambda x: tmpg.matrix({'a': x})
+    rx_diff_matrix_generator = lambda x: tmpg.diff_matrix({'a': x}, 'a')
     c = Circuit()
     c += UN(G.H, 3)
     c.x(0).y(1).z(2)
@@ -128,7 +131,7 @@ def generate_test_circuit():
     c += UN(G.H, 3)
     c += UN(G.S, 3)
     c += qft(range(3))
-    c += G.gene_univ_parameterized_gate('fake_x', G.RX(0)._matrix, G.RX(0)._diff_matrix)('a').on(0)
+    c += G.gene_univ_parameterized_gate('fake_x', rx_matrix_generator, rx_diff_matrix_generator)('a').on(0)
     c += G.RX('b').on(1, 2)
     c += G.RX('c').on(2, 0)
     c += UN(G.H, 3)

@@ -85,9 +85,9 @@ PYBIND11_MODULE(mqbackend, m) {
     m.def("get_measure_gate", &GetMeasureGate<MT>);
     // parameter resolver
     py::class_<ParameterResolver<MT>, std::shared_ptr<ParameterResolver<MT>>>(m, "parameter_resolver")
-        .def(py::init<const MST<MT> &, const SS &, const SS &>())
         .def(py::init<>())
-        .def(py::init<const VT<std::string> &, const VT<MT> &, const VT<bool> &>())
+        .def(py::init<const MST<MT> &, const SS &, const SS &, const SS &, const SS &, MT, bool>())
+        .def(py::init<const VT<std::string> &, const VT<MT> &, const VT<bool> &, const VT<bool> &, MT, bool>())
         .def_readonly("data", &ParameterResolver<MT>::data_)
         .def_readonly("no_grad_parameters", &ParameterResolver<MT>::no_grad_parameters_)
         .def_readonly("requires_grad_parameters", &ParameterResolver<MT>::requires_grad_parameters_);

@@ -28,6 +28,8 @@ from . import utils
 from . import algorithm
 from . import simulator
 from . import io
+from . import config
+from .config import *
 from .core import *
 from .algorithm import *
 from .utils import *
@@ -48,11 +50,11 @@ try:
 except PackageNotFoundError:
     __all__ = []
 
-
 __all__.extend(core.__all__)
 __all__.extend(algorithm.__all__)
 __all__.extend(utils.__all__)
 __all__.extend(simulator.__all__)
 __all__.extend(framework.__all__)
 __all__.extend(io.__all__)
+__all__.extend(config.__all__)
 __all__.sort()

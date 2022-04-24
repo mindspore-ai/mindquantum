@@ -178,6 +178,18 @@ class FermionOperator(_Operator):
             # replace it with the corresponding commutation relationship
         return tuple(terms_to_tuple)
 
+    def to_openfermion(self):
+        """Convert fermion operator to openfermion format"""
+        from openfermion import FermionOperator as ofo
+        terms = {}
+        for k, v in self.terms.items():
+            if not v.is_const():
+                raise ValueError("Cannot convert parameteized fermion operator to openfermion format")
+            terms[k] = v.const
+        of = ofo()
+        of.terms = terms
+        return of
+
     def __str__(self):
         """
         Return an easy-to-read string representation of the FermionOperator.
@@ -243,8 +255,9 @@ class FermionOperator(_Operator):
                 f"Given n_qubits {n_qubits} is small than qubit of fermion operator, which is {n_qubits_local}.")
         out = 0
         for term, coeff in self.terms.items():
-            if isinstance(coeff, PR):
+            if not coeff.is_const():
                 raise RuntimeError("Cannot convert a parameterized fermion operator to matrix.")
+            coeff = coeff.const
             if not term:
                 out += csr_matrix(np.identity(2**n_qubits, dtype=np.complex128)) * coeff
             else:

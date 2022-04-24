@@ -16,11 +16,16 @@
 """Useful functions"""
 
 import fractions
+from functools import lru_cache
+import numbers
 import numpy as np
+from mindquantum.config.config import _GLOBAL_MAT_VALUE
 from .type_value_check import _check_input_type
 from .type_value_check import _check_int_type
 from .type_value_check import _check_value_should_not_less
 from .type_value_check import _check_value_should_between_close_set
+
+__all__ = ['random_circuit', 'mod', 'normalize', 'random_state']
 
 
 def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=None):
@@ -189,8 +194,14 @@ def _index_to_bitstring(index, n, big_end=False):
     return s
 
 
-def _common_exp(num, round_n=None):
-    """common expressions."""
+def real_string_expression(num, round_n=None):
+    """
+    Convert a real number to string expression.
+
+    Returns:
+        str, the string expression of given real number.
+    """
+    _check_input_type('num', numbers.Real, num)
     if num == 0:
         return '0'
     com = {'': 1, 'π': np.pi, '√2': np.sqrt(2), '√3': np.sqrt(3), '√5': np.sqrt(5)}
@@ -211,6 +222,37 @@ def _common_exp(num, round_n=None):
                     tmp[0] = f"{tmp[0]}{k}"
                 return '/'.join(tmp)
     return str(num) if round_n is None else str(round(num, round_n))
+
+
+def join_without_empty(joiner, s):
+    """Join strings and skip empty string."""
+    return joiner.join(filter(lambda x: x and x.strip(), s))
+
+
+def string_expression(x):
+    """
+    Convert a number, complex number included, to string expression.
+
+    Returns:
+        str, the string expression of given number.
+    """
+    _check_input_type('x', numbers.Number, x)
+    rx = np.real(x)
+    ix = np.imag(x)
+    if is_two_number_close(x, 0):
+        return '0'
+    if is_two_number_close(ix, 0):
+        res = real_string_expression(rx)
+        if res == str(rx):
+            res = str(np.round(rx, 4))
+        return res
+    if is_two_number_close(rx, 0):
+        return string_expression(ix) + 'j'
+    real_part = string_expression(rx)
+    imag_part = string_expression(ix * 1j)
+    if imag_part.startswith('-'):
+        return real_part + imag_part
+    return real_part + ' + ' + imag_part
 
 
 def ket_string(state, tol=1e-7):
@@ -242,15 +284,72 @@ def ket_string(state, tol=1e-7):
         if np.abs(i) < tol:
             continue
         if np.abs(np.real(i)) < tol:
-            s.append(f'{_common_exp(np.imag(i))}j¦{b}⟩')
+            s.append(f'{real_string_expression(np.imag(i))}j¦{b}⟩')
             continue
         if np.abs(np.imag(i)) < tol:
-            s.append(f'{_common_exp(np.real(i))}¦{b}⟩')
+            s.append(f'{real_string_expression(np.real(i))}¦{b}⟩')
             continue
-        i_real = _common_exp(np.real(i))
-        i_imag = _common_exp(np.imag(i))
+        i_real = real_string_expression(np.real(i))
+        i_imag = real_string_expression(np.imag(i))
         if i_imag.startswith('-'):
             s.append(f'({i_real}{i_imag}j)¦{b}⟩')
         else:
             s.append(f'({i_real}+{i_imag}j)¦{b}⟩')
     return s
+
+
+def is_two_number_close(a, b, atol=None):
+    """
+    Check whether two number is close within the error of atol. This
+    method also works for complex number.
+
+    Args:
+        a (numbers.Number): The first number.
+        b (numbers.Number): The second number.
+        atol (float): The atol. If None, the precision defined in global config
+            will be used. Default: None.
+
+    Returns:
+        bool, whether this two number close to each other.
+
+    Examples:
+        >>> from mindquantum.utils import is_two_number_close
+        >>> is_two_number_close(1+1j, 1+1j)
+        True
+    """
+    from mindquantum.config.config import context
+    _check_input_type("a", numbers.Number, a)
+    _check_input_type("b", numbers.Number, b)
+    if atol is None:
+        atol = context.get_precision()
+    _check_input_type("atol", float, atol)
+    return np.allclose(np.abs(a - b), 0, atol=atol)
+
+
+def quantifier_selector(num, single, plural):
+    _check_int_type('num', num)
+    _check_value_should_not_less('num', 0, num)
+    if num > 1:
+        return f'{num} {plural}'
+    return f'{num} {single}'
+
+
+s_quantifier = lambda num, quantifier: quantifier_selector(num, quantifier, f'{quantifier}s')
+es_quantifier = lambda num, quantifier: quantifier_selector(num, quantifier, f'{quantifier}es')
+
+
+def is_power_of_two(num):
+    """check a number whether is power of 2 or not."""
+    return (num & (num - 1) == 0) and num != 0
+
+
+@lru_cache()
+def pauli_string_matrix(pauli_string):
+    """
+    Generate the matrix of pauli string. If pauli string is XYZ, then
+    the matrix will be `Z@Y@X`.
+    """
+    m = _GLOBAL_MAT_VALUE[pauli_string[0]]
+    for s in pauli_string[1:]:
+        m = np.kron(_GLOBAL_MAT_VALUE[s], m)
+    return m

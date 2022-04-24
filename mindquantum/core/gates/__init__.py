@@ -22,7 +22,6 @@ Gate provides different quantum gate.
 from .basic import BasicGate
 from .basic import NoneParameterGate
 from .basic import ParameterGate
-from .basic import IntrinsicOneParaGate
 from .basic import HERMITIAN_PROPERTIES
 from .basicgate import BarrierGate
 from .basicgate import CNOTGate
@@ -66,14 +65,11 @@ from .channel import BitPhaseFlipChannel
 from .channel import DepolarizingChannel
 
 __all__ = [
-    "BasicGate", "NoneParameterGate", "ParameterGate", "IntrinsicOneParaGate",
-    "HERMITIAN_PROPERTIES", "BarrierGate", "CNOTGate", "HGate", "IGate",
-    "XGate", "YGate", "ZGate", "gene_univ_parameterized_gate", "UnivMathGate",
-    "SWAPGate", "ISWAPGate", "RX", "RY", "RZ", "PhaseShift", "SGate", "TGate",
-    "XX", "YY", "ZZ", "Power", "I", "X", "Y", "Z", "H", "S", "T", "SWAP",
-    "ISWAP", "CNOT", "BARRIER", "Measure", "MeasureResult", "PauliChannel",
-    "BitFlipChannel", "PhaseFlipChannel", "BitPhaseFlipChannel", "DepolarizingChannel",
-    "GlobalPhase"
+    "BasicGate", "NoneParameterGate", "ParameterGate", "HERMITIAN_PROPERTIES", "BarrierGate", "CNOTGate", "HGate",
+    "IGate", "XGate", "YGate", "ZGate", "gene_univ_parameterized_gate", "UnivMathGate", "SWAPGate", "ISWAPGate", "RX",
+    "RY", "RZ", "PhaseShift", "SGate", "TGate", "XX", "YY", "ZZ", "Power", "I", "X", "Y", "Z", "H", "S", "T", "SWAP",
+    "ISWAP", "CNOT", "BARRIER", "Measure", "MeasureResult", "PauliChannel", "BitFlipChannel", "PhaseFlipChannel",
+    "BitPhaseFlipChannel", "DepolarizingChannel", "GlobalPhase"
 ]
 
 __all__.sort()

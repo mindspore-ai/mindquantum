@@ -28,9 +28,9 @@ def test_spin_adapted_t1():
     Expectation:
     """
     t1_20 = spin_adapted_t1(2, 0)[0]
-    assert str(t1_20) == '1.0 [4^ 0] +\n1.0 [5^ 1] '
+    assert str(t1_20) == '1 [4^ 0] +\n1 [5^ 1] '
     t1_00 = spin_adapted_t1(0, 0)[0]
-    assert str(t1_00) == '1.0 [0^ 0] +\n1.0 [1^ 1] '
+    assert str(t1_00) == '1 [0^ 0] +\n1 [1^ 1] '
 
 
 def test_spin_adapted_t2():

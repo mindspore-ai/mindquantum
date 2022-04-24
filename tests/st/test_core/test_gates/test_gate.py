@@ -162,13 +162,13 @@ def test_gate_obj_mismatch():
     Description: Test raise gate obj mismatch
     Expectation:
     """
-    with pytest.raises(Exception, match=r"requires \d+ qubits"):
+    with pytest.raises(Exception, match=r"requires \d+ qubit"):
         G.X((0, 1))
-    with pytest.raises(Exception, match=r"requires \d+ qubits"):
+    with pytest.raises(Exception, match=r"requires \d+ qubit"):
         G.RX('a').on((1, 2), 0)
-    with pytest.raises(Exception, match=r"requires \d+ qubits"):
+    with pytest.raises(Exception, match=r"requires \d+ qubit"):
         G.RX(1).on((1, 2), 0)
-    with pytest.raises(Exception, match=r"requires \d+ qubits"):
+    with pytest.raises(Exception, match=r"requires \d+ qubit"):
         G.ZZ('a').on(1, 0)
 
 

@@ -101,7 +101,7 @@ class Transform:
         transf_op = QubitOperator()
         for term in self.operator.terms:
             # Initialize identity matrix.
-            transformed_term = QubitOperator((), self.operator.terms[term])
+            transformed_term = QubitOperator((), 1*self.operator.terms[term])
 
             # Loop through operators, transform and multiply.
             for ladder_operator in term:
@@ -162,7 +162,7 @@ class Transform:
         transf_op = QubitOperator()
         for term in self.operator.terms:
             # Initialize identity matrix.
-            transformed_term = QubitOperator((), self.operator.terms[term])
+            transformed_term = QubitOperator((), 1*self.operator.terms[term])
 
             # Loop through operators, transform and multiply.
             for ladder_operator in term:
@@ -232,7 +232,7 @@ class Transform:
         transf_op = QubitOperator()
         for term in self.operator.terms:
             # Initialize identity matrix.
-            transformed_term = QubitOperator((), self.operator.terms[term])
+            transformed_term = QubitOperator((), 1*self.operator.terms[term])
 
             # Loop through operators, transform and multiply.
             for ladder_operator in term:
@@ -387,7 +387,7 @@ class Transform:
         transf_op = QubitOperator()
         for term in self.operator.terms:
             # Initialize identity matrix.
-            transformed_term = QubitOperator((), self.operator.terms[term])
+            transformed_term = QubitOperator((), 1*self.operator.terms[term])
 
             # Loop through operators, transform and multiply.
             for ladder_operator in term:

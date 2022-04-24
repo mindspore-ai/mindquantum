@@ -35,7 +35,7 @@ def test_count_qubits():
 def test_normal_ordered():
     """Test normal_ordered function"""
     op = FermionOperator("3 4^")
-    assert str(normal_ordered(op)) == '-1.0 [4^ 3] '
+    assert str(normal_ordered(op)) == '-1 [4^ 3] '
 
 
 def test_commutator():
@@ -60,10 +60,10 @@ def test_number_operator():
     """Test number operator"""
     nmode = 3
     # other parameters by default
-    check_str = '1.0 [0^ 0] +\n1.0 [1^ 1] +\n1.0 [2^ 2] '
+    check_str = '1 [0^ 0] +\n1 [1^ 1] +\n1 [2^ 2] '
     assert str(number_operator(nmode)) == check_str
 
-    check_str2 = '1.0 [3^ 3] '
+    check_str2 = '1 [3^ 3] '
     assert str(number_operator(None, nmode)) == check_str2
 
 def test_up_index():

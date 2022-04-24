@@ -19,6 +19,9 @@ import numpy as np
 
 _num_type = (int, float, complex, np.int32, np.int64, np.float32, np.float64)
 
+def _check_np_dtype(dtype):
+    """check dtype is a valid numpy dtype"""
+    np.array([0],dtype=dtype)
 
 def _check_seed(seed):
     """check seed"""

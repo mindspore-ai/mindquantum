@@ -28,13 +28,24 @@ struct ParameterResolver {
     MST<T> data_;
     SS no_grad_parameters_;
     SS requires_grad_parameters_;
-
+    SS encoder_parameters_;
+    SS ansatz_parameters_;
+    T const_;
+    bool is_const_ = false;
     ParameterResolver() {
     }
-    ParameterResolver(const MST<T> &data, const SS &ngp, const SS &rgp)
-        : data_(data), no_grad_parameters_(ngp), requires_grad_parameters_(rgp) {
+    ParameterResolver(const MST<T> &data, const SS &ngp, const SS &rgp, const SS &ep, const SS &ap, T const_v,
+                      bool is_const)
+        : data_(data)
+        , no_grad_parameters_(ngp)
+        , requires_grad_parameters_(rgp)
+        , encoder_parameters_(ep)
+        , ansatz_parameters_(ap)
+        , const_(const_v)
+        , is_const_(is_const) {
     }
-    ParameterResolver(const VT<std::string> &names, const VT<T> &coeffs, const VT<bool> &requires_grads) {
+    ParameterResolver(const VT<std::string> &names, const VT<T> &coeffs, const VT<bool> &requires_grads,
+                      const VT<bool> &is_ansatz, T const_v, bool is_const) {
         for (Index i = 0; i < static_cast<Index>(names.size()); ++i) {
             data_[names[i]] = coeffs[i];
             if (requires_grads[i]) {
@@ -42,7 +53,14 @@ struct ParameterResolver {
             } else {
                 no_grad_parameters_.insert(names[i]);
             }
+            if (is_ansatz[i]) {
+                ansatz_parameters_.insert(names[i]);
+            } else {
+                encoder_parameters_.insert(names[i]);
+            }
         }
+        this->const_ = const_v;
+        this->is_const_ = is_const;
     }
     void SetData(const VT<T> &data, const VS &name) {
         for (size_t i = 0; i < data.size(); i++) {
@@ -58,9 +76,11 @@ struct ParameterResolver {
 
 template <typename T>
 T LinearCombine(const ParameterResolver<T> &pr_big, const ParameterResolver<T> &pr_small) {
-    T res = 0;
+    T res = pr_small.const_;
     for (typename MST<T>::const_iterator i = pr_small.data_.begin(); i != pr_small.data_.end(); ++i) {
-        res += (pr_big.data_.at(i->first) * i->second);
+        if (pr_big.data_.find(i->first) != pr_big.data_.end()) {
+            res += (pr_big.data_.at(i->first) * i->second);
+        }
     }
     return res;
 }
