@@ -110,6 +110,9 @@ class ParameterResolver:
             self.const = self.dtype(const)
             self.no_grad_parameters = set()
             self.encoder_parameters = set()
+        else:
+            raise TypeError(
+                f"data requires a number or a string or a dict or a ParameterResolver, but get {type(data)}!")
 
     def astype(self, dtype, inplace=False):
         """
@@ -639,7 +642,7 @@ class ParameterResolver:
             >>> pr.para_value
             [1, 2]
         """
-        return np.array(list(self.values()), dtype=self.dtype)
+        return list(self.values())
 
     def requires_grad(self):
         """
