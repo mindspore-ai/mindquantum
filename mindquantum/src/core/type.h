@@ -35,6 +35,10 @@ namespace mindquantum {
 #define PRECISION     1e-8
 #define COS1_2(theta) static_cast<T>(cos(theta / 2))
 #define SIN1_2(theta) static_cast<T>(sin(theta / 2))
+#define ITER(p, obj)                                                                                                   \
+    auto p = obj.begin();                                                                                              \
+    p != obj.end();                                                                                                    \
+    p++
 
 using Index = int64_t;
 #ifdef FLOAT
@@ -137,8 +141,8 @@ const char gPS[] = "PS";
 const char gXX[] = "XX";
 const char gYY[] = "YY";
 const char gZZ[] = "ZZ";
-const char cPL[] = "PL";    // Pauli channel
-const char cAD[] = "AD";    // amplitude damping channel
-const char cPD[] = "PD";    // phase damping channel
+const char cPL[] = "PL";  // Pauli channel
+const char cAD[] = "AD";  // amplitude damping channel
+const char cPD[] = "PD";  // phase damping channel
 }  // namespace mindquantum
 #endif  // MINDQUANTUM_TYPE_H_

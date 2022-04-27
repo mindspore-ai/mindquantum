@@ -2,6 +2,7 @@
 "mindquantum/tests/cmake-ldtest"                                                                   "whitespace/braces"
 
 "mindquantum/mindquantum/src"                                                                      "whitespace/comments"
+"mindquantum/mindquantum/src"                                                                      "build/include_order"
 
 "mindquantum/mindquantum/src"                                                                      "build/include_subdir"
 "mindquantum/mindquantum/src/backends/quest"                                                       "build/include_subdir"

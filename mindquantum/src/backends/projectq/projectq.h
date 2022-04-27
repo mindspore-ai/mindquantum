@@ -123,7 +123,7 @@ class Projectq : public Simulator {
     }
 
     void ApplyGate(const BasicGate<T> &gate, const ParameterResolver<T> &pr, bool diff = false) {
-        T theta = LinearCombine(pr, gate.params_);
+        T theta = gate.params_.Combination(pr).const_value;
         if (diff) {
             Projectq::apply_controlled_gate(MCast<T>(gate.param_diff_matrix_(theta).matrix_), VCast(gate.obj_qubits_),
                                             VCast(gate.ctrl_qubits_));
@@ -243,7 +243,8 @@ class Projectq : public Simulator {
         Projectq<T> sim_right = Projectq<T>(this->seed, n_qubits_, right_vec);
         Projectq<T> sim_right_tmp = Projectq<T>(this->seed, n_qubits_);
         for (size_t j = 0; j < circ.size(); j++) {
-            if ((!herm_circ[j].parameterized_) || (herm_circ[j].params_.requires_grad_parameters_.size() == 0)) {
+            if ((!herm_circ[j].parameterized_)
+                || (herm_circ[j].params_.data_.size() == herm_circ[j].params_.no_grad_parameters_.size())) {
                 if (herm_circ[j].parameterized_) {
                     sim_left.ApplyGate(herm_circ[j], pr, false);
                     sim_right.ApplyGate(herm_circ[j], pr, false);
@@ -266,7 +267,7 @@ class Projectq : public Simulator {
                                                                       static_cast<Index>(len_),
                                                                       GetControlMask(herm_circ[j].ctrl_qubits_));
                 }
-                for (auto &it : herm_circ[j].params_.requires_grad_parameters_) {
+                for (auto &it : herm_circ[j].params_.GetRequiresGradParameters()) {
                     f_g[1 + p_map.at(it)] += circ[circ.size() - j - 1].params_.data_.at(it) * gi;
                 }
                 sim_left.ApplyGate(herm_circ[j], pr, false);
@@ -361,8 +362,8 @@ class Projectq : public Simulator {
 
         if (n_prs == 1) {
             ParameterResolver<T> pr = ParameterResolver<T>();
-            pr.SetData(enc_data[0], enc_name);
-            pr.SetData(ans_data, ans_name);
+            pr.SetItems(enc_name, enc_data[0]);
+            pr.SetItems(ans_name, ans_data);
             output[0] = HermitianMeasureWithGrad(hams, circ, herm_circ, pr, p_map, mea_threads);
         } else {
             std::vector<std::thread> tasks;
@@ -379,8 +380,8 @@ class Projectq : public Simulator {
                 auto task = [&, start, end]() {
                     for (size_t n = start; n < end; n++) {
                         ParameterResolver<T> pr = ParameterResolver<T>();
-                        pr.SetData(enc_data[n], enc_name);
-                        pr.SetData(ans_data, ans_name);
+                        pr.SetItems(enc_name, enc_data[n]);
+                        pr.SetItems(ans_name, ans_data);
                         auto f_g = HermitianMeasureWithGrad(hams, circ, herm_circ, pr, p_map, mea_threads);
                         output[n] = f_g;
                     }
@@ -480,8 +481,8 @@ class Projectq : public Simulator {
         }
         if (n_prs == 1) {
             ParameterResolver<T> pr = ParameterResolver<T>();
-            pr.SetData(enc_data[0], enc_name);
-            pr.SetData(ans_data, ans_name);
+            pr.SetItems(enc_name, enc_data[0]);
+            pr.SetItems(ans_name, ans_data);
             output[0] = NonHermitianMeasureWithGrad(hams, herm_hams, left_circ, herm_left_circ, right_circ,
                                                     herm_right_circ, pr, p_map, mea_threads, varphi);
         } else {
@@ -499,8 +500,8 @@ class Projectq : public Simulator {
                 auto task = [&, start, end]() {
                     for (size_t n = start; n < end; n++) {
                         ParameterResolver<T> pr = ParameterResolver<T>();
-                        pr.SetData(enc_data[n], enc_name);
-                        pr.SetData(ans_data, ans_name);
+                        pr.SetItems(enc_name, enc_data[n]);
+                        pr.SetItems(ans_name, ans_data);
                         auto f_g = NonHermitianMeasureWithGrad(hams, herm_hams, left_circ, herm_left_circ, right_circ,
                                                                herm_right_circ, pr, p_map, mea_threads, varphi);
                         output[n] = f_g;

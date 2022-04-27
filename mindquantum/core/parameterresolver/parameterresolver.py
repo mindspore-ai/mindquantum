@@ -15,6 +15,7 @@
 # ============================================================================
 """Parameter resolver."""
 
+import warnings
 import numbers
 import copy
 import json
@@ -22,7 +23,6 @@ from typing import Iterable
 import numpy as np
 from mindquantum.utils.type_value_check import _check_input_type
 from mindquantum.utils.type_value_check import _check_int_type
-from mindquantum.utils.type_value_check import _check_np_dtype
 from mindquantum.utils.f import is_two_number_close
 from mindquantum.utils.f import string_expression
 from mindquantum.utils.f import join_without_empty
@@ -75,26 +75,44 @@ class ParameterResolver:
         >>> ParameterResolver('a')
         {'a': 1.0}, const: 0.0
     """
-    def __init__(self, data=None, const=None, dtype=np.float64):
-        _check_np_dtype(dtype)
+    def __init__(self, data=None, const=None, dtype=None):
+        if dtype is None:
+            if isinstance(data, (complex, np.complex128)):
+                dtype = np.complex128
+            else:
+                dtype = np.float64
+        if dtype not in (np.float64, np.complex128, float, complex):
+            raise ValueError(f"dtype requires np.float64 or np.complex128, but get {dtype}")
+        if dtype == float:
+            dtype = np.float64
+        if dtype == complex:
+            dtype = np.complex128
         self.dtype = dtype
-        self.data = {}
-        self._const = self.dtype(0)
+        if dtype == np.float64:
+            obj = mb.real_pr
+        else:
+            obj = mb.complex_pr
         if data is None:
             data = {}
         if isinstance(data, numbers.Number):
             if const is not None:
                 raise ValueError(f"data and const cannot not both be number.")
-            const = data
+            const = self.dtype(data)
             data = {}
+            self.obj = obj(data, const)
         if isinstance(data, str):
-            data = {data: self.dtype(1)}
-        if isinstance(data, self.__class__):
+            if const is None:
+                const = 0
+            _check_input_type('const', numbers.Number, const)
+            self.obj = obj({data: self.dtype(1)}, self.dtype(const))
+        elif isinstance(data, self.__class__):
+            self.obj = copy.copy(data.obj)
+            dtype = self.dtype
             self.dtype = data.dtype
-            self.data = {k: v for k, v in data.items()}
-            self.const = data.const
-            self.no_grad_parameters = copy.deepcopy(data.no_grad_parameters)
-            self.encoder_parameters = copy.deepcopy(data.encoder_parameters)
+            self.astype(dtype, True)
+            if const is not None:
+                _check_input_type('const', numbers.Number, const)
+                self.obj.set_const(self.dtype(const))
         elif isinstance(data, dict):
             for k, v in data.items():
                 _check_input_type("parameter name", str, k)
@@ -102,14 +120,11 @@ class ParameterResolver:
                 if not k.strip():
                     raise KeyError(f"parameter name cannot be empty string.")
 
-            for k, v in data.items():
-                self[k] = self.dtype(v)
             if const is None:
                 const = 0
             _check_input_type("const", numbers.Number, const)
-            self.const = self.dtype(const)
-            self.no_grad_parameters = set()
-            self.encoder_parameters = set()
+            const = self.dtype(const)
+            self.obj = obj({i: self.dtype(j) for i, j in data.items()}, const)
         else:
             raise TypeError(
                 f"data requires a number or a string or a dict or a ParameterResolver, but get {type(data)}!")
@@ -135,17 +150,27 @@ class ParameterResolver:
             >>> pr
             {'a': (1+0j)}, const: (2+0j)
         """
-        _check_np_dtype(dtype)
+        if dtype == complex:
+            dtype = np.complex128
+        if dtype == float:
+            dtype = np.float64
+        if dtype not in (np.float64, np.complex128):
+            raise ValueError(f"dtype requires np.float64 or np.complex128, but get {dtype}")
         _check_input_type('inplace', bool, inplace)
         if inplace:
             if dtype != self.dtype:
+                if self.dtype == np.complex128 and dtype == np.float64:
+                    warnings.warn("Casting complex parameter resolver to float parameter \
+resolver discards the imaginary part.")
+                    if self.obj.is_complex_pr():
+                        self.obj = self.obj.real()
+                else:
+                    if not self.obj.is_complex_pr():
+                        self.obj = self.obj.to_complex()
                 self.dtype = dtype
-                for k in self.keys():
-                    self[k] = dtype(self[k])
-                self.const = dtype(self.const)
             return self
         new = copy.copy(self)
-        new.astype(dtype, inplace=True)
+        new = new.astype(dtype, inplace=True)
         return new
 
     @property
@@ -162,7 +187,7 @@ class ParameterResolver:
             >>> pr.const
             2.5
         """
-        return self._const
+        return self.obj.const
 
     @const.setter
     def const(self, const_value):
@@ -170,9 +195,11 @@ class ParameterResolver:
         The setter method of const.
         """
         _check_input_type('const value', numbers.Number, const_value)
+        if isinstance(const_value, complex):
+            const_value = np.complex128(const_value)
         if is_type_upgrade(self.const, const_value):
-            self.astype(type(const_value), True)
-        self._const = self.dtype(const_value)
+            self.astype(type(const_value), inplace=True)
+        self.obj.set_const(self.dtype(const_value))
 
     def __len__(self):
         """
@@ -190,7 +217,7 @@ class ParameterResolver:
             >>> len(a)
             2
         """
-        return len(self.data)
+        return len(self.obj)
 
     def keys(self):
         """
@@ -202,8 +229,8 @@ class ParameterResolver:
             >>> list(a.keys())
             ['a', 'b']
         """
-        for k in self.data.keys():
-            yield k
+        for k in range(len(self)):
+            yield self.obj.get_key(k)
 
     def values(self):
         """
@@ -215,8 +242,8 @@ class ParameterResolver:
             >>> list(a.values())
             [0.0, 1.0]
         """
-        for v in self.data.values():
-            yield v
+        for k in self.keys():
+            yield self.obj[k]
 
     def items(self):
         """
@@ -228,8 +255,9 @@ class ParameterResolver:
             >>> list(a.items())
             [('a', 0.0), ('b', 1.0)]
         """
-        for k, v in self.data.items():
-            yield (k, v)
+        for i in range(len(self)):
+            key = self.obj.get_key(i)
+            yield (key, self.obj[key])
 
     def is_const(self):
         """
@@ -245,12 +273,8 @@ class ParameterResolver:
             >>> pr.is_const()
             True
         """
-        if not self.data:
-            return True
-        for v in self.values():
-            if not is_two_number_close(v, 0):
-                return False
-        return True
+
+        return self.obj.is_const()
 
     def __bool__(self):
         """
@@ -266,7 +290,7 @@ class ParameterResolver:
             >>> bool(pr)
             False
         """
-        return not (self.is_const() and is_two_number_close(self.const, 0))
+        return bool(self.obj)
 
     def __setitem__(self, keys, values):
         """
@@ -287,7 +311,7 @@ class ParameterResolver:
                 raise KeyError(f"parameter name cannot be empty string.")
             if is_type_upgrade(self.dtype(0), values):
                 self.astype(type(values), True)
-            self.data[keys] = self.dtype(values)
+            self.obj[keys] = self.dtype(values)
         elif isinstance(keys, Iterable):
             if not isinstance(values, Iterable):
                 raise ValueError("Values should be iterable.")
@@ -311,9 +335,8 @@ class ParameterResolver:
             >>> pr['a']
             1.0
         """
-        if key not in self.data:
-            raise KeyError(f"parameter {key} not in this parameter resolver")
-        return self.data[key]
+        _check_input_type('key', str, key)
+        return self.obj[key]
 
     def __iter__(self):
         """
@@ -325,7 +348,7 @@ class ParameterResolver:
             >>> list(pr)
             ['a', 'b']
         """
-        for i in self.data.keys():
+        for i in self.keys():
             yield i
 
     def __contains__(self, key):
@@ -338,17 +361,12 @@ class ParameterResolver:
             >>> 'c' in pr
             False
         """
-        return key in self.data
+        _check_input_type('key', str, key)
+        return key in self.obj
 
     def get_cpp_obj(self):
         """Get the cpp object of this parameter resolver."""
-        is_const = self.is_const()
-        const = self.const
-        cpp = mb.parameter_resolver(self.data, self.no_grad_parameters,
-                                    set(self.params_name) - self.no_grad_parameters, self.encoder_parameters,
-                                    set(self.params_name) - self.encoder_parameters, const, is_const)
-        self.const = const
-        return cpp
+        return self.obj
 
     def __eq__(self, other):
         """
@@ -372,28 +390,22 @@ class ParameterResolver:
             True
         """
         if isinstance(other, numbers.Number):
-            if not self.is_const():
-                return False
-            return is_two_number_close(self.const, other)
+            return self.obj == self.dtype(other)
         if isinstance(other, str):
             if not is_two_number_close(self.const, 0):
                 return False
-            if len(self.data) == 1 and other in self.data:
-                return True
+            if len(self) == 1 and other in self:
+                return is_two_number_close(self[other], 1)
             return False
         _check_input_type("other", ParameterResolver, other)
-        if not is_two_number_close(self.const, other.const):
-            return False
-        if self.no_grad_parameters != other.no_grad_parameters:
-            return False
-        if set(self.data.keys()) != set(other.data.keys()):
-            return False
-        if self.encoder_parameters != other.encoder_parameters:
-            return False
-        for k, v in self.items():
-            if not is_two_number_close(v, other[k]):
-                return False
-        return True
+        if self.dtype == other.dtype:
+            return self.obj == other.obj
+        this = self
+        if self.dtype == np.complex128:
+            other = other.astype(np.complex128, inplace=False)
+        else:
+            this = self.astype(np.complex128, inplace=False)
+        return this.obj == other.obj
 
     def __copy__(self):
         """
@@ -416,13 +428,20 @@ class ParameterResolver:
             >>> c.expression()
             '4*a + 3'
         """
-        pr = ParameterResolver()
-        pr.dtype = self.dtype
-        pr.data = {k: v for k, v in self.items()}
-        pr.const = self.const
-        pr.no_grad_parameters = {i for i in self.no_grad_parameters}
-        pr.encoder_parameters = {i for i in self.encoder_parameters}
+        pr = self.__class__({}, 0, dtype=self.dtype)
+        pr.obj = copy.copy(self.obj)
         return pr
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if isinstance(v, (mb.real_pr, mb.complex_pr)):
+                setattr(result, k, copy.copy(v))
+            else:
+                setattr(result, k, copy.deepcopy(v, memo))
+        return result
 
     def __iadd__(self, other):
         """
@@ -443,24 +462,18 @@ class ParameterResolver:
         """
         _check_input_type('other', (numbers.Number, ParameterResolver), other)
         if isinstance(other, numbers.Number):
-            self.const += other
-        if isinstance(other, ParameterResolver):
-            self.const += other.const
-            for k, v in other.data.items():
-                if k in self.data:
-                    if k in self.no_grad_parameters and k not in other.no_grad_parameters \
-                        or k in other.no_grad_parameters and k not in self.no_grad_parameters:
-                        raise RuntimeError(f"gradient property of parameter {k} conflict.")
-                    if k in self.encoder_parameters and k not in other.encoder_parameters \
-                        or k in other.encoder_parameters and k not in self.encoder_parameters:
-                        raise RuntimeError(f"encoder or ansatz property of parameter {k} conflict.")
-                    self[k] += v
+            if isinstance(other, (complex, np.complex128)):
+                self.astype(np.complex128, inplace=True)
+            self.obj += self.dtype(other)
+        elif isinstance(other, ParameterResolver):
+            if self.dtype != other.dtype:
+                if self.dtype == np.complex128:
+                    other = other.astype(np.complex128)
                 else:
-                    self[k] = v
-                    if k in other.no_grad_parameters:
-                        self.no_grad_parameters.add(k)
-                    if k in other.encoder_parameters:
-                        self.encoder_parameters.add(k)
+                    self.astype(np.complex128, True)
+            self.obj += other.obj
+        else:
+            raise TypeError(f"unsupported operand type(s) for +: 'ParameterResolver' and '{type(other)}'")
         return self
 
     def __add__(self, other):
@@ -493,46 +506,64 @@ class ParameterResolver:
 
     def __isub__(self, other):
         """Self subtract a number or ParameterResolver."""
-        self += (-other)
+        _check_input_type('other', (numbers.Number, ParameterResolver), other)
+        if isinstance(other, numbers.Number):
+            if isinstance(other, (complex, np.complex128)):
+                self.astype(np.complex128, inplace=True)
+            self.obj -= self.dtype(other)
+        elif isinstance(other, ParameterResolver):
+            if self.dtype != other.dtype:
+                if self.dtype == np.complex128:
+                    other = other.astype(np.complex128)
+                else:
+                    self.astype(np.complex128, True)
+            self.obj -= other.obj
+        else:
+            raise TypeError(f"unsupported operand type(s) for -: 'ParameterResolver' and '{type(other)}'")
         return self
 
     def __sub__(self, other):
         """Subtract a number or ParameterResolver."""
-        _check_input_type('other', (numbers.Number, ParameterResolver), other)
-        if isinstance(other, numbers.Number):
-            return self + (-other)
-        if isinstance(other, ParameterResolver):
-            other = copy.copy(other)
-            for k in other.data:
-                other.data[k] *= -1
-            other.const *= -1
-            return self + other
-        raise TypeError(f"unsupported operand type(s) for -: 'ParameterResolver' and '{type(other)}'")
+        res = copy.copy(self)
+        res -= other
+        return res
 
     def __rsub__(self, other):
         """Self subtract a number or ParameterResolver."""
-        return other + (-self)
+        _check_input_type('other', (numbers.Number, ParameterResolver), other)
+        this = copy.copy(self)
+        if isinstance(other, numbers.Number):
+            if isinstance(other, (complex, np.complex128)):
+                this.astype(np.complex128, inplace=True)
+            this.obj = -this.obj + this.dtype(other)
+        elif isinstance(other, ParameterResolver):
+            if this.dtype != other.dtype:
+                if this.dtype == np.complex128:
+                    other = other.astype(np.complex128)
+                else:
+                    this.astype(np.complex128, True)
+            this.obj = other.obj - this.obj
+        else:
+            raise TypeError(f"unsupported operand type(s) for -: 'ParameterResolver' and '{type(other)}'")
+        return this
 
     def __imul__(self, other):
         """Self multiply a number or ParameterResolver."""
+        _check_input_type('other', (numbers.Number, ParameterResolver), other)
         if isinstance(other, numbers.Number):
-            for k in list(self):
-                self[k] *= other
-            self.const *= other
-            return self
-        if isinstance(other, self.__class__):
-            if self.is_const():
-                for k, v in other.items():
-                    self[k] = v * self.const
-                self.const *= other.const
-                return self
-            if other.is_const():
-                for k in list(self):
-                    self[k] *= other.const
-                self.const *= other.const
-                return self
-            raise ValueError("Parameter resolver only support first order variable.")
-        raise ValueError(f"other requires a number or a number or a parameter resolver, but get {type(other)}")
+            if isinstance(other, (complex, np.complex128)):
+                self.astype(np.complex128, inplace=True)
+            self.obj *= self.dtype(other)
+        elif isinstance(other, ParameterResolver):
+            if self.dtype != other.dtype:
+                if self.dtype == np.complex128:
+                    other = other.astype(np.complex128)
+                else:
+                    self.astype(np.complex128, True)
+            self.obj *= other.obj
+        else:
+            raise TypeError(f"unsupported operand type(s) for *: 'ParameterResolver' and '{type(other)}'")
+        return self
 
     def __mul__(self, other):
         """Multiply a number or ParameterResolver."""
@@ -546,7 +577,8 @@ class ParameterResolver:
 
     def __neg__(self):
         """The negative of this parameter resolver."""
-        out = -1 * self
+        out = copy.copy(self)
+        out.obj = -out.obj
         return out
 
     def __itruediv__(self, other):
@@ -563,7 +595,7 @@ class ParameterResolver:
 
     def __str__(self):
         """String expression of this parameter resolver."""
-        return f'{str(self.data)}, const: {self.const}'
+        return self.obj.__str__()
 
     def __repr__(self) -> str:
         """Repr of this parameter resolver."""
@@ -573,7 +605,7 @@ class ParameterResolver:
         """Convert the constant part to float. Raise error if it's not constant."""
         if not self.is_const():
             raise ValueError("parameter resolver is not constant, cannot convert to float.")
-        return float(self.const)
+        return np.float64(self.const)
 
     def expression(self):
         """
@@ -590,7 +622,7 @@ class ParameterResolver:
             'π*a + √2'
         """
         s = {}
-        for k, v in self.data.items():
+        for k, v in self.items():
             s[k] = string_expression(v)
             if s[k] == '1':
                 s[k] = ''
@@ -662,7 +694,7 @@ class ParameterResolver:
             >>> pr.requires_grad_parameters
             {'a', 'b'}
         """
-        self.no_grad_parameters = set()
+        self.obj.requires_grad()
         return self
 
     def no_grad(self):
@@ -680,8 +712,7 @@ class ParameterResolver:
             >>> pr.requires_grad_parameters
             set()
         """
-        self.no_grad_parameters = set(self.data.keys())
-        self.no_grad_parameters.discard('')
+        self.obj.no_grad()
         return self
 
     def requires_grad_part(self, *names):
@@ -706,9 +737,7 @@ class ParameterResolver:
         """
         for name in names:
             _check_input_type('name', str, name)
-            if name not in self.data or name == '':
-                raise KeyError(f"Parameter {name} not in this parameter resolver!")
-            self.no_grad_parameters.discard(name)
+        self.obj.requires_grad_part(names)
         return self
 
     def no_grad_part(self, *names):
@@ -731,9 +760,7 @@ class ParameterResolver:
         """
         for name in names:
             _check_input_type('name', str, name)
-            if name not in self.data or name == '':
-                raise KeyError(f"Parameter {name} not in this parameter resolver!")
-            self.no_grad_parameters.add(name)
+        self.obj.no_grad_part(names)
         return self
 
     def encoder_part(self, *names):
@@ -756,9 +783,7 @@ class ParameterResolver:
         """
         for name in names:
             _check_input_type('name', str, name)
-            if name not in self.data or name == '':
-                raise KeyError(f"Parameter {name} not in this parameter resolver!")
-            self.encoder_parameters.add(name)
+        self.obj.encoder_part(names)
         return self
 
     def ansatz_part(self, *names):
@@ -781,9 +806,8 @@ class ParameterResolver:
         """
         for name in names:
             _check_input_type('name', str, name)
-            if name not in self.data or name == '':
-                raise KeyError(f"Parameter {name} not in this parameter resolver!")
-            self.encoder_parameters.discard(name)
+        self.obj.ansatz_part(names)
+        return self
 
     def as_encoder(self):
         """
@@ -799,9 +823,7 @@ class ParameterResolver:
             >>> pr.encoder_parameters
             {'a', 'b'}
         """
-        for name in self.data:
-            if name != '':
-                self.encoder_parameters.add(name)
+        self.obj.as_encoder()
         return self
 
     def as_ansatz(self):
@@ -819,8 +841,7 @@ class ParameterResolver:
             >>> pr.ansatz_parameters
             {'a', 'b'}
         """
-        for name in self.data:
-            self.encoder_parameters.discard(name)
+        self.obj.as_ansatz()
         return self
 
     def update(self, other):
@@ -848,20 +869,7 @@ class ParameterResolver:
             {'b'}
         """
         _check_input_type('other', ParameterResolver, other)
-        for k, v in other.items():
-            if k in other.no_grad_parameters and (k in self.data and k not in self.no_grad_parameters) or \
-                (k not in other.no_grad_parameters and k in self.no_grad_parameters):
-                raise ValueError(f"Parameter conflict, {k} require grad in some parameter resolver and not \
-require grad in other parameter resolver.")
-            if k in other.encoder_parameters and (k in self.data and k not in self.encoder_parameters) or \
-                (k not in other.encoder_parameters and k in self.encoder_parameters):
-                raise ValueError(f"Parameter conflict, {k} is encoder parameter in some parameter resolver and is not \
-encoder parameter in other parameter resolver.")
-            self[k] = v
-            if k in other.no_grad_parameters:
-                self.no_grad_parameters.add(k)
-            if k in other.encoder_parameters:
-                self.encoder_parameters.add(k)
+        self.obj.update(other.obj)
 
     @property
     def requires_grad_parameters(self):
@@ -877,6 +885,14 @@ encoder parameter in other parameter resolver.")
         {'a', 'b'}
         """
         return set(self.params_name) - self.no_grad_parameters
+
+    @property
+    def no_grad_parameters(self):
+        return self.obj.no_grad_parameters
+
+    @property
+    def encoder_parameters(self):
+        return self.obj.encoder_parameters()
 
     @property
     def ansatz_parameters(self):
@@ -908,9 +924,7 @@ encoder parameter in other parameter resolver.")
             'a + (-1j)*b'
         """
         res = copy.copy(self)
-        for k, v in res.data.items():
-            res.data[k] = np.conj(v)
-        res.const = np.conj(self.const)
+        res.obj = res.obj.conjugate()
         return res
 
     def combination(self, other):
@@ -944,6 +958,9 @@ encoder parameter in other parameter resolver.")
         """
         Pop out a parameter.
 
+        Args:
+            v (str): The parameter you want to pop.
+
         Returns:
             numbers.Number, the popped out parameter value.
 
@@ -953,10 +970,10 @@ encoder parameter in other parameter resolver.")
             >>> a.pop('a')
             1.0
         """
-        out = self.data.pop(v)
-        self.encoder_parameters.discard(v)
-        self.no_grad_parameters.discard(v)
-        return out
+        _check_input_type('v', str, v)
+        data = self.obj[v]
+        self.obj.pop(v)
+        return data
 
     @property
     def real(self):
@@ -975,14 +992,7 @@ encoder parameter in other parameter resolver.")
             {'a': 1.0}, const: 3.0
         """
         out = self.__class__()
-        for k, v in self.data.items():
-            r_v = np.real(v)
-            out[k] = r_v
-            if k in self.no_grad_parameters:
-                out.no_grad_parameters.add(k)
-            if k in self.encoder_parameters:
-                out.encoder_parameters.add(k)
-        out.const = np.real(self.const)
+        out.obj = self.obj.real()
         return out
 
     @property
@@ -1002,14 +1012,7 @@ encoder parameter in other parameter resolver.")
             {'a': 1.0}, const: 4.0
         """
         out = self.__class__()
-        for k, v in self.data.items():
-            i_v = np.imag(v)
-            out[k] = i_v
-            if k in self.no_grad_parameters:
-                out.no_grad_parameters.add(k)
-            if k in self.encoder_parameters:
-                out.encoder_parameters.add(k)
-        out.const = np.imag(self.const)
+        out.obj = self.obj.imag()
         return out
 
     def is_hermitian(self):
@@ -1030,7 +1033,7 @@ encoder parameter in other parameter resolver.")
             >>> (pr * 1j).is_hermitian()
             False
         """
-        return self == self.conjugate()
+        return self.obj.is_hermitian()
 
     def is_anti_hermitian(self):
         """
@@ -1050,7 +1053,7 @@ encoder parameter in other parameter resolver.")
             >>> (pr*1j).is_anti_hermitian()
             True
         """
-        return self == -self.conjugate()
+        return self.obj.is_anti_hermitian()
 
     def dumps(self, indent=4):
         '''

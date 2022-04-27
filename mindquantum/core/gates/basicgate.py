@@ -524,6 +524,9 @@ class PhaseShift(ParameterOppsGate):
     def matrix(self, pr=None):
         """
         Get the matrix of this none parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Defaults, None.
         """
         val = 0
         if self.coeff.is_const():
@@ -538,6 +541,10 @@ class PhaseShift(ParameterOppsGate):
     def diff_matrix(self, pr=None, about_what=None):
         """
         Get the  matrix of this none parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Defaults, None.
+            about_what (str): The parameter you want to calculate gradient.
         """
         if self.coeff.is_const():
             return np.zeros((2, 2))
