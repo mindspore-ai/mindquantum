@@ -277,7 +277,7 @@ class NoneParameterGate(BasicGate):
 
 class ParameterGate(BasicGate):
     """Gate that is parameterized."""
-    def __init__(self, pr, name, n_qubits, *args, obj_qubits=None, ctrl_qubits=None, **kwargs):
+    def __init__(self, pr: PR, name, n_qubits, *args, obj_qubits=None, ctrl_qubits=None, **kwargs):
         super().__init__(name, n_qubits, *args, obj_qubits=obj_qubits, ctrl_qubits=ctrl_qubits, **kwargs)
         self.coeff = pr
 
