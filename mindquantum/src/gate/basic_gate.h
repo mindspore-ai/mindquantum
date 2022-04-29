@@ -65,10 +65,12 @@ struct BasicGate {
     // Dim2Matrix<T> (*param_matrix_)(T para);
     // Dim2Matrix<T> (*param_diff_matrix_)(T para);
 
-    bool is_channel_ = false;
+    bool is_pauli_channel_ = false;
+    bool is_damping_channel_ = false;
     VT<BasicGate<T>> gate_list_;
     VT<T> probs_;
     VT<T> cumulative_probs_;
+    T damping_coeff_;
 
     void PrintInfo() {
         if (!daggered_) {
@@ -107,8 +109,8 @@ struct BasicGate {
     BasicGate(bool parameterized, const std::string& name, int64_t hermitian_prop, Dim2Matrix<T> base_matrix)
         : parameterized_(parameterized), name_(name), hermitian_prop_(hermitian_prop), base_matrix_(base_matrix) {
     }
-    BasicGate(const std::string& name, bool is_channel, T px, T py, T pz)  // for quantum channel
-        : name_(name), is_channel_(is_channel) {
+    BasicGate(const std::string& name, bool is_pauli_channel, T px, T py, T pz)  // for pauli channel
+        : name_(name), is_pauli_channel_(is_pauli_channel) {
         probs_ = VT<T>{px, py, pz, 1 - px - py - pz};
         T sum = 0.;
         cumulative_probs_.push_back(sum);
@@ -116,6 +118,9 @@ struct BasicGate {
             sum += *it;
             cumulative_probs_.push_back(sum);
         }
+    }
+    BasicGate(const std::string& name, bool is_damping_channel, T damping_coeff)  // for damping channel
+        : name_(name), is_damping_channel_(is_damping_channel), damping_coeff_(damping_coeff) {
     }
     BasicGate(bool parameterized, const std::string& name, int64_t hermitian_prop,
               Dim2Matrix<T> (*param_matrix)(T para), Dim2Matrix<T> (*param_diff_matrix)(T para))
