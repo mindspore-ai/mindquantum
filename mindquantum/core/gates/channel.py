@@ -16,10 +16,10 @@
 """Quantum channel."""
 
 from mindquantum import mqbackend as mb
-from mindquantum.core.gates.basic import NoneParameterGate, SelfHermitianGate
+from mindquantum.core.gates.basic import NoiseGate, SelfHermitianGate
 
 
-class PauliChannel(NoneParameterGate, SelfHermitianGate):
+class PauliChannel(NoiseGate, SelfHermitianGate):
     r"""
     Quantum channel that express the incoherent noise in quantum computing.
 
@@ -70,7 +70,7 @@ class PauliChannel(NoneParameterGate, SelfHermitianGate):
         if 'name' not in kwargs:
             kwargs['name'] = 'PC'
         kwargs['n_qubits'] = 1
-        NoneParameterGate.__init__(self, **kwargs)
+        NoiseGate.__init__(self, **kwargs)
         SelfHermitianGate.__init__(self, **kwargs)
         if not isinstance(px, (int, float)):
             raise TypeError("Unsupported type for px, get {}.".format(type(px)))
@@ -279,3 +279,116 @@ class DepolarizingChannel(PauliChannel):
         prop = super().__extra_prop__()
         prop['p'] = self.p
         return prop
+
+
+class AmplitudeDampingChannel(NoiseGate, SelfHermitianGate):
+    r"""
+    Quantum channel that express the incoherent noise in quantum computing.
+
+    Amplitude damping channel express error that qubit is affected by the energy dissipation.
+
+    Amplitude damping channel applies noise as:
+
+    .. math::
+
+        \epsilon(\rho) = E_0 \rho E_0^\dagger + E_1 \rho E_1^\dagger
+
+        where\ {E_0}=\begin{bmatrix}1&0\\
+                0&\sqrt{1-\gamma}\end{bmatrix},
+            \ {E_1}=\begin{bmatrix}0&\sqrt{\gamma}\\
+                0&0\end{bmatrix}
+
+    where ρ is quantum state as density matrix type;
+    gamma is the coefficient of energy dissipation.
+
+    Args:
+        gamma (int, float): damping coefficient.
+
+    Examples:
+        >>> from mindquantum.core.gates import AmplitudeDampingChannel
+        >>> from mindquantum.core.circuit import Circuit
+        >>> circ = Circuit()
+        >>> circ += AmplitudeDampingChannel(0.02).on(0)
+        >>> circ += AmplitudeDampingChannel(0.01).on(1, 0)
+        >>> print(circ)
+        q0: ──ADC─────●───
+                      │
+        q1: ─────────ADC──
+    """
+    def __init__(self, gamma: float, **kwargs):
+        kwargs['name']='ADC'
+        kwargs['n_qubits'] = 1
+        NoiseGate.__init__(self, **kwargs)
+        SelfHermitianGate.__init__(self, **kwargs)
+        if not isinstance(gamma, (int, float)):
+            raise TypeError("Unsupported type for gamma, get {}.".format(type(gamma)))
+        if 0 <= gamma <= 1:
+            self.gamma = gamma
+        else:
+            raise ValueError("Required damping coefficient gamma ∈ [0,1].")
+
+    def get_cpp_obj(self):
+        cpp_gate = mb.basic_gate('ADC', True, self.gamma)
+        cpp_gate.obj_qubits = self.obj_qubits
+        cpp_gate.ctrl_qubits = self.ctrl_qubits
+        return cpp_gate
+
+    def define_projectq_gate(self):
+        """Define the corresponded projectq gate."""
+        self.projectq_gate = None
+
+class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
+    r"""
+    Quantum channel that express the incoherent noise in quantum computing.
+
+    Phase damping channel express error that qubit loses quantum information without exchanging energy with environment.
+
+    Phase damping channel applies noise as:
+
+    .. math::
+
+        \epsilon(\rho) = E_0 \rho E_0^\dagger + E_1 \rho E_1^\dagger
+
+        where\ {E_0}=\begin{bmatrix}1&0\\
+                0&\sqrt{1-\gamma}\end{bmatrix},
+            \ {E_1}=\begin{bmatrix}0&0\\
+                0&\sqrt{\gamma}\end{bmatrix}
+
+    where ρ is quantum state as density matrix type;
+    gamma is the coefficient of quantum information loss.
+
+    Args:
+        gamma (int, float): damping coefficient.
+
+    Examples:
+        >>> from mindquantum.core.gates import PhaseDampingChannel
+        >>> from mindquantum.core.circuit import Circuit
+        >>> circ = Circuit()
+        >>> circ += PhaseDampingChannel(0.02).on(0)
+        >>> circ += PhaseDampingChannel(0.01).on(1, 0)
+        >>> print(circ)
+        q0: ──PDC─────●───
+                      │
+        q1: ─────────PDC──
+    """
+    def __init__(self, gamma: float, **kwargs):
+        kwargs['name']='PDC'
+        kwargs['n_qubits'] = 1
+        NoiseGate.__init__(self, **kwargs)
+        SelfHermitianGate.__init__(self, **kwargs)
+        if not isinstance(gamma, (int, float)):
+            raise TypeError("Unsupported type for gamma, get {}.".format(type(gamma)))
+        if 0 <= gamma <= 1:
+            self.gamma = gamma
+        else:
+            raise ValueError("Required damping coefficient gamma ∈ [0,1].")
+
+    def get_cpp_obj(self):
+        cpp_gate = mb.basic_gate('PDC', True, self.gamma)
+        cpp_gate.obj_qubits = self.obj_qubits
+        cpp_gate.ctrl_qubits = self.ctrl_qubits
+        return cpp_gate
+
+    def define_projectq_gate(self):
+        """Define the corresponded projectq gate."""
+        self.projectq_gate = None

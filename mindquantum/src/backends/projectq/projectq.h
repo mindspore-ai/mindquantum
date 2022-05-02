@@ -101,7 +101,7 @@ class Projectq : public Simulator {
     }
 
     void ApplyGate(const BasicGate<T> &gate) {
-        if (gate.is_channel_) {  // gate is constructed be like: BasicGate(cPL, true, px, py, pz)
+        if (gate.is_pauli_channel_) {  // gate is constructed be like: BasicGate(cPL, true, px, py, pz)
             VT<BasicGate<T>> gate_list_ = {XGate<T>, YGate<T>, ZGate<T>, IGate<T>};
             double r = static_cast<double>(rng_());
             //            std::cout << "r = " << r << std::endl;
@@ -116,6 +116,64 @@ class Projectq : public Simulator {
                                                           //            std::cout << gate_.name_ << std::endl;
             Projectq::apply_controlled_gate(MCast<T>(gate_.base_matrix_.matrix_), VCast(gate.obj_qubits_),
                                             VCast(gate.ctrl_qubits_));
+        } else if (gate.is_damping_channel_) {
+            VT<T> base_index;
+            for (unsigned i = 0; i < (1 << n_qubits_); i++) {
+                if ((i >> gate.obj_qubits_[0]) & 1) {
+                    base_index.push_back(i);
+                }
+            }
+            VT<CT<T>> curr_state_ = Projectq::cheat();
+            double reduced_factor_ = 0;
+            for (unsigned i = 0; i < base_index.size(); i++) {
+                reduced_factor_ += (curr_state_[base_index[i]] * std::conj(curr_state_[base_index[i]])).real();
+            }
+            if (reduced_factor_ < pow(10, -8)) {
+                return;
+            }
+            double prob_ = gate.damping_coeff_ * reduced_factor_;
+            double r = static_cast<double>(rng_());
+            VT<CT<T>> aim_state_ = curr_state_;
+            if (gate.name_ == "ADC") {
+                unsigned j = 0;
+                unsigned k = 0;
+                for (unsigned i = 0; i < aim_state_.size(); i++) {
+                    if (base_index[j] == i) {
+                        aim_state_[i] = 0;
+                        j++;
+                    } else {
+                        aim_state_[i] = aim_state_[base_index[k]] / sqrt(reduced_factor_);
+                        k++;
+                    }
+                }
+            } else if (gate.name_ == "PDC") {
+                unsigned j = 0;
+                for (unsigned i = 0; i < aim_state_.size(); i++) {
+                    if (base_index[j] == i) {
+                        aim_state_[i] = aim_state_[i] / sqrt(reduced_factor_);
+                        j++;
+                    } else {
+                        aim_state_[i] = 0;
+                    }
+                }
+            } else {
+                return;
+            }
+            if (r <= prob_) {
+                Projectq::SetState(aim_state_);
+            } else {
+                VT<CT<T>> remain_state_ = curr_state_;
+                unsigned j = 0;
+                for (unsigned i = 0; i < remain_state_.size(); i++) {
+                    if (base_index[j] == i) {
+                        remain_state_[i] = remain_state_[i] * sqrt(1 - gate.damping_coeff_) / sqrt(1 - prob_);
+                        j++;
+                    } else {
+                        remain_state_[i] = remain_state_[i] / sqrt(1 - prob_);
+                    }
+                }
+                Projectq::SetState(remain_state_);
+            }
         } else {
             Projectq::apply_controlled_gate(MCast<T>(gate.base_matrix_.matrix_), VCast(gate.obj_qubits_),
                                             VCast(gate.ctrl_qubits_));

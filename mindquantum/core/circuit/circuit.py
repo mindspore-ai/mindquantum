@@ -207,7 +207,7 @@ class Circuit(list):
         _check_gate_has_obj(gate)
         if isinstance(gate, G.Measure):
             self.all_measures.collect_only_one(gate, f'measure key {gate.key} already exist.')
-        if isinstance(gate, G.PauliChannel):
+        if isinstance(gate, G.NoiseGate):
             self.all_noises.collect(gate.name)
         self.all_qubits.collect(gate.obj_qubits)
         self.all_qubits.collect(gate.ctrl_qubits)
@@ -290,7 +290,7 @@ class Circuit(list):
             self.all_paras.delete(list(old_v.coeff.keys()))
         if isinstance(old_v, G.Measure):
             self.all_measures.delete(old_v)
-        if isinstance(old_v, G.PauliChannel):
+        if isinstance(old_v, G.NoiseGate):
             self.all_noises.delete(old_v.name)
         super().__setitem__(k, v)
         self.all_qubits.collect(v.obj_qubits)
@@ -299,7 +299,7 @@ class Circuit(list):
             self.all_paras.collect(list(v.coeff.keys()))
         if isinstance(v, G.Measure):
             self.all_measures.collect_only_one(v, f'measure key {v.key} already exist.')
-        if isinstance(v, G.PauliChannel):
+        if isinstance(v, G.NoiseGate):
             self.all_noises.collect(v.name)
         self.has_cpp_obj = False
 

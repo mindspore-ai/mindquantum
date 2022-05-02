@@ -526,3 +526,7 @@ class ParamNonHerm(ParameterGate, NonHermitianGate):
         if self.hermitianed:
             return np.conj(m.T)
         return m
+
+
+class NoiseGate(NoneParameterGate):
+    pass
