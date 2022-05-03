@@ -113,12 +113,19 @@ The trained parameters are,
 1. Basic usage
 
     - [Variational Quantum Circuit](https://mindspore.cn/mindquantum/docs/en/master/parameterized_quantum_circuit.html)
+    - [Initial experience of quantum neural network](https://www.mindspore.cn/mindquantum/docs/en/master/initial_experience_of_quantum_neural_network.html)
+    - [Advanced gradient calculation of variational quantum circuits](https://www.mindspore.cn/mindquantum/docs/en/master/get_gradient_of_PQC_with_mindquantum.html)
 
 2. Variational quantum algorithm
-
+    - [Classification of iris by quantum neural network](https://www.mindspore.cn/mindquantum/docs/en/master/classification_of_iris_by_qnn.html)
     - [Quantum Approximate Optimization Algorithm](https://mindspore.cn/mindquantum/docs/en/master/quantum_approximate_optimization_algorithm.html)
     - [The Application of Quantum Neural Network in NLP](https://mindspore.cn/mindquantum/docs/en/master/qnn_for_nlp.html)
     - [VQE Application in Quantum Chemistry Computing](https://mindspore.cn/mindquantum/docs/en/master/vqe_for_quantum_chemistry.html)
+
+3. GENERAL QUANTUM ALGORITHM
+    - [Quantum Phase Estimation algorithm](https://www.mindspore.cn/mindquantum/docs/en/master/quantum_phase_estimation.html)
+    - [Grover search algorithm based on MindQuantum](https://www.mindspore.cn/mindquantum/docs/en/master/grover_search_algorithm.html)
+    - [Shor’s algorithm based on MindQuantum](https://www.mindspore.cn/mindquantum/docs/en/master/shor_algorithm.html)
 
 ## API
 

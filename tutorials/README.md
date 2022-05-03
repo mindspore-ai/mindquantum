@@ -3,8 +3,11 @@
 1. 基础使用指南
 
     - [变分量子线路](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/parameterized_quantum_circuit.html)
+    - [量子模拟器](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/quantum_simulator.html)
     - [量子神经网络初体验](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/initial_experience_of_quantum_neural_network.html)
     - [变分量子线路梯度计算进阶](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/get_gradient_of_PQC_with_mindquantum.html)
+    - [量子线路高阶操作](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/advanced_operations_of_quantum_circuit.html)
+    - [量子测量](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/quantum_measurement.html)
 
 2. 变分量子算法
 
