@@ -276,3 +276,28 @@ _bloch_drawer_config = {
     'label_color': 'black',
     'ax_offset': (0, 0),
 }
+
+_bloch_default_style_ = {
+    'ket_label_fs': 18,
+    'stick_c': 'k',
+    'stick_w': 3,
+    'point_c': 'k',
+    'point_s': 50,
+    'point_m': 'o',
+    'proj_c': 'g',
+    'state_mode': 'both',
+    'with_proj': True,
+    'trace_c': '#345678',
+    'trace_m': '*',
+    'trace_lw': 1.5,
+    'trace_ms': 3,
+    'trace_ls': '-',
+    'arrowstyle': '-|>',
+    'mutation_scale': 20,
+    'arrow_ls': 'dashed',
+    'plane_alpha': 0.04,
+    'xy_plane_color': 'b',
+    'yz_plane_color': 'r',
+    'zx_plane_color': 'g',
+    'frame_alpha': 0.15,
+}

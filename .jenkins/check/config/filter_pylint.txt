@@ -18,6 +18,7 @@
 "mindquantum/mindquantum/config/config.py"                                             "invalid-name"
 "mindquantum/mindquantum/core/gates/basicgate.py"                                      "arguments-differ"
 "mindquantum/mindquantum/core/gates/basic.py"                                          "arguments-differ"
+"mindquantum/mindquantum/io/display/bloch_plt_drawer.py"                               "protected-access"
 
 # Tests
 "mindquantum/tests/st"                                                                 "missing-docstring"
