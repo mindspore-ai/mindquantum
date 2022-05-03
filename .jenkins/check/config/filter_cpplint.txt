@@ -5,7 +5,6 @@
 "mindquantum/mindquantum/src"                                                                      "build/include_order"
 
 "mindquantum/mindquantum/src"                                                                      "build/include_subdir"
-"mindquantum/mindquantum/src/backends/quest"                                                       "build/include_subdir"
 "mindquantum/mindquantum/src/backends/projectq"                                                    "build/include_subdir"
 "mindquantum/mindquantum/src/gate"                                                                 "build/include_subdir"
 "mindquantum/mindquantum/src/hamiltonian"                                                          "build/include_subdir"
