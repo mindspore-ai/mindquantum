@@ -64,7 +64,7 @@ $PYTHON -m pip install -U "${pkgs[@]}"
 # ------------------------------------------------------------------------------
 # Setup arguments for build
 
-args=(--set ENABLE_PROJECTQ --unset ENABLE_QUEST)
+args=(--set ENABLE_PROJECTQ)
 
 if [[ $1 = "gpu" ]]; then
     args+=(--set ENABLE_CUDA --unset MULTITHREADED --set VERBOSE_CMAKE)

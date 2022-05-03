@@ -204,7 +204,7 @@ fi
 # ------------------------------------------------------------------------------
 # Setup arguments for build
 
-cmake_args=(-DENABLE_PROJECTQ:BOOL=ON -DENABLE_QUEST:BOOL=OFF -DIN_PLACE_BUILD:BOOL=ON)
+cmake_args=(-DENABLE_PROJECTQ:BOOL=ON -DIN_PLACE_BUILD:BOOL=ON)
 
 if [[ $enable_gpu -eq 1 ]]; then
     cmake_args+=(-DENABLE_CUDA:BOOL=ON)

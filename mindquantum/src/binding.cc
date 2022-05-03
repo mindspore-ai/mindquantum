@@ -22,9 +22,6 @@
 #ifdef ENABLE_PROJECTQ
 #    include "backends/projectq/projectq.h"
 #endif
-#ifdef ENABLE_QUEST
-#    include "backends/quest/quest.h"
-#endif
 #include "core/type.h"
 #include "gate/gates.h"
 #include "hamiltonian/hamiltonian.h"
@@ -46,10 +43,6 @@ using mindquantum::sparse::TransposeCsrHdMatrix;
 #ifdef ENABLE_PROJECTQ
 using mindquantum::projectq::InnerProduct;
 using mindquantum::projectq::Projectq;
-#endif
-
-#ifdef ENABLE_QUEST
-using mindquantum::quest::Quest;
 #endif
 
 // Interface with python
@@ -155,28 +148,6 @@ PYBIND11_MODULE(mqbackend, m) {
                                const VVT<MT> &, const VT<MT> &, const VS &, const VS &, size_t, size_t,
                                const Projectq<MT> &>(&Projectq<MT>::NonHermitianMeasureWithGrad));
     m.def("cpu_projectq_inner_product", &InnerProduct<MT>);
-#endif
-
-#ifdef ENABLE_QUEST
-    // quest simulator
-    py::class_<Quest<MT>, std::shared_ptr<Quest<MT>>>(m, "quest")
-        .def(py::init<int>())
-        .def(py::init<>())
-        .def("reset", &Quest<MT>::InitializeSimulator)
-        .def("PrintInfo", &Quest<MT>::PrintInfo)
-        .def("get_qs", &Quest<MT>::GetVec)
-        .def("apply_gate", py::overload_cast<const BasicGate<MT> &>(&Quest<MT>::ApplyGate))
-        .def("apply_gate",
-             py::overload_cast<const BasicGate<MT> &, const ParameterResolver<MT> &, bool>(&Quest<MT>::ApplyGate))
-        .def("apply_circuit", py::overload_cast<const VT<BasicGate<MT>> &>(&Quest<MT>::ApplyCircuit))
-        .def("apply_circuit",
-             py::overload_cast<const VT<BasicGate<MT>> &, const ParameterResolver<MT> &>(&Quest<MT>::ApplyCircuit))
-        .def("apply_hamiltonian", &Quest<MT>::ApplyHamiltonian)
-        .def("get_expectation", &Quest<MT>::GetExpectation)
-        .def("hermitian_measure_with_grad",
-             py::overload_cast<const VT<Hamiltonian<MT>> &, const VT<BasicGate<MT>> &, const VT<BasicGate<MT>> &,
-                               const VT<ParameterResolver<MT>> &, const VT<std::string> &, size_t, size_t>(
-                 &Quest<MT>::HermitianMeasureWithGrad));
 #endif
 }
 }  // namespace mindquantum

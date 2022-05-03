@@ -37,8 +37,8 @@ python -m pip install -U pip setuptools build wheel pybind11
 rem ============================================================================
 rem Build the wheels
 
-echo python -m build -w -C--global-option=--set -C--global-option=ENABLE_PROJECTQ -C--global-option=--unset -C--global-option=ENABLE_QUEST %*
-python -m build -w -C--global-option=--set -C--global-option=ENABLE_PROJECTQ -C--global-option=--unset -C--global-option=ENABLE_QUEST %*
+echo python -m build -w -C--global-option=--set -C--global-option=ENABLE_PROJECTQ %*
+python -m build -w -C--global-option=--set -C--global-option=ENABLE_PROJECTQ %*
 
 rem -----------------------------------------------------------------------------
 rem Move the wheels to the output directory

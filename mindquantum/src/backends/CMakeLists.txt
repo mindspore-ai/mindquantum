@@ -19,7 +19,3 @@
 if(ENABLE_PROJECTQ)
   add_subdirectory(projectq)
 endif()
-
-if(ENABLE_QUEST)
-  add_subdirectory(quest)
-endif()

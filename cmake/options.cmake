@@ -53,7 +53,6 @@ option(CUDA_STATIC "Use static version of Nvidia CUDA libraries during linking (
 option(ENABLE_OPENMP "Use OpenMP for multi-threading" ON)
 
 option(ENABLE_PROJECTQ "Enable ProjectQ support" ON)
-option(ENABLE_QUEST "Enable QuEST support" ON)
 
 # ------------------------------------------------------------------------------
 

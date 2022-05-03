@@ -20,12 +20,10 @@
 
 # for pybind
 pybind11_add_module(mqbackend ${CMAKE_CURRENT_SOURCE_DIR}/binding.cc)
-target_compile_definitions(mqbackend PUBLIC $<$<BOOL:${ENABLE_PROJECTQ}>:ENABLE_PROJECTQ>
-                                            $<$<BOOL:${ENABLE_QUEST}>:ENABLE_QUEST>)
+target_compile_definitions(mqbackend PUBLIC $<$<BOOL:${ENABLE_PROJECTQ}>:ENABLE_PROJECTQ>)
 target_include_directories(mqbackend PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
-target_link_libraries(mqbackend PUBLIC ${PARALLEL_LIBS} "$<$<BOOL:${ENABLE_PROJECTQ}>:mq_projectq>"
-                                       "$<$<BOOL:${ENABLE_QUEST}>:QuEST;mq_quest>" mq_base)
+target_link_libraries(mqbackend PUBLIC ${PARALLEL_LIBS} "$<$<BOOL:${ENABLE_PROJECTQ}>:mq_projectq>" mq_base)
 
 set_output_directory_auto(mqbackend mindquantum)
 python_install_set_rpath(mqbackend "")
@@ -59,11 +57,20 @@ target_include_directories(mq_base PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 if(WIN32)
   get_filename_component(CXX_DIR ${CMAKE_CXX_COMPILER} PATH)
-  file(GLOB LIB_LIST ${CXX_DIR}/libstdc++-6.dll ${CXX_DIR}/libwinpthread-1.dll
-    ${CXX_DIR}/libssp-0.dll ${CXX_DIR}/libgcc_s_*-1.dll ${CXX_DIR}/libgomp-1.dll)
+  file(
+    GLOB
+    LIB_LIST
+    ${CXX_DIR}/libstdc++-6.dll
+    ${CXX_DIR}/libwinpthread-1.dll
+    ${CXX_DIR}/libssp-0.dll
+    ${CXX_DIR}/libgcc_s_*-1.dll
+    ${CXX_DIR}/libgomp-1.dll)
   # install(FILES ${LIB_LIST} DESTINATION ${CMAKE_BINARY_DIR})
   foreach(WIN_DEP_LIB ${LIB_LIST})
-    MESSAGE("COPYING ${WIN_DEP_LIB}")
-    file(COPY ${WIN_DEP_LIB} DESTINATION ${MQBACKEND_OUTPUT_DIR} FOLLOW_SYMLINK_CHAIN)
+    message("COPYING ${WIN_DEP_LIB}")
+    file(
+      COPY ${WIN_DEP_LIB}
+      DESTINATION ${MQBACKEND_OUTPUT_DIR}
+      FOLLOW_SYMLINK_CHAIN)
   endforeach()
 endif()
