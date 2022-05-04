@@ -15,6 +15,7 @@
 # ============================================================================
 """Display one qubit state in bloch sphere."""
 from collections import deque
+import warnings
 import numbers
 from matplotlib.figure import Figure
 import matplotlib.animation as animation
@@ -24,6 +25,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from mpl_toolkits.mplot3d.axes3d import Axes3D
 import numpy as np
+import rich
 from mindquantum.utils.type_value_check import _check_input_type
 from mindquantum.utils.type_value_check import _check_int_type
 from mindquantum.io.display._config import _bloch_default_style_
@@ -471,6 +473,10 @@ class BlochScene:
         Returns:
             animation.FuncAnimation, the animation object in matplotlib.
         """
+        console = rich.console.Console()
+        if console.is_jupyter:
+            warnings.warn("jupyter environment detected, if animation not work, \
+please run '%matplotlib notebook' in cell.")
         _check_input_type('fig', Figure, fig)
         _check_input_type('ax', Axes3D, ax)
         _check_input_type('objs', dict, objs)
