@@ -230,7 +230,7 @@ When using MindQuantum for research, please cite:
 ```bash
 @misc{mq_2021,
     author      = {MindQuantum Developer},
-    title       = {MindQuantum, version 0.5.0},
+    title       = {MindQuantum, version 0.6.0},
     month       = {March},
     year        = {2021},
     url         = {https://gitee.com/mindspore/mindquantum}
