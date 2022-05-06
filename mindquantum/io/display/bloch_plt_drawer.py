@@ -374,6 +374,8 @@ class BlochScene:
                 `Axes3D.scatter`.
             proj_args (tuple): The other args for projection line. These args will be send
                 to `Axes3D.plot`. Default: None.
+            proj_kwargs (dict): The other key word args for projection line. These args will be send to
+                `Axes3D.plot`. Default: None.
 
         Returns:
             dict, a dict of object of stick, point, and projection line.
