@@ -255,12 +255,12 @@ export OMP_NUM_THREADS=4
 
 ## 引用MindQuantum
 
-当您用MindQuantum进行科学研究是，请引用：
+当您用MindQuantum进行科学研究时，请引用：
 
 ```bash
 @misc{mq_2021,
     author      = {MindQuantum Developer},
-    title       = {MindQuantum, version 0.5.0},
+    title       = {MindQuantum, version 0.6.0},
     month       = {March},
     year        = {2021},
     url         = {https://gitee.com/mindspore/mindquantum}
