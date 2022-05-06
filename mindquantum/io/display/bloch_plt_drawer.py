@@ -29,6 +29,7 @@ import rich
 from mindquantum.utils.type_value_check import _check_input_type
 from mindquantum.utils.type_value_check import _check_int_type
 from mindquantum.io.display._config import _bloch_default_style_
+from mindquantum.io.display._config import _bloch_default_style_dark_
 
 
 class Arrow3D(FancyArrowPatch):
@@ -56,8 +57,8 @@ class BlochScene:
     Display a one qubit quantum state in bloch sphere.
 
     Args:
-        config (dict): The bloch sphere style configuration. If None, a built-in style configuration
-            will be used. Default: None.
+        config (Union[dict, str]): The bloch sphere style configuration. If None, a built-in style configuration
+            will be used. Beside built-in style, we also support a `dark` style. Default: None.
 
     Examples:
         >>> import matplotlib.pyplot as plt
@@ -75,6 +76,7 @@ class BlochScene:
         ...     state = RZ(angle).matrix() @ RX(np.pi / 4).matrix() @ np.array([[1], [0]])
         ...     state = state.T[0]
         ...     amps[i] = state
+        >>> scene = BlochScene('dark')
         >>> fig, ax = scene.create_scene()
         >>> scene.add_state(ax, np.array([1, 1 - 1j])/np.sqrt(3), with_proj=False)
         >>> objs = scene.add_state(ax, amps[0], linecolor='r')
@@ -82,9 +84,14 @@ class BlochScene:
         >>> plt.show()
     """
     def __init__(self, config=None):
+        supported_stype = {'default': _bloch_default_style_, 'dark': _bloch_default_style_dark_}
         if config is None:
-            config = _bloch_default_style_
-        _check_input_type("config", dict, config)
+            config = 'default'
+        if isinstance(config, str):
+            if config not in supported_stype:
+                raise ValueError(f"Support style: {list(supported_stype.keys())}, but get {config}")
+            config = supported_stype[config]
+        _check_input_type("config", (dict, str), config)
         self.config = config
         self.c_ang = np.linspace(0, 2 * np.pi, 100)
         self.c_x = np.cos(self.c_ang)
@@ -242,6 +249,7 @@ class BlochScene:
         """
         arrow = Arrow3D(*data, *args, **kwargs)
         ax.add_artist(arrow)
+        return arrow
 
     def create_scene(self):
         """
@@ -251,18 +259,19 @@ class BlochScene:
         arrowstyle = self.config['arrowstyle']
         mutation_scale = self.config['mutation_scale']
         linestyle = self.config['arrow_ls']
-        self.add_3d_arrow(ax, [0, 0, -1, 0, 0, 2],
+        delta = self.config['axis_delta']
+        self.add_3d_arrow(ax, [0, 0, -1 - delta, 0, 0, 2 + 2 * delta],
                           arrowstyle=arrowstyle,
                           mutation_scale=mutation_scale,
-                          linestyle=linestyle)
-        self.add_3d_arrow(ax, [0, -1, 0, 0, 2, 0],
+                          linestyle=linestyle).set_color(self.config['arrow_c'])
+        self.add_3d_arrow(ax, [0, -1 - delta, 0, 0, 2 + 2 * delta, 0],
                           arrowstyle=arrowstyle,
                           mutation_scale=mutation_scale,
-                          linestyle=linestyle)
-        self.add_3d_arrow(ax, [-1, 0, 0, 2, 0, 0],
+                          linestyle=linestyle).set_color(self.config['arrow_c'])
+        self.add_3d_arrow(ax, [-1 - delta, 0, 0, 2 + 2 * delta, 0, 0],
                           arrowstyle=arrowstyle,
                           mutation_scale=mutation_scale,
-                          linestyle=linestyle)
+                          linestyle=linestyle).set_color(self.config['arrow_c'])
         plane_alpha = self.config['plane_alpha']
         xy_plane_color = self.config['xy_plane_color']
         yz_plane_color = self.config['yz_plane_color']
@@ -277,16 +286,19 @@ class BlochScene:
 
         for angle in np.linspace(0, np.pi, 7):
             self.circle_xy(ax, '--', angle=angle, color='#cdcdcd', linewidth=1)
-        for angle in np.linspace(0, 2 * np.pi, 6):
+        for angle in np.linspace(0, 2 * np.pi, 4):
             self.circle_yz(ax, '--', angle=angle, color='#cdcdcd', linewidth=1)
         self.circle_xy(ax, c='#999999')
         self.circle_yz(ax, c='#999999')
         self.circle_yz(ax, c='#999999', angle=np.pi / 2)
         self.set_view(ax, elev=10, azim=40)
-        self.add_ket_label(ax)
+        self.add_ket_label(ax, c=self.config['axis_label_c'])
         ax.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
         ax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
         ax.set_axis_off()
+        fig.set_facecolor(self.config['fig_color'])
+        ax.set_facecolor(self.config['fig_color'])
+        fig.set_size_inches(self.config['fig_w'], self.config['fig_h'])
         return fig, ax
 
     @staticmethod
@@ -412,12 +424,6 @@ class BlochScene:
 
         x, y, z = self.state_to_cor(amp)
         objs = {}
-        if mode in ('both', 'stick'):
-            vec = ax.plot([0, x], [0, y], [0, z], linecolor, *stick_args, linewidth=linewidth, **stick_kwargs)[0]
-            objs['vec'] = vec
-        if mode in ('both', 'dot'):
-            point = ax.scatter([x], [y], [z], *point_args, s=pointsize, marker=marker, c=pointcolor, **point_kwargs)
-            objs['point'] = point
         if with_proj:
             line_x = ax.plot([0, x], [0, 0], [0, 0], projcolor, *proj_args, linewidth=linewidth, **proj_kwargs)[0]
             line_y = ax.plot([0, 0], [0, y], [0, 0], projcolor, *proj_args, linewidth=linewidth, **proj_kwargs)[0]
@@ -425,6 +431,12 @@ class BlochScene:
             objs['line_x'] = line_x
             objs['line_y'] = line_y
             objs['line_z'] = line_z
+        if mode in ('both', 'stick'):
+            vec = ax.plot([0, x], [0, y], [0, z], linecolor, *stick_args, linewidth=linewidth, **stick_kwargs)[0]
+            objs['vec'] = vec
+        if mode in ('both', 'dot'):
+            point = ax.scatter([x], [y], [z], *point_args, s=pointsize, marker=marker, c=pointcolor, **point_kwargs)
+            objs['point'] = point
         return objs
 
     def update(self, objs: dict, new_amp: np.ndarray):
