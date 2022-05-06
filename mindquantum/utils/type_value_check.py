@@ -19,9 +19,11 @@ import numpy as np
 
 _num_type = (int, float, complex, np.int32, np.int64, np.float32, np.float64)
 
+
 def _check_np_dtype(dtype):
     """check dtype is a valid numpy dtype"""
-    np.array([0],dtype=dtype)
+    np.array([0], dtype=dtype)
+
 
 def _check_seed(seed):
     """check seed"""
@@ -63,14 +65,16 @@ def _check_and_generate_pr_type(pr, names=None):
     _check_input_type('parameter', (ParameterResolver, np.ndarray, list, dict), pr)
     if isinstance(pr, dict):
         pr = ParameterResolver(pr)
-        if len(pr) != len(names):
-            raise ValueError(f"given parameter value size ({len(pr)}) not match with parameter size ({len(names)})")
     elif isinstance(pr, (np.ndarray, list)):
         pr = np.array(pr)
         if len(pr) != len(names) or len(pr.shape) != 1:
             raise ValueError(f"given parameter value size ({pr.shape}) not match with parameter size ({len(names)})")
         pr = ParameterResolver(dict(zip(names, pr)))
-
+    if isinstance(pr, ParameterResolver):
+        if names is not None:
+            for n in names:
+                if n not in pr:
+                    raise ValueError(f"Parameter {n} not in given parameter resolver.")
     return pr
 
 
@@ -85,11 +89,13 @@ def _check_gate_type(gate):
     if not isinstance(gate, BasicGate):
         raise TypeError("Require a quantum gate, but get {}".format(type(gate)))
 
+
 def _check_gate_has_obj(gate):
     from mindquantum.core.gates import BarrierGate
-    if not isinstance(gate,BarrierGate):
+    if not isinstance(gate, BarrierGate):
         if not gate.obj_qubits:
             raise ValueError("Gate shuould act on some qubits first.")
+
 
 def _check_qubit_id(qubit_id):
     if not isinstance(qubit_id, (int, np.int64)):
@@ -105,3 +111,9 @@ def _check_obj_and_ctrl_qubits(obj_qubits, ctrl_qubits):
         raise ValueError("obj_qubits cannot have same qubits")
     if len(set(ctrl_qubits)) != len(ctrl_qubits):
         raise ValueError("ctrl_qubits cannot have same qubits")
+
+
+def _check_control_num(ctrl_qubits, require_n):
+    from mindquantum.utils.f import s_quantifier
+    if len(ctrl_qubits) != require_n:
+        raise RuntimeError(f"requires {s_quantifier(require_n,'control qubit')}, but get {len(ctrl_qubits)}")

@@ -16,7 +16,7 @@
 """Quantum channel."""
 
 from mindquantum import mqbackend as mb
-from mindquantum.core.gates.basic import NoiseGate, SelfHermitianGate
+from mindquantum.core.gates.basic import BasicGate, NoiseGate, SelfHermitianGate
 
 
 class PauliChannel(NoiseGate, SelfHermitianGate):
@@ -101,6 +101,12 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
         self.projectq_gate = None
+
+    def __eq__(self, other):
+        if isinstance(other, PauliChannel):
+            if BasicGate.__eq__(self, other) and self.px == other.px and self.py == other.py and self.pz == other.pz:
+                return True
+        return False
 
 
 class BitFlipChannel(PauliChannel):
@@ -316,7 +322,7 @@ class AmplitudeDampingChannel(NoiseGate, SelfHermitianGate):
         q1: ─────────ADC──
     """
     def __init__(self, gamma: float, **kwargs):
-        kwargs['name']='ADC'
+        kwargs['name'] = 'ADC'
         kwargs['n_qubits'] = 1
         NoiseGate.__init__(self, **kwargs)
         SelfHermitianGate.__init__(self, **kwargs)
@@ -336,6 +342,10 @@ class AmplitudeDampingChannel(NoiseGate, SelfHermitianGate):
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
         self.projectq_gate = None
+
+    def __eq__(self, other):
+        return BasicGate.__eq__(self, other) and self.gamma == other.gamma
+
 
 class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
     r"""
@@ -372,7 +382,7 @@ class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
         q1: ─────────PDC──
     """
     def __init__(self, gamma: float, **kwargs):
-        kwargs['name']='PDC'
+        kwargs['name'] = 'PDC'
         kwargs['n_qubits'] = 1
         NoiseGate.__init__(self, **kwargs)
         SelfHermitianGate.__init__(self, **kwargs)
@@ -392,3 +402,6 @@ class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
         self.projectq_gate = None
+
+    def __eq__(self, other):
+        return super().__eq__(other) and self.gamma == other.gamma

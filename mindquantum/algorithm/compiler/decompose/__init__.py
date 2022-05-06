@@ -13,15 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Quantum algorithms"""
-
-from . import library
-from . import nisq
-from . import compiler
-from .library import *
-from .nisq import *
+"""
+Decompose rule for gate.
+"""
+from . import x_related
+from .x_related import ccx_decompose
 
 __all__ = []
-__all__.extend(library.__all__)
-__all__.extend(nisq.__all__)
+__all__.extend(x_related.__all__)
 __all__.sort()

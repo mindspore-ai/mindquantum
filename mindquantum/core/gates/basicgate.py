@@ -15,12 +15,14 @@
 # ============================================================================
 """Basic module for quantum gate."""
 
+import numbers
 import numpy as np
 from scipy.linalg import fractional_matrix_power
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 from mindquantum.utils.f import is_power_of_two
+from mindquantum.utils.type_value_check import _check_gate_type, _check_input_type
 from mindquantum.config.config import _GLOBAL_MAT_VALUE
-from mindquantum.core.gates.basic import NoneParamNonHermMat
+from mindquantum.core.gates.basic import BasicGate, NoneParamNonHermMat
 from mindquantum.core.gates.basic import NoneParamSelfHermMat
 from mindquantum.core.gates.basic import PauliGate
 from mindquantum.core.gates.basic import RotSelfHermMat
@@ -85,6 +87,9 @@ class HGate(NoneParamSelfHermMat):
             matrix_value=_GLOBAL_MAT_VALUE['H'],
         )
 
+    def __eq__(self, other):
+        return BasicGate.__eq__(self, other)
+
 
 class XGate(PauliGate):
     r"""
@@ -129,6 +134,16 @@ class XGate(PauliGate):
             n_qubits=1,
             matrix_value=_GLOBAL_MAT_VALUE['X'],
         )
+
+    def __eq__(self, other):
+        if isinstance(other, CNOTGate):
+            obj = [other.obj_qubits[0]]
+            ctrl = [other.obj_qubits[1]]
+            ctrl.extend(other.ctrl_qubits)
+            if self.obj_qubits == obj and set(self.ctrl_qubits) == set(ctrl):
+                return True
+            return False
+        return super().__eq__(other)
 
 
 class YGate(PauliGate):
@@ -184,6 +199,10 @@ class IGate(PauliGate):
             matrix_value=_GLOBAL_MAT_VALUE['I'],
         )
 
+    def __eq__(self, other):
+        _check_gate_type(other)
+        return isinstance(other, IGate)
+
 
 class CNOTGate(NoneParamSelfHermMat):
     r"""
@@ -208,6 +227,14 @@ class CNOTGate(NoneParamSelfHermMat):
         out = super().on([obj_qubits, ctrl_qubits[0]], ctrl_qubits[1:])
         return out
 
+    def __eq__(self, other):
+        if isinstance(other, XGate):
+            return other.__eq__(self)
+        return BasicGate.__eq__(self, other)
+
+    def __decompose__(self):
+        return X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits]).__decompose__()
+
 
 class SWAPGate(NoneParamSelfHermMat):
     """
@@ -221,6 +248,12 @@ class SWAPGate(NoneParamSelfHermMat):
             n_qubits=2,
             matrix_value=_GLOBAL_MAT_VALUE['SWAP'],
         )
+
+    def __eq__(self, other):
+        _check_gate_type(other)
+        if isinstance(other, SWAPGate):
+            return set(self.obj_qubits) == set(other.obj_qubits) and set(self.ctrl_qubits) == set(other.ctrl_qubits)
+        return False
 
 
 class ISWAPGate(NoneParamNonHermMat):
@@ -237,6 +270,12 @@ class ISWAPGate(NoneParamNonHermMat):
             n_qubits=2,
             matrix_value=_GLOBAL_MAT_VALUE['ISWAP'],
         )
+
+    def __eq__(self, other):
+        _check_gate_type(other)
+        if isinstance(other, ISWAPGate):
+            return set(self.obj_qubits) == set(other.obj_qubits) and set(self.ctrl_qubits) == set(other.ctrl_qubits)
+        return False
 
 
 class TGate(NoneParamNonHermMat):
@@ -406,6 +445,19 @@ class ZZ(RotSelfHermMat):
     def diff_matrix(self, pr=None, about_what=None, frac=1):
         return super().diff_matrix(pr, about_what, frac)
 
+    def __decompose__(self):
+        from mindquantum.core import Circuit
+        out = []
+        out.append(Circuit())
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out[-1] += RZ(2 * self.coeff).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out.append(Circuit())
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += RZ(2 * self.coeff).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        return out
+
 
 class XX(RotSelfHermMat):
     r"""
@@ -433,6 +485,27 @@ class XX(RotSelfHermMat):
     def diff_matrix(self, pr=None, about_what=None, frac=1):
         return super().diff_matrix(pr, about_what, frac)
 
+    def __decompose__(self):
+        from mindquantum.core import Circuit
+        out = []
+        out.append(Circuit())
+        out[-1] += H.on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out[-1] += RZ(2 * self.coeff).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out.append(Circuit())
+        out[-1] += H.on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += RZ(2 * self.coeff).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[1], [*self.ctrl_qubits])
+        return out
+
 
 class YY(RotSelfHermMat):
     r"""
@@ -459,6 +532,27 @@ class YY(RotSelfHermMat):
 
     def diff_matrix(self, pr=None, about_what=None, frac=1):
         return super().diff_matrix(pr, about_what, frac)
+
+    def __decompose__(self):
+        from mindquantum.core import Circuit
+        out = []
+        out.append(Circuit())
+        out[-1] += RX(np.pi / 2).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += RX(np.pi / 2).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out[-1] += RZ(2 * self.coeff).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out[-1] += RX(7 * np.pi / 2).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += RX(7 * np.pi / 2).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out.append(Circuit())
+        out[-1] += RX(np.pi / 2).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += RX(np.pi / 2).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += RZ(2 * self.coeff).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += RX(7 * np.pi / 2).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += RX(7 * np.pi / 2).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        return out
 
 
 class BarrierGate(FunctionalGate):
@@ -576,6 +670,7 @@ class Power(NoneParamNonHermMat):
         >>> assert np.all(np.isclose(Power(rx2,0.5).matrix(), rx1.matrix()))
     """
     def __init__(self, gate, t=0.5):
+        _check_input_type('t', numbers.Number, t)
         name = f'{gate}^{t}'
         n_qubits = gate.n_qubits
         matrix_value = fractional_matrix_power(gate.matrix(), t)
@@ -594,6 +689,16 @@ class Power(NoneParamNonHermMat):
         cpp_gate.obj_qubits = self.obj_qubits
         cpp_gate.ctrl_qubits = self.ctrl_qubits
         return cpp_gate
+
+    def __eq__(self, other):
+        _check_gate_type(other)
+        if self.obj_qubits == other.obj_qubits and set(self.ctrl_qubits) == set(other.ctrl_qubits):
+            if self.gate == other and self.t == 1:
+                return True
+            if isinstance(other, Power):
+                if self.gate == other.gate and self.t == other.t:
+                    return True
+        return False
 
 
 def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):

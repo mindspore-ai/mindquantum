@@ -13,15 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Quantum algorithms"""
+'''test decompose rule'''
+import numpy as np
+from mindquantum.algorithm.compiler.decompose import ccx_decompose
+from mindquantum.core import Circuit
+from mindquantum.core import X
 
-from . import library
-from . import nisq
-from . import compiler
-from .library import *
-from .nisq import *
 
-__all__ = []
-__all__.extend(library.__all__)
-__all__.extend(nisq.__all__)
-__all__.sort()
+def circuit_equal_test(gate, decompose_circ):
+    """
+    require two circuits are equal.
+    """
+    orig_circ = Circuit() + gate
+    assert np.allclose(orig_circ.matrix(), decompose_circ.matrix())
+
+
+def test_ccx():
+    """
+    Description: Test ccx decompose
+    Expectation: success
+    """
+    ccx = X.on(1, [0, 2])
+    for solution in ccx_decompose(ccx):
+        circuit_equal_test(ccx, solution)

@@ -72,7 +72,7 @@ evolution operator, but get {}".format(len(term)))
         if not isinstance(para, (dict, ParameterResolver)):
             raise TypeError(f'para requiers a number or a dict or a ParameterResolver, but get {type(para)}')
         para = ParameterResolver(para)
-
+    para = 2 * PR(para)
     out = []
     term = sorted(term)
     rxs = []
@@ -80,11 +80,11 @@ evolution operator, but get {}".format(len(term)))
         raise ValueError("Get constant hamiltonian, please use GlobalPhase gate and give the obj_qubit by yourself.")
     if len(term) == 1:  # single pauli operator
         if term[0][1] == 'X':
-            out.append(G.RX(para * 2).on(term[0][0]))
+            out.append(G.RX(para).on(term[0][0]))
         elif term[0][1] == 'Y':
-            out.append(G.RY(para * 2).on(term[0][0]))
+            out.append(G.RY(para).on(term[0][0]))
         else:
-            out.append(G.RZ(para * 2).on(term[0][0]))
+            out.append(G.RZ(para).on(term[0][0]))
     else:
         for index, action in term:
             if action == 'X':
@@ -97,10 +97,7 @@ evolution operator, but get {}".format(len(term)))
         for i in range(len(term) - 1):
             out.append(G.X.on(term[i + 1][0], term[i][0]))
         out.append(G.BarrierGate(False))
-        if isinstance(para, (dict, PR)):
-            out.append(G.RZ({i: 2 * j for i, j in para.items()}).on(term[-1][0]))
-        else:
-            out.append(G.RZ(2 * para).on(term[-1][0]))
+        out.append(G.RZ(para).on(term[-1][0]))
         for i in range(len(out) - 1)[::-1]:
             if i in rxs:
                 out.append(G.RX(np.pi * 3.5).on(out[i].obj_qubits))
