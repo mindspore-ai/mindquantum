@@ -360,6 +360,8 @@ class BlochScene:
                 Default: None.
             point_kwargs (dict): The other key word args for point. These args will be send to
                 `Axes3D.scatter`.
+            proj_kwargs (dict): The other key word args for projection line. These args will be send
+                to `Axes3D.plot`. Default: None.
 
         Returns:
             dict, a dict of object of stick, point, and projection line.
