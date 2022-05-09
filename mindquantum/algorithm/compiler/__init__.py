@@ -13,15 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Quantum algorithms"""
+"""MindQuantum compiler related modules."""
 
-from . import library
-from . import nisq
-from . import compiler
-from .library import *
-from .nisq import *
-
-__all__ = []
-__all__.extend(library.__all__)
-__all__.extend(nisq.__all__)
-__all__.sort()
+from . import decompose

@@ -136,6 +136,7 @@ struct ParameterResolver {
 
     T GetItem(const std::string& key) const {
         if (!this->Contains(key)) {
+            std::cout << "herer" << std::endl;
             throw std::runtime_error("parameter " + key + " not in this parameter resolver.");
         }
         return this->data_.at(key);

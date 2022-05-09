@@ -73,6 +73,13 @@ class BasicGate():
         return self.n_qubits == len(self.obj_qubits)
 
     def __decompose__(self):
+        """
+        Decompose this gate into more basic gate.
+
+        Returns:
+            None, if the decomposation is not defined.
+            List[Circuit], all possible decomposations.
+        """
         return None
 
     def __commutate__(self, other):
@@ -198,7 +205,10 @@ class BasicGate():
 
     def __eq__(self, other):
         _check_gate_type(other)
-        if self.name != other.name or self.n_qubits != other.n_qubits:
+        if not self.__class__ is other.__class__:
+            return False
+        if self.name != other.name or self.n_qubits != other.n_qubits or \
+self.obj_qubits != other.obj_qubits or set(self.ctrl_qubits) != set(other.ctrl_qubits):
             return False
         return True
 
@@ -214,16 +224,27 @@ class FunctionalGate(BasicGate):
         return copy.deepcopy(self)
 
 
-class SelfHermitianGate(BasicGate):
+class QuantumGate(BasicGate):
+    def __commutate__(self, other):
+        from mindquantum.core.gates import IGate, GlobalPhase
+        if isinstance(self, (IGate, GlobalPhase)) or isinstance(other, (IGate, GlobalPhase)) or self == other:
+            return True
+        if isinstance(self, other.__class__):
+            if self.obj_qubits == other.obj_qubits:
+                return True
+        return False
+
+
+class SelfHermitianGate(QuantumGate):
     def hermitian(self):
         return copy.deepcopy(self)
 
 
-class AntiHermitianGate(BasicGate):
+class AntiHermitianGate(QuantumGate):
     pass
 
 
-class NonHermitianGate(BasicGate):
+class NonHermitianGate(QuantumGate):
     """
     The basic class of gate that is non hermitian.
 
@@ -259,8 +280,11 @@ class NonHermitianGate(BasicGate):
             s += _DAGGER_MASK
         return s
 
+    def __eq__(self, other):
+        return super().__eq__(other) and self.hermitianed == other.hermitianed
 
-class MatrixGate(BasicGate):
+
+class MatrixGate(QuantumGate):
     """Gate that has matrix defined."""
     def __init__(self, matrix_value, name, n_qubits, *args, obj_qubits=None, ctrl_qubits=None, **kwargs):
         super().__init__(name, n_qubits, *args, obj_qubits=obj_qubits, ctrl_qubits=ctrl_qubits, **kwargs)
@@ -269,13 +293,16 @@ class MatrixGate(BasicGate):
     def matrix(self):
         return self.matrix_value
 
+    def __eq__(self, other):
+        return super().__eq__(other) and np.allclose(self.matrix(), other.matrix())
 
-class NoneParameterGate(BasicGate):
+
+class NoneParameterGate(QuantumGate):
     def __call__(self, obj_qubits, ctrl_qubits=None):
         return self.on(obj_qubits, ctrl_qubits)
 
 
-class ParameterGate(BasicGate):
+class ParameterGate(QuantumGate):
     """Gate that is parameterized."""
     def __init__(self, pr: PR, name, n_qubits, *args, obj_qubits=None, ctrl_qubits=None, **kwargs):
         super().__init__(name, n_qubits, *args, obj_qubits=obj_qubits, ctrl_qubits=ctrl_qubits, **kwargs)
@@ -285,7 +312,7 @@ class ParameterGate(BasicGate):
         return self.coeff.expression()
 
     def __str_in_terminal__(self):
-        qubit_s = BasicGate.__qubits_expression__(self)
+        qubit_s = QuantumGate.__qubits_expression__(self)
         pr_s = self.__type_specific_str__()
         s = join_without_empty('|', [pr_s, qubit_s])
         return self.name + (f'({s})' if s else '')
@@ -342,6 +369,9 @@ class ParameterGate(BasicGate):
         self.coeff.no_grad_part(names)
         return self
 
+    def __eq__(self, other):
+        return super().__eq__(other) and self.coeff == other.coeff
+
 
 class ParameterOppsGate(ParameterGate):
     def hermitian(self):
@@ -373,12 +403,19 @@ class NoneParamNonHermMat(NoneParameterGate, MatrixGate, NonHermitianGate):
             cpp_obj.base_matrix = mb.dim2matrix(self.matrix())
         return cpp_obj
 
+    def __eq__(self, other):
+        return NonHermitianGate.__eq__(self, other)
+
 
 class NoneParamSelfHermMat(NoneParameterGate, SelfHermitianGate, MatrixGate):
-    pass
+    def __eq__(self, other):
+        return MatrixGate.__eq__(self, other)
 
 
 class PauliGate(NoneParamSelfHermMat):
+    """
+    Pauli Gate.
+    """
     def __pow__(self, coeff):
         from mindquantum.core.gates.basicgate import RX, RY, RZ
         gate_map = {'X': RX, 'Y': RY, 'Z': RZ}
@@ -387,6 +424,9 @@ class PauliGate(NoneParamSelfHermMat):
         r_gate = gate_map[self.name]
         pr = PR(coeff) * np.pi
         return r_gate(pr)
+
+    def __eq__(self, other):
+        return QuantumGate.__eq__(self, other)
 
 
 class PauliStringGate(NoneParamSelfHermMat):
@@ -399,6 +439,9 @@ class PauliStringGate(NoneParamSelfHermMat):
         matrix_value = pauli_string_matrix(name)
         super().__init__(name=name, n_qubits=n_qubits, matrix_value=matrix_value)
         self.pauli_string = pauli_string
+
+    def __eq__(self, other):
+        return QuantumGate.__eq__(self, other)
 
 
 class RotSelfHermMat(ParameterOppsGate):
