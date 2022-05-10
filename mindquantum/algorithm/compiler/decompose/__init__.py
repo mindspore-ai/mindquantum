@@ -17,6 +17,7 @@
 Decompose rule for gate.
 """
 from . import x_related
+from . import xx_related
 from .x_related import ccx_decompose
 from .xx_related import xx_decompose, cxx_decompose
 
