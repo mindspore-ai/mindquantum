@@ -44,7 +44,7 @@ def cy_decompose(gate: G.Y):
 
         >>> decomposed_circ
         q0: ────────●───────
-                     │
+                    │
         q1: ──S†────X────S──
     """
     
