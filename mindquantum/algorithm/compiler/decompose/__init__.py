@@ -18,10 +18,23 @@ Decompose rule for gate.
 """
 from . import x_related
 from . import xx_related, yy_related
+from . import y_related
+from . import h_related
+from . import z_related
+from . import ry_related
+from . import rz_related
+from . import rx_related
+from . import swap_related
 from .x_related import ccx_decompose
 from .xx_related import xx_decompose, cxx_decompose
 from .yy_related import yy_decompose, cyy_decompose
-
+from .y_related import cry_decompose
+from .h_related import ch_decompose
+from .z_related import cz_decompose
+from .ry_related import cry_decompose
+from .rz_related import crz_decompose
+from .rx_related import crx_decompose
+from .swap_related import swap_decompose, cswap_decompose
 __all__ = []
 __all__.extend(x_related.__all__)
 __all__.extend(xx_related.__all__)
