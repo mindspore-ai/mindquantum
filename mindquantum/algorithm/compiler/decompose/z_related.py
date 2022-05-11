@@ -43,7 +43,7 @@ def cz_decompose(gate: G.Z):
         q1: ──Z──
         >>> decomposed_circ
         q0: ───────●───────
-                    │
+                   │
         q1: ──H────X────H──
     """
     _check_input_type('gate', G.Z, gate)
