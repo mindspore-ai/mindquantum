@@ -44,7 +44,7 @@ def swap_decompose(gate: G.SWAP):
 
         >>> decomposed_circ
         q0: ──X────●────X──
-              │     │    │
+              │    │    │
         q1: ──●────X────●──
     """
     
@@ -87,9 +87,9 @@ def cswap_decompose(gate: G.SWAP):
 
         >>> decomposed_circ
         q0: ───────●───────
-                │
+                   │
         q1: ──X────●────X──
-            │    │    │
+              │    │    │
         q2: ──●────X────●──
     """
     
