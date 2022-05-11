@@ -39,12 +39,12 @@ def cry_decompose(gate: G.RY):
         >>> decomposed_circ = cry_decompose(cry)[0]
         >>> origin_circ
         q0: ─────●─────
-                  │       
+                 │       
         q1: ───RY(1)───
 
         >>> decomposed_circ
-        q0: ────────────●───────────────●──
-                          │                 │
+        q0: ─────────────●────────────────●──
+                         │                │
         q1: ──RY(1/2)────X────RY(-1/2)────X──
     """
     
