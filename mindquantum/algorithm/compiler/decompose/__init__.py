@@ -17,8 +17,11 @@
 Decompose rule for gate.
 """
 from . import x_related
+from . import xx_related
 from .x_related import ccx_decompose
+from .xx_related import xx_decompose, cxx_decompose
 
 __all__ = []
 __all__.extend(x_related.__all__)
+__all__.extend(xx_related.__all__)
 __all__.sort()
