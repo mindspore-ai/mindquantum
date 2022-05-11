@@ -39,12 +39,12 @@ def crz_decompose(gate: G.RZ):
         >>> decomposed_circ = crz_decompose(crz)[0]
         >>> origin_circ
         q0: ────●────
-                 │
+                │
         q1: ──RZ(1)──
 
         >>> decomposed_circ
-        q0: ─────────────●────────────────●──
-                           │                   │
+        q0: ──────────────●─────────────────●──
+                          │                 │
         q1: ──RZ(1/2)─────X─────RZ(-1/2)────X──
     """
     
