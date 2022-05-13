@@ -14,7 +14,6 @@
 # limitations under the License.
 # ============================================================================
 '''test decompose rule'''
-import numpy as np
 from mindquantum.algorithm.compiler.decompose import cry_decompose
 from mindquantum.core import Circuit
 from mindquantum.core import RY
