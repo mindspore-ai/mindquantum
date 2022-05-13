@@ -51,15 +51,15 @@ def ch_decompose(gate: G.HGate):
     solutions = []
     c1 = Circuit()
     solutions.append(c1)
-    q0 = gate.obj_qubits[0]
-    q1 = gate.ctrl_qubits[0]
-    c1 += S.on(q0)
-    c1 += H.on(q0)
-    c1 += T.on(q0)
-    c1 += X.on(q0,q1)
-    c1 += T.on(q0).hermitian()
-    c1 += H.on(q0)
-    c1 += S.on(q0).hermitian()
+    q0 = gate.ctrl_qubits[0]
+    q1 = gate.obj_qubits[0]
+    c1 += S.on(q1)
+    c1 += H.on(q1)
+    c1 += T.on(q1)
+    c1 += X.on(q1,q0)
+    c1 += T.on(q1).hermitian()
+    c1 += H.on(q1)
+    c1 += S.on(q1).hermitian()
     return solutions
 
 decompose_rules = ['ch_decompose']
