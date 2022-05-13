@@ -21,7 +21,7 @@ from mindquantum.core import gates as G
 from mindquantum.core import Circuit, T, X, H, S
 from mindquantum.utils.type_value_check import _check_input_type, _check_control_num
 
-def ch_decompose(gate: G.H):
+def ch_decompose(gate: G.HGate):
     """
     Decompose ch gate.
 
@@ -47,7 +47,7 @@ def ch_decompose(gate: G.H):
                              │
         q1: ──S────H────T────X────T†────H────S†──
     """
-    _check_input_type('gate', G.H, gate)
+    _check_input_type('gate', G.HGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)
     solutions = []
     c1 = Circuit()
