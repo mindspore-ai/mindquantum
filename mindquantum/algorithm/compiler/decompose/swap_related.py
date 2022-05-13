@@ -18,7 +18,7 @@ SWAP gate related decompose rule.
 """
 
 from mindquantum.core import gates as G
-from mindquantum.core import Circuit, X, SWAP
+from mindquantum.core import Circuit
 from mindquantum.utils.type_value_check import _check_input_type, _check_control_num
 
 def swap_decompose(gate: G.SWAP):
@@ -55,11 +55,9 @@ def swap_decompose(gate: G.SWAP):
     solutions.append(c1)
     q0 = gate.obj_qubits[0]
     q1 = gate.obj_qubits[1]
-    
     c1 += G.X.on(q1,q0)
     c1 += G.X.on(q0,q1)
     c1 += G.X.on(q1,q0)
-    
     return solutions
 
 def cswap_decompose(gate: G.SWAP):
@@ -92,7 +90,6 @@ def cswap_decompose(gate: G.SWAP):
               │    │    │
         q2: ──●────X────●──
     """
-    
     _check_input_type('gate', G.SWAP, gate)
     _check_control_num(gate.ctrl_qubits, 1)
     solutions = []
@@ -101,12 +98,10 @@ def cswap_decompose(gate: G.SWAP):
     q0 = gate.ctrl_qubits[0]
     q1 = gate.obj_qubits[0]
     q2 = gate.obj_qubits[1]
-    
-    c1 += X.on(q1,q2)
-    c1 += X.on(q2,[q0,q1])
-    c1 += X.on(q1,q2)
-    
+    c1 += G.X.on(q1,q2)
+    c1 += G.X.on(q2,[q0,q1])
+    c1 += G.X.on(q1,q2)
     return solutions
 
 decompose_rules = ['swap_decompose', 'cswap_decompose']
-__all__ = decompose_rules 
+__all__ = decompose_rules
