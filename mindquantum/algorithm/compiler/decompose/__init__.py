@@ -28,7 +28,7 @@ from . import swap_related
 from .x_related import ccx_decompose
 from .xx_related import xx_decompose, cxx_decompose
 from .yy_related import yy_decompose, cyy_decompose
-from .y_related import cry_decompose
+from .y_related import cy_decompose
 from .h_related import ch_decompose
 from .z_related import cz_decompose
 from .ry_related import cry_decompose
