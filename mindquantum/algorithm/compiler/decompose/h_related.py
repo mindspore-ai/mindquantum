@@ -18,7 +18,7 @@ H gate related decompose rule.
 """
 
 from mindquantum.core import gates as G
-from mindquantum.core import Circuit, T, X, H, S
+from mindquantum.core import Circuit
 from mindquantum.utils.type_value_check import _check_input_type, _check_control_num
 
 def ch_decompose(gate: G.HGate):
@@ -53,13 +53,13 @@ def ch_decompose(gate: G.HGate):
     solutions.append(c1)
     q0 = gate.ctrl_qubits[0]
     q1 = gate.obj_qubits[0]
-    c1 += S.on(q1)
-    c1 += H.on(q1)
-    c1 += T.on(q1)
-    c1 += X.on(q1,q0)
-    c1 += T.on(q1).hermitian()
-    c1 += H.on(q1)
-    c1 += S.on(q1).hermitian()
+    c1 += G.S.on(q1)
+    c1 += G.H.on(q1)
+    c1 += G.T.on(q1)
+    c1 += G.X.on(q1,q0)
+    c1 += G.T.on(q1).hermitian()
+    c1 += G.H.on(q1)
+    c1 += G.S.on(q1).hermitian()
     return solutions
 
 decompose_rules = ['ch_decompose']
