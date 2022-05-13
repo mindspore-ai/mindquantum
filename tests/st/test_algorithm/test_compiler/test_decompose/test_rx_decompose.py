@@ -37,4 +37,3 @@ def test_crx():
     crx = RX.on(1, 0)
     for solution in crx_decompose(crx):
         circuit_equal_test(crx, solution)
-        
