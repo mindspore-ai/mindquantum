@@ -51,11 +51,11 @@ def cz_decompose(gate: G.Z):
     solutions = []
     c1 = Circuit()
     solutions.append(c1)
-    q0 = gate.obj_qubits[0]
-    q1 = gate.ctrl_qubits[0]
-    c1 += G.H.on(q0)
-    c1 += G.X.on(q0,q1)
-    c1 += G.H.on(q0)
+    q0 = gate.ctrl_qubits[0]
+    q1 = gate.obj_qubits[0]
+    c1 += G.H.on(q1)
+    c1 += G.X.on(q1,q0)
+    c1 += G.H.on(q1)
 
     return solutions
 
