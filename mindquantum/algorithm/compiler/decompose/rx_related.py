@@ -19,14 +19,15 @@ RX gate related decompose rule.
 
 from mindquantum.core import gates as G
 from mindquantum.core import Circuit
+from mindquantum.core.gates.basicgate import RX
 from mindquantum.utils.type_value_check import _check_input_type, _check_control_num
 
-def crx_decompose(gate: G.RXGate):
+def crx_decompose(gate: G.RX):
     """
     Decompose crx gate.
 
     Args:
-        gate (RXGate): a RXGate with one control qubits.
+        gate (RX): a RX gate with one control qubits.
 
     Returns:
         List[Circuit], all possible decompose solution.
@@ -46,7 +47,7 @@ def crx_decompose(gate: G.RXGate):
                    │                │
         q1: ──S────X────RY(-1/2)────X────RY(1/2)────S†──
     """
-    _check_input_type('gate', G.RXGate, gate)
+    _check_input_type('gate', RX, gate)
     _check_control_num(gate.ctrl_qubits, 1)
     solutions = []
     c1 = Circuit()
