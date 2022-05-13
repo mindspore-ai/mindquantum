@@ -39,15 +39,18 @@ def crx_decompose(gate: G.RX):
         >>> decomposed_circ = crx_decompose(crx)[0]
         >>> origin_circ
         q0: ─────●─────
-                 │       
+                 │
         q1: ───RX(1)───
 
         >>> decomposed_circ
-        q0: ─────────────●─────────────────────────────────────────────────────────●─────────────────────────────────────────────────────────
-                         │                                                         │
-        q1: ──RZ(π/2)────X────RZ(-1/2)────RX(-π/2)────RZ(0)────RX(π/2)────RZ(0)────X────RZ(1/2)────RX(-π/2)────RZ(-π/2)────RX(π/2)────RZ(0)──
+        q0: ─────────────●───────────────────────────────────────────────────────
+                         │                                                       
+        q1: ──RZ(π/2)────X────RZ(-1/2)────RX(-π/2)────RZ(0)────RX(π/2)────RZ(0)──
+
+        ──●─────────────────────────────────────────────────────────
+          │
+        ──X────RZ(1/2)────RX(-π/2)────RZ(-π/2)────RX(π/2)────RZ(0)──
     """
-    
     _check_input_type('gate', G.RX, gate)
     _check_control_num(gate.ctrl_qubits, 1)
     solutions = []
@@ -55,13 +58,11 @@ def crx_decompose(gate: G.RX):
     solutions.append(c1)
     q0 = gate.obj_qubits[0]
     q1 = gate.ctrl_qubits[0]
-    
     c1 += G.RZ(np.pi/2).on(q0)
     c1 += G.X.on(q0,q1)
     c1 += U3(-gate.coeff/2,0,0,obj_qubit=q0)
     c1 += G.X.on(q0,q1)
     c1 += U3(gate.coeff/2,-np.pi/2,0,obj_qubit=q0)
-
     return solutions
 
 
