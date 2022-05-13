@@ -17,6 +17,7 @@
 from mindquantum.algorithm.compiler.decompose import cry_decompose
 from mindquantum.core import Circuit
 from mindquantum.core import RY
+import numpy as np
 
 
 
