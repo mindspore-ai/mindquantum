@@ -37,5 +37,3 @@ def test_cry():
     cry = RY.on(1, 0)
     for solution in cry_decompose(cry):
         circuit_equal_test(cry, solution)
-        
-
