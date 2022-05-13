@@ -21,12 +21,12 @@ from mindquantum.core import gates as G
 from mindquantum.core import Circuit
 from mindquantum.utils.type_value_check import _check_input_type, _check_control_num
 
-def cy_decompose(gate: G.Y):
+def cy_decompose(gate: G.YGate):
     """
     Decompose cy gate.
 
     Args:
-        gate (Y): a YGate with one control qubits.
+        gate (YGate): a YGate with one control qubits.
 
     Returns:
         List[Circuit], all possible decompose solution.
@@ -46,7 +46,7 @@ def cy_decompose(gate: G.Y):
                     │
         q1: ──S†────X────S──
     """
-    _check_input_type('gate', G.Y, gate)
+    _check_input_type('gate', G.YGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)
     solutions = []
     c1 = Circuit()
