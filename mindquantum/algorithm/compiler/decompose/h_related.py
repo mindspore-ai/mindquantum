@@ -47,7 +47,6 @@ def ch_decompose(gate: G.H):
                              │
         q1: ──S────H────T────X────T†────H────S†──
     """
-    
     _check_input_type('gate', G.H, gate)
     _check_control_num(gate.ctrl_qubits, 1)
     solutions = []
@@ -55,7 +54,6 @@ def ch_decompose(gate: G.H):
     solutions.append(c1)
     q0 = gate.obj_qubits[0]
     q1 = gate.ctrl_qubits[0]
-    
     c1 += S.on(q0)
     c1 += H.on(q0)
     c1 += T.on(q0)
@@ -63,7 +61,6 @@ def ch_decompose(gate: G.H):
     c1 += T.on(q0).hermitian()
     c1 += H.on(q0)
     c1 += S.on(q0).hermitian()
-    
     return solutions
 
 decompose_rules = ['ch_decompose']
