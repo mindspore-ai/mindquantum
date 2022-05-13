@@ -47,12 +47,12 @@ def cz_decompose(gate: G.Z):
         q1: ──H────X────H──
     """
     _check_input_type('gate', G.Z, gate)
-    _check_control_num(gate.ctrl_qubits, 0)
+    _check_control_num(gate.ctrl_qubits, 1)
     solutions = []
     c1 = Circuit()
     solutions.append(c1)
     q0 = gate.obj_qubits[0]
-    q1 = gate.ctrl_qubits[1]
+    q1 = gate.ctrl_qubits[0]
     c1 += G.H.on(q0)
     c1 += G.X.on(q0,q1)
     c1 += G.H.on(q0)
