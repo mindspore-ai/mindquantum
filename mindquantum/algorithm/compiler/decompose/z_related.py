@@ -21,12 +21,12 @@ from mindquantum.core import gates as G
 from mindquantum.core import Circuit
 from mindquantum.utils.type_value_check import _check_input_type, _check_control_num
 
-def cz_decompose(gate: G.Z):
+def cz_decompose(gate: G.ZGate):
     """
     Decompose cz gate.
 
     Args:
-        gate (Z): a ZGate with one control qubits.
+        gate (ZGate): a ZGate with one control qubits.
 
     Returns:
         List[Circuit], all possible decompose solution.
@@ -46,7 +46,7 @@ def cz_decompose(gate: G.Z):
                    │
         q1: ──H────X────H──
     """
-    _check_input_type('gate', G.Z, gate)
+    _check_input_type('gate', G.ZGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)
     solutions = []
     c1 = Circuit()
