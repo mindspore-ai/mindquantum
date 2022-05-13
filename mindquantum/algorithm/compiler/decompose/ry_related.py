@@ -18,7 +18,7 @@ RY gate related decompose rule.
 """
 
 from mindquantum.core import gates as G
-from mindquantum.core import Circuit, RY, X, Y
+from mindquantum.core import Circuit
 from mindquantum.utils.type_value_check import _check_input_type, _check_control_num
 
 def cry_decompose(gate: G.RY):
@@ -39,7 +39,7 @@ def cry_decompose(gate: G.RY):
         >>> decomposed_circ = cry_decompose(cry)[0]
         >>> origin_circ
         q0: ─────●─────
-                 │       
+                 │
         q1: ───RY(1)───
 
         >>> decomposed_circ
@@ -47,7 +47,6 @@ def cry_decompose(gate: G.RY):
                          │                │
         q1: ──RY(1/2)────X────RY(-1/2)────X──
     """
-    
     _check_input_type('gate', G.RY, gate)
     _check_control_num(gate.ctrl_qubits, 1)
     solutions = []
@@ -55,12 +54,10 @@ def cry_decompose(gate: G.RY):
     solutions.append(c1)
     q0 = gate.obj_qubits[0]
     q1 = gate.ctrl_qubits[0]
-    
     c1 += G.RY(gate.coeff/2).on(q0)
     c1 += G.X.on(q0, q1)
     c1 += G.RY(-gate.coeff/2).on(q0)
     c1 += G.X.on(q0, q1)
-    
     return solutions
 
 decompose_rules = ['cry_decompose']
