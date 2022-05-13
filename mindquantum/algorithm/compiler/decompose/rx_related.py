@@ -18,7 +18,7 @@ RX gate related decompose rule.
 """
 
 from mindquantum.core import gates as G
-from mindquantum.core import Circuit, X, U3, RZ
+from mindquantum.core import Circuit
 from mindquantum.utils.type_value_check import _check_input_type, _check_control_num
 
 def crx_decompose(gate: G.RX):
@@ -60,9 +60,9 @@ def crx_decompose(gate: G.RX):
     q1 = gate.ctrl_qubits[0]
     c1 += G.RZ(np.pi/2).on(q0)
     c1 += G.X.on(q0,q1)
-    c1 += U3(-gate.coeff/2,0,0,obj_qubit=q0)
+    c1 += G.U3(-gate.coeff/2,0,0,obj_qubit=q0)
     c1 += G.X.on(q0,q1)
-    c1 += U3(gate.coeff/2,-np.pi/2,0,obj_qubit=q0)
+    c1 += G.U3(gate.coeff/2,-np.pi/2,0,obj_qubit=q0)
     return solutions
 
 
