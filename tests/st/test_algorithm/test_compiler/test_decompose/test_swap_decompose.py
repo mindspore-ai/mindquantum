@@ -17,6 +17,7 @@
 from mindquantum.algorithm.compiler.decompose import swap_decompose, cswap_decompose
 from mindquantum.core import Circuit
 from mindquantum.core import SWAP
+import numpy as np
 
 
 
