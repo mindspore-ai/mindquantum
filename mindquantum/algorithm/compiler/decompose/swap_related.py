@@ -47,7 +47,7 @@ def swap_decompose(gate: G.SWAP):
               │    │    │
         q1: ──●────X────●──
     """
-    
+
     _check_input_type('gate', G.SWAP, gate)
     _check_control_num(gate.obj_qubits, 2)
     solutions = []
