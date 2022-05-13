@@ -21,12 +21,12 @@ from mindquantum.core import gates as G
 from mindquantum.core import Circuit
 from mindquantum.utils.type_value_check import _check_input_type, _check_control_num
 
-def cry_decompose(gate: G.RY):
+def cry_decompose(gate: G.RYGate):
     """
     Decompose cry gate.
 
     Args:
-        gate (RY): a RY gate with one control qubits.
+        gate (RYGate): a RYGate with one control qubits.
 
     Returns:
         List[Circuit], all possible decompose solution.
@@ -47,7 +47,7 @@ def cry_decompose(gate: G.RY):
                          │                │
         q1: ──RY(1/2)────X────RY(-1/2)────X──
     """
-    _check_input_type('gate', G.RY, gate)
+    _check_input_type('gate', G.RYGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)
     solutions = []
     c1 = Circuit()
