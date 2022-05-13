@@ -34,6 +34,6 @@ def test_crz():
     Description: Test crz decompose
     Expectation: success
     """
-    crz = RZ.on(1, 0)
+    crz = RZ(1.23).on(1, 0)
     for solution in crz_decompose(crz):
         circuit_equal_test(crz, solution)
