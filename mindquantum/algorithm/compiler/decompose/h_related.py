@@ -41,7 +41,6 @@ def ch_decompose(gate: G.HGate):
         q0: ──●──
               │
         q1: ──H──
-
         >>> decomposed_circ
         q0: ─────────────────●───────────────────
                              │
