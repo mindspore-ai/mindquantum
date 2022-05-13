@@ -52,12 +52,12 @@ def cry_decompose(gate: G.RYGate):
     solutions = []
     c1 = Circuit()
     solutions.append(c1)
-    q0 = gate.obj_qubits[0]
-    q1 = gate.ctrl_qubits[0]
-    c1 += G.RY(gate.coeff/2).on(q0)
-    c1 += G.X.on(q0, q1)
-    c1 += G.RY(-gate.coeff/2).on(q0)
-    c1 += G.X.on(q0, q1)
+    q0 = gate.ctrl_qubits[0]
+    q1 = gate.obj_qubits[0]
+    c1 += G.RY(gate.coeff/2).on(q1)
+    c1 += G.X.on(q1, q0)
+    c1 += G.RY(-gate.coeff/2).on(q1)
+    c1 += G.X.on(q1, q0)
     return solutions
 
 decompose_rules = ['cry_decompose']
