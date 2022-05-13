@@ -26,7 +26,7 @@ def ch_decompose(gate: G.HGate):
     Decompose ch gate.
 
     Args:
-        gate (H): a H gate with one control qubits.
+        gate (HGate): a HGate with one control qubits.
 
     Returns:
         List[Circuit], all possible decompose solution.
