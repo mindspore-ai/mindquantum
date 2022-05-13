@@ -14,7 +14,6 @@
 # limitations under the License.
 # ============================================================================
 '''test decompose rule'''
-import numpy as np
 from mindquantum.algorithm.compiler.decompose import crx_decompose
 from mindquantum.core import Circuit
 from mindquantum.core import RX
@@ -33,6 +32,6 @@ def test_crx():
     Description: Test crx decompose
     Expectation: success
     """
-    crx = RX(np.pi).on(1, 0)
+    crx = RX(1.23).on(1, 0)
     for solution in crx_decompose(crx):
         circuit_equal_test(crx, solution)
