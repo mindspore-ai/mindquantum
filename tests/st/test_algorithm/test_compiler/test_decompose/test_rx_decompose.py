@@ -20,7 +20,6 @@ from mindquantum.core import Circuit
 from mindquantum.core import RX
 
 
-
 def circuit_equal_test(gate, decompose_circ):
     """
     require two circuits are equal.
@@ -34,6 +33,6 @@ def test_crx():
     Description: Test crx decompose
     Expectation: success
     """
-    crx = RX.on(1, 0)
+    crx = RX(np.pi).on(1, 0)
     for solution in crx_decompose(crx):
         circuit_equal_test(crx, solution)
