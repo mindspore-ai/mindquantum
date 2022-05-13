@@ -18,7 +18,7 @@ RX gate related decompose rule.
 """
 
 from mindquantum.core import gates as G
-from mindquantum.core import Circuit, U3
+from mindquantum.core import Circuit
 from mindquantum.utils.type_value_check import _check_input_type, _check_control_num
 import numpy as np
 
@@ -27,7 +27,7 @@ def crx_decompose(gate: G.RXGate):
     Decompose crx gate.
 
     Args:
-        gate (RXGate): a RXGate gate with one control qubits.
+        gate (RXGate): a RXGate with one control qubits.
 
     Returns:
         List[Circuit], all possible decompose solution.
@@ -42,28 +42,24 @@ def crx_decompose(gate: G.RXGate):
         q0: ─────●─────
                  │
         q1: ───RX(1)───
-
         >>> decomposed_circ
-        q0: ─────────────●───────────────────────────────────────────────────────
-                         │
-        q1: ──RZ(π/2)────X────RZ(-1/2)────RX(-π/2)────RZ(0)────RX(π/2)────RZ(0)──
-
-        ──●─────────────────────────────────────────────────────────
-          │
-        ──X────RZ(1/2)────RX(-π/2)────RZ(-π/2)────RX(π/2)────RZ(0)──
+        q0: ───────●────────────────●───────────────────
+                   │                │
+        q1: ──S────X────RY(-1/2)────X────RY(1/2)────S†──
     """
     _check_input_type('gate', G.RXGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)
     solutions = []
     c1 = Circuit()
     solutions.append(c1)
-    q0 = gate.obj_qubits[0]
-    q1 = gate.ctrl_qubits[0]
-    c1 += G.RZ(np.pi/2).on(q0)
-    c1 += G.X.on(q0,q1)
-    c1 += U3(-gate.coeff/2,0,0,obj_qubit=q0)
-    c1 += G.X.on(q0,q1)
-    c1 += U3(gate.coeff/2,-np.pi/2,0,obj_qubit=q0)
+    q0 = gate.ctrl_qubits[0]
+    q1 = gate.obj_qubits[0]
+    c1 += G.S.on(q1)
+    c1 += G.X.on(q1, q0)
+    c1 += G.RY(-gate.coeff/2).on(q1)
+    c1 += G.X.on(q1, q0)
+    c1 += G.RY(gate.coeff/2).on(q1)
+    c1 += G.S.on(q1).hermitian()
     return solutions
 
 
