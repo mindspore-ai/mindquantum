@@ -41,7 +41,6 @@ def cy_decompose(gate: G.Y):
         q0: ──●──
               │
         q1: ──Y──
-
         >>> decomposed_circ
         q0: ────────●───────
                     │
@@ -52,11 +51,11 @@ def cy_decompose(gate: G.Y):
     solutions = []
     c1 = Circuit()
     solutions.append(c1)
-    q0 = gate.obj_qubits[0]
-    q1 = gate.ctrl_qubits[0]
-    c1 += G.S.on(q0).hermitian()
-    c1 += G.X.on(q0, q1)
-    c1 += G.S.on(q0)
+    q0 = gate.ctrl_qubits[0]
+    q1 = gate.obj_qubits[0]
+    c1 += G.S.on(q1).hermitian()
+    c1 += G.X.on(q1, q0)
+    c1 += G.S.on(q1)
     return solutions
 
 decompose_rules = ['cy_decompose']
