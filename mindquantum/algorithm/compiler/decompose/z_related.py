@@ -56,7 +56,6 @@ def cz_decompose(gate: G.Z):
     c1 += G.H.on(q1)
     c1 += G.X.on(q1,q0)
     c1 += G.H.on(q1)
-
     return solutions
 
 decompose_rules = ['cz_decompose']
