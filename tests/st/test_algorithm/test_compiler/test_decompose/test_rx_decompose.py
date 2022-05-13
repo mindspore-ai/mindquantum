@@ -17,6 +17,7 @@
 from mindquantum.algorithm.compiler.decompose import crx_decompose
 from mindquantum.core import Circuit
 from mindquantum.core import RX
+import numpy as np
 
 
 def circuit_equal_test(gate, decompose_circ):
