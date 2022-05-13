@@ -20,7 +20,6 @@ RX gate related decompose rule.
 from mindquantum.core import gates as G
 from mindquantum.core import Circuit
 from mindquantum.utils.type_value_check import _check_input_type, _check_control_num
-import numpy as np
 
 def crx_decompose(gate: G.RXGate):
     """
