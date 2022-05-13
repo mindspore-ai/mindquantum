@@ -60,4 +60,4 @@ def crz_decompose(gate: G.RZ):
     c1 += G.X.on(q0,q1)
     return solutions
 decompose_rules = ['crz_decompose']
-__all__ = decompose_rules 
+__all__ = decompose_rules
