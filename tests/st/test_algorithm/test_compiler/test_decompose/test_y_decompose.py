@@ -14,11 +14,9 @@
 # limitations under the License.
 # ============================================================================
 '''test decompose rule'''
-import numpy as np
 from mindquantum.algorithm.compiler.decompose import cy_decompose
 from mindquantum.core import Circuit
 from mindquantum.core import Y
-
 
 
 def circuit_equal_test(gate, decompose_circ):
