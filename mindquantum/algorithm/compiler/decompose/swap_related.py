@@ -65,7 +65,7 @@ def cswap_decompose(gate: G.SWAPGate):
     Decompose cswap gate.
 
     Args:
-        gate (SWAP): a SWAP gate with one control qubit.
+        gate (SWAPGate): a SWAPGate with one control qubit.
 
     Returns:
         List[Circuit], all possible decompose solution.
@@ -90,7 +90,7 @@ def cswap_decompose(gate: G.SWAPGate):
               │    │    │
         q2: ──●────X────●──
     """
-    _check_input_type('gate', G.SWAP, gate)
+    _check_input_type('gate', G.SWAPGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)
     solutions = []
     c1 = Circuit()
