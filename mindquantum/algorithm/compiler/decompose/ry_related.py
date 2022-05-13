@@ -41,7 +41,6 @@ def cry_decompose(gate: G.RYGate):
         q0: ─────●─────
                  │
         q1: ───RY(1)───
-
         >>> decomposed_circ
         q0: ─────────────●────────────────●──
                          │                │
