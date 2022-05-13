@@ -34,6 +34,6 @@ def test_cry():
     Description: Test cry decompose
     Expectation: success
     """
-    cry = RY.on(1, 0)
+    cry = RY(1.23).on(1, 0)
     for solution in cry_decompose(cry):
         circuit_equal_test(cry, solution)
