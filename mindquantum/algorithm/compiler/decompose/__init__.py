@@ -25,6 +25,9 @@ from . import ry_related
 from . import rz_related
 from . import rx_related
 from . import swap_related
+from . import zz_related
+from . import s_related
+from . import t_related
 from .x_related import ccx_decompose
 from .xx_related import xx_decompose, cxx_decompose
 from .yy_related import yy_decompose, cyy_decompose
@@ -35,6 +38,9 @@ from .ry_related import cry_decompose
 from .rz_related import crz_decompose
 from .rx_related import crx_decompose
 from .swap_related import swap_decompose, cswap_decompose
+from .zz_related import zz_decompose
+from .s_related import cs_decompose
+from .t_related import ct_decompose
 
 __all__ = []
 __all__.extend(x_related.__all__)
@@ -47,4 +53,7 @@ __all__.extend(ry_related.__all__)
 __all__.extend(rz_related.__all__)
 __all__.extend(rx_related.__all__)
 __all__.extend(swap_related.__all__)
+__all__.extend(zz_related.__all__)
+__all__.extend(s_related.__all__)
+__all__.extend(t_related.__all__)
 __all__.sort()
