@@ -1,0 +1,2 @@
+mindquantum.core.operators.TimeEvolution.circuit
+得到这个时间进化算子的一阶蹄子分解电路。
