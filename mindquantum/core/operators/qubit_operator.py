@@ -20,12 +20,11 @@
 """This is the module for the Qubit Operator. """
 
 import json
-import ast
 import numpy as np
 from scipy.sparse import kron, csr_matrix
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
-from ._base_operator import _Operator
+from mindquantum.core.operators._base_operator import _Operator
 
 EQ_TOLERANCE = 1e-8
 
@@ -149,6 +148,15 @@ class QubitOperator(_Operator):
         of = oqo()
         of.terms = terms
         return of
+
+    @staticmethod
+    def from_openfermion(of_ops):
+        from openfermion import QubitOperator as ofo
+        _check_input_type('of_ops', ofo, of_ops)
+        out = QubitOperator()
+        for k, v in of_ops.terms.items():
+            out.terms[k] = PR(v)
+        return out
 
     def _parse_string(self, terms_string):
         """Parse a term given as a string type
@@ -360,39 +368,15 @@ class QubitOperator(_Operator):
         Examples:
             >>> from mindquantum.core.operators import QubitOperator
             >>> ops = QubitOperator('X0 Y1', 1.2) + QubitOperator('Z0 X1', {'a': 2.1})
-            >>> print(ops.dumps())
-            {
-                "((0, 'X'), (1, 'Y'))": "1.2",
-                "((0, 'Z'), (1, 'X'))": "{\"a\": 2.1, \"__class__\": \"ParameterResolver\", \
-                    \"__module__\": \"parameterresolver.parameterresolver\", \"no_grad_parameters\": []}",
-                "__class__": "QubitOperator",
-                "__module__": "operators.qubit_operator"
-            }
+            >>> len(ops.dumps())
+            448
         '''
         if indent is not None:
             _check_int_type('indent', indent)
-        d = self.terms
-
-        # Convert key type from tuple into str
-        key_list = list(d.keys())
-        for i, k in enumerate(key_list):
-            key_list[i] = k.__str__()
-
-        # Convert value type from complex/ParameterResolver into str
-        value_list = list(d.values())
-        for j, v in enumerate(value_list):
-            if isinstance(v, (complex, int, float)):
-                value_list[j] = str(v)
-            elif isinstance(v, PR):
-                value_list[j] = (v.dumps(None))
-            else:
-                raise ValueError("Coefficient must be a complex/int/float type or a ParameterResolver, \
-                    but get {}.".format(type(v)))
-
-        dic = dict(zip(key_list, value_list))
-        dic['__class__'] = self.__class__.__name__
-        dic['__module__'] = self.__module__
-
+        dic = {}
+        for o, c in self.terms.items():
+            s = _qubit_tuple_to_string(o)
+            dic[s] = c.dumps(indent)
         return json.dumps(dic, indent=indent)
 
     @staticmethod
@@ -408,48 +392,40 @@ class QubitOperator(_Operator):
 
         Examples:
             >>> from mindquantum.core.operators import QubitOperator
-            >>> strings = """{"((0, 'X'), (1, 'Y'))": 1.2, "((0, 'Z'), (1, 'X'))": {"a": 2.1}, \
-                "__class__": "QubitOperator", "__module__": "__main__"}"""
-            >>> obj = QubitOperator.loads(strings)
-            >>> print(obj)
-            1.2 [X0 Y1] + 2.1*a [Z0 X1]
+            >>> ops = QubitOperator('X0 Y1', 1.2) + QubitOperator('Z0 X1', {'a': 2.1})
+            >>> obj = QubitOperator.loads(ops.dumps())
+            >>> obj == ops
+            True
         '''
         _check_input_type('strs', str, strs)
         dic = json.loads(strs)
-        if '__class__' in dic:
-            class_name = dic.pop('__class__')
-            if class_name == 'QubitOperator':
-                module_name = dic.pop('__module__')
-                module = __import__(module_name)
-                class_ = getattr(module, class_name)
+        f_op = QubitOperator()
+        for k, v in dic.items():
+            f_op += QubitOperator(k, PR.loads(v))
+        return f_op
 
-                # Convert key type from str into tuple
-                key_list = list(dic.keys())
-                for i, k in enumerate(key_list):
-                    key_list[i] = tuple(ast.literal_eval(k))
+    def split(self):
+        """
+        Split the coefficient and the operator.
 
-                # Convert value type from str into ParameterResolver/complex
-                value_list = list(dic.values())
-                for j, v in enumerate(value_list):
-                    if isinstance(v, str):
-                        if '__class__' in v:
-                            value_list[j] = PR.loads(v)
-                        else:
-                            value_list[j] = complex(v)
+        Returns:
+            List[List[ParameterResolver, QubitOperator]], the split result.
 
-                terms = dict(zip(key_list, value_list))
+        Examples:
+            >>> from mindquantum.core import QubitOperator
+            >>> a = QubitOperator('X0', 'a') + QubitOperator('Z1', 1.2)
+            >>> list(a.split())
+            [[{'a': 1}, const: 0, 1 [X0] ], [{}, const: 1.2, 1 [Z1] ]]
+        """
+        for i, j in self.terms.items():
+            yield [j, QubitOperator(i)]
 
-                q_op = QubitOperator()
-                for key, value in terms.items():
-                    q_op += class_(key, value)
 
-            else:
-                raise TypeError("Require a QubitOperator class, but get {} class".format(class_name))
-
-        else:
-            raise ValueError("Expect a '__class__' in strings, but not found")
-
-        return q_op
+def _qubit_tuple_to_string(term):
+    s = []
+    for i in term:
+        s.append(f'{i[1]}{i[0]}')
+    return ' '.join(s)
 
 
 __all__ = ['QubitOperator']

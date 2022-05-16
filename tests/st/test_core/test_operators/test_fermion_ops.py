@@ -172,3 +172,15 @@ def test_dumps_and_loads():
     strings = f.dumps()
     obj = FermionOperator.loads(strings)
     assert obj == f
+
+
+def test_of_fermion_trans():
+    """
+    Description: Test transfor fermion operator to openfermion back and force.
+    Expectation: success.
+    """
+    from openfermion import FermionOperator as ofo
+    ofo_ops = ofo("1^ 0", 1)
+    mq_ops = FermionOperator('1^ 0', 1)
+    assert mq_ops.to_openfermion() == ofo_ops
+    assert mq_ops == FermionOperator.from_openfermion(ofo_ops)
