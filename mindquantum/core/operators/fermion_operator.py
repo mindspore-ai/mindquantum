@@ -16,7 +16,6 @@
 """This module is generated the Fermion Operator"""
 
 import json
-import ast
 from functools import lru_cache
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -190,6 +189,16 @@ class FermionOperator(_Operator):
         of.terms = terms
         return of
 
+    @staticmethod
+    def from_openfermion(of_ops):
+        """Convert openfermion fermion operator to mindquantum format."""
+        from openfermion import FermionOperator as ofo
+        _check_input_type('of_ops', ofo, of_ops)
+        out = FermionOperator()
+        for k, v in of_ops.terms.items():
+            out.terms[k] = PR(v)
+        return out
+
     def __str__(self):
         """
         Return an easy-to-read string representation of the FermionOperator.
@@ -353,40 +362,15 @@ class FermionOperator(_Operator):
         Examples:
             >>> from mindquantum.core.operators import FermionOperator
             >>> f = FermionOperator('0', 1 + 2j) + FermionOperator('0^', 'a')
-            >>> print(f.dumps())
-            {
-                "((0, 0),)": "(1+2j)",
-                "((0, 1),)": "{\"a\": 1, \"__class__\": \"ParameterResolver\", \"__module__\": \
-                    \"parameterresolver.parameterresolver\", \"no_grad_parameters\": []}",
-                "__class__": "FermionOperator",
-                "__module__": "operators.fermion_operator"
-            }
+            >>> len(f.dumps())
+            443
         '''
         if indent is not None:
             _check_int_type('indent', indent)
-        d = self.terms
-
-        # Convert key type from tuple to str
-        key_list = list(d.keys())
-        for i, k in enumerate(key_list):
-            if isinstance(k, tuple):
-                key_list[i] = k.__str__()
-
-        # Convert value type from complex/PR into str
-        value_list = list(d.values())
-        for j, v in enumerate(value_list):
-            if isinstance(v, (complex, int, float)):
-                value_list[j] = str(v)
-            elif isinstance(v, PR):
-                value_list[j] = (v.dumps(None))
-            else:
-                raise ValueError("Coefficient must be a complex/int/float type or a ParameterResolver, \
-                    but get {}.".format(type(v)))
-
-        dic = dict(zip(key_list, value_list))
-        dic['__class__'] = self.__class__.__name__
-        dic['__module__'] = self.__module__
-
+        dic = {}
+        for o, c in self.terms.items():
+            s = _fermion_tuple_to_string(o)
+            dic[s] = c.dumps(indent)
         return json.dumps(dic, indent=indent)
 
     @staticmethod
@@ -402,48 +386,33 @@ class FermionOperator(_Operator):
 
         Examples:
             >>> from mindquantum.core.operators import FermionOperator
-            >>> strings == '{"((0, 0),)": "(1+2j)", "((0, 1),)": {"a": 1}, \
-                "__class__": "FermionOperator", "__module__": "__main__"}'
-            >>> obj = FermionOperator.loads(strings)
-            >>> print(obj)
-            (1+2j) [0] + a [0^]
+            >>> f = FermionOperator('0', 1 + 2j) + FermionOperator('0^', 'a')
+            >>> obj = FermionOperator.loads(f.dumps())
+            >>> obj == f
+            True
         '''
         _check_input_type('strs', str, strs)
         dic = json.loads(strs)
-        if '__class__' in dic:
-            class_name = dic.pop('__class__')
-            if class_name == 'FermionOperator':
-                module_name = dic.pop('__module__')
-                module = __import__(module_name)
-                class_ = getattr(module, class_name)
-
-                # Convert key type from str into tuple
-                key_list = list(dic.keys())
-                for i, k in enumerate(key_list):
-                    key_list[i] = tuple(ast.literal_eval(k))
-
-                # Convert value type from str into ParameterResolver/complex
-                value_list = list(dic.values())
-                for j, v in enumerate(value_list):
-                    if isinstance(v, str):
-                        if '__class__' in v:
-                            value_list[j] = PR.loads(v)
-                        else:
-                            value_list[j] = complex(v)
-
-                terms = dict(zip(key_list, value_list))
-
-                f_op = FermionOperator()
-                for key, value in terms.items():
-                    f_op += class_(key, value)
-
-            else:
-                raise TypeError("Require a FermionOperator class, but get {} class".format(class_name))
-
-        else:
-            raise ValueError("Expect a '__class__' in strings, but not found")
-
+        f_op = FermionOperator()
+        for k, v in dic.items():
+            f_op += FermionOperator(k, PR.loads(v))
         return f_op
+
+    def split(self):
+        """
+        Split the coefficient and the operator.
+
+        Returns:
+            List[List[ParameterResolver, FermionOperator]], the split result.
+
+        Examples:
+            >>> from mindquantum.core import FermionOperator
+            >>> a = FermionOperator('0', 'a') + FermionOperator('1^', 1.2)
+            >>> list(a.split())
+            [[{'a': 1}, const: 0, 1 [0] ], [{}, const: 1.2, 1 [1^] ]]
+        """
+        for i, j in self.terms.items():
+            yield [j, FermionOperator(i)]
 
 
 def _normal_ordered_term(term, coefficient):

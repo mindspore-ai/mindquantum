@@ -154,3 +154,15 @@ def test_qubit_ops_dumps_and_loads():
     strings = ops.dumps()
     obj = QubitOperator.loads(strings)
     assert obj == ops
+
+
+def test_qubit_ops_trans():
+    """
+    Description: Test transfor fermion operator to openfermion back and force.
+    Expectation: success.
+    """
+    from openfermion import QubitOperator as ofo
+    ofo_ops = ofo("X0 Y1 Z2", 1)
+    mq_ops = QubitOperator("X0 Y1 Z2", 1)
+    assert mq_ops.to_openfermion() == ofo_ops
+    assert mq_ops == QubitOperator.from_openfermion(ofo_ops)

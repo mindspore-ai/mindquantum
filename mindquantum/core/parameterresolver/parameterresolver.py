@@ -161,7 +161,7 @@ class ParameterResolver:
             if dtype != self.dtype:
                 if self.dtype == np.complex128 and dtype == np.float64:
                     warnings.warn("Casting complex parameter resolver to float parameter \
-resolver discards the imaginary part.")
+resolver discards the imaginary part."                                                                            )
                     if self.obj.is_complex_pr():
                         self.obj = self.obj.real()
                 else:
@@ -892,7 +892,7 @@ resolver discards the imaginary part.")
 
     @property
     def encoder_parameters(self):
-        return self.obj.encoder_parameters()
+        return self.obj.encoder_parameters
 
     @property
     def ansatz_parameters(self):
@@ -1068,33 +1068,40 @@ resolver discards the imaginary part.")
 
         Examples:
             >>> from mindquantum.core.parameterresolver import ParameterResolver
-            >>> pr = ParameterResolver({'a': 1, 'b': 2, 'c': 3, 'd': 4})
+            >>> pr = ParameterResolver({'a': 1, 'b': 2}, const=3 + 4j, dtype=complex)
             >>> pr.no_grad_part('a', 'b')
             >>> print(pr.dumps())
             {
-                "a": 1,
-                "b": 2,
-                "c": 3,
-                "d": 4,
-                "__class__": "ParameterResolver",
-                "__module__": "parameterresolver",
+                "pr_data": {
+                    "a": [
+                        1.0,
+                        0.0
+                    ],
+                    "b": [
+                        2.0,
+                        0.0
+                    ]
+                },
+                "const": [
+                    3.0,
+                    4.0
+                ],
+                "dtype": "complex",
                 "no_grad_parameters": [
-                    "a",
-                    "b"
-                ]
+                    "b",
+                    "a"
+                ],
+                "encoder_parameters": []
             }
         '''
         if indent is not None:
             _check_int_type('indent', indent)
-        dic = dict(zip(self.params_name, self.para_value))
-        dic['__class__'] = self.__class__.__name__
-        dic['__module__'] = self.__module__
-
-        dic['no_grad_parameters'] = list()
-        for j in self.no_grad_parameters:
-            dic["no_grad_parameters"].append(j)
-        dic["no_grad_parameters"].sort()
-
+        dic = {}
+        dic['pr_data'] = {i: (j.real, j.imag) for i, j in self.items()}
+        dic['const'] = (self.const.real, self.const.imag)
+        dic['dtype'] = 'float' if self.dtype == np.float64 else 'complex'
+        dic['no_grad_parameters'] = list(self.no_grad_parameters)
+        dic['encoder_parameters'] = list(self.encoder_parameters)
         return json.dumps(dic, indent=indent)
 
     @staticmethod
@@ -1110,23 +1117,12 @@ resolver discards the imaginary part.")
 
         Examples:
             >>> from mindquantum.core.parameterresolver import ParameterResolver
-            >>> strings = """
-            ...     {
-            ...         "a": 1,
-            ...         "b": 2,
-            ...         "c": 3,
-            ...         "d": 4,
-            ...         "__class__": "ParameterResolver",
-            ...         "__module__": "parameterresolver",
-            ...         "no_grad_parameters": [
-            ...             "a",
-            ...             "b"
-            ...         ]
-            ...     }
-            ...     """
+            >>> ori = ParameterResolver({'a': 1, 'b': 2, 'c': 3, 'd': 4})
+            >>> ori.no_grad_part('a', 'b')
+            >>> string = ori.dumps()
             >>> obj = ParameterResolver.loads(string)
             >>> print(obj)
-            {'a': 1, 'b': 2, 'c': 3, 'd': 4}
+            {'a': 1, 'b': 2, 'c': 3, 'd': 4}, const: 0
             >>> print('requires_grad_parameters is:', obj.requires_grad_parameters)
             requires_grad_parameters is: {'c', 'd'}
             >>> print('no_grad_parameters is :', obj.no_grad_parameters)
@@ -1135,25 +1131,29 @@ resolver discards the imaginary part.")
         _check_input_type('strs', str, strs)
         dic = json.loads(strs)
 
-        if '__class__' in dic:
-            class_name = dic.pop('__class__')
+        if 'dtype' not in dic:
+            raise ValueError("Invalid string. Cannot convert it to ParameterResolver, no key dtype")
+        dtype = np.float64 if dic['dtype'] == 'float' else np.complex128
 
-            if class_name == 'ParameterResolver':
-                module_name = dic.pop('__module__')
-                module = __import__(module_name)
-                class_ = getattr(module, class_name)
-                no_grad_parameters_list = dic.pop('no_grad_parameters')
+        if 'pr_data' not in dic:
+            raise ValueError("Invalid string. Cannot convert it to ParameterResolver, no key pr_data")
+        pr_data = dic['pr_data']
+        pr_data = {n: v_r if dtype == np.float64 else v_r + 1j * v_i for n, (v_r, v_i) in pr_data.items()}
 
-                args = dic
-                p = class_(args)
+        if 'const' not in dic:
+            raise ValueError("Invalid string. Cannot convert it to ParameterResolver, no key const")
+        const = dic['const']
+        const = const[0] if dtype == np.float64 else const[0] + 1j * const[1]
 
-                for i in no_grad_parameters_list:
-                    p.no_grad_part(str(i))
+        if 'no_grad_parameters' not in dic:
+            raise ValueError("Invalid string. Cannot convert it to ParameterResolver, no key no_grad_parameters")
+        no_grad_parameters_list = dic['no_grad_parameters']
 
-            else:
-                raise TypeError("Require a ParameterResolver class, but get {} class".format(class_name))
+        if 'encoder_parameters' not in dic:
+            raise ValueError("Invalid string. Cannot convert it to ParameterResolver, no key encoder_parameters")
+        encoder_parameters_list = dic['encoder_parameters']
 
-        else:
-            raise ValueError("Expect a '__class__' in strings, but not found")
-
-        return p
+        out = ParameterResolver(pr_data, const, dtype)
+        out.encoder_part(*encoder_parameters_list)
+        out.no_grad_part(*no_grad_parameters_list)
+        return out
