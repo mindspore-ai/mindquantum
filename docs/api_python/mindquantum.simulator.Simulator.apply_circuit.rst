@@ -30,3 +30,4 @@ mindquantum.simulator.Simulator.apply_circuit(circuit, pr=None)
                      11│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
                        │
             {'11': 1}
+           
