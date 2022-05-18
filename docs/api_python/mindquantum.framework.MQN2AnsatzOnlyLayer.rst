@@ -1,6 +1,6 @@
 .. py:class:: mindquantum.framework.MQN2AnsatzOnlyLayer(expectation_with_grad, weight='normal')
 
-    MindQuantum可训练层。 ansatz电路的参数是可训练的参数。 该层将自动计算期望绝对值的平方。
+    MindQuantum可训练层。 ansatz电路的参数是可训练的参数。该层将自动计算期望绝对值的平方。
 
     **参数：**
 
