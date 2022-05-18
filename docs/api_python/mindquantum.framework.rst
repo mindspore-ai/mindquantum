@@ -1,2 +1,2 @@
 mindquantum.framework
-量子神经网络算子和细胞。
+量子神经网络算子和cell。
