@@ -1,9 +1,8 @@
-mindquantum.core.circuit.Circuit.un(gate, maps_obj, maps_ctrl=None)
+.. py:method:: mindquantum.core.circuit.Circuit.un(gate, maps_obj, maps_ctrl=None)
 
-        将量子门映射到不同的目标量子位和控制量子位。请参考UN.
+        将量子门作用于不同的目标量子比特和控制量子比特，详见类`mindquantum.core.circuit.UN`。
 
-        参数:
-            gate (BasicGate): 要映射的基本门。
-            map_obj (Union[int, list[int]]): 对象量子位。
-            maps_ctrl (Union[int, list[int]]): 控制量子位。默认值：None。
-        
+        **参数：**
+        - **gate** (BasicGate) - 要执行的量子门。
+        - **map_obj** (Union[int, list[int]]) - 执行该量子门的目标量子比特。
+        - **maps_ctrl** (Union[int, list[int]]) - 执行该量子门的控制量子比特。默认值：None。
