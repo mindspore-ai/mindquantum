@@ -13,5 +13,4 @@
 
     **异常：**
 
-    - **ValueError** – 异常描述1。
-        ValueError：如果`weight`的shape长度不等于1，并且`weight` 的shape[0]不等于`weight_size`。
+    - **ValueError** – 如果`weight`的shape长度不等于1，并且`weight` 的shape[0]不等于`weight_size`。
