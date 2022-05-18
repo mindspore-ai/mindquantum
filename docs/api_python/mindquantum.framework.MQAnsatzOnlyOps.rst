@@ -1,35 +1,15 @@
-Class mindquantum.framework.MQAnsatzOnlyOps(expectation_with_grad)
+.. py:class:: mindquantum.framework.MQAnsatzOnlyOps(expectation_with_grad)
 
-    通过参数化量子电路（PQC）评估的量子状态上获得汉密尔顿人的期望的MindQuantum算子。此PQC应仅包含一个asatz电路。此操作仅受`PYNT_MODE`支持。
+    MindQuantum 算子，通过参数化量子电路 (PQC) 获得对量子态的哈密顿期望。 这个PQC应该只包含一个ansatz电路。 此操作仅受 `PYNATIVE_MODE` 支持。
 
-    参数:
-        expectation_with_grad (GradOpsWrapper): 接收编码器数据和andsatz数据，并返回参数相对于期望的期望值和梯度值的梯度值。
+    **参数：**
 
-    输入:
-        - **ans_data** (Tensor) - 带形状的张量 :math:`N` 用于andsatz电路，其中 :math:`N` 表示andsatz参数的数量。
+    - **expectation_with_grad** (GradOpsWrapper) – 接收encoder数据和ansatz数据，并返回期望值和参数相对于期望的梯度值。
 
-    输出:
-        张量，汉密尔顿的期望值。
+    **输入：**
 
-    支持平台:
-        ``GPU``, ``CPU``
+    - **ans_data** (Tensor) - shape为 :math:`N` 的Tensor，用于ansatz电路，其中 :math:`N` 表示ansatz参数的数量。
 
-    样例:
-        >>> import numpy as np
-        >>> from mindquantum import Circuit, Hamiltonian, QubitOperator
-        >>> from mindquantum import Simulator, MQAnsatzOnlyOps
-        >>> import mindspore as ms
-        >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
-        >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0)
-        >>> ham = Hamiltonian(QubitOperator('Z0'))
-        >>> sim = Simulator('projectq', 1)
-        >>> grad_ops = sim.get_expectation_with_grad(ham, circ)
-        >>> data = np.array([0.1, 0.2])
-        >>> f, g = grad_ops(data)
-        >>> f
-        array([[0.0978434+0.j]])
-        >>> net = MQAnsatzOnlyOps(grad_ops)
-        >>> f_ms = net(ms.Tensor(data))
-        >>> f_ms
-        Tensor(shape=[1], dtype=Float32, value= [ 9.78433937e-02])
-    
+    **输出：**
+
+    - **Output** (Tensor) - hamiltonian的期望值。   
