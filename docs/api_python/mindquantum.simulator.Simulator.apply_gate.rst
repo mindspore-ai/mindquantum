@@ -28,3 +28,4 @@ mindquantum.simulator.Simulator.apply_gate(gate, pr=None, diff=False)
             1
             >>> sim.get_qs()
             array([0.+0.j, 1.+0.j])
+        
