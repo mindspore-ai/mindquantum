@@ -1,8 +1,8 @@
-mindquantum.core.circuit.Circuit.s(obj_qubits, ctrl_qubits=None)
+.. py:method:: mindquantum.core.circuit.Circuit.s(obj_qubits, ctrl_qubits=None)
 
-        添加S门。
+        在电路中添加`S`门。
 
-        参数:
-            obj_qubits (Union[int, list[int]]): `S`门的对象量子位。
-            ctrl_qubits (Union[int, list[int]]): `S`门的控制量子位。默认值：None。
-        
+        **参数：**
+
+        - **obj_qubits** (Union[int, list[int]]) - `S`门的目标量子比特。
+        - **ctrl_qubits** (Union[int, list[int]]) - `S`门的控制量子比特。默认值：None。

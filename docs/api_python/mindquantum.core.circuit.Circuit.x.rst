@@ -1,8 +1,9 @@
-mindquantum.core.circuit.Circuit.x(obj_qubits, ctrl_qubits=None)
+.. py:method:: mindquantum.core.circuit.Circuit.x(obj_qubits, ctrl_qubits=None)
 
-        添加X门。
+        在电路中添加`X`门。
 
-        参数:
-            obj_qubits (Union[int, list[int]]): `X`门的对象量子位。
-            ctrl_qubits (Union[int, list[int]]): `X`门的控制量子位。默认值：None。
+        **参数：**
+
+        - **obj_qubits** (Union[int, list[int]]) - `X`门的目标量子比特。
+        - **ctrl_qubits** (Union[int, list[int]]) - `X`门的控制量子比特。默认值：None。
         
