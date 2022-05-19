@@ -1,5 +1,5 @@
 mindquantum.core.gates
 
-大门。
+门。
 
-门提供不同的量子门。
+门提供了不同的量子门。
