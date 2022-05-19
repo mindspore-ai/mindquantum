@@ -948,5 +948,28 @@ class Circuit(list):
             style = supported_style[style]
         return SVGCircuit(self, style)
 
+    def remove_noise(self):
+        """Remove all noise gate."""
+        circ = Circuit()
+        for g in self:
+            if not isinstance(g, G.NoiseGate):
+                circ += g
+        return circ
+
+    def with_noise(self, noise_gate=G.AmplitudeDampingChannel(0.001)):
+        """
+        Apply noises on each gate.
+
+        Args:
+            noise_gate (NoiseGate): The NoiseGate you want to apply. Default: AmplitudeDampingChannel(0.001).
+        """
+        circ = Circuit()
+        for g in self:
+            circ += g
+            if not isinstance(g, G.Measure):
+                for i in g.obj_qubits:
+                    circ += noise_gate.on(i)
+        return circ
+
 
 __all__ = ['Circuit']
