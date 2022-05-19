@@ -1,7 +1,7 @@
-mindquantum.core.circuit.Circuit.append(gate)
+.. py:method:: mindquantum.core.circuit.Circuit.append(gate)
 
-        附加一个门。
+    增加一个门。
 
-        参数:
-            gate (BasicGate): 要附加的门。
-        
+    **参数：**
+
+    - **gate** (BasicGate) - 增加的门。    

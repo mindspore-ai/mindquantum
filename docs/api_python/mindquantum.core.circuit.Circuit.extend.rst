@@ -1,7 +1,7 @@
-mindquantum.core.circuit.Circuit.extend(gates)
+.. py:method:: mindquantum.core.circuit.Circuit.extend(gates)
 
-        扩展电路。
+    扩展线路。
 
-        参数:
-            gates (Union[Circuit, list[BasicGate]]), 要扩展的`电路'或`基本门'列表。
-        
+    **参数：**
+
+    - **gates** (Union[Circuit, list[BasicGate]]) - `Circuit` 或 `BasicGate` 的list。    
