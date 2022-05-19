@@ -1,12 +1,10 @@
-mindquantum.core.circuit.Circuit.parameter_resolver()
+.. py:method:: mindquantum.core.circuit.Circuit.parameter_resolver()
 
-        获取整个电路的参数解析器。
+    获取整个线路的parameter resolver。
 
-        注:
-            这个参数解析器只告诉你这个量子电路的参数是什么，哪些部分参数需要梯度，
-            因为相同的参数可以在不同的栅极中，并且系数可以不同。
-            显示系数的详细参数解析器位于电路的每个栅极中。
+    .. note::
+        因为相同的参数可以在不同的门中，并且系数可以不同，所以这个parameter resolver只告诉您量子线路的参数是什么，哪些参数需要梯度。显示系数的更详细的parameter resolver位于线路的每个门中。
 
-        返回:
-            参数解析器，整个电路的参数解析器。
-        
+    **返回：**
+
+    ParameterResolver，整个线路的parameter resolver。

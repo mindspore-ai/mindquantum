@@ -1,4 +1,3 @@
-mindquantum.core.circuit.Circuit.no_grad()
+.. py:method:: mindquantum.core.circuit.Circuit.no_grad()
 
-        设置此量子电路中的所有参数化门不需要梯度。
-        
+    设置量子线路中所有不需要梯度的含参门。
