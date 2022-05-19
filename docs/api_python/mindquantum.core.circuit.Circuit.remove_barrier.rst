@@ -1,2 +1,3 @@
-mindquantum.core.circuit.Circuit.remove_barrier()
-²ğ³ıËùÓĞÆÁÕÏÕ¢ÃÅ
+.. py:method:: mindquantum.core.circuit.Circuit.remove_barrier()
+
+    移除所有barrier门。

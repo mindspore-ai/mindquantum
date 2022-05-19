@@ -1,2 +1,3 @@
-mindquantum.core.circuit.Circuit.remove_measure()
-拆除所有测量闸门。
+.. py:method:: mindquantum.core.circuit.Circuit.remove_measure()
+
+    移除所有的测量门。

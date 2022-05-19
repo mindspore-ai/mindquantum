@@ -1,4 +1,3 @@
-mindquantum.core.circuit.Circuit.requires_grad()
+.. py:method:: mindquantum.core.circuit.Circuit.requires_grad()
 
-        设置此量子电路中的所有参数化门都需要梯度。
-        
+    将量子线路中的所有含参门都设置为需要梯度。   
