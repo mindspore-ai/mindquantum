@@ -359,7 +359,7 @@ class AmplitudeDampingChannel(NoiseGate, SelfHermitianGate):
         return BasicGate.__eq__(self, other) and self.gamma == other.gamma
 
     def __str_in_circ__(self):
-        return f"AD({self.p})"
+        return f"AD({self.gamma})"
 
 
 class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
@@ -422,4 +422,4 @@ class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
         return super().__eq__(other) and self.gamma == other.gamma
 
     def __str_in_circ__(self):
-        return f"PD({self.p})"
+        return f"PD({self.gamma})"
