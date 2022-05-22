@@ -70,13 +70,11 @@ class MQOps(nn.Cell):
         >>> from mindquantum import Simulator, MQOps
         >>> import mindspore as ms
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
-        >>> enc = Circuit().ry('a', 0)
+        >>> enc = Circuit().ry('a', 0).as_encoder()
         >>> ans = Circuit().h(0).rx('b', 0)
         >>> ham = Hamiltonian(QubitOperator('Z0'))
         >>> sim = Simulator('projectq', 1)
-        >>> grad_ops = sim.get_expectation_with_grad(ham, enc+ans,
-        ...                                          encoder_params_name=['a'],
-        ...                                          ansatz_params_name=['b'])
+        >>> grad_ops = sim.get_expectation_with_grad(ham, enc + ans)
         >>> enc_data = np.array([[0.1]])
         >>> ans_data = np.array([0.2])
         >>> f, g_enc, g_ans = grad_ops(enc_data, ans_data)
@@ -150,13 +148,11 @@ class MQN2Ops(nn.Cell):
         >>> from mindquantum import Simulator, MQN2Ops
         >>> import mindspore as ms
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
-        >>> enc = Circuit().ry('a', 0)
+        >>> enc = Circuit().ry('a', 0).as_encoder()
         >>> ans = Circuit().h(0).rx('b', 0)
         >>> ham = Hamiltonian(QubitOperator('Z0'))
         >>> sim = Simulator('projectq', 1)
-        >>> grad_ops = sim.get_expectation_with_grad(ham, enc+ans,
-        ...                                          encoder_params_name=['a'],
-        ...                                          ansatz_params_name=['b'])
+        >>> grad_ops = sim.get_expectation_with_grad(ham, enc + ans)
         >>> enc_data = np.array([[0.1]])
         >>> ans_data = np.array([0.2])
         >>> f, g_enc, g_ans = grad_ops(enc_data, ans_data)
@@ -354,10 +350,10 @@ class MQEncoderOnlyOps(nn.Cell):
         >>> from mindquantum import Simulator, MQEncoderOnlyOps
         >>> import mindspore as ms
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
-        >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0)
+        >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0).as_encoder()
         >>> ham = Hamiltonian(QubitOperator('Z0'))
         >>> sim = Simulator('projectq', 1)
-        >>> grad_ops = sim.get_expectation_with_grad(ham, circ, encoder_params_name=circ.params_name)
+        >>> grad_ops = sim.get_expectation_with_grad(ham, circ)
         >>> data = np.array([[0.1, 0.2], [0.3, 0.4]])
         >>> f, g = grad_ops(data)
         >>> f
@@ -421,10 +417,10 @@ class MQN2EncoderOnlyOps(nn.Cell):
         >>> from mindquantum import Simulator, MQN2EncoderOnlyOps
         >>> import mindspore as ms
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
-        >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0)
+        >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0).as_encoder()
         >>> ham = Hamiltonian(QubitOperator('Z0'))
         >>> sim = Simulator('projectq', 1)
-        >>> grad_ops = sim.get_expectation_with_grad(ham, circ, encoder_params_name=circ.params_name)
+        >>> grad_ops = sim.get_expectation_with_grad(ham, circ)
         >>> data = np.array([[0.1, 0.2], [0.3, 0.4]])
         >>> f, g = grad_ops(data)
         >>> np.abs(f) ** 2

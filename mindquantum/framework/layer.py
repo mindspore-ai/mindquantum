@@ -60,13 +60,11 @@ class MQLayer(nn.Cell):
         >>> import mindspore as ms
         >>> ms.set_seed(42)
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
-        >>> enc = Circuit().ry('a', 0)
-        >>> ans = Circuit().h(0).rx('b', 0)
+        >>> enc = Circuit().ry('a', 0).as_encoder()
+        >>> ans = Circuit().h(0).rx('b', 0).as_ansatz()
         >>> ham = Hamiltonian(QubitOperator('Z0'))
         >>> sim = Simulator('projectq', 1)
-        >>> grad_ops = sim.get_expectation_with_grad(ham, enc+ans,
-        ...                                          encoder_params_name=['a'],
-        ...                                          ansatz_params_name=['b'])
+        >>> grad_ops = sim.get_expectation_with_grad(ham, enc + ans)
         >>> enc_data = ms.Tensor(np.array([[0.1]]))
         >>> net =  MQLayer(grad_ops)
         >>> opti = ms.nn.Adam(net.trainable_params(), learning_rate=0.1)
@@ -129,13 +127,11 @@ class MQN2Layer(nn.Cell):
         >>> import mindspore as ms
         >>> ms.set_seed(42)
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
-        >>> enc = Circuit().ry('a', 0)
-        >>> ans = Circuit().h(0).rx('b', 0)
+        >>> enc = Circuit().ry('a', 0).as_encoder()
+        >>> ans = Circuit().h(0).rx('b', 0).as_ansatz()
         >>> ham = Hamiltonian(QubitOperator('Z0'))
         >>> sim = Simulator('projectq', 1)
-        >>> grad_ops = sim.get_expectation_with_grad(ham, enc+ans,
-        ...                                          encoder_params_name=['a'],
-        ...                                          ansatz_params_name=['b'])
+        >>> grad_ops = sim.get_expectation_with_grad(ham, enc + ans)
         >>> enc_data = ms.Tensor(np.array([[0.1]]))
         >>> net =  MQN2Layer(grad_ops)
         >>> opti = ms.nn.Adam(net.trainable_params(), learning_rate=0.1)

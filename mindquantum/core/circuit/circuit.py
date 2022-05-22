@@ -21,6 +21,7 @@ import copy
 import numpy as np
 from rich.console import Console
 import mindquantum.core.gates as G
+from mindquantum.core.gates.basic import ParameterGate
 from mindquantum.utils.type_value_check import _check_gate_type
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 from mindquantum.core.parameterresolver.parameterresolver import ParameterResolver
@@ -29,7 +30,7 @@ from mindquantum.io.display import brick_model
 from mindquantum.utils.type_value_check import _check_input_type
 from mindquantum.utils.type_value_check import _check_and_generate_pr_type
 from mindquantum.utils.type_value_check import _check_gate_has_obj
-from .utils import apply
+from mindquantum.core.circuit.utils import apply
 
 GateSeq = List[G.BasicGate]
 
@@ -53,6 +54,7 @@ def _two_dim_array_to_list(data):
 
 class CollectionMap:
     """A collection container."""
+
     def __init__(self):
         self.map = {}
 
@@ -183,18 +185,35 @@ class Circuit(list):
                                 │
         q1: ────────────────────●──
     """
+
     def __init__(self, gates=None):
         list.__init__([])
         self.all_qubits = CollectionMap()
         self.all_paras = CollectionMap()
         self.all_measures = CollectionMap()
         self.all_noises = CollectionMap()
+        self.all_encoder = CollectionMap()
+        self.all_ansatz = CollectionMap()
         if gates is not None:
             if isinstance(gates, Iterable):
                 self.extend(gates)
             else:
                 self.append(gates)
         self.has_cpp_obj = False
+
+    def _collect_parameterized_gate(self, gate: ParameterGate):
+        """Collect parameterized gate information"""
+        self.all_paras.collect(list(gate.coeff.keys()))
+        gate_ansatz = list(gate.coeff.ansatz_parameters)
+        gate_encoder = list(gate.coeff.encoder_parameters)
+        for k in gate_ansatz:
+            if k in self.all_encoder.map:
+                raise RuntimeError(f"Parameter '{k}' already set to encoder parameter.")
+        for k in gate_encoder:
+            if k in self.all_ansatz.map:
+                raise RuntimeError(f"Parameter '{k}' already set to ansatz parameters.")
+        self.all_ansatz.collect(gate_ansatz)
+        self.all_encoder.collect(gate_encoder)
 
     def append(self, gate):
         """
@@ -212,7 +231,7 @@ class Circuit(list):
         self.all_qubits.collect(gate.obj_qubits)
         self.all_qubits.collect(gate.ctrl_qubits)
         if gate.parameterized:
-            self.all_paras.collect(list(gate.coeff.keys()))
+            self._collect_parameterized_gate(gate)
         super().append(gate)
         self.has_cpp_obj = False
 
@@ -228,6 +247,16 @@ class Circuit(list):
             self.all_qubits.merge(gates.all_qubits)
             self.all_paras.merge(gates.all_paras)
             self.all_noises.merge(gates.all_noises)
+            conflict_params = set(self.all_encoder.keys()) & set(gates.all_ansatz.keys())
+            if conflict_params:
+                raise RuntimeError(f"Parameters {conflict_params} can not be both encoder \
+parameters and ansatz parameters.")
+            conflict_params = set(self.all_ansatz.keys()) & set(gates.all_encoder.keys())
+            if conflict_params:
+                raise RuntimeError(f"Parameters {conflict_params} can not be both encoder \
+parameters and ansatz parameters.")
+            self.all_encoder.merge(gates.all_encoder)
+            self.all_ansatz.merge(gates.all_ansatz)
             super().extend(gates)
         else:
             for gate in gates:
@@ -288,6 +317,8 @@ class Circuit(list):
         self.all_qubits.delete(old_v.ctrl_qubits)
         if old_v.parameterized:
             self.all_paras.delete(list(old_v.coeff.keys()))
+            self.all_ansatz.delete(list(old_v.coeff.ansatz_parameters))
+            self.all_encoder.delete(list(old_v.coeff.encoder_parameters))
         if isinstance(old_v, G.Measure):
             self.all_measures.delete(old_v)
         if isinstance(old_v, G.NoiseGate):
@@ -296,7 +327,7 @@ class Circuit(list):
         self.all_qubits.collect(v.obj_qubits)
         self.all_qubits.collect(v.ctrl_qubits)
         if v.parameterized:
-            self.all_paras.collect(list(v.coeff.keys()))
+            self._collect_parameterized_gate(v)
         if isinstance(v, G.Measure):
             self.all_measures.collect_only_one(v, f'measure key {v.key} already exist.')
         if isinstance(v, G.NoiseGate):
@@ -353,7 +384,7 @@ class Circuit(list):
             self.all_qubits.collect(gates.obj_qubits)
             self.all_qubits.collect(gates.ctrl_qubits)
             if gates.parameterized:
-                self.all_paras.collect(list(gates.coeff.keys()))
+                self._collect_parameterized_gate(gates)
             if isinstance(gates, G.Measure):
                 self.all_measures.collect_only_one(gates, f'measure key {gates.key} already exist.')
         elif isinstance(gates, Iterable):
@@ -362,7 +393,7 @@ class Circuit(list):
                 self.all_qubits.collect(gate.obj_qubits)
                 self.all_qubits.collect(gate.ctrl_qubits)
                 if gate.parameterized:
-                    self.all_paras.collect(list(gate.coeff.keys()))
+                    self._collect_parameterized_gate(gate)
                 if isinstance(gate, G.Measure):
                     self.all_measures.collect_only_one(gate, f'measure key {gate.key} already exist.')
         else:
@@ -532,6 +563,42 @@ class Circuit(list):
             ['a', 'b']
         """
         return list(self.all_paras.keys())
+
+    @property
+    def encoder_params_name(self):
+        """
+        Get the encoder parameter name of this circuit.
+
+        Returns:
+            list, a list that contains the parameter name that work as encoder.
+
+        Examples:
+            >>> from mindquantum.core.gates import RX, RY
+            >>> from mindquantum.core.circuit import Circuit
+            >>> circuit = Circuit(RX({'a': 1, 'b': 2}).on(0)).as_encoder()
+            >>> circuit += Circuit(RY('c').on(0)).as_ansatz()
+            >>> circuit.encoder_params_name
+            ['a', 'b']
+        """
+        return list(self.all_encoder.keys())
+
+    @property
+    def ansatz_params_name(self):
+        """
+        Get the encoder parameter name of this circuit.
+
+        Returns:
+            list, a list that contains the parameter name that work as encoder.
+
+        Examples:
+            >>> from mindquantum.core.gates import RX, RY
+            >>> from mindquantum.core.circuit import Circuit
+            >>> circuit = Circuit(RX({'a': 1, 'b': 2}).on(0)).as_encoder()
+            >>> circuit += Circuit(RY('c').on(0)).as_ansatz()
+            >>> circuit.ansatz_params_name
+            ['c']
+        """
+        return list(self.all_ansatz.keys())
 
     def matrix(self, pr=None, big_end=False, backend='projectq', seed=None):
         """
@@ -969,6 +1036,46 @@ class Circuit(list):
             if not isinstance(g, G.Measure):
                 for i in g.obj_qubits:
                     circ += noise_gate.on(i)
+        return circ
+
+    def as_encoder(self, inplace=True):
+        """
+        To set this circuit to encoder or not.
+
+        Args:
+            inplace (bool): Whether to set inplace. Defaults: True.
+        """
+        _check_input_type("inplace", bool, inplace)
+        if inplace:
+            circ = self
+        else:
+            circ = self * 1
+        for g in circ:
+            if g.parameterized:
+                g.coeff.as_encoder()
+        circ.all_encoder.merge(circ.all_ansatz)
+        circ.all_ansatz.map = {}
+        circ.has_cpp_obj = False
+        return circ
+
+    def as_ansatz(self, inplace=True):
+        """
+        To set this circuit to ansatz or not.
+
+        Args:
+            inplace (bool): Whether to set inplace. Defaults: True.
+        """
+        _check_input_type("inplace", bool, inplace)
+        if inplace:
+            circ = self
+        else:
+            circ = self * 1
+        for g in circ:
+            if g.parameterized:
+                g.coeff.as_ansatz()
+        circ.all_ansatz.merge(circ.all_encoder)
+        circ.all_encoder.map = {}
+        circ.has_cpp_obj = False
         return circ
 
 

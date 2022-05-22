@@ -22,6 +22,7 @@
 
 # Tests
 "mindquantum/tests/st"                                                                 "missing-docstring"
+"mindquantum/tests/st"                                                                 "pointless-statement"
 "mindquantum/tests/st"                                                                 "unused-variable"
 "mindquantum/tests/st"                                                                 "len-as-condition"
 "mindquantum/tests/ut"                                                                 "missing-docstring"

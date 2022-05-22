@@ -34,11 +34,12 @@ from .utils import A
 from .utils import D
 from .utils import AP
 from .utils import CPN
+from .utils import as_ansatz
+from .utils import as_encoder
 
 __all__ = [
-    'Circuit', 'U3', 'UN', 'SwapParts', 'C', 'A', 'D', 'AP', 'CPN',
-    'decompose_single_term_time_evolution', 'pauli_word_to_circuits',
-    'controlled', 'dagger', 'apply', 'add_prefix', 'change_param_name',
-    'shift'
+    'Circuit', 'U3', 'UN', 'SwapParts', 'C', 'A', 'D', 'AP', 'CPN', 'decompose_single_term_time_evolution',
+    'pauli_word_to_circuits', 'controlled', 'dagger', 'apply', 'add_prefix', 'change_param_name', 'shift', 'as_ansatz',
+    'as_encoder'
 ]
 __all__.sort()
