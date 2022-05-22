@@ -1,4 +1,4 @@
-Class mindquantum.core.gates.PhaseShift(pr)
+.. py:class:: mindquantum.core.gates.PhaseShift(pr)
 
     相移门。更多用法，请参见 :class:`mindquantum.core.gates.RX`.
 
@@ -7,6 +7,6 @@ Class mindquantum.core.gates.PhaseShift(pr)
         {\rm PhaseShift}=\begin{pmatrix}1&0\\
                          0&\exp(i\theta)\end{pmatrix}
 
-    参数:
-        coeff (Union[int, float, str, dict, ParameterResolver]): 参数化门的参数，详细解释请参见上文。默认值：None。
+    **参数：**
+    - **coeff** (Union[int, float, str, dict, ParameterResolver]) - 参数化门的参数，详细解释请参见上文。默认值：None。
     
