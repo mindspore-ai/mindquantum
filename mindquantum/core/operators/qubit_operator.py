@@ -151,6 +151,15 @@ class QubitOperator(_Operator):
 
     @staticmethod
     def from_openfermion(of_ops):
+        """
+        Convert qubit operator from openfermion.
+
+        Args:
+            of_ops (openfermion.QubitOperator): Qubit operator from openfermion.
+
+        Returns:
+            QubitOperator, qubit operator from mindquantum.
+        """
         from openfermion import QubitOperator as ofo
         _check_input_type('of_ops', ofo, of_ops)
         out = QubitOperator()
