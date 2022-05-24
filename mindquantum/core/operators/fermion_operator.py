@@ -191,7 +191,15 @@ class FermionOperator(_Operator):
 
     @staticmethod
     def from_openfermion(of_ops):
-        """Convert openfermion fermion operator to mindquantum format."""
+        """
+        Convert openfermion fermion operator to mindquantum format.
+
+        Args:
+            of_ops (openfermion.FermionOperator): fermion operator from openfermion.
+
+        Returns:
+            FermionOperator, fermion operator from mindquantum.
+        """
         from openfermion import FermionOperator as ofo
         _check_input_type('of_ops', ofo, of_ops)
         out = FermionOperator()
