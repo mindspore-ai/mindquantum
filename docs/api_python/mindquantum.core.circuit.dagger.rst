@@ -4,7 +4,7 @@
 
     **参数：**
 
-    - **circuit_fn**(Union[Circuit, FunctionType, MethodType]) - 量子线路，或可以生成量子线路的函数。
+    - **circuit_fn** (Union[Circuit, FunctionType, MethodType]) - 量子线路，或可以生成量子线路的函数。
 
     **异常：**
 
@@ -13,3 +13,4 @@
     **返回：**
 
     Circuit或可以生成Circuit的函数。
+ 

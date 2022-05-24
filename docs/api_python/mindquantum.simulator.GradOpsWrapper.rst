@@ -4,7 +4,7 @@
 
     **参数：**
 
-    - **grad_ops** (Union[FunctionType, MethodType])) - 返回前向值和线路参数梯度的函数或方法
+    - **grad_ops** (Union[FunctionType, MethodType]) - 返回前向值和线路参数梯度的函数或方法。
     - **hams** (Hamiltonian) - 生成这个梯度算子的hamiltonian。
     - **circ_right** (Circuit) - 生成这个梯度算子的右电路。
     - **circ_left** (Circuit) - 生成这个梯度算子的左电路。

@@ -4,6 +4,6 @@
 
         **参数：**
 
-        - **obj_qubits** (Union[int, list[int]]) - `X`门的目标量子比特。
-        - **ctrl_qubits** (Union[int, list[int]]) - `X`门的控制量子比特。默认值：None。
+        - **obj_qubits** (Union[int, list[int]]) - `X` 门的目标量子比特。
+        - **ctrl_qubits** (Union[int, list[int]]) - `X` 门的控制量子比特。默认值：None。
         

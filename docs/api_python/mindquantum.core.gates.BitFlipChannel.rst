@@ -2,7 +2,7 @@
 
     量子信道可以描述量子计算中的非相干噪声。
 
-    比特翻转信道描述的噪声体现为：以P的概率翻转量子比特（作用X门），或以1-P的概率保持不变（作用I门）。
+    比特翻转信道描述的噪声体现为：以 :math:`P` 的概率翻转量子比特（作用 :math:`X` 门），或以 :math:`1-P` 的概率保持不变（作用 :math:`I` 门）。
 
     比特翻转信道的数学表示如下：
 
@@ -10,19 +10,9 @@
 
         \epsilon(\rho) = (1 - P)\rho + P X \rho X
 
-    其中ρ是密度矩阵形式的量子态；P是作用额外X门的概率。
+    其中 :math:`\rho` 是密度矩阵形式的量子态； :math:`P` 是作用额外 :math:`X` 门的概率。
 
     **参数：**
-    - **p** (int, float) - 发生错误的概率。
 
-    **样例：**
-        >>> from mindquantum.core.gates import BitFlipChannel
-        >>> from mindquantum.core.circuit import Circuit
-        >>> circ = Circuit()
-        >>> circ += BitFlipChannel(0.02).on(0)
-        >>> circ += BitFlipChannel(0.01).on(1, 0)
-        >>> print(circ)
-        q0: ──BFC─────●───
-                      │
-        q1: ─────────BFC──
+    - **p** (int, float) - 发生错误的概率。
        

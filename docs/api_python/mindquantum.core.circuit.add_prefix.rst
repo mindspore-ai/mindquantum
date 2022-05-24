@@ -10,7 +10,7 @@
     **异常：**
 
     - **TypeError** - 如果前缀不是字符串。
-    - **TypeError** - circuit_fn不是 Circuit或者未返回Circuit。
+    - **TypeError** - circuit_fn不是Circuit或者未返回Circuit。
 
     **返回：**
 
