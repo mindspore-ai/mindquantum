@@ -73,7 +73,8 @@ from mindquantum.core import RY
 ansatz = HardwareEfficientAnsatz(4, single_rot_gate_seq=[RY], entangle_gate=X, depth=3).circuit
 ansatz.summary()
 ansatz
-
+encoder.as_encoder()
+ansatz.as_ansatz()
 circuit = encoder + ansatz
 circuit.summary()
 circuit
@@ -91,11 +92,7 @@ from mindquantum.simulator import Simulator
 ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 ms.set_seed(1)
 sim = Simulator('projectq', circuit.n_qubits)
-grad_ops = sim.get_expectation_with_grad(hams,
-                                         circuit,
-                                         encoder_params_name=encoder.params_name,
-                                         ansatz_params_name=ansatz.params_name,
-                                         parallel_worker=5)
+grad_ops = sim.get_expectation_with_grad(hams, circuit, parallel_worker=5)
 QuantumNet = MQLayer(grad_ops)
 QuantumNet
 

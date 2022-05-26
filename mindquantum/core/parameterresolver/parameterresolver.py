@@ -75,6 +75,7 @@ class ParameterResolver:
         >>> ParameterResolver('a')
         {'a': 1.0}, const: 0.0
     """
+
     def __init__(self, data=None, const=None, dtype=None):
         if dtype is None:
             if isinstance(data, (complex, np.complex128)):
@@ -161,7 +162,7 @@ class ParameterResolver:
             if dtype != self.dtype:
                 if self.dtype == np.complex128 and dtype == np.float64:
                     warnings.warn("Casting complex parameter resolver to float parameter \
-resolver discards the imaginary part."                                                                            )
+resolver discards the imaginary part.")
                     if self.obj.is_complex_pr():
                         self.obj = self.obj.real()
                 else:

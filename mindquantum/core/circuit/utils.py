@@ -64,7 +64,7 @@ def decompose_single_term_time_evolution(term, para):
         try:
             if len(term.terms) != 1:
                 raise ValueError("Only work for single term time \
-evolution operator, but get {}".format(len(term)))
+evolution operator, but get {}"                               .format(len(term)))
             term = list(term.terms.keys())[0]
         except TypeError:
             raise TypeError("Not supported type:{}".format(type(term)))
@@ -362,9 +362,12 @@ def _add_prefix(circ, prefix):
     for g in circ:
         g = copy.deepcopy(g)
         if g.parameterized:
-            pr = PR()
+            origin_encoder = g.coeff.encoder_parameters
+            pr = PR(dtype=g.coeff.dtype)
             for k, v in g.coeff.items():
                 pr[f'{prefix}_{k}'] = v
+                if k in origin_encoder:
+                    pr.encoder_part(f'{prefix}_{k}')
             g.coeff = pr
         out += g
     return out
@@ -456,11 +459,14 @@ def _change_param_name(circ, name_map):
     for g in circ:
         g = copy.deepcopy(g)
         if g.parameterized:
-            pr = PR()
+            origin_encoder = g.coeff.encoder_parameters
+            pr = PR(dtype=g.coeff.dtype)
             for k, v in g.coeff.items():
                 if k not in name_map:
                     raise KeyError(f"Original parameter {k} not in name_map!")
                 pr[name_map[k]] = v
+                if k in origin_encoder:
+                    pr.encoder_part(name_map[k])
             g.coeff = pr
         out += g
     return out
@@ -519,6 +525,104 @@ def change_param_name(circuit_fn, name_map):
     if isinstance(circuit_fn, Circuit):
         return _change_param_name(circuit_fn, name_map)
     raise TypeError("circuit_fn need a circuit or a function that can generate a circuit.")
+
+
+def as_encoder(circuit_fn):
+    """
+    Decorator that convert circuit to encoder circuit.
+
+    Args:
+        circuit_fn (Union[Circuit, FunctionType, MethodType]): A Circuit or a callable function that can return
+            a Circuit.
+
+    Returns:
+        Function, if `circuit_fn` is a callable function that will return a Circuit.
+        Circuit, if `circuit_fn` is already a Circuit.
+
+    Examples:
+        >>> from mindquantum.core import as_encoder
+        >>> from mindquantum.core import Circuit, RX
+        >>> @as_encoder
+        ... def create_circuit():
+        ...     circ = Circuit()
+        ...     circ += RX('a').on(0)
+        ...     return circ
+        >>> circ = create_circuit()
+        >>> circ.encoder_params_name
+        ['a']
+        >>> circ.as_ansatz()
+        >>> circ.encoder_params_name
+        []
+        >>> circ = as_encoder(circ)
+        >>> circ.encoder_params_name
+        ['a']
+    """
+    from mindquantum.core import Circuit
+    if isinstance(circuit_fn, (FunctionType, MethodType)):
+
+        def gene_circ(*args, **kwargs):
+            circ = circuit_fn(*args, **kwargs)
+            if not isinstance(circ, Circuit):
+                raise ValueError(f"The callable circuit_fn should return a Circuit, but get {type(circ)}")
+            circ.as_encoder()
+            return circ
+
+        return gene_circ
+
+    if isinstance(circuit_fn, Circuit):
+        new_circ = copy.deepcopy(circuit_fn)
+        return new_circ.as_encoder()
+    raise TypeError(f"circuit_fn need a circuit or a function that can generate a circuit, \
+but get {type(circuit_fn)}."                            )
+
+
+def as_ansatz(circuit_fn):
+    """
+    Decorator that convert circuit to ansatz circuit.
+
+    Args:
+        circuit_fn (Union[Circuit, FunctionType, MethodType]): A Circuit or a callable function that can return
+            a Circuit.
+
+    Returns:
+        Function, if `circuit_fn` is a callable function that will return a Circuit.
+        Circuit, if `circuit_fn` is already a Circuit.
+
+    Examples:
+        >>> from mindquantum.core import as_encoder
+        >>> from mindquantum.core import Circuit, RX
+        >>> @as_ansatz
+        ... def create_circuit():
+        ...     circ = Circuit()
+        ...     circ += RX('a').on(0)
+        ...     return circ
+        >>> circ = create_circuit()
+        >>> circ.ansatz_params_name
+        ['a']
+        >>> circ.as_encoder()
+        >>> circ.ansatz_params_name
+        []
+        >>> circ = as_ansatz(circ)
+        >>> circ.ansatz_params_name
+        ['a']
+    """
+    from mindquantum.core import Circuit
+    if isinstance(circuit_fn, (FunctionType, MethodType)):
+
+        def gene_circ(*args, **kwargs):
+            circ = circuit_fn(*args, **kwargs)
+            if not isinstance(circ, Circuit):
+                raise ValueError(f"The callable circuit_fn should return a Circuit, but get {type(circ)}")
+            circ.as_ansatz()
+            return circ
+
+        return gene_circ
+
+    if isinstance(circuit_fn, Circuit):
+        new_circ = copy.deepcopy(circuit_fn)
+        return new_circ.as_ansatz()
+    raise TypeError(f"circuit_fn need a circuit or a function that can generate a circuit, \
+but get {type(circuit_fn)}."                            )
 
 
 C = controlled

@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """Basic functionality test module."""
 
 # NB: This file is mainly used to perform quick installation tests when building Python binary wheels
@@ -46,11 +45,9 @@ ham = Hamiltonian(QubitOperator('Z1'))
 encoder_names = ['a', 'b']
 ansatz_names = ['p1', 'p2']
 
-total_circuit = encoder + ansatz
+total_circuit = encoder.as_encoder() + ansatz.as_ansatz()
 sim = Simulator('projectq', total_circuit.n_qubits)
-grad_ops = sim.get_expectation_with_grad(
-    ham, total_circuit, encoder_params_name=encoder_names, ansatz_params_name=ansatz_names
-)
+grad_ops = sim.get_expectation_with_grad(ham, total_circuit)
 encoder_data = np.array([[0.1, 0.2]])
 ansatz_data = np.array([0.3, 0.4])
 measure_result, encoder_grad, ansatz_grad = grad_ops(encoder_data, ansatz_data)
