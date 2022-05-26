@@ -1,7 +1,7 @@
-mindquantum.algorithm.nisq.MaxCutAnsatz.hamiltonian
+.. py:method:: mindquantum.algorithm.nisq.MaxCutAnsatz.hamiltonian
 
-        得到汉密尔顿这个最大削减问题。
+    获取max-cut问题的哈密顿量。
 
-        返回:
-            量子位算子，这个最大切割问题的汉密尔顿。
-        
+    **返回：**
+
+    QubitOperator，max-cut问题的哈密顿量。
