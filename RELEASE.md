@@ -2,6 +2,64 @@
 
 [查看中文](./RELEASE_CN.md)
 
+## MindQuantum 0.6.5 Release Notes
+
+### Major Features and Improvements
+
+#### Circuit
+
+- [STABLE] `as_encoder`: Method of `Circuit` to mark this circuit as an encoder circuit.
+- [STABLE] `as_ansatz`: Method of `Circuit` to mark this circuit as an ansatz circuit.
+- [STABLE] `encoder_params_name`: Method of `Circuit` to return the encoder parameters.
+- [STABLE] `ansatz_params_name`: Method of `Circuit` to return the ansatz parameters.
+- [STABLE] `remove_noise`: Method of `Circuit` to remove all noise channel.
+- [STABLE] `with_noise`: Method of `Circuit` to add a given noise channel after every gate.
+- [STABLE] `as_encoder`: A decorator to wrap a function, so that it can generate an encoder circuit.
+- [STABLE] `as_ansatz`: A decorator to wrap a function, so that it can generate an ansatz circuit.
+
+#### Gates
+
+- [STABLE] `AmplitudeDampingChannel`: Amplitude damping channel express error that qubit is affected by the energy dissipation.
+- [STABLE] `PhaseDampingChannel`: Phase damping channel express error that qubit loses quantum information without exchanging energy with environment
+
+#### FermionOperator and QubitOperator
+
+- [STABLE] `split`: A method of FermionOperator and QubitOperator that can split the coefficient with the operator.
+
+#### ParameterResolver
+
+- [STABLE] `astype`: Convert the ParameterResolver to a given type, can be float or double complex
+- [STABLE] `const`: Get the constant part of this ParameterResolver.
+- [STABLE] `is_const`: Check whether this ParameterResolver is constant.
+- [STABLE] `encoder_part`: Set a part of parameter to be encoder parameter.
+- [STABLE] `ansatz_part`: Set a part of parameter to be ansatz parameter.
+- [STABLE] `as_encoder`: Set all parameter to encoder parameters.
+- [STABLE] `as_ansatz`: Set all parameter to ansatz parameters.
+- [STABLE] `encoder_parameters`: Return all encoder parameters.
+- [STABLE] `ansatz_parameters`: Return all ansatz parameters.
+- [STABLE] `is_hermitian`: Check whether this ParameterResolver is hermitian conjugate.
+- [STABLE] `is_anti_hermitian`: Check whether this ParameterResolver is anti hermitian conjugate.
+- [STABLE] `no_grad_parameters`: Return all parameters that do no require gradient.
+- [STABLE] `requires_grad_parameters`: Return all parameters that require gradient.
+
+#### Simulator
+
+- [STABLE] `copy`: The simulator can now very easy to duplicate.
+- [STABLE] `apply_gate`: In this version, you can apply a gate in differential version.
+- [STABLE] `inner_product`: Calculate the inner product of two state in two simulator.
+
+#### IO
+
+- [STABLE] `BlochSphere`: Now we support display and animate a one qubit state in bloch sphere.
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+yufan, wengwenkang, xuxusheng, Damien Ngyuen, zhouxu, wangzidong, yangkang, lujiale, zhangzhenghai, fanyi, zhangwengang, wangkaisheng, zhoufeng, wangsiyuan, gongxiaoqing, chengxianbin, sunxiyin, wenwenkang, lvdingshun, cuijiangyu, chendiqing, zhangkai, Zotov Yuriy, liqin, zengjinglin, cuixiaopeng, 朱祎康, dorothy20212021, dsdsdshe, buyulin, norl-corxilea, herunhong, Arapat Ablimit, NoE, panshijie, longhanlin.
+
+Contributions of any kind are welcome!
+
 ## MindQuantum 0.6.0 Release Notes
 
 ### Major Features and Improvements

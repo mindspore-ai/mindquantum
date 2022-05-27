@@ -64,7 +64,7 @@ def decompose_single_term_time_evolution(term, para):
         try:
             if len(term.terms) != 1:
                 raise ValueError("Only work for single term time \
-evolution operator, but get {}"                               .format(len(term)))
+evolution operator, but get {}".format(len(term)))
             term = list(term.terms.keys())[0]
         except TypeError:
             raise TypeError("Not supported type:{}".format(type(term)))
@@ -573,7 +573,7 @@ def as_encoder(circuit_fn):
         new_circ = copy.deepcopy(circuit_fn)
         return new_circ.as_encoder()
     raise TypeError(f"circuit_fn need a circuit or a function that can generate a circuit, \
-but get {type(circuit_fn)}."                            )
+but get {type(circuit_fn)}.")
 
 
 def as_ansatz(circuit_fn):
@@ -622,7 +622,7 @@ def as_ansatz(circuit_fn):
         new_circ = copy.deepcopy(circuit_fn)
         return new_circ.as_ansatz()
     raise TypeError(f"circuit_fn need a circuit or a function that can generate a circuit, \
-but get {type(circuit_fn)}."                            )
+but get {type(circuit_fn)}.")
 
 
 C = controlled
