@@ -15,7 +15,7 @@
     **参数：**
 
     - **n_qubits** (int) – 量子比特（自旋轨道）的数量。默认值：None。
-    - **n_electrons** (int) – 电子的数量（占用的自旋轨道）。默认值：无。
+    - **n_electrons** (int) – 电子的数量（占用的自旋轨道）。默认值：None。
     - **occ_orb** (list) – 手动分配的占用空间轨道的指数，仅适用于asatz构造。默认值：None。
     - **vir_orb** (list) – 手动分配的虚拟空间轨道的指数，仅适用于asatz构造。默认值：None。
     - **generalized** (bool) – 是否使用不区分占用轨道或虚拟轨道的广义激励（UGCGSD）。默认值：False。
