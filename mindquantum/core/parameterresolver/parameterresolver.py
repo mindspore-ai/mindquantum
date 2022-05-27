@@ -162,7 +162,7 @@ class ParameterResolver:
             if dtype != self.dtype:
                 if self.dtype == np.complex128 and dtype == np.float64:
                     warnings.warn("Casting complex parameter resolver to float parameter \
-resolver discards the imaginary part.")
+resolver discards the imaginary part."                                      )
                     if self.obj.is_complex_pr():
                         self.obj = self.obj.real()
                 else:
@@ -880,19 +880,46 @@ resolver discards the imaginary part.")
         Returns:
             set, the set of parameters that requires grad.
 
-        >>> from mindquantum.core import ParameterResolver as PR
-        >>> a = PR({'a': 1, 'b': 2})
-        >>> a.requires_grad_parameters
-        {'a', 'b'}
+        Examples:
+            >>> from mindquantum.core import ParameterResolver as PR
+            >>> a = PR({'a': 1, 'b': 2})
+            >>> a.requires_grad_parameters
+            {'a', 'b'}
         """
         return set(self.params_name) - self.no_grad_parameters
 
     @property
     def no_grad_parameters(self):
+        """
+        Get parameters that do not require grad.
+
+        Returns:
+            set, the set of parameters that do not require grad.
+
+        Examples:
+            >>> from mindquantum.core import ParameterResolver as PR
+            >>> a = PR({'a': 1, 'b': 2})
+            >>> a.no_grad()
+            >>> a.no_grad_parameters
+            {'a', 'b'}
+        """
         return self.obj.no_grad_parameters
 
     @property
     def encoder_parameters(self):
+        """
+        Get parameters that is encoder parameters.
+
+        Returns:
+            set, the set of encoder parameters.
+
+        Examples:
+            >>> from mindquantum.core import ParameterResolver as PR
+            >>> a = PR({'a': 1, 'b': 2})
+            >>> a.as_encoder()
+            >>> a.encoder_parameters
+            {'a', 'b'}
+        """
         return self.obj.encoder_parameters
 
     @property
@@ -903,10 +930,11 @@ resolver discards the imaginary part.")
         Returns:
             set, the set of ansatz parameters.
 
-        >>> from mindquantum.core import ParameterResolver as PR
-        >>> a = PR({'a': 1, 'b': 2})
-        >>> a.ansatz_parameters
-        {'a', 'b'}
+        Examples:
+            >>> from mindquantum.core import ParameterResolver as PR
+            >>> a = PR({'a': 1, 'b': 2})
+            >>> a.ansatz_parameters
+            {'a', 'b'}
         """
         return set(self.params_name) - self.encoder_parameters
 
