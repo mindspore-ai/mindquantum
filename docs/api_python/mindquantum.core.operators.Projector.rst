@@ -1,23 +1,17 @@
-Class mindquantum.core.operators.Projector(proj)
+.. py:class:: mindquantum.core.operators.Projector(proj)
 
-    投影仪操作员。
+    投影算子。
 
-    对于投影仪，如下所示：
+    对于一个如下所示的投影算子：
 
     .. math::
         \left|01\right>\left<01\right|\otimes I^2
 
-    字符串格式为“01II”。
+    字符串格式为'01II'。
 
-    注:
-        下索引量子位位于布拉和ket字符串格式的右端。
+    .. note::
+        索引小的量子比特位于bra和ket字符串格式的右端。
 
-    参数:
-        proj (str): 投影仪的字符串格式。
+    **参数：**
 
-    样例:
-        >>> from mindquantum.core.operators import Projector
-        >>> p = Projector('II010')
-        >>> p
-        I2 ⊗ ¦010⟩⟨010¦
-       
+    - **proj** (str) - 投影算子的字符串格式。

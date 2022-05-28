@@ -1,2 +1,4 @@
-mindquantum.core.operators.TimeEvolution.circuit
-得到这个时间进化算子的一阶蹄子分解电路。
+.. py:method:: mindquantum.core.operators.TimeEvolution.circuit
+    :property:
+
+    返回时间演化算符的一阶Trotter分解线路。
