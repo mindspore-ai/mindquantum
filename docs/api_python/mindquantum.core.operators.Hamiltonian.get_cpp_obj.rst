@@ -1,6 +1,6 @@
 .. py:method:: mindquantum.core.operators.Hamiltonian.get_cpp_obj(hermitian=False)
 
-    get_cpp_obj
+    获得cpp对象
 
     **参数：**
 

@@ -1,6 +1,6 @@
 .. py:method:: mindquantum.core.operators.Hamiltonian.sparse(n_qubits=1)
 
-    在pqc算子中计算哈密顿量的稀疏矩阵
+    在pqc算子中计算哈密顿量的稀疏矩阵。
 
     **参数：**
 
