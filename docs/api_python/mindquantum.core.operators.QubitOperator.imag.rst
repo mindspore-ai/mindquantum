@@ -1,13 +1,9 @@
-mindquantum.core.operators.QubitOperator.imag
+.. py:method:: mindquantum.core.operators.QubitOperator.imag
+    :property:
 
-        将系数转换为其形象部分。
+    获得系数的虚部。
 
-        返回:
-            QubitOperator，此量子位运算符的形象部分。
+    **返回：**
 
-        样例:
-            >>> from mindquantum.core.operators import QubitOperator
-            >>> f = QubitOperator('X0', 1 + 2j) + QubitOperator('Y0', 'a')
-            >>> f.imag.compress()
-            2.0 [X0]
-        
+    QubitOperator，此量子算符的虚部。
+   
