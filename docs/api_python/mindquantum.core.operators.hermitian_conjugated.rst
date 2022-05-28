@@ -1,17 +1,11 @@
-mindquantum.core.operators.hermitian_conjugated(operator)
+.. py:function:: mindquantum.core.operators.hermitian_conjugated(operator)
 
-    返回费米子算子或量子算子的厄米共轭。
+    返回FermionOperator或QubitOperator的厄米共轭。
 
-    参数:
-        operator (Union[FermionOperator, QubitOperator, QubitExcitationOperator]): 输入运算符。
+    **参数：**
 
-    返回:
-        operator (Union[FermionOperator, QubitOperator, QubitExcitationOperator]), 输入运算符的隐士形式。
+    - **operator** (Union[FermionOperator, QubitOperator, QubitExcitationOperator]) - 输入的算子。
 
-    样例:
-        >>> from mindquantum.core.operators import QubitOperator
-        >>> from mindquantum.core.operators import hermitian_conjugated
-        >>> q = QubitOperator('X0', {'a' : 2j})
-        >>> hermitian_conjugated(q)
-        -2.0*I*a [X0]
-    
+    **返回：**
+
+    operator (Union[FermionOperator, QubitOperator, QubitExcitationOperator]), 输入算子的厄米共轭。
