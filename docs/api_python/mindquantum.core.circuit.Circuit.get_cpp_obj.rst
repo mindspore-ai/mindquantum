@@ -1,7 +1,7 @@
-mindquantum.core.circuit.Circuit.get_cpp_obj(hermitian=False)
+.. py:method:: mindquantum.core.circuit.Circuit.get_cpp_obj(hermitian=False)
 
-        获取电路的cpp对象。
+    获取线路的cpp object。
 
-        参数:
-            hermitian (bool): 是否在隐士版本中获取此电路的cpp对象。默认值：False。
-        
+    **参数：**
+
+    - **hermitian** (bool) - 是否获取线路cpp object的hermitian版本。默认值：False。    

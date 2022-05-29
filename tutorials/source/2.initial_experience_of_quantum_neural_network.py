@@ -14,12 +14,7 @@ encoder.summary()
 encoder
 
 alpha0, alpha1, alpha2 = 0.2, 0.3, 0.4
-state = encoder.get_qs(pr={
-    'alpha0': alpha0,
-    'alpha1': alpha1,
-    'alpha2': alpha2
-},
-                       ket=True)
+state = encoder.get_qs(pr={'alpha0': alpha0, 'alpha1': alpha1, 'alpha2': alpha2}, ket=True)
 print(state)
 
 ansatz = Circuit()
@@ -28,10 +23,10 @@ ansatz += RY(f'theta{1}').on(0)
 ansatz
 
 theta0, theta1 = 0, 0
-state = ansatz.get_qs(pr=dict(zip(ansatz.params_name, [theta0, theta1])),
-                      ket=True)
+state = ansatz.get_qs(pr=dict(zip(ansatz.params_name, [theta0, theta1])), ket=True)
 print(state)
-
+encoder.as_encoder()
+ansatz.as_ansatz()
 circuit = encoder + ansatz
 circuit
 
@@ -44,18 +39,14 @@ print(ham)
 encoder_names = encoder.params_name
 ansatz_names = ansatz.params_name
 
-print('encoder_names = ', encoder.params_name, '\nansatz_names =',
-      ansatz.params_name)
+print('encoder_names = ', encoder.params_name, '\nansatz_names =', ansatz.params_name)
 
 # 导入Simulator模块
 from mindquantum.simulator import Simulator
 
 sim = Simulator('projectq', circuit.n_qubits)
 
-grad_ops = sim.get_expectation_with_grad(ham,
-                                         circuit,
-                                         encoder_params_name=encoder_names,
-                                         ansatz_params_name=ansatz_names)
+grad_ops = sim.get_expectation_with_grad(ham, circuit)
 
 encoder_data = np.array([[alpha0, alpha1, alpha2]]).astype(np.float32)
 
@@ -91,13 +82,7 @@ theta0, theta1 = QuantumNet.weight.asnumpy()
 
 print(QuantumNet.weight.asnumpy())
 
-pr = {
-    'alpha0': alpha0,
-    'alpha1': alpha1,
-    'alpha2': alpha2,
-    'theta0': theta0,
-    'theta1': theta1
-}
+pr = {'alpha0': alpha0, 'alpha1': alpha1, 'alpha2': alpha2, 'theta0': theta0, 'theta1': theta1}
 state = circuit.get_qs(pr=pr, ket=True)
 
 print(state)

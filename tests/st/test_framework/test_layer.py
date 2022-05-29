@@ -36,9 +36,9 @@ def test_mindquantumlayer():
     ansatz += G.RY('p1').on(0)
     ham = Hamiltonian(QubitOperator('Z0'))
     ms.set_seed(55)
-    circ = encoder + ansatz
+    circ = encoder.as_encoder() + ansatz.as_ansatz()
     sim = Simulator('projectq', circ.n_qubits)
-    f_g_ops = sim.get_expectation_with_grad(ham, circ, encoder_params_name=['e1', 'e2'], ansatz_params_name=['p1'])
+    f_g_ops = sim.get_expectation_with_grad(ham, circ)
     net = MQLayer(f_g_ops)
     encoder_data = ms.Tensor(np.array([[0.1, 0.2]]).astype(np.float32))
     res = net(encoder_data)

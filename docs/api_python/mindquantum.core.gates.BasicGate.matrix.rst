@@ -1,2 +1,3 @@
-mindquantum.core.gates.BasicGate.matrix(*args)
-ÃÅµÄ¾ØÕó¡£
+.. py:method:: mindquantum.core.gates.BasicGate.matrix(*args)
+
+    门的矩阵。

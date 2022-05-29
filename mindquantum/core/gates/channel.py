@@ -152,6 +152,9 @@ class BitFlipChannel(PauliChannel):
         prop['p'] = self.p
         return prop
 
+    def __str_in_circ__(self):
+        return f"BF({self.p})"
+
 
 class PhaseFlipChannel(PauliChannel):
     r"""
@@ -195,6 +198,9 @@ class PhaseFlipChannel(PauliChannel):
         prop = super().__extra_prop__()
         prop['p'] = self.p
         return prop
+
+    def __str_in_circ__(self):
+        return f"PF({self.p})"
 
 
 class BitPhaseFlipChannel(PauliChannel):
@@ -241,6 +247,9 @@ class BitPhaseFlipChannel(PauliChannel):
         prop['p'] = self.p
         return prop
 
+    def __str_in_circ__(self):
+        return f"BPF({self.p})"
+
 
 class DepolarizingChannel(PauliChannel):
     r"""
@@ -285,6 +294,9 @@ class DepolarizingChannel(PauliChannel):
         prop = super().__extra_prop__()
         prop['p'] = self.p
         return prop
+
+    def __str_in_circ__(self):
+        return f"Dep({self.p})"
 
 
 class AmplitudeDampingChannel(NoiseGate, SelfHermitianGate):
@@ -346,6 +358,9 @@ class AmplitudeDampingChannel(NoiseGate, SelfHermitianGate):
     def __eq__(self, other):
         return BasicGate.__eq__(self, other) and self.gamma == other.gamma
 
+    def __str_in_circ__(self):
+        return f"AD({self.gamma})"
+
 
 class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
     r"""
@@ -405,3 +420,6 @@ class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
 
     def __eq__(self, other):
         return super().__eq__(other) and self.gamma == other.gamma
+
+    def __str_in_circ__(self):
+        return f"PD({self.gamma})"

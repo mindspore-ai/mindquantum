@@ -1,25 +1,4 @@
-Class mindquantum.core.gates.MeasureResult
+.. py:class:: mindquantum.core.gates.MeasureResult
 
     测量结果容器。
-
-    样例:
-        >>> from mindquantum import qft
-        >>> from mindquantum import Simulator
-        >>> sim = Simulator('projectq', 2)
-        >>> res = sim.sampling(qft(range(2)).measure_all(), shots=1000, seed=42)
-        >>> res
-        shots: 1000
-        Keys: q1 q0│0.00   0.065        0.13       0.194       0.259       0.324
-        ───────────┼───────────┴───────────┴───────────┴───────────┴───────────┴
-                 00│▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-                   │
-                 01│▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-                   │
-                 10│▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-                   │
-                 11│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-                   │
-        {'00': 230, '01': 254, '10': 257, '11': 259}
-        >>> res.data
-        {'00': 230, '01': 254, '10': 257, '11': 259}
-       
+      

@@ -1,20 +1,11 @@
-mindquantum.core.circuit.Circuit.apply_value(pr)
+.. py:method:: mindquantum.core.circuit.Circuit.apply_value(pr)
 
-        将此电路转换为具有输入参数的非参数化电路。
+    将此线路使用输入参数转换成的不含参线路。
 
-        参数:
-            pr (Union[dict, ParameterResolver]): 要应用到此电路中的参数。
+    **参数：**
 
-        返回:
-            电路，非参数化电路。
+    - **pr** (Union[dict, ParameterResolver]) - 应用到此线路中的参数。
 
-        样例:
-            >>> from mindquantum.core.gates import X, RX
-            >>> from mindquantum.core.circuit import Circuit
-            >>> circuit = Circuit()
-            >>> circuit += X.on(0)
-            >>> circuit += RX({'a': 2}).on(0)
-            >>> circuit = circuit.apply_value({'a': 1.5})
-            >>> circuit
-            q0: ──X────RX(3)──
-           
+    **返回：**
+
+    Circuit，不含参线路。           

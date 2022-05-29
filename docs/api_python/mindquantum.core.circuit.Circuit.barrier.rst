@@ -1,7 +1,7 @@
-mindquantum.core.circuit.Circuit.barrier(show=True)
+.. py:method:: mindquantum.core.circuit.Circuit.barrier(show=True)
 
-        添加屏障。
+    添加barrier。
 
-        参数:
-            show (bool): 是否显示障碍物。默认值：True。
-        
+    **参数：**
+
+    - **show** (bool) - 是否显示barrier。默认值：True。

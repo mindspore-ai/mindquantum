@@ -8,6 +8,7 @@
     - [变分量子线路梯度计算进阶](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/get_gradient_of_PQC_with_mindquantum.html)
     - [量子线路高阶操作](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/advanced_operations_of_quantum_circuit.html)
     - [量子测量](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/quantum_measurement.html)
+    - [含噪量子线路](https://mindspore.cn/mindquantum/docs/zh-CN/master/noise.html)
 
 2. 变分量子算法
 

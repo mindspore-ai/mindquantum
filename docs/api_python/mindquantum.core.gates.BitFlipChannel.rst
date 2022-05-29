@@ -1,28 +1,18 @@
-Class mindquantum.core.gates.BitFlipChannel(p: float, **kwargs)
+.. py:class:: mindquantum.core.gates.BitFlipChannel(p: float, **kwargs)
 
-    量子信道，表达量子计算中的非相干噪声。
+    量子信道可以描述量子计算中的非相干噪声。
 
-    位翻转通道表示错误，即随机翻转量子位（应用X门），概率P，或注意（应用I门），概率1-P。
+    比特翻转信道描述的噪声体现为：以 :math:`P` 的概率翻转量子比特（作用 :math:`X` 门），或以 :math:`1-P` 的概率保持不变（作用 :math:`I` 门）。
 
-    位翻转通道应用噪声为：
+    比特翻转信道的数学表示如下：
 
     .. math::
 
         \epsilon(\rho) = (1 - P)\rho + P X \rho X
 
-    其中，P是密度矩阵类型的量子态；P是应用额外X门的概率。
+    其中 :math:`\rho` 是密度矩阵形式的量子态； :math:`P` 是作用额外 :math:`X` 门的概率。
 
-    参数:
-        p (int, float): 发生错误的概率。
+    **参数：**
 
-    样例:
-        >>> from mindquantum.core.gates import BitFlipChannel
-        >>> from mindquantum.core.circuit import Circuit
-        >>> circ = Circuit()
-        >>> circ += BitFlipChannel(0.02).on(0)
-        >>> circ += BitFlipChannel(0.01).on(1, 0)
-        >>> print(circ)
-        q0: ──BFC─────●───
-                      │
-        q1: ─────────BFC──
+    - **p** (int, float) - 发生错误的概率。
        

@@ -563,7 +563,14 @@ struct ParameterResolver {
         ParameterResolver<type> pr = {};
         pr.const_value = std::real(this->const_value);
         for (ITER(p, this->data_)) {
+            auto& key = p->first;
             pr.data_[p->first] = std::real(p->second);
+            if (this->EncoderContains(key)) {
+                pr.encoder_parameters_.insert(key);
+            }
+            if (this->NoGradContains(key)) {
+                pr.no_grad_parameters_.insert(key);
+            }
         }
         return pr;
     }
@@ -573,7 +580,14 @@ struct ParameterResolver {
         ParameterResolver<type> pr = {};
         pr.const_value = std::imag(this->const_value);
         for (ITER(p, this->data_)) {
+            auto& key = p->first;
             pr.data_[p->first] = std::imag(p->second);
+            if (this->EncoderContains(key)) {
+                pr.encoder_parameters_.insert(key);
+            }
+            if (this->NoGradContains(key)) {
+                pr.no_grad_parameters_.insert(key);
+            }
         }
         return pr;
     }
@@ -581,6 +595,12 @@ struct ParameterResolver {
     T Pop(const std::string& key) {
         auto out = this->GetItem(key);
         this->data_.erase(key);
+        if (this->EncoderContains(key)) {
+            this->encoder_parameters_.erase(key);
+        }
+        if (this->NoGradContains(key)) {
+            this->no_grad_parameters_.erase(key);
+        }
         return out;
     }
 
@@ -596,8 +616,15 @@ struct ParameterResolver {
         using type = typename RemoveComplex<T>::type;
         ParameterResolver<std::complex<type>> out;
         for (ITER(p, this->data_)) {
+            auto& key = p->first;
             auto& t = p->second;
             out.data_[p->first] = std::complex<type>(t);
+            if (this->EncoderContains(key)) {
+                out.encoder_parameters_.insert(key);
+            }
+            if (this->NoGradContains(key)) {
+                out.no_grad_parameters_.insert(key);
+            }
         }
         out.const_value = std::complex<type>(this->const_value);
         return out;

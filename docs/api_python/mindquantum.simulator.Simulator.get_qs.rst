@@ -1,17 +1,11 @@
-mindquantum.simulator.Simulator.get_qs(ket=False)
+.. py:method:: mindquantum.simulator.Simulator.get_qs(ket=False)
 
-        获取此模拟器的当前量子状态。
+    获取模拟器的当前量子态。
 
-        参数:
-            ket (bool): 是否以ket格式返回量子状态。默认值：False。
+    **参数：**
 
-        返回:
-            numpy.nd数组，当前量子状态。
+    - **ket** (bool) – 是否以ket格式返回量子状态。默认值：False。
 
-        样例:
-            >>> from mindquantum import qft, Simulator
-            >>> sim = Simulator('projectq', 2)
-            >>> sim.apply_circuit(qft(range(2)))
-            >>> sim.get_qs()
-            array([0.5+0.j, 0.5+0.j, 0.5+0.j, 0.5+0.j])
-        
+     **返回：**
+
+    numpy.ndarray，当前量子态。        

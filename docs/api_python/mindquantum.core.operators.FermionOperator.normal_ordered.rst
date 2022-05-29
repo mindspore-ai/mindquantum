@@ -1,15 +1,8 @@
-mindquantum.core.operators.FermionOperator.normal_ordered()
-返回费米子算子的正常有序形式。
+.. py:method:: mindquantum.core.operators.FermionOperator.normal_ordered()
 
-        返回:
-            费米子算子，正常有序的费米子算子。
+    返回FermionOperator的规范有序形式。
 
-        样例:
-            >>> from mindquantum.core.operators import FermionOperator
-            >>> origin = FermionOperator('0 1^')
-            >>> origin
-            1.0 [0 1^]
-            >>> origin.normal_ordered()
-            -1.0 [1^ 0]
+    **返回：**
 
-        
+    FermionOperator，规范有序的FermionOperator。
+   

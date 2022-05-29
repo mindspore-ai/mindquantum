@@ -1,3 +1,3 @@
 mindquantum.core
-MindQuantum核心特性(eDSL)
-L)
+
+MindQuantum的核心特性(eDSL)

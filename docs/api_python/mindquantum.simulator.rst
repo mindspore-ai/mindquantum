@@ -1,2 +1,2 @@
 mindquantum.simulator
-Ä£ÄâÆ÷¡£
+模拟器

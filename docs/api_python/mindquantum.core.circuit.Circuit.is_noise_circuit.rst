@@ -1,7 +1,8 @@
-mindquantum.core.circuit.Circuit.is_noise_circuit
+.. py:method:: mindquantum.core.circuit.Circuit.is_noise_circuit
+    :property:
 
-        检查此电路是否有保利通道。
+    检查线路是否有Pauli信道。
 
-        返回:
-            bool, 这个电路是否有保利频道。
-        
+    **返回：**
+
+    bool, 线路是否有Pauli信道。

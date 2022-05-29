@@ -1,7 +1,8 @@
-mindquantum.core.circuit.Circuit.has_measure_gate
+.. py:method:: mindquantum.core.circuit.Circuit.has_measure_gate
+    :property:
 
-        检查此电路是否有测量门。
+    检查线路是否有测量门。
 
-        返回:
-            bool, 此电路是否有测量门。
-        
+    **返回：**
+
+    bool, 线路是否有测量门。 
