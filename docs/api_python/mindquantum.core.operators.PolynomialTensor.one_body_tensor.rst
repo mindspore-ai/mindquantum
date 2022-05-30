@@ -1,2 +1,4 @@
-mindquantum.core.operators.PolynomialTensor.one_body_tensor
-得一体相关词语。
+.. py:method:: mindquantum.core.operators.PolynomialTensor.one_body_tensor
+    :property:
+
+    获得单体项。

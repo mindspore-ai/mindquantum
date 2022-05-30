@@ -1,15 +1,12 @@
-mindquantum.core.operators.down_index(index)
+.. py:function:: mindquantum.core.operators.down_index(index)
 
-    索引顺序，默认情况下，我们将无自旋轨道设置为偶数-奇数-偶数-奇数（0,1,2,3,...）。具有索引奇数的自旋轨道（β轨道）。
+    索引顺序，默认情况下，我们将无自旋轨道设置为偶数-奇数-偶数-奇数（0,1,2,3,...）。自旋向下的轨道（β轨道）索引是奇数。
 
-    参数:
-        index (int): 空间轨道索引。
+    **参数：**
 
-    返回:
-        一个整数，它是关联的自旋轨道的索引。
+    - **index** (int) - 空间轨道索引。
 
-    样例:
-        >>> from mindquantum.core.operators import down_index
-        >>> down_index(1)
-        3
-    
+    **返回：**
+
+    一个整数，它是关联的自旋向下的轨道索引。
+ 
