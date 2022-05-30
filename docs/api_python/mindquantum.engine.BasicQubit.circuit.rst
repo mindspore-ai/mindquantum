@@ -1,4 +1,4 @@
-mindquantum.engine.BasicQubit.circuit
+.. py:method:: mindquantum.engine.BasicQubit.circuit
+    :property:
 
-        获取此量子位所属的量子电路。
-��
+    得到此量子比特所属的量子线路。
