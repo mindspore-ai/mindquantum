@@ -1,6 +1,6 @@
 .. py:method:: mindquantum.algorithm.nisq.MaxCutAnsatz.get_cut_value(partition)
 
-    获取给定分区的切割值。分区是一个包含两个列表的列表，每个列表都包含给定图的节点。
+    获取切割方案的切割边数。切割方案是一个list数组，该list数组由两个list数组构成，每一个list数组包含切割的节点。
 
     **参数：**
 
