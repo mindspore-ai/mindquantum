@@ -1,7 +1,7 @@
-mindquantum.core.operators.Hamiltonian.get_cpp_obj(hermitian=False)
+.. py:method:: mindquantum.core.operators.Hamiltonian.get_cpp_obj(hermitian=False)
 
-        get_cpp_obj
+    获得cpp对象。
 
-        参数:
-            hermitian (bool): 是否在隐士版本中获得这个汉密尔顿语的cpp对象。
-        
+    **参数：**
+
+    - **hermitian** (bool) - 是否获得哈密顿量的cpp对象的厄密共轭。
