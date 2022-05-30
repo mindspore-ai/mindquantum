@@ -1,6 +1,6 @@
 .. py:method:: mindquantum.algorithm.nisq.Max2SATAnsatz.get_sat(max_n, weight)
 
-    获取这个max-2-sat问题的字符串。
+    获取max-2-sat问题的字符串。
 
     **参数：**
 
