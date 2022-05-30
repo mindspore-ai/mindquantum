@@ -1,3 +1,3 @@
-mindquantum.core.parameterresolver
-å‚æ•°è§£æå™¨ã€‚
-€‚
+.. py:class:: mindquantum.core.parameterresolver
+
+    ²ÎÊı½âÎöÆ÷¡£
