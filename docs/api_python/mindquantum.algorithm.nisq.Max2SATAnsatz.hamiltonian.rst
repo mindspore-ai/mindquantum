@@ -1,7 +1,7 @@
-mindquantum.algorithm.nisq.Max2SATAnsatz.hamiltonian
+.. py:method:: mindquantum.algorithm.nisq.Max2SATAnsatz.hamiltonian
 
-        得到这个max-2-sat问题的汉密尔顿式。
+    获取max-2-sat问题的哈密顿算符。
 
-        返回:
-            量子算子，这个max-2-sat问题的汉密尔顿。
-        
+    **返回：**
+
+    QubitOperator，max-2-sat问题的哈密顿算符。
