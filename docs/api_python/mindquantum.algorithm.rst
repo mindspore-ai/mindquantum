@@ -1,2 +1,3 @@
-mindquantum.algorithm
-Á¿×ÓËã·¨¡£
+.. py:function:: mindquantum.algorithm
+
+    量子算法。
