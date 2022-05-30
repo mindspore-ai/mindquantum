@@ -1,6 +1,6 @@
 .. py:class:: mindquantum.algorithm.nisq.Max2SATAnsatz(clauses, depth=1)
 
-    Max-2-SAT ansatz。欲了解更多详细信息，请参考https://arxiv.org/pdf/1906.11259.pdf.
+    Max-2-SAT ansatz。了解更多详细信息，请参考https://arxiv.org/pdf/1906.11259.pdf。
 
     .. math::
 
@@ -15,6 +15,5 @@
 
     **参数：**
 
-    - **clauses** (list[tuple[int]]) – Max-2-SAT结构。列表的每个元素都是一个由长度为2的元组表示的子句。
-        元组的元素必须是非零整数。例如，（2,-3）代表子句： :math:`x_2\lor\lnot x_3`。
+    - **clauses** (list[tuple[int]]) – Max-2-SAT结构。列表的每个元素都是一个由长度为2的元组表示的子句。元组的元素必须是非零整数。例如，（2,-3）代表子句： :math:`x_2\lor\lnot x_3`。
     - **depth** (int) – Max-2-SAT的深度。默认值：1。
