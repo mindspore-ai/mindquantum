@@ -1,3 +1,3 @@
 .. py:class:: mindquantum.core.parameterresolver
 
-    ²ÎÊı½âÎöÆ÷¡£
+    å‚æ•°è§£æå™¨æ¨¡å—ï¼Œç”¨äºå£°æ˜MindSpore Quantumä¸­æ‰€ä½¿ç”¨åˆ°çš„å‚æ•°ã€‚
