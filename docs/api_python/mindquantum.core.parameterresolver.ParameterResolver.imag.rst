@@ -1,15 +1,7 @@
-mindquantum.core.parameterresolver.ParameterResolver.imag
+.. py:method:: mindquantum.core.parameterresolver.ParameterResolver.imag
 
-        获取每个参数值的图像部分。
+    获取每个参数值的虚部构成的参数解析器。
 
-        返回：
-            ParameterResolver，图像部分参数值。
+    **返回：**
 
-        样例：
-            >>> from mindquantum.core import ParameterResolver as PR
-            >>> pr = PR('a', 3) + 1j * PR('a', 4)
-            >>> pr
-            {'a': (1+1j)}, const: (3+4j)
-            >>> pr.imag
-            {'a': 1.0}, const: 4.0
-.0
+    ParameterResolver，参数解析器的虚部。
