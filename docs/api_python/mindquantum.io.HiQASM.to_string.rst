@@ -1,17 +1,19 @@
-mindquantum.io.HiQASM.to_string(circuit, version='0.1')
+.. py:method:: mindquantum.io.HiQASM.to_string(circuit, version='0.1')
 
-        将电路转换为hiqasm。
+    将量子线路转换为HiQASM。
 
-        参数:
-            circuit (Circuit): 要转换为HiQASM的量子电路。
-            version (str): 要使用的HiQASM版本。默认值：“2.0”。
+    **参数：**
 
-        返回:
-            str，输入电路的HiQASM格式。
+    - **circuit** (Circuit) – 需要转换为HiQASM的量子线路。
+    - **version** (str) – 需要使用的HiQASM版本。默认值："0.1"。
 
-        异常:
-            TypeError: 如果电路不是电路。
-            TypeError: 如果版本不是str。
-            NotImplementedError: 如果HiQASM版本未实现。
-            ValueError: 如果在此版本中没有实现门。
-        
+    **返回：**
+
+    str，输入线路对应的HiQASM格式。
+
+    **异常：**
+
+    - **TypeError** – 如果 `Circuit` 类型不是circuit。
+    - **TypeError** – 如果 `version` 类型不是str。
+    - **NotImplementedError** – 如果HiQASM版本未实现。
+    - **ValueError** – 如果在此版本中没有实现门。
