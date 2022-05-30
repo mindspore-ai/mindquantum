@@ -1,13 +1,7 @@
-mindquantum.core.parameterresolver.ParameterResolver.para_value
+.. py:method:: mindquantum.core.parameterresolver.ParameterResolver.para_value
 
-        获取参数值。
+    获取参数值。
 
-        返回：
-            list，参数值的列表。
+    **返回：**
 
-        样例：
-            >>> from mindquantum import ParameterResolver
-            >>> pr = ParameterResolver({'a': 1, 'b': 2})
-            >>> pr.para_value
-            [1, 2]
-2]
+    list，参数值的列表。
