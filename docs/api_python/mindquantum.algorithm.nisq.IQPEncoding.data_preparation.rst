@@ -10,9 +10,9 @@
 
     **参数：**
 
-    - **data** ([list, numpy.ndarray]) – 经典数据需要使用IQPEn编码安萨茨编码。
+    - **data** ([list, numpy.ndarray]) – IQPEncoding所需要的经典数据。
 
     **返回：**
 
-    numpy.ndarray，适合此安萨茨的准备数据。
+    numpy.ndarray，适合此ansatz维度的数据。
         
