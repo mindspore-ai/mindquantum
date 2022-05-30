@@ -1,2 +1,2 @@
 mindquantum.algorithm.library
-µçÂ·¿â¡£
+MindQuantum常用算法模块
