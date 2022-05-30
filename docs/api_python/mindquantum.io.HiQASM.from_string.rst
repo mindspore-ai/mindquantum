@@ -1,10 +1,11 @@
-mindquantum.io.HiQASM.from_string(string)
+.. py:method:: mindquantum.io.HiQASM.from_string(string)
 
-        读个hiqasm串
+    读取HiQASM字符串。
 
-        参数:
-            string (str): 电路的HiQASM字符串。
+    **参数：**
 
-        返回:
-            电路，量子电路从HiQASM字符串翻译过来。
-        
+    - **string** (str) – 线路的HiQASM字符串。
+
+    **返回：**
+
+    线路，从HiQASM字符串转换过来的量子线路。
