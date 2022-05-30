@@ -4,7 +4,7 @@
 
     **参数：**
 
-    - **n_feature** (int) – 要使用iqp编码编码编码的数据特征数。
+    - **n_feature** (int) – IQPEncoding的数据特征数。
     - **first_rotation_gate** (ParamaterGate) – 旋转门RX、RY或RZ之一。
     - **second_rotation_gate** (ParamaterGate) – 旋转门RX、RY或RZ之一。
     - **num_repeats** (int) – 编码迭代次数。
