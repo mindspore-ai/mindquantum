@@ -1,6 +1,6 @@
 .. py:method:: mindquantum.core.circuit.Circuit.s(obj_qubits, ctrl_qubits=None)
 
-        在电路中添加`S`门。
+        在电路中添加 `S` 门。
 
         **参数：**
 

@@ -1,6 +1,6 @@
 .. py:method:: mindquantum.core.circuit.Circuit.yy(para, obj_qubits, ctrl_qubits=None)
 
-        在电路中添加`YY`门。
+        在电路中添加 `YY` 门。
 
         **参数：**
 

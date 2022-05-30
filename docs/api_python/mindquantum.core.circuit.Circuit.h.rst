@@ -1,6 +1,6 @@
 .. py:method:: mindquantum.core.circuit.Circuit.h(obj_qubits, ctrl_qubits=None)
 
-        在电路中添加哈达玛（Hadamard, `H`）门。
+        在电路中添加哈达玛（Hadamard,  `H` ）门。
 
         **参数：**
 

@@ -1,6 +1,6 @@
 .. py:method:: mindquantum.core.circuit.Circuit.z(obj_qubits, ctrl_qubits=None)
 
-        在电路中添加`Z`门。
+        在电路中添加 `Z` 门。
 
         **参数：**
 
