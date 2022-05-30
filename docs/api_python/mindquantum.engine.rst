@@ -1,3 +1,2 @@
 mindquantum.engine
-电路引擎模块。
-��
+MindQuantum引擎模块。

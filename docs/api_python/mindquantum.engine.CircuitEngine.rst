@@ -1,7 +1,7 @@
-Class mindquantum.engine.CircuitEngine
+.. py:class:: mindquantum.engine.CircuitEngine()
 
-    一个简单的电路引擎，允许生成量子电路作为projectq样式。
+    一个简单的线路引擎，生成projectq格式的量子线路。
 
-    注：
-        有关更多用法，请参考:class:`CircuitEngine.generator`。
-��
+    .. note::
+
+    更多有关用法，请参考:class:`CircuitEngine.generator`。

@@ -1,4 +1,3 @@
-mindquantum.engine.CircuitEngine.allocate_qubit()
+.. py:method:: mindquantum.engine.CircuitEngine.allocate_qubit()
 
-        分配量子的量子位。
-��
+    分配一个量子比特。
