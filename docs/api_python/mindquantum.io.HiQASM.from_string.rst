@@ -4,7 +4,7 @@
 
     **参数：**
 
-    - **string** (str) – 线路的HiQASM字符串。
+    - **string** (str) - 线路的HiQASM字符串。
 
     **返回：**
 

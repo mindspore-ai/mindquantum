@@ -8,7 +8,7 @@
 
     **参数：**
 
-    - **hamiltonian** (Hamiltonian) – 想得到期望的hamiltonian。
+    - **hamiltonian** (Hamiltonian) - 想得到期望的hamiltonian。
 
     **返回：**
 

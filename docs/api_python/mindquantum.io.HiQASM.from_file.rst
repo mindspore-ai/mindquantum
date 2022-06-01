@@ -4,7 +4,7 @@
 
     **参数：**
 
-    - **file_name** (str) – 以HiQASM格式存储量子线路的文件路径。
+    - **file_name** (str) - 以HiQASM格式存储量子线路的文件路径。
 
     **返回：**
 

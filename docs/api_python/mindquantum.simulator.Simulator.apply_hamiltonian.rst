@@ -7,4 +7,4 @@
 
     **参数：**
 
-    - **hamiltonian** (Hamiltonian) – 想应用的hamiltonian。
+    - **hamiltonian** (Hamiltonian) - 想应用的hamiltonian。
