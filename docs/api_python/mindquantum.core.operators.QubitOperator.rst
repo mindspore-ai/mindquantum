@@ -10,7 +10,7 @@
     QubitOperator的属性设置如下：operators = ('X', 'Y', 'Z')，different_indices_commute = True。
 
     **参数：**
-    
+
     - **term** (str) - 量子位运算符的输入项。默认值：None。
     - **coefficient** (Union[numbers.Number, str, ParameterResolver]) - 此量子位运算符的系数，可以是由字符串、符号或参数解析器表示的数字或变量。默认值：1.0。
    
