@@ -3,7 +3,7 @@
     更改含参量子线路或含参量子算子里的参数名称（是一个可以生成含参量子线路的函数）。
 
     **参数：**
-    
+
     - **circuit_fn** (Union[Circuit, FunctionType, MethodType]) - 量子线路，或可以生成量子线路的函数。
     - **name_map** (dict) - 参数名称映射的dict。
 
