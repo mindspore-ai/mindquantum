@@ -5,4 +5,3 @@
     **参数：**
 
     - **style** (dict, str) - 设置svg线路的样式。目前，我们支持'official'，'light'和'dark'。默认值：None。
-    
