@@ -6,7 +6,7 @@
 
     - **file_name** (str) - 要保存openqasm文件的文件名。
     - **circuit** (Circuit) - 要转换的电路。
-    - **version** (str) - openqasm的版本。默认值：“2.0”。
+    - **version** (str) - openqasm的版本。默认值："2.0"。
 
     **异常：**
 

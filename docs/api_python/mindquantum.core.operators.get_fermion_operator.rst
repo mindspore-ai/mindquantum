@@ -3,7 +3,7 @@
 
     **参数：**
 
-    - **operator** (PolynomialTensor) - 要转换为 `FermionOperator` 的 `PolynomialTensor'。
+    - **operator** (PolynomialTensor) - 要转换为 `FermionOperator` 的 `PolynomialTensor` 。
 
     **返回：**
 
