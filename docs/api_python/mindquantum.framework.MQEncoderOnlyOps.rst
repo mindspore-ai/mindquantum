@@ -4,11 +4,11 @@
 
     **参数：**
 
-    - **expectation_with_grad** (GradOpsWrapper) – 接收encoder数据和ansatz数据，并返回期望值和参数相对于期望的梯度值。
+    - **expectation_with_grad** (GradOpsWrapper) - 接收encoder数据和ansatz数据，并返回期望值和参数相对于期望的梯度值。
 
     **输入：**
 
-    - **enc_data** (Tensor) - 您希望编码为量子状态的Tensor，其shape为 :math:`(N, M)` ，其中 :math:`N` 表示batch大小， :math:`M` 表示encoder数量。
+    - **enc_data** (Tensor) - 希望编码为量子状态的Tensor，其shape为 :math:`(N, M)` ，其中 :math:`N` 表示batch大小， :math:`M` 表示encoder数量。
 
     **输出：**
 

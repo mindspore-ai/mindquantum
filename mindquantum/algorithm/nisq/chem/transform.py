@@ -27,18 +27,16 @@ from mindquantum.core.operators.utils import count_qubits, number_operator, norm
 class Transform:
     r"""
     Class for transforms of fermionic and qubit operators.
-    Methods jordan_wigner, parity, bravyi_kitaev, bravyi_kitaev_tree,
-    bravyi_kitaev_superfast make transform of fermionic operators to
-    qubit ones,
-    they are initialized by FermionOperator, return QubitOperator.
-    Note method reversed_jordan_wigner makes transform of qubit operator
-    to fermionic one, it is initialized by QubitOperator,
-    returns FermionOperator.
+    `jordan_wigner`, `parity`, `bravyi_kitaev`, `bravyi_kitaev_tree`,
+    `bravyi_kitaev_superfast` will transform `FermionOperator` to
+    `QubitOperator`. `reversed_jordan_wigner` will transform `QubitOperator`
+    to `FermionOperator`.
 
     Args:
         operator (Union[FermionOperator, QubitOperator]): The input
             FermionOperator or QubitOperator that need to do transform.
-        n_qubits (int): The total qubits of this operator. Default: None
+        n_qubits (int): The total qubits of given operator. If None, then we will count it automatically.
+            Default: None.
 
     Examples:
         >>> from mindquantum.core.operators import FermionOperator
@@ -79,8 +77,7 @@ class Transform:
     def jordan_wigner(self):
         r"""
         Apply Jordan-Wigner transform. The Jordan-Wigner transform
-        holds the initial occupation number locally.
-        which change the formular of fermion
+        holds the initial occupation number locally, which change the formular of fermion
         operator into qubit operator following the equation.
 
         .. math::
@@ -122,13 +119,13 @@ class Transform:
     def parity(self):
         r"""
         Apply parity transform.
-        The parity transform
-        stores the initial occupation number nonlocally.
+
+        The parity transform stores the initial occupation number nonlocally,
         with the formular:
 
         .. math::
 
-            \left|f_{M−1}, f_{M−2},\cdots, f_0\right> → \left|q_{M−1}, q_{M−2},\cdots, q_0\right>,
+            \left|f_{M-1}, f_{M-2},\cdots, f_0\right> \rightarrow \left|q_{M−1}, q_{M−2},\cdots, q_0\right>,
 
         where
 
@@ -208,11 +205,10 @@ class Transform:
         and so we will call this set of qubit indices the "parity set" of
         index :math:`j`, or :math:`P(j)`.
 
-        the update set of index :math:`j`, or :math:`U(j)` contains the set of qubits (other than
+        The update set of index :math:`j`, or :math:`U(j)` contains the set of qubits (other than
         qubit :math:`j`) that must be updated when the occupation of orbital :math:`j`
-        This is the set of qubits in the Bravyi-Kitaev basis that store a
-        partial sum including orbital :math:`j`.
-        the flip set of index :math:`j`, or :math:`F(j)` contains the set of BravyiKitaev qubits determines
+
+        The flip set of index :math:`j`, or :math:`F(j)` contains the set of BravyiKitaev qubits determines
         whether qubit :math:`j` has the same parity or inverted parity with
         respect to orbital :math:`j`.
 
@@ -604,11 +600,11 @@ def _get_edge_matrix(fermion_operator):
             else:
                 a[ladder_operator[1]].append(ladder_operator[0])
 
-        if len(a[1]) == 2:
-            edge_set.add(tuple(a[1]))
-            edge_set.add(tuple(a[0]))
-        elif len(a[1]) == 1:
-            a = [*a[1], *a[0]] if a[1][0] > a[0][0] else [*a[0], *a[1]]
+        if len(a.get(1)) == 2:
+            edge_set.add(tuple(a.get(1)))
+            edge_set.add(tuple(a.get(0)))
+        elif len(a.get(1)) == 1:
+            a = [*a.get(1), *a.get(0)] if a.get(1)[0] > a.get(0)[0] else [*a.get(0), *a.get(1)]
             edge_set.add(tuple(a))
 
     d = count_qubits(fermion_operator)

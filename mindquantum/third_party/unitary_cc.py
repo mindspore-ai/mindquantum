@@ -30,10 +30,10 @@ def uccsd_singlet_get_packed_amplitudes(single_amplitudes, double_amplitudes,
 
     Args:
         single_amplitudes(numpy.ndarray): :math:`N\times N` array storing single excitation
-            amplitudes corresponding to :math:`t_{i,j} * (a_i^\dagger a_j - \text{H.C.})`
+            amplitudes corresponding to :math:`t_{i,j} * (a_i^\dagger a_j - \text{H.C.})`.
         double_amplitudes(numpy.ndarray): :math:`N\times N\times N\times N` array storing double
             excitation amplitudes corresponding to
-            :math:`t_{i,j,k,l} * (a_i^\dagger a_j a_k^\dagger a_l - \text{H.C.})`
+            :math:`t_{i,j,k,l} * (a_i^\dagger a_j a_k^\dagger a_l - \text{H.C.})`.
         n_qubits(int): Number of spin-orbitals used to represent the system,
             which also corresponds to number of qubits in a non-compact map.
         n_electrons(int): Number of electrons in the physical system.
@@ -53,7 +53,7 @@ def uccsd_singlet_get_packed_amplitudes(single_amplitudes, double_amplitudes,
         >>> ccsd_double_amps = np.random.random((4, 4, 4, 4))
         >>> uccsd_singlet_get_packed_amplitudes(ccsd_single_amps, ccsd_double_amps,
         ...                                     n_qubits, n_electrons)
-        {'s_0': 0.6011150117432088, 'd1_0': 0.7616196153287176}
+        {'d1_0': 0.76162, 's_0': 0.601115}, const: 0
     """
     n_spatial_orbitals = n_qubits // 2
     n_occupied = int(numpy.ceil(n_electrons / 2))

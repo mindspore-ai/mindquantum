@@ -4,8 +4,8 @@
 
     **参数：**
 
-    - **names** (tuple[str]) – 作为一个ansatz参数。
+    - **names** (tuple[str]) - 作为一个ansatz参数。
 
     **返回：**
 
-    参数解析器，参数解析器本身。
+    ParameterResolver，参数解析器本身。

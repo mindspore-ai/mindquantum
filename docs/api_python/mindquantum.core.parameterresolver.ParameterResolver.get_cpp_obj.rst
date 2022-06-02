@@ -1,7 +1,7 @@
 .. py:method:: mindquantum.core.parameterresolver.ParameterResolver.get_cpp_obj()
 
-    »ñÈ¡´Ë²ÎÊı½âÎöÆ÷µÄ cpp ¶ÔÏó¡£
+    è·å–æ­¤å‚æ•°è§£æå™¨çš„ cpp å¯¹è±¡ã€‚
 
-    **·µ»Ø£º**
+    **è¿”å›ï¼š**
 
-    ²ÎÊı½âÎöÆ÷µÄ cpp ¶ÔÏó
+    å‚æ•°è§£æå™¨çš„ cpp å¯¹è±¡

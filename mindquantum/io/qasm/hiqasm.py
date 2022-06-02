@@ -41,7 +41,7 @@ def random_hiqasm(n_qubits, gate_num, version='0.1', seed=42):
         seed (int): The random seed to generate this random quantum circuit. Default: 42.
 
     Returns:
-        str, quantum in HIQASM format.
+        str, quantum circuit in HIQASM format.
 
     Examples:
         >>> from mindquantum.io.qasm import random_hiqasm

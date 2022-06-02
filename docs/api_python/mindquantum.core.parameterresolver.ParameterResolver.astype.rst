@@ -4,8 +4,8 @@
 
     **参数：**
 
-    - **dtype** (type) – 数据类型。
-    - **inplace** (bool) – 是否原地更改类型。默认值：False。
+    - **dtype** (type) - 数据类型。
+    - **inplace** (bool) - 是否原地更改类型。默认值：False。
 
     **返回：**
 

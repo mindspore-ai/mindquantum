@@ -4,7 +4,7 @@
 
     **参数：**
 
-    - **expectation_with_grad** (GradOpsWrapper) – 接收encoder数据和ansatz数据，并返回期望值的绝对值和参数相对于期望的梯度值的平方。
+    - **expectation_with_grad** (GradOpsWrapper) - 接收encoder数据和ansatz数据，并返回期望值的绝对值和参数相对于期望的梯度值的平方。
 
     **输入：**
 

@@ -88,7 +88,7 @@ def isgateinstance(gate, gates):
 
 class OpenQASM:
     """
-    Convert a circuit to openqasm format
+    Convert a circuit to openqasm format.
 
     Examples:
         >>> import numpy as np
@@ -107,14 +107,14 @@ class OpenQASM:
 
     def to_string(self, circuit, version="2.0"):
         """
-        Convert circuit to hiqasm.
+        Convert circuit to openqasm.
 
         Args:
             circuit (Circuit): The quantum circuit you want to translated to openqasm.
-            version (str): The HiQASM version you want to use. Default: '2.0'.
+            version (str): The openqasm version you want to use. Default: '2.0'.
 
         Returns:
-            str, The HiQASM format of input circuit.
+            str, The openqasm format of input circuit.
 
         Raises:
             TypeError: if circuit is not a Circuit.
