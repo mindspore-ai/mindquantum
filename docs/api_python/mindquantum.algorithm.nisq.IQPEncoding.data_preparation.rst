@@ -6,13 +6,12 @@
 
     .. math::
 
-    \text{data}_m = \text{data}_{m - n} * \text{data}_{m - n - 1}
+        \text{data}_m = \text{data}_{m - n} * \text{data}_{m - n - 1}
 
     **参数：**
 
-    - **data** ([list, numpy.ndarray]) – IQPEncoding所需要的经典数据。
+    - **data** ([list, numpy.ndarray]) - IQPEncoding所需要的经典数据。
 
     **返回：**
 
     numpy.ndarray，适合此ansatz维度的数据。
-        

@@ -1,17 +1,17 @@
-mindquantum.algorithm.nisq.Transform.bravyi_kitaev_superfast()
+.. py:method:: mindquantum.algorithm.nisq.Transform.bravyi_kitaev_superfast()
 
-        应用Bravyi-Kitaev超快变换。
-        从https://arxiv.org/pdf/1712.00446.pdf实施
+    作用快速Bravyi-Kitaev变换。
+    基于 https://arxiv.org/pdf/1712.00446.pdf 实现。
 
-        请注意，只有形式的隐数运算符
+    请注意，只有如下的厄密共轭算符才能进行转换。
 
-        .. math::
+    .. math::
 
-            C + \sum_{p, q} h_{p, q} a^\dagger_p a_q +
-                \sum_{p, q, r, s} h_{p, q, r, s} a^\dagger_p a^\dagger_q a_r a_s
+        C + \sum_{p, q} h_{p, q} a^\dagger_p a_q +
+            \sum_{p, q, r, s} h_{p, q, r, s} a^\dagger_p a^\dagger_q a_r a_s
 
-        其中 :math:`C`是一个常数，进行转换。
+    其中 :math:`C` 是一个常数。
 
-        返回:
-            量子位运算符，在bravyi_itaev_超快之后的量子位运算符。
-        
+    **返回：**
+
+    QubitOperator，经过快速bravyi_kitaev变换之后的玻色子算符。

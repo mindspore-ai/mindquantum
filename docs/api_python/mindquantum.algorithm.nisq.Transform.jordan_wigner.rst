@@ -1,16 +1,15 @@
-mindquantum.algorithm.nisq.Transform.jordan_wigner()
+.. py:method:: mindquantum.algorithm.nisq.Transform.jordan_wigner()
 
-        应用乔丹-威格纳变换。乔丹-威格纳变换在本地保留初始占领编号。
-        它将费米子算子的公式转换为量子位算子。
+    应用Jordan-Wigner变换。Jordan-Wigner变换能够保留初始占据数的局域性，并安装如下的形式将费米子转化为玻色子。
 
-        .. math::
+    .. math::
 
-            a^\dagger_{j}\rightarrow \sigma^{-}_{j} X \prod_{i=0}^{j-1}\sigma^{Z}_{i}
+        a^\dagger_{j}\rightarrow \sigma^{-}_{j} X \prod_{i=0}^{j-1}\sigma^{Z}_{i}
 
-            a_{j}\rightarrow \sigma^{+}_{j} X \prod_{i=0}^{j-1}\sigma^{Z}_{i},
+        a_{j}\rightarrow \sigma^{+}_{j} X \prod_{i=0}^{j-1}\sigma^{Z}_{i},
 
-        其中 :math:'\sigma_{+}=\sigma^{X}+i\sigma^{Y}'和 :math:'\sigma^{X} = \sigma^{X} - i\sigma^{Y}'是Pauli自旋上升和降低算子。
+    其中 :math:`\sigma_{+}=\sigma^{X}+i\sigma^{Y}` 和 :math:`\sigma^{X} = \sigma^{X} - i\sigma^{Y}` 分别是自旋生算符和降算符。
 
-        返回:
-            QubitOperator，约旦_维格纳转换后的量子位运算符。
-        
+    **返回：**
+
+    QubitOperator，Jordan-Wigner变换后的玻色子算符。

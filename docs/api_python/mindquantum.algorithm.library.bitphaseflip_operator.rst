@@ -4,9 +4,9 @@
 
     **参数：**
 
-    - **phase_inversion_index** (list[int]) – 需要翻转相位的计算基的索引。
-    - **n_qubits** (int) – 量子比特总数。
+    - **phase_inversion_index** (list[int]) - 需要翻转相位的计算基的索引。
+    - **n_qubits** (int) - 量子比特总数。
 
     **返回：**
 
-    线路，位相位翻转后的线路。
+    Circuit，位相位翻转后的线路。

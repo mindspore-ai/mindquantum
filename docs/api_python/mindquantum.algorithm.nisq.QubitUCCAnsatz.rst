@@ -13,9 +13,9 @@
 
     **参数：**
 
-    - **n_qubits** (int) – 模拟中量子位（自旋轨道）的数量。默认值：None。
-    - **n_electrons** (int) – 给定分子的电子数。默认值：None。
-    - **occ_orb** (list) – 手动分配的占用空间轨道的指数。默认值：None。
-    - **vir_orb** (list) – 手动分配的虚拟空间轨道的指数。默认值：None。
-    - **generalized** (bool) – 是否使用不区分占用轨道或虚拟轨道的广义激励（qUCCGSD）。目前，不允许generalized=True，因为需要理论验证。默认值：False。
-    - **trotter_step** (int) – 梯度的数量。默认值为1。建议设置大于等于2的值，以获得较好的精度。默认值：1。
+    - **n_qubits** (int) - 模拟中量子位（自旋轨道）的数量。默认值：None。
+    - **n_electrons** (int) - 给定分子的电子数。默认值：None。
+    - **occ_orb** (list) - 手动分配的占用空间轨道的指数。默认值：None。
+    - **vir_orb** (list) - 手动分配的虚拟空间轨道的指数。默认值：None。
+    - **generalized** (bool) - 是否使用不区分占用轨道或虚拟轨道的广义激励（qUCCGSD）。目前，不允许generalized=True，因为需要理论验证。默认值：False。
+    - **trotter_step** (int) - 梯度的数量。默认值为1。建议设置大于等于2的值，以获得较好的精度。默认值：1。

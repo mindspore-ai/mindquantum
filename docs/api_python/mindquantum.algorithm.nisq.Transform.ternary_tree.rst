@@ -1,8 +1,8 @@
-mindquantum.algorithm.nisq.Transform.ternary_tree()
+.. py:method:: mindquantum.algorithm.nisq.Transform.ternary_tree()
 
-        应用三元树变换。
-        从https://arxiv.org/pdf/1910.10746.pdf实施。
+    作用Ternary tree变换。
+    基于 https://arxiv.org/pdf/1910.10746.pdf 实现。
 
-        返回:
-            QubitOperator, 三元树转换后的量子位运算符。
-        
+    **返回：**
+
+    QubitOperator，Ternary tree变换后的玻色子算符。

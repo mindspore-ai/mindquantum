@@ -6,7 +6,7 @@
 
     U(\vec{\theta}) = \prod_{j=1}^{N(N\ge1)}{\prod_{i=0}^{N_{j}}{\exp{(\theta_{i}\hat{\tau}_{i})}}}
 
-    其中，:math:`\hat{\tau}`是反埃尔米特运算符。
+    其中，:math:`\hat{\tau}` 是反埃尔米特运算符。
 
     .. note::
         目前，该电路是使用JW变换构建的。
@@ -14,10 +14,10 @@
 
     **参数：**
 
-    - **n_qubits** (int) – 量子比特（自旋轨道）的数量。默认值：None。
-    - **n_electrons** (int) – 电子的数量（占用的自旋轨道）。默认值：None。
-    - **occ_orb** (list) – 手动分配的占用空间轨道的指数，仅适用于asatz构造。默认值：None。
-    - **vir_orb** (list) – 手动分配的虚拟空间轨道的指数，仅适用于asatz构造。默认值：None。
-    - **generalized** (bool) – 是否使用不区分占用轨道或虚拟轨道的广义激励（UGCGSD）。默认值：False。
-    - **trotter_step** (int) – Trotterization步骤的顺序。默认值：1。
+    - **n_qubits** (int) - 量子比特（自旋轨道）的数量。默认值：None。
+    - **n_electrons** (int) - 电子的数量（占用的自旋轨道）。默认值：None。
+    - **occ_orb** (list) - 手动分配的占用空间轨道的指数，仅适用于asatz构造。默认值：None。
+    - **vir_orb** (list) - 手动分配的虚拟空间轨道的指数，仅适用于asatz构造。默认值：None。
+    - **generalized** (bool) - 是否使用不区分占用轨道或虚拟轨道的广义激励（UGCGSD）。默认值：False。
+    - **trotter_step** (int) - Trotterization步骤的顺序。默认值：1。
        

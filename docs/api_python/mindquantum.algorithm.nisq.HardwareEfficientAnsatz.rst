@@ -7,9 +7,8 @@
 
     **参数：**
 
-    - **n_qubits** (int) – 此ansatz的比特数。
-    - **single_rot_gate_seq** (list[BasicGate]) – 作用于每个量子位的参数化旋转门列表。
-    - **entangle_gate** (BasicGate) – 非参数化纠缠门。如果它是单个量子位门，则将使用控制版本。默认值：XGate。
-    - **entangle_mapping** (Union[str, list[tuple[int]]]) – 纠缠门的纠缠映射。“线性”表示纠缠门将作用于每个相邻的量子比特。"all"表示纠缠门将作用于任何两个qbuits。此外，可以通过将纠缠映射设置为两个量子位元组的列表来指定要执行纠缠的两个量子位。默认值："线性"。
-    - **depth** (int) – ansatz的深度。默认值：1。
-       
+    - **n_qubits** (int) - 此ansatz的比特数。
+    - **single_rot_gate_seq** (list[BasicGate]) - 作用于每个量子位的参数化旋转门列表。
+    - **entangle_gate** (BasicGate) - 非参数化纠缠门。如果它是单个量子位门，则将使用控制版本。默认值：XGate。
+    - **entangle_mapping** (Union[str, list[tuple[int]]]) - 纠缠门的纠缠映射。"linear"表示纠缠门将作用于每个相邻的量子比特。"all"表示纠缠门将作用于任何两个qbuits。此外，可以通过将纠缠映射设置为两个量子位元组的列表来指定要执行纠缠的两个量子位。默认值："linear"。
+    - **depth** (int) - ansatz的深度。默认值：1。

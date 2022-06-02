@@ -15,5 +15,5 @@
 
     **参数：**
 
-    - **graph** (list[tuple[int]]) – 图结构。图的每个元素都是由两个节点构造的边。
-    - **depth** (int) – MaxCut ansatz的深度。默认值：1。
+    - **graph** (list[tuple[int]]) - 图结构。图的每个元素都是由两个节点构造的边。
+    - **depth** (int) - MaxCut ansatz的深度。默认值：1。

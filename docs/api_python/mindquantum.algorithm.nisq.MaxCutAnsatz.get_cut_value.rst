@@ -4,7 +4,7 @@
 
     **参数：**
 
-    - **partition** (list) – 图形分区。
+    - **partition** (list) - 图形分区。
 
     **返回：**
 
