@@ -8,5 +8,6 @@
                          0&\exp(i\theta/2)\end{pmatrix}
 
     **参数：**
+
     - **coeff** (Union[int, float, str, dict, ParameterResolver]) - 参数化门的参数，详细解释请参见上文。默认值：None。
     

@@ -1,4 +1,3 @@
-mindquantum.core.gates.PhaseShift.diff_matrix(pr=None, about_what=None)
+.. py:method:: mindquantum.core.gates.PhaseShift.diff_matrix(pr=None, about_what=None)
 
-        获取此无参数化门的矩阵。
-        
+    获取此参数化门的导数矩阵。

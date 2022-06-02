@@ -13,16 +13,5 @@
     其中，ρ是密度矩阵形式的量子态；P是发生去极化错误的概率。
 
     **参数：**
-    - **p** (int, float) - 发生错误的概率。
 
-    **样例：**
-        >>> from mindquantum.core.gates import DepolarizingChannel
-        >>> from mindquantum.core.circuit import Circuit
-        >>> circ = Circuit()
-        >>> circ += DepolarizingChannel(0.02).on(0)
-        >>> circ += DepolarizingChannel(0.01).on(1, 0)
-        >>> print(circ)
-        q0: ──DC────●───
-                    │
-        q1: ────────DC──
-       
+    - **p** (int, float) - 发生错误的概率。

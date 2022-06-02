@@ -14,22 +14,3 @@
         .. math::
 
             X^\theta = RX(\theta\pi)
-
-    **样例：**
-        >>> from mindquantum.core.gates import X
-        >>> x1 = X.on(0)
-        >>> cnot = X.on(0, 1)
-        >>> print(x1)
-        X(0)
-        >>> print(cnot)
-        X(0 <-: 1)
-        >>> x1.matrix()
-        array([[0, 1],
-               [1, 0]])
-        >>> x1**2
-        RX(2π)
-        >>> (x1**'a').coeff
-        {'a': 3.141592653589793}, const: 0.0
-        >>> (x1**{'a' : 2}).coeff
-        {'a': 6.283185307179586}, const: 0.0
-       
