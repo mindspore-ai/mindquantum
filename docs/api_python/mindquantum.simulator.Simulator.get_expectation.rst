@@ -1,6 +1,6 @@
 .. py:method:: mindquantum.simulator.Simulator.get_expectation(hamiltonian)
 
-    得到给定hamiltonian的期望。hamiltonian可能是non hermitian的。
+    得到给定hamiltonian的期望。hamiltonian可能是非厄密共轭的。
 
     .. math::
 
@@ -8,7 +8,7 @@
 
     **参数：**
 
-    - **hamiltonian** (Hamiltonian) – 想得到期望的hamiltonian。
+    - **hamiltonian** (Hamiltonian) - 想得到期望的hamiltonian。
 
     **返回：**
 

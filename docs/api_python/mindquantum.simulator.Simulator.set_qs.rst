@@ -4,4 +4,4 @@
 
     **参数：**
 
-    - **quantum_state** (numpy.ndarray) - 您想设置的量子态。
+    - **quantum_state** (numpy.ndarray) - 想设置的量子态。

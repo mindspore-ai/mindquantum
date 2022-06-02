@@ -4,7 +4,7 @@
 
     **参数：**
 
-    - **shapes** (tuple) - shapes = (m, n) 表示m个量子状态，每个状态由 :math: `\log_2(n)` 量子位形成。
+    - **shapes** (tuple) - shapes = (m, n) 表示m个量子状态，每个状态由 :math:`\log_2(n)` 量子位形成。
     - **norm_axis** (int) - 应用归一化的轴。默认值：0。
     - **comp** (bool) - 如果为 `True` ，量子态的每个振幅将是一个复数。默认值：True。
     - **seed** (int) - 随机种子。默认值：None。

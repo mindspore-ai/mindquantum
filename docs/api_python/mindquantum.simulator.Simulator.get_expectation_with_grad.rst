@@ -10,13 +10,13 @@
 
     **参数：**
 
-    - **hams** (Hamiltonian) – 需要计算期望的Hamiltonian。
-    - **circ_right** (Circuit) – 上述 :math:`U_r` 电路。
-    - **circ_left** (Circuit) – 上述 :math:`U_l` 电路，默认情况下，这个线路将为None，在这种情况下， :math:`U_l` 将等于 :math:`U_r` 。默认值：None。
-    - **simulator_left** (Simulator) – 包含 :math:`\left|\varphi\right>` 的模拟器。如果无，则 :math:`\left|\varphi\right>` 被假定等于 :math:`\left|\psi\right>`。默认值：None。
-    - **encoder_params_name** (list[str]) – 指定哪些参数属于encoder，被编码成量子态。encoder数据可以是一个batch。默认值：None。
-    - **ansatz_params_name** (list[str]) – 指定哪些参数属于ansatz，被在训练期间训练。默认值：None。
-    - **parallel_worker** (int) – 并行器数目。并行器可以在并行线程中处理batch。默认值：None。
+    - **hams** (Hamiltonian) - 需要计算期望的Hamiltonian。
+    - **circ_right** (Circuit) - 上述 :math:`U_r` 电路。
+    - **circ_left** (Circuit) - 上述 :math:`U_l` 电路，默认情况下，这个线路将为None，在这种情况下， :math:`U_l` 将等于 :math:`U_r` 。默认值：None。
+    - **simulator_left** (Simulator) - 包含 :math:`\left|\varphi\right>` 的模拟器。如果无，则 :math:`\left|\varphi\right>` 被假定等于 :math:`\left|\psi\right>`。默认值：None。
+    - **encoder_params_name** (list[str]) - 指定哪些参数属于encoder，被编码成量子态。encoder数据可以是一个batch。默认值：None。
+    - **ansatz_params_name** (list[str]) - 指定哪些参数属于ansatz，被在训练期间训练。默认值：None。
+    - **parallel_worker** (int) - 并行器数目。并行器可以在并行线程中处理batch。默认值：None。
 
     **返回：**
 

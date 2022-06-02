@@ -4,7 +4,7 @@
 
     **参数：**
 
-    - **pr** (Union[dict, ParameterResolver]) – 需要做线性组合的参数解析器。
+    - **pr** (Union[dict, ParameterResolver]) - 需要做线性组合的参数解析器。
 
     **返回：**
 

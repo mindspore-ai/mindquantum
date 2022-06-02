@@ -1,9 +1,10 @@
-mindquantum.core.operators.get_fermion_operator(operator)
-将张量（多项式张量）转换为费米子运算符。
+.. py:function:: mindquantum.core.operators.get_fermion_operator(operator)
+    将张量（多项式张量）转换为费米子运算符。
 
-    参数:
-        operator (PolynomialTensor): 要转换为`费米子运算符'的`多项式张量'。
+    **参数：**
 
-    返回:
-        Fermion_operator,FermionOperator类的实例。
-    
+    - **operator** (PolynomialTensor) - 要转换为 `FermionOperator` 的 `PolynomialTensor` 。
+
+    **返回：**
+
+    FermionOperator，FermionOperator类的实例。
