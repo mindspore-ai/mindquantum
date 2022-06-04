@@ -1,0 +1,5 @@
+Start case:  CH4
+OMP_NUM_THREAD:  8
+Time: 0 hrs 17 mints 34.38 sec. Energy:  -38.65306915406351
+Time: 0 hrs 43 mints 38.90 sec. Energy:  -39.66369865559286
+Optimization completed. Time: 0 hrs 43 mints 38.90 sec.
