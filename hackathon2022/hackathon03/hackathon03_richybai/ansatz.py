@@ -1,0 +1,82 @@
+import numpy as np
+from mindquantum import *
+
+
+def generate_RZ_RY_RZ(label, on, control):
+    out = Circuit()
+    out += RZ(f"rz0-{label}").on(on, control)
+    out += RY(f"ry0-{label}").on(on, control)
+    out += RZ(f"rz1-{label}").on(on, control)
+    return out
+
+
+def ansatz():
+    ansatz = Circuit()
+    ansatz += X.on(1)
+    ansatz += generate_RZ_RY_RZ(0, 0, [1, 2])
+    ansatz += X.on(1)
+    ansatz += generate_RZ_RY_RZ(1, 1, [0, 2])
+    ansatz += generate_RZ_RY_RZ(2, 0, [1, 2])
+    ansatz += X.on(0)
+    ansatz += generate_RZ_RY_RZ(3, 2, [0, 1])
+    ansatz += X.on(0)
+    ansatz += X.on(2)
+    ansatz += generate_RZ_RY_RZ(4, 0, [1, 2])
+    ansatz += generate_RZ_RY_RZ(5, 1, [0, 2])
+    ansatz += X.on(1)
+    ansatz += generate_RZ_RY_RZ(6, 0, [1, 2])
+    ansatz += X.on(2)
+    ansatz += generate_RZ_RY_RZ(7, 0, [1, 2])
+    ansatz += X.on(1)
+    ansatz += generate_RZ_RY_RZ(8, 1, [0, 2])
+    ansatz += generate_RZ_RY_RZ(9, 0, [1, 2])
+    ansatz += X.on(0)
+    ansatz += generate_RZ_RY_RZ(10, 2, [0, 1])
+    ansatz += X.on(0)
+    ansatz += X.on(2)
+    ansatz += generate_RZ_RY_RZ(11, 0, [1, 2])
+    ansatz += generate_RZ_RY_RZ(12, 1, [0, 2])
+    ansatz += X.on(1)
+    ansatz += X.on(2)
+    ansatz += generate_RZ_RY_RZ(13, 0, [1, 2])
+    ansatz += X.on(1)
+    ansatz += generate_RZ_RY_RZ(14, 1, [0, 2])
+    ansatz += generate_RZ_RY_RZ(15, 0, [1, 2])
+    ansatz += X.on(0)
+    ansatz += generate_RZ_RY_RZ(16, 2, [0, 1])
+    ansatz += X.on(0)
+    ansatz += X.on(2)
+    ansatz += generate_RZ_RY_RZ(17, 0, [1, 2])
+    ansatz += X.on(1)
+    ansatz += X.on(2)
+    ansatz += generate_RZ_RY_RZ(18, 0, [1, 2])
+    ansatz += X.on(1)
+    ansatz += generate_RZ_RY_RZ(19, 1, [0, 2])
+    ansatz += generate_RZ_RY_RZ(20, 0, [1, 2])
+    ansatz += X.on(0)
+    ansatz += generate_RZ_RY_RZ(21, 2, [0, 1])
+    ansatz += X.on(0)
+    ansatz += X.on(1)
+    ansatz += generate_RZ_RY_RZ(22, 0, [1, 2])
+    ansatz += X.on(1)
+    ansatz += generate_RZ_RY_RZ(23, 1, [0, 2])
+    ansatz += generate_RZ_RY_RZ(24, 0, [1, 2])
+    ansatz += X.on(1)
+    ansatz += generate_RZ_RY_RZ(25, 0, [1, 2])
+    ansatz += X.on(1)
+    ansatz += generate_RZ_RY_RZ(26, 1, [0, 2])
+    ansatz += X.on(1)
+    ansatz += generate_RZ_RY_RZ(27, 0, [1, 2])
+    ansatz += Power(Z, -0.28497876144037315).on(0, [1, 2])
+    ansatz += X.on(1)
+    return ansatz
+
+
+if __name__ == "__main__":
+    np.set_printoptions(precision=3)
+
+    ansatz = ansatz()
+    print("summary of ansatz:")
+    ansatz.summary()    
+    # print(ansatz)
+    
