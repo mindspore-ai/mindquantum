@@ -1,3 +1,6 @@
+mindquantum.core.gates.ZZGate
+=============================
+
 .. py:class:: mindquantum.core.gates.ZZ(coeff=None)
 
     伊辛ZZ门。更多用法，请参见 :class:`mindquantum.core.gates.RX`。

@@ -18,3 +18,18 @@
 
     .. note::
         这里的'1'代表 :math:`a^\dagger`，而'0'代表 :math:`a`。
+
+  .. py:method:: constant
+      :property:
+
+      获取常数项的值。
+
+  .. py:method:: one_body_tensor
+      :property:
+
+      获得单体项。
+
+  .. py:method:: two_body_tensor
+      :property:
+
+      获得双体项。

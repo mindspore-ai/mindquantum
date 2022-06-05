@@ -149,15 +149,15 @@ class Max2SATAnsatz(Ansatz):
 
     def get_sat(self, max_n, weight):
         """
-            Get the strings of this max-2-sat problem.
+        Get the strings of this max-2-sat problem.
 
-            Args:
-                max_n (int): how many strings you want.
-                weight (Union[ParameterResolver, dict, numpy.ndarray, list, numbers.Number]): parameter
-                    value for Max-2-SAT ansatz.
+        Args:
+            max_n (int): how many strings you want.
+            weight (Union[ParameterResolver, dict, numpy.ndarray, list, numbers.Number]): parameter
+                value for Max-2-SAT ansatz.
 
-            Returns:
-                list, a list of strings.
+        Returns:
+            list, a list of strings.
         """
         _check_int_type('max_n', max_n)
         _check_value_should_between_close_set('max_n', 1, 1 << self._circuit.n_qubits, max_n)

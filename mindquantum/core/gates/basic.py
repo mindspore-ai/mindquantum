@@ -122,9 +122,14 @@ class BasicGate():
         raise NotImplementedError(f"projectq version of gate {self.name} is not implement.")
 
     def no_grad(self):
+        """Set this gate to not calculate gradient."""
         return self
 
     def requires_grad(self):
+        """
+        Set this gate to calculate gradient. In default, a parameterized gate
+        will requires grad when you init it.
+        """
         return self
 
     def on(self, obj_qubits, ctrl_qubits=None):

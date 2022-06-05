@@ -1,3 +1,4 @@
-.. py:function:: mindquantum.algorithm
+mindquantum.algorithm
+=====================
 
-    量子算法。
+量子算法。

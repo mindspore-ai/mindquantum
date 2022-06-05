@@ -1,3 +1,6 @@
+mindquantum.core.gates.BitPhaseFlipChannel
+==========================================
+
 .. py:class:: mindquantum.core.gates.BitPhaseFlipChannel(p: float, **kwargs)
 
     量子信道可以描述量子计算中的非相干噪声。

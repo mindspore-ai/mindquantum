@@ -1,3 +1,6 @@
+mindquantum.core.gates.BasicGate
+================================
+
 .. py:class:: mindquantum.core.gates.BasicGate(name, n_qubits, obj_qubits=None, ctrl_qubits=None)
 
     BasicGate是所有门的基类。
@@ -8,4 +11,49 @@
     - **n_qubits** (int) - 这个门有多少个量子位。
     - **obj_qubits** (int, list[int]) - 具体门作用在哪个量子位上。
     - **ctrl_qubits** (int, list[int]) - 指定控制量子位。默认：None。
-    
+
+    .. py:method:: acted
+        :property:
+
+        检查此门是否作用于量子位。
+
+    .. py:method:: matrix(*args)
+
+        门的矩阵。
+
+    .. py:method:: hermitian()
+
+        返回该门的厄米特矩阵。
+
+    .. py:method:: parameterized
+        :property:
+
+        检查此门是否为参数化门。
+
+    .. py:method:: define_projectq_gate()
+
+        定义对应的 `projectq` 中的量子门。
+
+    .. py:method:: no_grad()
+
+        该量子门在梯度计算相关算法中不计算梯度。
+
+    .. py:method:: requires_grad()
+
+        该量子门在梯度计算相关算法中计算梯度。在默认情况下，参数化量子门在构造是就是需要计算梯度。
+
+    .. py:method:: on(obj_qubits, ctrl_qubits=None)
+
+        定义门作用于哪个量子比特和控制量子比特。
+
+        .. note::
+            在此框架中，首先指定门作用的量子位，即使对于控制门，例如CNOT，第二个参数是控制量子位。
+
+        **参数：**
+
+        - **obj_qubits** (int, list[int]) - 指定门作用在哪个量子位上。
+        - **ctrl_qubits** (int, list[int]) - 指定控制量子位。默认：None。
+
+        **返回：**
+
+        返回一个新的门。
