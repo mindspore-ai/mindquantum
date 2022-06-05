@@ -1,3 +1,4 @@
-.. py:function:: mindquantum.algorithm.nisq
+mindquantum.algorithm.nisq
+==========================
 
-    NISQ算法。
+NISQ算法。

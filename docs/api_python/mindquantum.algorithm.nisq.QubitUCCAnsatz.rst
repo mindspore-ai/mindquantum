@@ -1,3 +1,6 @@
+mindquantum.algorithm.nisq.QubitUCCAnsatz
+=========================================
+
 .. py:class:: mindquantum.algorithm.nisq.QubitUCCAnsatz(n_qubits=None, n_electrons=None, occ_orb=None, vir_orb=None, generalized=False, trotter_step=1)
 
     量子位幺正耦合簇（qUCC）是幺正耦合簇的变体，它使用量子位激励算子而不是费米子激励算子。

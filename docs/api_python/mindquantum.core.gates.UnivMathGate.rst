@@ -1,3 +1,6 @@
+mindquantum.core.gates.UnivMathGate
+===================================
+
 .. py:class:: mindquantum.core.gates.UnivMathGate(name, matrix_value)
 
     通用数学门。

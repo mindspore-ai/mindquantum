@@ -1,3 +1,6 @@
+mindquantum.core.gates.YYGate
+=============================
+
 .. py:class:: mindquantum.core.gates.YY(coeff=None)
 
     伊辛YY门。更多用法，请参见 :class:`mindquantum.core.gates.RX`。

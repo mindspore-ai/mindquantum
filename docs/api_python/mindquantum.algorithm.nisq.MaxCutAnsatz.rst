@@ -1,3 +1,6 @@
+mindquantum.algorithm.nisq.MaxCutAnsatz
+=======================================
+
 .. py:class:: mindquantum.algorithm.nisq.MaxCutAnsatz(graph, depth=1)
 
     MaxCut ansatz。了解更多详细信息，请访问https://arxiv.org/pdf/1411.4028.pdf。
@@ -17,3 +20,37 @@
 
     - **graph** (list[tuple[int]]) - 图结构。图的每个元素都是由两个节点构造的边。
     - **depth** (int) - MaxCut ansatz的深度。默认值：1。
+
+    .. py:method:: hamiltonian
+        :property:
+
+        获取MaxCut问题的哈密顿量。
+
+        **返回：**
+
+        QubitOperator，MaxCut问题的哈密顿量。
+
+    .. py:method:: get_partition(max_n, weight)
+
+        获取MaxCut问题的切割方案。
+
+        **参数：**
+
+        - **max_n** (int) - 需要多少个切割方案。
+        - **weight** (Union[ParameterResolver, dict, numpy.ndarray, list, numbers.Number]) - MaxCut ansatz的参数值。
+
+        **返回：**
+
+        list，切割方案构成的列表。
+
+    .. py:method:: get_cut_value(partition)
+
+        获取切割方案的切割边数。切割方案是一个list数组，该list数组由两个list数组构成，每一个list数组包含切割的节点。
+
+        **参数：**
+
+        - **partition** (list) - 图形分区。
+
+        **返回：**
+
+        int，给定分区下的切割值。

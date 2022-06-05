@@ -1,3 +1,6 @@
+mindquantum.core.gates.PauliChannel
+===================================
+
 .. py:class:: mindquantum.core.gates.PauliChannel(px: float, py: float, pz: float, **kwargs)
 
     量子信道可以描述量子计算中的非相干噪声。
@@ -17,4 +20,7 @@
     - **px** (int, float) - 作用的泡利门是X门的概率。
     - **py** (int, float) - 作用的泡利门是Y门的概率。
     - **pz** (int, float) - 作用的泡利门是Z门的概率。
-       
+
+    .. py:method:: define_projectq_gate()
+
+        定义对应的projectq门。

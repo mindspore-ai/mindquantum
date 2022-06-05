@@ -1,3 +1,6 @@
+mindquantum.core.gates.CNOTGate
+===============================
+
 .. py:class:: mindquantum.core.gates.CNOTGate
 
     控制X门。

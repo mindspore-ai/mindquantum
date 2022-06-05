@@ -1,3 +1,6 @@
+mindquantum.algorithm.nisq.HardwareEfficientAnsatz
+==================================================
+
 .. py:class:: mindquantum.algorithm.nisq.HardwareEfficientAnsatz(n_qubits, single_rot_gate_seq, entangle_gate=X, entangle_mapping='linear', depth=1)
 
     HardwareEfficientAnsatz是一种可以很容易地在量子芯片上高效实现的ansatz。

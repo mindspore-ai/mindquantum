@@ -472,6 +472,7 @@ parameters and ansatz parameters.")
 
     @property
     def n_qubits(self):
+        """Get the total number of qubits used."""
         if self.all_qubits:
             return max(self.all_qubits.keys()) + 1
         return 0
@@ -1040,7 +1041,7 @@ parameters and ansatz parameters.")
 
     def as_encoder(self, inplace=True):
         """
-        To set this circuit to encoder or not.
+        To set this circuit to encoder.
 
         Args:
             inplace (bool): Whether to set inplace. Defaults: True.
