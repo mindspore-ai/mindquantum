@@ -1,3 +1,6 @@
+mindquantum.simulator.GradOpsWrapper
+====================================
+
 .. py:class:: mindquantum.simulator.GradOpsWrapper(grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name, parallel_worker)
 
     用生成梯度算子的信息包装梯度算子。
@@ -11,3 +14,11 @@
     - **encoder_params_name** (list[str]) - encoder参数名称。
     - **ansatz_params_name** (list[str]) - ansatz参数名称。
     - **parallel_worker** (int) - 运行批处理的并行工作器数量。
+
+    .. py:method:: set_str(s)
+
+        设置梯度算子的表达式。
+
+        **参数：**
+
+        - **s** (str) - QNN运算符的字符串。
