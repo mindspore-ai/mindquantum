@@ -1,6 +1,3 @@
-mindquantum.core.gates.RX
-=========================
-
 .. py:class:: mindquantum.core.gates.RX(coeff=None)
 
     围绕x轴的旋转门。

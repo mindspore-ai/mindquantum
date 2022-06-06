@@ -1,6 +1,3 @@
-mindquantum.core.operators.QubitOperator
-========================================
-
 .. py:class:: mindquantum.core.operators.QubitOperator(term=None, coefficient=1.0)
 
     作用于量子位的项的总和，例如 0.5 * 'X1 X5' + 0.3 * 'Z1 Z2'。

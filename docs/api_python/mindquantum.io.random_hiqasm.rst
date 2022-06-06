@@ -1,6 +1,3 @@
-mindquantum.io.random_hiqasm
-============================
-
 .. py:function:: mindquantum.io.random_hiqasm(n_qubits, gate_num, version='0.1', seed=42)
 
     生成随机的hiqasm格式支持的量子线路。

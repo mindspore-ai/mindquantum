@@ -1,6 +1,3 @@
-mindquantum.engine.BasicQubit
-=============================
-
 .. py:class:: mindquantum.engine.BasicQubit(qubit_id, circuit=None)
 
     量子比特。

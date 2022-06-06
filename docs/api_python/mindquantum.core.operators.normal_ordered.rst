@@ -1,6 +1,3 @@
-mindquantum.core.operators.normal_ordered
-=========================================
-
 .. py:function:: mindquantum.core.operators.normal_ordered(fermion_operator)
 
     计算并返回FermionOperator的规范顺序。

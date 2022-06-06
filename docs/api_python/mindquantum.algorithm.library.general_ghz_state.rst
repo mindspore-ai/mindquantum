@@ -1,6 +1,3 @@
-mindquantum.algorithm.library.general_ghz_state
-===============================================
-
 .. py:function:: mindquantum.algorithm.library.general_ghz_state(qubits)
 
     基于零态制备通用GHZ态的线路。

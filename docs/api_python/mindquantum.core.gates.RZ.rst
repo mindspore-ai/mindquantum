@@ -1,6 +1,3 @@
-mindquantum.core.gates.RZ
-=========================
-
 .. py:class:: mindquantum.core.gates.RZ(coeff=None)
 
     围绕z轴的旋转门。更多用法，请参见 :class:`mindquantum.core.gates.RX`。

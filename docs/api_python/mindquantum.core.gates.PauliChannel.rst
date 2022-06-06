@@ -1,6 +1,3 @@
-mindquantum.core.gates.PauliChannel
-===================================
-
 .. py:class:: mindquantum.core.gates.PauliChannel(px: float, py: float, pz: float, **kwargs)
 
     量子信道可以描述量子计算中的非相干噪声。

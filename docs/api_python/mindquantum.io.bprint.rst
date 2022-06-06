@@ -1,6 +1,3 @@
-mindquantum.io.bprint
-=====================
-
 .. py:function:: mindquantum.io.bprint(strings: list, align=':', title='', v_around='=', h_around='|', fill_char=' ')
 
     以block形状打印信息。

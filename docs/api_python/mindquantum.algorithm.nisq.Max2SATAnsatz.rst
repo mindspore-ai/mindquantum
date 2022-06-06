@@ -1,6 +1,3 @@
-mindquantum.algorithm.nisq.Max2SATAnsatz
-========================================
-
 .. py:class:: mindquantum.algorithm.nisq.Max2SATAnsatz(clauses, depth=1)
 
     Max-2-SAT ansatz。了解更多详细信息，请参考https://arxiv.org/pdf/1906.11259.pdf。

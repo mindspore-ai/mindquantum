@@ -1,6 +1,3 @@
-mindquantum.core.gates.Measure
-==============================
-
 .. py:class:: mindquantum.core.gates.Measure(name='')
 
     测量量子位的测量门。

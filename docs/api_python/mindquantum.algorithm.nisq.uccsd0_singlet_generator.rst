@@ -1,4 +1,4 @@
-.. py:method:: mindquantum.algorithm.nisq.uccsd0_singlet_generator(n_qubits=None, n_electrons=None, anti_hermitian=True, occ_orb=None, vir_orb=None, generalized=False)
+.. py:function:: mindquantum.algorithm.nisq.uccsd0_singlet_generator(n_qubits=None, n_electrons=None, anti_hermitian=True, occ_orb=None, vir_orb=None, generalized=False)
 
     利用CCD0拟设来生成分子系统的UCCSD算子。
 

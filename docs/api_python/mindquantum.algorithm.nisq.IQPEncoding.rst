@@ -1,6 +1,3 @@
-mindquantum.algorithm.nisq.IQPEncoding
-======================================
-
 .. py:class:: mindquantum.algorithm.nisq.IQPEncoding(n_feature, first_rotation_gate=<class 'mindquantum.core.gates.basicgate.RZ'>, second_rotation_gate=<class 'mindquantum.core.gates.basicgate.RZ'>, num_repeats=1)
 
     通用IQP编码。
