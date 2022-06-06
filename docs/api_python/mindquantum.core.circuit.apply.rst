@@ -1,3 +1,6 @@
+mindquantum.core.circuit.apply
+==============================
+
 .. py:function:: mindquantum.core.circuit.apply(circuit_fn, qubits)
 
     将量子线路或量子算子（可以生成量子线路的函数）作用到不同的量子比特上。

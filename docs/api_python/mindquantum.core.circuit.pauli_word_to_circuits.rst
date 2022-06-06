@@ -1,3 +1,6 @@
+mindquantum.core.circuit.pauli_word_to_circuits
+===============================================
+
 .. py:function:: mindquantum.core.circuit.pauli_word_to_circuits(qubitops)
 
     将单Pauli词的量子算子转换成量子线路。

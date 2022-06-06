@@ -1,3 +1,6 @@
+mindquantum.core.operators.Projector
+====================================
+
 .. py:class:: mindquantum.core.operators.Projector(proj)
 
     投影算子。
