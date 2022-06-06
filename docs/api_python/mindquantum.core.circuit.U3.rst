@@ -1,6 +1,3 @@
-mindquantum.core.circuit.U3
-===========================
-
 .. py:class:: mindquantum.core.circuit.U3(a, b, c, obj_qubit=None)
 
     该电路表示任意单量子比特门。

@@ -1,6 +1,3 @@
-mindquantum.core.gates.IGate
-============================
-
 .. py:class:: mindquantum.core.gates.IGate
 
     Identity门，矩阵为：

@@ -1,6 +1,3 @@
-mindquantum.utils.random_circuit
-================================
-
 .. py:function:: mindquantum.utils.random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=None)
 
     生成随机线路。

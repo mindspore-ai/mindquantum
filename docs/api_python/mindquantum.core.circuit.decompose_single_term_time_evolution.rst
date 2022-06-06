@@ -1,6 +1,3 @@
-mindquantum.core.circuit.decompose_single_term_time_evolution
-=============================================================
-
 .. py:function:: mindquantum.core.circuit.decompose_single_term_time_evolution(term, para)
 
     将时间演化门分解成基本的量子门。

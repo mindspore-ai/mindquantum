@@ -1,6 +1,3 @@
-mindquantum.algorithm.library.qft
-=================================
-
 .. py:function:: mindquantum.algorithm.library.qft(qubits)
 
     量子傅里叶变换。

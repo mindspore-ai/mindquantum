@@ -1,6 +1,3 @@
-mindquantum.core.parameterresolver.ParameterResolver
-====================================================
-
 .. py:class:: mindquantum.core.parameterresolver.ParameterResolver(data=None, const=None, dtype=<class 'numpy.float64'>)
 
     ParameterRsolver可以设置参数化量子门或参数化量子电路的参数。

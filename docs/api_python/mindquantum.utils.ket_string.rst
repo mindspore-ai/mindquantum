@@ -1,6 +1,3 @@
-mindquantum.utils.ket_string
-============================
-
 .. py:function:: mindquantum.utils.ket_string(state, tol=1e-07)
 
     获取量子状态的ket格式。

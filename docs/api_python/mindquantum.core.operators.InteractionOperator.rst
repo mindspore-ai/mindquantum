@@ -1,6 +1,3 @@
-mindquantum.core.operators.InteractionOperator
-==============================================
-
 .. py:class:: mindquantum.core.operators.InteractionOperator(constant, one_body_tensor, two_body_tensor)
 
     存储用于配置费米子分子哈密顿量的“交互算子”的类。哈密顿量包括存储了自旋和奇偶性的单体项和双体项。在这个模块中，存储的系数可以通过费米子算子表示为分子的哈密顿量。

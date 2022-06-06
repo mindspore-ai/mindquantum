@@ -1,6 +1,3 @@
-mindquantum.core.gates.gene_univ_parameterized_gate
-===================================================
-
 .. py:function:: mindquantum.core.gates.gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator)
 
     基于单参数幺正矩阵生成自定义参数化门。

@@ -1,6 +1,3 @@
-mindquantum.simulator.Simulator
-===============================
-
 .. py:class:: mindquantum.simulator.Simulator(backend, n_qubits, seed=None)
 
     模拟量子电路的量子模拟器。

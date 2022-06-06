@@ -1,6 +1,3 @@
-mindquantum.core.gates.TGate
-============================
-
 .. py:class:: mindquantum.core.gates.TGate
 
     T门，矩阵为：

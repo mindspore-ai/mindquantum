@@ -1,6 +1,3 @@
-mindquantum.engine.circuit_generator
-====================================
-
 .. py:function:: mindquantum.engine.circuit_generator(n_qubits, *args, **kwds)
 
     生成projectq格式的量子线路。
@@ -8,7 +5,3 @@ mindquantum.engine.circuit_generator
     **参数：**
 
     - **n_qubits** (int) - 量子线路的量子比特数。
-
-    .. note::
-
-    更多信息请参考:class:`CircuitEngine.generator`。

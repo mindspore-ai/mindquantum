@@ -1,6 +1,3 @@
-mindquantum.core.gates.DepolarizingChannel
-==========================================
-
 .. py:class:: mindquantum.core.gates.DepolarizingChannel(p: float, **kwargs)
 
     量子信道可以描述量子计算中的非相干噪声。
