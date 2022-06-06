@@ -1,3 +1,6 @@
+mindquantum.framework.MQLayer
+=============================
+
 .. py:class:: mindquantum.framework.MQLayer(expectation_with_grad, weight='normal')
 
     MindQuantum可训练层。asatz电路的参数是可训练的参数。

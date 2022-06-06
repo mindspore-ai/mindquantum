@@ -1,3 +1,6 @@
+mindquantum.framework.MQAnsatzOnlyLayer
+=======================================
+
 .. py:class:: mindquantum.framework.MQAnsatzOnlyLayer(expectation_with_grad, weight='normal')
 
     MindQuantum可训练层。ansatz电路的参数是可训练的参数。

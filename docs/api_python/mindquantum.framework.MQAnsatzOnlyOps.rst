@@ -1,3 +1,6 @@
+mindquantum.framework.MQAnsatzOnlyOps
+=====================================
+
 .. py:class:: mindquantum.framework.MQAnsatzOnlyOps(expectation_with_grad)
 
     MindQuantum 算子，通过参数化量子电路 (PQC) 获得对量子态的哈密顿期望。 这个PQC应该只包含一个ansatz电路。 此操作仅受 `PYNATIVE_MODE` 支持。
