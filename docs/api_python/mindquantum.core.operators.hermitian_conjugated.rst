@@ -1,3 +1,6 @@
+mindquantum.core.operators.hermitian_conjugated
+===============================================
+
 .. py:function:: mindquantum.core.operators.hermitian_conjugated(operator)
 
     返回FermionOperator或QubitOperator的厄米共轭。

@@ -1,3 +1,6 @@
+mindquantum.algorithm.nisq.uccsd_singlet_get_packed_amplitudes
+==============================================================
+
 .. py:function:: mindquantum.algorithm.nisq.uccsd_singlet_get_packed_amplitudes(single_amplitudes, double_amplitudes, n_qubits, n_electrons)
 
     提取单态UCCSD算子的振幅系数。输出列表仅包含与单态UCCSD相关的振幅，顺序与 `uccsd_singlet_generator` 保持一致。

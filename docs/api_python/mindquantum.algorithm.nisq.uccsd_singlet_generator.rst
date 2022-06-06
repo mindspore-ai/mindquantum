@@ -1,3 +1,6 @@
+mindquantum.algorithm.nisq.uccsd_singlet_generator
+==================================================
+
 .. py:function:: mindquantum.algorithm.nisq.uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True)
 
     为 `n_electrons` 的系统生成单态UCCSD算子。此函数生成一个由费米子构成的UCCSD算子，该算子作用在一个由 `n_qubits` 的自旋轨道和 `n_electrons` 电子构成的单参考态，也就是自旋单态算符，这也意味着该算符能够保证自旋守恒。

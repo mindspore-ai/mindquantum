@@ -1,3 +1,6 @@
+mindquantum.core.circuit.shift
+==============================
+
 .. py:function:: mindquantum.core.circuit.shift(circ, p)
 
     移动给定线路的量子比特范围。

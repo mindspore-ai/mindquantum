@@ -1,3 +1,6 @@
+mindquantum.algorithm.library.amplitude_encoder
+===============================================
+
 .. py:function:: mindquantum.algorithm.library.amplitude_encoder(x, n_qubits)
 
     用于幅度编码的量子线路。
