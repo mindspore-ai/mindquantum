@@ -4,7 +4,7 @@
 
     .. math::
 
-    U(\vec{\theta}) = \prod_{j=1}^{N(N\ge1)}{\prod_{i=0}^{N_{j}}{\exp{(\theta_{i}\hat{\tau}_{i})}}}
+        U(\vec{\theta}) = \prod_{j=1}^{N(N\ge1)}{\prod_{i=0}^{N_{j}}{\exp{(\theta_{i}\hat{\tau}_{i})}}}
 
     其中，:math:`\hat{\tau}` 是反埃尔米特运算符。
 

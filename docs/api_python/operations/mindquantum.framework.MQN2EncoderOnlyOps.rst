@@ -3,7 +3,7 @@ mindquantum.framework.MQN2EncoderOnlyOps
 
 .. py:class:: mindquantum.framework.MQN2EncoderOnlyOps(expectation_with_grad)
 
-    MindQuantum算子，它返回在参数化量子电路（PQC）评估出的量子态上，hamiltonian期望绝对值的平方。这个PQC应该只包含一个encoder电路。此操作仅受 `PYNATIVE_MODE` 支持。
+    仅包含encoder线路的量子线路演化算子，算子返回参数化量子电路（PQC）演化出的量子态上哈密的量期望绝值对值的平方。此操作仅受 `PYNATIVE_MODE` 支持。
 
     **参数：**
 

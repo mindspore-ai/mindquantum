@@ -316,8 +316,8 @@ class AmplitudeDampingChannel(NoiseGate, SelfHermitianGate):
             \ {E_1}=\begin{bmatrix}0&\sqrt{\gamma}\\
                 0&0\end{bmatrix}
 
-    where ρ is quantum state as density matrix type;
-    gamma is the coefficient of energy dissipation.
+    where :math:`\rho` is quantum state as density matrix type;
+    :math:`\gamma` is the coefficient of energy dissipation.
 
     Args:
         gamma (int, float): damping coefficient.

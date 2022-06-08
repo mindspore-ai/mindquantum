@@ -4,12 +4,12 @@
 
     .. math::
 
-    U(\beta, \gamma) = e^{-\beta_pH_b}e^{-\gamma_pH_c}
-    \cdots e^{-\beta_0H_b}e^{-\gamma_0H_c}H^{\otimes n}
+        U(\beta, \gamma) = e^{-\beta_pH_b}e^{-\gamma_pH_c}
+        \cdots e^{-\beta_0H_b}e^{-\gamma_0H_c}H^{\otimes n}
 
     .. math::
 
-    H_b = \sum_{i\in n}X_{i}, H_c = \sum_{l\in m}P(l)
+        H_b = \sum_{i\in n}X_{i}, H_c = \sum_{l\in m}P(l)
 
     :math:`n` 是布尔变量的数量， :math:`m` 是总子句的数量， :math:`P(l)` 是第一级投影。
 
