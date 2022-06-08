@@ -25,29 +25,49 @@ if(ENABLE_OPENMP)
   if(APPLE)
     find_program(BREW_CMD brew PATHS /usr/local/bin)
     if(BREW_CMD)
-      # Homebrew installs libomp in ${LLVM_PREFIX}/lib and the headers in /usr/local/include
-      execute_process(COMMAND ${BREW_CMD} --prefix llvm OUTPUT_VARIABLE LLVM_PREFIX)
-      string(STRIP ${LLVM_PREFIX} LLVM_PREFIX)
-      list(APPEND CMAKE_LIBRARY_PATH ${LLVM_PREFIX}/lib)
+      # Homebrew installs libomp in ${LIBOMP_PREFIX}/lib and the headers in ${LIBOMP_PREFIX}/include
+      execute_process(COMMAND ${BREW_CMD} --prefix libomp OUTPUT_VARIABLE LIBOMP_PREFIX)
+      string(STRIP ${LIBOMP_PREFIX} LIBOMP_PREFIX)
+
+      find_library(
+        LIBOMP_LIB omp gomp libomp
+        HINTS ${LIBOMP_PREFIX}
+        PATH_SUFFIXES lib
+        NO_DEFAULT_PATH)
+      if(LIBOMP_LIB)
+        get_filename_component(LIBOMP_DIR ${LIBOMP_LIB} DIRECTORY)
+        list(APPEND CMAKE_LIBRARY_PATH ${LIBOMP_DIR})
+      endif()
+
+      find_path(
+        LIBOMP_INC omp.h
+        HINTS ${LIBOMP_PREFIX}
+        PATH_SUFFIXES include
+        NO_DEFAULT_PATH)
+      if(LIBOMP_INC)
+        get_filename_component(LIBOMP_DIR ${LIBOMP_INC} DIRECTORY)
+        list(APPEND CMAKE_INCLUDE_PATH ${LIBOMP_DIR})
+      endif()
     else()
       # MacPorts install libomp in /opt/local/lib/libomp and the headers in /opt/local/include/libomp
       find_library(
         LIBOMP_LIB omp gomp libomp
-        HINTS /opt/local/lib
+        PATHS /opt/local/lib
         PATH_SUFFIXES libomp
         NO_DEFAULT_PATH)
-      fin_path(
-        LIBOMP_INC
-        omp.h
-        HINTS
-        /opt/local/include
-        PATH_SUFFIXES
-        libomp
-        NO_DEFAULT_PATH)
-      if(LIBOMP_LIB AND LIBOMP_INC)
+      if(LIBOMP_LIB)
         get_filename_component(LIBOMP_DIR ${LIBOMP_LIB} DIRECTORY)
         list(APPEND CMAKE_LIBRARY_PATH ${LIBOMP_DIR})
-        list(APPEND CMAKE_INCLUDE_PATH ${LIBOMP_INC})
+      endif()
+
+      find_path(
+        LIBOMP_INC omp.h
+        PATHS /opt/local/include
+        PATH_SUFFIXES libomp
+        NO_DEFAULT_PATH)
+      if(LIBOMP_INC)
+        get_filename_component(LIBOMP_DIR ${LIBOMP_INC} DIRECTORY)
+        list(APPEND CMAKE_INCLUDE_PATH ${LIBOMP_DIR})
       endif()
     endif()
   endif()
