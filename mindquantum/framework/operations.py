@@ -42,9 +42,9 @@ def check_ans_input_shape(data, x, ans_len):
 
 class MQOps(nn.Cell):
     """
-    MindQuantum operator that get the expectation of a hamiltonian on a quantum
-    state evaluated by a parameterized quantum circuit (PQC). This PQC should contains
-    a encoder circuit and an ansatz circuit. This ops is `PYNATIVE_MODE` supported only.
+    A quantum circuit evolution operator that include encoder and ansatz circuit, who return
+    the expectation of given hamiltonian w.r.t final state of parameterized quantum circuit (PQC).
+    This ops is `PYNATIVE_MODE` supported only.
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
@@ -116,9 +116,9 @@ class MQOps(nn.Cell):
 
 class MQN2Ops(nn.Cell):
     r"""
-    MindQuantum operator that get the square of absolute value of expectation of a hamiltonian
-    on a quantum state evaluated by a parameterized quantum circuit (PQC). This PQC should contains
-    a encoder circuit and an ansatz circuit. This ops is `PYNATIVE_MODE` supported only.
+    A quantum circuit evolution operator that include encoder and ansatz circuit, who return
+    the square of absolute value of expectation of given hamiltonian w.r.t final state of
+    parameterized quantum circuit (PQC). This ops is `PYNATIVE_MODE` supported only.
 
     .. math::
 
@@ -195,9 +195,9 @@ class MQN2Ops(nn.Cell):
 
 class MQAnsatzOnlyOps(nn.Cell):
     r"""
-    MindQuantum operator that get the expectation of a hamiltonian
-    on a quantum state evaluated by a parameterized quantum circuit (PQC). This PQC should
-    contains an ansatz circuit only. This ops is `PYNATIVE_MODE` supported only.
+    A quantum circuit evolution operator that only include ansatz circuit, who return
+    the expectation of given hamiltonian w.r.t final state of parameterized quantum circuit (PQC).
+    This ops is `PYNATIVE_MODE` supported only.
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
@@ -259,9 +259,9 @@ class MQAnsatzOnlyOps(nn.Cell):
 
 class MQN2AnsatzOnlyOps(nn.Cell):
     r"""
-    MindQuantum operator that get the square of absolute value of expectation of a hamiltonian
-    on a quantum state evaluated by a parameterized quantum circuit (PQC). This PQC should
-    contains an ansatz circuit only. This ops is `PYNATIVE_MODE` supported only.
+    A quantum circuit evolution operator that only include ansatz circuit, who return
+    the square of absolute value of given hamiltonian w.r.t final state of parameterized
+    quantum circuit (PQC). This ops is `PYNATIVE_MODE` supported only.
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
@@ -324,9 +324,9 @@ class MQN2AnsatzOnlyOps(nn.Cell):
 
 class MQEncoderOnlyOps(nn.Cell):
     r"""
-    MindQuantum operator that get the expectation of a hamiltonian
-    on a quantum state evaluated by a parameterized quantum circuit (PQC). This PQC should
-    contains a encoder circuit only. This ops is `PYNATIVE_MODE` supported only.
+    A quantum circuit evolution operator that only include encoder circuit, who return
+    the square of absolute value of given hamiltonian w.r.t final state of parameterized
+    quantum circuit (PQC). This ops is `PYNATIVE_MODE` supported only.
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
@@ -392,9 +392,9 @@ class MQEncoderOnlyOps(nn.Cell):
 
 class MQN2EncoderOnlyOps(nn.Cell):
     r"""
-    MindQuantum operator that get the square of absolute value of expectation of a hamiltonian
-    on a quantum state evaluated by a parameterized quantum circuit (PQC). This PQC should
-    contains a encoder circuit only. This ops is `PYNATIVE_MODE` supported only.
+    A quantum circuit evolution operator that only include encoder circuit, who return
+    the square of absolute value of given hamiltonian w.r.t final state of parameterized
+    quantum circuit (PQC). This ops is `PYNATIVE_MODE` supported only.
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
