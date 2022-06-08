@@ -97,7 +97,7 @@ class MQN2Layer(nn.Cell):
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
-            ansatz data and return the square of absolute value of expectation value and
+            ansatz data and return the expectation value and
             gradient value of parameters respect to expectation.
         weight (Union[Tensor, str, Initializer, numbers.Number]): Initializer for the
             convolution kernel. It can be a Tensor, a string, an Initializer or a number.

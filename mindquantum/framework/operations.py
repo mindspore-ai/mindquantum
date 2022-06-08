@@ -126,7 +126,7 @@ class MQN2Ops(nn.Cell):
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
-            ansatz data and return the square of absolute value of expectation value and
+            ansatz data and return the expectation value and
             gradient value of parameters respect to expectation.
 
     Inputs:
@@ -265,7 +265,7 @@ class MQN2AnsatzOnlyOps(nn.Cell):
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
-            ansatz data and return the square of absolute value of expectation value and
+            ansatz data and return the expectation value and
             gradient value of parameters respect to expectation.
 
     Inputs:
