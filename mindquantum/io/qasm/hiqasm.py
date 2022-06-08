@@ -259,20 +259,22 @@ class HiQASM:
         """Conversion of parametric gates to string"""
         from mindquantum.core import gates as G
         n_ctrl_qubits = len(ctrl_qubits)
+        if gate.parameterized:
+            raise ValueError(f"Cannot convert parameterzed gate {gate} to hiqasm format.")
 
         if isinstance(gate, (G.RX, G.RY, G.RZ)):
             if n_ctrl_qubits == 0:
-                self.cmds.append(f'{gate.name} q[{obj_qubits[0]}] {gate.coeff}')
+                self.cmds.append(f'{gate.name} q[{obj_qubits[0]}] {gate.coeff.const}')
             elif n_ctrl_qubits == 1:
-                self.cmds.append(f'C{gate.name} q[{ctrl_qubits[0]}],q[{obj_qubits[0]}] {gate.coeff}')
+                self.cmds.append(f'C{gate.name} q[{ctrl_qubits[0]}],q[{obj_qubits[0]}] {gate.coeff.const}')
             elif n_ctrl_qubits == 2:
                 self.cmds.append(
-                    f'CC{gate.name} q[{ctrl_qubits[0]}],q[{ctrl_qubits[1]}],q[{obj_qubits[0]}] {gate.coeff}')
+                    f'CC{gate.name} q[{ctrl_qubits[0]}],q[{ctrl_qubits[1]}],q[{obj_qubits[0]}] {gate.coeff.const}')
             else:
                 _not_implement(version, gate)
         elif isinstance(gate, (G.XX, G.YY, G.ZZ)):
             if n_ctrl_qubits == 0:
-                self.cmds.append(f'{gate.name} q[{obj_qubits[0]}],q[{obj_qubits[1]}] {gate.coeff}')
+                self.cmds.append(f'{gate.name} q[{obj_qubits[0]}],q[{obj_qubits[1]}] {gate.coeff.const}')
             else:
                 _not_implement(version, gate)
         else:
