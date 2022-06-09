@@ -115,7 +115,7 @@
 
         **返回：**
         
-        list，包含参数名称的list。
+        list，线路中encoder部分参数名称的list。
 
     .. py:method:: ansatz_params_name
         :property:
@@ -124,7 +124,7 @@
 
         **返回：**
         
-        list，包含参数名称的list。
+        list，线路中ansatz部分参数名称的list。
 
     .. py:method:: matrix(pr=None, big_end=False, backend='projectq', seed=None)
 
@@ -184,16 +184,16 @@
 
         **参数：**
 
-        - **hermitian** (bool) - 是否获取线路cpp object的hermitian版本。默认值：False。
+        - **hermitian** (bool) - 是否获取线路cpp object的hermitian版本。默认值： `False` 。
 
     .. py:method:: h(obj_qubits, ctrl_qubits=None)
 
-        在电路中添加哈达玛（Hadamard，`H` ）门。
+        添加一个hadamard门。
 
         **参数：**
 
         - **obj_qubits** (Union[int, list[int]]) - `H` 门的目标量子比特。
-        - **ctrl_qubits** (Union[int, list[int]]) - `H` 门的控制量子比特。默认值：None。
+        - **ctrl_qubits** (Union[int, list[int]]) - `H` 门的控制量子比特。默认值： `None` 。
 
     .. py:method:: x(obj_qubits, ctrl_qubits=None)
 
@@ -238,7 +238,7 @@
         **参数：**
 
         - **obj_qubits** (Union[int, list[int]]) - `SWAP` 门的目标量子比特。
-        - **ctrl_qubits** (Union[int, list[int]]) - `SWAP` 门的控制量子比特。默认值：None。
+        - **ctrl_qubits** (Union[int, list[int]]) - `SWAP` 门的控制量子比特。默认值： `None` 。
 
     .. py:method:: rx(para, obj_qubits, ctrl_qubits=None)
 
@@ -248,7 +248,7 @@
 
         - **para** (Union[dict, ParameterResolver]) - `RX` 门的参数。
         - **obj_qubits** (Union[int, list[int]]) - `RX` 门的目标量子比特。
-        - **ctrl_qubits** (Union[int, list[int]]) - `RX` 门的控制量子比特。默认值：None。
+        - **ctrl_qubits** (Union[int, list[int]]) - `RX` 门的控制量子比特。默认值： `None` 。
 
     .. py:method:: ry(para, obj_qubits, ctrl_qubits=None)
 
@@ -258,7 +258,7 @@
 
         - **para** (Union[dict, ParameterResolver]) - `RY` 门的参数。
         - **obj_qubits** (Union[int, list[int]]) - `RY` 门的目标量子比特。
-        - **ctrl_qubits** (Union[int, list[int]]) - `RY` 门的控制量子比特。默认值：None。
+        - **ctrl_qubits** (Union[int, list[int]]) - `RY` 门的控制量子比特。默认值： `None` 。
 
     .. py:method:: rz(para, obj_qubits, ctrl_qubits=None)
 

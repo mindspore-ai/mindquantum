@@ -14,8 +14,17 @@
         将费米子运算符转换为openfermion格式。
 
     .. py:method:: from_openfermion(of_ops)
+        :staticmethod:
 
         将openfermion格式的费米子运算符转换为mindquantum格式。
+
+        **参数：**
+
+        - **of_ops** (openfermion.FermionOperator) - openfermion中的费米子算符。
+
+        **返回：**
+
+        FermionOperator，mindquantum中的费米子算符。
 
     .. py:method:: matrix(n_qubits=None)
 
@@ -64,6 +73,7 @@
         JSON(str)，FermionOperator的JSON字符串。
 
     .. py:method:: loads(strs)
+        :staticmethod:
 
         将JSON（JavaScript对象表示法）加载到FermionOperator中。
 

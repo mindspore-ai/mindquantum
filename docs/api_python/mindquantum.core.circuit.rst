@@ -18,6 +18,10 @@ Quantum Circuit
 
 .. include:: mindquantum.core.circuit.apply.rst
 
+.. include:: mindquantum.core.circuit.as_ansatz.rst
+
+.. include:: mindquantum.core.circuit.as_encoder.rst
+
 .. include:: mindquantum.core.circuit.change_param_name.rst
 
 .. include:: mindquantum.core.circuit.controlled.rst

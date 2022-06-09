@@ -1,4 +1,4 @@
-.. py:class:: mindquantum.core.gates.RX(coeff=None)
+.. py:class:: mindquantum.core.gates.RX(pr)
 
     围绕x轴的旋转门。
 
@@ -22,4 +22,4 @@
 
     **参数：**
 
-    - **coeff** (Union[int, float, str, dict, ParameterResolver]) - 参数化门的参数，详细解释请参见上文。默认值：None。
+    - **pr** (Union[int, float, str, dict, ParameterResolver]) - 参数化门的参数，详细解释请参见上文。

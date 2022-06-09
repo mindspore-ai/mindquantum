@@ -961,7 +961,7 @@ resolver discards the imaginary part."                                      )
         Apply linear combination between this parameter resolver with input pr.
 
         Args:
-            pr (Union[dict, ParameterResolver]): The parameter resolver you
+            other (Union[dict, ParameterResolver]): The parameter resolver you
                 want to do linear combination.
 
         Returns:

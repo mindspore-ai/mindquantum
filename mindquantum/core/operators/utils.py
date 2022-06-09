@@ -84,7 +84,7 @@ def commutator(left_operator, right_operator):
             FermionOperator or QubitOperator.
 
     Raises:
-        TypeError: operator_a and operator_b are not of the same type.
+        TypeError: left_operator and right_operator are not of the same type.
 
     Examples:
         >>> from mindquantum.core.operators import QubitOperator,FermionOperator
@@ -294,7 +294,7 @@ def up_index(index):
         index (int): spatial orbital index.
 
     Returns:
-        An integer that is the index of the associated spin-up orbital.
+        int, an integer that is the index of the associated spin-up orbital.
 
     Examples:
         >>> from mindquantum.core.operators import up_index
@@ -313,7 +313,7 @@ def down_index(index):
         index (int): spatial orbital index.
 
     Returns:
-        An integer that is the index of the associated spin-down orbital.
+        int, an integer that is the index of the associated spin-down orbital.
 
     Examples:
         >>> from mindquantum.core.operators import down_index

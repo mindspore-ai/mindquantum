@@ -18,6 +18,8 @@ MindQuantum算子库。算子由一个或多个基本门的组合而成。
 
 .. include:: mindquantum.core.operators.Projector.rst
 
+.. include:: mindquantum.core.operators.QubitExcitationOperator.rst
+
 .. include:: mindquantum.core.operators.QubitOperator.rst
 
 .. include:: mindquantum.core.operators.TimeEvolution.rst

@@ -3,6 +3,7 @@
     一个简单的线路引擎，生成projectq格式的量子线路。
 
     .. py:method:: generator(n_qubits, *args, **kwds)
+        :staticmethod:
 
         量子线路寄存器。
 
