@@ -61,7 +61,7 @@ def quccsd_generator(n_qubits=None,
             do not distinguish occupied or virtual orbitals (qUCCGSD). Default: False.
 
     Returns:
-        QubitExcitationOperator: Generator of the qUCCSD operators.
+        QubitExcitationOperator, Generator of the qUCCSD operators.
 
     Examples:
         >>> from mindquantum.algorithm.nisq.chem import quccsd_generator

@@ -1,6 +1,6 @@
 .. py:function:: mindquantum.core.operators.commutator(left_operator, right_operator)
 
-    计算两个算子的交换子。
+    计算两个算子的对易。
 
     **参数：**
 

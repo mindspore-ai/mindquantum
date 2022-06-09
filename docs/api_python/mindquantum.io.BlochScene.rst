@@ -51,6 +51,10 @@
         - **proj_args** (tuple) - 投影线的其他位置参数。这些参数会被传入到 `Axes3D.plot` 中。默认值： `None` 。
         - **proj_kwargs** (dict) - 投影线的其他关键字参数。这些参数会被传入到 `Axes3D.plot` 中。默认值： `None` 。
 
+        **返回：**
+
+        dict，由折线、端点和投影线构成的字典。
+
     .. py:method:: animation(fig, ax, objs, new_amps: np.ndarray, interval=15, with_trace=True, history_len=None, **kwargs)
 
         在布洛赫球上动画展示给定量子态。
@@ -132,6 +136,7 @@
         - **azim** (numbers.Number) - 以度为单位时，当前方位相对与 (x, y) 平面的仰角。默认值：0。
 
     .. py:method:: state_to_cor(amp: np.ndarray)
+        :staticmethod:
 
         将单比特量子态转化为布洛赫球上的三维坐标。
 

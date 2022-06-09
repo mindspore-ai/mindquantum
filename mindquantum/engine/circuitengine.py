@@ -58,9 +58,6 @@ class CircuitEngine:
     """
     A simple circuit engine that allows you to generate quantum circuit as
     projectq style.
-
-    Note:
-        For more usage, please refers to :class:`CircuitEngine.generator`
     """
     def __init__(self):
         self.current_id = -1
@@ -130,8 +127,5 @@ def circuit_generator(n_qubits, *args, **kwds):
 
         Args:
             n_qubits (int): qubit number of quantum circuit.
-
-        Note:
-            More information please refers to :class:`CircuitEngine.generator`.
     """
     return CircuitEngine().generator(n_qubits, *args, **kwds)

@@ -142,7 +142,7 @@
 
         将模拟器重置为0态。
 
-    .. py:method:: apply_hamiltonian(hamiltonian: mindquantum.core.operators.hamiltonian.Hamiltonian)
+    .. py:method:: apply_hamiltonian(hamiltonian: Hamiltonian)
 
         将hamiltonian应用到模拟器上，这个hamiltonian可以是hermitian或non hermitian。
 

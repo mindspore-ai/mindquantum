@@ -32,14 +32,43 @@
         ParameterResolver，参数解析器本身。
 
     .. py:method:: requires_grad_parameters
+        :property:
 
         获取需要梯度的参数。
 
         **返回：**
 
-        set，需要梯度的参数集合。
+        set，需要计算梯度的参数集合。
+
+    .. py:method:: no_grad_parameters
+        :property:
+
+        获取不需要计算梯度的参数。
+
+        **返回：**
+
+        set，不需要计算梯度的参数集合。
+
+    .. py:method:: encoder_parameters
+        :property:
+
+        获取所有encoder参数。
+
+        **返回：**
+
+        set，encoder参数构成的集合。
+
+    .. py:method:: ansatz_parameters
+        :property:
+
+        获取参数，该参数是一个ansatz参数。
+
+        **返回：**
+
+        set，ansatz参数的集合。
 
     .. py:method:: imag
+        :property:
 
         获取每个参数值的虚部构成的参数解析器。
 
@@ -48,6 +77,7 @@
         ParameterResolver，参数解析器的虚部。
 
     .. py:method:: const
+        :property:
 
         获取此参数解析器的常量部分。
 
@@ -107,14 +137,6 @@
 
         生成所有参数名称的迭代器。
 
-    .. py:method:: ansatz_parameters
-
-        获取参数，该参数是一个ansatz参数。
-
-        **返回：**
-
-        set，ansatz参数的集合。
-
     .. py:method:: no_grad_part(*names)
 
         设置不需要梯度的部分参数。
@@ -143,12 +165,17 @@
 
         弹出参数。
 
+        **参数：**
+
+        - **v** (str) - 想要弹出的参数名称。
+
         **返回：**
 
-        numbers.Number，弹出参数值。
+        numbers.Number，弹出的参数值。
 
 
     .. py:method:: real
+        :property:
 
         获取每个参数值的实部。
 
@@ -184,9 +211,9 @@
 
         str，此参数解析器的字符串表达式。
 
-    .. py:method:: combination(pr)
+    .. py:method:: combination(other)
 
-        在此参数解析器与输入pr之间应用线性组合。
+        将该参数解析器与输入的参数解析器进行线性组合。
 
         **参数：**
 
@@ -197,6 +224,7 @@
         numbers.Number，组合结果。
 
     .. py:method:: params_name
+        :property:
 
         获取参数名称。
 
@@ -210,7 +238,7 @@
 
         **参数：**
 
-        - **indent** (int) - 将使用该缩进级别，可读性更高地打印JSON数组元素和对象成员。默认值：4。
+        - **indent** (int) - 打印JSON数据时的所进级别，利用缩进会使打印效果更新美观。默认值：4。
 
         **返回：**
 
@@ -224,11 +252,8 @@
 
         获取此参数解析器的 cpp 对象。
 
-        **返回：**
-
-        参数解析器的 cpp 对象
-
     .. py:method:: para_value
+        :property:
 
         获取参数值。
 
@@ -237,6 +262,7 @@
         list，参数值的列表。
 
     .. py:method:: loads(strs)
+        :staticmethod:
 
         将JSON（JavaScript对象表示法）加载到FermionOperator中。
 

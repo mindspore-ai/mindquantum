@@ -27,6 +27,7 @@
         将量子位运算符转换为openfermion格式。
 
     .. py:method:: from_openfermion(of_ops)
+        :staticmethod:
 
         将openfermion格式的玻色子运算符转换为mindquantum格式。
 
@@ -77,6 +78,7 @@
         JSON(strings)，QubitOperator的JSON字符串。
 
     .. py:method:: loads(strs)
+        :staticmethod:
 
         将JSON（JavaScript对象表示法）加载到QubitOperator中。
 
