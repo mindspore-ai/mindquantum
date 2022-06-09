@@ -12,7 +12,7 @@
 
         **参数：**
 
-        - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 想要添加三维箭头的三维Axes。
+        - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 需要添加三维箭头的三维Axes。
         - **data** (list) - 具有六个元素的列表，其中前三个表示箭头的起始坐标，后三个表示箭头相对与起始位置的偏移量。
         - **args** (tuple) - `FancyArrowPatch` 所需要的其他位置参数。
         - **kwargs** (dict) - `FancyArrowPatch` 所需要的其他关键字参数。
@@ -23,7 +23,7 @@
     
         **参数：**
 
-        - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 想要添加右矢标签的三维Axes。
+        - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 需要添加右矢标签的三维Axes。
         - **args** (tuple) - 右矢标签中 `matplotlib` 的 `text` 对象的其他位置参数。
         - **kwargs** (dict) - 右矢标签中 `matplotlib` 的 `text` 对象的其他关键字参数。
         - **fontsize** (int) - 标签字体大小。如果为 `None` ，字体大小将取 `BlochScene` 的配置文件中键 `ket_label_fs` 对应的值。默认值： `None` 。
@@ -34,7 +34,7 @@
 
         **参数：**
 
-        - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 想要添加量子态的三维Axes。
+        - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 需要添加量子态的三维Axes。
         - **amp** (numpy.ndarray) - 量子态。
         - **linecolor** (str) - 线的颜色。如果为 `None` ， 系统将会从 `BlochScene` 的 `config` 中取键 `stick_c` 对应的值。默认值： `None` 。
         - **linewidth** (numbers.Number) - 线宽度。如果为 `None` ， 系统将会从 `BlochScene` 的 `config` 中取键 `stick_w` 对应的值。默认值： `None` 。
@@ -76,7 +76,7 @@
 
         **参数：**
 
-        - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 想要绘制平行于xy平面的圆的Axes。
+        - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 需要绘制平行于xy平面的圆的Axes。
         - **args** () - 传入给 `Axes3D.plot` 的位置参数。
         - **angle** () - 圆相对于z轴的仰角。默认值：π / 2。
         - **kwargs** () - 传入给 `Axes3D.plot` 的关键字参数。
@@ -87,7 +87,7 @@
 
         **参数：**
 
-        - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 想要绘制平行于yz平面的圆的Axes。
+        - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 需要绘制平行于yz平面的圆的Axes。
         - **args** (tuple) - 传入给 `Axes3D.plot` 的位置参数。
         - **angle** (numbers.Number) - 相对与z轴的旋转角度。默认值：0。
         - **kwargs** (dict) - 传入给 `Axes3D.plot` 的关键字参数。

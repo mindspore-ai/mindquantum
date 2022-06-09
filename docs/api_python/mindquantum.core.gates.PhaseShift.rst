@@ -11,10 +11,10 @@
 
     - **coeff** (Union[int, float, str, dict, ParameterResolver]) - 参数化门的参数，详细解释请参见上文。默认值：None。
 
-    .. py:method:: matrix(pr=None)
-
-        获取此参数化门的矩阵。
-
     .. py:method:: diff_matrix(pr=None, about_what=None)
 
         获取此参数化门的导数矩阵。
+
+    .. py:method:: matrix(pr=None)
+
+        获取此参数化门的矩阵。

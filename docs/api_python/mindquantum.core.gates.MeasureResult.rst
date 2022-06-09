@@ -18,14 +18,6 @@
 
         - **samples** (numpy.ndarray) - 一个二维(N x M) numpy数组，以0或1存储采样位字符串，其中N表示拍摄次数，M表示此测量容器中的键数。
 
-    .. py:method:: select_keys(*keys)
-
-        从该测量容器中选择某些测量键。
-
-        **参数：**
-
-        - **keys** (tuple[str]) - 要选择的键。
-
     .. py:method:: data
 
         获取采样数据。
@@ -33,6 +25,14 @@
         **返回：**
 
         dict，采样数据。
+
+    .. py:method:: select_keys(*keys)
+
+        从该测量容器中选择某些测量键。
+
+        **参数：**
+
+        - **keys** (tuple[str]) - 要选择的键。
 
     .. py:method:: svg(style=None)
 
