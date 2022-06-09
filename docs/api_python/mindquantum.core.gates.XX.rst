@@ -1,4 +1,4 @@
-.. py:class:: mindquantum.core.gates.XX(pr)
+.. py:class:: mindquantum.core.gates.XX(coeff=None)
 
     伊辛XX门。更多用法，请参见 :class:`mindquantum.core.gates.RX`。
 

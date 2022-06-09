@@ -8,4 +8,4 @@
 
     **返回：**
 
-    operator (Union[FermionOperator, QubitOperator, QubitExcitationOperator])，输入算子的厄米共轭。
+    operator (Union[FermionOperator, QubitOperator, QubitExcitationOperator])， 输入算子的厄米共轭。

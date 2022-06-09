@@ -1,4 +1,4 @@
-.. py:class:: mindquantum.core.gates.RY(pr)
+.. py:class:: mindquantum.core.gates.RY(coeff=None)
 
     围绕y轴的旋转门。更多用法，请参见 :class:`mindquantum.core.gates.RX`。
 

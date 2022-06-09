@@ -15,4 +15,4 @@ mindquantum.framework.MQN2EncoderOnlyOps
 
     **输出：**
 
-    - **Output** (Tensor) - hamiltonian期望绝对值的平方。
+    Tensor，hamiltonian期望绝对值的平方。

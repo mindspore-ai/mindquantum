@@ -16,7 +16,7 @@ mindquantum.framework.MQN2Layer
 
     **输出：**
 
-    - **Output** (Tensor) - hamiltonian期望绝对值的平方。
+    Tensor，hamiltonian期望绝对值的平方。
 
     **异常：**
 

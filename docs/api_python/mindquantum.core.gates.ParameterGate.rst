@@ -1,4 +1,4 @@
-.. py:class:: mindquantum.core.gates.ParameterGate(pr: PR, name, n_qubits, *args, obj_qubits=None, ctrl_qubits=None, **kwargs)
+.. py:class:: mindquantum.core.gates.ParameterGate(pr, name, n_qubits, *args, obj_qubits=None, ctrl_qubits=None, **kwargs)
 
     参数化的门。
 
@@ -24,4 +24,4 @@
 
         **返回：**
 
-        BasicGate，与某些部分参数需要更新梯度。
+        BasicGate，返回门本身。

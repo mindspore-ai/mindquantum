@@ -16,7 +16,7 @@ mindquantum.framework.MQN2AnsatzOnlyLayer
 
     **输出：**
 
-    - **Output** (Tensor) - hamiltonian的期望值。
+    Tensor，hamiltonian的期望值。
 
     **异常：**
 

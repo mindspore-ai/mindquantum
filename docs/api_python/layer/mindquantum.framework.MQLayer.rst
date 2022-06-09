@@ -16,7 +16,7 @@ mindquantum.framework.MQLayer
 
     **输出：**
 
-    - **Output** (Tensor) - hamiltonian的期望值。
+    Tensor，hamiltonian的期望值。
 
     **异常：**
 

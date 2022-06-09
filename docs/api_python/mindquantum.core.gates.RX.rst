@@ -1,4 +1,4 @@
-.. py:class:: mindquantum.core.gates.RX(pr)
+.. py:class:: mindquantum.core.gates.RX(coeff=None)
 
     围绕x轴的旋转门。
 
@@ -14,6 +14,7 @@
     2. 如果使用单个str初始化它，那么它将是只有一个参数的参数化门，默认系数为1。
 
     3. 如果使用dict初始化它，例如 `{'a'：1，'b'：2}` ，则此门可以包含多个具有特定系数的参数。在这种情况下，它可以表示为：
+
 
     .. math::
 

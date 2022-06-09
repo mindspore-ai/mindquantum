@@ -4,7 +4,7 @@
 
     **参数：**
 
-    - **backend** (str) - 需要的后端。通过调用 `get_supported_simulator()` 可以返回支持的后端。
+    - **backend** (str) - 想要的后端。通过调用 `get_supported_simulator()` 可以返回支持的后端。
     - **n_qubits** (int) - 量子模拟器的数量。
     - **seed** (int) - 模拟器的随机种子，如果为None，种子将由 `numpy.random.randint` 生成。默认值：None。
 
@@ -16,79 +16,6 @@
     - **ValueError** - 如果不支持 `backend` 。
     - **ValueError** - 如果 `n_qubits` 为负数。
     - **ValueError** - 如果 `seed` 小于0或大于2**23 - 1。
-
-    .. py:method:: apply_circuit(circuit, pr=None)
-
-        在模拟器上应用量子线路。
-
-        **参数：**
-
-        - **circuit** (Circuit) - 要应用在模拟器上的量子线路。
-        - **pr** (Union[ParameterResolver, dict, numpy.ndarray, list, numbers.Number]) - 线路的ParameterResolver。如果线路不含参数，则此参数应为None。默认值：None。
-
-        **返回：**
-
-        MeasureResult或None，如果线路具有测量门，则返回MeasureResult，否则返回None。
-
-    .. py:method:: apply_gate(gate, pr=None, diff=False)
-
-        在此模拟器上应用门，可以是量子门或测量算子。
-
-        **参数：**
-
-        - **gate** (BasicGate) - 要应用的门。
-        - **pr** (Union[numbers.Number, numpy.ndarray, ParameterResolver, list]) - 含参门的参数。默认值：None。
-        - **diff** (bool) - 是否在模拟器上应用导数门。默认值：False。
-
-        **返回：**
-
-        int或None，如果是该门是测量门，则返回坍缩态，否则返回None。
-
-        **异常：**
-
-        - **TypeError** - 如果 `gate` 不是BasicGate。
-        - **ValueError** - 如果 `gate` 的任何量子位高于模拟器量子位。
-        - **ValueError** - 如果 `gate` 是含参的，但没有提供参数。
-        - **TypeError** - 如果 `gate` 是含参的，但 `pr` 不是ParameterResolver。
-
-    .. py:method:: apply_hamiltonian(hamiltonian: Hamiltonian)
-
-        将hamiltonian应用到模拟器上，这个hamiltonian可以是hermitian或non hermitian。
-
-        .. note::
-            应用hamiltonian后，量子态可能不是归一化量子态。
-
-        **参数：**
-
-        - **hamiltonian** (Hamiltonian) - 需要应用的hamiltonian。
-
-    .. py:method:: copy()
-
-        复制模拟器。
-
-        **返回：**
-
-        模拟器，当前模拟器的副本。
-
-    .. py:method:: flush()
-
-        适用于projectq模拟器的flush门。projectq模拟器将缓存一些门并将这些门融合到一个更大的门中，然后作用在量子态上。flush命令使模拟器刷新当前存储的门并作用在量子状态上。
-
-    .. py:method:: get_expectation(hamiltonian)
-
-        得到给定hamiltonian的期望。hamiltonian可能是非厄密共轭的。
-
-        .. math::
-
-            E = \left<\psi\right|H\left|\psi\right>
-
-        **参数：**
-
-        - **hamiltonian** (Hamiltonian) - 需要得到期望的hamiltonian。
-
-        **返回：**
-
-        numbers.Number，期望值。
 
     .. py:method:: get_expectation_with_grad(hams, circ_right, circ_left=None, simulator_left=None, encoder_params_name=None, ansatz_params_name=None, parallel_worker=None)
 
@@ -114,21 +41,63 @@
 
         GradOpsWrapper，一个包含生成梯度算子信息的梯度算子包装器。
 
-    .. py:method:: get_qs(ket=False)
+    .. py:method:: apply_circuit(circuit, pr=None)
 
-        获取模拟器的当前量子态。
+        在模拟器上应用量子线路。
 
         **参数：**
 
-        - **ket** (bool) - 是否以ket格式返回量子状态。默认值：False。
+        - **circuit** (Circuit) - 要应用在模拟器上的量子线路。
+        - **pr** (Union[ParameterResolver, dict, numpy.ndarray, list, numbers.Number]) - 线路的ParameterResolver。如果线路不含参数，则此参数应为None。默认值：None。
 
         **返回：**
 
-        numpy.ndarray，当前量子态。
+        MeasureResult或None，如果线路具有测量门，则返回MeasureResult，否则返回None。           
 
-    .. py:method:: reset()
+    .. py:method:: copy()
 
-        将模拟器重置为0态。
+        复制模拟器。
+
+        **返回：**
+
+        模拟器，当前模拟器的副本。
+
+    .. py:method:: get_expectation(hamiltonian)
+
+        得到给定hamiltonian的期望。hamiltonian可能是非厄密共轭的。
+
+        .. math::
+
+            E = \left<\psi\right|H\left|\psi\right>
+
+        **参数：**
+
+        - **hamiltonian** (Hamiltonian) - 想得到期望的hamiltonian。
+
+        **返回：**
+
+        numbers.Number，期望值。
+
+    .. py:method:: apply_gate(gate, pr=None, diff=False)
+
+        在此模拟器上应用门，可以是量子门或测量算子。
+
+        **参数：**
+
+        - **gate** (BasicGate) - 要应用的门。
+        - *pr** (Union[numbers.Number, numpy.ndarray, ParameterResolver, list]) - 含参门的参数。默认值：None。
+        - **diff** (bool) - 是否在模拟器上应用导数门。默认值：False。
+
+        **返回：**
+
+        int或None，如果是该门是测量门，则返回坍缩态，否则返回None。
+
+        **异常：**
+
+        - **TypeError** - 如果 `gate` 不是BasicGate。
+        - **ValueError** - 如果 `gate` 的任何量子位高于模拟器量子位。
+        - **ValueError** - 如果 `gate` 是含参的，但没有提供参数。
+        - **TypeError** - 如果 `gate` 是含参的，但 `pr` 不是ParameterResolver。
 
     .. py:method:: sampling(circuit, pr=None, shots=1, seed=None)
 
@@ -145,10 +114,41 @@
 
         MeasureResult，采样的统计结果。
 
+    .. py:method:: get_qs(ket=False)
+
+        获取模拟器的当前量子态。
+
+        **参数：**
+
+        - **ket** (bool) - 是否以ket格式返回量子状态。默认值：False。
+
+        **返回：**
+
+        numpy.ndarray，当前量子态。
+
+    .. py:method:: flush()
+
+        适用于projectq模拟器的flush门。 projectq模拟器将缓存一些门并将这些门融合到一个更大的门中，然后作用在量子态上。 flush命令使模拟器刷新当前存储的门并作用在量子状态上。
+
     .. py:method:: set_qs(quantum_state)
 
         设置模拟器的量子态。
 
         **参数：**
 
-        - **quantum_state** (numpy.ndarray) - 需要设置的量子态。
+        - **quantum_state** (numpy.ndarray) - 想设置的量子态。
+
+    .. py:method:: reset()
+
+        将模拟器重置为0态。
+
+    .. py:method:: apply_hamiltonian(hamiltonian: mindquantum.core.operators.hamiltonian.Hamiltonian)
+
+        将hamiltonian应用到模拟器上，这个hamiltonian可以是hermitian或non hermitian。
+
+        .. note::
+            应用hamiltonian后，量子态可能不是归一化量子态。
+
+        **参数：**
+
+        - **hamiltonian** (Hamiltonian) - 想应用的hamiltonian。
