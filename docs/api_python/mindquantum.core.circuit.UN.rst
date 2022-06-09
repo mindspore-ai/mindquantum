@@ -1,4 +1,4 @@
-.. py:class:: mindquantum.core.circuit.UN(gate: mindquantum.core.gates.basic.BasicGate, maps_obj, maps_ctrl=None)
+.. py:class:: mindquantum.core.circuit.UN(gate: BasicGate, maps_obj, maps_ctrl=None)
 
     将量子门映射到不同的目标量子位和控制量子位。
 

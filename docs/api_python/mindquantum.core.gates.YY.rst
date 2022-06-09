@@ -1,4 +1,4 @@
-.. py:class:: mindquantum.core.gates.YY(coeff=None)
+.. py:class:: mindquantum.core.gates.YY(pr)
 
     伊辛YY门。更多用法，请参见 :class:`mindquantum.core.gates.RX`。
 

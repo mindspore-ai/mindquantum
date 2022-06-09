@@ -1,4 +1,4 @@
-.. py:class:: mindquantum.core.gates.RX(coeff=None)
+.. py:class:: mindquantum.core.gates.RX(pr)
 
     围绕x轴的旋转门。
 

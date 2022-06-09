@@ -1,4 +1,4 @@
-.. py:class:: mindquantum.core.operators.TimeEvolution(ops: mindquantum.core.operators.qubit_operator.QubitOperator, time=None)
+.. py:class:: mindquantum.core.operators.TimeEvolution(ops: QubitOperator, time=None)
 
     可以生成对应线路的时间进化算子。
 

@@ -52,7 +52,7 @@ class ParameterResolver:
             be 1. Default: None.
         const (number.Number): the constant part of this parameter resolver.
             Default: None.
-        dtype (type): the value type of this parameter resolver. Default: numpy.float64.
+        dtype (type): the value type of this parameter resolver. Default: None.
 
     Examples:
         >>> from mindquantum.core import ParameterResolver

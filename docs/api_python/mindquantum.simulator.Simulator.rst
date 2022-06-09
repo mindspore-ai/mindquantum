@@ -37,7 +37,7 @@
         **参数：**
 
         - **gate** (BasicGate) - 要应用的门。
-        - *pr** (Union[numbers.Number, numpy.ndarray, ParameterResolver, list]) - 含参门的参数。默认值：None。
+        - **pr** (Union[numbers.Number, numpy.ndarray, ParameterResolver, list]) - 含参门的参数。默认值：None。
         - **diff** (bool) - 是否在模拟器上应用导数门。默认值：False。
 
         **返回：**
@@ -51,7 +51,7 @@
         - **ValueError** - 如果 `gate` 是含参的，但没有提供参数。
         - **TypeError** - 如果 `gate` 是含参的，但 `pr` 不是ParameterResolver。
 
-    .. py:method:: apply_hamiltonian(hamiltonian: mindquantum.core.operators.hamiltonian.Hamiltonian)
+    .. py:method:: apply_hamiltonian(hamiltonian: Hamiltonian)
 
         将hamiltonian应用到模拟器上，这个hamiltonian可以是hermitian或non hermitian。
 

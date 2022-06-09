@@ -98,7 +98,7 @@
         - **backend** (str) - 使用的后端。默认值：'projectq'。
         - **pr** (Union[numbers.Number, ParameterResolver, dict, numpy.ndarray]) - 线路的参数，线路含参数时提供。默认值：None。
         - **ket** (str) - 是否以ket格式返回量子态。默认值：False。
-        - **seed **(int) - 模拟器的随机种子。默认值：None。
+        - **seed** (int) - 模拟器的随机种子。默认值：None。
 
     .. py:method:: h(obj_qubits, ctrl_qubits=None)
 
@@ -331,7 +331,7 @@
         - **map_obj** (Union[int, list[int]]) - 执行该量子门的目标量子比特。
         - **maps_ctrl** (Union[int, list[int]]) - 执行该量子门的控制量子比特。默认值：None。
 
-    .. py:method:: with_noise(noise_gate=AmplitudeDampingChannel(0.001))
+    .. py:method:: with_noise(noise_gate=G.AmplitudeDampingChannel(0.001))
 
         在每个量子门后面添加一个噪声信道。
 
