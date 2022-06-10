@@ -10,14 +10,6 @@
     - **terms** (str) - 量子比特激发算子的输入项。 默认值：None。
     - **coefficient** (Union[numbers.Number, str, ParameterResolver]) - 相应单个运算符的系数。默认值：1.0。
 
-    .. py:method:: to_qubits_operator()
-
-        将量子比特激发算子转化为泡利算符。
-
-        **返回：**
-
-        QubitOperator，根据量子比特激发算符定义相对应的泡利算符。
-
     .. py:method:: imag
         :property:
 
@@ -26,6 +18,14 @@
         **返回：**
 
         QubitExcitationOperator，保留原始算符虚部的量子比特激发算符。
+
+    .. py:method:: normal_ordered()
+
+        按照比特序号由小到大排列量子比特激发算符。
+
+        **返回：**
+
+        QubitExcitationOperator，正规排序后的量子比特激发算符。
 
     .. py:method:: real
         :property:
@@ -36,10 +36,11 @@
 
         QubitExcitationOperator，保留原始算符实部的量子比特激发算符。
 
-    .. py:method:: normal_ordered()
+    .. py:method:: to_qubits_operator()
 
-        按照比特序号由小到大排列量子比特激发算符。
+        将量子比特激发算子转化为泡利算符。
 
         **返回：**
 
-        QubitExcitationOperator，正规排序后的量子比特激发算符。
+        QubitOperator，根据量子比特激发算符定义相对应的泡利算符。
+
