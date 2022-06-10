@@ -8,6 +8,48 @@
     - **operator** (Union[FermionOperator, QubitOperator]) - 需要进行转换的 `FermionOperator` 或 `QubitOperator` 。
     - **n_qubits** (int) - 输入算符的比特数。如果为 `None` ， 系统将会自动数出比特数。默认值：None。
 
+    .. py:method:: bravyi_kitaev()
+
+        进行Bravyi-Kitaev变换。
+
+        Bravyi-Kitaev是介于Jordan-Wigner变换和parity变换之间的变换。也就是说，它平衡了占据的局部性和宇称信息，以提高模拟效率。在此方案中，量子比特存储一组 :math:`2^x` 轨道的宇称，其中 :math:`x \ge 0` 。索引j的量子比特总是存储轨道 :math:`j` 。对于偶数的 :math:`j` ，这是它存储的唯一轨道。但对于奇数的 :math:`j` ，它还存储索引小于 :math:`j` 的一组相邻轨道。
+        对于占据态变换，我们遵循公式：
+
+        .. math::
+
+            b_{i} = \sum{[\beta_{n}]_{i,j}} f_{j},
+
+        其中 :math:`\beta_{n}` 是 :math:`N\times N` 维平方矩阵， :math:`N` 是总量子数。量子比特的索引分为三个集合，宇称集、更新集和翻转集。这组量子比特的宇称与索引小于 :math:`j` 的轨道集具有相同的宇称，因此我们将称这组量子比特索引为“宇称集” :math:`j` ，或 :math:`P(j)` 。
+
+        索引为 :math:`j` 的更新集，或 :math:`U(j)` ，包含除序号为 :math:`j` 的量子比特会被更新，当轨道 :math:`j` 被占据时。
+        索引为 :math:`j` 的翻转集，或 :math:`F(j)` ，包含所有的BravyiKitaev量子比特，这些比特将决定量子比特 :math:`j` 相对于轨道 :math:`j` 来说是否有相同或者相反的宇称。
+
+        请参见论文中的一些详细解释 (THE JOURNAL OF CHEMICAL PHYSICS 137, 224109 (2012))。
+
+        本方法基于 https://arxiv.org/pdf/quant-ph/0003137.pdf 和 "A New Data Structure for Cumulative Frequency Tables" 实现。
+
+        **返回：**
+
+        QubitOperator，经过 `bravyi_kitaev` 变换的玻色子算符。
+
+    .. py:method:: bravyi_kitaev_superfast()
+
+        作用快速Bravyi-Kitaev变换。
+        基于 https://arxiv.org/pdf/1712.00446.pdf 实现。
+
+        请注意，只有如下的厄密共轭算符才能进行转换。
+
+        .. math::
+
+            C + \sum_{p, q} h_{p, q} a^\dagger_p a_q +
+                \sum_{p, q, r, s} h_{p, q, r, s} a^\dagger_p a^\dagger_q a_r a_s
+
+        其中 :math:`C` 是一个常数。
+
+        **返回：**
+
+        QubitOperator，经过快速bravyi_kitaev变换之后的玻色子算符。
+
     .. py:method:: jordan_wigner()
 
         应用Jordan-Wigner变换。Jordan-Wigner变换能够保留初始占据数的局域性，并安装如下的形式将费米子转化为玻色子。
@@ -58,47 +100,13 @@
 
         QubitOperator，经过宇称变换后的玻色子算符。
 
-    .. py:method:: bravyi_kitaev()
+    .. py:method:: reversed_jordan_wigner()
 
-        进行Bravyi-Kitaev变换。
-
-        Bravyi-Kitaev是介于Jordan-Wigner变换和parity变换之间的变换。也就是说，它平衡了占据的局部性和宇称信息，以提高模拟效率。在此方案中，量子比特存储一组 :math:`2^x` 轨道的宇称，其中 :math:`x \ge 0` 。索引j的量子比特总是存储轨道 :math:`j` 。对于偶数的 :math:`j` ，这是它存储的唯一轨道。但对于奇数的 :math:`j` ，它还存储索引小于 :math:`j` 的一组相邻轨道。
-        对于占据态变换，我们遵循公式：
-
-        .. math::
-
-            b_{i} = \sum{[\beta_{n}]_{i,j}} f_{j},
-
-        其中 :math:`\beta_{n}` 是 :math:`N\times N` 维平方矩阵， :math:`N` 是总量子数。量子比特的索引分为三个集合，宇称集、更新集和翻转集。这组量子比特的宇称与索引小于 :math:`j` 的轨道集具有相同的宇称，因此我们将称这组量子比特索引为“宇称集” :math:`j` ，或 :math:`P(j)` 。
-
-        索引为 :math:`j` 的更新集，或 :math:`U(j)` ，包含除序号为 :math:`j` 的量子比特会被更新，当轨道 :math:`j` 被占据时。
-        索引为 :math:`j` 的翻转集，或 :math:`F(j)` ，包含所有的BravyiKitaev量子比特，这些比特将决定量子比特 :math:`j` 相对于轨道 :math:`j` 来说是否有相同或者相反的宇称。
-
-        请参见论文中的一些详细解释 (THE JOURNAL OF CHEMICAL PHYSICS 137, 224109 (2012))。
-
-        本方法基于 https://arxiv.org/pdf/quant-ph/0003137.pdf 和 "A New Data Structure for Cumulative Frequency Tables" 实现。
+        应用Jordan-Wigner逆变换。
 
         **返回：**
 
-        QubitOperator，经过 `bravyi_kitaev` 变换的玻色子算符。
-
-    .. py:method:: bravyi_kitaev_superfast()
-
-        作用快速Bravyi-Kitaev变换。
-        基于 https://arxiv.org/pdf/1712.00446.pdf 实现。
-
-        请注意，只有如下的厄密共轭算符才能进行转换。
-
-        .. math::
-
-            C + \sum_{p, q} h_{p, q} a^\dagger_p a_q +
-                \sum_{p, q, r, s} h_{p, q, r, s} a^\dagger_p a^\dagger_q a_r a_s
-
-        其中 :math:`C` 是一个常数。
-
-        **返回：**
-
-        QubitOperator，经过快速bravyi_kitaev变换之后的玻色子算符。
+        FermionOperator，Jordan-Wigner逆变换后的费米子算符。
 
     .. py:method:: ternary_tree()
 
@@ -109,10 +117,3 @@
 
         QubitOperator，Ternary tree变换后的玻色子算符。
 
-    .. py:method:: reversed_jordan_wigner()
-
-        应用Jordan-Wigner逆变换。
-
-        **返回：**
-
-        FermionOperator，Jordan-Wigner逆变换后的费米子算符。

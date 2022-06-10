@@ -240,7 +240,7 @@ class Circuit(list):
         Extend a circuit.
 
         Args:
-            gates (Union[Circuit, list[BasicGate]]), A `Circuit` or a list of `BasicGate` you want to extend.
+            gates (Union[Circuit, list[BasicGate]]): A `Circuit` or a list of `BasicGate` you want to extend.
         """
         if isinstance(gates, Circuit):
             self.all_measures.merge_only_one(gates.all_measures, "Measure already exist.")

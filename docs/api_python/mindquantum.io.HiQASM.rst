@@ -2,6 +2,18 @@
 
     将线路转换为HiQASM格式。
 
+    .. py:method:: from_file(file_name)
+
+        读取HiQASM文件。
+
+        **参数：**
+
+        - **file_name** (str) - 以HiQASM格式存储量子线路的文件路径。
+
+        **返回：**
+
+        线路，从HiQASM文件转换过来的量子线路。 
+
     .. py:method:: from_string(string)
 
         读取HiQASM字符串。
@@ -29,18 +41,6 @@
         - **TypeError** - 如果 `file_name` 类型不是str。
         - **TypeError** - 如果 `Circuit` 类型不是circuit。
         - **TypeError** - 如果 `version` 类型不是str。
-
-    .. py:method:: from_file(file_name)
-
-        读取HiQASM文件。
-
-        **参数：**
-
-        - **file_name** (str) - 以HiQASM格式存储量子线路的文件路径。
-
-        **返回：**
-
-        线路，从HiQASM文件转换过来的量子线路。 
 
     .. py:method:: to_string(circuit, version='0.1')
 

@@ -37,7 +37,7 @@
         **参数：**
 
         - **circuit** (Circuit) - 要转换为openqasm的量子电路。
-        - **version** (str) - 要使用的openqasm版本。默认值：“2.0”。
+        - **version** (str) - 要使用的openqasm版本。默认值："2.0"。
 
         **返回：**
 

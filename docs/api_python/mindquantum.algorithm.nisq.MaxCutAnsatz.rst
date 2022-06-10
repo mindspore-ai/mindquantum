@@ -18,14 +18,17 @@
     - **graph** (list[tuple[int]]) - 图结构。图的每个元素都是由两个节点构造的边。
     - **depth** (int) - MaxCut ansatz的深度。默认值：1。
 
-    .. py:method:: hamiltonian
-        :property:
+    .. py:method:: get_cut_value(partition)
 
-        获取MaxCut问题的哈密顿量。
+        获取切割方案的切割边数。切割方案是一个list数组，该list数组由两个list数组构成，每一个list数组包含切割的节点。
+
+        **参数：**
+
+        - **partition** (list) - 图形分区。
 
         **返回：**
 
-        QubitOperator，MaxCut问题的哈密顿量。
+        int，给定分区下的切割值。
 
     .. py:method:: get_partition(max_n, weight)
 
@@ -40,14 +43,11 @@
 
         list，切割方案构成的列表。
 
-    .. py:method:: get_cut_value(partition)
+    .. py:method:: hamiltonian
+        :property:
 
-        获取切割方案的切割边数。切割方案是一个list数组，该list数组由两个list数组构成，每一个list数组包含切割的节点。
-
-        **参数：**
-
-        - **partition** (list) - 图形分区。
+        获取MaxCut问题的哈密顿量。
 
         **返回：**
 
-        int，给定分区下的切割值。
+        QubitOperator，MaxCut问题的哈密顿量。

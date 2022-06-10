@@ -7,6 +7,15 @@
 
     - **gates** (BasicGate, list[BasicGate]) - 可以通过单个量子门或门列表初始化量子电路。默认值：None。
 
+    .. py:method:: ansatz_params_name
+        :property:
+
+        获取线路中ansatz部分的参数名称。
+
+        **返回：**
+        
+        list，线路中ansatz部分参数名称的list。
+
     .. py:method:: append(gate)
 
         增加一个门。
@@ -15,98 +24,45 @@
 
         - **gate** (BasicGate) - 增加的门。
 
-    .. py:method:: extend(gates)
+    .. py:method:: apply_value(pr)
 
-        扩展线路。
-
-        **参数：**
-
-        - **gates** (Union[Circuit, list[BasicGate]]) - `Circuit` 或 `BasicGate` 的list。
-
-    .. py:method:: has_measure_gate
-        :property:
-
-        检查线路是否有测量门。
-
-        **返回：**
-
-        bool, 线路是否有测量门。
-
-    .. py:method:: parameterized
-        :property:
-
-        检查线路是否是含参量子线路。
-
-        **返回：**
-
-        bool，线路是否是含参量子线路。
-
-    .. py:method:: is_noise_circuit
-        :property:
-
-        检查线路是否有噪声信道。
-
-        **返回：**
-
-        bool，线路是否有噪声信道。
-
-    .. py:method:: insert(index, gates)
-
-        在索引处插入量子门或量子线路。
+        将此线路使用输入参数转换成的不含参线路。
 
         **参数：**
 
-        - **index** (int) - 用来设置门的索引。
-        - **gates** (Union[BasicGate, list[BasicGate]]) - 需要插入的量子门。
+        - **pr** (Union[dict, ParameterResolver]) - 应用到此线路中的参数。
 
-    .. py:method:: no_grad()
+        **返回：**
 
-        设置量子线路中所有不需要梯度的含参门。
+        Circuit，不含参线路。
 
-    .. py:method:: requires_grad()
+    .. py:method:: as_ansatz(inplace=True)
 
-        将量子线路中的所有含参门都设置为需要梯度。
+        将该量子线路变为ansatz量子线路。
+
+        **参数：**
+
+        - **inplace** (True) - 是否原位设置。默认值：True。
+
+    .. py:method:: as_encoder(inplace=True)
+
+        将该量子线路变为编码量子线路。
+
+        **参数：**
+    
+        - **inplace** (True) - 是否原位设置。默认值：True。
+
+    .. py:method:: barrier(show=True)
+
+        添加barrier。
+
+        **参数：**
+
+        - **show** (bool) - 是否显示barrier。默认值：True。
 
     .. py:method:: compress()
 
         删除所有未使用的量子比特，并将量子比特映射到 `range(n_qubits)` 。
-
-    .. py:method:: n_qubits
-        :property:
-
-        获取量子线路所使用的比特数。
-
-    .. py:method:: summary(show=True)
-
-        打印当前线路的信息，包括块的数量、门的数量、不含参门的数量、含参门的数量和参数的个数。
-
-        **参数：**
-        
-        - **show** (bool) - 是否显示信息。默认值：True。
-
-    .. py:method:: hermitian()
-
-        获得量子线路的厄米共轭。
-
-    .. py:method:: parameter_resolver()
-
-        获取整个线路的parameter resolver。
-
-        .. note::
-            因为相同的参数可以在不同的门中，并且系数可以不同，所以这个parameter resolver只返回量子线路的参数是什么，哪些参数需要梯度。显示系数的更详细的parameter resolver位于线路的每个门中。
-
-        **返回：**
-
-        ParameterResolver，整个线路的parameter resolver。
-
-    .. py:method:: params_name
-        :property:
-
-        获取线路的参数名称。
-
-        **返回：**
-        
-        list，包含参数名称的list。
 
     .. py:method:: encoder_params_name
         :property:
@@ -117,14 +73,81 @@
         
         list，线路中encoder部分参数名称的list。
 
-    .. py:method:: ansatz_params_name
+    .. py:method:: extend(gates)
+
+        扩展线路。
+
+        **参数：**
+
+        - **gates** (Union[Circuit, list[BasicGate]]) - `Circuit` 或 `BasicGate` 的list。
+
+    .. py:method:: get_cpp_obj(hermitian=False)
+
+        获取线路的cpp object。
+
+        **参数：**
+
+        - **hermitian** (bool) - 是否获取线路cpp object的hermitian版本。默认值： `False` 。
+
+    .. py:method:: get_qs(backend='projectq', pr=None, ket=False, seed=None)
+
+        获取线路的最终量子态。
+
+        **参数：**
+
+        - **backend** (str) - 使用的后端。默认值：'projectq'。
+        - **pr** (Union[numbers.Number, ParameterResolver, dict, numpy.ndarray]) - 线路的参数，线路含参数时提供。默认值：None。
+        - **ket** (str) - 是否以ket格式返回量子态。默认值：False。
+        - **seed** (int) - 模拟器的随机种子。默认值：None。
+
+    .. py:method:: h(obj_qubits, ctrl_qubits=None)
+
+        添加一个hadamard门。
+
+        **参数：**
+
+        - **obj_qubits** (Union[int, list[int]]) - `H` 门的目标量子比特。
+        - **ctrl_qubits** (Union[int, list[int]]) - `H` 门的控制量子比特。默认值： `None` 。
+
+    .. py:method:: has_measure_gate
         :property:
 
-        获取线路中ansatz部分的参数名称。
+        检查线路是否有测量门。
 
         **返回：**
-        
-        list，线路中ansatz部分参数名称的list。
+
+        bool, 线路是否有测量门。
+
+    .. py:method:: hermitian()
+
+        获得量子线路的厄米共轭。
+
+    .. py:method:: insert(index, gates)
+
+        在索引处插入量子门或量子线路。
+
+        **参数：**
+
+        - **index** (int) - 用来设置门的索引。
+        - **gates** (Union[BasicGate, list[BasicGate]]) - 需要插入的量子门。
+
+    .. py:method:: is_measure_end
+        :property:
+
+        检查线路是否以测量门结束，每个量子比特上最多有一个测量门，并且该测量门应位于该量子比特门序列的末尾。
+
+        **返回：**
+
+        bool, 线路是否以测量门结束。
+
+    .. py:method:: is_noise_circuit
+        :property:
+
+        检查线路是否有噪声信道。
+
+        **返回：**
+
+        bool，线路是否有噪声信道。
 
     .. py:method:: matrix(pr=None, big_end=False, backend='projectq', seed=None)
 
@@ -141,26 +164,70 @@
 
         numpy.ndarray，线路的二维复矩阵。
 
-    .. py:method:: is_measure_end
-        :property:
+    .. py:method:: measure(key, obj_qubit=None)
 
-        检查线路是否以测量门结束，每个量子比特上最多有一个测量门，并且该测量门应位于该量子比特门序列的末尾。
-
-        **返回：**
-
-        bool, 线路是否以测量门结束。
-
-    .. py:method:: apply_value(pr)
-
-        将此线路使用输入参数转换成的不含参线路。
+        添加一个测量门。
 
         **参数：**
 
-        - **pr** (Union[dict, ParameterResolver]) - 应用到此线路中的参数。
+        - **key** (Union[int, str]) - 如果 `obj_qubit` 为None，则 `key` 应为int，表示要测量哪个量子比特，否则， `key` 应为str，表示测量门的名称。
+        - **obj_qubit** (int) - 要测量的量子比特。默认值：None。
+
+    .. py:method:: measure_all(subfix=None)
+
+        测量所有量子比特。
+
+        **参数：**
+
+        - **subfix** (str) - 添加到测量门名称中的后缀字符串。
+
+    .. py:method:: n_qubits
+        :property:
+
+        获取量子线路所使用的比特数。
+
+    .. py:method:: no_grad()
+
+        设置量子线路中所有不需要梯度的含参门。
+
+    .. py:method:: parameter_resolver()
+
+        获取整个线路的parameter resolver。
+
+        .. note::
+            因为相同的参数可以在不同的门中，并且系数可以不同，所以这个parameter resolver只返回量子线路的参数是什么，哪些参数需要梯度。显示系数的更详细的parameter resolver位于线路的每个门中。
 
         **返回：**
 
-        Circuit，不含参线路。
+        ParameterResolver，整个线路的parameter resolver。
+
+    .. py:method:: parameterized
+        :property:
+
+        检查线路是否是含参量子线路。
+
+        **返回：**
+
+        bool，线路是否是含参量子线路。
+
+    .. py:method:: params_name
+        :property:
+
+        获取线路的参数名称。
+
+        **返回：**
+        
+        list，包含参数名称的list。
+
+    .. py:method:: phase_shift(para, obj_qubits, ctrl_qubits=None)
+
+        添加一个Phase Shift门。
+
+        **参数：**
+        
+        - **para** (Union[dict, ParameterResolver]) - `PhaseShift` 门的参数。
+        - **obj_qubits** (Union[int, list[int]]) - `PhaseShift` 门的目标量子比特。
+        - **ctrl_qubits** (Union[int, list[int]]) - `PhaseShift` 门的控制量子比特。默认值：None。
 
     .. py:method:: remove_barrier()
 
@@ -178,67 +245,17 @@
 
         - **qubit** (Union[int, list[int]]) - 需要删除测量门的量子比特。
 
-    .. py:method:: get_cpp_obj(hermitian=False)
+    .. py:method:: remove_noise()
 
-        获取线路的cpp object。
+        删除量子线路中的所有噪声信道。
 
-        **参数：**
+    .. py:method:: requires_grad()
 
-        - **hermitian** (bool) - 是否获取线路cpp object的hermitian版本。默认值： `False` 。
+        将量子线路中的所有含参门都设置为需要梯度。
 
-    .. py:method:: h(obj_qubits, ctrl_qubits=None)
+    .. py:method:: reverse_qubits()
 
-        添加一个hadamard门。
-
-        **参数：**
-
-        - **obj_qubits** (Union[int, list[int]]) - `H` 门的目标量子比特。
-        - **ctrl_qubits** (Union[int, list[int]]) - `H` 门的控制量子比特。默认值： `None` 。
-
-    .. py:method:: x(obj_qubits, ctrl_qubits=None)
-
-        在电路中添加 `X` 门。
-
-        **参数：**
-
-        - **obj_qubits** (Union[int, list[int]]) - `X` 门的目标量子比特。
-        - **ctrl_qubits** (Union[int, list[int]]) - `X` 门的控制量子比特。默认值：None。
-
-    .. py:method:: y(obj_qubits, ctrl_qubits=None)
-
-        在电路中添加 `Y` 门。
-
-        **参数：**
-
-        - **obj_qubits** (Union[int, list[int]]) - `Y` 门的目标量子比特。
-        - **ctrl_qubits** (Union[int, list[int]]) - `Y` 门的控制量子比特。默认值：None。
-
-    .. py:method:: z(obj_qubits, ctrl_qubits=None)
-
-        在电路中添加 `Z` 门。
-
-        **参数：**
-
-        - **obj_qubits** (Union[int, list[int]]) - `Z` 门的目标量子比特。
-        - **ctrl_qubits** (Union[int, list[int]]) - `Z` 门的控制量子比特。默认值：None。
-
-    .. py:method:: s(obj_qubits, ctrl_qubits=None)
-
-        在电路中添加 `S` 门。
-
-        **参数：**
-
-        - **obj_qubits** (Union[int, list[int]]) - `S` 门的目标量子比特。
-        - **ctrl_qubits** (Union[int, list[int]]) - `S` 门的控制量子比特。默认值：None。
-
-    .. py:method:: swap(obj_qubits, ctrl_qubits=None)
-
-        在电路中添加 `SWAP` 门。
-
-        **参数：**
-
-        - **obj_qubits** (Union[int, list[int]]) - `SWAP` 门的目标量子比特。
-        - **ctrl_qubits** (Union[int, list[int]]) - `SWAP` 门的控制量子比特。默认值： `None` 。
+        将线路翻转成大端头(big endian)。
 
     .. py:method:: rx(para, obj_qubits, ctrl_qubits=None)
 
@@ -270,70 +287,39 @@
         - **obj_qubits** (Union[int, list[int]]) - `RZ` 门的目标量子比特。
         - **ctrl_qubits** (Union[int, list[int]]) - `RZ` 门的控制量子比特。默认值：None。
 
-    .. py:method:: phase_shift(para, obj_qubits, ctrl_qubits=None)
+    .. py:method:: s(obj_qubits, ctrl_qubits=None)
 
-        添加一个Phase Shift门。
+        在电路中添加 `S` 门。
+
+        **参数：**
+
+        - **obj_qubits** (Union[int, list[int]]) - `S` 门的目标量子比特。
+        - **ctrl_qubits** (Union[int, list[int]]) - `S` 门的控制量子比特。默认值：None。
+
+    .. py:method:: summary(show=True)
+
+        打印当前线路的信息，包括块的数量、门的数量、不含参门的数量、含参门的数量和参数的个数。
 
         **参数：**
         
-        - **para** (Union[dict, ParameterResolver]) - `PhaseShift` 门的参数。
-        - **obj_qubits** (Union[int, list[int]]) - `PhaseShift` 门的目标量子比特。
-        - **ctrl_qubits** (Union[int, list[int]]) - `PhaseShift` 门的控制量子比特。默认值：None。
+        - **show** (bool) - 是否显示信息。默认值：True。
 
-    .. py:method:: xx(para, obj_qubits, ctrl_qubits=None)
+    .. py:method:: svg(style=None)
 
-        在电路中添加 `XX` 门。
+        在Jupyter Notebook中将当前量子线路用SVG图展示。
 
         **参数：**
 
-        - **para** (Union[dict, ParameterResolver]) - `XX` 门的参数。
-        - **obj_qubits** (Union[int, list[int]]) - `XX` 门的目标量子比特。
-        - **ctrl_qubits** (Union[int, list[int]]) - `XX` 门的控制量子比特。默认值：None。
+        - **style** (dict, str) - 设置svg线路的样式。目前，我们支持'official'，'light'和'dark'。默认值：None。
 
-    .. py:method:: yy(para, obj_qubits, ctrl_qubits=None)
+    .. py:method:: swap(obj_qubits, ctrl_qubits=None)
 
-        在电路中添加 `YY` 门。
+        在电路中添加 `SWAP` 门。
 
         **参数：**
 
-        - **para** (Union[dict, ParameterResolver]) - `YY` 门的参数。
-        - **obj_qubits** (Union[int, list[int]]) - `YY` 门的目标量子比特。
-        - **ctrl_qubits** (Union[int, list[int]]) - `YY` 门的控制量子比特。默认值：None。
-
-    .. py:method:: zz(para, obj_qubits, ctrl_qubits=None)
-
-        在电路中添加 `ZZ` 门。
-
-        **参数：**
-
-        - **para** (Union[dict, ParameterResolver]) - `ZZ` 门的参数。
-        - **obj_qubits** (Union[int, list[int]]) - `ZZ` 门的目标量子比特。
-        - **ctrl_qubits** (Union[int, list[int]]) - `ZZ` 门的控制量子比特。默认值：None。
-
-    .. py:method:: measure(key, obj_qubit=None)
-
-        添加一个测量门。
-
-        **参数：**
-
-        - **key** (Union[int, str]) - 如果 `obj_qubit` 为None，则 `key` 应为int，表示要测量哪个量子比特，否则， `key` 应为str，表示测量门的名称。
-        - **obj_qubit** (int) - 要测量的量子比特。默认值：None。
-
-    .. py:method:: measure_all(subfix=None)
-
-        测量所有量子比特。
-
-        **参数：**
-
-        - **subfix** (str) - 添加到测量门名称中的后缀字符串。
-
-    .. py:method:: barrier(show=True)
-
-        添加barrier。
-
-        **参数：**
-
-        - **show** (bool) - 是否显示barrier。默认值：True。
+        - **obj_qubits** (Union[int, list[int]]) - `SWAP` 门的目标量子比特。
+        - **ctrl_qubits** (Union[int, list[int]]) - `SWAP` 门的控制量子比特。默认值： `None` 。
 
     .. py:method:: un(gate, maps_obj, maps_ctrl=None)
 
@@ -345,34 +331,7 @@
         - **map_obj** (Union[int, list[int]]) - 执行该量子门的目标量子比特。
         - **maps_ctrl** (Union[int, list[int]]) - 执行该量子门的控制量子比特。默认值：None。
 
-    .. py:method:: get_qs(backend='projectq', pr=None, ket=False, seed=None)
-
-        获取线路的最终量子态。
-
-        **参数：**
-
-        - **backend** (str) - 使用的后端。默认值：'projectq'。
-        - **pr** (Union[numbers.Number, ParameterResolver, dict, numpy.ndarray]) - 线路的参数，线路含参数时提供。默认值：None。
-        - **ket** (str) - 是否以ket格式返回量子态。默认值：False。
-        - **seed **(int) - 模拟器的随机种子。默认值：None。
-
-    .. py:method:: reverse_qubits()
-
-        将线路翻转成大端头(big endian)。
-
-    .. py:method:: svg(style=None)
-
-        在Jupyter Notebook中将当前量子线路用SVG图展示。
-
-        **参数：**
-
-        - **style** (dict, str) - 设置svg线路的样式。目前，我们支持'official'，'light'和'dark'。默认值：None。
-
-    .. py:method:: remove_noise()
-
-        删除量子线路中的所有噪声信道。
-
-    .. py:method:: with_noise(noise_gate=AmplitudeDampingChannel(0.001))
+    .. py:method:: with_noise(noise_gate=G.AmplitudeDampingChannel(0.001))
 
         在每个量子门后面添加一个噪声信道。
 
@@ -380,18 +339,59 @@
 
         - **noise_gate** (NoiseGate) - 想要添加的噪声信道。默认值：`AmplitudeDampingChannel(0.001)`。
 
-    .. py:method:: as_encoder(inplace=True)
+    .. py:method:: x(obj_qubits, ctrl_qubits=None)
 
-        将该量子线路变为编码量子线路。
-
-        **参数：**
-    
-        - **inplace** (True) - 是否原位设置。默认值：True。
-
-    .. py:method:: as_ansatz(inplace=True)
-
-        将该量子线路变为ansatz量子线路。
+        在电路中添加 `X` 门。
 
         **参数：**
 
-        - **inplace** (True) - 是否原位设置。默认值：True。
+        - **obj_qubits** (Union[int, list[int]]) - `X` 门的目标量子比特。
+        - **ctrl_qubits** (Union[int, list[int]]) - `X` 门的控制量子比特。默认值：None。
+
+    .. py:method:: xx(para, obj_qubits, ctrl_qubits=None)
+
+        在电路中添加 `XX` 门。
+
+        **参数：**
+
+        - **para** (Union[dict, ParameterResolver]) - `XX` 门的参数。
+        - **obj_qubits** (Union[int, list[int]]) - `XX` 门的目标量子比特。
+        - **ctrl_qubits** (Union[int, list[int]]) - `XX` 门的控制量子比特。默认值：None。
+
+    .. py:method:: y(obj_qubits, ctrl_qubits=None)
+
+        在电路中添加 `Y` 门。
+
+        **参数：**
+
+        - **obj_qubits** (Union[int, list[int]]) - `Y` 门的目标量子比特。
+        - **ctrl_qubits** (Union[int, list[int]]) - `Y` 门的控制量子比特。默认值：None。
+
+    .. py:method:: yy(para, obj_qubits, ctrl_qubits=None)
+
+        在电路中添加 `YY` 门。
+
+        **参数：**
+
+        - **para** (Union[dict, ParameterResolver]) - `YY` 门的参数。
+        - **obj_qubits** (Union[int, list[int]]) - `YY` 门的目标量子比特。
+        - **ctrl_qubits** (Union[int, list[int]]) - `YY` 门的控制量子比特。默认值：None。
+
+    .. py:method:: z(obj_qubits, ctrl_qubits=None)
+
+        在电路中添加 `Z` 门。
+
+        **参数：**
+
+        - **obj_qubits** (Union[int, list[int]]) - `Z` 门的目标量子比特。
+        - **ctrl_qubits** (Union[int, list[int]]) - `Z` 门的控制量子比特。默认值：None。
+
+    .. py:method:: zz(para, obj_qubits, ctrl_qubits=None)
+
+        在电路中添加 `ZZ` 门。
+
+        **参数：**
+
+        - **para** (Union[dict, ParameterResolver]) - `ZZ` 门的参数。
+        - **obj_qubits** (Union[int, list[int]]) - `ZZ` 门的目标量子比特。
+        - **ctrl_qubits** (Union[int, list[int]]) - `ZZ` 门的控制量子比特。默认值：None。

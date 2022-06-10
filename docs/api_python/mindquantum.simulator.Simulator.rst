@@ -17,30 +17,6 @@
     - **ValueError** - 如果 `n_qubits` 为负数。
     - **ValueError** - 如果 `seed` 小于0或大于2**23 - 1。
 
-    .. py:method:: get_expectation_with_grad(hams, circ_right, circ_left=None, simulator_left=None, encoder_params_name=None, ansatz_params_name=None, parallel_worker=None)
-
-        获取一个返回前向值和关于线路参数梯度的函数。该方法旨在计算期望值及其梯度，如下所示。
-
-        .. math::
-
-            E = \left<\varphi\right|U_l^\dagger H U_r \left|\psi\right>
-
-        其中 :math:`U_l` 是circ_left，:math:`U_r` 是circ_right，:math:`H` 是hams, :math:`\left|\psi\right>` 是模拟器当前的量子态, :math:`\left|\varphi\right>` 是 `simulator_left` 的量子态。
-
-        **参数：**
-
-        - **hams** (Hamiltonian) - 需要计算期望的Hamiltonian。
-        - **circ_right** (Circuit) - 上述 :math:`U_r` 电路。
-        - **circ_left** (Circuit) - 上述 :math:`U_l` 电路，默认情况下，这个线路将为None，在这种情况下， :math:`U_l` 将等于 :math:`U_r` 。默认值：None。
-        - **simulator_left** (Simulator) - 包含 :math:`\left|\varphi\right>` 的模拟器。如果无，则 :math:`\left|\varphi\right>` 被假定等于 :math:`\left|\psi\right>`。默认值：None。
-        - **encoder_params_name** (list[str]) - 指定哪些参数属于encoder，被编码成量子态。encoder数据可以是一个batch。默认值：None。
-        - **ansatz_params_name** (list[str]) - 指定哪些参数属于ansatz，被在训练期间训练。默认值：None。
-        - **parallel_worker** (int) - 并行器数目。并行器可以在并行线程中处理batch。默认值：None。
-
-        **返回：**
-
-        GradOpsWrapper，一个包含生成梯度算子信息的梯度算子包装器。
-
     .. py:method:: apply_circuit(circuit, pr=None)
 
         在模拟器上应用量子线路。
@@ -52,31 +28,7 @@
 
         **返回：**
 
-        MeasureResult或None，如果线路具有测量门，则返回MeasureResult，否则返回None。           
-
-    .. py:method:: copy()
-
-        复制模拟器。
-
-        **返回：**
-
-        模拟器，当前模拟器的副本。
-
-    .. py:method:: get_expectation(hamiltonian)
-
-        得到给定hamiltonian的期望。hamiltonian可能是非厄密共轭的。
-
-        .. math::
-
-            E = \left<\psi\right|H\left|\psi\right>
-
-        **参数：**
-
-        - **hamiltonian** (Hamiltonian) - 想得到期望的hamiltonian。
-
-        **返回：**
-
-        numbers.Number，期望值。
+        MeasureResult或None，如果线路具有测量门，则返回MeasureResult，否则返回None。 
 
     .. py:method:: apply_gate(gate, pr=None, diff=False)
 
@@ -99,6 +51,85 @@
         - **ValueError** - 如果 `gate` 是含参的，但没有提供参数。
         - **TypeError** - 如果 `gate` 是含参的，但 `pr` 不是ParameterResolver。
 
+    .. py:method:: apply_hamiltonian(hamiltonian: Hamiltonian)
+
+        将hamiltonian应用到模拟器上，这个hamiltonian可以是hermitian或non hermitian。
+
+        .. note::
+            应用hamiltonian后，量子态可能不是归一化量子态。
+
+        **参数：**
+
+        - **hamiltonian** (Hamiltonian) - 想应用的hamiltonian。
+
+    .. py:method:: copy()
+
+        复制模拟器。
+
+        **返回：**
+
+        模拟器，当前模拟器的副本。
+
+    .. py:method:: flush()
+
+        适用于projectq模拟器的flush门。 projectq模拟器将缓存一些门并将这些门融合到一个更大的门中，然后作用在量子态上。 flush命令使模拟器刷新当前存储的门并作用在量子状态上。
+
+    .. py:method:: get_expectation(hamiltonian)
+
+        得到给定hamiltonian的期望。hamiltonian可能是非厄密共轭的。
+
+        .. math::
+
+            E = \left<\psi\right|H\left|\psi\right>
+
+        **参数：**
+
+        - **hamiltonian** (Hamiltonian) - 想得到期望的hamiltonian。
+
+        **返回：**
+
+        numbers.Number，期望值。
+
+    .. py:method:: get_expectation_with_grad(hams, circ_right, circ_left=None, simulator_left=None, encoder_params_name=None, ansatz_params_name=None, parallel_worker=None)
+
+        获取一个返回前向值和关于线路参数梯度的函数。该方法旨在计算期望值及其梯度，如下所示。
+
+        .. math::
+
+            E = \left<\varphi\right|U_l^\dagger H U_r \left|\psi\right>
+
+        其中 :math:`U_l` 是circ_left，:math:`U_r` 是circ_right，:math:`H` 是hams, :math:`\left|\psi\right>` 是模拟器当前的量子态, :math:`\left|\varphi\right>` 是 `simulator_left` 的量子态。
+
+        **参数：**
+
+        - **hams** (Hamiltonian) - 需要计算期望的Hamiltonian。
+        - **circ_right** (Circuit) - 上述 :math:`U_r` 电路。
+        - **circ_left** (Circuit) - 上述 :math:`U_l` 电路，默认情况下，这个线路将为None，在这种情况下， :math:`U_l` 将等于 :math:`U_r` 。默认值：None。
+        - **simulator_left** (Simulator) - 包含 :math:`\left|\varphi\right>` 的模拟器。如果无，则 :math:`\left|\varphi\right>` 被假定等于 :math:`\left|\psi\right>`。默认值：None。
+        - **encoder_params_name** (list[str]) - 指定哪些参数属于encoder，被编码成量子态。encoder数据可以是一个batch。默认值：None。
+        - **ansatz_params_name** (list[str]) - 指定哪些参数属于ansatz，被在训练期间训练。默认值：None。
+        - **parallel_worker** (int) - 并行器数目。并行器可以在并行线程中处理batch。默认值：None。
+
+        **返回：**
+
+        GradOpsWrapper，一个包含生成梯度算子信息的梯度算子包装器。          
+
+    .. py:method:: get_qs(ket=False)
+
+        获取模拟器的当前量子态。
+
+        **参数：**
+
+        - **ket** (bool) - 是否以ket格式返回量子状态。默认值：False。
+
+        **返回：**
+
+        numpy.ndarray，当前量子态。
+
+    .. py:method:: reset()
+
+        将模拟器重置为0态。
+
     .. py:method:: sampling(circuit, pr=None, shots=1, seed=None)
 
         在线路中对测量比特进行采样。采样不会改变模拟器的量子态。
@@ -114,22 +145,6 @@
 
         MeasureResult，采样的统计结果。
 
-    .. py:method:: get_qs(ket=False)
-
-        获取模拟器的当前量子态。
-
-        **参数：**
-
-        - **ket** (bool) - 是否以ket格式返回量子状态。默认值：False。
-
-        **返回：**
-
-        numpy.ndarray，当前量子态。
-
-    .. py:method:: flush()
-
-        适用于projectq模拟器的flush门。 projectq模拟器将缓存一些门并将这些门融合到一个更大的门中，然后作用在量子态上。 flush命令使模拟器刷新当前存储的门并作用在量子状态上。
-
     .. py:method:: set_qs(quantum_state)
 
         设置模拟器的量子态。
@@ -137,18 +152,3 @@
         **参数：**
 
         - **quantum_state** (numpy.ndarray) - 想设置的量子态。
-
-    .. py:method:: reset()
-
-        将模拟器重置为0态。
-
-    .. py:method:: apply_hamiltonian(hamiltonian: Hamiltonian)
-
-        将hamiltonian应用到模拟器上，这个hamiltonian可以是hermitian或non hermitian。
-
-        .. note::
-            应用hamiltonian后，量子态可能不是归一化量子态。
-
-        **参数：**
-
-        - **hamiltonian** (Hamiltonian) - 想应用的hamiltonian。

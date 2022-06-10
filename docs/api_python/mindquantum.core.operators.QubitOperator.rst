@@ -22,9 +22,17 @@
 
         int，单量子门的数量。
 
-    .. py:method:: to_openfermion()
+    .. py:method:: dumps(indent=4)
 
-        将量子位运算符转换为openfermion格式。
+        将QubitOperator转储到JSON（JavaScript对象表示法）。
+
+        **参数：**
+
+        - **indent** (int) - JSON数组元素和对象成员打印时的缩进。默认值：4。
+
+        **返回：**
+        
+        JSON(strings)，QubitOperator的JSON字符串。
 
     .. py:method:: from_openfermion(of_ops)
         :staticmethod:
@@ -38,6 +46,28 @@
         **返回：**
 
         QubitOperator，mindquantum框架中的玻色子算符。
+
+    .. py:method:: imag
+        :property:
+
+        获得系数的虚部。
+
+        **返回：**
+
+        QubitOperator，此量子算符的虚部。
+
+    .. py:method:: loads(strs)
+        :staticmethod:
+
+        将JSON（JavaScript对象表示法）加载到QubitOperator中。
+
+        **参数：**
+
+        - **strs** (str) - 转储的量子位运算符字符串。
+
+        **返回：**
+
+        FermionOperator，从字符串加载的QubitOperator。
 
     .. py:method:: matrix(n_qubits=None)
 
@@ -56,40 +86,6 @@
 
         QubitOperator，这个量子位运算符的实部。
 
-    .. py:method:: imag
-        :property:
-
-        获得系数的虚部。
-
-        **返回：**
-
-        QubitOperator，此量子算符的虚部。
-
-    .. py:method:: dumps(indent=4)
-
-        将QubitOperator转储到JSON（JavaScript对象表示法）。
-
-        **参数：**
-
-        - **indent** (int) - JSON数组元素和对象成员打印时的缩进。默认值：4。
-
-        **返回：**
-        
-        JSON(strings)，QubitOperator的JSON字符串。
-
-    .. py:method:: loads(strs)
-        :staticmethod:
-
-        将JSON（JavaScript对象表示法）加载到QubitOperator中。
-
-        **参数：**
-
-        - **strs** (str) - 转储的量子位运算符字符串。
-
-        **返回：**
-
-        FermionOperator，从字符串加载的QubitOperator。
-
     .. py:method:: split()
 
         将算符的系数跟算符本身分开。
@@ -97,3 +93,7 @@
         **返回：**
 
         List[List[ParameterResolver, QubitOperator]]，分裂后的结果。
+
+    .. py:method:: to_openfermion()
+
+        将量子位运算符转换为openfermion格式。
