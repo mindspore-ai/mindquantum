@@ -37,7 +37,7 @@
         **参数：**
 
         - **gate** (BasicGate) - 要应用的门。
-        - *pr** (Union[numbers.Number, numpy.ndarray, ParameterResolver, list]) - 含参门的参数。默认值：None。
+        - **pr** (Union[numbers.Number, numpy.ndarray, ParameterResolver, list]) - 含参门的参数。默认值：None。
         - **diff** (bool) - 是否在模拟器上应用导数门。默认值：False。
 
         **返回：**

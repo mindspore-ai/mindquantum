@@ -112,6 +112,8 @@
 
         在xy、yz和zx平面上创建参考平面。
 
+        **参数：**
+
         - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 需要添加参考面的三维Axes。
         - **x** (numpy.ndarray) - 参考面的x轴坐标。
         - **y** (numpy.ndarray) - 参考面的y轴坐标。

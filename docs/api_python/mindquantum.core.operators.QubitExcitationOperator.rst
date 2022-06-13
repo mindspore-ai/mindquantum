@@ -36,7 +36,7 @@
 
         QubitExcitationOperator，保留原始算符实部的量子比特激发算符。
 
-    .. py:method:: to_qubits_operator()
+    .. py:method:: to_qubit_operator()
 
         将量子比特激发算子转化为泡利算符。
 
