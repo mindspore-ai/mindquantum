@@ -1,0 +1,13 @@
+Start case:  LiH
+OMP_NUM_THREAD:  8
+Time: 0 hrs 0 mints 17.43 sec. Energy:  -6.640121404439892
+Time: 0 hrs 0 mints 30.52 sec. Energy:  -7.634158449691659
+Time: 0 hrs 0 mints 42.62 sec. Energy:  -7.852423724894339
+Time: 0 hrs 0 mints 55.94 sec. Energy:  -7.882313766937004
+Time: 0 hrs 1 mints 9.04 sec. Energy:  -7.861069316057167
+Time: 0 hrs 1 mints 23.04 sec. Energy:  -7.830600193114035
+Time: 0 hrs 1 mints 37.23 sec. Energy:  -7.806714568237609
+Time: 0 hrs 1 mints 53.64 sec. Energy:  -7.793201306391807
+Time: 0 hrs 2 mints 8.42 sec. Energy:  -7.78690034976268
+Time: 0 hrs 2 mints 22.03 sec. Energy:  -7.784167315669014
+Optimization completed. Time: 0 hrs 2 mints 22.03 sec.
