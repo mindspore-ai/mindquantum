@@ -1,11 +1,12 @@
 # Distributed under the OSI-approved BSD 3-Clause License.  See accompanying file Copyright.txt or
 # https://cmake.org/licensing for details.
 
-# lint_cmake: -convention/filename,-whitespace/indent,-package/stdargs
+# lint_cmake: -convention/filename,-whitespace/indent,-package/stdargs,-whitespace/extra
 
 # cmake-lint: disable=C0103,C0111,R0912,R0915,E1121
 
 #[=======================================================================[.rst:
+
 FindOpenMP
 ----------
 
@@ -106,20 +107,19 @@ function(_OPENMP_FLAG_CANDIDATES LANG)
     unset(OpenMP_FLAG_CANDIDATES)
 
     set(OMP_FLAG_GNU "-fopenmp")
-    # set(OMP_FLAG_Clang "-fopenmp=libomp" "-fopenmp=libiomp5" "-fopenmp" "-Xclang -fopenmp")
-    set(OMP_FLAG_Clang "-fopenmp")
+    set(OMP_FLAG_Clang "-fopenmp=libomp" "-fopenmp=libiomp5" "-fopenmp" "-Xclang -fopenmp")
     set(OMP_FLAG_AppleClang "-Xclang -fopenmp")
     set(OMP_FLAG_HP "+Oopenmp")
     if(WIN32)
       set(OMP_FLAG_Intel "-Qopenmp")
-    elseif(CMAKE_${LANG}_COMPILER_ID STREQUAL "Intel" AND "${CMAKE_${LANG}_COMPILER_VERSION}" VERSION_LESS
-                                                          "15.0.0.20140528")
+    elseif("${CMAKE_${LANG}_COMPILER_ID}" STREQUAL "Intel" AND "${CMAKE_${LANG}_COMPILER_VERSION}" VERSION_LESS
+                                                               "15.0.0.20140528")
       set(OMP_FLAG_Intel "-openmp")
     else()
       set(OMP_FLAG_Intel "-qopenmp")
     endif()
-    if(CMAKE_${LANG}_COMPILER_ID STREQUAL "IntelLLVM" AND "x${CMAKE_${LANG}_COMPILER_FRONTEND_VARIANT}" STREQUAL
-                                                          "xMSVC")
+    if("${CMAKE_${LANG}_COMPILER_ID}" STREQUAL "IntelLLVM" AND "x${CMAKE_${LANG}_COMPILER_FRONTEND_VARIANT}" STREQUAL
+                                                               "xMSVC")
       set(OMP_FLAG_IntelLLVM "-Qiopenmp")
     else()
       set(OMP_FLAG_IntelLLVM "-fiopenmp")
@@ -183,7 +183,7 @@ set(OpenMP_Fortran_TEST_SOURCE
   ")
 
 function(_OPENMP_WRITE_SOURCE_FILE LANG SRC_FILE_CONTENT_VAR SRC_FILE_NAME SRC_FILE_FULLPATH)
-  set(WORK_DIR ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/FindOpenMP)
+  set(WORK_DIR ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/FindOpenMP)
   if("${LANG}" STREQUAL "C")
     set(SRC_FILE "${WORK_DIR}/${SRC_FILE_NAME}.c")
     file(WRITE "${SRC_FILE}" "${OpenMP_C_CXX_${SRC_FILE_CONTENT_VAR}}")
@@ -221,7 +221,7 @@ function(_OPENMP_GET_FLAGS LANG FLAG_MODE OPENMP_FLAG_VAR OPENMP_LIB_NAMES_VAR)
     endif()
     string(REGEX REPLACE "[-/=+]" "" OPENMP_PLAIN_FLAG "${OPENMP_FLAG}")
     try_compile(
-      OpenMP_COMPILE_RESULT_${FLAG_MODE}_${OPENMP_PLAIN_FLAG} ${CMAKE_BINARY_DIR}
+      OpenMP_COMPILE_RESULT_${FLAG_MODE}_${OPENMP_PLAIN_FLAG} ${CMAKE_CURRENT_BINARY_DIR}
       ${_OPENMP_TEST_SRC}
       CMAKE_FLAGS "-DCOMPILE_DEFINITIONS:STRING=${OPENMP_FLAGS_TEST}"
       LINK_LIBRARIES ${CMAKE_${LANG}_VERBOSE_FLAG}
@@ -238,7 +238,7 @@ function(_OPENMP_GET_FLAGS LANG FLAG_MODE OPENMP_FLAG_VAR OPENMP_LIB_NAMES_VAR)
         unset(OpenMP_${LANG}_IMPLICIT_FWK_DIRS)
         unset(OpenMP_${LANG}_LOG_VAR)
 
-        file(APPEND ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeOutput.log
+        file(APPEND ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeOutput.log
              "Detecting ${LANG} OpenMP compiler ABI info compiled with the following output:\
 \n${OpenMP_TRY_COMPILE_OUTPUT}\n\n")
 
@@ -246,7 +246,7 @@ function(_OPENMP_GET_FLAGS LANG FLAG_MODE OPENMP_FLAG_VAR OPENMP_LIB_NAMES_VAR)
           "${OpenMP_TRY_COMPILE_OUTPUT}" OpenMP_${LANG}_IMPLICIT_LIBRARIES OpenMP_${LANG}_IMPLICIT_LINK_DIRS
           OpenMP_${LANG}_IMPLICIT_FWK_DIRS OpenMP_${LANG}_LOG_VAR "${CMAKE_${LANG}_IMPLICIT_OBJECT_REGEX}")
 
-        file(APPEND ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeOutput.log
+        file(APPEND ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeOutput.log
              "Parsed ${LANG} OpenMP implicit link information from above output:\n${OpenMP_${LANG}_LOG_VAR}\n\n")
 
         unset(_OPENMP_LIB_NAMES)
@@ -290,9 +290,9 @@ function(_OPENMP_GET_FLAGS LANG FLAG_MODE OPENMP_FLAG_VAR OPENMP_LIB_NAMES_VAR)
             PARENT_SCOPE)
       endif()
       break()
-    elseif((CMAKE_${LANG}_COMPILER_ID STREQUAL "AppleClang" AND CMAKE_${LANG}_COMPILER_VERSION VERSION_GREATER_EQUAL
-                                                                "7.0") OR (CMAKE_${LANG}_COMPILER_ID STREQUAL "Clang"
-                                                                           AND APPLE))
+    elseif(("${CMAKE_${LANG}_COMPILER_ID}" STREQUAL "AppleClang" AND CMAKE_${LANG}_COMPILER_VERSION
+                                                                     VERSION_GREATER_EQUAL "7.0")
+           OR (CMAKE_${LANG}_COMPILER_ID STREQUAL "Clang" AND APPLE))
       # Check for separate OpenMP library on AppleClang 7+
       find_library(
         OpenMP_libomp_LIBRARY
@@ -304,7 +304,7 @@ function(_OPENMP_GET_FLAGS LANG FLAG_MODE OPENMP_FLAG_VAR OPENMP_LIB_NAMES_VAR)
         # Try without specifying include directory first. We only want to explicitly add a search path if the header
         # can't be found on the default header search path already.
         try_compile(
-          OpenMP_COMPILE_RESULT_${FLAG_MODE}_${OPENMP_PLAIN_FLAG} ${CMAKE_BINARY_DIR}
+          OpenMP_COMPILE_RESULT_${FLAG_MODE}_${OPENMP_PLAIN_FLAG} ${CMAKE_CURRENT_BINARY_DIR}
           ${_OPENMP_TEST_SRC}
           CMAKE_FLAGS "-DCOMPILE_DEFINITIONS:STRING=${OPENMP_FLAGS_TEST}"
           LINK_LIBRARIES ${CMAKE_${LANG}_VERBOSE_FLAG} ${OpenMP_libomp_LIBRARY}
@@ -320,7 +320,7 @@ function(_OPENMP_GET_FLAGS LANG FLAG_MODE OPENMP_FLAG_VAR OPENMP_LIB_NAMES_VAR)
           set(_linkDirFlags "-DLINK_DIRECTORIES:STRING=${_omp_dir} ")
 
           try_compile(
-            OpenMP_COMPILE_RESULT_${FLAG_MODE}_${OPENMP_PLAIN_FLAG} ${CMAKE_BINARY_DIR}
+            OpenMP_COMPILE_RESULT_${FLAG_MODE}_${OPENMP_PLAIN_FLAG} ${CMAKE_CURRENT_BINARY_DIR}
             ${_OPENMP_TEST_SRC}
             CMAKE_FLAGS "-DCOMPILE_DEFINITIONS:STRING=${OPENMP_FLAGS_TEST}" ${_linkDirFlags}
             LINK_LIBRARIES ${CMAKE_${LANG}_VERBOSE_FLAG} ${OpenMP_libomp_LIBRARY}
@@ -335,7 +335,7 @@ function(_OPENMP_GET_FLAGS LANG FLAG_MODE OPENMP_FLAG_VAR OPENMP_LIB_NAMES_VAR)
               PARENT_SCOPE)
           if(OpenMP_${LANG}_INCLUDE_DIR)
             try_compile(
-              OpenMP_COMPILE_RESULT_${FLAG_MODE}_${OPENMP_PLAIN_FLAG} ${CMAKE_BINARY_DIR}
+              OpenMP_COMPILE_RESULT_${FLAG_MODE}_${OPENMP_PLAIN_FLAG} ${CMAKE_CURRENT_BINARY_DIR}
               ${_OPENMP_TEST_SRC}
               CMAKE_FLAGS "-DCOMPILE_DEFINITIONS:STRING=${OPENMP_FLAGS_TEST}" ${_linkDirFlags}
                           "-DINCLUDE_DIRECTORIES:STRING=${OpenMP_${LANG}_INCLUDE_DIR}"
@@ -360,7 +360,7 @@ function(_OPENMP_GET_FLAGS LANG FLAG_MODE OPENMP_FLAG_VAR OPENMP_LIB_NAMES_VAR)
           break()
         endif()
       endif()
-    elseif(CMAKE_${LANG}_COMPILER_ID STREQUAL "Clang" AND WIN32)
+    elseif("${CMAKE_${LANG}_COMPILER_ID}" STREQUAL "Clang" AND WIN32)
       # Check for separate OpenMP library for Clang on Windows
       find_library(
         OpenMP_libomp_LIBRARY
@@ -369,7 +369,7 @@ function(_OPENMP_GET_FLAGS LANG FLAG_MODE OPENMP_FLAG_VAR OPENMP_LIB_NAMES_VAR)
       mark_as_advanced(OpenMP_libomp_LIBRARY)
       if(OpenMP_libomp_LIBRARY)
         try_compile(
-          OpenMP_COMPILE_RESULT_${FLAG_MODE}_${OPENMP_PLAIN_FLAG} ${CMAKE_BINARY_DIR}
+          OpenMP_COMPILE_RESULT_${FLAG_MODE}_${OPENMP_PLAIN_FLAG} ${CMAKE_CURRENT_BINARY_DIR}
           ${_OPENMP_TEST_SRC}
           CMAKE_FLAGS "-DCOMPILE_DEFINITIONS:STRING=${OPENMP_FLAGS_TEST}"
           LINK_LIBRARIES ${CMAKE_${LANG}_VERBOSE_FLAG} ${OpenMP_libomp_LIBRARY}
@@ -385,7 +385,7 @@ function(_OPENMP_GET_FLAGS LANG FLAG_MODE OPENMP_FLAG_VAR OPENMP_LIB_NAMES_VAR)
         endif()
       endif()
     else()
-      file(APPEND ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeError.log
+      file(APPEND ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeError.log
            "Detecting ${LANG} OpenMP failed with the following output:\n${OpenMP_TRY_COMPILE_OUTPUT}\n\n")
     endif()
     set("${OPENMP_LIB_NAMES_VAR}"
@@ -451,10 +451,10 @@ function(_OPENMP_GET_SPEC_DATE LANG SPEC_DATE)
     set(_linkDirFlags "-DLINK_DIRECTORIES:STRING=${OpenMP_libomp_LIBRARY_DIR}")
   endif()
 
-  set(BIN_FILE "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/FindOpenMP/ompver_${LANG}.bin")
+  set(BIN_FILE "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/FindOpenMP/ompver_${LANG}.bin")
   string(REGEX REPLACE "[-/=+]" "" OPENMP_PLAIN_FLAG "${OPENMP_FLAG}")
   try_compile(
-    OpenMP_SPECTEST_${LANG}_${OPENMP_PLAIN_FLAG} "${CMAKE_BINARY_DIR}"
+    OpenMP_SPECTEST_${LANG}_${OPENMP_PLAIN_FLAG} "${CMAKE_CURRENT_BINARY_DIR}"
     "${_OPENMP_TEST_SRC}"
     CMAKE_FLAGS "-DCOMPILE_DEFINITIONS:STRING=${OpenMP_${LANG}_FLAGS}" ${_linkDirFlags} ${_includeDirFlags}
     COPY_FILE ${BIN_FILE}
@@ -462,9 +462,13 @@ function(_OPENMP_GET_SPEC_DATE LANG SPEC_DATE)
 
   if(${OpenMP_SPECTEST_${LANG}_${OPENMP_PLAIN_FLAG}})
     file(
-      STRINGS ${BIN_FILE} specstr
-      LIMIT_COUNT 1
-      REGEX "INFO:OpenMP-date")
+      STRINGS
+      ${BIN_FILE}
+      specstr
+      LIMIT_COUNT
+      1
+      REGEX
+      "INFO:OpenMP-date")
     set(regex_spec_date ".*INFO:OpenMP-date\\[0*([^]]*)\\].*")
     if("${specstr}" MATCHES "${regex_spec_date}")
       set(${SPEC_DATE}
@@ -472,7 +476,7 @@ function(_OPENMP_GET_SPEC_DATE LANG SPEC_DATE)
           PARENT_SCOPE)
     endif()
   else()
-    file(APPEND ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeError.log
+    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeError.log
          "Detecting ${LANG} OpenMP version failed with the following output:\n${OpenMP_TRY_COMPILE_OUTPUT}\n\n")
   endif()
 endfunction()
@@ -507,7 +511,7 @@ macro(_OPENMP_SET_VERSION_BY_SPEC_DATE LANG)
   else()
     set(_version_match "")
   endif()
-  if(NOT _version_match STREQUAL "")
+  if(NOT "${_version_match}" STREQUAL "")
     set(OpenMP_${LANG}_VERSION_MAJOR ${CMAKE_MATCH_1})
     set(OpenMP_${LANG}_VERSION_MINOR ${CMAKE_MATCH_2})
     set(OpenMP_${LANG}_VERSION "${OpenMP_${LANG}_VERSION_MAJOR}.${OpenMP_${LANG}_VERSION_MINOR}")
