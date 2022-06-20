@@ -84,7 +84,7 @@ if(ENABLE_OPENMP)
   find_package(OpenMP)
   if(OpenMP_FOUND)
     set(MQ_OPENMP_TARGET OpenMP::OpenMP_CXX)
-    list(APPEND PARALLEL_LIBS ${OpenMP_target})
+    list(APPEND PARALLEL_LIBS ${MQ_OPENMP_TARGET})
   else()
     set(MQ_OPENMP_TARGET)
     # cmake-lint: disable=C0103
