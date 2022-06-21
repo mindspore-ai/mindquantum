@@ -23,7 +23,7 @@ pybind11_add_module(mqbackend ${CMAKE_CURRENT_SOURCE_DIR}/binding.cc)
 target_compile_definitions(mqbackend PUBLIC $<$<BOOL:${ENABLE_PROJECTQ}>:ENABLE_PROJECTQ>)
 target_include_directories(mqbackend PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
-target_link_libraries(mqbackend PUBLIC ${PARALLEL_LIBS} "$<$<BOOL:${ENABLE_PROJECTQ}>:mq_projectq>" mq_base)
+target_link_libraries(mqbackend PUBLIC ${MQ_OPENMP_TARGET} "$<$<BOOL:${ENABLE_PROJECTQ}>:mq_projectq>" mq_base)
 
 set_output_directory_auto(mqbackend mindquantum)
 python_install_set_rpath(mqbackend "")
@@ -54,6 +54,7 @@ else()
   add_library(mq_base STATIC ${MQ_BASE_SOURCES} ${MQ_BASE_HEADERS})
 endif()
 target_include_directories(mq_base PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+target_link_libraries(mq_base PUBLIC ${MQ_OPENMP_TARGET})
 
 if(WIN32)
   get_filename_component(CXX_DIR ${CMAKE_CXX_COMPILER} PATH)
