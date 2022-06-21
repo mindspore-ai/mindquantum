@@ -14,21 +14,25 @@
 # limitations under the License.
 # ============================================================================
 """Test Circuit utils."""
-import pytest
 import numpy as np
-from mindquantum import pauli_word_to_circuits
-from mindquantum import decompose_single_term_time_evolution
-from mindquantum import QubitOperator
+import pytest
+
 import mindquantum.core.gates as G
-from mindquantum import Circuit, X, H, RX
-from mindquantum.core.circuit.utils import add_prefix, controlled as C
-from mindquantum.core.circuit.utils import dagger as D
-from mindquantum.core.circuit.utils import apply as A
-from mindquantum.core.circuit.utils import AP
-from mindquantum.core.circuit.utils import CPN
-from mindquantum.core.circuit.utils import as_encoder
-from mindquantum.core.circuit.utils import as_ansatz
+from mindquantum import (
+    RX,
+    Circuit,
+    H,
+    QubitOperator,
+    X,
+    decompose_single_term_time_evolution,
+    pauli_word_to_circuits,
+)
 from mindquantum.algorithm.library import qft
+from mindquantum.core.circuit.utils import AP, CPN, add_prefix
+from mindquantum.core.circuit.utils import apply as A
+from mindquantum.core.circuit.utils import as_ansatz, as_encoder
+from mindquantum.core.circuit.utils import controlled as C
+from mindquantum.core.circuit.utils import dagger as D
 
 
 def test_pauli_word_to_circuits():

@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Configuration"""
+
+"""Configuration."""
 
 CIRCUIT_HTML_FORMAT = """\
 <div style="{stylesheet}color: {foreground}; background-color: {background}"></div>
@@ -38,14 +39,14 @@ _res_text_drawer_config = {
 }
 
 _text_drawer_config = {
-    'ctrl_mask': '●',  #⨉
+    'ctrl_mask': '●',  # ⨉
     'circ_line': '─',
     'ctrl_line': '│',
     'cross_mask': '┼',
     'v_n': 1,
     'swap_mask': ['@', '@'],  # ✖, ⨯⨯
     'edge_num': 2,
-    'barrier': '‖'
+    'barrier': '‖',
 }
 
 _text_drawer_config['edge'] = _text_drawer_config['circ_line'] * _text_drawer_config['edge_num']
@@ -133,7 +134,7 @@ _svg_config_official = {
     # for barrier
     'barrier_width': 20,
     'barrier_fill': 'gray',
-    'barrier_opacity': 0.8
+    'barrier_opacity': 0.8,
 }
 
 _svg_config_dark = {
@@ -195,7 +196,7 @@ _svg_config_dark = {
     # for barrier
     'barrier_width': 20,
     'barrier_fill': '#8a744d',
-    'barrier_opacity': 0.95
+    'barrier_opacity': 0.95,
 }
 
 _svg_config_light = {
@@ -257,7 +258,7 @@ _svg_config_light = {
     # for barrier
     'barrier_width': 20,
     'barrier_fill': '#8a744d',
-    'barrier_opacity': 0.95
+    'barrier_opacity': 0.95,
 }
 
 _bloch_drawer_config = {

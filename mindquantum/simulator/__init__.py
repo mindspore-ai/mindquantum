@@ -15,10 +15,7 @@
 # ============================================================================
 """Simulator."""
 
-from .simulator import Simulator
-from .simulator import GradOpsWrapper
-from .simulator import get_supported_simulator
-from .simulator import inner_product
+from .simulator import GradOpsWrapper, Simulator, get_supported_simulator, inner_product
 
 __all__ = ['Simulator', 'GradOpsWrapper', 'get_supported_simulator', 'inner_product']
 __all__.sort()

@@ -21,9 +21,11 @@ PROJECT_DIR=$(realpath "$SCRIPT_BASEDIR/../../")
 ST_PATH="$PROJECT_DIR/tests/st"
 
 run_test() {
-    echo "Start to run test."
+    OS_NAME=$(uname)
+    echo "Start to run test on $OS_NAME"
     cd "$PROJECT_DIR" || exit
-    python -m pytest "$ST_PATH"
+    echo "python -m pytest -v '$ST_PATH'"
+    python -m pytest -v "$ST_PATH"
     echo "Test all use cases success."
 }
 

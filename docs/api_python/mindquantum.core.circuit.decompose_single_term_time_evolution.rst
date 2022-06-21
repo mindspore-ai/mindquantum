@@ -18,4 +18,4 @@
     **异常：**
 
     - **ValueError** - 如果term里有多个pauli字符串。
-    - **TypeError** - 如果term不是map。       
+    - **TypeError** - 如果term不是map。

@@ -14,29 +14,33 @@
 # limitations under the License.
 # ============================================================================
 """Benchmakr for gradient calculation of mindquantum."""
-import time
+
 import os
+import time
+
+import mindspore.context as context
+import numpy as np
+import tqdm
 from _parse_args import parser
+
+from mindquantum.core import XX, ZZ, Circuit, H, Hamiltonian, QubitOperator, X
+from mindquantum.simulator import Simulator
 
 args = parser.parse_args()
 os.environ['OMP_NUM_THREADS'] = str(args.omp_num_threads)
-import numpy as np
-from mindquantum.core import QubitOperator
-from mindquantum.core import Circuit, X, H, XX, ZZ, Hamiltonian
-from mindquantum.simulator import Simulator
-import mindspore.context as context
-import tqdm
-
 context.set_context(mode=context.PYNATIVE_MODE, device_target="CPU")
 
 
-class CircuitLayerBuilder():
-    """CircuitLayerBuilder"""
+class CircuitLayerBuilder:
+    """CircuitLayerBuilder class."""
+
     def __init__(self, data_qubits, readout):
+        """Initialize a CircuitLayerBuilder object."""
         self.data_qubits = data_qubits
         self.readout = readout
 
     def add_layer(self, circuit, gate, prefix):
+        """Add a layer to this instance."""
         for i, qubit in enumerate(self.data_qubits):
             symbol = prefix + '-' + str(i)
             circuit.append(gate({symbol: np.pi / 2}).on([qubit, self.readout]))
@@ -44,7 +48,7 @@ class CircuitLayerBuilder():
 
 def convert_to_circuit(image, data_qubits=None):
     """
-    convert_to_circuit
+    Convert an image to a circuit.
 
     Returns:
         Circuit
@@ -54,7 +58,7 @@ def convert_to_circuit(image, data_qubits=None):
         data_qubits = range(len(values))
 
     c = Circuit()
-    for i, value in enumerate(values[:len(data_qubits)]):
+    for i, value in enumerate(values[: len(data_qubits)]):
         if value:
             c += X.on(data_qubits[i])
     return c
@@ -81,18 +85,18 @@ def create_quantum_model(n_qubits):
 
 n_qubits = 17
 data = np.load('./mnist_resize.npz')
-x_train_bin, y_train_nocon, x_test_bin, y_test_nocon = data['arr_0'], data[
-    'arr_1'], data['arr_2'], data['arr_3']
+x_train_bin, y_train_nocon, x_test_bin, y_test_nocon = data['arr_0'], data['arr_1'], data['arr_2'], data['arr_3']
 x_train_circ = [convert_to_circuit(x, range(1, n_qubits)) for x in x_train_bin]
 
 ansatz, ham = create_quantum_model(n_qubits)
 model_params_names = ansatz.params_name
 ops = Simulator('projectq', ansatz.n_qubits).get_expectation_with_grad(
-    ham, ansatz, parallel_worker=args.parallel_worker)
+    ham, ansatz, parallel_worker=args.parallel_worker
+)
 
 t0 = time.time()
 eval_time = []
-for x in tqdm.tqdm(x_train_circ[:args.num_sampling]):
+for x in tqdm.tqdm(x_train_circ[: args.num_sampling]):
     eval_time.append(time.time())
     ops(np.random.normal(size=32))
     eval_time[-1] = time.time() - eval_time[-1]

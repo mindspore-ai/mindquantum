@@ -1,7 +1,7 @@
 mindquantum.core.circuit
 ========================
 
-Quantum Circuit 
+Quantum Circuit
 ---------------
 
 .. automodule:: mindquantum.core.circuit

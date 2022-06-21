@@ -5,4 +5,4 @@ openfermion>=1.0.0
 sympy>=1.4
 matplotlib<=3.4.3
 rich>=10.9.0
-
+importlib-metadata>=0.9;python_version<"3.8"

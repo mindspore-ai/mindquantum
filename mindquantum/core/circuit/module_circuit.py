@@ -13,13 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Module circuit"""
+
+"""Module circuit."""
 
 from collections.abc import Iterable
+
 import numpy as np
-from mindquantum.core.gates import BasicGate
-from mindquantum.core.gates import SWAP
+
+from mindquantum.core.gates import SWAP, BasicGate
 from mindquantum.core.gates.basic import _check_gate_type
+
 from .circuit import Circuit
 
 
@@ -57,7 +60,9 @@ class UN(Circuit):
               │
         q3: ──@───────
     """
+
     def __init__(self, gate: BasicGate, maps_obj, maps_ctrl=None):
+        """Initialize a UN object."""
         _check_gate_type(gate)
         if isinstance(maps_obj, Iterable):
             if maps_ctrl is None:
@@ -102,7 +107,9 @@ class SwapParts(Circuit):
                    │
         q4: ───────@──
     """
+
     def __init__(self, a: Iterable, b: Iterable, maps_ctrl=None):
+        """Initialize a SwapParts object."""
         if not isinstance(a, Iterable) or not isinstance(b, Iterable):
             raise Exception("Swap part should be iterable!")
         maps = [[a[i], b[i]] for i in range(len(a))]
@@ -124,7 +131,9 @@ class U3(Circuit):
         >>> U3('a','b','c')
         q0: ──RZ(a)────RX(-π/2)────RZ(b)────RX(π/2)────RZ(c)──
     """
+
     def __init__(self, a, b, c, obj_qubit=None):
+        """Initialize a U3 object."""
         if obj_qubit is None:
             obj_qubit = 0
         circ = Circuit()

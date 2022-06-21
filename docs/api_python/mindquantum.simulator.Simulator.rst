@@ -28,7 +28,7 @@
 
         **返回：**
 
-        MeasureResult或None，如果线路具有测量门，则返回MeasureResult，否则返回None。 
+        MeasureResult或None，如果线路具有测量门，则返回MeasureResult，否则返回None。
 
     .. py:method:: apply_gate(gate, pr=None, diff=False)
 
@@ -112,7 +112,7 @@
 
         **返回：**
 
-        GradOpsWrapper，一个包含生成梯度算子信息的梯度算子包装器。          
+        GradOpsWrapper，一个包含生成梯度算子信息的梯度算子包装器。
 
     .. py:method:: get_qs(ket=False)
 

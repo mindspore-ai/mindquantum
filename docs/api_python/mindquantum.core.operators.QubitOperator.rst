@@ -31,7 +31,7 @@
         - **indent** (int) - JSON数组元素和对象成员打印时的缩进。默认值：4。
 
         **返回：**
-        
+
         JSON(strings)，QubitOperator的JSON字符串。
 
     .. py:method:: from_openfermion(of_ops)

@@ -14,35 +14,38 @@
 # limitations under the License.
 # ============================================================================
 """Display one qubit state in bloch sphere."""
-from collections import deque
-import warnings
 import numbers
-from matplotlib.figure import Figure
+import warnings
+from collections import deque
+
 import matplotlib.animation as animation
-from matplotlib.patches import FancyArrowPatch
-from mpl_toolkits.mplot3d.proj3d import proj_transform
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-from mpl_toolkits.mplot3d.axes3d import Axes3D
 import numpy as np
 import rich
-from mindquantum.utils.type_value_check import _check_input_type
-from mindquantum.utils.type_value_check import _check_int_type
-from mindquantum.io.display._config import _bloch_default_style_
-from mindquantum.io.display._config import _bloch_default_style_dark_
+from matplotlib.figure import Figure
+from matplotlib.patches import FancyArrowPatch
+from mpl_toolkits.mplot3d.axes3d import Axes3D
+from mpl_toolkits.mplot3d.proj3d import proj_transform
+
+from mindquantum.io.display._config import (
+    _bloch_default_style_,
+    _bloch_default_style_dark_,
+)
+from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
 
 
 class Arrow3D(FancyArrowPatch):
-    """
-    3D arrow.
-    """
+    """3D arrow."""
+
     def __init__(self, x, y, z, dx, dy, dz, *args, **kwargs):
+        """Initialize an Arrow3D object."""
         super().__init__((0, 0), (0, 0), *args, **kwargs)
         self._xyz = (x, y, z)
         self._dxdydz = (dx, dy, dz)
 
     def draw(self, renderer):
-        """draw artist"""
+        """Draw artist."""
         x1, y1, z1 = self._xyz
         dx, dy, dz = self._dxdydz
         x2, y2, z2 = (x1 + dx, y1 + dy, z1 + dz)
@@ -83,7 +86,9 @@ class BlochScene:
         >>> anim = scene.animation(fig, ax, objs, amps,history_len=10)
         >>> plt.show()
     """
+
     def __init__(self, config=None):
+        """Initialize a BlochScene object."""
         supported_stype = {'default': _bloch_default_style_, 'dark': _bloch_default_style_dark_}
         if config is None:
             config = 'default'
@@ -151,19 +156,21 @@ class BlochScene:
         _check_input_type("angle", numbers.Number, angle)
         ax.plot(self.c_x * np.sin(angle), self.c_y * np.sin(angle), np.cos(angle), *args, **kwargs)
 
-    def plot_slice(self,
-                   ax,
-                   x,
-                   y,
-                   z,
-                   frame_color,
-                   frame_alpha,
-                   surface_color,
-                   surface_alpha,
-                   frame_args=None,
-                   frame_kwargs=None,
-                   surface_args=None,
-                   surface_kwargs=None):
+    def plot_slice(
+        self,
+        ax,
+        x,
+        y,
+        z,
+        frame_color,
+        frame_alpha,
+        surface_color,
+        surface_alpha,
+        frame_args=None,
+        frame_kwargs=None,
+        surface_args=None,
+        surface_kwargs=None,
+    ):
         """
         Plot reference surface in xy, yz and zx plane.
 
@@ -219,20 +226,20 @@ class BlochScene:
         ax.set_box_aspect([1, 1, 1])
         ax.view_init(elev=elev, azim=azim)
 
-    def gen_fig_ax(self, boxs=None):
+    def gen_fig_ax(self, boxes=None):
         """
         Add three dimension scene.
 
         Args:
-            boxs (list): A float list with 4 elements that are left, bottom, width, height
+            boxes (list): A float list with 4 elements that are left, bottom, width, height
                 of this scene. If None, then left and bottom will be 0 and width and height
                 will be 1. Default: None.
         """
-        if boxs is None:
-            boxs = [0, 0, 1, 1]
-        _check_input_type("boxs", list, boxs)
+        if boxes is None:
+            boxes = [0, 0, 1, 1]
+        _check_input_type("boxes", list, boxes)
         fig = plt.figure()
-        ax = fig.add_axes(boxs, projection='3d')
+        ax = fig.add_axes(boxes, projection='3d')
         return fig, ax
 
     def add_3d_arrow(self, ax, data, *args, **kwargs):
@@ -252,37 +259,47 @@ class BlochScene:
         return arrow
 
     def create_scene(self):
-        """
-        Create default layout with `BlochScene.config`.
-        """
+        """Create default layout with `BlochScene.config`."""
         fig, ax = self.gen_fig_ax()
         arrowstyle = self.config['arrowstyle']
         mutation_scale = self.config['mutation_scale']
         linestyle = self.config['arrow_ls']
         delta = self.config['axis_delta']
-        self.add_3d_arrow(ax, [0, 0, -1 - delta, 0, 0, 2 + 2 * delta],
-                          arrowstyle=arrowstyle,
-                          mutation_scale=mutation_scale,
-                          linestyle=linestyle).set_color(self.config['arrow_c'])
-        self.add_3d_arrow(ax, [0, -1 - delta, 0, 0, 2 + 2 * delta, 0],
-                          arrowstyle=arrowstyle,
-                          mutation_scale=mutation_scale,
-                          linestyle=linestyle).set_color(self.config['arrow_c'])
-        self.add_3d_arrow(ax, [-1 - delta, 0, 0, 2 + 2 * delta, 0, 0],
-                          arrowstyle=arrowstyle,
-                          mutation_scale=mutation_scale,
-                          linestyle=linestyle).set_color(self.config['arrow_c'])
+        self.add_3d_arrow(
+            ax,
+            [0, 0, -1 - delta, 0, 0, 2 + 2 * delta],
+            arrowstyle=arrowstyle,
+            mutation_scale=mutation_scale,
+            linestyle=linestyle,
+        ).set_color(self.config['arrow_c'])
+        self.add_3d_arrow(
+            ax,
+            [0, -1 - delta, 0, 0, 2 + 2 * delta, 0],
+            arrowstyle=arrowstyle,
+            mutation_scale=mutation_scale,
+            linestyle=linestyle,
+        ).set_color(self.config['arrow_c'])
+        self.add_3d_arrow(
+            ax,
+            [-1 - delta, 0, 0, 2 + 2 * delta, 0, 0],
+            arrowstyle=arrowstyle,
+            mutation_scale=mutation_scale,
+            linestyle=linestyle,
+        ).set_color(self.config['arrow_c'])
         plane_alpha = self.config['plane_alpha']
         xy_plane_color = self.config['xy_plane_color']
         yz_plane_color = self.config['yz_plane_color']
         zx_plane_color = self.config['zx_plane_color']
         frame_alpha = self.config['frame_alpha']
-        self.plot_slice(ax, self.plane_x, self.plane_y, self.plane_z, xy_plane_color, frame_alpha, xy_plane_color,
-                        plane_alpha)
-        self.plot_slice(ax, self.plane_x, self.plane_z, self.plane_y, yz_plane_color, frame_alpha, yz_plane_color,
-                        plane_alpha)
-        self.plot_slice(ax, self.plane_z, self.plane_x, self.plane_y, zx_plane_color, frame_alpha, zx_plane_color,
-                        plane_alpha)
+        self.plot_slice(
+            ax, self.plane_x, self.plane_y, self.plane_z, xy_plane_color, frame_alpha, xy_plane_color, plane_alpha
+        )
+        self.plot_slice(
+            ax, self.plane_x, self.plane_z, self.plane_y, yz_plane_color, frame_alpha, yz_plane_color, plane_alpha
+        )
+        self.plot_slice(
+            ax, self.plane_z, self.plane_x, self.plane_y, zx_plane_color, frame_alpha, zx_plane_color, plane_alpha
+        )
 
         for angle in np.linspace(0, np.pi, 7):
             self.circle_xy(ax, '--', angle=angle, color='#cdcdcd', linewidth=1)
@@ -313,7 +330,7 @@ class BlochScene:
             numpy.ndarray, three dimension coordinate.
         """
         _check_input_type('amp', np.ndarray, amp)
-        if amp.shape != (2, ):
+        if amp.shape != (2,):
             raise ValueError(f"amp requires shape (2, ), but get {amp.shape}")
         amp = amp / np.sqrt(np.vdot(amp, amp))
         global_phase = np.angle(amp[0])
@@ -323,23 +340,25 @@ class BlochScene:
         x, y, z = np.sin(theta) * np.cos(phi), np.sin(theta) * np.sin(phi), np.cos(theta)
         return np.array([x, y, z])
 
-    def add_state(self,
-                  ax,
-                  amp,
-                  linecolor=None,
-                  linewidth=None,
-                  pointcolor=None,
-                  pointsize=None,
-                  marker=None,
-                  projcolor=None,
-                  mode=None,
-                  with_proj=None,
-                  stick_args=None,
-                  stick_kwargs=None,
-                  point_args=None,
-                  point_kwargs=None,
-                  proj_args=None,
-                  proj_kwargs=None):
+    def add_state(
+        self,
+        ax,
+        amp,
+        linecolor=None,
+        linewidth=None,
+        pointcolor=None,
+        pointsize=None,
+        marker=None,
+        projcolor=None,
+        mode=None,
+        with_proj=None,
+        stick_args=None,
+        stick_kwargs=None,
+        point_args=None,
+        point_kwargs=None,
+        proj_args=None,
+        proj_kwargs=None,
+    ):
         """
         Add one quantum state on bloch sphere.
 
@@ -443,6 +462,8 @@ class BlochScene:
 
     def update(self, objs: dict, new_amp: np.ndarray):
         """
+        Update quantum state in bloch sphere.
+
         Update the quantum state in bloch sphere for a given objs generated
         by :class:`mindquantum.io.BlochScene.add_state` and a given quantum state.
 
@@ -491,8 +512,10 @@ class BlochScene:
         """
         console = rich.console.Console()
         if console.is_jupyter:
-            warnings.warn("jupyter environment detected, if animation not work, \
-please run '%matplotlib notebook' in cell.")
+            warnings.warn(
+                "jupyter environment detected, if animation not work, \
+please run '%matplotlib notebook' in cell."
+            )
         _check_input_type('fig', Figure, fig)
         _check_input_type('ax', Axes3D, ax)
         _check_input_type('objs', dict, objs)
@@ -508,19 +531,16 @@ please run '%matplotlib notebook' in cell.")
             trace_lw = self.config['trace_lw']
             trace_ms = self.config['trace_ms']
             trace_ls = self.config['trace_ls']
-            trace, = ax.plot([], [], [],
-                             color=trace_color,
-                             linestyle=trace_ls,
-                             marker=trace_marker,
-                             lw=trace_lw,
-                             ms=trace_ms)
+            (trace,) = ax.plot(
+                [], [], [], color=trace_color, linestyle=trace_ls, marker=trace_marker, lw=trace_lw, ms=trace_ms
+            )
             if history_len is None:
                 history_len = new_amps.shape[0]
             _check_int_type('history_len', history_len)
             his_x, his_y, his_z = deque(maxlen=history_len), deque(maxlen=history_len), deque(maxlen=history_len)
 
             def func(i):
-                """update func with projection lines."""
+                """Update func with projection lines."""
                 x, y, z = self.state_to_cor(new_amps[i])
                 if i == 0:
                     his_x.clear()
@@ -532,6 +552,7 @@ please run '%matplotlib notebook' in cell.")
                 self.update(objs, new_amps[i])
                 trace.set_data(np.array([his_x, his_y]))
                 trace.set_3d_properties(np.array(his_z))
+
         else:
 
             def func(i):

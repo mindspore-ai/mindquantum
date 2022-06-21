@@ -13,7 +13,7 @@
             \ {E_1}=\begin{bmatrix}0&0\\
                 0&\sqrt{\gamma}\end{bmatrix}
 
-    这里 :math:`\rho` 是密度矩阵形式的量子态。 :math:`\gamma` 是信息损失系数。 
+    这里 :math:`\rho` 是密度矩阵形式的量子态。 :math:`\gamma` 是信息损失系数。
 
     **参数：**
 

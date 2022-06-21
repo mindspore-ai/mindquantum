@@ -14,10 +14,11 @@
 # limitations under the License.
 # ============================================================================
 '''test decompose rule'''
-from mindquantum.algorithm.compiler.decompose import cz_decompose
-from mindquantum.core import Circuit
-from mindquantum.core import  Z
 import numpy as np
+
+from mindquantum.algorithm.compiler.decompose import cz_decompose
+from mindquantum.core import Circuit, Z
+
 
 def circuit_equal_test(gate, decompose_circ):
     """
@@ -25,6 +26,7 @@ def circuit_equal_test(gate, decompose_circ):
     """
     orig_circ = Circuit() + gate
     assert np.allclose(orig_circ.matrix(), decompose_circ.matrix())
+
 
 def test_cz():
     """

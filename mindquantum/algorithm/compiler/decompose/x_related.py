@@ -13,17 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""
-X gate related decompose rule.
-"""
 
-from mindquantum.core import gates as G
-from mindquantum.core import Circuit
+"""X gate related decompose rule."""
+
+from mindquantum.core import Circuit, gates
 from mindquantum.core.gates.basicgate import XGate
-from mindquantum.utils.type_value_check import _check_input_type, _check_control_num
+from mindquantum.utils.type_value_check import _check_control_num, _check_input_type
 
 
-def ccx_decompose(gate: G.XGate):
+def ccx_decompose(gate: gates.XGate):
     """
     Decompose ccx gate.
 
@@ -72,50 +70,50 @@ def ccx_decompose(gate: G.XGate):
     q0 = gate.obj_qubits[0]
     q1 = gate.ctrl_qubits[0]
     q2 = gate.ctrl_qubits[1]
-    c1 += G.H.on(q0)
-    c1 += G.X.on(q0, q1)
-    c1 += G.T.on(q0).hermitian()
-    c1 += G.X.on(q0, q2)
-    c1 += G.T.on(q0)
-    c1 += G.X.on(q0, q1)
-    c1 += G.T.on(q0).hermitian()
-    c1 += G.X.on(q0, q2)
-    c1 += G.T.on(q0)
-    c1 += G.T.on(q1)
-    c1 += G.X.on(q1, q2)
-    c1 += G.H.on(q0)
-    c1 += G.T.on(q2)
-    c1 += G.T.on(q1).hermitian()
-    c1 += G.X.on(q1, q2)
+    c1 += gates.H.on(q0)
+    c1 += gates.X.on(q0, q1)
+    c1 += gates.T.on(q0).hermitian()
+    c1 += gates.X.on(q0, q2)
+    c1 += gates.T.on(q0)
+    c1 += gates.X.on(q0, q1)
+    c1 += gates.T.on(q0).hermitian()
+    c1 += gates.X.on(q0, q2)
+    c1 += gates.T.on(q0)
+    c1 += gates.T.on(q1)
+    c1 += gates.X.on(q1, q2)
+    c1 += gates.H.on(q0)
+    c1 += gates.T.on(q2)
+    c1 += gates.T.on(q1).hermitian()
+    c1 += gates.X.on(q1, q2)
 
     c2 = Circuit()
     solutions.append(c2)
-    c2 += G.H.on(q0)
-    c2 += G.T.on(q2)
-    c2 += G.T.on(q0)
-    c2 += G.X.on(q0, q2)
-    c2 += G.T.on(q0).hermitian()
-    c2 += G.X.on(q0, q2)
-    c2 += G.H.on(q0)
-    c2 += G.X.on(q2,q1)
-    c2 += G.Z.on(q0)
-    c2 += G.S.on(q2).hermitian()
-    c2 += G.H.on(q0)
-    c2 += G.T.on(q2)
-    c2 += G.T.on(q0)
-    c2 += G.X.on(q0, q2)
-    c2 += G.T.on(q0).hermitian()
-    c2 += G.X.on(q0, q2)
-    c2 += G.H.on(q0)
-    c2 += G.X.on(q2,q1)
-    c2 += G.Z.on(q0)
-    c2 += G.H.on(q0)
-    c2 += G.T.on(q1)
-    c2 += G.T.on(q0)
-    c2 += G.X.on(q0, q1)
-    c2 += G.T.on(q0).hermitian()
-    c2 += G.X.on(q0, q1)
-    c2 += G.H.on(q0)
+    c2 += gates.H.on(q0)
+    c2 += gates.T.on(q2)
+    c2 += gates.T.on(q0)
+    c2 += gates.X.on(q0, q2)
+    c2 += gates.T.on(q0).hermitian()
+    c2 += gates.X.on(q0, q2)
+    c2 += gates.H.on(q0)
+    c2 += gates.X.on(q2, q1)
+    c2 += gates.Z.on(q0)
+    c2 += gates.S.on(q2).hermitian()
+    c2 += gates.H.on(q0)
+    c2 += gates.T.on(q2)
+    c2 += gates.T.on(q0)
+    c2 += gates.X.on(q0, q2)
+    c2 += gates.T.on(q0).hermitian()
+    c2 += gates.X.on(q0, q2)
+    c2 += gates.H.on(q0)
+    c2 += gates.X.on(q2, q1)
+    c2 += gates.Z.on(q0)
+    c2 += gates.H.on(q0)
+    c2 += gates.T.on(q1)
+    c2 += gates.T.on(q0)
+    c2 += gates.X.on(q0, q1)
+    c2 += gates.T.on(q0).hermitian()
+    c2 += gates.X.on(q0, q1)
+    c2 += gates.H.on(q0)
     return solutions
 
 

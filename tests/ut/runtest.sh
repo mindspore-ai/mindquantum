@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 set -e
 
 SCRIPT_BASEDIR=$(realpath "$(dirname "$0")")
@@ -22,7 +23,8 @@ UT_PATH="$PROJECT_DIR/tests/ut"
 run_test() {
     echo "Start to run test."
     cd "$PROJECT_DIR" || exit
-    pytest "$UT_PATH"
+    echo python -m pytest -v "$UT_PATH"
+    python -m pytest -v "$UT_PATH"
     echo "Test all use cases success."
 }
 

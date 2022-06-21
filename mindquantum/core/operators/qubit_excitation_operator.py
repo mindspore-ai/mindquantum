@@ -13,20 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""This module implements qubit-excitation operators"""
 
-from mindquantum.core.operators.fermion_operator import FermionOperator
-from mindquantum.core.operators.qubit_operator import QubitOperator
-from mindquantum.core.parameterresolver import ParameterResolver as PR
+"""This module implements qubit-excitation operators."""
+
+from mindquantum.core.parameterresolver import ParameterResolver
+
 from ._base_operator import _Operator
+from .fermion_operator import FermionOperator
+from .qubit_operator import QubitOperator
 
 
 def _check_valid_qubit_excitation_operator_term(term):
     """Check valid qubit excitation operator term."""
     if term is not None and term != '':
         if not isinstance(term, (str, tuple)):
-            raise ValueError('Qubit excitation operator requires a string or a tuple, \
-but get {}'.format(type(term)))
+            raise ValueError(
+                'Qubit excitation operator requires a string or a tuple, \
+but get {}'.format(
+                    type(term)
+                )
+            )
         if isinstance(term, str):
             terms = term.split(' ')
             for t in terms:
@@ -35,14 +41,20 @@ but get {}'.format(type(term)))
                         raise ValueError('Invalid qubit excitation operator term {}'.format(t))
         if isinstance(term, tuple):
             for t in term:
-                if len(t) != 2 or not isinstance(t[0], int) or not isinstance(t[1], int) or t[0] < 0 or t[1] not in [
-                        0, 1
-                ]:
+                if (
+                    len(t) != 2
+                    or not isinstance(t[0], int)
+                    or not isinstance(t[1], int)
+                    or t[0] < 0
+                    or t[1] not in [0, 1]
+                ):
                     raise ValueError('Invalid qubit excitation operator term {}'.format(t))
 
 
 class QubitExcitationOperator(_Operator):
     r"""
+    QubitExcitationOperator class.
+
     The Qubit Excitation Operator is defined as:
     :math:`Q^{\dagger}_{n} = \frac{1}{2} (X_{n} - iY_{n})` and
     :math:`Q_{n} = \frac{1}{2} (X_{n} + iY_{n})`. Compared with Fermion
@@ -90,6 +102,7 @@ class QubitExcitationOperator(_Operator):
     __hash__ = None
 
     def __init__(self, term=None, coefficient=1.0):
+        """Initialize a QubitExcitationOperator object."""
         super(QubitExcitationOperator, self).__init__(term, coefficient)
         _check_valid_qubit_excitation_operator_term(term)
         self.operators = {1: '^', 0: '', '^': '^', '': ''}
@@ -128,11 +141,9 @@ class QubitExcitationOperator(_Operator):
             for (idx, excit) in term_i:
                 qubit_op_ = None
                 if excit == 0:
-                    qubit_op_ = QubitOperator(((idx, "X"),), 1) + \
-                        QubitOperator(((idx, "Y"),), 1j)
+                    qubit_op_ = QubitOperator(((idx, "X"),), 1) + QubitOperator(((idx, "Y"),), 1j)
                 else:
-                    qubit_op_ = QubitOperator(((idx, "X"),), 1) - \
-                        QubitOperator(((idx, "Y"),), 1j)
+                    qubit_op_ = QubitOperator(((idx, "X"),), 1) - QubitOperator(((idx, "Y"),), 1j)
                 qubit_op_ *= 0.5
                 qubit_operator_i *= qubit_op_
             qubit_operator_i *= coeff_i
@@ -145,10 +156,10 @@ class QubitExcitationOperator(_Operator):
 
     def _parse_string(self, terms_string):
         r"""
-        Parse a term given as a string type
+        Parse a term given as a string type.
+
         e.g. For QubitExcitationOperator: 4^ 3  -> ((4, 1),(3, 0))
-        Note here the '1' and '0' in the second col represents creation
-        and annihilaiton operator respectively
+        Note here the '1' and '0' in the second col represents creation and annihilaiton operator respectively
 
         Returns:
             tuple, return a tuple list, such as ((4, 1),(3, 0))
@@ -157,7 +168,11 @@ class QubitExcitationOperator(_Operator):
             '1.5 4^ 3' is not the proper format and
             could raise TypeError.
         """
-        map_operator_to_integer_rep = lambda operator: 1 if operator == '^' else 0
+
+        def map_operator_to_integer_rep(operator):
+            """Operator to integer conversion function."""
+            return 1 if operator == '^' else 0
+
         terms = terms_string.split()
         terms_to_tuple = []
         for sub_term in terms:
@@ -167,35 +182,37 @@ class QubitExcitationOperator(_Operator):
             if len(sub_term) >= 2:
                 if '^' in sub_term:
                     operator = '^'
-                    index = int(sub_term[:sub_term.index(operator)])
+                    index = int(sub_term[: sub_term.index(operator)])
                 else:
                     operator = ''
                     index = int(sub_term)
 
             if operator not in self.operators:
-                raise ValueError('Invalid type of operator {}.'
-                                 'The Qubit excitation operator should be one of this {}'.format(
-                                     operator, self.operators))
+                raise ValueError(
+                    'Invalid type of operator {}.'
+                    'The Qubit excitation operator should be one of this {}'.format(operator, self.operators)
+                )
             if index < 0:
-                raise ValueError("Invalid index {}.The qubit index should be\
-                    non negative integer".format(self.operators))
+                raise ValueError(
+                    "Invalid index {}.The qubit index should be\
+                    non negative integer".format(
+                        self.operators
+                    )
+                )
             terms_to_tuple.append((index, map_operator_to_integer_rep(operator)))
             # check the commutate terms with same index in the list and
             # replace it with the corresponding commutation relationship
         return tuple(terms_to_tuple)
 
     def __str__(self):
-        """
-        Return an easy-to-read string representation of the
-        QubitExcitationOperator.
-        """
+        """Return an easy-to-read string representation of the QubitExcitationOperator."""
         if not self.terms:
             return '0'
         string_rep = ''
         term_cnt = 0
         for term, coeff in sorted(self.terms.items()):
             term_cnt += 1
-            if isinstance(coeff, PR):
+            if isinstance(coeff, ParameterResolver):
                 tmp_string = '{} ['.format(coeff.expression())  # begin of the '['
             else:
                 tmp_string = '{} ['.format(coeff)  # begin of the '['
@@ -226,6 +243,7 @@ class QubitExcitationOperator(_Operator):
         return string_rep
 
     def __repr__(self):
+        """Return a string representation of the object."""
         return str(self)
 
     @property
@@ -272,7 +290,8 @@ class QubitExcitationOperator(_Operator):
         return out
 
     def normal_ordered(self):
-        r"""Return the normal ordered form of the Qubit excitation operator.
+        r"""
+        Return the normal ordered form of the Qubit excitation operator.
 
         Returns:
             QubitExcitationOperator, the normal ordered operator.
@@ -296,8 +315,8 @@ class QubitExcitationOperator(_Operator):
 
 
 def _normal_ordered_term(term, coefficient):
-    r"""Return the normal ordered term of the QubitExcitationOperator
-    with high indexand creation operator in front.
+    r"""
+    Return the normal ordered term of the QubitExcitationOperator with high indexand creation operator in front.
 
     eg. :math:`Q_{3}^{\dagger} Q_{2}^{\dagger} Q_{1} Q_{0}`
 
@@ -315,7 +334,7 @@ def _normal_ordered_term(term, coefficient):
                 # If indice are same, employ the commutation relationship
                 # And generate the new term
                 if left_sub_term[0] == right_sub_term[0]:
-                    new_term = term[:(j - 1)] + term[(j + 1):]
+                    new_term = term[: (j - 1)] + term[(j + 1) :]  # noqa: E203
                     ordered_term += _normal_ordered_term(new_term, coefficient)
             elif left_sub_term[1] == right_sub_term[1]:
                 # If indice are same, evaluate it to zero.

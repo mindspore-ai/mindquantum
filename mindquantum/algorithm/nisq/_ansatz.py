@@ -16,6 +16,7 @@
 """Basic class of ansatz."""
 
 from abc import abstractmethod
+
 from mindquantum.core.circuit import Circuit
 
 
@@ -27,7 +28,9 @@ class Ansatz:
         name (str): The name of this ansatz.
         n_qubits (int): How many qubits this ansatz act on.
     """
+
     def __init__(self, name, n_qubits, *args, **kwargs):
+        """Initialize an Ansatz object."""
         self.name = name
         self.n_qubits = n_qubits
         self._circuit = Circuit()

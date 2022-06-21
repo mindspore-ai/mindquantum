@@ -13,13 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
 """Basic module for quantum gate."""
+
 from collections.abc import Iterable
+
 import numpy as np
 from rich.console import Console
+
 from mindquantum import mqbackend as mb
 from mindquantum.io.display import measure_text_drawer
 from mindquantum.utils.f import join_without_empty
+
 from .basic import FunctionalGate
 
 
@@ -77,42 +82,52 @@ class Measure(FunctionalGate):
         >>> np.abs(sim.get_qs())**2
         array([0.5 , 0.  , 0.25, 0.25])
     """
+
     def __init__(self, name=''):
+        """Initialize a Measure object."""
         super().__init__('Measure', 1)
         self.key = name
 
     def get_cpp_obj(self):
+        """Get the underlying C++ object."""
         out = mb.get_measure_gate(self.key)
         out.obj_qubits = self.obj_qubits
         return out
 
     def __hash__(self):
+        """Hash method."""
         return hash(self.key)
 
     def __eq__(self, other):
+        """Equality comparison operator."""
         if isinstance(other, self.__class__):
             if self.key == other.key:
                 return True
         return False
 
     def __extra_prop__(self):
+        """Extra prop magic method."""
         prop = super().__extra_prop__()
         prop['key'] = self.key
         return prop
 
     def __type_specific_str__(self):
+        """Return a string representation of the object."""
         q_s = self.__qubits_expression__()
-        k_s = (f"key={self.key}" if self.key else '')
+        k_s = f"key={self.key}" if self.key else ''
         return join_without_empty(", ", [q_s, k_s])
 
     def __str_in_terminal__(self):
+        """Return a string representation of the object."""
         type_s = self.__type_specific_str__()
         return f"{self.name}({type_s})" if type_s else self.name
 
     def __str_in_circ__(self):
+        """Return a string representation of the object."""
         return f"M({self.key})"
 
     def on(self, obj_qubits, ctrl_qubits=None):
+        """Define which qubit the gate act on and the control qubit."""
         new = super().on(obj_qubits, ctrl_qubits)
         if len(new.obj_qubits) != 1:
             raise ValueError("Measure gate only apply on a single qubit")
@@ -121,7 +136,7 @@ class Measure(FunctionalGate):
         return new
 
     def hermitian(self):
-        """Hermitian gate of measure return its self"""
+        """Hermitian gate of measure return its self."""
         if not self.obj_qubits:
             raise ValueError("Measurement should apply on some qubit first.")
         return self.__class__(self.key).on(self.obj_qubits[0])
@@ -129,7 +144,7 @@ class Measure(FunctionalGate):
 
 class MeasureResult:
     """
-    Measurement result container
+    Measurement result container.
 
     Examples:
         >>> from mindquantum import qft
@@ -152,7 +167,9 @@ class MeasureResult:
         >>> res.data
         {'00': 230, '01': 254, '10': 257, '11': 259}
     """
+
     def __init__(self):
+        """Initialize a MeasureResult object."""
         self.measures = []
         self.keys = []
         self.samples = np.array([])
@@ -161,8 +178,9 @@ class MeasureResult:
 
     def add_measure(self, measure):
         """
-        Add a measurement gate into this measurement result container. Measure key
-        should be unique in this measurement result container.
+        Add a measurement gate into this measurement result container.
+
+        Measure key should be unique in this measurement result container.
 
         Args:
             measure (Union[Iterable, Measure]): One or more measure gates.
@@ -171,8 +189,10 @@ class MeasureResult:
             measure = [measure]
         for m in measure:
             if not isinstance(m, Measure):
-                raise ValueError("Measurement gates need to \
-be objects of class 'Measurement' "                                   )
+                raise ValueError(
+                    "Measurement gates need to \
+be objects of class 'Measurement' "
+                )
         for m in measure:
             if m.key in self.keys:
                 raise ValueError(f"Measure key {m.key} already defined.")
@@ -181,11 +201,12 @@ be objects of class 'Measurement' "                                   )
 
     @property
     def keys_map(self):
+        """Reverse mapping for the keys."""
         return {i: j for j, i in enumerate(self.keys)}
 
     def collect_data(self, samples):
         """
-        collect the measured bit string
+        Collect the measured bit string.
 
         Args:
             samples (numpy.ndarray): A two dimensional (N x M) numpy array that stores
@@ -202,12 +223,12 @@ be objects of class 'Measurement' "                                   )
                 out[s] += 1
             else:
                 out[s] = 1
-        keys = sorted(list(out.keys()))
+        keys = sorted(out.keys())
         self.bit_string_data = {key: out[key] for key in keys}
 
     def select_keys(self, *keys):
         """
-        Select certain measurement keys from this measurement container
+        Select certain measurement keys from this measurement container.
 
         Args:
             keys (tuple[str]): The key you want to select.
@@ -260,10 +281,13 @@ be objects of class 'Measurement' "                                   )
         return self.bit_string_data
 
     def __str__(self):
+        """Return a string representation of the object."""
         return self.__repr__()
 
     def __repr__(self):
+        """Return a string representation of the object."""
         from mindquantum.io.display._config import _MEA_RES_STYLE
+
         res = measure_text_drawer(self)
         res.append(self.data.__str__())
         s = '\n'.join(res)
@@ -275,9 +299,9 @@ be objects of class 'Measurement' "                                   )
         return s
 
     def _repr_html_(self):
-        """repr for jupyter notebook"""
-        from mindquantum.io.display._config import _MEA_RES_STYLE
-        from mindquantum.io.display._config import MEA_HTML_FORMAT
+        """Repr for jupyter notebook."""
+        from mindquantum.io.display._config import _MEA_RES_STYLE, MEA_HTML_FORMAT
+
         res = measure_text_drawer(self)
         res.append(self.data.__str__())
         s = '\n'.join(res)
@@ -295,8 +319,9 @@ be objects of class 'Measurement' "                                   )
             style (dict, str): the style to set svg style. Currently, we support
                 'official'. Default: None.
         """
-        from mindquantum.io.display.measure_res_svg_drawer import SVGMeasure
         from mindquantum.io.display._config import _svg_measure_config_official
+        from mindquantum.io.display.measure_res_svg_drawer import SVGMeasure
+
         supported_style = {
             'official': _svg_measure_config_official,
         }

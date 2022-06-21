@@ -8,6 +8,7 @@
 [![Release](https://badg.vercel.app/gitee/release/mindspore/mindquantum?scale=1.3)](https://gitee.com/mindspore/mindquantum/releases)
 [![LICENSE](https://badg.vercel.app/gitee/license/mindspore/mindquantum?scale=1.3)](https://github.com/mindspore-ai/mindquantum/blob/master/LICENSE)
 [![PRs Welcome](https://badg.vercel.app/badge/PRs/Welcome?scale=1.3)](https://gitee.com/mindspore/mindquantum/pulls)
+[![Documentation Status](https://readthedocs.org/projects/mindquantum/badge/?version=latest&style=flat)](https://mindquantum.readthedocs.io/en/latest/?badge=latest)
 
 [查看中文](./README_CN.md)
 

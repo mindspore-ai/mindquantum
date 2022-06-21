@@ -2,7 +2,7 @@
 
 These scripts are going to test the performance between MindQuantum and PaddlePaddle Quantum with QAOA algorithm.
 
-Please install PaddlePaddle Quantum before runing these scripts.
+Please install PaddlePaddle Quantum before running these scripts.
 
 ## MindQuantum
 

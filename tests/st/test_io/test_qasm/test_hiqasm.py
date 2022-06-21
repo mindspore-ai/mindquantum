@@ -15,9 +15,9 @@
 # ============================================================================
 """Test hiqasm."""
 
-from mindquantum.io import random_hiqasm
-from mindquantum.io import HiQASM
 from mindquantum.core import X
+from mindquantum.io import HiQASM, random_hiqasm
+
 
 def test_hiqasm():
     """

@@ -13,15 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""
-SWAP gate related decompose rule.
-"""
 
-from mindquantum.core import gates as G
-from mindquantum.core import Circuit
-from mindquantum.utils.type_value_check import _check_input_type, _check_control_num
+"""SWAP gate related decompose rule."""
 
-def swap_decompose(gate: G.SWAPGate):
+from mindquantum.core import Circuit, gates
+from mindquantum.utils.type_value_check import _check_control_num, _check_input_type
+
+
+def swap_decompose(gate: gates.SWAPGate):
     """
     Decompose swap gate.
 
@@ -46,20 +45,20 @@ def swap_decompose(gate: G.SWAPGate):
               │    │    │
         q1: ──●────X────●──
     """
-
-    _check_input_type('gate', G.SWAPGate, gate)
+    _check_input_type('gate', gates.SWAPGate, gate)
     _check_control_num(gate.obj_qubits, 2)
     solutions = []
     c1 = Circuit()
     solutions.append(c1)
     q0 = gate.obj_qubits[0]
     q1 = gate.obj_qubits[1]
-    c1 += G.X.on(q1,q0)
-    c1 += G.X.on(q0,q1)
-    c1 += G.X.on(q1,q0)
+    c1 += gates.X.on(q1, q0)
+    c1 += gates.X.on(q0, q1)
+    c1 += gates.X.on(q1, q0)
     return solutions
 
-def cswap_decompose(gate: G.SWAPGate):
+
+def cswap_decompose(gate: gates.SWAPGate):
     """
     Decompose cswap gate.
 
@@ -88,7 +87,7 @@ def cswap_decompose(gate: G.SWAPGate):
               │    │    │
         q2: ──●────X────●──
     """
-    _check_input_type('gate', G.SWAPGate, gate)
+    _check_input_type('gate', gates.SWAPGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)
     solutions = []
     c1 = Circuit()
@@ -96,10 +95,11 @@ def cswap_decompose(gate: G.SWAPGate):
     q0 = gate.ctrl_qubits[0]
     q1 = gate.obj_qubits[0]
     q2 = gate.obj_qubits[1]
-    c1 += G.X.on(q1,q2)
-    c1 += G.X.on(q2,[q0,q1])
-    c1 += G.X.on(q1,q2)
+    c1 += gates.X.on(q1, q2)
+    c1 += gates.X.on(q2, [q0, q1])
+    c1 += gates.X.on(q1, q2)
     return solutions
+
 
 decompose_rules = ['swap_decompose', 'cswap_decompose']
 __all__ = decompose_rules

@@ -13,46 +13,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Benchmark for mnist classification with MindQuantum"""
 
-import time
+"""Benchmark for mnist classification with MindQuantum."""
+
 import os
+import time
+
+import mindspore as ms
+import mindspore.dataset as ds
 import numpy as np
 from _parse_args import parser
+from mindspore import Model, Tensor, nn
+from mindspore.ops import operations as ops
+from mindspore.train.callback import Callback
+
+from mindquantum.core import RX, XX, ZZ, Circuit, H, Hamiltonian, QubitOperator, X, Z
+from mindquantum.framework import MQLayer
+from mindquantum.simulator import Simulator
 
 args = parser.parse_args()
 os.environ['OMP_NUM_THREADS'] = str(args.omp_num_threads)
-
-import mindspore as ms
-import mindspore.context as context
-import mindspore.dataset as ds
-from mindspore.ops import operations as P
-from mindspore import Tensor
-from mindspore import nn
-from mindspore import Model
-from mindspore.train.callback import Callback
-from mindquantum.core import Circuit, X, Z, H, XX, ZZ, Hamiltonian, RX, QubitOperator
-from mindquantum.framework import MQLayer
-from mindquantum.simulator import Simulator
 
 ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 
 
 class FPSMonitor(Callback):
     """A fps monitor."""
+
     def __init__(self, forget_first_n=2):
+        """Initialize a FPSMonitor object."""
         super(FPSMonitor, self).__init__()
         self.forget_first_n = forget_first_n
         self.step = 0
         self.times = np.array([])
 
     def step_begin(self, run_context):
+        """Step initialization method."""
         run_context.original_args()
         self.step += 1
         if self.step > self.forget_first_n:
             self.times = np.append(self.times, time.time())
 
     def step_end(self, run_context):
+        """Step finalization method."""
         run_context.original_args()
         if self.times.size > 0:
             self.times[-1] = time.time() - self.times[-1]
@@ -61,13 +64,16 @@ class FPSMonitor(Callback):
 
 class Hinge(nn.MSELoss):
     """Hinge loss."""
+
     def __init__(self, reduction='mean'):
+        """Initialize a Hinge object."""
         super(Hinge, self).__init__(reduction)
-        self.maximum = P.Maximum()
-        self.mul = P.Mul()
+        self.maximum = ops.Maximum()
+        self.mul = ops.Mul()
         self.zero = Tensor(np.array([0]).astype(np.float32))
 
     def construct(self, base, target):
+        """Construct a Hinge node (?)."""
         x = 1 - self.mul(base, target)
         x = self.maximum(x, self.zero)
         return self.get_loss(x)
@@ -75,11 +81,14 @@ class Hinge(nn.MSELoss):
 
 class MnistNet(nn.Cell):
     """Net for mnist dataset."""
+
     def __init__(self, net):
+        """Initialize a MnistNet object."""
         super(MnistNet, self).__init__()
         self.net = net
 
     def construct(self, x):
+        """Construct a MnistNet node (?)."""
         x = self.net(x)
         return x
 
@@ -97,9 +106,11 @@ def encoder_circuit_builder(n_qubits_range, prefix='encoder'):
     return c
 
 
-class CircuitLayerBuilder():
+class CircuitLayerBuilder:
     """Build ansatz layer."""
+
     def __init__(self, data_qubits, readout):
+        """Initialize a CircuitLayerBuild object."""
         self.data_qubits = data_qubits
         self.readout = readout
 
@@ -157,17 +168,13 @@ def generate_dataset(data_file_path, n_qubits, sampling_num, batch_num, eval_siz
     y_test_nocon = np.array(y_test_nocon).astype(np.int32)[:, None]
     y_train_nocon = y_train_nocon * 2 - 1
     y_test_nocon = y_test_nocon * 2 - 1
-    train = ds.NumpySlicesDataset({
-        "image": x_train_encoder[:sampling_num],
-        "label": y_train_nocon[:sampling_num]
-    },
-                                  shuffle=False).batch(batch_num)
+    train = ds.NumpySlicesDataset(
+        {"image": x_train_encoder[:sampling_num], "label": y_train_nocon[:sampling_num]}, shuffle=False
+    ).batch(batch_num)
 
-    test = ds.NumpySlicesDataset({
-        "image": x_test_encoder[:eval_size_num],
-        "label": y_test_nocon[:eval_size_num]
-    },
-                                 shuffle=False).batch(eval_size_num)
+    test = ds.NumpySlicesDataset(
+        {"image": x_test_encoder[:eval_size_num], "label": y_test_nocon[:eval_size_num]}, shuffle=False
+    ).batch(eval_size_num)
     return train, test
 
 
@@ -200,8 +207,11 @@ if __name__ == '__main__':
     t0 = time.time()
     model.train(epochs, train_loader, callbacks=[fps])
     t1 = time.time()
-    print("\nNum sampling:{}\nBatchs:{}\nParallel worker:{}\nOMP THREADS:{}\nTotal time: {}s".format(
-        args.num_sampling, args.batchs, args.parallel_worker, args.omp_num_threads, t1 - t0))
+    print(
+        "\nNum sampling:{}\nBatchs:{}\nParallel worker:{}\nOMP THREADS:{}\nTotal time: {}s".format(
+            args.num_sampling, args.batchs, args.parallel_worker, args.omp_num_threads, t1 - t0
+        )
+    )
     res = np.array([])
     for train_x, train_y in train_loader:
         y_pred = mnist_net(train_x)

@@ -15,30 +15,32 @@
 # ============================================================================
 """Parameter resolver."""
 
-import warnings
-import numbers
 import copy
 import json
+import numbers
+import warnings
 from typing import Iterable
+
 import numpy as np
-from mindquantum.utils.type_value_check import _check_input_type
-from mindquantum.utils.type_value_check import _check_int_type
-from mindquantum.utils.f import is_two_number_close
-from mindquantum.utils.f import string_expression
-from mindquantum.utils.f import join_without_empty
+
 from mindquantum import mqbackend as mb
+from mindquantum.utils.f import (
+    is_two_number_close,
+    join_without_empty,
+    string_expression,
+)
+from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
 
 
 def is_type_upgrade(origin_v, other_v):
-    """check whether type upgraded."""
+    """Check whether type upgraded."""
     tmp = origin_v + other_v
     return not isinstance(tmp, type(origin_v))
 
 
 class ParameterResolver:
     """
-    A ParameterRsolver can set the parameter of parameterized quantum gate or
-    parameterized quantum circuit.
+    A ParameterRsolver can set the parameter of parameterized quantum gate or parameterized quantum circuit.
 
     By specific which part of parameters needs to calculate gradient, the PQC
     operator can only calculate gradient of these parameters.
@@ -77,6 +79,7 @@ class ParameterResolver:
     """
 
     def __init__(self, data=None, const=None, dtype=None):
+        """Initialize a ParameterResolver object."""
         if dtype is None:
             if isinstance(data, (complex, np.complex128)):
                 dtype = np.complex128
@@ -97,7 +100,7 @@ class ParameterResolver:
             data = {}
         if isinstance(data, numbers.Number):
             if const is not None:
-                raise ValueError(f"data and const cannot not both be number.")
+                raise ValueError("data and const cannot not both be number.")
             const = self.dtype(data)
             data = {}
             self.obj = obj(data, const)
@@ -119,7 +122,7 @@ class ParameterResolver:
                 _check_input_type("parameter name", str, k)
                 _check_input_type("parameter value", numbers.Number, v)
                 if not k.strip():
-                    raise KeyError(f"parameter name cannot be empty string.")
+                    raise KeyError("parameter name cannot be empty string.")
 
             if const is None:
                 const = 0
@@ -128,7 +131,8 @@ class ParameterResolver:
             self.obj = obj({i: self.dtype(j) for i, j in data.items()}, const)
         else:
             raise TypeError(
-                f"data requires a number or a string or a dict or a ParameterResolver, but get {type(data)}!")
+                f"data requires a number or a string or a dict or a ParameterResolver, but get {type(data)}!"
+            )
 
     def astype(self, dtype, inplace=False):
         """
@@ -161,8 +165,10 @@ class ParameterResolver:
         if inplace:
             if dtype != self.dtype:
                 if self.dtype == np.complex128 and dtype == np.float64:
-                    warnings.warn("Casting complex parameter resolver to float parameter \
-resolver discards the imaginary part."                                      )
+                    warnings.warn(
+                        "Casting complex parameter resolver to float parameter \
+resolver discards the imaginary part."
+                    )
                     if self.obj.is_complex_pr():
                         self.obj = self.obj.real()
                 else:
@@ -192,9 +198,7 @@ resolver discards the imaginary part."                                      )
 
     @const.setter
     def const(self, const_value):
-        """
-        The setter method of const.
-        """
+        """Setter method for const."""
         _check_input_type('const value', numbers.Number, const_value)
         if isinstance(const_value, complex):
             const_value = np.complex128(const_value)
@@ -204,8 +208,9 @@ resolver discards the imaginary part."                                      )
 
     def __len__(self):
         """
-        Get the number of parameters in this parameter resolver. Please note that
-        the parameter with 0 coefficient is also considered.
+        Get the number of parameters in this parameter resolver.
+
+        Please note that the parameter with 0 coefficient is also considered.
 
         Returns:
             int, the number of all parameters.
@@ -222,7 +227,7 @@ resolver discards the imaginary part."                                      )
 
     def keys(self):
         """
-        A iterator that yield the name of all parameters.
+        Yield an iterator to the name of all parameters.
 
         Examples:
             >>> from mindquantum.core import ParameterResolver as PR
@@ -235,7 +240,7 @@ resolver discards the imaginary part."                                      )
 
     def values(self):
         """
-        A iterator that yield the value of all parameters.
+        Yield an iterator to the value of all parameters.
 
         Examples:
             >>> from mindquantum.core import ParameterResolver as PR
@@ -248,7 +253,7 @@ resolver discards the imaginary part."                                      )
 
     def items(self):
         """
-        A iterator that yield the name and value of all parameters.
+        Yield an iterator to the name and value of all parameters.
 
         Examples:
             >>> from mindquantum.core import ParameterResolver as PR
@@ -262,8 +267,9 @@ resolver discards the imaginary part."                                      )
 
     def is_const(self):
         """
-        Check that whether this parameter resolver represent a constant number, which
-        means that there is no non zero parameter in this parameter resolver.
+        Check whether this parameter resolver represents a constant number.
+
+        This means that there is no non zero parameter in this parameter resolver.
 
         Returns:
             bool, whether this parameter resolver represent a constant number.
@@ -274,13 +280,11 @@ resolver discards the imaginary part."                                      )
             >>> pr.is_const()
             True
         """
-
         return self.obj.is_const()
 
     def __bool__(self):
         """
-        Check whether this parameter resolver has non zero constant or parameter
-        with non zero coefficient.
+        Check whether this parameter resolver has non zero constant or parameter with non zero coefficient.
 
         Returns:
             bool, False if this parameter resolver represent zero and True if not.
@@ -295,8 +299,9 @@ resolver discards the imaginary part."                                      )
 
     def __setitem__(self, keys, values):
         """
-        Set the value of parameter in this parameter resolver. You can set multiple
-        values of multiple parameters with given iterable keys and values.
+        Set the value of parameter in this parameter resolver.
+
+        You can set multiple values of multiple parameters with given iterable keys and values.
 
         Examples:
             >>> from mindquantum.core import ParameterResolver as PR
@@ -309,7 +314,7 @@ resolver discards the imaginary part."                                      )
             _check_input_type("parameter name", str, keys)
             _check_input_type("parameter value", numbers.Number, values)
             if not keys.strip():
-                raise KeyError(f"parameter name cannot be empty string.")
+                raise KeyError("parameter name cannot be empty string.")
             if is_type_upgrade(self.dtype(0), values):
                 self.astype(type(values), True)
             self.obj[keys] = self.dtype(values)
@@ -434,6 +439,7 @@ resolver discards the imaginary part."                                      )
         return pr
 
     def __deepcopy__(self, memo):
+        """Deep copy operator."""
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
@@ -500,9 +506,7 @@ resolver discards the imaginary part."                                      )
         return res
 
     def __radd__(self, other):
-        """
-        Add a number or ParameterResolver.
-        """
+        """Add a number or ParameterResolver."""
         return self + other
 
     def __isub__(self, other):
@@ -577,7 +581,7 @@ resolver discards the imaginary part."                                      )
         return self * other
 
     def __neg__(self):
-        """The negative of this parameter resolver."""
+        """Return the negative of this parameter resolver."""
         out = copy.copy(self)
         out.obj = -out.obj
         return out
@@ -585,7 +589,7 @@ resolver discards the imaginary part."                                      )
     def __itruediv__(self, other):
         """Divide a number inplace."""
         _check_input_type("other", numbers.Number, other)
-        self *= (1 / other)
+        self *= 1 / other
         return self
 
     def __truediv__(self, other):
@@ -595,11 +599,11 @@ resolver discards the imaginary part."                                      )
         return res
 
     def __str__(self):
-        """String expression of this parameter resolver."""
+        """Return the string expression of this parameter resolver."""
         return self.obj.__str__()
 
     def __repr__(self) -> str:
-        """Repr of this parameter resolver."""
+        """Return the repr of this parameter resolver."""
         return self.__str__()
 
     def __float__(self):
@@ -679,8 +683,9 @@ resolver discards the imaginary part."                                      )
 
     def requires_grad(self):
         """
-        Set all parameters of this parameter resolver to require gradient
-        calculation. Inplace operation.
+        Set all parameters of this parameter resolver to require gradient calculation.
+
+        Inplace operation.
 
         Returns:
             ParameterResolver, the parameter resolver itself.
@@ -853,9 +858,8 @@ resolver discards the imaginary part."                                      )
             other (ParameterResolver): other parameter resolver.
 
         Raises:
-            ValueError: If some parameters require grad and not require grad in
-                other parameter resolver and vice versa and some parameters are encoder
-                parameters and not encoder in other parameter resolver and vice versa.
+            ValueError: If some parameters require grad and not require grad in other parameter resolver and vice versa
+                and some parameters are encoder parameters and not encoder in other parameter resolver and vice versa.
 
         Examples:
             >>> from mindquantum import ParameterResolver
@@ -1046,8 +1050,7 @@ resolver discards the imaginary part."                                      )
 
     def is_hermitian(self):
         """
-        To check whether the parameter value of this parameter resolver is
-        hermitian or not.
+        To check whether the parameter value of this parameter resolver is hermitian or not.
 
         Returns:
             bool, whether the parameter resolver is hermitian or not.
@@ -1066,8 +1069,7 @@ resolver discards the imaginary part."                                      )
 
     def is_anti_hermitian(self):
         """
-        To check whether the parameter value of this parameter resolver is
-        anti hermitian or not.
+        To check whether the parameter value of this parameter resolver is anti hermitian or not.
 
         Returns:
             bool, whether the parameter resolver is anti hermitian or not.
@@ -1085,8 +1087,8 @@ resolver discards the imaginary part."                                      )
         return self.obj.is_anti_hermitian()
 
     def dumps(self, indent=4):
-        '''
-        Dump ParameterResolver into JSON(JavaScript Object Notation)
+        """
+        Dump ParameterResolver into JSON(JavaScript Object Notation).
 
         Args:
             indent (int): Then JSON array elements and object members will be
@@ -1122,7 +1124,7 @@ resolver discards the imaginary part."                                      )
                 ],
                 "encoder_parameters": []
             }
-        '''
+        """
         if indent is not None:
             _check_int_type('indent', indent)
         dic = {}
@@ -1135,8 +1137,8 @@ resolver discards the imaginary part."                                      )
 
     @staticmethod
     def loads(strs):
-        '''
-        Load JSON(JavaScript Object Notation) into FermionOperator
+        r"""
+        Load JSON(JavaScript Object Notation) into FermionOperator.
 
         Args:
             strs (str): The dumped parameter resolver string.
@@ -1156,7 +1158,7 @@ resolver discards the imaginary part."                                      )
             requires_grad_parameters is: {'c', 'd'}
             >>> print('no_grad_parameters is :', obj.no_grad_parameters)
             no_grad_parameters is : {'b', 'a'}
-        '''
+        """
         _check_input_type('strs', str, strs)
         dic = json.loads(strs)
 

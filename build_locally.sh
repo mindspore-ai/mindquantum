@@ -13,40 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-BASEPATH=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+# shellcheck disable=SC2154
 
-# ==============================================================================
-# Default values
-
-do_clean=0
-do_clean_build_dir=0
-do_clean_cache=0
-do_clean_venv=0
-enable_gpu=0
-n_jobs=$(nproc)
-
-source_dir=$(realpath "$BASEPATH")
-build_dir=$(realpath "$source_dir/build")
+BASEPATH=$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}" )" &> /dev/null && pwd )
+ROOTDIR="$BASEPATH"
+PROGRAM=$(basename "${BASH_SOURCE[0]:-$0}")
 
 # ==============================================================================
 
-call_cmake() {
-    echo "**********"
-    echo "Calling CMake with: cmake " "$@"
-    echo "**********"
-    cmake "$@"
-}
+# Load common bash helper functions
+. "$ROOTDIR/scripts/build/common_functions.sh"
 
-# ==============================================================================
+# -----------------------------------------------------------------------------
 
-die() { echo "$*" >&2; exit 2; }  # complain to STDERR and exit with error
-no_arg() {
-    if [ -n "$OPTARG" ]; then die "No arg allowed for --$OPT option"; fi; }
-needs_arg() { if [ -z "$OPTARG" ]; then die "No arg for --$OPT option"; fi; }
-
-# ------------------------------------------------------------------------------
-
-help_message() {
+function help_header() {
     echo 'Build MindQunantum locally (in-source build)'
     echo ''
     echo 'This is mainly relevant for developers that do not want to always '
@@ -60,176 +40,211 @@ help_message() {
     echo 'A pth-file will be created in the virtualenv site-packages directory'
     echo 'so that the MindQuantum root folder will be added to the Python PATH'
     echo 'without the need to modify PYTHONPATH.'
-    echo -e '\nUsage:'
-    echo "  $(basename "$0") [options] [-- cmake_options]"
-    echo -e '\nOptions:'
-    echo '  -h,--help          Show this help message and exit'
-    echo '  -B [dir]           Specify build directory'
-    echo "                     Defaults to: $build_dir"
-    echo '  -c,--clean         Run make clean before building'
-    echo '  --clean-all        Clean everything before building.'
-    echo '                     Equivalent to --clean-venv --clean-builddir'
-    echo '  --clean-builddir   Delete build directory before building'
-    echo '  --clean-cache      Re-run CMake to generate the CMake cache'
-    echo '  --clean-venv       Clean Python virtualenv before building'
-    echo '  --gpu              Enable GPU support'
-    echo '  -j,--jobs [N]      Number of parallel jobs for building'
-    echo "                     Defaults to: $n_jobs"
+}
+
+function extra_help() {
+    echo 'Extra options:'
+    echo '  --clean              Run make clean before building'
+    echo '  -c,--configure       Force running the CMake configure step'
+    echo '  --configure-only     Stop after the CMake configure and generation steps (ie. before building MindQuantum)'
+    echo '  --doc,--docs         Setup the Python virtualenv for building the documentation and ask CMake to build the'
+    echo '                       documentation'
+    echo '  --install            Build the ´install´ target'
+    echo '  --prefix             Specify installation prefix'
     echo ''
-    echo 'Any options after "--" will be passed onto CMake when configuring'
+    echo 'Any options after "--" will be passed onto CMake during the configuration step'
     echo -e '\nExample calls:'
-    echo "$0 -B build"
-    echo "$0 -B build --gpu"
-    echo "$0 -B build -- -DIN_PLACE_BUILD=ON"
+    echo "$PROGRAM -B build"
+    echo "$PROGRAM -B build --gpu"
+    echo "$PROGRAM -B build --cxx --with-boost --without-gmp --venv=/tmp/venv"
+    echo "$PROGRAM -B build -- -DCMAKE_CUDA_COMPILER=/opt/cuda/bin/nvcc"
+    echo "$PROGRAM -B build --cxx --gpu -- -DCMAKE_NVCXX_COMPILER=/opt/nvidia/hpc_sdk/Linux_x86_64/22.3/compilers/bin/nvc++"
 }
 
-# ==============================================================================
+# --------------------------------------
 
-while getopts hcB:j:-: OPT; do
-    if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
-        OPT="${OPTARG%%=*}"       # extract long option name
-        OPTARG="${OPTARG#$OPT}"   # extract long option argument (may be empty)
-        OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
-    fi
-    # shellcheck disable=SC2214
-    case "$OPT" in
-        h | help )       no_arg;
-                         help_message >&2
-                         exit 1 ;;
-        B )              needs_arg;
-                         build_dir="$OPTARG"
+# shellcheck disable=SC2034
+getopts_args_extra='c'
+
+function parse_extra_args() {
+    case "$1" in
+        clean )          no_arg;
+                         set_var do_clean
                          ;;
-        c | clean )      no_arg;
-                         do_clean=1
+        c | configure )  no_arg;
+                         set_var do_configure
                          ;;
-        clean-all )      no_arg;
-                         do_clean_venv=1
-                         do_clean_build_dir=1
+        configure-only ) no_arg;
+                         set_var configure_only
                          ;;
-        clean-builddir ) no_arg;
-                         do_clean_build_dir=1
+        doc | docs )     no_arg;
+                         set_var do_docs
                          ;;
-        clean-cache )    no_arg;
-                         do_clean_cache=1
+        install)         no_arg;
+                         set_var do_install
                          ;;
-        clean-venv )     no_arg;
-                         do_clean_venv=1
+        prefix)          needs_arg;
+                         set_var prefix_dir "$2"
                          ;;
-        gpu )            no_arg;
-                         enable_gpu=1
+        ??* )            die "Illegal option --OPT: $1"
                          ;;
-        j | jobs )       needs_arg;
-                         n_jobs="$OPTARG"
-                         ;;
-        ??* )           die "Illegal option --OPT: $OPT" ;;
-        \? )            exit 2 ;;  # bad short option (error reported via getopts)
     esac
-done
-shift $((OPTIND-1)) # remove parsed options and args from $@ list
-
-# ==============================================================================
-
-if command -v python3 >/dev/null 2>&1; then
-    PYTHON=python3
-elif command -v python >/dev/null 2>&1; then
-    PYTHON=python3
-else
-    echo 'Unable to locate python or python3!' 1>&2
-    exit 1
-fi
-
-# ==============================================================================
-
-mk_new_dir() {
-    local create_dir="$1"  # the target to make
-
-    if [[ -d "${create_dir}" ]];then
-        rm -rf "${create_dir}"
-    fi
-
-    mkdir -pv "${create_dir}"
 }
 
+# ------------------------------------------------------------------------------
+
+# NB: using the default values from parse_common_args.sh
+. "$ROOTDIR/scripts/build/parse_common_args.sh"
+
+# Locate python or python3
+. "$ROOTDIR/scripts/build/locate_python3.sh"
 
 # ==============================================================================
 
 set -e
 
-cd "${BASEPATH}"
+cd "${ROOTDIR}"
 
 # ------------------------------------------------------------------------------
 # Create a virtual environment for building the wheel
 
-if [ $do_clean_venv -eq 1 ]; then
-    echo "Deleting virtualenv folder: $BASEPATH/venv"
-    rm -rf venv
-fi
-
-if [ $do_clean_build_dir -eq 1 ]; then
+if [ "$do_clean_build_dir" -eq 1 ]; then
     echo "Deleting build folder: $build_dir"
-    rm -rf "$build_dir"
+    call_cmd rm -rf "$build_dir"
 fi
 
-created_venv=0
-if [ ! -d "$BASEPATH/venv" ]; then
-    created_venv=1
-    echo "Creating Python virtualenv: $PYTHON -m venv venv"
-    $PYTHON -m venv venv
-fi
+# NB: `created_venv` variable can be used to detect if a virtualenv was created or not
+. "$ROOTDIR/scripts/build/python_virtualenv_activate.sh"
 
-source venv/bin/activate
+if [ "$dry_run" -ne 1 ]; then
+    # Make sure the root directory is in the virtualenv PATH
+    site_pkg_dir=$("$PYTHON" -c 'import site; print(site.getsitepackages()[0])')
+    pth_file="$site_pkg_dir/mindquantum_local.pth"
 
-if [ $created_venv -eq 1 ]; then
-    pkgs=(pip setuptools wheel build pybind11)
-
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        pkgs+=(auditwheel)
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-        pkgs+=(delocate)
+    if [ ! -e "$pth_file" ]; then
+        echo "Creating pth-file in $pth_file"
+        echo "$ROOTDIR" > "$pth_file"
     fi
-
-    echo "Updating Python packages: $PYTHON -m pip install -U ${pkgs[*]}"
-    $PYTHON -m pip install -U "${pkgs[@]}"
 fi
 
-# Make sure the root directory is in the virtualenv PATH
-site_pkg_dir=$($PYTHON -c 'import site; print(site.getsitepackages()[0])')
-pth_file="$site_pkg_dir/mindquantum_local.pth"
+# ------------------------------------------------------------------------------
+# Locate cmake or cmake3
 
-if [ ! -e "$pth_file" ]; then
-    echo "Creating pth-file in $pth_file"
-    echo "$BASEPATH" > "$pth_file"
-fi
+# NB: `cmake_from_venv` variable is set by this script (and is used by python_virtualenv_update.sh)
+. "$ROOTDIR/scripts/build/locate_cmake.sh"
+
+# ------------------------------------------------------------------------------
+# Update Python virtualenv (if requested/necessary)
+
+. "$ROOTDIR/scripts/build/python_virtualenv_update.sh"
 
 # ------------------------------------------------------------------------------
 # Setup arguments for build
 
-cmake_args=(-DENABLE_PROJECTQ:BOOL=ON -DIN_PLACE_BUILD:BOOL=ON)
+CMAKE_BOOL=(OFF ON)
 
-if [[ $enable_gpu -eq 1 ]]; then
-    cmake_args+=(-DENABLE_CUDA:BOOL=ON)
+cmake_args=(-DIN_PLACE_BUILD:BOOL=ON
+            -DIS_PYTHON_BUILD:BOOL=OFF
+            -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON
+            -DCMAKE_BUILD_TYPE:STRING="$build_type"
+            -DENABLE_PROJECTQ:BOOL="${CMAKE_BOOL[$enable_projectq]}"
+            -DENABLE_CMAKE_DEBUG:BOOL="${CMAKE_BOOL[$cmake_debug_mode]}"
+            -DENABLE_CUDA:BOOL="${CMAKE_BOOL[$enable_gpu]}"
+            -DENABLE_CXX_EXPERIMENTAL:BOOL="${CMAKE_BOOL[$enable_cxx]}"
+            -DENABLE_GITEE:BOOL="${CMAKE_BOOL[$enable_gitee]}"
+            -DBUILD_TESTING:BOOL="${CMAKE_BOOL[$enable_tests]}"
+            -DCLEAN_3RDPARTY_INSTALL_DIR:BOOL="${CMAKE_BOOL[$do_clean_3rdparty]}"
+            -DUSE_VERBOSE_MAKEFILE:BOOL="${CMAKE_BOOL[! $cmake_make_silent]}"
+            -DCMAKE_FIND_USE_PACKAGE_REGISTRY:BOOL="${CMAKE_BOOL[! $cmake_no_registry]}"
+            -DCMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY:BOOL="${CMAKE_BOOL[! $cmake_no_registry]}")
+make_args=()
+
+if [[ -n "$cmake_generator" ]]; then
+    cmake_args+=(-G "${cmake_generator}")
+fi
+
+if [[ -n "$prefix_dir" ]]; then
+    cmake_args+=(-DCMAKE_INSTALL_PREFIX:FILEPATH="${prefix_dir}")
+fi
+
+if [ "$enable_ccache" -eq 1 ]; then
+    ccache_exec=
+    if command -v ccache > /dev/null 2>&1; then
+        ccache_exec=ccache
+    elif command -v sccache > /dev/null 2>&1; then
+        ccache_exec=sccache
+    fi
+    if [ -n "$ccache_exec" ]; then
+        ccache_exec=$(which "$ccache_exec")
+        cmake_args+=(-DCMAKE_C_COMPILER_LAUNCHER="$ccache_exec")
+        cmake_args+=(-DCMAKE_CXX_COMPILER_LAUNCHER="$ccache_exec")
+    fi
+fi
+
+if [[ "$enable_gpu" -eq 1 && -n "$cuda_arch" ]]; then
+    cmake_args+=(-DCMAKE_CUDA_ARCHITECTURES:STRING="$cuda_arch")
+fi
+
+local_pkgs_str=$(join_by , "${local_pkgs[@]}")
+if [[ "$force_local_pkgs" -eq 1 ]]; then
+    cmake_args+=(-DMQ_FORCE_LOCAL_PKGS=all)
+elif [ -n "$local_pkgs_str" ]; then
+    cmake_args+=(-DMQ_FORCE_LOCAL_PKGS="$local_pkgs_str")
+fi
+
+if [ "$n_jobs" -ne -1 ]; then
+    cmake_args+=(-DJOBS:STRING="$n_jobs")
+    make_args+=(-j "$n_jobs")
+fi
+
+# NB: CMake < 3.24 typically set CC, CXX during the first run, which basically overwrites the values in CC, CXX. In
+#     order to work around that, we explicitly set the compilers using the related CMake variables.
+if [ -n "$CC" ]; then
+    cmake_args+=(-DCMAKE_C_COMPILER:FILEPATH="$CC")
+fi
+if [ -n "$CXX" ]; then
+    cmake_args+=(-DCMAKE_CXX_COMPILER:FILEPATH="$CXX")
+fi
+if [ -n "$CUDACXX" ]; then
+    cmake_args+=(-DCMAKE_CUDA_COMPILER:FILEPATH="$CUDACXX")
 fi
 
 # ------------------------------------------------------------------------------
 # Build
 
-do_configure=0
-if [ ! -d "$build_dir" ]; then
+if [[ ! -d "$build_dir" || "$do_clean_build_dir" -eq 1 ]]; then
     do_configure=1
-elif [ $do_clean_cache -eq 1 ]; then
+elif [ "$do_clean_cache" -eq 1 ]; then
     do_configure=1
     echo "Removing CMake cache at: $build_dir/CMakeCache.txt"
-    rm -f "$build_dir/CMakeCache.txt"
+    call_cmd rm -f "$build_dir/CMakeCache.txt"
+    echo "Removing CMake files at: $build_dir/CMakeFiles"
+    call_cmd  rm -rf "$build_dir/CMakeFiles"
+    echo "Removing CMake files at: $build_dir/cmake-ldtest*"
+    call_cmd  rm -rf "$build_dir/cmake-ldtest*"
 fi
 
-if [ $do_configure -eq 1 ]; then
+if [ "$do_configure" -eq 1 ]; then
     call_cmake -S "$source_dir" -B "$build_dir" "${cmake_args[@]}" "$@"
 fi
 
-if [ $do_clean -eq 1 ]; then
+if [ "$configure_only" -eq 1 ]; then
+    exit 0
+fi
+
+target=all
+if [ "$do_install" -eq 1 ]; then
+    target=install
+fi
+
+if [ "$do_clean" -eq 1 ]; then
     call_cmake --build "$build_dir" --target clean
 fi
 
-call_cmake --build "$build_dir" --target all -j "$n_jobs"
+if [ "$do_docs" -eq 1 ]; then
+    call_cmake --build "$build_dir" --target docs --config "$build_type" "${make_args[@]}"
+fi
+
+call_cmake --build "$build_dir" --config "$build_type" --target "${target}" "${make_args[@]}"
 
 # ==============================================================================

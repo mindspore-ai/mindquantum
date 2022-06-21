@@ -1,7 +1,30 @@
 # -*- coding: utf-8 -*-
+#   Copyright 2022 <Huawei Technologies Co., Ltd>
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
+"""Example of advanced use of quantum circuits."""
+
+from mindquantum import RX, RZ, SWAP, UN, Circuit, H, X
 from mindquantum.algorithm.library import qft
-from mindquantum.core.circuit import controlled, dagger, apply, add_prefix, change_param_name, shift
-from mindquantum import RX, X, H, UN, SWAP, Circuit
+from mindquantum.core.circuit import (
+    add_prefix,
+    apply,
+    change_param_name,
+    controlled,
+    dagger,
+    shift,
+)
 
 # controlled()
 u1 = qft(range(2))  # 构建量子线路
@@ -44,7 +67,11 @@ print(circ)
 circ = add_prefix(circ, 'l0')  # 添加后，参数"theta"就变成了"l0_theta"
 print(circ)
 
-u = lambda qubit: Circuit([H.on(0), RX('a').on(qubit)])
+
+def u(qubit):
+    """Qubit generator function."""
+    return Circuit([H.on(0), RX('a').on(qubit)])
+
 
 u1 = u(0)
 u1 = add_prefix(u1, 'ansatz')
@@ -54,8 +81,12 @@ u2 = add_prefix(u, 'ansatz')
 u2 = u2(0)
 print(u2)
 
+
 # change_param_name()
-u = lambda qubit: Circuit([H.on(0), RX('a').on(qubit)])
+def u(qubit):
+    """Qubit generator function."""
+    return Circuit([H.on(0), RX('a').on(qubit)])
+
 
 u1 = u(0)
 u1 = change_param_name(u1, {'a': 'b'})
@@ -85,7 +116,10 @@ print(circ)  # 线路作用的量子比特从q0,q1变为q1,q2
 
 # 搭建Encoder
 template = Circuit([X.on(1, 0), RZ('alpha').on(1), X.on(1, 0)])
-encoder = UN(H, 4) + (RZ(f'{i}_alpha').on(i) for i in range(4)) + sum(
-    add_prefix(shift(template, i), f'{i + 4}') for i in range(3))
+encoder = (
+    UN(H, 4)
+    + (RZ(f'{i}_alpha').on(i) for i in range(4))
+    + sum(add_prefix(shift(template, i), f'{i + 4}') for i in range(3))
+)
 print(encoder)
 encoder.summary()

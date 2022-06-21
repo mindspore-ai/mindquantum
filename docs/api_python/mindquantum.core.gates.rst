@@ -95,7 +95,7 @@ functional
    * - mindquantum.core.gates.SWAP
      - :class:`mindquantum.core.gates.SWAPGate`
    * - mindquantum.core.gates.X
-     - :class:`mindquantum.core.gates.XGate`   
+     - :class:`mindquantum.core.gates.XGate`
    * - mindquantum.core.gates.Y
      - :class:`mindquantum.core.gates.YGate`
    * - mindquantum.core.gates.Z

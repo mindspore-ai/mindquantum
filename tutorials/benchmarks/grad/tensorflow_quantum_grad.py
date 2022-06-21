@@ -13,17 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Benchmakr for gradient calculation of tensorflow quantum."""
+
+"""Benchmark for gradient calculation of tensorflow quantum."""
+
 import time
+
+import cirq
 import numpy as np
+import sympy
 import tensorflow as tf
+import tensorflow_quantum as tfq
+import tqdm
 from _parse_args import parser
+
 args = parser.parse_args()
 tf.config.threading.set_intra_op_parallelism_threads(args.omp_num_threads)
-import tensorflow_quantum as tfq
-import cirq
-import sympy
-import tqdm
 
 
 def convert_to_circuit(image):
@@ -37,16 +41,19 @@ def convert_to_circuit(image):
     return circuit
 
 
-class CircuitLayerBuilder():
-    """CircuitLayerBuilder"""
+class CircuitLayerBuilder:
+    """CircuitLayerBuilder class."""
+
     def __init__(self, data_qubits, readout):
+        """Initialize a CircuitLayerBuilder object."""
         self.data_qubits = data_qubits
         self.readout = readout
 
     def add_layer(self, circuit, gate, prefix):
+        """Add a layer to this instance."""
         for i, qubit in enumerate(self.data_qubits):
             symbol = sympy.Symbol(prefix + '-' + str(i))
-            circuit.append(gate(qubit, self.readout)**symbol)
+            circuit.append(gate(qubit, self.readout) ** symbol)
 
 
 def create_quantum_model():
@@ -73,31 +80,28 @@ def create_quantum_model():
 
 n_qubits = 17
 data = np.load('./mnist_resize.npz')
-x_train_bin, y_train_nocon, x_test_bin, y_test = data['arr_0'], data[
-    'arr_1'], data['arr_2'], data['arr_3']
+x_train_bin, y_train_nocon, x_test_bin, y_test = data['arr_0'], data['arr_1'], data['arr_2'], data['arr_3']
 x_train_circ = [convert_to_circuit(x) for x in x_train_bin]
 x_test_circ = [convert_to_circuit(x) for x in x_test_bin]
 
 model_circuit, model_readout = create_quantum_model()
-names = sorted(list(model_circuit._parameter_names_()))
+names = sorted(model_circuit._parameter_names_())
 init = np.random.random(len(names))[None, :].astype(np.float32)
 values_tensor = tf.convert_to_tensor(init)
 for c in x_train_circ:
     c.append(model_circuit)
 
-expectation_calculation = tfq.layers.Expectation(
-    differentiator=tfq.differentiators.Adjoint())
+expectation_calculation = tfq.layers.Expectation(differentiator=tfq.differentiators.Adjoint())
 
 t0 = time.time()
 eval_time = []
-for circuit in tqdm.tqdm(x_train_circ[:args.num_sampling]):
+for circuit in tqdm.tqdm(x_train_circ[: args.num_sampling]):
     eval_time.append(time.time())
     with tf.GradientTape() as g:
         g.watch(values_tensor)
-        exact_outputs = expectation_calculation(model_circuit,
-                                                operators=model_readout,
-                                                symbol_names=names,
-                                                symbol_values=values_tensor)
+        exact_outputs = expectation_calculation(
+            model_circuit, operators=model_readout, symbol_names=names, symbol_values=values_tensor
+        )
     g.gradient(exact_outputs, values_tensor)
     eval_time[-1] = time.time() - eval_time[-1]
 eval_time = np.sort(eval_time[1:])

@@ -1,0 +1,224 @@
+diff --git a/include/tweedledum/IR/Operator.h b/include/tweedledum/IR/Operator.h
+index 755a0f4..62bf94b 100644
+--- a/include/tweedledum/IR/Operator.h
++++ b/include/tweedledum/IR/Operator.h
+@@ -16,6 +16,21 @@
+ #include <optional>
+ #include <string_view>
+ 
++#ifdef __has_include
++# if __has_include(<version>)
++#   include <version>
++# endif
++#endif
++
++#if __cpp_lib_launder < 201606L
++namespace std_fix {
++  template <typename T>
++  constexpr T* launder(T* t) noexcept { return t; }
++} // namespace std_fix
++#endif // __cpp_lib_launder < 201606L
++
++
++
+ namespace tweedledum {
+ 
+ class Instruction;
+@@ -229,12 +244,12 @@ struct Operator::Model<ConcreteOp, true> {
+ 
+     static void dtor(void* self) noexcept
+     {
+-        std::launder(reinterpret_cast<Model*>(self))->~Model();
++        std_fix::launder(reinterpret_cast<Model*>(self))->~Model();
+     }
+ 
+     static void clone(void const* self, void* other) noexcept
+     {
+-        new (other) Model<std::decay_t<ConcreteOp>, true>(std::launder(reinterpret_cast<Model const*>(self))->operator_);
++        new (other) Model<std::decay_t<ConcreteOp>, true>(std_fix::launder(reinterpret_cast<Model const*>(self))->operator_);
+     }
+ 
+     static bool equal(void const* self, void const* other) noexcept
+@@ -243,19 +258,19 @@ struct Operator::Model<ConcreteOp, true> {
+         {
+             return true;
+         } else {
+-            return std::launder(reinterpret_cast<Model const*>(self))->operator_ == std::launder(reinterpret_cast<Model const*>(other))->operator_;
++            return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_ == std_fix::launder(reinterpret_cast<Model const*>(other))->operator_;
+         }
+     }
+ 
+     static void const* optor(void const* self) noexcept
+     {
+-        return &std::launder(reinterpret_cast<Model const*>(self))->operator_;
++        return &std_fix::launder(reinterpret_cast<Model const*>(self))->operator_;
+     }
+ 
+     static std::optional<Operator> adjoint(void const* self) noexcept
+     {
+         if constexpr (has_adjoint_v<ConcreteOp>) {
+-            return std::launder(reinterpret_cast<Model const*>(self))->operator_.adjoint();
++            return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_.adjoint();
+         } else {
+             return std::nullopt;
+         }
+@@ -263,13 +278,13 @@ struct Operator::Model<ConcreteOp, true> {
+ 
+     static std::string_view kind(void const* self) noexcept
+     {
+-        return std::launder(reinterpret_cast<Model const*>(self))->operator_.kind();
++        return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_.kind();
+     }
+ 
+     static std::optional<UMatrix> const matrix(void const* self) noexcept
+     {
+         if constexpr (has_matrix_v<ConcreteOp>) {
+-            return std::launder(reinterpret_cast<Model const*>(self))->operator_.matrix();
++            return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_.matrix();
+         } else {
+             return std::nullopt;
+         }
+@@ -278,7 +293,7 @@ struct Operator::Model<ConcreteOp, true> {
+     static uint32_t num_targets(void const* self) noexcept
+     {
+         if constexpr (has_num_targets_v<ConcreteOp>) {
+-            return std::launder(reinterpret_cast<Model const*>(self))->operator_.num_targets();
++            return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_.num_targets();
+         } else {
+             return 1u;
+         }
+@@ -292,7 +307,7 @@ struct Operator::Model<ConcreteOp, true> {
+     static Operator eval(Operator const* parent, void const* self, const SymEngine::map_basic_basic& subs) noexcept
+     {
+          if constexpr(is_parametric_v<ConcreteOp>) {
+-            return std::launder(reinterpret_cast<Model const*>(self))->operator_.eval(subs);
++            return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_.eval(subs);
+          }
+          else {
+             return *parent;
+@@ -302,7 +317,7 @@ struct Operator::Model<ConcreteOp, true> {
+     static Operator eval_full(Operator const* parent, void const* self, const SymEngine::map_basic_basic& subs) noexcept
+     {
+          if constexpr(is_parametric_v<ConcreteOp>) {
+-            return std::launder(reinterpret_cast<Model const*>(self))->operator_.eval_full(subs);
++            return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_.eval_full(subs);
+          }
+          else {
+             return *parent;
+@@ -312,7 +327,7 @@ struct Operator::Model<ConcreteOp, true> {
+     static Operator eval_smart(Operator const* parent, void const* self, const SymEngine::map_basic_basic& subs) noexcept
+     {
+          if constexpr(is_parametric_v<ConcreteOp>) {
+-            return std::launder(reinterpret_cast<Model const*>(self))->operator_.eval_smart(subs);
++            return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_.eval_smart(subs);
+          }
+          else {
+             return *parent;
+@@ -322,7 +337,7 @@ struct Operator::Model<ConcreteOp, true> {
+     static bool is_symmetric(void const* self) noexcept
+     {
+         if constexpr (has_is_symmetric_v<ConcreteOp>) {
+-            return std::launder(reinterpret_cast<Model const*>(self))->operator_.is_symmetric();
++            return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_.is_symmetric();
+         } else {
+             return false;
+         }
+@@ -346,12 +361,12 @@ struct Operator::Model<ConcreteOp, false> {
+ 
+     static void dtor(void* self) noexcept
+     {
+-        std::launder(reinterpret_cast<Model*>(self))->~Model();
++        std_fix::launder(reinterpret_cast<Model*>(self))->~Model();
+     }
+ 
+     static void clone(void const* self, void* other) noexcept
+     {
+-        new (other) Model<ConcreteOp, false>(*std::launder(reinterpret_cast<Model const*>(self))->operator_);
++        new (other) Model<ConcreteOp, false>(*std_fix::launder(reinterpret_cast<Model const*>(self))->operator_);
+     }
+ 
+     static bool equal(void const* self, void const* other) noexcept
+@@ -360,19 +375,19 @@ struct Operator::Model<ConcreteOp, false> {
+         {
+             return true;
+         } else {
+-            return std::launder(reinterpret_cast<Model const*>(self))->operator_ == std::launder(reinterpret_cast<Model const*>(other))->operator_;
++            return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_ == std_fix::launder(reinterpret_cast<Model const*>(other))->operator_;
+         }
+     }
+ 
+     static void const* optor(void const* self) noexcept
+     {
+-         return std::launder(reinterpret_cast<Model const*>(self))->operator_.get();
++         return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_.get();
+     }
+ 
+     static std::optional<Operator> adjoint(void const* self) noexcept
+     {
+         if constexpr (has_adjoint_v<ConcreteOp>) {
+-            return std::launder(reinterpret_cast<Model const*>(self))->operator_->adjoint();
++            return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_->adjoint();
+         } else {
+             return std::nullopt;
+         }
+@@ -380,13 +395,13 @@ struct Operator::Model<ConcreteOp, false> {
+ 
+     static std::string_view kind(void const* self) noexcept
+     {
+-        return std::launder(reinterpret_cast<Model const*>(self))->operator_->kind();
++        return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_->kind();
+     }
+ 
+     static std::optional<UMatrix> const matrix(void const* self) noexcept
+     {
+         if constexpr (has_matrix_v<ConcreteOp>) {
+-            return std::launder(reinterpret_cast<Model const*>(self))->operator_->matrix();
++            return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_->matrix();
+         } else {
+             return std::nullopt;
+         }
+@@ -395,7 +410,7 @@ struct Operator::Model<ConcreteOp, false> {
+     static uint32_t num_targets(void const* self) noexcept
+     {
+         if constexpr (has_num_targets_v<ConcreteOp>) {
+-            return std::launder(reinterpret_cast<Model const*>(self))->operator_->num_targets();
++            return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_->num_targets();
+         } else {
+             return 1u;
+         }
+@@ -409,7 +424,7 @@ struct Operator::Model<ConcreteOp, false> {
+     static Operator eval(Operator const* parent, void const* self, const SymEngine::map_basic_basic& subs) noexcept
+     {
+          if constexpr(is_parametric_v<ConcreteOp>) {
+-             return std::launder(reinterpret_cast<Model const*>(self))->operator_->eval(subs);
++             return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_->eval(subs);
+          }
+          else {
+               return *parent;
+@@ -419,7 +434,7 @@ struct Operator::Model<ConcreteOp, false> {
+     static Operator eval_full(Operator const* parent, void const* self, const SymEngine::map_basic_basic& subs) noexcept
+     {
+          if constexpr(is_parametric_v<ConcreteOp>) {
+-             return std::launder(reinterpret_cast<Model const*>(self))->operator_->eval_full(subs);
++             return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_->eval_full(subs);
+          }
+          else {
+               return *parent;
+@@ -429,7 +444,7 @@ struct Operator::Model<ConcreteOp, false> {
+     static Operator eval_smart(Operator const* parent, void const* self, const SymEngine::map_basic_basic& subs) noexcept
+     {
+          if constexpr(is_parametric_v<ConcreteOp>) {
+-             return std::launder(reinterpret_cast<Model const*>(self))->operator_->eval_smart(subs);
++             return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_->eval_smart(subs);
+          }
+          else {
+               return *parent;
+@@ -438,7 +453,7 @@ struct Operator::Model<ConcreteOp, false> {
+     static bool is_symmetric(void const* self) noexcept
+     {
+         if constexpr (has_is_symmetric_v<ConcreteOp>) {
+-            return std::launder(reinterpret_cast<Model const*>(self))->operator_->is_symmetric();
++            return std_fix::launder(reinterpret_cast<Model const*>(self))->operator_->is_symmetric();
+         } else {
+             return false;
+         }

@@ -13,24 +13,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Algorithm for quantum chemistry"""
 
-from mindquantum.third_party.unitary_cc import uccsd_singlet_generator
-from mindquantum.third_party.unitary_cc import uccsd_singlet_get_packed_amplitudes
-from .transform import Transform
-from .qubit_hamiltonian import get_qubit_hamiltonian
-from .uccsd0 import uccsd0_singlet_generator
-from .quccsd import quccsd_generator
+"""Algorithm for quantum chemistry."""
+
+from mindquantum.third_party.unitary_cc import (
+    uccsd_singlet_generator,
+    uccsd_singlet_get_packed_amplitudes,
+)
+
 from .hardware_efficient_ansatz import HardwareEfficientAnsatz
+from .qubit_hamiltonian import get_qubit_hamiltonian
 from .qubit_ucc_ansatz import QubitUCCAnsatz
+from .quccsd import quccsd_generator
+from .transform import Transform
 from .uccsd import generate_uccsd
+from .uccsd0 import uccsd0_singlet_generator
 from .unitary_cc import UCCAnsatz
 
 __all__ = [
-    'Transform', 'get_qubit_hamiltonian', 'uccsd_singlet_generator',
-    'uccsd_singlet_get_packed_amplitudes', 'uccsd0_singlet_generator',
-    'quccsd_generator', 'HardwareEfficientAnsatz', 'QubitUCCAnsatz',
-    'generate_uccsd', 'UCCAnsatz'
+    'Transform',
+    'get_qubit_hamiltonian',
+    'uccsd_singlet_generator',
+    'uccsd_singlet_get_packed_amplitudes',
+    'uccsd0_singlet_generator',
+    'quccsd_generator',
+    'HardwareEfficientAnsatz',
+    'QubitUCCAnsatz',
+    'generate_uccsd',
+    'UCCAnsatz',
 ]
 
 __all__.sort()

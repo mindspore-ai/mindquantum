@@ -13,7 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Algorithm for quantum approximation optimization algorithm"""
+
+"""Algorithm for quantum approximation optimization algorithm."""
+
 from .max_2_sat_ansatz import Max2SATAnsatz
 from .max_cut_ansatz import MaxCutAnsatz
 

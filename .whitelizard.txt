@@ -1,0 +1,29 @@
+# Scene1:
+#    function_name1, function_name2
+# Scene2:
+#    file_path:function_name1, function_name2
+#
+mindquantum/algorithm/nisq/chem/qubit_ucc_ansatz.py:_implement
+mindquantum/algorithm/nisq/chem/quccsd.py:quccsd_generator
+mindquantum/algorithm/nisq/chem/transform.py:bravyi_kitaev_superfast
+mindquantum/algorithm/nisq/chem/uccsd.py:_para_uccsd_singlet_generator
+mindquantum/algorithm/nisq/chem/uccsd0.py:uccsd0_singlet_generator
+mindquantum/io/display/bloch_plt_drawer.py:add_state
+mindquantum/io/qasm/hiqasm.py:to_string
+mindquantum/io/qasm/hiqasm.py:trans_v01
+mindquantum/simulator/simulator.py:get_expectation_with_grad
+mindquantum/src/binding.cc:mindquantum::PYBIND11_MODULE
+mindquantum/third_party/unitary_cc.py:uccsd_singlet_generator
+
+mindquantum/experimental/_symengine_utilities.py:symbols
+
+ccsrc/mq_base/gate/gates.h:mindquantum::GetGateByName
+ccsrc/mqbackend/binding.cc:mindquantum::PYBIND11_MODULE
+
+ccsrc/cxx_experimental/lib/core/cpp_core.cpp:mindquantum::core::CppCore::flush
+ccsrc/cxx_experimental/python/lib/core/symengine.cpp:mindquantum::python::init_symengine_basic_types
+ccsrc/cxx_experimental/python/lib/ops/command.cpp:mindquantum::details::load_gate
+
+TEST_CASE
+
+tests/st/test_io/test_svg.py:test_measure_svg

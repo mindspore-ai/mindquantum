@@ -16,9 +16,11 @@
 """Quantum fourier transform."""
 
 import numpy as np
+
+from mindquantum.core.circuit import Circuit, SwapParts
 from mindquantum.core.gates import H, PhaseShift
-from mindquantum.core.circuit import SwapParts, Circuit
 from mindquantum.utils.type_value_check import _check_input_type
+
 
 def _rn(k):
     return PhaseShift(2 * np.pi / 2**k)

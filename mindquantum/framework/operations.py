@@ -14,26 +14,31 @@
 # limitations under the License.
 # ============================================================================
 """Mindspore quantum simulator operator."""
-import numpy as np
 import mindspore as ms
-from mindspore import context
-from mindspore.ops import operations as P
 import mindspore.nn as nn
+import numpy as np
+from mindspore import context
+from mindspore.ops import operations
 from mindspore.ops.primitive import constexpr
+
 from mindquantum.simulator import GradOpsWrapper
 
 
 @constexpr
 def check_enc_input_shape(data, x, enc_len):
+    """Check encoder parameter input shape."""
     if not isinstance(data, ms.Tensor):
         raise TypeError(f"Encoder parameter requires a Tensor but get {type(data)}")
     if len(x) != 2 or x[1] != enc_len:
-        raise ValueError(f'Encoder data requires a two dimension Tensor with second' +
-                         f' dimension should be {enc_len}, but get shape {x}')
+        raise ValueError(
+            'Encoder data requires a two dimension Tensor with second'
+            + f' dimension should be {enc_len}, but get shape {x}'
+        )
 
 
 @constexpr
 def check_ans_input_shape(data, x, ans_len):
+    """Check ansatz input shape."""
     if not isinstance(data, ms.Tensor):
         raise TypeError(f"Ansatz parameter requires a Tensor but get {type(data)}")
     if len(x) != 1 or x[0] != ans_len:
@@ -42,6 +47,8 @@ def check_ans_input_shape(data, x, ans_len):
 
 class MQOps(nn.Cell):
     """
+    MindQuantum operator.
+
     A quantum circuit evolution operator that include encoder and ansatz circuit, who return
     the expectation of given hamiltonian w.r.t final state of parameterized quantum circuit (PQC).
     This ops is `PYNATIVE_MODE` supported only.
@@ -86,17 +93,21 @@ class MQOps(nn.Cell):
         Tensor(shape=[1, 1], dtype=Float32, value=
         [[ 9.78433937e-02]])
     """
+
     def __init__(self, expectation_with_grad):
+        """Initialize a MQOps object."""
         super(MQOps, self).__init__()
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
-        self.shape_ops = P.Shape()
+        self.shape_ops = operations.Shape()
 
     def extend_repr(self):
+        """Return a string representation of the object."""
         return self.expectation_with_grad.str
 
     def construct(self, enc_data, ans_data):
+        """Construct a MQOps node."""
         check_enc_input_shape(enc_data, self.shape_ops(enc_data), len(self.expectation_with_grad.encoder_params_name))
         check_ans_input_shape(ans_data, self.shape_ops(ans_data), len(self.expectation_with_grad.ansatz_params_name))
         enc_data = enc_data.asnumpy()
@@ -108,6 +119,7 @@ class MQOps(nn.Cell):
         return f
 
     def bprop(self, enc_data, ans_data, out, dout):
+        """Implement the bprop function."""
         dout = dout.asnumpy()
         enc_grad = np.einsum('smp,sm->sp', self.g_enc, dout)
         ans_grad = np.einsum('smp,sm->p', self.g_ans, dout)
@@ -116,6 +128,8 @@ class MQOps(nn.Cell):
 
 class MQN2Ops(nn.Cell):
     r"""
+    MindQuantum operator.
+
     A quantum circuit evolution operator that include encoder and ansatz circuit, who return
     the square of absolute value of expectation of given hamiltonian w.r.t final state of
     parameterized quantum circuit (PQC). This ops is `PYNATIVE_MODE` supported only.
@@ -164,29 +178,34 @@ class MQN2Ops(nn.Cell):
         Tensor(shape=[1, 1], dtype=Float32, value=
         [[ 9.57333017e-03]])
     """
+
     def __init__(self, expectation_with_grad):
+        """Initialize a MQN2Ops object."""
         super(MQN2Ops, self).__init__()
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
-        self.shape_ops = P.Shape()
+        self.shape_ops = operations.Shape()
 
     def extend_repr(self):
+        """Return a string representation of the object."""
         return self.expectation_with_grad.str
 
     def construct(self, enc_data, ans_data):
+        """Constructn a MQN2Ops node."""
         check_enc_input_shape(enc_data, self.shape_ops(enc_data), len(self.expectation_with_grad.encoder_params_name))
         check_ans_input_shape(ans_data, self.shape_ops(ans_data), len(self.expectation_with_grad.ansatz_params_name))
         enc_data = enc_data.asnumpy()
         ans_data = ans_data.asnumpy()
         f, g_enc, g_ans = self.expectation_with_grad(enc_data, ans_data)
         self.f = f
-        f = ms.Tensor(np.abs(f)**2, dtype=ms.float32)
+        f = ms.Tensor(np.abs(f) ** 2, dtype=ms.float32)
         self.g_enc = g_enc
         self.g_ans = g_ans
         return f
 
     def bprop(self, enc_data, ans_data, out, dout):
+        """Implement the bprop function."""
         dout = dout.asnumpy()
         enc_grad = 2 * np.real(np.einsum('smp,sm,sm->sp', self.g_enc, dout, np.conj(self.f)))
         ans_grad = 2 * np.real(np.einsum('smp,sm,sm->p', self.g_ans, dout, np.conj(self.f)))
@@ -195,6 +214,8 @@ class MQN2Ops(nn.Cell):
 
 class MQAnsatzOnlyOps(nn.Cell):
     r"""
+    MindQuantum operator.
+
     A quantum circuit evolution operator that only include ansatz circuit, who return
     the expectation of given hamiltonian w.r.t final state of parameterized quantum circuit (PQC).
     This ops is `PYNATIVE_MODE` supported only.
@@ -233,17 +254,21 @@ class MQAnsatzOnlyOps(nn.Cell):
         >>> f_ms
         Tensor(shape=[1], dtype=Float32, value= [ 9.78433937e-02])
     """
+
     def __init__(self, expectation_with_grad):
+        """Initialize a MQAnsatzOnlyOps object."""
         super(MQAnsatzOnlyOps, self).__init__()
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
-        self.shape_ops = P.Shape()
+        self.shape_ops = operations.Shape()
 
     def extend_repr(self):
+        """Return a string representation of the object."""
         return self.expectation_with_grad.str
 
     def construct(self, x):
+        """Construct a MQAnsatzOnlyOps node."""
         check_ans_input_shape(x, self.shape_ops(x), len(self.expectation_with_grad.ansatz_params_name))
         x = x.asnumpy()
         f, g = self.expectation_with_grad(x)
@@ -252,6 +277,7 @@ class MQAnsatzOnlyOps(nn.Cell):
         return f
 
     def bprop(self, x, out, dout):
+        """Implement the bprop function."""
         dout = dout.asnumpy()
         grad = dout @ self.g
         return ms.Tensor(grad, dtype=ms.float32)
@@ -259,6 +285,8 @@ class MQAnsatzOnlyOps(nn.Cell):
 
 class MQN2AnsatzOnlyOps(nn.Cell):
     r"""
+    MindQuantum operator.
+
     A quantum circuit evolution operator that only include ansatz circuit, who return
     the square of absolute value of given hamiltonian w.r.t final state of parameterized
     quantum circuit (PQC). This ops is `PYNATIVE_MODE` supported only.
@@ -297,26 +325,31 @@ class MQN2AnsatzOnlyOps(nn.Cell):
         >>> f_ms
         Tensor(shape=[1], dtype=Float32, value= [ 9.57333017e-03])
     """
+
     def __init__(self, expectation_with_grad):
+        """Initialize a MQN2AnsatzOnlyOps object."""
         super(MQN2AnsatzOnlyOps, self).__init__()
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
-        self.shape_ops = P.Shape()
+        self.shape_ops = operations.Shape()
 
     def extend_repr(self):
+        """Return a string representation of the object."""
         return self.expectation_with_grad.str
 
     def construct(self, x):
+        """Construct a MQN2AnsatzOnlyOps node."""
         check_ans_input_shape(x, self.shape_ops(x), len(self.expectation_with_grad.ansatz_params_name))
         x = x.asnumpy()
         f, g = self.expectation_with_grad(x)
         self.f = f[0]
-        f = ms.Tensor(np.abs(f[0])**2, dtype=ms.float32)
+        f = ms.Tensor(np.abs(f[0]) ** 2, dtype=ms.float32)
         self.g = g[0]
         return f
 
     def bprop(self, x, out, dout):
+        """Implement the bprop function."""
         dout = dout.asnumpy()
         grad = 2 * np.real(np.einsum('m,m,mp->p', np.conj(self.f), dout, self.g))
         return ms.Tensor(grad, dtype=ms.float32)
@@ -324,6 +357,8 @@ class MQN2AnsatzOnlyOps(nn.Cell):
 
 class MQEncoderOnlyOps(nn.Cell):
     r"""
+    MindQuantum operator.
+
     A quantum circuit evolution operator that only include encoder circuit, who return
     the square of absolute value of given hamiltonian w.r.t final state of parameterized
     quantum circuit (PQC). This ops is `PYNATIVE_MODE` supported only.
@@ -366,17 +401,21 @@ class MQEncoderOnlyOps(nn.Cell):
         [[ 9.78433937e-02],
          [ 2.72192121e-01]])
     """
+
     def __init__(self, expectation_with_grad):
+        """Initialize a MQEncoderOnlyOps object."""
         super(MQEncoderOnlyOps, self).__init__()
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
-        self.shape_ops = P.Shape()
+        self.shape_ops = operations.Shape()
 
     def extend_repr(self):
+        """Return a string representation of the object."""
         return self.expectation_with_grad.str
 
     def construct(self, x):
+        """Construct a MQEncoderOnlyOps node."""
         check_enc_input_shape(x, self.shape_ops(x), len(self.expectation_with_grad.encoder_params_name))
         x = x.asnumpy()
         f, g = self.expectation_with_grad(x)
@@ -385,6 +424,7 @@ class MQEncoderOnlyOps(nn.Cell):
         return f
 
     def bprop(self, x, out, dout):
+        """Implement the bprop function."""
         dout = dout.asnumpy()
         grad = np.einsum('smp,sm->sp', self.g, dout)
         return ms.Tensor(grad, dtype=ms.float32)
@@ -392,6 +432,8 @@ class MQEncoderOnlyOps(nn.Cell):
 
 class MQN2EncoderOnlyOps(nn.Cell):
     r"""
+    MindQuantum operator.
+
     A quantum circuit evolution operator that only include encoder circuit, who return
     the square of absolute value of given hamiltonian w.r.t final state of parameterized
     quantum circuit (PQC). This ops is `PYNATIVE_MODE` supported only.
@@ -433,26 +475,31 @@ class MQN2EncoderOnlyOps(nn.Cell):
         [[ 9.57333017e-03],
          [ 7.40885586e-02]])
     """
+
     def __init__(self, expectation_with_grad):
+        """Initialize a MQN2EncoderOnlyOps object."""
         super(MQN2EncoderOnlyOps, self).__init__()
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
-        self.shape_ops = P.Shape()
+        self.shape_ops = operations.Shape()
 
     def extend_repr(self):
+        """Return a string representation of the object."""
         return self.expectation_with_grad.str
 
     def construct(self, x):
+        """Construct a MQN2EncoderOnlyOps node."""
         check_enc_input_shape(x, self.shape_ops(x), len(self.expectation_with_grad.encoder_params_name))
         x = x.asnumpy()
         f, g = self.expectation_with_grad(x)
         self.f = f
-        f = ms.Tensor(np.abs(f)**2, dtype=ms.float32)
+        f = ms.Tensor(np.abs(f) ** 2, dtype=ms.float32)
         self.g = g
         return f
 
     def bprop(self, x, out, dout):
+        """Implement the bprop function."""
         dout = dout.asnumpy()
         grad = 2 * np.real(np.einsum('smp,sm,sm->sp', self.g, dout, np.conj(self.f)))
         return ms.Tensor(grad, dtype=ms.float32)
@@ -460,9 +507,11 @@ class MQN2EncoderOnlyOps(nn.Cell):
 
 def _mode_check(self):
     if context.get_context('mode') != context.PYNATIVE_MODE:
-        raise RuntimeError(f'{self.__class__} is `PYNATIVE_MODE` supported only. Run command below to set context\n\
+        raise RuntimeError(
+            f'{self.__class__} is `PYNATIVE_MODE` supported only. Run command below to set context\n\
     import mindspore as ms\n\
-    ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")')
+    ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")'
+        )
 
 
 def _check_grad_ops(expectation_with_grad):

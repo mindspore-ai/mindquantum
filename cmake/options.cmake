@@ -16,7 +16,16 @@
 #
 # ==============================================================================
 
+# lint_cmake: -whitespace/indent
+
 include(CMakeDependentOption)
+
+# ==============================================================================
+# MindQuantum feature selection
+
+option(ENABLE_PROJECTQ "Enable ProjectQ support" ON)
+option(ENABLE_GITEE "Use Gitee instead of GitHub for checking out third-party dependencies" OFF)
+option(ENABLE_CXX_EXPERIMENTAL "Enable the new (experimental) C++ backend" OFF)
 
 # ==============================================================================
 # Python related options
@@ -50,9 +59,27 @@ option(CUDA_STATIC "Use static version of Nvidia CUDA libraries during linking (
 # ==============================================================================
 # Compilation options
 
-option(ENABLE_OPENMP "Use OpenMP for multi-threading" ON)
+option(USE_OPENMP "Enable the use of OpenMP throughout the code" ON)
 
-option(ENABLE_PROJECTQ "Enable ProjectQ support" ON)
+# cmake-lint: disable=C0103
+set(_USE_PARALLEL_STL OFF)
+if("x${CMAKE_CXX_COMPILER_ID}" STREQUAL "xMSVC"
+   OR "x${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
+   OR "x${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel"
+   OR "x${CMAKE_CXX_COMPILER_ID}" STREQUAL "IntelLLVM")
+  set(_USE_PARALLEL_STL ON)
+endif()
+option(USE_PARALLEL_STL
+       "Use parallel STL algorithms (GCC, Intel, IntelLLVM and MSVC only for now) over OpenMP if possible."
+       ${_USE_PARALLEL_STL})
+
+# ------------------------------------------------------------------------------
+
+if(MSVC)
+  option(ENABLE_MD "Enable compilation using the /MD,/MDd flags" OFF)
+  option(ENABLE_MT "Enable compilation using the /MT,/MTd flags" OFF)
+  option(DISABLE_FORTRAN_COMPILER "Forcefully disable the Fortran compiler for some 3rd party libraries" ON)
+endif()
 
 # ------------------------------------------------------------------------------
 
@@ -76,11 +103,10 @@ option(LINKER_STRIP_ALL "Use --strip-all during linking" ON)
 # ==============================================================================
 # Other CMake related options
 
-option(BUILD_TESTING "Build the test suite?" OFF)
-
-# NB: most if not all of our libraries have the type explicitly specified.
 option(BUILD_SHARED_LIBS "Build shared libs" OFF)
-
+option(BUILD_TESTING "Build the test suite?" OFF)
+option(CLEAN_3RDPARTY_INSTALL_DIR "Clean third-party installation directory" OFF)
+option(ENABLE_CMAKE_DEBUG "Enable verbose output to debug CMake issues" OFF)
 option(USE_VERBOSE_MAKEFILE "Use verbose Makefiles" ON)
 
 # ==============================================================================
@@ -93,6 +119,10 @@ endif()
 
 # ------------------------------------------------------------------------------
 
+if(DEFINED ENABLE_OPENMP) # For backwards compatibility
+  set(USE_OPENMP ${ENABLE_OPENMP})
+endif()
+
 if(IS_PYTHON_BUILD AND IN_PLACE_BUILD)
   message(FATAL_ERROR "Cannot specify both IS_PYTHON_BUILD=ON and IN_PLACE_BUILD=ON!")
 endif()
@@ -100,53 +130,55 @@ endif()
 # ==============================================================================
 # CUDA related options
 
-if(CUDA_ALLOW_UNSUPPORTED_COMPILER)
-  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -allow-unsupported-compiler")
-endif()
+include(CheckLanguage)
 
+set(_mq_added_nvcxx_module_path FALSE)
 if(ENABLE_CUDA)
-  enable_language(CUDA)
+  set(_mq_added_nvcxx_module_path TRUE)
+  list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/NVCXX)
 
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.17)
-    find_package(CUDAToolkit REQUIRED)
+  # NB: NVHPC < 20.11 will fail this test since they do not support -x c++
+  check_language(NVCXX)
+
+  if(CMAKE_NVCXX_COMPILER)
+    enable_language(NVCXX)
+
+    if(NOT CMAKE_CUDA_ARCHITECTURES AND "$ENV{CUDAARCHS}" STREQUAL "")
+      # Default architectures list supported by NVHPC when using -stdpar -cuda -gpu=ccXX (taken from NVHPC 22.3)
+      set(CMAKE_CUDA_ARCHITECTURES
+          60
+          61
+          62
+          70
+          72
+          75
+          80)
+      if(CMAKE_NVCXX_COMPILER_VERSION VERSION_GREATER_EQUAL 21.5)
+        list(APPEND CMAKE_CUDA_ARCHITECTURES 86)
+      endif()
+
+      # NB: CUDAARCHS requires CMake 3.20+
+      message(STATUS "Neither of CMAKE_CUDA_ARCHITECTURES (CMake variable) or CUDAARCHS (env. variable; CMake 3.20+) "
+                     "have been defined. Defaulting to ${CMAKE_CUDA_ARCHITECTURES}")
+    elseif(NOT "$ENV{CUDAARCHS}" STREQUAL "")
+      message(STATUS "CUDAARCHS environment variable present: $ENV{CUDAARCHS}")
+    endif()
+    list(SORT CMAKE_CUDA_ARCHITECTURES ORDER DESCENDING)
+
+    setup_language(NVCXX)
+    enable_language(CUDA)
+    setup_language(CUDA)
+
+    if(CMAKE_NVCXX_COMPILER_VERSION VERSION_LESS 21.5)
+      # * NVCXX < 20.11 : missing '-x c++' argument for CMake flag detection
+      # * NVCXX < 21.3  : can only specify one CUDA_ARCHITECTURE
+      # * NVCXX < 21.5  : extraction of GPU kernels from shared library is broken
+      message(
+        FATAL_ERROR "MindQuantum is not compatible with the current version of NVHPC (${CMAKE_NVCXX_COMPILER_VERSION})"
+                    "Required is at least 21.5.")
+    endif()
   else()
-    find_package(CUDA REQUIRED)
-
-    if(CUDA_LIBRARIES)
-      if(NOT TARGET CUDA::cudart)
-        add_library(CUDA::cudart IMPORTED INTERFACE)
-        target_include_directories(CUDA::cudart SYSTEM INTERFACE "${CUDA_INCLUDE_DIRS}")
-        target_link_libraries(CUDA::cudart INTERFACE "${CUDA_LIBRARIES}")
-      endif()
-    endif()
-
-    if(CUDA_cudart_static_LIBRARY)
-      if(NOT TARGET CUDA::cudart_static)
-        add_library(CUDA::cudart_static IMPORTED INTERFACE)
-        target_include_directories(CUDA::cudart_static SYSTEM INTERFACE "${CUDA_INCLUDE_DIRS}")
-        target_link_libraries(CUDA::cudart_static INTERFACE "${CUDA_cudart_static_LIBRARY}" Threads::Threads)
-      endif()
-    endif()
-
-    find_library(
-      CUDA_driver_LIBRARY
-      NAMES cuda_driver cuda
-      HINTS ${CUDA_TOOLKIT_ROOT_DIR} ENV CUDA_PATH
-      PATH_SUFFIXES nvidia/current lib64 lib/x64 lib)
-    if(NOT CUDA_driver_LIBRARY)
-      # Don't try any stub directories until we have exhausted all other search locations.
-      find_library(
-        CUDA_driver_LIBRARY
-        NAMES cuda_driver cuda
-        HINTS ${CUDA_TOOLKIT_ROOT_DIR} ENV CUDA_PATH
-        PATH_SUFFIXES lib64/stubs lib/x64/stubs lib/stubs stubs)
-    endif()
-    mark_as_advanced(CUDA_driver_LIBRARY)
-    if(CUDA_driver_LIBRARY)
-      add_library(CUDA::cuda_driver IMPORTED INTERFACE)
-      target_include_directories(CUDA::cuda_driver SYSTEM INTERFACE "${CUDA_INCLUDE_DIRS}")
-      target_link_libraries(CUDA::cuda_driver INTERFACE "${CUDA_driver_LIBRARY}")
-    endif()
+    disable_cuda()
   endif()
 endif()
 

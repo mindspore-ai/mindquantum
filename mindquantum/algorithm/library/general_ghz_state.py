@@ -15,8 +15,8 @@
 # ============================================================================
 """General GHZ State."""
 
-from mindquantum.core.gates import X, H
 from mindquantum.core.circuit import Circuit
+from mindquantum.core.gates import H, X
 from mindquantum.utils.type_value_check import _check_input_type
 
 

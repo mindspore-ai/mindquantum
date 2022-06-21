@@ -1,6 +1,5 @@
 [build-system]
-# requires = ["setuptools>=42", "wheel", "pybind11>=2.6.0", "setuptools_scm[toml]>=3.4"]
-requires = ["setuptools>=42", "wheel", "pybind11>=2.6.0"]
+requires = ["setuptools>=45", "wheel", "pybind11>=2.6.2", "setuptools_scm[toml]>=6"]
 build-backend = "backend"
 backend-path = ["_build"]
 
@@ -8,7 +7,7 @@ backend-path = ["_build"]
 
 [tool.black]
     line-length = 120
-    target-version = ['py36','py37','py38']
+    target-version = ['py36','py37','py38', 'py39']
     skip-string-normalization = true
 
 
@@ -32,6 +31,10 @@ backend-path = ["_build"]
     extension-pkg-allow-list = [
     ]
 
+    init-hook = '''from pylint.config import find_default_config_files;\
+    import os, sys; \
+    sys.path.append(os.path.dirname(list(find_default_config_files())[0]))'''
+
     [tool.pylint.basic]
     good-names = []
 
@@ -45,24 +48,44 @@ backend-path = ["_build"]
     ]
 
 
-# [tool.pytest.ini_options]
+[tool.pytest.ini_options]
 
-# minversion = '6.0'
-# addopts = '-pno:warnings'
-# testpaths = ['mindquantum']
-# norecursedirs = 'third_party'
-# mock_use_standalone_module = true
+minversion = '6.0'
+testpaths = ['tests']
+addopts = "--ignore='tests/quick_test.py'"
+norecursedirs = ['third_party', 'mindquantum/ccsrc']
+mock_use_standalone_module = true
+markers = [
+    "symengine: test using the mindquantum.symengine module",
+    "cxx_exp_projectq: tests involving the ProjectQ simulator",
+]
+filterwarnings = [
+    'ignore:.*Please use `OptimizeResult`.*is deprecated:DeprecationWarning',
+    'ignore:.*`np.str` is a deprecated alias for the builtin `str`.*:DeprecationWarning',
+    'ignore:.*MindSpore not installed.*:UserWarning',
+]
+
+
+[tool.doc8]
+
+verbose = 0
+max_line_length = 120
+ignore-path-errors = [
+    "docs/api_python/mindquantum.algorithm.nisq.uccsd_singlet_get_packed_amplitudes.rst;D001",
+    "docs/api_python/mindquantum.algorithm.nisq.quccsd_generator.rst;D001",
+    "docs/api_python/mindquantum.algorithm.nisq.uccsd0_singlet_generator.rst;D001"
+]
 
 [tool.isort]
 
 profile = "black"
 
 
-#[tool.setuptools_scm]
-#write_to = 'VERSION.txt'
-#write_to_template = '{version}'
-#local_scheme = 'no-local-version'
-#fallback_version = '0.3.0'
+[tool.setuptools_scm]
+# write_to = 'VERSION.txt'
+write_to_template = '{version}'
+local_scheme = 'no-local-version'
+fallback_version = 'v2.0.0'
 
 
 [tool.yapf]
@@ -91,3 +114,6 @@ manylinux-x86_64-image = 'manylinux2014'
 [[tool.cibuildwheel.overrides]]
 select = 'cp3{6,7,8,9}-*'
 manylinux-x86_64-image = 'manylinux2010'
+
+# [tool.cibuildwheel.linux]
+# repair-wheel-command = "auditwheel -v repair -w {dest_dir} {wheel}"

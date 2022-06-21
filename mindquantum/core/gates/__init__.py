@@ -19,60 +19,106 @@ Gate.
 Gate provides different quantum gate.
 """
 
-from .basic import BasicGate
-from .basic import NoneParameterGate
-from .basic import ParameterGate
-from .basic import NoiseGate
-from .basic import HERMITIAN_PROPERTIES
-from .basicgate import BarrierGate
-from .basicgate import CNOTGate
-from .basicgate import HGate
-from .basicgate import IGate
-from .basicgate import XGate
-from .basicgate import YGate
-from .basicgate import ZGate
-from .basicgate import gene_univ_parameterized_gate
-from .basicgate import UnivMathGate
-from .basicgate import SWAPGate
-from .basicgate import ISWAPGate
-from .basicgate import RX
-from .basicgate import RY
-from .basicgate import RZ
-from .basicgate import GlobalPhase
-from .basicgate import PhaseShift
-from .basicgate import SGate
-from .basicgate import TGate
-from .basicgate import XX
-from .basicgate import YY
-from .basicgate import ZZ
-from .basicgate import Power
-from .basicgate import I
-from .basicgate import X
-from .basicgate import Y
-from .basicgate import Z
-from .basicgate import H
-from .basicgate import S
-from .basicgate import T
-from .basicgate import SWAP
-from .basicgate import ISWAP
-from .basicgate import CNOT
-from .basicgate import BARRIER
-from .measurement import Measure
-from .measurement import MeasureResult
-from .channel import PauliChannel
-from .channel import BitFlipChannel
-from .channel import PhaseFlipChannel
-from .channel import BitPhaseFlipChannel
-from .channel import DepolarizingChannel
-from .channel import AmplitudeDampingChannel
-from .channel import PhaseDampingChannel
+from .basic import (  # noqa: F401
+    HERMITIAN_PROPERTIES,
+    BasicGate,
+    NoiseGate,
+    NoneParameterGate,
+    ParameterGate,
+)
+from .basicgate import (
+    BARRIER,
+    CNOT,
+    ISWAP,
+    RX,
+    RY,
+    RZ,
+    SWAP,
+    XX,
+    YY,
+    ZZ,
+    BarrierGate,
+    CNOTGate,
+    GlobalPhase,
+    H,
+    HGate,
+    I,
+    IGate,
+    ISWAPGate,
+    PhaseShift,
+    Power,
+    S,
+    SGate,
+    SWAPGate,
+    T,
+    TGate,
+    UnivMathGate,
+    X,
+    XGate,
+    Y,
+    YGate,
+    Z,
+    ZGate,
+    gene_univ_parameterized_gate,
+)
+from .channel import (
+    AmplitudeDampingChannel,
+    BitFlipChannel,
+    BitPhaseFlipChannel,
+    DepolarizingChannel,
+    PauliChannel,
+    PhaseDampingChannel,
+    PhaseFlipChannel,
+)
+from .measurement import Measure, MeasureResult
 
 __all__ = [
-    "BasicGate", "NoneParameterGate", "ParameterGate", "HERMITIAN_PROPERTIES", "BarrierGate", "CNOTGate", "HGate",
-    "IGate", "XGate", "YGate", "ZGate", "gene_univ_parameterized_gate", "UnivMathGate", "SWAPGate", "ISWAPGate", "RX",
-    "RY", "RZ", "PhaseShift", "SGate", "TGate", "XX", "YY", "ZZ", "Power", "I", "X", "Y", "Z", "H", "S", "T", "SWAP",
-    "ISWAP", "CNOT", "BARRIER", "Measure", "MeasureResult", "PauliChannel", "BitFlipChannel", "PhaseFlipChannel",
-    "BitPhaseFlipChannel", "DepolarizingChannel", "GlobalPhase", "AmplitudeDampingChannel", "PhaseDampingChannel"
+    "BasicGate",
+    "NoneParameterGate",
+    "ParameterGate",
+    "HERMITIAN_PROPERTIES",
+    "BarrierGate",
+    "CNOTGate",
+    "HGate",
+    "IGate",
+    "XGate",
+    "YGate",
+    "ZGate",
+    "gene_univ_parameterized_gate",
+    "UnivMathGate",
+    "SWAPGate",
+    "ISWAPGate",
+    "RX",
+    "RY",
+    "RZ",
+    "PhaseShift",
+    "SGate",
+    "TGate",
+    "XX",
+    "YY",
+    "ZZ",
+    "Power",
+    "I",
+    "X",
+    "Y",
+    "Z",
+    "H",
+    "S",
+    "T",
+    "SWAP",
+    "ISWAP",
+    "CNOT",
+    "BARRIER",
+    "Measure",
+    "MeasureResult",
+    "PauliChannel",
+    "BitFlipChannel",
+    "PhaseFlipChannel",
+    "BitPhaseFlipChannel",
+    "DepolarizingChannel",
+    "GlobalPhase",
+    "AmplitudeDampingChannel",
+    "PhaseDampingChannel",
 ]
 
 __all__.sort()

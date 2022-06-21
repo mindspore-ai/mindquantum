@@ -16,7 +16,9 @@
 """Test iqp_encoding"""
 
 import numpy as np
+
 from mindquantum.algorithm.nisq.qnn import IQPEncoding
+
 
 def test_general_iqp_encoding():
     """

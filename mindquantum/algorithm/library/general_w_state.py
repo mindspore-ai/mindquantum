@@ -16,8 +16,9 @@
 """General W State."""
 
 import numpy as np
-from mindquantum.core.gates import X, RY
+
 from mindquantum.core.circuit import Circuit
+from mindquantum.core.gates import RY, X
 from mindquantum.utils.type_value_check import _check_input_type
 
 

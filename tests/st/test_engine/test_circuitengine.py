@@ -16,16 +16,16 @@
 """Test circuitengine."""
 
 import mindquantum.core.gates as G
-from mindquantum.engine.circuitengine import CircuitEngine
-from mindquantum.engine import circuit_generator
 from mindquantum import Circuit
+from mindquantum.engine import circuit_generator
+from mindquantum.engine.circuitengine import CircuitEngine
 
 
 def test_allocate_qureg():
     """Test allocate qureg."""
     eng = CircuitEngine()
     qubits = eng.allocate_qureg(2)
-    G.H.__or__((eng.qubits[0], ))
+    G.H.__or__((eng.qubits[0],))
     G.X.__or__((eng.qubits[0], eng.qubits[1]))
     assert qubits[0].qubit_id == 0
     assert qubits[1].qubit_id == 1
@@ -33,10 +33,11 @@ def test_allocate_qureg():
 
 def test_circuit_generator():
     """Test circuit generator."""
+
     @circuit_generator(3)
     def encoder(qubits):
-        G.H.__or__((qubits[0], ))
+        G.H.__or__((qubits[0],))
         G.X.__or__((qubits[0], qubits[1]))
-        G.RY('p1').__or__((qubits[2], ))
+        G.RY('p1').__or__((qubits[2],))
 
     assert isinstance(encoder, Circuit)

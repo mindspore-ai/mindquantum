@@ -15,9 +15,9 @@
 # ============================================================================
 """Circuit for time evolution."""
 
+from mindquantum.core.circuit.utils import decompose_single_term_time_evolution
 from mindquantum.core.operators import QubitOperator
 from mindquantum.core.parameterresolver import ParameterResolver
-from mindquantum.core.circuit.utils import decompose_single_term_time_evolution
 
 
 class TimeEvolution:
@@ -57,8 +57,11 @@ class TimeEvolution:
                    │               │               │               │
         q1: ───────X────RZ(2*b)────X────RX(π/2)────X────RZ(2*a)────X────RX(7π/2)──
     """
+
     def __init__(self, ops: QubitOperator, time=None):
+        """Initialize a TimeEvolution object."""
         from mindquantum.utils.type_value_check import _num_type
+
         if time is None:
             time = 1
         if not isinstance(time, _num_type):
@@ -74,6 +77,7 @@ class TimeEvolution:
     def circuit(self):
         """Get the first order trotter decomposition circuit of this time evolution operator."""
         from ..circuit import Circuit
+
         circ = Circuit()
         for k, v in self.ops.terms.items():
             pr_tmp = self.time * v

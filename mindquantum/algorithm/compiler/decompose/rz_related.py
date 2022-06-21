@@ -13,16 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""
-RZ gate related decompose rule.
-"""
+"""RZ gate related decompose rule."""
 
-from mindquantum.core import gates as G
-from mindquantum.core import Circuit
+from mindquantum.core import Circuit, gates
 from mindquantum.core.gates.basicgate import RZ
-from mindquantum.utils.type_value_check import _check_input_type, _check_control_num
+from mindquantum.utils.type_value_check import _check_control_num, _check_input_type
 
-def crz_decompose(gate: G.RZ):
+
+def crz_decompose(gate: gates.RZ):
     """
     Decompose crz gate.
 
@@ -54,11 +52,12 @@ def crz_decompose(gate: G.RZ):
     solutions.append(c1)
     q0 = gate.ctrl_qubits[0]
     q1 = gate.obj_qubits[0]
-    c1 += G.RZ(gate.coeff/2).on(q1)
-    c1 += G.X.on(q1,q0)
-    c1 += G.RZ(-gate.coeff/2).on(q1)
-    c1 += G.X.on(q1,q0)
+    c1 += gates.RZ(gate.coeff / 2).on(q1)
+    c1 += gates.X.on(q1, q0)
+    c1 += gates.RZ(-gate.coeff / 2).on(q1)
+    c1 += gates.X.on(q1, q0)
     return solutions
+
 
 decompose_rules = ['crz_decompose']
 

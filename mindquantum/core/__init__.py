@@ -13,21 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""MindQuantum core features (eDSL)"""
 
-from . import circuit
-from . import gates
-from . import operators
-from . import parameterresolver
-from . import third_party
-from .circuit import *
-from .gates import *
-from .operators import *
-from .parameterresolver import *
-from .third_party import *
+"""MindQuantum core features (eDSL)."""
+
 
 # Provide alias for convenience
-from . import operators as ops
+from . import circuit, gates, operators, parameterresolver, third_party
+from .circuit import *  # noqa: F401,F403
+from .gates import *  # noqa: F401,F403
+from .operators import *  # noqa: F401,F403
+from .parameterresolver import *  # noqa: F401,F403
+from .third_party import *  # noqa: F401,F403
 
 __all__ = []
 __all__.extend(circuit.__all__)

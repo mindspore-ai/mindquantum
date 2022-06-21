@@ -13,13 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
 """Hamiltonian module."""
 
-import scipy.sparse as sp
 import numpy as np
-from projectq.ops import QubitOperator as pq_operator
-from openfermion.ops import QubitOperator as of_operator
+import scipy.sparse as sp
+from openfermion.ops import QubitOperator as OFOperator
+
 from mindquantum import mqbackend as mb
+
+try:
+    from projectq.ops import QubitOperator as PQOperator
+except ImportError:
+
+    class PQOperator:
+        """Dummy class for ProjectQ operators."""
+
 
 MODE = {'origin': 0, 'backend': 1, 'frontend': 2}
 EDOM = {0: 'origin', 1: 'backend', 2: 'frontend'}
@@ -37,19 +46,23 @@ class Hamiltonian:
         >>> from mindquantum import Hamiltonian
         >>> ham = Hamiltonian(QubitOperator('Z0 Y1', 0.3))
     """
+
     def __init__(self, hamiltonian):
-        from mindquantum.core.operators import QubitOperator as hiq_operator
+        """Initialize a Hamiltonian object."""
+        from mindquantum.core.operators import QubitOperator as HiQOperator
         from mindquantum.core.operators.utils import count_qubits
-        support_type = (pq_operator, of_operator, hiq_operator, sp.csr_matrix)
+
+        support_type = (PQOperator, OFOperator, HiQOperator, sp.csr_matrix)
         if not isinstance(hamiltonian, support_type):
             raise TypeError("Require a QubitOperator or a csr_matrix, but get {}!".format(type(hamiltonian)))
         if isinstance(hamiltonian, sp.csr_matrix):
             if len(hamiltonian.shape) != 2 or hamiltonian.shape[0] != hamiltonian.shape[1]:
                 raise ValueError(
-                    f"Hamiltonian requires a two dimension square csr_matrix, but get shape {hamiltonian.shape}")
+                    f"Hamiltonian requires a two dimension square csr_matrix, but get shape {hamiltonian.shape}"
+                )
             if np.log2(hamiltonian.shape[0]) % 1 != 0:
                 raise ValueError(f"size of hamiltonian sparse matrix should be power of 2, but get {hamiltonian.shape}")
-            self.hamiltonian = hiq_operator('')
+            self.hamiltonian = HiQOperator('')
             self.sparse_mat = hamiltonian
             self.how_to = MODE['frontend']
             self.n_qubits = int(np.log2(self.sparse_mat.shape[0]))
@@ -58,25 +71,27 @@ class Hamiltonian:
             self.sparse_mat = sp.csr_matrix(np.eye(2, dtype=np.complex64))
             self.how_to = MODE['origin']
             self.n_qubits = count_qubits(hamiltonian)
-        self.ham_termlist=[]
-        for i,j in self.hamiltonian.terms.items():
+        self.ham_termlist = []
+        for i, j in self.hamiltonian.terms.items():
             if not j.is_const():
                 raise ValueError("Hamiltonian cannot be parameterized.")
-            self.ham_termlist.append((i,j.const))
+            self.ham_termlist.append((i, j.const))
 
     def __str__(self):
+        """Return a string representation of the object."""
         if self.how_to == MODE['frontend']:
             return self.sparse_mat.__str__()
         return self.hamiltonian.__str__()
 
     def __repr__(self):
+        """Return a string representation of the object."""
         if self.how_to == MODE['frontend']:
             return self.sparse_mat.__str__()
         return self.hamiltonian.__repr__()
 
     def sparse(self, n_qubits=1):
         """
-        Calculate the sparse matrix of this hamiltonian in pqc operator
+        Calculate the sparse matrix of this hamiltonian in pqc operator.
 
         Args:
             n_qubits (int): The total qubit of this hamiltonian, only need when mode is
@@ -92,7 +107,7 @@ class Hamiltonian:
 
     def get_cpp_obj(self, hermitian=False):
         """
-        get_cpp_obj
+        Get the underlying C++ object.
 
         Args:
             hermitian (bool): Whether to get the cpp object of this hamiltonian in hermitian version.
@@ -106,8 +121,9 @@ class Hamiltonian:
                 else:
                     dim = self.sparse_mat.shape[0]
                     nnz = self.sparse_mat.nnz
-                    csr_mat = mb.csr_hd_matrix(dim, nnz, self.sparse_mat.indptr, self.sparse_mat.indices,
-                                               self.sparse_mat.data)
+                    csr_mat = mb.csr_hd_matrix(
+                        dim, nnz, self.sparse_mat.indptr, self.sparse_mat.indices, self.sparse_mat.data
+                    )
                     ham = mb.hamiltonian(csr_mat, self.n_qubits)
                 self.ham_cpp = ham
             return self.ham_cpp

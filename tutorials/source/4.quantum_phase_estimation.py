@@ -1,7 +1,23 @@
-from mindquantum import Circuit
-from mindquantum import Simulator
-from mindquantum import UN, PhaseShift, qft, H, X, BARRIER
+# -*- coding: utf-8 -*-
+#   Copyright 2022 <Huawei Technologies Co., Ltd>
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
+"""Example of performing a quantum phase estimation algorithm."""
+
 import numpy as np
+
+from mindquantum import BARRIER, UN, Circuit, H, Measure, PhaseShift, Simulator, X, qft
 
 n = 3
 c = Circuit()
@@ -17,7 +33,7 @@ c += BARRIER
 c += qft(range(n)).hermitian()
 print(c)
 
-from mindquantum import Measure
+
 sim = Simulator('projectq', c.n_qubits)
 phi = 0.125
 sim.apply_circuit(c, {'phi': 2 * np.pi * phi})

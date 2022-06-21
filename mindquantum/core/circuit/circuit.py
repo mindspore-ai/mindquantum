@@ -15,30 +15,31 @@
 # ============================================================================
 """Circuit module."""
 
+import copy
 from collections.abc import Iterable
 from typing import List
-import copy
+
 import numpy as np
 from rich.console import Console
-import mindquantum.core.gates as G
+
+import mindquantum.core.gates as mq_gates
+from mindquantum.core.circuit.utils import apply
 from mindquantum.core.gates.basic import ParameterGate
-from mindquantum.utils.type_value_check import _check_gate_type
-from mindquantum.core.parameterresolver import ParameterResolver as PR
-from mindquantum.core.parameterresolver.parameterresolver import ParameterResolver
+from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.io import bprint
 from mindquantum.io.display import brick_model
-from mindquantum.utils.type_value_check import _check_input_type
-from mindquantum.utils.type_value_check import _check_and_generate_pr_type
-from mindquantum.utils.type_value_check import _check_gate_has_obj
-from mindquantum.core.circuit.utils import apply
+from mindquantum.utils.type_value_check import (
+    _check_and_generate_pr_type,
+    _check_gate_has_obj,
+    _check_gate_type,
+    _check_input_type,
+)
 
-GateSeq = List[G.BasicGate]
+GateSeq = List[mq_gates.BasicGate]
 
 
 def _two_dim_array_to_list(data):
-    """
-    Convert a two dimension array to a list of string.
-    """
+    """Convert a two dimension array to a list of string."""
     if len(data.shape) != 2:
         raise ValueError("data need two dimensions, but get {} dimensions".format(len(data.shape)))
     out_real = []
@@ -56,16 +57,19 @@ class CollectionMap:
     """A collection container."""
 
     def __init__(self):
+        """Initialize a CollectionMap object."""
         self.map = {}
 
     def __str__(self):
+        """Return a string representation of the object."""
         return self.map.__str__()
 
     def __repr__(self):
+        """Return a string representation of the object."""
         return self.map.__repr__()
 
     def collect(self, keys):
-        """collect items"""
+        """Collect items."""
         if not isinstance(keys, list):
             keys = [keys]
         for k in keys:
@@ -75,7 +79,7 @@ class CollectionMap:
                 self.map[k] += 1
 
     def collect_only_one(self, keys, raise_msg):
-        """collect item only single time, otherwise raise error"""
+        """Collect item only single time, otherwise raise error."""
         if not isinstance(keys, list):
             keys = [keys]
         for k in keys:
@@ -84,7 +88,7 @@ class CollectionMap:
             self.map[k] = 1
 
     def delete(self, keys):
-        """delete items"""
+        """Delete items."""
         if not isinstance(keys, list):
             keys = [keys]
         for k in keys:
@@ -95,25 +99,26 @@ class CollectionMap:
                     self.map[k] -= 1
 
     def num(self, k):
-        """items count number"""
+        """Items count number."""
         if k not in self.map:
             return 0
         return self.map[k]
 
     def keys(self):
-        """All items list"""
+        """Return the list of all items list."""
         return list(self.map.keys())
 
     @property
     def size(self):
-        """number of items"""
+        """Return the number of items in the container."""
         return len(self.map)
 
     def __len__(self):
+        """Size of the container."""
         return self.size
 
     def merge(self, other):
-        """merge with other collection container"""
+        """Merge with other collection container."""
         for k, v in other.map.items():
             if k in self.map:
                 self.map[k] += v
@@ -121,14 +126,14 @@ class CollectionMap:
                 self.map[k] = v
 
     def merge_only_one(self, other, raise_msg):
-        """merge with other collection container"""
+        """Merge with other collection container."""
         for k, _ in other.map.items():
             if k in self.map:
                 raise ValueError(raise_msg)
             self.map[k] = 1
 
     def unmerge(self, other):
-        """delete with other collection container"""
+        """Delete with other collection container."""
         for k, v in other.map.items():
             if k in self.map:
                 if self.map[k] <= v:
@@ -137,13 +142,13 @@ class CollectionMap:
                     self.map[k] -= v
 
     def __copy__(self):
-        """copy this container"""
+        """Copy this container."""
         out = CollectionMap()
         out.merge(self)
         return out
 
     def __deepcopy__(self, memo):
-        """deepcopy this container"""
+        """Deepcopy this container."""
         out = CollectionMap()
         out.merge(self)
         return out
@@ -187,6 +192,7 @@ class Circuit(list):
     """
 
     def __init__(self, gates=None):
+        """Initialize a Circuit object."""
         list.__init__([])
         self.all_qubits = CollectionMap()
         self.all_paras = CollectionMap()
@@ -202,7 +208,7 @@ class Circuit(list):
         self.has_cpp_obj = False
 
     def _collect_parameterized_gate(self, gate: ParameterGate):
-        """Collect parameterized gate information"""
+        """Collect parameterized gate information."""
         self.all_paras.collect(list(gate.coeff.keys()))
         gate_ansatz = list(gate.coeff.ansatz_parameters)
         gate_encoder = list(gate.coeff.encoder_parameters)
@@ -224,9 +230,9 @@ class Circuit(list):
         """
         _check_gate_type(gate)
         _check_gate_has_obj(gate)
-        if isinstance(gate, G.Measure):
+        if isinstance(gate, mq_gates.Measure):
             self.all_measures.collect_only_one(gate, f'measure key {gate.key} already exist.')
-        if isinstance(gate, G.NoiseGate):
+        if isinstance(gate, mq_gates.NoiseGate):
             self.all_noises.collect(gate.name)
         self.all_qubits.collect(gate.obj_qubits)
         self.all_qubits.collect(gate.ctrl_qubits)
@@ -249,12 +255,16 @@ class Circuit(list):
             self.all_noises.merge(gates.all_noises)
             conflict_params = set(self.all_encoder.keys()) & set(gates.all_ansatz.keys())
             if conflict_params:
-                raise RuntimeError(f"Parameters {conflict_params} can not be both encoder \
-parameters and ansatz parameters.")
+                raise RuntimeError(
+                    f"Parameters {conflict_params} can not be both encoder \
+parameters and ansatz parameters."
+                )
             conflict_params = set(self.all_ansatz.keys()) & set(gates.all_encoder.keys())
             if conflict_params:
-                raise RuntimeError(f"Parameters {conflict_params} can not be both encoder \
-parameters and ansatz parameters.")
+                raise RuntimeError(
+                    f"Parameters {conflict_params} can not be both encoder \
+parameters and ansatz parameters."
+                )
             self.all_encoder.merge(gates.all_encoder)
             self.all_ansatz.merge(gates.all_ansatz)
             super().extend(gates)
@@ -264,21 +274,24 @@ parameters and ansatz parameters.")
         self.has_cpp_obj = False
 
     def __add__(self, gates):
+        """Addition operator."""
         out = Circuit()
         out.extend(self)
-        if isinstance(gates, G.BasicGate):
+        if isinstance(gates, mq_gates.BasicGate):
             out.append(gates)
         else:
             out.extend(gates)
         return out
 
     def __radd__(self, gates):
+        """Right-addition operator."""
         if isinstance(gates, int) and gates == 0:
             return self
         return Circuit(gates) + self
 
     def __iadd__(self, gates):
-        if isinstance(gates, G.BasicGate):
+        """In-place addition operator."""
+        if isinstance(gates, mq_gates.BasicGate):
             self.append(gates)
         elif isinstance(gates, Circuit):
             self.extend(gates)
@@ -287,6 +300,7 @@ parameters and ansatz parameters.")
         return self
 
     def __mul__(self, num):
+        """Repeat the circuit."""
         if not isinstance(num, int):
             raise TypeError(f'{type(num)} object cannot be interpreted as an integer')
         out = Circuit()
@@ -295,21 +309,25 @@ parameters and ansatz parameters.")
         return out
 
     def __deepcopy__(self, memo):
+        """Deep-copy operator."""
         res = Circuit()
         for gate in self:
             res.append(copy.deepcopy(gate))
         return res
 
     def __copy__(self):
+        """Copy operator."""
         res = Circuit()
         for gate in self:
             res.append(copy.deepcopy(gate))
         return res
 
     def __rmul__(self, num):
+        """Repeat the circuit."""
         return self.__mul__(num)
 
     def __setitem__(self, k, v):
+        """Implement the dictionary-like [] operator (write)."""
         _check_gate_type(v)
         _check_gate_has_obj(v)
         old_v = self[k]
@@ -319,22 +337,23 @@ parameters and ansatz parameters.")
             self.all_paras.delete(list(old_v.coeff.keys()))
             self.all_ansatz.delete(list(old_v.coeff.ansatz_parameters))
             self.all_encoder.delete(list(old_v.coeff.encoder_parameters))
-        if isinstance(old_v, G.Measure):
+        if isinstance(old_v, mq_gates.Measure):
             self.all_measures.delete(old_v)
-        if isinstance(old_v, G.NoiseGate):
+        if isinstance(old_v, mq_gates.NoiseGate):
             self.all_noises.delete(old_v.name)
         super().__setitem__(k, v)
         self.all_qubits.collect(v.obj_qubits)
         self.all_qubits.collect(v.ctrl_qubits)
         if v.parameterized:
             self._collect_parameterized_gate(v)
-        if isinstance(v, G.Measure):
+        if isinstance(v, mq_gates.Measure):
             self.all_measures.collect_only_one(v, f'measure key {v.key} already exist.')
-        if isinstance(v, G.NoiseGate):
+        if isinstance(v, mq_gates.NoiseGate):
             self.all_noises.collect(v.name)
         self.has_cpp_obj = False
 
     def __getitem__(self, sliced):
+        """Implement the dictionary-like [] operator (read)."""
         if isinstance(sliced, int):
             return super().__getitem__(sliced)
         return Circuit(super().__getitem__(sliced))
@@ -377,7 +396,7 @@ parameters and ansatz parameters.")
             index (int): Index to set gate.
             gates (Union[BasicGate, list[BasicGate]]): Gates you need to insert.
         """
-        if isinstance(gates, G.BasicGate):
+        if isinstance(gates, mq_gates.BasicGate):
             _check_gate_has_obj(gates)
             _check_gate_type(gates)
             super().insert(index, gates)
@@ -385,8 +404,8 @@ parameters and ansatz parameters.")
             self.all_qubits.collect(gates.ctrl_qubits)
             if gates.parameterized:
                 self._collect_parameterized_gate(gates)
-            if isinstance(gates, G.Measure):
-                self.all_measures.collect_only_one(gates, f'measure key {gates.key} already exist.')
+            if isinstance(gates, mq_gates.Measure):
+                self.all_measures.collect_only_one(gates, f'measure key {mq_gates.key} already exist.')
         elif isinstance(gates, Iterable):
             for gate in gates[::-1]:
                 self.insert(index, gate)
@@ -394,25 +413,21 @@ parameters and ansatz parameters.")
                 self.all_qubits.collect(gate.ctrl_qubits)
                 if gate.parameterized:
                     self._collect_parameterized_gate(gate)
-                if isinstance(gate, G.Measure):
+                if isinstance(gate, mq_gates.Measure):
                     self.all_measures.collect_only_one(gate, f'measure key {gate.key} already exist.')
         else:
             raise TypeError("Unsupported type for quantum gate: {}".format(type(gates)))
         self.has_cpp_obj = False
 
     def no_grad(self):
-        """
-        Set all parameterized gate in this quantum circuit not require grad.
-        """
+        """Set all parameterized gate in this quantum circuit not require grad."""
         for gate in self:
             gate.no_grad()
         self.has_cpp_obj = False
         return self
 
     def requires_grad(self):
-        """
-        Set all parameterized gates in this quantum circuit require grad.
-        """
+        """Set all parameterized gates in this quantum circuit require grad."""
         for gate in self:
             gate.requires_grad()
         self.has_cpp_obj = False
@@ -441,10 +456,13 @@ parameters and ansatz parameters.")
         return circ
 
     def __str__(self):
+        """Return a string representation of the object."""
         return self.__repr__()
 
     def __repr__(self):
+        """Return a string representation of the object."""
         from mindquantum.io.display._config import _CIRCUIT_STYLE
+
         circ = self.compress()
         s = brick_model(circ, sorted(self.all_qubits.map))
         s = '\n'.join(s)
@@ -457,9 +475,9 @@ parameters and ansatz parameters.")
         return s
 
     def _repr_html_(self):
-        """repr for jupyter nontebook"""
-        from mindquantum.io.display._config import CIRCUIT_HTML_FORMAT
-        from mindquantum.io.display._config import _CIRCUIT_STYLE
+        """Repr for jupyter nontebook."""
+        from mindquantum.io.display._config import _CIRCUIT_STYLE, CIRCUIT_HTML_FORMAT
+
         console = Console(record=True)
         circ = self.compress()
         s = brick_model(circ, sorted(self.all_qubits.map))
@@ -479,6 +497,8 @@ parameters and ansatz parameters.")
 
     def summary(self, show=True):
         """
+        Print a summary of the current circuit.
+
         Print the information about current circuit, including block number,
         gate number, non-parameterized gate number, parameterized gate number
         and the total parameters.
@@ -505,13 +525,19 @@ parameters and ansatz parameters.")
             else:
                 self.num_non_para_gate += 1
         if show:
-            info = bprint([
-                'Total number of gates: {}.'.format(self.num_para_gate + self.num_non_para_gate),
-                'Parameter gates: {}.'.format(self.num_para_gate), 'with {} parameters are: {}{}'.format(
-                    len(self.all_paras), ', '.join(self.all_paras.keys()[:10]),
-                    ('.' if len(self.all_paras) <= 10 else '...')), 'Number qubit of circuit: {}'.format(self.n_qubits)
-            ],
-                          title='Circuit Summary')
+            info = bprint(
+                [
+                    'Total number of gates: {}.'.format(self.num_para_gate + self.num_non_para_gate),
+                    'Parameter gates: {}.'.format(self.num_para_gate),
+                    'with {} parameters are: {}{}'.format(
+                        len(self.all_paras),
+                        ', '.join(self.all_paras.keys()[:10]),
+                        ('.' if len(self.all_paras) <= 10 else '...'),
+                    ),
+                    'Number qubit of circuit: {}'.format(self.n_qubits),
+                ],
+                title='Circuit Summary',
+            )
             for i in info:
                 print(i)
 
@@ -543,7 +569,7 @@ parameters and ansatz parameters.")
         Returns:
             ParameterResolver, the parameter resolver of the whole circuit.
         """
-        pr = PR(self.all_paras.map)
+        pr = ParameterResolver(self.all_paras.map)
         for k in pr.keys():
             pr[k] = 1
         return pr
@@ -633,6 +659,7 @@ parameters and ansatz parameters.")
         if self.has_measure_gate:
             raise ValueError("This circuit cannot have measurement gate.")
         from mindquantum.simulator import Simulator
+
         sim = Simulator(backend, self.n_qubits, seed=seed)
         m = np.array(sim.sim.get_circuit_matrix(circ.get_cpp_obj(), pr.get_cpp_obj())).T
         return m
@@ -640,6 +667,8 @@ parameters and ansatz parameters.")
     @property
     def is_measure_end(self):
         """
+        Check whether each qubit has a measurement as its last operation.
+
         Check whether the circuit is end with measurement gate that there is at most one measurement
         gate that act on each qubit, and this measurement gate should be at end of gate serial of
         this qubit.
@@ -652,7 +681,7 @@ parameters and ansatz parameters.")
         for gate in circ:
             for idx in set(gate.obj_qubits + gate.ctrl_qubits):
                 high[idx] += 1
-            if isinstance(gate, G.Measure):
+            if isinstance(gate, mq_gates.Measure):
                 m_idx = gate.obj_qubits[0]
                 if high[m_idx] != self.all_qubits.map[m_idx]:
                     return False
@@ -691,10 +720,10 @@ parameters and ansatz parameters.")
         return circuit
 
     def remove_barrier(self):
-        """Remove all barrier gates"""
+        """Remove all barrier gates."""
         circ = Circuit()
         for g in self:
-            if not isinstance(g, G.BarrierGate):
+            if not isinstance(g, mq_gates.BarrierGate):
                 circ += g
         return circ
 
@@ -702,7 +731,7 @@ parameters and ansatz parameters.")
         """Remove all measure gate."""
         circ = Circuit()
         for g in self:
-            if not isinstance(g, G.Measure):
+            if not isinstance(g, mq_gates.Measure):
                 circ += g
         return circ
 
@@ -729,7 +758,7 @@ parameters and ansatz parameters.")
             qubits = [qubits]
         circ = Circuit()
         for gate in self:
-            if isinstance(gate, G.Measure) and gate.obj_qubits[0] in qubits:
+            if isinstance(gate, mq_gates.Measure) and gate.obj_qubits[0] in qubits:
                 continue
             circ += gate
         return circ
@@ -743,8 +772,8 @@ parameters and ansatz parameters.")
         """
         if not self.has_cpp_obj:
             self.has_cpp_obj = True
-            self.cpp_obj = [i.get_cpp_obj() for i in self if not isinstance(i, G.BarrierGate)]
-            self.herm_cpp_obj = [i.get_cpp_obj() for i in self.hermitian() if not isinstance(i, G.BarrierGate)]
+            self.cpp_obj = [i.get_cpp_obj() for i in self if not isinstance(i, mq_gates.BarrierGate)]
+            self.herm_cpp_obj = [i.get_cpp_obj() for i in self.hermitian() if not isinstance(i, mq_gates.BarrierGate)]
 
         if hasattr(self, 'cpp_obj') and hasattr(self, 'herm_cpp_obj'):
             if hermitian:
@@ -760,7 +789,7 @@ parameters and ansatz parameters.")
             obj_qubits (Union[int, list[int]]): The object qubits of `H` gate.
             ctrl_qubits (Union[int, list[int]]): the control qubits of `H` gate. Default: None.
         """
-        self.append(G.H.on(obj_qubits, ctrl_qubits))
+        self.append(mq_gates.H.on(obj_qubits, ctrl_qubits))
         return self
 
     def x(self, obj_qubits, ctrl_qubits=None):
@@ -771,7 +800,7 @@ parameters and ansatz parameters.")
             obj_qubits (Union[int, list[int]]): The object qubits of `X` gate.
             ctrl_qubits (Union[int, list[int]]): the control qubits of `X` gate. Default: None.
         """
-        self.append(G.X.on(obj_qubits, ctrl_qubits))
+        self.append(mq_gates.X.on(obj_qubits, ctrl_qubits))
         return self
 
     def y(self, obj_qubits, ctrl_qubits=None):
@@ -782,7 +811,7 @@ parameters and ansatz parameters.")
             obj_qubits (Union[int, list[int]]): The object qubits of `Y` gate.
             ctrl_qubits (Union[int, list[int]]): the control qubits of `Y` gate. Default: None.
         """
-        self.append(G.Y.on(obj_qubits, ctrl_qubits))
+        self.append(mq_gates.Y.on(obj_qubits, ctrl_qubits))
         return self
 
     def z(self, obj_qubits, ctrl_qubits=None):
@@ -793,7 +822,7 @@ parameters and ansatz parameters.")
             obj_qubits (Union[int, list[int]]): The object qubits of `Z` gate.
             ctrl_qubits (Union[int, list[int]]): the control qubits of `Z` gate. Default: None.
         """
-        self.append(G.Z.on(obj_qubits, ctrl_qubits))
+        self.append(mq_gates.Z.on(obj_qubits, ctrl_qubits))
         return self
 
     def s(self, obj_qubits, ctrl_qubits=None):
@@ -804,7 +833,7 @@ parameters and ansatz parameters.")
             obj_qubits (Union[int, list[int]]): The object qubits of `S` gate.
             ctrl_qubits (Union[int, list[int]]): the control qubits of `S` gate. Default: None.
         """
-        self.append(G.S.on(obj_qubits, ctrl_qubits))
+        self.append(mq_gates.S.on(obj_qubits, ctrl_qubits))
         return self
 
     def swap(self, obj_qubits, ctrl_qubits=None):
@@ -815,7 +844,7 @@ parameters and ansatz parameters.")
             obj_qubits (Union[int, list[int]]): The object qubits of `SWAP` gate.
             ctrl_qubits (Union[int, list[int]]): the control qubits of `SWAP` gate. Default: None.
         """
-        self.append(G.SWAP.on(obj_qubits, ctrl_qubits))
+        self.append(mq_gates.SWAP.on(obj_qubits, ctrl_qubits))
         return self
 
     def rx(self, para, obj_qubits, ctrl_qubits=None):
@@ -827,7 +856,7 @@ parameters and ansatz parameters.")
             obj_qubits (Union[int, list[int]]): The object qubits of `RX` gate.
             ctrl_qubits (Union[int, list[int]]): the control qubits of `RX` gate. Default: None.
         """
-        self.append(G.RX(para).on(obj_qubits, ctrl_qubits))
+        self.append(mq_gates.RX(para).on(obj_qubits, ctrl_qubits))
         return self
 
     def ry(self, para, obj_qubits, ctrl_qubits=None):
@@ -839,7 +868,7 @@ parameters and ansatz parameters.")
             obj_qubits (Union[int, list[int]]): The object qubits of `RY` gate.
             ctrl_qubits (Union[int, list[int]]): the control qubits of `RY` gate. Default: None.
         """
-        self.append(G.RY(para).on(obj_qubits, ctrl_qubits))
+        self.append(mq_gates.RY(para).on(obj_qubits, ctrl_qubits))
         return self
 
     def rz(self, para, obj_qubits, ctrl_qubits=None):
@@ -851,7 +880,7 @@ parameters and ansatz parameters.")
             obj_qubits (Union[int, list[int]]): The object qubits of `RZ` gate.
             ctrl_qubits (Union[int, list[int]]): the control qubits of `RZ` gate. Default: None.
         """
-        self.append(G.RZ(para).on(obj_qubits, ctrl_qubits))
+        self.append(mq_gates.RZ(para).on(obj_qubits, ctrl_qubits))
         return self
 
     def phase_shift(self, para, obj_qubits, ctrl_qubits=None):
@@ -861,8 +890,9 @@ parameters and ansatz parameters.")
         Args:
             para (Union[dict, ParameterResolver]): The parameter for `PhaseShift` gate.
             obj_qubits (Union[int, list[int]]): The object qubits of `PhaseShift` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `PhaseShift` gate. Default: None."""
-        self.append(G.PhaseShift(para).on(obj_qubits, ctrl_qubits))
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `PhaseShift` gate. Default: None.
+        """
+        self.append(mq_gates.PhaseShift(para).on(obj_qubits, ctrl_qubits))
         return self
 
     def xx(self, para, obj_qubits, ctrl_qubits=None):
@@ -874,7 +904,7 @@ parameters and ansatz parameters.")
             obj_qubits (Union[int, list[int]]): The object qubits of `XX` gate.
             ctrl_qubits (Union[int, list[int]]): the control qubits of `XX` gate. Default: None.
         """
-        self.append(G.XX(para).on(obj_qubits, ctrl_qubits))
+        self.append(mq_gates.XX(para).on(obj_qubits, ctrl_qubits))
         return self
 
     def yy(self, para, obj_qubits, ctrl_qubits=None):
@@ -886,7 +916,7 @@ parameters and ansatz parameters.")
             obj_qubits (Union[int, list[int]]): The object qubits of `YY` gate.
             ctrl_qubits (Union[int, list[int]]): the control qubits of `YY` gate. Default: None.
         """
-        self.append(G.YY(para).on(obj_qubits, ctrl_qubits))
+        self.append(mq_gates.YY(para).on(obj_qubits, ctrl_qubits))
         return self
 
     def zz(self, para, obj_qubits, ctrl_qubits=None):
@@ -898,7 +928,7 @@ parameters and ansatz parameters.")
             obj_qubits (Union[int, list[int]]): The object qubits of `ZZ` gate.
             ctrl_qubits (Union[int, list[int]]): the control qubits of `ZZ` gate. Default: None.
         """
-        self.append(G.ZZ(para).on(obj_qubits, ctrl_qubits))
+        self.append(mq_gates.ZZ(para).on(obj_qubits, ctrl_qubits))
         return self
 
     def measure(self, key, obj_qubit=None):
@@ -911,21 +941,21 @@ parameters and ansatz parameters.")
             obj_qubit (int): Which qubit to measure. Default: None.
         """
         if obj_qubit is None:
-            self.append(G.Measure().on(key))
+            self.append(mq_gates.Measure().on(key))
         else:
-            self.append(G.Measure(key).on(obj_qubit))
+            self.append(mq_gates.Measure(key).on(obj_qubit))
         return self
 
     def measure_all(self, subfix=None):
         """
-        Measure all qubits
+        Measure all qubits.
 
         Args:
             subfix (str): The subfix string you want to add to the name of measure gate.
         """
         for i in range(self.n_qubits):
             s = f"q{i}" if subfix is None else f"q{i}_{subfix}"
-            self += G.Measure(s).on(i)
+            self += mq_gates.Measure(s).on(i)
         return self
 
     def barrier(self, show=True):
@@ -936,12 +966,13 @@ parameters and ansatz parameters.")
             show (bool): Whether show barrier or not. Default: True.
         """
         _check_input_type('show', bool, show)
-        self.append(G.BarrierGate(show))
+        self.append(mq_gates.BarrierGate(show))
         return self
 
     def un(self, gate, maps_obj, maps_ctrl=None):
         """
         Map a quantum gate to different objective qubits and control qubits.
+
         Please refers to UN.
 
         Args:
@@ -950,6 +981,7 @@ parameters and ansatz parameters.")
             maps_ctrl (Union[int, list[int]]): control qubits. Default: None.
         """
         from mindquantum import UN
+
         self += UN(gate, maps_obj, maps_ctrl)
         return self
 
@@ -965,6 +997,7 @@ parameters and ansatz parameters.")
             seed (int): The random seed of simulator. Default: None
         """
         from mindquantum import Simulator
+
         sim = Simulator(backend, self.n_qubits, seed)
         sim.apply_circuit(self, pr)
         return sim.get_qs(ket)
@@ -999,10 +1032,13 @@ parameters and ansatz parameters.")
             style (dict, str): the style to set svg circuit. Currently, we support
                 'official', 'light' and 'dark'. Default: None.
         """
+        from mindquantum.io.display._config import (
+            _svg_config_dark,
+            _svg_config_light,
+            _svg_config_official,
+        )
         from mindquantum.io.display.circuit_svg_drawer import SVGCircuit
-        from mindquantum.io.display._config import _svg_config_dark
-        from mindquantum.io.display._config import _svg_config_light
-        from mindquantum.io.display._config import _svg_config_official
+
         supported_style = {
             'official': _svg_config_official,
             'dark': _svg_config_dark,
@@ -1020,11 +1056,11 @@ parameters and ansatz parameters.")
         """Remove all noise gate."""
         circ = Circuit()
         for g in self:
-            if not isinstance(g, G.NoiseGate):
+            if not isinstance(g, mq_gates.NoiseGate):
                 circ += g
         return circ
 
-    def with_noise(self, noise_gate=G.AmplitudeDampingChannel(0.001)):
+    def with_noise(self, noise_gate=mq_gates.AmplitudeDampingChannel(0.001)):
         """
         Apply noises on each gate.
 
@@ -1034,7 +1070,7 @@ parameters and ansatz parameters.")
         circ = Circuit()
         for g in self:
             circ += g
-            if not isinstance(g, (G.Measure, G.NoiseGate)):
+            if not isinstance(g, (mq_gates.Measure, mq_gates.NoiseGate)):
                 for i in g.obj_qubits:
                     circ += noise_gate.on(i)
         return circ

@@ -13,13 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Quantum algorithms"""
 
-from . import library
-from . import nisq
-from . import compiler
-from .library import *
-from .nisq import *
+"""Quantum algorithms."""
+
+from . import compiler, library, nisq  # noqa: F401
+from .library import *  # noqa: F401,F403
+from .nisq import *  # noqa: F401,F403
 
 __all__ = []
 __all__.extend(library.__all__)

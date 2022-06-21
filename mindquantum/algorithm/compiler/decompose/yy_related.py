@@ -13,21 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""
-YY gate related decompose rule.
-"""
 
-from mindquantum.core import gates as G
-from mindquantum.core import Circuit
-from mindquantum.core.gates.basicgate import YY
-from mindquantum.utils.type_value_check import _check_input_type#, _check_control_num
+"""YY gate related decompose rule."""
+
 import numpy as np
+
+from mindquantum.core import Circuit, gates
+from mindquantum.core.gates.basicgate import YY
+from mindquantum.utils.type_value_check import _check_input_type  # , _check_control_num
+
 
 def _check_control_num(ctrl_qubits, require_n):
     if len(ctrl_qubits) != require_n:
         raise RuntimeError(f"requires {(require_n,'control qubit')}, but get {len(ctrl_qubits)}")
 
-def yy_decompose(gate: G.YY):
+
+def yy_decompose(gate: gates.YY):
     """
     Decompose YY gate.
 
@@ -56,7 +57,8 @@ def yy_decompose(gate: G.YY):
     _check_control_num(gate.ctrl_qubits, 0)
     return cyy_decompose(gate)
 
-def cyy_decompose(gate: G.YY):
+
+def cyy_decompose(gate: gates.YY):
     """
     Decompose yy gate with control qubits.
 
@@ -97,25 +99,26 @@ def cyy_decompose(gate: G.YY):
 
     c1 = Circuit()
     solutions.append(c1)
-    c1 += G.RX(np.pi / 2).on(q0, cq)
-    c1 += G.RX(np.pi / 2).on(q1, cq)
-    c1 += G.X.on(q1, [q0] + cq)
-    c1 += G.RZ(2 * gate.coeff).on(q1, cq)
+    c1 += gates.RX(np.pi / 2).on(q0, cq)
+    c1 += gates.RX(np.pi / 2).on(q1, cq)
+    c1 += gates.X.on(q1, [q0] + cq)
+    c1 += gates.RZ(2 * gate.coeff).on(q1, cq)
     c1 += c1[-2]
-    c1 += G.RX(- np.pi / 2).on(q1, cq)
-    c1 += G.RX(- np.pi / 2).on(q0, cq)
+    c1 += gates.RX(-np.pi / 2).on(q1, cq)
+    c1 += gates.RX(-np.pi / 2).on(q0, cq)
 
     c2 = Circuit()
     solutions.append(c2)
-    c2 += G.RX(np.pi / 2).on(q0, cq)
-    c2 += G.RX(np.pi / 2).on(q1, cq)
-    c2 += G.X.on(q0, [q1] + cq)
-    c2 += G.RZ(2 * gate.coeff).on(q0, cq)
+    c2 += gates.RX(np.pi / 2).on(q0, cq)
+    c2 += gates.RX(np.pi / 2).on(q1, cq)
+    c2 += gates.X.on(q0, [q1] + cq)
+    c2 += gates.RZ(2 * gate.coeff).on(q0, cq)
     c2 += c2[-2]
-    c2 += G.RX(- np.pi / 2).on(q1, cq)
-    c2 += G.RX(- np.pi / 2).on(q0, cq)
+    c2 += gates.RX(-np.pi / 2).on(q1, cq)
+    c2 += gates.RX(-np.pi / 2).on(q0, cq)
 
     return solutions
+
 
 decompose_rules = ['yy_decompose', 'cyy_decompose']
 __all__ = decompose_rules

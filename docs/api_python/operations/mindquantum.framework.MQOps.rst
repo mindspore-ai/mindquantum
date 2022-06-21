@@ -11,7 +11,7 @@ mindquantum.framework.MQOps
 
     **输入：**
 
-    - **enc_data** (Tensor) - 希望编码为量子状态的Tensor，其shape为 :math:`(N, M)` ，其中 :math:`N` 表示batch大小， :math:`M` 表示encoder参数的数量。    
+    - **enc_data** (Tensor) - 希望编码为量子状态的Tensor，其shape为 :math:`(N, M)` ，其中 :math:`N` 表示batch大小， :math:`M` 表示encoder参数的数量。
     - **ans_data** (Tensor) - shape为 :math:`N` 的Tensor，用于ansatz电路，其中 :math:`N` 表示ansatz参数的数量。
 
     **输出：**

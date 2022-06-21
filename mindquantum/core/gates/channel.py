@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
 """Quantum channel."""
 
 from mindquantum import mqbackend as mb
@@ -66,7 +67,9 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
                    │
         {'00': 101, '01': 862, '11': 37}
     """
+
     def __init__(self, px: float, py: float, pz: float, **kwargs):
+        """Initialize a PauliChannel object."""
         if 'name' not in kwargs:
             kwargs['name'] = 'PC'
         kwargs['n_qubits'] = 1
@@ -86,6 +89,7 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
             raise ValueError("Required total probability P = px + py + pz ∈ [0,1].")
 
     def __extra_prop__(self):
+        """Extra prop magic method."""
         prop = super().__extra_prop__()
         prop['px'] = self.px
         prop['py'] = self.py
@@ -93,6 +97,7 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
         return prop
 
     def get_cpp_obj(self):
+        """Get underlying C++ object."""
         cpp_gate = mb.basic_gate('PL', True, self.px, self.py, self.pz)
         cpp_gate.obj_qubits = self.obj_qubits
         cpp_gate.ctrl_qubits = self.ctrl_qubits
@@ -103,6 +108,7 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
         self.projectq_gate = None
 
     def __eq__(self, other):
+        """Equality comparison operator."""
         if isinstance(other, PauliChannel):
             if BasicGate.__eq__(self, other) and self.px == other.px and self.py == other.py and self.pz == other.pz:
                 return True
@@ -138,7 +144,9 @@ class BitFlipChannel(PauliChannel):
                       │
         q1: ─────────BFC──
     """
+
     def __init__(self, p: float, **kwargs):
+        """Initialize a BitFlipChannel object."""
         kwargs['name'] = 'BFC'
         kwargs['n_qubits'] = 1
         kwargs['px'] = p
@@ -148,11 +156,13 @@ class BitFlipChannel(PauliChannel):
         self.p = p
 
     def __extra_prop__(self):
+        """Extra prop magic method."""
         prop = super().__extra_prop__()
         prop['p'] = self.p
         return prop
 
     def __str_in_circ__(self):
+        """Return a string representation of the object in a quantum circuit."""
         return f"BF({self.p})"
 
 
@@ -185,7 +195,9 @@ class PhaseFlipChannel(PauliChannel):
                       │
         q1: ─────────PFC──
     """
+
     def __init__(self, p: float, **kwargs):
+        """Initialize a PhaseFlipChannel object."""
         kwargs['name'] = 'PFC'
         kwargs['n_qubits'] = 1
         kwargs['px'] = 0
@@ -195,11 +207,13 @@ class PhaseFlipChannel(PauliChannel):
         self.p = p
 
     def __extra_prop__(self):
+        """Extra prop magic method."""
         prop = super().__extra_prop__()
         prop['p'] = self.p
         return prop
 
     def __str_in_circ__(self):
+        """Return a string representation of the object in a quantum circuit."""
         return f"PF({self.p})"
 
 
@@ -233,7 +247,9 @@ class BitPhaseFlipChannel(PauliChannel):
                        │
         q1: ──────────BPFC──
     """
+
     def __init__(self, p: float, **kwargs):
+        """Initialize a BitPhaseFlipChannel object."""
         kwargs['name'] = 'BPFC'
         kwargs['n_qubits'] = 1
         kwargs['px'] = 0
@@ -243,11 +259,13 @@ class BitPhaseFlipChannel(PauliChannel):
         self.p = p
 
     def __extra_prop__(self):
+        """Extra prop magic method."""
         prop = super().__extra_prop__()
         prop['p'] = self.p
         return prop
 
     def __str_in_circ__(self):
+        """Return a string representation of the object in a quantum circuit."""
         return f"BPF({self.p})"
 
 
@@ -281,7 +299,9 @@ class DepolarizingChannel(PauliChannel):
                     │
         q1: ────────DC──
     """
+
     def __init__(self, p: float, **kwargs):
+        """Initialize a DepolarizingChannel object."""
         kwargs['name'] = 'DC'
         kwargs['n_qubits'] = 1
         kwargs['px'] = p / 3
@@ -291,11 +311,13 @@ class DepolarizingChannel(PauliChannel):
         self.p = p
 
     def __extra_prop__(self):
+        """Extra prop magic method."""
         prop = super().__extra_prop__()
         prop['p'] = self.p
         return prop
 
     def __str_in_circ__(self):
+        """Return a string representation of the object in a quantum circuit."""
         return f"Dep({self.p})"
 
 
@@ -333,7 +355,9 @@ class AmplitudeDampingChannel(NoiseGate, SelfHermitianGate):
                       │
         q1: ─────────ADC──
     """
+
     def __init__(self, gamma: float, **kwargs):
+        """Initialize an AmplitudeDampingChannel object."""
         kwargs['name'] = 'ADC'
         kwargs['n_qubits'] = 1
         NoiseGate.__init__(self, **kwargs)
@@ -346,6 +370,7 @@ class AmplitudeDampingChannel(NoiseGate, SelfHermitianGate):
             raise ValueError("Required damping coefficient gamma ∈ [0,1].")
 
     def get_cpp_obj(self):
+        """Get underlying C++ object."""
         cpp_gate = mb.basic_gate('ADC', True, self.gamma)
         cpp_gate.obj_qubits = self.obj_qubits
         cpp_gate.ctrl_qubits = self.ctrl_qubits
@@ -356,9 +381,11 @@ class AmplitudeDampingChannel(NoiseGate, SelfHermitianGate):
         self.projectq_gate = None
 
     def __eq__(self, other):
+        """Equality comparison operator."""
         return BasicGate.__eq__(self, other) and self.gamma == other.gamma
 
     def __str_in_circ__(self):
+        """Return a string representation of the object in a quantum circuit."""
         return f"AD({self.gamma})"
 
 
@@ -396,7 +423,9 @@ class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
                       │
         q1: ─────────PDC──
     """
+
     def __init__(self, gamma: float, **kwargs):
+        """Initialize a PhaseDampingChannel object."""
         kwargs['name'] = 'PDC'
         kwargs['n_qubits'] = 1
         NoiseGate.__init__(self, **kwargs)
@@ -409,6 +438,7 @@ class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
             raise ValueError("Required damping coefficient gamma ∈ [0,1].")
 
     def get_cpp_obj(self):
+        """Get underlying C++ object."""
         cpp_gate = mb.basic_gate('PDC', True, self.gamma)
         cpp_gate.obj_qubits = self.obj_qubits
         cpp_gate.ctrl_qubits = self.ctrl_qubits
@@ -419,7 +449,9 @@ class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
         self.projectq_gate = None
 
     def __eq__(self, other):
+        """Equality comparison operator."""
         return super().__eq__(other) and self.gamma == other.gamma
 
     def __str_in_circ__(self):
+        """Return a string representation of the object in a quantum circuit."""
         return f"PD({self.gamma})"

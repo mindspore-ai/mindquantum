@@ -1,0 +1,19 @@
+diff -Npur symengine-orig/CMakeLists.txt symengine-src/CMakeLists.txt
+--- symengine-orig/CMakeLists.txt	2022-03-25 18:11:28.850210407 +0100
++++ symengine-src/CMakeLists.txt	2022-03-25 18:12:09.245004679 +0100
+@@ -150,15 +150,9 @@ else()
+     set(SYMENGINE_INTEGER_CLASS "GMP")
+ endif()
+ 
+-set(MSVC_USE_MT yes CACHE BOOL "Use MT flags when compiling in MSVC")
+ set(MSVC_WARNING_LEVEL 1 CACHE STRING "MSVC warning level")
+ 
+ if (MSVC)
+-    if (MSVC_USE_MT)
+-	    foreach(CompilerFlag CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE)
+-	      string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
+-	    endforeach()
+-    endif()
+     foreach(CompilerFlag CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE)
+       set(${CompilerFlag} "${${CompilerFlag}} /W${MSVC_WARNING_LEVEL}")
+     endforeach()

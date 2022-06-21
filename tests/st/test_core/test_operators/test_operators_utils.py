@@ -15,9 +15,20 @@
 # ============================================================================
 """Test operator_utils."""
 
-from mindquantum.core.operators import QubitOperator, FermionOperator, QubitExcitationOperator
-from mindquantum.core.operators.utils import (count_qubits, normal_ordered, commutator, number_operator, up_index,
-                                              down_index, hermitian_conjugated)
+from mindquantum.core.operators import (
+    FermionOperator,
+    QubitExcitationOperator,
+    QubitOperator,
+)
+from mindquantum.core.operators.utils import (
+    commutator,
+    count_qubits,
+    down_index,
+    hermitian_conjugated,
+    normal_ordered,
+    number_operator,
+    up_index,
+)
 
 
 def test_count_qubits():
@@ -47,10 +58,9 @@ def test_commutator():
 
     assert commutator(qub_op1, qub_op1) == QubitOperator()
 
-    qubit_exc_op1 = QubitExcitationOperator(((4, 1), (1, 0)), 2.j)
-    qubit_exc_op2 = QubitExcitationOperator(((3, 1), (2, 0)), 2.j)
-    qubit_exc_op3 = QubitExcitationOperator("3^ 2 4^ 1", 4.0) + \
-        QubitExcitationOperator("4^ 1 3^ 2", -4.0)
+    qubit_exc_op1 = QubitExcitationOperator(((4, 1), (1, 0)), 2.0j)
+    qubit_exc_op2 = QubitExcitationOperator(((3, 1), (2, 0)), 2.0j)
+    qubit_exc_op3 = QubitExcitationOperator("3^ 2 4^ 1", 4.0) + QubitExcitationOperator("4^ 1 3^ 2", -4.0)
     assert commutator(qubit_exc_op1, qubit_exc_op2).compress() == qubit_exc_op3
 
     assert commutator(qubit_exc_op1, qubit_exc_op1) == QubitExcitationOperator()
@@ -65,6 +75,7 @@ def test_number_operator():
 
     check_str2 = '1 [3^ 3] '
     assert str(number_operator(None, nmode)) == check_str2
+
 
 def test_up_index():
     """This is for labelling the spin-orbital index with spin alpha"""
@@ -89,6 +100,6 @@ def test_hermitian_conjugated():
     fer_op2 = FermionOperator("2^ 1")
     assert hermitian_conjugated(fer_op1) == fer_op2
 
-    qubit_exc_op1 = QubitExcitationOperator(((4, 1), (1, 0)), 2.j).normal_ordered()
-    qubit_exc_op2 = QubitExcitationOperator(((4, 0), (1, 1)), -2.j).normal_ordered()
+    qubit_exc_op1 = QubitExcitationOperator(((4, 1), (1, 0)), 2.0j).normal_ordered()
+    qubit_exc_op2 = QubitExcitationOperator(((4, 0), (1, 1)), -2.0j).normal_ordered()
     assert hermitian_conjugated(qubit_exc_op1) == qubit_exc_op2

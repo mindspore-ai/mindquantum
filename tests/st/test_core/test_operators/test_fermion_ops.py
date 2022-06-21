@@ -179,8 +179,10 @@ def test_of_fermion_trans():
     Description: Test transfor fermion operator to openfermion back and force.
     Expectation: success.
     """
-    from openfermion import FermionOperator as ofo
-    ofo_ops = ofo("1^ 0", 1)
+    from openfermion import FermionOperator as OFFermionOperator
+
+    ofo_ops = OFFermionOperator("1^ 0", 1)
     mq_ops = FermionOperator('1^ 0', 1)
     assert mq_ops.to_openfermion() == ofo_ops
+    print(type(FermionOperator.from_openfermion(ofo_ops)), type(mq_ops))
     assert mq_ops == FermionOperator.from_openfermion(ofo_ops)

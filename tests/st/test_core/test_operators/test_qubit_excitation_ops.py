@@ -15,8 +15,11 @@
 # ============================================================================
 """Test qubit excitation operator."""
 
-from mindquantum.core.operators import QubitExcitationOperator
-from mindquantum.core.operators import QubitOperator, FermionOperator
+from mindquantum.core.operators import (
+    FermionOperator,
+    QubitExcitationOperator,
+    QubitOperator,
+)
 
 
 def test_qubit_excitation_ops_num_coeff():
@@ -45,8 +48,7 @@ def test_power():
     Description: check power and multiply
     Expectation:
     """
-    w = (1 + 2j) * QubitExcitationOperator(' 4^ 3 9 3^ ') + \
-        4 * QubitExcitationOperator(' 2 ')
+    w = (1 + 2j) * QubitExcitationOperator(' 4^ 3 9 3^ ') + 4 * QubitExcitationOperator(' 2 ')
     w_2 = w * w
     w_3 = w**2
     assert w_2 == w_3
@@ -92,8 +94,7 @@ def test_add_sub():
     Expectation:
     """
     # Test in place add
-    w1 = QubitExcitationOperator(' 4^ 3 9 3^ ') + \
-        4 * QubitExcitationOperator(' 2 ')
+    w1 = QubitExcitationOperator(' 4^ 3 9 3^ ') + 4 * QubitExcitationOperator(' 2 ')
     w2 = 4 * QubitExcitationOperator(' 2 ')
     w1 -= w2
     assert str(w1) == '1 [Q4^ Q3 Q9 Q3^] '
@@ -104,8 +105,7 @@ def test_compress():
     Description: Test compress
     Expectation:
     """
-    w1 = QubitExcitationOperator('4^ 3') + \
-        QubitExcitationOperator('2', 1e-9)
+    w1 = QubitExcitationOperator('4^ 3') + QubitExcitationOperator('2', 1e-9)
     w2 = QubitExcitationOperator('4^ 3')
     assert w1.compress() == w2
 
@@ -121,8 +121,9 @@ def test_constant():
     Description: Test constant
     Expectation:
     """
-    w1 = QubitExcitationOperator('4^ 3 9 3^') + 6.0 * QubitExcitationOperator(
-        '2 3^') + 2.0 * QubitExcitationOperator('')
+    w1 = (
+        QubitExcitationOperator('4^ 3 9 3^') + 6.0 * QubitExcitationOperator('2 3^') + 2.0 * QubitExcitationOperator('')
+    )
     assert w1.constant == 2.0
 
 
@@ -155,9 +156,13 @@ def test_convert_to_qubit_operator():
         the qubit operator correctly according to the definition.
     Expectation:
     """
-    op = QubitExcitationOperator(((4, 1), (1, 0)), 2.j)
-    qubit_op = QubitOperator("X1 X4", 0.5j) + QubitOperator("X1 Y4", 0.5) + \
-        QubitOperator("Y1 X4", -0.5) + QubitOperator("Y1 Y4", 0.5j)
+    op = QubitExcitationOperator(((4, 1), (1, 0)), 2.0j)
+    qubit_op = (
+        QubitOperator("X1 X4", 0.5j)
+        + QubitOperator("X1 Y4", 0.5)
+        + QubitOperator("Y1 X4", -0.5)
+        + QubitOperator("Y1 Y4", 0.5j)
+    )
 
     assert op.to_qubit_operator().compress() == qubit_op
 
@@ -167,7 +172,7 @@ def test_fermion_op():
     Description: Test the "Fermion excitation version" of a qubit excitation operator
     Expectation:
     """
-    op = QubitExcitationOperator(((4, 1), (1, 0)), 2.j)
-    ferm_op = FermionOperator(((4, 1), (1, 0)), 2.j)
+    op = QubitExcitationOperator(((4, 1), (1, 0)), 2.0j)
+    ferm_op = FermionOperator(((4, 1), (1, 0)), 2.0j)
 
     assert op.fermion_operator == ferm_op

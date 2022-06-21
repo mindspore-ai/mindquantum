@@ -29,7 +29,7 @@ set(CMAKE_SUPPRESS_REGENERATION 1)
 set(CMAKE_VERBOSE_MAKEFILE @CMAKE_VERBOSE_MAKEFILE@)
 
 foreach(_flag ${LINKER_FLAGS})
-  add_link_options("LINKER:${_flag}")
+  add_link_options("${_flag}")
 endforeach()
 
 set(CMAKE_BUILD_SKIP_RPATH @CMAKE_BUILD_SKIP_RPATH@)

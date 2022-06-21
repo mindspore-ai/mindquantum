@@ -1,0 +1,52 @@
+diff -Npur symengine-orig/cmake/FindGMP.cmake symengine-src/cmake/FindGMP.cmake
+--- symengine-orig/cmake/FindGMP.cmake	2022-06-12 22:55:48.061061629 +0200
++++ symengine-src/cmake/FindGMP.cmake	1970-01-01 01:00:00.000000000 +0100
+@@ -1,22 +0,0 @@
+-include(LibFindMacros)
+-
+-libfind_library(gmp gmp)
+-set(GMP_LIBRARIES ${GMP_LIBRARY})
+-set(GMP_TARGETS gmp)
+-
+-if (WITH_GMPXX)
+-    libfind_include(gmpxx.h gmp)
+-    libfind_library(gmpxx gmp)
+-    set(GMP_LIBRARIES ${GMPXX_LIBRARY} ${GMP_LIBRARIES})
+-    set(GMP_TARGETS ${GMP_TARGETS} gmpxx)
+-else()
+-    libfind_include(gmp.h gmp)
+-endif()
+-
+-set(GMP_INCLUDE_DIRS ${GMP_INCLUDE_DIR})
+-
+-include(FindPackageHandleStandardArgs)
+-find_package_handle_standard_args(GMP DEFAULT_MSG GMP_LIBRARIES
+-    GMP_INCLUDE_DIRS)
+-
+-mark_as_advanced(GMP_INCLUDE_DIR GMPXX_LIBRARY GMP_LIBRARY)
+diff -Npur symengine-orig/CMakeLists.txt symengine-src/CMakeLists.txt
+--- symengine-orig/CMakeLists.txt	2022-06-12 22:55:48.061061629 +0200
++++ symengine-src/CMakeLists.txt	2022-06-12 22:55:19.543460708 +0200
+@@ -332,9 +332,19 @@ endif()
+ 
+ # GMP
+ if (HAVE_SYMENGINE_GMP)
+-    find_package(GMP REQUIRED)
+-    include_directories(SYSTEM ${GMP_INCLUDE_DIRS})
+-    set(LIBS ${LIBS} ${GMP_TARGETS})
++    set(_comps gmp)
++    if(WITH_GMPXX)
++      list(APPEND _comps gmpxx)
++    endif()
++    find_package(gmp COMPONENTS ${_comps} REQUIRED)
++
++    set(SYMENGINE_PKG_FINDS "${SYMENGINE_PKG_FINDS}\nfind_package(gmp COMPONENTS ${_comps} REQUIRED)")
++
++    set(GMP_INCLUDE_DIRS ${gmp_INCLUDE_DIRS})
++    set(GMP_LIBRARIES ${gmp_LIBRARIES})
++
++    include_directories(SYSTEM ${gmp_INCLUDE_DIRS})
++    set(LIBS ${LIBS} ${gmp_IMPORTED_TARGETS})
+     set(PKGS ${PKGS} "GMP")
+ 
+     # Check gmpxx

@@ -15,8 +15,7 @@
 # ============================================================================
 """Test Hamiltonian."""
 
-from mindquantum import Hamiltonian
-from mindquantum import QubitOperator
+from mindquantum import Hamiltonian, QubitOperator
 
 
 def test_hamiltonian():

@@ -1,0 +1,19 @@
+diff -Npur projectq-orig/projectq/backends/_sim/_cppkernels/simulator.hpp projectq-src/projectq/backends/_sim/_cppkernels/simulator.hpp
+--- projectq-orig/projectq/backends/_sim/_cppkernels/simulator.hpp	2022-05-13 18:05:25.725187867 +0200
++++ projectq-src/projectq/backends/_sim/_cppkernels/simulator.hpp	2022-05-13 18:18:18.729603017 +0200
+@@ -30,6 +30,7 @@
+ #include <functional>
+ #include <cstring>
+ 
++namespace projectq {
+ class Simulator{
+ public:
+     using calc_type = double;
+@@ -321,6 +322,6 @@ private:
+     RndEngine rnd_eng_;
+     std::function<double()> rng_;
+ };
+-
++} // namespace projectq
+ 
+ #endif

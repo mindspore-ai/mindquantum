@@ -15,33 +15,33 @@
 # ============================================================================
 """.. MindQuantum package."""
 
-import os
-import warnings
+import os  # noqa: F401
 import sys
+import warnings  # noqa: F401
 
-from . import core
-from .core import gates
-from .core import operators
-from . import engine
-from . import framework
-from . import utils
-from . import algorithm
-from . import simulator
-from . import io
-from . import config
-from .config import *
-from .core import *
-from .algorithm import *
-from .utils import *
-from .simulator import *
-from .framework import *
-from .io import *
-
+from . import (  # noqa: F401
+    algorithm,
+    config,
+    core,
+    engine,
+    framework,
+    io,
+    simulator,
+    utils,
+)
+from .algorithm import *  # noqa: F401,F403
+from .config import *  # noqa: F401,F403
+from .core import *  # noqa: F401,F403
+from .core import gates, operators  # noqa: F401
+from .framework import *  # noqa: F401,F403
+from .io import *  # noqa: F401,F403
+from .simulator import *  # noqa: F401,F403
+from .utils import *  # noqa: F401,F403
 
 if sys.version_info < (3, 8):  # pragma: no cover
-    from importlib_metadata import version, PackageNotFoundError
+    from importlib_metadata import PackageNotFoundError, version
 else:  # pragma: no cover
-    from importlib.metadata import version, PackageNotFoundError
+    from importlib.metadata import PackageNotFoundError, version
 
 try:
     __version__ = version("mindquantum")

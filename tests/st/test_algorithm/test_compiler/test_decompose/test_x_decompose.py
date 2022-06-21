@@ -14,10 +14,17 @@
 # limitations under the License.
 # ============================================================================
 '''test decompose rule'''
+import warnings
+
 import numpy as np
-from mindquantum.algorithm.compiler.decompose import ccx_decompose
-from mindquantum.core import Circuit
-from mindquantum.core import X
+
+with warnings.catch_warnings():
+    warnings.filterwarnings('ignore', category=UserWarning, message='MindSpore not installed.*')
+    warnings.filterwarnings(
+        'ignore', category=DeprecationWarning, message=r'Please use `OptimizeResult` from the `scipy\.optimize`'
+    )
+    from mindquantum.algorithm.compiler.decompose import ccx_decompose
+    from mindquantum.core import Circuit, X
 
 
 def circuit_equal_test(gate, decompose_circ):

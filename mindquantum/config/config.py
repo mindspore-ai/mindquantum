@@ -13,9 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Global config for mindquantum"""
+
+"""Global config for MindQuantum."""
+
 import numbers
+
 import numpy as np
+
 from mindquantum.utils.type_value_check import _check_input_type
 
 __all__ = ['context']
@@ -38,9 +42,11 @@ _GLOBAL_CONFIG = {
 }
 
 
-class context:
+class Context:
     """
-    Set context for running environment. See the below table for detail:
+    Set context for running environment.
+
+    See the below table for detail:
 
     +------------------------+-----------------------------+
     |Configuration Parameters|Description                  |
@@ -51,11 +57,14 @@ class context:
     Note:
         For every parameter, a setter or a getter method is implemented.
     """
+
     @staticmethod
     def set_precision(atol):
         """
-        Set the number precision for mindquantum. For example, `is_two_number_close` will
-        use this precision to determine whether two number is close to each other.
+        Set the number precision for mindquantum.
+
+        For example, `is_two_number_close` will use this precision to determine whether two number is close to each
+        other.
 
         >>> from mindquantum import context
         >>> context.set_precision(1e-3)
@@ -74,3 +83,6 @@ class context:
             float, the number precision.
         """
         return _GLOBAL_CONFIG['PRECISION']
+
+
+context = Context

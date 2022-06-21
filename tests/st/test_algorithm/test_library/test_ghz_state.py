@@ -16,6 +16,7 @@
 """General GHZ State"""
 
 import numpy as np
+
 from mindquantum.algorithm.library import general_ghz_state
 
 

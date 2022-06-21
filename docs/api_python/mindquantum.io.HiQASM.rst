@@ -12,7 +12,7 @@
 
         **返回：**
 
-        线路，从HiQASM文件转换过来的量子线路。 
+        线路，从HiQASM文件转换过来的量子线路。
 
     .. py:method:: from_string(string)
 

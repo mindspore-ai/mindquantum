@@ -15,4 +15,4 @@
 # ============================================================================
 """MindQuantum compiler related modules."""
 
-from . import decompose
+from . import decompose  # noqa: F401

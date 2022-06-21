@@ -13,33 +13,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Generate qUCCSD operators"""
+
+"""Generate qUCCSD operators."""
 
 import itertools
 import warnings
 
 import numpy
+
 from mindquantum.core.operators import QubitExcitationOperator
 from mindquantum.core.operators.utils import hermitian_conjugated
-from mindquantum.core.parameterresolver import ParameterResolver as PR
+from mindquantum.core.parameterresolver import ParameterResolver as ParameterResolver
 
 
 def _check_int_list(input_list, name):
     if not isinstance(input_list, list):
-        raise ValueError("The input {} should be a list, \
-but get {}.".format(str(name), type(input_list)))
+        raise ValueError(
+            "The input {} should be a list, \
+but get {}.".format(
+                str(name), type(input_list)
+            )
+        )
     for i in input_list:
         if not isinstance(i, int):
-            raise ValueError("The indices of {} should be integer, \
-but get {}.".format(str(name), type(i)))
+            raise ValueError(
+                "The indices of {} should be integer, \
+but get {}.".format(
+                    str(name), type(i)
+                )
+            )
 
 
-def quccsd_generator(n_qubits=None,
-                     n_electrons=None,
-                     anti_hermitian=True,
-                     occ_orb=None,
-                     vir_orb=None,
-                     generalized=False):
+def quccsd_generator(
+    n_qubits=None, n_electrons=None, anti_hermitian=True, occ_orb=None, vir_orb=None, generalized=False
+):
     r"""
     Generate qubit-UCCSD (qUCCSD) ansatz using qubit-excitation operators.
 
@@ -88,24 +95,42 @@ def quccsd_generator(n_qubits=None,
         0.125*I*q_d_4 + 0.125*I*q_d_7 - 0.125*I*q_d_9 [X0 Y1 Y2 Y3] +
     """
     if n_qubits is not None and not isinstance(n_qubits, int):
-        raise ValueError("The number of qubits should be integer, \
-but get {}.".format(type(n_qubits)))
+        raise ValueError(
+            "The number of qubits should be integer, \
+but get {}.".format(
+                type(n_qubits)
+            )
+        )
     if n_electrons is not None and not isinstance(n_electrons, int):
-        raise ValueError("The number of electrons should be integer, \
-but get {}.".format(type(n_electrons)))
+        raise ValueError(
+            "The number of electrons should be integer, \
+but get {}.".format(
+                type(n_electrons)
+            )
+        )
     if isinstance(n_electrons, int) and n_electrons > n_qubits:
-        raise ValueError("The number of electrons must be smaller than \
-the number of qubits (spin-orbitals) in the ansatz!")
+        raise ValueError(
+            "The number of electrons must be smaller than \
+the number of qubits (spin-orbitals) in the ansatz!"
+        )
     if not isinstance(anti_hermitian, bool):
-        raise ValueError("The parameter anti_hermitian should be bool, \
-but get {}.".format(type(anti_hermitian)))
+        raise ValueError(
+            "The parameter anti_hermitian should be bool, \
+but get {}.".format(
+                type(anti_hermitian)
+            )
+        )
     if occ_orb is not None:
         _check_int_list(occ_orb, "occupied orbitals")
     if vir_orb is not None:
         _check_int_list(vir_orb, "virtual orbitals")
     if not isinstance(generalized, bool):
-        raise ValueError("The parameter generalized should be bool, \
-but get {}.".format(type(generalized)))
+        raise ValueError(
+            "The parameter generalized should be bool, \
+but get {}.".format(
+                type(generalized)
+            )
+        )
 
     occ_indices = []
     vir_indices = []
@@ -114,13 +139,15 @@ but get {}.".format(type(generalized)))
     n_orb_vir = 0
     if n_qubits is not None:
         if n_qubits % 2 != 0:
-            raise ValueError('The total number of qubits (spin-orbitals) \
-should be even.')
+            raise ValueError(
+                'The total number of qubits (spin-orbitals) \
+should be even.'
+            )
         n_orb = n_qubits // 2
     if n_electrons is not None:
         n_orb_occ = int(numpy.ceil(n_electrons / 2))
         n_orb_vir = n_orb - n_orb_occ
-        occ_indices = [i for i in range(n_orb_occ)]
+        occ_indices = list(range(n_orb_occ))
         vir_indices = [i + n_orb_occ for i in range(n_orb_vir)]
     warn_flag = False
     if occ_orb is not None:
@@ -143,8 +170,10 @@ should be even.')
         max_idx = max(set(indices_tot))
     n_orb = max(n_orb, max_idx)
     if warn_flag:
-        warnings.warn("[Note] Override n_qubits and n_electrons with manually \
-set occ_orb and vir_orb. Handle with caution!")
+        warnings.warn(
+            "[Note] Override n_qubits and n_electrons with manually \
+set occ_orb and vir_orb. Handle with caution!"
+        )
 
     if generalized:
         occ_indices = indices_tot
@@ -152,12 +181,16 @@ set occ_orb and vir_orb. Handle with caution!")
 
     n_occ = len(occ_indices)
     if n_occ == 0:
-        warnings.warn("The number of occupied orbitals is zero. Ansatz may \
-contain no parameters.")
+        warnings.warn(
+            "The number of occupied orbitals is zero. Ansatz may \
+contain no parameters."
+        )
     n_vir = len(vir_indices)
     if n_vir == 0:
-        warnings.warn("The number of virtual orbitals is zero. Ansatz may \
-contain no parameters.")
+        warnings.warn(
+            "The number of virtual orbitals is zero. Ansatz may \
+contain no parameters."
+        )
 
     # Convert spatial-orbital indices to spin-orbital indices
     occ_indices_spin = []
@@ -181,8 +214,8 @@ contain no parameters.")
 
     singles_counter = 0
     for (p, q) in itertools.product(vir_indices_spin, occ_indices_spin):
-        coeff_s = PR({f'q_s_{singles_counter}': 1})
-        q_pq = QubitExcitationOperator(((p, 1), (q, 0)), 1.)
+        coeff_s = ParameterResolver({f'q_s_{singles_counter}': 1})
+        q_pq = QubitExcitationOperator(((p, 1), (q, 0)), 1.0)
         if anti_hermitian:
             q_pq = q_pq - hermitian_conjugated(q_pq)
         q_pq = q_pq.normal_ordered()
@@ -191,15 +224,13 @@ contain no parameters.")
             singles_counter += 1
 
     doubles_counter = 0
-    for pq_counter, (p_idx, q_idx) in enumerate(
-            itertools.product(range(n_vir_spin), range(n_vir_spin))):
+    for pq_counter, (p_idx, q_idx) in enumerate(itertools.product(range(n_vir_spin), range(n_vir_spin))):
         # Only take half of the loop to avoid repeated excitations
         if q_idx > p_idx:
             continue
         p = vir_indices_spin[p_idx]
         q = vir_indices_spin[q_idx]
-        for rs_counter, (r_idx, s_idx) in enumerate(
-                itertools.product(range(n_occ_spin), range(n_occ_spin))):
+        for rs_counter, (r_idx, s_idx) in enumerate(itertools.product(range(n_occ_spin), range(n_occ_spin))):
             # Only take half of the loop to avoid repeated excitations
             if s_idx > r_idx:
                 continue
@@ -207,9 +238,8 @@ contain no parameters.")
             s = occ_indices_spin[s_idx]
             if generalized and pq_counter > rs_counter:
                 continue
-            coeff_d = PR({f'q_d_{doubles_counter}': 1})
-            q_pqrs = QubitExcitationOperator(((p, 1), (q, 1), (r, 0), (s, 0)),
-                                             1.)
+            coeff_d = ParameterResolver({f'q_d_{doubles_counter}': 1})
+            q_pqrs = QubitExcitationOperator(((p, 1), (q, 1), (r, 0), (s, 0)), 1.0)
             if anti_hermitian:
                 q_pqrs = q_pqrs - hermitian_conjugated(q_pqrs)
             q_pqrs = q_pqrs.normal_ordered()

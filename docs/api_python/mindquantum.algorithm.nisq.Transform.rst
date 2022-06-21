@@ -116,4 +116,3 @@
         **返回：**
 
         QubitOperator，Ternary tree变换后的玻色子算符。
-

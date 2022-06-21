@@ -16,11 +16,38 @@
 #
 # ==============================================================================
 
-if(UNIX)
+set(OS_NAME "Unknown")
+set(OS_RELEASE 0)
+if(MSYS)
+  if("$ENV{MSYSTEM}" STREQUAL "MSYS")
+    set(OS_NAME "MSYS-MSYS")
+  elseif("$ENV{MSYSTEM}" STREQUAL "MINGW64")
+    set(OS_NAME "MSYS-MINGW64")
+  elseif("$ENV{MSYSTEM}" STREQUAL "CLANG64")
+    set(OS_NAME "MSYS-CLANG64")
+  elseif("$ENV{MSYSTEM}" STREQUAL "UCRT64")
+    set(OS_NAME "MSYS-UCRT64")
+  else()
+    set(OS_NAME "MSYS-unsupported")
+  endif()
+elseif(MINGW)
+  set(OS_NAME "MinGW")
+elseif(CYGWIN)
+  set(OS_NAME "Cygwin")
+elseif(UNIX)
   if(APPLE)
-    set(OS_NAME
-        "OSX"
-        CACHE STRING "Operating system name" FORCE)
+    set(OS_NAME "MacOS")
+    find_program(sw_vers_exec sw_vers)
+    if(sw_vers_exec)
+      execute_process(
+        COMMAND ${sw_vers_exec} -productVersion
+        OUTPUT_VARIABLE _macos_version
+        OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+      set(OS_RELEASE "${_macos_version}")
+      set(OS_RELEASE
+          "${_macos_version}"
+          CACHE STRING "OS version")
+    endif()
   else()
     # Tested with:
     #
@@ -63,12 +90,11 @@ if(UNIX)
           OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
         set(OS_RELEASE ${_nix_version})
       endif()
-    else()
-      set(OS_NAME "unknown")
-      set(OS_RELEASE "0")
     endif()
   endif() # APPLE
 endif() # UNIX
+
+message(STATUS "Detected system: ${OS_NAME} (${OS_RELEASE})")
 
 # ==============================================================================
 
@@ -84,5 +110,15 @@ elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*|arm64.*|ARM64.*)")
 else()
   message(WARNING "MindQuantum: unrecognized target processor configuration")
 endif()
+
+# ==============================================================================
+
+include(ProcessorCount)
+if(JOBS)
+  set(_max_num_threads ${JOBS})
+else()
+  ProcessorCount(_max_num_threads)
+endif()
+message(STATUS "Max. number of parallel jobs for sub-commands: ${_max_num_threads}")
 
 # ==============================================================================

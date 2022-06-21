@@ -13,7 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Algorithm for IQP Encoding"""
+
+"""Algorithm for IQP Encoding."""
+
 from .iqp_encoding import IQPEncoding
 
 __all__ = ['IQPEncoding']

@@ -15,16 +15,18 @@
 # ============================================================================
 """UCCSD ansatz."""
 
-from collections import OrderedDict as ordict
 import itertools
+from collections import OrderedDict
+
 import numpy as np
 from openfermion.chem import MolecularData
-from mindquantum.core.operators import FermionOperator
-from mindquantum.core.operators.utils import down_index, up_index, get_fermion_operator
+
 from mindquantum.algorithm.nisq.chem.transform import Transform
-from mindquantum.third_party.interaction_operator import InteractionOperator
-from mindquantum.core.circuit.utils import decompose_single_term_time_evolution
 from mindquantum.core.circuit import Circuit
+from mindquantum.core.circuit.utils import decompose_single_term_time_evolution
+from mindquantum.core.operators import FermionOperator
+from mindquantum.core.operators.utils import down_index, get_fermion_operator, up_index
+from mindquantum.third_party.interaction_operator import InteractionOperator
 
 
 def _para_uccsd_singlet_generator(mol, th=0):
@@ -54,8 +56,7 @@ def _para_uccsd_singlet_generator(mol, th=0):
     spin_index_functions = [up_index, down_index]
     # Generate all spin-conserving single and double excitations derived
     # from one spatial occupied-virtual pair
-    for i, (p, q) in enumerate(
-            itertools.product(range(n_virtual), range(n_occupied))):
+    for i, (p, q) in enumerate(itertools.product(range(n_virtual), range(n_occupied))):
 
         # Get indices of spatial orbitals
         virtual_spatial = n_occupied + p
@@ -65,8 +66,7 @@ def _para_uccsd_singlet_generator(mol, th=0):
         virtual_down = virtual_spatial * 2 + 1
         occupied_down = occupied_spatial * 2 + 1
         single_amps = mol.ccsd_single_amps[virtual_up, occupied_up]
-        double1_amps = mol.ccsd_double_amps[virtual_up, occupied_up,
-                                            virtual_down, occupied_down]
+        double1_amps = mol.ccsd_double_amps[virtual_up, occupied_up, virtual_down, occupied_down]
         single_amps_name = 'p' + str(i)
         double1_amps_name = 'p' + str(i + n_single_amplitudes)
 
@@ -85,29 +85,27 @@ def _para_uccsd_singlet_generator(mol, th=0):
             # Generate single excitations
             if abs(single_amps) > th:
                 params[single_amps_name] = single_amps
-                fermion_ops1 = FermionOperator(
-                    ((occupied_this, 1), (virtual_this, 0)), 1)
-                fermion_ops2 = FermionOperator(
-                    ((virtual_this, 1), (occupied_this, 0)), 1)
+                fermion_ops1 = FermionOperator(((occupied_this, 1), (virtual_this, 0)), 1)
+                fermion_ops2 = FermionOperator(((virtual_this, 1), (occupied_this, 0)), 1)
                 out.append([fermion_ops1 - fermion_ops2, single_amps_name])
 
             # Generate double excitation
             if abs(double1_amps) > th:
                 params[double1_amps_name] = double1_amps
                 fermion_ops1 = FermionOperator(
-                    ((virtual_this, 1), (occupied_this, 0), (virtual_other, 1),
-                     (occupied_other, 0)), 1)
+                    ((virtual_this, 1), (occupied_this, 0), (virtual_other, 1), (occupied_other, 0)), 1
+                )
                 fermion_ops2 = FermionOperator(
-                    ((occupied_other, 1), (virtual_other, 0),
-                     (occupied_this, 1), (virtual_this, 0)), 1)
+                    ((occupied_other, 1), (virtual_other, 0), (occupied_this, 1), (virtual_this, 0)), 1
+                )
                 out.append([fermion_ops1 - fermion_ops2, double1_amps_name])
     out.extend(out_tmp)
     out_tmp = []
     # Generate all spin-conserving double excitations derived
     # from two spatial occupied-virtual pairs
     for i, ((p, q), (r, s)) in enumerate(
-            itertools.combinations(
-                itertools.product(range(n_virtual), range(n_occupied)), 2)):
+        itertools.combinations(itertools.product(range(n_virtual), range(n_occupied)), 2)
+    ):
 
         # Get indices of spatial orbitals
         virtual_spatial_1 = n_occupied + p
@@ -120,8 +118,7 @@ def _para_uccsd_singlet_generator(mol, th=0):
         virtual_2_up = virtual_spatial_2 * 2 + 1
         occupied_2_up = occupied_spatial_2 * 2 + 1
 
-        double2_amps = mol.ccsd_double_amps[virtual_1_up, occupied_1_up,
-                                            virtual_2_up, occupied_2_up]
+        double2_amps = mol.ccsd_double_amps[virtual_1_up, occupied_1_up, virtual_2_up, occupied_2_up]
         double2_amps_name = 'p' + str(i + 2 * n_single_amplitudes)
 
         # Generate double excitations
@@ -139,27 +136,24 @@ def _para_uccsd_singlet_generator(mol, th=0):
             if abs(double2_amps) > th:
                 params[double2_amps_name] = double2_amps
                 fermion_ops1 = FermionOperator(
-                    ((virtual_1_a, 1), (occupied_1_a, 0), (virtual_2_b, 1),
-                     (occupied_2_b, 0)), 1)
+                    ((virtual_1_a, 1), (occupied_1_a, 0), (virtual_2_b, 1), (occupied_2_b, 0)), 1
+                )
                 fermion_ops2 = FermionOperator(
-                    ((occupied_2_b, 1), (virtual_2_b, 0), (occupied_1_a, 1),
-                     (virtual_1_a, 0)), 1)
+                    ((occupied_2_b, 1), (virtual_2_b, 0), (occupied_1_a, 1), (virtual_1_a, 0)), 1
+                )
                 out.append([fermion_ops1 - fermion_ops2, double2_amps_name])
     return out, params
 
 
 def _transform2pauli(fermion_ansatz):
-    """
-    Transform a fermion ansatz to pauli ansatz based on jordan-wigner
-    transformation.
-    """
-    out = ordict()
+    """Transform a fermion ansatz to pauli ansatz based on jordan-wigner transformation."""
+    out = OrderedDict()
     for i in fermion_ansatz:
         qubit_generator = Transform(i[0]).jordan_wigner()
         if qubit_generator.terms != {}:
             for key, term in qubit_generator.terms.items():
                 if key not in out:
-                    out[key] = ordict({i[1]: float(term.imag)})
+                    out[key] = OrderedDict({i[1]: float(term.imag)})
                 else:
                     if i[1] in out[key]:
                         out[key][i[1]] += float(term.imag)
@@ -178,8 +172,7 @@ def _pauli2circuit(pauli_ansatz):
 
 def generate_uccsd(molecular, th=0):
     """
-    Generate a uccsd quantum circuit based on a molecular data generated by
-    HiQfermion or openfermion.
+    Generate a uccsd quantum circuit based on a molecular data generated by HiQfermion or openfermion.
 
     Args:
         molecular (Union[str, MolecularData]): the name of the molecular data file,
@@ -214,9 +207,4 @@ def generate_uccsd(molecular, th=0):
 
     parameters_name = list(parameters.keys())
     initial_amplitudes = [parameters[i] for i in parameters_name]
-    return uccsd_circuit, \
-        initial_amplitudes, \
-        parameters_name, \
-        qubit_hamiltonian, \
-        mol.n_qubits, \
-        mol.n_electrons
+    return uccsd_circuit, initial_amplitudes, parameters_name, qubit_hamiltonian, mol.n_qubits, mol.n_electrons

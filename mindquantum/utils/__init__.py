@@ -13,15 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Utils"""
 
-from .f import mod
-from .f import normalize
-from .f import random_state
-from .f import ket_string
-from .f import random_circuit
+"""Utils."""
+
+from .f import ket_string, mod, normalize, random_circuit, random_state
+from .fdopen import fdopen
 
 __all__ = [
+    'fdopen',
     'mod',
     'normalize',
     'random_state',

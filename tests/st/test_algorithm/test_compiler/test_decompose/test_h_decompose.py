@@ -13,12 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-'''test decompose rule'''
-import numpy as np
-from mindquantum.algorithm.compiler.decompose import ch_decompose
-from mindquantum.core import Circuit
-from mindquantum.core import H
 
+'''test decompose rule'''
+
+import warnings
+
+import numpy as np
+
+with warnings.catch_warnings():
+    warnings.filterwarnings('ignore', category=UserWarning, message='MindSpore not installed.*')
+    warnings.simplefilter('ignore', category=DeprecationWarning)
+    from mindquantum.algorithm.compiler.decompose import ch_decompose
+    from mindquantum.core import Circuit, H
 
 
 def circuit_equal_test(gate, decompose_circ):

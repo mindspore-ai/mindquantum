@@ -20,4 +20,3 @@
     - **vir_orb** (list) - 手动分配的虚拟空间轨道的指数，仅适用于asatz构造。默认值：None。
     - **generalized** (bool) - 是否使用不区分占用轨道或虚拟轨道的广义激励（UGCGSD）。默认值：False。
     - **trotter_step** (int) - Trotterization步骤的顺序。默认值：1。
-       

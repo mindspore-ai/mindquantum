@@ -13,11 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""display"""
 
-from .circuit_text_drawer import brick_model
-from .measure_res_drawer import measure_text_drawer
+"""Circuit display utilities."""
+
 from .bloch_plt_drawer import BlochScene
+from .circuit_text_drawer import brick_model  # noqa: F401
+from .measure_res_drawer import measure_text_drawer  # noqa: F401
 
 __all__ = ['BlochScene']
 # __all__ = ['brick_model', 'measure_text_drawer']

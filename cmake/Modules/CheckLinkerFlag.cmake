@@ -48,7 +48,7 @@ function(CHECK_LINKER_FLAG _lang _flag _var)
     return()
   endif()
 
-  include(CheckSourceCompiles)
+  include(CheckSourceCompilesLocal)
 
   set(CMAKE_REQUIRED_LINK_OPTIONS "${_flag}")
 
@@ -59,9 +59,9 @@ function(CHECK_LINKER_FLAG _lang _flag _var)
     set(ENV{${v}} C)
   endforeach()
 
-  if(_lang MATCHES "^(C|CXX)$")
+  if(_lang MATCHES "^(C|CXX|NVCXX)$")
     set(_source "int main() { return 0; }")
-  elseif(_lang STREQUAL "Fortran")
+  elseif("${_lang}" STREQUAL "Fortran")
     set(_source "       program test\n       stop\n       end program")
   elseif(_lang MATCHES "CUDA")
     set(_source "__host__ int main() { return 0; }")
@@ -75,7 +75,7 @@ function(CHECK_LINKER_FLAG _lang _flag _var)
   endif()
   check_compiler_flag_common_patterns(_common_patterns)
 
-  check_source_compiles(${_lang} "${_source}" ${_var} ${_common_patterns})
+  cmake_check_source_compiles_local(${_lang} "${_source}" ${_var} ${_common_patterns})
 
   foreach(v IN LISTS _locale_vars)
     set(ENV{${v}} ${_locale_vars_saved_${v}})
