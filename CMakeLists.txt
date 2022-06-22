@@ -16,67 +16,28 @@
 #
 # ==============================================================================
 
-cmake_minimum_required(VERSION 3.15)
+# lint_cmake: -whitespace/indent
 
-set(_policy_list
-    CMP0012
-    CMP0015
-    CMP0022
-    CMP0023
-    CMP0028
-    CMP0042
-    CMP0048
-    CMP0051
-    CMP0054
-    CMP0056
-    CMP0057
-    CMP0066
-    CMP0067
-    CMP0068
-    CMP0074
-    CMP0076
-    CMP0077
-    CMP0079
-    CMP0094
-    CMP0104)
-foreach(_policy ${_policy_list})
-  if(POLICY ${_policy})
-    cmake_policy(SET ${_policy} NEW)
-  endif()
-  # cmake-format: off
-  # CMP0012: if() recognizes numbers and booleans
-  # CMP0015: paths relative to source dir for link_directories
-  # CMP0028: :: in target names
-  # CMP0042: MACOS_RPATH
-  # CMP0048: allow VERSION in project()
-  # CMP0051: list TARGET_OBJECTS in SOURCES property
-  # CMP0054: no more de-referencing of "expr" in if() statements
-  # CMP0056: try_compile(): link flags
-  # CMP0057: if IN_LIST
-  # CMP0066: try_compile(): use per-config flags, like CMAKE_CXX_FLAGS_RELEASE
-  # CMP0067: try_compile(): honor language standard variables (like C++11)
-  # CMP0068: RPATH on Mac OS does not affect install_name
-  # CMP0074: XXX_ROOT variables for find_package(XXX)
-  # CMP0076: target_sources relative paths
-  # CMP0077: option() honors normal variables
-  # CMP0079: target_link_libraries allows use with targets in other directories
-  #          (CMake 3.13 minimum)
-  # CMP0094: FindPython* use LOCATION strategy (stop at first valid version)
-  # CMP0104: Empty CUDA_ARCHITECTURES target property is an error
-  # cmake-format: on
-endforeach()
+cmake_minimum_required(VERSION 3.20) # mainly because of NVHPC support
+
+cmake_policy(VERSION 3.0...3.23)
 
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake/Modules)
+list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake/commands)
 
 # ==============================================================================
 # Macro definitions
 
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/macros.cmake)
+include(macros)
 
 # ==============================================================================
 # Create the MindQuantum project
+
 project(MindQuantum LANGUAGES C CXX)
+# NB: we enable C since some of the third-party libraries require C to be compiled properly
+setup_language(C)
+setup_language(CXX)
 
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -88,39 +49,145 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "RelWithDebInfo")
 endif()
 
-if(NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/mindquantum)
-endif()
+# ------------------------------------------------------------------------------
+
+include(GNUInstallDirs)
+
+set(MQ_INSTALL_BINDIR "${CMAKE_INSTALL_BINDIR}")
+set(MQ_INSTALL_SBINDIR "${CMAKE_INSTALL_SBINDIR}")
+set(MQ_INSTALL_SYSCONFDIR "${CMAKE_INSTALL_SYSCONFDIR}")
+set(MQ_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}/mindquantum")
+set(MQ_INSTALL_DATADIR "${CMAKE_INSTALL_DATADIR}/mindquantum")
+set(MQ_INSTALL_LIBDIR "${CMAKE_INSTALL_LIBDIR}/mindquantum")
+set(MQ_INSTALL_DOCDIR "${CMAKE_INSTALL_DATADIR}/doc/mindquantum")
+set(MQ_INSTALL_CMAKEDIR "${MQ_INSTALL_DATADIR}/cmake")
+set(MQ_INSTALL_3RDPARTYDIR "${MQ_INSTALL_LIBDIR}/third_party")
+
+foreach(
+  _type
+  BINDIR
+  SBINDIR
+  SYSCONFDIR
+  DATADIR
+  LIBDIR
+  DOCDIR
+  CMAKEDIR
+  3RDPARTYDIR)
+  GNUInstallDirs_get_absolute_install_dir(MQ_INSTALL_FULL_${_type} MQ_INSTALL_${_type} ${_type})
+endforeach()
 
 # ==============================================================================
 # OS-detection
 
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/os_detection.cmake)
+include(os_detection)
 
 # ==============================================================================
 # Options
 
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/options.cmake)
+include(options)
 
 # ==============================================================================
 # Package dependencies
 
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/packages.cmake)
+include(packages)
 
 # ==============================================================================
 # Setup compiler flags
 
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/compiler_flags.cmake)
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/linker_flags.cmake)
+include(compiler_flags)
+include(linker_flags)
 
-# ==============================================================================
-# Add submodule dependencies (now rather than later so that the relevant macros/variables are defined)
+is_language_enabled(C, _c_enabled)
+add_library(mindquantum_setup INTERFACE)
+target_link_libraries(mindquantum_setup INTERFACE CXX_mindquantum $<$<BOOL:${_c_enabled}>:C_mindquantum>
+                                                  $<$<BOOL:${ENABLE_CUDA}>:CUDA_mindquantum;NVCXX_mindquantum>)
+append_to_property(mq_install_targets GLOBAL mindquantum_setup)
 
-add_subdirectory(mindquantum/src)
+if(ENABLE_CMAKE_DEBUG)
+  message(STATUS "Content of language specific targets:")
+  list(APPEND CMAKE_MESSAGE_INDENT "  ")
+
+  set(_targets CXX_mindquantum)
+  if(_c_enabled)
+    list(APPEND _targets C_mindquantum)
+  endif()
+  if(ENABLE_CUDA)
+    list(APPEND _targets CUDA_mindquantum NVCXX_mindquantum)
+  endif()
+
+  include(CMakePrintHelpers)
+  cmake_print_properties(
+    TARGETS ${_targets} PROPERTIES INTERFACE_COMPILE_OPTIONS INTERFACE_COMPILE_DEFINITIONS
+                                   INTERFACE_INCLUDE_DIRECTORIES INTERFACE_LINK_OPTIONS INTERFACE_LINK_LIBRARIES)
+  list(POP_BACK CMAKE_MESSAGE_INDENT)
+endif()
 
 # ==============================================================================
 # Some more macro definitions
 
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/macros_more.cmake)
+if(NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/mindquantum)
+endif()
 
 # ==============================================================================
+
+# First add third-party libraries
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party)
+
+# Then re-define some CMake macros/functions
+include(macros_more)
+
+# Then add our libraries
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ccsrc)
+
+# ==============================================================================
+# Convenience target to automatically build all pybind11 C++ modules
+
+get_property(_targets GLOBAL PROPERTY _python_targets)
+add_custom_target(
+  python
+  DEPENDS ${_targets}
+  COMMENT "Build python C++ modules")
+
+# ==============================================================================
+
+if(binscope_exec)
+  gen_binscope_target(${_targets})
+endif()
+
+# ==============================================================================
+# Unit testing
+
+if(BUILD_TESTING AND NOT IS_PYTHON_BUILD)
+  enable_testing()
+  add_subdirectory(tests)
+else()
+  message(STATUS "Disabling building of tests")
+  message(STATUS "  (BUILD_TESTING=${BUILD_TESTING}, IS_PYTHON_BUILD=${IS_PYTHON_BUILD})")
+  # Essentially only for CI builds with testing disabled
+  add_custom_target(build_all_test COMMENT "Dummy target for CI builds")
+  add_custom_target(test COMMENT "Dummy target for CI builds")
+endif()
+
+# ==============================================================================
+
+if(NOT IS_PYTHON_BUILD)
+  find_package(Doxygen QUIET)
+  if(Doxygen_FOUND)
+    add_subdirectory(docs)
+  endif()
+endif()
+
+# ==============================================================================
+
+include(install)
+
+# ==============================================================================
+
+list(POP_FRONT CMAKE_MODULE_PATH)
+list(POP_FRONT CMAKE_MODULE_PATH)
+list(POP_FRONT CMAKE_MODULE_PATH)
+
+if(_mq_added_nvcxx_module_path)
+  list(POP_FRONT CMAKE_MODULE_PATH)
+endif()

@@ -13,7 +13,7 @@
         获取线路中ansatz部分的参数名称。
 
         **返回：**
-        
+
         list，线路中ansatz部分参数名称的list。
 
     .. py:method:: append(gate)
@@ -49,7 +49,7 @@
         将该量子线路变为编码量子线路。
 
         **参数：**
-    
+
         - **inplace** (True) - 是否原位设置。默认值：True。
 
     .. py:method:: barrier(show=True)
@@ -70,7 +70,7 @@
         获取线路中encoder部分的参数名称。
 
         **返回：**
-        
+
         list，线路中encoder部分参数名称的list。
 
     .. py:method:: extend(gates)
@@ -216,7 +216,7 @@
         获取线路的参数名称。
 
         **返回：**
-        
+
         list，包含参数名称的list。
 
     .. py:method:: phase_shift(para, obj_qubits, ctrl_qubits=None)
@@ -224,7 +224,7 @@
         添加一个Phase Shift门。
 
         **参数：**
-        
+
         - **para** (Union[dict, ParameterResolver]) - `PhaseShift` 门的参数。
         - **obj_qubits** (Union[int, list[int]]) - `PhaseShift` 门的目标量子比特。
         - **ctrl_qubits** (Union[int, list[int]]) - `PhaseShift` 门的控制量子比特。默认值：None。
@@ -301,7 +301,7 @@
         打印当前线路的信息，包括块的数量、门的数量、不含参门的数量、含参门的数量和参数的个数。
 
         **参数：**
-        
+
         - **show** (bool) - 是否显示信息。默认值：True。
 
     .. py:method:: svg(style=None)

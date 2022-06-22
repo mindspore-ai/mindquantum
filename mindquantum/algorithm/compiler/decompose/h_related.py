@@ -13,15 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""
-H gate related decompose rule.
-"""
+"""H gate related decompose rule."""
 
-from mindquantum.core import gates as G
-from mindquantum.core import Circuit
-from mindquantum.utils.type_value_check import _check_input_type, _check_control_num
+from mindquantum.core import Circuit, gates
+from mindquantum.utils.type_value_check import _check_control_num, _check_input_type
 
-def ch_decompose(gate: G.HGate):
+
+def ch_decompose(gate: gates.HGate):
     """
     Decompose ch gate.
 
@@ -46,21 +44,22 @@ def ch_decompose(gate: G.HGate):
                              │
         q1: ──S────H────T────X────T†────H────S†──
     """
-    _check_input_type('gate', G.HGate, gate)
+    _check_input_type('gate', gates.HGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)
     solutions = []
     c1 = Circuit()
     solutions.append(c1)
     q0 = gate.ctrl_qubits[0]
     q1 = gate.obj_qubits[0]
-    c1 += G.S.on(q1)
-    c1 += G.H.on(q1)
-    c1 += G.T.on(q1)
-    c1 += G.X.on(q1,q0)
-    c1 += G.T.on(q1).hermitian()
-    c1 += G.H.on(q1)
-    c1 += G.S.on(q1).hermitian()
+    c1 += gates.S.on(q1)
+    c1 += gates.H.on(q1)
+    c1 += gates.T.on(q1)
+    c1 += gates.X.on(q1, q0)
+    c1 += gates.T.on(q1).hermitian()
+    c1 += gates.H.on(q1)
+    c1 += gates.S.on(q1).hermitian()
     return solutions
+
 
 decompose_rules = ['ch_decompose']
 __all__ = decompose_rules

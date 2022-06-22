@@ -13,7 +13,7 @@ __pycache__/
 *.o
 *.out
 *.gch
-build
+/build
 *.egg-info
 output
 local_script/
@@ -24,3 +24,10 @@ requirements.txt
 .eggs
 cmake-build-debug
 venv
+docs/doxygen
+Testing
+# clangd local cache directory
+.cache
+ stat
+/build.conf
+docs/build

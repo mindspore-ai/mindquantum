@@ -13,18 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
 """Max-2-SAT ansatz."""
 
 from math import copysign as sign
+
 import numpy as np
-from mindquantum.core.circuit import Circuit, UN
+
+from mindquantum.core.circuit import UN, Circuit
 from mindquantum.core.circuit.utils import CPN
+from mindquantum.core.gates import RX, H
+from mindquantum.core.operators import QubitOperator, TimeEvolution
 from mindquantum.simulator import Simulator
-from mindquantum.utils.type_value_check import _check_int_type
-from mindquantum.utils.type_value_check import _check_value_should_between_close_set
-from mindquantum.utils.type_value_check import _check_input_type
-from mindquantum.core.gates import H, RX
-from mindquantum.core.operators import TimeEvolution, QubitOperator
+from mindquantum.utils.type_value_check import (
+    _check_input_type,
+    _check_int_type,
+    _check_value_should_between_close_set,
+)
+
 from .._ansatz import Ansatz
 
 
@@ -45,7 +51,7 @@ def _get_clause_act_qubits(clauses):
 
 
 def _check_clause(clauses):
-    """check clauses"""
+    """Check clauses."""
     if not isinstance(clauses, list):
         raise TypeError(f"clauses requires a list, but get {type(clauses)}")
     for clause in clauses:
@@ -59,8 +65,7 @@ def _check_clause(clauses):
 
 class Max2SATAnsatz(Ansatz):
     r"""
-    The Max-2-SAT ansatz. For more detail,
-    please refers to https://arxiv.org/pdf/1906.11259.pdf.
+    The Max-2-SAT ansatz. For more detail, please refers to https://arxiv.org/pdf/1906.11259.pdf.
 
     .. math::
 
@@ -107,7 +112,9 @@ class Max2SATAnsatz(Ansatz):
         sat value: 2
         sat value: 1
     """
+
     def __init__(self, clauses, depth=1):
+        """Initialize a Max2SATAnsatz object."""
         if not isinstance(depth, int):
             raise TypeError(f"depth requires a int, but get {type(depth)}")
         if depth <= 0:
@@ -121,10 +128,15 @@ class Max2SATAnsatz(Ansatz):
         """Build hc circuit."""
         ham = QubitOperator()
         for clause in clauses:
-            ham += (sign(1, clause[0]) * QubitOperator(f'Z{abs(clause[0]) - 1}', 'beta') +
-                    sign(1, clause[1]) * QubitOperator(f'Z{abs(clause[1]) - 1}', 'beta')) / 4
-            ham += (sign(1, clause[0]) * sign(1, clause[1]) *
-                    QubitOperator(f'Z{abs(clause[0]) - 1} Z{abs(clause[1]) - 1}', 'beta')) / 4
+            ham += (
+                sign(1, clause[0]) * QubitOperator(f'Z{abs(clause[0]) - 1}', 'beta')
+                + sign(1, clause[1]) * QubitOperator(f'Z{abs(clause[1]) - 1}', 'beta')
+            ) / 4
+            ham += (
+                sign(1, clause[0])
+                * sign(1, clause[1])
+                * QubitOperator(f'Z{abs(clause[0]) - 1} Z{abs(clause[1]) - 1}', 'beta')
+            ) / 4
         return TimeEvolution(ham).circuit
 
     def _build_hb(self, clauses):
@@ -142,9 +154,14 @@ class Max2SATAnsatz(Ansatz):
         """
         qo = QubitOperator()
         for clause in self.clauses:
-            qo += (QubitOperator('') + sign(1, clause[0]) * QubitOperator(f'Z{abs(clause[0]) - 1}') +
-                   sign(1, clause[1]) * QubitOperator(f'Z{abs(clause[1]) - 1}') + sign(1, clause[0]) *
-                   sign(1, clause[1]) * QubitOperator(f'Z{abs(clause[0]) - 1} Z{abs(clause[1]) - 1}')) / 4
+            qo += (
+                QubitOperator('')
+                + sign(1, clause[0]) * QubitOperator(f'Z{abs(clause[0]) - 1}')
+                + sign(1, clause[1]) * QubitOperator(f'Z{abs(clause[1]) - 1}')
+                + sign(1, clause[0])
+                * sign(1, clause[1])
+                * QubitOperator(f'Z{abs(clause[0]) - 1} Z{abs(clause[1]) - 1}')
+            ) / 4
         return qo
 
     def get_sat(self, max_n, weight):
@@ -171,6 +188,7 @@ class Max2SATAnsatz(Ansatz):
     def get_sat_value(self, string):
         """
         Get the sat values for given strings.
+
         The string is a str that satisfies all the clauses of the given max-2-sat problem.
 
         Args:

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
 """Projector module."""
 
 import re
@@ -49,12 +50,15 @@ class Projector:
         >>> p
         I2 ⊗ ¦010⟩⟨010¦
     """
+
     def __init__(self, proj):
+        """Initialize a Projector object."""
         _check_projector_str(proj)
         self.proj = proj
         self.n_qubits = len(proj)
 
     def __str__(self):
+        """Return a string representation of the object."""
         res = re.split(r'(\d+)', self.proj)
         out = []
         for i in res:
@@ -65,4 +69,5 @@ class Projector:
         return ' ⊗ '.join(out)
 
     def __repr__(self):
+        """Return a string representation of the object."""
         return self.__str__()

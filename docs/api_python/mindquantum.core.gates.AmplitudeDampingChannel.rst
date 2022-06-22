@@ -13,7 +13,7 @@
             \ {E_1}=\begin{bmatrix}0&\sqrt{\gamma}\\
                 0&0\end{bmatrix}
 
-    这里 :math:`\rho` 是密度矩阵形式的量子态。 :math:`\gamma` 是能量损耗系数。 
+    这里 :math:`\rho` 是密度矩阵形式的量子态。 :math:`\gamma` 是能量损耗系数。
 
     **参数：**
 

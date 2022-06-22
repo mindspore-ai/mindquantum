@@ -15,8 +15,8 @@
 # ============================================================================
 """Test module_circuit."""
 import numpy as np
-from mindquantum import UN, SwapParts, U3
-from mindquantum import Circuit
+
+from mindquantum import U3, UN, Circuit, SwapParts
 from mindquantum.core import gates as G
 
 

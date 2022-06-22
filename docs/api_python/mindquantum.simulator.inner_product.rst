@@ -9,4 +9,4 @@
 
     **返回：**
 
-    numbers.Number，两个量子态的内积。    
+    numbers.Number，两个量子态的内积。

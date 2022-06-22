@@ -15,9 +15,10 @@
 # ============================================================================
 '''test decompose rule'''
 import numpy as np
-from mindquantum.algorithm.compiler.decompose import yy_decompose, cyy_decompose
-from mindquantum.core import Circuit
-from mindquantum.core import YY
+
+from mindquantum.algorithm.compiler.decompose import cyy_decompose, yy_decompose
+from mindquantum.core import YY, Circuit
+
 
 def circuit_equal_test(gate, decompose_circ):
     """
@@ -25,6 +26,7 @@ def circuit_equal_test(gate, decompose_circ):
     """
     orig_circ = Circuit() + gate
     assert np.allclose(orig_circ.matrix(), decompose_circ.matrix())
+
 
 def test_yy():
     """
@@ -34,11 +36,13 @@ def test_yy():
     yy = YY(1).on([0, 1])
     for solution in yy_decompose(yy):
         circuit_equal_test(yy, solution)
+
+
 def test_cyy():
     """
     Description: Test cyy decompose
     Expectation: success
     """
-    cyy = YY(2).on([0, 1], [2,3])
+    cyy = YY(2).on([0, 1], [2, 3])
     for solution in cyy_decompose(cyy):
         circuit_equal_test(cyy, solution)

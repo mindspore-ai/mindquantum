@@ -1,0 +1,168 @@
+diff -Npur tweedledum-orig/external/abcesop/eabc/abc_global.h tweedledum-src/external/abcesop/eabc/abc_global.h
+--- tweedledum-orig/external/abcesop/eabc/abc_global.h	2022-03-31 08:30:45.562929858 +0200
++++ tweedledum-src/external/abcesop/eabc/abc_global.h	2022-03-31 08:33:11.252713591 +0200
+@@ -36,7 +36,7 @@
+ #endif
+ #endif
+ 
+-#ifdef WIN32
++#ifdef _WIN32
+   #ifdef WIN32_NO_DLL
+     #define ABC_DLLEXPORT
+     #define ABC_DLLIMPORT
+@@ -90,7 +90,7 @@ typedef intptr_t ABC_PTRINT_T;
+ typedef long ABC_PTRINT_T;
+ #elif     defined(NT64)
+ typedef long long ABC_PTRINT_T;
+-#elif     defined(NT) || defined(LIN) || defined(WIN32)
++#elif     defined(NT) || defined(LIN) || defined(_WIN32)
+ typedef int ABC_PTRINT_T;
+ #else
+    #error unknown platform
+@@ -107,7 +107,7 @@ typedef int64_t ABC_INT64_T;
+ typedef long ABC_INT64_T;
+ #elif     defined(NT64) || defined(LIN)
+ typedef long long ABC_INT64_T;
+-#elif     defined(WIN32) || defined(NT)
++#elif     defined(_WIN32) || defined(NT)
+ typedef signed __int64 ABC_INT64_T;
+ #else
+    #error unknown platform
+diff -Npur tweedledum-orig/external/abcsat/abc/abc_global.h tweedledum-src/external/abcsat/abc/abc_global.h
+--- tweedledum-orig/external/abcsat/abc/abc_global.h	2022-03-31 08:30:45.569597136 +0200
++++ tweedledum-src/external/abcsat/abc/abc_global.h	2022-03-31 08:42:53.005211281 +0200
+@@ -40,7 +40,7 @@
+ //#pragma warning( disable : 4273 )
+ #endif
+ 
+-#ifdef WIN32
++#ifdef _WIN32
+   #ifdef WIN32_NO_DLL
+     #define ABC_DLLEXPORT
+     #define ABC_DLLIMPORT
+@@ -48,9 +48,9 @@
+     #define ABC_DLLEXPORT __declspec(dllexport)
+     #define ABC_DLLIMPORT __declspec(dllimport)
+   #endif
+-#else  /* defined(WIN32) */
++#else  /* defined(_WIN32) */
+ #define ABC_DLLIMPORT
+-#endif /* defined(WIN32) */
++#endif /* defined(_WIN32) */
+ 
+ #ifndef ABC_DLL
+ #define ABC_DLL ABC_DLLIMPORT
+@@ -80,7 +80,7 @@
+ #include <string.h>
+ 
+ // catch memory leaks in Visual Studio
+-#ifdef WIN32
++#ifdef _WIN32
+   #ifdef _DEBUG
+     #define _CRTDBG_MAP_ALLOC
+     #include <crtdbg.h>
+@@ -114,7 +114,7 @@ typedef platform_dependent_type ABC_PTRD
+ typedef long ABC_PTRDIFF_T;
+ #elif     defined(NT64)
+ typedef long long ABC_PTRDIFF_T;
+-#elif     defined(NT) || defined(LIN) || defined(WIN32)
++#elif     defined(NT) || defined(LIN) || defined(_WIN32)
+ typedef int ABC_PTRDIFF_T;
+ #else
+    #error unknown platform
+@@ -131,7 +131,7 @@ typedef platform_dependent_type ABC_PTRU
+ typedef unsigned long ABC_PTRUINT_T;
+ #elif     defined(NT64)
+ typedef unsigned long long ABC_PTRUINT_T;
+-#elif     defined(NT) || defined(LIN) || defined(WIN32)
++#elif     defined(NT) || defined(LIN) || defined(_WIN32)
+ typedef unsigned int ABC_PTRUINT_T;
+ #else
+    #error unknown platform
+@@ -148,7 +148,7 @@ typedef platform_dependent_type ABC_PTRI
+ typedef long ABC_PTRINT_T;
+ #elif     defined(NT64)
+ typedef long long ABC_PTRINT_T;
+-#elif     defined(NT) || defined(LIN) || defined(WIN32)
++#elif     defined(NT) || defined(LIN) || defined(_WIN32)
+ typedef int ABC_PTRINT_T;
+ #else
+    #error unknown platform
+@@ -163,7 +163,7 @@ typedef platform_dependent_type ABC_INT6
+ typedef long ABC_INT64_T;
+ #elif     defined(NT64) || defined(LIN)
+ typedef long long ABC_INT64_T;
+-#elif     defined(WIN32) || defined(NT)
++#elif     defined(_WIN32) || defined(NT)
+ typedef signed __int64 ABC_INT64_T;
+ #else
+    #error unknown platform
+diff -Npur tweedledum-orig/external/bill/bill/sat/solver/abc/abc_global.h tweedledum-src/external/bill/bill/sat/solver/abc/abc_global.h
+--- tweedledum-orig/external/bill/bill/sat/solver/abc/abc_global.h	2022-03-31 08:30:45.572930776 +0200
++++ tweedledum-src/external/bill/bill/sat/solver/abc/abc_global.h	2022-03-31 08:45:23.884722093 +0200
+@@ -38,7 +38,7 @@
+ #endif
+ #endif
+ 
+-#ifdef WIN32
++#ifdef _WIN32
+   #ifdef WIN32_NO_DLL
+     #define ABC_DLLEXPORT
+     #define ABC_DLLIMPORT
+@@ -46,9 +46,9 @@
+     #define ABC_DLLEXPORT __declspec(dllexport)
+     #define ABC_DLLIMPORT __declspec(dllimport)
+   #endif
+-#else  /* defined(WIN32) */
++#else  /* defined(_WIN32) */
+ #define ABC_DLLIMPORT
+-#endif /* defined(WIN32) */
++#endif /* defined(_WIN32) */
+ 
+ #ifndef ABC_DLL
+ #define ABC_DLL ABC_DLLIMPORT
+@@ -78,7 +78,7 @@
+ #include <string.h>
+ 
+ // catch memory leaks in Visual Studio
+-#ifdef WIN32
++#ifdef _WIN32
+   #ifdef _DEBUG
+     #define _CRTDBG_MAP_ALLOC
+     #include <crtdbg.h>
+@@ -112,7 +112,7 @@ typedef platform_dependent_type ABC_PTRD
+ typedef long ABC_PTRDIFF_T;
+ #elif     defined(NT64)
+ typedef long long ABC_PTRDIFF_T;
+-#elif     defined(NT) || defined(LIN) || defined(WIN32)
++#elif     defined(NT) || defined(LIN) || defined(_WIN32)
+ typedef int ABC_PTRDIFF_T;
+ #else
+    #error unknown platform
+@@ -129,7 +129,7 @@ typedef platform_dependent_type ABC_PTRU
+ typedef unsigned long ABC_PTRUINT_T;
+ #elif     defined(NT64)
+ typedef unsigned long long ABC_PTRUINT_T;
+-#elif     defined(NT) || defined(LIN) || defined(WIN32)
++#elif     defined(NT) || defined(LIN) || defined(_WIN32)
+ typedef unsigned int ABC_PTRUINT_T;
+ #else
+    #error unknown platform
+@@ -146,7 +146,7 @@ typedef platform_dependent_type ABC_PTRI
+ typedef long ABC_PTRINT_T;
+ #elif     defined(NT64)
+ typedef long long ABC_PTRINT_T;
+-#elif     defined(NT) || defined(LIN) || defined(WIN32)
++#elif     defined(NT) || defined(LIN) || defined(_WIN32)
+ typedef int ABC_PTRINT_T;
+ #else
+    #error unknown platform
+@@ -161,7 +161,7 @@ typedef platform_dependent_type ABC_INT6
+ typedef long ABC_INT64_T;
+ #elif     defined(NT64) || defined(LIN)
+ typedef long long ABC_INT64_T;
+-#elif     defined(WIN32) || defined(NT)
++#elif     defined(_WIN32) || defined(NT)
+ typedef signed __int64 ABC_INT64_T;
+ #else
+    #error unknown platform

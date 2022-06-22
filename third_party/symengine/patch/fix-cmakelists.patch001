@@ -1,0 +1,117 @@
+diff -Npur symengine-0.9.0/cmake/SymEngineConfig.cmake.in symengine-new/cmake/SymEngineConfig.cmake.in
+--- symengine-0.9.0/cmake/SymEngineConfig.cmake.in	2022-02-16 23:21:46.000000000 +0100
++++ symengine-new/cmake/SymEngineConfig.cmake.in	2022-03-24 01:02:50.797606030 +0100
+@@ -48,7 +48,6 @@ set(SYMENGINE_BUILD_TREE @SYMENGINE_BUIL
+ if(NOT TARGET symengine)
+     include("${SYMENGINE_CMAKE_DIR}/SymEngineTargets.cmake")
+ endif()
+-set_target_properties(symengine PROPERTIES INTERFACE_LINK_LIBRARIES "")
+ 
+ if(SYMENGINE_BUILD_TREE)
+     set(SYMENGINE_INSTALL_CMAKE_DIR "${SYMENGINE_CMAKE_DIR}")
+diff -Npur symengine-0.9.0/CMakeLists.txt symengine-new/CMakeLists.txt
+--- symengine-0.9.0/CMakeLists.txt	2022-02-16 23:21:46.000000000 +0100
++++ symengine-new/CMakeLists.txt	2022-03-24 01:17:23.982353976 +0100
+@@ -26,41 +26,9 @@ endif ()
+ set(BUILD_FOR_DISTRIBUTION no
+     CACHE BOOL "Building SymEngine for a distribution")
+ 
+-# Enable C++11 support in all compilers. SymEngine will not compile unless
+-# the C++11 support is enabled.
+-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|Intel|SunPRO")
+-    set(CXX11_OPTIONS "-std=c++11")
+-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
+-    # pgcpp
+-    set(CXX11_OPTIONS "--gnu --c++11 -D__GXX_EXPERIMENTAL_CXX0X__")
+-endif ()
+-set(CMAKE_CXX_FLAGS "${CXX11_OPTIONS} ${CMAKE_CXX_FLAGS}")
+-
+-# Add proper -fPIC and MINGW handling
+-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+-    if (NOT MINGW)
+-        set(common "-fPIC")
+-    else()
+-        set(common "-D_hypot=hypot -Doff64_t=_off64_t")
+-        if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
+-            set(common "${common} -DMS_WIN64")
+-        endif()
+-    endif()
+-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${common}")
+-endif ()
+-if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
+-    set(common "-fPIC")
+-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${common}")
+-endif ()
+-
+-# Check c++11 support
+-try_compile(CXX11 "${CMAKE_CURRENT_BINARY_DIR}/cxx" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/checkcxx11.cpp"
+-	CMAKE_FLAGS "-DCOMPILE_DEFINITIONS=${CMAKE_CXX_FLAGS}" OUTPUT_VARIABLE CXX11_ERROR_LOG)
+-if (NOT ${CXX11})
+-	message(FATAL_ERROR "Compiler does not support C++11 constructs. \n"
+-		"CXX11 Error Log : \n${CXX11_ERROR_LOG}")
+-endif()
+ 
++set(CMAKE_POSITION_INDEPENDENT_CODE ON)
++  
+ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+     CHECK_CXX_COMPILER_FLAG("-Wno-implicit-fallthrough" NO_WARN_IMPLICIT_FALL_THROUGH_FLAG)
+ endif()
+@@ -436,7 +404,7 @@ if (WITH_LLVM)
+ endif()
+ 
+ # BENCHMARKS
+-set(BUILD_BENCHMARKS yes
++set(BUILD_BENCHMARKS no
+     CACHE BOOL "Build SymEngine benchmarks")
+ 
+ set(BUILD_BENCHMARKS_GOOGLE no
+@@ -445,8 +413,16 @@ set(BUILD_BENCHMARKS_GOOGLE no
+ if (WITH_BOOST)
+     find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+     include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+-    set(LIBS ${LIBS} ${Boost_LIBRARIES})
++    list(TRANSFORM BOOST_COMPONENTS PREPEND "Boost::" OUTPUT_VARIABLE BOOST_LIBS)
++    list(APPEND BOOST_LIBS Boost::headers)
++    list(REMOVE_DUPLICATES BOOST_LIBS)
++    set(LIBS ${LIBS} ${BOOST_LIBS})
+     set(HAVE_SYMENGINE_BOOST yes)
++
++    if(BOOST_ROOT)
++      set(SYMENGINE_PKG_FINDS "${SYMENGINE_PKG_FINDS}\nset(BOOST_ROOT \"${BOOST_ROOT}\")")
++    endif()
++    set(SYMENGINE_PKG_FINDS "${SYMENGINE_PKG_FINDS}\nfind_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})")
+ endif()
+ 
+ # BFD
+@@ -507,7 +483,7 @@ set(WITH_SYMENGINE_THREAD_SAFE "${BUILD_
+     CACHE BOOL "Enable SYMENGINE_THREAD_SAFE support")
+ 
+ # TESTS
+-set(BUILD_TESTS yes
++set(BUILD_TESTS no
+     CACHE BOOL "Build SymEngine tests")
+ 
+ # Teuchos
+diff -Npur symengine-0.9.0/symengine/CMakeLists.txt symengine-new/symengine/CMakeLists.txt
+--- symengine-0.9.0/symengine/CMakeLists.txt	2022-02-16 23:21:46.000000000 +0100
++++ symengine-new/symengine/CMakeLists.txt	2022-03-24 00:24:46.340870054 +0100
+@@ -248,6 +248,7 @@ include_directories(BEFORE ${symengine_B
+ include_directories(BEFORE ${symengine_SOURCE_DIR})
+ 
+ add_library(symengine ${SRC})
++target_compile_features(symengine PUBLIC cxx_std_17)
+ 
+ include(GenerateExportHeader)
+ generate_export_header(symengine)
+@@ -278,9 +279,9 @@ if (WITH_LLVM AND NOT ${LLVM_VERSION} VE
+ endif()
+ 
+ if (WITH_SYMENGINE_TEUCHOS)
+-    target_link_libraries(symengine teuchos)
++    target_link_libraries(symengine PUBLIC teuchos)
+ endif()
+-target_link_libraries(symengine ${LIBS})
++target_link_libraries(symengine PUBLIC ${LIBS})
+ 
+ if (WITH_LLVM AND NOT SYMENGINE_LLVM_LINK_DOWNSTREAM AND NOT WITH_SYMENGINE_TEUCHOS)
+     if (${EXCLUDE_LIBS})

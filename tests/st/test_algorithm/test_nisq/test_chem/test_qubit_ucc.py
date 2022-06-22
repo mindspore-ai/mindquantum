@@ -17,53 +17,62 @@
 
 import os
 
-os.environ['OMP_NUM_THREADS'] = '8'
 import numpy as np
-import mindspore as ms
+import pytest
+
 from mindquantum.algorithm.nisq.chem import QubitUCCAnsatz
 from mindquantum.core.circuit import Circuit
-from mindquantum.framework import MQAnsatzOnlyLayer
-from mindquantum.core.operators import Hamiltonian
-from mindquantum.core.operators import QubitOperator
 from mindquantum.core.gates import X
+from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.simulator import Simulator
 
-ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
+os.environ.setdefault('OMP_NUM_THREADS', '8')
+
+_has_mindspore = True
+try:
+    import mindspore as ms
+
+    from mindquantum.framework import MQAnsatzOnlyLayer
+
+    ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
+except ImportError:
+    _has_mindspore = False
 
 
+@pytest.mark.skipif(not _has_mindspore, reason='MindSpore is not installed')
 def test_quccsd():
     # Hydrogen molecule
-    ham = QubitOperator("", (-0.5339363487727398+0j)) + \
-        QubitOperator("X0 X1 Y2 Y3", (-0.0647846187202642+0j)) + \
-        QubitOperator("X0 Y1 Y2 X3", (0.0647846187202642+0j)) + \
-        QubitOperator("Y0 X1 X2 Y3", (0.0647846187202642+0j)) + \
-        QubitOperator("Y0 Y1 X2 X3", (-0.0647846187202642+0j)) + \
-        QubitOperator("Z0", (0.06727930458983417+0j)) + \
-        QubitOperator("Z0 Z1", (0.12736570310657463+0j)) + \
-        QubitOperator("Z0 Z2", (0.06501569581211997+0j)) + \
-        QubitOperator("Z0 Z3", (0.12980031453238416+0j)) + \
-        QubitOperator("Z1", (0.06727930458983417+0j)) + \
-        QubitOperator("Z1 Z2", (0.12980031453238416+0j)) + \
-        QubitOperator("Z1 Z3", (0.06501569581211997+0j)) + \
-        QubitOperator("Z2", (0.006651295687574388+0j)) + \
-        QubitOperator("Z2 Z3", (0.13366602988233994+0j)) + \
-        QubitOperator("Z3", (0.006651295687574388+0j))
+    ham = (
+        QubitOperator("", (-0.5339363487727398 + 0j))
+        + QubitOperator("X0 X1 Y2 Y3", (-0.0647846187202642 + 0j))
+        + QubitOperator("X0 Y1 Y2 X3", (0.0647846187202642 + 0j))
+        + QubitOperator("Y0 X1 X2 Y3", (0.0647846187202642 + 0j))
+        + QubitOperator("Y0 Y1 X2 X3", (-0.0647846187202642 + 0j))
+        + QubitOperator("Z0", (0.06727930458983417 + 0j))
+        + QubitOperator("Z0 Z1", (0.12736570310657463 + 0j))
+        + QubitOperator("Z0 Z2", (0.06501569581211997 + 0j))
+        + QubitOperator("Z0 Z3", (0.12980031453238416 + 0j))
+        + QubitOperator("Z1", (0.06727930458983417 + 0j))
+        + QubitOperator("Z1 Z2", (0.12980031453238416 + 0j))
+        + QubitOperator("Z1 Z3", (0.06501569581211997 + 0j))
+        + QubitOperator("Z2", (0.006651295687574388 + 0j))
+        + QubitOperator("Z2 Z3", (0.13366602988233994 + 0j))
+        + QubitOperator("Z3", (0.006651295687574388 + 0j))
+    )
     n_qubits = 4
     n_electrons = 2
     occ_orb = [0]
     vir_orb = [1]
     generalized = False
     trotter_step = 4
-    ucc = QubitUCCAnsatz(n_qubits, n_electrons, occ_orb, vir_orb, generalized,
-                         trotter_step)
+    ucc = QubitUCCAnsatz(n_qubits, n_electrons, occ_orb, vir_orb, generalized, trotter_step)
     total_circuit = Circuit()
     for i in range(n_electrons):
         total_circuit += X.on(i)
     total_circuit += ucc.circuit
 
     sim = Simulator('projectq', total_circuit.n_qubits)
-    f_g_ops = sim.get_expectation_with_grad(Hamiltonian(ham.real),
-                                            total_circuit)
+    f_g_ops = sim.get_expectation_with_grad(Hamiltonian(ham.real), total_circuit)
     net = MQAnsatzOnlyLayer(f_g_ops)
     opti = ms.nn.Adagrad(net.trainable_params(), learning_rate=4e-2)
     train_net = ms.nn.TrainOneStepCell(net, opti)

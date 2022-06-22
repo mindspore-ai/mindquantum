@@ -71,7 +71,7 @@ def test_qubit_ops_num_coeff():
     iden = -QubitOperator('')
     assert str(iden) == '-1 [] '
 
-    ham = ((QubitOperator('X0 Y3', 0.5) + 0.6 * QubitOperator('X0 Y3')))
+    ham = QubitOperator('X0 Y3', 0.5) + 0.6 * QubitOperator('X0 Y3')
     assert str(ham) == '1.1 [X0 Y3] '
 
 
@@ -104,7 +104,7 @@ def test_qubit_ops_symbol_coeff():
     assert str(q14) == '(1/10000j) [X1 Y2 Z3] +\n1/100000*b [Y1 X2] +\n(1j) [Z1 Y2 Z3] +\n(-1/1000000000j)*b [X2] '
     assert str(q14.compress()) == str(q14)
 
-    ham = ((QubitOperator('X0 Y3', 'a') + 'a' * QubitOperator('X0 Y3')))
+    ham = QubitOperator('X0 Y3', 'a') + 'a' * QubitOperator('X0 Y3')
     assert str(ham) == '2*a [X0 Y3] '
     assert ham == QubitOperator('X0 Y3', {'a': 2})
 
@@ -126,7 +126,6 @@ def test_qubit_ops_sub():
     """
     q1 = QubitOperator('X0')
     q2 = QubitOperator('Y0')
-    q = QubitOperator('X0') + QubitOperator('Y0', -1)
     assert str(q1 - q2) == '1 [X0] +\n-1 [Y0] '
 
 
@@ -161,8 +160,9 @@ def test_qubit_ops_trans():
     Description: Test transfor fermion operator to openfermion back and force.
     Expectation: success.
     """
-    from openfermion import QubitOperator as ofo
-    ofo_ops = ofo("X0 Y1 Z2", 1)
+    from openfermion import QubitOperator as OFQubitOperator
+
+    ofo_ops = OFQubitOperator("X0 Y1 Z2", 1)
     mq_ops = QubitOperator("X0 Y1 Z2", 1)
     assert mq_ops.to_openfermion() == ofo_ops
     assert mq_ops == QubitOperator.from_openfermion(ofo_ops)

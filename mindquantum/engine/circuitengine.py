@@ -26,48 +26,40 @@ class BasicQubit:
         qubit_id (int): The id of this quantum qubit.
         circuit (Circuit): The quantum circuit that this qubit belongs to. Default: None.
     """
+
     def __init__(self, qubit_id, circuit=None):
+        """Initialize a BasicQubit object."""
         if not isinstance(qubit_id, int):
-            raise TypeError("qubit_id should be int, but get {}!".format(
-                type(qubit_id)))
+            raise TypeError("qubit_id should be int, but get {}!".format(type(qubit_id)))
         self.qubit_id = qubit_id
         if circuit is None:
             self.circuit_ = Circuit()
         elif isinstance(circuit, Circuit):
             self.circuit_ = circuit
         else:
-            raise TypeError(
-                "circuit should be a quantum circuit, but get {}!".format(
-                    type(circuit)))
+            raise TypeError("circuit should be a quantum circuit, but get {}!".format(type(circuit)))
 
     def __str__(self):
+        """Return a string representation of the object."""
         return 'qubit_{}'.format(self.qubit_id)
-
-    def __repr__(self):
-        return self.__str__()
 
     @property
     def circuit(self):
-        """
-        Get the quantum circuit that this qubit belongs to.
-        """
+        """Get the quantum circuit that this qubit belongs to."""
         return self.circuit_
 
 
 class CircuitEngine:
-    """
-    A simple circuit engine that allows you to generate quantum circuit as
-    projectq style.
-    """
+    """A simple circuit engine that allows you to generate quantum circuit as projectq style."""
+
     def __init__(self):
+        """Initialize a CircuitEngine object."""
         self.current_id = -1
         self.qubits = []
         self.circuit_ = Circuit()
 
     def allocate_qubit(self):
-        """
-        Allocate a quantum qubit.
-        """
+        """Allocate a quantum qubit."""
         self.current_id += 1
         self.qubits.append(BasicQubit(self.current_id, self.circuit_))
         return [self.qubits[-1]]
@@ -86,9 +78,7 @@ class CircuitEngine:
 
     @property
     def circuit(self):
-        """
-        Get the quantum circuit that construct by this engin.
-        """
+        """Get the quantum circuit that construct by this engin."""
         return self.circuit_
 
     @staticmethod
@@ -112,6 +102,7 @@ class CircuitEngine:
             >>> print(type(ansatz))
             <class 'mindquantum.core.circuit.circuit.Circuit'>
         """
+
         def deco(fn):
             eng = CircuitEngine()
             qubits = eng.allocate_qureg(n_qubits)
@@ -123,7 +114,7 @@ class CircuitEngine:
 
 def circuit_generator(n_qubits, *args, **kwds):
     """
-        Generate quantum circuit as projectq style.
+    Generate quantum circuit as projectq style.
 
         Args:
             n_qubits (int): qubit number of quantum circuit.

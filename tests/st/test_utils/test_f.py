@@ -16,6 +16,7 @@
 """Test utils."""
 
 import numpy as np
+
 from mindquantum.utils import f
 
 
@@ -29,12 +30,10 @@ def test_mod():
 
 def test_normalize():
     """Test normalize"""
-    norm = np.real((f.normalize([[1 + 1j, 0.5 + 0.5j], [0.5 + 1j,
-                                                        0.5 + 0.5j]]))[0, 0])
+    norm = np.real((f.normalize([[1 + 1j, 0.5 + 0.5j], [0.5 + 1j, 0.5 + 0.5j]]))[0, 0])
     assert round(norm, 5) == round(0.5547002, 5)
 
 
 def test_random_state():
     """Test random state"""
-    assert round(np.real(f.random_state((2, 4), seed=55)[0, 0]),
-                 5) == round(0.16926417, 5)
+    assert round(np.real(f.random_state((2, 4), seed=55)[0, 0]), 5) == round(0.16926417, 5)

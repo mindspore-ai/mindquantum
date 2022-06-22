@@ -20,7 +20,7 @@
     .. py:method:: add_ket_label(ax, *args, fontsize=None, **kwargs)
 
         在给定的Axes中设置布洛赫球坐标轴的右矢标签。
-    
+
         **参数：**
 
         - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 想要添加右矢标签的三维Axes。
@@ -100,13 +100,13 @@
 
         根据 `BlochScene.config` 创建默认的布洛赫球场景。
 
-    .. py:method:: gen_fig_ax(boxs=None)
+    .. py:method:: gen_fig_ax(boxes=None)
 
         创建一个三维的画布。
 
         **参数：**
 
-        - **boxs** (list) - 四维的浮点数数组，分别为左边界，底边，宽度和高度。如果为 `None` ，左边界和底边将为0，宽度和高度将为1。默认值： `None` 。
+        - **boxes** (list) - 四维的浮点数数组，分别为左边界，底边，宽度和高度。如果为 `None` ，左边界和底边将为0，宽度和高度将为1。默认值： `None` 。
 
     .. py:method:: plot_slice(ax, x, y, z, frame_color, frame_alpha, surface_color, surface_alpha, frame_args=None, frame_kwargs=None, surface_args=None, surface_kwargs=None)
 
@@ -133,7 +133,7 @@
 
         **参数：**
 
-        - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 
+        - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) -
         - **elev** (numbers.Number) - 以度为单位时，当前方位绕z轴转动的角度。
         - **azim** (numbers.Number) - 以度为单位时，当前方位相对与 (x, y) 平面的仰角。默认值：0。
 

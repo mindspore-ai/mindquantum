@@ -15,7 +15,6 @@
 
 """Helper functions for building MindQuantum."""
 
-import contextlib
 import errno
 import logging
 import os
@@ -23,36 +22,12 @@ import shutil
 import stat
 import subprocess
 import sys
+from pathlib import Path
 
-# ==============================================================================
-
-
-@contextlib.contextmanager
-def fdopen(fname, mode, perms=0o644):  # pragma: no cover
-    """
-    Context manager for opening files with correct permissions.
-
-    Args:
-        fname (str): Path to file to open for reading/writing
-        mode (str): Mode in which the file is opened (see help for builtin `open()`)
-        perms (int): Permission mask (see help for `os.open()`)
-    """
-    if 'r' in mode:
-        flags = os.O_RDONLY
-    elif 'w' in mode:
-        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
-    elif 'a' in mode:
-        flags = os.O_WRONLY | os.O_CREAT
-    else:
-        raise RuntimeError(f'Unsupported mode: {mode}')
-
-    file_object = open(os.open(fname, flags, perms), mode=mode, encoding='utf-8')
-
-    try:
-        yield file_object
-    finally:
-        file_object.close()
-
+sys.path.append(str(Path(__file__).parent.parent / 'mindquantum' / 'utils'))
+from fdopen import (  # noqa: E402 pylint: disable=wrong-import-position,import-error
+    fdopen,
+)
 
 # ==============================================================================
 
@@ -63,7 +38,9 @@ def remove_tree(directory):
     def remove_read_only(func, path, exc_info):
         excvalue = exc_info[1]
         if func in (os.rmdir, os.remove) and excvalue.errno == errno.EACCES:
-            os.chmod(path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+            os.chmod(  # noqa: SCS119 pylint: disable=os-chmod-unsafe-permissions
+                path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO
+            )
             func(path)
         else:
             raise exc_info[0].with_traceback(exc_info[1], exc_info[2])
@@ -97,7 +74,7 @@ def get_executable(exec_name):
             with fdopen(os.devnull, 'w') as devnull:
                 subprocess.check_call([cmd, '--version'], stdout=devnull, stderr=devnull)
         except (OSError, subprocess.CalledProcessError):
-            logging.info('  failed in %s', base_path)
+            logging.info('  failed with %s', cmd)
         else:
             logging.info('  command found:%s', cmd)
             return cmd
@@ -109,7 +86,7 @@ def get_executable(exec_name):
             with fdopen(os.devnull, 'w') as devnull:
                 subprocess.check_call(cmd + ['--version'], stdout=devnull, stderr=devnull)
         except (OSError, subprocess.CalledProcessError):
-            logging.info('  failed in %s', base_path)
+            logging.info('  failed with %s', cmd)
         else:
             logging.info('  command found: %s', cmd)
             return cmd
@@ -121,9 +98,11 @@ def get_executable(exec_name):
 def get_cmake_command():
     """Retrieve the path to the CMake executable."""
     try:
-        with fdopen(os.devnull, 'w') as devnull:
-            subprocess.check_call(['cmake', '--version'], stdout=devnull, stderr=devnull)
-        return 'cmake'
+        cmd = shutil.which('cmake')
+        if cmd is not None:
+            with fdopen(os.devnull, 'w') as devnull:
+                subprocess.check_call([cmd, '--version'], stdout=devnull, stderr=devnull)
+            return cmd
     except (OSError, subprocess.CalledProcessError):
         pass
 

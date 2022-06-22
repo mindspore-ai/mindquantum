@@ -1,0 +1,12 @@
+diff --git a/include/tweedledum/Operators/Ising/Rxx.h b/include/tweedledum/Operators/Ising/Rxx.h
+index 27a6e17..da6c531 100644
+--- a/include/tweedledum/Operators/Ising/Rxx.h
++++ b/include/tweedledum/Operators/Ising/Rxx.h
+@@ -31,6 +36,6 @@
+     {
+         Complex const a = std::cos(angle_);
+-        Complex const b = {0. - std::sin(angle_)};
++        Complex const b = {0., - std::sin(angle_)};
+         // clang-format off
+         return (UMatrix4() << a, 0 ,0, b,
+                               0, a, b, 0,

@@ -1,0 +1,55 @@
+diff --git a/external/bill/bill/sat/solver/glucose.hpp b/external/bill/bill/sat/solver/glucose.hpp
+index e4b8df56..4167abd3 100644
+--- a/external/bill/bill/sat/solver/glucose.hpp
++++ b/external/bill/bill/sat/solver/glucose.hpp
+@@ -37,6 +37,38 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR
+ 
+ #endif
+ 
++#ifdef _MSC_VER
++
++#include <intrin.h>
++
++template <bool, class _Tp> struct __sync_win32_enable_if {};
++template<class _Tp>
++struct __sync_win32_enable_if<true, _Tp> {
++    typedef _Tp type;
++};
++
++template <class _Tp>
++inline bool __sync_bool_compare_and_swap(
++    _Tp *__ptr,
++    typename __sync_win32_enable_if<sizeof(_Tp) == sizeof(long), _Tp>::type __old_val,
++    typename __sync_win32_enable_if<true, _Tp>::type __new_val)
++{
++    return _InterlockedCompareExchange((long*)(__ptr), (long)(__new_val),
++                                       (long)(__old_val)) == (long)(__old_val);
++}
++
++template <class _Tp>
++inline bool __sync_bool_compare_and_swap(
++    _Tp *__ptr,
++    typename __sync_win32_enable_if<sizeof(_Tp) == sizeof(__int64), _Tp>::type __old_val,
++    typename __sync_win32_enable_if<true, _Tp>::type __new_val)
++{
++    return _InterlockedCompareExchange64((__int64*)(__ptr), (__int64)(__new_val),
++                                         (__int64)(__old_val)) == (__int64)(__old_val);
++}
++
++#endif // _MSC_VER
++
+ #include <limits.h>
+ 
+ #ifndef PRIu64
+@@ -1053,7 +1085,11 @@ class vecThreads {
+     T*  data;
+     int sz;
+     int cap;
++#ifdef _MSC_VER
++    long lock;
++#else
+     bool lock;
++#endif // _MSC_VER
+     int nbusers;
+ 
+     // Don't allow copying (error prone):

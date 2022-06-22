@@ -13,17 +13,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Useful functions"""
+
+"""Useful functions."""
 
 import fractions
-from functools import lru_cache
 import numbers
+from functools import lru_cache
+
 import numpy as np
+
 from mindquantum.config.config import _GLOBAL_MAT_VALUE
-from .type_value_check import _check_input_type
-from .type_value_check import _check_int_type
-from .type_value_check import _check_value_should_not_less
-from .type_value_check import _check_value_should_between_close_set
+
+from .type_value_check import (
+    _check_input_type,
+    _check_int_type,
+    _check_value_should_between_close_set,
+    _check_value_should_not_less,
+)
 
 __all__ = ['random_circuit', 'mod', 'normalize', 'random_state']
 
@@ -46,8 +52,9 @@ def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=None):
               │        │            │            │
         q2: ──●────────●────────RZ(-2.42)────────●───────
     """
+    import mindquantum.core.gates as gates
     from mindquantum import Circuit
-    import mindquantum.core.gates as G
+
     _check_int_type('n_qubits', n_qubits)
     _check_int_type('gate_num', gate_num)
     _check_input_type('sd_rate', float, sd_rate)
@@ -63,8 +70,11 @@ def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=None):
     if n_qubits == 1:
         sd_rate = 1
         ctrl_rate = 0
-    single = {'param': [G.RX, G.RY, G.RZ, G.PhaseShift], 'non_param': [G.X, G.Y, G.Z, G.H]}
-    double = {'param': [G.XX, G.YY, G.ZZ], 'non_param': [G.SWAP]}
+    single = {
+        'param': [gates.RX, gates.RY, gates.RZ, gates.PhaseShift],
+        'non_param': [gates.X, gates.Y, gates.Z, gates.H],
+    }
+    double = {'param': [gates.XX, gates.YY, gates.ZZ], 'non_param': [gates.SWAP]}
     c = Circuit()
     np.random.seed(seed)
     qubits = range(n_qubits)
@@ -187,7 +197,7 @@ def random_state(shapes, norm_axis=0, comp=True, seed=None):
 
 
 def _index_to_bitstring(index, n, big_end=False):
-    """Transfor the index to bitstring"""
+    """Transfer the index to bitstring."""
     s = bin(index)[2:].zfill(n)
     if big_end:
         return s[::-1]
@@ -274,7 +284,7 @@ def ket_string(state, tol=1e-7):
         ['√2/2¦0⟩', '-√2/2j¦1⟩']
     """
     if not isinstance(state, np.ndarray) or len(state.shape) != 1:
-        raise TypeError(f"state need a 1-D ndarray.")
+        raise TypeError("state need a 1-D ndarray.")
     n = int(np.log2(len(state)))
     if len(state) < 2 and len(state) != (1 << n):
         raise ValueError("Invalid state size!")
@@ -300,8 +310,9 @@ def ket_string(state, tol=1e-7):
 
 def is_two_number_close(a, b, atol=None):
     """
-    Check whether two number is close within the error of atol. This
-    method also works for complex number.
+    Check whether two number is close within the error of atol.
+
+    This method also works for complex numbers.
 
     Args:
         a (numbers.Number): The first number.
@@ -318,6 +329,7 @@ def is_two_number_close(a, b, atol=None):
         True
     """
     from mindquantum.config.config import context
+
     _check_input_type("a", numbers.Number, a)
     _check_input_type("b", numbers.Number, b)
     if atol is None:
@@ -334,20 +346,27 @@ def quantifier_selector(num, single, plural):
     return f'{num} {single}'
 
 
-s_quantifier = lambda num, quantifier: quantifier_selector(num, quantifier, f'{quantifier}s')
-es_quantifier = lambda num, quantifier: quantifier_selector(num, quantifier, f'{quantifier}es')
+def s_quantifier(num, quantifier):
+    """S quantifier."""
+    return quantifier_selector(num, quantifier, f'{quantifier}s')
+
+
+def es_quantifier(num, quantifier):
+    """ES quantifier."""
+    return quantifier_selector(num, quantifier, f'{quantifier}es')
 
 
 def is_power_of_two(num):
-    """check a number whether is power of 2 or not."""
+    """Check whether a number is power of 2 or not."""
     return (num & (num - 1) == 0) and num != 0
 
 
 @lru_cache()
 def pauli_string_matrix(pauli_string):
     """
-    Generate the matrix of pauli string. If pauli string is XYZ, then
-    the matrix will be `Z@Y@X`.
+    Generate the matrix of pauli string.
+
+    If pauli string is XYZ, then the matrix will be `Z@Y@X`.
     """
     m = _GLOBAL_MAT_VALUE[pauli_string[0]]
     for s in pauli_string[1:]:

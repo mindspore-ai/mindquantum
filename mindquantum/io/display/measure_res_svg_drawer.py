@@ -14,17 +14,26 @@
 # limitations under the License.
 # ============================================================================
 """SVG module."""
-#%%
+
 import time
+
 import numpy as np
-from mindquantum.io.display.circuit_svg_drawer import BaseComponent
-from mindquantum.io.display.circuit_svg_drawer import Rect, Line, SVGContainer, Text, super_align
+
+from mindquantum.io.display.circuit_svg_drawer import (
+    BaseComponent,
+    Line,
+    Rect,
+    SVGContainer,
+    Text,
+    super_align,
+)
 
 
 class AnimationSVG(BaseComponent):
     """Animation a svg property."""
 
     def __init__(self, svg_id, attr, v_from, v_to, dur, spline=None):
+        """Initialize an AnimationSVG object."""
         super().__init__('animate')
         self.id = svg_id
         self.attr = attr
@@ -48,27 +57,34 @@ class AnimationSVG(BaseComponent):
 
     @property
     def bottom(self):
+        """Getter for bottom."""
         return -np.inf
 
     @property
     def top(self):
+        """Getter for top."""
         return np.inf
 
     @property
     def left(self):
+        """Getter for left."""
         return np.inf
 
     @property
     def right(self):
+        """Getter for right."""
         return -np.inf
 
     def change_color(self, color):
+        """Getter for change of color."""
         return self
 
     def scale(self, scale):
+        """Getter for scale factor."""
         return self
 
     def shift(self, x, y):
+        """Getter for shift factor."""
         return self
 
 
@@ -76,6 +92,7 @@ class SVGMeasure(SVGContainer):
     """SVG object of measure result."""
 
     def __init__(self, res, style):
+        """Initialize an SVGMeasure object."""
         super().__init__()
         self.style = style
         self.res = res
@@ -94,7 +111,7 @@ class SVGMeasure(SVGContainer):
         self.add(main_box)
 
     def build_title(self):
-        """build title"""
+        """Build title."""
         shots_text = Text(0, 0, f"Shots:\n {str(self.res.shots)}")
         shots_text.text_anchor("start")
         shots_text.shift(0, (shots_text.bottom - shots_text.top) / 2)
@@ -107,7 +124,7 @@ class SVGMeasure(SVGContainer):
         return text
 
     def build_box(self):
-        """build box"""
+        """Build box."""
         animations = SVGContainer()
         max_bar_animations = SVGContainer()
         sampling_animations = SVGContainer()
@@ -119,8 +136,11 @@ class SVGMeasure(SVGContainer):
         h_axis.add(val_axis)
         box_h = self.style['bar_dis'] * (len(self.res.data) + 0.5)
         for i, t in enumerate(np.linspace(0, self.max_val, self.style['n_stick'])):
-            text = Text(i * self.style['v_dis'] + self.style['table_box_line_width'] * 2,
-                        self.style['stick_len'] - self.style['table_box_line_width'] * 2, f'{round(t, 3)}')
+            text = Text(
+                i * self.style['v_dis'] + self.style['table_box_line_width'] * 2,
+                self.style['stick_len'] - self.style['table_box_line_width'] * 2,
+                f'{round(t, 3)}',
+            )
             text.dominant_baseline('bottom')
             text.text_anchor('start')
             text.font_size(self.style['label_fontsize'])
@@ -161,8 +181,9 @@ class SVGMeasure(SVGContainer):
             anim = AnimationSVG(bar.get('id'), 'width', 0, bar.get('width'), self.style['anim_time'])
             animations.add(anim)
             if n == max_bar:
-                anim = AnimationSVG(bar.get('id'), 'fill', bar.get('fill'), self.style['max_color'],
-                                    self.style['anim_time'] / 2)
+                anim = AnimationSVG(
+                    bar.get('id'), 'fill', bar.get('fill'), self.style['max_color'], self.style['anim_time'] / 2
+                )
                 anim.prop['begin'] = f"{self.style['anim_time']}s"
                 max_bar_animations.add(anim)
             text = Text(0, 0, str(n))

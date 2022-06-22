@@ -17,17 +17,27 @@
 
 import os
 
-os.environ['OMP_NUM_THREADS'] = '8'
 import numpy as np
-import mindspore as ms
+import pytest
+
 from mindquantum.algorithm.nisq.qaoa import MaxCutAnsatz
-from mindquantum.framework import MQAnsatzOnlyLayer
 from mindquantum.core.operators import Hamiltonian
 from mindquantum.simulator import Simulator
 
-ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
+os.environ.setdefault('OMP_NUM_THREADS', '8')
+
+_has_mindspore = True
+try:
+    import mindspore as ms
+
+    from mindquantum.framework import MQAnsatzOnlyLayer
+
+    ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
+except ImportError:
+    _has_mindspore = False
 
 
+@pytest.mark.skipif(not _has_mindspore, reason='MindSpore is not installed')
 def test_max_cut():
     """
     Description: test maxcut ansatz.

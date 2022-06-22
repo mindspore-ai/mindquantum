@@ -13,8 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Global config for mindquantum"""
-from .config import context
+
+"""Global config for MindQuantum."""
+
+from . import config
+from .config import context  # noqa: F401
 
 __all__ = []
 __all__.extend(config.__all__)

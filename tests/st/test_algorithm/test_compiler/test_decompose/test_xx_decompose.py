@@ -15,9 +15,10 @@
 # ============================================================================
 '''test decompose rule'''
 import numpy as np
-from mindquantum.algorithm.compiler.decompose import xx_decompose, cxx_decompose
-from mindquantum.core import Circuit
-from mindquantum.core import XX
+
+from mindquantum.algorithm.compiler.decompose import cxx_decompose, xx_decompose
+from mindquantum.core import XX, Circuit
+
 
 def circuit_equal_test(gate, decompose_circ):
     """
@@ -25,6 +26,7 @@ def circuit_equal_test(gate, decompose_circ):
     """
     orig_circ = Circuit() + gate
     assert np.allclose(orig_circ.matrix(), decompose_circ.matrix())
+
 
 def test_xx():
     """
@@ -34,11 +36,13 @@ def test_xx():
     xx = XX(1).on([0, 1])
     for solution in xx_decompose(xx):
         circuit_equal_test(xx, solution)
+
+
 def test_cxx():
     """
     Description: Test cxx decompose
     Expectation: success
     """
-    cxx = XX(2).on([0, 1], [2,3])
+    cxx = XX(2).on([0, 1], [2, 3])
     for solution in cxx_decompose(cxx):
         circuit_equal_test(cxx, solution)

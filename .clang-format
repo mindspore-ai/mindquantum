@@ -1,3 +1,5 @@
+---
+
 BasedOnStyle: Google
 AccessModifierOffset: -3
 AlignConsecutiveMacros: true
@@ -5,7 +7,7 @@ AlignEscapedNewlines: Right
 AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
-AlwaysBreakTemplateDeclarations: Yes
+AlwaysBreakTemplateDeclarations: true
 BraceWrapping:
   AfterClass: false
   AfterControlStatement: false
@@ -30,28 +32,32 @@ CompactNamespaces: false
 FixNamespaceComments: true
 IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex:           '<(assert|complex|ctype|errno|fenv|float|inttypes|iso646|limits|locale|math|setjmp|signal|stdalign|stdarg|stdatomic|stdbool|stddef|stdint|stdio|stdlib|stdnoreturn|string|tdmath|threads|time|uchar|wchar|wctype)\.h>'
-    Priority:        1
-  - Regex:           '<[[:alnum:]_\.]+.h>'
-    Priority:        2
-  - Regex:           '<[[:alnum:]_\.]+>'
-    Priority:        3
-  - Regex:           '<[[:alnum:]_\.]+'
-    Priority:        4
-  - Regex:           '[<"]tweedledum/([A-Za-z0-9.\/\-_])+[>"]'
-    Priority:        5
-  - Regex:           '<(catch2|boost|eigen)\/'
-    Priority:        6
-  - Regex:           '<symengine\/'
-    Priority:        7
-  - Regex:           '[<"]cuda[A-Za-z0-9.\/\-_]+[>"]'
-    Priority:        8
-  - Regex:           '[<"](driver_types.h)[>"]'
-    Priority:        8
-  - Regex:           '"[[:alpha:]\/]*config\.hpp"'
-    Priority:        10
-  - Regex:           '"([A-Za-z0-9.\/\-_])+"'
-    Priority:        20
+  - Regex: >-
+      '<
+      (assert|complex|ctype|errno|fenv|float|inttypes|iso646|limits|locale|math|setjmp|signal|stdalign|stdarg
+      |stdatomic|stdbool|stddef|stdint|stdio|stdlib|stdnoreturn|string|tdmath|threads|time|uchar|wchar|wctype)
+      \.h>'
+    Priority: 1
+  - Regex: '<[[:alnum:]_\.]+.h>'
+    Priority: 2
+  - Regex: '<[[:alnum:]_\.]+>'
+    Priority: 3
+  - Regex: '<[[:alnum:]_\.]+'
+    Priority: 4
+  - Regex: '[<"]tweedledum/([A-Za-z0-9.\/\-_])+[>"]'
+    Priority: 5
+  - Regex: '<(catch2|boost|eigen)\/'
+    Priority: 6
+  - Regex: '<symengine\/'
+    Priority: 7
+  - Regex: '[<"]cuda[A-Za-z0-9.\/\-_]+[>"]'
+    Priority: 8
+  - Regex: '[<"](driver_types.h)[>"]'
+    Priority: 8
+  - Regex: '"[[:alpha:]\/]*config\.hpp"'
+    Priority: 10
+  - Regex: '"([A-Za-z0-9.\/\-_])+"'
+    Priority: 20
 IndentPPDirectives: AfterHash
 IndentRequires: true
 IndentWidth: 4
@@ -62,15 +68,20 @@ ReflowComments: true
 SortIncludes: true
 SortUsingDeclarations: true
 SpaceAfterCStyleCast: true
+SpaceAfterLogicalNot: false
 SpaceAfterTemplateKeyword: true
 SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
 SpaceBeforeInheritanceColon: true
 SpaceBeforeParens: ControlStatements
 SpaceBeforeRangeBasedForLoopColon: true
 SpaceInEmptyParentheses: false
 SpacesInAngles: false
 SpacesInCStyleCastParentheses: false
-Standard: c++17
+StatementMacros: []
+TypenameMacros: []
+Standard: Latest
 TabWidth: 4
 UseTab: Never
-WhitespaceSensitiveMacros: ['CLANG_DIAG_ON', 'CLANG_DIAG_OFF', 'GCC_DIAG_ON', 'GCC_DIAG_OFF', 'MSVC_DIAG_ON', 'MSVC_DIAG_OFF']
+WhitespaceSensitiveMacros: ['CLANG_DIAG_ON', 'CLANG_DIAG_OFF', 'GCC_DIAG_ON', 'GCC_DIAG_OFF', 'MSVC_DIAG_ON',
+                            'MSVC_DIAG_OFF']

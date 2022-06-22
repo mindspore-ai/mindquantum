@@ -1,7 +1,28 @@
 # -*- coding: utf-8 -*-
+#   Copyright 2022 <Huawei Technologies Co., Ltd>
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
+"""Example of a Grover search implementation."""
+
+from numpy import pi, sqrt
+
+from mindquantum import UN, Circuit, H, Measure, Z
+from mindquantum.simulator import Simulator
 
 
 def bitphaseflip_operator(phase_inversion_qubit, n_qubits):
+    """Bit phase-flip operator."""
     s = [1 for i in range(1 << n_qubits)]
     for i in phase_inversion_qubit:
         s[i] = -1
@@ -34,10 +55,6 @@ def bitphaseflip_operator(phase_inversion_qubit, n_qubits):
     return circuit
 
 
-import mindquantum as mq
-from mindquantum import Circuit, UN, H, Z
-from mindquantum.simulator import Simulator
-
 n_qubits = 3
 sim = Simulator('projectq', n_qubits)
 
@@ -67,8 +84,7 @@ print(int('100', 2))
 n_qubits = 3
 sim1 = Simulator('projectq', n_qubits)
 
-operator1 = bitphaseflip_operator([i for i in range(1, pow(2, n_qubits))],
-                                  n_qubits)
+operator1 = bitphaseflip_operator(list(range(1, pow(2, n_qubits))), n_qubits)
 
 circuit1 = Circuit()
 circuit1 += UN(H, n_qubits)
@@ -81,22 +97,19 @@ circuit1
 print(sim1.get_qs(True))
 
 
-def G(phase_inversion_qubit, n_qubits):
+def grover(phase_inversion_qubit, n_qubits):
+    """Implement Grover operator."""
     operator = bitphaseflip_operator(phase_inversion_qubit, n_qubits)
     operator += UN(H, n_qubits)
-    operator += bitphaseflip_operator([i for i in range(1, pow(2, n_qubits))],
-                                      n_qubits)
+    operator += bitphaseflip_operator(list(range(1, pow(2, n_qubits))), n_qubits)
     operator += UN(H, n_qubits)
     return operator
 
 
-import numpy as np
-from numpy import pi, sqrt
-
 n_qubits = 3
 phase_inversion_qubit = [2]
 
-N = 2**(n_qubits)
+N = 2 ** (n_qubits)
 M = len(phase_inversion_qubit)
 
 r = int(pi / 4 * sqrt(N / M))
@@ -107,14 +120,13 @@ circuit2 = Circuit()
 circuit2 += UN(H, n_qubits)
 
 for i in range(r):
-    circuit2 += G(phase_inversion_qubit, n_qubits)
+    circuit2 += grover(phase_inversion_qubit, n_qubits)
 
 sim2.apply_circuit(circuit2)
 
 circuit2
 
 print(sim2.get_qs(True))
-from mindquantum import Measure
 
 sim2.reset()
 
@@ -128,7 +140,7 @@ print(int('010', 2))
 n_qubits = 5
 phase_inversion_qubit = [5, 11]
 
-N = 2**(n_qubits)
+N = 2 ** (n_qubits)
 M = len(phase_inversion_qubit)
 
 r = int(pi / 4 * sqrt(N / M))
@@ -139,7 +151,7 @@ circuit3 = Circuit()
 circuit3 += UN(H, n_qubits)
 
 for i in range(r):
-    circuit3 += G(phase_inversion_qubit, n_qubits)
+    circuit3 += grover(phase_inversion_qubit, n_qubits)
 
 sim3.apply_circuit(circuit3)
 

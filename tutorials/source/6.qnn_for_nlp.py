@@ -1,17 +1,38 @@
 # -*- coding: utf-8 -*-
+#   Copyright 2022 <Huawei Technologies Co., Ltd>
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
+"""Example of running QNN for NLP."""
+
 import time
-import numpy as np
-from mindquantum.core import QubitOperator
-import mindspore.ops as ops
+
+import matplotlib.pyplot as plt
+import mindspore as ms
 import mindspore.dataset as ds
-from mindspore import nn
+import mindspore.ops as ops
+import numpy as np
+from mindspore import Model, Tensor, context, nn
 from mindspore.train.callback import LossMonitor
-from mindspore import Model
+
+from mindquantum import RX, RY, UN, Circuit, H, Hamiltonian, X
+from mindquantum.core import QubitOperator
 from mindquantum.framework import MQLayer
-from mindquantum import Hamiltonian, Circuit, RX, RY, X, H, UN
+from mindquantum.simulator import Simulator
 
 
-def GenerateWordDictAndSample(corpus, window=2):
+def generate_word_dict_and_sample(corpus, window=2):
+    """Generate a word dictionary and some samples."""
     all_words = corpus.split()
     word_set = list(set(all_words))
     word_set.sort()
@@ -26,14 +47,15 @@ def GenerateWordDictAndSample(corpus, window=2):
     return word_dict, sampling
 
 
-word_dict, sample = GenerateWordDictAndSample("I love natural language processing")
+word_dict, sample = generate_word_dict_and_sample("I love natural language processing")
 print(word_dict)
 print('word dict size: ', len(word_dict))
 print('samples: ', sample)
 print('number of samples: ', len(sample))
 
 
-def GenerateEncoderCircuit(n_qubits, prefix=''):
+def generate_encoder_circuit(n_qubits, prefix=''):
+    """Generate an encoder circuit."""
     if len(prefix) != 0 and prefix[-1] != '_':
         prefix += '_'
     circ = Circuit()
@@ -42,17 +64,14 @@ def GenerateEncoderCircuit(n_qubits, prefix=''):
     return circ.as_encoder()
 
 
-GenerateEncoderCircuit(3, prefix='e')
+generate_encoder_circuit(3, prefix='e')
 
-from mindquantum.simulator import Simulator
-from mindspore import context
-from mindspore import Tensor
 
 n_qubits = 3
 label = 2
 label_bin = bin(label)[-1:1:-1].ljust(n_qubits, '0')
 label_array = np.array([int(i) * np.pi for i in label_bin]).astype(np.float32)
-encoder = GenerateEncoderCircuit(n_qubits, prefix='e')
+encoder = generate_encoder_circuit(n_qubits, prefix='e')
 encoder_params_names = encoder.params_name
 
 print("Label is: ", label)
@@ -62,13 +81,14 @@ print("Encoder circuit is: \n", encoder)
 print("Encoder parameter names are: \n", encoder_params_names)
 
 state = encoder.get_qs(pr=dict(zip(encoder_params_names, label_array)))
-amp = np.round(np.abs(state)**2, 3)
+amp = np.round(np.abs(state) ** 2, 3)
 
 print("Amplitude of quantum state is: \n", amp)
 print("Label in quantum state is: ", np.argmax(amp))
 
 
-def GenerateTrainData(sample, word_dict):
+def generate_train_data(sample, word_dict):
+    """Generate some training data."""
     n_qubits = np.int(np.ceil(np.log2(1 + max(word_dict.values()))))
     data_x = []
     data_y = []
@@ -83,26 +103,28 @@ def GenerateTrainData(sample, word_dict):
     return np.array(data_x).astype(np.float32), np.array(data_y).astype(np.int32)
 
 
-GenerateTrainData(sample, word_dict)
+generate_train_data(sample, word_dict)
 
 
-def GenerateAnsatzCircuit(n_qubits, layers, prefix=''):
+def generate_ansatz_circuit(n_qubits, layers, prefix=''):
+    """Generate some training ansatz circuit."""
     if len(prefix) != 0 and prefix[-1] != '_':
         prefix += '_'
     circ = Circuit()
-    for l in range(layers):
+    for ll in range(layers):
         for i in range(n_qubits):
-            circ += RY(prefix + str(l) + '_' + str(i)).on(i)
-        for i in range(l % 2, n_qubits, 2):
+            circ += RY(prefix + str(ll) + '_' + str(i)).on(i)
+        for i in range(ll % 2, n_qubits, 2):
             if i < n_qubits and i + 1 < n_qubits:
                 circ += X.on(i + 1, i)
     return circ
 
 
-GenerateAnsatzCircuit(5, 2, 'a')
+generate_ansatz_circuit(5, 2, 'a')
 
 
-def GenerateEmbeddingHamiltonian(dims, n_qubits):
+def generate_embedding_hamiltonian(dims, n_qubits):
+    """Generate an embedded hamiltonian."""
     hams = []
     for i in range(dims):
         s = ''
@@ -113,19 +135,20 @@ def GenerateEmbeddingHamiltonian(dims, n_qubits):
     return hams
 
 
-GenerateEmbeddingHamiltonian(5, 5)
+generate_embedding_hamiltonian(5, 5)
 
 
-def QEmbedding(num_embedding, embedding_dim, window, layers, n_threads):
+def q_embedding(num_embedding, embedding_dim, window, layers, n_threads):
+    """QEmbedding."""
     n_qubits = int(np.ceil(np.log2(num_embedding)))
-    hams = GenerateEmbeddingHamiltonian(embedding_dim, n_qubits)
+    hams = generate_embedding_hamiltonian(embedding_dim, n_qubits)
     circ = Circuit()
     circ = UN(H, n_qubits)
     encoder_param_name = []
     ansatz_param_name = []
     for w in range(2 * window):
-        encoder = GenerateEncoderCircuit(n_qubits, 'Encoder_' + str(w))
-        ansatz = GenerateAnsatzCircuit(n_qubits, layers, 'Ansatz_' + str(w))
+        encoder = generate_encoder_circuit(n_qubits, 'Encoder_' + str(w))
+        ansatz = generate_ansatz_circuit(n_qubits, layers, 'Ansatz_' + str(w))
         encoder.no_grad()
         circ += encoder
         circ += ansatz
@@ -136,15 +159,18 @@ def QEmbedding(num_embedding, embedding_dim, window, layers, n_threads):
 
 
 class CBOW(nn.Cell):
+    """CBOW class."""
 
     def __init__(self, num_embedding, embedding_dim, window, layers, n_threads, hidden_dim):
+        """Initialize a CBOW object."""
         super(CBOW, self).__init__()
-        self.embedding = QEmbedding(num_embedding, embedding_dim, window, layers, n_threads)
+        self.embedding = q_embedding(num_embedding, embedding_dim, window, layers, n_threads)
         self.dense1 = nn.Dense(embedding_dim, hidden_dim)
         self.dense2 = nn.Dense(hidden_dim, num_embedding)
         self.relu = ops.ReLU()
 
     def construct(self, x):
+        """Construct a CBOW(?)."""
         embed = self.embedding(x)
         out = self.dense1(embed)
         out = self.relu(out)
@@ -153,28 +179,35 @@ class CBOW(nn.Cell):
 
 
 class LossMonitorWithCollection(LossMonitor):
+    """LossMonitorWithCollection class."""
 
     def __init__(self, per_print_times=1):
+        """Initialize a LossMonitorWithCollection object."""
         super(LossMonitorWithCollection, self).__init__(per_print_times)
         self.loss = []
 
     def begin(self, run_context):
+        """Begin method."""
         self.begin_time = time.time()
 
     def end(self, run_context):
+        """End method."""
         self.end_time = time.time()
         print('Total time used: {}'.format(self.end_time - self.begin_time))
 
     def epoch_begin(self, run_context):
+        """Epoch begin method."""
         self.epoch_begin_time = time.time()
 
     def epoch_end(self, run_context):
+        """Epoch end method."""
         cb_params = run_context.original_args()
         self.epoch_end_time = time.time()
         if self._per_print_times != 0 and cb_params.cur_step_num % self._per_print_times == 0:
             print('')
 
     def step_end(self, run_context):
+        """Step end finalizer method."""
         cb_params = run_context.original_args()
         loss = cb_params.net_outputs
 
@@ -188,19 +221,20 @@ class LossMonitorWithCollection(LossMonitor):
         cur_step_in_epoch = (cb_params.cur_step_num - 1) % cb_params.batch_num + 1
 
         if isinstance(loss, float) and (np.isnan(loss) or np.isinf(loss)):
-            raise ValueError("epoch: {} step: {}. Invalid loss, terminating training.".format(
-                cb_params.cur_epoch_num, cur_step_in_epoch))
+            raise ValueError(
+                "epoch: {} step: {}. Invalid loss, terminating training.".format(
+                    cb_params.cur_epoch_num, cur_step_in_epoch
+                )
+            )
         self.loss.append(loss)
         if self._per_print_times != 0 and cb_params.cur_step_num % self._per_print_times == 0:
-            print("\repoch: %+3s step: %+3s time: %5.5s, loss is %5.5s" %
-                  (cb_params.cur_epoch_num, cur_step_in_epoch, time.time() - self.epoch_begin_time, loss),
-                  flush=True,
-                  end='')
+            print(
+                "\repoch: %+3s step: %+3s time: %5.5s, loss is %5.5s"
+                % (cb_params.cur_epoch_num, cur_step_in_epoch, time.time() - self.epoch_begin_time, loss),
+                flush=True,
+                end='',
+            )
 
-
-import mindspore as ms
-from mindspore import context
-from mindspore import Tensor
 
 context.set_context(mode=context.PYNATIVE_MODE, device_target="CPU")
 corpus = """We are about to study the idea of a computational process.
@@ -214,8 +248,8 @@ ms.set_seed(42)
 window_size = 2
 embedding_dim = 10
 hidden_dim = 128
-word_dict, sample = GenerateWordDictAndSample(corpus, window=window_size)
-train_x, train_y = GenerateTrainData(sample, word_dict)
+word_dict, sample = generate_word_dict_and_sample(corpus, window=window_size)
+train_x, train_y = generate_train_data(sample, word_dict)
 
 train_loader = ds.NumpySlicesDataset({"around": train_x, "center": train_y}, shuffle=False).batch(3)
 net = CBOW(len(word_dict), embedding_dim, window_size, 3, 4, hidden_dim)
@@ -225,7 +259,6 @@ loss_monitor = LossMonitorWithCollection(500)
 model = Model(net, net_loss, net_opt)
 model.train(350, train_loader, callbacks=[loss_monitor], dataset_sink_mode=False)
 
-import matplotlib.pyplot as plt
 
 plt.plot(loss_monitor.loss, '.')
 plt.xlabel('Steps')
@@ -236,8 +269,10 @@ net.embedding.weight.asnumpy()
 
 
 class CBOWClassical(nn.Cell):
+    """CBOWClassical class."""
 
     def __init__(self, num_embedding, embedding_dim, window, hidden_dim):
+        """Initialize a CBOWClassical object."""
         super(CBOWClassical, self).__init__()
         self.dim = 2 * window * embedding_dim
         self.embedding = nn.Embedding(num_embedding, embedding_dim, True)
@@ -247,6 +282,7 @@ class CBOWClassical(nn.Cell):
         self.reshape = ops.Reshape()
 
     def construct(self, x):
+        """Construct a CBOWClassical(?)."""
         embed = self.embedding(x)
         embed = self.reshape(embed, (-1, self.dim))
         out = self.dense1(embed)
@@ -278,7 +314,6 @@ loss_monitor = LossMonitorWithCollection(500)
 model = Model(net, net_loss, net_opt)
 model.train(350, train_loader, callbacks=[loss_monitor], dataset_sink_mode=False)
 
-import matplotlib.pyplot as plt
 
 plt.plot(loss_monitor.loss, '.')
 plt.xlabel('Steps')

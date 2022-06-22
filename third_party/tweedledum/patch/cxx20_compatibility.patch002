@@ -1,0 +1,322 @@
+diff --git a/external/kitty/kitty/constructors.hpp b/external/kitty/kitty/constructors.hpp
+index 784709d..a624ee7 100644
+--- a/external/kitty/kitty/constructors.hpp
++++ b/external/kitty/kitty/constructors.hpp
+@@ -32,6 +32,9 @@
+ 
+ #pragma once
+ 
++#if __has_include(<compare>) && __cplusplus > 201703L
++#    include <compare>
++#endif  // __has_include(<compare>) && C++20
+ #include <cctype>
+ #include <chrono>
+ #include <istream>
+@@ -1193,4 +1196,4 @@ void create_prime( TT& tt )
+   }
+ }
+ 
+-} // namespace kitty
+\ No newline at end of file
++} // namespace kitty
+diff --git a/external/mockturtle/mockturtle/networks/aig.hpp b/external/mockturtle/mockturtle/networks/aig.hpp
+index 6a87408..3d2a408 100644
+--- a/external/mockturtle/mockturtle/networks/aig.hpp
++++ b/external/mockturtle/mockturtle/networks/aig.hpp
+@@ -909,7 +909,7 @@ public:
+   {
+     uint32_t i = -1;
+     foreach_co( [&]( const auto& x, auto index ){
+-        if ( x == s )
++        if ( x == aig_storage::node_type::pointer_type(s) )
+         {
+           i = index;
+           return false;
+@@ -931,7 +931,7 @@ public:
+   {
+     uint32_t i = -1;
+     foreach_po( [&]( const auto& x, auto index ){
+-        if ( x == s )
++        if ( x == aig_storage::node_type::pointer_type(s) )
+         {
+           i = index;
+           return false;
+@@ -953,7 +953,7 @@ public:
+   {
+     uint32_t i = -1;
+     foreach_ri( [&]( const auto& x, auto index ){
+-        if ( x == s )
++        if ( x == aig_storage::node_type::pointer_type(s) )
+         {
+           i = index;
+           return false;
+diff --git a/external/mockturtle/mockturtle/networks/mig.hpp b/external/mockturtle/mockturtle/networks/mig.hpp
+index 6dca509..36a4a2b 100644
+--- a/external/mockturtle/mockturtle/networks/mig.hpp
++++ b/external/mockturtle/mockturtle/networks/mig.hpp
+@@ -869,7 +869,7 @@ public:
+   {
+     uint32_t i = -1;
+     foreach_co( [&]( const auto& x, auto index ) {
+-      if ( x == s )
++      if ( x == mig_storage::node_type::pointer_type(s) )
+       {
+         i = index;
+         return false;
+@@ -892,7 +892,7 @@ public:
+   {
+     uint32_t i = -1;
+     foreach_po( [&]( const auto& x, auto index ) {
+-      if ( x == s )
++      if ( x == mig_storage::node_type::pointer_type(s) )
+       {
+         i = index;
+         return false;
+@@ -915,7 +915,7 @@ public:
+   {
+     uint32_t i = -1;
+     foreach_ri( [&]( const auto& x, auto index ) {
+-      if ( x == s )
++      if ( x == mig_storage::node_type::pointer_type(s) )
+       {
+         i = index;
+         return false;
+diff --git a/external/mockturtle/mockturtle/networks/xag.hpp b/external/mockturtle/mockturtle/networks/xag.hpp
+index 6642357..251b4ea 100644
+--- a/external/mockturtle/mockturtle/networks/xag.hpp
++++ b/external/mockturtle/mockturtle/networks/xag.hpp
+@@ -852,7 +852,7 @@ public:
+   {
+     uint32_t i = -1;
+     foreach_co( [&]( const auto& x, auto index ) {
+-      if ( x == s )
++      if ( x == xag_storage::node_type::pointer_type(s) )
+       {
+         i = index;
+         return false;
+@@ -874,7 +874,7 @@ public:
+   {
+     uint32_t i = -1;
+     foreach_po( [&]( const auto& x, auto index ) {
+-      if ( x == s )
++      if ( x == xag_storage::node_type::pointer_type(s) )
+       {
+         i = index;
+         return false;
+@@ -896,7 +896,7 @@ public:
+   {
+     uint32_t i = -1;
+     foreach_ri( [&]( const auto& x, auto index ) {
+-      if ( x == s )
++      if ( x == xag_storage::node_type::pointer_type(s) )
+       {
+         i = index;
+         return false;
+diff --git a/external/mockturtle/mockturtle/networks/xmg.hpp b/external/mockturtle/mockturtle/networks/xmg.hpp
+index 8c7f908..b620639 100644
+--- a/external/mockturtle/mockturtle/networks/xmg.hpp
++++ b/external/mockturtle/mockturtle/networks/xmg.hpp
+@@ -947,7 +947,7 @@ public:
+   {
+     uint32_t i = -1;
+     foreach_co( [&]( const auto& x, auto index ) {
+-      if ( x == s )
++      if ( x == xmg_storage::node_type::pointer_type(s) )
+       {
+         i = index;
+         return false;
+@@ -969,7 +969,7 @@ public:
+   {
+     uint32_t i = -1;
+     foreach_po( [&]( const auto& x, auto index ) {
+-      if ( x == s )
++      if ( x == xmg_storage::node_type::pointer_type(s) )
+       {
+         i = index;
+         return false;
+@@ -991,7 +991,7 @@ public:
+   {
+     uint32_t i = -1;
+     foreach_ri( [&]( const auto& x, auto index ) {
+-      if ( x == s )
++      if ( x == xmg_storage::node_type::pointer_type(s) )
+       {
+         i = index;
+         return false;
+diff --git a/include/tweedledum/Utils/SmallVector.h b/include/tweedledum/Utils/SmallVector.h
+index 0b73477..019fdf8 100644
+--- a/include/tweedledum/Utils/SmallVector.h
++++ b/include/tweedledum/Utils/SmallVector.h
+@@ -10,6 +10,7 @@
+ #include <cstring>
+ #include <iterator>
+ #include <limits>
++#include <memory>
+ #include <type_traits>
+ 
+ // Based this implementation on what I have seen in LLVM's SmallVector
+diff --git a/include/tweedledum/Utils/Source.h b/include/tweedledum/Utils/Source.h
+index 32c66aa..b11cdca 100644
+--- a/include/tweedledum/Utils/Source.h
++++ b/include/tweedledum/Utils/Source.h
+@@ -5,7 +5,16 @@
+ #pragma once
+ 
+ #include <cstdint>
++#if __has_include(<version>)
++#  include <version>
++#endif
++#if __has_include(<filesystem>) && __cpp_lib_filesystem >= 201703
+ #include <filesystem>
++#define fs_ns std
++#else
++#include <boost/filesystem.hpp>
++#define fs_ns boost
++#endif
+ #include <fstream>
+ #include <map>
+ #include <memory>
+@@ -75,7 +81,7 @@ public:
+         return "";
+     }
+ 
+-    virtual std::filesystem::path parent_path() const
++    virtual fs_ns::filesystem::path parent_path() const
+     {
+         return "";
+     }
+@@ -116,7 +122,7 @@ private:
+ class File final : public Source {
+ public:
+     static std::unique_ptr<File> open(
+-      std::filesystem::path const& file_path, uint32_t const offset)
++      fs_ns::filesystem::path const& file_path, uint32_t const offset)
+     {
+         std::optional<std::string> content = load_content(file_path);
+         if (content) {
+@@ -131,13 +137,13 @@ public:
+         return file_path_.filename().string();
+     }
+ 
+-    std::filesystem::path parent_path() const override
++    fs_ns::filesystem::path parent_path() const override
+     {
+         return file_path_.parent_path();
+     }
+ 
+ private:
+-    File(std::filesystem::path const& file_path, std::string&& content,
++    File(fs_ns::filesystem::path const& file_path, std::string&& content,
+       uint32_t const offset)
+         : Source(content, offset)
+         , file_path_(file_path)
+@@ -148,10 +154,14 @@ private:
+     File& operator=(const File&) = delete;
+ 
+     static std::optional<std::string> load_content(
+-      std::filesystem::path const& file_path)
++      fs_ns::filesystem::path const& file_path)
+     {
+         std::string content;
++#if __has_include(<filesystem>) && __cpp_lib_filesystem >= 201703
+         std::ifstream input_file(file_path);
++#else
++        std::ifstream input_file(file_path.string<std::string>());
++#endif
+         if (input_file.is_open()) {
+             input_file.seekg(0, input_file.end);
+             uint32_t length = input_file.tellg();
+@@ -164,7 +174,9 @@ private:
+         return std::nullopt;
+     }
+ 
+-    std::filesystem::path const file_path_;
++    fs_ns::filesystem::path const file_path_;
+ };
+ 
+ } // namespace tweedledum
++
++#undef fs_ns
+diff --git a/include/tweedledum/Utils/SourceManager.h b/include/tweedledum/Utils/SourceManager.h
+index 3f425e4..ecccda2 100644
+--- a/include/tweedledum/Utils/SourceManager.h
++++ b/include/tweedledum/Utils/SourceManager.h
+@@ -7,7 +7,16 @@
+ #include "Source.h"
+ 
+ #include <cstdint>
++#if __has_include(<version>)
++#  include <version>
++#endif
++#if __has_include(<filesystem>) && __cpp_lib_filesystem >= 201703
+ #include <filesystem>
++#define fs_ns std
++#else
++#include <boost/filesystem.hpp>
++#define fs_ns boost
++#endif
+ #include <fmt/format.h>
+ #include <map>
+ #include <memory>
+@@ -31,7 +37,7 @@ public:
+         return sources_.at(0).get();
+     }
+ 
+-    Source const* add_file(std::filesystem::path const& file_path)
++    Source const* add_file(fs_ns::filesystem::path const& file_path)
+     {
+         std::unique_ptr<File> file = File::open(file_path, next_offset_);
+         if (file != nullptr) {
+@@ -73,3 +79,5 @@ private:
+ };
+ 
+ } // namespace tweedledum
++
++#undef fs_ns
+diff --git a/src/Parser/QASM/PPLexer.h b/src/Parser/QASM/PPLexer.h
+index 367ed6e..09ea1f6 100644
+--- a/src/Parser/QASM/PPLexer.h
++++ b/src/Parser/QASM/PPLexer.h
+@@ -9,7 +9,14 @@
+ #include "tweedledum/Utils/Source.h"
+ #include "tweedledum/Utils/SourceManager.h"
+ 
++#if __has_include(<version>)
++#  include <version>
++#endif
++#if __has_include(<filesystem>) && __cpp_lib_filesystem >= 201703
+ #include <filesystem>
++#else
++#include <boost/filesystem.hpp>
++#endif
+ #include <fmt/format.h>
+ #include <memory>
+ #include <vector>
+@@ -36,7 +40,11 @@ public:
+ 
+     bool add_target_file(std::string_view path)
+     {
++#if __has_include(<filesystem>) && __cpp_lib_filesystem >= 201703
+         Source const* source = source_manager_.add_file(path);
++#else
++        Source const* source = source_manager_.add_file(path.data());
++#endif
+         if (source == nullptr) {
+             return false;
+         }
+diff --git a/src/Parser/qasm.cpp b/src/Parser/qasm.cpp
+index da0426c..552f0e4 100644
+--- a/src/Parser/qasm.cpp
++++ b/src/Parser/qasm.cpp
+@@ -23,7 +23,11 @@ Circuit parse_source_file(std::string_view path)
+ {
+     Circuit circuit;
+     SourceManager source_manager;
++#if __has_include(<filesystem>) && __cpp_lib_filesystem >= 201703
+     source_manager.add_file(path);
++#else
++    source_manager.add_file(path.data());
++#endif
+     Parser parser(source_manager);
+     parser.parse(circuit);
+     return circuit;

@@ -15,9 +15,7 @@
 # ============================================================================
 """Circuit engine module."""
 
-from .circuitengine import BasicQubit
-from .circuitengine import CircuitEngine
-from .circuitengine import circuit_generator
+from .circuitengine import BasicQubit, CircuitEngine, circuit_generator
 
 __all__ = ["BasicQubit", "CircuitEngine", "circuit_generator"]
 __all__.sort()

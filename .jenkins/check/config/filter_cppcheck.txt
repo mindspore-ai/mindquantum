@@ -1,3 +1,13 @@
 # MindQuantum
 
-"mindquantum/mindquantum/src/binding.cc"                               "syntaxError"
+"mindquantum/ccsrc/mqbackend/binding.cc"                                    "syntaxError"
+
+"mindquantum/ccsrc/cxx_experimental/lib/core/circuit_manager.cpp"           "useStlAlgorithm"
+"mindquantum/ccsrc/cxx_experimental/lib/simulator/projectq_simulator.cpp"   "useStlAlgorithm"
+"mindquantum/ccsrc/cxx_experimental/python/lib/ops/command.cpp"             "useStlAlgorithm"
+
+"mindquantum/ccsrc/cxx_experimental/lib/cengines/write_projectq.cpp"        "stlIfFind"
+"mindquantum/ccsrc/cxx_experimental/lib/decompositions/atom_storage.cpp"    "stlIfFind"
+"mindquantum/ccsrc/cxx_experimental/lib/decompositions/gate_decomposer.cpp" "stlIfFind"
+
+"mindquantum/tests/mapping/test_partial_placer.cpp"                          "unreadVariable"

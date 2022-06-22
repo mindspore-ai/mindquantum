@@ -14,8 +14,8 @@
 #   limitations under the License.
 """Third-party modules for MindQuantum eDSL."""
 
-import pkgutil
 import importlib
+import pkgutil
 
 # Allow extending this namespace.
 __path__ = pkgutil.extend_path(__path__, __name__)
@@ -28,13 +28,11 @@ for (_, pkg_name, _) in pkgutil.iter_modules(path=__path__):
     if hasattr(imported_module, '__all__'):
         __all__.extend(imported_module.__all__)
         for symbol_name in imported_module.__all__:
-            globals().setdefault(symbol_name,
-                                 getattr(imported_module, symbol_name))
+            globals().setdefault(symbol_name, getattr(imported_module, symbol_name))
     else:
         for attr_name in dir(imported_module):
             if attr_name[0] != '_':
                 __all__.append(attr_name)
-                globals().setdefault(attr_name,
-                                     getattr(imported_module, attr_name))
+                globals().setdefault(attr_name, getattr(imported_module, attr_name))
 
 __all__.sort()

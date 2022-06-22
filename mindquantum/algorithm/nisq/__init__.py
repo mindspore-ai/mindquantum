@@ -13,15 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""NISQ algorithms"""
+"""NISQ algorithms."""
 
+from . import chem, qaoa, qnn
 from ._ansatz import Ansatz
-from . import chem
-from . import qaoa
-from . import qnn
-from .chem import *
-from .qaoa import *
-from .qnn import *
+from .chem import *  # noqa: F401,F403
+from .qaoa import *  # noqa: F401,F403
+from .qnn import *  # noqa: F401,F403
 
 __all__ = ['Ansatz']
 __all__.extend(chem.__all__)

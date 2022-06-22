@@ -14,11 +14,10 @@
 # limitations under the License.
 # ============================================================================
 '''test decompose rule'''
-from mindquantum.algorithm.compiler.decompose import swap_decompose, cswap_decompose
-from mindquantum.core import Circuit
-from mindquantum.core import SWAP
 import numpy as np
 
+from mindquantum.algorithm.compiler.decompose import cswap_decompose, swap_decompose
+from mindquantum.core import SWAP, Circuit
 
 
 def circuit_equal_test(gate, decompose_circ):
@@ -34,15 +33,16 @@ def test_swap():
     Description: Test swap decompose
     Expectation: success
     """
-    swap = SWAP.on([0,1])
+    swap = SWAP.on([0, 1])
     for solution in swap_decompose(swap):
         circuit_equal_test(swap, solution)
+
 
 def test_cswap():
     """
     Description: Test cswap decompose
     Expectation: success
     """
-    cswap = SWAP.on([1,2], 0)
+    cswap = SWAP.on([1, 2], 0)
     for solution in cswap_decompose(cswap):
         circuit_equal_test(cswap, solution)

@@ -1,0 +1,833 @@
+diff --git a/include/tweedledum/IR/Operator.h b/include/tweedledum/IR/Operator.h
+index a22e858..44d15a9 100644
+--- a/include/tweedledum/IR/Operator.h
++++ b/include/tweedledum/IR/Operator.h
+@@ -8,6 +8,10 @@
+ #include "../Utils/Matrix.h"
+ #include "OperatorTraits.h"
+
++#include <symengine/basic.h>
++
++#include <cstddef>
++#include <new>
+ #include <memory>
+ #include <optional>
+ #include <string_view>
+@@ -54,9 +57,8 @@ public:
+     }
+     // clang-format on
+ 
+-    Operator(Operator const& other) noexcept
++    Operator(const Operator& other) noexcept : concept_(other.concept_)
+     {
+-        concept_ = other.concept_;
+         concept_->clone(&other.model_, &model_);
+     }
+ 
+@@ -73,24 +75,38 @@ public:
+         return *this;
+     }
+ 
+-    // TODO: I need to think a bit better about move!!
+-    Operator(Operator&& other) = delete;
+-
+-    Operator& operator=(Operator&& other) = delete;
++    Operator(Operator&& other) noexcept : concept_(std::move(other.concept_))
++    {
++        std::copy(begin(other.model_), end(other.model_), begin(model_));
++        std::fill(begin(other.model_), end(other.model_), std::byte{0});
++        other.concept_ = nullptr;
++    }
++    Operator& operator=(Operator&& other) noexcept
++    {
++        if (this != &other) {
++            concept_ = std::move(other.concept_);
++            std::copy(begin(other.model_), end(other.model_), begin(model_));
++            std::fill(begin(other.model_), end(other.model_), std::byte{0});
++            other.concept_ = nullptr;
++        }
++        return *this;
++    }
+ 
+     ~Operator()
+     {
+-        concept_->dtor(&model_);
++         if (concept_) {
++              concept_->dtor(model_);
++         }
+     }
+ 
+     std::optional<Operator> adjoint() const
+     {
+-        return concept_->adjoint(&model_);
++        return concept_->adjoint(model_);
+     }
+ 
+     std::string_view kind() const
+     {
+-        return concept_->kind(&model_);
++        return concept_->kind(model_);
+     };
+ 
+     std::string_view name() const
+@@ -103,16 +119,46 @@ public:
+             ++pos;
+         }
+         return std::string_view(the_kind.data() + pos, the_kind.size() - pos);
+-    };
++    }
+ 
+     std::optional<UMatrix> const matrix() const
+     {
+-        return concept_->matrix(&model_);
++        return concept_->matrix(model_);
+     }
+ 
+     uint32_t num_targets() const
+     {
+-        return concept_->num_targets(&model_);
++        return concept_->num_targets(model_);
++    };
++
++    auto is_parametric() const
++    {
++         return concept_->num_parameters() > 0;
++    }
++
++    auto num_parameters() const
++    {
++         return concept_->num_parameters();
++    }
++
++    Operator eval(const SymEngine::map_basic_basic& subs) const
++    {
++         return concept_->eval(this, model_, subs);
++    }
++
++    Operator eval_full(const SymEngine::map_basic_basic& subs) const
++    {
++         return concept_->eval_full(this, model_, subs);
++    }
++
++    Operator eval_smart(const SymEngine::map_basic_basic& subs) const
++    {
++         return concept_->eval_smart(this, model_, subs);
++    }
++
++    bool is_symmetric() const
++    {
++        return concept_->is_symmetric(model_);
+     };
+ 
+     template<typename ConcreteOp>
+@@ -131,7 +177,7 @@ public:
+     ConcreteOp const& cast() const
+     {
+         assert(is_a<ConcreteOp>());
+-        return *static_cast<ConcreteOp const*>(concept_->optor(&model_));
++        return *static_cast<ConcreteOp const*>(concept_->optor(model_));
+     }
+ 
+     bool operator==(Operator const& other) const
+@@ -139,7 +185,7 @@ public:
+         if (kind() != other.kind()) {
+             return false;
+         }
+-        return concept_->equal(&model_, &other.model_);
++        return concept_->equal(model_, other.model_);
+     }
+ 
+ private:
+@@ -154,6 +200,11 @@ private:
+         std::string_view (*kind)(void const*) noexcept;
+         std::optional<UMatrix> const (*matrix)(void const*) noexcept;
+         uint32_t (*num_targets)(void const*) noexcept;
++        uint8_t (*num_parameters)() noexcept;
++        Operator (*eval)(Operator const*, void const*, const SymEngine::map_basic_basic&) noexcept;
++        Operator (*eval_full)(Operator const*, void const*, const SymEngine::map_basic_basic&) noexcept;
++        Operator (*eval_smart)(Operator const*, void const*, const SymEngine::map_basic_basic&) noexcept;
++        bool (*is_symmetric)(void const*) noexcept;
+     };
+ 
+     template<class ConcreteOp, bool IsSmall>
+@@ -161,7 +212,7 @@ private:
+ 
+     static constexpr size_t small_size = sizeof(void*) * 4;
+     Concept const* concept_;
+-    std::aligned_storage_t<small_size> model_;
++    alignas(64) std::byte model_[small_size];
+ };
+ 
+ // Stack
+@@ -177,13 +228,12 @@ struct Operator::Model<ConcreteOp, true> {
+ 
+     static void dtor(void* self) noexcept
+     {
+-        static_cast<Model*>(self)->~Model();
++        std::launder(reinterpret_cast<Model*>(self))->~Model();
+     }
+ 
+     static void clone(void const* self, void* other) noexcept
+     {
+-        new (other) Model<remove_cvref_t<ConcreteOp>, true>(
+-          static_cast<Model const*>(self)->operator_);
++        new (other) Model<std::decay_t<ConcreteOp>, true>(std::launder(reinterpret_cast<Model const*>(self))->operator_);
+     }
+ 
+     static bool equal(void const* self, void const* other) noexcept
+@@ -192,20 +242,19 @@ struct Operator::Model<ConcreteOp, true> {
+         {
+             return true;
+         } else {
+-            return static_cast<Model const*>(self)->operator_
+-                == static_cast<Model const*>(other)->operator_;
++            return std::launder(reinterpret_cast<Model const*>(self))->operator_ == std::launder(reinterpret_cast<Model const*>(other))->operator_;
+         }
+     }
+ 
+     static void const* optor(void const* self) noexcept
+     {
+-        return &static_cast<Model const*>(self)->operator_;
++        return &std::launder(reinterpret_cast<Model const*>(self))->operator_;
+     }
+ 
+     static std::optional<Operator> adjoint(void const* self) noexcept
+     {
+         if constexpr (has_adjoint_v<ConcreteOp>) {
+-            return static_cast<Model const*>(self)->operator_.adjoint();
++            return std::launder(reinterpret_cast<Model const*>(self))->operator_.adjoint();
+         } else {
+             return std::nullopt;
+         }
+@@ -213,13 +262,13 @@ struct Operator::Model<ConcreteOp, true> {
+ 
+     static std::string_view kind(void const* self) noexcept
+     {
+-        return static_cast<Model const*>(self)->operator_.kind();
++        return std::launder(reinterpret_cast<Model const*>(self))->operator_.kind();
+     }
+ 
+     static std::optional<UMatrix> const matrix(void const* self) noexcept
+     {
+         if constexpr (has_matrix_v<ConcreteOp>) {
+-            return static_cast<Model const*>(self)->operator_.matrix();
++            return std::launder(reinterpret_cast<Model const*>(self))->operator_.matrix();
+         } else {
+             return std::nullopt;
+         }
+@@ -228,14 +277,57 @@ struct Operator::Model<ConcreteOp, true> {
+     static uint32_t num_targets(void const* self) noexcept
+     {
+         if constexpr (has_num_targets_v<ConcreteOp>) {
+-            return static_cast<Model const*>(self)->operator_.num_targets();
++            return std::launder(reinterpret_cast<Model const*>(self))->operator_.num_targets();
+         } else {
+             return 1u;
+         }
+     }
+ 
+-    static constexpr Concept vtable_{
+-      dtor, clone, equal, optor, adjoint, kind, matrix, num_targets};
++    static constexpr auto num_parameters() noexcept
++    {
++         return num_param_v<ConcreteOp>;
++    }
++
++    static Operator eval(Operator const* parent, void const* self, const SymEngine::map_basic_basic& subs) noexcept
++    {
++         if constexpr(is_parametric_v<ConcreteOp>) {
++            return std::launder(reinterpret_cast<Model const*>(self))->operator_.eval(subs);
++         }
++         else {
++            return *parent;
++         }
++    }
++
++    static Operator eval_full(Operator const* parent, void const* self, const SymEngine::map_basic_basic& subs) noexcept
++    {
++         if constexpr(is_parametric_v<ConcreteOp>) {
++            return std::launder(reinterpret_cast<Model const*>(self))->operator_.eval_full(subs);
++         }
++         else {
++            return *parent;
++         }
++    }
++
++    static Operator eval_smart(Operator const* parent, void const* self, const SymEngine::map_basic_basic& subs) noexcept
++    {
++         if constexpr(is_parametric_v<ConcreteOp>) {
++            return std::launder(reinterpret_cast<Model const*>(self))->operator_.eval_smart(subs);
++         }
++         else {
++            return *parent;
++         }
++    }
++
++    static bool is_symmetric(void const* self) noexcept
++    {
++        if constexpr (has_is_symmetric_v<ConcreteOp>) {
++            return std::launder(reinterpret_cast<Model const*>(self))->operator_.is_symmetric();
++        } else {
++            return false;
++        }
++    }
++
++    static constexpr Concept vtable_{dtor, clone, equal, optor, adjoint, kind, matrix, num_targets, num_parameters, eval, eval_full, eval_smart, is_symmetric};
+ 
+     ConcreteOp operator_;
+ };
+@@ -253,13 +345,12 @@ struct Operator::Model<ConcreteOp, false> {
+ 
+     static void dtor(void* self) noexcept
+     {
+-        static_cast<Model*>(self)->operator_.reset();
++        std::launder(reinterpret_cast<Model*>(self))->~Model();
+     }
+ 
+     static void clone(void const* self, void* other) noexcept
+     {
+-        new (other)
+-          Model<ConcreteOp, false>(*static_cast<Model const*>(self)->operator_);
++        new (other) Model<ConcreteOp, false>(*std::launder(reinterpret_cast<Model const*>(self))->operator_);
+     }
+ 
+     static bool equal(void const* self, void const* other) noexcept
+@@ -268,20 +359,19 @@ struct Operator::Model<ConcreteOp, false> {
+         {
+             return true;
+         } else {
+-            return static_cast<Model const*>(self)->operator_
+-                == static_cast<Model const*>(other)->operator_;
++            return std::launder(reinterpret_cast<Model const*>(self))->operator_ == std::launder(reinterpret_cast<Model const*>(other))->operator_;
+         }
+     }
+ 
+     static void const* optor(void const* self) noexcept
+     {
+-        return static_cast<Model const*>(self)->operator_.get();
++         return std::launder(reinterpret_cast<Model const*>(self))->operator_.get();
+     }
+ 
+     static std::optional<Operator> adjoint(void const* self) noexcept
+     {
+         if constexpr (has_adjoint_v<ConcreteOp>) {
+-            return static_cast<Model const*>(self)->operator_->adjoint();
++            return std::launder(reinterpret_cast<Model const*>(self))->operator_->adjoint();
+         } else {
+             return std::nullopt;
+         }
+@@ -289,13 +379,13 @@ struct Operator::Model<ConcreteOp, false> {
+ 
+     static std::string_view kind(void const* self) noexcept
+     {
+-        return static_cast<Model const*>(self)->operator_->kind();
++        return std::launder(reinterpret_cast<Model const*>(self))->operator_->kind();
+     }
+ 
+     static std::optional<UMatrix> const matrix(void const* self) noexcept
+     {
+         if constexpr (has_matrix_v<ConcreteOp>) {
+-            return static_cast<Model const*>(self)->operator_->matrix();
++            return std::launder(reinterpret_cast<Model const*>(self))->operator_->matrix();
+         } else {
+             return std::nullopt;
+         }
+@@ -304,14 +394,56 @@ struct Operator::Model<ConcreteOp, false> {
+     static uint32_t num_targets(void const* self) noexcept
+     {
+         if constexpr (has_num_targets_v<ConcreteOp>) {
+-            return static_cast<Model const*>(self)->operator_->num_targets();
++            return std::launder(reinterpret_cast<Model const*>(self))->operator_->num_targets();
+         } else {
+             return 1u;
+         }
+     }
+ 
+-    static constexpr Concept vtable_{
+-      dtor, clone, equal, optor, adjoint, kind, matrix, num_targets};
++    static constexpr auto num_parameters() noexcept
++    {
++         return num_param_v<ConcreteOp>;
++    }
++
++    static Operator eval(Operator const* parent, void const* self, const SymEngine::map_basic_basic& subs) noexcept
++    {
++         if constexpr(is_parametric_v<ConcreteOp>) {
++             return std::launder(reinterpret_cast<Model const*>(self))->operator_->eval(subs);
++         }
++         else {
++              return *parent;
++         }
++    }
++
++    static Operator eval_full(Operator const* parent, void const* self, const SymEngine::map_basic_basic& subs) noexcept
++    {
++         if constexpr(is_parametric_v<ConcreteOp>) {
++             return std::launder(reinterpret_cast<Model const*>(self))->operator_->eval_full(subs);
++         }
++         else {
++              return *parent;
++         }
++    }
++
++    static Operator eval_smart(Operator const* parent, void const* self, const SymEngine::map_basic_basic& subs) noexcept
++    {
++         if constexpr(is_parametric_v<ConcreteOp>) {
++             return std::launder(reinterpret_cast<Model const*>(self))->operator_->eval_smart(subs);
++         }
++         else {
++              return *parent;
++         }
++    }
++    static bool is_symmetric(void const* self) noexcept
++    {
++        if constexpr (has_is_symmetric_v<ConcreteOp>) {
++            return std::launder(reinterpret_cast<Model const*>(self))->operator_->is_symmetric();
++        } else {
++            return false;
++        }
++    }
++
++    static constexpr Concept vtable_{dtor, clone, equal, optor, adjoint, kind, matrix, num_targets, num_parameters, eval, eval_full, eval_smart, is_symmetric};
+ 
+     std::unique_ptr<ConcreteOp> operator_;
+ };
+diff --git a/include/tweedledum/IR/OperatorTraits.h b/include/tweedledum/IR/OperatorTraits.h
+index aad7887..4fe2d41 100644
+--- a/include/tweedledum/IR/OperatorTraits.h
++++ b/include/tweedledum/IR/OperatorTraits.h
+@@ -64,4 +64,67 @@ struct remove_cvref {
+ template< class T >
+ using remove_cvref_t = typename remove_cvref<T>::type;
+ 
++//
++
++template<class Op, class OpOther, class = void>
++struct has_is_adjoint : std::false_type {
++};
++
++template<class Op, class OpOther>
++struct has_is_adjoint<Op, OpOther, std::void_t<decltype(std::declval<Op>().is_adjoint(std::declval<OpOther>()))>>
++    : std::true_type {
++};
++
++template<class Op, class OpOther>
++inline constexpr bool has_is_adjoint_v = has_is_adjoint<Op, OpOther>::value;
++
++//
++
++template<class Op, class OpOther, class = void>
++struct has_is_same : std::false_type {
++};
++
++template<class Op, class OpOther>
++struct has_is_same<Op, OpOther, std::void_t<decltype(std::declval<Op>().is_same(std::declval<OpOther>()))>>
++    : std::true_type {
++};
++
++template<class Op, class OpOther>
++inline constexpr bool has_is_same_v = has_is_same<Op, OpOther>::value;
++
++//
++
++template<class Op, class = void>
++struct has_is_symmetric : std::false_type {
++};
++
++template<class Op>
++struct has_is_symmetric<Op, std::void_t<decltype(std::declval<Op>().is_symmetric())>>
++    : std::true_type {
++};
++
++template<class Op>
++inline constexpr bool has_is_symmetric_v = has_is_symmetric<Op>::value;
++
++//
++
++template <typename Op, typename = void>
++struct is_parametric : std::false_type
++{};
++template <typename Op>
++struct is_parametric<Op,
++                     std::void_t<typename Op::is_parametric,
++                                 typename Op::non_param_type,
++                                 std::enable_if_t<std::is_integral_v<decltype(Op::num_params)>>>>
++     : std::true_type
++{};
++template <typename Op>
++inline constexpr bool is_parametric_v = is_parametric<Op>::value;
++
++template <typename Op, typename = void>
++inline constexpr uint8_t num_param_v = 0;
++
++template <typename Op>
++inline constexpr uint8_t num_param_v<Op, std::void_t<decltype(Op::num_params)>> = Op::num_params;
++
+ } // namespace tweedledum
+diff --git a/include/tweedledum/Operators/Ising/Rxx.h b/include/tweedledum/Operators/Ising/Rxx.h
+index 27a6e17..da6c531 100644
+--- a/include/tweedledum/Operators/Ising/Rxx.h
++++ b/include/tweedledum/Operators/Ising/Rxx.h
+@@ -27,4 +27,9 @@ public:
+         return Rxx(-angle_);
+     }
+ 
++    constexpr bool is_symmetric() const
++    {
++        return true;
++    }
++
+     UMatrix4 const matrix() const
+@@ -49,6 +54,11 @@ public:
+         return angle_ == other.angle_;
+     }
+ 
++    const auto& angle() const
++    {
++         return angle_;
++    }
++
+ private:
+     double const angle_;
+ };
+diff --git a/include/tweedledum/Operators/Ising/Ryy.h b/include/tweedledum/Operators/Ising/Ryy.h
+index ef04c5f..593487e 100644
+--- a/include/tweedledum/Operators/Ising/Ryy.h
++++ b/include/tweedledum/Operators/Ising/Ryy.h
+@@ -27,6 +27,11 @@ public:
+         return Ryy(-angle_);
+     }
+ 
++    constexpr bool is_symmetric() const
++    {
++        return true;
++    }
++
+     UMatrix4 const matrix() const
+     {
+         Complex const a = std::cos(angle_);
+@@ -50,6 +55,11 @@ public:
+         return angle_ == other.angle_;
+     }
+ 
++    const auto& angle() const
++    {
++         return angle_;
++    }
++
+ private:
+     double const angle_;
+ };
+diff --git a/include/tweedledum/Operators/Ising/Rzz.h b/include/tweedledum/Operators/Ising/Rzz.h
+index 9ddca47..c332909 100644
+--- a/include/tweedledum/Operators/Ising/Rzz.h
++++ b/include/tweedledum/Operators/Ising/Rzz.h
+@@ -27,6 +27,11 @@ public:
+         return Rzz(-angle_);
+     }
+ 
++    constexpr bool is_symmetric() const
++    {
++        return true;
++    }
++
+     UMatrix4 const matrix() const
+     {
+         Complex const p = std::exp(Complex(0., angle_ / 2));
+@@ -49,6 +54,11 @@ public:
+         return angle_ == other.angle_;
+     }
+ 
++    const auto& angle() const
++    {
++         return angle_;
++    }
++
+ private:
+     double const angle_;
+ };
+diff --git a/include/tweedledum/Operators/Standard/H.h b/include/tweedledum/Operators/Standard/H.h
+index 61fa8b5..5faae23 100644
+--- a/include/tweedledum/Operators/Standard/H.h
++++ b/include/tweedledum/Operators/Standard/H.h
+@@ -31,6 +31,11 @@ public:
+         return H();
+     }
+ 
++    constexpr bool is_symmetric() const
++    {
++        return true;
++    }
++
+     static UMatrix2 const matrix()
+     {
+         return Eigen::Map<UMatrix2 const>(mat_.data());
+diff --git a/include/tweedledum/Operators/Standard/P.h b/include/tweedledum/Operators/Standard/P.h
+index 3767763..cf4b59e 100644
+--- a/include/tweedledum/Operators/Standard/P.h
++++ b/include/tweedledum/Operators/Standard/P.h
+@@ -26,9 +26,9 @@ public:
+         return P(-angle_);
+     }
+ 
+-    double angle() const
++    constexpr bool is_symmetric() const
+     {
+-        return angle_;
++        return true;
+     }
+ 
+     UMatrix2 const matrix() const
+@@ -45,6 +45,11 @@ public:
+         return angle_ == other.angle_;
+     }
+ 
++    const auto& angle() const
++    {
++        return angle_;
++    }
++
+ private:
+     double const angle_;
+ };
+diff --git a/include/tweedledum/Operators/Standard/Rx.h b/include/tweedledum/Operators/Standard/Rx.h
+index 30a3491..05a8e4d 100644
+--- a/include/tweedledum/Operators/Standard/Rx.h
++++ b/include/tweedledum/Operators/Standard/Rx.h
+@@ -27,9 +27,9 @@ public:
+         return Rx(-angle_);
+     }
+ 
+-    double angle() const
++    constexpr bool is_symmetric() const
+     {
+-        return angle_;
++        return true;
+     }
+ 
+     UMatrix2 const matrix() const
+@@ -47,6 +47,11 @@ public:
+         return angle_ == other.angle_;
+     }
+ 
++    const auto& angle() const
++    {
++         return angle_;
++    }
++
+ private:
+     double const angle_;
+ };
+diff --git a/include/tweedledum/Operators/Standard/Ry.h b/include/tweedledum/Operators/Standard/Ry.h
+index 43893cc..cb78423 100644
+--- a/include/tweedledum/Operators/Standard/Ry.h
++++ b/include/tweedledum/Operators/Standard/Ry.h
+@@ -27,9 +27,9 @@ public:
+         return Ry(-angle_);
+     }
+ 
+-    double angle() const
++    constexpr bool is_symmetric() const
+     {
+-        return angle_;
++        return true;
+     }
+ 
+     UMatrix2 const matrix() const
+@@ -47,6 +47,11 @@ public:
+         return angle_ == other.angle_;
+     }
+ 
++    const auto& angle() const
++    {
++         return angle_;
++    }
++
+ private:
+     double const angle_;
+ };
+diff --git a/include/tweedledum/Operators/Standard/Rz.h b/include/tweedledum/Operators/Standard/Rz.h
+index ec3d7d4..ac388c5 100644
+--- a/include/tweedledum/Operators/Standard/Rz.h
++++ b/include/tweedledum/Operators/Standard/Rz.h
+@@ -27,9 +27,9 @@ public:
+         return Rz(-angle_);
+     }
+ 
+-    double angle() const
++    bool is_symmetric() const
+     {
+-        return angle_;
++        return true;
+     }
+ 
+     UMatrix2 const matrix() const
+@@ -44,6 +44,11 @@ public:
+         return angle_ == other.angle_;
+     }
+ 
++    const auto& angle() const
++    {
++         return angle_;
++    }
++
+ private:
+     double const angle_;
+ };
+diff --git a/include/tweedledum/Operators/Standard/S.h b/include/tweedledum/Operators/Standard/S.h
+index b594f2e..678b19b 100644
+--- a/include/tweedledum/Operators/Standard/S.h
++++ b/include/tweedledum/Operators/Standard/S.h
+@@ -34,6 +34,11 @@ public:
+         return numbers::pi_div_2;
+     }
+ 
++    static inline bool is_symmetric()
++    {
++        return true;
++    }
++
+     static UMatrix2 const matrix()
+     {
+         return Eigen::Map<UMatrix2 const>(mat_.data());
+@@ -59,6 +64,11 @@ public:
+         return -numbers::pi_div_2;
+     }
+ 
++    static constexpr bool is_symmetric()
++    {
++        return true;
++    }
++
+     static UMatrix2 const matrix()
+     {
+         return Eigen::Map<UMatrix2 const>(mat_.data());
+diff --git a/include/tweedledum/Operators/Standard/Swap.h b/include/tweedledum/Operators/Standard/Swap.h
+index ecd470e..a7c9c71 100644
+--- a/include/tweedledum/Operators/Standard/Swap.h
++++ b/include/tweedledum/Operators/Standard/Swap.h
+@@ -6,11 +6,20 @@
+ 
+ #include "../../Utils/Matrix.h"
+ 
++#include <array>
+ #include <string_view>
+ 
+ namespace tweedledum::Op {
+ 
+ class Swap {
++     // clang-format off
++     constexpr static std::array<Complex, 16> mat_ = {
++          1., 0, 0, 0,
++          0, 0, 1., 0,
++          0, 1., 0, 0,
++          0, 0, 0, 1.
++     };
++     // clang-format on
+ public:
+     static constexpr std::string_view kind()
+     {
+@@ -22,20 +31,20 @@ public:
+         return Swap();
+     }
+ 
+-    UMatrix4 const matrix() const
++    static constexpr bool is_symmetric()
+     {
+-        // clang-format off
+-        return (UMatrix4() << 1, 0 ,0, 0,
+-                              0, 0, 1, 0,
+-                              0, 1, 0, 0,
+-                              0, 0, 0, 1).finished();
+-        // clang-format on
++        return true;
+     }
+ 
+     uint32_t num_targets() const
+     {
+         return 2u;
+     }
++
++    static UMatrix4 const matrix()
++    {
++        return Eigen::Map<UMatrix4 const>(mat_.data());
++    }
+ };
+ 
+ } // namespace tweedledum::Op
+diff --git a/include/tweedledum/Operators/Standard/T.h b/include/tweedledum/Operators/Standard/T.h
+index 4a72c5c..29fd7ad 100644
+--- a/include/tweedledum/Operators/Standard/T.h
++++ b/include/tweedledum/Operators/Standard/T.h
+@@ -36,6 +36,11 @@ public:
+         return numbers::pi_div_4;
+     }
+ 
++    static inline bool is_symmetric()
++    {
++        return true;
++    }
++
+     static UMatrix2 const matrix()
+     {
+         return Eigen::Map<UMatrix2 const>(mat_.data());
+@@ -66,6 +71,11 @@ public:
+         return -numbers::pi_div_4;
+     }
+ 
++    static constexpr bool is_symmetric()
++    {
++        return true;
++    }
++
+     static UMatrix2 const matrix()
+     {
+         return Eigen::Map<UMatrix2 const>(mat_.data());
+diff --git a/include/tweedledum/Operators/Standard/X.h b/include/tweedledum/Operators/Standard/X.h
+index 04ce080..873d445 100644
+--- a/include/tweedledum/Operators/Standard/X.h
++++ b/include/tweedledum/Operators/Standard/X.h
+@@ -32,6 +32,11 @@ public:
+         return numbers::pi;
+     }
+ 
++    static constexpr bool is_symmetric()
++    {
++        return true;
++    }
++
+     static UMatrix2 const matrix()
+     {
+         return Eigen::Map<UMatrix2 const>(mat_.data());
+diff --git a/include/tweedledum/Operators/Standard/Y.h b/include/tweedledum/Operators/Standard/Y.h
+index 75f4112..76cb7f5 100644
+--- a/include/tweedledum/Operators/Standard/Y.h
++++ b/include/tweedledum/Operators/Standard/Y.h
+@@ -33,6 +33,11 @@ public:
+         return numbers::pi;
+     }
+ 
++    static constexpr bool is_symmetric()
++    {
++        return true;
++    }
++
+     static UMatrix2 const matrix()
+     {
+         return Eigen::Map<UMatrix2 const>(mat_.data());
+diff --git a/include/tweedledum/Operators/Standard/Z.h b/include/tweedledum/Operators/Standard/Z.h
+index 0a5dfc2..af47b7f 100644
+--- a/include/tweedledum/Operators/Standard/Z.h
++++ b/include/tweedledum/Operators/Standard/Z.h
+@@ -32,6 +32,11 @@ public:
+         return numbers::pi;
+     }
+ 
++    static bool is_parametrized()
++    {
++        return false;
++    }
++
+     static UMatrix2 const matrix()
+     {
+         return Eigen::Map<UMatrix2 const>(mat_.data());

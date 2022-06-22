@@ -13,12 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""openqasm"""
+
+"""OpenQASM support module."""
+
 import numpy as np
+
+from mindquantum.utils import fdopen
 
 
 def _find_qubit_id(cmd):
-    """Find qubit id in openqasm cmd"""
+    """Find qubit id in openqasm cmd."""
     left = []
     right = []
     for i, j in enumerate(cmd):
@@ -29,18 +33,18 @@ def _find_qubit_id(cmd):
     if len(left) != len(right):
         raise ValueError(f"Parsing failed for cmd {cmd}")
     idx = []
-    for l, r in zip(left, right):
-        idx.append(int(cmd[l + 1:r]))
+    for name_left, name_right in zip(left, right):
+        idx.append(int(cmd[name_left + 1 : name_right]))  # noqa: E203
     return idx
 
 
 def _extr_parameter(cmd):
-    """extra parameter for parameterized gate in openqasm cmd"""
-    l = cmd.find('(')
+    """Extra parameter for parameterized gate in openqasm cmd."""
+    param_start = cmd.find('(')
     r = cmd.find(')')
-    if l == -1 or r == -1:
+    if param_start == -1 or r == -1:
         raise ValueError(f"no parameter found in cmd {cmd}")
-    all_expre = cmd[l + 1:r]
+    all_expre = cmd[param_start + 1 : r]  # noqa: E203
     all_expre = all_expre.split(',')
     out = []
     for expre in all_expre:
@@ -61,8 +65,9 @@ def _extr_parameter(cmd):
 
 
 def u3(theta, psi, lambd, q):
-    """decomp u3 gate"""
+    """Decompose u3 gate."""
     from mindquantum import Circuit
+
     circ = Circuit().rz(psi + 3 * np.pi, q)
     circ.rx(np.pi / 2, q).rz(theta + np.pi, q)
     circ.rx(np.pi / 2, q).rz(lambd, q)
@@ -70,15 +75,16 @@ def u3(theta, psi, lambd, q):
 
 
 def u1(lambd, q):
-    """openqasm u1 gate"""
+    """Openqasm u1 gate."""
     from mindquantum import Circuit
+
     return Circuit().rz(lambd, q)
 
 
 def isgateinstance(gate, gates):
-    """Check whether gate is any instance of supported gate type"""
+    """Check whether gate is any instance of supported gate type."""
     if isinstance(gates, list):
-        gates = (gates, )
+        gates = (gates,)
     for gate_test in gates:
         for g in gate_test:
             if isinstance(gate, g):
@@ -100,8 +106,11 @@ class OpenQASM:
         >>> circuit_str[47:60]
         'rx(0.3) q[0];'
     """
+
     def __init__(self):
+        """Initialize an OpenQASM object."""
         from mindquantum import Circuit
+
         self.circuit = Circuit()
         self.cmds = []
 
@@ -122,16 +131,17 @@ class OpenQASM:
             NotImplementedError: if openqasm version not implement.
             ValueError: if gate not implement in this version.
         """
-        from mindquantum import gates as G
+        from mindquantum import gates
         from mindquantum.core import Circuit
+
         if not isinstance(circuit, Circuit):
             raise TypeError(f"circuit requires Circuit, but get {type(circuit)}.")
         if not isinstance(version, str):
             raise TypeError(f"version requires a str, but get {type(version)}")
-        single_np = [G.XGate, G.YGate, G.ZGate]
-        single_p = [G.RX, G.RY, G.RZ, G.PhaseShift]
-        double_np = [G.SWAPGate, G.CNOTGate]
-        double_p = [G.XX, G.YY, G.ZZ]
+        single_np = [gates.XGate, gates.YGate, gates.ZGate]
+        single_p = [gates.RX, gates.RY, gates.RZ, gates.PhaseShift]
+        double_np = [gates.SWAPGate, gates.CNOTGate]
+        double_p = [gates.XX, gates.YY, gates.ZZ]
         if version == "2.0":
             self.circuit = circuit
             self.cmds = [f"OPENQASM {version};", "include \"qelib1.inc\";"]
@@ -160,11 +170,11 @@ class OpenQASM:
                         raise ValueError(f"control two qubits gate {gate} not implement")
                     if isgateinstance(gate, double_np):
                         obj = gate.obj_qubits
-                        if isinstance(gate, G.SWAPGate):
+                        if isinstance(gate, gates.SWAPGate):
                             self.cmds.append(f"cx q[{obj[1]}],q[{obj[0]}];")
                             self.cmds.append(f"cx q[{obj[0]}],q[{obj[1]}];")
                             self.cmds.append(f"cx q[{obj[1]}],q[{obj[0]}];")
-                        if isinstance(gate, G.CNOTGate):
+                        if isinstance(gate, gates.CNOTGate):
                             self.cmds.append(f"cx q[{obj[1]}],q[{obj[0]}];")
                     else:
                         obj = gate.obj_qubits
@@ -189,6 +199,7 @@ class OpenQASM:
             TypeError: if `version` is not a str.
         """
         from mindquantum.core import Circuit
+
         if not isinstance(file_name, str):
             raise TypeError(f'file_name requires a str, but get {type(file_name)}')
         if not isinstance(circuit, Circuit):
@@ -196,7 +207,7 @@ class OpenQASM:
         if not isinstance(version, str):
             raise TypeError(f'version requires a str, but get {type(version)}')
         cs = self.to_string(circuit, version)
-        with open(file_name, 'w') as f:
+        with fdopen(file_name, 'w') as f:
             f.writelines(cs)
         print(f"write circuit to {file_name} finished!")
 
@@ -210,7 +221,7 @@ class OpenQASM:
         Returns:
             Circuit, the quantum circuit translated from openqasm file.
         """
-        with open(file_name, 'r') as f:
+        with fdopen(file_name, 'r') as f:
             cmds = f.readlines()
         self.cmds, version = self._filter(cmds)
         if version == '2.0':
@@ -219,9 +230,7 @@ class OpenQASM:
             raise ValueError(f"OPENQASM {version} not implement yet")
 
     def _filter(self, cmds):
-        """
-        filter empty cmds and head.
-        """
+        """Filter empty cmds and head."""
         out = []
         version = None
         for cmd in cmds:
@@ -235,11 +244,10 @@ class OpenQASM:
         return out, version
 
     def _trans_v2(self, cmds):
-        """
-        trans method for openqasm version 2
-        """
+        """Trans method for openqasm version 2."""
         from mindquantum import Circuit
         from mindquantum.core.circuit import controlled
+
         self.circuit = Circuit()
         for cmd in cmds:
             q = _find_qubit_id(cmd)

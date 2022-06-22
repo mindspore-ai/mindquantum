@@ -20,12 +20,77 @@ import hashlib
 import logging
 import os
 import platform
-import sys
+import shutil
+import subprocess
+from pathlib import Path
 
 import setuptools.build_meta
-from utils import get_cmake_command
+from utils import fdopen, get_cmake_command  # pylint: disable=import-error
 
-build_sdist = setuptools.build_meta.build_sdist
+# ==============================================================================
+
+
+def call_auditwheel(*args, **kwargs):
+    """Call auditwheel."""
+    args = ['auditwheel', *(str(s) for s in args)]
+    logging.info('auditwheel command: %s', ' '.join(args))
+
+    try:
+        subprocess.check_call(args)
+    except subprocess.CalledProcessError:
+        if not kwargs.get('allow_failure', False):
+            raise
+        return False
+    return True
+
+
+# ------------------------------------------------------------------------------
+
+
+def call_delocate_wheel(*args):
+    """Call delocate-wheel."""
+    args = ['delocate-wheel', *(str(s) for s in args)]
+    logging.info('delocate-wheel command: %s', ' '.join(args))
+
+    subprocess.check_call(args)
+    return True
+
+
+# ------------------------------------------------------------------------------
+
+
+def move_delocated_wheel(delocated_wheel, wheel_directory):
+    """Move delocated wheel to destination directory."""
+    logging.info('Delocated wheel found at: %s', str(delocated_wheel))
+    dest_wheel = Path(wheel_directory, delocated_wheel.name)
+    if dest_wheel.exists():
+        logging.info('Destination wheel %s already exists, deleting', str(dest_wheel))
+        dest_wheel.unlink()
+    logging.info('Moving delocated wheel into destination directory')
+    logging.info('  %s -> %s', str(delocated_wheel), str(dest_wheel))
+    shutil.move(str(delocated_wheel), str(dest_wheel))
+    return dest_wheel
+
+
+# ------------------------------------------------------------------------------
+
+
+def get_delocated_wheel_name(name_full, delocated_wheel_directory):
+    """Locate the delocated wheel on Linux."""
+    path_suffixes = name_full.suffixes
+    new_suffix = ''.join([*path_suffixes[:2], '-'.join(path_suffixes[2].split('-')[:3])])
+    basename = Path(name_full.name[: -len(''.join(name_full.suffixes))]).with_suffix(new_suffix)
+
+    logging.info('Basename of original wheel: %s', basename)
+    for new_wheel in delocated_wheel_directory.iterdir():
+        if new_wheel.is_file() and new_wheel.match(f'{basename}*.whl'):
+            return new_wheel
+    logging.warning('Unable to locate delocated wheel: %s', str(name_full))
+    return None
+
+
+# ==============================================================================
+
 prepare_metadata_for_build_wheel = setuptools.build_meta.prepare_metadata_for_build_wheel
 get_requires_for_build_sdist = setuptools.build_meta.get_requires_for_build_sdist
 
@@ -48,14 +113,15 @@ def get_requires_for_build_wheel(config_settings=None):
 
 def generate_digest_file(fname):
     """Generate a SHA256 digest file for the wheels."""
+    logging.info('Generate SHA256 digest file for %s', fname)
     name = os.path.basename(fname)
     sha256_hash = hashlib.sha256()
-    with open(fname, 'rb') as wheel_file:
+    with fdopen(fname, 'rb') as wheel_file:
         # Read and update hash string value in blocks of 1M
         for byte_block in iter(lambda: wheel_file.read(1 << 20), b""):
             sha256_hash.update(byte_block)
 
-    with open(f'{fname}.sha256', 'w') as digest_file:
+    with fdopen(f'{fname}.sha256', 'w') as digest_file:
         digest_file.write(f'{sha256_hash.hexdigest()} {name}\n')
 
 
@@ -66,6 +132,9 @@ def build_sdist(sdist_directory, config_settings=None):
     return name
 
 
+# ==============================================================================
+
+
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     """Build a wheel from this project."""
     if platform.system() == 'Darwin' and (
@@ -74,73 +143,67 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
         os.environ.setdefault('MACOSX_DEPLOYMENT_TARGET', '10.13')
         os.environ.setdefault('_PYTHON_HOST_PLATFORM', f'macosx-10.13-{platform.machine()}')
 
+    temp_wheel_directory = Path(wheel_directory, 'temp')
+    temp_wheel_directory.mkdir(parents=True, exist_ok=True)
+
     name = setuptools.build_meta.build_wheel(
-        wheel_directory=wheel_directory, config_settings=config_settings, metadata_directory=metadata_directory
+        wheel_directory=temp_wheel_directory, config_settings=config_settings, metadata_directory=metadata_directory
     )
 
-    name_full = os.path.join(wheel_directory, name)
+    name_full = temp_wheel_directory / name
 
     # ==========================================================================
     # Delocate the wheel if requested
 
+    delocated_wheel_directory = Path(wheel_directory, 'delocated')
     delocate_wheel = int(os.environ.get('MQ_DELOCATE_WHEEL', False))
     if delocate_wheel and platform.system() == 'Linux':
-        try:
-            import auditwheel.main  # pylint: disable=import-outside-toplevel
+        delocated_wheel_directory.mkdir(parents=True, exist_ok=True)
+        plat = os.environ.get('MQ_DELOCATE_WHEEL_PLAT', '')
 
-            plat = os.environ.get('MQ_DELOCATE_WHEEL_PLAT', f'linux_{platform.machine()}')
-            if plat.lower() == 'auto' or not plat:
-                if sys.version_info.major == 3:
-                    plat = f'manylinux2014_{platform.machine()}'
-                    if sys.version_info.minor <= 6:
-                        plat = f'manylinux1_{platform.machine()}'
-                    elif sys.version_info.minor <= 9:
-                        plat = f'manylinux2010_{platform.machine()}'
+        call_auditwheel('show', name_full)
+        if plat:
+            call_auditwheel('repair', '--plat', plat, '-w', delocated_wheel_directory, name_full)
+        else:
+            logging.info('No platform specified, trying a few from older specifications to more recent')
+            for plat in (
+                'manylinux2010_x86_64',  # NB: equivalent to manylinux_2_5_x86_64
+                'manylinux2014_x86_64',  # NB: equivalent to manylinux_2_17_x86_64
+                'manylinux_2_24_x86_64',
+                'manylinux_2_27_x86_64',
+                'manylinux_2_28_x86_64',
+                'manylinux_2_31_x86_64',
+                'linux_x86_64',
+            ):
+                logging.info('----------------------------------------')
+                logging.info('Trying to delocate to platform: %s', plat)
+                if call_auditwheel(
+                    'repair', '--plat', plat, '-w', delocated_wheel_directory, name_full, allow_failure=True
+                ):
+                    break
 
-            argv = sys.argv
-            sys.argv = [
-                'auditwheel',
-                'repair',
-                '--plat',
-                plat,
-                '-w',
-                wheel_directory,
-                name_full,
-            ]
-
-            logging.info('Calling %s', ' '.join(sys.argv))
-
-            auditwheel.main.main()
-
-            sys.argv = argv
-        except ImportError as err:
-            raise RuntimeError('Cannot delocate wheel on Linux without the `auditwheel` package installed!') from err
+        delocated_wheel = get_delocated_wheel_name(name_full, delocated_wheel_directory)
+        if delocated_wheel:
+            dest_wheel = move_delocated_wheel(delocated_wheel, wheel_directory)
     elif delocate_wheel and platform.system() == 'Darwin':
-        try:
-            from delocate.cmd import (  # pylint: disable=import-outside-toplevel
-                delocate_wheel,
-            )
-
-            argv = sys.argv
-            sys.argv = [
-                'delocate-wheel',
-                '-v',
-                f'--require-archs={platform.machine()}',
-                name_full,
-            ]
-
-            logging.info('Calling %s', ' '.join(sys.argv))
-            delocate_wheel.main()
-
-            sys.argv = argv
-        except ImportError as err:
-            raise RuntimeError('Cannot delocate wheel on MacOS without the `delocate` package installed!') from err
+        delocated_wheel_directory.mkdir(parents=True, exist_ok=True)
+        call_delocate_wheel(
+            '-v', '-k', '-w', str(delocated_wheel_directory), f'--require-archs={platform.machine()}', name_full
+        )
+        delocated_wheel = get_delocated_wheel_name(name_full, delocated_wheel_directory)
+        if delocated_wheel:
+            dest_wheel = move_delocated_wheel(delocated_wheel, wheel_directory)
     elif delocate_wheel:
-        raise RuntimeError(f'Do not know how to delocate wheels on {platform.system()}')
+        logging.warning('Do not know how to delocate wheels on %s', platform.system())
+        dest_wheel = Path(wheel_directory, name_full.name)
+        shutil.move(str(name_full), str(dest_wheel))
+    else:
+        dest_wheel = Path(wheel_directory, name_full.name)
+        shutil.move(str(name_full), str(dest_wheel))
 
     # ==========================================================================
     # Calculate the SHA256 of the wheel
 
-    generate_digest_file(name_full)
+    generate_digest_file(dest_wheel)
 
     return name

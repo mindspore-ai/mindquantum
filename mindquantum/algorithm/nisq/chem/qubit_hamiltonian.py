@@ -13,10 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Get qubit hamiltonian"""
+"""Get qubit hamiltonian."""
 
 from mindquantum.core.operators import InteractionOperator
 from mindquantum.core.operators.utils import get_fermion_operator
+
 from .transform import Transform
 
 

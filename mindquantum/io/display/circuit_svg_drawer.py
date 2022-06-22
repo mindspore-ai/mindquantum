@@ -14,22 +14,32 @@
 # limitations under the License.
 # ============================================================================
 """SVG module."""
-from abc import ABC, abstractmethod
 import copy
+from abc import ABC, abstractmethod
+
 import numpy as np
 
-from mindquantum.io.display._config import _DAGGER_MASK
-from mindquantum.core.gates import CNOTGate, BarrierGate, Measure, SWAPGate, XGate
-from mindquantum.core.gates import ParameterGate, TGate, SGate
 from mindquantum.core.circuit import Circuit
+from mindquantum.core.gates import (
+    BarrierGate,
+    CNOTGate,
+    Measure,
+    ParameterGate,
+    SGate,
+    SWAPGate,
+    TGate,
+    XGate,
+)
+from mindquantum.io.display._config import _DAGGER_MASK
+from mindquantum.utils import fdopen
 from mindquantum.utils.type_value_check import _check_input_type
 
 
 class BaseComponent(ABC):
-    """
-    BaseComponent
-    """
+    """BaseComponent."""
+
     def __init__(self, tag):
+        """Initialize a BaseComponent object."""
         self.head = f"<{tag}"
         self.tail = "/>"
         self.prop = {}
@@ -41,20 +51,20 @@ class BaseComponent(ABC):
         return ele
 
     def __str__(self):
+        """Return a string representation of the object."""
         return self.to_string()
 
     def __repr__(self):
+        """Return a string representation of the object."""
         return self.to_string()
 
     def svg_id(self, id_name):
-        """
-        set id for this svg component.
-        """
+        """Set id for this svg component."""
         self.prop['id'] = id_name
 
     def to_string(self):
         """
-        svg to string.
+        SVG to string.
 
         Returns:
             str, string of svg.
@@ -62,114 +72,82 @@ class BaseComponent(ABC):
         return " ".join([self.head] + self._prop_to_str() + [self.tail])
 
     def get(self, prop):
-        """
-        Get property of svg parameters.
-        """
+        """Get property of svg parameters."""
         return self.prop[prop]
 
     @abstractmethod
     def scale(self, scale):
-        """
-        scale the svg figure.
-        """
+        """Scale the svg figure."""
 
     @abstractmethod
     def shift(self, x, y):
-        """
-        shift the svg figure.
-        """
+        """Shift the svg figure."""
 
     @abstractmethod
     def left(self):
-        """
-        Get the left side of svg.
-        """
+        """Get the left side of svg."""
 
     @abstractmethod
     def right(self):
-        """
-        Get the right side of svg.
-        """
+        """Get the right side of svg."""
 
     @abstractmethod
     def top(self):
-        """
-        Get the top side of svg.
-        """
+        """Get the top side of svg."""
 
     @abstractmethod
     def bottom(self):
-        """
-        Get bottom side of svg.
-        """
+        """Get bottom side of svg."""
 
     @abstractmethod
     def change_color(self, color):
-        """
-        Change color of svg.
-        """
+        """Change color of svg."""
 
 
 class HasStroke(BaseComponent):
-    """
-    A svg component that has stroke related property.
-    """
+    """A svg component that has stroke related property."""
+
     def stroke(self, stroke):
-        """
-        set stroke.
-        """
+        """Set stroke."""
         self.prop['stroke'] = stroke
         return self
 
     def stroke_width(self, stroke_width):
-        """
-        set stroke width
-        """
+        """Set stroke width."""
         self.prop['stroke-width'] = stroke_width
         return self
 
     def scale(self, scale):
-        """
-        change the scale of stroke.
-        """
+        """Change the scale of stroke."""
         if 'stroke-width' in self.prop:
             self.stroke_width(self.get('stroke-width') * scale)
         return self
 
     def change_color(self, color):
-        """
-        change the color of stroke.
-        """
+        """Change the color of stroke."""
         self.stroke(color)
         return self
 
 
 class HasFill(HasStroke):
-    """
-    A svg component that has fill property
-    """
+    """A svg component that has fill property."""
+
     def fill(self, fill):
-        """
-        set fill.
-        """
+        """Set fill."""
         self.prop['fill'] = fill
         return self
 
     def fill_opacity(self, opacity):
-        """
-        set fill opacity.
-        """
+        """Set fill opacity."""
         self.prop['fill-opacity'] = opacity
 
     def change_color(self, color):
-        """
-        change the color of filled component.
-        """
+        """Change the color of filled component."""
         self.fill(color)
         return self
 
     def get_main_color(self):
-        """Get main color"""
+        """Get main color."""
         if 'fill-opacity' not in self.prop:
             opacity = 0
         else:
@@ -180,45 +158,36 @@ class HasFill(HasStroke):
 
 
 class HasXY(BaseComponent):
-    """
-    A svg component that has x and y property.
-    """
+    """A svg component that has x and y property."""
+
     def x(self, x):
-        """
-        change x
-        """
+        """Change x."""
         self.prop['x'] = x
         return self
 
     def y(self, y):
-        """
-        change y
-        """
+        """Change y."""
         self.prop['y'] = y
         return self
 
     def scale(self, scale):
-        """
-        change the size of x and y.
-        """
+        """Change the size of x and y."""
         self.x(self.get('x') * scale)
         self.y(self.get('y') * scale)
         return self
 
     def shift(self, x, y):
-        """
-        shift x and y.
-        """
+        """Shift x and y."""
         self.x(self.get('x') + x)
         self.y(self.get('y') + y)
         return self
 
 
 class Line(HasStroke):
-    """
-    SVG line component.
-    """
+    """SVG line component."""
+
     def __init__(self, x1, x2, y1, y2):
+        """Initialize a Line object."""
         super().__init__('line')
         self.x1(x1)
         self.x2(x2)
@@ -226,9 +195,7 @@ class Line(HasStroke):
         self.y2(y2)
 
     def scale(self, scale):
-        """
-        scale the line.
-        """
+        """Scale the line."""
         self.x1(self.get('x1') * scale)
         self.y1(self.get('y1') * scale)
         self.x2(self.get('x2') * scale)
@@ -237,33 +204,27 @@ class Line(HasStroke):
         return self
 
     def x1(self, x1):
-        """
-        change x1
-        """
+        """Change x1."""
         self.prop['x1'] = x1
         return self
 
     def x2(self, x2):
-        """
-        change x2
-        """
+        """Change x2."""
         self.prop['x2'] = x2
         return self
 
     def y1(self, y1):
-        """
-        change y1
-        """
+        """Change y1."""
         self.prop['y1'] = y1
         return self
 
     def y2(self, y2):
-        """change y2"""
+        """Change y2."""
         self.prop['y2'] = y2
         return self
 
     def shift(self, x, y):
-        """shift line."""
+        """Shift line."""
         self.x1(self.get('x1') + x)
         self.y1(self.get('y1') + y)
         self.x2(self.get('x2') + x)
@@ -272,35 +233,35 @@ class Line(HasStroke):
 
     @property
     def left(self):
-        """left side of line."""
+        """Left side of line."""
         return self.get('x1')
 
     @property
     def right(self):
-        """right side of line."""
+        """Right side of line."""
         return self.get('x2')
 
     @property
     def top(self):
-        """top side of line."""
+        """Top side of line."""
         return self.get('y1')
 
     @property
     def bottom(self):
-        """bottom side of line."""
+        """Bottom side of line."""
         return self.get('y2')
 
     def change_color(self, color):
-        """change color of line."""
+        """Change color of line."""
         self.stroke(color)
         return self
 
 
 class Rect(HasFill, HasXY):
-    """
-    SVG rectangle component.
-    """
+    """SVG rectangle component."""
+
     def __init__(self, x, y, width, height):
+        """Initialize a Rect object."""
         super().__init__('rect')
         self.x(x)
         self.y(y)
@@ -308,7 +269,7 @@ class Rect(HasFill, HasXY):
         self.height(height)
 
     def scale(self, scale):
-        """scale the rectangle."""
+        """Scale the rectangle."""
         self.width(self.get('width') * scale)
         self.height(self.get('height') * scale)
         HasStroke.scale(self, scale)
@@ -316,38 +277,38 @@ class Rect(HasFill, HasXY):
         return self
 
     def width(self, width):
-        """the width of rectangle."""
+        """Width of rectangle."""
         self.prop['width'] = width
         return self
 
     def height(self, height):
-        """the height of rectangle."""
+        """Height of rectangle."""
         self.prop['height'] = height
         return self
 
     def rx(self, rx):
-        """the rx of rectangle."""
+        """Rx of rectangle."""
         self.prop['rx'] = rx
         return self
 
     def ry(self, ry):
-        """the ry of rectangle."""
+        """Ry of rectangle."""
         self.prop['ry'] = ry
         return self
 
     def chamfer(self, r):
-        """chamfer the rectangle."""
+        """Chamfer the rectangle."""
         self.rx(r)
         self.ry(r)
         return self
 
     def fill_opacity(self, opacity):
-        """change rectangle opacity."""
+        """Change rectangle opacity."""
         self.prop['fill-opacity'] = opacity
         return self
 
     def fit_text(self, text):
-        """set the text to the center of rectangle and fit text automatically."""
+        """Set the text to the center of rectangle and fit text automatically."""
         text_len = len(text.text)
         text_font_size = text.font_size_num
         width = self.get('width')
@@ -357,30 +318,30 @@ class Rect(HasFill, HasXY):
 
     @property
     def left(self):
-        """left side of rectangle"""
+        """Left side of rectangle."""
         return self.get('x')
 
     @property
     def top(self):
-        """top side of rectangle."""
+        """Top side of rectangle."""
         return self.get('y')
 
     @property
     def right(self):
-        """right side of rectangle."""
+        """Right side of rectangle."""
         return self.left + self.get('width')
 
     @property
     def bottom(self):
-        """bottom side of rectangle."""
+        """Bottom side of rectangle."""
         return self.top + self.get('height')
 
 
 class Text(HasXY, HasFill):
-    """
-    SVG text component.
-    """
+    """SVG text component."""
+
     def __init__(self, x, y, text):
+        """Initialize a Text object."""
         super().__init__('text')
         self.x(x)
         self.y(y)
@@ -393,45 +354,45 @@ class Text(HasXY, HasFill):
         self.text_anchor('middle')
 
     def scale(self, scale):
-        """scale text."""
+        """Scale text."""
         HasXY.scale(self, scale)
         self.font_size_num *= scale
         self.font_size(self.font_size_num, self.unit)
         return self
 
     def to_string(self):
-        """return the string format of text svg."""
+        """Return the string format of text svg."""
         return ' '.join([self.head] + self._prop_to_str() + [f'>\n{self.text}\n'] + [self.tail])
 
     def dominant_baseline(self, dominant_baseline):
-        """set dominant baseline of text."""
+        """Set dominant baseline of text."""
         self.prop["dominant-baseline"] = dominant_baseline
         return self
 
     def text_anchor(self, text_anchor):
-        """change text anchor"""
+        """Change text anchor."""
         self.prop['text-anchor'] = text_anchor
         return self
 
     def font_size(self, font_size, unit='px'):
-        """change font size."""
+        """Change font size."""
         self.font_size_num = font_size
         self.prop['font-size'] = f'{font_size}{unit}'
         return self
 
     def font_family(self, font_family):
-        """change font family."""
+        """Change font family."""
         self.prop['font-family'] = font_family
         return self
 
     def font_weight(self, font_weight):
-        """Change font weight"""
+        """Change font weight."""
         self.prop['font-weight'] = font_weight
         return self
 
     @property
     def left(self):
-        """left side of text."""
+        """Left side of text."""
         anchor = self.get('text-anchor')
         if anchor == 'middle':
             return self.get('x') - len(self.text) / 2 * self.font_size_num * 0.6
@@ -441,7 +402,7 @@ class Text(HasXY, HasFill):
 
     @property
     def right(self):
-        """right side of text."""
+        """Right side of text."""
         anchor = self.get('text-anchor')
         if anchor == 'middle':
             return self.get('x') + len(self.text) / 2 * self.font_size_num * 0.6
@@ -451,7 +412,7 @@ class Text(HasXY, HasFill):
 
     @property
     def top(self):
-        """top side of svg"""
+        """Top side of svg."""
         baseline = self.get('dominant-baseline')
         if baseline == 'middle':
             return self.get('y') - self.font_size_num / 2
@@ -461,7 +422,7 @@ class Text(HasXY, HasFill):
 
     @property
     def bottom(self):
-        """bottom side of svg."""
+        """Bottom side of svg."""
         baseline = self.get('dominant-baseline')
         if baseline == 'middle':
             return self.get('y') + self.font_size_num / 2
@@ -471,14 +432,16 @@ class Text(HasXY, HasFill):
 
 
 class Path(HasFill):
-    """svg path component"""
+    """SVG path component."""
+
     def __init__(self, points):
+        """Initialize a Path object."""
         super().__init__('path')
         self.points = np.array(points).astype(float)
         self.d()
 
     def d(self, points=None):
-        """The d property of path"""
+        """D property of path."""
         if points is None:
             points = self.points
         else:
@@ -492,38 +455,38 @@ class Path(HasFill):
 
     @property
     def left(self):
-        """Get left side of path"""
+        """Get left side of path."""
         return np.min(self.points[0])
 
     @property
     def right(self):
-        """Get right side of path"""
+        """Get right side of path."""
         return np.max(self.points[0])
 
     @property
     def top(self):
-        """Get top side of path"""
+        """Get top side of path."""
         return np.min(self.points[1])
 
     @property
     def bottom(self):
-        """Get bottom side of path"""
+        """Get bottom side of path."""
         return np.max(self.points[1])
 
     def scale(self, scale):
-        """Scale path"""
+        """Scale path."""
         self.points *= scale
         self.d()
         return self
 
     def shift(self, x, y):
-        """Shift path"""
+        """Shift path."""
         self.points += np.array([[x], [y]])
         self.d()
         return self
 
     def rotate(self, angle):
-        """Rotate path"""
+        """Rotate path."""
         center_x = np.mean(self.points[0])
         center_y = np.mean(self.points[1])
         self.shift(-center_x, -center_y)
@@ -536,15 +499,17 @@ class Path(HasFill):
 
 
 class Arc(HasFill):
-    """Arc component of svg"""
+    """Arc component of svg."""
+
     def __init__(self, r):
+        """Initialize an Arc object."""
         super().__init__('path')
         self.center = np.array([r, r])
         self.r = r
         self.d()
 
     def d(self):
-        """d property of arc"""
+        """D property of arc."""
         x, y = self.center
         r = self.r
         d_str = f'M {x-r} {y}'
@@ -553,26 +518,26 @@ class Arc(HasFill):
 
     @property
     def left(self):
-        """Get left side of arc"""
+        """Get left side of arc."""
         return self.center[0] - self.r
 
     @property
     def right(self):
-        """Get right side of arc"""
+        """Get right side of arc."""
         return self.center[0] + self.r
 
     @property
     def top(self):
-        """Get top side of arc"""
+        """Get top side of arc."""
         return self.center[1] - self.r
 
     @property
     def bottom(self):
-        """Get bottom side of arc"""
+        """Get bottom side of arc."""
         return self.center[1]
 
     def scale(self, scale):
-        """Scale path"""
+        """Scale path."""
         self.center *= scale
         self.r *= scale
         HasStroke.scale(self, scale)
@@ -580,63 +545,65 @@ class Arc(HasFill):
         return self
 
     def shift(self, x, y):
-        """shift path"""
+        """Shift path."""
         self.center += np.array([x, y])
         self.d()
         return self
 
 
 class Circle(HasFill):
-    """Circle component of svg"""
+    """Circle component of svg."""
+
     def __init__(self, cx, cy, r):
+        """Initialize a Circle object."""
         super().__init__('circle')
         self.cx(cx)
         self.cy(cy)
         self.r(r)
 
     def cx(self, cx):
-        """Get cx"""
+        """Get cx."""
         self.prop['cx'] = cx
         return self
 
     def cy(self, cy):
-        """Get cy"""
+        """Get cy."""
         self.prop['cy'] = cy
         return self
 
     def r(self, r):
-        """Get r"""
+        """Get r."""
         self.prop['r'] = r
         return self
 
     @property
     def left(self):
-        """Get left side of circle"""
+        """Get left side of circle."""
         return self.get('cx') - self.get('r')
 
     @property
     def right(self):
-        """Get right side of circle"""
+        """Get right side of circle."""
         return self.get('cx') + self.get('r')
 
     @property
     def top(self):
-        """Get top side of circle"""
+        """Get top side of circle."""
         return self.get('cy') - self.get('r')
 
     @property
     def bottom(self):
-        """Get bottom side of circle"""
+        """Get bottom side of circle."""
         return self.get('cy') + self.get('r')
 
     def shift(self, x, y):
-        """Shift circle"""
+        """Shift circle."""
         self.cx(self.get('cx') + x)
         self.cy(self.get('cy') + y)
         return self
 
     def scale(self, scale):
-        """Scale circle"""
+        """Scale circle."""
         HasStroke.scale(self, scale)
         self.r(self.get('r') * scale)
         self.cx(self.get('cx') * scale)
@@ -646,21 +613,23 @@ class Circle(HasFill):
 
 class SVGContainer:
     """Container that contain any kinds of svg component, even its self."""
+
     def __init__(self):
+        """Initialize an SVGContainer object."""
         self.element = []
 
     def add(self, ele):
-        """Method to add svg component"""
+        """Add an svg component."""
         self.element.append(ele)
 
     def scale(self, scale):
-        """Scale every sub element"""
+        """Scale every sub element."""
         for e in self.element:
             e.scale(scale)
         return self
 
     def shift(self, x, y):
-        """shift every sub element"""
+        """Shift every sub element."""
         for e in self.element:
             e.shift(x, y)
         return self
@@ -670,45 +639,48 @@ class SVGContainer:
         return '\n'.join([i.to_string() for i in self.element])
 
     def _repr_svg_(self):
-        """Magic method for rendering svg in jupyter notebook"""
+        """Magic method for rendering svg in jupyter notebook."""
         box_data = box(self)
         w = box_data['width']
         h = box_data['height']
-        head = f"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{w}\" height=\"{h}\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
+        head = (
+            f"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{w}\" height=\"{h}\" "
+            f"xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
+        )
         tail = "</svg>"
         s = f"{head}\n{self.to_string()}\n{tail}"
         return "<div class=\"nb-html-output output_area\">" + s + "</div>"
 
     def to_file(self, filename='circuit.svg'):
-        """save svg file."""
+        """Save svg file."""
         s = self._repr_svg_()
-        with open(filename, 'w', encoding='utf-8') as f:
+        with fdopen(filename, 'w', encoding='utf-8') as f:
             f.writelines(s)
 
     @property
     def left(self):
-        """Get left side of container"""
+        """Get left side of container."""
         if not self.element:
             return np.inf
         return min([e.left for e in self.element])
 
     @property
     def right(self):
-        """Get right side of container"""
+        """Get right side of container."""
         if not self.element:
             return -np.inf
         return max([e.right for e in self.element])
 
     @property
     def top(self):
-        """Get top side of container"""
+        """Get top side of container."""
         if not self.element:
             return np.inf
         return min([e.top for e in self.element])
 
     @property
     def bottom(self):
-        """Get bottom side of container"""
+        """Get bottom side of container."""
         if not self.element:
             return -np.inf
         return max([e.bottom for e in self.element])
@@ -722,15 +694,20 @@ class SVGContainer:
 
 class ObjDots(SVGContainer):
     """SVG dots on object qubits for multiply qubits gate that act on discontinue qubits."""
+
     def __init__(self, obj_qubits, width, svg_config):
+        """Initialize an ObjDots object."""
         super().__init__()
         self.svg_config = svg_config
         self.obj_qubits = obj_qubits
         min_obj = min(obj_qubits)
         if max(obj_qubits) - min(obj_qubits) + 1 != len(obj_qubits):
             for obj in obj_qubits:
-                dot = Circle(0, (obj - min_obj) * self.svg_config['circuit_line_distance'] +
-                             self.svg_config['gate_size'] / 2, self.svg_config['obj_dot_r'])
+                dot = Circle(
+                    0,
+                    (obj - min_obj) * self.svg_config['circuit_line_distance'] + self.svg_config['gate_size'] / 2,
+                    self.svg_config['obj_dot_r'],
+                )
                 dot.fill('black')
                 self.add(dot)
                 self.add(copy.deepcopy(dot).shift(width, 0))
@@ -738,30 +715,38 @@ class ObjDots(SVGContainer):
 
 class CtrlDots(SVGContainer):
     """SVG dot for control qubits."""
+
     def __init__(self, obj_qubits, ctrl_qubits, svg_config):
+        """Initialize a CtdlDots object."""
         super().__init__()
         self.svg_config = svg_config
         if ctrl_qubits:
             min_obj = min(obj_qubits)
             for ctrl in ctrl_qubits:
-                ctrl_dot = Circle(0, (ctrl - min_obj) * self.svg_config['circuit_line_distance'] +
-                                  self.svg_config['gate_size'] / 2, self.svg_config['ctrl_dot_r']).fill('black')
+                ctrl_dot = Circle(
+                    0,
+                    (ctrl - min_obj) * self.svg_config['circuit_line_distance'] + self.svg_config['gate_size'] / 2,
+                    self.svg_config['ctrl_dot_r'],
+                ).fill('black')
                 self.add(ctrl_dot)
             min_ctrl = min(ctrl_qubits + [min_obj])
             max_ctrl = max(ctrl_qubits + [min_obj])
-            line = Line(0, 0, 0,
-                        (max_ctrl - min_ctrl) * self.svg_config['circuit_line_distance']).stroke('black').stroke_width(
-                            self.svg_config['ctrl_line_stroke_width'])
+            line = (
+                Line(0, 0, 0, (max_ctrl - min_ctrl) * self.svg_config['circuit_line_distance'])
+                .stroke('black')
+                .stroke_width(self.svg_config['ctrl_line_stroke_width'])
+            )
             line.shift(
-                0, self.svg_config['gate_size'] / 2 + (min_ctrl - min_obj) * self.svg_config['circuit_line_distance'])
+                0, self.svg_config['gate_size'] / 2 + (min_ctrl - min_obj) * self.svg_config['circuit_line_distance']
+            )
             self.add(line)
 
 
 class SVGBasicGate(SVGContainer):
-    """
-    Basic style for quantum gate.
-    """
+    """Basic style for quantum gate."""
+
     def __init__(self, g, svg_config):
+        """Initialize an SVGBasicGate object."""
         super().__init__()
         self.svg_config = svg_config
         self.name = g.__str_in_svg__()
@@ -776,17 +761,19 @@ class SVGBasicGate(SVGContainer):
         self.background_container = SVGContainer()
 
     def as_background(self, *svg):
-        """
-        Set the svg component as background.
-        """
+        """Set the svg component as background."""
         for _ in svg:
             self.background_container.add(svg)
         return self
 
     def create_n_qubits_rect(self, n_qubits):
         """Create n qubits rectangle."""
-        rect = Rect(0, 0, self.svg_config['gate_size'],
-                    self.svg_config['gate_size'] + (n_qubits - 1) * self.svg_config['circuit_line_distance'])
+        rect = Rect(
+            0,
+            0,
+            self.svg_config['gate_size'],
+            self.svg_config['gate_size'] + (n_qubits - 1) * self.svg_config['circuit_line_distance'],
+        )
         rect.chamfer(self.svg_config['gate_chamfer'])
         rect.stroke(self.svg_config['npg_stroke'])
         rect.stroke_width(self.svg_config['gate_stroke_width'])
@@ -819,15 +806,13 @@ class SVGBasicGate(SVGContainer):
         return obj_dots
 
     def move_to_create_qubit(self):
-        """
-        move the gate to correct qubit position.
-        """
+        """Move the gate to correct qubit position."""
         self.shift(0, min(self.obj_qubits) * self.svg_config['circuit_line_distance'])
         return self
 
 
 def get_bound_color(svg_config, fill, stroke):
-    """Get bound color"""
+    """Get bound color."""
     if svg_config['background'] == fill:
         return stroke
     return fill
@@ -835,7 +820,9 @@ def get_bound_color(svg_config, fill, stroke):
 
 class SVGGate(SVGBasicGate):
     """SVG Gate."""
+
     def __init__(self, g, svg_config):
+        """Initialize an SVGGate object."""
         super().__init__(g, svg_config)
         self.rect = self.create_n_qubits_rect(g.n_qubits)
         self.rect.fill(self.svg_config['npg_fill'])
@@ -866,14 +853,19 @@ class SVGGate(SVGBasicGate):
 
 class SVGSWAPGate(SVGBasicGate):
     """Style for swap gate."""
+
     def __init__(self, g, svg_config):
+        """Initialize an SVGSWAPGate object."""
         super().__init__(g, svg_config)
         self.rect1 = SWAPIcon(svg_config)
         self.rect2 = SWAPIcon(svg_config)
         self.rect2.shift(0, (max(self.obj_qubits) - min(self.obj_qubits)) * self.svg_config['circuit_line_distance'])
         color = get_bound_color(self.svg_config, self.svg_config['swap_fill'], self.svg_config['swap_stroke'])
-        self.swap_line = Line(self.rect1.right / 2, self.rect1.right / 2, 0,
-                              self.rect2.bottom).stroke_width(self.svg_config['ctrl_line_stroke_width']).stroke(color)
+        self.swap_line = (
+            Line(self.rect1.right / 2, self.rect1.right / 2, 0, self.rect2.bottom)
+            .stroke_width(self.svg_config['ctrl_line_stroke_width'])
+            .stroke(color)
+        )
 
         self.ctrl_dots = self.create_ctrl_dots(self.rect1.right / 2, color)
         self.add(self.swap_line)
@@ -886,7 +878,9 @@ class SVGSWAPGate(SVGBasicGate):
 
 class SVGCNOTGate(SVGBasicGate):
     """SVG for cnot gate."""
+
     def __init__(self, g, svg_config):
+        """Initialize an SVGCNOTGate object."""
         super().__init__(g, svg_config)
         if isinstance(g, CNOTGate):
             self.obj_qubits = [g.obj_qubits[0]]
@@ -899,11 +893,15 @@ class SVGCNOTGate(SVGBasicGate):
 
         self.cross = SVGContainer()
         self.cross.add(
-            Line(-self.svg_config['cnot_cross_size'] / 2, self.svg_config['cnot_cross_size'] / 2, 0, 0).stroke(
-                self.svg_config['cnot_cross_stroke']).stroke_width(self.svg_config['cnot_cross_stroke_width']))
+            Line(-self.svg_config['cnot_cross_size'] / 2, self.svg_config['cnot_cross_size'] / 2, 0, 0)
+            .stroke(self.svg_config['cnot_cross_stroke'])
+            .stroke_width(self.svg_config['cnot_cross_stroke_width'])
+        )
         self.cross.add(
-            Line(0, 0, -self.svg_config['cnot_cross_size'] / 2, self.svg_config['cnot_cross_size'] / 2).stroke(
-                self.svg_config['cnot_cross_stroke']).stroke_width(self.svg_config['cnot_cross_stroke_width']))
+            Line(0, 0, -self.svg_config['cnot_cross_size'] / 2, self.svg_config['cnot_cross_size'] / 2)
+            .stroke(self.svg_config['cnot_cross_stroke'])
+            .stroke_width(self.svg_config['cnot_cross_stroke_width'])
+        )
         self.cross.shift(self.svg_config['gate_size'] / 2, self.svg_config['gate_size'] / 2)
         color = get_bound_color(self.svg_config, self.svg_config['cnot_fill'], self.svg_config['cnot_stroke'])
         self.ctrl_dots = self.create_ctrl_dots(self.rect1.right / 2, color)
@@ -916,7 +914,9 @@ class SVGCNOTGate(SVGBasicGate):
 
 class SVGParameterGate(SVGBasicGate):
     """SVG for parameterized gate."""
+
     def __init__(self, gate, svg_config):
+        """Initialize an SVGParameterGate object."""
         super().__init__(gate, svg_config)
         self.rect1 = self.create_n_qubits_rect(max(self.obj_qubits) - min(self.obj_qubits) + 1)
         self.rect1.fill(self.svg_config['pg_fill'])
@@ -953,13 +953,16 @@ class SVGParameterGate(SVGBasicGate):
 
 class GateContainer(SVGContainer):
     """Container that contains gate. This container can make sure that the gate will added layer by layer."""
+
     def __init__(self, n_qubits, svg_config):
+        """Initialize a GateContainer object."""
         super().__init__()
         self.svg_config = svg_config
         self.n_qubits = n_qubits
         self.circ_high = [0 for _ in range(n_qubits)]
 
     def add(self, ele):
+        """Add an svg component."""
         high = max([self.circ_high[i] for i in ele.all_qubits_range])
         ele.shift(high + self.svg_config['gate_v_distance'] * (high != 0), 0)
         super().add(ele)
@@ -972,7 +975,9 @@ class GateContainer(SVGContainer):
 
 class SVGCircuit(SVGContainer):
     """SVG circuit component."""
+
     def __init__(self, circuit, svg_config):
+        """Initialize an SVGCircuit object."""
         super().__init__()
         self.svg_config = svg_config
         _check_input_type("circuit", Circuit, circuit)
@@ -986,7 +991,7 @@ class SVGCircuit(SVGContainer):
                 gate_container.add(SVGBarrier(circuit.n_qubits, svg_config, g.show))
             elif isinstance(g, Measure):
                 gate_container.add(SVGMeasure(g, svg_config))
-            elif (isinstance(g, XGate) and len(g.ctrl_qubits) == 1):
+            elif isinstance(g, XGate) and len(g.ctrl_qubits) == 1:
                 gate_container.add(SVGCNOTGate(g, svg_config))
             elif isinstance(g, CNOTGate):
                 gate_container.add(SVGCNOTGate(g, svg_config))
@@ -1000,22 +1005,35 @@ class SVGCircuit(SVGContainer):
         for i in range(circuit.n_qubits):
             qubit_container.add(SVGQubit(0, i * self.svg_config['circuit_line_distance'], old_qubits[i], svg_config))
             circuit_line_container.add(
-                SVGCircuitLine(0, circ_len, i * self.svg_config['circuit_line_distance'],
-                               i * self.svg_config['circuit_line_distance'], self.svg_config))
-        qubit_container.shift(self.svg_config['padding_x'],
-                              self.svg_config['padding_y'] + self.svg_config['gate_size'] / 2)
+                SVGCircuitLine(
+                    0,
+                    circ_len,
+                    i * self.svg_config['circuit_line_distance'],
+                    i * self.svg_config['circuit_line_distance'],
+                    self.svg_config,
+                )
+            )
+        qubit_container.shift(
+            self.svg_config['padding_x'], self.svg_config['padding_y'] + self.svg_config['gate_size'] / 2
+        )
 
-        circuit_line_container.shift(qubit_container.right,
-                                     self.svg_config['padding_y'] + self.svg_config['gate_size'] / 2)
-        gate_container.shift(circuit_line_container.left + self.svg_config['gate_start_distance'],
-                             self.svg_config['padding_y'])
+        circuit_line_container.shift(
+            qubit_container.right, self.svg_config['padding_y'] + self.svg_config['gate_size'] / 2
+        )
+        gate_container.shift(
+            circuit_line_container.left + self.svg_config['gate_start_distance'], self.svg_config['padding_y']
+        )
         self.front = SVGContainer()
         self.front.add(qubit_container)
         self.front.add(circuit_line_container)
         self.front.add(gate_container)
         front_box = box(self.front)
-        self.background = Rect(front_box['left'], front_box['top'], front_box['width'] + self.svg_config['gate_size'],
-                               front_box['height'] + self.svg_config['gate_size'])
+        self.background = Rect(
+            front_box['left'],
+            front_box['top'],
+            front_box['width'] + self.svg_config['gate_size'],
+            front_box['height'] + self.svg_config['gate_size'],
+        )
         self.background.fill(self.svg_config['background'])
         self.front.shift(self.svg_config['gate_size'] / 2, self.svg_config['gate_size'] / 2)
         self.add(self.background)
@@ -1024,7 +1042,9 @@ class SVGCircuit(SVGContainer):
 
 class SVGQubit(Text):
     """SVT qubit component."""
+
     def __init__(self, x, y, idx, svg_config):
+        """Initialize an SVTQubit object."""
         super().__init__(x, y, f"q{idx}:")
         self.svg_config = svg_config
         self.text_anchor('start')
@@ -1036,7 +1056,9 @@ class SVGQubit(Text):
 
 class SVGCircuitLine(Line):
     """SVG circuit line."""
+
     def __init__(self, x1, x2, y1, y2, svg_config):
+        """Initialize an SVGCircuitLine object."""
         super().__init__(x1, x2, y1, y2)
         self.svg_config = svg_config
         self.stroke(self.svg_config['circuit_line_stroke'])
@@ -1045,7 +1067,9 @@ class SVGCircuitLine(Line):
 
 class SVGBarrier(SVGContainer):
     """SVG barrier."""
+
     def __init__(self, n_qubits, svg_config, show=True):
+        """Initialize an SVGBarrier object."""
         super().__init__()
         self.svg_config = svg_config
         self.n_qubits = n_qubits
@@ -1054,8 +1078,12 @@ class SVGBarrier(SVGContainer):
         self.all_qubits = list(range(n_qubits))
         self.all_qubits_range = list(range(n_qubits))
         self.show = show
-        self.rect = Rect(0, 0, self.svg_config['barrier_width'] * show,
-                         self.svg_config['gate_size'] + (self.n_qubits - 1) * self.svg_config['circuit_line_distance'])
+        self.rect = Rect(
+            0,
+            0,
+            self.svg_config['barrier_width'] * show,
+            self.svg_config['gate_size'] + (self.n_qubits - 1) * self.svg_config['circuit_line_distance'],
+        )
         self.rect.fill(self.svg_config['barrier_fill'])
         self.rect.fill_opacity(self.svg_config['barrier_opacity'])
         self.add(self.rect)
@@ -1063,15 +1091,18 @@ class SVGBarrier(SVGContainer):
 
 class SVGMeasure(SVGBasicGate):
     """SVG for measure gate."""
+
     def __init__(self, g, svg_config):
+        """Initialize an SVGMeasure object."""
         super().__init__(g, svg_config)
         self.rect = self.create_n_qubits_rect(1)
         self.rect.fill(self.svg_config['measure_fill'])
         self.rect.fill_opacity(self.svg_config['measure_fill_opacity'])
         self.rect.stroke(self.svg_config['measure_stroke'])
         self.rect.stroke_width(self.svg_config['gate_stroke_width'])
-        self.circle = Circle(0.5 * self.svg_config['gate_size'], 0.8 * self.svg_config['gate_size'],
-                             2).fill(self.svg_config['measure_icon_color'])
+        self.circle = Circle(0.5 * self.svg_config['gate_size'], 0.8 * self.svg_config['gate_size'], 2).fill(
+            self.svg_config['measure_icon_color']
+        )
         self.arc = Arc(self.svg_config['gate_size'] * 0.4)
         self.arc.stroke(self.svg_config['measure_icon_color'])
         self.arc.stroke_width(self.svg_config['measure_arc_stroke_width'])
@@ -1080,8 +1111,9 @@ class SVGMeasure(SVGBasicGate):
         super_align(self.rect, self.arc, 'middle', 'middle', 'v')
         self.arrow = Arrow(0.2).fill(self.svg_config['measure_icon_color'])
         self.arrow.scale(6).rotate(30)
-        super_align(self.circle, self.arrow, 'middle', self.arrow.left + 3 * self.arrow.w * np.cos(np.pi / 180 * 30),
-                    'v')
+        super_align(
+            self.circle, self.arrow, 'middle', self.arrow.left + 3 * self.arrow.w * np.cos(np.pi / 180 * 30), 'v'
+        )
         super_align(self.rect, self.arrow, 0.8, 'bottom', relative=True)
         self.icon = SVGContainer()
         self.icon.add(self.circle)
@@ -1098,7 +1130,9 @@ class SVGMeasure(SVGBasicGate):
 
 class Arrow(Path):
     """Arrow component."""
+
     def __init__(self, w=0.3):
+        """Initialize an Arrow object."""
         self.w = w
         self.points = [[0, 1, 2, 1 + w, 1 + w, 1 - w, 1 - w], [np.sqrt(3), 0, np.sqrt(3), np.sqrt(3), 5, 5, np.sqrt(3)]]
         super().__init__(self.points)
@@ -1106,7 +1140,9 @@ class Arrow(Path):
 
 class SWAPIcon(SVGContainer):
     """Icon for swap gate."""
+
     def __init__(self, svg_config):
+        """Initialize a SWAPIcon object."""
         super().__init__()
         self.svg_config = svg_config
         self.rect = Rect(0, 0, self.svg_config['gate_size'], self.svg_config['gate_size'])
@@ -1155,6 +1191,8 @@ def center_align_to(target, source):
 
 def super_align(target, source, t_des, s_des, direction=None, relative=False):
     """
+    Align.
+
     Args:
         t_des ([str, numbers.Number]): if str, should be 'left', 'right', 'top', 'bottom' or
             'middle'.
@@ -1164,17 +1202,15 @@ def super_align(target, source, t_des, s_des, direction=None, relative=False):
         relative (bool): if true, t_des and s_des should be number and will be tride as a
             percentage.
     """
+
     def relative_to_num(des, direction, box_data):
         """Relative keyword to absolute number."""
-        assert direction in ['h', 'v']
-        assert not isinstance(des, str)
         if direction == 'h':
             return des * box_data['height']
         return des * box_data['width']
 
     def str_to_num(des, direction, box_data):
-        """String keyword to absolute number."""
-        assert isinstance(des, str)
+        """Convert string keyword to absolute number."""
         if des in ['left', 'right']:
             if direction == 'h':
                 raise ValueError('wrong direction')
@@ -1183,15 +1219,12 @@ def super_align(target, source, t_des, s_des, direction=None, relative=False):
             if direction == 'v':
                 raise ValueError('wrong direction')
             return box_data[des]
-        assert direction in ['h', 'v']
         if direction == 'h':
             return box_data['cy']
         return box_data['cx']
 
     def determain_direction(t_des, s_des, direction):
-        """
-        Check the direction
-        """
+        """Check the direction."""
         v_key = ['left', 'right']
         h_key = ['top', 'bottom']
         if t_des in v_key and s_des in h_key or t_des in h_key and s_des in v_key:

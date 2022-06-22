@@ -18,22 +18,26 @@
 
 # lint_cmake: -whitespace/indent
 
+include(debug_print)
+
 # OpenMP
 
 set(PARALLEL_LIBS)
-if(ENABLE_OPENMP)
+if(USE_OPENMP)
   if(APPLE)
     find_program(BREW_CMD brew PATHS /usr/local/bin)
     if(BREW_CMD)
       # Homebrew installs libomp in ${LIBOMP_PREFIX}/lib and the headers in ${LIBOMP_PREFIX}/include
       execute_process(COMMAND ${BREW_CMD} --prefix libomp OUTPUT_VARIABLE LIBOMP_PREFIX)
       string(STRIP ${LIBOMP_PREFIX} LIBOMP_PREFIX)
+      debug_print(STATUS "LIBOMP_PREFIX = ${LIBOMP_PREFIX}")
 
       find_library(
         LIBOMP_LIB omp gomp libomp
         HINTS ${LIBOMP_PREFIX}
         PATH_SUFFIXES lib
         NO_DEFAULT_PATH)
+      debug_print(STATUS "LIBOMP_LIB = ${LIBOMP_LIB}")
       if(LIBOMP_LIB)
         get_filename_component(LIBOMP_DIR ${LIBOMP_LIB} DIRECTORY)
         list(APPEND CMAKE_LIBRARY_PATH ${LIBOMP_DIR})
@@ -44,6 +48,7 @@ if(ENABLE_OPENMP)
         HINTS ${LIBOMP_PREFIX}
         PATH_SUFFIXES include
         NO_DEFAULT_PATH)
+      debug_print(STATUS "LIBOMP_INC = ${LIBOMP_INC}")
       if(LIBOMP_INC)
         list(APPEND CMAKE_INCLUDE_PATH ${LIBOMP_INC})
       else()
@@ -57,6 +62,7 @@ if(ENABLE_OPENMP)
         PATHS /opt/local/lib
         PATH_SUFFIXES libomp
         NO_DEFAULT_PATH)
+      debug_print(STATUS "LIBOMP_LIB = ${LIBOMP_LIB}")
       if(LIBOMP_LIB)
         get_filename_component(LIBOMP_DIR ${LIBOMP_LIB} DIRECTORY)
         list(APPEND CMAKE_LIBRARY_PATH ${LIBOMP_DIR})
@@ -67,6 +73,7 @@ if(ENABLE_OPENMP)
         PATHS /opt/local/include
         PATH_SUFFIXES libomp
         NO_DEFAULT_PATH)
+      debug_print(STATUS "LIBOMP_INC = ${LIBOMP_INC}")
       if(LIBOMP_INC)
         list(APPEND CMAKE_INCLUDE_PATH ${LIBOMP_INC})
       else()
@@ -74,6 +81,8 @@ if(ENABLE_OPENMP)
                         "You might want to try installing the `libomp` MacPorts port: sudo port install libomp")
       endif()
     endif()
+    debug_print(STATUS "CMAKE_INCLUDE_PATH = ${CMAKE_INCLUDE_PATH}")
+    debug_print(STATUS "CMAKE_LIBRARY_PATH = ${CMAKE_LIBRARY_PATH}")
   endif()
 
   # ----------------------------------------------------------------------------
@@ -84,11 +93,11 @@ if(ENABLE_OPENMP)
   find_package(OpenMP)
   if(OpenMP_FOUND)
     set(MQ_OPENMP_TARGET OpenMP::OpenMP_CXX)
-    list(APPEND PARALLEL_LIBS ${MQ_OPENMP_TARGET})
+    list(APPEND PARALLEL_LIBS ${OpenMP_target})
   else()
     set(MQ_OPENMP_TARGET)
     # cmake-lint: disable=C0103
-    set(ENABLE_OPENMP
+    set(USE_OPENMP
         FALSE
         CACHE INTERNAL "Disabled OpenMP support")
   endif()
@@ -98,17 +107,42 @@ if(ENABLE_OPENMP)
   endif()
 endif()
 
+if(USE_PARALLEL_STL)
+  find_package(TBB COMPONENTS tbb)
+  if(TBB_FOUND)
+    target_compile_options(TBB::tbb INTERFACE "$<$<COMPILE_LANGUAGE:DPCXX>:-tbb>")
+    list(APPEND PARALLEL_LIBS TBB::tbb)
+  else()
+    set(USE_PARALLEL_STL
+        FALSE
+        CACHE BOOL "Use the parallel STL libraries (TBB)")
+  endif()
+endif()
+
 # ==============================================================================
 
 find_package(Threads REQUIRED)
 list(APPEND PARALLEL_LIBS Threads::Threads)
 
-find_package(Patch REQUIRED)
-include(FetchContent)
-set(FETCHCONTENT_QUIET OFF)
-set(BUILD_DIR ${CMAKE_BINARY_DIR})
-set(DEP_DIR ${BUILD_DIR}/_deps)
-set(PATCH_DIR ${CMAKE_SOURCE_DIR}/third_party/patch)
+if("${CMAKE_PROJECT_NAME}" STREQUAL "MindQuantum")
+  find_package(Patch REQUIRED)
+endif()
+
+# ==============================================================================
+# CUDA
+
+if(ENABLE_CUDA)
+  find_package(CUDAToolkit ${MQ_CUDA_VERSION})
+  if(CUDAToolkit_FOUND)
+    set(MQ_CUDA_VERSION "${CUDAToolkit_VERSION_MAJOR}.${CUDAToolkit_VERSION_MINOR}")
+  else()
+    message(STATUS "Disabling CUDA since unable to locate CUDAToolkit")
+    # cmake-lint: disable=C0103
+    set(ENABLE_CUDA
+        OFF
+        CACHE INTERNAL "Enable building of CUDA/NVHPC libraries")
+  endif()
+endif()
 
 # ==============================================================================
 
@@ -117,7 +151,7 @@ if(DEFINED PYTHON_EXECUTABLE)
   set(Python_EXECUTABLE ${PYTHON_EXECUTABLE}) # cmake-lint: disable=C0103
 endif()
 
-set(_python_find_args Python 3.5.0 COMPONENTS Interpreter)
+set(_python_find_args Python 3.6.0 COMPONENTS Interpreter)
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
   list(APPEND _python_find_args Development.Module)
 else()
@@ -125,113 +159,88 @@ else()
 endif()
 find_package(${_python_find_args})
 
-# NB: This should be removed for CMake >= 3.16
-if(NOT Python_FOUND)
-  # Use PYTHON_EXECUTABLE if it is defined, otherwise default to python
-  if(PYTHON_EXECUTABLE)
-    set(Python_EXECUTABLE ${PYTHON_EXECUTABLE}) # cmake-lint: disable=C0103
-  elseif(NOT Python_EXECUTABLE)
-    find_program(Python_EXECUTABLE NAMES python3 python)
-    if(NOT Python_EXECUTABLE)
-      message(FATAL_ERROR "Unable to locate Python!")
-    endif()
-  endif()
-
-  execute_process(
-    COMMAND "${Python_EXECUTABLE}" --version
-    RESULT_VARIABLE result
-    OUTPUT_VARIABLE _python_version)
-  string(STRIP "${_python_version}" Python_VERSION)
-
-  if(Python_VERSION VERSION_LESS 3.6.0)
-    message(FATAL_ERROR "Cannot use Python ${Python_VERSION} (${Python_EXECUTABLE}): version too old!")
-  endif()
-
-  execute_process(
-    COMMAND "${Python_EXECUTABLE}" -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())"
-    RESULT_VARIABLE result
-    OUTPUT_VARIABLE _python_inc)
-  string(STRIP "${_python_inc}" _python_inc)
-
-  execute_process(
-    COMMAND "${Python_EXECUTABLE}" -c "import distutils.sysconfig as sysconfig; import os; \
-                  print(os.path.join(sysconfig.get_config_var('LIBDIR'), sysconfig.get_config_var('LDLIBRARY')))"
-    RESULT_VARIABLE result
-    OUTPUT_VARIABLE _python_lib)
-  string(STRIP "${_python_lib}" _python_lib)
-
-  # Define an imported library for Python
-  macro(_python_import_library lib_name)
-    if(lib MATCHES "${CMAKE_SHARED_LIBRARY_SUFFIX}$")
-      set(_type SHARED)
-    else()
-      set(_type STATIC)
-    endif()
-
-    add_library(${lib_name} ${_type} IMPORTED)
-    target_include_directories(${lib_name} INTERFACE "${_python_inc}")
-    # cmake-lint: disable=C0307
-    set_target_properties(${lib_name} PROPERTIES IMPORTED_LINK_INTERFACE_LANGUAGES "C" IMPORTED_LOCATION
-                                                                                       "${_python_lib}")
-  endmacro()
-
-  _python_import_library(Python::Python)
-  if(WIN32
-     OR CYGWIN
-     OR MSYS)
-    # On Windows/Cygwin/MSYS Python::Module is an alias for Python::Python. See CMake code for FindPython.
-    _python_import_library(Python::Module)
-  else()
-    if(NOT TARGET Python::Module)
-      add_library(Python::Module INTERFACE IMPORTED)
-    endif()
-    target_include_directories(Python::Module INTERFACE "${_python_inc}")
-    target_link_options(Python::Module INTERFACE $<$<PLATFORM_ID:Darwin>:LINKER:-undefined,dynamic_lookup>
-                        $<$<PLATFORM_ID:SunOS>:LINKER:-z,nodefs> $<$<PLATFORM_ID:AIX>:LINKER:-b,erok>)
-  endif()
-endif()
-
-if(CMAKE_VERSION VERSION_LESS 3.17)
-  message(CHECK_START "Looking for python SOABI")
-
-  execute_process(
-    COMMAND "${Python_EXECUTABLE}" "-c" "from sysconfig import get_config_var; \
-print(get_config_var ('EXT_SUFFIX') or s.get_config_var ('SO'))"
-    RESULT_VARIABLE _soabi_success
-    OUTPUT_VARIABLE _python_so_extension
-    ERROR_VARIABLE _soabi_error_value
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-  if(NOT _soabi_success MATCHES 0)
-    message(CHECK_FAIL "failed")
-    message(FATAL_ERROR "Failed to extract Python SOABI extension:\n${_soabi_error_value}")
-  else()
-    message(CHECK_PASS "done")
-  endif()
-endif()
-
 # ------------------------------------------------------------------------------
 
-include(${CMAKE_CURRENT_LIST_DIR}/pybind11.cmake)
+# Check if we are being used directly or via add_subdirectory()
+if("${CMAKE_PROJECT_NAME}" STREQUAL "MindQuantum")
+  if(NOT MQ_PYTHON_PACKAGE_NAME)
+    execute_process(
+      COMMAND
+        "${Python_EXECUTABLE}" -c [=[
+import sys
+try:
+    from setuptools.config.setupcfg import read_configuration
+except ImportError:
+    from setuptools.config import read_configuration
 
-# ------------------------------------------------------------------------------
+sys.stdout.write(read_configuration("setup.cfg")["metadata"]["name"])
+]=]
+      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+      RESULT_VARIABLE result
+      OUTPUT_VARIABLE MQ_PYTHON_PACKAGE_NAME)
 
-if(ENABLE_PROJECTQ)
-  include(${CMAKE_CURRENT_LIST_DIR}/projectq.cmake)
+    if(NOT result EQUAL 0)
+      message(FATAL_ERROR "Unable to determine MindQuantum's Python package name")
+    endif()
+
+    set(MQ_PYTHON_PACKAGE_NAME
+        "${MQ_PYTHON_PACKAGE_NAME}"
+        CACHE STRING "MindQuantum's Python package name")
+    mark_as_advanced(MQ_PYTHON_PACKAGE_NAME)
+  endif()
+
+  # ----------------------------------------------------------------------------
+
+  if(NOT MQ_INSTALL_PYTHONDIR)
+    execute_process(
+      COMMAND
+        "${Python_EXECUTABLE}" -c [=[
+import sys
+from pathlib import Path
+
+try:
+    from distutils import sysconfig
+
+    platlib = Path(sysconfig.get_python_lib(plat_specific=True, standard_lib=False))
+    platbase = Path(sysconfig.EXEC_PREFIX)
+except Exception:
+    import sysconfig
+
+    platlib = Path(sysconfig.get_path("platlib"))
+    platbase = Path(sysconfig.get_config_var("base"))
+
+sys.stdout.write(str(platlib.relative_to(platbase)))
+]=]
+      RESULT_VARIABLE result
+      OUTPUT_VARIABLE MQ_INSTALL_PYTHONDIR)
+
+    if(NOT result EQUAL 0)
+      message(FATAL_ERROR "Unable to determine Python path to site-packages sub-directory")
+    endif()
+
+    set(MQ_INSTALL_PYTHONDIR
+        "${MQ_INSTALL_PYTHONDIR}"
+        CACHE FILEPATH "Python path to site-packages sub-directory")
+    mark_as_advanced(MQ_INSTALL_PYTHONDIR)
+  endif()
+
+  GNUInstallDirs_get_absolute_install_dir(MQ_INSTALL_FULL_PYTHONDIR MQ_INSTALL_PYTHONDIR PYTHONDIR)
 endif()
 
 # ==============================================================================
 # For Huawei internal security assessment
 
-if(BINSCOPE)
-  get_filename_component(_binscope_path ${BINSCOPE} DIRECTORY)
-  get_filename_component(_binscope_name ${BINSCOPE} NAME)
-endif()
+if("${CMAKE_PROJECT_NAME}" STREQUAL "MindQuantum")
+  if(BINSCOPE)
+    get_filename_component(_binscope_path ${BINSCOPE} DIRECTORY)
+    get_filename_component(_binscope_name ${BINSCOPE} NAME)
+  endif()
 
-find_program(
-  binscope_exec
-  NAMES binscope ${_binscope_name}
-  HINTS ${_binscope_path})
-include(${CMAKE_CURRENT_LIST_DIR}/binscope.cmake)
+  find_program(
+    binscope_exec
+    NAMES binscope ${_binscope_name}
+    HINTS ${_binscope_path})
+  include(binscope)
+endif()
 
 # ==============================================================================

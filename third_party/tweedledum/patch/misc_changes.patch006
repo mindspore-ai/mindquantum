@@ -1,0 +1,176 @@
+diff --git a/include/tweedledum/Decomposition/BarencoDecomposer.h b/include/tweedledum/Decomposition/BarencoDecomposer.h
+index 6414071..8c948ce 100644
+--- a/include/tweedledum/Decomposition/BarencoDecomposer.h
++++ b/include/tweedledum/Decomposition/BarencoDecomposer.h
+@@ -7,7 +7,7 @@
+ #include "../IR/Circuit.h"
+ #include "../IR/Instruction.h"
+ 
+-#include <nlohmann/json.hpp>
++#include "nlohmann/json.hpp"
+ 
+ namespace tweedledum {
+ 
+diff --git a/include/tweedledum/IR/Instruction.h b/include/tweedledum/IR/Instruction.h
+index 6cba8fb..d94fd1f 100644
+--- a/include/tweedledum/IR/Instruction.h
++++ b/include/tweedledum/IR/Instruction.h
+@@ -102,6 +102,26 @@ public:
+         return qubits_conns_[num_controls() + idx].qubit;
+     }
+ 
++    bool is_same_op(const Instruction& other) const
++    {
++         if (static_cast<Operator const&>(*this) == static_cast<Operator const&>(other)
++             && num_qubits() == other.num_qubits()) {
++              return true;
++         }
++
++         return false;
++    }
++
++    InstRef child(const Qubit& ref) const
++    {
++        for (QubitConnection const& connection : qubits_conns_) {
++             if(connection.qubit == ref) {
++                  return connection.inst_ref;
++             }
++        }
++        return InstRef::invalid();
++    }
++
+     uint32_t num_qubits() const
+     {
+         return qubits_conns_.size();
+diff --git a/include/tweedledum/Target/Device.h b/include/tweedledum/Target/Device.h
+index 37150a1..c641088 100644
+--- a/include/tweedledum/Target/Device.h
++++ b/include/tweedledum/Target/Device.h
+@@ -7,7 +7,7 @@
+ #include <Eigen/Dense>
+ #include <algorithm>
+ #include <cstdint>
+-#include <nlohmann/json.hpp>
++#include "nlohmann/json.hpp"
+ #include <string>
+ #include <utility>
+ #include <vector>
+diff --git a/src/Passes/Mapping/RePlacer/JitRePlacer.cpp b/src/Passes/Mapping/RePlacer/JitRePlacer.cpp
+index 46dfabb..6ff3242 100644
+--- a/src/Passes/Mapping/RePlacer/JitRePlacer.cpp
++++ b/src/Passes/Mapping/RePlacer/JitRePlacer.cpp
+@@ -66,7 +66,7 @@ void JitRePlacer::select_extended_layer()
+     std::vector<InstRef> tmp_layer = front_layer_;
+     while (!tmp_layer.empty()) {
+         std::vector<InstRef> new_tmp_layer;
+-        for (InstRef const ref : tmp_layer) {
++        for (InstRef const& ref : tmp_layer) {
+             current_->foreach_child(
+               ref, [&](InstRef cref, Instruction const& child) {
+                   visited_.at(cref) += 1;
+@@ -85,7 +85,7 @@ void JitRePlacer::select_extended_layer()
+         tmp_layer = std::move(new_tmp_layer);
+     }
+ undo_increment:
+-    for (InstRef const ref : incremented) {
++    for (InstRef const& ref : incremented) {
+         visited_.at(ref) -= 1;
+     }
+ }
+diff --git a/src/Passes/Mapping/RePlacer/SabreRePlacer.cpp b/src/Passes/Mapping/RePlacer/SabreRePlacer.cpp
+index 5e272fd..8ff3365 100644
+--- a/src/Passes/Mapping/RePlacer/SabreRePlacer.cpp
++++ b/src/Passes/Mapping/RePlacer/SabreRePlacer.cpp
+@@ -66,7 +66,7 @@ void SabreRePlacer::select_extended_layer()
+     std::vector<InstRef> tmp_layer = front_layer_;
+     while (!tmp_layer.empty()) {
+         std::vector<InstRef> new_tmp_layer;
+-        for (InstRef const ref : tmp_layer) {
++        for (InstRef const& ref : tmp_layer) {
+             current_->foreach_child(
+               ref, [&](InstRef cref, Instruction const& child) {
+                   visited_.at(cref) += 1;
+@@ -85,7 +85,7 @@ void SabreRePlacer::select_extended_layer()
+         tmp_layer = std::move(new_tmp_layer);
+     }
+ undo_increment:
+-    for (InstRef const ref : incremented) {
++    for (InstRef const& ref : incremented) {
+         visited_.at(ref) -= 1;
+     }
+ }
+diff --git a/src/Passes/Mapping/Router/JitRouter.cpp b/src/Passes/Mapping/Router/JitRouter.cpp
+index 8df5a62..0eaab3c 100644
+--- a/src/Passes/Mapping/Router/JitRouter.cpp
++++ b/src/Passes/Mapping/Router/JitRouter.cpp
+@@ -98,7 +98,7 @@ void JitRouter::select_extended_layer()
+     std::vector<InstRef> tmp_layer = front_layer_;
+     while (!tmp_layer.empty()) {
+         std::vector<InstRef> new_tmp_layer;
+-        for (InstRef const ref : tmp_layer) {
++        for (InstRef const& ref : tmp_layer) {
+             original_.foreach_child(
+               ref, [&](InstRef cref, Instruction const& child) {
+                   visited_.at(cref) += 1;
+@@ -117,7 +117,7 @@ void JitRouter::select_extended_layer()
+         tmp_layer = std::move(new_tmp_layer);
+     }
+ undo_increment:
+-    for (InstRef const ref : incremented) {
++    for (InstRef const& ref : incremented) {
+         visited_.at(ref) -= 1;
+     }
+ }
+diff --git a/src/Passes/Mapping/Router/SabreRouter.cpp b/src/Passes/Mapping/Router/SabreRouter.cpp
+index 6bd805b..0606690 100644
+--- a/src/Passes/Mapping/Router/SabreRouter.cpp
++++ b/src/Passes/Mapping/Router/SabreRouter.cpp
+@@ -77,7 +77,7 @@ void SabreRouter::select_extended_layer()
+     std::vector<InstRef> tmp_layer = front_layer_;
+     while (!tmp_layer.empty()) {
+         std::vector<InstRef> new_tmp_layer;
+-        for (InstRef const ref : tmp_layer) {
++        for (InstRef const& ref : tmp_layer) {
+             original_.foreach_child(
+               ref, [&](InstRef cref, Instruction const& child) {
+                   visited_.at(cref) += 1;
+@@ -96,7 +96,7 @@ void SabreRouter::select_extended_layer()
+         tmp_layer = std::move(new_tmp_layer);
+     }
+ undo_increment:
+-    for (InstRef const ref : incremented) {
++    for (InstRef const& ref : incremented) {
+         visited_.at(ref) -= 1;
+     }
+ }
+diff --git a/src/Utils/Visualization/string_utf8.cpp b/src/Utils/Visualization/string_utf8.cpp
+index 80057e1..5eded12 100644
+--- a/src/Utils/Visualization/string_utf8.cpp
++++ b/src/Utils/Visualization/string_utf8.cpp
+@@ -564,7 +564,7 @@ std::string to_string_utf8(Circuit const& circuit, uint32_t const max_rows)
+     uint32_t acc_width = prefix_size;
+     std::vector<uint32_t> cutting_point;
+     for (uint32_t layer = 0u; layer < layers.size(); ++layer) {
+-        for (InstRef const ref : layers.at(layer)) {
++        for (InstRef const& ref : layers.at(layer)) {
+             auto& box = boxes.at(ref);
+             box->set_cols(
+               curr_width + (layer_width.at(layer) - box->width()) / 2u);
+@@ -614,4 +614,4 @@ void print(Circuit const& circuit, uint32_t const max_rows)
+     fmt::print("{}", to_string_utf8(circuit, max_rows));
+ }
+ 
+-} // namespace tweedledum
+\ No newline at end of file
++} // namespace tweedledum
+diff --git a/tests/check_unitary.h b/tests/check_unitary.h
+index 885aabb..ba694f0 100644
+--- a/tests/check_unitary.h
++++ b/tests/check_unitary.h
+@@ -28,4 +28,4 @@ inline bool check_unitary(Circuit const& left, Circuit const& right,
+     // std::cout << u_left.matrix() << std::endl << std::endl;
+     // std::cout << u_right.matrix() << std::endl;
+     return is_approx_equal(u_left, u_right, up_to_global_phase, rtol, atol);
+-}
+\ No newline at end of file
++}

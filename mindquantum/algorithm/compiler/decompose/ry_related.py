@@ -13,16 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""
-RY gate related decompose rule.
-"""
 
-from mindquantum.core import gates as G
-from mindquantum.core import Circuit
+"""RY gate related decompose rule."""
+
+from mindquantum.core import Circuit, gates
 from mindquantum.core.gates.basicgate import RY
-from mindquantum.utils.type_value_check import _check_input_type, _check_control_num
+from mindquantum.utils.type_value_check import _check_control_num, _check_input_type
 
-def cry_decompose(gate: G.RY):
+
+def cry_decompose(gate: gates.RY):
     """
     Decompose cry gate.
 
@@ -54,11 +53,12 @@ def cry_decompose(gate: G.RY):
     solutions.append(c1)
     q0 = gate.ctrl_qubits[0]
     q1 = gate.obj_qubits[0]
-    c1 += G.RY(gate.coeff/2).on(q1)
-    c1 += G.X.on(q1, q0)
-    c1 += G.RY(-gate.coeff/2).on(q1)
-    c1 += G.X.on(q1, q0)
+    c1 += gates.RY(gate.coeff / 2).on(q1)
+    c1 += gates.X.on(q1, q0)
+    c1 += gates.RY(-gate.coeff / 2).on(q1)
+    c1 += gates.X.on(q1, q0)
     return solutions
+
 
 decompose_rules = ['cry_decompose']
 __all__ = decompose_rules

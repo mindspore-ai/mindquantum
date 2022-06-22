@@ -25,15 +25,9 @@ def test_polynomial_tensor():
     Description: Test polynomial tensor
     Expectation:
     """
-    constant = 1
     one_body_term = np.array([[1, 0], [0, 1]])
-    two_body_term = np.array([[[[1, 0], [0, 1]], [[1, 0], [0, 1]]],
-                              [[[1, 0], [0, 1]], [[1, 0], [0, 1]]]])
-    n_body_tensors = {
-        (): 1,
-        (1, 0): one_body_term,
-        (1, 1, 0, 0): two_body_term
-    }
+    two_body_term = np.array([[[[1, 0], [0, 1]], [[1, 0], [0, 1]]], [[[1, 0], [0, 1]], [[1, 0], [0, 1]]]])
+    n_body_tensors = {(): 1, (1, 0): one_body_term, (1, 1, 0, 0): two_body_term}
     poly_op = PolynomialTensor(n_body_tensors)
 
     # test get function

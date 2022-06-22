@@ -15,10 +15,9 @@
 # ============================================================================
 '''test decompose rule'''
 import numpy as np
-from mindquantum.algorithm.compiler.decompose import ct_decompose
-from mindquantum.core import Circuit
-from mindquantum.core import T
 
+from mindquantum.algorithm.compiler.decompose import ct_decompose
+from mindquantum.core import Circuit, T
 
 
 def circuit_equal_test(gate, decompose_circ):

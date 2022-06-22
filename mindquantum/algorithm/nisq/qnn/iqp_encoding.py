@@ -16,12 +16,15 @@
 """General IQP Encoding."""
 
 import numpy as np
-from mindquantum.core.circuit import Circuit, UN
-from mindquantum.core.gates import ParameterGate, H, X, RZ, BARRIER
+
 from mindquantum.algorithm.nisq._ansatz import Ansatz
-from mindquantum.utils.type_value_check import _check_input_type
-from mindquantum.utils.type_value_check import _check_int_type
-from mindquantum.utils.type_value_check import _check_value_should_not_less
+from mindquantum.core.circuit import UN, Circuit
+from mindquantum.core.gates import BARRIER, RZ, H, ParameterGate, X
+from mindquantum.utils.type_value_check import (
+    _check_input_type,
+    _check_int_type,
+    _check_value_should_not_less,
+)
 
 
 def _check_intrinsconeparagate(msg, gate_type):
@@ -62,6 +65,7 @@ class IQPEncoding(Ansatz):
     """
 
     def __init__(self, n_feature, first_rotation_gate=RZ, second_rotation_gate=RZ, num_repeats=1):
+        """Initialize an IQPEncoding object."""
         _check_int_type("n_feature", n_feature)
         _check_value_should_not_less("n_feature", 1, n_feature)
         _check_int_type("num_repeats", num_repeats)
@@ -90,8 +94,10 @@ class IQPEncoding(Ansatz):
 
     def data_preparation(self, data):
         r"""
-        The IQPEncoding ansatz provide a ansatz to encode classical data into quantum state.
-        This method will prepare the classical data into suitable dimension for IQPEncoding.
+        Prepare the classical data into suitable dimension for IQPEncoding.
+
+        The IQPEncoding ansatz provides an ansatz to encode classical data into quantum state.
+
         Suppose the origin data has :math:`n` features, then the output data will have :math:`2n-1` features,
         with first :math:`n` features keep the same and for :math:`m > n`,
 
@@ -112,13 +118,15 @@ class IQPEncoding(Ansatz):
         if len(output.shape) == 1:
             if output.shape[0] != self.n_feature:
                 raise ValueError(
-                    f"This iqp encoding requires {self.n_feature} features, but data has {output.shape[0]} features")
+                    f"This iqp encoding requires {self.n_feature} features, but data has {output.shape[0]} features"
+                )
             output = np.append(output, output[:-1] * output[1:])
             return output
         if len(output.shape) == 2:
             if output.shape[1] != self.n_feature:
                 raise ValueError(
-                    f"This iqp encoding requires {self.n_feature} features, but data has {output.shape[1]} features")
+                    f"This iqp encoding requires {self.n_feature} features, but data has {output.shape[1]} features"
+                )
             output = np.append(output, output[:, :-1] * output[:, 1:], axis=1)
             return output
         raise ValueError(f"data need a one or two dimension array, but get dimension of {data.shape}")

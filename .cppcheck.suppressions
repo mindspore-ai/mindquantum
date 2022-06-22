@@ -2,11 +2,29 @@ unusedFunction
 missingInclude
 missingReturn
 
-unusedStructMember:mindquantum/src/core/type.h:79
-unusedStructMember:mindquantum/src/core/type.h:80
-unusedStructMember:mindquantum/src/core/type.h:81
-unusedStructMember:mindquantum/src/core/type.h:82
-unusedStructMember:mindquantum/src/core/type.h:83
-unusedStructMember:mindquantum/src/core/type.h:84
+constParameter:tests/*
 
-objectIndex:mindquantum/src/core/utils.h:87
+duplicateExpression:ccsrc/mq_base/pr/parameter_resolver.h:703
+
+noExplicitConstructor:ccsrc/cxx_experimental/include/decompositions/decomposition_atom.hpp:42
+noExplicitConstructor:ccsrc/cxx_experimental/include/ops/parametric/gate_base.hpp
+
+noValidConfiguration:ccsrc/cxx_experimental/include/core/details/cxx20_compatibility.hpp
+noValidConfiguration:ccsrc/cxx_experimental/include/ops/parametric/angle_base.hpp
+noValidConfiguration:ccsrc/cxx_experimental/include/ops/parametric/angle_gates.hpp
+
+operatorEqVarError:ccsrc/cxx_experimental/include/decompositions/decomposition_atom.hpp
+
+preprocessorErrorDirective:ccsrc/cxx_experimental/include/core/details/cxx20_compatibility.hpp:20
+preprocessorErrorDirective:ccsrc/cxx_experimental/include/decompositions/rules/config.hpp
+preprocessorErrorDirective:ccsrc/cxx_experimental/include/ops/parametric/angle_base.hpp
+preprocessorErrorDirective:tests/decompositions/test_apply_atoms.cpp:48
+preprocessorErrorDirective:tests/ops/test_angle_parametric_gates.cpp:26
+
+unknownMacro:ccsrc/cxx_experimental/python/include/python/cengines/resource_counter.hpp:24
+unknownMacro:ccsrc/cxx_experimental/python/include/python/ops/command.hpp:28
+
+unusedStructMember:ccsrc/cxx_experimental/include/ops/parametric/param_names.hpp
+
+useStlAlgorithm:ccsrc/cxx_experimental/include/core/control.hpp:79
+useStlAlgorithm:ccsrc/cxx_experimental/lib/core/circuit_manager.cpp

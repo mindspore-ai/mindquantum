@@ -1,3 +1,5 @@
+---
+
 markup:
   first_comment_is_literal: true
 format:
@@ -23,25 +25,116 @@ format:
   require_valid_layout: false
 parse:
   additional_commands:
+    file:
+      pargs:
+        flags:
+          - CONFIGURE
+          - '@ONLY'
+      kwargs:
+        OUTPUT: 1
+        CONTENT: 1
+        NEWLINE_STYLE: 1
+    check_compiler_flags:
+      pargs:
+        nargs: 2+
+        flags:
+          - FLAGCHECK
     test_compile_option:
       pargs:
         nargs: 1+
         flags:
-          - AUTO_ADD_CO
+          - FLAGCHECK
+          - NO_MQ_TARGET
+          - NO_TRYCOMPILE_TARGET
+          - NO_TRYCOMPILE_FLAGCHECK_TARGET
       kwargs:
         LANGS: +
         FLAGS: +
+        CMAKE_OPTION: 1
         GENEX: 1
-    test_link_option:
+    check_link_flags:
+      pargs:
+        nargs: 2+
+        flags:
+          - VERBATIM
+    test_linker_option:
       pargs:
         nargs: 1+
         flags:
-          - AUTO_ADD_LO
+          - NO_MQ_TARGET
           - VERBATIM
       kwargs:
         LANGS: +
         FLAGS: +
+        CMAKE_OPTION: 1
         GENEX: 1
+    _apply_patch_file:
+      kwargs:
+        PATCH_ARGS: +
+        ERROR_VARIABLE: 1
+        INPUT_FILE: 1
+        OUTPUT_VARIABLE: 1
+        RESULTS_VARIABLE: 1
+        RESULT_VARIABLE: 1
+        WORKING_DIRECTORY: 1
+    __find_package:
+      pargs:
+        nargs: 1+
+      kwargs:
+        SEARCH_NAME: 1
+    __exec_cmd:
+      kwargs:
+        COMMAND: +
+        WORKING_DIRECTORY: 1
+    pybind11_add_module:
+      pargs:
+        nargs: 1+
+        flags:
+          - MODULE
+      kwargs:
+        OUTPUT_HINT: 1
+    mq_add_compile_definitions:
+      pargs:
+        nargs: +
+    mindquantum_add_pkg:
+      pargs:
+        nargs: 1
+        flags:
+          - CMAKE_PKG_NO_COMPONENTS
+          - FORCE_CONFIG_SEARCH
+          - FORCE_EXACT_VERSION
+          - FORCE_LOCAL_PKG
+          - GEN_CMAKE_CONFIG
+          - ONLY_MAKE
+          - SKIP_BUILD_STEP
+          - SKIP_INSTALL_STEP
+          - SKIP_IN_INSTALL_CONFIG
+      kwargs:
+        CMAKE_PATH: 1
+        CUSTOM_CMAKE: 1
+        DIR: 1
+        EXE: 1
+        GIT_REPOSITORY: 1
+        GIT_TAG: 1
+        MD5: 1
+        NS_NAME: 1
+        URL: 1
+        VER: 1
+        BUILD_COMMAND: +
+        BUILD_DEPENDENCIES: +
+        BUILD_OPTION: +
+        CMAKE_OPTION: +
+        CONFIGURE_COMMAND: +
+        INSTALL_COMMAND: +
+        INSTALL_INCS: +
+        INSTALL_LIBS: +
+        LIBS: +
+        ONLY_COPY_DIRS: +
+        ONLY_MAKE_INCS: +
+        ONLY_MAKE_LIBS: +
+        PATCHES: +
+        PRE_CONFIGURE_COMMAND: +
+        TARGET_ALIAS: +
 lint:
   argument_var_pattern: _?[a-z][a-z0-9_]+
   local_var_pattern: _?([a-z][a-z0-9_]+|[A-Z][A-Z0-9_]+)

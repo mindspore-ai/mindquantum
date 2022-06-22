@@ -3,7 +3,28 @@
 # Scene2:
 #    file_path:function_name1, function_name2
 #
-mindquantum/mindquantum/src/binding.cc:mindquantum::PYBIND11_MODULE
-mindquantum/mindquantum/io/qasm/hiqasm.py:trans_v01
+mindquantum/mindquantum/algorithm/nisq/chem/qubit_ucc_ansatz.py:_implement
+mindquantum/mindquantum/algorithm/nisq/chem/quccsd.py:quccsd_generator
+mindquantum/mindquantum/algorithm/nisq/chem/transform.py:bravyi_kitaev_superfast
+mindquantum/mindquantum/algorithm/nisq/chem/uccsd.py:_para_uccsd_singlet_generator
+mindquantum/mindquantum/algorithm/nisq/chem/uccsd0.py:uccsd0_singlet_generator
+mindquantum/mindquantum/experimental/_symengine_utilities.py:symbols
+mindquantum/mindquantum/io/display/bloch_plt_drawer.py:add_state
 mindquantum/mindquantum/io/qasm/hiqasm.py:to_string
-mindquantum/mindquantum/src/gate/gates.h:mindquantum::GetGateByName
+mindquantum/mindquantum/io/qasm/hiqasm.py:trans_v01
+mindquantum/mindquantum/simulator/simulator.py:get_expectation_with_grad
+mindquantum/mindquantum/src/binding.cc:mindquantum::PYBIND11_MODULE
+mindquantum/mindquantum/third_party/unitary_cc.py:uccsd_singlet_generator
+
+mindquantum/mindquantum/experimental/_symengine_utilities.py:symbols
+
+mindquantum/ccsrc/mq_base/gate/gates.h:mindquantum::GetGateByName
+mindquantum/ccsrc/mqbackend/binding.cc:mindquantum::PYBIND11_MODULE
+
+mindquantum/ccsrc/cxx_experimental/lib/core/cpp_core.cpp:mindquantum::core::CppCore::flush
+mindquantum/ccsrc/cxx_experimental/python/lib/core/symengine.cpp:mindquantum::python::init_symengine_basic_types
+mindquantum/ccsrc/cxx_experimental/python/lib/ops/command.cpp:mindquantum::details::load_gate
+
+TEST_CASE
+
+mindquantum/tests/st/test_io/test_svg.py:test_measure_svg

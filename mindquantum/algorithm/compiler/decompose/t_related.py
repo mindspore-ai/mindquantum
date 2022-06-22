@@ -13,17 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""
-CT gate related decompose rule.
-"""
+"""CT gate related decompose rule."""
 
 
-from mindquantum.core import gates as G
-from mindquantum.core import Circuit
-from mindquantum.utils.type_value_check import _check_input_type, _check_control_num
 import numpy as np
 
-def ct_decompose(gate: G.TGate):
+from mindquantum.core import Circuit, gates
+from mindquantum.utils.type_value_check import _check_control_num, _check_input_type
+
+
+def ct_decompose(gate: gates.TGate):
     """
     Decompose ct gate.
 
@@ -48,19 +47,20 @@ def ct_decompose(gate: G.TGate):
                          │                │
         q1: ──RZ(π/8)────X────RZ(-π/8)────X──
     """
-    _check_input_type('gate', G.TGate, gate)
+    _check_input_type('gate', gates.TGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)
     solutions = []
     c1 = Circuit()
     solutions.append(c1)
     q0 = gate.ctrl_qubits[0]
     q1 = gate.obj_qubits[0]
-    c1 += G.PhaseShift(np.pi/8).on(q0)
-    c1 += G.RZ(np.pi/8).on(q1)
-    c1 += G.X.on(q1, q0)
-    c1 += G.RZ(-np.pi/8).on(q1)
-    c1 += G.X.on(q1, q0)
+    c1 += gates.PhaseShift(np.pi / 8).on(q0)
+    c1 += gates.RZ(np.pi / 8).on(q1)
+    c1 += gates.X.on(q1, q0)
+    c1 += gates.RZ(-np.pi / 8).on(q1)
+    c1 += gates.X.on(q1, q0)
     return solutions
+
 
 decompose_rules = ['ct_decompose']
 __all__ = decompose_rules

@@ -16,6 +16,7 @@
 """General W State"""
 
 import numpy as np
+
 from mindquantum.algorithm.library import general_w_state
 
 

@@ -1,0 +1,49 @@
+diff -Npur tweedledum-orig/external/mockturtle/mockturtle/algorithms/cleanup.hpp tweedledum-src/external/mockturtle/mockturtle/algorithms/cleanup.hpp
+--- tweedledum-orig/external/mockturtle/mockturtle/algorithms/cleanup.hpp	2022-06-17 21:18:41.830079248 +0200
++++ tweedledum-src/external/mockturtle/mockturtle/algorithms/cleanup.hpp	2022-06-17 21:24:52.596950639 +0200
+@@ -43,6 +43,25 @@
+ #include "../utils/node_map.hpp"
+ #include "../views/topo_view.hpp"
+ 
++
++namespace details {
++     template <bool _has_create_node = true>
++     struct traits {
++          template <typename dest_t, typename child_t, typename ntk_t, typename node_t>
++          typename dest_t::signal apply(dest_t&& dest, const child_t& children, const ntk_t& ntk, const node_t& node) {
++               return dest.create_node( children, ntk.node_function( node ) );
++          }
++     };
++     template <>
++     struct traits<false> {
++          template <typename dest_t, typename child_t, typename ntk_t, typename node_t>
++          typename dest_t::signal apply(dest_t&& dest, const child_t& children, const ntk_t& ntk, const node_t& node) {
++               return {};
++          }
++     };
++}
++
++
+ namespace mockturtle
+ {
+ 
+@@ -189,10 +208,9 @@ std::vector<signal<NtkDest>> cleanup_dan
+             break;
+           }
+         }
+-        if constexpr ( has_is_function_v<NtkSource> )
++        if constexpr ( has_is_function_v<NtkSource> && has_create_node_v<NtkDest>)
+         {
+-          static_assert( has_create_node_v<NtkDest>, "NtkDest cannot create arbitrary function gates" );
+-          old_to_new[node] = dest.create_node( children, ntk.node_function( node ) );
++          old_to_new[node] = details::traits<has_create_node_v<NtkDest>>(dest, children, ntk, node);
+           break;
+         }
+         std::cerr << "[e] something went wrong, could not copy node " << ntk.node_to_index( node ) << "\n";
+@@ -410,4 +428,4 @@ Ntk cleanup_luts( Ntk const& ntk )
+   return dest;
+ }
+ 
+-} // namespace mockturtle
+\ No newline at end of file
++} // namespace mockturtle

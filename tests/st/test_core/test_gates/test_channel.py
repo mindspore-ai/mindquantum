@@ -16,8 +16,9 @@
 """Test channel."""
 
 import numpy as np
-from mindquantum import Simulator, X
+
 import mindquantum.core.gates.channel as C
+from mindquantum import Simulator, X
 
 
 def test_pauli_channel():
@@ -29,7 +30,7 @@ def test_pauli_channel():
     sim.apply_gate(C.PauliChannel(1, 0, 0).on(0))
     sim.apply_gate(C.PauliChannel(0, 0, 1).on(0))
     sim.apply_gate(C.PauliChannel(0, 1, 0).on(0))
-    assert np.allclose(sim.get_qs(), np.array([0. + 1.j, 0. + 0.j]))
+    assert np.allclose(sim.get_qs(), np.array([0.0 + 1.0j, 0.0 + 0.0j]))
 
 
 def test_flip_channel():
@@ -39,11 +40,11 @@ def test_flip_channel():
     """
     sim1 = Simulator('projectq', 1)
     sim1.apply_gate(C.BitFlipChannel(1).on(0))
-    assert np.allclose(sim1.get_qs(), np.array([0. + 0.j, 1. + 0.j]))
+    assert np.allclose(sim1.get_qs(), np.array([0.0 + 0.0j, 1.0 + 0.0j]))
     sim1.apply_gate(C.PhaseFlipChannel(1).on(0))
-    assert np.allclose(sim1.get_qs(), np.array([0. + 0.j, -1. + 0.j]))
+    assert np.allclose(sim1.get_qs(), np.array([0.0 + 0.0j, -1.0 + 0.0j]))
     sim1.apply_gate(C.BitPhaseFlipChannel(1).on(0))
-    assert np.allclose(sim1.get_qs(), np.array([0. + 1.j, 0. + 0.j]))
+    assert np.allclose(sim1.get_qs(), np.array([0.0 + 1.0j, 0.0 + 0.0j]))
 
 
 def test_depolarizing_channel():
@@ -53,7 +54,7 @@ def test_depolarizing_channel():
     """
     sim2 = Simulator('projectq', 1)
     sim2.apply_gate(C.DepolarizingChannel(0).on(0))
-    assert np.allclose(sim2.get_qs(), np.array([1. + 0.j, 0. + 0.j]))
+    assert np.allclose(sim2.get_qs(), np.array([1.0 + 0.0j, 0.0 + 0.0j]))
 
 
 def test_damping_channel():

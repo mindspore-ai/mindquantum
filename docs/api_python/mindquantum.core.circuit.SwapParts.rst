@@ -6,4 +6,4 @@
 
     - **a** (Iterable) - 您需要交换的第一部分。
     - **b** (Iterable) - 您需要交换的第二部分。
-    - **maps_ctrl** (int, Iterable) - 通过单个量子位或不同量子位来控制交换，或者不加控制量子位。默认值：None。       
+    - **maps_ctrl** (int, Iterable) - 通过单个量子位或不同量子位来控制交换，或者不加控制量子位。默认值：None。

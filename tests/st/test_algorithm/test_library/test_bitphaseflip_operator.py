@@ -16,9 +16,10 @@
 """Bitphaseflip operator."""
 
 import numpy as np
+
 from mindquantum import UN, H
-from mindquantum.core.circuit import Circuit
 from mindquantum.algorithm.library import bitphaseflip_operator
+from mindquantum.core.circuit import Circuit
 
 
 def test_bitphaseflip_operator():

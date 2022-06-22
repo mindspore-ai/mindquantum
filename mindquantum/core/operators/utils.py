@@ -13,27 +13,34 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-"""This module provide some useful function related to operators"""
 
-import projectq.ops as pjops
+"""This module provide some useful function related to operators."""
+
 import openfermion.ops as ofops
+
 from mindquantum.core.operators.fermion_operator import FermionOperator
-from mindquantum.core.operators.qubit_operator import QubitOperator
-from mindquantum.core.operators.qubit_excitation_operator import QubitExcitationOperator
 from mindquantum.core.operators.polynomial_tensor import PolynomialTensor
+from mindquantum.core.operators.qubit_excitation_operator import QubitExcitationOperator
+from mindquantum.core.operators.qubit_operator import QubitOperator
+
+try:
+    from projectq.ops import QubitOperator as PQOperator
+except ImportError:
+
+    class PQOperator:
+        """Dummy class for ProjectQ operators."""
 
 
 def count_qubits(operator):
     """
-    Calculate the number of qubits on which operator acts before
-    removing the unused qubit
+    Calculate the number of qubits on which operator acts before removing the unused qubit.
 
     Note:
         In some case, we need to remove the unused index.
 
     Args:
-        operator (Union[FermionOperator, QubitOperator, QubitExcitationOperator]):
-            FermionOperator or QubitOperator or QubitExcitationOperator.
+        operator (Union[FermionOperator, QubitOperator, QubitExcitationOperator]): FermionOperator or QubitOperator or
+            QubitExcitationOperator.
 
     Returns:
         int, The minimum number of qubits on which operator acts.
@@ -52,19 +59,23 @@ def count_qubits(operator):
         2
     """
     # Handle FermionOperator.
-    valueable_type = (FermionOperator, QubitOperator, QubitExcitationOperator,
-                      ofops.FermionOperator, ofops.QubitOperator,
-                      pjops.QubitOperator)
+    valueable_type = (
+        FermionOperator,
+        QubitOperator,
+        QubitExcitationOperator,
+        ofops.FermionOperator,
+        ofops.QubitOperator,
+        PQOperator,
+    )
     if isinstance(operator, valueable_type):
         num_qubits = 0
         for term in operator.terms:
             # a tuple compose of single (qubit_index,operator) subterms
             if term == ():
-                qubit_index = (0, )
+                qubit_index = (0,)
             else:
                 qubit_index, _ = zip(*term)
-            num_qubits = max(max(qubit_index) + 1,
-                             num_qubits)  # index start with 0
+            num_qubits = max(max(qubit_index) + 1, num_qubits)  # index start with 0
         return num_qubits
 
     if isinstance(operator, PolynomialTensor):
@@ -100,9 +111,7 @@ def commutator(left_operator, right_operator):
         raise TypeError('operator_a and operator_b are not of the same type.')
     valueable_type = (QubitOperator, FermionOperator, QubitExcitationOperator)
     if not isinstance(left_operator, valueable_type):
-        raise TypeError(
-            "Operator should be QubitOperator, FermionOperator or QubitExcitationOperator."
-        )
+        raise TypeError("Operator should be QubitOperator, FermionOperator or QubitExcitationOperator.")
 
     result = left_operator * right_operator
     result -= right_operator * left_operator
@@ -111,8 +120,8 @@ def commutator(left_operator, right_operator):
 
 def _normal_ordered_term(term, coefficient):
     r"""
-    return the normal order order of a fermion operator with
-    larger index and creation operator in front.
+    Return the normal order order of a fermion operator with larger index and creation operator in front.
+
     eg. :math:`a_4\dagger a3_\dagger a_2 a_1`.
     """
     term = list(term)
@@ -129,9 +138,8 @@ def _normal_ordered_term(term, coefficient):
                 # If indice are same, employ the anti-commutation relationship
                 # And generate the new term
                 if left_sub_term[0] == right_sub_term[0]:
-                    new_term = term[:(j - 1)] + term[(j + 1):]
-                    ordered_term += _normal_ordered_term(
-                        new_term, -coefficient)
+                    new_term = term[: (j - 1)] + term[(j + 1) :]  # noqa: E203
+                    ordered_term += _normal_ordered_term(new_term, -coefficient)
             # Deal with the case with same operator
             elif left_sub_term[1] == right_sub_term[1]:
                 # If indice are same,evaluate it to zero.
@@ -150,14 +158,13 @@ def _normal_ordered_term(term, coefficient):
 def normal_ordered(fermion_operator):
     r"""
     Calculate and return the normal order of the FermionOperator.
-    By convention, normal ordering implies terms are ordered
-    from highest mode index (on left) to lowest (on right).
+
+    By convention, normal ordering implies terms are ordered from highest mode index (on left) to lowest (on right).
     Also, creation operators come first then follows the annihilation operator.
     e.g 3 4^ :math:`\rightarrow` - 4^ 3.
 
     Args:
-        fermion_operator(FermionOperator): Only Fermion type Operator has
-            such forms.
+        fermion_operator(FermionOperator): Only Fermion type Operator has such forms.
 
     Returns:
         FermionOperator, the normal_ordered FermionOperator.
@@ -221,9 +228,8 @@ def number_operator(n_modes=None, mode=None, coefficient=1.0):
         >>> number_operator(None, mode)
         1.0 [3^ 3]
     """
-    if (mode is None and n_modes is None) or (not mode is None and not n_modes is None):
-        raise ValueError(
-            "Please provide only one parameter between n_modes and mode.")
+    if (mode is None and n_modes is None) or (mode is not None and n_modes is not None):
+        raise ValueError("Please provide only one parameter between n_modes and mode.")
 
     operator = FermionOperator()
     if mode is None:
@@ -258,8 +264,7 @@ def hermitian_conjugated(operator):
         conjugate_operator = FermionOperator()
         for term, coefficient in operator.terms.items():
             # reverse the order and change the action from 0(1) to 1(0)
-            conjugate_term = tuple([(index, 1 - op)
-                                    for (index, op) in reversed(term)])
+            conjugate_term = tuple([(index, 1 - op) for (index, op) in reversed(term)])
             conjugate_operator.terms[conjugate_term] = coefficient.conjugate()
 
     # Handle QubitOperator
@@ -273,20 +278,20 @@ def hermitian_conjugated(operator):
         conjugate_operator = QubitExcitationOperator()
         for term, coefficient in operator.terms.items():
             # reverse the order and change the action from 0(1) to 1(0)
-            conjugate_term = tuple([(index, 1 - op)
-                                    for (index, op) in reversed(term)])
+            conjugate_term = tuple([(index, 1 - op) for (index, op) in reversed(term)])
             conjugate_operator.terms[conjugate_term] = coefficient.conjugate()
 
     # Unsupported type
     else:
-        raise TypeError('Taking the hermitian conjugate of a {} is not '
-                        'supported.'.format(type(operator).__name__))
+        raise TypeError('Taking the hermitian conjugate of a {} is not ' 'supported.'.format(type(operator).__name__))
 
     return conjugate_operator
 
 
 def up_index(index):
     """
+    Up index getter function.
+
     The index order, by default we set the spinless orbits as
     even-odd-even-odd (0,1,2,3,...). The spin_up orbitals (alpha orbitals) with index even.
 
@@ -306,8 +311,10 @@ def up_index(index):
 
 def down_index(index):
     """
-    The index order, by default we set the spinless orbits as
-    even-odd-even-odd (0,1,2,3,...). The spin_down orbitals (beta orbital) with index odd.
+    Down index getter function.
+
+    The index order, by default we set the spinless orbits as even-odd-even-odd (0,1,2,3,...). The spin_down orbitals
+    (beta orbital) with index odd.
 
     Args:
         index (int): spatial orbital index.

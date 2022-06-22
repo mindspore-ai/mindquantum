@@ -13,13 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Text draw a circuit"""
+
+"""Text draw a circuit."""
+
 import numpy as np
+
 from ._config import _text_drawer_config
 
 
 def _get_qubit_range(gate):
-    """_get_qubit_range"""
+    """Get qubit range."""
     out = []
     out.extend(gate.obj_qubits)
     out.extend(gate.ctrl_qubits)
@@ -30,7 +33,8 @@ def _get_qubit_range(gate):
 
 def brick_model(circ, qubits_name=None):
     """Split a circuit into layers."""
-    from mindquantum import gates as G
+    from mindquantum import gates as gates
+
     n = circ.n_qubits
     if qubits_name is None:
         qubits_name = list(range(n))
@@ -38,7 +42,7 @@ def brick_model(circ, qubits_name=None):
     blocks = []
     qubit_hight = np.zeros(n, dtype=int)
     for gate in circ:
-        if isinstance(gate, G.BarrierGate):
+        if isinstance(gate, gates.BarrierGate):
             qrange = range(n)
         else:
             qrange = _get_qubit_range(gate)
@@ -65,18 +69,19 @@ def brick_model(circ, qubits_name=None):
 
 
 def _single_gate_drawer(gate):
-    """_single_gate_drawer"""
-    from mindquantum import gates as G
-    if isinstance(gate, G.CNOTGate):
-        gate = G.X.on(*gate.obj_qubits)
+    """Single gate drawer."""
+    from mindquantum import gates as gates
+
+    if isinstance(gate, gates.CNOTGate):
+        gate = gates.X.on(*gate.obj_qubits)
     main_text = gate.__str_in_circ__()
-    if isinstance(gate, G.SWAPGate):
+    if isinstance(gate, gates.SWAPGate):
         main_text = _text_drawer_config['swap_mask'][0]
     main_text = _text_drawer_config['edge'] + main_text + _text_drawer_config['edge']
     res = {}
     for i in gate.obj_qubits:
         res[i] = main_text
-    if isinstance(gate, G.SWAPGate):
+    if isinstance(gate, gates.SWAPGate):
         max_idx = max(gate.obj_qubits)
         lower_txt = _text_drawer_config['swap_mask'][1]
         res[max_idx] = _text_drawer_config['edge'] + lower_txt + _text_drawer_config['edge']
@@ -88,11 +93,12 @@ def _single_gate_drawer(gate):
 
 
 def _single_block_drawer(block, n_qubits):
-    """single block drawer"""
-    from mindquantum import gates as G
+    """Single block drawer."""
+    from mindquantum import gates as gates
+
     v_n = _text_drawer_config['v_n']
     text_gates = {}
-    if isinstance(block[0], G.BarrierGate):
+    if isinstance(block[0], gates.BarrierGate):
         if not block[0].show:
             tmp = ''
         else:

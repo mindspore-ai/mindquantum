@@ -1,0 +1,1040 @@
+---
+
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches-ignore:
+      - 'test'
+
+jobs:
+  standard:
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [ubuntu-latest]
+        python:
+          - 3.6
+          - 3.7
+          - 3.8
+          - 3.9
+          - '3.10'
+        include:
+          - test_install: false
+          - test_bdist_wheel: false
+          - python: 3.9
+            test_install: true
+            VENV_PYTHON_TEST_PKGS:
+          - python: 3.8
+            test_bdist_wheel: true
+    env:
+      CMAKE_VERSION: 3.22.3
+    name: "Python ${{ matrix.python }} • ${{ matrix.runs-on }} • x64"
+    runs-on: ${{ matrix.runs-on }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get history and tags for SCM versioning to work
+        if: env.ACT != 'true'
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*¨
+
+      - name: Setup Python ${{ matrix.python }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: 'x64'
+
+      - name: Prepare env
+        run: >
+          sudo apt-get update && sudo apt-get install -y libboost-filesystem-dev
+          --no-install-recommends
+
+      - name: Setup CCache
+        uses: hendrikmuhs/ccache-action@v1.2.2
+        with:
+          key: ${{ matrix.runs-on }}-python-${{ matrix.python }}-ccache
+          max-size: 75M
+
+      - name: Cache CMake installer
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh
+          key: cmake-${{ env.CMAKE_VERSION }}
+
+      - name: Install latest CMake
+        run: |
+          if [ ! -e cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh ]; then
+            url_base='https://github.com/Kitware/CMake/releases/download'
+            wget ${url_base}/v${{ env.CMAKE_VERSION }}/cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh
+          fi
+          sudo bash cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh --skip-license --prefix=/usr/local
+
+      - name: Cache Python virtualenv
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: venv
+          key: >-
+            ${{ matrix.runs-on }}-python-${{ matrix.python }}-python-venv
+            -${{ hashFiles('build_locally.sh', 'scripts/build/**.sh') }}-${{ secrets.cache_ver }}
+
+      - name: Cache compiled third-party libraries
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: build/.mqlibs
+          key: >-
+            ${{ matrix.runs-on }}-python-${{ matrix.python }}-third-party-libs-${{ hashFiles('third_party/**') }}
+            -${{ secrets.cache_ver }}
+
+      - name: Configure
+        run: >-
+          ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache
+          --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
+
+      - name: Build
+        run: ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache
+
+      - name: Install
+        run: ./build_locally.sh --install  # NB: no need to pass the other parameters
+
+      # ------------------------------------------------------------------------
+
+      - name: Run C++ tests
+        run: |
+          cd build
+          ctest --output-on-failure
+
+      - name: Run Python tests
+        run: |
+          . venv/bin/activate
+          python3 -m pytest -v
+
+      # ------------------------------------------------------------------------
+
+      - name: In-build config files
+        if: matrix.test_install
+        run: |
+          cat ${{ github.workspace }}/build/mindquantumConfig.cmake
+          echo ----------
+          cat ${{ github.workspace }}/build/mindquantumTargetsExternal.cmake
+
+      - name: Out-of-build config files
+        if: matrix.test_install
+        run: |
+          cat ${{ github.workspace }}/build/config_for_install/mindquantumConfig.cmake
+          echo ----------
+          cat ${{ github.workspace }}/build/config_for_install/mindquantumTargetsExternal.cmake
+
+      - name: Setup installation test
+        if: matrix.test_install
+        run: |
+          mkdir other
+          cat << \EOF > other/CMakeLists.txt
+          cmake_minimum_required(VERSION 3.20)
+          project(test CXX)
+          find_package(mindquantum CONFIG REQUIRED)
+          set(CMAKE_CXX_STANDARD 20)
+          set(CMAKE_CXX_STANDARD_REQUIRED OFF)
+          set(CMAKE_CXX_EXTENSIONS OFF)
+          add_library(mylib STATIC test.cpp)
+          target_link_libraries(mylib PUBLIC mindquantum::mindquantum_cxx)
+          EOF
+          cat << \EOF > other/test.cpp
+          #include "ops/parametric/angle_gates.hpp"
+          double foo() { return mindquantum::ops::parametric::Rxx{1.3}.eval_full().angle(); }
+          EOF
+
+      - name: Test (local) installation
+        if: matrix.test_install
+        run: |
+          . venv/bin/activate
+          hash -r
+          cmake -S other -B other/local_build -Dmindquantum_DEBUG=ON -Dmindquantum_ROOT=${{ github.workspace }}/build
+          cmake --build other/local_build --target all -v
+
+      - name: Test (normal) installation
+        if: matrix.test_install
+        run: |
+          . venv/bin/activate
+          hash -r
+          cmake -S other -B other/build -Dmindquantum_DEBUG=ON  -Dmindquantum_ROOT="${{ github.workspace }}/install"
+          cmake --build other/build --target all -v
+
+      # ------------------------------------------------------------------------
+
+      - name: Test (setup.py) installation
+        if: matrix.test_bdist_wheel
+        env:
+          VENV_PYTHON_TEST_PKGS: ${{ matrix.VENV_PYTHON_TEST_PKGS }}
+        run: |
+          mkdir -p "${{ github.workspace }}/wheel_build"
+          cp -r "${{ github.workspace }}/build/.mqlibs" "${{ github.workspace }}/wheel_build"
+          ./build.sh --cxx --with-projectq --debug-cmake --test --build="${{ github.workspace }}/wheel_build" \
+            --no-delocate --ccache --cmake-no-registry
+
+  # ============================================================================
+
+  macos:
+    runs-on: macos-11
+    name: "MacOS 11 • ${{ matrix.xcode }} • x64"
+    env:
+      DEVELOPER_DIR: "/Applications/${{ matrix.xcode }}.app/Contents/Developer"
+      CC: /usr/bin/clang
+      CXX: /usr/bin/clang++
+    strategy:
+      fail-fast: false
+      matrix:
+        xcode:
+          - "Xcode_11.7"    # Not available on macos-12
+          - "Xcode_12.4"    # Not available on macos-12
+          - "Xcode_12.5.1"  # Not available on macos-12
+          # - "Xcode_13.0"    # Not available on macos-12
+          - "Xcode_13.1"
+          - "Xcode_13.2.1"
+          # - "Xcode_13.3.1"  # macos-12 only
+          # - "Xcode_13.4.1"  # macos-12 only
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get history and tags for SCM versioning to work
+        if: env.ACT != 'true'
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*¨
+
+      - name: Setup Python ${{ matrix.python }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: 'x64'
+
+      - name: Prepare env
+        run: brew install libomp ccache
+
+      - name: Setup CCache
+        uses: hendrikmuhs/ccache-action@v1.2.2
+        with:
+          key: macos-${{ matrix.xcode }}-ccache
+          max-size: 75M
+
+      - name: Cache Python virtualenv
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: venv
+          key: macos-python-venv-${{ hashFiles('build_locally.sh', 'scripts/build/**.sh') }}-${{ secrets.cache_ver }}
+
+      - name: Cache compiled third-party libraries
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: build/.mqlibs
+          key: macos-${{ matrix.xcode }}-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
+
+      - name: Configure
+        run: >-
+          ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache --only-pytest
+          --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
+
+      - name: Build
+        run: ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache
+
+      - name: Install
+        run: ./build_locally.sh --install  # NB: no need to pass the other parameters
+
+  # ============================================================================
+
+  gcc:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        gcc:
+          - 7  # C++17 earliest version
+          - 8
+          - 9
+          - 10
+          - 11
+          - 12
+    env:
+      CMAKE_VERSION: 3.22.3
+    name: "GCC ${{ matrix.gcc }} • x64"
+    container: "gcc:${{ matrix.gcc }}"
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get history and tags for SCM versioning to work
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Prepare env
+        run: >
+          apt-get update && apt-get install -y python3-dev python3-pip
+          python3-setuptools python3-wheel python3-venv libboost-filesystem-dev
+          --no-install-recommends
+
+      - name: Setup CCache
+        uses: hendrikmuhs/ccache-action@v1.2.2
+        with:
+          key: gcc-${{ matrix.gcc }}-ccache
+          max-size: 75M
+
+      - name: Cache CMake installer
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh
+          key: cmake-${{ env.CMAKE_VERSION }}
+
+      - name: Install latest CMake
+        run: |
+          if [ ! -e cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh ]; then
+            url_base='https://github.com/Kitware/CMake/releases/download'
+            wget ${url_base}/v${{ env.CMAKE_VERSION }}/cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh
+          fi
+          bash cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh --skip-license --prefix=/usr/local
+
+      - name: Cache Python virtualenv
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: venv
+          key: >-
+            gcc-${{ matrix.gcc }}-python-venv-${{ hashFiles('build_locally.sh', 'scripts/build/**.sh') }}
+            -${{ secrets.cache_ver }}
+
+      - name: Cache compiled third-party libraries
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: build/.mqlibs
+          key: gcc-${{ matrix.gcc }}-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
+
+      - name: Configure
+        run: >-
+          ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache --only-pytest
+          --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
+
+      - name: Build
+        run: ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache
+
+      - name: Install
+        run: ./build_locally.sh --install  # NB: no need to pass the other parameters
+
+
+  # ============================================================================
+
+  clang:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        clang:
+          - 7
+          - 8
+          - 9
+          - 10   # first version for full C++17 support (with patches)
+          - 11
+          - 12
+          - 13
+          - 14
+    env:
+      CC: clang
+      CXX: clang++
+      CMAKE_VERSION: 3.22.3
+
+    name: "Clang ${{ matrix.clang }} • x64"
+    container: "silkeh/clang:${{ matrix.clang }}"
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get history and tags for SCM versioning to work
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Prepare env
+        run: >
+          apt-get update && apt-get install -y python3-dev python3-pip
+          python3-setuptools python3-wheel python3-venv
+          --no-install-recommends
+
+      - name: Setup CCache
+        uses: hendrikmuhs/ccache-action@v1.2.2
+        with:
+          key: clang-${{ matrix.clang }}-ccache
+          max-size: 75M
+
+      - name: Cache CMake installer
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh
+          key: cmake-${{ env.CMAKE_VERSION }}
+
+      - name: Install latest CMake
+        run: |
+          if [ ! -e cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh ]; then
+            url_base='https://github.com/Kitware/CMake/releases/download'
+            wget ${url_base}/v${{ env.CMAKE_VERSION }}/cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh
+          fi
+          bash cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh --skip-license --prefix=/usr/local
+
+      - name: Cache Python virtualenv
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: venv
+          key: >-
+            clang-${{ matrix.clang }}-python-venv-${{ hashFiles('build_locally.sh', 'scripts/build/**.sh') }}
+            -${{ secrets.cache_ver }}
+
+      - name: Cache compiled third-party libraries
+        if: env.ACT != 'true'
+        uses: actions/cache@v2
+        with:
+          path: build/.mqlibs
+          key: clang-${{ matrix.clang }}-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
+
+      - name: Configure
+        run: >-
+          ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache --only-pytest
+          --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
+
+      - name: Build
+        run: ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache
+
+      - name: Install
+        run: ./build_locally.sh --install  # NB: no need to pass the other parameters
+
+  # ============================================================================
+
+  msvc:
+    runs-on: windows-latest
+    name: "MSVC • x64"
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get history and tags for SCM versioning to work
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Install ninja-build tool
+        uses: seanmiddleditch/gha-setup-ninja@v3
+
+      - name: Enable Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1.10.0
+
+      - name: Install Scoop && Scoop packages
+        run: |
+          iwr -useb get.scoop.sh -outfile 'install.ps1'
+          .\install.ps1 -RunAsAdmin
+          Join-Path (Resolve-Path ~).Path "scoop\shims" >> $Env:GITHUB_PATH
+          scoop install ccache
+
+      - name: Get Date
+        id: get-date
+        shell: bash
+        run: |
+          echo "::set-output name=date::$(date -Iseconds)"
+
+      - name: Restore cache for CCache
+        if: env.ACT != 'true'
+        id: ccache-cache
+        uses: martijnhols/actions-cache/restore@v3
+        with:
+          path: ccache
+          key: msvc-ccache-${{ steps.get-date.outputs.date }}
+          restore-keys: msvc-ccache-
+
+      - name: Configure CCache
+        run: |
+          ccache --set-config=cache_dir="$PWD/ccache"
+          ccache --set-config=max_size=250M
+          ccache --set-config=compression=true
+          ccache -pz
+          ccache -sv
+
+      - name: Cache Python virtualenv
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: venv
+          key: msvc-python-venv-${{ hashFiles('build_locally.ps1', 'scripts/build/**.ps1') }}-${{ secrets.cache_ver }}
+
+      - name: Cache compiled third-party libraries
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: build/.mqlibs
+          key: msvc-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
+
+      - name: Configure
+        env:
+          CC: cl
+          CXX: cl
+        run: >-
+           ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -CCache -OnlyPytest
+           -ConfigureOnly -C -Clean3rdParty -Prefix "${{ github.workspace }}/install"
+           -DUSE_PARALLEL_STL=OFF
+
+      - name: Build
+        run: ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -CCache
+
+      - name: Install
+        run: ./build_locally.ps1 -Install
+
+      - name: Print CCache statistics
+        run: |
+          ccache -sv
+
+      - name: Save cache for CCache
+        if: env.ACT != 'true'
+        uses: martijnhols/actions-cache/save@v3
+        with:
+          path: ccache
+          key: msvc-ccache-${{ steps.get-date.outputs.date }}
+
+  # ============================================================================
+
+  mingw64:
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+    name: "MINGW64 • x64"
+    env:
+      BOOST_VERSION: 1.78.0
+      BOOST_PATH: ${{github.workspace}}/boost/boost
+      CCACHE_VERSION: 4.6.1
+      CCACHE_URL: https://github.com/ccache/ccache/releases/download/
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get history and tags for SCM versioning to work
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Install ninja-build tool
+        uses: seanmiddleditch/gha-setup-ninja@v3
+
+      - name: Restore cache for CCache
+        if: env.ACT != 'true'
+        id: ccache-cache
+        uses: martijnhols/actions-cache/restore@v3
+        with:
+          path: ccache
+          key: mingw64-ccache-${{ steps.get-date.outputs.date }}
+          restore-keys: msvc-ccache-
+
+      - name: Cache Python virtualenv
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: venv
+          key: >-
+            mingw64-python-venv-${{ hashFiles('build_locally.ps1', 'scripts/build/**.ps1') }}-${{ secrets.cache_ver }}
+
+      - name: Cache compiled third-party libraries
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: build/.mqlibs
+          key: mingw64-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
+
+      - name: Set up MinGW64
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
+
+      # - name: Cache boost
+      #   uses: actions/cache@v2
+      #   id: cache-boost
+      #   with:
+      #     path: ${{ env.BOOST_PATH }}
+      #     key: boost-${{ env.BOOST_VERSION }}
+
+      - name: Download and install Boost
+        uses: MarkusJx/install-boost@v2.3.0
+        if: steps.cache-boost.outputs.cache-hit != 'true'
+        id: install-boost
+        with:
+          boost_version: ${{ env.BOOST_VERSION }}
+          platform_version: 2022
+          toolset: mingw
+
+      - name: Configure
+        env:
+          BOOST_ROOT: ${{ env.BOOST_PATH }}
+          CC: cc
+          CXX: c++
+        run: >-
+           ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -CCache -OnlyPytest
+           -ConfigureOnly -C -Clean3rdParty -Prefix "${{ github.workspace }}/install"
+           -G "MinGW Makefiles" -DUSE_PARALLEL_STL=OFF
+
+      - name: Build
+        run: ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -CCache
+
+      - name: Install
+        run: ./build_locally.ps1 -Install
+
+  # ============================================================================
+
+  msys2:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - msystem: MINGW64
+            installdeps: >-
+              git
+              patch
+              make
+              mingw-w64-x86_64-toolchain
+              mingw-w64-x86_64-cmake
+              mingw-w64-x86_64-ccache
+              mingw-w64-x86_64-gmp
+              mingw-w64-x86_64-python
+              mingw-w64-x86_64-python-pip
+            cmake_generator: -- -G "MSYS Makefiles"
+            CC: gcc
+            CXX: g++
+
+          - msystem: CLANG64
+            installdeps: >-
+              git
+              patch
+              make
+              mingw-w64-clang-x86_64-toolchain
+              mingw-w64-clang-x86_64-libssp
+              mingw-w64-clang-x86_64-cmake
+              mingw-w64-clang-x86_64-ccache
+              mingw-w64-clang-x86_64-gmp
+              mingw-w64-clang-x86_64-python
+              mingw-w64-clang-x86_64-python-pip
+            cmake_generator: -- -G "MSYS Makefiles"
+            CC: clang
+            CXX: clang++
+
+          - msystem: UCRT64
+            installdeps: >-
+              git
+              patch
+              make
+              mingw-w64-ucrt-x86_64-toolchain
+              mingw-w64-ucrt-x86_64-cmake
+              mingw-w64-ucrt-x86_64-ccache
+              mingw-w64-ucrt-x86_64-gmp
+              mingw-w64-ucrt-x86_64-python
+              mingw-w64-ucrt-x86_64-python-pip
+            cmake_generator: -- -G "MSYS Makefiles"
+            CC: gcc
+            CXX: g++
+
+          - msystem: MSYS
+            installdeps: >-
+              git
+              base-devel
+              gcc
+              cmake
+              python-devel
+              python-pip
+              gmp-devel
+            cmake_generator:
+            CC: gcc
+            CXX: g++
+
+    name: "MSYS2 ${{ matrix.msystem }} • x64"
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get history and tags for SCM versioning to work
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Setup MSYS
+        uses: msys2/setup-msys2@v2
+        with:
+          install: ${{ matrix.installdeps }}
+          msystem: ${{ matrix.msystem }}
+          path-type: strict
+          update: false
+
+      - name: Get Date
+        id: get-date
+        shell: msys2 {0}
+        run: |
+          echo "::set-output name=date::$(date -Iseconds)"
+
+      - name: Restore cache for CCache
+        if: env.ACT != 'true' && matrix.msystem != 'MSYS'
+        id: ccache-cache
+        uses: martijnhols/actions-cache/restore@v3
+        with:
+          path: ccache
+          key: msys2-${{ matrix.msystem }}-ccache-${{ steps.get-date.outputs.date }}
+          restore-keys: msys2-${{ matrix.msystem }}-ccache-
+
+      - name: Configure CCache
+        if: matrix.msystem != 'MSYS'
+        shell: msys2 {0}
+        run: |
+          which ccache
+          ccache --help
+          ccache --set-config=cache_dir="$PWD/ccache"
+          ccache --set-config=max_size=75M
+          ccache --set-config=compression=true
+          ccache -pz
+          ccache -sv
+
+      - name: Cache Python virtualenv
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: venv
+          key: >-
+            msys2-${{ matrix.msystem }}-python-venv-${{ hashFiles('build_locally.sh', 'scripts/build/**.sh') }}
+            -${{ secrets.cache_ver }}
+
+      - name: Cache compiled third-party libraries
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: build/.mqlibs
+          key: msys2-${{ matrix.msystem }}-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
+
+      - name: Configure
+        shell: msys2 {0}
+        env:
+          CC: ${{ matrix.CC }}
+          CXX: ${{ matrix.CXX }}
+        run: >-
+          ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache -v --only-pytest
+          --configure-only -c --clean-3rdparty --prefix="$PWD/install"
+          ${{ matrix.cmake_generator }}
+
+      - name: Build
+        shell: msys2 {0}
+        env:
+          CC: ${{ matrix.CC }}
+          CXX: ${{ matrix.CXX }}
+        run: ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache
+
+      - name: Install
+        shell: msys2 {0}
+        env:
+          CC: ${{ matrix.CC }}
+          CXX: ${{ matrix.CXX }}
+        run: ./build_locally.sh --install
+
+      - name: Print CCache statistics
+        if: matrix.msystem != 'MSYS'
+        shell: msys2 {0}
+        run: |
+          ccache -sv
+
+      - name: Save cache for CCache
+        if: env.ACT != 'true' && matrix.msystem != 'MSYS'
+        uses: martijnhols/actions-cache/save@v3
+        with:
+          path: ccache
+          key: msys2-${{ matrix.msystem }}-ccache-${{ steps.get-date.outputs.date }}
+
+  # ============================================================================
+
+  cygwin:
+    runs-on: windows-latest
+    name: "Cygwin • x64"
+    env:
+      CYGWIN_NOWINPATH: 1  # only have cygwin's executables on PATH
+      CHERE_INVOKING: 1  # prevent profile script to change directory
+      CCACHE_VERSION: 4.6.1
+    steps:
+      - run: git config --global core.autocrlf input
+
+      - uses: actions/checkout@v2
+
+      - name: Get history and tags for SCM versioning to work
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Setup Cygwin
+        uses: cygwin/cygwin-install-action@v2
+        with:
+          packages: >-
+            cygwin cygwin-devel
+            autoconf automake coreutils m4 make cmake patch git
+            gawk sed libtool gettext wget curl grep dos2unix
+            gzip bzip2 tar xz
+            binutils gcc-core gcc-g++
+            libgmp-devel libzstd-devel
+            python3 python3-devel python3-pip python3-virtualenv
+
+      - name: Get Date
+        id: get-date
+        shell: bash --login -eo pipefail -o igncr {0}
+        run: |
+          echo "::set-output name=date::$(date -Iseconds)"
+
+      - name: Restore cache for CCache
+        if: env.ACT != 'true'
+        id: ccache-cache
+        uses: martijnhols/actions-cache/restore@v3
+        with:
+          path: ccache
+          key: cygwin-ccache-${{ steps.get-date.outputs.date }}
+          restore-keys: cygwin-ccache-
+
+      - name: Install CCache
+        shell: bash --login -eo pipefail -o igncr {0}
+        run: |
+          export PATH="$PATH:$PWD/ccache/bin"
+          if ! command -v ccache >/dev/null 2>&1 || [[ \
+            "$(ccache --version | head -1)" != "ccache version ${CCACHE_VERSION}" ]]; then
+              echo "Building CCache ${CCACHE_VERSION} from source"
+              wget https://github.com/ccache/ccache/releases/download/v${CCACHE_VERSION}/ccache-${CCACHE_VERSION}.tar.gz
+              tar xf ccache-${CCACHE_VERSION}.tar.gz
+              cmake -S ccache-${CCACHE_VERSION} -B ccache-${CCACHE_VERSION}/build \
+                    -DENABLE_TESTING=OFF -DENABLE_DOCUMENTATION=OFF \
+                    -DCCACHE_DEV_MODE=OFF -DHIREDIS_FROM_INTERNET=ON \
+                    -DHAVE_ASM_SSE41=OFF -DHAVE_ASM_AVX2=OFF -DHAVE_ASM_AVX512=OFF \
+                    -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/ccache"
+              make -C ccache-${CCACHE_VERSION}/build -j$(nproc) install VERBOSE=1
+          else
+              echo 'Skip building CCcache'
+          fi
+
+      - name: Configure CCache
+        shell: bash --login -eo pipefail -o igncr {0}
+        run: |
+          export PATH="$PATH:$PWD/ccache/bin"
+          ccache --set-config=cache_dir="$PWD/ccache"
+          ccache --set-config=max_size=75M
+          ccache --set-config=compression=true
+          ccache -pz
+          ccache -sv
+
+      - name: Cache Python virtualenv
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: venv
+          key: cygwin-python-venv-${{ hashFiles('build_locally.sh', 'scripts/build/**.sh') }}-${{ secrets.cache_ver }}
+
+      - name: Cache compiled third-party libraries
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: build/.mqlibs
+          key: cygwin-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
+
+      - name: Configure
+        env:
+          PATH: C:\cygwin\bin
+        shell: bash --login -eo pipefail -o igncr {0}
+        run: |
+          export PATH="$PATH:$PWD/ccache/bin"
+          ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache -v --only-pytest \
+          --configure-only -c --clean-3rdparty --prefix=$PWD/install \
+          ${{ matrix.cmake_generator }}
+
+      - name: Build
+        shell: bash --login -eo pipefail -o igncr {0}
+        run: |
+          export PATH="$PATH:$PWD/ccache/bin"
+          ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache
+
+      - name: Install
+        shell: bash --login -eo pipefail -o igncr {0}
+        run: ./build_locally.sh --install
+
+      - name: Print CCache statistics
+        shell: bash --login -eo pipefail -o igncr {0}
+        run: |
+          export PATH="$PATH:$PWD/ccache/bin"
+          ccache -sv
+
+      - name: Save cache for CCache
+        if: env.ACT != 'true'
+        uses: martijnhols/actions-cache/save@v3
+        with:
+          path: ccache
+          key: cygwin-ccache-${{ steps.get-date.outputs.date }}
+
+      - name: Restore PATH for git
+        run: Add-Content -Path $env:GITHUB_PATH -Value "C:\Program Files\Git\bin"
+
+  # ============================================================================
+
+  nvhpc:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        nvhpc:
+          - 21.5-devel-cuda11.3
+          - 22.3-devel-cuda11.6
+    env:
+      CMAKE_VERSION: 3.22.3
+      CC: gcc
+      CXX: g++
+    name: "NVHPC ${{ matrix.nvhpc }} • x64"
+    container: "nvcr.io/nvidia/nvhpc:${{ matrix.nvhpc }}-ubuntu20.04"
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get history and tags for SCM versioning to work
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Prepare env
+        run: >
+          apt-get update && apt-get install -y python3-dev python3-pip
+          python3-setuptools python3-wheel python3-venv libboost-filesystem-dev
+          --no-install-recommends
+
+      - name: Setup CCache
+        uses: hendrikmuhs/ccache-action@v1.2.2
+        with:
+          key: nvhpc-${{ matrix.nvhpc }}-ccache
+          max-size: 75M
+
+      - name: Cache CMake installer
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh
+          key: cmake-${{ env.CMAKE_VERSION }}
+
+      - name: Install latest CMake
+        run: |
+          if [ ! -e cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh ]; then
+            url_base='https://github.com/Kitware/CMake/releases/download'
+            wget ${url_base}/v${{ env.CMAKE_VERSION }}/cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh
+          fi
+          bash cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh --skip-license --prefix=/usr/local
+
+      - name: Cache Python virtualenv
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: venv
+          key: >-
+            nvhpc-${{ matrix.nvhpc }}-python-venv-${{ hashFiles('build_locally.sh', 'scripts/build/**.sh') }}
+            -${{ secrets.cache_ver }}
+
+      - name: Cache compiled third-party libraries
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: build/.mqlibs
+          key: nvhpc-${{ matrix.nvhpc }}-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
+
+      - name: Configure
+        run: >-
+          ./build_locally.sh --cxx --with-projectq --debug-cmake --gpu --test --ccache --only-pytest
+          --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
+
+      - name: Build
+        run: ./build_locally.sh --cxx --with-projectq --debug-cmake --gpu --test --ccache
+
+      - name: Install
+        run: ./build_locally.sh --install
+
+  # ============================================================================
+
+  # NB: Disabled due to compilation error in tweedledum library
+  # intel:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       - name: ICX-ICPX
+  #         cc: icx
+  #         cxx: icpx
+  #         apt_pkg: intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic
+  #       - name: DPC++
+  #         cc: dpcpp
+  #         cxx: dpcpp
+  #         apt_pkg: intel-oneapi-compiler-dpcpp-cpp
+
+  #   name: "Intel ${{ matrix.name }} • x64"
+  #   env:
+  #     CC: ${{ matrix.cc }}
+  #     CXX: ${{ matrix.cxx }}
+  #   steps:
+  #     - uses: actions/checkout@v2
+
+  #     - name: Get history and tags for SCM versioning to work
+  #       run: |
+  #         git fetch --prune --unshallow
+  #         git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+  #     - name: Setup Intel APT
+  #       run: |
+  #         wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+  #         sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+  #         echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+  #         sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/oneAPI.list" -o APT::Get::List-Cleanup="0"
+
+  #     - name: Prepare env
+  #       run: >
+  #         apt-get update && apt-get install -y python3-dev python3-pip
+  #         python3-setuptools python3-wheel python3-venv
+  #         ${{ matrix.apt_pkg }}
+  #         --no-install-recommends
+
+  #     - name: Setup CCache
+  #       uses: hendrikmuhs/ccache-action@v1.2.2
+  #       with:
+  #         key: nvhpc-${{ matrix.nvhpc }}-ccache
+  #         max-size: 75M
+
+  #     - name: Cache Python virtualenv
+  #       if: env.ACT != 'true'
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: venv
+  #         key: intel-python-venv-${{ hashFiles('build_locally.sh', 'scripts/build/**.sh') }}-${{ secrets.cache_ver }}
+
+  #     - name: Cache compiled third-party libraries
+  #       if: env.ACT != 'true'
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: build/.mqlibs
+  #         key: >-
+  #           intel-${{ matrix.cc }}-${{ matrix.cxx }}-clang-third-party-libs-${{ hashFiles('third_party/**') }}
+  #           -${{ secrets.cache_ver }}
+
+  #     - name: Configure
+  #       run: |
+  #         source /opt/intel/oneapi/compiler/latest/env/vars.sh
+  #         if [ -f /opt/intel/oneapi/tbb/latest/env/vars.sh ]; then
+  #           source /opt/intel/oneapi/tbb/latest/env/vars.sh
+  #         fi
+  #         ./build_locally.sh --cxx --with-projectq --debug-cmake --test --gpu \
+  #         --configure-only -c --clean-3rdparty  --prefix="${{ github.workspace }}/install"
+
+  #     - name: Build
+  #       run: |
+  #         source /opt/intel/oneapi/compiler/latest/env/vars.sh
+  #         if [ -f /opt/intel/oneapi/tbb/latest/env/vars.sh ]; then
+  #           source /opt/intel/oneapi/tbb/latest/env/vars.sh
+  #         fi
+  #         ./build_locally.sh --cxx --with-projectq --debug-cmake --test --gpu
+
+  #     - name: Install
+  #       run: ./build_locally.sh --install

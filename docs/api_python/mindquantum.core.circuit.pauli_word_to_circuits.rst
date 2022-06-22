@@ -14,4 +14,4 @@
 
     - **TypeError** - 如果qubitops不是QubitOperator或QubitOperator。
     - **ValueError** - 如果量子点是QubitOperator的，但不是在origin模式下。
-    - **ValueError** - 如果qubitops有多个Pauli词。       
+    - **ValueError** - 如果qubitops有多个Pauli词。

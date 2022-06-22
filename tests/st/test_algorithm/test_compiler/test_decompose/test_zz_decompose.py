@@ -15,8 +15,10 @@
 # ============================================================================
 '''test decompose rule'''
 import numpy as np
+
 from mindquantum.algorithm.compiler.decompose import zz_decompose
-from mindquantum.core import Circuit, ZZ
+from mindquantum.core import ZZ, Circuit
+
 
 def circuit_equal_test(gate, decompose_circ):
     """
@@ -24,6 +26,7 @@ def circuit_equal_test(gate, decompose_circ):
     """
     orig_circ = Circuit() + gate
     assert np.allclose(orig_circ.matrix(), decompose_circ.matrix())
+
 
 def test_zz():
     """
@@ -33,4 +36,3 @@ def test_zz():
     zz = ZZ(1).on([1, 0])
     for solution in zz_decompose(zz):
         circuit_equal_test(zz, solution)
-        

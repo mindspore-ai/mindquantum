@@ -13,20 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""
-XX gate related decompose rule.
-"""
 
-from mindquantum.core import gates as G
-from mindquantum.core import Circuit
+"""XX gate related decompose rule."""
+
+from mindquantum.core import Circuit, gates
 from mindquantum.core.gates.basicgate import XX
-from mindquantum.utils.type_value_check import _check_input_type#, _check_control_num
+from mindquantum.utils.type_value_check import _check_input_type  # , _check_control_num
+
 
 def _check_control_num(ctrl_qubits, require_n):
     if len(ctrl_qubits) != require_n:
         raise RuntimeError(f"requires {(require_n,'control qubit')}, but get {len(ctrl_qubits)}")
 
-def xx_decompose(gate: G.XX):
+
+def xx_decompose(gate: gates.XX):
     """
     Decompose XX gate.
 
@@ -55,7 +55,8 @@ def xx_decompose(gate: G.XX):
     _check_control_num(gate.ctrl_qubits, 0)
     return cxx_decompose(gate)
 
-def cxx_decompose(gate: G.XX):
+
+def cxx_decompose(gate: gates.XX):
     """
     Decompose xx gate with control qubits.
 
@@ -96,21 +97,22 @@ def cxx_decompose(gate: G.XX):
 
     c1 = Circuit()
     solutions.append(c1)
-    c1 += G.H.on(q0, cq)
-    c1 += G.H.on(q1, cq)
-    c1 += G.X.on(q1, [q0] + cq)
-    c1 += G.RZ(2 * gate.coeff).on(q1, cq)
+    c1 += gates.H.on(q0, cq)
+    c1 += gates.H.on(q1, cq)
+    c1 += gates.X.on(q1, [q0] + cq)
+    c1 += gates.RZ(2 * gate.coeff).on(q1, cq)
     c1 += c1[:-1][::-1]
 
     c2 = Circuit()
     solutions.append(c2)
-    c2 += G.H.on(q0, cq)
-    c2 += G.H.on(q1, cq)
-    c2 += G.X.on(q0, [q1] + cq)
-    c2 += G.RZ(2 * gate.coeff).on(q0, cq)
+    c2 += gates.H.on(q0, cq)
+    c2 += gates.H.on(q1, cq)
+    c2 += gates.X.on(q0, [q1] + cq)
+    c2 += gates.RZ(2 * gate.coeff).on(q0, cq)
     c2 += c2[:-1][::-1]
 
     return solutions
+
 
 decompose_rules = ['xx_decompose', 'cxx_decompose']
 __all__ = decompose_rules

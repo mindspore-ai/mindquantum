@@ -13,34 +13,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""
-Decompose rule for gate.
-"""
-from . import x_related
-from . import xx_related, yy_related
-from . import y_related
-from . import h_related
-from . import z_related
-from . import ry_related
-from . import rz_related
-from . import rx_related
-from . import swap_related
-from . import zz_related
-from . import s_related
-from . import t_related
-from .x_related import ccx_decompose
-from .xx_related import xx_decompose, cxx_decompose
-from .yy_related import yy_decompose, cyy_decompose
-from .y_related import cy_decompose
-from .h_related import ch_decompose
-from .z_related import cz_decompose
-from .ry_related import cry_decompose
-from .rz_related import crz_decompose
-from .rx_related import crx_decompose
-from .swap_related import swap_decompose, cswap_decompose
-from .zz_related import zz_decompose
-from .s_related import cs_decompose
-from .t_related import ct_decompose
+
+"""Decompose rule for gate."""
+
+from . import (
+    h_related,
+    rx_related,
+    ry_related,
+    rz_related,
+    s_related,
+    swap_related,
+    t_related,
+    x_related,
+    xx_related,
+    y_related,
+    yy_related,
+    z_related,
+    zz_related,
+)
+from .h_related import ch_decompose  # noqa: F401
+from .ry_related import cry_decompose  # noqa: F401
+from .rz_related import crz_decompose  # noqa: F401
+from .s_related import cs_decompose  # noqa: F401
+from .swap_related import cswap_decompose, swap_decompose  # noqa: F401
+from .t_related import ct_decompose  # noqa: F401
+from .x_related import ccx_decompose  # noqa: F401
+from .xx_related import cxx_decompose, xx_decompose  # noqa: F401
+from .y_related import cy_decompose  # noqa: F401
+from .yy_related import cyy_decompose, yy_decompose  # noqa: F401
+from .z_related import cz_decompose  # noqa: F401
+from .zz_related import zz_decompose  # noqa: F401
 
 __all__ = []
 __all__.extend(x_related.__all__)

@@ -22,7 +22,10 @@ Contains classes representing:
 - TimeEvolution operator
 
 """
-from mindquantum.third_party.interaction_operator import InteractionOperator
+from mindquantum.third_party.interaction_operator import (  # noqa: F401
+    InteractionOperator,
+)
+
 from .fermion_operator import FermionOperator
 from .hamiltonian import Hamiltonian
 from .polynomial_tensor import PolynomialTensor
@@ -30,22 +33,35 @@ from .projector import Projector
 from .qubit_excitation_operator import QubitExcitationOperator
 from .qubit_operator import QubitOperator
 from .time_evolution import TimeEvolution
-from .utils import count_qubits
-from .utils import commutator
-from .utils import normal_ordered
-from .utils import get_fermion_operator
-from .utils import number_operator
-from .utils import hermitian_conjugated
-from .utils import up_index
-from .utils import down_index
-from .utils import sz_operator
+from .utils import (
+    commutator,
+    count_qubits,
+    down_index,
+    get_fermion_operator,
+    hermitian_conjugated,
+    normal_ordered,
+    number_operator,
+    sz_operator,
+    up_index,
+)
 
 __all__ = [
-    "FermionOperator", "Hamiltonian", "PolynomialTensor", "Projector",
-    "QubitExcitationOperator", "QubitOperator", "TimeEvolution",
-    "count_qubits", "commutator", "normal_ordered", "get_fermion_operator",
-    "number_operator", "hermitian_conjugated", "up_index", "down_index",
-    "sz_operator"
+    "FermionOperator",
+    "Hamiltonian",
+    "PolynomialTensor",
+    "Projector",
+    "QubitExcitationOperator",
+    "QubitOperator",
+    "TimeEvolution",
+    "count_qubits",
+    "commutator",
+    "normal_ordered",
+    "get_fermion_operator",
+    "number_operator",
+    "hermitian_conjugated",
+    "up_index",
+    "down_index",
+    "sz_operator",
 ]
 __all__.append('InteractionOperator')
 __all__.sort()

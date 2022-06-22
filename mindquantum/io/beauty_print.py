@@ -19,9 +19,7 @@
 def _fill_fist_sep(string, sep, length, fill_char=' '):
     poi = string.find(sep)
     if length < poi:
-        raise Exception(
-            "Original length is {}, can not fill it to length {}.".format(
-                poi, length))
+        raise Exception("Original length is {}, can not fill it to length {}.".format(poi, length))
     return string[:poi] + fill_char * (length - poi) + string[poi:]
 
 
@@ -30,12 +28,7 @@ def _check_str(s, name):
         raise TypeError("{} requires str, but get {}!".format(name, type(s)))
 
 
-def bprint(strings: list,
-           align=":",
-           title='',
-           v_around='=',
-           h_around='|',
-           fill_char=' '):
+def bprint(strings: list, align=":", title='', v_around='=', h_around='|', fill_char=' '):
     """
     Print the information in block shape.
 
@@ -64,8 +57,7 @@ def bprint(strings: list,
         ===================
     """
     if not isinstance(strings, list):
-        raise TypeError("strings requires a list, but get {}".format(
-            type(strings)))
+        raise TypeError("strings requires a list, but get {}".format(type(strings)))
     for s in strings:
         _check_str(s, "string")
     _check_str(align, 'align')
@@ -78,27 +70,18 @@ def bprint(strings: list,
         m_poi = sub_str.find(align)
         if m_poi > maxmim_len:
             maxmim_len = m_poi
-    strings = [
-        _fill_fist_sep(i, align, maxmim_len, fill_char) for i in strings
-    ]
+    strings = [_fill_fist_sep(i, align, maxmim_len, fill_char) for i in strings]
     n_around = 3
     title = v_around * n_around + title + v_around * n_around
     maxmim = max([len(i) for i in strings])
     if len(title) > maxmim:
         len_total = (len(title) - maxmim) // 2 + (len(title) - maxmim) % 2
-        strings = [
-            h_around + ' ' * len_total + i + ' ' *
-            (len(title) - len(i) - len_total) + h_around for i in strings
-        ]
+        strings = [h_around + ' ' * len_total + i + ' ' * (len(title) - len(i) - len_total) + h_around for i in strings]
         title = h_around + title + h_around
     else:
         len_total = (maxmim - len(title)) // 2 + (maxmim - len(title)) % 2
-        title = v_around + v_around * len_total +\
-            title + v_around * len_total + v_around
-        strings = [
-            h_around + i + ' ' * (len(title) - 2 - len(i)) + h_around
-            for i in strings
-        ]
+        title = v_around + v_around * len_total + title + v_around * len_total + v_around
+        strings = [h_around + i + ' ' * (len(title) - 2 - len(i)) + h_around for i in strings]
     bot = v_around + v_around * (len(title) - 2) + v_around
     output = []
     output.append(title)

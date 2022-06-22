@@ -16,18 +16,17 @@
 """Mindspore quantum simulator layer."""
 import mindspore as ms
 import mindspore.nn as nn
-from mindspore.common.parameter import Parameter
 from mindspore.common.initializer import initializer
-from .operations import MQOps
-from .operations import MQN2Ops
-from .operations import MQAnsatzOnlyOps
-from .operations import MQN2AnsatzOnlyOps
+from mindspore.common.parameter import Parameter
+
+from .operations import MQAnsatzOnlyOps, MQN2AnsatzOnlyOps, MQN2Ops, MQOps
 
 
 class MQLayer(nn.Cell):
     """
-    Quantum neural network include encoder and ansatz circuit. The encoder circuit
-    encode classical data into quantum state, while the ansatz circuit act as trainable circuit.
+    Quantum neural network include encoder and ansatz circuit.
+
+    The encoder circuit encode classical data into quantum state, while the ansatz circuit act as trainable circuit.
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
@@ -78,7 +77,9 @@ class MQLayer(nn.Cell):
         Tensor(shape=[1, 1], dtype=Float32, value=
         [[-9.98333842e-02]])
     """
+
     def __init__(self, expectation_with_grad, weight='normal'):
+        """Initialize a MQLayer object."""
         super(MQLayer, self).__init__()
         self.evolution = MQOps(expectation_with_grad)
         weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
@@ -88,14 +89,17 @@ class MQLayer(nn.Cell):
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self, x):
+        """Construct a MQLayer node."""
         return self.evolution(x, self.weight)
 
 
 class MQN2Layer(nn.Cell):
     """
-    Quantum neural network include encoder and ansatz circuit. The encoder circuit
-    encode classical data into quantum state, while the ansatz circuit act as trainable circuit.
-    This layer will calculate the square of absolute value of expectation automatically.
+    MindQuantum trainable layer.
+
+    Quantum neural network include encoder and ansatz circuit. The encoder circuit encode classical data into quantum
+    state, while the ansatz circuit act as trainable circuit.  This layer will calculate the square of absolute value of
+    expectation automatically.
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
@@ -146,7 +150,9 @@ class MQN2Layer(nn.Cell):
         Tensor(shape=[1, 1], dtype=Float32, value=
         [[ 3.80662982e-07]])
     """
+
     def __init__(self, expectation_with_grad, weight='normal'):
+        """Initialize a MQN2Layer object."""
         super(MQN2Layer, self).__init__()
         self.evolution = MQN2Ops(expectation_with_grad)
         weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
@@ -156,13 +162,15 @@ class MQN2Layer(nn.Cell):
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self, x):
+        """Construct a MQN2Layer node."""
         return self.evolution(x, self.weight)
 
 
 class MQAnsatzOnlyLayer(nn.Cell):
     """
-    Quantum neural network only include ansatz circuit.
-    The ansatz circuit act as trainable circuit.
+    MindQuantum trainable layer.
+
+    Quantum neural network only include ansatz circuit.  The ansatz circuit act as trainable circuit.
 
     Args:
         expectation_with_grad (GradOpsWrapper): a grad ops that receive encoder data and
@@ -207,7 +215,9 @@ class MQAnsatzOnlyLayer(nn.Cell):
         >>> net()
         Tensor(shape=[1], dtype=Float32, value= [-9.99999166e-01])
     """
+
     def __init__(self, expectation_with_grad, weight='normal'):
+        """Initialize a MQAnsatzOnlyLayer object."""
         super(MQAnsatzOnlyLayer, self).__init__()
         self.evolution = MQAnsatzOnlyOps(expectation_with_grad)
         weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
@@ -217,11 +227,14 @@ class MQAnsatzOnlyLayer(nn.Cell):
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self):
+        """Construct a MQAnsatzOnlyLayer node."""
         return self.evolution(self.weight)
 
 
 class MQN2AnsatzOnlyLayer(nn.Cell):
     """
+    MindQuantum trainable layer.
+
     Quantum neural network only include ansatz circuit. The ansatz circuit act as trainable circuit.
     This layer will calculate the square of absolute value of expectation automatically.
 
@@ -271,7 +284,9 @@ class MQN2AnsatzOnlyLayer(nn.Cell):
         >>> net()
         Tensor(shape=[1], dtype=Float32, value= [ 1.56737148e-08])
     """
+
     def __init__(self, expectation_with_grad, weight='normal'):
+        """Initialize a MQN2AnsatzOnlyLayer object."""
         super(MQN2AnsatzOnlyLayer, self).__init__()
         self.evolution = MQN2AnsatzOnlyOps(expectation_with_grad)
         weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
@@ -281,4 +296,5 @@ class MQN2AnsatzOnlyLayer(nn.Cell):
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self):
+        """Construct a MQN2AnsatzOnlyLayer node."""
         return self.evolution(self.weight)
