@@ -40,6 +40,7 @@ Param(
     [Alias("J")][ValidateRange("Positive")][int]$Jobs,
     [switch]$Ninja,
     [switch]$NoConfig,
+    [switch]$NoGitee,
     [switch]$OnlyPytest,
     [ValidateNotNullOrEmpty()][string]$Prefix,
     [switch]$Quiet,
@@ -195,6 +196,7 @@ $cmake_args = @('-DIN_PLACE_BUILD:BOOL=ON'
                 "-DENABLE_CMAKE_DEBUG:BOOL={0}" -f $CMAKE_BOOL[$cmake_debug_mode]
                 "-DENABLE_CUDA:BOOL={0}" -f $CMAKE_BOOL[$enable_gpu]
                 "-DENABLE_CXX_EXPERIMENTAL:BOOL={0}" -f $CMAKE_BOOL[$enable_cxx]
+                "-DENABLE_DOCUMENTATION:BOOL={0}" -f $CMAKE_BOOL[$do_docs]
                 "-DENABLE_GITEE:BOOL={0}" -f $CMAKE_BOOL[$enable_gitee]
                 "-DBUILD_TESTING:BOOL={0}" -f $CMAKE_BOOL[$enable_tests]
                 "-DCLEAN_3RDPARTY_INSTALL_DIR:BOOL={0}" -f $CMAKE_BOOL[$do_clean_3rdparty]
@@ -394,6 +396,9 @@ Build using Ninja instead of make
 
 .PARAMETER NoConfig
 Ignore any configuration file
+
+.PARAMETER NoGitee
+Do not favor Gitee over Github/Gitlab
 
 .PARAMETER OnlyPytest
 Only install pytest and its dependencies when creating/building the virtualenv

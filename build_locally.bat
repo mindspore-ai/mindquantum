@@ -300,6 +300,12 @@ if !enable_gpu! == 1 (
   if NOT "!cuda_arch!" == "" set cmake_args=!cmake_args! -DCMAKE_CUDA_ARCHITECTURES:STRING=!cuda_arch!
 )
 
+if !do_docs! == 1 (
+  set cmake_args=!cmake_args! -DENABLE_DOCUMENTATION:BOOL=ON
+) else (
+  set cmake_args=!cmake_args! -DENABLE_DOCUMENTATION:BOOL=OFF
+)
+
 if !enable_projectq! == 1 (
   set cmake_args=!cmake_args! -DENABLE_PROJECTQ:BOOL=ON
 ) else (

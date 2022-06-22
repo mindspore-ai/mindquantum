@@ -24,8 +24,6 @@ target_include_directories(mqbackend PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LI
 force_at_least_cxx17_workaround(mqbackend)
 target_link_libraries(mqbackend PUBLIC ${MQ_OPENMP_TARGET} "$<$<BOOL:${ENABLE_PROJECTQ}>:mq_projectq>" mq_base)
 
-python_install_set_rpath(mqbackend "")
-
 get_target_property(_mqbackend_output_dir mqbackend LIBRARY_OUTPUT_DIRECTORY)
 if(NOT _mqbackend_output_dir)
   set(_mqbackend_output_dir "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")

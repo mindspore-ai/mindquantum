@@ -83,6 +83,8 @@ function(add_test_executable target)
 
   add_executable(${target} ${target}.cpp ${${target}_UNPARSED_ARGUMENTS})
   force_at_least_cxx17_workaround(${target})
+  # NB: these will never be installed so need RPATH if we want to run them
+  set_target_properties(${target} PROPERTIES BUILD_WITH_INSTALL_RPATH FALSE SKIP_BUILD_RPATH FALSE)
   target_include_directories(${target} PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/tests>
                                                $<INSTALL_INTERFACE:${MQ_INSTALL_INCLUDEDIR}/include/tests>)
   target_link_libraries(${target} PRIVATE Catch2::Catch2 ${${target}_LIBS})

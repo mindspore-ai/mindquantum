@@ -115,5 +115,9 @@ manylinux-x86_64-image = 'manylinux2014'
 select = 'cp3{6,7,8,9}-*'
 manylinux-x86_64-image = 'manylinux2010'
 
-# [tool.cibuildwheel.linux]
+[tool.cibuildwheel.linux]
+
+# MQ_CIBW_BUILD_ARGS is a comma-separated list of arguments to pass onto `python3 -m build` when running within
+# cibuildwheel (e.g. MQ_CIBW_BUILD_ARGS='--set,ENABLE_GITEE')
+environment-pass = ['MQ_CIBW_BUILD_ARGS']
 # repair-wheel-command = "auditwheel -v repair -w {dest_dir} {wheel}"

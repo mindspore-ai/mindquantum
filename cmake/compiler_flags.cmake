@@ -33,9 +33,14 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 #
 # All of this should achieve the desired effect on all platforms and compilers
 
-set(CMAKE_BUILD_SKIP_RPATH TRUE)
-set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
+if(IN_PLACE_BUILD)
+  set(CMAKE_BUILD_SKIP_RPATH FALSE)
+  set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+else()
+  set(CMAKE_BUILD_SKIP_RPATH TRUE)
+  set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+endif()
 
 # CMake usually does not add /usr/local/include to any compiler commands. This can lead to some issues on Mac OS when
 # using the -isysroot option so we allow for explicit -I/usr/local/include on the command line.
