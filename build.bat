@@ -32,7 +32,7 @@ set delocate_wheel=1
 set build_isolation=1
 set output_path=%ROOTDIR%\output
 set platform_name=
-set python_extra_pkgs=setuptools-scm[toml]
+set python_extra_pkgs=setuptools-scm[toml] wheel-filename>1.2
 
 call %SCRIPTDIR%\default_values.bat
 

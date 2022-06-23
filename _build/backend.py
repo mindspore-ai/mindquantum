@@ -26,6 +26,7 @@ from pathlib import Path
 
 import setuptools.build_meta
 from utils import fdopen, get_cmake_command  # pylint: disable=import-error
+from wheel_filename import parse_wheel_filename
 
 # ==============================================================================
 
@@ -77,11 +78,12 @@ def move_delocated_wheel(delocated_wheel, wheel_directory):
 
 def get_delocated_wheel_name(name_full, delocated_wheel_directory):
     """Locate the delocated wheel on Linux."""
-    path_suffixes = name_full.suffixes
-    new_suffix = ''.join([*path_suffixes[:2], '-'.join(path_suffixes[2].split('-')[:3])])
-    basename = Path(name_full.name[: -len(''.join(name_full.suffixes))]).with_suffix(new_suffix)
 
+    pwf = parse_wheel_filename(str(name_full))
+    platform_tag_suffix = '.'.join(pwf.platform_tags) + '.whl'
+    basename = name_full.name[: -len(platform_tag_suffix)]
     logging.info('Basename of original wheel: %s', basename)
+    logging.info('Platform tag suffix: %s', platform_tag_suffix)
     for new_wheel in delocated_wheel_directory.iterdir():
         if new_wheel.is_file() and new_wheel.match(f'{basename}*.whl'):
             return new_wheel
@@ -147,7 +149,9 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     temp_wheel_directory.mkdir(parents=True, exist_ok=True)
 
     name = setuptools.build_meta.build_wheel(
-        wheel_directory=temp_wheel_directory, config_settings=config_settings, metadata_directory=metadata_directory
+        wheel_directory=temp_wheel_directory,
+        config_settings=config_settings,
+        metadata_directory=metadata_directory,
     )
 
     name_full = temp_wheel_directory / name
@@ -157,6 +161,7 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
 
     delocated_wheel_directory = Path(wheel_directory, 'delocated')
     delocate_wheel = int(os.environ.get('MQ_DELOCATE_WHEEL', False))
+    delocated_wheel = None
     if delocate_wheel and platform.system() == 'Linux':
         delocated_wheel_directory.mkdir(parents=True, exist_ok=True)
         plat = os.environ.get('MQ_DELOCATE_WHEEL_PLAT', '')
@@ -195,9 +200,9 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
             dest_wheel = move_delocated_wheel(delocated_wheel, wheel_directory)
     elif delocate_wheel:
         logging.warning('Do not know how to delocate wheels on %s', platform.system())
-        dest_wheel = Path(wheel_directory, name_full.name)
-        shutil.move(str(name_full), str(dest_wheel))
-    else:
+
+    if not delocated_wheel:
+        logging.info('Delocated wheel not found -> using original wheel instead')
         dest_wheel = Path(wheel_directory, name_full.name)
         shutil.move(str(name_full), str(dest_wheel))
 
