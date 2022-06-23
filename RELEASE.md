@@ -8,49 +8,49 @@
 
 #### Circuit
 
-- [STABLE] `as_encoder`: Method of `Circuit` to mark this circuit as an encoder circuit.
-- [STABLE] `as_ansatz`: Method of `Circuit` to mark this circuit as an ansatz circuit.
-- [STABLE] `encoder_params_name`: Method of `Circuit` to return the encoder parameters.
-- [STABLE] `ansatz_params_name`: Method of `Circuit` to return the ansatz parameters.
-- [STABLE] `remove_noise`: Method of `Circuit` to remove all noise channel.
-- [STABLE] `with_noise`: Method of `Circuit` to add a given noise channel after every gate.
-- [STABLE] `as_encoder`: A decorator to wrap a function, so that it can generate an encoder circuit.
-- [STABLE] `as_ansatz`: A decorator to wrap a function, so that it can generate an ansatz circuit.
+- [STABLE] [`as_encoder`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.as_encoder): Method of `Circuit` to mark this circuit as an encoder circuit.
+- [STABLE] [`as_ansatz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.as_ansatz): Method of `Circuit` to mark this circuit as an ansatz circuit.
+- [STABLE] [`encoder_params_name`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.encoder_params_name): Method of `Circuit` to return the encoder parameters.
+- [STABLE] [`ansatz_params_name`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.ansatz_params_name): Method of `Circuit` to return the ansatz parameters.
+- [STABLE] [`remove_noise`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.remove_noise): Method of `Circuit` to remove all noise channel.
+- [STABLE] [`with_noise`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.with_noise): Method of `Circuit` to add a given noise channel after every gate.
+- [STABLE] [`as_encoder`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.as_encoder): A decorator to wrap a function, so that it can generate an encoder circuit.
+- [STABLE] [`as_ansatz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.as_ansatz): A decorator to wrap a function, so that it can generate an ansatz circuit.
 
 #### Gates
 
-- [STABLE] `AmplitudeDampingChannel`: Amplitude damping channel express error that qubit is affected by the energy dissipation.
-- [STABLE] `PhaseDampingChannel`: Phase damping channel express error that qubit loses quantum information without exchanging energy with environment
+- [STABLE] [`AmplitudeDampingChannel`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.html#mindquantum.core.gates.AmplitudeDampingChannel): Amplitude damping channel express error that qubit is affected by the energy dissipation.
+- [STABLE] [`PhaseDampingChannel`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.html#mindquantum.core.gates.PhaseDampingChannel): Phase damping channel express error that qubit loses quantum information without exchanging energy with environment
 
 #### FermionOperator and QubitOperator
 
-- [STABLE] `split`: A method of FermionOperator and QubitOperator that can split the coefficient with the operator.
+- [STABLE] [`split`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.operators.html#mindquantum.core.operators.FermionOperator.split): A method of FermionOperator and QubitOperator that can split the coefficient with the operator.
 
 #### ParameterResolver
 
-- [STABLE] `astype`: Convert the ParameterResolver to a given type, can be float or double complex
-- [STABLE] `const`: Get the constant part of this ParameterResolver.
-- [STABLE] `is_const`: Check whether this ParameterResolver is constant.
-- [STABLE] `encoder_part`: Set a part of parameter to be encoder parameter.
-- [STABLE] `ansatz_part`: Set a part of parameter to be ansatz parameter.
-- [STABLE] `as_encoder`: Set all parameter to encoder parameters.
-- [STABLE] `as_ansatz`: Set all parameter to ansatz parameters.
-- [STABLE] `encoder_parameters`: Return all encoder parameters.
-- [STABLE] `ansatz_parameters`: Return all ansatz parameters.
-- [STABLE] `is_hermitian`: Check whether this ParameterResolver is hermitian conjugate.
-- [STABLE] `is_anti_hermitian`: Check whether this ParameterResolver is anti hermitian conjugate.
-- [STABLE] `no_grad_parameters`: Return all parameters that do no require gradient.
-- [STABLE] `requires_grad_parameters`: Return all parameters that require gradient.
+- [STABLE] [`astype`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.astype): Convert the ParameterResolver to a given type, can be float or double complex
+- [STABLE] [`const`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.const): Get the constant part of this ParameterResolver.
+- [STABLE] [`is_const`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.is_const): Check whether this ParameterResolver is constant.
+- [STABLE] [`encoder_part`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.encoder_part): Set a part of parameter to be encoder parameter.
+- [STABLE] [`ansatz_part`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.ansatz_part): Set a part of parameter to be ansatz parameter.
+- [STABLE] [`as_encoder`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.as_encoder): Set all parameter to encoder parameters.
+- [STABLE] [`as_ansatz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.as_ansatz): Set all parameter to ansatz parameters.
+- [STABLE] [`encoder_parameters`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.encoder_parameters): Return all encoder parameters.
+- [STABLE] [`ansatz_parameters`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.ansatz_parameters): Return all ansatz parameters.
+- [STABLE] [`is_hermitian`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.is_hermitian): Check whether this ParameterResolver is hermitian conjugate.
+- [STABLE] [`is_anti_hermitian`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.is_anti_hermitian): Check whether this ParameterResolver is anti hermitian conjugate.
+- [STABLE] [`no_grad_parameters`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.no_grad_parameters): Return all parameters that do no require gradient.
+- [STABLE] [`requires_grad_parameters`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.requires_grad_parameters): Return all parameters that require gradient.
 
 #### Simulator
 
-- [STABLE] `copy`: The simulator can now very easy to duplicate.
-- [STABLE] `apply_gate`: In this version, you can apply a gate in differential version.
-- [STABLE] `inner_product`: Calculate the inner product of two state in two simulator.
+- [STABLE] [`copy`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.simulator.html#mindquantum.simulator.Simulator.copy): The simulator can now very easy to duplicate.
+- [STABLE] [`apply_gate`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.simulator.html#mindquantum.simulator.Simulator.apply_gate): In this version, you can apply a gate in differential version.
+- [BETA] [`inner_product`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.simulator.html#mindquantum.simulator.inner_product): Calculate the inner product of two state in two simulator.
 
 #### IO
 
-- [STABLE] `BlochSphere`: Now we support display and animate a one qubit state in bloch sphere.
+- [STABLE] [`BlochSphere`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.io.html): Now we support display and animate a one qubit state in bloch sphere.
 
 ### Contributors
 
