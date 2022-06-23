@@ -41,5 +41,5 @@ mindquantum_add_pkg(
   MD5 ${MD5}
   GEN_CMAKE_CONFIG
   BUILD_DEPENDENCIES "m4"
-  CONFIGURE_COMMAND ./configure --enable-cxx
+  CONFIGURE_COMMAND ./configure --enable-cxx --enable-shared=no --with-pic
   TARGET_ALIAS mindquantum::gmp gmp::gmp)

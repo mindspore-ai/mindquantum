@@ -37,6 +37,7 @@ Param(
     [switch]$Ninja,
     [switch]$NoBuildIsolation,
     [switch]$NoDelocate,
+    [switch]$NoGitee,
     [switch]$OnlyPytest,
     [Alias("O")][ValidateNotNullOrEmpty()][string]$Output,
     [ValidateNotNullOrEmpty()][string]$PlatName,
@@ -398,6 +399,9 @@ Ignore any configuration file
 
 .PARAMETER NoDelocate
 Do not delocate the binary wheels after build is finished (pass -Delocate to enable)
+
+.PARAMETER NoGitee
+Do not favor Gitee over Github/Gitlab
 
 .PARAMETER OnlyPytest
 Only install pytest and its dependencies when creating/building the virtualenv

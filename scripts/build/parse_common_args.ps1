@@ -81,6 +81,7 @@ function Help-Message() {
     Write-Output ("                      Defaults to: {0}" -f $n_jobs_default)
     Write-Output '  -LocalPkgs          Compile third-party dependencies locally'
     Write-Output '  -NoConfig           Ignore any configuration file'
+    Write-Output '  -NoGitee            Do not favor Gitee over Github/Gitlab'
     Write-Output '  -Ninja              Build using Ninja instead of make'
     Write-Output '  -Quiet              Disable verbose build rules'
     Write-Output '  -ShowLibraries      Show all known third-party libraries'
@@ -169,6 +170,9 @@ if ($DebugCMake.IsPresent) {
 
 if ($Gitee.IsPresent) {
     Set-Value 'enable_gitee'
+}
+if ($NoGitee.IsPresent) {
+    Set-Value 'enable_gitee' $false
 }
 
 if ($Gpu.IsPresent) {

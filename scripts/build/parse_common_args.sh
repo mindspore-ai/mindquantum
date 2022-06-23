@@ -111,6 +111,7 @@ help_message() {
     echo '  --debug              Build in debug mode'
     echo '  --debug-cmake        Enable debugging mode for CMake configuration step'
     echo '  --gitee              Use Gitee (where possible) instead of Github/Gitlab'
+    echo '  --no-gitee           Do not favor Gitee over Github/Gitlab'
     echo '  --gpu                Enable GPU support'
     echo '  -j,--jobs [N]        Number of parallel jobs for building'
     echo "                       Defaults to: $n_jobs_default"
@@ -226,6 +227,9 @@ while getopts "${getopts_args}" OPT; do
                              ;;
         gitee )             no_arg;
                             set_var enable_gitee
+                            ;;
+        no-gitee )          no_arg;
+                            set_var enable_gitee 0
                             ;;
         gpu )               no_arg;
                             set_var enable_gpu

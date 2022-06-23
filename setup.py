@@ -16,7 +16,7 @@
 
 """Setup.py file."""
 
-import copy
+import argparse
 import itertools
 import logging
 import multiprocessing
@@ -60,61 +60,6 @@ def important_msgs(*msgs):
     for msg in msgs:
         print(msg)
     print('*' * 75)
-
-
-def get_extra_cmake_options():
-    """
-    Parse CMake options from python3 setup.py command line.
-
-    Read --unset, --set, -A and -G options from the command line and add them as cmake switches.
-    """
-    _cmake_extra_options = []
-
-    opt_key = None
-
-    has_generator = False
-
-    argv = copy.deepcopy(sys.argv)
-    # parse command line options and consume those we care about
-    var_name = None
-    for arg in argv:
-        if opt_key == 'var':
-            if var_name is None:
-                var_name = arg.strip()
-                sys.argv.remove(arg)
-                continue
-            _cmake_extra_options.append(f'-D{var_name}:STRING={arg.strip()}')
-
-        elif opt_key == 'G':
-            has_generator = True
-            _cmake_extra_options += ['-G', arg.strip()]
-        elif opt_key == 'A':
-            _cmake_extra_options += ['-A', arg.strip()]
-        elif opt_key == 'unset':
-            _cmake_extra_options.append(f'-D{arg.strip()}:BOOL=OFF')
-        elif opt_key == 'set':
-            _cmake_extra_options.append(f'-D{arg.strip()}:BOOL=ON')
-
-        if opt_key:
-            sys.argv.remove(arg)
-            opt_key = None
-            continue
-
-        if arg in ['--unset', '--set', '--var', '--compiler-flags']:
-            var_name = None
-            opt_key = arg[2:].lower()
-            sys.argv.remove(arg)
-            continue
-        if arg in ('-A', '-G'):
-            opt_key = arg[1:]
-            sys.argv.remove(arg)
-            continue
-
-    # If no explicit CMake Generator specification, prefer MinGW Makefiles on Windows
-    if (not has_generator) and (platform.system() == 'Windows'):
-        _cmake_extra_options += ['-G', 'MinGW Makefiles']
-
-    return _cmake_extra_options
 
 
 # ==============================================================================
@@ -458,9 +403,75 @@ ext_modules = [
 ]
 
 
+# ==============================================================================
+
+
+class ArgsCMakeFlag(argparse.Action):
+    """Custom argparse action for CMake flags."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """Call operator."""
+        if isinstance(values, list):
+            raise ValueError(f'values = {values} is a list! Only single value are currently supported!')
+
+        cmake_extra_options.append(option_string)
+        cmake_extra_options.append(values)
+        setattr(namespace, self.dest, True)
+
+
+class ArgsCMakeDefinition(argparse.Action):
+    """Custom argparse action to set boolean CMake variables."""
+
+    def __init__(self, cmake_value, *args, **kwargs):
+        """Initialize an ArgsCMakeDefinition object."""
+        super().__init__(*args, **kwargs)
+        self.cmake_value = bool(cmake_value)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """Call operator."""
+        if isinstance(values, list):
+            raise ValueError(f'values = {values} is a list! Only single value are currently supported!')
+
+        if self.cmake_value:
+            cmake_extra_options.append(f'-D{values}:BOOL=ON')
+        else:
+            cmake_extra_options.append(f'-D{values}:BOOL=OFF')
+
+
+class ArgsCMakeVariable(argparse.Action):
+    """Custom argparse action to set string CMake variables."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """Call operator."""
+        if not isinstance(values, list) or len(values) != 2:
+            parser.error(
+                f'{option_string} expects 2 arguments, only {len(values)} provided! (make sure nargs is set properly)'
+            )
+        cmake_extra_options.append(f'-D{values[0]}:STRING={values[1]}')
+
+
+# ==============================================================================
+
 if __name__ == '__main__':
     remove_tree(Path(cur_dir, 'output'))
-    cmake_extra_options.extend(get_extra_cmake_options())
+
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('--set', action=ArgsCMakeDefinition, cmake_value=True)
+    arg_parser.add_argument('--unset', action=ArgsCMakeDefinition, cmake_value=False)
+    arg_parser.add_argument('--var', nargs=2, action=ArgsCMakeVariable)
+    arg_parser.add_argument('-A', action=ArgsCMakeFlag)
+    arg_parser.add_argument('-G', dest='cmake_generator', action=ArgsCMakeFlag)
+
+    if 'bdist_wheel' in sys.argv:
+        sys.argv.extend(arg.strip() for arg in os.environ.get('MQ_CIBW_BUILD_ARGS', '').split(',') if arg)
+        parsed_args, unparsed_args = arg_parser.parse_known_args()
+
+        sys.argv = sys.argv[:1] + unparsed_args
+
+        # If no explicit CMake Generator specification, prefer MinGW Makefiles on Windows
+        if (not parsed_args.cmake_generator) and (platform.system() == 'Windows'):
+            cmake_extra_options += ['-G', 'MinGW Makefiles']
+
     setuptools.setup(
         cmdclass={
             'build_ext': CMakeBuildExt,

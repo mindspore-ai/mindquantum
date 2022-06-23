@@ -171,7 +171,7 @@ endif()
 
 # ==============================================================================
 
-if(NOT IS_PYTHON_BUILD)
+if(NOT IS_PYTHON_BUILD AND ENABLE_DOCUMENTATION)
   find_package(Doxygen QUIET)
   if(Doxygen_FOUND)
     add_subdirectory(docs)
