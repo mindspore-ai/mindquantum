@@ -1,7 +1,7 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "pybind11>=2.6.2", "setuptools_scm[toml]>=6"]
-build-backend = "backend"
-backend-path = ["_build"]
+requires = ['setuptools>=45', 'wheel', 'pybind11>=2.6.2', 'setuptools_scm[toml]>=6', 'wheel-filename>1.2']
+build-backend = 'backend'
+backend-path = ['_build']
 
 # ==============================================================================
 
@@ -56,8 +56,8 @@ addopts = "--ignore='tests/quick_test.py'"
 norecursedirs = ['third_party', 'mindquantum/ccsrc']
 mock_use_standalone_module = true
 markers = [
-    "symengine: test using the mindquantum.symengine module",
-    "cxx_exp_projectq: tests involving the ProjectQ simulator",
+    'symengine: test using the mindquantum.symengine module',
+    'cxx_exp_projectq: tests involving the ProjectQ simulator',
 ]
 filterwarnings = [
     'ignore:.*Please use `OptimizeResult`.*is deprecated:DeprecationWarning',
@@ -84,8 +84,9 @@ profile = "black"
 [tool.setuptools_scm]
 # write_to = 'VERSION.txt'
 write_to_template = '{version}'
+parentdir_prefix_version = 'mindquantum-'
 local_scheme = 'no-local-version'
-fallback_version = 'v2.0.0'
+fallback_version = 'v1.0.0'
 
 
 [tool.yapf]

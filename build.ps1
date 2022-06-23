@@ -63,6 +63,8 @@ if ("$Env:JENKINS_URL" -Match 'https?://build.mindspore.cn' -And [bool]$Env:CI) 
 # ==============================================================================
 # Default values
 
+$python_extra_pkgs = @('wheel-filename>1.2')
+
 . (Join-Path $ROOTDIR 'scripts\build\common_functions.ps1')
 
 # ------------------------------------------------------------------------------
