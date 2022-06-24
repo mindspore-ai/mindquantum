@@ -477,7 +477,9 @@ struct ParameterResolver {
 
     void NoGradPart(const std::vector<std::string>& names) {
         for (auto& name : names) {
-            this->no_grad_parameters_.insert(name);
+            if (this->Contains(name)){
+                this->no_grad_parameters_.insert(name);
+            }
         }
     }
 
@@ -491,7 +493,9 @@ struct ParameterResolver {
 
     void EncoderPart(const std::vector<std::string>& names) {
         for (auto& name : names) {
-            this->encoder_parameters_.insert(name);
+            if (this->Contains(name)){
+                this->encoder_parameters_.insert(name);
+            }
         }
     }
 

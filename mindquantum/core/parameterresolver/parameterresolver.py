@@ -269,7 +269,7 @@ resolver discards the imaginary part."
         """
         Check whether this parameter resolver represents a constant number.
 
-        This means that there is no non zero parameter in this parameter resolver.
+        This means that there is no parameter with non zero coefficient in this parameter resolver.
 
         Returns:
             bool, whether this parameter resolver represent a constant number.
