@@ -50,7 +50,7 @@
 
 #### IO
 
-- [STABLE] [`BlochSphere`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.io.html): Now we support display and animate a one qubit state in bloch sphere.
+- [STABLE] [`BlochScene`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.io.html): Now we support display and animate a one qubit state in bloch sphere.
 
 ### Contributors
 

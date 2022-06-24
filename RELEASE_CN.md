@@ -50,7 +50,7 @@
 
 #### IO
 
-- [STABLE] [`BlochSphere`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.io.html): 此次更新，我们支持搭建布洛赫球绘图场景，可在其上绘制量子态，也可以动态演示量子态的变化。
+- [STABLE] [`BlochScene`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.io.html): 此次更新，我们支持搭建布洛赫球绘图场景，可在其上绘制量子态，也可以动态演示量子态的变化。
 
 ## MindQuantum 0.6.0 Release Notes
 
