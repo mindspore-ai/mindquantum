@@ -140,7 +140,7 @@ repos:
     rev: '0.48'
     hooks:
       - id: check-manifest
-        additional_dependencies: ['setuptools-scm[toml]', 'pybind11>=2.6']
+        additional_dependencies: ['pybind11>=2.6']
 
   - repo: https://gitee.com/dnguyen/cmake-pre-commit-hooks-mirror
     rev: 'v1.5.3'

@@ -42,7 +42,7 @@ if [[ "${created_venv:-0}" -eq 1 || "${do_update_venv:-0}" -eq 1 ]]; then
     echo "Updating critical Python packages: $PYTHON -m pip install -U ${critical_pkgs[*]}"
     call_cmd "$PYTHON" -m pip install -U "${critical_pkgs[@]}"
 
-    pkgs=(pybind11 setuptools-scm[toml])
+    pkgs=(pybind11)
 
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         pkgs+=(auditwheel)

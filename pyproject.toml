@@ -1,5 +1,5 @@
 [build-system]
-requires = ['setuptools>=45', 'wheel', 'pybind11>=2.6.2', 'setuptools_scm[toml]>=6', 'wheel-filename>1.2']
+requires = ['setuptools>=45', 'wheel', 'pybind11>=2.6.2', 'wheel-filename>1.2']
 build-backend = 'backend'
 backend-path = ['_build']
 
@@ -81,12 +81,12 @@ ignore-path-errors = [
 profile = "black"
 
 
-[tool.setuptools_scm]
+# [tool.setuptools_scm]
 # write_to = 'VERSION.txt'
-write_to_template = '{version}'
-parentdir_prefix_version = 'mindquantum-'
-local_scheme = 'no-local-version'
-fallback_version = 'v1.0.0'
+# write_to_template = '{version}'
+# parentdir_prefix_version = 'mindquantum-'
+# local_scheme = 'no-local-version'
+# fallback_version = 'v1.0.0'
 
 
 [tool.yapf]

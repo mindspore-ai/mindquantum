@@ -4,7 +4,7 @@ missingReturn
 
 constParameter:tests/*
 
-duplicateExpression:ccsrc/mq_base/pr/parameter_resolver.h:703
+duplicateExpression:ccsrc/mq_base/pr/parameter_resolver.h:707
 
 noExplicitConstructor:ccsrc/cxx_experimental/include/decompositions/decomposition_atom.hpp:42
 noExplicitConstructor:ccsrc/cxx_experimental/include/ops/parametric/gate_base.hpp

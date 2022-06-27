@@ -38,7 +38,7 @@ if ($created_venv -or $do_update_venv) {
     Write-Output ("Updating critical Python packages: $PYTHON -m pip install -U " + ($critical_pkgs -Join ' '))
     Call-Cmd "$PYTHON" -m pip install -U @critical_pkgs
 
-    $pkgs = @('pybind11', 'setuptools-scm[toml]')
+    $pkgs = @('pybind11')
 
     if ($IsLinuxEnv) {
         $pkgs += 'auditwheel'

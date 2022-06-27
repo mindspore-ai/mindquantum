@@ -78,7 +78,6 @@ def move_delocated_wheel(delocated_wheel, wheel_directory):
 
 def get_delocated_wheel_name(name_full, delocated_wheel_directory):
     """Locate the delocated wheel on Linux."""
-
     pwf = parse_wheel_filename(str(name_full))
     platform_tag_suffix = '.'.join(pwf.platform_tags) + '.whl'
     basename = name_full.name[: -len(platform_tag_suffix)]

@@ -19,6 +19,11 @@ import argparse
 import sys
 from pathlib import Path
 
+try:
+    import importlib.metadata as importlib_metadata  # pragma: no cover (PY38+)
+except ImportError:
+    import importlib_metadata  # pragma: no cover (<PY38)
+
 _ROOT = Path(__file__).parent.parent.resolve()
 
 # ==============================================================================
@@ -86,6 +91,18 @@ def get_cmake_dir(as_string=True):
 # ==============================================================================
 
 
+def print_version():
+    """Print MindQuantum's version."""
+    try:
+        print(importlib_metadata.version('mindquantum'))
+    except importlib_metadata.PackageNotFoundError:
+        with (_ROOT / 'VERSION.txt').open() as fd:
+            print([line.strip() for line in fd.readlines() if line][0])
+
+
+# ==============================================================================
+
+
 def main():
     """Implement main functionality."""
     parser = argparse.ArgumentParser()
@@ -102,9 +119,16 @@ def main():
         action="store_true",
         help="Include flags for MindQuantum",
     )
+    parser.add_argument(
+        "--version",
+        action="store_true",
+        help="Print out MindQuantum's version",
+    )
     args = parser.parse_args()
     if not sys.argv[1:]:
         parser.print_help()
+    if args.version:
+        print_version()
     if args.includes:
         print_includes()
     if args.cmakedir:

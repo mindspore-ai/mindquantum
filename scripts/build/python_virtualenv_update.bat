@@ -44,7 +44,7 @@ set critical_pkgs=pip setuptools wheel build
 echo Updating critical Python packages: !PYTHON! -m pip install -U !critical_pkgs!
 call %BASEPATH%\dos\call_cmd.bat !PYTHON! -m pip install -U !critical_pkgs!
 
-set pkgs=pybind11 setuptools-scm[toml]
+set pkgs=pybind11
 
 if !cmake_from_venv! == 1 set pkgs=!pkgs! cmake
 
