@@ -654,7 +654,7 @@ class SVGContainer:
     def to_file(self, filename='circuit.svg'):
         """Save svg file."""
         s = self._repr_svg_()
-        with fdopen(filename, 'w', encoding='utf-8') as f:
+        with fdopen(filename, 'w') as f:
             f.writelines(s)
 
     @property
