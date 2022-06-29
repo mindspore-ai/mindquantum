@@ -100,6 +100,7 @@ class OpenQASM:
         >>> circuit_str[47:60]
         'rx(0.3) q[0];'
     """
+
     def __init__(self):
         from mindquantum import Circuit
         self.circuit = Circuit()
@@ -124,6 +125,7 @@ class OpenQASM:
         """
         from mindquantum import gates as G
         from mindquantum.core import Circuit
+        from mindquantum.core import ParameterResolver
         if not isinstance(circuit, Circuit):
             raise TypeError(f"circuit requires Circuit, but get {type(circuit)}.")
         if not isinstance(version, str):
@@ -150,6 +152,8 @@ class OpenQASM:
                     else:
                         obj = gate.obj_qubits[0]
                         p = gate.coeff
+                        if isinstance(p, ParameterResolver):
+                            raise ValueError(f"Cannot convert parameterized gate {gate} into OpenQASM.")
                         if gate.ctrl_qubits:
                             ctrl = gate.ctrl_qubits[0]
                             self.cmds.append(f"c{gate.name.lower()}({p}) q[{ctrl}],q[{obj}];")
@@ -217,6 +221,7 @@ class OpenQASM:
             self._trans_v2(self.cmds)
         else:
             raise ValueError(f"OPENQASM {version} not implement yet")
+        return self.circuit
 
     def _filter(self, cmds):
         """
