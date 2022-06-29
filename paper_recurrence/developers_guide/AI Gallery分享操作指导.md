@@ -34,3 +34,5 @@ mox.file.copy_parallel('obs://obs-aigallery-developer/MindQuantum/xxx','xxx')
 5. 点击右上角分享按钮，发布到AI Gallery（分享主文件）
 
 6. 发布成功之后，可以修改副标题和页面，确认一键run in ModelArts可以成功运行代码，即可领取奖品
+
+7. 如果要修改部分代码内容，可在notebook修改后再分享至AI Gallery即可更新版本
