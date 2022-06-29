@@ -35,6 +35,11 @@
 #    define MQ_NODISCARD
 #endif  // MQ_NODISCARD
 
+/*!
+ * \def MQ_NODISCARD
+ * Add the [[nodiscard]] attribute to a function if supported by the compiler
+ */
+
 // -------------------------------------
 
 #ifndef _MSC_VER
@@ -43,6 +48,11 @@
 #    define MQ_ALIGN(x)
 #endif  // !_MSC_VER
 
+/*!
+ * \def MQ_ALIGN(x)
+ * Align a C++ struct/class to a specific size.
+ */
+
 // -------------------------------------
 
 #if MQ_HAS_CONCEPTS
@@ -50,6 +60,11 @@
 #else
 #    define MQ_REQUIRES(x)
 #endif  // MQ_HAS_CONCEPTS
+
+/*!
+ * \def MQ_REQUIRES
+ * Add a C++20 requires() clause to a function if supported by the compiler.
+ */
 
 // -------------------------------------
 
@@ -60,19 +75,35 @@
         (defined __clang__) && (MQ_CLANG_MAJOR <= major) && (MQ_CLANG_MINOR <= minor)
 #endif  // MQ_IS_CLANG_VERSION_LESS
 
+/*!
+ * \def MQ_IS_CLANG_VERSION_LESS(major, minor)
+ * True if the compiler is Clang and if its version is strictly less than <major>.<minor>
+ */
+/*!
+ * \def MQ_IS_CLANG_VERSION_LESS_EQUAL(major, minor)
+ * True if the compiler is Clang and if its version is less than or equal to <major>.<minor>
+ */
+
 // -------------------------------------
 
 #if !defined(MQ_CONFIG_NO_COUNTER) && !defined(MQ_CONFIG_COUNTER)
 #    define MQ_CONFIG_COUNTER
 #endif  // !MQ_CONFIG_NO_COUNTER && !MQ_CONFIG_COUNTER
 
-#define MQ_UNIQUE_NAME_LINE2(name, line) name##line
-#define MQ_UNIQUE_NAME_LINE(name, line)  MQ_UNIQUE_NAME_LINE2(name, line)
+#define MQ_UNIQUE_NAME_LINE2_(name, line) name##line
+#define MQ_UNIQUE_NAME_LINE_(name, line)  MQ_UNIQUE_NAME_LINE2_(name, line)
 #ifdef MQ_CONFIG_COUNTER
-#    define MQ_UNIQUE_NAME(name) MQ_UNIQUE_NAME_LINE(name, __COUNTER__)
+#    define MQ_UNIQUE_NAME(name) MQ_UNIQUE_NAME_LINE_(name, __COUNTER__)
 #else
-#    define MQ_UNIQUE_NAME(name) MQ_UNIQUE_NAME_LINE(name, __LINE__)
+#    define MQ_UNIQUE_NAME(name) MQ_UNIQUE_NAME_LINE_(name, __LINE__)
 #endif
+
+/*!
+ * \def MQ_UNIQUE_NAME(name)
+ * Define a unique and valid C++ identifier.
+ *
+ * This is either based on \c __COUNTER__ if supported or in \c __LINE__ otherwise.
+ */
 
 // =============================================================================
 

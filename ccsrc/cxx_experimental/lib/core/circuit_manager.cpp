@@ -126,8 +126,8 @@ void CircuitManager::delete_qubits(const std::vector<ext_id_t>& ids_to_delete) {
 // =============================================================================
 
 namespace mindquantum {
-auto CircuitManager::apply_operator(const instruction_t& optor, const qureg_t& control_qubits,
-                                    const qureg_t& target_qubits) -> inst_ref_t {
+auto CircuitManager::apply_operator(const instruction_t& optor, const qubit_ids_t& control_qubits,
+                                    const qubit_ids_t& target_qubits) -> inst_ref_t {
     return blocks_.back().apply_operator(optor, control_qubits, target_qubits);
 }
 

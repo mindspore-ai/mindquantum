@@ -107,7 +107,7 @@ class CppCore {
 
  protected:
     //! Insert an operation into circuit
-    void apply_operation_(const gate_t& gate, const qureg_t& control_qubit_ids, const qureg_t& qubit_ids);
+    void apply_operation_(const gate_t& gate, const qubit_ids_t& control_qubit_ids, const qubit_ids_t& qubit_ids);
 
     bool simulator_backend_;
     bool has_new_operations_;

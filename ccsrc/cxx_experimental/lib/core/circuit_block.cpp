@@ -188,8 +188,8 @@ auto CircuitBlock::translate_id(const ext_id_t& qubit_id) const -> td_qid_t {
 
 // =============================================================================
 namespace mindquantum {
-auto CircuitBlock::apply_operator(const instruction_t& optor, const qureg_t& control_qubits,
-                                  const qureg_t& target_qubits) -> inst_ref_t {
+auto CircuitBlock::apply_operator(const instruction_t& optor, const qubit_ids_t& control_qubits,
+                                  const qubit_ids_t& target_qubits) -> inst_ref_t {
     return circuit_.apply_operator(optor, translate_ext_ids_(control_qubits, target_qubits));
 }
 
@@ -206,9 +206,9 @@ auto CircuitBlock::apply_measurement(qubit_id_t id) -> inst_ref_t {
 }  // namespace mindquantum
 
 // =============================================================================
-
+// TODO(explain): Why we need this?
 namespace mindquantum {
-auto CircuitBlock::translate_ext_ids_(const qureg_t& control_qubits, const qureg_t& target_qubits)
+auto CircuitBlock::translate_ext_ids_(const qubit_ids_t& control_qubits, const qubit_ids_t& target_qubits)
     -> std::vector<qubit_t> {
     std::vector<qubit_t> wires;
     wires.reserve(std::size(control_qubits) + std::size(target_qubits));

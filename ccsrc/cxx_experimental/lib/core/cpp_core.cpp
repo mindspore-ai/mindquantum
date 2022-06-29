@@ -299,7 +299,7 @@ void CppCore::write(std::string_view format) {
     }
 }
 
-void CppCore::apply_operation_(const gate_t& gate, const qureg_t& control_qubit_ids, const qureg_t& qubit_ids) {
+void CppCore::apply_operation_(const gate_t& gate, const qubit_ids_t& control_qubit_ids, const qubit_ids_t& qubit_ids) {
     using ext_id_t = decltype(circuit_manager_)::ext_id_t;
 
     if (gate.is_one<ops::Measure>()) {

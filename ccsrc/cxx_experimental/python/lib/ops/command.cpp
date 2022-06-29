@@ -194,12 +194,12 @@ std::optional<mindquantum::qubit_id_t> load_qubit(PyObject* src) {
     return {};
 }
 
-std::optional<mindquantum::qureg_t> load_qureg(PyObject* src) {
+std::optional<mindquantum::qubit_ids_t> load_qureg(PyObject* src) {
     if (!PyList_Check(src)) {
         return {};
     }
 
-    mindquantum::qureg_t qureg;
+    mindquantum::qubit_ids_t qureg;
 
     const auto size = PyList_Size(src);
     for (auto i(0UL); i < size; ++i) {
@@ -217,7 +217,7 @@ std::optional<mindquantum::qureg_t> load_qureg(PyObject* src) {
 bool mindquantum::details::load_command(pybind11::handle src, python::Command& cmd) {
     using str_caster_t = py::detail::make_caster<std::string>;
 
-    qureg_t qubits;
+    qubit_ids_t qubits;
     if (auto attr = PSG(PyObject_GetAttrString(src.ptr(), "qubits")); attr) {
         if (!PyTuple_Check(attr)) {
             return false;
@@ -237,7 +237,7 @@ bool mindquantum::details::load_command(pybind11::handle src, python::Command& c
         return false;
     }
 
-    qureg_t control_qubits;
+    qubit_ids_t control_qubits;
     if (auto attr = PSG(PyObject_GetAttrString(src.ptr(), "control_qubits")); attr) {
         if (auto qureg = load_qureg(attr); qureg) {
             control_qubits = qureg.value();

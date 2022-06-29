@@ -150,6 +150,14 @@ class QubitID {
 
 bool operator<(qubit_id_t id, const QubitID& qubit);
 
+//! A quantum circuit block
+/*!
+ * A circuit block is a quantum circuit (ie. a list of quantum/classical gates applied to some qubits) that may or may
+ * not be applied to some physical qubits.
+ *
+ * In addition to being a quantum circuit, a circuit block also keep tracks of any qubit mapping that has been performed
+ * and makes sure that the mapping stays consistent when executing a list of quantum circuits.
+ */
 class CircuitBlock {
  public:
     using cbit_t = tweedledum::Cbit;
@@ -285,7 +293,7 @@ class CircuitBlock {
      * \param target_qubits List of External qubit IDs representing targets
      */
     template <typename OpT>
-    inst_ref_t apply_operator(OpT&& optor, const qureg_t& control_qubits, const qureg_t& target_qubits);
+    inst_ref_t apply_operator(OpT&& optor, const qubit_ids_t& control_qubits, const qubit_ids_t& target_qubits);
 
     //! Add an operation to the underlying circuit
     /*!
@@ -293,7 +301,8 @@ class CircuitBlock {
      * \param control_qubits List of External qubit IDs representing controls
      * \param target_qubits List of External qubit IDs representing targets
      */
-    inst_ref_t apply_operator(const instruction_t& optor, const qureg_t& control_qubits, const qureg_t& target_qubits);
+    inst_ref_t apply_operator(const instruction_t& optor, const qubit_ids_t& control_qubits,
+                              const qubit_ids_t& target_qubits);
 
     //! Apply a measurement on a qubit
     /*!
@@ -348,7 +357,7 @@ class CircuitBlock {
     friend class ::UnitTestAccessor;
 #endif  // UNIT_TESTS
 
-    std::vector<qubit_t> translate_ext_ids_(const qureg_t& control_qubits, const qureg_t& target_qubits);
+    std::vector<qubit_t> translate_ext_ids_(const qubit_ids_t& control_qubits, const qubit_ids_t& target_qubits);
     void update_mappings_(const std::vector<qubit_t>& old_to_new);
 
     const device_t* device_;

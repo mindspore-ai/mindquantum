@@ -25,7 +25,7 @@
 
 namespace mindquantum {
 using qubit_id_t = uint32_t;
-using qureg_t = std::vector<qubit_id_t>;
+using qubit_ids_t = std::vector<qubit_id_t>;
 
 using qubit_t = tweedledum::Qubit;
 using qubits_t = std::vector<qubit_t>;

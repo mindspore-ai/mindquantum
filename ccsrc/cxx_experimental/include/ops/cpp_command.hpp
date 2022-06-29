@@ -42,8 +42,8 @@ class Command {
     }
 
  protected:
-    qureg_t qubits_;
-    qureg_t control_qubits_;
+    qubit_ids_t qubits_;
+    qubit_ids_t control_qubits_;
 
     // TODO(dnguyen): Can we do better than this?
     std::unique_ptr<td::Operator> operation_;

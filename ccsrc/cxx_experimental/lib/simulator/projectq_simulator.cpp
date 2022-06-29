@@ -40,7 +40,8 @@ bool Simulator::allocate_qubits(const qubits_t& qubits) {
     }
     return true;
 }
-
+// TODO(explain): Do we have better solution that do not do data type conversion for matrix every time we run
+// instruction
 bool Simulator::run_instruction(const instruction_t& inst) {
     using Complex = std::complex<double>;
     using c_type = std::complex<double>;
@@ -77,6 +78,7 @@ bool Simulator::run_instruction(const instruction_t& inst) {
         gate_matrix.emplace_back(ArrayType{matrix(3, 0), matrix(3, 1), matrix(3, 2), matrix(3, 3)});
     } else if (inst.is_one<ops::Barrier>()) {
         // Silently ignore gates
+        return true;
     } else {
         std::cerr << "Simulator doesn't support gate type:\n";
         std::cerr << inst.kind() << std::endl;

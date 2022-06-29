@@ -149,7 +149,7 @@ class CircuitManager {
      * \param target_qubits List of External qubit IDs representing targets
      */
     template <typename OpT>
-    inst_ref_t apply_operator(OpT&& optor, const qureg_t& control_qubits, const qureg_t& target_qubits);
+    inst_ref_t apply_operator(OpT&& optor, const qubit_ids_t& control_qubits, const qubit_ids_t& target_qubits);
 
     //! Add an operation to the underlying network
     /*!
@@ -157,7 +157,8 @@ class CircuitManager {
      * \param control_qubits List of External qubit IDs representing controls
      * \param target_qubits List of External qubit IDs representing targets
      */
-    inst_ref_t apply_operator(const instruction_t& optor, const qureg_t& control_qubits, const qureg_t& target_qubits);
+    inst_ref_t apply_operator(const instruction_t& optor, const qubit_ids_t& control_qubits,
+                              const qubit_ids_t& target_qubits);
 
     //! Apply a measurement on a qubit
     /*!

@@ -42,11 +42,11 @@ namespace td = tweedledum;
 
 class Command : public ops::Command {
  public:
-    void set_qubits(const qureg_t& qubits) {
+    void set_qubits(const qubit_ids_t& qubits) {
         qubits_ = qubits;
     }
 
-    void set_control_qubits(const qureg_t& qubits) {
+    void set_control_qubits(const qubit_ids_t& qubits) {
         control_qubits_ = qubits;
     }
 

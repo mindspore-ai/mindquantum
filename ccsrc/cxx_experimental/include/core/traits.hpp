@@ -47,6 +47,7 @@ inline constexpr auto is_tuple_v = is_tuple<Ts...>::value;
 
 // ---------------------------------
 
+//! C++ type-traits that is true if and only if the list of types passed in as argument only contains unique types.
 template <typename...>
 inline constexpr auto is_unique = std::true_type{};
 
@@ -56,6 +57,7 @@ inline constexpr auto is_unique<T, Ts...> = std::bool_constant<
 
 // ---------------------------------
 
+//! C++ type-traits that is true if and only the type passed in argument can be found inside the type list of the tuple
 template <typename T, typename Tuple>
 inline constexpr auto tuple_contains = false;
 

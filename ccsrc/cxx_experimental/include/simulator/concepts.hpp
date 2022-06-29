@@ -25,6 +25,7 @@
 
 namespace mindquantum::concepts {
 #if MQ_HAS_CONCEPTS
+//! C++20 concept representing a basic simulator API.
 template <typename simulator_t>
 concept CircuitSimulator = requires(simulator_t simulator, qubit_t qubit, qubits_t qubits, instruction_t inst) {
     { simulator.run_instruction(inst) } -> same_decay_as<bool>;
