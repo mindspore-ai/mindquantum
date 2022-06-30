@@ -160,6 +160,9 @@ class OpenQASM:
                     else:
                         obj = gate.obj_qubits[0]
                         p = gate.coeff
+                        if not p.is_const():
+                            raise ValueError(f"Cannot convert parameterized gate {gate} to OpenQASM.")
+                        p = p.const
                         if gate.ctrl_qubits:
                             ctrl = gate.ctrl_qubits[0]
                             self.cmds.append(f"c{gate.name.lower()}({p}) q[{ctrl}],q[{obj}];")
@@ -228,6 +231,7 @@ class OpenQASM:
             self._trans_v2(self.cmds)
         else:
             raise ValueError(f"OPENQASM {version} not implement yet")
+        return self.circuit
 
     def _filter(self, cmds):
         """Filter empty cmds and head."""
