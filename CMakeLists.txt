@@ -20,6 +20,8 @@
 
 cmake_minimum_required(VERSION 3.20) # mainly because of NVHPC support
 
+message(STATUS "Running using CMake ${CMAKE_VERSION}")
+
 cmake_policy(VERSION 3.0...3.23)
 
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)

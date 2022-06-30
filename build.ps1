@@ -129,6 +129,8 @@ if ([bool]$PlatName) {
 
 $ErrorActionPreference = 'Stop'
 
+Write-Output "Called with: $($MyInvocation.Line)"
+
 cd "$ROOTDIR"
 
 # ------------------------------------------------------------------------------
