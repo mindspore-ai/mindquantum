@@ -2,7 +2,7 @@
 
 [View English](./RELEASE.md)
 
-## MindQuantum 0.6.5 Release Notes
+## MindQuantum 0.7.0 Release Notes
 
 ### 主要特性和增强
 

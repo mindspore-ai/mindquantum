@@ -2,7 +2,7 @@
 
 [查看中文](./RELEASE_CN.md)
 
-## MindQuantum 0.6.5 Release Notes
+## MindQuantum 0.7.0 Release Notes
 
 ### Major Features and Improvements
 
