@@ -103,6 +103,8 @@ function parse_extra_args() {
 
 set -e
 
+echo "Called with: $*"
+
 cd "${ROOTDIR}"
 
 # ------------------------------------------------------------------------------

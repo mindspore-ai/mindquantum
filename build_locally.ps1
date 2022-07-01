@@ -148,6 +148,8 @@ if([bool]$A) {
 
 $ErrorActionPreference = 'Stop'
 
+Write-Output "Called with: $($MyInvocation.Line)"
+
 cd "$ROOTDIR"
 
 # ------------------------------------------------------------------------------
