@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,10 +41,10 @@ def circuit_qaoa(p):
     for layer in range(p):
         for (u, v) in E:
             circ += X.on(v, u)
-            circ += RZ('gamma_{}'.format(layer)).on(v)
+            circ += RZ(f'gamma_{layer}').on(v)
             circ += X.on(v, u)
         for v in V:
-            circ += RX('beta_{}'.format(layer)).on(v)
+            circ += RX(f'beta_{layer}').on(v)
     return circ
 
 
@@ -76,7 +75,7 @@ LR = 0.1
 
 ham = QubitOperator()
 for (v, u) in E:
-    ham += QubitOperator('Z{} Z{}'.format(v, u), -1.0)
+    ham += QubitOperator(f'Z{v} Z{u}', -1.0)
 ham = Hamiltonian(ham)
 
 circ = circuit_qaoa(p)
@@ -92,4 +91,4 @@ t0 = time.time()
 for i in range(ITR):
     train_net()
 t1 = time.time()
-print('Total time for mindquantum :{}'.format(t1 - t0))
+print(f'Total time for mindquantum :{t1 - t0}')

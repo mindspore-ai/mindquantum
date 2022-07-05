@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,23 +21,20 @@ from ._base_operator import _Operator
 from .fermion_operator import FermionOperator
 from .qubit_operator import QubitOperator
 
+# pylint: disable=bad-continuation
+
 
 def _check_valid_qubit_excitation_operator_term(term):
     """Check valid qubit excitation operator term."""
     if term is not None and term != '':
         if not isinstance(term, (str, tuple)):
-            raise ValueError(
-                'Qubit excitation operator requires a string or a tuple, \
-but get {}'.format(
-                    type(term)
-                )
-            )
+            raise ValueError(f'Qubit excitation operator requires a string or a tuple, but get {type(term)}')
         if isinstance(term, str):
             terms = term.split(' ')
             for t in terms:
                 if (t.endswith('^') and not t[:-1].isdigit()) or (not t.endswith('^') and not t.isdigit()):
                     if t:
-                        raise ValueError('Invalid qubit excitation operator term {}'.format(t))
+                        raise ValueError(f'Invalid qubit excitation operator term {t}')
         if isinstance(term, tuple):
             for t in term:
                 if (
@@ -48,7 +44,7 @@ but get {}'.format(
                     or t[0] < 0
                     or t[1] not in [0, 1]
                 ):
-                    raise ValueError('Invalid qubit excitation operator term {}'.format(t))
+                    raise ValueError(f'Invalid qubit excitation operator term {t}')
 
 
 class QubitExcitationOperator(_Operator):
@@ -103,7 +99,7 @@ class QubitExcitationOperator(_Operator):
 
     def __init__(self, term=None, coefficient=1.0):
         """Initialize a QubitExcitationOperator object."""
-        super(QubitExcitationOperator, self).__init__(term, coefficient)
+        super().__init__(term, coefficient)
         _check_valid_qubit_excitation_operator_term(term)
         self.operators = {1: '^', 0: '', '^': '^', '': ''}
         self.gates_number = 0
@@ -193,12 +189,7 @@ class QubitExcitationOperator(_Operator):
                     'The Qubit excitation operator should be one of this {}'.format(operator, self.operators)
                 )
             if index < 0:
-                raise ValueError(
-                    "Invalid index {}.The qubit index should be\
-                    non negative integer".format(
-                        self.operators
-                    )
-                )
+                raise ValueError(f"Invalid index {self.operators}.The qubit index should be non negative integer")
             terms_to_tuple.append((index, map_operator_to_integer_rep(operator)))
             # check the commutate terms with same index in the list and
             # replace it with the corresponding commutation relationship
@@ -213,9 +204,9 @@ class QubitExcitationOperator(_Operator):
         for term, coeff in sorted(self.terms.items()):
             term_cnt += 1
             if isinstance(coeff, ParameterResolver):
-                tmp_string = '{} ['.format(coeff.expression())  # begin of the '['
+                tmp_string = f'{coeff.expression()} ['  # begin of the '['
             else:
-                tmp_string = '{} ['.format(coeff)  # begin of the '['
+                tmp_string = f'{coeff} ['  # begin of the '['
             # deal with this situation (1,'X') or [1, 'X']
             if term == ():
                 if self.size == 1:
@@ -226,19 +217,19 @@ class QubitExcitationOperator(_Operator):
             elif isinstance(term[0], int):
                 index, operator = term
                 if operator in self.operators:
-                    tmp_string += 'Q{}{} '.format(index, self.operators[operator])
+                    tmp_string += f'Q{index}{self.operators[operator]} '
             else:
                 for sub_term in term:
                     index, operator = sub_term
                     # check validity, if checked before,
                     # then we can take away this step
                     if operator in self.operators:
-                        tmp_string += 'Q{}{} '.format(index, self.operators[operator])
+                        tmp_string += f'Q{index}{self.operators[operator]} '
 
             if term_cnt < len(self.terms):
-                string_rep += '{}] +\n'.format(tmp_string.strip())  # end of the ']'
+                string_rep += f'{tmp_string.strip()}] +\n'  # end of the ']'
             else:
-                string_rep += '{}] '.format(tmp_string.strip())  # end of the ']'
+                string_rep += f'{tmp_string.strip()}] '  # end of the ']'
 
         return string_rep
 
@@ -353,7 +344,7 @@ def _qubit_excitation_tuple_to_string(term):
     s = []
     for i in term:
         if i[1] == 1:
-            s.append('{}^'.format(i[0]))
+            s.append(f'{i[0]}^')
         else:
             s.append(str(i[0]))
     return ' '.join(s)

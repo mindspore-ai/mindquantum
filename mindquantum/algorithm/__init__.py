@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,9 +15,9 @@
 
 """Quantum algorithms."""
 
-from . import compiler, library, nisq  # noqa: F401
-from .library import *  # noqa: F401,F403
-from .nisq import *  # noqa: F401,F403
+from . import compiler, library, nisq
+from .library import *
+from .nisq import *
 
 __all__ = []
 __all__.extend(library.__all__)

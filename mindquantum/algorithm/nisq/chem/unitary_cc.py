@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,21 +24,12 @@ from .uccsd0 import uccsd0_singlet_generator
 
 
 def _check_int_list(input_list, name):
+    """Check if input_list is a list of integers."""
     if not isinstance(input_list, list):
-        raise ValueError(
-            "The input {} should be a list, \
-but get {}.".format(
-                str(name), type(input_list)
-            )
-        )
+        raise ValueError(f"The input {str(name)} should be a list, but get {type(input_list)}.")
     for i in input_list:
         if not isinstance(i, int):
-            raise ValueError(
-                "The indices of {} should be integer, \
-but get {}.".format(
-                    str(name), type(i)
-                )
-            )
+            raise ValueError(f"The indices of {str(name)} should be integer, but get {type(i)}.")
 
 
 class UCCAnsatz(Ansatz):
@@ -89,35 +79,19 @@ class UCCAnsatz(Ansatz):
     def __init__(self, n_qubits=None, n_electrons=None, occ_orb=None, vir_orb=None, generalized=False, trotter_step=1):
         """Initialize a UCCAnsatz object."""
         if n_qubits is not None and not isinstance(n_qubits, int):
-            raise ValueError(
-                "The number of qubits should be integer, \
-but get {}.".format(
-                    type(n_qubits)
-                )
-            )
+            raise ValueError(f"The number of qubits should be integer, but get {type(n_qubits)}.")
         if n_electrons is not None and not isinstance(n_electrons, int):
-            raise ValueError(
-                "The number of electrons should be integer, \
-but get {}.".format(
-                    type(n_electrons)
-                )
-            )
+            raise ValueError(f"The number of electrons should be integer, but get {type(n_electrons)}.")
         if isinstance(n_electrons, int) and n_electrons > n_qubits:
             raise ValueError(
-                "The number of electrons must be smaller than \
-the number of qubits (spin-orbitals) in the ansatz!"
+                "The number of electrons must be smaller than the number of qubits (spin-orbitals) in the ansatz!"
             )
         if occ_orb is not None:
             _check_int_list(occ_orb, "occupied orbitals")
         if vir_orb is not None:
             _check_int_list(vir_orb, "virtual orbitals")
         if not isinstance(generalized, bool):
-            raise ValueError(
-                "The parameter generalized should be bool, \
-but get {}.".format(
-                    type(generalized)
-                )
-            )
+            raise ValueError(f"The parameter generalized should be bool, but get {type(generalized)}.")
         if not isinstance(trotter_step, int) or trotter_step < 1:
             raise ValueError("Trotter step must be a positive integer!")
 
@@ -140,9 +114,7 @@ but get {}.".format(
             self.n_qubits = n_qubits_circuit
         if self.n_qubits < n_qubits_circuit:
             raise ValueError(
-                "The number of qubits in the ansatz circuit {} is larger than \
-the input n_qubits {}! Please check input parameters such as occ_orb, etc.".format(
-                    n_qubits_circuit, n_qubits
-                )
+                f"The number of qubits in the ansatz circuit {n_qubits_circuit} is larger than the input"
+                f" n_qubits {n_qubits}! Please check input parameters such as occ_orb, etc."
             )
         self._circuit = ansatz_circuit

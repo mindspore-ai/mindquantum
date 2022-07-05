@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -77,7 +76,7 @@ class IQPEncoding(Ansatz):
         self.first_rotation_gate = first_rotation_gate
         self.second_rotation_gate = second_rotation_gate
         self.num_repeats = num_repeats
-        super(IQPEncoding, self).__init__("IQPEncoding", n_feature)
+        super().__init__("IQPEncoding", n_feature)
 
     def _implement(self):
         """Implement of iqp encoding ansatz."""

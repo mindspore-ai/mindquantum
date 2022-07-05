@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #   Copyright 2022 <Huawei Technologies Co., Ltd>
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +35,7 @@ def fdopen(fname, mode, perms=0o644):  # pragma: no cover
     elif 'a' in mode:
         flags = os.O_WRONLY | os.O_CREAT
     else:
-        raise RuntimeError('Unsupported mode: {}'.format(mode))
+        raise RuntimeError(f'Unsupported mode: {mode}')
 
     file_object = open(os.open(fname, flags, perms), mode=mode)  # noqa: SCS109
 

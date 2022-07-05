@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -80,7 +79,7 @@ def create_quantum_model(n_qubits):
     builder.add_layer(c, XX, 'xx1')
     builder.add_layer(c, ZZ, 'zz1')
     c += H.on(readout)
-    return c, Hamiltonian(QubitOperator('Z{}'.format(readout)))
+    return c, Hamiltonian(QubitOperator(f'Z{readout}'))
 
 
 n_qubits = 17
@@ -102,5 +101,5 @@ for x in tqdm.tqdm(x_train_circ[: args.num_sampling]):
     eval_time[-1] = time.time() - eval_time[-1]
 eval_time = np.sort(eval_time[1:])
 t1 = time.time()
-print("Eval grad mean time:{}".format(eval_time[1:-1].mean()))
-print("Total time:{}".format(t1 - t0))
+print(f"Eval grad mean time:{eval_time[1:-1].mean()}")
+print(f"Total time:{t1 - t0}")

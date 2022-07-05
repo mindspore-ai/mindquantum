@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,9 +21,7 @@ Contains classes representing:
 - TimeEvolution operator
 
 """
-from mindquantum.third_party.interaction_operator import (  # noqa: F401
-    InteractionOperator,
-)
+from mindquantum.third_party.interaction_operator import InteractionOperator
 
 from .fermion_operator import FermionOperator
 from .hamiltonian import Hamiltonian

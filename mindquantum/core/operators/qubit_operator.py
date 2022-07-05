@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #   Portions Copyright (c) 2020 Huawei Technologies Co.,ltd.
 #   Portions Copyright 2017 The OpenFermion Developers.
 
@@ -57,7 +56,7 @@ def _check_valid_qubit_operator_term(term):
     """Check valid qubit operator term."""
     if term is not None and term != '':
         if not isinstance(term, (str, tuple)):
-            raise ValueError('Qubit operator requires a string or a tuple, but get {}'.format(type(term)))
+            raise ValueError(f'Qubit operator requires a string or a tuple, but get {type(term)}')
 
         operators = ('X', 'Y', 'Z')
         if isinstance(term, str):
@@ -65,11 +64,11 @@ def _check_valid_qubit_operator_term(term):
             for t in terms:
                 if len(t) < 2 or t[0].upper() not in operators or not t[1:].isdigit():
                     if t:
-                        raise ValueError('Invalid qubit operator term {}.'.format(t))
+                        raise ValueError(f'Invalid qubit operator term {t}.')
         if isinstance(term, tuple):
             for t in term:
                 if len(t) != 2 or not isinstance(t[0], int) or t[0] < 0 or t[1].upper() not in operators:
-                    raise ValueError('Invalid qubit operator term {}.'.format(t))
+                    raise ValueError(f'Invalid qubit operator term {t}.')
 
 
 class QubitOperator(_Operator):
@@ -117,7 +116,7 @@ class QubitOperator(_Operator):
 
     def __init__(self, term=None, coefficient=1.0):
         """Initialize a QubitOperator object."""
-        super(QubitOperator, self).__init__(term, coefficient)
+        super().__init__(term, coefficient)
         _check_valid_qubit_operator_term(term)
         self.operators = ('X', 'Y', 'Z')
         self.gates_number = 0
@@ -351,26 +350,26 @@ class QubitOperator(_Operator):
         for term, coeff in sorted(self.terms.items()):
             term_cnt += 1
             if isinstance(coeff, ParameterResolver):
-                tmp_string = '{} ['.format(coeff.expression())
+                tmp_string = f'{coeff.expression()} ['
             else:
-                tmp_string = '{} ['.format(coeff)
+                tmp_string = f'{coeff} ['
             # deal with this situation (1,'X') or [1, 'X']
             if term == ():
                 tmp_string.join(' ]')
             elif isinstance(term[0], int):
                 index, operator = term
-                tmp_string += '{}{} '.format(operator, index)
+                tmp_string += f'{operator}{index} '
             else:
                 for sub_term in term:
                     index, operator = sub_term
                     # check validity, if checked before,
                     # then we can take away this step
                     if operator in self.operators:
-                        tmp_string += '{}{} '.format(operator, index)
+                        tmp_string += f'{operator}{index} '
             if term_cnt < len(self.terms):
-                string_rep += '{}] +\n'.format(tmp_string.strip())
+                string_rep += f'{tmp_string.strip()}] +\n'
             else:
-                string_rep += '{}] '.format(tmp_string.strip())
+                string_rep += f'{tmp_string.strip()}] '
 
         return string_rep
 

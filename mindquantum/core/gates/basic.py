@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,6 +37,9 @@ HERMITIAN_PROPERTIES = {
 }
 
 
+# pylint: disable=bad-continuation
+
+
 class BasicGate:
     """
     BasicGate is the base class of all gates.
@@ -57,7 +59,7 @@ class BasicGate:
         if ctrl_qubits is None:
             ctrl_qubits = []
         if not isinstance(name, str):
-            raise TypeError("Excepted string for gate name, get {}".format(type(name)))
+            raise TypeError(f"Excepted string for gate name, get {type(name)}")
         _check_qubit_id(n_qubits)
         self.name = name
         self.n_qubits = n_qubits
@@ -182,8 +184,7 @@ class BasicGate:
             raise ValueError("Obj_qubit and ctrl_qubit cannot have same qubits.")
         if len(obj_qubits) != self.n_qubits:
             raise ValueError(
-                f"{self.name} gate requires {s_quantifier(self.n_qubits, 'qubit')} \
-, but get {len(obj_qubits)}"
+                f"{self.name} gate requires {s_quantifier(self.n_qubits, 'qubit')}, but get {len(obj_qubits)}"
             )
         new = copy.deepcopy(self)
         new.obj_qubits = []
@@ -278,8 +279,6 @@ class SelfHermitianGate(QuantumGate):
 
 class AntiHermitianGate(QuantumGate):
     """Base class for anti-hermitian gates."""
-
-    pass
 
 
 class NonHermitianGate(QuantumGate):
@@ -650,5 +649,3 @@ class ParamNonHerm(ParameterGate, NonHermitianGate):
 
 class NoiseGate(NoneParameterGate):
     """Noise gate class."""
-
-    pass

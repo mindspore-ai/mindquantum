@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #   Copyright 2021 <Huawei Technologies Co., Ltd>
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +15,8 @@
 
 from . import display, qasm
 from .beauty_print import bprint
-from .display import *  # noqa: F401,F403
-from .qasm import *  # noqa: F401,F403
+from .display import *
+from .qasm import *
 
 __all__ = ['bprint']
 __all__.extend(display.__all__)

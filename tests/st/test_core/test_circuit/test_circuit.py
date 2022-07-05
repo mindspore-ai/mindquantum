@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -103,7 +102,7 @@ def test_circuit_operator():
     Expectation: success.
     """
     template = Circuit([G.X.on(1, 0), G.RX('a').on(1), G.X.on(1, 0)])
-    circ = sum([shift(add_prefix(template, f'l{i}'), i) for i in range(3)])
+    circ = sum(shift(add_prefix(template, f'l{i}'), i) for i in range(3))
     circ_exp = Circuit()
     for i in range(3):
         circ_exp += G.X.on(i + 1, i)

@@ -55,9 +55,10 @@ MindQuantum是基于昇思MindSpore开源深度学习框架和HiQ量子计算云
 ```python
 from mindquantum import *
 import numpy as np
+
 encoder = Circuit().h(0).rx({'a0': 2}, 0).ry('a1', 1)
 print(encoder)
-print(encoder.get_qs(pr={'a0': np.pi/2, 'a1': np.pi/2}, ket=True))
+print(encoder.get_qs(pr={'a0': np.pi / 2, 'a1': np.pi / 2}, ket=True))
 ```
 
 你将得到
@@ -88,15 +89,18 @@ circuit.svg()
 ansatz = CPN(encoder.hermitian(), {'a0': 'b0', 'a1': 'b1'})
 sim = Simulator('projectq', 2)
 ham = Hamiltonian(-QubitOperator('Z0 Z1'))
-grad_ops = sim.get_expectation_with_grad(ham,
-                                         encoder + ansatz,
-                                         encoder_params_name=encoder.params_name,
-                                         ansatz_params_name=ansatz.params_name)
+grad_ops = sim.get_expectation_with_grad(
+    ham,
+    encoder + ansatz,
+    encoder_params_name=encoder.params_name,
+    ansatz_params_name=ansatz.params_name,
+)
 
 import mindspore as ms
-ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
+
+ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target='CPU')
 net = MQLayer(grad_ops)
-encoder_data = ms.Tensor(np.array([[np.pi/2, np.pi/2]]))
+encoder_data = ms.Tensor(np.array([[np.pi / 2, np.pi / 2]]))
 opti = ms.nn.Adam(net.trainable_params(), learning_rate=0.1)
 train_net = ms.nn.TrainOneStepCell(net, opti)
 for i in range(100):

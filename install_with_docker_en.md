@@ -47,27 +47,27 @@ import mindspore.context as context
 import mindspore.ops as ops
 from mindspore import Tensor
 
-context.set_context(mode=context.PYNATIVE_MODE, device_target="CPU")
+context.set_context(mode=context.PYNATIVE_MODE, device_target='CPU')
 
-x = Tensor(np.ones([1,3,3,4]).astype(np.float32))
-y = Tensor(np.ones([1,3,3,4]).astype(np.float32))
+x = Tensor(np.ones([1, 3, 3, 4]).astype(np.float32))
+y = Tensor(np.ones([1, 3, 3, 4]).astype(np.float32))
 print(ops.add(x, y))
 ```
 
 When the code runs successfully, it will output:
 
 ```text
-[[[[2. 2. 2. 2.]
-   [2. 2. 2. 2.]
-   [2. 2. 2. 2.]]
+[[[[2., 2., 2., 2.],
+   [2., 2., 2., 2.],
+   [2., 2., 2., 2.]],
 
-  [[2. 2. 2. 2.]
-   [2. 2. 2. 2.]
-   [2. 2. 2. 2.]]
+  [[2., 2., 2., 2.],
+   [2., 2., 2., 2.],
+   [2., 2., 2., 2.]],
 
-  [[2. 2. 2. 2.]
-   [2. 2. 2. 2.]
-   [2. 2. 2. 2.]]]]
+  [[2., 2., 2., 2.],
+   [2., 2., 2., 2.],
+   [2., 2., 2., 2.]]]]
 ```
 
 At this point, you have successfully installed the MindSpore CPU version by Docker.
@@ -100,6 +100,6 @@ At this point, you have successfully installed the MindSpore CPU version by Dock
 
 ### MindQuantum Installation Verification
 
-```python
+```bash
 python -c 'import mindquantum'
 ```

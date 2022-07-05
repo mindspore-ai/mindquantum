@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Portions Copyright 2021 Huawei Technologies Co., Ltd
 # Portions Copyright 2017 The OpenFermion Developers.
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -129,7 +128,7 @@ class _Operator(metaclass=ABCMeta):
         elif isinstance(term, str):
             term = self._parse_string(term)
         else:
-            raise TypeError('Unexpected term for {}'.format(term))
+            raise TypeError(f'Unexpected term for {term}')
         return term
 
     @abstractmethod
@@ -153,14 +152,14 @@ class _Operator(metaclass=ABCMeta):
     def _validate_term(self, term):
         """Check whether the tuple term e.g.(2, 'X') is valid."""
         if len(term) != 2 or not isinstance(term, tuple):
-            raise ValueError("Invalid type of format {}".format(term))
+            raise ValueError(f"Invalid type of format {term}")
 
         index, operator = term
         if operator not in self.operators:
-            raise ValueError("Invalid operator {}. Valid operator should be {}".format(term, self.operators))
+            raise ValueError(f"Invalid operator {term}. Valid operator should be {self.operators}")
 
         if not isinstance(index, int) or (index < 0):
-            raise ValueError('Invalid index {} in term. Index should be non-negative'.format(index))
+            raise ValueError(f'Invalid index {index} in term. Index should be non-negative')
 
     @abstractmethod
     def _simplify(self, terms, coefficient=1.0):
@@ -191,7 +190,7 @@ class _Operator(metaclass=ABCMeta):
                     # compress
             self.terms = product_results
             return self
-        raise TypeError('Cannot multiply invalid operator type to {}.'.format(type(self)))
+        raise TypeError(f'Cannot multiply invalid operator type to {type(self)}.')
 
     def __mul__(self, multiplier):
         if isinstance(multiplier, (*_validate_coeff_type, type(self))):
@@ -199,24 +198,24 @@ class _Operator(metaclass=ABCMeta):
             product_results *= multiplier
             return product_results
 
-        raise TypeError('Cannot multiply invalid operator type to {}.'.format(type(self)))
+        raise TypeError(f'Cannot multiply invalid operator type to {type(self)}.')
 
     def __rmul__(self, multiplier):
         if isinstance(multiplier, _validate_coeff_type):
             return self * multiplier
 
-        raise TypeError('Cannot multiply invalid operator type to {}.'.format(type(self)))
+        raise TypeError(f'Cannot multiply invalid operator type to {type(self)}.')
 
     def __truediv__(self, divisor):
         if isinstance(divisor, (int, float, complex)) and divisor != 0:
             return self * (1.0 / divisor)
-        raise TypeError('Cannot divide the {} by non_numeric type or the divisor is 0.'.format(type(self)))
+        raise TypeError(f'Cannot divide the {type(self)} by non_numeric type or the divisor is 0.')
 
     def __itruediv__(self, divisor):
         if isinstance(divisor, (int, float, complex)) and divisor != 0:
             self *= 1.0 / divisor
             return self
-        raise TypeError('Cannot divide the {} by non_numeric type or the divisor is 0.'.format(type(self)))
+        raise TypeError(f'Cannot divide the {type(self)} by non_numeric type or the divisor is 0.')
 
     def __neg__(self):
         return self * (-1)
@@ -228,7 +227,7 @@ class _Operator(metaclass=ABCMeta):
                 exponential_results *= self
             return exponential_results
 
-        raise ValueError('exponent must be a non-negative int, but was {} {}'.format(type(exponent), repr(exponent)))
+        raise ValueError(f'exponent must be a non-negative int, but was {type(exponent)} {repr(exponent)}')
 
     def __iadd__(self, operator):
         """In-place method for += addition of QubitOperator.
@@ -257,7 +256,7 @@ class _Operator(metaclass=ABCMeta):
         elif isinstance(operator, numbers.Number):
             self += operator * self.__class__("")
         else:
-            raise TypeError('Cannot add invalid operator type to {}.'.format(type(self)))
+            raise TypeError(f'Cannot add invalid operator type to {type(self)}.')
 
         return self
 
@@ -289,7 +288,7 @@ class _Operator(metaclass=ABCMeta):
             substract_operator -= operator * self.__class__("")
             return substract_operator
         else:
-            raise TypeError('Cannot sub invalid operator type to {}.'.format(type(self)))
+            raise TypeError(f'Cannot sub invalid operator type to {type(self)}.')
 
         return self
 
@@ -303,7 +302,7 @@ class _Operator(metaclass=ABCMeta):
 
     def __eq__(self, other):
         if not isinstance(self, type(other)):
-            raise TypeError('Cannot compare invalid operator type {} to {}.'.format(type(other), type(self)))
+            raise TypeError(f'Cannot compare invalid operator type {type(other)} to {type(self)}.')
         # terms which are in both Operator:
         tmp_self = self.compress()
         tmp_other = other.compress()

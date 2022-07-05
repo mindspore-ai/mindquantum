@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,23 +24,15 @@ from mindquantum.core.operators import FermionOperator
 from mindquantum.core.operators.utils import hermitian_conjugated, normal_ordered
 from mindquantum.core.parameterresolver import ParameterResolver
 
+# pylint: disable=bad-continuation
+
 
 def _check_int_list(input_list, name):
     if not isinstance(input_list, list):
-        raise ValueError(
-            "The input {} should be a list, \
-but get {}.".format(
-                str(name), type(input_list)
-            )
-        )
+        raise ValueError(f"The input {str(name)} should be a list, but get {type(input_list)}.")
     for i in input_list:
         if not isinstance(i, int):
-            raise ValueError(
-                "The indices of {} should be integer, \
-but get {}.".format(
-                    str(name), type(i)
-                )
-            )
+            raise ValueError(f"The indices of {str(name)} should be integer, but get {type(i)}.")
 
 
 def _pij(i: int, j: int):
@@ -166,12 +157,7 @@ def spin_adapted_t1(i, j):
             1. Scuseria, G. E. et al., J. Chem. Phys. 89, 7382 (1988)
     """
     if not isinstance(i, int) or not isinstance(j, int):
-        raise ValueError(
-            "Requires integers as orbital indices, \
-but get {} and {}.".format(
-                type(i), type(j)
-            )
-        )
+        raise ValueError(f"Requires integers as orbital indices, but get {type(i)} and {type(j)}.")
 
     ia = i * 2 + 0
     ib = i * 2 + 1
@@ -223,9 +209,8 @@ def spin_adapted_t2(creation_list, annihilation_list):
 
     if len(creation_list) != 2 or len(annihilation_list) != 2:
         raise ValueError(
-            f"T2 excitations take exactly 2 indices for both \
-creation and annihilation operators, \
-but get {len(creation_list)} and {len(annihilation_list)} indices."
+            "T2 excitations take exactly 2 indices for both creation and annihilation operators, ",
+            f"but get {len(creation_list)} and {len(annihilation_list)} indices.",
         )
 
     p = creation_list[0]
@@ -302,42 +287,21 @@ def uccsd0_singlet_generator(
         -2.0*d0_d_0 [3^ 2^ 1 0]
     """
     if n_qubits is not None and not isinstance(n_qubits, int):
-        raise ValueError(
-            "The number of qubits should be integer, \
-but get {}.".format(
-                type(n_qubits)
-            )
-        )
+        raise ValueError(f"The number of qubits should be integer, but get {type(n_qubits)}.")
     if n_electrons is not None and not isinstance(n_electrons, int):
-        raise ValueError(
-            "The number of electrons should be integer, \
-but get {}.".format(
-                type(n_electrons)
-            )
-        )
+        raise ValueError(f"The number of electrons should be integer, but get {type(n_electrons)}.")
     if isinstance(n_electrons, int) and n_electrons > n_qubits:
         raise ValueError(
-            "The number of electrons must be smaller than \
-the number of qubits (spin-orbitals) in the ansatz!"
+            "The number of electrons must be smaller than the number of qubits (spin-orbitals) in the ansatz!"
         )
     if not isinstance(anti_hermitian, bool):
-        raise ValueError(
-            "The parameter anti_hermitian should be bool, \
-but get {}.".format(
-                type(anti_hermitian)
-            )
-        )
+        raise ValueError(f"The parameter anti_hermitian should be bool, but get {type(anti_hermitian)}.")
     if occ_orb is not None:
         _check_int_list(occ_orb, "occupied orbitals")
     if vir_orb is not None:
         _check_int_list(vir_orb, "virtual orbitals")
     if not isinstance(generalized, bool):
-        raise ValueError(
-            "The parameter generalized should be bool, \
-but get {}.".format(
-                type(generalized)
-            )
-        )
+        raise ValueError(f"The parameter generalized should be bool, but get {type(generalized)}.")
 
     occ_indices = []
     vir_indices = []
@@ -346,10 +310,7 @@ but get {}.".format(
     n_orb_vir = 0
     if n_qubits is not None:
         if n_qubits % 2 != 0:
-            raise ValueError(
-                'The total number of qubits (spin-orbitals) \
-should be even.'
-            )
+            raise ValueError('The total number of qubits (spin-orbitals) should be even.')
         n_orb = n_qubits // 2
     if n_electrons is not None:
         n_orb_occ = int(numpy.ceil(n_electrons / 2))
@@ -378,8 +339,7 @@ should be even.'
     n_orb = max(n_orb, max_idx)
     if warn_flag:
         warnings.warn(
-            "[Note] Override n_qubits and n_electrons with manually \
-set occ_orb and vir_orb. Handle with caution!"
+            "[Note] Override n_qubits and n_electrons with manually set occ_orb and vir_orb. Handle with caution!"
         )
 
     if generalized:
@@ -388,16 +348,10 @@ set occ_orb and vir_orb. Handle with caution!"
 
     n_occ = len(occ_indices)
     if n_occ == 0:
-        warnings.warn(
-            "The number of occupied orbitals is zero. Ansatz may \
-contain no parameters."
-        )
+        warnings.warn("The number of occupied orbitals is zero. Ansatz may contain no parameters.")
     n_vir = len(vir_indices)
     if n_vir == 0:
-        warnings.warn(
-            "The number of virtual orbitals is zero. Ansatz may \
-contain no parameters."
-        )
+        warnings.warn("The number of virtual orbitals is zero. Ansatz may contain no parameters.")
 
     generator_uccsd0_singles = FermionOperator()
     generator_uccsd0_doubles = FermionOperator()

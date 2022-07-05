@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +26,8 @@ from mindquantum.core.circuit.utils import decompose_single_term_time_evolution
 from mindquantum.core.operators import FermionOperator
 from mindquantum.core.operators.utils import down_index, get_fermion_operator, up_index
 from mindquantum.third_party.interaction_operator import InteractionOperator
+
+# pylint: disable=bad-continuation
 
 
 def _para_uccsd_singlet_generator(mol, th=0):
@@ -194,8 +195,8 @@ def generate_uccsd(molecular, th=0):
         mol.load()
     else:
         mol = molecular
-    print("ccsd:{}.".format(mol.ccsd_energy))
-    print("fci:{}.".format(mol.fci_energy))
+    print(f"ccsd:{mol.ccsd_energy}.")
+    print(f"fci:{mol.fci_energy}.")
     fermion_ansatz, parameters = _para_uccsd_singlet_generator(mol, th)
     pauli_ansatz = _transform2pauli(fermion_ansatz)
     uccsd_circuit = _pauli2circuit(pauli_ansatz)

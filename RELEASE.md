@@ -121,7 +121,7 @@ We unified the abbreviations of some nouns in MindQuantum.
 <tr>
 <td>
 
-```python
+```bash
 >>> from mindquantum import RX
 >>> gate = RX('a').on(0)
 >>> gate.isparameter
@@ -131,7 +131,7 @@ True
 </td>
 <td>
 
-```python
+```bash
 >>> from mindquantum import RX
 >>> gate = RX('a').on(0)
 >>> gate.parameterized
@@ -151,7 +151,7 @@ True
 <tr>
 <td>
 
-```python
+```bash
 >>> from mindquantum import Circuit
 >>> circ = Circuit().rx('a', 0)
 >>> circ.para_name
@@ -161,7 +161,7 @@ True
 </td>
 <td>
 
-```python
+```bash
 >>> from mindquantum import Circuit
 >>> circ = Circuit().rx('a', 0)
 >>> circ.params_name

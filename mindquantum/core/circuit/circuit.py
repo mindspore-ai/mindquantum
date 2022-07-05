@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,7 +40,7 @@ GateSeq = List[mq_gates.BasicGate]
 def _two_dim_array_to_list(data):
     """Convert a two dimension array to a list of string."""
     if len(data.shape) != 2:
-        raise ValueError("data need two dimensions, but get {} dimensions".format(len(data.shape)))
+        raise ValueError(f"data need two dimensions, but get {len(data.shape)} dimensions")
     out_real = []
     out_imag = []
     for i in data:
@@ -296,7 +295,7 @@ parameters and ansatz parameters."
         elif isinstance(gates, Circuit):
             self.extend(gates)
         else:
-            raise TypeError("Require a quantum gate or a quantum circuit, but get {}.".format(type(gates)))
+            raise TypeError(f"Require a quantum gate or a quantum circuit, but get {type(gates)}.")
         return self
 
     def __mul__(self, num):
@@ -416,7 +415,7 @@ parameters and ansatz parameters."
                 if isinstance(gate, mq_gates.Measure):
                     self.all_measures.collect_only_one(gate, f'measure key {gate.key} already exist.')
         else:
-            raise TypeError("Unsupported type for quantum gate: {}".format(type(gates)))
+            raise TypeError(f"Unsupported type for quantum gate: {type(gates)}")
         self.has_cpp_obj = False
 
     def no_grad(self):
@@ -517,24 +516,24 @@ parameters and ansatz parameters."
             |Number qubit of circuit: 2     |
             =================================
         """
-        self.num_non_para_gate = 0
-        self.num_para_gate = 0
+        num_non_para_gate = 0
+        num_para_gate = 0
         for gate in self:
             if gate.parameterized:
-                self.num_para_gate += 1
+                num_para_gate += 1
             else:
-                self.num_non_para_gate += 1
+                num_non_para_gate += 1
         if show:
             info = bprint(
                 [
-                    'Total number of gates: {}.'.format(self.num_para_gate + self.num_non_para_gate),
-                    'Parameter gates: {}.'.format(self.num_para_gate),
+                    f'Total number of gates: {num_para_gate + num_non_para_gate}.',
+                    f'Parameter gates: {num_para_gate}.',
                     'with {} parameters are: {}{}'.format(
                         len(self.all_paras),
                         ', '.join(self.all_paras.keys()[:10]),
                         ('.' if len(self.all_paras) <= 10 else '...'),
                     ),
-                    'Number qubit of circuit: {}'.format(self.n_qubits),
+                    f'Number qubit of circuit: {self.n_qubits}',
                 ],
                 title='Circuit Summary',
             )

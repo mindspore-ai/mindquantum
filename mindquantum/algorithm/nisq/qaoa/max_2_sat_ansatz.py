@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -120,7 +119,7 @@ class Max2SATAnsatz(Ansatz):
         if depth <= 0:
             raise ValueError(f"depth must be greater than 0, but get {depth}.")
         _check_clause(clauses)
-        super(Max2SATAnsatz, self).__init__('Max2SAT', _get_clause_act_qubits_num(clauses), clauses, depth)
+        super().__init__('Max2SAT', _get_clause_act_qubits_num(clauses), clauses, depth)
         self.clauses = clauses
         self.depth = depth
 

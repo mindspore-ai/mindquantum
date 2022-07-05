@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +16,7 @@
 """Global config for MindQuantum."""
 
 from . import config
-from .config import context  # noqa: F401
+from .config import context
 
 __all__ = []
 __all__.extend(config.__all__)

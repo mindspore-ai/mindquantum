@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #   Portions Copyright (c) 2020 Huawei Technologies Co.,ltd.
 #   Portions Copyright 2017 The OpenFermion Developers.
 #
@@ -247,7 +246,7 @@ class PolynomialTensor:
             TypeError: Cannot add invalid addend type.
         """
         if not isinstance(addend, type(self)):
-            raise PolynomialTensorError("Cannot add invalid type! \n Expect {}".format(type(self)))
+            raise PolynomialTensorError(f"Cannot add invalid type! \n Expect {type(self)}")
         # check dimension, self.n_qubits
         if self.n_qubits != addend.n_qubits:
             raise PolynomialTensorError("Can not add invalid type, the shape does not match!")
@@ -299,7 +298,7 @@ class PolynomialTensor:
             TypeError: Cannot sub invalid addend type.
         """
         if not isinstance(subtractend, type(self)):
-            raise PolynomialTensorError("Cannot sub invalid type! \n Expect {}".format(type(self)))
+            raise PolynomialTensorError(f"Cannot sub invalid type! \n Expect {type(self)}")
         # check dimension, self.n_qubits
         if self.n_qubits != subtractend.n_qubits:
             raise PolynomialTensorError("Cannot sub invalid type, the shape does not match!")
@@ -390,7 +389,7 @@ class PolynomialTensor:
             product_results = copy.deepcopy(self)
             product_results *= multiplier
         else:
-            raise PolynomialTensorError('Cannot multiply invalid type to {}.'.format(type(self)))
+            raise PolynomialTensorError(f'Cannot multiply invalid type to {type(self)}.')
         return product_results
 
     def __rmul__(self, multiplier):
@@ -409,7 +408,7 @@ class PolynomialTensor:
         if isinstance(multiplier, (int, float, complex)):  # make use of the * method, basically scalar
             return self * multiplier
 
-        raise PolynomialTensorError('Cannot multiply invalid operator type to {}.'.format(type(self)))
+        raise PolynomialTensorError(f'Cannot multiply invalid operator type to {type(self)}.')
 
     def __itruediv__(self, divisor):
         """
@@ -429,12 +428,7 @@ class PolynomialTensor:
             for key in self.n_body_tensors:
                 self.n_body_tensors[key] /= divisor
         else:
-            raise PolynomialTensorError(
-                'Cannot divide the {} by non_numeric type or \
-            the divisor is 0.'.format(
-                    type(self)
-                )
-            )
+            raise PolynomialTensorError(f'Cannot divide the {type(self)} by non_numeric type or the divisor is 0.')
         return self
 
     def __truediv__(self, divisor):
@@ -443,12 +437,7 @@ class PolynomialTensor:
             quotient = copy.deepcopy(self)
             quotient /= divisor
         else:
-            raise PolynomialTensorError(
-                'Cannot divide the {} by non_numeric type or \
-            the divisor is 0.'.format(
-                    type(self)
-                )
-            )
+            raise PolynomialTensorError(f'Cannot divide the {type(self)} by non_numeric type or the divisor is 0.')
         return quotient
 
     # be careful with this function
@@ -481,7 +470,7 @@ class PolynomialTensor:
         """Print out the non-zero elements of PolynomialTensor."""
         strings = []
         for key in self:
-            strings.append('{} {}\n'.format(key, self[key]))
+            strings.append(f'{key} {self[key]}\n')
         return ''.join(strings) if strings else '0'
 
     def __repr__(self):

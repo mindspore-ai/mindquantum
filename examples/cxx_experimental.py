@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #   Copyright 2022 <Huawei Technologies Co., Ltd>
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +13,8 @@
 #   limitations under the License.
 
 """An example of using the C++ backend for MindQuantum."""
+
+# pylint: disable=pointless-statement,expression-not-assigned
 
 from projectq.backends import Simulator
 from projectq.cengines import MainEngine
@@ -47,9 +48,9 @@ eng.flush()
 # ==============================================================================
 
 
-def print_simulator(sim):
+def print_simulator(simulator):
     """Print the state vector of a ProjectQ-like simulator."""
-    qubit_map, state = sim.cheat()
+    qubit_map, state = simulator.cheat()
 
     print('Simulator:')
     print(qubit_map)

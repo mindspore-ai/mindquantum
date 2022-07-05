@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,7 +41,7 @@ class FPSMonitor(Callback):
 
     def __init__(self, forget_first_n=2):
         """Initialize a FPSMonitor object."""
-        super(FPSMonitor, self).__init__()
+        super().__init__()
         self.forget_first_n = forget_first_n
         self.step = 0
         self.times = np.array([])
@@ -59,7 +58,7 @@ class FPSMonitor(Callback):
         run_context.original_args()
         if self.times.size > 0:
             self.times[-1] = time.time() - self.times[-1]
-            print("\rAverage: {:.6}ms/step".format(self.times.mean() * 1000), end="")
+            print(f"\rAverage: {self.times.mean() * 1000:.6}ms/step", end="")
 
 
 class Hinge(nn.MSELoss):
@@ -67,7 +66,7 @@ class Hinge(nn.MSELoss):
 
     def __init__(self, reduction='mean'):
         """Initialize a Hinge object."""
-        super(Hinge, self).__init__(reduction)
+        super().__init__(reduction)
         self.maximum = ops.Maximum()
         self.mul = ops.Mul()
         self.zero = Tensor(np.array([0]).astype(np.float32))
@@ -84,7 +83,7 @@ class MnistNet(nn.Cell):
 
     def __init__(self, net):
         """Initialize a MnistNet object."""
-        super(MnistNet, self).__init__()
+        super().__init__()
         self.net = net
 
     def construct(self, x):
@@ -102,7 +101,7 @@ def encoder_circuit_builder(n_qubits_range, prefix='encoder'):
     """
     c = Circuit()
     for i in n_qubits_range:
-        c += RX('{}_{}'.format(prefix, i)).on(i)
+        c += RX(f'{prefix}_{i}').on(i)
     return c
 
 
@@ -216,4 +215,4 @@ if __name__ == '__main__':
     for train_x, train_y in train_loader:
         y_pred = mnist_net(train_x)
         res = np.append(res, (train_y.asnumpy() > 0) == (y_pred.asnumpy() > 0))
-    print('Acc: {}'.format(np.mean(res)))
+    print(f'Acc: {np.mean(res)}')

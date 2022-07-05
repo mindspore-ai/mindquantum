@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,18 +30,18 @@ from . import (
     z_related,
     zz_related,
 )
-from .h_related import ch_decompose  # noqa: F401
-from .ry_related import cry_decompose  # noqa: F401
-from .rz_related import crz_decompose  # noqa: F401
-from .s_related import cs_decompose  # noqa: F401
-from .swap_related import cswap_decompose, swap_decompose  # noqa: F401
-from .t_related import ct_decompose  # noqa: F401
-from .x_related import ccx_decompose  # noqa: F401
-from .xx_related import cxx_decompose, xx_decompose  # noqa: F401
-from .y_related import cy_decompose  # noqa: F401
-from .yy_related import cyy_decompose, yy_decompose  # noqa: F401
-from .z_related import cz_decompose  # noqa: F401
-from .zz_related import zz_decompose  # noqa: F401
+from .h_related import ch_decompose
+from .ry_related import cry_decompose
+from .rz_related import crz_decompose
+from .s_related import cs_decompose
+from .swap_related import cswap_decompose, swap_decompose
+from .t_related import ct_decompose
+from .x_related import ccx_decompose
+from .xx_related import cxx_decompose, xx_decompose
+from .y_related import cy_decompose
+from .yy_related import cyy_decompose, yy_decompose
+from .z_related import cz_decompose
+from .zz_related import zz_decompose
 
 __all__ = []
 __all__.extend(x_related.__all__)

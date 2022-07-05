@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
 """MaxCut ansatz."""
 
 import numpy as np
@@ -30,6 +30,8 @@ from mindquantum.utils.type_value_check import (
 )
 
 from .._ansatz import Ansatz
+
+# pylint: disable=bad-continuation
 
 
 def _get_graph_act_qubits_num(graph):
@@ -113,7 +115,7 @@ class MaxCutAnsatz(Ansatz):
         _check_int_type('depth', depth)
         _check_value_should_not_less('depth', 1, depth)
         _check_graph(graph)
-        super(MaxCutAnsatz, self).__init__('MaxCut', _get_graph_act_qubits_num(graph), graph, depth)
+        super().__init__('MaxCut', _get_graph_act_qubits_num(graph), graph, depth)
         self.graph = graph
         self.all_node = set()
         for edge in self.graph:
@@ -141,10 +143,10 @@ class MaxCutAnsatz(Ansatz):
         Returns:
             QubitOperator, hamiltonian of this max cut problem.
         """
-        qo = QubitOperator('', 0)
+        qubit_op = QubitOperator('', 0)
         for node in self.graph:
-            qo += (QubitOperator('') - QubitOperator(f'Z{node[0]} Z{node[1]}')) / 2
-        return qo
+            qubit_op += (QubitOperator('') - QubitOperator(f'Z{node[0]} Z{node[1]}')) / 2
+        return qubit_op
 
     def get_partition(self, max_n, weight):
         """
@@ -162,8 +164,8 @@ class MaxCutAnsatz(Ansatz):
         _check_value_should_between_close_set('max_n', 1, 1 << self._circuit.n_qubits, max_n)
         sim = Simulator('projectq', self._circuit.n_qubits)
         sim.apply_circuit(self._circuit, weight)
-        qs = sim.get_qs()
-        idxs = np.argpartition(np.abs(qs), -max_n)[-max_n:]
+        state = sim.get_qs()
+        idxs = np.argpartition(np.abs(state), -max_n)[-max_n:]
         partitions = [bin(i)[2:].zfill(self._circuit.n_qubits)[::-1] for i in idxs]
         res = []
         for partition in partitions:
@@ -203,11 +205,11 @@ class MaxCutAnsatz(Ansatz):
         cut_value = 0
         for edge in self.graph:
             node_left, node_right = edge
-            for n in edge:
-                if n not in partition[0] and n not in partition[1]:
-                    raise ValueError(f'Invalid partition, node {n} not in partition.')
-                if n in partition[0] and n in partition[1]:
-                    raise ValueError(f'Invalid partition, node {n} in both side of cut.')
+            for node in edge:
+                if node not in partition[0] and node not in partition[1]:
+                    raise ValueError(f'Invalid partition, node {node} not in partition.')
+                if node in partition[0] and node in partition[1]:
+                    raise ValueError(f'Invalid partition, node {node} in both side of cut.')
             if (
                 node_left in partition[0]
                 and node_right in partition[1]
@@ -217,9 +219,9 @@ class MaxCutAnsatz(Ansatz):
                 cut_value += 1
         return cut_value
 
-    def _implement(self, graph, depth):
+    def _implement(self, graph, depth):  # pylint: disable=arguments-differ
         """Implement of max cut ansatz."""
         self._circuit = UN(H, _get_graph_act_qubits(graph))
-        for d in range(depth):
-            self._circuit += CPN(self._build_hc(graph), {'beta': f'beta_{d}'})
-            self._circuit += CPN(self._build_hb(graph), {'alpha': f'alpha_{d}'})
+        for current_depth in range(depth):
+            self._circuit += CPN(self._build_hc(graph), {'beta': f'beta_{current_depth}'})
+            self._circuit += CPN(self._build_hb(graph), {'alpha': f'alpha_{current_depth}'})

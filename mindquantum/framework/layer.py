@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -80,7 +79,7 @@ class MQLayer(nn.Cell):
 
     def __init__(self, expectation_with_grad, weight='normal'):
         """Initialize a MQLayer object."""
-        super(MQLayer, self).__init__()
+        super().__init__()
         self.evolution = MQOps(expectation_with_grad)
         weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
         if isinstance(weight, ms.Tensor):
@@ -153,7 +152,7 @@ class MQN2Layer(nn.Cell):
 
     def __init__(self, expectation_with_grad, weight='normal'):
         """Initialize a MQN2Layer object."""
-        super(MQN2Layer, self).__init__()
+        super().__init__()
         self.evolution = MQN2Ops(expectation_with_grad)
         weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
         if isinstance(weight, ms.Tensor):
@@ -218,7 +217,7 @@ class MQAnsatzOnlyLayer(nn.Cell):
 
     def __init__(self, expectation_with_grad, weight='normal'):
         """Initialize a MQAnsatzOnlyLayer object."""
-        super(MQAnsatzOnlyLayer, self).__init__()
+        super().__init__()
         self.evolution = MQAnsatzOnlyOps(expectation_with_grad)
         weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
         if isinstance(weight, ms.Tensor):
@@ -287,7 +286,7 @@ class MQN2AnsatzOnlyLayer(nn.Cell):
 
     def __init__(self, expectation_with_grad, weight='normal'):
         """Initialize a MQN2AnsatzOnlyLayer object."""
-        super(MQN2AnsatzOnlyLayer, self).__init__()
+        super().__init__()
         self.evolution = MQN2AnsatzOnlyOps(expectation_with_grad)
         weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
         if isinstance(weight, ms.Tensor):

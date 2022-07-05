@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #   Copyright 2022 <Huawei Technologies Co., Ltd>
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,6 +32,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""SymEngine compatibility header."""
+
 import re as _re
 import string
 from itertools import product as cartes
@@ -40,6 +41,8 @@ from itertools import product as cartes
 from ._mindquantum_cxx import symengine
 
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
+
+# pylint: disable=bad-continuation
 
 
 def symbols(names, **args):
@@ -213,11 +216,11 @@ def symbols(names, **args):
             return result[0]
 
         return tuple(result)
-    else:
-        for name in names:
-            result.append(symbols(name, **args))
 
-        return type(names)(result)
+    # else
+    for name in names:
+        result.append(symbols(name, **args))
+    return type(names)(result)
 
 
 def var(names, **args):

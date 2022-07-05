@@ -47,27 +47,23 @@ import mindspore.context as context
 import mindspore.ops as ops
 from mindspore import Tensor
 
-context.set_context(mode=context.PYNATIVE_MODE, device_target="CPU")
+context.set_context(mode=context.PYNATIVE_MODE, device_target='CPU')
 
-x = Tensor(np.ones([1,3,3,4]).astype(np.float32))
-y = Tensor(np.ones([1,3,3,4]).astype(np.float32))
+x = Tensor(np.ones([1, 3, 3, 4]).astype(np.float32))
+y = Tensor(np.ones([1, 3, 3, 4]).astype(np.float32))
 print(ops.add(x, y))
 ```
 
 代码成功运行时会输出：
 
 ```python
-[[[[2. 2. 2. 2.]
-   [2. 2. 2. 2.]
-   [2. 2. 2. 2.]]
-
-  [[2. 2. 2. 2.]
-   [2. 2. 2. 2.]
-   [2. 2. 2. 2.]]
-
-  [[2. 2. 2. 2.]
-   [2. 2. 2. 2.]
-   [2. 2. 2. 2.]]]]
+[
+    [
+        [[2.0, 2.0, 2.0, 2.0], [2.0, 2.0, 2.0, 2.0], [2.0, 2.0, 2.0, 2.0]],
+        [[2.0, 2.0, 2.0, 2.0], [2.0, 2.0, 2.0, 2.0], [2.0, 2.0, 2.0, 2.0]],
+        [[2.0, 2.0, 2.0, 2.0], [2.0, 2.0, 2.0, 2.0], [2.0, 2.0, 2.0, 2.0]],
+    ]
+]
 ```
 
 至此，你已经成功通过Docker方式安装了MindSpore CPU版本。
@@ -100,6 +96,6 @@ print(ops.add(x, y))
 
 ### 验证MindQuantum是否安装成功
 
-```python
+```bash
 python -c 'import mindquantum'
 ```

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,15 +17,10 @@ import warnings
 
 __all__ = []
 try:
-    import mindspore  # noqa: F401
+    import mindspore
 
-    from .layer import (  # noqa: F401
-        MQAnsatzOnlyLayer,
-        MQLayer,
-        MQN2AnsatzOnlyLayer,
-        MQN2Layer,
-    )
-    from .operations import (  # noqa: F401
+    from .layer import MQAnsatzOnlyLayer, MQLayer, MQN2AnsatzOnlyLayer, MQN2Layer
+    from .operations import (
         MQAnsatzOnlyOps,
         MQEncoderOnlyOps,
         MQN2AnsatzOnlyOps,

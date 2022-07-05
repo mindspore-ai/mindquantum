@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -92,7 +91,7 @@ def _check_gate_type(gate):
     from mindquantum.core.gates import BasicGate
 
     if not isinstance(gate, BasicGate):
-        raise TypeError("Require a quantum gate, but get {}".format(type(gate)))
+        raise TypeError(f"Require a quantum gate, but get {type(gate)}")
 
 
 def _check_gate_has_obj(gate):
@@ -105,9 +104,9 @@ def _check_gate_has_obj(gate):
 
 def _check_qubit_id(qubit_id):
     if not isinstance(qubit_id, (int, np.int64)):
-        raise TypeError("Qubit should be a non negative int, but get {}!".format(type(qubit_id)))
+        raise TypeError(f"Qubit should be a non negative int, but get {type(qubit_id)}!")
     if qubit_id < 0:
-        raise ValueError("Qubit should be non negative int, but get {}!".format(qubit_id))
+        raise ValueError(f"Qubit should be non negative int, but get {qubit_id}!")
 
 
 def _check_obj_and_ctrl_qubits(obj_qubits, ctrl_qubits):

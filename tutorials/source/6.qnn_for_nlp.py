@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #   Copyright 2022 <Huawei Technologies Co., Ltd>
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -69,18 +68,18 @@ generate_encoder_circuit(3, prefix='e')
 
 n_qubits = 3
 label = 2
-label_bin = bin(label)[-1:1:-1].ljust(n_qubits, '0')
-label_array = np.array([int(i) * np.pi for i in label_bin]).astype(np.float32)
+label_bin_global = bin(label)[-1:1:-1].ljust(n_qubits, '0')
+label_array_global = np.array([int(i) * np.pi for i in label_bin_global]).astype(np.float32)
 encoder = generate_encoder_circuit(n_qubits, prefix='e')
 encoder_params_names = encoder.params_name
 
 print("Label is: ", label)
-print("Binary label is: ", label_bin)
-print("Parameters of encoder is: \n", np.round(label_array, 5))
+print("Binary label is: ", label_bin_global)
+print("Parameters of encoder is: \n", np.round(label_array_global, 5))
 print("Encoder circuit is: \n", encoder)
 print("Encoder parameter names are: \n", encoder_params_names)
 
-state = encoder.get_qs(pr=dict(zip(encoder_params_names, label_array)))
+state = encoder.get_qs(pr=dict(zip(encoder_params_names, label_array_global)))
 amp = np.round(np.abs(state) ** 2, 3)
 
 print("Amplitude of quantum state is: \n", amp)
@@ -163,7 +162,7 @@ class CBOW(nn.Cell):
 
     def __init__(self, num_embedding, embedding_dim, window, layers, n_threads, hidden_dim):
         """Initialize a CBOW object."""
-        super(CBOW, self).__init__()
+        super().__init__()
         self.embedding = q_embedding(num_embedding, embedding_dim, window, layers, n_threads)
         self.dense1 = nn.Dense(embedding_dim, hidden_dim)
         self.dense2 = nn.Dense(hidden_dim, num_embedding)
@@ -183,7 +182,7 @@ class LossMonitorWithCollection(LossMonitor):
 
     def __init__(self, per_print_times=1):
         """Initialize a LossMonitorWithCollection object."""
-        super(LossMonitorWithCollection, self).__init__(per_print_times)
+        super().__init__(per_print_times)
         self.loss = []
 
     def begin(self, run_context):
@@ -193,7 +192,7 @@ class LossMonitorWithCollection(LossMonitor):
     def end(self, run_context):
         """End method."""
         self.end_time = time.time()
-        print('Total time used: {}'.format(self.end_time - self.begin_time))
+        print(f'Total time used: {self.end_time - self.begin_time}')
 
     def epoch_begin(self, run_context):
         """Epoch begin method."""
@@ -248,8 +247,8 @@ ms.set_seed(42)
 window_size = 2
 embedding_dim = 10
 hidden_dim = 128
-word_dict, sample = generate_word_dict_and_sample(corpus, window=window_size)
-train_x, train_y = generate_train_data(sample, word_dict)
+word_dict, sampling = generate_word_dict_and_sample(corpus, window=window_size)
+train_x, train_y = generate_train_data(sampling, word_dict)
 
 train_loader = ds.NumpySlicesDataset({"around": train_x, "center": train_y}, shuffle=False).batch(3)
 net = CBOW(len(word_dict), embedding_dim, window_size, 3, 4, hidden_dim)
@@ -273,7 +272,7 @@ class CBOWClassical(nn.Cell):
 
     def __init__(self, num_embedding, embedding_dim, window, hidden_dim):
         """Initialize a CBOWClassical object."""
-        super(CBOWClassical, self).__init__()
+        super().__init__()
         self.dim = 2 * window * embedding_dim
         self.embedding = nn.Embedding(num_embedding, embedding_dim, True)
         self.dense1 = nn.Dense(self.dim, hidden_dim)
@@ -293,8 +292,8 @@ class CBOWClassical(nn.Cell):
 
 train_x = []
 train_y = []
-for i in sample:
-    around, center = i
+for sample in sampling:
+    around, center = sample
     train_y.append(word_dict[center])
     train_x.append([])
     for j in around:

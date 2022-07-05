@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,18 +29,18 @@ class BasicQubit:
     def __init__(self, qubit_id, circuit=None):
         """Initialize a BasicQubit object."""
         if not isinstance(qubit_id, int):
-            raise TypeError("qubit_id should be int, but get {}!".format(type(qubit_id)))
+            raise TypeError(f"qubit_id should be int, but get {type(qubit_id)}!")
         self.qubit_id = qubit_id
         if circuit is None:
             self.circuit_ = Circuit()
         elif isinstance(circuit, Circuit):
             self.circuit_ = circuit
         else:
-            raise TypeError("circuit should be a quantum circuit, but get {}!".format(type(circuit)))
+            raise TypeError(f"circuit should be a quantum circuit, but get {type(circuit)}!")
 
     def __str__(self):
         """Return a string representation of the object."""
-        return 'qubit_{}'.format(self.qubit_id)
+        return f'qubit_{self.qubit_id}'
 
     @property
     def circuit(self):

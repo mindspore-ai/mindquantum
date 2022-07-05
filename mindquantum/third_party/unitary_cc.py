@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #   Copyright 2017 The OpenFermion Developers.
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -186,6 +185,8 @@ def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):
                 generator += FermionOperator(
                     ((occupied_other, 1), (virtual_other, 0), (occupied_this, 1), (virtual_this, 0)), -1 * coeff
                 )
+
+    # pylint: disable=bad-continuation
 
     # Generate all spin-conserving double excitations derived
     # from two spatial occupied-virtual pairs

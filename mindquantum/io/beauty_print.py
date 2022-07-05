@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,13 +18,13 @@
 def _fill_fist_sep(string, sep, length, fill_char=' '):
     poi = string.find(sep)
     if length < poi:
-        raise Exception("Original length is {}, can not fill it to length {}.".format(poi, length))
+        raise Exception(f"Original length is {poi}, can not fill it to length {length}.")
     return string[:poi] + fill_char * (length - poi) + string[poi:]
 
 
 def _check_str(s, name):
     if not isinstance(s, str):
-        raise TypeError("{} requires str, but get {}!".format(name, type(s)))
+        raise TypeError(f"{name} requires str, but get {type(s)}!")
 
 
 def bprint(strings: list, align=":", title='', v_around='=', h_around='|', fill_char=' '):
@@ -57,7 +56,7 @@ def bprint(strings: list, align=":", title='', v_around='=', h_around='|', fill_
         ===================
     """
     if not isinstance(strings, list):
-        raise TypeError("strings requires a list, but get {}".format(type(strings)))
+        raise TypeError(f"strings requires a list, but get {type(strings)}")
     for s in strings:
         _check_str(s, "string")
     _check_str(align, 'align')
@@ -73,7 +72,7 @@ def bprint(strings: list, align=":", title='', v_around='=', h_around='|', fill_
     strings = [_fill_fist_sep(i, align, maxmim_len, fill_char) for i in strings]
     n_around = 3
     title = v_around * n_around + title + v_around * n_around
-    maxmim = max([len(i) for i in strings])
+    maxmim = max(len(i) for i in strings)
     if len(title) > maxmim:
         len_total = (len(title) - maxmim) // 2 + (len(title) - maxmim) % 2
         strings = [h_around + ' ' * len_total + i + ' ' * (len(title) - len(i) - len_total) + h_around for i in strings]

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,7 +53,7 @@ class Hamiltonian:
 
         support_type = (PQOperator, OFOperator, HiQOperator, sp.csr_matrix)
         if not isinstance(hamiltonian, support_type):
-            raise TypeError("Require a QubitOperator or a csr_matrix, but get {}!".format(type(hamiltonian)))
+            raise TypeError(f"Require a QubitOperator or a csr_matrix, but get {type(hamiltonian)}!")
         if isinstance(hamiltonian, sp.csr_matrix):
             if len(hamiltonian.shape) != 2 or hamiltonian.shape[0] != hamiltonian.shape[1]:
                 raise ValueError(

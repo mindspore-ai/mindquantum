@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -76,11 +75,11 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
         NoiseGate.__init__(self, **kwargs)
         SelfHermitianGate.__init__(self, **kwargs)
         if not isinstance(px, (int, float)):
-            raise TypeError("Unsupported type for px, get {}.".format(type(px)))
+            raise TypeError(f"Unsupported type for px, get {type(px)}.")
         if not isinstance(py, (int, float)):
-            raise TypeError("Unsupported type for py, get {}.".format(type(py)))
+            raise TypeError(f"Unsupported type for py, get {type(py)}.")
         if not isinstance(pz, (int, float)):
-            raise TypeError("Unsupported type for pz, get {}.".format(type(pz)))
+            raise TypeError(f"Unsupported type for pz, get {type(pz)}.")
         if 0 <= px + py + pz <= 1:
             self.px = px
             self.py = py
@@ -363,7 +362,7 @@ class AmplitudeDampingChannel(NoiseGate, SelfHermitianGate):
         NoiseGate.__init__(self, **kwargs)
         SelfHermitianGate.__init__(self, **kwargs)
         if not isinstance(gamma, (int, float)):
-            raise TypeError("Unsupported type for gamma, get {}.".format(type(gamma)))
+            raise TypeError(f"Unsupported type for gamma, get {type(gamma)}.")
         if 0 <= gamma <= 1:
             self.gamma = gamma
         else:
@@ -431,7 +430,7 @@ class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
         NoiseGate.__init__(self, **kwargs)
         SelfHermitianGate.__init__(self, **kwargs)
         if not isinstance(gamma, (int, float)):
-            raise TypeError("Unsupported type for gamma, get {}.".format(type(gamma)))
+            raise TypeError(f"Unsupported type for gamma, get {type(gamma)}.")
         if 0 <= gamma <= 1:
             self.gamma = gamma
         else:

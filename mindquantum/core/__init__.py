@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,11 +18,11 @@
 
 # Provide alias for convenience
 from . import circuit, gates, operators, parameterresolver, third_party
-from .circuit import *  # noqa: F401,F403
-from .gates import *  # noqa: F401,F403
-from .operators import *  # noqa: F401,F403
-from .parameterresolver import *  # noqa: F401,F403
-from .third_party import *  # noqa: F401,F403
+from .circuit import *
+from .gates import *
+from .operators import *
+from .parameterresolver import *
+from .third_party import *
 
 __all__ = []
 __all__.extend(circuit.__all__)

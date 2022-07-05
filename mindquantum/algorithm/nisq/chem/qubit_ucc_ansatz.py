@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,23 +27,15 @@ from mindquantum.core.parameterresolver import ParameterResolver
 
 from .._ansatz import Ansatz
 
+# pylint: disable=bad-continuation
+
 
 def _check_int_list(input_list, name):
     if not isinstance(input_list, list):
-        raise ValueError(
-            "The input {} should be a list, \
-but get {}.".format(
-                str(name), type(input_list)
-            )
-        )
+        raise ValueError(f"The input {str(name)} should be a list, but get {type(input_list)}.")
     for i in input_list:
         if not isinstance(i, int):
-            raise ValueError(
-                "The indices of {} should be integer, \
-but get {}.".format(
-                    str(name), type(i)
-                )
-            )
+            raise ValueError(f"The indices of {str(name)} should be integer, but get {type(i)}.")
 
 
 class QubitUCCAnsatz(Ansatz):
@@ -117,35 +108,19 @@ class QubitUCCAnsatz(Ansatz):
     def __init__(self, n_qubits=None, n_electrons=None, occ_orb=None, vir_orb=None, generalized=False, trotter_step=1):
         """Initialize a QubitUCCAnsatz object."""
         if n_qubits is not None and not isinstance(n_qubits, int):
-            raise ValueError(
-                "The number of qubits should be integer, \
-but get {}.".format(
-                    type(n_qubits)
-                )
-            )
+            raise ValueError(f"The number of qubits should be integer, but get {type(n_qubits)}.")
         if n_electrons is not None and not isinstance(n_electrons, int):
-            raise ValueError(
-                "The number of electrons should be integer, \
-but get {}.".format(
-                    type(n_electrons)
-                )
-            )
+            raise ValueError(f"The number of electrons should be integer, but get {type(n_electrons)}.")
         if isinstance(n_electrons, int) and n_electrons > n_qubits:
             raise ValueError(
-                "The number of electrons must be smaller than \
-the number of qubits (spin-orbitals) in the ansatz!"
+                "The number of electrons must be smaller than the number of qubits (spin-orbitals) in the ansatz!"
             )
         if occ_orb is not None:
             _check_int_list(occ_orb, "occupied orbitals")
         if vir_orb is not None:
             _check_int_list(vir_orb, "virtual orbitals")
         if not isinstance(generalized, bool):
-            raise ValueError(
-                "The parameter generalized should be bool, \
-but get {}.".format(
-                    type(generalized)
-                )
-            )
+            raise ValueError(f"The parameter generalized should be bool, but get {type(generalized)}.")
         # Although the code for generalized excitations has been written,
         # the physical underneath of such type of operators is still not clear,
         # therefore, currently it seems reasonable to make generalized qUCC unavailable.
@@ -199,10 +174,7 @@ but get {}.".format(
         n_orb_vir = 0
         if n_qubits is not None:
             if n_qubits % 2 != 0:
-                raise ValueError(
-                    'The total number of qubits (spin-orbitals) \
-should be even.'
-                )
+                raise ValueError('The total number of qubits (spin-orbitals) should be even.')
             n_orb = n_qubits // 2
         if n_electrons is not None:
             n_orb_occ = int(numpy.ceil(n_electrons / 2))
@@ -231,8 +203,7 @@ should be even.'
         n_orb = max(n_orb, max_idx)
         if warn_flag:
             warnings.warn(
-                "[Note] Override n_qubits and n_electrons with manually \
-set occ_orb and vir_orb. Handle with caution!"
+                "[Note] Override n_qubits and n_electrons with manually set occ_orb and vir_orb. Handle with caution!"
             )
 
         if generalized:
@@ -241,16 +212,10 @@ set occ_orb and vir_orb. Handle with caution!"
 
         n_occ = len(occ_indices)
         if n_occ == 0:
-            warnings.warn(
-                "The number of occupied orbitals is zero. Ansatz may \
-contain no parameters."
-            )
+            warnings.warn("The number of occupied orbitals is zero. Ansatz may contain no parameters.")
         n_vir = len(vir_indices)
         if n_vir == 0:
-            warnings.warn(
-                "The number of virtual orbitals is zero. Ansatz may \
-contain no parameters."
-            )
+            warnings.warn("The number of virtual orbitals is zero. Ansatz may contain no parameters.")
 
         # Convert spatial-orbital indices to spin-orbital indices
         occ_indices_spin = []
@@ -323,9 +288,9 @@ contain no parameters."
             self.n_qubits = n_qubits_circuit
         if self.n_qubits < n_qubits_circuit:
             raise ValueError(
-                "The number of qubits in the ansatz circuit {} is larger than \
-the input n_qubits {}! Please check input parameters such as occ_orb, etc.".format(
-                    n_qubits_circuit, n_qubits
+                (
+                    f'The number of qubits in the ansatz circuit {n_qubits_circuit} is larger ',
+                    'than the input n_qubits {n_qubits}! Please check input parameters such as occ_orb, etc.',
                 )
             )
         self._circuit = ansatz_circuit

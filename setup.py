@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -73,11 +72,11 @@ def get_python_executable():
 # ==============================================================================
 
 
-class BuildFailed(Exception):
+class BuildFailedError(Exception):
     """Extension raised if the build fails for any reason."""
 
     def __init__(self):
-        """Initialize a BuildFailed exception."""
+        """Initialize a BuildFailedError exception."""
         super().__init__()
         self.cause = sys.exc_info()[1]  # work around py 2/3 different syntax
 
@@ -232,7 +231,7 @@ class CMakeBuildExt(build_ext):
         try:
             subprocess.check_call(self.cmake_cmd + [src_dir] + args, cwd=build_temp, env=env)
         except ext_errors as err:
-            raise BuildFailed() from err
+            raise BuildFailedError() from err
         finally:
             logging.info(' End configuring from %s '.center(80, '-'), src_dir)
 
@@ -251,7 +250,7 @@ class CMakeBuildExt(build_ext):
             )
         except ext_errors as err:
             if not ext.optional:
-                raise BuildFailed() from err
+                raise BuildFailedError() from err
             logging.info('Failed to compile optional extension %s (not an error)', ext.pymod)
         finally:
             logging.info(' End building %s '.center(80, '-'), ext.pymod)

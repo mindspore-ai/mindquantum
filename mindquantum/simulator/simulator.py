@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,6 +34,8 @@ from mindquantum.utils.type_value_check import (
 )
 
 SUPPORTED_SIMULATOR = ['projectq']
+
+# pylint: disable=bad-continuation
 
 
 def get_supported_simulator():
@@ -322,7 +323,7 @@ class Simulator:
             if pr is None:
                 raise ValueError("Sampling a parameterized circuit need a ParameterResolver")
             if not isinstance(pr, (dict, ParameterResolver)):
-                raise TypeError("pr requires a dict or a ParameterResolver, but get {}!".format(type(pr)))
+                raise TypeError(f"pr requires a dict or a ParameterResolver, but get {type(pr)}!")
             pr = ParameterResolver(pr)
         else:
             pr = ParameterResolver()
@@ -546,13 +547,13 @@ class Simulator:
             _check_input_type("simulator_left", Simulator, simulator_left)
             if self.backend != simulator_left.backend:
                 raise ValueError(
-                    f"simulator_left should have the same backend as this simulator, \
-which is {self.backend}, but get {simulator_left.backend}"
+                    "simulator_left should have the same backend as this simulator, ",
+                    f"which is {self.backend}, but get {simulator_left.backend}",
                 )
             if self.n_qubits != simulator_left.n_qubits:
                 raise ValueError(
-                    f"simulator_left should have the same n_qubits as this simulator, \
-which is {self.n_qubits}, but get {simulator_left.n_qubits}"
+                    "simulator_left should have the same n_qubits as this simulator, ",
+                    f"which is {self.n_qubits}, but get {simulator_left.n_qubits}",
                 )
             non_hermitian = True
         if non_hermitian and simulator_left is None:
@@ -565,8 +566,10 @@ which is {self.n_qubits}, but get {simulator_left.n_qubits}"
             _check_int_type("parallel_worker", parallel_worker)
         if encoder_params_name is not None:
             warnings.warn(
-                "Setting encoder_params_name is perecated from version 0.7.0, please call '.as_encoder()' \
-of the circuit you want to work as encoder, and do not set in this API.",
+                (
+                    "Setting encoder_params_name is perecated from version 0.7.0, please call '.as_encoder()'"
+                    " of the circuit you want to work as encoder, and do not set in this API.",
+                ),
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -575,8 +578,10 @@ of the circuit you want to work as encoder, and do not set in this API.",
             encoder_params_name_old_api = []
         if ansatz_params_name is not None:
             warnings.warn(
-                "Setting ansatz_params_name is perecated from version 0.7.0, please call '.as_ansatz()' \
-of the circuit you want to work as ansatz, and do not set in this API.",
+                (
+                    "Setting ansatz_params_name is perecated from version 0.7.0, please call '.as_ansatz()' "
+                    "of the circuit you want to work as ansatz, and do not set in this API.",
+                ),
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -601,13 +606,13 @@ of the circuit you want to work as ansatz, and do not set in this API.",
             raise RuntimeError("Parameter cannot be both encoder and ansatz parameter.")
         if set(ansatz_params_name_old_api) != set(ansatz_params_name):
             raise RuntimeError(
-                "You set wrong ansatz parameters. Please do not set ansatz_params_name anymore, but \
-call '.as_ansatz()' of circuit that you want to work as ansatz."
+                "You set wrong ansatz parameters. Please do not set ansatz_params_name anymore, "
+                "but call '.as_ansatz()' of circuit that you want to work as ansatz."
             )
         if set(encoder_params_name_old_api) != set(encoder_params_name):
             raise RuntimeError(
-                "You set wrong encoder parameters. Please do not set encoder_params_name anymore, but \
-call '.as_encoder()' of circuit that you want to work as encoder."
+                "You set wrong encoder parameters. Please do not set encoder_params_name anymore, "
+                "but call '.as_encoder()' of circuit that you want to work as encoder."
             )
         version = "both"
         if not ansatz_params_name:
@@ -695,8 +700,8 @@ def _check_encoder(data, encoder_params_size):
         raise ValueError("encoder data requires a two dimension numpy array")
     if data_shape[1] != encoder_params_size:
         raise ValueError(
-            f"encoder parameters size do not match with encoder parameters name,\
-need {encoder_params_size} but get {data_shape[1]}."
+            "encoder parameters size do not match with encoder parameters name, ",
+            f"need {encoder_params_size} but get {data_shape[1]}.",
         )
 
 
@@ -709,8 +714,8 @@ def _check_ansatz(data, ansatz_params_size):
         raise ValueError("ansatz data requires a one dimension numpy array")
     if data_shape[0] != ansatz_params_size:
         raise ValueError(
-            f"ansatz parameters size do not match with ansatz parameters name,\
-need {ansatz_params_size} but get {data_shape[0]}"
+            "ansatz parameters size do not match with ansatz parameters name, "
+            f"need {ansatz_params_size} but get {data_shape[0]}"
         )
 
 
@@ -736,8 +741,7 @@ def _check_hamiltonian_qubits_number(hamiltonian, sim_qubits):
     if hamiltonian.how_to != MODE['origin']:
         if hamiltonian.n_qubits != sim_qubits:
             raise ValueError(
-                f"Hamiltonian qubits is {hamiltonian.n_qubits}, not match \
-with simulator qubits number {sim_qubits}"
+                f"Hamiltonian qubits is {hamiltonian.n_qubits}, not match with simulator qubits number {sim_qubits}"
             )
     else:
         if hamiltonian.n_qubits > sim_qubits:
@@ -808,8 +812,8 @@ def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
     _check_input_type('ket_simulator', Simulator, ket_simulator)
     if bra_simulator.n_qubits != ket_simulator.n_qubits:
         raise ValueError(
-            f"Two simulator should have same quantum state, \
-but get {bra_simulator.n_qubits} and {ket_simulator.n_qubits}."
+            "Two simulator should have same quantum state, "
+            f"but get {bra_simulator.n_qubits} and {ket_simulator.n_qubits}."
         )
     if bra_simulator.backend != ket_simulator.backend:
         raise ValueError("The backend of two simulator should be same.")

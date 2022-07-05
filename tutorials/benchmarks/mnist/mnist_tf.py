@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -113,4 +112,4 @@ model.compile(loss=tf.keras.losses.Hinge(), optimizer=tf.keras.optimizers.Adam()
 t0 = time.time()
 qnn_history = model.fit(x_train_tfcirc_sub, y_train_hinge_sub, batch_size=args.batchs, epochs=3, verbose=1)
 t1 = time.time()
-print("Total time: {}".format(t1 - t0))
+print(f"Total time: {t1 - t0}")

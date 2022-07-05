@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -662,28 +661,28 @@ class SVGContainer:
         """Get left side of container."""
         if not self.element:
             return np.inf
-        return min([e.left for e in self.element])
+        return min(e.left for e in self.element)
 
     @property
     def right(self):
         """Get right side of container."""
         if not self.element:
             return -np.inf
-        return max([e.right for e in self.element])
+        return max(e.right for e in self.element)
 
     @property
     def top(self):
         """Get top side of container."""
         if not self.element:
             return np.inf
-        return min([e.top for e in self.element])
+        return min(e.top for e in self.element)
 
     @property
     def bottom(self):
         """Get bottom side of container."""
         if not self.element:
             return -np.inf
-        return max([e.bottom for e in self.element])
+        return max(e.bottom for e in self.element)
 
     def change_color(self, color):
         """Change color of every element."""
@@ -963,7 +962,7 @@ class GateContainer(SVGContainer):
 
     def add(self, ele):
         """Add an svg component."""
-        high = max([self.circ_high[i] for i in ele.all_qubits_range])
+        high = max(self.circ_high[i] for i in ele.all_qubits_range)
         ele.shift(high + self.svg_config['gate_v_distance'] * (high != 0), 0)
         super().add(ele)
         w = ele.right - ele.left

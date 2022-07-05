@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +32,7 @@ def _get_qubit_range(gate):
 
 def brick_model(circ, qubits_name=None):
     """Split a circuit into layers."""
-    from mindquantum import gates as gates
+    from mindquantum import gates
 
     n = circ.n_qubits
     if qubits_name is None:
@@ -70,7 +69,7 @@ def brick_model(circ, qubits_name=None):
 
 def _single_gate_drawer(gate):
     """Single gate drawer."""
-    from mindquantum import gates as gates
+    from mindquantum import gates
 
     if isinstance(gate, gates.CNOTGate):
         gate = gates.X.on(*gate.obj_qubits)
@@ -94,7 +93,7 @@ def _single_gate_drawer(gate):
 
 def _single_block_drawer(block, n_qubits):
     """Single block drawer."""
-    from mindquantum import gates as gates
+    from mindquantum import gates
 
     v_n = _text_drawer_config['v_n']
     text_gates = {}
@@ -121,7 +120,7 @@ def _single_block_drawer(block, n_qubits):
                 ind = q * (v_n + 1) + i + 1
                 text_gates[ind] = _text_drawer_config['ctrl_line']
                 text_gates[ind] = text_gates[ind].center(text_gate['len'], ' ')
-    max_l = max([len(j) for j in text_gates.values()])
+    max_l = max(len(j) for j in text_gates.values())
     for k, v in text_gates.items():
         if len(v) != max_l:
             if k % (v_n + 1) == 0:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +16,9 @@
 
 from . import chem, qaoa, qnn
 from ._ansatz import Ansatz
-from .chem import *  # noqa: F401,F403
-from .qaoa import *  # noqa: F401,F403
-from .qnn import *  # noqa: F401,F403
+from .chem import *
+from .qaoa import *
+from .qnn import *
 
 __all__ = ['Ansatz']
 __all__.extend(chem.__all__)

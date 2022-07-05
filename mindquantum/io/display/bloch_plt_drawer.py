@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Display one qubit state in bloch sphere."""
+
 import numbers
 import warnings
 from collections import deque
@@ -33,6 +33,8 @@ from mindquantum.io.display._config import (
     _bloch_default_style_dark_,
 )
 from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
+
+# pylint: disable=bad-continuation
 
 
 class Arrow3D(FancyArrowPatch):
@@ -513,8 +515,7 @@ class BlochScene:
         console = rich.console.Console()
         if console.is_jupyter:
             warnings.warn(
-                "jupyter environment detected, if animation not work, \
-please run '%matplotlib notebook' in cell."
+                "jupyter environment detected, if animation not work, please run '%matplotlib notebook' in cell."
             )
         _check_input_type('fig', Figure, fig)
         _check_input_type('ax', Axes3D, ax)

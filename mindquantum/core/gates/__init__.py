@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +18,7 @@ Gate.
 Gate provides different quantum gate.
 """
 
-from .basic import (  # noqa: F401
+from .basic import (
     HERMITIAN_PROPERTIES,
     BasicGate,
     NoiseGate,

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -96,11 +95,13 @@ class MQOps(nn.Cell):
 
     def __init__(self, expectation_with_grad):
         """Initialize a MQOps object."""
-        super(MQOps, self).__init__()
+        super().__init__()
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
         self.shape_ops = operations.Shape()
+        self.g_enc = None
+        self.g_ans = None
 
     def extend_repr(self):
         """Return a string representation of the object."""
@@ -181,11 +182,13 @@ class MQN2Ops(nn.Cell):
 
     def __init__(self, expectation_with_grad):
         """Initialize a MQN2Ops object."""
-        super(MQN2Ops, self).__init__()
+        super().__init__()
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
         self.shape_ops = operations.Shape()
+        self.g_enc = None
+        self.g_ans = None
 
     def extend_repr(self):
         """Return a string representation of the object."""
@@ -257,7 +260,7 @@ class MQAnsatzOnlyOps(nn.Cell):
 
     def __init__(self, expectation_with_grad):
         """Initialize a MQAnsatzOnlyOps object."""
-        super(MQAnsatzOnlyOps, self).__init__()
+        super().__init__()
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
@@ -328,7 +331,7 @@ class MQN2AnsatzOnlyOps(nn.Cell):
 
     def __init__(self, expectation_with_grad):
         """Initialize a MQN2AnsatzOnlyOps object."""
-        super(MQN2AnsatzOnlyOps, self).__init__()
+        super().__init__()
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
@@ -404,7 +407,7 @@ class MQEncoderOnlyOps(nn.Cell):
 
     def __init__(self, expectation_with_grad):
         """Initialize a MQEncoderOnlyOps object."""
-        super(MQEncoderOnlyOps, self).__init__()
+        super().__init__()
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
@@ -478,7 +481,7 @@ class MQN2EncoderOnlyOps(nn.Cell):
 
     def __init__(self, expectation_with_grad):
         """Initialize a MQN2EncoderOnlyOps object."""
-        super(MQN2EncoderOnlyOps, self).__init__()
+        super().__init__()
         _mode_check(self)
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad

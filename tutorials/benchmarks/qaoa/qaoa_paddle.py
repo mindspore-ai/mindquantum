@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -70,7 +69,7 @@ class Net(paddle.nn.Layer):
 
     def __init__(self, p, dtype="float64"):
         """Initialize a Net object."""
-        super(Net, self).__init__()
+        super().__init__()
 
         self.p = p
         self.gamma = self.create_parameter(
@@ -113,4 +112,4 @@ for itr in range(1, ITR + 1):
     if itr % 10 == 0:
         print("iter:", itr, "  loss:", "%.4f" % loss.numpy())
 t1 = time.time()
-print('Total time for paddle quantum :{}'.format(t1 - t0))
+print(f'Total time for paddle quantum :{t1 - t0}')

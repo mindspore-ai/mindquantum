@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #   Portions Copyright (c) 2020 Huawei Technologies Co.,ltd.
 #   Portions Copyright 2017 The OpenFermion Developers.
 #
@@ -81,7 +80,7 @@ def count_qubits(operator):
     if isinstance(operator, PolynomialTensor):
         return operator.n_qubits
 
-    raise TypeError("Unsupported type of operator {}".format(operator))
+    raise TypeError(f"Unsupported type of operator {operator}")
 
 
 def commutator(left_operator, right_operator):
@@ -200,7 +199,7 @@ def get_fermion_operator(operator):
             fermion_operator += FermionOperator(term, operator[term])
         return fermion_operator
 
-    raise TypeError("Unsupported type of oeprator {}".format(operator))
+    raise TypeError(f"Unsupported type of oeprator {operator}")
 
 
 def number_operator(n_modes=None, mode=None, coefficient=1.0):
@@ -264,7 +263,7 @@ def hermitian_conjugated(operator):
         conjugate_operator = FermionOperator()
         for term, coefficient in operator.terms.items():
             # reverse the order and change the action from 0(1) to 1(0)
-            conjugate_term = tuple([(index, 1 - op) for (index, op) in reversed(term)])
+            conjugate_term = tuple((index, 1 - op) for (index, op) in reversed(term))
             conjugate_operator.terms[conjugate_term] = coefficient.conjugate()
 
     # Handle QubitOperator
@@ -278,7 +277,7 @@ def hermitian_conjugated(operator):
         conjugate_operator = QubitExcitationOperator()
         for term, coefficient in operator.terms.items():
             # reverse the order and change the action from 0(1) to 1(0)
-            conjugate_term = tuple([(index, 1 - op) for (index, op) in reversed(term)])
+            conjugate_term = tuple((index, 1 - op) for (index, op) in reversed(term))
             conjugate_operator.terms[conjugate_term] = coefficient.conjugate()
 
     # Unsupported type

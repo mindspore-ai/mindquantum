@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -175,7 +174,7 @@ class HiQASM:
             NotImplementedError: if HiQASM version not implement.
             ValueError: if gate not implement in this version.
         """
-        from mindquantum import gates as gates
+        from mindquantum import gates
         from mindquantum.core import Circuit
 
         _check_input_type("circuit", Circuit, circuit)
@@ -218,7 +217,7 @@ class HiQASM:
 
     def _to_string_non_parametric(self, gate, ctrl_qubits, obj_qubits, version):
         """Conversion of simple gates to string."""
-        from mindquantum.core import gates as gates
+        from mindquantum.core import gates
 
         n_ctrl_qubits = len(ctrl_qubits)
 
@@ -268,7 +267,7 @@ class HiQASM:
 
     def _to_string_parametric(self, gate, ctrl_qubits, obj_qubits, version):
         """Conversion of parametric gates to string."""
-        from mindquantum.core import gates as gates
+        from mindquantum.core import gates
 
         n_ctrl_qubits = len(ctrl_qubits)
         if gate.parameterized:

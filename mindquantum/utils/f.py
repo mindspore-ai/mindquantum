@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -107,7 +106,7 @@ def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=None):
 
 def _check_num_array(vec, name):
     if not isinstance(vec, (np.ndarray, list)):
-        raise TypeError("{} requires a numpy.ndarray or a list of number, but get {}.".format(name, type(vec)))
+        raise TypeError(f"{name} requires a numpy.ndarray or a list of number, but get {type(vec)}.")
 
 
 def mod(vec_in, axis=0):
@@ -184,9 +183,9 @@ def random_state(shapes, norm_axis=0, comp=True, seed=None):
                [0.87252821+0.06923499j, 0.41946926+0.60691409j]])
     """
     if not isinstance(shapes, (int, tuple)):
-        raise TypeError("shape requires a int of a tuple of int, but get {}!".format(type(shapes)))
+        raise TypeError(f"shape requires a int of a tuple of int, but get {type(shapes)}!")
     if not isinstance(comp, bool):
-        raise TypeError("comp requires a bool, but get {}!".format(comp))
+        raise TypeError(f"comp requires a bool, but get {comp}!")
     np.random.seed(seed)
     out = np.random.uniform(size=shapes) + 0j
     if comp:

@@ -34,8 +34,6 @@ repos:
       - id: mixed-line-ending
       - id: trailing-whitespace
         exclude: ^(.*patch[0-9]*)$
-      - id: fix-encoding-pragma
-        exclude: ^(.*patch[0-9]*)$
 
   # Changes tabs to spaces
   - repo: https://gitee.com/mirrors_pre-commit/pre-commit-hooks
@@ -97,6 +95,19 @@ repos:
     hooks:
       - id: black
         language_version: python3
+
+  - repo: https://gitee.com/mirrors_asottile/blacken-docs
+    rev: v1.12.1
+    hooks:
+      - id: blacken-docs
+        args: [-S, -l, '120']
+        additional_dependencies: [black==22.3.0]
+
+  - repo: https://gitee.com/mirrors_asottile/pyupgrade
+    rev: v2.34.0
+    hooks:
+      - id: pyupgrade
+        args: [--py36-plus, --keep-mock]
 
   - repo: https://gitee.com/dnguyen/cmake-pre-commit-hooks-mirror
     rev: 'v1.5.3'

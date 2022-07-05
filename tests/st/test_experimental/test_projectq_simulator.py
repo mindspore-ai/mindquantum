@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #   Copyright 2022 <Huawei Technologies Co., Ltd>
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +25,6 @@ except ImportError:
 
 _HAS_PROJECTQ = True
 try:
-    import projectq  # noqa: F401
     from projectq import ops as pq_ops
     from projectq.backends import Simulator as PQ_Simulator
     from projectq.cengines import MainEngine
@@ -37,15 +35,15 @@ has_projectq = pytest.mark.skipif(not _HAS_PROJECTQ, reason='ProjectQ is not ins
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore', category=PendingDeprecationWarning)
-    PQ_SqrtXInverse = pq_ops.get_inverse(pq_ops.SqrtX)
+    PQ_SqrtXInverse = pq_ops.get_inverse(pq_ops.SqrtX)  # pylint: disable=invalid-name
 
 # ==============================================================================
 
 
 def angle_idfn(val):
     if isinstance(val, symengine.Basic):
-        return 'sym({})'.format(val)
-    return 'num({})'.format(val)
+        return f'sym({val})'
+    return f'num({val})'
 
 
 # ==============================================================================
@@ -64,7 +62,7 @@ def mindquantum_setup(seed, n_qubits):
 
 
 def projectq_setup(seed, n_qubits):
-    eng = MainEngine(backend=PQ_Simulator(96123), engine_list=[])
+    eng = MainEngine(backend=PQ_Simulator(seed), engine_list=[])
     qureg = eng.allocate_qureg(n_qubits)
     return (qureg, eng)
 
@@ -96,7 +94,7 @@ def run_projectq(gate, n_qubits, seed):
         eng.flush()
         qubits_map, state = eng.backend.cheat()
 
-        pq_ops.All(pq_ops.Measure) | qubits
+        pq_ops.All(pq_ops.Measure) | qubits  # pylint: disable=expression-not-assigned
         eng.flush()
 
         return (qubits_map, state)
