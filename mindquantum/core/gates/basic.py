@@ -167,7 +167,6 @@ class BasicGate:
             [1]
             >>> x.ctrl_qubits
             []
-
             >>> x = X.on(2, [0, 1])
             >>> x.ctrl_qubits
             [0, 1]
@@ -355,7 +354,18 @@ class NoneParameterGate(QuantumGate):
 
 
 class ParameterGate(QuantumGate):
-    """Gate that is parameterized."""
+    """
+    Gate that is parameterized.
+
+    Args:
+        pr (ParameterResolver): the parameter for parameterized gate.
+        name (str): the name of this parameterized gate.
+        n_qubits (int): the qubit number of this parameterized gate.
+        args (list): other arguments for quantum gate.
+        obj_qubits (Union[int, List[int]]): the qubit that this gate act on. Default: None.
+        ctrl_qubits (Union[int, List[int]]): the control qubit of this gate. Default: None.
+        kwargs (dict): other arguments for quantum gate.
+    """
 
     def __init__(self, pr: ParameterResolver, name, n_qubits, *args, obj_qubits=None, ctrl_qubits=None, **kwargs):
         """Initialize a ParameterGate object."""

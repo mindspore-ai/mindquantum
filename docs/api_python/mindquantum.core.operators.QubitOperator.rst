@@ -1,18 +1,18 @@
 .. py:class:: mindquantum.core.operators.QubitOperator(term=None, coefficient=1.0)
 
-    作用于量子位的项的总和，例如 0.5 * 'X1 X5' + 0.3 * 'Z1 Z2'。
-    项是一个作用于n个量子位的运算符，可以表示为：coefficient * local_operator[0] x ... x local_operator[n-1]，其中x是张量乘积。
-    本地运算符是作用于一个量子位的Pauli运算符（'I'，'X'，'Y'或者'Z'）。
-    在数学符号中，一个QubitOperator是例如0.5 * 'X1 X5'的项，它意味着Pauli X运算符作用于量子位1和5，而恒等运算符作用于其余所有量子位。
+    作用于量子比特的项的总和，例如 0.5 * 'X1 X5' + 0.3 * 'Z1 Z2'。
+    项是一个作用于n个量子比特的运算符，可以表示为：coefficient * local_operator[0] x ... x local_operator[n-1]，其中x是张量乘积。
+    本地运算符是作用于一个量子比特的Pauli运算符（'I'，'X'，'Y'或者'Z'）。
+    在数学符号中，一个QubitOperator是例如0.5 * 'X1 X5'的项，它意味着X运算符作用于量子比特1和5，而恒等运算符作用于其余所有量子比特。
 
-    请注意，由QubitOperator算子组成的哈密顿量应该是一个厄米特算子，因此要求所有项的系数必须是实数。
+    请注意，由QubitOperator算子组成的哈密顿量应该是一个厄米算子，因此要求所有项的系数必须是实数。
 
     QubitOperator的属性设置如下：operators = ('X', 'Y', 'Z')，different_indices_commute = True。
 
     **参数：**
 
-    - **term** (str) - 量子位运算符的输入项。默认值：None。
-    - **coefficient** (Union[numbers.Number, str, ParameterResolver]) - 此量子位运算符的系数，可以是由字符串、符号或参数解析器表示的数字或变量。默认值：1.0。
+    - **term** (str) - 量子比特运算符的输入项。默认值：None。
+    - **coefficient** (Union[numbers.Number, str, ParameterResolver]) - 此量子比特运算符的系数，可以是由字符串、符号或参数解析器表示的数字或变量。默认值：1.0。
 
     .. py:method:: count_gates()
 
@@ -37,15 +37,15 @@
     .. py:method:: from_openfermion(of_ops)
         :staticmethod:
 
-        将openfermion格式的玻色子运算符转换为mindquantum格式。
+        将openfermion格式的量子比特算符转换为mindquantum格式。
 
         **参数：**
 
-        - **of_ops** (openfermion.QubitOperator) - openfermion框架中的玻色子算符。
+        - **of_ops** (openfermion.QubitOperator) - openfermion框架中的量子比特算符。
 
         **返回：**
 
-        QubitOperator，mindquantum框架中的玻色子算符。
+        QubitOperator，mindquantum框架中的量子比特算符。
 
     .. py:method:: imag
         :property:
@@ -63,7 +63,7 @@
 
         **参数：**
 
-        - **strs** (str) - 转储的量子位运算符字符串。
+        - **strs** (str) - 转储的量子比特算符字符串。
 
         **返回：**
 
@@ -71,11 +71,11 @@
 
     .. py:method:: matrix(n_qubits=None)
 
-        将此量子位运算符转换为csr_matrix。
+        将此量子比特算符转换为csr_matrix。
 
         **参数：**
 
-        - **n_qubits** (int) - 结果矩阵的量子位数目。如果是None，则该值将是最大本地量子位数。默认值：None。
+        - **n_qubits** (int) - 结果矩阵的量子比特数目。如果是None，则该值将是最大局域量子比特数。默认值：None。
 
     .. py:method:: real
         :property:
@@ -84,7 +84,7 @@
 
         **返回：**
 
-        QubitOperator，这个量子位运算符的实部。
+        QubitOperator，这个量子比特算符的实部。
 
     .. py:method:: split()
 
@@ -96,4 +96,4 @@
 
     .. py:method:: to_openfermion()
 
-        将量子位运算符转换为openfermion格式。
+        将量子比特算符转换为openfermion格式。

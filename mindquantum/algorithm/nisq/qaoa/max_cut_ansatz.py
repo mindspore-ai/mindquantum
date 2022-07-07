@@ -62,7 +62,8 @@ class MaxCutAnsatz(Ansatz):
     r"""
     The MaxCut ansatz.
 
-    For more detail, please refers to https://arxiv.org/pdf/1411.4028.pdf.
+    For more detail, please refers to `A Quantum Approximate Optimization
+    Algorithm <https://arxiv.org/abs/1411.4028.pdf>`_.
 
     .. math::
 
@@ -80,7 +81,9 @@ class MaxCutAnsatz(Ansatz):
 
     Args:
         graph (list[tuple[int]]): The graph structure. Every element of graph
-            is a edge that constructed by two nodes.
+            is a edge that constructed by two nodes. For example, `[(0, 1), (1, 2)]` means
+            the graph has three nodes which are `0` , `1` and `2` with one edge connect between
+            node `0` and node `1` and another connect between node `1` and node `2`.
         depth (int): The depth of max cut ansatz. Default: 1.
 
     Examples:

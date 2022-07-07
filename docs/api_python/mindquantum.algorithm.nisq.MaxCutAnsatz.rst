@@ -1,21 +1,21 @@
 .. py:class:: mindquantum.algorithm.nisq.MaxCutAnsatz(graph, depth=1)
 
-    MaxCut ansatz。了解更多详细信息，请访问https://arxiv.org/pdf/1411.4028.pdf。
+    MaxCut ansatz。了解更多详细信息，请访问 `A Quantum Approximate Optimization Algorithm <https://arxiv.org/abs/1411.4028>`_。
 
     .. math::
 
-    U(\beta, \gamma) = e^{-\beta_pH_b}e^{-\gamma_pH_c}
-    \cdots e^{-\beta_0H_b}e^{-\gamma_0H_c}H^{\otimes n}
+        U(\beta, \gamma) = e^{-\beta_pH_b}e^{-\gamma_pH_c}
+        \cdots e^{-\beta_0H_b}e^{-\gamma_0H_c}H^{\otimes n}
 
     .. math::
 
-    H_b = \sum_{i\in n}X_{i}, H_c = \sum_{(i,j)\in C}Z_iZ_j
+        H_b = \sum_{i\in n}X_{i}, H_c = \sum_{(i,j)\in C}Z_iZ_j
 
     这里： :math:`n` 是节点的集合， :math:`C` 是图的边的集合。
 
     **参数：**
 
-    - **graph** (list[tuple[int]]) - 图结构。图的每个元素都是由两个节点构造的边。
+    - **graph** (list[tuple[int]]) - 图结构。图的每个元素都是由两个节点构造的边。例如，[(0, 1), (1,2)]表示一个三节点的图，且其中一条边连接节点0和节点1，另一条边连接节点1和节点2。
     - **depth** (int) - MaxCut ansatz的深度。默认值：1。
 
     .. py:method:: get_cut_value(partition)
@@ -24,11 +24,11 @@
 
         **参数：**
 
-        - **partition** (list) - 图形分区。
+        - **partition** (list) - 图形切割方案。
 
         **返回：**
 
-        int，给定分区下的切割值。
+        int，给定切割方案下的切割值。
 
     .. py:method:: get_partition(max_n, weight)
 

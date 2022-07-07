@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Simulator."""
+"""Quantum simulator that simulate evolution of quantum system."""
 
 from .simulator import GradOpsWrapper, Simulator, get_supported_simulator, inner_product
 

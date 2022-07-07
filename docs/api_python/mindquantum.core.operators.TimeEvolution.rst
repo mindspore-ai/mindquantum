@@ -5,6 +5,7 @@
     时间进化算子将执行以下进化：
 
     .. math::
+
         \left|\varphi(t)\right> = e^{-iHt}\left|\varphi(0)\right>
 
     .. note::

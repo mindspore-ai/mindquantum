@@ -7,7 +7,7 @@
 
     **参数：**
 
-    - **fermion_operator** (FermionOperator) - 只有费米子类型运算符才有这样的形式。
+    - **fermion_operator** (FermionOperator) - 此参数只能为费米子类型运算符。
 
     **返回：**
 

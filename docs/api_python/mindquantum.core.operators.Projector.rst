@@ -5,6 +5,7 @@
     对于一个如下所示的投影算子：
 
     .. math::
+
         \left|01\right>\left<01\right|\otimes I^2
 
     字符串格式为'01II'。

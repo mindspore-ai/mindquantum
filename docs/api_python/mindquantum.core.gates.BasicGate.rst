@@ -5,14 +5,14 @@
     **参数：**
 
     - **name** (str) - 此门的名称。
-    - **n_qubits** (int) - 这个门有多少个量子位。
-    - **obj_qubits** (int, list[int]) - 具体门作用在哪个量子位上。
-    - **ctrl_qubits** (int, list[int]) - 指定控制量子位。默认：None。
+    - **n_qubits** (int) - 这个门有多少个量子比特。
+    - **obj_qubits** (int, list[int]) - 具体门作用在哪个量子比特上。
+    - **ctrl_qubits** (int, list[int]) - 指定控制量子比特。默认：None。
 
     .. py:method:: acted
         :property:
 
-        检查此门是否作用于量子位。
+        检查此门是否已经作用在量子比特上。
 
     .. py:method:: define_projectq_gate()
 
@@ -20,7 +20,7 @@
 
     .. py:method:: hermitian()
 
-        返回该门的厄米特矩阵。
+        返回该量子门的厄米共轭形式。
 
     .. py:method:: matrix(*args)
 
@@ -28,19 +28,19 @@
 
     .. py:method:: no_grad()
 
-        该量子门在梯度计算相关算法中不计算梯度。
+        设置该量子门在梯度计算相关算法中不计算梯度。
 
     .. py:method:: on(obj_qubits, ctrl_qubits=None)
 
         定义门作用于哪个量子比特和控制量子比特。
 
         .. note::
-            在此框架中，首先指定门作用的量子位，即使对于控制门，例如CNOT，第二个参数是控制量子位。
+            在此框架中，首先指定门作用的量子比特，即使对于控制门，例如CNOT，第二个参数是控制量子比特。
 
         **参数：**
 
-        - **obj_qubits** (int, list[int]) - 指定门作用在哪个量子位上。
-        - **ctrl_qubits** (int, list[int]) - 指定控制量子位。默认：None。
+        - **obj_qubits** (int, list[int]) - 指定门作用在哪个量子比特上。
+        - **ctrl_qubits** (int, list[int]) - 指定控制量子比特。默认：None。
 
         **返回：**
 
@@ -53,4 +53,8 @@
 
     .. py:method:: requires_grad()
 
-        该量子门在梯度计算相关算法中计算梯度。在默认情况下，参数化量子门在构造是就是需要计算梯度。
+        设置该量子门在梯度计算相关算法中要计算梯度。在默认情况下，参数化量子门在构造时就是需要计算梯度。
+
+    .. py:method:: get_cpp_obj()
+
+        获取底层c++对象。

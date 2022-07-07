@@ -1,6 +1,6 @@
 .. py:function:: mindquantum.algorithm.library.qft(qubits)
 
-    量子傅里叶变换。
+    量子傅里叶变换（QFT）。量子傅里叶变换与经典傅里叶变换的功能相似。
 
     .. note::
         更多信息请参考Nielsen, M., & Chuang, I. (2010)。

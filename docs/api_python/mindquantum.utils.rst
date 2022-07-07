@@ -13,5 +13,7 @@ mindquantum.utils
 
 .. include:: mindquantum.utils.random_state.rst
 
+.. include:: mindquantum.utils.fdopen.rst
+
 .. automodule:: mindquantum.utils
     :members:

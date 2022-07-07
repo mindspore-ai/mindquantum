@@ -1,11 +1,11 @@
 .. py:class:: mindquantum.core.circuit.Circuit(gates=None)
 
-    量子电路模块。
-    量子电路包含一个或多个量子门，可以在量子模拟器中进行计算。可以通过添加量子门或另一电路的方式容易地构建量子电路。
+    量子线路模块。
+    量子线路包含一个或多个量子门，可以在量子模拟器中进行计算。可以通过添加量子门或另一电路的方式容易地构建量子线路。
 
     **参数：**
 
-    - **gates** (BasicGate, list[BasicGate]) - 可以通过单个量子门或门列表初始化量子电路。默认值：None。
+    - **gates** (BasicGate, list[BasicGate]) - 可以通过单个量子门或门列表初始化量子线路。默认值：None。
 
     .. py:method:: ansatz_params_name
         :property:
@@ -26,7 +26,7 @@
 
     .. py:method:: apply_value(pr)
 
-        将此线路使用输入参数转换成的不含参线路。
+        用输入的参数将该参数化量子线路转化为非参数量子线路。
 
         **参数：**
 
@@ -42,7 +42,7 @@
 
         **参数：**
 
-        - **inplace** (True) - 是否原位设置。默认值：True。
+        - **inplace** (bool) - 是否原位设置。默认值： `True`。
 
     .. py:method:: as_encoder(inplace=True)
 
@@ -50,7 +50,7 @@
 
         **参数：**
 
-        - **inplace** (True) - 是否原位设置。默认值：True。
+        - **inplace** (bool) - 是否原位设置。默认值： `True`。
 
     .. py:method:: barrier(show=True)
 
@@ -155,9 +155,9 @@
 
         **参数：**
 
-        - **pr** (ParameterResolver, dict, numpy.ndarray, list, numbers.Number) - 含参量子电路的parameter resolver。默认值：None。
-        - **big_end** (bool) - 低索引量子位是否放置在末尾。默认值：False。
-        - **backend** (str) - 进行模拟的后端。默认值：'projectq'。
+        - **pr** (ParameterResolver, dict, numpy.ndarray, list, numbers.Number) - 含参量子线路的参数。默认值： `None`。
+        - **big_end** (bool) - 低索引量子比特是否放置在末尾。默认值： `False`。
+        - **backend** (str) - 进行模拟的后端。默认值： `'projectq'`。
         - **seed** (int) - 生成线路矩阵的随机数，如果线路包含噪声信道。
 
         **返回：**
@@ -170,7 +170,7 @@
 
         **参数：**
 
-        - **key** (Union[int, str]) - 如果 `obj_qubit` 为None，则 `key` 应为int，表示要测量哪个量子比特，否则， `key` 应为str，表示测量门的名称。
+        - **key** (Union[int, str]) - 如果 `obj_qubit` 为 `None` ，则 `key` 应为int，表示要测量哪个量子比特，否则， `key` 应为str，表示测量门的名称。
         - **obj_qubit** (int) - 要测量的量子比特。默认值：None。
 
     .. py:method:: measure_all(subfix=None)
@@ -221,7 +221,7 @@
 
     .. py:method:: phase_shift(para, obj_qubits, ctrl_qubits=None)
 
-        添加一个Phase Shift门。
+        添加一个PhaseShift门。
 
         **参数：**
 
@@ -323,7 +323,7 @@
 
     .. py:method:: un(gate, maps_obj, maps_ctrl=None)
 
-        将量子门作用于不同的目标量子比特和控制量子比特，详见类 :class:`mindquantum.core.circuit.UN` 。
+        将量子门作用于多个目标量子比特和控制量子比特，详见类 :class:`mindquantum.core.circuit.UN` 。
 
         **参数：**
 
@@ -331,7 +331,7 @@
         - **map_obj** (Union[int, list[int]]) - 执行该量子门的目标量子比特。
         - **maps_ctrl** (Union[int, list[int]]) - 执行该量子门的控制量子比特。默认值：None。
 
-    .. py:method:: with_noise(noise_gate=G.AmplitudeDampingChannel(0.001))
+    .. py:method:: with_noise(noise_gate=mq_gates.AmplitudeDampingChannel(0.001))
 
         在每个量子门后面添加一个噪声信道。
 

@@ -3,7 +3,7 @@ mindquantum.framework.MQN2Ops
 
 .. py:class:: mindquantum.framework.MQN2Ops(expectation_with_grad)
 
-    包含encoder和ansatz线路的量子线路演化算子，算子返回在参数化量子电路（PQC）演化出的量子态上哈密的量期望绝对值的平方。此操作仅受 `PYNATIVE_MODE` 支持。
+    包含encoder和ansatz线路的量子线路演化算子，算子返回在参数化量子线路（PQC）演化出的量子态上哈密顿量期望绝对值的平方。此操作仅受 `PYNATIVE_MODE` 支持。
 
     .. math::
 
@@ -15,7 +15,7 @@ mindquantum.framework.MQN2Ops
 
     **输入：**
 
-    - **enc_data** (Tensor) - 希望编码为量子状态的Tensor，其shape为 :math:`(N, M)` ，其中 :math:`N` 表示batch大小， :math:`M` 表示encoder参数的数量。
+    - **enc_data** (Tensor) - 希望编码为量子态的Tensor，其shape为 :math:`(N, M)` ，其中 :math:`N` 表示batch大小， :math:`M` 表示encoder参数的数量。
     - **ans_data** (Tensor) - shape为 :math:`N` 的Tensor，用于ansatz电路，其中 :math:`N` 表示ansatz参数的数量。
 
     **输出：**

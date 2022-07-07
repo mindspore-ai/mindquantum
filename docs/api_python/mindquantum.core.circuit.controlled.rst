@@ -1,6 +1,6 @@
 .. py:function:: mindquantum.core.circuit.controlled(circuit_fn)
 
-    在量子线路或量子算子上添加控制量子比特（是一个可以生成量子线路的函数）
+    在量子线路或量子算子（可以生成量子线路的函数）上添加控制量子比特。
 
     **参数：**
 
@@ -8,7 +8,7 @@
 
     **异常：**
 
-    - **TypeError** - circuit_fn不是Circuit或无法返回Circuit。
+    - **TypeError** - `circuit_fn` 不是Circuit或无法返回Circuit。
 
     **返回：**
 

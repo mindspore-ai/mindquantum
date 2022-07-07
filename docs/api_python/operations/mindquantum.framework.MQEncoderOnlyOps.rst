@@ -3,7 +3,7 @@ mindquantum.framework.MQEncoderOnlyOps
 
 .. py:class:: mindquantum.framework.MQEncoderOnlyOps(expectation_with_grad)
 
-    仅包含encoder线路的量子线路演化算子。通过参数化量子电路(PQC)获得对量子态的哈密顿期望。此操作仅受 `PYNATIVE_MODE` 支持。
+    仅包含encoder线路的量子线路演化算子。通过参数化量子线路(PQC)获得对量子态的哈密顿期望。此操作仅受 `PYNATIVE_MODE` 支持。
 
     **参数：**
 
@@ -11,7 +11,7 @@ mindquantum.framework.MQEncoderOnlyOps
 
     **输入：**
 
-    - **enc_data** (Tensor) - 希望编码为量子状态的Tensor，其shape为 :math:`(N, M)` ，其中 :math:`N` 表示batch大小， :math:`M` 表示encoder数量。
+    - **enc_data** (Tensor) - 希望编码为量子态的Tensor，其shape为 :math:`(N, M)` ，其中 :math:`N` 表示batch大小， :math:`M` 表示encoder数量。
 
     **输出：**
 

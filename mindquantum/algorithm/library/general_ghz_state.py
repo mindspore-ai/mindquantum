@@ -20,8 +20,18 @@ from mindquantum.utils.type_value_check import _check_input_type
 
 
 def general_ghz_state(qubits):
-    """
+    r"""
     Circuit that prepare a general GHZ State based on zero state.
+
+    The GHZ State is defined as the equality superposition of three zeros state
+    and three ones state:
+
+    .. math:
+
+        \left\text{GHZ}\right> = (\left|000\right> + \left|111\right>)/\sqrt{2}
+
+    Here in this API, we can create a general GHZ state on arbitrary sub qubits of
+    any total qubits.
 
     Args:
         qubits (list[int]): Qubits you want to apply general GHZ state.

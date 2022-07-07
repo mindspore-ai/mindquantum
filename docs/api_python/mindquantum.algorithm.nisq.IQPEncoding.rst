@@ -2,18 +2,20 @@
 
     通用IQP编码。
 
+    更多信息请参考 `Supervised learning with quantum-enhanced feature spaces. <https://www.nature.com/articles/s41586-019-0980-2>`_。
+
     **参数：**
 
-    - **n_feature** (int) - IQPEncoding的数据特征数。
+    - **n_feature** (int) - IQP编码所需编码的数据的特征数。
     - **first_rotation_gate** (ParamaterGate) - 旋转门RX、RY或RZ之一。
     - **second_rotation_gate** (ParamaterGate) - 旋转门RX、RY或RZ之一。
     - **num_repeats** (int) - 编码迭代次数。
 
     .. py:method:: data_preparation(data)
 
-        IQPEncoding的ansatz能够将经典数据编码为量子态。
-        这种方法将经典数据准备成适合IQPEncoding的维数。
-        假设源数据具有 :math:`n` 特征，那么输出数据将具有 :math:`2n-1` 特征，第一个 :math:`n` 特征保持不变，对于 :math:`m>n` 。
+        IQP编码的ansatz能够将经典数据编码为量子态。
+        这种方法将经典数据准备成适合IQP编码的维数。
+        假设源数据具有 :math:`n` 特征，那么输出数据将具有 :math:`2n-1` 特征，前 :math:`n` 个特征是原始数据。对于 :math:`m>n` 。
 
         .. math::
 
@@ -21,7 +23,7 @@
 
         **参数：**
 
-        - **data** ([list, numpy.ndarray]) - IQPEncoding所需要的经典数据。
+        - **data** ([list, numpy.ndarray]) - IQP编码了解更多详细信息所需要的经典数据。
 
         **返回：**
 

@@ -342,7 +342,7 @@ def sz_operator(n_spatial_orbitals):
 
     Note:
         The default index order spin_up(alpha) corresponds to even index,
-        while the spin_down(beta) corresponds to odd index.rpartition()
+        while the spin_down(beta) corresponds to odd.
 
     Examples:
         >>> from mindquantum.core.operators import sz_operator

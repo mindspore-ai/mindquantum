@@ -1,8 +1,6 @@
 .. py:class:: mindquantum.core.parameterresolver.ParameterResolver(data=None, const=None, dtype=None)
 
-    ParameterRsolver可以设置参数化量子门或参数化量子电路的参数。
-
-    根据具体哪一部分参数需要计算梯度，PQC算子只能计算这部分参数的梯度。
+    ParameterResolver可以设置参数化量子门或参数化量子线路的参数。
 
     **参数：**
 
@@ -91,11 +89,11 @@
 
     .. py:method:: dumps(indent=4)
 
-        将参数解析器转储到JSON（JavaScript对象表示法）
+        将参数解析器转储到JSON（JavaScript对象表示法）。
 
         **参数：**
 
-        - **indent** (int) - 打印JSON数据时的所进级别，利用缩进会使打印效果更新美观。默认值：4。
+        - **indent** (int) - 打印JSON数据时的缩进级别，利用缩进会使打印效果更新美观。默认值：4。
 
         **返回：**
 
@@ -145,11 +143,11 @@
 
     .. py:method:: is_anti_hermitian()
 
-        检查该参数解析器的参数值是否为反厄密。
+        检查该参数解析器的参数值是否为反厄米。
 
         **返回：**
 
-        bool，参数解析器是否为反厄密。
+        bool，参数解析器是否为反厄米。
 
     .. py:method:: is_const()
 
@@ -157,15 +155,15 @@
 
         **返回：**
 
-        bool，此参数解析器是否表示常量数。
+        bool，此参数解析器是否表示常量。
 
     .. py:method:: is_hermitian()
 
-        检查该参数解析器的参数值是否为厄密的。
+        检查该参数解析器的参数值是否为厄米的。
 
         **返回：**
 
-        bool，参数解析器是否为厄密的。
+        bool，参数解析器是否为厄米的。
 
     .. py:method:: items()
 
@@ -190,7 +188,7 @@
 
     .. py:method:: no_grad()
 
-        将所有参数设置为不需要计算梯度。该操作为原位操作。
+        将所有参数设置为不需要计算梯度。该操作为原地操作。
 
         **返回：**
 
@@ -211,7 +209,7 @@
 
         **参数：**
 
-        - **names** (tuple[str]) - 不需要梯度的参数。
+        - **names** (tuple[str]) - 不需要计算梯度的参数。
 
         **返回：**
 
@@ -258,7 +256,7 @@
 
     .. py:method:: requires_grad()
 
-        将此参数解析器的所有参数设置为需要进行梯度计算。该操作为原位操作。
+        将此参数解析器的所有参数设置为需要进行梯度计算。该操作为原地操作。
 
         **返回：**
 
@@ -275,7 +273,7 @@
 
     .. py:method:: requires_grad_part(*names)
 
-        设置部分需要渐变的参数。该操作为原位操作。
+        设置部分需要计算梯度的参数。该操作为原地操作。
 
         **参数：**
 

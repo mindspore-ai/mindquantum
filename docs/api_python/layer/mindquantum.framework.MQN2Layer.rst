@@ -3,7 +3,7 @@ mindquantum.framework.MQN2Layer
 
 .. py:class:: mindquantum.framework.MQN2Layer(expectation_with_grad, weight='normal')
 
-    包含encoder线路和ansatz线路的量子神经网络，encoder线路将经典数据编码成量子态，asatz线路的参数是可训练的参数，网络输出测量值的模方。
+    包含encoder线路和ansatz线路的量子神经网络，encoder线路将经典数据编码成量子态，ansatz线路的参数是可训练的参数，网络输出测量值的模方。
 
     **参数：**
 

@@ -1,5 +1,6 @@
 # MindQuantum
 "mindquantum"                                                                          "ungrouped-imports"
+"mindquantum"                                                                          "bad-continuation"
 "mindquantum"                                                                          "bad-whitespace"
 "mindquantum/mindquantum/framework"                                                    "unused-argument"
 "mindquantum/mindquantum/framework"                                                    "arguments-differ"

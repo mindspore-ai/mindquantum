@@ -41,9 +41,6 @@ class ParameterResolver:
     """
     A ParameterRsolver can set the parameter of parameterized quantum gate or parameterized quantum circuit.
 
-    By specific which part of parameters needs to calculate gradient, the PQC
-    operator can only calculate gradient of these parameters.
-
     Args:
         data (Union[dict, numbers.Number, str, ParameterResolver]): initial parameter names and
             its values. If data is a dict, the key will be the parameter name

@@ -1,6 +1,6 @@
 .. py:function:: mindquantum.core.circuit.change_param_name(circuit_fn, name_map)
 
-    更改含参量子线路或含参量子算子里的参数名称（是一个可以生成含参量子线路的函数）。
+    更改含参量子线路或含参量子算子（可以生成含参量子线路的函数）里的参数名称。
 
     **参数：**
 
@@ -9,11 +9,11 @@
 
     **异常：**
 
-    - **TypeError** - 如果name_map不是映射。
-    - **TypeError** - 如果name_map的key不是字符串。
-    - **TypeError** - 如果name_map的value不是字符串。
-    - **TypeError** - 如果circuit_fn不是Circuit或不能返回Circuit。
+    - **TypeError** - 如果 `name_map` 不是映射。
+    - **TypeError** - 如果 `name_map` 的 `key` 不是字符串。
+    - **TypeError** - 如果 `name_map` 的 `value` 不是字符串。
+    - **TypeError** - 如果 `circuit_fn` 不是Circuit或不能返回Circuit。
 
     **返回：**
 
-    Circuit或可以生成Circuit的函数。
+    Circuit，或可以生成Circuit的函数。

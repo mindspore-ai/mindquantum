@@ -4,8 +4,8 @@
 
     **参数：**
 
-    - **left_operator** (Union[FermionOperator, QubitOperator, QubitExcitationOperator]) - 第一个算子，类型是FermionOperator或者QubitOperator。
-    - **right_operator** (Union[FermionOperator, QubitOperator, QubitExcitationOperator]) - 第二个算子，类型是FermionOperator或者QubitOperator。
+    - **left_operator** (Union[FermionOperator, QubitOperator, QubitExcitationOperator]) - 第一个算子，类型是 `FermionOperator` 或者 `QubitOperator`。
+    - **right_operator** (Union[FermionOperator, QubitOperator, QubitExcitationOperator]) - 第二个算子，类型是 `FermionOperator` 或者 `QubitOperator`。
 
     **异常：**
 

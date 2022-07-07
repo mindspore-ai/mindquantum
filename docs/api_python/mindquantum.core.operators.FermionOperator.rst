@@ -62,7 +62,7 @@
 
         **参数：**
 
-        - **n_qubits** (int) - 结果矩阵的总量子位。如果是None，则该值将是最大本地量子位数。默认值：None。
+        - **n_qubits** (int) - 结果矩阵的总量子比特数。如果是None，则该值将是最大局域量子比特数。默认值：None。
 
     .. py:method:: normal_ordered()
 

@@ -8,15 +8,15 @@
 
         **参数：**
 
-        - **file_name** (str) - 以openqasm格式存储量子电路的文件路径。
+        - **file_name** (str) - 以openqasm格式存储量子线路的文件路径。
 
         **返回：**
 
-        Circuit，从openqasm文件翻译过来的量子电路。
+        Circuit，从openqasm文件翻译过来的量子线路。
 
     .. py:method:: to_file(file_name, circuit, version='2.0')
 
-        将量子电路转换为openqasm格式并保存在文件中。
+        将量子线路转换为openqasm格式并保存在文件中。
 
         **参数：**
 
@@ -36,7 +36,7 @@
 
         **参数：**
 
-        - **circuit** (Circuit) - 要转换为openqasm的量子电路。
+        - **circuit** (Circuit) - 要转换为openqasm的量子线路。
         - **version** (str) - 要使用的openqasm版本。默认值："2.0"。
 
         **返回：**

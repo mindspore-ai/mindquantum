@@ -22,8 +22,17 @@ from mindquantum.utils.type_value_check import _check_input_type
 
 
 def general_w_state(qubits):
-    """
+    r"""
     General W State.
+
+    The W State is defined as the equality superposition of bases that only one qubit is in :math:`\left|1\right>`
+    while others qubits are in :math:`\left|0\right>`. For example, a three qubits W state is defined as:
+
+        .. math::
+
+            \left|\rm W\right> = (\left|001\right> + \left|010\right> + \left|100\right>)/\sqrt(3)
+
+    Here in this API, we can define a W state on any sub hilbert space of any total number qubits.
 
     Note:
         Please refer https://quantumcomputing.stackexchange.com/questions/4350/general-construction-of-w-n-state.

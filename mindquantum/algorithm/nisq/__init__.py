@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""NISQ algorithms."""
+"""
+Noisy Intermediate Scale Quantum (NISQ) algorithms. In NISQ, the quantum qubits number
+and quantum circuit depth are very limited and the quantum gate fidelity is also limited.
+"""
 
 from . import chem, qaoa, qnn
 from ._ansatz import Ansatz

@@ -1,6 +1,16 @@
-.. py:class:: mindquantum.core.gates.ParameterGate(pr: PR, name, n_qubits, *args, obj_qubits=None, ctrl_qubits=None, **kwargs)
+.. py:class:: mindquantum.core.gates.ParameterGate(pr: ParameterResolver, name, n_qubits, *args, obj_qubits=None, ctrl_qubits=None, **kwargs)
 
     参数化的门。
+
+    **参数：**
+
+    - **pr** (ParameterResolver) - 参数化量子门的参数。
+    - **name** (str) - 参数化量子门的名字。
+    - **n_qubits** (int) - 参数化量子门的比特数。
+    - **args** (list) - 量子门的其他参数。
+    - **obj_qubits** (Union[int, List[int]]) - 量子门作用在哪些比特上。默认值： `None` 。
+    - **ctrl_qubits** (Union[int, List[int]]) - 量子门受哪些量子比特控制。默认值： `None` 。
+    - **kwargs** (dict) - 量子门的其他参数。
 
     .. py:method:: no_grad_part(names)
 
@@ -16,7 +26,7 @@
 
     .. py:method:: requires_grad_part(names)
 
-        设置部分参数需要求导参数。原位操作。
+        设置哪部分参数需要求导。原地操作。
 
         **参数：**
 

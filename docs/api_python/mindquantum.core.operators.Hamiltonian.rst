@@ -12,11 +12,11 @@
 
         **参数：**
 
-        - **hermitian** (bool) - 是否获得哈密顿量的cpp对象的厄密共轭。
+        - **hermitian** (bool) - 返回的cpp对象是否是原始哈密顿量的厄米共轭。
 
     .. py:method:: sparse(n_qubits=1)
 
-        在pqc算子中计算哈密顿量的稀疏矩阵。
+        在后台计算哈密顿量的稀疏矩阵。
 
         **参数：**
 

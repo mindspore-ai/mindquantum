@@ -13,7 +13,7 @@
 
     .. py:method:: diff_matrix(pr=None, about_what=None)
 
-        获取此参数化门的导数矩阵。
+        获取此参数门的导数矩阵。
 
         **参数：**
 
@@ -22,7 +22,7 @@
 
     .. py:method:: matrix(pr=None)
 
-        获取此参数化门的矩阵。
+        获取此参数门的矩阵。
 
         **参数：**
 

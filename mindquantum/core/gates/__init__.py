@@ -12,11 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""
-Gate.
-
-Gate provides different quantum gate.
-"""
+"""Gate module that provides different quantum gate."""
 
 from .basic import (
     HERMITIAN_PROPERTIES,

@@ -10,3 +10,12 @@
     **参数：**
 
     - **pr** (Union[int, float, str, dict, ParameterResolver]) - 参数化门的参数，详细解释请参见上文。
+
+    .. py:method:: matrix(pr=None, **kwargs)
+
+        获取全局相位门的矩阵
+
+    .. py:method:: diff_matrix(pr=None, about_what=None, **kwargs)
+
+        获取全局相位门的导数矩阵
+        

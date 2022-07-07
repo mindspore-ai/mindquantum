@@ -3,7 +3,7 @@ mindquantum.framework.MQAnsatzOnlyLayer
 
 .. py:class:: mindquantum.framework.MQAnsatzOnlyLayer(expectation_with_grad, weight='normal')
 
-    仅包含ansatz线路的量子神经网络，ansatz线路路的参数是可训练的参数。
+    仅包含ansatz线路的量子神经网络，ansatz线路的参数是可训练的参数。
 
     **参数：**
 

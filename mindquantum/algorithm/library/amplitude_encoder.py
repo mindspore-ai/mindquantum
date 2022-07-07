@@ -51,6 +51,11 @@ def amplitude_encoder(x, n_qubits):
         x (list[float] or numpy.array(list[float]): the vector of data you want to encode, which should be normalized
         n_qubits (int): the number of qubits of the encoder circuit
 
+    Returns:
+        Circuit, the parameterized quantum circuit that do amplitude encoder.
+        ParameterResolver, the parameter for parameterized quantum circuit to do
+            amplitude encoder.
+
     Examples:
         >>> from mindquantum.algorithm.library import amplitude_encoder
         >>> from mindquantum.simulator import Simulator

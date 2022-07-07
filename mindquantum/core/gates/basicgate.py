@@ -298,7 +298,7 @@ class ISWAPGate(NoneParamNonHermMat):
     r"""
     ISWAP gate.
 
-    ISWAP gate that swap two different qubits and phase the :math:`\left|01\right>` and :math:`\left|10\right>`
+    ISWAP gate that swaps two different qubits and phase the :math:`\left|01\right>` and :math:`\left|10\right>`
     amplitudes by :math:`i`.
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
@@ -701,7 +701,7 @@ class PhaseShift(ParameterOppsGate):
 
     def matrix(self, pr=None):
         """
-        Get the matrix of this none parameterized gate.
+        Get the matrix of this phase shift gate.
 
         Args:
             pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
@@ -718,7 +718,7 @@ class PhaseShift(ParameterOppsGate):
 
     def diff_matrix(self, pr=None, about_what=None):
         """
-        Get the matrix of this none parameterized gate.
+        Get the diff matrix of this phase shift gate.
 
         Args:
             pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Defaults, None.

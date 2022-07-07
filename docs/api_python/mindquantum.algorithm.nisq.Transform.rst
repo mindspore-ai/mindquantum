@@ -12,7 +12,7 @@
 
         进行Bravyi-Kitaev变换。
 
-        Bravyi-Kitaev是介于Jordan-Wigner变换和parity变换之间的变换。也就是说，它平衡了占据的局部性和宇称信息，以提高模拟效率。在此方案中，量子比特存储一组 :math:`2^x` 轨道的宇称，其中 :math:`x \ge 0` 。索引j的量子比特总是存储轨道 :math:`j` 。对于偶数的 :math:`j` ，这是它存储的唯一轨道。但对于奇数的 :math:`j` ，它还存储索引小于 :math:`j` 的一组相邻轨道。
+        Bravyi-Kitaev是介于Jordan-Wigner变换和parity变换之间的变换。也就是说，它平衡了占据的局部性和宇称信息，以提高模拟效率。在此方案中，量子比特存储一组 :math:`2^x` 轨道的宇称，其中 :math:`x \ge 0` 。索引 :math:`j` 的量子比特总是存储轨道 :math:`j` 。对于偶数的 :math:`j` ，这是它存储的唯一轨道。但对于奇数的 :math:`j` ，它还存储索引小于 :math:`j` 的一组相邻轨道。
         对于占据态变换，我们遵循公式：
 
         .. math::
@@ -21,12 +21,12 @@
 
         其中 :math:`\beta_{n}` 是 :math:`N\times N` 维平方矩阵， :math:`N` 是总量子数。量子比特的索引分为三个集合，宇称集、更新集和翻转集。这组量子比特的宇称与索引小于 :math:`j` 的轨道集具有相同的宇称，因此我们将称这组量子比特索引为“宇称集” :math:`j` ，或 :math:`P(j)` 。
 
-        索引为 :math:`j` 的更新集，或 :math:`U(j)` ，包含除序号为 :math:`j` 的量子比特会被更新，当轨道 :math:`j` 被占据时。
+        索引为 :math:`j` 的更新集，或 :math:`U(j)` 包含除序号为 :math:`j` 的量子比特会被更新，当轨道 :math:`j` 被占据时。
         索引为 :math:`j` 的翻转集，或 :math:`F(j)` ，包含所有的BravyiKitaev量子比特，这些比特将决定量子比特 :math:`j` 相对于轨道 :math:`j` 来说是否有相同或者相反的宇称。
 
-        请参见论文中的一些详细解释 (THE JOURNAL OF CHEMICAL PHYSICS 137, 224109 (2012))。
+        请参见论文中的一些详细解释 `The Bravyi-Kitaev transformation for quantum computation of electronic structure <https://doi.org/10.1063/1.4768229>`_。
 
-        本方法基于 https://arxiv.org/pdf/quant-ph/0003137.pdf 和 "A New Data Structure for Cumulative Frequency Tables" 实现。
+        本方法基于 `Fermionic quantum computation <https://arxiv.org/abs/quant-ph/0003137>`_ 和 `A New Data Structure for Cumulative Frequency Tables <https://doi.org/10.1002/spe.4380240306>`_ 实现。
 
         **返回：**
 
@@ -35,9 +35,9 @@
     .. py:method:: bravyi_kitaev_superfast()
 
         作用快速Bravyi-Kitaev变换。
-        基于 https://arxiv.org/pdf/1712.00446.pdf 实现。
+        基于 `Bravyi-Kitaev Superfast simulation of fermions on a quantum computer <https://arxiv.org/abs/1712.00446>`_ 实现。
 
-        请注意，只有如下的厄密共轭算符才能进行转换。
+        请注意，只有如下的厄米共轭算符才能进行转换。
 
         .. math::
 
@@ -52,7 +52,7 @@
 
     .. py:method:: jordan_wigner()
 
-        应用Jordan-Wigner变换。Jordan-Wigner变换能够保留初始占据数的局域性，并安装如下的形式将费米子转化为玻色子。
+        应用Jordan-Wigner变换。Jordan-Wigner变换能够保留初始占据数的局域性，并按照如下的形式将费米子转化为玻色子。
 
         .. math::
 
@@ -60,15 +60,15 @@
 
             a_{j}\rightarrow \sigma^{+}_{j} X \prod_{i=0}^{j-1}\sigma^{Z}_{i},
 
-        其中 :math:`\sigma_{+}=\sigma^{X}+i\sigma^{Y}` 和 :math:`\sigma^{X} = \sigma^{X} - i\sigma^{Y}` 分别是自旋生算符和降算符。
+        其中 :math:`\sigma_{+}=\sigma^{X}+i\sigma^{Y}` 和 :math:`\sigma^{-} = \sigma^{X} - i\sigma^{Y}` 分别是自旋升算符和降算符。
 
         **返回：**
 
-        QubitOperator，Jordan-Wigner变换后的玻色子算符。
+        QubitOperator，Jordan-Wigner变换后的量子比特算符。
 
     .. py:method:: parity()
 
-        作用宇称变换。宇称变换保存初始占据数的非局域性。公式为：
+        应用宇称变换。宇称变换保存初始占据数的非局域性。公式为：
 
         .. math::
 
@@ -80,7 +80,7 @@
 
             q_{m} = \left|\left(\sum_{i=0}^{m-1}f_{i}\right) mod\ 2 \right>
 
-        基本上，这个公式可以写成这样，
+        该公式可以写成这样，
 
         .. math::
 
@@ -111,7 +111,7 @@
     .. py:method:: ternary_tree()
 
         作用Ternary tree变换。
-        基于 https://arxiv.org/pdf/1910.10746.pdf 实现。
+        基于 `Optimal fermion-to-qubit mapping via ternary trees with applications to reduced quantum states learning <https://arxiv.org/abs/1910.10746>`_ 实现。
 
         **返回：**
 

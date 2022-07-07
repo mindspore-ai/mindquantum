@@ -1,6 +1,6 @@
 .. py:function:: mindquantum.core.operators.number_operator(n_modes=None, mode=None, coefficient=1.0)
 
-    返回reverse_jordan_wigner变换的费米数运算符。
+    返回 `reverse_jordan_wigner` 变换的费米数运算符。
 
     **参数：**
 

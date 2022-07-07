@@ -10,7 +10,7 @@
 
         \epsilon(\rho) = (1 - P)\rho + P Y \rho Y
 
-    其中， :math:`\rho` 是密度矩阵形式的量子态； :math:`P` 是作用额外Y门的概率。
+    其中， :math:`\rho` 是密度矩阵形式的量子态； :math:`P` 是作用额外 :math:`Y` 门的概率。
 
     **参数：**
 

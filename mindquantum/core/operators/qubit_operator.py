@@ -159,7 +159,7 @@ class QubitOperator(_Operator):
     @staticmethod
     def from_openfermion(of_ops):
         """
-        Convert qubit operator from openfermion.
+        Convert qubit operator from openfermion to mindquantum format.
 
         Args:
             of_ops (openfermion.QubitOperator): Qubit operator from openfermion.

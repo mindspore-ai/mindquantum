@@ -12,7 +12,7 @@
 
     .. py:method:: collect_data(samples)
 
-        收集测量的比特串。
+        收集所有测量门测量出的比特串。
 
         **参数：**
 
@@ -26,6 +26,11 @@
         **返回：**
 
         dict，采样数据。
+
+    .. py:method:: keys_map
+        :property:
+
+        返回测量门名词与出现顺序的关系的字典。
 
     .. py:method:: select_keys(*keys)
 

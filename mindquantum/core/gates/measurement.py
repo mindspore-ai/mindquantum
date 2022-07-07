@@ -33,7 +33,7 @@ class Measure(FunctionalGate):
 
     Args:
         name (str): The key of this measurement gate. In a quantum circuit, the
-            key of different measurement gate should be unique. Default: ""
+            key of different measurement gate should be unique. Default: ''
 
     Examples:
         >>> import numpy as np

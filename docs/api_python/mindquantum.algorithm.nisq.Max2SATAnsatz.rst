@@ -1,6 +1,6 @@
 .. py:class:: mindquantum.algorithm.nisq.Max2SATAnsatz(clauses, depth=1)
 
-    Max-2-SAT ansatz。了解更多详细信息，请参考https://arxiv.org/pdf/1906.11259.pdf。
+    Max-2-SAT ansatz。了解更多详细信息，请参考 `Reachability Deficits in Quantum Approximate Optimization <https://arxiv.org/abs/1906.11259>`_。
 
     .. math::
 
@@ -33,7 +33,7 @@
 
     .. py:method:: get_sat_value(string)
 
-        获取给定字符串的sat值。
+        获取给定字符串的 `sat` 值。
         字符串是满足给定Max-2-SAT问题的所有子句的str。
 
         **参数：**
@@ -47,8 +47,8 @@
     .. py:method:: hamiltonian
         :property:
 
-        获取Max-2-SAT问题的哈密顿算符。
+        获取Max-2-SAT问题的哈密顿量。
 
         **返回：**
 
-        QubitOperator，Max-2-SAT问题的哈密顿算符。
+        QubitOperator，Max-2-SAT问题的哈密顿量。

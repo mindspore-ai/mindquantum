@@ -216,11 +216,11 @@ class Transform:
         whether qubit :math:`j` has the same parity or inverted parity with
         respect to orbital :math:`j`.
 
-        Please see some detail explanation in the paper (THE JOURNAL OF
-        CHEMICAL PHYSICS 137, 224109 (2012)).
+        Please see some detail explanation in the paper `The Bravyi-Kitaev transformation for
+        quantum computation of electronic structure <https://doi.org/10.1063/1.4768229>`_.
 
-        Implementation from https://arxiv.org/pdf/quant-ph/0003137.pdf and
-        "A New Data Structure for Cumulative Frequency Tables"
+        Implementation from `Fermionic quantum computation <https://arxiv.org/abs/quant-ph/0003137>`_ and
+        `A New Data Structure for Cumulative Frequency Tables <https://doi.org/10.1002/spe.4380240306>`_
         by Peter M. Fenwick.
 
         Returns:
@@ -255,16 +255,17 @@ class Transform:
         r"""
         Apply Bravyi-Kitaev Superfast transform.
 
-        Implementation from https://arxiv.org/pdf/1712.00446.pdf
+        Implementation from `Bravyi-Kitaev Superfast simulation of fermions on a
+        quantum computer <https://arxiv.org/abs/1712.00446>`_.
 
-        Note that only hermitian operators of form
+        Note that only hermitian operators of form will be transformed.
 
         .. math::
 
             C + \sum_{p, q} h_{p, q} a^\dagger_p a_q +
                 \sum_{p, q, r, s} h_{p, q, r, s} a^\dagger_p a^\dagger_q a_r a_s
 
-        where :math:`C` is a constant, be transformed.
+        where :math:`C` is a constant.
 
         Returns:
             QubitOperator, qubit operator after bravyi_kitaev_superfast.
@@ -366,7 +367,8 @@ class Transform:
         """
         Apply Ternary tree transform.
 
-        Implementation from https://arxiv.org/pdf/1910.10746.pdf.
+        Implementation from `Optimal fermion-to-qubit mapping via ternary trees with
+        applications to reduced quantum states learning <https://arxiv.org/abs/1910.10746>`_.
 
         Returns:
             QubitOperator, qubit operator after ternary_tree transformation.
@@ -590,7 +592,7 @@ def _get_edge_matrix(fermion_operator):
         a = {1: [], 0: []}
         for ladder_operator in term:
             if ladder_operator[0] in a[ladder_operator[1] ^ 1]:
-                a[ladder_operator[1] ^ 1].remove(ladder_operator[0])
+                a.get(ladder_operator[1] ^ 1).remove(ladder_operator[0])
             else:
                 a[ladder_operator[1]].append(ladder_operator[0])
 

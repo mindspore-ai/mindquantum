@@ -35,8 +35,11 @@ class IQPEncoding(Ansatz):
     """
     General IQP Encoding.
 
+    For more information, please refer `Supervised learning with quantum-enhanced feature
+    spaces. <https://www.nature.com/articles/s41586-019-0980-2>`_.
+
     Args:
-        n_feature (int): The number of feature of data you want to encode with iqp encoding.
+        n_feature (int): The number of feature of data you want to encode with IQPEncoding.
         first_rotation_gate (ParamaterGate): One of the rotation gate RX, RY or RZ.
         second_rotation_gate (ParamaterGate): One of the rotation gate RX, RY or RZ.
         num_repeats (int): Number of encoding iterations.
@@ -98,7 +101,7 @@ class IQPEncoding(Ansatz):
         The IQPEncoding ansatz provides an ansatz to encode classical data into quantum state.
 
         Suppose the origin data has :math:`n` features, then the output data will have :math:`2n-1` features,
-        with first :math:`n` features keep the same and for :math:`m > n`,
+        with first :math:`n` features will be the original data. For :math:`m > n`,
 
         .. math::
 

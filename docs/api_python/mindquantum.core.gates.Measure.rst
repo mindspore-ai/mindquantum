@@ -1,11 +1,19 @@
 .. py:class:: mindquantum.core.gates.Measure(name='')
 
-    测量量子位的测量门。
+    测量量子比特的测量门。
 
     **参数：**
 
-    - **name** (str) - 此测量门的键。在量子电路中，不同测量门的键应该是唯一的。默认值：``''``。
+    - **name** (str) - 此测量门的键。在量子线路中，不同测量门的键应该是唯一的。默认值： ``''``。
+
+    .. py:method:: get_cpp_obj()
+
+        获取测量门的地层c++对象。
 
     .. py:method:: hermitian()
 
-        厄米特门的测量，返回其自身。
+        测量门的厄米形式，返回其自身。
+
+    .. py:method:: on(obj_qubits, ctrl_qubits=None)
+
+        定义测量门作用在什么量子比特上。

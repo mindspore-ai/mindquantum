@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """Tools for MindQuantum eDSL."""
 
 import copy
@@ -37,7 +36,7 @@ def decompose_single_term_time_evolution(term, para):
     """
     Decompose a time evolution gate into basic quantum gates.
 
-    This function only work for the hamiltonian with only single pauli word.
+    This function only works for the hamiltonian with only single pauli word.
     For example, exp(-i * t * ham), ham can only be a single pauli word, such
     as ham = X0 x Y1 x Z2, and at this time, term will be
     ((0, 'X'), (1, 'Y'), (2, 'Z')). When the evolution time is expressd as
@@ -157,7 +156,7 @@ def pauli_word_to_circuits(qubitops):
         circ = Circuit()
         if operator:
             for ind, single_op in operator:
-                circ += gate_map[single_op].on(ind)
+                circ += gate_map.get(single_op).on(ind)
         else:
             circ += gates.I.on(0)
     return circ
@@ -181,7 +180,7 @@ def _add_ctrl_qubits(circ, ctrl_qubits):
         intersection = ctrl_qubits_set.intersection(set(gate.obj_qubits))
         if intersection:
             raise ValueError(
-                f"Qubit {intersection} in ctrl_qubits {ctrl_qubits} already used in obj_qubits of gate {gate}"
+                f"Qubit {intersection} in ctrl_qubits {ctrl_qubits_set} already used in obj_qubits of gate {gate}"
             )
         curr_ctrl = set(gate.ctrl_qubits)
         curr_ctrl = list(curr_ctrl.union(ctrl_qubits_set))
@@ -297,14 +296,15 @@ def _apply_circuit(circ, qubits):
     """Apply a circuit to other different qubits."""
     from mindquantum.core import Circuit
 
-    old_qubits = set()
+    old_qubits_set = set()
     for g in circ:
-        old_qubits.update(g.obj_qubits)
-        old_qubits.update(g.ctrl_qubits)
-    old_qubits_list = sorted(old_qubits)
-    if len(old_qubits_list) != len(qubits):
-        raise ValueError(f"Can not apply a {len(old_qubits_list)} qubits unit to {len(qubits)} qubits circuit.")
-    qubits_map = dict(zip(old_qubits_list, qubits))
+        old_qubits_set.update(g.obj_qubits)
+        old_qubits_set.update(g.ctrl_qubits)
+    old_qubits = list(old_qubits_set)
+    old_qubits.sort()
+    if len(old_qubits) != len(qubits):
+        raise ValueError(f"Can not apply a {len(old_qubits)} qubits unit to {len(qubits)} qubits circuit.")
+    qubits_map = dict(zip(old_qubits, qubits))
     out = Circuit()
     for g in circ:
         g = copy.deepcopy(g)

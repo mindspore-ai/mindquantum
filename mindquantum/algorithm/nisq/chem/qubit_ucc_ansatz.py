@@ -31,6 +31,7 @@ from .._ansatz import Ansatz
 
 
 def _check_int_list(input_list, name):
+    """Check a list with int."""
     if not isinstance(input_list, list):
         raise ValueError(f"The input {str(name)} should be a list, but get {type(input_list)}.")
     for i in input_list:
@@ -57,7 +58,8 @@ class QubitUCCAnsatz(Ansatz):
     Note:
         The Hartree-Fock circuit is not included.
         Currently, generalized=True is not allowed since the theory needs verification.
-        Reference: Yordan S. Yordanov et al. Phys. Rev. A, 102, 062612 (2020)
+        Reference: `Efficient quantum circuits for quantum computational
+        chemistry <https://doi.org/10.1103/PhysRevA.102.062612>`_.
 
     Args:
         n_qubits (int): The number of qubits (spin-orbitals) in the simulation. Default: None.

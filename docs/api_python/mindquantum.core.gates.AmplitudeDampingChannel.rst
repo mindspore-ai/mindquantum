@@ -13,7 +13,7 @@
             \ {E_1}=\begin{bmatrix}0&\sqrt{\gamma}\\
                 0&0\end{bmatrix}
 
-    这里 :math:`\rho` 是密度矩阵形式的量子态。 :math:`\gamma` 是能量损耗系数。
+    这里 :math:`\rho` 是密度矩阵形式的量子态; :math:`\gamma` 是能量损耗系数。
 
     **参数：**
 
@@ -22,3 +22,7 @@
     .. py:method:: define_projectq_gate()
 
         定义对应的projectq门。
+
+    .. py:method:: get_cpp_obj()
+
+        返回底层c++对象。
