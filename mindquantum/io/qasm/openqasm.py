@@ -260,6 +260,8 @@ class OpenQASM:
                 self.circuit.x(q[0])
             elif cmd.startswith("y "):
                 self.circuit.y(q[0])
+            elif cmd.startswith("z "):
+                self.circuit.z(q[0])
             elif cmd.startswith("cx "):
                 self.circuit.x(q[1], q[0])
             elif cmd.startswith("cz "):
