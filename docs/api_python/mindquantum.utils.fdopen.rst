@@ -1,4 +1,4 @@
-.. py:function:: fdopen(fname, mode, perms=0o644)
+.. py:function:: mindquantum.utils.fdopen(fname, mode, perms=0o644)
 
     以正确权限打开文件的上下文管理器。
 
