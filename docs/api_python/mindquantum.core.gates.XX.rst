@@ -10,10 +10,10 @@
 
     - **pr** (Union[int, float, str, dict, ParameterResolver]) - 参数化门的参数，详细解释请参见上文。
 
-    .. py:method:: matrix(pr=None, frac=1):
+    .. py:method:: matrix(pr=None, frac=1)
 
         返回XX门的矩阵。
 
-    .. py:method:: diff_matrix(pr=None, about_what=None, frac=1):
+    .. py:method:: diff_matrix(pr=None, about_what=None, frac=1)
 
         返回XX门的导数矩阵。
