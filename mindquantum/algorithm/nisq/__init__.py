@@ -13,8 +13,10 @@
 # limitations under the License.
 # ============================================================================
 """
-Noisy Intermediate Scale Quantum (NISQ) algorithms. In NISQ, the quantum qubits number
-and quantum circuit depth are very limited and the quantum gate fidelity is also limited.
+Noisy Intermediate Scale Quantum (NISQ) algorithms.
+
+In NISQ, the quantum qubits number and quantum circuit depth are very limited
+and the quantum gate fidelity is also limited.
 """
 
 from . import chem, qaoa, qnn

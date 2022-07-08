@@ -38,7 +38,7 @@ class Hamiltonian:
     A QubitOperator hamiltonian wrapper.
 
     Args:
-        hamiltonian (QubitOperator): The pauli word qubit operator.
+        hamiltonian (QubitOperator): The pauli qubit operator.
 
     Examples:
         >>> from mindquantum.core.operators import QubitOperator

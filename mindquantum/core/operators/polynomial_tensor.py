@@ -143,7 +143,7 @@ class PolynomialTensor:
     @one_body_tensor.setter
     def one_body_tensor(self, value):
         """
-        Set the value of the one body term.
+        Set the value of the one-body term.
 
         The value should numpy array with size n_qubits x n_qubits.
         """
@@ -151,7 +151,7 @@ class PolynomialTensor:
 
     @property
     def two_body_tensor(self):
-        """Get the two body term."""
+        """Get the two-body term."""
         if (1, 1, 0, 0) in self.n_body_tensors:
             return self.n_body_tensors[(1, 1, 0, 0)]
 
@@ -160,7 +160,7 @@ class PolynomialTensor:
     @two_body_tensor.setter
     def two_body_tensor(self, value):
         """
-        Set the two body term.
+        Set the two-body term.
 
         The value should be of numpy array with size n_qubits x n_qubits x n_qubits x n_qubits.
         """

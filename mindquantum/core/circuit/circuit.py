@@ -637,15 +637,15 @@ parameters and ansatz parameters."
             backend (str): The backend to do simulation. Default: 'projectq'.
             seed (int): The random to generate circuit matrix, if the circuit has noise channel.
 
+        Returns:
+            numpy.ndarray, two dimensional complex matrix of this circuit.
+
         Examples:
             >>> from mindquantum.core import Circuit
             >>> circuit = Circuit().rx('a',0).h(0)
             >>> circuit.matrix({'a': 1.0})
             array([[ 0.62054458-0.33900505j,  0.62054458-0.33900505j],
                 [ 0.62054458+0.33900505j, -0.62054458-0.33900505j]])
-
-        Returns:
-            numpy.ndarray, two dimensional complex matrix of this circuit.
         """
         _check_input_type('big_end', bool, big_end)
         if big_end:
@@ -972,7 +972,7 @@ parameters and ansatz parameters."
         """
         Map a quantum gate to different objective qubits and control qubits.
 
-        Please refers to UN.
+        Please refer to UN.
 
         Args:
             gate (BasicGate): The BasicGate you want to map.

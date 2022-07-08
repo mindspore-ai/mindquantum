@@ -22,7 +22,7 @@
 
         **返回：**
 
-        BasicGate，以及那些不需要更新梯度的参数。
+        BasicGate，其中有些参数不需要更新梯度。
 
     .. py:method:: requires_grad_part(names)
 
@@ -34,4 +34,4 @@
 
         **返回：**
 
-        BasicGate，返回门本身。
+        BasicGate，其中有些参数需要更新梯度。

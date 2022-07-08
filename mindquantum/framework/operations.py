@@ -104,11 +104,9 @@ class MQOps(nn.Cell):
         self.g_ans = None
 
     def extend_repr(self):
-        """Return a string representation of the object."""
         return self.expectation_with_grad.str
 
     def construct(self, enc_data, ans_data):
-        """Construct a MQOps node."""
         check_enc_input_shape(enc_data, self.shape_ops(enc_data), len(self.expectation_with_grad.encoder_params_name))
         check_ans_input_shape(ans_data, self.shape_ops(ans_data), len(self.expectation_with_grad.ansatz_params_name))
         enc_data = enc_data.asnumpy()
@@ -120,7 +118,6 @@ class MQOps(nn.Cell):
         return f
 
     def bprop(self, enc_data, ans_data, out, dout):
-        """Implement the bprop function."""
         dout = dout.asnumpy()
         enc_grad = np.einsum('smp,sm->sp', self.g_enc, dout)
         ans_grad = np.einsum('smp,sm->p', self.g_ans, dout)
@@ -191,11 +188,9 @@ class MQN2Ops(nn.Cell):
         self.g_ans = None
 
     def extend_repr(self):
-        """Return a string representation of the object."""
         return self.expectation_with_grad.str
 
     def construct(self, enc_data, ans_data):
-        """Constructn a MQN2Ops node."""
         check_enc_input_shape(enc_data, self.shape_ops(enc_data), len(self.expectation_with_grad.encoder_params_name))
         check_ans_input_shape(ans_data, self.shape_ops(ans_data), len(self.expectation_with_grad.ansatz_params_name))
         enc_data = enc_data.asnumpy()
@@ -208,7 +203,6 @@ class MQN2Ops(nn.Cell):
         return f
 
     def bprop(self, enc_data, ans_data, out, dout):
-        """Implement the bprop function."""
         dout = dout.asnumpy()
         enc_grad = 2 * np.real(np.einsum('smp,sm,sm->sp', self.g_enc, dout, np.conj(self.f)))
         ans_grad = 2 * np.real(np.einsum('smp,sm,sm->p', self.g_ans, dout, np.conj(self.f)))
@@ -267,11 +261,9 @@ class MQAnsatzOnlyOps(nn.Cell):
         self.shape_ops = operations.Shape()
 
     def extend_repr(self):
-        """Return a string representation of the object."""
         return self.expectation_with_grad.str
 
     def construct(self, x):
-        """Construct a MQAnsatzOnlyOps node."""
         check_ans_input_shape(x, self.shape_ops(x), len(self.expectation_with_grad.ansatz_params_name))
         x = x.asnumpy()
         f, g = self.expectation_with_grad(x)
@@ -280,7 +272,6 @@ class MQAnsatzOnlyOps(nn.Cell):
         return f
 
     def bprop(self, x, out, dout):
-        """Implement the bprop function."""
         dout = dout.asnumpy()
         grad = dout @ self.g
         return ms.Tensor(grad, dtype=ms.float32)
@@ -338,11 +329,9 @@ class MQN2AnsatzOnlyOps(nn.Cell):
         self.shape_ops = operations.Shape()
 
     def extend_repr(self):
-        """Return a string representation of the object."""
         return self.expectation_with_grad.str
 
     def construct(self, x):
-        """Construct a MQN2AnsatzOnlyOps node."""
         check_ans_input_shape(x, self.shape_ops(x), len(self.expectation_with_grad.ansatz_params_name))
         x = x.asnumpy()
         f, g = self.expectation_with_grad(x)
@@ -352,7 +341,6 @@ class MQN2AnsatzOnlyOps(nn.Cell):
         return f
 
     def bprop(self, x, out, dout):
-        """Implement the bprop function."""
         dout = dout.asnumpy()
         grad = 2 * np.real(np.einsum('m,m,mp->p', np.conj(self.f), dout, self.g))
         return ms.Tensor(grad, dtype=ms.float32)
@@ -414,11 +402,9 @@ class MQEncoderOnlyOps(nn.Cell):
         self.shape_ops = operations.Shape()
 
     def extend_repr(self):
-        """Return a string representation of the object."""
         return self.expectation_with_grad.str
 
     def construct(self, x):
-        """Construct a MQEncoderOnlyOps node."""
         check_enc_input_shape(x, self.shape_ops(x), len(self.expectation_with_grad.encoder_params_name))
         x = x.asnumpy()
         f, g = self.expectation_with_grad(x)
@@ -427,7 +413,6 @@ class MQEncoderOnlyOps(nn.Cell):
         return f
 
     def bprop(self, x, out, dout):
-        """Implement the bprop function."""
         dout = dout.asnumpy()
         grad = np.einsum('smp,sm->sp', self.g, dout)
         return ms.Tensor(grad, dtype=ms.float32)
@@ -488,11 +473,9 @@ class MQN2EncoderOnlyOps(nn.Cell):
         self.shape_ops = operations.Shape()
 
     def extend_repr(self):
-        """Return a string representation of the object."""
         return self.expectation_with_grad.str
 
     def construct(self, x):
-        """Construct a MQN2EncoderOnlyOps node."""
         check_enc_input_shape(x, self.shape_ops(x), len(self.expectation_with_grad.encoder_params_name))
         x = x.asnumpy()
         f, g = self.expectation_with_grad(x)
@@ -502,7 +485,6 @@ class MQN2EncoderOnlyOps(nn.Cell):
         return f
 
     def bprop(self, x, out, dout):
-        """Implement the bprop function."""
         dout = dout.asnumpy()
         grad = 2 * np.real(np.einsum('smp,sm,sm->sp', self.g, dout, np.conj(self.f)))
         return ms.Tensor(grad, dtype=ms.float32)

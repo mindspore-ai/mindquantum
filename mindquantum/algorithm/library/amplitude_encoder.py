@@ -44,8 +44,8 @@ def amplitude_encoder(x, n_qubits):
     Quantum circuit for amplitude encoding.
 
     Note:
-        the length of classic data ought to be the power of 2, otherwise will be filled up with 0.
-        the vector should be normalized.
+        The length of classic data ought to be the power of 2, otherwise will be filled up with 0.
+        The vector should be normalized.
 
     Args:
         x (list[float] or numpy.array(list[float]): the vector of data you want to encode, which should be normalized.

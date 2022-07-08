@@ -429,7 +429,7 @@ class ParameterGate(QuantumGate):
 
     def no_grad_part(self, names):
         """
-        Set certain parameters that not need grad. Inplace operation.
+        Set certain parameters that do not need grad. Inplace operation.
 
         Args:
             names (tuple[str]): Parameters that not requires grad.

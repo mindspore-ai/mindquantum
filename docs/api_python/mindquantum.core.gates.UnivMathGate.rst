@@ -8,7 +8,3 @@
 
     - **name** (str) - 此门的名称。
     - **mat** (np.ndarray) - 此门的矩阵值。
-
-    .. py:method:: get_cpp_obj()
-
-        返回地层c++对象。

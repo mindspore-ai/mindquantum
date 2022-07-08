@@ -16,6 +16,7 @@
 "mindquantum/mindquantum/io/display/circuit_svg_drawer.py"                             "abstract-method"
 "mindquantum/mindquantum/core/gates"                                                   "abstract-method"
 "mindquantum/mindquantum/core/gates"                                                   "unused-argument"
+"mindquantum/mindquantum/core/gates"                                                   "missing-docstring"
 "mindquantum/mindquantum/config/config.py"                                             "invalid-name"
 "mindquantum/mindquantum/core/gates/basicgate.py"                                      "arguments-differ"
 "mindquantum/mindquantum/core/gates/basic.py"                                          "arguments-differ"

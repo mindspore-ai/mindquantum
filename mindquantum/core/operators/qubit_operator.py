@@ -16,7 +16,6 @@
 #   This module we develop is default being licensed under Apache 2.0 license,
 #   and also uses or refactor Fermilib and OpenFermion licensed under
 #   Apache 2.0 license.
-
 """This is the module for the Qubit Operator."""
 
 import json
@@ -215,7 +214,7 @@ class QubitOperator(_Operator):
         Convert this qubit operator to csr_matrix.
 
         Args:
-            n_qubits (int): The total qubit of final matrix. If None, the value will be
+            n_qubits (int): The total qubits of final matrix. If None, the value will be
                 the maximum local qubit number. Default: None.
         """
         from mindquantum import I, X, Y, Z
@@ -261,7 +260,7 @@ class QubitOperator(_Operator):
     @property
     def real(self):
         """
-        Convert the coeff to its real part.
+        Convert the coefficient to its real part.
 
         Returns:
             QubitOperator, the real part of this qubit operator.
@@ -282,7 +281,7 @@ class QubitOperator(_Operator):
     @property
     def imag(self):
         """
-        Convert the coeff to its imag part.
+        Convert the coefficient to its imag part.
 
         Returns:
             QubitOperator, the imag part of this qubit operator.
@@ -411,7 +410,7 @@ class QubitOperator(_Operator):
             strs (str): The dumped qubit operator string.
 
         Returns:
-            FermionOperator, the QubitOperator load from strings
+            QubitOperator`, the QubitOperator load from strings
 
         Examples:
             >>> from mindquantum.core.operators import QubitOperator

@@ -35,8 +35,8 @@ class IQPEncoding(Ansatz):
     """
     General IQP Encoding.
 
-    For more information, please refer `Supervised learning with quantum-enhanced feature
-    spaces. <https://www.nature.com/articles/s41586-019-0980-2>`_.
+    For more information, please refer to `Supervised learning with quantum-enhanced feature
+    spaces <https://www.nature.com/articles/s41586-019-0980-2>`_.
 
     Args:
         n_feature (int): The number of feature of data you want to encode with IQPEncoding.

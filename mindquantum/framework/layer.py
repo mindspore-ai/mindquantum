@@ -88,7 +88,6 @@ class MQLayer(nn.Cell):
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self, x):
-        """Construct a MQLayer node."""
         return self.evolution(x, self.weight)
 
 
@@ -161,7 +160,6 @@ class MQN2Layer(nn.Cell):
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self, x):
-        """Construct a MQN2Layer node."""
         return self.evolution(x, self.weight)
 
 
@@ -226,7 +224,6 @@ class MQAnsatzOnlyLayer(nn.Cell):
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self):
-        """Construct a MQAnsatzOnlyLayer node."""
         return self.evolution(self.weight)
 
 
@@ -295,5 +292,4 @@ class MQN2AnsatzOnlyLayer(nn.Cell):
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self):
-        """Construct a MQN2AnsatzOnlyLayer node."""
         return self.evolution(self.weight)

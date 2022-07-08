@@ -135,7 +135,7 @@ class Measure(FunctionalGate):
         return new
 
     def hermitian(self):
-        """Hermitian gate of measure return its self."""
+        """Hermitian gate of measure return itself."""
         if not self.obj_qubits:
             raise ValueError("Measurement should apply on some qubit first.")
         return self.__class__(self.key).on(self.obj_qubits[0])

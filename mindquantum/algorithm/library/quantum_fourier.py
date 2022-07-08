@@ -34,11 +34,12 @@ def _qft_unit(qubits):
 
 def qft(qubits):
     """
-    Quantum fourier transform (QFT). The function of the quantum Fourier transform
-    is similar to that of the classical Fourier transform.
+    Quantum fourier transform (QFT).
+
+    The function of the quantum Fourier transform is similar to that of the classical Fourier transform.
 
     Note:
-        Please refer Nielsen, M., & Chuang, I. (2010) for more information.
+        Please refer to Nielsen, M., & Chuang, I. (2010) for more information.
 
     Args:
         qubits (list[int]): Qubits you want to apply quantum fourier transform.

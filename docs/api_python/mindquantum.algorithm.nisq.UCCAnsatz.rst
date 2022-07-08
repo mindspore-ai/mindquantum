@@ -19,4 +19,4 @@
     - **occ_orb** (list) - 手动分配的占用空间轨道的索引，仅适用于ansatz构造。默认值：None。
     - **vir_orb** (list) - 手动分配的虚拟空间轨道的索引，仅适用于ansatz构造。默认值：None。
     - **generalized** (bool) - 是否使用不区分占用轨道或虚拟轨道的广义激励（UCCGSD）。默认值：False。
-    - **trotter_step** (int) - Trotterization的介数。默认值：1。
+    - **trotter_step** (int) - Trotterization的阶数。默认值：1。

@@ -368,7 +368,6 @@ class Simulator:
             >>> sim.apply_hamiltonian(ham1)
             >>> sim.get_qs()
             array([ 0.70710678+0.j, -0.70710678+0.j])
-
             >>> sim.reset()
             >>> ham2 = Hamiltonian(sp.csr_matrix([[1, 2], [3, 4]]))
             >>> sim.apply_hamiltonian(ham2)
@@ -564,11 +563,13 @@ class Simulator:
             raise ValueError("circuit for variational algorithm cannot have measure gate")
         if parallel_worker is not None:
             _check_int_type("parallel_worker", parallel_worker)
+        url = "https://mindspore.cn/mindquantum/docs/zh-CN/master/get_gradient_of_PQC_with_mindquantum.html"
         if encoder_params_name is not None:
             warnings.warn(
                 (
                     "Setting encoder_params_name is perecated from version 0.7.0, please call '.as_encoder()'"
-                    " of the circuit you want to work as encoder, and do not set in this API.",
+                    " of the circuit you want to work as encoder, and do not set in this API. "
+                    "Please refer to tutorial {}".format(url)
                 ),
                 DeprecationWarning,
                 stacklevel=2,
@@ -580,7 +581,8 @@ class Simulator:
             warnings.warn(
                 (
                     "Setting ansatz_params_name is perecated from version 0.7.0, please call '.as_ansatz()' "
-                    "of the circuit you want to work as ansatz, and do not set in this API.",
+                    "of the circuit you want to work as ansatz, and do not set in this API. "
+                    "Please refer to tutorial {}".format(url)
                 ),
                 DeprecationWarning,
                 stacklevel=2,
@@ -604,15 +606,15 @@ class Simulator:
                     encoder_params_name.append(i)
         if set(ansatz_params_name) & set(encoder_params_name):
             raise RuntimeError("Parameter cannot be both encoder and ansatz parameter.")
-        if set(ansatz_params_name_old_api) != set(ansatz_params_name):
-            raise RuntimeError(
-                "You set wrong ansatz parameters. Please do not set ansatz_params_name anymore, "
-                "but call '.as_ansatz()' of circuit that you want to work as ansatz."
-            )
         if set(encoder_params_name_old_api) != set(encoder_params_name):
             raise RuntimeError(
                 "You set wrong encoder parameters. Please do not set encoder_params_name anymore, "
                 "but call '.as_encoder()' of circuit that you want to work as encoder."
+            )
+        if set(ansatz_params_name_old_api) != set(ansatz_params_name):
+            raise RuntimeError(
+                "You set wrong ansatz parameters. Please do not set ansatz_params_name anymore, "
+                "but call '.as_ansatz()' of circuit that you want to work as ansatz."
             )
         version = "both"
         if not ansatz_params_name:

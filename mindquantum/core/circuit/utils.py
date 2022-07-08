@@ -202,11 +202,11 @@ def controlled(circuit_fn):
         circuit_fn (Union[Circuit, FunctionType, MethodType]): A quantum circuit, or a function that can generate a
             quantum circuit.
 
-    Raises:
-        TypeError: circuit_fn is not a Circuit or can not return a Circuit.
-
     Returns:
         function that can generate a Circuit.
+
+    Raises:
+        TypeError: circuit_fn is not a Circuit or can not return a Circuit.
 
     Examples:
         >>> from mindquantum.algorithm.library import qft
@@ -254,11 +254,11 @@ def dagger(circuit_fn):
         circuit_fn (Union[Circuit, FunctionType, MethodType]): A quantum circuit, or a function that can generate a
             quantum circuit.
 
-    Raises:
-        TypeError: If circuit_fn is not a Circuit or can not return a Circuit.
-
     Returns:
         Circuit or a function that can generate Circuit.
+
+    Raises:
+        TypeError: If circuit_fn is not a Circuit or can not return a Circuit.
 
     Examples:
         >>> from mindquantum.algorithm.library import qft
@@ -323,13 +323,13 @@ def apply(circuit_fn, qubits):
             quantum circuit.
         qubits (list[int]): The new qubits that you want to apply.
 
+    Returns:
+        Circuit or a function that can generate a Circuit.
+
     Raises:
         TypeError: If qubits is not a list.
         ValueError: If any element of qubits is negative.
         TypeError: If circuit_fn is not Circuit or can not return a Circuit.
-
-    Returns:
-        Circuit or a function that can generate a Circuit.
 
     Examples:
         >>> from mindquantum.algorithm.library import qft
@@ -399,12 +399,12 @@ def add_prefix(circuit_fn, prefix):
             or a function that can generate a quantum circuit.
         prefix (str): The prefix you want to add to every parameters.
 
+    Returns:
+        Circuit or a function that can generate a Circuit.
+
     Raises:
         TypeError: If prefix is not a string.
         TypeError: circuit_fn is not a Circuit or can not return a Circuit.
-
-    Returns:
-        Circuit or a function that can generate a Circuit.
 
     Examples:
         >>> from mindquantum.algorithm.library import qft
@@ -501,14 +501,14 @@ def change_param_name(circuit_fn, name_map):
             or a function that can generate a quantum circuit.
         name_map (dict): The parameter name mapping dict.
 
+    Returns:
+        Circuit or a function that can generate a Circuit.
+
     Raises:
         TypeError: If name_map is not a map.
         TypeError: If key of name_map is not string.
         TypeError: If value of name_map is not string.
         TypeError: If circuit_fn is not a Circuit or can not return a Circuit.
-
-    Returns:
-        Circuit or a function that can generate a Circuit.
 
     Examples:
         >>> from mindquantum.algorithm.library import qft

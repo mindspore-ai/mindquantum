@@ -7,11 +7,11 @@
     - **circuit_fn** (Union[Circuit, FunctionType, MethodType]) - 量子线路，或可以生成量子线路的函数。
     - **prefix** (str) - 添加到每个参数中的前缀。
 
+    **返回：**
+
+    Circuit，或可以生成Circuit的函数。
+
     **异常：**
 
     - **TypeError** - 如果前缀不是字符串。
     - **TypeError** - `circuit_fn` 不是Circuit或者未返回Circuit。
-
-    **返回：**
-
-    Circuit，或可以生成Circuit的函数。

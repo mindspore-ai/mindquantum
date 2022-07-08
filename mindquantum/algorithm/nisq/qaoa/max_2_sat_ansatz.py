@@ -66,7 +66,7 @@ class Max2SATAnsatz(Ansatz):
     r"""
     The Max-2-SAT ansatz.
 
-    For more detail, please refers to `Reachability Deficits
+    For more detail, please refer to `Reachability Deficits
     in Quantum Approximate Optimization <https://arxiv.org/abs/1906.11259.pdf>`_.
 
     .. math::

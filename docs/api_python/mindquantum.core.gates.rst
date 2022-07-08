@@ -70,6 +70,10 @@ Quantum Gates
 
 .. include:: mindquantum.core.gates.gene_univ_parameterized_gate.rst
 
+.. include:: mindquantum.core.gates.BarrierGate.rst
+
+.. include:: mindquantum.core.gates.NoneParameterGate.rst
+
 .. automodule:: mindquantum.core.gates
     :members:
 

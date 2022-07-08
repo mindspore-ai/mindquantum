@@ -166,7 +166,7 @@ def normal_ordered(fermion_operator):
         fermion_operator(FermionOperator): Only Fermion type Operator has such forms.
 
     Returns:
-        FermionOperator, the normal_ordered FermionOperator.
+        FermionOperator, the FermionOperator with normal order.
 
     Examples:
         >>> from mindquantum.core.operators import FermionOperator
@@ -190,7 +190,7 @@ def get_fermion_operator(operator):
         operator (PolynomialTensor): The `PolynomialTensor` you want to convert to `FermionOperator`.
 
     Returns:
-        fermion_operator, An instance of the FermionOperator class.
+        FermionOperator, An instance of the FermionOperator class.
     """
     fermion_operator = FermionOperator()
 
@@ -298,7 +298,7 @@ def up_index(index):
         index (int): spatial orbital index.
 
     Returns:
-        int, an integer that is the index of the associated spin-up orbital.
+        int, the index of the associated spin-up orbital.
 
     Examples:
         >>> from mindquantum.core.operators import up_index
@@ -319,7 +319,7 @@ def down_index(index):
         index (int): spatial orbital index.
 
     Returns:
-        int, an integer that is the index of the associated spin-down orbital.
+        int, the index of the associated spin-down orbital.
 
     Examples:
         >>> from mindquantum.core.operators import down_index
@@ -333,16 +333,16 @@ def sz_operator(n_spatial_orbitals):
     """
     Return the sz operator.
 
+    Note:
+        The default index order spin_up (alpha) corresponds to even index,
+        while the spin_down (beta) corresponds to odd.
+
     Args:
         n_spatial_orbitals (int): number of spatial orbitals (n_qubits // 2).
 
     Returns:
         FermionOperator, corresponding to the sz operator over
         n_spatial_orbitals.
-
-    Note:
-        The default index order spin_up(alpha) corresponds to even index,
-        while the spin_down(beta) corresponds to odd.
 
     Examples:
         >>> from mindquantum.core.operators import sz_operator

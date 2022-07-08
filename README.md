@@ -134,7 +134,7 @@ The trained parameters are,
 
 ## API
 
-For more API, please refers to [MindQuantum API](https://www.mindspore.cn/mindquantum/docs/en/master/mindquantum.core.html)
+For more API, please refer to [MindQuantum API](https://www.mindspore.cn/mindquantum/docs/en/master/mindquantum.core.html).
 
 ## Installation
 
@@ -166,7 +166,7 @@ pip install mindquantum-*.whl
 
 #### Install MindSpore
 
-Please refers to [MindSpore installation guide](https://www.mindspore.cn/install) to install MindSpore that at least 1.4.0 version.
+Please refer to [MindSpore installation guide](https://www.mindspore.cn/install) to install MindSpore that at least 1.4.0 version.
 
 #### Install MindQuantum
 

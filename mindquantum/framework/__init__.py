@@ -44,6 +44,9 @@ try:
         ]
     )
 except ImportError:
-    warnings.warn("MindSpore not installed, you may not be able to use hybrid quantum classical neural network.")
+    warnings.warn(
+        ("MindSpore not installed, you may not be able to " "use hybrid quantum classical neural network."),
+        stacklevel=2,
+    )
 
 __all__.sort()

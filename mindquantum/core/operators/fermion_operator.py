@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """This module is generated the Fermion Operator."""
 
 import json
@@ -318,7 +317,7 @@ class FermionOperator(_Operator):
     @property
     def imag(self):
         """
-        Convert the coeff to its imag part.
+        Convert the coefficient to its imag part.
 
         Returns:
             FermionOperator, the imag part of this fermion operator.
@@ -338,7 +337,7 @@ class FermionOperator(_Operator):
     @property
     def real(self):
         """
-        Convert the coeff to its real part.
+        Convert the coefficient to its real part.
 
         Returns:
             FermionOperator, the real part of this fermion operator.

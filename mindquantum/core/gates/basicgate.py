@@ -68,7 +68,6 @@ class UnivMathGate(NoneParamNonHermMat):
         super().__init__(name=name, n_qubits=n_qubits, matrix_value=matrix_value)
 
     def get_cpp_obj(self):
-        """Get the underlying C++ object."""
         mat = mb.dim2matrix(self.matrix())
         cpp_gate = mb.basic_gate(False, self.name, 1, mat)
         cpp_gate.daggered = self.hermitianed
@@ -114,11 +113,11 @@ class XGate(PauliGate):
         {\rm X}=\begin{pmatrix}0&1\\1&0\end{pmatrix}
 
     For simplicity, we define ```X``` as a instance of ```XGate()```. For more
-    redefine, please refer the functional table below.
+    redefine, please refer to the functional table below.
 
     Note:
         For simplicity, you can do power operator on pauli gate (only works
-        for pauli gate at this time). The rules is set below as:
+        for pauli gate at this time). The rule is set below as:
 
         .. math::
 
@@ -250,7 +249,6 @@ class CNOTGate(NoneParamSelfHermMat):
         )
 
     def on(self, obj_qubits, ctrl_qubits=None):
-        """Define which qubit the gate act on and the control qubit."""
         if ctrl_qubits is None:
             raise ValueError("A control qubit is needed for CNOT gate!")
         if isinstance(ctrl_qubits, (int, np.int64)):
@@ -498,11 +496,9 @@ class ZZ(RotSelfHermMat):
         )
 
     def matrix(self, pr=None, frac=1):
-        """Matrix of parameterized gate."""
         return super().matrix(pr, frac)
 
     def diff_matrix(self, pr=None, about_what=None, frac=1):
-        """Differential form of this parameterized gate."""
         return super().diff_matrix(pr, about_what, frac)
 
     def __decompose__(self):
@@ -544,11 +540,9 @@ class XX(RotSelfHermMat):
         )
 
     def matrix(self, pr=None, frac=1):
-        """Matrix of parameterized gate."""
         return super().matrix(pr, frac)
 
     def diff_matrix(self, pr=None, about_what=None, frac=1):
-        """Differential form of this parameterized gate."""
         return super().diff_matrix(pr, about_what, frac)
 
     def __decompose__(self):
@@ -598,11 +592,9 @@ class YY(RotSelfHermMat):
         )
 
     def matrix(self, pr=None, frac=1):
-        """Matrix of parameterized gate."""
         return super().matrix(pr, frac)
 
     def diff_matrix(self, pr=None, about_what=None, frac=1):
-        """Differential form of this parameterized gate."""
         return super().diff_matrix(pr, about_what, frac)
 
     def __decompose__(self):
@@ -630,7 +622,14 @@ class YY(RotSelfHermMat):
 
 
 class BarrierGate(FunctionalGate):
-    """Barrier gate."""
+    """
+    Barrier gate do nothing but set a barrier for drawing circuit.
+
+    The system will not draw quantum gates around barrier gate.
+
+    Args:
+        show (bool): whether show the barrier gate. Default: True.
+    """
 
     def __init__(self, show=True):
         """Initialize a BarrierGate object."""
@@ -638,7 +637,6 @@ class BarrierGate(FunctionalGate):
         self.show = show
 
     def on(self, obj_qubits, ctrl_qubits=None):
-        """Define which qubit the gate act on and the control qubit."""
         raise RuntimeError("Cannot call on for BarrierGate.")
 
 
@@ -666,11 +664,9 @@ class GlobalPhase(RotSelfHermMat):
         )
 
     def matrix(self, pr=None, **kwargs):
-        """Matrix of parameterized gate."""
         return RotSelfHermMat.matrix(self, pr, 1)
 
     def diff_matrix(self, pr=None, about_what=None, **kwargs):
-        """Differential form of this parameterized gate."""
         return RotSelfHermMat.diff_matrix(self, pr, about_what, 1)
 
 
@@ -700,12 +696,6 @@ class PhaseShift(ParameterOppsGate):
         )
 
     def matrix(self, pr=None):
-        """
-        Get the matrix of this phase shift gate.
-
-        Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-        """
         val = 0
         if self.coeff.is_const():
             val = self.coeff.const
@@ -717,13 +707,6 @@ class PhaseShift(ParameterOppsGate):
         return np.array([[1, 0], [0, np.exp(1j * val)]])
 
     def diff_matrix(self, pr=None, about_what=None):
-        """
-        Get the diff matrix of this phase shift gate.
-
-        Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Defaults, None.
-            about_what (str): The parameter you want to calculate gradient.
-        """
         if self.coeff.is_const():
             return np.zeros((2, 2))
         new_pr = self.coeff.combination(pr)
@@ -769,7 +752,6 @@ class Power(NoneParamNonHermMat):
         self.t = t
 
     def get_cpp_obj(self):
-        """Get the underlying C++ object."""
         mat = mb.dim2matrix(self.matrix())
         cpp_gate = mb.basic_gate(False, self.name, 1, mat)
         cpp_gate.daggered = self.hermitianed

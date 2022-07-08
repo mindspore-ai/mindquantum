@@ -7,13 +7,13 @@
     - **circuit_fn** (Union[Circuit, FunctionType, MethodType]) - 量子线路，或可以生成量子线路的函数。
     - **name_map** (dict) - 参数名称映射的dict。
 
+    **返回：**
+
+    Circuit，或可以生成Circuit的函数。
+
     **异常：**
 
     - **TypeError** - 如果 `name_map` 不是映射。
     - **TypeError** - 如果 `name_map` 的 `key` 不是字符串。
     - **TypeError** - 如果 `name_map` 的 `value` 不是字符串。
     - **TypeError** - 如果 `circuit_fn` 不是Circuit或不能返回Circuit。
-
-    **返回：**
-
-    Circuit，或可以生成Circuit的函数。

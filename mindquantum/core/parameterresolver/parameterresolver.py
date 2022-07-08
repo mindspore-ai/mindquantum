@@ -223,7 +223,7 @@ resolver discards the imaginary part."
 
     def keys(self):
         """
-        Yield an iterator to the name of all parameters.
+        Return an iterator that yields the name and value of all parameters.
 
         Examples:
             >>> from mindquantum.core import ParameterResolver as PR
@@ -236,7 +236,7 @@ resolver discards the imaginary part."
 
     def values(self):
         """
-        Yield an iterator to the value of all parameters.
+        Return an iterator that yields the name and value of all parameters.
 
         Examples:
             >>> from mindquantum.core import ParameterResolver as PR
@@ -249,7 +249,7 @@ resolver discards the imaginary part."
 
     def items(self):
         """
-        Yield an iterator to the name and value of all parameters.
+        Return an iterator that yields the name and value of all parameters.
 
         Examples:
             >>> from mindquantum.core import ParameterResolver as PR
@@ -957,7 +957,7 @@ resolver discards the imaginary part."
 
     def combination(self, other):
         """
-        Apply linear combination between this parameter resolver with input pr.
+        Apply linear combination between this parameter resolver with input parameter resolver.
 
         Args:
             other (Union[dict, ParameterResolver]): The parameter resolver you
@@ -1026,7 +1026,7 @@ resolver discards the imaginary part."
     @property
     def imag(self):
         """
-        Get the image part of every parameter value.
+        Get the imaginary part of every parameter value.
 
         Returns:
             ParameterResolver, image part parameter value.

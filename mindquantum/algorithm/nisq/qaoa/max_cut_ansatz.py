@@ -62,7 +62,7 @@ class MaxCutAnsatz(Ansatz):
     r"""
     The MaxCut ansatz.
 
-    For more detail, please refers to `A Quantum Approximate Optimization
+    For more detail, please refer to `A Quantum Approximate Optimization
     Algorithm <https://arxiv.org/abs/1411.4028.pdf>`_.
 
     .. math::

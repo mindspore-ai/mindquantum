@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """This module implements qubit-excitation operators."""
 
 from mindquantum.core.parameterresolver import ParameterResolver
@@ -240,7 +239,7 @@ class QubitExcitationOperator(_Operator):
     @property
     def imag(self):
         """
-        Convert the coeff to its imag part.
+        Convert the coefficient to its imag part.
 
         Returns:
             QubitExcitationOperator, the image part of this qubit excitation operator.
@@ -261,7 +260,7 @@ class QubitExcitationOperator(_Operator):
     @property
     def real(self):
         """
-        Convert the coeff to its real part.
+        Convert the coefficient to its real part.
 
         Returns:
             QubitExcitationOperator, the real part of this qubit excitation operator.
@@ -284,6 +283,10 @@ class QubitExcitationOperator(_Operator):
         r"""
         Return the normal ordered form of the Qubit excitation operator.
 
+        Note:
+            Unlike Fermion excitation operators, Qubit excitation operators
+            will not multiply -1 when the order is swapped.
+
         Returns:
             QubitExcitationOperator, the normal ordered operator.
 
@@ -294,10 +297,6 @@ class QubitExcitationOperator(_Operator):
             1.0 [Q7 Q1^]
             >>> op.normal_ordered()
             1.0 [Q1^ Q7]
-
-        Note:
-            Unlike Fermion excitation operators, Qubit excitation operators
-            will not multiply -1 when the order is swapped.
         """
         ordered_op = self.__class__()
         for term, coeff in self.terms.items():
