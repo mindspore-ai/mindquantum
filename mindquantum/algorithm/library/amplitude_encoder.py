@@ -44,17 +44,17 @@ def amplitude_encoder(x, n_qubits):
     Quantum circuit for amplitude encoding.
 
     Note:
-        the length of classic data ought to be the power of 2, otherwise will be filled up with 0
-        the vector should be normalized
+        the length of classic data ought to be the power of 2, otherwise will be filled up with 0.
+        the vector should be normalized.
 
     Args:
-        x (list[float] or numpy.array(list[float]): the vector of data you want to encode, which should be normalized
-        n_qubits (int): the number of qubits of the encoder circuit
+        x (list[float] or numpy.array(list[float]): the vector of data you want to encode, which should be normalized.
+        n_qubits (int): the number of qubits of the encoder circuit.
 
     Returns:
         Circuit, the parameterized quantum circuit that do amplitude encoder.
         ParameterResolver, the parameter for parameterized quantum circuit to do
-            amplitude encoder.
+        amplitude encoder.
 
     Examples:
         >>> from mindquantum.algorithm.library import amplitude_encoder

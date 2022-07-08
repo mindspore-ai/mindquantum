@@ -28,14 +28,14 @@ def general_w_state(qubits):
     The W State is defined as the equality superposition of bases that only one qubit is in :math:`\left|1\right>`
     while others qubits are in :math:`\left|0\right>`. For example, a three qubits W state is defined as:
 
-        .. math::
+    .. math::
 
-            \left|\rm W\right> = (\left|001\right> + \left|010\right> + \left|100\right>)/\sqrt(3)
+        \left|\rm W\right> = (\left|001\right> + \left|010\right> + \left|100\right>)/\sqrt(3)
 
     Here in this API, we can define a W state on any sub hilbert space of any total number qubits.
 
     Note:
-        Please refer https://quantumcomputing.stackexchange.com/questions/4350/general-construction-of-w-n-state.
+        Please refer to https://quantumcomputing.stackexchange.com/questions/4350/general-construction-of-w-n-state.
 
     Args:
         qubits (list[int]): Qubits you want to apply general W state.
