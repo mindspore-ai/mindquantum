@@ -12,10 +12,12 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+# pylint: disable=invalid-name
+
 """Example of VQE implementation for quantum chemistry."""
 
 import mindspore as ms
-import mindspore.context as context
+from mindspore import context
 from mindspore.common.parameter import Parameter
 from openfermion.chem import MolecularData
 from openfermionpyscf import run_pyscf
@@ -45,9 +47,9 @@ print("Geometry: \n", geometry)
 molecule_of = MolecularData(geometry, basis, multiplicity=2 * spin + 1)
 molecule_of = run_pyscf(molecule_of, run_scf=1, run_ccsd=1, run_fci=1)
 
-print("Hartree-Fock energy: %20.16f Ha" % (molecule_of.hf_energy))
-print("CCSD energy: %20.16f Ha" % (molecule_of.ccsd_energy))
-print("FCI energy: %20.16f Ha" % (molecule_of.fci_energy))
+print(f"Hartree-Fock energy: {molecule_of.hf_energy:20.16f} Ha")
+print(f"CCSD energy: {molecule_of.ccsd_energy:20.16f} Ha")
+print(f"FCI energy: {molecule_of.fci_energy:20.16f} Ha")
 
 molecule_of.save()
 molecule_file = molecule_of.filename
@@ -57,12 +59,12 @@ hartreefock_wfn_circuit = Circuit([X.on(i) for i in range(molecule_of.n_electron
 print(hartreefock_wfn_circuit)
 
 ansatz_circuit, init_amplitudes, ansatz_parameter_names, hamiltonian_qubit_op, n_qubits, n_electrons = generate_uccsd(
-    molecule_file, th=-1
+    molecule_file, threshold=-1
 )
 
 total_circuit = hartreefock_wfn_circuit + ansatz_circuit
 total_circuit.summary()
-print("Number of parameters: %d" % (len(ansatz_parameter_names)))
+print(f"Number of parameters: {len(ansatz_parameter_names)}")
 
 sim = Simulator('projectq', total_circuit.n_qubits)
 molecule_pqc = sim.get_expectation_with_grad(Hamiltonian(hamiltonian_qubit_op), total_circuit)
@@ -71,7 +73,7 @@ molecule_pqc = sim.get_expectation_with_grad(Hamiltonian(hamiltonian_qubit_op), 
 molecule_pqcnet = MQAnsatzOnlyLayer(molecule_pqc, 'Zeros')
 
 initial_energy = molecule_pqcnet()
-print("Initial energy: %20.16f" % (initial_energy.asnumpy()))
+print(f"Initial energy: {initial_energy.asnumpy():20.16f}")
 
 optimizer = ms.nn.Adagrad(molecule_pqcnet.trainable_params(), learning_rate=4e-2)
 train_pqcnet = ms.nn.TrainOneStepCell(molecule_pqcnet, optimizer)
@@ -83,13 +85,13 @@ iter_idx = 0
 while abs(energy_diff) > eps:
     energy_i = train_pqcnet().asnumpy()
     if iter_idx % 5 == 0:
-        print("Step %3d energy %20.16f" % (iter_idx, float(energy_i)))
+        print(f"Step {int(iter_idx):3} energy {float(energy_i):20.16f}")
     energy_diff = energy_last - energy_i
     energy_last = energy_i
     iter_idx += 1
 
-print("Optimization completed at step %3d" % (iter_idx - 1))
-print("Optimized energy: %20.16f" % (energy_i))
+print(f"Optimization completed at step {int(iter_idx - 1):3}")
+print(f"Optimized energy: {energy_i:20.16f}")
 print("Optimized amplitudes: \n", molecule_pqcnet.weight.asnumpy())
 
 
@@ -118,7 +120,7 @@ molecule_pqcnet = MQAnsatzOnlyLayer(grad_ops)
 
 molecule_pqcnet.weight = Parameter(ms.Tensor(init_amplitudes_ccsd, molecule_pqcnet.weight.dtype))
 initial_energy = molecule_pqcnet()
-print("Initial energy: %20.16f" % (initial_energy.asnumpy()))
+print(f"Initial energy: {initial_energy.asnumpy():20.16f}")
 
 optimizer = ms.nn.Adagrad(molecule_pqcnet.trainable_params(), learning_rate=4e-2)
 train_pqcnet = ms.nn.TrainOneStepCell(molecule_pqcnet, optimizer)
@@ -130,11 +132,11 @@ iter_idx = 0
 while abs(energy_diff) > eps:
     energy_i = train_pqcnet().asnumpy()
     if iter_idx % 5 == 0:
-        print("Step %3d energy %20.16f" % (iter_idx, float(energy_i)))
+        print(f"Step {int(iter_idx):3} energy {float(energy_i):20.16f}")
     energy_diff = energy_last - energy_i
     energy_last = energy_i
     iter_idx += 1
 
-print("Optimization completed at step %3d" % (iter_idx - 1))
-print("Optimized energy: %20.16f" % (energy_i))
+print(f"Optimization completed at step {int(iter_idx - 1):3}")
+print(f"Optimized energy: {energy_i:20.16f}")
 print("Optimized amplitudes: \n", molecule_pqcnet.weight.asnumpy())

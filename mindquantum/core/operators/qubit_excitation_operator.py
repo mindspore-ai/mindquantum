@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+# pylint: disable=duplicate-code
+
 """This module implements qubit-excitation operators."""
 
 from mindquantum.core.parameterresolver import ParameterResolver
@@ -20,30 +23,28 @@ from ._base_operator import _Operator
 from .fermion_operator import FermionOperator
 from .qubit_operator import QubitOperator
 
-# pylint: disable=bad-continuation
 
-
-def _check_valid_qubit_excitation_operator_term(term):
+def _check_valid_qubit_excitation_operator_term(qeo_term):
     """Check valid qubit excitation operator term."""
-    if term is not None and term != '':
-        if not isinstance(term, (str, tuple)):
-            raise ValueError(f'Qubit excitation operator requires a string or a tuple, but get {type(term)}')
-        if isinstance(term, str):
-            terms = term.split(' ')
-            for t in terms:
-                if (t.endswith('^') and not t[:-1].isdigit()) or (not t.endswith('^') and not t.isdigit()):
-                    if t:
-                        raise ValueError(f'Invalid qubit excitation operator term {t}')
-        if isinstance(term, tuple):
-            for t in term:
+    if qeo_term is not None and qeo_term != '':
+        if not isinstance(qeo_term, (str, tuple)):
+            raise ValueError(f'Qubit excitation operator requires a string or a tuple, but get {type(qeo_term)}')
+        if isinstance(qeo_term, str):
+            terms = qeo_term.split(' ')
+            for term in terms:
+                if (term.endswith('^') and not term[:-1].isdigit()) or (not term.endswith('^') and not term.isdigit()):
+                    if term:
+                        raise ValueError(f'Invalid qubit excitation operator term {term}')
+        if isinstance(qeo_term, tuple):
+            for term in qeo_term:
                 if (
-                    len(t) != 2
-                    or not isinstance(t[0], int)
-                    or not isinstance(t[1], int)
-                    or t[0] < 0
-                    or t[1] not in [0, 1]
+                    len(term) != 2
+                    or not isinstance(term[0], int)
+                    or not isinstance(term[1], int)
+                    or term[0] < 0
+                    or term[1] not in [0, 1]
                 ):
-                    raise ValueError(f'Invalid qubit excitation operator term {t}')
+                    raise ValueError(f'Invalid qubit excitation operator term {term}')
 
 
 class QubitExcitationOperator(_Operator):
@@ -184,8 +185,8 @@ class QubitExcitationOperator(_Operator):
 
             if operator not in self.operators:
                 raise ValueError(
-                    'Invalid type of operator {}.'
-                    'The Qubit excitation operator should be one of this {}'.format(operator, self.operators)
+                    f'Invalid type of operator {operator}.'
+                    f'The Qubit excitation operator should be one of this {self.operators}'
                 )
             if index < 0:
                 raise ValueError(f"Invalid index {self.operators}.The qubit index should be non negative integer")
@@ -194,7 +195,7 @@ class QubitExcitationOperator(_Operator):
             # replace it with the corresponding commutation relationship
         return tuple(terms_to_tuple)
 
-    def __str__(self):
+    def __str__(self):  # pylint: disable=too-many-branches
         """Return an easy-to-read string representation of the QubitExcitationOperator."""
         if not self.terms:
             return '0'
@@ -340,13 +341,13 @@ def _normal_ordered_term(term, coefficient):
 
 
 def _qubit_excitation_tuple_to_string(term):
-    s = []
+    string = []
     for i in term:
         if i[1] == 1:
-            s.append(f'{i[0]}^')
+            string.append(f'{i[0]}^')
         else:
-            s.append(str(i[0]))
-    return ' '.join(s)
+            string.append(str(i[0]))
+    return ' '.join(string)
 
 
 __all__ = ['QubitExcitationOperator']

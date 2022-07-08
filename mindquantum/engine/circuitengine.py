@@ -102,10 +102,10 @@ class CircuitEngine:
             <class 'mindquantum.core.circuit.circuit.Circuit'>
         """
 
-        def deco(fn):
+        def deco(func):
             eng = CircuitEngine()
             qubits = eng.allocate_qureg(n_qubits)
-            fn(qubits, *args, **kwds)
+            func(qubits, *args, **kwds)
             return eng.circuit
 
         return deco

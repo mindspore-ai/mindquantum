@@ -19,26 +19,29 @@ import os
 import numpy as np
 import pytest
 
-from mindquantum.algorithm import HardwareEfficientAnsatz
-from mindquantum.core.gates import RX, RY, X
-from mindquantum.core.operators import Hamiltonian, QubitOperator
-from mindquantum.simulator import Simulator
-
 os.environ.setdefault('OMP_NUM_THREADS', '8')
 
-_has_mindspore = True
+_HAS_MINDSPORE = True
 try:
     import mindspore as ms
 
+    from mindquantum.algorithm import HardwareEfficientAnsatz
+    from mindquantum.core.gates import RX, RY, X
+    from mindquantum.core.operators import Hamiltonian, QubitOperator
     from mindquantum.framework import MQAnsatzOnlyLayer
+    from mindquantum.simulator import Simulator
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
-    _has_mindspore = False
+    _HAS_MINDSPORE = False
 
 
-@pytest.mark.skipif(not _has_mindspore, reason='MindSpore is not installed')
+@pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
 def test_hardware_efficient():
+    """
+    Description: Test hardware efficient ansatz
+    Expectation:
+    """
     depth = 3
     n_qubits = 3
     hea = HardwareEfficientAnsatz(n_qubits, [RX, RY, RX], X, 'all', depth)
@@ -49,6 +52,6 @@ def test_hardware_efficient():
     net = MQAnsatzOnlyLayer(f_g_ops)
     opti = ms.nn.Adagrad(net.trainable_params(), learning_rate=4e-1)
     train_net = ms.nn.TrainOneStepCell(net, opti)
-    for i in range(3):
+    for _ in range(3):
         res = train_net().asnumpy()[0]
     assert np.allclose(round(res, 4), -0.7588)

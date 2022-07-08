@@ -44,8 +44,8 @@ def test_count_qubits():
 
 def test_normal_ordered():
     """Test normal_ordered function"""
-    op = FermionOperator("3 4^")
-    assert str(normal_ordered(op)) == '-1 [4^ 3] '
+    fermion_operator = FermionOperator("3 4^")
+    assert str(normal_ordered(fermion_operator)) == '-1 [4^ 3] '
 
 
 def test_commutator():

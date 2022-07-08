@@ -47,16 +47,14 @@ def cry_decompose(gate: gates.RY):
     """
     _check_input_type('gate', RY, gate)
     _check_control_num(gate.ctrl_qubits, 1)
-    solutions = []
-    c1 = Circuit()
-    solutions.append(c1)
-    q0 = gate.ctrl_qubits[0]
-    q1 = gate.obj_qubits[0]
-    c1 += gates.RY(gate.coeff / 2).on(q1)
-    c1 += gates.X.on(q1, q0)
-    c1 += gates.RY(-gate.coeff / 2).on(q1)
-    c1 += gates.X.on(q1, q0)
-    return solutions
+    circuit = Circuit()
+    control = gate.ctrl_qubits[0]
+    target = gate.obj_qubits[0]
+    circuit += gates.RY(gate.coeff / 2).on(target)
+    circuit += gates.X.on(target, control)
+    circuit += gates.RY(-gate.coeff / 2).on(target)
+    circuit += gates.X.on(target, control)
+    return [circuit]
 
 
 decompose_rules = ['cry_decompose']

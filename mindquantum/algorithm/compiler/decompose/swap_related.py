@@ -46,15 +46,13 @@ def swap_decompose(gate: gates.SWAPGate):
     """
     _check_input_type('gate', gates.SWAPGate, gate)
     _check_control_num(gate.obj_qubits, 2)
-    solutions = []
-    c1 = Circuit()
-    solutions.append(c1)
+    circuit = Circuit()
     q0 = gate.obj_qubits[0]
     q1 = gate.obj_qubits[1]
-    c1 += gates.X.on(q1, q0)
-    c1 += gates.X.on(q0, q1)
-    c1 += gates.X.on(q1, q0)
-    return solutions
+    circuit += gates.X.on(q1, q0)
+    circuit += gates.X.on(q0, q1)
+    circuit += gates.X.on(q1, q0)
+    return [circuit]
 
 
 def cswap_decompose(gate: gates.SWAPGate):
@@ -88,16 +86,14 @@ def cswap_decompose(gate: gates.SWAPGate):
     """
     _check_input_type('gate', gates.SWAPGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)
-    solutions = []
-    c1 = Circuit()
-    solutions.append(c1)
+    circuit = Circuit()
     q0 = gate.ctrl_qubits[0]
     q1 = gate.obj_qubits[0]
     q2 = gate.obj_qubits[1]
-    c1 += gates.X.on(q1, q2)
-    c1 += gates.X.on(q2, [q0, q1])
-    c1 += gates.X.on(q1, q2)
-    return solutions
+    circuit += gates.X.on(q1, q2)
+    circuit += gates.X.on(q2, [q0, q1])
+    circuit += gates.X.on(q1, q2)
+    return [circuit]
 
 
 decompose_rules = ['swap_decompose', 'cswap_decompose']

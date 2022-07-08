@@ -13,10 +13,13 @@
 # limitations under the License.
 # ============================================================================
 
+# pylint: disable=abstract-method
+
 """Quantum channel."""
 
 from mindquantum import mqbackend as mb
-from mindquantum.core.gates.basic import BasicGate, NoiseGate, SelfHermitianGate
+
+from .basic import BasicGate, NoiseGate, SelfHermitianGate
 
 
 class PauliChannel(NoiseGate, SelfHermitianGate):
@@ -69,11 +72,13 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
 
     def __init__(self, px: float, py: float, pz: float, **kwargs):
         """Initialize a PauliChannel object."""
+        # pylint: disable=invalid-name
         if 'name' not in kwargs:
             kwargs['name'] = 'PC'
         kwargs['n_qubits'] = 1
         NoiseGate.__init__(self, **kwargs)
         SelfHermitianGate.__init__(self, **kwargs)
+        self.projectq_gate = None
         if not isinstance(px, (int, float)):
             raise TypeError(f"Unsupported type for px, get {type(px)}.")
         if not isinstance(py, (int, float)):
@@ -89,11 +94,7 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
 
     def __extra_prop__(self):
         """Extra prop magic method."""
-        prop = super().__extra_prop__()
-        prop['px'] = self.px
-        prop['py'] = self.py
-        prop['pz'] = self.pz
-        return prop
+        return {'px': self.px, 'py': self.py, 'pz': self.pz}
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
@@ -143,6 +144,8 @@ class BitFlipChannel(PauliChannel):
                       │
         q1: ─────────BFC──
     """
+
+    # pylint: disable=invalid-name
 
     def __init__(self, p: float, **kwargs):
         """Initialize a BitFlipChannel object."""
@@ -194,6 +197,8 @@ class PhaseFlipChannel(PauliChannel):
                       │
         q1: ─────────PFC──
     """
+
+    # pylint: disable=invalid-name
 
     def __init__(self, p: float, **kwargs):
         """Initialize a PhaseFlipChannel object."""
@@ -247,6 +252,8 @@ class BitPhaseFlipChannel(PauliChannel):
         q1: ──────────BPFC──
     """
 
+    # pylint: disable=invalid-name
+
     def __init__(self, p: float, **kwargs):
         """Initialize a BitPhaseFlipChannel object."""
         kwargs['name'] = 'BPFC'
@@ -298,6 +305,8 @@ class DepolarizingChannel(PauliChannel):
                     │
         q1: ────────DC──
     """
+
+    # pylint: disable=invalid-name
 
     def __init__(self, p: float, **kwargs):
         """Initialize a DepolarizingChannel object."""
@@ -361,6 +370,7 @@ class AmplitudeDampingChannel(NoiseGate, SelfHermitianGate):
         kwargs['n_qubits'] = 1
         NoiseGate.__init__(self, **kwargs)
         SelfHermitianGate.__init__(self, **kwargs)
+        self.projectq_gate = None
         if not isinstance(gamma, (int, float)):
             raise TypeError(f"Unsupported type for gamma, get {type(gamma)}.")
         if 0 <= gamma <= 1:
@@ -429,6 +439,7 @@ class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
         kwargs['n_qubits'] = 1
         NoiseGate.__init__(self, **kwargs)
         SelfHermitianGate.__init__(self, **kwargs)
+        self.projectq_gate = None
         if not isinstance(gamma, (int, float)):
             raise TypeError(f"Unsupported type for gamma, get {type(gamma)}.")
         if 0 <= gamma <= 1:

@@ -14,12 +14,12 @@
 # ============================================================================
 """Circuit for time evolution."""
 
-from mindquantum.core.circuit.utils import decompose_single_term_time_evolution
-from mindquantum.core.operators import QubitOperator
-from mindquantum.core.parameterresolver import ParameterResolver
+from ..circuit.utils import decompose_single_term_time_evolution
+from ..parameterresolver import ParameterResolver
+from .qubit_operator import QubitOperator
 
 
-class TimeEvolution:
+class TimeEvolution:  # pylint: disable=too-few-public-methods
     r"""
     The time evolution operator that can generate a crosponded circuit.
 
@@ -59,6 +59,7 @@ class TimeEvolution:
 
     def __init__(self, ops: QubitOperator, time=None):
         """Initialize a TimeEvolution object."""
+        # pylint: disable=import-outside-toplevel
         from mindquantum.utils.type_value_check import _num_type
 
         if time is None:
@@ -75,7 +76,7 @@ class TimeEvolution:
     @property
     def circuit(self):
         """Get the first order trotter decomposition circuit of this time evolution operator."""
-        from ..circuit import Circuit
+        from ..circuit import Circuit  # pylint: disable=import-outside-toplevel
 
         circ = Circuit()
         for k, v in self.ops.terms.items():

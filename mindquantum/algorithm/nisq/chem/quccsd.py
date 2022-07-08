@@ -13,6 +13,8 @@
 # limitations under the License.
 # ============================================================================
 
+# pylint: disable=duplicate-code
+
 """Generate qUCCSD operators."""
 
 import itertools
@@ -24,8 +26,6 @@ from mindquantum.core.operators import QubitExcitationOperator
 from mindquantum.core.operators.utils import hermitian_conjugated
 from mindquantum.core.parameterresolver import ParameterResolver
 
-# pylint: disable=bad-continuation
-
 
 def _check_int_list(input_list, name):
     if not isinstance(input_list, list):
@@ -35,7 +35,7 @@ def _check_int_list(input_list, name):
             raise ValueError(f"The indices of {str(name)} should be integer, but get {type(i)}.")
 
 
-def quccsd_generator(
+def quccsd_generator(  # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
     n_qubits=None, n_electrons=None, anti_hermitian=True, occ_orb=None, vir_orb=None, generalized=False
 ):
     r"""
@@ -173,6 +173,7 @@ def quccsd_generator(
     generator_quccsd_doubles = QubitExcitationOperator()
 
     singles_counter = 0
+    # pylint: disable=invalid-name
     for (p, q) in itertools.product(vir_indices_spin, occ_indices_spin):
         coeff_s = ParameterResolver({f'q_s_{singles_counter}': 1})
         q_pq = QubitExcitationOperator(((p, 1), (q, 0)), 1.0)

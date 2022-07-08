@@ -12,15 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+# pylint: disable=invalid-name,too-few-public-methods,redefined-outer-name,duplicate-code
+
+
 """Benchmakr for gradient calculation of mindquantum."""
 
 import os
 import time
 
-import mindspore.context as context
 import numpy as np
 import tqdm
 from _parse_args import parser
+from mindspore import context
 
 from mindquantum.core import XX, ZZ, Circuit, H, Hamiltonian, QubitOperator, X
 from mindquantum.simulator import Simulator
@@ -41,7 +45,7 @@ class CircuitLayerBuilder:
     def add_layer(self, circuit, gate, prefix):
         """Add a layer to this instance."""
         for i, qubit in enumerate(self.data_qubits):
-            symbol = prefix + '-' + str(i)
+            symbol = f"{prefix}-{i}"
             circuit.append(gate({symbol: np.pi / 2}).on([qubit, self.readout]))
 
 

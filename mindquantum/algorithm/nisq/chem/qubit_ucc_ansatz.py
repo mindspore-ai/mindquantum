@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+# pylint: disable=duplicate-code
+
 """Qubit unitary coupled-cluster ansatz."""
 
 import itertools
@@ -27,8 +30,6 @@ from mindquantum.core.parameterresolver import ParameterResolver
 
 from .._ansatz import Ansatz
 
-# pylint: disable=bad-continuation
-
 
 def _check_int_list(input_list, name):
     """Check a list with int."""
@@ -39,7 +40,7 @@ def _check_int_list(input_list, name):
             raise ValueError(f"The indices of {str(name)} should be integer, but get {type(i)}.")
 
 
-class QubitUCCAnsatz(Ansatz):
+class QubitUCCAnsatz(Ansatz):  # pylint: disable=too-few-public-methods
     r"""
     Qubit Unitary Coupled-Cluster (qUCC) ansatz class.
 
@@ -107,7 +108,9 @@ class QubitUCCAnsatz(Ansatz):
         1.0*t_0_q_d_5 [Q5^ Q4^ Q3 Q2] ]
     """
 
-    def __init__(self, n_qubits=None, n_electrons=None, occ_orb=None, vir_orb=None, generalized=False, trotter_step=1):
+    def __init__(  # pylint: disable=too-many-arguments
+        self, n_qubits=None, n_electrons=None, occ_orb=None, vir_orb=None, generalized=False, trotter_step=1
+    ):
         """Initialize a QubitUCCAnsatz object."""
         if n_qubits is not None and not isinstance(n_qubits, int):
             raise ValueError(f"The number of qubits should be integer, but get {type(n_qubits)}.")
@@ -145,7 +148,7 @@ class QubitUCCAnsatz(Ansatz):
         circuit_singles += CNOT(i, k)
         return circuit_singles
 
-    def _double_qubit_excitation_circuit(self, i, j, k, l, theta):  # noqa: E741
+    def _double_qubit_excitation_circuit(self, i, j, k, l, theta):  # noqa: E741 # pylint: disable=too-many-arguments
         """
         Implement circuit for double qubit excitation.
 
@@ -165,6 +168,7 @@ class QubitUCCAnsatz(Ansatz):
         circuit_doubles += CNOT.on(k, l)
         return circuit_doubles
 
+    # pylint: disable=arguments-differ,too-many-arguments,too-many-locals,too-many-branches,too-many-statements
     def _implement(
         self, n_qubits=None, n_electrons=None, occ_orb=None, vir_orb=None, generalized=False, trotter_step=1
     ):
@@ -243,6 +247,7 @@ class QubitUCCAnsatz(Ansatz):
         generator_quccsd_doubles = []
         for trotter_idx in range(trotter_step):
             singles_counter = 0
+            # pylint: disable=invalid-name
             for (p, q) in itertools.product(vir_indices_spin, occ_indices_spin):
                 coeff_s = ParameterResolver({f't_{trotter_idx}_q_s_{singles_counter}': 1})
                 q_pq = QubitExcitationOperator(((p, 1), (q, 0)), 1.0)

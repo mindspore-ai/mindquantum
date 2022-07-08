@@ -59,7 +59,8 @@ def _check_value_should_between_close_set(arg_ms, min_value, max_value, arg):
 
 def _check_and_generate_pr_type(pr, names=None):
     """Check and generate PR type."""
-    from mindquantum.core import ParameterResolver
+    # pylint: disable=import-outside-toplevel,cyclic-import
+    from ..core.parameterresolver import ParameterResolver
 
     if isinstance(pr, _num_type):
         if len(names) != 1:
@@ -88,14 +89,17 @@ def _check_number_type(arg_msg, arg):
 
 
 def _check_gate_type(gate):
-    from mindquantum.core.gates import BasicGate
+    # pylint: disable=import-outside-toplevel,cyclic-import
+    from ..core.gates.basic import BasicGate
 
     if not isinstance(gate, BasicGate):
         raise TypeError(f"Require a quantum gate, but get {type(gate)}")
 
 
 def _check_gate_has_obj(gate):
-    from mindquantum.core.gates import BarrierGate
+    from ..core.gates.basicgate import (  # pylint: disable=import-outside-toplevel,cyclic-import
+        BarrierGate,
+    )
 
     if not isinstance(gate, BarrierGate):
         if not gate.obj_qubits:
@@ -119,7 +123,9 @@ def _check_obj_and_ctrl_qubits(obj_qubits, ctrl_qubits):
 
 
 def _check_control_num(ctrl_qubits, require_n):
-    from mindquantum.utils.f import s_quantifier
+    from .quantifiers import (  # pylint: disable=import-outside-toplevel,cyclic-import
+        s_quantifier,
+    )
 
     if len(ctrl_qubits) != require_n:
         raise RuntimeError(f"requires {s_quantifier(require_n,'control qubit')}, but get {len(ctrl_qubits)}")

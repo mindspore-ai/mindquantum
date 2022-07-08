@@ -12,13 +12,15 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+# pylint: disable=redefined-outer-name,invalid-name
+
 """Example of the quantum approximate optimization algorithm."""
 
 import matplotlib.pyplot as plt
 import mindspore as ms
-import mindspore.nn as nn
 import networkx as nx
 import numpy as np
+from mindspore import nn
 
 from mindquantum.core import RX, UN, ZZ, Circuit, H, Hamiltonian, QubitOperator
 from mindquantum.framework import MQAnsatzOnlyLayer

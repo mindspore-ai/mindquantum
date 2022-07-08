@@ -22,6 +22,7 @@ from mindquantum.core.gates.basicgate import YY
 from mindquantum.utils.type_value_check import _check_input_type  # , _check_control_num
 
 
+#  TODO(dnguyen): Why the redefinition here?
 def _check_control_num(ctrl_qubits, require_n):
     if len(ctrl_qubits) != require_n:
         raise RuntimeError(f"requires {(require_n,'control qubit')}, but get {len(ctrl_qubits)}")
@@ -91,32 +92,29 @@ def cyy_decompose(gate: gates.YY):
         q3: ─────●──────────●───────●──────●──────●───────●───────────●──────
     """
     _check_input_type('gate', YY, gate)
-    solutions = []
     q0 = gate.obj_qubits[0]
     q1 = gate.obj_qubits[1]
-    cq = gate.ctrl_qubits
+    controls = gate.ctrl_qubits
 
-    c1 = Circuit()
-    solutions.append(c1)
-    c1 += gates.RX(np.pi / 2).on(q0, cq)
-    c1 += gates.RX(np.pi / 2).on(q1, cq)
-    c1 += gates.X.on(q1, [q0] + cq)
-    c1 += gates.RZ(2 * gate.coeff).on(q1, cq)
-    c1 += c1[-2]
-    c1 += gates.RX(-np.pi / 2).on(q1, cq)
-    c1 += gates.RX(-np.pi / 2).on(q0, cq)
+    circuit1 = Circuit()
+    circuit1 += gates.RX(np.pi / 2).on(q0, controls)
+    circuit1 += gates.RX(np.pi / 2).on(q1, controls)
+    circuit1 += gates.X.on(q1, [q0] + controls)
+    circuit1 += gates.RZ(2 * gate.coeff).on(q1, controls)
+    circuit1 += circuit1[-2]
+    circuit1 += gates.RX(-np.pi / 2).on(q1, controls)
+    circuit1 += gates.RX(-np.pi / 2).on(q0, controls)
 
-    c2 = Circuit()
-    solutions.append(c2)
-    c2 += gates.RX(np.pi / 2).on(q0, cq)
-    c2 += gates.RX(np.pi / 2).on(q1, cq)
-    c2 += gates.X.on(q0, [q1] + cq)
-    c2 += gates.RZ(2 * gate.coeff).on(q0, cq)
-    c2 += c2[-2]
-    c2 += gates.RX(-np.pi / 2).on(q1, cq)
-    c2 += gates.RX(-np.pi / 2).on(q0, cq)
+    circuit2 = Circuit()
+    circuit2 += gates.RX(np.pi / 2).on(q0, controls)
+    circuit2 += gates.RX(np.pi / 2).on(q1, controls)
+    circuit2 += gates.X.on(q0, [q1] + controls)
+    circuit2 += gates.RZ(2 * gate.coeff).on(q0, controls)
+    circuit2 += circuit2[-2]
+    circuit2 += gates.RX(-np.pi / 2).on(q1, controls)
+    circuit2 += gates.RX(-np.pi / 2).on(q0, controls)
 
-    return solutions
+    return [circuit1, circuit2]
 
 
 decompose_rules = ['yy_decompose', 'cyy_decompose']

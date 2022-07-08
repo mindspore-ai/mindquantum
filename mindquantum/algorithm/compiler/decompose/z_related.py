@@ -45,15 +45,13 @@ def cz_decompose(gate: gates.ZGate):
     """
     _check_input_type('gate', gates.ZGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)
-    solutions = []
-    c1 = Circuit()
-    solutions.append(c1)
+    circuit = Circuit()
     q0 = gate.ctrl_qubits[0]
     q1 = gate.obj_qubits[0]
-    c1 += gates.H.on(q1)
-    c1 += gates.X.on(q1, q0)
-    c1 += gates.H.on(q1)
-    return solutions
+    circuit += gates.H.on(q1)
+    circuit += gates.X.on(q1, q0)
+    circuit += gates.H.on(q1)
+    return [circuit]
 
 
 decompose_rules = ['cz_decompose']

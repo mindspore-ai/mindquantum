@@ -13,6 +13,8 @@
 # limitations under the License.
 # ============================================================================
 
+# pylint: disable=invalid-name,too-few-public-methods,duplicate-code
+
 """Benchmark for mnist classification with MindQuantum."""
 
 import os
@@ -116,7 +118,7 @@ class CircuitLayerBuilder:
     def add_layer(self, circuit, gate, prefix):
         """Add one layer to circuit."""
         for i, qubit in enumerate(self.data_qubits):
-            symbol = prefix + '-' + str(i)
+            symbol = f"{prefix}-{i}"
             circuit.append(gate({symbol: np.pi / 2}).on([qubit, self.readout]))
 
 
@@ -207,9 +209,9 @@ if __name__ == '__main__':
     model.train(epochs, train_loader, callbacks=[fps])
     t1 = time.time()
     print(
-        "\nNum sampling:{}\nBatchs:{}\nParallel worker:{}\nOMP THREADS:{}\nTotal time: {}s".format(
-            args.num_sampling, args.batchs, args.parallel_worker, args.omp_num_threads, t1 - t0
-        )
+        f"\nNum sampling:{args.num_sampling}\nBatchs:{args.batchs}\n"
+        f"Parallel worker:{args.parallel_worker}\n"
+        f"\nOMP THREADS:{args.omp_num_threads}\nTotal time: {t1 - t0}s"
     )
     res = np.array([])
     for train_x, train_y in train_loader:

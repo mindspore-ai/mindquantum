@@ -28,7 +28,7 @@ def test_measure_svg():
     circ = qft(range(3)).measure_all()
     sim = Simulator('projectq', 3)
     res = sim.sampling(circ, shots=100, seed=42)
-    text = res.svg()._repr_svg_().split('bar')
+    text = res.svg()._repr_svg_().split('bar')  # pylint: disable=protected-access
     text = "bar".join([text[0]] + ['"'.join(i.split('"')[1:]) for i in text[1:]])
     text_exp = (
         '<div class="nb-html-output output_area"><svg xmlns="http://www.w3.org/2000/svg" width="415.6" height="327.0" '
@@ -136,6 +136,7 @@ def test_circuit_svg():
     Description: Test svg default style.
     Expectation: success.
     """
+    # pylint: disable=protected-access
     text = (qft(range(3)) + RX({'a': 1.2}).on(1) + BarrierGate()).measure_all().svg()._repr_svg_()
     text_exp = (
         '<div class="nb-html-output output_area"><svg xmlns="http://www.w3.org/2000/svg" width="716.8" height="200"'

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
 """Test max_cut"""
 
 import os
@@ -19,24 +20,23 @@ import os
 import numpy as np
 import pytest
 
-from mindquantum.algorithm.nisq.qaoa import MaxCutAnsatz
-from mindquantum.core.operators import Hamiltonian
-from mindquantum.simulator import Simulator
-
 os.environ.setdefault('OMP_NUM_THREADS', '8')
 
-_has_mindspore = True
+_HAS_MINDSPORE = True
 try:
     import mindspore as ms
 
+    from mindquantum.algorithm.nisq.qaoa import MaxCutAnsatz
+    from mindquantum.core.operators import Hamiltonian
     from mindquantum.framework import MQAnsatzOnlyLayer
+    from mindquantum.simulator import Simulator
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
-    _has_mindspore = False
+    _HAS_MINDSPORE = False
 
 
-@pytest.mark.skipif(not _has_mindspore, reason='MindSpore is not installed')
+@pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
 def test_max_cut():
     """
     Description: test maxcut ansatz.
@@ -52,7 +52,7 @@ def test_max_cut():
     net = MQAnsatzOnlyLayer(f_g_ops)
     opti = ms.nn.Adagrad(net.trainable_params(), learning_rate=4e-1)
     train_net = ms.nn.TrainOneStepCell(net, opti)
-    for i in range(50):
+    for _ in range(50):
         cut = -train_net().asnumpy()[0]
     partition = maxcut.get_partition(3, net.weight.asnumpy())[0]
     assert partition[0] == [0, 1, 3] or partition[1] == [0, 1, 3]

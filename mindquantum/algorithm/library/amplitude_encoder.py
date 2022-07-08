@@ -26,17 +26,17 @@ from mindquantum.utils.type_value_check import _check_input_type
 def controlled_gate(circuit, gate, tqubit, cqubits, zero_qubit):
     """Add an extended quantum controlled gate."""
     tmp = []
-    for i in range(len(cqubits)):
-        tmp.append(cqubits[i])
-        if cqubits[i] < 0 or (cqubits[i] == 0 and zero_qubit == 0):
-            circuit += X.on(abs(cqubits[i]))
+    for i, control in enumerate(cqubits):
+        tmp.append(control)
+        if control < 0 or (control == 0 and zero_qubit == 0):
+            circuit += X.on(abs(control))
             tmp[i] = -tmp[i]
 
     circuit += gate.on(tqubit, tmp)
 
-    for i in range(len(cqubits)):
-        if cqubits[i] < 0 or (cqubits[i] == 0 and zero_qubit == 0):
-            circuit += X.on(abs(cqubits[i]))
+    for control in cqubits:
+        if control < 0 or (control == 0 and zero_qubit == 0):
+            circuit += X.on(abs(control))
 
 
 def amplitude_encoder(x, n_qubits):
@@ -85,12 +85,12 @@ def amplitude_encoder(x, n_qubits):
     while 2**n_qubits != len(x):
         x.append(0)
 
-    c = Circuit()
+    circuit = Circuit()
     tree = []
     for i in range(len(x) - 1):
         tree.append(0)
-    for i in range(len(x)):
-        tree.append(x[i])
+    for x_val in x:
+        tree.append(x_val)
     for i in range(len(x) - 2, -1, -1):
         tree[i] += math.sqrt(tree[i * 2 + 1] * tree[i * 2 + 1] + tree[i * 2 + 2] * tree[i * 2 + 2])
 
@@ -103,8 +103,8 @@ def amplitude_encoder(x, n_qubits):
 
         tmp = path[(i - 1) // 2]
         controls = []
-        for j in range(len(tmp)):
-            controls.append(tmp[j] * j)
+        for j, tmp_j in enumerate(tmp):
+            controls.append(tmp_j * j)
         theta = 0
         if tree[(i - 1) // 2] > 1e-10:
             amp_0 = tree[i] / tree[(i - 1) // 2]
@@ -112,7 +112,7 @@ def amplitude_encoder(x, n_qubits):
             if tree[i + 1] < 0 < math.sin(theta / 2):
                 theta = -theta
         num[f'alpha{cnt}'] = theta
-        controlled_gate(c, RY(f'alpha{cnt}'), len(tmp), controls, (0 if tmp and tmp[0] == -1 else 1))
+        controlled_gate(circuit, RY(f'alpha{cnt}'), len(tmp), controls, (0 if tmp and tmp[0] == -1 else 1))
         cnt += 1
 
-    return c.reverse_qubits(), ParameterResolver(num)
+    return circuit.reverse_qubits(), ParameterResolver(num)

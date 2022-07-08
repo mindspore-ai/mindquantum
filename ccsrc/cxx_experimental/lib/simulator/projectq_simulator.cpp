@@ -64,7 +64,7 @@ bool Simulator::run_instruction(const instruction_t& inst) {
         sim_.measure_qubits(qubits, res);
         return true;
     } else if (inst.is_one<ops::X, ops::Y, ops::Z, ops::S, ops::Sdg, ops::T, ops::Tdg, ops::P, ops::H, ops::Rx, ops::Ry,
-                           ops::Rz, ops::Sx, ops::Ph>()) {
+                           ops::Rz, ops::Sx, ops::Sxdg, ops::Ph>()) {
         const auto matrix = inst.matrix().value();
         assert(std::size(matrix) == 4);
         gate_matrix.emplace_back(ArrayType{matrix(0, 0), matrix(0, 1)});

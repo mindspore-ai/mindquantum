@@ -15,7 +15,6 @@
 
 """Useful functions."""
 
-import fractions
 import numbers
 from functools import lru_cache
 
@@ -51,8 +50,9 @@ def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=None):
               │        │            │            │
         q2: ──●────────●────────RZ(-2.42)────────●───────
     """
-    import mindquantum.core.gates as gates
-    from mindquantum import Circuit
+    # pylint: disable=import-outside-toplevel,cyclic-import
+    from ..core import gates
+    from ..core.circuit import Circuit
 
     _check_int_type('n_qubits', n_qubits)
     _check_int_type('gate_num', gate_num)
@@ -74,7 +74,7 @@ def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=None):
         'non_param': [gates.X, gates.Y, gates.Z, gates.H],
     }
     double = {'param': [gates.XX, gates.YY, gates.ZZ], 'non_param': [gates.SWAP]}
-    c = Circuit()
+    circuit = Circuit()
     np.random.seed(seed)
     qubits = range(n_qubits)
     for _ in range(gate_num):
@@ -88,20 +88,20 @@ def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=None):
                 q2 = None
             if np.random.random() < 0.5:
                 gate = np.random.choice(single['param'])
-                p = np.random.uniform(-np.pi * 2, np.pi * 2)
-                c += gate(p).on(q1, q2)
+                param = np.random.uniform(-np.pi * 2, np.pi * 2)
+                circuit += gate(param).on(q1, q2)
             else:
                 gate = np.random.choice(single['non_param'])
-                c += gate.on(q1, q2)
+                circuit += gate.on(q1, q2)
         else:
             if np.random.random() < 0.75:
                 gate = np.random.choice(double['param'])
-                p = np.random.uniform(-np.pi * 2, np.pi * 2)
-                c += gate(p).on([q1, q2])
+                param = np.random.uniform(-np.pi * 2, np.pi * 2)
+                circuit += gate(param).on([q1, q2])
             else:
                 gate = np.random.choice(double['non_param'])
-                c += gate.on([q1, q2])
-    return c
+                circuit += gate.on([q1, q2])
+    return circuit
 
 
 def _check_num_array(vec, name):
@@ -195,119 +195,7 @@ def random_state(shapes, norm_axis=0, comp=True, seed=None):
     return normalize(out, axis=norm_axis)
 
 
-def _index_to_bitstring(index, n, big_end=False):
-    """Transfer the index to bitstring."""
-    s = bin(index)[2:].zfill(n)
-    if big_end:
-        return s[::-1]
-    return s
-
-
-def real_string_expression(num, round_n=None):
-    """
-    Convert a real number to string expression.
-
-    Returns:
-        str, the string expression of given real number.
-    """
-    _check_input_type('num', numbers.Real, num)
-    if num == 0:
-        return '0'
-    com = {'': 1, 'π': np.pi, '√2': np.sqrt(2), '√3': np.sqrt(3), '√5': np.sqrt(5)}
-    for k, v in com.items():
-        left = str(fractions.Fraction(str(round(num / v, 9))))
-        if len(left) < 5 or '/' not in left or left.startswith('1/') or left.startswith('-1/'):
-            tmp = left.split('/')
-            if not (len(tmp) == 2 and int(tmp[1]) > 5 and int(tmp[0]) > 5):
-                if tmp[0] == '1':
-                    tmp[0] = k
-                    if k == '':
-                        tmp[0] = '1'
-                elif tmp[0] == '-1':
-                    tmp[0] = f"-{k}"
-                    if k == '':
-                        tmp[0] = '-1'
-                else:
-                    tmp[0] = f"{tmp[0]}{k}"
-                return '/'.join(tmp)
-    return str(num) if round_n is None else str(round(num, round_n))
-
-
-def join_without_empty(joiner, s):
-    """Join strings and skip empty string."""
-    return joiner.join(filter(lambda x: x and x.strip(), s))
-
-
-def string_expression(x):
-    """
-    Convert a number, complex number included, to string expression.
-
-    Returns:
-        str, the string expression of given number.
-    """
-    _check_input_type('x', numbers.Number, x)
-    rx = np.real(x)
-    ix = np.imag(x)
-    if is_two_number_close(x, 0):
-        return '0'
-    if is_two_number_close(ix, 0):
-        res = real_string_expression(rx)
-        if res == str(rx):
-            res = str(np.round(rx, 4))
-        return res
-    if is_two_number_close(rx, 0):
-        return string_expression(ix) + 'j'
-    real_part = string_expression(rx)
-    imag_part = string_expression(ix * 1j)
-    if imag_part.startswith('-'):
-        return real_part + imag_part
-    return real_part + ' + ' + imag_part
-
-
-def ket_string(state, tol=1e-7):
-    """
-    Get the ket format of the quantum state.
-
-    Args:
-        state (numpy.ndarray): The input quantum state.
-        tol (float): The ignore tolence for small amplitude. Default: 1e-7.
-
-    Returns:
-        str, the ket format of the quantum state.
-
-    Examples:
-        >>> import numpy as np
-        >>> from mindquantum.utils import ket_string
-        >>> state = np.array([1, -1j])/np.sqrt(2)
-        >>> print(ket_string(state))
-        ['√2/2¦0⟩', '-√2/2j¦1⟩']
-    """
-    if not isinstance(state, np.ndarray) or len(state.shape) != 1:
-        raise TypeError("state need a 1-D ndarray.")
-    n = int(np.log2(len(state)))
-    if len(state) < 2 and len(state) != (1 << n):
-        raise ValueError("Invalid state size!")
-    s = []
-    for index, i in enumerate(state):
-        b = _index_to_bitstring(index, n)
-        if np.abs(i) < tol:
-            continue
-        if np.abs(np.real(i)) < tol:
-            s.append(f'{real_string_expression(np.imag(i))}j¦{b}⟩')
-            continue
-        if np.abs(np.imag(i)) < tol:
-            s.append(f'{real_string_expression(np.real(i))}¦{b}⟩')
-            continue
-        i_real = real_string_expression(np.real(i))
-        i_imag = real_string_expression(np.imag(i))
-        if i_imag.startswith('-'):
-            s.append(f'({i_real}{i_imag}j)¦{b}⟩')
-        else:
-            s.append(f'({i_real}+{i_imag}j)¦{b}⟩')
-    return s
-
-
-def is_two_number_close(a, b, atol=None):
+def is_two_number_close(a, b, atol=None):  # pylint: disable=invalid-name
     """
     Check whether two number is close within the error of atol.
 
@@ -327,32 +215,16 @@ def is_two_number_close(a, b, atol=None):
         >>> is_two_number_close(1+1j, 1+1j)
         True
     """
-    from mindquantum.config.config import context
+    from mindquantum.config.config import (  # pylint: disable=import-outside-toplevel
+        Context,
+    )
 
     _check_input_type("a", numbers.Number, a)
     _check_input_type("b", numbers.Number, b)
     if atol is None:
-        atol = context.get_precision()
+        atol = Context.get_precision()
     _check_input_type("atol", float, atol)
     return np.allclose(np.abs(a - b), 0, atol=atol)
-
-
-def quantifier_selector(num, single, plural):
-    _check_int_type('num', num)
-    _check_value_should_not_less('num', 0, num)
-    if num > 1:
-        return f'{num} {plural}'
-    return f'{num} {single}'
-
-
-def s_quantifier(num, quantifier):
-    """S quantifier."""
-    return quantifier_selector(num, quantifier, f'{quantifier}s')
-
-
-def es_quantifier(num, quantifier):
-    """ES quantifier."""
-    return quantifier_selector(num, quantifier, f'{quantifier}es')
 
 
 def is_power_of_two(num):
@@ -367,7 +239,10 @@ def pauli_string_matrix(pauli_string):
 
     If pauli string is XYZ, then the matrix will be `Z@Y@X`.
     """
-    m = _GLOBAL_MAT_VALUE[pauli_string[0]]
-    for s in pauli_string[1:]:
-        m = np.kron(_GLOBAL_MAT_VALUE[s], m)
-    return m
+    try:
+        matrix = _GLOBAL_MAT_VALUE[pauli_string[0]]
+        for string in pauli_string[1:]:
+            matrix = np.kron(_GLOBAL_MAT_VALUE[string], matrix)
+    except KeyError as err:
+        raise err
+    return matrix

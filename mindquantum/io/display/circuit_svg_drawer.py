@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+# pylint: disable=too-many-lines,invalid-overridden-method
+
 """SVG module."""
+
 import copy
 from abc import ABC, abstractmethod
 
@@ -285,6 +289,8 @@ class Rect(HasFill, HasXY):
         self.prop['height'] = height
         return self
 
+    # pylint: disable=invalid-name
+
     def rx(self, rx):
         """Rx of rectangle."""
         self.prop['rx'] = rx
@@ -295,10 +301,10 @@ class Rect(HasFill, HasXY):
         self.prop['ry'] = ry
         return self
 
-    def chamfer(self, r):
+    def chamfer(self, rect):
         """Chamfer the rectangle."""
-        self.rx(r)
-        self.ry(r)
+        self.rx(rect)
+        self.ry(rect)
         return self
 
     def fill_opacity(self, opacity):
@@ -439,12 +445,12 @@ class Path(HasFill):
         self.points = np.array(points).astype(float)
         self.d()
 
-    def d(self, points=None):
+    def d(self, points=None):  # pylint: disable=invalid-name
         """D property of path."""
         if points is None:
             points = self.points
         else:
-            self.points = np.array(points).ast(float)
+            self.points = np.array(points).astype(float)
         d_str = f'M {points[0][0]} {points[1][0]}'
         for i in range(1, points.shape[1]):
             d_str += f' L {points[0][i]} {points[1][i]}'
@@ -490,8 +496,7 @@ class Path(HasFill):
         center_y = np.mean(self.points[1])
         self.shift(-center_x, -center_y)
         angle = np.pi / 180 * angle
-        m = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
-        self.points = m @ self.points
+        self.points = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]]) @ self.points
         self.shift(center_x, center_y)
         self.d()
         return self
@@ -500,19 +505,19 @@ class Path(HasFill):
 class Arc(HasFill):
     """Arc component of svg."""
 
-    def __init__(self, r):
+    def __init__(self, radius):
         """Initialize an Arc object."""
         super().__init__('path')
-        self.center = np.array([r, r])
-        self.r = r
+        self.center = np.array([radius, radius])
+        self.r = radius  # pylint: disable=invalid-name
         self.d()
 
-    def d(self):
+    def d(self):  # pylint: disable=invalid-name
         """D property of arc."""
         x, y = self.center
-        r = self.r
-        d_str = f'M {x-r} {y}'
-        d_str += f' A {r} {r} 0 0 1 {x+r} {y}'
+        radius = self.r
+        d_str = f'M {x-radius} {y}'
+        d_str += f' A {radius} {radius} 0 0 1 {x+radius} {y}'
         self.prop['d'] = d_str
 
     @property
@@ -553,12 +558,14 @@ class Arc(HasFill):
 class Circle(HasFill):
     """Circle component of svg."""
 
-    def __init__(self, cx, cy, r):
+    def __init__(self, cx, cy, radius):
         """Initialize a Circle object."""
         super().__init__('circle')
         self.cx(cx)
         self.cy(cy)
-        self.r(r)
+        self.r(radius)
+
+    # pylint: disable=invalid-name
 
     def cx(self, cx):
         """Get cx."""
@@ -570,9 +577,9 @@ class Circle(HasFill):
         self.prop['cy'] = cy
         return self
 
-    def r(self, r):
+    def r(self, radius):
         """Get r."""
-        self.prop['r'] = r
+        self.prop['r'] = radius
         return self
 
     @property
@@ -623,14 +630,14 @@ class SVGContainer:
 
     def scale(self, scale):
         """Scale every sub element."""
-        for e in self.element:
-            e.scale(scale)
+        for elem in self.element:
+            elem.scale(scale)
         return self
 
     def shift(self, x, y):
         """Shift every sub element."""
-        for e in self.element:
-            e.shift(x, y)
+        for elem in self.element:
+            elem.shift(x, y)
         return self
 
     def to_string(self):
@@ -640,21 +647,21 @@ class SVGContainer:
     def _repr_svg_(self):
         """Magic method for rendering svg in jupyter notebook."""
         box_data = box(self)
-        w = box_data['width']
-        h = box_data['height']
+        width = box_data['width']
+        height = box_data['height']
         head = (
-            f"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{w}\" height=\"{h}\" "
+            f"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height}\" "
             f"xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
         )
         tail = "</svg>"
-        s = f"{head}\n{self.to_string()}\n{tail}"
-        return "<div class=\"nb-html-output output_area\">" + s + "</div>"
+        string = f"{head}\n{self.to_string()}\n{tail}"
+        return "<div class=\"nb-html-output output_area\">" + string + "</div>"
 
     def to_file(self, filename='circuit.svg'):
         """Save svg file."""
-        s = self._repr_svg_()
-        with fdopen(filename, 'w') as f:
-            f.writelines(s)
+        string = self._repr_svg_()
+        with fdopen(filename, 'w') as fd:
+            fd.writelines(string)
 
     @property
     def left(self):
@@ -686,8 +693,8 @@ class SVGContainer:
 
     def change_color(self, color):
         """Change color of every element."""
-        for e in self.element:
-            e.change_color(color)
+        for elem in self.element:
+            elem.change_color(color)
         return self
 
 
@@ -741,7 +748,7 @@ class CtrlDots(SVGContainer):
             self.add(line)
 
 
-class SVGBasicGate(SVGContainer):
+class SVGBasicGate(SVGContainer):  # pylint: disable=too-many-instance-attributes
     """Basic style for quantum gate."""
 
     def __init__(self, g, svg_config):
@@ -965,10 +972,10 @@ class GateContainer(SVGContainer):
         high = max(self.circ_high[i] for i in ele.all_qubits_range)
         ele.shift(high + self.svg_config['gate_v_distance'] * (high != 0), 0)
         super().add(ele)
-        w = ele.right - ele.left
+        width = ele.right - ele.left
         barrier_not_show = isinstance(ele, SVGBarrier) and not ele.show
         for i in ele.all_qubits_range:
-            self.circ_high[i] = high + w + self.svg_config['gate_v_distance'] * (high != 0) * (not barrier_not_show)
+            self.circ_high[i] = high + width + self.svg_config['gate_v_distance'] * (high != 0) * (not barrier_not_show)
         return self
 
 
@@ -985,21 +992,21 @@ class SVGCircuit(SVGContainer):
         qubit_container = SVGContainer()
         circuit_line_container = SVGContainer()
         gate_container = GateContainer(circuit.n_qubits, svg_config)
-        for g in circuit:
-            if isinstance(g, BarrierGate):
-                gate_container.add(SVGBarrier(circuit.n_qubits, svg_config, g.show))
-            elif isinstance(g, Measure):
-                gate_container.add(SVGMeasure(g, svg_config))
-            elif isinstance(g, XGate) and len(g.ctrl_qubits) == 1:
-                gate_container.add(SVGCNOTGate(g, svg_config))
-            elif isinstance(g, CNOTGate):
-                gate_container.add(SVGCNOTGate(g, svg_config))
-            elif isinstance(g, SWAPGate):
-                gate_container.add(SVGSWAPGate(g, svg_config))
-            elif isinstance(g, ParameterGate) and not isinstance(g, (TGate, SGate)):
-                gate_container.add(SVGParameterGate(g, svg_config))
+        for gate in circuit:
+            if isinstance(gate, BarrierGate):
+                gate_container.add(SVGBarrier(circuit.n_qubits, svg_config, gate.show))
+            elif isinstance(gate, Measure):
+                gate_container.add(SVGMeasure(gate, svg_config))
+            elif isinstance(gate, XGate) and len(gate.ctrl_qubits) == 1:
+                gate_container.add(SVGCNOTGate(gate, svg_config))
+            elif isinstance(gate, CNOTGate):
+                gate_container.add(SVGCNOTGate(gate, svg_config))
+            elif isinstance(gate, SWAPGate):
+                gate_container.add(SVGSWAPGate(gate, svg_config))
+            elif isinstance(gate, ParameterGate) and not isinstance(gate, (TGate, SGate)):
+                gate_container.add(SVGParameterGate(gate, svg_config))
             else:
-                gate_container.add(SVGGate(g, svg_config))
+                gate_container.add(SVGGate(gate, svg_config))
         circ_len = gate_container.right - gate_container.left + 2 * self.svg_config['gate_start_distance']
         for i in range(circuit.n_qubits):
             qubit_container.add(SVGQubit(0, i * self.svg_config['circuit_line_distance'], old_qubits[i], svg_config))
@@ -1056,7 +1063,7 @@ class SVGQubit(Text):
 class SVGCircuitLine(Line):
     """SVG circuit line."""
 
-    def __init__(self, x1, x2, y1, y2, svg_config):
+    def __init__(self, x1, x2, y1, y2, svg_config):  # pylint: disable=too-many-arguments
         """Initialize an SVGCircuitLine object."""
         super().__init__(x1, x2, y1, y2)
         self.svg_config = svg_config
@@ -1064,7 +1071,7 @@ class SVGCircuitLine(Line):
         self.stroke_width(self.svg_config['circuit_line_stroke_width'])
 
 
-class SVGBarrier(SVGContainer):
+class SVGBarrier(SVGContainer):  # pylint: disable=too-many-instance-attributes
     """SVG barrier."""
 
     def __init__(self, n_qubits, svg_config, show=True):
@@ -1130,10 +1137,13 @@ class SVGMeasure(SVGBasicGate):
 class Arrow(Path):
     """Arrow component."""
 
-    def __init__(self, w=0.3):
+    def __init__(self, width=0.3):
         """Initialize an Arrow object."""
-        self.w = w
-        self.points = [[0, 1, 2, 1 + w, 1 + w, 1 - w, 1 - w], [np.sqrt(3), 0, np.sqrt(3), np.sqrt(3), 5, 5, np.sqrt(3)]]
+        self.w = width  # pylint: disable=invalid-name
+        self.points = [
+            [0, 1, 2, 1 + width, 1 + width, 1 - width, 1 - width],
+            [np.sqrt(3), 0, np.sqrt(3), np.sqrt(3), 5, 5, np.sqrt(3)],
+        ]
         super().__init__(self.points)
 
 
@@ -1188,7 +1198,7 @@ def center_align_to(target, source):
     source.shift(t_x - s_x, t_y - s_y)
 
 
-def super_align(target, source, t_des, s_des, direction=None, relative=False):
+def super_align(target, source, t_des, s_des, direction=None, relative=False):  # pylint: disable=too-many-arguments
     """
     Align.
 

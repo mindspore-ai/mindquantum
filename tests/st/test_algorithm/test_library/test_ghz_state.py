@@ -24,6 +24,7 @@ def test_general_ghz_state():
     Description: Test if three qubit general_ghz_state correct or not.
     Expectation: success.
     """
-    qs = general_ghz_state(range(3)).get_qs()
-    qs_exp = 1 / np.sqrt(2) * np.array([1, 0, 0, 0, 0, 0, 0, 1])
-    assert np.allclose(qs, qs_exp)
+    state = general_ghz_state(range(3)).get_qs()
+
+    state_exp = 1 / np.sqrt(2) * np.array([1, 0, 0, 0, 0, 0, 0, 1])
+    assert np.allclose(state, state_exp)

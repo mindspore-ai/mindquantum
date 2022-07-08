@@ -18,11 +18,11 @@ import numbers
 import warnings
 from collections import deque
 
-import matplotlib.animation as animation
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 import numpy as np
 import rich
+from matplotlib import animation
+from matplotlib import pyplot as plt
+from matplotlib import ticker
 from matplotlib.figure import Figure
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d.axes3d import Axes3D
@@ -34,13 +34,11 @@ from mindquantum.io.display._config import (
 )
 from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
 
-# pylint: disable=bad-continuation
-
 
 class Arrow3D(FancyArrowPatch):
     """3D arrow."""
 
-    def __init__(self, x, y, z, dx, dy, dz, *args, **kwargs):
+    def __init__(self, x, y, z, dx, dy, dz, *args, **kwargs):  # pylint: disable=too-many-arguments
         """Initialize an Arrow3D object."""
         super().__init__((0, 0), (0, 0), *args, **kwargs)
         self._xyz = (x, y, z)
@@ -48,6 +46,7 @@ class Arrow3D(FancyArrowPatch):
 
     def draw(self, renderer):
         """Draw artist."""
+        # pylint: disable=invalid-name
         x1, y1, z1 = self._xyz
         dx, dy, dz = self._dxdydz
         x2, y2, z2 = (x1 + dx, y1 + dy, z1 + dz)
@@ -57,7 +56,7 @@ class Arrow3D(FancyArrowPatch):
         super().draw(renderer)
 
 
-class BlochScene:
+class BlochScene:  # pylint: disable=too-many-instance-attributes
     """
     Display a one qubit quantum state in bloch sphere.
 
@@ -158,7 +157,7 @@ class BlochScene:
         _check_input_type("angle", numbers.Number, angle)
         ax.plot(self.c_x * np.sin(angle), self.c_y * np.sin(angle), np.cos(angle), *args, **kwargs)
 
-    def plot_slice(
+    def plot_slice(  # pylint: disable=too-many-arguments
         self,
         ax,
         x,
@@ -342,7 +341,7 @@ class BlochScene:
         x, y, z = np.sin(theta) * np.cos(phi), np.sin(theta) * np.sin(phi), np.cos(theta)
         return np.array([x, y, z])
 
-    def add_state(
+    def add_state(  # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
         self,
         ax,
         amp,
@@ -480,7 +479,7 @@ class BlochScene:
             vec.set_3d_properties(np.array([0, z]))
         if 'point' in objs:
             point = objs['point']
-            point._offsets3d = np.array([[x, y, z]]).T
+            point._offsets3d = np.array([[x, y, z]]).T  # pylint: disable=protected-access
         if 'line_x' in objs:
             line_x = objs['line_x']
             line_x.set_data(np.array([[0, x], [0, 0]]))
@@ -494,7 +493,9 @@ class BlochScene:
             line_z.set_data(np.array([[0, 0], [0, 0]]))
             line_z.set_3d_properties(np.array([0, z]))
 
-    def animation(self, fig, ax, objs, new_amps: np.ndarray, interval=15, with_trace=True, history_len=None, **kwargs):
+    def animation(  # pylint: disable=too-many-arguments,too-many-locals
+        self, fig, ax, objs, new_amps: np.ndarray, interval=15, with_trace=True, history_len=None, **kwargs
+    ):
         """
         Animate a quantum state on bolch sphere.
 

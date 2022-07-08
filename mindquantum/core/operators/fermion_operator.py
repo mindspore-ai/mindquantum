@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+# pylint: disable=duplicate-code
+
 """This module is generated the Fermion Operator."""
 
 import json
@@ -20,12 +23,10 @@ from functools import lru_cache
 import numpy as np
 from scipy.sparse import csr_matrix, kron
 
-from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
 
+from ..parameterresolver import ParameterResolver
 from ._base_operator import _Operator
-
-# pylint: disable=bad-continuation
 
 
 @lru_cache()
@@ -52,10 +53,10 @@ def _n_identity(n):
 @lru_cache()
 def _single_fermion_word(idx, dag, n_qubits):
     """Single_fermion_word."""
-    m = csr_matrix(np.array([[0, 1], [0, 0]], dtype=np.complex128))
+    matrix = csr_matrix(np.array([[0, 1], [0, 0]], dtype=np.complex128))
     if dag:
-        m = csr_matrix(np.array([[0, 0], [1, 0]], dtype=np.complex128))
-    return kron(_n_identity(n_qubits - 1 - idx), kron(m, _n_sz(idx)))
+        matrix = csr_matrix(np.array([[0, 0], [1, 0]], dtype=np.complex128))
+    return kron(_n_identity(n_qubits - 1 - idx), kron(matrix, _n_sz(idx)))
 
 
 @lru_cache()
@@ -64,27 +65,27 @@ def _two_fermion_word(idx1, dag1, idx2, dag2, n_qubits):
     return _single_fermion_word(idx1, dag1, n_qubits) * _single_fermion_word(idx2, dag2, n_qubits)
 
 
-def _check_valid_fermion_operator_term(term):
+def _check_valid_fermion_operator_term(fo_term):
     """Check valid fermion operator term."""
-    if term is not None and term != '':
-        if not isinstance(term, (str, tuple)):
-            raise ValueError(f'Fermion operator requires a string or a tuple, but get {type(term)}')
-        if isinstance(term, str):
-            terms = term.split(' ')
-            for t in terms:
-                if (t.endswith('^') and not t[:-1].isdigit()) or (not t.endswith('^') and not t.isdigit()):
-                    if t:
-                        raise ValueError(f'Invalid fermion operator term {t}')
-        if isinstance(term, tuple):
-            for t in term:
+    if fo_term is not None and fo_term != '':
+        if not isinstance(fo_term, (str, tuple)):
+            raise ValueError(f'Fermion operator requires a string or a tuple, but get {type(fo_term)}')
+        if isinstance(fo_term, str):
+            terms = fo_term.split(' ')
+            for term in terms:
+                if (term.endswith('^') and not term[:-1].isdigit()) or (not term.endswith('^') and not term.isdigit()):
+                    if term:
+                        raise ValueError(f'Invalid fermion operator term {term}')
+        if isinstance(fo_term, tuple):
+            for term in fo_term:
                 if (
-                    len(t) != 2
-                    or not isinstance(t[0], int)
-                    or not isinstance(t[1], int)
-                    or t[0] < 0
-                    or t[1] not in [0, 1]
+                    len(term) != 2
+                    or not isinstance(term[0], int)
+                    or not isinstance(term[1], int)
+                    or term[0] < 0
+                    or term[1] not in [0, 1]
                 ):
-                    raise ValueError(f'Invalid fermion operator term {t}')
+                    raise ValueError(f'Invalid fermion operator term {term}')
 
 
 class FermionOperator(_Operator):
@@ -183,8 +184,8 @@ class FermionOperator(_Operator):
 
             if operator not in self.operators:
                 raise ValueError(
-                    'Invalid type of operator {}.'
-                    'The Fermion operator should be one of this {}'.format(operator, self.operators)
+                    f'Invalid type of operator {operator}.'
+                    f'The Fermion operator should be one of this {self.operators}'
                 )
             if index < 0:
                 raise ValueError(f"Invalid index {self.operators}.The qubit index should be non negative integer")
@@ -195,6 +196,7 @@ class FermionOperator(_Operator):
 
     def to_openfermion(self):
         """Convert fermion operator to openfermion format."""
+        # pylint: disable=import-outside-toplevel
         from openfermion import FermionOperator as OFFermionOperator
 
         terms = {}
@@ -202,9 +204,9 @@ class FermionOperator(_Operator):
             if not v.is_const():
                 raise ValueError("Cannot convert parameteized fermion operator to openfermion format")
             terms[k] = v.const
-        of = OFFermionOperator()
-        of.terms = terms
-        return of
+        fermion_operator = OFFermionOperator()
+        fermion_operator.terms = terms
+        return fermion_operator
 
     @staticmethod
     def from_openfermion(of_ops):
@@ -217,15 +219,16 @@ class FermionOperator(_Operator):
         Returns:
             FermionOperator, fermion operator from mindquantum.
         """
+        # pylint: disable=import-outside-toplevel
         from openfermion import FermionOperator as OFFermionOperator
 
         _check_input_type('of_ops', OFFermionOperator, of_ops)
-        out = FermionOperator()
+        fermion_operator = FermionOperator()
         for k, v in of_ops.terms.items():
-            out.terms[k] = ParameterResolver(v)
-        return out
+            fermion_operator.terms[k] = ParameterResolver(v)
+        return fermion_operator
 
-    def __str__(self):
+    def __str__(self):  # pylint: disable=too-many-branches
         """Return an easy-to-read string representation of the FermionOperator."""
         if not self.terms:
             return '0'
@@ -267,7 +270,7 @@ class FermionOperator(_Operator):
         """Return a string representation of the object."""
         return str(self)
 
-    def matrix(self, n_qubits=None):
+    def matrix(self, n_qubits=None):  # pylint: disable=too-many-branches
         """
         Convert this fermion operator to csr_matrix under jordan_wigner mapping.
 
@@ -275,7 +278,9 @@ class FermionOperator(_Operator):
             n_qubits (int): The total qubit of final matrix. If None, the value will be
                 the maximum local qubit number. Default: None.
         """
-        from mindquantum.core.operators.utils import count_qubits
+        from .utils import (  # pylint: disable=import-outside-toplevel,cyclic-import
+            count_qubits,
+        )
 
         if not self.terms:
             raise ValueError("Cannot convert empty fermion operator to matrix")
@@ -305,12 +310,12 @@ class FermionOperator(_Operator):
                         group[-1].append(dag)
                     if len(group[-1]) == 4:
                         group.append([])
-                for g in group:
-                    if g:
-                        if len(g) == 4:
-                            tmp *= _two_fermion_word(g[0], g[1], g[2], g[3], n_qubits)
+                for gate in group:
+                    if gate:
+                        if len(gate) == 4:
+                            tmp *= _two_fermion_word(gate[0], gate[1], gate[2], gate[3], n_qubits)
                         else:
-                            tmp *= _single_fermion_word(g[0], g[1], n_qubits)
+                            tmp *= _single_fermion_word(gate[0], gate[1], n_qubits)
                 out += tmp * coeff
         return out
 
@@ -330,8 +335,8 @@ class FermionOperator(_Operator):
         """
         out = FermionOperator()
 
-        for k, v in self.terms.items():
-            out.terms[k] = v.imag
+        for term, coeff in self.terms.items():
+            out.terms[term] = coeff.imag
         return out
 
     @property
@@ -351,8 +356,8 @@ class FermionOperator(_Operator):
         """
         out = FermionOperator()
 
-        for k, v in self.terms.items():
-            out.terms[k] = v.real
+        for term, coeff in self.terms.items():
+            out.terms[term] = coeff.real
         return out
 
     def normal_ordered(self):
@@ -396,9 +401,9 @@ class FermionOperator(_Operator):
         if indent is not None:
             _check_int_type('indent', indent)
         dic = {}
-        for o, c in self.terms.items():
-            s = _fermion_tuple_to_string(o)
-            dic[s] = c.dumps(indent)
+        for term, coeff in self.terms.items():
+            string = _fermion_tuple_to_string(term)
+            dic[string] = coeff.dumps(indent)
         return json.dumps(dic, indent=indent)
 
     @staticmethod
@@ -439,8 +444,8 @@ class FermionOperator(_Operator):
             >>> list(a.split())
             [[{'a': 1}, const: 0, 1 [0] ], [{}, const: 1.2, 1 [1^] ]]
         """
-        for i, j in self.terms.items():
-            yield [j, FermionOperator(i)]
+        for term, coeff in self.terms.items():
+            yield [coeff, FermionOperator(term)]
 
 
 def _normal_ordered_term(term, coefficient):
@@ -481,10 +486,10 @@ def _normal_ordered_term(term, coefficient):
 
 
 def _fermion_tuple_to_string(term):
-    s = []
+    string = []
     for i in term:
         if i[1] == 1:
-            s.append(f'{i[0]}^')
+            string.append(f'{i[0]}^')
         else:
-            s.append(str(i[0]))
-    return ' '.join(s)
+            string.append(str(i[0]))
+    return ' '.join(string)

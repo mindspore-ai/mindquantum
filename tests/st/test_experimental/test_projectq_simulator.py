@@ -12,6 +12,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+# pylint: disable=no-member,pointless-statement
+
+"""Test C++ ProjectQ simulator."""
+
 import math
 import warnings
 
@@ -41,6 +45,7 @@ with warnings.catch_warnings():
 
 
 def angle_idfn(val):
+    """Pretty-print angles."""
     if isinstance(val, symengine.Basic):
         return f'sym({val})'
     return f'num({val})'
@@ -50,6 +55,7 @@ def angle_idfn(val):
 
 
 def mindquantum_setup(seed, n_qubits):
+    """Generate default setup for MindQuantum."""
     circuit = Circuit()
     qubits = []
     for _ in range(n_qubits):
@@ -62,6 +68,7 @@ def mindquantum_setup(seed, n_qubits):
 
 
 def projectq_setup(seed, n_qubits):
+    """Generate default setup for ProjectQ."""
     eng = MainEngine(backend=PQ_Simulator(seed), engine_list=[])
     qureg = eng.allocate_qureg(n_qubits)
     return (qureg, eng)
@@ -71,6 +78,7 @@ def projectq_setup(seed, n_qubits):
 
 
 def run_mindquantum(gate, n_qubits, seed):
+    """Run MindQuantum circuit."""
     qubits, circuit, mq_sim = mindquantum_setup(seed, n_qubits)
 
     circuit.apply_operator(gate, qubits)
@@ -83,6 +91,7 @@ def run_mindquantum(gate, n_qubits, seed):
 
 
 def run_projectq(gate, n_qubits, seed):
+    """Run ProjectQ circuit."""
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=PendingDeprecationWarning)
 
@@ -133,7 +142,7 @@ def test_single_qubit_gates(mq_gate, pq_gate):
     pq_map, pq_state = run_projectq(pq_gate, n_qubits, seed)
 
     assert mq_map == pq_map
-    assert pytest.approx(pq_state) == pq_state
+    assert pytest.approx(mq_state) == pq_state
 
 
 # ------------------------------------------------------------------------------
@@ -161,7 +170,7 @@ def test_two_qubit_gates(mq_gate, pq_gate):
     pq_map, pq_state = run_projectq(pq_gate, n_qubits, seed)
 
     assert mq_map == pq_map
-    assert pytest.approx(pq_state) == pq_state
+    assert pytest.approx(mq_state) == pq_state
 
 
 # ------------------------------------------------------------------------------
@@ -198,7 +207,7 @@ def test_single_qubit_param_gates(angle, mq_gate, pq_gate):
     pq_map, pq_state = run_projectq(pq_gate(angle), n_qubits, seed)
 
     assert mq_map == pq_map
-    assert pytest.approx(pq_state) == pq_state
+    assert pytest.approx(mq_state) == pq_state
 
 
 # ------------------------------------------------------------------------------
@@ -231,8 +240,14 @@ def test_two_qubit_param_gates(angle, mq_gate, pq_gate):
     seed = 98138
     n_qubits = 2
 
-    mq_map, mq_state = run_mindquantum(mq_gate(angle), n_qubits, seed)
+    mq_angle = angle
+    if mq_gate in (ops.Rxx, ops.Ryy):
+        mq_angle /= 2
+    elif mq_gate is ops.Rzz:
+        mq_angle *= -1
+
+    mq_map, mq_state = run_mindquantum(mq_gate(mq_angle), n_qubits, seed)
     pq_map, pq_state = run_projectq(pq_gate(angle), n_qubits, seed)
 
     assert mq_map == pq_map
-    assert pytest.approx(pq_state) == pq_state
+    assert pytest.approx(mq_state) == pq_state

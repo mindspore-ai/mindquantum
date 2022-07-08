@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+# pylint: disable=invalid-name
+
 """Test circuit."""
 import numpy as np
 
@@ -48,8 +51,8 @@ def test_get_matrix():
     Expectation:
     """
     circ = Circuit().ry('a', 0).rz('b', 0).ry('c', 0)
-    m = circ.matrix(np.array([7.902762e-01, 2.139225e-04, 7.795934e-01]))
-    assert np.allclose(m[0, 0], 0.70743435 - 1.06959724e-04j)
+    matrix = circ.matrix(np.array([7.902762e-01, 2.139225e-04, 7.795934e-01]))
+    assert np.allclose(matrix[0, 0], 0.70743435 - 1.06959724e-04j)
 
 
 def test_circuit_apply():
@@ -73,9 +76,9 @@ def test_evolution_state():
     """
     a, b = 0.3, 0.5
     circ = Circuit([G.RX('a').on(0), G.RX('b').on(1)])
-    s = Simulator('projectq', circ.n_qubits)
-    s.apply_circuit(circ, ParameterResolver({'a': a, 'b': b}))
-    state = s.get_qs()
+    simulator = Simulator('projectq', circ.n_qubits)
+    simulator.apply_circuit(circ, ParameterResolver({'a': a, 'b': b}))
+    state = simulator.get_qs()
     state_exp = [0.9580325796404553, -0.14479246283091116j, -0.2446258794777393j, -0.036971585637570345]
     assert np.allclose(state, state_exp)
 

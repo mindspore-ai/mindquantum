@@ -14,14 +14,16 @@
 
 """Example of running QNN for NLP."""
 
+# pylint: disable=redefined-outer-name,invalid-name,too-few-public-methods,unused-argument
+
+
 import time
 
 import matplotlib.pyplot as plt
 import mindspore as ms
 import mindspore.dataset as ds
-import mindspore.ops as ops
 import numpy as np
-from mindspore import Model, Tensor, context, nn
+from mindspore import Model, Tensor, context, nn, ops
 from mindspore.train.callback import LossMonitor
 
 from mindquantum import RX, RY, UN, Circuit, H, Hamiltonian, X
@@ -37,7 +39,7 @@ def generate_word_dict_and_sample(corpus, window=2):
     word_set.sort()
     word_dict = {w: i for i, w in enumerate(word_set)}
     sampling = []
-    for index, word in enumerate(all_words[window:-window]):
+    for index, _ in enumerate(all_words[window:-window]):
         around = []
         for i in range(index, index + 2 * window + 1):
             if i != index + window:
@@ -110,10 +112,10 @@ def generate_ansatz_circuit(n_qubits, layers, prefix=''):
     if len(prefix) != 0 and prefix[-1] != '_':
         prefix += '_'
     circ = Circuit()
-    for ll in range(layers):
+    for layer in range(layers):
         for i in range(n_qubits):
-            circ += RY(prefix + str(ll) + '_' + str(i)).on(i)
-        for i in range(ll % 2, n_qubits, 2):
+            circ += RY(f"{prefix + layer}_{i}").on(i)
+        for i in range(layer % 2, n_qubits, 2):
             if i < n_qubits and i + 1 < n_qubits:
                 circ += X.on(i + 1, i)
     return circ
@@ -129,7 +131,7 @@ def generate_embedding_hamiltonian(dims, n_qubits):
         s = ''
         for j, k in enumerate(bin(i + 1)[-1:1:-1]):
             if k == '1':
-                s = s + 'Z' + str(j) + ' '
+                s = f"{s}Z{j} "
         hams.append(Hamiltonian(QubitOperator(s)))
     return hams
 
@@ -146,8 +148,8 @@ def q_embedding(num_embedding, embedding_dim, window, layers, n_threads):
     encoder_param_name = []
     ansatz_param_name = []
     for w in range(2 * window):
-        encoder = generate_encoder_circuit(n_qubits, 'Encoder_' + str(w))
-        ansatz = generate_ansatz_circuit(n_qubits, layers, 'Ansatz_' + str(w))
+        encoder = generate_encoder_circuit(n_qubits, f"Encoder_{w}")
+        ansatz = generate_ansatz_circuit(n_qubits, layers, f"Ansatz_{w}")
         encoder.no_grad()
         circ += encoder
         circ += ansatz
@@ -159,6 +161,8 @@ def q_embedding(num_embedding, embedding_dim, window, layers, n_threads):
 
 class CBOW(nn.Cell):
     """CBOW class."""
+
+    # pylint: disable=too-many-arguments
 
     def __init__(self, num_embedding, embedding_dim, window, layers, n_threads, hidden_dim):
         """Initialize a CBOW object."""
@@ -179,6 +183,8 @@ class CBOW(nn.Cell):
 
 class LossMonitorWithCollection(LossMonitor):
     """LossMonitorWithCollection class."""
+
+    # pylint: disable=attribute-defined-outside-init
 
     def __init__(self, per_print_times=1):
         """Initialize a LossMonitorWithCollection object."""
@@ -221,15 +227,15 @@ class LossMonitorWithCollection(LossMonitor):
 
         if isinstance(loss, float) and (np.isnan(loss) or np.isinf(loss)):
             raise ValueError(
-                "epoch: {} step: {}. Invalid loss, terminating training.".format(
-                    cb_params.cur_epoch_num, cur_step_in_epoch
-                )
+                f"epoch: {cb_params.cur_epoch_num} step: {cur_step_in_epoch}. Invalid loss, terminating training."
             )
         self.loss.append(loss)
         if self._per_print_times != 0 and cb_params.cur_step_num % self._per_print_times == 0:
             print(
-                "\repoch: %+3s step: %+3s time: %5.5s, loss is %5.5s"
-                % (cb_params.cur_epoch_num, cur_step_in_epoch, time.time() - self.epoch_begin_time, loss),
+                (
+                    f"\repoch: {cb_params.cur_epoch_num:>3} step: {cur_step_in_epoch:>3} "
+                    f"time: {(time.time() - self.epoch_begin_time):5.5f}, loss is  {loss:5.5f}"
+                ),
                 flush=True,
                 end='',
             )

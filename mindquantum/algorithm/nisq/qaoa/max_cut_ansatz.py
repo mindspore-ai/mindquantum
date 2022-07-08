@@ -13,6 +13,8 @@
 # limitations under the License.
 # ============================================================================
 
+# pylint: disable=duplicate-code
+
 """MaxCut ansatz."""
 
 import numpy as np
@@ -30,8 +32,6 @@ from mindquantum.utils.type_value_check import (
 )
 
 from .._ansatz import Ansatz
-
-# pylint: disable=bad-continuation
 
 
 def _get_graph_act_qubits_num(graph):

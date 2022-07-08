@@ -36,9 +36,9 @@ u3 = controlled(u1)
 u4 = u3(2)
 print(u4)
 
-u = controlled(qft)
-u = u([2, 3], [0, 1])  # 批量添加控制位
-print(u)
+u5 = controlled(qft)
+u5 = u5([2, 3], [0, 1])  # 批量添加控制位
+print(u5)
 
 # dagger()
 u1 = qft(range(3))
@@ -82,10 +82,6 @@ print(u2)
 
 
 # change_param_name()
-def u(qubit):
-    """Qubit generator function."""
-    return Circuit([H.on(0), RX('a').on(qubit)])
-
 
 u1 = u(0)
 u1 = change_param_name(u1, {'a': 'b'})

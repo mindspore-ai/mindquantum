@@ -37,7 +37,7 @@ def fdopen(fname, mode, perms=0o644):  # pragma: no cover
     else:
         raise RuntimeError(f'Unsupported mode: {mode}')
 
-    file_object = open(os.open(fname, flags, perms), mode=mode)  # noqa: SCS109
+    file_object = open(os.open(fname, flags, perms), mode=mode)  # noqa: SCS109  # pylint: disable=unspecified-encoding
 
     try:
         yield file_object

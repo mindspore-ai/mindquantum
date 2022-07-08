@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
 """Mindspore quantum simulator operator."""
+
 import mindspore as ms
-import mindspore.nn as nn
 import numpy as np
-from mindspore import context
+from mindspore import context, nn
 from mindspore.ops import operations
 from mindspore.ops.primitive import constexpr
 
@@ -24,24 +25,26 @@ from mindquantum.simulator import GradOpsWrapper
 
 
 @constexpr
-def check_enc_input_shape(data, x, enc_len):
+def check_enc_input_shape(data, encoder_tensor, enc_len):
     """Check encoder parameter input shape."""
     if not isinstance(data, ms.Tensor):
         raise TypeError(f"Encoder parameter requires a Tensor but get {type(data)}")
-    if len(x) != 2 or x[1] != enc_len:
+    if len(encoder_tensor) != 2 or encoder_tensor[1] != enc_len:
         raise ValueError(
             'Encoder data requires a two dimension Tensor with second'
-            + f' dimension should be {enc_len}, but get shape {x}'
+            + f' dimension should be {enc_len}, but get shape {encoder_tensor}'
         )
 
 
 @constexpr
-def check_ans_input_shape(data, x, ans_len):
+def check_ans_input_shape(data, ansatz_tensor, ans_len):
     """Check ansatz input shape."""
     if not isinstance(data, ms.Tensor):
         raise TypeError(f"Ansatz parameter requires a Tensor but get {type(data)}")
-    if len(x) != 1 or x[0] != ans_len:
-        raise ValueError(f'Ansatz data requires a one dimension Tensor with shape {ans_len} ' + f'but get {x}')
+    if len(ansatz_tensor) != 1 or ansatz_tensor[0] != ans_len:
+        raise ValueError(
+            f'Ansatz data requires a one dimension Tensor with shape {ans_len} ' + f'but get {ansatz_tensor}'
+        )
 
 
 class MQOps(nn.Cell):
@@ -104,20 +107,21 @@ class MQOps(nn.Cell):
         self.g_ans = None
 
     def extend_repr(self):
+        """Extend string representation."""
         return self.expectation_with_grad.str
 
     def construct(self, enc_data, ans_data):
+        """Construct an MQOps node."""
         check_enc_input_shape(enc_data, self.shape_ops(enc_data), len(self.expectation_with_grad.encoder_params_name))
         check_ans_input_shape(ans_data, self.shape_ops(ans_data), len(self.expectation_with_grad.ansatz_params_name))
-        enc_data = enc_data.asnumpy()
-        ans_data = ans_data.asnumpy()
-        f, g_enc, g_ans = self.expectation_with_grad(enc_data, ans_data)
-        f = ms.Tensor(np.real(f), dtype=ms.float32)
+        fval, g_enc, g_ans = self.expectation_with_grad(enc_data.asnumpy(), ans_data.asnumpy())
+        fval = ms.Tensor(np.real(fval), dtype=ms.float32)
         self.g_enc = np.real(g_enc)
         self.g_ans = np.real(g_ans)
-        return f
+        return fval
 
-    def bprop(self, enc_data, ans_data, out, dout):
+    def bprop(self, enc_data, ans_data, out, dout):  # pylint: disable=unused-argument
+        """Implement the bprop function."""
         dout = dout.asnumpy()
         enc_grad = np.einsum('smp,sm->sp', self.g_enc, dout)
         ans_grad = np.einsum('smp,sm->p', self.g_ans, dout)
@@ -184,25 +188,27 @@ class MQN2Ops(nn.Cell):
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
         self.shape_ops = operations.Shape()
+        self.f = None  # pylint: disable=invalid-name
         self.g_enc = None
         self.g_ans = None
 
     def extend_repr(self):
+        """Extend string representation."""
         return self.expectation_with_grad.str
 
     def construct(self, enc_data, ans_data):
+        """Construct an MQN2Ops node."""
         check_enc_input_shape(enc_data, self.shape_ops(enc_data), len(self.expectation_with_grad.encoder_params_name))
         check_ans_input_shape(ans_data, self.shape_ops(ans_data), len(self.expectation_with_grad.ansatz_params_name))
-        enc_data = enc_data.asnumpy()
-        ans_data = ans_data.asnumpy()
-        f, g_enc, g_ans = self.expectation_with_grad(enc_data, ans_data)
-        self.f = f
-        f = ms.Tensor(np.abs(f) ** 2, dtype=ms.float32)
+        fval, g_enc, g_ans = self.expectation_with_grad(enc_data.asnumpy(), ans_data.asnumpy())
+        self.f = fval
+        fval = ms.Tensor(np.abs(fval) ** 2, dtype=ms.float32)
         self.g_enc = g_enc
         self.g_ans = g_ans
-        return f
+        return fval
 
-    def bprop(self, enc_data, ans_data, out, dout):
+    def bprop(self, enc_data, ans_data, out, dout):  # pylint: disable=unused-argument
+        """Implement the bprop function."""
         dout = dout.asnumpy()
         enc_grad = 2 * np.real(np.einsum('smp,sm,sm->sp', self.g_enc, dout, np.conj(self.f)))
         ans_grad = 2 * np.real(np.einsum('smp,sm,sm->p', self.g_ans, dout, np.conj(self.f)))
@@ -259,19 +265,22 @@ class MQAnsatzOnlyOps(nn.Cell):
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
         self.shape_ops = operations.Shape()
+        self.g = None  # pylint: disable=invalid-name
 
     def extend_repr(self):
+        """Extend string representation."""
         return self.expectation_with_grad.str
 
-    def construct(self, x):
-        check_ans_input_shape(x, self.shape_ops(x), len(self.expectation_with_grad.ansatz_params_name))
-        x = x.asnumpy()
-        f, g = self.expectation_with_grad(x)
-        f = ms.Tensor(np.real(f[0]), dtype=ms.float32)
-        self.g = np.real(g[0])
-        return f
+    def construct(self, arg):
+        """Construct a MQAnsatzOnlyOps node."""
+        check_ans_input_shape(arg, self.shape_ops(arg), len(self.expectation_with_grad.ansatz_params_name))
+        fval, g_ans = self.expectation_with_grad(arg.asnumpy())
+        fval = ms.Tensor(np.real(fval[0]), dtype=ms.float32)
+        self.g = np.real(g_ans[0])
+        return fval
 
-    def bprop(self, x, out, dout):
+    def bprop(self, arg, out, dout):  # pylint: disable=unused-argument
+        """Implement the bprop function."""
         dout = dout.asnumpy()
         grad = dout @ self.g
         return ms.Tensor(grad, dtype=ms.float32)
@@ -327,20 +336,25 @@ class MQN2AnsatzOnlyOps(nn.Cell):
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
         self.shape_ops = operations.Shape()
+        # pylint: disable=invalid-name
+        self.f = None
+        self.g = None
 
     def extend_repr(self):
+        """Extend string representation."""
         return self.expectation_with_grad.str
 
-    def construct(self, x):
-        check_ans_input_shape(x, self.shape_ops(x), len(self.expectation_with_grad.ansatz_params_name))
-        x = x.asnumpy()
-        f, g = self.expectation_with_grad(x)
-        self.f = f[0]
-        f = ms.Tensor(np.abs(f[0]) ** 2, dtype=ms.float32)
-        self.g = g[0]
-        return f
+    def construct(self, arg):
+        """Construct a MQN2AnsatzOnlyOps node."""
+        check_ans_input_shape(arg, self.shape_ops(arg), len(self.expectation_with_grad.ansatz_params_name))
+        fval, g_ans = self.expectation_with_grad(arg.asnumpy())
+        self.f = fval[0]
+        fval = ms.Tensor(np.abs(fval[0]) ** 2, dtype=ms.float32)
+        self.g = g_ans[0]
+        return fval
 
-    def bprop(self, x, out, dout):
+    def bprop(self, arg, out, dout):  # pylint: disable=unused-argument
+        """Implement the bprop function."""
         dout = dout.asnumpy()
         grad = 2 * np.real(np.einsum('m,m,mp->p', np.conj(self.f), dout, self.g))
         return ms.Tensor(grad, dtype=ms.float32)
@@ -400,19 +414,22 @@ class MQEncoderOnlyOps(nn.Cell):
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
         self.shape_ops = operations.Shape()
+        self.g = None  # pylint: disable=invalid-name
 
     def extend_repr(self):
+        """Extend string representation."""
         return self.expectation_with_grad.str
 
-    def construct(self, x):
-        check_enc_input_shape(x, self.shape_ops(x), len(self.expectation_with_grad.encoder_params_name))
-        x = x.asnumpy()
-        f, g = self.expectation_with_grad(x)
-        f = ms.Tensor(np.real(f), dtype=ms.float32)
-        self.g = np.real(g)
-        return f
+    def construct(self, arg):
+        """Construct a MQEncoderOnlyOps node."""
+        check_enc_input_shape(arg, self.shape_ops(arg), len(self.expectation_with_grad.encoder_params_name))
+        fval, g_enc = self.expectation_with_grad(arg.asnumpy())
+        fval = ms.Tensor(np.real(fval), dtype=ms.float32)
+        self.g = np.real(g_enc)
+        return fval
 
-    def bprop(self, x, out, dout):
+    def bprop(self, arg, out, dout):  # pylint: disable=unused-argument
+        """Implement the bprop function."""
         dout = dout.asnumpy()
         grad = np.einsum('smp,sm->sp', self.g, dout)
         return ms.Tensor(grad, dtype=ms.float32)
@@ -471,20 +488,25 @@ class MQN2EncoderOnlyOps(nn.Cell):
         _check_grad_ops(expectation_with_grad)
         self.expectation_with_grad = expectation_with_grad
         self.shape_ops = operations.Shape()
+        # pylint: disable=invalid-name
+        self.f = None
+        self.g = None
 
     def extend_repr(self):
+        """Extend string representation."""
         return self.expectation_with_grad.str
 
-    def construct(self, x):
-        check_enc_input_shape(x, self.shape_ops(x), len(self.expectation_with_grad.encoder_params_name))
-        x = x.asnumpy()
-        f, g = self.expectation_with_grad(x)
-        self.f = f
-        f = ms.Tensor(np.abs(f) ** 2, dtype=ms.float32)
-        self.g = g
-        return f
+    def construct(self, arg):
+        """Construct a MQN2EncoderOnlyOps node."""
+        check_enc_input_shape(arg, self.shape_ops(arg), len(self.expectation_with_grad.encoder_params_name))
+        fval, g_enc = self.expectation_with_grad(arg.asnumpy())
+        self.f = fval
+        fval = ms.Tensor(np.abs(fval) ** 2, dtype=ms.float32)
+        self.g = g_enc
+        return fval
 
-    def bprop(self, x, out, dout):
+    def bprop(self, arg, out, dout):  # pylint: disable=unused-argument
+        """Implement the bprop function."""
         dout = dout.asnumpy()
         grad = 2 * np.real(np.einsum('smp,sm,sm->sp', self.g, dout, np.conj(self.f)))
         return ms.Tensor(grad, dtype=ms.float32)

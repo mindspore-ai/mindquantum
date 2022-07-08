@@ -292,8 +292,9 @@ class Transform:
         for term in fermion_operator:
             # Check whether term is already transformed
             if term not in transformed_terms:
+                # pylint: disable=invalid-name
                 at = [i for i, t in term[: len(term) // 2]]
-                a = [i for i, t in term[len(term) // 2 :]]  # noqa: E203
+                a = [i for i, t in term[len(term) // 2 :]]
                 u = set(at) | set(a)
 
                 # Second term in pair to transform
@@ -302,7 +303,7 @@ class Transform:
                 # Check equality between numbers of creation and annihilation
                 # operators in term
                 if len(at) != len(a):
-                    raise ValueError("Terms in hamiltonian must consist " "f pairs of creation/annihilation operators")
+                    raise ValueError("Terms in hamiltonian must consist f pairs of creation/annihilation operators")
 
                 # Check whether fermion operator is hermitian
                 if abs(fermion_operator.terms[term] - fermion_operator.terms[term_t]) > 1e-8:
@@ -363,7 +364,7 @@ class Transform:
 
         return transf_op
 
-    def ternary_tree(self):
+    def ternary_tree(self):  # pylint: disable=too-many-locals
         """
         Apply Ternary tree transform.
 
@@ -373,6 +374,7 @@ class Transform:
         Returns:
             QubitOperator, qubit operator after ternary_tree transformation.
         """
+        # pylint: disable=invalid-name
         h = floor(log(2 * self.n_qubits + 1, 3))
         d = self.n_qubits - (3**h - 1) // 2
 
@@ -483,15 +485,15 @@ class Transform:
         return transf_op
 
 
-def _get_qubit_index(p, i):
+def _get_qubit_index(p, i):  # pylint: disable=invalid-name
     """Get the qubit index."""
-    n = (3**i - 1) // 2
+    qubit_idx = (3**i - 1) // 2
     for j in range(i):
-        n += 3 ** (i - 1 - j) * p[j]
-    return n
+        qubit_idx += 3 ** (i - 1 - j) * p[j]
+    return qubit_idx
 
 
-def _transform_ladder_operator(ladder_operator, x1, y1, z1, x2, y2, z2):
+def _transform_ladder_operator(ladder_operator, x1, y1, z1, x2, y2, z2):  # pylint: disable=too-many-arguments
     r"""
     Make transformation to qubits for :math:`a`, :math:`a^\dagger` operators.
 
@@ -587,6 +589,7 @@ def _parity_set(index):
 
 def _get_edge_matrix(fermion_operator):
     """Return antisymmetric adjacency matrix (Edge matrix) for graph based on fermion operator for BKSF transform."""
+    # pylint: disable=invalid-name
     edge_set = set()
     for term in fermion_operator:
         a = {1: [], 0: []}
@@ -615,6 +618,7 @@ def _get_edge_matrix(fermion_operator):
 
 def _enumerate_edges(edge_matrix):
     """Return dictionary of edges of the graph and its coresponing number based on Edge matrix."""
+    # pylint: disable=invalid-name
     d = len(edge_matrix)
     edge_enum = {}
     n = 0
@@ -645,7 +649,7 @@ def _get_a(i, j, edge_matrix, edge_enum):
     for k in range(0, j):
         if edge_matrix[k, i] != 0:
             long_string += 'Z' + str(edge_enum[(k, i)]) + ' '
-    for s in range(0, i):
+    for s in range(0, i):  # pylint: disable=invalid-name
         if edge_matrix[s, j] != 0:
             long_string += 'Z' + str(edge_enum[(s, j)]) + ' '
 
@@ -682,7 +686,9 @@ def _transformed_number_excitation_operator(i, j, k, edge_matrix, edge_enum):
     )
 
 
-def _transformed_double_excitation_operator(i, j, k, l, edge_matrix, edge_enum):  # noqa: E741
+def _transformed_double_excitation_operator(  # pylint: disable=too-many-arguments
+    i, j, k, l, edge_matrix, edge_enum  # noqa: E741
+):
     """Return qubit operator based on Edge matrix for a^i a^j ak al."""
     b_i = _get_b(i, edge_matrix, edge_enum)
     b_j = _get_b(j, edge_matrix, edge_enum)

@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+# pylint: disable=too-many-lines
+
 """Circuit module."""
 
 import copy
 from collections.abc import Iterable
+from types import FunctionType, MethodType
 from typing import List
 
 import numpy as np
 from rich.console import Console
 
-import mindquantum.core.gates as mq_gates
-from mindquantum.core.circuit.utils import apply
-from mindquantum.core.gates.basic import ParameterGate
-from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.io import bprint
 from mindquantum.io.display import brick_model
 from mindquantum.utils.type_value_check import (
@@ -33,6 +33,84 @@ from mindquantum.utils.type_value_check import (
     _check_gate_type,
     _check_input_type,
 )
+
+from .. import gates as mq_gates
+from ..gates.basic import ParameterGate
+from ..parameterresolver import ParameterResolver
+
+
+def _apply_circuit(circ, qubits):
+    """Apply a circuit to other different qubits."""
+    old_qubits_set = set()
+    for gate in circ:
+        old_qubits_set.update(gate.obj_qubits)
+        old_qubits_set.update(gate.ctrl_qubits)
+    old_qubits = list(old_qubits_set)
+    old_qubits.sort()
+    if len(old_qubits) != len(qubits):
+        raise ValueError(f"Can not apply a {len(old_qubits)} qubits unit to {len(qubits)} qubits circuit.")
+    qubits_map = dict(zip(old_qubits, qubits))
+    out = Circuit()
+    for gate in circ:
+        gate = copy.deepcopy(gate)
+        gate.obj_qubits = [qubits_map[i] for i in gate.obj_qubits]
+        gate.ctrl_qubits = [qubits_map[i] for i in gate.ctrl_qubits]
+        out += gate
+    return out
+
+
+def apply(circuit_fn, qubits):
+    """
+    Apply a quantum circuit or a quantum operator (a function that can generate a quantum circuit) to different qubits.
+
+    Args:
+        circuit_fn (Union[Circuit, FunctionType, MethodType]): A quantum circuit, or a function that can generate a
+            quantum circuit.
+        qubits (list[int]): The new qubits that you want to apply.
+
+    Returns:
+        Circuit or a function that can generate a Circuit.
+
+    Raises:
+        TypeError: If qubits is not a list.
+        ValueError: If any element of qubits is negative.
+        TypeError: If circuit_fn is not Circuit or can not return a Circuit.
+
+    Examples:
+        >>> from mindquantum.algorithm.library import qft
+        >>> from mindquantum.core.circuit import apply
+        >>> u1 = qft([0, 1])
+        >>> u2 = apply(u1, [1, 0])
+        >>> u3 = apply(qft, [1, 0])
+        >>> u3 = u3([0, 1])
+        >>> u2
+        q0: ──────────●───────H────@──
+                      │            │
+        q1: ──H────PS(π/2)─────────@──
+        >>> u3
+        q0: ──────────●───────H────@──
+                      │            │
+        q1: ──H────PS(π/2)─────────@──
+    """
+    if not isinstance(qubits, list):
+        raise TypeError(f"qubits need a list, but get {type(qubits)}!")
+    if len(qubits) > 1:
+        for index, qubit in enumerate(qubits[1:]):
+            if qubit < 0 or qubits[index] < 0:
+                raise ValueError("Qubit index can not negative!")
+    if isinstance(circuit_fn, (FunctionType, MethodType)):
+
+        def wrapper(*arg, **keywords):
+            circ = circuit_fn(*arg, **keywords)
+            if not isinstance(circ, Circuit):
+                return apply(circ, qubits)
+            return _apply_circuit(circ, qubits)
+
+        return wrapper
+    if isinstance(circuit_fn, Circuit):
+        return _apply_circuit(circuit_fn, qubits)
+    raise TypeError("circuit_fn need a circuit or a function that can generate a circuit.")
+
 
 GateSeq = List[mq_gates.BasicGate]
 
@@ -153,7 +231,7 @@ class CollectionMap:
         return out
 
 
-class Circuit(list):
+class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-public-methods
     """
     The quantum circuit module.
 
@@ -190,6 +268,8 @@ class Circuit(list):
         q1: ────────────────────●──
     """
 
+    # pylint: disable=invalid-name
+
     def __init__(self, gates=None):
         """Initialize a Circuit object."""
         list.__init__([])
@@ -205,6 +285,8 @@ class Circuit(list):
             else:
                 self.append(gates)
         self.has_cpp_obj = False
+        self.cpp_obj = None
+        self.herm_cpp_obj = None
 
     def _collect_parameterized_gate(self, gate: ParameterGate):
         """Collect parameterized gate information."""
@@ -404,7 +486,7 @@ parameters and ansatz parameters."
             if gates.parameterized:
                 self._collect_parameterized_gate(gates)
             if isinstance(gates, mq_gates.Measure):
-                self.all_measures.collect_only_one(gates, f'measure key {mq_gates.key} already exist.')
+                self.all_measures.collect_only_one(gates, f'measure key {gates.key} already exist.')
         elif isinstance(gates, Iterable):
             for gate in gates[::-1]:
                 self.insert(index, gate)
@@ -460,32 +542,34 @@ parameters and ansatz parameters."
 
     def __repr__(self):
         """Return a string representation of the object."""
+        # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum.io.display._config import _CIRCUIT_STYLE
 
         circ = self.compress()
-        s = brick_model(circ, sorted(self.all_qubits.map))
-        s = '\n'.join(s)
+        string = brick_model(circ, sorted(self.all_qubits.map))
+        string = '\n'.join(string)
         console = Console(record=True)
         if not console.is_jupyter:
-            console.width = len(s)
+            console.width = len(string)
             with console.capture() as capture:
-                console.print(s, style=_CIRCUIT_STYLE['style'], width=len(s))
-            s = capture.get()
-        return s
+                console.print(string, style=_CIRCUIT_STYLE, width=len(string))
+            string = capture.get()
+        return string
 
     def _repr_html_(self):
         """Repr for jupyter nontebook."""
+        # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum.io.display._config import _CIRCUIT_STYLE, CIRCUIT_HTML_FORMAT
 
         console = Console(record=True)
         circ = self.compress()
-        s = brick_model(circ, sorted(self.all_qubits.map))
-        s = '\n'.join(s)
-        console.width = len(s)
+        string = brick_model(circ, sorted(self.all_qubits.map))
+        string = '\n'.join(string)
+        console.width = len(string)
         with console.capture() as _:
-            console.print(s, style=_CIRCUIT_STYLE['style'], width=len(s))
-        s = console.export_html(code_format=CIRCUIT_HTML_FORMAT, inline_styles=True)
-        return '\n'.join(s.split('\n')[1:])
+            console.print(string, style=_CIRCUIT_STYLE, width=len(string))
+        string = console.export_html(code_format=CIRCUIT_HTML_FORMAT, inline_styles=True)
+        return '\n'.join(string.split('\n')[1:])
 
     @property
     def n_qubits(self):
@@ -528,11 +612,8 @@ parameters and ansatz parameters."
                 [
                     f'Total number of gates: {num_para_gate + num_non_para_gate}.',
                     f'Parameter gates: {num_para_gate}.',
-                    'with {} parameters are: {}{}'.format(
-                        len(self.all_paras),
-                        ', '.join(self.all_paras.keys()[:10]),
-                        ('.' if len(self.all_paras) <= 10 else '...'),
-                    ),
+                    f"with {len(self.all_paras)} parameters are: ",
+                    f"{', '.join(self.all_paras.keys()[:10])}{'.' if len(self.all_paras) <= 10 else '...'}",
                     f'Number qubit of circuit: {self.n_qubits}',
                 ],
                 title='Circuit Summary',
@@ -657,11 +738,11 @@ parameters and ansatz parameters."
         pr = _check_and_generate_pr_type(pr, self.params_name)
         if self.has_measure_gate:
             raise ValueError("This circuit cannot have measurement gate.")
+        # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum.simulator import Simulator
 
         sim = Simulator(backend, self.n_qubits, seed=seed)
-        m = np.array(sim.sim.get_circuit_matrix(circ.get_cpp_obj(), pr.get_cpp_obj())).T
-        return m
+        return np.array(sim.sim.get_circuit_matrix(circ.get_cpp_obj(), pr.get_cpp_obj())).T
 
     @property
     def is_measure_end(self):
@@ -721,17 +802,17 @@ parameters and ansatz parameters."
     def remove_barrier(self):
         """Remove all barrier gates."""
         circ = Circuit()
-        for g in self:
-            if not isinstance(g, mq_gates.BarrierGate):
-                circ += g
+        for gate in self:
+            if not isinstance(gate, mq_gates.BarrierGate):
+                circ += gate
         return circ
 
     def remove_measure(self):
         """Remove all measure gate."""
         circ = Circuit()
-        for g in self:
-            if not isinstance(g, mq_gates.Measure):
-                circ += g
+        for gate in self:
+            if not isinstance(gate, mq_gates.Measure):
+                circ += gate
         return circ
 
     def remove_measure_on_qubits(self, qubits):
@@ -953,8 +1034,8 @@ parameters and ansatz parameters."
             subfix (str): The subfix string you want to add to the name of measure gate.
         """
         for i in range(self.n_qubits):
-            s = f"q{i}" if subfix is None else f"q{i}_{subfix}"
-            self += mq_gates.Measure(s).on(i)
+            string = f"q{i}" if subfix is None else f"q{i}_{subfix}"
+            self += mq_gates.Measure(string).on(i)
         return self
 
     def barrier(self, show=True):
@@ -979,7 +1060,7 @@ parameters and ansatz parameters."
             map_obj (Union[int, list[int]]): object qubits.
             maps_ctrl (Union[int, list[int]]): control qubits. Default: None.
         """
-        from mindquantum import UN
+        from mindquantum import UN  # pylint: disable=import-outside-toplevel
 
         self += UN(gate, maps_obj, maps_ctrl)
         return self
@@ -995,7 +1076,9 @@ parameters and ansatz parameters."
             ket (str): Whether to return the quantum state in ket format. Default: False.
             seed (int): The random seed of simulator. Default: None
         """
-        from mindquantum import Simulator
+        from mindquantum import (  # pylint: disable=import-outside-toplevel,cyclic-import
+            Simulator,
+        )
 
         sim = Simulator(backend, self.n_qubits, seed)
         sim.apply_circuit(self, pr)
@@ -1031,6 +1114,7 @@ parameters and ansatz parameters."
             style (dict, str): the style to set svg circuit. Currently, we support
                 'official', 'light' and 'dark'. Default: None.
         """
+        # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum.io.display._config import (
             _svg_config_dark,
             _svg_config_light,
@@ -1054,9 +1138,9 @@ parameters and ansatz parameters."
     def remove_noise(self):
         """Remove all noise gate."""
         circ = Circuit()
-        for g in self:
-            if not isinstance(g, mq_gates.NoiseGate):
-                circ += g
+        for gate in self:
+            if not isinstance(gate, mq_gates.NoiseGate):
+                circ += gate
         return circ
 
     def with_noise(self, noise_gate=mq_gates.AmplitudeDampingChannel(0.001)):
@@ -1067,10 +1151,10 @@ parameters and ansatz parameters."
             noise_gate (NoiseGate): The NoiseGate you want to apply. Default: AmplitudeDampingChannel(0.001).
         """
         circ = Circuit()
-        for g in self:
-            circ += g
-            if not isinstance(g, (mq_gates.Measure, mq_gates.NoiseGate)):
-                for i in g.obj_qubits:
+        for gate in self:
+            circ += gate
+            if not isinstance(gate, (mq_gates.Measure, mq_gates.NoiseGate)):
+                for i in gate.obj_qubits:
                     circ += noise_gate.on(i)
         return circ
 
@@ -1086,9 +1170,9 @@ parameters and ansatz parameters."
             circ = self
         else:
             circ = self * 1
-        for g in circ:
-            if g.parameterized:
-                g.coeff.as_encoder()
+        for gate in circ:
+            if gate.parameterized:
+                gate.coeff.as_encoder()
         circ.all_encoder.merge(circ.all_ansatz)
         circ.all_ansatz.map = {}
         circ.has_cpp_obj = False
@@ -1106,13 +1190,15 @@ parameters and ansatz parameters."
             circ = self
         else:
             circ = self * 1
-        for g in circ:
-            if g.parameterized:
-                g.coeff.as_ansatz()
+        for gate in circ:
+            if gate.parameterized:
+                gate.coeff.as_ansatz()
         circ.all_ansatz.merge(circ.all_encoder)
         circ.all_encoder.map = {}
         circ.has_cpp_obj = False
         return circ
 
 
-__all__ = ['Circuit']
+A = apply
+
+__all__ = ['Circuit', 'A']

@@ -13,6 +13,8 @@
 # limitations under the License.
 # ============================================================================
 
+# pylint: disable=duplicate-code
+
 """Implement UCCSD0/UCCGSD0 ansatz using CCD0 excitation operators."""
 
 import itertools
@@ -23,8 +25,6 @@ import numpy
 from mindquantum.core.operators import FermionOperator
 from mindquantum.core.operators.utils import hermitian_conjugated, normal_ordered
 from mindquantum.core.parameterresolver import ParameterResolver
-
-# pylint: disable=bad-continuation
 
 
 def _check_int_list(input_list, name):
@@ -41,6 +41,7 @@ def _pij(i: int, j: int):
 
     See :class: `mindquantum.third_party.unitary_cc.spin_adapted_t2`.
     """
+    # pylint: disable=invalid-name
     ia = i * 2 + 0
     ib = i * 2 + 1
     ja = j * 2 + 0
@@ -65,6 +66,7 @@ def _qij_plus(i: int, j: int):
 
     See :class: `mindquantum.third_party.unitary_cc.spin_adapted_t2`.
     """
+    # pylint: disable=invalid-name
     ia = i * 2 + 0
     ja = j * 2 + 0
     term = FermionOperator(((ja, 0), (ia, 0)), 1.0)
@@ -77,6 +79,7 @@ def _qij_minus(i: int, j: int):
 
     See :class: `mindquantum.third_party.unitary_cc.spin_adapted_t2`.
     """
+    # pylint: disable=invalid-name
     ib = i * 2 + 1
     jb = j * 2 + 1
     term = FermionOperator(((jb, 0), (ib, 0)), 1.0)
@@ -89,6 +92,7 @@ def _qij_0(i: int, j: int):
 
     See :class: `mindquantum.third_party.unitary_cc.spin_adapted_t2`.
     """
+    # pylint: disable=invalid-name
     ia = i * 2 + 0
     ib = i * 2 + 1
     ja = j * 2 + 0
@@ -116,7 +120,7 @@ def _qij_vec_dagger(i: int, j: int):
     return [hermitian_conjugated(i) for i in _qij_vec(i, j)]
 
 
-def _qij_vec_inner(a: int, b: int, i: int, j: int):
+def _qij_vec_inner(a: int, b: int, i: int, j: int):  # pylint: disable=invalid-name
     r"""
     CCD0 ansatz helper function.
 
@@ -159,6 +163,7 @@ def spin_adapted_t1(i, j):
     if not isinstance(i, int) or not isinstance(j, int):
         raise ValueError(f"Requires integers as orbital indices, but get {type(i)} and {type(j)}.")
 
+    # pylint: disable=invalid-name
     ia = i * 2 + 0
     ib = i * 2 + 1
     ja = j * 2 + 0
@@ -213,6 +218,7 @@ def spin_adapted_t2(creation_list, annihilation_list):
             f"but get {len(creation_list)} and {len(annihilation_list)} indices.",
         )
 
+    # pylint: disable=invalid-name
     p = creation_list[0]
     r = annihilation_list[0]
     q = creation_list[1]
@@ -223,6 +229,7 @@ def spin_adapted_t2(creation_list, annihilation_list):
     return tpqrs_list
 
 
+# pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
 def uccsd0_singlet_generator(
     n_qubits=None, n_electrons=None, anti_hermitian=True, occ_orb=None, vir_orb=None, generalized=False
 ):
@@ -358,6 +365,7 @@ def uccsd0_singlet_generator(
 
     singles_counter = 0
     for pq_counter, (p_idx, q_idx) in enumerate(itertools.product(range(n_vir), range(n_occ))):
+        # pylint: disable=invalid-name
         p = vir_indices[p_idx]
         q = occ_indices[q_idx]
         tpq_list = spin_adapted_t1(p, q)
@@ -372,6 +380,7 @@ def uccsd0_singlet_generator(
 
     doubles_counter = 0
     for pq_counter, (p_idx, q_idx) in enumerate(itertools.product(range(n_vir), range(n_vir))):
+        # pylint: disable=invalid-name
         # Only take half of the loop to avoid repeated excitations
         if q_idx > p_idx:
             continue

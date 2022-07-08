@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+# pylint: disable=invalid-name
+
 """Test qubit excitation operator."""
 
 from mindquantum.core.operators import (

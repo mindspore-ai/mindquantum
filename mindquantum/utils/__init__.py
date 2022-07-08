@@ -15,8 +15,9 @@
 
 """Utils."""
 
-from .f import ket_string, mod, normalize, random_circuit, random_state
+from .f import mod, normalize, random_circuit, random_state
 from .fdopen import fdopen
+from .string_utils import ket_string
 
 __all__ = [
     'fdopen',

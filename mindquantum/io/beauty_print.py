@@ -22,11 +22,12 @@ def _fill_fist_sep(string, sep, length, fill_char=' '):
     return string[:poi] + fill_char * (length - poi) + string[poi:]
 
 
-def _check_str(s, name):
-    if not isinstance(s, str):
-        raise TypeError(f"{name} requires str, but get {type(s)}!")
+def _check_str(string, name):
+    if not isinstance(string, str):
+        raise TypeError(f"{name} requires str, but get {type(string)}!")
 
 
+# pylint: disable=too-many-arguments
 def bprint(strings: list, align=":", title='', v_around='=', h_around='|', fill_char=' '):
     """
     Print the information in block shape.
@@ -57,8 +58,8 @@ def bprint(strings: list, align=":", title='', v_around='=', h_around='|', fill_
     """
     if not isinstance(strings, list):
         raise TypeError(f"strings requires a list, but get {type(strings)}")
-    for s in strings:
-        _check_str(s, "string")
+    for string in strings:
+        _check_str(string, "string")
     _check_str(align, 'align')
     _check_str(title, 'title')
     _check_str(v_around, 'v_around')

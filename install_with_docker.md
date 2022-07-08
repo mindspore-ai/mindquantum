@@ -43,11 +43,9 @@ docker run -it swr.cn-south-1.myhuaweicloud.com/mindspore/mindspore-cpu:{tag} /b
 
 ```python
 import numpy as np
-import mindspore.context as context
-import mindspore.ops as ops
-from mindspore import Tensor
+from mindspore import context, ops, Tensor
 
-context.set_context(mode=context.PYNATIVE_MODE, device_target='CPU')
+context.set_context(mode=context.PYNATIVE_MODE, device_target="CPU")
 
 x = Tensor(np.ones([1, 3, 3, 4]).astype(np.float32))
 y = Tensor(np.ones([1, 3, 3, 4]).astype(np.float32))
@@ -96,6 +94,6 @@ print(ops.add(x, y))
 
 ### 验证MindQuantum是否安装成功
 
-```bash
+```shell
 python -c 'import mindquantum'
 ```

@@ -42,7 +42,7 @@ def _check_single_rot_gate_seq(single_rot_gate_seq):
             raise ValueError("single rotation gate should be a one qubit gate.")
 
 
-class HardwareEfficientAnsatz(Ansatz):
+class HardwareEfficientAnsatz(Ansatz):  # pylint: disable=too-few-public-methods
     r"""
     HardwareEfficientAnsatz is a kind of ansatz that can be easily implement on quantum chip.
 
@@ -79,7 +79,9 @@ class HardwareEfficientAnsatz(Ansatz):
 
     """
 
-    def __init__(self, n_qubits, single_rot_gate_seq, entangle_gate=X, entangle_mapping='linear', depth=1):
+    def __init__(  # pylint: disable=too-many-arguments
+        self, n_qubits, single_rot_gate_seq, entangle_gate=X, entangle_mapping='linear', depth=1
+    ):
         """Initialize a HardwareEfficientAnsatz object."""
         _check_single_rot_gate_seq(single_rot_gate_seq)
         _check_int_type('depth', depth)
@@ -88,7 +90,9 @@ class HardwareEfficientAnsatz(Ansatz):
             raise ValueError(f"entangle gate requires a non parameterized gate, but get {entangle_gate}")
         super().__init__('Hardware Efficient', n_qubits, single_rot_gate_seq, entangle_gate, entangle_mapping, depth)
 
-    def _implement(self, single_rot_gate_seq, entangle_gate, entangle_mapping, depth):
+    def _implement(  # pylint: disable=arguments-differ,invalid-name
+        self, single_rot_gate_seq, entangle_gate, entangle_mapping, depth
+    ):
         """Implement of hardware efficient ansatz."""
         entangle_mapping = self._get_entangle_mapping(entangle_mapping)
         circ = Circuit()
@@ -130,15 +134,15 @@ or a list of tuple of the qubits that the entanglement gate act on."
         """Build entanglement layer."""
         gate_qubit = int(np.log2(entangle_gate.matrix().shape[0]))
         circ = Circuit()
-        for qs in entangle_mapping:
+        for qubits in entangle_mapping:
             if gate_qubit == 1:
-                circ += entangle_gate.on(qs[1], qs[0])
+                circ += entangle_gate.on(qubits[1], qubits[0])
             elif gate_qubit == 2:
-                circ += entangle_gate.on(qs)
+                circ += entangle_gate.on(qubits)
             else:
                 raise ValueError(
-                    f"Entangle gate can only be a controlled single qubit gate \
-or two qubits gate, but get {gate_qubit} qubits gate."
+                    "Entangle gate can only be a controlled single qubit gate or two qubits gate, "
+                    f"but get {gate_qubit} qubits gate."
                 )
         return circ
 

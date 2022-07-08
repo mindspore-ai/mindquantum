@@ -10,8 +10,6 @@
 "mindquantum/mindquantum/framework/_check_qnn_input.py"                                "duplicate-string-formatting-argument"
 "mindquantum/mindquantum/core/ops/_base_operator.py"                                   "bare-except"
 "mindquantum/mindquantum/algorithm/nisq"                                               "arguments-differ"
-"mindquantum/mindquantum/core/circuit/circuit.py"                                      "redefined-outer-name"
-"mindquantum/mindquantum/core/circuit/circuit.py"                                      "invalid-name"
 "mindquantum/mindquantum/framework"                                                    "missing-docstring"
 "mindquantum/mindquantum/io/display/circuit_svg_drawer.py"                             "abstract-method"
 "mindquantum/mindquantum/core/gates"                                                   "abstract-method"

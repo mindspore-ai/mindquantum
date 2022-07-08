@@ -51,10 +51,10 @@ def general_ghz_state(qubits):
     _check_input_type('qubits', (list, range), qubits)
     circuit = Circuit()
 
-    for i in range(len(qubits)):
+    for i, qubit in enumerate(qubits):
         if i == 0:
-            circuit += H.on(qubits[i])
+            circuit += H.on(qubit)
         else:
-            circuit += X.on(qubits[i], qubits[i - 1])
+            circuit += X.on(qubit, qubits[i - 1])
 
     return circuit

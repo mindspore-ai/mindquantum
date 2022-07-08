@@ -28,7 +28,7 @@ sys.modules[f'{__name__}.circuit'] = circuit
 sys.modules[f'{__name__}.ops'] = ops
 sys.modules[f'{__name__}.optimizer'] = optimizer
 sys.modules[f'{__name__}.simulator'] = simulator
-sys.modules[f'{__name__}.simulator.projectq'] = simulator.projectq
+sys.modules[f'{__name__}.simulator.projectq'] = simulator.projectq  # pylint: disable=no-member
 sys.modules[f'{__name__}.symengine'] = symengine
 
 symengine.symbols = _symengine_utilities.symbols

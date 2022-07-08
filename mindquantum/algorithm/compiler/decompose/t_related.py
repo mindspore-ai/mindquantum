@@ -48,17 +48,15 @@ def ct_decompose(gate: gates.TGate):
     """
     _check_input_type('gate', gates.TGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)
-    solutions = []
-    c1 = Circuit()
-    solutions.append(c1)
-    q0 = gate.ctrl_qubits[0]
-    q1 = gate.obj_qubits[0]
-    c1 += gates.PhaseShift(np.pi / 8).on(q0)
-    c1 += gates.RZ(np.pi / 8).on(q1)
-    c1 += gates.X.on(q1, q0)
-    c1 += gates.RZ(-np.pi / 8).on(q1)
-    c1 += gates.X.on(q1, q0)
-    return solutions
+    circuit1 = Circuit()
+    control = gate.ctrl_qubits[0]
+    target = gate.obj_qubits[0]
+    circuit1 += gates.PhaseShift(np.pi / 8).on(control)
+    circuit1 += gates.RZ(np.pi / 8).on(target)
+    circuit1 += gates.X.on(target, control)
+    circuit1 += gates.RZ(-np.pi / 8).on(target)
+    circuit1 += gates.X.on(target, control)
+    return [circuit1]
 
 
 decompose_rules = ['ct_decompose']

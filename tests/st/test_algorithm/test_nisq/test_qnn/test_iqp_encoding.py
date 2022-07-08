@@ -25,7 +25,7 @@ def test_general_iqp_encoding():
     Expectation:
     """
     iqp = IQPEncoding(2)
-    a = np.array([0, 0])
-    qs = iqp.circuit.get_qs(pr=iqp.data_preparation(a))
-    qs_exp = 1 / 2 * np.array([1, 1, 1, 1])
-    assert np.allclose(qs, qs_exp)
+    data = np.array([0, 0])
+    state = iqp.circuit.get_qs(pr=iqp.data_preparation(data))
+    state_exp = 1 / 2 * np.array([1, 1, 1, 1])
+    assert np.allclose(state, state_exp)

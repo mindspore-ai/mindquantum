@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+# pylint: disable=abstract-method,duplicate-code
+
 """Basic module for quantum gate."""
 
 import copy
@@ -21,23 +24,23 @@ import numpy as np
 import scipy
 
 from mindquantum import mqbackend as mb
-from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.io.display._config import _DAGGER_MASK
-from mindquantum.utils.f import join_without_empty, pauli_string_matrix, s_quantifier
+from mindquantum.utils.f import pauli_string_matrix
+from mindquantum.utils.quantifiers import s_quantifier
+from mindquantum.utils.string_utils import join_without_empty
 from mindquantum.utils.type_value_check import (
     _check_gate_type,
     _check_input_type,
     _check_qubit_id,
 )
 
+from ..parameterresolver import ParameterResolver
+
 HERMITIAN_PROPERTIES = {
     'self_hermitian': 0,  # the hermitian of this gate is its self
     'do_hermitian': 1,  # just do hermitian when you need hermitian
     'params_opposite': 2,  # use the negative parameters for hermitian
 }
-
-
-# pylint: disable=bad-continuation
 
 
 class BasicGate:
@@ -87,7 +90,7 @@ class BasicGate:
         """
         return None
 
-    def __commutate__(self, other):
+    def __commutate__(self, _):
         """Indicate whether a gate commutes."""
         return False
 
@@ -108,8 +111,8 @@ class BasicGate:
 
     def __str_in_terminal__(self):
         """Return a string representation of the object."""
-        qe = self.__qubits_expression__()
-        return self.name + (f"({qe})" if qe else '')
+        expression = self.__qubits_expression__()
+        return self.name + (f"({expression})" if expression else '')
 
     def __type_specific_str__(self):
         """Return a string representation of the object."""
@@ -126,7 +129,7 @@ class BasicGate:
     @property
     def parameterized(self):
         """Check whether this gate is a parameterized gate."""
-        return isinstance(self, ParameterGate) and not self.coeff.is_const()
+        return isinstance(self, ParameterGate) and not self.coeff.is_const()  # pylint: disable=no-member
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
@@ -144,7 +147,7 @@ class BasicGate:
         """
         return self
 
-    def on(self, obj_qubits, ctrl_qubits=None):
+    def on(self, obj_qubits, ctrl_qubits=None):  # pylint: disable=invalid-name
         """
         Define which qubit the gate act on and the control qubit.
 
@@ -203,9 +206,9 @@ class BasicGate:
 
         qubits = list(qubits)
 
-        for i, _ in enumerate(qubits):
-            if hasattr(qubits[i], "qubit_id"):
-                qubits[i] = [qubits[i]]
+        for i, qubit in enumerate(qubits):
+            if hasattr(qubit, "qubit_id"):
+                qubits[i] = [qubit]
         ctrls = []
         objs = []
         if len(qubits) == 1:
@@ -258,7 +261,10 @@ class QuantumGate(BasicGate):
 
     def __commutate__(self, other):
         """Indicate whether a gate commutes."""
-        from mindquantum.core.gates import GlobalPhase, IGate
+        from .basicgate import (  # pylint: disable=import-outside-toplevel,cyclic-import
+            GlobalPhase,
+            IGate,
+        )
 
         if isinstance(self, (IGate, GlobalPhase)) or isinstance(other, (IGate, GlobalPhase)) or self == other:
             return True
@@ -308,20 +314,20 @@ class NonHermitianGate(QuantumGate):
 
     def __str_in_terminal__(self):
         """Return a string representation of the object."""
-        s = super().__str_in_terminal__()
-        return f"{self.name}{self.__type_specific_str__()}{s[len(self.name):]}"
+        string = super().__str_in_terminal__()
+        return f"{self.name}{self.__type_specific_str__()}{string[len(self.name):]}"
 
     def __str_in_circ__(self):
         """Return a string representation of the object."""
-        s = super().__str_in_circ__()
-        return f"{self.name}{self.__type_specific_str__()}{s[len(self.name):]}"
+        string = super().__str_in_circ__()
+        return f"{self.name}{self.__type_specific_str__()}{string[len(self.name):]}"
 
     def __str_in_svg__(self):
         """Return a string representation of the object."""
-        s = super().__str_in_svg__()
+        string = super().__str_in_svg__()
         if self.hermitianed:
-            s += _DAGGER_MASK
-        return s
+            string += _DAGGER_MASK
+        return string
 
     def __eq__(self, other):
         """Equality comparison operator."""
@@ -336,7 +342,7 @@ class MatrixGate(QuantumGate):
         super().__init__(name, n_qubits, *args, obj_qubits=obj_qubits, ctrl_qubits=ctrl_qubits, **kwargs)
         self.matrix_value = matrix_value
 
-    def matrix(self):
+    def matrix(self):  # pylint: disable=arguments-differ
         """Matrix of parameterized gate."""
         return self.matrix_value
 
@@ -380,14 +386,14 @@ class ParameterGate(QuantumGate):
         """Return a string representation of the object."""
         qubit_s = QuantumGate.__qubits_expression__(self)
         pr_s = self.__type_specific_str__()
-        s = join_without_empty('|', [pr_s, qubit_s])
-        return self.name + (f'({s})' if s else '')
+        string = join_without_empty('|', [pr_s, qubit_s])
+        return self.name + (f'({string})' if string else '')
 
     def __str_in_circ__(self):
         """Return a string representation of the object."""
         pr_s = self.__type_specific_str__()
-        s = join_without_empty('|', [pr_s])
-        return self.name + (f'({s})' if s else '')
+        string = join_without_empty('|', [pr_s])
+        return self.name + (f'({string})' if string else '')
 
     def __call__(self, pr):
         """Definition of a function call operator."""
@@ -458,7 +464,9 @@ class ParameterOppsGate(ParameterGate):
 class NoneParamNonHermMat(NoneParameterGate, MatrixGate, NonHermitianGate):
     """Gate that is both none parameterized and non hermitian."""
 
-    def __init__(self, matrix_value, name, n_qubits, obj_qubits=None, ctrl_qubits=None, hermitianed=False):
+    def __init__(
+        self, matrix_value, name, n_qubits, obj_qubits=None, ctrl_qubits=None, hermitianed=False
+    ):  # pylint: disable=too-many-arguments
         """Initialize a NoneParamNonHermMat object."""
         super().__init__(
             matrix_value, name, n_qubits, obj_qubits=obj_qubits, ctrl_qubits=ctrl_qubits, hermitianed=hermitianed
@@ -495,7 +503,11 @@ class PauliGate(NoneParamSelfHermMat):
 
     def __pow__(self, coeff):
         """Calculate the power of a Ppauli gate."""
-        from mindquantum.core.gates.basicgate import RX, RY, RZ
+        from .basicgate import (  # pylint: disable=import-outside-toplevel,cyclic-import
+            RX,
+            RY,
+            RZ,
+        )
 
         gate_map = {'X': RX, 'Y': RY, 'Z': RZ}
         if self.name not in gate_map:
@@ -528,12 +540,14 @@ class PauliStringGate(NoneParamSelfHermMat):
 class RotSelfHermMat(ParameterOppsGate):
     """Exponential of a self hermitian gate."""
 
-    def __init__(self, core, name, n_qubits, obj_qubits=None, ctrl_qubits=None, pr=ParameterResolver()):
+    def __init__(
+        self, core, name, n_qubits, obj_qubits=None, ctrl_qubits=None, pr=ParameterResolver()
+    ):  # pylint: disable=too-many-arguments
         """Initialize a RotSelfHermMat object."""
         super().__init__(pr, name, n_qubits, obj_qubits=obj_qubits, ctrl_qubits=ctrl_qubits)
         self.core = core
 
-    def matrix(self, pr=None, frac=0.5):
+    def matrix(self, pr=None, frac=0.5):  # pylint: disable=arguments-differ
         """Matrix of parameterized gate."""
         val = 0
         if not self.parameterized:
@@ -562,7 +576,9 @@ class RotSelfHermMat(ParameterOppsGate):
 class ParamNonHerm(ParameterGate, NonHermitianGate):
     """Gate that is parameterized and non hermitian."""
 
-    def __init__(self, pr, matrix_generator, diff_matrix_generator, name, n_qubits, obj_qubits=None, ctrl_qubits=None):
+    def __init__(
+        self, pr, matrix_generator, diff_matrix_generator, name, n_qubits, obj_qubits=None, ctrl_qubits=None
+    ):  # pylint: disable=too-many-arguments
         """Initialize a ParamNonHerm object."""
         super().__init__(pr, name, n_qubits, obj_qubits=obj_qubits, ctrl_qubits=ctrl_qubits)
         self.matrix_generator = matrix_generator
@@ -570,20 +586,20 @@ class ParamNonHerm(ParameterGate, NonHermitianGate):
 
     def __str_in_circ__(self):
         """Return a string representation of the object."""
-        s = ParameterGate.__str_in_circ__(self)
-        return self.name + NonHermitianGate.__type_specific_str__(self) + s[len(self.name) :]  # noqa: E203
+        string = ParameterGate.__str_in_circ__(self)
+        return self.name + NonHermitianGate.__type_specific_str__(self) + string[len(self.name) :]  # noqa: E203
 
     def __str_in_svg__(self):
         """Return a string representation of the object."""
-        s = ParameterGate.__str_in_svg__(self)
-        return self.name + NonHermitianGate.__type_specific_str__(self) + s[len(self.name) :]  # noqa: E203
+        string = ParameterGate.__str_in_svg__(self)
+        return self.name + NonHermitianGate.__type_specific_str__(self) + string[len(self.name) :]  # noqa: E203
 
     def __str_in_terminal__(self):
         """Return a string representation of the object."""
-        s = ParameterGate.__str_in_terminal__(self)
-        return self.name + NonHermitianGate.__type_specific_str__(self) + s[len(self.name) :]  # noqa: E203
+        string = ParameterGate.__str_in_terminal__(self)
+        return self.name + NonHermitianGate.__type_specific_str__(self) + string[len(self.name) :]  # noqa: E203
 
-    def matrix(self, pr=None):
+    def matrix(self, pr=None):  # pylint: disable=arguments-differ
         """
         Matrix of parameterized gate.
 
@@ -616,10 +632,10 @@ class ParamNonHerm(ParameterGate, NonHermitianGate):
             if not new.is_const():
                 raise ValueError("Parameter not set completed.")
             val = new.const
-        m = self.matrix_generator(val)
+        matrix = self.matrix_generator(val)
         if self.hermitianed:
-            return np.conj(m.T)
-        return m
+            return np.conj(matrix.T)
+        return matrix
 
     def diff_matrix(self, pr=None, about_what=None):
         """
@@ -651,10 +667,10 @@ class ParamNonHerm(ParameterGate, NonHermitianGate):
                 raise ValueError("Should specific which parameter are going to do derivation.")
             for i in self.coeff:
                 about_what = i
-        m = self.coeff[about_what] * self.diff_matrix_generator(val)
+        matrix = self.coeff[about_what] * self.diff_matrix_generator(val)
         if self.hermitianed:
-            return np.conj(m.T)
-        return m
+            return np.conj(matrix.T)
+        return matrix
 
 
 class NoiseGate(NoneParameterGate):

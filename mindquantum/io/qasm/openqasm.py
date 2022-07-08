@@ -40,10 +40,10 @@ def _find_qubit_id(cmd):
 def _extr_parameter(cmd):
     """Extra parameter for parameterized gate in openqasm cmd."""
     param_start = cmd.find('(')
-    r = cmd.find(')')
-    if param_start == -1 or r == -1:
+    idx = cmd.find(')')
+    if param_start == -1 or idx == -1:
         raise ValueError(f"no parameter found in cmd {cmd}")
-    all_expre = cmd[param_start + 1 : r]  # noqa: E203
+    all_expre = cmd[param_start + 1 : idx]  # noqa: E203
     all_expre = all_expre.split(',')
     out = []
     for expre in all_expre:
@@ -63,30 +63,34 @@ def _extr_parameter(cmd):
     return out[0] if len(all_expre) == 1 else out
 
 
-def u3(theta, psi, lambd, q):
+def u3(theta, psi, lambd, qubit):
     """Decompose u3 gate."""
-    from mindquantum import Circuit
+    from mindquantum import (  # pylint: disable=import-outside-toplevel,cyclic-import
+        Circuit,
+    )
 
-    circ = Circuit().rz(psi + 3 * np.pi, q)
-    circ.rx(np.pi / 2, q).rz(theta + np.pi, q)
-    circ.rx(np.pi / 2, q).rz(lambd, q)
+    circ = Circuit().rz(psi + 3 * np.pi, qubit)
+    circ.rx(np.pi / 2, qubit).rz(theta + np.pi, qubit)
+    circ.rx(np.pi / 2, qubit).rz(lambd, qubit)
     return circ
 
 
-def u1(lambd, q):
+def u1(lambd, qubit):
     """Openqasm u1 gate."""
-    from mindquantum import Circuit
+    from mindquantum import (  # pylint: disable=import-outside-toplevel,cyclic-import
+        Circuit,
+    )
 
-    return Circuit().rz(lambd, q)
+    return Circuit().rz(lambd, qubit)
 
 
 def isgateinstance(gate, gates):
     """Check whether gate is any instance of supported gate type."""
     if isinstance(gates, list):
         gates = (gates,)
-    for gate_test in gates:
-        for g in gate_test:
-            if isinstance(gate, g):
+    for gate_list in gates:
+        for gate_set in gate_list:
+            if isinstance(gate, gate_set):
                 return True
     return False
 
@@ -108,12 +112,14 @@ class OpenQASM:
 
     def __init__(self):
         """Initialize an OpenQASM object."""
-        from mindquantum import Circuit
+        from mindquantum import (  # pylint: disable=import-outside-toplevel,cyclic-import
+            Circuit,
+        )
 
         self.circuit = Circuit()
         self.cmds = []
 
-    def to_string(self, circuit, version="2.0"):
+    def to_string(self, circuit, version="2.0"):  # pylint: disable=too-many-branches,too-many-statements
         """
         Convert circuit to openqasm.
 
@@ -130,8 +136,8 @@ class OpenQASM:
             NotImplementedError: if openqasm version not implement.
             ValueError: if gate not implement in this version.
         """
-        from mindquantum import gates
-        from mindquantum.core import Circuit
+        # pylint: disable=import-outside-toplevel,cyclic-import
+        from mindquantum import Circuit, gates
 
         if not isinstance(circuit, Circuit):
             raise TypeError(f"circuit requires Circuit, but get {type(circuit)}.")
@@ -158,15 +164,15 @@ class OpenQASM:
                             self.cmds.append(f"{gate.name.lower()} q[{obj}];")
                     else:
                         obj = gate.obj_qubits[0]
-                        p = gate.coeff
-                        if not p.is_const():
+                        param = gate.coeff
+                        if not param.is_const():
                             raise ValueError(f"Cannot convert parameterized gate {gate} to OpenQASM.")
-                        p = p.const
+                        param = param.const
                         if gate.ctrl_qubits:
                             ctrl = gate.ctrl_qubits[0]
-                            self.cmds.append(f"c{gate.name.lower()}({p}) q[{ctrl}],q[{obj}];")
+                            self.cmds.append(f"c{gate.name.lower()}({param}) q[{ctrl}],q[{obj}];")
                         else:
-                            self.cmds.append(f"{gate.name.lower()}({p}) q[{obj}];")
+                            self.cmds.append(f"{gate.name.lower()}({param}) q[{obj}];")
                 if isgateinstance(gate, (double_np, double_p)):
                     if gate.ctrl_qubits:
                         raise ValueError(f"control two qubits gate {gate} not implement")
@@ -180,8 +186,8 @@ class OpenQASM:
                             self.cmds.append(f"cx q[{obj[1]}],q[{obj[0]}];")
                     else:
                         obj = gate.obj_qubits
-                        p = gate.coeff
-                        self.cmds.append(f"{gate.name.lower()}({p}) q[{obj[0]}],q[{obj[1]}];")
+                        param = gate.coeff
+                        self.cmds.append(f"{gate.name.lower()}({param}) q[{obj[0]}],q[{obj[1]}];")
         else:
             raise NotImplementedError(f"openqasm version {version} not implement")
         return '\n'.join(self.cmds)
@@ -200,7 +206,9 @@ class OpenQASM:
             TypeError: if `circuit` is not a Circuit.
             TypeError: if `version` is not a str.
         """
-        from mindquantum.core import Circuit
+        from mindquantum.core import (  # pylint: disable=import-outside-toplevel,cyclic-import
+            Circuit,
+        )
 
         if not isinstance(file_name, str):
             raise TypeError(f'file_name requires a str, but get {type(file_name)}')
@@ -208,9 +216,8 @@ class OpenQASM:
             raise TypeError(f"circuit requires a Circuit, but get {type(circuit)}")
         if not isinstance(version, str):
             raise TypeError(f'version requires a str, but get {type(version)}')
-        cs = self.to_string(circuit, version)
-        with fdopen(file_name, 'w') as f:
-            f.writelines(cs)
+        with fdopen(file_name, 'w') as fd:
+            fd.writelines(self.to_string(circuit, version))
         print(f"write circuit to {file_name} finished!")
 
     def from_file(self, file_name):
@@ -223,8 +230,8 @@ class OpenQASM:
         Returns:
             Circuit, the quantum circuit translated from openqasm file.
         """
-        with fdopen(file_name, 'r') as f:
-            cmds = f.readlines()
+        with fdopen(file_name, 'r') as fd:
+            cmds = fd.readlines()
         self.cmds, version = self._filter(cmds)
         if version == '2.0':
             self._trans_v2(self.cmds)
@@ -246,35 +253,36 @@ class OpenQASM:
                 out.append(cmd[:-1])
         return out, version
 
-    def _trans_v2(self, cmds):
+    def _trans_v2(self, cmds):  # pylint: disable=too-many-branches
         """Trans method for openqasm version 2."""
+        # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum import Circuit
         from mindquantum.core.circuit import controlled
 
         self.circuit = Circuit()
         for cmd in cmds:
-            q = _find_qubit_id(cmd)
+            qubit = _find_qubit_id(cmd)
             if cmd.startswith("h "):
-                self.circuit.h(q[0])
+                self.circuit.h(qubit[0])
             elif cmd.startswith("x "):
-                self.circuit.x(q[0])
+                self.circuit.x(qubit[0])
             elif cmd.startswith("y "):
-                self.circuit.y(q[0])
+                self.circuit.y(qubit[0])
             elif cmd.startswith("z "):
-                self.circuit.z(q[0])
+                self.circuit.z(qubit[0])
             elif cmd.startswith("cx "):
-                self.circuit.x(q[1], q[0])
+                self.circuit.x(qubit[1], qubit[0])
             elif cmd.startswith("cz "):
-                self.circuit.z(*q[::-1])
+                self.circuit.z(*qubit[::-1])
             elif cmd.startswith("rz("):
-                self.circuit.rz(_extr_parameter(cmd), q[0])
+                self.circuit.rz(_extr_parameter(cmd), qubit[0])
             elif cmd.startswith("ry("):
-                self.circuit.ry(_extr_parameter(cmd), q[0])
+                self.circuit.ry(_extr_parameter(cmd), qubit[0])
             elif cmd.startswith("rx("):
-                self.circuit.rx(_extr_parameter(cmd), q[0])
+                self.circuit.rx(_extr_parameter(cmd), qubit[0])
             elif cmd.startswith("u3("):
-                self.circuit += u3(*_extr_parameter(cmd), q[0])
+                self.circuit += u3(*_extr_parameter(cmd), qubit[0])
             elif cmd.startswith("cu1("):
-                self.circuit += controlled(u1(_extr_parameter(cmd), q[1]))(q[0])
+                self.circuit += controlled(u1(_extr_parameter(cmd), qubit[1]))(qubit[0])
             else:
                 raise ValueError(f"transfer cmd {cmd} not implement yet!")

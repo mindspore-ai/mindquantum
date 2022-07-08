@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+# pylint: disable=too-many-lines
+
 """Parameter resolver."""
 
 import copy
@@ -23,11 +26,8 @@ from typing import Iterable
 import numpy as np
 
 from mindquantum import mqbackend as mb
-from mindquantum.utils.f import (
-    is_two_number_close,
-    join_without_empty,
-    string_expression,
-)
+from mindquantum.utils.f import is_two_number_close
+from mindquantum.utils.string_utils import join_without_empty, string_expression
 from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
 
 
@@ -37,7 +37,7 @@ def is_type_upgrade(origin_v, other_v):
     return not isinstance(tmp, type(origin_v))
 
 
-class ParameterResolver:
+class ParameterResolver:  # pylint: disable=too-many-public-methods
     """
     A ParameterRsolver can set the parameter of parameterized quantum gate or parameterized quantum circuit.
 
@@ -74,7 +74,7 @@ class ParameterResolver:
         {'a': 1.0}, const: 0.0
     """
 
-    def __init__(self, data=None, const=None, dtype=None):
+    def __init__(self, data=None, const=None, dtype=None):  # pylint: disable=too-many-branches
         """Initialize a ParameterResolver object."""
         if dtype is None:
             if isinstance(data, (complex, np.complex128)):
@@ -621,19 +621,20 @@ resolver discards the imaginary part."
             >>> pr.expression()
             'π*a + √2'
         """
-        s = {}
+        string = {}
         for k, v in self.items():
-            s[k] = string_expression(v)
-            if s[k] == '1':
-                s[k] = ''
-            if s[k] == '-1':
-                s[k] = '-'
+            expr = string_expression(v)
+            string[k] = expr
+            if expr == '1':
+                string[k] = ''
+            if expr == '-1':
+                string[k] = '-'
 
         const = string_expression(self.const)
-        s[''] = const
+        string[''] = const
         res = ''
-        for k, v in s.items():
-            current_s = s[k]
+        for k, v in string.items():
+            current_s = v
             if current_s.endswith('j'):
                 current_s = f'({current_s})'
             if res and (current_s.startswith('(') or not current_s.startswith('-')):
@@ -974,13 +975,13 @@ resolver discards the imaginary part."
             {}, const: 8.0
         """
         _check_input_type('other', (ParameterResolver, dict), other)
-        c = self.const
+        const = self.const
         for k, v in self.items():
             if k in other:
-                c += v * other[k]
+                const += v * other[k]
             else:
                 raise ValueError(f"{k} not in input parameter resolver.")
-        return self.__class__(c, dtype=type(c))
+        return self.__class__(const, dtype=type(const))
 
     def pop(self, v):
         """

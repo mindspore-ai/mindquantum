@@ -20,11 +20,11 @@ import math
 from ._config import _res_text_drawer_config
 
 
-def _trans(v, k, m):
+def _trans(v, k, m):  # pylint: disable=invalid-name
     return math.ceil(v / m * k)
 
 
-def measure_text_drawer(res):
+def measure_text_drawer(res):  # pylint: disable=too-many-locals
     """Draw measure result."""
     max_size = _res_text_drawer_config['max_size']
     vline = _res_text_drawer_config['vline']
@@ -46,21 +46,21 @@ def measure_text_drawer(res):
         max_prop /= 0.8
     ket_exp = 'Keys: '
     ket_exp += ' '.join(keys[::-1])
-    s = [f'shots: {res.shots}']
-    s.append(ket_exp + vline)
+    string = [f'shots: {res.shots}']
+    string.append(ket_exp + vline)
     axis_num = ''
     axis = ''
     for i in range(split):
         axis_num = str(round(max_prop / split * (split - i), deci)).rjust(int(max_size / split)) + axis_num
         axis = axis_mask.rjust(int(max_size / split), hline) + axis
     axis_num = '0.00' + axis_num[4:]
-    s[-1] += axis_num
-    s.append(hline * len(ket_exp) + cross_mask + axis)
+    string[-1] += axis_num
+    string.append(hline * len(ket_exp) + cross_mask + axis)
     for k, v in res.data.items():
         state = k
         state = state.rjust(len(ket_exp))
         state += vline
         state += (box_high if v == max_shot else box_low) * _trans(v / res.shots, max_size, max_prop)
-        s.append(state)
-        s.append(' ' * len(ket_exp) + vline)
-    return s
+        string.append(state)
+        string.append(' ' * len(ket_exp) + vline)
+    return string

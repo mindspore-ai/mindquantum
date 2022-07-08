@@ -50,8 +50,8 @@ _text_drawer_config = {
 
 _text_drawer_config['edge'] = _text_drawer_config['circ_line'] * _text_drawer_config['edge_num']
 
-_CIRCUIT_STYLE = {'style': 'blue bold'}
-_MEA_RES_STYLE = {'style': 'yellow'}
+_CIRCUIT_STYLE = 'blue bold'
+_MEA_RES_STYLE = 'yellow'
 _DAGGER_MASK = '†'
 
 _svg_measure_config_official = {

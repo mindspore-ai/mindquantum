@@ -17,16 +17,16 @@
 
 import openfermion.ops as ofops
 
-from mindquantum.core.operators.fermion_operator import FermionOperator
-from mindquantum.core.operators.polynomial_tensor import PolynomialTensor
-from mindquantum.core.operators.qubit_excitation_operator import QubitExcitationOperator
-from mindquantum.core.operators.qubit_operator import QubitOperator
+from ..operators.fermion_operator import FermionOperator
+from ..operators.polynomial_tensor import PolynomialTensor
+from ..operators.qubit_excitation_operator import QubitExcitationOperator
+from ..operators.qubit_operator import QubitOperator
 
 try:
     from projectq.ops import QubitOperator as PQOperator
 except ImportError:
 
-    class PQOperator:
+    class PQOperator:  # pylint: disable=too-few-public-methods
         """Dummy class for ProjectQ operators."""
 
 
@@ -232,8 +232,8 @@ def number_operator(n_modes=None, mode=None, coefficient=1.0):
 
     operator = FermionOperator()
     if mode is None:
-        for m in range(n_modes):
-            operator += FermionOperator(((m, 1), (m, 0)), coefficient)
+        for mode_idx in range(n_modes):
+            operator += FermionOperator(((mode_idx, 1), (mode_idx, 0)), coefficient)
     else:
         operator = FermionOperator(((mode, 1), (mode, 0)), coefficient)
     return operator
@@ -282,7 +282,7 @@ def hermitian_conjugated(operator):
 
     # Unsupported type
     else:
-        raise TypeError('Taking the hermitian conjugate of a {} is not ' 'supported.'.format(type(operator).__name__))
+        raise TypeError(f'Taking the hermitian conjugate of a {type(operator).__name__} is not supported.')
 
     return conjugate_operator
 

@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+# pylint: disable=pointless-statement,expression-not-assigned
+
 """Test circuitengine."""
 
 import mindquantum.core.gates as G
@@ -24,8 +27,8 @@ def test_allocate_qureg():
     """Test allocate qureg."""
     eng = CircuitEngine()
     qubits = eng.allocate_qureg(2)
-    G.H.__or__((eng.qubits[0],))
-    G.X.__or__((eng.qubits[0], eng.qubits[1]))
+    G.H | (eng.qubits[0],)
+    G.X | (eng.qubits[0], eng.qubits[1])
     assert qubits[0].qubit_id == 0
     assert qubits[1].qubit_id == 1
 
@@ -35,8 +38,8 @@ def test_circuit_generator():
 
     @circuit_generator(3)
     def encoder(qubits):
-        G.H.__or__((qubits[0],))
-        G.X.__or__((qubits[0], qubits[1]))
-        G.RY('p1').__or__((qubits[2],))
+        G.H | (qubits[0],)
+        G.X | (qubits[0], qubits[1])
+        G.RY('p1') | (qubits[2],)
 
     assert isinstance(encoder, Circuit)

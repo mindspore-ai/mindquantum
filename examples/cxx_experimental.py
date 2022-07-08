@@ -12,9 +12,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-"""An example of using the C++ backend for MindQuantum."""
+# pylint: disable=pointless-statement,expression-not-assigned,no-member
 
-# pylint: disable=pointless-statement,expression-not-assigned
+"""An example of using the C++ backend for MindQuantum."""
 
 from projectq.backends import Simulator
 from projectq.cengines import MainEngine

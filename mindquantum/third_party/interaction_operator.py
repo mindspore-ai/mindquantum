@@ -84,6 +84,8 @@ class InteractionOperator(PolynomialTensor):
         if self.constant:
             yield ()
 
+        # pylint: disable=invalid-name
+
         # One-body terms.
         for p in range(self.n_qubits):
             for q in range(p + 1):
@@ -100,6 +102,7 @@ class InteractionOperator(PolynomialTensor):
 
 def _symmetric_two_body_terms(quad, complex_valued):
     """symmetric_two_body_terms."""
+    # pylint: disable=invalid-name
     p, q, r, s = quad
     # four point symmetry
     yield p, q, r, s

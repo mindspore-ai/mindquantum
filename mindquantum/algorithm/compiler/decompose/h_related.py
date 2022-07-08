@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
 """H gate related decompose rule."""
 
 from mindquantum.core import Circuit, gates
@@ -45,19 +46,17 @@ def ch_decompose(gate: gates.HGate):
     """
     _check_input_type('gate', gates.HGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)
-    solutions = []
-    c1 = Circuit()
-    solutions.append(c1)
-    q0 = gate.ctrl_qubits[0]
-    q1 = gate.obj_qubits[0]
-    c1 += gates.S.on(q1)
-    c1 += gates.H.on(q1)
-    c1 += gates.T.on(q1)
-    c1 += gates.X.on(q1, q0)
-    c1 += gates.T.on(q1).hermitian()
-    c1 += gates.H.on(q1)
-    c1 += gates.S.on(q1).hermitian()
-    return solutions
+    circuit = Circuit()
+    control = gate.ctrl_qubits[0]
+    target = gate.obj_qubits[0]
+    circuit += gates.S.on(target)
+    circuit += gates.H.on(target)
+    circuit += gates.T.on(target)
+    circuit += gates.X.on(target, control)
+    circuit += gates.T.on(target).hermitian()
+    circuit += gates.H.on(target)
+    circuit += gates.S.on(target).hermitian()
+    return [circuit]
 
 
 decompose_rules = ['ch_decompose']

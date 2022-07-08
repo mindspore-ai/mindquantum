@@ -14,37 +14,39 @@
 
 """Example of a Grover search implementation."""
 
+# pylint: disable=pointless-statement,redefined-outer-name
+
 from numpy import pi, sqrt
 
 from mindquantum import UN, Circuit, H, Measure, Z
 from mindquantum.simulator import Simulator
 
 
-def bitphaseflip_operator(phase_inversion_qubit, n_qubits):
+def bitphaseflip_operator(phase_inversion_qubit, n_qubits):  # pylint: disable=too-many-branches
     """Bit phase-flip operator."""
-    s = [1 for i in range(1 << n_qubits)]
+    state = [1 for i in range(1 << n_qubits)]
     for i in phase_inversion_qubit:
-        s[i] = -1
-    if s[0] == -1:
-        for i in range(len(s)):
-            s[i] = -1 * s[i]
+        state[i] = -1
+    if state[0] == -1:
+        for i, val in enumerate(state):
+            state[i] = -1 * val
     circuit = Circuit()
-    length = len(s)
-    cz = []
+    length = len(state)
+    cz_list = []
     for i in range(length):
-        if s[i] == -1:
-            cz.append([])
+        if state[i] == -1:
+            cz_list.append([])
             current = i
-            t = 0
+            idx = 0
             while current != 0:
                 if (current & 1) == 1:
-                    cz[-1].append(t)
-                t += 1
+                    cz_list[-1].append(idx)
+                idx += 1
                 current = current >> 1
             for j in range(i + 1, length):
                 if i & j == i:
-                    s[j] = -1 * s[j]
-    for i in cz:
+                    state[j] = -1 * state[j]
+    for i in cz_list:
         if i:
             if len(i) > 1:
                 circuit += Z.on(i[-1], i[:-1])

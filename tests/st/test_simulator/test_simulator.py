@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+# pylint: disable=invalid-name,ungrouped-imports
+
 """Test simulator."""
 
 import numpy as np
@@ -28,7 +31,7 @@ from mindquantum.core.circuit import UN
 from mindquantum.simulator import inner_product
 from mindquantum.simulator.simulator import Simulator
 
-_has_mindspore = True
+_HAS_MINDSPORE = True
 try:
     import mindspore as ms
 
@@ -36,7 +39,7 @@ try:
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
-    _has_mindspore = False
+    _HAS_MINDSPORE = False
 
 
 def _test_init_reset(virtual_qc):
@@ -74,21 +77,21 @@ def _test_apply_circuit_and_hermitian(virtual_qc):
     pr = PR({'a': 1, 'b': 3, 'c': 5})
     s1.apply_circuit(circ, pr)
     v1 = s1.get_qs()
-    m = np.kron(G.RY(3.4).matrix(), G.RY(1.2).matrix())
-    m = np.kron(G.H.matrix(), G.H.matrix()) @ m
-    m = (np.kron(G.I.matrix(), sv0) + np.kron(G.X.matrix(), sv1)) @ m
-    m = np.kron(G.RY(3).matrix(), G.RX(1).matrix()) @ m
-    m = G.ZZ(5).matrix() @ m
-    m = (np.kron(G.I.matrix(), sv0) + np.kron(G.Z.matrix(), sv1)) @ m
-    v = m[:, 0]
+    matrix = np.kron(G.RY(3.4).matrix(), G.RY(1.2).matrix())
+    matrix = np.kron(G.H.matrix(), G.H.matrix()) @ matrix
+    matrix = (np.kron(G.I.matrix(), sv0) + np.kron(G.X.matrix(), sv1)) @ matrix
+    matrix = np.kron(G.RY(3).matrix(), G.RX(1).matrix()) @ matrix
+    matrix = G.ZZ(5).matrix() @ matrix
+    matrix = (np.kron(G.I.matrix(), sv0) + np.kron(G.Z.matrix(), sv1)) @ matrix
+    v = matrix[:, 0]
     assert np.allclose(v, v1)
 
     circ2 = circ.hermitian()
     s1.reset()
     s1.apply_circuit(circ2, pr)
-    m = np.conj(m.T)
+    matrix = np.conj(matrix.T)
     v1 = s1.get_qs()
-    v = m[:, 0]
+    v = matrix[:, 0]
     assert np.allclose(v, v1)
 
 
@@ -127,6 +130,10 @@ def _test_non_hermitian_grad_ops(virtual_qc):
 
 
 def generate_test_circuit():
+    """
+    Description:
+    Expectation:
+    """
     tmpg = G.RX('a')
 
     def rx_matrix_generator(x):
@@ -135,34 +142,33 @@ def generate_test_circuit():
     def rx_diff_matrix_generator(x):
         return tmpg.diff_matrix({'a': x}, 'a')
 
-    c = Circuit()
-    c += UN(G.H, 3)
-    c.x(0).y(1).z(2)
-    c += G.SWAP([0, 2], 1)
-    c += UN(G.X, 3)
-    c += G.ISWAP([0, 1], 2)
-    c.rx(1.2, 0).ry(2.3, 1).rz(3.4, 2)
-    c.x(0, 1).x(1, 2).x(0, 2)
-    c += G.PhaseShift(1.3).on(0, [1, 2])
-    c += UN(G.H, 3)
-    c += UN(G.S, 3)
-    c += qft(range(3))
-    c += G.gene_univ_parameterized_gate('fake_x', rx_matrix_generator, rx_diff_matrix_generator)('a').on(0)
-    c += G.RX('b').on(1, 2)
-    c += G.RX('c').on(2, 0)
-    c += UN(G.H, 3)
-    c += UN(G.T, 3)
-    c += G.UnivMathGate('fake_XX', G.XX(1.2).matrix()).on([0, 1])
-    c += G.YY(2.3).on([1, 2])
-    c += G.ZZ(3.4).on([0, 2])
-    c += G.UnivMathGate('myX', G.X.matrix()).on(0)
-    c += G.Power(G.X, 1.2).on(1)
-    return c
+    circuit = Circuit()
+    circuit += UN(G.H, 3)
+    circuit.x(0).y(1).z(2)
+    circuit += G.SWAP([0, 2], 1)
+    circuit += UN(G.X, 3)
+    circuit += G.ISWAP([0, 1], 2)
+    circuit.rx(1.2, 0).ry(2.3, 1).rz(3.4, 2)
+    circuit.x(0, 1).x(1, 2).x(0, 2)
+    circuit += G.PhaseShift(1.3).on(0, [1, 2])
+    circuit += UN(G.H, 3)
+    circuit += UN(G.S, 3)
+    circuit += qft(range(3))
+    circuit += G.gene_univ_parameterized_gate('fake_x', rx_matrix_generator, rx_diff_matrix_generator)('a').on(0)
+    circuit += G.RX('b').on(1, 2)
+    circuit += G.RX('c').on(2, 0)
+    circuit += UN(G.H, 3)
+    circuit += UN(G.T, 3)
+    circuit += G.UnivMathGate('fake_XX', G.XX(1.2).matrix()).on([0, 1])
+    circuit += G.YY(2.3).on([1, 2])
+    circuit += G.ZZ(3.4).on([0, 2])
+    circuit += G.UnivMathGate('myX', G.X.matrix()).on(0)
+    circuit += G.Power(G.X, 1.2).on(1)
+    return circuit
 
 
-def _test_all_gate_with_simulator(virtual_qc):
+def _test_all_gate_with_simulator(virtual_qc):  # pylint: disable=too-many-locals
     """
-    test
     Description:
     Expectation:
     """
@@ -197,14 +203,13 @@ def _test_all_gate_with_simulator(virtual_qc):
     assert np.allclose(g_a_1, g_a_2, atol=1e-4)
 
 
-@pytest.mark.skipif(not _has_mindspore, reason='MindSpore is not installed')
-def _test_optimization_with_custom_gate(virtual_qc):
+@pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
+def _test_optimization_with_custom_gate(virtual_qc):  # pylint: disable=too-many-locals
     """
-    test
     Description:
     Expectation:
     """
-    if not _has_mindspore:  # NB: take care to avoid errors with 'ms' module below
+    if not _HAS_MINDSPORE:  # NB: take care to avoid errors with 'ms' module below
         return
 
     def _matrix(theta):
@@ -218,13 +223,13 @@ def _test_optimization_with_custom_gate(virtual_qc):
     h = G.UnivMathGate('H', G.H.matrix())
     rx = G.gene_univ_parameterized_gate('RX', _matrix, _diff_matrix)
 
-    c1 = Circuit() + G.RY(3.4).on(0) + h.on(0) + rx('a').on(0)
-    c2 = Circuit() + G.RY(3.4).on(0) + G.H.on(0) + G.RX('a').on(0)
+    circuit1 = Circuit() + G.RY(3.4).on(0) + h.on(0) + rx('a').on(0)
+    circuit2 = Circuit() + G.RY(3.4).on(0) + G.H.on(0) + G.RX('a').on(0)
 
     sim = Simulator(virtual_qc, 1)
     ham = Hamiltonian(QubitOperator('Z0'))
-    grad_ops1 = sim.get_expectation_with_grad(ham, c1)
-    grad_ops2 = sim.get_expectation_with_grad(ham, c2)
+    grad_ops1 = sim.get_expectation_with_grad(ham, circuit1)
+    grad_ops2 = sim.get_expectation_with_grad(ham, circuit2)
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
     init_data = ms.Tensor(np.array([1.2]).astype(np.float32))
     net1 = MQAnsatzOnlyLayer(grad_ops1, weight=init_data)
@@ -233,7 +238,7 @@ def _test_optimization_with_custom_gate(virtual_qc):
     opti2 = ms.nn.Adam(net2.trainable_params(), learning_rate=0.1)
     train1 = ms.nn.TrainOneStepCell(net1, opti1)
     train2 = ms.nn.TrainOneStepCell(net2, opti2)
-    for i in range(10):
+    for _ in range(10):
         train1()
         train2()
     assert np.allclose(train1().asnumpy(), train2().asnumpy())
@@ -241,7 +246,6 @@ def _test_optimization_with_custom_gate(virtual_qc):
 
 def _test_fid():
     """
-    test
     Description:
     Expectation:
     """
@@ -258,8 +262,6 @@ def _test_fid():
 
 def test_virtual_quantum_computer():
     """
-    test virtual quantum computer
-
     Description: Test mindquantum supported virtual quantum computers
     Expectation:
     """
@@ -279,11 +281,11 @@ def test_non_hermitian_grad_ops():
     Description: test non hermitian grad ops
     Expectation: success.
     """
-    c1 = Circuit([G.RX('a').on(0)])
-    c2 = Circuit([G.RY('b').on(0)])
+    circuit1 = Circuit([G.RX('a').on(0)])
+    circuit2 = Circuit([G.RY('b').on(0)])
     ham = Hamiltonian(csr_matrix([[1, 2], [3, 4]]))
     sim = Simulator('projectq', 1)
-    grad_ops = sim.get_expectation_with_grad(ham, c2, c1)
+    grad_ops = sim.get_expectation_with_grad(ham, circuit2, circuit1)
     f, _ = grad_ops(np.array([1, 2]))
     f_exp = np.conj(G.RX(2).matrix().T) @ ham.sparse_mat.toarray() @ G.RY(1).matrix()
     f_exp = f_exp[0, 0]

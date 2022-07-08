@@ -12,6 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+# pylint: disable=duplicate-code
+
 """Example of using a parameterized quantum circuit."""
 
 import numpy as np

@@ -19,7 +19,7 @@ from abc import abstractmethod
 from mindquantum.core.circuit import Circuit
 
 
-class Ansatz:
+class Ansatz:  # pylint: disable=too-few-public-methods
     """
     Basic class for Ansatz.
 

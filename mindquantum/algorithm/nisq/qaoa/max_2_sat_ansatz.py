@@ -154,9 +154,9 @@ class Max2SATAnsatz(Ansatz):
         Returns:
             QubitOperator, hamiltonian of this max-2-sat problem.
         """
-        qo = QubitOperator()
+        qubit_operator = QubitOperator()
         for clause in self.clauses:
-            qo += (
+            qubit_operator += (
                 QubitOperator('')
                 + sign(1, clause[0]) * QubitOperator(f'Z{abs(clause[0]) - 1}')
                 + sign(1, clause[1]) * QubitOperator(f'Z{abs(clause[1]) - 1}')
@@ -164,7 +164,7 @@ class Max2SATAnsatz(Ansatz):
                 * sign(1, clause[1])
                 * QubitOperator(f'Z{abs(clause[0]) - 1} Z{abs(clause[1]) - 1}')
             ) / 4
-        return qo
+        return qubit_operator
 
     def get_sat(self, max_n, weight):
         """
@@ -182,8 +182,8 @@ class Max2SATAnsatz(Ansatz):
         _check_value_should_between_close_set('max_n', 1, 1 << self._circuit.n_qubits, max_n)
         sim = Simulator('projectq', self._circuit.n_qubits)
         sim.apply_circuit(self._circuit, weight)
-        qs = sim.get_qs()
-        idxs = np.argpartition(np.abs(qs), -max_n)[-max_n:]
+        state = sim.get_qs()
+        idxs = np.argpartition(np.abs(state), -max_n)[-max_n:]
         strings = [bin(i)[2:].zfill(self._circuit.n_qubits)[::-1] for i in idxs]
         return strings
 
@@ -203,9 +203,9 @@ class Max2SATAnsatz(Ansatz):
         sat_value = string.count('1')
         return sat_value
 
-    def _implement(self, clauses, depth):
+    def _implement(self, clauses, depth):  # pylint: disable=arguments-differ
         """Implement of Max-2-SAT ansatz."""
         self._circuit = UN(H, _get_clause_act_qubits(clauses))
-        for d in range(depth):
-            self._circuit += CPN(self._build_hc(clauses), {'beta': f'beta_{d}'})
-            self._circuit += CPN(self._build_hb(clauses), {'alpha': f'alpha_{d}'})
+        for depth_idx in range(depth):
+            self._circuit += CPN(self._build_hc(clauses), {'beta': f'beta_{depth_idx}'})
+            self._circuit += CPN(self._build_hb(clauses), {'alpha': f'alpha_{depth_idx}'})

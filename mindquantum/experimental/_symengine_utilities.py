@@ -42,10 +42,8 @@ from ._mindquantum_cxx import symengine
 
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
-# pylint: disable=bad-continuation
 
-
-def symbols(names, **args):
+def symbols(names, **args):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     r"""
     Transform strings into instances of :class:`Symbol` class.
 
@@ -135,11 +133,11 @@ def symbols(names, **args):
                 names = names.replace(lit, lit_char)
                 literals.append((lit_char, lit[1:]))
 
-        def literal(s):
+        def literal(lit):
             if literals:
-                for c, l in literals:
-                    s = s.replace(c, l)
-            return s
+                for char, literal in literals:
+                    lit = lit.replace(char, literal)
+            return lit
 
         names = names.strip()
         as_seq = names.endswith(',')
@@ -156,7 +154,7 @@ def symbols(names, **args):
         for i in range(len(names) - 1, -1, -1):
             names[i : i + 1] = names[i].split()  # noqa: E203
 
-        cls = args.pop('cls', symengine.symbol)
+        cls = args.pop('cls', symengine.symbol)  # pylint: disable=no-member
         seq = args.pop('seq', as_seq)
 
         for name in names:
@@ -164,8 +162,7 @@ def symbols(names, **args):
                 raise ValueError('missing symbol')
 
             if ':' not in name:
-                symbol = cls(literal(name), **args)
-                result.append(symbol)
+                result.append(cls(literal(name), **args))
                 continue
 
             split = _range.split(name)
@@ -180,25 +177,27 @@ def symbols(names, **args):
                 ):
                     split[i - 1] = split[i - 1][:-1]
                     split[i + 1] = split[i + 1][1:]
-            for i, s in enumerate(split):
-                if ':' in s:
-                    if s[-1].endswith(':'):
+            for i, symbol in enumerate(split):
+                if ':' in symbol:
+                    if symbol[-1].endswith(':'):
                         raise ValueError('missing end range')
-                    a, b = s.split(':')
-                    if b[-1] in string.digits:
-                        a = 0 if not a else int(a)
-                        b = int(b)
-                        split[i] = [str(c) for c in range(a, b)]
+                    left_symbol, right_symbol = symbol.split(':')
+                    if right_symbol[-1] in string.digits:
+                        left_symbol = 0 if not left_symbol else int(left_symbol)
+                        right_symbol = int(right_symbol)
+                        split[i] = [str(c) for c in range(left_symbol, right_symbol)]
                     else:
-                        a = a or 'a'
+                        left_symbol = left_symbol or 'a'
                         split[i] = [
                             string.ascii_letters[c]
-                            for c in range(string.ascii_letters.index(a), string.ascii_letters.index(b) + 1)
+                            for c in range(
+                                string.ascii_letters.index(left_symbol), string.ascii_letters.index(right_symbol) + 1
+                            )
                         ]  # inclusive
                     if not split[i]:
                         break
                 else:
-                    split[i] = [s]
+                    split[i] = [symbol]
             else:
                 seq = True
                 if len(split) == 1:
@@ -259,13 +258,13 @@ def var(names, **args):
     def traverse(symbols_arg, frame):
         """Recursively inject symbols to the global namespace."""
         for symbol in symbols_arg:
-            if isinstance(symbol, symengine.Basic):
-                frame.f_globals[symbol.__str__()] = symbol
+            if isinstance(symbol, symengine.Basic):  # pylint: disable=no-member
+                frame.f_globals[str(symbol)] = symbol
             # Once we have an undefined function class implemented, put a check for function here
             else:
                 traverse(symbol, frame)
 
-    from inspect import currentframe
+    from inspect import currentframe  # pylint: disable=import-outside-toplevel
 
     frame = currentframe().f_back
 
@@ -273,8 +272,8 @@ def var(names, **args):
         syms = symbols(names, **args)
 
         if syms is not None:
-            if isinstance(syms, symengine.Basic):
-                frame.f_globals[syms.__str__()] = syms
+            if isinstance(syms, symengine.Basic):  # pylint: disable=no-member
+                frame.f_globals[str(syms)] = syms
             # Once we have an undefined function class implemented, put a check for function here
             else:
                 traverse(syms, frame)

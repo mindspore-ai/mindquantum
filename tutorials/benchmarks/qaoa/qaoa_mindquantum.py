@@ -13,16 +13,17 @@
 # limitations under the License.
 # ============================================================================
 
+# pylint: disable=redefined-outer-name,duplicate-code
+
 """Benchmark for QAOA with MindQuantum."""
 
 import os
 import time
 
-import mindspore.context as context
 import mindspore.dataset as ds
-import mindspore.nn as nn
 import numpy as np
 from _parse_args import parser
+from mindspore import context, nn
 
 from mindquantum.core import RX, RZ, UN, Circuit, H, Hamiltonian, QubitOperator, X
 from mindquantum.framework import MQAnsatzOnlyLayer
@@ -34,22 +35,21 @@ os.environ['OMP_NUM_THREADS'] = str(args.omp_num_threads)
 context.set_context(mode=context.PYNATIVE_MODE, device_target="CPU")
 
 
-def circuit_qaoa(p):
+def circuit_qaoa(n_layers):
     """Build a QAOA circuit."""
     circ = Circuit()
-    circ += UN(H, n)
-    for layer in range(p):
+    circ += UN(H, n_qubits)
+    for layer in range(n_layers):
         for (u, v) in E:
             circ += X.on(v, u)
             circ += RZ(f'gamma_{layer}').on(v)
             circ += X.on(v, u)
-        for v in V:
+        for v in range(n_qubits):
             circ += RX(f'beta_{layer}').on(v)
     return circ
 
 
-n = 12
-V = range(n)
+n_qubits = 12
 E = [
     (0, 1),
     (1, 2),
@@ -69,7 +69,7 @@ E = [
     (10, 11),
     (3, 11),
 ]
-p = 4
+n_layers = 4
 ITR = 120
 LR = 0.1
 
@@ -78,7 +78,7 @@ for (v, u) in E:
     ham += QubitOperator(f'Z{v} Z{u}', -1.0)
 ham = Hamiltonian(ham)
 
-circ = circuit_qaoa(p)
+circ = circuit_qaoa(n_layers)
 ansatz_name = circ.params_name
 net = MQAnsatzOnlyLayer(Simulator('projectq', circ.n_qubits).get_expectation_with_grad(ham, circ))
 train_loader = ds.NumpySlicesDataset(

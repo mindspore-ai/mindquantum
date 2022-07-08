@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+# pylint: disable=invalid-name
+
 """Test gate."""
 
 import numpy as np
@@ -19,6 +22,7 @@ import pytest
 from scipy.linalg import expm
 
 import mindquantum.core.gates as G
+from mindquantum import UN
 
 
 def test_rotate_pauli():
@@ -38,7 +42,7 @@ def test_rotate_pauli():
         'rz': [G.RZ('angle').on(0), lambda phi: np.array([[np.exp(-1j * phi / 2), 0], [0, np.exp(1j * phi / 2)]])],
     }
     angle = 0.5
-    for name, rs in gates.items():
+    for _, rs in gates.items():
         assert np.allclose(rs[0].matrix({'angle': angle}), rs[1](angle))
         assert np.allclose(rs[0].diff_matrix({'angle': angle}), 0.5 * rs[1](angle + np.pi))
         assert np.allclose(rs[0].hermitian().matrix({'angle': angle}), rs[1](-angle))
@@ -130,7 +134,7 @@ def test_pauli_gate():
         ],
     }
     angle = 0.5
-    for name, ps in gates.items():
+    for _, ps in gates.items():
         assert np.allclose(ps[0].matrix(), ps[1])
         assert np.allclose((ps[0] ** angle).matrix(), ps[2](angle * np.pi))
 
@@ -223,7 +227,5 @@ def test_global_phase():
     Description: Test global phase gate
     Expectation: success
     """
-    from mindquantum import UN
-
     c = UN(G.H, 2) + G.GlobalPhase(np.pi).on(1, 0)
     assert np.allclose(c.get_qs(), np.array([0.5, -0.5, 0.5, -0.5]))

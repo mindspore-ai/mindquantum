@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+# pylint: disable=invalid-overridden-method
+
 """SVG module."""
 
 import time
@@ -31,10 +34,10 @@ from mindquantum.io.display.circuit_svg_drawer import (
 class AnimationSVG(BaseComponent):
     """Animation a svg property."""
 
-    def __init__(self, svg_id, attr, v_from, v_to, dur, spline=None):
+    def __init__(self, svg_id, attr, v_from, v_to, dur, spline=None):  # pylint: disable=too-many-arguments
         """Initialize an AnimationSVG object."""
         super().__init__('animate')
-        self.id = svg_id
+        self.id = svg_id  # pylint: disable=invalid-name
         self.attr = attr
         self.v_from = v_from
         self.v_to = v_to
@@ -98,7 +101,7 @@ class SVGMeasure(SVGContainer):
         self.table = SVGContainer()
         self.max_val = max(res.data.values()) / res.shots
         self.max_val = min(self.max_val / 0.9, self.max_val)
-        self.f = (self.style['n_stick'] - 1) / self.max_val * self.style['v_dis']
+        self.f = (self.style['n_stick'] - 1) / self.max_val * self.style['v_dis']  # pylint: disable=invalid-name
         main_box = SVGContainer()
         text = self.build_title()
         main_box.add(text)
@@ -122,7 +125,7 @@ class SVGMeasure(SVGContainer):
         text.add(keys_text)
         return text
 
-    def build_box(self):
+    def build_box(self):  # pylint: disable=too-many-locals,too-many-statements
         """Build box."""
         animations = SVGContainer()
         max_bar_animations = SVGContainer()
@@ -134,11 +137,11 @@ class SVGMeasure(SVGContainer):
         val_axis.stroke_width(self.style['table_box_line_width'])
         h_axis.add(val_axis)
         box_h = self.style['bar_dis'] * (len(self.res.data) + 0.5)
-        for i, t in enumerate(np.linspace(0, self.max_val, self.style['n_stick'])):
+        for i, num in enumerate(np.linspace(0, self.max_val, self.style['n_stick'])):
             text = Text(
                 i * self.style['v_dis'] + self.style['table_box_line_width'] * 2,
                 self.style['stick_len'] - self.style['table_box_line_width'] * 2,
-                f'{round(t, 3)}',
+                f'{round(num, 3)}',
             )
             text.dominant_baseline('bottom')
             text.text_anchor('start')
@@ -157,8 +160,8 @@ class SVGMeasure(SVGContainer):
             h_axis.add(text)
             h_axis.add(line)
         max_bar = max(self.res.data.values())
-        for idx, (s, n) in enumerate(self.res.data.items()):
-            stick = Text(0, 0, s)
+        for idx, (string, n) in enumerate(self.res.data.items()):
+            stick = Text(0, 0, string)
             stick.fill(self.style['label_fontcolor'])
             stick.font_size(self.style['label_fontsize'])
             stick.text_anchor('end')
@@ -169,7 +172,7 @@ class SVGMeasure(SVGContainer):
             line.shift(0, (idx + 1) * self.style['bar_dis'])
             h_axis.add(stick)
             h_axis.add(line)
-            bar = Rect(0, 0, self.f * n / self.res.shots, self.style['rec_h'])
+            bar = Rect(0, 0, self.f * n / self.res.shots, self.style['rec_h'])  # pylint: disable=disallowed-name
             bar.shift(0, (idx + 1) * self.style['bar_dis'] - self.style['rec_h'] / 2)
             h_axis.add(bar)
             bar.svg_id(f"bar_{idx}_{time.time_ns()}")

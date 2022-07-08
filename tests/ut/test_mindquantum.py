@@ -18,4 +18,5 @@
 
 
 def test_empty():
-    assert 1 < 2
+    """Dummy test."""
+    assert 1 < 2  # pylint: disable=comparison-of-constants

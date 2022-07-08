@@ -81,7 +81,7 @@ class IQPEncoding(Ansatz):
         self.num_repeats = num_repeats
         super().__init__("IQPEncoding", n_feature)
 
-    def _implement(self):
+    def _implement(self):  # pylint: disable=arguments-differ
         """Implement of iqp encoding ansatz."""
         self._circuit = UN(H, self.n_feature)
         repeat_unit = Circuit()

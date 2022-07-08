@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+# pylint: disable=duplicate-code
+
 """Bitphaseflip operator."""
 
 from mindquantum.core.circuit import Circuit
@@ -19,7 +22,7 @@ from mindquantum.core.gates import Z
 from mindquantum.utils.type_value_check import _check_input_type
 
 
-def bitphaseflip_operator(phase_inversion_index, n_qubits):
+def bitphaseflip_operator(phase_inversion_index, n_qubits):  # pylint: disable=too-many-branches
     """
     Generate a circuit that can flip the sign of any calculation bases.
 
@@ -49,29 +52,29 @@ def bitphaseflip_operator(phase_inversion_index, n_qubits):
     """
     _check_input_type('n_qubits', int, n_qubits)
     _check_input_type('phase_inversion_index', (list, range), phase_inversion_index)
-    s = [1 for i in range(1 << n_qubits)]
+    state = [1 for i in range(1 << n_qubits)]
     for i in phase_inversion_index:
-        s[i] = -1
-    if s[0] == -1:
-        for i in range(len(s)):
-            s[i] = -1 * s[i]
+        state[i] = -1
+    if state[0] == -1:
+        for i, state_i in enumerate(state):
+            state[i] = -1 * state_i
     circuit = Circuit()
-    length = len(s)
-    cz = []
+    length = len(state)
+    cz_list = []
     for i in range(length):
-        if s[i] == -1:
-            cz.append([])
+        if state[i] == -1:
+            cz_list.append([])
             current = i
-            t = 0
+            qubit_id = 0
             while current != 0:
                 if (current & 1) == 1:
-                    cz[-1].append(t)
-                t += 1
+                    cz_list[-1].append(qubit_id)
+                qubit_id += 1
                 current = current >> 1
             for j in range(i + 1, length):
                 if i & j == i:
-                    s[j] = -1 * s[j]
-    for i in cz:
+                    state[j] = -1 * state[j]
+    for i in cz_list:
         if i:
             if len(i) > 1:
                 circuit += Z.on(i[-1], i[:-1])

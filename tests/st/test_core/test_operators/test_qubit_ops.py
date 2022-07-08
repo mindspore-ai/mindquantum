@@ -11,6 +11,9 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+
+# pylint: disable=invalid-name
+
 """The test function for QubitOperator."""
 
 from mindquantum.core.operators import QubitOperator
@@ -159,6 +162,7 @@ def test_qubit_ops_trans():
     Description: Test transfor fermion operator to openfermion back and force.
     Expectation: success.
     """
+    # pylint: disable=import-outside-toplevel
     from openfermion import QubitOperator as OFQubitOperator
 
     ofo_ops = OFQubitOperator("X0 Y1 Z2", 1)

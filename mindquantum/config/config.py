@@ -21,7 +21,7 @@ import numpy as np
 
 from mindquantum.utils.type_value_check import _check_input_type
 
-__all__ = ['context']
+__all__ = ['Context']
 
 _GLOBAL_MAT_VALUE = {
     'X': np.array([[0, 1], [1, 0]]),
@@ -65,9 +65,9 @@ class Context:
         For example, `is_two_number_close` will use this precision to determine whether two number is close to each
         other.
 
-        >>> from mindquantum import context
-        >>> context.set_precision(1e-3)
-        >>> context.get_precision()
+        >>> from mindquantum import Context
+        >>> Context.set_precision(1e-3)
+        >>> Context.get_precision()
         0.001
         """
         _check_input_type('atol', numbers.Real, atol)
@@ -82,6 +82,3 @@ class Context:
             float, the number precision.
         """
         return _GLOBAL_CONFIG['PRECISION']
-
-
-context = Context

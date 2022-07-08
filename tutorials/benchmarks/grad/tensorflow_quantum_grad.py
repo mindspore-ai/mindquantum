@@ -13,6 +13,8 @@
 # limitations under the License.
 # ============================================================================
 
+# pylint: disable=redefined-outer-name,too-few-public-methods,protected-access,duplicate-code
+
 """Benchmark for gradient calculation of tensorflow quantum."""
 
 import time

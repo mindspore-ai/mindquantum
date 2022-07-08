@@ -136,15 +136,15 @@ repos:
         args: [--score=n, --load-plugins=pylint_secure_coding_standard]
         # This is a slow hook, so only run this if --hook-stage manual is passed
         stages: [manual]
-        additional_dependencies: [pybind11>=2.6, numpy, scipy, projectq, openfermion, sympy, matplotlib, rich,
-                                  pylint-secure-coding-standard]
+        additional_dependencies: [pybind11>=2.6, wheel_filename, numpy, scipy, projectq, openfermion, sympy, matplotlib,
+                                  rich, pylint-secure-coding-standard]
       - id: pylint
         name: pylint-test-files
         files: (test_.*\.py)$
         args: [--score=n, --load-plugins=pylint_pytest]
         # This is a slow hook, so only run this if --hook-stage manual is passed
         stages: [manual]
-        additional_dependencies: [pybind11>=2.6, numpy, scipy, projectq, openfermion, sympy, matplotlib, rich, pytest,
+        additional_dependencies: [numpy, scipy, projectq, openfermion, sympy, matplotlib, rich, pytest,
                                   pylint-pytest]
 
   - repo: https://github.com/mgedmin/check-manifest

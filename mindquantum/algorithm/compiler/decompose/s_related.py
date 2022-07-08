@@ -51,25 +51,22 @@ def cs_decompose(gate: gates.SGate):
     """
     _check_input_type('gate', gates.SGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)
-    solutions = []
-    c1 = Circuit()
-    solutions.append(c1)
-    q0 = gate.ctrl_qubits[0]
-    q1 = gate.obj_qubits[0]
-    c1 += gates.T.on(q0)
-    c1 += gates.T.on(q1)
-    c1 += gates.X.on(q1, q0)
-    c1 += gates.T.on(q1).hermitian()
-    c1 += gates.X.on(q1, q0)
+    circuit1 = Circuit()
+    control = gate.ctrl_qubits[0]
+    target = gate.obj_qubits[0]
+    circuit1 += gates.T.on(control)
+    circuit1 += gates.T.on(target)
+    circuit1 += gates.X.on(target, control)
+    circuit1 += gates.T.on(target).hermitian()
+    circuit1 += gates.X.on(target, control)
 
-    c2 = Circuit()
-    solutions.append(c2)
-    c2 += gates.PhaseShift(np.pi / 4).on(q0)
-    c2 += gates.RZ(np.pi / 4).on(q1)
-    c2 += gates.X.on(q1, q0)
-    c2 += gates.RZ(-np.pi / 4).on(q1)
-    c2 += gates.X.on(q1, q0)
-    return solutions
+    circuit2 = Circuit()
+    circuit2 += gates.PhaseShift(np.pi / 4).on(control)
+    circuit2 += gates.RZ(np.pi / 4).on(target)
+    circuit2 += gates.X.on(target, control)
+    circuit2 += gates.RZ(-np.pi / 4).on(target)
+    circuit2 += gates.X.on(target, control)
+    return [circuit1, circuit2]
 
 
 decompose_rules = ['cs_decompose']

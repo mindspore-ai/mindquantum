@@ -89,28 +89,24 @@ def cxx_decompose(gate: gates.XX):
         q3: ──●────●────●──────●──────●────●────●──
     """
     _check_input_type('gate', XX, gate)
-    solutions = []
     q0 = gate.obj_qubits[0]
     q1 = gate.obj_qubits[1]
-    cq = gate.ctrl_qubits
 
-    c1 = Circuit()
-    solutions.append(c1)
-    c1 += gates.H.on(q0, cq)
-    c1 += gates.H.on(q1, cq)
-    c1 += gates.X.on(q1, [q0] + cq)
-    c1 += gates.RZ(2 * gate.coeff).on(q1, cq)
-    c1 += c1[:-1][::-1]
+    circuit1 = Circuit()
+    circuit1 += gates.H.on(q0, gate.ctrl_qubits)
+    circuit1 += gates.H.on(q1, gate.ctrl_qubits)
+    circuit1 += gates.X.on(q1, [q0] + gate.ctrl_qubits)
+    circuit1 += gates.RZ(2 * gate.coeff).on(q1, gate.ctrl_qubits)
+    circuit1 += circuit1[:-1][::-1]
 
-    c2 = Circuit()
-    solutions.append(c2)
-    c2 += gates.H.on(q0, cq)
-    c2 += gates.H.on(q1, cq)
-    c2 += gates.X.on(q0, [q1] + cq)
-    c2 += gates.RZ(2 * gate.coeff).on(q0, cq)
-    c2 += c2[:-1][::-1]
+    circuit2 = Circuit()
+    circuit2 += gates.H.on(q0, gate.ctrl_qubits)
+    circuit2 += gates.H.on(q1, gate.ctrl_qubits)
+    circuit2 += gates.X.on(q0, [q1] + gate.ctrl_qubits)
+    circuit2 += gates.RZ(2 * gate.coeff).on(q0, gate.ctrl_qubits)
+    circuit2 += circuit2[:-1][::-1]
 
-    return solutions
+    return [circuit1, circuit2]
 
 
 decompose_rules = ['xx_decompose', 'cxx_decompose']

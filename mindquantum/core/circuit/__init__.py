@@ -18,16 +18,14 @@ Circuit.
 Quantum circuit module.
 """
 
-from .circuit import Circuit
+from .circuit import A, Circuit, apply
 from .module_circuit import U3, UN, SwapParts
 from .utils import (
     AP,
     CPN,
-    A,
     C,
     D,
     add_prefix,
-    apply,
     as_ansatz,
     as_encoder,
     change_param_name,

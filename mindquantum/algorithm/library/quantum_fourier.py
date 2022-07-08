@@ -56,15 +56,15 @@ def qft(qubits):
         Circuit, circuit that can do fourier transform.
     """
     _check_input_type('qubits', (list, range), qubits)
-    c = Circuit()
+    circuit = Circuit()
     n_qubits = len(qubits)
     for i in range(n_qubits):
-        c += _qft_unit(qubits[i:])
+        circuit += _qft_unit(qubits[i:])
     if n_qubits > 1:
         part1 = []
         part2 = []
         for j in range(n_qubits // 2):
             part1.append(qubits[j])
             part2.append(qubits[n_qubits - 1 - j])
-        c += SwapParts(part1, part2)
-    return c
+        circuit += SwapParts(part1, part2)
+    return circuit

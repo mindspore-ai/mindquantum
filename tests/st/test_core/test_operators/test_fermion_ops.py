@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+# pylint: disable=invalid-name
+
 """Test fermion operator."""
 
 from mindquantum.core.operators import FermionOperator
@@ -178,6 +181,7 @@ def test_of_fermion_trans():
     Description: Test transfor fermion operator to openfermion back and force.
     Expectation: success.
     """
+    # pylint: disable=import-outside-toplevel
     from openfermion import FermionOperator as OFFermionOperator
 
     ofo_ops = OFFermionOperator("1^ 0", 1)

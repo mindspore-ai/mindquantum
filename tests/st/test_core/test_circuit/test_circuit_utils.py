@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+# pylint: disable=invalid-name
+
 """Test Circuit utils."""
 import numpy as np
 import pytest
@@ -54,6 +57,10 @@ def test_decompose_single_term_time_evolution():
 
 
 def test_apply():
+    """
+    Description:
+    Expectation:
+    """
     u = unit1([0])
     u2 = A(unit1, [1, 2])
     u2 = u2([0])
@@ -63,6 +70,10 @@ def test_apply():
 
 
 def test_add_prefix():
+    """
+    Description:
+    Expectation:
+    """
     u = unit1([0])
     u2 = AP(u, 'x')
     u3 = AP(unit1, 'x')
@@ -72,6 +83,10 @@ def test_add_prefix():
 
 
 def test_change_param_name():
+    """
+    Description:
+    Expectation:
+    """
     u = unit1([0])
     u2 = CPN(u, {'a_0': 'x'})
     u3 = CPN(unit1, {'a_0': 'x'})
@@ -81,15 +96,23 @@ def test_change_param_name():
 
 
 def unit1(rotate_qubits):
+    """
+    Description:
+    Expectation:
+    """
     circuit = Circuit()
     circuit += X.on(0)
     circuit += H.on(1)
-    for q in rotate_qubits:
-        circuit += RX(f'a_{q}').on(q)
+    for qubits in rotate_qubits:
+        circuit += RX(f'a_{qubits}').on(qubits)
     return circuit
 
 
 def test_controlled_and_dagger():
+    """
+    Description:
+    Expectation:
+    """
     qubits = [0, 1, 2, 3]
     c1 = C(unit1)(4, qubits)
     c2 = C(unit1(qubits))(4)
@@ -110,6 +133,10 @@ def test_controlled_and_dagger():
 
 
 def test_state_evol():
+    """
+    Description:
+    Expectation:
+    """
     qubits = [0, 1, 2, 3]
     circuit = X.on(4) + C(D(unit1(qubits)))(4)
     circuit_exp = Circuit()
@@ -128,10 +155,14 @@ def test_state_evol():
 
 
 def test_qft():
+    """
+    Description:
+    Expectation:
+    """
     c = qft(range(4))
-    s = c.get_qs()
-    s_exp = np.ones(2**4) * 0.25
-    assert np.allclose(s, s_exp)
+    state = c.get_qs()
+    state_exp = np.ones(2**4) * 0.25
+    assert np.allclose(state, state_exp)
 
 
 def test_as_encoder_as_ansatz():
@@ -161,7 +192,7 @@ def test_as_encoder_as_ansatz():
     assert circ22.ansatz_params_name == ['a', 'b', 'c']
 
     with pytest.raises(Exception, match="can not be both encoder parameters and ansatz parameters."):
-        circ11 + circ22
+        circ11 + circ22  # pylint: disable=pointless-statement
     res = circ11.as_ansatz() + add_prefix(circ22.as_encoder(), 'e')
     assert res.encoder_params_name == ['e_a', 'e_b', 'e_c']
     assert res.ansatz_params_name == ['a', 'b', 'c']

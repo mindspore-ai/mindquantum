@@ -21,7 +21,9 @@ from openfermion.utils.indexing import down_index, up_index
 from mindquantum.core.parameterresolver import ParameterResolver
 
 
-def uccsd_singlet_get_packed_amplitudes(single_amplitudes, double_amplitudes, n_qubits, n_electrons):
+def uccsd_singlet_get_packed_amplitudes(  # pylint: disable=too-many-locals
+    single_amplitudes, double_amplitudes, n_qubits, n_electrons
+):
     r"""
     Convert amplitudes for use with singlet UCCSD.
 
@@ -64,8 +66,8 @@ def uccsd_singlet_get_packed_amplitudes(single_amplitudes, double_amplitudes, n_
     doubles_1 = ParameterResolver()
     doubles_2 = ParameterResolver()
 
-    # Get singles and doubles amplitudes associated with one
-    # spatial occupied-virtual pair
+    # pylint: disable=invalid-name
+    # Get singles and doubles amplitudes associated with one spatial occupied-virtual pair
     for p, q in itertools.product(range(n_virtual), range(n_occupied)):
         # Get indices of spatial orbitals
         virtual_spatial = n_occupied + p
@@ -104,7 +106,7 @@ def uccsd_singlet_get_packed_amplitudes(single_amplitudes, double_amplitudes, n_
     return singles + doubles_1 + doubles_2
 
 
-def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):
+def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):  # pylint: disable=too-many-locals
     """
     Create a singlet UCCSD generator for a system with n_electrons.
 
@@ -136,7 +138,9 @@ def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):
         s_0 [3^ 1] +
         d1_0 [3^ 1 2^ 0]
     """
-    from mindquantum.core.operators import FermionOperator
+    from mindquantum.core.operators import (  # pylint: disable=import-outside-toplevel
+        FermionOperator,
+    )
 
     if n_qubits % 2 != 0:
         raise ValueError('The total number of spin-orbitals should be even.')
@@ -150,10 +154,10 @@ def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):
 
     # Generate excitations
     spin_index_functions = [up_index, down_index]
-    # Generate all spin-conserving single and double excitations derived
-    # from one spatial occupied-virtual pair
-    for i, (p, q) in enumerate(itertools.product(range(n_virtual), range(n_occupied))):
 
+    # pylint: disable=invalid-name
+    # Generate all spin-conserving single and double excitations derived from one spatial occupied-virtual pair
+    for i, (p, q) in enumerate(itertools.product(range(n_virtual), range(n_occupied))):
         # Get indices of spatial orbitals
         virtual_spatial = n_occupied + p
         occupied_spatial = q
@@ -186,14 +190,10 @@ def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):
                     ((occupied_other, 1), (virtual_other, 0), (occupied_this, 1), (virtual_this, 0)), -1 * coeff
                 )
 
-    # pylint: disable=bad-continuation
-
-    # Generate all spin-conserving double excitations derived
-    # from two spatial occupied-virtual pairs
+    # Generate all spin-conserving double excitations derived from two spatial occupied-virtual pairs
     for i, ((p, q), (r, s)) in enumerate(
         itertools.combinations(itertools.product(range(n_virtual), range(n_occupied)), 2)
     ):
-
         # Get indices of spatial orbitals
         virtual_spatial_1 = n_occupied + p
         occupied_spatial_1 = q
@@ -214,18 +214,15 @@ def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):
             virtual_2_b = index_b(virtual_spatial_2)
             occupied_2_b = index_b(occupied_spatial_2)
 
-            if virtual_1_a == virtual_2_b:
+            if virtual_1_a == virtual_2_b or occupied_1_a == occupied_2_b:
                 continue
-            if occupied_1_a == occupied_2_b:
-                continue
-            else:
 
+            generator += FermionOperator(
+                ((virtual_1_a, 1), (occupied_1_a, 0), (virtual_2_b, 1), (occupied_2_b, 0)), coeff
+            )
+            if anti_hermitian:
                 generator += FermionOperator(
-                    ((virtual_1_a, 1), (occupied_1_a, 0), (virtual_2_b, 1), (occupied_2_b, 0)), coeff
+                    ((occupied_2_b, 1), (virtual_2_b, 0), (occupied_1_a, 1), (virtual_1_a, 0)), -1 * coeff
                 )
-                if anti_hermitian:
-                    generator += FermionOperator(
-                        ((occupied_2_b, 1), (virtual_2_b, 0), (occupied_1_a, 1), (virtual_1_a, 0)), -1 * coeff
-                    )
 
     return generator

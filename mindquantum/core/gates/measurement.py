@@ -13,6 +13,8 @@
 # limitations under the License.
 # ============================================================================
 
+# pylint: disable=abstract-method
+
 """Basic module for quantum gate."""
 
 from collections.abc import Iterable
@@ -22,7 +24,7 @@ from rich.console import Console
 
 from mindquantum import mqbackend as mb
 from mindquantum.io.display import measure_text_drawer
-from mindquantum.utils.f import join_without_empty
+from mindquantum.utils.string_utils import join_without_empty
 
 from .basic import FunctionalGate
 
@@ -106,9 +108,7 @@ class Measure(FunctionalGate):
 
     def __extra_prop__(self):
         """Extra prop magic method."""
-        prop = super().__extra_prop__()
-        prop['key'] = self.key
-        return prop
+        return {'key': self.key}
 
     def __type_specific_str__(self):
         """Return a string representation of the object."""
@@ -186,17 +186,14 @@ class MeasureResult:
         """
         if not isinstance(measure, Iterable):
             measure = [measure]
-        for m in measure:
-            if not isinstance(m, Measure):
-                raise ValueError(
-                    "Measurement gates need to \
-be objects of class 'Measurement' "
-                )
-        for m in measure:
-            if m.key in self.keys:
-                raise ValueError(f"Measure key {m.key} already defined.")
-            self.measures.append(m)
-            self.keys.append(m.key)
+        for meas in measure:
+            if not isinstance(meas, Measure):
+                raise ValueError("Measurement gates need to be objects of class 'Measurement' ")
+        for meas in measure:
+            if meas.key in self.keys:
+                raise ValueError(f"Measure key {meas.key} already defined.")
+            self.measures.append(meas)
+            self.keys.append(meas.key)
 
     @property
     def keys_map(self):
@@ -216,12 +213,12 @@ be objects of class 'Measurement' "
         out = {}
         res = np.fliplr(self.samples)
         self.shots = len(self.samples)
-        for s in res:
-            s = ''.join([str(i) for i in s])
-            if s in out:
-                out[s] += 1
+        for string in res:
+            string = ''.join([str(i) for i in string])
+            if string in out:
+                out[string] += 1
             else:
-                out[s] = 1
+                out[string] = 1
         keys = sorted(out.keys())
         self.bit_string_data = {key: out[key] for key in keys}
 
@@ -285,30 +282,32 @@ be objects of class 'Measurement' "
 
     def __repr__(self):
         """Return a string representation of the object."""
+        # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum.io.display._config import _MEA_RES_STYLE
 
         res = measure_text_drawer(self)
         res.append(self.data.__str__())
-        s = '\n'.join(res)
+        string = '\n'.join(res)
         console = Console(record=True)
         if not console.is_jupyter:
             with console.capture() as capture:
-                console.print(s, style=_MEA_RES_STYLE['style'])
-            s = capture.get()
-        return s
+                console.print(string, style=_MEA_RES_STYLE)
+            string = capture.get()
+        return string
 
     def _repr_html_(self):
         """Repr for jupyter notebook."""
+        # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum.io.display._config import _MEA_RES_STYLE, MEA_HTML_FORMAT
 
         res = measure_text_drawer(self)
-        res.append(self.data.__str__())
-        s = '\n'.join(res)
+        res.append(str(self.data))
+        string = '\n'.join(res)
         console = Console(record=True)
         with console.capture() as _:
-            console.print(s, style=_MEA_RES_STYLE['style'])
-        s = console.export_html(code_format=MEA_HTML_FORMAT, inline_styles=True)
-        return '\n'.join(s.split('\n')[1:])
+            console.print(string, style=_MEA_RES_STYLE)
+        string = console.export_html(code_format=MEA_HTML_FORMAT, inline_styles=True)
+        return '\n'.join(string.split('\n')[1:])
 
     def svg(self, style=None):
         """
@@ -318,6 +317,7 @@ be objects of class 'Measurement' "
             style (dict, str): the style to set svg style. Currently, we support
                 'official'. Default: None.
         """
+        # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum.io.display._config import _svg_measure_config_official
         from mindquantum.io.display.measure_res_svg_drawer import SVGMeasure
 

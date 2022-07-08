@@ -14,6 +14,8 @@
 
 """Example of running a QNN iris classification."""
 
+# pylint: disable=pointless-statement,redefined-outer-name,too-few-public-methods
+
 import matplotlib.pyplot as plt
 import mindspore as ms
 import numpy as np
@@ -129,7 +131,7 @@ class StepAcc(Callback):
         self.test_loader = test_loader
         self.acc = []
 
-    def step_end(self, run_context):
+    def step_end(self, run_context):  # pylint: disable=unused-argument
         """Mark the end of an accumulation."""
         self.acc.append(self.model.eval(self.test_loader, dataset_sink_mode=False)['Acc'])
 

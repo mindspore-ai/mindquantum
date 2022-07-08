@@ -45,15 +45,13 @@ def cy_decompose(gate: gates.YGate):
     """
     _check_input_type('gate', gates.YGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)
-    solutions = []
-    c1 = Circuit()
-    solutions.append(c1)
+    circuit = Circuit()
     q0 = gate.ctrl_qubits[0]
     q1 = gate.obj_qubits[0]
-    c1 += gates.S.on(q1).hermitian()
-    c1 += gates.X.on(q1, q0)
-    c1 += gates.S.on(q1)
-    return solutions
+    circuit += gates.S.on(q1).hermitian()
+    circuit += gates.X.on(q1, q0)
+    circuit += gates.S.on(q1)
+    return [circuit]
 
 
 decompose_rules = ['cy_decompose']

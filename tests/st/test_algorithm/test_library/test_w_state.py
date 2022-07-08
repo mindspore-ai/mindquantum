@@ -24,6 +24,6 @@ def test_general_w_state():
     Description: Test general_w_state
     Expectation:
     """
-    qs = general_w_state(range(3)).get_qs()
+    state = general_w_state(range(3)).get_qs()
     qs_exp = 1 / np.sqrt(3) * np.array([0, 1, 1, 0, 1, 0, 0, 0])
-    assert np.allclose(qs, qs_exp)
+    assert np.allclose(state, qs_exp)

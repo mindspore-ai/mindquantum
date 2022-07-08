@@ -14,14 +14,14 @@
 # ============================================================================
 """Mindspore quantum simulator layer."""
 import mindspore as ms
-import mindspore.nn as nn
+from mindspore import nn
 from mindspore.common.initializer import initializer
 from mindspore.common.parameter import Parameter
 
 from .operations import MQAnsatzOnlyOps, MQN2AnsatzOnlyOps, MQN2Ops, MQOps
 
 
-class MQLayer(nn.Cell):
+class MQLayer(nn.Cell):  # pylint: disable=too-few-public-methods
     """
     Quantum neural network include encoder and ansatz circuit.
 
@@ -87,11 +87,12 @@ class MQLayer(nn.Cell):
                 raise ValueError(f"Weight init shape error, required ({weight_size}, ), but get {weight.shape}.")
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
-    def construct(self, x):
-        return self.evolution(x, self.weight)
+    def construct(self, arg):
+        """Construct a MQLayer node."""
+        return self.evolution(arg, self.weight)
 
 
-class MQN2Layer(nn.Cell):
+class MQN2Layer(nn.Cell):  # pylint: disable=too-few-public-methods
     """
     MindQuantum trainable layer.
 
@@ -159,11 +160,12 @@ class MQN2Layer(nn.Cell):
                 raise ValueError(f"Weight init shape error, required ({weight_size}, ), but get f{weight.shape}.")
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
-    def construct(self, x):
-        return self.evolution(x, self.weight)
+    def construct(self, arg):
+        """Construct a MQN2Layer node."""
+        return self.evolution(arg, self.weight)
 
 
-class MQAnsatzOnlyLayer(nn.Cell):
+class MQAnsatzOnlyLayer(nn.Cell):  # pylint: disable=too-few-public-methods
     """
     MindQuantum trainable layer.
 
@@ -224,10 +226,11 @@ class MQAnsatzOnlyLayer(nn.Cell):
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self):
+        """Construct a MQAnsatzOnlyLayer node."""
         return self.evolution(self.weight)
 
 
-class MQN2AnsatzOnlyLayer(nn.Cell):
+class MQN2AnsatzOnlyLayer(nn.Cell):  # pylint: disable=too-few-public-methods
     """
     MindQuantum trainable layer.
 
@@ -292,4 +295,5 @@ class MQN2AnsatzOnlyLayer(nn.Cell):
         self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
 
     def construct(self):
+        """Construct a MQN2AnsatzOnlyLayer node."""
         return self.evolution(self.weight)

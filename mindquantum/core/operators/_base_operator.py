@@ -24,7 +24,7 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
-from mindquantum.core.parameterresolver import ParameterResolver
+from ..parameterresolver import ParameterResolver
 
 EQ_TOLERANCE = 1e-8
 
@@ -87,9 +87,7 @@ class _Operator(metaclass=ABCMeta):
         """Initialize a empty class."""
         if not isinstance(coefficient, _validate_coeff_type):
             raise ValueError(
-                "Coefficient must be a numeric type or a string or a ParameterResolver, but get {}.".format(
-                    type(coefficient)
-                )
+                f"Coefficient must be a numeric type or a string or a ParameterResolver, but get {type(coefficient)}."
             )
 
         self.terms = {}
@@ -359,9 +357,8 @@ class _Operator(metaclass=ABCMeta):
 
         """
         new_terms = {}
-        for term in self.terms:
+        for term, coeff in self.terms.items():
             # Remove small imaginary and real parts
-            coeff = self.terms[term]
             if coeff.is_const():
                 coeff = coeff.const
                 if abs(coeff) > abs_tol:

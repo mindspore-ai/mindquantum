@@ -27,8 +27,12 @@ backend-path = ['_build']
     ]
 
     extension-pkg-whitelist = [
+      'mindquantum.mqbackend',
+      'mindquantum.experimental._mindquantum_cxx',
     ]
     extension-pkg-allow-list = [
+      'mindquantum.mqbackend',
+      'mindquantum.experimental._mindquantum_cxx',
     ]
 
     init-hook = '''from pylint.config import find_default_config_files;\
@@ -36,15 +40,38 @@ backend-path = ['_build']
     sys.path.append(os.path.dirname(list(find_default_config_files())[0]))'''
 
     [tool.pylint.basic]
-    good-names = []
+    good-names = ['ax', 'fd', 'i', 'j', 'k', 'l', 'n', 'N', 'q0', 'q1', 'q2', 'u', 'u1', 'u2', 'u3', 'v',
+                  'x', 'x1', 'x2', 'y', 'y1', 'y2', 'z', 'z1', 'z2',
+                  'n_layers', 'n_qubits', 'pr']
+
+    [tool.pylint.typecheck]
+    ignored-modules = [
+        'mindquantum.experimental._mindquantum_cxx',
+        'mindquantum.experimental.circuit',
+        'mindquantum.experimental.simulator',
+        'mindquantum.mqbackend',
+        'mindspore',
+        'openfermion',
+        'openfermionpyscf',
+        'paddle',
+        'paddle_quantum',
+        'rich',
+        'sklearn',
+        'tensorflow',
+        'tensorflow_quantum',
+    ]
 
     [tool.pylint.format]
     max-line-length = 120
 
     [tool.pylint.messages_control]
+    enable = [
+         'useless-suppression',
+    ]
     disable = [
          'no-name-in-module',  # due to dynamic importing of symbols
-         'fixme'
+         'duplicate-code',
+         'fixme',
     ]
 
 

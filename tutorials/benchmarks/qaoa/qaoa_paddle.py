@@ -13,6 +13,8 @@
 # limitations under the License.
 # ============================================================================
 
+# pylint: disable=redefined-outer-name,invalid-name,too-few-public-methods,duplicate-code
+
 """Benchmark for QAOA with PaddlePaddle Quantum."""
 
 import time
@@ -45,7 +47,7 @@ E = [
 
 h_d_list = []
 for (u, v) in E:
-    h_d_list.append([-1.0, 'z' + str(u) + ',z' + str(v)])
+    h_d_list.append([-1.0, f"z{u},z{v}"])
 
 
 def circuit_qaoa(p, gamma, beta):
@@ -110,6 +112,6 @@ for itr in range(1, ITR + 1):
     opt.minimize(loss)
     opt.clear_grad()
     if itr % 10 == 0:
-        print("iter:", itr, "  loss:", "%.4f" % loss.numpy())
+        print("iter:", itr, "  loss:", f"{loss.numpy():.4f}")
 t1 = time.time()
 print(f'Total time for paddle quantum :{t1 - t0}')

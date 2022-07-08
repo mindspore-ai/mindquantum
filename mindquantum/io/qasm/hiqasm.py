@@ -35,7 +35,7 @@ HIQASM_GATE_SET = {
 }
 
 
-def random_hiqasm(n_qubits, gate_num, version='0.1', seed=42):
+def random_hiqasm(n_qubits, gate_num, version='0.1', seed=42):  # pylint: disable=too-many-branches,too-many-statements
     """
     Generate random HiQASM supported circuit.
 
@@ -83,24 +83,33 @@ def random_hiqasm(n_qubits, gate_num, version='0.1', seed=42):
             g_set = [np_set, p_set][int(np.random.choice([0, 1]))]
             gate = np.random.choice(g_set)
             pval = np.random.uniform(-np.pi, np.pi, 3)
-            qidx = np.arange(n_qubits)
-            np.random.shuffle(qidx)
+
+            qubit_list = np.arange(n_qubits)
+            np.random.shuffle(qubit_list)
+            qubit_strings = [f'q[{idx}]' for idx in qubit_list]
+            param_string = ''
+
             if gate in ['X', 'Y', 'Z', 'S', 'T', 'H']:
-                qasm.append(f'{gate} q[{qidx[0]}]')
+                qubit_strings = qubit_strings[:1]
             elif gate in ['CNOT', 'CZ', 'ISWAP']:
-                qasm.append(f'{gate} q[{qidx[0]}],q[{qidx[1]}]')
+                qubit_strings = qubit_strings[:2]
             elif gate == 'CCNOT':
-                qasm.append('{} q[{}],q[{}],q[{}]'.format(gate, *qidx[:3]))
+                qubit_strings = qubit_strings[:3]
             elif gate in ['RX', 'RY', 'RZ']:
-                qasm.append(f'{gate} q[{qidx[0]}] {pval[0]}')
+                qubit_strings = qubit_strings[:1]
+                param_string = f' {pval[0]}'
             elif gate == 'U':
-                qasm.append('U q[{}] {},{},{}'.format(qidx[0], *pval))
+                qubit_strings = qubit_strings[:1]
+                param_string = f' {",".join(map(str, pval))}'
             elif gate in ['CRX', 'CRY', 'CRZ', 'XX', 'YY', 'ZZ']:
-                qasm.append('{} q[{}],q[{}] {}'.format(gate, *qidx[:2], pval[0]))
+                qubit_strings = qubit_strings[:2]
+                param_string = f' {pval[0]}'
             elif gate in ['CCRX', 'CCRY', 'CCRZ']:
-                qasm.append('{} q[{}],q[{}],q[{}] {}'.format(gate, *qidx[:3], pval[0]))
+                qubit_strings = qubit_strings[:3]
+                param_string = f' {pval[0]}'
             else:
                 raise NotImplementedError(f"gate {gate} not implement in HIQASM {version}")
+            qasm.append(f'{gate} {",".join(qubit_strings)}{param_string}')
         qasm.append('MEASURE q')
         qasm.append('DEALLOCATE q')
         qasm.append('')
@@ -130,7 +139,7 @@ class HiQASM:
 
     def __init__(self):
         """Initialize a HiQASM object."""
-        from mindquantum import Circuit
+        from mindquantum import Circuit  # pylint: disable=import-outside-toplevel
 
         self.circuit = Circuit()
         self.cmds = []
@@ -157,7 +166,7 @@ class HiQASM:
             raise ValueError('Can not find version in qasm')
         return out, version, n_qubits
 
-    def to_string(self, circuit, version='0.1'):
+    def to_string(self, circuit, version='0.1'):  # pylint: disable=too-many-branches
         """
         Convert circuit to HiQASM.
 
@@ -174,8 +183,10 @@ class HiQASM:
             NotImplementedError: if HiQASM version not implement.
             ValueError: if gate not implement in this version.
         """
-        from mindquantum import gates
-        from mindquantum.core import Circuit
+        from mindquantum import (  # pylint: disable=import-outside-toplevel
+            Circuit,
+            gates,
+        )
 
         _check_input_type("circuit", Circuit, circuit)
         _check_input_type("version", str, version)
@@ -215,9 +226,11 @@ class HiQASM:
             raise NotImplementedError(f"version of {version} for HiQASM not implement yet.")
         return '\n'.join(self.cmds)
 
-    def _to_string_non_parametric(self, gate, ctrl_qubits, obj_qubits, version):
+    def _to_string_non_parametric(self, gate, ctrl_qubits, obj_qubits, version):  # pylint: disable=too-many-branches
         """Conversion of simple gates to string."""
-        from mindquantum.core import gates
+        from mindquantum.core import (  # pylint: disable=import-outside-toplevel,cyclic-import
+            gates,
+        )
 
         n_ctrl_qubits = len(ctrl_qubits)
 
@@ -267,7 +280,9 @@ class HiQASM:
 
     def _to_string_parametric(self, gate, ctrl_qubits, obj_qubits, version):
         """Conversion of parametric gates to string."""
-        from mindquantum.core import gates
+        from mindquantum.core import (  # pylint: disable=import-outside-toplevel,cyclic-import
+            gates,
+        )
 
         n_ctrl_qubits = len(ctrl_qubits)
         if gate.parameterized:
@@ -323,8 +338,8 @@ class HiQASM:
             Circuit, the quantum circuit translated from HiQASM file.
         """
         _check_input_type('file_name', str, file_name)
-        with fdopen(file_name, 'r') as f:
-            cmds = f.readlines()
+        with fdopen(file_name, 'r') as fd:
+            cmds = fd.readlines()
         self.from_string('\n'.join(cmds))
         return self.circuit
 
@@ -342,65 +357,71 @@ class HiQASM:
             TypeError: if `circuit` is not a Circuit.
             TypeError: if `version` is not a str.
         """
-        from mindquantum.core import Circuit
+        from mindquantum.core import (  # pylint: disable=import-outside-toplevel,cyclic-import
+            Circuit,
+        )
 
         _check_input_type('file_name', str, file_name)
         _check_input_type('circuit', Circuit, circuit)
         _check_input_type('version', str, version)
-        cs = self.to_string(circuit, version)
-        with fdopen(file_name, 'w') as f:
-            f.writelines(cs)
+        circuit_string = self.to_string(circuit, version)
+        with fdopen(file_name, 'w') as fd:
+            fd.writelines(circuit_string)
         print(f"write circuit to {file_name} finished!")
 
-    def _trans_v01(self, cmds, n_qubits):
+    def _trans_v01(self, cmds, n_qubits):  # pylint: disable=too-many-branches
         """Trans method for HiQASM version 0.1."""
-        import mindquantum.core.gates as gates
-        from mindquantum import Circuit
+        from mindquantum import (  # pylint: disable=import-outside-toplevel,cyclic-import
+            Circuit,
+            gates,
+        )
 
         self.circuit = Circuit()
         for cmd in cmds:
-            q = _find_qubit_id(cmd)
+            qubit = _find_qubit_id(cmd)
             if cmd.startswith('CNOT '):
-                self.circuit.x(q[1], q[0])
+                self.circuit.x(qubit[1], qubit[0])
             elif cmd.startswith('CZ '):
-                self.circuit.z(q[1], q[0])
+                self.circuit.z(qubit[1], qubit[0])
             elif cmd.startswith('ISWAP '):
-                self.circuit += gates.ISWAP.on(q[:2])
+                self.circuit += gates.ISWAP.on(qubit[:2])
             elif cmd.startswith('CCNOT '):
-                self.circuit.x(q[-1], q[:2])
+                self.circuit.x(qubit[-1], qubit[:2])
             elif cmd.startswith('CRX '):
-                self.circuit.rx(*_extr_parameter(cmd), q[1], q[0])
+                self.circuit.rx(*_extr_parameter(cmd), qubit[1], qubit[0])
             elif cmd.startswith('CRY '):
-                self.circuit.ry(*_extr_parameter(cmd), q[1], q[0])
+                self.circuit.ry(*_extr_parameter(cmd), qubit[1], qubit[0])
             elif cmd.startswith('CRZ '):
-                self.circuit.rz(*_extr_parameter(cmd), q[1], q[0])
+                self.circuit.rz(*_extr_parameter(cmd), qubit[1], qubit[0])
             elif cmd.startswith('XX '):
-                self.circuit.xx(*_extr_parameter(cmd), q[:2])
+                self.circuit.xx(*_extr_parameter(cmd), qubit[:2])
             elif cmd.startswith('YY '):
-                self.circuit.yy(*_extr_parameter(cmd), q[:2])
+                self.circuit.yy(*_extr_parameter(cmd), qubit[:2])
             elif cmd.startswith('ZZ '):
-                self.circuit.zz(*_extr_parameter(cmd), q[:2])
+                self.circuit.zz(*_extr_parameter(cmd), qubit[:2])
             elif cmd.startswith('CCRX '):
-                self.circuit.rx(*_extr_parameter(cmd), q[-1], q[:2])
+                self.circuit.rx(*_extr_parameter(cmd), qubit[-1], qubit[:2])
             elif cmd.startswith('CCRY '):
-                self.circuit.ry(*_extr_parameter(cmd), q[-1], q[:2])
+                self.circuit.ry(*_extr_parameter(cmd), qubit[-1], qubit[:2])
             elif cmd.startswith('CCRZ '):
-                self.circuit.rz(*_extr_parameter(cmd), q[-1], q[:2])
+                self.circuit.rz(*_extr_parameter(cmd), qubit[-1], qubit[:2])
             elif cmd.startswith('MEASURE '):
-                q = _find_qubit_id(cmd)
-                if q:
-                    self.circuit.measure(f'k{self.circuit.all_measures.size}', q[0])
+                qubit = _find_qubit_id(cmd)
+                if qubit:
+                    self.circuit.measure(f'k{self.circuit.all_measures.size}', qubit[0])
                 else:
                     for midx in range(n_qubits):
                         self.circuit.measure(f'k{self.circuit.all_measures.size}', midx)
-            elif self._trans_v01_single_qubit(cmd, q[0]):
+            elif self._trans_v01_single_qubit(cmd, qubit[0]):
                 pass
             else:
                 raise ValueError(f"transfer cmd {cmd} not implement yet!")
 
     def _trans_v01_single_qubit(self, cmd, qubit):
         """Trans method for HiQASM version 0.1 (single-qubit gates)."""
-        from mindquantum.core import gates
+        from mindquantum.core import (  # pylint: disable=import-outside-toplevel,cyclic-import
+            gates,
+        )
 
         if cmd.startswith('H '):
             self.circuit.h(qubit)

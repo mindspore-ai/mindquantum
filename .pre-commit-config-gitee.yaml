@@ -47,6 +47,7 @@ repos:
 
   - repo: https://gitee.com/mirrors_PyCQA/doc8.git
     rev: 0.11.2
+
     hooks:
       - id: doc8
         require_serial: false

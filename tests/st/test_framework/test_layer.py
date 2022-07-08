@@ -17,21 +17,19 @@
 import numpy as np
 import pytest
 
-from mindquantum import Circuit, Hamiltonian, QubitOperator, Simulator
-from mindquantum.core import gates as G
-
-_has_mindspore = True
+_HAS_MINDSPORE = True
 try:
     import mindspore as ms
 
-    from mindquantum import MQLayer
+    from mindquantum import Circuit, Hamiltonian, MQLayer, QubitOperator, Simulator
+    from mindquantum.core import gates as G
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
-    _has_mindspore = False
+    _HAS_MINDSPORE = False
 
 
-@pytest.mark.skipif(not _has_mindspore, reason='MindSpore is not installed')
+@pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
 def test_mindquantumlayer():
     """
     Description: Test MQLayer
