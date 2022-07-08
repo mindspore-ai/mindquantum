@@ -96,7 +96,7 @@ def _single_gate_drawer(gate):
     return res
 
 
-def _single_block_drawer(block, n_qubits):  # pylint: disable=too-many-branches
+def _single_block_drawer(block, n_qubits):  # pylint: disable=too-many-branches,too-many-locals
     """Single block drawer."""
     from mindquantum import (  # pylint: disable=import-outside-toplevel,cyclic-import
         gates,
