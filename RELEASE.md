@@ -16,6 +16,9 @@
 - [STABLE] [`with_noise`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.with_noise): Method of `Circuit` to add a given noise channel after every gate.
 - [STABLE] [`as_encoder`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.as_encoder): A decorator to wrap a function, so that it can generate an encoder circuit.
 - [STABLE] [`as_ansatz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.as_ansatz): A decorator to wrap a function, so that it can generate an ansatz circuit.
+- [STABLE] [`qfi`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.qfi): A method that can calculate the quantum fisher information of a given parameterized quantum circuit.
+- [STABLE] [`partial_psi_partial_psi`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.partial_psi_partial_psi): A method that can calculate the first part of quantum fisher information.
+- [STABLE] [`partial_psi_psi`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.partial_psi_psi): A method that can calculate the second part of quantum fisher information.
 
 #### Gates
 

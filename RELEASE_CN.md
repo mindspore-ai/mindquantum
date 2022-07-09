@@ -15,7 +15,10 @@
 - [STABLE] [`remove_noise`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.remove_noise): `Circuit` 中的方法，用于将所有噪声信道移除。
 - [STABLE] [`with_noise`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.with_noise): `Circuit` 中的方法，用于在每个非噪声门后面添加一个噪声信道。
 - [STABLE] [`as_encoder`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.as_encoder): 一个装饰器，将所装饰函数返回的量子线路标记为编码量子线路。
-- [STABLE] [`as_ansatz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.as_ansatz): 一个装饰其，将所装饰函数返回的量子线路标记为训练量子线路。
+- [STABLE] [`as_ansatz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.as_ansatz): 一个装饰器，将所装饰函数返回的量子线路标记为训练量子线路。
+- [STABLE] [`qfi`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.qfi): 用于计算给定参数化量子线路的量子fisher信息的方法。
+- [STABLE] [`partial_psi_partial_psi`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.partial_psi_partial_psi): 计算量子fisher信息第一部分的方法。
+- [STABLE] [`partial_psi_psi`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.partial_psi_psi): 计算量子fisher信息第二部分的方法。
 
 #### Gates
 

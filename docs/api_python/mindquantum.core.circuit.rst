@@ -34,6 +34,12 @@ Quantum Circuit
 
 .. include:: mindquantum.core.circuit.shift.rst
 
+.. include:: mindquantum.core.circuit.qfi.rst
+
+.. include:: mindquantum.core.circuit.partial_psi_partial_psi.rst
+
+.. include:: mindquantum.core.circuit.partial_psi_psi.rst
+
 .. automodule:: mindquantum.core.circuit
     :exclude-members: C, D, A, AP, CPN
     :members:

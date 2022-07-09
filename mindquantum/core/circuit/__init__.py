@@ -20,6 +20,7 @@ Quantum circuit module.
 
 from .circuit import A, Circuit, apply
 from .module_circuit import U3, UN, SwapParts
+from .qfi import partial_psi_partial_psi, partial_psi_psi, qfi
 from .utils import (
     AP,
     CPN,
@@ -55,6 +56,9 @@ __all__ = [
     'change_param_name',
     'shift',
     'as_ansatz',
+    'qfi',
+    'partial_psi_psi',
+    'partial_psi_partial_psi',
     'as_encoder',
 ]
 __all__.sort()
