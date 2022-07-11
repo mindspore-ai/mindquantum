@@ -12,10 +12,10 @@
     - **ansatz_params_name** (list[str]) - ansatz参数名称。
     - **parallel_worker** (int) - 运行批处理的并行工作器数量。
 
-    .. py:method:: set_str(s)
+    .. py:method:: set_str(grad_str)
 
         设置梯度算子的表达式。
 
         **参数：**
 
-        - **s** (str) - QNN运算符的字符串。
+        - **grad_str** (str) - QNN运算符的字符串。

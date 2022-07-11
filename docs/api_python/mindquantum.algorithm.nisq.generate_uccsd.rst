@@ -1,11 +1,11 @@
-.. py:function:: mindquantum.algorithm.nisq.generate_uccsd(molecular, th=0)
+.. py:function:: mindquantum.algorithm.nisq.generate_uccsd(molecular, threshold=0)
 
     使用OpenFermion生成的分子数据生成uccsd量子线路。
 
     **参数：**
 
     - **molecular** (Union[str, MolecularData]) - 分子数据文件的名称，或openfermion中的 `MolecularData` 。
-    - **th** (float) - 过滤uccsd中组态幅度的阈值。我们将保留那些组态振幅绝对值比 `th` 大的组态，因此，当 `th=0` 时，只会保留非零振幅的组态。默认值：0。
+    - **threshold** (float) - 过滤uccsd中组态幅度的阈值。我们将保留那些组态振幅绝对值比 `threshold` 大的组态，因此，当 `threshold=0` 时，只会保留非零振幅的组态。默认值：0。
 
     **返回：**
 

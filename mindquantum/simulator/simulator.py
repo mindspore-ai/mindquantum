@@ -789,7 +789,7 @@ class GradOpsWrapper:  # pylint: disable=too-many-instance-attributes
         Set expression for gradient operator.
 
         Args:
-            s (str): The string of QNN operator.
+            grad_str (str): The string of QNN operator.
         """
         self.str = grad_str
 

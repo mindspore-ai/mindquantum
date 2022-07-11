@@ -127,7 +127,16 @@ class Measure(FunctionalGate):
         return f"M({self.key})"
 
     def on(self, obj_qubits, ctrl_qubits=None):
-        """Define which qubit the gate act on and the control qubit."""
+        """
+        Define which qubit the gate act on and the control qubit.
+
+        Args:
+            obj_qubits (Union[int, list[int]]): measure on which qubit.
+            ctrl_qubits (Union[int, list[int]]): for measurement, we can not set control qubits. Default: None.
+
+        Returns:
+            Measure, a measurement gate with will defined `obj_qubits` .
+        """
         new = super().on(obj_qubits, ctrl_qubits)
         if len(new.obj_qubits) != 1:
             raise ValueError("Measure gate only apply on a single qubit")

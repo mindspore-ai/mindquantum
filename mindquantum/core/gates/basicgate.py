@@ -668,11 +668,30 @@ class GlobalPhase(RotSelfHermMat):
         )
 
     def matrix(self, pr=None, **kwargs):  # pylint: disable=arguments-differ,unused-argument
-        """Matrix of parameterized gate."""
+        """
+        Matrix of parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            kwargs (dict): other key arguments.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
         return RotSelfHermMat.matrix(self, pr, 1)
 
     def diff_matrix(self, pr=None, about_what=None, **kwargs):  # pylint: disable=arguments-differ,unused-argument
-        """Differential form of this parameterized gate."""
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
+            kwargs (dict): othet key arguments.
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
         return RotSelfHermMat.diff_matrix(self, pr, about_what, 1)
 
 
@@ -703,10 +722,13 @@ class PhaseShift(ParameterOppsGate):
 
     def matrix(self, pr=None):  # pylint: disable=arguments-differ
         """
-        Get the matrix of this none parameterized gate.
+        Get the matrix of this parameterized gate.
 
         Args:
             pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
         """
         val = 0
         if self.coeff.is_const():
@@ -719,7 +741,16 @@ class PhaseShift(ParameterOppsGate):
         return np.array([[1, 0], [0, np.exp(1j * val)]])
 
     def diff_matrix(self, pr=None, about_what=None):
-        """Differential form of this parameterized gate."""
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            about_what (str): calculate the gradient w.r.t which parameter.
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
         if self.coeff.is_const():
             return np.zeros((2, 2))
         new_pr = self.coeff.combination(pr)
@@ -740,7 +771,7 @@ class Power(NoneParamNonHermMat):
 
     Args:
         gates (:class:`mindquantum.core.gates.NoneParameterGate`): The basic gate you need to apply power operator.
-        t (int, float): The exponenet. Default: 0.5.
+        exponent (int, float): The exponenet. Default: 0.5.
 
     Examples:
         >>> from mindquantum.core.gates import Power

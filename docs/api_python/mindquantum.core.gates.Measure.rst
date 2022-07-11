@@ -17,3 +17,12 @@
     .. py:method:: on(obj_qubits, ctrl_qubits=None)
 
         定义测量门作用在什么量子比特上。
+
+        **参数：**
+
+        - **obj_qubits** (Union[int, list[int]]) - 对哪个比特进行测量。
+        - **ctrl_qubits** (Union[int, list[int]]) - 测量门不允许设置控制位。
+
+        **返回：**
+
+        Measure，以及定义好作用在哪个比特上的测量门。
