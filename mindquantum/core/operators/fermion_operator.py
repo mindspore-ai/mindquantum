@@ -439,7 +439,7 @@ class FermionOperator(_Operator):
             List[List[ParameterResolver, FermionOperator]], the split result.
 
         Examples:
-            >>> from mindquantum.core import FermionOperator
+            >>> from mindquantum.core.operators import FermionOperator
             >>> a = FermionOperator('0', 'a') + FermionOperator('1^', 1.2)
             >>> list(a.split())
             [[{'a': 1}, const: 0, 1 [0] ], [{}, const: 1.2, 1 [1^] ]]

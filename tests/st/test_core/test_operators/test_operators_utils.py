@@ -18,8 +18,6 @@ from mindquantum.core.operators import (
     FermionOperator,
     QubitExcitationOperator,
     QubitOperator,
-)
-from mindquantum.core.operators.utils import (
     commutator,
     count_qubits,
     down_index,

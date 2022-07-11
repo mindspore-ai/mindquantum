@@ -103,12 +103,12 @@ class QubitOperator(_Operator):
         1.1 [X0 Y3]
         >>> ham3 = QubitOperator('')
         >>> ham3
-        1.0 []
+        1 []
         >>> ham_para = QubitOperator('X0 Y3', 'x')
         >>> ham_para
         x [X0 Y3]
         >>> ham_para.subs({'x':1.2})
-        1.2 [X0 Y3]
+        6/5 [X0 Y3]
     """
 
     __hash__ = None
@@ -271,7 +271,7 @@ class QubitOperator(_Operator):
             >>> from mindquantum.core.operators import QubitOperator
             >>> f = QubitOperator('X0', 1 + 2j) + QubitOperator('Y0', 'a')
             >>> f.real.compress()
-            1.0 [X0] +
+            1 [X0] +
             a [Y0]
         """
         out = QubitOperator()
@@ -292,7 +292,7 @@ class QubitOperator(_Operator):
             >>> from mindquantum.core.operators import QubitOperator
             >>> f = QubitOperator('X0', 1 + 2j) + QubitOperator('Y0', 'a')
             >>> f.imag.compress()
-            2.0 [X0]
+            2 [X0]
         """
         out = QubitOperator()
 
@@ -436,7 +436,7 @@ class QubitOperator(_Operator):
             List[List[ParameterResolver, QubitOperator]], the split result.
 
         Examples:
-            >>> from mindquantum.core import QubitOperator
+            >>> from mindquantum.core.operators import QubitOperator
             >>> a = QubitOperator('X0', 'a') + QubitOperator('Z1', 1.2)
             >>> list(a.split())
             [[{'a': 1}, const: 0, 1 [X0] ], [{}, const: 1.2, 1 [Z1] ]]

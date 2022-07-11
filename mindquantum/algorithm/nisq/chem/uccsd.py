@@ -20,12 +20,16 @@ from collections import OrderedDict
 import numpy as np
 from openfermion.chem import MolecularData
 
-from mindquantum.algorithm.nisq.chem.transform import Transform
-from mindquantum.core.circuit import Circuit
-from mindquantum.core.circuit.utils import decompose_single_term_time_evolution
-from mindquantum.core.operators import FermionOperator
-from mindquantum.core.operators.utils import down_index, get_fermion_operator, up_index
+from mindquantum.core.circuit import Circuit, decompose_single_term_time_evolution
+from mindquantum.core.operators import (
+    FermionOperator,
+    down_index,
+    get_fermion_operator,
+    up_index,
+)
 from mindquantum.third_party.interaction_operator import InteractionOperator
+
+from .transform import Transform
 
 
 def _para_uccsd_singlet_generator(mol, threshold=0):  # pylint: disable=too-many-locals,too-many-statements

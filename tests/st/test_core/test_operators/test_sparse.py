@@ -20,8 +20,8 @@ import numpy as np
 from openfermion import get_sparse_operator
 from openfermion.chem import MolecularData
 
-from mindquantum.algorithm.nisq.chem.transform import Transform
-from mindquantum.core.operators.utils import get_fermion_operator
+from mindquantum.algorithm.nisq import Transform
+from mindquantum.core.operators import get_fermion_operator
 from mindquantum.third_party.interaction_operator import InteractionOperator
 
 

@@ -15,7 +15,8 @@
 
 """SWAP gate related decompose rule."""
 
-from mindquantum.core import Circuit, gates
+from mindquantum.core import gates
+from mindquantum.core.circuit import Circuit
 from mindquantum.utils.type_value_check import _check_control_num, _check_input_type
 
 
@@ -31,7 +32,8 @@ def swap_decompose(gate: gates.SWAPGate):
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import swap_decompose
-        >>> from mindquantum.core import Circuit, SWAP
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.gates import SWAP
         >>> swap = SWAP.on([1, 0])
         >>> origin_circ = Circuit() + swap
         >>> decomposed_circ = swap_decompose(swap)[0]

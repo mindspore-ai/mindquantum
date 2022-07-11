@@ -101,8 +101,8 @@ class OpenQASM:
 
     Examples:
         >>> import numpy as np
-        >>> from mindquantum.io.qasm import OpenQASM
         >>> from mindquantum.core import Circuit
+        >>> from mindquantum.io import OpenQASM
         >>> circuit = Circuit().rx(0.3, 0).z(0, 1).zz(np.pi, [0, 1])
         >>> openqasm = OpenQASM()
         >>> circuit_str = openqasm.to_string(circuit)

@@ -19,7 +19,9 @@ import math
 
 import numpy as np
 
-from mindquantum.core import RY, Circuit, ParameterResolver, X
+from mindquantum.core.circuit import Circuit
+from mindquantum.core.gates import RY, X
+from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.utils.type_value_check import _check_input_type
 
 

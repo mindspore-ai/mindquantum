@@ -19,8 +19,7 @@
 
 import numpy as np
 
-from mindquantum.core.circuit import UN, Circuit
-from mindquantum.core.circuit.utils import CPN
+from mindquantum.core.circuit import CPN, UN, Circuit
 from mindquantum.core.gates import RX, ZZ, H
 from mindquantum.core.operators import QubitOperator
 from mindquantum.simulator import Simulator
@@ -87,7 +86,7 @@ class MaxCutAnsatz(Ansatz):
         depth (int): The depth of max cut ansatz. Default: 1.
 
     Examples:
-        >>> from mindquantum.algorithm.nisq.qaoa import MaxCutAnsatz
+        >>> from mindquantum.algorithm.nisq import MaxCutAnsatz
         >>> graph = [(0, 1), (1, 2), (0, 2)]
         >>> maxcut = MaxCutAnsatz(graph, 1)
         >>> maxcut.circuit
@@ -98,14 +97,14 @@ class MaxCutAnsatz(Ansatz):
         q2: ──H──────────────────ZZ(beta_0)────ZZ(beta_0)────RX(alpha_0)──
 
         >>> maxcut.hamiltonian
-        1.5 [] +
-        -0.5 [Z0 Z1] +
-        -0.5 [Z0 Z2] +
-        -0.5 [Z1 Z2]
+        3/2 [] +
+        -1/2 [Z0 Z1] +
+        -1/2 [Z0 Z2] +
+        -1/2 [Z1 Z2]
         >>> maxcut.hamiltonian
         >>> partitions = maxcut.get_partition(5, np.array([4, 1]))
         >>> for i in partitions:
-        >>>     print(f'partition: left: {i[0]}, right: {i[1]}, cut value: {maxcut.get_cut_value(i)}')
+        ...     print(f'partition: left: {i[0]}, right: {i[1]}, cut value: {maxcut.get_cut_value(i)}')
         partition: left: [2], right: [0, 1], cut value: 2
         partition: left: [0, 1], right: [2], cut value: 2
         partition: left: [0], right: [1, 2], cut value: 2

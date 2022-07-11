@@ -14,7 +14,8 @@
 # ============================================================================
 """Z gate related decompose rule."""
 
-from mindquantum.core import Circuit, gates
+from mindquantum.core import gates
+from mindquantum.core.circuit import Circuit
 from mindquantum.utils.type_value_check import _check_control_num, _check_input_type
 
 
@@ -30,7 +31,8 @@ def cz_decompose(gate: gates.ZGate):
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import cz_decompose
-        >>> from mindquantum.core import Circuit, Z
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.gates import Z
         >>> cz = Z.on(1, 0)
         >>> origin_circ = Circuit() + cz
         >>> decomposed_circ = cz_decompose(cz)[0]

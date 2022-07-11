@@ -14,8 +14,8 @@
 # ============================================================================
 """Test TimeEvolution."""
 
-from mindquantum import Circuit
-from mindquantum import gates as G
+from mindquantum.core import gates as G
+from mindquantum.core.circuit import Circuit
 from mindquantum.core.operators import QubitOperator, TimeEvolution
 
 

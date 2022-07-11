@@ -31,7 +31,7 @@ except ImportError:
 from mindquantum.utils.type_value_check import _check_input_type
 
 from ..parameterresolver.parameterresolver import ParameterResolver
-from .circuit import A, Circuit, apply  # noqa: F401  # pylint: disable=unused-import
+from .circuit import Circuit, apply  # noqa: F401  # pylint: disable=unused-import
 
 
 def decompose_single_term_time_evolution(term, para):  # pylint: disable=too-many-branches
@@ -67,7 +67,7 @@ def decompose_single_term_time_evolution(term, para):  # pylint: disable=too-man
         q1: ──RX(π/2)────X────RZ(2*a)────X────RX(7π/2)──
     """
     # pylint: disable=import-outside-toplevel,cyclic-import
-    from mindquantum import gates
+    from mindquantum.core import gates
     from mindquantum.utils.type_value_check import _num_type
 
     if not isinstance(term, tuple):
@@ -141,8 +141,8 @@ def pauli_word_to_circuits(qubitops):
         q1: ──Y────X──
     """
     # pylint: disable=import-outside-toplevel,cyclic-import
-    from mindquantum import gates
     from mindquantum import operators as ops
+    from mindquantum.core import gates
 
     allow_ops = (PQOperator, OFOperator, ops.QubitOperator, ops.Hamiltonian)
     if not isinstance(qubitops, allow_ops):
@@ -167,7 +167,7 @@ def pauli_word_to_circuits(qubitops):
 def _add_ctrl_qubits(circ, ctrl_qubits):
     """Add control qubits on a circuit."""
     # pylint: disable=import-outside-toplevel,cyclic-import
-    from mindquantum import gates
+    from mindquantum.core import gates
 
     if not isinstance(ctrl_qubits, (int, list)):
         raise TypeError(f"Require a int or a list of int for ctrl_qubits, but get {type(ctrl_qubits)}!")
@@ -364,8 +364,7 @@ def shift(circ, inc):
         inc (int): The qubit distance you want to shift.
 
     Examples:
-        >>> from mindquantum.core.circuit import shift
-        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.circuit import shift, Circuit
         >>> circ = Circuit().x(1, 0)
         >>> circ
         q0: ──●──
@@ -425,8 +424,8 @@ def change_param_name(circuit_fn, name_map):
 
     Examples:
         >>> from mindquantum.algorithm.library import qft
-        >>> from mindquantum.core.circuit import change_param_name
-        >>> from mindquantum import RX, H, Circuit
+        >>> from mindquantum.core.circuit import change_param_name, Circuit
+        >>> from mindquantum.core.gates import RX, H
         >>> u = lambda qubit: Circuit([H.on(0), RX('a').on(qubit)])
         >>> u1 = u(0)
         >>> u2 = change_param_name(u1, {'a': 'b'})
@@ -471,8 +470,8 @@ def as_encoder(circuit_fn):
         Circuit, if `circuit_fn` is already a Circuit.
 
     Examples:
-        >>> from mindquantum.core import as_encoder
-        >>> from mindquantum.core import Circuit, RX
+        >>> from mindquantum.core.circuit import as_encoder, Circuit
+        >>> from mindquantum.core.gates import RX
         >>> @as_encoder
         ... def create_circuit():
         ...     circ = Circuit()
@@ -518,8 +517,8 @@ def as_ansatz(circuit_fn):
         Circuit, if `circuit_fn` is already a Circuit.
 
     Examples:
-        >>> from mindquantum.core import as_encoder
-        >>> from mindquantum.core import Circuit, RX
+        >>> from mindquantum.core.circuit import as_ansatz, Circuit
+        >>> from mindquantum.core.gates import RX
         >>> @as_ansatz
         ... def create_circuit():
         ...     circ = Circuit()

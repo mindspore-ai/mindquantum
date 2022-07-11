@@ -25,7 +25,7 @@ _HAS_MINDSPORE = True
 try:
     import mindspore as ms
 
-    from mindquantum.algorithm import HardwareEfficientAnsatz
+    from mindquantum.algorithm.nisq import HardwareEfficientAnsatz
     from mindquantum.core.gates import RX, RY, X
     from mindquantum.core.operators import Hamiltonian, QubitOperator
     from mindquantum.framework import MQAnsatzOnlyLayer

@@ -47,9 +47,10 @@ class Hamiltonian:
         hamiltonian (QubitOperator): The pauli qubit operator.
 
     Examples:
-        >>> from mindquantum.core.operators import QubitOperator
-        >>> from mindquantum import Hamiltonian
+        >>> from mindquantum.core.operators import QubitOperator, Hamiltonian
         >>> ham = Hamiltonian(QubitOperator('Z0 Y1', 0.3))
+        >>> ham
+        3/10 [Z0 Y1]
     """
 
     def __init__(self, hamiltonian):

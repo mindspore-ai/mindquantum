@@ -31,8 +31,8 @@ def bitphaseflip_operator(phase_inversion_index, n_qubits):  # pylint: disable=t
         n_qubits (int): Total number of qubits.
 
     Examples:
-        >>> from mindquantum.core.circuit import Circuit
-        >>> from mindquantum import UN, H, Z
+        >>> from mindquantum.core.circuit import Circuit, UN
+        >>> from mindquantum.core.gates import H, Z
         >>> from mindquantum.algorithm.library import bitphaseflip_operator
         >>> circuit = Circuit()
         >>> circuit += UN(H, 3)

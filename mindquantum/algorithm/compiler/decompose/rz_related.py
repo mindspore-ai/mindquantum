@@ -14,8 +14,8 @@
 # ============================================================================
 """RZ gate related decompose rule."""
 
-from mindquantum.core import Circuit, gates
-from mindquantum.core.gates.basicgate import RZ
+from mindquantum.core import gates
+from mindquantum.core.circuit import Circuit
 from mindquantum.utils.type_value_check import _check_control_num, _check_input_type
 
 
@@ -31,8 +31,9 @@ def crz_decompose(gate: gates.RZ):
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import crz_decompose
-        >>> from mindquantum.core import Circuit, X, RZ
-        >>> crz = RZ.on(1, 0)
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.gates import X, RZ
+        >>> crz = RZ(1).on(1, 0)
         >>> origin_circ = Circuit() + crz
         >>> decomposed_circ = crz_decompose(crz)[0]
         >>> origin_circ
@@ -44,7 +45,7 @@ def crz_decompose(gate: gates.RZ):
                           │                 │
         q1: ──RZ(1/2)─────X─────RZ(-1/2)────X──
     """
-    _check_input_type('gate', RZ, gate)
+    _check_input_type('gate', gates.RZ, gate)
     _check_control_num(gate.ctrl_qubits, 1)
     circuit = Circuit()
     control = gate.ctrl_qubits[0]

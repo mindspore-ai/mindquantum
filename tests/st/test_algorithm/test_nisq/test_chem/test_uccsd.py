@@ -18,7 +18,7 @@ from pathlib import Path
 
 import numpy as np
 
-from mindquantum.algorithm.nisq.chem import generate_uccsd
+from mindquantum.algorithm.nisq import generate_uccsd
 from mindquantum.core import gates as G
 
 

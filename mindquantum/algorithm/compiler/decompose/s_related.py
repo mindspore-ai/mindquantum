@@ -16,7 +16,8 @@
 
 import numpy as np
 
-from mindquantum.core import Circuit, gates
+from mindquantum.core import gates
+from mindquantum.core.circuit import Circuit
 from mindquantum.utils.type_value_check import _check_control_num, _check_input_type
 
 
@@ -32,7 +33,8 @@ def cs_decompose(gate: gates.SGate):
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import cs_decompose
-        >>> from mindquantum.core import Circuit, S
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.gates import S
         >>> cs = S.on(1, 0)
         >>> origin_circ = Circuit() + cs
         >>> decomposed_circ = cs_decompose(cs)[0]
@@ -44,10 +46,6 @@ def cs_decompose(gate: gates.SGate):
         q0: ──T────●──────────●──
                    │          │
         q1: ──T────X────T†────X──
-        ,
-        q0: ──PS(π/4)────●────────────────●──
-                         │                │
-        q1: ──RZ(π/4)────X────RZ(-π/4)────X──
     """
     _check_input_type('gate', gates.SGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)

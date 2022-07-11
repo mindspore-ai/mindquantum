@@ -68,31 +68,31 @@ class QubitExcitationOperator(_Operator):
             coefficient for the corresponding single operators Default: 1.0.
 
     Examples:
-        >>> from mindquantum.algorithm.nisq.chem import Transform
+        >>> from mindquantum.algorithm.nisq import Transform
         >>> from mindquantum.core.operators import QubitExcitationOperator
         >>> op = QubitExcitationOperator(((4, 1), (1, 0), (0, 0)), 2.5)
         >>> op
-        2.5 [Q4^ Q1 Q0]
+        5/2 [Q4^ Q1 Q0]
         >>> op.fermion_operator
-        2.5 [4^ 1 0]
+        5/2 [4^ 1 0]
         >>> op.to_qubit_operator()
-        0.3125 [X0 X1 X4] +
-        -0.3125j [X0 X1 Y4] +
-        0.3125j [X0 Y1 X4] +
-        (0.3125+0j) [X0 Y1 Y4] +
-        0.3125j [Y0 X1 X4] +
-        (0.3125+0j) [Y0 X1 Y4] +
-        (-0.3125+0j) [Y0 Y1 X4] +
-        0.3125j [Y0 Y1 Y4]
+        5/16 [X0 X1 X4] +
+        (-0.3125j) [X0 X1 Y4] +
+        (5/16j) [X0 Y1 X4] +
+        5/16 [X0 Y1 Y4] +
+        (5/16j) [Y0 X1 X4] +
+        5/16 [Y0 X1 Y4] +
+        -0.3125 [Y0 Y1 X4] +
+        (5/16j) [Y0 Y1 Y4]
         >>> Transform(op.fermion_operator).jordan_wigner()
-        (0.3125+0j) [X0 X1 Z2 Z3 X4] +
-        -0.3125j [X0 X1 Z2 Z3 Y4] +
-        0.3125j [X0 Y1 Z2 Z3 X4] +
-        (0.3125+0j) [X0 Y1 Z2 Z3 Y4] +
-        0.3125j [Y0 X1 Z2 Z3 X4] +
-        (0.3125+0j) [Y0 X1 Z2 Z3 Y4] +
-        (-0.3125+0j) [Y0 Y1 Z2 Z3 X4] +
-        0.3125j [Y0 Y1 Z2 Z3 Y4]
+        5/16 [X0 X1 Z2 Z3 X4] +
+        (-0.3125j) [X0 X1 Z2 Z3 Y4] +
+        (5/16j) [X0 Y1 Z2 Z3 X4] +
+        5/16 [X0 Y1 Z2 Z3 Y4] +
+        (5/16j) [Y0 X1 Z2 Z3 X4] +
+        5/16 [Y0 X1 Z2 Z3 Y4] +
+        -0.3125 [Y0 Y1 Z2 Z3 X4] +
+        (5/16j) [Y0 Y1 Z2 Z3 Y4]
     """
 
     __hash__ = None
@@ -126,10 +126,10 @@ class QubitExcitationOperator(_Operator):
             >>> from mindquantum.core.operators import QubitExcitationOperator
             >>> op = QubitExcitationOperator("7^ 1")
             >>> op.to_qubit_operator()
-            0.25 [X1 X7] +
-            -0.25j [X1 Y7] +
-            0.25j [Y1 X7] +
-            (0.25+0j) [Y1 Y7]
+            1/4 [X1 X7] +
+            (-1/4j) [X1 Y7] +
+            (1/4j) [Y1 X7] +
+            1/4 [Y1 Y7]
         """
         qubit_operator = QubitOperator()
         for term_i, coeff_i in self.terms.items():
@@ -250,7 +250,7 @@ class QubitExcitationOperator(_Operator):
             >>> f = QubitExcitationOperator(((1, 0),), 1 + 2j)
             >>> f += QubitExcitationOperator(((1, 1),), 'a')
             >>> f.imag.compress()
-            2.0 [Q1]
+            2 [Q1]
         """
         out = QubitExcitationOperator()
 
@@ -271,7 +271,7 @@ class QubitExcitationOperator(_Operator):
             >>> f = QubitExcitationOperator(((1, 0),), 1 + 2j)
             >>> f += QubitExcitationOperator(((1, 1),), 'a')
             >>> f.real.compress()
-            1.0 [Q1] +
+            1 [Q1] +
             a [Q1^]
         """
         out = QubitExcitationOperator()
@@ -295,9 +295,9 @@ class QubitExcitationOperator(_Operator):
             >>> from mindquantum.core.operators import QubitExcitationOperator
             >>> op = QubitExcitationOperator("7 1^")
             >>> op
-            1.0 [Q7 Q1^]
+            1 [Q7 Q1^]
             >>> op.normal_ordered()
-            1.0 [Q1^ Q7]
+            1 [Q1^ Q7]
         """
         ordered_op = self.__class__()
         for term, coeff in self.terms.items():

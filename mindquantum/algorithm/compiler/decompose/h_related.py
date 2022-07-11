@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """H gate related decompose rule."""
 
-from mindquantum.core import Circuit, gates
+from mindquantum.core import gates
+from mindquantum.core.circuit import Circuit
 from mindquantum.utils.type_value_check import _check_control_num, _check_input_type
 
 
@@ -31,7 +31,8 @@ def ch_decompose(gate: gates.HGate):
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import ch_decompose
-        >>> from mindquantum.core import Circuit, T, X, H, S
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.gates import T, X, H, S
         >>> ch = H.on(1, 0)
         >>> origin_circ = Circuit() + ch
         >>> decomposed_circ = ch_decompose(ch)[0]

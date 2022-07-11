@@ -15,8 +15,8 @@
 
 """XX gate related decompose rule."""
 
-from mindquantum.core import Circuit, gates
-from mindquantum.core.gates.basicgate import XX
+from mindquantum.core import gates
+from mindquantum.core.circuit import Circuit
 from mindquantum.utils.type_value_check import _check_input_type  # , _check_control_num
 
 
@@ -37,7 +37,8 @@ def xx_decompose(gate: gates.XX):
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import xx_decompose
-        >>> from mindquantum.core import Circuit, XX
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.gates import XX
         >>> xx = XX(1).on([0, 1])
         >>> origin_circ = Circuit() + xx
         >>> decomposed_circ = xx_decompose(xx)[0]
@@ -50,7 +51,7 @@ def xx_decompose(gate: gates.XX):
                    │             │
         q1: ──H────X────RZ(2)────X────H──
     """
-    _check_input_type('gate', XX, gate)
+    _check_input_type('gate', gates.XX, gate)
     _check_control_num(gate.ctrl_qubits, 0)
     return cxx_decompose(gate)
 
@@ -88,7 +89,7 @@ def cxx_decompose(gate: gates.XX):
               │    │    │      │      │    │    │
         q3: ──●────●────●──────●──────●────●────●──
     """
-    _check_input_type('gate', XX, gate)
+    _check_input_type('gate', gates.XX, gate)
     q0 = gate.obj_qubits[0]
     q1 = gate.obj_qubits[1]
 

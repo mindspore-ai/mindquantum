@@ -20,9 +20,9 @@ import numpy as np
 import mindquantum.mqbackend as mb
 
 from ..core.circuit import Circuit
-from ..core.gates import BarrierGate, Measure, MeasureResult
-from ..core.gates.basic import BasicGate
-from ..core.operators.hamiltonian import Hamiltonian, HowTo
+from ..core.gates import BarrierGate, BasicGate, Measure, MeasureResult
+from ..core.operators import Hamiltonian
+from ..core.operators.hamiltonian import HowTo
 from ..core.parameterresolver import ParameterResolver
 from ..utils.string_utils import ket_string
 from ..utils.type_value_check import (
@@ -66,8 +66,8 @@ class Simulator:
         ValueError: if `seed` is less than 0 or great than 2**23 - 1.
 
     Examples:
-        >>> from mindquantum import Simulator
-        >>> from mindquantum import qft
+        >>> from mindquantum.algorithm.library import qft
+        >>> from mindquantum.simulator import Simulator
         >>> sim = Simulator('projectq', 2)
         >>> sim.apply_circuit(qft(range(2)))
         >>> sim.get_qs()
@@ -98,7 +98,8 @@ class Simulator:
             Simulator, a copy version of this simulator.
 
         Examples:
-            >>> from mindquantum import RX, Simulator
+            >>> from mindquantum.core.gates import RX
+            >>> from mindquantum.simulator import Simulator
             >>> sim = Simulator('projectq', 1)
             >>> sim.apply_gate(RX(1).on(0))
             >>> sim.flush()
@@ -133,8 +134,8 @@ class Simulator:
         Reset simulator to zero state.
 
         Examples:
-            >>> from mindquantum import Simulator
-            >>> from mindquantum import qft
+            >>> from mindquantum.algorithm.library import qft
+            >>> from mindquantum.simulator import Simulator
             >>> sim = Simulator('projectq', 2)
             >>> sim.apply_circuit(qft(range(2)))
             >>> sim.reset()
@@ -152,8 +153,8 @@ class Simulator:
         state.
 
         Examples:
-            >>> from mindquantum import Simulator
-            >>> from mindquantum import H
+            >>> from mindquantum.core.gates import H
+            >>> from mindquantum.simulator import Simulator
             >>> sim = Simulator('projectq', 1)
             >>> sim.apply_gate(H.on(0))
             >>> sim.flush()
@@ -183,8 +184,8 @@ class Simulator:
 
         Examples:
             >>> import numpy as np
-            >>> from mindquantum import Simulator
-            >>> from mindquantum import RY, Measure
+            >>> from mindquantum.core.gates import RY, Measure
+            >>> from mindquantum.simulator import Simulator
             >>> sim = Simulator('projectq', 1)
             >>> sim.apply_gate(RY('a').on(0), np.pi/2)
             >>> sim.get_qs()
@@ -226,8 +227,9 @@ class Simulator:
 
         Examples:
             >>> import numpy as np
-            >>> from mindquantum import Circuit, H
-            >>> from mindquantum import Simulator
+            >>> from mindquantum.core.circuit import Circuit
+            >>> from mindquantum.core.gates import H
+            >>> from mindquantum.simulator import Simulator
             >>> sim = Simulator('projectq', 2)
             >>> sim.apply_circuit(Circuit().un(H, 2))
             >>> sim.apply_circuit(Circuit().ry('a', 0).ry('b', 1), np.array([1.1, 2.2]))
@@ -288,8 +290,9 @@ class Simulator:
             MeasureResult, the measure result of sampling.
 
         Examples:
-            >>> from mindquantum import Circuit, Measure
-            >>> from mindquantum import Simulator
+            >>> from mindquantum.core.circuit import Circuit
+            >>> from mindquantum.core.gates import Measure
+            >>> from mindquantum.simulator import Simulator
             >>> circ = Circuit().ry('a', 0).ry('b', 1)
             >>> circ += Measure('q0_0').on(0)
             >>> circ += Measure('q0_1').on(0)
@@ -354,9 +357,9 @@ class Simulator:
             hamiltonian (Hamiltonian): the hamiltonian you want to apply.
 
         Examples:
-            >>> from mindquantum import Simulator
-            >>> from mindquantum import Circuit, Hamiltonian
-            >>> from mindquantum.core.operators import QubitOperator
+            >>> from mindquantum.core.circuit import Circuit
+            >>> from mindquantum.core.operators import QubitOperator, Hamiltonian
+            >>> from mindquantum.simulator import Simulator
             >>> import scipy.sparse as sp
             >>> sim = Simulator('projectq', 1)
             >>> sim.apply_circuit(Circuit().h(0))
@@ -391,9 +394,9 @@ class Simulator:
             numbers.Number, the expectation value.
 
         Examples:
-            >>> from mindquantum.core.operators import QubitOperator
-            >>> from mindquantum import Circuit, Simulator
-            >>> from mindquantum import Hamiltonian
+            >>> from mindquantum.core.circuit import Circuit
+            >>> from mindquantum.core.operators import QubitOperator, Hamiltonian
+            >>> from mindquantum.simulator import Simulator
             >>> sim = Simulator('projectq', 1)
             >>> sim.apply_circuit(Circuit().ry(1.2, 0))
             >>> ham = Hamiltonian(QubitOperator('Z0'))
@@ -417,7 +420,8 @@ class Simulator:
             numpy.ndarray, the current quantum state.
 
         Examples:
-            >>> from mindquantum import qft, Simulator
+            >>> from mindquantum.algorithm.library import qft
+            >>> from mindquantum.simulator import Simulator
             >>> sim = Simulator('projectq', 2)
             >>> sim.apply_circuit(qft(range(2)))
             >>> sim.get_qs()
@@ -438,8 +442,8 @@ class Simulator:
             quantum_state (numpy.ndarray): the quantum state that you want.
 
         Examples:
-            >>> from mindquantum import Simulator
             >>> import numpy as np
+            >>> from mindquantum.simulator import Simulator
             >>> sim = Simulator('projectq', 1)
             >>> sim.get_qs()
             array([1.+0.j, 0.+0.j])
@@ -505,9 +509,9 @@ class Simulator:
 
         Examples:
             >>> import numpy as np
-            >>> from mindquantum import Simulator, Hamiltonian
-            >>> from mindquantum import Circuit
-            >>> from mindquantum.core.operators import QubitOperator
+            >>> from mindquantum.core.circuit import Circuit
+            >>> from mindquantum.core.operators import QubitOperator, Hamiltonian
+            >>> from mindquantum.simulator import Simulator
             >>> circ = Circuit().ry('a', 0)
             >>> ham = Hamiltonian(QubitOperator('Z0'))
             >>> sim = Simulator('projectq', 1)
@@ -802,13 +806,14 @@ def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
         numbers.Number, the inner product of two quantum state.
 
     Examples:
-        >>> from mindquantum import RX, RY, Simulator
-        >>> from mindquantum.simulator import inner_product
+        >>> from mindquantum.core.gates import RX, RY
+        >>> from mindquantum.simulator import inner_product, Simulator
         >>> bra_simulator = Simulator('projectq', 1)
         >>> bra_simulator.apply_gate(RY(1.2).on(0))
         >>> ket_simulator = Simulator('projectq', 1)
         >>> ket_simulator.apply_gate(RX(2.3).on(0))
         >>> inner_product(bra_simulator, ket_simulator)
+        (0.33713923320500694-0.5153852888544989j)
     """
     _check_input_type('bra_simulator', Simulator, bra_simulator)
     _check_input_type('ket_simulator', Simulator, ket_simulator)

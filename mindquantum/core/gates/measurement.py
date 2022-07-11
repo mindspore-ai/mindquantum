@@ -39,9 +39,10 @@ class Measure(FunctionalGate):
 
     Examples:
         >>> import numpy as np
-        >>> from mindquantum import qft, Circuit
-        >>> from mindquantum import Measure
-        >>> from mindquantum import Simulator
+        >>> from mindquantum.algorithm.library import qft
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.gates import Measure
+        >>> from mindquantum.simulator import Simulator
         >>> circ = qft(range(2))
         >>> circ += Measure('q0').on(0)
         >>> circ += Measure().on(1)
@@ -146,8 +147,8 @@ class MeasureResult:
     Measurement result container.
 
     Examples:
-        >>> from mindquantum import qft
-        >>> from mindquantum import Simulator
+        >>> from mindquantum.algorithm.library import qft
+        >>> from mindquantum.simulator import Simulator
         >>> sim = Simulator('projectq', 2)
         >>> res = sim.sampling(qft(range(2)).measure_all(), shots=1000, seed=42)
         >>> res
@@ -230,8 +231,9 @@ class MeasureResult:
             keys (tuple[str]): The key you want to select.
 
         Examples:
-            >>> from mindquantum import Simulator
-            >>> from mindquantum import qft, H
+            >>> from mindquantum.algorithm.library import qft
+            >>> from mindquantum.core.gates import H
+            >>> from mindquantum.simulator import Simulator
             >>> circ = qft(range(2)).measure('q0_0', 0).measure('q1_0', 1)
             >>> circ.h(0).measure('q0_1', 0)
             >>> circ

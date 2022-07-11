@@ -22,7 +22,7 @@ import pytest
 from scipy.linalg import expm
 
 import mindquantum.core.gates as G
-from mindquantum import UN
+from mindquantum.core.circuit import UN
 
 
 def test_rotate_pauli():

@@ -17,7 +17,8 @@
 import numpy as np
 
 import mindquantum.core.gates.channel as C
-from mindquantum import Simulator, X
+from mindquantum.core.gates import X
+from mindquantum.simulator import Simulator
 
 
 def test_pauli_channel():

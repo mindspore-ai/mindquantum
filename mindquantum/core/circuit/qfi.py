@@ -195,7 +195,7 @@ def partial_psi_partial_psi(circuit: Circuit, backend='projectq'):
     .. math::
 
         A_{i,j} = \frac{\partial \left<\psi\right| }{\partial x_{i}}
-        \frac{\partial \left|\\psi\right> }{\partial x_{j}}
+        \frac{\partial \left|\psi\right> }{\partial x_{j}}
 
     Args:
         circuit (Circuit): A parameterized quantum circuit.

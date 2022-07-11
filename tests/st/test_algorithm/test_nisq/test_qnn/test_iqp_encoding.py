@@ -16,7 +16,7 @@
 
 import numpy as np
 
-from mindquantum.algorithm.nisq.qnn import IQPEncoding
+from mindquantum.algorithm.nisq import IQPEncoding
 
 
 def test_general_iqp_encoding():

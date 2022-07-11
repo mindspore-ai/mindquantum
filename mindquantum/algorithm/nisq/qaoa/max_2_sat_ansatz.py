@@ -19,8 +19,7 @@ from math import copysign as sign
 
 import numpy as np
 
-from mindquantum.core.circuit import UN, Circuit
-from mindquantum.core.circuit.utils import CPN
+from mindquantum.core.circuit import CPN, UN, Circuit
 from mindquantum.core.gates import RX, H
 from mindquantum.core.operators import QubitOperator, TimeEvolution
 from mindquantum.simulator import Simulator
@@ -91,24 +90,24 @@ class Max2SATAnsatz(Ansatz):
         depth (int): The depth of Max-2-SAT ansatz. Default: 1.
 
     Examples:
-        >>> from mindquantum.algorithm.nisq.qaoa import Max2SATAnsatz
+        >>> import numpy as np
+        >>> from mindquantum.algorithm.nisq import Max2SATAnsatz
         >>> clauses = [(2, -3)]
         >>> max2sat = Max2SATAnsatz(clauses, 1)
         >>> max2sat.circuit
-        q1: ──H─────RZ(0.5*beta_0)────●───────────────────────●────RX(alpha_0)──
-                                      │                       │
-        q2: ──H────RZ(-0.5*beta_0)────X────RZ(-0.5*beta_0)────X────RX(alpha_0)──
-
+        q1: ──H─────RZ(beta_0)────●───────────────────────●────RX(alpha_0)──
+                                  │                       │
+        q2: ──H────RZ(-beta_0)────X────RZ(-1/2*beta_0)────X────RX(alpha_0)──
         >>> max2sat.hamiltonian
-        0.25 [] +
-        0.25 [Z1] +
-        -0.25 [Z1 Z2] +
-        -0.25 [Z2]
+        1/4 [] +
+        1/4 [Z1] +
+        -1/4 [Z1 Z2] +
+        -1/4 [Z2]
         >>> sats = max2sat.get_sat(4, np.array([4, 1]))
         >>> sats
         ['001', '000', '011', '010']
         >>> for i in sats:
-        >>>     print(f'sat value: {max2sat.get_sat_value([i])}')
+        ...     print(f'sat value: {max2sat.get_sat_value(i)}')
         sat value: 1
         sat value: 0
         sat value: 2

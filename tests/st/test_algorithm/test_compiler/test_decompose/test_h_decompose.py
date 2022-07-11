@@ -25,7 +25,8 @@ with warnings.catch_warnings():
     warnings.filterwarnings('ignore', category=UserWarning, message='MindSpore not installed.*')
     warnings.simplefilter('ignore', category=DeprecationWarning)
     from mindquantum.algorithm.compiler.decompose import ch_decompose
-    from mindquantum.core import Circuit, H
+    from mindquantum.core.circuit import Circuit
+    from mindquantum.core.gates import H
 
 
 def circuit_equal_test(gate, decompose_circ):

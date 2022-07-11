@@ -20,9 +20,9 @@ from math import floor, log
 
 import numpy as np
 
-from mindquantum.core.operators.fermion_operator import FermionOperator
-from mindquantum.core.operators.qubit_operator import QubitOperator
 from mindquantum.core.operators.utils import (
+    FermionOperator,
+    QubitOperator,
     count_qubits,
     normal_ordered,
     number_operator,
@@ -49,7 +49,7 @@ class Transform:
         >>> op1 = FermionOperator('1^')
         >>> op1
         1.0 [1^]
-        >>> from mindquantum.algorithm.nisq.chem import Transform
+        >>> from mindquantum.algorithm.nisq import Transform
         >>> op_transform = Transform(op1)
         >>> op_transform.jordan_wigner()
         0.5 [Z0 X1] +

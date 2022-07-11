@@ -16,7 +16,8 @@
 import numpy as np
 
 from mindquantum.algorithm.compiler.decompose import cswap_decompose, swap_decompose
-from mindquantum.core import SWAP, Circuit
+from mindquantum.core.circuit import Circuit
+from mindquantum.core.gates import SWAP
 
 
 def circuit_equal_test(gate, decompose_circ):

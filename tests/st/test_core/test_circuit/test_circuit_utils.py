@@ -14,27 +14,22 @@
 # ============================================================================
 
 # pylint: disable=invalid-name
-
 """Test Circuit utils."""
 import numpy as np
 import pytest
 
 import mindquantum.core.gates as G
-from mindquantum import (
-    RX,
-    Circuit,
-    H,
-    QubitOperator,
-    X,
+from mindquantum.algorithm.library import qft
+from mindquantum.core.circuit import AP, CPN, Circuit, add_prefix
+from mindquantum.core.circuit import apply as A
+from mindquantum.core.circuit import as_ansatz, as_encoder
+from mindquantum.core.circuit import controlled as C
+from mindquantum.core.circuit import dagger as D
+from mindquantum.core.circuit import (
     decompose_single_term_time_evolution,
     pauli_word_to_circuits,
 )
-from mindquantum.algorithm.library import qft
-from mindquantum.core.circuit.utils import AP, CPN, add_prefix
-from mindquantum.core.circuit.utils import apply as A
-from mindquantum.core.circuit.utils import as_ansatz, as_encoder
-from mindquantum.core.circuit.utils import controlled as C
-from mindquantum.core.circuit.utils import dagger as D
+from mindquantum.core.operators import QubitOperator
 
 
 def test_pauli_word_to_circuits():
@@ -65,7 +60,7 @@ def test_apply():
     u2 = A(unit1, [1, 2])
     u2 = u2([0])
     u3 = A(u, [1, 2])
-    u_exp = Circuit([X.on(1), H.on(2), RX('a_0').on(1)])
+    u_exp = Circuit([G.H.on(1), G.H.on(2), G.RX('a_0').on(1)])
     assert u2 == u3 == u_exp
 
 
@@ -78,7 +73,7 @@ def test_add_prefix():
     u2 = AP(u, 'x')
     u3 = AP(unit1, 'x')
     u3 = u3([0])
-    u_exp = Circuit([X.on(0), H.on(1), RX('x_a_0').on(0)])
+    u_exp = Circuit([G.H.on(0), G.H.on(1), G.RX('x_a_0').on(0)])
     assert u2 == u3 == u_exp
 
 
@@ -91,7 +86,7 @@ def test_change_param_name():
     u2 = CPN(u, {'a_0': 'x'})
     u3 = CPN(unit1, {'a_0': 'x'})
     u3 = u3([0])
-    u_exp = Circuit([X.on(0), H.on(1), RX('x').on(0)])
+    u_exp = Circuit([G.H.on(0), G.H.on(1), G.RX('x').on(0)])
     assert u2 == u3 == u_exp
 
 
@@ -101,10 +96,10 @@ def unit1(rotate_qubits):
     Expectation:
     """
     circuit = Circuit()
-    circuit += X.on(0)
-    circuit += H.on(1)
+    circuit += G.H.on(0)
+    circuit += G.H.on(1)
     for qubits in rotate_qubits:
-        circuit += RX(f'a_{qubits}').on(qubits)
+        circuit += G.RX(f'a_{qubits}').on(qubits)
     return circuit
 
 
@@ -138,15 +133,15 @@ def test_state_evol():
     Expectation:
     """
     qubits = [0, 1, 2, 3]
-    circuit = X.on(4) + C(D(unit1(qubits)))(4)
+    circuit = G.H.on(4) + C(D(unit1(qubits)))(4)
     circuit_exp = Circuit()
-    circuit_exp += X.on(4)
-    circuit_exp += RX({'a_3': -1}).on(3, 4)
-    circuit_exp += RX({'a_2': -1}).on(2, 4)
-    circuit_exp += RX({'a_1': -1}).on(1, 4)
-    circuit_exp += RX({'a_0': -1}).on(0, 4)
-    circuit_exp += H.on(1, 4)
-    circuit_exp += X.on(0, 4)
+    circuit_exp += G.H.on(4)
+    circuit_exp += G.RX({'a_3': -1}).on(3, 4)
+    circuit_exp += G.RX({'a_2': -1}).on(2, 4)
+    circuit_exp += G.RX({'a_1': -1}).on(1, 4)
+    circuit_exp += G.RX({'a_0': -1}).on(0, 4)
+    circuit_exp += G.H.on(1, 4)
+    circuit_exp += G.H.on(0, 4)
     assert circuit_exp == circuit
     pr = {'a_0': 1, 'a_1': 2, 'a_2': 3, 'a_3': 4}
     fs1 = circuit.get_qs(pr=pr)

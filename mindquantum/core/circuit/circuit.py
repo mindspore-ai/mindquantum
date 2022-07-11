@@ -246,7 +246,8 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
 
 
     Examples:
-        >>> from mindquantum import Circuit, RX, X
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.gates import RX, X
         >>> circuit1 = Circuit()
         >>> circuit1 += RX('a').on(0)
         >>> circuit1 *= 2
@@ -519,7 +520,7 @@ parameters and ansatz parameters."
         Remove all unused qubits, and map qubits to `range(n_qubits)`.
 
         Examples:
-            >>> from mindquantum import qft
+            >>> from mindquantum.algorithm.library import qft
             >>> qft([0, 2, 4])
             q0: ──H────PS(π/2)────PS(π/4)─────────────────────────@──
                           │          │                            │
@@ -590,7 +591,8 @@ parameters and ansatz parameters."
             show (bool): whether to show the information. Default: True.
 
         Examples:
-            >>> from mindquantum import Circuit, RX, H
+            >>> from mindquantum.core.circuit import Circuit
+            >>> from mindquantum.core.gates import RX, H
             >>> circuit = Circuit([RX('a').on(1), H.on(1), RX('b').on(0)])
             >>> circuit.summary()
             =========Circuit Summary=========
@@ -626,12 +628,12 @@ parameters and ansatz parameters."
         Get the hermitian of this quantum circuit.
 
         Examples:
-            >>> from mindquantum.core import Circuit
-            >>> from mindquantum.core import RX
+            >>> from mindquantum.core.circuit import Circuit
+            >>> from mindquantum.core.gates import RX
             >>> circ = Circuit(RX({'a': 0.2}).on(0))
             >>> herm_circ = circ.hermitian()
-            >>> herm_circ[0].coeff
-            {'a': -0.2}
+            >>> print(herm_circ[0].coeff.expression())
+            -1/5*a
         """
         return Circuit([gate.hermitian() for gate in self[::-1]])
 
@@ -722,11 +724,11 @@ parameters and ansatz parameters."
             numpy.ndarray, two dimensional complex matrix of this circuit.
 
         Examples:
-            >>> from mindquantum.core import Circuit
+            >>> from mindquantum.core.circuit import Circuit
             >>> circuit = Circuit().rx('a',0).h(0)
             >>> circuit.matrix({'a': 1.0})
             array([[ 0.62054458-0.33900505j,  0.62054458-0.33900505j],
-                [ 0.62054458+0.33900505j, -0.62054458-0.33900505j]])
+                   [ 0.62054458+0.33900505j, -0.62054458-0.33900505j]])
         """
         _check_input_type('big_end', bool, big_end)
         if big_end:
@@ -823,7 +825,8 @@ parameters and ansatz parameters."
             qubit (Union[int, list[int]]): The qubits you want to remove measure.
 
         Examples:
-            >>> from mindquantum import UN, H, Measure
+            >>> from mindquantum.core.circuit import UN
+            >>> from mindquantum.core.gates import H, Measure
             >>> circ = UN(H, 3).x(0, 1).x(1, 2).measure_all()
             >>> circ += H.on(0)
             >>> circ += Measure('q0_1').on(0)
@@ -1089,7 +1092,7 @@ parameters and ansatz parameters."
         Flip the circuit to big endian.
 
         Examples:
-            >>> from mindquantum.core import Circuit
+            >>> from mindquantum.core.circuit import Circuit
             >>> circ = Circuit().h(0).x(2, 0).y(3).x(3, 2)
             >>> circ
             q0: ──H────●───────

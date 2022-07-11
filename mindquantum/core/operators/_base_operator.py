@@ -338,23 +338,20 @@ class _Operator(metaclass=ABCMeta):
             the compressed operator
 
         Examples:
+            >>> from mindquantum.core.operators import QubitOperator
             >>> ham_compress = QubitOperator('X0 Y3', 0.5) + QubitOperator('X0 Y2', 1e-7)
             >>> ham_compress
-            1e-07 [X0 Y2] +
-            0.5 [X0 Y3]
-
+            1/10000000 [X0 Y2] +
+            1/2 [X0 Y3]
             >>> ham_compress.compress(1e-6)
-            0.5 [X0 Y3]
-
+            1/2 [X0 Y3]
             >>> ham_para_compress =  QubitOperator('X0 Y3', 0.5) + QubitOperator('X0 Y2', 'X')
             >>> ham_para_compress
             X [X0 Y2] +
-            0.5 [X0 Y3]
-
+            1/2 [X0 Y3]
             >>> ham_para_compress.compress(1e-7)
             X [X0 Y2] +
-            0.5 [X0 Y3]
-
+            1/2 [X0 Y3]
         """
         new_terms = {}
         for term, coeff in self.terms.items():
@@ -419,7 +416,7 @@ class _Operator(metaclass=ABCMeta):
             list(_Operator): The split word of the string.
 
         Examples:
-            >>> from mindquantum import QubitOperator
+            >>> from mindquantum.core.operators import QubitOperator
             >>> ops = QubitOperator("X0 Y1", 1)
             >>> print(ops.singlet())
             [1 [X0] , 1 [Y1] ]
@@ -443,10 +440,10 @@ class _Operator(metaclass=ABCMeta):
             ParameterResolver: the coefficient of this single string operator.
 
         Examples:
-            >>> from mindquantum import QubitOperator
+            >>> from mindquantum.core.operators import QubitOperator
             >>> ops = QubitOperator("X0 Y1", "a")
             >>> print(ops.singlet_coeff())
-            {'a': 1}
+            {'a': 1}, const: 0
         """
         if not self.is_singlet:
             raise RuntimeError(f"terms size should be equal to 1, but get {len(self.terms)} terms.")

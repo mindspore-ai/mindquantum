@@ -119,8 +119,8 @@ class BitFlipChannel(PauliChannel):
     r"""
     Quantum channel that express the incoherent noise in quantum computing.
 
-    Bit flip channel express error that randomly flip the qubit (applies X gate)
-    with probability P, or do noting (applies I gate) with probability 1 - P.
+    Bit flip channel express error that randomly flip the qubit (applies :math:`X` gate)
+    with probability :math:`P`, or do noting (applies :math:`I` gate) with probability :math:`1-P`.
 
     Bit flip channel applies noise as:
 
@@ -128,7 +128,8 @@ class BitFlipChannel(PauliChannel):
 
         \epsilon(\rho) = (1 - P)\rho + P X \rho X
 
-    where ρ is quantum state as density matrix type; P is the probability of applying an additional X gate.
+    where :math:`\rho` is quantum state as density matrix type; :math:`P` is
+    the probability of applying an additional :math:`X` gate.
 
     Args:
         p (int, float): probability of occurred error.
@@ -140,9 +141,9 @@ class BitFlipChannel(PauliChannel):
         >>> circ += BitFlipChannel(0.02).on(0)
         >>> circ += BitFlipChannel(0.01).on(1, 0)
         >>> print(circ)
-        q0: ──BFC─────●───
-                      │
-        q1: ─────────BFC──
+        q0: ──BF(0.02)───────●──────
+                             │
+        q1: ──────────────BF(0.01)──
     """
 
     # pylint: disable=invalid-name
@@ -193,9 +194,9 @@ class PhaseFlipChannel(PauliChannel):
         >>> circ += PhaseFlipChannel(0.02).on(0)
         >>> circ += PhaseFlipChannel(0.01).on(1, 0)
         >>> print(circ)
-        q0: ──PFC─────●───
-                      │
-        q1: ─────────PFC──
+        q0: ──PF(0.02)───────●──────
+                             │
+        q1: ──────────────PF(0.01)──
     """
 
     # pylint: disable=invalid-name
@@ -247,9 +248,9 @@ class BitPhaseFlipChannel(PauliChannel):
         >>> circ += BitPhaseFlipChannel(0.02).on(0)
         >>> circ += BitPhaseFlipChannel(0.01).on(1, 0)
         >>> print(circ)
-        q0: ──BPFC─────●────
-                       │
-        q1: ──────────BPFC──
+        q0: ──BPF(0.02)────────●──────
+                               │
+        q1: ───────────────BPF(0.01)──
     """
 
     # pylint: disable=invalid-name
@@ -301,9 +302,9 @@ class DepolarizingChannel(PauliChannel):
         >>> circ += DepolarizingChannel(0.02).on(0)
         >>> circ += DepolarizingChannel(0.01).on(1, 0)
         >>> print(circ)
-        q0: ──DC────●───
-                    │
-        q1: ────────DC──
+        q0: ──Dep(0.02)────────●──────
+                               │
+        q1: ───────────────Dep(0.01)──
     """
 
     # pylint: disable=invalid-name
@@ -359,9 +360,9 @@ class AmplitudeDampingChannel(NoiseGate, SelfHermitianGate):
         >>> circ += AmplitudeDampingChannel(0.02).on(0)
         >>> circ += AmplitudeDampingChannel(0.01).on(1, 0)
         >>> print(circ)
-        q0: ──ADC─────●───
-                      │
-        q1: ─────────ADC──
+        q0: ──AD(0.02)───────●──────
+                             │
+        q1: ──────────────AD(0.01)──
     """
 
     def __init__(self, gamma: float, **kwargs):
@@ -428,9 +429,9 @@ class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
         >>> circ += PhaseDampingChannel(0.02).on(0)
         >>> circ += PhaseDampingChannel(0.01).on(1, 0)
         >>> print(circ)
-        q0: ──PDC─────●───
-                      │
-        q1: ─────────PDC──
+        q0: ──PD(0.02)───────●──────
+                             │
+        q1: ──────────────PD(0.01)──
     """
 
     def __init__(self, gamma: float, **kwargs):

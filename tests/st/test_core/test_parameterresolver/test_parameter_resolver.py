@@ -14,7 +14,7 @@
 # ============================================================================
 """Test ParameterResolve."""
 
-from mindquantum import ParameterResolver as PR
+from mindquantum.core.parameterresolver import ParameterResolver as PR
 
 
 def test_parameter_resolve():

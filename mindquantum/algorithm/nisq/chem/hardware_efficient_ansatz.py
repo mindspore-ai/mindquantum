@@ -19,8 +19,7 @@ import itertools
 
 import numpy as np
 
-from mindquantum.core.circuit import Circuit
-from mindquantum.core.circuit.utils import AP, A
+from mindquantum.core.circuit import AP, A, Circuit
 from mindquantum.core.gates import BasicGate, X
 from mindquantum.utils.type_value_check import (
     _check_int_type,
@@ -67,8 +66,8 @@ class HardwareEfficientAnsatz(Ansatz):  # pylint: disable=too-few-public-methods
         depth (int): The depth of ansatz. Default: 1.
 
     Examples:
-        >>> from mindquantum.algorithm.nisq.chem import HardwareEfficientAnsatz
-        >>> from mindquantum import RY, RZ, Z
+        >>> from mindquantum.algorithm.nisq import HardwareEfficientAnsatz
+        >>> from mindquantum.core.gates import RY, RZ, Z
         >>> hea = HardwareEfficientAnsatz(3, [RY, RZ], Z, [(0, 1), (0, 2)])
         >>> hea.circuit
         q0: ──RY(d0_n0_0)────RZ(d0_n0_1)────●────●────RY(d1_n0_0)────RZ(d1_n0_1)──

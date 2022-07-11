@@ -38,7 +38,8 @@ class UN(Circuit):
         Circuit, Return a quantum circuit.
 
     Examples:
-        >>> from mindquantum.core import UN, X
+        >>> from mindquantum.core.circuit import UN
+        >>> from mindquantum.core.gates import X
         >>> circuit1 = UN(X, maps_obj = [0, 1], maps_ctrl = [2, 3])
         >>> print(circuit1)
         q0: ──X───────
@@ -48,7 +49,7 @@ class UN(Circuit):
         q2: ──●────┼──
                    │
         q3: ───────●──
-        >>> from mindquantum.core import SWAP
+        >>> from mindquantum.core.gates import SWAP
         >>> circuit2 = UN(SWAP, maps_obj =[[0, 1], [2, 3]]).x(2, 1)
         >>> print(circuit2)
         q0: ──@───────
@@ -94,7 +95,7 @@ class SwapParts(Circuit):
             different qubits or just no control qubit. Default: None.
 
     Examples:
-        >>> from mindquantum import SwapParts
+        >>> from mindquantum.core.circuit import SwapParts
         >>> SwapParts([1, 2], [3, 4], 0)
         q0: ──●────●──
               │    │
@@ -126,7 +127,7 @@ class U3(Circuit):
         obj_qubit (int): Which qubit the U3 circuit will act on. Default: None.
 
     Examples:
-        >>> from mindquantum.core import U3
+        >>> from mindquantum.core.circuit import U3
         >>> U3('a','b','c')
         q0: ──RZ(a)────RX(-π/2)────RZ(b)────RX(π/2)────RZ(c)──
     """

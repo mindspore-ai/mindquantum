@@ -27,7 +27,7 @@ _HAS_MINDSPORE = True
 try:
     import mindspore as ms
 
-    from mindquantum.algorithm.nisq.qaoa import Max2SATAnsatz
+    from mindquantum.algorithm.nisq import Max2SATAnsatz
     from mindquantum.core.operators import Hamiltonian
     from mindquantum.framework import MQAnsatzOnlyLayer
     from mindquantum.simulator import Simulator

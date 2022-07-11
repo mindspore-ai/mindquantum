@@ -25,7 +25,7 @@ _HAS_MINDSPORE = True
 try:
     import mindspore as ms
 
-    from mindquantum.algorithm.nisq.chem import UCCAnsatz
+    from mindquantum.algorithm.nisq import UCCAnsatz
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.gates import X
     from mindquantum.core.operators import Hamiltonian, QubitOperator

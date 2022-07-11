@@ -75,9 +75,11 @@ class MQOps(nn.Cell):
 
     Examples:
         >>> import numpy as np
-        >>> from mindquantum import Circuit, Hamiltonian, QubitOperator
-        >>> from mindquantum import Simulator, MQOps
         >>> import mindspore as ms
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
+        >>> from mindquantum.framework import MQOps
+        >>> from mindquantum.simulator import Simulator
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
         >>> enc = Circuit().ry('a', 0).as_encoder()
         >>> ans = Circuit().h(0).rx('b', 0)
@@ -160,9 +162,11 @@ class MQN2Ops(nn.Cell):
 
     Examples:
         >>> import numpy as np
-        >>> from mindquantum import Circuit, Hamiltonian, QubitOperator
-        >>> from mindquantum import Simulator, MQN2Ops
         >>> import mindspore as ms
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
+        >>> from mindquantum.framework import MQN2Ops
+        >>> from mindquantum.simulator import Simulator
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
         >>> enc = Circuit().ry('a', 0).as_encoder()
         >>> ans = Circuit().h(0).rx('b', 0)
@@ -240,9 +244,11 @@ class MQAnsatzOnlyOps(nn.Cell):
 
     Examples:
         >>> import numpy as np
-        >>> from mindquantum import Circuit, Hamiltonian, QubitOperator
-        >>> from mindquantum import Simulator, MQAnsatzOnlyOps
         >>> import mindspore as ms
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
+        >>> from mindquantum.framework import MQAnsatzOnlyOps
+        >>> from mindquantum.simulator import Simulator
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
         >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0)
         >>> ham = Hamiltonian(QubitOperator('Z0'))
@@ -311,9 +317,11 @@ class MQN2AnsatzOnlyOps(nn.Cell):
 
     Examples:
         >>> import numpy as np
-        >>> from mindquantum import Circuit, Hamiltonian, QubitOperator
-        >>> from mindquantum import Simulator, MQN2AnsatzOnlyOps
         >>> import mindspore as ms
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
+        >>> from mindquantum.framework import MQN2AnsatzOnlyOps
+        >>> from mindquantum.simulator import Simulator
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
         >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0)
         >>> ham = Hamiltonian(QubitOperator('Z0'))
@@ -386,9 +394,11 @@ class MQEncoderOnlyOps(nn.Cell):
 
     Examples:
         >>> import numpy as np
-        >>> from mindquantum import Circuit, Hamiltonian, QubitOperator
-        >>> from mindquantum import Simulator, MQEncoderOnlyOps
         >>> import mindspore as ms
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
+        >>> from mindquantum.framework import MQEncoderOnlyOps
+        >>> from mindquantum.simulator import Simulator
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
         >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0).as_encoder()
         >>> ham = Hamiltonian(QubitOperator('Z0'))
@@ -460,9 +470,11 @@ class MQN2EncoderOnlyOps(nn.Cell):
 
     Examples:
         >>> import numpy as np
-        >>> from mindquantum import Circuit, Hamiltonian, QubitOperator
-        >>> from mindquantum import Simulator, MQN2EncoderOnlyOps
         >>> import mindspore as ms
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
+        >>> from mindquantum.framework import MQN2EncoderOnlyOps
+        >>> from mindquantum.simulator import Simulator
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
         >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0).as_encoder()
         >>> ham = Hamiltonian(QubitOperator('Z0'))

@@ -22,8 +22,7 @@ import warnings
 
 import numpy
 
-from mindquantum.core.operators import QubitExcitationOperator
-from mindquantum.core.operators.utils import hermitian_conjugated
+from mindquantum.core.operators import QubitExcitationOperator, hermitian_conjugated
 from mindquantum.core.parameterresolver import ParameterResolver
 
 
@@ -62,7 +61,7 @@ def quccsd_generator(  # pylint: disable=too-many-arguments,too-many-locals,too-
         QubitExcitationOperator, Generator of the qUCCSD operators.
 
     Examples:
-        >>> from mindquantum.algorithm.nisq.chem import quccsd_generator
+        >>> from mindquantum.algorithm.nisq import quccsd_generator
         >>> quccsd_generator()
         0
         >>> quccsd_generator(4, 2)

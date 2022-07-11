@@ -24,8 +24,7 @@ import numpy
 
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import CNOT, RY, X
-from mindquantum.core.operators import QubitExcitationOperator
-from mindquantum.core.operators.utils import hermitian_conjugated
+from mindquantum.core.operators import QubitExcitationOperator, hermitian_conjugated
 from mindquantum.core.parameterresolver import ParameterResolver
 
 from .._ansatz import Ansatz
@@ -75,7 +74,7 @@ class QubitUCCAnsatz(Ansatz):  # pylint: disable=too-few-public-methods
             good accuracy. Default: 1.
 
     Examples:
-        >>> from mindquantum.algorithm.nisq.chem import QubitUCCAnsatz
+        >>> from mindquantum.algorithm.nisq import QubitUCCAnsatz
         >>> QubitUCCAnsatz().n_qubits
         0
         >>> qucc = QubitUCCAnsatz(4, 2, trotter_step=2)

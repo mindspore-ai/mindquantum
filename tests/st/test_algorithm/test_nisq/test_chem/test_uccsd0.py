@@ -16,10 +16,9 @@
 
 import warnings
 
-from mindquantum.algorithm.nisq.chem import Transform, uccsd0_singlet_generator
+from mindquantum.algorithm.nisq import Transform, uccsd0_singlet_generator
 from mindquantum.algorithm.nisq.chem.uccsd0 import spin_adapted_t1, spin_adapted_t2
-from mindquantum.core.operators import TimeEvolution
-from mindquantum.core.operators.utils import count_qubits
+from mindquantum.core.operators import TimeEvolution, count_qubits
 
 
 def test_spin_adapted_t1():

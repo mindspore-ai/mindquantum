@@ -48,8 +48,7 @@ def count_qubits(operator):
        TypeError: Operator of invalid type.
 
     Examples:
-        >>> from mindquantum.core.operators import QubitOperator,FermionOperator
-        >>> from mindquantum.core.operators.utils import count_qubits
+        >>> from mindquantum.core.operators import QubitOperator,FermionOperator, count_qubits
         >>> qubit_op = QubitOperator("X1 Y2")
         >>> count_qubits(qubit_op)
         3
@@ -97,14 +96,13 @@ def commutator(left_operator, right_operator):
         TypeError: left_operator and right_operator are not of the same type.
 
     Examples:
-        >>> from mindquantum.core.operators import QubitOperator,FermionOperator
-        >>> from mindquantum.core.operators import commutator
+        >>> from mindquantum.core.operators import QubitOperator, FermionOperator, commutator
         >>> qub_op1 = QubitOperator("X1 Y2")
         >>> qub_op2 = QubitOperator("X1 Z2")
         >>> commutator(qub_op1, qub_op1)
         0
         >>> commutator(qub_op1, qub_op2)
-        2j [X2]
+        (2j) [X2]
     """
     if not isinstance(left_operator, type(right_operator)):
         raise TypeError('operator_a and operator_b are not of the same type.')
@@ -169,8 +167,7 @@ def normal_ordered(fermion_operator):
         FermionOperator, the FermionOperator with normal order.
 
     Examples:
-        >>> from mindquantum.core.operators import FermionOperator
-        >>> from mindquantum.core.operators import normal_ordered
+        >>> from mindquantum.core.operators import FermionOperator, normal_ordered
         >>> op = FermionOperator("3 4^", 'a')
         >>> normal_ordered(op)
         -a [4^ 3]
@@ -216,16 +213,15 @@ def number_operator(n_modes=None, mode=None, coefficient=1.0):
         FermionOperator, a fermionic number operator for the reverse_jordan_wigner transform.
 
     Examples:
-        >>> from mindquantum.core.operators import FermionOperator
-        >>> from mindquantum.core.operators import number_operator
+        >>> from mindquantum.core.operators import FermionOperator, number_operator
         >>> nmode = 3
         >>> number_operator(nmode)
-        1.0 [0^ 0] +
-        1.0 [1^ 1] +
-        1.0 [2^ 2]
+        1 [0^ 0] +
+        1 [1^ 1] +
+        1 [2^ 2]
         >>> mode = 3
         >>> number_operator(None, mode)
-        1.0 [3^ 3]
+        1 [3^ 3]
     """
     if (mode is None and n_modes is None) or (mode is not None and n_modes is not None):
         raise ValueError("Please provide only one parameter between n_modes and mode.")
@@ -252,11 +248,10 @@ def hermitian_conjugated(operator):
         the hermitian form of the input operator.
 
     Examples:
-        >>> from mindquantum.core.operators import QubitOperator
-        >>> from mindquantum.core.operators import hermitian_conjugated
+        >>> from mindquantum.core.operators import QubitOperator, hermitian_conjugated
         >>> q = QubitOperator('X0', {'a' : 2j})
         >>> hermitian_conjugated(q)
-        -2.0*I*a [X0]
+        (-2j)*a [X0]
     """
     # Handle FermionOperator
     if isinstance(operator, FermionOperator):
@@ -347,12 +342,12 @@ def sz_operator(n_spatial_orbitals):
     Examples:
         >>> from mindquantum.core.operators import sz_operator
         >>> sz_operator(3)
-        0.5 [0^ 0] +
-        -0.5 [1^ 1] +
-        0.5 [2^ 2] +
-        -0.5 [3^ 3] +
-        0.5 [4^ 4] +
-        -0.5 [5^ 5]
+        1/2 [0^ 0] +
+        -1/2 [1^ 1] +
+        1/2 [2^ 2] +
+        -1/2 [3^ 3] +
+        1/2 [4^ 4] +
+        -1/2 [5^ 5]
     """
     if not isinstance(n_spatial_orbitals, int) or n_spatial_orbitals < 0:
         raise TypeError("n_orbitals must be specified as an integer")

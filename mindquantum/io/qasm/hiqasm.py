@@ -49,9 +49,9 @@ def random_hiqasm(n_qubits, gate_num, version='0.1', seed=42):  # pylint: disabl
         str, quantum circuit in HIQASM format.
 
     Examples:
-        >>> from mindquantum.io.qasm import random_HiQASM
-        >>> from mindquantum.io.qasm import HiQASM
-        >>> HiQASM_str = random_HiQASM(2, 5)
+        >>> from mindquantum.io import random_hiqasm
+        >>> from mindquantum.io import HiQASM
+        >>> HiQASM_str = random_hiqasm(2, 5)
         >>> HiQASM = HiQASM()
         >>> circuit = HiQASM.from_string(HiQASM_str)
         >>> circuit

@@ -18,9 +18,10 @@
 """Test circuit."""
 import numpy as np
 
-from mindquantum import Circuit, ParameterResolver, Simulator, add_prefix
-from mindquantum import gates as G
-from mindquantum import shift
+from mindquantum.core import gates as G
+from mindquantum.core.circuit import Circuit, add_prefix, shift
+from mindquantum.core.parameterresolver import ParameterResolver
+from mindquantum.simulator import Simulator
 
 
 def test_circuit_qubits_grad():

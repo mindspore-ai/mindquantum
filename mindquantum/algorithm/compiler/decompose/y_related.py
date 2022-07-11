@@ -14,7 +14,8 @@
 # ============================================================================
 """y gate related decompose rule."""
 
-from mindquantum.core import Circuit, gates
+from mindquantum.core import gates
+from mindquantum.core.circuit import Circuit
 from mindquantum.utils.type_value_check import _check_control_num, _check_input_type
 
 
@@ -30,7 +31,8 @@ def cy_decompose(gate: gates.YGate):
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import cy_decompose
-        >>> from mindquantum.core import Circuit, Y
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.gates import Y
         >>> cy = Y.on(1, 0)
         >>> origin_circ = Circuit() + cy
         >>> decomposed_circ = cy_decompose(cy)[0]

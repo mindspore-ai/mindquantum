@@ -18,7 +18,7 @@
 """Test circuitengine."""
 
 import mindquantum.core.gates as G
-from mindquantum import Circuit
+from mindquantum.core.circuit import Circuit
 from mindquantum.engine import circuit_generator
 from mindquantum.engine.circuitengine import CircuitEngine
 

@@ -22,8 +22,11 @@ import warnings
 
 import numpy
 
-from mindquantum.core.operators import FermionOperator
-from mindquantum.core.operators.utils import hermitian_conjugated, normal_ordered
+from mindquantum.core.operators import (
+    FermionOperator,
+    hermitian_conjugated,
+    normal_ordered,
+)
 from mindquantum.core.parameterresolver import ParameterResolver
 
 
@@ -262,7 +265,7 @@ def uccsd0_singlet_generator(
         FermionOperator, Generator of the UCCSD operators that uses CCD0 ansatz.
 
     Examples:
-        >>> from mindquantum.algorithm.nisq.chem.uccsd0 import uccsd0_singlet_generator
+        >>> from mindquantum.algorithm.nisq import uccsd0_singlet_generator
         >>> uccsd0_singlet_generator(4, 2)
         -1.0*d0_s_0 [0^ 2] +
         2.0*d0_d_0 [1^ 0^ 3 2] +

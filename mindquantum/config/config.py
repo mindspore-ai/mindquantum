@@ -65,10 +65,11 @@ class Context:
         For example, `is_two_number_close` will use this precision to determine whether two number is close to each
         other.
 
-        >>> from mindquantum import Context
-        >>> Context.set_precision(1e-3)
-        >>> Context.get_precision()
-        0.001
+        Examples:
+            >>> from mindquantum import Context
+            >>> Context.set_precision(1e-3)
+            >>> Context.get_precision()
+            0.001
         """
         _check_input_type('atol', numbers.Real, atol)
         _GLOBAL_CONFIG['PRECISION'] = atol

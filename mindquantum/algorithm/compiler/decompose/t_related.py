@@ -17,7 +17,8 @@
 
 import numpy as np
 
-from mindquantum.core import Circuit, gates
+from mindquantum.core import gates
+from mindquantum.core.circuit import Circuit
 from mindquantum.utils.type_value_check import _check_control_num, _check_input_type
 
 
@@ -33,7 +34,8 @@ def ct_decompose(gate: gates.TGate):
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import ct_decompose
-        >>> from mindquantum.core import Circuit, T
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.gates import T
         >>> ct = T.on(1, 0)
         >>> origin_circ = Circuit() + ct
         >>> decomposed_circ = ct_decompose(ct)[0]

@@ -14,7 +14,6 @@
 # ============================================================================
 
 # pylint: disable=invalid-name,ungrouped-imports
-
 """Test simulator."""
 
 import numpy as np
@@ -22,14 +21,12 @@ import pytest
 from scipy.sparse import csr_matrix
 
 import mindquantum.core.operators as ops
-from mindquantum import Circuit, Hamiltonian
-from mindquantum import ParameterResolver as PR
-from mindquantum import QubitOperator
-from mindquantum.algorithm import qft
+from mindquantum.algorithm.library import qft
 from mindquantum.core import gates as G
-from mindquantum.core.circuit import UN
-from mindquantum.simulator import inner_product
-from mindquantum.simulator.simulator import Simulator
+from mindquantum.core.circuit import UN, Circuit
+from mindquantum.core.operators import Hamiltonian, QubitOperator
+from mindquantum.core.parameterresolver import ParameterResolver as PR
+from mindquantum.simulator import Simulator, inner_product
 
 _HAS_MINDSPORE = True
 try:

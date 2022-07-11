@@ -19,7 +19,8 @@
 import numpy as np
 
 from mindquantum.algorithm.compiler.decompose import zz_decompose
-from mindquantum.core import ZZ, Circuit
+from mindquantum.core.circuit import Circuit
+from mindquantum.core.gates import ZZ
 
 
 def circuit_equal_test(gate, decompose_circ):

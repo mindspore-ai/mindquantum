@@ -45,9 +45,10 @@ class IQPEncoding(Ansatz):
         num_repeats (int): Number of encoding iterations.
 
     Examples:
-        >>> from mindquantum.algorithm.library import IQPEncoding
+        >>> import numpy as np
+        >>> from mindquantum.algorithm.nisq import IQPEncoding
         >>> iqp = IQPEncoding(3)
-        >>> iqp
+        >>> iqp.circuit
         q0: ──H────RZ(alpha0)────●───────────────────────────●───────────────────────────────────
                                  │                           │
         q1: ──H────RZ(alpha1)────X────RZ(alpha0 * alpha1)────X────●───────────────────────────●──

@@ -23,7 +23,8 @@ with warnings.catch_warnings():
         'ignore', category=DeprecationWarning, message=r'Please use `OptimizeResult` from the `scipy\.optimize`'
     )
     from mindquantum.algorithm.compiler.decompose import ccx_decompose
-    from mindquantum.core import Circuit, X
+    from mindquantum.core.circuit import Circuit
+    from mindquantum.core.gates import X
 
 
 def circuit_equal_test(gate, decompose_circ):

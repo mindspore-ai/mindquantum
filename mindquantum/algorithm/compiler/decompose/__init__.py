@@ -31,6 +31,7 @@ from . import (
     zz_related,
 )
 from .h_related import ch_decompose
+from .rx_related import crx_decompose
 from .ry_related import cry_decompose
 from .rz_related import crz_decompose
 from .s_related import cs_decompose

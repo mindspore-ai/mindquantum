@@ -14,7 +14,7 @@
 # ============================================================================
 """Test hiqasm."""
 
-from mindquantum.core import X
+from mindquantum.core.gates import X
 from mindquantum.io import HiQASM, random_hiqasm
 
 

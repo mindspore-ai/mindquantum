@@ -17,8 +17,7 @@
 
 """Unitary coupled-cluster ansatz."""
 
-from mindquantum.core.circuit import Circuit
-from mindquantum.core.circuit.utils import add_prefix
+from mindquantum.core.circuit import Circuit, add_prefix
 from mindquantum.core.operators import TimeEvolution
 
 from .._ansatz import Ansatz
@@ -62,7 +61,7 @@ class UCCAnsatz(Ansatz):  # pylint: disable=too-few-public-methods
         trotter_step(int): The order of Trotterization step. Default: 1.
 
     Examples:
-        >>> from mindquantum.algorithm.nisq.chem import UCCAnsatz
+        >>> from mindquantum.algorithm.nisq import UCCAnsatz
         >>> ucc = UCCAnsatz(12, 4, occ_orb=[1],
         ...                 vir_orb=[2, 3],
         ...                 generalized=True,

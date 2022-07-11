@@ -743,7 +743,7 @@ class Power(NoneParamNonHermMat):
         t (int, float): The exponenet. Default: 0.5.
 
     Examples:
-        >>> from mindquantum import Power
+        >>> from mindquantum.core.gates import Power
         >>> import numpy as np
         >>> rx1 = RX(0.5)
         >>> rx2 = RX(1)
@@ -800,8 +800,9 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
 
     Examples:
         >>> import numpy as np
-        >>> from mindquantum import gene_univ_parameterized_gate
-        >>> from mindquantum import Simulator, Circuit
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.gates import gene_univ_parameterized_gate
+        >>> from mindquantum.simulator import Simulator
         >>> def matrix(theta):
         ...     return np.array([[np.exp(1j * theta), 0],
         ...                      [0, np.exp(-1j * theta)]])

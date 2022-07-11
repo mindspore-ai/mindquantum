@@ -15,7 +15,7 @@
 Test the transforms in the hiqfermion module.
 """
 
-from mindquantum.algorithm.nisq.chem import Transform
+from mindquantum.algorithm.nisq import Transform
 from mindquantum.core.operators import FermionOperator
 
 

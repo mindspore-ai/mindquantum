@@ -24,10 +24,12 @@ _HAS_MINDSPORE = True
 try:
     import mindspore as ms
 
-    from mindquantum import Circuit, Hamiltonian, Simulator
-    from mindquantum.algorithm.nisq.chem import generate_uccsd
+    from mindquantum.algorithm.nisq import generate_uccsd
     from mindquantum.core import gates as G
+    from mindquantum.core.circuit import Circuit
+    from mindquantum.core.operators import Hamiltonian
     from mindquantum.framework import MQAnsatzOnlyLayer
+    from mindquantum.simulator import Simulator
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:

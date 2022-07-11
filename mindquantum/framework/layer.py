@@ -54,9 +54,11 @@ class MQLayer(nn.Cell):  # pylint: disable=too-few-public-methods
 
     Examples:
         >>> import numpy as np
-        >>> from mindquantum import Circuit, Hamiltonian, QubitOperator
-        >>> from mindquantum import Simulator, MQLayer
         >>> import mindspore as ms
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
+        >>> from mindquantum.framework import MQLayer
+        >>> from mindquantum.simulator import Simulator
         >>> ms.set_seed(42)
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
         >>> enc = Circuit().ry('a', 0).as_encoder()
@@ -127,9 +129,11 @@ class MQN2Layer(nn.Cell):  # pylint: disable=too-few-public-methods
 
     Examples:
         >>> import numpy as np
-        >>> from mindquantum import Circuit, Hamiltonian, QubitOperator
-        >>> from mindquantum import Simulator, MQN2Layer
         >>> import mindspore as ms
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
+        >>> from mindquantum.framework import MQN2Layer
+        >>> from mindquantum.simulator import Simulator
         >>> ms.set_seed(42)
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
         >>> enc = Circuit().ry('a', 0).as_encoder()
@@ -195,9 +199,11 @@ class MQAnsatzOnlyLayer(nn.Cell):  # pylint: disable=too-few-public-methods
 
     Examples:
         >>> import numpy as np
-        >>> from mindquantum import Circuit, Hamiltonian, QubitOperator
-        >>> from mindquantum import Simulator, MQAnsatzOnlyLayer
         >>> import mindspore as ms
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
+        >>> from mindquantum.framework import MQAnsatzOnlyLayer
+        >>> from mindquantum.simulator import Simulator
         >>> ms.set_seed(42)
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
         >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0)
@@ -264,9 +270,11 @@ class MQN2AnsatzOnlyLayer(nn.Cell):  # pylint: disable=too-few-public-methods
 
     Examples:
         >>> import numpy as np
-        >>> from mindquantum import Circuit, Hamiltonian, QubitOperator
-        >>> from mindquantum import Simulator, MQN2AnsatzOnlyLayer
         >>> import mindspore as ms
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
+        >>> from mindquantum.framework import MQN2AnsatzOnlyLayer
+        >>> from mindquantum.simulator import Simulator
         >>> ms.set_seed(43)
         >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
         >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0)

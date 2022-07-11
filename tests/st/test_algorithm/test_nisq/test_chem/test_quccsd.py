@@ -16,9 +16,8 @@
 
 import warnings
 
-from mindquantum.algorithm.nisq.chem import quccsd_generator
-from mindquantum.core.operators import TimeEvolution
-from mindquantum.core.operators.utils import count_qubits
+from mindquantum.algorithm.nisq import quccsd_generator
+from mindquantum.core.operators import TimeEvolution, count_qubits
 
 
 def test_quccsd():

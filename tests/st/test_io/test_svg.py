@@ -17,7 +17,9 @@
 
 import pytest
 
-from mindquantum import RX, BarrierGate, Simulator, qft
+from mindquantum.algorithm.library import qft
+from mindquantum.core.gates import RX, BarrierGate
+from mindquantum.simulator import Simulator
 
 
 def test_measure_svg():

@@ -53,7 +53,7 @@ class ParameterResolver:  # pylint: disable=too-many-public-methods
         dtype (type): the value type of this parameter resolver. Default: None.
 
     Examples:
-        >>> from mindquantum.core import ParameterResolver
+        >>> from mindquantum.core.parameterresolver import ParameterResolver
         >>> pr = ParameterResolver({'a': 0.3})
         >>> pr['b'] = 0.5
         >>> pr.no_grad_part('a')
@@ -142,7 +142,7 @@ class ParameterResolver:  # pylint: disable=too-many-public-methods
             ParameterResolver, the parameter resolver with given data type.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> import numpy as np
             >>> pr = PR({'a': 1.0}, 2.0)
             >>> pr
@@ -185,7 +185,7 @@ resolver discards the imaginary part."
             numbers.Number, the constant part of this parameter resolver.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> pr = PR({'a': 1}, 2.5)
             >>> pr.const
             2.5
@@ -212,7 +212,7 @@ resolver discards the imaginary part."
             int, the number of all parameters.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> a = PR({'a': 0, 'b': 1})
             >>> a.expression()
             'b'
@@ -226,7 +226,7 @@ resolver discards the imaginary part."
         Return an iterator that yields the name and value of all parameters.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> a = PR({'a': 0, 'b': 1})
             >>> list(a.keys())
             ['a', 'b']
@@ -239,7 +239,7 @@ resolver discards the imaginary part."
         Return an iterator that yields the name and value of all parameters.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> a = PR({'a': 0, 'b': 1})
             >>> list(a.values())
             [0.0, 1.0]
@@ -252,7 +252,7 @@ resolver discards the imaginary part."
         Return an iterator that yields the name and value of all parameters.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> a = PR({'a': 0, 'b': 1})
             >>> list(a.items())
             [('a', 0.0), ('b', 1.0)]
@@ -271,7 +271,7 @@ resolver discards the imaginary part."
             bool, whether this parameter resolver represent a constant number.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> pr = PR(1.0)
             >>> pr.is_const()
             True
@@ -286,7 +286,7 @@ resolver discards the imaginary part."
             bool, False if this parameter resolver represent zero and True if not.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> pr = PR(0)
             >>> bool(pr)
             False
@@ -300,7 +300,7 @@ resolver discards the imaginary part."
         You can set multiple values of multiple parameters with given iterable keys and values.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> pr = PR(0)
             >>> pr['a'] = 2.5
             >>> pr.expression()
@@ -332,7 +332,7 @@ resolver discards the imaginary part."
             numbers.Number, the parameter value.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> pr = PR({'a': 1, 'b': 2})
             >>> pr['a']
             1.0
@@ -345,7 +345,7 @@ resolver discards the imaginary part."
         Yield the parameter name.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> pr = PR({'a': 1, 'b': 2})
             >>> list(pr)
             ['a', 'b']
@@ -357,7 +357,7 @@ resolver discards the imaginary part."
         Check whether the given key is in this parameter resolver or not.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> pr = PR({'a': 1, 'b': 2})
             >>> 'c' in pr
             False
@@ -382,7 +382,7 @@ resolver discards the imaginary part."
             bool, whether two parameter resolvers are equal.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> PR(3) == 3
             True
             >>> PR('a') == 3
@@ -417,7 +417,7 @@ resolver discards the imaginary part."
 
         Examples:
             >>> import copy
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> a = PR({'a': 2}, 3)
             >>> b = copy.copy(a)
             >>> c = a
@@ -453,7 +453,7 @@ resolver discards the imaginary part."
             resolver you want add.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> pr = PR({'a': 3})
             >>> pr += 4
             >>> pr.expression()
@@ -489,7 +489,7 @@ resolver discards the imaginary part."
             ParameterResolver, the result of add.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> pr = PR({'a': 3})
             >>> pr + 1
             {'a': 3.0}, const: 1.0
@@ -615,7 +615,7 @@ resolver discards the imaginary part."
             str, the string expression of this parameter resolver.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> import numpy as np
             >>> pr = PR({'a': np.pi}, np.sqrt(2))
             >>> pr.expression()
@@ -819,7 +819,7 @@ resolver discards the imaginary part."
             ParameterResolver, the parameter resolver itself.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> pr = PR({'a': 1, 'b': 2})
             >>> pr.as_encoder()
             >>> pr.encoder_parameters
@@ -836,7 +836,7 @@ resolver discards the imaginary part."
             ParameterResolver, the parameter resolver itself.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> pr = PR({'a': 1, 'b': 2})
             >>> pr.as_encoder()
             >>> pr.as_ansatz()
@@ -881,7 +881,7 @@ resolver discards the imaginary part."
             set, the set of parameters that requires grad.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> a = PR({'a': 1, 'b': 2})
             >>> a.requires_grad_parameters
             {'a', 'b'}
@@ -897,7 +897,7 @@ resolver discards the imaginary part."
             set, the set of parameters that do not require grad.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> a = PR({'a': 1, 'b': 2})
             >>> a.no_grad()
             >>> a.no_grad_parameters
@@ -914,7 +914,7 @@ resolver discards the imaginary part."
             set, the set of encoder parameters.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> a = PR({'a': 1, 'b': 2})
             >>> a.as_encoder()
             >>> a.encoder_parameters
@@ -931,7 +931,7 @@ resolver discards the imaginary part."
             set, the set of ansatz parameters.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> a = PR({'a': 1, 'b': 2})
             >>> a.ansatz_parameters
             {'a', 'b'}
@@ -994,7 +994,7 @@ resolver discards the imaginary part."
             numbers.Number, the popped out parameter value.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> a = PR({'a': 1, 'b': 2})
             >>> a.pop('a')
             1.0
@@ -1013,7 +1013,7 @@ resolver discards the imaginary part."
             ParameterResolver, real part parameter value.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> pr = PR('a', 3) + 1j * PR('a', 4)
             >>> pr
             {'a': (1+1j)}, const: (3+4j)
@@ -1033,7 +1033,7 @@ resolver discards the imaginary part."
             ParameterResolver, image part parameter value.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> pr = PR('a', 3) + 1j * PR('a', 4)
             >>> pr
             {'a': (1+1j)}, const: (3+4j)
@@ -1052,7 +1052,7 @@ resolver discards the imaginary part."
             bool, whether the parameter resolver is hermitian or not.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> pr = PR({'a': 1})
             >>> pr.is_hermitian()
             True
@@ -1071,7 +1071,7 @@ resolver discards the imaginary part."
             bool, whether the parameter resolver is anti hermitian or not.
 
         Examples:
-            >>> from mindquantum.core import ParameterResolver as PR
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
             >>> pr = PR({'a': 1})
             >>> pr.is_anti_hermitian()
             False

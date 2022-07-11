@@ -17,8 +17,8 @@
 
 import numpy as np
 
-from mindquantum.core import Circuit, gates
-from mindquantum.core.gates.basicgate import YY
+from mindquantum.core import gates
+from mindquantum.core.circuit import Circuit
 from mindquantum.utils.type_value_check import _check_input_type  # , _check_control_num
 
 
@@ -40,7 +40,8 @@ def yy_decompose(gate: gates.YY):
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import yy_decompose
-        >>> from mindquantum.core import Circuit, YY
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.gates import YY
         >>> yy = YY(1).on([0, 1])
         >>> origin_circ = Circuit() + yy
         >>> decomposed_circ = yy_decompose(yy)[0]
@@ -53,7 +54,7 @@ def yy_decompose(gate: gates.YY):
                          │             │
         q1: ──RX(π/2)────X────RZ(2)────X────RX(-π/2)──
     """
-    _check_input_type('gate', YY, gate)
+    _check_input_type('gate', gates.YY, gate)
     _check_control_num(gate.ctrl_qubits, 0)
     return cyy_decompose(gate)
 
@@ -70,7 +71,8 @@ def cyy_decompose(gate: gates.YY):
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import cyy_decompose
-        >>> from mindquantum.core import Circuit, YY
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.gates import YY
         >>> cyy = YY(2).on([0, 1], [2, 3])
         >>> origin_circ = Circuit() + cyy
         >>> decomposed_circ = cyy_decompose(cyy)[0]
@@ -91,7 +93,7 @@ def cyy_decompose(gate: gates.YY):
                  │          │       │      │      │       │           │
         q3: ─────●──────────●───────●──────●──────●───────●───────────●──────
     """
-    _check_input_type('gate', YY, gate)
+    _check_input_type('gate', gates.YY, gate)
     q0 = gate.obj_qubits[0]
     q1 = gate.obj_qubits[1]
     controls = gate.ctrl_qubits

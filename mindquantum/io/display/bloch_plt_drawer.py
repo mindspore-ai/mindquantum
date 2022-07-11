@@ -67,8 +67,8 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
     Examples:
         >>> import matplotlib.pyplot as plt
         >>> import numpy as np
+        >>> from mindquantum.core.gates import RX, RZ
         >>> from mindquantum.io.display import BlochScene
-        >>> from mindquantum import RX, RZ
         >>> state = np.array([1, 1 + 1j])/np.sqrt(3)
         >>> scene = BlochScene()
         >>> fig, ax = scene.create_scene()
