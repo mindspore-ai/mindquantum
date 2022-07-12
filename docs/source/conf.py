@@ -35,6 +35,8 @@ except ImportError:
     import importlib_metadata  # pragma: no cover (<PY38)
 
 conf_path = pathlib.Path(__file__).parent.resolve()
+doxygen_output_path = conf_path.parent / 'doxygen'
+doxygen_output_path.mkdir(parents=True, exist_ok=True)
 
 # -- General declarations ----------------------------------------------------
 
@@ -48,9 +50,8 @@ if on_rtd:
     mqbackend = conf_path.parent.parent / 'mindquantum' / 'mqbackend.py'
     if not mqbackend.exists():
         mqbackend.write_text('')
-    doxygen_cmd = f'cd {conf_path.parent} && mkdir -p doxygen && doxygen'
-    print(f'INFO: Calling doxygen: {doxygen_cmd}')
-    subprocess.check_call(doxygen_cmd)  # noqa: SCS103
+    print(f'INFO: Calling doxygen in {conf_path.parent}')
+    subprocess.check_call(['doxygen'], cwd=conf_path.parent)
 
 # -- Project information -----------------------------------------------------
 
@@ -115,7 +116,7 @@ todo_include_todos = False
 
 # -- Options for C++ documentation
 
-breathe_projects = {'mindquantum': f'{conf_path.parent}/doxygen/xml'}
+breathe_projects = {'mindquantum': f'{doxygen_output_path}/xml'}
 breathe_default_members = ('members', 'undoc-members')
 
 highlight_language = 'c++'
