@@ -15,7 +15,7 @@
 ---
 
 ci:
-  skip: [check-manifest, pylint]
+  skip: [check-manifest, pylint, cppcheck]
 
 repos:
   - repo: meta
@@ -40,7 +40,7 @@ repos:
 
   # Changes tabs to spaces
   - repo: https://gitee.com/dnguyen/lukas-c-pre-commit-hooks-mirror.git
-    rev: v1.2.0
+    rev: v1.3.0
     hooks:
       - id: remove-tabs
         exclude: ^(.*Makefile|.*patch[0-9]*)$
@@ -61,7 +61,7 @@ repos:
     hooks:
       - id: shellcheck
         require_serial: false
-        args: [-x]
+        args: [-x, --severity=warning]
 
   - repo: https://gitee.com/mirrors_codespell-project/codespell
     rev: v2.1.0
@@ -72,7 +72,7 @@ repos:
         args: [-S, '.git,third_party', -I, .codespell.allow]
 
   - repo: https://gitee.com/mirrors_adrienverge/yamllint.git
-    rev: v1.26.3
+    rev: v1.27.1
     hooks:
       - id: yamllint
         require_serial: false
@@ -95,7 +95,7 @@ repos:
         name: isort (python)
 
   - repo: https://gitee.com/mirrors_psf/black.git
-    rev: 22.3.0
+    rev: 22.6.0
     hooks:
       - id: black
         language_version: python3
@@ -108,7 +108,7 @@ repos:
         additional_dependencies: [black==22.3.0]
 
   - repo: https://gitee.com/mirrors_asottile/pyupgrade
-    rev: v2.34.0
+    rev: v2.37.1
     hooks:
       - id: pyupgrade
         args: [--py36-plus, --keep-mock]
@@ -135,13 +135,13 @@ repos:
         name: pylint-strict
         exclude: (test_.*\.py)$
         args: [--score=n, --load-plugins=pylint_secure_coding_standard]
-        additional_dependencies: [pybind11>=2.6, numpy, scipy, projectq, openfermion, sympy, matplotlib, rich,
-                                  pylint-secure-coding-standard]
+        additional_dependencies: [pybind11>=2.6, wheel_filename, numpy, scipy, projectq, openfermion, sympy, matplotlib,
+                                  rich, pylint-secure-coding-standard]
       - id: pylint
         name: pylint-test-files
         files: (test_.*\.py)$
         args: [--score=n, --load-plugins=pylint_pytest]
-        additional_dependencies: [pybind11>=2.6, numpy, scipy, projectq, openfermion, sympy, matplotlib, rich, pytest,
+        additional_dependencies: [numpy, scipy, projectq, openfermion, sympy, matplotlib, rich, pytest,
                                   pylint-pytest]
 
   - repo: https://gitee.com/mirrors_mgedmin/check-manifest
@@ -164,6 +164,8 @@ repos:
         files: (.*\.hpp|.*\.h|.*\.tpp|.*\.cpp)$
         additional_dependencies: ['cpplint']
       - id: lizard
+        require_serial: false
+        files: .*(\.hpp|\.h|\.tpp|\.cpp|\.py)$
         args: [-l, cpp, -l, python, -l, java, -C, '19', -L, '100',
                -x, '*/tests/*', -x, '*/test/*', -x, '*/third_party/*',
                -W.whitelizard.txt, -w]
@@ -184,6 +186,6 @@ repos:
       - id: cppcheck
         args: [--force,
                --inline-suppr,
-               --std=c++17,
+               --std=c++20,
                --language=c++,
                --suppressions-list=.cppcheck.suppressions]

@@ -40,7 +40,7 @@ repos:
 
   # Changes tabs to spaces
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.2.0
+    rev: v1.3.0
     hooks:
       - id: remove-tabs
         exclude: ^(.*Makefile|.*patch[0-9]*)$
@@ -71,7 +71,7 @@ repos:
         args: [-S, '.git,third_party', -I, .codespell.allow]
 
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.26.3
+    rev: v1.27.1
     hooks:
       - id: yamllint
         require_serial: false
@@ -94,7 +94,7 @@ repos:
         name: isort (python)
 
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 22.6.0
     hooks:
       - id: black
         language_version: python3
@@ -107,7 +107,7 @@ repos:
         additional_dependencies: [black==22.3.0]
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.34.0
+    rev: v2.37.1
     hooks:
       - id: pyupgrade
         args: [--py36-plus, --keep-mock]
