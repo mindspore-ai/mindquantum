@@ -42,13 +42,13 @@ if ($do_clean_venv) {
 
 # ------------------------------------------------------------------------------
 
-$venv_args = @( "$python_venv_path" )
+$venv_args = @( "'$python_venv_path'" )
 if ("$Env:VENV_USE_SYSTEM_PACKAGES" -eq '1') {
     $venv_args += '--system-site-packages'
 }
 
 $created_venv = $false
-if (-Not (Test-Path -Path "'$python_venv_path'" -PathType Container)) {
+if (-Not (Test-Path -Path "$python_venv_path" -PathType Container)) {
     $created_venv = $true
     Write-Output "Creating Python virtualenv: $PYTHON -m venv $venv_args"
     Call-Cmd "$PYTHON" -m venv @venv_args
@@ -70,7 +70,7 @@ if (Test-Path -Path (Join-Path $python_venv_path 'Scripts\Activate.ps1') -PathTy
 }
 
 if (-Not $dry_run) {
-    . "$activate_path"
+    . $activate_path
 } else {
     Write-Output ". $activate_path"
 }

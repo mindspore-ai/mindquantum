@@ -528,8 +528,6 @@ jobs:
     env:
       BOOST_VERSION: 1.78.0
       BOOST_PATH: ${{github.workspace}}/boost/boost
-      CCACHE_VERSION: 4.6.1
-      CCACHE_URL: https://github.com/ccache/ccache/releases/download/
     steps:
       - uses: actions/checkout@v2
 
@@ -541,14 +539,11 @@ jobs:
       - name: Install ninja-build tool
         uses: seanmiddleditch/gha-setup-ninja@v3
 
-      - name: Restore cache for CCache
-        if: env.ACT != 'true'
-        id: ccache-cache
-        uses: martijnhols/actions-cache/restore@v3
-        with:
-          path: ccache
-          key: mingw64-ccache-${{ steps.get-date.outputs.date }}
-          restore-keys: msvc-ccache-
+      # - name: Setup CCache
+      #   uses: hendrikmuhs/ccache-action@v1.2.2
+      #   with:
+      #     key: mingw64-ccache
+      #     max-size: 75M
 
       - name: Cache Python virtualenv
         if: env.ACT != 'true'
@@ -592,12 +587,12 @@ jobs:
           CC: cc
           CXX: c++
         run: >-
-           ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -CCache -OnlyPytest -NoGitee
+           ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -OnlyPytest -NoGitee
            -ConfigureOnly -C -Clean3rdParty -Prefix "${{ github.workspace }}/install"
            -G "MinGW Makefiles" -DUSE_PARALLEL_STL=OFF
 
       - name: Build
-        run: ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -CCache
+        run: ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test
 
       - name: Install
         run: ./build_locally.ps1 -Install
@@ -830,7 +825,7 @@ jobs:
                     -DENABLE_TESTING=OFF -DENABLE_DOCUMENTATION=OFF \
                     -DCCACHE_DEV_MODE=OFF -DHIREDIS_FROM_INTERNET=ON \
                     -DHAVE_ASM_SSE41=OFF -DHAVE_ASM_AVX2=OFF -DHAVE_ASM_AVX512=OFF \
-                    -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/ccache"
+                    -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$PWD/ccache"
               make -C ccache-${CCACHE_VERSION}/build -j$(nproc) install VERBOSE=1
           else
               echo 'Skip building CCcache'
