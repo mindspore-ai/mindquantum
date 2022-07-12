@@ -172,11 +172,8 @@ class PolynomialTensor:
 
         Args:
             args(tuples): Tuples indicating which coefficient to get.
-            For instance,
-            `my_tensor[(3, 1), (4, 1), (2, 0)]` means look for the coefficient
-            of fermionic ladder operator (a^\dagger_3 a^\dagger_4 a_2 )
-                returns
-                `my_tensor.n_body_tensors[1, 1, 0][3, 4, 2]`
+                For instance, `my_tensor[(3, 1), (4, 1), (2, 0)]` means look for the coefficient of fermionic ladder
+                operator (a^\dagger_3 a^\dagger_4 a_2 ) returns `my_tensor.n_body_tensors[1, 1, 0][3, 4, 2]`
 
         Note: this supports single element extraction
         """
@@ -192,8 +189,8 @@ class PolynomialTensor:
         Set matrix element.
 
         Args:
-            args(tuples): Tuples indicating which terms to set the
-            corresponding coefficient.
+            args(tuples): Tuples indicating which terms to set the corresponding coefficient.
+            value: ???
         """
         if args == ():
             self.constant = value

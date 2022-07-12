@@ -1060,7 +1060,7 @@ parameters and ansatz parameters."
 
         Args:
             gate (BasicGate): The BasicGate you want to map.
-            map_obj (Union[int, list[int]]): object qubits.
+            maps_obj (Union[int, list[int]]): object qubits.
             maps_ctrl (Union[int, list[int]]): control qubits. Default: None.
         """
         from mindquantum import UN  # pylint: disable=import-outside-toplevel
