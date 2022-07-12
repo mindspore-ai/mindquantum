@@ -19,6 +19,8 @@ BASEPATH=$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}" )" &> /dev/null && pwd 
 ROOTDIR="$BASEPATH"
 PROGRAM=$(basename "${BASH_SOURCE[0]:-$0}")
 
+echo "Called with: $*"
+
 # Test for MindSpore CI
 _IS_MINDSPORE_CI=0
 if [[ "${JENKINS_URL:-0}" =~ https?://build.mindspore.cn && ! "${CI:-0}" =~ ^(false|0)$ ]]; then
@@ -105,8 +107,6 @@ function parse_extra_args() {
 # ==============================================================================
 
 set -e
-
-echo "Called with: $*"
 
 cd "${ROOTDIR}"
 

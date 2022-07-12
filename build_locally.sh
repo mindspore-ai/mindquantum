@@ -27,6 +27,8 @@ if [[ "${JENKINS_URL:-0}" =~ https?://build.mindspore.cn && ! "${CI:-0}" =~ ^(fa
     _IS_MINDSPORE_CI=1
 fi
 
+echo "Called with: $*"
+
 # ==============================================================================
 
 # Load common bash helper functions
@@ -110,8 +112,6 @@ function parse_extra_args() {
 # ==============================================================================
 
 set -e
-
-echo "Called with: $*"
 
 cd "${ROOTDIR}"
 
