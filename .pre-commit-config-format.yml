@@ -42,6 +42,12 @@ repos:
       - id: remove-tabs
         exclude: ^(.*Makefile|.*patch[0-9]*)$
 
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.1.1
+    hooks:
+      - id: pydocstyle
+        exclude: (test_.*\.py)$
+        additional_dependencies: [toml]
 
   - repo: https://github.com/PyCQA/doc8/
     rev: 0.11.2

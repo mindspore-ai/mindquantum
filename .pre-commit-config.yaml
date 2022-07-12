@@ -45,6 +45,13 @@ repos:
       - id: remove-tabs
         exclude: ^(.*Makefile|.*patch[0-9]*)$
 
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.1.1
+    hooks:
+      - id: pydocstyle
+        exclude: (test_.*\.py)$
+        additional_dependencies: [toml]
+
   - repo: https://github.com/PyCQA/doc8/
     rev: 0.11.2
     hooks:
@@ -116,6 +123,7 @@ repos:
     rev: 4.0.1
     hooks:
       - id: flake8
+        args: [--docstring-convention, google]
         name: flake8-strict
         exclude: (test_.*\.py)$
         additional_dependencies: [flake8-comprehensions, flake8-breakpoint,
