@@ -23,6 +23,9 @@
 
 #include "ops/parametric/config.hpp"
 
+#if MQ_HAS_CONCEPTS
+#    include "core/concepts.hpp"
+#endif  // MQ_HAS_CONCEPTS
 #include "ops/parametric/param_names.hpp"
 
 namespace mindquantum::concepts {
@@ -42,14 +45,6 @@ concept parameter = requires(param_t p) {
               || std::same_as<typename param_t::param_type, ops::parametric::details::complex_tag_t>);
     // clang-format on
 };
-
-template <typename T>
-concept real_number = std::integral<T> || std::floating_point<T>;
-template <typename T>
-concept complex_number = std::same_as<std::complex<double>, T>;
-
-template <typename T>
-concept number = real_number<std::remove_cvref_t<T>> || complex_number<std::remove_cvref_t<T>>;
 
 template <typename T>
 concept expr_or_number = symengine_expr<T> || number<T>;
