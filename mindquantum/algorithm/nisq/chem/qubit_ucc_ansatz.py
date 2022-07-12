@@ -39,7 +39,8 @@ def _check_int_list(input_list, name):
             raise ValueError(f"The indices of {str(name)} should be integer, but get {type(i)}.")
 
 
-class QubitUCCAnsatz(Ansatz):  # pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods
+class QubitUCCAnsatz(Ansatz):
     r"""
     Qubit Unitary Coupled-Cluster (qUCC) ansatz class.
 
@@ -107,9 +108,8 @@ class QubitUCCAnsatz(Ansatz):  # pylint: disable=too-few-public-methods
         1.0*t_0_q_d_5 [Q5^ Q4^ Q3 Q2] ]
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
-        self, n_qubits=None, n_electrons=None, occ_orb=None, vir_orb=None, generalized=False, trotter_step=1
-    ):
+    # pylint: disable=too-many-arguments
+    def __init__(self, n_qubits=None, n_electrons=None, occ_orb=None, vir_orb=None, generalized=False, trotter_step=1):
         """Initialize a QubitUCCAnsatz object."""
         if n_qubits is not None and not isinstance(n_qubits, int):
             raise ValueError(f"The number of qubits should be integer, but get {type(n_qubits)}.")

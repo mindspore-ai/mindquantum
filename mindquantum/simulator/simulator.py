@@ -464,7 +464,8 @@ class Simulator:
         self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state) ** 2)))
 
     # pylint: disable=too-many-arguments
-    def get_expectation_with_grad(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+    def get_expectation_with_grad(
         self,
         hams,
         circ_right,

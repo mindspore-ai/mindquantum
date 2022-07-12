@@ -157,7 +157,8 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
         _check_input_type("angle", numbers.Number, angle)
         ax.plot(self.c_x * np.sin(angle), self.c_y * np.sin(angle), np.cos(angle), *args, **kwargs)
 
-    def plot_slice(  # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments
+    def plot_slice(
         self,
         ax,
         x,
@@ -341,7 +342,8 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
         x, y, z = np.sin(theta) * np.cos(phi), np.sin(theta) * np.sin(phi), np.cos(theta)
         return np.array([x, y, z])
 
-    def add_state(  # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
+    # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
+    def add_state(
         self,
         ax,
         amp,
@@ -493,9 +495,8 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
             line_z.set_data(np.array([[0, 0], [0, 0]]))
             line_z.set_3d_properties(np.array([0, z]))
 
-    def animation(  # pylint: disable=too-many-arguments,too-many-locals
-        self, fig, ax, objs, new_amps: np.ndarray, interval=15, with_trace=True, history_len=None, **kwargs
-    ):
+    # pylint: disable=too-many-arguments,too-many-locals
+    def animation(self, fig, ax, objs, new_amps: np.ndarray, interval=15, with_trace=True, history_len=None, **kwargs):
         """
         Animate a quantum state on bolch sphere.
 

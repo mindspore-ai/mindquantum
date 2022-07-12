@@ -21,9 +21,8 @@ from openfermion.utils.indexing import down_index, up_index
 from mindquantum.core.parameterresolver import ParameterResolver
 
 
-def uccsd_singlet_get_packed_amplitudes(  # pylint: disable=too-many-locals
-    single_amplitudes, double_amplitudes, n_qubits, n_electrons
-):
+# pylint: disable=too-many-locals
+def uccsd_singlet_get_packed_amplitudes(single_amplitudes, double_amplitudes, n_qubits, n_electrons):
     r"""
     Convert amplitudes for use with singlet UCCSD.
 
@@ -106,7 +105,8 @@ def uccsd_singlet_get_packed_amplitudes(  # pylint: disable=too-many-locals
     return singles + doubles_1 + doubles_2
 
 
-def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):  # pylint: disable=too-many-locals
+# pylint: disable=too-many-locals
+def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):
     """
     Create a singlet UCCSD generator for a system with n_electrons.
 

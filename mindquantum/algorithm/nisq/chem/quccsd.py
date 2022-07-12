@@ -34,7 +34,8 @@ def _check_int_list(input_list, name):
             raise ValueError(f"The indices of {str(name)} should be integer, but get {type(i)}.")
 
 
-def quccsd_generator(  # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
+# pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
+def quccsd_generator(
     n_qubits=None, n_electrons=None, anti_hermitian=True, occ_orb=None, vir_orb=None, generalized=False
 ):
     r"""

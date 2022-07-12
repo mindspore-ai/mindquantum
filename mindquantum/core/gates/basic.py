@@ -464,9 +464,8 @@ class ParameterOppsGate(ParameterGate):
 class NoneParamNonHermMat(NoneParameterGate, MatrixGate, NonHermitianGate):
     """Gate that is both none parameterized and non hermitian."""
 
-    def __init__(
-        self, matrix_value, name, n_qubits, obj_qubits=None, ctrl_qubits=None, hermitianed=False
-    ):  # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments
+    def __init__(self, matrix_value, name, n_qubits, obj_qubits=None, ctrl_qubits=None, hermitianed=False):
         """Initialize a NoneParamNonHermMat object."""
         super().__init__(
             matrix_value, name, n_qubits, obj_qubits=obj_qubits, ctrl_qubits=ctrl_qubits, hermitianed=hermitianed

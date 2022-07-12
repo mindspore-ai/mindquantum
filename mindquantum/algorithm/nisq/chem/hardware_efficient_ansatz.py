@@ -41,7 +41,8 @@ def _check_single_rot_gate_seq(single_rot_gate_seq):
             raise ValueError("single rotation gate should be a one qubit gate.")
 
 
-class HardwareEfficientAnsatz(Ansatz):  # pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods
+class HardwareEfficientAnsatz(Ansatz):
     r"""
     HardwareEfficientAnsatz is a kind of ansatz that can be easily implement on quantum chip.
 
@@ -78,9 +79,8 @@ class HardwareEfficientAnsatz(Ansatz):  # pylint: disable=too-few-public-methods
 
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
-        self, n_qubits, single_rot_gate_seq, entangle_gate=X, entangle_mapping='linear', depth=1
-    ):
+    # pylint: disable=too-many-arguments
+    def __init__(self, n_qubits, single_rot_gate_seq, entangle_gate=X, entangle_mapping='linear', depth=1):
         """Initialize a HardwareEfficientAnsatz object."""
         _check_single_rot_gate_seq(single_rot_gate_seq)
         _check_int_type('depth', depth)
@@ -89,9 +89,8 @@ class HardwareEfficientAnsatz(Ansatz):  # pylint: disable=too-few-public-methods
             raise ValueError(f"entangle gate requires a non parameterized gate, but get {entangle_gate}")
         super().__init__('Hardware Efficient', n_qubits, single_rot_gate_seq, entangle_gate, entangle_mapping, depth)
 
-    def _implement(  # pylint: disable=arguments-differ,invalid-name
-        self, single_rot_gate_seq, entangle_gate, entangle_mapping, depth
-    ):
+    # pylint: disable=arguments-differ,invalid-name
+    def _implement(self, single_rot_gate_seq, entangle_gate, entangle_mapping, depth):
         """Implement of hardware efficient ansatz."""
         entangle_mapping = self._get_entangle_mapping(entangle_mapping)
         circ = Circuit()

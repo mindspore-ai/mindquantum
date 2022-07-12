@@ -34,7 +34,8 @@ def _check_int_list(input_list, name):
             raise ValueError(f"The indices of {str(name)} should be integer, but get {type(i)}.")
 
 
-class UCCAnsatz(Ansatz):  # pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods
+class UCCAnsatz(Ansatz):
     r"""
     The unitary coupled-cluster ansatz for molecular simulations.
 
@@ -78,9 +79,8 @@ class UCCAnsatz(Ansatz):  # pylint: disable=too-few-public-methods
         q7: ──X───────H────────RX(π/2)────X────RZ(-0.5*t_1_d0_d_17)────X────RX(7π/2)──
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
-        self, n_qubits=None, n_electrons=None, occ_orb=None, vir_orb=None, generalized=False, trotter_step=1
-    ):
+    # pylint: disable=too-many-arguments
+    def __init__(self, n_qubits=None, n_electrons=None, occ_orb=None, vir_orb=None, generalized=False, trotter_step=1):
         """Initialize a UCCAnsatz object."""
         if n_qubits is not None and not isinstance(n_qubits, int):
             raise ValueError(f"The number of qubits should be integer, but get {type(n_qubits)}.")
@@ -101,9 +101,8 @@ class UCCAnsatz(Ansatz):  # pylint: disable=too-few-public-methods
 
         super().__init__("Unitary CC", n_qubits, n_qubits, n_electrons, occ_orb, vir_orb, generalized, trotter_step)
 
-    def _implement(  # pylint: disable=arguments-differ,too-many-arguments
-        self, n_qubits, n_electrons, occ_orb=None, vir_orb=None, generalized=False, trotter_step=1
-    ):
+    # pylint: disable=arguments-differ,too-many-arguments
+    def _implement(self, n_qubits, n_electrons, occ_orb=None, vir_orb=None, generalized=False, trotter_step=1):
         """Implement the UCC ansatz using uccsd0."""
         ansatz_circuit = Circuit()
         for trotter_idx in range(trotter_step):

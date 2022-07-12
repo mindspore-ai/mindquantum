@@ -720,7 +720,8 @@ class PhaseShift(ParameterOppsGate):
             n_qubits=1,
         )
 
-    def matrix(self, pr=None):  # pylint: disable=arguments-differ
+    # pylint: disable=arguments-differ
+    def matrix(self, pr=None):
         """
         Get the matrix of this parameterized gate.
 
