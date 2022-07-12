@@ -450,8 +450,7 @@ class PolynomialTensor:
             if key == ():
                 return 0
 
-            key_int = int(''.join(map(str, key)))
-            return key_int
+            return int(''.join(map(str, key)))
 
         for key in sorted(self.n_body_tensors, key=sort_key):
             if key == ():

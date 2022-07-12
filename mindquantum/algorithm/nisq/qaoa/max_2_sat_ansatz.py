@@ -142,8 +142,7 @@ class Max2SATAnsatz(Ansatz):
 
     def _build_hb(self, clauses):
         """Build hb circuit."""
-        circ = Circuit([RX('alpha').on(i) for i in _get_clause_act_qubits(clauses)])
-        return circ
+        return Circuit([RX('alpha').on(i) for i in _get_clause_act_qubits(clauses)])
 
     @property
     def hamiltonian(self):
@@ -183,8 +182,7 @@ class Max2SATAnsatz(Ansatz):
         sim.apply_circuit(self._circuit, weight)
         state = sim.get_qs()
         idxs = np.argpartition(np.abs(state), -max_n)[-max_n:]
-        strings = [bin(i)[2:].zfill(self._circuit.n_qubits)[::-1] for i in idxs]
-        return strings
+        return [bin(i)[2:].zfill(self._circuit.n_qubits)[::-1] for i in idxs]
 
     def get_sat_value(self, string):
         """
@@ -199,8 +197,7 @@ class Max2SATAnsatz(Ansatz):
             int, sat_value under the given string.
         """
         _check_input_type('string', str, string)
-        sat_value = string.count('1')
-        return sat_value
+        return string.count('1')
 
     def _implement(self, clauses, depth):  # pylint: disable=arguments-differ
         """Implement of Max-2-SAT ansatz."""

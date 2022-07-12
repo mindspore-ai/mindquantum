@@ -81,7 +81,7 @@ def string_expression(arg):
     if is_two_number_close(imag_x, 0):
         res = real_string_expression(real_x)
         if res == str(real_x):
-            res = str(np.round(real_x, 4))
+            return str(np.round(real_x, 4))
         return res
     if is_two_number_close(real_x, 0):
         return string_expression(imag_x) + 'j'

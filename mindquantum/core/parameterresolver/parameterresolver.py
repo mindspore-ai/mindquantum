@@ -162,8 +162,7 @@ class ParameterResolver:  # pylint: disable=too-many-public-methods
             if dtype != self.dtype:
                 if self.dtype == np.complex128 and dtype == np.float64:
                     warnings.warn(
-                        "Casting complex parameter resolver to float parameter \
-resolver discards the imaginary part."
+                        "Casting complex parameter resolver to float parameter resolver discards the imaginary part."
                     )
                     if self.obj.is_complex_pr():
                         self.obj = self.obj.real()
@@ -173,8 +172,7 @@ resolver discards the imaginary part."
                 self.dtype = dtype
             return self
         new = copy.copy(self)
-        new = new.astype(dtype, inplace=True)
-        return new
+        return new.astype(dtype, inplace=True)
 
     @property
     def const(self):
@@ -1000,9 +998,7 @@ resolver discards the imaginary part."
             1.0
         """
         _check_input_type('v', str, v)
-        data = self.obj[v]
-        self.obj.pop(v)
-        return data
+        return self.obj.pop(v)
 
     @property
     def real(self):

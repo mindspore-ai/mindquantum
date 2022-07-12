@@ -88,7 +88,7 @@ class BasicGate:
             None, if the decomposation is not defined.
             List[Circuit], all possible decomposations.
         """
-        return None
+        return
 
     def __commutate__(self, _):
         """Indicate whether a gate commutes."""
@@ -98,8 +98,7 @@ class BasicGate:
         """Qubit expression generator."""
         obj_s = ' '.join([str(i) for i in self.obj_qubits])
         ctrl_s = ' '.join([str(i) for i in self.ctrl_qubits])
-        out = join_without_empty(' <-: ', [obj_s, ctrl_s])
-        return out
+        return join_without_empty(' <-: ', [obj_s, ctrl_s])
 
     def __str_in_svg__(self):
         """Return a string representation of the object."""

@@ -111,8 +111,8 @@ class HardwareEfficientAnsatz(Ansatz):
                     res.append((i, i + 1))
                 return res
             raise ValueError(
-                "entangle_mapping can only be 'all', 'linear', \
-or a list of tuple of the qubits that the entanglement gate act on."
+                "entangle_mapping can only be 'all', 'linear', or a list of tuple of the qubits that the entanglement"
+                " gate act on."
             )
         if isinstance(entangle_mapping, list):
             for i in entangle_mapping:
@@ -123,8 +123,8 @@ or a list of tuple of the qubits that the entanglement gate act on."
                     raise TypeError(f"Element of entangle_mapping need a tuple, but get {type(i)}")
         else:
             raise ValueError(
-                "entangle_mapping can only be 'all', 'linear', \
-or a list of tuple of the qubits that the entanglement gate act on."
+                "entangle_mapping can only be 'all', 'linear', or a list of tuple of the qubits that the entanglement"
+                " gate act on."
             )
         return entangle_mapping
 

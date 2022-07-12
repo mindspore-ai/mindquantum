@@ -208,6 +208,4 @@ def quccsd_generator(
                 generator_quccsd_doubles += q_pqrs * coeff_d
                 doubles_counter += 1
 
-    generator_quccsd = generator_quccsd_singles + generator_quccsd_doubles
-
-    return generator_quccsd
+    return generator_quccsd_singles + generator_quccsd_doubles

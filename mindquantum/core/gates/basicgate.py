@@ -275,8 +275,7 @@ class CNOTGate(NoneParamSelfHermMat):
             ctrl_qubits = [ctrl_qubits]
         elif not isinstance(ctrl_qubits, list) or not ctrl_qubits:
             raise ValueError(f"ctrl_qubits requires a list, but get {type(ctrl_qubits)}")
-        out = super().on([obj_qubits, ctrl_qubits[0]], ctrl_qubits[1:])
-        return out
+        return super().on([obj_qubits, ctrl_qubits[0]], ctrl_qubits[1:])
 
     def __eq__(self, other):
         """Equality comparison operator."""

@@ -561,5 +561,4 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
             def func(i):
                 self.update(objs, new_amps[i])
 
-        anim = animation.FuncAnimation(fig, func, new_amps.shape[0], interval=interval, **kwargs)
-        return anim
+        return animation.FuncAnimation(fig, func, new_amps.shape[0], interval=interval, **kwargs)

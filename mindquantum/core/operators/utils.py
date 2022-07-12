@@ -230,9 +230,8 @@ def number_operator(n_modes=None, mode=None, coefficient=1.0):
     if mode is None:
         for mode_idx in range(n_modes):
             operator += FermionOperator(((mode_idx, 1), (mode_idx, 0)), coefficient)
-    else:
-        operator = FermionOperator(((mode, 1), (mode, 0)), coefficient)
-    return operator
+        return operator
+    return FermionOperator(((mode, 1), (mode, 0)), coefficient)
 
 
 def hermitian_conjugated(operator):
