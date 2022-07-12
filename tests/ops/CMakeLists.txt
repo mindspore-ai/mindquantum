@@ -19,3 +19,5 @@
 add_test_executable(test_parametric_gates LIBS mindquantum_cxx mindquantum::symengine)
 add_test_executable(test_angle_parametric_gates LIBS mindquantum_cxx mindquantum::symengine)
 add_test_executable(test_register_gate LIBS mindquantum_cxx mindquantum::symengine)
+
+add_test_executable(test_terms_operators LIBS mindquantum_cxx)
