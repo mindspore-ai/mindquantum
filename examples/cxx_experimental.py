@@ -12,7 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-# pylint: disable=pointless-statement,expression-not-assigned,no-member
+# pylint: disable=pointless-statement,expression-not-assigned,no-member,useless-suppression
 
 """An example of using the C++ backend for MindQuantum."""
 

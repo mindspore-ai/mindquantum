@@ -13,7 +13,8 @@
 # limitations under the License.
 # ============================================================================
 
-# pylint: disable=invalid-name,ungrouped-imports
+# pylint: disable=invalid-name
+
 """Test simulator."""
 
 import numpy as np
@@ -32,7 +33,9 @@ _HAS_MINDSPORE = True
 try:
     import mindspore as ms
 
-    from mindquantum.framework.layer import MQAnsatzOnlyLayer
+    from mindquantum.framework.layer import (  # pylint: disable=ungrouped-imports
+        MQAnsatzOnlyLayer,
+    )
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:

@@ -31,7 +31,7 @@ except ImportError:
 from mindquantum.utils.type_value_check import _check_input_type
 
 from ..parameterresolver.parameterresolver import ParameterResolver
-from .circuit import Circuit, apply  # noqa: F401  # pylint: disable=unused-import
+from .circuit import Circuit, apply
 
 
 def decompose_single_term_time_evolution(term, para):  # pylint: disable=too-many-branches

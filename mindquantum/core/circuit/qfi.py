@@ -16,13 +16,9 @@
 
 import numpy as np
 
-from mindquantum.core.circuit import Circuit
-from mindquantum.core.parameterresolver import ParameterResolver
-from mindquantum.simulator import Simulator, inner_product
-from mindquantum.utils.type_value_check import (
-    _check_and_generate_pr_type,
-    _check_input_type,
-)
+from ...utils.type_value_check import _check_and_generate_pr_type, _check_input_type
+from ..parameterresolver import ParameterResolver
+from .circuit import Circuit
 
 
 def pr_converter(pr_map, origin: ParameterResolver):
@@ -33,16 +29,22 @@ def pr_converter(pr_map, origin: ParameterResolver):
     return ParameterResolver(part_a)
 
 
-def apply_gate(sim, g, g_cpp, pr_cpp, diff):
+def apply_gate(sim, gate, g_cpp, pr_cpp, diff):
     """Apply a gate."""
-    if g.parameterized:
+    if gate.parameterized:
         sim.apply_gate(g_cpp, pr_cpp, diff)
     else:
         sim.apply_gate(g_cpp)
 
 
+# pylint: disable=too-many-statements,too-many-locals
 def _qfi_matrix_base(circuit: Circuit, which_part='both', backend='projectq'):
     """Calculate Quantum Fisher Information (QFI)."""
+    from ...simulator import (  # pylint: disable=import-outside-toplevel,cyclic-import
+        Simulator,
+        inner_product,
+    )
+
     _check_input_type('circuit', Circuit, circuit)
     if which_part not in ['A', 'B', 'both']:
         raise ValueError(f"which part shoude be 'A', 'B' or 'both', but get {which_part}.")
@@ -58,26 +60,27 @@ def _qfi_matrix_base(circuit: Circuit, which_part='both', backend='projectq'):
     n_params = 0
     jac = {}
     pr_map = {}
-    for g in circuit:
-        if g.parameterized:
+    for gate in circuit:
+        if gate.parameterized:
             n_params += 1
             new_p = f'p{n_params}'
-            pure_circ += g(ParameterResolver(new_p)).on(g.obj_qubits, g.ctrl_qubits)
-            jac[new_p] = dict(g.coeff.items())
-            pr_map[new_p] = g.coeff
+            pure_circ += gate(ParameterResolver(new_p)).on(gate.obj_qubits, gate.ctrl_qubits)
+            jac[new_p] = dict(gate.coeff.items())
+            pr_map[new_p] = gate.coeff
         else:
-            pure_circ += g
+            pure_circ += gate
     old_idx_map = {p: idx for idx, p in enumerate(circuit.params_name)}
     new_idx_map = {p: idx for idx, p in enumerate(pure_circ.params_name)}
     tmp = np.zeros((len(new_idx_map), len(old_idx_map)), np.complex128)
-    for new_p, m in jac.items():
-        for old_p, v in m.items():
+    for new_p, matrix in jac.items():
+        for old_p, v in matrix.items():
             tmp[new_idx_map[new_p], old_idx_map[old_p]] = v
     jac = tmp
     cpp_obj = pure_circ.get_cpp_obj()
     c_len = len(pure_circ)
     ket = Simulator(backend, pure_circ.n_qubits)
 
+    # pylint: disable=too-many-branches
     def qfi_ops(pr: ParameterResolver):
         pr = _check_and_generate_pr_type(pr, circuit.params_name)
         ket.reset()
@@ -87,10 +90,10 @@ def _qfi_matrix_base(circuit: Circuit, which_part='both', backend='projectq'):
         if which_part != 'A':
             part_b = np.zeros(len(new_idx_map), np.complex128)
         for i in range(c_len):
-            g = pure_circ[i]
+            gate = pure_circ[i]
             g_cpp = cpp_obj[i]
-            if g.parameterized:
-                idx_i = new_idx_map[g.coeff.params_name[0]]
+            if gate.parameterized:
+                idx_i = new_idx_map[gate.coeff.params_name[0]]
                 bra = Simulator(backend, pure_circ.n_qubits)
                 ket_tmp = ket.copy()
                 ket_tmp.sim.apply_gate(g_cpp, pr_cpp, True)
@@ -181,6 +184,7 @@ def qfi(circuit: Circuit, backend='projectq'):
     qfi_ops_tmp = _qfi_matrix_base(circuit, backend=backend)
 
     def qfi_ops(pr):
+        # pylint: disable=invalid-name
         a, b = qfi_ops_tmp(pr)
         b = np.outer(b, np.conj(b))
         return np.real(a - b) * 4
