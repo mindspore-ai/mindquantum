@@ -32,5 +32,4 @@ def get_qubit_hamiltonian(mol):
     m_ham = mol.get_molecular_hamiltonian()
     int_ham = InteractionOperator(*(m_ham.n_body_tensors.values()))
     f_ham = get_fermion_operator(int_ham)
-    q_ham = Transform(f_ham).jordan_wigner()
-    return q_ham
+    return Transform(f_ham).jordan_wigner()

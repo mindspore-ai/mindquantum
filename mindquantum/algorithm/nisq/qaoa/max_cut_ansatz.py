@@ -134,8 +134,7 @@ class MaxCutAnsatz(Ansatz):
 
     def _build_hb(self, graph):
         """Build hb circuit."""
-        circ = Circuit([RX('alpha').on(i) for i in _get_graph_act_qubits(graph)])
-        return circ
+        return Circuit([RX('alpha').on(i) for i in _get_graph_act_qubits(graph)])
 
     @property
     def hamiltonian(self):

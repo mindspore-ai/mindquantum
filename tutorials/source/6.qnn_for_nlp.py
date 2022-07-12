@@ -177,8 +177,7 @@ class CBOW(nn.Cell):
         embed = self.embedding(x)
         out = self.dense1(embed)
         out = self.relu(out)
-        out = self.dense2(out)
-        return out
+        return self.dense2(out)
 
 
 class LossMonitorWithCollection(LossMonitor):
@@ -292,8 +291,7 @@ class CBOWClassical(nn.Cell):
         embed = self.reshape(embed, (-1, self.dim))
         out = self.dense1(embed)
         out = self.relu(out)
-        out = self.dense2(out)
-        return out
+        return self.dense2(out)
 
 
 train_x = []

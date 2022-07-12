@@ -117,10 +117,9 @@ class MQOps(nn.Cell):
         check_enc_input_shape(enc_data, self.shape_ops(enc_data), len(self.expectation_with_grad.encoder_params_name))
         check_ans_input_shape(ans_data, self.shape_ops(ans_data), len(self.expectation_with_grad.ansatz_params_name))
         fval, g_enc, g_ans = self.expectation_with_grad(enc_data.asnumpy(), ans_data.asnumpy())
-        fval = ms.Tensor(np.real(fval), dtype=ms.float32)
         self.g_enc = np.real(g_enc)
         self.g_ans = np.real(g_ans)
-        return fval
+        return ms.Tensor(np.real(fval), dtype=ms.float32)
 
     def bprop(self, enc_data, ans_data, out, dout):  # pylint: disable=unused-argument
         """Implement the bprop function."""
@@ -206,10 +205,9 @@ class MQN2Ops(nn.Cell):
         check_ans_input_shape(ans_data, self.shape_ops(ans_data), len(self.expectation_with_grad.ansatz_params_name))
         fval, g_enc, g_ans = self.expectation_with_grad(enc_data.asnumpy(), ans_data.asnumpy())
         self.f = fval
-        fval = ms.Tensor(np.abs(fval) ** 2, dtype=ms.float32)
         self.g_enc = g_enc
         self.g_ans = g_ans
-        return fval
+        return ms.Tensor(np.abs(fval) ** 2, dtype=ms.float32)
 
     def bprop(self, enc_data, ans_data, out, dout):  # pylint: disable=unused-argument
         """Implement the bprop function."""
@@ -281,9 +279,8 @@ class MQAnsatzOnlyOps(nn.Cell):
         """Construct a MQAnsatzOnlyOps node."""
         check_ans_input_shape(arg, self.shape_ops(arg), len(self.expectation_with_grad.ansatz_params_name))
         fval, g_ans = self.expectation_with_grad(arg.asnumpy())
-        fval = ms.Tensor(np.real(fval[0]), dtype=ms.float32)
         self.g = np.real(g_ans[0])
-        return fval
+        return ms.Tensor(np.real(fval[0]), dtype=ms.float32)
 
     def bprop(self, arg, out, dout):  # pylint: disable=unused-argument
         """Implement the bprop function."""
@@ -357,9 +354,8 @@ class MQN2AnsatzOnlyOps(nn.Cell):
         check_ans_input_shape(arg, self.shape_ops(arg), len(self.expectation_with_grad.ansatz_params_name))
         fval, g_ans = self.expectation_with_grad(arg.asnumpy())
         self.f = fval[0]
-        fval = ms.Tensor(np.abs(fval[0]) ** 2, dtype=ms.float32)
         self.g = g_ans[0]
-        return fval
+        return ms.Tensor(np.abs(fval[0]) ** 2, dtype=ms.float32)
 
     def bprop(self, arg, out, dout):  # pylint: disable=unused-argument
         """Implement the bprop function."""
@@ -434,9 +430,8 @@ class MQEncoderOnlyOps(nn.Cell):
         """Construct a MQEncoderOnlyOps node."""
         check_enc_input_shape(arg, self.shape_ops(arg), len(self.expectation_with_grad.encoder_params_name))
         fval, g_enc = self.expectation_with_grad(arg.asnumpy())
-        fval = ms.Tensor(np.real(fval), dtype=ms.float32)
         self.g = np.real(g_enc)
-        return fval
+        return ms.Tensor(np.real(fval), dtype=ms.float32)
 
     def bprop(self, arg, out, dout):  # pylint: disable=unused-argument
         """Implement the bprop function."""
@@ -513,9 +508,8 @@ class MQN2EncoderOnlyOps(nn.Cell):
         check_enc_input_shape(arg, self.shape_ops(arg), len(self.expectation_with_grad.encoder_params_name))
         fval, g_enc = self.expectation_with_grad(arg.asnumpy())
         self.f = fval
-        fval = ms.Tensor(np.abs(fval) ** 2, dtype=ms.float32)
         self.g = g_enc
-        return fval
+        return ms.Tensor(np.abs(fval) ** 2, dtype=ms.float32)
 
     def bprop(self, arg, out, dout):  # pylint: disable=unused-argument
         """Implement the bprop function."""
@@ -527,9 +521,9 @@ class MQN2EncoderOnlyOps(nn.Cell):
 def _mode_check(self):
     if context.get_context('mode') != context.PYNATIVE_MODE:
         raise RuntimeError(
-            f'{self.__class__} is `PYNATIVE_MODE` supported only. Run command below to set context\n\
-    import mindspore as ms\n\
-    ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")'
+            f'{self.__class__} is `PYNATIVE_MODE` supported only. Run command below to set context\n'
+            'import mindspore as ms\n'
+            'ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")'
         )
 
 

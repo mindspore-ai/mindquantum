@@ -72,8 +72,7 @@ def _qij_plus(i: int, j: int):
     # pylint: disable=invalid-name
     ia = i * 2 + 0
     ja = j * 2 + 0
-    term = FermionOperator(((ja, 0), (ia, 0)), 1.0)
-    return term
+    return FermionOperator(((ja, 0), (ia, 0)), 1.0)
 
 
 def _qij_minus(i: int, j: int):
@@ -85,8 +84,7 @@ def _qij_minus(i: int, j: int):
     # pylint: disable=invalid-name
     ib = i * 2 + 1
     jb = j * 2 + 1
-    term = FermionOperator(((jb, 0), (ib, 0)), 1.0)
-    return term
+    return FermionOperator(((jb, 0), (ib, 0)), 1.0)
 
 
 def _qij_0(i: int, j: int):
@@ -173,8 +171,7 @@ def spin_adapted_t1(i, j):
     jb = j * 2 + 1
     term1 = FermionOperator(((ia, 1), (ja, 0)), 1.0)
     term2 = FermionOperator(((ib, 1), (jb, 0)), 1.0)
-    tpq_list = [term1 + term2]
-    return tpq_list
+    return [term1 + term2]
 
 
 def spin_adapted_t2(creation_list, annihilation_list):
@@ -228,8 +225,7 @@ def spin_adapted_t2(creation_list, annihilation_list):
     s = annihilation_list[1]
     tpqrs1 = _pij_dagger(p, q) * _pij(r, s)
     tpqrs2 = _qij_vec_inner(p, q, r, s)
-    tpqrs_list = [tpqrs1, tpqrs2]
-    return tpqrs_list
+    return [tpqrs1, tpqrs2]
 
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
@@ -407,6 +403,4 @@ def uccsd0_singlet_generator(
                     generator_uccsd0_doubles += tpqrs * coeff_d
                     doubles_counter += 1
 
-    generator_uccsd0 = generator_uccsd0_singles + generator_uccsd0_doubles
-
-    return generator_uccsd0
+    return generator_uccsd0_singles + generator_uccsd0_doubles

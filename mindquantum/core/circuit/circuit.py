@@ -338,14 +338,12 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             conflict_params = set(self.all_encoder.keys()) & set(gates.all_ansatz.keys())
             if conflict_params:
                 raise RuntimeError(
-                    f"Parameters {conflict_params} can not be both encoder \
-parameters and ansatz parameters."
+                    f"Parameters {conflict_params} can not be both encoder parameters and ansatz parameters."
                 )
             conflict_params = set(self.all_ansatz.keys()) & set(gates.all_encoder.keys())
             if conflict_params:
                 raise RuntimeError(
-                    f"Parameters {conflict_params} can not be both encoder \
-parameters and ansatz parameters."
+                    f"Parameters {conflict_params} can not be both encoder parameters and ansatz parameters."
                 )
             self.all_encoder.merge(gates.all_encoder)
             self.all_ansatz.merge(gates.all_ansatz)
@@ -534,8 +532,7 @@ parameters and ansatz parameters."
                                      │               │            │
             q2: ─────────────────────●───────────────●───────H────@──
         """
-        circ = apply(self, list(range(len(self.all_qubits))))
-        return circ
+        return apply(self, list(range(len(self.all_qubits))))
 
     def __str__(self):
         """Return a string representation of the object."""
@@ -554,7 +551,7 @@ parameters and ansatz parameters."
             console.width = len(string)
             with console.capture() as capture:
                 console.print(string, style=_CIRCUIT_STYLE, width=len(string))
-            string = capture.get()
+            return capture.get()
         return string
 
     def _repr_html_(self):
@@ -1060,7 +1057,7 @@ parameters and ansatz parameters."
 
         Args:
             gate (BasicGate): The BasicGate you want to map.
-            map_obj (Union[int, list[int]]): object qubits.
+            maps_obj (Union[int, list[int]]): object qubits.
             maps_ctrl (Union[int, list[int]]): control qubits. Default: None.
         """
         from mindquantum import UN  # pylint: disable=import-outside-toplevel

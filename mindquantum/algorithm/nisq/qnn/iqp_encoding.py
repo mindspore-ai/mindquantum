@@ -130,6 +130,5 @@ class IQPEncoding(Ansatz):
                 raise ValueError(
                     f"This iqp encoding requires {self.n_feature} features, but data has {output.shape[1]} features"
                 )
-            output = np.append(output, output[:, :-1] * output[:, 1:], axis=1)
-            return output
+            return np.append(output, output[:, :-1] * output[:, 1:], axis=1)
         raise ValueError(f"data need a one or two dimension array, but get dimension of {data.shape}")

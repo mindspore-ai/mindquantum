@@ -15,7 +15,7 @@
 
 # pylint: disable=invalid-name
 
-'''test decompose rule'''
+"""Test decompose rule."""
 import numpy as np
 
 from mindquantum.algorithm.compiler.decompose import cy_decompose
@@ -24,9 +24,7 @@ from mindquantum.core.gates import Y
 
 
 def circuit_equal_test(gate, decompose_circ):
-    """
-    require two circuits are equal.
-    """
+    """Require two circuits are equal."""
     orig_circ = Circuit() + gate
     assert np.allclose(orig_circ.matrix(), decompose_circ.matrix())
 

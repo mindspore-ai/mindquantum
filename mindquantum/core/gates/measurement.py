@@ -303,7 +303,7 @@ class MeasureResult:
         if not console.is_jupyter:
             with console.capture() as capture:
                 console.print(string, style=_MEA_RES_STYLE)
-            string = capture.get()
+            return capture.get()
         return string
 
     def _repr_html_(self):
@@ -341,5 +341,4 @@ class MeasureResult:
             if style not in supported_style:
                 raise ValueError(f"Style not found, currently we support {list(supported_style.keys())}")
             style = supported_style[style]
-        svg = SVGMeasure(self, style)
-        return svg
+        return SVGMeasure(self, style)

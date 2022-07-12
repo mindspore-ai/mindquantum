@@ -90,8 +90,7 @@ class MnistNet(nn.Cell):
 
     def construct(self, x):
         """Construct a MnistNet node (?)."""
-        x = self.net(x)
-        return x
+        return self.net(x)
 
 
 def encoder_circuit_builder(n_qubits_range, prefix='encoder'):

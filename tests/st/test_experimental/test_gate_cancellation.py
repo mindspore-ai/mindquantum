@@ -12,6 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+# pylint: disable=no-member,useless-suppression
+
 """Test gate decomposition."""
 
 import pytest

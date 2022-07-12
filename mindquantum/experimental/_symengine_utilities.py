@@ -226,35 +226,34 @@ try:
 
     def var(names, **args):
         """
-            Create symbols and inject them into the global namespace.
+        Create symbols and inject them into the global namespace.
 
-            INPUT:
+        INPUT:
         -            s -- a string, either a single variable name, or
         -                 a space separated list of variable names, or
         -                 a list of variable names.
 
-            This calls :func:`symbols` with the same arguments and puts the results
-            into the *global* namespace. It's recommended not to use :func:`var` in
-            library code, where :func:`symbols` has to be used::
+        This calls :func:`symbols` with the same arguments and puts the results
+        into the *global* namespace. It's recommended not to use :func:`var` in
+        library code, where :func:`symbols` has to be used::
 
-            Examples
-            ========
+        Examples
+        ========
 
-            >>> from symengine import var
+        >>> from symengine import var
 
-            >>> var('x')
-            x
-            >>> x
-            x
+        >>> var('x')
+        x
+        >>> x
+        x
 
-            >>> var('a,ab,abc')
-            (a, ab, abc)
-            >>> abc
-            abc
+        >>> var('a,ab,abc')
+        (a, ab, abc)
+        >>> abc
+        abc
 
-            See :func:`symbols` documentation for more details on what kinds of
-            arguments can be passed to :func:`var`.
-
+        See :func:`symbols` documentation for more details on what kinds of
+        arguments can be passed to :func:`var`.
         """
 
         def traverse(symbols_arg, frame):

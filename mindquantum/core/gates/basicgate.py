@@ -72,6 +72,7 @@ class UnivMathGate(NoneParamNonHermMat):
         super().__init__(name=name, n_qubits=n_qubits, matrix_value=matrix_value)
 
     def get_cpp_obj(self):
+        """Get the underlying C++ object."""
         mat = mb.dim2matrix(self.matrix())
         cpp_gate = mb.basic_gate(False, self.name, 1, mat)
         cpp_gate.daggered = self.hermitianed
@@ -253,14 +254,28 @@ class CNOTGate(NoneParamSelfHermMat):
         )
 
     def on(self, obj_qubits, ctrl_qubits=None):
+        """
+        Define which qubit the gate act on and the control qubit.
+
+        Note:
+            In this framework, the qubit that the gate act on is specified
+            first, even for control gate, e.g. CNOT, the second arg is control
+            qubits.
+
+        Args:
+            obj_qubits (int, list[int]): Specific which qubits the gate act on.
+            ctrl_qubits (int, list[int]): Specific the control qbits. Default, None.
+
+        Returns:
+            Gate, Return a new gate.
+        """
         if ctrl_qubits is None:
             raise ValueError("A control qubit is needed for CNOT gate!")
         if isinstance(ctrl_qubits, (int, np.int64)):
             ctrl_qubits = [ctrl_qubits]
         elif not isinstance(ctrl_qubits, list) or not ctrl_qubits:
             raise ValueError(f"ctrl_qubits requires a list, but get {type(ctrl_qubits)}")
-        out = super().on([obj_qubits, ctrl_qubits[0]], ctrl_qubits[1:])
-        return out
+        return super().on([obj_qubits, ctrl_qubits[0]], ctrl_qubits[1:])
 
     def __eq__(self, other):
         """Equality comparison operator."""
@@ -500,9 +515,29 @@ class ZZ(RotSelfHermMat):
         )
 
     def matrix(self, pr=None, frac=1):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
         return super().matrix(pr, frac)
 
     def diff_matrix(self, pr=None, about_what=None, frac=1):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
+            frac (float): ???
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
         return super().diff_matrix(pr, about_what, frac)
 
     def __decompose__(self):
@@ -544,9 +579,29 @@ class XX(RotSelfHermMat):
         )
 
     def matrix(self, pr=None, frac=1):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
         return super().matrix(pr, frac)
 
     def diff_matrix(self, pr=None, about_what=None, frac=1):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
+            frac (float): ???
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
         return super().diff_matrix(pr, about_what, frac)
 
     def __decompose__(self):
@@ -596,9 +651,29 @@ class YY(RotSelfHermMat):
         )
 
     def matrix(self, pr=None, frac=1):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
         return super().matrix(pr, frac)
 
     def diff_matrix(self, pr=None, about_what=None, frac=1):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
+            frac (float): ???
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
         return super().diff_matrix(pr, about_what, frac)
 
     def __decompose__(self):
@@ -641,6 +716,19 @@ class BarrierGate(FunctionalGate):
         self.show = show
 
     def on(self, obj_qubits, ctrl_qubits=None):
+        """
+        Define which qubit the gate act on and the control qubit.
+
+        Note:
+            This implementation will always raise a runtime error since this is not supported with BarrierGate objects.
+
+        Args:
+            obj_qubits (int, list[int]): Specific which qubits the gate act on.
+            ctrl_qubits (int, list[int]): Specific the control qbits. Default, None.
+
+        Returns:
+            Gate, Return a new gate.
+        """
         raise RuntimeError("Cannot call on for BarrierGate.")
 
 
@@ -797,6 +885,7 @@ class Power(NoneParamNonHermMat):
         self.t = exponent  # pylint: disable=invalid-name
 
     def get_cpp_obj(self):
+        """Get the underlying C++ object."""
         mat = mb.dim2matrix(self.matrix())
         cpp_gate = mb.basic_gate(False, self.name, 1, mat)
         cpp_gate.daggered = self.hermitianed

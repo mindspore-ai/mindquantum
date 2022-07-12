@@ -449,3 +449,4 @@ class _Operator(metaclass=ABCMeta):
             raise RuntimeError(f"terms size should be equal to 1, but get {len(self.terms)} terms.")
         for i in self.terms.values():
             return i
+        return None

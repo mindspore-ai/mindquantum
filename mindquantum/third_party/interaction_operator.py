@@ -77,8 +77,8 @@ class InteractionOperator(PolynomialTensor):
             2. pqrs = rqps = psrq = srqp = qpsr = rspq = spqr = qrsp.
 
         Args:
-            complex_valued (bool):
-                Whether the operator has complex coefficients. Default: False.
+            complex_valued (bool): Whether the operator has complex coefficients.
+                Default: False.
         """
         # Constant.
         if self.constant:

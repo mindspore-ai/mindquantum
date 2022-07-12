@@ -45,6 +45,13 @@ repos:
       - id: remove-tabs
         exclude: ^(.*Makefile|.*patch[0-9]*)$
 
+  - repo: https://gitee.com/astroshot/pydocstyle
+    rev: 6.1.1
+    hooks:
+      - id: pydocstyle
+        exclude: (test_.*\.py)$
+        additional_dependencies: [toml]
+
   - repo: https://gitee.com/mirrors_PyCQA/doc8.git
     rev: 0.11.2
 
@@ -117,16 +124,17 @@ repos:
     rev: 4.0.1
     hooks:
       - id: flake8
+        args: [--docstring-convention, google]
         name: flake8-strict
         exclude: (test_.*\.py)$
-        additional_dependencies: [flake8-comprehensions, flake8-breakpoint,
-                                  flake8-eradicate, flake8-mutable, pep8-naming,
-                                  flake8-docstrings, flake8-secure-coding-standard]
+        additional_dependencies: [flake8-breakpoint, flake8-builtins, flake8-comprehensions, flake8-continuation,
+                                  flake8-docstrings, flake8-eradicate, flake8-mutable, flake8-return, pep8-naming,
+                                  flake8-secure-coding-standard]
       - id: flake8
         name: flake8-test-files
         files: (test_.*\.py)$
-        additional_dependencies: [flake8-comprehensions, flake8-breakpoint,
-                                  flake8-eradicate, flake8-mutable]
+        additional_dependencies: [flake8-breakpoint, flake8-builtins, flake8-comprehensions, flake8-continuation,
+                                  flake8-eradicate, flake8-mutable, flake8-return]
 
   - repo: https://gitee.com/mirrors_PyCQA/pylint
     rev: v3.0.0a5

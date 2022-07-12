@@ -1203,13 +1203,12 @@ def super_align(target, source, t_des, s_des, direction=None, relative=False):  
     Align.
 
     Args:
-        t_des ([str, numbers.Number]): if str, should be 'left', 'right', 'top', 'bottom' or
-            'middle'.
-        s_des ([str, numbers.Number]): if str, should be 'left', 'right', 'top', 'bottom' or
-            'middle'.
+        target: ???
+        source: ???
+        t_des ([str, numbers.Number]): if str, should be 'left', 'right', 'top', 'bottom' or 'middle'.
+        s_des ([str, numbers.Number]): if str, should be 'left', 'right', 'top', 'bottom' or 'middle'.
         direction (str): should 'v' for vertical or 'h' for horizontal.
-        relative (bool): if true, t_des and s_des should be number and will be tride as a
-            percentage.
+        relative (bool): if true, t_des and s_des should be number and will be tride as a percentage.
     """
 
     def relative_to_num(des, direction, box_data):
