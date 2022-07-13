@@ -29,6 +29,8 @@
 
 #cmakedefine01 MQ_HAS_MAP_CONTAINS
 
+#cmakedefine01 MQ_HAS_MAP_ERASE_IF
+
 #cmakedefine01 MQ_HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
 
 #cmakedefine01 MQ_HAS_REMOVE_CVREF_T

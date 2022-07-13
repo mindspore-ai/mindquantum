@@ -177,6 +177,23 @@ int main() { std::map<int, double> m{{0, 1.}, {1, 2.}}; return m.contains(1); }
 # --------------------------------------
 
 check_cxx_code_compiles(
+  compiler_has_map_erase_if
+  MQ_HAS_MAP_ERASE_IF
+  cxx_std_20
+  [[
+#include <map>
+int main() {
+     std::map<int, double> m{{0, 1.}, {1, 2.}};
+     return std::erase_if(m, [](const auto& item) {
+        auto const& [key, value] = item;
+        return (key & 1) == 1;
+    });
+}
+]])
+
+# --------------------------------------
+
+check_cxx_code_compiles(
   compiler_has_detected_ts2
   MQ_HAS_DETECTED_TS2
   cxx_std_17
