@@ -36,21 +36,11 @@ endif()
 include(${CMAKE_CURRENT_LIST_DIR}/pybind11/pybind11.cmake)
 
 if(ENABLE_CXX_EXPERIMENTAL)
-  set(_include_boost FALSE)
-
-  if(NOT MQ_HAS_STD_FILESYSTEM)
-    set(_include_boost TRUE)
-  endif()
-
   if(NOT MSVC AND NOT "${OS_NAME}" STREQUAL "MinGW")
     include(${CMAKE_CURRENT_LIST_DIR}/gmp/gmp.cmake)
-  else()
-    set(_include_boost TRUE)
   endif()
 
-  if(_include_boost)
-    include(${CMAKE_CURRENT_LIST_DIR}/boost/boost.cmake)
-  endif()
+  include(${CMAKE_CURRENT_LIST_DIR}/boost/boost.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/nlohmann_json/nlohmann_json.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/fmt/fmt.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/eigen3/eigen3.cmake)

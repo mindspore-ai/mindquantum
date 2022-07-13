@@ -619,6 +619,7 @@ jobs:
               mingw-w64-x86_64-cmake
               mingw-w64-x86_64-ccache
               mingw-w64-x86_64-gmp
+              mingw-w64-x86_64-boost
               mingw-w64-x86_64-python
               mingw-w64-x86_64-python-pip
             cmake_generator: -- -G "MSYS Makefiles"
@@ -635,6 +636,7 @@ jobs:
               mingw-w64-clang-x86_64-cmake
               mingw-w64-clang-x86_64-ccache
               mingw-w64-clang-x86_64-gmp
+              mingw-w64-clang-x86_64-boost
               mingw-w64-clang-x86_64-python
               mingw-w64-clang-x86_64-python-pip
             cmake_generator: -- -G "MSYS Makefiles"
@@ -650,6 +652,7 @@ jobs:
               mingw-w64-ucrt-x86_64-cmake
               mingw-w64-ucrt-x86_64-ccache
               mingw-w64-ucrt-x86_64-gmp
+              mingw-w64-ucrt-x86_64-boost
               mingw-w64-ucrt-x86_64-python
               mingw-w64-ucrt-x86_64-python-pip
             cmake_generator: -- -G "MSYS Makefiles"
