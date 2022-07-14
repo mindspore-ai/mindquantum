@@ -23,6 +23,20 @@ set ROOTDIR=%BASEPATH%
 set SCRIPTDIR=%BASEPATH%\scripts\build
 set PROGRAM=%~nx0
 
+set _IS_MINDSPORE_CI=0
+if /I "%CI%" == "true" goto :CI_TRUE
+if %CI% == 1 goto :CI_TRUE
+goto :DONE_CI
+
+:CI_TRUE
+
+if NOT %JENKINS_URL% == "" (
+   echo %JENKINS_URL% | findstr /r "^https*://build.mindspore.cn">nul 2>&1
+   if %errorlevel% == 0 set _IS_MINDSPORE_CI=1
+)
+
+:DONE_CI
+
 rem ============================================================================
 rem Default values for this particular script
 

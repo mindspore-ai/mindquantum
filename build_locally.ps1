@@ -55,6 +55,13 @@ $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 $ROOTDIR = $BASEPATH
 $PROGRAM = Split-Path $MyInvocation.MyCommand.Path -Leaf
 
+# Test for MindSpore CI
+$_IS_MINDSPORE_CI=$false
+if ("$Env:JENKINS_URL" -Match 'https?://build.mindspore.cn' -And [bool]$Env:CI) {
+    Write-Output "Detected MindSpore/MindQuantum CI"
+    $_IS_MINDSPORE_CI=$true
+}
+
 # ==============================================================================
 # Default values
 

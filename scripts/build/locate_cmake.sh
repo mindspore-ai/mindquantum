@@ -77,9 +77,14 @@ if [ $has_cmake -ne 1 ]; then
     fi
 fi
 
+pip_args=()
+if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
+    pip_args+=(-i https://mirror.baidu.com/pypi/simple)
+fi
+
 if [ $has_cmake -eq 0 ]; then
     echo "Installing CMake inside the Python virtual environment"
-    call_cmd "$PYTHON" -m pip install "cmake>=$cmake_version_min"
+    call_cmd "$PYTHON" -m pip install "${pip_args[@]}" "cmake>=$cmake_version_min"
     CMAKE="$python_venv_path/bin/cmake"
 fi
 
