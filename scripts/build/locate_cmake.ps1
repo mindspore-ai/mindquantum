@@ -82,8 +82,13 @@ if(-Not $has_cmake) {
 }
 
 if (-Not $has_cmake) {
+    $pip_args = @()
+    if ($_IS_MINDSPORE_CI) {
+        $pip_args += '-i', 'https://mirror.baidu.com/pypi/simple'
+    }
+
     Write-Output "Installing CMake inside the Python virtual environment"
-    Call-Cmd "$PYTHON" -m pip install "cmake>=$cmake_version_min"
+    Call-Cmd "$PYTHON" -m pip install @pip_args "cmake>=$cmake_version_min"
     foreach($_cmake in @("$python_venv_path\Scripts\cmake",
                          "$python_venv_path\Scripts\cmake.exe",
                          "$python_venv_path\bin\cmake",
