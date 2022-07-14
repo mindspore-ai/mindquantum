@@ -1,12 +1,12 @@
 # MindQuantum
 
-[![API](https://badg.vercel.app/badge/MQ/API?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.html)
-[![Tutorial](https://badg.vercel.app/badge/MQ/Tutorial?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/en/master/parameterized_quantum_circuit.html)
+[![API](https://badg.vercel.app/badge/MQ/API?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.html)
+[![Tutorial](https://badg.vercel.app/badge/MQ/Tutorial?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/en/r0.7/parameterized_quantum_circuit.html)
 [![Tutorial](https://badg.vercel.app/gitee/open-issues/mindspore/mindquantum?scale=1.3)](https://gitee.com/mindspore/mindquantum/issues)
 [![Tutorial](https://badg.vercel.app/gitee/stars/mindspore/mindquantum?scale=1.3&color=purple)](https://gitee.com/mindspore/mindquantum)
 [![Tutorial](https://badg.vercel.app/gitee/forks/mindspore/mindquantum?scale=1.3&color=purple)](https://gitee.com/mindspore/mindquantum)
 [![Release](https://badg.vercel.app/gitee/release/mindspore/mindquantum?scale=1.3)](https://gitee.com/mindspore/mindquantum/releases)
-[![LICENSE](https://badg.vercel.app/gitee/license/mindspore/mindquantum?scale=1.3)](https://github.com/mindspore-ai/mindquantum/blob/master/LICENSE)
+[![LICENSE](https://badg.vercel.app/gitee/license/mindspore/mindquantum?scale=1.3)](https://github.com/mindspore-ai/mindquantum/blob/r0.7/LICENSE)
 [![PRs Welcome](https://badg.vercel.app/badge/PRs/Welcome?scale=1.3)](https://gitee.com/mindspore/mindquantum/pulls)
 [![Documentation Status](https://readthedocs.org/projects/mindquantum/badge/?version=latest&style=flat)](https://mindquantum.readthedocs.io/en/latest/?badge=latest)
 
@@ -80,7 +80,7 @@ circuit = (qft(range(3)) + BarrierGate(True)).measure_all()
 circuit.svg()
 ```
 
-<img src="https://gitee.com/mindspore/mindquantum/raw/master/docs/circuit_svg.png" alt="Circuit SVG" width="600"/>
+<img src="https://gitee.com/mindspore/mindquantum/raw/r0.7/docs/circuit_svg.png" alt="Circuit SVG" width="600"/>
 
 ### Train quantum neural network
 
@@ -117,24 +117,24 @@ The trained parameters are,
 
 1. Basic usage
 
-    - [Variational Quantum Circuit](https://mindspore.cn/mindquantum/docs/en/master/parameterized_quantum_circuit.html)
-    - [Initial experience of quantum neural network](https://www.mindspore.cn/mindquantum/docs/en/master/initial_experience_of_quantum_neural_network.html)
-    - [Advanced gradient calculation of variational quantum circuits](https://www.mindspore.cn/mindquantum/docs/en/master/get_gradient_of_PQC_with_mindquantum.html)
+    - [Variational Quantum Circuit](https://mindspore.cn/mindquantum/docs/en/r0.7/parameterized_quantum_circuit.html)
+    - [Initial experience of quantum neural network](https://www.mindspore.cn/mindquantum/docs/en/r0.7/initial_experience_of_quantum_neural_network.html)
+    - [Advanced gradient calculation of variational quantum circuits](https://www.mindspore.cn/mindquantum/docs/en/r0.7/get_gradient_of_PQC_with_mindquantum.html)
 
 2. Variational quantum algorithm
-    - [Classification of iris by quantum neural network](https://www.mindspore.cn/mindquantum/docs/en/master/classification_of_iris_by_qnn.html)
-    - [Quantum Approximate Optimization Algorithm](https://mindspore.cn/mindquantum/docs/en/master/quantum_approximate_optimization_algorithm.html)
-    - [The Application of Quantum Neural Network in NLP](https://mindspore.cn/mindquantum/docs/en/master/qnn_for_nlp.html)
-    - [VQE Application in Quantum Chemistry Computing](https://mindspore.cn/mindquantum/docs/en/master/vqe_for_quantum_chemistry.html)
+    - [Classification of iris by quantum neural network](https://www.mindspore.cn/mindquantum/docs/en/r0.7/classification_of_iris_by_qnn.html)
+    - [Quantum Approximate Optimization Algorithm](https://mindspore.cn/mindquantum/docs/en/r0.7/quantum_approximate_optimization_algorithm.html)
+    - [The Application of Quantum Neural Network in NLP](https://mindspore.cn/mindquantum/docs/en/r0.7/qnn_for_nlp.html)
+    - [VQE Application in Quantum Chemistry Computing](https://mindspore.cn/mindquantum/docs/en/r0.7/vqe_for_quantum_chemistry.html)
 
 3. GENERAL QUANTUM ALGORITHM
-    - [Quantum Phase Estimation algorithm](https://www.mindspore.cn/mindquantum/docs/en/master/quantum_phase_estimation.html)
-    - [Grover search algorithm based on MindQuantum](https://www.mindspore.cn/mindquantum/docs/en/master/grover_search_algorithm.html)
-    - [Shor’s algorithm based on MindQuantum](https://www.mindspore.cn/mindquantum/docs/en/master/shor_algorithm.html)
+    - [Quantum Phase Estimation algorithm](https://www.mindspore.cn/mindquantum/docs/en/r0.7/quantum_phase_estimation.html)
+    - [Grover search algorithm based on MindQuantum](https://www.mindspore.cn/mindquantum/docs/en/r0.7/grover_search_algorithm.html)
+    - [Shor’s algorithm based on MindQuantum](https://www.mindspore.cn/mindquantum/docs/en/r0.7/shor_algorithm.html)
 
 ## API
 
-For more API, please refer to [MindQuantum API](https://www.mindspore.cn/mindquantum/docs/en/master/mindquantum.core.html).
+For more API, please refer to [MindQuantum API](https://www.mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.html).
 
 ## Installation
 
@@ -142,7 +142,7 @@ For more API, please refer to [MindQuantum API](https://www.mindspore.cn/mindqua
 
 - The hardware platform should be CPU with avx2 supported.
 - Refer to [MindQuantum Installation Guide](https://www.mindspore.cn/install/en), install MindSpore, version 1.4.0 or later is required.
-- See [setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py) for the remaining dependencies.
+- See [setup.py](https://gitee.com/mindspore/mindquantum/blob/r0.7/setup.py) for the remaining dependencies.
 
 ### Install by Source Code
 
@@ -189,7 +189,7 @@ pip install https://hiq.huaweicloud.com/download/mindquantum/newest/macosx/mindq
 ```
 
 > - Change `cp37-cp37m` to `cp38-cp38` or `cp39-cp39` according to your python version.
-> - When the network is connected, dependency items are automatically downloaded during .whl package installation. (For details about other dependency items, see [setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py)). In other cases, you need to manually install dependency items.
+> - When the network is connected, dependency items are automatically downloaded during .whl package installation. (For details about other dependency items, see [setup.py](https://gitee.com/mindspore/mindquantum/blob/r0.7/setup.py)). In other cases, you need to manually install dependency items.
 
 ## Verifying Successful Installation
 
@@ -219,7 +219,7 @@ If you would like to build some binary wheels for redistribution, please have a 
 
 ## Quick Start
 
-For more details about how to build a parameterized quantum circuit and a quantum neural network and how to train these models, see the [MindQuantum Tutorial](https://www.mindspore.cn/mindquantum/docs/en/master/index.html).
+For more details about how to build a parameterized quantum circuit and a quantum neural network and how to train these models, see the [MindQuantum Tutorial](https://www.mindspore.cn/mindquantum/docs/en/r0.7/index.html).
 
 ## Docs
 

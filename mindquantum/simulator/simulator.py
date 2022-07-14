@@ -567,7 +567,7 @@ class Simulator:
             raise ValueError("circuit for variational algorithm cannot have measure gate")
         if parallel_worker is not None:
             _check_int_type("parallel_worker", parallel_worker)
-        url = "https://mindspore.cn/mindquantum/docs/zh-CN/master/get_gradient_of_PQC_with_mindquantum.html"
+        url = "https://mindspore.cn/mindquantum/docs/zh-CN/r0.7/get_gradient_of_PQC_with_mindquantum.html"
         if encoder_params_name is not None:
             warnings.warn(
                 (

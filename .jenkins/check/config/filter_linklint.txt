@@ -2,3 +2,5 @@ https://apt.repos.intel.com/oneapi
 https://github.com/Kitware/CMake/releases/download
 https://github.com/ccache/ccache/releases/download/
 https://github.com/ccache/ccache/releases/download/v
+https://www.mindspore.cn/mindquantum/*/r0.7/*
+https://mindspore.cn/mindquantum/*/r0.7/*

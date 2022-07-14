@@ -8,52 +8,52 @@
 
 #### Circuit
 
-- [STABLE] [`as_encoder`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.as_encoder): Method of `Circuit` to mark this circuit as an encoder circuit.
-- [STABLE] [`as_ansatz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.as_ansatz): Method of `Circuit` to mark this circuit as an ansatz circuit.
-- [STABLE] [`encoder_params_name`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.encoder_params_name): Method of `Circuit` to return the encoder parameters.
-- [STABLE] [`ansatz_params_name`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.ansatz_params_name): Method of `Circuit` to return the ansatz parameters.
-- [STABLE] [`remove_noise`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.remove_noise): Method of `Circuit` to remove all noise channel.
-- [STABLE] [`with_noise`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.with_noise): Method of `Circuit` to add a given noise channel after every gate.
-- [STABLE] [`as_encoder`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.as_encoder): A decorator to wrap a function, so that it can generate an encoder circuit.
-- [STABLE] [`as_ansatz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.as_ansatz): A decorator to wrap a function, so that it can generate an ansatz circuit.
-- [STABLE] [`qfi`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.qfi): A method that can calculate the quantum fisher information of a given parameterized quantum circuit.
-- [STABLE] [`partial_psi_partial_psi`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.partial_psi_partial_psi): A method that can calculate the first part of quantum fisher information.
-- [STABLE] [`partial_psi_psi`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#mindquantum.core.circuit.partial_psi_psi): A method that can calculate the second part of quantum fisher information.
+- [STABLE] [`as_encoder`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.as_encoder): Method of `Circuit` to mark this circuit as an encoder circuit.
+- [STABLE] [`as_ansatz`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.as_ansatz): Method of `Circuit` to mark this circuit as an ansatz circuit.
+- [STABLE] [`encoder_params_name`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.encoder_params_name): Method of `Circuit` to return the encoder parameters.
+- [STABLE] [`ansatz_params_name`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.ansatz_params_name): Method of `Circuit` to return the ansatz parameters.
+- [STABLE] [`remove_noise`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.remove_noise): Method of `Circuit` to remove all noise channel.
+- [STABLE] [`with_noise`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.with_noise): Method of `Circuit` to add a given noise channel after every gate.
+- [STABLE] [`as_encoder`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.circuit.html#mindquantum.core.circuit.as_encoder): A decorator to wrap a function, so that it can generate an encoder circuit.
+- [STABLE] [`as_ansatz`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.circuit.html#mindquantum.core.circuit.as_ansatz): A decorator to wrap a function, so that it can generate an ansatz circuit.
+- [STABLE] [`qfi`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.circuit.html#mindquantum.core.circuit.qfi): A method that can calculate the quantum fisher information of a given parameterized quantum circuit.
+- [STABLE] [`partial_psi_partial_psi`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.circuit.html#mindquantum.core.circuit.partial_psi_partial_psi): A method that can calculate the first part of quantum fisher information.
+- [STABLE] [`partial_psi_psi`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.circuit.html#mindquantum.core.circuit.partial_psi_psi): A method that can calculate the second part of quantum fisher information.
 
 #### Gates
 
-- [STABLE] [`AmplitudeDampingChannel`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.html#mindquantum.core.gates.AmplitudeDampingChannel): Amplitude damping channel express error that qubit is affected by the energy dissipation.
-- [STABLE] [`PhaseDampingChannel`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.html#mindquantum.core.gates.PhaseDampingChannel): Phase damping channel express error that qubit loses quantum information without exchanging energy with environment
+- [STABLE] [`AmplitudeDampingChannel`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.gates.html#mindquantum.core.gates.AmplitudeDampingChannel): Amplitude damping channel express error that qubit is affected by the energy dissipation.
+- [STABLE] [`PhaseDampingChannel`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.gates.html#mindquantum.core.gates.PhaseDampingChannel): Phase damping channel express error that qubit loses quantum information without exchanging energy with environment
 
 #### FermionOperator and QubitOperator
 
-- [STABLE] [`split`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.operators.html#mindquantum.core.operators.FermionOperator.split): A method of FermionOperator and QubitOperator that can split the coefficient with the operator.
+- [STABLE] [`split`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.operators.html#mindquantum.core.operators.FermionOperator.split): A method of FermionOperator and QubitOperator that can split the coefficient with the operator.
 
 #### ParameterResolver
 
-- [STABLE] [`astype`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.astype): Convert the ParameterResolver to a given type, can be float or double complex
-- [STABLE] [`const`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.const): Get the constant part of this ParameterResolver.
-- [STABLE] [`is_const`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.is_const): Check whether this ParameterResolver is constant.
-- [STABLE] [`encoder_part`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.encoder_part): Set a part of parameter to be encoder parameter.
-- [STABLE] [`ansatz_part`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.ansatz_part): Set a part of parameter to be ansatz parameter.
-- [STABLE] [`as_encoder`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.as_encoder): Set all parameter to encoder parameters.
-- [STABLE] [`as_ansatz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.as_ansatz): Set all parameter to ansatz parameters.
-- [STABLE] [`encoder_parameters`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.encoder_parameters): Return all encoder parameters.
-- [STABLE] [`ansatz_parameters`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.ansatz_parameters): Return all ansatz parameters.
-- [STABLE] [`is_hermitian`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.is_hermitian): Check whether this ParameterResolver is hermitian conjugate.
-- [STABLE] [`is_anti_hermitian`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.is_anti_hermitian): Check whether this ParameterResolver is anti hermitian conjugate.
-- [STABLE] [`no_grad_parameters`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.no_grad_parameters): Return all parameters that do no require gradient.
-- [STABLE] [`requires_grad_parameters`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.requires_grad_parameters): Return all parameters that require gradient.
+- [STABLE] [`astype`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.astype): Convert the ParameterResolver to a given type, can be float or double complex
+- [STABLE] [`const`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.const): Get the constant part of this ParameterResolver.
+- [STABLE] [`is_const`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.is_const): Check whether this ParameterResolver is constant.
+- [STABLE] [`encoder_part`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.encoder_part): Set a part of parameter to be encoder parameter.
+- [STABLE] [`ansatz_part`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.ansatz_part): Set a part of parameter to be ansatz parameter.
+- [STABLE] [`as_encoder`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.as_encoder): Set all parameter to encoder parameters.
+- [STABLE] [`as_ansatz`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.as_ansatz): Set all parameter to ansatz parameters.
+- [STABLE] [`encoder_parameters`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.encoder_parameters): Return all encoder parameters.
+- [STABLE] [`ansatz_parameters`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.ansatz_parameters): Return all ansatz parameters.
+- [STABLE] [`is_hermitian`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.is_hermitian): Check whether this ParameterResolver is hermitian conjugate.
+- [STABLE] [`is_anti_hermitian`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.is_anti_hermitian): Check whether this ParameterResolver is anti hermitian conjugate.
+- [STABLE] [`no_grad_parameters`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.no_grad_parameters): Return all parameters that do no require gradient.
+- [STABLE] [`requires_grad_parameters`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.core.parameterresolver.html#mindquantum.core.parameterresolver.ParameterResolver.requires_grad_parameters): Return all parameters that require gradient.
 
 #### Simulator
 
-- [STABLE] [`copy`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.simulator.html#mindquantum.simulator.Simulator.copy): The simulator can now very easy to duplicate.
-- [STABLE] [`apply_gate`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.simulator.html#mindquantum.simulator.Simulator.apply_gate): In this version, you can apply a gate in differential version.
-- [BETA] [`inner_product`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.simulator.html#mindquantum.simulator.inner_product): Calculate the inner product of two state in two simulator.
+- [STABLE] [`copy`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.simulator.html#mindquantum.simulator.Simulator.copy): The simulator can now very easy to duplicate.
+- [STABLE] [`apply_gate`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.simulator.html#mindquantum.simulator.Simulator.apply_gate): In this version, you can apply a gate in differential version.
+- [BETA] [`inner_product`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.simulator.html#mindquantum.simulator.inner_product): Calculate the inner product of two state in two simulator.
 
 #### IO
 
-- [STABLE] [`BlochScene`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.io.html): Now we support display and animate a one qubit state in bloch sphere.
+- [STABLE] [`BlochScene`](https://mindspore.cn/mindquantum/docs/en/r0.7/mindquantum.io.html): Now we support display and animate a one qubit state in bloch sphere.
 
 ### Contributors
 
@@ -74,10 +74,10 @@ Contributions of any kind are welcome!
 
 ### Add line module
 
-- [**general_w_state**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarygeneral-w-state): prepare w-state quantum circuits.
-- [**general_ghz_state**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarygeneral-ghz-state): prepare ghz-state quantum circuits
-- [**bitphaseflip_operator**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarybitphaseflip-operator): bit-flip quantum circuits
-- [**amplitude_encoder**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.library.html#mindquantumalgorithmlibraryamplitude-encoder): amplitude-encoded quantum circuits
+- [**general_w_state**](https://mindspore.cn/mindquantum/docs/zh-CN/r0.7/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarygeneral-w-state): prepare w-state quantum circuits.
+- [**general_ghz_state**](https://mindspore.cn/mindquantum/docs/zh-CN/r0.7/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarygeneral-ghz-state): prepare ghz-state quantum circuits
+- [**bitphaseflip_operator**](https://mindspore.cn/mindquantum/docs/zh-CN/r0.7/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarybitphaseflip-operator): bit-flip quantum circuits
+- [**amplitude_encoder**](https://mindspore.cn/mindquantum/docs/zh-CN/r0.7/mindquantum.algorithm.library.html#mindquantumalgorithmlibraryamplitude-encoder): amplitude-encoded quantum circuits
 
 ### Richer circuit operation supported
 
@@ -87,9 +87,9 @@ Contributions of any kind are welcome!
 
 ### Feature enhancement
 
-- `MaxCutAnsatz`: [**get_partition**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.html#mindquantumalgorithmnisqmaxcutansatzget-partition), get the max-cut cutting solution
-- `MaxCutAnsatz`: [**get_cut_value**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.html#mindquantumalgorithmnisqmaxcutansatzget-cut-value), get the number of cuts for a cutting solution
-- `Circuit`: [**is_measure_end**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.circuit.html#mindquantumcorecircuitcircuitis-measure-end), determine whether the quantum circuit is the end of the measurement gate
+- `MaxCutAnsatz`: [**get_partition**](https://mindspore.cn/mindquantum/docs/zh-CN/r0.7/mindquantum.algorithm.nisq.html#mindquantumalgorithmnisqmaxcutansatzget-partition), get the max-cut cutting solution
+- `MaxCutAnsatz`: [**get_cut_value**](https://mindspore.cn/mindquantum/docs/zh-CN/r0.7/mindquantum.algorithm.nisq.html#mindquantumalgorithmnisqmaxcutansatzget-cut-value), get the number of cuts for a cutting solution
+- `Circuit`: [**is_measure_end**](https://mindspore.cn/mindquantum/docs/zh-CN/r0.7/mindquantum.core.circuit.html#mindquantumcorecircuitcircuitis-measure-end), determine whether the quantum circuit is the end of the measurement gate
 
 ### SVG drawing mode that supports quantum circuits
 
@@ -99,11 +99,11 @@ Contributions of any kind are welcome!
 
 MindQuantum adds the following quantum channels for quantum noise simulation
 
-- [`PauliChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatespaulichannel): Pauli channel
-- [`BitFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatesbitflipchannel): bit-flip channel
-- [`PhaseFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatesphaseflipchannel): phase-flip channel
-- [`BitPhaseFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatesbitphaseflipchannel): bit-phase flip channel
-- [`DepolarizingChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatesdepolarizingchannel): depolarized channel
+- [`PauliChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/r0.7/mindquantum.core.gates.html#mindquantumcoregatespaulichannel): Pauli channel
+- [`BitFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/r0.7/mindquantum.core.gates.html#mindquantumcoregatesbitflipchannel): bit-flip channel
+- [`PhaseFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/r0.7/mindquantum.core.gates.html#mindquantumcoregatesphaseflipchannel): phase-flip channel
+- [`BitPhaseFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/r0.7/mindquantum.core.gates.html#mindquantumcoregatesbitphaseflipchannel): bit-phase flip channel
+- [`DepolarizingChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/r0.7/mindquantum.core.gates.html#mindquantumcoregatesdepolarizingchannel): depolarized channel
 
 ## MindQuantum 0.5.0 Release Notes
 
