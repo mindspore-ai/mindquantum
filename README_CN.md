@@ -1,12 +1,12 @@
 # MindQuantum
 
-[![API](https://badg.vercel.app/badge/MQ/API?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.html)
-[![Tutorial](https://badg.vercel.app/badge/MQ/Tutorial?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/zh-CN/master/parameterized_quantum_circuit.html)
+[![API](https://badg.vercel.app/badge/MQ/API?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/zh-CN/r0.7/mindquantum.core.html)
+[![Tutorial](https://badg.vercel.app/badge/MQ/Tutorial?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/zh-CN/r0.7/parameterized_quantum_circuit.html)
 [![Tutorial](https://badg.vercel.app/gitee/open-issues/mindspore/mindquantum?scale=1.3)](https://gitee.com/mindspore/mindquantum/issues)
 [![Tutorial](https://badg.vercel.app/gitee/stars/mindspore/mindquantum?scale=1.3&color=purple)](https://gitee.com/mindspore/mindquantum)
 [![Tutorial](https://badg.vercel.app/gitee/forks/mindspore/mindquantum?scale=1.3&color=purple)](https://gitee.com/mindspore/mindquantum)
 [![Release](https://badg.vercel.app/gitee/release/mindspore/mindquantum?scale=1.3)](https://gitee.com/mindspore/mindquantum/releases)
-[![LICENSE](https://badg.vercel.app/gitee/license/mindspore/mindquantum?scale=1.3)](https://github.com/mindspore-ai/mindquantum/blob/master/LICENSE)
+[![LICENSE](https://badg.vercel.app/gitee/license/mindspore/mindquantum?scale=1.3)](https://github.com/mindspore-ai/mindquantum/blob/r0.7/LICENSE)
 [![PRs Welcome](https://badg.vercel.app/badge/PRs/Welcome?scale=1.3)](https://gitee.com/mindspore/mindquantum/pulls)
 
 [View English](./README.md)
@@ -81,7 +81,7 @@ circuit = (qft(range(3)) + BarrierGate(True)).measure_all()
 circuit.svg()
 ```
 
-<img src="https://gitee.com/mindspore/mindquantum/raw/master/docs/circuit_svg.png" alt="Circuit SVG" width="600"/>
+<img src="https://gitee.com/mindspore/mindquantum/raw/r0.7/docs/circuit_svg.png" alt="Circuit SVG" width="600"/>
 
 ### 训练量子神经网络
 
@@ -118,29 +118,29 @@ print(dict(zip(ansatz.params_name, net.trainable_params()[0].asnumpy())))
 
 1. 基础使用指南
 
-    - [变分量子线路](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/parameterized_quantum_circuit.html)
-    - [量子模拟器](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/quantum_simulator.html)
-    - [量子神经网络初体验](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/initial_experience_of_quantum_neural_network.html)
-    - [变分量子线路梯度计算进阶](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/get_gradient_of_PQC_with_mindquantum.html)
-    - [量子线路高阶操作](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/advanced_operations_of_quantum_circuit.html)
-    - [量子测量](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/quantum_measurement.html)
+    - [变分量子线路](https://www.mindspore.cn/mindquantum/docs/zh-CN/r0.7/parameterized_quantum_circuit.html)
+    - [量子模拟器](https://www.mindspore.cn/mindquantum/docs/zh-CN/r0.7/quantum_simulator.html)
+    - [量子神经网络初体验](https://www.mindspore.cn/mindquantum/docs/zh-CN/r0.7/initial_experience_of_quantum_neural_network.html)
+    - [变分量子线路梯度计算进阶](https://www.mindspore.cn/mindquantum/docs/zh-CN/r0.7/get_gradient_of_PQC_with_mindquantum.html)
+    - [量子线路高阶操作](https://www.mindspore.cn/mindquantum/docs/zh-CN/r0.7/advanced_operations_of_quantum_circuit.html)
+    - [量子测量](https://www.mindspore.cn/mindquantum/docs/zh-CN/r0.7/quantum_measurement.html)
 
 2. 变分量子算法
 
-    - [通过量子神经网络对鸢尾花进行分类](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/classification_of_iris_by_qnn.html)
-    - [量子近似优化算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/quantum_approximate_optimization_algorithm.html)
-    - [量子神经网络在自然语言处理中的应用](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/qnn_for_nlp.html)
-    - [在量子化学计算中应用量子变分求解器](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/vqe_for_quantum_chemistry.html)
+    - [通过量子神经网络对鸢尾花进行分类](https://www.mindspore.cn/mindquantum/docs/zh-CN/r0.7/classification_of_iris_by_qnn.html)
+    - [量子近似优化算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/r0.7/quantum_approximate_optimization_algorithm.html)
+    - [量子神经网络在自然语言处理中的应用](https://www.mindspore.cn/mindquantum/docs/zh-CN/r0.7/qnn_for_nlp.html)
+    - [在量子化学计算中应用量子变分求解器](https://www.mindspore.cn/mindquantum/docs/zh-CN/r0.7/vqe_for_quantum_chemistry.html)
 
 3. 通用量子算法
 
-    - [量子相位估计算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/quantum_phase_estimation.html)
-    - [基于MindQuantum的Grover搜索算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/grover_search_algorithm.html)
-    - [基于MindQuantum的Shor算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/shor_algorithm.html)
+    - [量子相位估计算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/r0.7/quantum_phase_estimation.html)
+    - [基于MindQuantum的Grover搜索算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/r0.7/grover_search_algorithm.html)
+    - [基于MindQuantum的Shor算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/r0.7/shor_algorithm.html)
 
 ## API
 
-对于上述示例所涉及API和其他更多用法，请查看MindQuantum API文档[文档链接](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.html)
+对于上述示例所涉及API和其他更多用法，请查看MindQuantum API文档[文档链接](https://www.mindspore.cn/mindquantum/docs/zh-CN/r0.7/mindquantum.core.html)
 
 ## 安装教程
 
@@ -148,7 +148,7 @@ print(dict(zip(ansatz.params_name, net.trainable_params()[0].asnumpy())))
 
 - 硬件平台支持avx2指令集。
 - 参考[MindSpore安装指南](https://www.mindspore.cn/install)，完成MindSpore的安装，要求至少1.4.0版本。
-- 其余依赖请参见[setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py)
+- 其余依赖请参见[setup.py](https://gitee.com/mindspore/mindquantum/blob/r0.7/setup.py)
 
 ### pip安装
 
@@ -180,7 +180,7 @@ pip install https://hiq.huaweicloud.com/download/mindquantum/newest/macosx/mindq
 
 > - 如需安装其他python版本的MindQuantum，请将上述地址中的`cp37-cp37m`更换为`cp38-cp38`或者`cp39-cp39`。
 > - 如需安装其他版本的MindQuantum，请浏览[所有安装包](https://hiq.huaweicloud.com/download/mindquantum/)。
-> - 在联网状态下，安装whl包时会自动下载MindQuantum安装包的依赖项（依赖项详情参见[setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py)），其余情况需自行安装。
+> - 在联网状态下，安装whl包时会自动下载MindQuantum安装包的依赖项（依赖项详情参见[setup.py](https://gitee.com/mindspore/mindquantum/blob/r0.7/setup.py)），其余情况需自行安装。
 
 ### 源码安装
 
@@ -233,7 +233,7 @@ export OMP_NUM_THREADS=4
 
 对于大型服务器，请根据模型规模合理设置并行内核数以达到最优效果。
 
-更多注意事项请查看[FAQ页面](https://gitee.com/mindspore/mindquantum/blob/master/tutorials/0.frequently_asked_questions.ipynb)。
+更多注意事项请查看[FAQ页面](https://gitee.com/mindspore/mindquantum/blob/r0.7/tutorials/0.frequently_asked_questions.ipynb)。
 
 ## 构建二进制whl包
 
@@ -241,7 +241,7 @@ export OMP_NUM_THREADS=4
 
 ## 快速入门
 
-关于如何快速搭建参数化量子线路和量子神经网络，并进行训练，请点击查看[MindQuantum使用教程](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/index.html)
+关于如何快速搭建参数化量子线路和量子神经网络，并进行训练，请点击查看[MindQuantum使用教程](https://www.mindspore.cn/mindquantum/docs/zh-CN/r0.7/index.html)
 
 ## 文档
 

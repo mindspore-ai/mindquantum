@@ -33,7 +33,7 @@ circuit = (qft(range(3)) + BarrierGate(True)).measure_all()
 circuit.svg()
 ```
 
-<img src="https://gitee.com/mindspore/mindquantum/raw/master/docs/circuit_svg.png" alt="Circuit SVG" width="600"/>
+<img src="https://gitee.com/mindspore/mindquantum/raw/r0.7/docs/circuit_svg.png" alt="Circuit SVG" width="600"/>
 
 ## Train quantum neural network
 
@@ -70,10 +70,10 @@ The trained parameters are,
 
 1. Basic usage
 
-    - [Variational Quantum Circuit](https://mindspore.cn/mindquantum/docs/en/master/parameterized_quantum_circuit.html)
+    - [Variational Quantum Circuit](https://mindspore.cn/mindquantum/docs/en/r0.7/parameterized_quantum_circuit.html)
 
 2. Variational quantum algorithm
 
-    - [Quantum Approximate Optimization Algorithm](https://mindspore.cn/mindquantum/docs/en/master/quantum_approximate_optimization_algorithm.html)
-    - [The Application of Quantum Neural Network in NLP](https://mindspore.cn/mindquantum/docs/en/master/qnn_for_nlp.html)
-    - [VQE Application in Quantum Chemistry Computing](https://mindspore.cn/mindquantum/docs/en/master/vqe_for_quantum_chemistry.html)
+    - [Quantum Approximate Optimization Algorithm](https://mindspore.cn/mindquantum/docs/en/r0.7/quantum_approximate_optimization_algorithm.html)
+    - [The Application of Quantum Neural Network in NLP](https://mindspore.cn/mindquantum/docs/en/r0.7/qnn_for_nlp.html)
+    - [VQE Application in Quantum Chemistry Computing](https://mindspore.cn/mindquantum/docs/en/r0.7/vqe_for_quantum_chemistry.html)
