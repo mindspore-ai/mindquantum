@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Parameter resolver."""
+"""Parameter resolver. Help to generate parameter in mindspore quantum."""
 
 from .parameterresolver import ParameterResolver
 

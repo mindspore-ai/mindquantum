@@ -328,7 +328,7 @@
         **参数：**
 
         - **gate** (BasicGate) - 要执行的量子门。
-        - **map_obj** (Union[int, list[int]]) - 执行该量子门的目标量子比特。
+        - **maps_obj** (Union[int, list[int]]) - 执行该量子门的目标量子比特。
         - **maps_ctrl** (Union[int, list[int]]) - 执行该量子门的控制量子比特。默认值：None。
 
     .. py:method:: with_noise(noise_gate=mq_gates.AmplitudeDampingChannel(0.001))

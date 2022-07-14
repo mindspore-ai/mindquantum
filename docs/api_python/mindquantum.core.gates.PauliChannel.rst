@@ -21,3 +21,7 @@
     .. py:method:: define_projectq_gate()
 
         定义对应的projectq门。
+
+    .. py:method:: get_cpp_obj()
+
+        返回量子门的c++对象。

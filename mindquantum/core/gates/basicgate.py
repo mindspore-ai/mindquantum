@@ -514,32 +514,6 @@ class ZZ(RotSelfHermMat):
             core=PauliStringGate([Z, Z]),
         )
 
-    def matrix(self, pr=None, frac=1):
-        """
-        Get the matrix of this parameterized gate.
-
-        Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-
-        Returns:
-            numpy.ndarray, the matrix of this gate.
-        """
-        return super().matrix(pr, frac)
-
-    def diff_matrix(self, pr=None, about_what=None, frac=1):
-        """
-        Differential form of this parameterized gate.
-
-        Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
-            frac (float): ???
-
-        Returns:
-            numpy.ndarray, the differential form matrix.
-        """
-        return super().diff_matrix(pr, about_what, frac)
-
     def __decompose__(self):
         """Gate decomposition method."""
         from ..circuit import Circuit  # pylint: disable=cyclic-import
@@ -554,6 +528,33 @@ class ZZ(RotSelfHermMat):
         out[-1] += RZ(2 * self.coeff).on(self.obj_qubits[1], [*self.ctrl_qubits])
         out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
         return out
+
+    def matrix(self, pr=None, frac=1):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 1.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
+        return super().matrix(pr, frac)
+
+    def diff_matrix(self, pr=None, about_what=None, frac=1):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 1.
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
+        return super().diff_matrix(pr, about_what, 1)
 
 
 class XX(RotSelfHermMat):
@@ -578,32 +579,6 @@ class XX(RotSelfHermMat):
             core=PauliStringGate([X, X]),
         )
 
-    def matrix(self, pr=None, frac=1):
-        """
-        Get the matrix of this parameterized gate.
-
-        Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-
-        Returns:
-            numpy.ndarray, the matrix of this gate.
-        """
-        return super().matrix(pr, frac)
-
-    def diff_matrix(self, pr=None, about_what=None, frac=1):
-        """
-        Differential form of this parameterized gate.
-
-        Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
-            frac (float): ???
-
-        Returns:
-            numpy.ndarray, the differential form matrix.
-        """
-        return super().diff_matrix(pr, about_what, frac)
-
     def __decompose__(self):
         """Gate decomposition method."""
         from ..circuit import Circuit  # pylint: disable=cyclic-import
@@ -626,6 +601,33 @@ class XX(RotSelfHermMat):
         out[-1] += H.on(self.obj_qubits[0], [*self.ctrl_qubits])
         out[-1] += H.on(self.obj_qubits[1], [*self.ctrl_qubits])
         return out
+
+    def matrix(self, pr=None, frac=1):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 1.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
+        return super().matrix(pr, 1)
+
+    def diff_matrix(self, pr=None, about_what=None, frac=1):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 1.
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
+        return super().diff_matrix(pr, about_what, 1)
 
 
 class YY(RotSelfHermMat):
@@ -650,32 +652,6 @@ class YY(RotSelfHermMat):
             core=PauliStringGate([Y, Y]),
         )
 
-    def matrix(self, pr=None, frac=1):
-        """
-        Get the matrix of this parameterized gate.
-
-        Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-
-        Returns:
-            numpy.ndarray, the matrix of this gate.
-        """
-        return super().matrix(pr, frac)
-
-    def diff_matrix(self, pr=None, about_what=None, frac=1):
-        """
-        Differential form of this parameterized gate.
-
-        Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
-            frac (float): ???
-
-        Returns:
-            numpy.ndarray, the differential form matrix.
-        """
-        return super().diff_matrix(pr, about_what, frac)
-
     def __decompose__(self):
         """Gate decomposition method."""
         from ..circuit import Circuit  # pylint: disable=cyclic-import
@@ -698,6 +674,33 @@ class YY(RotSelfHermMat):
         out[-1] += RX(7 * np.pi / 2).on(self.obj_qubits[0], [*self.ctrl_qubits])
         out[-1] += RX(7 * np.pi / 2).on(self.obj_qubits[1], [*self.ctrl_qubits])
         return out
+
+    def matrix(self, pr=None, frac=1):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 1.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
+        return super().matrix(pr, 1)
+
+    def diff_matrix(self, pr=None, about_what=None, frac=1):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 1.
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
+        return super().diff_matrix(pr, about_what, 1)
 
 
 class BarrierGate(FunctionalGate):

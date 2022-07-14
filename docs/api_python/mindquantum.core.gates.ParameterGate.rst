@@ -35,3 +35,15 @@
         **返回：**
 
         BasicGate，其中有些参数需要更新梯度。
+
+    .. py:method:: no_grad()
+
+        设置量子门中的所有参数都不需要求导数。
+
+    .. py:method:: requires_grad()
+
+        设置量子门中的所有参数都需要求导数。
+
+    .. py:method:: get_cpp_obj()
+
+        返回量子门的c++对象。
