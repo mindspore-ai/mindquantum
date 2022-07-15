@@ -16,23 +16,12 @@
 
 #include <algorithm>
 #include <array>
-#include <cstdint>
-#include <functional>
 #include <numeric>
 #include <optional>
-#include <string_view>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#include <boost/fusion/include/adapt_struct.hpp>
-#include <boost/fusion/include/at_c.hpp>
-#include <boost/fusion/include/std_pair.hpp>
-#include <boost/range/adaptor/transformed.hpp>
-#include <boost/range/algorithm/copy.hpp>
-#include <boost/range/algorithm_ext/push_back.hpp>
-#include <boost/spirit/home/x3.hpp>
 
 #include <unsupported/Eigen/KroneckerProduct>
 
@@ -42,16 +31,75 @@
 
 #include <fmt/format.h>
 
-#include "core/format/format_complex.hpp"
-#include "core/logging.hpp"
 #include "ops/gates.hpp"
 #include "ops/gates/terms_operator.hpp"
 
+namespace mindquantum::ops {
+constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermValue& left_op,
+                                                                     const TermValue& right_op) {
+    if (left_op == TermValue::I && right_op == TermValue::X) {
+        return {1., TermValue::X};
+    }
+    if (left_op == TermValue::X && right_op == TermValue::I) {
+        return {1., TermValue::X};
+    }
+    if (left_op == TermValue::I && right_op == TermValue::Y) {
+        return {1., TermValue::Y};
+    }
+    if (left_op == TermValue::Y && right_op == TermValue::I) {
+        return {1., TermValue::Y};
+    }
+    if (left_op == TermValue::I && right_op == TermValue::Z) {
+        return {1., TermValue::Z};
+    }
+    if (left_op == TermValue::Z && right_op == TermValue::I) {
+        return {1., TermValue::Z};
+    }
+    if (left_op == TermValue::X && right_op == TermValue::X) {
+        return {1., TermValue::I};
+    }
+    if (left_op == TermValue::Y && right_op == TermValue::Y) {
+        return {1., TermValue::I};
+    }
+    if (left_op == TermValue::Z && right_op == TermValue::Z) {
+        return {1., TermValue::I};
+    }
+    if (left_op == TermValue::X && right_op == TermValue::Y) {
+        return {{0, 1.}, TermValue::Z};
+    }
+    if (left_op == TermValue::X && right_op == TermValue::Z) {
+        return {{0, -1.}, TermValue::Y};
+    }
+    if (left_op == TermValue::Y && right_op == TermValue::X) {
+        return {{0, -1.}, TermValue::Z};
+    }
+    if (left_op == TermValue::Y && right_op == TermValue::Z) {
+        return {{0, 1.}, TermValue::X};
+    }
+    if (left_op == TermValue::Z && right_op == TermValue::X) {
+        return {{0, 1.}, TermValue::Y};
+    }
+    if (left_op == TermValue::Z && right_op == TermValue::Y) {
+        return {{0, -1.}, TermValue::X};
+    }
+
+    return {1., TermValue::I};
+}
+
+// =============================================================================
+
+QubitOperator::QubitOperator(term_t term, coefficient_t coeff) : TermsOperator(std::move(term), coeff) {
+}
+
 // -----------------------------------------------------------------------------
 
-using namespace std::literals::string_literals;  // NOLINT(build/namespaces_literals)
+QubitOperator::QubitOperator(const std::vector<term_t>& term, coefficient_t coeff) : TermsOperator(term, coeff) {
+}
 
-namespace mindquantum::ops {
+// -----------------------------------------------------------------------------
+
+QubitOperator::QubitOperator(complex_term_dict_t terms) : TermsOperator(std::move(terms)) {
+}
 
 // =============================================================================
 
@@ -68,11 +116,10 @@ auto QubitOperator::matrix(std::optional<uint32_t> n_qubits) const -> std::optio
     using dense_2x2_t = Eigen::Matrix2cd;
 
     // NB: required since we are indexing into the array below
-    constexpr auto offset = static_cast<std::underlying_type_t<TermValue>>(TermValue::I);
-    static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::I) - offset == 0);
-    static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::X) - offset == 1);
-    static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::Y) - offset == 2);
-    static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::Z) - offset == 3);
+    static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::I) == 0);
+    static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::X) == 1);
+    static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::Y) == 2);
+    static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::Z) == 3);
 
     static const std::array<csr_matrix_t, 4> pauli_matrices = {
         dense_2x2_t::Identity().sparseView(),
@@ -101,34 +148,27 @@ auto QubitOperator::matrix(std::optional<uint32_t> n_qubits) const -> std::optio
     }
 
     const auto n_qubits_value = n_qubits.value_or(n_qubits_local);
-
-    const auto process_term = [n_qubits_value](const auto& local_ops, const auto& coeff) -> csr_matrix_t {
+    csr_matrix_t result;
+    for (const auto& [local_ops, coeff] : terms_) {
         if (std::empty(local_ops)) {
-            return (Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>::Identity(
-                        1U << n_qubits_value, 1U << n_qubits_value))
-                       .sparseView()
-                   * coeff;
+            result += (Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>::Identity(
+                           1U << n_qubits_value, 1U << n_qubits_value))
+                          .sparseView()
+                      * coeff;
+        } else {
+            // TODO(dnguyen): The `total` variable is probably not required and could be removed altogether...
+            std::vector<csr_matrix_t> total(
+                n_qubits_value, pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(TermValue::I)]);
+            for (const auto& [qubit_id, local_op] : local_ops) {
+                total[qubit_id] = pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(local_op)];
+            }
+
+            csr_matrix_t init(1, 1);
+            init.insert(0, 0) = coeff;
+            result += std::accumulate(begin(total), end(total), init, [](const csr_matrix_t& init, const auto& matrix) {
+                return Eigen::kroneckerProduct(matrix, init).eval();
+            });
         }
-
-        // TODO(dnguyen): The `total` variable is probably not required and could be removed altogether...
-        std::vector<csr_matrix_t> total(
-            n_qubits_value, pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(TermValue::I) - offset]);
-        for (const auto& [qubit_id, local_op] : local_ops) {
-            total[qubit_id] = pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(local_op) - offset];
-        }
-
-        csr_matrix_t init(1, 1);
-        init.insert(0, 0) = coeff;
-        return std::accumulate(begin(total), end(total), init, [](const csr_matrix_t& init, const auto& matrix) {
-            return Eigen::kroneckerProduct(matrix, init).eval();
-        });
-    };
-
-    auto it = begin(terms_);
-    auto result = process_term(it->first, it->second);
-    ++it;
-    for (; it != end(terms_); ++it) {
-        result += process_term(it->first, it->second);
     }
 
     return result;
@@ -136,14 +176,25 @@ auto QubitOperator::matrix(std::optional<uint32_t> n_qubits) const -> std::optio
 
 // =============================================================================
 
-auto QubitOperator::simplify_(terms_t terms, coefficient_t coeff) -> std::tuple<terms_t, coefficient_t> {
-    if (std::empty(terms)) {
-        return {terms_t{}, coeff};
+auto QubitOperator::split() const noexcept -> std::vector<QubitOperator> {
+    std::vector<QubitOperator> result;
+    for (const auto& [local_ops, coeff] : terms_) {
+        result.emplace_back(local_ops, coeff);
     }
-    std::stable_sort(
+    return result;
+}
+
+// =============================================================================
+
+auto QubitOperator::simplify_(std::vector<term_t> terms, coefficient_t coeff)
+    -> std::tuple<std::vector<term_t>, coefficient_t> {
+    if (std::empty(terms)) {
+        return {std::vector<term_t>{}, coeff};
+    }
+    std::sort(
         begin(terms), end(terms), [](const auto& lhs, const auto& rhs) constexpr { return lhs.first < rhs.first; });
 
-    terms_t reduced_terms;
+    std::vector<term_t> reduced_terms;
     auto left_term = terms.front();
     for (auto it(begin(terms) + 1); it != end(terms); ++it) {
         const auto& [left_qubit_id, left_operator] = left_term;
@@ -160,30 +211,9 @@ auto QubitOperator::simplify_(terms_t terms, coefficient_t coeff) -> std::tuple<
             left_term = *it;
         }
     }
-    reduced_terms.emplace_back(left_term);
-    return {std::move(reduced_terms), coeff};
-}
 
-// -----------------------------------------------------------------------------
-
-auto QubitOperator::simplify_(py_terms_t py_terms, coefficient_t coeff) -> std::tuple<terms_t, coefficient_t> {
-    terms_t terms;
-    terms.reserve(std::size(py_terms));
-    boost::range::push_back(
-        terms, py_terms | boost::adaptors::transformed([](const auto& value) -> term_t {
-                   return {std::get<0>(value), static_cast<mindquantum::ops::TermValue>(std::get<1>(value))};
-               }));
-
-    return simplify_(terms, coeff);
+    return {std::move(terms), coeff};
 }
 
 // =============================================================================
-
-auto QubitOperator::sort_terms_(terms_t local_ops, coefficient_t coeff) -> std::pair<terms_t, coefficient_t> {
-    auto [a, b] = simplify_(local_ops, coeff);
-    return {std::move(a), b};  // TODO(dnguyen): Should we move? or can (N)RVO take care of that?
-}
-
-// =============================================================================
-
 }  // namespace mindquantum::ops

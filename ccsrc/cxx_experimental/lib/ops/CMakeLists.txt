@@ -16,18 +16,7 @@
 #
 # ==============================================================================
 
-target_sources(
-  mindquantum_cxx
-  PRIVATE ${CMAKE_CURRENT_LIST_DIR}/gates/details/complex_double_coeff_policy.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/gates/details/fermion_operator_term_policy.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/gates/details/qubit_operator_term_policy.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/gates/details/symengine_coeff_policy.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/gates/details/parameterresolver_coeff_policy.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/gates/fermion_operator.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/gates/fermion_operator_parameter_resolver.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/gates/jordan_wigner.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/gates/qubit_operator.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/gates/qubit_operator_parameter_resolver.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/parametric/register_gate_type.cpp)
+target_sources(mindquantum_cxx PRIVATE ${CMAKE_CURRENT_LIST_DIR}/gates/qubit_operator.cpp
+                                       ${CMAKE_CURRENT_LIST_DIR}/parametric/register_gate_type.cpp)
 
 target_link_libraries(mindquantum_cxx PUBLIC mindquantum::symengine)

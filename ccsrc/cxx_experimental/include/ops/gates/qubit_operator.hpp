@@ -17,9 +17,9 @@
 
 #include <complex>
 #include <cstdint>
-#include <string>
 #include <string_view>
 #include <tuple>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -27,65 +27,13 @@
 
 #include "core/config.hpp"
 
-#include "ops/gates/details/qubit_operator_term_policy.hpp"
 #include "ops/gates/terms_operator.hpp"
-
-#ifdef UNIT_TESTS
-class UnitTestAccessor;
-#endif  // UNIT_TESTS
+#include "ops/meta/dagger.hpp"
 
 namespace mindquantum::ops {
-class QubitOperatorPR;
-constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermValue& left_op,
-                                                                     const TermValue& right_op) {
-    if (left_op == TermValue::I && right_op == TermValue::X) {
-        return {1., TermValue::X};
-    }
-    if (left_op == TermValue::X && right_op == TermValue::I) {
-        return {1., TermValue::X};
-    }
-    if (left_op == TermValue::I && right_op == TermValue::Y) {
-        return {1., TermValue::Y};
-    }
-    if (left_op == TermValue::Y && right_op == TermValue::I) {
-        return {1., TermValue::Y};
-    }
-    if (left_op == TermValue::I && right_op == TermValue::Z) {
-        return {1., TermValue::Z};
-    }
-    if (left_op == TermValue::Z && right_op == TermValue::I) {
-        return {1., TermValue::Z};
-    }
-    if (left_op == TermValue::X && right_op == TermValue::X) {
-        return {1., TermValue::I};
-    }
-    if (left_op == TermValue::Y && right_op == TermValue::Y) {
-        return {1., TermValue::I};
-    }
-    if (left_op == TermValue::Z && right_op == TermValue::Z) {
-        return {1., TermValue::I};
-    }
-    if (left_op == TermValue::X && right_op == TermValue::Y) {
-        return {{0, 1.}, TermValue::Z};
-    }
-    if (left_op == TermValue::X && right_op == TermValue::Z) {
-        return {{0, -1.}, TermValue::Y};
-    }
-    if (left_op == TermValue::Y && right_op == TermValue::X) {
-        return {{0, -1.}, TermValue::Z};
-    }
-    if (left_op == TermValue::Y && right_op == TermValue::Z) {
-        return {{0, 1.}, TermValue::X};
-    }
-    if (left_op == TermValue::Z && right_op == TermValue::X) {
-        return {{0, 1.}, TermValue::Y};
-    }
-    if (left_op == TermValue::Z && right_op == TermValue::Y) {
-        return {{0, -1.}, TermValue::X};
-    }
 
-    return {1., TermValue::I};
-}
+constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermValue& left_op,
+                                                                     const TermValue& right_op);
 
 //! Definition of a qubit operator; a sum of terms acting on qubits.
 /*!
@@ -101,54 +49,37 @@ constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermV
  *  QubitOperator has the following attributes set as follows: operators = ('X', 'Y', 'Z'), different_indices_commute =
  *  True.
  */
-class QubitOperator : public TermsOperator<QubitOperator, details::QubitOperatorTermPolicy> {
-    friend TermsOperator<QubitOperator, details::QubitOperatorTermPolicy>;
+class QubitOperator : public TermsOperator<QubitOperator> {
+    friend TermsOperator<QubitOperator>;
 
  public:
     using csr_matrix_t = Eigen::SparseMatrix<std::complex<double>, Eigen::RowMajor>;
-    using TermsOperator<QubitOperator, details::QubitOperatorTermPolicy>::operator==;
 
     static constexpr std::string_view kind() {
         return "mindquantum.qubitoperator";
     }
 
-    using TermsOperator::TermsOperator;
     QubitOperator() = default;
-    QubitOperator(const QubitOperator&) = default;
-    QubitOperator(QubitOperator&&) noexcept = default;
-    QubitOperator& operator=(const QubitOperator&) = default;
-    QubitOperator& operator=(QubitOperator&&) noexcept = default;
-    ~QubitOperator() noexcept = default;
+
+    explicit QubitOperator(term_t term, coefficient_t coefficient = 1.0);
+
+    explicit QubitOperator(const std::vector<term_t>& term, coefficient_t coeff = 1.0);
+
+    explicit QubitOperator(complex_term_dict_t terms);
 
     // -------------------------------------------------------------------
 
-    //! Count the number of gates that make up a qubit operator
     MQ_NODISCARD uint32_t count_gates() const noexcept;
 
-    //! Return the matrix representing a QubitOperator
     MQ_NODISCARD std::optional<csr_matrix_t> matrix(std::optional<uint32_t> n_qubits) const;
 
+    //! Split the operator into its individual components
+    MQ_NODISCARD std::vector<QubitOperator> split() const noexcept;
+
  private:
-#ifdef UNIT_TESTS
-    friend class ::UnitTestAccessor;
-#endif  // UNIT_TESTS
-
-    // TODO(dnguyen): Move this into term_policy_t class
     //! Simplify the list of local operators by using commutation and anti-commutation relations
-    static std::tuple<terms_t, coefficient_t> simplify_(std::vector<term_t> terms, coefficient_t coeff = 1.);
-
-    // TODO(dnguyen): Move this into term_policy_t class
-    //! Simplify the list of local operators by using commutation and anti-commutation relations
-    static std::tuple<terms_t, coefficient_t> simplify_(std::vector<py_term_t> py_terms, coefficient_t coeff = 1.);
-
-    // TODO(dnguyen): Move this into term_policy_t class
-    //! Sort a list of local operators
-    /*!
-     * \param local_ops A list of local operators
-     * \param coeff A coefficient
-     * \note Potentially called by the TermsOperator constructor
-     */
-    static std::pair<terms_t, coefficient_t> sort_terms_(terms_t local_ops, coefficient_t coeff);
+    static std::tuple<std::vector<term_t>, coefficient_t> simplify_(std::vector<term_t> terms,
+                                                                    coefficient_t coeff = 1.);
 };
 }  // namespace mindquantum::ops
 

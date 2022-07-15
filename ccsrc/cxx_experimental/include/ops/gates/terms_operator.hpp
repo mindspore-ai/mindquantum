@@ -63,6 +63,9 @@ class TermsOperator
     , boost::multipliable1<TermsOperator<derived_t>
     , boost::multiplicative2<TermsOperator<derived_t>, double
     , boost::multiplicative2<TermsOperator<derived_t>, std::complex<double>
+#if !MQ_HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
+    , boost::equality_comparable1<TermsOperator<derived_t>>
+#endif  // !MQ_HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
       >>>>>> {
     // clang-format on
  public:
@@ -81,12 +84,51 @@ class TermsOperator
 
     TermsOperator() = default;
 
-    explicit TermsOperator(term_t term, coefficient_t coefficient = 1.0);
+    explicit TermsOperator(term_t term, coefficient_t coeff = 1.0);
+
+    explicit TermsOperator(const std::vector<term_t>& term, coefficient_t coeff = 1.0);
 
     explicit TermsOperator(complex_term_dict_t terms);
 
+    //! Return the number of target qubits of an operator
+    MQ_NODISCARD uint32_t num_targets() const noexcept;
+
+    //! Return the size of the hamiltonian terms
+    MQ_NODISCARD auto size() const noexcept;
+
+    MQ_NODISCARD const complex_term_dict_t& get_terms() const noexcept;
+
+    //! Check whether this operator is equivalent to the identity
+    MQ_NODISCARD bool is_identity(double abs_tol = EQ_TOLERANCE) const noexcept;
+
+    //! Calculate the number of qubits on which operator acts
+    MQ_NODISCARD term_t::first_type count_qubits() const noexcept;
+
+    // -------------------------------------------------------------------------
+
+    //! Get the coefficient of the constant (ie. identity) term
+    MQ_NODISCARD coefficient_t constant() const noexcept;
+
+    //! Test whether this operator consists of a single term
+    MQ_NODISCARD bool is_singlet() const noexcept;
+
+    //! Split a single-term operator into its components/words
+    MQ_NODISCARD std::vector<self_t> singlet() const noexcept;
+
+    //! Get the coefficient of a single-term operator
+    MQ_NODISCARD coefficient_t singlet_coeff() const noexcept;
+
+    //! Set the coefficient of the constant (ie. identity) term
+    void constant(const coefficient_t& coeff);
+
     //! Return the adjoint of this operator
     MQ_NODISCARD operator_t adjoint() const noexcept;
+
+    //! Convert all the coefficients to their real part
+    MQ_NODISCARD self_t real() const noexcept;
+
+    //! Convert all the coefficients to their imaginary part
+    MQ_NODISCARD self_t imag() const noexcept;
 
     //! Compress a TermsOperator
     /*!
@@ -150,6 +192,10 @@ class TermsOperator
     self_t& add_sub_impl_(const self_t& other, assign_modify_op_t&& assign_modify_op,
                           coeff_unary_op_t&& coeff_unary_op);
 
+    void calculate_num_targets_() noexcept;
+
+ protected:
+    uint32_t num_targets_{0UL};
     complex_term_dict_t terms_;
 };
 

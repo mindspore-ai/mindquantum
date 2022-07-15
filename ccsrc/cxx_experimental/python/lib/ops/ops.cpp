@@ -161,30 +161,8 @@ void init_mindquantum_ops(pybind11::module& module) {
         .def("__str__", &::to_string<ops::Entangle>);
     py::class_<ops::Ph>(module, "Ph").def(py::init<const double>());
     py::class_<ops::QFT>(module, "QFT").def(py::init<const uint32_t>()).def("__str__", &::to_string<ops::QFT>);
-
-    py::enum_<ops::TermValue>(module, "TermValue")
-        .value("I", ops::TermValue::I)
-        .value("X", ops::TermValue::X)
-        .value("Y", ops::TermValue::Y)
-        .value("Z", ops::TermValue::Z)
-        .value("a", ops::TermValue::a)
-        .value("adg", ops::TermValue::adg);
-
-    // =========================================================================
-
-    mindquantum::python::bindops::bind_ops<ops::QubitOperatorPR>(module, "QubitOperatorPR")
-        .def("count_gates", &ops::QubitOperatorPR::count_gates)
-        .def("subs", &ops::QubitOperatorPR::subs);
-    mindquantum::python::bindops::bind_ops<ops::FermionOperatorPR>(module, "FermionOperatorPR")
-        .def("normal_ordered", &ops::FermionOperatorPR::normal_ordered)
-        .def("subs", &ops::FermionOperatorPR::subs);
-    mindquantum::python::bindops::bind_ops<ops::QubitOperator>(module, "QubitOperator")
-        .def("count_gates", &ops::QubitOperator::count_gates);
-    mindquantum::python::bindops::bind_ops<ops::FermionOperator>(module, "FermionOperator")
-        .def("normal_ordered", &ops::FermionOperator::normal_ordered);
-    module.def("jordan_wigner", &ops::transform::jordan_wigner);
-
-    // =========================================================================
+    // py::class_<ops::QubitOperator>(module, "QubitOperator")
+    //     .def(py::init<const uint32_t, const ops::QubitOperator::ComplexTermsDict&>());
 
     // py::class_<ops::parametric::P>(module, "P").def(py::init<const double>());
     // py::class_<ops::parametric::Ph>(module, "Ph"). def(py::init<SymEngine::number>());
