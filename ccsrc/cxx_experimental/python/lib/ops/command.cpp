@@ -82,14 +82,39 @@ td::Operator load_gate(PyObject* src, std::size_t n_targets, std::size_t n_contr
         }
     } else if (gate_type == "QubitOperator") {
         if (auto attr = PSG(PyObject_GetAttrString(src, "terms")); attr) {
+            using ComplexTermsDict = std::map<std::vector<std::pair<uint32_t, char>>, std::complex<double>>;
             using caster_t = py::detail::make_caster<ComplexTermsDict>;
             if (caster_t caster; caster.load(py::handle(attr), true)) {
                 ComplexTermsDict terms = caster;
                 if (caster) {
+                    // Convert to the C++ terms representation
+                    ops::QubitOperator::complex_term_dict_t cpp_terms;
+                    for (const auto& [local_ops, coeff] : terms) {
+                        decltype(cpp_terms)::key_type cpp_local_ops;
+
+                        for (const auto& [qubit_id, local_op] : local_ops) {
+                            ops::TermValue cpp_local_op = ops::TermValue::I;
+                            switch (local_op) {
+                                case 'X':
+                                    cpp_local_op = ops::TermValue::X;
+                                    break;
+                                case 'Y':
+                                    cpp_local_op = ops::TermValue::Y;
+                                    break;
+                                case 'Z':
+                                    cpp_local_op = ops::TermValue::Z;
+                                    break;
+                                default:
+                                    break;
+                            }
+                            cpp_local_ops.emplace_back(qubit_id, cpp_local_op);
+                        }
+                        cpp_terms.emplace(cpp_local_ops, coeff);
+                    }
                     if (is_dagger) {
-                        return ops::DaggerOperation(ops::QubitOperator(n_targets, terms));
+                        return ops::DaggerOperation(ops::QubitOperator(cpp_terms));
                     } else {
-                        return ops::QubitOperator(n_targets, terms);
+                        return ops::QubitOperator(cpp_terms);
                     }
                 }
             }
@@ -99,6 +124,7 @@ td::Operator load_gate(PyObject* src, std::size_t n_targets, std::size_t n_contr
         auto terms_attr = PSG(PyObject_GetAttrString(ham_attr, "terms"));
         auto time_attr = PSG(PyObject_GetAttrString(src, "time"));
         if (terms_attr && time_attr) {
+            using ComplexTermsDict = std::map<std::vector<std::pair<uint32_t, char>>, std::complex<double>>;
             py::detail::make_caster<ComplexTermsDict> terms_caster;
             py::detail::make_caster<double> time_caster;
             if (terms_caster.load(py::handle(terms_attr), true) && time_caster.load(py::handle(time_attr), true)) {
@@ -107,7 +133,32 @@ td::Operator load_gate(PyObject* src, std::size_t n_targets, std::size_t n_contr
                 if (is_dagger) {
                     time *= -1.;
                 }
-                return ops::TimeEvolution(ops::QubitOperator(n_targets, terms), time);
+
+                // Convert to the C++ terms representation
+                ops::QubitOperator::complex_term_dict_t cpp_terms;
+                for (const auto& [local_ops, coeff] : terms) {
+                    decltype(cpp_terms)::key_type cpp_local_ops;
+
+                    for (const auto& [qubit_id, local_op] : local_ops) {
+                        ops::TermValue cpp_local_op = ops::TermValue::I;
+                        switch (local_op) {
+                            case 'X':
+                                cpp_local_op = ops::TermValue::X;
+                                break;
+                            case 'Y':
+                                cpp_local_op = ops::TermValue::Y;
+                                break;
+                            case 'Z':
+                                cpp_local_op = ops::TermValue::Z;
+                                break;
+                            default:
+                                break;
+                        }
+                        cpp_local_ops.emplace_back(qubit_id, cpp_local_op);
+                    }
+                    cpp_terms.emplace(cpp_local_ops, coeff);
+                }
+                return ops::TimeEvolution(ops::QubitOperator(cpp_terms), time);
             } else {
                 std::cerr << "Error: Couldn't load TimeEvolution attributes\n";
             }

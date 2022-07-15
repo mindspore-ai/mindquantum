@@ -24,6 +24,7 @@
 #include "core/dagger.hpp"
 #include "decompositions.hpp"
 #include "ops/gates/qubit_operator.hpp"
+#include "ops/gates/terms_operator.hpp"
 
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846 /* pi */
@@ -33,8 +34,6 @@ namespace mindquantum::decompositions {
 namespace td = tweedledum;
 
 bool recognize_time_evolution_commuting(const instruction_t& inst) {
-    using ComplexTermsDict = ops::QubitOperator::ComplexTermsDict;
-
     assert(inst.kind() == "projectq.timeevolution");
 
     const auto& op = inst.cast<ops::TimeEvolution>();
@@ -45,9 +44,9 @@ bool recognize_time_evolution_commuting(const instruction_t& inst) {
     } else {
         const auto num_targets = op.num_targets();
         for (const auto& term : terms) {
-            const ops::QubitOperator test_op(num_targets, {term});
+            const ops::QubitOperator test_op(term.first, term.second);
             for (const auto& other : terms) {
-                const ops::QubitOperator other_op(num_targets, {other});
+                const ops::QubitOperator other_op(other.first, other.second);
                 const auto& commutator = test_op * other_op - other_op * test_op;
                 if (!commutator.is_identity(1.e-9)) {
                     return false;
@@ -70,7 +69,7 @@ void decompose_time_evolution_commuting(circuit_t& result, const instruction_t& 
     const auto& qubits = inst.qubits();
 
     for (const auto& term : hamiltonian.get_terms()) {
-        ops::QubitOperator ind_operator(num_targets, {term});
+        ops::QubitOperator ind_operator(term.first, term.second);
         decompose_time_evolution_individual_terms(result,
                                                   td::Instruction(ops::TimeEvolution(ind_operator, time), qubits, {}));
 
@@ -82,9 +81,6 @@ bool recognize_time_evolution_individual_terms(const instruction_t& inst) {
     assert(inst.kind() == "projectq.timeevolution");
 
     const auto& op = inst.cast<ops::TimeEvolution>();
-
-    using ComplexTermsDict = ops::QubitOperator::ComplexTermsDict;
-
     auto terms = op.get_hamiltonian().get_terms();
     return std::size(terms) == 1;
 }
@@ -117,9 +113,9 @@ void decompose_time_evolution_individual_terms(CircuitType& result, const instru
 
         qubits.push_back(targets[term[0].first]);
 
-        if (term[0].second == 'X') {
+        if (term[0].second == ops::TermValue::X) {
             result.apply_operator(td::Op::Rx(time * coefficient * 2.), qubits, {});
-        } else if (term[0].second == 'Y') {
+        } else if (term[0].second == ops::TermValue::Y) {
             result.apply_operator(td::Op::Ry(time * coefficient * 2.), qubits, {});
         } else {
             // NB: missing * 2 factor due to Tweedledum Rz definition
@@ -130,9 +126,9 @@ void decompose_time_evolution_individual_terms(CircuitType& result, const instru
         MQ_WITH_COMPUTE(result, circuit) {
             for (const auto& [index, action] : term) {
                 qubits.push_back(targets[index]);
-                if (action == 'X') {
+                if (action == ops::TermValue::X) {
                     circuit.apply_operator(td::Op::H(), qubits);
-                } else if (action == 'Y') {
+                } else if (action == ops::TermValue::Y) {
                     circuit.apply_operator(td::Op::Rx(0.5), qubits);
                 }
                 qubits.pop_back();

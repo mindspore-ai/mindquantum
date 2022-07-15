@@ -17,209 +17,70 @@
 
 #include <algorithm>
 #include <complex>
-#include <map>
+#include <cstdint>
 #include <string_view>
+#include <tuple>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
+#include <Eigen/SparseCore>
+
+#include "core/config.hpp"
+
+#include "ops/gates/terms_operator.hpp"
 #include "ops/meta/dagger.hpp"
 
 namespace mindquantum::ops {
-class QubitOperator {
-    std::map<std::pair<char, char>, std::pair<std::complex<double>, char>> PAULI_OPERATOR_PRODUCTS_ = {
-        {{'I', 'I'}, {1., 'I'}},       {{'I', 'X'}, {1., 'X'}},      {{'X', 'I'}, {1., 'X'}},
-        {{'I', 'Y'}, {1., 'Y'}},       {{'Y', 'I'}, {1., 'Y'}},      {{'I', 'Z'}, {1., 'Z'}},
-        {{'Z', 'I'}, {1., 'Z'}},       {{'X', 'X'}, {1., 'I'}},      {{'Y', 'Y'}, {1., 'I'}},
-        {{'Z', 'Z'}, {1., 'I'}},       {{'X', 'Y'}, {{0, 1.}, 'Z'}}, {{'X', 'Z'}, {{0, -1.}, 'Y'}},
-        {{'Y', 'X'}, {{0, -1.}, 'Z'}}, {{'Y', 'Z'}, {{0, 1.}, 'X'}}, {{'Z', 'X'}, {{0, 1.}, 'Y'}},
-        {{'Z', 'Y'}, {{0, -1.}, 'X'}}};
+
+constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermValue& left_op,
+                                                                     const TermValue& right_op);
+
+//! Definition of a qubit operator; a sum of terms acting on qubits.
+/*!
+ *  A term is an operator acting on n qubits and can be represented as:
+ *      coefficient * local_operator[0] x ... x local_operator[n-1]
+ *  where x is the tensor product. A local operator is a Pauli operator ('I', 'X', 'Y', or 'Z') which acts on one
+ *  qubit. In mathematical notation a QubitOperator term is, for example, 0.5 * 'X1 X5', which means that a Pauli X
+ *  operator acts on qubit 1 and 5, while the identity operator acts on all the rest qubits.
+ *
+ *  Note that a Hamiltonian composed of QubitOperators should be a hermitian operator, thus requires the coefficients of
+ *  all terms must be real.
+ *
+ *  QubitOperator has the following attributes set as follows: operators = ('X', 'Y', 'Z'), different_indices_commute =
+ *  True.
+ */
+class QubitOperator : public TermsOperator<QubitOperator> {
+    friend TermsOperator<QubitOperator>;
 
  public:
-    using non_const_num_targets = void;
-
-    using ComplexTerm = std::pair<std::vector<std::pair<uint32_t, char>>, std::complex<double>>;
-    using ComplexTermsDict = std::map<std::vector<std::pair<uint32_t, char>>, std::complex<double>>;
+    using csr_matrix_t = Eigen::SparseMatrix<std::complex<double>, Eigen::RowMajor>;
 
     static constexpr std::string_view kind() {
-        return "projectq.qubitoperator";
+        return "mindquantum.qubitoperator";
     }
 
-    explicit QubitOperator(uint32_t num_targets, ComplexTermsDict terms)
-        : num_targets_(num_targets), terms_(std::move(terms)) {
-    }
+    QubitOperator() = default;
 
-    td::Operator adjoint() const {
-        return DaggerOperation(*this);
-    }
+    explicit QubitOperator(term_t term, coefficient_t coefficient = 1.0);
 
-    uint32_t num_targets() const {
-        return num_targets_;
-    }
+    explicit QubitOperator(const std::vector<term_t>& term, coefficient_t coeff = 1.0);
 
-    bool operator==(const QubitOperator& other) const {
-        return is_close(other);
-    }
+    explicit QubitOperator(complex_term_dict_t terms);
 
     // -------------------------------------------------------------------
 
-    const ComplexTermsDict& get_terms() const {
-        return terms_;
-    }
+    MQ_NODISCARD uint32_t count_gates() const noexcept;
 
-    QubitOperator Subtract(QubitOperator const& other) const {
-        ComplexTermsDict result_terms = terms_;
-        for (auto& [term, other_coefficient] : other.get_terms()) {
-            if (result_terms.count(term)) {
-                if (abs(result_terms.at(term) - other_coefficient) > 0) {
-                    result_terms.at(term) -= other_coefficient;
-                } else {
-                    result_terms.erase(term);
-                }
-            } else {
-                result_terms[term] = -other_coefficient;
-            }
-        }
-        return QubitOperator(num_targets_, result_terms);
-    }
+    MQ_NODISCARD std::optional<csr_matrix_t> matrix(std::optional<uint32_t> n_qubits) const;
 
-    QubitOperator operator-(QubitOperator const& other) const {
-        return Subtract(other);
-    }
-
-    QubitOperator Multiply(QubitOperator const& other) const {
-        ComplexTermsDict result_terms;
-        for (auto& [left_term, coefficient] : terms_) {
-            for (auto& [right_term, other_coefficient] : other.get_terms()) {
-                auto new_coefficient = coefficient * other_coefficient;
-
-                // Loop through local operators and create new sorted
-                // list of representing the product local operator:
-                std::vector<std::pair<uint32_t, char>> product_operators;
-                unsigned left_operator_index = 0;
-                unsigned right_operator_index = 0;
-                unsigned n_operators_left = std::size(left_term);
-                unsigned n_operators_right = std::size(right_term);
-                while (left_operator_index < n_operators_left && right_operator_index < n_operators_right) {
-                    auto [left_qubit, left_loc_op] = left_term[left_operator_index];
-                    auto [right_qubit, right_loc_op] = right_term[right_operator_index];
-
-                    // Multiply local operators acting on the same
-                    // qubit
-                    if (left_qubit == right_qubit) {
-                        left_operator_index += 1;
-                        right_operator_index += 1;
-                        auto [scalar, loc_op] = PAULI_OPERATOR_PRODUCTS_.at(std::make_pair(left_loc_op, right_loc_op));
-
-                        // Add new term.
-                        if (loc_op != 'I') {
-                            product_operators.push_back({left_qubit, loc_op});
-                            new_coefficient *= scalar;
-                        }
-                        // Note if loc_op == 'I', then scalar == 1.0
-                    }
-                    // If left_qubit > right_qubit, add right_loc_op;
-                    // else, add left_loc_op.
-                    else if (left_qubit > right_qubit) {
-                        product_operators.push_back({right_qubit, right_loc_op});
-                        right_operator_index += 1;
-                    } else {
-                        product_operators.push_back({left_qubit, left_loc_op});
-                        left_operator_index += 1;
-                    }
-                }
-
-                // Finish the remaining operators :
-                if (left_operator_index == n_operators_left) {
-                    for (unsigned index = right_operator_index; index < std::size(right_term); index++) {
-                        product_operators.push_back(right_term[index]);
-                    }
-                } else if (right_operator_index == n_operators_right) {
-                    for (unsigned index = left_operator_index; index < std::size(left_term); index++) {
-                        product_operators.push_back(left_term[index]);
-                    }
-                }
-
-                // Add to result dict
-                if (result_terms.count(product_operators)) {
-                    result_terms[product_operators] += new_coefficient;
-                } else {
-                    result_terms[product_operators] = new_coefficient;
-                }
-            }
-        }
-        return QubitOperator(num_targets_, result_terms);
-    }
-
-    QubitOperator operator*(QubitOperator const& other) const {
-        return Multiply(other);
-    }
-
-    bool is_close(const QubitOperator& other, double rel_tol = 1e-12, double abs_tol = 1e-12) const {
-        auto it_this = std::begin(terms_);
-        auto it_other = std::begin(other.terms_);
-
-        while (it_this != std::end(terms_) && it_other != std::end(other.terms_)) {
-            if (it_this->first < it_other->first) {
-                if (std::abs(it_this->second) <= abs_tol) {
-                    ++it_this;
-                } else {
-                    return false;
-                }
-            } else if (it_other->first < it_this->first) {
-                if (std::abs(it_other->second) <= abs_tol) {
-                    ++it_other;
-                } else {
-                    return false;
-                }
-            } else {
-                // Equal keys
-                const auto& a = it_this->second;
-                const auto& b = it_other->second;
-
-                if (std::abs(a - b) <= std::max(rel_tol * std::max(std::abs(a), std::abs(b)), abs_tol)) {
-                    ++it_this;
-                    ++it_other;
-                } else {
-                    return false;
-                }
-            }
-        }
-
-        while (it_this != std::end(terms_)) {
-            if (it_this->first < it_other->first) {
-                if (std::abs(it_this->second) <= abs_tol) {
-                    ++it_this;
-                } else {
-                    return false;
-                }
-            }
-        }
-
-        while (it_other != std::end(other.terms_)) {
-            if (it_other->first < it_this->first) {
-                if (std::abs(it_other->second) <= abs_tol) {
-                    ++it_other;
-                } else {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    bool is_identity(double abs_tol = 1e-12) const {
-        for (const auto& [term, coeff] : terms_) {
-            if (!(std::abs(coeff) <= abs_tol)) {
-                return false;
-            }
-        }
-        return true;
-    }
+    //! Split the operator into its individual components
+    MQ_NODISCARD std::vector<QubitOperator> split() const noexcept;
 
  private:
-    uint32_t num_targets_;
-    ComplexTermsDict terms_;
+    //! Simplify the list of local operators by using commutation and anti-commutation relations
+    static std::tuple<std::vector<term_t>, coefficient_t> simplify_(std::vector<term_t> terms,
+                                                                    coefficient_t coeff = 1.);
 };
 }  // namespace mindquantum::ops
 

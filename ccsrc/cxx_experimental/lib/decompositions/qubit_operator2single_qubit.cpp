@@ -39,17 +39,17 @@ void decompose_qubitop2onequbit(circuit_t& result, const instruction_t& inst) {
     qubits.pop_back();
 
     for (auto& pauli : std::begin(terms)->first) {
-        qubits.push_back(targets[pauli.first]);
-        if (pauli.second == 'X') {
-            result.apply_operator(td::Op::X(), qubits);
-        } else if (pauli.second == 'Y') {
-            result.apply_operator(td::Op::Y(), qubits);
-        } else if (pauli.second == 'Z') {
-            result.apply_operator(td::Op::Z(), qubits);
-        } else {
-            assert(0 && "QubitOperator Pauli must be 'X', 'Y' or 'Z'");
-        }
-        qubits.pop_back();
+        // qubits.push_back(targets[pauli.first]);
+        // if (pauli.second == 'X') {
+        //     result.apply_operator(td::Op::X(), qubits);
+        // } else if (pauli.second == 'Y') {
+        //     result.apply_operator(td::Op::Y(), qubits);
+        // } else if (pauli.second == 'Z') {
+        //     result.apply_operator(td::Op::Z(), qubits);
+        // } else {
+        //     assert(0 && "QubitOperator Pauli must be 'X', 'Y' or 'Z'");
+        // }
+        // qubits.pop_back();
     }
 }
 }  // namespace mindquantum::decompositions

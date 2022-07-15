@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <utility>
@@ -30,19 +31,158 @@
 namespace mindquantum::ops {
 
 template <typename derived_t>
-TermsOperator<derived_t>::TermsOperator(term_t term, coefficient_t coefficient)
-    : terms_{{{std::move(term)}, coefficient}} {
+TermsOperator<derived_t>::TermsOperator(term_t term, coefficient_t coeff) : terms_{{{std::move(term)}, coeff}} {
+    calculate_num_targets_();
 }
+
+// -----------------------------------------------------------------------------
+
+template <typename derived_t>
+TermsOperator<derived_t>::TermsOperator(const std::vector<term_t>& term, coefficient_t coeff) {
+    const auto [new_terms, new_coeff] = derived_t::simplify_(term, coeff);
+    terms_.emplace(new_terms, new_coeff);
+    calculate_num_targets_();
+}
+
+// -----------------------------------------------------------------------------
 
 template <typename derived_t>
 TermsOperator<derived_t>::TermsOperator(complex_term_dict_t terms) : terms_{std::move(terms)} {
+    calculate_num_targets_();
 }
 
 // =============================================================================
 
 template <typename derived_t>
-operator_t TermsOperator<derived_t>::adjoint() const noexcept {
+uint32_t TermsOperator<derived_t>::num_targets() const noexcept {
+    return num_targets_;
+}
+
+// -----------------------------------------------------------------------------
+
+template <typename derived_t>
+auto TermsOperator<derived_t>::size() const noexcept {
+    return size(terms_);
+}
+
+// -----------------------------------------------------------------------------
+
+template <typename derived_t>
+auto TermsOperator<derived_t>::get_terms() const noexcept -> const complex_term_dict_t& {
+    return terms_;
+}
+
+// -----------------------------------------------------------------------------
+
+template <typename derived_t>
+bool TermsOperator<derived_t>::is_identity(double abs_tol) const noexcept {
+    for (const auto& [term, coeff] : terms_) {
+        if (!(std::abs(coeff) <= abs_tol)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// -----------------------------------------------------------------------------
+
+template <typename derived_t>
+auto TermsOperator<derived_t>::count_qubits() const noexcept -> term_t::first_type {
+    term_t::first_type num_qubits{0};
+    for (const auto& [local_ops, coeff] : terms_) {
+        if (std::empty(local_ops)) {
+            num_qubits = std::max(decltype(num_qubits){1}, num_qubits);
+        } else {
+            num_qubits = std::max(decltype(num_qubits){std::max_element(
+                                                           begin(local_ops), end(local_ops),
+                                                           [](const auto& lhs, const auto& rhs) constexpr {
+                                                               return lhs.first < rhs.first;
+                                                           })
+                                                           ->first},
+                                  num_qubits);
+        }
+    }
+    return num_qubits;
+}
+
+// =============================================================================
+
+template <typename derived_t>
+bool TermsOperator<derived_t>::is_singlet() const noexcept {
+    return size() == 1;
+}
+
+// -----------------------------------------------------------------------------
+
+template <typename derived_t>
+auto TermsOperator<derived_t>::singlet() const noexcept -> std::vector<self_t> {
+    if (!is_singlet()) {
+        return {};
+    }
+
+    std::vector<self_t> words;
+    for (const auto& [term, coeff] : terms_) {
+        words.emplace(term, coeff);
+    }
+
+    return words;
+}
+
+// -----------------------------------------------------------------------------
+
+template <typename derived_t>
+auto TermsOperator<derived_t>::singlet_coeff() const noexcept -> coefficient_t {
+    if (!is_singlet()) {
+        return {};
+    }
+    return begin(terms_)->second;
+}
+
+// =============================================================================
+
+template <typename derived_t>
+auto TermsOperator<derived_t>::constant() const noexcept -> coefficient_t {
+    if (const auto it = terms_.find({}); it != end(terms_)) {
+        assert(std::empty(it->first));
+        return it->second;
+    }
+    return 0.0;
+}
+
+// -----------------------------------------------------------------------------
+
+template <typename derived_t>
+auto TermsOperator<derived_t>::constant(const coefficient_t& coeff) -> void {
+    terms_[{}] = coeff;
+}
+
+// =============================================================================
+
+template <typename derived_t>
+auto TermsOperator<derived_t>::adjoint() const noexcept -> operator_t {
     return DaggerOperation(*this);
+}
+
+// =============================================================================
+
+template <typename derived_t>
+auto TermsOperator<derived_t>::real() const noexcept -> self_t {
+    auto out(static_cast<self_t>(*this));
+    for (auto& [local_ops, coeff] : out.terms_) {
+        coeff = coeff.real();
+    }
+    return out;
+}
+
+// -----------------------------------------------------------------------------
+
+template <typename derived_t>
+auto TermsOperator<derived_t>::imag() const noexcept -> self_t {
+    auto out(static_cast<self_t>(*this));
+    for (auto& [local_ops, coeff] : out.terms_) {
+        coeff = coeff.imag();
+    }
+    return out;
 }
 
 // =============================================================================
@@ -60,6 +200,7 @@ auto TermsOperator<derived_t>::compress(double abs_tol) -> self_t& {
             it->second = coefficient_t{0., it->second.imag()};
         }
     }
+    calculate_num_targets_();
     return *this;
 }
 
@@ -135,6 +276,7 @@ auto TermsOperator<derived_t>::operator*=(const self_t& other) -> self_t& {
         }
     }
     terms_ = std::move(product_results);
+    calculate_num_targets_();
     return *this;
 }
 
@@ -174,9 +316,9 @@ bool TermsOperator<derived_t>::operator==(const self_t& other) const {
     std::vector<complex_term_dict_t::value_type> intersection;
     std::vector<complex_term_dict_t::value_type> symmetric_differences;
 
-    std::set_intersection(begin(terms_), end(terms_), begin(other.terms_), end(other.terms_),
-                          std::back_inserter(intersection),
-                          [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; });
+    std::set_intersection(
+        begin(terms_), end(terms_), begin(other.terms_), end(other.terms_), std::back_inserter(intersection),
+        [](const auto& lhs, const auto& rhs) constexpr { return lhs.first < rhs.first; });
 
     for (const auto& term : intersection) {
         const auto& left = terms_.at(term.first);
@@ -212,7 +354,16 @@ auto TermsOperator<derived_t>::add_sub_impl_(const self_t& other, assign_modify_
         }
     }
 
+    calculate_num_targets_();
+
     return *this;
+}
+
+// =============================================================================
+
+template <typename derived_t>
+void TermsOperator<derived_t>::calculate_num_targets_() noexcept {
+    num_targets_ = count_qubits();
 }
 
 // =============================================================================

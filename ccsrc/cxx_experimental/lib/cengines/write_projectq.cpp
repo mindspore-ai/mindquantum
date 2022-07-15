@@ -23,6 +23,7 @@
 #include <tweedledum/Operators/Standard.h>
 
 #include "ops/gates.hpp"
+#include "ops/gates/terms_operator.hpp"
 
 namespace mindquantum {
 std::string to_string(std::size_t qubit_id) {
@@ -58,8 +59,7 @@ std::string to_string(const std::vector<std::size_t>& qubit_ids) {
 }
 std::string to_string(ops::QubitOperator const& qb_op, std::vector<std::size_t> const& targets) {
     std::string result = "";
-    using ComplexTermsDict = std::map<std::vector<std::pair<uint32_t, char>>, std::complex<double>>;
-    ComplexTermsDict terms = qb_op.get_terms();
+    auto terms = qb_op.get_terms();
     bool first_term = true;
     for (auto& term : terms) {
         if (!first_term) {
@@ -73,7 +73,28 @@ std::string to_string(ops::QubitOperator const& qb_op, std::vector<std::size_t> 
             result += fmt::format("({}{}j)", term.second.real(), term.second.imag());
         }
         for (auto& pauli : term.first) {
-            result += fmt::format(" {}{}", pauli.second, targets.at(pauli.first));
+            const auto& [qubit_id, term_value] = pauli;
+            switch (term_value) {
+                case ops::TermValue::I: {
+                    result += fmt::format(" I{}", targets.at(qubit_id));
+                    break;
+                }
+                case ops::TermValue::X: {
+                    result += fmt::format(" X{}", targets.at(qubit_id));
+                    break;
+                }
+                case ops::TermValue::Y: {
+                    result += fmt::format(" Y{}", targets.at(qubit_id));
+                    break;
+                }
+                case ops::TermValue::Z: {
+                    result += fmt::format(" Z{}", targets.at(qubit_id));
+                    break;
+                }
+                default:
+                    result += fmt::format(" ?{}", targets.at(qubit_id));
+                    break;
+            }
         }
         first_term = false;
     }

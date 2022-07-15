@@ -71,8 +71,8 @@ void init_mindquantum_ops(pybind11::module& module) {
         .def("__str__", &::to_string<ops::Entangle>);
     py::class_<ops::Ph>(module, "Ph").def(py::init<const double>());
     py::class_<ops::QFT>(module, "QFT").def(py::init<const uint32_t>()).def("__str__", &::to_string<ops::QFT>);
-    py::class_<ops::QubitOperator>(module, "QubitOperator")
-        .def(py::init<const uint32_t, const ops::QubitOperator::ComplexTermsDict&>());
+    // py::class_<ops::QubitOperator>(module, "QubitOperator")
+    //     .def(py::init<const uint32_t, const ops::QubitOperator::ComplexTermsDict&>());
 
     // py::class_<ops::parametric::P>(module, "P").def(py::init<const double>());
     // py::class_<ops::parametric::Ph>(module, "Ph").def(py::init<SymEngine::number>());

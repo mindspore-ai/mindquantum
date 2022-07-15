@@ -29,6 +29,7 @@
 #include "ops/gates/measure.hpp"
 #include "ops/gates/ph.hpp"
 #include "ops/gates/sqrtswap.hpp"
+#include "ops/gates/terms_operator.hpp"
 
 // #define MEASURE_TIMINGS
 #ifdef MEASURE_TIMINGS
@@ -145,15 +146,67 @@ void CppCore::flush() {
                 } else if (inst.is_one<ops::QubitOperator>()) {
                     const auto& qubit_op = inst.cast<ops::QubitOperator>();
                     assert(std::empty(control_ids));
-                    std::vector<ops::QubitOperator::ComplexTerm> terms;
-                    std::copy(std::begin(qubit_op.get_terms()), std::end(qubit_op.get_terms()),
-                              std::back_inserter(terms));
+                    using ComplexTerm = std::pair<std::vector<std::pair<uint32_t, char>>, std::complex<double>>;
+                    std::vector<ComplexTerm> terms;
+                    std::for_each(std::begin(qubit_op.get_terms()), std::end(qubit_op.get_terms()),
+                                  [&terms](const auto& term) {
+                                      const auto& [ops, coeff] = term;
+                                      char op_char('?');
+                                      ComplexTerm::first_type new_terms;
+                                      for (const auto& term : ops) {
+                                          const auto& [qubit_id, op] = term;
+                                          switch (op) {
+                                              case ops::TermValue::X: {
+                                                  op_char = 'X';
+                                                  break;
+                                              }
+                                              case ops::TermValue::Y: {
+                                                  op_char = 'Y';
+                                                  break;
+                                              }
+                                              case ops::TermValue::Z: {
+                                                  op_char = 'Z';
+                                                  break;
+                                              }
+                                              default:
+                                                  break;
+                                          }
+                                          new_terms.emplace_back(qubit_id, op_char);
+                                      }
+                                      terms.emplace_back(new_terms, coeff);
+                                  });
                     sim_->apply_qubit_operator(terms, target_ids);
                 } else if (inst.is_one<ops::TimeEvolution>()) {
                     const auto& time_evol = inst.cast<ops::TimeEvolution>();
-                    std::vector<ops::QubitOperator::ComplexTerm> terms;
-                    std::copy(std::begin(time_evol.get_hamiltonian().get_terms()),
-                              std::end(time_evol.get_hamiltonian().get_terms()), std::back_inserter(terms));
+                    using ComplexTerm = std::pair<std::vector<std::pair<uint32_t, char>>, std::complex<double>>;
+                    std::vector<ComplexTerm> terms;
+                    std::for_each(std::begin(time_evol.get_hamiltonian().get_terms()),
+                                  std::end(time_evol.get_hamiltonian().get_terms()), [&terms](const auto& term) {
+                                      const auto& [ops, coeff] = term;
+                                      char op_char('?');
+                                      ComplexTerm::first_type new_terms;
+                                      for (const auto& term : ops) {
+                                          const auto& [qubit_id, op] = term;
+                                          switch (op) {
+                                              case ops::TermValue::X: {
+                                                  op_char = 'X';
+                                                  break;
+                                              }
+                                              case ops::TermValue::Y: {
+                                                  op_char = 'Y';
+                                                  break;
+                                              }
+                                              case ops::TermValue::Z: {
+                                                  op_char = 'Z';
+                                                  break;
+                                              }
+                                              default:
+                                                  break;
+                                          }
+                                          new_terms.emplace_back(qubit_id, op_char);
+                                      }
+                                      terms.emplace_back(new_terms, coeff);
+                                  });
                     sim_->emulate_time_evolution(terms, time_evol.get_time(), target_ids, control_ids);
                 } else {
                     std::cerr << "Simulator doesn't support gate type:\n";
