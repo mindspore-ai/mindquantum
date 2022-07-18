@@ -351,7 +351,15 @@ class MatrixGate(QuantumGate):
 
 
 class NoneParameterGate(QuantumGate):
-    """Base class for non-parametric gates."""
+    """
+    Base class for non-parametric gates.
+
+    Args:
+        name (str): the name of this gate.
+        n_qubits (int): how many qubits is this gate.
+        obj_qubits (int, list[int]): Specific which qubits the gate act on.
+        ctrl_qubits (int, list[int]): Specific the control qbits. Default, None.
+    """
 
     def __call__(self, obj_qubits, ctrl_qubits=None):
         """Definition of a function call operator."""
