@@ -223,7 +223,8 @@ auto FermionOperator::matrix(std::optional<uint32_t> n_qubits) const -> std::opt
             const auto local_ops_end = end(local_ops);
             auto num_to_copy = size_groups;
             for (auto it(begin(local_ops)); it != local_ops_end; std::advance(it, num_to_copy)) {
-                num_to_copy = std::min(static_cast<std::size_t>(std::distance(it, local_ops_end)), size_groups);
+                num_to_copy = std::min(static_cast<decltype(size_groups)>(std::distance(it, local_ops_end)),
+                                       size_groups);
                 groups.emplace_back(&*it, size_groups);
             }
 
