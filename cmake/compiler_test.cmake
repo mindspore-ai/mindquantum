@@ -372,31 +372,6 @@ int main() {
 # --------------------------------------
 
 check_cxx_code_compiles(
-  compiler_has_cxx20_format
-  MQ_HAS_CXX20_FORMAT
-  cxx_std_20
-  [[
-#ifdef __has_include
-#    if __has_include(<version>)
-#        include <version>
-#    endif
-#endif
-#include <format>
-#include <complex>
-
-int main() {
-#if __cpp_lib_format >= 201907L
-    const auto res = std::format("{}", std::complex<double>{1, 2});
-    return res.size();
-#else
-#    error C++20 std::format not supported
-#endif
-    return 0;
-}
-]])
-
-# --------------------------------------
-check_cxx_code_compiles(
   compiler_has_cxx20_span
   MQ_HAS_CXX20_SPAN
   cxx_std_20
@@ -416,59 +391,6 @@ int main() {
 #else
 #    error C++20 std::span not supported
 #endif
-    return 0;
-}
-]])
-
-# --------------------------------------
-
-check_cxx_code_compiles(
-  compiler_has_cxx20_ranges
-  MQ_HAS_CXX20_RANGES
-  cxx_std_20
-  [[
-#ifdef __has_include
-#    if __has_include(<version>)
-#        include <version>
-#    endif
-#endif
-#include <algorithm>
-#include <iostream>
-#include <iterator>
-#include <numeric>
-#include <ranges>
-#include <vector>
-
-int main() {
-#if __cpp_lib_ranges >= 201911L
-    std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-    std::partial_sum(v.cbegin(), v.cend(), v.begin());
-    std::ranges::copy(v, std::ostream_iterator<int>(std::cout, " "));
-    auto divisible_by = [](int d) { return [d](int m) { return m % d == 0; }; };
-    if (std::ranges::any_of(v, divisible_by(7))) {
-        std::cout << "At least one number is divisible by 7" << std::endl;
-    }
-#else
-#    error C++20 ranges not supported
-#endif
-    return 0;
-}
-]])
-
-# --------------------------------------
-
-check_cxx_code_compiles(
-  compiler_std_accumulate_use_move
-  MQ_STD_ACCUMULATE_USE_MOVE
-  cxx_std_20
-  [[
-#include <numeric>
-#include <vector>
-
-int main() {
-    std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-    return std::accumulate(begin(v), end(v), int{0},
-                           [](int&& init, int value) -> decltype(auto) { return init += value; });
     return 0;
 }
 ]])
