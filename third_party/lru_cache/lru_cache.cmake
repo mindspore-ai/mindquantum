@@ -25,8 +25,7 @@ else()
 endif()
 set(GIT_TAG "48f9cd9f1713ee63172f2a28af6824bbf8161e5c")
 
-set(PATCHES ${CMAKE_CURRENT_LIST_DIR}/patch/fix-memory-leak-node-deletion-callback.patch001
-            ${CMAKE_CURRENT_LIST_DIR}/patch/optional-abseil-dependency.patch002)
+set(PATCHES ${CMAKE_CURRENT_LIST_DIR}/patch/fix-memory-leak-node-deletion-callback.patch001)
 
 mindquantum_add_pkg(
   lru_cache
@@ -39,7 +38,4 @@ mindquantum_add_pkg(
   FORCE_LOCAL_PKG
   TARGET_ALIAS mindquantum::lru_cache lru_cache::lru_cache)
 target_compile_features(lru_cache::lru_cache INTERFACE cxx_std_17)
-if(ENABLE_ABSEIL_CPP)
-  target_link_libraries(lru_cache::lru_cache INTERFACE mindquantum::absl_node_hash_set)
-  target_compile_definitions(lru_cache::lru_cache INTERFACE LRU_CACHE_HAS_ABSEIL_CPP)
-endif()
+target_link_libraries(lru_cache::lru_cache INTERFACE mindquantum::absl_node_hash_set)
