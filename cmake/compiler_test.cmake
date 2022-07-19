@@ -368,6 +368,32 @@ int main() {
 }
 ]])
 
+# --------------------------------------
+
+check_cxx_code_compiles(
+  compiler_has_cxx20_span
+  MQ_HAS_CXX20_SPAN
+  cxx_std_20
+  [[
+#ifdef __has_include
+#    if __has_include(<version>)
+#        include <version>
+#    endif
+#endif
+#include <span>
+#include <vector>
+
+int main() {
+#if __cpp_lib_span >= 202002L
+    std::vector<int> vec = {1, 2, 3, 4, 5};
+    return std::span<int, 4>{vec}.size();
+#else
+#    error C++20 std::span not supported
+#endif
+    return 0;
+}
+]])
+
 # ==============================================================================
 
 configure_file(${CMAKE_CURRENT_LIST_DIR}/cxx20_config.hpp.in ${PROJECT_BINARY_DIR}/core/cxx20_config.hpp)
