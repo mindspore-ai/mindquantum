@@ -1,0 +1,12 @@
+diff -Npur lru_cache-orig/lru_cache/lru_cache_impl.h lru_cache/lru_cache/lru_cache_impl.h
+--- lru_cache-orig/lru_cache/lru_cache_impl.h   2022-07-19 15:45:22.863854820 +0200
++++ lru_cache/lru_cache/lru_cache_impl.h        2022-07-19 15:46:17.937460555 +0200
+@@ -325,8 +325,6 @@ class LruCacheImpl {
+     node_type& oldest_node = value_list_.oldest();
+     Key old_key = oldest_node.key();
+     map().erase(oldest_node.key());
+-    dropped_entry_callback_(std::move(oldest_node.key()),
+-                            std::move(oldest_node.value()));
+     map().emplace(key, value_list_.oldest_index());
+ 
+     return value_list_.replace_oldest_entry(old_key, key, std::move(new_value));

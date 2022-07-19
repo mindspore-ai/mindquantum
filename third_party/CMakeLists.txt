@@ -42,6 +42,7 @@ if(ENABLE_CXX_EXPERIMENTAL)
 
   include(${CMAKE_CURRENT_LIST_DIR}/boost/boost.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/abseil_cpp/abseil_cpp.cmake)
+  include(${CMAKE_CURRENT_LIST_DIR}/lru_cache/lru_cache.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/nlohmann_json/nlohmann_json.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/fmt/fmt.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/eigen3/eigen3.cmake)
