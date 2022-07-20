@@ -101,6 +101,18 @@ option(LINKER_STRIP_ALL "Use --strip-all during linking" ON)
 # ==============================================================================
 # Package related options
 
+set(_enable_abseil_cpp ON)
+if("${OS_NAME}" STREQUAL "Cygwin" OR "${OS_NAME}" STREQUAL "MSYS-MSYS")
+  if(ENABLE_ABSEIL_CPP)
+    message(WARNING "Unable to use abseil-cpp with Cygwin or MSYS2-MSYS")
+  endif()
+  set(ENABLE_ABSEIL_CPP
+      OFF
+      CACHE BOOL "Enable the use of the abseil-cpp library" FORCE)
+  set(_enable_abseil_cpp OFF)
+endif()
+option(ENABLE_ABSEIL_CPP "Enable the use of the abseil-cpp library" _enable_abseil_cpp)
+
 # ==============================================================================
 # Other CMake related options
 

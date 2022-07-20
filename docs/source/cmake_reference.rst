@@ -44,6 +44,8 @@ Descriptions
 +-----------------------------------+-----------------------------------------------------------------------+
 | ``DISABLE_FORTRAN_COMPILER``      | Forcefully disable the Fortran compiler for some 3rd party libraries  |
 +-----------------------------------+-----------------------------------------------------------------------+
+| ``ENABLE_ABSEIL_CPP``             | Enable the use of the abseil-cpp library                              |
++-----------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_CMAKE_DEBUG``            | Enable verbose output to debug CMake issues                           |
 +-----------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_CUDA``                   | Enable the use of CUDA code                                           |

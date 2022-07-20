@@ -271,6 +271,7 @@ endif()
 
 # ==============================================================================
 
+set(MQ_HAS_ABSEIL_CPP ${ENABLE_ABSEIL_CPP})
 configure_file(${CMAKE_CURRENT_LIST_DIR}/cmake_config.hpp.in ${PROJECT_BINARY_DIR}/core/cmake_config.hpp)
 
 add_library(cmake_config INTERFACE)

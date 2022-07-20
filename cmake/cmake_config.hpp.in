@@ -17,4 +17,7 @@
 
 #define VERSION_INFO @VERSION_INFO @
 
+#cmakedefine01 MQ_HAS_ABSEIL_CPP
+
+
 #endif /* CMAKE_CONFIG_HPP_IN */
