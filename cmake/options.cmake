@@ -102,7 +102,7 @@ option(LINKER_STRIP_ALL "Use --strip-all during linking" ON)
 # ==============================================================================
 # Package related options
 
-set(_enable_abseil_cpp OFF)
+set(_enable_abseil_cpp ON)
 if("${OS_NAME}" STREQUAL "Cygwin" OR "${OS_NAME}" STREQUAL "MSYS-MSYS")
   if(ENABLE_ABSEIL_CPP)
     message(WARNING "Unable to use abseil-cpp with Cygwin or MSYS2-MSYS")

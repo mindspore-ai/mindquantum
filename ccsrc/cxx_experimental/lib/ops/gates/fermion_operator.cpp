@@ -22,6 +22,7 @@
 #include <optional>
 #include <tuple>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -50,7 +51,12 @@ using boost::span;
 #include "ops/gates.hpp"
 #include "ops/gates/terms_operator.hpp"
 
+#if !MQ_HAS_ABSEIL_CPP
+#    include "details/cache_impl.hpp"
+#endif  // MQ_HAS_ABSEIL_CPP
+
 namespace {
+static constexpr auto cache_size = 100UL;
 using csr_matrix_t = mindquantum::ops::FermionOperator::csr_matrix_t;
 
 // =============================================================================
@@ -144,12 +150,22 @@ static auto n_sz_impl(std::size_t n) -> csr_matrix_t {
     return result;
 }
 static auto n_sz(std::size_t n) -> csr_matrix_t {
-    static auto cache_ = lru_cache::memoize_function(100, n_sz_impl);
+#if MQ_HAS_ABSEIL_CPP
+    static auto cache_ = lru_cache::node::memoize_function(cache_size, n_sz_impl);
+#else
+    static auto cache_ = lru_cache::staticc::memoize_function<cache_size>(n_sz_impl);
+#endif  // MQ_HAS_ABSEIL_CPP
     return cache_(n);
 }
 
 static auto single_fermion_word(std::size_t idx, bool dag, std::size_t n_qubits) -> csr_matrix_t {
-    static auto cache_ = lru_cache::make_cache<std::tuple<std::size_t, bool, std::size_t>, csr_matrix_t>(100);
+#if MQ_HAS_ABSEIL_CPP
+    static auto cache_ = lru_cache::node::make_cache<std::tuple<std::size_t, bool, std::size_t>, csr_matrix_t>(
+        cache_size);
+#else
+    static auto cache_
+        = lru_cache::staticc::make_cache<cache_size, std::tuple<std::size_t, bool, std::size_t>, csr_matrix_t>();
+#endif  // MQ_HAS_ABSEIL_CPP
 
     if (auto value_or_null = cache_.get_or_null(std::make_tuple(idx, dag, n_qubits)); value_or_null != nullptr) {
         return *value_or_null;
