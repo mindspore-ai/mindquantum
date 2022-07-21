@@ -36,6 +36,12 @@
 #include <fmt/format.h>
 #include <lru_cache/lru_cache.h>
 
+#include "details/eigen_diagonal_identity.hpp"
+#include "ops/gates.hpp"
+#include "ops/gates/terms_operator.hpp"
+
+// -----------------------------------------------------------------------------
+
 #if MQ_HAS_CXX20_SPAN
 #    include <span>
 namespace mindquantum::compat {
@@ -48,58 +54,20 @@ using boost::span;
 }  // namespace mindquantum::compat
 #endif  // MQ_HAS_CXX20_SPAN
 
-#include "ops/gates.hpp"
-#include "ops/gates/terms_operator.hpp"
-
-#if !MQ_HAS_ABSEIL_CPP
+#if MQ_HAS_ABSEIL_CPP
+#    define DECLARE_MEMOIZE_CACHE(name, cache_size, function)                                                          \
+        static auto name = lru_cache::node::memoize_function(cache_size, function)
+#else
 #    include "details/cache_impl.hpp"
+#    define DECLARE_MEMOIZE_CACHE(name, cache_size, function)                                                          \
+        static auto name = lru_cache::staticc::memoize_function<cache_size>(function)
 #endif  // MQ_HAS_ABSEIL_CPP
+
+// =============================================================================
 
 namespace {
 static constexpr auto cache_size = 100UL;
 using csr_matrix_t = mindquantum::ops::FermionOperator::csr_matrix_t;
-
-// =============================================================================
-
-// Merge two integer sequences
-template <typename lhs_t, typename rhs_t>
-struct merge;
-
-template <typename int_t, int_t... lhs, int_t... rhs>
-struct merge<std::integer_sequence<int_t, lhs...>, std::integer_sequence<int_t, rhs...>> {
-    using type = std::integer_sequence<int_t, lhs..., rhs...>;
-};
-
-template <typename int_t, typename N>
-struct log_make_sequence {
-    using L = std::integral_constant<int_t, N::value / 2>;
-    using R = std::integral_constant<int_t, N::value - L::value>;
-    using type =
-        typename merge<typename log_make_sequence<int_t, L>::type, typename log_make_sequence<int_t, R>::type>::type;
-};
-
-template <typename int_t>
-struct log_make_sequence<int_t, std::integral_constant<int_t, 0>> {
-    using type = std::integer_sequence<int_t>;
-};
-
-template <typename int_t>
-struct log_make_sequence<int_t, std::integral_constant<int_t, 1>> {
-    using type = std::integer_sequence<int_t, 1>;
-};
-
-template <std::size_t N>
-using make_ones_sequence = typename log_make_sequence<std::size_t, std::integral_constant<std::size_t, N>>::type;
-
-template <typename scalar_t, typename int_t, int_t... ints>
-auto generate_eigen_diagonal_impl(std::integer_sequence<int_t, ints...>) {
-    return Eigen::DiagonalMatrix<scalar_t, sizeof...(ints)>{ints...};
-}
-
-template <typename scalar_t, std::size_t N>
-auto generate_eigen_diagonal() {
-    return generate_eigen_diagonal_impl<scalar_t>(make_ones_sequence<N>{});
-}
 
 static auto n_identity(std::size_t n) -> csr_matrix_t {
     using scalar_t = csr_matrix_t::Scalar;
@@ -122,6 +90,9 @@ static auto n_identity(std::size_t n) -> csr_matrix_t {
         case 5:
             return csr_matrix_t{::generate_eigen_diagonal<scalar_t, 1 << 5>()};
             break;
+        case 6:
+            return csr_matrix_t{::generate_eigen_diagonal<scalar_t, 1 << 6>()};
+            break;
         default:
             auto tmp = Eigen::DiagonalMatrix<csr_matrix_t::Scalar, Eigen::Dynamic>(1UL << n);
             tmp.setIdentity();
@@ -129,6 +100,8 @@ static auto n_identity(std::size_t n) -> csr_matrix_t {
             break;
     }
 }
+
+// =============================================================================
 
 static auto n_sz_impl(std::size_t n) -> csr_matrix_t {
     using scalar_t = csr_matrix_t::Scalar;
@@ -149,43 +122,48 @@ static auto n_sz_impl(std::size_t n) -> csr_matrix_t {
 
     return result;
 }
+
 static auto n_sz(std::size_t n) -> csr_matrix_t {
-#if MQ_HAS_ABSEIL_CPP
-    static auto cache_ = lru_cache::node::memoize_function(cache_size, n_sz_impl);
-#else
-    static auto cache_ = lru_cache::staticc::memoize_function<cache_size>(n_sz_impl);
-#endif  // MQ_HAS_ABSEIL_CPP
+    DECLARE_MEMOIZE_CACHE(cache_, cache_size, n_sz_impl);
     return cache_(n);
 }
 
-static auto single_fermion_word(std::size_t idx, bool dag, std::size_t n_qubits) -> csr_matrix_t {
-#if MQ_HAS_ABSEIL_CPP
-    static auto cache_ = lru_cache::node::make_cache<std::tuple<std::size_t, bool, std::size_t>, csr_matrix_t>(
-        cache_size);
-#else
-    static auto cache_
-        = lru_cache::staticc::make_cache<cache_size, std::tuple<std::size_t, bool, std::size_t>, csr_matrix_t>();
-#endif  // MQ_HAS_ABSEIL_CPP
+// =============================================================================
 
-    if (auto value_or_null = cache_.get_or_null(std::make_tuple(idx, dag, n_qubits)); value_or_null != nullptr) {
-        return *value_or_null;
-    }
-
+static auto single_fermion_word_impl(const std::tuple<std::size_t, bool, std::size_t>& data) -> csr_matrix_t {
+    const auto& [idx, is_adg, n_qubits] = data;
     auto result = csr_matrix_t{2, 2};
-    if (dag) {
+    if (is_adg) {
         result.insert(0, 1) = 1;
     } else {
         result.insert(1, 0) = 1;
     }
-    return cache_.insert(
-        std::make_tuple(idx, dag, n_qubits),
-        Eigen::kroneckerProduct(n_identity(n_qubits - 1 - idx), Eigen::kroneckerProduct(result, n_sz(idx)).eval()));
+    return Eigen::kroneckerProduct(n_identity(n_qubits - 1 - idx), Eigen::kroneckerProduct(result, n_sz(idx)).eval());
 }
 
-static auto two_fermion_word(std::size_t idx1, bool dag1, std::size_t idx2, bool dag2, std::size_t n_qubits)
-    -> csr_matrix_t {
-    return single_fermion_word(idx1, dag1, n_qubits) * single_fermion_word(idx2, dag2, n_qubits);
+// -----------------------------------------------------------------------------
+
+static auto single_fermion_word(std::size_t idx, bool is_adg, std::size_t n_qubits) -> csr_matrix_t {
+    DECLARE_MEMOIZE_CACHE(cache_, cache_size, single_fermion_word_impl);
+    return cache_(std::make_tuple(idx, is_adg, n_qubits));
 }
+
+// =============================================================================
+
+static auto two_fermion_word_impl(const std::tuple<std::size_t, bool, std::size_t, bool, std::size_t>& data)
+    -> csr_matrix_t {
+    const auto& [idx1, is_adg1, idx2, is_adg2, n_qubits] = data;
+    return single_fermion_word(idx1, is_adg1, n_qubits) * single_fermion_word(idx2, is_adg2, n_qubits);
+}
+
+// -----------------------------------------------------------------------------
+
+static auto two_fermion_word(std::size_t idx1, bool is_adg1, std::size_t idx2, bool is_adg2, std::size_t n_qubits)
+    -> csr_matrix_t {
+    DECLARE_MEMOIZE_CACHE(cache_, cache_size, two_fermion_word_impl);
+    return cache_(std::make_tuple(idx1, is_adg1, idx2, is_adg2, n_qubits));
+}
+// =============================================================================
 }  // namespace
 
 namespace mindquantum::ops {
@@ -226,35 +204,48 @@ auto FermionOperator::matrix(std::optional<uint32_t> n_qubits) const -> std::opt
     }
 
     const auto n_qubits_value = n_qubits.value_or(n_qubits_local);
-    csr_matrix_t result;
-    for (const auto& [local_ops, coeff] : terms_) {
+
+    const auto process_term = [n_qubits_value](const auto& local_ops) -> csr_matrix_t {
         if (std::empty(local_ops)) {
-            result += (Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>::Identity(
-                           1U << n_qubits_value, 1U << n_qubits_value))
-                          .sparseView()
-                      * coeff;
-        } else {
-            static constexpr auto size_groups = 2UL;
-            std::vector<compat::span<const term_t>> groups;
-            groups.reserve(std::size(local_ops) / size_groups + 1);
-
-            const auto local_ops_end = end(local_ops);
-            auto num_to_copy = size_groups;
-            for (auto it(begin(local_ops)); it != local_ops_end; std::advance(it, num_to_copy)) {
-                num_to_copy = std::min(static_cast<decltype(size_groups)>(std::distance(it, local_ops_end)),
-                                       size_groups);
-                groups.emplace_back(&*it, size_groups);
-            }
-
-            auto tmp = n_identity(1);
-            for (const auto& local_ops_span : groups) {
-                if (!std::empty(local_ops_span)) {
-                    if (std::size(local_ops_span) == 2) {
-                    } else {
-                    }
-                }
-            }
+            return (Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>::Identity(
+                        1U << n_qubits_value, 1U << n_qubits_value))
+                .sparseView();
         }
+
+        constexpr auto size_groups = 2UL;
+        std::vector<compat::span<const term_t>> groups;
+        groups.reserve(std::size(local_ops) / size_groups + 1);
+
+        const auto local_ops_end = end(local_ops);
+        auto num_to_copy = size_groups;
+        for (auto it(begin(local_ops)); it != local_ops_end; std::advance(it, num_to_copy)) {
+            num_to_copy = std::min(static_cast<decltype(size_groups)>(std::distance(it, local_ops_end)), size_groups);
+            groups.emplace_back(&*it, num_to_copy);
+        }
+
+        auto process_group = [n_qubits_value](const auto& group) constexpr {
+            if (std::size(group) == 2) {
+                return ::two_fermion_word(group[0].first, group[0].second == TermValue::adg, group[1].first,
+                                          group[1].second == TermValue::adg, n_qubits_value);
+            }
+            return ::single_fermion_word(group[0].first, group[0].second == TermValue::adg, n_qubits_value);
+        };
+
+        assert(!std::empty(groups));
+        auto tmp = process_group(groups.front());
+
+        for (auto it(begin(groups) + 1); it != end(groups); ++it) {
+            tmp *= process_group(*it);
+        }
+
+        return tmp;
+    };
+
+    auto it = begin(terms_);
+    auto result = process_term(it->first) * it->second;
+    ++it;
+    for (; it != end(terms_); ++it) {
+        result *= process_term(it->first) * it->second;
     }
 
     return result;
