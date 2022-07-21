@@ -70,36 +70,32 @@ struct hash<std::tuple<types_t...>> {
 namespace lru_cache {
 using csr_matrix_t = mindquantum::ops::FermionOperator::csr_matrix_t;
 
-template <std::size_t cache_size>
-struct StaticLruCacheOptions<std::tuple<std::size_t, bool, std::size_t>, csr_matrix_t, cache_size, true> {
-    using Key = std::tuple<std::size_t, bool, std::size_t>;
-    using Value = csr_matrix_t;
-    using IndexType = internal::index_type_for<cache_size>;
+template <typename key_t, typename value_t, std::size_t cache_size, bool by_access_order>
+struct StaticLruCacheOptionsBase {
+    using index_t = internal::index_type_for<cache_size>;
 
-    static constexpr IndexType MAX_SIZE = std::numeric_limits<IndexType>::max() - 1;
+    static constexpr index_t MAX_SIZE = std::numeric_limits<index_t>::max() - 1;
     static_assert(cache_size <= MAX_SIZE);
 
-    using Map = std::unordered_map<Key, IndexType, hash_tuple::hash<Key>>;
+    using Key = key_t;
+    using Value = value_t;
+    using IndexType = index_t;
 
-    using NodeContainer = ArrayNodeContainer<internal::Node<Key, Value, IndexType>, cache_size>;
+    using Map = std::unordered_map<key_t, index_t, hash_tuple::hash<key_t>>;
 
-    static constexpr bool ByAccessOrder = true;
+    using NodeContainer = ArrayNodeContainer<internal::Node<key_t, value_t, index_t>, cache_size>;
+
+    static constexpr bool ByAccessOrder = by_access_order;
 };
 
-template <std::size_t cache_size>
-struct StaticLruCacheOptions<std::tuple<std::size_t, bool, std::size_t>, csr_matrix_t, cache_size, false> {
-    using Key = std::tuple<std::size_t, bool, std::size_t>;
-    using Value = csr_matrix_t;
-    using IndexType = internal::index_type_for<cache_size>;
-
-    static constexpr IndexType MAX_SIZE = std::numeric_limits<IndexType>::max() - 1;
-    static_assert(cache_size <= MAX_SIZE);
-
-    using Map = std::unordered_map<Key, IndexType, hash_tuple::hash<Key>>;
-
-    using NodeContainer = ArrayNodeContainer<internal::Node<Key, Value, IndexType>, cache_size>;
-
-    static constexpr bool ByAccessOrder = false;
-};
+template <std::size_t cache_size, bool by_access_order>
+struct StaticLruCacheOptions<std::tuple<std::size_t, bool, std::size_t>, csr_matrix_t, cache_size, by_access_order>
+    : public StaticLruCacheOptionsBase<std::tuple<std::size_t, bool, std::size_t>, csr_matrix_t, cache_size,
+                                       by_access_order> {};
+template <std::size_t cache_size, bool by_access_order>
+struct StaticLruCacheOptions<std::tuple<std::size_t, bool, std::size_t, bool, std::size_t>, csr_matrix_t, cache_size,
+                             by_access_order>
+    : public StaticLruCacheOptionsBase<std::tuple<std::size_t, bool, std::size_t, bool, std::size_t>, csr_matrix_t,
+                                       cache_size, by_access_order> {};
 }  // namespace lru_cache
 #endif /* OPS_GATES_DETAILS_CACHE_IMPL_HPP */

@@ -146,27 +146,34 @@ auto QubitOperator::matrix(std::optional<uint32_t> n_qubits) const -> std::optio
     }
 
     const auto n_qubits_value = n_qubits.value_or(n_qubits_local);
-    csr_matrix_t result;
-    for (const auto& [local_ops, coeff] : terms_) {
-        if (std::empty(local_ops)) {
-            result += (Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>::Identity(
-                           1U << n_qubits_value, 1U << n_qubits_value))
-                          .sparseView()
-                      * coeff;
-        } else {
-            // TODO(dnguyen): The `total` variable is probably not required and could be removed altogether...
-            std::vector<csr_matrix_t> total(
-                n_qubits_value, pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(TermValue::I)]);
-            for (const auto& [qubit_id, local_op] : local_ops) {
-                total[qubit_id] = pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(local_op)];
-            }
 
-            csr_matrix_t init(1, 1);
-            init.insert(0, 0) = coeff;
-            result += std::accumulate(begin(total), end(total), init, [](const csr_matrix_t& init, const auto& matrix) {
-                return Eigen::kroneckerProduct(matrix, init).eval();
-            });
+    const auto process_term = [n_qubits_value](const auto& local_ops, const auto& coeff) -> csr_matrix_t {
+        if (std::empty(local_ops)) {
+            return (Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>::Identity(
+                        1U << n_qubits_value, 1U << n_qubits_value))
+                       .sparseView()
+                   * coeff;
         }
+
+        // TODO(dnguyen): The `total` variable is probably not required and could be removed altogether...
+        std::vector<csr_matrix_t> total(n_qubits_value,
+                                        pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(TermValue::I)]);
+        for (const auto& [qubit_id, local_op] : local_ops) {
+            total[qubit_id] = pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(local_op)];
+        }
+
+        csr_matrix_t init(1, 1);
+        init.insert(0, 0) = coeff;
+        return std::accumulate(begin(total), end(total), init, [](const csr_matrix_t& init, const auto& matrix) {
+            return Eigen::kroneckerProduct(matrix, init).eval();
+        });
+    };
+
+    auto it = begin(terms_);
+    auto result = process_term(it->first, it->second);
+    ++it;
+    for (; it != end(terms_); ++it) {
+        result += process_term(it->first, it->second);
     }
 
     return result;
