@@ -8,7 +8,7 @@
 
     .. py:method:: get_cpp_obj()
 
-        获取测量门的地层c++对象。
+        获取测量门的底层c++对象。
 
     .. py:method:: hermitian()
 
