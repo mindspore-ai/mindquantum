@@ -28,3 +28,5 @@ unusedStructMember:ccsrc/cxx_experimental/include/ops/parametric/param_names.hpp
 
 useStlAlgorithm:ccsrc/cxx_experimental/include/core/control.hpp:79
 useStlAlgorithm:ccsrc/cxx_experimental/lib/core/circuit_manager.cpp
+
+containerOutOfBounds:ccsrc/cxx_experimental/lib/ops/gates/fermion_operator.cpp
