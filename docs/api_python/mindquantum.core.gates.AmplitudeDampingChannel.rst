@@ -15,9 +15,8 @@
 
     这里 :math:`\rho` 是密度矩阵形式的量子态； :math:`\gamma` 是能量损耗系数。
 
-    **参数：**
-
-    - **gamma** (int, float) - 振幅衰减系数。
+    参数：
+        - **gamma** (int, float) - 振幅衰减系数。
 
     .. py:method:: define_projectq_gate()
 

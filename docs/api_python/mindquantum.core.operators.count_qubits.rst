@@ -5,14 +5,11 @@
     .. note::
         在某些情况下，我们需要删除未使用的索引。
 
-    **参数：**
+    参数：
+        - **operator** (Union[FermionOperator, QubitOperator, QubitExcitationOperator]) - `operator` 算子类型为FermionOperator、QubitOperator或QubitExcitationOperator。
 
-    - **operator** (Union[FermionOperator, QubitOperator, QubitExcitationOperator]) - `operator` 算子类型为FermionOperator、QubitOperator或QubitExcitationOperator。
+    返回：
+        int，运算符作用的最小量子比特数。
 
-    **返回：**
-
-    int，运算符作用的最小量子比特数。
-
-    **异常：**
-
-    - **TypeError** - 类型无效的运算符。
+    异常：
+        - **TypeError** - 类型无效的运算符。

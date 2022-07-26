@@ -2,12 +2,11 @@
 
     BasicGate是所有门的基类。
 
-    **参数：**
-
-    - **name** (str) - 此门的名称。
-    - **n_qubits** (int) - 这个门有多少个量子比特。
-    - **obj_qubits** (int, list[int]) - 具体门作用在哪个量子比特上。
-    - **ctrl_qubits** (int, list[int]) - 指定控制量子比特。默认：None。
+    参数：
+        - **name** (str) - 此门的名称。
+        - **n_qubits** (int) - 这个门有多少个量子比特。
+        - **obj_qubits** (int, list[int]) - 具体门作用在哪个量子比特上。
+        - **ctrl_qubits** (int, list[int]) - 指定控制量子比特。默认：None。
 
     .. py:method:: acted
         :property:
@@ -37,14 +36,12 @@
         .. note::
             在此框架中，首先指定门作用的量子比特，即使对于控制门，例如CNOT，第二个参数是控制量子比特。
 
-        **参数：**
+        参数：
+            - **obj_qubits** (int, list[int]) - 指定门作用在哪个量子比特上。
+            - **ctrl_qubits** (int, list[int]) - 指定控制量子比特。默认：None。
 
-        - **obj_qubits** (int, list[int]) - 指定门作用在哪个量子比特上。
-        - **ctrl_qubits** (int, list[int]) - 指定控制量子比特。默认：None。
-
-        **返回：**
-
-        返回一个新的门。
+        返回：
+            返回一个新的门。
 
     .. py:method:: parameterized
         :property:

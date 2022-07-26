@@ -4,12 +4,11 @@
 
     更多信息请参考 `Supervised learning with quantum-enhanced feature spaces. <https://www.nature.com/articles/s41586-019-0980-2>`_。
 
-    **参数：**
-
-    - **n_feature** (int) - IQP编码所需编码的数据的特征数。
-    - **first_rotation_gate** (ParamaterGate) - 旋转门RX、RY或RZ之一。
-    - **second_rotation_gate** (ParamaterGate) - 旋转门RX、RY或RZ之一。
-    - **num_repeats** (int) - 编码迭代次数。
+    参数：
+        - **n_feature** (int) - IQP编码所需编码的数据的特征数。
+        - **first_rotation_gate** (ParamaterGate) - 旋转门RX、RY或RZ之一。
+        - **second_rotation_gate** (ParamaterGate) - 旋转门RX、RY或RZ之一。
+        - **num_repeats** (int) - 编码迭代次数。
 
     .. py:method:: data_preparation(data)
 
@@ -21,10 +20,8 @@
 
             \text{data}_m = \text{data}_{m - n} * \text{data}_{m - n - 1}
 
-        **参数：**
+        参数：
+            - **data** ([list, numpy.ndarray]) - IQP编码了解更多详细信息所需要的经典数据。
 
-        - **data** ([list, numpy.ndarray]) - IQP编码了解更多详细信息所需要的经典数据。
-
-        **返回：**
-
-        numpy.ndarray，适合此ansatz维度的数据。
+        返回：
+            numpy.ndarray，适合此ansatz维度的数据。

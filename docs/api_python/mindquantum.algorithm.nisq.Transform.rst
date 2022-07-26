@@ -3,10 +3,9 @@
     将费米子或者玻色子进行转化的模块。
     `jordan_wigner` , `parity` , `bravyi_kitaev` , `bravyi_kitaev_tree` , `bravyi_kitaev_superfast` 将会把 `FermionOperator` 转换为 `QubitOperator`。 `reversed_jordan_wigner` 将会把 `QubitOperator` 转换为 `FermionOperator` 。
 
-    **参数：**
-
-    - **operator** (Union[FermionOperator, QubitOperator]) - 需要进行转换的 `FermionOperator` 或 `QubitOperator` 。
-    - **n_qubits** (int) - 输入算符的比特数。如果为 `None` ， 系统将会自动数出比特数。默认值：None。
+    参数：
+        - **operator** (Union[FermionOperator, QubitOperator]) - 需要进行转换的 `FermionOperator` 或 `QubitOperator` 。
+        - **n_qubits** (int) - 输入算符的比特数。如果为 `None` ， 系统将会自动数出比特数。默认值：None。
 
     .. py:method:: bravyi_kitaev()
 
@@ -28,9 +27,8 @@
 
         本方法基于 `Fermionic quantum computation <https://arxiv.org/abs/quant-ph/0003137>`_ 和 `A New Data Structure for Cumulative Frequency Tables <https://doi.org/10.1002/spe.4380240306>`_ 实现。
 
-        **返回：**
-
-        QubitOperator，经过 `bravyi_kitaev` 变换的玻色子算符。
+        返回：
+            QubitOperator，经过 `bravyi_kitaev` 变换的玻色子算符。
 
     .. py:method:: bravyi_kitaev_superfast()
 
@@ -46,9 +44,8 @@
 
         其中 :math:`C` 是一个常数。
 
-        **返回：**
-
-        QubitOperator，经过快速bravyi_kitaev变换之后的玻色子算符。
+        返回：
+            QubitOperator，经过快速bravyi_kitaev变换之后的玻色子算符。
 
     .. py:method:: jordan_wigner()
 
@@ -62,9 +59,8 @@
 
         其中 :math:`\sigma_{+}=\sigma^{X}+i\sigma^{Y}` 和 :math:`\sigma^{-} = \sigma^{X} - i\sigma^{Y}` 分别是自旋升算符和降算符。
 
-        **返回：**
-
-        QubitOperator，Jordan-Wigner变换后的量子比特算符。
+        返回：
+            QubitOperator，Jordan-Wigner变换后的量子比特算符。
 
     .. py:method:: parity()
 
@@ -96,23 +92,20 @@
             a_{j}\rightarrow\frac{1}{2}\left(\prod_{i=j+1}^N
             \left(\sigma_i^X X\right)\right)\left( \sigma^{X}_{j}+i\sigma_j^Y\right) X \sigma^{Z}_{j-1}
 
-        **返回：**
-
-        QubitOperator，经过宇称变换后的玻色子算符。
+        返回：
+            QubitOperator，经过宇称变换后的玻色子算符。
 
     .. py:method:: reversed_jordan_wigner()
 
         应用Jordan-Wigner逆变换。
 
-        **返回：**
-
-        FermionOperator，Jordan-Wigner逆变换后的费米子算符。
+        返回：
+            FermionOperator，Jordan-Wigner逆变换后的费米子算符。
 
     .. py:method:: ternary_tree()
 
         作用Ternary tree变换。
         基于 `Optimal fermion-to-qubit mapping via ternary trees with applications to reduced quantum states learning <https://arxiv.org/abs/1910.10746>`_ 实现。
 
-        **返回：**
-
-        QubitOperator，Ternary tree变换后的玻色子算符。
+        返回：
+            QubitOperator，Ternary tree变换后的玻色子算符。
