@@ -15,9 +15,8 @@
 
     这里 :math:`\rho` 是密度矩阵形式的量子态； :math:`\gamma` 是信息损失系数。
 
-    **参数：**
-
-    - **gamma** (int, float) - 信息损失系数。
+    参数：
+        - **gamma** (int, float) - 信息损失系数。
 
     .. py:method:: define_projectq_gate()
 

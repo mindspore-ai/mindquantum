@@ -12,11 +12,10 @@
 
     其中， :math:`\rho` 是密度矩阵形式的量子态； :math:`P_x` 、 :math:`P_y` 和 :math:`P_z` 是作用的泡利门为 :math:`X` 、 :math:`Y` 和 :math:`Z` 门的概率。
 
-    **参数：**
-
-    - **px** (int, float) - 作用的泡利门是X门的概率。
-    - **py** (int, float) - 作用的泡利门是Y门的概率。
-    - **pz** (int, float) - 作用的泡利门是Z门的概率。
+    参数：
+        - **px** (int, float) - 作用的泡利门是X门的概率。
+        - **py** (int, float) - 作用的泡利门是Y门的概率。
+        - **pz** (int, float) - 作用的泡利门是Z门的概率。
 
     .. py:method:: define_projectq_gate()
 
