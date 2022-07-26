@@ -57,6 +57,7 @@ repos:
     hooks:
       - id: doc8
         require_serial: false
+        additional_dependencies: [tomli]
         args: [--ignore-path-errors, docs/api_python/mindquantum.algorithm.nisq.uccsd0_singlet_generator.rst;D001,
                --ignore-path-errors, docs/api_python/mindquantum.algorithm.nisq.quccsd_generator.rst;D001,
                --ignore-path-errors,
