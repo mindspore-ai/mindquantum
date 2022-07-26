@@ -121,7 +121,7 @@
         以合适的角度来展示布洛赫球。
 
         参数：
-            - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) -
+            - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 需要设置视图的三维Axes。
             - **elev** (numbers.Number) - 以度为单位时，当前方位绕z轴转动的角度。
             - **azim** (numbers.Number) - 以度为单位时，当前方位相对与 (x, y) 平面的仰角。默认值：0。
 
