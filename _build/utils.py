@@ -114,7 +114,7 @@ def get_cmake_command():
 # ==============================================================================
 
 try:
-    import tomllib
+    import tomllib  # pylint: disable=import-outside-toplevel
 
     def parse_toml(filename):
         """Parse a TOML file."""
@@ -122,6 +122,7 @@ try:
             return tomllib.load(toml_file)
 
 except ImportError:
+    # pylint: disable=import-outside-toplevel
     try:
         import toml
 
