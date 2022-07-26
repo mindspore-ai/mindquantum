@@ -165,19 +165,11 @@ find_package(${_python_find_args})
 if("${CMAKE_PROJECT_NAME}" STREQUAL "MindQuantum")
   if(NOT MQ_PYTHON_PACKAGE_NAME)
     execute_process(
-      COMMAND
-        "${Python_EXECUTABLE}" -c [=[
-import sys
-try:
-    from setuptools.config.setupcfg import read_configuration
-except ImportError:
-    from setuptools.config import read_configuration
-
-sys.stdout.write(read_configuration("setup.cfg")["metadata"]["name"])
-]=]
+      COMMAND "${Python_EXECUTABLE}" setup.py --name
       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
       RESULT_VARIABLE result
-      OUTPUT_VARIABLE MQ_PYTHON_PACKAGE_NAME)
+      OUTPUT_VARIABLE MQ_PYTHON_PACKAGE_NAME
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
 
     if(NOT result EQUAL 0)
       message(FATAL_ERROR "Unable to determine MindQuantum's Python package name")

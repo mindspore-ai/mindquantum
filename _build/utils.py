@@ -21,6 +21,7 @@ import shutil
 import stat
 import subprocess
 import sys
+from operator import itemgetter
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent / 'mindquantum' / 'utils'))
@@ -108,3 +109,121 @@ def get_cmake_command():
     # CMake not in PATH, should have installed the Python CMake module
     # -> try to find out where it is
     return get_executable('cmake')
+
+
+# ==============================================================================
+
+try:
+    import tomllib  # pylint: disable=import-outside-toplevel
+
+    def parse_toml(filename):
+        """Parse a TOML file."""
+        with fdopen(str(filename), 'rb') as toml_file:
+            return tomllib.load(toml_file)
+
+except ImportError:
+    # pylint: disable=import-outside-toplevel
+    try:
+        import toml
+
+        def parse_toml(filename):
+            """Parse a TOML file."""
+            return toml.load(filename)
+
+    except ImportError:
+
+        try:
+            import tomli
+
+            def parse_toml(filename):
+                """Parse a TOML file."""
+                with fdopen(str(filename), "rb") as toml_file:
+                    return tomli.load(toml_file)
+
+        except ImportError:
+
+            def _find_toml_section_end(lines, start):
+                """Find the index of the start of the next section."""
+                return (
+                    next(filter(itemgetter(1), enumerate(line.startswith('[') for line in lines[start + 1 :])))[0]
+                    + start
+                    + 1
+                )
+
+            def _parse_list(lines):
+                """Parse a TOML list into a Python list."""
+                # NB: This function expects the TOML list to be formatted like so (ignoring leading and trailing
+                #     spaces):
+                #     name = [
+                #          '...',
+                #     ]
+                #     Any other format is not supported.
+                name = None
+                elements = []
+
+                for idx, line in enumerate(lines):
+                    if name is None and not line.startswith("'"):
+                        name = line.split('=')[0].strip()
+                        continue
+                    if line.startswith("]"):
+                        return (name, elements, idx + 1)
+                    elements.append(line.rstrip(',').strip("'").strip('"'))
+
+                raise RuntimeError(f'Failed to locate closing "]" for {name}')
+
+            def _parse_string_value(data, key, line):
+                if line.startswith(key):
+                    data[key] = line.split('=')[1].strip().strip("'")
+                    return True
+                return False
+
+            def parse_toml(filename):
+                """Very simple parser routine for pyproject.toml."""
+                result = {'project': {'optional-dependencies': {}}, 'build-sytem': {}}
+                with fdopen(filename, mode='r') as toml_file:
+                    lines = [line.strip() for line in toml_file.readlines()]
+                lines = [line for line in lines if line and not line.startswith('#')]
+
+                # ----------------------
+
+                start = lines.index('[build-system]')
+                data = lines[start : _find_toml_section_end(lines, start)]
+                idx = 0
+                N = len(data)  # noqa: N806
+                while idx < N:
+                    line = data[idx]
+                    shift = 1
+                    if line.startswith('requires'):
+                        (name, pkgs, shift) = _parse_list(data[idx:])
+                        result['build-system'][name] = pkgs
+                    idx += shift
+
+                # ----------------------
+
+                start = lines.index('[project]')
+                data = lines[start : _find_toml_section_end(lines, start)]
+                idx = 0
+                N = len(data)  # noqa: N806
+                while idx < N:
+                    line = data[idx]
+                    shift = 1
+                    if _parse_string_value(result['project'], 'name', line):
+                        pass
+                    elif _parse_string_value(result['project'], 'description', line):
+                        pass
+                    elif line.startswith('dependencies'):
+                        (name, pkgs, shift) = _parse_list(data[idx:])
+                        result['project'][name] = pkgs
+                    idx += shift
+
+                # ----------------------
+
+                start = lines.index('[project.optional-dependencies]')
+                data = lines[start + 1 : _find_toml_section_end(lines, start)]
+                idx = 0
+                N = len(data)  # noqa: N806
+                while idx < N:
+                    (opt_name, opt_pkgs, shift) = _parse_list(data[idx:])
+                    result['project']['optional-dependencies'][opt_name] = opt_pkgs
+                    idx += shift
+                return result

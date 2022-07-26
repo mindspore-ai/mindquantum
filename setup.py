@@ -38,6 +38,7 @@ from _build.utils import (  # pylint: disable=wrong-import-position  # noqa: E40
     fdopen,
     get_cmake_command,
     get_executable,
+    parse_toml,
     remove_tree,
 )
 
@@ -189,7 +190,6 @@ class CMakeBuildExt(build_ext):
         self.build_args = ['--config', cfg]
 
         if platform.system() == 'Windows':
-            # self.build_args += ['--', '/m']
             pass
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
@@ -354,6 +354,7 @@ class GenerateRequirementFile(setuptools.Command):
         self.include_all_extras = None
         self.output = None
         self.extra_pkgs = []
+        self.dependencies = []
 
     def finalize_options(self):
         """Finalize this command's options."""
@@ -363,30 +364,22 @@ class GenerateRequirementFile(setuptools.Command):
         else:
             self.output = Path(self.output)
 
-        if self.include_extras:
-            include_extras = self.include_extras.split(',')
-        else:
-            include_extras = []
+        include_extras = self.include_extras.split(',') if self.include_extras else []
+        pyproject_toml = parse_toml(Path(__file__).parent / 'pyproject.toml')
 
-        try:
-            for name, pkgs in self.distribution.extras_require.items():
-                if self.include_all_extras or name in include_extras:
-                    self.extra_pkgs.extend(pkgs)
+        for name, pkgs in pyproject_toml['project']['optional-dependencies'].items():
+            if self.include_all_extras or name in include_extras:
+                self.extra_pkgs.extend(pkgs)
 
-        except TypeError:  # Mostly for old setuptools (< 30.x)
-            for name, pkgs in self.distribution.command_options['options.extras_require'].items():
-                if self.include_all_extras or name in include_extras:
-                    self.extra_pkgs.extend(pkgs)
+        self.dependencies = self.distribution.install_requires
+        if not self.dependencies:
+            self.dependencies = pyproject_toml['project']['dependencies']
 
     def run(self):
         """Execute this command."""
         with fdopen(str(self.output), 'w') as req_file:
-            try:
-                for pkg in self.distribution.install_requires:
-                    req_file.write(f'{pkg}\n')
-            except TypeError:  # Mostly for old setuptools (< 30.x)
-                for pkg in self.distribution.command_options['options']['install_requires']:
-                    req_file.write(f'{pkg}\n')
+            for pkg in self.dependencies:
+                req_file.write(f'{pkg}\n')
             req_file.write('\n')
             for pkg in self.extra_pkgs:
                 req_file.write(f'{pkg}\n')
