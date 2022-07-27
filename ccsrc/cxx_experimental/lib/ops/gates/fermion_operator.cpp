@@ -16,18 +16,19 @@
 
 #include <algorithm>
 #include <array>
-#include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <numeric>
 #include <optional>
+#include <string_view>
 #include <tuple>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
-#include <unsupported/Eigen/KroneckerProduct>
-#include <unsupported/Eigen/src/KroneckerProduct/KroneckerTensorProduct.h>
+#include <boost/fusion/include/adapt_struct.hpp>
+#include <boost/fusion/include/std_pair.hpp>
+#include <boost/spirit/home/x3.hpp>
 
 #include <tweedledum/Operators/Standard/X.h>
 #include <tweedledum/Operators/Standard/Y.h>
@@ -36,6 +37,12 @@
 #include <fmt/format.h>
 #include <lru_cache/lru_cache.h>
 
+#ifdef ENABLE_LOGGING
+#    include <spdlog/spdlog.h>
+#endif  // ENABLE_LOGGING
+
+#include "core/parser/boost_x3_error_handler.hpp"
+#include "details/boost_x3_parse_term.hpp"
 #include "details/eigen_diagonal_identity.hpp"
 #include "ops/gates.hpp"
 #include "ops/gates/terms_operator.hpp"
@@ -55,10 +62,12 @@ using boost::span;
 #endif  // MQ_HAS_CXX20_SPAN
 
 #if MQ_HAS_ABSEIL_CPP
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #    define DECLARE_MEMOIZE_CACHE(name, cache_size, function)                                                          \
         static auto name = lru_cache::node::memoize_function(cache_size, function)
 #else
 #    include "details/cache_impl.hpp"
+   // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #    define DECLARE_MEMOIZE_CACHE(name, cache_size, function)                                                          \
         static auto name = lru_cache::staticc::memoize_function<cache_size>(function)
 #endif  // MQ_HAS_ABSEIL_CPP
@@ -66,44 +75,37 @@ using boost::span;
 // =============================================================================
 
 namespace {
-static constexpr auto cache_size = 100UL;
+constexpr auto cache_size = 100UL;
 using csr_matrix_t = mindquantum::ops::FermionOperator::csr_matrix_t;
 
-static auto n_identity(std::size_t n) -> csr_matrix_t {
+auto n_identity(std::size_t n) -> csr_matrix_t {
     using scalar_t = csr_matrix_t::Scalar;
+    // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+#define MQ_CASE_FOR_NQUBITS(n)                                                                                         \
+    case n:                                                                                                            \
+        return csr_matrix_t{::generate_eigen_diagonal<scalar_t, 1U << (n)>()};                                         \
+        break
+
     switch (n) {
-        case 0:
-            return csr_matrix_t{::generate_eigen_diagonal<scalar_t, 1 << 0>()};
-            break;
-        case 1:
-            return csr_matrix_t{::generate_eigen_diagonal<scalar_t, 1 << 1>()};
-            break;
-        case 2:
-            return csr_matrix_t{::generate_eigen_diagonal<scalar_t, 1 << 2>()};
-            break;
-        case 3:
-            return csr_matrix_t{::generate_eigen_diagonal<scalar_t, 1 << 3>()};
-            break;
-        case 4:
-            return csr_matrix_t{::generate_eigen_diagonal<scalar_t, 1 << 4>()};
-            break;
-        case 5:
-            return csr_matrix_t{::generate_eigen_diagonal<scalar_t, 1 << 5>()};
-            break;
-        case 6:
-            return csr_matrix_t{::generate_eigen_diagonal<scalar_t, 1 << 6>()};
-            break;
+        MQ_CASE_FOR_NQUBITS(0U);
+        MQ_CASE_FOR_NQUBITS(1U);
+        MQ_CASE_FOR_NQUBITS(2U);
+        MQ_CASE_FOR_NQUBITS(3U);
+        MQ_CASE_FOR_NQUBITS(4U);
+        MQ_CASE_FOR_NQUBITS(5U);
+        MQ_CASE_FOR_NQUBITS(6U);
         default:
-            auto tmp = Eigen::DiagonalMatrix<csr_matrix_t::Scalar, Eigen::Dynamic>(1UL << n);
+            auto tmp = Eigen::DiagonalMatrix<csr_matrix_t::Scalar, Eigen::Dynamic>(1U << n);
             tmp.setIdentity();
             return csr_matrix_t{tmp};
             break;
     }
+#undef MQ_CASE_FOR_NQUBITS
 }
 
 // =============================================================================
 
-static auto n_sz_impl(std::size_t n) -> csr_matrix_t {
+auto n_sz_impl(std::size_t n) -> csr_matrix_t {
     using scalar_t = csr_matrix_t::Scalar;
 
     if (n == 0) {
@@ -123,14 +125,16 @@ static auto n_sz_impl(std::size_t n) -> csr_matrix_t {
     return result;
 }
 
-static auto n_sz(std::size_t n) -> csr_matrix_t {
+// -----------------------------------------------------------------------------
+
+auto n_sz(std::size_t n) {
     DECLARE_MEMOIZE_CACHE(cache_, cache_size, n_sz_impl);
     return cache_(n);
 }
 
 // =============================================================================
 
-static auto single_fermion_word_impl(const std::tuple<std::size_t, bool, std::size_t>& data) -> csr_matrix_t {
+auto single_fermion_word_impl(const std::tuple<std::size_t, bool, std::size_t>& data) -> csr_matrix_t {
     const auto& [idx, is_adg, n_qubits] = data;
     auto result = csr_matrix_t{2, 2};
     if (is_adg) {
@@ -143,23 +147,21 @@ static auto single_fermion_word_impl(const std::tuple<std::size_t, bool, std::si
 
 // -----------------------------------------------------------------------------
 
-static auto single_fermion_word(std::size_t idx, bool is_adg, std::size_t n_qubits) -> csr_matrix_t {
+auto single_fermion_word(std::size_t idx, bool is_adg, std::size_t n_qubits) {
     DECLARE_MEMOIZE_CACHE(cache_, cache_size, single_fermion_word_impl);
     return cache_(std::make_tuple(idx, is_adg, n_qubits));
 }
 
 // =============================================================================
 
-static auto two_fermion_word_impl(const std::tuple<std::size_t, bool, std::size_t, bool, std::size_t>& data)
-    -> csr_matrix_t {
+auto two_fermion_word_impl(const std::tuple<std::size_t, bool, std::size_t, bool, std::size_t>& data) -> csr_matrix_t {
     const auto& [idx1, is_adg1, idx2, is_adg2, n_qubits] = data;
     return single_fermion_word(idx1, is_adg1, n_qubits) * single_fermion_word(idx2, is_adg2, n_qubits);
 }
 
 // -----------------------------------------------------------------------------
 
-static auto two_fermion_word(std::size_t idx1, bool is_adg1, std::size_t idx2, bool is_adg2, std::size_t n_qubits)
-    -> csr_matrix_t {
+auto two_fermion_word(std::size_t idx1, bool is_adg1, std::size_t idx2, bool is_adg2, std::size_t n_qubits) {
     DECLARE_MEMOIZE_CACHE(cache_, cache_size, two_fermion_word_impl);
     return cache_(std::make_tuple(idx1, is_adg1, idx2, is_adg2, n_qubits));
 }
@@ -348,6 +350,56 @@ auto FermionOperator::normal_ordered_term_(std::vector<term_t> terms, coefficien
     // Add the terms and return
     ordered_term += FermionOperator(terms, coeff);
     return ordered_term;
+}
+}  // namespace mindquantum::ops
+
+// =============================================================================
+
+namespace x3 = boost::spirit::x3;
+
+namespace ast {
+using mindquantum::ops::TermValue;
+using term_t = mindquantum::ops::FermionOperator::term_t;
+
+struct TermOp : x3::symbols<TermValue> {
+    TermOp() {
+        add("^", TermValue::adg);
+    }
+} const term_op;
+
+}  // namespace ast
+
+// -----------------------------------------------------------------------------
+
+namespace parser {
+struct local_op_sym_class {};
+x3::rule<local_op_sym_class, ast::TermValue> const local_op_sym = "ladder operator (a: '', adg: '^')";
+static const auto local_op_sym_def = ast::term_op | x3::attr(ast::TermValue::a);
+
+struct unsigned_value_class {};
+x3::rule<unsigned_value_class, uint32_t> const unsigned_value = "unsigned int";
+static const auto unsigned_value_def = x3::uint_;
+
+struct term_class : mindquantum::parser::x3::rule::error_handler {};
+x3::rule<term_class, ast::term_t> const term = "fermion_operator term";
+static const auto term_def = x3::eps > unsigned_value > local_op_sym > x3::omit[*x3::space];
+
+BOOST_SPIRIT_DEFINE(local_op_sym, unsigned_value, term);
+
+// -------------------------------------
+
+static const auto terms = +term;
+}  // namespace parser
+
+// -----------------------------------------------------------------------------
+
+namespace mindquantum::ops {
+auto FermionOperator::parse_string_(std::string_view terms_string) -> std::vector<term_t> {
+    using terms_t = std::vector<term_t>;
+    if (terms_t terms; parser::parse_term(begin(terms_string), end(terms_string), terms, ::parser::terms)) {
+        return terms;
+    }
+    return {};
 }
 
 // =============================================================================
