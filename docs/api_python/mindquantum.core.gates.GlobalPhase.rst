@@ -12,6 +12,8 @@
 
     .. py:method:: matrix(pr=None, **kwargs)
 
+        参数门的矩阵形式。
+
         参数：
             - **pr** (Union[ParameterResolver, dict]) - 参数门的参数。默认值：None。
             - **kwargs** (dict) - 其他的参数。
@@ -20,6 +22,8 @@
             numpy.ndarray，量子门的矩阵形式。
 
     .. py:method:: diff_matrix(pr=None, about_what=None, **kwargs)
+
+        参数门的倒数矩阵形式。
 
         参数：
             - **pr** (Union[ParameterResolver, dict]) - 参数门的参数。默认值：None。
