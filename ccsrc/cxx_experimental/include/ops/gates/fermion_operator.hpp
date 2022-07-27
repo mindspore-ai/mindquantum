@@ -15,6 +15,9 @@
 #ifndef FERMION_OPERATOR_HPP
 #define FERMION_OPERATOR_HPP
 
+#include <complex>
+#include <cstdint>
+#include <string_view>
 #include <tuple>
 #include <vector>
 
@@ -23,6 +26,10 @@
 #include "core/config.hpp"
 
 #include "ops/gates/terms_operator.hpp"
+
+#ifdef UNIT_TESTS
+class UnitTestAccessor;
+#endif  // UNIT_TESTS
 
 namespace mindquantum::ops {
 
@@ -64,8 +71,15 @@ class FermionOperator : public TermsOperator<FermionOperator> {
     MQ_NODISCARD self_t normal_ordered() const;
 
  private:
+#ifdef UNIT_TESTS
+    friend class ::UnitTestAccessor;
+#endif  // UNIT_TESTS
+
     //! Return the normal ordered term of the FermionOperator with high index and creation operator in front.
     static FermionOperator normal_ordered_term_(std::vector<term_t> terms, coefficient_t coeff);
+
+    //! Convert a string of space-separated fermion operators into an array of terms
+    static std::vector<term_t> parse_string_(std::string_view terms_string);
 
     //! Simplify the list of local operators
     static std::tuple<std::vector<term_t>, coefficient_t> simplify_(std::vector<term_t> terms,

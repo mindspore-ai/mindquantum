@@ -16,19 +16,31 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdint>
+#include <functional>
 #include <numeric>
 #include <optional>
+#include <string_view>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
+// IMPORTANT: do not include boost/fusion/include/std_pair.hpp!
+#include <boost/fusion/include/adapt_struct.hpp>
+#include <boost/spirit/home/x3.hpp>
 #include <fmt/format.h>
 #include <tweedledum/Operators/Standard/X.h>
 #include <tweedledum/Operators/Standard/Y.h>
 #include <tweedledum/Operators/Standard/Z.h>
 #include <unsupported/Eigen/KroneckerProduct>
 
+#ifdef ENABLE_LOGGING
+#    include <spdlog/spdlog.h>
+#endif  // ENABLE_LOGGING
+
+#include "core/parser/boost_x3_error_handler.hpp"
+#include "details/boost_x3_parse_term.hpp"
 #include "ops/gates.hpp"
 #include "ops/gates/terms_operator.hpp"
 
@@ -218,6 +230,72 @@ auto QubitOperator::simplify_(std::vector<term_t> terms, coefficient_t coeff)
     }
 
     return {std::move(terms), coeff};
+}
+}  // namespace mindquantum::ops
+
+// =============================================================================
+
+namespace x3 = boost::spirit::x3;
+
+namespace ast {
+using mindquantum::ops::TermValue;
+using term_t = mindquantum::ops::QubitOperator::term_t;
+
+struct TermOp : x3::symbols<TermValue> {
+    TermOp() {
+        add("X", TermValue::X)("Y", TermValue::Y)("Z", TermValue::Z);
+    }
+} const term_op;
+
+// NB: This struct is required to re-order the parsed values since the local_op appears *before* the qubit index in the
+//     string
+struct qubit_operator_term {
+    TermValue local_op;
+    uint32_t qubit_id;
+
+    operator term_t() const& {  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
+        return {qubit_id, local_op};
+    }
+    operator term_t() && {  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
+        return {qubit_id, local_op};
+    }
+};
+}  // namespace ast
+
+BOOST_FUSION_ADAPT_STRUCT(ast::qubit_operator_term, local_op, qubit_id);
+
+// -----------------------------------------------------------------------------
+
+namespace parser {
+struct local_op_sym_class {};
+x3::rule<local_op_sym_class, ast::TermValue> const local_op_sym = "local operator (X, Y, Z)";
+static const auto local_op_sym_def = ast::term_op;
+
+struct unsigned_value_class {};
+x3::rule<unsigned_value_class, uint32_t> const unsigned_value = "unsigned int";
+static const auto unsigned_value_def = x3::uint_;
+
+struct term_class : mindquantum::parser::x3::rule::error_handler {};
+x3::rule<term_class, ast::qubit_operator_term> const term = "qubit_operator term";
+static const auto term_def = x3::eps > local_op_sym > unsigned_value > x3::omit[*x3::space];
+
+BOOST_SPIRIT_DEFINE(local_op_sym, unsigned_value, term);
+
+// -------------------------------------
+
+static const auto terms = +term;
+}  // namespace parser
+
+// -----------------------------------------------------------------------------
+
+namespace mindquantum::ops {
+
+auto QubitOperator::parse_string_(std::string_view terms_string) -> std::vector<term_t> {
+    using terms_t = std::vector<term_t>;
+    if (terms_t terms; parser::parse_term(begin(terms_string), end(terms_string), terms, ::parser::terms)) {
+        return terms;
+    }
+    return {};
 }
 
 // =============================================================================

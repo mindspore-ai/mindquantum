@@ -15,13 +15,10 @@
 #ifndef QUBITOPERATOR_OP_HPP
 #define QUBITOPERATOR_OP_HPP
 
-#include <algorithm>
 #include <complex>
 #include <cstdint>
 #include <string_view>
 #include <tuple>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include <Eigen/SparseCore>
@@ -29,7 +26,10 @@
 #include "core/config.hpp"
 
 #include "ops/gates/terms_operator.hpp"
-#include "ops/meta/dagger.hpp"
+
+#ifdef UNIT_TESTS
+class UnitTestAccessor;
+#endif  // UNIT_TESTS
 
 namespace mindquantum::ops {
 
@@ -78,6 +78,13 @@ class QubitOperator : public TermsOperator<QubitOperator> {
     MQ_NODISCARD std::vector<QubitOperator> split() const noexcept;
 
  private:
+#ifdef UNIT_TESTS
+    friend class ::UnitTestAccessor;
+#endif  // UNIT_TESTS
+
+    //! Convert a string of space-separated qubit operators into an array of terms
+    static std::vector<term_t> parse_string_(std::string_view terms_string);
+
     //! Simplify the list of local operators by using commutation and anti-commutation relations
     static std::tuple<std::vector<term_t>, coefficient_t> simplify_(std::vector<term_t> terms,
                                                                     coefficient_t coeff = 1.);
