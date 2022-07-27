@@ -33,6 +33,8 @@ Param(
     [switch]$Gpu,
     [Alias("H")][switch]$Help,
     [Alias("J")][ValidateRange("Positive")][int]$Jobs,
+    [switch]$LocalPkgs,
+    [switch]$Logging,
     [switch]$NoConfig,
     [switch]$Ninja,
     [switch]$NoBuildIsolation,
@@ -164,6 +166,7 @@ $cmake_option_names = @{
     enable_gitee = 'ENABLE_GITEE'
     enable_gpu = 'ENABLE_CUDA'
     enable_projectq = 'ENABLE_PROJECTQ'
+    enable_logging = 'ENABLE_LOGGING'
     enable_tests = 'BUILD_TESTING'
     do_clean_3rdparty = 'CLEAN_3RDPARTY_INSTALL_DIR'
 }
@@ -391,6 +394,9 @@ Number of parallel jobs for building
 
 .PARAMETER LocalPkgs
 Compile third-party dependencies locally
+
+.PARAMETER Logging
+Enable logging in C++ code
 
 .PARAMETER Ninja
 Build using Ninja instead of make

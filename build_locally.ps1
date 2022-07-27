@@ -38,6 +38,8 @@ Param(
     [Alias("H")][switch]$Help,
     [switch]$Install,
     [Alias("J")][ValidateRange("Positive")][int]$Jobs,
+    [switch]$LocalPkgs,
+    [switch]$Logging,
     [switch]$Ninja,
     [switch]$NoConfig,
     [switch]$NoGitee,
@@ -207,6 +209,7 @@ $cmake_args = @('-DIN_PLACE_BUILD:BOOL=ON'
                 "-DENABLE_CXX_EXPERIMENTAL:BOOL={0}" -f $CMAKE_BOOL[$enable_cxx]
                 "-DENABLE_DOCUMENTATION:BOOL={0}" -f $CMAKE_BOOL[$do_docs]
                 "-DENABLE_GITEE:BOOL={0}" -f $CMAKE_BOOL[$enable_gitee]
+                "-DENABLE_LOGGING:BOOL={0}" -f $CMAKE_BOOL[$enable_logging]
                 "-DBUILD_TESTING:BOOL={0}" -f $CMAKE_BOOL[$enable_tests]
                 "-DCLEAN_3RDPARTY_INSTALL_DIR:BOOL={0}" -f $CMAKE_BOOL[$do_clean_3rdparty]
                 "-DUSE_VERBOSE_MAKEFILE:BOOL={0}" -f $CMAKE_BOOL[-not $cmake_make_silent]
@@ -399,6 +402,9 @@ Number of parallel jobs for building
 
 .PARAMETER LocalPkgs
 Compile third-party dependencies locally
+
+.PARAMETER Logging
+Enable logging in C++ code
 
 .PARAMETER Ninja
 Build using Ninja instead of make

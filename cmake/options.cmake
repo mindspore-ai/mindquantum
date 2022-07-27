@@ -27,6 +27,7 @@ option(ENABLE_PROJECTQ "Enable ProjectQ support" ON)
 option(ENABLE_GITEE "Use Gitee instead of GitHub for checking out third-party dependencies" OFF)
 option(ENABLE_CXX_EXPERIMENTAL "Enable the new (experimental) C++ backend" OFF)
 option(ENABLE_DOCUMENTATION "Enable building of the documentation using Doxygen" OFF)
+option(ENABLE_LOGGING "Enable the use of logging in C++" OFF)
 
 # ==============================================================================
 # Python related options

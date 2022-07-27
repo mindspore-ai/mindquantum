@@ -80,6 +80,7 @@ function Help-Message() {
     Write-Output '  -J,-Jobs [N]        Number of parallel jobs for building'
     Write-Output ("                      Defaults to: {0}" -f $n_jobs_default)
     Write-Output '  -LocalPkgs          Compile third-party dependencies locally'
+    Write-Output '  -Logging            Enable logging in C++ code'
     Write-Output '  -NoConfig           Ignore any configuration file'
     Write-Output '  -NoGitee            Do not favor Gitee over Github/Gitlab'
     Write-Output '  -Ninja              Build using Ninja instead of make'
@@ -181,6 +182,10 @@ if ($Gpu.IsPresent) {
 
 if ($LocalPkgs.IsPresent) {
     Set-Value 'force_local_pkgs'
+}
+
+if ($Logging.IsPresent) {
+    Set-Value 'enable_logging'
 }
 
 if ($Quiet.IsPresent) {

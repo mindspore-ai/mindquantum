@@ -163,6 +163,7 @@ cmake_args=(-DIN_PLACE_BUILD:BOOL=ON
             -DENABLE_CXX_EXPERIMENTAL:BOOL="${CMAKE_BOOL[$enable_cxx]}"
             -DENABLE_DOCUMENTATION:BOOL="${CMAKE_BOOL[$do_docs]}"
             -DENABLE_GITEE:BOOL="${CMAKE_BOOL[$enable_gitee]}"
+            -DENABLE_LOGGING:BOOL="${CMAKE_BOOL[$enable_logging]}"
             -DBUILD_TESTING:BOOL="${CMAKE_BOOL[$enable_tests]}"
             -DCLEAN_3RDPARTY_INSTALL_DIR:BOOL="${CMAKE_BOOL[$do_clean_3rdparty]}"
             -DUSE_VERBOSE_MAKEFILE:BOOL="${CMAKE_BOOL[! $cmake_make_silent]}"

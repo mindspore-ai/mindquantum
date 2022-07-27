@@ -31,6 +31,7 @@ if NOT DEFINED enable_gitee set enable_gitee=0
 if NOT DEFINED enable_gpu set enable_gpu=0
 if NOT DEFINED enable_projectq set enable_projectq=1
 if NOT DEFINED enable_tests set enable_tests=0
+if NOT DEFINED enable_logging set enable_logging=1
 if NOT DEFINED force_local_pkgs set force_local_pkgs=0
 if NOT DEFINED local_pkgs set local_pkgs=
 if NOT DEFINED n_jobs set n_jobs=-1

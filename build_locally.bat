@@ -177,6 +177,11 @@ rem ============================================================================
     shift & goto :initial
   )
 
+  if /I "%1" == "/Logging" (
+    set enable_logging=1
+    shift & goto :initial
+  )
+
   if /I "%1" == "/Ninja" (
     set ninja=1
     shift & goto :initial
@@ -297,36 +302,25 @@ rem Setup arguments for build
 
 set cmake_args="-DIN_PLACE_BUILD:BOOL=ON -DIS_PYTHON_BUILD:BOOL=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON"
 
+set RETVAL=
+call %SCRIPTDIR%\dos\build_locally_cmake_option.bat BUILD_TESTING !enable_tests!
+call %SCRIPTDIR%\dos\build_locally_cmake_option.bat CLEAN_3RDPARTY_INSTALL_DIR !do_clean_3rdparty!
+call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_CMAKE_DEBUG !cmake_debug_mode!
+call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_CUDA !enable_gpu!
+call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_CXX_EXPERIMENTAL !enable_cxx!
+call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_DOCUMENTATION !do_docs!
+call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_GITEE !enable_gitee!
+call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_LOGGING !enable_logging!
+call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_PROJECTQ !enable_projectq!
+
+set cmake_args=!cmake_args! %RETVAL%
 set cmake_args=!cmake_args! -DENABLE_BUILD_TYPE:STRING=!build_type!
 
-if !cmake_debug_mode! == 1 set cmake_args=!cmake_args! -DENABLE_CMAKE_DEBUG:BOOL=ON
-
-if !cmake_make_silent! == 1 set cmake_args=!cmake_args! -DUSE_VERBOSE_MAKEFILE:BOOL=OFF
-
-if !do_clean_3rdparty! == 1 set cmake_args=!cmake_args! -DCLEAN_3RDPARTY_INSTALL_DIR:BOOL=ON
-
-if !enable_cxx! == 1 set cmake_args=!cmake_args! -DENABLE_CXX_EXPERIMENTAL:BOOL=ON
-
-if !enable_gitee! == 1 set cmake_args=!cmake_args! -DENABLE_GITEE:BOOL=ON
-
-if !enable_gpu! == 1 (
-  set cmake_args=!cmake_args! -DENABLE_CUDA:BOOL=ON
-  if NOT "!cuda_arch!" == "" set cmake_args=!cmake_args! -DCMAKE_CUDA_ARCHITECTURES:STRING=!cuda_arch!
-)
-
-if !do_docs! == 1 (
-  set cmake_args=!cmake_args! -DENABLE_DOCUMENTATION:BOOL=ON
+if !cmake_make_silent! == 1 (
+  set cmake_args=!cmake_args! -DUSE_VERBOSE_MAKEFILE:BOOL=OFF
 ) else (
-  set cmake_args=!cmake_args! -DENABLE_DOCUMENTATION:BOOL=OFF
+  set cmake_args=!cmake_args! -DUSE_VERBOSE_MAKEFILE:BOOL=ON
 )
-
-if !enable_projectq! == 1 (
-  set cmake_args=!cmake_args! -DENABLE_PROJECTQ:BOOL=ON
-) else (
-  set cmake_args=!cmake_args! -DENABLE_PROJECTQ:BOOL=OFF
-)
-
-if !enable_tests! == 1 set cmake_args=!cmake_args! -DBUILD_TESTING:BOOL=ON
 
 if !force_local_pkgs! == 1 (
   set cmake_args=!cmake_args! -DMQ_FORCE_LOCAL_PKGS=all
@@ -499,6 +493,7 @@ exit /B 0
   echo   /J,/Jobs [N]        Number of parallel jobs for building
   echo                       Defaults to: !n_jobs_default!
   echo   /LocalPkgs          Compile third-party dependencies locally
+  echo   /Logging            Enable logging in C++ code
   echo   /Ninja              Use the Ninja CMake generator
   echo   /Prefix             Specify installation prefix
   echo   /Quiet              Disable verbose build rules

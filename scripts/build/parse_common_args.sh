@@ -116,6 +116,7 @@ help_message() {
     echo '  -j,--jobs [N]        Number of parallel jobs for building'
     echo "                       Defaults to: $n_jobs_default"
     echo '  --local-pkgs         Compile third-party dependencies locally'
+    echo '  --logging            Enable logging in C++ code'
     echo '  --no-config          Ignore any configuration file'
     echo '  --ninja              Build using Ninja instead of make'
     echo '  --quiet              Disable verbose build rules'
@@ -239,6 +240,9 @@ while getopts "${getopts_args}" OPT; do
                             ;;
         local-pkgs )        no_arg;
                             set_var force_local_pkgs
+                            ;;
+        logging )           no_arg;
+                            set_var enable_logging
                             ;;
         n )                 no_arg;
                             set_var dry_run

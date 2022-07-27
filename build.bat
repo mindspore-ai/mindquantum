@@ -182,6 +182,11 @@ rem ============================================================================
     shift & goto :initial
   )
 
+  if /I "%1" == "/Logging" (
+    set enable_logging=1
+    shift & goto :initial
+  )
+
   if /I "%1" == "/Ninja" (
     set ninja=1
     shift & goto :initial
@@ -294,13 +299,14 @@ set args=-w
 if !build_isolation! == 0 set args=!args! --no-isolation
 
 set RETVAL=
-call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CMAKE_DEBUG !cmake_debug_mode!
-call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CXX_EXPERIMENTAL !enable_cxx!
-call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CUDA !enable_gpu!
-call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_GITEE !enable_gitee!
-call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_PROJECTQ !enable_projectq!
 call %SCRIPTDIR%\dos\build_cmake_option.bat BUILD_TESTING !enable_tests!
 call %SCRIPTDIR%\dos\build_cmake_option.bat CLEAN_3RDPARTY_INSTALL_DIR !do_clean_3rdparty!
+call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CMAKE_DEBUG !cmake_debug_mode!
+call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CUDA !enable_gpu!
+call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CXX_EXPERIMENTAL !enable_cxx!
+call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_GITEE !enable_gitee!
+call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_LOGGING !enable_logging!
+call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_PROJECTQ !enable_projectq!
 
 set args=!args! %RETVAL%
 
@@ -410,6 +416,7 @@ rem ============================================================================
   echo   /j,/Jobs [N]        Number of parallel jobs for building
   echo                       Defaults to: !n_jobs_default!
   echo   /LocalPkgs          Compile third-party dependencies locally
+  echo   /Logging            Enable logging in C++ code
   echo   /Ninja              Use the Ninja CMake generator
   echo   /NoDelocate         Disable delocating the binary wheels after build is finished
   echo   /NoIsolation        Pass --no-isolation to python3 -m build

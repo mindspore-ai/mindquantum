@@ -14,12 +14,13 @@ rem See the License for the specific language governing permissions and
 rem limitations under the License.
 rem ============================================================================
 
-rem build_cmake_option <opt_name> <variable>
+rem build_locally_cmake_option <opt_name> <variable>
 
-:build_cmake_option
+:build_locally_cmake_option
    if %~2 == 1 (
-      set RETVAL=%RETVAL% -C--global-option=--set -C--global-option=%~1
+      set cmake_args=!cmake_args!
+      set RETVAL=%RETVAL% -D%~1:BOOL=ON
    ) else (
-      set RETVAL=%RETVAL% -C--global-option=--unset -C--global-option=%~1
+      set RETVAL=%RETVAL% -D%~1:BOOL=OFF
    )
    exit /B 0

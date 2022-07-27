@@ -147,6 +147,7 @@ set_AA cmake_option_names enable_cxx ENABLE_CXX_EXPERIMENTAL
 set_AA cmake_option_names enable_gitee ENABLE_GITEE
 set_AA cmake_option_names enable_gpu ENABLE_CUDA
 set_AA cmake_option_names enable_projectq ENABLE_PROJECTQ
+set_AA cmake_option_names enable_logging ENABLE_LOGGING
 set_AA cmake_option_names enable_tests BUILD_TESTING
 set_AA cmake_option_names do_clean_3rdparty CLEAN_3RDPARTY_INSTALL_DIR
 
