@@ -23,7 +23,8 @@ target_include_directories(include_lib INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRE
                                                  $<INSTALL_INTERFACE:${MQ_INSTALL_INCLUDEDIR}/experimental>)
 append_to_property(mq_install_targets GLOBAL include_lib)
 
-target_link_libraries(mindquantum_cxx PUBLIC include_lib mindquantum::boost_headers mindquantum::lru_cache)
+target_link_libraries(mindquantum_cxx PUBLIC include_lib mindquantum::boost_headers mindquantum::lru_cache
+                                             $<$<BOOL:${ENABLE_LOGGING}>:mindquantum::spdlog>)
 
 # ------------------------------------------------------------------------------
 

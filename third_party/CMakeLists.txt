@@ -52,6 +52,10 @@ if(ENABLE_CXX_EXPERIMENTAL)
   include(${CMAKE_CURRENT_LIST_DIR}/symengine/symengine.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/tweedledum/tweedledum.cmake)
 
+  if(ENABLE_LOGGING)
+    include(${CMAKE_CURRENT_LIST_DIR}/spdlog/spdlog.cmake)
+  endif()
+
   if(BUILD_TESTING)
     include(${CMAKE_CURRENT_LIST_DIR}/catch2/catch2.cmake)
   endif()
