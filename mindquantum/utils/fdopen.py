@@ -19,7 +19,7 @@ import os
 
 
 @contextlib.contextmanager
-def fdopen(fname, mode, perms=0o644):  # pragma: no cover
+def fdopen(fname, mode, perms=0o644, encoding=None):  # pragma: no cover
     """
     Context manager for opening files with correct permissions.
 
@@ -37,7 +37,8 @@ def fdopen(fname, mode, perms=0o644):  # pragma: no cover
     else:
         raise RuntimeError(f'Unsupported mode: {mode}')
 
-    file_object = open(os.open(fname, flags, perms), mode=mode)  # noqa: SCS109  # pylint: disable=unspecified-encoding
+    # pylint: disable=unspecified-encoding
+    file_object = open(os.open(fname, flags, perms), mode=mode, encoding=encoding)  # noqa: SCS109
 
     try:
         yield file_object
