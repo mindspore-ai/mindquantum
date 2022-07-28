@@ -104,7 +104,7 @@ QubitOperator::QubitOperator(term_t term, coefficient_t coeff) : TermsOperator(s
 
 // -----------------------------------------------------------------------------
 
-QubitOperator::QubitOperator(const std::vector<term_t>& term, coefficient_t coeff) : TermsOperator(term, coeff) {
+QubitOperator::QubitOperator(const terms_t& term, coefficient_t coeff) : TermsOperator(term, coeff) {
 }
 
 // -----------------------------------------------------------------------------
@@ -209,15 +209,14 @@ auto QubitOperator::split() const noexcept -> std::vector<QubitOperator> {
 
 // =============================================================================
 
-auto QubitOperator::simplify_(std::vector<term_t> terms, coefficient_t coeff)
-    -> std::tuple<std::vector<term_t>, coefficient_t> {
+auto QubitOperator::simplify_(terms_t terms, coefficient_t coeff) -> std::tuple<terms_t, coefficient_t> {
     if (std::empty(terms)) {
-        return {std::vector<term_t>{}, coeff};
+        return {terms_t{}, coeff};
     }
     std::sort(
         begin(terms), end(terms), [](const auto& lhs, const auto& rhs) constexpr { return lhs.first < rhs.first; });
 
-    std::vector<term_t> reduced_terms;
+    terms_t reduced_terms;
     auto left_term = terms.front();
     for (auto it(begin(terms) + 1); it != end(terms); ++it) {
         const auto& [left_qubit_id, left_operator] = left_term;
@@ -296,8 +295,7 @@ static const auto terms = +term;
 
 namespace mindquantum::ops {
 
-auto QubitOperator::parse_string_(std::string_view terms_string) -> std::vector<term_t> {
-    using terms_t = std::vector<term_t>;
+auto QubitOperator::parse_string_(std::string_view terms_string) -> terms_t {
     if (terms_t terms; parser::parse_term(begin(terms_string), end(terms_string), terms, ::parser::terms)) {
         return terms;
     }
