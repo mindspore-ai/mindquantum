@@ -183,6 +183,11 @@ FermionOperator::FermionOperator(const std::vector<term_t>& term, coefficient_t 
 FermionOperator::FermionOperator(complex_term_dict_t terms) : TermsOperator(std::move(terms)) {
 }
 
+// -----------------------------------------------------------------------------
+
+FermionOperator::FermionOperator(std::string_view terms_string) : TermsOperator(parse_string_(terms_string)) {
+}
+
 // =============================================================================
 
 auto FermionOperator::matrix(std::optional<uint32_t> n_qubits) const -> std::optional<csr_matrix_t> {
