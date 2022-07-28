@@ -24,11 +24,7 @@
 #include <pybind11/stl.h>
 
 #include "ops/gates.hpp"
-#include "ops/gates/fermion_operator.hpp"
-#include "ops/gates/fermion_operator_parameter_resolver.hpp"
-#include "ops/gates/jordan_wigner.hpp"
-#include "ops/gates/qubit_operator.hpp"
-#include "ops/gates/qubit_operator_parameter_resolver.hpp"
+#include "ops/gates/terms_operator.hpp"
 #include "ops/parametric/angle_gates.hpp"
 #include "python/bindings.hpp"
 #include "python/ops/gate_adapter.hpp"
@@ -161,6 +157,15 @@ void init_mindquantum_ops(pybind11::module& module) {
         .def("__str__", &::to_string<ops::Entangle>);
     py::class_<ops::Ph>(module, "Ph").def(py::init<const double>());
     py::class_<ops::QFT>(module, "QFT").def(py::init<const uint32_t>()).def("__str__", &::to_string<ops::QFT>);
+
+    py::enum_<ops::TermValue>(module, "TermValue")
+        .value("I", ops::TermValue::I)
+        .value("X", ops::TermValue::X)
+        .value("Y", ops::TermValue::Y)
+        .value("Z", ops::TermValue::Z)
+        .value("a", ops::TermValue::a)
+        .value("adg", ops::TermValue::adg);
+
     // py::class_<ops::QubitOperator>(module, "QubitOperator")
     //     .def(py::init<const uint32_t, const ops::QubitOperator::ComplexTermsDict&>());
 
