@@ -60,6 +60,8 @@ class FermionOperator : public TermsOperator<FermionOperator> {
 
     explicit FermionOperator(complex_term_dict_t terms);
 
+    explicit FermionOperator(std::string_view terms_string);
+
     // -------------------------------------------------------------------
 
     MQ_NODISCARD std::optional<csr_matrix_t> matrix(std::optional<uint32_t> n_qubits) const;

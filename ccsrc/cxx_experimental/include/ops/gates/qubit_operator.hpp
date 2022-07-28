@@ -68,6 +68,8 @@ class QubitOperator : public TermsOperator<QubitOperator> {
 
     explicit QubitOperator(complex_term_dict_t terms);
 
+    explicit QubitOperator(std::string_view terms_string);
+
     // -------------------------------------------------------------------
 
     MQ_NODISCARD uint32_t count_gates() const noexcept;

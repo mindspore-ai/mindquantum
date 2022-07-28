@@ -112,6 +112,11 @@ QubitOperator::QubitOperator(const std::vector<term_t>& term, coefficient_t coef
 QubitOperator::QubitOperator(complex_term_dict_t terms) : TermsOperator(std::move(terms)) {
 }
 
+// -----------------------------------------------------------------------------
+
+QubitOperator::QubitOperator(std::string_view terms_string) : TermsOperator(parse_string_(terms_string)) {
+}
+
 // =============================================================================
 
 uint32_t QubitOperator::count_gates() const noexcept {

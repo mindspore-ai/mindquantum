@@ -101,13 +101,19 @@ class TermsOperator
     //! Check whether this operator is equivalent to the identity
     MQ_NODISCARD bool is_identity(double abs_tol = EQ_TOLERANCE) const noexcept;
 
-    //! Calculate the number of qubits on which operator acts
+    //! Calculate the number of qubits on which an operator acts
     MQ_NODISCARD term_t::first_type count_qubits() const noexcept;
 
     // -------------------------------------------------------------------------
 
+    //! Return the adjoint of this operator
+    MQ_NODISCARD operator_t adjoint() const noexcept;
+
     //! Get the coefficient of the constant (ie. identity) term
     MQ_NODISCARD coefficient_t constant() const noexcept;
+
+    //! Set the coefficient of the constant (ie. identity) term
+    void constant(const coefficient_t& coeff);
 
     //! Test whether this operator consists of a single term
     MQ_NODISCARD bool is_singlet() const noexcept;
@@ -118,30 +124,33 @@ class TermsOperator
     //! Get the coefficient of a single-term operator
     MQ_NODISCARD coefficient_t singlet_coeff() const noexcept;
 
-    //! Set the coefficient of the constant (ie. identity) term
-    void constant(const coefficient_t& coeff);
-
-    //! Return the adjoint of this operator
-    MQ_NODISCARD operator_t adjoint() const noexcept;
-
-    //! Convert all the coefficients to their real part
+    //! Return a copy of an operator with all the coefficients set to their real part
     MQ_NODISCARD self_t real() const noexcept;
 
-    //! Convert all the coefficients to their imaginary part
+    //! Return a copy of an operator with all the coefficients set to their imaginary part
     MQ_NODISCARD self_t imag() const noexcept;
 
     //! Compress a TermsOperator
     /*!
      * Eliminate terms with small coefficients close to zero. Also remove small imaginary and real parts.
      *
-     * Compression is done /e in-place and the modified operator is then returned.
+     * Compression is done \e in-place and the modified operator is then returned.
      *
      * \param abs_tol Absolute tolerance, must be a positive non-zero number
+     * \return The compressed term operator
+     *
+     * \note Example
+     * \code{.cpp}
+     *    ham_compress = QubitOperator("X0 Y3", 0.5) + QubitOperator("X0 Y2", 1e-7);
+     *    // ham_compress = 1/10000000 [X0 Y2] + 1/2 [X0 Y3]
+     *    ham_compress.compress(1e-6);
+     *    // ham_compress = 1/2 [X0 Y3]
+     * \endcode
      */
     self_t& compress(double abs_tol = EQ_TOLERANCE);
 
     //! Power operator (self-multiply n-times)
-    self_t pow(uint32_t exponent) const;
+    MQ_NODISCARD self_t pow(uint32_t exponent) const;
 
     // =================================
 
@@ -164,7 +173,7 @@ class TermsOperator
     // ---------------------------------
 
     //! Unary - operator with a number
-    self_t operator-() const;
+    MQ_NODISCARD self_t operator-() const;
 
     // ---------------------------------
 
@@ -183,15 +192,28 @@ class TermsOperator
 
     // =================================
 
-    bool operator==(self_t& other);
+    // TODO(dnguyen): This might be counter-intuitive...
+    //! Comparison operator (non-const)
+    /*!
+     * Compared to its const counterpart, this overload calls \c compress() before performing the comparison.
+     *
+     * \param other Another term operators
+     */
+    MQ_NODISCARD bool operator==(self_t& other);
 
-    bool operator==(const self_t& other) const;
+    //! Comparison operator
+    /*!
+     * \param other Another term operators
+     */
+    MQ_NODISCARD bool operator==(const self_t& other) const;
 
  private:
+    //! Addition/subtraction helper member function
     template <typename assign_modify_op_t, typename coeff_unary_op_t>
     self_t& add_sub_impl_(const self_t& other, assign_modify_op_t&& assign_modify_op,
                           coeff_unary_op_t&& coeff_unary_op);
 
+    //! Calculate the number of target qubits of a TermOperator.
     void calculate_num_targets_() noexcept;
 
  protected:

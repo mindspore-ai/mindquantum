@@ -76,11 +76,15 @@ auto TermsOperator<derived_t>::get_terms() const noexcept -> const complex_term_
 
 template <typename derived_t>
 bool TermsOperator<derived_t>::is_identity(double abs_tol) const noexcept {
+#if MQ_HAS_CXX20_RANGES
+    return std::ranges::all_of(terms_, [abs_tol](const auto& term) { return std::abs(term.second) <= abs_tol; });
+#else
     for (const auto& [term, coeff] : terms_) {
         if (!(std::abs(coeff) <= abs_tol)) {
             return false;
         }
     }
+#endif  // MQ_HAS_CXX20_RANGES
     return true;
 }
 
@@ -103,6 +107,31 @@ auto TermsOperator<derived_t>::count_qubits() const noexcept -> term_t::first_ty
         }
     }
     return num_qubits;
+}
+
+// =============================================================================
+
+template <typename derived_t>
+auto TermsOperator<derived_t>::adjoint() const noexcept -> operator_t {
+    return DaggerOperation(*this);
+}
+
+// =============================================================================
+
+template <typename derived_t>
+auto TermsOperator<derived_t>::constant() const noexcept -> coefficient_t {
+    if (const auto it = terms_.find({}); it != end(terms_)) {
+        assert(std::empty(it->first));
+        return it->second;
+    }
+    return 0.0;
+}
+
+// -----------------------------------------------------------------------------
+
+template <typename derived_t>
+auto TermsOperator<derived_t>::constant(const coefficient_t& coeff) -> void {
+    terms_[{}] = coeff;
 }
 
 // =============================================================================
@@ -136,31 +165,6 @@ auto TermsOperator<derived_t>::singlet_coeff() const noexcept -> coefficient_t {
         return {};
     }
     return begin(terms_)->second;
-}
-
-// =============================================================================
-
-template <typename derived_t>
-auto TermsOperator<derived_t>::constant() const noexcept -> coefficient_t {
-    if (const auto it = terms_.find({}); it != end(terms_)) {
-        assert(std::empty(it->first));
-        return it->second;
-    }
-    return 0.0;
-}
-
-// -----------------------------------------------------------------------------
-
-template <typename derived_t>
-auto TermsOperator<derived_t>::constant(const coefficient_t& coeff) -> void {
-    terms_[{}] = coeff;
-}
-
-// =============================================================================
-
-template <typename derived_t>
-auto TermsOperator<derived_t>::adjoint() const noexcept -> operator_t {
-    return DaggerOperation(*this);
 }
 
 // =============================================================================
