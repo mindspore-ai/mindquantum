@@ -76,6 +76,7 @@ class TermsOperator
 
     using coefficient_t = std::complex<double>;
     using term_t = std::pair<uint32_t, TermValue>;
+    using terms_t = std::vector<term_t>;
     using complex_term_dict_t = std::map<std::vector<term_t>, coefficient_t>;
 
     static constexpr std::string_view kind() {
@@ -86,14 +87,17 @@ class TermsOperator
 
     explicit TermsOperator(term_t term, coefficient_t coeff = 1.0);
 
-    explicit TermsOperator(const std::vector<term_t>& term, coefficient_t coeff = 1.0);
+    explicit TermsOperator(const terms_t& term, coefficient_t coeff = 1.0);
 
     explicit TermsOperator(complex_term_dict_t terms);
 
     //! Return the number of target qubits of an operator
     MQ_NODISCARD uint32_t num_targets() const noexcept;
 
-    //! Return the size of the hamiltonian terms
+    //! Return true if the TermsOperator is empty
+    MQ_NODISCARD auto empty() const noexcept;
+
+    //! Return the number of terms within the TermsOperator
     MQ_NODISCARD auto size() const noexcept;
 
     MQ_NODISCARD const complex_term_dict_t& get_terms() const noexcept;
@@ -119,6 +123,11 @@ class TermsOperator
     MQ_NODISCARD bool is_singlet() const noexcept;
 
     //! Split a single-term operator into its components/words
+    /*!
+     * \note The coefficient attribute is ignored.
+     *
+     * \return A vector of TermsOperator::derived_t
+     */
     MQ_NODISCARD std::vector<self_t> singlet() const noexcept;
 
     //! Get the coefficient of a single-term operator

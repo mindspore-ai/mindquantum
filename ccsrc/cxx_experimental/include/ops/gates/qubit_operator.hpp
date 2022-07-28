@@ -64,7 +64,7 @@ class QubitOperator : public TermsOperator<QubitOperator> {
 
     explicit QubitOperator(term_t term, coefficient_t coefficient = 1.0);
 
-    explicit QubitOperator(const std::vector<term_t>& term, coefficient_t coeff = 1.0);
+    explicit QubitOperator(const terms_t& term, coefficient_t coeff = 1.0);
 
     explicit QubitOperator(complex_term_dict_t terms);
 
@@ -85,11 +85,10 @@ class QubitOperator : public TermsOperator<QubitOperator> {
 #endif  // UNIT_TESTS
 
     //! Convert a string of space-separated qubit operators into an array of terms
-    static std::vector<term_t> parse_string_(std::string_view terms_string);
+    static terms_t parse_string_(std::string_view terms_string);
 
     //! Simplify the list of local operators by using commutation and anti-commutation relations
-    static std::tuple<std::vector<term_t>, coefficient_t> simplify_(std::vector<term_t> terms,
-                                                                    coefficient_t coeff = 1.);
+    static std::tuple<terms_t, coefficient_t> simplify_(std::vector<term_t> terms, coefficient_t coeff = 1.);
 };
 }  // namespace mindquantum::ops
 

@@ -38,7 +38,7 @@ TermsOperator<derived_t>::TermsOperator(term_t term, coefficient_t coeff) : term
 // -----------------------------------------------------------------------------
 
 template <typename derived_t>
-TermsOperator<derived_t>::TermsOperator(const std::vector<term_t>& term, coefficient_t coeff) {
+TermsOperator<derived_t>::TermsOperator(const terms_t& term, coefficient_t coeff) {
     const auto [new_terms, new_coeff] = derived_t::simplify_(term, coeff);
     terms_.emplace(new_terms, new_coeff);
     calculate_num_targets_();
@@ -61,8 +61,14 @@ uint32_t TermsOperator<derived_t>::num_targets() const noexcept {
 // -----------------------------------------------------------------------------
 
 template <typename derived_t>
+auto TermsOperator<derived_t>::empty() const noexcept {
+    return std::empty(terms_);
+}
+// -----------------------------------------------------------------------------
+
+template <typename derived_t>
 auto TermsOperator<derived_t>::size() const noexcept {
-    return size(terms_);
+    return std::size(terms_);
 }
 
 // -----------------------------------------------------------------------------
@@ -77,10 +83,20 @@ auto TermsOperator<derived_t>::get_terms() const noexcept -> const complex_term_
 template <typename derived_t>
 bool TermsOperator<derived_t>::is_identity(double abs_tol) const noexcept {
 #if MQ_HAS_CXX20_RANGES
-    return std::ranges::all_of(terms_, [abs_tol](const auto& term) { return std::abs(term.second) <= abs_tol; });
+    return std::ranges::all_of(
+        terms_, [abs_tol](const auto& term) constexpr {
+            return std::empty(term.first)
+                   || std::ranges::all_of(
+                       term.first, [](const auto& local_op) constexpr { return local_op.second == TermValue::I; })
+                   || std::abs(term.second) <= abs_tol;
+        });
 #else
     for (const auto& [term, coeff] : terms_) {
-        if (!(std::abs(coeff) <= abs_tol)) {
+        if (!std::empty(term)
+            && std::any_of(
+                std::begin(term), std::end(term),
+                [](const auto& local_op) constexpr { return local_op.second != TermValue::I; })
+            && std::abs(coeff) > abs_tol) {
             return false;
         }
     }
@@ -97,12 +113,13 @@ auto TermsOperator<derived_t>::count_qubits() const noexcept -> term_t::first_ty
         if (std::empty(local_ops)) {
             num_qubits = std::max(decltype(num_qubits){1}, num_qubits);
         } else {
-            num_qubits = std::max(decltype(num_qubits){std::max_element(
-                                                           begin(local_ops), end(local_ops),
-                                                           [](const auto& lhs, const auto& rhs) constexpr {
-                                                               return lhs.first < rhs.first;
-                                                           })
-                                                           ->first},
+            num_qubits = std::max(static_cast<decltype(num_qubits)>(std::max_element(
+                                                                        begin(local_ops), end(local_ops),
+                                                                        [](const auto& lhs, const auto& rhs) constexpr {
+                                                                            return lhs.first < rhs.first;
+                                                                        })
+                                                                        ->first
+                                                                    + 1),  // NB: qubit_ids are 0-based
                                   num_qubits);
         }
     }
@@ -146,12 +163,13 @@ bool TermsOperator<derived_t>::is_singlet() const noexcept {
 template <typename derived_t>
 auto TermsOperator<derived_t>::singlet() const noexcept -> std::vector<self_t> {
     if (!is_singlet()) {
+        MQ_ERROR("Operator is not a singlet!");
         return {};
     }
 
     std::vector<self_t> words;
-    for (const auto& [term, coeff] : terms_) {
-        words.emplace(term, coeff);
+    for (const auto& local_op : begin(terms_)->first) {
+        words.emplace_back(term_t{local_op}, 1.);
     }
 
     return words;
@@ -162,6 +180,7 @@ auto TermsOperator<derived_t>::singlet() const noexcept -> std::vector<self_t> {
 template <typename derived_t>
 auto TermsOperator<derived_t>::singlet_coeff() const noexcept -> coefficient_t {
     if (!is_singlet()) {
+        MQ_ERROR("Operator is not a singlet!");
         return {};
     }
     return begin(terms_)->second;
@@ -194,15 +213,16 @@ auto TermsOperator<derived_t>::imag() const noexcept -> self_t {
 template <typename derived_t>
 auto TermsOperator<derived_t>::compress(double abs_tol) -> self_t& {
     const auto end_it = end(terms_);
-    // NOLINTNEXTLINE(altera-id-dependent-backward-branch)
-    for (auto it = begin(terms_); it != end_it; ++it) {
-        if (std::abs(it->second) < abs_tol) {
-            terms_.erase(it);
-        } else if (std::abs(it->second.imag()) < abs_tol) {
+    for (auto it = begin(terms_); it != end_it;) {
+        if (std::abs(it->second) <= abs_tol) {
+            it = terms_.erase(it);
+            continue;
+        } else if (std::abs(it->second.imag()) <= abs_tol) {
             it->second = it->second.real();
-        } else if (std::abs(it->second.real()) < abs_tol) {
+        } else if (std::abs(it->second.real()) <= abs_tol) {
             it->second = coefficient_t{0., it->second.imag()};
         }
+        ++it;
     }
     calculate_num_targets_();
     return *this;

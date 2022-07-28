@@ -175,7 +175,7 @@ FermionOperator::FermionOperator(term_t term, coefficient_t coeff) : TermsOperat
 
 // -----------------------------------------------------------------------------
 
-FermionOperator::FermionOperator(const std::vector<term_t>& term, coefficient_t coeff) : TermsOperator(term, coeff) {
+FermionOperator::FermionOperator(const terms_t& term, coefficient_t coeff) : TermsOperator(term, coeff) {
 }
 
 // -----------------------------------------------------------------------------
@@ -287,7 +287,7 @@ auto FermionOperator::simplify_(std::vector<term_t> terms, coefficient_t coeff)
 
 // =============================================================================
 
-auto FermionOperator::normal_ordered_term_(std::vector<term_t> terms, coefficient_t coeff) -> FermionOperator {
+auto FermionOperator::normal_ordered_term_(terms_t terms, coefficient_t coeff) -> FermionOperator {
     FermionOperator ordered_term;
 
     for (auto it(begin(terms) + 1); it != end(terms); ++it) {
@@ -302,7 +302,7 @@ auto FermionOperator::normal_ordered_term_(std::vector<term_t> terms, coefficien
                     // NB: we need to skip skip elements j-1 and j. Since it_jm1 and it_j are reverse iterators:
                     //     (it_j + 1).base() is actually the j-1 element
                     //     it_jm1.base() is actually the j+1 element
-                    auto new_terms = std::vector<term_t>(begin(terms), (it_j + 1).base());
+                    auto new_terms = terms_t(begin(terms), (it_j + 1).base());
                     new_terms.reserve(std::size(terms) - 1);
                     std::copy(it_jm1.base(), end(terms), std::back_inserter(new_terms));
                     ordered_term += normal_ordered_term_(new_terms, -1. * coeff);
@@ -332,7 +332,7 @@ auto FermionOperator::normal_ordered_term_(std::vector<term_t> terms, coefficien
     //             // If indice are same, employ the anti-commutation relationship and generate the new term
     //             if (left_sub_term.first == right_sub_term.first) {
     //                 // NB: skip elements j-1 and j
-    //                 auto new_term = std::vector<term_t>(begin(terms), begin(terms) + j - 1);
+    //                 auto new_term = terms_t(begin(terms), begin(terms) + j - 1);
     //                 new_term.reserve(std::size(terms) - 1);
     //                 std::copy(begin(terms) + j + 1, end(terms), std::back_inserter(new_term));
     //                 ordered_term += normal_ordered_term_(new_term, -1. * coeff);
@@ -399,8 +399,7 @@ static const auto terms = +term;
 // -----------------------------------------------------------------------------
 
 namespace mindquantum::ops {
-auto FermionOperator::parse_string_(std::string_view terms_string) -> std::vector<term_t> {
-    using terms_t = std::vector<term_t>;
+auto FermionOperator::parse_string_(std::string_view terms_string) -> terms_t {
     if (terms_t terms; parser::parse_term(begin(terms_string), end(terms_string), terms, ::parser::terms)) {
         return terms;
     }
