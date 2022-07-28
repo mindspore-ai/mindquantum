@@ -394,6 +394,41 @@ int main() {
 }
 ]])
 
+# --------------------------------------
+
+check_cxx_code_compiles(
+  compiler_has_cxx20_ranges
+  MQ_HAS_CXX20_RANGES
+  cxx_std_20
+  [[
+#ifdef __has_include
+#    if __has_include(<version>)
+#        include <version>
+#    endif
+#endif
+#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <numeric>
+#include <ranges>
+#include <vector>
+
+int main() {
+#if __cpp_lib_ranges >= 201911L
+    std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    std::partial_sum(v.cbegin(), v.cend(), v.begin());
+    std::ranges::copy(v, std::ostream_iterator<int>(std::cout, " "));
+    auto divisible_by = [](int d) { return [d](int m) { return m % d == 0; }; };
+    if (std::ranges::any_of(v, divisible_by(7))) {
+        std::cout << "At least one number is divisible by 7" << std::endl;
+    }
+#else
+#    error C++20 ranges not supported
+#endif
+    return 0;
+}
+]])
+
 # ==============================================================================
 
 configure_file(${CMAKE_CURRENT_LIST_DIR}/cxx20_config.hpp.in ${PROJECT_BINARY_DIR}/core/cxx20_config.hpp)
