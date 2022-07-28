@@ -17,5 +17,6 @@
 # ==============================================================================
 
 target_sources(
-  mindquantum_cxx PRIVATE ${CMAKE_CURRENT_LIST_DIR}/circuit_block.cpp ${CMAKE_CURRENT_LIST_DIR}/circuit_manager.cpp
-                          ${CMAKE_CURRENT_LIST_DIR}/cpp_core.cpp)
+  mindquantum_cxx
+  PRIVATE ${CMAKE_CURRENT_LIST_DIR}/circuit_block.cpp ${CMAKE_CURRENT_LIST_DIR}/circuit_manager.cpp
+          $<$<BOOL:${ENABLE_LOGGING}>:${CMAKE_CURRENT_LIST_DIR}/logging.cpp> ${CMAKE_CURRENT_LIST_DIR}/cpp_core.cpp)

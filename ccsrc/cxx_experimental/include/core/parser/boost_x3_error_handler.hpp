@@ -27,9 +27,7 @@
 #include <boost/spirit/home/x3/support/utility/utf8.hpp>
 #include <nlohmann/detail/input/position_t.hpp>
 
-#ifdef ENABLE_LOGGING
-#    include <spdlog/spdlog.h>
-#endif  // ENABLE_LOGGING
+#include "core/logging.hpp"
 
 namespace mindquantum::parser {
 
@@ -103,12 +101,12 @@ class error_handler {
 template <typename iterator_t>
 void error_handler<iterator_t>::print_file_line(std::size_t line) const {
     if (!std::empty(file)) {
-        logger->error("In file {}", file);
+        MQ_LOGGER_ERROR(logger, "In file {}", file);
     } else {
-        logger->error("In ");
+        MQ_LOGGER_ERROR(logger, "In ");
     }
 
-    logger->error("line {}:", line);
+    MQ_LOGGER_ERROR(logger, "line {}:", line);
 }
 
 template <typename iterator_t>
@@ -123,7 +121,7 @@ void error_handler<iterator_t>::print_line(iterator_t start, iterator_t last) co
     }
     using char_type = typename std::iterator_traits<iterator_t>::value_type;
     std::basic_string<char_type> line{start, end};
-    logger->error(boost::spirit::x3::to_utf8(line));
+    MQ_LOGGER_ERROR(logger, boost::spirit::x3::to_utf8(line));
 }
 
 template <typename iterator_t>
@@ -143,13 +141,13 @@ void error_handler<iterator_t>::print_indicator(iterator_t& start, iterator_t la
     }
     switch (ind) {
         case ' ':
-            logger->error("{: >{}}{}", "", length, indicator);
+            MQ_LOGGER_ERROR(logger, "{: >{}}{}", "", length, indicator);
             break;
         case '~':
-            logger->error("{:~>{}}{}", "", length, indicator);
+            MQ_LOGGER_ERROR(logger, "{:~>{}}{}", "", length, indicator);
             break;
         default:
-            logger->error("{:->{}}{}", "", length, indicator);
+            MQ_LOGGER_ERROR(logger, "{:->{}}{}", "", length, indicator);
             break;
     }
 }
@@ -197,7 +195,7 @@ void error_handler<iterator_t>::operator()(iterator_t err_pos, std::string const
     iterator_t last = pos_cache.last();
 
     print_file_line(position(err_pos));
-    logger->error(error_message);
+    MQ_LOGGER_ERROR(logger, error_message);
 
     iterator_t start = get_line_start(first, err_pos);
     print_line(start, last);
@@ -211,7 +209,7 @@ void error_handler<iterator_t>::operator()(iterator_t err_first, iterator_t err_
     iterator_t last = pos_cache.last();
 
     print_file_line(position(err_first));
-    logger->error(error_message);
+    MQ_LOGGER_ERROR(logger, error_message);
 
     iterator_t start = get_line_start(first, err_first);
     print_line(start, last);
