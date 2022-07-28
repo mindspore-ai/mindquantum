@@ -16,11 +16,20 @@
 #define PARAM_UTILS_HPP
 
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 #include <catch2/catch.hpp>
 #include <symengine/expression.h>
+
+#ifdef ENABLE_LOGGING
+#    include <sstream>
+
+#    include <spdlog/async.h>
+#    include <spdlog/sinks/ostream_sink.h>
+#    include <spdlog/spdlog.h>
+#endif  // ENABLE_LOGGING
 
 namespace Catch {
 template <>
@@ -43,8 +52,9 @@ struct Equals : Catch::MatcherBase<std::vector<SymEngine::RCP<const SymEngine::B
     }
 
     bool match(const std::vector<SymEngine::RCP<const SymEngine::Basic>>& v) const override {
-        if (comparator_.size() != v.size())
+        if (comparator_.size() != v.size()) {
             return false;
+        }
         for (std::size_t i = 0; i < v.size(); ++i) {
             if (!eq(*comparator_[i], *v[i])) {
                 return false;
@@ -58,5 +68,15 @@ struct Equals : Catch::MatcherBase<std::vector<SymEngine::RCP<const SymEngine::B
 
     const std::vector<SymEngine::RCP<const SymEngine::Basic>> comparator_;
 };
+
+// =============================================================================
+
+#ifdef ENABLE_LOGGING
+#    define MQ_DISABLE_LOGGING spdlog::default_logger()->set_level(spdlog::level::off)
+#else
+#    define MQ_DISABLE_LOGGING static_cast<void>(0)
+#endif  // ENABLE_LOGGING
+
+// =============================================================================
 
 #endif /* PARAM_UTILS_HPP */
