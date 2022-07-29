@@ -13,22 +13,30 @@
 //   limitations under the License.
 
 #ifndef TESTS_OPS_UTILS_HPP
-#    define TESTS_OPS_UTILS_HPP
+#define TESTS_OPS_UTILS_HPP
 
-#    include <string>
-#    include <tuple>
-#    include <utility>
-#    include <vector>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
-#    include <symengine/expression.h>
+#include <symengine/expression.h>
 
-#    ifdef ENABLE_LOGGING
-#        include <sstream>
+#include "../utils.hpp"
 
-#        include <spdlog/async.h>
-#        include <spdlog/sinks/ostream_sink.h>
-#        include <spdlog/spdlog.h>
-#    endif  // ENABLE_LOGGING
+#ifdef ENABLE_LOGGING
+#    include <sstream>
+
+#    include <spdlog/async.h>
+#    include <spdlog/sinks/ostream_sink.h>
+#    include <spdlog/spdlog.h>
+#endif  // ENABLE_LOGGING
+
+// -----------------------------------------------------------------------------
+
+#include <catch2/catch.hpp>
+
+// =============================================================================
 
 namespace Catch {
 template <>
@@ -68,22 +76,6 @@ struct SymEngineEquals : Catch::MatcherBase<std::vector<SymEngine::RCP<const Sym
     const std::vector<SymEngine::RCP<const SymEngine::Basic>> comparator_;
 };
 
-<<<<<<< HEAD
 // =============================================================================
 
-#    endif /* TESTS_OPS_UTILS_HPP */
-||||||| parent of 8e19e32 ([CXX] Start implementing C++ unit tests for TermsOperator)
-#endif /* PARAM_UTILS_HPP */
-    =======
-// =============================================================================
-
-#ifdef ENABLE_LOGGING
-#    define MQ_DISABLE_LOGGING spdlog::default_logger()->set_level(spdlog::level::off)
-#else
-#    define MQ_DISABLE_LOGGING static_cast<void>(0)
-#endif  // ENABLE_LOGGING
-
-// =============================================================================
-
-#endif /* PARAM_UTILS_HPP */
-    >>>>>>> 8e19e32 ([CXX] Start implementing C++ unit tests for TermsOperator)
+#endif /* TESTS_OPS_UTILS_HPP */
