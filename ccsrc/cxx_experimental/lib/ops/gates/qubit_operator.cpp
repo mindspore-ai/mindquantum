@@ -114,7 +114,8 @@ QubitOperator::QubitOperator(complex_term_dict_t terms) : TermsOperator(std::mov
 
 // -----------------------------------------------------------------------------
 
-QubitOperator::QubitOperator(std::string_view terms_string) : TermsOperator(parse_string_(terms_string)) {
+QubitOperator::QubitOperator(std::string_view terms_string, coefficient_t coeff)
+    : QubitOperator(parse_string_(terms_string), coeff) {
 }
 
 // =============================================================================
