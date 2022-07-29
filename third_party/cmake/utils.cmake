@@ -165,6 +165,7 @@ function(__download_pkg pkg_name pkg_url pkg_md5)
   if(_local_server)
     get_filename_component(_url_file_name ${pkg_url} NAME)
     set(pkg_url "${_local_server}/libs/${pkg_name}/${_url_file_name}" ${pkg_url})
+    debug_print(STATUS "Using local server URL: ${pkg_url}")
   endif()
 
   FetchContent_Declare(
@@ -179,11 +180,14 @@ endfunction()
 function(__download_pkg_with_git pkg_name pkg_url pkg_git_commit pkg_md5)
   if(_local_server)
     set(pkg_url "${_local_server}/libs/${pkg_name}/${pkg_git_commit}")
+    debug_print(STATUS "Using local server URL: ${pkg_url}")
     FetchContent_Declare(
       ${pkg_name}
       URL ${pkg_url}
       URL_HASH MD5=${pkg_md5})
   else()
+    debug_print(STATUS "GIT_REPOSITORY = ${GIT_REPOSITORY}")
+    debug_print(STATUS "GIT_TAG = ${GIT_TAG}")
     FetchContent_Declare(
       ${pkg_name}
       GIT_REPOSITORY ${pkg_url}
