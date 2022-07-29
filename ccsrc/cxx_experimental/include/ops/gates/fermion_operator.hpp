@@ -70,7 +70,7 @@ class FermionOperator : public TermsOperator<FermionOperator> {
     MQ_NODISCARD std::vector<FermionOperator> split() const noexcept;
 
     //! Return the normal ordered form of the Fermion Operator.
-    MQ_NODISCARD self_t normal_ordered() const;
+    MQ_NODISCARD FermionOperator normal_ordered() const;
 
  private:
 #ifdef UNIT_TESTS

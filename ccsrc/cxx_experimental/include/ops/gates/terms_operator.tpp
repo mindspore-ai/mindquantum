@@ -22,9 +22,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
+#include "core/logging.hpp"
 #include "ops/gates/terms_operator.hpp"
 #include "ops/meta/dagger.hpp"
 
@@ -126,6 +128,13 @@ auto TermsOperator<derived_t>::count_qubits() const noexcept -> term_t::first_ty
     return num_qubits;
 }
 
+// -----------------------------------------------------------------------------
+
+template <typename derived_t>
+auto TermsOperator<derived_t>::identity() -> derived_t {
+    return derived_t{terms_t{}};
+}
+
 // =============================================================================
 
 template <typename derived_t>
@@ -161,13 +170,13 @@ bool TermsOperator<derived_t>::is_singlet() const noexcept {
 // -----------------------------------------------------------------------------
 
 template <typename derived_t>
-auto TermsOperator<derived_t>::singlet() const noexcept -> std::vector<self_t> {
+auto TermsOperator<derived_t>::singlet() const noexcept -> std::vector<derived_t> {
     if (!is_singlet()) {
         MQ_ERROR("Operator is not a singlet!");
         return {};
     }
 
-    std::vector<self_t> words;
+    std::vector<derived_t> words;
     for (const auto& local_op : begin(terms_)->first) {
         words.emplace_back(term_t{local_op}, 1.);
     }
@@ -189,8 +198,8 @@ auto TermsOperator<derived_t>::singlet_coeff() const noexcept -> coefficient_t {
 // =============================================================================
 
 template <typename derived_t>
-auto TermsOperator<derived_t>::real() const noexcept -> self_t {
-    auto out(static_cast<self_t>(*this));
+auto TermsOperator<derived_t>::real() const noexcept -> derived_t {
+    auto out(*static_cast<const derived_t*>(this));
     for (auto& [local_ops, coeff] : out.terms_) {
         coeff = coeff.real();
     }
@@ -200,8 +209,8 @@ auto TermsOperator<derived_t>::real() const noexcept -> self_t {
 // -----------------------------------------------------------------------------
 
 template <typename derived_t>
-auto TermsOperator<derived_t>::imag() const noexcept -> self_t {
-    auto out(static_cast<self_t>(*this));
+auto TermsOperator<derived_t>::imag() const noexcept -> derived_t {
+    auto out(*static_cast<const derived_t*>(this));
     for (auto& [local_ops, coeff] : out.terms_) {
         coeff = coeff.imag();
     }
@@ -211,7 +220,7 @@ auto TermsOperator<derived_t>::imag() const noexcept -> self_t {
 // =============================================================================
 
 template <typename derived_t>
-auto TermsOperator<derived_t>::compress(double abs_tol) -> self_t& {
+auto TermsOperator<derived_t>::compress(double abs_tol) -> derived_t& {
     const auto end_it = end(terms_);
     for (auto it = begin(terms_); it != end_it;) {
         if (std::abs(it->second) <= abs_tol) {
@@ -225,24 +234,13 @@ auto TermsOperator<derived_t>::compress(double abs_tol) -> self_t& {
         ++it;
     }
     calculate_num_targets_();
-    return *this;
+    return *static_cast<derived_t*>(this);
 }
 
 // =============================================================================
 
 template <typename derived_t>
-auto TermsOperator<derived_t>::pow(uint32_t exponent) const -> self_t {
-    derived_t result;
-    for (auto i(0UL); i < exponent; ++i) {
-        result *= *this;
-    }
-    return result;
-}
-
-// =============================================================================
-
-template <typename derived_t>
-auto TermsOperator<derived_t>::operator+=(const self_t& other) -> self_t& {
+auto TermsOperator<derived_t>::operator+=(const derived_t& other) -> derived_t& {
     return add_sub_impl_(
         other, [](coefficient_t & lhs, const coefficient_t& rhs) constexpr { lhs += rhs; },
         [](const coefficient_t& coefficient) constexpr { return coefficient; });
@@ -252,15 +250,15 @@ auto TermsOperator<derived_t>::operator+=(const self_t& other) -> self_t& {
 
 template <typename derived_t>
 template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_IMPL>
-auto TermsOperator<derived_t>::operator+=(const number_t& number) -> self_t& {
-    *this += self_t{} * number;
-    return *this;
+auto TermsOperator<derived_t>::operator+=(const number_t& number) -> derived_t& {
+    *this += derived_t::identity() * number;
+    return *static_cast<derived_t*>(this);
 }
 
 // =============================================================================
 
 template <typename derived_t>
-auto TermsOperator<derived_t>::operator-=(const self_t& other) -> self_t& {
+auto TermsOperator<derived_t>::operator-=(const derived_t& other) -> derived_t& {
     return add_sub_impl_(
         other, [](coefficient_t & lhs, const coefficient_t& rhs) constexpr { lhs -= rhs; },
         [](const coefficient_t& coefficient) constexpr { return -coefficient; });
@@ -270,22 +268,22 @@ auto TermsOperator<derived_t>::operator-=(const self_t& other) -> self_t& {
 
 template <typename derived_t>
 template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_IMPL>
-auto TermsOperator<derived_t>::operator-=(const number_t& number) -> self_t& {
-    *this -= self_t{} * number;
-    return *this;
+auto TermsOperator<derived_t>::operator-=(const number_t& number) -> derived_t& {
+    *this -= derived_t::identity() * number;
+    return *static_cast<derived_t*>(this);
 }
 
 // =============================================================================
 
 template <typename derived_t>
-auto TermsOperator<derived_t>::operator-() const -> self_t {
-    return (*this *= -1);
+auto TermsOperator<derived_t>::operator-() const -> derived_t {
+    return (*this * -1.);
 }
 
 // =============================================================================
 
 template <typename derived_t>
-auto TermsOperator<derived_t>::operator*=(const self_t& other) -> self_t& {
+auto TermsOperator<derived_t>::operator*=(const derived_t& other) -> derived_t& {
     complex_term_dict_t product_results;
     for (const auto& [left_op, left_coeff] : terms_) {
         for (const auto& [right_op, right_coeff] : other.terms_) {
@@ -301,42 +299,53 @@ auto TermsOperator<derived_t>::operator*=(const self_t& other) -> self_t& {
     }
     terms_ = std::move(product_results);
     calculate_num_targets_();
-    return *this;
+    return *static_cast<derived_t*>(this);
 }
 
 // -----------------------------------------------------------------------------
 
 template <typename derived_t>
 template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_IMPL>
-auto TermsOperator<derived_t>::operator*=(const number_t& number) -> self_t& {
+auto TermsOperator<derived_t>::operator*=(const number_t& number) -> derived_t& {
     for (auto& [term, coeff] : terms_) {
         coeff *= number;
     }
-    return *this;
+    return *static_cast<derived_t*>(this);
 }
 
 // =============================================================================
 
 template <typename derived_t>
 template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_IMPL>
-auto TermsOperator<derived_t>::operator/=(const number_t& number) -> self_t& {
-    *this *= 1 / number;
-    return *this;
+auto TermsOperator<derived_t>::operator/=(const number_t& number) -> derived_t& {
+    *this *= 1. / number;
+    return *static_cast<derived_t*>(this);
 }
 
 // =============================================================================
 
 template <typename derived_t>
-bool TermsOperator<derived_t>::operator==(self_t& other) {
-    this->compress();
-    other.compress();
-    return *this == other;
+auto TermsOperator<derived_t>::pow(uint32_t exponent) const -> derived_t {
+    derived_t result = identity();
+    for (auto i(0UL); i < exponent; ++i) {
+        result *= *static_cast<const derived_t*>(this);
+    }
+    return result;
 }
+
+// =============================================================================
+
+// template <typename derived_t>
+// bool TermsOperator<derived_t>::operator==(derived_t& other) {
+//     this->compress();
+//     other.compress();
+//     return *this == other;
+// }
 
 // -----------------------------------------------------------------------------
 
 template <typename derived_t>
-bool TermsOperator<derived_t>::operator==(const self_t& other) const {
+bool TermsOperator<derived_t>::operator==(const derived_t& other) const {
     std::vector<complex_term_dict_t::value_type> intersection;
     std::vector<complex_term_dict_t::value_type> symmetric_differences;
 
@@ -347,8 +356,9 @@ bool TermsOperator<derived_t>::operator==(const self_t& other) const {
     for (const auto& term : intersection) {
         const auto& left = terms_.at(term.first);
         const auto& right = other.terms_.at(term.first);
-        if (std::abs(left - right)
-            <= std::max(EQ_TOLERANCE, EQ_TOLERANCE * std::max(std::abs(left), std::abs(right)))) {
+        static_assert(std::is_same_v<std::remove_cvref_t<decltype(left)>, coefficient_t>);
+        static_assert(std::is_same_v<std::remove_cvref_t<decltype(right)>, coefficient_t>);
+        if (std::abs(left - right) > std::max(EQ_TOLERANCE, EQ_TOLERANCE * std::max(std::abs(left), std::abs(right)))) {
             return false;
         }
     }
@@ -363,8 +373,8 @@ bool TermsOperator<derived_t>::operator==(const self_t& other) const {
 
 template <typename derived_t>
 template <typename assign_modify_op_t, typename coeff_unary_op_t>
-auto TermsOperator<derived_t>::add_sub_impl_(const self_t& other, assign_modify_op_t&& assign_modify_op,
-                                             coeff_unary_op_t&& coeff_unary_op) -> self_t& {
+auto TermsOperator<derived_t>::add_sub_impl_(const derived_t& other, assign_modify_op_t&& assign_modify_op,
+                                             coeff_unary_op_t&& coeff_unary_op) -> derived_t& {
     for (const auto& [term, coeff] : other.terms_) {
         auto it = terms_.find(term);
         if (it != terms_.end()) {
@@ -380,7 +390,7 @@ auto TermsOperator<derived_t>::add_sub_impl_(const self_t& other, assign_modify_
 
     calculate_num_targets_();
 
-    return *this;
+    return *static_cast<derived_t*>(this);
 }
 
 // =============================================================================
@@ -388,6 +398,14 @@ auto TermsOperator<derived_t>::add_sub_impl_(const self_t& other, assign_modify_
 template <typename derived_t>
 void TermsOperator<derived_t>::calculate_num_targets_() noexcept {
     num_targets_ = count_qubits();
+}
+
+// =============================================================================
+
+template <typename derived_t, TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_IMPL>
+auto operator-(const number_t& number, TermsOperator<derived_t> other) {
+    other -= number;
+    return *static_cast<derived_t*>(&other);
 }
 
 // =============================================================================

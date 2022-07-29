@@ -57,20 +57,20 @@ enum class TermValue : uint8_t {
 template <typename derived_t>
 class TermsOperator
     // clang-format off
-    : boost::additive1<TermsOperator<derived_t>
-    , boost::additive2<TermsOperator<derived_t>, double
-    , boost::additive2<TermsOperator<derived_t>, std::complex<double>
-    , boost::multipliable1<TermsOperator<derived_t>
-    , boost::multiplicative2<TermsOperator<derived_t>, double
-    , boost::multiplicative2<TermsOperator<derived_t>, std::complex<double>
+    : boost::additive1<derived_t
+    , boost::additive2<derived_t, double
+    , boost::additive2<derived_t, std::complex<double>
+    , boost::multipliable1<derived_t
+    , boost::multiplicative2<derived_t, double
+    , boost::multiplicative2<derived_t, std::complex<double>
 #if !MQ_HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
-    , boost::equality_comparable1<TermsOperator<derived_t>>
+    , boost::equality_comparable1<derived_t>
 #endif  // !MQ_HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
-      >>>>>> {
+    >>>>>> {
     // clang-format on
  public:
     using non_const_num_targets = void;
-    using self_t = TermsOperator<derived_t>;
+    using base_t = TermsOperator<derived_t>;
 
     static constexpr auto EQ_TOLERANCE = 1.e-8;
 
@@ -84,6 +84,11 @@ class TermsOperator
     }
 
     TermsOperator() = default;
+    TermsOperator(const TermsOperator&) = default;
+    TermsOperator(TermsOperator&&) noexcept = default;
+    TermsOperator& operator=(const TermsOperator&) = default;
+    TermsOperator& operator=(TermsOperator&&) noexcept = default;
+    ~TermsOperator() noexcept = default;
 
     explicit TermsOperator(term_t term, coefficient_t coeff = 1.0);
 
@@ -108,6 +113,8 @@ class TermsOperator
     //! Calculate the number of qubits on which an operator acts
     MQ_NODISCARD term_t::first_type count_qubits() const noexcept;
 
+    MQ_NODISCARD static derived_t identity();
+
     // -------------------------------------------------------------------------
 
     //! Return the adjoint of this operator
@@ -128,16 +135,16 @@ class TermsOperator
      *
      * \return A vector of TermsOperator::derived_t
      */
-    MQ_NODISCARD std::vector<self_t> singlet() const noexcept;
+    MQ_NODISCARD std::vector<derived_t> singlet() const noexcept;
 
     //! Get the coefficient of a single-term operator
     MQ_NODISCARD coefficient_t singlet_coeff() const noexcept;
 
     //! Return a copy of an operator with all the coefficients set to their real part
-    MQ_NODISCARD self_t real() const noexcept;
+    MQ_NODISCARD derived_t real() const noexcept;
 
     //! Return a copy of an operator with all the coefficients set to their imaginary part
-    MQ_NODISCARD self_t imag() const noexcept;
+    MQ_NODISCARD derived_t imag() const noexcept;
 
     //! Compress a TermsOperator
     /*!
@@ -156,48 +163,50 @@ class TermsOperator
      *    // ham_compress = 1/2 [X0 Y3]
      * \endcode
      */
-    self_t& compress(double abs_tol = EQ_TOLERANCE);
-
-    //! Power operator (self-multiply n-times)
-    MQ_NODISCARD self_t pow(uint32_t exponent) const;
+    derived_t& compress(double abs_tol = EQ_TOLERANCE);
 
     // =================================
 
     //! In-place addition of another terms operator
-    self_t& operator+=(const self_t& other);
+    derived_t& operator+=(const derived_t& other);
 
     //! In-place addition with a number
     template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_DEF>
-    self_t& operator+=(const number_t& number);
+    derived_t& operator+=(const number_t& number);
 
     // ---------------------------------
 
     //! In-place subtraction of another terms operator
-    self_t& operator-=(const self_t& other);
+    derived_t& operator-=(const derived_t& other);
 
     //! In-place subtraction with a number
     template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_DEF>
-    self_t& operator-=(const number_t& number);
+    derived_t& operator-=(const number_t& number);
 
     // ---------------------------------
 
     //! Unary - operator with a number
-    MQ_NODISCARD self_t operator-() const;
+    MQ_NODISCARD derived_t operator-() const;
 
     // ---------------------------------
 
     //! In-place multiplication of another terms operator
-    self_t& operator*=(const self_t& other);
+    derived_t& operator*=(const derived_t& other);
 
     //! In-place multiplication with a number
     template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_DEF>
-    self_t& operator*=(const number_t& number);
+    derived_t& operator*=(const number_t& number);
 
     // ---------------------------------
 
     //! In-place multiplication with a number
     template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_DEF>
-    self_t& operator/=(const number_t& number);
+    derived_t& operator/=(const number_t& number);
+
+    // ---------------------------------
+
+    //! Power operator (self-multiply n-times)
+    MQ_NODISCARD derived_t pow(uint32_t exponent) const;
 
     // =================================
 
@@ -208,19 +217,19 @@ class TermsOperator
      *
      * \param other Another term operators
      */
-    MQ_NODISCARD bool operator==(self_t& other);
+    // MQ_NODISCARD bool operator==(derived_t& other);
 
     //! Comparison operator
     /*!
      * \param other Another term operators
      */
-    MQ_NODISCARD bool operator==(const self_t& other) const;
+    MQ_NODISCARD bool operator==(const derived_t& other) const;
 
  private:
     //! Addition/subtraction helper member function
     template <typename assign_modify_op_t, typename coeff_unary_op_t>
-    self_t& add_sub_impl_(const self_t& other, assign_modify_op_t&& assign_modify_op,
-                          coeff_unary_op_t&& coeff_unary_op);
+    derived_t& add_sub_impl_(const derived_t& other, assign_modify_op_t&& assign_modify_op,
+                             coeff_unary_op_t&& coeff_unary_op);
 
     //! Calculate the number of target qubits of a TermOperator.
     void calculate_num_targets_() noexcept;
@@ -229,6 +238,9 @@ class TermsOperator
     uint32_t num_targets_{0UL};
     complex_term_dict_t terms_;
 };
+
+template <typename derived_t, TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_DEF>
+auto operator-(const number_t& number, TermsOperator<derived_t> other);
 
 }  // namespace mindquantum::ops
 
