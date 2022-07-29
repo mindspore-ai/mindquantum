@@ -13,21 +13,28 @@
 //   limitations under the License.
 
 #include <complex>
-#include <iostream>
+#include <sstream>
 
 #include <boost/range/combine.hpp>
-#include <catch2/catch.hpp>
-#include <spdlog/common.h>
-#include <spdlog/spdlog.h>
 
+#include "core/logging.hpp"
 #include "ops/gates/terms_operator.hpp"
 #include "ops/utils.hpp"
+
+// clang-format off
+#include <catch2/catch.hpp>
+// clang-format on
 
 // =============================================================================
 
 namespace {
 struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator> {
     using TermsOperator::TermsOperator;
+    DummyOperator(const DummyOperator&) = default;
+    DummyOperator(DummyOperator&&) = default;
+    DummyOperator& operator=(const DummyOperator&) = default;
+    DummyOperator& operator=(DummyOperator&&) = default;
+    ~DummyOperator() = default;
 
     static std::tuple<std::vector<term_t>, coefficient_t> simplify_(const std::vector<term_t>& terms,
                                                                     coefficient_t coeff) {
@@ -38,9 +45,12 @@ struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator> {
 
 using namespace std::literals::complex_literals;
 using TermValue = mindquantum::ops::TermValue;
+using coefficient_t = DummyOperator::coefficient_t;
 using term_t = DummyOperator::term_t;
 using terms_t = DummyOperator::terms_t;
 using complex_term_dict_t = DummyOperator::complex_term_dict_t;
+
+// =============================================================================
 
 TEST_CASE("TermsOperator constructor", "[terms_op][ops]") {
     MQ_DISABLE_LOGGING;
@@ -241,25 +251,395 @@ TEST_CASE("TermsOperator compression", "[terms_op][ops]") {
 
 // =============================================================================
 
-// TEST_CASE("TermsOperator constructor", "[terms_op][ops]") {
-//     using namespace std::literals::complex_literals;
+TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
+    SECTION("Addition (TermsOperator)") {
+        DummyOperator op;
+        complex_term_dict_t ref_terms;
 
-//     ::A op, other;
-//     op += other;
-//     op += 2.0;
-//     op += 2.i;
-//     op + other;
+        CHECK(std::empty(op));
 
-//     op -= other;
-//     op -= 2.0;
-//     op -= 2.i;
-//     op - other;
+        op += DummyOperator{};
+        CHECK(std::empty(op));
 
-//     op *= other;
+        // op = {'X3': 2.3}
+        auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
+        REQUIRE(inserted1);
+        op += DummyOperator(it1->first, it1->second);
+        REQUIRE(!std::empty(op));
+        CHECK(std::size(op) == 1);
+        CHECK(op.get_terms() == ref_terms);
 
-//     op.pow(10);
+        // op = {'X3': 2.3,  'X1': 1.}
+        auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::X}}, 1.);
+        REQUIRE(inserted2);
+        op += DummyOperator(it2->first, it2->second);
+        REQUIRE(!std::empty(op));
+        CHECK(std::size(op) == 2);
+        CHECK(op.get_terms() == ref_terms);
 
-//     CHECK(op == other);
-// }
+        // op = {'X3': 2.3 + 1.85i,  'X1': 1.}
+        const auto term3 = it1->first.front();
+        const auto coeff3 = 1.85i;
+        it1->second += coeff3;
+        op += DummyOperator(term3, coeff3);
+        REQUIRE(!std::empty(op));
+        CHECK(std::size(op) == 2);
+        CHECK(op.get_terms() == ref_terms);
+
+        // op = {'X3': 2.3 + 1.85i,  'X1': 1.,  'Y1': 10.}
+        auto [it3, inserted3] = ref_terms.emplace(terms_t{{1, TermValue::Y}}, 10.);
+        REQUIRE(inserted3);
+        op += DummyOperator(it3->first, it3->second);
+        REQUIRE(!std::empty(op));
+        CHECK(std::size(op) == 3);
+        CHECK(op.get_terms() == ref_terms);
+
+        // op = {'X3': 2.3 + 1.85i,  'Y1': 10.}
+        const auto term4 = it2->first.front();
+        const auto coeff4 = -it2->second;
+        ref_terms.erase(it2);
+        op += DummyOperator(term4, coeff4);
+        REQUIRE(!std::empty(op));
+        CHECK(std::size(op) == 2);
+        CHECK(op.get_terms() == ref_terms);
+    }
+
+    SECTION("Addition (numbers)") {
+        complex_term_dict_t ref_terms;
+
+        auto [it, inserted] = ref_terms.emplace(terms_t{}, 1.);
+        DummyOperator op = DummyOperator::identity();
+
+        CHECK(!std::empty(op));
+        REQUIRE(op.is_identity());
+        CHECK(op.get_terms() == ref_terms);
+
+        SECTION("Integer") {
+            UNSCOPED_INFO("Integer");
+            const auto addend = 13;
+            op += addend;
+            it->second += addend;
+        }
+
+        SECTION("Double") {
+            UNSCOPED_INFO("Double");
+            const auto addend = 2.34;
+            op += addend;
+            it->second += addend;
+        }
+
+        SECTION("Complex double") {
+            UNSCOPED_INFO("Complex double");
+            const auto addend = 5. + 2.34i;
+            op += addend;
+            it->second += addend;
+        }
+
+        // NB: important to have this check here first (UNSCOPED_INFO)
+        CHECK(op.get_terms() == ref_terms);
+        CHECK(!std::empty(op));
+        REQUIRE(op.is_identity());
+    }
+}
+
+TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
+    SECTION("Subtraction (TermsOperator)") {
+        // NB: careful with the signs of coefficients!
+        DummyOperator op;
+        complex_term_dict_t ref_terms;
+
+        CHECK(std::empty(op));
+
+        op -= DummyOperator{};
+        CHECK(std::empty(op));
+
+        // op = {'X3': -2.3}
+        auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
+        REQUIRE(inserted1);
+        op -= DummyOperator(it1->first, -it1->second);
+        REQUIRE(!std::empty(op));
+        CHECK(std::size(op) == 1);
+        CHECK(op.get_terms() == ref_terms);
+
+        // op = {'X3': -2.3,  'X1': -1.}
+        auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::X}}, 1.);
+        REQUIRE(inserted2);
+        op -= DummyOperator(it2->first, -it2->second);
+        REQUIRE(!std::empty(op));
+        CHECK(std::size(op) == 2);
+        CHECK(op.get_terms() == ref_terms);
+
+        // op = {'X3': -2.3 - 1.85i,  'X1': -1.}
+        const auto term3 = it1->first.front();
+        const auto coeff3 = 1.85i;
+        it1->second -= coeff3;
+        op -= DummyOperator(term3, coeff3);
+        REQUIRE(!std::empty(op));
+        CHECK(std::size(op) == 2);
+        CHECK(op.get_terms() == ref_terms);
+
+        // op = {'X3': -2.3 - 1.85i,  'X1': -1.,  'Y1': -10.}
+        auto [it3, inserted3] = ref_terms.emplace(terms_t{{1, TermValue::Y}}, 10.);
+        REQUIRE(inserted3);
+        op -= DummyOperator(it3->first, -it3->second);
+        REQUIRE(!std::empty(op));
+        CHECK(std::size(op) == 3);
+        CHECK(op.get_terms() == ref_terms);
+
+        // op = {'X3': -2.3 - 1.85i,  'Y1': -10.}
+        const auto term4 = it2->first.front();
+        const auto coeff4 = it2->second;
+        ref_terms.erase(it2);
+        op -= DummyOperator(term4, coeff4);
+        REQUIRE(!std::empty(op));
+        CHECK(std::size(op) == 2);
+        CHECK(op.get_terms() == ref_terms);
+    }
+
+    SECTION("Subtraction (numbers)") {
+        complex_term_dict_t ref_terms;
+
+        auto [it, inserted] = ref_terms.emplace(terms_t{}, 1.);
+        DummyOperator op = DummyOperator::identity();
+
+        CHECK(!std::empty(op));
+        REQUIRE(op.is_identity());
+        CHECK(op.get_terms() == ref_terms);
+
+        SECTION("Integer") {
+            const auto subtrahend = 13;
+            SECTION("In-place subtraction") {
+                UNSCOPED_INFO("In-place subtraction");
+                op -= subtrahend;
+            }
+            SECTION("Left subtraction") {
+                UNSCOPED_INFO("Left subtraction");
+                op = op - subtrahend;
+            }
+            SECTION("Right subtraction") {
+                UNSCOPED_INFO("Right subtraction");
+                op = subtrahend - op;
+            }
+
+            it->second -= subtrahend;
+        }
+
+        SECTION("Double") {
+            const auto subtrahend = 2.34;
+            SECTION("In-place subtraction") {
+                UNSCOPED_INFO("In-place subtraction");
+                op -= subtrahend;
+            }
+            SECTION("Left subtraction") {
+                UNSCOPED_INFO("Left subtraction");
+                op = op - subtrahend;
+            }
+            SECTION("Right subtraction") {
+                UNSCOPED_INFO("Right subtraction");
+                op = subtrahend - op;
+            }
+            it->second -= subtrahend;
+        }
+
+        SECTION("Complex double") {
+            const auto subtrahend = 5. + 2.34i;
+            SECTION("In-place subtraction") {
+                UNSCOPED_INFO("In-place subtraction");
+                op -= subtrahend;
+            }
+            SECTION("Left subtraction") {
+                UNSCOPED_INFO("Left subtraction");
+                op = op - subtrahend;
+            }
+            SECTION("Right subtraction") {
+                UNSCOPED_INFO("Right subtraction");
+                op = subtrahend - op;
+            }
+            it->second -= subtrahend;
+        }
+
+        // NB: important to have this check here first (UNSCOPED_INFO)
+        CHECK(op.get_terms() == ref_terms);
+        CHECK(!std::empty(op));
+        REQUIRE(op.is_identity());
+    }
+}
+
+TEST_CASE("TermsOperator arithmetic operators (*)", "[terms_op][ops]") {
+    SECTION("Multiplication (TermsOperator)") {
+        DummyOperator op;
+        complex_term_dict_t ref_terms;
+
+        // op = {'X3': 2.3}
+        auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
+        REQUIRE(inserted1);
+        op += DummyOperator(it1->first, it1->second);
+
+        // op = {'X3 Y1': 4.255}
+        const auto term = term_t{1, TermValue::Y};
+        const auto coeff = 1.85;
+        auto [it2, inserted2] = ref_terms.emplace(terms_t{it1->first.front(), term}, it1->second * coeff);
+        REQUIRE(inserted2);
+        ref_terms.erase(it1);
+
+        op *= DummyOperator({term}, coeff);
+        REQUIRE(!std::empty(op));
+        CHECK(std::size(op) == 1);
+        CHECK(op.get_terms() == ref_terms);
+
+        /* NB: cannot test for the case where the product of terms is already present in the original since we do not
+         *     implement the simplify_ member function in these tests.
+         */
+    }
+
+    SECTION("Multiplication (numbers)") {
+        complex_term_dict_t ref_terms{
+            {terms_t{{0, TermValue::X}}, 2.34},
+            {terms_t{{3, TermValue::Z}}, 2.3i},
+        };
+
+        DummyOperator op{ref_terms};
+
+        CHECK(!std::empty(op));
+        CHECK(op.get_terms() == ref_terms);
+
+        const auto do_multiply = [](auto& terms, const auto& multiplier) constexpr {
+            for (auto& [_, coeff] : terms) {
+                coeff *= multiplier;
+            }
+        };
+
+        SECTION("Integer") {
+            UNSCOPED_INFO("Integer");
+            const auto multiplier = 13;
+            op *= multiplier;
+            do_multiply(ref_terms, multiplier);
+        }
+
+        SECTION("Double") {
+            UNSCOPED_INFO("Double");
+            const auto multiplier = 2.34;
+            op *= multiplier;
+            do_multiply(ref_terms, multiplier);
+        }
+
+        SECTION("Complex double") {
+            UNSCOPED_INFO("Complex double");
+            const auto multiplier = 5. + 2.34i;
+            op *= multiplier;
+            do_multiply(ref_terms, multiplier);
+        }
+
+        // NB: important to have this check here first (UNSCOPED_INFO)
+        CHECK(op.get_terms() == ref_terms);
+        CHECK(!std::empty(op));
+    }
+}
+
+TEST_CASE("TermsOperator arithmetic operators (/)", "[terms_op][ops]") {
+    SECTION("Division (numbers)") {
+        complex_term_dict_t ref_terms{
+            {terms_t{{0, TermValue::X}}, 2.34},
+            {terms_t{{3, TermValue::Z}}, 2.3i},
+        };
+
+        DummyOperator op{ref_terms};
+
+        CHECK(!std::empty(op));
+        CHECK(op.get_terms() == ref_terms);
+
+        const auto do_multiply = [](auto& terms, const auto& multiplier) constexpr {
+            for (auto& [_, coeff] : terms) {
+                coeff /= multiplier;
+            }
+        };
+
+        const auto approx_equal = [&ref_terms](const complex_term_dict_t& other_terms) {
+            for (const auto& [ref, other] : boost::combine(ref_terms, other_terms)) {
+                const auto& [local_ops_ref, coeff_ref] = ref;
+                const auto& [local_ops_other, coeff_other] = other;
+                if (local_ops_ref != local_ops_other) {
+                    FAIL_CHECK(local_ops_ref << " != " << local_ops_other);
+                    return false;
+                }
+                const auto rel_diff = std::abs((coeff_ref - coeff_other)
+                                               / std::min(std::abs(coeff_ref), std::abs(coeff_other)));
+                if (rel_diff > 1.e-8) {
+                    FAIL_CHECK(coeff_ref << " != " << coeff_other << '(' << rel_diff << ')');
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        SECTION("Integer") {
+            UNSCOPED_INFO("Integer");
+            const auto divisor = 13;
+            op /= divisor;
+            do_multiply(ref_terms, divisor);
+        }
+
+        SECTION("Double") {
+            UNSCOPED_INFO("Double");
+            const auto divisor = 2.34;
+            op /= divisor;
+            do_multiply(ref_terms, divisor);
+        }
+
+        SECTION("Complex double") {
+            UNSCOPED_INFO("Complex double");
+            const auto divisor = 5. + 2.34i;
+            op /= divisor;
+            do_multiply(ref_terms, divisor);
+        }
+
+        CHECK_THAT(op.get_terms(), Catch::Predicate<complex_term_dict_t>(approx_equal, "Approx equal terms"));
+        CHECK(!std::empty(op));
+    }
+}
+
+TEST_CASE("TermsOperator mathmetic operators (pow)", "[terms_op][ops]") {
+    SECTION("Addition (TermsOperator)") {
+        complex_term_dict_t ref_terms;
+
+        auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
+        auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::X}}, 1.);
+        REQUIRE(inserted1);
+        REQUIRE(inserted2);
+
+        // op = {'X3': 2.3,  'X1': 1.}
+        DummyOperator op(ref_terms);
+        REQUIRE(!std::empty(op));
+        CHECK(std::size(op) == 2);
+        CHECK(op.get_terms() == ref_terms);
+
+        const auto result = op.pow(3);
+        const auto ref = op * op * op;
+
+        REQUIRE(!std::empty(result));
+        CHECK(std::size(result) == std::size(ref));
+        CHECK(result.get_terms() == ref.get_terms());
+    }
+}
+
+TEST_CASE("TermsOperator comparison operators", "[terms_op][ops]") {
+    complex_term_dict_t ref_terms;
+
+    auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
+    auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::X}}, 1.);
+    REQUIRE(inserted1);
+    REQUIRE(inserted2);
+
+    // op = {'X3': 2.3,  'X1': 1.}
+    const DummyOperator op(ref_terms);
+    DummyOperator other(ref_terms);
+
+    CHECK(op == op);
+    CHECK(op == other);
+
+    other += DummyOperator::identity();
+    CHECK(!(op == other));
+    CHECK(op != other);
+}
 
 // =============================================================================
