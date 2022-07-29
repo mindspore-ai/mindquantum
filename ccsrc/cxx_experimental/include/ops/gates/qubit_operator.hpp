@@ -61,6 +61,11 @@ class QubitOperator : public TermsOperator<QubitOperator> {
     }
 
     QubitOperator() = default;
+    QubitOperator(const QubitOperator&) = default;
+    QubitOperator(QubitOperator&&) noexcept = default;
+    QubitOperator& operator=(const QubitOperator&) = default;
+    QubitOperator& operator=(QubitOperator&&) noexcept = default;
+    ~QubitOperator() noexcept = default;
 
     explicit QubitOperator(term_t term, coefficient_t coefficient = 1.0);
 
@@ -68,7 +73,12 @@ class QubitOperator : public TermsOperator<QubitOperator> {
 
     explicit QubitOperator(complex_term_dict_t terms);
 
-    explicit QubitOperator(std::string_view terms_string);
+    //! Constructor from a string
+    /*!
+     * \note If parsing the string fails, the resulting QubitOperator object will represent the identity. If logging is
+     *       enabled, an error message will be printed inside the log with an appropriate error message.
+     */
+    explicit QubitOperator(std::string_view terms_string, coefficient_t coeff = 1.0);
 
     // -------------------------------------------------------------------
 
