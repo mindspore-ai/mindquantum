@@ -32,8 +32,6 @@
 #    include <spdlog/spdlog.h>
 #endif  // ENABLE_LOGGING
 
-// -----------------------------------------------------------------------------
-
 #include <catch2/catch.hpp>
 
 // =============================================================================
@@ -75,6 +73,16 @@ struct SymEngineEquals : Catch::MatcherBase<std::vector<SymEngine::RCP<const Sym
 
     const std::vector<SymEngine::RCP<const SymEngine::Basic>> comparator_;
 };
+
+// =============================================================================
+
+#ifdef ENABLE_LOGGING
+#    define MQ_DISABLE_LOGGING spdlog::default_logger()->set_level(spdlog::level::off)
+#    define MQ_ENABLE_LOGGING  spdlog::default_logger()->set_level(spdlog::level::info)
+#else
+#    define MQ_DISABLE_LOGGING static_cast<void>(0)
+#    define MQ_ENABLE_LOGGING  static_cast<void>(0)
+#endif  // ENABLE_LOGGING
 
 // =============================================================================
 
