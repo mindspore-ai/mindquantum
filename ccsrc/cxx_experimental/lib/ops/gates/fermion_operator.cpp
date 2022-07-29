@@ -270,7 +270,7 @@ auto FermionOperator::split() const noexcept -> std::vector<FermionOperator> {
 
 // -----------------------------------------------------------------------------
 
-auto FermionOperator::normal_ordered() const -> self_t {
+auto FermionOperator::normal_ordered() const -> FermionOperator {
     auto ordered_op{*this};
     for (const auto& [local_ops, coeff] : terms_) {
         ordered_op += normal_ordered_term_(local_ops, coeff);
