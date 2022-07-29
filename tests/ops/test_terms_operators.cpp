@@ -314,12 +314,12 @@ TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
         REQUIRE(op.is_identity());
         CHECK(op.get_terms() == ref_terms);
 
-        SECTION("Integer") {
-            UNSCOPED_INFO("Integer");
-            const auto addend = 13;
-            op += addend;
-            it->second += addend;
-        }
+        // SECTION("Integer") {
+        //     UNSCOPED_INFO("Integer");
+        //     const auto addend = 13;
+        //     op += addend;
+        //     it->second += addend;
+        // }
 
         SECTION("Double") {
             UNSCOPED_INFO("Double");
@@ -406,23 +406,23 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
         REQUIRE(op.is_identity());
         CHECK(op.get_terms() == ref_terms);
 
-        SECTION("Integer") {
-            const auto subtrahend = 13;
-            SECTION("In-place subtraction") {
-                UNSCOPED_INFO("In-place subtraction");
-                op -= subtrahend;
-            }
-            SECTION("Left subtraction") {
-                UNSCOPED_INFO("Left subtraction");
-                op = op - subtrahend;
-            }
-            SECTION("Right subtraction") {
-                UNSCOPED_INFO("Right subtraction");
-                op = subtrahend - op;
-            }
+        // SECTION("Integer") {
+        //     const auto subtrahend = 13;
+        //     SECTION("In-place subtraction") {
+        //         UNSCOPED_INFO("In-place subtraction");
+        //         op -= subtrahend;
+        //     }
+        //     SECTION("Left subtraction") {
+        //         UNSCOPED_INFO("Left subtraction");
+        //         op = op - subtrahend;
+        //     }
+        //     SECTION("Right subtraction") {
+        //         UNSCOPED_INFO("Right subtraction");
+        //         op = subtrahend - op;
+        //     }
 
-            it->second -= subtrahend;
-        }
+        //     it->second -= subtrahend;
+        // }
 
         SECTION("Double") {
             const auto subtrahend = 2.34;
@@ -509,12 +509,12 @@ TEST_CASE("TermsOperator arithmetic operators (*)", "[terms_op][ops]") {
             }
         };
 
-        SECTION("Integer") {
-            UNSCOPED_INFO("Integer");
-            const auto multiplier = 13;
-            op *= multiplier;
-            do_multiply(ref_terms, multiplier);
-        }
+        // SECTION("Integer") {
+        //     UNSCOPED_INFO("Integer");
+        //     const auto multiplier = 13;
+        //     op *= multiplier;
+        //     do_multiply(ref_terms, multiplier);
+        // }
 
         SECTION("Double") {
             UNSCOPED_INFO("Double");
@@ -572,12 +572,12 @@ TEST_CASE("TermsOperator arithmetic operators (/)", "[terms_op][ops]") {
             return true;
         };
 
-        SECTION("Integer") {
-            UNSCOPED_INFO("Integer");
-            const auto divisor = 13;
-            op /= divisor;
-            do_multiply(ref_terms, divisor);
-        }
+        // SECTION("Integer") {
+        //     UNSCOPED_INFO("Integer");
+        //     const auto divisor = 13;
+        //     op /= divisor;
+        //     do_multiply(ref_terms, divisor);
+        // }
 
         SECTION("Double") {
             UNSCOPED_INFO("Double");

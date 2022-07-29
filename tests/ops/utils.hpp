@@ -32,8 +32,6 @@
 #    include <spdlog/spdlog.h>
 #endif  // ENABLE_LOGGING
 
-// -----------------------------------------------------------------------------
-
 #include <catch2/catch.hpp>
 
 // =============================================================================
@@ -53,9 +51,9 @@ struct StringMaker<SymEngine::Expression> {
 };
 }  // namespace Catch
 
-struct Equals : Catch::MatcherBase<std::vector<SymEngine::RCP<const SymEngine::Basic>>> {
+struct SymEngineEquals : Catch::MatcherBase<std::vector<SymEngine::RCP<const SymEngine::Basic>>> {
     template <typename... Ts>
-    explicit Equals(Ts&&... ts) : comparator_{{std::forward<Ts>(ts)...}} {
+    explicit SymEngineEquals(Ts&&... ts) : comparator_{{std::forward<Ts>(ts)...}} {
     }
 
     bool match(const std::vector<SymEngine::RCP<const SymEngine::Basic>>& v) const override {
@@ -85,8 +83,6 @@ struct Equals : Catch::MatcherBase<std::vector<SymEngine::RCP<const SymEngine::B
 #    define MQ_DISABLE_LOGGING static_cast<void>(0)
 #    define MQ_ENABLE_LOGGING  static_cast<void>(0)
 #endif  // ENABLE_LOGGING
-
-// =============================================================================
 
 // =============================================================================
 
