@@ -65,4 +65,6 @@ auto Equals(const std::vector<T*>& range) {
     return InstructionPtrRange(range);
 }
 
+// =============================================================================
+
 #endif /* TEST_CORE_UTILS_HPP */

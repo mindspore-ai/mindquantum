@@ -18,12 +18,22 @@
 #include <sstream>
 #include <string>
 
-#include <catch2/catch.hpp>
 #include <tweedledum/IR/Circuit.h>
 #include <tweedledum/IR/Instruction.h>
 
 #include "ops/gates.hpp"
 #include "ops/meta/dagger.hpp"
+
+// =============================================================================
+// NB: Need to have those defined *before* including Catch2
+
+#include "stream_operators.hpp"  // NOLINT(build/include_subdir)
+
+// -----------------------------------------------------------------------------
+
+#include <catch2/catch.hpp>
+
+// =============================================================================
 
 namespace Catch {
 template <>
@@ -136,5 +146,7 @@ struct CircuitEquals : Catch::MatcherBase<tweedledum::Circuit> {
 inline auto Equals(const tweedledum::Circuit& circuit) {
     return CircuitEquals(circuit);
 }
+
+// =============================================================================
 
 #endif /* TESTS_UTILS_HPP */

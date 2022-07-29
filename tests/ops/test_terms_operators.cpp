@@ -36,52 +36,6 @@ struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator> {
 };
 }  // namespace
 
-// =============================================================================
-
-std::ostream& operator<<(std::ostream& out, mindquantum::ops::TermValue val) {
-    using TermValue = mindquantum::ops::TermValue;
-    if (val == TermValue::I) {
-        out << 'I';
-    } else if (val == TermValue::X) {
-        out << 'X';
-    } else if (val == TermValue::Y) {
-        out << 'Y';
-    } else if (val == TermValue::Z) {
-        out << 'Z';
-    } else if (val == TermValue::a) {
-        out << 'a';
-    } else if (val == TermValue::adg) {
-        out << "adg";
-    } else {
-        out << "UNKNOWN";
-    }
-    return out;
-}
-
-template <typename T, typename U>
-std::ostream& operator<<(std::ostream& out, const std::pair<T, U>& p) {
-    out << '(' << p.first << ',' << p.second << ')';
-    return out;
-}
-
-template <typename T>
-std::ostream& operator<<(std::ostream& out, const std::vector<T>& v) {
-    for (const auto& el : v) {
-        out << el << ",";
-    }
-    return out;
-}
-
-template <typename key_t, typename value_t, typename comp_t>
-std::ostream& operator<<(std::ostream& out, const std::map<key_t, value_t, comp_t>& m) {
-    for (const auto& [k, v] : m) {
-        std::cout << k << ": " << v << '\n';
-    }
-    return out;
-}
-
-// =============================================================================
-
 using namespace std::literals::complex_literals;
 using TermValue = mindquantum::ops::TermValue;
 using term_t = DummyOperator::term_t;
