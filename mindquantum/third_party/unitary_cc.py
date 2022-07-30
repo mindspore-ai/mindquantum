@@ -16,7 +16,6 @@
 import itertools
 
 import numpy
-from openfermion.utils.indexing import down_index, up_index
 
 from mindquantum.core.parameterresolver import ParameterResolver
 
@@ -57,6 +56,8 @@ def uccsd_singlet_get_packed_amplitudes(single_amplitudes, double_amplitudes, n_
         ...                                     n_qubits, n_electrons)
         {'d1_0': 0.76162, 's_0': 0.601115}, const: 0
     """
+    import openfermion.utils.indexing as of_indexing  # pylint: disable=import-outside-toplevel
+
     n_spatial_orbitals = n_qubits // 2
     n_occupied = int(numpy.ceil(n_electrons / 2))
     n_virtual = n_spatial_orbitals - n_occupied
@@ -72,10 +73,10 @@ def uccsd_singlet_get_packed_amplitudes(single_amplitudes, double_amplitudes, n_
         virtual_spatial = n_occupied + p
         occupied_spatial = q
         # Get indices of spin orbitals
-        virtual_up = up_index(virtual_spatial)
-        virtual_down = down_index(virtual_spatial)
-        occupied_up = up_index(occupied_spatial)
-        occupied_down = down_index(occupied_spatial)
+        virtual_up = of_indexing.up_index(virtual_spatial)
+        virtual_down = of_indexing.down_index(virtual_spatial)
+        occupied_up = of_indexing.up_index(occupied_spatial)
+        occupied_down = of_indexing.down_index(occupied_spatial)
 
         # Get singles amplitude
         # Just get up amplitude, since down should be the same
@@ -94,10 +95,10 @@ def uccsd_singlet_get_packed_amplitudes(single_amplitudes, double_amplitudes, n_
 
         # Get indices of spin orbitals
         # Just get up amplitudes, since down and cross terms should be the same
-        virtual_1_up = up_index(virtual_spatial_1)
-        occupied_1_up = up_index(occupied_spatial_1)
-        virtual_2_up = up_index(virtual_spatial_2)
-        occupied_2_up = up_index(occupied_spatial_2)
+        virtual_1_up = of_indexing.up_index(virtual_spatial_1)
+        occupied_1_up = of_indexing.up_index(occupied_spatial_1)
+        virtual_2_up = of_indexing.up_index(virtual_spatial_2)
+        occupied_2_up = of_indexing.up_index(occupied_spatial_2)
 
         # Get amplitude
         doubles_2[f'd2_{len(doubles_2)}'] = double_amplitudes[virtual_1_up, occupied_1_up, virtual_2_up, occupied_2_up]
@@ -138,6 +139,9 @@ def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):
         s_0 [3^ 1] +
         d1_0 [3^ 1 2^ 0]
     """
+    # pylint: disable=import-outside-toplevel
+    import openfermion.utils.indexing as of_indexing
+
     from mindquantum.core.operators import (  # pylint: disable=import-outside-toplevel
         FermionOperator,
     )
@@ -153,7 +157,7 @@ def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):
     generator = FermionOperator()
 
     # Generate excitations
-    spin_index_functions = [up_index, down_index]
+    spin_index_functions = [of_indexing.up_index, of_indexing.down_index]
 
     # pylint: disable=invalid-name
     # Generate all spin-conserving single and double excitations derived from one spatial occupied-virtual pair

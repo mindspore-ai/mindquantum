@@ -18,7 +18,6 @@ import itertools
 from collections import OrderedDict
 
 import numpy as np
-from openfermion.chem import MolecularData
 
 from mindquantum.core.circuit import Circuit, decompose_single_term_time_evolution
 from mindquantum.core.operators import (
@@ -192,6 +191,9 @@ def generate_uccsd(molecular, threshold=0):
         - **n_qubits** (int), the number of qubits in simulation.
         - **n_electrons** (int), the number of electrons of the molecule.
     """
+    # pylint: disable=import-outside-toplevel
+    from openfermion.chem import MolecularData
+
     if isinstance(molecular, str):
         mol = MolecularData(filename=molecular)
         mol.load()

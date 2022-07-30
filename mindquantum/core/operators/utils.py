@@ -15,19 +15,11 @@
 
 """This module provide some useful function related to operators."""
 
-import openfermion.ops as ofops
 
 from ..operators.fermion_operator import FermionOperator
 from ..operators.polynomial_tensor import PolynomialTensor
 from ..operators.qubit_excitation_operator import QubitExcitationOperator
 from ..operators.qubit_operator import QubitOperator
-
-try:
-    from projectq.ops import QubitOperator as PQOperator
-except ImportError:
-
-    class PQOperator:  # pylint: disable=too-few-public-methods
-        """Dummy class for ProjectQ operators."""
 
 
 def count_qubits(operator):
@@ -56,6 +48,10 @@ def count_qubits(operator):
         >>> count_qubits(fer_op)
         2
     """
+    # pylint: disable=import-outside-toplevel
+    import openfermion.ops as ofops
+    import projectq.ops as pqops
+
     # Handle FermionOperator.
     valueable_type = (
         FermionOperator,
@@ -63,7 +59,7 @@ def count_qubits(operator):
         QubitExcitationOperator,
         ofops.FermionOperator,
         ofops.QubitOperator,
-        PQOperator,
+        pqops.QubitOperator,
     )
     if isinstance(operator, valueable_type):
         num_qubits = 0
