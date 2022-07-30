@@ -18,15 +18,6 @@ import copy
 from types import FunctionType, MethodType
 
 import numpy as np
-from openfermion.ops import QubitOperator as OFOperator
-
-try:
-    from projectq.ops import QubitOperator as PQOperator
-except ImportError:
-
-    class PQOperator:  # pylint: disable=too-few-public-methods
-        """Dummy class for ProjectQ operators."""
-
 
 from mindquantum.utils.type_value_check import _check_input_type
 
@@ -141,10 +132,13 @@ def pauli_word_to_circuits(qubitops):
         q1: ──Y────X──
     """
     # pylint: disable=import-outside-toplevel,cyclic-import
+    import openfermion.ops as of_ops
+    import projectq.ops as pq_ops
+
     from mindquantum import operators as ops
     from mindquantum.core import gates
 
-    allow_ops = (PQOperator, OFOperator, ops.QubitOperator, ops.Hamiltonian)
+    allow_ops = (pq_ops.QubitOperator, of_ops.QubitOperator, ops.QubitOperator, ops.Hamiltonian)
     if not isinstance(qubitops, allow_ops):
         raise TypeError(f"qubitops require a QubitOperator or a Hamiltonian, but get {type(qubitops)}!")
     if isinstance(qubitops, ops.Hamiltonian):

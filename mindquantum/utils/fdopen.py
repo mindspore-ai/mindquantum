@@ -11,7 +11,6 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-
 """Safe open() function."""
 
 import contextlib
@@ -38,7 +37,6 @@ def fdopen(fname, mode, perms=0o644, encoding=None):  # pragma: no cover
     else:
         raise RuntimeError(f'Unsupported mode: {mode}')
 
-    # pylint: disable=unspecified-encoding
     file_object = open(os.open(fname, flags, perms), mode=mode, encoding=encoding)  # noqa: SCS109
 
     try:
