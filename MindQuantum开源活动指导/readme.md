@@ -20,11 +20,11 @@
 4. 第四步：欢迎Watch、Star和Fork MindSpore的主仓到个人空间（可选）
 ### 登录HiQ量子计算云服务
 ### 创建实例和Notebook
-2. 第一步：新建Jupyter Notebook实例
-3. 第二步：导入MindQuantum代码仓
-4. 第三步：安装mindquantum-master包（可选）
-5. 第四步：切换代码分支
-6. 第五步：新建Notebook文件
+1. 第一步：新建Jupyter Notebook实例
+2. 第二步：导入MindQuantum代码仓
+3. 第三步：安装mindquantum-master包（可选）
+4. 第四步：切换代码分支
+5. 第五步：新建Notebook文件
 ### 量子门编程初体验
 1. 量子门简介
 2. 导入依赖包
