@@ -1,12 +1,7 @@
 # MindQuantum开源活动指导
 
 - [MindQuantum开源活动指导](#mindquantum开源活动指导)
-  - [MindQuantum开发指导](#mindquantum开发指导)
-    - [准备MindQuantum代码仓](#准备mindQuantun代码仓)
-	- [登录HiQ量子计算云服务](#登录hiq量子计算云服务)
-	- [新建CloudIDE实例](#新建cloudide实例)
-    - [导入MindQuantum的代码仓](#导入mindquantum的代码仓)
-    - [开发示例：开发量子变分线路](#开发示例：开发量子变分线路)
+  - [MindQuantum开发指南](#mindquantum开发指南)
   - [参与开源互动热身](#参与开源互动热身)
     - [参与开源热身（参与线上会议实操互动）](#参与开源热身参与线上会议实操互动)
     - [PR贡献奖（会议中/后）](#pr贡献奖会议中后)
@@ -14,15 +9,29 @@
   - [部分奖品展示](#部分奖品展示)
 
 
-## MindQuantum开发指导
+## MindQuantum开发指南
 
-访问HiQ量子计算官网，打开MindQuantum编程实战教程，参照教程完成
-1. 准备MindQuantum代码仓
-2. 登录HiQ量子计算云服务
-3. 开发量子神经网络
-4. 提交代码到mindquantum代码仓
+包含如下步骤，详见[https://gitee.com/mindspore/mindquantum/blob/research/course/developers_guide.ipynb](https://gitee.com/mindspore/mindquantum/blob/research/course/developers_guide.ipynb)
 
-[https://hiq.huaweicloud.com/document/parameterized-quantum-circuit]([https://hiq.huaweicloud.com/document/parameterized-quantum-circuit)
+### 准备MindQuantum代码仓
+1. 第一步：登录Gitee官网
+2. 第二步：Fork MindQuantum主仓库到个人空间
+3. 第三步：复制MindQuantum个人代码仓地址
+4. 第四步：欢迎Watch、Star和Fork MindSpore的主仓到个人空间（可选）
+### 登录HiQ量子计算云服务
+### 创建实例和Notebook
+2. 第一步：新建Jupyter Notebook实例
+3. 第二步：导入MindQuantum代码仓
+4. 第三步：安装mindquantum-master包（可选）
+5. 第四步：切换代码分支
+6. 第五步：新建Notebook文件
+### 量子门编程初体验
+1. 量子门简介
+2. 导入依赖包
+3. 打印量子门矩阵
+### 提交代码到代码仓
+1. 第一步：提交代码到个人仓库
+2. 第二步：提交代码到主仓库
 
 ## 参与开源互动热身
 
