@@ -170,26 +170,9 @@ Please refer to [MindSpore installation guide](https://www.mindspore.cn/install)
 
 #### Install MindQuantum
 
-- Linux
-
 ```bash
-pip install https://hiq.huaweicloud.com/download/mindquantum/newest/linux/mindquantum-master-cp37-cp37m-linux_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install mindquantum
 ```
-
-- Windows
-
-```bash
-pip install https://hiq.huaweicloud.com/download/mindquantum/newest/windows/mindquantum-master-cp37-cp37m-win_amd64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
-```
-
-- MacOSX
-
-```bash
-pip install https://hiq.huaweicloud.com/download/mindquantum/newest/macosx/mindquantum-master-cp37-cp37m-macosx_10_13_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
-```
-
-> - Change `cp37-cp37m` to `cp38-cp38` or `cp39-cp39` according to your python version.
-> - When the network is connected, dependency items are automatically downloaded during .whl package installation. (For details about other dependency items, see [setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py)). In other cases, you need to manually install dependency items.
 
 ## Verifying Successful Installation
 
