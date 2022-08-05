@@ -27,6 +27,7 @@ def fdopen(fname, mode, perms=0o644, encoding=None):  # pragma: no cover
         fname (str): Path to file to open for reading/writing
         mode (str): Mode in which the file is opened (see help for builtin `open()`)
         perms (int): Permission mask (see help for `os.open()`)
+        encoding (str): The name of encoding used to decode or encode the file.
     """
     if 'r' in mode:
         flags = os.O_RDONLY
