@@ -53,15 +53,15 @@ struct PauliMat {
         col_ = reinterpret_cast<Index *>(malloc(sizeof(Index) * dim_));
         auto mask = GetPauliMask(pt.first);
         auto mask_f = mask.mask_x | mask.mask_y;
-#pragma omp parallel for schedule(static)
-        for (Index i = 0; i < dim_; i++) {
-            auto j = (i ^ mask_f);
-            col_[i] = j;
-            auto axis2power = CountOne(i & mask.mask_z);  // -1
-            auto axis3power = CountOne(i & mask.mask_y);  // -1j
-            // (-1)^a2*(-1j)^a3*(1j)^a1=(1j)^2a2*(1j)^3a3*(1j)^a1=(1j)^(a1+2*a2+3*a3)
-            coeff_[j] = static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3);
-        }
+        THRESHOLD_OMP_FOR(
+            dim_, 1UL << nQubitTh, for (Index i = 0; i < dim_; i++) {
+                auto j = (i ^ mask_f);
+                col_[i] = j;
+                auto axis2power = CountOne(i & mask.mask_z);  // -1
+                auto axis3power = CountOne(i & mask.mask_y);  // -1j
+                // (-1)^a2*(-1j)^a3*(1j)^a1=(1j)^2a2*(1j)^3a3*(1j)^a1=(1j)^(a1+2*a2+3*a3)
+                coeff_[j] = static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3);
+            })
     }
     void PrintInfo() {
         std::cout << "<--Pauli Matrix with Dimension: ";

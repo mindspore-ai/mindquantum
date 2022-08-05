@@ -42,6 +42,21 @@
 #include "core/type.h"
 
 namespace mindquantum {
+#ifdef _MSC_VER
+#    define _DO_PRAGMA(x) __pragma(#    x)
+#else
+#    define _DO_PRAGMA(x) _Pragma(#    x)
+#endif
+
+#define THRESHOLD_OMP(omp_pragma, n, n_th, ...)                                                                        \
+    if ((n) < (n_th)) {                                                                                                \
+        __VA_ARGS__                                                                                                    \
+    } else {                                                                                                           \
+        omp_pragma __VA_ARGS__                                                                                         \
+    }
+#define THRESHOLD_OMP_FOR(n, n_th, ...)                                                                                \
+    THRESHOLD_OMP(_DO_PRAGMA(omp parallel for schedule(static)), n, n_th, __VA_ARGS__)
+
 extern const VT<CT<MT>> POLAR;
 template <typename T, typename ST>
 CT<T> ComplexInnerProduct(const ST *v1, const ST *v2, Index len) {
@@ -49,12 +64,12 @@ CT<T> ComplexInnerProduct(const ST *v1, const ST *v2, Index len) {
     ST real_part = 0;
     ST imag_part = 0;
     auto size = len / 2;
-#pragma omp parallel for reduction(+ : real_part, imag_part)
-    for (Index i = 0; i < size; i++) {
+    THRESHOLD_OMP(
+        _DO_PRAGMA(omp parallel for reduction(+ : real_part, imag_part)), len, 2UL << nQubitTh,
+        for (Index i = 0; i < size; i++) {
         real_part += v1[2 * i] * v2[2 * i] + v1[2 * i + 1] * v2[2 * i + 1];
         imag_part += v1[2 * i] * v2[2 * i + 1] - v1[2 * i + 1] * v2[2 * i];
-    }
-
+        })
     CT<T> result = {static_cast<T>(real_part), static_cast<T>(imag_part)};
     return result;
 }
@@ -65,13 +80,14 @@ CT<T> ComplexInnerProductWithControl(const ST *v1, const ST *v2, Index len, Inde
     ST real_part = 0;
     ST imag_part = 0;
     auto size = len / 2;
-#pragma omp parallel for reduction(+ : real_part, imag_part)
-    for (Index i = 0; i < size; i++) {
+    THRESHOLD_OMP(
+        _DO_PRAGMA(omp parallel for reduction(+ : real_part, imag_part)), len, 2UL << nQubitTh,
+        for (Index i = 0; i < size; i++) {
         if ((i & ctrlmask) == ctrlmask) {
             real_part += v1[2 * i] * v2[2 * i] + v1[2 * i + 1] * v2[2 * i + 1];
             imag_part += v1[2 * i] * v2[2 * i + 1] - v1[2 * i + 1] * v2[2 * i];
         }
-    }
+        })
     CT<T> result = {static_cast<T>(real_part), static_cast<T>(imag_part)};
     return result;
 }
