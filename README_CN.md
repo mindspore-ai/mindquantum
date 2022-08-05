@@ -158,29 +158,9 @@ print(dict(zip(ansatz.params_name, net.trainable_params()[0].asnumpy())))
 
 #### 安装MindQuantum
 
-最新版MindQuantum请通过如下指令安装。
-
-- Linux系统：
-
 ```bash
-pip install https://hiq.huaweicloud.com/download/mindquantum/newest/linux/mindquantum-master-cp37-cp37m-linux_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install mindquantum
 ```
-
-- Windows系统：
-
-```bash
-pip install https://hiq.huaweicloud.com/download/mindquantum/newest/windows/mindquantum-master-cp37-cp37m-win_amd64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
-```
-
-- MacOSX
-
-```bash
-pip install https://hiq.huaweicloud.com/download/mindquantum/newest/macosx/mindquantum-master-cp37-cp37m-macosx_10_13_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
-```
-
-> - 如需安装其他python版本的MindQuantum，请将上述地址中的`cp37-cp37m`更换为`cp38-cp38`或者`cp39-cp39`。
-> - 如需安装其他版本的MindQuantum，请浏览[所有安装包](https://hiq.huaweicloud.com/download/mindquantum/)。
-> - 在联网状态下，安装whl包时会自动下载MindQuantum安装包的依赖项（依赖项详情参见[setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py)），其余情况需自行安装。
 
 ### 源码安装
 
