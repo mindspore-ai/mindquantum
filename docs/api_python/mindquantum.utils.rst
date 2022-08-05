@@ -3,6 +3,8 @@ mindquantum.utils
 
 实用工具。
 
+.. include:: mindquantum.utils.fdopen.rst
+
 .. include:: mindquantum.utils.ket_string.rst
 
 .. include:: mindquantum.utils.mod.rst
@@ -12,8 +14,6 @@ mindquantum.utils
 .. include:: mindquantum.utils.random_circuit.rst
 
 .. include:: mindquantum.utils.random_state.rst
-
-.. include:: mindquantum.utils.fdopen.rst
 
 .. automodule:: mindquantum.utils
     :members:
