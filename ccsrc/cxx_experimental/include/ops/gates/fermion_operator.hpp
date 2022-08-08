@@ -47,6 +47,7 @@ class FermionOperator : public TermsOperator<FermionOperator> {
 
  public:
     using csr_matrix_t = Eigen::SparseMatrix<std::complex<double>, Eigen::RowMajor>;
+    using TermsOperator<FermionOperator>::operator==;
 
     static constexpr std::string_view kind() {
         return "mindquantum.fermionoperator";

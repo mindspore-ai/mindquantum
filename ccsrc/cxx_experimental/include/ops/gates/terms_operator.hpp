@@ -240,7 +240,7 @@ class TermsOperator
 };
 
 template <typename derived_t, TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_DEF>
-auto operator-(const number_t& number, TermsOperator<derived_t> other);
+MQ_NODISCARD auto operator-(const number_t& number, TermsOperator<derived_t> other);
 
 }  // namespace mindquantum::ops
 
