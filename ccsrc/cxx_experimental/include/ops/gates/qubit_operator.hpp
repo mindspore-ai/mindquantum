@@ -55,6 +55,7 @@ class QubitOperator : public TermsOperator<QubitOperator> {
 
  public:
     using csr_matrix_t = Eigen::SparseMatrix<std::complex<double>, Eigen::RowMajor>;
+    using TermsOperator<QubitOperator>::operator==;
 
     static constexpr std::string_view kind() {
         return "mindquantum.qubitoperator";

@@ -40,6 +40,8 @@ struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator> {
                                                                     coefficient_t coeff) {
         return {terms, coeff};
     }
+
+    using TermsOperator::operator==;
 };
 }  // namespace
 
