@@ -683,7 +683,15 @@ TEST_CASE("TermsOperator comparison operators", "[terms_op][ops]") {
     CHECK(op == op);
     CHECK(op == other);
 
-    other += DummyOperator::identity();
+    SECTION("Add identity term") {
+        other += DummyOperator::identity();
+    }
+    SECTION("Add other term") {
+        other += DummyOperator{terms_t{{2, TermValue::Z}}, 2.34i};
+    }
+    SECTION("No common terms") {
+        other = DummyOperator{terms_t{{2, TermValue::Z}}, 2.34i};
+    }
     CHECK(!(op == other));
     CHECK(op != other);
 }
