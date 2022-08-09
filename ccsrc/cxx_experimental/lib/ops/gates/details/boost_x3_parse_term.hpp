@@ -15,6 +15,10 @@
 #ifndef BOOST_X3_PARSE_TERM_HPP
 #define BOOST_X3_PARSE_TERM_HPP
 
+#ifndef ENABLE_LOGGING
+#    include <iostream>
+#endif  // !ENABLE_LOGGING
+
 #include <boost/spirit/home/x3/directive/with.hpp>
 #include <boost/spirit/home/x3/support/utility/error_reporting.hpp>
 
