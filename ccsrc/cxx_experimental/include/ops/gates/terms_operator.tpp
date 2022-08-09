@@ -277,7 +277,7 @@ auto TermsOperator<derived_t>::operator-=(const number_t& number) -> derived_t& 
 
 template <typename derived_t>
 auto TermsOperator<derived_t>::operator-() const -> derived_t {
-    return (*this * -1.);
+    return (*static_cast<const derived_t*>(this) * -1.);
 }
 
 // =============================================================================
@@ -403,9 +403,8 @@ void TermsOperator<derived_t>::calculate_num_targets_() noexcept {
 // =============================================================================
 
 template <typename derived_t, TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_IMPL>
-auto operator-(const number_t& number, TermsOperator<derived_t> other) {
-    other -= number;
-    return *static_cast<derived_t*>(&other);
+auto operator-(const number_t& number, const TermsOperator<derived_t>& other) {
+    return number + (-other);
 }
 
 // =============================================================================

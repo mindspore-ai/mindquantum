@@ -431,16 +431,18 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
             SECTION("In-place subtraction") {
                 UNSCOPED_INFO("In-place subtraction");
                 op -= subtrahend;
+                it->second -= subtrahend;
             }
             SECTION("Left subtraction") {
                 UNSCOPED_INFO("Left subtraction");
                 op = op - subtrahend;
+                it->second -= subtrahend;
             }
             SECTION("Right subtraction") {
                 UNSCOPED_INFO("Right subtraction");
                 op = subtrahend - op;
+                it->second = subtrahend - it->second;
             }
-            it->second -= subtrahend;
         }
 
         SECTION("Complex double") {
@@ -448,16 +450,18 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
             SECTION("In-place subtraction") {
                 UNSCOPED_INFO("In-place subtraction");
                 op -= subtrahend;
+                it->second -= subtrahend;
             }
             SECTION("Left subtraction") {
                 UNSCOPED_INFO("Left subtraction");
                 op = op - subtrahend;
+                it->second -= subtrahend;
             }
             SECTION("Right subtraction") {
                 UNSCOPED_INFO("Right subtraction");
                 op = subtrahend - op;
+                it->second = subtrahend - it->second;
             }
-            it->second -= subtrahend;
         }
 
         // NB: important to have this check here first (UNSCOPED_INFO)
@@ -597,6 +601,35 @@ TEST_CASE("TermsOperator arithmetic operators (/)", "[terms_op][ops]") {
 
         CHECK_THAT(op.get_terms(), Catch::Predicate<complex_term_dict_t>(approx_equal, "Approx equal terms"));
         CHECK(!std::empty(op));
+    }
+}
+
+TEST_CASE("TermsOperator unary operators", "[terms_op][ops]") {
+    SECTION("Unary minus (TermsOperator)") {
+        complex_term_dict_t ref_terms;
+
+        auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
+        auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::X}}, 1.);
+        REQUIRE(inserted1);
+        REQUIRE(inserted2);
+
+        // op = {'X3': 2.3,  'X1': 1.}
+        const DummyOperator op(ref_terms);
+        const DummyOperator ref = op;
+        REQUIRE(!std::empty(op));
+        CHECK(std::size(op) == 2);
+        CHECK(op.get_terms() == ref_terms);
+
+        const auto result = -op;
+        for (auto& [local_ops, coeff] : ref_terms) {
+            coeff *= -1;
+        }
+
+        REQUIRE(!std::empty(result));
+        REQUIRE(op == ref);
+        REQUIRE(op != result);
+        CHECK(std::size(result) == std::size(ref));
+        CHECK(result.get_terms() == ref_terms);
     }
 }
 
