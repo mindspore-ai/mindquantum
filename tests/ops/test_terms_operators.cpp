@@ -81,6 +81,17 @@ TEST_CASE("TermsOperator constructor", "[terms_op][ops]") {
         CHECK(identity.is_identity());
         CHECK(identity.is_singlet());
     }
+    SECTION("Identity (static member function)") {
+        auto identity = DummyOperator::identity();
+        CHECK(!std::empty(identity));
+        CHECK(std::size(identity) == 1);
+        CHECK(!std::empty(identity.get_terms()));
+        CHECK(std::size(identity.get_terms()) == 1);
+        CHECK(identity.num_targets() == 1);
+        CHECK(identity.count_qubits() == 1);
+        CHECK(identity.is_identity());
+        CHECK(identity.is_singlet());
+    }
     SECTION("Single term constructor") {
         const auto ref_term = term_t{0, TermValue::X};
         ref_terms.emplace(terms_t{ref_term}, 1);
