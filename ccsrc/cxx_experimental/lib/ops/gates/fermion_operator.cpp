@@ -20,6 +20,7 @@
 #include <iterator>
 #include <numeric>
 #include <optional>
+#include <string>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
@@ -69,7 +70,70 @@ using boost::span;
         static auto name = lru_cache::staticc::memoize_function<cache_size>(function)
 #endif  // MQ_HAS_ABSEIL_CPP
 
+// -----------------------------------------------------------------------------
+
+using namespace std::literals::string_literals;  // NOLINT(build/namespaces_literals)
+
 // =============================================================================
+
+/// Part of the cppduals project.
+/// https://tesch1.gitlab.io/cppduals
+///
+/// (c)2019 Michael Tesch. tesch1@gmail.com
+///
+/// See https://gitlab.com/tesch1/cppduals/blob/master/LICENSE.txt for
+/// license information.
+///
+/// This Source Code Form is subject to the terms of the Mozilla
+/// Public License v. 2.0. If a copy of the MPL was not distributed
+/// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+///
+/// std::complex<> Formatter for libfmt https://github.com/fmtlib/fmt
+///
+/// libfmt does not provide a formatter for std::complex<>, although one is proposed for c++20.  Anyway, at the expense
+/// of a k or two, you can define CPPDUALS_LIBFMT_COMPLEX and get this one.
+///
+/// The standard iostreams formatting of complex numbers is (a,b), where a and b are the real and imaginary parts.  This
+/// formats a complex number (a+bi) as (a+bi), offering the same formatting options as the underlying type - with the
+/// addition of three optional format options, only one of which may appear directly after the ':' in the format spec
+/// (before any fill or align): '$' (the default if no flag is specified), '*', and ','.  The '*' flag adds a * before
+/// the 'i', producing (a+b*i), where a and b are the formatted value_type values.  The ',' flag simply prints the real
+/// and complex parts separated by a comma (same as iostreams' format).  As a concrete example, this formatter can
+/// produce either (3+5.4i) or (3+5.4*i) or (3,5.4) for a complex<double> using the specs {:g} | {:$g}, {:*g}, or {:,g},
+/// respectively.  (this implementation is a bit hacky - glad for cleanups).
+///
+template <typename T, typename Char>
+struct fmt::formatter<std::complex<T>, Char> : public fmt::formatter<T, Char> {
+    using base = fmt::formatter<T, Char>;
+    fmt::detail::dynamic_format_specs<Char> specs_;
+    FMT_CONSTEXPR auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
+        return ctx.begin();
+    }
+    template <typename FormatCtx>
+    auto format(const std::complex<T>& number, FormatCtx& ctx) -> decltype(ctx.out()) {
+        if (number.real() || !number.imag()) {
+            return base::format(number.real(), ctx);
+        }
+
+        format_to(ctx.out(), "(");
+        if (number.imag()) {
+            if (number.real() && number.imag() >= 0 && specs_.sign != sign::plus) {
+                format_to(ctx.out(), "+");
+            }
+            base::format(number.imag(), ctx);
+            format_to(ctx.out(), "j");  // NB: use j instead of i like Python
+            if (std::is_same<typename std::decay<T>::type, float>::value) {
+                format_to(ctx.out(), "f");
+            }
+            if (std::is_same<typename std::decay<T>::type, long double>::value) {
+                format_to(ctx.out(), "l");
+            }
+        }
+        return format_to(ctx.out(), ")");
+    }
+};
+
+// -----------------------------------------------------------------------------
 
 namespace {
 constexpr auto cache_size = 100UL;
@@ -168,22 +232,8 @@ auto two_fermion_word(std::size_t idx1, bool is_adg1, std::size_t idx2, bool is_
 
 namespace mindquantum::ops {
 
-FermionOperator::FermionOperator(term_t term, coefficient_t coeff) : TermsOperator(std::move(term), coeff) {
-}
-
-// -----------------------------------------------------------------------------
-
-FermionOperator::FermionOperator(const terms_t& term, coefficient_t coeff) : TermsOperator(term, coeff) {
-}
-
-// -----------------------------------------------------------------------------
-
-FermionOperator::FermionOperator(complex_term_dict_t terms) : TermsOperator(std::move(terms)) {
-}
-
-// -----------------------------------------------------------------------------
-
-FermionOperator::FermionOperator(std::string_view terms_string) : TermsOperator(parse_string_(terms_string)) {
+FermionOperator::FermionOperator(std::string_view terms_string, coefficient_t coeff)
+    : TermsOperator(parse_string_(terms_string), coeff) {
 }
 
 // =============================================================================
@@ -268,12 +318,61 @@ auto FermionOperator::split() const noexcept -> std::vector<FermionOperator> {
 
 // -----------------------------------------------------------------------------
 
-auto FermionOperator::normal_ordered() const -> FermionOperator {
-    auto ordered_op{*this};
-    for (const auto& [local_ops, coeff] : terms_) {
-        ordered_op += normal_ordered_term_(local_ops, coeff);
+// auto FermionOperator::normal_ordered() const -> FermionOperator {
+//     auto ordered_op{*this};
+//     for (const auto& [local_ops, coeff] : terms_) {
+//         ordered_op += normal_ordered_term_(local_ops, coeff);
+//     }
+//     return ordered_op;
+// }
+
+// =============================================================================
+
+struct term_to_string {
+    template <bool is_first_elem = false>
+    static auto apply(const FermionOperator::term_t& term) {
+        if constexpr (is_first_elem) {
+            return fmt::format("{}{}", std::get<0>(term), std::get<1>(term) == TermValue::adg ? "^"s : "");
+        } else {
+            return fmt::format(" {}{}", std::get<0>(term), std::get<1>(term) == TermValue::adg ? "^"s : "");
+        }
     }
-    return ordered_op;
+};
+
+// -----------------------------------------------------------------------------
+
+auto FermionOperator::to_string() const noexcept -> std::string {
+#if __cplusplus >= 202002L
+    using acc_init_t = std::string&&;
+#else
+    using acc_init_t = std::string&;
+#endif  // __cplusplus >= 202002L
+
+    if (std::empty(terms_)) {
+        return "0"s;
+    }
+
+    const auto process_term = [](const complex_term_dict_t::value_type& term_value,
+                                 bool prepend_newline = false) -> std::string {
+        const auto& [local_ops, coeff] = term_value;
+        auto term_str = fmt::format("{}{} [", prepend_newline ? "\n" : "", coeff);
+        if (std::empty(local_ops)) {
+            term_str += ']';
+        } else {
+            const auto it = begin(local_ops);
+            term_str += std::accumulate(begin(local_ops) + 1, end(local_ops), term_to_string::apply<true>(*it),
+                                        [](acc_init_t init, const auto& term) -> decltype(auto) {
+                                            return init += term_to_string::apply<false>(term);
+                                        });
+            term_str += ']';
+        }
+        return term_str;
+    };
+
+    return std::accumulate(++begin(terms_), end(terms_), process_term(*begin(terms_)),
+                           [&process_term](acc_init_t init, const auto& term_value) -> decltype(auto) {
+                               return init += process_term(term_value, true);
+                           });
 }
 
 // =============================================================================
