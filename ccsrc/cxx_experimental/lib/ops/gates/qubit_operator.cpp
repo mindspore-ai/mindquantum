@@ -36,10 +36,7 @@
 
 #include <fmt/format.h>
 
-#ifdef ENABLE_LOGGING
-#    include <spdlog/spdlog.h>
-#endif  // ENABLE_LOGGING
-
+#include "core/logging.hpp"
 #include "core/parser/boost_x3_error_handler.hpp"
 #include "details/boost_x3_parse_term.hpp"
 #include "ops/gates.hpp"
@@ -243,7 +240,7 @@ auto QubitOperator::simplify_(terms_t terms, coefficient_t coeff) -> std::tuple<
 
 namespace x3 = boost::spirit::x3;
 
-namespace ast {
+namespace ast::qb_op {
 using mindquantum::ops::TermValue;
 using term_t = mindquantum::ops::QubitOperator::term_t;
 
@@ -266,40 +263,59 @@ struct qubit_operator_term {
         return {qubit_id, local_op};
     }
 };
-}  // namespace ast
+}  // namespace ast::qb_op
 
-BOOST_FUSION_ADAPT_STRUCT(ast::qubit_operator_term, local_op, qubit_id);
+BOOST_FUSION_ADAPT_STRUCT(ast::qb_op::qubit_operator_term, local_op, qubit_id);
 
 // -----------------------------------------------------------------------------
 
-namespace parser {
-struct local_op_sym_class {};
-x3::rule<local_op_sym_class, ast::TermValue> const local_op_sym = "local operator (X, Y, Z)";
-static const auto local_op_sym_def = ast::term_op;
-
-struct unsigned_value_class {};
-x3::rule<unsigned_value_class, uint32_t> const unsigned_value = "unsigned int";
-static const auto unsigned_value_def = x3::uint_;
+namespace parser::qb_op {
+namespace ast = ::ast::qb_op;
+struct not_space_or_eoi_class {};
+const x3::rule<not_space_or_eoi_class, x3::unused_type> space_or_eoi = "<space> or <end of input>";
+static const auto space_or_eoi_def = x3::space | x3::eoi;
 
 struct term_class : mindquantum::parser::x3::rule::error_handler {};
 x3::rule<term_class, ast::qubit_operator_term> const term = "qubit_operator term";
-static const auto term_def = x3::eps > local_op_sym > unsigned_value > x3::omit[*x3::space];
+static const auto term_def = !space_or_eoi > ast::term_op > x3::uint_ > &space_or_eoi;
 
-BOOST_SPIRIT_DEFINE(local_op_sym, unsigned_value, term);
+BOOST_SPIRIT_DEFINE(term, space_or_eoi);
 
 // -------------------------------------
 
-static const auto terms = +term;
-}  // namespace parser
+static const auto terms = x3::omit[*x3::space] >> term > *(x3::omit[+x3::space] >> term) >> x3::omit[*x3::space];
+}  // namespace parser::qb_op
+
+// -------------------------------------
+
+namespace boost::spirit::x3 {
+template <>
+struct get_info<uint_type> {
+    using result_type = std::string;
+    result_type operator()(const uint_type& /* type */) const noexcept {
+        using std::literals::string_literals::operator""s;
+        return "unsigned int"s;
+    }
+};
+template <>
+struct get_info<ast::qb_op::TermOp> {
+    using result_type = std::string;
+    result_type operator()(const ast::qb_op::TermOp& /* type */) const noexcept {
+        using std::literals::string_literals::operator""s;
+        return "local operator (X, Y, Z)"s;
+    }
+};
+}  // namespace boost::spirit::x3
 
 // -----------------------------------------------------------------------------
 
 namespace mindquantum::ops {
 
 auto QubitOperator::parse_string_(std::string_view terms_string) -> terms_t {
-    if (terms_t terms; parser::parse_term(begin(terms_string), end(terms_string), terms, ::parser::terms)) {
+    if (terms_t terms; parser::parse_term(begin(terms_string), end(terms_string), terms, ::parser::qb_op::terms)) {
         return terms;
     }
+    MQ_ERROR("QubitOperator terms string parsing failed for '{}'", terms_string);
     return {};
 }
 
