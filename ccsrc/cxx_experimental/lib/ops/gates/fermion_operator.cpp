@@ -37,10 +37,7 @@
 #include <fmt/format.h>
 #include <lru_cache/lru_cache.h>
 
-#ifdef ENABLE_LOGGING
-#    include <spdlog/spdlog.h>
-#endif  // ENABLE_LOGGING
-
+#include "core/logging.hpp"
 #include "core/parser/boost_x3_error_handler.hpp"
 #include "details/boost_x3_parse_term.hpp"
 #include "details/eigen_diagonal_identity.hpp"
@@ -363,47 +360,67 @@ auto FermionOperator::normal_ordered_term_(terms_t terms, coefficient_t coeff) -
 
 namespace x3 = boost::spirit::x3;
 
-namespace ast {
+namespace ast::fm_op {
 using mindquantum::ops::TermValue;
 using term_t = mindquantum::ops::FermionOperator::term_t;
 
 struct TermOp : x3::symbols<TermValue> {
     TermOp() {
         add("^", TermValue::adg);
+        add("v", TermValue::a);
     }
 } const term_op;
 
-}  // namespace ast
+}  // namespace ast::fm_op
 
 // -----------------------------------------------------------------------------
 
-namespace parser {
-struct local_op_sym_class {};
-x3::rule<local_op_sym_class, ast::TermValue> const local_op_sym = "ladder operator (a: '', adg: '^')";
-static const auto local_op_sym_def = ast::term_op | x3::attr(ast::TermValue::a);
-
-struct unsigned_value_class {};
-x3::rule<unsigned_value_class, uint32_t> const unsigned_value = "unsigned int";
-static const auto unsigned_value_def = x3::uint_;
+namespace parser::fm_op {
+namespace ast = ::ast::fm_op;
+struct not_space_or_eoi_class {};
+const x3::rule<not_space_or_eoi_class, x3::unused_type> space_or_eoi = "<space> or <end of input>";
+static const auto space_or_eoi_def = x3::space | x3::eoi;
 
 struct term_class : mindquantum::parser::x3::rule::error_handler {};
-x3::rule<term_class, ast::term_t> const term = "fermion_operator term";
-static const auto term_def = x3::eps > unsigned_value > local_op_sym > x3::omit[*x3::space];
+const x3::rule<term_class, ast::term_t> term = "fermion_operator term";
+static const auto term_def = !space_or_eoi > x3::uint_ > (ast::term_op | x3::attr(ast::TermValue::a)) > &space_or_eoi;
 
-BOOST_SPIRIT_DEFINE(local_op_sym, unsigned_value, term);
+BOOST_SPIRIT_DEFINE(term, space_or_eoi);
 
 // -------------------------------------
 
-static const auto terms = +term;
-}  // namespace parser
+static const auto terms = x3::omit[*x3::space] >> term > *(x3::omit[+x3::space] >> term) >> x3::omit[*x3::space];
+}  // namespace parser::fm_op
+
+// -------------------------------------
+
+namespace boost::spirit::x3 {
+template <>
+struct get_info<uint_type> {
+    using result_type = std::string;
+    result_type operator()(const uint_type& /* type */) const noexcept {
+        using std::literals::string_literals::operator""s;
+        return "unsigned int"s;
+    }
+};
+template <>
+struct get_info<ast::fm_op::TermOp> {
+    using result_type = std::string;
+    result_type operator()(const ast::fm_op::TermOp& /* type */) const noexcept {
+        using std::literals::string_literals::operator""s;
+        return "ladder operator (a: '' or 'v', adg: '^')"s;
+    }
+};
+}  // namespace boost::spirit::x3
 
 // -----------------------------------------------------------------------------
 
 namespace mindquantum::ops {
 auto FermionOperator::parse_string_(std::string_view terms_string) -> terms_t {
-    if (terms_t terms; parser::parse_term(begin(terms_string), end(terms_string), terms, ::parser::terms)) {
+    if (terms_t terms; parser::parse_term(begin(terms_string), end(terms_string), terms, ::parser::fm_op::terms)) {
         return terms;
     }
+    MQ_ERROR("FermionOperator terms string parsing failed for '{}'", terms_string);
     return {};
 }
 
