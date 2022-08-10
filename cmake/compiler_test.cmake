@@ -371,6 +371,31 @@ int main() {
 # --------------------------------------
 
 check_cxx_code_compiles(
+  compiler_has_cxx20_format
+  MQ_HAS_CXX20_FORMAT
+  cxx_std_20
+  [[
+#ifdef __has_include
+#    if __has_include(<version>)
+#        include <version>
+#    endif
+#endif
+#include <format>
+#include <complex>
+
+int main() {
+#if __cpp_lib_format >= 201907L
+    const auto res = std::format("{}", std::complex<double>{1, 2});
+    return res.size();
+#else
+#    error C++20 std::format not supported
+#endif
+    return 0;
+}
+]])
+
+# --------------------------------------
+check_cxx_code_compiles(
   compiler_has_cxx20_span
   MQ_HAS_CXX20_SPAN
   cxx_std_20
