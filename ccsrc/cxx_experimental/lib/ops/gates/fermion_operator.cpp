@@ -142,7 +142,8 @@ auto single_fermion_word_impl(const std::tuple<std::size_t, bool, std::size_t>& 
     } else {
         result.insert(1, 0) = 1;
     }
-    return Eigen::kroneckerProduct(n_identity(n_qubits - 1 - idx), Eigen::kroneckerProduct(result, n_sz(idx)).eval());
+    return Eigen::kroneckerProduct(n_identity(n_qubits - 1 - idx), Eigen::kroneckerProduct(result, n_sz(idx)).eval())
+        .eval();
 }
 
 // -----------------------------------------------------------------------------
@@ -242,17 +243,17 @@ auto FermionOperator::matrix(std::optional<uint32_t> n_qubits) const -> std::opt
         auto tmp = process_group(groups.front());
 
         for (auto it(begin(groups) + 1); it != end(groups); ++it) {
-            tmp *= process_group(*it);
+            tmp = tmp * process_group(*it);
         }
 
         return tmp;
     };
 
     auto it = begin(terms_);
-    auto result = process_term(it->first) * it->second;
+    auto result = (process_term(it->first) * it->second).eval();
     ++it;
     for (; it != end(terms_); ++it) {
-        result *= process_term(it->first) * it->second;
+        result = result * process_term(it->first) * it->second;
     }
 
     return result;
