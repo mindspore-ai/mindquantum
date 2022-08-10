@@ -102,12 +102,10 @@ class error_handler {
 template <typename iterator_t>
 void error_handler<iterator_t>::print_file_line(std::size_t line) const {
     if (!std::empty(file)) {
-        MQ_LOGGER_ERROR(logger, "In file {}", file);
+        MQ_LOGGER_ERROR(logger, "In file {}, line: {}", file, line);
     } else {
-        MQ_LOGGER_ERROR(logger, "In ");
+        MQ_LOGGER_ERROR(logger, "On line: {}", line);
     }
-
-    MQ_LOGGER_ERROR(logger, "line {}:", line);
 }
 
 template <typename iterator_t>
