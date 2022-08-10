@@ -24,4 +24,4 @@ add_test_executable(test_terms_operators LIBS mindquantum_cxx)
 
 # add_test_executable(test_qubit_operators LIBS mindquantum_cxx)
 
-# add_test_executable(test_fermion_operators LIBS mindquantum_cxx)
+add_test_executable(test_fermion_operators LIBS mindquantum_cxx DEFINES UNIT_TESTS)
