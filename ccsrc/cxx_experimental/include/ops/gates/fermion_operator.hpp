@@ -17,6 +17,7 @@
 
 #include <complex>
 #include <cstdint>
+#include <string>
 #include <string_view>
 #include <tuple>
 #include <vector>
@@ -53,25 +54,35 @@ class FermionOperator : public TermsOperator<FermionOperator> {
         return "mindquantum.fermionoperator";
     }
 
+    using TermsOperator::TermsOperator;
     FermionOperator() = default;
+    FermionOperator(const FermionOperator&) = default;
+    FermionOperator(FermionOperator&&) noexcept = default;
+    FermionOperator& operator=(const FermionOperator&) = default;
+    FermionOperator& operator=(FermionOperator&&) noexcept = default;
+    ~FermionOperator() noexcept = default;
 
-    explicit FermionOperator(term_t term, coefficient_t coefficient = 1.0);
-
-    explicit FermionOperator(const terms_t& term, coefficient_t coeff = 1.0);
-
-    explicit FermionOperator(complex_term_dict_t terms);
-
-    explicit FermionOperator(std::string_view terms_string);
+    //! Constructor from a string representing a list of terms
+    /*!
+     * \note If parsing the string fails, the resulting QubitOperator object will represent the identity. If logging is
+     *       enabled, an error message will be printed inside the log with an appropriate error message.
+     */
+    explicit FermionOperator(std::string_view terms_string, coefficient_t coeff = 1.0);
 
     // -------------------------------------------------------------------
 
+    //! Return the matrix representing a FermionOperator
     MQ_NODISCARD std::optional<csr_matrix_t> matrix(std::optional<uint32_t> n_qubits) const;
 
     //! Split the operator into its individual components
     MQ_NODISCARD std::vector<FermionOperator> split() const noexcept;
 
-    //! Return the normal ordered form of the Fermion Operator.
-    MQ_NODISCARD FermionOperator normal_ordered() const;
+    // NB: This makes little sense since the ordering is given by the storage (std::map or else)
+    // //! Return the normal ordered form of the Fermion Operator.
+    // MQ_NODISCARD FermionOperator normal_ordered() const;
+
+    //! Convert a FermionOperatoir to a string
+    MQ_NODISCARD std::string to_string() const noexcept;
 
  private:
 #ifdef UNIT_TESTS

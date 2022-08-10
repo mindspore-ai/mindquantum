@@ -33,6 +33,7 @@
 namespace ops = mindquantum::ops;
 
 using namespace std::literals::complex_literals;
+using namespace std::literals::string_literals;
 using FermionOperator = ops::FermionOperator;
 using TermValue = mindquantum::ops::TermValue;
 using coefficient_t = FermionOperator::coefficient_t;
@@ -52,6 +53,7 @@ class UnitTestAccessor {
 // =============================================================================
 
 TEST_CASE("FermionOperator parse_string", "[terms_op][ops]") {
+    MQ_DISABLE_LOGGING;
     std::string terms_string;
     terms_t ref_terms;
 
@@ -111,4 +113,93 @@ TEST_CASE("FermionOperator parse_string", "[terms_op][ops]") {
     CHECK(ref_terms == terms);
 }
 
+TEST_CASE("FermionOperator constructor", "[terms_op][ops]") {
+    MQ_DISABLE_LOGGING;
+    const auto coeff = 2.34i;
+    auto ref_terms = complex_term_dict_t{{{{1, TermValue::a}, {2, TermValue::adg}, {4, TermValue::a}}, coeff}};
+
+    FermionOperator fermion_op("1 2^ 4", coeff);
+    CHECK(!std::empty(fermion_op));
+    CHECK(std::size(fermion_op) == 1);
+    CHECK(fermion_op.get_terms() == ref_terms);
+
+    const auto [it, inserted] = ref_terms.emplace(terms_t{{1, TermValue::adg}}, 3.2);
+    fermion_op += FermionOperator("1^", it->second);
+
+    CHECK(std::size(fermion_op) == 2);
+    CHECK(fermion_op.get_terms() == ref_terms);
+
+    // NB: failure to parse will result in an empty list of terms... -> identity()
+    CHECK(FermionOperator("1^^").is_identity());
+    CHECK(FermionOperator("^").is_identity());
+    CHECK(FermionOperator("2 1^ 11a 3").is_identity());
+}
+
+TEST_CASE("FermionOperator to_string", "[terms_op][ops]") {
+    auto str = ""s;
+    auto ref_str = ""s;
+
+    SECTION("0") {
+        str = FermionOperator("0").to_string();
+        ref_str = "1 [0]";
+    }
+    SECTION("1^") {
+        str = FermionOperator("1^").to_string();
+        ref_str = "1 [1^]";
+    }
+    SECTION("Identity") {
+        str = FermionOperator::identity().to_string();
+        ref_str = "1 []";
+    }
+    SECTION("1^ 2 3^ 1") {
+        str = FermionOperator("1^ 2 3^ 1", 1.2i).to_string();
+        ref_str = "(1.2j) [1^ 2 3^ 1]";
+    }
+
+    CHECK(ref_str == str);
+}
+
+TEST_CASE("FermionOperator split", "[terms_op][ops]") {
+    const auto lhs = FermionOperator("1^", 1.2i);
+    const auto rhs = FermionOperator("0", 1.2);
+    const auto fermion_op = lhs + rhs;
+
+    const auto splitted = fermion_op.split();
+    REQUIRE(std::size(splitted) == 2);
+    if (splitted[0] == lhs) {
+        CHECK(splitted[0] == lhs);
+        CHECK(splitted[1] == rhs);
+    } else {
+        CHECK(splitted[0] == rhs);
+        CHECK(splitted[1] == lhs);
+    }
+}
+
+TEST_CASE("FermionOperator comparison operators", "[terms_op][ops]") {
+    complex_term_dict_t ref_terms;
+
+    auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::a}}, 2.3);
+    auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::adg}}, 1.);
+    REQUIRE(inserted1);
+    REQUIRE(inserted2);
+
+    // op = {'3': 2.3,  '1^': 1.}
+    const FermionOperator op(ref_terms);
+    FermionOperator other(ref_terms);
+
+    CHECK(op == op);
+    CHECK(op == other);
+
+    SECTION("Add identity term") {
+        other += FermionOperator::identity();
+    }
+    SECTION("Add other term") {
+        other += FermionOperator{terms_t{{2, TermValue::a}}, 2.34i};
+    }
+    SECTION("No common terms") {
+        other = FermionOperator{terms_t{{2, TermValue::a}}, 2.34i};
+    }
+    CHECK(!(op == other));
+    CHECK(op != other);
+}
 // =============================================================================
