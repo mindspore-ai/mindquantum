@@ -10,3 +10,7 @@
         :property:
 
         获取ansatz的量子线路。
+
+        返回：
+            Circuit，ansatz的量子线路。
+
