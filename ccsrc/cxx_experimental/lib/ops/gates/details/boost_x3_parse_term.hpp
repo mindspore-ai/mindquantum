@@ -19,9 +19,11 @@
 #    include <iostream>
 #endif  // !ENABLE_LOGGING
 
+#include <boost/spirit/home/x3/core/parse.hpp>
 #include <boost/spirit/home/x3/directive/with.hpp>
 #include <boost/spirit/home/x3/support/utility/error_reporting.hpp>
 
+#include "core/logging.hpp"
 #include "core/parser/boost_x3_error_handler.hpp"
 
 namespace mindquantum::parser {
@@ -33,8 +35,14 @@ bool parse_term(iterator_t iter, iterator_t end, terms_t& terms, rule_t&& start_
     boost::spirit::x3::error_handler<iterator_t> handler(iter, end, std::cerr);
 #endif  // ENABLE_LOGGING
 
+    if (iter == end) {
+        MQ_ERROR("Cannot parse empty string!");
+        terms.clear();
+        return false;
+    }
+
     const auto parser = boost::spirit::x3::with<boost::spirit::x3::error_handler_tag>(std::ref(handler))[start_rule];
-    if (parse(iter, end, parser, terms) && iter == end) {
+    if (boost::spirit::x3::parse(iter, end, parser, terms) && iter == end) {
         return true;
     }
 
