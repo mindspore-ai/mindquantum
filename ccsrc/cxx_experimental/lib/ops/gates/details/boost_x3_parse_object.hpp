@@ -65,30 +65,6 @@ bool parse_object(iterator_t iter, iterator_t end, object_t& object, rule_t&& st
     details::traits::call_clear<object_t>::apply(object);
     return false;
 }
-
-template <typename iterator_t, typename object_t, typename rule_t, typename skipper_t>
-bool parse_object_skipper(iterator_t iter, iterator_t end, object_t& object, rule_t&& start_rule, skipper_t&& skipper) {
-#ifdef ENABLE_LOGGING
-    mindquantum::parser::error_handler<iterator_t> handler(iter, end);
-#else
-    boost::spirit::x3::error_handler<iterator_t> handler(iter, end, std::cerr);
-#endif  // ENABLE_LOGGING
-
-    if (iter == end) {
-        MQ_ERROR("Cannot parse empty string!");
-        details::traits::call_clear<object_t>::apply(object);
-        return false;
-    }
-
-    const auto parser = boost::spirit::x3::with<boost::spirit::x3::error_handler_tag>(std::ref(handler))[start_rule];
-    if (boost::spirit::x3::phrase_parse(iter, end, parser, skipper, object) && iter == end) {
-        return true;
-    }
-
-    // Parsing failed
-    details::traits::call_clear<object_t>::apply(object);
-    return false;
-}
 }  // namespace mindquantum::parser
 
 #endif /* BOOST_X3_PARSE_OBJECT_HPP */
