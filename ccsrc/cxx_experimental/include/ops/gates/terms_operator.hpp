@@ -33,7 +33,6 @@
 #endif  // MQ_HAS_CONCEPTS
 
 namespace mindquantum::ops {
-using namespace std::literals::complex_literals;  // NOLINT(build/namespaces_literals)
 enum class TermValue : uint8_t {
     I = 0,
     X = 1,
