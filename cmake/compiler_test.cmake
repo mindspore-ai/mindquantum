@@ -455,6 +455,24 @@ int main() {
 }
 ]])
 
+# --------------------------------------
+
+check_cxx_code_compiles(
+  compiler_std_accumulate_use_move
+  MQ_STD_ACCUMULATE_USE_MOVE
+  cxx_std_20
+  [[
+#include <numeric>
+#include <vector>
+
+int main() {
+    std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    return std::accumulate(begin(v), end(v), int{0},
+                           [](int&& init, int value) -> decltype(auto) { return init += value; });
+    return 0;
+}
+]])
+
 # ==============================================================================
 
 # NB: second condition is workardoung for Clang < 9.0
