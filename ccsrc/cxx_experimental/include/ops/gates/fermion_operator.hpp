@@ -81,8 +81,22 @@ class FermionOperator : public TermsOperator<FermionOperator> {
     // //! Return the normal ordered form of the Fermion Operator.
     // MQ_NODISCARD FermionOperator normal_ordered() const;
 
-    //! Convert a FermionOperatoir to a string
+    //! Convert a FermionOperator to a string
     MQ_NODISCARD std::string to_string() const noexcept;
+
+    //! Dump FermionOperator into JSON(JavaScript Object Notation).
+    /*!
+     * \param indent Number of spaces to use for indent
+     * \return JSON formatted string
+     */
+    MQ_NODISCARD std::string dumps(std::size_t indent = 4UL) const;
+
+    //! Load a FermionOperator from a JSON-formatted string.
+    /*!
+     * \param string_data
+     * \return A FermionOperator if the loading was successful, false otherwise.
+     */
+    MQ_NODISCARD static std::optional<FermionOperator> loads(std::string_view string_data);
 
  private:
 #ifdef UNIT_TESTS
