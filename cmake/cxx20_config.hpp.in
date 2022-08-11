@@ -47,4 +47,6 @@
 
 #cmakedefine01 MQ_HAS_CONSTEXPR_STD_VECTOR
 
+#cmakedefine01 MQ_STD_ACCUMULATE_USE_MOVE
+
 #endif /* CXX20_CONFIG_HPP */
