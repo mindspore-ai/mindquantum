@@ -113,6 +113,8 @@ TEST_CASE("FermionOperator parse_string", "[terms_op][ops]") {
     CHECK(ref_terms == terms);
 }
 
+// -----------------------------------------------------------------------------
+
 TEST_CASE("FermionOperator constructor", "[terms_op][ops]") {
     MQ_DISABLE_LOGGING;
     const auto coeff = 2.34i;
@@ -135,6 +137,22 @@ TEST_CASE("FermionOperator constructor", "[terms_op][ops]") {
     CHECK(FermionOperator("2 1^ 11a 3").is_identity());
 }
 
+TEST_CASE("FermionOperator split", "[terms_op][ops]") {
+    const auto lhs = FermionOperator("1^", 1.2i);
+    const auto rhs = FermionOperator("0", 1.2);
+    const auto fermion_op = lhs + rhs;
+
+    const auto splitted = fermion_op.split();
+    REQUIRE(std::size(splitted) == 2);
+    if (splitted[0] == lhs) {
+        CHECK(splitted[0] == lhs);
+        CHECK(splitted[1] == rhs);
+    } else {
+        CHECK(splitted[0] == rhs);
+        CHECK(splitted[1] == lhs);
+    }
+}
+
 TEST_CASE("FermionOperator to_string", "[terms_op][ops]") {
     auto str = ""s;
     auto ref_str = ""s;
@@ -153,26 +171,85 @@ TEST_CASE("FermionOperator to_string", "[terms_op][ops]") {
     }
     SECTION("1^ 2 3^ 1") {
         str = FermionOperator("1^ 2 3^ 1", 1.2i).to_string();
-        ref_str = "(1.2j) [1^ 2 3^ 1]";
+        ref_str = "1.2j [1^ 2 3^ 1]";
     }
 
     CHECK(ref_str == str);
 }
 
-TEST_CASE("FermionOperator split", "[terms_op][ops]") {
-    const auto lhs = FermionOperator("1^", 1.2i);
-    const auto rhs = FermionOperator("0", 1.2);
-    const auto fermion_op = lhs + rhs;
+TEST_CASE("FermionOperator dumps", "[terms_op][ops]") {
+    MQ_ENABLE_LOGGING;
+}
 
-    const auto splitted = fermion_op.split();
-    REQUIRE(std::size(splitted) == 2);
-    if (splitted[0] == lhs) {
-        CHECK(splitted[0] == lhs);
-        CHECK(splitted[1] == rhs);
-    } else {
-        CHECK(splitted[0] == rhs);
-        CHECK(splitted[1] == lhs);
+TEST_CASE("FermionOperator loads", "[terms_op][ops]") {
+    MQ_DISABLE_LOGGING;
+
+    std::string json_data;
+    std::optional<FermionOperator> fermion_op;
+    std::optional<FermionOperator> ref_op;
+
+    SECTION("Empty string") {
+        fermion_op = FermionOperator::loads("");
     }
+    SECTION("Only whitespace") {
+        fermion_op = FermionOperator::loads("      ");
+    }
+    SECTION(R"s(Invalid: ('{"": ""}'))s") {
+        fermion_op = FermionOperator::loads(R"s({"": ""})s");
+    }
+    SECTION(R"s(Invalid: ('{"X1 Y2": "1"}'))s") {
+        fermion_op = FermionOperator::loads(R"s({"X1 Y2": "1"})s");
+    }
+    SECTION(R"s(Invalid: ('"1" : "(1+2.1j)"'))s") {
+        fermion_op = FermionOperator::loads(R"s("1" : "(1+2.1j)")s");
+    }
+
+    SECTION(R"s({"": "1.23"})s") {
+        fermion_op = FermionOperator::loads(R"({"": "1.23"})");
+        ref_op = FermionOperator::identity() * 1.23;
+    }
+    SECTION(R"s({"": "2.34j"})s") {
+        fermion_op = FermionOperator::loads(R"({"": "2.34j"})");
+        ref_op = FermionOperator::identity() * 2.34i;
+    }
+    SECTION(R"s({"": "(3-2j)"})s") {
+        fermion_op = FermionOperator::loads(R"s({"": "(3-2j)"})s");
+        ref_op = FermionOperator::identity() * (3. - 2.i);
+    }
+    SECTION(R"s({"1": "(1+2.1j)"})s") {
+        fermion_op = FermionOperator::loads(R"s({"1": "(1+2.1j)"})s");
+        ref_op = FermionOperator("1", 1.0 + 2.1i);
+    }
+    SECTION(R"s({"2 1^ 3 4^": "(1+2j)"})s") {
+        fermion_op = FermionOperator::loads(R"s({"2 1^ 3 4^": "(1+2j)"})s");
+        ref_op = FermionOperator("2 1^ 3 4^", 1.0 + 2.i);
+    }
+    SECTION(R"s({"2 3^ 4^": "4.5j", "1" : "1"})s") {
+        fermion_op = FermionOperator::loads(
+            R"s({"2 3^ 4^": "4.5j",
+                 "1" : "1"})s");
+        ref_op = FermionOperator("2 3^ 4^", 4.5i) + FermionOperator("1");
+    }
+
+    if (ref_op) {
+        REQUIRE(fermion_op.has_value());
+        CHECK(fermion_op == ref_op);
+    } else {
+        REQUIRE(!fermion_op.has_value());
+    }
+}
+
+TEST_CASE("FermionOperator JSON save - load", "[terms_op][ops]") {
+    MQ_DISABLE_LOGGING;
+    FermionOperator fermion_op;
+    SECTION("Identity") {
+        fermion_op = FermionOperator::identity() * (1.2 + 5.4i);
+    }
+    SECTION("2 1^ 3 4^") {
+        fermion_op = FermionOperator("2 1^ 3 4^", 23.3 + 4.5i);
+    }
+
+    CHECK(fermion_op == FermionOperator::loads(fermion_op.dumps()));
 }
 
 TEST_CASE("FermionOperator comparison operators", "[terms_op][ops]") {

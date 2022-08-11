@@ -76,32 +76,6 @@ using namespace std::literals::string_literals;  // NOLINT(build/namespaces_lite
 
 // =============================================================================
 
-/// Part of the cppduals project.
-/// https://tesch1.gitlab.io/cppduals
-///
-/// (c)2019 Michael Tesch. tesch1@gmail.com
-///
-/// See https://gitlab.com/tesch1/cppduals/blob/master/LICENSE.txt for
-/// license information.
-///
-/// This Source Code Form is subject to the terms of the Mozilla
-/// Public License v. 2.0. If a copy of the MPL was not distributed
-/// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
-///
-/// std::complex<> Formatter for libfmt https://github.com/fmtlib/fmt
-///
-/// libfmt does not provide a formatter for std::complex<>, although one is proposed for c++20.  Anyway, at the expense
-/// of a k or two, you can define CPPDUALS_LIBFMT_COMPLEX and get this one.
-///
-/// The standard iostreams formatting of complex numbers is (a,b), where a and b are the real and imaginary parts.  This
-/// formats a complex number (a+bi) as (a+bi), offering the same formatting options as the underlying type - with the
-/// addition of three optional format options, only one of which may appear directly after the ':' in the format spec
-/// (before any fill or align): '$' (the default if no flag is specified), '*', and ','.  The '*' flag adds a * before
-/// the 'i', producing (a+b*i), where a and b are the formatted value_type values.  The ',' flag simply prints the real
-/// and complex parts separated by a comma (same as iostreams' format).  As a concrete example, this formatter can
-/// produce either (3+5.4i) or (3+5.4*i) or (3,5.4) for a complex<double> using the specs {:g} | {:$g}, {:*g}, or {:,g},
-/// respectively.  (this implementation is a bit hacky - glad for cleanups).
-///
 template <typename T, typename Char>
 struct fmt::formatter<std::complex<T>, Char> : public fmt::formatter<T, Char> {
     using base = fmt::formatter<T, Char>;
@@ -111,29 +85,158 @@ struct fmt::formatter<std::complex<T>, Char> : public fmt::formatter<T, Char> {
     }
     template <typename FormatCtx>
     auto format(const std::complex<T>& number, FormatCtx& ctx) -> decltype(ctx.out()) {
-        if (number.real() || !number.imag()) {
-            return base::format(number.real(), ctx);
+        const auto& real = number.real();
+        const auto& imag = number.imag();
+        if (real && !imag) {
+            return base::format(real, ctx);
+        }
+        if (!real && imag) {
+            base::format(imag, ctx);
+            return format_to(ctx.out(), "j");  // NB: use j instead of i (ie. like Python)
         }
 
         format_to(ctx.out(), "(");
-        if (number.imag()) {
+        base::format(real, ctx);
+        if (imag) {
             if (number.real() && number.imag() >= 0 && specs_.sign != sign::plus) {
                 format_to(ctx.out(), "+");
             }
-            base::format(number.imag(), ctx);
-            format_to(ctx.out(), "j");  // NB: use j instead of i like Python
-            if (std::is_same<typename std::decay<T>::type, float>::value) {
-                format_to(ctx.out(), "f");
-            }
-            if (std::is_same<typename std::decay<T>::type, long double>::value) {
-                format_to(ctx.out(), "l");
-            }
+            base::format(imag, ctx);
+            format_to(ctx.out(), "j");  // NB: use j instead of i (ie. like Python)
         }
         return format_to(ctx.out(), ")");
     }
 };
 
+// =============================================================================
+
+namespace x3 = boost::spirit::x3;
+
+namespace ast::fm_op {
+using mindquantum::ops::TermValue;
+using term_t = mindquantum::ops::FermionOperator::term_t;
+using terms_t = mindquantum::ops::FermionOperator::terms_t;
+using complex_term_dict_t = mindquantum::ops::FermionOperator::complex_term_dict_t;
+using term_coeff_t = std::pair<mindquantum::ops::FermionOperator::complex_term_dict_t::key_type,
+                               mindquantum::ops::FermionOperator::complex_term_dict_t::mapped_type>;
+
+struct TermOp : x3::symbols<TermValue> {
+    TermOp() {
+        add("^", TermValue::adg);
+        add("v", TermValue::a);
+    }
+} const term_op;
+
+template <typename T>
+struct complex_number {
+    T real;
+    T imag = 0;
+
+    operator std::complex<T>() const& {
+        return {real, imag};
+    }
+    operator std::complex<T>() && {
+        return {real, imag};
+    }
+};
+}  // namespace ast::fm_op
+
+BOOST_FUSION_ADAPT_STRUCT(ast::fm_op::complex_number<double>, real, imag);
+
 // -----------------------------------------------------------------------------
+
+namespace parser::fm_op {
+namespace ast = ::ast::fm_op;
+
+struct term_class : mindquantum::parser::x3::rule::error_handler {};
+const x3::rule<term_class, ast::term_t> term = "FermionOperator term (ie. [0-9]+^?)";
+static const auto term_def = x3::lexeme[x3::uint_ > (ast::term_op | x3::attr(ast::TermValue::a))];
+
+struct terms_class : mindquantum::parser::x3::rule::error_handler {};
+const x3::rule<terms_class, ast::terms_t> terms = "fermion_operator terms list";
+static const auto terms_def = +term;
+
+// -------------------------------------
+
+struct imag_unit_class {};
+const x3::rule<imag_unit_class, x3::unused_type> imag_unit = "Imaginary unit ('i', 'j', 'I', 'J')";
+const auto imag_unit_def = x3::char_("ijIJ");
+
+struct complex_class {};
+const x3::rule<complex_class, ast::complex_number<double>> complex = "Complex number ('X', 'Yj', or '(X+Yj)')";
+static const auto complex_def = ('(' >> x3::double_ >> -(x3::double_ >> imag_unit) >> ')')
+                                // | (x3::double_ >> x3::double_ >> imag_unit)
+                                | (x3::attr(0.) >> x3::double_ >> imag_unit) | (x3::double_ >> x3::attr(0.));
+
+struct json_value_class : mindquantum::parser::x3::rule::error_handler {};
+const x3::rule<json_value_class, ast::term_coeff_t> json_value_term = "FermionOperator JSON key-value";
+static const auto json_value_term_def = x3::expect[x3::lit('"')]
+                                        >> (('"' >> x3::attr(ast::terms_t{})) | (x3::expect[+term] >> '"')) > ':'
+                                        > x3::lit('"') > complex > '"';
+struct json_dict_class : mindquantum::parser::x3::rule::error_handler {};
+const x3::rule<json_dict_class, ast::complex_term_dict_t> json_dict = "JSON representation of a FermionOperator";
+static const auto json_dict_def = x3::expect['{'] > (json_value_term % ',') > '}';
+
+BOOST_SPIRIT_DEFINE(term, terms, imag_unit, complex, json_value_term, json_dict);
+}  // namespace parser::fm_op
+
+// -------------------------------------
+
+namespace boost::spirit::x3 {
+template <>
+struct get_info<uint_type> {
+    using result_type = std::string;
+    result_type operator()(const uint_type& /* type */) const noexcept {
+        using std::literals::string_literals::operator""s;
+        return "unsigned int"s;
+    }
+};
+template <>
+struct get_info<ast::fm_op::TermOp> {
+    using result_type = std::string;
+    result_type operator()(const ast::fm_op::TermOp& /* type */) const noexcept {
+        using std::literals::string_literals::operator""s;
+        return "ladder operator (a: '' or 'v', adg: '^')"s;
+    }
+};
+template <typename rule_t>
+struct get_info<x3::plus<rule_t>> {
+    using result_type = std::string;
+    result_type operator()(const x3::plus<rule_t>& type) const noexcept {
+        return "one or more of: " + get_info<rule_t>{}(type.subject);
+    }
+};
+template <typename rule_t>
+struct get_info<x3::omit_directive<rule_t>> {
+    using result_type = std::string;
+    result_type operator()(const x3::omit_directive<rule_t>& type) const noexcept {
+        return get_info<rule_t>{}(type.subject);
+    }
+};
+template <typename rule_t>
+struct get_info<x3::and_predicate<rule_t>> {
+    using result_type = std::string;
+    result_type operator()(const x3::and_predicate<rule_t>& type) const noexcept {
+        return "&("s + get_info<rule_t>{}(type.subject) + ")";
+    }
+};
+template <typename rule_t>
+struct get_info<x3::not_predicate<rule_t>> {
+    using result_type = std::string;
+    result_type operator()(const x3::not_predicate<rule_t>& type) const noexcept {
+        return "!(" + get_info<rule_t>{}(type.subject) + ")";
+    }
+};
+template <typename left_t, typename right_t>
+struct get_info<x3::list<left_t, right_t>> {
+    using result_type = std::string;
+    result_type operator()(const x3::list<left_t, right_t>& type) const noexcept {
+        return "list of [" + get_info<left_t>{}(type.left) + "], delimited by " + get_info<right_t>{}(type.right);
+    }
+};
+}  // namespace boost::spirit::x3
+
+// =============================================================================
 
 namespace {
 constexpr auto cache_size = 100UL;
@@ -377,6 +480,31 @@ auto FermionOperator::to_string() const noexcept -> std::string {
 
 // =============================================================================
 
+auto FermionOperator::dumps(std::size_t indent) const -> std::string {
+    std::string result("{\n");
+    for (const auto& [local_ops, coeff] : terms_) {
+        result += std::string(indent, ' ') + '"';
+        for (const auto& term : local_ops) {
+            result += term_to_string::apply<true>(term) + ' ';
+        }
+        result += fmt::format(R"(": "{}")", coeff);
+    }
+    return result += "\n}";
+}
+
+// -----------------------------------------------------------------------------
+
+auto FermionOperator::loads(std::string_view string_data) -> std::optional<FermionOperator> {
+    if (complex_term_dict_t terms_dict; parser::parse_object_skipper(begin(string_data), end(string_data), terms_dict,
+                                                                     ::parser::fm_op::json_dict, x3::space)) {
+        return FermionOperator(terms_dict);
+    }
+    MQ_ERROR("FermionOperator JSON string parsing failed for '{}'", string_data);
+    return {};
+}
+
+// =============================================================================
+
 auto FermionOperator::simplify_(std::vector<term_t> terms, coefficient_t coeff)
     -> std::tuple<std::vector<term_t>, coefficient_t> {
     return {std::move(terms), coeff};
@@ -457,67 +585,10 @@ auto FermionOperator::normal_ordered_term_(terms_t terms, coefficient_t coeff) -
 
 // =============================================================================
 
-
-namespace x3 = boost::spirit::x3;
-
-namespace ast::fm_op {
-using mindquantum::ops::TermValue;
-using term_t = mindquantum::ops::FermionOperator::term_t;
-
-struct TermOp : x3::symbols<TermValue> {
-    TermOp() {
-        add("^", TermValue::adg);
-        add("v", TermValue::a);
-    }
-} const term_op;
-
-}  // namespace ast::fm_op
-
-// -----------------------------------------------------------------------------
-
-namespace parser::fm_op {
-namespace ast = ::ast::fm_op;
-struct not_space_or_eoi_class {};
-const x3::rule<not_space_or_eoi_class, x3::unused_type> space_or_eoi = "<space> or <end of input>";
-static const auto space_or_eoi_def = x3::space | x3::eoi;
-
-struct term_class : mindquantum::parser::x3::rule::error_handler {};
-const x3::rule<term_class, ast::term_t> term = "fermion_operator term";
-static const auto term_def = !space_or_eoi > x3::uint_ > (ast::term_op | x3::attr(ast::TermValue::a)) > &space_or_eoi;
-
-BOOST_SPIRIT_DEFINE(term, space_or_eoi);
-
-// -------------------------------------
-
-static const auto terms = x3::omit[*x3::space] >> term > *(x3::omit[+x3::space] >> term) >> x3::omit[*x3::space];
-}  // namespace parser::fm_op
-
-// -------------------------------------
-
-namespace boost::spirit::x3 {
-template <>
-struct get_info<uint_type> {
-    using result_type = std::string;
-    result_type operator()(const uint_type& /* type */) const noexcept {
-        using std::literals::string_literals::operator""s;
-        return "unsigned int"s;
-    }
-};
-template <>
-struct get_info<ast::fm_op::TermOp> {
-    using result_type = std::string;
-    result_type operator()(const ast::fm_op::TermOp& /* type */) const noexcept {
-        using std::literals::string_literals::operator""s;
-        return "ladder operator (a: '' or 'v', adg: '^')"s;
-    }
-};
-}  // namespace boost::spirit::x3
-
-// -----------------------------------------------------------------------------
-
 namespace mindquantum::ops {
 auto FermionOperator::parse_string_(std::string_view terms_string) -> terms_t {
-    if (terms_t terms; parser::parse_object(begin(terms_string), end(terms_string), terms, ::parser::fm_op::terms)) {
+    if (terms_t terms; parser::parse_object_skipper(begin(terms_string), end(terms_string), terms,
+                                                    ::parser::fm_op::terms, x3::space)) {
         return terms;
     }
     MQ_ERROR("FermionOperator terms string parsing failed for '{}'", terms_string);
