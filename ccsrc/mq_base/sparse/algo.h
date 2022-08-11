@@ -17,6 +17,7 @@
 #define MINDQUANTUM_SPARSE_ALGO_H_
 #include <memory>
 
+#include "core/utils.h"
 #include "sparse/csrhdmatrix.h"
 #include "sparse/paulimat.h"
 #include "sparse/sparse_utils.h"
@@ -68,12 +69,13 @@ std::shared_ptr<CsrHdMatrix<T>> PauliMatToCsrHdMatrix(std::shared_ptr<PauliMat<T
     auto &dim = a->dim_;
     auto &coeff = a->coeff_;
     auto &p = a->p_;
-#pragma omp parallel for schedule(static) reduction(+ : nnz)
-    for (Index i = 0; i < dim; i++) {
+    THRESHOLD_OMP(
+        _DO_PRAGMA(omp parallel for schedule(static) reduction(+ : nnz)), dim, 1UL << nQubitTh,
+        for (Index i = 0; i < dim; i++) {
         if (i <= col[i]) {
             nnz++;
         }
-    }
+        })
     Index *indptr = reinterpret_cast<Index *>(malloc(sizeof(Index) * (dim + 1)));
     Index *indices = reinterpret_cast<Index *>(malloc(sizeof(Index) * nnz));
     CTP<T> data = reinterpret_cast<CTP<T>>(malloc(sizeof(CT<T>) * nnz));
@@ -122,20 +124,21 @@ template <typename T>
 std::shared_ptr<CsrHdMatrix<T>> SparseHamiltonian(const VT<PauliTerm<T>> &hams, Index n_qubits) {
     VT<std::shared_ptr<CsrHdMatrix<T>>> sp_hams(hams.size());
 
-#pragma omp parallel for schedule(static)
-    for (Index i = 0; i < static_cast<Index>(hams.size()); i++) {
-        auto pm = GetPauliMat(hams[i], n_qubits);
-        sp_hams[i] = PauliMatToCsrHdMatrix(pm);
-        pm->Reset();
-    }
+    THRESHOLD_OMP_FOR(
+        n_qubits, nQubitTh, for (Index i = 0; i < static_cast<Index>(hams.size()); i++) {
+            auto pm = GetPauliMat(hams[i], n_qubits);
+            sp_hams[i] = PauliMatToCsrHdMatrix(pm);
+            pm->Reset();
+        })
     Index tot = static_cast<Index>(hams.size());
     while (tot > 1) {
         Index half = tot / 2 + tot % 2;
-#pragma omp parallel for schedule(static) num_threads(half)
-        for (Index i = half; i < tot; i++) {
+        THRESHOLD_OMP(
+            _DO_PRAGMA(omp parallel for schedule(static) num_threads(half)), n_qubits, nQubitTh,
+            for (Index i = half; i < tot; i++) {
             sp_hams[i - half] = Csr_Plus_Csr(sp_hams[i - half], sp_hams[i]);
             sp_hams[i]->Reset();
-        }
+            })
         tot = half;
     }
     return sp_hams[0];
@@ -150,14 +153,14 @@ T2 *Csr_Dot_Vec(std::shared_ptr<CsrHdMatrix<T>> a, T2 *vec) {
     auto data = a->data_;
     auto indptr = a->indptr_;
     auto indices = a->indices_;
-#pragma omp parallel for schedule(static)
-    for (Index i = 0; i < dim; i++) {
-        CT<T2> sum = {0.0, 0.0};
-        for (Index j = indptr[i]; j < indptr[i + 1]; j++) {
-            sum += data[j] * c_vec[indices[j]];
-        }
-        new_vec[i] = sum;
-    }
+    THRESHOLD_OMP_FOR(
+        dim, 1UL << nQubitTh, for (Index i = 0; i < dim; i++) {
+            CT<T2> sum = {0.0, 0.0};
+            for (Index j = indptr[i]; j < indptr[i + 1]; j++) {
+                sum += data[j] * c_vec[indices[j]];
+            }
+            new_vec[i] = sum;
+        })
     free(vec);
     return reinterpret_cast<T2 *>(new_vec);
 }
@@ -175,17 +178,17 @@ T2 *Csr_Dot_Vec(std::shared_ptr<CsrHdMatrix<T>> a, std::shared_ptr<CsrHdMatrix<T
     auto indptr_b = b->indptr_;
     auto indices_b = b->indices_;
 
-#pragma omp parallel for schedule(static)
-    for (Index i = 0; i < dim; i++) {
-        CT<T2> sum = {0.0, 0.0};
-        for (Index j = indptr[i]; j < indptr[i + 1]; j++) {
-            sum += data[j] * c_vec[indices[j]];
-        }
-        for (Index j = indptr_b[i]; j < indptr_b[i + 1]; j++) {
-            sum += data_b[j] * c_vec[indices_b[j]];
-        }
-        new_vec[i] = sum;
-    }
+    THRESHOLD_OMP_FOR(
+        dim, 1UL << nQubitTh, for (Index i = 0; i < dim; i++) {
+            CT<T2> sum = {0.0, 0.0};
+            for (Index j = indptr[i]; j < indptr[i + 1]; j++) {
+                sum += data[j] * c_vec[indices[j]];
+            }
+            for (Index j = indptr_b[i]; j < indptr_b[i + 1]; j++) {
+                sum += data_b[j] * c_vec[indices_b[j]];
+            }
+            new_vec[i] = sum;
+        })
     free(vec);
     return reinterpret_cast<T2 *>(new_vec);
 }

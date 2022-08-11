@@ -25,6 +25,7 @@
 #include <thread>
 #include <vector>
 
+#include "core/utils.h"
 #include "gate/basic_gate.h"
 #include "gate/gates.h"
 #include "hamiltonian/hamiltonian.h"
@@ -186,13 +187,13 @@ class Projectq : public ::projectq::Simulator {
                                             VCast(gate.ctrl_qubits_));
             if (gate.ctrl_qubits_.size() != 0) {
                 auto ctrl_mask = GetControlMask(gate.ctrl_qubits_);
-#pragma omp parallel for schedule(static)
-                for (Index i = 0; i < (len_ >> 1); i++) {
-                    if ((i & ctrl_mask) != ctrl_mask) {
-                        this->vec_[2 * i] = 0;
-                        this->vec_[2 * i + 1] = 0;
-                    }
-                }
+                THRESHOLD_OMP_FOR(
+                    n_qubits_, nQubitTh, for (Index i = 0; i < (len_ >> 1); i++) {
+                        if ((i & ctrl_mask) != ctrl_mask) {
+                            this->vec_[2 * i] = 0;
+                            this->vec_[2 * i + 1] = 0;
+                        }
+                    })
             }
         } else {
             Projectq::apply_controlled_gate(MCast<T>(gate.param_matrix_(theta).matrix_), VCast(gate.obj_qubits_),
@@ -213,16 +214,16 @@ class Projectq : public ::projectq::Simulator {
         }
         unsigned collapse = (static_cast<unsigned>(rng_() > zero_amps) << qubit);
         auto norm = (collapse == 0) ? sqrt(zero_amps) : sqrt(1 - zero_amps);
-#pragma omp parallel for schedule(static)
-        for (omp::idx_t i = 0; i < (len_ >> 1); i++) {
-            if ((i & mask) == collapse) {
-                vec_[2 * i] /= norm;
-                vec_[2 * i + 1] /= norm;
-            } else {
-                vec_[2 * i] = 0;
-                vec_[2 * i + 1] = 0;
-            }
-        }
+        THRESHOLD_OMP_FOR(
+            n_qubits_, nQubitTh, for (omp::idx_t i = 0; i < (len_ >> 1); i++) {
+                if ((i & mask) == collapse) {
+                    vec_[2 * i] /= norm;
+                    vec_[2 * i + 1] /= norm;
+                } else {
+                    vec_[2 * i] = 0;
+                    vec_[2 * i + 1] = 0;
+                }
+            })
         return (collapse >> qubit);
     }
 
@@ -582,14 +583,14 @@ class Projectq : public ::projectq::Simulator {
 
     VVT<CT<calc_type>> GetCircuitMatrix(const VT<BasicGate<T>> &circ, const ParameterResolver<T> &pr) {
         VVT<CT<calc_type>> out((1 << n_qubits_));
-#pragma omp parallel for schedule(static)
-        for (omp::idx_t i = 0; i < (1UL << n_qubits_); i++) {
-            Projectq<T> sim = Projectq<T>(this->seed, n_qubits_);
-            sim.vec_[0] = 0;
-            sim.vec_[2 * i] = 1;
-            sim.ApplyCircuit(circ, pr);
-            out[i] = sim.cheat();
-        }
+        THRESHOLD_OMP_FOR(
+            n_qubits_, nQubitTh, for (omp::idx_t i = 0; i < (1UL << n_qubits_); i++) {
+                Projectq<T> sim = Projectq<T>(this->seed, n_qubits_);
+                sim.vec_[0] = 0;
+                sim.vec_[2 * i] = 1;
+                sim.ApplyCircuit(circ, pr);
+                out[i] = sim.cheat();
+            })
         return out;
     }
 

@@ -31,7 +31,8 @@ endif()
 set(PATCHES
     ${CMAKE_CURRENT_LIST_DIR}/patch/001-projectq.patch
     ${CMAKE_CURRENT_LIST_DIR}/patch/002-better-aligned-allocator.patch
-    ${CMAKE_CURRENT_LIST_DIR}/patch/003-projectq-namespace.patch)
+    ${CMAKE_CURRENT_LIST_DIR}/patch/003-projectq-namespace.patch
+    ${CMAKE_CURRENT_LIST_DIR}/patch/004-threshold-omp.patch)
 
 mindquantum_add_pkg(
   projectq
