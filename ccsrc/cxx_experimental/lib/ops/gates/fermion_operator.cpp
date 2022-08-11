@@ -342,7 +342,7 @@ struct term_to_string {
 // -----------------------------------------------------------------------------
 
 auto FermionOperator::to_string() const noexcept -> std::string {
-#if __cplusplus >= 202002L
+#if MQ_STD_ACCUMULATE_USE_MOVE
     using acc_init_t = std::string&&;
 #else
     using acc_init_t = std::string&;
