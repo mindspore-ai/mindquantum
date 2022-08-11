@@ -37,7 +37,7 @@
 
 #include "core/logging.hpp"
 #include "core/parser/boost_x3_error_handler.hpp"
-#include "details/boost_x3_parse_term.hpp"
+#include "details/boost_x3_parse_object.hpp"
 #include "ops/gates.hpp"
 #include "ops/gates/terms_operator.hpp"
 
@@ -311,7 +311,7 @@ struct get_info<ast::qb_op::TermOp> {
 namespace mindquantum::ops {
 
 auto QubitOperator::parse_string_(std::string_view terms_string) -> terms_t {
-    if (terms_t terms; parser::parse_term(begin(terms_string), end(terms_string), terms, ::parser::qb_op::terms)) {
+    if (terms_t terms; parser::parse_object(begin(terms_string), end(terms_string), terms, ::parser::qb_op::terms)) {
         return terms;
     }
     MQ_ERROR("QubitOperator terms string parsing failed for '{}'", terms_string);

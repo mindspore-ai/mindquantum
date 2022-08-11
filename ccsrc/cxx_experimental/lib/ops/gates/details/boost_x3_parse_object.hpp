@@ -12,9 +12,10 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef BOOST_X3_PARSE_TERM_HPP
-#define BOOST_X3_PARSE_TERM_HPP
+#ifndef BOOST_X3_PARSE_OBJECT_HPP
+#define BOOST_X3_PARSE_OBJECT_HPP
 
+#include <type_traits>
 #ifndef ENABLE_LOGGING
 #    include <iostream>
 #endif  // !ENABLE_LOGGING
@@ -27,8 +28,22 @@
 #include "core/parser/boost_x3_error_handler.hpp"
 
 namespace mindquantum::parser {
-template <typename iterator_t, typename terms_t, typename rule_t>
-bool parse_term(iterator_t iter, iterator_t end, terms_t& terms, rule_t&& start_rule) {
+namespace details::traits {
+template <typename T, typename = void>
+struct call_clear {
+    static void apply(T& /* value */) {
+    }
+};
+template <typename T>
+struct call_clear<T, std::void_t<decltype(std::declval<T&>().clear())>> {
+    static void apply(T& value) {
+        value.clear();
+    }
+};
+}  // namespace details::traits
+
+template <typename iterator_t, typename object_t, typename rule_t>
+bool parse_object(iterator_t iter, iterator_t end, object_t& object, rule_t&& start_rule) {
 #ifdef ENABLE_LOGGING
     mindquantum::parser::error_handler<iterator_t> handler(iter, end);
 #else
@@ -37,19 +52,19 @@ bool parse_term(iterator_t iter, iterator_t end, terms_t& terms, rule_t&& start_
 
     if (iter == end) {
         MQ_ERROR("Cannot parse empty string!");
-        terms.clear();
+        details::traits::call_clear<object_t>::apply(object);
         return false;
     }
 
     const auto parser = boost::spirit::x3::with<boost::spirit::x3::error_handler_tag>(std::ref(handler))[start_rule];
-    if (boost::spirit::x3::parse(iter, end, parser, terms) && iter == end) {
+    if (boost::spirit::x3::parse(iter, end, parser, object) && iter == end) {
         return true;
     }
 
     // Parsing failed
-    terms.clear();
+    details::traits::call_clear<object_t>::apply(object);
     return false;
 }
 }  // namespace mindquantum::parser
 
-#endif /* BOOST_X3_PARSE_TERM_HPP */
+#endif /* BOOST_X3_PARSE_OBJECT_HPP */

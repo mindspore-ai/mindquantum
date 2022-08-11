@@ -40,7 +40,7 @@
 
 #include "core/logging.hpp"
 #include "core/parser/boost_x3_error_handler.hpp"
-#include "details/boost_x3_parse_term.hpp"
+#include "details/boost_x3_parse_object.hpp"
 #include "details/eigen_diagonal_identity.hpp"
 #include "ops/gates.hpp"
 #include "ops/gates/terms_operator.hpp"
@@ -457,6 +457,7 @@ auto FermionOperator::normal_ordered_term_(terms_t terms, coefficient_t coeff) -
 
 // =============================================================================
 
+
 namespace x3 = boost::spirit::x3;
 
 namespace ast::fm_op {
@@ -516,7 +517,7 @@ struct get_info<ast::fm_op::TermOp> {
 
 namespace mindquantum::ops {
 auto FermionOperator::parse_string_(std::string_view terms_string) -> terms_t {
-    if (terms_t terms; parser::parse_term(begin(terms_string), end(terms_string), terms, ::parser::fm_op::terms)) {
+    if (terms_t terms; parser::parse_object(begin(terms_string), end(terms_string), terms, ::parser::fm_op::terms)) {
         return terms;
     }
     MQ_ERROR("FermionOperator terms string parsing failed for '{}'", terms_string);
