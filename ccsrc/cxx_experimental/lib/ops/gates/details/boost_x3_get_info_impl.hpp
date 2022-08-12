@@ -16,6 +16,7 @@
 #define BOOST_X3_GET_INFO_IMPL_HPP
 
 #include <string>
+#include <string_view>
 
 #include <boost/spirit/home/x3.hpp>
 
@@ -46,7 +47,7 @@ template <typename rule_t>
 struct get_info<and_predicate<rule_t>> {
     using result_type = std::string;
     result_type operator()(const and_predicate<rule_t>& type) const noexcept {
-        using std::literals::string_literals::operator""s;
+        using namespace std::literals::string_literals;
         return "&("s + get_info<rule_t>{}(type.subject) + ")";
     }
 };
@@ -54,7 +55,7 @@ template <typename rule_t>
 struct get_info<not_predicate<rule_t>> {
     using result_type = std::string;
     result_type operator()(const not_predicate<rule_t>& type) const noexcept {
-        using std::literals::string_literals::operator""s;
+        using namespace std::literals::string_literals;
         return "!("s + get_info<rule_t>{}(type.subject) + ")";
     }
 };
@@ -62,7 +63,7 @@ template <typename left_t, typename right_t>
 struct get_info<list<left_t, right_t>> {
     using result_type = std::string;
     result_type operator()(const list<left_t, right_t>& type) const noexcept {
-        using std::literals::string_literals::operator""s;
+        using namespace std::literals::string_literals;
         return "list of ["s + get_info<left_t>{}(type.left) + "], delimited by " + get_info<right_t>{}(type.right);
     }
 };
