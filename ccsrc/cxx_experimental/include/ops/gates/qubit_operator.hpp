@@ -20,6 +20,7 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include <Eigen/SparseCore>
@@ -115,6 +116,14 @@ class QubitOperator : public TermsOperator<QubitOperator> {
 
     //! Simplify the list of local operators by using commutation and anti-commutation relations
     static std::tuple<terms_t, coefficient_t> simplify_(std::vector<term_t> terms, coefficient_t coeff = 1.);
+
+    //! Sort a list of local operators
+    /*!
+     * \param local_ops A list of local operators
+     * \param coeff A coefficient
+     * \note Potentially called by the TermsOperator constructor
+     */
+    static std::pair<terms_t, coefficient_t> sort_terms_(terms_t local_ops, coefficient_t coeff);
 };
 }  // namespace mindquantum::ops
 

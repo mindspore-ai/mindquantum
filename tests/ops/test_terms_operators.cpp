@@ -39,6 +39,11 @@ struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator> {
         return {terms, coeff};
     }
 
+    static std::pair<terms_t, coefficient_t> sort_terms_(terms_t local_ops, coefficient_t coeff) {
+        std::sort(begin(local_ops), end(local_ops));
+        return {std::move(local_ops), coeff};  // TODO(dnguyen): Should we move? or can (N)RVO take care of that?
+    }
+
     using TermsOperator::operator==;
 };
 }  // namespace

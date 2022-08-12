@@ -33,8 +33,8 @@
 namespace mindquantum::ops {
 
 template <typename derived_t>
-TermsOperator<derived_t>::TermsOperator(term_t term, coefficient_t coeff) : terms_{{{std::move(term)}, coeff}} {
-    calculate_num_targets_();
+TermsOperator<derived_t>::TermsOperator(term_t term, coefficient_t coeff)
+    : TermsOperator(complex_term_dict_t{{{std::move(term)}, coeff}}) {
 }
 
 // -----------------------------------------------------------------------------
@@ -49,7 +49,11 @@ TermsOperator<derived_t>::TermsOperator(const terms_t& term, coefficient_t coeff
 // -----------------------------------------------------------------------------
 
 template <typename derived_t>
-TermsOperator<derived_t>::TermsOperator(complex_term_dict_t terms) : terms_{std::move(terms)} {
+TermsOperator<derived_t>::TermsOperator(const complex_term_dict_t& terms) {
+    for (const auto& [local_ops, coeff] : terms) {
+        terms_.emplace(derived_t::sort_terms_(local_ops, coeff));
+    }
+
     calculate_num_targets_();
 }
 
@@ -226,7 +230,8 @@ auto TermsOperator<derived_t>::compress(double abs_tol) -> derived_t& {
         if (std::abs(it->second) <= abs_tol) {
             it = terms_.erase(it);
             continue;
-        } else if (std::abs(it->second.imag()) <= abs_tol) {
+        }
+        if (std::abs(it->second.imag()) <= abs_tol) {
             it->second = it->second.real();
         } else if (std::abs(it->second.real()) <= abs_tol) {
             it->second = coefficient_t{0., it->second.imag()};
