@@ -417,8 +417,11 @@ auto FermionOperator::loads(std::string_view string_data) -> std::optional<Fermi
 
 auto FermionOperator::normal_ordered_term_(terms_t local_ops, coefficient_t coeff)
     -> std::pair<terms_t, coefficient_t> {
+    if (std::empty(local_ops)) {
+        return {{}, coeff};
+    }
     for (auto it(begin(local_ops) + 1); it != end(local_ops); ++it) {
-        for (auto it_jm1(std::make_reverse_iterator(it) - 1), it_j(std::make_reverse_iterator(it));
+        for (auto it_jm1(std::make_reverse_iterator(it)), it_j(std::make_reverse_iterator(it) - 1);
              it_jm1 != rend(local_ops); ++it_jm1, ++it_j) {
             // Swap operators if left operator is a and right operator is a^\dagger
             if (it_jm1->second == TermValue::a && it_j->second == TermValue::adg) {
@@ -499,7 +502,7 @@ auto FermionOperator::parse_string_(std::string_view terms_string) -> terms_t {
 
 auto FermionOperator::simplify_(std::vector<term_t> terms, coefficient_t coeff)
     -> std::tuple<std::vector<term_t>, coefficient_t> {
-    return {std::move(terms), coeff};
+    return sort_terms_(std::move(terms), coeff);
 }
 
 // =============================================================================
