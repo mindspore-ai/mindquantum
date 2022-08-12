@@ -28,23 +28,7 @@ include(CheckLinkerFlag)
 
 # ==============================================================================
 
-# Check if a language has been enabled without attempting to enable it
-#
-# is_language_enabled(<lang> <resultvar>)
-#
-# If the language <lang> has already been enabled, <resultvar> is set to TRUE. Otherwise it is set to FALSE.
-function(is_language_enabled _lang _var)
-  get_property(_supported_languages GLOBAL PROPERTY ENABLED_LANGUAGES)
-  if(NOT _lang IN_LIST _supported_languages)
-    set(${_var}
-        FALSE
-        PARENT_SCOPE)
-  else()
-    set(${_var}
-        TRUE
-        PARENT_SCOPE)
-  endif()
-endfunction()
+include(is_language_enabled)
 
 # ------------------------------------------------------------------------------
 
