@@ -53,7 +53,6 @@ using complex_term_dict_t = DummyOperator::complex_term_dict_t;
 // =============================================================================
 
 TEST_CASE("TermsOperator constructor", "[terms_op][ops]") {
-    MQ_DISABLE_LOGGING;
     complex_term_dict_t ref_terms;
 
     SECTION("Default constructor") {
