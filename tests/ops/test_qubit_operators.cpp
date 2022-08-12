@@ -44,7 +44,6 @@ class UnitTestAccessor {
 // =============================================================================
 
 TEST_CASE("QubitOperator parse_string", "[terms_op][ops]") {
-    MQ_DISABLE_LOGGING;
     std::string terms_string;
     terms_t ref_terms;
 

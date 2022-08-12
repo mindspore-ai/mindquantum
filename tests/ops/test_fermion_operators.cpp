@@ -26,9 +26,9 @@
 // =============================================================================
 
 namespace ops = mindquantum::ops;
-
 using namespace std::literals::complex_literals;
 using namespace std::literals::string_literals;
+
 using FermionOperator = ops::FermionOperator;
 using TermValue = mindquantum::ops::TermValue;
 using coefficient_t = FermionOperator::coefficient_t;
@@ -48,7 +48,6 @@ class UnitTestAccessor {
 // =============================================================================
 
 TEST_CASE("FermionOperator parse_string", "[terms_op][ops]") {
-    MQ_DISABLE_LOGGING;
     std::string terms_string;
     terms_t ref_terms;
 
@@ -114,7 +113,6 @@ TEST_CASE("FermionOperator parse_string", "[terms_op][ops]") {
 // -----------------------------------------------------------------------------
 
 TEST_CASE("FermionOperator constructor", "[terms_op][ops]") {
-    MQ_DISABLE_LOGGING;
     const auto coeff = 2.34i;
     auto ref_terms = complex_term_dict_t{{{{1, TermValue::a}, {2, TermValue::adg}, {4, TermValue::a}}, coeff}};
 
@@ -176,12 +174,9 @@ TEST_CASE("FermionOperator to_string", "[terms_op][ops]") {
 }
 
 TEST_CASE("FermionOperator dumps", "[terms_op][ops]") {
-    MQ_ENABLE_LOGGING;
 }
 
 TEST_CASE("FermionOperator loads", "[terms_op][ops]") {
-    MQ_DISABLE_LOGGING;
-
     std::string json_data;
     std::optional<FermionOperator> fermion_op;
     std::optional<FermionOperator> ref_op;
@@ -238,7 +233,6 @@ TEST_CASE("FermionOperator loads", "[terms_op][ops]") {
 }
 
 TEST_CASE("FermionOperator JSON save - load", "[terms_op][ops]") {
-    MQ_DISABLE_LOGGING;
     FermionOperator fermion_op;
     SECTION("Identity") {
         fermion_op = FermionOperator::identity() * (1.2 + 5.4i);
@@ -277,4 +271,5 @@ TEST_CASE("FermionOperator comparison operators", "[terms_op][ops]") {
     CHECK(!(op == other));
     CHECK(op != other);
 }
+
 // =============================================================================

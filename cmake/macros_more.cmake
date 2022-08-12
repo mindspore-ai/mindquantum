@@ -92,7 +92,13 @@ function(add_test_executable target)
   set_property(
     SOURCE ${target}.cpp
     APPEND_STRING
-    PROPERTY COMPILE_DEFINITIONS CATCH_CONFIG_MAIN)
+    PROPERTY COMPILE_DEFINITIONS CATCH_CONFIG_RUNNER)
+  # ~~~
+  # set_property(
+  #   SOURCE ${target}.cpp
+  #   APPEND_STRING
+  #   PROPERTY COMPILE_DEFINITIONS CATCH_CONFIG_MAIN)
+  # ~~~
 
   target_compile_definitions(${target} PRIVATE ${${target}_DEFINES})
 endfunction()
