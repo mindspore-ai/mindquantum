@@ -13,20 +13,15 @@
 //   limitations under the License.
 
 #include <complex>
-#include <sstream>
 #include <string>
-
-#include <boost/range/combine.hpp>
+#include <string_view>
 
 #include "core/circuit_block.hpp"
 #include "core/logging.hpp"
 #include "ops/gates/fermion_operator.hpp"
-#include "ops/gates/qubit_operator.hpp"
 #include "ops/utils.hpp"
 
-// clang-format off
 #include <catch2/catch.hpp>
-// clang-format on
 
 // =============================================================================
 

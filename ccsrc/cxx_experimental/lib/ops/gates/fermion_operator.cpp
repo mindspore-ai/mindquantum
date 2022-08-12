@@ -31,6 +31,9 @@
 #include <boost/fusion/include/std_pair.hpp>
 #include <boost/spirit/home/x3.hpp>
 
+#include <unsupported/Eigen/KroneckerProduct>
+#include <unsupported/Eigen/src/KroneckerProduct/KroneckerTensorProduct.h>
+
 #include <tweedledum/Operators/Standard/X.h>
 #include <tweedledum/Operators/Standard/Y.h>
 #include <tweedledum/Operators/Standard/Z.h>

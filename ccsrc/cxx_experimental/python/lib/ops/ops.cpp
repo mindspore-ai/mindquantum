@@ -12,8 +12,6 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#include <memory>
-
 #include <tweedledum/IR/Circuit.h>
 #include <tweedledum/IR/Qubit.h>
 
