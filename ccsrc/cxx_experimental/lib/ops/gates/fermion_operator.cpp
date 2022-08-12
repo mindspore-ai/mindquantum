@@ -30,13 +30,16 @@
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/fusion/include/std_pair.hpp>
 #include <boost/spirit/home/x3.hpp>
-#include <fmt/format.h>
-#include <lru_cache/lru_cache.h>
+
+#include <unsupported/Eigen/KroneckerProduct>
+#include <unsupported/Eigen/src/KroneckerProduct/KroneckerTensorProduct.h>
+
 #include <tweedledum/Operators/Standard/X.h>
 #include <tweedledum/Operators/Standard/Y.h>
 #include <tweedledum/Operators/Standard/Z.h>
-#include <unsupported/Eigen/KroneckerProduct>
-#include <unsupported/Eigen/src/KroneckerProduct/KroneckerTensorProduct.h>
+
+#include <fmt/format.h>
+#include <lru_cache/lru_cache.h>
 
 #include "core/logging.hpp"
 #include "core/parser/boost_x3_error_handler.hpp"

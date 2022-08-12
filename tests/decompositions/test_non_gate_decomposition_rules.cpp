@@ -15,7 +15,6 @@
 #include <string>
 #include <string_view>
 
-#include <catch2/catch.hpp>
 #include <tweedledum/Passes/Utility/shallow_duplicate.h>
 
 #include "decompositions/config.hpp"
@@ -23,6 +22,8 @@
 #include "../utils.hpp"
 #include "decompositions/non_gate_decomposition_rule.hpp"
 #include "ops/gates.hpp"
+
+#include <catch2/catch.hpp>
 
 using namespace std::literals::string_literals;
 using namespace std::literals::string_view_literals;

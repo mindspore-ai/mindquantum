@@ -19,10 +19,11 @@
 
 #include <utility>
 
+#include <tweedledum/IR/Operator.h>
+
 #include <symengine/constants.h>
 #include <symengine/logic.h>
 #include <symengine/mul.h>
-#include <tweedledum/IR/Operator.h>
 
 #include "core/config.hpp"
 

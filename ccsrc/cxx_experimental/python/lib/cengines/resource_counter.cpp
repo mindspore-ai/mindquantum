@@ -14,11 +14,12 @@
 
 #include "python/cengines/resource_counter.hpp"
 
+#include <tweedledum/Operators/Ising.h>
+#include <tweedledum/Operators/Standard.h>
+
 #include <fmt/format.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <tweedledum/Operators/Ising.h>
-#include <tweedledum/Operators/Standard.h>
 
 #include "cengines/write_projectq.hpp"
 #include "ops/gates/ph.hpp"

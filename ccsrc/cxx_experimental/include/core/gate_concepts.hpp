@@ -21,9 +21,9 @@
 #include <type_traits>
 #include <vector>
 
-#include <symengine/basic.h>
-
 #include "tweedledum/IR/Operator.h"
+
+#include <symengine/basic.h>
 
 #include "ops/parametric/config.hpp"
 

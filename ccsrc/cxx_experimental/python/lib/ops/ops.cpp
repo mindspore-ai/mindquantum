@@ -12,12 +12,13 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+#include <tweedledum/IR/Circuit.h>
+#include <tweedledum/IR/Qubit.h>
+
 #include <fmt/format.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <tweedledum/IR/Circuit.h>
-#include <tweedledum/IR/Qubit.h>
 
 #include "ops/gates.hpp"
 #include "ops/gates/terms_operator.hpp"

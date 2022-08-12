@@ -16,9 +16,6 @@
 #include <cstdint>
 #include <optional>
 
-#include <pybind11/complex.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 #include <symengine/add.h>
 #include <symengine/basic.h>
 #include <symengine/complex.h>
@@ -36,6 +33,10 @@
 #include <symengine/rational.h>
 #include <symengine/real_double.h>
 #include <symengine/symbol.h>
+
+#include <pybind11/complex.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include <sys/types.h>
 
 #include "python/bindings.hpp"

@@ -15,7 +15,6 @@
 #include <string_view>
 #include <variant>
 
-#include <catch2/catch.hpp>
 #include <symengine/basic.h>
 #include <symengine/expression.h>
 #include <symengine/real_double.h>
@@ -26,6 +25,8 @@
 #include "ops/parametric/angle_base.hpp"
 #include "ops/parametric/register_gate_type.hpp"
 #include "ops/utils.hpp"
+
+#include <catch2/catch.hpp>
 
 // =============================================================================
 

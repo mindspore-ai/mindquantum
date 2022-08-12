@@ -12,11 +12,12 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#include <catch2/catch.hpp>
 #include <tweedledum/IR/Circuit.h>
 #include <tweedledum/Target/Placement.h>
 
 #include "mapping/partial_placer.hpp"
+
+#include <catch2/catch.hpp>
 
 // =============================================================================
 

@@ -30,11 +30,12 @@
 #    include "core/gate_concepts.hpp"
 #endif  // MQ_HAS_CONCEPTS
 
+#include <tweedledum/IR/Operator.h>
+
 #include <symengine/basic.h>
 #include <symengine/complex_double.h>
 #include <symengine/eval_double.h>
 #include <symengine/visitor.h>
-#include <tweedledum/IR/Operator.h>
 
 // #include <frozen/unordered_map.h>
 

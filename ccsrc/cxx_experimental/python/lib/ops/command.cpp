@@ -21,12 +21,13 @@
 #include <utility>
 #include <vector>
 
+#include <tweedledum/Operators/Ising.h>
+#include <tweedledum/Operators/Standard.h>
+
 #include <pybind11/complex.h>
 #include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <tweedledum/Operators/Ising.h>
-#include <tweedledum/Operators/Standard.h>
 
 #include "ops/gates.hpp"
 #include "ops/meta/dagger.hpp"

@@ -21,9 +21,7 @@
 #include "ops/gates/terms_operator.hpp"
 #include "ops/utils.hpp"
 
-// clang-format off
 #include <catch2/catch.hpp>
-// clang-format on
 
 // =============================================================================
 

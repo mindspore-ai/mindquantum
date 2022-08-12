@@ -34,11 +34,10 @@
 #include <utility>
 #include <vector>
 
+#include "tweedledum/Target/Placement.h"
 #include <tweedledum/IR/Circuit.h>
 #include <tweedledum/Target/Device.h>
 #include <tweedledum/Target/Mapping.h>
-
-#include "tweedledum/Target/Placement.h"
 
 #ifdef UNIT_TESTS
 class UnitTestAccessor;

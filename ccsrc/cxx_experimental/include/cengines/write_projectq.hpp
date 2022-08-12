@@ -19,9 +19,10 @@
 #include <string_view>
 #include <vector>
 
+#include <tweedledum/IR/Circuit.h>
+
 #include <fmt/format.h>
 #include <kitty/detail/mscfix.hpp>
-#include <tweedledum/IR/Circuit.h>
 
 #include "ops/gates.hpp"
 

@@ -19,11 +19,11 @@
 #include <string>
 #include <vector>
 
-#include <catch2/catch.hpp>
-
 #include "tweedledum/IR/Instruction.h"
 
 #include "../utils.hpp"
+
+#include <catch2/catch.hpp>
 
 template <typename Range>
 class InstructionPtrRange : public Catch::MatcherBase<Range> {

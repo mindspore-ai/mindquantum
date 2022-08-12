@@ -17,6 +17,7 @@
 
 #include <complex>
 #include <cstdint>
+#include <string>
 #include <string_view>
 #include <tuple>
 #include <vector>
@@ -61,6 +62,7 @@ class QubitOperator : public TermsOperator<QubitOperator> {
         return "mindquantum.qubitoperator";
     }
 
+    using TermsOperator::TermsOperator;
     QubitOperator() = default;
     QubitOperator(const QubitOperator&) = default;
     QubitOperator(QubitOperator&&) noexcept = default;
@@ -68,13 +70,7 @@ class QubitOperator : public TermsOperator<QubitOperator> {
     QubitOperator& operator=(QubitOperator&&) noexcept = default;
     ~QubitOperator() noexcept = default;
 
-    explicit QubitOperator(term_t term, coefficient_t coefficient = 1.0);
-
-    explicit QubitOperator(const terms_t& term, coefficient_t coeff = 1.0);
-
-    explicit QubitOperator(complex_term_dict_t terms);
-
-    //! Constructor from a string
+    //! Constructor from a string representing a list of terms
     /*!
      * \note If parsing the string fails, the resulting QubitOperator object will represent the identity. If logging is
      *       enabled, an error message will be printed inside the log with an appropriate error message.
@@ -83,12 +79,31 @@ class QubitOperator : public TermsOperator<QubitOperator> {
 
     // -------------------------------------------------------------------
 
+    //! Count the number of gates that make up a qubit operator
     MQ_NODISCARD uint32_t count_gates() const noexcept;
 
+    //! Return the matrix representing a QubitOperator
     MQ_NODISCARD std::optional<csr_matrix_t> matrix(std::optional<uint32_t> n_qubits) const;
 
     //! Split the operator into its individual components
     MQ_NODISCARD std::vector<QubitOperator> split() const noexcept;
+
+    //! Convert a QubitOperator to a string
+    MQ_NODISCARD std::string to_string() const noexcept;
+
+    //! Dump QubitOperator into JSON(JavaScript Object Notation).
+    /*!
+     * \param indent Number of spaces to use for indent
+     * \return JSON formatted string
+     */
+    MQ_NODISCARD std::string dumps(std::size_t indent = 4UL) const;
+
+    //! Load a QubitOperator from a JSON-formatted string.
+    /*!
+     * \param string_data
+     * \return A QubitOperator if the loading was successful, false otherwise.
+     */
+    MQ_NODISCARD static std::optional<QubitOperator> loads(std::string_view string_data);
 
  private:
 #ifdef UNIT_TESTS

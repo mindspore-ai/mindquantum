@@ -12,8 +12,6 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#include <catch2/catch.hpp>
-
 #include "tweedledum/Passes/Utility/shallow_duplicate.h"
 
 #include "decompositions/config.hpp"
@@ -25,6 +23,8 @@
 #include "decompositions/gate_decomposition_rule.hpp"
 #include "decompositions/trivial_atom.hpp"
 #include "ops/gates.hpp"
+
+#include <catch2/catch.hpp>
 
 using namespace std::literals::string_literals;
 using namespace std::literals::string_view_literals;

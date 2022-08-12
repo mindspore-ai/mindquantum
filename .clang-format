@@ -32,32 +32,48 @@ CompactNamespaces: false
 FixNamespaceComments: true
 IncludeBlocks: Regroup
 IncludeCategories:
+  # We define the include categories such that the header files are sorted and grouped as follows:
+  #    1. C standard headers
+  #    2. C++ standard headers
+  #    3. CUDA headers
+  #    4. Boost headers
+  #    5. Eigen headers
+  #    6. tweedledum headers
+  #    7. SymEngine headers
+  #    8. Other system headers
+  #    9. Any local config header
+  #   10. Local headers
+  #   11. Catch2 headers
+  - Regex: '[<"](catch2/catch.hpp)[>"]'  # Make sure Catch2 is included last
+    Priority: 110
+  - Regex: '[<"]tweedledum/([A-Za-z0-9.\/\-_])+[>"]'
+    Priority: 60
+  - Regex: '<boost\/'
+    Priority: 40
+  - Regex: '<(Eigen|Unsupported/Eigen)\/'
+    Priority: 50
+  - Regex: '[<"]symengine\/'
+    Priority: 70
+  - Regex: '[<"]cuda[A-Za-z0-9.\/\-_]+[>"]'
+    Priority: 30
+  - Regex: '[<"](driver_types.h)[>"]'
+    Priority: 30
   - Regex: >-
       '<
       (assert|complex|ctype|errno|fenv|float|inttypes|iso646|limits|locale|math|setjmp|signal|stdalign|stdarg
       |stdatomic|stdbool|stddef|stdint|stdio|stdlib|stdnoreturn|string|tdmath|threads|time|uchar|wchar|wctype)
       \.h>'
-    Priority: 1
-  - Regex: '<[[:alnum:]_\.]+.h>'
-    Priority: 2
-  - Regex: '<[[:alnum:]_\.]+>'
-    Priority: 3
-  - Regex: '<[[:alnum:]_\.]+'
-    Priority: 4
-  - Regex: '[<"]tweedledum/([A-Za-z0-9.\/\-_])+[>"]'
-    Priority: 5
-  - Regex: '<(catch2|boost|eigen)\/'
-    Priority: 6
-  - Regex: '<symengine\/'
-    Priority: 7
-  - Regex: '[<"]cuda[A-Za-z0-9.\/\-_]+[>"]'
-    Priority: 8
-  - Regex: '[<"](driver_types.h)[>"]'
-    Priority: 8
-  - Regex: '"[[:alpha:]\/]*config\.hpp"'
     Priority: 10
-  - Regex: '"([A-Za-z0-9.\/\-_])+"'
+  - Regex: '<[[:alnum:]_\.]+.h>'
+    Priority: 10
+  - Regex: '<[[:alnum:]_\.]+>'
     Priority: 20
+  - Regex: '<[[:alnum:]_\.]+'
+    Priority: 80
+  - Regex: '"[[:alpha:]\/]*config\.hpp"'
+    Priority: 90
+  - Regex: '"([A-Za-z0-9.\/\-_])+"'
+    Priority: 100
 IndentPPDirectives: AfterHash
 IndentRequires: true
 IndentWidth: 4

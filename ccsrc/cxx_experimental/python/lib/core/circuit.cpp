@@ -17,14 +17,15 @@
 #include <cstdint>
 #include <vector>
 
-#include <pybind11/operators.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 #include <tweedledum/IR/Circuit.h>
 #include <tweedledum/IR/Qubit.h>
 #include <tweedledum/Parser/qasm.h>
 #include <tweedledum/Parser/tfc.h>
 #include <tweedledum/Utils/Visualization/string_utf8.h>
+
+#include <pybind11/operators.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include "core/types.hpp"
 #include "ops/gates.hpp"
