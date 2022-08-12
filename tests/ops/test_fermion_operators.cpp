@@ -109,7 +109,10 @@ TEST_CASE("FermionOperator parse_string", "[terms_op][ops]") {
 
     const auto terms = UnitTestAccessor::parse_string(terms_string);
 
+    INFO("terms_string = " << terms_string);
     REQUIRE(std::size(ref_terms) == std::size(terms));
+
+    INFO("terms_string = " << terms_string);
     CHECK(ref_terms == terms);
 }
 
