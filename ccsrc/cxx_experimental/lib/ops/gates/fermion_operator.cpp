@@ -415,19 +415,11 @@ auto FermionOperator::loads(std::string_view string_data) -> std::optional<Fermi
 
 // =============================================================================
 
-auto FermionOperator::simplify_(std::vector<term_t> terms, coefficient_t coeff)
-    -> std::tuple<std::vector<term_t>, coefficient_t> {
-    return {std::move(terms), coeff};
-}
-
-// =============================================================================
-
-auto FermionOperator::normal_ordered_term_(terms_t terms, coefficient_t coeff) -> FermionOperator {
-    FermionOperator ordered_term;
-
-    for (auto it(begin(terms) + 1); it != end(terms); ++it) {
+auto FermionOperator::normal_ordered_term_(terms_t local_ops, coefficient_t coeff)
+    -> std::pair<terms_t, coefficient_t> {
+    for (auto it(begin(local_ops) + 1); it != end(local_ops); ++it) {
         for (auto it_jm1(std::make_reverse_iterator(it) - 1), it_j(std::make_reverse_iterator(it));
-             it_jm1 != rend(terms); ++it_jm1, ++it_j) {
+             it_jm1 != rend(local_ops); ++it_jm1, ++it_j) {
             // Swap operators if left operator is a and right operator is a^\dagger
             if (it_jm1->second == TermValue::a && it_j->second == TermValue::adg) {
                 std::iter_swap(it_jm1, it_j);
@@ -437,15 +429,15 @@ auto FermionOperator::normal_ordered_term_(terms_t terms, coefficient_t coeff) -
                     // NB: we need to skip skip elements j-1 and j. Since it_jm1 and it_j are reverse iterators:
                     //     (it_j + 1).base() is actually the j-1 element
                     //     it_jm1.base() is actually the j+1 element
-                    auto new_terms = terms_t(begin(terms), (it_j + 1).base());
-                    new_terms.reserve(std::size(terms) - 1);
-                    std::copy(it_jm1.base(), end(terms), std::back_inserter(new_terms));
-                    ordered_term += normal_ordered_term_(new_terms, -1. * coeff);
+                    auto new_terms = terms_t(begin(local_ops), (it_j + 1).base());
+                    new_terms.reserve(std::size(local_ops) - 1);
+                    std::copy(it_jm1.base(), end(local_ops), std::back_inserter(new_terms));
                 }
             } else if (it_jm1->second == it_j->second) {
                 // If indices are the same, evaluate to zero
                 if (it_jm1->first == it_j->first) {
-                    return ordered_term;
+                    // TODO(dnguyen): Should we move? or can (N)RVO take care of that?
+                    return {std::move(local_ops), coeff};
                 }
                 // Swap them if the same operator but lower index on the left
                 if (it_jm1->first < it_j->first) {
@@ -470,13 +462,12 @@ auto FermionOperator::normal_ordered_term_(terms_t terms, coefficient_t coeff) -
     //                 auto new_term = terms_t(begin(terms), begin(terms) + j - 1);
     //                 new_term.reserve(std::size(terms) - 1);
     //                 std::copy(begin(terms) + j + 1, end(terms), std::back_inserter(new_term));
-    //                 ordered_term += normal_ordered_term_(new_term, -1. * coeff);
     //             }
     //         } else if (left_sub_term.second == right_sub_term.second) {
     //             // TODO(dnguyen): Check that this is really ok? What if ordered_term is not zero?
     //             // If indices are the same, evaluate to zero
     //             if (left_sub_term.first == right_sub_term.first) {
-    //                 return ordered_term;
+    //                 return;
     //             }
     //             // Swap them if the same operator but lower index on the left
     //             if (left_sub_term.first < right_sub_term.first) {
@@ -487,9 +478,7 @@ auto FermionOperator::normal_ordered_term_(terms_t terms, coefficient_t coeff) -
     //     }
     // }
 
-    // Add the terms and return
-    ordered_term += FermionOperator(terms, coeff);
-    return ordered_term;
+    return {std::move(local_ops), coeff};  // TODO(dnguyen): Should we move? or can (N)RVO take care of that?
 }
 }  // namespace mindquantum::ops
 
@@ -504,6 +493,19 @@ auto FermionOperator::parse_string_(std::string_view terms_string) -> terms_t {
     }
     MQ_ERROR("FermionOperator terms string parsing failed for '{}'", terms_string);
     return {};
+}
+
+// =============================================================================
+
+auto FermionOperator::simplify_(std::vector<term_t> terms, coefficient_t coeff)
+    -> std::tuple<std::vector<term_t>, coefficient_t> {
+    return {std::move(terms), coeff};
+}
+
+// =============================================================================
+
+auto FermionOperator::sort_terms_(terms_t local_ops, coefficient_t coeff) -> std::pair<terms_t, coefficient_t> {
+    return FermionOperator::normal_ordered_term_(std::move(local_ops), coeff);
 }
 
 // =============================================================================

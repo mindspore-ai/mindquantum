@@ -93,7 +93,7 @@ class TermsOperator
 
     explicit TermsOperator(const terms_t& term, coefficient_t coeff = 1.0);
 
-    explicit TermsOperator(complex_term_dict_t terms);
+    explicit TermsOperator(const complex_term_dict_t& terms);
 
     //! Return the number of target qubits of an operator
     MQ_NODISCARD uint32_t num_targets() const noexcept;

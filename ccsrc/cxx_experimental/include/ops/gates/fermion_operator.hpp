@@ -20,6 +20,7 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include <Eigen/SparseCore>
@@ -103,14 +104,27 @@ class FermionOperator : public TermsOperator<FermionOperator> {
     friend class ::UnitTestAccessor;
 #endif  // UNIT_TESTS
 
-    //! Return the normal ordered term of the FermionOperator with high index and creation operator in front.
-    static FermionOperator normal_ordered_term_(terms_t terms, coefficient_t coeff);
+    //! Put a term from a FermionOperator into normal ordered form
+    /*!
+     * \param terms A list of local operators
+     * \note Normal ordered form is with high index and creation operator in front.
+     */
+    static std::pair<terms_t, coefficient_t> normal_ordered_term_(terms_t local_ops, coefficient_t coeff);
 
     //! Convert a string of space-separated fermion operators into an array of terms
     static terms_t parse_string_(std::string_view terms_string);
 
     //! Simplify the list of local operators
     static std::tuple<std::vector<term_t>, coefficient_t> simplify_(terms_t terms, coefficient_t coeff = 1.);
+
+    //! Sort a list of local operators
+    /*!
+     * \param local_ops A list of local operators
+     * \param coeff A coefficient
+     * \note Potentially called by the TermsOperator constructor
+     * \note Defaults to normal ordering by calling \sa normal_ordered_term_
+     */
+    static std::pair<terms_t, coefficient_t> sort_terms_(terms_t local_ops, coefficient_t coeff);
 };
 
 }  // namespace mindquantum::ops
