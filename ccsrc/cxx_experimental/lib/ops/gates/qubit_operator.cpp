@@ -27,6 +27,7 @@
 #include <vector>
 
 #include <boost/fusion/include/adapt_struct.hpp>
+#include <boost/fusion/include/at_c.hpp>
 #include <boost/fusion/include/std_pair.hpp>
 #include <boost/spirit/home/x3.hpp>
 
@@ -78,8 +79,9 @@ using mindquantum::parser::complex;
 
 struct term_class : mindquantum::parser::x3::rule::error_handler {};
 const x3::rule<term_class, ast::term_t> term = "QubitOperator term (ie. [XYZ][0-9]+)";
-static const auto term_def = x3::lexeme[((ast::term_op > x3::uint_)[(
-    [](auto& ctx) { x3::_val(ctx) = std::make_pair(at_c<1>(x3::_attr(ctx)), at_c<0>(x3::_attr(ctx))); })])];
+static const auto term_def = x3::lexeme[((ast::term_op > x3::uint_)[([](auto& ctx) {
+    x3::_val(ctx) = std::make_pair(boost::fusion::at_c<1>(x3::_attr(ctx)), boost::fusion::at_c<0>(x3::_attr(ctx)));
+})])];
 
 struct terms_class : mindquantum::parser::x3::rule::error_handler {};
 const x3::rule<terms_class, ast::terms_t> terms = "QubitOperator terms list";

@@ -15,6 +15,7 @@
 #include <tweedledum/IR/Circuit.h>
 #include <tweedledum/Target/Placement.h>
 
+#include "../utils.hpp"
 #include "mapping/partial_placer.hpp"
 
 #include <catch2/catch.hpp>
