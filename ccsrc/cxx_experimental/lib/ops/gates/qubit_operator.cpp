@@ -26,9 +26,11 @@
 #include <utility>
 #include <vector>
 
-// IMPORTANT: do not include boost/fusion/include/std_pair.hpp!
 #include <boost/fusion/include/adapt_struct.hpp>
+#include <boost/fusion/include/std_pair.hpp>
 #include <boost/spirit/home/x3.hpp>
+
+#include <unsupported/Eigen/KroneckerProduct>
 
 #include <tweedledum/Operators/Standard/X.h>
 #include <tweedledum/Operators/Standard/Y.h>
@@ -38,9 +40,85 @@
 
 #include "core/logging.hpp"
 #include "core/parser/boost_x3_error_handler.hpp"
+#include "details/boost_x3_complex_number.hpp"
+#include "details/boost_x3_get_info_impl.hpp"
 #include "details/boost_x3_parse_object.hpp"
+#include "details/fmt_std_complex.hpp"
 #include "ops/gates.hpp"
 #include "ops/gates/terms_operator.hpp"
+
+// -----------------------------------------------------------------------------
+
+using namespace std::literals::string_literals;  // NOLINT(build/namespaces_literals)
+
+// =============================================================================
+
+namespace x3 = boost::spirit::x3;
+
+namespace ast::qb_op {
+using mindquantum::ops::TermValue;
+using term_t = mindquantum::ops::QubitOperator::term_t;
+using terms_t = mindquantum::ops::QubitOperator::terms_t;
+using complex_term_dict_t = mindquantum::ops::QubitOperator::complex_term_dict_t;
+using term_coeff_t = std::pair<mindquantum::ops::QubitOperator::complex_term_dict_t::key_type,
+                               mindquantum::ops::QubitOperator::complex_term_dict_t::mapped_type>;
+
+struct TermOp : x3::symbols<TermValue> {
+    TermOp() {
+        add("X", TermValue::X)("Y", TermValue::Y)("Z", TermValue::Z);
+    }
+} const term_op;
+}  // namespace ast::qb_op
+
+// -----------------------------------------------------------------------------
+
+namespace parser::qb_op {
+namespace ast = ::ast::qb_op;
+using mindquantum::parser::complex;
+
+struct term_class : mindquantum::parser::x3::rule::error_handler {};
+const x3::rule<term_class, ast::term_t> term = "QubitOperator term (ie. [XYZ][0-9]+)";
+static const auto term_def = x3::lexeme[((ast::term_op > x3::uint_)[(
+    [](auto& ctx) { x3::_val(ctx) = std::make_pair(at_c<1>(x3::_attr(ctx)), at_c<0>(x3::_attr(ctx))); })])];
+
+struct terms_class : mindquantum::parser::x3::rule::error_handler {};
+const x3::rule<terms_class, ast::terms_t> terms = "QubitOperator terms list";
+/* NB: Simply using '+term' will not work here since we have to reject cases like: 'X1 YY'
+ *     So we make sure that everything will match using a look-ahead on each term before actually matching the term.
+ */
+static const auto terms_def = +(&term >> term);
+
+// -------------------------------------
+
+struct json_value_class : mindquantum::parser::x3::rule::error_handler {};
+const x3::rule<json_value_class, ast::term_coeff_t> json_value_term
+    = R"s(QubitOperator JSON key-value pair ("<term-list>": "<complex-num>"))s";
+static const auto json_value_term_def = x3::expect[x3::lit('"')]
+                                        >> (('"' >> x3::attr(ast::terms_t{})) | (x3::expect[+term] >> '"')) > ':'
+                                        > x3::lit('"') > complex > '"';
+struct json_dict_class : mindquantum::parser::x3::rule::error_handler {};
+const x3::rule<json_dict_class, ast::complex_term_dict_t> json_dict = "JSON representation of a QubitOperator";
+static const auto json_dict_def = x3::expect['{'] > (json_value_term % ',') > '}';
+
+// -------------------------------------
+
+BOOST_SPIRIT_DEFINE(term, terms, json_value_term, json_dict);
+}  // namespace parser::qb_op
+
+// -------------------------------------
+
+namespace boost::spirit::x3 {
+template <>
+struct get_info<ast::qb_op::TermOp> {
+    using result_type = std::string;
+    result_type operator()(const ast::qb_op::TermOp& /* type */) const noexcept {
+        using std::literals::string_literals::operator""s;
+        return "local operator (X, Y, Z)"s;
+    }
+};
+}  // namespace boost::spirit::x3
+
+// =============================================================================
 
 namespace mindquantum::ops {
 constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermValue& left_op,
@@ -95,21 +173,6 @@ constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermV
 }
 
 // =============================================================================
-
-QubitOperator::QubitOperator(term_t term, coefficient_t coeff) : TermsOperator(std::move(term), coeff) {
-}
-
-// -----------------------------------------------------------------------------
-
-QubitOperator::QubitOperator(const terms_t& term, coefficient_t coeff) : TermsOperator(term, coeff) {
-}
-
-// -----------------------------------------------------------------------------
-
-QubitOperator::QubitOperator(complex_term_dict_t terms) : TermsOperator(std::move(terms)) {
-}
-
-// -----------------------------------------------------------------------------
 
 QubitOperator::QubitOperator(std::string_view terms_string, coefficient_t coeff)
     : QubitOperator(parse_string_(terms_string), coeff) {
@@ -207,6 +270,108 @@ auto QubitOperator::split() const noexcept -> std::vector<QubitOperator> {
 
 // =============================================================================
 
+namespace {
+constexpr auto to_string(TermValue local_op) {
+    if (local_op == TermValue::X) {
+        return "X";
+    }
+    if (local_op == TermValue::Y) {
+        return "Y";
+    }
+    if (local_op == TermValue::Z) {
+        return "Z";
+    }
+    return "UNKNOWN";
+}
+
+struct term_to_string {
+    template <bool is_first_elem = false>
+    static auto apply(const QubitOperator::term_t& term) {
+        const auto& [qubit_id, local_op] = term;
+        if constexpr (is_first_elem) {
+            return fmt::format("{}{}", to_string(local_op), qubit_id);
+        } else {
+            return fmt::format(" {}{}", to_string(local_op), qubit_id);
+        }
+    }
+};
+}  // namespace
+
+// -----------------------------------------------------------------------------
+
+auto QubitOperator::to_string() const noexcept -> std::string {
+#if MQ_STD_ACCUMULATE_USE_MOVE
+    using acc_init_t = std::string&&;
+#else
+    using acc_init_t = std::string&;
+#endif  // __cplusplus >= 202002L
+
+    if (std::empty(terms_)) {
+        return "0"s;
+    }
+
+    const auto process_term = [](const complex_term_dict_t::value_type& term_value,
+                                 bool prepend_newline = false) -> std::string {
+        const auto& [local_ops, coeff] = term_value;
+        auto term_str = fmt::format("{}{} [", prepend_newline ? "\n" : "", coeff);
+        if (std::empty(local_ops)) {
+            term_str += ']';
+        } else {
+            const auto it = begin(local_ops);
+            term_str += std::accumulate(begin(local_ops) + 1, end(local_ops), term_to_string::apply<true>(*it),
+                                        [](acc_init_t init, const auto& term) -> decltype(auto) {
+                                            return init += term_to_string::apply<false>(term);
+                                        });
+            term_str += ']';
+        }
+        return term_str;
+    };
+
+    return std::accumulate(++begin(terms_), end(terms_), process_term(*begin(terms_)),
+                           [&process_term](acc_init_t init, const auto& term_value) -> decltype(auto) {
+                               return init += process_term(term_value, true);
+                           });
+}
+
+// =============================================================================
+
+auto QubitOperator::dumps(std::size_t indent) const -> std::string {
+    std::string result("{\n");
+    for (const auto& [local_ops, coeff] : terms_) {
+        result += std::string(indent, ' ') + '"';
+        for (const auto& term : local_ops) {
+            result += term_to_string::apply<true>(term) + ' ';
+        }
+        result += fmt::format(R"(": "{}")", coeff);
+    }
+    return result += "\n}";
+}
+
+// -----------------------------------------------------------------------------
+
+auto QubitOperator::loads(std::string_view string_data) -> std::optional<QubitOperator> {
+    if (complex_term_dict_t terms_dict; parser::parse_object_skipper(begin(string_data), end(string_data), terms_dict,
+                                                                     ::parser::qb_op::json_dict, x3::space)) {
+        return QubitOperator(terms_dict);
+    }
+    MQ_ERROR("QubitOperator JSON string parsing failed for '{}'", string_data);
+    return {};
+}
+
+// =============================================================================
+
+auto QubitOperator::parse_string_(std::string_view terms_string) -> terms_t {
+    MQ_INFO("Attempting to parse: '{}'", terms_string);
+    if (terms_t terms; parser::parse_object_skipper(begin(terms_string), end(terms_string), terms,
+                                                    ::parser::qb_op::terms, x3::space)) {
+        return terms;
+    }
+    MQ_ERROR("QubitOperator terms string parsing failed for '{}'", terms_string);
+    return {};
+}
+
+// =============================================================================
+
 auto QubitOperator::simplify_(terms_t terms, coefficient_t coeff) -> std::tuple<terms_t, coefficient_t> {
     if (std::empty(terms)) {
         return {terms_t{}, coeff};
@@ -234,90 +399,14 @@ auto QubitOperator::simplify_(terms_t terms, coefficient_t coeff) -> std::tuple<
 
     return {std::move(terms), coeff};
 }
-}  // namespace mindquantum::ops
 
 // =============================================================================
 
-namespace x3 = boost::spirit::x3;
-
-namespace ast::qb_op {
-using mindquantum::ops::TermValue;
-using term_t = mindquantum::ops::QubitOperator::term_t;
-
-struct TermOp : x3::symbols<TermValue> {
-    TermOp() {
-        add("X", TermValue::X)("Y", TermValue::Y)("Z", TermValue::Z);
-    }
-} const term_op;
-
-// NB: This struct is required to re-order the parsed values since the local_op appears *before* the qubit index in the
-//     string
-struct qubit_operator_term {
-    TermValue local_op;
-    uint32_t qubit_id;
-
-    operator term_t() const& {  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
-        return {qubit_id, local_op};
-    }
-    operator term_t() && {  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
-        return {qubit_id, local_op};
-    }
-};
-}  // namespace ast::qb_op
-
-BOOST_FUSION_ADAPT_STRUCT(ast::qb_op::qubit_operator_term, local_op, qubit_id);
-
-// -----------------------------------------------------------------------------
-
-namespace parser::qb_op {
-namespace ast = ::ast::qb_op;
-struct not_space_or_eoi_class {};
-const x3::rule<not_space_or_eoi_class, x3::unused_type> space_or_eoi = "<space> or <end of input>";
-static const auto space_or_eoi_def = x3::space | x3::eoi;
-
-struct term_class : mindquantum::parser::x3::rule::error_handler {};
-x3::rule<term_class, ast::qubit_operator_term> const term = "qubit_operator term";
-static const auto term_def = !space_or_eoi > ast::term_op > x3::uint_ > &space_or_eoi;
-
-BOOST_SPIRIT_DEFINE(term, space_or_eoi);
-
-// -------------------------------------
-
-static const auto terms = x3::omit[*x3::space] >> term > *(x3::omit[+x3::space] >> term) >> x3::omit[*x3::space];
-}  // namespace parser::qb_op
-
-// -------------------------------------
-
-namespace boost::spirit::x3 {
-template <>
-struct get_info<uint_type> {
-    using result_type = std::string;
-    result_type operator()(const uint_type& /* type */) const noexcept {
-        using std::literals::string_literals::operator""s;
-        return "unsigned int"s;
-    }
-};
-template <>
-struct get_info<ast::qb_op::TermOp> {
-    using result_type = std::string;
-    result_type operator()(const ast::qb_op::TermOp& /* type */) const noexcept {
-        using std::literals::string_literals::operator""s;
-        return "local operator (X, Y, Z)"s;
-    }
-};
-}  // namespace boost::spirit::x3
-
-// -----------------------------------------------------------------------------
-
-namespace mindquantum::ops {
-
-auto QubitOperator::parse_string_(std::string_view terms_string) -> terms_t {
-    if (terms_t terms; parser::parse_object(begin(terms_string), end(terms_string), terms, ::parser::qb_op::terms)) {
-        return terms;
-    }
-    MQ_ERROR("QubitOperator terms string parsing failed for '{}'", terms_string);
-    return {};
+auto QubitOperator::sort_terms_(terms_t local_ops, coefficient_t coeff) -> std::pair<terms_t, coefficient_t> {
+    std::sort(begin(local_ops), end(local_ops));
+    return {std::move(local_ops), coeff};  // TODO(dnguyen): Should we move? or can (N)RVO take care of that?
 }
 
 // =============================================================================
+
 }  // namespace mindquantum::ops
