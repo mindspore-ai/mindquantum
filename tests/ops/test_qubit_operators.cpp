@@ -12,19 +12,22 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+#include <complex>
+#include <string>
+#include <string_view>
+
 #include "core/logging.hpp"
 #include "ops/gates/qubit_operator.hpp"
 #include "ops/utils.hpp"
 
-// clang-format off
 #include <catch2/catch.hpp>
-// clang-format on
 
 // =============================================================================
 
 namespace ops = mindquantum::ops;
-
 using namespace std::literals::complex_literals;
+using namespace std::literals::string_literals;
+
 using QubitOperator = ops::QubitOperator;
 using TermValue = ops::TermValue;
 using coefficient_t = QubitOperator::coefficient_t;
@@ -103,7 +106,10 @@ TEST_CASE("QubitOperator parse_string", "[terms_op][ops]") {
 
     const auto terms = UnitTestAccessor::parse_string(terms_string);
 
+    INFO("terms_string = " << terms_string);
     REQUIRE(std::size(ref_terms) == std::size(terms));
+
+    INFO("terms_string = " << terms_string);
     CHECK(ref_terms == terms);
 }
 
@@ -125,6 +131,153 @@ TEST_CASE("QubitOperator constructor", "[qubit_op][ops]") {
     CHECK(QubitOperator("XX").is_identity());
     CHECK(QubitOperator("1X").is_identity());
     CHECK(QubitOperator("Y1 Z2 1X Y3").is_identity());
+}
+
+TEST_CASE("QubitOperator split", "[terms_op][ops]") {
+    const auto lhs = QubitOperator("X1", 1.2i);
+    const auto rhs = QubitOperator("Z3", 1.2);
+    const auto qubit_op = lhs + rhs;
+
+    const auto splitted = qubit_op.split();
+    REQUIRE(std::size(splitted) == 2);
+    if (splitted[0] == lhs) {
+        CHECK(splitted[0] == lhs);
+        CHECK(splitted[1] == rhs);
+    } else {
+        CHECK(splitted[0] == rhs);
+        CHECK(splitted[1] == lhs);
+    }
+}
+
+TEST_CASE("QubitOperator to_string", "[terms_op][ops]") {
+    auto str = ""s;
+    auto ref_str = ""s;
+
+    SECTION("X1") {
+        str = QubitOperator("X1").to_string();
+        ref_str = "1 [X1]";
+    }
+    SECTION("Y1") {
+        str = QubitOperator("Y1").to_string();
+        ref_str = "1 [Y1]";
+    }
+    SECTION("Z1") {
+        str = QubitOperator("Z1").to_string();
+        ref_str = "1 [Z1]";
+    }
+    SECTION("Identity") {
+        str = QubitOperator::identity().to_string();
+        ref_str = "1 []";
+    }
+    SECTION("X1 Y3 Z2 X10") {
+        str = QubitOperator("X1 Y3 Z2 X10", 1.2i).to_string();
+        ref_str = "1.2j [X1 Z2 Y3 X10]";  // NB: ordering is based on qubit index
+    }
+
+    INFO("Testing with: " << ref_str);
+    CHECK(ref_str == str);
+}
+
+TEST_CASE("QubitOperator dumps", "[terms_op][ops]") {
+}
+
+TEST_CASE("QubitOperator loads", "[terms_op][ops]") {
+    std::string json_data;
+    std::optional<QubitOperator> qubit_op;
+    std::optional<QubitOperator> ref_op;
+
+    SECTION("Empty string") {
+        qubit_op = QubitOperator::loads("");
+    }
+    SECTION("Only whitespace") {
+        qubit_op = QubitOperator::loads("      ");
+    }
+    SECTION(R"s(Invalid: ('{"": ""}'))s") {
+        qubit_op = QubitOperator::loads(R"s({"": ""})s");
+    }
+    SECTION(R"s(Invalid: ('{"1 2^": "1"}'))s") {
+        qubit_op = QubitOperator::loads(R"s({"1 2^": "1"})s");
+    }
+    SECTION(R"s(Invalid: ('"X1" : "(1+2.1j)"'))s") {
+        qubit_op = QubitOperator::loads(R"s("X1" : "(1+2.1j)")s");
+    }
+
+    SECTION(R"s({"": "1.23"})s") {
+        qubit_op = QubitOperator::loads(R"({"": "1.23"})");
+        ref_op = QubitOperator::identity() * 1.23;
+    }
+    SECTION(R"s({"": "2.34j"})s") {
+        qubit_op = QubitOperator::loads(R"({"": "2.34j"})");
+        ref_op = QubitOperator::identity() * 2.34i;
+    }
+    SECTION(R"s({"": "(3-2j)"})s") {
+        qubit_op = QubitOperator::loads(R"s({"": "(3-2j)"})s");
+        ref_op = QubitOperator::identity() * (3. - 2.i);
+    }
+    SECTION(R"s({"X1": "(1+2.1j)"})s") {
+        qubit_op = QubitOperator::loads(R"s({"X1": "(1+2.1j)"})s");
+        ref_op = QubitOperator("X1", 1.0 + 2.1i);
+    }
+    SECTION(R"s({"X2 Y1 Z3 Y4": "(1+2j)"})s") {
+        qubit_op = QubitOperator::loads(R"s({"X2 Y1 Z3 Y4": "(1+2j)"})s");
+        ref_op = QubitOperator("X2 Y1 Z3 Y4", 1.0 + 2.i);
+    }
+    SECTION(R"s({"X2 Z3 Y4": "4.5j", "X1" : "1"})s") {
+        qubit_op = QubitOperator::loads(
+            R"s({"X2 Z3 Y4": "4.5j",
+                 "X1" : "1"})s");
+        ref_op = QubitOperator("X2 Z3 Y4", 4.5i) + QubitOperator("X1");
+    }
+
+    if (ref_op) {
+        REQUIRE(qubit_op.has_value());
+        std::cout << qubit_op.value().get_terms() << std::endl;
+        std::cout << ref_op.value().get_terms() << std::endl;
+        CHECK(qubit_op.value() == ref_op.value());
+    } else {
+        REQUIRE(!qubit_op.has_value());
+    }
+    std::cout << "\n----------\n";
+}
+
+TEST_CASE("QubitOperator JSON save - load", "[terms_op][ops]") {
+    QubitOperator qubit_op;
+    SECTION("Identity") {
+        qubit_op = QubitOperator::identity() * (1.2 + 5.4i);
+    }
+    SECTION("2 1^ 3 4^") {
+        qubit_op = QubitOperator("Z2 X1 Z3 Y4", 23.3 + 4.5i);
+    }
+
+    CHECK(qubit_op == QubitOperator::loads(qubit_op.dumps()));
+}
+
+TEST_CASE("QubitOperator comparison operators", "[terms_op][ops]") {
+    complex_term_dict_t ref_terms;
+
+    auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
+    auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::Y}}, 1.);
+    REQUIRE(inserted1);
+    REQUIRE(inserted2);
+
+    // op = {'3': 2.3,  '1^': 1.}
+    const QubitOperator qubit_op(ref_terms);
+    QubitOperator other(ref_terms);
+
+    CHECK(qubit_op == qubit_op);
+    CHECK(qubit_op == other);
+
+    SECTION("Add identity term") {
+        other += QubitOperator::identity();
+    }
+    SECTION("Add other term") {
+        other += QubitOperator{terms_t{{2, TermValue::Z}}, 2.34i};
+    }
+    SECTION("No common terms") {
+        other = QubitOperator{terms_t{{2, TermValue::Z}}, 2.34i};
+    }
+    CHECK(!(qubit_op == other));
+    CHECK(qubit_op != other);
 }
 
 // =============================================================================
