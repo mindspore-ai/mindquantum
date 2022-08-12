@@ -18,10 +18,6 @@
 
 # lint_cmake: -whitespace/indent
 
-include(is_language_enabled)
-
-# ==============================================================================
-
 # ~~~
 # Add one or more link libraries to some of the language specific targets (see setup_languages())
 #
