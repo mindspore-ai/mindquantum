@@ -231,13 +231,10 @@ TEST_CASE("QubitOperator loads", "[terms_op][ops]") {
 
     if (ref_op) {
         REQUIRE(qubit_op.has_value());
-        std::cout << qubit_op.value().get_terms() << std::endl;
-        std::cout << ref_op.value().get_terms() << std::endl;
         CHECK(qubit_op.value() == ref_op.value());
     } else {
         REQUIRE(!qubit_op.has_value());
     }
-    std::cout << "\n----------\n";
 }
 
 TEST_CASE("QubitOperator JSON save - load", "[terms_op][ops]") {
