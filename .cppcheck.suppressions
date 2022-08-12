@@ -19,7 +19,7 @@ preprocessorErrorDirective:ccsrc/cxx_experimental/include/core/details/cxx20_com
 preprocessorErrorDirective:ccsrc/cxx_experimental/include/decompositions/rules/config.hpp
 preprocessorErrorDirective:ccsrc/cxx_experimental/include/ops/parametric/angle_base.hpp
 preprocessorErrorDirective:tests/decompositions/test_apply_atoms.cpp:48
-preprocessorErrorDirective:tests/ops/test_angle_parametric_gates.cpp:26
+preprocessorErrorDirective:tests/ops/test_angle_parametric_gates.cpp:27
 
 unknownMacro:ccsrc/cxx_experimental/python/include/python/cengines/resource_counter.hpp:24
 unknownMacro:ccsrc/cxx_experimental/python/include/python/ops/command.hpp:28
