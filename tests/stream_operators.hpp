@@ -109,4 +109,18 @@ std::ostream& operator<<(std::ostream& out, const std::map<key_t, value_t, comp_
     return out << '}';
 }
 
+// -----------------------------------------------------------------------------
+
+namespace internal::traits {
+template <typename T, typename = void>
+struct to_string : std::false_type {};
+template <typename T>
+struct to_string<T, std::void_t<decltype(std::declval<const T&>().to_string())>> : std::true_type {};
+}  // namespace internal::traits
+
+template <typename T>
+std::enable_if_t<internal::traits::to_string<T>::value, std::ostream&> operator<<(std::ostream& out, const T& object) {
+    return out << object.to_string();
+}
+
 #endif /* TESTS_STREAM_OPERATORS */
