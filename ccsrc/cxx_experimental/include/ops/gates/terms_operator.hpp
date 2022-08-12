@@ -224,6 +224,13 @@ class TermsOperator
      */
     MQ_NODISCARD bool operator==(const derived_t& other) const;
 
+ protected:
+    struct sorted_constructor_t {
+    } sorted_constructor;
+
+    //! (internal) Constructor designed for cases where the terms dictionary is already optimal
+    TermsOperator(complex_term_dict_t terms, sorted_constructor_t /* unused */);
+
  private:
     //! Addition/subtraction helper member function
     template <typename assign_modify_op_t, typename coeff_unary_op_t>

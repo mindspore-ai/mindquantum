@@ -57,6 +57,14 @@ TermsOperator<derived_t>::TermsOperator(const complex_term_dict_t& terms) {
     calculate_num_targets_();
 }
 
+// -----------------------------------------------------------------------------
+
+template <typename derived_t>
+TermsOperator<derived_t>::TermsOperator(complex_term_dict_t terms, sorted_constructor_t /* unused */)
+    : terms_{std::move(terms)} {
+    calculate_num_targets_();
+}
+
 // =============================================================================
 
 template <typename derived_t>
