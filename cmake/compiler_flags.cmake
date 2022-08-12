@@ -153,6 +153,16 @@ test_compile_option(
 
 # --------------------------------------
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.0)
+  test_compile_option(
+    compile_flags_no_finite_math
+    LANGS C CXX DPCXX
+    FLAGS "-fno-finite-math-only"
+    GENEX "$<OR:$<CONFIG:RELEASE>,$<CONFIG:RELWITHDEBINFO>>")
+endif()
+
+# --------------------------------------
+
 if(X86_64)
   test_compile_option(
     intrin_flag
