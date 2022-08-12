@@ -226,7 +226,7 @@ TEST_CASE("FermionOperator loads", "[terms_op][ops]") {
 
     if (ref_op) {
         REQUIRE(fermion_op.has_value());
-        CHECK(fermion_op == ref_op);
+        CHECK(fermion_op.value() == ref_op.value());
     } else {
         REQUIRE(!fermion_op.has_value());
     }
