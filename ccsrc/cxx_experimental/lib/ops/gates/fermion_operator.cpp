@@ -42,6 +42,7 @@
 #include "core/parser/boost_x3_error_handler.hpp"
 #include "details/boost_x3_parse_object.hpp"
 #include "details/eigen_diagonal_identity.hpp"
+#include "details/fmt_std_complex.hpp"
 #include "ops/gates.hpp"
 #include "ops/gates/terms_operator.hpp"
 
@@ -73,40 +74,6 @@ using boost::span;
 // -----------------------------------------------------------------------------
 
 using namespace std::literals::string_literals;  // NOLINT(build/namespaces_literals)
-
-// =============================================================================
-
-template <typename T, typename Char>
-struct fmt::formatter<std::complex<T>, Char> : public fmt::formatter<T, Char> {
-    using base = fmt::formatter<T, Char>;
-    fmt::detail::dynamic_format_specs<Char> specs_;
-    FMT_CONSTEXPR auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
-        return ctx.begin();
-    }
-    template <typename FormatCtx>
-    auto format(const std::complex<T>& number, FormatCtx& ctx) -> decltype(ctx.out()) {
-        const auto& real = number.real();
-        const auto& imag = number.imag();
-        if (real && !imag) {
-            return base::format(real, ctx);
-        }
-        if (!real && imag) {
-            base::format(imag, ctx);
-            return format_to(ctx.out(), "j");  // NB: use j instead of i (ie. like Python)
-        }
-
-        format_to(ctx.out(), "(");
-        base::format(real, ctx);
-        if (imag) {
-            if (number.real() && number.imag() >= 0 && specs_.sign != sign::plus) {
-                format_to(ctx.out(), "+");
-            }
-            base::format(imag, ctx);
-            format_to(ctx.out(), "j");  // NB: use j instead of i (ie. like Python)
-        }
-        return format_to(ctx.out(), ")");
-    }
-};
 
 // =============================================================================
 
