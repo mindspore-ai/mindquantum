@@ -494,6 +494,7 @@ auto FermionOperator::normal_ordered_term_(terms_t terms, coefficient_t coeff) -
 
 namespace mindquantum::ops {
 auto FermionOperator::parse_string_(std::string_view terms_string) -> terms_t {
+    MQ_INFO("Attempting to parse: '{}'", terms_string);
     if (terms_t terms; parser::parse_object_skipper(begin(terms_string), end(terms_string), terms,
                                                     ::parser::fm_op::terms, x3::space)) {
         return terms;
