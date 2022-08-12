@@ -114,7 +114,7 @@ TEST_CASE("FermionOperator parse_string", "[terms_op][ops]") {
 
 TEST_CASE("FermionOperator constructor", "[terms_op][ops]") {
     const auto coeff = 2.34i;
-    auto ref_terms = complex_term_dict_t{{{{2, TermValue::adg}, {4, TermValue::a}, {1, TermValue::a}}, coeff}};
+    auto ref_terms = complex_term_dict_t{{{{4, TermValue::a}, {2, TermValue::adg}, {1, TermValue::a}}, coeff}};
 
     FermionOperator fermion_op("1 2^ 4", coeff);
     CHECK(!std::empty(fermion_op));
@@ -167,7 +167,7 @@ TEST_CASE("FermionOperator to_string", "[terms_op][ops]") {
     }
     SECTION("1^ 2 3^ 1") {
         str = FermionOperator("1^ 2 3^ 1", 1.2i).to_string();
-        ref_str = "1.2j [3^ 1^ 2 1]";
+        ref_str = "1.2j [3^ 2 1^ 1]";
     }
 
     CHECK(ref_str == str);
