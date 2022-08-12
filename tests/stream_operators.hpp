@@ -118,16 +118,9 @@ struct to_string : std::false_type {};
 template <typename T>
 struct to_string<T, std::void_t<decltype(std::declval<const T&>().to_string())>> : std::true_type {};
 
-template <typename T, typename = void>
-struct has_stream_operator : std::false_type {};
-template <typename T>
-struct has_stream_operator<T, std::void_t<decltype(std::declval<std::ostream&>() << std::declval<const T&>())>>
-    : std::true_type {};
-template <typename T>
-struct has_stream_operator<std::optional<T>,
-                           std::void_t<decltype(std::declval<std::ostream&>() << std::declval<const T&>())>>
-    : std::true_type {};
 }  // namespace internal::traits
+
+// -------------------------------------
 
 template <typename T>
 std::enable_if_t<internal::traits::to_string<T>::value, std::ostream&> operator<<(std::ostream& out, const T& object) {
@@ -135,6 +128,17 @@ std::enable_if_t<internal::traits::to_string<T>::value, std::ostream&> operator<
 }
 
 // -----------------------------------------------------------------------------
+
+namespace internal::traits {
+template <typename T, typename = void>
+struct has_stream_operator : std::false_type {};
+template <typename T>
+struct has_stream_operator<std::optional<T>,
+                           std::void_t<decltype(std::declval<std::ostream&>() << std::declval<const T&>())>>
+    : std::true_type {};
+}  // namespace internal::traits
+
+// -------------------------------------
 
 template <typename T>
 std::enable_if_t<internal::traits::has_stream_operator<std::optional<T>>::value, std::ostream&> operator<<(
