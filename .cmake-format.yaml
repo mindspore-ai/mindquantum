@@ -96,6 +96,15 @@ parse:
     mq_add_compile_definitions:
       pargs:
         nargs: +
+        flags:
+          - TRYCOMPILE
+          - TRYCOMPILE_FLAGCHECK
+    mq_link_libraries:
+      pargs:
+        nargs: +
+        flags:
+          - TRYCOMPILE
+          - TRYCOMPILE_FLAGCHECK
     mindquantum_add_pkg:
       pargs:
         nargs: 1

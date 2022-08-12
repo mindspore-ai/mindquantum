@@ -19,7 +19,30 @@
 # lint_cmake: -whitespace/indent
 
 include(debug_print)
+include(mq_link_libraries)
 
+# ==============================================================================
+# Math lib
+
+if(UNIX)
+  include(CheckLibraryExists)
+  check_library_exists(m sin "" HAVE_LIB_M)
+
+  if(HAVE_LIB_M)
+    if(NOT TARGET libm)
+      add_library(libm INTERFACE)
+    endif()
+    target_link_libraries(libm INTERFACE m)
+    if(NOT TARGET mindquantum::math)
+      add_library(mindquantum::math ALIAS libm)
+    endif()
+    mq_link_libraries(mindquantum::math)
+  else()
+    message(FATAL_ERROR "Math library (m) required on UNIX systems")
+  endif()
+endif()
+
+# ==============================================================================
 # OpenMP
 
 set(PARALLEL_LIBS)
