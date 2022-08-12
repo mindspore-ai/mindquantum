@@ -78,9 +78,8 @@ class FermionOperator : public TermsOperator<FermionOperator> {
     //! Split the operator into its individual components
     MQ_NODISCARD std::vector<FermionOperator> split() const noexcept;
 
-    // NB: This makes little sense since the ordering is given by the storage (std::map or else)
-    // //! Return the normal ordered form of the Fermion Operator.
-    // MQ_NODISCARD FermionOperator normal_ordered() const;
+    //! Return the normal ordered form of the Fermion Operator.
+    MQ_NODISCARD FermionOperator normal_ordered() const;
 
     //! Convert a FermionOperator to a string
     MQ_NODISCARD std::string to_string() const noexcept;

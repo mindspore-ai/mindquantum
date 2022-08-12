@@ -329,13 +329,13 @@ auto FermionOperator::split() const noexcept -> std::vector<FermionOperator> {
 
 // -----------------------------------------------------------------------------
 
-// auto FermionOperator::normal_ordered() const -> FermionOperator {
-//     auto ordered_op{*this};
-//     for (const auto& [local_ops, coeff] : terms_) {
-//         ordered_op += normal_ordered_term_(local_ops, coeff);
-//     }
-//     return ordered_op;
-// }
+auto FermionOperator::normal_ordered() const -> FermionOperator {
+    FermionOperator ordered_op;
+    for (const auto& [local_ops, coeff] : terms_) {
+        ordered_op += FermionOperator(complex_term_dict_t{normal_ordered_term_(local_ops, coeff)}, sorted_constructor);
+    }
+    return ordered_op;
+}
 
 // =============================================================================
 
@@ -508,7 +508,8 @@ auto FermionOperator::simplify_(std::vector<term_t> terms, coefficient_t coeff)
 // =============================================================================
 
 auto FermionOperator::sort_terms_(terms_t local_ops, coefficient_t coeff) -> std::pair<terms_t, coefficient_t> {
-    return FermionOperator::normal_ordered_term_(std::move(local_ops), coeff);
+    std::sort(rbegin(local_ops), rend(local_ops));
+    return {std::move(local_ops), coeff};
 }
 
 // =============================================================================
