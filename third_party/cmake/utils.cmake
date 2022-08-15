@@ -1100,7 +1100,9 @@ function(mindquantum_add_pkg pkg_name)
 
   message(STATUS "${pkg_name} config hash: ${${pkg_name}_CONFIG_HASH}")
 
-  set(${pkg_name}_BASE_DIR ${_mq_local_prefix}/${pkg_name}_${PKG_VER}_${${pkg_name}_CONFIG_HASH})
+  set(${pkg_name}_BASE_DIR
+      ${_mq_local_prefix}/${pkg_name}_${PKG_VER}_${${pkg_name}_CONFIG_HASH}
+      CACHE STRING INTERNAL)
   set(${pkg_name}_DIRPATH
       ${${pkg_name}_BASE_DIR}
       CACHE STRING INTERNAL)

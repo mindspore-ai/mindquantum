@@ -57,6 +57,7 @@ __test_cxx20_memory()
 
 if(NOT _MQ_MEMORY_CXX20_WORKS)
   set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
 # --------------------------------------
@@ -473,6 +474,16 @@ int main() {
 ]])
 
 # ==============================================================================
+
+# NB: second condition is workardoung for Clang < 9.0
+if(cxx_std_20 IN_LIST CMAKE_CXX_COMPILE_FEATURES AND CMAKE_CXX_STANDARD EQUAL 20)
+  target_compile_features(CXX_mindquantum INTERFACE cxx_std_20)
+else()
+  target_compile_features(CXX_mindquantum INTERFACE cxx_std_17)
+endif()
+set_target_properties(CXX_mindquantum PROPERTIES CXX_STANDARD_REQUIRED ON)
+
+# ------------------------------------------------------------------------------
 
 configure_file(${CMAKE_CURRENT_LIST_DIR}/cxx20_config.hpp.in ${PROJECT_BINARY_DIR}/core/cxx20_config.hpp)
 
