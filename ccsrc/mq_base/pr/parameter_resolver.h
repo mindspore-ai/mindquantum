@@ -27,8 +27,6 @@
 #include <type_traits>
 #include <vector>
 
-#include <nlohmann/json.hpp>
-
 #include "core/utils.h"
 
 namespace mindquantum {
@@ -688,7 +686,6 @@ template <typename T>
 ParameterResolver<T> operator/(T value, const ParameterResolver<T>& pr) {
     return ParameterResolver<T>(value) / pr;
 }
-
 }  // namespace mindquantum
 
 #endif  // MINDQUANTUM_PR_PARAMETER_RESOLVER_H_
