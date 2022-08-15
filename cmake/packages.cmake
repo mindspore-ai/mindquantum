@@ -24,7 +24,7 @@ include(mq_link_libraries)
 # ==============================================================================
 # Math lib
 
-if(UNIX)
+if(UNIX AND "${CMAKE_PROJECT_NAME}" STREQUAL "MindQuantum")
   include(CheckLibraryExists)
   check_library_exists(m sin "" HAVE_LIB_M)
 
@@ -36,10 +36,14 @@ if(UNIX)
     if(NOT TARGET mindquantum::math)
       add_library(mindquantum::math ALIAS libm)
     endif()
-    mq_link_libraries(mindquantum::math)
+    append_to_property(mq_install_targets GLOBAL libm)
   else()
     message(FATAL_ERROR "Math library (m) required on UNIX systems")
   endif()
+endif()
+
+if(TARGET libm AND NOT TARGET mindquantum::math)
+  add_library(mindquantum::math ALIAS libm)
 endif()
 
 # ==============================================================================
