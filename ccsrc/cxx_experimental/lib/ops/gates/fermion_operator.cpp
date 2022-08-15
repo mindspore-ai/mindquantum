@@ -332,7 +332,7 @@ auto FermionOperator::split() const noexcept -> std::vector<FermionOperator> {
 auto FermionOperator::normal_ordered() const -> FermionOperator {
     FermionOperator ordered_op;
     for (const auto& [local_ops, coeff] : terms_) {
-        ordered_op += FermionOperator(complex_term_dict_t{normal_ordered_term_(local_ops, coeff)}, sorted_constructor);
+        ordered_op += normal_ordered_term_(local_ops, coeff);
     }
     return ordered_op;
 }
@@ -415,11 +415,13 @@ auto FermionOperator::loads(std::string_view string_data) -> std::optional<Fermi
 
 // =============================================================================
 
-auto FermionOperator::normal_ordered_term_(terms_t local_ops, coefficient_t coeff)
-    -> std::pair<terms_t, coefficient_t> {
+auto FermionOperator::normal_ordered_term_(terms_t local_ops, coefficient_t coeff) -> FermionOperator {
+    auto ordered_term = FermionOperator{};
+
     if (std::empty(local_ops)) {
-        return {{}, coeff};
+        return FermionOperator(local_ops, coeff);
     }
+
     for (auto it(begin(local_ops) + 1); it != end(local_ops); ++it) {
         for (auto it_jm1(std::make_reverse_iterator(it)), it_j(std::make_reverse_iterator(it) - 1);
              it_jm1 != rend(local_ops); ++it_jm1, ++it_j) {
@@ -431,16 +433,16 @@ auto FermionOperator::normal_ordered_term_(terms_t local_ops, coefficient_t coef
                 if (it_jm1->first == it_j->first) {
                     // NB: we need to skip skip elements j-1 and j. Since it_jm1 and it_j are reverse iterators:
                     //     (it_j + 1).base() is actually the j-1 element
-                    //     it_jm1.base() is actually the j+1 element
-                    auto new_terms = terms_t(begin(local_ops), (it_j + 1).base());
-                    new_terms.reserve(std::size(local_ops) - 1);
-                    std::copy(it_jm1.base(), end(local_ops), std::back_inserter(new_terms));
+                    //     it_j.base() is actually the j+1 element
+                    auto new_terms = terms_t(begin(local_ops), (it_jm1 + 1).base());
+                    new_terms.reserve(std::size(local_ops) - 2);
+                    std::copy(it_j.base(), end(local_ops), std::back_inserter(new_terms));
+                    ordered_term += normal_ordered_term_(std::move(new_terms), -coeff);
                 }
             } else if (it_jm1->second == it_j->second) {
                 // If indices are the same, evaluate to zero
                 if (it_jm1->first == it_j->first) {
-                    // TODO(dnguyen): Should we move? or can (N)RVO take care of that?
-                    return {std::move(local_ops), coeff};
+                    return ordered_term;
                 }
                 // Swap them if the same operator but lower index on the left
                 if (it_jm1->first < it_j->first) {
@@ -450,38 +452,7 @@ auto FermionOperator::normal_ordered_term_(terms_t local_ops, coefficient_t coef
             }
         }
     }
-
-    // for (auto i(1UL); i < std::size(terms); ++i) {
-    //     for (auto j(i); j < i; --i) {
-    //         const auto& left_sub_term = terms[j - 1];
-    //         const auto& right_sub_term = terms[j];
-    //         // Swap operators if left operator is a and right operator is a^\dagger
-    //         if (left_sub_term.second == TermValue::a && right_sub_term.second == TermValue::adg) {
-    //             std::swap(terms[j - 1], terms[j]);
-    //             coeff *= -1.;
-    //             // If indice are same, employ the anti-commutation relationship and generate the new term
-    //             if (left_sub_term.first == right_sub_term.first) {
-    //                 // NB: skip elements j-1 and j
-    //                 auto new_term = terms_t(begin(terms), begin(terms) + j - 1);
-    //                 new_term.reserve(std::size(terms) - 1);
-    //                 std::copy(begin(terms) + j + 1, end(terms), std::back_inserter(new_term));
-    //             }
-    //         } else if (left_sub_term.second == right_sub_term.second) {
-    //             // TODO(dnguyen): Check that this is really ok? What if ordered_term is not zero?
-    //             // If indices are the same, evaluate to zero
-    //             if (left_sub_term.first == right_sub_term.first) {
-    //                 return;
-    //             }
-    //             // Swap them if the same operator but lower index on the left
-    //             if (left_sub_term.first < right_sub_term.first) {
-    //                 std::swap(terms[j - 1], terms[j]);
-    //                 coeff *= -1.;
-    //             }
-    //         }
-    //     }
-    // }
-
-    return {std::move(local_ops), coeff};  // TODO(dnguyen): Should we move? or can (N)RVO take care of that?
+    return ordered_term += FermionOperator(local_ops, coeff);
 }
 }  // namespace mindquantum::ops
 
@@ -500,15 +471,15 @@ auto FermionOperator::parse_string_(std::string_view terms_string) -> terms_t {
 
 // =============================================================================
 
-auto FermionOperator::simplify_(std::vector<term_t> terms, coefficient_t coeff)
+auto FermionOperator::simplify_(terms_t local_ops, coefficient_t coeff)
     -> std::tuple<std::vector<term_t>, coefficient_t> {
-    return sort_terms_(std::move(terms), coeff);
+    return sort_terms_(std::move(local_ops), coeff);
 }
 
 // =============================================================================
 
 auto FermionOperator::sort_terms_(terms_t local_ops, coefficient_t coeff) -> std::pair<terms_t, coefficient_t> {
-    std::sort(rbegin(local_ops), rend(local_ops));
+    // std::sort(rbegin(local_ops), rend(local_ops));
     return {std::move(local_ops), coeff};
 }
 
