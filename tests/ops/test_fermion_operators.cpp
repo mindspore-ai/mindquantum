@@ -114,7 +114,7 @@ TEST_CASE("FermionOperator parse_string", "[terms_op][ops]") {
 
 TEST_CASE("FermionOperator constructor", "[terms_op][ops]") {
     const auto coeff = 2.34i;
-    auto ref_terms = complex_term_dict_t{{{{4, TermValue::a}, {2, TermValue::adg}, {1, TermValue::a}}, coeff}};
+    auto ref_terms = complex_term_dict_t{{{{1, TermValue::a}, {2, TermValue::adg}, {4, TermValue::a}}, coeff}};
 
     FermionOperator fermion_op("1 2^ 4", coeff);
     CHECK(!std::empty(fermion_op));
@@ -149,6 +149,42 @@ TEST_CASE("FermionOperator split", "[terms_op][ops]") {
     }
 }
 
+TEST_CASE("FermionOperator normal_ordered", "[terms_op][ops]") {
+    const auto coeff = 2.34i;
+    auto ref_coeff = coeff;
+
+    std::string fermion_op_str;
+    FermionOperator ref_op;
+
+    SECTION("1 0") {
+        ref_op = FermionOperator("1 0", ref_coeff);
+        fermion_op_str = "1 0";
+    }
+    SECTION("0 1") {
+        ref_coeff *= -1;
+        ref_op = FermionOperator("1 0", ref_coeff);
+        fermion_op_str = "0 1";
+    }
+    SECTION("0 1^") {
+        ref_coeff *= -1;
+        ref_op = FermionOperator("1^ 0", ref_coeff);
+        fermion_op_str = "0 1^";
+    }
+    SECTION("1 0 2") {
+        ref_op = FermionOperator("2 1 0", ref_coeff);
+        fermion_op_str = "1 0 2";
+    }
+    SECTION("1 4 1^") {
+        ref_coeff *= -1;
+        ref_op = FermionOperator("1^ 4 1", ref_coeff) + FermionOperator("4", ref_coeff);
+        fermion_op_str = "1 4 1^";
+    }
+
+    const auto normal_ordered = FermionOperator(fermion_op_str, coeff).normal_ordered();
+    INFO("fermion_op = FermionOperator(\"" << fermion_op_str << "\")");
+    CHECK(normal_ordered == ref_op);
+}
+
 TEST_CASE("FermionOperator to_string", "[terms_op][ops]") {
     auto str = ""s;
     auto ref_str = ""s;
@@ -167,9 +203,10 @@ TEST_CASE("FermionOperator to_string", "[terms_op][ops]") {
     }
     SECTION("1^ 2 3^ 1") {
         str = FermionOperator("1^ 2 3^ 1", 1.2i).to_string();
-        ref_str = "1.2j [3^ 2 1^ 1]";
+        ref_str = "1.2j [1^ 2 3^ 1]";
     }
 
+    INFO("ref_str = " << ref_str);
     CHECK(ref_str == str);
 }
 

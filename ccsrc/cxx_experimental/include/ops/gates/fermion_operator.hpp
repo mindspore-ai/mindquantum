@@ -108,7 +108,7 @@ class FermionOperator : public TermsOperator<FermionOperator> {
      * \param terms A list of local operators
      * \note Normal ordered form is with high index and creation operator in front.
      */
-    static std::pair<terms_t, coefficient_t> normal_ordered_term_(terms_t local_ops, coefficient_t coeff);
+    static FermionOperator normal_ordered_term_(terms_t local_ops, coefficient_t coeff);
 
     //! Convert a string of space-separated fermion operators into an array of terms
     static terms_t parse_string_(std::string_view terms_string);
