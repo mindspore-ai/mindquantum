@@ -25,7 +25,7 @@ template <>
 struct get_info<uint_type> {
     using result_type = std::string;
     result_type operator()(const uint_type& /* type */) const noexcept {
-        using std::literals::string_literals::operator""s;
+        using namespace std::literals::string_literals;
         return "unsigned int"s;
     }
 };
@@ -33,7 +33,8 @@ template <typename rule_t>
 struct get_info<plus<rule_t>> {
     using result_type = std::string;
     result_type operator()(const plus<rule_t>& type) const noexcept {
-        return "one or more of: " + get_info<rule_t>{}(type.subject);
+        using namespace std::literals::string_literals;
+        return "one or more of: "s + get_info<rule_t>{}(type.subject);
     }
 };
 template <typename rule_t>
@@ -56,7 +57,7 @@ struct get_info<not_predicate<rule_t>> {
     using result_type = std::string;
     result_type operator()(const not_predicate<rule_t>& type) const noexcept {
         using namespace std::literals::string_literals;
-        return "!("s + get_info<rule_t>{}(type.subject) + ")";
+        return "!("s + get_info<rule_t>{}(type.subject) + ")"s;
     }
 };
 template <typename left_t, typename right_t>
@@ -64,7 +65,7 @@ struct get_info<list<left_t, right_t>> {
     using result_type = std::string;
     result_type operator()(const list<left_t, right_t>& type) const noexcept {
         using namespace std::literals::string_literals;
-        return "list of ["s + get_info<left_t>{}(type.left) + "], delimited by " + get_info<right_t>{}(type.right);
+        return "list of ["s + get_info<left_t>{}(type.left) + "], delimited by "s + get_info<right_t>{}(type.right);
     }
 };
 }  // namespace boost::spirit::x3
