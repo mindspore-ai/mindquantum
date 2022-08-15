@@ -22,6 +22,7 @@
 #ifdef ENABLE_PROJECTQ
 #    include "projectq.h"
 #endif
+
 #include "core/type.h"
 #include "gate/gates.h"
 #include "hamiltonian/hamiltonian.h"
@@ -32,6 +33,7 @@
 #include "sparse/paulimat.h"
 
 namespace py = pybind11;
+
 namespace mindquantum {
 using mindquantum::sparse::Csr_Plus_Csr;
 using mindquantum::sparse::GetPauliMat;
@@ -44,6 +46,67 @@ using mindquantum::sparse::TransposeCsrHdMatrix;
 using mindquantum::projectq::InnerProduct;
 using mindquantum::projectq::Projectq;
 #endif
+
+template <typename T>
+void BindPR(py::module *m, const std::string &name) {
+    py::class_<ParameterResolver<T>, std::shared_ptr<ParameterResolver<T>>>(*m, name.c_str())
+        .def(py::init<T>())
+        .def(py::init<std::string>())
+        .def(py::init<const MST<T> &, T>())
+        .def(py::init<const MST<T> &, T, const SS &, const SS &>())
+        .def_readonly("const", &ParameterResolver<T>::const_value)
+        .def_readonly("data", &ParameterResolver<T>::data_)
+        .def_readonly("no_grad_parameters", &ParameterResolver<T>::no_grad_parameters_)
+        .def_readonly("encoder_parameters", &ParameterResolver<T>::encoder_parameters_)
+        .def("set_const", &ParameterResolver<T>::SetConst)
+        .def("params_name", &ParameterResolver<T>::ParamsName)
+        .def("display", &ParameterResolver<T>::PrintInfo)
+        .def("__setitem__", &ParameterResolver<T>::SetItem)
+        .def("__getitem__", py::overload_cast<size_t>(&ParameterResolver<T>::GetItem, py::const_))
+        .def("__getitem__", py::overload_cast<const std::string &>(&ParameterResolver<T>::GetItem, py::const_))
+        .def("__len__", &ParameterResolver<T>::Size)
+        .def("size", &ParameterResolver<T>::Size)
+        .def("__bool__", &ParameterResolver<T>::IsNotZero)
+        .def("__repr__", &ParameterResolver<T>::ToString)
+        .def("__str__", &ParameterResolver<T>::ToString)
+        .def("__contains__", &ParameterResolver<T>::Contains)
+        .def("__copy__", &ParameterResolver<T>::Copy)
+        .def("get_key", &ParameterResolver<T>::GetKey)
+        .def(py::self + py::self)
+        .def(T() + py::self)
+        .def(py::self + T())
+        .def(py::self - py::self)
+        .def(T() - py::self)
+        .def(py::self - T())
+        .def(py::self * py::self)
+        .def(py::self * T())
+        .def(T() * py::self)
+        .def(py::self / py::self)
+        .def(T() / py::self)
+        .def(py::self / T())
+        .def(py::self == T())
+        .def(py::self == py::self)
+        .def(-py::self)
+        .def("is_const", &ParameterResolver<T>::IsConst)
+        .def("requires_grad", &ParameterResolver<T>::RequiresGrad)
+        .def("no_grad", &ParameterResolver<T>::NoGrad)
+        .def("no_grad_part", &ParameterResolver<T>::NoGradPart)
+        .def("requires_grad_part", &ParameterResolver<T>::RequiresGradPart)
+        .def("as_encoder", &ParameterResolver<T>::AsEncoder)
+        .def("as_ansatz", &ParameterResolver<T>::AsAnsatz)
+        .def("encoder_part", &ParameterResolver<T>::EncoderPart)
+        .def("ansatz_part", &ParameterResolver<T>::AnsatzPart)
+        .def("update", &ParameterResolver<T>::Update)
+        .def("conjugate", &ParameterResolver<T>::Conjugate)
+        .def("combination", &ParameterResolver<T>::Combination)
+        .def("real", &ParameterResolver<T>::Real)
+        .def("imag", &ParameterResolver<T>::Imag)
+        .def("pop", &ParameterResolver<T>::Pop)
+        .def("is_hermitian", &ParameterResolver<T>::IsHermitian)
+        .def("is_anti_hermitian", &ParameterResolver<T>::IsAntiHermitian)
+        .def("to_complex", &ParameterResolver<T>::ToComplexPR)
+        .def("is_complex_pr", &ParameterResolver<T>::IsComplexPR);
+}
 
 // Interface with python
 PYBIND11_MODULE(mqbackend, m) {
