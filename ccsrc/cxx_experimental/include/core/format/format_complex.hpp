@@ -12,8 +12,12 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef FMT_STD_COMPLEX_HPP
-#define FMT_STD_COMPLEX_HPP
+#ifndef FORMAT_COMPLEX_HPP
+#define FORMAT_COMPLEX_HPP
+
+#include <complex>
+
+#include <fmt/format.h>
 
 template <typename T, typename Char>
 struct fmt::formatter<std::complex<T>, Char> : public fmt::formatter<T, Char> {
@@ -47,4 +51,4 @@ struct fmt::formatter<std::complex<T>, Char> : public fmt::formatter<T, Char> {
     }
 };
 
-#endif /* FMT_STD_COMPLEX_HPP */
+#endif /* FORMAT_COMPLEX_HPP */

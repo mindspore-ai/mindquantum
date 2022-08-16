@@ -16,12 +16,14 @@
 #include <tweedledum/IR/Qubit.h>
 
 #include <fmt/format.h>
+#include <pybind11/complex.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
 #include "ops/gates.hpp"
-#include "ops/gates/terms_operator.hpp"
+#include "ops/gates/fermion_operator.hpp"
+#include "ops/gates/qubit_operator.hpp"
 #include "ops/parametric/angle_gates.hpp"
 #include "python/bindings.hpp"
 #include "python/ops/gate_adapter.hpp"
@@ -66,6 +68,8 @@ void init_tweedledum_ops(pybind11::module& module) {
 }
 
 void init_mindquantum_ops(pybind11::module& module) {
+    using namespace pybind11::literals;
+
     py::class_<ops::SqrtSwap>(module, "SqrtSwap").def(py::init<>()).def("__str__", &::to_string<ops::SqrtSwap>);
 
     py::class_<ops::Entangle>(module, "Entangle")
@@ -82,8 +86,19 @@ void init_mindquantum_ops(pybind11::module& module) {
         .value("a", ops::TermValue::a)
         .value("adg", ops::TermValue::adg);
 
-    // py::class_<ops::QubitOperator>(module, "QubitOperator")
-    //     .def(py::init<const uint32_t, const ops::QubitOperator::ComplexTermsDict&>());
+    py::class_<ops::QubitOperator>(module, "QubitOperator")
+        .def(py::init<>())
+        .def(py::init<const ops::term_t&, ops::QubitOperator::coefficient_t>(), "term"_a, "coeff"_a = 1.0)
+        .def(py::init<const ops::terms_t&, ops::QubitOperator::coefficient_t>(), "terms"_a, "coeff"_a = 1.0)
+        .def(py::init<const ops::QubitOperator::complex_term_dict_t&>(), "coeff_terms"_a)
+        .def(py::init<std::string_view, ops::QubitOperator::coefficient_t>(), "terms_string"_a, "coeff"_a = 1.0);
+
+    py::class_<ops::FermionOperator>(module, "FermionOperator")
+        .def(py::init<>())
+        .def(py::init<const ops::term_t&, ops::FermionOperator::coefficient_t>(), "term"_a, "coeff"_a = 1.0)
+        .def(py::init<const ops::terms_t&, ops::FermionOperator::coefficient_t>(), "terms"_a, "coeff"_a = 1.0)
+        .def(py::init<const ops::FermionOperator::complex_term_dict_t&>(), "coeff_terms"_a)
+        .def(py::init<std::string_view, ops::FermionOperator::coefficient_t>(), "terms_string"_a, "coeff"_a = 1.0);
 
     // py::class_<ops::parametric::P>(module, "P").def(py::init<const double>());
     // py::class_<ops::parametric::Ph>(module, "Ph"). def(py::init<SymEngine::number>());

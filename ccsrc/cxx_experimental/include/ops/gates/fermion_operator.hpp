@@ -34,6 +34,20 @@ class UnitTestAccessor;
 #endif  // UNIT_TESTS
 
 namespace mindquantum::ops {
+namespace details {
+struct FermionOperatorTermPolicy {
+    static auto to_string(const TermValue& value) {
+        using namespace std::literals::string_literals;
+        if (value == TermValue::adg) {
+            return "^"s;
+        }
+        return ""s;
+    }
+    static auto to_string(const term_t& term) {
+        return fmt::format("{}{}", std::get<0>(term), to_string(std::get<1>(term)));
+    }
+};
+}  // namespace details
 
 //! Definition of a fermionic operator
 /*!
@@ -44,12 +58,12 @@ namespace mindquantum::ops {
  *  These are the Basic Operators to describe a fermionic system, such as a Molecular system. The FermionOperator are
  *  follows the anti-commutation relationship.
  */
-class FermionOperator : public TermsOperator<FermionOperator> {
-    friend TermsOperator<FermionOperator>;
+class FermionOperator : public TermsOperator<FermionOperator, details::FermionOperatorTermPolicy> {
+    friend TermsOperator<FermionOperator, details::FermionOperatorTermPolicy>;
 
  public:
     using csr_matrix_t = Eigen::SparseMatrix<std::complex<double>, Eigen::RowMajor>;
-    using TermsOperator<FermionOperator>::operator==;
+    using TermsOperator<FermionOperator, details::FermionOperatorTermPolicy>::operator==;
 
     static constexpr std::string_view kind() {
         return "mindquantum.fermionoperator";
@@ -80,16 +94,6 @@ class FermionOperator : public TermsOperator<FermionOperator> {
 
     //! Return the normal ordered form of the Fermion Operator.
     MQ_NODISCARD FermionOperator normal_ordered() const;
-
-    //! Convert a FermionOperator to a string
-    MQ_NODISCARD std::string to_string() const noexcept;
-
-    //! Dump FermionOperator into JSON(JavaScript Object Notation).
-    /*!
-     * \param indent Number of spaces to use for indent
-     * \return JSON formatted string
-     */
-    MQ_NODISCARD std::string dumps(std::size_t indent = 4UL) const;
 
     //! Load a FermionOperator from a JSON-formatted string.
     /*!

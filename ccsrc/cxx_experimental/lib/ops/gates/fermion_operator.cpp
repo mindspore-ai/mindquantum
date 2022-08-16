@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <functional>
 #include <iterator>
 #include <numeric>
 #include <optional>
@@ -41,13 +42,13 @@
 #include <fmt/format.h>
 #include <lru_cache/lru_cache.h>
 
+#include "core/format/format_complex.hpp"
 #include "core/logging.hpp"
 #include "core/parser/boost_x3_error_handler.hpp"
 #include "details/boost_x3_complex_number.hpp"
 #include "details/boost_x3_get_info_impl.hpp"
 #include "details/boost_x3_parse_object.hpp"
 #include "details/eigen_diagonal_identity.hpp"
-#include "details/fmt_std_complex.hpp"
 #include "ops/gates.hpp"
 #include "ops/gates/terms_operator.hpp"
 
@@ -338,71 +339,6 @@ auto FermionOperator::normal_ordered() const -> FermionOperator {
 }
 
 // =============================================================================
-
-namespace {
-struct term_to_string {
-    template <bool is_first_elem = false>
-    static auto apply(const FermionOperator::term_t& term) {
-        if constexpr (is_first_elem) {
-            return fmt::format("{}{}", std::get<0>(term), std::get<1>(term) == TermValue::adg ? "^"s : "");
-        } else {
-            return fmt::format(" {}{}", std::get<0>(term), std::get<1>(term) == TermValue::adg ? "^"s : "");
-        }
-    }
-};
-}  // namespace
-
-// -----------------------------------------------------------------------------
-
-auto FermionOperator::to_string() const noexcept -> std::string {
-#if MQ_STD_ACCUMULATE_USE_MOVE
-    using acc_init_t = std::string&&;
-#else
-    using acc_init_t = std::string&;
-#endif  // __cplusplus >= 202002L
-
-    if (std::empty(terms_)) {
-        return "0"s;
-    }
-
-    const auto process_term = [](const complex_term_dict_t::value_type& term_value,
-                                 bool prepend_newline = false) -> std::string {
-        const auto& [local_ops, coeff] = term_value;
-        auto term_str = fmt::format("{}{} [", prepend_newline ? "\n" : "", coeff);
-        if (std::empty(local_ops)) {
-            term_str += ']';
-        } else {
-            const auto it = begin(local_ops);
-            term_str += std::accumulate(begin(local_ops) + 1, end(local_ops), term_to_string::apply<true>(*it),
-                                        [](acc_init_t init, const auto& term) -> decltype(auto) {
-                                            return init += term_to_string::apply<false>(term);
-                                        });
-            term_str += ']';
-        }
-        return term_str;
-    };
-
-    return std::accumulate(++begin(terms_), end(terms_), process_term(*begin(terms_)),
-                           [&process_term](acc_init_t init, const auto& term_value) -> decltype(auto) {
-                               return init += process_term(term_value, true);
-                           });
-}
-
-// =============================================================================
-
-auto FermionOperator::dumps(std::size_t indent) const -> std::string {
-    std::string result("{\n");
-    for (const auto& [local_ops, coeff] : terms_) {
-        result += std::string(indent, ' ') + '"';
-        for (const auto& term : local_ops) {
-            result += term_to_string::apply<true>(term) + ' ';
-        }
-        result += fmt::format(R"(": "{}")", coeff);
-    }
-    return result += "\n}";
-}
-
-// -----------------------------------------------------------------------------
 
 auto FermionOperator::loads(std::string_view string_data) -> std::optional<FermionOperator> {
     if (complex_term_dict_t terms_dict; parser::parse_object_skipper(begin(string_data), end(string_data), terms_dict,
