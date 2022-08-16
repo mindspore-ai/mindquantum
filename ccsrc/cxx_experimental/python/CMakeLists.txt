@@ -36,6 +36,7 @@ pybind11_add_module(
   ${CMAKE_CURRENT_LIST_DIR}/lib/_mindquantum_cxx.cpp
   ${CMAKE_CURRENT_LIST_DIR}/lib/core/circuit.cpp
   ${CMAKE_CURRENT_LIST_DIR}/lib/core/symengine.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/lib/logging/logging.cpp
   ${CMAKE_CURRENT_LIST_DIR}/lib/ops/ops.cpp
   ${CMAKE_CURRENT_LIST_DIR}/lib/optimizer/optimizer.cpp
   ${CMAKE_CURRENT_LIST_DIR}/lib/simulator/simulator.cpp
