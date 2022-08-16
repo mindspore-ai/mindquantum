@@ -491,9 +491,8 @@ void TermsOperator<derived_t, term_policy_t, coeff_policy_t>::calculate_num_targ
 
 // =============================================================================
 
-template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_IMPL, typename derived_t>
-std::enable_if_t<traits::is_terms_operator<derived_t>::value, derived_t> operator-(const number_t& number,
-                                                                                   const derived_t& other) {
+template <TYPENAME_NUMBER number_t, typename derived_t TYPENAME_NUMBER_CONSTRAINTS_IMPL>
+auto operator-(const number_t& number, const derived_t& other) {
     return number + (-other);
 }
 
@@ -503,6 +502,7 @@ std::enable_if_t<traits::is_terms_operator<derived_t>::value, derived_t> operato
 
 #undef TYPENAME_NUMBER
 #undef TYPENAME_NUMBER_CONSTRAINTS_DEF
+#undef TYPENAME_NUMBER_CONSTRAINTS_DEF_ADD
 #undef TYPENAME_NUMBER_CONSTRAINTS_IMPL
 
 #endif /* TERMS_OPERATOR_TPP */
