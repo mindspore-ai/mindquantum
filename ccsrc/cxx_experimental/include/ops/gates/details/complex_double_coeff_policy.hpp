@@ -19,9 +19,6 @@
 
 #include <algorithm>
 #include <complex>
-#include <optional>
-
-#include <boost/range/iterator_range.hpp>
 
 #include <fmt/format.h>
 
@@ -40,10 +37,6 @@ struct CmplxDoubleCoeffPolicy {
     static auto equal(const coeff_t& lhs, const coeff_t& rhs) {
         return std::abs(lhs - rhs) <= std::max(EQ_TOLERANCE, EQ_TOLERANCE * std::max(std::abs(lhs), std::abs(rhs)));
     }
-
-    // Conversion
-    static std::optional<coeff_t> coeff_from_string(
-        const boost::iterator_range<std::string_view::const_iterator>& range);
 
     // Unary operators
     static auto uminus(const coeff_t& lhs) {
@@ -77,9 +70,6 @@ struct CmplxDoubleCoeffPolicy {
     }
 
     // Misc. functions
-    static auto conjugate(const coeff_t& coeff) {
-        return std::conj(coeff);
-    }
     static auto is_zero(const coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
         return std::abs(coeff) <= abs_tol;
     }
@@ -90,7 +80,6 @@ struct CmplxDoubleCoeffPolicy {
         coeff = coeff.imag();
     }
     static auto compress(coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
-        // TODO(bugfix): how about a negative real or imag part?
         if (coeff.imag() <= abs_tol) {
             cast_real(coeff);
         } else if (coeff.real() <= abs_tol) {

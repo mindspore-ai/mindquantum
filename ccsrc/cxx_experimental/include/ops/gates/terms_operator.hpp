@@ -18,6 +18,9 @@
 #include <complex>
 #include <cstdint>
 #include <map>
+#include <string>
+#include <string_view>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -25,12 +28,21 @@
 
 #include "core/config.hpp"
 
-#include "core/traits.hpp"
-#include "core/types.hpp"
-#include "ops/meta/dagger.hpp"
 #if MQ_HAS_CONCEPTS
 #    include "core/concepts.hpp"
 #endif  // MQ_HAS_CONCEPTS
+#include "core/traits.hpp"
+#include "core/types.hpp"
+#include "ops/gates/details/complex_double_coeff_policy.hpp"
+#include "ops/meta/dagger.hpp"
+
+namespace mindquantum::traits {
+template <typename T, typename = void>
+struct is_terms_operator : std::false_type {};
+
+template <typename T>
+struct is_terms_operator<T, std::void_t<typename T::terms_operator_tag>> : std::true_type {};
+}  // namespace mindquantum::traits
 
 namespace mindquantum::ops {
 enum class TermValue : uint8_t {
@@ -41,6 +53,9 @@ enum class TermValue : uint8_t {
     a = 0,
     adg = 1,
 };
+
+using term_t = std::pair<uint32_t, TermValue>;
+using terms_t = std::vector<term_t>;
 
 #if MQ_HAS_CONCEPTS
 #    define TYPENAME_NUMBER concepts::number
@@ -53,7 +68,13 @@ enum class TermValue : uint8_t {
 #    define TYPENAME_NUMBER_CONSTRAINTS_IMPL , typename
 #endif  // MQ_HAS_CONCEPTS
 
-template <typename derived_t>
+//! Base class for term operators (like qubit or fermion operators)
+/*!
+ * \note This template CRTP class expects the derived classes to implement the following member functions:
+ *         - static std::pair<terms_t, coefficient_t> sort_terms_(terms_t local_ops, coefficient_t coeff);
+ *         - static std::tuple<std::vector<term_t>, coefficient_t> simplify_(terms_t terms, coefficient_t coeff = 1.);
+ */
+template <typename derived_t, typename term_policy_t_, typename coeff_policy_t_ = details::CmplxDoubleCoeffPolicy>
 class TermsOperator
     // clang-format off
     : boost::additive1<derived_t
@@ -69,13 +90,16 @@ class TermsOperator
     // clang-format on
  public:
     using non_const_num_targets = void;
-    using base_t = TermsOperator<derived_t>;
+    using terms_operator_tag = void;
+    using term_policy_t = term_policy_t_;
+    using coeff_policy_t = coeff_policy_t_;
+    using base_t = TermsOperator<derived_t, term_policy_t, coeff_policy_t>;
 
-    static constexpr auto EQ_TOLERANCE = 1.e-8;
+    static constexpr auto EQ_TOLERANCE = coeff_policy_t::EQ_TOLERANCE;
 
-    using coefficient_t = std::complex<double>;
-    using term_t = std::pair<uint32_t, TermValue>;
-    using terms_t = std::vector<term_t>;
+    using coefficient_t = typename coeff_policy_t::coeff_t;
+    using term_t = mindquantum::ops::term_t;
+    using terms_t = mindquantum::ops::terms_t;
     using complex_term_dict_t = std::map<std::vector<term_t>, coefficient_t>;
 
     static constexpr std::string_view kind() {
@@ -89,9 +113,9 @@ class TermsOperator
     TermsOperator& operator=(TermsOperator&&) noexcept = default;
     ~TermsOperator() noexcept = default;
 
-    explicit TermsOperator(term_t term, coefficient_t coeff = 1.0);
+    explicit TermsOperator(term_t term, coefficient_t coeff = coeff_policy_t::one);
 
-    explicit TermsOperator(const terms_t& term, coefficient_t coeff = 1.0);
+    explicit TermsOperator(const terms_t& terms, coefficient_t coeff = coeff_policy_t::one);
 
     explicit TermsOperator(const complex_term_dict_t& terms);
 
@@ -164,7 +188,19 @@ class TermsOperator
      */
     derived_t& compress(double abs_tol = EQ_TOLERANCE);
 
-    // =================================
+    // =========================================================================
+
+    //! Convert a TermsOperator to a string
+    MQ_NODISCARD std::string to_string() const noexcept;
+
+    //! Dump TermsOperator into JSON(JavaScript Object Notation).
+    /*!
+     * \param indent Number of spaces to use for indent
+     * \return JSON formatted string
+     */
+    MQ_NODISCARD std::string dumps(std::size_t indent = 4UL) const;
+
+    // =========================================================================
 
     //! In-place addition of another terms operator
     derived_t& operator+=(const derived_t& other);
@@ -245,8 +281,9 @@ class TermsOperator
     complex_term_dict_t terms_;
 };
 
-template <typename derived_t, TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_DEF>
-MQ_NODISCARD auto operator-(const number_t& number, const TermsOperator<derived_t>& other);
+template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_IMPL, typename derived_t>
+MQ_NODISCARD std::enable_if_t<traits::is_terms_operator<derived_t>::value, derived_t> operator-(const number_t& number,
+                                                                                                const derived_t& other);
 
 }  // namespace mindquantum::ops
 

@@ -149,38 +149,6 @@ TEST_CASE("QubitOperator split", "[terms_op][ops]") {
     }
 }
 
-TEST_CASE("QubitOperator to_string", "[terms_op][ops]") {
-    auto str = ""s;
-    auto ref_str = ""s;
-
-    SECTION("X1") {
-        str = QubitOperator("X1").to_string();
-        ref_str = "1 [X1]";
-    }
-    SECTION("Y1") {
-        str = QubitOperator("Y1").to_string();
-        ref_str = "1 [Y1]";
-    }
-    SECTION("Z1") {
-        str = QubitOperator("Z1").to_string();
-        ref_str = "1 [Z1]";
-    }
-    SECTION("Identity") {
-        str = QubitOperator::identity().to_string();
-        ref_str = "1 []";
-    }
-    SECTION("X1 Y3 Z2 X10") {
-        str = QubitOperator("X1 Y3 Z2 X10", 1.2i).to_string();
-        ref_str = "1.2j [X1 Z2 Y3 X10]";  // NB: ordering is based on qubit index
-    }
-
-    INFO("Testing with: " << ref_str);
-    CHECK(ref_str == str);
-}
-
-TEST_CASE("QubitOperator dumps", "[terms_op][ops]") {
-}
-
 TEST_CASE("QubitOperator loads", "[terms_op][ops]") {
     std::string json_data;
     std::optional<QubitOperator> qubit_op;

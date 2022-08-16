@@ -185,34 +185,6 @@ TEST_CASE("FermionOperator normal_ordered", "[terms_op][ops]") {
     CHECK(normal_ordered == ref_op);
 }
 
-TEST_CASE("FermionOperator to_string", "[terms_op][ops]") {
-    auto str = ""s;
-    auto ref_str = ""s;
-
-    SECTION("0") {
-        str = FermionOperator("0").to_string();
-        ref_str = "1 [0]";
-    }
-    SECTION("1^") {
-        str = FermionOperator("1^").to_string();
-        ref_str = "1 [1^]";
-    }
-    SECTION("Identity") {
-        str = FermionOperator::identity().to_string();
-        ref_str = "1 []";
-    }
-    SECTION("1^ 2 3^ 1") {
-        str = FermionOperator("1^ 2 3^ 1", 1.2i).to_string();
-        ref_str = "1.2j [1^ 2 3^ 1]";
-    }
-
-    INFO("ref_str = " << ref_str);
-    CHECK(ref_str == str);
-}
-
-TEST_CASE("FermionOperator dumps", "[terms_op][ops]") {
-}
-
 TEST_CASE("FermionOperator loads", "[terms_op][ops]") {
     std::string json_data;
     std::optional<FermionOperator> fermion_op;

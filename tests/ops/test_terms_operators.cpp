@@ -23,16 +23,40 @@
 
 #include <catch2/catch.hpp>
 
+using namespace std::literals::complex_literals;
+using namespace std::literals::string_literals;
+using TermValue = mindquantum::ops::TermValue;
+
 // =============================================================================
 
 namespace {
-struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator> {
+struct DummyOperatorTermPolicy {
+    static auto to_string(const mindquantum::ops::TermValue& value) {
+        if (value == TermValue::X) {
+            return "X"s;
+        } else if (value == TermValue::Y) {
+            return "Y"s;
+        } else if (value == TermValue::Z) {
+            return "Z"s;
+        } else if (value == TermValue::a) {
+            return "v"s;
+        } else if (value == TermValue::adg) {
+            return "^"s;
+        }
+        return "UNKNOWN"s;
+    }
+    static auto to_string(const mindquantum::ops::term_t& term) {
+        return fmt::format("{}-{}", std::get<0>(term), to_string(std::get<1>(term)));
+    }
+};
+struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator, DummyOperatorTermPolicy> {
     using TermsOperator::TermsOperator;
     DummyOperator(const DummyOperator&) = default;
     DummyOperator(DummyOperator&&) = default;
     DummyOperator& operator=(const DummyOperator&) = default;
     DummyOperator& operator=(DummyOperator&&) = default;
     ~DummyOperator() = default;
+    using term_t = mindquantum::ops::term_t;
 
     static std::tuple<std::vector<term_t>, coefficient_t> simplify_(const std::vector<term_t>& terms,
                                                                     coefficient_t coeff) {
@@ -48,8 +72,6 @@ struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator> {
 };
 }  // namespace
 
-using namespace std::literals::complex_literals;
-using TermValue = mindquantum::ops::TermValue;
 using coefficient_t = DummyOperator::coefficient_t;
 using term_t = DummyOperator::term_t;
 using terms_t = DummyOperator::terms_t;
@@ -266,6 +288,59 @@ TEST_CASE("TermsOperator compression", "[terms_op][ops]") {
 
 // =============================================================================
 
+TEST_CASE("TermsOperator to_string", "[terms_op][ops]") {
+    auto str = ""s;
+    auto ref_str = ""s;
+
+    SECTION("0") {
+        str = DummyOperator(terms_t{{0, TermValue::a}}).to_string();
+        ref_str = "1 [0-v]";
+    }
+    SECTION("1^") {
+        str = DummyOperator(terms_t{{1, TermValue::adg}}).to_string();
+        ref_str = "1 [1-X]";  // NB: adg == X == 1
+    }
+    SECTION("Identity") {
+        str = DummyOperator::identity().to_string();
+        ref_str = "1 []";
+    }
+    SECTION("1^ 2 X3 Y4 Z5") {
+        str = DummyOperator(
+                  terms_t{
+                      {1, TermValue::a}, {2, TermValue::adg}, {3, TermValue::X}, {4, TermValue::Y}, {5, TermValue::Z}},
+                  1.2i)
+                  .to_string();
+        ref_str = "1.2j [1-v 2-X 3-X 4-Y 5-Z]";  // NB: adg == X == 1
+    }
+
+    INFO("ref_str = " << ref_str);
+    CHECK(ref_str == str);
+}
+
+TEST_CASE("DummyOperator dumps", "[terms_op][ops]") {
+    DummyOperator op;
+    auto ref_json = ""s;
+    SECTION("Empty") {
+        op = DummyOperator();
+        ref_json = "{}"s;
+    }
+    SECTION("Not empty") {
+        op = DummyOperator(
+                 terms_t{
+                     {1, TermValue::a}, {2, TermValue::adg}, {3, TermValue::X}, {4, TermValue::Y}, {5, TermValue::Z}},
+                 1.2i)
+             + DummyOperator::identity();
+        ref_json = R"s({
+    "": "1",
+    "1-v 2-X 3-X 4-Y 5-Z": "1.2j"
+})s";  // NB: adg == X == 1
+    }
+
+    CHECK(op.dumps() == ref_json);
+}
+
+// =============================================================================
+
 TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
     SECTION("Addition (TermsOperator)") {
         DummyOperator op;
@@ -368,7 +443,7 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
         op -= DummyOperator{};
         CHECK(std::empty(op));
 
-        // op = {'X3': -2.3}
+        // op = {'X3': 2.3}
         auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
         REQUIRE(inserted1);
         op -= DummyOperator(it1->first, -it1->second);
@@ -376,7 +451,7 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
         CHECK(std::size(op) == 1);
         CHECK(op.get_terms() == ref_terms);
 
-        // op = {'X3': -2.3,  'X1': -1.}
+        // op = {'X3': 2.3,  'X1': 1.}
         auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::X}}, 1.);
         REQUIRE(inserted2);
         op -= DummyOperator(it2->first, -it2->second);
@@ -384,7 +459,7 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
         CHECK(std::size(op) == 2);
         CHECK(op.get_terms() == ref_terms);
 
-        // op = {'X3': -2.3 - 1.85i,  'X1': -1.}
+        // op = {'X3': 2.3 - 1.85i,  'X1': 1.}
         const auto term3 = it1->first.front();
         const auto coeff3 = 1.85i;
         it1->second -= coeff3;
@@ -393,7 +468,7 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
         CHECK(std::size(op) == 2);
         CHECK(op.get_terms() == ref_terms);
 
-        // op = {'X3': -2.3 - 1.85i,  'X1': -1.,  'Y1': -10.}
+        // op = {'X3': 2.3 - 1.85i,  'X1': 1.,  'Y1': 10.}
         auto [it3, inserted3] = ref_terms.emplace(terms_t{{1, TermValue::Y}}, 10.);
         REQUIRE(inserted3);
         op -= DummyOperator(it3->first, -it3->second);
@@ -401,7 +476,7 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
         CHECK(std::size(op) == 3);
         CHECK(op.get_terms() == ref_terms);
 
-        // op = {'X3': -2.3 - 1.85i,  'Y1': -10.}
+        // op = {'X3': 2.3 - 1.85i,  'Y1': 10.}
         const auto term4 = it2->first.front();
         const auto coeff4 = it2->second;
         ref_terms.erase(it2);

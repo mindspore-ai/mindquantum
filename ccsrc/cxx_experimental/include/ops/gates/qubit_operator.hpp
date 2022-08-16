@@ -34,6 +34,26 @@ class UnitTestAccessor;
 #endif  // UNIT_TESTS
 
 namespace mindquantum::ops {
+namespace details {
+struct QubitOperatorTermPolicy {
+    static auto to_string(const TermValue& value) {
+        using namespace std::literals::string_literals;
+        if (value == TermValue::X) {
+            return "X"s;
+        }
+        if (value == TermValue::Y) {
+            return "Y"s;
+        }
+        if (value == TermValue::Z) {
+            return "Z"s;
+        }
+        return "UNKNOWN"s;
+    }
+    static auto to_string(const term_t& term) {
+        return fmt::format("{}{}", to_string(std::get<1>(term)), std::get<0>(term));
+    }
+};
+}  // namespace details
 
 constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermValue& left_op,
                                                                      const TermValue& right_op);
@@ -52,12 +72,12 @@ constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermV
  *  QubitOperator has the following attributes set as follows: operators = ('X', 'Y', 'Z'), different_indices_commute =
  *  True.
  */
-class QubitOperator : public TermsOperator<QubitOperator> {
-    friend TermsOperator<QubitOperator>;
+class QubitOperator : public TermsOperator<QubitOperator, details::QubitOperatorTermPolicy> {
+    friend TermsOperator<QubitOperator, details::QubitOperatorTermPolicy>;
 
  public:
     using csr_matrix_t = Eigen::SparseMatrix<std::complex<double>, Eigen::RowMajor>;
-    using TermsOperator<QubitOperator>::operator==;
+    using TermsOperator<QubitOperator, details::QubitOperatorTermPolicy>::operator==;
 
     static constexpr std::string_view kind() {
         return "mindquantum.qubitoperator";
@@ -88,16 +108,6 @@ class QubitOperator : public TermsOperator<QubitOperator> {
 
     //! Split the operator into its individual components
     MQ_NODISCARD std::vector<QubitOperator> split() const noexcept;
-
-    //! Convert a QubitOperator to a string
-    MQ_NODISCARD std::string to_string() const noexcept;
-
-    //! Dump QubitOperator into JSON(JavaScript Object Notation).
-    /*!
-     * \param indent Number of spaces to use for indent
-     * \return JSON formatted string
-     */
-    MQ_NODISCARD std::string dumps(std::size_t indent = 4UL) const;
 
     //! Load a QubitOperator from a JSON-formatted string.
     /*!
