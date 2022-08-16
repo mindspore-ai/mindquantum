@@ -52,14 +52,23 @@ std::set<T> operator&(const std::set<T>& s1, const std::set<T>& s2) {
     return out;
 }
 
+// template <typename T>
+// std::ostream& operator<<(std::ostream& os, const std::set<T>& s) {
+//     os << "(";
+//     for (ITER(p, s)) {
+//         os << *p << ", ";
+//     }
+//     os << ")";
+//     return os;
+// }
+
 template <typename T>
-std::ostream& operator<<(std::ostream& os, const std::set<T>& s) {
+void Print(std::ostream& os, const std::set<T>& s) {
     os << "(";
     for (ITER(p, s)) {
         os << *p << ", ";
     }
     os << ")";
-    return os;
 }
 
 template <typename T>
