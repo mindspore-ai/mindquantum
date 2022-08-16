@@ -33,16 +33,7 @@ using TermValue = ops::TermValue;
 using coefficient_t = QubitOperator::coefficient_t;
 using term_t = QubitOperator::term_t;
 using terms_t = QubitOperator::terms_t;
-using complex_term_dict_t = QubitOperator::complex_term_dict_t;
-
-// -----------------------------------------------------------------------------
-
-class UnitTestAccessor {
- public:
-    static auto parse_string(std::string_view terms_string) {
-        return QubitOperator::parse_string_(terms_string);
-    }
-};
+using coeff_term_dict_t = QubitOperator::coeff_term_dict_t;
 
 // =============================================================================
 
@@ -104,7 +95,7 @@ TEST_CASE("QubitOperator parse_string", "[terms_op][ops]") {
         ref_terms.emplace_back(1, TermValue::X);
     }
 
-    const auto terms = UnitTestAccessor::parse_string(terms_string);
+    const auto terms = QubitOperator::term_policy_t::parse_terms_string(terms_string);
 
     INFO("terms_string = " << terms_string);
     REQUIRE(std::size(ref_terms) == std::size(terms));
@@ -114,7 +105,7 @@ TEST_CASE("QubitOperator parse_string", "[terms_op][ops]") {
 }
 
 TEST_CASE("QubitOperator constructor", "[qubit_op][ops]") {
-    auto ref_terms = complex_term_dict_t{{{{1, TermValue::X}, {2, TermValue::Y}, {4, TermValue::Z}}, 1.}};
+    auto ref_terms = coeff_term_dict_t{{{{1, TermValue::X}, {2, TermValue::Y}, {4, TermValue::Z}}, 1.}};
 
     QubitOperator op("X1 Y2 Z4");
     CHECK(!std::empty(op));
@@ -149,76 +140,76 @@ TEST_CASE("QubitOperator split", "[terms_op][ops]") {
     }
 }
 
-TEST_CASE("QubitOperator loads", "[terms_op][ops]") {
-    std::string json_data;
-    std::optional<QubitOperator> qubit_op;
-    std::optional<QubitOperator> ref_op;
+// TEST_CASE("QubitOperator loads", "[terms_op][ops]") {
+//     std::string json_data;
+//     std::optional<QubitOperator> qubit_op;
+//     std::optional<QubitOperator> ref_op;
 
-    SECTION("Empty string") {
-        qubit_op = QubitOperator::loads("");
-    }
-    SECTION("Only whitespace") {
-        qubit_op = QubitOperator::loads("      ");
-    }
-    SECTION(R"s(Invalid: ('{"": ""}'))s") {
-        qubit_op = QubitOperator::loads(R"s({"": ""})s");
-    }
-    SECTION(R"s(Invalid: ('{"1 2^": "1"}'))s") {
-        qubit_op = QubitOperator::loads(R"s({"1 2^": "1"})s");
-    }
-    SECTION(R"s(Invalid: ('"X1" : "(1+2.1j)"'))s") {
-        qubit_op = QubitOperator::loads(R"s("X1" : "(1+2.1j)")s");
-    }
+//     SECTION("Empty string") {
+//         qubit_op = QubitOperator::loads("");
+//     }
+//     SECTION("Only whitespace") {
+//         qubit_op = QubitOperator::loads("      ");
+//     }
+//     SECTION(R"s(Invalid: ('{"": ""}'))s") {
+//         qubit_op = QubitOperator::loads(R"s({"": ""})s");
+//     }
+//     SECTION(R"s(Invalid: ('{"1 2^": "1"}'))s") {
+//         qubit_op = QubitOperator::loads(R"s({"1 2^": "1"})s");
+//     }
+//     SECTION(R"s(Invalid: ('"X1" : "(1+2.1j)"'))s") {
+//         qubit_op = QubitOperator::loads(R"s("X1" : "(1+2.1j)")s");
+//     }
 
-    SECTION(R"s({"": "1.23"})s") {
-        qubit_op = QubitOperator::loads(R"({"": "1.23"})");
-        ref_op = QubitOperator::identity() * 1.23;
-    }
-    SECTION(R"s({"": "2.34j"})s") {
-        qubit_op = QubitOperator::loads(R"({"": "2.34j"})");
-        ref_op = QubitOperator::identity() * 2.34i;
-    }
-    SECTION(R"s({"": "(3-2j)"})s") {
-        qubit_op = QubitOperator::loads(R"s({"": "(3-2j)"})s");
-        ref_op = QubitOperator::identity() * (3. - 2.i);
-    }
-    SECTION(R"s({"X1": "(1+2.1j)"})s") {
-        qubit_op = QubitOperator::loads(R"s({"X1": "(1+2.1j)"})s");
-        ref_op = QubitOperator("X1", 1.0 + 2.1i);
-    }
-    SECTION(R"s({"X2 Y1 Z3 Y4": "(1+2j)"})s") {
-        qubit_op = QubitOperator::loads(R"s({"X2 Y1 Z3 Y4": "(1+2j)"})s");
-        ref_op = QubitOperator("X2 Y1 Z3 Y4", 1.0 + 2.i);
-    }
-    SECTION(R"s({"X2 Z3 Y4": "4.5j", "X1" : "1"})s") {
-        qubit_op = QubitOperator::loads(
-            R"s({"X2 Z3 Y4": "4.5j",
-                 "X1" : "1"})s");
-        ref_op = QubitOperator("X2 Z3 Y4", 4.5i) + QubitOperator("X1");
-    }
+//     SECTION(R"s({"": "1.23"})s") {
+//         qubit_op = QubitOperator::loads(R"({"": "1.23"})");
+//         ref_op = QubitOperator::identity() * 1.23;
+//     }
+//     SECTION(R"s({"": "2.34j"})s") {
+//         qubit_op = QubitOperator::loads(R"({"": "2.34j"})");
+//         ref_op = QubitOperator::identity() * 2.34i;
+//     }
+//     SECTION(R"s({"": "(3-2j)"})s") {
+//         qubit_op = QubitOperator::loads(R"s({"": "(3-2j)"})s");
+//         ref_op = QubitOperator::identity() * (3. - 2.i);
+//     }
+//     SECTION(R"s({"X1": "(1+2.1j)"})s") {
+//         qubit_op = QubitOperator::loads(R"s({"X1": "(1+2.1j)"})s");
+//         ref_op = QubitOperator("X1", 1.0 + 2.1i);
+//     }
+//     SECTION(R"s({"X2 Y1 Z3 Y4": "(1+2j)"})s") {
+//         qubit_op = QubitOperator::loads(R"s({"X2 Y1 Z3 Y4": "(1+2j)"})s");
+//         ref_op = QubitOperator("X2 Y1 Z3 Y4", 1.0 + 2.i);
+//     }
+//     SECTION(R"s({"X2 Z3 Y4": "4.5j", "X1" : "1"})s") {
+//         qubit_op = QubitOperator::loads(
+//             R"s({"X2 Z3 Y4": "4.5j",
+//                  "X1" : "1"})s");
+//         ref_op = QubitOperator("X2 Z3 Y4", 4.5i) + QubitOperator("X1");
+//     }
 
-    if (ref_op) {
-        REQUIRE(qubit_op.has_value());
-        CHECK(qubit_op.value() == ref_op.value());
-    } else {
-        REQUIRE(!qubit_op.has_value());
-    }
-}
+//     if (ref_op) {
+//         REQUIRE(qubit_op.has_value());
+//         CHECK(qubit_op.value() == ref_op.value());
+//     } else {
+//         REQUIRE(!qubit_op.has_value());
+//     }
+// }
 
-TEST_CASE("QubitOperator JSON save - load", "[terms_op][ops]") {
-    QubitOperator qubit_op;
-    SECTION("Identity") {
-        qubit_op = QubitOperator::identity() * (1.2 + 5.4i);
-    }
-    SECTION("2 1^ 3 4^") {
-        qubit_op = QubitOperator("Z2 X1 Z3 Y4", 23.3 + 4.5i);
-    }
+// TEST_CASE("QubitOperator JSON save - load", "[terms_op][ops]") {
+//     QubitOperator qubit_op;
+//     SECTION("Identity") {
+//         qubit_op = QubitOperator::identity() * (1.2 + 5.4i);
+//     }
+//     SECTION("2 1^ 3 4^") {
+//         qubit_op = QubitOperator("Z2 X1 Z3 Y4", 23.3 + 4.5i);
+//     }
 
-    CHECK(qubit_op == QubitOperator::loads(qubit_op.dumps()));
-}
+//     CHECK(qubit_op == QubitOperator::loads(qubit_op.dumps()));
+// }
 
 TEST_CASE("QubitOperator comparison operators", "[terms_op][ops]") {
-    complex_term_dict_t ref_terms;
+    coeff_term_dict_t ref_terms;
 
     auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
     auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::Y}}, 1.);

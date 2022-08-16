@@ -83,68 +83,6 @@ using namespace std::literals::string_literals;  // NOLINT(build/namespaces_lite
 
 // =============================================================================
 
-namespace x3 = boost::spirit::x3;
-
-namespace ast::fm_op {
-using mindquantum::ops::TermValue;
-using term_t = mindquantum::ops::FermionOperator::term_t;
-using terms_t = mindquantum::ops::FermionOperator::terms_t;
-using complex_term_dict_t = mindquantum::ops::FermionOperator::complex_term_dict_t;
-using term_coeff_t = std::pair<mindquantum::ops::FermionOperator::complex_term_dict_t::key_type,
-                               mindquantum::ops::FermionOperator::complex_term_dict_t::mapped_type>;
-
-struct TermOp : x3::symbols<TermValue> {
-    TermOp() {
-        add("^", TermValue::adg);
-        add("v", TermValue::a);
-    }
-} const term_op;
-}  // namespace ast::fm_op
-
-// -----------------------------------------------------------------------------
-
-namespace parser::fm_op {
-namespace ast = ::ast::fm_op;
-using mindquantum::parser::complex;
-
-struct term_class : mindquantum::parser::x3::rule::error_handler {};
-const x3::rule<term_class, ast::term_t> term = "FermionOperator term (ie. [0-9]+^?)";
-static const auto term_def = x3::lexeme[x3::uint_ > (ast::term_op | x3::attr(ast::TermValue::a))];
-
-struct terms_class : mindquantum::parser::x3::rule::error_handler {};
-const x3::rule<terms_class, ast::terms_t> terms = "FermionOperator terms list";
-static const auto terms_def = +term;
-
-// -------------------------------------
-
-struct json_value_class : mindquantum::parser::x3::rule::error_handler {};
-const x3::rule<json_value_class, ast::term_coeff_t> json_value_term
-    = R"s(FermionOperator JSON key-value pair ("<term-list>": "<complex-num>"))s";
-static const auto json_value_term_def = x3::expect[x3::lit('"')]
-                                        >> (('"' >> x3::attr(ast::terms_t{})) | (x3::expect[+term] >> '"')) > ':'
-                                        > x3::lit('"') > complex > '"';
-struct json_dict_class : mindquantum::parser::x3::rule::error_handler {};
-const x3::rule<json_dict_class, ast::complex_term_dict_t> json_dict = "JSON representation of a FermionOperator";
-static const auto json_dict_def = x3::expect['{'] > (json_value_term % ',') > '}';
-
-// -------------------------------------
-
-BOOST_SPIRIT_DEFINE(term, terms, json_value_term, json_dict);
-}  // namespace parser::fm_op
-
-// -------------------------------------
-
-namespace boost::spirit::x3 {
-template <>
-struct get_info<ast::fm_op::TermOp> {
-    using result_type = std::string;
-    result_type operator()(const ast::fm_op::TermOp& /* type */) const noexcept {
-        using std::literals::string_literals::operator""s;
-        return "ladder operator (a: '' or 'v', adg: '^')"s;
-    }
-};
-}  // namespace boost::spirit::x3
-
 // =============================================================================
 
 namespace {
@@ -242,14 +180,9 @@ auto two_fermion_word(std::size_t idx1, bool is_adg1, std::size_t idx2, bool is_
 // =============================================================================
 }  // namespace
 
-namespace mindquantum::ops {
-
-FermionOperator::FermionOperator(std::string_view terms_string, coefficient_t coeff)
-    : TermsOperator(parse_string_(terms_string), coeff) {
-}
-
 // =============================================================================
 
+namespace mindquantum::ops {
 auto FermionOperator::matrix(std::optional<uint32_t> n_qubits) const -> std::optional<csr_matrix_t> {
     if (std::empty(terms_)) {
         return std::nullopt;
@@ -320,33 +253,12 @@ auto FermionOperator::matrix(std::optional<uint32_t> n_qubits) const -> std::opt
 
 // =============================================================================
 
-auto FermionOperator::split() const noexcept -> std::vector<FermionOperator> {
-    std::vector<FermionOperator> result;
-    for (const auto& [local_ops, coeff] : terms_) {
-        result.emplace_back(local_ops, coeff);
-    }
-    return result;
-}
-
-// -----------------------------------------------------------------------------
-
 auto FermionOperator::normal_ordered() const -> FermionOperator {
     FermionOperator ordered_op;
     for (const auto& [local_ops, coeff] : terms_) {
         ordered_op += normal_ordered_term_(local_ops, coeff);
     }
     return ordered_op;
-}
-
-// =============================================================================
-
-auto FermionOperator::loads(std::string_view string_data) -> std::optional<FermionOperator> {
-    if (complex_term_dict_t terms_dict; parser::parse_object_skipper(begin(string_data), end(string_data), terms_dict,
-                                                                     ::parser::fm_op::json_dict, x3::space)) {
-        return FermionOperator(terms_dict);
-    }
-    MQ_ERROR("FermionOperator JSON string parsing failed for '{}'", string_data);
-    return {};
 }
 
 // =============================================================================
@@ -395,17 +307,6 @@ auto FermionOperator::normal_ordered_term_(terms_t local_ops, coefficient_t coef
 // =============================================================================
 
 namespace mindquantum::ops {
-auto FermionOperator::parse_string_(std::string_view terms_string) -> terms_t {
-    MQ_INFO("Attempting to parse: '{}'", terms_string);
-    if (terms_t terms; parser::parse_object_skipper(begin(terms_string), end(terms_string), terms,
-                                                    ::parser::fm_op::terms, x3::space)) {
-        return terms;
-    }
-    MQ_ERROR("FermionOperator terms string parsing failed for '{}'", terms_string);
-    return {};
-}
-
-// =============================================================================
 
 auto FermionOperator::simplify_(terms_t local_ops, coefficient_t coeff)
     -> std::tuple<std::vector<term_t>, coefficient_t> {

@@ -75,12 +75,12 @@ struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator, DummyOpera
 using coefficient_t = DummyOperator::coefficient_t;
 using term_t = DummyOperator::term_t;
 using terms_t = DummyOperator::terms_t;
-using complex_term_dict_t = DummyOperator::complex_term_dict_t;
+using coeff_term_dict_t = DummyOperator::coeff_term_dict_t;
 
 // =============================================================================
 
 TEST_CASE("TermsOperator constructor", "[terms_op][ops]") {
-    complex_term_dict_t ref_terms;
+    coeff_term_dict_t ref_terms;
 
     SECTION("Default constructor") {
         DummyOperator op;
@@ -220,7 +220,7 @@ TEST_CASE("TermsOperator identity", "[terms_op][ops]") {
         REQUIRE(std::size(singlet_terms) == std::size(terms));
     }
     SECTION("Single term multiple local_ops operator") {
-        auto terms = complex_term_dict_t{};
+        auto terms = coeff_term_dict_t{};
         terms.emplace(terms_t{{0, TermValue::Y}}, 1.e-5);
         terms.emplace(terms_t{{2, TermValue::Z}, {4, TermValue::X}}, 1.e-6);
         DummyOperator op{terms};
@@ -229,7 +229,7 @@ TEST_CASE("TermsOperator identity", "[terms_op][ops]") {
         CHECK(op.is_identity(1.e-5));
     }
     SECTION("Single term multiple local_ops including I operator") {
-        auto terms = complex_term_dict_t{};
+        auto terms = coeff_term_dict_t{};
         terms.emplace(terms_t{{0, TermValue::I}, {1, TermValue::I}}, 2i);
         terms.emplace(terms_t{{3, TermValue::X}}, DummyOperator::EQ_TOLERANCE / 10.);
         terms.emplace(terms_t{{1, TermValue::I}}, 1);
@@ -242,7 +242,7 @@ TEST_CASE("TermsOperator identity", "[terms_op][ops]") {
 // =============================================================================
 
 TEST_CASE("TermsOperator real/imag", "[terms_op][ops]") {
-    auto terms = complex_term_dict_t{};
+    auto terms = coeff_term_dict_t{};
     terms.emplace(terms_t{{0, TermValue::Y}}, 1. + 2.i);
     terms.emplace(terms_t{{2, TermValue::Z}, {4, TermValue::X}}, 3. + 4.i);
     DummyOperator op{terms};
@@ -270,7 +270,7 @@ TEST_CASE("TermsOperator compression", "[terms_op][ops]") {
     const auto coeff2 = 1.e-6;
     const auto terms2 = terms_t{{2, TermValue::Z}, {4, TermValue::X}};
 
-    auto terms = complex_term_dict_t{};
+    auto terms = coeff_term_dict_t{};
     terms.emplace(terms1, coeff1);
     terms.emplace(terms2, coeff2);
     DummyOperator op{terms};
@@ -344,7 +344,7 @@ TEST_CASE("DummyOperator dumps", "[terms_op][ops]") {
 TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
     SECTION("Addition (TermsOperator)") {
         DummyOperator op;
-        complex_term_dict_t ref_terms;
+        coeff_term_dict_t ref_terms;
 
         CHECK(std::empty(op));
 
@@ -395,7 +395,7 @@ TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
     }
 
     SECTION("Addition (numbers)") {
-        complex_term_dict_t ref_terms;
+        coeff_term_dict_t ref_terms;
 
         auto [it, inserted] = ref_terms.emplace(terms_t{}, 1.);
         DummyOperator op = DummyOperator::identity();
@@ -436,7 +436,7 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
     SECTION("Subtraction (TermsOperator)") {
         // NB: careful with the signs of coefficients!
         DummyOperator op;
-        complex_term_dict_t ref_terms;
+        coeff_term_dict_t ref_terms;
 
         CHECK(std::empty(op));
 
@@ -487,7 +487,7 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
     }
 
     SECTION("Subtraction (numbers)") {
-        complex_term_dict_t ref_terms;
+        coeff_term_dict_t ref_terms;
 
         auto [it, inserted] = ref_terms.emplace(terms_t{}, 1.);
         DummyOperator op = DummyOperator::identity();
@@ -562,7 +562,7 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
 TEST_CASE("TermsOperator arithmetic operators (*)", "[terms_op][ops]") {
     SECTION("Multiplication (TermsOperator)") {
         DummyOperator op;
-        complex_term_dict_t ref_terms;
+        coeff_term_dict_t ref_terms;
 
         // op = {'X3': 2.3}
         auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
@@ -587,7 +587,7 @@ TEST_CASE("TermsOperator arithmetic operators (*)", "[terms_op][ops]") {
     }
 
     SECTION("Multiplication (numbers)") {
-        complex_term_dict_t ref_terms{
+        coeff_term_dict_t ref_terms{
             {terms_t{{0, TermValue::X}}, 2.34},
             {terms_t{{3, TermValue::Z}}, 2.3i},
         };
@@ -632,7 +632,7 @@ TEST_CASE("TermsOperator arithmetic operators (*)", "[terms_op][ops]") {
 
 TEST_CASE("TermsOperator arithmetic operators (/)", "[terms_op][ops]") {
     SECTION("Division (numbers)") {
-        complex_term_dict_t ref_terms{
+        coeff_term_dict_t ref_terms{
             {terms_t{{0, TermValue::X}}, 2.34},
             {terms_t{{3, TermValue::Z}}, 2.3i},
         };
@@ -648,7 +648,7 @@ TEST_CASE("TermsOperator arithmetic operators (/)", "[terms_op][ops]") {
             }
         };
 
-        const auto approx_equal = [&ref_terms](const complex_term_dict_t& other_terms) {
+        const auto approx_equal = [&ref_terms](const coeff_term_dict_t& other_terms) {
             for (const auto& [ref, other] : boost::combine(ref_terms, other_terms)) {
                 const auto& [local_ops_ref, coeff_ref] = ref;
                 const auto& [local_ops_other, coeff_other] = other;
@@ -687,14 +687,14 @@ TEST_CASE("TermsOperator arithmetic operators (/)", "[terms_op][ops]") {
             do_multiply(ref_terms, divisor);
         }
 
-        CHECK_THAT(op.get_terms(), Catch::Predicate<complex_term_dict_t>(approx_equal, "Approx equal terms"));
+        CHECK_THAT(op.get_terms(), Catch::Predicate<coeff_term_dict_t>(approx_equal, "Approx equal terms"));
         CHECK(!std::empty(op));
     }
 }
 
 TEST_CASE("TermsOperator unary operators", "[terms_op][ops]") {
     SECTION("Unary minus (TermsOperator)") {
-        complex_term_dict_t ref_terms;
+        coeff_term_dict_t ref_terms;
 
         auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
         auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::X}}, 1.);
@@ -723,7 +723,7 @@ TEST_CASE("TermsOperator unary operators", "[terms_op][ops]") {
 
 TEST_CASE("TermsOperator mathmetic operators (pow)", "[terms_op][ops]") {
     SECTION("Addition (TermsOperator)") {
-        complex_term_dict_t ref_terms;
+        coeff_term_dict_t ref_terms;
 
         auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
         auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::X}}, 1.);
@@ -746,7 +746,7 @@ TEST_CASE("TermsOperator mathmetic operators (pow)", "[terms_op][ops]") {
 }
 
 TEST_CASE("TermsOperator comparison operators", "[terms_op][ops]") {
-    complex_term_dict_t ref_terms;
+    coeff_term_dict_t ref_terms;
 
     auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
     auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::X}}, 1.);

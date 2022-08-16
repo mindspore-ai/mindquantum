@@ -57,6 +57,9 @@ enum class TermValue : uint8_t {
 using term_t = std::pair<uint32_t, TermValue>;
 using terms_t = std::vector<term_t>;
 
+template <typename coefficient_t>
+using term_dict_t = std::map<std::vector<term_t>, coefficient_t>;
+
 #if MQ_HAS_CONCEPTS
 #    define TYPENAME_NUMBER concepts::number
 #    define TYPENAME_NUMBER_CONSTRAINTS_DEF
@@ -103,7 +106,7 @@ class TermsOperator
     using coefficient_t = typename coeff_policy_t::coeff_t;
     using term_t = mindquantum::ops::term_t;
     using terms_t = mindquantum::ops::terms_t;
-    using complex_term_dict_t = std::map<std::vector<term_t>, coefficient_t>;
+    using coeff_term_dict_t = term_dict_t<coefficient_t>;
 
     static constexpr std::string_view kind() {
         return "mindquantum.terms_operator";
@@ -120,7 +123,14 @@ class TermsOperator
 
     explicit TermsOperator(const terms_t& terms, coefficient_t coeff = coeff_policy_t::one);
 
-    explicit TermsOperator(const complex_term_dict_t& terms);
+    explicit TermsOperator(const coeff_term_dict_t& terms);
+
+    //! Constructor from a string representing a list of terms
+    /*!
+     * \note If parsing the string fails, the resulting TermsOperator object will represent the identity. If logging is
+     *       enabled, an error message will be printed inside the log with an appropriate error message.
+     */
+    explicit TermsOperator(std::string_view terms_string, coefficient_t coeff = 1.0);
 
     //! Return the number of target qubits of an operator
     MQ_NODISCARD uint32_t num_targets() const noexcept;
@@ -131,7 +141,7 @@ class TermsOperator
     //! Return the number of terms within the TermsOperator
     MQ_NODISCARD auto size() const noexcept;
 
-    MQ_NODISCARD const complex_term_dict_t& get_terms() const noexcept;
+    MQ_NODISCARD const coeff_term_dict_t& get_terms() const noexcept;
 
     //! Check whether this operator is equivalent to the identity
     MQ_NODISCARD bool is_identity(double abs_tol = EQ_TOLERANCE) const noexcept;
@@ -165,6 +175,9 @@ class TermsOperator
 
     //! Get the coefficient of a single-term operator
     MQ_NODISCARD coefficient_t singlet_coeff() const noexcept;
+
+    //! Split the operator into its individual components
+    MQ_NODISCARD std::vector<derived_t> split() const noexcept;
 
     //! Return a copy of an operator with all the coefficients set to their real part
     MQ_NODISCARD derived_t real() const noexcept;
@@ -202,6 +215,13 @@ class TermsOperator
      * \return JSON formatted string
      */
     MQ_NODISCARD std::string dumps(std::size_t indent = 4UL) const;
+
+    //! Load a TermsOperator from a JSON-formatted string.
+    /*!
+     * \param string_data
+     * \return A TermsOperator if the loading was successful, false otherwise.
+     */
+    // MQ_NODISCARD static std::optional<derived_t> loads(std::string_view string_data);
 
     // =========================================================================
 
@@ -268,7 +288,7 @@ class TermsOperator
     } sorted_constructor;
 
     //! (internal) Constructor designed for cases where the terms dictionary is already optimal
-    TermsOperator(complex_term_dict_t terms, sorted_constructor_t /* unused */);
+    TermsOperator(coeff_term_dict_t terms, sorted_constructor_t /* unused */);
 
  private:
     //! Addition/subtraction helper member function
@@ -281,7 +301,7 @@ class TermsOperator
 
  protected:
     uint32_t num_targets_{0UL};
-    complex_term_dict_t terms_;
+    coeff_term_dict_t terms_;
 };
 
 template <TYPENAME_NUMBER number_t,

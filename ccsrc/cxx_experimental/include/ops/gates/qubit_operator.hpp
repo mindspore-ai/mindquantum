@@ -27,6 +27,7 @@
 
 #include "core/config.hpp"
 
+#include "ops/gates/details/qubit_operator_term_policy.hpp"
 #include "ops/gates/terms_operator.hpp"
 
 #ifdef UNIT_TESTS
@@ -34,27 +35,6 @@ class UnitTestAccessor;
 #endif  // UNIT_TESTS
 
 namespace mindquantum::ops {
-namespace details {
-struct QubitOperatorTermPolicy {
-    static auto to_string(const TermValue& value) {
-        using namespace std::literals::string_literals;
-        if (value == TermValue::X) {
-            return "X"s;
-        }
-        if (value == TermValue::Y) {
-            return "Y"s;
-        }
-        if (value == TermValue::Z) {
-            return "Z"s;
-        }
-        return "UNKNOWN"s;
-    }
-    static auto to_string(const term_t& term) {
-        return fmt::format("{}{}", to_string(std::get<1>(term)), std::get<0>(term));
-    }
-};
-}  // namespace details
-
 constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermValue& left_op,
                                                                      const TermValue& right_op);
 
@@ -91,13 +71,6 @@ class QubitOperator : public TermsOperator<QubitOperator, details::QubitOperator
     QubitOperator& operator=(QubitOperator&&) noexcept = default;
     ~QubitOperator() noexcept = default;
 
-    //! Constructor from a string representing a list of terms
-    /*!
-     * \note If parsing the string fails, the resulting QubitOperator object will represent the identity. If logging is
-     *       enabled, an error message will be printed inside the log with an appropriate error message.
-     */
-    explicit QubitOperator(std::string_view terms_string, coefficient_t coeff = 1.0);
-
     // -------------------------------------------------------------------
 
     //! Count the number of gates that make up a qubit operator
@@ -106,23 +79,10 @@ class QubitOperator : public TermsOperator<QubitOperator, details::QubitOperator
     //! Return the matrix representing a QubitOperator
     MQ_NODISCARD std::optional<csr_matrix_t> matrix(std::optional<uint32_t> n_qubits) const;
 
-    //! Split the operator into its individual components
-    MQ_NODISCARD std::vector<QubitOperator> split() const noexcept;
-
-    //! Load a QubitOperator from a JSON-formatted string.
-    /*!
-     * \param string_data
-     * \return A QubitOperator if the loading was successful, false otherwise.
-     */
-    MQ_NODISCARD static std::optional<QubitOperator> loads(std::string_view string_data);
-
  private:
 #ifdef UNIT_TESTS
     friend class ::UnitTestAccessor;
 #endif  // UNIT_TESTS
-
-    //! Convert a string of space-separated qubit operators into an array of terms
-    static terms_t parse_string_(std::string_view terms_string);
 
     //! Simplify the list of local operators by using commutation and anti-commutation relations
     static std::tuple<terms_t, coefficient_t> simplify_(std::vector<term_t> terms, coefficient_t coeff = 1.);

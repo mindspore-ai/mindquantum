@@ -27,6 +27,7 @@
 
 #include "core/config.hpp"
 
+#include "ops/gates/details/fermion_operator_term_policy.hpp"
 #include "ops/gates/terms_operator.hpp"
 
 #ifdef UNIT_TESTS
@@ -34,21 +35,6 @@ class UnitTestAccessor;
 #endif  // UNIT_TESTS
 
 namespace mindquantum::ops {
-namespace details {
-struct FermionOperatorTermPolicy {
-    static auto to_string(const TermValue& value) {
-        using namespace std::literals::string_literals;
-        if (value == TermValue::adg) {
-            return "^"s;
-        }
-        return ""s;
-    }
-    static auto to_string(const term_t& term) {
-        return fmt::format("{}{}", std::get<0>(term), to_string(std::get<1>(term)));
-    }
-};
-}  // namespace details
-
 //! Definition of a fermionic operator
 /*!
  *
@@ -77,30 +63,13 @@ class FermionOperator : public TermsOperator<FermionOperator, details::FermionOp
     FermionOperator& operator=(FermionOperator&&) noexcept = default;
     ~FermionOperator() noexcept = default;
 
-    //! Constructor from a string representing a list of terms
-    /*!
-     * \note If parsing the string fails, the resulting QubitOperator object will represent the identity. If logging is
-     *       enabled, an error message will be printed inside the log with an appropriate error message.
-     */
-    explicit FermionOperator(std::string_view terms_string, coefficient_t coeff = 1.0);
-
     // -------------------------------------------------------------------
 
     //! Return the matrix representing a FermionOperator
     MQ_NODISCARD std::optional<csr_matrix_t> matrix(std::optional<uint32_t> n_qubits) const;
 
-    //! Split the operator into its individual components
-    MQ_NODISCARD std::vector<FermionOperator> split() const noexcept;
-
     //! Return the normal ordered form of the Fermion Operator.
     MQ_NODISCARD FermionOperator normal_ordered() const;
-
-    //! Load a FermionOperator from a JSON-formatted string.
-    /*!
-     * \param string_data
-     * \return A FermionOperator if the loading was successful, false otherwise.
-     */
-    MQ_NODISCARD static std::optional<FermionOperator> loads(std::string_view string_data);
 
  private:
 #ifdef UNIT_TESTS

@@ -89,7 +89,7 @@ td::Operator load_gate(PyObject* src, std::size_t n_targets, std::size_t n_contr
                 ComplexTermsDict terms = caster;
                 if (caster) {
                     // Convert to the C++ terms representation
-                    ops::QubitOperator::complex_term_dict_t cpp_terms;
+                    ops::QubitOperator::coeff_term_dict_t cpp_terms;
                     for (const auto& [local_ops, coeff] : terms) {
                         decltype(cpp_terms)::key_type cpp_local_ops;
 
@@ -136,7 +136,7 @@ td::Operator load_gate(PyObject* src, std::size_t n_targets, std::size_t n_contr
                 }
 
                 // Convert to the C++ terms representation
-                ops::QubitOperator::complex_term_dict_t cpp_terms;
+                ops::QubitOperator::coeff_term_dict_t cpp_terms;
                 for (const auto& [local_ops, coeff] : terms) {
                     decltype(cpp_terms)::key_type cpp_local_ops;
 
