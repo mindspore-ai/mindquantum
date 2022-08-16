@@ -56,7 +56,7 @@ def decompose_single_term_time_evolution(term, para):  # pylint: disable=too-man
         ValueError: If term has more than one pauli string.
         TypeError: If term is not map.
 
-    Example:
+    Examples:
         >>> from mindquantum.core.operators import QubitOperator
         >>> from mindquantum.core.circuit import decompose_single_term_time_evolution
         >>> ham = QubitOperator('X0 Y1')
