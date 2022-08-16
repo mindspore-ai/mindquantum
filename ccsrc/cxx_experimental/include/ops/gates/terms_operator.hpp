@@ -60,11 +60,14 @@ using terms_t = std::vector<term_t>;
 #if MQ_HAS_CONCEPTS
 #    define TYPENAME_NUMBER concepts::number
 #    define TYPENAME_NUMBER_CONSTRAINTS_DEF
+#    define TYPENAME_NUMBER_CONSTRAINTS_DEF_ADD(x)
 #    define TYPENAME_NUMBER_CONSTRAINTS_IMPL
 #else
 #    define TYPENAME_NUMBER typename
 #    define TYPENAME_NUMBER_CONSTRAINTS_DEF                                                                            \
         , typename = std::enable_if_t < traits::is_complex_v<number_t> || std::is_floating_point_v < number_t >>
+#    define TYPENAME_NUMBER_CONSTRAINTS_DEF_ADD(x)                                                                     \
+        , typename = std::enable_if_t<(traits::is_complex_v<number_t> || std::is_floating_point_v<number_t>) &&(x)>
 #    define TYPENAME_NUMBER_CONSTRAINTS_IMPL , typename
 #endif  // MQ_HAS_CONCEPTS
 
@@ -281,9 +284,9 @@ class TermsOperator
     complex_term_dict_t terms_;
 };
 
-template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_IMPL, typename derived_t>
-MQ_NODISCARD std::enable_if_t<traits::is_terms_operator<derived_t>::value, derived_t> operator-(const number_t& number,
-                                                                                                const derived_t& other);
+template <TYPENAME_NUMBER number_t,
+          typename derived_t TYPENAME_NUMBER_CONSTRAINTS_DEF_ADD(traits::is_terms_operator<derived_t>::value)>
+MQ_NODISCARD auto operator-(const number_t& number, const derived_t& other);
 
 }  // namespace mindquantum::ops
 
