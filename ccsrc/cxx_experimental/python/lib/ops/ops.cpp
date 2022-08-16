@@ -169,14 +169,14 @@ void init_mindquantum_ops(pybind11::module& module) {
         .def(py::init<>())
         .def(py::init<const ops::term_t&, ops::QubitOperator::coefficient_t>(), "term"_a, "coeff"_a = 1.0)
         .def(py::init<const ops::terms_t&, ops::QubitOperator::coefficient_t>(), "terms"_a, "coeff"_a = 1.0)
-        .def(py::init<const ops::QubitOperator::complex_term_dict_t&>(), "coeff_terms"_a)
+        .def(py::init<const ops::QubitOperator::coeff_term_dict_t&>(), "coeff_terms"_a)
         .def(py::init<std::string_view, ops::QubitOperator::coefficient_t>(), "terms_string"_a, "coeff"_a = 1.0);
 
     py::class_<ops::FermionOperator>(module, "FermionOperator")
         .def(py::init<>())
         .def(py::init<const ops::term_t&, ops::FermionOperator::coefficient_t>(), "term"_a, "coeff"_a = 1.0)
         .def(py::init<const ops::terms_t&, ops::FermionOperator::coefficient_t>(), "terms"_a, "coeff"_a = 1.0)
-        .def(py::init<const ops::FermionOperator::complex_term_dict_t&>(), "coeff_terms"_a)
+        .def(py::init<const ops::FermionOperator::coeff_term_dict_t&>(), "coeff_terms"_a)
         .def(py::init<std::string_view, ops::FermionOperator::coefficient_t>(), "terms_string"_a, "coeff"_a = 1.0);
 
     // py::class_<ops::parametric::P>(module, "P").def(py::init<const double>());

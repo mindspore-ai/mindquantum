@@ -40,7 +40,7 @@ namespace mindquantum::ops {
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
 TermsOperator<derived_t, term_policy_t, coeff_policy_t>::TermsOperator(term_t term, coefficient_t coeff)
-    : TermsOperator(complex_term_dict_t{{{std::move(term)}, coeff}}) {
+    : TermsOperator(coeff_term_dict_t{{{std::move(term)}, coeff}}) {
 }
 
 // -----------------------------------------------------------------------------
@@ -55,7 +55,7 @@ TermsOperator<derived_t, term_policy_t, coeff_policy_t>::TermsOperator(const ter
 // -----------------------------------------------------------------------------
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-TermsOperator<derived_t, term_policy_t, coeff_policy_t>::TermsOperator(const complex_term_dict_t& terms) {
+TermsOperator<derived_t, term_policy_t, coeff_policy_t>::TermsOperator(const coeff_term_dict_t& terms) {
     for (const auto& [local_ops, coeff] : terms) {
         terms_.emplace(derived_t::sort_terms_(local_ops, coeff));
     }
@@ -66,7 +66,15 @@ TermsOperator<derived_t, term_policy_t, coeff_policy_t>::TermsOperator(const com
 // -----------------------------------------------------------------------------
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-TermsOperator<derived_t, term_policy_t, coeff_policy_t>::TermsOperator(complex_term_dict_t terms,
+TermsOperator<derived_t, term_policy_t, coeff_policy_t>::TermsOperator(std::string_view terms_string,
+                                                                       coefficient_t coeff)
+    : TermsOperator(term_policy_t::parse_terms_string(terms_string), coeff) {
+}
+
+// -----------------------------------------------------------------------------
+
+template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
+TermsOperator<derived_t, term_policy_t, coeff_policy_t>::TermsOperator(coeff_term_dict_t terms,
                                                                        sorted_constructor_t /* unused */)
     : terms_{std::move(terms)} {
     calculate_num_targets_();
@@ -95,7 +103,7 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::size() const noexc
 // -----------------------------------------------------------------------------
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::get_terms() const noexcept -> const complex_term_dict_t& {
+auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::get_terms() const noexcept -> const coeff_term_dict_t& {
     return terms_;
 }
 
@@ -214,6 +222,17 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::singlet_coeff() co
     return begin(terms_)->second;
 }
 
+// -----------------------------------------------------------------------------
+
+template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
+auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::split() const noexcept -> std::vector<derived_t> {
+    std::vector<derived_t> result;
+    for (const auto& [local_ops, coeff] : terms_) {
+        result.emplace_back(local_ops, coeff);
+    }
+    return result;
+}
+
 // =============================================================================
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
@@ -262,7 +281,7 @@ struct stringize {
     using term_t = typename TermsOperator::term_t;
     using terms_t = typename TermsOperator::terms_t;
     using term_policy_t = typename TermsOperator::term_policy_t;
-    using coeff_terms_t = typename TermsOperator::complex_term_dict_t::value_type;
+    using coeff_terms_t = typename TermsOperator::coeff_term_dict_t::value_type;
     using self_t = stringize<TermsOperator>;
 
     static auto to_string(const terms_t& local_ops) -> std::string {
@@ -297,11 +316,11 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::to_string() const 
     if (std::empty(terms_)) {
         return "0"s;
     }
-    return boost::algorithm::join(terms_
-                                      | boost::adaptors::transformed(
-                                          static_cast<std::string (*)(const typename complex_term_dict_t::value_type&)>(
-                                              details::stringize<derived_t>::to_string)),
-                                  "\n"s);
+    return boost::algorithm::join(
+        terms_
+            | boost::adaptors::transformed(static_cast<std::string (*)(const typename coeff_term_dict_t::value_type&)>(
+                details::stringize<derived_t>::to_string)),
+        "\n"s);
 }
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
@@ -321,6 +340,15 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::dumps(std::size_t 
                                }),
                                ",\n"));
 }
+
+// -----------------------------------------------------------------------------
+
+// TODO(dnguyen): This will not work for anything else than complex<double>! Need to implement a better version based on
+// coefficient_t template <typename derived_t, typename term_policy_t, typename coeff_policy_t> auto
+// TermsOperator<derived_t, term_policy_t, coeff_policy_t>::loads(std::string_view string_data)
+//     -> std::optional<derived_t> {
+//     return {term_policy_t::parse_json_complex_double(string_data)};
+// }
 
 // =============================================================================
 
@@ -369,7 +397,7 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::operator-() const 
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
 auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::operator*=(const derived_t& other) -> derived_t& {
-    complex_term_dict_t product_results;
+    coeff_term_dict_t product_results;
     for (const auto& [left_op, left_coeff] : terms_) {
         for (const auto& [right_op, right_coeff] : other.terms_) {
             auto new_op = std::vector<term_t>{left_op};
@@ -433,8 +461,8 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::pow(uint32_t expon
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
 bool TermsOperator<derived_t, term_policy_t, coeff_policy_t>::operator==(const derived_t& other) const {
     using policy_t = coeff_policy_t;
-    std::vector<typename complex_term_dict_t::value_type> intersection;
-    std::vector<typename complex_term_dict_t::value_type> symmetric_differences;
+    std::vector<typename coeff_term_dict_t::value_type> intersection;
+    std::vector<typename coeff_term_dict_t::value_type> symmetric_differences;
 
     std::set_intersection(
         begin(terms_), end(terms_), begin(other.terms_), end(other.terms_), std::back_inserter(intersection),
