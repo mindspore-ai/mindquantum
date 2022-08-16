@@ -19,15 +19,20 @@
 
 #include <fmt/format.h>
 
-template <typename T, typename Char>
-struct fmt::formatter<std::complex<T>, Char> : public fmt::formatter<T, Char> {
-    using base = fmt::formatter<T, Char>;
-    fmt::detail::dynamic_format_specs<Char> specs_;
+//! Custom formatter for a std::complex<T>
+template <typename float_t, typename char_type>
+struct fmt::formatter<std::complex<float_t>, char_type> : public fmt::formatter<float_t, char_type> {
+    using base = fmt::formatter<float_t, char_type>;
+    fmt::detail::dynamic_format_specs<char_type> specs_;
     FMT_CONSTEXPR auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
-        return ctx.begin();
+        using handler_type = fmt::detail::dynamic_specs_handler<format_parse_context>;
+        auto type = fmt::detail::type_constant<float_t, char_type>::value;
+        fmt::detail::specs_checker<handler_type> handler(handler_type(specs_, ctx), type);
+        parse_format_specs(ctx.begin(), ctx.end(), handler);
+        return base::parse(ctx);
     }
     template <typename FormatCtx>
-    auto format(const std::complex<T>& number, FormatCtx& ctx) -> decltype(ctx.out()) {
+    auto format(const std::complex<float_t>& number, FormatCtx& ctx) -> decltype(ctx.out()) {
         const auto& real = number.real();
         const auto& imag = number.imag();
         if (real && !imag) {
@@ -35,19 +40,19 @@ struct fmt::formatter<std::complex<T>, Char> : public fmt::formatter<T, Char> {
         }
         if (!real && imag) {
             base::format(imag, ctx);
-            return format_to(ctx.out(), "j");  // NB: use j instead of i (ie. like Python)
+            return fmt::format_to(ctx.out(), "j");  // NB: use j instead of i (ie. like Python)
         }
 
-        format_to(ctx.out(), "(");
+        fmt::format_to(ctx.out(), "(");
         base::format(real, ctx);
         if (imag) {
             if (number.real() && number.imag() >= 0 && specs_.sign != sign::plus) {
-                format_to(ctx.out(), "+");
+                fmt::format_to(ctx.out(), "+");
             }
             base::format(imag, ctx);
-            format_to(ctx.out(), "j");  // NB: use j instead of i (ie. like Python)
+            fmt::format_to(ctx.out(), "j");  // NB: use j instead of i (ie. like Python)
         }
-        return format_to(ctx.out(), ")");
+        return fmt::format_to(ctx.out(), ")");
     }
 };
 
