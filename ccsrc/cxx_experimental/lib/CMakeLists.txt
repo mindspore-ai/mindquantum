@@ -24,4 +24,4 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ops)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/optimisation)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/simulator)
 
-target_link_libraries(mindquantum_cxx PUBLIC mindquantum::tweedledum ${OpenMP_tgt} Threads::Threads)
+target_link_libraries(mindquantum_cxx PUBLIC mindquantum::tweedledum mindquantum::json ${OpenMP_tgt} Threads::Threads)

@@ -59,6 +59,7 @@ struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator, DummyOpera
     DummyOperator& operator=(const DummyOperator&) = default;
     DummyOperator& operator=(DummyOperator&&) = default;
     ~DummyOperator() = default;
+
     using term_t = mindquantum::ops::term_t;
     using py_term_t = mindquantum::ops::py_term_t;
 
@@ -73,7 +74,7 @@ struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator, DummyOpera
         terms.reserve(std::size(py_terms));
         boost::range::push_back(
             terms, py_terms | boost::adaptors::transformed([](const auto& value) -> term_t {
-                       return {get<0>(value), static_cast<mindquantum::ops::TermValue>(std::get<1>(value))};
+                       return {std::get<0>(value), static_cast<mindquantum::ops::TermValue>(std::get<1>(value))};
                    }));
 
         return simplify_(terms, coeff);
