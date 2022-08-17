@@ -49,6 +49,7 @@ if(ENABLE_CXX_EXPERIMENTAL)
   include(${CMAKE_CURRENT_LIST_DIR}/lru_cache/lru_cache.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/fmt/fmt.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/eigen3/eigen3.cmake)
+  include(${CMAKE_CURRENT_LIST_DIR}/cereal/cereal.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/symengine/symengine.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/tweedledum/tweedledum.cmake)
 

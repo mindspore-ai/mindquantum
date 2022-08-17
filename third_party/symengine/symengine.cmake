@@ -28,7 +28,12 @@ else()
   set(MD5 "72d11e59315b84ff9abdf51c590e986c")
 endif()
 
-set(CMAKE_OPTION -DBUILD_TESTING=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DWITH_SYSTEM_CEREAL=OFF)
+set(CMAKE_OPTION -DBUILD_TESTING=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DWITH_SYSTEM_CEREAL=ON)
+
+if(cereal_DIRPATH)
+  # Cereal was locally built, make sure we use that one
+  list(APPEND CMAKE_OPTION -Dcereal_ROOT=${cereal_DIRPATH})
+endif()
 
 if(MSVC)
   set(SymEngine_CFLAGS "/D_ITERATOR_DEBUG_LEVEL=0")
@@ -51,7 +56,8 @@ endif()
 set(PATCHES
     ${CMAKE_CURRENT_LIST_DIR}/patch/fix-cmakelists.patch001
     ${CMAKE_CURRENT_LIST_DIR}/patch/remove-msvc-mt-option.patch002
-    ${CMAKE_CURRENT_LIST_DIR}/patch/fix-finding-gmp.patch003)
+    ${CMAKE_CURRENT_LIST_DIR}/patch/fix-finding-gmp.patch003
+    ${CMAKE_CURRENT_LIST_DIR}/patch/fix-finding-cereal.patch004)
 
 if(gmp_DIR)
   # If gmp_DIR is defined then we can find gmp using the CONFIG method -> patch SymEngine accordingly.
@@ -60,11 +66,11 @@ if(gmp_DIR)
   # files during its normal installation. In all other case, the FindGMP code from SymEngine should be able to locate
   # gmp successfully.
   list(APPEND CMAKE_OPTION -Dgmp_DIR=${gmp_DIR})
-  list(APPEND PATCHES ${CMAKE_CURRENT_LIST_DIR}/patch/find-gmp-using-config-method.patch004)
+  list(APPEND PATCHES ${CMAKE_CURRENT_LIST_DIR}/patch/find-gmp-using-config-method.patch005)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-  list(APPEND PATCHES ${CMAKE_CURRENT_LIST_DIR}/patch/apple-clang-debug-build-fix.patch005)
+  list(APPEND PATCHES ${CMAKE_CURRENT_LIST_DIR}/patch/apple-clang-debug-build-fix.patch006)
 endif()
 
 mindquantum_add_pkg(

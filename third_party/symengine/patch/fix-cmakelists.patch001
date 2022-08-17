@@ -103,7 +103,7 @@ diff -Npur symengine-0.9.0/symengine/CMakeLists.txt symengine-new/symengine/CMak
  
  include(GenerateExportHeader)
  generate_export_header(symengine)
-@@ -278,9 +279,10 @@ if (WITH_LLVM AND NOT ${LLVM_VERSION} VE
+@@ -278,9 +279,9 @@ if (WITH_LLVM AND NOT ${LLVM_VERSION} VE
  endif()
  
  if (WITH_SYMENGINE_TEUCHOS)
@@ -112,7 +112,6 @@ diff -Npur symengine-0.9.0/symengine/CMakeLists.txt symengine-new/symengine/CMak
  endif()
 -target_link_libraries(symengine ${LIBS})
 +target_link_libraries(symengine PUBLIC ${LIBS})
-+target_include_directories(symengine PUBLIC $<$<NOT:$<BOOL:${WITH_SYSTEM_CEREAL}>>:$<INSTALL_INTERFACE:include/symengine/utilities/cereal/include>>)
  
  if (WITH_LLVM AND NOT SYMENGINE_LLVM_LINK_DOWNSTREAM AND NOT WITH_SYMENGINE_TEUCHOS)
      if (${EXCLUDE_LIBS})
