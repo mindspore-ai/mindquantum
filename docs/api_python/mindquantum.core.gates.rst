@@ -3,6 +3,36 @@ mindquantum.core.gates
 
 量子门模块，提供不同的量子门。
 
+functional
+----------
+
+如下量子门是预实例化的量子门，可直接作为对应量子门的实例来使用。
+
+.. list-table::
+   :widths: 50 50
+   :header-rows: 1
+
+   * - functional
+     - gates
+   * - mindquantum.core.gates.CNOT
+     - :class:`mindquantum.core.gates.CNOTGate`
+   * - mindquantum.core.gates.I
+     - :class:`mindquantum.core.gates.IGate`
+   * - mindquantum.core.gates.H
+     - :class:`mindquantum.core.gates.HGate`
+   * - mindquantum.core.gates.S
+     - :class:`mindquantum.core.gates.PhaseShift` (numpy.pi/2)
+   * - mindquantum.core.gates.T
+     - :class:`mindquantum.core.gates.PhaseShift` (numpy.pi/4)
+   * - mindquantum.core.gates.SWAP
+     - :class:`mindquantum.core.gates.SWAPGate`
+   * - mindquantum.core.gates.X
+     - :class:`mindquantum.core.gates.XGate`
+   * - mindquantum.core.gates.Y
+     - :class:`mindquantum.core.gates.YGate`
+   * - mindquantum.core.gates.Z
+     - :class:`mindquantum.core.gates.ZGate`
+
 Quantum Gates
 -------------
 
@@ -76,31 +106,3 @@ Quantum Gates
 
 .. automodule:: mindquantum.core.gates
     :members:
-
-functional
-----------
-
-如下量子门是预实例化的量子门，可直接作为对应量子门的实例来使用。
-
-.. list-table::
-   :widths: 50 50
-   :header-rows: 1
-
-   * - functional
-     - gates
-   * - mindquantum.core.gates.CNOT
-     - :class:`mindquantum.core.gates.CNOTGate`
-   * - mindquantum.core.gates.I
-     - :class:`mindquantum.core.gates.IGate`
-   * - mindquantum.core.gates.H
-     - :class:`mindquantum.core.gates.HGate`
-   * - mindquantum.core.gates.S
-     - :class:`mindquantum.core.gates.PhaseShift` (numpy.pi/2)
-   * - mindquantum.core.gates.SWAP
-     - :class:`mindquantum.core.gates.SWAPGate`
-   * - mindquantum.core.gates.X
-     - :class:`mindquantum.core.gates.XGate`
-   * - mindquantum.core.gates.Y
-     - :class:`mindquantum.core.gates.YGate`
-   * - mindquantum.core.gates.Z
-     - :class:`mindquantum.core.gates.ZGate`
