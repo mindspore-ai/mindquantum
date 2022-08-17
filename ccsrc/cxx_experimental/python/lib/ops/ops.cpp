@@ -90,7 +90,7 @@ void init_mindquantum_ops(pybind11::module& module) {
 
 #define TO_STRING1(X)    #X
 #define TO_STRING(X)     TO_STRING1(X)
-#define CONCAT2(A, B)    A##B  // NOLINT(preprocessorErrorDirective)
+#define CONCAT2(A, B)    A##B
 #define CONCAT3(A, B, C) A##B##C
 
 #define PYBIND11_DEFINE_BINOP_IMPL(py_name, lhs_t, rhs_t, op)                                                          \
