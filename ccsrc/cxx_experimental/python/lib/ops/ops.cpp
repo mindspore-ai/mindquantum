@@ -86,19 +86,119 @@ void init_mindquantum_ops(pybind11::module& module) {
         .value("a", ops::TermValue::a)
         .value("adg", ops::TermValue::adg);
 
+    // =========================================================================
+
+#define TO_STRING1(X)    #X
+#define TO_STRING(X)     TO_STRING1(X)
+#define CONCAT2(A, B)    A##B  // NOLINT(preprocessorErrorDirective)
+#define CONCAT3(A, B, C) A##B##C
+
+#define PYBIND11_DEFINE_BINOP_IMPL(py_name, lhs_t, rhs_t, op)                                                          \
+    def(                                                                                                               \
+        py_name, [](lhs_t& lhs, rhs_t rhs) { return lhs op rhs; }, py::is_operator())
+#define PYBIND11_DEFINE_BINOP(py_name, lhs_t, rhs_t, op) PYBIND11_DEFINE_BINOP_IMPL(#py_name, lhs_t, rhs_t, op)
+#define PYBIND11_DEFINE_BINOP_PAIR(py_name, lhs_t, rhs_t, op)                                                          \
+    PYBIND11_DEFINE_BINOP_IMPL(TO_STRING(CONCAT3(__i, py_name, __)), lhs_t, rhs_t, CONCAT2(op, =))                     \
+        .PYBIND11_DEFINE_BINOP_IMPL(TO_STRING(CONCAT3(__, py_name, __)), const lhs_t, rhs_t, op)
+#define PYBIND11_DEFINE_UNOP(py_name, lhs_t, op)                                                                       \
+    def(                                                                                                               \
+        #py_name, [](const lhs_t& base) { return op base; }, py::is_operator())
+
     py::class_<ops::QubitOperator>(module, "QubitOperator")
         .def(py::init<>())
         .def(py::init<const ops::term_t&, ops::QubitOperator::coefficient_t>(), "term"_a, "coeff"_a = 1.0)
         .def(py::init<const ops::terms_t&, ops::QubitOperator::coefficient_t>(), "terms"_a, "coeff"_a = 1.0)
         .def(py::init<const ops::QubitOperator::coeff_term_dict_t&>(), "coeff_terms"_a)
-        .def(py::init<std::string_view, ops::QubitOperator::coefficient_t>(), "terms_string"_a, "coeff"_a = 1.0);
+        .def(py::init<std::string_view, ops::QubitOperator::coefficient_t>(), "terms_string"_a, "coeff"_a = 1.0)
+        .def("num_targets", &ops::QubitOperator::num_targets)
+        .def("count_qubits", &ops::QubitOperator::count_qubits)
+        .def("is_identity", &ops::QubitOperator::is_identity, "abs_tol"_a = ops::QubitOperator::EQ_TOLERANCE)
+        .def_static("identity", &ops::QubitOperator::identity)
+        .def("constant", static_cast<void (ops::QubitOperator::*)(const ops::QubitOperator::coefficient_t&)>(
+                             &ops::QubitOperator::constant))
+        .def("constant", static_cast<ops::QubitOperator::coefficient_t (ops::QubitOperator::*)() const>(
+                             &ops::QubitOperator::constant))
+        .def("is_singlet", &ops::QubitOperator::real)
+        .def("singlet", &ops::QubitOperator::real)
+        .def("singlet_coeff", &ops::QubitOperator::real)
+        .def("split", &ops::QubitOperator::real)
+        .def("imag", &ops::QubitOperator::imag)
+        .def("compress", &ops::QubitOperator::compress, "abs_tol"_a = ops::QubitOperator::EQ_TOLERANCE)
+        .def("dumps", &ops::QubitOperator::dumps, "indent"_a = 4)
+        .def_static("loads", ops::QubitOperator::loads, "string_data"_a)
+        .def(
+            "__str__", [](const ops::QubitOperator& base) { return base.to_string(); }, py::is_operator())
+        .PYBIND11_DEFINE_BINOP_PAIR(add, ops::QubitOperator, const ops::QubitOperator&, +)
+        .PYBIND11_DEFINE_BINOP_PAIR(add, ops::QubitOperator, double, +)
+        .PYBIND11_DEFINE_BINOP_PAIR(add, ops::QubitOperator, std::complex<double>, +)
+        .PYBIND11_DEFINE_BINOP_PAIR(sub, ops::QubitOperator, const ops::QubitOperator&, -)
+        .PYBIND11_DEFINE_BINOP_PAIR(sub, ops::QubitOperator, double, -)
+        .PYBIND11_DEFINE_BINOP_PAIR(sub, ops::QubitOperator, std::complex<double>, -)
+        .PYBIND11_DEFINE_BINOP_PAIR(mul, ops::QubitOperator, const ops::QubitOperator&, *)
+        .PYBIND11_DEFINE_BINOP_PAIR(mul, ops::QubitOperator, double, *)
+        .PYBIND11_DEFINE_BINOP_PAIR(mul, ops::QubitOperator, std::complex<double>, *)
+        .PYBIND11_DEFINE_BINOP_PAIR(truediv, ops::QubitOperator, double, /)
+        .PYBIND11_DEFINE_BINOP_PAIR(truediv, ops::QubitOperator, std::complex<double>, /)
+        .PYBIND11_DEFINE_UNOP(__neg__, ops::QubitOperator, -)
+        .PYBIND11_DEFINE_BINOP(__eq__, const ops::QubitOperator, const ops::QubitOperator&, ==)
+        .def(
+            "__pow__", [](const ops::QubitOperator& base, unsigned int exponent) { return base.pow(exponent); },
+            py::is_operator())
+        .def("count_gates", &ops::QubitOperator::count_gates)
+        .def("matrix", &ops::QubitOperator::matrix, "n_qubits"_a);
 
     py::class_<ops::FermionOperator>(module, "FermionOperator")
         .def(py::init<>())
         .def(py::init<const ops::term_t&, ops::FermionOperator::coefficient_t>(), "term"_a, "coeff"_a = 1.0)
         .def(py::init<const ops::terms_t&, ops::FermionOperator::coefficient_t>(), "terms"_a, "coeff"_a = 1.0)
         .def(py::init<const ops::FermionOperator::coeff_term_dict_t&>(), "coeff_terms"_a)
-        .def(py::init<std::string_view, ops::FermionOperator::coefficient_t>(), "terms_string"_a, "coeff"_a = 1.0);
+        .def(py::init<std::string_view, ops::FermionOperator::coefficient_t>(), "terms_string"_a, "coeff"_a = 1.0)
+        .def("num_targets", &ops::FermionOperator::num_targets)
+        .def("is_identity", &ops::FermionOperator::is_identity, "abs_tol"_a = ops::FermionOperator::EQ_TOLERANCE)
+        .def_static("identity", &ops::FermionOperator::identity)
+        .def("constant", static_cast<void (ops::FermionOperator::*)(const ops::FermionOperator::coefficient_t&)>(
+                             &ops::FermionOperator::constant))
+        .def("constant", static_cast<ops::FermionOperator::coefficient_t (ops::FermionOperator::*)() const>(
+                             &ops::FermionOperator::constant))
+        .def("is_singlet", &ops::FermionOperator::real)
+        .def("singlet", &ops::FermionOperator::real)
+        .def("singlet_coeff", &ops::FermionOperator::real)
+        .def("split", &ops::FermionOperator::real)
+        .def("imag", &ops::FermionOperator::imag)
+        .def("compress", &ops::FermionOperator::compress, "abs_tol"_a = ops::FermionOperator::EQ_TOLERANCE)
+        .def("dumps", &ops::FermionOperator::dumps, "indent"_a = 4)
+        .def_static("loads", ops::FermionOperator::loads, "string_data"_a)
+        .def(
+            "__str__", [](const ops::FermionOperator& base) { return base.to_string(); }, py::is_operator())
+        .PYBIND11_DEFINE_BINOP_PAIR(add, ops::FermionOperator, const ops::FermionOperator&, +)
+        .PYBIND11_DEFINE_BINOP_PAIR(add, ops::FermionOperator, double, +)
+        .PYBIND11_DEFINE_BINOP_PAIR(add, ops::FermionOperator, std::complex<double>, +)
+        .PYBIND11_DEFINE_BINOP_PAIR(sub, ops::FermionOperator, const ops::FermionOperator&, -)
+        .PYBIND11_DEFINE_BINOP_PAIR(sub, ops::FermionOperator, double, -)
+        .PYBIND11_DEFINE_BINOP_PAIR(sub, ops::FermionOperator, std::complex<double>, -)
+        .PYBIND11_DEFINE_BINOP_PAIR(mul, ops::FermionOperator, const ops::FermionOperator&, *)
+        .PYBIND11_DEFINE_BINOP_PAIR(mul, ops::FermionOperator, double, *)
+        .PYBIND11_DEFINE_BINOP_PAIR(mul, ops::FermionOperator, std::complex<double>, *)
+        .PYBIND11_DEFINE_BINOP_PAIR(truediv, ops::FermionOperator, double, /)
+        .PYBIND11_DEFINE_BINOP_PAIR(truediv, ops::FermionOperator, std::complex<double>, /)
+        .PYBIND11_DEFINE_UNOP(__neg__, ops::FermionOperator, -)
+        .PYBIND11_DEFINE_BINOP(__eq__, const ops::FermionOperator, const ops::FermionOperator&, ==)
+        .def(
+            "__pow__", [](const ops::FermionOperator& base, unsigned int exponent) { return base.pow(exponent); },
+            py::is_operator())
+        .def("matrix", &ops::FermionOperator::matrix, "n_qubits"_a)
+        .def("normal_ordered", &ops::FermionOperator::normal_ordered);
+
+#undef TO_STRING1
+#undef TO_STRING
+#undef CONCAT2
+#undef CONCAT3
+#undef PYBIND11_DEFINE_BINOP
+#undef PYBIND11_DEFINE_BINOP_IMPL
+#undef PYBIND11_DEFINE_BINOP_PAIR
+#undef PYBIND11_DEFINE_UNOP
+
+    // =========================================================================
 
     // py::class_<ops::parametric::P>(module, "P").def(py::init<const double>());
     // py::class_<ops::parametric::Ph>(module, "Ph"). def(py::init<SymEngine::number>());
