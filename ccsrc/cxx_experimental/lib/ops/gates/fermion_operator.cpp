@@ -319,10 +319,10 @@ auto FermionOperator::simplify_(terms_t local_ops, coefficient_t coeff)
 auto FermionOperator::simplify_(py_terms_t py_terms, coefficient_t coeff) -> std::tuple<terms_t, coefficient_t> {
     terms_t terms;
     terms.reserve(std::size(py_terms));
-    boost::range::push_back(terms,
-                            py_terms | boost::adaptors::transformed([](const auto& value) -> term_t {
-                                return {get<0>(value), static_cast<mindquantum::ops::TermValue>(std::get<1>(value))};
-                            }));
+    boost::range::push_back(
+        terms, py_terms | boost::adaptors::transformed([](const auto& value) -> term_t {
+                   return {std::get<0>(value), static_cast<mindquantum::ops::TermValue>(std::get<1>(value))};
+               }));
 
     return simplify_(terms, coeff);
 }

@@ -33,6 +33,8 @@ set(CMAKE_OPTION -DBUILD_TESTING=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DWITH
 if(cereal_DIRPATH)
   # Cereal was locally built, make sure we use that one
   list(APPEND CMAKE_OPTION -Dcereal_ROOT=${cereal_DIRPATH})
+elseif(cereal_DIR)
+  list(APPEND CMAKE_OPTION -Dcereal_DIR=${cereal_DIR})
 endif()
 
 if(MSVC)
