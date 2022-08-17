@@ -18,6 +18,7 @@
 #include <complex>
 
 #include <fmt/format.h>
+#include <nlohmann/json.hpp>
 
 //! Custom formatter for a std::complex<T>
 template <typename float_t, typename char_type>
@@ -53,6 +54,21 @@ struct fmt::formatter<std::complex<float_t>, char_type> : public fmt::formatter<
             fmt::format_to(ctx.out(), "j");  // NB: use j instead of i (ie. like Python)
         }
         return fmt::format_to(ctx.out(), ")");
+    }
+};
+
+// =============================================================================
+
+//! Custom JSON serialization for std::complex<T>
+template <typename T>
+struct nlohmann::adl_serializer<std::complex<T>> {
+    static void to_json(json& json_data, const std::complex<T>& number) {
+        json_data = nlohmann::json{number.real(), number.imag()};
+    }
+
+    static void from_json(const json& json_data, std::complex<T>& number) {
+        number.real(json_data.at(0).get<T>());
+        number.imag(json_data.at(1).get<T>());
     }
 };
 

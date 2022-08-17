@@ -83,9 +83,6 @@ class FermionOperator : public TermsOperator<FermionOperator, details::FermionOp
      */
     static FermionOperator normal_ordered_term_(terms_t local_ops, coefficient_t coeff);
 
-    //! Convert a string of space-separated fermion operators into an array of terms
-    static terms_t parse_string_(std::string_view terms_string);
-
     //! Simplify the list of local operators
     static std::tuple<std::vector<term_t>, coefficient_t> simplify_(terms_t terms, coefficient_t coeff = 1.);
 

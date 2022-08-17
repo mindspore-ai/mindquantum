@@ -31,6 +31,8 @@
 #if MQ_HAS_CONCEPTS
 #    include "core/concepts.hpp"
 #endif  // MQ_HAS_CONCEPTS
+#include <nlohmann/json.hpp>
+
 #include "core/traits.hpp"
 #include "core/types.hpp"
 #include "ops/gates/details/complex_double_coeff_policy.hpp"
@@ -46,13 +48,23 @@ struct is_terms_operator<T, std::void_t<typename T::terms_operator_tag>> : std::
 
 namespace mindquantum::ops {
 enum class TermValue : uint8_t {
-    I = 0,
-    X = 1,
-    Y = 2,
-    Z = 3,
+    I = 10,
+    X = 11,
+    Y = 12,
+    Z = 13,
     a = 0,
     adg = 1,
 };
+
+// NOLINTNEXTLINE(*avoid-c-arrays,readability-identifier-length)
+NLOHMANN_JSON_SERIALIZE_ENUM(TermValue, {
+                                            {TermValue::I, "I"},
+                                            {TermValue::X, "X"},
+                                            {TermValue::Y, "Y"},
+                                            {TermValue::Z, "Z"},
+                                            {TermValue::a, "v"},
+                                            {TermValue::adg, "^"},
+                                        });
 
 using term_t = std::pair<uint32_t, TermValue>;
 using terms_t = std::vector<term_t>;
@@ -221,7 +233,7 @@ class TermsOperator
      * \param string_data
      * \return A TermsOperator if the loading was successful, false otherwise.
      */
-    // MQ_NODISCARD static std::optional<derived_t> loads(std::string_view string_data);
+    MQ_NODISCARD static std::optional<derived_t> loads(std::string_view string_data);
 
     // =========================================================================
 
@@ -271,7 +283,7 @@ class TermsOperator
     // TODO(dnguyen): This might be counter-intuitive...
     //! Comparison operator (non-const)
     /*!
-     * Compared to its const counterpart, this overload calls \c compress() before performing the comparison.
+     * Compared to its const counterpart, this overload calls \c compress() before performing th<e comparison.
      *
      * \param other Another term operators
      */
@@ -302,6 +314,8 @@ class TermsOperator
  protected:
     uint32_t num_targets_{0UL};
     coeff_term_dict_t terms_;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(base_t, num_targets_, terms_);
 };
 
 template <TYPENAME_NUMBER number_t,

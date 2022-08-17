@@ -19,6 +19,9 @@
 
 #include <algorithm>
 #include <complex>
+#include <optional>
+
+#include <boost/range/iterator_range.hpp>
 
 #include <fmt/format.h>
 
@@ -37,6 +40,10 @@ struct CmplxDoubleCoeffPolicy {
     static auto equal(const coeff_t& lhs, const coeff_t& rhs) {
         return std::abs(lhs - rhs) <= std::max(EQ_TOLERANCE, EQ_TOLERANCE * std::max(std::abs(lhs), std::abs(rhs)));
     }
+
+    // Conversion
+    static std::optional<coeff_t> coeff_from_string(
+        const boost::iterator_range<std::string_view::const_iterator>& range);
 
     // Unary operators
     static auto uminus(const coeff_t& lhs) {

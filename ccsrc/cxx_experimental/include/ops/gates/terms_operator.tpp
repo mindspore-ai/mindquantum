@@ -312,7 +312,6 @@ struct stringize {
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
 auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::to_string() const noexcept -> std::string {
     using namespace std::literals::string_literals;
-
     if (std::empty(terms_)) {
         return "0"s;
     }
@@ -323,32 +322,21 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::to_string() const 
         "\n"s);
 }
 
-template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::dumps(std::size_t indent) const -> std::string {
-    using namespace std::literals::string_literals;
-
-    if (std::empty(terms_)) {
-        return "{}"s;
-    }
-
-    return fmt::format(
-        R"({{
-{}
-}})",
-        boost::algorithm::join(terms_ | boost::adaptors::transformed([indent](const auto& coeff_terms) {
-                                   return details::stringize<derived_t>::to_json(coeff_terms, indent);
-                               }),
-                               ",\n"));
-}
-
 // -----------------------------------------------------------------------------
 
-// TODO(dnguyen): This will not work for anything else than complex<double>! Need to implement a better version based on
-// coefficient_t template <typename derived_t, typename term_policy_t, typename coeff_policy_t> auto
-// TermsOperator<derived_t, term_policy_t, coeff_policy_t>::loads(std::string_view string_data)
-//     -> std::optional<derived_t> {
-//     return {term_policy_t::parse_json_complex_double(string_data)};
-// }
+template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
+auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::dumps(std::size_t indent) const -> std::string {
+    nlohmann::json json(*this);
+    return json.dump(static_cast<int>(indent), ' ', true);
+}
+
+// -------------------------------------
+
+template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
+auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::loads(std::string_view string_data)
+    -> std::optional<derived_t> {
+    return nlohmann::json::parse(string_data).get<derived_t>();
+}
 
 // =============================================================================
 

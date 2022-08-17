@@ -83,8 +83,6 @@ using namespace std::literals::string_literals;  // NOLINT(build/namespaces_lite
 
 // =============================================================================
 
-// =============================================================================
-
 namespace {
 constexpr auto cache_size = 100UL;
 using csr_matrix_t = mindquantum::ops::FermionOperator::csr_matrix_t;

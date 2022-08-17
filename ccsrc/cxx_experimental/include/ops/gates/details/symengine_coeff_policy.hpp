@@ -16,9 +16,11 @@
 #define DETAILS_SYMENGINE_COEFF_POLICY_HPP
 
 #include <cmath>
-#include <complex.h>
 
 #include <complex>
+#include <optional>
+
+#include <boost/range/iterator_range.hpp>
 
 #include <symengine/add.h>
 #include <symengine/basic.h>
@@ -34,6 +36,7 @@
 
 #include "core/config.hpp"
 
+#include "core/format/symengine_basic.hpp"
 #include "ops/gates/details/complex_double_coeff_policy.hpp"
 
 namespace mindquantum::ops::details {
@@ -48,6 +51,10 @@ struct SymEngineCoeffPolicy {
     static auto equal(const coeff_t& lhs, const coeff_t& rhs) {
         return SymEngine::eq(*lhs, *rhs);
     }
+
+    // Conversion
+    static std::optional<coeff_t> coeff_from_string(
+        const boost::iterator_range<std::string_view::const_iterator>& range);
 
     // Unary operators
     static auto uminus(const coeff_t& lhs) {
@@ -95,17 +102,17 @@ struct SymEngineCoeffPolicy {
         return false;
     }
     static auto cast_real(coeff_t& coeff) {
-        if (SymEngine::is_a_Number(*coeff) && SymEngine::is_a<SymEngine::ComplexBase>(*coeff)) {
+        if (SymEngine::is_a_Complex(*coeff)) {
             coeff = SymEngine::complex_double(SymEngine::eval_complex_double(*coeff).real());
         }
     }
     static auto cast_imag(coeff_t& coeff) {
-        if (SymEngine::is_a_Number(*coeff) && SymEngine::is_a<SymEngine::ComplexBase>(*coeff)) {
+        if (SymEngine::is_a_Complex(*coeff)) {
             coeff = SymEngine::complex_double(SymEngine::eval_complex_double(*coeff).imag());
         }
     }
     static auto compress(coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
-        if (SymEngine::is_a_Number(*coeff) && SymEngine::is_a<SymEngine::ComplexBase>(*coeff)) {
+        if (SymEngine::is_a_Complex(*coeff)) {
             auto tmp = SymEngine::eval_complex_double(*coeff);
             CmplxDoubleCoeffPolicy::compress(tmp, abs_tol);
             coeff = SymEngine::complex_double(tmp);
