@@ -86,6 +86,9 @@ class FermionOperator : public TermsOperator<FermionOperator, details::FermionOp
     //! Simplify the list of local operators
     static std::tuple<std::vector<term_t>, coefficient_t> simplify_(terms_t terms, coefficient_t coeff = 1.);
 
+    //! Simplify the list of local operators
+    static std::tuple<std::vector<term_t>, coefficient_t> simplify_(py_terms_t py_terms, coefficient_t coeff = 1.);
+
     //! Sort a list of local operators
     /*!
      * \param local_ops A list of local operators

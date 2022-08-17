@@ -29,6 +29,9 @@
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/fusion/include/at_c.hpp>
 #include <boost/fusion/include/std_pair.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm/copy.hpp>
+#include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/spirit/home/x3.hpp>
 
 #include <unsupported/Eigen/KroneckerProduct>
@@ -209,6 +212,19 @@ auto QubitOperator::simplify_(terms_t terms, coefficient_t coeff) -> std::tuple<
     }
 
     return {std::move(terms), coeff};
+}
+
+// -----------------------------------------------------------------------------
+
+auto QubitOperator::simplify_(py_terms_t py_terms, coefficient_t coeff) -> std::tuple<terms_t, coefficient_t> {
+    terms_t terms;
+    terms.reserve(std::size(py_terms));
+    boost::range::push_back(terms,
+                            py_terms | boost::adaptors::transformed([](const auto& value) -> term_t {
+                                return {get<0>(value), static_cast<mindquantum::ops::TermValue>(std::get<1>(value))};
+                            }));
+
+    return simplify_(terms, coeff);
 }
 
 // =============================================================================

@@ -69,6 +69,9 @@ NLOHMANN_JSON_SERIALIZE_ENUM(TermValue, {
 using term_t = std::pair<uint32_t, TermValue>;
 using terms_t = std::vector<term_t>;
 
+using py_term_t = std::pair<uint32_t, uint32_t>;
+using py_terms_t = std::vector<py_term_t>;
+
 template <typename coefficient_t>
 using term_dict_t = std::map<std::vector<term_t>, coefficient_t>;
 
@@ -91,6 +94,8 @@ using term_dict_t = std::map<std::vector<term_t>, coefficient_t>;
  * \note This template CRTP class expects the derived classes to implement the following member functions:
  *         - static std::pair<terms_t, coefficient_t> sort_terms_(terms_t local_ops, coefficient_t coeff);
  *         - static std::tuple<std::vector<term_t>, coefficient_t> simplify_(terms_t terms, coefficient_t coeff = 1.);
+ *         - static std::tuple<std::vector<term_t>, coefficient_t> simplify_(py_terms_t terms, coefficient_t coeff
+ * = 1.);
  */
 template <typename derived_t, typename term_policy_t_, typename coeff_policy_t_ = details::CmplxDoubleCoeffPolicy>
 class TermsOperator
@@ -134,6 +139,8 @@ class TermsOperator
     explicit TermsOperator(term_t term, coefficient_t coeff = coeff_policy_t::one);
 
     explicit TermsOperator(const terms_t& terms, coefficient_t coeff = coeff_policy_t::one);
+
+    explicit TermsOperator(const py_terms_t& terms, coefficient_t coeff = coeff_policy_t::one);
 
     explicit TermsOperator(const coeff_term_dict_t& terms);
 
