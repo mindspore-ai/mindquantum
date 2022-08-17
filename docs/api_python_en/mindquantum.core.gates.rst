@@ -1,12 +1,6 @@
 mindquantum.core.gates
 ======================
 
-Quantum Gates
--------------
-
-.. automodule:: mindquantum.core.gates
-    :members:
-
 functional
 ----------
 
@@ -26,6 +20,8 @@ The gates blow are the pre-instantiated quantum gates, which can be used directl
      - :class:`mindquantum.core.gates.HGate`
    * - mindquantum.core.gates.S
      - :class:`mindquantum.core.gates.PhaseShift` (numpy.pi/2)
+   * - mindquantum.core.gates.T
+     - :class:`mindquantum.core.gates.PhaseShift` (numpy.pi/4)
    * - mindquantum.core.gates.SWAP
      - :class:`mindquantum.core.gates.SWAPGate`
    * - mindquantum.core.gates.X
@@ -34,3 +30,9 @@ The gates blow are the pre-instantiated quantum gates, which can be used directl
      - :class:`mindquantum.core.gates.YGate`
    * - mindquantum.core.gates.Z
      - :class:`mindquantum.core.gates.ZGate`
+
+Quantum Gates
+-------------
+
+.. automodule:: mindquantum.core.gates
+    :members:

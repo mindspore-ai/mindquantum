@@ -13,4 +13,3 @@
 
         返回：
             Circuit，ansatz的量子线路。
-
