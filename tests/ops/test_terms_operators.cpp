@@ -298,19 +298,19 @@ TEST_CASE("TermsOperator to_string", "[terms_op][ops]") {
     }
     SECTION("1^") {
         str = DummyOperator(terms_t{{1, TermValue::adg}}).to_string();
-        ref_str = "1 [1-X]";  // NB: adg == X == 1
+        ref_str = "1 [1-^]";
     }
     SECTION("Identity") {
         str = DummyOperator::identity().to_string();
         ref_str = "1 []";
     }
-    SECTION("1^ 2 X3 Y4 Z5") {
+    SECTION("1v 2^ X3 Y4 Z5 + Identity") {
         str = DummyOperator(
                   terms_t{
                       {1, TermValue::a}, {2, TermValue::adg}, {3, TermValue::X}, {4, TermValue::Y}, {5, TermValue::Z}},
                   1.2i)
                   .to_string();
-        ref_str = "1.2j [1-v 2-X 3-X 4-Y 5-Z]";  // NB: adg == X == 1
+        ref_str = "1.2j [1-v 2-^ 3-X 4-Y 5-Z]";
     }
 
     INFO("ref_str = " << ref_str);
@@ -322,21 +322,188 @@ TEST_CASE("DummyOperator dumps", "[terms_op][ops]") {
     auto ref_json = ""s;
     SECTION("Empty") {
         op = DummyOperator();
-        ref_json = "{}"s;
+        ref_json = R"({
+    "num_targets_": 0,
+    "terms_": []
+})"s;
     }
-    SECTION("Not empty") {
+    SECTION("1v 2^ X3 Y4 Z5 + Identity") {
         op = DummyOperator(
                  terms_t{
                      {1, TermValue::a}, {2, TermValue::adg}, {3, TermValue::X}, {4, TermValue::Y}, {5, TermValue::Z}},
                  1.2i)
              + DummyOperator::identity();
         ref_json = R"s({
-    "": "1",
-    "1-v 2-X 3-X 4-Y 5-Z": "1.2j"
-})s";  // NB: adg == X == 1
+    "num_targets_": 6,
+    "terms_": [
+        [
+            [],
+            [
+                1.0,
+                0.0
+            ]
+        ],
+        [
+            [
+                [
+                    1,
+                    "v"
+                ],
+                [
+                    2,
+                    "^"
+                ],
+                [
+                    3,
+                    "X"
+                ],
+                [
+                    4,
+                    "Y"
+                ],
+                [
+                    5,
+                    "Z"
+                ]
+            ],
+            [
+                0.0,
+                1.2
+            ]
+        ]
+    ]
+})s";
     }
 
     CHECK(op.dumps() == ref_json);
+}
+
+// TEST_CASE("FermionOperator loads", "[terms_op][ops]") {
+//     std::string json_data;
+//     std::optional<FermionOperator> fermion_op;
+//     std::optional<FermionOperator> ref_op;
+
+//     SECTION("Empty string") {
+//         fermion_op = FermionOperator::loads("");
+//     }
+//     SECTION("Only whitespace") {
+//         fermion_op = FermionOperator::loads("      ");
+//     }
+//     SECTION(R"s(Invalid: ('{"": ""}'))s") {
+//         fermion_op = FermionOperator::loads(R"s({"": ""})s");
+//     }
+//     SECTION(R"s(Invalid: ('{"X1 Y2": "1"}'))s") {
+//         fermion_op = FermionOperator::loads(R"s({"X1 Y2": "1"})s");
+//     }
+//     SECTION(R"s(Invalid: ('"1" : "(1+2.1j)"'))s") {
+//         fermion_op = FermionOperator::loads(R"s("1" : "(1+2.1j)")s");
+//     }
+
+//     SECTION(R"s({"": "1.23"})s") {
+//         fermion_op = FermionOperator::loads(R"({"": "1.23"})");
+//         ref_op = FermionOperator::identity() * 1.23;
+//     }
+//     SECTION(R"s({"": "2.34j"})s") {
+//         fermion_op = FermionOperator::loads(R"({"": "2.34j"})");
+//         ref_op = FermionOperator::identity() * 2.34i;
+//     }
+//     SECTION(R"s({"": "(3-2j)"})s") {
+//         fermion_op = FermionOperator::loads(R"s({"": "(3-2j)"})s");
+//         ref_op = FermionOperator::identity() * (3. - 2.i);
+//     }
+//     SECTION(R"s({"1": "(1+2.1j)"})s") {
+//         fermion_op = FermionOperator::loads(R"s({"1": "(1+2.1j)"})s");
+//         ref_op = FermionOperator("1", 1.0 + 2.1i);
+//     }
+//     SECTION(R"s({"2 1^ 3 4^": "(1+2j)"})s") {
+//         fermion_op = FermionOperator::loads(R"s({"2 1^ 3 4^": "(1+2j)"})s");
+//         ref_op = FermionOperator("2 1^ 3 4^", 1.0 + 2.i);
+//     }
+//     SECTION(R"s({"2 3^ 4^": "4.5j", "1" : "1"})s") {
+//         fermion_op = FermionOperator::loads(
+//             R"s({"2 3^ 4^": "4.5j",
+//                  "1" : "1"})s");
+//         ref_op = FermionOperator("2 3^ 4^", 4.5i) + FermionOperator("1");
+//     }
+
+//     if (ref_op) {
+//         REQUIRE(fermion_op.has_value());
+//         CHECK(fermion_op.value() == ref_op.value());
+//     } else {
+//         REQUIRE(!fermion_op.has_value());
+//     }
+// }
+
+// TEST_CASE("QubitOperator loads", "[terms_op][ops]") {
+//     std::string json_data;
+//     std::optional<QubitOperator> qubit_op;
+//     std::optional<QubitOperator> ref_op;
+
+//     SECTION("Empty string") {
+//         qubit_op = QubitOperator::loads("");
+//     }
+//     SECTION("Only whitespace") {
+//         qubit_op = QubitOperator::loads("      ");
+//     }
+//     SECTION(R"s(Invalid: ('{"": ""}'))s") {
+//         qubit_op = QubitOperator::loads(R"s({"": ""})s");
+//     }
+//     SECTION(R"s(Invalid: ('{"1 2^": "1"}'))s") {
+//         qubit_op = QubitOperator::loads(R"s({"1 2^": "1"})s");
+//     }
+//     SECTION(R"s(Invalid: ('"X1" : "(1+2.1j)"'))s") {
+//         qubit_op = QubitOperator::loads(R"s("X1" : "(1+2.1j)")s");
+//     }
+
+//     SECTION(R"s({"": "1.23"})s") {
+//         qubit_op = QubitOperator::loads(R"({"": "1.23"})");
+//         ref_op = QubitOperator::identity() * 1.23;
+//     }
+//     SECTION(R"s({"": "2.34j"})s") {
+//         qubit_op = QubitOperator::loads(R"({"": "2.34j"})");
+//         ref_op = QubitOperator::identity() * 2.34i;
+//     }
+//     SECTION(R"s({"": "(3-2j)"})s") {
+//         qubit_op = QubitOperator::loads(R"s({"": "(3-2j)"})s");
+//         ref_op = QubitOperator::identity() * (3. - 2.i);
+//     }
+//     SECTION(R"s({"X1": "(1+2.1j)"})s") {
+//         qubit_op = QubitOperator::loads(R"s({"X1": "(1+2.1j)"})s");
+//         ref_op = QubitOperator("X1", 1.0 + 2.1i);
+//     }
+//     SECTION(R"s({"X2 Y1 Z3 Y4": "(1+2j)"})s") {
+//         qubit_op = QubitOperator::loads(R"s({"X2 Y1 Z3 Y4": "(1+2j)"})s");
+//         ref_op = QubitOperator("X2 Y1 Z3 Y4", 1.0 + 2.i);
+//     }
+//     SECTION(R"s({"X2 Z3 Y4": "4.5j", "X1" : "1"})s") {
+//         qubit_op = QubitOperator::loads(
+//             R"s({"X2 Z3 Y4": "4.5j",
+//                  "X1" : "1"})s");
+//         ref_op = QubitOperator("X2 Z3 Y4", 4.5i) + QubitOperator("X1");
+//     }
+
+//     if (ref_op) {
+//         REQUIRE(qubit_op.has_value());
+//         CHECK(qubit_op.value() == ref_op.value());
+//     } else {
+//         REQUIRE(!qubit_op.has_value());
+//     }
+// }
+
+TEST_CASE("TermsOperator JSON save - load", "[terms_op][ops]") {
+    DummyOperator op;
+    SECTION("Identity") {
+        op = DummyOperator::identity() * (1.2 + 5.4i);
+    }
+    SECTION("1v 2^ X3 Y4 Z5 + Identity") {
+        op = DummyOperator(
+                 terms_t{
+                     {1, TermValue::a}, {2, TermValue::adg}, {3, TermValue::X}, {4, TermValue::Y}, {5, TermValue::Z}},
+                 1.2i)
+             + DummyOperator::identity();
+    }
+
+    CHECK(op == DummyOperator::loads(op.dumps()));
 }
 
 // =============================================================================

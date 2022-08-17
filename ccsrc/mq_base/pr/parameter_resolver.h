@@ -27,6 +27,8 @@
 #include <type_traits>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 #include "core/utils.h"
 
 namespace mindquantum {
@@ -93,6 +95,8 @@ struct RemoveComplex<std::complex<T>> {
 
 template <typename T>
 struct ParameterResolver {
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(ParameterResolver<T>, data_, const_value, no_grad_parameters_, encoder_parameters_);
+
     MST<T> data_{};
     T const_value = 0;
     SS no_grad_parameters_{};
@@ -670,6 +674,7 @@ template <typename T>
 ParameterResolver<T> operator/(T value, const ParameterResolver<T>& pr) {
     return ParameterResolver<T>(value) / pr;
 }
+
 }  // namespace mindquantum
 
 #endif  // MINDQUANTUM_PR_PARAMETER_RESOLVER_H_

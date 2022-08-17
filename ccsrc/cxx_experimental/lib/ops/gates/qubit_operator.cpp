@@ -115,10 +115,11 @@ auto QubitOperator::matrix(std::optional<uint32_t> n_qubits) const -> std::optio
     using dense_2x2_t = Eigen::Matrix2cd;
 
     // NB: required since we are indexing into the array below
-    static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::I) == 0);
-    static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::X) == 1);
-    static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::Y) == 2);
-    static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::Z) == 3);
+    constexpr auto offset = static_cast<std::underlying_type_t<TermValue>>(TermValue::I);
+    static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::I) - offset == 0);
+    static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::X) - offset == 1);
+    static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::Y) - offset == 2);
+    static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::Z) - offset == 3);
 
     static const std::array<csr_matrix_t, 4> pauli_matrices = {
         dense_2x2_t::Identity().sparseView(),
@@ -157,10 +158,10 @@ auto QubitOperator::matrix(std::optional<uint32_t> n_qubits) const -> std::optio
         }
 
         // TODO(dnguyen): The `total` variable is probably not required and could be removed altogether...
-        std::vector<csr_matrix_t> total(n_qubits_value,
-                                        pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(TermValue::I)]);
+        std::vector<csr_matrix_t> total(
+            n_qubits_value, pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(TermValue::I) - offset]);
         for (const auto& [qubit_id, local_op] : local_ops) {
-            total[qubit_id] = pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(local_op)];
+            total[qubit_id] = pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(local_op) - offset];
         }
 
         csr_matrix_t init(1, 1);
