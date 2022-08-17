@@ -30,6 +30,9 @@
 
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/fusion/include/std_pair.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm/copy.hpp>
+#include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/spirit/home/x3.hpp>
 
 #include <unsupported/Eigen/KroneckerProduct>
@@ -309,6 +312,19 @@ namespace mindquantum::ops {
 auto FermionOperator::simplify_(terms_t local_ops, coefficient_t coeff)
     -> std::tuple<std::vector<term_t>, coefficient_t> {
     return sort_terms_(std::move(local_ops), coeff);
+}
+
+// -----------------------------------------------------------------------------
+
+auto FermionOperator::simplify_(py_terms_t py_terms, coefficient_t coeff) -> std::tuple<terms_t, coefficient_t> {
+    terms_t terms;
+    terms.reserve(std::size(py_terms));
+    boost::range::push_back(terms,
+                            py_terms | boost::adaptors::transformed([](const auto& value) -> term_t {
+                                return {get<0>(value), static_cast<mindquantum::ops::TermValue>(std::get<1>(value))};
+                            }));
+
+    return simplify_(terms, coeff);
 }
 
 // =============================================================================

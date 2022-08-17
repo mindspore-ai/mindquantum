@@ -55,6 +55,15 @@ TermsOperator<derived_t, term_policy_t, coeff_policy_t>::TermsOperator(const ter
 // -----------------------------------------------------------------------------
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
+TermsOperator<derived_t, term_policy_t, coeff_policy_t>::TermsOperator(const py_terms_t& terms, coefficient_t coeff) {
+    const auto [new_terms, new_coeff] = derived_t::simplify_(terms, coeff);
+    terms_.emplace(new_terms, new_coeff);
+    calculate_num_targets_();
+}
+
+// -----------------------------------------------------------------------------
+
+template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
 TermsOperator<derived_t, term_policy_t, coeff_policy_t>::TermsOperator(const coeff_term_dict_t& terms) {
     for (const auto& [local_ops, coeff] : terms) {
         terms_.emplace(derived_t::sort_terms_(local_ops, coeff));

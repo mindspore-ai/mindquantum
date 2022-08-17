@@ -87,6 +87,9 @@ class QubitOperator : public TermsOperator<QubitOperator, details::QubitOperator
     //! Simplify the list of local operators by using commutation and anti-commutation relations
     static std::tuple<terms_t, coefficient_t> simplify_(std::vector<term_t> terms, coefficient_t coeff = 1.);
 
+    //! Simplify the list of local operators by using commutation and anti-commutation relations
+    static std::tuple<terms_t, coefficient_t> simplify_(std::vector<py_term_t> py_terms, coefficient_t coeff = 1.);
+
     //! Sort a list of local operators
     /*!
      * \param local_ops A list of local operators
