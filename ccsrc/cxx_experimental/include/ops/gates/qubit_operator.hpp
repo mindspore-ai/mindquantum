@@ -37,7 +37,55 @@ class UnitTestAccessor;
 namespace mindquantum::ops {
 class QubitOperatorPR;
 constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermValue& left_op,
-                                                                     const TermValue& right_op);
+                                                                     const TermValue& right_op) {
+    if (left_op == TermValue::I && right_op == TermValue::X) {
+        return {1., TermValue::X};
+    }
+    if (left_op == TermValue::X && right_op == TermValue::I) {
+        return {1., TermValue::X};
+    }
+    if (left_op == TermValue::I && right_op == TermValue::Y) {
+        return {1., TermValue::Y};
+    }
+    if (left_op == TermValue::Y && right_op == TermValue::I) {
+        return {1., TermValue::Y};
+    }
+    if (left_op == TermValue::I && right_op == TermValue::Z) {
+        return {1., TermValue::Z};
+    }
+    if (left_op == TermValue::Z && right_op == TermValue::I) {
+        return {1., TermValue::Z};
+    }
+    if (left_op == TermValue::X && right_op == TermValue::X) {
+        return {1., TermValue::I};
+    }
+    if (left_op == TermValue::Y && right_op == TermValue::Y) {
+        return {1., TermValue::I};
+    }
+    if (left_op == TermValue::Z && right_op == TermValue::Z) {
+        return {1., TermValue::I};
+    }
+    if (left_op == TermValue::X && right_op == TermValue::Y) {
+        return {{0, 1.}, TermValue::Z};
+    }
+    if (left_op == TermValue::X && right_op == TermValue::Z) {
+        return {{0, -1.}, TermValue::Y};
+    }
+    if (left_op == TermValue::Y && right_op == TermValue::X) {
+        return {{0, -1.}, TermValue::Z};
+    }
+    if (left_op == TermValue::Y && right_op == TermValue::Z) {
+        return {{0, 1.}, TermValue::X};
+    }
+    if (left_op == TermValue::Z && right_op == TermValue::X) {
+        return {{0, 1.}, TermValue::Y};
+    }
+    if (left_op == TermValue::Z && right_op == TermValue::Y) {
+        return {{0, -1.}, TermValue::X};
+    }
+
+    return {1., TermValue::I};
+}
 
 //! Definition of a qubit operator; a sum of terms acting on qubits.
 /*!

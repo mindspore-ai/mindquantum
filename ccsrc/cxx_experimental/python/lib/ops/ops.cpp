@@ -23,6 +23,7 @@
 
 #include "ops/gates.hpp"
 #include "ops/gates/fermion_operator.hpp"
+#include "ops/gates/fermion_operator_parameter_resolver.hpp"
 #include "ops/gates/qubit_operator.hpp"
 #include "ops/gates/qubit_operator_parameter_resolver.hpp"
 #include "ops/parametric/angle_gates.hpp"
