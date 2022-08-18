@@ -68,7 +68,11 @@ struct hash<std::tuple<types_t...>> {
 }  // namespace hash_tuple
 
 namespace lru_cache {
+#ifdef FERMION_OPERATOR_HPP
 using csr_matrix_t = mindquantum::ops::FermionOperator::csr_matrix_t;
+#elif defined(FERMION_OPERATOR_PARAMETER_RESOLVER_HPP)
+using csr_matrix_t = mindquantum::ops::FermionOperatorPR::csr_matrix_t;
+#endif  // FERMION_OPERATOR_HPP
 
 template <typename key_t, typename value_t, std::size_t cache_size, bool by_access_order>
 struct StaticLruCacheOptionsBase {

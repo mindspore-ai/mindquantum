@@ -35,6 +35,7 @@ class UnitTestAccessor;
 #endif  // UNIT_TESTS
 
 namespace mindquantum::ops {
+class QubitOperatorPR;
 constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermValue& left_op,
                                                                      const TermValue& right_op);
 
@@ -84,12 +85,15 @@ class QubitOperator : public TermsOperator<QubitOperator, details::QubitOperator
     friend class ::UnitTestAccessor;
 #endif  // UNIT_TESTS
 
+    // TODO(dnguyen): Move this into term_policy_t class
     //! Simplify the list of local operators by using commutation and anti-commutation relations
     static std::tuple<terms_t, coefficient_t> simplify_(std::vector<term_t> terms, coefficient_t coeff = 1.);
 
+    // TODO(dnguyen): Move this into term_policy_t class
     //! Simplify the list of local operators by using commutation and anti-commutation relations
     static std::tuple<terms_t, coefficient_t> simplify_(std::vector<py_term_t> py_terms, coefficient_t coeff = 1.);
 
+    // TODO(dnguyen): Move this into term_policy_t class
     //! Sort a list of local operators
     /*!
      * \param local_ops A list of local operators

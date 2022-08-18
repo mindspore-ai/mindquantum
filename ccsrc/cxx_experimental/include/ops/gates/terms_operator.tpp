@@ -126,7 +126,7 @@ bool TermsOperator<derived_t, term_policy_t, coeff_policy_t>::is_identity(double
             return std::empty(term.first)
                    || std::ranges::all_of(
                        term.first, [](const auto& local_op) constexpr { return local_op.second == TermValue::I; })
-                   || std::abs(term.second) <= abs_tol;
+                   || coeff_policy_t::is_zero(term.second, abs_tol);
         });
 #else
     for (const auto& [term, coeff] : terms_) {
@@ -134,7 +134,7 @@ bool TermsOperator<derived_t, term_policy_t, coeff_policy_t>::is_identity(double
             && std::any_of(
                 std::begin(term), std::end(term),
                 [](const auto& local_op) constexpr { return local_op.second != TermValue::I; })
-            && std::abs(coeff) > abs_tol) {
+            && !coeff_policy_t::is_zero(coeff, abs_tol)) {
             return false;
         }
     }
@@ -186,7 +186,7 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::constant() const n
         assert(std::empty(it->first));
         return it->second;
     }
-    return 0.0;
+    return coefficient_t{0.0};
 }
 
 // -----------------------------------------------------------------------------
@@ -429,7 +429,7 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::operator*=(const n
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
 template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_IMPL>
 auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::operator/=(const number_t& number) -> derived_t& {
-    *this *= coeff_policy_t::div(coeff_policy_t::one, number);
+    *this *= 1. / number;
     return *static_cast<derived_t*>(this);
 }
 

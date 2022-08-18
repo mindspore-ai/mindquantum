@@ -76,6 +76,7 @@ class FermionOperator : public TermsOperator<FermionOperator, details::FermionOp
     friend class ::UnitTestAccessor;
 #endif  // UNIT_TESTS
 
+    // TODO(dnguyen): Move this into term_policy_t class?
     //! Put a term from a FermionOperator into normal ordered form
     /*!
      * \param terms A list of local operators
@@ -83,12 +84,15 @@ class FermionOperator : public TermsOperator<FermionOperator, details::FermionOp
      */
     static FermionOperator normal_ordered_term_(terms_t local_ops, coefficient_t coeff);
 
+    // TODO(dnguyen): Move this into term_policy_t class
     //! Simplify the list of local operators
     static std::tuple<std::vector<term_t>, coefficient_t> simplify_(terms_t terms, coefficient_t coeff = 1.);
 
+    // TODO(dnguyen): Move this into term_policy_t class
     //! Simplify the list of local operators
     static std::tuple<std::vector<term_t>, coefficient_t> simplify_(py_terms_t py_terms, coefficient_t coeff = 1.);
 
+    // TODO(dnguyen): Move this into term_policy_t class
     //! Sort a list of local operators
     /*!
      * \param local_ops A list of local operators

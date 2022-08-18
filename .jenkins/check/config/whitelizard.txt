@@ -24,6 +24,7 @@ mindquantum/ccsrc/mqbackend/binding.cc:mindquantum::PYBIND11_MODULE
 mindquantum/ccsrc/cxx_experimental/lib/core/cpp_core.cpp:mindquantum::core::CppCore::flush
 mindquantum/ccsrc/cxx_experimental/python/lib/core/symengine.cpp:mindquantum::python::init_symengine_basic_types
 mindquantum/ccsrc/cxx_experimental/python/lib/ops/command.cpp:mindquantum::details::load_gate
+mindquantum/ccsrc/cxx_experimental/python/lib/ops/ops.cpp:init_mindquantum_ops
 
 TEST_CASE
 
