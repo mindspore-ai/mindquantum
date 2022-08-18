@@ -21,6 +21,7 @@ preprocessorErrorDirective:ccsrc/cxx_experimental/include/ops/parametric/angle_b
 preprocessorErrorDirective:ccsrc/cxx_experimental/python/lib/ops/ops.cpp:93
 preprocessorErrorDirective:tests/decompositions/test_apply_atoms.cpp:48
 preprocessorErrorDirective:tests/ops/test_angle_parametric_gates.cpp:27
+preprocessorErrorDirective:ccsrc/cxx_experimental/python/lib/ops/ops.cpp
 
 unknownMacro:ccsrc/cxx_experimental/python/include/python/cengines/resource_counter.hpp:24
 unknownMacro:ccsrc/cxx_experimental/python/include/python/ops/command.hpp:28

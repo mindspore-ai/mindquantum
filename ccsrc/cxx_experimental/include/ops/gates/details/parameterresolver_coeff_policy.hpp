@@ -27,8 +27,9 @@
 #include "pr/parameter_resolver.h"
 
 namespace mindquantum::ops::details {
-template <typename float_t>
+template <typename float_t_>
 struct ParameterResolverCoeffPolicyBase {
+    using float_t = float_t_;
     using coeff_t = ParameterResolver<float_t>;
 
     static constexpr auto EQ_TOLERANCE = PRECISION;
@@ -118,15 +119,19 @@ struct ParameterResolverCoeffPolicyBase {
 };
 
 struct DoublePRCoeffPolicy : public ParameterResolverCoeffPolicyBase<double> {
+    static const coeff_t one;
     // Conversion
     static std::optional<coeff_t> coeff_from_string(
         const boost::iterator_range<std::string_view::const_iterator>& range);
 };
+inline const DoublePRCoeffPolicy::coeff_t DoublePRCoeffPolicy::one(DoublePRCoeffPolicy::float_t{1.0});
 struct CmplxDoublePRCoeffPolicy : public ParameterResolverCoeffPolicyBase<std::complex<double>> {
+    static const coeff_t one;
     // Conversion
     static std::optional<coeff_t> coeff_from_string(
         const boost::iterator_range<std::string_view::const_iterator>& range);
 };
+inline const CmplxDoublePRCoeffPolicy::coeff_t CmplxDoublePRCoeffPolicy::one(CmplxDoublePRCoeffPolicy::float_t{1.0, 0});
 }  // namespace mindquantum::ops::details
 
 #endif /* DETAILS_PARAMETERRESOLVER_COEFF_POLICY_HPP */

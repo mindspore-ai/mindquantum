@@ -24,6 +24,7 @@
 #include "ops/gates.hpp"
 #include "ops/gates/fermion_operator.hpp"
 #include "ops/gates/qubit_operator.hpp"
+#include "ops/gates/qubit_operator_parameter_resolver.hpp"
 #include "ops/parametric/angle_gates.hpp"
 #include "python/bindings.hpp"
 #include "python/ops/gate_adapter.hpp"
@@ -227,6 +228,50 @@ void init_mindquantum_ops(pybind11::module& module) {
         .def("count_gates", &ops::QubitOperator::count_gates)
         .def("matrix", &ops::QubitOperator::matrix, "n_qubits"_a);
 
+    py::class_<ops::QubitOperatorPR>(module, "QubitOperatorPR")
+        .def(py::init<>())
+        .def(py::init<const ops::term_t&, ops::QubitOperatorPR::coefficient_t>(), "term"_a, "coeff"_a = 1.0)
+        .def(py::init<const ops::terms_t&, ops::QubitOperatorPR::coefficient_t>(), "terms"_a, "coeff"_a = 1.0)
+        .def(py::init<const ops::py_terms_t&, ops::QubitOperatorPR::coefficient_t>(), "terms"_a, "coeff"_a = 1.0)
+        .def(py::init<const ops::QubitOperatorPR::coeff_term_dict_t&>(), "coeff_terms"_a)
+        .def(py::init<std::string_view, ops::QubitOperatorPR::coefficient_t>(), "terms_string"_a, "coeff"_a = 1.0)
+        .def("num_targets", &ops::QubitOperatorPR::num_targets)
+        .def("count_qubits", &ops::QubitOperatorPR::count_qubits)
+        .def("is_identity", &ops::QubitOperatorPR::is_identity, "abs_tol"_a = ops::QubitOperatorPR::EQ_TOLERANCE)
+        .def_static("identity", &ops::QubitOperatorPR::identity)
+        .def("constant", static_cast<void (ops::QubitOperatorPR::*)(const ops::QubitOperatorPR::coefficient_t&)>(
+                             &ops::QubitOperatorPR::constant))
+        .def("constant", static_cast<ops::QubitOperatorPR::coefficient_t (ops::QubitOperatorPR::*)() const>(
+                             &ops::QubitOperatorPR::constant))
+        .def("is_singlet", &ops::QubitOperatorPR::real)
+        .def("singlet", &ops::QubitOperatorPR::real)
+        .def("singlet_coeff", &ops::QubitOperatorPR::real)
+        .def("split", &ops::QubitOperatorPR::real)
+        .def("imag", &ops::QubitOperatorPR::imag)
+        .def("compress", &ops::QubitOperatorPR::compress, "abs_tol"_a = ops::QubitOperatorPR::EQ_TOLERANCE)
+        .def("dumps", &ops::QubitOperatorPR::dumps, "indent"_a = 4)
+        .def_static("loads", ops::QubitOperatorPR::loads, "string_data"_a)
+        .def(
+            "__str__", [](const ops::QubitOperatorPR& base) { return base.to_string(); }, py::is_operator())
+        .PYBIND11_DEFINE_BINOP_PAIR(add, ops::QubitOperatorPR, const ops::QubitOperatorPR&, +)
+        .PYBIND11_DEFINE_BINOP_PAIR(add, ops::QubitOperatorPR, double, +)
+        .PYBIND11_DEFINE_BINOP_PAIR(add, ops::QubitOperatorPR, std::complex<double>, +)
+        .PYBIND11_DEFINE_BINOP_PAIR(sub, ops::QubitOperatorPR, const ops::QubitOperatorPR&, -)
+        .PYBIND11_DEFINE_BINOP_PAIR(sub, ops::QubitOperatorPR, double, -)
+        .PYBIND11_DEFINE_BINOP_PAIR(sub, ops::QubitOperatorPR, std::complex<double>, -)
+        .PYBIND11_DEFINE_BINOP_PAIR(mul, ops::QubitOperatorPR, const ops::QubitOperatorPR&, *)
+        .PYBIND11_DEFINE_BINOP_PAIR(mul, ops::QubitOperatorPR, double, *)
+        .PYBIND11_DEFINE_BINOP_PAIR(mul, ops::QubitOperatorPR, std::complex<double>, *)
+        .PYBIND11_DEFINE_BINOP_PAIR(truediv, ops::QubitOperatorPR, double, /)
+        .PYBIND11_DEFINE_BINOP_PAIR(truediv, ops::QubitOperatorPR, std::complex<double>, /)
+        .PYBIND11_DEFINE_UNOP(__neg__, ops::QubitOperatorPR, -)
+        .PYBIND11_DEFINE_BINOP(__eq__, const ops::QubitOperatorPR, const ops::QubitOperatorPR&, ==)
+        .def(
+            "__pow__", [](const ops::QubitOperatorPR& base, unsigned int exponent) { return base.pow(exponent); },
+            py::is_operator())
+        .def("count_gates", &ops::QubitOperatorPR::count_gates)
+        .def("matrix", &ops::QubitOperatorPR::matrix, "n_qubits"_a);
+
     py::class_<ops::FermionOperator>(module, "FermionOperator")
         .def(py::init<>())
         .def(py::init<const ops::term_t&, ops::FermionOperator::coefficient_t>(), "term"_a, "coeff"_a = 1.0)
@@ -269,6 +314,49 @@ void init_mindquantum_ops(pybind11::module& module) {
             py::is_operator())
         .def("matrix", &ops::FermionOperator::matrix, "n_qubits"_a)
         .def("normal_ordered", &ops::FermionOperator::normal_ordered);
+
+    py::class_<ops::FermionOperatorPR>(module, "FermionOperatorPR")
+        .def(py::init<>())
+        .def(py::init<const ops::term_t&, ops::FermionOperatorPR::coefficient_t>(), "term"_a, "coeff"_a = 1.0)
+        .def(py::init<const ops::terms_t&, ops::FermionOperatorPR::coefficient_t>(), "terms"_a, "coeff"_a = 1.0)
+        .def(py::init<const ops::py_terms_t&, ops::FermionOperatorPR::coefficient_t>(), "terms"_a, "coeff"_a = 1.0)
+        .def(py::init<const ops::FermionOperatorPR::coeff_term_dict_t&>(), "coeff_terms"_a)
+        .def(py::init<std::string_view, ops::FermionOperatorPR::coefficient_t>(), "terms_string"_a, "coeff"_a = 1.0)
+        .def("num_targets", &ops::FermionOperatorPR::num_targets)
+        .def("is_identity", &ops::FermionOperatorPR::is_identity, "abs_tol"_a = ops::FermionOperatorPR::EQ_TOLERANCE)
+        .def_static("identity", &ops::FermionOperatorPR::identity)
+        .def("constant", static_cast<void (ops::FermionOperatorPR::*)(const ops::FermionOperatorPR::coefficient_t&)>(
+                             &ops::FermionOperatorPR::constant))
+        .def("constant", static_cast<ops::FermionOperatorPR::coefficient_t (ops::FermionOperatorPR::*)() const>(
+                             &ops::FermionOperatorPR::constant))
+        .def("is_singlet", &ops::FermionOperatorPR::real)
+        .def("singlet", &ops::FermionOperatorPR::real)
+        .def("singlet_coeff", &ops::FermionOperatorPR::real)
+        .def("split", &ops::FermionOperatorPR::real)
+        .def("imag", &ops::FermionOperatorPR::imag)
+        .def("compress", &ops::FermionOperatorPR::compress, "abs_tol"_a = ops::FermionOperatorPR::EQ_TOLERANCE)
+        .def("dumps", &ops::FermionOperatorPR::dumps, "indent"_a = 4)
+        .def_static("loads", ops::FermionOperatorPR::loads, "string_data"_a)
+        .def(
+            "__str__", [](const ops::FermionOperatorPR& base) { return base.to_string(); }, py::is_operator())
+        .PYBIND11_DEFINE_BINOP_PAIR(add, ops::FermionOperatorPR, const ops::FermionOperatorPR&, +)
+        .PYBIND11_DEFINE_BINOP_PAIR(add, ops::FermionOperatorPR, double, +)
+        .PYBIND11_DEFINE_BINOP_PAIR(add, ops::FermionOperatorPR, std::complex<double>, +)
+        .PYBIND11_DEFINE_BINOP_PAIR(sub, ops::FermionOperatorPR, const ops::FermionOperatorPR&, -)
+        .PYBIND11_DEFINE_BINOP_PAIR(sub, ops::FermionOperatorPR, double, -)
+        .PYBIND11_DEFINE_BINOP_PAIR(sub, ops::FermionOperatorPR, std::complex<double>, -)
+        .PYBIND11_DEFINE_BINOP_PAIR(mul, ops::FermionOperatorPR, const ops::FermionOperatorPR&, *)
+        .PYBIND11_DEFINE_BINOP_PAIR(mul, ops::FermionOperatorPR, double, *)
+        .PYBIND11_DEFINE_BINOP_PAIR(mul, ops::FermionOperatorPR, std::complex<double>, *)
+        .PYBIND11_DEFINE_BINOP_PAIR(truediv, ops::FermionOperatorPR, double, /)
+        .PYBIND11_DEFINE_BINOP_PAIR(truediv, ops::FermionOperatorPR, std::complex<double>, /)
+        .PYBIND11_DEFINE_UNOP(__neg__, ops::FermionOperatorPR, -)
+        .PYBIND11_DEFINE_BINOP(__eq__, const ops::FermionOperatorPR, const ops::FermionOperatorPR&, ==)
+        .def(
+            "__pow__", [](const ops::FermionOperatorPR& base, unsigned int exponent) { return base.pow(exponent); },
+            py::is_operator())
+        .def("matrix", &ops::FermionOperatorPR::matrix, "n_qubits"_a)
+        .def("normal_ordered", &ops::FermionOperatorPR::normal_ordered);
 
 #undef TO_STRING1
 #undef TO_STRING

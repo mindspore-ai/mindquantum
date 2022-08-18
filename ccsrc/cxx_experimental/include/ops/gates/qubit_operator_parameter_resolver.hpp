@@ -68,9 +68,6 @@ class QubitOperatorPR
     //! Return the matrix representing a QubitOperator
     MQ_NODISCARD std::optional<csr_matrix_t> matrix(std::optional<uint32_t> n_qubits) const;
 
-    //! Set parameter with given params PR
-    QubitOperatorPR subs(const coefficient_t& params_pr) noexcept;
-
  private:
 #ifdef UNIT_TESTS
     friend class ::UnitTestAccessor;
