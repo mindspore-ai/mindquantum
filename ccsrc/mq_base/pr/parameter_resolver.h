@@ -549,7 +549,7 @@ struct ParameterResolver {
         this->const_value = other.const_value;
     }
 
-    ParameterResolver<T> Conjugate() {
+    ParameterResolver<T> Conjugate() const {
         auto out = *this;
         for (ITER(p, out.data_)) {
             out.data_[p->first] = Conj(p->second);

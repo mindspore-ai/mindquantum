@@ -140,7 +140,7 @@ auto QubitOperator::simplify_(terms_t terms, coefficient_t coeff) -> std::tuple<
     if (std::empty(terms)) {
         return {terms_t{}, coeff};
     }
-    std::sort(
+    std::stable_sort(
         begin(terms), end(terms), [](const auto& lhs, const auto& rhs) constexpr { return lhs.first < rhs.first; });
 
     terms_t reduced_terms;
@@ -160,8 +160,8 @@ auto QubitOperator::simplify_(terms_t terms, coefficient_t coeff) -> std::tuple<
             left_term = *it;
         }
     }
-
-    return {std::move(terms), coeff};
+    reduced_terms.emplace_back(left_term);
+    return {std::move(reduced_terms), coeff};
 }
 
 // -----------------------------------------------------------------------------
@@ -180,8 +180,8 @@ auto QubitOperator::simplify_(py_terms_t py_terms, coefficient_t coeff) -> std::
 // =============================================================================
 
 auto QubitOperator::sort_terms_(terms_t local_ops, coefficient_t coeff) -> std::pair<terms_t, coefficient_t> {
-    std::sort(begin(local_ops), end(local_ops));
-    return {std::move(local_ops), coeff};  // TODO(dnguyen): Should we move? or can (N)RVO take care of that?
+    auto [a, b] = simplify_(local_ops, coeff);
+    return {std::move(a), b};  // TODO(dnguyen): Should we move? or can (N)RVO take care of that?
 }
 
 // =============================================================================

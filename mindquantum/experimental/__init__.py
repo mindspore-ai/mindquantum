@@ -13,13 +13,13 @@
 #   limitations under the License.
 
 # pylint: disable=useless-suppression
-
 """Experimental C++ backend for MindQuantum."""
 
 import sys
 
 try:
     from ._mindquantum_cxx import circuit, ops, optimizer, simulator, symengine
+    from .utils import TermValue, TermValueCpp, TermValueStr
 
     # isort: split
 

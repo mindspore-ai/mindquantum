@@ -40,6 +40,9 @@ struct QubitOperatorTermPolicy {
         }
         return "UNKNOWN"s;
     }
+    static auto hermitian(const terms_t& terms) {
+        return terms;
+    }
     static auto to_string(const term_t& term) {
         return fmt::format("{}{}", to_string(std::get<1>(term)), std::get<0>(term));
     }

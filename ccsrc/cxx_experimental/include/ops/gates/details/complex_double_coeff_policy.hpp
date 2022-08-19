@@ -77,6 +77,9 @@ struct CmplxDoubleCoeffPolicy {
     }
 
     // Misc. functions
+    static auto conjugate(const coeff_t& coeff) {
+        return std::conj(coeff);
+    }
     static auto is_zero(const coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
         return std::abs(coeff) <= abs_tol;
     }
@@ -87,6 +90,7 @@ struct CmplxDoubleCoeffPolicy {
         coeff = coeff.imag();
     }
     static auto compress(coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
+        // TODO(bugfix): how about a negative real or imag part?
         if (coeff.imag() <= abs_tol) {
             cast_real(coeff);
         } else if (coeff.real() <= abs_tol) {

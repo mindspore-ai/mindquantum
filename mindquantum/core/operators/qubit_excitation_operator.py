@@ -18,6 +18,7 @@
 """This module implements qubit-excitation operators."""
 
 from mindquantum.core.parameterresolver import ParameterResolver
+from mindquantum.experimental import TermValue
 
 from ._base_operator import _Operator
 from .fermion_operator import FermionOperator
@@ -137,9 +138,9 @@ class QubitExcitationOperator(_Operator):
             for (idx, excit) in term_i:
                 qubit_op_ = None
                 if excit == 0:
-                    qubit_op_ = QubitOperator(((idx, "X"),), 1) + QubitOperator(((idx, "Y"),), 1j)
+                    qubit_op_ = QubitOperator(((idx, TermValue["X"]),), 1) + QubitOperator(((idx, TermValue["Y"]),), 1j)
                 else:
-                    qubit_op_ = QubitOperator(((idx, "X"),), 1) - QubitOperator(((idx, "Y"),), 1j)
+                    qubit_op_ = QubitOperator(((idx, TermValue["X"]),), 1) - QubitOperator(((idx, TermValue["Y"]),), 1j)
                 qubit_op_ *= 0.5
                 qubit_operator_i *= qubit_op_
             qubit_operator_i *= coeff_i

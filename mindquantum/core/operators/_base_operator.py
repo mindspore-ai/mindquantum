@@ -227,7 +227,7 @@ class _Operator(metaclass=ABCMeta):
 
         raise ValueError(f'exponent must be a non-negative int, but was {type(exponent)} {repr(exponent)}')
 
-    def __iadd__(self, operator):
+    def __iadd__(self, operator) -> "_Operator":
         """In-place method for += addition of QubitOperator.
 
         Args:
@@ -258,12 +258,12 @@ class _Operator(metaclass=ABCMeta):
 
         return self
 
-    def __add__(self, operator):
+    def __add__(self, operator) -> "_Operator":
         sum_operator = copy.deepcopy(self)
         sum_operator += operator
         return sum_operator
 
-    def __radd__(self, operator):
+    def __radd__(self, operator) -> "_Operator":
         sum_operator = copy.deepcopy(self)
         sum_operator += operator
         return sum_operator
@@ -325,7 +325,7 @@ class _Operator(metaclass=ABCMeta):
     def __ne__(self, other):
         return not self == other
 
-    def compress(self, abs_tol=EQ_TOLERANCE):
+    def compress(self, abs_tol=EQ_TOLERANCE) -> "_Operator":
         """
         Eliminate the very small terms that close to zero.
 
@@ -380,7 +380,7 @@ class _Operator(metaclass=ABCMeta):
     @constant.setter
     def constant(self, coefficient):
         """Set the coefficient of the Identity term."""
-        self.terms[()] = coefficient
+        self.terms[()] = ParameterResolver(coefficient)
         return self
 
     def __len__(self):

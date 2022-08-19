@@ -27,6 +27,8 @@ from mindquantum.core.operators.utils import (
     normal_ordered,
     number_operator,
 )
+from mindquantum.experimental import TermValue
+from mindquantum.experimental._mindquantum_cxx.ops import jordan_wigner as cxx_jw
 
 
 class Transform:
@@ -102,25 +104,7 @@ class Transform:
         """
         if not isinstance(self.operator, FermionOperator):
             raise TypeError('This method can be only applied for FermionOperator.')
-        transf_op = QubitOperator()
-        for term in self.operator.terms:
-            # Initialize identity matrix.
-            transformed_term = QubitOperator((), 1 * self.operator.terms[term])
-
-            # Loop through operators, transform and multiply.
-            for ladder_operator in term:
-                # Define lists of qubits to apply Pauli gates
-                index = ladder_operator[0]
-                x1 = [index]
-                y1 = []
-                z1 = list(range(index))
-                x2 = []
-                y2 = [index]
-                z2 = list(range(index))
-                transformed_term *= _transform_ladder_operator(ladder_operator, x1, y1, z1, x2, y2, z2)
-            transf_op += transformed_term
-
-        return transf_op
+        return QubitOperator(cxx_jw(self.operator))
 
     def parity(self):
         r"""
@@ -517,11 +501,15 @@ def _transform_ladder_operator(ladder_operator, x1, y1, z1, x2, y2, z2):  # pyli
     coefficient_1 = 0.5
     coefficient_2 = -0.5j if ladder_operator[1] else 0.5j
     transf_op_1 = QubitOperator(
-        tuple((index, 'X') for index in x1) + tuple((index, 'Y') for index in y1) + tuple((index, 'Z') for index in z1),
+        tuple((index, TermValue['X']) for index in x1)
+        + tuple((index, TermValue['Y']) for index in y1)
+        + tuple((index, TermValue['Z']) for index in z1),
         coefficient_1,
     )
     transf_op_2 = QubitOperator(
-        tuple((index, 'X') for index in x2) + tuple((index, 'Y') for index in y2) + tuple((index, 'Z') for index in z2),
+        tuple((index, TermValue['X']) for index in x2)
+        + tuple((index, TermValue['Y']) for index in y2)
+        + tuple((index, TermValue['Z']) for index in z2),
         coefficient_2,
     )
     return transf_op_1 + transf_op_2

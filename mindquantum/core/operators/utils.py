@@ -15,7 +15,11 @@
 
 """This module provide some useful function related to operators."""
 
+import numpy as np
 
+from mindquantum.experimental import TermValueCpp, TermValueStr
+
+from ...core.parameterresolver import ParameterResolver
 from ..operators.fermion_operator import FermionOperator
 from ..operators.polynomial_tensor import PolynomialTensor
 from ..operators.qubit_excitation_operator import QubitExcitationOperator
@@ -61,6 +65,9 @@ def count_qubits(operator):
         ofops.QubitOperator,
         pqops.QubitOperator,
     )
+    if isinstance(operator, (FermionOperator, QubitOperator)):
+        return operator.count_qubits()
+
     if isinstance(operator, valueable_type):
         num_qubits = 0
         for term in operator.terms:
@@ -185,12 +192,13 @@ def get_fermion_operator(operator):
     Returns:
         FermionOperator, An instance of the FermionOperator class.
     """
-    fermion_operator = FermionOperator()
-
+    terms = {}
     if isinstance(operator, PolynomialTensor):
         for term in operator:
-            fermion_operator += FermionOperator(term, operator[term])
-        return fermion_operator
+            terms[tuple((i, TermValueCpp[TermValueStr[j]]) for i, j in term)] = ParameterResolver(
+                operator[term], dtype=np.complex128
+            ).get_cpp_obj()
+        return FermionOperator(terms)
 
     raise TypeError(f"Unsupported type of oeprator {operator}")
 
@@ -248,19 +256,9 @@ def hermitian_conjugated(operator):
         >>> hermitian_conjugated(q)
         (-2j)*a [X0]
     """
-    # Handle FermionOperator
-    if isinstance(operator, FermionOperator):
-        conjugate_operator = FermionOperator()
-        for term, coefficient in operator.terms.items():
-            # reverse the order and change the action from 0(1) to 1(0)
-            conjugate_term = tuple((index, 1 - op) for (index, op) in reversed(term))
-            conjugate_operator.terms[conjugate_term] = coefficient.conjugate()
-
-    # Handle QubitOperator
-    elif isinstance(operator, QubitOperator):
-        conjugate_operator = QubitOperator()
-        for term, coefficient in operator.terms.items():
-            conjugate_operator.terms[term] = coefficient.conjugate()
+    # Handle FermionOperator and QubitOperator
+    if isinstance(operator, (FermionOperator, QubitOperator)):
+        conjugate_operator = operator.hermitian()
 
     # Handle QubitExcitationOperator
     elif isinstance(operator, QubitExcitationOperator):

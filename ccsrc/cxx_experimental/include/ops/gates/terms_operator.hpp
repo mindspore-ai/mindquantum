@@ -124,6 +124,7 @@ class TermsOperator
     using term_t = mindquantum::ops::term_t;
     using terms_t = mindquantum::ops::terms_t;
     using coeff_term_dict_t = term_dict_t<coefficient_t>;
+    using py_coeff_term_list_t = std::vector<std::pair<mindquantum::ops::py_terms_t, coefficient_t>>;
 
     static constexpr std::string_view kind() {
         return "mindquantum.terms_operator";
@@ -152,25 +153,33 @@ class TermsOperator
     explicit TermsOperator(std::string_view terms_string, coefficient_t coeff = 1.0);
 
     //! Return the number of target qubits of an operator
-    MQ_NODISCARD uint32_t num_targets() const noexcept;
+    MQ_NODISCARD uint32_t num_targets() const;
 
     //! Return true if the TermsOperator is empty
     MQ_NODISCARD auto empty() const noexcept;
 
     //! Return the number of terms within the TermsOperator
-    MQ_NODISCARD auto size() const noexcept;
+    MQ_NODISCARD auto size() const;
 
-    MQ_NODISCARD const coeff_term_dict_t& get_terms() const noexcept;
+    MQ_NODISCARD const coeff_term_dict_t& get_terms() const;
+
+    //! Return the operator in list of term and coefficient pair.
+    // TODO(xusheng): Since the key of coeff_term_dict_t is list, which
+    // is unhashable in python, so the get_terms is unable to bind.
+    MQ_NODISCARD py_coeff_term_list_t get_terms_pair() const;
 
     //! Check whether this operator is equivalent to the identity
-    MQ_NODISCARD bool is_identity(double abs_tol = EQ_TOLERANCE) const noexcept;
+    MQ_NODISCARD bool is_identity(double abs_tol = EQ_TOLERANCE) const;
 
     //! Calculate the number of qubits on which an operator acts
-    MQ_NODISCARD term_t::first_type count_qubits() const noexcept;
+    MQ_NODISCARD term_t::first_type count_qubits() const;
 
     MQ_NODISCARD static derived_t identity();
 
     // -------------------------------------------------------------------------
+
+    //! Return the hermitian of this operator
+    MQ_NODISCARD derived_t hermitian() const;
 
     //! Return the adjoint of this operator
     MQ_NODISCARD operator_t adjoint() const noexcept;
@@ -182,7 +191,7 @@ class TermsOperator
     void constant(const coefficient_t& coeff);
 
     //! Test whether this operator consists of a single term
-    MQ_NODISCARD bool is_singlet() const noexcept;
+    MQ_NODISCARD bool is_singlet() const;
 
     //! Split a single-term operator into its components/words
     /*!
@@ -190,19 +199,19 @@ class TermsOperator
      *
      * \return A vector of TermsOperator::derived_t
      */
-    MQ_NODISCARD std::vector<derived_t> singlet() const noexcept;
+    MQ_NODISCARD std::vector<derived_t> singlet() const;
 
     //! Get the coefficient of a single-term operator
-    MQ_NODISCARD coefficient_t singlet_coeff() const noexcept;
+    MQ_NODISCARD coefficient_t singlet_coeff() const;
 
     //! Split the operator into its individual components
-    MQ_NODISCARD std::vector<derived_t> split() const noexcept;
+    MQ_NODISCARD std::vector<std::pair<coefficient_t, derived_t>> split() const;
 
     //! Return a copy of an operator with all the coefficients set to their real part
-    MQ_NODISCARD derived_t real() const noexcept;
+    MQ_NODISCARD derived_t real() const;
 
     //! Return a copy of an operator with all the coefficients set to their imaginary part
-    MQ_NODISCARD derived_t imag() const noexcept;
+    MQ_NODISCARD derived_t imag() const;
 
     //! Compress a TermsOperator
     /*!
@@ -273,6 +282,9 @@ class TermsOperator
     //! In-place multiplication with a number
     template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_DEF>
     derived_t& operator*=(const number_t& number);
+
+    //! In-place multiplication with a coefficient_t
+    derived_t& operator*=(const coefficient_t& coeff_out);
 
     // ---------------------------------
 

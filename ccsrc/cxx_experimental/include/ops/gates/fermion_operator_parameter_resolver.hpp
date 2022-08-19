@@ -74,6 +74,9 @@ class FermionOperatorPR
     //! Return the normal ordered form of the Fermion Operator.
     MQ_NODISCARD FermionOperatorPR normal_ordered() const;
 
+    //! Set parameter with given params PR
+    FermionOperatorPR subs(const coefficient_t& params_pr) noexcept;
+
  private:
 #ifdef UNIT_TESTS
     friend class ::UnitTestAccessor;

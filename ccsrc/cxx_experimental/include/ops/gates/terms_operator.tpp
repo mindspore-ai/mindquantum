@@ -92,7 +92,7 @@ TermsOperator<derived_t, term_policy_t, coeff_policy_t>::TermsOperator(coeff_ter
 // =============================================================================
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-uint32_t TermsOperator<derived_t, term_policy_t, coeff_policy_t>::num_targets() const noexcept {
+uint32_t TermsOperator<derived_t, term_policy_t, coeff_policy_t>::num_targets() const {
     return num_targets_;
 }
 
@@ -105,21 +105,36 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::empty() const noex
 // -----------------------------------------------------------------------------
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::size() const noexcept {
+auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::size() const {
     return std::size(terms_);
 }
 
 // -----------------------------------------------------------------------------
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::get_terms() const noexcept -> const coeff_term_dict_t& {
+auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::get_terms() const -> const coeff_term_dict_t& {
     return terms_;
 }
 
 // -----------------------------------------------------------------------------
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-bool TermsOperator<derived_t, term_policy_t, coeff_policy_t>::is_identity(double abs_tol) const noexcept {
+auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::get_terms_pair() const -> py_coeff_term_list_t {
+    py_coeff_term_list_t out;
+    for (const auto& [local_ops, coeff] : terms_) {
+        py_terms_t py_local_ops;
+        for (const auto& [idx, term_value] : local_ops) {
+            py_local_ops.emplace_back(std::make_pair(idx, static_cast<uint8_t>(term_value)));
+        }
+        out.emplace_back(std::make_pair(py_local_ops, coeff));
+    }
+    return out;
+}
+
+// -----------------------------------------------------------------------------
+
+template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
+bool TermsOperator<derived_t, term_policy_t, coeff_policy_t>::is_identity(double abs_tol) const {
 #if MQ_HAS_CXX20_RANGES
     return std::ranges::all_of(
         terms_, [abs_tol](const auto& term) constexpr {
@@ -145,7 +160,7 @@ bool TermsOperator<derived_t, term_policy_t, coeff_policy_t>::is_identity(double
 // -----------------------------------------------------------------------------
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::count_qubits() const noexcept -> term_t::first_type {
+auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::count_qubits() const -> term_t::first_type {
     term_t::first_type num_qubits{0};
     for (const auto& [local_ops, coeff] : terms_) {
         if (std::empty(local_ops)) {
@@ -169,6 +184,17 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::count_qubits() con
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
 auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::identity() -> derived_t {
     return derived_t{terms_t{}};
+}
+
+// =============================================================================
+
+template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
+auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::hermitian() const -> derived_t {
+    coeff_term_dict_t terms;
+    for (auto& [local_ops, coeff] : terms_) {
+        terms.emplace(std::move(term_policy_t::hermitian(local_ops)), std::move(coeff_policy_t::conjugate(coeff)));
+    }
+    return derived_t(std::move(terms));
 }
 
 // =============================================================================
@@ -199,14 +225,14 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::constant(const coe
 // =============================================================================
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-bool TermsOperator<derived_t, term_policy_t, coeff_policy_t>::is_singlet() const noexcept {
+bool TermsOperator<derived_t, term_policy_t, coeff_policy_t>::is_singlet() const {
     return size() == 1;
 }
 
 // -----------------------------------------------------------------------------
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::singlet() const noexcept -> std::vector<derived_t> {
+auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::singlet() const -> std::vector<derived_t> {
     if (!is_singlet()) {
         MQ_ERROR("Operator is not a singlet!");
         return {};
@@ -214,7 +240,7 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::singlet() const no
 
     std::vector<derived_t> words;
     for (const auto& local_op : begin(terms_)->first) {
-        words.emplace_back(term_t{local_op}, 1.);
+        words.emplace_back(term_t{local_op}, coeff_policy_t::one);
     }
 
     return words;
@@ -223,7 +249,7 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::singlet() const no
 // -----------------------------------------------------------------------------
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::singlet_coeff() const noexcept -> coefficient_t {
+auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::singlet_coeff() const -> coefficient_t {
     if (!is_singlet()) {
         MQ_ERROR("Operator is not a singlet!");
         return {};
@@ -234,10 +260,11 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::singlet_coeff() co
 // -----------------------------------------------------------------------------
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::split() const noexcept -> std::vector<derived_t> {
-    std::vector<derived_t> result;
+auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::split() const
+    -> std::vector<std::pair<coefficient_t, derived_t>> {
+    std::vector<std::pair<coefficient_t, derived_t>> result;
     for (const auto& [local_ops, coeff] : terms_) {
-        result.emplace_back(local_ops, coeff);
+        result.emplace_back(std::make_pair(coeff, derived_t(local_ops, coeff_policy_t::one)));
     }
     return result;
 }
@@ -245,7 +272,7 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::split() const noex
 // =============================================================================
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::real() const noexcept -> derived_t {
+auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::real() const -> derived_t {
     auto out(*static_cast<const derived_t*>(this));
     for (auto& [local_ops, coeff] : out.terms_) {
         coeff_policy_t::cast_real(coeff);
@@ -256,7 +283,7 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::real() const noexc
 // -----------------------------------------------------------------------------
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::imag() const noexcept -> derived_t {
+auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::imag() const -> derived_t {
     auto out(*static_cast<const derived_t*>(this));
     for (auto& [local_ops, coeff] : out.terms_) {
         coeff_policy_t::cast_imag(coeff);
@@ -404,7 +431,7 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::operator*=(const d
             if (auto it = product_results.find(new_terms); it != end(product_results)) {
                 coeff_policy_t::iadd(it->second, new_coeff);
             } else {
-                product_results.emplace(std::move(new_op), std::move(new_coeff));
+                product_results.emplace(std::move(new_terms), std::move(new_coeff));
             }
         }
     }
@@ -420,6 +447,14 @@ template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_IMPL>
 auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::operator*=(const number_t& number) -> derived_t& {
     for (auto& [term, coeff] : terms_) {
         coeff_policy_t::imul(coeff, number);
+    }
+    return *static_cast<derived_t*>(this);
+}
+
+template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
+auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::operator*=(const coefficient_t& coeff_out) -> derived_t& {
+    for (auto& [term, coeff] : terms_) {
+        coeff_policy_t::imul(coeff, coeff_out);
     }
     return *static_cast<derived_t*>(this);
 }

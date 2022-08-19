@@ -41,6 +41,7 @@
 #include "core/format/format_complex.hpp"
 #include "core/logging.hpp"
 #include "ops/gates.hpp"
+#include "ops/gates/qubit_operator.hpp"
 #include "ops/gates/terms_operator.hpp"
 
 // -----------------------------------------------------------------------------
@@ -143,7 +144,7 @@ auto QubitOperatorPR::simplify_(terms_t terms, coefficient_t coeff) -> std::tupl
     if (std::empty(terms)) {
         return {terms_t{}, coeff};
     }
-    std::sort(
+    std::stable_sort(
         begin(terms), end(terms), [](const auto& lhs, const auto& rhs) constexpr { return lhs.first < rhs.first; });
 
     terms_t reduced_terms;
@@ -163,8 +164,10 @@ auto QubitOperatorPR::simplify_(terms_t terms, coefficient_t coeff) -> std::tupl
             left_term = *it;
         }
     }
-
-    return {std::move(terms), coeff};
+    if (left_term.second != TermValue::I) {
+        reduced_terms.emplace_back(left_term);
+    }
+    return {std::move(reduced_terms), coeff};
 }
 
 // -----------------------------------------------------------------------------
@@ -183,9 +186,19 @@ auto QubitOperatorPR::simplify_(py_terms_t py_terms, coefficient_t coeff) -> std
 // =============================================================================
 
 auto QubitOperatorPR::sort_terms_(terms_t local_ops, coefficient_t coeff) -> std::pair<terms_t, coefficient_t> {
-    std::sort(begin(local_ops), end(local_ops));
-    return {std::move(local_ops), coeff};  // TODO(dnguyen): Should we move? or can (N)RVO take care of that?
+    auto [a, b] = simplify_(local_ops, coeff);
+    return {std::move(a), b};  // TODO(dnguyen): Should we move? or can (N)RVO take care of that?
 }
+
+// =============================================================================
+
+QubitOperatorPR QubitOperatorPR::subs(const coefficient_t& params_pr) noexcept {
+    auto out(*static_cast<const QubitOperatorPR*>(this));
+    for (auto& [local_ops, coeff] : out.terms_) {
+        coeff = coeff.Combination(params_pr);
+    }
+    return out;
+};
 
 // =============================================================================
 

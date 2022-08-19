@@ -92,6 +92,10 @@ struct SymEngineCoeffPolicy {
     }
 
     // Misc. math functions
+    static auto conjugate(const coeff_t& coeff) {
+        // TODO(xusheng): implement conjugate for symengine coefficient.
+        throw std::runtime_error("not implement yet.");
+    }
     static auto is_zero(const coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
         if (SymEngine::is_a_Number(*coeff)) {
             if (SymEngine::is_a_Complex(*coeff)) {

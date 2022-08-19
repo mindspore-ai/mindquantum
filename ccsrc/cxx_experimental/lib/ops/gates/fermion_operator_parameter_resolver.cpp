@@ -265,6 +265,16 @@ auto FermionOperatorPR::normal_ordered() const -> FermionOperatorPR {
 
 // =============================================================================
 
+FermionOperatorPR FermionOperatorPR::subs(const coefficient_t& params_pr) noexcept {
+    auto out(*static_cast<const FermionOperatorPR*>(this));
+    for (auto& [local_ops, coeff] : out.terms_) {
+        coeff = coeff.Combination(params_pr);
+    }
+    return out;
+};
+
+// =============================================================================
+
 auto FermionOperatorPR::normal_ordered_term_(terms_t local_ops, coefficient_t coeff) -> FermionOperatorPR {
     auto ordered_term = FermionOperatorPR{};
 

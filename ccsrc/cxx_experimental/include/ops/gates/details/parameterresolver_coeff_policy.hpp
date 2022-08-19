@@ -81,6 +81,9 @@ struct ParameterResolverCoeffPolicyBase {
     }
 
     // Misc. math functions
+    static auto conjugate(const coeff_t& coeff) {
+        return coeff.Conjugate();
+    }
     static auto is_zero(const coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
         if (coeff.IsConst()) {
             return std::abs(coeff.const_value) <= abs_tol;
@@ -96,22 +99,22 @@ struct ParameterResolverCoeffPolicyBase {
     }
     static auto cast_imag(coeff_t& coeff) {
         if constexpr (is_complex_valued) {
-            if (coeff.IsConst()) {
-                coeff.const_value = coeff.const_value.real();
+            coeff.const_value = coeff.const_value.imag();
+            for (auto p = coeff.data_.begin(); p != coeff.data_.end(); p++) {
+                coeff.data_[p->first] = p->second.imag();
             }
         } else {
             // TODO(dnguyen): Is this really needed?
-            coeff.const_value = 0.;
+            // DONE(xusheng): Yes.
+            coeff *= 0;
         }
     }
     static auto compress(coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
         // NB: This assumes a complex API similar to std::complex
         if constexpr (is_complex_valued) {
             if (coeff.IsConst()) {
-                if (coeff.const_value.imag() <= abs_tol) {
-                    cast_real(coeff);
-                } else if (coeff.const_value.real() <= abs_tol) {
-                    cast_imag(coeff);
+                if (IsTwoNumberClose(coeff.const_value, EQ_TOLERANCE)) {
+                    coeff.const_value = 0.0;
                 }
             }
         }

@@ -125,6 +125,12 @@ class ParameterResolver:  # pylint: disable=too-many-public-methods
             _check_input_type("const", numbers.Number, const)
             const = self.dtype(const)
             self.obj = obj({i: self.dtype(j) for i, j in data.items()}, const)
+        elif isinstance(data, mb.complex_pr):
+            self.obj = data
+            self.dtype = np.complex128
+        elif isinstance(data, mb.real_pr):
+            self.obj = data
+            self.dtype = np.float64
         else:
             raise TypeError(
                 f"data requires a number or a string or a dict or a ParameterResolver, but get {type(data)}!"

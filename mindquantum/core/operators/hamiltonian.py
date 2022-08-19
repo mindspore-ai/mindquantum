@@ -21,6 +21,7 @@ import numpy as np
 import scipy.sparse as sp
 
 from mindquantum import mqbackend as mb
+from mindquantum.experimental import TermValueStr
 
 
 class HowTo(Enum):
@@ -77,7 +78,7 @@ class Hamiltonian:
         for i, j in self.hamiltonian.terms.items():
             if not j.is_const():
                 raise ValueError("Hamiltonian cannot be parameterized.")
-            self.ham_termlist.append((i, j.const))
+            self.ham_termlist.append((tuple((k, TermValueStr[l]) for k, l in i), j.const.real))
 
         self.ham_cpp = None
         self.herm_ham_cpp = None

@@ -17,6 +17,7 @@
 
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include <symengine/basic.h>
 
@@ -33,6 +34,19 @@ struct FermionOperatorTermPolicy {
             return "^"s;
         }
         return ""s;
+    }
+    static auto hermitian(const terms_t& terms) {
+        terms_t new_terms(terms.size());
+        size_t n = 0;
+        for (auto& [qid, value] : terms) {
+            if (value == TermValue::adg) {
+                new_terms[terms.size() - n - 1] = std::make_pair(qid, TermValue::a);
+            } else {
+                new_terms[terms.size() - n - 1] = std::make_pair(qid, TermValue::adg);
+            }
+            n += 1;
+        }
+        return new_terms;
     }
     static auto to_string(const term_t& term) {
         return fmt::format("{}{}", std::get<0>(term), to_string(std::get<1>(term)));
