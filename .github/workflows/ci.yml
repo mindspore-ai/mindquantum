@@ -573,7 +573,7 @@ jobs:
       #     key: boost-${{ env.BOOST_VERSION }}
 
       - name: Download and install Boost
-        uses: MarkusJx/install-boost@v2.3.0
+        uses: MarkusJx/install-boost@v2.3.1
         if: steps.cache-boost.outputs.cache-hit != 'true'
         id: install-boost
         with:
