@@ -30,7 +30,8 @@ def initdata(mole):
             "Hartree-Fock": [],
             "full-CI": [],
             "HEA": [],
-            "1-UpCCGSD": []
+            "1-UpCCGSD": [],
+            "UCCSD": [],
         }
     }
 
@@ -39,7 +40,8 @@ def initdata(mole):
         "bond_lengths": [],
         "parameters": {
             "HEA": [],
-            "1-UpCCGSD": []
+            "1-UpCCGSD": [],
+            "UCCSD": [],
         }
     }
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),

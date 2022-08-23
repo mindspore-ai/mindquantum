@@ -3,12 +3,12 @@ import json
 import numpy as np
 
 markers_dict = dict(zip(["Hartree-Fock", "full-CI", "CCSD", "1-UpCCGSD",
-                    "2-UpCCGSD", "UCCSD0", "UCCSD", "QUCC", "HEA", "ADAPT", "qubit-ADAPT", "QCC"],
-                    ['.', '|', 'x', '+', '1', '2', '3', '4', '1', '2', '3', '4']))
+                    "2-UpCCGSD", "UCCSD0", "UCCSD", "QUCC", "HEA", "ADAPT", "qubit-ADAPT", "QCC", "2-LDCA"],
+                    ['.', '|', 'x', '+', '1', '2', '3', '4', '1', '2', '3', '4', '1']))
 colos_dict = dict(zip(["Hartree-Fock", "full-CI", "CCSD", "1-UpCCGSD",
-                    "2-UpCCGSD", "UCCSD0", "UCCSD", "QUCC", "HEA", "ADAPT", "qubit-ADAPT", "QCC"],
+                    "2-UpCCGSD", "UCCSD0", "UCCSD", "QUCC", "HEA", "ADAPT", "qubit-ADAPT", "QCC", "2-LDCA"],
                     ['aquamarine', 'azure', 'teal', 'limegreen', 'chocolate', 'steelblue', 'magenta', 
-                    'violet', 'orange', 'darkseagreen', 'tomato', 'orchid']))
+                    'violet', 'orange', 'darkseagreen', 'tomato', 'orchid', 'black']))
 #, "HEA", "ADAPT", "qubit-ADAPT"
 
 font = {'family': 'serif',
@@ -150,12 +150,14 @@ def draw_paras(molecular='LiH',
 
 
 if __name__ == '__main__':
-    molecule = "H4"
+    molecule = "LiH"
     figsize=(10, 7.5)
     ylim=(-0.002, 0.02) #setting for error
     #ansatzes = ["CCSD", "UCCSD", "1-UpCCGSD", "2-UpCCGSD", "UCCSD0", "QUCC"]
-    ansatzes = ["CCSD", "HEA", "ADAPT", "qubit-ADAPT", "QCC"]
-    #draw_energies(molecular=molecule, figsize=figsize)
+    # ansatzes = ["CCSD", "HEA", "ADAPT", "qubit-ADAPT", "QCC", "2-LDCA"]
+    ansatzes = ["CCSD", "HEA", "ADAPT", "qubit-ADAPT", "2-LDCA"]
+    # ansatzes = ["UCCSD", "2-LDCA"]
+    # draw_energies(molecular=molecule, figsize=figsize)
     draw_errors(molecular=molecule, figsize=figsize, ansatzes=ansatzes, ylim=ylim)
-    draw_runtimes(molecular=molecule, figsize=figsize, ansatzes=ansatzes)
-    draw_paras(molecular=molecule, figsize=figsize, ansatzes=ansatzes)
+    # draw_runtimes(molecular=molecule, figsize=figsize, ansatzes=ansatzes)
+    # draw_paras(molecular=molecule, figsize=figsize, ansatzes=ansatzes)
