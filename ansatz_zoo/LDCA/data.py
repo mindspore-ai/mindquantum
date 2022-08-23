@@ -19,7 +19,8 @@ def initdata(mole):
             "1-UpCCGSD": [],
             "HEA": [],
             "CCSD": [],
-            "UCCSD": []
+            "UCCSD": [],
+            "LDCA": [],
         }
     }
 
@@ -31,7 +32,7 @@ def initdata(mole):
             "full-CI": [],
             "HEA": [],
             "1-UpCCGSD": [],
-            "UCCSD": [],
+            "LDCA": [],
         }
     }
 
@@ -41,7 +42,7 @@ def initdata(mole):
         "parameters": {
             "HEA": [],
             "1-UpCCGSD": [],
-            "UCCSD": [],
+            "LDCA": [],
         }
     }
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
