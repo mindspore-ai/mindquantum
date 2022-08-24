@@ -27,7 +27,6 @@ from mindquantum.experimental._mindquantum_cxx.ops import (
     FermionOperatorPR as FermionOperator_,
 )
 from mindquantum.experimental.utils import TermValueCpp, TermValueStr
-from mindquantum.mqbackend import complex_pr, real_pr
 from mindquantum.utils.type_value_check import _check_input_type
 
 from ..parameterresolver import ParameterResolver
@@ -141,8 +140,8 @@ class FermionOperator(FermionOperator_):
             if isinstance(term, dict):
                 FermionOperator_.__init__(self, term)
             else:
-                if not isinstance(coeff, (complex_pr, real_pr)):
-                    coeff = ParameterResolver(coeff, dtype=np.complex128).get_cpp_obj()
+                if not isinstance(coeff, ParameterResolver):
+                    coeff = ParameterResolver(coeff)
                 FermionOperator_.__init__(self, term, coeff)
 
     def __deepcopy__(self, memodict) -> "FermionOperator":
@@ -184,7 +183,8 @@ class FermionOperator(FermionOperator_):
 
     def __iadd__(self, other) -> "FermionOperator":
         """Inplace add a number or a FermionOperator."""
-        return FermionOperator(FermionOperator_.__iadd__(self, other))
+        FermionOperator_.__iadd__(self, other)
+        return self
 
     def __radd__(self, other) -> "FermionOperator":
         """Right add a number or a FermionOperator."""
@@ -196,7 +196,8 @@ class FermionOperator(FermionOperator_):
 
     def __isub__(self, other) -> "FermionOperator":
         """Inplace subtrace a number or a FermionOperator."""
-        return FermionOperator(FermionOperator_.__isub__(self, other))
+        FermionOperator_.__isub__(self, other)
+        return self
 
     def __rsub__(self, other) -> "FermionOperator":
         """Subtrace a number or a FermionOperator with this FermionOperator."""
@@ -204,26 +205,21 @@ class FermionOperator(FermionOperator_):
 
     def __mul__(self, other) -> "FermionOperator":
         """Multiple a number or a FermionOperator."""
-        if isinstance(other, ParameterResolver):
-            other = other.get_cpp_obj().to_complex()
         if isinstance(other, str):
-            other = ParameterResolver(other, dtype=np.complex128).get_cpp_obj()
+            other = ParameterResolver(other)
         return FermionOperator(FermionOperator_.__mul__(self, other))
 
     def __imul__(self, other) -> "FermionOperator":
         """Inplace multiple a number or a FermionOperator."""
-        if isinstance(other, ParameterResolver):
-            other = other.get_cpp_obj().to_complex()
         if isinstance(other, str):
-            other = ParameterResolver(other, dtype=np.complex128).get_cpp_obj()
-        return FermionOperator(FermionOperator_.__imul__(self, other))
+            other = ParameterResolver(other)
+        FermionOperator_.__imul__(self, other)
+        return self
 
     def __rmul__(self, other) -> "FermionOperator":
         """Right multiple a number or a FermionOperator."""
-        if isinstance(other, ParameterResolver):
-            other = other.get_cpp_obj().to_complex()
         if isinstance(other, str):
-            other = ParameterResolver(other, dtype=np.complex128).get_cpp_obj()
+            other = ParameterResolver(other)
         return FermionOperator(FermionOperator_.__mul__(self, other))
 
     def __truediv__(self, other) -> "FermionOperator":
@@ -232,7 +228,8 @@ class FermionOperator(FermionOperator_):
 
     def __itruediv__(self, other) -> "FermionOperator":
         """Divide a number."""
-        return FermionOperator(FermionOperator_.__itruediv__(self, other))
+        FermionOperator_.__itruediv__(self, other)
+        return self
 
     def __power__(self, exponent: int) -> "FermionOperator":
         """Exponential of FermionOperator."""
@@ -322,7 +319,9 @@ class FermionOperator(FermionOperator_):
     @constant.setter
     def constant(self, coeff):
         """Set the coefficient of the Identity term."""
-        FermionOperator_.constant(self, ParameterResolver(coeff, dtype=np.complex128).get_cpp_obj())
+        if not isinstance(coeff, ParameterResolver):
+            coeff = ParameterResolver(coeff)
+        FermionOperator_.constant(self, coeff)
 
     def count_qubits(self) -> int:
         """
@@ -424,7 +423,8 @@ class FermionOperator(FermionOperator_):
 
     def subs(self, params_value: ParameterResolver) -> "FermionOperator":
         """Replace the symbolical representation with the corresponding value."""
-        params_value = ParameterResolver(params_value, dtype=np.complex128).get_cpp_obj()
+        if not isinstance(params_value, ParameterResolver):
+            params_value = ParameterResolver(params_value)
         return FermionOperator(FermionOperator_.subs(self, params_value))
 
     @property
@@ -471,7 +471,7 @@ class FermionOperator(FermionOperator_):
             >>> print(ops.singlet_coeff())
             {'a': (1,0)}, const: (0,0)
         """
-        return FermionOperator_.singlet_coeff(self)
+        return ParameterResolver(FermionOperator_.singlet_coeff(self))
 
     @property
     def size(self):
@@ -493,7 +493,7 @@ class FermionOperator(FermionOperator_):
             [[{'a': 1}, const: 0, 1 [0] ], [{}, const: 1.2, 1 [1^] ]]
         """
         for i, j in FermionOperator_.split(self):
-            yield [i, FermionOperator(j)]
+            yield [ParameterResolver(i), FermionOperator(j)]
 
     def to_openfermion(self):
         """Convert fermion operator to openfermion format."""
@@ -526,9 +526,7 @@ class FermionOperator(FermionOperator_):
         _check_input_type('of_ops', OFFermionOperator, of_ops)
         terms = {}
         for k, v in of_ops.terms.items():
-            terms[tuple((i, TermValueCpp[TermValueStr[j]]) for i, j in k)] = ParameterResolver(
-                v, dtype=np.complex128
-            ).get_cpp_obj()
+            terms[tuple((i, TermValueCpp[TermValueStr[j]]) for i, j in k)] = ParameterResolver(v)
         return FermionOperator(terms)
 
 

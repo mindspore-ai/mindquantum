@@ -175,7 +175,7 @@ struct ParameterResolver {
         return true;
     }
 
-    bool IsNotZero() {
+    bool IsNotZero() const {
         if (!IsTwoNumberClose(this->const_value, 0.0)) {
             return true;
         }
@@ -348,7 +348,6 @@ struct ParameterResolver {
     }
 
     ParameterResolver<T>& operator/=(T value) {
-        this->const_value /= value;
         for (ITER(p, this->data_)) {
             this->data_[p->first] /= value;
         }
@@ -582,7 +581,18 @@ struct ParameterResolver {
         }
         return pr;
     }
-
+    void KeepReal() {
+        this->const_value = std::real(this->const_value);
+        for (auto& [name, value] : this->data_) {
+            value = std::real(value);
+        }
+    }
+    void KeepImag() {
+        this->const_value = std::imag(this->const_value);
+        for (auto& [name, value] : this->data_) {
+            value = std::imag(value);
+        }
+    }
     auto Imag() const {
         using type = typename RemoveComplex<T>::type;
         ParameterResolver<type> pr = {};
@@ -612,11 +622,11 @@ struct ParameterResolver {
         return out;
     }
 
-    bool IsHermitian() {
+    bool IsHermitian() const {
         return *this == this->Conjugate();
     }
 
-    bool IsAntiHermitian() {
+    bool IsAntiHermitian() const {
         return *this == -this->Conjugate();
     }
 

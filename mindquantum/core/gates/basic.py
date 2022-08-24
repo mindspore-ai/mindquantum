@@ -412,9 +412,9 @@ class ParameterGate(QuantumGate):
         """Get the underlying C++ object."""
         cpp_gate = super().get_cpp_obj()
         if not self.parameterized:
-            cpp_gate.apply_value(self.coeff.const)
+            cpp_gate.apply_value(self.coeff.const.real)
         else:
-            cpp_gate.params = self.coeff.get_cpp_obj()
+            cpp_gate.params = self.coeff.real.to_real_obj()
         return cpp_gate
 
     def no_grad(self):

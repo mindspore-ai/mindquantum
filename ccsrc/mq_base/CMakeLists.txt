@@ -23,6 +23,7 @@ set(MQ_BASE_HEADERS
     matrix/two_dim_matrix.h
     core/popcnt.h
     pr/parameter_resolver.h
+    pr/PRPython.h
     projector/projector.h
     sparse/algo.h
     sparse/csrhdmatrix.h

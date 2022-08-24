@@ -84,7 +84,7 @@ def _qfi_matrix_base(circuit: Circuit, which_part='both', backend='projectq'):
     def qfi_ops(pr: ParameterResolver):
         pr = _check_and_generate_pr_type(pr, circuit.params_name)
         ket.reset()
-        pr_cpp = pr_converter(pr_map, pr).get_cpp_obj()
+        pr_cpp = pr_converter(pr_map, pr).to_real_obj()
         if which_part != 'B':
             part_a = np.zeros((len(new_idx_map), len(new_idx_map)), np.complex128)
         if which_part != 'A':

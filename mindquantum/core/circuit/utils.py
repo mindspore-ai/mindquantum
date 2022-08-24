@@ -292,7 +292,7 @@ def _add_prefix(circ, prefix):
         gate = copy.deepcopy(gate)
         if gate.parameterized:
             origin_encoder = gate.coeff.encoder_parameters
-            pr = ParameterResolver(dtype=gate.coeff.dtype)
+            pr = ParameterResolver()
             for k, v in gate.coeff.items():
                 pr[f'{prefix}_{k}'] = v
                 if k in origin_encoder:
@@ -385,7 +385,7 @@ def _change_param_name(circ, name_map):
         gate = copy.deepcopy(gate)
         if gate.parameterized:
             origin_encoder = gate.coeff.encoder_parameters
-            pr = ParameterResolver(dtype=gate.coeff.dtype)
+            pr = ParameterResolver()
             for k, v in gate.coeff.items():
                 if k not in name_map:
                     raise KeyError(f"Original parameter {k} not in name_map!")

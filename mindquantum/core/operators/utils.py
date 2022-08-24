@@ -15,8 +15,6 @@
 
 """This module provide some useful function related to operators."""
 
-import numpy as np
-
 from mindquantum.experimental import TermValueCpp, TermValueStr
 
 from ...core.parameterresolver import ParameterResolver
@@ -195,9 +193,7 @@ def get_fermion_operator(operator):
     terms = {}
     if isinstance(operator, PolynomialTensor):
         for term in operator:
-            terms[tuple((i, TermValueCpp[TermValueStr[j]]) for i, j in term)] = ParameterResolver(
-                operator[term], dtype=np.complex128
-            ).get_cpp_obj()
+            terms[tuple((i, TermValueCpp[TermValueStr[j]]) for i, j in term)] = ParameterResolver(operator[term])
         return FermionOperator(terms)
 
     raise TypeError(f"Unsupported type of oeprator {operator}")

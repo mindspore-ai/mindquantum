@@ -741,7 +741,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         from mindquantum.simulator import Simulator
 
         sim = Simulator(backend, self.n_qubits, seed=seed)
-        return np.array(sim.sim.get_circuit_matrix(circ.get_cpp_obj(), pr.get_cpp_obj())).T
+        return np.array(sim.sim.get_circuit_matrix(circ.get_cpp_obj(), pr.to_real_obj())).T
 
     @property
     def is_measure_end(self):

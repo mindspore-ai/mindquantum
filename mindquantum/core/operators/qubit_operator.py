@@ -19,14 +19,14 @@
 """This is the module for the Qubit Operator."""
 from typing import Dict, List, Tuple
 
-import numpy as np
 
 from mindquantum.core.operators._base_operator import EQ_TOLERANCE
 from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.experimental import TermValueStr
-from mindquantum.experimental._mindquantum_cxx.ops import QubitOperatorPR as QubitOperator_
+from mindquantum.experimental._mindquantum_cxx.ops import (
+    QubitOperatorPR as QubitOperator_,
+)
 from mindquantum.experimental.utils import TermValueCpp
-from mindquantum.mqbackend import complex_pr, real_pr
 from mindquantum.utils.type_value_check import _check_input_type
 
 
@@ -83,8 +83,8 @@ class QubitOperator(QubitOperator_):
             else:
                 if isinstance(term, str):
                     term = term.upper()
-                if not isinstance(coeff, (complex_pr, real_pr)):
-                    coeff = ParameterResolver(coeff, dtype=np.complex128).get_cpp_obj()
+                if not isinstance(coeff, ParameterResolver):
+                    coeff = ParameterResolver(coeff)
                 QubitOperator_.__init__(self, term, coeff)
 
     def __deepcopy__(self, memodict) -> "QubitOperator":
@@ -126,7 +126,8 @@ class QubitOperator(QubitOperator_):
 
     def __iadd__(self, other) -> "QubitOperator":
         """Inplace add a number or a QubitOperator."""
-        return QubitOperator(QubitOperator_.__iadd__(self, other))
+        QubitOperator_.__iadd__(self, other)
+        return self
 
     def __radd__(self, other) -> "QubitOperator":
         """Right add a number or a QubitOperator."""
@@ -138,7 +139,8 @@ class QubitOperator(QubitOperator_):
 
     def __isub__(self, other) -> "QubitOperator":
         """Inplace subtrace a number or a QubitOperator."""
-        return QubitOperator(QubitOperator_.__isub__(self, other))
+        QubitOperator_.__isub__(self, other)
+        return self
 
     def __rsub__(self, other) -> "QubitOperator":
         """Subtrace a number or a QubitOperator this QubitOperator."""
@@ -146,26 +148,21 @@ class QubitOperator(QubitOperator_):
 
     def __mul__(self, other) -> "QubitOperator":
         """Multiple a number or a QubitOperator."""
-        if isinstance(other, ParameterResolver):
-            other = other.get_cpp_obj().to_complex()
         if isinstance(other, str):
-            other = ParameterResolver(other, dtype=np.complex128).get_cpp_obj()
+            other = ParameterResolver(other)
         return QubitOperator(QubitOperator_.__mul__(self, other))
 
     def __imul__(self, other) -> "QubitOperator":
         """Inplace multiple a number or a QubitOperator."""
-        if isinstance(other, ParameterResolver):
-            other = other.get_cpp_obj().to_complex()
         if isinstance(other, str):
-            other = ParameterResolver(other, dtype=np.complex128).get_cpp_obj()
-        return QubitOperator(QubitOperator_.__imul__(self, other))
+            other = ParameterResolver(other)
+        QubitOperator_.__imul__(self, other)
+        return self
 
     def __rmul__(self, other) -> "QubitOperator":
         """Right multiple a number or a QubitOperator."""
-        if isinstance(other, ParameterResolver):
-            other = other.get_cpp_obj().to_complex()
         if isinstance(other, str):
-            other = ParameterResolver(other, dtype=np.complex128).get_cpp_obj()
+            other = ParameterResolver(other)
         return QubitOperator(QubitOperator_.__mul__(self, other))
 
     def __truediv__(self, other) -> "QubitOperator":
@@ -264,7 +261,9 @@ class QubitOperator(QubitOperator_):
     @constant.setter
     def constant(self, coeff):
         """Set the coefficient of the Identity term."""
-        QubitOperator_.constant(self, ParameterResolver(coeff, dtype=np.complex128).get_cpp_obj())
+        if not isinstance(coeff, ParameterResolver):
+            coeff = ParameterResolver(coeff)
+        QubitOperator_.constant(self, coeff)
 
     def count_gates(self):
         """
@@ -364,7 +363,8 @@ class QubitOperator(QubitOperator_):
 
     def subs(self, params_value: ParameterResolver) -> "QubitOperator":
         """Replace the symbolical representation with the corresponding value."""
-        params_value = ParameterResolver(params_value, dtype=np.complex128).get_cpp_obj()
+        if not isinstance(params_value, ParameterResolver):
+            params_value = ParameterResolver(params_value)
         return QubitOperator(QubitOperator_.subs(self, params_value))
 
     @property
@@ -411,7 +411,7 @@ class QubitOperator(QubitOperator_):
             >>> print(ops.singlet_coeff())
             {'a': (1,0)}, const: (0,0)
         """
-        return QubitOperator_.singlet_coeff(self)
+        return ParameterResolver(QubitOperator_.singlet_coeff(self))
 
     @property
     def size(self):
@@ -433,7 +433,7 @@ class QubitOperator(QubitOperator_):
             [[{'a': (1,0)}, const: (0,0), 1 [X0] ], [{}, const: (1.2,0), 1 [Z1] ]]
         """
         for i, j in QubitOperator_.split(self):
-            yield [i, QubitOperator(j)]
+            yield [ParameterResolver(i), QubitOperator(j)]
 
     def to_openfermion(self):
         """Convert qubit operator to openfermion format."""
@@ -466,7 +466,7 @@ class QubitOperator(QubitOperator_):
         _check_input_type('of_ops', OFQubitOperator, of_ops)
         terms = {}
         for k, v in of_ops.terms.items():
-            terms[tuple((i, TermValueCpp[j]) for i, j in k)] = ParameterResolver(v, dtype=np.complex128).get_cpp_obj()
+            terms[tuple((i, TermValueCpp[j]) for i, j in k)] = ParameterResolver(v)
         return QubitOperator(terms)
 
 

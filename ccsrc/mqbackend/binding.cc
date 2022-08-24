@@ -27,6 +27,7 @@
 #include "gate/gates.h"
 #include "hamiltonian/hamiltonian.h"
 #include "matrix/two_dim_matrix.h"
+#include "pr/PRPython.h"
 #include "pr/parameter_resolver.h"
 #include "sparse/algo.h"
 #include "sparse/csrhdmatrix.h"
@@ -47,6 +48,60 @@ using mindquantum::projectq::InnerProduct;
 using mindquantum::projectq::Projectq;
 #endif
 
+void BindPRPython(py::module *m) {
+    py::class_<PRPython, std::shared_ptr<PRPython>>(*m, "pr_python")
+        .def(py::init<double>())
+        .def(py::init<std::complex<double>>())
+        .def(py::init<const MST<double>, double>())
+        .def(py::init<const MST<std::complex<double>>, std::complex<double>>())
+        .def(py::init([](const PRPython &pr) { return std::make_shared<PRPython>(pr); }))
+        .def(py::init<std::string, PRTypeID>())
+        .def("set_const", py::overload_cast<double>(&PRPython::SetConst))
+        .def("set_const", py::overload_cast<std::complex<double>>(&PRPython::SetConst))
+        .def("params_name", &PRPython::ParamsName)
+        .def("display", &PRPython::PrintInfo)
+        .def("__len__", &PRPython::Size)
+        .def("size", &PRPython::Size)
+        .def("__bool__", &PRPython::IsNotZero)
+        .def("__repr__", &PRPython::ToString)
+        .def("__str__", &PRPython::ToString)
+        .def("__contains__", &PRPython::Contains)
+        .def("__copy__", [](const PRPython &pr) { return pr; })
+        .def("get_key", &PRPython::GetKey)
+        .def(py::self += double(), py::is_operator())
+        .def(py::self += std::complex<double>(), py::is_operator())
+        .def(py::self += py::self, py::is_operator())
+        .def(py::self -= double(), py::is_operator())
+        .def(py::self -= std::complex<double>(), py::is_operator())
+        .def(py::self -= py::self, py::is_operator())
+        .def(py::self *= double(), py::is_operator())
+        .def(py::self *= std::complex<double>(), py::is_operator())
+        .def(py::self *= py::self, py::is_operator())
+        .def(py::self /= double(), py::is_operator())
+        .def(py::self /= std::complex<double>(), py::is_operator())
+        .def(py::self /= py::self, py::is_operator())
+        .def("is_const", &PRPython::IsConst)
+        .def("is_const", &PRPython::IsConst)
+        .def("requires_grad", &PRPython::RequiresGrad)
+        .def("no_grad", &PRPython::NoGrad)
+        .def("no_grad_part", &PRPython::NoGradPart)
+        .def("requires_grad_part", &PRPython::RequiresGradPart)
+        .def("as_encoder", &PRPython::AsEncoder)
+        .def("as_ansatz", &PRPython::AsAnsatz)
+        .def("encoder_part", &PRPython::EncoderPart)
+        .def("ansatz_part", &PRPython::AnsatzPart)
+        .def("update", py::overload_cast<const PRPython &>(&PRPython::Update))
+        .def("conjugate", &PRPython::Conjugate)
+        .def("combination", &PRPython::Combination)
+        .def("real", &PRPython::Real)
+        .def("imag", &PRPython::Imag)
+        // .def("pop", &PRPython::Pop)
+        .def("is_hermitian", &PRPython::IsHermitian)
+        .def("is_anti_hermitian", &PRPython::IsAntiHermitian)
+        .def("to_complex", &PRPython::ToComplexPR)
+        .def("is_complex_pr", &PRPython::IsComplexPR);
+}
+
 template <typename T>
 void BindPR(py::module *m, const std::string &name) {
     py::class_<ParameterResolver<T>, std::shared_ptr<ParameterResolver<T>>>(*m, name.c_str())
@@ -55,10 +110,10 @@ void BindPR(py::module *m, const std::string &name) {
         .def(py::init<std::string>())
         .def(py::init<const MST<T> &, T>())
         .def(py::init<const MST<T> &, T, const SS &, const SS &>())
-        .def_readonly("const", &ParameterResolver<T>::const_value)
+        .def("const", [](const ParameterResolver<T> &pr) { return pr.const_value; })
         .def_readonly("data", &ParameterResolver<T>::data_)
-        .def_readonly("no_grad_parameters", &ParameterResolver<T>::no_grad_parameters_)
-        .def_readonly("encoder_parameters", &ParameterResolver<T>::encoder_parameters_)
+        .def("no_grad_parameters", [](const ParameterResolver<T> &pr) { return pr.no_grad_parameters_; })
+        .def("encoder_parameters", [](const ParameterResolver<T> &pr) { return pr.encoder_parameters_; })
         .def("set_const", &ParameterResolver<T>::SetConst)
         .def("params_name", &ParameterResolver<T>::ParamsName)
         .def("display", &ParameterResolver<T>::PrintInfo)
@@ -74,17 +129,25 @@ void BindPR(py::module *m, const std::string &name) {
         .def("__copy__", &ParameterResolver<T>::Copy)
         .def("get_key", &ParameterResolver<T>::GetKey)
         .def(py::self + py::self)
+        .def(py::self += py::self)
         .def(T() + py::self)
         .def(py::self + T())
+        .def(py::self += T())
         .def(py::self - py::self)
+        .def(py::self -= py::self)
         .def(T() - py::self)
         .def(py::self - T())
+        .def(py::self -= T())
         .def(py::self * py::self)
+        .def(py::self *= py::self)
         .def(py::self * T())
+        .def(py::self *= T())
         .def(T() * py::self)
         .def(py::self / py::self)
+        .def(py::self /= py::self)
         .def(T() / py::self)
         .def(py::self / T())
+        .def(py::self /= T())
         .def(py::self == T())
         .def(py::self == py::self)
         .def(-py::self)
@@ -101,6 +164,8 @@ void BindPR(py::module *m, const std::string &name) {
         .def("conjugate", &ParameterResolver<T>::Conjugate)
         .def("combination", &ParameterResolver<T>::Combination)
         .def("real", &ParameterResolver<T>::Real)
+        .def("keep_real", &ParameterResolver<T>::KeepReal)
+        .def("keep_imag", &ParameterResolver<T>::KeepImag)
         .def("imag", &ParameterResolver<T>::Imag)
         .def("pop", &ParameterResolver<T>::Pop)
         .def("is_hermitian", &ParameterResolver<T>::IsHermitian)
@@ -146,6 +211,7 @@ PYBIND11_MODULE(mqbackend, m) {
     // parameter resolver
     BindPR<MT>(&m, "real_pr");
     BindPR<std::complex<MT>>(&m, "complex_pr");
+    BindPRPython(&m);
 
     // pauli mat
     py::class_<PauliMat<MT>, std::shared_ptr<PauliMat<MT>>>(m, "pauli_mat")

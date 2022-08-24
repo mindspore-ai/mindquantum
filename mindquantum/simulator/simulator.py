@@ -208,7 +208,7 @@ class Simulator:
                 self.sim.apply_gate(gate.get_cpp_obj())
             else:
                 pr = _check_and_generate_pr_type(pr, gate.coeff.params_name)
-                self.sim.apply_gate(gate.get_cpp_obj(), pr.get_cpp_obj(), diff)
+                self.sim.apply_gate(gate.get_cpp_obj(), pr.to_real_obj(), diff)
         return None
 
     def apply_circuit(self, circuit, pr=None):
@@ -262,13 +262,13 @@ class Simulator:
             pr = ParameterResolver()
         if circuit.has_measure_gate:
             samples = np.array(
-                self.sim.apply_circuit_with_measure(circuit.get_cpp_obj(), pr.get_cpp_obj(), res.keys_map)
+                self.sim.apply_circuit_with_measure(circuit.get_cpp_obj(), pr.to_real_obj(), res.keys_map)
             )
             samples = samples.reshape((1, -1))
             res.collect_data(samples)
             return res
         if circuit.params_name:
-            self.sim.apply_circuit(circuit.get_cpp_obj(), pr.get_cpp_obj())
+            self.sim.apply_circuit(circuit.get_cpp_obj(), pr.to_real_obj())
         else:
             self.sim.apply_circuit(circuit.get_cpp_obj())
         return None
@@ -341,7 +341,7 @@ class Simulator:
             sim.apply_circuit(circuit.remove_measure(), pr)
             circuit = Circuit(circuit.all_measures.keys())
         samples = np.array(
-            sim.sim.sampling(circuit.get_cpp_obj(), pr.get_cpp_obj(), shots, res.keys_map, seed)
+            sim.sim.sampling(circuit.get_cpp_obj(), pr.to_real_obj(), shots, res.keys_map, seed)
         ).reshape((shots, -1))
         res.collect_data(samples)
         return res

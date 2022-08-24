@@ -92,8 +92,9 @@ struct ParameterResolverCoeffPolicyBase {
     }
     static auto cast_real(coeff_t& coeff) {
         if constexpr (is_complex_valued) {
-            if (coeff.IsConst()) {
-                coeff.const_value.imag(0.);
+            coeff.const_value = coeff.const_value.real();
+            for (auto p = coeff.data_.begin(); p != coeff.data_.end(); p++) {
+                coeff.data_[p->first] = p->second.real();
             }
         }
     }
