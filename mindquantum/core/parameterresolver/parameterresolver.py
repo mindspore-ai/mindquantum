@@ -34,6 +34,7 @@ def is_type_upgrade(origin_v, other_v):
     return not isinstance(tmp, type(origin_v))
 
 
+# pylint: disable=invalid-overridden-method
 class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
     """
     A ParameterRsolver can set the parameter of parameterized quantum gate or parameterized quantum circuit.

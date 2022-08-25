@@ -26,7 +26,7 @@ from mindquantum.core.operators._base_operator import EQ_TOLERANCE
 from mindquantum.experimental._mindquantum_cxx.ops import (
     FermionOperatorPR as FermionOperator_,
 )
-from mindquantum.experimental.utils import TermValueCpp, TermValueStr
+from mindquantum.experimental.utils import TermValue
 from mindquantum.utils.type_value_check import _check_input_type
 
 from ..parameterresolver import ParameterResolver
@@ -153,7 +153,7 @@ class FermionOperator(FermionOperator_):
         terms = self.terms
         new_str = ''
         for idx, (term, coeff) in enumerate(terms.items()):
-            term = [f"{i}{'^' if j else ''}" for i, j in term]
+            term = [f"{i}{'^' if j == TermValue.adg else ''}" for i, j in term]
             end = ' +\n'
             if idx == len(terms) - 1:
                 end = ' '
@@ -312,9 +312,9 @@ class FermionOperator(FermionOperator_):
         return FermionOperator(FermionOperator_.compress(self, abs_tol))
 
     @property
-    def constant(self) -> "FermionOperator":
+    def constant(self) -> ParameterResolver:
         """Return the value of the constant term."""
-        return FermionOperator_.constant(self)
+        return ParameterResolver(FermionOperator_.constant(self))
 
     @constant.setter
     def constant(self, coeff):
@@ -376,6 +376,10 @@ class FermionOperator(FermionOperator_):
             True
         """
         return FermionOperator(FermionOperator_.loads(strs))
+
+    def get_coeff(self, term):
+        """Get coefference of given term."""
+        return ParameterResolver(FermionOperator_.get_coeff(self, term))
 
     def hermitian(self) -> "FermionOperator":
         """
@@ -504,7 +508,7 @@ class FermionOperator(FermionOperator_):
         for term, pr in self.terms.items():
             if not pr.is_const:
                 raise ValueError("Cannot convert parameteized fermion operator to openfermion format")
-            terms[term] = pr.const
+            terms[tuple((i, TermValue[j]) for i, j in term)] = pr.const
         fermion_operator = OFFermionOperator()
         fermion_operator.terms = terms
         return fermion_operator
@@ -526,7 +530,7 @@ class FermionOperator(FermionOperator_):
         _check_input_type('of_ops', OFFermionOperator, of_ops)
         terms = {}
         for k, v in of_ops.terms.items():
-            terms[tuple((i, TermValueCpp[TermValueStr[j]]) for i, j in k)] = ParameterResolver(v)
+            terms[tuple((i, TermValue[j]) for i, j in k)] = ParameterResolver(v)
         return FermionOperator(terms)
 
 

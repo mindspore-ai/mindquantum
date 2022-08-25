@@ -19,14 +19,12 @@
 """This is the module for the Qubit Operator."""
 from typing import Dict, List, Tuple
 
-
 from mindquantum.core.operators._base_operator import EQ_TOLERANCE
 from mindquantum.core.parameterresolver import ParameterResolver
-from mindquantum.experimental import TermValueStr
+from mindquantum.experimental import TermValue
 from mindquantum.experimental._mindquantum_cxx.ops import (
     QubitOperatorPR as QubitOperator_,
 )
-from mindquantum.experimental.utils import TermValueCpp
 from mindquantum.utils.type_value_check import _check_input_type
 
 
@@ -96,7 +94,7 @@ class QubitOperator(QubitOperator_):
         terms = self.terms
         new_str = ''
         for idx, (term, coeff) in enumerate(terms.items()):
-            term = [f"{TermValueStr[j]}{i}" for i, j in term]
+            term = [f"{TermValue[j]}{i}" for i, j in term]
             end = ' +\n'
             if idx == len(terms) - 1:
                 end = ' '
@@ -254,9 +252,9 @@ class QubitOperator(QubitOperator_):
         return QubitOperator(QubitOperator_.compress(self, abs_tol))
 
     @property
-    def constant(self) -> "QubitOperator":
+    def constant(self) -> ParameterResolver:
         """Return the value of the constant term."""
-        return QubitOperator_.constant(self)
+        return ParameterResolver(QubitOperator_.constant(self))
 
     @constant.setter
     def constant(self, coeff):
@@ -333,6 +331,10 @@ class QubitOperator(QubitOperator_):
             True
         """
         return QubitOperator(QubitOperator_.loads(strs))
+
+    def get_coeff(self, term):
+        """Get coefference of given term."""
+        return ParameterResolver(QubitOperator_.get_coeff(self, term))
 
     def hermitian(self) -> "QubitOperator":
         """
@@ -444,7 +446,7 @@ class QubitOperator(QubitOperator_):
         for term, pr in self.terms.items():
             if not pr.is_const:
                 raise ValueError("Cannot convert parameteized fermion operator to openfermion format")
-            terms[tuple((i, TermValueStr[j]) for i, j in term)] = pr.const
+            terms[tuple((i, TermValue[j]) for i, j in term)] = pr.const
         fermion_operator = OFQubitOperator()
         fermion_operator.terms = terms
         return fermion_operator
@@ -466,7 +468,7 @@ class QubitOperator(QubitOperator_):
         _check_input_type('of_ops', OFQubitOperator, of_ops)
         terms = {}
         for k, v in of_ops.terms.items():
-            terms[tuple((i, TermValueCpp[j]) for i, j in k)] = ParameterResolver(v)
+            terms[tuple((i, TermValue[j]) for i, j in k)] = ParameterResolver(v)
         return QubitOperator(terms)
 
 

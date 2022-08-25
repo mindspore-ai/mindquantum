@@ -124,7 +124,7 @@ class TermsOperator
     using term_t = mindquantum::ops::term_t;
     using terms_t = mindquantum::ops::terms_t;
     using coeff_term_dict_t = term_dict_t<coefficient_t>;
-    using py_coeff_term_list_t = std::vector<std::pair<mindquantum::ops::py_terms_t, coefficient_t>>;
+    using py_coeff_term_list_t = std::vector<std::pair<mindquantum::ops::terms_t, coefficient_t>>;
 
     static constexpr std::string_view kind() {
         return "mindquantum.terms_operator";
@@ -167,6 +167,8 @@ class TermsOperator
     // TODO(xusheng): Since the key of coeff_term_dict_t is list, which
     // is unhashable in python, so the get_terms is unable to bind.
     MQ_NODISCARD py_coeff_term_list_t get_terms_pair() const;
+
+    MQ_NODISCARD coefficient_t get_coeff(const terms_t& term) const;
 
     //! Check whether this operator is equivalent to the identity
     MQ_NODISCARD bool is_identity(double abs_tol = EQ_TOLERANCE) const;

@@ -19,7 +19,7 @@ import sys
 
 try:
     from ._mindquantum_cxx import circuit, ops, optimizer, simulator, symengine
-    from .utils import TermValue, TermValueCpp, TermValueStr
+    from .utils import TermValue
 
     # isort: split
 

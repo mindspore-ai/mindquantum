@@ -15,7 +15,7 @@
 
 """This module provide some useful function related to operators."""
 
-from mindquantum.experimental import TermValueCpp, TermValueStr
+from mindquantum.experimental import TermValue
 
 from ...core.parameterresolver import ParameterResolver
 from ..operators.fermion_operator import FermionOperator
@@ -130,7 +130,7 @@ def _normal_ordered_term(term, coefficient):
             right_sub_term = term[j]
             # Swap operators if left operator is annihilation op and right operator is
             # a\dagger operator
-            if not left_sub_term[1] and right_sub_term[1]:
+            if left_sub_term[1] == TermValue.a and right_sub_term[1] == TermValue.adg:
                 term[j], term[j - 1] = left_sub_term, right_sub_term
                 coefficient = coefficient * -1
                 # If indice are same, employ the anti-commutation relationship
@@ -175,10 +175,7 @@ def normal_ordered(fermion_operator):
     """
     if not isinstance(fermion_operator, FermionOperator):
         raise ValueError("The operator should be FermionOperator!")
-    ordered_op = FermionOperator()
-    for term, coeff in fermion_operator.terms.items():
-        ordered_op += _normal_ordered_term(term, coeff)
-    return ordered_op
+    return fermion_operator.normal_ordered()
 
 
 def get_fermion_operator(operator):
@@ -193,7 +190,7 @@ def get_fermion_operator(operator):
     terms = {}
     if isinstance(operator, PolynomialTensor):
         for term in operator:
-            terms[tuple((i, TermValueCpp[TermValueStr[j]]) for i, j in term)] = ParameterResolver(operator[term])
+            terms[tuple((i, TermValue[j]) for i, j in term)] = ParameterResolver(operator[term])
         return FermionOperator(terms)
 
     raise TypeError(f"Unsupported type of oeprator {operator}")

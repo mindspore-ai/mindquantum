@@ -13,33 +13,61 @@
 #   limitations under the License.
 """Utils for experimental."""
 
-from ._mindquantum_cxx.ops import TermValue as TermValue_
+from mindquantum.experimental._mindquantum_cxx.ops import TermValue as TermValue_
 
-TermValue = {
-    'I': int(TermValue_.I),
-    'X': int(TermValue_.X),
-    'Y': int(TermValue_.Y),
-    'Z': int(TermValue_.Z),
-    'a': int(TermValue_.a),
-    'adg': int(TermValue_.adg),
-}
-
-
-TermValueCpp = {
-    'I': TermValue_.I,
+term_map = {
+    0: TermValue_.a,
+    1: TermValue_.adg,
     'X': TermValue_.X,
     'Y': TermValue_.Y,
     'Z': TermValue_.Z,
-    'a': TermValue_.a,
-    'adg': TermValue_.adg,
+    'I': TermValue_.I,
+    TermValue_.a: 0,
+    TermValue_.adg: 1,
+    TermValue_.X: 'X',
+    TermValue_.Y: 'Y',
+    TermValue_.Z: 'Z',
+    TermValue_.I: 'I',
 }
 
 
-TermValueStr = {
-    int(TermValue_.I): 'I',
-    int(TermValue_.X): 'X',
-    int(TermValue_.Y): 'Y',
-    int(TermValue_.Z): 'Z',
-    int(TermValue_.a): 'a',
-    int(TermValue_.adg): 'adg',
-}
+class TermValue__:
+    """Bind TermValue to python."""
+
+    # pylint: disable=invalid-name
+    @property
+    def I(self):
+        """Bind pauli I operator."""
+        return TermValue_.I
+
+    @property
+    def X(self):
+        """Bind pauli X operator."""
+        return TermValue_.X
+
+    @property
+    def Y(self):
+        """Bind pauli Y operator."""
+        return TermValue_.Y
+
+    @property
+    def Z(self):
+        """Bind pauli Z operator."""
+        return TermValue_.Y
+
+    @property
+    def a(self):
+        """Bind annihilation operator."""
+        return TermValue_.a
+
+    @property
+    def adg(self):
+        """Bind creation operator."""
+        return TermValue_.adg
+
+    def __getitem__(self, val):
+        """Get operator."""
+        return term_map[val]
+
+
+TermValue = TermValue__()

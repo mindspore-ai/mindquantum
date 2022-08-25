@@ -119,10 +119,9 @@ auto bind_ops(pybind11::module& module, const std::string_view& name) {
         .def("compress", &op_t::compress, "abs_tol"_a = op_t::EQ_TOLERANCE)
         .def("dumps", &op_t::dumps, "indent"_a = 4)
         .def_static("loads", op_t::loads, "string_data"_a)
-        .def(
-            "__str__", [](const op_t& base) { return base.to_string(); }, py::is_operator())
-        .def(
-            "__repr__", [](const op_t& base) { return base.to_string(); }, py::is_operator())
+        .def("__str__", [](const op_t& base) { return base.to_string(); })
+        .def("__repr__", [](const op_t& base) { return base.to_string(); })
+        .def("get_coeff", &op_t::get_coeff)
         .PYBIND11_DEFINE_BINOP_PAIR(add, op_t, const op_t&, +)
         .PYBIND11_DEFINE_BINOP_PAIR(add, op_t, double, +)
         .PYBIND11_DEFINE_BINOP_PAIR(add, op_t, std::complex<double>, +)

@@ -122,13 +122,20 @@ template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
 auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::get_terms_pair() const -> py_coeff_term_list_t {
     py_coeff_term_list_t out;
     for (const auto& [local_ops, coeff] : terms_) {
-        py_terms_t py_local_ops;
+        terms_t py_local_ops;
         for (const auto& [idx, term_value] : local_ops) {
-            py_local_ops.emplace_back(std::make_pair(idx, static_cast<uint8_t>(term_value)));
+            py_local_ops.emplace_back(std::make_pair(idx, term_value));
         }
         out.emplace_back(std::make_pair(py_local_ops, coeff));
     }
     return out;
+}
+
+// -----------------------------------------------------------------------------
+
+template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
+auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::get_coeff(const terms_t& term) const -> coefficient_t {
+    return terms_.at(term);
 }
 
 // -----------------------------------------------------------------------------
