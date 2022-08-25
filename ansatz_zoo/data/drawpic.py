@@ -3,27 +3,28 @@ import json
 import numpy as np
 
 markers_dict = dict(zip(["Hartree-Fock", "full-CI", "CCSD", "1-UpCCGSD",
-                    "2-UpCCGSD", "UCCSD0", "UCCSD", "QUCC", "HEA", "ADAPT", "qubit-ADAPT", "QCC", "2-LDCA"],
-                    ['.', '|', 'x', '+', '1', '2', '3', '4', '1', '2', '3', '4', '1']))
+                         "2-UpCCGSD", "UCCSD0", "UCCSD", "QUCC", "HEA", "ADAPT", "qubit-ADAPT", "QCC", "2-LDCA", "BRC"],
+                        ['.', '|', 'x', '+', '1', '2', '3', '4', '1', '2', '3', '4', '1', 'x']))
 colos_dict = dict(zip(["Hartree-Fock", "full-CI", "CCSD", "1-UpCCGSD",
-                    "2-UpCCGSD", "UCCSD0", "UCCSD", "QUCC", "HEA", "ADAPT", "qubit-ADAPT", "QCC", "2-LDCA"],
-                    ['aquamarine', 'azure', 'teal', 'limegreen', 'chocolate', 'steelblue', 'magenta', 
-                    'violet', 'orange', 'darkseagreen', 'tomato', 'orchid', 'black']))
-#, "HEA", "ADAPT", "qubit-ADAPT"
+                       "2-UpCCGSD", "UCCSD0", "UCCSD", "QUCC", "HEA", "ADAPT", "qubit-ADAPT", "QCC", "2-LDCA", "BRC"],
+                      ['aquamarine', 'azure', 'teal', 'limegreen', 'chocolate', 'steelblue', 'magenta',
+                       'violet', 'orange', 'darkseagreen', 'tomato', 'orchid', 'black', 'limegreen']))
+# , "HEA", "ADAPT", "qubit-ADAPT"
 
 font = {'family': 'serif',
         'weight': 'normal',
         'size': 16}
 
+
 def draw_energies(molecular='LiH',
-                  ansatzes = None,
+                  ansatzes=None,
                   xlim=None, ylim=None,
                   savefig=True, figsize=(8, 6)
                   ):
     if ansatzes is None:
         ansatzes = ["Hartree-Fock", "full-CI", "CCSD", "1-UpCCGSD",
                     "2-UpCCGSD", "HEA", "UCCSD0", "ADAPT", "qubit-ADAPT",
-                    "QUCC"]
+                    "QUCC", "BRC"]
     with open(f"mindquantum_energies_{molecular}.json") as f:
         json_data = json.load(f)
     engy = json_data["energies"]
@@ -43,14 +44,14 @@ def draw_energies(molecular='LiH',
 
 
 def draw_errors(molecular='LiH',
-                  ansatzes = None,
-                  xlim=None, ylim=(0, 0.005),
-                  savefig=True, figsize=(8, 6)
-                  ):
+                ansatzes=None,
+                xlim=None, ylim=(0, 0.005),
+                savefig=True, figsize=(8, 6)
+                ):
     if ansatzes is None:
         ansatzes = ["Hartree-Fock", "CCSD", "1-UpCCGSD",
                     "2-UpCCGSD", "HEA", "UCCSD0", "ADAPT", "qubit-ADAPT",
-                    "QUCC"]
+                    "QUCC", "BRC"]
     with open(f"mindquantum_energies_{molecular}.json") as f:
         json_data = json.load(f)
     engy = json_data["energies"]
@@ -58,7 +59,7 @@ def draw_errors(molecular='LiH',
     fcie = engy["full-CI"]
     plt.figure(figsize=figsize)
     for asz in ansatzes:
-        plt.plot(klen, np.array(engy[asz])-np.array(fcie), label=asz, linewidth=1, marker=markers_dict[asz],
+        plt.semilogy(klen, np.array(engy[asz]) - np.array(fcie), label=asz, linewidth=1, marker=markers_dict[asz],
                  color=colos_dict[asz], markersize=10, markeredgewidth=1.5)
     if ylim is not None:
         plt.ylim(ylim)
@@ -79,13 +80,13 @@ def draw_errors(molecular='LiH',
 
 
 def draw_runtimes(molecular='LiH',
-                  ansatzes = None,
+                  ansatzes=None,
                   xlim=None, ylim=None,
                   savefig=True, figsize=(8, 6)
                   ):
     ansatzes_legal = ["1-UpCCGSD",
-                    "2-UpCCGSD", "HEA", "UCCSD0", "ADAPT", "qubit-ADAPT",
-                    "QUCC"]
+                      "2-UpCCGSD", "HEA", "UCCSD0", "ADAPT", "qubit-ADAPT",
+                      "QUCC", "BRC"]
     if ansatzes is None:
         ansatzes = ansatzes_legal
     with open(f"mindquantum_times_{molecular}.json") as f:
@@ -96,8 +97,8 @@ def draw_runtimes(molecular='LiH',
     for asz in ansatzes:
         if asz not in ansatzes_legal:
             continue
-        plt.plot(klen, times[asz], label=asz, linewidth=1, marker=markers_dict[asz], 
-                    color=colos_dict[asz], markersize=10, markeredgewidth=1.5)
+        plt.plot(klen, times[asz], label=asz, linewidth=1, marker=markers_dict[asz],
+                 color=colos_dict[asz], markersize=10, markeredgewidth=1.5)
     if ylim is not None:
         plt.ylim(ylim)
     plt.ylim(bottom=0)
@@ -115,13 +116,13 @@ def draw_runtimes(molecular='LiH',
 
 
 def draw_paras(molecular='LiH',
-                  ansatzes = None,
-                  xlim=None, ylim=None,
-                  savefig=True, figsize=(8, 6)
-                  ):
+               ansatzes=None,
+               xlim=None, ylim=None,
+               savefig=True, figsize=(8, 6)
+               ):
     ansatzes_legal = ["1-UpCCGSD",
-                    "2-UpCCGSD", "HEA", "UCCSD0", "ADAPT", "qubit-ADAPT",
-                    "QUCC"]
+                      "2-UpCCGSD", "HEA", "UCCSD0", "ADAPT", "qubit-ADAPT",
+                      "QUCC", "BRC"]
     if ansatzes is None:
         ansatzes = ansatzes_legal
     with open(f"mindquantum_parameters_{molecular}.json") as f:
@@ -132,8 +133,8 @@ def draw_paras(molecular='LiH',
     for asz in ansatzes:
         if asz not in ansatzes_legal:
             continue
-        plt.plot(klen, parameters[asz], label=asz, linewidth=1, marker=markers_dict[asz], 
-                    color=colos_dict[asz], markersize=10, markeredgewidth=1.5)
+        plt.plot(klen, parameters[asz], label=asz, linewidth=1, marker=markers_dict[asz],
+                 color=colos_dict[asz], markersize=10, markeredgewidth=1.5)
     if ylim is not None:
         plt.ylim(ylim)
     if xlim is not None:
@@ -150,14 +151,19 @@ def draw_paras(molecular='LiH',
 
 
 if __name__ == '__main__':
-    molecule = "LiH"
-    figsize=(10, 7.5)
-    ylim=(-0.002, 0.02) #setting for error
-    #ansatzes = ["CCSD", "UCCSD", "1-UpCCGSD", "2-UpCCGSD", "UCCSD0", "QUCC"]
-    # ansatzes = ["CCSD", "HEA", "ADAPT", "qubit-ADAPT", "QCC", "2-LDCA"]
-    ansatzes = ["CCSD", "HEA", "ADAPT", "qubit-ADAPT", "2-LDCA"]
-    # ansatzes = ["UCCSD", "2-LDCA"]
+    molecule = 'H4'
+    # molecule = 'LiH'
+    # molecule = 'BeH2'
+    # molecule = 'H2O'
+    # molecule = 'CH4'
+    # molecule = 'N2'
+    figsize = (10, 7.5)
+    # ylim = (-0.002, 0.02)  # setting for error
+    ylim = (-0.002, 1)  # setting for error
+
+    # ansatzes = ["CCSD", "HEA", "ADAPT", "qubit-ADAPT", "QCC"]
+    ansatzes = ["CCSD", "1-UpCCGSD", "2-UpCCGSD", "UCCSD", "UCCSD0", "QUCC", "2-LDCA", "BRC"]
     # draw_energies(molecular=molecule, figsize=figsize)
     draw_errors(molecular=molecule, figsize=figsize, ansatzes=ansatzes, ylim=ylim)
-    # draw_runtimes(molecular=molecule, figsize=figsize, ansatzes=ansatzes)
-    # draw_paras(molecular=molecule, figsize=figsize, ansatzes=ansatzes)
+    draw_runtimes(molecular=molecule, figsize=figsize, ansatzes=ansatzes)
+    draw_paras(molecular=molecule, figsize=figsize, ansatzes=ansatzes)
