@@ -258,10 +258,10 @@ if __name__ == "__main__":
         # print('E(brc) = %.9g' % hf)
         # print('E(FCI) = %.9g' % e_fci)
         # Write data to .csv file
-        datas = [[mole, bond_len, e_hf, e_fci]]
+        data = [[mole, bond_len, e_hf, e_fci]]
         with open('./data/classical.csv'.format(mole), 'a', newline='') as f:
             writer = csv.writer(f)
-            for row in datas:
+            for row in data:
                 writer.writerow(row)
     print(bond_length)
     print(hf)
