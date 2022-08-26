@@ -106,7 +106,7 @@ template <typename T>
 void BindPR(py::module *m, const std::string &name) {
     py::class_<ParameterResolver<T>, std::shared_ptr<ParameterResolver<T>>>(*m, name.c_str())
         .def(py::init<T>())
-        .def(py::init([](const ParameterResolver<T> &pr) { return std::make_shared<ParameterResolver<T>>(pr); }))
+        .def(py::init([](ParameterResolver<T> &pr) { return std::move(pr); }))
         .def(py::init<std::string>())
         .def(py::init<const MST<T> &, T>())
         .def(py::init<const MST<T> &, T, const SS &, const SS &>())

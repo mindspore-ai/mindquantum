@@ -101,8 +101,6 @@ struct ParameterResolver {
     T const_value = 0;
     SS no_grad_parameters_{};
     SS encoder_parameters_{};
-    ParameterResolver() {
-    }
     explicit ParameterResolver(T const_value) : const_value(const_value) {
     }
     ParameterResolver(const MST<T>& data, T const_value) : data_(data), const_value(const_value) {
@@ -118,6 +116,12 @@ struct ParameterResolver {
     explicit ParameterResolver(const std::string& p) {
         this->data_[p] = 1;
     }
+    ParameterResolver() = default;
+    ParameterResolver(const ParameterResolver&) = default;
+    ParameterResolver(ParameterResolver&&) noexcept = default;
+    ParameterResolver& operator=(const ParameterResolver&) = default;
+    ParameterResolver& operator=(ParameterResolver&&) noexcept = default;
+    ~ParameterResolver() noexcept = default;
     size_t Size() const {
         return this->data_.size();
     }
