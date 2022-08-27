@@ -74,7 +74,9 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
 
     def __init__(self, data=None, const=None):
         """Initialize a ParameterResolver object."""
-        if isinstance(data, (complex_pr_, numbers.Number)):
+        if isinstance(data, complex_pr_):
+            complex_pr_.__init__(self, data, isinstance(data, ParameterResolver))
+        if isinstance(data, numbers.Number):
             complex_pr_.__init__(self, data)
         else:
             if const is None:

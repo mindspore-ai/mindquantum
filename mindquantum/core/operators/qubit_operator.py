@@ -72,7 +72,7 @@ class QubitOperator(QubitOperator_):
     def __init__(self, term=None, coeff=1.0):
         """Initialize a QubitOperator object."""
         if isinstance(term, QubitOperator_):
-            QubitOperator_.__init__(self, term)
+            QubitOperator_.__init__(self, term, isinstance(term, QubitOperator))
         else:
             if term is None:
                 QubitOperator_.__init__(self)

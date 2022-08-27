@@ -133,7 +133,7 @@ class FermionOperator(FermionOperator_):
     def __init__(self, term=None, coeff=1.0):
         """Initialize a FermionOperator object."""
         if isinstance(term, FermionOperator_):
-            FermionOperator_.__init__(self, term)
+            FermionOperator_.__init__(self, term, isinstance(term, FermionOperator))
         else:
             if term is None:
                 FermionOperator_.__init__(self)

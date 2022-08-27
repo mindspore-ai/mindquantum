@@ -92,7 +92,12 @@ auto bind_ops(pybind11::module& module, const std::string_view& name) {
     using coeff_t = typename op_t::coefficient_t;
     return py::class_<op_t, std::shared_ptr<op_t>>(module, name.data())
         .def(py::init<>())
-        .def(py::init([](op_t& op) { return std::move(op); }))
+        .def(py::init([](op_t& op, bool copy) {
+            if (copy) {
+                return op;
+            }
+            return std::move(op);
+        }))
         .def(py::init<const ops::term_t&, coeff_t>(), "term"_a, "coeff"_a = op_t::coeff_policy_t::one)
         .def(py::init<const ops::terms_t&, coeff_t>(), "terms"_a, "coeff"_a = op_t::coeff_policy_t::one)
         .def(py::init<const ops::py_terms_t&, coeff_t>(), "terms"_a, "coeff"_a = op_t::coeff_policy_t::one)
