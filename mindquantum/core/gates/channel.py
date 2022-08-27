@@ -18,6 +18,8 @@
 """Quantum channel."""
 
 from mindquantum import mqbackend as mb
+import numpy as np
+from mindquantum.utils.f import _check_num_array
 
 from .basic import BasicGate, NoiseGate, SelfHermitianGate
 
@@ -466,3 +468,81 @@ class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
     def __str_in_circ__(self):
         """Return a string representation of the object in a quantum circuit."""
         return f"PD({self.gamma})"
+
+
+class KrausChannel(NoiseGate, SelfHermitianGate):
+    r"""
+    Quantum channel that express the incoherent noise in quantum computing.
+
+    Kraus channel accepts two or more 2x2 matrices as Kraus operator to construct
+    custom (single-qubit) noise in quantum circuit.
+
+    Kraus channel applies noise as:
+
+    .. math::
+
+        \epsilon(\rho) = \sum_{k=0}^{m-1} E_k \rho E_k^\dagger
+
+    where :math:`\rho` is quantum state as density matrix type; {:math:`\E_k`} is Kraus operator,
+    and it should satisfy the completeness condition: :math:`\sum_k E_k E_k^\dagger = I`.
+
+    Args:
+        name (str): the name of this custom noise channel.
+        kraus_op (list, np.ndarray): Kraus operator, with two or more 2x2 matrices packaged as a list.
+
+    Examples:
+        >>> from mindquantum.core.gates import KrausChannel
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from cmath import sqrt
+        >>> gamma = 0.5
+        >>> kmat0 = [[1, 0], [0, sqrt(1 - gamma)]]
+        >>> kmat1 = [[0, sqrt(gamma)], [0, 0]]
+        >>> amplitude_damping = KrausChannel('damping', [kmat0, kmat1])
+        >>> circ = Circuit()
+        >>> circ += amplitude_damping.on(0)
+        >>> circ += amplitude_damping.on(1, 0)
+        >>> print(circ)
+        q0: ──damping───────●─────
+                            │
+        q1: ─────────────damping──
+    """
+
+    def __init__(self, name, kraus_op, **kwargs):
+        """Initialize an KrausChannel object."""
+        _check_num_array(kraus_op, name)
+        if not isinstance(kraus_op, np.ndarray):
+            kraus_op = np.array(kraus_op)
+        for mat in kraus_op:
+            if len(mat.shape) != 2:
+                raise ValueError(f"matrix_value require shape of 2, but get shape of {mat.shape}")
+            if mat.shape[0] != mat.shape[1]:
+                raise ValueError(f"matrix_value need a square matrix, but get shape {mat.shape}")
+            if mat.shape[0] != 2:
+                raise ValueError(f"Dimension of matrix_value need should be 2, but get {mat.shape[0]}")
+        sum_of_mat = np.zeros((2, 2), 'complex128')
+        for mat in kraus_op:
+            sum_of_mat += np.dot(mat.T.conj(), mat)
+        if not np.allclose(sum_of_mat, [[1, 0], [0, 1]]):
+            raise ValueError(f"kraus_op need to satisfy the completeness condition, but get {sum_of_mat}")
+        kwargs['name'] = name
+        kwargs['n_qubits'] = 1
+        NoiseGate.__init__(self, **kwargs)
+        SelfHermitianGate.__init__(self, **kwargs)
+        self.projectq_gate = None
+        self.kraus_op = kraus_op
+
+    def get_cpp_obj(self):
+        """Get underlying C++ object."""
+        cpp_gate = mb.basic_gate(self.name, True, self.kraus_op)
+        cpp_gate.obj_qubits = self.obj_qubits
+        cpp_gate.ctrl_qubits = self.ctrl_qubits
+        return cpp_gate
+
+    def define_projectq_gate(self):
+        """Define the corresponded projectq gate."""
+        self.projectq_gate = None
+
+    def __str_in_circ__(self):
+        """Return a string representation of the object in a quantum circuit."""
+        return self.name
+    
