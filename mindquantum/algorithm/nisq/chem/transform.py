@@ -28,7 +28,7 @@ from mindquantum.core.operators.utils import (
     number_operator,
 )
 from mindquantum.experimental import TermValue
-from mindquantum.experimental._mindquantum_cxx.ops import jordan_wigner as cxx_jw
+from mindquantum.experimental._mindquantum_cxx.ops import transform as transform_
 
 
 class Transform:
@@ -104,7 +104,7 @@ class Transform:
         """
         if not isinstance(self.operator, FermionOperator):
             raise TypeError('This method can be only applied for FermionOperator.')
-        return QubitOperator(cxx_jw(self.operator))
+        return QubitOperator(transform_.jordan_wigner(self.operator))
 
     def parity(self):
         r"""
@@ -145,25 +145,7 @@ class Transform:
         """
         if not isinstance(self.operator, FermionOperator):
             raise TypeError('This method can be only applied for FermionOperator.')
-        transf_op = QubitOperator()
-        for term, value in self.operator.terms.items():
-            # Initialize identity matrix.
-            transformed_term = QubitOperator((), value)
-
-            # Loop through operators, transform and multiply.
-            for ladder_operator in term:
-                # Define lists of qubits to apply Pauli gates
-                index = ladder_operator[0]
-                x1 = list(range(index, self.n_qubits))
-                y1 = []
-                z1 = [index - 1] if index > 0 else []
-                x2 = list(range(index + 1, self.n_qubits))
-                y2 = [index]
-                z2 = []
-                transformed_term *= _transform_ladder_operator(ladder_operator, x1, y1, z1, x2, y2, z2)
-            transf_op += transformed_term
-
-        return transf_op
+        return QubitOperator(transform_.parity(self.operator))
 
     def bravyi_kitaev(self):  # pylint disable=too-many-locals
         r"""

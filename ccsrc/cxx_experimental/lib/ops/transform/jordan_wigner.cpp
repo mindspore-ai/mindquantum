@@ -12,33 +12,23 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#include "ops/gates/jordan_wigner.hpp"
+#include "ops/transform/jordan_wigner.hpp"
 
-#include <cstdint>
-
-#include "ops/gates/fermion_operator_parameter_resolver.hpp"
-#include "ops/gates/qubit_operator.hpp"
 #include "ops/gates/terms_operator.hpp"
+#include "ops/transform/transform_ladder_operator.hpp"
 
 namespace mindquantum::ops::transform {
-auto jordan_wigner(const FermionOperatorPR& ops) -> QubitOperatorPR {
-    auto transf_op = QubitOperatorPR();
+// template <typename fermion_t, typename qubit_t>
+qubit_t jordan_wigner(const fermion_t& ops) {
+    auto transf_op = qubit_t();
     for (const auto& [term, coeff] : ops.get_terms()) {
-        auto transformed_term = QubitOperatorPR(terms_t{}, coeff);
+        auto transformed_term = qubit_t(terms_t{}, coeff);
         for (const auto& [idx, value] : term) {
-            auto coefficient_1 = QubitOperatorPR::coefficient_t(0.5);
-            auto coefficient_2 = QubitOperatorPR::coefficient_t(std::complex<double>(0, -0.5));
-            if (value == TermValue::a) {
-                coefficient_2 *= -1;
-            }
-            terms_t t1, t2;
-            t1.emplace_back(idx, TermValue::X);
-            t2.emplace_back(idx, TermValue::Y);
+            qlist_t z = {};
             for (auto i = 0; i < idx; i++) {
-                t1.emplace_back(i, TermValue::Z);
-                t2.emplace_back(i, TermValue::Z);
+                z.push_back((i));
             }
-            transformed_term *= (QubitOperatorPR(t1, coefficient_1) + QubitOperatorPR(t2, coefficient_2));
+            transformed_term *= transform_ladder_operator(value, {idx}, {}, z, {}, {idx}, z);
         }
         transf_op += transformed_term;
     }

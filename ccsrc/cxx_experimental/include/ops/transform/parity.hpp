@@ -12,15 +12,19 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef JORDAN_WIGNER_TRANSFORM_H_
-#define JORDAN_WIGNER_TRANSFORM_H_
+#ifndef PARITY_TRANSFORM_HPP
+#define PARITY_TRANSFORM_HPP
 
 #include "ops/gates/fermion_operator_parameter_resolver.hpp"
 #include "ops/gates/qubit_operator_parameter_resolver.hpp"
 
 namespace mindquantum::ops::transform {
+using qubit_t = QubitOperatorPR;
+using fermion_t = FermionOperatorPR;
 
-MQ_NODISCARD QubitOperatorPR jordan_wigner(const FermionOperatorPR& ops);
-}
+//! Jordan Wigner transform that transform a Fermion operator to qubit operator.
+// template <typename fermion_t, typename qubit_t>
+MQ_NODISCARD qubit_t parity(const fermion_t& ops);
+}  // namespace mindquantum::ops::transform
 
 #endif
