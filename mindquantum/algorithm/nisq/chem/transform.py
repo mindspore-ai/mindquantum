@@ -145,7 +145,7 @@ class Transform:
         """
         if not isinstance(self.operator, FermionOperator):
             raise TypeError('This method can be only applied for FermionOperator.')
-        return QubitOperator(transform_.parity(self.operator))
+        return QubitOperator(transform_.parity(self.operator, self.n_qubits))
 
     def bravyi_kitaev(self):  # pylint disable=too-many-locals
         r"""

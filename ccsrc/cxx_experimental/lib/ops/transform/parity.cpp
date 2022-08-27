@@ -19,8 +19,14 @@
 
 namespace mindquantum::ops::transform {
 // template <typename fermion_t, typename qubit_t>
-qubit_t parity(const fermion_t& ops) {
-    auto n_qubits = ops.count_qubits();
+qubit_t parity(const fermion_t& ops, int n_qubits) {
+    auto local_n_qubits = ops.count_qubits();
+    if (n_qubits <= 0) {
+        n_qubits = local_n_qubits;
+    }
+    if (n_qubits < local_n_qubits) {
+        throw std::runtime_error("Target qubits number is less than local qubits of operator.");
+    }
     auto transf_op = qubit_t();
     for (const auto& [term, coeff] : ops.get_terms()) {
         auto transformed_term = qubit_t(terms_t{}, coeff);

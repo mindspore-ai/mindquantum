@@ -24,7 +24,7 @@ using fermion_t = FermionOperatorPR;
 
 //! Jordan Wigner transform that transform a Fermion operator to qubit operator.
 // template <typename fermion_t, typename qubit_t>
-MQ_NODISCARD qubit_t parity(const fermion_t& ops);
+MQ_NODISCARD qubit_t parity(const fermion_t& ops, int n_qubits = -1);
 }  // namespace mindquantum::ops::transform
 
 #endif

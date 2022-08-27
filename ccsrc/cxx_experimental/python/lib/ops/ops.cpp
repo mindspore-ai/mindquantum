@@ -335,8 +335,10 @@ void init_mindquantum_ops(pybind11::module& module) {
     // py::class_<ops::parametric::Rzz>(module, "Rzz").def(py::init<const double>());
 }
 void init_transform(py::module& module) {
+    using namespace pybind11::literals;
+
     namespace transform = mindquantum::ops::transform;
-    module.def("parity", &transform::parity);
+    module.def("parity", &transform::parity, "ops"_a, "n_qubits"_a = -1);
     module.def("jordan_wigner", &transform::jordan_wigner);
 }
 void mindquantum::python::init_ops(pybind11::module& module) {
