@@ -12,18 +12,17 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef TRANSFORM_TRANSFORM_LADDER_OPERATOR_HPP
-#define TRANSFORM_TRANSFORM_LADDER_OPERATOR_HPP
+#ifndef REVERSE_JORDAN_WIGNER_TRANSFORM_HPP
+#define REVERSE_JORDAN_WIGNER_TRANSFORM_HPP
 
 #include "ops/transform/types.hpp"
 
 namespace mindquantum::ops::transform {
-//! Ladder operator transform.
+
+//! Reverse Jordan Wigner transform that transform a Qubit operator to Fermion operator.
+// TODO(xusheng): Why cannot use template, otherwise undefined symbol error occur.
 // template <typename fermion_t, typename qubit_t>
-// TODO(xusheng): Why cannot use inline here, otherwise undefined symbol error occur.
-MQ_NODISCARD qubit_t transform_ladder_operator(const TermValue& value, const qlist_t& x1, const qlist_t& y1,
-                                                      const qlist_t& z1, const qlist_t& x2, const qlist_t& y2,
-                                                      const qlist_t& z2);
+MQ_NODISCARD fermion_t reverse_jordan_wigner(const qubit_t& ops, int n_qubits = -1);
 }  // namespace mindquantum::ops::transform
 
 #endif

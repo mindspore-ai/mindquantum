@@ -25,7 +25,6 @@ from mindquantum.core.operators.utils import (
     QubitOperator,
     count_qubits,
     normal_ordered,
-    number_operator,
 )
 from mindquantum.experimental import TermValue
 from mindquantum.experimental._mindquantum_cxx.ops import transform as transform_
@@ -400,53 +399,8 @@ class Transform:
         """
         if not isinstance(self.operator, QubitOperator):
             raise TypeError('This method can be only applied for QubitOperator.')
-        transf_op = FermionOperator()
-
-        # Loop through terms.
-        for term in self.operator.terms:
-            transformed_term = FermionOperator(())
-            if term:
-                working_term = QubitOperator(term)
-                pauli_operator = term[-1]
-                while pauli_operator is not None:
-
-                    # Handle Pauli Z.
-                    if pauli_operator[1] == TermValue.Z:
-                        transformed_pauli = FermionOperator(()) + number_operator(None, pauli_operator[0], -2.0)
-
-                    # Handle Pauli X and Y.
-                    else:
-                        raising_term = FermionOperator(((pauli_operator[0], TermValue.adg),))
-                        lowering_term = FermionOperator(((pauli_operator[0], TermValue.a),))
-                        if pauli_operator[1] == TermValue.Y:
-                            raising_term *= 1.0j
-                            lowering_term *= -1.0j
-
-                        transformed_pauli = raising_term + lowering_term
-
-                        # Account for the phase terms.
-                        for j in reversed(range(pauli_operator[0])):
-                            z_term = QubitOperator(((j, TermValue.Z),))
-                            working_term = z_term * working_term
-                        term_key = list(working_term.terms)[0]
-                        transformed_pauli *= working_term.terms[term_key]
-                        working_term.terms[list(working_term.terms)[0]] = 1.0
-
-                    # Get next non-identity operator acting below
-                    # 'working_qubit'.
-                    working_qubit = pauli_operator[0] - 1
-                    for working_operator in reversed(list(working_term.terms)[0]):
-                        if working_operator[0] <= working_qubit:
-                            pauli_operator = working_operator
-                            break
-                        pauli_operator = None
-
-                    # Multiply term by transformed operator.
-                    transformed_term *= transformed_pauli
-            # Account for overall coefficient
-            transformed_term *= self.operator.terms[term]
-            transf_op += transformed_term
-        return transf_op
+        
+        return FermionOperator(transform_.reverse_jordan_wigner(self.operator, self.n_qubits))
 
 
 def _get_qubit_index(p, i):  # pylint: disable=invalid-name

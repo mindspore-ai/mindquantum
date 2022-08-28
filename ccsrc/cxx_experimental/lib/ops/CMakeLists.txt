@@ -29,7 +29,9 @@ target_sources(
           ${CMAKE_CURRENT_LIST_DIR}/gates/qubit_operator_parameter_resolver.cpp
           ${CMAKE_CURRENT_LIST_DIR}/parametric/register_gate_type.cpp
           ${CMAKE_CURRENT_LIST_DIR}/transform/jordan_wigner.cpp
+          ${CMAKE_CURRENT_LIST_DIR}/transform/reverse_jordan_wigner.cpp
           ${CMAKE_CURRENT_LIST_DIR}/transform/parity.cpp
+          ${CMAKE_CURRENT_LIST_DIR}/transform/fermion_number_operator.cpp
           ${CMAKE_CURRENT_LIST_DIR}/transform/transform_ladder_operator.cpp)
 
 target_link_libraries(mindquantum_cxx PUBLIC mindquantum::symengine)

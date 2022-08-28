@@ -29,6 +29,7 @@
 #include "ops/parametric/angle_gates.hpp"
 #include "ops/transform/jordan_wigner.hpp"
 #include "ops/transform/parity.hpp"
+#include "ops/transform/reverse_jordan_wigner.hpp"
 #include "python/bindings.hpp"
 #include "python/ops/gate_adapter.hpp"
 
@@ -339,6 +340,7 @@ void init_transform(py::module& module) {
 
     namespace transform = mindquantum::ops::transform;
     module.def("parity", &transform::parity, "ops"_a, "n_qubits"_a = -1);
+    module.def("reverse_jordan_wigner", &transform::reverse_jordan_wigner);
     module.def("jordan_wigner", &transform::jordan_wigner);
 }
 void mindquantum::python::init_ops(pybind11::module& module) {

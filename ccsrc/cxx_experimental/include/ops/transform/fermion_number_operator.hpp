@@ -12,18 +12,17 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef TRANSFORM_TRANSFORM_LADDER_OPERATOR_HPP
-#define TRANSFORM_TRANSFORM_LADDER_OPERATOR_HPP
+#ifndef FERMION_NUMBER_OPERATOR_HPP
+#define FERMION_NUMBER_OPERATOR_HPP
 
 #include "ops/transform/types.hpp"
 
 namespace mindquantum::ops::transform {
-//! Ladder operator transform.
+
+//! Jordan Wigner transform that transform a Fermion operator to qubit operator.
 // template <typename fermion_t, typename qubit_t>
-// TODO(xusheng): Why cannot use inline here, otherwise undefined symbol error occur.
-MQ_NODISCARD qubit_t transform_ladder_operator(const TermValue& value, const qlist_t& x1, const qlist_t& y1,
-                                                      const qlist_t& z1, const qlist_t& x2, const qlist_t& y2,
-                                                      const qlist_t& z2);
+MQ_NODISCARD fermion_t fermion_number_operator(int n_modes, int mode = -1,
+                                               fermion_t::coefficient_t coeff = fermion_t::coeff_policy_t::one);
 }  // namespace mindquantum::ops::transform
 
 #endif

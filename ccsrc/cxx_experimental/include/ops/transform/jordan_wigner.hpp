@@ -15,12 +15,9 @@
 #ifndef JORDAN_WIGNER_TRANSFORM_HPP
 #define JORDAN_WIGNER_TRANSFORM_HPP
 
-#include "ops/gates/fermion_operator_parameter_resolver.hpp"
-#include "ops/gates/qubit_operator_parameter_resolver.hpp"
+#include "ops/transform/types.hpp"
 
 namespace mindquantum::ops::transform {
-using qubit_t = QubitOperatorPR;
-using fermion_t = FermionOperatorPR;
 
 //! Jordan Wigner transform that transform a Fermion operator to qubit operator.
 // TODO(xusheng): Why cannot use template, otherwise undefined symbol error occur.

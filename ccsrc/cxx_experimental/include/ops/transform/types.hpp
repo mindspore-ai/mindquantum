@@ -12,18 +12,15 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef TRANSFORM_TRANSFORM_LADDER_OPERATOR_HPP
-#define TRANSFORM_TRANSFORM_LADDER_OPERATOR_HPP
+#ifndef OPS_TRANSFORM_TYPES_HPP
+#define OPS_TRANSFORM_TYPES_HPP
 
-#include "ops/transform/types.hpp"
+#include "ops/gates/fermion_operator_parameter_resolver.hpp"
+#include "ops/gates/qubit_operator_parameter_resolver.hpp"
 
 namespace mindquantum::ops::transform {
-//! Ladder operator transform.
-// template <typename fermion_t, typename qubit_t>
-// TODO(xusheng): Why cannot use inline here, otherwise undefined symbol error occur.
-MQ_NODISCARD qubit_t transform_ladder_operator(const TermValue& value, const qlist_t& x1, const qlist_t& y1,
-                                                      const qlist_t& z1, const qlist_t& x2, const qlist_t& y2,
-                                                      const qlist_t& z2);
+using qubit_t = QubitOperatorPR;
+using fermion_t = FermionOperatorPR;
+using qlist_t = std::vector<term_t::first_type>;
 }  // namespace mindquantum::ops::transform
-
 #endif
