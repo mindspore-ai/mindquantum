@@ -929,6 +929,24 @@ TEST_CASE("TermsOperator mathmetic operators (pow)", "[terms_op][ops]") {
     }
 }
 
+TEST_CASE("TermsOperator split", "[terms_op][ops]") {
+    const auto lhs = DummyOperator(terms_t{{3, TermValue::X}}, 1.2i);
+    const auto rhs = DummyOperator(terms_t{{1, TermValue::Z}}, 1.2);
+    const auto qubit_op = lhs + rhs;
+
+    const auto get = [](const auto& op) { return op.first * op.second; };
+
+    const auto splitted = qubit_op.split();
+    REQUIRE(std::size(splitted) == 2);
+    if (get(splitted[0]) == lhs) {
+        CHECK(get(splitted[0]) == lhs);
+        CHECK(get(splitted[1]) == rhs);
+    } else {
+        CHECK(get(splitted[0]) == rhs);
+        CHECK(get(splitted[1]) == lhs);
+    }
+}
+
 TEST_CASE("TermsOperator comparison operators", "[terms_op][ops]") {
     coeff_term_dict_t ref_terms;
 

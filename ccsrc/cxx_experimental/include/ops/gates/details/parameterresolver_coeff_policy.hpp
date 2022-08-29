@@ -22,9 +22,18 @@
 #include "core/config.hpp"
 
 #include "core/format/parameter_resolver.hpp"
-#include "core/traits.hpp"
 #include "core/type.h"
+#include "ops/gates/traits.hpp"
 #include "pr/parameter_resolver.h"
+
+// =============================================================================
+
+namespace mindquantum::traits {
+template <typename float_t>
+inline constexpr auto is_termsop_number<ParameterResolver<float_t>> = true;
+}  // namespace mindquantum::traits
+
+// -----------------------------------------------------------------------------
 
 namespace mindquantum::ops::details {
 template <typename float_t_>
@@ -112,9 +121,9 @@ struct ParameterResolverCoeffPolicyBase {
                     // TODO(dnguyen): Should we clear the PR in this case?
                     // coeff.data_.clear();
                 } else if (std::abs(coeff.const_value.imag()) <= abs_tol) {
-                    cast_real(coeff.const_value);
+                    cast_real(coeff);
                 } else if (std::abs(coeff.const_value.real()) <= abs_tol) {
-                    cast_imag(coeff.const_value);
+                    cast_imag(coeff);
                 }
             }
         }

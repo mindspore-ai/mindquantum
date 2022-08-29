@@ -36,6 +36,7 @@
 #include "core/traits.hpp"
 #include "core/types.hpp"
 #include "ops/gates/details/complex_double_coeff_policy.hpp"
+#include "ops/gates/traits.hpp"
 #include "ops/meta/dagger.hpp"
 
 namespace mindquantum::traits {
@@ -44,6 +45,55 @@ struct is_terms_operator : std::false_type {};
 
 template <typename T>
 struct is_terms_operator<T, std::void_t<typename T::terms_operator_tag>> : std::true_type {};
+
+template <typename derived_t, typename coeff_t>
+struct boost_operators_helper
+    // clang-format off
+    : boost::additive1<derived_t
+    , boost::additive2<derived_t, double
+    , boost::additive2<derived_t, std::complex<double>
+    , boost::multipliable1<derived_t
+    , boost::multiplicative2<derived_t, double
+    , boost::multiplicative2<derived_t, std::complex<double>
+    , boost::additive2<derived_t, coeff_t
+    , boost::multiplicative2<derived_t, coeff_t
+#if !MQ_HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
+    , boost::equality_comparable1<derived_t>
+#endif  // !MQ_HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
+    >>>>>>>> {
+    // clang-format on
+};
+
+template <typename derived_t>
+struct boost_operators_helper<derived_t, double>
+    // clang-format off
+    : boost::additive1<derived_t
+    , boost::additive2<derived_t, double
+    , boost::additive2<derived_t, std::complex<double>
+    , boost::multipliable1<derived_t
+    , boost::multiplicative2<derived_t, double
+    , boost::multiplicative2<derived_t, std::complex<double>
+#if !MQ_HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
+    , boost::equality_comparable1<derived_t>
+#endif  // !MQ_HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
+    >>>>>>  {
+    // clang-format on
+};
+template <typename derived_t>
+struct boost_operators_helper<derived_t, std::complex<double>>
+    // clang-format off
+    : boost::additive1<derived_t
+    , boost::additive2<derived_t, double
+    , boost::additive2<derived_t, std::complex<double>
+    , boost::multipliable1<derived_t
+    , boost::multiplicative2<derived_t, double
+    , boost::multiplicative2<derived_t, std::complex<double>
+#if !MQ_HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
+    , boost::equality_comparable1<derived_t>
+#endif  // !MQ_HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
+    >>>>>> {
+    // clang-format on
+};
 }  // namespace mindquantum::traits
 
 namespace mindquantum::ops {
@@ -76,41 +126,33 @@ template <typename coefficient_t>
 using term_dict_t = std::map<std::vector<term_t>, coefficient_t>;
 
 #if MQ_HAS_CONCEPTS
-#    define TYPENAME_NUMBER concepts::number
-#    define TYPENAME_NUMBER_CONSTRAINTS_DEF
-#    define TYPENAME_NUMBER_CONSTRAINTS_DEF_ADD(x)
-#    define TYPENAME_NUMBER_CONSTRAINTS_IMPL
+
+namespace details {
+template <typename coeff_t>
+concept coefficient = traits::is_termsop_number<coeff_t>;
+}  // namespace details
+
+#    define TYPENAME_COEFFICIENT details::coefficient
+#    define TYPENAME_COEFFICIENT_CONSTRAINTS_DEF
+#    define TYPENAME_COEFFICIENT_CONSTRAINTS_DEF_ADD(x)
+#    define TYPENAME_COEFFICIENT_CONSTRAINTS_IMPL
 #else
-#    define TYPENAME_NUMBER typename
-#    define TYPENAME_NUMBER_CONSTRAINTS_DEF                                                                            \
-        , typename = std::enable_if_t < traits::is_complex_v<number_t> || std::is_floating_point_v < number_t >>
-#    define TYPENAME_NUMBER_CONSTRAINTS_DEF_ADD(x)                                                                     \
-        , typename = std::enable_if_t<(traits::is_complex_v<number_t> || std::is_floating_point_v<number_t>) &&(x)>
-#    define TYPENAME_NUMBER_CONSTRAINTS_IMPL , typename
+#    define TYPENAME_COEFFICIENT                 typename
+#    define TYPENAME_COEFFICIENT_CONSTRAINTS_DEF , typename = std::enable_if_t<traits::is_termsop_number<number_t>>
+#    define TYPENAME_COEFFICIENT_CONSTRAINTS_DEF_ADD(x)                                                                \
+        , typename = std::enable_if_t < traits::is_termsop_number<number_t> && (x) >
+#    define TYPENAME_COEFFICIENT_CONSTRAINTS_IMPL , typename
 #endif  // MQ_HAS_CONCEPTS
 
 //! Base class for term operators (like qubit or fermion operators)
 /*!
  * \note This template CRTP class expects the derived classes to implement the following member functions:
- *         - static std::pair<terms_t, coefficient_t> sort_terms_(terms_t local_ops, coefficient_t coeff);
- *         - static std::tuple<std::vector<term_t>, coefficient_t> simplify_(terms_t terms, coefficient_t coeff = 1.);
- *         - static std::tuple<std::vector<term_t>, coefficient_t> simplify_(py_terms_t terms, coefficient_t coeff
- * = 1.);
+ *      - static std::pair<terms_t, coefficient_t> sort_terms_(terms_t local_ops, coefficient_t coeff);
+ *      - static std::tuple<std::vector<term_t>, coefficient_t> simplify_(terms_t terms, coefficient_t coeff * = 1.);
+ *      - static std::tuple<std::vector<term_t>, coefficient_t> simplify_(py_terms_t terms, coefficient_t coeff * = 1.);
  */
 template <typename derived_t, typename term_policy_t_, typename coeff_policy_t_ = details::CmplxDoubleCoeffPolicy>
-class TermsOperator
-    // clang-format off
-    : boost::additive1<derived_t
-    , boost::additive2<derived_t, double
-    , boost::additive2<derived_t, std::complex<double>
-    , boost::multipliable1<derived_t
-    , boost::multiplicative2<derived_t, double
-    , boost::multiplicative2<derived_t, std::complex<double>
-#if !MQ_HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
-    , boost::equality_comparable1<derived_t>
-#endif  // !MQ_HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
-    >>>>>> {
-    // clang-format on
+class TermsOperator : public traits::boost_operators_helper<derived_t, typename coeff_policy_t_::coeff_t> {
  public:
     using non_const_num_targets = void;
     using terms_operator_tag = void;
@@ -146,10 +188,10 @@ class TermsOperator
 
     //! Constructor from a string representing a list of terms
     /*!
-     * \note If parsing the string fails, the resulting TermsOperator object will represent the identity. If logging is
-     *       enabled, an error message will be printed inside the log with an appropriate error message.
+     * \note If parsing the string fails, the resulting TermsOperator object will represent the identity. If logging
+     * is enabled, an error message will be printed inside the log with an appropriate error message.
      */
-    explicit TermsOperator(std::string_view terms_string, coefficient_t coeff = 1.0);
+    explicit TermsOperator(std::string_view terms_string, coefficient_t coeff = coeff_policy_t::one);
 
     //! Return the number of target qubits of an operator
     MQ_NODISCARD uint32_t num_targets() const noexcept;
@@ -248,7 +290,7 @@ class TermsOperator
     derived_t& operator+=(const derived_t& other);
 
     //! In-place addition with a number
-    template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_DEF>
+    template <TYPENAME_COEFFICIENT number_t TYPENAME_COEFFICIENT_CONSTRAINTS_DEF>
     derived_t& operator+=(const number_t& number);
 
     // ---------------------------------
@@ -257,7 +299,7 @@ class TermsOperator
     derived_t& operator-=(const derived_t& other);
 
     //! In-place subtraction with a number
-    template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_DEF>
+    template <TYPENAME_COEFFICIENT number_t TYPENAME_COEFFICIENT_CONSTRAINTS_DEF>
     derived_t& operator-=(const number_t& number);
 
     // ---------------------------------
@@ -271,13 +313,13 @@ class TermsOperator
     derived_t& operator*=(const derived_t& other);
 
     //! In-place multiplication with a number
-    template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_DEF>
+    template <TYPENAME_COEFFICIENT number_t TYPENAME_COEFFICIENT_CONSTRAINTS_DEF>
     derived_t& operator*=(const number_t& number);
 
     // ---------------------------------
 
     //! In-place multiplication with a number
-    template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_DEF>
+    template <TYPENAME_COEFFICIENT number_t TYPENAME_COEFFICIENT_CONSTRAINTS_DEF>
     derived_t& operator/=(const number_t& number);
 
     // ---------------------------------
@@ -325,8 +367,8 @@ class TermsOperator
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(base_t, num_targets_, terms_);
 };
 
-template <TYPENAME_NUMBER number_t,
-          typename derived_t TYPENAME_NUMBER_CONSTRAINTS_DEF_ADD(traits::is_terms_operator<derived_t>::value)>
+template <TYPENAME_COEFFICIENT number_t,
+          typename derived_t TYPENAME_COEFFICIENT_CONSTRAINTS_DEF_ADD(traits::is_terms_operator<derived_t>::value)>
 MQ_NODISCARD auto operator-(const number_t& number, const derived_t& other);
 
 }  // namespace mindquantum::ops

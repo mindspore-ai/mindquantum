@@ -359,7 +359,7 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::operator+=(const d
 // -----------------------------------------------------------------------------
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_IMPL>
+template <TYPENAME_COEFFICIENT number_t TYPENAME_COEFFICIENT_CONSTRAINTS_IMPL>
 auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::operator+=(const number_t& number) -> derived_t& {
     *this += derived_t::identity() * number;
     return *static_cast<derived_t*>(this);
@@ -377,7 +377,7 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::operator-=(const d
 // -----------------------------------------------------------------------------
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_IMPL>
+template <TYPENAME_COEFFICIENT number_t TYPENAME_COEFFICIENT_CONSTRAINTS_IMPL>
 auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::operator-=(const number_t& number) -> derived_t& {
     *this -= derived_t::identity() * number;
     return *static_cast<derived_t*>(this);
@@ -416,7 +416,7 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::operator*=(const d
 // -----------------------------------------------------------------------------
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_IMPL>
+template <TYPENAME_COEFFICIENT number_t TYPENAME_COEFFICIENT_CONSTRAINTS_IMPL>
 auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::operator*=(const number_t& number) -> derived_t& {
     for (auto& [term, coeff] : terms_) {
         coeff_policy_t::imul(coeff, number);
@@ -427,7 +427,7 @@ auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::operator*=(const n
 // =============================================================================
 
 template <typename derived_t, typename term_policy_t, typename coeff_policy_t>
-template <TYPENAME_NUMBER number_t TYPENAME_NUMBER_CONSTRAINTS_IMPL>
+template <TYPENAME_COEFFICIENT number_t TYPENAME_COEFFICIENT_CONSTRAINTS_IMPL>
 auto TermsOperator<derived_t, term_policy_t, coeff_policy_t>::operator/=(const number_t& number) -> derived_t& {
     *this *= 1. / number;
     return *static_cast<derived_t*>(this);
@@ -516,7 +516,7 @@ void TermsOperator<derived_t, term_policy_t, coeff_policy_t>::calculate_num_targ
 
 // =============================================================================
 
-template <TYPENAME_NUMBER number_t, typename derived_t TYPENAME_NUMBER_CONSTRAINTS_IMPL>
+template <TYPENAME_COEFFICIENT number_t, typename derived_t TYPENAME_COEFFICIENT_CONSTRAINTS_IMPL>
 auto operator-(const number_t& number, const derived_t& other) {
     return number + (-other);
 }
@@ -525,9 +525,9 @@ auto operator-(const number_t& number, const derived_t& other) {
 
 }  // namespace mindquantum::ops
 
-#undef TYPENAME_NUMBER
-#undef TYPENAME_NUMBER_CONSTRAINTS_DEF
-#undef TYPENAME_NUMBER_CONSTRAINTS_DEF_ADD
-#undef TYPENAME_NUMBER_CONSTRAINTS_IMPL
+#undef TYPENAME_COEFFICIENT
+#undef TYPENAME_COEFFICIENT_CONSTRAINTS_DEF
+#undef TYPENAME_COEFFICIENT_CONSTRAINTS_DEF_ADD
+#undef TYPENAME_COEFFICIENT_CONSTRAINTS_IMPL
 
 #endif /* TERMS_OPERATOR_TPP */

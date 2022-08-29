@@ -136,20 +136,11 @@ auto bind_ops(pybind11::module& module, const std::string_view& name) {
         .PYBIND11_DEFINE_BINOP_PAIR(mul, op_t, const op_t&, *)
         .PYBIND11_DEFINE_BINOP_PAIR(mul, op_t, double, *)
         .PYBIND11_DEFINE_BINOP_PAIR(mul, op_t, std::complex<double>, *)
-        // .PYBIND11_DEFINE_BINOP_PAIR(mul, op_t, typename op_t::coefficient_t&, *)
+        .PYBIND11_DEFINE_BINOP_PAIR(mul, op_t, typename op_t::coefficient_t&, *)
         .PYBIND11_DEFINE_BINOP_PAIR(truediv, op_t, double, /)
         .PYBIND11_DEFINE_BINOP_PAIR(truediv, op_t, std::complex<double>, /)
         .PYBIND11_DEFINE_UNOP(__neg__, op_t, -)
         .PYBIND11_DEFINE_BINOP(__eq__, const op_t, const op_t&, ==)
-        .def(py::self *= coeff_t(), py::is_operator())
-        .def(
-            "__mul__",
-            [](const op_t& lhs, const coeff_t& coeff) {
-                auto out = lhs;
-                out *= coeff;
-                return out;
-            },
-            py::is_operator())
         .def(
             "__pow__", [](const op_t& base, unsigned int exponent) { return base.pow(exponent); }, py::is_operator())
         .def("matrix", &op_t::matrix, "n_qubits"_a);

@@ -28,6 +28,9 @@
 #include "core/config.hpp"
 
 #include "core/format/format_complex.hpp"
+#include "ops/gates/traits.hpp"
+
+// =============================================================================
 
 namespace mindquantum::ops::details {
 struct CmplxDoubleCoeffPolicy {

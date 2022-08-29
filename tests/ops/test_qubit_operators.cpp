@@ -124,48 +124,4 @@ TEST_CASE("QubitOperator constructor", "[qubit_op][ops]") {
     CHECK(QubitOperator("Y1 Z2 1X Y3").is_identity());
 }
 
-TEST_CASE("QubitOperator split", "[terms_op][ops]") {
-    const auto lhs = QubitOperator("X1", 1.2i);
-    const auto rhs = QubitOperator("Z3", 1.2);
-    const auto qubit_op = lhs + rhs;
-
-    const auto splitted = qubit_op.split();
-    REQUIRE(std::size(splitted) == 2);
-    if (splitted[0] == lhs) {
-        CHECK(splitted[0] == lhs);
-        CHECK(splitted[1] == rhs);
-    } else {
-        CHECK(splitted[0] == rhs);
-        CHECK(splitted[1] == lhs);
-    }
-}
-
-TEST_CASE("QubitOperator comparison operators", "[terms_op][ops]") {
-    coeff_term_dict_t ref_terms;
-
-    auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
-    auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::Y}}, 1.);
-    REQUIRE(inserted1);
-    REQUIRE(inserted2);
-
-    // op = {'3': 2.3,  '1^': 1.}
-    const QubitOperator qubit_op(ref_terms);
-    QubitOperator other(ref_terms);
-
-    CHECK(qubit_op == qubit_op);
-    CHECK(qubit_op == other);
-
-    SECTION("Add identity term") {
-        other += QubitOperator::identity();
-    }
-    SECTION("Add other term") {
-        other += QubitOperator{terms_t{{2, TermValue::Z}}, 2.34i};
-    }
-    SECTION("No common terms") {
-        other = QubitOperator{terms_t{{2, TermValue::Z}}, 2.34i};
-    }
-    CHECK(!(qubit_op == other));
-    CHECK(qubit_op != other);
-}
-
 // =============================================================================

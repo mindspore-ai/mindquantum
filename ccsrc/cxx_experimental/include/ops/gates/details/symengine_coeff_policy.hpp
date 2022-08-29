@@ -38,6 +38,16 @@
 
 #include "core/format/symengine_basic.hpp"
 #include "ops/gates/details/complex_double_coeff_policy.hpp"
+#include "ops/gates/traits.hpp"
+
+// =============================================================================
+
+namespace mindquantum::traits {
+template <>
+inline constexpr auto is_termsop_number<SymEngine::RCP<const SymEngine::Basic>> = true;
+}  // namespace mindquantum::traits
+
+// -----------------------------------------------------------------------------
 
 namespace mindquantum::ops::details {
 struct SymEngineCoeffPolicy {
