@@ -100,18 +100,21 @@ struct ParameterResolverCoeffPolicyBase {
                 coeff.const_value = coeff.const_value.real();
             }
         } else {
-            // TODO(dnguyen): Is this really needed?
-            coeff.const_value = 0.;
+            coeff *= 0;
         }
     }
     static auto compress(coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
         // NB: This assumes a complex API similar to std::complex
         if constexpr (is_complex_valued) {
             if (coeff.IsConst()) {
-                if (coeff.const_value.imag() <= abs_tol) {
-                    cast_real(coeff);
-                } else if (coeff.const_value.real() <= abs_tol) {
-                    cast_imag(coeff);
+                if (std::abs(coeff.const_value) <= abs_tol) {
+                    coeff.const_value = float_t{0.};
+                    // TODO(dnguyen): Should we clear the PR in this case?
+                    // coeff.data_.clear();
+                } else if (std::abs(coeff.const_value.imag()) <= abs_tol) {
+                    cast_real(coeff.const_value);
+                } else if (std::abs(coeff.const_value.real()) <= abs_tol) {
+                    cast_imag(coeff.const_value);
                 }
             }
         }

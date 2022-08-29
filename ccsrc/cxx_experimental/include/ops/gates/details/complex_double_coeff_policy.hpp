@@ -87,9 +87,11 @@ struct CmplxDoubleCoeffPolicy {
         coeff = coeff.imag();
     }
     static auto compress(coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
-        if (coeff.imag() <= abs_tol) {
+        if (std::abs(coeff) <= abs_tol) {
+            coeff = coeff_t{0.};
+        } else if (std::abs(coeff.imag()) <= abs_tol) {
             cast_real(coeff);
-        } else if (coeff.real() <= abs_tol) {
+        } else if (std::abs(coeff.real()) <= abs_tol) {
             cast_imag(coeff);
         }
     }
