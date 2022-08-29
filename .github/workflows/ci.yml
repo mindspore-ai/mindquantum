@@ -441,7 +441,7 @@ jobs:
         uses: seanmiddleditch/gha-setup-ninja@v3
 
       - name: Enable Developer Command Prompt
-        uses: ilammy/msvc-dev-cmd@v1.10.0
+        uses: ilammy/msvc-dev-cmd@v1.11.0
 
       - name: Install Scoop && Scoop packages
         run: |
