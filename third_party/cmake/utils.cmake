@@ -168,8 +168,13 @@ function(__download_pkg pkg_name pkg_url pkg_md5)
     debug_print(STATUS "Using local server URL: ${pkg_url}")
   endif()
 
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
+    set(_opts DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+  endif()
+
   FetchContent_Declare(
     ${pkg_name}
+    ${_opts}
     URL ${pkg_url}
     URL_HASH MD5=${pkg_md5})
 
@@ -178,11 +183,16 @@ endfunction()
 
 # Fetch some content by downloading a Git repository (or from an archive on the local server with a specific commit)
 function(__download_pkg_with_git pkg_name pkg_url pkg_git_commit pkg_md5)
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
+    set(_opts DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+  endif()
+
   if(_local_server)
     set(pkg_url "${_local_server}/libs/${pkg_name}/${pkg_git_commit}")
     debug_print(STATUS "Using local server URL: ${pkg_url}")
     FetchContent_Declare(
       ${pkg_name}
+      ${_opts}
       URL ${pkg_url}
       URL_HASH MD5=${pkg_md5})
   else()
