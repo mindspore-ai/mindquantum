@@ -76,7 +76,7 @@ diff --color -aur --new-file projectq-src/projectq/backends/_sim/_cppkernels/int
 +
 +  if (ctrlmask == 0) {
 +      THRESHOLD_OMP(
-+          _DO_PRAGMA(omp for collapse(LOOP_COLLAPSE1) schedule(static)), len,
++          MQ_DO_PRAGMA(omp for collapse(LOOP_COLLAPSE1) schedule(static)), len,
 +          2UL << mindquantum::nQubitTh,
 +          for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]) {
 +      for (std::size_t i1 = 0; i1 < dsorted[0]; ++i1) {
@@ -85,7 +85,7 @@ diff --color -aur --new-file projectq-src/projectq/backends/_sim/_cppkernels/int
 +          })
 +  } else {
 +      THRESHOLD_OMP(
-+          _DO_PRAGMA(omp for collapse(LOOP_COLLAPSE1) schedule(static)), len,
++          MQ_DO_PRAGMA(omp for collapse(LOOP_COLLAPSE1) schedule(static)), len,
 +          2UL << mindquantum::nQubitTh,
 +          for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]) {
 +      for (std::size_t i1 = 0; i1 < dsorted[0]; ++i1) {
@@ -187,7 +187,7 @@ diff --color -aur --new-file projectq-src/projectq/backends/_sim/_cppkernels/int
 +
 +  if (ctrlmask == 0) {
 +      THRESHOLD_OMP(
-+          _DO_PRAGMA(omp for collapse(LOOP_COLLAPSE2) schedule(static)), len,
++          MQ_DO_PRAGMA(omp for collapse(LOOP_COLLAPSE2) schedule(static)), len,
 +          2UL << mindquantum::nQubitTh,
 +          for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]) {
 +      for (omp::idx_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]) {
@@ -208,7 +208,7 @@ diff --color -aur --new-file projectq-src/projectq/backends/_sim/_cppkernels/int
 +          })
 +  } else {
 +      THRESHOLD_OMP(
-+          _DO_PRAGMA(omp for collapse(LOOP_COLLAPSE2) schedule(static)), len,
++          MQ_DO_PRAGMA(omp for collapse(LOOP_COLLAPSE2) schedule(static)), len,
 +          2UL << mindquantum::nQubitTh,
 +          for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]) {
 +      for (omp::idx_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]) {
@@ -373,7 +373,7 @@ diff --color -aur --new-file projectq-src/projectq/backends/_sim/_cppkernels/int
 +
 +  if (ctrlmask == 0) {
 +      THRESHOLD_OMP(
-+          _DO_PRAGMA(omp for collapse(LOOP_COLLAPSE3) schedule(static)), len,
++          MQ_DO_PRAGMA(omp for collapse(LOOP_COLLAPSE3) schedule(static)), len,
 +          2UL << mindquantum::nQubitTh,
 +          for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]) {
 +      for (omp::idx_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]) {
@@ -398,7 +398,7 @@ diff --color -aur --new-file projectq-src/projectq/backends/_sim/_cppkernels/int
 +          })
 +  } else {
 +      THRESHOLD_OMP(
-+          _DO_PRAGMA(omp for collapse(LOOP_COLLAPSE3) schedule(static)), len,
++          MQ_DO_PRAGMA(omp for collapse(LOOP_COLLAPSE3) schedule(static)), len,
 +          2UL << mindquantum::nQubitTh,
 +          for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]) {
 +      for (omp::idx_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]) {
@@ -778,7 +778,7 @@ diff --color -aur --new-file projectq-src/projectq/backends/_sim/_cppkernels/int
 +
 +  if (ctrlmask == 0) {
 +        THRESHOLD_OMP(
-+            _DO_PRAGMA(omp for collapse(LOOP_COLLAPSE4) schedule(static)), len, 2UL << mindquantum::nQubitTh,
++            MQ_DO_PRAGMA(omp for collapse(LOOP_COLLAPSE4) schedule(static)), len, 2UL << mindquantum::nQubitTh,
 +            for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
 +      for (omp::idx_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]) {
 +        for (omp::idx_t i2 = 0; i2 < dsorted[1]; i2 += 2 * dsorted[2]) {
@@ -805,7 +805,7 @@ diff --color -aur --new-file projectq-src/projectq/backends/_sim/_cppkernels/int
 +            })
 +  } else {
 +      THRESHOLD_OMP(
-+          _DO_PRAGMA(omp for collapse(LOOP_COLLAPSE4) schedule(static)), len,
++          MQ_DO_PRAGMA(omp for collapse(LOOP_COLLAPSE4) schedule(static)), len,
 +          2UL << mindquantum::nQubitTh,
 +          for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]) {
 +      for (omp::idx_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]) {
@@ -1909,7 +1909,7 @@ diff --color -aur --new-file projectq-src/projectq/backends/_sim/_cppkernels/int
 +
 +  if (ctrlmask == 0) {
 +        THRESHOLD_OMP(
-+            _DO_PRAGMA(omp for collapse(LOOP_COLLAPSE5) schedule(static)), len, 2UL << mindquantum::nQubitTh,
++            MQ_DO_PRAGMA(omp for collapse(LOOP_COLLAPSE5) schedule(static)), len, 2UL << mindquantum::nQubitTh,
 +            for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]){
 +      for (omp::idx_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]) {
 +        for (omp::idx_t i2 = 0; i2 < dsorted[1]; i2 += 2 * dsorted[2]) {
@@ -1941,7 +1941,7 @@ diff --color -aur --new-file projectq-src/projectq/backends/_sim/_cppkernels/int
 +            })
 +  } else {
 +      THRESHOLD_OMP(
-+          _DO_PRAGMA(omp for collapse(LOOP_COLLAPSE5) schedule(static)), len,
++          MQ_DO_PRAGMA(omp for collapse(LOOP_COLLAPSE5) schedule(static)), len,
 +          2UL << mindquantum::nQubitTh,
 +          for (omp::idx_t i0 = 0; i0 < n; i0 += 2 * dsorted[0]) {
 +      for (omp::idx_t i1 = 0; i1 < dsorted[0]; i1 += 2 * dsorted[1]) {
@@ -2146,7 +2146,7 @@ diff --color -aur --new-file projectq-src/projectq/backends/_sim/_cppkernels/sim
 +      apply_term(term.first, ids, {});
 +      calc_type delta = 0.;
 +            THRESHOLD_OMP(
-+                _DO_PRAGMA(
++                MQ_DO_PRAGMA(
 +                    omp parallel for reduction(+:delta) schedule(static)),
 +                N_, mindquantum::nQubitTh,
 +                for (omp::idx_t i = 0; i < (len_ >> 1); ++i) {
@@ -2320,7 +2320,7 @@ diff --color -aur --new-file projectq-src/projectq/backends/_sim/_cppkernels/sim
 +              })
 +        }
 +        nrm_change = 0.;
-+                THRESHOLD_OMP(_DO_PRAGMA(omp parallel for reduction(+:nrm_change) schedule(static)), N_, mindquantum::nQubitTh,
++                THRESHOLD_OMP(MQ_DO_PRAGMA(omp parallel for reduction(+:nrm_change) schedule(static)), N_, mindquantum::nQubitTh,
 +                    for (omp::idx_t j = 0; j < (len_ >> 1); ++j){
 +          complex_type tmp(update[2 * j], update[2 * j + 1]);
 +          tmp *= coeff;
@@ -2470,25 +2470,25 @@ diff --color -aur --new-file projectq-src/projectq/backends/_sim/_cppkernels/sim
 +
 +    switch (ids.size()) {
 +    case 1:
-+      THRESHOLD_OMP(_DO_PRAGMA(omp parallel), N_, mindquantum::nQubitTh,
++      THRESHOLD_OMP(MQ_DO_PRAGMA(omp parallel), N_, mindquantum::nQubitTh,
 +                    kernel(vec_, ids[0], m, ctrlmask, len_ >> 1);)
 +      break;
 +    case 2:
-+      THRESHOLD_OMP(_DO_PRAGMA(omp parallel), N_, mindquantum::nQubitTh,
++      THRESHOLD_OMP(MQ_DO_PRAGMA(omp parallel), N_, mindquantum::nQubitTh,
 +                    kernel(vec_, ids[1], ids[0], m, ctrlmask, len_ >> 1);)
 +      break;
 +    case 3:
 +      THRESHOLD_OMP(
-+          _DO_PRAGMA(omp parallel), N_, mindquantum::nQubitTh,
++          MQ_DO_PRAGMA(omp parallel), N_, mindquantum::nQubitTh,
 +          kernel(vec_, ids[2], ids[1], ids[0], m, ctrlmask, len_ >> 1);)
 +      break;
 +    case 4:
 +      THRESHOLD_OMP(
-+          _DO_PRAGMA(omp parallel), N_, mindquantum::nQubitTh,
++          MQ_DO_PRAGMA(omp parallel), N_, mindquantum::nQubitTh,
 +          kernel(vec_, ids[3], ids[2], ids[1], ids[0], m, ctrlmask, len_ >> 1);)
 +      break;
 +    case 5:
-+      THRESHOLD_OMP(_DO_PRAGMA(omp parallel), N_, mindquantum::nQubitTh,
++      THRESHOLD_OMP(MQ_DO_PRAGMA(omp parallel), N_, mindquantum::nQubitTh,
 +                    kernel(vec_, ids[4], ids[3], ids[2], ids[1], ids[0], m,
 +                           ctrlmask, len_ >> 1);)
 +      break;

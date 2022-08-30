@@ -21,6 +21,7 @@
 #include "core/cxx20_config.hpp"
 #include "core/details/clang_version.hpp"
 #include "core/details/cxx20_compatibility.hpp"
+#include "core/details/macros.hpp"
 #include "core/logging.hpp"
 #include "core/types.hpp"
 

@@ -70,12 +70,12 @@ std::shared_ptr<CsrHdMatrix<T>> PauliMatToCsrHdMatrix(std::shared_ptr<PauliMat<T
     auto &coeff = a->coeff_;
     auto &p = a->p_;
     THRESHOLD_OMP(
-        _DO_PRAGMA(omp parallel for schedule(static) reduction(+ : nnz)), dim, 1UL << nQubitTh,
-        for (Index i = 0; i < dim; i++) {
-        if (i <= col[i]) {
-            nnz++;
-        }
-        })
+        MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+ : nnz)), dim, 1UL << nQubitTh,
+                     for (Index i = 0; i < dim; i++) {
+                         if (i <= col[i]) {
+                             nnz++;
+                         }
+                     })
     Index *indptr = reinterpret_cast<Index *>(malloc(sizeof(Index) * (dim + 1)));
     Index *indices = reinterpret_cast<Index *>(malloc(sizeof(Index) * nnz));
     CTP<T> data = reinterpret_cast<CTP<T>>(malloc(sizeof(CT<T>) * nnz));
@@ -134,11 +134,11 @@ std::shared_ptr<CsrHdMatrix<T>> SparseHamiltonian(const VT<PauliTerm<T>> &hams, 
     while (tot > 1) {
         Index half = tot / 2 + tot % 2;
         THRESHOLD_OMP(
-            _DO_PRAGMA(omp parallel for schedule(static) num_threads(half)), n_qubits, nQubitTh,
-            for (Index i = half; i < tot; i++) {
-            sp_hams[i - half] = Csr_Plus_Csr(sp_hams[i - half], sp_hams[i]);
-            sp_hams[i]->Reset();
-            })
+            MQ_DO_PRAGMA(omp parallel for schedule(static) num_threads(half)), n_qubits, nQubitTh,
+                         for (Index i = half; i < tot; i++) {
+                             sp_hams[i - half] = Csr_Plus_Csr(sp_hams[i - half], sp_hams[i]);
+                             sp_hams[i]->Reset();
+                         })
         tot = half;
     }
     return sp_hams[0];
