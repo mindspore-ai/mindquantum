@@ -565,6 +565,7 @@ jobs:
 
       - name: Set up MinGW64
         uses: egor-tensin/setup-mingw@v2
+        id: mingw64-setup
         with:
           platform: x64
 
@@ -587,8 +588,8 @@ jobs:
       - name: Configure
         env:
           BOOST_ROOT: ${{ env.BOOST_PATH }}
-          CC: cc
-          CXX: c++
+          CC: ${{ steps.mingw64-setup.outputs.gcc }}
+          CXX: ${{ steps.mingw64-setup.outputs.gxx }}
         run: >-
            ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -OnlyPytest -NoGitee
            -ConfigureOnly -C -Clean3rdParty -Prefix "${{ github.workspace }}/install"
