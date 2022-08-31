@@ -15,6 +15,8 @@
 #ifndef OPS_TRANSFORM_TYPES_HPP
 #define OPS_TRANSFORM_TYPES_HPP
 
+#include <vector>
+
 #include "ops/gates/fermion_operator_parameter_resolver.hpp"
 #include "ops/gates/qubit_operator_parameter_resolver.hpp"
 

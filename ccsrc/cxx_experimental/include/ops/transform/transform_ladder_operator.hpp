@@ -22,8 +22,8 @@ namespace mindquantum::ops::transform {
 // template <typename fermion_t, typename qubit_t>
 // TODO(xusheng): Why cannot use inline here, otherwise undefined symbol error occur.
 MQ_NODISCARD qubit_t transform_ladder_operator(const TermValue& value, const qlist_t& x1, const qlist_t& y1,
-                                                      const qlist_t& z1, const qlist_t& x2, const qlist_t& y2,
-                                                      const qlist_t& z2);
+                                               const qlist_t& z1, const qlist_t& x2, const qlist_t& y2,
+                                               const qlist_t& z2);
 }  // namespace mindquantum::ops::transform
 
 #endif

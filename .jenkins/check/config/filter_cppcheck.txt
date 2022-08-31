@@ -11,3 +11,20 @@
 "mindquantum/ccsrc/cxx_experimental/lib/decompositions/gate_decomposer.cpp" "stlIfFind"
 
 "mindquantum/tests/mapping/test_partial_placer.cpp"                          "unreadVariable"
+
+"mindquantum/ccsrc/cxx_experimental/python/include/python/cengines/resource_counter.hpp:24" "unknownMacro"
+"mindquantum/ccsrc/cxx_experimental/python/include/python/ops/command.hpp:28"               "unknownMacro"
+
+"mindquantum/ccsrc/cxx_experimental/lib/ops/gates/fermion_operator.cpp"                     "containerOutOfBounds"
+"mindquantum/ccsrc/cxx_experimental/lib/ops/gates/fermion_operator_parameter_resolver.cpp"  "containerOutOfBounds"
+
+"mindquantum/ccsrc/cxx_experimental/include/ops/parametric/param_names.hpp"                 "unusedStructMember"
+
+"mindquantum/ccsrc/cxx_experimental/include/core/control.hpp:79"                            "useStlAlgorithm"
+"mindquantum/ccsrc/cxx_experimental/lib/core/circuit_manager.cpp"                           "useStlAlgorithm"
+
+"mindquantum/ccsrc/cxx_experimental/lib/ops/gates/fermion_operator.cpp"                     "containerOutOfBounds"
+"mindquantum/ccsrc/cxx_experimental/lib/ops/gates/fermion_operator_parameter_resolver.cpp"  "containerOutOfBounds"
+
+"mindquantum/ccsrc/mqbackend/binding.cc:183"                                                "syntaxError"
+"mindquantum/ccsrc/mq_base/sparse/algo.h:73"                                                "syntaxError"

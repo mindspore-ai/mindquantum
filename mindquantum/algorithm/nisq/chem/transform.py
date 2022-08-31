@@ -146,7 +146,7 @@ class Transform:
             raise TypeError('This method can be only applied for FermionOperator.')
         return QubitOperator(transform_.parity(self.operator, self.n_qubits))
 
-    def bravyi_kitaev(self):  # pylint disable=too-many-locals
+    def bravyi_kitaev(self):  # pylint: disable=too-many-locals
         r"""
         Apply Bravyi-Kitaev transform.
 
@@ -399,7 +399,7 @@ class Transform:
         """
         if not isinstance(self.operator, QubitOperator):
             raise TypeError('This method can be only applied for QubitOperator.')
-        
+
         return FermionOperator(transform_.reverse_jordan_wigner(self.operator, self.n_qubits))
 
 

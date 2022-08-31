@@ -32,5 +32,7 @@ useStlAlgorithm:ccsrc/cxx_experimental/include/core/control.hpp:79
 useStlAlgorithm:ccsrc/cxx_experimental/lib/core/circuit_manager.cpp
 
 containerOutOfBounds:ccsrc/cxx_experimental/lib/ops/gates/fermion_operator.cpp
+containerOutOfBounds:ccsrc/cxx_experimental/lib/ops/gates/fermion_operator_parameter_resolver.cpp
 
-syntaxError:ccsrc/mqbackend/binding.cc:112
+syntaxError:ccsrc/mqbackend/binding.cc:183
+syntaxError:ccsrc/mq_base/sparse/algo.h:73

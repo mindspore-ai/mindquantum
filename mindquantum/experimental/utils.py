@@ -36,22 +36,22 @@ class TermValue__:
 
     # pylint: disable=invalid-name
     @property
-    def I(self):
+    def I(self):  # noqa: E743,E741,N802
         """Bind pauli I operator."""
         return TermValue_.I
 
     @property
-    def X(self):
+    def X(self):  # noqa: N802
         """Bind pauli X operator."""
         return TermValue_.X
 
     @property
-    def Y(self):
+    def Y(self):  # noqa: N802
         """Bind pauli Y operator."""
         return TermValue_.Y
 
     @property
-    def Z(self):
+    def Z(self):  # noqa: N802
         """Bind pauli Z operator."""
         return TermValue_.Y
 
