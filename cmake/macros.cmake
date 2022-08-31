@@ -205,18 +205,25 @@ function(_apply_patch_file)
     INPUT_FILE "${APF_INPUT_FILE}"
     WORKING_DIRECTORY "${APF_WORKING_DIRECTORY}"
     OUTPUT_VARIABLE _stdout
-    ERROR_VARIABLE _stderr RESULTS_VARIABLE _results
+    COMMAND_ECHO NONE
+    ERROR_VARIABLE _stderr
+    RESULTS_VARIABLE _results
     RESULT_VARIABLE _result)
 
   if(_result EQUAL "0")
-    message("${_stdout}")
+    string(REGEX REPLACE "\n" ";" _stdout "${_stdout}")
+    foreach(_line ${_stdout})
+      message(STATUS "     :: ${_line}")
+    endforeach()
     debug_print(STATUS "  -> dry-run patch successful, applying patch for real")
     execute_process(
       COMMAND "${Patch_EXECUTABLE}" ${APF_PATCH_ARGS}
       INPUT_FILE "${APF_INPUT_FILE}"
       WORKING_DIRECTORY "${APF_WORKING_DIRECTORY}"
       OUTPUT_VARIABLE _stdout
-      ERROR_VARIABLE _stderr RESULTS_VARIABLE _results
+      COMMAND_ECHO NONE
+      ERROR_VARIABLE _stderr
+      RESULTS_VARIABLE _results
       RESULT_VARIABLE _result)
   else()
     debug_print(STATUS "  -> application of patch failed (dry-run)")
