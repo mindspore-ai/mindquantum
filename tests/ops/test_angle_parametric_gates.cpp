@@ -19,8 +19,9 @@
 #include <symengine/real_double.h>
 #include <symengine/symengine_exception.h>
 
-#include "ops/parametric/angle_base.hpp"
-#include "ops/utils.hpp"
+#include "ops/test_utils.hpp"
+
+#include "experimental/ops/parametric/angle_base.hpp"
 
 #include <catch2/catch.hpp>
 

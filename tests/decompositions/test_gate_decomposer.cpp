@@ -14,22 +14,21 @@
 
 #include <tweedledum/Passes/Utility/shallow_duplicate.h>
 
-#include "decompositions/config.hpp"
+#include "ops/test_utils.hpp"
 
-#include "../utils.hpp"
-#include "core/compute.hpp"
-#include "core/control.hpp"
-#include "decompositions/atom_meta.hpp"
-#include "decompositions/atom_storage.hpp"
-#include "decompositions/decomposition_atom.hpp"
-#include "decompositions/details/concepts.hpp"
-#include "decompositions/details/decomposition_param.hpp"
-#include "decompositions/gate_decomposer.hpp"
-#include "decompositions/gate_decomposition_rule.hpp"
-#include "decompositions/non_gate_decomposition_rule.hpp"
-#include "decompositions/trivial_atom.hpp"
-#include "ops/gates.hpp"
-#include "ops/utils.hpp"
+#include "experimental/core/compute.hpp"
+#include "experimental/core/control.hpp"
+#include "experimental/decompositions/atom_meta.hpp"
+#include "experimental/decompositions/atom_storage.hpp"
+#include "experimental/decompositions/config.hpp"
+#include "experimental/decompositions/decomposition_atom.hpp"
+#include "experimental/decompositions/details/concepts.hpp"
+#include "experimental/decompositions/details/decomposition_param.hpp"
+#include "experimental/decompositions/gate_decomposer.hpp"
+#include "experimental/decompositions/gate_decomposition_rule.hpp"
+#include "experimental/decompositions/non_gate_decomposition_rule.hpp"
+#include "experimental/decompositions/trivial_atom.hpp"
+#include "experimental/ops/gates.hpp"
 
 #include <catch2/catch.hpp>
 

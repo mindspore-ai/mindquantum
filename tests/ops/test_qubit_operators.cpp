@@ -16,9 +16,10 @@
 #include <string>
 #include <string_view>
 
-#include "core/logging.hpp"
-#include "ops/gates/qubit_operator.hpp"
-#include "ops/utils.hpp"
+#include "ops/test_utils.hpp"
+
+#include "experimental/core/logging.hpp"
+#include "experimental/ops/gates/qubit_operator.hpp"
 
 #include <catch2/catch.hpp>
 

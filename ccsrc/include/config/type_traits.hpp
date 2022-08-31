@@ -1,0 +1,36 @@
+//   Copyright 2022 <Huawei Technologies Co., Ltd>
+//
+//   Licensed under the Apache License, Version 2.0 (the "License");
+//   you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//   Unless required by applicable law or agreed to in writing, software
+//   distributed under the License is distributed on an "AS IS" BASIS,
+//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+//   limitations under the License.
+
+#ifndef MQ_CONFIG_TRAITS_HPP
+#define MQ_CONFIG_TRAITS_HPP
+
+#include <complex>
+#include <type_traits>
+
+namespace mindquantum::traits {
+template <typename T>
+struct is_std_complex : std::false_type {};
+
+template <typename T>
+struct is_std_complex<std::complex<T>> : std::true_type {};
+
+template <typename T>
+inline constexpr auto is_std_complex_v = is_std_complex<T>::value;
+
+template <typename T>
+inline constexpr auto is_complex_v = is_std_complex_v<T>;
+
+}  // namespace mindquantum::traits
+
+#endif /* MQ_CONFIG_TRAITS_HPP */

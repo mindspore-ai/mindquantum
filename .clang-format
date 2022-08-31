@@ -70,9 +70,15 @@ IncludeCategories:
     Priority: 20
   - Regex: '<[[:alnum:]_\.]+'
     Priority: 80
-  - Regex: '"[[:alpha:]\/]*config\.hpp"'
+  - Regex: '"experimental/config/[[:alnum:]\/\-_\.]+\.hpp"'
+    Priority: 105
+  - Regex: '"experimental/[[:alnum:]\/\-_\.]+\.hpp"'
+    Priority: 106
+  - Regex: '"config/[[:alnum:]\/\-_\.]+\.hpp"'
     Priority: 90
-  - Regex: '"([A-Za-z0-9.\/\-_])+"'
+  - Regex: '"python/[[:alnum:]\/\-_\.]+"'
+    Priority: 110
+  - Regex: '"[[:alnum:]\/\-_\.]+"'
     Priority: 100
 IndentPPDirectives: AfterHash
 IndentRequires: true

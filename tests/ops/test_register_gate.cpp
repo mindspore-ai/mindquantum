@@ -20,11 +20,11 @@
 #include <symengine/real_double.h>
 #include <symengine/symengine_exception.h>
 
-#include "ops/parametric/config.hpp"
+#include "ops/test_utils.hpp"
 
-#include "ops/parametric/angle_base.hpp"
-#include "ops/parametric/register_gate_type.hpp"
-#include "ops/utils.hpp"
+#include "experimental/ops/parametric/angle_base.hpp"
+#include "experimental/ops/parametric/config.hpp"
+#include "experimental/ops/parametric/register_gate_type.hpp"
 
 #include <catch2/catch.hpp>
 

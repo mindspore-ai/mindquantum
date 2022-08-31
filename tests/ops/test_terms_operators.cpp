@@ -20,9 +20,11 @@
 #include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/range/combine.hpp>
 
-#include "core/logging.hpp"
-#include "ops/gates/terms_operator.hpp"
-#include "ops/utils.hpp"
+#include "ops/test_utils.hpp"
+
+#include "experimental/core/logging.hpp"
+#include "experimental/ops/gates/details/complex_double_coeff_policy.hpp"
+#include "experimental/ops/gates/terms_operator.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -32,7 +34,12 @@ using TermValue = mindquantum::ops::TermValue;
 
 // =============================================================================
 
+using mindquantum::ops::py_terms_t;
+using mindquantum::ops::term_t;
+using mindquantum::ops::terms_t;
+
 namespace {
+template <typename coefficient_t>
 struct DummyOperatorTermPolicy {
     static auto to_string(const mindquantum::ops::TermValue& value) {
         if (value == TermValue::X) {
@@ -51,9 +58,28 @@ struct DummyOperatorTermPolicy {
     static auto to_string(const mindquantum::ops::term_t& term) {
         return fmt::format("{}-{}", std::get<0>(term), to_string(std::get<1>(term)));
     }
+
+    static auto parse_terms_string(std::string_view terms_string) -> terms_t {
+        return {};
+    }
+
+    static std::tuple<std::vector<term_t>, coefficient_t> simplify(terms_t terms, coefficient_t coeff = 1.) {
+        return {std::move(terms), coeff};
+    }
+
+    static std::tuple<std::vector<term_t>, coefficient_t> simplify(py_terms_t py_terms, coefficient_t coeff = 1.) {
+        return {std::move(py_terms), coeff};
+    }
+
+    static std::pair<terms_t, coefficient_t> sort_terms(terms_t local_ops, coefficient_t coeff) {
+        return {std::move(local_ops), coeff};
+    }
 };
-struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator, DummyOperatorTermPolicy> {
-    using TermsOperator::TermsOperator;
+
+using mindquantum::ops::details::CmplxDoubleCoeffPolicy;
+
+struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator, DummyOperatorTermPolicy, CmplxDoubleCoeffPolicy> {
+    using TermsOperator<DummyOperator, DummyOperatorTermPolicy>::TermsOperator;
     DummyOperator(const DummyOperator&) = default;
     DummyOperator(DummyOperator&&) = default;
     DummyOperator& operator=(const DummyOperator&) = default;
@@ -90,8 +116,6 @@ struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator, DummyOpera
 }  // namespace
 
 using coefficient_t = DummyOperator::coefficient_t;
-using term_t = DummyOperator::term_t;
-using terms_t = DummyOperator::terms_t;
 using coeff_term_dict_t = DummyOperator::coeff_term_dict_t;
 
 // =============================================================================

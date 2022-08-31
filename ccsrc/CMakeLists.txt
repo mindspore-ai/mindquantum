@@ -16,9 +16,28 @@
 
 # lint_cmake: -whitespace/indent
 
-add_subdirectory(mqbackend)
-add_subdirectory(mq_base)
+add_library(mq_base STATIC)
+set_target_properties(mq_base PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+target_compile_features(mq_base PUBLIC $<IF:$<COMPILE_FEATURES:cxx_std_20>,cxx_std_20,cxx_std_17>)
+append_to_property(mq_install_targets GLOBAL mq_base)
+force_at_least_cxx17_workaround(mq_base)
+target_link_libraries(mq_base PUBLIC cxx20_compat cmake_config mindquantum_setup)
 
 if(ENABLE_CXX_EXPERIMENTAL)
-  add_subdirectory(cxx_experimental)
+  add_library(mq_cxx_nextgen STATIC)
+  set_target_properties(mq_cxx_nextgen PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+  append_to_property(mq_install_targets GLOBAL mq_cxx_nextgen)
+  target_compile_features(mq_cxx_nextgen PUBLIC $<IF:$<COMPILE_FEATURES:cxx_std_20>,cxx_std_20,cxx_std_17>)
+  force_at_least_cxx17_workaround(mq_cxx_nextgen)
+
+  target_link_libraries(mq_cxx_nextgen PUBLIC cxx20_compat cmake_config mindquantum_setup mq_projectq_exp mq_base
+                                              ${MQ_OPENMP_TARGET})
 endif()
+
+# ==============================================================================
+
+add_subdirectory(include)
+add_subdirectory(lib)
+add_subdirectory(python)
+
+# ==============================================================================

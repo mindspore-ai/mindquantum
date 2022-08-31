@@ -16,4 +16,4 @@
 #
 # ==============================================================================
 
-add_test_executable(test_partial_placer LIBS mindquantum_cxx)
+add_test_executable(test_partial_placer LIBS mq_cxx_nextgen)

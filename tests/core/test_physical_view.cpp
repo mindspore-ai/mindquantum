@@ -20,8 +20,9 @@
 #include <tweedledum/Operators/Standard.h>
 #include <tweedledum/Passes/Mapping/Placer/TrivialPlacer.h>
 
-#include "core/circuit_manager.hpp"
-#include "core/utils.hpp"
+#include "core/test_utils.hpp"
+
+#include "experimental/core/circuit_manager.hpp"
 
 #include <catch2/catch.hpp>
 

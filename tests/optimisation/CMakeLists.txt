@@ -16,4 +16,4 @@
 #
 # ==============================================================================
 
-# add_test_executable(test_gate_cancellation LIBS mindquantum_cxx)
+# add_test_executable(test_gate_cancellation LIBS mq_cxx_nextgen)

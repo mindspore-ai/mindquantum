@@ -24,7 +24,7 @@
 #include <utility>
 #include <vector>
 
-#include "ops/gates/terms_operator.hpp"  // For mindquantum::ops::TermValue
+#include "experimental/ops/gates/terms_operator.hpp"  // For mindquantum::ops::TermValue
 
 // =============================================================================
 

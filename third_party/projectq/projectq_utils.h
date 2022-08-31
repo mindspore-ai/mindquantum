@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-#include "core/utils.h"
+#include "core/utils.hpp"
 #include "projectq/backends/_sim/_cppkernels/fusion.hpp"
 #include "projectq/backends/_sim/_cppkernels/intrin/alignedallocator.hpp"
 #include "projectq/backends/_sim/_cppkernels/simulator.hpp"

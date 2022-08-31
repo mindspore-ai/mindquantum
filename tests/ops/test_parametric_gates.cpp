@@ -19,9 +19,10 @@
 #include <symengine/real_double.h>
 #include <symengine/symengine_exception.h>
 
-#include "core/operator_traits.hpp"
-#include "ops/parametric/gate_base.hpp"
-#include "utils.hpp"  // NOLINT(build/include_subdir)
+#include "ops/test_utils.hpp"  // NOLINT(build/include_subdir)
+
+#include "experimental/core/operator_traits.hpp"
+#include "experimental/ops/parametric/gate_base.hpp"
 
 // -----------------------------------------------------------------------------
 

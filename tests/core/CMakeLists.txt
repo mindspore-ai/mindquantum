@@ -16,10 +16,10 @@
 #
 # ==============================================================================
 
-add_test_executable(test_circuit_block LIBS mindquantum_cxx DEFINES UNIT_TESTS)
+add_test_executable(test_circuit_block LIBS mq_cxx_nextgen DEFINES UNIT_TESTS)
 
-add_test_executable(test_circuit_manager LIBS mindquantum_cxx DEFINES UNIT_TESTS)
+add_test_executable(test_circuit_manager LIBS mq_cxx_nextgen DEFINES UNIT_TESTS)
 
-add_test_executable(test_projectq_view LIBS mindquantum_cxx DEFINES UNIT_TESTS)
+add_test_executable(test_projectq_view LIBS mq_cxx_nextgen DEFINES UNIT_TESTS)
 
-add_test_executable(test_physical_view LIBS mindquantum_cxx DEFINES UNIT_TESTS)
+add_test_executable(test_physical_view LIBS mq_cxx_nextgen DEFINES UNIT_TESTS)

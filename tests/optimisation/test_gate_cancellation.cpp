@@ -46,7 +46,8 @@
 #include <tweedledum/Operators/Standard.h>
 
 #include "../utils.hpp"
-#include "optimisation/gate_cancellation.hpp"
+
+#include "experimental/optimisation/gate_cancellation.hpp"
 
 #include <catch2/catch.hpp>
 

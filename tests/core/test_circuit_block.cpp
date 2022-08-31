@@ -25,7 +25,7 @@
 #include <tweedledum/Passes/Mapping/sabre_map.h>
 #include <tweedledum/Target/Device.h>
 
-#include "core/circuit_block.hpp"
+#include "experimental/core/circuit_block.hpp"
 
 // -----------------------------------------------------------------------------
 
@@ -35,8 +35,9 @@ std::ostream& operator<<(std::ostream& out, const mindquantum::QubitID& qubit_id
 
 // -----------------------------------------------------------------------------
 
-#include "core/utils.hpp"
-#include "ops/gates/measure.hpp"
+#include "core/test_utils.hpp"
+
+#include "experimental/ops/gates/measure.hpp"
 
 #include <catch2/catch.hpp>
 

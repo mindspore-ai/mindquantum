@@ -1972,7 +1972,7 @@ diff --color -aur --new-file projectq-src/projectq/backends/_sim/_cppkernels/int
 +#include "../omp_compat.hpp"
 +#include "alignedallocator.hpp"
 +#include "cintrin.hpp"
-+#include "core/utils.h"
++#include "core/utils.hpp"
 +#include <algorithm>
  #include <cmath>
 -#include <cstdlib>
@@ -2007,7 +2007,7 @@ diff --color -aur --new-file projectq-src/projectq/backends/_sim/_cppkernels/sim
  #include "intrin/kernels.hpp"
  
 -#include "intrin/alignedallocator.hpp"
-+#include "core/utils.h"
++#include "core/utils.hpp"
  #include "fusion.hpp"
 -#include <map>
 -#include <cassert>

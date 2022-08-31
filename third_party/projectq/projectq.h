@@ -25,11 +25,11 @@
 #include <thread>
 #include <vector>
 
-#include "core/utils.h"
-#include "gate/basic_gate.h"
-#include "gate/gates.h"
-#include "hamiltonian/hamiltonian.h"
-#include "pr/parameter_resolver.h"
+#include "core/parameter_resolver.hpp"
+#include "core/utils.hpp"
+#include "ops/basic_gate.hpp"
+#include "ops/gates.hpp"
+#include "ops/hamiltonian.hpp"
 #include "projectq/backends/_sim/_cppkernels/simulator.hpp"
 #include "projectq_utils.h"
 

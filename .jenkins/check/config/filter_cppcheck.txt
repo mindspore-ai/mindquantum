@@ -1,30 +1,35 @@
-# MindQuantum
 
-"mindquantum/ccsrc/mqbackend/binding.cc"                                    "syntaxError"
 
-"mindquantum/ccsrc/cxx_experimental/lib/core/circuit_manager.cpp"           "useStlAlgorithm"
-"mindquantum/ccsrc/cxx_experimental/lib/simulator/projectq_simulator.cpp"   "useStlAlgorithm"
-"mindquantum/ccsrc/cxx_experimental/python/lib/ops/command.cpp"             "useStlAlgorithm"
+"mindquantum/ccsrc/include/core/parameter_resolver.h:707"                                   "duplicateExpression"
 
-"mindquantum/ccsrc/cxx_experimental/lib/cengines/write_projectq.cpp"        "stlIfFind"
-"mindquantum/ccsrc/cxx_experimental/lib/decompositions/atom_storage.cpp"    "stlIfFind"
-"mindquantum/ccsrc/cxx_experimental/lib/decompositions/gate_decomposer.cpp" "stlIfFind"
+"mindquantum/ccsrc/include/experimental/decompositions/decomposition_atom.hpp:41"           "noExplicitConstructor"
+"mindquantum/ccsrc/include/experimental/ops/parametric/gate_base.hpp"                       "noExplicitConstructor"
 
-"mindquantum/tests/mapping/test_partial_placer.cpp"                          "unreadVariable"
+"mindquantum/ccsrc/include/experimental/core/details/cxx20_compatibility.hpp"               "noValidConfiguration"
+"mindquantum/ccsrc/include/experimental/ops/parametric/angle_base.hpp"                      "noValidConfiguration"
+"mindquantum/ccsrc/include/experimental/ops/parametric/angle_gates.hpp"                     "noValidConfiguration"
+"mindquantum/tests/decompositions/test_apply_atoms.cpp"                                     "noValidConfiguration"
 
-"mindquantum/ccsrc/cxx_experimental/python/include/python/cengines/resource_counter.hpp:24" "unknownMacro"
-"mindquantum/ccsrc/cxx_experimental/python/include/python/ops/command.hpp:28"               "unknownMacro"
+"mindquantum/ccsrc/include/experimental/decompositions/decomposition_atom.hpp"              "operatorEqVarError"
 
-"mindquantum/ccsrc/cxx_experimental/lib/ops/gates/fermion_operator.cpp"                     "containerOutOfBounds"
-"mindquantum/ccsrc/cxx_experimental/lib/ops/gates/fermion_operator_parameter_resolver.cpp"  "containerOutOfBounds"
+"mindquantum/ccsrc/include/experimental/core/details/cxx20_compatibility.hpp:20"            "preprocessorErrorDirective"
+"mindquantum/ccsrc/include/experimental/decompositions/rules/config.hpp"                    "preprocessorErrorDirective"
+"mindquantum/ccsrc/include/experimental/ops/parametric/angle_base.hpp"                      "preprocessorErrorDirective"
+"mindquantum/ccsrc/python/experimental/lib/ops/ops.cpp"                                     "preprocessorErrorDirective"
+"mindquantum/tests/decompositions/test_apply_atoms.cpp:48"                                  "preprocessorErrorDirective"
+"mindquantum/tests/ops/test_angle_parametric_gates.cpp:28"                                  "preprocessorErrorDirective"
 
-"mindquantum/ccsrc/cxx_experimental/include/ops/parametric/param_names.hpp"                 "unusedStructMember"
+"mindquantum/ccsrc/include/core/sparse/paulimat.hpp:58"                                     "unknownMacro"
+"mindquantum/ccsrc/python/experimental/include/python/cengines/resource_counter.hpp:24"     "unknownMacro"
+"mindquantum/ccsrc/python/experimental/include/python/ops/command.hpp:27"                   "unknownMacro"
+"mindquantum/third_party/projectq/projectq.h:190"                                           "unknownMacro"
 
-"mindquantum/ccsrc/cxx_experimental/include/core/control.hpp:79"                            "useStlAlgorithm"
-"mindquantum/ccsrc/cxx_experimental/lib/core/circuit_manager.cpp"                           "useStlAlgorithm"
+"mindquantum/ccsrc/include/experimental/ops/parametric/param_names.hpp"                     "unusedStructMember"
 
-"mindquantum/ccsrc/cxx_experimental/lib/ops/gates/fermion_operator.cpp"                     "containerOutOfBounds"
-"mindquantum/ccsrc/cxx_experimental/lib/ops/gates/fermion_operator_parameter_resolver.cpp"  "containerOutOfBounds"
+"mindquantum/ccsrc/include/experimental/core/control.hpp:79"                                "useStlAlgorithm"
+"mindquantum/ccsrc/lib/experimental/core/circuit_manager.cpp"                               "useStlAlgorithm"
 
-"mindquantum/ccsrc/mqbackend/binding.cc:183"                                                "syntaxError"
-"mindquantum/ccsrc/mq_base/sparse/algo.h:73"                                                "syntaxError"
+"mindquantum/ccsrc/lib/experimental/ops/gates/fermion_operator.cpp"                         "containerOutOfBounds"
+"mindquantum/ccsrc/lib/experimental/ops/gates/fermion_operator_parameter_resolver.cpp"      "containerOutOfBounds"
+
+"mindquantum/ccsrc/python/mqbackend/lib/binding.cc:184"                                     "syntaxError"

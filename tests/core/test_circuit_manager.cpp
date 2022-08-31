@@ -14,10 +14,11 @@
 
 #include <tweedledum/Operators/Standard.h>
 
-#include "core/circuit_block.hpp"
-#include "core/circuit_manager.hpp"
-#include "core/utils.hpp"
-#include "ops/gates/measure.hpp"
+#include "core/test_utils.hpp"
+
+#include "experimental/core/circuit_block.hpp"
+#include "experimental/core/circuit_manager.hpp"
+#include "experimental/ops/gates/measure.hpp"
 
 #include <catch2/catch.hpp>
 
