@@ -37,7 +37,7 @@ repos:
 
   # Changes tabs to spaces
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.3.0
+    rev: v1.3.1
     hooks:
       - id: remove-tabs
         exclude: ^(.*Makefile|.*patch[0-9]*)$
@@ -50,7 +50,7 @@ repos:
         additional_dependencies: [toml]
 
   - repo: https://github.com/PyCQA/doc8/
-    rev: 0.11.2
+    rev: v1.0.0
     hooks:
       - id: doc8
         require_serial: false
@@ -68,7 +68,7 @@ repos:
         args: [-x]
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.1.0
+    rev: v2.2.1
     hooks:
       - id: codespell
         require_serial: false
@@ -112,7 +112,7 @@ repos:
         additional_dependencies: [black==22.3.0]
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.37.1
+    rev: v2.37.3
     hooks:
       - id: pyupgrade
         args: [--py36-plus, --keep-mock]

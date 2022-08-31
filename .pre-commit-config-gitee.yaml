@@ -40,7 +40,7 @@ repos:
 
   # Changes tabs to spaces
   - repo: https://gitee.com/dnguyen/lukas-c-pre-commit-hooks-mirror.git
-    rev: v1.3.0
+    rev: v1.3.1
     hooks:
       - id: remove-tabs
         exclude: ^(.*Makefile|.*patch[0-9]*)$
@@ -53,8 +53,7 @@ repos:
         additional_dependencies: [toml]
 
   - repo: https://gitee.com/mirrors_PyCQA/doc8.git
-    rev: 0.11.2
-
+    rev: v1.0.0
     hooks:
       - id: doc8
         require_serial: false
@@ -72,7 +71,7 @@ repos:
         args: [-x, --severity=warning]
 
   - repo: https://gitee.com/mirrors_codespell-project/codespell
-    rev: v2.1.0
+    rev: v2.2.1
     hooks:
       - id: codespell
         require_serial: false
@@ -116,7 +115,7 @@ repos:
         additional_dependencies: [black==22.3.0]
 
   - repo: https://gitee.com/mirrors_asottile/pyupgrade
-    rev: v2.37.1
+    rev: v2.37.3
     hooks:
       - id: pyupgrade
         args: [--py36-plus, --keep-mock]
