@@ -15,11 +15,15 @@
 #ifndef OPS_GATES_TRAITS_HPP
 #define OPS_GATES_TRAITS_HPP
 
+#include <complex>
+
 #include "experimental/core/traits.hpp"
 
 namespace mindquantum::traits {
+// TODO(dnguyen): Remove this if not needed anymore.
 template <typename T>
 inline constexpr auto is_termsop_number = std::is_floating_point_v<T> || is_std_complex_v<T>;
+
 }  // namespace mindquantum::traits
 
 #endif /* OPS_GATES_TRAITS_HPP */

@@ -30,8 +30,12 @@
 #include <nlohmann/json.hpp>
 
 #include "config/real_cast.hpp"
+#include "config/type_promotion.hpp"
+#include "config/type_traits.hpp"
 
 #include "core/utils.hpp"
+
+// =============================================================================
 
 namespace mindquantum {
 namespace details {
@@ -63,6 +67,24 @@ struct real_cast_impl<cast_type, ParameterResolver<std::complex<float_t>>> {
     }
 };
 }  // namespace details
+
+// =============================================================================
+
+namespace traits {
+template <typename float_t>
+struct to_real_type<ParameterResolver<float_t>> {
+    using type = ParameterResolver<to_real_type_t<float_t>>;
+};
+template <typename float_t>
+struct to_cmplx_type<ParameterResolver<float_t>> {
+    using type = ParameterResolver<to_cmplx_type_t<float_t>>;
+};
+
+template <typename T>
+struct type_promotion<ParameterResolver<T>> : details::type_promotion_encapsulated_fp<T, ParameterResolver> {};
+}  // namespace traits
+
+// =============================================================================
 
 template <typename T1, typename T2>
 bool IsTwoNumberClose(T1 v1, T2 v2) {
@@ -124,6 +146,8 @@ template <typename T>
 struct RemoveComplex<std::complex<T>> {
     using type = T;
 };
+
+// -----------------------------------------------------------------------------
 
 template <typename T>
 struct ParameterResolver {

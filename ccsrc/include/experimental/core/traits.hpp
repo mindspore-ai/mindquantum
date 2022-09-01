@@ -18,6 +18,7 @@
 #include <tuple>
 #include <type_traits>
 
+#include "config/config.hpp"
 #include "config/type_traits.hpp"
 
 #include "experimental/core/config.hpp"

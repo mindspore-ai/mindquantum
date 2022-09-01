@@ -46,24 +46,6 @@ inline constexpr auto is_complex_v = is_std_complex_v<T>;
 // =============================================================================
 
 template <typename float_t, typename = void>
-struct to_real_type;
-
-template <typename float_t>
-struct to_real_type<float_t, std::enable_if_t<std::is_floating_point_v<float_t>>> {
-    using type = float_t;
-};
-
-template <typename complex_t>
-struct to_real_type<complex_t, std::enable_if_t<is_std_complex_v<complex_t>>> {
-    using type = typename complex_t::value_type;
-};
-
-template <typename float_t>
-using to_real_type_t = typename to_real_type<float_t>::type;
-
-// -----------------------------------------------------------------------------
-
-template <typename float_t, typename = void>
 struct to_cmplx_type;
 
 template <typename float_t>
@@ -71,13 +53,38 @@ struct to_cmplx_type<float_t, std::enable_if_t<std::is_floating_point_v<float_t>
     using type = std::complex<float_t>;
 };
 
-template <typename complex_t>
-struct to_cmplx_type<complex_t, std::enable_if_t<is_std_complex_v<complex_t>>> {
-    using type = complex_t;
+template <typename float_t>
+struct to_cmplx_type<std::complex<float_t>> {
+    using type = std::complex<float_t>;
 };
 
 template <typename float_t>
 using to_cmplx_type_t = typename to_cmplx_type<float_t>::type;
+
+// -----------------------------------------------------------------------------
+
+template <typename float_t, typename = void>
+struct to_real_type;
+
+template <typename float_t>
+struct to_real_type<float_t, std::enable_if_t<std::is_floating_point_v<float_t>>> {
+    using type = float_t;
+};
+
+template <typename float_t>
+struct to_real_type<std::complex<float_t>> {
+    using type = float_t;
+};
+
+template <typename float_t>
+using to_real_type_t = typename to_real_type<float_t>::type;
+
+// -----------------------------------------------------------------------------
+
+static_assert(std::is_same_v<std::complex<double>, to_cmplx_type_t<double>>);
+static_assert(std::is_same_v<std::complex<double>, to_cmplx_type_t<std::complex<double>>>);
+static_assert(std::is_same_v<double, to_real_type_t<double>>);
+static_assert(std::is_same_v<double, to_real_type_t<std::complex<double>>>);
 
 }  // namespace mindquantum::traits
 
