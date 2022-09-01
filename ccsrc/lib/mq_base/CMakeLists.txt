@@ -16,9 +16,6 @@
 #
 # ==============================================================================
 
-include(CMakePrintHelpers)
-cmake_print_properties(TARGETS mq_base PROPERTIES INTERFACE_INCLUDE_DIRECTORIES INCLUDE_DIRECTORIES)
-
 target_sources(mq_base PRIVATE ${CMAKE_CURRENT_LIST_DIR}/utils.cc)
 
 if(ENABLE_CUDA)

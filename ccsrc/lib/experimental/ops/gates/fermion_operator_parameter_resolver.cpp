@@ -308,34 +308,3 @@ auto FermionOperatorPR::normal_ordered_term_(terms_t local_ops, coefficient_t co
 }  // namespace mindquantum::ops
 
 // =============================================================================
-
-namespace mindquantum::ops {
-
-auto FermionOperatorPR::simplify_(terms_t local_ops, coefficient_t coeff)
-    -> std::tuple<std::vector<term_t>, coefficient_t> {
-    return sort_terms_(std::move(local_ops), coeff);
-}
-
-// -----------------------------------------------------------------------------
-
-auto FermionOperatorPR::simplify_(py_terms_t py_terms, coefficient_t coeff) -> std::tuple<terms_t, coefficient_t> {
-    terms_t terms;
-    terms.reserve(std::size(py_terms));
-    boost::range::push_back(
-        terms, py_terms | boost::adaptors::transformed([](const auto& value) -> term_t {
-                   return {std::get<0>(value), static_cast<mindquantum::ops::TermValue>(std::get<1>(value))};
-               }));
-
-    return simplify_(terms, coeff);
-}
-
-// =============================================================================
-
-auto FermionOperatorPR::sort_terms_(terms_t local_ops, coefficient_t coeff) -> std::pair<terms_t, coefficient_t> {
-    // std::sort(rbegin(local_ops), rend(local_ops));
-    return {std::move(local_ops), coeff};
-}
-
-// =============================================================================
-
-}  // namespace mindquantum::ops

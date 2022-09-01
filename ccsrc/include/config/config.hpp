@@ -15,7 +15,12 @@
 #ifndef MQ_CORE_CONFIG_HPP
 #define MQ_CORE_CONFIG_HPP
 
+#include "config/cmake_config.hpp"
+#include "config/cxx20_config.hpp"
 #include "config/type_traits.hpp"
+
+#include "details/clang_version.hpp"
+#include "details/macros.hpp"
 
 // =============================================================================
 
@@ -45,6 +50,45 @@
 /*!
  * \def MQ_ALIGN(x)
  * Align a C++ struct/class to a specific size.
+ */
+
+// =============================================================================
+
+#ifndef MQ_IS_CLANG_VERSION_LESS
+#    define MQ_IS_CLANG_VERSION_LESS(major, minor)                                                                     \
+        (defined __clang__) && (MQ_CLANG_MAJOR < major) && (MQ_CLANG_MINOR < minor)
+#    define MQ_IS_CLANG_VERSION_LESS_EQUAL(major, minor)                                                               \
+        (defined __clang__) && (MQ_CLANG_MAJOR <= major) && (MQ_CLANG_MINOR <= minor)
+#endif  // MQ_IS_CLANG_VERSION_LESS
+
+/*!
+ * \def MQ_IS_CLANG_VERSION_LESS(major, minor)
+ * True if the compiler is Clang and if its version is strictly less than <major>.<minor>
+ */
+/*!
+ * \def MQ_IS_CLANG_VERSION_LESS_EQUAL(major, minor)
+ * True if the compiler is Clang and if its version is less than or equal to <major>.<minor>
+ */
+
+// -------------------------------------
+
+#if !defined(MQ_CONFIG_NO_COUNTER) && !defined(MQ_CONFIG_COUNTER)
+#    define MQ_CONFIG_COUNTER
+#endif  // !MQ_CONFIG_NO_COUNTER && !MQ_CONFIG_COUNTER
+
+#define MQ_UNIQUE_NAME_LINE2_(name, line) name##line
+#define MQ_UNIQUE_NAME_LINE_(name, line)  MQ_UNIQUE_NAME_LINE2_(name, line)
+#ifdef MQ_CONFIG_COUNTER
+#    define MQ_UNIQUE_NAME(name) MQ_UNIQUE_NAME_LINE_(name, __COUNTER__)
+#else
+#    define MQ_UNIQUE_NAME(name) MQ_UNIQUE_NAME_LINE_(name, __LINE__)
+#endif
+
+/*!
+ * \def MQ_UNIQUE_NAME(name)
+ * Define a unique and valid C++ identifier.
+ *
+ * This is either based on \c __COUNTER__ if supported or in \c __LINE__ otherwise.
  */
 
 // =============================================================================

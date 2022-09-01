@@ -79,7 +79,7 @@ struct DummyOperatorTermPolicy {
 using mindquantum::ops::details::CmplxDoubleCoeffPolicy;
 
 struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator, DummyOperatorTermPolicy, CmplxDoubleCoeffPolicy> {
-    using TermsOperator<DummyOperator, DummyOperatorTermPolicy>::TermsOperator;
+    using TermsOperator<DummyOperator, DummyOperatorTermPolicy, CmplxDoubleCoeffPolicy>::TermsOperator;
     DummyOperator(const DummyOperator&) = default;
     DummyOperator(DummyOperator&&) = default;
     DummyOperator& operator=(const DummyOperator&) = default;
@@ -88,28 +88,6 @@ struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator, DummyOpera
 
     using term_t = mindquantum::ops::term_t;
     using py_term_t = mindquantum::ops::py_term_t;
-
-    static std::tuple<std::vector<term_t>, coefficient_t> simplify_(const std::vector<term_t>& terms,
-                                                                    coefficient_t coeff) {
-        return {terms, coeff};
-    }
-
-    static std::tuple<std::vector<term_t>, coefficient_t> simplify_(const std::vector<py_term_t>& py_terms,
-                                                                    coefficient_t coeff) {
-        terms_t terms;
-        terms.reserve(std::size(py_terms));
-        boost::range::push_back(
-            terms, py_terms | boost::adaptors::transformed([](const auto& value) -> term_t {
-                       return {std::get<0>(value), static_cast<mindquantum::ops::TermValue>(std::get<1>(value))};
-                   }));
-
-        return simplify_(terms, coeff);
-    }
-
-    static std::pair<terms_t, coefficient_t> sort_terms_(terms_t local_ops, coefficient_t coeff) {
-        std::sort(begin(local_ops), end(local_ops));
-        return {std::move(local_ops), coeff};  // TODO(dnguyen): Should we move? or can (N)RVO take care of that?
-    }
 
     using TermsOperator::operator==;
 };

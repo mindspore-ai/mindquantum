@@ -17,6 +17,8 @@
 
 #include <map>
 
+#include "config/config.hpp"
+
 // clang-format off
 #include "experimental/details/macros_conv_begin.hpp"
 // clang-format on

@@ -106,7 +106,7 @@ auto QubitOperatorTermPolicyBase::hermitian(term_t term) -> term_t {
     return term;
 }
 
-auto QubitOperatorTermPolicyBase::hermitian(const terms_t& terms) {
+auto QubitOperatorTermPolicyBase::hermitian(const terms_t& terms) -> terms_t {
     return terms;
 }
 

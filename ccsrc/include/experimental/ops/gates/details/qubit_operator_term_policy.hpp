@@ -49,7 +49,7 @@ struct QubitOperatorTermPolicyBase {
     static auto hermitian(term_t term) -> term_t;
 
     //! Convert a list of terms to its hermitian conjugate
-    static auto hermitian(const terms_t& terms);
+    static auto hermitian(const terms_t& terms) -> terms_t;
 
     //! Convert a term to a string
     /*!

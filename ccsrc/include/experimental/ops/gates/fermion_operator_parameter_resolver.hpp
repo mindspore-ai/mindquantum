@@ -85,26 +85,6 @@ class FermionOperatorPR
      * \note Normal ordered form is with high index and creation operator in front.
      */
     static FermionOperatorPR normal_ordered_term_(terms_t local_ops, coefficient_t coeff);
-
-    // TODO(dnguyen): Move this into term_policy_t class
-    //! Simplify the list of local operators
-    static std::tuple<std::vector<term_t>, coefficient_t> simplify_(terms_t terms,
-                                                                    coefficient_t coeff = coeff_policy_t::one);
-
-    // TODO(dnguyen): Move this into term_policy_t class
-    //! Simplify the list of local operators
-    static std::tuple<std::vector<term_t>, coefficient_t> simplify_(py_terms_t py_terms,
-                                                                    coefficient_t coeff = coeff_policy_t::one);
-
-    // TODO(dnguyen): Move this into term_policy_t class
-    //! Sort a list of local operators
-    /*!
-     * \param local_ops A list of local operators
-     * \param coeff A coefficient
-     * \note Potentially called by the TermsOperator constructor
-     * \note Defaults to normal ordering by calling \sa normal_ordered_term_
-     */
-    static std::pair<terms_t, coefficient_t> sort_terms_(terms_t local_ops, coefficient_t coeff);
 };
 
 }  // namespace mindquantum::ops

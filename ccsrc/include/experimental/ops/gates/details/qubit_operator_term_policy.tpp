@@ -121,7 +121,7 @@ auto QubitOperatorTermPolicy<coefficient_t>::simplify(py_terms_t py_terms, coeff
                    return {std::get<0>(value), static_cast<mindquantum::ops::TermValue>(std::get<1>(value))};
                }));
 
-    return simplify_(terms, coeff);
+    return simplify(terms, coeff);
 }
 
 // =============================================================================
@@ -129,7 +129,7 @@ auto QubitOperatorTermPolicy<coefficient_t>::simplify(py_terms_t py_terms, coeff
 template <typename coefficient_t>
 auto QubitOperatorTermPolicy<coefficient_t>::sort_terms(terms_t local_ops, coefficient_t coeff)
     -> std::pair<terms_t, coefficient_t> {
-    auto [a, b] = simplify_(local_ops, coeff);
+    auto [a, b] = simplify(local_ops, coeff);
     return {std::move(a), b};  // TODO(dnguyen): Should we move? or can (N)RVO take care of that?
 }
 

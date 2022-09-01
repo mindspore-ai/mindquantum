@@ -46,7 +46,7 @@ auto FermionOperatorTermPolicy<coefficient_t>::simplify(py_terms_t py_terms, coe
                    return {std::get<0>(value), static_cast<mindquantum::ops::TermValue>(std::get<1>(value))};
                }));
 
-    return simplify_(terms, coeff);
+    return simplify(terms, coeff);
 }
 
 // =============================================================================

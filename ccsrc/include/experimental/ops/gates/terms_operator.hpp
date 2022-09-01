@@ -152,8 +152,7 @@ concept coefficient = traits::is_termsop_number<coeff_t>;
  *      - static std::tuple<std::vector<term_t>, coefficient_t> simplify_(py_terms_t terms, coefficient_t coeff * = 1.);
  *      - static std::vector<term_t> parse_terms_string(std::string_view);
  */
-template <typename derived_t, template <typename coeff_t> class term_policy_t_,
-          typename coeff_policy_t_ = details::CmplxDoubleCoeffPolicy>
+template <typename derived_t, template <typename coeff_t> class term_policy_t_, typename coeff_policy_t_>
 class TermsOperator : public traits::boost_operators_helper<derived_t, typename coeff_policy_t_::coeff_t> {
  public:
     using non_const_num_targets = void;
@@ -266,6 +265,8 @@ class TermsOperator : public traits::boost_operators_helper<derived_t, typename 
      * \endcode
      */
     derived_t& compress(double abs_tol = EQ_TOLERANCE);
+
+    // =========================================================================
 
     // =========================================================================
 

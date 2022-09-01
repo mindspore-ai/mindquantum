@@ -21,7 +21,6 @@
 #include <tweedledum/IR/Operator.h>
 
 #include "experimental/core/config.hpp"
-#include "experimental/core/details/macros.hpp"
 #include "experimental/ops/cpp_command.hpp"
 
 CLANG_DIAG_OFF("-Wdeprecated-declarations")

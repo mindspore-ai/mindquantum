@@ -285,7 +285,7 @@ endif()
 # ==============================================================================
 
 set(MQ_HAS_ABSEIL_CPP ${ENABLE_ABSEIL_CPP})
-configure_file(${CMAKE_CURRENT_LIST_DIR}/cmake_config.hpp.in ${PROJECT_BINARY_DIR}/core/cmake_config.hpp)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/cmake_config.hpp.in ${PROJECT_BINARY_DIR}/config/cmake_config.hpp)
 
 add_library(cmake_config INTERFACE)
 target_include_directories(cmake_config INTERFACE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>)
@@ -293,6 +293,6 @@ target_include_directories(cmake_config INTERFACE $<BUILD_INTERFACE:${PROJECT_BI
 # ------------------------------------------------------------------------------
 
 append_to_property(mq_install_targets GLOBAL cmake_config)
-install(FILES ${PROJECT_BINARY_DIR}/core/cmake_config.hpp DESTINATION ${MQ_INSTALL_INCLUDEDIR}/experimental/core)
+install(FILES ${PROJECT_BINARY_DIR}/config/cmake_config.hpp DESTINATION ${MQ_INSTALL_INCLUDEDIR}/config)
 
 # ==============================================================================

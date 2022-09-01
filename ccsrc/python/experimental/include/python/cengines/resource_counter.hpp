@@ -17,8 +17,9 @@
 
 #include <tweedledum/IR/Circuit.h>
 
+#include "config/config.hpp"
+
 #include "experimental/cengines/cpp_resource_counter.hpp"
-#include "experimental/core/details/macros.hpp"
 #include "experimental/details/macros_conv_begin.hpp"
 
 CLANG_DIAG_OFF("-Wdeprecated-declarations")

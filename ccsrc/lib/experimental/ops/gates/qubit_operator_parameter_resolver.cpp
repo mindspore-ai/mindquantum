@@ -140,53 +140,13 @@ auto QubitOperatorPR::matrix(std::optional<uint32_t> n_qubits) const -> std::opt
 
 // =============================================================================
 
-auto QubitOperatorPR::simplify_(terms_t terms, coefficient_t coeff) -> std::tuple<terms_t, coefficient_t> {
-    if (std::empty(terms)) {
-        return {terms_t{}, coeff};
+QubitOperatorPR QubitOperatorPR::subs(const coefficient_t& params_pr) noexcept {
+    auto out(*static_cast<const QubitOperatorPR*>(this));
+    for (auto& [local_ops, coeff] : out.terms_) {
+        coeff = coeff.Combination(params_pr);
     }
-    std::sort(
-        begin(terms), end(terms), [](const auto& lhs, const auto& rhs) constexpr { return lhs.first < rhs.first; });
-
-    terms_t reduced_terms;
-    auto left_term = terms.front();
-    for (auto it(begin(terms) + 1); it != end(terms); ++it) {
-        const auto& [left_qubit_id, left_operator] = left_term;
-        const auto& [right_qubit_id, right_operator] = *it;
-
-        if (left_qubit_id == right_qubit_id) {
-            const auto [new_coeff, new_op] = details::pauli_products(left_operator, right_operator);
-            left_term = term_t{left_qubit_id, new_op};
-            coeff *= new_coeff;
-        } else {
-            if (left_term.second != TermValue::I) {
-                reduced_terms.emplace_back(left_term);
-            }
-            left_term = *it;
-        }
-    }
-
-    return {std::move(terms), coeff};
-}
-
-// -----------------------------------------------------------------------------
-
-auto QubitOperatorPR::simplify_(py_terms_t py_terms, coefficient_t coeff) -> std::tuple<terms_t, coefficient_t> {
-    terms_t terms;
-    terms.reserve(std::size(py_terms));
-    boost::range::push_back(
-        terms, py_terms | boost::adaptors::transformed([](const auto& value) -> term_t {
-                   return {std::get<0>(value), static_cast<mindquantum::ops::TermValue>(std::get<1>(value))};
-               }));
-
-    return simplify_(terms, coeff);
-}
-
-// =============================================================================
-
-auto QubitOperatorPR::sort_terms_(terms_t local_ops, coefficient_t coeff) -> std::pair<terms_t, coefficient_t> {
-    std::sort(begin(local_ops), end(local_ops));
-    return {std::move(local_ops), coeff};  // TODO(dnguyen): Should we move? or can (N)RVO take care of that?
-}
+    return out;
+};
 
 // =============================================================================
 

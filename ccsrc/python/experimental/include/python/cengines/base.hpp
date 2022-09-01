@@ -15,7 +15,7 @@
 #ifndef PYTHON_BASE_HPP
 #define PYTHON_BASE_HPP
 
-#include "experimental/core/details/macros.hpp"
+#include "config/config.hpp"
 
 CLANG_DIAG_OFF("-Wdeprecated-declarations")
 #include <pybind11/pybind11.h>

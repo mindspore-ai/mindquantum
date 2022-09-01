@@ -19,52 +19,22 @@
 
 #include <boost/range/iterator_range.hpp>
 
+#include "config/type_traits.hpp"
+
 #include "core/parameter_resolver.hpp"
 
 #include "experimental/core/config.hpp"
 #include "experimental/core/format/parameter_resolver.hpp"
-#include "experimental/core/real_cast.hpp"
 #include "experimental/core/traits.hpp"
 #include "experimental/core/types.hpp"
 #include "experimental/ops/gates/traits.hpp"
 
 // =============================================================================
 
-namespace mindquantum {
-namespace traits {
+namespace mindquantum::traits {
 template <typename float_t>
 inline constexpr auto is_termsop_number<ParameterResolver<float_t>> = true;
-}  // namespace traits
-
-// -----------------------------------------------------------------------------
-
-namespace details {
-template <RealCastType cast_type, typename float_t>
-struct real_cast_impl<cast_type, ParameterResolver<float_t>> {
-    using type = ParameterResolver<float_t>;
-    static auto apply(const type& coeff) {
-        constexpr auto is_complex_valued = traits::is_complex_v<float_t>;
-        if constexpr (is_complex_valued) {
-            ParameterResolver<traits::to_real_type_t<float_t>> new_coeff;
-            if constexpr (cast_type == RealCastType::REAL) {
-                coeff.const_value = coeff.const_value.real(0.);
-                for (auto p = coeff.data_.begin(); p != coeff.data_.end(); p++) {
-                    new_coeff.data_[p->first] = p->second.real(0.);
-                }
-            } else {
-                coeff.const_value = coeff.const_value.real(0.);
-                for (auto p = coeff.data_.begin(); p != coeff.data_.end(); p++) {
-                    new_coeff.data_[p->first] = p->second.real(0.);
-                }
-            }
-            return new_coeff;
-        } else {
-            return coeff;
-        }
-    }
-};
-}  // namespace details
-}  // namespace mindquantum
+}  // namespace mindquantum::traits
 
 // -----------------------------------------------------------------------------
 
@@ -73,6 +43,7 @@ template <typename float_t_>
 struct ParameterResolverCoeffPolicyBase {
     using float_t = float_t_;
     using coeff_t = ParameterResolver<float_t>;
+    using real_coeff_policy_t = ParameterResolverCoeffPolicyBase<traits::to_real_type_t<float_t>>;
 
     static constexpr auto EQ_TOLERANCE = PRECISION;
 
@@ -131,21 +102,13 @@ struct ParameterResolverCoeffPolicyBase {
     }
     static auto discard_imag(coeff_t& coeff) {
         if constexpr (is_complex_valued) {
-            coeff.const_value = coeff.const_value.imag(0.);
-            for (auto p = coeff.data_.begin(); p != coeff.data_.end(); p++) {
-                coeff.data_[p->first] = p->second.imag(0.);
-            }
-        } else {
-            coeff *= 0;
+            coeff.const_value.imag(0.);
+            std::for_each(begin(coeff.data_), end(coeff.data_), [](auto& param) { std::get<1>(param).imag(0.); });
         }
     }
     static auto discard_real(coeff_t& coeff) {
-        if constexpr (is_complex_valued) {
-            coeff.const_value = coeff.const_value.real(0.);
-            for (auto p = coeff.data_.begin(); p != coeff.data_.end(); p++) {
-                coeff.data_[p->first] = p->second.real(0.);
-            }
-        }
+        coeff.const_value.real(0.);
+        std::for_each(begin(coeff.data_), end(coeff.data_), [](auto& param) { std::get<1>(param).real(0.); });
     }
     static auto compress(coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
         // NB: This assumes a complex API similar to std::complex
@@ -165,6 +128,8 @@ struct ParameterResolverCoeffPolicyBase {
     }
 };
 
+// =============================================================================
+
 struct DoublePRCoeffPolicy : public ParameterResolverCoeffPolicyBase<double> {
     static const coeff_t one;
     // Conversion
@@ -172,6 +137,9 @@ struct DoublePRCoeffPolicy : public ParameterResolverCoeffPolicyBase<double> {
         const boost::iterator_range<std::string_view::const_iterator>& range);
 };
 inline const DoublePRCoeffPolicy::coeff_t DoublePRCoeffPolicy::one(DoublePRCoeffPolicy::float_t{1.0});
+
+// -----------------------------------------------------------------------------
+
 struct CmplxDoublePRCoeffPolicy : public ParameterResolverCoeffPolicyBase<std::complex<double>> {
     static const coeff_t one;
     // Conversion
@@ -179,6 +147,8 @@ struct CmplxDoublePRCoeffPolicy : public ParameterResolverCoeffPolicyBase<std::c
         const boost::iterator_range<std::string_view::const_iterator>& range);
 };
 inline const CmplxDoublePRCoeffPolicy::coeff_t CmplxDoublePRCoeffPolicy::one(CmplxDoublePRCoeffPolicy::float_t{1.0, 0});
+
+// =============================================================================
 }  // namespace mindquantum::ops::details
 
 #endif /* DETAILS_PARAMETERRESOLVER_COEFF_POLICY_HPP */

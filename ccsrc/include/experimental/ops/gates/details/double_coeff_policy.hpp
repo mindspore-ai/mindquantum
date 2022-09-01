@@ -12,32 +12,27 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef DETAILS_COMPLEX_DOUBLE_COEFF_POLICY_HPP
-#define DETAILS_COMPLEX_DOUBLE_COEFF_POLICY_HPP
+#ifndef DETAILS_DOUBLE_COEFF_POLICY_HPP
+#define DETAILS_DOUBLE_COEFF_POLICY_HPP
 
 #include <cmath>
 
 #include <algorithm>
-#include <complex>
 #include <optional>
 
 #include <boost/range/iterator_range.hpp>
 
-#include <fmt/format.h>
-
 #include "experimental/core/config.hpp"
-#include "experimental/core/format/format_complex.hpp"
-#include "experimental/ops/gates/details/double_coeff_policy.hpp"
-#include "experimental/ops/gates/traits.hpp"
 
 // =============================================================================
 
 namespace mindquantum::ops::details {
-struct CmplxDoubleCoeffPolicy {
-    using coeff_t = std::complex<double>;
-    using real_coeff_policy_t = DoubleCoeffPolicy;
+template <typename float_t>
+struct FloatCoeffPolicyBase {
+    using coeff_t = float_t;
+    using real_coeff_policy_t = FloatCoeffPolicyBase<float_t>;
 
-    static constexpr auto one = coeff_t{1, 0};
+    static constexpr auto one = coeff_t{1.};
     static constexpr auto EQ_TOLERANCE = 1.e-8;
 
     // Comparisons
@@ -81,25 +76,31 @@ struct CmplxDoubleCoeffPolicy {
     }
 
     // Misc. functions
+    static auto conjugate(const coeff_t& coeff) {
+        return coeff;
+    }
     static auto is_zero(const coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
         return std::abs(coeff) <= abs_tol;
     }
     static auto discard_imag(coeff_t& coeff) {
-        coeff.imag(0.);
+        coeff = 0.;
     }
     static auto discard_real(coeff_t& coeff) {
-        coeff.real(0.);
     }
     static auto compress(coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
         if (std::abs(coeff) <= abs_tol) {
             coeff = coeff_t{0.};
-        } else if (std::abs(coeff.imag()) <= abs_tol) {
-            discard_imag(coeff);
-        } else if (std::abs(coeff.real()) <= abs_tol) {
-            discard_real(coeff);
         }
     }
 };
 }  // namespace mindquantum::ops::details
 
-#endif /* DETAILS_COMPLEX_DOUBLE_COEFF_POLICY_HPP */
+#include "experimental/ops/gates/details/double_coeff_policy.tpp"
+
+namespace mindquantum::ops::details {
+using FloatCoeffPolicy = FloatCoeffPolicyBase<float>;
+using SingleCoeffPolicy = FloatCoeffPolicy;
+using DoubleCoeffPolicy = FloatCoeffPolicyBase<double>;
+}  // namespace mindquantum::ops::details
+
+#endif /* DETAILS_DOUBLE_COEFF_POLICY_HPP */

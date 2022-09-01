@@ -34,9 +34,10 @@
 #include <symengine/sets.h>
 #include <symengine/symengine_casts.h>
 
+#include "config/real_cast.hpp"
+
 #include "experimental/core/config.hpp"
 #include "experimental/core/format/symengine_basic.hpp"
-#include "experimental/core/real_cast.hpp"
 #include "experimental/ops/gates/details/complex_double_coeff_policy.hpp"
 #include "experimental/ops/gates/traits.hpp"
 

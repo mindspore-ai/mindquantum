@@ -29,9 +29,41 @@
 
 #include <nlohmann/json.hpp>
 
+#include "config/real_cast.hpp"
+
 #include "core/utils.hpp"
 
 namespace mindquantum {
+namespace details {
+template <RealCastType cast_type, typename float_t>
+struct real_cast_impl<cast_type, ParameterResolver<float_t>> {
+    using type = ParameterResolver<float_t>;
+    static auto apply(const type& coeff) {
+        return coeff;
+    }
+};
+template <RealCastType cast_type, typename float_t>
+struct real_cast_impl<cast_type, ParameterResolver<std::complex<float_t>>> {
+    using type = ParameterResolver<std::complex<float_t>>;
+    static auto apply(const type& coeff) {
+        constexpr auto is_complex_valued = traits::is_complex_v<float_t>;
+        ParameterResolver<traits::to_real_type_t<float_t>> new_coeff;
+        if constexpr (cast_type == RealCastType::REAL) {
+            new_coeff.const_value = coeff.const_value.real();
+            for (auto param = coeff.data_.begin(); param != coeff.data_.end(); ++param) {
+                new_coeff.data_[param->first] = param->second.real();
+            }
+        } else {
+            new_coeff.const_value = coeff.const_value.imag();
+            for (auto param = coeff.data_.begin(); param != coeff.data_.end(); ++param) {
+                new_coeff.data_[param->first] = param->second.imag();
+            }
+        }
+        return new_coeff;
+    }
+};
+}  // namespace details
+
 template <typename T1, typename T2>
 bool IsTwoNumberClose(T1 v1, T2 v2) {
     if (std::abs(v1 - v2) < PRECISION) {

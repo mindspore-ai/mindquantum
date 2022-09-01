@@ -26,6 +26,7 @@
 #include <Eigen/SparseCore>
 
 #include "experimental/core/config.hpp"
+#include "experimental/ops/gates/details/complex_double_coeff_policy.hpp"
 #include "experimental/ops/gates/details/qubit_operator_term_policy.hpp"
 #include "experimental/ops/gates/terms_operator.hpp"
 
@@ -48,12 +49,13 @@ namespace mindquantum::ops {
  *  QubitOperator has the following attributes set as follows: operators = ('X', 'Y', 'Z'), different_indices_commute =
  *  True.
  */
-class QubitOperator : public TermsOperator<QubitOperator, details::QubitOperatorTermPolicy> {
-    friend TermsOperator<QubitOperator, details::QubitOperatorTermPolicy>;
+class QubitOperator
+    : public TermsOperator<QubitOperator, details::QubitOperatorTermPolicy, details::CmplxDoubleCoeffPolicy> {
+    friend TermsOperator<QubitOperator, details::QubitOperatorTermPolicy, details::CmplxDoubleCoeffPolicy>;
 
  public:
     using csr_matrix_t = Eigen::SparseMatrix<std::complex<double>, Eigen::RowMajor>;
-    using TermsOperator<QubitOperator, details::QubitOperatorTermPolicy>::operator==;
+    using TermsOperator<QubitOperator, details::QubitOperatorTermPolicy, details::CmplxDoubleCoeffPolicy>::operator==;
 
     static constexpr std::string_view kind() {
         return "mindquantum.qubitoperator";

@@ -26,7 +26,6 @@
 #include <tweedledum/Target/Placement.h>
 
 #include "experimental/core/config.hpp"
-#include "experimental/core/details/macros.hpp"
 #include "experimental/core/details/visitor.hpp"
 #include "experimental/mapping/types.hpp"
 

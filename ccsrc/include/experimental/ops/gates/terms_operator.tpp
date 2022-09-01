@@ -32,8 +32,9 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/any_range.hpp>
 
+#include "config/real_cast.hpp"
+
 #include "experimental/core/logging.hpp"
-#include "experimental/core/real_cast.hpp"
 #include "experimental/ops/gates/terms_operator.hpp"
 #include "experimental/ops/meta/dagger.hpp"
 
@@ -67,7 +68,7 @@ TermsOperator<derived_t, term_policy_t_, coeff_policy_t>::TermsOperator(const py
 template <typename derived_t, template <typename coeff_t> class term_policy_t_, typename coeff_policy_t>
 TermsOperator<derived_t, term_policy_t_, coeff_policy_t>::TermsOperator(const coeff_term_dict_t& terms) {
     for (const auto& [local_ops, coeff] : terms) {
-        terms_.emplace(derived_t::sort_terms_(local_ops, coeff));
+        terms_.emplace(term_policy_t::sort_terms(local_ops, coeff));
     }
 
     calculate_num_targets_();
@@ -283,7 +284,8 @@ template <typename derived_t, template <typename coeff_t> class term_policy_t_, 
 auto TermsOperator<derived_t, term_policy_t_, coeff_policy_t>::real() const -> derived_t {
     auto out(*static_cast<const derived_t*>(this));
     for (auto& [local_ops, coeff] : out.terms_) {
-        coeff = real_cast<RealCastType::REAL>(coeff);
+        // TODO(dnguyen): Finish this!
+        // coeff = real_cast<RealCastType::REAL>(coeff);
     }
     return out;
 }
@@ -294,7 +296,8 @@ template <typename derived_t, template <typename coeff_t> class term_policy_t_, 
 auto TermsOperator<derived_t, term_policy_t_, coeff_policy_t>::imag() const -> derived_t {
     auto out(*static_cast<const derived_t*>(this));
     for (auto& [local_ops, coeff] : out.terms_) {
-        coeff = real_cast<RealCastType::IMAG>(coeff);
+        // TODO(dnguyen): Finish this!
+        // coeff = real_cast<RealCastType::IMAG>(coeff);
     }
     return out;
 }

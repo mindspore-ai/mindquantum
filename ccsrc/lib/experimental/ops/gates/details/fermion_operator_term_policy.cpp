@@ -106,7 +106,7 @@ auto FermionOpteratorTermPolicyBase::hermitian(term_t term) -> term_t {
     return term;
 }
 
-auto FermionOpteratorTermPolicyBase::hermitian(const terms_t& terms) {
+auto FermionOpteratorTermPolicyBase::hermitian(const terms_t& terms) -> terms_t {
     terms_t new_terms;
     new_terms.reserve(terms.size());
 

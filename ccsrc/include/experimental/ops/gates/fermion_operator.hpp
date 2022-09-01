@@ -26,6 +26,7 @@
 #include <Eigen/SparseCore>
 
 #include "experimental/core/config.hpp"
+#include "experimental/ops/gates/details/complex_double_coeff_policy.hpp"
 #include "experimental/ops/gates/details/fermion_operator_term_policy.hpp"
 #include "experimental/ops/gates/terms_operator.hpp"
 
@@ -43,12 +44,14 @@ namespace mindquantum::ops {
  *  These are the Basic Operators to describe a fermionic system, such as a Molecular system. The FermionOperator are
  *  follows the anti-commutation relationship.
  */
-class FermionOperator : public TermsOperator<FermionOperator, details::FermionOperatorTermPolicy> {
-    friend TermsOperator<FermionOperator, details::FermionOperatorTermPolicy>;
+class FermionOperator
+    : public TermsOperator<FermionOperator, details::FermionOperatorTermPolicy, details::CmplxDoubleCoeffPolicy> {
+    friend TermsOperator<FermionOperator, details::FermionOperatorTermPolicy, details::CmplxDoubleCoeffPolicy>;
 
  public:
     using csr_matrix_t = Eigen::SparseMatrix<std::complex<double>, Eigen::RowMajor>;
-    using TermsOperator<FermionOperator, details::FermionOperatorTermPolicy>::operator==;
+    using TermsOperator<FermionOperator, details::FermionOperatorTermPolicy,
+                        details::CmplxDoubleCoeffPolicy>::operator==;
 
     static constexpr std::string_view kind() {
         return "mindquantum.fermionoperator";
