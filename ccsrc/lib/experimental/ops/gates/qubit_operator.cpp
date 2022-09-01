@@ -42,7 +42,8 @@
 
 #include <fmt/format.h>
 
-#include "experimental/core/format/format_complex.hpp"
+#include "config/format/std_complex.hpp"
+
 #include "experimental/core/logging.hpp"
 #include "experimental/ops/gates.hpp"
 #include "experimental/ops/gates/terms_operator.hpp"

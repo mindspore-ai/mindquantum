@@ -45,9 +45,10 @@
 #include <fmt/format.h>
 #include <lru_cache/lru_cache.h>
 
+#include "config/format/std_complex.hpp"
+
 #include "details/eigen_diagonal_identity.hpp"
 
-#include "experimental/core/format/format_complex.hpp"
 #include "experimental/core/logging.hpp"
 #include "experimental/core/parser/boost_x3_error_handler.hpp"
 #include "experimental/ops/gates.hpp"

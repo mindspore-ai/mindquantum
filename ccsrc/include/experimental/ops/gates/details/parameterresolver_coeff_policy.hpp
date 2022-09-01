@@ -19,12 +19,12 @@
 
 #include <boost/range/iterator_range.hpp>
 
+#include "config/format/parameter_resolver.hpp"
 #include "config/type_traits.hpp"
 
 #include "core/parameter_resolver.hpp"
 
 #include "experimental/core/config.hpp"
-#include "experimental/core/format/parameter_resolver.hpp"
 #include "experimental/core/traits.hpp"
 #include "experimental/core/types.hpp"
 #include "experimental/ops/gates/details/coeff_policy.hpp"
