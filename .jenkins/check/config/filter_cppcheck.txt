@@ -5,14 +5,15 @@
 "mindquantum/ccsrc/include/experimental/decompositions/decomposition_atom.hpp:41"           "noExplicitConstructor"
 "mindquantum/ccsrc/include/experimental/ops/parametric/gate_base.hpp"                       "noExplicitConstructor"
 
-"mindquantum/ccsrc/include/experimental/core/details/cxx20_compatibility.hpp"               "noValidConfiguration"
+"mindquantum/ccsrc/include/config/config.hpp"                                               "noValidConfiguration"
+"mindquantum/ccsrc/include/config/details/cxx20_compatibility.hpp"                          "noValidConfiguration"
 "mindquantum/ccsrc/include/experimental/ops/parametric/angle_base.hpp"                      "noValidConfiguration"
 "mindquantum/ccsrc/include/experimental/ops/parametric/angle_gates.hpp"                     "noValidConfiguration"
 "mindquantum/tests/decompositions/test_apply_atoms.cpp"                                     "noValidConfiguration"
 
 "mindquantum/ccsrc/include/experimental/decompositions/decomposition_atom.hpp"              "operatorEqVarError"
 
-"mindquantum/ccsrc/include/experimental/core/details/cxx20_compatibility.hpp:20"            "preprocessorErrorDirective"
+"mindquantum/ccsrc/include/config/details/cxx20_compatibility.hpp:20"                       "preprocessorErrorDirective"
 "mindquantum/ccsrc/include/experimental/decompositions/rules/config.hpp"                    "preprocessorErrorDirective"
 "mindquantum/ccsrc/include/experimental/ops/parametric/angle_base.hpp"                      "preprocessorErrorDirective"
 "mindquantum/ccsrc/python/experimental/lib/ops/ops.cpp"                                     "preprocessorErrorDirective"
@@ -20,8 +21,8 @@
 "mindquantum/tests/ops/test_angle_parametric_gates.cpp:28"                                  "preprocessorErrorDirective"
 
 "mindquantum/ccsrc/include/core/sparse/paulimat.hpp:58"                                     "unknownMacro"
-"mindquantum/ccsrc/python/experimental/include/python/cengines/resource_counter.hpp:24"     "unknownMacro"
-"mindquantum/ccsrc/python/experimental/include/python/ops/command.hpp:27"                   "unknownMacro"
+"mindquantum/ccsrc/python/experimental/include/python/cengines/resource_counter.hpp:25"     "unknownMacro"
+"mindquantum/ccsrc/python/experimental/include/python/ops/command.hpp:26"                   "unknownMacro"
 "mindquantum/third_party/projectq/projectq.h:190"                                           "unknownMacro"
 
 "mindquantum/ccsrc/include/experimental/ops/parametric/param_names.hpp"                     "unusedStructMember"
@@ -33,3 +34,4 @@
 "mindquantum/ccsrc/lib/experimental/ops/gates/fermion_operator_parameter_resolver.cpp"      "containerOutOfBounds"
 
 "mindquantum/ccsrc/python/mqbackend/lib/binding.cc:184"                                     "syntaxError"
+"mindquantum/ccsrc/include/core/sparse/algo.hpp:73"                                         "syntaxError"
