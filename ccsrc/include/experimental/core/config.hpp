@@ -19,7 +19,6 @@
 
 #include "config/config.hpp"
 
-#include "experimental/core/details/cxx20_compatibility.hpp"
 #include "experimental/core/logging.hpp"
 #include "experimental/core/types.hpp"
 

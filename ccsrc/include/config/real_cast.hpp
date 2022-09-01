@@ -19,6 +19,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "config/config.hpp"
 #include "config/type_traits.hpp"
 
 namespace mindquantum {

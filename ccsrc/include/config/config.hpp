@@ -20,6 +20,7 @@
 #include "config/type_traits.hpp"
 
 #include "details/clang_version.hpp"
+#include "details/cxx20_compatibility.hpp"
 #include "details/macros.hpp"
 
 // =============================================================================

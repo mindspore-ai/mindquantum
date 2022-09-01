@@ -55,7 +55,7 @@ struct DummyOperatorTermPolicy {
         }
         return "UNKNOWN"s;
     }
-    static auto to_string(const mindquantum::ops::term_t& term) {
+    static auto to_string(const mindquantum::ops::term_t& term) -> std::string {
         return fmt::format("{}-{}", std::get<0>(term), to_string(std::get<1>(term)));
     }
 
