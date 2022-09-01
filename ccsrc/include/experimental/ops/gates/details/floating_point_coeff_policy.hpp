@@ -12,37 +12,36 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef DETAILS_DOUBLE_COEFF_POLICY_HPP
-#define DETAILS_DOUBLE_COEFF_POLICY_HPP
+#ifndef DETAILS_FLOATING_POINT_COEFF_POLICY_HPP
+#define DETAILS_FLOATING_POINT_COEFF_POLICY_HPP
 
 #include <cmath>
 
 #include <algorithm>
-#include <optional>
-
-#include <boost/range/iterator_range.hpp>
+#include <type_traits>
 
 #include "experimental/core/config.hpp"
+#include "experimental/ops/gates/details/coeff_policy.hpp"
 
 // =============================================================================
 
 namespace mindquantum::ops::details {
 template <typename float_t>
-struct FloatCoeffPolicyBase {
+struct CoeffPolicy<float_t, std::enable_if_t<std::is_floating_point_v<float_t>>> : CoeffPolicyBase<float_t> {
     using coeff_t = float_t;
-    using real_coeff_policy_t = FloatCoeffPolicyBase<float_t>;
+    using base_t = CoeffPolicyBase<coeff_t>;
+    using base_t::EQ_TOLERANCE;
+    using coeff_policy_real_t = typename base_t::coeff_policy_real_t;
 
     static constexpr auto one = coeff_t{1.};
-    static constexpr auto EQ_TOLERANCE = 1.e-8;
 
-    // Comparisons
+    // Comparisons/Checks
+    static constexpr auto is_const(const coeff_t& /* coeff */) {
+        return true;
+    }
     static auto equal(const coeff_t& lhs, const coeff_t& rhs) {
         return std::abs(lhs - rhs) <= std::max(EQ_TOLERANCE, EQ_TOLERANCE * std::max(std::abs(lhs), std::abs(rhs)));
     }
-
-    // Conversion
-    static std::optional<coeff_t> coeff_from_string(
-        const boost::iterator_range<std::string_view::const_iterator>& range);
 
     // Unary operators
     static auto uminus(const coeff_t& lhs) {
@@ -93,14 +92,10 @@ struct FloatCoeffPolicyBase {
         }
     }
 };
+
+using FloatCoeffPolicy = CoeffPolicy<float>;
+using SingleCoeffPolicy = CoeffPolicy<float>;
+using DoubleCoeffPolicy = CoeffPolicy<double>;
 }  // namespace mindquantum::ops::details
 
-#include "experimental/ops/gates/details/double_coeff_policy.tpp"
-
-namespace mindquantum::ops::details {
-using FloatCoeffPolicy = FloatCoeffPolicyBase<float>;
-using SingleCoeffPolicy = FloatCoeffPolicy;
-using DoubleCoeffPolicy = FloatCoeffPolicyBase<double>;
-}  // namespace mindquantum::ops::details
-
-#endif /* DETAILS_DOUBLE_COEFF_POLICY_HPP */
+#endif /* DETAILS_FLOATING_POINT_COEFF_POLICY_HPP */

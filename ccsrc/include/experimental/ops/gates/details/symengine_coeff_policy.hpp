@@ -38,7 +38,7 @@
 
 #include "experimental/core/config.hpp"
 #include "experimental/core/format/symengine_basic.hpp"
-#include "experimental/ops/gates/details/complex_double_coeff_policy.hpp"
+#include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 #include "experimental/ops/gates/traits.hpp"
 
 // =============================================================================
@@ -68,14 +68,21 @@ struct real_cast_impl<cast_type, SymEngine::RCP<const SymEngine::Basic>> {
 // -----------------------------------------------------------------------------
 
 namespace mindquantum::ops::details {
-struct SymEngineCoeffPolicy {
+template <>
+struct CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>> {
     using coeff_t = SymEngine::RCP<const SymEngine::Basic>;
-    using self_t = SymEngineCoeffPolicy;
+    using self_t = CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>>;
+    using base_t = CoeffPolicyBase<coeff_t>;
+
+    using coeff_policy_real_t = self_t;
 
     static const coeff_t one;
     static constexpr auto EQ_TOLERANCE = 1.e-8;
 
-    // Comparisons
+    // Comparisons/Checks
+    static auto is_const(const coeff_t& coeff) {
+        return SymEngine::is_a_Number(*coeff);
+    }
     static auto equal(const coeff_t& lhs, const coeff_t& rhs) {
         return SymEngine::eq(*lhs, *rhs);
     }
@@ -142,12 +149,17 @@ struct SymEngineCoeffPolicy {
     static auto compress(coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
         if (SymEngine::is_a_Complex(*coeff)) {
             auto tmp = SymEngine::eval_complex_double(*coeff);
-            CmplxDoubleCoeffPolicy::compress(tmp, abs_tol);
+            CoeffPolicy<std::complex<double>>::compress(tmp, abs_tol);
             coeff = SymEngine::complex_double(tmp);
         }
     }
 };
-inline const SymEngineCoeffPolicy::coeff_t SymEngineCoeffPolicy::one = SymEngine::one;
+
+inline const CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>>::coeff_t
+    CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>>::one
+    = SymEngine::one;
+
+using SymEngineCoeffPolicy = CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>>;
 }  // namespace mindquantum::ops::details
 
 #endif /* DETAILS_SYMENGINE_COEFF_POLICY_HPP */

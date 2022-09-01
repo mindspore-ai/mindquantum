@@ -240,10 +240,21 @@ auto FermionOperator::matrix(std::optional<uint32_t> n_qubits) const -> std::opt
         return tmp;
     };
 
+    // NB: if the coefficient type is always constant (e.g. float, double), then the compiler should be able to remove
+    //     both if() below.
+
     auto it = begin(terms_);
+    if (!coeff_policy_t::is_const(it->second)) {
+        MQ_ERROR("Coeff is not const! ({})", it->second);
+        return {};
+    }
     auto result = (process_term(it->first) * it->second).eval();
     ++it;
     for (; it != end(terms_); ++it) {
+        if (!coeff_policy_t::is_const(it->second)) {
+            MQ_ERROR("Coeff is not const! ({})", it->second);
+            return {};
+        }
         result = result * process_term(it->first) * it->second;
     }
 

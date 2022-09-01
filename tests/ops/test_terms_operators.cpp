@@ -23,7 +23,7 @@
 #include "ops/test_utils.hpp"
 
 #include "experimental/core/logging.hpp"
-#include "experimental/ops/gates/details/complex_double_coeff_policy.hpp"
+#include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 #include "experimental/ops/gates/terms_operator.hpp"
 
 #include <catch2/catch.hpp>

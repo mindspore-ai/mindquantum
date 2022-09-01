@@ -27,6 +27,9 @@
 #include "experimental/core/format/parameter_resolver.hpp"
 #include "experimental/core/traits.hpp"
 #include "experimental/core/types.hpp"
+#include "experimental/ops/gates/details/coeff_policy.hpp"
+#include "experimental/ops/gates/details/floating_point_coeff_policy.hpp"
+#include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 #include "experimental/ops/gates/traits.hpp"
 
 // =============================================================================
@@ -39,17 +42,20 @@ inline constexpr auto is_termsop_number<ParameterResolver<float_t>> = true;
 // -----------------------------------------------------------------------------
 
 namespace mindquantum::ops::details {
-template <typename float_t_>
-struct ParameterResolverCoeffPolicyBase {
-    using float_t = float_t_;
+template <typename float_t>
+struct CoeffPolicy<ParameterResolver<float_t>> : CoeffPolicyBase<ParameterResolver<float_t>> {
     using coeff_t = ParameterResolver<float_t>;
-    using real_coeff_policy_t = ParameterResolverCoeffPolicyBase<traits::to_real_type_t<float_t>>;
+    using base_t = CoeffPolicyBase<coeff_t>;
+    using base_t::EQ_TOLERANCE;
+    using coeff_policy_real_t = typename base_t::coeff_policy_real_t;
 
-    static constexpr auto EQ_TOLERANCE = PRECISION;
-
+    static const coeff_t one;
     static constexpr auto is_complex_valued = traits::is_complex_v<float_t>;
 
-    // Comparisons
+    // Comparisons/Checks
+    static auto is_const(const coeff_t& coeff) {
+        return coeff.IsConst();
+    }
     static auto equal(const coeff_t& lhs, const coeff_t& rhs) {
         return lhs == rhs;
     }
@@ -130,23 +136,14 @@ struct ParameterResolverCoeffPolicyBase {
 
 // =============================================================================
 
-struct DoublePRCoeffPolicy : public ParameterResolverCoeffPolicyBase<double> {
-    static const coeff_t one;
-    // Conversion
-    static std::optional<coeff_t> coeff_from_string(
-        const boost::iterator_range<std::string_view::const_iterator>& range);
-};
-inline const DoublePRCoeffPolicy::coeff_t DoublePRCoeffPolicy::one(DoublePRCoeffPolicy::float_t{1.0});
+using FloatPRCoeffPolicy = CoeffPolicy<ParameterResolver<float>>;
+using DoublePRCoeffPolicy = CoeffPolicy<ParameterResolver<double>>;
+using CmplxFloatPRCoeffPolicy = CoeffPolicy<ParameterResolver<std::complex<float>>>;
+using CmplxDoublePRCoeffPolicy = CoeffPolicy<ParameterResolver<std::complex<double>>>;
 
-// -----------------------------------------------------------------------------
-
-struct CmplxDoublePRCoeffPolicy : public ParameterResolverCoeffPolicyBase<std::complex<double>> {
-    static const coeff_t one;
-    // Conversion
-    static std::optional<coeff_t> coeff_from_string(
-        const boost::iterator_range<std::string_view::const_iterator>& range);
-};
-inline const CmplxDoublePRCoeffPolicy::coeff_t CmplxDoublePRCoeffPolicy::one(CmplxDoublePRCoeffPolicy::float_t{1.0, 0});
+template <typename float_t>
+inline const typename CoeffPolicy<ParameterResolver<float_t>>::coeff_t CoeffPolicy<ParameterResolver<float_t>>::one(
+    typename CoeffPolicy<ParameterResolver<float_t>>::coeff_t{1.0});
 
 // =============================================================================
 }  // namespace mindquantum::ops::details

@@ -39,3 +39,5 @@ containerOutOfBounds:ccsrc/lib/experimental/ops/gates/fermion_operator_parameter
 
 syntaxError:ccsrc/python/mqbackend/lib/binding.cc:184
 syntaxError:ccsrc/include/core/sparse/algo.hpp:73
+
+unusedStructMember:ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp:29

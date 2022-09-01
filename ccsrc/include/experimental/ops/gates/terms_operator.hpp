@@ -35,7 +35,7 @@
 
 #include "experimental/core/traits.hpp"
 #include "experimental/core/types.hpp"
-#include "experimental/ops/gates/details/complex_double_coeff_policy.hpp"
+#include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 #include "experimental/ops/gates/traits.hpp"
 #include "experimental/ops/meta/dagger.hpp"
 

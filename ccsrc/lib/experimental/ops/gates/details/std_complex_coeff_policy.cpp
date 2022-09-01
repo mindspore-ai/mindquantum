@@ -12,8 +12,9 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#include "experimental/ops/gates/details/complex_double_coeff_policy.hpp"
+#include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 
+#include <complex>
 #include <optional>
 
 #include "boost_x3_complex_number.hpp"
@@ -26,10 +27,10 @@
 namespace x3 = boost::spirit::x3;
 
 namespace mindquantum::ops::details {
-auto CmplxDoubleCoeffPolicy::coeff_from_string(const boost::iterator_range<std::string_view::const_iterator> &range)
-    -> std::optional<coeff_t> {
+auto std_complex_from_string(const boost::iterator_range<std::string_view::const_iterator> &range)
+    -> std::optional<std::complex<double>> {
     MQ_INFO("Attempting to parse: '{}'", std::string(range.begin(), range.end()));
-    if (coeff_t coeff;
+    if (std::complex<double> coeff;
         mindquantum::parser::parse_object_skipper(range.begin(), range.end(), coeff, parser::complex, x3::space)) {
         return coeff;
     }
