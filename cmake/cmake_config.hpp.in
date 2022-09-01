@@ -19,5 +19,6 @@
 
 #cmakedefine01 MQ_HAS_ABSEIL_CPP
 
+#cmakedefine01 MQ_HAS_LONG_DOUBLE
 
 #endif /* CMAKE_CONFIG_HPP_IN */

@@ -28,6 +28,7 @@ option(ENABLE_GITEE "Use Gitee instead of GitHub for checking out third-party de
 option(ENABLE_CXX_EXPERIMENTAL "Enable the new (experimental) C++ backend" OFF)
 option(ENABLE_DOCUMENTATION "Enable building of the documentation using Doxygen" OFF)
 option(ENABLE_LOGGING "Enable the use of logging in C++" OFF)
+option(ENABLE_LONG_DOUBLE "Enable the use of the `long double` type in certain areas" OFF)
 
 # ==============================================================================
 # Python related options

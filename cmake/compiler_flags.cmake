@@ -285,6 +285,7 @@ endif()
 # ==============================================================================
 
 set(MQ_HAS_ABSEIL_CPP ${ENABLE_ABSEIL_CPP})
+set(MQ_HAS_LONG_DOUBLE ${ENABLE_LONG_DOUBLE})
 configure_file(${CMAKE_CURRENT_LIST_DIR}/cmake_config.hpp.in ${PROJECT_BINARY_DIR}/config/cmake_config.hpp)
 
 add_library(cmake_config INTERFACE)
