@@ -143,9 +143,15 @@ auto QubitOperatorPR::matrix(std::optional<uint32_t> n_qubits) const -> std::opt
 
 QubitOperatorPR QubitOperatorPR::subs(const coefficient_t& params_pr) noexcept {
     auto out(*static_cast<const QubitOperatorPR*>(this));
-    for (auto& [local_ops, coeff] : out.terms_) {
-        coeff = coeff.Combination(params_pr);
+    // NB: cannot use the usual range-for loop since that uses operator*() implicitly and using tsl::ordered_map the
+    //     values accessed in this way are constants
+    for (auto it(begin(out.terms_)), it_end(end(out.terms_)); it != it_end; ++it) {
+        it.value() = it->second.Combination(params_pr);
     }
+    // NB: This would work for normal std::map/std::unordered_map
+    // for (auto& [local_ops, coeff] : out.terms_) {
+    //     coeff = coeff.Combination(params_pr);
+    // }
     return out;
 };
 

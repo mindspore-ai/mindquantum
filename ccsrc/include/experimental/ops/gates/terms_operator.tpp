@@ -32,6 +32,7 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/any_range.hpp>
 
+#include "config/format/std_complex.hpp"
 #include "config/real_cast.hpp"
 
 #include "experimental/core/logging.hpp"
@@ -306,55 +307,31 @@ auto TermsOperator<derived_t, term_policy_t_, coeff_policy_t>::imag() const -> d
 
 template <typename derived_t, template <typename coeff_t> class term_policy_t_, typename coeff_policy_t>
 auto TermsOperator<derived_t, term_policy_t_, coeff_policy_t>::compress(double abs_tol) -> derived_t& {
-    const auto end_it = end(terms_);
-    for (auto it = begin(terms_); it != end_it;) {
-        if (coeff_policy_t::is_zero(it->second, abs_tol)) {
-            it = terms_.erase(it);
-            continue;
-        }
-        coeff_policy_t::compress(it->second, abs_tol);
-        ++it;
+    // TODO(dnguyen): Fix this! std::remove uses std::move(*it)... but *it is const!
+    auto new_end = std::remove(begin(terms_), end(terms_), [abs_tol](const auto& term) -> bool {
+        return coeff_policy_t::is_zero(term.second, abs_tol);
+    });
+    terms_.erase(new_end, end(terms_));
+
+    for (auto it(begin(terms_)), it_end(end(terms_)); it != new_end; ++it) {
+        coeff_policy_t::compress(it.value(), abs_tol);
     }
+
+    // NB: cannot use this with tsl::ordered_map since iterators are invalidated after calling erase()
+    // const auto end_it = end(terms_);
+    // for (auto it = begin(terms_); it != end_it;) {
+    //     if (coeff_policy_t::is_zero(it->second, abs_tol)) {
+    //         it = terms_.erase(it);
+    //         continue;
+    //     }
+    //     coeff_policy_t::compress(it.value(), abs_tol);
+    //     ++it;
+    // }
     calculate_num_targets_();
     return *static_cast<derived_t*>(this);
 }
 
 // =============================================================================
-
-namespace details {
-using namespace std::literals::string_literals;
-template <typename TermsOperator>
-struct stringize {
-    using term_t = typename TermsOperator::term_t;
-    using terms_t = typename TermsOperator::terms_t;
-    using term_policy_t = typename TermsOperator::term_policy_t;
-    using coeff_terms_t = typename TermsOperator::coeff_term_dict_t::value_type;
-    using self_t = stringize<TermsOperator>;
-
-    static auto to_string(const terms_t& local_ops) -> std::string {
-        return boost::algorithm::join(
-            local_ops
-                | boost::adaptors::transformed(static_cast<std::string (*)(const term_t&)>(term_policy_t::to_string)),
-            " ");
-    }
-    static auto to_string(const coeff_terms_t& coeff_terms) -> std::string {
-        const auto& [local_ops, coeff] = coeff_terms;
-        return fmt::format("{} [{}]", coeff, to_string(local_ops));
-    }
-    static auto to_json(const coeff_terms_t& coeff_terms, std::size_t indent) {
-        const auto& [local_ops, coeff] = coeff_terms;
-        return fmt::format(
-            R"({}"{}": "{}")", std::string(indent, ' '),
-            boost::algorithm::join(local_ops
-                                       | boost::adaptors::transformed(
-                                           static_cast<std::string (*)(const term_t&)>(term_policy_t::to_string)),
-                                   " "),
-            coeff);
-    }
-};
-}  // namespace details
-
-// -------------------------------------
 
 template <typename derived_t, template <typename coeff_t> class term_policy_t_, typename coeff_policy_t>
 auto TermsOperator<derived_t, term_policy_t_, coeff_policy_t>::to_string() const noexcept -> std::string {
@@ -440,7 +417,7 @@ auto TermsOperator<derived_t, term_policy_t_, coeff_policy_t>::operator*=(const 
             const auto [new_terms, new_coeff] = term_policy_t::simplify(new_op,
                                                                         coeff_policy_t::mul(left_coeff, right_coeff));
             if (auto it = product_results.find(new_terms); it != end(product_results)) {
-                coeff_policy_t::iadd(it->second, new_coeff);
+                coeff_policy_t::iadd(it.value(), new_coeff);
             } else {
                 product_results.emplace(std::move(new_op), std::move(new_coeff));
             }
@@ -456,9 +433,15 @@ auto TermsOperator<derived_t, term_policy_t_, coeff_policy_t>::operator*=(const 
 template <typename derived_t, template <typename coeff_t> class term_policy_t_, typename coeff_policy_t>
 template <TYPENAME_COEFFICIENT number_t TYPENAME_COEFFICIENT_CONSTRAINTS_IMPL>
 auto TermsOperator<derived_t, term_policy_t_, coeff_policy_t>::operator*=(const number_t& number) -> derived_t& {
-    for (auto& [term, coeff] : terms_) {
-        coeff_policy_t::imul(coeff, number);
+    // NB: cannot use the usual range-for loop since that uses operator*() implicitly and using tsl::ordered_map the
+    //     values accessed in this way are constants
+    for (auto it(begin(terms_)), it_end(end(terms_)); it != it_end; ++it) {
+        coeff_policy_t::imul(it.value(), number);
     }
+    // NB: This would work for normal std::map/std::unordered_map
+    // for (auto& [term, coeff] : terms_) {
+    //     coeff_policy_t::imul(coeff.value(), number);
+    // }
     return *static_cast<derived_t*>(this);
 }
 
@@ -530,7 +513,7 @@ auto TermsOperator<derived_t, term_policy_t_, coeff_policy_t>::add_sub_impl_(con
     for (const auto& [term, coeff] : other.terms_) {
         auto it = terms_.find(term);
         if (it != terms_.end()) {
-            assign_modify_op(it->second, coeff);
+            assign_modify_op(it.value(), coeff);
         } else {
             it = terms_.emplace(term, coeff_unary_op(coeff)).first;
         }

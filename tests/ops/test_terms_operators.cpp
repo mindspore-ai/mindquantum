@@ -44,13 +44,17 @@ struct DummyOperatorTermPolicy {
     static auto to_string(const mindquantum::ops::TermValue& value) {
         if (value == TermValue::X) {
             return "X"s;
-        } else if (value == TermValue::Y) {
+        }
+        if (value == TermValue::Y) {
             return "Y"s;
-        } else if (value == TermValue::Z) {
+        }
+        if (value == TermValue::Z) {
             return "Z"s;
-        } else if (value == TermValue::a) {
+        }
+        if (value == TermValue::a) {
             return "v"s;
-        } else if (value == TermValue::adg) {
+        }
+        if (value == TermValue::adg) {
             return "^"s;
         }
         return "UNKNOWN"s;
@@ -59,7 +63,7 @@ struct DummyOperatorTermPolicy {
         return fmt::format("{}-{}", std::get<0>(term), to_string(std::get<1>(term)));
     }
 
-    static auto parse_terms_string(std::string_view terms_string) -> terms_t {
+    static auto parse_terms_string(std::string_view /* terms_string */) -> terms_t {
         return {};
     }
 
@@ -357,13 +361,6 @@ TEST_CASE("DummyOperator dumps", "[terms_op][ops]") {
     "num_targets_": 6,
     "terms_": [
         [
-            [],
-            [
-                1.0,
-                0.0
-            ]
-        ],
-        [
             [
                 [
                     1,
@@ -389,6 +386,13 @@ TEST_CASE("DummyOperator dumps", "[terms_op][ops]") {
             [
                 0.0,
                 1.2
+            ]
+        ],
+        [
+            [],
+            [
+                1.0,
+                0.0
             ]
         ]
     ]
@@ -557,7 +561,7 @@ TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
         // op = {'X3': 2.3 + 1.85i,  'X1': 1.}
         const auto term3 = it1->first.front();
         const auto coeff3 = 1.85i;
-        it1->second += coeff3;
+        it1.value() += coeff3;
         op += DummyOperator(term3, coeff3);
         REQUIRE(!std::empty(op));
         CHECK(std::size(op) == 2);
@@ -602,14 +606,14 @@ TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
             UNSCOPED_INFO("Double");
             const auto addend = 2.34;
             op += addend;
-            it->second += addend;
+            it.value() += addend;
         }
 
         SECTION("Complex double") {
             UNSCOPED_INFO("Complex double");
             const auto addend = 5. + 2.34i;
             op += addend;
-            it->second += addend;
+            it.value() += addend;
         }
 
         // NB: important to have this check here first (UNSCOPED_INFO)
@@ -649,7 +653,7 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
         // op = {'X3': 2.3 - 1.85i,  'X1': 1.}
         const auto term3 = it1->first.front();
         const auto coeff3 = 1.85i;
-        it1->second -= coeff3;
+        it1.value() -= coeff3;
         op -= DummyOperator(term3, coeff3);
         REQUIRE(!std::empty(op));
         CHECK(std::size(op) == 2);
@@ -706,17 +710,17 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
             SECTION("In-place subtraction") {
                 UNSCOPED_INFO("In-place subtraction");
                 op -= subtrahend;
-                it->second -= subtrahend;
+                it.value() -= subtrahend;
             }
             SECTION("Left subtraction") {
                 UNSCOPED_INFO("Left subtraction");
                 op = op - subtrahend;
-                it->second -= subtrahend;
+                it.value() -= subtrahend;
             }
             SECTION("Right subtraction") {
                 UNSCOPED_INFO("Right subtraction");
                 op = subtrahend - op;
-                it->second = subtrahend - it->second;
+                it.value() = subtrahend - it->second;
             }
         }
 
@@ -725,17 +729,17 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
             SECTION("In-place subtraction") {
                 UNSCOPED_INFO("In-place subtraction");
                 op -= subtrahend;
-                it->second -= subtrahend;
+                it.value() -= subtrahend;
             }
             SECTION("Left subtraction") {
                 UNSCOPED_INFO("Left subtraction");
                 op = op - subtrahend;
-                it->second -= subtrahend;
+                it.value() -= subtrahend;
             }
             SECTION("Right subtraction") {
                 UNSCOPED_INFO("Right subtraction");
                 op = subtrahend - op;
-                it->second = subtrahend - it->second;
+                it.value() = subtrahend - it->second;
             }
         }
 
@@ -785,9 +789,12 @@ TEST_CASE("TermsOperator arithmetic operators (*)", "[terms_op][ops]") {
         CHECK(op.get_terms() == ref_terms);
 
         const auto do_multiply = [](auto& terms, const auto& multiplier) constexpr {
-            for (auto& [_, coeff] : terms) {
-                coeff *= multiplier;
+            for (auto it(begin(terms)), it_end(end(terms)); it != it_end; ++it) {
+                it.value() *= multiplier;
             }
+            // for (auto& [_, coeff] : terms) {
+            //     coeff *= multiplier;
+            // }
         };
 
         // SECTION("Integer") {
@@ -830,9 +837,12 @@ TEST_CASE("TermsOperator arithmetic operators (/)", "[terms_op][ops]") {
         CHECK(op.get_terms() == ref_terms);
 
         const auto do_multiply = [](auto& terms, const auto& multiplier) constexpr {
-            for (auto& [_, coeff] : terms) {
-                coeff /= multiplier;
+            for (auto it(begin(terms)), it_end(end(terms)); it != it_end; ++it) {
+                it.value() /= multiplier;
             }
+            // for (auto& [_, coeff] : terms) {
+            //     coeff /= multiplier;
+            // }
         };
 
         const auto approx_equal = [&ref_terms](const coeff_term_dict_t& other_terms) {
@@ -896,9 +906,12 @@ TEST_CASE("TermsOperator unary operators", "[terms_op][ops]") {
         CHECK(op.get_terms() == ref_terms);
 
         const auto result = -op;
-        for (auto& [local_ops, coeff] : ref_terms) {
-            coeff *= -1;
+        for (auto it(begin(ref_terms)), it_end(end(ref_terms)); it != it_end; ++it) {
+            it.value() *= -1;
         }
+        // for (auto& [local_ops, coeff] : ref_terms) {
+        //     coeff *= -1;
+        // }
 
         REQUIRE(!std::empty(result));
         REQUIRE(op == ref);

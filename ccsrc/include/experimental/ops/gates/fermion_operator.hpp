@@ -29,6 +29,7 @@
 #include "experimental/ops/gates/details/fermion_operator_term_policy.hpp"
 #include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 #include "experimental/ops/gates/terms_operator.hpp"
+#include "experimental/ops/gates/terms_operator_base.hpp"
 
 #ifdef UNIT_TESTS
 class UnitTestAccessor;

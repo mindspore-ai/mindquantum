@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <complex>
 
+#include "config/format/std_complex.hpp"
+
 #include "experimental/ops/gates/details/coeff_policy.hpp"
 
 namespace mindquantum::ops::details {

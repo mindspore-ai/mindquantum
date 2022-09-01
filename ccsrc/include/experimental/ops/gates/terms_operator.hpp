@@ -36,16 +36,11 @@
 #include "experimental/core/traits.hpp"
 #include "experimental/core/types.hpp"
 #include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
+#include "experimental/ops/gates/terms_operator_base.hpp"
 #include "experimental/ops/gates/traits.hpp"
 #include "experimental/ops/meta/dagger.hpp"
 
 namespace mindquantum::traits {
-template <typename T, typename = void>
-struct is_terms_operator : std::false_type {};
-
-template <typename T>
-struct is_terms_operator<T, std::void_t<typename T::terms_operator_tag>> : std::true_type {};
-
 template <typename derived_t, typename coeff_t>
 struct boost_operators_helper
     // clang-format off
@@ -97,34 +92,6 @@ struct boost_operators_helper<derived_t, std::complex<double>>
 }  // namespace mindquantum::traits
 
 namespace mindquantum::ops {
-enum class TermValue : uint8_t {
-    I = 10,
-    X = 11,
-    Y = 12,
-    Z = 13,
-    a = 0,
-    adg = 1,
-};
-
-// NOLINTNEXTLINE(*avoid-c-arrays,readability-identifier-length)
-NLOHMANN_JSON_SERIALIZE_ENUM(TermValue, {
-                                            {TermValue::I, "I"},
-                                            {TermValue::X, "X"},
-                                            {TermValue::Y, "Y"},
-                                            {TermValue::Z, "Z"},
-                                            {TermValue::a, "v"},
-                                            {TermValue::adg, "^"},
-                                        });
-
-using term_t = std::pair<uint32_t, TermValue>;
-using terms_t = std::vector<term_t>;
-
-using py_term_t = std::pair<uint32_t, uint32_t>;
-using py_terms_t = std::vector<py_term_t>;
-
-template <typename coefficient_t>
-using term_dict_t = std::map<std::vector<term_t>, coefficient_t>;
-
 #if MQ_HAS_CONCEPTS
 
 namespace details {

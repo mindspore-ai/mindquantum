@@ -152,12 +152,12 @@ TEST_CASE("FermionOperator normal_ordered", "[terms_op][ops]") {
     }
     SECTION("1 4 1^") {
         ref_coeff *= -1;
-        ref_op = FermionOperator("1^ 4 1", ref_coeff) + FermionOperator("4", ref_coeff);
+        ref_op = FermionOperator("4", ref_coeff) + FermionOperator("1^ 4 1", ref_coeff);
         fermion_op_str = "1 4 1^";
     }
 
     const auto normal_ordered = FermionOperator(fermion_op_str, coeff).normal_ordered();
-    INFO("fermion_op = FermionOperator(\"" << fermion_op_str << "\")");
+    INFO("normal_ordered = FermionOperator(\"" << fermion_op_str << "\").normal_ordered()");
     CHECK(normal_ordered == ref_op);
 }
 
