@@ -26,15 +26,3 @@ endif()
 target_link_libraries(mq_base PUBLIC ${MQ_OPENMP_TARGET} mindquantum::json)
 
 # ==============================================================================
-
-install(
-  DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/core
-            ${CMAKE_CURRENT_LIST_DIR}/gate
-            ${CMAKE_CURRENT_LIST_DIR}/hamiltonian
-            ${CMAKE_CURRENT_LIST_DIR}/matrix
-            ${CMAKE_CURRENT_LIST_DIR}/pr
-            ${CMAKE_CURRENT_LIST_DIR}/projector
-            ${CMAKE_CURRENT_LIST_DIR}/sparse
-  DESTINATION ${MQ_INSTALL_INCLUDEDIR})
-
-# ==============================================================================
