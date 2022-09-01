@@ -137,10 +137,10 @@ jobs:
           set(CMAKE_CXX_STANDARD_REQUIRED OFF)
           set(CMAKE_CXX_EXTENSIONS OFF)
           add_library(mylib STATIC test.cpp)
-          target_link_libraries(mylib PUBLIC mindquantum::mindquantum_cxx)
+          target_link_libraries(mylib PUBLIC mindquantum::mq_cxx_nextgen)
           EOF
           cat << \EOF > other/test.cpp
-          #include "ops/parametric/angle_gates.hpp"
+          #include "experimental/ops/parametric/angle_gates.hpp"
           double foo() { return mindquantum::ops::parametric::Rxx{1.3}.eval_full().angle(); }
           EOF
 
