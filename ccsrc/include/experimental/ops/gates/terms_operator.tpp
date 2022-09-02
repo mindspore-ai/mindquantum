@@ -307,8 +307,7 @@ auto TermsOperator<derived_t, term_policy_t_, coeff_policy_t>::imag() const -> d
 
 template <typename derived_t, template <typename coeff_t> class term_policy_t_, typename coeff_policy_t>
 auto TermsOperator<derived_t, term_policy_t_, coeff_policy_t>::compress(double abs_tol) -> derived_t& {
-    // TODO(dnguyen): Fix this! std::remove uses std::move(*it)... but *it is const!
-    auto new_end = std::remove(begin(terms_), end(terms_), [abs_tol](const auto& term) -> bool {
+    auto new_end = tsl::remove_if(begin(terms_), end(terms_), [abs_tol](const auto& term) -> bool {
         return coeff_policy_t::is_zero(term.second, abs_tol);
     });
     terms_.erase(new_end, end(terms_));

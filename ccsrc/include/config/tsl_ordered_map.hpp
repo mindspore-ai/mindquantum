@@ -15,9 +15,44 @@
 #ifndef MQ_CONFIG_TSL_ORDERED_MAP_HPP
 #define MQ_CONFIG_TSL_ORDERED_MAP_HPP
 
+#include <algorithm>
+#include <type_traits>
+#include <utility>
+
 #include <nlohmann/detail/exceptions.hpp>
 #include <nlohmann/json.hpp>
 #include <tsl/ordered_map.h>
+
+#include "config/config.hpp"
+
+namespace tsl {
+template <typename iterator_t, typename function_t>
+MQ_NODISCARD constexpr function_t for_each(iterator_t first, const iterator_t& last, function_t func) {
+    if constexpr (std::is_const_v<std::remove_pointer_t<typename std::iterator_traits<iterator_t>::pointer>>) {
+        return std::for_each(first, last, std::move(func));
+    } else {
+        for (; first != last; ++first) {
+            func(first.value());
+        }
+        return func;
+    }
+}
+
+template <typename iterator_t, typename predicate_t>
+MQ_NODISCARD constexpr iterator_t remove_if(iterator_t first, iterator_t last, predicate_t pred) {
+    first = std::find_if(first, last, pred);
+    if (first != last) {
+        auto it = first;
+        while (++it != last) {
+            if (!pred(*it)) {
+                first.value() = std::move(it.value());
+                ++first;
+            }
+        }
+    }
+    return first;
+}
+}  // namespace tsl
 
 namespace nlohmann {
 template <typename key_t, typename value_t, typename hash_t>

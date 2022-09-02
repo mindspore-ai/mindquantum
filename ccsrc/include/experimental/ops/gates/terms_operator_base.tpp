@@ -243,7 +243,7 @@ template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
 auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::adjoint()
     const noexcept -> operator_t {
-    return *qstatic_cast<derived_t*>(*this);
+    return *static_cast<derived_t*>(*this);
 }
 
 // =============================================================================
@@ -346,15 +346,25 @@ template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
 auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::compress(
     double abs_tol) -> derived_t& {
-    const auto end_it = end(terms_);
-    for (auto it = begin(terms_); it != end_it;) {
-        if (coeff_policy_t::is_zero(it->second, abs_tol)) {
-            it = terms_.erase(it);
-            continue;
-        }
+    auto new_end = tsl::remove_if(begin(terms_), end(terms_), [abs_tol](const auto& term) -> bool {
+        return coeff_policy_t::is_zero(term.second, abs_tol);
+    });
+    terms_.erase(new_end, end(terms_));
+
+    for (auto it(begin(terms_)), it_end(end(terms_)); it != new_end; ++it) {
         coeff_policy_t::compress(it.value(), abs_tol);
-        ++it;
     }
+
+    // NB: cannot use this with tsl::ordered_map since iterators are invalidated after calling erase()
+    // const auto end_it = end(terms_);
+    // for (auto it = begin(terms_); it != end_it;) {
+    //     if (coeff_policy_t::is_zero(it->second, abs_tol)) {
+    //         it = terms_.erase(it);
+    //         continue;
+    //     }
+    //     coeff_policy_t::compress(it.value(), abs_tol);
+    //     ++it;
+    // }
     calculate_num_targets_();
     return *static_cast<derived_t*>(this);
 }
