@@ -17,14 +17,14 @@ mindquantum/third_party/unitary_cc.py:uccsd_singlet_generator
 
 mindquantum/experimental/_symengine_utilities.py:symbols
 
-ccsrc/mq_base/gate/gates.h:mindquantum::GetGateByName
+ccsrc/include/ops/gates.hpp:mindquantum::GetGateByName
 ccsrc/mqbackend/binding.cc:mindquantum::PYBIND11_MODULE
-
-ccsrc/cxx_experimental/lib/core/cpp_core.cpp:mindquantum::core::CppCore::flush
-ccsrc/cxx_experimental/python/lib/core/symengine.cpp:mindquantum::python::init_symengine_basic_types
-ccsrc/cxx_experimental/python/lib/ops/command.cpp:mindquantum::details::load_gate
-ccsrc/cxx_experimental/python/lib/ops/ops.cpp:init_mindquantum_ops
+ccsrc/lib/experimental/core/cpp_core.cpp:mindquantum::core::CppCore::flush
+ccsrc/python/experimental/lib/core/symengine.cpp:mindquantum::python::init_symengine_basic_types
+ccsrc/python/experimental/lib/ops/command.cpp:mindquantum::details::load_gate
+ccsrc/python/experimental/lib/ops/ops.cpp:init_mindquantum_ops
 
 TEST_CASE
+DummyOperator::TermsOperator::operator == ; } ; } using coefficient_t = DummyOperator :: coefficient_t ; using coeff_term_dict_t = DummyOperator :: coeff_term_dict_t ; TEST_CASE
 
 tests/st/test_io/test_svg.py:test_measure_svg
