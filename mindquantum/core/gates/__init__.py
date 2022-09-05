@@ -64,6 +64,7 @@ from .channel import (
     PauliChannel,
     PhaseDampingChannel,
     PhaseFlipChannel,
+    KrausChannel,
 )
 from .measurement import Measure, MeasureResult
 
@@ -114,6 +115,7 @@ __all__ = [
     "GlobalPhase",
     "AmplitudeDampingChannel",
     "PhaseDampingChannel",
+    "KrausChannel",
 ]
 
 __all__.sort()

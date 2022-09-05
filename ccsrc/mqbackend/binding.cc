@@ -60,6 +60,7 @@ PYBIND11_MODULE(mqbackend, m) {
         .def(py::init<bool, std::string, int64_t, Dim2Matrix<MT>>())
         .def(py::init<std::string, bool, MT, MT, MT>())
         .def(py::init<std::string, bool, MT>())
+        .def(py::init<std::string, bool, VT<VVT<CT<MT>>>>())
         .def(py::init<std::string, int64_t, py::object, py::object>())
         .def("PrintInfo", &BasicGate<MT>::PrintInfo)
         .def("apply_value", &BasicGate<MT>::ApplyValue)
@@ -71,11 +72,11 @@ PYBIND11_MODULE(mqbackend, m) {
         .def_readwrite("is_measure", &BasicGate<MT>::is_measure_)
         .def_readwrite("base_matrix", &BasicGate<MT>::base_matrix_)
         .def_readwrite("hermitian_prop", &BasicGate<MT>::hermitian_prop_)
-        .def_readwrite("is_pauli_channel", &BasicGate<MT>::is_pauli_channel_)
-        .def_readwrite("is_damping_channel", &BasicGate<MT>::is_damping_channel_)
+        .def_readwrite("is_channel", &BasicGate<MT>::is_channel_)
         .def_readwrite("gate_list", &BasicGate<MT>::gate_list_)
         .def_readwrite("probs", &BasicGate<MT>::probs_)
-        .def_readwrite("cumulative_probs", &BasicGate<MT>::cumulative_probs_);
+        .def_readwrite("cumulative_probs", &BasicGate<MT>::cumulative_probs_)
+        .def_readwrite("kraus_operator_set", &BasicGate<MT>::kraus_operator_set_);
     m.def("get_gate_by_name", &GetGateByName<MT>);
     m.def("get_measure_gate", &GetMeasureGate<MT>);
     // parameter resolver

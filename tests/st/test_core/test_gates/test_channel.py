@@ -72,3 +72,18 @@ def test_damping_channel():
     sim2.apply_gate(X.on(1))
     sim2.apply_gate(C.PhaseDampingChannel(0.5).on(0))
     assert np.allclose(sim2.get_qs(), np.array([0, 0, 0, 1]))
+
+
+def test_kraus_channel():
+    """
+    Description: Test kraus channel
+    Expectation: success.
+    """
+    kmat0 = [[1, 0], [0, 0]]
+    kmat1 = [[0, 1], [0, 0]]
+    kraus = C.KrausChannel("amplitude_damping", [kmat0, kmat1])
+    sim = Simulator('projectq', 2)
+    sim.apply_gate(X.on(0))
+    sim.apply_gate(X.on(1))
+    sim.apply_gate(kraus.on(0))
+    assert np.allclose(sim.get_qs(), np.array([0, 0, 1, 0]))

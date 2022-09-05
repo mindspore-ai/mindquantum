@@ -101,79 +101,8 @@ class Projectq : public ::projectq::Simulator {
     }
 
     void ApplyGate(const BasicGate<T> &gate) {
-        if (gate.is_pauli_channel_) {  // gate is constructed be like: BasicGate(cPL, true, px, py, pz)
-            VT<BasicGate<T>> gate_list_ = {XGate<T>, YGate<T>, ZGate<T>, IGate<T>};
-            double r = static_cast<double>(rng_());
-            //            std::cout << "r = " << r << std::endl;
-            auto it = std::lower_bound(gate.cumulative_probs_.begin(), gate.cumulative_probs_.end(), r);
-            size_t gate_index;
-            if (it != gate.cumulative_probs_.begin()) {
-                gate_index = std::distance(gate.cumulative_probs_.begin(), it) - 1;
-            } else {
-                gate_index = 0;
-            }
-            BasicGate<T> gate_ = gate_list_[gate_index];  // Select the gate to execute according to r.
-                                                          //            std::cout << gate_.name_ << std::endl;
-            Projectq::apply_controlled_gate(MCast<T>(gate_.base_matrix_.matrix_), VCast(gate.obj_qubits_),
-                                            VCast(gate.ctrl_qubits_));
-        } else if (gate.is_damping_channel_) {
-            VT<T> base_index;
-            for (unsigned i = 0; i < (1 << n_qubits_); i++) {
-                if ((i >> gate.obj_qubits_[0]) & 1) {
-                    base_index.push_back(i);
-                }
-            }
-            VT<CT<T>> curr_state_ = Projectq::cheat();
-            double reduced_factor_ = 0;
-            for (unsigned i = 0; i < base_index.size(); i++) {
-                reduced_factor_ += (curr_state_[base_index[i]] * std::conj(curr_state_[base_index[i]])).real();
-            }
-            if (reduced_factor_ < pow(10, -8)) {
-                return;
-            }
-            double prob_ = gate.damping_coeff_ * reduced_factor_;
-            double r = static_cast<double>(rng_());
-            VT<CT<T>> aim_state_ = curr_state_;
-            if (gate.name_ == "ADC") {
-                unsigned j = 0;
-                unsigned k = 0;
-                for (unsigned i = 0; i < aim_state_.size(); i++) {
-                    if (base_index[j] == i) {
-                        aim_state_[i] = 0;
-                        j++;
-                    } else {
-                        aim_state_[i] = aim_state_[base_index[k]] / sqrt(reduced_factor_);
-                        k++;
-                    }
-                }
-            } else if (gate.name_ == "PDC") {
-                unsigned j = 0;
-                for (unsigned i = 0; i < aim_state_.size(); i++) {
-                    if (base_index[j] == i) {
-                        aim_state_[i] = aim_state_[i] / sqrt(reduced_factor_);
-                        j++;
-                    } else {
-                        aim_state_[i] = 0;
-                    }
-                }
-            } else {
-                return;
-            }
-            if (r <= prob_) {
-                Projectq::SetState(aim_state_);
-            } else {
-                VT<CT<T>> remain_state_ = curr_state_;
-                unsigned j = 0;
-                for (unsigned i = 0; i < remain_state_.size(); i++) {
-                    if (base_index[j] == i) {
-                        remain_state_[i] = remain_state_[i] * sqrt(1 - gate.damping_coeff_) / sqrt(1 - prob_);
-                        j++;
-                    } else {
-                        remain_state_[i] = remain_state_[i] / sqrt(1 - prob_);
-                    }
-                }
-                Projectq::SetState(remain_state_);
-            }
+        if (gate.is_channel_) {
+            Projectq::ApplyChannel(gate);
         } else {
             Projectq::apply_controlled_gate(MCast<T>(gate.base_matrix_.matrix_), VCast(gate.obj_qubits_),
                                             VCast(gate.ctrl_qubits_));
@@ -198,6 +127,132 @@ class Projectq : public ::projectq::Simulator {
         } else {
             Projectq::apply_controlled_gate(MCast<T>(gate.param_matrix_(theta).matrix_), VCast(gate.obj_qubits_),
                                             VCast(gate.ctrl_qubits_));
+        }
+    }
+
+    void ApplyChannel(const BasicGate<T> &gate) {
+        if (gate.name_ == "PL") {  // pauli channel; gate is constructed be like: BasicGate(cPL, true, px, py, pz)
+            Projectq::ApplyPauliChannel(gate);
+        } else if (gate.name_ == "ADC" || gate.name_ == "PDC") {  // damping channel
+           Projectq::ApplyDampingChannel(gate);
+        } else if (gate.kraus_operator_set_.size() != 0) {  // Kraus channel
+            Projectq::ApplyKrausChannel(gate);
+        } else {
+            throw std::runtime_error("ApplyChannel: Unknown noise channel!");
+        }
+    }
+
+    void ApplyPauliChannel(const BasicGate<T> &gate) {
+        VT<BasicGate<T>> gate_list_ = {XGate<T>, YGate<T>, ZGate<T>, IGate<T>};
+        double r = static_cast<double>(rng_());
+        //            std::cout << "r = " << r << std::endl;
+        auto it = std::lower_bound(gate.cumulative_probs_.begin(), gate.cumulative_probs_.end(), r);
+        size_t gate_index;
+        if (it != gate.cumulative_probs_.begin()) {
+            gate_index = std::distance(gate.cumulative_probs_.begin(), it) - 1;
+        } else {
+            gate_index = 0;
+        }
+        BasicGate<T> gate_ = gate_list_[gate_index];  // Select the gate to execute according to r.
+                                                        //            std::cout << gate_.name_ << std::endl;
+        Projectq::apply_controlled_gate(MCast<T>(gate_.base_matrix_.matrix_), VCast(gate.obj_qubits_),
+                                        VCast(gate.ctrl_qubits_));
+    }
+
+    void ApplyDampingChannel(const BasicGate<T> &gate) {
+        VT<size_t> idx_of_zero; // the 01 base index of object qubit that being '0'
+        VT<size_t> idx_of_one;  // the 01 base index of object qubit that being '1'
+        for (size_t i = 0; i < (1 << n_qubits_); ++i) {
+            if ((i >> gate.obj_qubits_[0]) & 1) {
+                idx_of_one.push_back(i);
+            } else {
+                idx_of_zero.push_back(i);
+            }
+        }
+        VT<CT<T>> curr_state = Projectq::cheat();
+        double reduced_factor_b_square = 0;  // reduced quantum state (a, b) of the object qubit
+        for (size_t idx : idx_of_one) {
+            reduced_factor_b_square += (curr_state[idx] * std::conj(curr_state[idx])).real();
+        }
+        double reduced_factor_b = sqrt(reduced_factor_b_square);
+        if (reduced_factor_b < 1e-8) {
+            return;
+        }
+        double prob = gate.damping_coeff_ * reduced_factor_b_square;
+        double r = static_cast<double>(rng_());
+        if (r <= prob) {  // change to '0' or '1' state
+            VT<CT<T>> updated_state(curr_state.size());
+            if (gate.name_ == "ADC") {  // Amplitude damping channel case
+                for (size_t j = 0; j < idx_of_zero.size(); ++j) {
+                    updated_state[idx_of_zero[j]] = curr_state[idx_of_one[j]] / reduced_factor_b;
+                }
+                for (size_t idx : idx_of_one) {
+                    updated_state[idx] = 0;
+                }
+            } else {  // Phase damping channel case
+                for (size_t idx : idx_of_one) {
+                    updated_state[idx] = curr_state[idx] / reduced_factor_b;
+                }
+                for (size_t idx : idx_of_zero) {
+                    updated_state[idx] = 0;
+                }
+            }
+            Projectq::SetState(updated_state);
+        } else {  // change to remained state
+            double coeff_a = 1 / sqrt(1 - prob);
+            double coeff_b = sqrt(1 - gate.damping_coeff_) / sqrt(1 - prob);
+            size_t counter = 0;
+            for (size_t i = 0; i < (curr_state.size()); ++i) {
+                if (i == idx_of_zero[counter]) {
+                    curr_state[i] *= coeff_a;
+                    counter += 1;
+                } else {
+                    curr_state[i] *= coeff_b;
+                }
+            }
+            Projectq::SetState(curr_state);
+        }
+    }
+
+    void ApplyKrausChannel(const BasicGate<T> &gate) {
+        VT<size_t> idx_of_zero; // the 01 base index of object qubit that being '0'
+        VT<size_t> idx_of_one;  // the 01 base index of object qubit that being '1'
+        for (size_t i = 0; i < (1 << n_qubits_); ++i) {
+            if ((i >> gate.obj_qubits_[0]) & 1) {
+                idx_of_one.push_back(i);
+            } else {
+                idx_of_zero.push_back(i);
+            }
+        }
+        VT<CT<T>> curr_state = Projectq::cheat();
+        unsigned n_kraus = (gate.kraus_operator_set_).size();
+        double prob = 0;
+        for(unsigned i = 0; i < n_kraus; ++i) {
+            VT<CT<T>> updated_state(curr_state.size());
+            const VVT<CT<T>>& kraus_mat = gate.kraus_operator_set_[i];
+            double renormal_factor_square = 0;
+            for (size_t j = 0; j < idx_of_zero.size(); ++j) {
+                updated_state[idx_of_zero[j]] = curr_state[idx_of_zero[j]] * kraus_mat[0][0]
+                                                + curr_state[idx_of_one[j]] * kraus_mat[0][1];
+                renormal_factor_square += (updated_state[idx_of_zero[j]]
+                                        * std::conj(updated_state[idx_of_zero[j]])).real();
+            }
+            for (size_t j = 0; j < idx_of_one.size(); ++j) {
+                updated_state[idx_of_one[j]] = curr_state[idx_of_zero[j]] * kraus_mat[1][0]
+                                                + curr_state[idx_of_one[j]] * kraus_mat[1][1];
+                renormal_factor_square += (updated_state[idx_of_one[j]]
+                                        * std::conj(updated_state[idx_of_one[j]])).real();
+            }
+            double renormal_factor = sqrt(renormal_factor_square);
+            prob = renormal_factor_square / (1 - prob);
+            double r = static_cast<double>(rng_());
+            if (r <= prob) {
+                for (auto it = updated_state.begin(); it != updated_state.end(); ++it) {
+                    *it /= renormal_factor;
+                }
+                Projectq::SetState(updated_state);
+                break;
+            }
         }
     }
 
