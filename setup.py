@@ -398,7 +398,7 @@ ext_modules = [
 # ==============================================================================
 
 
-class ArgsCMakeFlag(argparse.Action):  # pylint: disable=too-few-public-methods
+class ArgsCMakeFlag(argparse.Action):
     """Custom argparse action for CMake flags."""
 
     def __call__(self, parser, namespace, values, option_string=None):
@@ -411,7 +411,7 @@ class ArgsCMakeFlag(argparse.Action):  # pylint: disable=too-few-public-methods
         setattr(namespace, self.dest, True)
 
 
-class ArgsCMakeDefinition(argparse.Action):  # pylint: disable=too-few-public-methods
+class ArgsCMakeDefinition(argparse.Action):
     """Custom argparse action to set boolean CMake variables."""
 
     def __init__(self, cmake_value, *args, **kwargs):
@@ -430,7 +430,7 @@ class ArgsCMakeDefinition(argparse.Action):  # pylint: disable=too-few-public-me
             cmake_extra_options.append(f'-D{values}:BOOL=OFF')
 
 
-class ArgsCMakeVariable(argparse.Action):  # pylint: disable=too-few-public-methods
+class ArgsCMakeVariable(argparse.Action):
     """Custom argparse action to set string CMake variables."""
 
     def __call__(self, parser, namespace, values, option_string=None):
