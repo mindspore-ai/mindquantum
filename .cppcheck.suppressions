@@ -5,6 +5,7 @@ missingReturn
 constParameter:tests/*
 
 duplicateExpression:ccsrc/include/core/parameter_resolver.h:707
+duplicateExpression:ccsrc/python/mqbackend/lib/binding.cc
 
 noExplicitConstructor:ccsrc/include/experimental/decompositions/decomposition_atom.hpp:41
 noExplicitConstructor:ccsrc/include/experimental/ops/parametric/gate_base.hpp
@@ -32,6 +33,7 @@ unknownMacro:third_party/projectq/projectq.h:190
 unusedStructMember:ccsrc/include/experimental/ops/parametric/param_names.hpp
 
 useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.hpp:32
+useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.hpp:67
 useStlAlgorithm:ccsrc/include/experimental/core/control.hpp:79
 useStlAlgorithm:ccsrc/lib/experimental/core/circuit_manager.cpp
 
