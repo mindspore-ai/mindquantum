@@ -16,11 +16,7 @@
 # pylint: disable=duplicate-code
 """This module is generated the Fermion Operator."""
 
-from functools import lru_cache
 from typing import Dict, List, Tuple
-
-import numpy as np
-from scipy.sparse import csr_matrix, kron
 
 from mindquantum.core.operators._base_operator import EQ_TOLERANCE
 from mindquantum.experimental._mindquantum_cxx.ops import (
@@ -32,66 +28,7 @@ from mindquantum.utils.type_value_check import _check_input_type
 from ..parameterresolver import ParameterResolver
 
 
-@lru_cache()
-def _n_sz(n):
-    if n == 0:
-        return csr_matrix(np.array([1]), dtype=np.complex128)
-    tmp = [csr_matrix(np.array([[1, 0], [0, -1]], dtype=np.complex128)) for _ in range(n)]
-    for i in tmp[1:]:
-        tmp[0] = kron(tmp[0], i)
-    return tmp[0]
-
-
-@lru_cache()
-def _n_identity(n):
-    """N_identity."""
-    if n == 0:
-        return csr_matrix(np.array([1]), dtype=np.complex128)
-    tmp = [csr_matrix(np.array([[1, 0], [0, 1]], dtype=np.complex128)) for _ in range(n)]
-    for i in tmp[1:]:
-        tmp[0] = kron(tmp[0], i)
-    return tmp[0]
-
-
-@lru_cache()
-def _single_fermion_word(idx, dag, n_qubits):
-    """Single_fermion_word."""
-    matrix = csr_matrix(np.array([[0, 1], [0, 0]], dtype=np.complex128))
-    if dag:
-        matrix = csr_matrix(np.array([[0, 0], [1, 0]], dtype=np.complex128))
-    return kron(_n_identity(n_qubits - 1 - idx), kron(matrix, _n_sz(idx)))
-
-
-@lru_cache()
-def _two_fermion_word(idx1, dag1, idx2, dag2, n_qubits):
-    """Two_fermion_word."""
-    return _single_fermion_word(idx1, dag1, n_qubits) * _single_fermion_word(idx2, dag2, n_qubits)
-
-
-def _check_valid_fermion_operator_term(fo_term):
-    """Check valid fermion operator term."""
-    if fo_term is not None and fo_term != '':
-        if not isinstance(fo_term, (str, tuple)):
-            raise ValueError(f'Fermion operator requires a string or a tuple, but get {type(fo_term)}')
-        if isinstance(fo_term, str):
-            terms = fo_term.split(' ')
-            for term in terms:
-                if (term.endswith('^') and not term[:-1].isdigit()) or (not term.endswith('^') and not term.isdigit()):
-                    if term:
-                        raise ValueError(f'Invalid fermion operator term {term}')
-        if isinstance(fo_term, tuple):
-            for term in fo_term:
-                if (
-                    len(term) != 2
-                    or not isinstance(term[0], int)
-                    or not isinstance(term[1], int)
-                    or term[0] < 0
-                    or term[1] not in [0, 1]
-                ):
-                    raise ValueError(f'Invalid fermion operator term {term}')
-
-
-class FermionOperator(FermionOperator_):
+class FermionOperator:
     r"""
     Definition of a Fermion Operator.
 
@@ -133,36 +70,28 @@ class FermionOperator(FermionOperator_):
     def __init__(self, term=None, coeff=1.0):
         """Initialize a FermionOperator object."""
         if isinstance(term, FermionOperator_):
-            FermionOperator_.__init__(self, term, isinstance(term, FermionOperator))
+            self._cpp_obj = term
         else:
             if term is None:
-                FermionOperator_.__init__(self)
+                self._cpp_obj = FermionOperator_()
             if isinstance(term, dict):
-                FermionOperator_.__init__(self, term)
+                self._cpp_obj = FermionOperator_(term)
             else:
                 if not isinstance(coeff, ParameterResolver):
                     coeff = ParameterResolver(coeff)
-                FermionOperator_.__init__(self, term, coeff)
+                self._cpp_obj = FermionOperator_(term, coeff)
 
     def __deepcopy__(self, memodict) -> "FermionOperator":
         """Deep copy this FermionOperator."""
-        return FermionOperator(self)
+        return FermionOperator(FermionOperator_(self._cpp_obj))
 
     def __str__(self) -> str:
         """Return string expression of FermionOperator."""
-        terms = self.terms
-        new_str = ''
-        for idx, (term, coeff) in enumerate(terms.items()):
-            term = [f"{i}{'^' if j == TermValue.adg else ''}" for i, j in term]
-            end = ' +\n'
-            if idx == len(terms) - 1:
-                end = ' '
-            new_str += f"{coeff.expression()} [{' '.join(term)}]{end}"
-        return new_str if new_str else "0"
+        return str(self._cpp_obj)
 
     def __repr__(self) -> str:
         """Return string expression of FermionOperator."""
-        return self.__str__()
+        return repr(self._cpp_obj)
 
     def __iter__(self) -> "FermionOperator":
         """Iterate every single term."""
@@ -171,32 +100,32 @@ class FermionOperator(FermionOperator_):
 
     def __len__(self) -> int:
         """Return the size of term."""
-        return self.size
+        return self._cpp_obj.size
 
     def __neg__(self) -> "FermionOperator":
         """Return negative FermionOperator."""
-        return FermionOperator(FermionOperator_.__neg__(self))
+        return FermionOperator(self._cpp_obj.__neg__())
 
     def __add__(self, other) -> "FermionOperator":
         """Add a number or a FermionOperator."""
-        return FermionOperator(FermionOperator_.__add__(self, other))
+        return FermionOperator(self._cpp_obj.__add__(other))
 
     def __iadd__(self, other) -> "FermionOperator":
         """Inplace add a number or a FermionOperator."""
-        FermionOperator_.__iadd__(self, other)
+        self._cpp_obj.__iadd__(other)
         return self
 
     def __radd__(self, other) -> "FermionOperator":
         """Right add a number or a FermionOperator."""
-        return FermionOperator(FermionOperator_.__add__(self, other))
+        return FermionOperator(self._cpp_obj.__add__(other))
 
     def __sub__(self, other) -> "FermionOperator":
         """Subtract a number or a FermionOperator."""
-        return FermionOperator(FermionOperator_.__sub__(self, other))
+        return FermionOperator(self._cpp_obj.__sub__(other))
 
     def __isub__(self, other) -> "FermionOperator":
         """Inplace subtrace a number or a FermionOperator."""
-        FermionOperator_.__isub__(self, other)
+        self._cpp_obj.__isub__(other)
         return self
 
     def __rsub__(self, other) -> "FermionOperator":
@@ -207,24 +136,24 @@ class FermionOperator(FermionOperator_):
         """Multiple a number or a FermionOperator."""
         if isinstance(other, str):
             other = ParameterResolver(other)
-        return FermionOperator(FermionOperator_.__mul__(self, other))
+        return FermionOperator(self._cpp_obj.__mul__(other))
 
     def __imul__(self, other) -> "FermionOperator":
         """Inplace multiple a number or a FermionOperator."""
         if isinstance(other, str):
             other = ParameterResolver(other)
-        FermionOperator_.__imul__(self, other)
+        self._cpp_obj.__imul__(other)
         return self
 
     def __rmul__(self, other) -> "FermionOperator":
         """Right multiple a number or a FermionOperator."""
         if isinstance(other, str):
             other = ParameterResolver(other)
-        return FermionOperator(FermionOperator_.__mul__(self, other))
+        return FermionOperator(self._cpp_obj.__mul__(other))
 
     def __truediv__(self, other) -> "FermionOperator":
         """Divide a number."""
-        return FermionOperator(FermionOperator_.__truediv__(self, other))
+        return FermionOperator(self._cpp_obj.__truediv__(other))
 
     def __itruediv__(self, other) -> "FermionOperator":
         """Divide a number."""
@@ -233,15 +162,15 @@ class FermionOperator(FermionOperator_):
 
     def __power__(self, exponent: int) -> "FermionOperator":
         """Exponential of FermionOperator."""
-        return FermionOperator(FermionOperator_.__power__(self, exponent))
+        return FermionOperator(self._cpp_obj.__power__(exponent))
 
     def __eq__(self, other) -> bool:
         """Check whether two FermionOperator equal."""
-        return FermionOperator_.__eq__(self, other)
+        return self._cpp_obj == other._cpp_obj
 
     def __ne__(self, other) -> bool:
         """Check whether two FermionOperator not equal."""
-        return not FermionOperator_.__eq__(self, other)
+        return self._cpp_obj != other._cpp_obj
 
     @property
     def imag(self) -> "FermionOperator":
@@ -257,7 +186,7 @@ class FermionOperator(FermionOperator_):
             >>> f.imag.compress()
             2.0 [0]
         """
-        return FermionOperator(FermionOperator_.imag(self))
+        return FermionOperator(self._cpp_obj.imag)
 
     @property
     def real(self) -> "FermionOperator":
@@ -274,12 +203,12 @@ class FermionOperator(FermionOperator_):
             1.0 [0] +
             a [0^]
         """
-        return FermionOperator(FermionOperator_.real(self))
+        return FermionOperator(self._cpp_obj.real)
 
     @property
     def terms(self) -> Dict[Tuple[Tuple[int]], ParameterResolver]:
         """Get the term of FermionOperator."""
-        return {tuple(i): ParameterResolver(j) for i, j in FermionOperator_.terms(self)}
+        return {tuple(i): ParameterResolver(j) for i, j in self._cpp_obj.terms()}
 
     def compress(self, abs_tol=EQ_TOLERANCE) -> "FermionOperator":
         """
@@ -309,19 +238,19 @@ class FermionOperator(FermionOperator_):
             1/2 [0^ 1] +
             X [2^ 3]
         """
-        return FermionOperator(FermionOperator_.compress(self, abs_tol))
+        return FermionOperator(self._cpp_obj.compress(abs_tol))
 
     @property
     def constant(self) -> ParameterResolver:
         """Return the value of the constant term."""
-        return ParameterResolver(FermionOperator_.constant(self))
+        return ParameterResolver(self._cpp_obj.constant)
 
     @constant.setter
     def constant(self, coeff):
         """Set the coefficient of the Identity term."""
         if not isinstance(coeff, ParameterResolver):
             coeff = ParameterResolver(coeff)
-        FermionOperator_.constant(self, coeff)
+        self._cpp_obj.constant = coeff
 
     def count_qubits(self) -> int:
         """
@@ -336,7 +265,7 @@ class FermionOperator(FermionOperator_):
             >>> a.count_qubits()
             4
         """
-        return FermionOperator_.count_qubits(self)
+        return self._cpp_obj.count_qubits()
 
     def dumps(self, indent: int = 4) -> str:
         r"""
@@ -355,7 +284,7 @@ class FermionOperator(FermionOperator_):
             >>> len(f.dumps())
             922
         """
-        return FermionOperator_.dumps(self, indent)
+        return self._cpp_obj.dumps(indent)
 
     @staticmethod
     def loads(strs: str) -> "FermionOperator":
@@ -379,7 +308,7 @@ class FermionOperator(FermionOperator_):
 
     def get_coeff(self, term):
         """Get coefference of given term."""
-        return ParameterResolver(FermionOperator_.get_coeff(self, term))
+        return ParameterResolver(self._cpp_obj.get_coeff(term))
 
     def hermitian(self) -> "FermionOperator":
         """
@@ -394,7 +323,7 @@ class FermionOperator(FermionOperator_):
             >>> a.hermitian()
             (1-2j)*a [1^ 0]
         """
-        return FermionOperator(FermionOperator_.hermitian(self))
+        return FermionOperator(self._cpp_obj.hermitian())
 
     def matrix(self, n_qubits: int = None):
         """
@@ -406,7 +335,7 @@ class FermionOperator(FermionOperator_):
         """
         if n_qubits is None:
             n_qubits = self.count_qubits()
-        return FermionOperator(FermionOperator_.matrix(self, n_qubits))
+        return FermionOperator(self._cpp_obj.matrix(n_qubits))
 
     def normal_ordered(self) -> "FermionOperator":
         """
@@ -423,13 +352,13 @@ class FermionOperator(FermionOperator_):
             >>> origin.normal_ordered()
             -1.0 [1^ 0]
         """
-        return FermionOperator(FermionOperator_.normal_ordered(self))
+        return FermionOperator(self._cpp_obj.normal_ordered())
 
     def subs(self, params_value: ParameterResolver) -> "FermionOperator":
         """Replace the symbolical representation with the corresponding value."""
         if not isinstance(params_value, ParameterResolver):
             params_value = ParameterResolver(params_value)
-        return FermionOperator(FermionOperator_.subs(self, params_value))
+        return FermionOperator(self._cpp_obj.subs(params_value))
 
     @property
     def is_singlet(self) -> bool:
@@ -439,7 +368,7 @@ class FermionOperator(FermionOperator_):
         Returns:
             bool, whether this operator has only one term.
         """
-        return FermionOperator_.is_singlet(self)
+        return self._cpp_obj.is_singlet
 
     def singlet(self) -> List["FermionOperator"]:
         """
@@ -457,7 +386,7 @@ class FermionOperator(FermionOperator_):
             >>> print(ops.singlet())
             [1 [1^] , 1 [2] ]
         """
-        return [FermionOperator(i) for i in FermionOperator_.singlet(self)]
+        return [FermionOperator(i) for i in self._cpp_obj.singlet()]
 
     def singlet_coeff(self) -> ParameterResolver:
         """
@@ -475,12 +404,12 @@ class FermionOperator(FermionOperator_):
             >>> print(ops.singlet_coeff())
             {'a': (1,0)}, const: (0,0)
         """
-        return ParameterResolver(FermionOperator_.singlet_coeff(self))
+        return ParameterResolver(self._cpp_obj.singlet_coeff())
 
     @property
     def size(self):
         """Return the size of the FermionOperator terms."""
-        return FermionOperator_.size(self)
+        return self._cpp_obj.size
 
     # TODO(xusheng): Finish type hint.
     def split(self):
@@ -534,48 +463,4 @@ class FermionOperator(FermionOperator_):
         return FermionOperator(terms)
 
 
-def _normal_ordered_term(term, coefficient):
-    r"""
-    Return the normal ordered term of the FermionOperator with high index and creation operator in front.
-
-    eg. :math:`a_3\dagger a_2\dagger a_1 a_0`
-
-    """
-    term = list(term)
-    ordered_term = FermionOperator()
-    for i in range(1, len(term)):
-        for j in range(i, 0, -1):
-            left_sub_term = term[j - 1]
-            right_sub_term = term[j]
-            # Swap operators if left operator is a and right operator is
-            # a^\dagger
-            if not left_sub_term[1] and right_sub_term[1]:
-                term[j], term[j - 1] = left_sub_term, right_sub_term
-                coefficient = -1 * coefficient
-                # If indice are same, employ the anti-commutation relationship
-                # And generate the new term
-                if left_sub_term[0] == right_sub_term[0]:
-                    new_term = term[: (j - 1)] + term[(j + 1) :]  # noqa: E203
-                    ordered_term += _normal_ordered_term(new_term, -1 * coefficient)
-            elif left_sub_term[1] == right_sub_term[1]:
-                # If indice are same,evaluate it to zero.
-                if left_sub_term[0] == right_sub_term[0]:
-                    return ordered_term
-                # Swap them if same operator but lower index on left
-                if left_sub_term[0] < right_sub_term[0]:
-                    term[j], term[j - 1] = left_sub_term, right_sub_term
-                    coefficient = -1 * coefficient
-
-    # Add the term and return.
-    ordered_term += FermionOperator(_fermion_tuple_to_string(tuple(term)), coefficient)
-    return ordered_term
-
-
-def _fermion_tuple_to_string(term):
-    string = []
-    for i in term:
-        if i[1] == 1:
-            string.append(f'{i[0]}^')
-        else:
-            string.append(str(i[0]))
-    return ' '.join(string)
+__all__ = ['FermionOperator']

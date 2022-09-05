@@ -28,7 +28,7 @@ from mindquantum.experimental._mindquantum_cxx.ops import (
 from mindquantum.utils.type_value_check import _check_input_type
 
 
-class QubitOperator(QubitOperator_):
+class QubitOperator:
     """
     A sum of terms acting on qubits, e.g., 0.5 * 'X1 X5' + 0.3 * 'Z1 Z2'.
 
@@ -72,42 +72,34 @@ class QubitOperator(QubitOperator_):
     def __init__(self, term=None, coeff=1.0):
         """Initialize a QubitOperator object."""
         if isinstance(term, QubitOperator_):
-            QubitOperator_.__init__(self, term, isinstance(term, QubitOperator))
+            self._cpp_obj = term
         else:
             if term is None:
-                QubitOperator_.__init__(self)
+                self._cpp_obj = QubitOperator_()
             if isinstance(term, dict):
-                QubitOperator_.__init__(self, term)
+                self._cpp_obj = QubitOperator_(term)
             else:
                 if isinstance(term, str):
                     term = term.upper()
                 if not isinstance(coeff, ParameterResolver):
                     coeff = ParameterResolver(coeff)
-                QubitOperator_.__init__(self, term, coeff)
+                self._cpp_obj = QubitOperator_(term, coeff)
 
     def __deepcopy__(self, memodict) -> "QubitOperator":
         """Deep copy this QubitOperator."""
-        return QubitOperator(self)
+        return QubitOperator(QubitOperator_(self._cpp_obj))
 
     def __str__(self) -> str:
         """Return string expression of QubitOperator."""
-        terms = self.terms
-        new_str = ''
-        for idx, (term, coeff) in enumerate(terms.items()):
-            term = [f"{TermValue[j]}{i}" for i, j in term]
-            end = ' +\n'
-            if idx == len(terms) - 1:
-                end = ' '
-            new_str += f"{coeff.expression()} [{' '.join(term)}]{end}"
-        return new_str if new_str else "0"
+        return str(self._cpp_obj)
 
     def __repr__(self) -> str:
         """Return string expression of QubitOperator."""
-        return self.__str__()
+        return repr(self._cpp_obj)
 
     def __iter__(self) -> "QubitOperator":
         """Iterate every single term."""
-        for term, coeff in self.terms.items():
+        for term, coeff in self._cpp_obj.terms.items():
             yield QubitOperator(term, coeff)
 
     def __len__(self) -> int:
@@ -116,28 +108,28 @@ class QubitOperator(QubitOperator_):
 
     def __neg__(self) -> "QubitOperator":
         """Return negative QubitOperator."""
-        return QubitOperator(QubitOperator_.__neg__(self))
+        return QubitOperator(self._cpp_obj.__neg__())
 
     def __add__(self, other) -> "QubitOperator":
         """Add a number or a QubitOperator."""
-        return QubitOperator(QubitOperator_.__add__(self, other))
+        return QubitOperator(self._cpp_obj.__add__(other))
 
     def __iadd__(self, other) -> "QubitOperator":
         """Inplace add a number or a QubitOperator."""
-        QubitOperator_.__iadd__(self, other)
+        self._cpp_obj.__iadd__(other)
         return self
 
     def __radd__(self, other) -> "QubitOperator":
         """Right add a number or a QubitOperator."""
-        return QubitOperator(QubitOperator_.__add__(self, other))
+        return QubitOperator(self._cpp_obj.__add__(other))
 
     def __sub__(self, other) -> "QubitOperator":
         """Subtract a number or a QubitOperator."""
-        return QubitOperator(QubitOperator_.__sub__(self, other))
+        return QubitOperator(self._cpp_obj.__sub__(other))
 
     def __isub__(self, other) -> "QubitOperator":
         """Inplace subtrace a number or a QubitOperator."""
-        QubitOperator_.__isub__(self, other)
+        self._cpp_obj.__isub__(self, other)
         return self
 
     def __rsub__(self, other) -> "QubitOperator":
@@ -148,40 +140,40 @@ class QubitOperator(QubitOperator_):
         """Multiple a number or a QubitOperator."""
         if isinstance(other, str):
             other = ParameterResolver(other)
-        return QubitOperator(QubitOperator_.__mul__(self, other))
+        return QubitOperator(self._cpp_obj.__mul__(other))
 
     def __imul__(self, other) -> "QubitOperator":
         """Inplace multiple a number or a QubitOperator."""
         if isinstance(other, str):
             other = ParameterResolver(other)
-        QubitOperator_.__imul__(self, other)
+        self._cpp_obj.__imul__(other)
         return self
 
     def __rmul__(self, other) -> "QubitOperator":
         """Right multiple a number or a QubitOperator."""
         if isinstance(other, str):
             other = ParameterResolver(other)
-        return QubitOperator(QubitOperator_.__mul__(self, other))
+        return QubitOperator(self._cpp_obj.__mul__(other))
 
     def __truediv__(self, other) -> "QubitOperator":
         """Divide a number."""
-        return QubitOperator(QubitOperator_.__truediv__(self, other))
+        return QubitOperator(self._cpp_obj.__truediv__(other))
 
     def __itruediv__(self, other) -> "QubitOperator":
         """Divide a number."""
-        return QubitOperator(QubitOperator_.__itruediv__(self, other))
+        return QubitOperator(self._cpp_obj.__itruediv__(other))
 
     def __power__(self, exponent: int) -> "QubitOperator":
         """Exponential of QubitOperator."""
-        return QubitOperator(QubitOperator_.__power__(self, exponent))
+        return QubitOperator(self._cpp_obj.__power__(exponent))
 
     def __eq__(self, other) -> bool:
         """Check whether two QubitOperator equal."""
-        return QubitOperator_.__eq__(self, other)
+        return self._cpp_obj == other._cpp_obj
 
     def __ne__(self, other) -> bool:
         """Check whether two QubitOperator not equal."""
-        return not QubitOperator_.__eq__(self, other)
+        return self._cpp_obj != other._cpp_obj
 
     @property
     def imag(self) -> "QubitOperator":
@@ -197,7 +189,7 @@ class QubitOperator(QubitOperator_):
             >>> f.imag.compress()
             2 [X0]
         """
-        return QubitOperator(QubitOperator_.imag(self))
+        return QubitOperator(self._cpp_obj.imag)
 
     @property
     def real(self) -> "QubitOperator":
@@ -214,12 +206,12 @@ class QubitOperator(QubitOperator_):
             1 [X0] +
             a [Y0]
         """
-        return QubitOperator(QubitOperator_.real(self))
+        return QubitOperator(self._cpp_obj.real)
 
     @property
     def terms(self) -> Dict[Tuple[Tuple[int]], ParameterResolver]:
         """Get the term of QubitOperator."""
-        return {tuple(i): ParameterResolver(j) for i, j in QubitOperator_.terms(self)}
+        return {tuple(i): ParameterResolver(j) for i, j in self._cpp_obj.terms()}
 
     def compress(self, abs_tol=EQ_TOLERANCE) -> "QubitOperator":
         """
@@ -249,19 +241,19 @@ class QubitOperator(QubitOperator_):
             X [X0 Y2] +
             1/2 [X0 Y3]
         """
-        return QubitOperator(QubitOperator_.compress(self, abs_tol))
+        return QubitOperator(self._cpp_obj.compress(abs_tol))
 
     @property
     def constant(self) -> ParameterResolver:
         """Return the value of the constant term."""
-        return ParameterResolver(QubitOperator_.constant(self))
+        return ParameterResolver(self._cpp_obj.constant)
 
     @constant.setter
     def constant(self, coeff):
         """Set the coefficient of the Identity term."""
         if not isinstance(coeff, ParameterResolver):
             coeff = ParameterResolver(coeff)
-        QubitOperator_.constant(self, coeff)
+        self._cpp_obj.constant = coeff
 
     def count_gates(self):
         """
@@ -276,7 +268,7 @@ class QubitOperator(QubitOperator_):
             >>> a.count_gates()
             4
         """
-        return QubitOperator_.count_gates(self)
+        return self._cpp_obj.count_gates()
 
     def count_qubits(self) -> int:
         """
@@ -291,7 +283,7 @@ class QubitOperator(QubitOperator_):
             >>> a.count_qubits()
             4
         """
-        return QubitOperator_.count_qubits(self)
+        return self._cpp_obj.count_qubits()
 
     def dumps(self, indent: int = 4) -> str:
         r"""
@@ -310,7 +302,7 @@ class QubitOperator(QubitOperator_):
             >>> len(ops.dumps())
             1090
         """
-        return QubitOperator_.dumps(self, indent)
+        return self._cpp_obj.dumps(indent)
 
     @staticmethod
     def loads(strs: str) -> "QubitOperator":
@@ -333,8 +325,8 @@ class QubitOperator(QubitOperator_):
         return QubitOperator(QubitOperator_.loads(strs))
 
     def get_coeff(self, term):
-        """Get coefference of given term."""
-        return ParameterResolver(QubitOperator_.get_coeff(self, term))
+        """Get coefficient for a given term."""
+        return ParameterResolver(self._cpp_obj.get_coeff(term))
 
     def hermitian(self) -> "QubitOperator":
         """
@@ -349,7 +341,7 @@ class QubitOperator(QubitOperator_):
             >>> a.hermitian()
             (1-2j)*a [X0 Z2]
         """
-        return QubitOperator(QubitOperator_.hermitian(self))
+        return QubitOperator(self._cpp_obj.hermitian())
 
     def matrix(self, n_qubits: int = None):
         """
@@ -361,13 +353,13 @@ class QubitOperator(QubitOperator_):
         """
         if n_qubits is None:
             n_qubits = self.count_qubits()
-        return QubitOperator(QubitOperator_.matrix(self, n_qubits))
+        return QubitOperator(self._cpp_obj.matrix(n_qubits))
 
     def subs(self, params_value: ParameterResolver) -> "QubitOperator":
         """Replace the symbolical representation with the corresponding value."""
         if not isinstance(params_value, ParameterResolver):
             params_value = ParameterResolver(params_value)
-        return QubitOperator(QubitOperator_.subs(self, params_value))
+        return QubitOperator(self._cpp_obj.subs(params_value))
 
     @property
     def is_singlet(self) -> bool:
@@ -377,7 +369,7 @@ class QubitOperator(QubitOperator_):
         Returns:
             bool, whether this operator has only one term.
         """
-        return QubitOperator_.is_singlet(self)
+        return self._cpp_obj.is_singlet
 
     def singlet(self) -> List["QubitOperator"]:
         """
@@ -395,7 +387,7 @@ class QubitOperator(QubitOperator_):
             >>> print(ops.singlet())
             [1 [X1] , 1 [Z2] ]
         """
-        return [QubitOperator(i) for i in QubitOperator_.singlet(self)]
+        return [QubitOperator(i) for i in self._cpp_obj.singlet()]
 
     def singlet_coeff(self) -> ParameterResolver:
         """
@@ -413,12 +405,12 @@ class QubitOperator(QubitOperator_):
             >>> print(ops.singlet_coeff())
             {'a': (1,0)}, const: (0,0)
         """
-        return ParameterResolver(QubitOperator_.singlet_coeff(self))
+        return ParameterResolver(self._cpp_obj.singlet_coeff())
 
     @property
     def size(self):
         """Return the size of the QubitOperator terms."""
-        return QubitOperator_.size(self)
+        return self._cpp_obj.size
 
     # TODO(xusheng): Finish type hint.
     def split(self):
@@ -472,14 +464,4 @@ class QubitOperator(QubitOperator_):
         return QubitOperator(terms)
 
 
-def _qubit_tuple_to_string(term):
-    string = []
-    for i in term:
-        string.append(f'{i[1]}{i[0]}')
-    return ' '.join(string)
-
-
 __all__ = ['QubitOperator']
-
-if __name__ == '__main__':
-    ops = QubitOperator("X0 Y1", "a")
