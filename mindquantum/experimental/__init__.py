@@ -18,6 +18,8 @@
 import sys
 
 try:
+    import mindquantum.mqbackend as mb
+
     from ._mindquantum_cxx import circuit, ops, optimizer, simulator, symengine
     from .utils import TermValue
 
