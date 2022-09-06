@@ -19,7 +19,7 @@
 
 namespace mindquantum::ops::details {
 
-template <typename coefficient_t, typename = void>
+template <typename coefficient_t>
 struct CoeffPolicy;
 
 template <typename coefficient_t>

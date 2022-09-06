@@ -115,9 +115,9 @@ class TermsOperatorBase {
 
     TermsOperatorBase() = default;
     TermsOperatorBase(const TermsOperatorBase&) = default;
-    TermsOperatorBase(TermsOperatorBase&&) noexcept = default;
+    TermsOperatorBase(TermsOperatorBase&&) = default;
     TermsOperatorBase& operator=(const TermsOperatorBase&) = default;
-    TermsOperatorBase& operator=(TermsOperatorBase&&) noexcept = default;
+    TermsOperatorBase& operator=(TermsOperatorBase&&) = default;
     ~TermsOperatorBase() noexcept = default;
 
     explicit TermsOperatorBase(term_t term, coefficient_t coeff = coeff_policy_t::one);

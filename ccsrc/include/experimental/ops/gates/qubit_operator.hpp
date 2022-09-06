@@ -64,9 +64,9 @@ class QubitOperator
     using TermsOperator::TermsOperator;
     QubitOperator() = default;
     QubitOperator(const QubitOperator&) = default;
-    QubitOperator(QubitOperator&&) noexcept = default;
+    QubitOperator(QubitOperator&&) = default;
     QubitOperator& operator=(const QubitOperator&) = default;
-    QubitOperator& operator=(QubitOperator&&) noexcept = default;
+    QubitOperator& operator=(QubitOperator&&) = default;
     ~QubitOperator() noexcept = default;
 
     // -------------------------------------------------------------------
@@ -81,23 +81,6 @@ class QubitOperator
 #ifdef UNIT_TESTS
     friend class ::UnitTestAccessor;
 #endif  // UNIT_TESTS
-
-    // TODO(dnguyen): Move this into term_policy_t class
-    //! Simplify the list of local operators by using commutation and anti-commutation relations
-    static std::tuple<terms_t, coefficient_t> simplify_(std::vector<term_t> terms, coefficient_t coeff = 1.);
-
-    // TODO(dnguyen): Move this into term_policy_t class
-    //! Simplify the list of local operators by using commutation and anti-commutation relations
-    static std::tuple<terms_t, coefficient_t> simplify_(std::vector<py_term_t> py_terms, coefficient_t coeff = 1.);
-
-    // TODO(dnguyen): Move this into term_policy_t class
-    //! Sort a list of local operators
-    /*!
-     * \param local_ops A list of local operators
-     * \param coeff A coefficient
-     * \note Potentially called by the TermsOperator constructor
-     */
-    static std::pair<terms_t, coefficient_t> sort_terms_(terms_t local_ops, coefficient_t coeff);
 };
 }  // namespace mindquantum::ops
 

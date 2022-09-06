@@ -141,9 +141,9 @@ class TermsOperator : public traits::boost_operators_helper<derived_t, typename 
 
     TermsOperator() = default;
     TermsOperator(const TermsOperator&) = default;
-    TermsOperator(TermsOperator&&) noexcept = default;
+    TermsOperator(TermsOperator&&) = default;
     TermsOperator& operator=(const TermsOperator&) = default;
-    TermsOperator& operator=(TermsOperator&&) noexcept = default;
+    TermsOperator& operator=(TermsOperator&&) = default;
     ~TermsOperator() noexcept = default;
 
     explicit TermsOperator(term_t term, coefficient_t coeff = coeff_policy_t::one);
