@@ -41,20 +41,34 @@
 
 // =============================================================================
 
+namespace details {
+template <typename coefficient_t>
+struct conversion_helper {
+    static auto apply(const coefficient_t& scalar) {
+        return scalar;
+    }
+    template <typename scalar_t>
+    static auto apply(const scalar_t& scalar) {
+        return static_cast<coefficient_t>(scalar);
+    }
+};
+}  // namespace details
+
+// =============================================================================
+
 namespace mindquantum::ops {
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::TermsOperatorBase(
-    term_t term, coefficient_t coeff)
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(term_t term, coefficient_t coeff)
     : TermsOperatorBase(coeff_term_dict_t{{{std::move(term)}, coeff}}) {
 }
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::TermsOperatorBase(
-    const terms_t& terms, coefficient_t coeff) {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(const terms_t& terms,
+                                                                                 coefficient_t coeff) {
     const auto [new_terms, new_coeff] = term_policy_t::simplify(terms, coeff);
     terms_.emplace(new_terms, new_coeff);
     calculate_num_targets_();
@@ -62,10 +76,10 @@ TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, co
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::TermsOperatorBase(
-    const py_terms_t& terms, coefficient_t coeff) {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(const py_terms_t& terms,
+                                                                                 coefficient_t coeff) {
     const auto [new_terms, new_coeff] = term_policy_t::simplify(terms, coeff);
     terms_.emplace(new_terms, new_coeff);
     calculate_num_targets_();
@@ -73,10 +87,9 @@ TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, co
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::TermsOperatorBase(
-    const coeff_term_dict_t& terms) {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(const coeff_term_dict_t& terms) {
     for (const auto& [local_ops, coeff] : terms) {
         terms_.emplace(term_policy_t::sort_terms(local_ops, coeff));
     }
@@ -86,63 +99,59 @@ TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, co
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::TermsOperatorBase(
-    std::string_view terms_string, coefficient_t coeff)
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(std::string_view terms_string,
+                                                                                 coefficient_t coeff)
     : TermsOperatorBase(term_policy_t::parse_terms_string(terms_string), coeff) {
 }
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::TermsOperatorBase(
-    coeff_term_dict_t terms, sorted_constructor_t /* unused */)
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(coeff_term_dict_t terms,
+                                                                                 sorted_constructor_t /* unused */)
     : terms_{std::move(terms)} {
     calculate_num_targets_();
 }
 
 // =============================================================================
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-uint32_t TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::num_targets()
-    const {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+uint32_t TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::num_targets() const {
     return num_targets_;
 }
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::empty()
-    const noexcept {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::empty() const noexcept {
     return std::empty(terms_);
 }
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::size() const {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::size() const {
     return std::size(terms_);
 }
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::get_terms() const
-    -> const coeff_term_dict_t& {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::get_terms() const -> const coeff_term_dict_t& {
     return terms_;
 }
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::get_terms_pair()
-    const -> py_coeff_term_list_t {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::get_terms_pair() const -> py_coeff_term_list_t {
     py_coeff_term_list_t out;
     for (const auto& [local_ops, coeff] : terms_) {
         terms_t py_local_ops;
@@ -156,19 +165,18 @@ auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::get_coeff(
-    const terms_t& term) const -> coefficient_t {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::get_coeff(const terms_t& term) const
+    -> coefficient_t {
     return terms_.at(term);
 }
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-bool TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::is_identity(
-    double abs_tol) const {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+bool TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::is_identity(double abs_tol) const {
 #if MQ_HAS_CXX20_RANGES
     return std::ranges::all_of(
         terms_, [abs_tol](const auto& term) constexpr {
@@ -193,10 +201,9 @@ bool TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::count_qubits()
-    const -> term_t::first_type {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::count_qubits() const -> term_t::first_type {
     term_t::first_type num_qubits{0};
     for (const auto& [local_ops, coeff] : terms_) {
         if (std::empty(local_ops)) {
@@ -217,19 +224,17 @@ auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::identity()
-    -> derived_t {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::identity() -> derived_t {
     return derived_t{terms_t{}};
 }
 
 // =============================================================================
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::hermitian() const
-    -> derived_t {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::hermitian() const -> derived_t {
     coeff_term_dict_t terms;
     for (auto& [local_ops, coeff] : terms_) {
         terms.emplace(std::move(term_policy_t::hermitian(local_ops)), std::move(coeff_policy_t::conjugate(coeff)));
@@ -239,19 +244,17 @@ auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t
 
 // =============================================================================
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::adjoint()
-    const noexcept -> operator_t {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::adjoint() const noexcept -> operator_t {
     return *static_cast<derived_t*>(*this);
 }
 
 // =============================================================================
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::constant()
-    const noexcept -> coefficient_t {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::constant() const noexcept -> coefficient_t {
     if (const auto it = terms_.find({}); it != end(terms_)) {
         assert(std::empty(it->first));
         return it->second;
@@ -261,28 +264,25 @@ auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::constant(
-    const coefficient_t& coeff) -> void {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::constant(const coefficient_t& coeff) -> void {
     terms_[{}] = coeff;
 }
 
 // =============================================================================
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-bool TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::is_singlet()
-    const {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+bool TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::is_singlet() const {
     return size() == 1;
 }
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::singlet() const
-    -> std::vector<derived_t> {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::singlet() const -> std::vector<derived_t> {
     if (!is_singlet()) {
         MQ_ERROR("Operator is not a singlet!");
         return {};
@@ -298,10 +298,9 @@ auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::singlet_coeff()
-    const -> coefficient_t {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::singlet_coeff() const -> coefficient_t {
     if (!is_singlet()) {
         MQ_ERROR("Operator is not a singlet!");
         return {};
@@ -311,9 +310,9 @@ auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::split() const
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::split() const
     -> std::vector<std::pair<coefficient_t, derived_t>> {
     std::vector<std::pair<coefficient_t, derived_t>> result;
     for (const auto& [local_ops, coeff] : terms_) {
@@ -324,28 +323,25 @@ auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t
 
 // =============================================================================
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::real() const
-    -> derived_real_t {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::real() const -> derived_real_t {
     return real_cast_<RealCastType::REAL>();
 }
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::imag() const
-    -> derived_real_t {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::imag() const -> derived_real_t {
     return real_cast_<RealCastType::REAL>();
 }
 
 // =============================================================================
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::compress(
-    double abs_tol) -> derived_t& {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::compress(double abs_tol) -> derived_t& {
     auto new_end = tsl::remove_if(begin(terms_), end(terms_), [abs_tol](const auto& term) -> bool {
         return coeff_policy_t::is_zero(term.second, abs_tol);
     });
@@ -406,10 +402,9 @@ struct stringize {
 
 // -------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::to_string()
-    const noexcept -> std::string {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::to_string() const noexcept -> std::string {
     using namespace std::literals::string_literals;
     if (std::empty(terms_)) {
         return "0"s;
@@ -423,38 +418,197 @@ auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t
 
 // -----------------------------------------------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::dumps(
-    std::size_t indent) const -> std::string {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::dumps(std::size_t indent) const -> std::string {
     nlohmann::json json(*this);
     return json.dump(static_cast<int>(indent), ' ', true);
 }
 
 // -------------------------------------
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::loads(
-    std::string_view string_data) -> std::optional<derived_t> {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::loads(std::string_view string_data)
+    -> std::optional<derived_t> {
     return nlohmann::json::parse(string_data).get<derived_t>();
 }
 
 // =============================================================================
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::operator-() const
-    -> derived_t {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator+=(const derived_t& other) -> derived_t& {
+    return add_sub_impl_(
+        other, coeff_policy_t::iadd, [](const coefficient_t& coefficient) constexpr { return coefficient; });
+}
+
+// -----------------------------------------------------------------------------
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator+=(const coefficient_t& scalar)
+    -> derived_t& {
+    *this += (derived_t::identity() *= scalar);
+    return *static_cast<derived_t*>(this);
+}
+
+// -----------------------------------------------------------------------------
+
+#if MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+template <mindquantum::concepts::compat_terms_op<derived_t_<coefficient_t_>> op_t>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator+=(const op_t& other) -> derived_t& {
+    static_assert(!traits::is_same_decay_v<derived_t, op_t>);
+    return add_sub_impl_(
+        other, coeff_policy_t::iadd, [](const coefficient_t& coefficient) constexpr { return coefficient; });
+}
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+template <mindquantum::concepts::compat_scalar<coefficient_t_> scalar_t>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator+=(const scalar_t& scalar) -> derived_t& {
+    static_assert(!traits::is_same_decay_v<coefficient_t, scalar_t>);
+    return *this += static_cast<coefficient_t>(scalar);
+}
+#else
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+template <typename type_t, typename>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator+=(const type_t& op_or_scalar)
+    -> derived_t& {
+    if constexpr (traits::is_terms_operator_v<type_t>) {
+        return add_sub_impl_(
+            op_or_scalar, coeff_policy_t::iadd, [](const coefficient_t& coefficient) constexpr { return coefficient; });
+    } else {
+        return *this += static_cast<coefficient_t>(op_or_scalar);
+    }
+}
+#endif  // MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+
+// =============================================================================
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator-=(const derived_t& other) -> derived_t& {
+    return add_sub_impl_(other, coeff_policy_t::isub, coeff_policy_t::uminus);
+}
+
+// -----------------------------------------------------------------------------
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator-=(const coefficient_t& scalar)
+    -> derived_t& {
+    *this -= (derived_t::identity() *= scalar);
+    return *static_cast<derived_t*>(this);
+}
+
+// -----------------------------------------------------------------------------
+
+#if MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+template <mindquantum::concepts::compat_terms_op<derived_t_<coefficient_t_>> op_t>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator-=(const op_t& other) -> derived_t& {
+    static_assert(!traits::is_same_decay_v<derived_t, op_t>);
+    return add_sub_impl_(other, coeff_policy_t::isub, coeff_policy_t::uminus);
+}
+
+// -----------------------------------------------------------------------------
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+template <mindquantum::concepts::compat_scalar<coefficient_t_> scalar_t>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator-=(const scalar_t& scalar) -> derived_t& {
+    static_assert(!traits::is_same_decay_v<coefficient_t, scalar_t>);
+    return *this -= static_cast<coefficient_t>(scalar);
+}
+#else
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+template <typename type_t, typename>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator-=(const type_t& op_or_scalar)
+    -> derived_t& {
+    if constexpr (traits::is_terms_operator_v<type_t>) {
+        return add_sub_impl_(op_or_scalar, coeff_policy_t::isub, coeff_policy_t::uminus);
+    } else {
+        return *this -= static_cast<coefficient_t>(op_or_scalar);
+    }
+}
+#endif  // MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+
+// =============================================================================
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator-() const -> derived_t {
     return (*static_cast<const derived_t*>(this) * -1.);
 }
 
 // =============================================================================
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::pow(
-    uint32_t exponent) const -> derived_t {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator*=(const derived_t& other) -> derived_t& {
+    return mul_impl_(other);
+}
+
+// -----------------------------------------------------------------------------
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator*=(const coefficient_t& scalar)
+    -> derived_t& {
+    // NB: cannot use the usual range-for loop since that uses operator*() implicitly and using tsl::ordered_map the
+    //     values accessed in this way are constants
+    for (auto it(begin(terms_)), it_end(end(terms_)); it != it_end; ++it) {
+        coeff_policy_t::imul(it.value(), scalar);
+    }
+    // NB: This would work for normal std::map/std::unordered_map
+    // for (auto& [term, coeff] : terms_) {
+    //     coeff_policy_t::imul(coeff.value(), number);
+    // }
+    return *static_cast<derived_t*>(this);
+}
+
+// -----------------------------------------------------------------------------
+
+#if MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+template <mindquantum::concepts::compat_terms_op<derived_t_<coefficient_t_>> op_t>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator*=(const op_t& other) -> derived_t& {
+    static_assert(!traits::is_same_decay_v<derived_t, op_t>);
+    return mul_impl_(other);
+}
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+template <mindquantum::concepts::compat_scalar<coefficient_t_> scalar_t>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator*=(const scalar_t& scalar) -> derived_t& {
+    static_assert(!traits::is_same_decay_v<coefficient_t, scalar_t>);
+    return *this *= static_cast<coefficient_t>(scalar);
+}
+#else
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+template <typename type_t, typename>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator*=(const type_t& op_or_scalar)
+    -> derived_t& {
+    if constexpr (traits::is_terms_operator_v<type_t>) {
+        return mul_impl_(op_or_scalar);
+    } else {
+        return *this *= static_cast<coefficient_t>(op_or_scalar);
+    }
+}
+#endif  // MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+
+// =============================================================================
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::pow(uint32_t exponent) const -> derived_t {
     derived_t result = identity();
     for (auto i(0UL); i < exponent; ++i) {
         result *= *static_cast<const derived_t*>(this);
@@ -464,10 +618,9 @@ auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t
 
 // =============================================================================
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
-bool TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::operator==(
-    const derived_t& other) const {
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+bool TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator==(const derived_t& other) const {
     using policy_t = coeff_policy_t;
     std::vector<typename coeff_term_dict_t::value_type> intersection;
     std::vector<typename coeff_term_dict_t::value_type> symmetric_differences;
@@ -494,11 +647,10 @@ bool TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t
 
 // =============================================================================
 
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
 template <RealCastType cast_type>
-auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t_, coeff_policy_t_>::real_cast_() const
-    -> derived_real_t {
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::real_cast_() const -> derived_real_t {
     using real_terms_t = typename derived_real_t::coeff_term_dict_t;
     using real_value_t = typename real_terms_t::value_type;
 
@@ -508,6 +660,69 @@ auto TermsOperatorBase<derived_t, derived_real_t_, coefficient_t_, term_policy_t
         return real_value_t{term.first, real_cast<cast_type>(term.second)};
     });
     return derived_real_t{real_terms};
+}
+
+// =============================================================================
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+template <typename other_t, typename assign_modify_op_t, typename coeff_unary_op_t>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::add_sub_impl_(const other_t& other,
+                                                                                  assign_modify_op_t&& assign_modify_op,
+                                                                                  coeff_unary_op_t&& coeff_unary_op)
+    -> derived_t& {
+    using conv_helper_t = ::details::conversion_helper<coefficient_t>;
+    for (const auto& [term, coeff] : other.get_terms()) {
+        auto it = terms_.find(term);
+        if (it != terms_.end()) {
+            assign_modify_op(it.value(), conv_helper_t::apply(coeff));
+        } else {
+            it = terms_.emplace(term, coeff_unary_op(conv_helper_t::apply(coeff))).first;
+        }
+
+        if (coeff_policy_t::is_zero(it->second)) {
+            terms_.erase(it);
+        }
+    }
+
+    calculate_num_targets_();
+
+    return *static_cast<derived_t*>(this);
+}
+
+// -----------------------------------------------------------------------------
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+template <typename other_t>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::mul_impl_(const other_t& other) -> derived_t& {
+    using conv_helper_t = ::details::conversion_helper<coefficient_t>;
+    coeff_term_dict_t product_results;
+    for (const auto& [left_op, left_coeff] : terms_) {
+        for (const auto& [right_op, right_coeff] : other.get_terms()) {
+            auto new_op = std::vector<term_t>{left_op};
+            new_op.insert(end(new_op), begin(right_op), end(right_op));
+            const auto [new_terms, new_coeff] = term_policy_t::simplify(
+                new_op, coeff_policy_t::mul(left_coeff, conv_helper_t::apply(right_coeff)));
+            if (auto it = product_results.find(new_terms); it != end(product_results)) {
+                coeff_policy_t::iadd(it.value(), new_coeff);
+            } else {
+                product_results.emplace(std::move(new_terms), std::move(new_coeff));
+            }
+        }
+    }
+    terms_ = std::move(product_results);
+
+    calculate_num_targets_();
+    return *static_cast<derived_t*>(this);
+}
+
+// =============================================================================
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+void TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::calculate_num_targets_() noexcept {
+    num_targets_ = count_qubits();
 }
 
 // =============================================================================

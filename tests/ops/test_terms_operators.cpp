@@ -39,6 +39,29 @@ using mindquantum::ops::term_t;
 using mindquantum::ops::terms_t;
 
 namespace {
+#if MQ_HAS_CONCEPTS
+template <typename coeff_t>
+struct A {
+    using terms_operator_tag = void;
+    using coefficient_t = coeff_t;
+    using coefficient_real_t = typename mindquantum::traits::to_real_type_t<coefficient_t>;
+    static constexpr auto is_real_valued = std::is_same_v<coefficient_t, coefficient_real_t>;
+};
+template <typename coeff_t>
+struct B : A<coeff_t> {};
+
+static_assert(mindquantum::concepts::compat_terms_op<B<double>, A<double>>);
+static_assert(!mindquantum::concepts::compat_terms_op<B<std::complex<double>>, A<double>>);
+static_assert(mindquantum::concepts::compat_terms_op<B<double>, A<std::complex<double>>>);
+static_assert(mindquantum::concepts::compat_terms_op<B<std::complex<double>>, A<std::complex<double>>>);
+
+static_assert(mindquantum::concepts::compat_scalar<double, double>);
+static_assert(!mindquantum::concepts::compat_scalar<std::complex<double>, double>);
+static_assert(mindquantum::concepts::compat_scalar<double, std::complex<double>>);
+static_assert(mindquantum::concepts::compat_scalar<std::complex<double>, std::complex<double>>);
+
+#endif  // MQ_HAS_CONCEPTS
+
 template <typename coefficient_t>
 struct DummyOperatorTermPolicy {
     static auto to_string(const mindquantum::ops::TermValue& value) {

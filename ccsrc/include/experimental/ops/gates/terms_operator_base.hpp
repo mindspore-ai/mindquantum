@@ -34,6 +34,7 @@
 #include "experimental/core/config.hpp"
 #include "experimental/core/traits.hpp"
 #include "experimental/core/types.hpp"
+#include "experimental/ops/gates/details/coeff_policy.hpp"
 #include "experimental/ops/gates/traits.hpp"
 #include "experimental/ops/meta/dagger.hpp"
 
@@ -44,6 +45,35 @@
 // =============================================================================
 
 namespace mindquantum::traits {
+template <typename scalar_t, bool is_real, typename = void>
+struct is_compatible_scalar : std::false_type {};
+
+// NB: If the ref coefficient is complex, then we accept all scalar types
+template <typename scalar_t>
+struct is_compatible_scalar<scalar_t, false, std::enable_if_t<is_termsop_number_v<std::remove_cvref_t<scalar_t>>>>
+    : std::true_type {};
+
+// NB: If the ref coefficient is real-valued, then we accept only real-valued scalar types
+template <typename scalar_t>
+struct is_compatible_scalar<scalar_t, true, std::enable_if_t<std::is_floating_point_v<std::remove_cvref_t<scalar_t>>>>
+    : std::true_type {};
+
+template <typename scalar_t, bool is_real>
+inline constexpr auto is_compatible_scalar_v = is_compatible_scalar<scalar_t, is_real>::value;
+
+// Real numbers
+static_assert(is_compatible_scalar_v<float, true>);
+static_assert(is_compatible_scalar_v<double, true>);
+static_assert(!is_compatible_scalar_v<std::complex<float>, true>);
+static_assert(!is_compatible_scalar_v<std::complex<double>, true>);
+// Complex numbers
+static_assert(is_compatible_scalar_v<float, false>);
+static_assert(is_compatible_scalar_v<double, false>);
+static_assert(is_compatible_scalar_v<std::complex<float>, false>);
+static_assert(is_compatible_scalar_v<std::complex<double>, false>);
+
+// -------------------------------------
+
 template <typename T, typename = void>
 struct is_terms_operator : std::false_type {};
 
@@ -53,6 +83,34 @@ struct is_terms_operator<T, std::void_t<typename T::terms_operator_tag>> : std::
 template <typename T>
 inline constexpr auto is_terms_operator_v = is_terms_operator<T>::value;
 }  // namespace mindquantum::traits
+
+// -----------------------------------------------------------------------------
+
+#if MQ_HAS_CONCEPTS
+namespace mindquantum::concepts {
+template <typename op_t>
+concept terms_op = requires(op_t) {
+    typename op_t::terms_operator_tag;
+    { op_t::is_real_valued } -> same_decay_as<bool>;
+};
+
+template <typename T, typename U>
+concept is_not_same_as = !std::is_same_v<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
+
+template <typename op_t, typename ref_op_t>
+concept compat_terms_op = requires(op_t, ref_op_t) {
+    requires terms_op<op_t>;
+    requires terms_op<ref_op_t>;
+    requires !same_decay_as<op_t, ref_op_t>;
+    requires traits::is_compatible_scalar_v<typename op_t::coefficient_t, ref_op_t::is_real_valued>;
+};
+
+template <typename scalar_t, typename coefficient_t>
+concept compat_scalar = requires(scalar_t, coefficient_t) {
+    requires traits::is_compatible_scalar_v<std::remove_cvref_t<scalar_t>, std::is_floating_point_v<coefficient_t>>;
+};
+}  // namespace mindquantum::concepts
+#endif  // MQ_HAS_CONCEPTS
 
 // =============================================================================
 
@@ -91,20 +149,24 @@ using term_dict_t = tsl::ordered_map<terms_t, coefficient_t, boost::hash<terms_t
 // =============================================================================
 
 //! Base class for term operators (like qubit or fermion operators)
-template <typename derived_t, typename derived_real_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_, template <typename coeff_t> class coeff_policy_t_>
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
 class TermsOperatorBase {
  public:
     using non_const_num_targets = void;
     using terms_operator_tag = void;
     using coefficient_t = coefficient_t_;
 
-    using coeff_policy_t = coeff_policy_t_<coefficient_t>;
-    using coefficient_real_t = typename coeff_policy_t::real_coeff_policy_t::coeff_t;
+    using coeff_policy_t = details::CoeffPolicy<coefficient_t>;
     using term_policy_t = term_policy_t_<coefficient_t>;
-    using derived_real_t = derived_real_t_;
-    using base_t = TermsOperatorBase<derived_t, derived_real_t, coefficient_t, term_policy_t_, coeff_policy_t_>;
+    using coefficient_real_t = typename coeff_policy_t::coeff_policy_real_t::coeff_t;
 
+    using derived_t = derived_t_<coefficient_t>;
+    using derived_real_t = derived_t_<coefficient_real_t>;
+
+    using base_t = TermsOperatorBase<derived_t_, coefficient_t, term_policy_t_>;
+
+    static constexpr auto is_real_valued = std::is_same_v<coefficient_t, coefficient_real_t>;
     static constexpr auto EQ_TOLERANCE = coeff_policy_t::EQ_TOLERANCE;
 
     using term_t = mindquantum::ops::term_t;
@@ -112,15 +174,34 @@ class TermsOperatorBase {
     using coeff_term_dict_t = term_dict_t<coefficient_t>;
     using py_coeff_term_list_t = std::vector<std::pair<mindquantum::ops::terms_t, coefficient_t>>;
 
+#if !MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+ private:
+    template <typename op_t, typename = void>
+    struct is_compat_terms_op_ : std::false_type {};
+
+    template <typename op_t>
+    struct is_compat_terms_op_<
+        op_t,
+        std::enable_if_t<
+            mindquantum::traits::is_terms_operator_v<
+                op_t> && mindquantum::traits::is_compatible_scalar_v<typename op_t::coefficient_t, is_real_valued>>>
+        : std::true_type {};
+
+    template <typename op_t>
+    inline static constexpr auto is_compat_terms_op_v_ = is_compat_terms_op_<op_t>::value;
+
+ public:
+#endif  // !MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+
     static constexpr std::string_view kind() {
         return "mindquantum.terms_operator";
     }
 
     TermsOperatorBase() = default;
     TermsOperatorBase(const TermsOperatorBase&) = default;
-    TermsOperatorBase(TermsOperatorBase&&) = default;
+    TermsOperatorBase(TermsOperatorBase&&) noexcept = default;
     TermsOperatorBase& operator=(const TermsOperatorBase&) = default;
-    TermsOperatorBase& operator=(TermsOperatorBase&&) = default;
+    TermsOperatorBase& operator=(TermsOperatorBase&&) noexcept = default;
     ~TermsOperatorBase() noexcept = default;
 
     explicit TermsOperatorBase(term_t term, coefficient_t coeff = coeff_policy_t::one);
@@ -133,8 +214,8 @@ class TermsOperatorBase {
 
     //! Constructor from a string representing a list of terms
     /*!
-     * \note If parsing the string fails, the resulting TermsOperatorBase object will represent the identity. If logging
-     * is enabled, an error message will be printed inside the log with an appropriate error message.
+     * \note If parsing the string fails, the resulting TermsOperatorBase object will represent the identity. If
+     * logging is enabled, an error message will be printed inside the log with an appropriate error message.
      */
     explicit TermsOperatorBase(std::string_view terms_string, coefficient_t coeff = coeff_policy_t::one);
 
@@ -241,8 +322,80 @@ class TermsOperatorBase {
 
     // =========================================================================
 
+    //! In-place addition of another terms operator
+    derived_t& operator+=(const derived_t& other);
+
+    //! In-place addition of a coefficient
+    derived_t& operator+=(const coefficient_t& scalar);
+
+#if MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+    //! In-place addition of another terms operator (with conversion)
+    template <concepts::compat_terms_op<derived_t> op_t>
+    derived_t& operator+=(const op_t& other);
+
+    //! In-place addition of a coefficient (with conversion)
+    template <concepts::compat_scalar<coefficient_t> scalar_t>
+    derived_t& operator+=(const scalar_t& scalar);
+#else
+    //! In-place addition of another terms operator or coefficient (with conversion)
+    template <typename type_t,
+              typename = std::enable_if_t<
+                  is_compat_terms_op_v_<type_t> || traits::is_compatible_scalar_v<type_t, is_real_valued>>>
+    derived_t& operator+=(const type_t& op_or_scalar);
+#endif  // MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+
+    // ---------------------------------
+
+    //! In-place subtraction of another terms operator
+    derived_t& operator-=(const derived_t& other);
+
+    //! In-place subtraction of a coefficient
+    derived_t& operator-=(const coefficient_t& scalar);
+
+#if MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+    //! In-place subtraction of another terms operator (with conversion)
+    template <concepts::compat_terms_op<derived_t> op_t>
+    derived_t& operator-=(const op_t& other);
+
+    //! In-place subtraction of a coefficient (with conversion)
+    template <concepts::compat_scalar<coefficient_t> scalar_t>
+    derived_t& operator-=(const scalar_t& scalar);
+#else
+    //! In-place subtraction of another terms operator or coefficient (with conversion)
+    template <typename type_t,
+              typename = std::enable_if_t<
+                  is_compat_terms_op_v_<type_t> || traits::is_compatible_scalar_v<type_t, is_real_valued>>>
+    derived_t& operator-=(const type_t& op_or_scalar);
+#endif  // MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+
+    // ---------------------------------
+
     //! Unary - operator with a number
     MQ_NODISCARD derived_t operator-() const;
+
+    // ---------------------------------
+
+    //! In-place multiplication of another terms operator
+    derived_t& operator*=(const derived_t& other);
+
+    //! In-place multiplication of a coefficient
+    derived_t& operator*=(const coefficient_t& scalar);
+
+#if MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+    //! In-place multiplication of another terms operator (with conversion)
+    template <concepts::compat_terms_op<derived_t> op_t>
+    derived_t& operator*=(const op_t& other);
+
+    //! In-place multiplication of a coefficient (with conversion)
+    template <concepts::compat_scalar<coefficient_t> scalar_t>
+    derived_t& operator*=(const scalar_t& scalar);
+#else
+    //! In-place multiplication of another terms operator or coefficient (with conversion)
+    template <typename type_t,
+              typename = std::enable_if_t<
+                  is_compat_terms_op_v_<type_t> || traits::is_compatible_scalar_v<type_t, is_real_valued>>>
+    derived_t& operator*=(const type_t& op_or_scalar);
+#endif  // MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
 
     // ---------------------------------
 
@@ -268,6 +421,15 @@ class TermsOperatorBase {
     template <RealCastType cast_type>
     derived_real_t real_cast_() const;
 
+    //! Addition/subtraction helper member function
+    template <typename other_t, typename assign_modify_op_t, typename coeff_unary_op_t>
+    derived_t& add_sub_impl_(const other_t& other, assign_modify_op_t&& assign_modify_op,
+                             coeff_unary_op_t&& coeff_unary_op);
+
+    //! Multiplication helper member function
+    template <typename other_t>
+    derived_t& mul_impl_(const other_t& other);
+
     //! Calculate the number of target qubits of a TermOperator.
     void calculate_num_targets_() noexcept;
 
@@ -276,7 +438,7 @@ class TermsOperatorBase {
     coeff_term_dict_t terms_;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(base_t, num_targets_, terms_);
-};
+};  // namespace mindquantum::ops
 }  // namespace mindquantum::ops
 
 #include "experimental/ops/gates/terms_operator_base.tpp"
