@@ -20,6 +20,14 @@
 #include <type_traits>
 
 namespace mindquantum::traits {
+template <typename T, typename U>
+struct is_same_decay : std::is_same<std::remove_cvref_t<T>, std::remove_cvref_t<U>> {};
+
+template <typename T, typename U>
+inline constexpr auto is_same_decay_v = is_same_decay<T, U>::value;
+
+// =============================================================================
+
 template <typename... Ts>
 struct is_tuple : std::false_type {};
 

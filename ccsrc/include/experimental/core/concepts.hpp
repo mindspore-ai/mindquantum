@@ -17,6 +17,8 @@
 
 #include <tuple>
 
+#include "config/concepts.hpp"
+
 #include "experimental/core/config.hpp"
 #include "experimental/core/traits.hpp"
 #include "experimental/core/types.hpp"
@@ -26,9 +28,6 @@ class CircuitBlock;
 }  // namespace mindquantum
 
 namespace mindquantum::concepts {
-template <typename T, typename U>
-concept same_decay_as = std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
-
 template <typename T, typename... Ts>
 concept tuple_contains = traits::tuple_contains<T, std::tuple<Ts...>>;
 
