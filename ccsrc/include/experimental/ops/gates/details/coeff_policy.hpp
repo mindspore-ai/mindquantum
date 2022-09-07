@@ -24,7 +24,7 @@ struct CoeffPolicy;
 
 template <typename coefficient_t>
 struct CoeffPolicyBase {
-    using coeff_policy_real_t = CoeffPolicy<traits::to_real_type_t<float_t>>;
+    using coeff_policy_real_t = CoeffPolicy<traits::to_real_type_t<coefficient_t>>;
 
     static constexpr auto EQ_TOLERANCE = 1.e-8;
 };

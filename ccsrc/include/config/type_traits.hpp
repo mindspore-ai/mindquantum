@@ -19,6 +19,8 @@
 #include <tuple>
 #include <type_traits>
 
+#include "config/config.hpp"
+
 namespace mindquantum::traits {
 template <typename T, typename U>
 struct is_same_decay : std::is_same<std::remove_cvref_t<T>, std::remove_cvref_t<U>> {};
