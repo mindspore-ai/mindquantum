@@ -38,7 +38,7 @@ void decompose_qubitop2onequbit(circuit_t& result, const instruction_t& inst) {
     result.apply_operator(ops::Ph(std::arg(std::begin(terms)->second)), qubits);
     qubits.pop_back();
 
-    for (auto& pauli : std::begin(terms)->first) {
+    for (const auto& pauli : std::begin(terms)->first) {
         // qubits.push_back(targets[pauli.first]);
         // if (pauli.second == 'X') {
         //     result.apply_operator(td::Op::X(), qubits);

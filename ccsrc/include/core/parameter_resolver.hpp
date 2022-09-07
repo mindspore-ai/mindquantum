@@ -298,7 +298,7 @@ struct ParameterResolver {
 
             for (ITER(p, other.data_)) {
                 auto& key = p->first;
-                auto& value = p->second;
+                const auto& value = p->second;
                 if (this->Contains(key)) {
                     this->data_[key] += value;
                 } else {
@@ -591,7 +591,7 @@ struct ParameterResolver {
 
             for (ITER(p, other.data_)) {
                 auto& key = p->first;
-                auto& value = p->second;
+                const auto& value = p->second;
                 if (this->Contains(key)) {
                     this->data_[key] = value;
                 } else {

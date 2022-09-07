@@ -888,7 +888,6 @@ function(__setup_install_target pkg_name)
       list(APPEND _find_pkg_str "# ${pkg_name} (system)")
     else()
       list(APPEND _find_pkg_str "# ${pkg_name} (local)")
-      # TODO(dnguyen): Replace value of PATHS arguments
       set(_args_patched)
       foreach(_value ${_find_pkg_args})
         if(_value MATCHES "^${_mq_local_prefix}/(.*)")

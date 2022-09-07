@@ -61,7 +61,7 @@ std::string to_string(ops::QubitOperator const& qb_op, std::vector<std::size_t> 
     std::string result = "";
     auto terms = qb_op.get_terms();
     bool first_term = true;
-    for (auto& term : terms) {
+    for (const auto& term : terms) {
         if (!first_term) {
             result += " +\n";
         }
@@ -72,7 +72,7 @@ std::string to_string(ops::QubitOperator const& qb_op, std::vector<std::size_t> 
         } else {
             result += fmt::format("({}{}j)", term.second.real(), term.second.imag());
         }
-        for (auto& pauli : term.first) {
+        for (const auto& pauli : term.first) {
             const auto& [qubit_id, term_value] = pauli;
             switch (term_value) {
                 case ops::TermValue::I: {
