@@ -77,9 +77,17 @@ endfunction()
 
 # ==============================================================================
 
-# Add a Catch2 test executable
+# ~~~
+# Add a (Catch2) C++ test executable.
+#
+# add_test_executable(<target>
+#                     [LIBS <libs> [... <libs>]]
+#                     [DEFINES <defines> [... <defines>]])
+#
+# The <libs> and <defines> add link libraries and compile definitions to the generated target.
+# ~~~
 function(add_test_executable target)
-  cmake_parse_arguments(${target} "" "" "LIBS;DEFINES" ${ARGN})
+  cmake_parse_arguments(PARSE_ARGV 1 "${target}" "" "" "LIBS;DEFINES")
 
   add_executable(${target} ${target}.cpp ${${target}_UNPARSED_ARGUMENTS})
   force_at_least_cxx17_workaround(${target})
