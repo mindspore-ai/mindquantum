@@ -20,9 +20,8 @@
 #include "experimental/core/traits.hpp"
 
 namespace mindquantum::traits {
-// TODO(dnguyen): Remove this if not needed anymore.
 template <typename T>
-inline constexpr auto is_termsop_number = std::is_floating_point_v<T> || is_std_complex_v<T>;
+inline constexpr auto is_termsop_number_v = std::is_floating_point_v<T> || is_std_complex_v<T>;
 
 }  // namespace mindquantum::traits
 

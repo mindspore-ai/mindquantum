@@ -96,7 +96,7 @@ namespace mindquantum::ops {
 
 namespace details {
 template <typename coeff_t>
-concept coefficient = traits::is_termsop_number<coeff_t>;
+concept coefficient = traits::is_termsop_number_v<coeff_t>;
 }  // namespace details
 
 #    define TYPENAME_COEFFICIENT details::coefficient
@@ -338,7 +338,7 @@ class TermsOperator : public traits::boost_operators_helper<derived_t, typename 
 };
 
 template <TYPENAME_COEFFICIENT number_t,
-          typename derived_t TYPENAME_COEFFICIENT_CONSTRAINTS_DEF_ADD(traits::is_terms_operator<derived_t>::value)>
+          typename derived_t TYPENAME_COEFFICIENT_CONSTRAINTS_DEF_ADD(traits::is_terms_operator_v<derived_t>::value)>
 MQ_NODISCARD auto operator-(const number_t& number, const derived_t& other);
 
 }  // namespace mindquantum::ops

@@ -36,7 +36,7 @@
 
 namespace mindquantum::traits {
 template <typename float_t>
-inline constexpr auto is_termsop_number<ParameterResolver<float_t>> = true;
+inline constexpr auto is_termsop_number_v<ParameterResolver<float_t>> = true;
 }  // namespace mindquantum::traits
 
 // -----------------------------------------------------------------------------

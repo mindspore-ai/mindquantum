@@ -49,6 +49,9 @@ struct is_terms_operator : std::false_type {};
 
 template <typename T>
 struct is_terms_operator<T, std::void_t<typename T::terms_operator_tag>> : std::true_type {};
+
+template <typename T>
+inline constexpr auto is_terms_operator_v = is_terms_operator<T>::value;
 }  // namespace mindquantum::traits
 
 // =============================================================================

@@ -46,7 +46,7 @@
 namespace mindquantum {
 namespace traits {
 template <>
-inline constexpr auto is_termsop_number<SymEngine::RCP<const SymEngine::Basic>> = true;
+inline constexpr auto is_termsop_number_v<SymEngine::RCP<const SymEngine::Basic>> = true;
 }  // namespace traits
 
 // -----------------------------------------------------------------------------
