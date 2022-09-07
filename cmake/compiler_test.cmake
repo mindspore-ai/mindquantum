@@ -318,6 +318,44 @@ endif()
 
 # --------------------------------------
 
+if(compiler_has_concepts)
+  check_cxx_code_compiles(
+    compiler_supports_external_dependent_concepts
+    MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+    cxx_std_20
+    [[
+#include <type_traits>
+
+template <typename T, typename U>
+concept number = requires(T, U) {
+    requires std::is_floating_point_v<T>;
+    requires std::is_floating_point_v<U>;
+};
+
+template <typename T>
+struct A {
+    using type = T;
+
+    template <number<type> other_t>
+    static int foo();
+};
+
+template <typename T>
+template <number<typename A<T>::type> other_t>
+int A<T>::foo() {
+    return 42;
+}
+
+int main() {
+    return A<double>::foo<float>();
+}
+]])
+else()
+  set(MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS FALSE)
+endif()
+
+# --------------------------------------
+
 check_cxx_code_compiles(
   compiler_has_std_launder
   MQ_HAS_STD_LAUNDER
