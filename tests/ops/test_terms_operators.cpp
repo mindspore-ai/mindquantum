@@ -12,19 +12,28 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+#include <algorithm>
 #include <complex>
+#include <functional>
+#include <optional>
 #include <sstream>
+#include <type_traits>
 
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/copy.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/range/combine.hpp>
 
+#include "config/detected.hpp"
+#include "config/type_traits.hpp"
+
 #include "ops/test_utils.hpp"
 
 #include "experimental/core/logging.hpp"
+#include "experimental/ops/gates/details/floating_point_coeff_policy.hpp"
 #include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 #include "experimental/ops/gates/terms_operator.hpp"
+#include "experimental/ops/gates/terms_operator_base.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -39,29 +48,6 @@ using mindquantum::ops::term_t;
 using mindquantum::ops::terms_t;
 
 namespace {
-#if MQ_HAS_CONCEPTS
-template <typename coeff_t>
-struct A {
-    using terms_operator_tag = void;
-    using coefficient_t = coeff_t;
-    using coefficient_real_t = typename mindquantum::traits::to_real_type_t<coefficient_t>;
-    static constexpr auto is_real_valued = std::is_same_v<coefficient_t, coefficient_real_t>;
-};
-template <typename coeff_t>
-struct B : A<coeff_t> {};
-
-static_assert(mindquantum::concepts::compat_terms_op<B<double>, A<double>>);
-static_assert(!mindquantum::concepts::compat_terms_op<B<std::complex<double>>, A<double>>);
-static_assert(mindquantum::concepts::compat_terms_op<B<double>, A<std::complex<double>>>);
-static_assert(mindquantum::concepts::compat_terms_op<B<std::complex<double>>, A<std::complex<double>>>);
-
-static_assert(mindquantum::concepts::compat_scalar<double, double>);
-static_assert(!mindquantum::concepts::compat_scalar<std::complex<double>, double>);
-static_assert(mindquantum::concepts::compat_scalar<double, std::complex<double>>);
-static_assert(mindquantum::concepts::compat_scalar<std::complex<double>, std::complex<double>>);
-
-#endif  // MQ_HAS_CONCEPTS
-
 template <typename coefficient_t>
 struct DummyOperatorTermPolicy {
     static auto to_string(const mindquantum::ops::TermValue& value) {
@@ -103,10 +89,11 @@ struct DummyOperatorTermPolicy {
     }
 };
 
-using mindquantum::ops::details::CmplxDoubleCoeffPolicy;
+template <typename coeff_t>
+struct DummyOperator : mindquantum::ops::TermsOperatorBase<DummyOperator, coeff_t, DummyOperatorTermPolicy> {
+    using base_t = mindquantum::ops::TermsOperatorBase<DummyOperator, coeff_t, DummyOperatorTermPolicy>;
+    using mindquantum::ops::TermsOperatorBase<DummyOperator, coeff_t, DummyOperatorTermPolicy>::TermsOperatorBase;
 
-struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator, DummyOperatorTermPolicy, CmplxDoubleCoeffPolicy> {
-    using TermsOperator<DummyOperator, DummyOperatorTermPolicy, CmplxDoubleCoeffPolicy>::TermsOperator;
     DummyOperator(const DummyOperator&) = default;
     DummyOperator(DummyOperator&&) = default;
     DummyOperator& operator=(const DummyOperator&) = default;
@@ -115,21 +102,206 @@ struct DummyOperator : mindquantum::ops::TermsOperator<DummyOperator, DummyOpera
 
     using term_t = mindquantum::ops::term_t;
     using py_term_t = mindquantum::ops::py_term_t;
-
-    using TermsOperator::operator==;
 };
 }  // namespace
 
-using coefficient_t = DummyOperator::coefficient_t;
-using coeff_term_dict_t = DummyOperator::coeff_term_dict_t;
+using DummyOperatorCD = DummyOperator<std::complex<double>>;
+using coefficient_t = DummyOperatorCD::coefficient_t;
+using coeff_term_dict_t = DummyOperatorCD::coeff_term_dict_t;
 
+// =============================================================================
+// =============================================================================
+// Static (ie. compile-time) testing
+
+namespace {
+#if MQ_HAS_CONCEPTS
+template <typename coeff_t>
+struct A {
+    using terms_operator_tag = void;
+    using coefficient_t = coeff_t;
+    using coefficient_real_t = typename mindquantum::traits::to_real_type_t<coefficient_t>;
+    static constexpr auto is_real_valued = std::is_same_v<coefficient_t, coefficient_real_t>;
+};
+template <typename coeff_t>
+struct B : A<coeff_t> {};
+
+static_assert(mindquantum::concepts::compat_terms_op<B<double>, A<double>>);
+static_assert(!mindquantum::concepts::compat_terms_op<B<std::complex<double>>, A<double>>);
+static_assert(mindquantum::concepts::compat_terms_op<B<double>, A<std::complex<double>>>);
+static_assert(mindquantum::concepts::compat_terms_op<B<std::complex<double>>, A<std::complex<double>>>);
+
+static_assert(mindquantum::concepts::compat_terms_op_scalar<double, A<double>>);
+static_assert(!mindquantum::concepts::compat_terms_op_scalar<std::complex<double>, A<double>>);
+static_assert(mindquantum::concepts::compat_terms_op_scalar<double, A<std::complex<double>>>);
+static_assert(mindquantum::concepts::compat_terms_op_scalar<std::complex<double>, A<std::complex<double>>>);
+#endif  // MQ_HAS_CONCEPTS
+
+// -----------------------------------------------------------------------------
+
+template <typename lhs_t, typename rhs_t, typename binop_t>
+using binop_valid = decltype(binop_t{}(std::declval<lhs_t>(), std::declval<rhs_t>()));
+
+template <typename lhs_t, typename rhs_t, typename binop_t>
+inline constexpr auto is_binop_defined_v = mindquantum::is_detected_v<binop_valid, lhs_t, rhs_t, binop_t>;
+
+// -------------------------------------
+
+template <typename lhs_t, typename rhs_t>
+using iadd_valid = decltype(std::declval<lhs_t&>() += std::declval<rhs_t>());
+template <typename lhs_t, typename rhs_t>
+using isub_valid = decltype(std::declval<lhs_t&>() -= std::declval<rhs_t>());
+template <typename lhs_t, typename rhs_t>
+using imul_valid = decltype(std::declval<lhs_t&>() *= std::declval<rhs_t>());
+template <typename lhs_t, typename rhs_t>
+using idiv_valid = decltype(std::declval<lhs_t&>() /= std::declval<rhs_t>());
+
+template <typename lhs_t, typename rhs_t, typename unop_t>
+using inplace_unop_valid = decltype(unop_t::apply(std::declval<lhs_t&>(), std::declval<rhs_t>()));
+
+template <typename lhs_t, typename rhs_t, template <typename olhs_t, typename orhs_t> typename unop_t>
+inline constexpr auto is_unop_defined_v = mindquantum::is_detected_v<unop_t, lhs_t, rhs_t>;
+
+// -------------------------------------
+
+template <typename lhs_t, typename rhs_t, typename binop_t>
+using binop_ret_t = mindquantum::detected_t<binop_valid, lhs_t, rhs_t, binop_t>;
+
+// -----------------------------------------------------------------------------
+
+// clang-format off
+#define MQ_IS_BINOP_DEFINED(op1_t, op2_t)                                                                              \
+    (is_binop_defined_v<op1_t, op2_t, std::plus<>>                                                                     \
+    && is_binop_defined_v<op1_t, op2_t, std::minus<>>                                                                  \
+    && is_binop_defined_v<op1_t, op2_t, std::multiplies<>>)
+#define MQ_IS_BINOP_RETURN_TYPE(op1_t, op2_t, ret_t)                                                                   \
+    (mindquantum::traits::is_same_decay_v<binop_ret_t<op1_t, op2_t, std::plus<>>, ret_t>                               \
+    && mindquantum::traits::is_same_decay_v<binop_ret_t<op1_t, op2_t, std::minus<>>, ret_t>                            \
+    && mindquantum::traits::is_same_decay_v<binop_ret_t<op1_t, op2_t, std::multiplies<>>, ret_t>)
+
+#define MQ_IS_INPLACE_UNOP_VALID(op1_t, op2_t)                                                                         \
+    (is_unop_defined_v<op1_t, op2_t, iadd_valid>                                                                       \
+    && is_unop_defined_v<op1_t, op2_t, isub_valid>                                                                     \
+    && is_unop_defined_v<op1_t, op2_t, imul_valid>)
+#define MQ_IS_INPLACE_UNOP_WITH_DIV_VALID(op1_t, op2_t)                                                                \
+    (MQ_IS_INPLACE_UNOP_VALID(op1_t, op2_t) && is_unop_defined_v<op1_t, op2_t, idiv_valid>)
+
+#define MQ_BINOP_COMMUTATIVE_VALID(op1_t, op2_t, ret_t)                                                                \
+    (MQ_IS_BINOP_DEFINED(op1_t, op2_t) && MQ_IS_BINOP_DEFINED(op2_t, op1_t) \
+     && MQ_IS_BINOP_RETURN_TYPE(op1_t, op2_t, ret_t) && MQ_IS_BINOP_RETURN_TYPE(op2_t, op1_t, ret_t))
+#define MQ_BINOP_SCALAR_RIGHT_VALID(term_op_t, scalar_t, ret_t)                                                        \
+    ((MQ_IS_BINOP_DEFINED(term_op_t, scalar_t) && (is_binop_defined_v<term_op_t, scalar_t, std::divides<>>))           \
+    && (MQ_IS_BINOP_RETURN_TYPE(term_op_t, scalar_t, ret_t)                                                            \
+        && mindquantum::traits::is_same_decay_v<binop_ret_t<term_op_t, scalar_t, std::divides<>>, ret_t>))
+// clang-format on
+#define MQ_BINOP_SCALAR_LEFT_VALID(term_op_t, scalar_t, ret_t)                                                         \
+    (MQ_IS_BINOP_DEFINED(scalar_t, term_op_t) && MQ_IS_BINOP_RETURN_TYPE(scalar_t, term_op_t, ret_t))
+
+template <typename coeff_t>
+using op_t = DummyOperator<coeff_t>;
+
+template <typename float_t>
+using cmplx_t = std::complex<float_t>;
+
+// -----------------------------------------------------------------------------
+
+// TermsOp - TermsOp inplace operators
+static_assert(MQ_IS_INPLACE_UNOP_VALID(op_t<float>, op_t<float>));
+static_assert(!MQ_IS_INPLACE_UNOP_VALID(op_t<float>, op_t<std::complex<float>>));
+static_assert(MQ_IS_INPLACE_UNOP_VALID(op_t<float>, op_t<double>));
+static_assert(!MQ_IS_INPLACE_UNOP_VALID(op_t<float>, op_t<std::complex<double>>));
+static_assert(MQ_IS_INPLACE_UNOP_VALID(op_t<double>, op_t<float>));
+static_assert(!MQ_IS_INPLACE_UNOP_VALID(op_t<double>, op_t<std::complex<float>>));
+static_assert(MQ_IS_INPLACE_UNOP_VALID(op_t<double>, op_t<double>));
+static_assert(!MQ_IS_INPLACE_UNOP_VALID(op_t<double>, op_t<std::complex<double>>));
+static_assert(MQ_IS_INPLACE_UNOP_VALID(op_t<std::complex<float>>, op_t<float>));
+static_assert(MQ_IS_INPLACE_UNOP_VALID(op_t<std::complex<float>>, op_t<std::complex<float>>));
+static_assert(MQ_IS_INPLACE_UNOP_VALID(op_t<std::complex<float>>, op_t<double>));
+static_assert(MQ_IS_INPLACE_UNOP_VALID(op_t<std::complex<float>>, op_t<std::complex<double>>));
+static_assert(MQ_IS_INPLACE_UNOP_VALID(op_t<std::complex<double>>, op_t<float>));
+static_assert(MQ_IS_INPLACE_UNOP_VALID(op_t<std::complex<double>>, op_t<std::complex<float>>));
+static_assert(MQ_IS_INPLACE_UNOP_VALID(op_t<std::complex<double>>, op_t<double>));
+static_assert(MQ_IS_INPLACE_UNOP_VALID(op_t<std::complex<double>>, op_t<std::complex<double>>));
+
+// TermsOp - Scalar inplace operators
+
+static_assert(MQ_IS_INPLACE_UNOP_WITH_DIV_VALID(op_t<float>, float));
+static_assert(!MQ_IS_INPLACE_UNOP_WITH_DIV_VALID(op_t<float>, std::complex<float>));
+static_assert(MQ_IS_INPLACE_UNOP_WITH_DIV_VALID(op_t<float>, double));
+static_assert(!MQ_IS_INPLACE_UNOP_WITH_DIV_VALID(op_t<float>, std::complex<double>));
+static_assert(MQ_IS_INPLACE_UNOP_WITH_DIV_VALID(op_t<double>, float));
+static_assert(!MQ_IS_INPLACE_UNOP_WITH_DIV_VALID(op_t<double>, std::complex<float>));
+static_assert(MQ_IS_INPLACE_UNOP_WITH_DIV_VALID(op_t<double>, double));
+static_assert(!MQ_IS_INPLACE_UNOP_WITH_DIV_VALID(op_t<double>, std::complex<double>));
+static_assert(MQ_IS_INPLACE_UNOP_WITH_DIV_VALID(op_t<std::complex<float>>, float));
+static_assert(MQ_IS_INPLACE_UNOP_WITH_DIV_VALID(op_t<std::complex<float>>, std::complex<float>));
+static_assert(MQ_IS_INPLACE_UNOP_WITH_DIV_VALID(op_t<std::complex<float>>, double));
+static_assert(MQ_IS_INPLACE_UNOP_WITH_DIV_VALID(op_t<std::complex<float>>, std::complex<double>));
+static_assert(MQ_IS_INPLACE_UNOP_WITH_DIV_VALID(op_t<std::complex<double>>, float));
+static_assert(MQ_IS_INPLACE_UNOP_WITH_DIV_VALID(op_t<std::complex<double>>, std::complex<float>));
+static_assert(MQ_IS_INPLACE_UNOP_WITH_DIV_VALID(op_t<std::complex<double>>, double));
+static_assert(MQ_IS_INPLACE_UNOP_WITH_DIV_VALID(op_t<std::complex<double>>, std::complex<double>));
+
+// -----------------------------------------------------------------------------
+
+// TermsOp - TermsOp binary operators
+static_assert(MQ_BINOP_COMMUTATIVE_VALID(op_t<float>, op_t<float>, op_t<float>));
+static_assert(MQ_BINOP_COMMUTATIVE_VALID(op_t<float>, op_t<double>, op_t<double>));
+static_assert(MQ_BINOP_COMMUTATIVE_VALID(op_t<float>, op_t<cmplx_t<float>>, op_t<cmplx_t<float>>));
+static_assert(MQ_BINOP_COMMUTATIVE_VALID(op_t<float>, op_t<cmplx_t<double>>, op_t<cmplx_t<double>>));
+static_assert(MQ_BINOP_COMMUTATIVE_VALID(op_t<double>, op_t<double>, op_t<double>));
+static_assert(MQ_BINOP_COMMUTATIVE_VALID(op_t<double>, op_t<cmplx_t<double>>, op_t<cmplx_t<double>>));
+static_assert(MQ_BINOP_COMMUTATIVE_VALID(op_t<cmplx_t<float>>, op_t<cmplx_t<float>>, op_t<cmplx_t<float>>));
+static_assert(MQ_BINOP_COMMUTATIVE_VALID(op_t<cmplx_t<float>>, op_t<cmplx_t<double>>, op_t<cmplx_t<double>>));
+static_assert(MQ_BINOP_COMMUTATIVE_VALID(op_t<cmplx_t<double>>, op_t<cmplx_t<double>>, op_t<cmplx_t<double>>));
+
+// Scalar - TermsOp binary operators
+// TODO(dnguyen): Fix some narrowing conversions like op_t<double> + cmplx_t<float> -> op_t<cmplx_t<float>>
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<float>, float, op_t<float>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<float>, double, op_t<double>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<float>, cmplx_t<float>, op_t<cmplx_t<float>>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<float>, cmplx_t<double>, op_t<cmplx_t<double>>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<double>, float, op_t<double>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<double>, double, op_t<double>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<double>, cmplx_t<float>, op_t<cmplx_t<float>>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<double>, cmplx_t<double>, op_t<cmplx_t<double>>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<cmplx_t<float>>, float, op_t<cmplx_t<float>>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<cmplx_t<float>>, double, op_t<cmplx_t<float>>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<cmplx_t<float>>, cmplx_t<float>, op_t<cmplx_t<float>>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<cmplx_t<float>>, cmplx_t<double>, op_t<cmplx_t<double>>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<cmplx_t<float>>, cmplx_t<double>, op_t<cmplx_t<double>>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<cmplx_t<double>>, float, op_t<cmplx_t<double>>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<cmplx_t<double>>, double, op_t<cmplx_t<double>>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<cmplx_t<double>>, cmplx_t<float>, op_t<cmplx_t<double>>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<cmplx_t<double>>, cmplx_t<double>, op_t<cmplx_t<double>>));
+
+// TermsOp - Scalar binary operators
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<float>, float, op_t<float>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<float>, double, op_t<double>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<float>, cmplx_t<float>, op_t<cmplx_t<float>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<float>, cmplx_t<double>, op_t<cmplx_t<double>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<double>, float, op_t<double>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<double>, double, op_t<double>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<double>, cmplx_t<float>, op_t<cmplx_t<float>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<double>, cmplx_t<double>, op_t<cmplx_t<double>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<float>>, float, op_t<cmplx_t<float>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<float>>, double, op_t<cmplx_t<float>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<float>>, cmplx_t<float>, op_t<cmplx_t<float>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<float>>, cmplx_t<double>, op_t<cmplx_t<double>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<float>>, cmplx_t<double>, op_t<cmplx_t<double>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<double>>, float, op_t<cmplx_t<double>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<double>>, double, op_t<cmplx_t<double>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<double>>, cmplx_t<float>, op_t<cmplx_t<double>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<double>>, cmplx_t<double>, op_t<cmplx_t<double>>));
+}  // namespace
+
+// =============================================================================
 // =============================================================================
 
 TEST_CASE("TermsOperator constructor", "[terms_op][ops]") {
     coeff_term_dict_t ref_terms;
 
     SECTION("Default constructor") {
-        DummyOperator op;
+        DummyOperatorCD op;
         CHECK(std::empty(op));
         CHECK(std::size(op) == 0);
         CHECK(std::empty(op.get_terms()));
@@ -141,7 +313,7 @@ TEST_CASE("TermsOperator constructor", "[terms_op][ops]") {
         CHECK(std::empty(op.singlet()));
     }
     SECTION("Identity") {
-        DummyOperator identity{terms_t{}};
+        DummyOperatorCD identity{terms_t{}};
         CHECK(!std::empty(identity));
         CHECK(std::size(identity) == 1);
         CHECK(!std::empty(identity.get_terms()));
@@ -152,7 +324,7 @@ TEST_CASE("TermsOperator constructor", "[terms_op][ops]") {
         CHECK(identity.is_singlet());
     }
     SECTION("Identity (static member function)") {
-        auto identity = DummyOperator::identity();
+        auto identity = DummyOperatorCD::identity();
         CHECK(!std::empty(identity));
         CHECK(std::size(identity) == 1);
         CHECK(!std::empty(identity.get_terms()));
@@ -166,7 +338,7 @@ TEST_CASE("TermsOperator constructor", "[terms_op][ops]") {
         const auto ref_term = term_t{0, TermValue::X};
         ref_terms.emplace(terms_t{ref_term}, 1);
 
-        DummyOperator op{ref_term};
+        DummyOperatorCD op{ref_term};
         CHECK(!std::empty(op));
         CHECK(std::size(op) == 1);
         CHECK(!std::empty(op.get_terms()));
@@ -183,7 +355,7 @@ TEST_CASE("TermsOperator constructor", "[terms_op][ops]") {
         const auto coeff = 0.5;
         ref_terms.emplace(ref_term, coeff);
 
-        DummyOperator op{ref_term, coeff};
+        DummyOperatorCD op{ref_term, coeff};
         CHECK(!std::empty(op));
         CHECK(std::size(op) == 1);
         CHECK(!std::empty(op.get_terms()));
@@ -212,7 +384,7 @@ TEST_CASE("TermsOperator constructor", "[terms_op][ops]") {
         ref_terms.emplace(terms_t{{0, TermValue::Y}, {3, TermValue::Z}}, 0.75i);
         ref_terms.emplace(terms_t{{1, TermValue::X}}, 2.);
 
-        DummyOperator op{ref_terms};
+        DummyOperatorCD op{ref_terms};
         CHECK(!std::empty(op));
         CHECK(std::size(op) == 2);
         CHECK(!std::empty(op.get_terms()));
@@ -230,7 +402,7 @@ TEST_CASE("TermsOperator constructor", "[terms_op][ops]") {
 
 TEST_CASE("TermsOperator identity", "[terms_op][ops]") {
     SECTION("Empty term operator") {
-        DummyOperator op;
+        DummyOperatorCD op;
         CHECK(op.is_identity());
 
         CHECK(op.constant() == 0.);
@@ -244,20 +416,20 @@ TEST_CASE("TermsOperator identity", "[terms_op][ops]") {
     }
     SECTION("Empty term operator") {
         auto const coeff = 1. + 2.i;
-        DummyOperator op{terms_t{}, coeff};
+        DummyOperatorCD op{terms_t{}, coeff};
         CHECK(op.is_identity());
         CHECK(op.constant() == coeff);
         CHECK(op.is_singlet());
     }
     SECTION("Single term operator") {
-        DummyOperator op{term_t{0, TermValue::X}, 1.e-5};
+        DummyOperatorCD op{term_t{0, TermValue::X}, 1.e-5};
         CHECK(!op.is_identity());
         CHECK(op.is_identity(1.e-5));
         CHECK(op.is_singlet());
     }
     SECTION("Single term multiple local_ops operator") {
         const auto terms = terms_t{{0, TermValue::X}, {2, TermValue::Z}};
-        DummyOperator op{terms, 1.e-4};
+        DummyOperatorCD op{terms, 1.e-4};
         CHECK(!op.is_identity());
         CHECK(op.is_identity(1.e-4));
         CHECK(op.is_singlet());
@@ -269,7 +441,7 @@ TEST_CASE("TermsOperator identity", "[terms_op][ops]") {
         auto terms = coeff_term_dict_t{};
         terms.emplace(terms_t{{0, TermValue::Y}}, 1.e-5);
         terms.emplace(terms_t{{2, TermValue::Z}, {4, TermValue::X}}, 1.e-6);
-        DummyOperator op{terms};
+        DummyOperatorCD op{terms};
         CHECK(!op.is_identity());
         CHECK(!op.is_identity(1.e-6));
         CHECK(op.is_identity(1.e-5));
@@ -277,9 +449,9 @@ TEST_CASE("TermsOperator identity", "[terms_op][ops]") {
     SECTION("Single term multiple local_ops including I operator") {
         auto terms = coeff_term_dict_t{};
         terms.emplace(terms_t{{0, TermValue::I}, {1, TermValue::I}}, 2i);
-        terms.emplace(terms_t{{3, TermValue::X}}, DummyOperator::EQ_TOLERANCE / 10.);
+        terms.emplace(terms_t{{3, TermValue::X}}, DummyOperatorCD::EQ_TOLERANCE / 10.);
         terms.emplace(terms_t{{1, TermValue::I}}, 1);
-        DummyOperator op{terms};
+        DummyOperatorCD op{terms};
         CHECK(op.is_identity());
         CHECK(!op.is_singlet());
     }
@@ -292,7 +464,7 @@ TEST_CASE("TermsOperator identity", "[terms_op][ops]") {
 //     auto terms = coeff_term_dict_t{};
 //     terms.emplace(terms_t{{0, TermValue::Y}}, 1. + 2.i);
 //     terms.emplace(terms_t{{2, TermValue::Z}, {4, TermValue::X}}, 3. + 4.i);
-//     DummyOperator op{terms};
+//     DummyOperatorD op{terms};
 
 //     auto real = op.real();
 //     REQUIRE(std::size(real) == std::size(op));
@@ -320,7 +492,7 @@ TEST_CASE("TermsOperator compression", "[terms_op][ops]") {
     auto terms = coeff_term_dict_t{};
     terms.emplace(terms1, coeff1);
     terms.emplace(terms2, coeff2);
-    DummyOperator op{terms};
+    DummyOperatorCD op{terms};
 
     REQUIRE(std::size(op) == 2);
     op.compress(1.e-6);
@@ -340,19 +512,19 @@ TEST_CASE("TermsOperator to_string", "[terms_op][ops]") {
     auto ref_str = ""s;
 
     SECTION("0") {
-        str = DummyOperator(terms_t{{0, TermValue::a}}).to_string();
+        str = DummyOperatorCD(terms_t{{0, TermValue::a}}).to_string();
         ref_str = "1 [0-v]";
     }
     SECTION("1^") {
-        str = DummyOperator(terms_t{{1, TermValue::adg}}).to_string();
+        str = DummyOperatorCD(terms_t{{1, TermValue::adg}}).to_string();
         ref_str = "1 [1-^]";
     }
     SECTION("Identity") {
-        str = DummyOperator::identity().to_string();
+        str = DummyOperatorCD::identity().to_string();
         ref_str = "1 []";
     }
     SECTION("1v 2^ X3 Y4 Z5 + Identity") {
-        str = DummyOperator(
+        str = DummyOperatorCD(
                   terms_t{
                       {1, TermValue::a}, {2, TermValue::adg}, {3, TermValue::X}, {4, TermValue::Y}, {5, TermValue::Z}},
                   1.2i)
@@ -364,22 +536,22 @@ TEST_CASE("TermsOperator to_string", "[terms_op][ops]") {
     CHECK(ref_str == str);
 }
 
-TEST_CASE("DummyOperator dumps", "[terms_op][ops]") {
-    DummyOperator op;
+TEST_CASE("DummyOperatorD dumps", "[terms_op][ops]") {
+    DummyOperatorCD op;
     auto ref_json = ""s;
     SECTION("Empty") {
-        op = DummyOperator();
+        op = DummyOperatorCD();
         ref_json = R"({
     "num_targets_": 0,
     "terms_": []
 })"s;
     }
     SECTION("1v 2^ X3 Y4 Z5 + Identity") {
-        op = DummyOperator(
+        op = DummyOperatorCD(
                  terms_t{
                      {1, TermValue::a}, {2, TermValue::adg}, {3, TermValue::X}, {4, TermValue::Y}, {5, TermValue::Z}},
                  1.2i)
-             + DummyOperator::identity();
+             + DummyOperatorCD::identity();
         ref_json = R"s({
     "num_targets_": 6,
     "terms_": [
@@ -538,37 +710,37 @@ TEST_CASE("DummyOperator dumps", "[terms_op][ops]") {
 // }
 
 TEST_CASE("TermsOperator JSON save - load", "[terms_op][ops]") {
-    DummyOperator op;
+    DummyOperatorCD op;
     SECTION("Identity") {
-        op = DummyOperator::identity() * (1.2 + 5.4i);
+        op = DummyOperatorCD::identity() * (1.2 + 5.4i);
     }
     SECTION("1v 2^ X3 Y4 Z5 + Identity") {
-        op = DummyOperator(
+        op = DummyOperatorCD(
                  terms_t{
                      {1, TermValue::a}, {2, TermValue::adg}, {3, TermValue::X}, {4, TermValue::Y}, {5, TermValue::Z}},
                  1.2i)
-             + DummyOperator::identity();
+             + DummyOperatorCD::identity();
     }
 
-    CHECK(op == DummyOperator::loads(op.dumps()));
+    CHECK(op == DummyOperatorCD::loads(op.dumps()));
 }
 
 // =============================================================================
 
 TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
     SECTION("Addition (TermsOperator)") {
-        DummyOperator op;
+        DummyOperatorCD op;
         coeff_term_dict_t ref_terms;
 
         CHECK(std::empty(op));
 
-        op += DummyOperator{};
+        op += DummyOperatorCD{};
         CHECK(std::empty(op));
 
         // op = {'X3': 2.3}
         auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
         REQUIRE(inserted1);
-        op += DummyOperator(it1->first, it1->second);
+        op += DummyOperatorCD(it1->first, it1->second);
         REQUIRE(!std::empty(op));
         CHECK(std::size(op) == 1);
         CHECK(op.get_terms() == ref_terms);
@@ -576,7 +748,7 @@ TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
         // op = {'X3': 2.3,  'X1': 1.}
         auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::X}}, 1.);
         REQUIRE(inserted2);
-        op += DummyOperator(it2->first, it2->second);
+        op += DummyOperatorCD(it2->first, it2->second);
         REQUIRE(!std::empty(op));
         CHECK(std::size(op) == 2);
         CHECK(op.get_terms() == ref_terms);
@@ -585,7 +757,7 @@ TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
         const auto term3 = it1->first.front();
         const auto coeff3 = 1.85i;
         it1.value() += coeff3;
-        op += DummyOperator(term3, coeff3);
+        op += DummyOperatorCD(term3, coeff3);
         REQUIRE(!std::empty(op));
         CHECK(std::size(op) == 2);
         CHECK(op.get_terms() == ref_terms);
@@ -593,7 +765,7 @@ TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
         // op = {'X3': 2.3 + 1.85i,  'X1': 1.,  'Y1': 10.}
         auto [it3, inserted3] = ref_terms.emplace(terms_t{{1, TermValue::Y}}, 10.);
         REQUIRE(inserted3);
-        op += DummyOperator(it3->first, it3->second);
+        op += DummyOperatorCD(it3->first, it3->second);
         REQUIRE(!std::empty(op));
         CHECK(std::size(op) == 3);
         CHECK(op.get_terms() == ref_terms);
@@ -602,7 +774,7 @@ TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
         const auto term4 = it2->first.front();
         const auto coeff4 = -it2->second;
         ref_terms.erase(it2);
-        op += DummyOperator(term4, coeff4);
+        op += DummyOperatorCD(term4, coeff4);
         REQUIRE(!std::empty(op));
         CHECK(std::size(op) == 2);
         CHECK(op.get_terms() == ref_terms);
@@ -612,7 +784,7 @@ TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
         coeff_term_dict_t ref_terms;
 
         auto [it, inserted] = ref_terms.emplace(terms_t{}, 1.);
-        DummyOperator op = DummyOperator::identity();
+        DummyOperatorCD op = DummyOperatorCD::identity();
 
         CHECK(!std::empty(op));
         REQUIRE(op.is_identity());
@@ -649,18 +821,18 @@ TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
 TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
     SECTION("Subtraction (TermsOperator)") {
         // NB: careful with the signs of coefficients!
-        DummyOperator op;
+        DummyOperatorCD op;
         coeff_term_dict_t ref_terms;
 
         CHECK(std::empty(op));
 
-        op -= DummyOperator{};
+        op -= DummyOperatorCD{};
         CHECK(std::empty(op));
 
         // op = {'X3': 2.3}
         auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
         REQUIRE(inserted1);
-        op -= DummyOperator(it1->first, -it1->second);
+        op -= DummyOperatorCD(it1->first, -it1->second);
         REQUIRE(!std::empty(op));
         CHECK(std::size(op) == 1);
         CHECK(op.get_terms() == ref_terms);
@@ -668,7 +840,7 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
         // op = {'X3': 2.3,  'X1': 1.}
         auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::X}}, 1.);
         REQUIRE(inserted2);
-        op -= DummyOperator(it2->first, -it2->second);
+        op -= DummyOperatorCD(it2->first, -it2->second);
         REQUIRE(!std::empty(op));
         CHECK(std::size(op) == 2);
         CHECK(op.get_terms() == ref_terms);
@@ -677,7 +849,7 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
         const auto term3 = it1->first.front();
         const auto coeff3 = 1.85i;
         it1.value() -= coeff3;
-        op -= DummyOperator(term3, coeff3);
+        op -= DummyOperatorCD(term3, coeff3);
         REQUIRE(!std::empty(op));
         CHECK(std::size(op) == 2);
         CHECK(op.get_terms() == ref_terms);
@@ -685,7 +857,7 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
         // op = {'X3': 2.3 - 1.85i,  'X1': 1.,  'Y1': 10.}
         auto [it3, inserted3] = ref_terms.emplace(terms_t{{1, TermValue::Y}}, 10.);
         REQUIRE(inserted3);
-        op -= DummyOperator(it3->first, -it3->second);
+        op -= DummyOperatorCD(it3->first, -it3->second);
         REQUIRE(!std::empty(op));
         CHECK(std::size(op) == 3);
         CHECK(op.get_terms() == ref_terms);
@@ -694,7 +866,7 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
         const auto term4 = it2->first.front();
         const auto coeff4 = it2->second;
         ref_terms.erase(it2);
-        op -= DummyOperator(term4, coeff4);
+        op -= DummyOperatorCD(term4, coeff4);
         REQUIRE(!std::empty(op));
         CHECK(std::size(op) == 2);
         CHECK(op.get_terms() == ref_terms);
@@ -704,7 +876,7 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
         coeff_term_dict_t ref_terms;
 
         auto [it, inserted] = ref_terms.emplace(terms_t{}, 1.);
-        DummyOperator op = DummyOperator::identity();
+        DummyOperatorCD op = DummyOperatorCD::identity();
 
         CHECK(!std::empty(op));
         REQUIRE(op.is_identity());
@@ -775,13 +947,13 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
 
 TEST_CASE("TermsOperator arithmetic operators (*)", "[terms_op][ops]") {
     SECTION("Multiplication (TermsOperator)") {
-        DummyOperator op;
+        DummyOperatorCD op;
         coeff_term_dict_t ref_terms;
 
         // op = {'X3': 2.3}
         auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
         REQUIRE(inserted1);
-        op += DummyOperator(it1->first, it1->second);
+        op += DummyOperatorCD(it1->first, it1->second);
 
         // op = {'X3 Y1': 4.255}
         const auto term = term_t{1, TermValue::Y};
@@ -790,7 +962,7 @@ TEST_CASE("TermsOperator arithmetic operators (*)", "[terms_op][ops]") {
         REQUIRE(inserted2);
         ref_terms.erase(it1);
 
-        op *= DummyOperator({term}, coeff);
+        op *= DummyOperatorCD({term}, coeff);
         REQUIRE(!std::empty(op));
         CHECK(std::size(op) == 1);
         CHECK(op.get_terms() == ref_terms);
@@ -806,7 +978,7 @@ TEST_CASE("TermsOperator arithmetic operators (*)", "[terms_op][ops]") {
             {terms_t{{3, TermValue::Z}}, 2.3i},
         };
 
-        DummyOperator op{ref_terms};
+        DummyOperatorCD op{ref_terms};
 
         CHECK(!std::empty(op));
         CHECK(op.get_terms() == ref_terms);
@@ -854,7 +1026,7 @@ TEST_CASE("TermsOperator arithmetic operators (/)", "[terms_op][ops]") {
             {terms_t{{3, TermValue::Z}}, 2.3i},
         };
 
-        DummyOperator op{ref_terms};
+        DummyOperatorCD op{ref_terms};
 
         CHECK(!std::empty(op));
         CHECK(op.get_terms() == ref_terms);
@@ -922,8 +1094,8 @@ TEST_CASE("TermsOperator unary operators", "[terms_op][ops]") {
         REQUIRE(inserted2);
 
         // op = {'X3': 2.3,  'X1': 1.}
-        const DummyOperator op(ref_terms);
-        const DummyOperator ref = op;
+        const DummyOperatorCD op(ref_terms);
+        const DummyOperatorCD ref = op;
         REQUIRE(!std::empty(op));
         CHECK(std::size(op) == 2);
         CHECK(op.get_terms() == ref_terms);
@@ -954,7 +1126,7 @@ TEST_CASE("TermsOperator mathmetic operators (pow)", "[terms_op][ops]") {
         REQUIRE(inserted2);
 
         // op = {'X3': 2.3,  'X1': 1.}
-        DummyOperator op(ref_terms);
+        DummyOperatorCD op(ref_terms);
         REQUIRE(!std::empty(op));
         CHECK(std::size(op) == 2);
         CHECK(op.get_terms() == ref_terms);
@@ -969,8 +1141,8 @@ TEST_CASE("TermsOperator mathmetic operators (pow)", "[terms_op][ops]") {
 }
 
 TEST_CASE("TermsOperator split", "[terms_op][ops]") {
-    const auto lhs = DummyOperator(terms_t{{3, TermValue::X}}, 1.2i);
-    const auto rhs = DummyOperator(terms_t{{1, TermValue::Z}}, 1.2);
+    const auto lhs = DummyOperatorCD(terms_t{{3, TermValue::X}}, 1.2i);
+    const auto rhs = DummyOperatorCD(terms_t{{1, TermValue::Z}}, 1.2);
     const auto qubit_op = lhs + rhs;
 
     const auto get = [](const auto& op) { return op.first * op.second; };
@@ -995,20 +1167,20 @@ TEST_CASE("TermsOperator comparison operators", "[terms_op][ops]") {
     REQUIRE(inserted2);
 
     // op = {'X3': 2.3,  'X1': 1.}
-    const DummyOperator op(ref_terms);
-    DummyOperator other(ref_terms);
+    const DummyOperatorCD op(ref_terms);
+    DummyOperatorCD other(ref_terms);
 
     CHECK(op == op);
     CHECK(op == other);
 
     SECTION("Add identity term") {
-        other += DummyOperator::identity();
+        other += DummyOperatorCD::identity();
     }
     SECTION("Add other term") {
-        other += DummyOperator{terms_t{{2, TermValue::Z}}, 2.34i};
+        other += DummyOperatorCD{terms_t{{2, TermValue::Z}}, 2.34i};
     }
     SECTION("No common terms") {
-        other = DummyOperator{terms_t{{2, TermValue::Z}}, 2.34i};
+        other = DummyOperatorCD{terms_t{{2, TermValue::Z}}, 2.34i};
     }
     CHECK(!(op == other));
     CHECK(op != other);

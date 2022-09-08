@@ -116,6 +116,19 @@ TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase
     calculate_num_targets_();
 }
 
+// -----------------------------------------------------------------------------
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+template <typename other_coeff_t>
+TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(const derived_t_<other_coeff_t>& other)
+    : num_targets_(other.num_targets_) {
+    using conv_helper_t = ::details::conversion_helper<coefficient_t>;
+    std::transform(begin(other.terms_), end(other.terms_), std::inserter(terms_, end(terms_)), [](const auto& term) {
+        return typename coeff_term_dict_t::value_type{term.first, conv_helper_t::apply(term.second)};
+    });
+}
+
 // =============================================================================
 
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
@@ -435,32 +448,13 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::loads(std::s
 }
 
 // =============================================================================
+// Addition
 
-template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_>
-auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator+=(const derived_t& other) -> derived_t& {
-    return add_sub_impl_(
-        other, coeff_policy_t::iadd, [](const coefficient_t& coefficient) constexpr { return coefficient; });
-}
-
-// -----------------------------------------------------------------------------
-
-template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_>
-auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator+=(const coefficient_t& scalar)
-    -> derived_t& {
-    *this += (derived_t::identity() *= scalar);
-    return *static_cast<derived_t*>(this);
-}
-
-// -----------------------------------------------------------------------------
-
-#if MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+#if MQ_HAS_CONCEPTS
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 template <mindquantum::concepts::compat_terms_op<derived_t_<coefficient_t_>> op_t>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator+=(const op_t& other) -> derived_t& {
-    static_assert(!traits::is_same_decay_v<derived_t, op_t>);
     return add_sub_impl_(
         other, coeff_policy_t::iadd, [](const coefficient_t& coefficient) constexpr { return coefficient; });
 }
@@ -469,8 +463,8 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 template <mindquantum::concepts::compat_terms_op_scalar<derived_t_<coefficient_t_>> scalar_t>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator+=(const scalar_t& scalar) -> derived_t& {
-    static_assert(!traits::is_same_decay_v<coefficient_t, scalar_t>);
-    return *this += static_cast<coefficient_t>(scalar);
+    *this += (derived_t::identity() *= scalar);
+    return *static_cast<derived_t*>(this);
 }
 #else
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
@@ -482,36 +476,20 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator+=(c
         return add_sub_impl_(
             op_or_scalar, coeff_policy_t::iadd, [](const coefficient_t& coefficient) constexpr { return coefficient; });
     } else {
-        return *this += static_cast<coefficient_t>(op_or_scalar);
+        *this += (derived_t::identity() *= op_or_scalar);
+        return *static_cast<derived_t*>(this);
     }
 }
-#endif  // MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+#endif  // MQ_HAS_CONCEPTS
 
-// =============================================================================
+// =============================================================================¨
+// Subtraction
 
-template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_>
-auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator-=(const derived_t& other) -> derived_t& {
-    return add_sub_impl_(other, coeff_policy_t::isub, coeff_policy_t::uminus);
-}
-
-// -----------------------------------------------------------------------------
-template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_>
-auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator-=(const coefficient_t& scalar)
-    -> derived_t& {
-    *this -= (derived_t::identity() *= scalar);
-    return *static_cast<derived_t*>(this);
-}
-
-// -----------------------------------------------------------------------------
-
-#if MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+#if MQ_HAS_CONCEPTS
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 template <mindquantum::concepts::compat_terms_op<derived_t_<coefficient_t_>> op_t>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator-=(const op_t& other) -> derived_t& {
-    static_assert(!traits::is_same_decay_v<derived_t, op_t>);
     return add_sub_impl_(other, coeff_policy_t::isub, coeff_policy_t::uminus);
 }
 
@@ -521,8 +499,8 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 template <mindquantum::concepts::compat_terms_op_scalar<derived_t_<coefficient_t_>> scalar_t>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator-=(const scalar_t& scalar) -> derived_t& {
-    static_assert(!traits::is_same_decay_v<coefficient_t, scalar_t>);
-    return *this -= static_cast<coefficient_t>(scalar);
+    *this -= (derived_t::identity() *= scalar);
+    return *static_cast<derived_t*>(this);
 }
 #else
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
@@ -533,53 +511,28 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator-=(c
     if constexpr (traits::is_terms_operator_v<type_t>) {
         return add_sub_impl_(op_or_scalar, coeff_policy_t::isub, coeff_policy_t::uminus);
     } else {
-        return *this -= static_cast<coefficient_t>(op_or_scalar);
+        *this -= (derived_t::identity() *= op_or_scalar);
+        return *static_cast<derived_t*>(this);
     }
 }
-#endif  // MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+#endif  // MQ_HAS_CONCEPTS
 
 // =============================================================================
 
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator-() const -> derived_t {
-    return (*static_cast<const derived_t*>(this) * -1.);
+    return (*static_cast<const derived_t*>(this) * static_cast<coefficient_t>(-1.));
 }
 
 // =============================================================================
+// Multiplication
 
-template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_>
-auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator*=(const derived_t& other) -> derived_t& {
-    return mul_impl_(other);
-}
-
-// -----------------------------------------------------------------------------
-
-template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
-          template <typename coeff_t> class term_policy_t_>
-auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator*=(const coefficient_t& scalar)
-    -> derived_t& {
-    // NB: cannot use the usual range-for loop since that uses operator*() implicitly and using tsl::ordered_map the
-    //     values accessed in this way are constants
-    for (auto it(begin(terms_)), it_end(end(terms_)); it != it_end; ++it) {
-        coeff_policy_t::imul(it.value(), scalar);
-    }
-    // NB: This would work for normal std::map/std::unordered_map
-    // for (auto& [term, coeff] : terms_) {
-    //     coeff_policy_t::imul(coeff.value(), number);
-    // }
-    return *static_cast<derived_t*>(this);
-}
-
-// -----------------------------------------------------------------------------
-
-#if MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+#if MQ_HAS_CONCEPTS
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 template <mindquantum::concepts::compat_terms_op<derived_t_<coefficient_t_>> op_t>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator*=(const op_t& other) -> derived_t& {
-    static_assert(!traits::is_same_decay_v<derived_t, op_t>);
     return mul_impl_(other);
 }
 
@@ -587,8 +540,17 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 template <mindquantum::concepts::compat_terms_op_scalar<derived_t_<coefficient_t_>> scalar_t>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator*=(const scalar_t& scalar) -> derived_t& {
-    static_assert(!traits::is_same_decay_v<coefficient_t, scalar_t>);
-    return *this *= static_cast<coefficient_t>(scalar);
+    using conv_helper_t = ::details::conversion_helper<coefficient_t>;
+    // NB: cannot use the usual range-for loop since that uses operator*() implicitly and using tsl::ordered_map the
+    //     values accessed in this way are constants
+    for (auto it(begin(terms_)), it_end(end(terms_)); it != it_end; ++it) {
+        coeff_policy_t::imul(it.value(), conv_helper_t::apply(scalar));
+    }
+    // NB: This would work for normal std::map/std::unordered_map
+    // for (auto& [term, coeff] : terms_) {
+    //     coeff_policy_t::imul(coeff.value(), number);
+    // }
+    return *static_cast<derived_t*>(this);
 }
 #else
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
@@ -599,12 +561,38 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator*=(c
     if constexpr (traits::is_terms_operator_v<type_t>) {
         return mul_impl_(op_or_scalar);
     } else {
-        return *this *= static_cast<coefficient_t>(op_or_scalar);
+        using conv_helper_t = ::details::conversion_helper<coefficient_t>;
+        // NB: cannot use the usual range-for loop since that uses operator*() implicitly and using tsl::ordered_map the
+        //     values accessed in this way are constants
+        for (auto it(begin(terms_)), it_end(end(terms_)); it != it_end; ++it) {
+            coeff_policy_t::imul(it.value(), conv_helper_t::apply(op_or_scalar));
+        }
+        // NB: This would work for normal std::map/std::unordered_map
+        // for (auto& [term, coeff] : terms_) {
+        //     coeff_policy_t::imul(coeff.value(), op_or_scalar);
+        // }
+        return *static_cast<derived_t*>(this);
     }
 }
-#endif  // MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+#endif  // MQ_HAS_CONCEPTS
 
 // =============================================================================
+// Division
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+#if MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+template <mindquantum::concepts::compat_terms_op_scalar<derived_t_<coefficient_t_>> scalar_t>
+#else
+template <typename scalar_t, typename>
+#endif  // MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator/=(const scalar_t& scalar) -> derived_t& {
+    using conv_helper_t = ::details::conversion_helper<coefficient_t>;
+    return *this *= static_cast<coefficient_t>(1.) / conv_helper_t::apply(scalar);
+}
+
+// =============================================================================
+// Other mathematical member functions
 
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
@@ -620,8 +608,15 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::pow(uint32_t
 
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
-bool TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator==(const derived_t& other) const {
+#if MQ_HAS_CONCEPTS
+template <mindquantum::concepts::compat_terms_op<derived_t_<coefficient_t_>> op_t>
+#else
+template <typename op_t, typename>
+#endif  // MQ_HAS_CONCEPTS
+bool TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::is_equal(const op_t& other) const {
     using policy_t = coeff_policy_t;
+    using conv_helper_t = ::details::conversion_helper<coefficient_t>;
+
     std::vector<typename coeff_term_dict_t::value_type> intersection;
     std::vector<typename coeff_term_dict_t::value_type> symmetric_differences;
 
@@ -631,10 +626,10 @@ bool TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator==(c
 
     for (const auto& term : intersection) {
         const auto& left = terms_.at(term.first);
-        const auto& right = other.terms_.at(term.first);
+        const auto& right = other.get_terms().at(term.first);
         static_assert(std::is_same_v<std::remove_cvref_t<decltype(left)>, coefficient_t>);
         static_assert(std::is_same_v<std::remove_cvref_t<decltype(right)>, coefficient_t>);
-        if (!policy_t::equal(left, right)) {
+        if (!policy_t::equal(left, conv_helper_t::apply(right))) {
             return false;
         }
     }
