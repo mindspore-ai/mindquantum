@@ -105,9 +105,9 @@ concept compat_terms_op = requires(op_t, ref_op_t) {
     requires traits::is_compatible_scalar_v<typename op_t::coefficient_t, ref_op_t::is_real_valued>;
 };
 
-template <typename scalar_t, typename coefficient_t>
-concept compat_scalar = requires(scalar_t, coefficient_t) {
-    requires traits::is_compatible_scalar_v<std::remove_cvref_t<scalar_t>, std::is_floating_point_v<coefficient_t>>;
+template <typename scalar_t, typename ref_op_t>
+concept compat_terms_op_scalar = requires(scalar_t, ref_op_t) {
+    requires traits::is_compatible_scalar_v<std::remove_cvref_t<scalar_t>, ref_op_t::is_real_valued>;
 };
 }  // namespace mindquantum::concepts
 #endif  // MQ_HAS_CONCEPTS
@@ -180,12 +180,13 @@ class TermsOperatorBase {
     struct is_compat_terms_op_ : std::false_type {};
 
     template <typename op_t>
+    // clang-format off
     struct is_compat_terms_op_<
         op_t,
-        std::enable_if_t<
-            mindquantum::traits::is_terms_operator_v<
-                op_t> && mindquantum::traits::is_compatible_scalar_v<typename op_t::coefficient_t, is_real_valued>>>
+        std::enable_if_t<mindquantum::traits::is_terms_operator_v<op_t>
+                         && mindquantum::traits::is_compatible_scalar_v<typename op_t::coefficient_t, is_real_valued>>>
         : std::true_type {};
+    // clang-format on
 
     template <typename op_t>
     inline static constexpr auto is_compat_terms_op_v_ = is_compat_terms_op_<op_t>::value;
@@ -321,6 +322,7 @@ class TermsOperatorBase {
     MQ_NODISCARD static std::optional<derived_t> loads(std::string_view string_data);
 
     // =========================================================================
+    // Addition
 
     //! In-place addition of another terms operator
     derived_t& operator+=(const derived_t& other);
@@ -334,7 +336,7 @@ class TermsOperatorBase {
     derived_t& operator+=(const op_t& other);
 
     //! In-place addition of a coefficient (with conversion)
-    template <concepts::compat_scalar<coefficient_t> scalar_t>
+    template <concepts::compat_terms_op_scalar<derived_t> scalar_t>
     derived_t& operator+=(const scalar_t& scalar);
 #else
     //! In-place addition of another terms operator or coefficient (with conversion)
@@ -344,7 +346,8 @@ class TermsOperatorBase {
     derived_t& operator+=(const type_t& op_or_scalar);
 #endif  // MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
 
-    // ---------------------------------
+    // -------------------------------------------------------------------------
+    // Subtraction
 
     //! In-place subtraction of another terms operator
     derived_t& operator-=(const derived_t& other);
@@ -358,7 +361,7 @@ class TermsOperatorBase {
     derived_t& operator-=(const op_t& other);
 
     //! In-place subtraction of a coefficient (with conversion)
-    template <concepts::compat_scalar<coefficient_t> scalar_t>
+    template <concepts::compat_terms_op_scalar<derived_t> scalar_t>
     derived_t& operator-=(const scalar_t& scalar);
 #else
     //! In-place subtraction of another terms operator or coefficient (with conversion)
@@ -373,7 +376,8 @@ class TermsOperatorBase {
     //! Unary - operator with a number
     MQ_NODISCARD derived_t operator-() const;
 
-    // ---------------------------------
+    // -------------------------------------------------------------------------
+    // Multiplication
 
     //! In-place multiplication of another terms operator
     derived_t& operator*=(const derived_t& other);
@@ -387,7 +391,7 @@ class TermsOperatorBase {
     derived_t& operator*=(const op_t& other);
 
     //! In-place multiplication of a coefficient (with conversion)
-    template <concepts::compat_scalar<coefficient_t> scalar_t>
+    template <concepts::compat_terms_op_scalar<derived_t> scalar_t>
     derived_t& operator*=(const scalar_t& scalar);
 #else
     //! In-place multiplication of another terms operator or coefficient (with conversion)

@@ -467,7 +467,7 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator+=(c
 
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
-template <mindquantum::concepts::compat_scalar<coefficient_t_> scalar_t>
+template <mindquantum::concepts::compat_terms_op_scalar<derived_t_<coefficient_t_>> scalar_t>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator+=(const scalar_t& scalar) -> derived_t& {
     static_assert(!traits::is_same_decay_v<coefficient_t, scalar_t>);
     return *this += static_cast<coefficient_t>(scalar);
@@ -519,7 +519,7 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator-=(c
 
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
-template <mindquantum::concepts::compat_scalar<coefficient_t_> scalar_t>
+template <mindquantum::concepts::compat_terms_op_scalar<derived_t_<coefficient_t_>> scalar_t>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator-=(const scalar_t& scalar) -> derived_t& {
     static_assert(!traits::is_same_decay_v<coefficient_t, scalar_t>);
     return *this -= static_cast<coefficient_t>(scalar);
@@ -585,7 +585,7 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator*=(c
 
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
-template <mindquantum::concepts::compat_scalar<coefficient_t_> scalar_t>
+template <mindquantum::concepts::compat_terms_op_scalar<derived_t_<coefficient_t_>> scalar_t>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator*=(const scalar_t& scalar) -> derived_t& {
     static_assert(!traits::is_same_decay_v<coefficient_t, scalar_t>);
     return *this *= static_cast<coefficient_t>(scalar);
