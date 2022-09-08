@@ -35,8 +35,9 @@
 
 // #include <frozen/unordered_map.h>
 
+#include "config/detected.hpp"
+
 #include "experimental/core/config.hpp"
-#include "experimental/core/details/detected.hpp"
 #include "experimental/core/operator_traits.hpp"
 #include "experimental/ops/parametric/config.hpp"
 #include "experimental/ops/parametric/param_names.hpp"

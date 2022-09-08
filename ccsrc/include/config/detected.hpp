@@ -12,8 +12,10 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef DETECTED_HPP
-#define DETECTED_HPP
+#ifndef MQ_CONFIG_DETECTED_HPP
+#define MQ_CONFIG_DETECTED_HPP
+
+#include "config/config.hpp"
 
 #ifdef HAS_STD_DETECTED_TS2
 #    include <experimental/type_traits>
@@ -89,4 +91,4 @@ constexpr inline bool is_detected_convertible_v = is_detected_convertible<To, Op
 }  // namespace mindquantum
 #endif  // COMPILER_TYPE_TRAITS_TS2
 
-#endif /* DETECTED_HPP */
+#endif /* MQ_CONFIG_DETECTED_HPP */

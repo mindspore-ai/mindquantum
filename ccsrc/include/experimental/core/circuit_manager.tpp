@@ -28,8 +28,9 @@
 #include <tweedledum/Operators/Standard/Swap.h>
 #include <tweedledum/Passes/Utility/shallow_duplicate.h>
 
+#include "config/detected.hpp"
+
 #include "experimental/core/circuit_manager.hpp"
-#include "experimental/core/details/detected.hpp"
 
 // =============================================================================
 
