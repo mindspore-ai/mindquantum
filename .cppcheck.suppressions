@@ -14,6 +14,7 @@ noExplicitConstructor:ccsrc/include/experimental/ops/parametric/gate_base.hpp
 
 noValidConfiguration:ccsrc/include/config/config.hpp
 noValidConfiguration:ccsrc/include/config/details/cxx20_compatibility.hpp
+noValidConfiguration:ccsrc/include/config/type_traits.hpp
 noValidConfiguration:ccsrc/include/experimental/ops/parametric/angle_base.hpp
 noValidConfiguration:ccsrc/include/experimental/ops/parametric/angle_gates.hpp
 noValidConfiguration:tests/decompositions/test_apply_atoms.cpp
@@ -33,6 +34,7 @@ unknownMacro:ccsrc/python/experimental/include/python/ops/command.hpp:26
 unknownMacro:third_party/projectq/projectq.h:190
 
 unusedStructMember:ccsrc/include/experimental/ops/parametric/param_names.hpp
+unusedStructMember:ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp
 
 useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.hpp:32
 useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.hpp:67
