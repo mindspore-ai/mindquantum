@@ -105,9 +105,9 @@ concept coefficient = traits::is_termsop_number_v<coeff_t>;
 #    define TYPENAME_COEFFICIENT_CONSTRAINTS_IMPL
 #else
 #    define TYPENAME_COEFFICIENT                 typename
-#    define TYPENAME_COEFFICIENT_CONSTRAINTS_DEF , typename = std::enable_if_t<traits::is_termsop_number<number_t>>
+#    define TYPENAME_COEFFICIENT_CONSTRAINTS_DEF , typename = std::enable_if_t<traits::is_termsop_number_v<number_t>>
 #    define TYPENAME_COEFFICIENT_CONSTRAINTS_DEF_ADD(x)                                                                \
-        , typename = std::enable_if_t < traits::is_termsop_number<number_t> && (x) >
+        , typename = std::enable_if_t < traits::is_termsop_number_v<number_t> && (x) >
 #    define TYPENAME_COEFFICIENT_CONSTRAINTS_IMPL , typename
 #endif  // MQ_HAS_CONCEPTS
 
@@ -338,7 +338,7 @@ class TermsOperator : public traits::boost_operators_helper<derived_t, typename 
 };
 
 template <TYPENAME_COEFFICIENT number_t,
-          typename derived_t TYPENAME_COEFFICIENT_CONSTRAINTS_DEF_ADD(traits::is_terms_operator_v<derived_t>::value)>
+          typename derived_t TYPENAME_COEFFICIENT_CONSTRAINTS_DEF_ADD(traits::is_terms_operator_v<derived_t>)>
 MQ_NODISCARD auto operator-(const number_t& number, const derived_t& other);
 
 }  // namespace mindquantum::ops

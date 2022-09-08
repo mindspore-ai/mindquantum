@@ -63,9 +63,9 @@ class FermionOperator
     using TermsOperator::TermsOperator;
     FermionOperator() = default;
     FermionOperator(const FermionOperator&) = default;
-    FermionOperator(FermionOperator&&) noexcept = default;
+    FermionOperator(FermionOperator&&) = default;
     FermionOperator& operator=(const FermionOperator&) = default;
-    FermionOperator& operator=(FermionOperator&&) noexcept = default;
+    FermionOperator& operator=(FermionOperator&&) = default;
     ~FermionOperator() noexcept = default;
 
     // -------------------------------------------------------------------

@@ -60,9 +60,9 @@ class FermionOperatorPR
     using TermsOperator::TermsOperator;
     FermionOperatorPR() = default;
     FermionOperatorPR(const FermionOperatorPR&) = default;
-    FermionOperatorPR(FermionOperatorPR&&) noexcept = default;
+    FermionOperatorPR(FermionOperatorPR&&) = default;
     FermionOperatorPR& operator=(const FermionOperatorPR&) = default;
-    FermionOperatorPR& operator=(FermionOperatorPR&&) noexcept = default;
+    FermionOperatorPR& operator=(FermionOperatorPR&&) = default;
     ~FermionOperatorPR() noexcept = default;
 
     // -------------------------------------------------------------------

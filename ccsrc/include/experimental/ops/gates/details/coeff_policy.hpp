@@ -19,8 +19,13 @@
 
 namespace mindquantum::ops::details {
 
+#if MQ_HAS_CONCEPTS
 template <typename coefficient_t>
 struct CoeffPolicy;
+#else
+template <typename coefficient_t, typename = void>
+struct CoeffPolicy;
+#endif  // MQ_HAS_CONCEPTS
 
 template <typename coefficient_t>
 struct CoeffPolicyBase {

@@ -32,10 +32,12 @@
 namespace mindquantum::ops::details {
 #if MQ_HAS_CONCEPTS
 template <std::floating_point float_t>
+struct CoeffPolicy<float_t>
 #else
 template <typename float_t>
+struct CoeffPolicy<float_t, std::enable_if_t<std::is_floating_point_v<float_t>>>
 #endif  // MQ_HAS_CONCEPTS
-struct CoeffPolicy<float_t> : CoeffPolicyBase<float_t> {
+    : CoeffPolicyBase<float_t> {
     using coeff_t = float_t;
     using base_t = CoeffPolicyBase<coeff_t>;
     using base_t::EQ_TOLERANCE;

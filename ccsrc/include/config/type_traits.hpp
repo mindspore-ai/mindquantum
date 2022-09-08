@@ -21,6 +21,8 @@
 
 #include "config/config.hpp"
 
+#include "details/cxx20_compatibility.hpp"
+
 namespace mindquantum::traits {
 template <typename T, typename U>
 struct is_same_decay : std::is_same<std::remove_cvref_t<T>, std::remove_cvref_t<U>> {};

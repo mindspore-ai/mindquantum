@@ -55,9 +55,9 @@ class QubitOperatorPR
     using TermsOperator::TermsOperator;
     QubitOperatorPR() = default;
     QubitOperatorPR(const QubitOperatorPR&) = default;
-    QubitOperatorPR(QubitOperatorPR&&) noexcept = default;
+    QubitOperatorPR(QubitOperatorPR&&) = default;
     QubitOperatorPR& operator=(const QubitOperatorPR&) = default;
-    QubitOperatorPR& operator=(QubitOperatorPR&&) noexcept = default;
+    QubitOperatorPR& operator=(QubitOperatorPR&&) = default;
     ~QubitOperatorPR() noexcept = default;
 
     // -------------------------------------------------------------------
