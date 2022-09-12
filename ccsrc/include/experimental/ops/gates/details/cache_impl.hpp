@@ -21,7 +21,7 @@
 
 #include <lru_cache/lru_cache.h>
 
-#include "experimental/ops/gates/fermion_operator.hpp"
+#include "experimental/ops/gates/types.hpp"
 
 namespace hash_tuple {
 // Code from boost
@@ -68,11 +68,7 @@ struct hash<std::tuple<types_t...>> {
 }  // namespace hash_tuple
 
 namespace lru_cache {
-#ifdef FERMION_OPERATOR_HPP
-using csr_matrix_t = mindquantum::ops::FermionOperator::csr_matrix_t;
-#elif defined(FERMION_OPERATOR_PARAMETER_RESOLVER_HPP)
-using csr_matrix_t = mindquantum::ops::FermionOperatorPR::csr_matrix_t;
-#endif  // FERMION_OPERATOR_HPP
+using mindquantum::ops::types::csr_matrix_t;
 
 template <typename key_t, typename value_t, std::size_t cache_size, bool by_access_order>
 struct StaticLruCacheOptionsBase {
@@ -92,14 +88,15 @@ struct StaticLruCacheOptionsBase {
     static constexpr bool ByAccessOrder = by_access_order;
 };
 
-template <std::size_t cache_size, bool by_access_order>
-struct StaticLruCacheOptions<std::tuple<std::size_t, bool, std::size_t>, csr_matrix_t, cache_size, by_access_order>
-    : public StaticLruCacheOptionsBase<std::tuple<std::size_t, bool, std::size_t>, csr_matrix_t, cache_size,
-                                       by_access_order> {};
-template <std::size_t cache_size, bool by_access_order>
-struct StaticLruCacheOptions<std::tuple<std::size_t, bool, std::size_t, bool, std::size_t>, csr_matrix_t, cache_size,
+template <typename coeff_t, std::size_t cache_size, bool by_access_order>
+struct StaticLruCacheOptions<std::tuple<std::size_t, bool, std::size_t>, csr_matrix_t<coeff_t>, cache_size,
                              by_access_order>
-    : public StaticLruCacheOptionsBase<std::tuple<std::size_t, bool, std::size_t, bool, std::size_t>, csr_matrix_t,
-                                       cache_size, by_access_order> {};
+    : public StaticLruCacheOptionsBase<std::tuple<std::size_t, bool, std::size_t>, csr_matrix_t<coeff_t>, cache_size,
+                                       by_access_order> {};
+template <typename coeff_t, std::size_t cache_size, bool by_access_order>
+struct StaticLruCacheOptions<std::tuple<std::size_t, bool, std::size_t, bool, std::size_t>, csr_matrix_t<coeff_t>,
+                             cache_size, by_access_order>
+    : public StaticLruCacheOptionsBase<std::tuple<std::size_t, bool, std::size_t, bool, std::size_t>,
+                                       csr_matrix_t<coeff_t>, cache_size, by_access_order> {};
 }  // namespace lru_cache
 #endif /* OPS_GATES_DETAILS_CACHE_IMPL_HPP */

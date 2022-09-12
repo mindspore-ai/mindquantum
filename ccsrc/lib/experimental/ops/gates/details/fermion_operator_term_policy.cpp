@@ -22,7 +22,6 @@
 #include <boost/fusion/include/std_pair.hpp>
 #include <boost/spirit/home/x3.hpp>
 
-#include "boost_x3_complex_number.hpp"
 #include "boost_x3_get_info_impl.hpp"
 #include "boost_x3_parse_object.hpp"
 
@@ -40,11 +39,8 @@ namespace x3 = boost::spirit::x3;
 
 namespace ast::fm_op {
 using mindquantum::ops::TermValue;
-using term_t = mindquantum::ops::FermionOperator::term_t;
-using terms_t = mindquantum::ops::FermionOperator::terms_t;
-using coeff_term_dict_t = mindquantum::ops::FermionOperator::coeff_term_dict_t;
-using term_coeff_t = std::pair<mindquantum::ops::FermionOperator::coeff_term_dict_t::key_type,
-                               mindquantum::ops::FermionOperator::coeff_term_dict_t::mapped_type>;
+using term_t = mindquantum::ops::term_t;
+using terms_t = mindquantum::ops::terms_t;
 
 struct TermOp : x3::symbols<TermValue> {
     TermOp() {
@@ -58,7 +54,6 @@ struct TermOp : x3::symbols<TermValue> {
 
 namespace parser::fm_op {
 namespace ast = ::ast::fm_op;
-using mindquantum::parser::complex;
 
 struct term_class : mindquantum::parser::x3::rule::error_handler {};
 const x3::rule<term_class, ast::term_t> term = "FermionOperator term (ie. [0-9]+^?)";
@@ -70,19 +65,7 @@ static const auto terms_def = +term;
 
 // -------------------------------------
 
-struct json_value_class : mindquantum::parser::x3::rule::error_handler {};
-const x3::rule<json_value_class, ast::term_coeff_t> json_value_term
-    = R"s(FermionOperator JSON key-value pair ("<term-list>": "<complex-num>"))s";
-static const auto json_value_term_def = x3::expect[x3::lit('"')]
-                                        >> (('"' >> x3::attr(ast::terms_t{})) | (x3::expect[+term] >> '"')) > ':'
-                                        > x3::lit('"') > complex > '"';
-struct json_dict_class : mindquantum::parser::x3::rule::error_handler {};
-const x3::rule<json_dict_class, ast::coeff_term_dict_t> json_dict = "JSON representation of a FermionOperator";
-static const auto json_dict_def = x3::expect['{'] > (json_value_term % ',') > '}';
-
-// -------------------------------------
-
-BOOST_SPIRIT_DEFINE(term, terms, json_value_term, json_dict);
+BOOST_SPIRIT_DEFINE(term, terms);
 }  // namespace parser::fm_op
 
 // -------------------------------------

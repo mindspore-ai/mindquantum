@@ -26,10 +26,10 @@
 #include <Eigen/SparseCore>
 
 #include "experimental/core/config.hpp"
+#include "experimental/ops/gates/details/coeff_policy.hpp"
 #include "experimental/ops/gates/details/fermion_operator_term_policy.hpp"
-#include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
-#include "experimental/ops/gates/terms_operator.hpp"
 #include "experimental/ops/gates/terms_operator_base.hpp"
+#include "experimental/ops/gates/types.hpp"
 
 #ifdef UNIT_TESTS
 class UnitTestAccessor;
@@ -47,34 +47,34 @@ namespace mindquantum::ops {
  *  These are the Basic Operators to describe a fermionic system, such as a Molecular system. The FermionOperator are
  *  follows the anti-commutation relationship.
  */
-class FermionOperator
-    : public TermsOperator<FermionOperator, details::FermionOperatorTermPolicy, details::CmplxDoubleCoeffPolicy> {
-    friend TermsOperator<FermionOperator, details::FermionOperatorTermPolicy, details::CmplxDoubleCoeffPolicy>;
-
+template <typename coeff_t>
+class FermionOperator : public TermsOperatorBase<FermionOperator, coeff_t, details::FermionOperatorTermPolicy> {
  public:
-    using csr_matrix_t = Eigen::SparseMatrix<std::complex<double>, Eigen::RowMajor>;
-    using TermsOperator<FermionOperator, details::FermionOperatorTermPolicy,
-                        details::CmplxDoubleCoeffPolicy>::operator==;
+    using base_t = TermsOperatorBase<FermionOperator, coeff_t, details::FermionOperatorTermPolicy>;
+    using typename base_t::coeff_policy_t;
+    using typename base_t::coeff_term_dict_t;
+    using typename base_t::coefficient_real_t;
+    using typename base_t::coefficient_t;
+    using typename base_t::term_policy_t;
+    using self_t = FermionOperator<coefficient_t>;
 
-    static constexpr std::string_view kind() {
-        return "mindquantum.fermionoperator";
-    }
+    using matrix_t = types::csr_matrix_t<coefficient_t>;
 
-    using TermsOperator::TermsOperator;
+    using TermsOperatorBase<FermionOperator, coeff_t, details::FermionOperatorTermPolicy>::TermsOperatorBase;
     FermionOperator() = default;
     FermionOperator(const FermionOperator&) = default;
-    FermionOperator(FermionOperator&&) = default;
+    FermionOperator(FermionOperator&&) noexcept(false) = default;
     FermionOperator& operator=(const FermionOperator&) = default;
-    FermionOperator& operator=(FermionOperator&&) = default;
+    FermionOperator& operator=(FermionOperator&&) noexcept(false) = default;
     ~FermionOperator() noexcept = default;
 
     // -------------------------------------------------------------------
 
     //! Return the matrix representing a FermionOperator
-    MQ_NODISCARD std::optional<csr_matrix_t> matrix(std::optional<uint32_t> n_qubits) const;
+    MQ_NODISCARD std::optional<matrix_t> matrix(std::optional<uint32_t> n_qubits) const;
 
     //! Return the normal ordered form of the Fermion Operator.
-    MQ_NODISCARD FermionOperator normal_ordered() const;
+    MQ_NODISCARD self_t normal_ordered() const;
 
  private:
 #ifdef UNIT_TESTS
@@ -86,9 +86,10 @@ class FermionOperator
      * \param terms A list of local operators
      * \note Normal ordered form is with high index and creation operator in front.
      */
-    static FermionOperator normal_ordered_term_(terms_t local_ops, coefficient_t coeff);
+    static self_t normal_ordered_term_(terms_t local_ops, coefficient_t coeff);
 };
-
 }  // namespace mindquantum::ops
+
+#include "experimental/ops/gates/fermion_operator.tpp"
 
 #endif /* FERMION_OPERATOR_HPP */
