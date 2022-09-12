@@ -28,6 +28,7 @@ endif()
 # ==============================================================================
 
 if(ENABLE_CXX_EXPERIMENTAL)
+  add_subdirectory(config)
   add_subdirectory(core)
   add_subdirectory(decompositions)
   add_subdirectory(mapping)
