@@ -434,6 +434,7 @@ int main() {
 ]])
 
 # --------------------------------------
+
 check_cxx_code_compiles(
   compiler_has_cxx20_span
   MQ_HAS_CXX20_SPAN

@@ -44,7 +44,6 @@
 #            define MQ_CLANG_MAJOR 13
 #        else
 #            define MQ_CLANG_MAJOR 13
-
 #        endif
 #        if mq_clang_version < 702
 #            define MQ_CLANG_MINOR 7
