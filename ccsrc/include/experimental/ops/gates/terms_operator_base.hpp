@@ -210,9 +210,7 @@ class TermsOperatorBase {
  public:
 #endif  // !MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
 
-    static constexpr std::string_view kind() {
-        return "mindquantum.terms_operator";
-    }
+    static constexpr std::string_view kind();
 
     TermsOperatorBase() = default;
     TermsOperatorBase(const TermsOperatorBase&) = default;

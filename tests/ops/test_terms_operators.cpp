@@ -17,6 +17,7 @@
 #include <functional>
 #include <optional>
 #include <sstream>
+#include <string_view>
 #include <type_traits>
 
 #include <boost/range/adaptor/transformed.hpp>
@@ -39,6 +40,7 @@
 
 using namespace std::literals::complex_literals;
 using namespace std::literals::string_literals;
+using namespace std::literals::string_view_literals;
 using TermValue = mindquantum::ops::TermValue;
 
 // =============================================================================
@@ -112,6 +114,14 @@ using coeff_term_dict_t = DummyOperatorCD::coeff_term_dict_t;
 // =============================================================================
 // =============================================================================
 // Static (ie. compile-time) testing
+
+static constexpr auto kind = DummyOperatorCD::kind();
+static constexpr auto idx = kind.find('D');
+#ifdef _MSC_VER
+static_assert(kind.substr(idx, kind.size() - idx) == "DummyOperator<std::complex<double> >"sv);
+#else
+static_assert(kind.substr(idx, kind.size() - idx) == "DummyOperator<std::complex<double>>"sv);
+#endif  // _MSC_VER
 
 namespace {
 #if MQ_HAS_CONCEPTS

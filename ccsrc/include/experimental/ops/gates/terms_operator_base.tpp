@@ -32,6 +32,7 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/any_range.hpp>
 
+#include "config/constexpr_type_name.hpp"
 #include "config/format/std_complex.hpp"
 #include "config/real_cast.hpp"
 
@@ -127,6 +128,14 @@ TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase
     std::transform(begin(other.terms_), end(other.terms_), std::inserter(terms_, end(terms_)), [](const auto& term) {
         return typename coeff_term_dict_t::value_type{term.first, conv_helper_t::apply(term.second)};
     });
+}
+
+// =============================================================================
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+constexpr auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::kind() -> std::string_view {
+    return get_type_name<derived_t>();
 }
 
 // =============================================================================
