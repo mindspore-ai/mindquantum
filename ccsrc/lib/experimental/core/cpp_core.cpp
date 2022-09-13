@@ -143,8 +143,8 @@ void CppCore::flush() {
                     gate_matrix.emplace_back(ArrayType{matrix(1, 0), matrix(1, 1), matrix(1, 2), matrix(1, 3)});
                     gate_matrix.emplace_back(ArrayType{matrix(2, 0), matrix(2, 1), matrix(2, 2), matrix(2, 3)});
                     gate_matrix.emplace_back(ArrayType{matrix(3, 0), matrix(3, 1), matrix(3, 2), matrix(3, 3)});
-                } else if (inst.is_one<ops::QubitOperator>()) {
-                    const auto& qubit_op = inst.cast<ops::QubitOperator>();
+                } else if (inst.is_one<ops::QubitOperator<std::complex<double>>>()) {
+                    const auto& qubit_op = inst.cast<ops::QubitOperator<std::complex<double>>>();
                     assert(std::empty(control_ids));
                     using ComplexTerm = std::pair<std::vector<std::pair<uint32_t, char>>, std::complex<double>>;
                     std::vector<ComplexTerm> terms;

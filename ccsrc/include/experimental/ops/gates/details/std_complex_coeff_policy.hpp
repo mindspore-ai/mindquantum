@@ -21,6 +21,7 @@
 #include "config/format/std_complex.hpp"
 
 #include "experimental/ops/gates/details/coeff_policy.hpp"
+#include "experimental/ops/gates/details/floating_point_coeff_policy.hpp"
 
 namespace mindquantum::ops::details {
 template <typename float_t>

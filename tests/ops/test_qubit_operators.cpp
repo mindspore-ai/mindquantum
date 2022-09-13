@@ -29,12 +29,12 @@ namespace ops = mindquantum::ops;
 using namespace std::literals::complex_literals;
 using namespace std::literals::string_literals;
 
-using QubitOperator = ops::QubitOperator;
+using QubitOperatorCD = ops::QubitOperator<std::complex<double>>;
 using TermValue = ops::TermValue;
-using coefficient_t = QubitOperator::coefficient_t;
-using term_t = QubitOperator::term_t;
-using terms_t = QubitOperator::terms_t;
-using coeff_term_dict_t = QubitOperator::coeff_term_dict_t;
+using coefficient_t = QubitOperatorCD::coefficient_t;
+using term_t = QubitOperatorCD::term_t;
+using terms_t = QubitOperatorCD::terms_t;
+using coeff_term_dict_t = QubitOperatorCD::coeff_term_dict_t;
 
 // =============================================================================
 
@@ -96,7 +96,7 @@ TEST_CASE("QubitOperator parse_string", "[terms_op][ops]") {
         ref_terms.emplace_back(1, TermValue::X);
     }
 
-    const auto terms = QubitOperator::term_policy_t::parse_terms_string(terms_string);
+    const auto terms = QubitOperatorCD::term_policy_t::parse_terms_string(terms_string);
 
     INFO("terms_string = " << terms_string);
     REQUIRE(std::size(ref_terms) == std::size(terms));
@@ -108,21 +108,21 @@ TEST_CASE("QubitOperator parse_string", "[terms_op][ops]") {
 TEST_CASE("QubitOperator constructor", "[qubit_op][ops]") {
     auto ref_terms = coeff_term_dict_t{{{{1, TermValue::X}, {2, TermValue::Y}, {4, TermValue::Z}}, 1.}};
 
-    QubitOperator op("X1 Y2 Z4");
+    QubitOperatorCD op("X1 Y2 Z4");
     CHECK(!std::empty(op));
     CHECK(std::size(op) == 1);
     CHECK(op.get_terms() == ref_terms);
 
     const auto [it, inserted] = ref_terms.emplace(terms_t{{1, TermValue::Y}}, 3.2);
-    op += QubitOperator("Y1", it->second);
+    op += QubitOperatorCD("Y1", it->second);
 
     CHECK(std::size(op) == 2);
     CHECK(op.get_terms() == ref_terms);
 
     // NB: failure to parse will result in an empty list of terms... -> identity()
-    CHECK(QubitOperator("XX").is_identity());
-    CHECK(QubitOperator("1X").is_identity());
-    CHECK(QubitOperator("Y1 Z2 1X Y3").is_identity());
+    CHECK(QubitOperatorCD("XX").is_identity());
+    CHECK(QubitOperatorCD("1X").is_identity());
+    CHECK(QubitOperatorCD("Y1 Z2 1X Y3").is_identity());
 }
 
 // =============================================================================

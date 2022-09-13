@@ -44,9 +44,9 @@ bool recognize_time_evolution_commuting(const instruction_t& inst) {
     } else {
         const auto num_targets = op.num_targets();
         for (const auto& term : terms) {
-            const ops::QubitOperator test_op(term.first, term.second);
+            const ops::QubitOperator<std::complex<double>> test_op(term.first, term.second);
             for (const auto& other : terms) {
-                const ops::QubitOperator other_op(other.first, other.second);
+                const ops::QubitOperator<std::complex<double>> other_op(other.first, other.second);
                 const auto& commutator = test_op * other_op - other_op * test_op;
                 if (!commutator.is_identity(1.e-9)) {
                     return false;
@@ -69,7 +69,7 @@ void decompose_time_evolution_commuting(circuit_t& result, const instruction_t& 
     const auto& qubits = inst.qubits();
 
     for (const auto& term : hamiltonian.get_terms()) {
-        ops::QubitOperator ind_operator(term.first, term.second);
+        ops::QubitOperator<std::complex<double>> ind_operator(term.first, term.second);
         decompose_time_evolution_individual_terms(result,
                                                   td::Instruction(ops::TimeEvolution(ind_operator, time), qubits, {}));
 

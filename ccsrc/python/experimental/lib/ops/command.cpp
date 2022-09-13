@@ -84,13 +84,14 @@ td::Operator load_gate(PyObject* src, std::size_t n_targets, std::size_t n_contr
         }
     } else if (gate_type == "QubitOperator") {
         if (auto attr = PSG(PyObject_GetAttrString(src, "terms")); attr) {
+            using QubitOperatorCD = ops::QubitOperator<std::complex<double>>;
             using ComplexTermsDict = std::map<std::vector<std::pair<uint32_t, char>>, std::complex<double>>;
             using caster_t = py::detail::make_caster<ComplexTermsDict>;
             if (caster_t caster; caster.load(py::handle(attr), true)) {
                 ComplexTermsDict terms = caster;
                 if (caster) {
                     // Convert to the C++ terms representation
-                    ops::QubitOperator::coeff_term_dict_t cpp_terms;
+                    QubitOperatorCD::coeff_term_dict_t cpp_terms;
                     for (const auto& [local_ops, coeff] : terms) {
                         decltype(cpp_terms)::key_type cpp_local_ops;
 
@@ -114,14 +115,15 @@ td::Operator load_gate(PyObject* src, std::size_t n_targets, std::size_t n_contr
                         cpp_terms.emplace(cpp_local_ops, coeff);
                     }
                     if (is_dagger) {
-                        return ops::DaggerOperation(ops::QubitOperator(cpp_terms));
+                        return ops::DaggerOperation(QubitOperatorCD(cpp_terms));
                     } else {
-                        return ops::QubitOperator(cpp_terms);
+                        return ops::QubitOperator<std::complex<double>>(cpp_terms);
                     }
                 }
             }
         }
     } else if (gate_type == "TimeEvolution") {
+        using QubitOperatorCD = ops::QubitOperator<std::complex<double>>;
         auto ham_attr = PSG(PyObject_GetAttrString(src, "hamiltonian"));
         auto terms_attr = PSG(PyObject_GetAttrString(ham_attr, "terms"));
         auto time_attr = PSG(PyObject_GetAttrString(src, "time"));
@@ -137,7 +139,7 @@ td::Operator load_gate(PyObject* src, std::size_t n_targets, std::size_t n_contr
                 }
 
                 // Convert to the C++ terms representation
-                ops::QubitOperator::coeff_term_dict_t cpp_terms;
+                QubitOperatorCD::coeff_term_dict_t cpp_terms;
                 for (const auto& [local_ops, coeff] : terms) {
                     decltype(cpp_terms)::key_type cpp_local_ops;
 
@@ -160,7 +162,7 @@ td::Operator load_gate(PyObject* src, std::size_t n_targets, std::size_t n_contr
                     }
                     cpp_terms.emplace(cpp_local_ops, coeff);
                 }
-                return ops::TimeEvolution(ops::QubitOperator(cpp_terms), time);
+                return ops::TimeEvolution(QubitOperatorCD(cpp_terms), time);
             } else {
                 std::cerr << "Error: Couldn't load TimeEvolution attributes\n";
             }

@@ -57,7 +57,7 @@ std::string to_string(const std::vector<std::size_t>& qubit_ids) {
     result += "]";
     return result;
 }
-std::string to_string(ops::QubitOperator const& qb_op, std::vector<std::size_t> const& targets) {
+std::string to_string(ops::QubitOperator<std::complex<double>> const& qb_op, std::vector<std::size_t> const& targets) {
     std::string result = "";
     auto terms = qb_op.get_terms();
     bool first_term = true;
@@ -189,8 +189,8 @@ void write_projectq(const td::Instruction& inst, std::ostream& os) {
 
     os << fmt::format("{}", std::string(inst.num_controls(), 'C'));
 
-    if (inst.is_a<ops::QubitOperator>()) {
-        os << to_string(inst.cast<ops::QubitOperator>(), targets);
+    if (inst.is_a<ops::QubitOperator<std::complex<double>>>()) {
+        os << to_string(inst.cast<ops::QubitOperator<std::complex<double>>>(), targets);
     } else if (inst.is_a<ops::TimeEvolution>()) {
         os << fmt::format("exp({}j * ({}))", -inst.cast<ops::TimeEvolution>().get_time(),
                           to_string(inst.cast<ops::TimeEvolution>().get_hamiltonian(), targets));

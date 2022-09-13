@@ -32,6 +32,8 @@ class TimeEvolution : public ParametricBase<TimeEvolution, ops::TimeEvolution, r
     using typename parent_t::non_param_type;
     using typename parent_t::subs_map_t;
 
+    using QubitOperatorCD = QubitOperator<std::complex<double>>;
+
     using non_const_num_targets = void;
 
     static constexpr std::string_view kind() {
@@ -43,14 +45,14 @@ class TimeEvolution : public ParametricBase<TimeEvolution, ops::TimeEvolution, r
      * Overload required in some cases for metaprogramming with operators.
      */
     template <typename param_t>
-    TimeEvolution(uint32_t num_targets, QubitOperator hamiltonian, param_t&& param)
+    TimeEvolution(uint32_t num_targets, QubitOperatorCD hamiltonian, param_t&& param)
         : TimeEvolution(hamiltonian, std::forward<param_t>(param)) {
         assert(num_targets == hamiltonian.num_targets());
     }
 
     //! Constructor
     template <typename param_t>
-    TimeEvolution(QubitOperator hamiltonian, param_t&& param)
+    TimeEvolution(QubitOperatorCD hamiltonian, param_t&& param)
         : ParametricBase<TimeEvolution, ops::TimeEvolution, real::alpha>(hamiltonian.num_targets(),
                                                                          std::forward<param_t>(param))
         , hamiltonian_(std::move(hamiltonian)) {
@@ -82,7 +84,7 @@ class TimeEvolution : public ParametricBase<TimeEvolution, ops::TimeEvolution, r
 
     // -------------------------------------------------------------------
 
-    MQ_NODISCARD const QubitOperator& get_hamiltonian() const {
+    MQ_NODISCARD const QubitOperatorCD& get_hamiltonian() const {
         return hamiltonian_;
     }
 
@@ -91,7 +93,7 @@ class TimeEvolution : public ParametricBase<TimeEvolution, ops::TimeEvolution, r
     }
 
  private:
-    QubitOperator hamiltonian_;
+    QubitOperatorCD hamiltonian_;
 };
 }  // namespace mindquantum::ops::parametric
 

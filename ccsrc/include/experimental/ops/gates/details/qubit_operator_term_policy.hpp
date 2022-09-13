@@ -64,6 +64,8 @@ struct QubitOperatorTermPolicyBase {
     static auto parse_terms_string(std::string_view terms_string) -> terms_t;
 };
 
+// -----------------------------------------------------------------------------
+
 template <typename coefficient_t>
 struct QubitOperatorTermPolicy : QubitOperatorTermPolicyBase {
     //! Simplify the list of local operators

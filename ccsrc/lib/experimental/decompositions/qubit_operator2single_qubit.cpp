@@ -25,10 +25,8 @@ namespace mindquantum::decompositions {
 namespace td = tweedledum;
 
 void decompose_qubitop2onequbit(circuit_t& result, const instruction_t& inst) {
-    assert(inst.kind() == "projectq.qubitoperator");
-
     auto qubits = inst.qubits();
-    const auto& terms = inst.cast<ops::QubitOperator>().get_terms();
+    const auto& terms = inst.cast<ops::QubitOperator<std::complex<double>>>().get_terms();
     decltype(qubits) targets(std::end(qubits) - inst.num_targets(), std::end(qubits));
 
     // Only keep control qubits in qubits

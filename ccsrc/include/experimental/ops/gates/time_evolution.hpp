@@ -14,9 +14,11 @@
 
 #ifndef TIMEEVOLUTION_OP_HPP
 #define TIMEEVOLUTION_OP_HPP
+
 #include <utility>
 
 #include "experimental/core/config.hpp"
+#include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 #include "experimental/ops/gates/qubit_operator.hpp"
 
 namespace mindquantum::ops {
@@ -28,17 +30,19 @@ class TimeEvolution {
         return "projectq.timeevolution";
     }
 
+    using QubitOperatorCD = QubitOperator<std::complex<double>>;
+
     //! Constructor
     /*!
      * Overload required in some cases for metaprogramming with operators.
      */
-    TimeEvolution(uint32_t num_targets, QubitOperator hamiltonian, double time)
+    TimeEvolution(uint32_t num_targets, QubitOperatorCD hamiltonian, double time)
         : TimeEvolution(std::move(hamiltonian), time) {
         assert(num_targets == hamiltonian.num_targets());
     }
 
     //! Constructor
-    TimeEvolution(QubitOperator hamiltonian, double time) : hamiltonian_(std::move(hamiltonian)), time_(time) {
+    TimeEvolution(QubitOperatorCD hamiltonian, double time) : hamiltonian_(std::move(hamiltonian)), time_(time) {
     }
 
     MQ_NODISCARD TimeEvolution adjoint() const {
@@ -55,7 +59,7 @@ class TimeEvolution {
 
     // -------------------------------------------------------------------
 
-    MQ_NODISCARD const QubitOperator& get_hamiltonian() const {
+    MQ_NODISCARD const QubitOperatorCD& get_hamiltonian() const {
         return hamiltonian_;
     }
 
@@ -68,7 +72,7 @@ class TimeEvolution {
     }
 
  private:
-    QubitOperator hamiltonian_;
+    QubitOperatorCD hamiltonian_;
     double time_;
 };
 }  // namespace mindquantum::ops

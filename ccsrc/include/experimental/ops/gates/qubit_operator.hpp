@@ -26,9 +26,10 @@
 #include <Eigen/SparseCore>
 
 #include "experimental/core/config.hpp"
+#include "experimental/ops/gates/details/coeff_policy.hpp"
 #include "experimental/ops/gates/details/qubit_operator_term_policy.hpp"
-#include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
-#include "experimental/ops/gates/terms_operator.hpp"
+#include "experimental/ops/gates/terms_operator_base.hpp"
+#include "experimental/ops/gates/types.hpp"
 
 #ifdef UNIT_TESTS
 class UnitTestAccessor;
@@ -49,19 +50,25 @@ namespace mindquantum::ops {
  *  QubitOperator has the following attributes set as follows: operators = ('X', 'Y', 'Z'), different_indices_commute =
  *  True.
  */
-class QubitOperator
-    : public TermsOperator<QubitOperator, details::QubitOperatorTermPolicy, details::CmplxDoubleCoeffPolicy> {
+template <typename coeff_t>
+class QubitOperator : public TermsOperatorBase<QubitOperator, coeff_t, details::QubitOperatorTermPolicy> {
     friend TermsOperator<QubitOperator, details::QubitOperatorTermPolicy, details::CmplxDoubleCoeffPolicy>;
 
  public:
-    using csr_matrix_t = Eigen::SparseMatrix<std::complex<double>, Eigen::RowMajor>;
-    using TermsOperator<QubitOperator, details::QubitOperatorTermPolicy, details::CmplxDoubleCoeffPolicy>::operator==;
+    using base_t = TermsOperatorBase<QubitOperator, coeff_t, details::QubitOperatorTermPolicy>;
+    using base_t::get_terms;
+    using base_t::new_derived_t;
+    using base_t::num_targets;
+    using typename base_t::coeff_policy_t;
+    using typename base_t::coeff_term_dict_t;
+    using typename base_t::coefficient_real_t;
+    using typename base_t::coefficient_t;
+    using typename base_t::term_policy_t;
+    using self_t = QubitOperator<coefficient_t>;
 
-    static constexpr std::string_view kind() {
-        return "mindquantum.qubitoperator";
-    }
+    using matrix_t = types::csr_matrix_t<coefficient_t>;
 
-    using TermsOperator::TermsOperator;
+    using TermsOperatorBase<QubitOperator, coeff_t, details::QubitOperatorTermPolicy>::TermsOperatorBase;
     QubitOperator() = default;
     QubitOperator(const QubitOperator&) = default;
     QubitOperator(QubitOperator&&) = default;
@@ -75,7 +82,7 @@ class QubitOperator
     MQ_NODISCARD uint32_t count_gates() const noexcept;
 
     //! Return the matrix representing a QubitOperator
-    MQ_NODISCARD std::optional<csr_matrix_t> matrix(std::optional<uint32_t> n_qubits) const;
+    MQ_NODISCARD std::optional<matrix_t> matrix(std::optional<uint32_t> n_qubits) const;
 
  private:
 #ifdef UNIT_TESTS
@@ -83,5 +90,7 @@ class QubitOperator
 #endif  // UNIT_TESTS
 };
 }  // namespace mindquantum::ops
+
+#include "experimental/ops/gates/qubit_operator.tpp"
 
 #endif /* QUBITOPERATOR_OP_HPP */

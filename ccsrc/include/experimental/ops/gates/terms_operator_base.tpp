@@ -289,7 +289,11 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::hermitian() 
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::adjoint() const noexcept -> operator_t {
-    return *static_cast<derived_t*>(*this);
+    if constexpr (is_real_valued) {
+        return *static_cast<const derived_t*>(this);
+    } else {
+        return DaggerOperation(*static_cast<const derived_t*>(this));
+    }
 }
 
 // =============================================================================

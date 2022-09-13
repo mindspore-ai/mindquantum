@@ -32,7 +32,7 @@ namespace mindquantum {
 class QubitOperator;
 std::string to_string(std::size_t qubit_id);
 std::string to_string(const std::vector<std::size_t>& qubit_ids);
-std::string to_string(const ops::QubitOperator& qb_op, std::vector<std::size_t> const& targets);
+std::string to_string(const ops::QubitOperator<std::complex<double>>& qb_op, std::vector<std::size_t> const& targets);
 std::string to_string(std::string_view kind);
 std::string to_string(const td::Instruction& inst);
 }  // namespace mindquantum
