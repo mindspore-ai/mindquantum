@@ -16,6 +16,7 @@
 #define DETAILS_PARAMETERRESOLVER_COEFF_POLICY_HPP
 
 #include <optional>
+#include <utility>
 
 #include <boost/range/iterator_range.hpp>
 
@@ -38,6 +39,24 @@ namespace mindquantum::traits {
 template <typename float_t>
 inline constexpr auto is_termsop_number_v<ParameterResolver<float_t>> = true;
 }  // namespace mindquantum::traits
+
+// -----------------------------------------------------------------------------
+
+namespace mindquantum::ops::details {
+template <typename float_t>
+struct CoeffSubsProxy<ParameterResolver<float_t>> {
+    using coeff_t = ParameterResolver<float_t>;
+    using subs_t = coeff_t;
+    explicit CoeffSubsProxy(subs_t params_a) : params(std::move(params_a)) {
+    }
+
+    void apply(coeff_t& coeff) {
+        coeff.Combination(params);
+    }
+
+    subs_t params;
+};
+}  // namespace mindquantum::ops::details
 
 // -----------------------------------------------------------------------------
 

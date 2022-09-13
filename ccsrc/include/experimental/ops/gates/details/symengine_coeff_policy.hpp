@@ -19,6 +19,7 @@
 
 #include <complex>
 #include <optional>
+#include <utility>
 
 #include <boost/range/iterator_range.hpp>
 
@@ -69,6 +70,21 @@ struct real_cast_impl<cast_type, SymEngine::RCP<const SymEngine::Basic>> {
 
 namespace mindquantum::ops::details {
 template <>
+struct CoeffSubsProxy<SymEngine::RCP<const SymEngine::Basic>> {
+    using coeff_t = SymEngine::RCP<const SymEngine::Basic>;
+    using subs_t = SymEngine::map_basic_basic;
+
+    explicit CoeffSubsProxy(subs_t params_a) : params(std::move(params_a)) {
+    }
+
+    void apply(coeff_t& coeff) {
+        coeff = SymEngine::expand(coeff->subs(params));
+    }
+
+    subs_t params;
+};
+
+template <>
 struct CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>> {
     using coeff_t = SymEngine::RCP<const SymEngine::Basic>;
     using self_t = CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>>;
@@ -78,6 +94,11 @@ struct CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>> {
 
     static const coeff_t one;
     static constexpr auto EQ_TOLERANCE = 1.e-8;
+
+    // TODO(dnguyen): This will not work... since the actual type we would need to pass is map_basic_basic
+    // Substitute values (if at all supported)
+    static auto subs(coeff_t& /* coeff */, const coeff_t& /* subs_params */) {
+    }
 
     // Comparisons/Checks
     static auto is_const(const coeff_t& coeff) {

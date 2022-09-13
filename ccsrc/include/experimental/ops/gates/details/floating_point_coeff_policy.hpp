@@ -32,6 +32,24 @@
 namespace mindquantum::ops::details {
 #if MQ_HAS_CONCEPTS
 template <std::floating_point float_t>
+struct CoeffSubsProxy<float_t>
+#else
+template <typename float_t>
+struct CoeffSubsProxy<float_t, std::enable_if_t<std::is_floating_point_v<float_t>>>
+#endif  // MQ_HAS_CONCEPTS
+{
+    using coeff_t = float_t;
+    using subs_t = coeff_t;
+
+    explicit CoeffSubsProxy(subs_t /* params */) {
+    }
+
+    void apply(float_t& /* coeff */) {
+    }
+};
+
+#if MQ_HAS_CONCEPTS
+template <std::floating_point float_t>
 struct CoeffPolicy<float_t>
 #else
 template <typename float_t>

@@ -28,6 +28,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "config/config.hpp"
 #include "config/real_cast.hpp"
 #include "config/tsl_ordered_map.hpp"
 #include "config/type_traits.hpp"
@@ -262,6 +263,9 @@ class TermsOperatorBase {
     MQ_NODISCARD term_t::first_type count_qubits() const;
 
     MQ_NODISCARD static derived_t identity();
+
+    //! Set parameter with given params PR
+    MQ_NODISCARD derived_t subs(const details::CoeffSubsProxy<coefficient_t>& subs_param) const;
 
     // -------------------------------------------------------------------------
 

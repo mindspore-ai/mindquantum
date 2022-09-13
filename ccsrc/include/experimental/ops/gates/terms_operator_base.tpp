@@ -256,6 +256,26 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::identity() -
 
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::subs(
+    const details::CoeffSubsProxy<coefficient_t>& subs_params) const -> derived_t {
+    auto out(*static_cast<const derived_t*>(this));
+
+    // NB: cannot use the usual range-for loop since that uses operator*() implicitly and using tsl::ordered_map the
+    //     values accessed in this way are constants
+    for (auto it(begin(out.terms_)), it_end(end(out.terms_)); it != it_end; ++it) {
+        subs_params.apply(it->value());
+    }
+    // NB: This would work for normal std::map/std::unordered_map
+    // for (auto& [local_ops, coeff] : out.terms_) {
+    //     subs_params.apply(coeff);
+    // }
+    return out;
+}
+
+// =============================================================================
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::hermitian() const -> derived_t {
     coeff_term_dict_t terms;
     for (auto& [local_ops, coeff] : terms_) {

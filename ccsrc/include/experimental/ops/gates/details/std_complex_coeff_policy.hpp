@@ -24,6 +24,18 @@
 
 namespace mindquantum::ops::details {
 template <typename float_t>
+struct CoeffSubsProxy<std::complex<float_t>> {
+    using coeff_t = std::complex<float_t>;
+    using subs_t = coeff_t;
+
+    explicit CoeffSubsProxy(subs_t /* params */) {
+    }
+
+    void apply(std::complex<float_t>& /* coeff */) {
+    }
+};
+
+template <typename float_t>
 struct CoeffPolicy<std::complex<float_t>> : CoeffPolicyBase<std::complex<float_t>> {
     using coeff_t = std::complex<float_t>;
     using base_t = CoeffPolicyBase<coeff_t>;
