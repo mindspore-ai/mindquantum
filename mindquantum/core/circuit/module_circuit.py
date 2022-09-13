@@ -145,7 +145,7 @@ class U3(Circuit):
     Examples:
         >>> from mindquantum.core.circuit import U3
         >>> U3('theta','phi','lambda')
-        q0: ──RZ(lambda)────RX(π/2)────RZ(theta)────RX(π/2)────RZ(phi)──
+        q0: ──RZ(lambda)────RX(π/2)────RZ(theta)────RX(-π/2)────RZ(phi)──
     """
 
     def __init__(self, theta, phi, lam, obj_qubit=None):
