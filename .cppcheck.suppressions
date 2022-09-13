@@ -4,7 +4,7 @@ missingReturn
 
 constParameter:tests/*
 
-constVariable:ccsrc/lib/experimental/core/cpp_core.cpp:283
+constVariable:ccsrc/lib/experimental/core/cpp_core.cpp:282
 
 duplicateExpression:ccsrc/include/core/parameter_resolver.h:707
 duplicateExpression:ccsrc/python/mqbackend/lib/binding.cc
