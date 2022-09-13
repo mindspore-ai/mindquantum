@@ -1,4 +1,4 @@
-# MindQuantum 中文俄文年当编写注意事项
+# MindQuantum 中文英文文档编写注意事项
 
 需翻译专业词汇
 
