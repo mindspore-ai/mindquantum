@@ -21,7 +21,7 @@ from mindquantum import mqbackend as mb
 import numpy as np
 from mindquantum.utils.f import _check_num_array
 
-from .basic import BasicGate, NoiseGate, SelfHermitianGate
+from .basic import BasicGate, NoiseGate, SelfHermitianGate, NonHermitianGate
 
 
 class PauliChannel(NoiseGate, SelfHermitianGate):
@@ -332,7 +332,7 @@ class DepolarizingChannel(PauliChannel):
         return f"Dep({self.p})"
 
 
-class AmplitudeDampingChannel(NoiseGate, SelfHermitianGate):
+class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
     r"""
     Quantum channel that express the incoherent noise in quantum computing.
 
@@ -372,7 +372,7 @@ class AmplitudeDampingChannel(NoiseGate, SelfHermitianGate):
         kwargs['name'] = 'ADC'
         kwargs['n_qubits'] = 1
         NoiseGate.__init__(self, **kwargs)
-        SelfHermitianGate.__init__(self, **kwargs)
+        NonHermitianGate.__init__(self, **kwargs)
         self.projectq_gate = None
         if not isinstance(gamma, (int, float)):
             raise TypeError(f"Unsupported type for gamma, get {type(gamma)}.")
@@ -401,7 +401,7 @@ class AmplitudeDampingChannel(NoiseGate, SelfHermitianGate):
         return f"AD({self.gamma})"
 
 
-class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
+class PhaseDampingChannel(NoiseGate, NonHermitianGate):
     r"""
     Quantum channel that express the incoherent noise in quantum computing.
 
@@ -441,7 +441,7 @@ class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
         kwargs['name'] = 'PDC'
         kwargs['n_qubits'] = 1
         NoiseGate.__init__(self, **kwargs)
-        SelfHermitianGate.__init__(self, **kwargs)
+        NonHermitianGate.__init__(self, **kwargs)
         self.projectq_gate = None
         if not isinstance(gamma, (int, float)):
             raise TypeError(f"Unsupported type for gamma, get {type(gamma)}.")
@@ -470,7 +470,7 @@ class PhaseDampingChannel(NoiseGate, SelfHermitianGate):
         return f"PD({self.gamma})"
 
 
-class KrausChannel(NoiseGate, SelfHermitianGate):
+class KrausChannel(NoiseGate, NonHermitianGate):
     r"""
     Quantum channel that express the incoherent noise in quantum computing.
 
@@ -507,7 +507,7 @@ class KrausChannel(NoiseGate, SelfHermitianGate):
         q1: ─────────────damping──
     """
 
-    def __init__(self, name, kraus_op, **kwargs):
+    def __init__(self, name: str, kraus_op, **kwargs):
         """Initialize an KrausChannel object."""
         _check_num_array(kraus_op, name)
         if not isinstance(kraus_op, np.ndarray):
@@ -527,7 +527,7 @@ class KrausChannel(NoiseGate, SelfHermitianGate):
         kwargs['name'] = name
         kwargs['n_qubits'] = 1
         NoiseGate.__init__(self, **kwargs)
-        SelfHermitianGate.__init__(self, **kwargs)
+        NonHermitianGate.__init__(self, **kwargs)
         self.projectq_gate = None
         self.kraus_op = kraus_op
 

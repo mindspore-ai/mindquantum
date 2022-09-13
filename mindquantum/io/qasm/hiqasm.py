@@ -257,14 +257,14 @@ class HiQASM:
                 _not_implement(version, gate)
         elif isinstance(gate, gates.SGate):
             if n_ctrl_qubits == 0:
-                if gate.daggered:
+                if gate.hermitianed:
                     _not_implement(version, gate)
                 self.cmds.append(f'S q[{obj_qubits[0]}]')
             else:
                 _not_implement(version, gate)
         elif isinstance(gate, gates.TGate):
             if n_ctrl_qubits == 0:
-                if gate.daggered:
+                if gate.hermitianed:
                     _not_implement(version, gate)
                 self.cmds.append(f'T q[{obj_qubits[0]}]')
             else:

@@ -117,29 +117,45 @@ class SwapParts(Circuit):
 
 
 class U3(Circuit):
-    """
+    r"""
     This circuit represent arbitrary single qubit gate.
 
+    U3 gate with matrix as:
+
+    .. math::
+
+        U3(\theta, \phi, \lambda) =
+        \begin{pmatrix}
+           cos \left( \frac{\theta}{2} \right) & -e^{i \lambda} sin \left( \frac{\theta}{2} \\
+        e^{i \phi} sin \left( \frac{\theta}{2} & e^{i (\phi + \lambda)} cos \left( \frac{\theta}{2}
+        \end{pmatrix}
+
+    It can be decomposed as:
+
+    .. math::
+
+        U3(\theta, \phi, \lambda) = RZ(\phi) RX(-\pi/2) RZ(\theta) RX(\pi/2) RZ(\lambda)
+
     Args:
-        a (Union[numbers.Number, dict, ParameterResolver]): First parameter for U3 circuit.
-        b (Union[numbers.Number, dict, ParameterResolver]): Second parameter for U3 circuit.
-        c (Union[numbers.Number, dict, ParameterResolver]): Third parameter for U3 circuit.
+        theta (Union[numbers.Number, dict, ParameterResolver]): First parameter for U3 circuit.
+        phi (Union[numbers.Number, dict, ParameterResolver]): Second parameter for U3 circuit.
+        lam (Union[numbers.Number, dict, ParameterResolver]): Third parameter for U3 circuit.
         obj_qubit (int): Which qubit the U3 circuit will act on. Default: None.
 
     Examples:
         >>> from mindquantum.core.circuit import U3
-        >>> U3('a','b','c')
-        q0: ──RZ(a)────RX(-π/2)────RZ(b)────RX(π/2)────RZ(c)──
+        >>> U3('theta','phi','lambda')
+        q0: ──RZ(lambda)────RX(π/2)────RZ(theta)────RX(π/2)────RZ(phi)──
     """
 
-    def __init__(self, a, b, c, obj_qubit=None):
+    def __init__(self, theta, phi, lam, obj_qubit=None):
         """Initialize a U3 object."""
         if obj_qubit is None:
             obj_qubit = 0
         circ = Circuit()
-        circ.rz(a, obj_qubit)
-        circ.rx(-np.pi / 2, obj_qubit)
-        circ.rz(b, obj_qubit)
+        circ.rz(lam, obj_qubit)
         circ.rx(np.pi / 2, obj_qubit)
-        circ.rz(c, obj_qubit)
+        circ.rz(theta, obj_qubit)
+        circ.rx(-np.pi / 2, obj_qubit)
+        circ.rz(phi, obj_qubit)
         Circuit.__init__(self, circ)

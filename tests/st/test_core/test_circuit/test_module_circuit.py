@@ -42,6 +42,6 @@ def test_u3():
     Description: Test U3
     Expectation:
     """
-    circ = U3('a', 'b', 'c', 0)
-    circ_exp = Circuit().rz('a', 0).rx(-np.pi / 2, 0).rz('b', 0).rx(np.pi / 2, 0).rz('c', 0)
+    circ = U3('theta', 'phi', 'lambda', 0)
+    circ_exp = Circuit().rz('lambda', 0).rx(np.pi / 2, 0).rz('theta', 0).rx(-np.pi / 2, 0).rz('phi', 0)
     assert circ == circ_exp
