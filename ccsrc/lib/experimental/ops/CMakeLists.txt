@@ -18,9 +18,9 @@
 
 target_sources(
   mq_cxx_nextgen
-  PRIVATE ${CMAKE_CURRENT_LIST_DIR}/gates/details/std_complex_coeff_policy.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/gates/details/fermion_operator_term_policy.cpp
+  PRIVATE ${CMAKE_CURRENT_LIST_DIR}/gates/details/fermion_operator_term_policy.cpp
           ${CMAKE_CURRENT_LIST_DIR}/gates/details/qubit_operator_term_policy.cpp
+          ${CMAKE_CURRENT_LIST_DIR}/gates/details/std_complex_coeff_policy.cpp
           ${CMAKE_CURRENT_LIST_DIR}/gates/details/symengine_coeff_policy.cpp
           ${CMAKE_CURRENT_LIST_DIR}/gates/qubit_operator.cpp
           ${CMAKE_CURRENT_LIST_DIR}/gates/qubit_operator_parameter_resolver.cpp
