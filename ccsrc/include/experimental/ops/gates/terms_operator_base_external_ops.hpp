@@ -18,6 +18,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "config/common_type.hpp"
 #include "config/type_traits.hpp"
 
 #include "experimental/core/config.hpp"
@@ -78,7 +79,7 @@ template <typename func_t, typename lhs_t, typename rhs_t>
 auto terms_op_arithmetic_op_impl(lhs_t&& lhs, rhs_t&& rhs) {
     using left_coeff_t = typename std::remove_cvref_t<lhs_t>::coefficient_t;
     using right_coeff_t = typename std::remove_cvref_t<rhs_t>::coefficient_t;
-    using common_t = std::common_type_t<left_coeff_t, right_coeff_t>;
+    using common_t = mindquantum::traits::common_type_t<left_coeff_t, right_coeff_t>;
 
     // See which of LHS or RHS we need to promote
     if constexpr (std::is_same_v<left_coeff_t, common_t>) {
@@ -94,7 +95,8 @@ auto terms_op_arithmetic_scalar_op_impl(term_op_t&& term_op, scalar_t&& scalar) 
     static_assert(!traits::is_terms_operator_v<scalar_t>);
 
     using terms_op_t = std::remove_cvref_t<term_op_t>;
-    using common_t = std::common_type_t<typename terms_op_t::coefficient_t, std::remove_cvref_t<scalar_t>>;
+    using common_t
+        = mindquantum::traits::common_type_t<typename terms_op_t::coefficient_t, std::remove_cvref_t<scalar_t>>;
     if constexpr (std::is_same_v<common_t, typename terms_op_t::coefficient_t>) {
         return r_value_optimisation<func_t>(std::forward<term_op_t>(term_op), std::forward<scalar_t>(scalar));
     } else {

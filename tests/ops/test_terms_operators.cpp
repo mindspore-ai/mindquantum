@@ -265,10 +265,10 @@ static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<float>, cmplx_t<float>, op_t<cmplx
 static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<float>, cmplx_t<double>, op_t<cmplx_t<double>>));
 static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<double>, float, op_t<double>));
 static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<double>, double, op_t<double>));
-static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<double>, cmplx_t<float>, op_t<cmplx_t<float>>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<double>, cmplx_t<float>, op_t<cmplx_t<double>>));
 static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<double>, cmplx_t<double>, op_t<cmplx_t<double>>));
 static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<cmplx_t<float>>, float, op_t<cmplx_t<float>>));
-static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<cmplx_t<float>>, double, op_t<cmplx_t<float>>));
+static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<cmplx_t<float>>, double, op_t<cmplx_t<double>>));
 static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<cmplx_t<float>>, cmplx_t<float>, op_t<cmplx_t<float>>));
 static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<cmplx_t<float>>, cmplx_t<double>, op_t<cmplx_t<double>>));
 static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<cmplx_t<float>>, cmplx_t<double>, op_t<cmplx_t<double>>));
@@ -284,10 +284,10 @@ static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<float>, cmplx_t<float>, op_t<cmpl
 static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<float>, cmplx_t<double>, op_t<cmplx_t<double>>));
 static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<double>, float, op_t<double>));
 static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<double>, double, op_t<double>));
-static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<double>, cmplx_t<float>, op_t<cmplx_t<float>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<double>, cmplx_t<float>, op_t<cmplx_t<double>>));
 static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<double>, cmplx_t<double>, op_t<cmplx_t<double>>));
 static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<float>>, float, op_t<cmplx_t<float>>));
-static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<float>>, double, op_t<cmplx_t<float>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<float>>, double, op_t<cmplx_t<double>>));
 static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<float>>, cmplx_t<float>, op_t<cmplx_t<float>>));
 static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<float>>, cmplx_t<double>, op_t<cmplx_t<double>>));
 static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<float>>, cmplx_t<double>, op_t<cmplx_t<double>>));

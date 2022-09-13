@@ -29,6 +29,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "config/common_type.hpp"
 #include "config/real_cast.hpp"
 #include "config/type_promotion.hpp"
 #include "config/type_traits.hpp"
@@ -82,6 +83,19 @@ struct to_cmplx_type<ParameterResolver<float_t>> {
 
 template <typename T>
 struct type_promotion<ParameterResolver<T>> : details::type_promotion_encapsulated_fp<T, ParameterResolver> {};
+
+template <typename float_t, typename U>
+struct common_type<ParameterResolver<float_t>, U> {
+    using type = ParameterResolver<std::common_type_t<float_t, U>>;
+};
+template <typename T, typename float_t>
+struct common_type<T, ParameterResolver<float_t>> {
+    using type = ParameterResolver<std::common_type_t<T, float_t>>;
+};
+template <typename float_t, typename float2_t>
+struct common_type<ParameterResolver<float_t>, ParameterResolver<float2_t>> {
+    using type = ParameterResolver<std::common_type_t<float_t, float2_t>>;
+};
 }  // namespace traits
 
 // =============================================================================
