@@ -29,7 +29,6 @@
 #include "experimental/ops/gates/measure.hpp"
 #include "experimental/ops/gates/ph.hpp"
 #include "experimental/ops/gates/sqrtswap.hpp"
-#include "experimental/ops/gates/terms_operator.hpp"
 
 // #define MEASURE_TIMINGS
 #ifdef MEASURE_TIMINGS

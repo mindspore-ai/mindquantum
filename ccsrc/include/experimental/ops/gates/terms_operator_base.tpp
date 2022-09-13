@@ -263,7 +263,7 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::subs(
     // NB: cannot use the usual range-for loop since that uses operator*() implicitly and using tsl::ordered_map the
     //     values accessed in this way are constants
     for (auto it(begin(out.terms_)), it_end(end(out.terms_)); it != it_end; ++it) {
-        subs_params.apply(it->value());
+        subs_params.apply(it.value());
     }
     // NB: This would work for normal std::map/std::unordered_map
     // for (auto& [local_ops, coeff] : out.terms_) {
@@ -393,7 +393,7 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::compress(dou
     });
     terms_.erase(new_end, end(terms_));
 
-    for (auto it(begin(terms_)), it_end(end(terms_)); it != new_end; ++it) {
+    for (auto it(begin(terms_)), it_end(end(terms_)); it != it_end; ++it) {
         coeff_policy_t::compress(it.value(), abs_tol);
     }
 

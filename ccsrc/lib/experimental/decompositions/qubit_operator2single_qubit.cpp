@@ -18,6 +18,7 @@
 #include <tweedledum/Operators/Standard/Z.h>
 
 #include "experimental/decompositions.hpp"
+#include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 #include "experimental/ops/gates/ph.hpp"
 #include "experimental/ops/gates/qubit_operator.hpp"
 

@@ -14,7 +14,6 @@
 
 #include "experimental/ops/transform/jordan_wigner.hpp"
 
-#include "experimental/ops/gates/terms_operator.hpp"
 #include "experimental/ops/transform/transform_ladder_operator.hpp"
 
 namespace mindquantum::ops::transform {

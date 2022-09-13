@@ -17,12 +17,15 @@
 
 #include <vector>
 
-#include "experimental/ops/gates/fermion_operator_parameter_resolver.hpp"
-#include "experimental/ops/gates/qubit_operator_parameter_resolver.hpp"
+#include "core/parameter_resolver.hpp"
+
+#include "experimental/ops/gates/details/parameterresolver_coeff_policy.hpp"
+#include "experimental/ops/gates/fermion_operator.hpp"
+#include "experimental/ops/gates/qubit_operator.hpp"
 
 namespace mindquantum::ops::transform {
-using qubit_t = QubitOperatorPR;
-using fermion_t = FermionOperatorPR;
+using qubit_t = QubitOperator<ParameterResolver<std::complex<double>>>;
+using fermion_t = FermionOperator<ParameterResolver<std::complex<double>>>;
 using qlist_t = std::vector<term_t::first_type>;
 }  // namespace mindquantum::ops::transform
 #endif

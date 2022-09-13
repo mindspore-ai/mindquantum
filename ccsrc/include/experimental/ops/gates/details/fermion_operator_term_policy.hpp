@@ -27,7 +27,7 @@
 
 #include "core/parameter_resolver.hpp"
 
-#include "experimental/ops/gates/terms_operator.hpp"
+#include "experimental/ops/gates/terms_operator_base.hpp"
 
 namespace mindquantum::ops::details {
 

@@ -23,7 +23,6 @@
 #include <tweedledum/Operators/Standard.h>
 
 #include "experimental/ops/gates.hpp"
-#include "experimental/ops/gates/terms_operator.hpp"
 
 namespace mindquantum {
 std::string to_string(std::size_t qubit_id) {

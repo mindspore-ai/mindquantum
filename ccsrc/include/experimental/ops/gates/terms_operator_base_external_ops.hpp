@@ -133,7 +133,7 @@ auto terms_op_arithmetic_scalar_op_impl(term_op_t&& term_op, scalar_t&& scalar) 
         MQ_DEFINE_BINOP_TERM_OPS_TERMS_(op, op_impl)                                                                   \
         MQ_DEFINE_BINOP_TERM_OPS_SCALAR_RIGHT_(op, op_impl)                                                            \
         template <concepts::not_terms_op scalar_t, concepts::terms_op rhs_t>                                           \
-        auto operator op(scalar_t&& lhs, rhs_t&& rhs) requires(concepts::compat_terms_op_scalar<scalar_t, rhs_t>) {    \
+        auto operator op(scalar_t&& lhs, rhs_t&& rhs) {                                                                \
             return (op_inv);                                                                                           \
         }
 #    define MQ_DEFINE_BINOP_SCALAR_RIGHT_ONLY(op, op_impl) MQ_DEFINE_BINOP_TERM_OPS_SCALAR_RIGHT_(op, op_impl)

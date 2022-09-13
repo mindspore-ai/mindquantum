@@ -85,36 +85,28 @@ struct CoeffPolicy<ParameterResolver<float_t>> : CoeffPolicyBase<ParameterResolv
     }
 
     // Binary operators
-    template <typename rhs_t>
-    static auto iadd(coeff_t& lhs, const rhs_t& rhs) {
+    static auto iadd(coeff_t& lhs, const coeff_t& rhs) {
         return lhs += rhs;
     }
-    template <typename rhs_t>
-    static auto add(const coeff_t& lhs, const rhs_t& rhs) {
+    static auto add(const coeff_t& lhs, const coeff_t& rhs) {
         return lhs + rhs;
     }
-    template <typename rhs_t>
-    static auto isub(coeff_t& lhs, const rhs_t& rhs) {
+    static auto isub(coeff_t& lhs, const coeff_t& rhs) {
         return lhs -= rhs;
     }
-    template <typename rhs_t>
-    static auto sub(const coeff_t& lhs, const rhs_t& rhs) {
+    static auto sub(const coeff_t& lhs, const coeff_t& rhs) {
         return lhs - rhs;
     }
-    template <typename rhs_t>
-    static auto imul(coeff_t& lhs, const rhs_t& rhs) {
+    static auto imul(coeff_t& lhs, const coeff_t& rhs) {
         return lhs *= rhs;
     }
-    template <typename rhs_t>
-    static auto mul(const coeff_t& lhs, const rhs_t& rhs) {
+    static auto mul(const coeff_t& lhs, const coeff_t& rhs) {
         return lhs * rhs;
     }
-    template <typename rhs_t>
-    static auto idiv(coeff_t& lhs, const rhs_t& rhs) {
+    static auto idiv(coeff_t& lhs, const coeff_t& rhs) {
         return lhs /= rhs;
     }
-    template <typename rhs_t>
-    static auto div(const coeff_t& lhs, const rhs_t& rhs) {
+    static auto div(const coeff_t& lhs, const coeff_t& rhs) {
         return lhs / rhs;
     }
 

@@ -14,7 +14,6 @@
 
 #include "experimental/ops/transform/reverse_jordan_wigner.hpp"
 
-#include "experimental/ops/gates/terms_operator.hpp"
 #include "experimental/ops/transform/fermion_number_operator.hpp"
 #include "experimental/ops/transform/types.hpp"
 

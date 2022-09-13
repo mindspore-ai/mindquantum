@@ -33,7 +33,6 @@
 #include "experimental/core/logging.hpp"
 #include "experimental/ops/gates/details/floating_point_coeff_policy.hpp"
 #include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
-#include "experimental/ops/gates/terms_operator.hpp"
 #include "experimental/ops/gates/terms_operator_base.hpp"
 
 #include <catch2/catch.hpp>

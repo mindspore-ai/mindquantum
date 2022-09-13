@@ -51,7 +51,10 @@ template <typename coeff_t>
 class FermionOperator : public TermsOperatorBase<FermionOperator, coeff_t, details::FermionOperatorTermPolicy> {
  public:
     using base_t = TermsOperatorBase<FermionOperator, coeff_t, details::FermionOperatorTermPolicy>;
+    using base_t::get_terms;
     using base_t::new_derived_t;
+    using base_t::num_targets;
+    using base_t::subs;
     using typename base_t::coeff_policy_t;
     using typename base_t::coeff_term_dict_t;
     using typename base_t::coefficient_real_t;

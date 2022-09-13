@@ -24,7 +24,6 @@
 #include "experimental/core/dagger.hpp"
 #include "experimental/decompositions.hpp"
 #include "experimental/ops/gates/qubit_operator.hpp"
-#include "experimental/ops/gates/terms_operator.hpp"
 
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846 /* pi */

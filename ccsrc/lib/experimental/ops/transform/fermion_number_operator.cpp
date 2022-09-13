@@ -12,7 +12,6 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#include "experimental/ops/gates/terms_operator.hpp"
 #include "experimental/ops/transform/parity.hpp"
 #include "experimental/ops/transform/transform_ladder_operator.hpp"
 #include "experimental/ops/transform/types.hpp"

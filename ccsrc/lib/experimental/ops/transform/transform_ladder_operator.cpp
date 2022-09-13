@@ -16,8 +16,6 @@
 
 #include <algorithm>
 
-#include "experimental/ops/gates/terms_operator.hpp"
-
 namespace mindquantum::ops::transform {
 // template <typename fermion_t, typename qubit_t>
 qubit_t transform_ladder_operator(const TermValue& value, const qlist_t& x1, const qlist_t& y1, const qlist_t& z1,

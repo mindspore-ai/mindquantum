@@ -52,13 +52,12 @@ namespace mindquantum::ops {
  */
 template <typename coeff_t>
 class QubitOperator : public TermsOperatorBase<QubitOperator, coeff_t, details::QubitOperatorTermPolicy> {
-    friend TermsOperator<QubitOperator, details::QubitOperatorTermPolicy, details::CmplxDoubleCoeffPolicy>;
-
  public:
     using base_t = TermsOperatorBase<QubitOperator, coeff_t, details::QubitOperatorTermPolicy>;
     using base_t::get_terms;
     using base_t::new_derived_t;
     using base_t::num_targets;
+    using base_t::subs;
     using typename base_t::coeff_policy_t;
     using typename base_t::coeff_term_dict_t;
     using typename base_t::coefficient_real_t;
