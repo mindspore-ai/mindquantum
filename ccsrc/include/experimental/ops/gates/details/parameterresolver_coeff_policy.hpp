@@ -168,8 +168,8 @@ using CmplxFloatPRCoeffPolicy = CoeffPolicy<ParameterResolver<std::complex<float
 using CmplxDoublePRCoeffPolicy = CoeffPolicy<ParameterResolver<std::complex<double>>>;
 
 template <typename float_t>
-inline const typename CoeffPolicy<ParameterResolver<float_t>>::coeff_t CoeffPolicy<ParameterResolver<float_t>>::one(
-    typename CoeffPolicy<ParameterResolver<float_t>>::coeff_t{1.0});
+inline const typename CoeffPolicy<ParameterResolver<float_t>>::coeff_t CoeffPolicy<ParameterResolver<float_t>>::one{
+    typename CoeffPolicy<ParameterResolver<float_t>>::coeff_t{1.0}};
 
 // =============================================================================
 }  // namespace mindquantum::ops::details

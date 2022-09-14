@@ -17,11 +17,10 @@
 
 #include "config/cmake_config.hpp"
 #include "config/cxx20_config.hpp"
+#include "config/details/clang_version.hpp"
+#include "config/details/cxx20_compatibility.hpp"
+#include "config/details/macros.hpp"
 #include "config/type_traits.hpp"
-
-#include "details/clang_version.hpp"
-#include "details/cxx20_compatibility.hpp"
-#include "details/macros.hpp"
 
 // =============================================================================
 

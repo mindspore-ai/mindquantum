@@ -162,7 +162,7 @@ class TermsOperatorBase {
     using coeff_term_dict_t = term_dict_t<coefficient_t>;
     using py_coeff_term_list_t = std::vector<std::pair<mindquantum::ops::terms_t, coefficient_t>>;
 
-#if !MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+#if !MQ_HAS_CONCEPTS || (defined _MSC_VER)
  private:
     template <typename op_t, typename = void>
     struct is_compat_terms_op_ : std::false_type {};
@@ -177,11 +177,16 @@ class TermsOperatorBase {
         : std::true_type {};
     // clang-format on
 
+#    if (defined __clang__) && MQ_CLANG_MAJOR == 9
+    template <typename op_t>
+    inline static constexpr bool is_compat_terms_op_v_ = is_compat_terms_op_<op_t>::value;
+#    else
     template <typename op_t>
     inline static constexpr auto is_compat_terms_op_v_ = is_compat_terms_op_<op_t>::value;
+#    endif  // Clang 9
 
  public:
-#endif  // !MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+#endif  // !MQ_HAS_CONCEPTS || (defined _MSC_VER)
 
     static constexpr std::string_view kind();
 
@@ -317,7 +322,7 @@ class TermsOperatorBase {
     // =========================================================================
     // Addition
 
-#if MQ_HAS_CONCEPTS
+#if MQ_HAS_CONCEPTS && !(defined _MSC_VER)
     //! In-place addition of another terms operator (with/without conversion)
     template <concepts::compat_terms_op<derived_t> op_t>
     derived_t& operator+=(const op_t& other);
@@ -331,12 +336,12 @@ class TermsOperatorBase {
               typename = std::enable_if_t<
                   is_compat_terms_op_v_<type_t> || traits::is_compatible_scalar_v<type_t, is_real_valued>>>
     derived_t& operator+=(const type_t& op_or_scalar);
-#endif  // MQ_HAS_CONCEPTS
+#endif  // MQ_HAS_CONCEPTS && !_MSC_VER
 
     // -------------------------------------------------------------------------
     // Subtraction
 
-#if MQ_HAS_CONCEPTS
+#if MQ_HAS_CONCEPTS && !(defined _MSC_VER)
     //! In-place subtraction of another terms operator (with/without conversion)
     template <concepts::compat_terms_op<derived_t> op_t>
     derived_t& operator-=(const op_t& other);
@@ -350,7 +355,7 @@ class TermsOperatorBase {
               typename = std::enable_if_t<
                   is_compat_terms_op_v_<type_t> || traits::is_compatible_scalar_v<type_t, is_real_valued>>>
     derived_t& operator-=(const type_t& op_or_scalar);
-#endif  // MQ_HAS_CONCEPTS
+#endif  // MQ_HAS_CONCEPTS && !_MSC_VER
 
     // ---------------------------------
 
@@ -360,7 +365,7 @@ class TermsOperatorBase {
     // -------------------------------------------------------------------------
     // Multiplication
 
-#if MQ_HAS_CONCEPTS
+#if MQ_HAS_CONCEPTS && !(defined _MSC_VER)
     //! In-place multiplication of another terms operator (with/without conversion)
     template <concepts::compat_terms_op<derived_t> op_t>
     derived_t& operator*=(const op_t& other);
@@ -374,17 +379,17 @@ class TermsOperatorBase {
               typename = std::enable_if_t<
                   is_compat_terms_op_v_<type_t> || traits::is_compatible_scalar_v<type_t, is_real_valued>>>
     derived_t& operator*=(const type_t& op_or_scalar);
-#endif  // MQ_HAS_CONCEPTS
+#endif  // MQ_HAS_CONCEPTS && !_MSC_VER
 
     // -------------------------------------------------------------------------
     // Division
 
     //! In-place division of a coefficient (with/without conversion)
-#if MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+#if MQ_HAS_CONCEPTS && !(defined _MSC_VER)
     template <concepts::compat_terms_op_scalar<derived_t> scalar_t>
 #else
     template <typename scalar_t, typename = std::enable_if_t<traits::is_compatible_scalar_v<scalar_t, is_real_valued>>>
-#endif  // MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+#endif  // MQ_HAS_CONCEPTS && !_MSC_VER
     derived_t& operator/=(const scalar_t& scalar);
 
     // -------------------------------------------------------------------------
@@ -400,12 +405,12 @@ class TermsOperatorBase {
      * \param other Another term operators
      */
 
-#if MQ_HAS_CONCEPTS
+#if MQ_HAS_CONCEPTS && !(defined _MSC_VER)
     template <concepts::terms_op op_t>
 #else
     //! In-place subtraction of another terms operator or coefficient (with/without conversion)
     template <typename op_t, typename = std::enable_if_t<traits::is_terms_operator_v<op_t>>>
-#endif  // MQ_HAS_CONCEPTS
+#endif  // MQ_HAS_CONCEPTS && !(defined _MSC_VER)
     MQ_NODISCARD bool is_equal(const op_t& other) const;
 
  protected:

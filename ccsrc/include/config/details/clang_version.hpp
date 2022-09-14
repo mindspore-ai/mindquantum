@@ -12,57 +12,39 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef CLANG_VERSION_HPP
-#define CLANG_VERSION_HPP
+#ifndef MQ_CONFIG_CLANG_VERSION_HPP
+#define MQ_CONFIG_CLANG_VERSION_HPP
 
 #ifdef __clang__
 #    ifdef __apple_build_version__
-#        define mq_clang_version (10 * (10 * (__clang_major__) + (__clang_minor__)) + (__clang_patchlevel__))
-#        if mq_clang_version < 700
-#            error Version of clang is too old!
-#        elif mq_clang_version < 900
-#            define MQ_CLANG_MAJOR 3
-#        elif mq_clang_version == 900
-#            define MQ_CLANG_MAJOR 4
-#        elif mq_clang_version < 1000
-#            define MQ_CLANG_MAJOR 5
-#        elif mq_clang_version == 1000
-#            define MQ_CLANG_MAJOR 6
-#        elif mq_clang_version == 1001
-#            define MQ_CLANG_MAJOR 7
-#        elif mq_clang_version == 1100
-#            define MQ_CLANG_MAJOR 8
-#        elif mq_clang_version == 1103
-#            define MQ_CLANG_MAJOR 9
-#        elif mq_clang_version == 1200
-#            define MQ_CLANG_MAJOR 10
-#        elif mq_clang_version == 1205
-#            define MQ_CLANG_MAJOR 11
-#        elif mq_clang_version == 1300
+#        if __apple_build_version__ > 14000000
+#            define MQ_CLANG_MAJOR 14
+#        elif __apple_build_version__ > 13160000
+#            define MQ_CLANG_MAJOR 13
+#        elif __apple_build_version__ > 13000000
 #            define MQ_CLANG_MAJOR 12
-#        elif mq_clang_version == 1316
-#            define MQ_CLANG_MAJOR 13
+#        elif __apple_build_version__ > 12050000
+#            define MQ_CLANG_MAJOR 11
+#        elif __apple_build_version__ > 12000000
+#            define MQ_CLANG_MAJOR 10
+#        elif __apple_build_version__ > 11030000
+#            define MQ_CLANG_MAJOR 9
+#        elif __apple_build_version__ > 11000000
+#            define MQ_CLANG_MAJOR 8
+#        elif __apple_build_version__ > 10010000
+#            define MQ_CLANG_MAJOR 7
 #        else
-#            define MQ_CLANG_MAJOR 13
+#            error Detected version of clang is too old!
 #        endif
-#        if mq_clang_version < 702
-#            define MQ_CLANG_MINOR 7
-#        elif mq_clang_version == 730
-#            define MQ_CLANG_MINOR 8
-#        elif mq_clang_version <= 810
-#            define MQ_CLANG_MINOR 9
-#        elif mq_clang_version <= 1200
-#            define MQ_CLANG_MINOR 0
-#        elif mq_clang_version == 1205
+#        if (__apple_build_version__ / 10000) == 1205
 #            define MQ_CLANG_MINOR 1
 #        else
 #            define MQ_CLANG_MINOR 0
 #        endif
-#        undef mq_clang_version
 #    else
 #        define MQ_CLANG_MAJOR __clang_major__
 #        define MQ_CLANG_MINOR __clang_minor__
 #    endif  // __apple_build_version__
 #endif      // __clang__
 
-#endif /* CLANG_VERSION_HPP */
+#endif /* MQ_CONFIG_CLANG_VERSION_HPP */

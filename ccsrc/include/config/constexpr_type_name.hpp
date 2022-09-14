@@ -26,7 +26,7 @@
  * The code below work by finding the prefix/suffix offsets in the function signature of wrapped_type_name<...> where
  * the template parameter appears. This is done using the default type (ie. void).
  * For example (on Clang/GCC):
- *   - std::string_view detail::wrapped_type_name() [T = void]
+ *   - std::string_view details::wrapped_type_name() [T = void]
  * -> prefix_offset = 50, suffix_offset = 1
  *
  * With these two offsets, we can then extract the substring containing the type name for any other instantiation of
@@ -81,7 +81,7 @@ constexpr std::string_view get_type_name() {
      * 7.
      */
     constexpr auto prefix_length
-        = detail::wrapped_type_name_prefix_length()
+        = details::wrapped_type_name_prefix_length()
           + std::conditional_t<std::is_class_v<std::decay_t<T>>, std::integral_constant<int, 6>,
                                std::integral_constant<int, 0>>::value;
     constexpr auto real_prefix_length = wrapped_name.find_first_not_of(' ', prefix_length);
@@ -91,21 +91,6 @@ constexpr std::string_view get_type_name() {
     constexpr auto suffix_length = details::wrapped_type_name_suffix_length();
     constexpr auto type_name_length = wrapped_name.length() - real_prefix_length - suffix_length;
     return wrapped_name.substr(real_prefix_length, type_name_length);
-}
-
-// -----------------------------------------------------------------------------
-
-template <typename T, typename marker_t>
-constexpr std::string_view get_relative_type_name() {
-    constexpr auto marker_name = get_type_name<marker_t>();
-    constexpr auto name = get_type_name<T>();
-
-    for (auto i(0UL); i < std::min(marker_name.size(), name.size()); ++i) {
-        if (marker_name[i] != name[i]) {
-            return name.substr(i, name.size() - i);
-        }
-    }
-    return name;
 }
 }  // namespace mindquantum
 

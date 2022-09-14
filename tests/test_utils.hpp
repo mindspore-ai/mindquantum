@@ -118,10 +118,10 @@ struct CircuitEquals : Catch::MatcherBase<tweedledum::Circuit> {
             }
         }
 
-        if (std::size(ref_circuit) != std::size(circuit)) {
+        if (ref_circuit.num_instructions() != circuit.num_instructions()) {
             return false;
         }
-        for (auto i(0UL); i < std::size(ref_circuit); ++i) {
+        for (auto i(0UL); i < ref_circuit.num_instructions(); ++i) {
             const auto ref_inst = ref_circuit.instruction(tweedledum::InstRef(i));
             const auto inst = circuit.instruction(tweedledum::InstRef(i));
 
