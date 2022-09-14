@@ -22,12 +22,6 @@
 #    include <omp.h>
 #endif  // USE_OPENMP  // NOLINT
 
-#ifdef _MSC_VER
-#    include <intrin.h>
-#else
-#    include <x86intrin.h>
-#endif  // _MSC_VER
-
 #include <complex>
 #include <cstdlib>
 #include <ctime>
