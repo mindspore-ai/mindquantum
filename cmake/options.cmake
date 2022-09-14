@@ -29,6 +29,7 @@ option(ENABLE_CXX_EXPERIMENTAL "Enable the new (experimental) C++ backend" OFF)
 option(ENABLE_DOCUMENTATION "Enable building of the documentation using Doxygen" OFF)
 option(ENABLE_LOGGING "Enable the use of logging in C++" OFF)
 option(ENABLE_LONG_DOUBLE "Enable the use of the `long double` type in certain areas" OFF)
+option(ENABLE_COLOR_COMPILER "Use color in compiler diagnostic messages" ON)
 
 # ==============================================================================
 # Python related options

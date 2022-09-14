@@ -56,6 +56,16 @@ endif()
 
 # ------------------------------------------------------------------------------
 
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  test_compile_option(
+    compile_color_flags
+    LANGS C CXX
+    FLAGS "-fdiagnostics-color=always -fcolor-diagnostics"
+    CMAKE_OPTION ENABLE_COLOR_COMPILER NO_TRYCOMPILER_TARGET NO_TRY_COMPILE_FLAGCHECK_TARGET)
+endif()
+
+# ------------------------------------------------------------------------------
+
 if(MSVC)
   test_compile_option(
     compile_msvc_flags
