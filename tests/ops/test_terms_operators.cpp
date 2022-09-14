@@ -32,6 +32,7 @@
 
 #include "experimental/core/logging.hpp"
 #include "experimental/ops/gates/details/floating_point_coeff_policy.hpp"
+#include "experimental/ops/gates/details/parameterresolver_coeff_policy.hpp"
 #include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 #include "experimental/ops/gates/terms_operator_base.hpp"
 
@@ -205,6 +206,9 @@ using op_t = DummyOperator<coeff_t>;
 template <typename float_t>
 using cmplx_t = std::complex<float_t>;
 
+template <typename float_t>
+using pr_t = mindquantum::ParameterResolver<float_t>;
+
 // -----------------------------------------------------------------------------
 
 // TermsOp - TermsOp inplace operators
@@ -295,6 +299,16 @@ static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<double>>, float, op_t<cmp
 static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<double>>, double, op_t<cmplx_t<double>>));
 static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<double>>, cmplx_t<float>, op_t<cmplx_t<double>>));
 static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<cmplx_t<double>>, cmplx_t<double>, op_t<cmplx_t<double>>));
+
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<pr_t<float>>, float, op_t<pr_t<float>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<pr_t<float>>, double, op_t<pr_t<double>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<pr_t<float>>, cmplx_t<float>, op_t<pr_t<cmplx_t<float>>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<pr_t<float>>, cmplx_t<double>, op_t<pr_t<cmplx_t<double>>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<pr_t<float>>, cmplx_t<double>, op_t<pr_t<cmplx_t<double>>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<pr_t<double>>, float, op_t<pr_t<double>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<pr_t<double>>, double, op_t<pr_t<double>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<pr_t<double>>, cmplx_t<float>, op_t<pr_t<cmplx_t<double>>>));
+static_assert(MQ_BINOP_SCALAR_RIGHT_VALID(op_t<pr_t<double>>, cmplx_t<double>, op_t<pr_t<cmplx_t<double>>>));
 }  // namespace
 
 // =============================================================================

@@ -19,12 +19,14 @@
 #include <algorithm>
 #include <complex>
 #include <iomanip>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <set>
 #include <sstream>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -72,6 +74,7 @@ struct real_cast_impl<cast_type, ParameterResolver<std::complex<float_t>>> {
 // =============================================================================
 
 namespace traits {
+// Template specialisations to support real-to-complex (and inverse) for ParameterResolver
 template <typename float_t>
 struct to_real_type<ParameterResolver<float_t>> {
     using type = ParameterResolver<to_real_type_t<float_t>>;
@@ -81,8 +84,14 @@ struct to_cmplx_type<ParameterResolver<float_t>> {
     using type = ParameterResolver<to_cmplx_type_t<float_t>>;
 };
 
+// -----------------------------------------------------------------------------
+// Template specialitation to support up_cast<...> and down_cast<...> for ParameterResolver<T>
+
 template <typename T>
 struct type_promotion<ParameterResolver<T>> : details::type_promotion_encapsulated_fp<T, ParameterResolver> {};
+
+// -----------------------------------------------------------------------------
+// Template specialitations for mindquantum::common_type<...>
 
 template <typename float_t, typename U>
 struct common_type<ParameterResolver<float_t>, U> {
@@ -96,16 +105,26 @@ template <typename float_t, typename float2_t>
 struct common_type<ParameterResolver<float_t>, ParameterResolver<float2_t>> {
     using type = ParameterResolver<std::common_type_t<float_t, float2_t>>;
 };
+
+/* NB: these two are required to avoid ambiguous cases like:
+ *       - ParameterResolver<T> - std::complex<U>
+ *       - std::complex<T> - ParameterResolver<U>
+ */
+template <typename float_t, typename float2_t>
+struct common_type<ParameterResolver<float_t>, std::complex<float2_t>> {
+    using type = ParameterResolver<std::complex<std::common_type_t<float_t, float2_t>>>;
+};
+template <typename float_t, typename float2_t>
+struct common_type<std::complex<float_t>, ParameterResolver<float2_t>> {
+    using type = ParameterResolver<std::complex<std::common_type_t<float_t, float2_t>>>;
+};
 }  // namespace traits
 
 // =============================================================================
 
 template <typename T1, typename T2>
 bool IsTwoNumberClose(T1 v1, T2 v2) {
-    if (std::abs(v1 - v2) < PRECISION) {
-        return true;
-    }
-    return false;
+    return static_cast<bool>(std::abs(v1 - v2) < PRECISION);
 }
 
 template <typename T>
@@ -173,25 +192,43 @@ struct ParameterResolver {
     SS encoder_parameters_{};
     explicit ParameterResolver(T const_value) : const_value(const_value) {
     }
+    template <typename U, typename = std::enable_if_t<std::is_floating_point_v<U> || traits::is_std_complex_v<U>>>
+    explicit ParameterResolver(U&& const_value) : const_value(static_cast<T>(std::forward<U>(const_value))) {
+    }
     ParameterResolver(const MST<T>& data, T const_value) : data_(data), const_value(const_value) {
-        for (ITER(p, this->data_)) {
-            if (p->first == "") {
+        for (ITER(param, this->data_)) {
+            if (param->first == "") {
                 throw std::runtime_error("Parameter name cannot be empty.");
             }
         }
     }
-    ParameterResolver(const MST<T>& data, T const_value, const SS& ngp, const SS& ep)
-        : data_(data), const_value(const_value), no_grad_parameters_(ngp), encoder_parameters_(ep) {
+    ParameterResolver(const MST<T>& data, T const_value, SS no_grad_parameters, SS encoder_parameters)
+        : data_(data)
+        , const_value(const_value)
+        , no_grad_parameters_(std::move(no_grad_parameters))
+        , encoder_parameters_(std::move(encoder_parameters)) {
     }
-    explicit ParameterResolver(const std::string& p) {
-        this->data_[p] = 1;
+    explicit ParameterResolver(const std::string& param) {
+        this->data_[param] = 1;
     }
+    template <typename U, typename = std::enable_if_t<std::is_floating_point_v<U> || traits::is_std_complex_v<U>>>
+    explicit ParameterResolver(const ParameterResolver<U>& other)
+        : const_value{static_cast<T>(other.const_value)}
+        , no_grad_parameters_{other.no_grad_parameters_}
+        , encoder_parameters_{other.encoder_parameters_} {
+        std::transform(begin(other.data_), end(other.data_), std::inserter(data_, end(data_)),
+                       [](const auto& param) -> typename MST<T>::value_type {
+                           return {param.first, static_cast<T>(param.second)};
+                       });
+    }
+
     ParameterResolver() = default;
     ParameterResolver(const ParameterResolver&) = default;
     ParameterResolver(ParameterResolver&&) noexcept = default;
     ParameterResolver& operator=(const ParameterResolver&) = default;
     ParameterResolver& operator=(ParameterResolver&&) noexcept = default;
     ~ParameterResolver() noexcept = default;
+
     size_t Size() const {
         return this->data_.size();
     }
@@ -242,7 +279,7 @@ struct ParameterResolver {
             return true;
         }
         for (ITER(p, this->data_)) {
-            if (!IsTwoNumberClose(p->second, 0.0)) {
+            if (!IsTwoNumberClose(p->second, static_cast<T>(0.0))) {
                 return false;
             }
         }
