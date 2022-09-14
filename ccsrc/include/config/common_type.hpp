@@ -25,9 +25,6 @@ template <typename... args_t>
 struct common_type;
 
 // Delegate to std::common_type
-template <>
-struct common_type<> : std::common_type<> {};
-
 template <typename T>
 struct common_type<T> : std::common_type_t<T> {};
 

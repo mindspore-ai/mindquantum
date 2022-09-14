@@ -60,8 +60,14 @@ struct CoeffPolicy<float_t, std::enable_if_t<std::is_floating_point_v<float_t>>>
     using base_t = CoeffPolicyBase<coeff_t>;
     using base_t::EQ_TOLERANCE;
     using coeff_policy_real_t = typename base_t::coeff_policy_real_t;
+    using matrix_coeff_t = coeff_t;
 
     static constexpr auto one = coeff_t{1.};
+
+    // Getter
+    static constexpr auto get_num(const coeff_t& coeff) {
+        return coeff;
+    }
 
     // Comparisons/Checks
     static constexpr auto is_const(const coeff_t& /* coeff */) {

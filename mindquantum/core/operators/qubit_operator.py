@@ -23,7 +23,7 @@ from mindquantum.core.operators._base_operator import EQ_TOLERANCE
 from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.experimental import TermValue
 from mindquantum.experimental._mindquantum_cxx.ops import (
-    QubitOperatorPR as QubitOperator_,
+    QubitOperatorPRCD as QubitOperator_,
 )
 from mindquantum.utils.type_value_check import _check_input_type
 

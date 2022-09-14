@@ -89,15 +89,19 @@ struct CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>> {
     using coeff_t = SymEngine::RCP<const SymEngine::Basic>;
     using self_t = CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>>;
     using base_t = CoeffPolicyBase<coeff_t>;
-
     using coeff_policy_real_t = self_t;
+    using matrix_coeff_t = std::complex<double>;
 
     static const coeff_t one;
     static constexpr auto EQ_TOLERANCE = 1.e-8;
 
-    // TODO(dnguyen): This will not work... since the actual type we would need to pass is map_basic_basic
-    // Substitute values (if at all supported)
-    static auto subs(coeff_t& /* coeff */, const coeff_t& /* subs_params */) {
+    // Getter
+    static auto get_num(const coeff_t& coeff) {
+        assert(SymEngine::is_a_Number(*coeff));
+        if (SymEngine::is_a_Complex(*coeff)) {
+            return SymEngine::eval_complex_double(*coeff);
+        }
+        return static_cast<std::complex<double>>(SymEngine::eval_double(*coeff));
     }
 
     // Comparisons/Checks

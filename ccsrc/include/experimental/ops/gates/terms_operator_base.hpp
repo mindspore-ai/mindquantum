@@ -143,6 +143,7 @@ class TermsOperatorBase {
     using coeff_policy_t = details::CoeffPolicy<coefficient_t>;
     using term_policy_t = term_policy_t_<coefficient_t>;
     using coefficient_real_t = typename coeff_policy_t::coeff_policy_real_t::coeff_t;
+    using matrix_coeff_t = typename coeff_policy_t::matrix_coeff_t;
 
     //! "Meta-function" to generate a a new related derived terms operator with a different coefficient type
     template <typename new_coeff_t>
@@ -400,10 +401,10 @@ class TermsOperatorBase {
      */
 
 #if MQ_HAS_CONCEPTS
-    template <concepts::compat_terms_op<derived_t> op_t>
+    template <concepts::terms_op op_t>
 #else
     //! In-place subtraction of another terms operator or coefficient (with/without conversion)
-    template <typename op_t, typename = std::enable_if_t<is_compat_terms_op_v_<op_t>>>
+    template <typename op_t, typename = std::enable_if_t<traits::is_terms_operator_v<op_t>>>
 #endif  // MQ_HAS_CONCEPTS
     MQ_NODISCARD bool is_equal(const op_t& other) const;
 

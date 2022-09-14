@@ -50,12 +50,12 @@ using mindquantum::projectq::InnerProduct;
 using mindquantum::projectq::Projectq;
 #endif
 
-void BindPRPython(py::module *m) {
+void BindPRPython(py::module &m) {
     using mindquantum::MST;
     using mindquantum::PRPython;
     using mindquantum::PRTypeID;
 
-    py::class_<PRPython, std::shared_ptr<PRPython>>(*m, "pr_python")
+    py::class_<PRPython, std::shared_ptr<PRPython>>(m, "pr_python")
         .def(py::init<double>())
         .def(py::init<std::complex<double>>())
         .def(py::init<const MST<double>, double>())
@@ -109,12 +109,13 @@ void BindPRPython(py::module *m) {
 }
 
 template <typename T>
-void BindPR(py::module *m, const std::string &name) {
+void BindPR(py::module &module, const std::string &name) {
     using mindquantum::MST;
     using mindquantum::ParameterResolver;
     using mindquantum::SS;
 
-    py::class_<ParameterResolver<T>, std::shared_ptr<ParameterResolver<T>>>(*m, name.c_str())
+    py::class_<mindquantum::ParameterResolver<T>, std::shared_ptr<mindquantum::ParameterResolver<T>>>(module,
+                                                                                                      name.c_str())
         .def(py::init<T>())
         .def(py::init([](ParameterResolver<T> &pr, bool copy) {
             if (copy) {
@@ -229,9 +230,9 @@ PYBIND11_MODULE(mqbackend, m) {
     m.def("get_gate_by_name", &GetGateByName<MT>);
     m.def("get_measure_gate", &GetMeasureGate<MT>);
     // parameter resolver
-    BindPR<MT>(&m, "real_pr");
-    BindPR<std::complex<MT>>(&m, "complex_pr");
-    BindPRPython(&m);
+    BindPR<MT>(m, "real_pr");
+    BindPR<std::complex<MT>>(m, "complex_pr");
+    BindPRPython(m);
 
     // pauli mat
     py::class_<PauliMat<MT>, std::shared_ptr<PauliMat<MT>>>(m, "pauli_mat")

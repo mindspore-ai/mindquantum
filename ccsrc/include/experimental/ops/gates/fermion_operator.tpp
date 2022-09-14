@@ -41,6 +41,7 @@ namespace mindquantum::ops {
 
 template <typename coeff_t>
 auto FermionOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> std::optional<matrix_t> {
+    using scalar_t = typename matrix_t::Scalar;
     if (std::empty(base_t::terms_)) {
         return std::nullopt;
     }
@@ -64,9 +65,7 @@ auto FermionOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const ->
 
     const auto process_term = [n_qubits_value](const auto& local_ops) -> matrix_t {
         if (std::empty(local_ops)) {
-            return (Eigen::Matrix<coefficient_t, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>::Identity(
-                        1U << n_qubits_value, 1U << n_qubits_value))
-                .sparseView();
+            return details::n_identity<scalar_t>(1U << n_qubits_value);
         }
 
         constexpr auto size_groups = 2UL;
@@ -82,12 +81,12 @@ auto FermionOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const ->
 
         auto process_group = [n_qubits_value](const auto& group) constexpr {
             if (std::size(group) == 2) {
-                return details::two_fermion_word<coefficient_t>(group[0].first, group[0].second == TermValue::adg,
-                                                                group[1].first, group[1].second == TermValue::adg,
-                                                                n_qubits_value);
+                return details::two_fermion_word<scalar_t>(group[0].first, group[0].second == TermValue::adg,
+                                                           group[1].first, group[1].second == TermValue::adg,
+                                                           n_qubits_value);
             }
-            return details::single_fermion_word<coefficient_t>(group[0].first, group[0].second == TermValue::adg,
-                                                               n_qubits_value);
+            return details::single_fermion_word<scalar_t>(group[0].first, group[0].second == TermValue::adg,
+                                                          n_qubits_value);
         };
 
         assert(!std::empty(groups));
@@ -108,14 +107,14 @@ auto FermionOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const ->
         MQ_ERROR("Coeff is not const! ({})", it->second);
         return {};
     }
-    auto result = (process_term(it->first) * it->second).eval();
+    auto result = (process_term(it->first) * coeff_policy_t::get_num(it->second)).eval();
     ++it;
     for (; it != end(base_t::terms_); ++it) {
         if (!coeff_policy_t::is_const(it->second)) {
             MQ_ERROR("Coeff is not const! ({})", it->second);
             return {};
         }
-        result = result * process_term(it->first) * it->second;
+        result = result * process_term(it->first) * coeff_policy_t::get_num(it->second);
     }
 
     return result;

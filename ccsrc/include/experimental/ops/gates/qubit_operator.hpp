@@ -62,10 +62,11 @@ class QubitOperator : public TermsOperatorBase<QubitOperator, coeff_t, details::
     using typename base_t::coeff_term_dict_t;
     using typename base_t::coefficient_real_t;
     using typename base_t::coefficient_t;
+    using typename base_t::matrix_coeff_t;
     using typename base_t::term_policy_t;
     using self_t = QubitOperator<coefficient_t>;
 
-    using matrix_t = types::csr_matrix_t<coefficient_t>;
+    using matrix_t = types::csr_matrix_t<matrix_coeff_t>;
 
     using TermsOperatorBase<QubitOperator, coeff_t, details::QubitOperatorTermPolicy>::TermsOperatorBase;
     QubitOperator() = default;

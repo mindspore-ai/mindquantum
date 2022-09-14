@@ -24,7 +24,7 @@
 
 #include <lru_cache/lru_cache.h>
 
-#include "experimental/ops/gates/details/eigen_diagonal_identity.hpp"
+#include "experimental/ops/gates/details/eigen_sparse_identity.hpp"
 #include "experimental/ops/gates/types.hpp"
 
 // -----------------------------------------------------------------------------
@@ -70,8 +70,8 @@ auto n_sz(std::size_t n) -> types::csr_matrix_t<coeff_t> {
     }
 
     auto result = matrix_t{2, 2};
-    result.insert(0, 0) = 1;
-    result.insert(1, 1) = -1;
+    result.insert(0, 0) = static_cast<coeff_t>(1.);
+    result.insert(1, 1) = static_cast<coeff_t>(-1.);
     const auto tmp = result;
 
     --n;
@@ -92,9 +92,9 @@ auto single_fermion_word(const std::tuple<std::size_t, bool, std::size_t>& data)
     const auto& [idx, is_adg, n_qubits] = data;
     auto result = matrix_t{2, 2};
     if (is_adg) {
-        result.insert(0, 1) = 1;
+        result.insert(0, 1) = static_cast<coeff_t>(1.);
     } else {
-        result.insert(1, 0) = 1;
+        result.insert(1, 0) = static_cast<coeff_t>(1.);
     }
     return Eigen::kroneckerProduct(n_identity<coeff_t>(n_qubits - 1 - idx),
                                    Eigen::kroneckerProduct(result, n_sz<coeff_t>(idx)).eval())
@@ -115,33 +115,6 @@ auto two_fermion_word(const std::tuple<std::size_t, bool, std::size_t, bool, std
 // =============================================================================
 
 namespace mindquantum::ops::details {
-template <typename coeff_t>
-auto n_identity(std::size_t n) -> types::csr_matrix_t<coeff_t> {
-    using matrix_t = types::csr_matrix_t<coeff_t>;
-    using scalar_t = typename matrix_t::Scalar;
-    // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define MQ_CASE_FOR_NQUBITS(n)                                                                                         \
-    case n:                                                                                                            \
-        return matrix_t{::generate_eigen_diagonal<scalar_t, 1U << (n)>()};                                             \
-        break
-
-    switch (n) {
-        MQ_CASE_FOR_NQUBITS(0U);
-        MQ_CASE_FOR_NQUBITS(1U);
-        MQ_CASE_FOR_NQUBITS(2U);
-        MQ_CASE_FOR_NQUBITS(3U);
-        MQ_CASE_FOR_NQUBITS(4U);
-        MQ_CASE_FOR_NQUBITS(5U);
-        MQ_CASE_FOR_NQUBITS(6U);
-        default:
-            auto tmp = Eigen::DiagonalMatrix<typename matrix_t::Scalar, Eigen::Dynamic>(1U << n);
-            tmp.setIdentity();
-            return matrix_t{tmp};
-            break;
-    }
-#undef MQ_CASE_FOR_NQUBITS
-}
-
 template <typename coeff_t>
 auto n_sz(std::size_t n) -> types::csr_matrix_t<coeff_t> {
     DECLARE_MEMOIZE_CACHE(cache_, cache_size, impl::n_sz<coeff_t>);

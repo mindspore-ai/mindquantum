@@ -26,6 +26,7 @@
 #include <tweedledum/Operators/Standard/Z.h>
 
 #include "experimental/core/logging.hpp"
+#include "experimental/ops/gates/details/eigen_sparse_identity.hpp"
 #include "experimental/ops/gates/qubit_operator.hpp"
 
 // =============================================================================
@@ -45,7 +46,8 @@ uint32_t QubitOperator<coeff_t>::count_gates() const noexcept {
 template <typename coeff_t>
 auto QubitOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> std::optional<matrix_t> {
     namespace Op = tweedledum::Op;
-    using dense_2x2_t = Eigen::Matrix2cd;
+    using scalar_t = typename matrix_t::Scalar;
+    using dense_2x2_t = Eigen::Matrix<scalar_t, 2, 2>;
 
     // NB: required since we are indexing into the array below
     constexpr auto offset = static_cast<std::underlying_type_t<TermValue>>(TermValue::I);
@@ -55,7 +57,7 @@ auto QubitOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> s
     static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::Z) - offset == 3);
 
     static const std::array<matrix_t, 4> pauli_matrices = {
-        dense_2x2_t::Identity().sparseView(),
+        ::generate_eigen_diagonal<scalar_t, 4>(),
         Op::X::matrix().sparseView(),
         Op::Y::matrix().sparseView(),
         Op::Z::matrix().sparseView(),
@@ -84,10 +86,7 @@ auto QubitOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> s
 
     const auto process_term = [n_qubits_value](const auto& local_ops, const auto& coeff) -> matrix_t {
         if (std::empty(local_ops)) {
-            return (Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>::Identity(
-                        1U << n_qubits_value, 1U << n_qubits_value))
-                       .sparseView()
-                   * coeff;
+            return details::n_identity<scalar_t>(1U << n_qubits_value) * coeff;
         }
 
         // TODO(dnguyen): The `total` variable is probably not required and could be removed altogether...
@@ -112,14 +111,14 @@ auto QubitOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> s
         MQ_ERROR("Coeff is not const! ({})", it->second);
         return {};
     }
-    auto result = process_term(it->first, it->second);
+    auto result = process_term(it->first, coeff_policy_t::get_num(it->second));
     ++it;
     for (; it != end(base_t::terms_); ++it) {
         if (!coeff_policy_t::is_const(it->second)) {
             MQ_ERROR("Coeff is not const! ({})", it->second);
             return {};
         }
-        result += process_term(it->first, it->second);
+        result += process_term(it->first, coeff_policy_t::get_num(it->second));
     }
 
     return result;

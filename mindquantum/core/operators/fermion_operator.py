@@ -20,7 +20,7 @@ from typing import Dict, List, Tuple
 
 from mindquantum.core.operators._base_operator import EQ_TOLERANCE
 from mindquantum.experimental._mindquantum_cxx.ops import (
-    FermionOperatorPR as FermionOperator_,
+    FermionOperatorPRCD as FermionOperator_,
 )
 from mindquantum.experimental.utils import TermValue
 from mindquantum.utils.type_value_check import _check_input_type

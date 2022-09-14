@@ -51,7 +51,7 @@ static_assert(get_type_name<mindquantum::A>() == "mindquantum::A"sv);
 static_assert(get_type_name<mindquantum::B>() == "mindquantum::B"sv);
 static_assert(get_type_name<mindquantum::C>() == "mindquantum::C"sv);
 static_assert(get_type_name<mindquantum::sub::D<double>>() == "mindquantum::sub::D<double>"sv);
-#if (defined __clang__) && (MQ_CLANG_MAJOR >= 10)
+#if (defined __clang__) && (MQ_CLANG_MAJOR > 10)
 static_assert(get_type_name<mindquantum::sub::E<std::optional<int>>>() == "mindquantum::sub::E<std::optional<int>>"sv);
 #else
 static_assert(get_type_name<mindquantum::sub::E<std::optional<int>>>() == "mindquantum::sub::E<std::optional<int> >"sv);

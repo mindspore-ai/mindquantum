@@ -260,8 +260,8 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::subs(
     const details::CoeffSubsProxy<coefficient_t>& subs_params) const -> derived_t {
     auto out(*static_cast<const derived_t*>(this));
 
-    // NB: cannot use the usual range-for loop since that uses operator*() implicitly and using tsl::ordered_map the
-    //     values accessed in this way are constants
+    // NB: cannot use the usual range-for loop or std::algorithm since that uses operator*() implicitly and using
+    //     tsl::ordered_map the values accessed in this way are constants.
     for (auto it(begin(out.terms_)), it_end(end(out.terms_)); it != it_end; ++it) {
         subs_params.apply(it.value());
     }
@@ -281,7 +281,7 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::hermitian() 
     for (auto& [local_ops, coeff] : terms_) {
         terms.emplace(std::move(term_policy_t::hermitian(local_ops)), std::move(coeff_policy_t::conjugate(coeff)));
     }
-    return derived_t(std::move(terms));
+    return derived_t{std::move(terms)};
 }
 
 // =============================================================================
@@ -642,7 +642,7 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::pow(uint32_t
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 #if MQ_HAS_CONCEPTS
-template <mindquantum::concepts::compat_terms_op<derived_t_<coefficient_t_>> op_t>
+template <mindquantum::concepts::terms_op op_t>
 #else
 template <typename op_t, typename>
 #endif  // MQ_HAS_CONCEPTS
