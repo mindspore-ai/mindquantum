@@ -56,6 +56,8 @@ Quantum Gates
 
 .. include:: mindquantum.core.gates.ISWAPGate.rst
 
+.. include:: mindquantum.core.gates.KrausChannel.rst
+
 .. include:: mindquantum.core.gates.Measure.rst
 
 .. include:: mindquantum.core.gates.MeasureResult.rst
