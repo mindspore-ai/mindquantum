@@ -38,6 +38,8 @@ class UnitTestAccessor;
 namespace mindquantum::ops::test {}  // namespace mindquantum::ops::test
 
 namespace mindquantum::ops {
+class FermionOperatorBase {};  // Empty base class
+
 //! Definition of a fermionic operator
 /*!
  *
@@ -48,7 +50,9 @@ namespace mindquantum::ops {
  *  follows the anti-commutation relationship.
  */
 template <typename coeff_t>
-class FermionOperator : public TermsOperatorBase<FermionOperator, coeff_t, details::FermionOperatorTermPolicy> {
+class FermionOperator
+    : public TermsOperatorBase<FermionOperator, coeff_t, details::FermionOperatorTermPolicy>
+    , public FermionOperatorBase {
  public:
     using base_t = TermsOperatorBase<FermionOperator, coeff_t, details::FermionOperatorTermPolicy>;
     using base_t::get_terms;

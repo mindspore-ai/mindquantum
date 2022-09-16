@@ -21,6 +21,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
 
 #include "core/parameter_resolver.hpp"
@@ -81,10 +82,10 @@ using namespace pybind11::literals;
 
 // -----------------------------------------------------------------------------
 
-template <class op_t>
+template <class op_t, class base_t>
 auto bind_ops(pybind11::module& module, const std::string_view& name) {
     using coeff_t = typename op_t::coefficient_t;
-    return py::class_<op_t, std::shared_ptr<op_t>>(module, name.data())
+    return py::class_<op_t, base_t, std::shared_ptr<op_t>>(module, name.data())
         .def(py::init<>())
         .def(py::init([](op_t& op, bool copy) {
             if (copy) {
@@ -141,10 +142,10 @@ template <typename T>
 using qop_t = ops::QubitOperator<T>;
 
 template <typename T>
-using py_fop_t = py::class_<fop_t<T>, std::shared_ptr<fop_t<T>>>;
+using py_fop_t = py::class_<fop_t<T>, ops::FermionOperatorBase, std::shared_ptr<fop_t<T>>>;
 
 template <typename T>
-using py_qop_t = py::class_<qop_t<T>, std::shared_ptr<qop_t<T>>>;
+using py_qop_t = py::class_<qop_t<T>, ops::QubitOperatorBase, std::shared_ptr<qop_t<T>>>;
 
 template <typename T, typename... args_t>
 struct define_fermion_ops {
@@ -158,7 +159,8 @@ struct define_fermion_ops {
 template <typename T>
 struct define_fermion_ops<T> {
     static auto apply(pybind11::module& module, std::string_view name) {
-        return std::make_tuple(bind_ops<fop_t<T>>(module, name).def("normal_ordered", &fop_t<T>::normal_ordered));
+        return std::make_tuple(bind_ops<fop_t<T>, ops::FermionOperatorBase>(module, name)
+                                   .def("normal_ordered", &fop_t<T>::normal_ordered));
     }
 };
 
@@ -174,7 +176,8 @@ struct define_qubit_ops {
 template <typename T>
 struct define_qubit_ops<T> {
     static auto apply(pybind11::module& module, std::string_view name) {
-        return std::make_tuple(bind_ops<qop_t<T>>(module, name).def("count_gates", &qop_t<T>::count_gates));
+        return std::make_tuple(
+            bind_ops<qop_t<T>, ops::QubitOperatorBase>(module, name).def("count_gates", &qop_t<T>::count_gates));
     }
 };
 }  // namespace bindops
@@ -210,11 +213,18 @@ void init_mindquantum_ops(pybind11::module& module) {
      * The two types for double and std::complex<double> do not do anything in practice but are defined anyway in order
      * to have a consistent API.
      */
-    py::class_<ops::details::CoeffSubsProxy<double>>(module, "DoubleSubsProxy").def(py::init<double>());
-    py::class_<ops::details::CoeffSubsProxy<std::complex<double>>>(module, "CmplxDoubleSubsProxy")
+    py::class_<ops::details::CoeffSubsProxy<double>>(module, "DoubleSubsProxy",
+                                                     "Substitution proxy class for floating point numbers")
+        .def(py::init<double>());
+    py::class_<ops::details::CoeffSubsProxy<std::complex<double>>>(module, "CmplxDoubleSubsProxy",
+                                                                   "Substitution proxy class for complex numbers")
         .def(py::init<std::complex<double>>());
-    py::class_<ops::details::CoeffSubsProxy<pr_t>>(module, "DoublePRSubsProxy").def(py::init<pr_t>());
-    py::class_<ops::details::CoeffSubsProxy<pr_cmplx_t>>(module, "CmplxPRSubsProxy").def(py::init<pr_cmplx_t>());
+    py::class_<ops::details::CoeffSubsProxy<pr_t>>(module, "DoublePRSubsProxy",
+                                                   "Substitution proxy class for mqbackend.real_pr")
+        .def(py::init<pr_t>());
+    py::class_<ops::details::CoeffSubsProxy<pr_cmplx_t>>(module, "CmplxPRSubsProxy",
+                                                         "Substitution proxy class for mqbackend.complex_pr")
+        .def(py::init<pr_cmplx_t>());
 
     // -----------------------------------------------------------------------------
 
@@ -222,6 +232,13 @@ void init_mindquantum_ops(pybind11::module& module) {
 
     // -----------------------------------------------------------------------------
     // FermionOperator
+
+    // Register empty base class (for instance(X, FermionOperatorBase) purposes
+    py::class_<ops::FermionOperatorBase, std::shared_ptr<ops::FermionOperatorBase>>(
+        module, "FermionOperatorBase",
+        "Base class for all C++ fermion operators. Use only for isinstance(obj, FermionOperatorBase) or use "
+        "is_fermion_operator(obj)");
+    module.def("is_fermion_operator", &pybind11::isinstance<ops::FermionOperatorBase>);
 
     // NB: pybind11 maps both float and double to Python float
     auto [fop_double, fop_cmplx_double, fop_pr_double, fop_pr_cmplx_double]
@@ -273,6 +290,13 @@ void init_mindquantum_ops(pybind11::module& module) {
 
     // -----------------------------------------------------------------------------
     // QubitOperator
+
+    // Register empty base class (for instance(X, QubitOperatorBase) purposes
+    py::class_<ops::QubitOperatorBase, std::shared_ptr<ops::QubitOperatorBase>>(
+        module, "QubitOperatorBase",
+        "Base class for all C++ qubit operators. Use only for isinstance(obj, QubitOperatorBase) or use "
+        "is_qubit_operator(obj)");
+    module.def("is_qubit_operator", &pybind11::isinstance<ops::QubitOperatorBase>);
 
     // NB: pybind11 maps both float and double to Python float
     auto [qop_double, qop_cmplx_double, qop_pr_double, qop_pr_cmplx_double]

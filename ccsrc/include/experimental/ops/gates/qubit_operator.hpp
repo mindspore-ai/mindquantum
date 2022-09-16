@@ -38,6 +38,8 @@ class UnitTestAccessor;
 #endif  // UNIT_TESTS
 
 namespace mindquantum::ops {
+class QubitOperatorBase {};  // Empty base class
+
 //! Definition of a qubit operator; a sum of terms acting on qubits.
 /*!
  *  A term is an operator acting on n qubits and can be represented as:
@@ -53,7 +55,9 @@ namespace mindquantum::ops {
  *  True.
  */
 template <typename coeff_t>
-class QubitOperator : public TermsOperatorBase<QubitOperator, coeff_t, details::QubitOperatorTermPolicy> {
+class QubitOperator
+    : public TermsOperatorBase<QubitOperator, coeff_t, details::QubitOperatorTermPolicy>
+    , public QubitOperatorBase {
  public:
     using base_t = TermsOperatorBase<QubitOperator, coeff_t, details::QubitOperatorTermPolicy>;
     using base_t::get_terms;
