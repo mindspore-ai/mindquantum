@@ -85,7 +85,7 @@ auto QubitOperatorTermPolicy<coefficient_t>::simplify(terms_t terms, coefficient
     -> std::tuple<terms_t, coefficient_t> {
     if constexpr (!traits::is_complex_v<coefficient_t>) {
         MQ_INFO("Cannot simplify a real-valued QubitOperator! Please cast to a complex-valued operator and retry.");
-        return {terms_t{}, coeff};
+        return {terms, coeff};
     } else {
         if (std::empty(terms)) {
             return {terms_t{}, coeff};
@@ -118,7 +118,7 @@ auto QubitOperatorTermPolicy<coefficient_t>::simplify(terms_t terms, coefficient
 // -----------------------------------------------------------------------------
 
 template <typename coefficient_t>
-auto QubitOperatorTermPolicy<coefficient_t>::simplify(py_terms_t py_terms, coefficient_t coeff)
+auto QubitOperatorTermPolicy<coefficient_t>::simplify(const py_terms_t& py_terms, coefficient_t coeff)
     -> std::tuple<terms_t, coefficient_t> {
     terms_t terms;
     terms.reserve(std::size(py_terms));
@@ -133,10 +133,11 @@ auto QubitOperatorTermPolicy<coefficient_t>::simplify(py_terms_t py_terms, coeff
 // =============================================================================
 
 template <typename coefficient_t>
-auto QubitOperatorTermPolicy<coefficient_t>::sort_terms(terms_t local_ops, coefficient_t coeff)
+auto QubitOperatorTermPolicy<coefficient_t>::sort_terms(terms_t terms, coefficient_t coeff)
     -> std::pair<terms_t, coefficient_t> {
-    auto [a, b] = simplify(local_ops, coeff);
-    return {std::move(a), b};  // TODO(dnguyen): Should we move? or can (N)RVO take care of that?
+    std::stable_sort(
+        begin(terms), end(terms), [](const auto& lhs, const auto& rhs) constexpr { return lhs.first < rhs.first; });
+    return {std::move(terms), coeff};  // TODO(dnguyen): Should we move? or can (N)RVO take care of that?
 }
 
 // =============================================================================

@@ -29,15 +29,15 @@ namespace mindquantum::ops::details {
 // =============================================================================
 
 template <typename coefficient_t>
-auto FermionOperatorTermPolicy<coefficient_t>::simplify(terms_t local_ops, coefficient_t coeff)
+auto FermionOperatorTermPolicy<coefficient_t>::simplify(terms_t terms, coefficient_t coeff)
     -> std::tuple<std::vector<term_t>, coefficient_t> {
-    return sort_terms(std::move(local_ops), coeff);
+    return sort_terms(std::move(terms), coeff);
 }
 
 // -----------------------------------------------------------------------------
 
 template <typename coefficient_t>
-auto FermionOperatorTermPolicy<coefficient_t>::simplify(py_terms_t py_terms, coefficient_t coeff)
+auto FermionOperatorTermPolicy<coefficient_t>::simplify(const py_terms_t& py_terms, coefficient_t coeff)
     -> std::tuple<terms_t, coefficient_t> {
     terms_t terms;
     terms.reserve(std::size(py_terms));
@@ -52,10 +52,9 @@ auto FermionOperatorTermPolicy<coefficient_t>::simplify(py_terms_t py_terms, coe
 // =============================================================================
 
 template <typename coefficient_t>
-auto FermionOperatorTermPolicy<coefficient_t>::sort_terms(terms_t local_ops, coefficient_t coeff)
+auto FermionOperatorTermPolicy<coefficient_t>::sort_terms(terms_t terms, coefficient_t coeff)
     -> std::pair<terms_t, coefficient_t> {
-    // std::sort(rbegin(local_ops), rend(local_ops));
-    return {std::move(local_ops), coeff};
+    return {std::move(terms), coeff};
 }
 
 }  // namespace mindquantum::ops::details

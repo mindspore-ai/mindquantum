@@ -15,6 +15,7 @@
 #ifndef QUBIT_OPERATOR_TPP
 #define QUBIT_OPERATOR_TPP
 
+#include <cstdint>
 #include <numeric>
 #include <optional>
 #include <utility>
@@ -114,8 +115,7 @@ auto QubitOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> s
     };
 
     // NB: if the coefficient type is always constant (e.g. float, double), then the compiler should be able to
-    // remove
-    //     both if() below.
+    // remove both if() below.
 
     auto it = begin(base_t::terms_);
     if (!coeff_policy_t::is_const(it->second)) {

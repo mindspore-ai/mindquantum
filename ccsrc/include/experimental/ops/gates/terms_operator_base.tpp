@@ -92,6 +92,7 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(const coeff_term_dict_t& terms) {
     for (const auto& [local_ops, coeff] : terms) {
+        // NB: not calling simplify() here... assuming that the terms are simplified already.
         terms_.emplace(term_policy_t::sort_terms(local_ops, coeff));
     }
 
@@ -700,7 +701,7 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::add_sub_impl
                                                                                   coeff_unary_op_t&& coeff_unary_op)
     -> derived_t& {
     using conv_helper_t = ::details::conversion_helper<coefficient_t>;
-    for (const auto& [term, coeff] : other.get_terms()) {
+    for (const auto& [term, coeff] : other.terms_) {
         auto it = terms_.find(term);
         if (it != terms_.end()) {
             assign_modify_op(it.value(), conv_helper_t::apply(coeff));

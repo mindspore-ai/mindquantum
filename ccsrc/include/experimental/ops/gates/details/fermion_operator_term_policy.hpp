@@ -67,16 +67,17 @@ struct FermionOperatorTermPolicy : FermionOpteratorTermPolicyBase {
     static std::tuple<std::vector<term_t>, coefficient_t> simplify(terms_t terms, coefficient_t coeff = 1.);
 
     //! Simplify the list of local operators
-    static std::tuple<std::vector<term_t>, coefficient_t> simplify(py_terms_t py_terms, coefficient_t coeff = 1.);
+    static std::tuple<std::vector<term_t>, coefficient_t> simplify(const py_terms_t& py_terms,
+                                                                   coefficient_t coeff = 1.);
 
     //! Sort a list of local operators
     /*!
-     * \param local_ops A list of local operators
+     * \param terms A list of local operators
      * \param coeff A coefficient
      * \note Potentially called by the TermsOperator constructor
      * \note Defaults to normal ordering by calling \sa normal_ordered_term_
      */
-    static std::pair<terms_t, coefficient_t> sort_terms(terms_t local_ops, coefficient_t coeff);
+    static std::pair<terms_t, coefficient_t> sort_terms(terms_t terms, coefficient_t coeff);
 };
 }  // namespace mindquantum::ops::details
 
