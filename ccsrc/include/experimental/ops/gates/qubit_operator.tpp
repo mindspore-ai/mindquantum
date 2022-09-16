@@ -91,27 +91,48 @@ auto QubitOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> s
             return details::n_identity<scalar_t>(1U << n_qubits_value) * coeff;
         }
 
-        // TODO(dnguyen): The `total` variable is probably not required and could be removed altogether...
-        std::vector<matrix_t> total(
-            n_qubits_value, pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(TermValue::I) - offset]);
-        // Workaround MINGW64 compiler error with GCC 8.1
-#if (defined __MINGW32__) || (defined __MINGW64__)
+        // NB: IMPORTANT! This below assumes that simplify() has been called correctly to eliminate terms like X1 Y1
+        std::vector<int64_t> order(n_qubits_value, -1);
+        int64_t idx = 0L;
         for (const auto& term : local_ops) {
-            const auto [qubit_id, local_op] = term;
-            const std::size_t idx = static_cast<std::underlying_type_t<TermValue>>(local_op) - offset;
-            total[qubit_id] = pauli_matrices[idx];
+            order[term.first] = idx++;
         }
-#else
-        for (const auto& [qubit_id, local_op] : local_ops) {
-            total[qubit_id] = pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(local_op) - offset];
-        }
-#endif  // MINGW
-
         matrix_t init(1, 1);
         init.insert(0, 0) = coeff;
-        return std::accumulate(begin(total), end(total), init, [](const matrix_t& init, const auto& matrix) {
-            return Eigen::kroneckerProduct(matrix, init).eval();
+        return std::accumulate(begin(order), end(order), init, [&local_ops](const matrix_t& init, const auto& idx) {
+            if (idx < 0) {
+                static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::I) - offset == 0);
+                return Eigen::kroneckerProduct(pauli_matrices[0], init).eval();
+            }
+            return Eigen::kroneckerProduct(
+                       pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(local_ops[idx].second) - offset],
+                       init)
+                .eval();
         });
+
+        // NB: IMPORTANT! This below assumes that simplify() has been called correctly to eliminate terms like X1 Y1
+        // std::vector<matrix_t> total(
+        //     n_qubits_value, pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(TermValue::I) - offset]);
+
+        //         // Workaround internal compiler error with GCC 8.1
+        // #if (defined __GNUC__) && (__GNUC__ == 8 && __GNUC_MINOR__ == 1)
+        //         for (const auto& term : local_ops) {
+        //             const auto [qubit_id, local_op] = term;
+        //             total[qubit_id] = pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(local_op) -
+        //             offset];
+        //         }
+        // #else
+        //         for (const auto& [qubit_id, local_op] : local_ops) {
+        //             total[qubit_id] = pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(local_op) -
+        //             offset];
+        //         }
+        // #endif  // MINGW
+
+        //         matrix_t init(1, 1);
+        //         init.insert(0, 0) = coeff;
+        //         return std::accumulate(begin(total), end(total), init, [](const matrix_t& init, const auto& matrix) {
+        //             return Eigen::kroneckerProduct(matrix, init).eval();
+        //         });
     };
 
     // NB: if the coefficient type is always constant (e.g. float, double), then the compiler should be able to
