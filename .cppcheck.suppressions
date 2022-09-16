@@ -24,6 +24,7 @@ operatorEqVarError:ccsrc/include/experimental/decompositions/decomposition_atom.
 preprocessorErrorDirective:ccsrc/include/config/details/cxx20_compatibility.hpp:20
 preprocessorErrorDirective:ccsrc/include/experimental/decompositions/rules/config.hpp
 preprocessorErrorDirective:ccsrc/include/experimental/ops/parametric/angle_base.hpp
+preprocessorErrorDirective:ccsrc/python/experimental/lib/ops/details/define_binary_operator_helpers.hpp
 preprocessorErrorDirective:ccsrc/python/experimental/lib/ops/ops.cpp
 preprocessorErrorDirective:tests/decompositions/test_apply_atoms.cpp:48
 preprocessorErrorDirective:tests/ops/test_angle_parametric_gates.cpp:28
