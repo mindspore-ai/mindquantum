@@ -95,7 +95,7 @@ class MaxCutAnsatz(Ansatz):
         q1: ──H────ZZ(beta_0)────ZZ(beta_0)────────┼─────────RX(alpha_0)──
                                      │             │
         q2: ──H──────────────────ZZ(beta_0)────ZZ(beta_0)────RX(alpha_0)──
-
+        >>>
         >>> maxcut.hamiltonian
         3/2 [] +
         -1/2 [Z0 Z1] +
