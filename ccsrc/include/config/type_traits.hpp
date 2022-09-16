@@ -52,8 +52,13 @@ struct is_std_complex<std::complex<T>> : std::true_type {};
 template <typename T>
 inline constexpr auto is_std_complex_v = is_std_complex<T>::value;
 
+// -----------------------------------------------------------------------------
+
 template <typename T>
-inline constexpr auto is_complex_v = is_std_complex_v<T>;
+struct is_complex : is_std_complex<T> {};
+
+template <typename T>
+inline constexpr auto is_complex_v = is_complex<T>::value;
 
 // =============================================================================
 

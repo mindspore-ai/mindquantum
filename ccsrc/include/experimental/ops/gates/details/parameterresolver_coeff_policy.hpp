@@ -58,7 +58,7 @@ struct CoeffSubsProxy<ParameterResolver<float_t>> {
     explicit CoeffSubsProxy(subs_t params_a) : params(std::move(params_a)) {
     }
 
-    void apply(coeff_t& coeff) {
+    void apply(coeff_t& coeff) const {
         coeff.Combination(params);
     }
 
@@ -78,7 +78,7 @@ struct CoeffPolicy<ParameterResolver<float_t>> : CoeffPolicyBase<ParameterResolv
     using matrix_coeff_t = float_t;
 
     static const coeff_t one;
-    static constexpr auto is_complex_valued = traits::is_complex_v<float_t>;
+    static constexpr auto is_complex_valued = traits::is_std_complex_v<float_t>;
 
     // Getter
     static constexpr auto get_num(const coeff_t& coeff) {

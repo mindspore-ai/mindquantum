@@ -23,7 +23,11 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "core/parameter_resolver.hpp"
+#include "details/define_binary_operator_helpers.hpp"
+
 #include "experimental/ops/gates.hpp"
+#include "experimental/ops/gates/details/coeff_policy.hpp"
 #include "experimental/ops/gates/fermion_operator.hpp"
 #include "experimental/ops/gates/qubit_operator.hpp"
 #include "experimental/ops/parametric/angle_gates.hpp"
@@ -75,75 +79,7 @@ void init_tweedledum_ops(pybind11::module& module) {
 namespace bindops {
 using namespace pybind11::literals;
 
-#define TO_STRING1(X)    #X
-#define TO_STRING(X)     TO_STRING1(X)
-#define CONCAT2(A, B)    A##B
-#define CONCAT3(A, B, C) A##B##C
-
-#define PYBIND11_DEFINE_BINOP_IMPL(py_name, lhs_t, rhs_t, op)                                                          \
-    def(                                                                                                               \
-        py_name, [](lhs_t& lhs, rhs_t rhs) { return lhs op rhs; }, py::is_operator())
-#define PYBIND11_DEFINE_BINOP(py_name, lhs_t, rhs_t, op) PYBIND11_DEFINE_BINOP_IMPL(#py_name, lhs_t, rhs_t, op)
-#define PYBIND11_DEFINE_BINOP_PAIR(py_name, lhs_t, rhs_t, op)                                                          \
-    PYBIND11_DEFINE_BINOP_IMPL(TO_STRING(CONCAT3(__i, py_name, __)), lhs_t, rhs_t, CONCAT2(op, =))                     \
-        .PYBIND11_DEFINE_BINOP_IMPL(TO_STRING(CONCAT3(__, py_name, __)), const lhs_t, rhs_t, op)
-#define PYBIND11_DEFINE_UNOP(py_name, lhs_t, op)                                                                       \
-    def(                                                                                                               \
-        #py_name, [](const lhs_t& base) { return op base; }, py::is_operator())
-
-namespace details {
-template <typename op_t, typename T>
-struct plus {
-    template <typename py_klass_t>
-    static constexpr void apply(py_klass_t& klass) {
-        klass.PYBIND11_DEFINE_BINOP_PAIR(add, op_t, T, +);
-    }
-};
-template <typename op_t, typename T>
-struct minus {
-    template <typename py_klass_t>
-    static constexpr void apply(py_klass_t& klass) {
-        klass.PYBIND11_DEFINE_BINOP_PAIR(add, op_t, T, -);
-    }
-};
-template <typename op_t, typename T>
-struct times {
-    template <typename py_klass_t>
-    static constexpr void apply(py_klass_t& klass) {
-        klass.PYBIND11_DEFINE_BINOP_PAIR(add, op_t, T, *);
-    }
-};
-template <typename op_t, typename T>
-struct divides {
-    template <typename py_klass_t>
-    static constexpr void apply(py_klass_t& klass) {
-        klass.PYBIND11_DEFINE_BINOP_PAIR(add, op_t, T, /);
-    }
-};
-}  // namespace details
-
-template <typename op_t, typename... args_t>
-struct binop_definition {
-    template <template <typename... others_t> class func_t, typename py_klass_t>
-    static constexpr void apply(py_klass_t& klass) {
-        binop_definition<op_t, args_t...>::template apply<func_t>(klass);
-    }
-};
-
-template <typename op_t>
-struct binop_definition<op_t> {
-    template <template <typename... others_t> class func_t, typename py_klass_t>
-    static constexpr void apply(py_klass_t& klass) {
-    }
-};
-template <typename op_t, typename T, typename... args_t>
-struct binop_definition<op_t, T, args_t...> {
-    template <template <typename... others_t> class func_t, typename py_klass_t>
-    static constexpr void apply(py_klass_t& klass) {
-        func_t<op_t, T>::apply(klass);
-        binop_definition<op_t, args_t...>::template apply<func_t>(klass);
-    }
-};
+// -----------------------------------------------------------------------------
 
 template <class op_t>
 auto bind_ops(pybind11::module& module, const std::string_view& name) {
@@ -165,6 +101,7 @@ auto bind_ops(pybind11::module& module, const std::string_view& name) {
         .def("count_qubits", &op_t::count_qubits)
         .def("is_identity", &op_t::is_identity, "abs_tol"_a = op_t::EQ_TOLERANCE)
         .def_static("identity", &op_t::identity)
+        .def("subs", &op_t::subs, "subs_proxy"_a)
         .def_property("constant", static_cast<void (op_t::*)(const coeff_t&)>(&op_t::constant),
                       static_cast<coeff_t (op_t::*)() const>(&op_t::constant))
         .def_property_readonly("is_singlet", &op_t::is_singlet)
@@ -184,23 +121,17 @@ auto bind_ops(pybind11::module& module, const std::string_view& name) {
         .def(
             "__repr__", [](const op_t& base) { return base.to_string(); }, py::is_operator())
         .def("get_coeff", &op_t::get_coeff)
-        .PYBIND11_DEFINE_BINOP_PAIR(add, op_t, const op_t&, +)
-        .PYBIND11_DEFINE_BINOP_PAIR(sub, op_t, const op_t&, -)
-        .PYBIND11_DEFINE_BINOP_PAIR(mul, op_t, const op_t&, *)
-        .PYBIND11_DEFINE_UNOP(__neg__, op_t, -)
-        .PYBIND11_DEFINE_BINOP(__eq__, const op_t, const op_t&, ==)
+        .PYBIND11_DEFINE_BINOP_INPLACE(add, op_t&, const op_t&, +)
+        .PYBIND11_DEFINE_BINOP_EXT(add, const op_t&, const op_t&, +)
+        .PYBIND11_DEFINE_BINOP_INPLACE(sub, op_t&, const op_t&, -)
+        .PYBIND11_DEFINE_BINOP_EXT(sub, const op_t&, const op_t&, -)
+        .PYBIND11_DEFINE_BINOP_INPLACE(mul, op_t&, const op_t&, *)
+        .PYBIND11_DEFINE_BINOP_EXT(mul, const op_t&, const op_t&, *)
+        .PYBIND11_DEFINE_UNOP(__neg__, const op_t&, -)
+        .PYBIND11_DEFINE_BINOP(__eq__, const op_t&, const op_t&, ==)
         .def(
             "__pow__", [](const op_t& base, unsigned int exponent) { return base.pow(exponent); }, py::is_operator())
         .def("matrix", &op_t::matrix, "n_qubits"_a);
-
-    // .PYBIND11_DEFINE_BINOP_PAIR(add, op_t, std::complex<double>, +)
-    // .PYBIND11_DEFINE_BINOP_PAIR(sub, op_t, double, -)
-    // .PYBIND11_DEFINE_BINOP_PAIR(sub, op_t, std::complex<double>, -)
-    // .PYBIND11_DEFINE_BINOP_PAIR(mul, op_t, double, *)
-    // .PYBIND11_DEFINE_BINOP_PAIR(mul, op_t, std::complex<double>, *)
-    // .PYBIND11_DEFINE_BINOP_PAIR(mul, op_t, typename op_t::coefficient_t&, *)
-    // .PYBIND11_DEFINE_BINOP_PAIR(truediv, op_t, double, /)
-    // .PYBIND11_DEFINE_BINOP_PAIR(truediv, op_t, std::complex<double>, /)
 }
 
 template <typename T>
@@ -230,6 +161,22 @@ struct define_fermion_ops<T> {
         return std::make_tuple(bind_ops<fop_t<T>>(module, name).def("normal_ordered", &fop_t<T>::normal_ordered));
     }
 };
+
+template <typename T, typename... args_t>
+struct define_qubit_ops {
+    template <typename... strings_t>
+    static auto apply(pybind11::module& module, std::string_view name, strings_t&&... names) {
+        static_assert(sizeof...(args_t) == sizeof...(strings_t));
+        return std::tuple_cat(define_qubit_ops<T>::apply(module, name),
+                              define_qubit_ops<args_t...>::apply(module, std::forward<strings_t>(names)...));
+    }
+};
+template <typename T>
+struct define_qubit_ops<T> {
+    static auto apply(pybind11::module& module, std::string_view name) {
+        return std::make_tuple(bind_ops<qop_t<T>>(module, name).def("count_gates", &qop_t<T>::count_gates));
+    }
+};
 }  // namespace bindops
 
 void init_mindquantum_ops(pybind11::module& module) {
@@ -253,33 +200,127 @@ void init_mindquantum_ops(pybind11::module& module) {
 
     // =========================================================================
 
+    namespace mq = mindquantum;
+    namespace op = bindops::details;
+
+    using pr_t = mq::ParameterResolver<double>;
+    using pr_cmplx_t = mq::ParameterResolver<std::complex<double>>;
+
+    /* These types are used when one wants to replace some parameters inside a FermionOperator or QubitOperator.
+     * The two types for double and std::complex<double> do not do anything in practice but are defined anyway in order
+     * to have a consistent API.
+     */
+    py::class_<ops::details::CoeffSubsProxy<double>>(module, "DoubleSubsProxy").def(py::init<double>());
+    py::class_<ops::details::CoeffSubsProxy<std::complex<double>>>(module, "CmplxDoubleSubsProxy")
+        .def(py::init<std::complex<double>>());
+    py::class_<ops::details::CoeffSubsProxy<pr_t>>(module, "DoublePRSubsProxy").def(py::init<pr_t>());
+    py::class_<ops::details::CoeffSubsProxy<pr_cmplx_t>>(module, "CmplxPRSubsProxy").def(py::init<pr_cmplx_t>());
+
+    // -----------------------------------------------------------------------------
+
+    using all_types_t = std::tuple<double, std::complex<double>, pr_t, pr_cmplx_t>;
+
+    // -----------------------------------------------------------------------------
+    // FermionOperator
+
     // NB: pybind11 maps both float and double to Python float
-    auto [fop_double, fop_cmplx_double, fop_pr_double, fop_pr_cmplx_double] = bindops::define_fermion_ops<
-        double, std::complex<double>, mindquantum::ParameterResolver<double>,
-        mindquantum::ParameterResolver<std::complex<double>>>::apply(module, "FermionOperatorD", "FermionOperatorCD",
-                                                                     "FermionOperatorPRD", "FermionOperatorPRCD");
+    auto [fop_double, fop_cmplx_double, fop_pr_double, fop_pr_cmplx_double]
+        = bindops::define_fermion_ops<double, std::complex<double>, pr_t, pr_cmplx_t>::apply(
+            module, "FermionOperatorD", "FermionOperatorCD", "FermionOperatorPRD", "FermionOperatorPRCD");
 
     static_assert(std::is_same_v<decltype(fop_double), bindops::py_fop_t<double>>);
     static_assert(std::is_same_v<decltype(fop_cmplx_double), bindops::py_fop_t<std::complex<double>>>);
 
-    // TODO(dnguyen): Need to differentiate between in-place and out-of-place operators!
-    //                -> in-place support less operations and out-of-place use conversions!
+    using fop_t = decltype(fop_double);
+    bindops::binop_definition<op::plus, fop_t>::inplace<double>(fop_double);
+    bindops::binop_definition<op::plus, fop_t>::external<all_types_t>(fop_double);
+    bindops::binop_definition<op::minus, fop_t>::inplace<double>(fop_double);
+    bindops::binop_definition<op::minus, fop_t>::external<all_types_t>(fop_double);
+    bindops::binop_definition<op::times, fop_t>::inplace<double>(fop_double);
+    bindops::binop_definition<op::times, fop_t>::external<all_types_t>(fop_double);
+    bindops::binop_definition<op::divides, fop_t>::inplace<double>(fop_double);
+    bindops::binop_definition<op::divides, fop_t>::external<all_types_t>(fop_double);
 
-    bindops::binop_definition<bindops::fop_t<double>, double>::apply<bindops::details::plus>(fop_double);
+    using fop_cmplx_t = decltype(fop_cmplx_double);
+    bindops::binop_definition<op::plus, fop_cmplx_t>::inplace<double, std::complex<double>>(fop_cmplx_double);
+    bindops::binop_definition<op::plus, fop_cmplx_t>::external<all_types_t>(fop_cmplx_double);
+    bindops::binop_definition<op::minus, fop_cmplx_t>::inplace<double, std::complex<double>>(fop_cmplx_double);
+    bindops::binop_definition<op::minus, fop_cmplx_t>::external<all_types_t>(fop_cmplx_double);
+    bindops::binop_definition<op::times, fop_cmplx_t>::inplace<double, std::complex<double>>(fop_cmplx_double);
+    bindops::binop_definition<op::times, fop_cmplx_t>::external<all_types_t>(fop_cmplx_double);
+    bindops::binop_definition<op::divides, fop_cmplx_t>::inplace<double, std::complex<double>>(fop_cmplx_double);
+    bindops::binop_definition<op::divides, fop_cmplx_t>::external<all_types_t>(fop_cmplx_double);
 
-    bindops::binop_definition<bindops::fop_t<std::complex<double>>, double,
-                              std::complex<double>>::apply<bindops::details::plus>(fop_cmplx_double);
+    using fop_pr_t = decltype(fop_pr_double);
+    bindops::binop_definition<op::plus, fop_pr_t>::inplace<double, pr_t>(fop_pr_double);
+    bindops::binop_definition<op::plus, fop_pr_t>::external<all_types_t>(fop_pr_double);
+    bindops::binop_definition<op::minus, fop_pr_t>::inplace<double, pr_t>(fop_pr_double);
+    bindops::binop_definition<op::minus, fop_pr_t>::external<all_types_t>(fop_pr_double);
+    bindops::binop_definition<op::times, fop_pr_t>::inplace<double, pr_t>(fop_pr_double);
+    bindops::binop_definition<op::times, fop_pr_t>::external<all_types_t>(fop_pr_double);
+    bindops::binop_definition<op::divides, fop_pr_t>::inplace<double, pr_t>(fop_pr_double);
+    bindops::binop_definition<op::divides, fop_pr_t>::external<all_types_t>(fop_pr_double);
 
-    // mindquantum::python::bindops::bind_ops<ops::QubitOperatorPR>(module, "QubitOperatorPR")
-    //     .def("count_gates", &ops::QubitOperatorPR::count_gates)
-    //     .def("subs", &ops::QubitOperatorPR::subs);
-    // mindquantum::python::bindops::bind_ops<ops::FermionOperatorPR>(module, "FermionOperatorPR")
-    //     .def("normal_ordered", &ops::FermionOperatorPR::normal_ordered)
-    //     .def("subs", &ops::FermionOperatorPR::subs);
-    // mindquantum::python::bindops::bind_ops<ops::QubitOperator>(module, "QubitOperator")
-    //     .def("count_gates", &ops::QubitOperator::count_gates);
-    // mindquantum::python::bindops::bind_ops<ops::FermionOperator>(module, "FermionOperator")
-    //     .def("normal_ordered", &ops::FermionOperator::normal_ordered);
+    using fop_pr_cmplx_t = decltype(fop_pr_cmplx_double);
+    bindops::binop_definition<op::plus, fop_pr_cmplx_t>::inplace<all_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::plus, fop_pr_cmplx_t>::external<all_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::minus, fop_pr_cmplx_t>::inplace<all_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::minus, fop_pr_cmplx_t>::external<all_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::times, fop_pr_cmplx_t>::inplace<all_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::times, fop_pr_cmplx_t>::external<all_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::divides, fop_pr_cmplx_t>::inplace<all_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::divides, fop_pr_cmplx_t>::external<all_types_t>(fop_pr_cmplx_double);
+
+    // -----------------------------------------------------------------------------
+    // QubitOperator
+
+    // NB: pybind11 maps both float and double to Python float
+    auto [qop_double, qop_cmplx_double, qop_pr_double, qop_pr_cmplx_double]
+        = bindops::define_qubit_ops<double, std::complex<double>, pr_t, pr_cmplx_t>::apply(
+            module, "QubitOperatorD", "QubitOperatorCD", "QubitOperatorPRD", "QubitOperatorPRCD");
+
+    static_assert(std::is_same_v<decltype(qop_double), bindops::py_qop_t<double>>);
+    static_assert(std::is_same_v<decltype(qop_cmplx_double), bindops::py_qop_t<std::complex<double>>>);
+
+    using qop_t = decltype(qop_double);
+    bindops::binop_definition<op::plus, qop_t>::inplace<double>(qop_double);
+    bindops::binop_definition<op::plus, qop_t>::external<all_types_t>(qop_double);
+    bindops::binop_definition<op::minus, qop_t>::inplace<double>(qop_double);
+    bindops::binop_definition<op::minus, qop_t>::external<all_types_t>(qop_double);
+    bindops::binop_definition<op::times, qop_t>::inplace<double>(qop_double);
+    bindops::binop_definition<op::times, qop_t>::external<all_types_t>(qop_double);
+    bindops::binop_definition<op::divides, qop_t>::inplace<double>(qop_double);
+    bindops::binop_definition<op::divides, qop_t>::external<all_types_t>(qop_double);
+
+    using qop_cmplx_t = decltype(qop_cmplx_double);
+    bindops::binop_definition<op::plus, qop_cmplx_t>::inplace<double, std::complex<double>>(qop_cmplx_double);
+    bindops::binop_definition<op::plus, qop_cmplx_t>::external<all_types_t>(qop_cmplx_double);
+    bindops::binop_definition<op::minus, qop_cmplx_t>::inplace<double, std::complex<double>>(qop_cmplx_double);
+    bindops::binop_definition<op::minus, qop_cmplx_t>::external<all_types_t>(qop_cmplx_double);
+    bindops::binop_definition<op::times, qop_cmplx_t>::inplace<double, std::complex<double>>(qop_cmplx_double);
+    bindops::binop_definition<op::times, qop_cmplx_t>::external<all_types_t>(qop_cmplx_double);
+    bindops::binop_definition<op::divides, qop_cmplx_t>::inplace<double, std::complex<double>>(qop_cmplx_double);
+    bindops::binop_definition<op::divides, qop_cmplx_t>::external<all_types_t>(qop_cmplx_double);
+
+    using qop_pr_t = decltype(qop_pr_double);
+    bindops::binop_definition<op::plus, qop_pr_t>::inplace<double, pr_t>(qop_pr_double);
+    bindops::binop_definition<op::plus, qop_pr_t>::external<all_types_t>(qop_pr_double);
+    bindops::binop_definition<op::minus, qop_pr_t>::inplace<double, pr_t>(qop_pr_double);
+    bindops::binop_definition<op::minus, qop_pr_t>::external<all_types_t>(qop_pr_double);
+    bindops::binop_definition<op::times, qop_pr_t>::inplace<double, pr_t>(qop_pr_double);
+    bindops::binop_definition<op::times, qop_pr_t>::external<all_types_t>(qop_pr_double);
+    bindops::binop_definition<op::divides, qop_pr_t>::inplace<double, pr_t>(qop_pr_double);
+    bindops::binop_definition<op::divides, qop_pr_t>::external<all_types_t>(qop_pr_double);
+
+    using qop_pr_cmplx_t = decltype(qop_pr_cmplx_double);
+    bindops::binop_definition<op::plus, qop_pr_cmplx_t>::inplace<all_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::plus, qop_pr_cmplx_t>::external<all_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::minus, qop_pr_cmplx_t>::inplace<all_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::minus, qop_pr_cmplx_t>::external<all_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::times, qop_pr_cmplx_t>::inplace<all_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::times, qop_pr_cmplx_t>::external<all_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::divides, qop_pr_cmplx_t>::inplace<all_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::divides, qop_pr_cmplx_t>::external<all_types_t>(qop_pr_cmplx_double);
 
     // =========================================================================
 

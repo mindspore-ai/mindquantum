@@ -16,6 +16,7 @@
 #define QUBIT_OPERATOR_TPP
 
 #include <numeric>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -57,7 +58,7 @@ auto QubitOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> s
     static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::Z) - offset == 3);
 
     static const std::array<matrix_t, 4> pauli_matrices = {
-        ::generate_eigen_diagonal<scalar_t, 4>(),
+        matrix_t{::generate_eigen_diagonal<scalar_t, 4>()},
         Op::X::matrix().sparseView(),
         Op::Y::matrix().sparseView(),
         Op::Z::matrix().sparseView(),
@@ -103,7 +104,8 @@ auto QubitOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> s
         });
     };
 
-    // NB: if the coefficient type is always constant (e.g. float, double), then the compiler should be able to remove
+    // NB: if the coefficient type is always constant (e.g. float, double), then the compiler should be able to
+    // remove
     //     both if() below.
 
     auto it = begin(base_t::terms_);

@@ -35,7 +35,7 @@ auto to_symengine(T&& t) {
         return SymEngine::integer(t);
     } else if constexpr (std::floating_point<type>) {
         return SymEngine::number(t);
-    } else if constexpr (traits::is_complex_v<type>) {
+    } else if constexpr (traits::is_std_complex_v<type>) {
         return SymEngine::complex_double(std::forward<T>(t));
     } else {
         return SymEngine::expand(std::forward<T>(t));
@@ -49,7 +49,7 @@ auto to_symengine(T&& t) {
         return SymEngine::integer(t);
     } else if constexpr (std::is_floating_point_v<type>) {
         return SymEngine::number(t);
-    } else if constexpr (traits::is_complex_v<type>) {
+    } else if constexpr (traits::is_std_complex_v<type>) {
         return SymEngine::complex_double(std::forward<T>(t));
     } else {
         return SymEngine::expand(std::forward<T>(t));

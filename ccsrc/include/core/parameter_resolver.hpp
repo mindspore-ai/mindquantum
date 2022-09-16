@@ -53,7 +53,7 @@ template <RealCastType cast_type, typename float_t>
 struct real_cast_impl<cast_type, ParameterResolver<std::complex<float_t>>> {
     using type = ParameterResolver<std::complex<float_t>>;
     static auto apply(const type& coeff) {
-        constexpr auto is_complex_valued = traits::is_complex_v<float_t>;
+        constexpr auto is_complex_valued = traits::is_std_complex_v<float_t>;
         ParameterResolver<traits::to_real_type_t<float_t>> new_coeff;
         if constexpr (cast_type == RealCastType::REAL) {
             new_coeff.const_value = coeff.const_value.real();
@@ -85,6 +85,12 @@ struct to_cmplx_type<ParameterResolver<float_t>> {
 };
 
 // -----------------------------------------------------------------------------
+// Template specialitation for is_complex<T>
+
+template <typename float_t>
+struct is_complex<ParameterResolver<float_t>> : is_complex<float_t> {};
+
+// -----------------------------------------------------------------------------
 // Template specialitation to support up_cast<...> and down_cast<...> for ParameterResolver<T>
 
 template <typename T>
@@ -95,15 +101,15 @@ struct type_promotion<ParameterResolver<T>> : details::type_promotion_encapsulat
 
 template <typename float_t, typename U>
 struct common_type<ParameterResolver<float_t>, U> {
-    using type = ParameterResolver<std::common_type_t<float_t, U>>;
+    using type = ParameterResolver<common_type_t<float_t, U>>;
 };
 template <typename T, typename float_t>
 struct common_type<T, ParameterResolver<float_t>> {
-    using type = ParameterResolver<std::common_type_t<T, float_t>>;
+    using type = ParameterResolver<common_type_t<T, float_t>>;
 };
 template <typename float_t, typename float2_t>
 struct common_type<ParameterResolver<float_t>, ParameterResolver<float2_t>> {
-    using type = ParameterResolver<std::common_type_t<float_t, float2_t>>;
+    using type = ParameterResolver<common_type_t<float_t, float2_t>>;
 };
 
 /* NB: these two are required to avoid ambiguous cases like:
@@ -112,11 +118,11 @@ struct common_type<ParameterResolver<float_t>, ParameterResolver<float2_t>> {
  */
 template <typename float_t, typename float2_t>
 struct common_type<ParameterResolver<float_t>, std::complex<float2_t>> {
-    using type = ParameterResolver<std::complex<std::common_type_t<float_t, float2_t>>>;
+    using type = ParameterResolver<common_type_t<float_t, std::complex<float2_t>>>;
 };
 template <typename float_t, typename float2_t>
 struct common_type<std::complex<float_t>, ParameterResolver<float2_t>> {
-    using type = ParameterResolver<std::complex<std::common_type_t<float_t, float2_t>>>;
+    using type = ParameterResolver<common_type_t<std::complex<float_t>, float2_t>>;
 };
 }  // namespace traits
 
@@ -187,7 +193,7 @@ struct ParameterResolver {
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(ParameterResolver<T>, data_, const_value, no_grad_parameters_, encoder_parameters_);
 
     MST<T> data_{};
-    T const_value = 0;
+    T const_value = static_cast<T>(0);
     SS no_grad_parameters_{};
     SS encoder_parameters_{};
     explicit ParameterResolver(T const_value) : const_value(const_value) {

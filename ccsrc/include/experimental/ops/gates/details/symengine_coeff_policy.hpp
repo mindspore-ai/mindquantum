@@ -77,7 +77,7 @@ struct CoeffSubsProxy<SymEngine::RCP<const SymEngine::Basic>> {
     explicit CoeffSubsProxy(subs_t params_a) : params(std::move(params_a)) {
     }
 
-    void apply(coeff_t& coeff) {
+    void apply(coeff_t& coeff) const {
         coeff = SymEngine::expand(coeff->subs(params));
     }
 

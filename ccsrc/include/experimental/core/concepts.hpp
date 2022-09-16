@@ -32,7 +32,7 @@ template <typename T, typename... Ts>
 concept tuple_contains = traits::tuple_contains<T, std::tuple<Ts...>>;
 
 template <typename T>
-concept std_complex = traits::is_complex_v<T>;
+concept std_complex = traits::is_std_complex_v<T>;
 
 template <typename T>
 concept CircuitLike = (concepts::same_decay_as<circuit_t, T> || concepts::same_decay_as<CircuitBlock, T>);

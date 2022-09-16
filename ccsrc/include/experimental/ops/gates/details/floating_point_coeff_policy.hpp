@@ -44,7 +44,7 @@ struct CoeffSubsProxy<float_t, std::enable_if_t<std::is_floating_point_v<float_t
     explicit CoeffSubsProxy(subs_t /* params */) {
     }
 
-    void apply(float_t& /* coeff */) {
+    void apply(float_t& /* coeff */) const {
     }
 };
 

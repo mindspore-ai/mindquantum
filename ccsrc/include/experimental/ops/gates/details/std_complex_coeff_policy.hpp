@@ -32,7 +32,7 @@ struct CoeffSubsProxy<std::complex<float_t>> {
     explicit CoeffSubsProxy(subs_t /* params */) {
     }
 
-    void apply(std::complex<float_t>& /* coeff */) {
+    void apply(std::complex<float_t>& /* coeff */) const {
     }
 };
 

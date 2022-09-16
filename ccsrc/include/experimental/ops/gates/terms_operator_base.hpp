@@ -143,7 +143,6 @@ class TermsOperatorBase {
     using coeff_policy_t = details::CoeffPolicy<coefficient_t>;
     using term_policy_t = term_policy_t_<coefficient_t>;
     using coefficient_real_t = typename coeff_policy_t::coeff_policy_real_t::coeff_t;
-    using matrix_coeff_t = typename coeff_policy_t::matrix_coeff_t;
 
     //! "Meta-function" to generate a a new related derived terms operator with a different coefficient type
     template <typename new_coeff_t>

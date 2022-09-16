@@ -52,6 +52,7 @@ class FermionOperator : public TermsOperatorBase<FermionOperator, coeff_t, detai
  public:
     using base_t = TermsOperatorBase<FermionOperator, coeff_t, details::FermionOperatorTermPolicy>;
     using base_t::get_terms;
+    using base_t::is_real_valued;
     using base_t::new_derived_t;
     using base_t::num_targets;
     using base_t::subs;
@@ -59,18 +60,18 @@ class FermionOperator : public TermsOperatorBase<FermionOperator, coeff_t, detai
     using typename base_t::coeff_term_dict_t;
     using typename base_t::coefficient_real_t;
     using typename base_t::coefficient_t;
-    using typename base_t::matrix_coeff_t;
     using typename base_t::term_policy_t;
     using self_t = FermionOperator<coefficient_t>;
 
+    using matrix_coeff_t = typename coeff_policy_t::matrix_coeff_t;
     using matrix_t = types::csr_matrix_t<matrix_coeff_t>;
 
     using TermsOperatorBase<FermionOperator, coeff_t, details::FermionOperatorTermPolicy>::TermsOperatorBase;
     FermionOperator() = default;
     FermionOperator(const FermionOperator&) = default;
-    FermionOperator(FermionOperator&&) noexcept(false) = default;
+    FermionOperator(FermionOperator&&) = default;
     FermionOperator& operator=(const FermionOperator&) = default;
-    FermionOperator& operator=(FermionOperator&&) noexcept(false) = default;
+    FermionOperator& operator=(FermionOperator&&) = default;
     ~FermionOperator() noexcept = default;
 
     // -------------------------------------------------------------------
