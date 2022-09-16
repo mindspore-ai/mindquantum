@@ -93,9 +93,18 @@ auto QubitOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> s
         // TODO(dnguyen): The `total` variable is probably not required and could be removed altogether...
         std::vector<matrix_t> total(
             n_qubits_value, pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(TermValue::I) - offset]);
+        // Workaround MINGW64 compiler error with GCC 8.1
+#if (defined __MINGW32__) || (defined __MINGW64__)
+        for (const auto& term : local_ops) {
+            const auto [qubit_id, local_op] = term;
+            const std::size_t idx = static_cast<std::underlying_type_t<TermValue>>(local_op) - offset;
+            total[qubit_id] = pauli_matrices[idx];
+        }
+#else
         for (const auto& [qubit_id, local_op] : local_ops) {
             total[qubit_id] = pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(local_op) - offset];
         }
+#endif  // MINGW
 
         matrix_t init(1, 1);
         init.insert(0, 0) = coeff;
