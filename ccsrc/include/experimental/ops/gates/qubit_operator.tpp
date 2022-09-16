@@ -100,6 +100,9 @@ auto QubitOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> s
         matrix_t init(1, 1);
         init.insert(0, 0) = coeff;
         return std::accumulate(begin(order), end(order), init, [&local_ops](const matrix_t& init, const auto& idx) {
+#ifdef _MSC_VER
+            constexpr auto offset = static_cast<std::underlying_type_t<TermValue>>(TermValue::I);
+#endif  // _MSC_VER
             if (idx < 0) {
                 static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::I) - offset == 0);
                 return Eigen::kroneckerProduct(pauli_matrices[0], init).eval();
