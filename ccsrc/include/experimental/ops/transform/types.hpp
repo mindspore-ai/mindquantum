@@ -19,7 +19,7 @@
 
 #include "core/parameter_resolver.hpp"
 
-#include "experimental/ops/gates/details/parameterresolver_coeff_policy.hpp"
+#include "experimental/ops/gates/details/parameter_resolver_coeff_policy.hpp"
 #include "experimental/ops/gates/fermion_operator.hpp"
 #include "experimental/ops/gates/qubit_operator.hpp"
 
