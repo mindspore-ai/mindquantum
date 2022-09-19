@@ -235,6 +235,13 @@ struct ParameterResolver {
     ParameterResolver& operator=(ParameterResolver&&) noexcept = default;
     ~ParameterResolver() noexcept = default;
 
+    explicit operator T() const {
+        if (!IsConst()) {
+            throw std::runtime_error("ParameterResolver: cannot convert to const value since not const!");
+        }
+        return this->const_value;
+    }
+
     size_t Size() const {
         return this->data_.size();
     }

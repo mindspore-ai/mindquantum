@@ -33,11 +33,11 @@ template <typename T, typename = void>
 struct CoeffSubsProxy;
 #endif  // MQ_HAS_CONCEPTS
 
+inline constexpr auto EQ_TOLERANCE = 1.e-8;
+
 template <typename coefficient_t>
 struct CoeffPolicyBase {
     using coeff_policy_real_t = CoeffPolicy<traits::to_real_type_t<coefficient_t>>;
-
-    static constexpr auto EQ_TOLERANCE = 1.e-8;
 
     // Substitute values (if at all supported)
     static auto subs(coefficient_t& coeff, const CoeffSubsProxy<coefficient_t>& subs_params) {

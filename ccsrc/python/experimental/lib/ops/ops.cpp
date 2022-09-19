@@ -16,7 +16,9 @@
 #include <tweedledum/IR/Qubit.h>
 
 #include <fmt/format.h>
+#include <pybind11/cast.h>
 #include <pybind11/complex.h>
+#include <pybind11/detail/common.h>
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
@@ -180,6 +182,37 @@ struct define_qubit_ops<T> {
             bind_ops<qop_t<T>, ops::QubitOperatorBase>(module, name).def("count_gates", &qop_t<T>::count_gates));
     }
 };
+
+template <typename self_t, typename... types_t>
+struct cast_helper_impl;
+
+template <typename self_t>
+struct cast_helper_impl<self_t> {
+    static py::object try_cast(const self_t& /* self */, const pybind11::object& /* type */) {
+        throw std::runtime_error("Invalid type passed to cast() member function!");
+        return py::none();
+    }
+};
+
+template <typename self_t, typename T, typename... types_t>
+struct cast_helper_impl<self_t, T, types_t...> {
+    static py::object try_cast(const self_t& self, const pybind11::object& type) {
+        if (type.is(py::type::of<T>())) {
+            const auto value = self.template cast<T>();
+            return py::cast(value);
+        }
+        return cast_helper_impl<self_t, types_t...>::try_cast(self, type);
+    }
+};
+
+template <typename self_t, typename... types_t>
+py::object cast(const self_t& self, const pybind11::object& type) {
+    if (!PyType_Check(type.ptr())) {
+        throw pybind11::type_error("Expect type as argument!");
+    }
+    return cast_helper_impl<self_t, types_t...>::try_cast(self, type);
+}
+
 }  // namespace bindops
 
 void init_mindquantum_ops(pybind11::module& module) {
@@ -226,6 +259,8 @@ void init_mindquantum_ops(pybind11::module& module) {
                                                          "Substitution proxy class for mqbackend.complex_pr")
         .def(py::init<pr_cmplx_t>());
 
+    module.attr("EQ_TOLERANCE") = py::float_(ops::details::EQ_TOLERANCE);
+
     // -----------------------------------------------------------------------------
 
     using all_types_t = std::tuple<double, std::complex<double>, pr_t, pr_cmplx_t>;
@@ -247,6 +282,26 @@ void init_mindquantum_ops(pybind11::module& module) {
 
     static_assert(std::is_same_v<decltype(fop_double), bindops::py_fop_t<double>>);
     static_assert(std::is_same_v<decltype(fop_cmplx_double), bindops::py_fop_t<std::complex<double>>>);
+
+    // ---------------------------------
+
+    using FermionOperatorD = decltype(fop_double)::type;
+    using FermionOperatorCD = decltype(fop_cmplx_double)::type;
+    using FermionOperatorPRD = decltype(fop_pr_double)::type;
+    using FermionOperatorPRCD = decltype(fop_pr_cmplx_double)::type;
+
+    fop_double.def("cast", bindops::cast<FermionOperatorD, FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD>,
+                   "Supported types: FermionOperatorD, FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD");
+    fop_cmplx_double.def("cast", bindops::cast<FermionOperatorCD, FermionOperatorPRCD>,
+                         "Supported types: FermionOperatorCD, FermionOperatorPRCD");
+
+    fop_pr_double.def("cast",
+                      bindops::cast<FermionOperatorD, FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD>,
+                      "Supported types: FermionOperatorD, FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD");
+    fop_pr_cmplx_double.def("cast", bindops::cast<FermionOperatorCD, FermionOperatorPRCD>,
+                            "Supported types: FermionOperatorCD, FermionOperatorPRCD");
+
+    // ---------------------------------
 
     using fop_t = decltype(fop_double);
     bindops::binop_definition<op::plus, fop_t>::inplace<double>(fop_double);
@@ -303,8 +358,29 @@ void init_mindquantum_ops(pybind11::module& module) {
         = bindops::define_qubit_ops<double, std::complex<double>, pr_t, pr_cmplx_t>::apply(
             module, "QubitOperatorD", "QubitOperatorCD", "QubitOperatorPRD", "QubitOperatorPRCD");
 
+    // ---------------------------------
+
     static_assert(std::is_same_v<decltype(qop_double), bindops::py_qop_t<double>>);
     static_assert(std::is_same_v<decltype(qop_cmplx_double), bindops::py_qop_t<std::complex<double>>>);
+
+    // ---------------------------------
+
+    using QubitOperatorD = decltype(qop_double)::type;
+    using QubitOperatorCD = decltype(qop_cmplx_double)::type;
+    using QubitOperatorPRD = decltype(qop_pr_double)::type;
+    using QubitOperatorPRCD = decltype(qop_pr_cmplx_double)::type;
+
+    qop_double.def("cast", bindops::cast<QubitOperatorD, QubitOperatorCD, QubitOperatorPRD, QubitOperatorPRCD>,
+                   "Supported types: QubitOperatorD, QubitOperatorCD, QubitOperatorPRD, QubitOperatorPRCD");
+    qop_cmplx_double.def("cast", bindops::cast<QubitOperatorCD, QubitOperatorPRCD>,
+                         "Supported types: QubitOperatorCD, QubitOperatorPRCD");
+
+    qop_pr_double.def("cast", bindops::cast<QubitOperatorD, QubitOperatorCD, QubitOperatorPRD, QubitOperatorPRCD>,
+                      "Supported types: QubitOperatorD, QubitOperatorCD, QubitOperatorPRD, QubitOperatorPRCD");
+    qop_pr_cmplx_double.def("cast", bindops::cast<QubitOperatorCD, QubitOperatorPRCD>,
+                            "Supported types: QubitOperatorCD, QubitOperatorPRCD");
+
+    // ---------------------------------
 
     using qop_t = decltype(qop_double);
     bindops::binop_definition<op::plus, qop_t>::inplace<double>(qop_double);

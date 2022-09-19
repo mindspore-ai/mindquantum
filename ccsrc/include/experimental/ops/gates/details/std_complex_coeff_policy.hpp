@@ -40,7 +40,6 @@ template <typename float_t>
 struct CoeffPolicy<std::complex<float_t>> : CoeffPolicyBase<std::complex<float_t>> {
     using coeff_t = std::complex<float_t>;
     using base_t = CoeffPolicyBase<coeff_t>;
-    using base_t::EQ_TOLERANCE;
     using coeff_policy_real_t = typename base_t::coeff_policy_real_t;
     using matrix_coeff_t = coeff_t;
 

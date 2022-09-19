@@ -28,6 +28,7 @@
 #include "config/detected.hpp"
 #include "config/type_traits.hpp"
 
+#include "core/parameter_resolver.hpp"
 #include "ops/test_utils.hpp"
 
 #include "experimental/core/logging.hpp"
@@ -107,6 +108,7 @@ struct DummyOperator : mindquantum::ops::TermsOperatorBase<DummyOperator, coeff_
 };
 }  // namespace
 
+using DummyOperatorD = DummyOperator<double>;
 using DummyOperatorCD = DummyOperator<std::complex<double>>;
 using coefficient_t = DummyOperatorCD::coefficient_t;
 using coeff_term_dict_t = DummyOperatorCD::coeff_term_dict_t;
@@ -262,7 +264,6 @@ static_assert(MQ_BINOP_COMMUTATIVE_VALID(op_t<cmplx_t<float>>, op_t<cmplx_t<doub
 static_assert(MQ_BINOP_COMMUTATIVE_VALID(op_t<cmplx_t<double>>, op_t<cmplx_t<double>>, op_t<cmplx_t<double>>));
 
 // Scalar - TermsOp binary operators
-// TODO(dnguyen): Fix some narrowing conversions like op_t<double> + cmplx_t<float> -> op_t<cmplx_t<float>>
 static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<float>, float, op_t<float>));
 static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<float>, double, op_t<double>));
 static_assert(MQ_BINOP_SCALAR_LEFT_VALID(op_t<float>, cmplx_t<float>, op_t<cmplx_t<float>>));
@@ -476,27 +477,51 @@ TEST_CASE("TermsOperator identity", "[terms_op][ops]") {
 
 // =============================================================================
 
-// TODO(dnguyen): Re-enable once we fix this!
-// TEST_CASE("TermsOperator real/imag", "[terms_op][ops]") {
-//     auto terms = coeff_term_dict_t{};
-//     terms.emplace(terms_t{{0, TermValue::Y}}, 1. + 2.i);
-//     terms.emplace(terms_t{{2, TermValue::Z}, {4, TermValue::X}}, 3. + 4.i);
-//     DummyOperatorD op{terms};
+TEST_CASE("TermsOperator cast", "[terms_op][ops]") {
+    auto terms = DummyOperatorD::coeff_term_dict_t{};
+    terms.emplace(terms_t{{0, TermValue::Y}}, 1.);
+    terms.emplace(terms_t{{2, TermValue::Z}, {4, TermValue::X}}, 3.2);
 
-//     auto real = op.real();
-//     REQUIRE(std::size(real) == std::size(op));
-//     for (const auto& [orig_terms, real_terms] : boost::combine(op.get_terms(), real.get_terms())) {
-//         CHECK(orig_terms.first == real_terms.first);
-//         CHECK(std::real(orig_terms.second) == real_terms.second);
-//     }
+    DummyOperatorD real_op{terms};
 
-//     auto imag = op.imag();
-//     REQUIRE(std::size(imag) == std::size(op));
-//     for (const auto& [orig_terms, imag_terms] : boost::combine(op.get_terms(), imag.get_terms())) {
-//         CHECK(orig_terms.first == imag_terms.first);
-//         CHECK(std::imag(orig_terms.second) == imag_terms.second);
-//     }
-// }
+    const auto cmplx_op = real_op.cast<DummyOperatorCD>();
+
+    REQUIRE(std::size(cmplx_op) == std::size(real_op));
+    for (const auto& [orig_terms, cmplx_terms] : boost::combine(real_op.get_terms(), cmplx_op.get_terms())) {
+        CHECK(orig_terms.first == cmplx_terms.first);
+        CHECK(static_cast<std::complex<double>>(orig_terms.second) == cmplx_terms.second);
+    }
+
+    const auto pr_op = real_op.cast<DummyOperator<mindquantum::ParameterResolver<double>>>();
+
+    REQUIRE(std::size(pr_op) == std::size(real_op));
+    for (const auto& [orig_terms, pr_terms] : boost::combine(real_op.get_terms(), pr_op.get_terms())) {
+        CHECK(orig_terms.first == pr_terms.first);
+        CHECK(pr_terms.second.IsConst());
+        CHECK(orig_terms.second == pr_terms.second.const_value);
+    }
+}
+
+TEST_CASE("TermsOperator real/imag cast", "[terms_op][ops]") {
+    auto terms = coeff_term_dict_t{};
+    terms.emplace(terms_t{{0, TermValue::Y}}, 1. + 2.i);
+    terms.emplace(terms_t{{2, TermValue::Z}, {4, TermValue::X}}, 3. + 4.i);
+    DummyOperatorCD op{terms};
+
+    auto real = op.real();
+    REQUIRE(std::size(real) == std::size(op));
+    for (const auto& [orig_terms, real_terms] : boost::combine(op.get_terms(), real.get_terms())) {
+        CHECK(orig_terms.first == real_terms.first);
+        CHECK(std::real(orig_terms.second) == real_terms.second);
+    }
+
+    auto imag = op.imag();
+    REQUIRE(std::size(imag) == std::size(op));
+    for (const auto& [orig_terms, imag_terms] : boost::combine(op.get_terms(), imag.get_terms())) {
+        CHECK(orig_terms.first == imag_terms.first);
+        CHECK(std::imag(orig_terms.second) == imag_terms.second);
+    }
+}
 
 // =============================================================================
 

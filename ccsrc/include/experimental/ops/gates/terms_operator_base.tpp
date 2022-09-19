@@ -38,6 +38,7 @@
 
 #include "experimental/core/logging.hpp"
 #include "experimental/ops/gates/terms_operator_base.hpp"
+#include "experimental/ops/gates/traits.hpp"
 #include "experimental/ops/meta/dagger.hpp"
 
 // =============================================================================
@@ -372,8 +373,32 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::split() cons
 
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
+#if MQ_HAS_CONCEPTS && !(defined _MSC_VER)
+template <mindquantum::concepts::terms_op op_t>
+#else
+template <typename op_t, typename>
+#endif  // MQ_HAS_CONCEPTS && !(defined _MSC_VER)
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::cast() const
+    -> derived_t_<typename op_t::coefficient_t> {
+    using other_coeff_t = typename op_t::coefficient_t;
+
+    if constexpr (std::is_same_v<coefficient_t, other_coeff_t>) {
+        return *static_cast<const derived_t*>(this);
+    } else {
+        return cast_<derived_t_<other_coeff_t>>(
+            [](const coefficient_t& coeff) constexpr { return static_cast<other_coeff_t>(coeff); });
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::real() const -> derived_real_t {
-    return real_cast_<RealCastType::REAL>();
+    if constexpr (is_real_valued) {
+        return *static_cast<const derived_t*>(this);
+    }
+    return cast_<derived_real_t>(real_cast<RealCastType::REAL, const coefficient_t&>);
 }
 
 // -----------------------------------------------------------------------------
@@ -381,7 +406,10 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::real() const
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::imag() const -> derived_real_t {
-    return real_cast_<RealCastType::REAL>();
+    if constexpr (is_real_valued) {
+        return *static_cast<const derived_t*>(this);
+    }
+    return cast_<derived_real_t>(real_cast<RealCastType::IMAG, const coefficient_t&>);
 }
 
 // =============================================================================
@@ -678,17 +706,20 @@ bool TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::is_equal(con
 
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
-template <RealCastType cast_type>
-auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::real_cast_() const -> derived_real_t {
-    using real_terms_t = typename derived_real_t::coeff_term_dict_t;
-    using real_value_t = typename real_terms_t::value_type;
+template <typename return_t, typename cast_func_t>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::cast_(const cast_func_t& cast_func) const
+    -> return_t {
+    using other_coeff_t = typename return_t::coefficient_t;
+    using other_terms_t = typename return_t::coeff_term_dict_t;
+    using other_value_t = typename other_terms_t::value_type;
 
-    real_terms_t real_terms;
+    other_terms_t real_terms;
     auto out(*static_cast<const derived_t*>(this));
-    std::transform(begin(terms_), end(terms_), std::inserter(real_terms, end(real_terms)), [](const auto& term) {
-        return real_value_t{term.first, real_cast<cast_type>(term.second)};
-    });
-    return derived_real_t{real_terms};
+    std::transform(begin(terms_), end(terms_), std::inserter(real_terms, end(real_terms)),
+                   [&cast_func](const auto& term) {
+                       return other_value_t{term.first, cast_func(term.second)};
+                   });
+    return return_t{real_terms};
 }
 
 // =============================================================================

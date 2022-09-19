@@ -93,7 +93,6 @@ struct CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>> {
     using matrix_coeff_t = std::complex<double>;
 
     static const coeff_t one;
-    static constexpr auto EQ_TOLERANCE = 1.e-8;
 
     // Getter
     static auto get_num(const coeff_t& coeff) {

@@ -154,7 +154,7 @@ class TermsOperatorBase {
     using base_t = TermsOperatorBase<derived_t_, coefficient_t, term_policy_t_>;
 
     static constexpr auto is_real_valued = std::is_same_v<coefficient_t, coefficient_real_t>;
-    static constexpr auto EQ_TOLERANCE = coeff_policy_t::EQ_TOLERANCE;
+    static constexpr auto EQ_TOLERANCE = details::EQ_TOLERANCE;
 
     using term_t = mindquantum::ops::term_t;
     using terms_t = mindquantum::ops::terms_t;
@@ -273,6 +273,15 @@ class TermsOperatorBase {
 
     //! Split the operator into its individual components
     MQ_NODISCARD std::vector<std::pair<coefficient_t, derived_t>> split() const;
+
+    // -------------------------------------------------------------------------
+
+#if MQ_HAS_CONCEPTS && !(defined _MSC_VER)
+    template <concepts::terms_op op_t>
+#else
+    template <typename op_t, typename = std::enable_if_t<traits::is_terms_operator_v<op_t>>>
+#endif  // MQ_HAS_CONCEPTS && !(defined _MSC_VER)
+    MQ_NODISCARD derived_t_<typename op_t::coefficient_t> cast() const;
 
     //! Return a copy of an operator with all the coefficients set to their real part
     MQ_NODISCARD derived_real_t real() const;
@@ -420,8 +429,8 @@ class TermsOperatorBase {
     TermsOperatorBase(coeff_term_dict_t terms, sorted_constructor_t /* unused */);
 
  private:
-    template <RealCastType cast_type>
-    derived_real_t real_cast_() const;
+    template <typename return_t, typename cast_func_t>
+    return_t cast_(const cast_func_t& cast_func) const;
 
     //! Addition/subtraction helper member function
     template <typename other_t, typename assign_modify_op_t, typename coeff_unary_op_t>
