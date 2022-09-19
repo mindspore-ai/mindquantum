@@ -398,7 +398,14 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::real() const
     if constexpr (is_real_valued) {
         return *static_cast<const derived_t*>(this);
     }
-    return cast_<derived_real_t>(real_cast<RealCastType::REAL, const coefficient_t&>);
+
+    // NB: Perhaps GCC 9.4 still fails (not tested; but 9.3 fails and 9.5 seems ok)
+#if defined(__GNUC__) && (__GNUC__ < 9) || (__GNUC__ == 9 && __GNUC_MINOR__ < 4)
+    return cast_<derived_real_t, decltype(&mindquantum::real_cast<RealCastType::REAL, const coefficient_t&>)>
+#else
+    return cast_<derived_real_t>
+#endif
+        (&mindquantum::real_cast<RealCastType::REAL, const coefficient_t&>);
 }
 
 // -----------------------------------------------------------------------------
@@ -409,7 +416,13 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::imag() const
     if constexpr (is_real_valued) {
         return *static_cast<const derived_t*>(this);
     }
-    return cast_<derived_real_t>(real_cast<RealCastType::IMAG, const coefficient_t&>);
+    // NB: Perhaps GCC 9.4 still fails (not tested; but 9.3 fails and 9.5 seems ok)
+#if defined(__GNUC__) && (__GNUC__ < 9) || (__GNUC__ == 9 && __GNUC_MINOR__ < 4)
+    return cast_<derived_real_t, decltype(&mindquantum::real_cast<RealCastType::IMAG, const coefficient_t&>)>
+#else
+    return cast_<derived_real_t>
+#endif
+        (&mindquantum::real_cast<RealCastType::IMAG, const coefficient_t&>);
 }
 
 // =============================================================================
