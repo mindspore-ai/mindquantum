@@ -20,7 +20,7 @@ import sys
 try:
     import mindquantum.mqbackend as mb
 
-    from ._mindquantum_cxx import circuit, ops, optimizer, simulator, symengine
+    from ._mindquantum_cxx import circuit, optimizer, simulator, symengine
     from .utils import TermValue
 
     # isort: split
@@ -30,7 +30,6 @@ try:
     # NB: These below will allow `from mindquantum.experimental.XXX import YYY` but not
     #     `from minquantum.experimental.XXX.YYY import ZZZ` for example
     sys.modules[f'{__name__}.circuit'] = circuit
-    sys.modules[f'{__name__}.ops'] = ops
     sys.modules[f'{__name__}.optimizer'] = optimizer
     sys.modules[f'{__name__}.simulator'] = simulator
     sys.modules[f'{__name__}.simulator.projectq'] = simulator.projectq  # pylint: disable=no-member
