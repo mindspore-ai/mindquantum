@@ -40,8 +40,15 @@ namespace mindquantum::ops {
 // =============================================================================
 
 template <typename coeff_t>
-auto FermionOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> std::optional<matrix_t> {
-    using scalar_t = typename matrix_t::Scalar;
+auto FermionOperator<coeff_t>::matrix() const -> std::optional<matrix_t> {
+    return std::nullopt;
+}
+
+// =============================================================================
+
+template <typename coeff_t>
+auto FermionOperator<coeff_t>::sparse_matrix(std::optional<uint32_t> n_qubits) const -> std::optional<sparse_matrix_t> {
+    using scalar_t = typename sparse_matrix_t::Scalar;
     if (std::empty(base_t::terms_)) {
         return std::nullopt;
     }
@@ -62,7 +69,7 @@ auto FermionOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const ->
 
     const auto n_qubits_value = n_qubits.value_or(n_qubits_local);
 
-    const auto process_term = [n_qubits_value](const auto& local_ops) -> matrix_t {
+    const auto process_term = [n_qubits_value](const auto& local_ops) -> sparse_matrix_t {
         if (std::empty(local_ops)) {
             return details::n_identity<scalar_t>(n_qubits_value);
         }

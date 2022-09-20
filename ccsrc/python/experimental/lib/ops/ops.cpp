@@ -134,7 +134,7 @@ auto bind_ops(pybind11::module& module, const std::string_view& name) {
         .PYBIND11_DEFINE_BINOP(__eq__, const op_t&, const op_t&, ==)
         .def(
             "__pow__", [](const op_t& base, unsigned int exponent) { return base.pow(exponent); }, py::is_operator())
-        .def("matrix", &op_t::matrix, "n_qubits"_a);
+        .def("matrix", &op_t::sparse_matrix, "n_qubits"_a);
 }
 
 template <typename T>

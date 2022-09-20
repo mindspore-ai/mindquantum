@@ -69,7 +69,8 @@ class FermionOperator
     using self_t = FermionOperator<coefficient_t>;
 
     using matrix_coeff_t = typename coeff_policy_t::matrix_coeff_t;
-    using matrix_t = types::csr_matrix_t<matrix_coeff_t>;
+    using matrix_t = tweedledum::UMatrix;
+    using sparse_matrix_t = types::csr_matrix_t<matrix_coeff_t>;
 
     using TermsOperatorBase<FermionOperator, coeff_t, details::FermionOperatorTermPolicy>::TermsOperatorBase;
     FermionOperator() = default;
@@ -82,7 +83,10 @@ class FermionOperator
     // -------------------------------------------------------------------
 
     //! Return the matrix representing a FermionOperator
-    MQ_NODISCARD std::optional<matrix_t> matrix(std::optional<uint32_t> n_qubits = std::nullopt) const;
+    MQ_NODISCARD std::optional<matrix_t> matrix(/* n_qubits = std::nullopt */) const;
+
+    //! Return the sparse matrix representing a FermionOperator
+    MQ_NODISCARD std::optional<sparse_matrix_t> sparse_matrix(std::optional<uint32_t> n_qubits = std::nullopt) const;
 
     //! Return the normal ordered form of the Fermion Operator.
     MQ_NODISCARD self_t normal_ordered() const;

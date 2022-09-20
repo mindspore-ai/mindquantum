@@ -26,6 +26,8 @@
 
 #include <Eigen/SparseCore>
 
+#include <tweedledum/Utils/Matrix.h>
+
 #include "config/type_traits.hpp"
 
 #include "experimental/core/config.hpp"
@@ -74,7 +76,8 @@ class QubitOperator
     using self_t = QubitOperator<coefficient_t>;
 
     using matrix_coeff_t = traits::to_cmplx_type_t<typename coeff_policy_t::matrix_coeff_t>;
-    using matrix_t = types::csr_matrix_t<matrix_coeff_t>;
+    using matrix_t = tweedledum::UMatrix;
+    using sparse_matrix_t = types::csr_matrix_t<matrix_coeff_t>;
 
     using TermsOperatorBase<QubitOperator, coeff_t, details::QubitOperatorTermPolicy>::TermsOperatorBase;
     QubitOperator() = default;
@@ -90,7 +93,10 @@ class QubitOperator
     MQ_NODISCARD uint32_t count_gates() const noexcept;
 
     //! Return the matrix representing a QubitOperator
-    MQ_NODISCARD std::optional<matrix_t> matrix(std::optional<uint32_t> n_qubits = std::nullopt) const;
+    MQ_NODISCARD std::optional<matrix_t> matrix(/* n_qubits = std::nullopt */) const;
+
+    //! Return the sparse matrix representing a QubitOperator
+    MQ_NODISCARD std::optional<sparse_matrix_t> sparse_matrix(std::optional<uint32_t> n_qubits = std::nullopt) const;
 
  private:
 #ifdef UNIT_TESTS

@@ -46,9 +46,16 @@ uint32_t QubitOperator<coeff_t>::count_gates() const noexcept {
 // =============================================================================
 
 template <typename coeff_t>
-auto QubitOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> std::optional<matrix_t> {
+auto QubitOperator<coeff_t>::matrix() const -> std::optional<matrix_t> {
+    return std::nullopt;
+}
+
+// =============================================================================
+
+template <typename coeff_t>
+auto QubitOperator<coeff_t>::sparse_matrix(std::optional<uint32_t> n_qubits) const -> std::optional<sparse_matrix_t> {
     namespace Op = tweedledum::Op;
-    using scalar_t = typename matrix_t::Scalar;
+    using scalar_t = typename sparse_matrix_t::Scalar;
     using dense_2x2_t = Eigen::Matrix<scalar_t, 2, 2>;
 
     // NB: required since we are indexing into the array below
@@ -58,8 +65,8 @@ auto QubitOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> s
     static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::Y) - offset == 2);
     static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::Z) - offset == 3);
 
-    static const std::array<matrix_t, 4> pauli_matrices = {
-        matrix_t{::generate_eigen_diagonal<scalar_t, 4>()},
+    static const std::array<sparse_matrix_t, 4> pauli_matrices = {
+        sparse_matrix_t{::generate_eigen_diagonal<scalar_t, 4>()},
         Op::X::matrix().sparseView(),
         Op::Y::matrix().sparseView(),
         Op::Z::matrix().sparseView(),
@@ -84,9 +91,11 @@ auto QubitOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> s
     }
 
     const auto n_qubits_value = n_qubits.value_or(n_qubits_local);
+    MQ_INFO("n_qubits_value {}", n_qubits_value);
 
-    const auto process_term = [n_qubits_value](const auto& local_ops, const auto& coeff) -> matrix_t {
+    const auto process_term = [n_qubits_value](const auto& local_ops, const auto& coeff) -> sparse_matrix_t {
         if (std::empty(local_ops)) {
+            MQ_INFO("Empty local ops: {}", 1U << n_qubits_value);
             return details::n_identity<scalar_t>(n_qubits_value) * coeff;
         }
 
@@ -96,24 +105,36 @@ auto QubitOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> s
         for (const auto& term : local_ops) {
             order[term.first] = idx++;
         }
-        matrix_t init(1, 1);
+        sparse_matrix_t init(1, 1);
         init.insert(0, 0) = coeff;
-        return std::accumulate(begin(order), end(order), init, [&local_ops](const matrix_t& init, const auto& idx) {
+        return std::accumulate(
+            begin(order), end(order), init, [&local_ops](const sparse_matrix_t& init, const auto& idx) {
+                MQ_INFO("init {}x{}, idx = {}", init.rows(), init.cols(), idx);
 #ifdef _MSC_VER
-            constexpr auto offset = static_cast<std::underlying_type_t<TermValue>>(TermValue::I);
+                constexpr auto offset = static_cast<std::underlying_type_t<TermValue>>(TermValue::I);
 #endif  // _MSC_VER
-            if (idx < 0) {
-                static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::I) - offset == 0);
-                return Eigen::kroneckerProduct(pauli_matrices[0], init).eval();
-            }
-            return Eigen::kroneckerProduct(
-                       pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(local_ops[idx].second) - offset],
-                       init)
-                .eval();
-        });
+                if (idx < 0) {
+                    static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::I) - offset == 0);
+                    const auto tmp = Eigen::kroneckerProduct(pauli_matrices[0], init).eval();
+                    MQ_INFO("return {}x{}", tmp.rows(), tmp.cols());
+                    return Eigen::kroneckerProduct(pauli_matrices[0], init).eval();
+                }
+                const auto tmp
+                    = Eigen::kroneckerProduct(
+                          pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(local_ops[idx].second)
+                                         - offset],
+                          init)
+                          .eval();
+                MQ_INFO("return {}x{}", tmp.rows(), tmp.cols());
+                return Eigen::kroneckerProduct(
+                           pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(local_ops[idx].second)
+                                          - offset],
+                           init)
+                    .eval();
+            });
 
         // NB: IMPORTANT! This below assumes that simplify() has been called correctly to eliminate terms like X1 Y1
-        // std::vector<matrix_t> total(
+        // std::vector<sparse_matrix_t> total(
         //     n_qubits_value, pauli_matrices[static_cast<std::underlying_type_t<TermValue>>(TermValue::I) - offset]);
 
         //         // Workaround internal compiler error with GCC 8.1
@@ -130,9 +151,10 @@ auto QubitOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> s
         //         }
         // #endif  // MINGW
 
-        //         matrix_t init(1, 1);
+        //         sparse_matrix_t init(1, 1);
         //         init.insert(0, 0) = coeff;
-        //         return std::accumulate(begin(total), end(total), init, [](const matrix_t& init, const auto& matrix) {
+        //         return std::accumulate(begin(total), end(total), init, [](const sparse_matrix_t& init, const auto&
+        //         matrix) {
         //             return Eigen::kroneckerProduct(matrix, init).eval();
         //         });
     };
@@ -146,6 +168,7 @@ auto QubitOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> s
         return {};
     }
     auto result = process_term(it->first, coeff_policy_t::get_num(it->second));
+    MQ_INFO("result: {}x{}", result.rows(), result.cols());
     ++it;
     for (; it != end(base_t::terms_); ++it) {
         if (!coeff_policy_t::is_const(it->second)) {
@@ -153,7 +176,9 @@ auto QubitOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const -> s
             return {};
         }
         result += process_term(it->first, coeff_policy_t::get_num(it->second));
+        MQ_INFO("result: {}x{}", result.rows(), result.cols());
     }
+    MQ_INFO("result: {}x{}", result.rows(), result.cols());
 
     return result;
 }
