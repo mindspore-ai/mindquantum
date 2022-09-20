@@ -93,7 +93,7 @@ repos:
         additional_dependencies: [pyyaml]
 
   - repo: https://gitee.com/mirrors_pre-commit/mirrors-isort
-    rev: 5.10.1
+    rev: v5.10.1
     hooks:
       - id: isort
         name: isort (python)
