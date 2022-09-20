@@ -45,10 +45,11 @@ endif()
 
 set(TARGET_ALIAS mindquantum::boost_headers Boost::headers)
 
-set(LIBS)
-set(INSTALL_COMMAND ./b2 --with-headers --prefix=@PREFIX@)
+set(LIBS serialization)
+set(INSTALL_COMMAND ./b2 --with-headers --prefix=@PREFIX@ --with-serialization)
+list(APPEND TARGET_ALIAS mindquantum::boost_serialization Boost::serialization)
 if(NOT MQ_HAS_STD_FILESYSTEM)
-  list(APPEND LIBS LIBS filesystem system)
+  list(APPEND LIBS filesystem system)
   list(APPEND INSTALL_COMMAND --with-system --with-filesystem)
   list(APPEND TARGET_ALIAS mindquantum::boost_system Boost::system)
   list(APPEND TARGET_ALIAS mindquantum::boost_filesystem Boost::filesystem)
@@ -73,7 +74,8 @@ endif()
 list(APPEND INSTALL_COMMAND install)
 
 mindquantum_add_pkg(
-  Boost ${LIBS}
+  Boost
+  LIBS ${LIBS}
   VER ${VER}
   URL ${REQ_URL}
   MD5 ${MD5}
