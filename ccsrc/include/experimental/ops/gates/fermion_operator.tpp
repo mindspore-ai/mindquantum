@@ -50,14 +50,13 @@ auto FermionOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const ->
     const auto& n_qubits_local = base_t::num_targets_;
 
     if (n_qubits_local == 0UL && !n_qubits) {
-        std::cerr << "You should specify n_qubits for converting an identity qubit operator.";
+        MQ_ERROR("You should specify n_qubits for converting an identity qubit operator.");
         return std::nullopt;
     }
 
     if (n_qubits && n_qubits.value() < n_qubits_local) {
-        std::cerr << fmt::format(
-            "Given n_qubits {} is smaller than the number of qubits of this qubit operator, which is {}.\n",
-            n_qubits.value(), n_qubits_local);
+        MQ_ERROR("Given n_qubits {} is smaller than the number of qubits of this qubit operator, which is {}.\n",
+                 n_qubits.value(), n_qubits_local);
         return std::nullopt;
     }
 
@@ -65,7 +64,7 @@ auto FermionOperator<coeff_t>::matrix(std::optional<uint32_t> n_qubits) const ->
 
     const auto process_term = [n_qubits_value](const auto& local_ops) -> matrix_t {
         if (std::empty(local_ops)) {
-            return details::n_identity<scalar_t>(1U << n_qubits_value);
+            return details::n_identity<scalar_t>(n_qubits_value);
         }
 
         constexpr auto size_groups = 2UL;

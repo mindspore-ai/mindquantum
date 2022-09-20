@@ -45,7 +45,7 @@
 namespace mindquantum::ops::details {
 constexpr auto cache_size = 100UL;
 template <typename coeff_t>
-types::csr_matrix_t<coeff_t> n_identity(std::size_t n);
+types::csr_matrix_t<coeff_t> n_identity(std::size_t n_qubits);
 template <typename coeff_t>
 types::csr_matrix_t<coeff_t> n_sz(std::size_t n);
 template <typename coeff_t>

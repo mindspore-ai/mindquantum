@@ -20,7 +20,7 @@
 
 namespace mindquantum::ops::details {
 template <typename coeff_t>
-auto n_identity(std::size_t n) -> types::csr_matrix_t<coeff_t> {
+auto n_identity(std::size_t n_qubits) -> types::csr_matrix_t<coeff_t> {
     using matrix_t = types::csr_matrix_t<coeff_t>;
     using scalar_t = typename matrix_t::Scalar;
     // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
@@ -30,7 +30,7 @@ auto n_identity(std::size_t n) -> types::csr_matrix_t<coeff_t> {
             ::generate_eigen_diagonal<scalar_t, 1U << (n)>()                                                           \
         }
 
-    switch (n) {
+    switch (n_qubits) {
         // clang-format off
         MQ_CASE_FOR_NQUBITS(0U); break;
         MQ_CASE_FOR_NQUBITS(1U); break;
@@ -41,7 +41,7 @@ auto n_identity(std::size_t n) -> types::csr_matrix_t<coeff_t> {
         MQ_CASE_FOR_NQUBITS(6U); break;
         // clang-format on
         default:
-            auto tmp = Eigen::DiagonalMatrix<scalar_t, Eigen::Dynamic>(1U << n);
+            auto tmp = Eigen::DiagonalMatrix<scalar_t, Eigen::Dynamic>(1U << n_qubits);
             tmp.setIdentity();
             return matrix_t{tmp};
             break;

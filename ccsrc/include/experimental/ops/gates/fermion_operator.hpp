@@ -17,6 +17,7 @@
 
 #include <complex>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -81,7 +82,7 @@ class FermionOperator
     // -------------------------------------------------------------------
 
     //! Return the matrix representing a FermionOperator
-    MQ_NODISCARD std::optional<matrix_t> matrix(std::optional<uint32_t> n_qubits) const;
+    MQ_NODISCARD std::optional<matrix_t> matrix(std::optional<uint32_t> n_qubits = std::nullopt) const;
 
     //! Return the normal ordered form of the Fermion Operator.
     MQ_NODISCARD self_t normal_ordered() const;

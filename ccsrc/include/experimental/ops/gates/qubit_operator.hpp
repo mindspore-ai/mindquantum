@@ -17,6 +17,7 @@
 
 #include <complex>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -89,7 +90,7 @@ class QubitOperator
     MQ_NODISCARD uint32_t count_gates() const noexcept;
 
     //! Return the matrix representing a QubitOperator
-    MQ_NODISCARD std::optional<matrix_t> matrix(std::optional<uint32_t> n_qubits) const;
+    MQ_NODISCARD std::optional<matrix_t> matrix(std::optional<uint32_t> n_qubits = std::nullopt) const;
 
  private:
 #ifdef UNIT_TESTS
