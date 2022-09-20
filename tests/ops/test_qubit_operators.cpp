@@ -16,6 +16,8 @@
 #include <string>
 #include <string_view>
 
+#include <tweedledum/Operators/Standard.h>
+
 #include "ops/test_utils.hpp"
 
 #include "experimental/core/logging.hpp"
@@ -123,6 +125,97 @@ TEST_CASE("QubitOperator constructor", "[qubit_op][ops]") {
     CHECK(QubitOperatorCD("XX").is_identity());
     CHECK(QubitOperatorCD("1X").is_identity());
     CHECK(QubitOperatorCD("Y1 Z2 1X Y3").is_identity());
+}
+
+// =============================================================================
+
+TEST_CASE("QubitOperator count_gates", "[qubit_op][ops]") {
+    using matrix_t = QubitOperatorCD::matrix_t;
+
+    uint32_t num_gates{0UL};
+    uint32_t num_gates_ref{0UL};
+
+    SECTION("Invalid empty") {
+        num_gates = QubitOperatorCD().count_gates();
+        UNSCOPED_INFO("Invalid empty");
+    }
+    SECTION("I") {
+        num_gates = QubitOperatorCD::identity().count_gates();
+        num_gates_ref = 0;
+        UNSCOPED_INFO("I");
+    }
+    SECTION("X0") {
+        num_gates = QubitOperatorCD("X0").count_gates();
+        num_gates_ref = 1;
+        UNSCOPED_INFO("X0");
+    }
+    SECTION("Y1") {
+        num_gates = QubitOperatorCD("Y1").count_gates();
+        num_gates_ref = 1;
+        UNSCOPED_INFO("Y1");
+    }
+    SECTION("Z2") {
+        num_gates = QubitOperatorCD("Z2").count_gates();
+        num_gates_ref = 1;
+        UNSCOPED_INFO("Z2");
+    }
+    SECTION("X0 Z2") {
+        num_gates = QubitOperatorCD("X0 Z2").count_gates();
+        num_gates_ref = 2;
+        UNSCOPED_INFO("X0 Z2");
+    }
+    SECTION("X0 Z2 X1") {
+        num_gates = QubitOperatorCD("X0 Z2 X1").count_gates();
+        num_gates_ref = 3;
+        UNSCOPED_INFO("X0 Z2 X1");
+    }
+
+    CHECK(num_gates == num_gates_ref);
+}
+
+// =============================================================================
+
+TEST_CASE("QubitOperator matrix", "[qubit_op][ops]") {
+    namespace Op = tweedledum::Op;
+    using matrix_t = QubitOperatorCD::sparse_matrix_t;
+
+    std::optional<matrix_t> ref_mat;
+    std::optional<matrix_t> actual_mat;
+
+    SECTION("Invalid empty") {
+        actual_mat = QubitOperatorCD().sparse_matrix();
+    }
+
+    SECTION("I") {
+        ref_mat = matrix_t{2, 2};
+        ref_mat.value().setIdentity();
+
+        actual_mat = QubitOperatorCD::identity().sparse_matrix(1);
+    }
+    SECTION("X0") {
+        ref_mat = matrix_t{Op::X::matrix().sparseView()};
+        actual_mat = QubitOperatorCD("X0").sparse_matrix();
+    }
+    SECTION("Y0") {
+        ref_mat = matrix_t{Op::Y::matrix().sparseView()};
+        actual_mat = QubitOperatorCD("Y0").sparse_matrix();
+    }
+    SECTION("Z0") {
+        ref_mat = matrix_t{Op::Z::matrix().sparseView()};
+        actual_mat = QubitOperatorCD("Z0").sparse_matrix();
+    }
+
+    if (ref_mat.has_value()) {
+        const auto& ref = ref_mat.value();
+        REQUIRE(actual_mat.has_value());
+        const auto& mat = actual_mat.value();
+
+        REQUIRE(mat.rows() == ref.rows());
+        REQUIRE(mat.cols() == ref.cols());
+        CHECK(mat.isApprox(ref));
+    } else {
+        CHECK(!actual_mat.has_value());
+    }
 }
 
 // =============================================================================
