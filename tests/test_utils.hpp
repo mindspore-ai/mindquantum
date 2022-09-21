@@ -33,7 +33,8 @@
 // =============================================================================
 // NB: Need to have those defined *before* including Catch2
 
-#include "stream_operators.hpp"  // NOLINT(build/include_subdir)
+#include "equality_operators.hpp"  // NOLINT(build/include_subdir)
+#include "stream_operators.hpp"    // NOLINT(build/include_subdir)
 
 // -----------------------------------------------------------------------------
 

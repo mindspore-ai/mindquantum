@@ -66,7 +66,7 @@ auto QubitOperator<coeff_t>::sparse_matrix(std::optional<uint32_t> n_qubits) con
     static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::Z) - offset == 3);
 
     static const std::array<sparse_matrix_t, 4> pauli_matrices = {
-        sparse_matrix_t{::generate_eigen_diagonal<scalar_t, 4>()},
+        sparse_matrix_t{::generate_eigen_diagonal<scalar_t, 2>()},
         Op::X::matrix().sparseView(),
         Op::Y::matrix().sparseView(),
         Op::Z::matrix().sparseView(),

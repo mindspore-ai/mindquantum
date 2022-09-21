@@ -16,11 +16,14 @@
 #include <string>
 #include <string_view>
 
+#include <unsupported/Eigen/KroneckerProduct>
+
 #include <tweedledum/Operators/Standard.h>
 
 #include "ops/test_utils.hpp"
 
 #include "experimental/core/logging.hpp"
+#include "experimental/ops/gates/details/eigen_sparse_identity.hpp"
 #include "experimental/ops/gates/qubit_operator.hpp"
 
 #include <catch2/catch.hpp>
@@ -212,7 +215,7 @@ TEST_CASE("QubitOperator matrix", "[qubit_op][ops]") {
 
         REQUIRE(mat.rows() == ref.rows());
         REQUIRE(mat.cols() == ref.cols());
-        CHECK(mat.isApprox(ref));
+        CHECK(mat == ref);
     } else {
         CHECK(!actual_mat.has_value());
     }
