@@ -23,9 +23,12 @@ from typing import Iterable
 import numpy as np
 
 from mindquantum.mqbackend import complex_pr as complex_pr_
+from mindquantum.mqbackend import real_pr as real_pr_
 from mindquantum.utils.f import is_two_number_close
 from mindquantum.utils.string_utils import join_without_empty, string_expression
 from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
+
+from .._arithmetic_ops_adaptor import CppArithmeticAdaptor
 
 
 def is_type_upgrade(origin_v, other_v):
@@ -35,7 +38,7 @@ def is_type_upgrade(origin_v, other_v):
 
 
 # pylint: disable=invalid-overridden-method
-class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
+class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-public-methods
     """
     A ParameterRsolver can set the parameter of parameterized quantum gate or parameterized quantum circuit.
 
@@ -74,18 +77,21 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
 
     def __init__(self, data=None, const=None):
         """Initialize a ParameterResolver object."""
-        if isinstance(data, complex_pr_):
-            complex_pr_.__init__(self, data, isinstance(data, ParameterResolver))
-        if isinstance(data, numbers.Number):
-            complex_pr_.__init__(self, data)
+        if isinstance(data, (complex_pr_, real_pr_)):
+            self._cpp_obj = data
         else:
-            if const is None:
-                const = 0.0
-            if data is None:
-                data = {}
-            if isinstance(data, str):
-                data = {data: 1.0}
-            complex_pr_.__init__(self, data, const)
+            if isinstance(data, numbers.Real):
+                self._cpp_obj = real_pr_(data)
+            elif isinstance(data, numbers.Complex):
+                self._cpp_obj = complex_pr_(data)
+            else:
+                if const is None:
+                    const = 0.0j
+                if data is None:
+                    data = {}
+                if isinstance(data, str):
+                    data = {data: 1.0}
+                self._cpp_obj = complex_pr_(data, const)
 
     @property
     def const(self) -> numbers.Number:
@@ -101,31 +107,12 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> pr.const
             2.5
         """
-        return complex_pr_.const(self)
+        return self._cpp_obj.const
 
     @const.setter
     def const(self, const_value):
         """Setter method for const."""
-        complex_pr_.set_const(self, const_value)
-
-    def __len__(self) -> int:
-        """
-        Get the number of parameters in this parameter resolver.
-
-        Please note that the parameter with 0 coefficient is also considered.
-
-        Returns:
-            int, the number of all parameters.
-
-        Examples:
-            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
-            >>> a = PR({'a': 0, 'b': 1})
-            >>> a.expression()
-            'b'
-            >>> len(a)
-            2
-        """
-        return complex_pr_.__len__(self)
+        self._cpp_obj.set_const(const_value)
 
     def keys(self):
         """
@@ -138,7 +125,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             ['a', 'b']
         """
         for k in range(len(self)):
-            yield complex_pr_.get_key(self, k)
+            yield self._cpp_obj.get_key(k)
 
     def values(self):
         """
@@ -151,7 +138,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             [0.0, 1.0]
         """
         for k in self.keys():
-            yield complex_pr_.__getitem__(self, k)
+            yield self._cpp_obj[k]
 
     def items(self):
         """
@@ -163,9 +150,9 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> list(a.items())
             [('a', 0.0), ('b', 1.0)]
         """
-        for i in range(len(self)):
-            key = complex_pr_.get_key(self, i)
-            yield (key, complex_pr_.__getitem__(self, key))
+        for i in range(len(self._cpp_obj)):
+            key = self._cpp_obj.get_key(i)
+            yield (key, self._cpp_obj[key])
 
     def is_const(self) -> bool:
         """
@@ -182,7 +169,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> pr.is_const()
             True
         """
-        return complex_pr_.is_const(self)
+        return self._cpp_obj.is_const()
 
     def __bool__(self) -> bool:
         """
@@ -197,7 +184,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> bool(pr)
             False
         """
-        return complex_pr_.__bool__(self)
+        return bool(self._cpp_obj)
 
     def __setitem__(self, keys, values):
         """
@@ -217,14 +204,14 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             _check_input_type("parameter value", numbers.Number, values)
             if not keys.strip():
                 raise KeyError("parameter name cannot be empty string.")
-            complex_pr_.__setitem__(self, keys, values)
+            self._cpp_obj[keys] = values
         elif isinstance(keys, Iterable):
             if not isinstance(values, Iterable):
                 raise ValueError("Values should be iterable.")
             if len(values) != len(keys):
                 raise ValueError("Size of keys and values do not match.")
             for k, v in zip(keys, values):
-                complex_pr_.__setitem__(self, k, v)
+                self._cpp_obj[k] = v
 
         else:
             raise TypeError(f"Parameter name should be a string, but get {type(keys)}!")
@@ -243,7 +230,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             1.0
         """
         _check_input_type('key', str, key)
-        return complex_pr_.__getitem__(self, key)
+        return self._cpp_obj[key]
 
     def __iter__(self):
         """
@@ -268,39 +255,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             False
         """
         _check_input_type('key', str, key)
-        return complex_pr_.__contains__(self, key)
-
-    def __eq__(self, other) -> bool:
-        """
-        To check whether two parameter resolvers are equal.
-
-        Args:
-            other (Union[numbers.Number, str, ParameterResolver]): The parameter resolver
-                or number you want to compare. If a number or string is given, this number will
-                convert to a parameter resolver.
-
-        Returns:
-            bool, whether two parameter resolvers are equal.
-
-        Examples:
-            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
-            >>> PR(3) == 3
-            True
-            >>> PR('a') == 3
-            False
-            >>> PR({'a': 2}, 3) == PR({'a': 2}) + 3
-            True
-        """
-        if isinstance(other, numbers.Number):
-            return complex_pr_.__eq__(self, other)
-        if isinstance(other, str):
-            if not is_two_number_close(self.const, 0):
-                return False
-            if len(self) == 1 and other in self:
-                return is_two_number_close(self[other], 1)
-            return False
-        _check_input_type("other", ParameterResolver, other)
-        return complex_pr_.__eq__(self, other)
+        return key in self._cpp_obj
 
     def __copy__(self) -> "ParameterResolver":
         """
@@ -323,108 +278,27 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> c.expression()
             '4*a + 3'
         """
-        return ParameterResolver(complex_pr_.__copy__(self))
+        return ParameterResolver(self._cpp_obj.__copy__())
 
     def __deepcopy__(self, memo):
         """Deep copy operator."""
-        return ParameterResolver(complex_pr_.__copy__(self))
-
-    def __iadd__(self, other) -> "ParameterResolver":
-        """
-        Inplace add a number or parameter resolver.
-
-        Args (Union[numbers.Number, ParameterResolver]): the number or parameter
-            resolver you want add.
-
-        Examples:
-            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
-            >>> pr = PR({'a': 3})
-            >>> pr += 4
-            >>> pr.expression()
-            '3*a + 4'
-            >>> pr += PR({'b': 1.5})
-            >>> pr
-            '3*a + 3/2*b + 4'
-        """
-        complex_pr_.__iadd__(self, other)
-        return self
-
-    def __add__(self, other) -> "ParameterResolver":
-        """
-        Add a number or parameter resolver.
-
-        Args:
-            other (Union[numbers.Number, ParameterResolver])
-
-        Returns:
-            ParameterResolver, the result of add.
-
-        Examples:
-            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
-            >>> pr = PR({'a': 3})
-            >>> pr + 1
-            {'a': 3.0}, const: 1.0
-            >>> pr + pr
-            {'a': 6.0}, const: 0.0
-        """
-        return ParameterResolver(complex_pr_.__add__(self, other))
-
-    def __radd__(self, other):
-        """Add a number or ParameterResolver."""
-        return ParameterResolver(complex_pr_.__radd__(self, other))
-
-    def __isub__(self, other):
-        """Self subtract a number or ParameterResolver."""
-        complex_pr_.__isub__(self, other)
-        return self
-
-    def __sub__(self, other):
-        """Subtract a number or ParameterResolver."""
-        return ParameterResolver(complex_pr_.__sub__(self, other))
-
-    def __rsub__(self, other):
-        """Self subtract a number or ParameterResolver."""
-        return ParameterResolver(complex_pr_.__rsub__(self, other))
-
-    def __imul__(self, other):
-        """Self multiply a number or ParameterResolver."""
-        complex_pr_.__imul__(self, other)
-        return self
-
-    def __mul__(self, other):
-        """Multiply a number or ParameterResolver."""
-        return ParameterResolver(complex_pr_.__mul__(self, other))
-
-    def __rmul__(self, other):
-        """Multiply a number or ParameterResolver."""
-        return ParameterResolver(complex_pr_.__rmul__(self, other))
-
-    def __neg__(self):
-        """Return the negative of this parameter resolver."""
-        return ParameterResolver(complex_pr_.__neg__(self))
-
-    def __itruediv__(self, other):
-        """Divide a number inplace."""
-        complex_pr_.__itruediv__(self, other)
-        return self
-
-    def __truediv__(self, other):
-        """Divide a number."""
-        return ParameterResolver(complex_pr_.__truediv__(self, other))
+        return ParameterResolver(self._cpp_obj.__copy__())
 
     def __str__(self):
         """Return the string expression of this parameter resolver."""
-        return complex_pr_.__str__(self)
+        return str(self._cpp_obj)
 
     def __repr__(self) -> str:
         """Return the repr of this parameter resolver."""
-        return self.__str__()
+        return str(self._cpp_obj)
 
     def __float__(self):
         """Convert the constant part to float. Raise error if it's not constant."""
-        if not self.is_const():
+        if not self._cpp_obj.is_const():
             raise ValueError("parameter resolver is not constant, cannot convert to float.")
-        return np.float64(self.const.real)
+        if isinstance(self._cpp_obj, real_pr_):
+            return self._cpp_obj.const
+        return np.float64(self._cpp_obj.const.real)
 
     def expression(self):
         """
@@ -449,8 +323,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             if expr == '-1':
                 string[k] = '-'
 
-        const = string_expression(self.const)
-        string[''] = const
+        string[''] = string_expression(self._cpp_obj.const)
         res = ''
         for k, v in string.items():
             current_s = v
@@ -515,7 +388,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> pr.requires_grad_parameters
             {'a', 'b'}
         """
-        complex_pr_.requires_grad(self)
+        self._cpp_obj.requires_grad()
         return self
 
     def no_grad(self):
@@ -533,7 +406,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> pr.requires_grad_parameters
             set()
         """
-        complex_pr_.no_grad(self)
+        self._cpp_obj.no_grad()
         return self
 
     def requires_grad_part(self, *names):
@@ -558,7 +431,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
         """
         for name in names:
             _check_input_type('name', str, name)
-        complex_pr_.requires_grad_part(self, names)
+        self._cpp_obj.requires_grad_part(names)
         return self
 
     def no_grad_part(self, *names):
@@ -581,7 +454,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
         """
         for name in names:
             _check_input_type('name', str, name)
-        complex_pr_.no_grad_part(self, names)
+        self._cpp_obj.no_grad_part(names)
         return self
 
     def encoder_part(self, *names):
@@ -604,7 +477,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
         """
         for name in names:
             _check_input_type('name', str, name)
-        complex_pr_.encoder_part(self, names)
+        self._cpp_obj.encoder_part(names)
         return self
 
     def ansatz_part(self, *names):
@@ -627,7 +500,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
         """
         for name in names:
             _check_input_type('name', str, name)
-        complex_pr_.ansatz_part(self, names)
+        self._cpp_obj.ansatz_part(names)
         return self
 
     def as_encoder(self):
@@ -644,7 +517,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> pr.encoder_parameters
             {'a', 'b'}
         """
-        complex_pr_.as_encoder(self)
+        self._cpp_obj.as_encoder()
         return self
 
     def as_ansatz(self):
@@ -662,7 +535,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> pr.ansatz_parameters
             {'a', 'b'}
         """
-        complex_pr_.as_ansatz(self)
+        self._cpp_obj.as_ansatz()
         return self
 
     def update(self, other):
@@ -689,7 +562,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             {'b'}
         """
         _check_input_type('other', ParameterResolver, other)
-        complex_pr_.update(self, other)
+        self._cpp_obj.update(other)
 
     @property
     def requires_grad_parameters(self):
@@ -705,7 +578,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> a.requires_grad_parameters
             {'a', 'b'}
         """
-        return set(self.params_name) - self.no_grad_parameters
+        return set(self._cpp_obj.params_name) - self._cpp_obj.no_grad_parameters
 
     @property
     def no_grad_parameters(self):
@@ -722,7 +595,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> a.no_grad_parameters
             {'a', 'b'}
         """
-        return complex_pr_.no_grad_parameters(self)
+        return self._cpp_obj.no_grad_parameters()
 
     @property
     def encoder_parameters(self):
@@ -739,7 +612,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> a.encoder_parameters
             {'a', 'b'}
         """
-        return complex_pr_.encoder_parameters(self)
+        return self._cpp_obj.encoder_parameters()
 
     @property
     def ansatz_parameters(self):
@@ -755,7 +628,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> a.ansatz_parameters
             {'a', 'b'}
         """
-        return set(self.params_name) - self.encoder_parameters
+        return set(self._cpp_obj.params_name) - self._cpp_obj.encoder_parameters
 
     def conjugate(self):
         """
@@ -771,7 +644,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> pr.conjugate().expression()
             'a + (-1j)*b'
         """
-        return ParameterResolver(complex_pr_.conjugate(self))
+        return ParameterResolver(self._cpp_obj.conjugate())
 
     def combination(self, other):
         """
@@ -816,7 +689,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> a.pop('a')
             1.0
         """
-        return complex_pr_.pop(self, v)
+        return self._cpp_obj.pop(v)
 
     @property
     def real(self):
@@ -834,8 +707,8 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> pr.real
             {'a': 1.0}, const: 3.0
         """
-        out = ParameterResolver(self)
-        complex_pr_.keep_real(out)
+        out = ParameterResolver(self._cpp_obj.__copy__())
+        self._cpp_obj.keep_real(out)
         return out
 
     @property
@@ -854,13 +727,13 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> pr.imag
             {'a': 1.0}, const: 4.0
         """
-        out = ParameterResolver(self)
-        complex_pr_.keep_imag(out)
+        out = ParameterResolver(self._cpp_obj.__copy__())
+        self._cpp_obj.keep_imag(out)
         return out
 
     def to_real_obj(self):
         """Convert to real type."""
-        return complex_pr_.real(self)
+        return self._cpp_obj.real()
 
     def is_hermitian(self):
         """
@@ -879,7 +752,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> (pr * 1j).is_hermitian()
             False
         """
-        return complex_pr_.is_hermitian(self)
+        return self._cpp_obj.is_hermitian()
 
     def is_anti_hermitian(self):
         """
@@ -898,7 +771,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             >>> (pr*1j).is_anti_hermitian()
             True
         """
-        return complex_pr_.is_anti_hermitian(self)
+        return self._cpp_obj.is_anti_hermitian()
 
     def dumps(self, indent=4):
         """
@@ -943,8 +816,12 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
             _check_int_type('indent', indent)
         dic = {}
         dic['pr_data'] = {i: (j.real, j.imag) for i, j in self.items()}
-        dic['const'] = (self.const.real, self.const.imag)
-        dic['dtype'] = 'complex'
+        if isinstance(self._cpp_obj, real_pr_):
+            dic['const'] = self._cpp_obj.const
+            dic['dtype'] = 'float'
+        else:
+            dic['const'] = (self._cpp_obj.const.real, self._cpp_obj.const.imag)
+            dic['dtype'] = 'complex'
         dic['no_grad_parameters'] = list(self.no_grad_parameters)
         dic['encoder_parameters'] = list(self.encoder_parameters)
         return json.dumps(dic, indent=indent)
@@ -988,7 +865,7 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
         if 'const' not in dic:
             raise ValueError("Invalid string. Cannot convert it to ParameterResolver, no key const")
         const = dic['const']
-        const = const[0] if dtype == np.float64 else const[0] + 1j * const[1]
+        const = const if dtype == np.float64 else const[0] + 1j * const[1]
 
         if 'no_grad_parameters' not in dic:
             raise ValueError("Invalid string. Cannot convert it to ParameterResolver, no key no_grad_parameters")
@@ -1002,3 +879,110 @@ class ParameterResolver(complex_pr_):  # pylint: disable=too-many-public-methods
         out.encoder_part(*encoder_parameters_list)
         out.no_grad_part(*no_grad_parameters_list)
         return out
+
+
+# ==============================================================================
+
+
+ParameterResolver.__len__.__doc__ = """
+    Get the number of parameters in this parameter resolver.
+
+    Please note that the parameter with 0 coefficient is also considered.
+
+    Returns:
+        int, the number of all parameters.
+
+    Examples:
+        >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
+        >>> a = PR({'a': 0, 'b': 1})
+        >>> a.expression()
+        'b'
+        >>> len(a)
+        2
+    """
+
+ParameterResolver.__eq__.__doc__ = """
+    To check whether two parameter resolvers are equal.
+
+    Args:
+        other (Union[numbers.Number, str, ParameterResolver]): The parameter resolver
+            or number you want to compare. If a number or string is given, this number will
+            convert to a parameter resolver.
+
+    Returns:
+        bool, whether two parameter resolvers are equal.
+
+    Examples:
+        >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
+        >>> PR(3) == 3
+        True
+        >>> PR('a') == 3
+        False
+        >>> PR({'a': 2}, 3) == PR({'a': 2}) + 3
+        True
+    """
+
+ParameterResolver.__iadd__.__doc__ = """
+    Inplace add a number or parameter resolver.
+
+    Args (Union[numbers.Number, ParameterResolver]): the number or parameter
+        resolver you want add.
+
+    Examples:
+        >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
+        >>> pr = PR({'a': 3})
+        >>> pr += 4
+        >>> pr.expression()
+        '3*a + 4'
+        >>> pr += PR({'b': 1.5})
+        >>> pr
+        '3*a + 3/2*b + 4'
+    """
+
+ParameterResolver.__add__.__doc__ = """
+    Add a number or parameter resolver.
+
+    Args:
+        other (Union[numbers.Number, ParameterResolver])
+
+    Returns:
+        ParameterResolver, the result of add.
+
+    Examples:
+        >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
+        >>> pr = PR({'a': 3})
+        >>> pr + 1
+        {'a': 3.0}, const: 1.0
+        >>> pr + pr
+        {'a': 6.0}, const: 0.0
+    """
+
+
+ParameterResolver.__radd__.__doc__ = """Add a number or ParameterResolver."""
+
+
+ParameterResolver.__isub__.__doc__ = """Self subtract a number or ParameterResolver."""
+
+
+ParameterResolver.__sub__.__doc__ = """Subtract a number or ParameterResolver."""
+
+
+ParameterResolver.__rsub__.__doc__ = """Self subtract a number or ParameterResolver."""
+
+
+ParameterResolver.__imul__.__doc__ = """Self multiply a number or ParameterResolver."""
+
+
+ParameterResolver.__mul__.__doc__ = """Multiply a number or ParameterResolver."""
+
+
+ParameterResolver.__rmul__.__doc__ = """Multiply a number or ParameterResolver."""
+
+
+ParameterResolver.__neg__.__doc__ = """Return the negative of this parameter resolver."""
+
+
+ParameterResolver.__itruediv__.__doc__ = """Divide a number inplace."""
+
+
+ParameterResolver.__truediv__.__doc__ = """Divide a number."""

@@ -126,7 +126,7 @@ void BindPR(py::module &module, const std::string &name) {
         .def(py::init<std::string>())
         .def(py::init<const MST<T> &, T>())
         .def(py::init<const MST<T> &, T, const SS &, const SS &>())
-        .def_readonly("const", &ParameterResolver<T>::const_value)
+        .def_property_readonly("const", [](const ParameterResolver<T> &pr) { return pr.const_value; })
         .def_readonly("data", &ParameterResolver<T>::data_)
         .def_readonly("no_grad_parameters", &ParameterResolver<T>::no_grad_parameters_)
         .def_readonly("encoder_parameters", &ParameterResolver<T>::encoder_parameters_)

@@ -1,0 +1,106 @@
+#   Copyright 2022 <Huawei Technologies Co., Ltd>
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
+
+class CppArithmeticAdaptor:
+    """
+    Adaptor class to handle a Python class with a C++ underlying object.
+
+    All arithmetic operations are simply forwarded to the underlying C++ object.
+
+    Attributes:
+        _cpp_obj (object): The underlying C++ object to which we should forward all operations
+    """
+
+    def __len__(self):
+        """Return length of CppArithmeticAdaptor."""
+        return len(self._cpp_obj)
+
+    # ----------------------------------
+
+    def __neg__(self):
+        """Return negative CppArithmeticAdaptor."""
+        return -self._cpp_obj
+
+    # ----------------------------------
+
+    def __add__(self, other):
+        """Add a number or a CppArithmeticAdaptor."""
+        return self.__class__(self._cpp_obj + other)
+
+    def __iadd__(self, other):
+        """Inplace add a number or a CppArithmeticAdaptor."""
+        self._cpp_obj += other
+        return self
+
+    def __radd__(self, other):
+        """Right add a number or a CppArithmeticAdaptor."""
+        return self.__class__(self._cpp_obj + other)
+
+    # ----------------------------------
+
+    def __sub__(self, other):
+        """Subtract a number or a CppArithmeticAdaptor."""
+        return self.__class__(self._cpp_obj - other)
+
+    def __isub__(self, other):
+        """Inplace subtraction a number or a CppArithmeticAdaptor."""
+        self._cpp_obj -= other
+        return self
+
+    def __rsub__(self, other):
+        """Subtrack a number or a CppArithmeticAdaptor with this CppArithmeticAdaptor."""
+        return self.__class__(other - self._cpp_obj)
+
+    # ----------------------------------
+
+    def __mul__(self, other):
+        """Multiple a number or a CppArithmeticAdaptor."""
+        return self.__class__(self._cpp_obj * other)
+
+    def __imul__(self, other):
+        """Inplace multiply a number or a CppArithmeticAdaptor."""
+        self._cpp_obj *= other
+        return self
+
+    def __rmul__(self, other):
+        """Right multiple a number or a CppArithmeticAdaptor."""
+        return self.__class__(other * self._cpp_obj)
+
+    # ----------------------------------
+
+    def __truediv__(self, other):
+        """Divide a number."""
+        return self.__class__(self._cpp_obj / other)
+
+    def __itruediv__(self, other):
+        """Divide a number."""
+        self._cpp_obj /= other
+        return self
+
+    # ----------------------------------
+
+    def __power__(self, exponent: int):
+        """Exponential of CppArithmeticAdaptors."""
+        return self.__class__(self._cpp_obj**exponent)
+
+    # ----------------------------------
+
+    def __eq__(self, other) -> bool:
+        """Check whether two CppArithmeticAdaptors equal."""
+        return self._cpp_obj == other._cpp_obj
+
+    def __ne__(self, other) -> bool:
+        """Check whether two CppArithmeticAdaptors not equal."""
+        return self._cpp_obj != other._cpp_obj
