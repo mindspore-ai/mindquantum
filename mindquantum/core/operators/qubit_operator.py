@@ -24,4 +24,4 @@ try:
     from ...experimental.ops.qubit_operator import QubitOperator
 except ImportError:
     warnings.warn("Using Python QubitOperator class")
-    from ._qubit_operator import QubitOperator
+    from ._qubit_operator import QubitOperator  # noqa: F401

@@ -24,4 +24,4 @@ try:
     from ...experimental.ops.fermion_operator import FermionOperator
 except ImportError:
     warnings.warn("Using Python FermionOperator class")
-    from ._fermion_operator import FermionOperator
+    from ._fermion_operator import FermionOperator  # noqa: F401
