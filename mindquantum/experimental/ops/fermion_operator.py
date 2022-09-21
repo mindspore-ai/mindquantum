@@ -91,15 +91,21 @@ class FermionOperator(TermsOperator):
 
         if isinstance(coeff, float):
             if coeff is not None:
-                coeff = ParameterResolver(coeff)
+                coeff = complex_pr(coeff)
             klass = FermionOperatorPRD
         elif isinstance(coeff, complex):
             if coeff is not None:
-                coeff = ParameterResolver(coeff)
+                coeff = real_pr(coeff)
             klass = FermionOperatorPRCD
+        elif isinstance(coeff, ParameterResolver):
+            if isinstance(ParameterResolver._cpp_obj, real_pr):
+                klass = FermionOperatorPRD
+            else:
+                klass = FermionOperatorPRCD
+            coeff = coeff._cpp_obj
         elif isinstance(coeff, real_pr):
             klass = FermionOperatorPRD
-        elif isinstance(coeff, complex_pr()):
+        elif isinstance(coeff, complex_pr):
             klass = FermionOperatorPRCD
         elif coeff is not None:
             return TypeError(f'FermionOperator does not support {type(coeff)} as coefficient type.')

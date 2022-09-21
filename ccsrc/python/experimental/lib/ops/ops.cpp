@@ -119,6 +119,7 @@ auto bind_ops(pybind11::module& module, const std::string_view& name) {
         .def("compress", &op_t::compress, "abs_tol"_a = op_t::EQ_TOLERANCE)
         .def("dumps", &op_t::dumps, "indent"_a = 4)
         .def_static("loads", op_t::loads, "string_data"_a)
+        .def("__len__", &op_t::size, py::is_operator())
         .def(
             "__str__", [](const op_t& base) { return base.to_string(); }, py::is_operator())
         .def(

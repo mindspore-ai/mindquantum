@@ -19,6 +19,7 @@ from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.mqbackend import complex_pr, real_pr
 from mindquantum.utils.type_value_check import _check_input_type
 
+from ...core._arithmetic_ops_adaptor import CppArithmeticAdaptor
 from .._mindquantum_cxx.ops import (
     EQ_TOLERANCE,
     CmplxPRSubsProxy,
@@ -27,7 +28,7 @@ from .._mindquantum_cxx.ops import (
 )
 
 
-class TermsOperator(metaclass=ABCMeta):
+class TermsOperator(CppArithmeticAdaptor, metaclass=ABCMeta):
     """Abstract base class for terms operators (FermionOperator and QubitOperator)."""
 
     cxx_base_klass: type
@@ -54,11 +55,12 @@ class TermsOperator(metaclass=ABCMeta):
         if isinstance(term, self.cxx_base_klass):
             self._cpp_obj = term
         else:
-            self._cpp_obj = self.__class__.factory_function(term, coeff)
+            print(type(term), term, type(coeff), coeff)
+            self._cpp_obj = self.__class__.create_cpp_obj(term, coeff)
 
     def __deepcopy__(self, memodict) -> 'TermsOperator':
         """Deep copy this TermsOperator."""
-        return self.__class__(self.__class__.factory_function(self._cpp_obj.get_terms()))
+        return self.__class__(self.__class__.create_cpp_obj(self._cpp_obj.get_terms()))
 
     def __str__(self) -> str:
         """Return string expression of a TermsOperator."""
@@ -76,70 +78,6 @@ class TermsOperator(metaclass=ABCMeta):
     def __len__(self) -> int:
         """Return the size of term."""
         return self._cpp_obj.size
-
-    def __neg__(self):
-        """Return negative TermsOperator."""
-        return self.__class__(self._cpp_obj.__neg__())
-
-    def __add__(self, other):
-        """Add a number or a TermsOperator."""
-        return self.__class__(self._cpp_obj.__add__(other))
-
-    def __iadd__(self, other):
-        """Inplace add a number or a TermsOperator."""
-        self._cpp_obj.__iadd__(other)
-        return self
-
-    def __radd__(self, other):
-        """Right add a number or a TermsOperator."""
-        return self.__class__(self._cpp_obj.__add__(other))
-
-    def __sub__(self, other):
-        """Subtract a number or a TermsOperator."""
-        return self.__class__(self._cpp_obj.__sub__(other))
-
-    def __isub__(self, other):
-        """Inplace subtrace a number or a TermsOperator."""
-        self._cpp_obj.__isub__(other)
-        return self
-
-    def __rsub__(self, other):
-        """Subtrace a number or a TermsOperator with this TermsOperator."""
-        return other + (-self)
-
-    def __mul__(self, other):
-        """Multiple a number or a TermsOperator."""
-        return self.__class__(self._cpp_obj.__mul__(other))
-
-    def __imul__(self, other):
-        """Inplace multiple a number or a TermsOperator."""
-        self._cpp_obj.__imul__(other)
-        return self
-
-    def __rmul__(self, other):
-        """Right multiple a number or a TermsOperator."""
-        return self.__class__(self._cpp_obj.__mul__(other))
-
-    def __truediv__(self, other):
-        """Divide a number."""
-        return self.__class__(self._cpp_obj.__truediv__(other))
-
-    def __itruediv__(self, other):
-        """Divide a number."""
-        self._cpp_obj.__itruediv__(other)
-        return self
-
-    def __power__(self, exponent: int):
-        """Exponential of TermsOperators."""
-        return self.__class__(self._cpp_obj.__power__(exponent))
-
-    def __eq__(self, other) -> bool:
-        """Check whether two TermsOperators equal."""
-        return self._cpp_obj == other._cpp_obj
-
-    def __ne__(self, other) -> bool:
-        """Check whether two TermsOperators not equal."""
-        return self._cpp_obj != other._cpp_obj
 
     @property
     def imag(self):
@@ -308,7 +246,7 @@ class TermsOperator(metaclass=ABCMeta):
             n_qubits (int): The total qubit of final matrix. If None, the value will be
                 the maximum local qubit number. Default: None.
         """
-        return self.__class__(self._cpp_obj.matrix(n_qubits))
+        return self._cpp_obj.matrix(n_qubits)
 
     def subs(self, params_value: ParameterResolver):
         """Replace the symbolical representation with the corresponding value."""

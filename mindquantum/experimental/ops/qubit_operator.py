@@ -21,8 +21,8 @@
 
 from openfermion import QubitOperator as OFQubitOperator
 
-from mindquantum.core.parameterresolver import ParameterResolver
-from mindquantum.mqbackend import complex_pr, real_pr
+from ...core.parameterresolver import ParameterResolver
+from ...mqbackend import complex_pr, real_pr
 
 # NB: C++ actually supports FermionOperatorD and FermionOperatorCD that are purely numerical FermionOperator classes
 from .._mindquantum_cxx.ops import (
@@ -96,12 +96,18 @@ class QubitOperator(TermsOperator):
 
         if isinstance(coeff, float):
             if coeff is not None:
-                coeff = ParameterResolver(coeff)
+                coeff = complex_pr(coeff)
             klass = QubitOperatorPRD
         elif isinstance(coeff, complex):
             if coeff is not None:
-                coeff = ParameterResolver(coeff)
+                coeff = real_pr(coeff)
             klass = QubitOperatorPRCD
+        elif isinstance(coeff, ParameterResolver):
+            if isinstance(ParameterResolver._cpp_obj, real_pr):
+                klass = QubitOperatorPRD
+            else:
+                klass = QubitOperatorPRCD
+            coeff = coeff._cpp_obj
         elif isinstance(coeff, real_pr):
             klass = QubitOperatorPRD
         elif isinstance(coeff, complex_pr):
