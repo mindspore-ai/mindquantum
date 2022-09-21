@@ -21,10 +21,11 @@
 #include <tweedledum/IR/Circuit.h>
 #include <tweedledum/IR/Instruction.h>
 
+#include "experimental/core/logging.hpp"
+
 #ifdef ENABLE_LOGGING
 #    include <spdlog/async.h>
 #    include <spdlog/sinks/ostream_sink.h>
-#    include <spdlog/spdlog.h>
 #endif  // ENABLE_LOGGING
 
 #include "experimental/ops/gates.hpp"
