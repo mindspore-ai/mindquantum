@@ -17,10 +17,12 @@
 
 #include <Eigen/SparseCore>
 
+namespace Eigen {
 template <typename scalar_t, int options, typename index_t>
 auto operator==(const Eigen::SparseMatrix<scalar_t, options, index_t>& lhs,
                 const Eigen::SparseMatrix<scalar_t, options, index_t>& rhs) {
     return lhs.isApprox(rhs);
 }
+}  // namespace Eigen
 
 #endif /* TESTS_EQUALITY_OPERATORS_HPP */
