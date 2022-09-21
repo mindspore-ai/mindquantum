@@ -34,6 +34,7 @@ endif()
 # =============================================================================
 
 include(${CMAKE_CURRENT_LIST_DIR}/eigen3/eigen3.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/fmt/fmt.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/pybind11/pybind11.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/nlohmann_json/nlohmann_json.cmake)
 
@@ -49,7 +50,6 @@ if(ENABLE_CXX_EXPERIMENTAL)
   endif()
   include(${CMAKE_CURRENT_LIST_DIR}/ordered_map/ordered_map.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/lru_cache/lru_cache.cmake)
-  include(${CMAKE_CURRENT_LIST_DIR}/fmt/fmt.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/cereal/cereal.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/symengine/symengine.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/tweedledum/tweedledum.cmake)

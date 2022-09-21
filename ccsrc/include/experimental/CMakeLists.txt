@@ -22,6 +22,7 @@ target_link_libraries(
   mq_cxx_nextgen
   PUBLIC include_lib
          mindquantum::boost_headers
+         mindquantum::fmt
          mindquantum::eigen
          mindquantum::tweedledum
          mindquantum::ordered_map
