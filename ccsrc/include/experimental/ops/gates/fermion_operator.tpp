@@ -86,7 +86,7 @@ auto FermionOperator<coeff_t>::sparse_matrix(std::optional<uint32_t> n_qubits) c
         }
 
         auto process_group = [n_qubits_value](const auto& group) constexpr {
-            assert(size(group) == 1 || size(group) == 2);
+            assert(group.size() == 1 || group.size() == 2);
             if (std::size(group) == 2) {
                 return details::two_fermion_word<scalar_t>(group[0].first, group[0].second == TermValue::adg,
                                                            group[1].first, group[1].second == TermValue::adg,
