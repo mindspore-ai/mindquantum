@@ -19,8 +19,14 @@
 # lint_cmake: -whitespace/indent
 
 target_link_libraries(
-  mq_cxx_nextgen PUBLIC include_lib mindquantum::boost_headers mindquantum::tweedledum mindquantum::ordered_map
-                        mindquantum::lru_cache $<$<BOOL:${ENABLE_LOGGING}>:mindquantum::spdlog>)
+  mq_cxx_nextgen
+  PUBLIC include_lib
+         mindquantum::boost_headers
+         mindquantum::eigen
+         mindquantum::tweedledum
+         mindquantum::ordered_map
+         mindquantum::lru_cache
+         $<$<BOOL:${ENABLE_LOGGING}>:mindquantum::spdlog>)
 
 # ------------------------------------------------------------------------------
 
