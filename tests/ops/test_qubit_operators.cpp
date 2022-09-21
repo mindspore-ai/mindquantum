@@ -207,6 +207,32 @@ TEST_CASE("QubitOperator matrix", "[qubit_op][ops]") {
         ref_mat = matrix_t{Op::Z::matrix().sparseView()};
         actual_mat = QubitOperatorCD("Z0").sparse_matrix();
     }
+    SECTION("X1") {
+        ref_mat = matrix_t{Op::X::matrix().sparseView()};
+        ref_mat = Eigen::kroneckerProduct(ref_mat.value(), ops::details::n_identity<matrix_t::Scalar>(1)).eval();
+        actual_mat = QubitOperatorCD("X1").sparse_matrix();
+    }
+    SECTION("Y1") {
+        ref_mat = matrix_t{Op::Y::matrix().sparseView()};
+        ref_mat = Eigen::kroneckerProduct(ref_mat.value(), ops::details::n_identity<matrix_t::Scalar>(1)).eval();
+        actual_mat = QubitOperatorCD("Y1").sparse_matrix();
+    }
+    SECTION("Z1") {
+        ref_mat = matrix_t{Op::Z::matrix().sparseView()};
+        ref_mat = Eigen::kroneckerProduct(ref_mat.value(), ops::details::n_identity<matrix_t::Scalar>(1)).eval();
+        actual_mat = QubitOperatorCD("Z1").sparse_matrix();
+    }
+    SECTION("Independent of order") {
+        ref_mat = Eigen::kroneckerProduct(matrix_t{Op::Y::matrix().sparseView()},
+                                          matrix_t{Op::X::matrix().sparseView()})
+                      .eval();
+        SECTION("Y1 X0") {
+            actual_mat = QubitOperatorCD("Y1 X0").sparse_matrix();
+        }
+        SECTION("X0 Y1") {
+            actual_mat = QubitOperatorCD("X0 Y1").sparse_matrix();
+        }
+    }
 
     if (ref_mat.has_value()) {
         const auto& ref = ref_mat.value();

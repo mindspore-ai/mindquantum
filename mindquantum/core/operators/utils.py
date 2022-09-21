@@ -63,7 +63,7 @@ def count_qubits(operator):
         ofops.QubitOperator,
         pqops.QubitOperator,
     )
-    if isinstance(operator, (FermionOperator, QubitOperator)):
+    if hasattr(operator, 'count_qubits'):
         return operator.count_qubits()
 
     if isinstance(operator, valueable_type):
