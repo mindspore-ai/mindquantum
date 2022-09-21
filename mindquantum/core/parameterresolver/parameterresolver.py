@@ -773,6 +773,38 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
         """
         return self._cpp_obj.is_anti_hermitian()
 
+    def __eq__(self, other) -> bool:
+        """
+        To check whether two parameter resolvers are equal.
+
+        Args:
+            other (Union[numbers.Number, str, ParameterResolver]): The parameter resolver
+                or number you want to compare. If a number or string is given, this number will
+                convert to a parameter resolver.
+
+        Returns:
+            bool, whether two parameter resolvers are equal.
+
+        Examples:
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
+            >>> PR(3) == 3
+            True
+            >>> PR('a') == 3
+            False
+            >>> PR({'a': 2}, 3) == PR({'a': 2}) + 3
+            True
+        """
+        if isinstance(other, numbers.Number):
+            return self._cpp_obj == other
+        if isinstance(other, str):
+            if not is_two_number_close(self.const, 0):
+                return False
+            if len(self) == 1 and other in self:
+                return is_two_number_close(self._cpp_obj[other], 1)
+            return False
+        _check_input_type("other", ParameterResolver, other)
+        return self._cpp_obj == other._cpp_obj
+
     def dumps(self, indent=4):
         """
         Dump ParameterResolver into JSON(JavaScript Object Notation).
@@ -899,27 +931,6 @@ ParameterResolver.__len__.__doc__ = """
         'b'
         >>> len(a)
         2
-    """
-
-ParameterResolver.__eq__.__doc__ = """
-    To check whether two parameter resolvers are equal.
-
-    Args:
-        other (Union[numbers.Number, str, ParameterResolver]): The parameter resolver
-            or number you want to compare. If a number or string is given, this number will
-            convert to a parameter resolver.
-
-    Returns:
-        bool, whether two parameter resolvers are equal.
-
-    Examples:
-        >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
-        >>> PR(3) == 3
-        True
-        >>> PR('a') == 3
-        False
-        >>> PR({'a': 2}, 3) == PR({'a': 2}) + 3
-        True
     """
 
 ParameterResolver.__iadd__.__doc__ = """
