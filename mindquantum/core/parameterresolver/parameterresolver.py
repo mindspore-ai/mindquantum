@@ -84,13 +84,15 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
                 self._cpp_obj = real_pr_(data)
             elif isinstance(data, numbers.Complex):
                 self._cpp_obj = complex_pr_(data)
+            elif isinstance(data, ParameterResolver):
+                self._cpp_obj = data.__copy__()
             else:
                 if const is None:
                     const = 0.0j
                 if data is None:
                     data = {}
                 if isinstance(data, str):
-                    data = {data: 1.0}
+                    data = {data: 1.0 + 0.0j}
                 self._cpp_obj = complex_pr_(data, const)
 
     @property
@@ -578,7 +580,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             >>> a.requires_grad_parameters
             {'a', 'b'}
         """
-        return set(self._cpp_obj.params_name) - self._cpp_obj.no_grad_parameters
+        return set(self.params_name) - self.no_grad_parameters
 
     @property
     def no_grad_parameters(self):
@@ -628,7 +630,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             >>> a.ansatz_parameters
             {'a', 'b'}
         """
-        return set(self._cpp_obj.params_name) - self._cpp_obj.encoder_parameters
+        return set(self.params_name) - self.encoder_parameters
 
     def conjugate(self):
         """
@@ -708,7 +710,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             {'a': 1.0}, const: 3.0
         """
         out = ParameterResolver(self._cpp_obj.__copy__())
-        self._cpp_obj.keep_real(out)
+        out._cpp_obj.keep_real()
         return out
 
     @property
@@ -728,7 +730,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             {'a': 1.0}, const: 4.0
         """
         out = ParameterResolver(self._cpp_obj.__copy__())
-        self._cpp_obj.keep_imag(out)
+        out._cpp_obj.keep_imag()
         return out
 
     def to_real_obj(self):

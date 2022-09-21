@@ -31,7 +31,7 @@ class CppArithmeticAdaptor:
 
     def __neg__(self):
         """Return negative CppArithmeticAdaptor."""
-        return -self._cpp_obj
+        return self.__class__(-self._cpp_obj)
 
     # ----------------------------------
 

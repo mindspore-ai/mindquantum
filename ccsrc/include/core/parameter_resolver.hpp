@@ -176,16 +176,6 @@ std::complex<T> Conj(const std::complex<T>& value) {
     return std::conj(value);
 }
 
-template <typename T>
-struct RemoveComplex {
-    using type = T;
-};
-
-template <typename T>
-struct RemoveComplex<std::complex<T>> {
-    using type = T;
-};
-
 // -----------------------------------------------------------------------------
 
 template <typename T>
@@ -690,8 +680,8 @@ struct ParameterResolver {
     }
 
     auto Real() const {
-        using type = typename RemoveComplex<T>::type;
-        ParameterResolver<type> pr = {};
+        using real_t = typename traits::to_real_type_t<T>;
+        ParameterResolver<real_t> pr = {};
         pr.const_value = std::real(this->const_value);
         for (ITER(p, this->data_)) {
             auto& key = p->first;
@@ -718,8 +708,8 @@ struct ParameterResolver {
         }
     }
     auto Imag() const {
-        using type = typename RemoveComplex<T>::type;
-        ParameterResolver<type> pr = {};
+        using real_t = typename traits::to_real_type_t<T>;
+        ParameterResolver<real_t> pr = {};
         pr.const_value = std::imag(this->const_value);
         for (ITER(p, this->data_)) {
             auto& key = p->first;
@@ -747,34 +737,45 @@ struct ParameterResolver {
     }
 
     bool IsHermitian() const {
-        return *this == this->Conjugate();
+        if constexpr (traits::is_complex_v<T>) {
+            return *this == this->Conjugate();
+        } else {
+            return true;
+        }
     }
 
     bool IsAntiHermitian() const {
-        return *this == -this->Conjugate();
+        if constexpr (traits::is_complex_v<T>) {
+            return *this == -this->Conjugate();
+        } else {
+            return false;
+        }
     }
 
     auto ToComplexPR() const {
-        using type = typename RemoveComplex<T>::type;
-        ParameterResolver<std::complex<type>> out;
-        for (ITER(p, this->data_)) {
-            auto& key = p->first;
-            auto& t = p->second;
-            out.data_[p->first] = std::complex<type>(t);
-            if (this->EncoderContains(key)) {
-                out.encoder_parameters_.insert(key);
+        if constexpr (traits::is_complex_v<T>) {
+            return *this;
+        } else {
+            using cmplx_t = typename traits::to_cmplx_type_t<T>;
+            ParameterResolver<cmplx_t> out;
+            for (ITER(param, this->data_)) {
+                const auto& key = param->first;
+                const auto& value = param->second;
+                out.data_[param->first] = static_cast<cmplx_t>(value);
+                if (this->EncoderContains(key)) {
+                    out.encoder_parameters_.insert(key);
+                }
+                if (this->NoGradContains(key)) {
+                    out.no_grad_parameters_.insert(key);
+                }
             }
-            if (this->NoGradContains(key)) {
-                out.no_grad_parameters_.insert(key);
-            }
+            out.const_value = static_cast<cmplx_t>(const_value);
+            return out;
         }
-        out.const_value = std::complex<type>(this->const_value);
-        return out;
     }
 
     bool IsComplexPR() const {
-        using type = typename RemoveComplex<T>::type;
-        return !std::is_same<type, T>::value;
+        return traits::is_complex_v<T>;
     }
 };
 
