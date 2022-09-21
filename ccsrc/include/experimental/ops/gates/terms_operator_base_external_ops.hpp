@@ -84,8 +84,19 @@ auto terms_op_arithmetic_op_impl(lhs_t&& lhs, rhs_t&& rhs) {
     // See which of LHS or RHS we need to promote
     if constexpr (std::is_same_v<left_coeff_t, common_t>) {
         return r_value_optimisation<func_t>(std::forward<lhs_t>(lhs), std::forward<rhs_t>(rhs));
-    } else {
+    } else if constexpr (std::is_same_v<right_coeff_t, common_t>) {
         return r_value_optimisation<func_t>(std::forward<rhs_t>(rhs), std::forward<lhs_t>(lhs));
+    } else {
+        /*
+         * In this case, we need to convert both LHS and RHS (e.g. T<std::complex<double>> T<ParameterResolver<double>>)
+         * -> make sure that both LHS and RHS would lead to same type  (e.g. both FermionOperator)
+         */
+        using lhs_new_derived_t = typename std::remove_cvref_t<lhs_t>::template new_derived_t<common_t>;
+        using rhs_new_derived_t = typename std::remove_cvref_t<lhs_t>::template new_derived_t<common_t>;
+        static_assert(std::is_same_v<lhs_new_derived_t, rhs_new_derived_t>);
+        lhs_new_derived_t tmp{lhs};
+        func_t::apply(tmp, std::forward<rhs_t>(rhs));
+        return tmp;
     }
 }
 

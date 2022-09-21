@@ -19,6 +19,8 @@
 
 """This is the module for the Qubit Operator."""
 
+import numbers
+
 from openfermion import QubitOperator as OFQubitOperator
 
 from ...core.parameterresolver import ParameterResolver
@@ -94,16 +96,16 @@ class QubitOperator(TermsOperator):
         """
         klass = None
 
-        if isinstance(coeff, float):
-            if coeff is not None:
-                coeff = complex_pr(coeff)
-            klass = QubitOperatorPRD
-        elif isinstance(coeff, complex):
+        if isinstance(coeff, numbers.Real):
             if coeff is not None:
                 coeff = real_pr(coeff)
+            klass = QubitOperatorPRD
+        elif isinstance(coeff, numbers.Complex):
+            if coeff is not None:
+                coeff = complex_pr(coeff)
             klass = QubitOperatorPRCD
         elif isinstance(coeff, ParameterResolver):
-            if isinstance(ParameterResolver._cpp_obj, real_pr):
+            if isinstance(coeff._cpp_obj, real_pr):
                 klass = QubitOperatorPRD
             else:
                 klass = QubitOperatorPRCD

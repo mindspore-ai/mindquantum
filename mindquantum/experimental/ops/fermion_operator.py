@@ -16,6 +16,7 @@
 # pylint: disable=duplicate-code
 """This module is generated the Fermion Operator."""
 
+import numbers
 
 from openfermion import FermionOperator as OFFermionOperator
 
@@ -87,18 +88,18 @@ class FermionOperator(TermsOperator):
             coeff (Union[numbers.Number, str, ParameterResolver]): The coefficient for the corresponding single
                 operators Default: 1.0.
         """
-        klass = None
+        klass = FermionOperatorPRCD
 
-        if isinstance(coeff, float):
-            if coeff is not None:
-                coeff = complex_pr(coeff)
-            klass = FermionOperatorPRD
-        elif isinstance(coeff, complex):
+        if isinstance(coeff, numbers.Real):
             if coeff is not None:
                 coeff = real_pr(coeff)
+            klass = FermionOperatorPRD
+        elif isinstance(coeff, numbers.Complex):
+            if coeff is not None:
+                coeff = complex_pr(coeff)
             klass = FermionOperatorPRCD
         elif isinstance(coeff, ParameterResolver):
-            if isinstance(ParameterResolver._cpp_obj, real_pr):
+            if isinstance(coeff._cpp_obj, real_pr):
                 klass = FermionOperatorPRD
             else:
                 klass = FermionOperatorPRCD
@@ -107,8 +108,11 @@ class FermionOperator(TermsOperator):
             klass = FermionOperatorPRD
         elif isinstance(coeff, complex_pr):
             klass = FermionOperatorPRCD
+        elif isinstance(coeff, str):
+            klass = FermionOperatorPRCD
+            coeff = complex_pr(coeff)
         elif coeff is not None:
-            return TypeError(f'FermionOperator does not support {type(coeff)} as coefficient type.')
+            raise TypeError(f'FermionOperator does not support {type(coeff)} as coefficient type.')
 
         if term is None:
             return klass()

@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <fmt/format.h>
 #include <pybind11/complex.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
+
+#include "config/constexpr_type_name.hpp"
 
 #include "ops/basic_gate.hpp"
 
@@ -139,7 +142,10 @@ void BindPR(py::module &module, const std::string &name) {
         .def("__len__", &ParameterResolver<T>::Size)
         .def("size", &ParameterResolver<T>::Size)
         .def("__bool__", &ParameterResolver<T>::IsNotZero)
-        .def("__repr__", &ParameterResolver<T>::ToString)
+        .def("__repr__",
+             [](const ParameterResolver<T> &pr) {
+                 return fmt::format("ParameterResolver<{}>({})", mindquantum::get_type_name<T>(), pr.ToString());
+             })
         .def("__str__", &ParameterResolver<T>::ToString)
         .def("__contains__", &ParameterResolver<T>::Contains)
         .def("__copy__", &ParameterResolver<T>::Copy)

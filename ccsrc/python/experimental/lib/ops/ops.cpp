@@ -12,6 +12,9 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+#include <memory>
+#include <tuple>
+
 #include <tweedledum/IR/Circuit.h>
 #include <tweedledum/IR/Qubit.h>
 
@@ -25,6 +28,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
+
+#include "config/constexpr_type_name.hpp"
 
 #include "core/parameter_resolver.hpp"
 #include "details/define_binary_operator_helpers.hpp"
@@ -105,7 +110,7 @@ auto bind_ops(pybind11::module& module, const std::string_view& name) {
         .def("is_identity", &op_t::is_identity, "abs_tol"_a = op_t::EQ_TOLERANCE)
         .def_static("identity", &op_t::identity)
         .def("subs", &op_t::subs, "subs_proxy"_a)
-        .def_property("constant", static_cast<void (op_t::*)(const coeff_t&)>(&op_t::constant),
+        .def_property("constant", static_cast<coeff_t (op_t::*)() const>(&op_t::constant),
                       static_cast<coeff_t (op_t::*)() const>(&op_t::constant))
         .def_property_readonly("is_singlet", &op_t::is_singlet)
         .def("singlet", &op_t::singlet)
@@ -121,9 +126,15 @@ auto bind_ops(pybind11::module& module, const std::string_view& name) {
         .def_static("loads", op_t::loads, "string_data"_a)
         .def("__len__", &op_t::size, py::is_operator())
         .def(
+            "__copy__", [](const op_t& base) -> op_t { return base; }, py::is_operator())
+        .def(
             "__str__", [](const op_t& base) { return base.to_string(); }, py::is_operator())
         .def(
-            "__repr__", [](const op_t& base) { return base.to_string(); }, py::is_operator())
+            "__repr__",
+            [](const op_t& base) {
+                return fmt::format("{}({})", mindquantum::get_type_name<op_t>(), base.to_string());
+            },
+            py::is_operator())
         .def("get_coeff", &op_t::get_coeff)
         .PYBIND11_DEFINE_BINOP_INPLACE(add, op_t&, const op_t&, +)
         .PYBIND11_DEFINE_BINOP_EXT(add, const op_t&, const op_t&, +)
@@ -264,7 +275,7 @@ void init_mindquantum_ops(pybind11::module& module) {
 
     // -----------------------------------------------------------------------------
 
-    using all_types_t = std::tuple<double, std::complex<double>, pr_t, pr_cmplx_t>;
+    using all_scalar_types_t = std::tuple<double, std::complex<double>, pr_t, pr_cmplx_t>;
 
     // -----------------------------------------------------------------------------
     // FermionOperator
@@ -291,6 +302,9 @@ void init_mindquantum_ops(pybind11::module& module) {
     using FermionOperatorPRD = decltype(fop_pr_double)::type;
     using FermionOperatorPRCD = decltype(fop_pr_cmplx_double)::type;
 
+    using all_fop_types_t = std::tuple<double, std::complex<double>, pr_t, pr_cmplx_t, FermionOperatorD,
+                                       FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD>;
+
     fop_double.def("cast", bindops::cast<FermionOperatorD, FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD>,
                    "Supported types: FermionOperatorD, FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD");
     fop_cmplx_double.def("cast", bindops::cast<FermionOperatorCD, FermionOperatorPRCD>,
@@ -306,43 +320,55 @@ void init_mindquantum_ops(pybind11::module& module) {
 
     using fop_t = decltype(fop_double);
     bindops::binop_definition<op::plus, fop_t>::inplace<double>(fop_double);
-    bindops::binop_definition<op::plus, fop_t>::external<all_types_t>(fop_double);
+    bindops::binop_definition<op::plus, fop_t>::external<all_scalar_types_t>(fop_double);
+    bindops::binop_definition<op::plus, fop_t>::reverse<all_fop_types_t>(fop_double);
     bindops::binop_definition<op::minus, fop_t>::inplace<double>(fop_double);
-    bindops::binop_definition<op::minus, fop_t>::external<all_types_t>(fop_double);
+    bindops::binop_definition<op::minus, fop_t>::external<all_scalar_types_t>(fop_double);
+    bindops::binop_definition<op::minus, fop_t>::reverse<all_fop_types_t>(fop_double);
     bindops::binop_definition<op::times, fop_t>::inplace<double>(fop_double);
-    bindops::binop_definition<op::times, fop_t>::external<all_types_t>(fop_double);
+    bindops::binop_definition<op::times, fop_t>::external<all_scalar_types_t>(fop_double);
+    bindops::binop_definition<op::times, fop_t>::reverse<all_fop_types_t>(fop_double);
     bindops::binop_definition<op::divides, fop_t>::inplace<double>(fop_double);
-    bindops::binop_definition<op::divides, fop_t>::external<all_types_t>(fop_double);
+    bindops::binop_definition<op::divides, fop_t>::external<all_scalar_types_t>(fop_double);
 
     using fop_cmplx_t = decltype(fop_cmplx_double);
     bindops::binop_definition<op::plus, fop_cmplx_t>::inplace<double, std::complex<double>>(fop_cmplx_double);
-    bindops::binop_definition<op::plus, fop_cmplx_t>::external<all_types_t>(fop_cmplx_double);
+    bindops::binop_definition<op::plus, fop_cmplx_t>::external<all_scalar_types_t>(fop_cmplx_double);
+    bindops::binop_definition<op::plus, fop_cmplx_t>::reverse<all_fop_types_t>(fop_cmplx_double);
     bindops::binop_definition<op::minus, fop_cmplx_t>::inplace<double, std::complex<double>>(fop_cmplx_double);
-    bindops::binop_definition<op::minus, fop_cmplx_t>::external<all_types_t>(fop_cmplx_double);
+    bindops::binop_definition<op::minus, fop_cmplx_t>::external<all_scalar_types_t>(fop_cmplx_double);
+    bindops::binop_definition<op::minus, fop_cmplx_t>::reverse<all_fop_types_t>(fop_cmplx_double);
     bindops::binop_definition<op::times, fop_cmplx_t>::inplace<double, std::complex<double>>(fop_cmplx_double);
-    bindops::binop_definition<op::times, fop_cmplx_t>::external<all_types_t>(fop_cmplx_double);
+    bindops::binop_definition<op::times, fop_cmplx_t>::external<all_scalar_types_t>(fop_cmplx_double);
+    bindops::binop_definition<op::times, fop_cmplx_t>::reverse<all_fop_types_t>(fop_cmplx_double);
     bindops::binop_definition<op::divides, fop_cmplx_t>::inplace<double, std::complex<double>>(fop_cmplx_double);
-    bindops::binop_definition<op::divides, fop_cmplx_t>::external<all_types_t>(fop_cmplx_double);
+    bindops::binop_definition<op::divides, fop_cmplx_t>::external<all_scalar_types_t>(fop_cmplx_double);
 
     using fop_pr_t = decltype(fop_pr_double);
     bindops::binop_definition<op::plus, fop_pr_t>::inplace<double, pr_t>(fop_pr_double);
-    bindops::binop_definition<op::plus, fop_pr_t>::external<all_types_t>(fop_pr_double);
+    bindops::binop_definition<op::plus, fop_pr_t>::external<all_scalar_types_t>(fop_pr_double);
+    bindops::binop_definition<op::plus, fop_pr_t>::reverse<all_fop_types_t>(fop_pr_double);
     bindops::binop_definition<op::minus, fop_pr_t>::inplace<double, pr_t>(fop_pr_double);
-    bindops::binop_definition<op::minus, fop_pr_t>::external<all_types_t>(fop_pr_double);
+    bindops::binop_definition<op::minus, fop_pr_t>::external<all_scalar_types_t>(fop_pr_double);
+    bindops::binop_definition<op::minus, fop_pr_t>::reverse<all_fop_types_t>(fop_pr_double);
     bindops::binop_definition<op::times, fop_pr_t>::inplace<double, pr_t>(fop_pr_double);
-    bindops::binop_definition<op::times, fop_pr_t>::external<all_types_t>(fop_pr_double);
+    bindops::binop_definition<op::times, fop_pr_t>::external<all_scalar_types_t>(fop_pr_double);
+    bindops::binop_definition<op::times, fop_pr_t>::reverse<all_fop_types_t>(fop_pr_double);
     bindops::binop_definition<op::divides, fop_pr_t>::inplace<double, pr_t>(fop_pr_double);
-    bindops::binop_definition<op::divides, fop_pr_t>::external<all_types_t>(fop_pr_double);
+    bindops::binop_definition<op::divides, fop_pr_t>::external<all_scalar_types_t>(fop_pr_double);
 
     using fop_pr_cmplx_t = decltype(fop_pr_cmplx_double);
-    bindops::binop_definition<op::plus, fop_pr_cmplx_t>::inplace<all_types_t>(fop_pr_cmplx_double);
-    bindops::binop_definition<op::plus, fop_pr_cmplx_t>::external<all_types_t>(fop_pr_cmplx_double);
-    bindops::binop_definition<op::minus, fop_pr_cmplx_t>::inplace<all_types_t>(fop_pr_cmplx_double);
-    bindops::binop_definition<op::minus, fop_pr_cmplx_t>::external<all_types_t>(fop_pr_cmplx_double);
-    bindops::binop_definition<op::times, fop_pr_cmplx_t>::inplace<all_types_t>(fop_pr_cmplx_double);
-    bindops::binop_definition<op::times, fop_pr_cmplx_t>::external<all_types_t>(fop_pr_cmplx_double);
-    bindops::binop_definition<op::divides, fop_pr_cmplx_t>::inplace<all_types_t>(fop_pr_cmplx_double);
-    bindops::binop_definition<op::divides, fop_pr_cmplx_t>::external<all_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::plus, fop_pr_cmplx_t>::inplace<all_scalar_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::plus, fop_pr_cmplx_t>::external<all_scalar_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::plus, fop_pr_cmplx_t>::reverse<all_fop_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::minus, fop_pr_cmplx_t>::inplace<all_scalar_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::minus, fop_pr_cmplx_t>::external<all_scalar_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::minus, fop_pr_cmplx_t>::reverse<all_fop_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::times, fop_pr_cmplx_t>::inplace<all_scalar_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::times, fop_pr_cmplx_t>::external<all_scalar_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::times, fop_pr_cmplx_t>::reverse<all_fop_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::divides, fop_pr_cmplx_t>::inplace<all_scalar_types_t>(fop_pr_cmplx_double);
+    bindops::binop_definition<op::divides, fop_pr_cmplx_t>::external<all_scalar_types_t>(fop_pr_cmplx_double);
 
     // -----------------------------------------------------------------------------
     // QubitOperator
@@ -371,6 +397,9 @@ void init_mindquantum_ops(pybind11::module& module) {
     using QubitOperatorPRD = decltype(qop_pr_double)::type;
     using QubitOperatorPRCD = decltype(qop_pr_cmplx_double)::type;
 
+    using all_qop_types_t = std::tuple<double, std::complex<double>, pr_t, pr_cmplx_t, QubitOperatorD, QubitOperatorCD,
+                                       QubitOperatorPRD, QubitOperatorPRCD>;
+
     qop_double.def("cast", bindops::cast<QubitOperatorD, QubitOperatorCD, QubitOperatorPRD, QubitOperatorPRCD>,
                    "Supported types: QubitOperatorD, QubitOperatorCD, QubitOperatorPRD, QubitOperatorPRCD");
     qop_cmplx_double.def("cast", bindops::cast<QubitOperatorCD, QubitOperatorPRCD>,
@@ -385,43 +414,55 @@ void init_mindquantum_ops(pybind11::module& module) {
 
     using qop_t = decltype(qop_double);
     bindops::binop_definition<op::plus, qop_t>::inplace<double>(qop_double);
-    bindops::binop_definition<op::plus, qop_t>::external<all_types_t>(qop_double);
+    bindops::binop_definition<op::plus, qop_t>::external<all_qop_types_t>(qop_double);
+    bindops::binop_definition<op::plus, qop_t>::reverse<all_qop_types_t>(qop_double);
     bindops::binop_definition<op::minus, qop_t>::inplace<double>(qop_double);
-    bindops::binop_definition<op::minus, qop_t>::external<all_types_t>(qop_double);
+    bindops::binop_definition<op::minus, qop_t>::external<all_qop_types_t>(qop_double);
+    bindops::binop_definition<op::minus, qop_t>::reverse<all_qop_types_t>(qop_double);
     bindops::binop_definition<op::times, qop_t>::inplace<double>(qop_double);
-    bindops::binop_definition<op::times, qop_t>::external<all_types_t>(qop_double);
+    bindops::binop_definition<op::times, qop_t>::external<all_qop_types_t>(qop_double);
+    bindops::binop_definition<op::times, qop_t>::reverse<all_qop_types_t>(qop_double);
     bindops::binop_definition<op::divides, qop_t>::inplace<double>(qop_double);
-    bindops::binop_definition<op::divides, qop_t>::external<all_types_t>(qop_double);
+    bindops::binop_definition<op::divides, qop_t>::external<all_scalar_types_t>(qop_double);
 
     using qop_cmplx_t = decltype(qop_cmplx_double);
     bindops::binop_definition<op::plus, qop_cmplx_t>::inplace<double, std::complex<double>>(qop_cmplx_double);
-    bindops::binop_definition<op::plus, qop_cmplx_t>::external<all_types_t>(qop_cmplx_double);
+    bindops::binop_definition<op::plus, qop_cmplx_t>::external<all_qop_types_t>(qop_cmplx_double);
+    bindops::binop_definition<op::plus, qop_cmplx_t>::reverse<all_qop_types_t>(qop_cmplx_double);
     bindops::binop_definition<op::minus, qop_cmplx_t>::inplace<double, std::complex<double>>(qop_cmplx_double);
-    bindops::binop_definition<op::minus, qop_cmplx_t>::external<all_types_t>(qop_cmplx_double);
+    bindops::binop_definition<op::minus, qop_cmplx_t>::external<all_qop_types_t>(qop_cmplx_double);
+    bindops::binop_definition<op::minus, qop_cmplx_t>::reverse<all_qop_types_t>(qop_cmplx_double);
     bindops::binop_definition<op::times, qop_cmplx_t>::inplace<double, std::complex<double>>(qop_cmplx_double);
-    bindops::binop_definition<op::times, qop_cmplx_t>::external<all_types_t>(qop_cmplx_double);
+    bindops::binop_definition<op::times, qop_cmplx_t>::external<all_qop_types_t>(qop_cmplx_double);
+    bindops::binop_definition<op::times, qop_cmplx_t>::reverse<all_qop_types_t>(qop_cmplx_double);
     bindops::binop_definition<op::divides, qop_cmplx_t>::inplace<double, std::complex<double>>(qop_cmplx_double);
-    bindops::binop_definition<op::divides, qop_cmplx_t>::external<all_types_t>(qop_cmplx_double);
+    bindops::binop_definition<op::divides, qop_cmplx_t>::external<all_scalar_types_t>(qop_cmplx_double);
 
     using qop_pr_t = decltype(qop_pr_double);
     bindops::binop_definition<op::plus, qop_pr_t>::inplace<double, pr_t>(qop_pr_double);
-    bindops::binop_definition<op::plus, qop_pr_t>::external<all_types_t>(qop_pr_double);
+    bindops::binop_definition<op::plus, qop_pr_t>::external<all_qop_types_t>(qop_pr_double);
+    bindops::binop_definition<op::plus, qop_pr_t>::reverse<all_qop_types_t>(qop_pr_double);
     bindops::binop_definition<op::minus, qop_pr_t>::inplace<double, pr_t>(qop_pr_double);
-    bindops::binop_definition<op::minus, qop_pr_t>::external<all_types_t>(qop_pr_double);
+    bindops::binop_definition<op::minus, qop_pr_t>::external<all_qop_types_t>(qop_pr_double);
+    bindops::binop_definition<op::minus, qop_pr_t>::reverse<all_qop_types_t>(qop_pr_double);
     bindops::binop_definition<op::times, qop_pr_t>::inplace<double, pr_t>(qop_pr_double);
-    bindops::binop_definition<op::times, qop_pr_t>::external<all_types_t>(qop_pr_double);
+    bindops::binop_definition<op::times, qop_pr_t>::external<all_qop_types_t>(qop_pr_double);
+    bindops::binop_definition<op::times, qop_pr_t>::reverse<all_qop_types_t>(qop_pr_double);
     bindops::binop_definition<op::divides, qop_pr_t>::inplace<double, pr_t>(qop_pr_double);
-    bindops::binop_definition<op::divides, qop_pr_t>::external<all_types_t>(qop_pr_double);
+    bindops::binop_definition<op::divides, qop_pr_t>::external<all_scalar_types_t>(qop_pr_double);
 
     using qop_pr_cmplx_t = decltype(qop_pr_cmplx_double);
-    bindops::binop_definition<op::plus, qop_pr_cmplx_t>::inplace<all_types_t>(qop_pr_cmplx_double);
-    bindops::binop_definition<op::plus, qop_pr_cmplx_t>::external<all_types_t>(qop_pr_cmplx_double);
-    bindops::binop_definition<op::minus, qop_pr_cmplx_t>::inplace<all_types_t>(qop_pr_cmplx_double);
-    bindops::binop_definition<op::minus, qop_pr_cmplx_t>::external<all_types_t>(qop_pr_cmplx_double);
-    bindops::binop_definition<op::times, qop_pr_cmplx_t>::inplace<all_types_t>(qop_pr_cmplx_double);
-    bindops::binop_definition<op::times, qop_pr_cmplx_t>::external<all_types_t>(qop_pr_cmplx_double);
-    bindops::binop_definition<op::divides, qop_pr_cmplx_t>::inplace<all_types_t>(qop_pr_cmplx_double);
-    bindops::binop_definition<op::divides, qop_pr_cmplx_t>::external<all_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::plus, qop_pr_cmplx_t>::inplace<all_scalar_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::plus, qop_pr_cmplx_t>::external<all_qop_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::plus, qop_pr_cmplx_t>::reverse<all_qop_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::minus, qop_pr_cmplx_t>::inplace<all_scalar_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::minus, qop_pr_cmplx_t>::external<all_qop_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::minus, qop_pr_cmplx_t>::reverse<all_qop_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::times, qop_pr_cmplx_t>::inplace<all_scalar_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::times, qop_pr_cmplx_t>::external<all_qop_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::times, qop_pr_cmplx_t>::reverse<all_qop_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::divides, qop_pr_cmplx_t>::inplace<all_scalar_types_t>(qop_pr_cmplx_double);
+    bindops::binop_definition<op::divides, qop_pr_cmplx_t>::external<all_scalar_types_t>(qop_pr_cmplx_double);
 
     // =========================================================================
 

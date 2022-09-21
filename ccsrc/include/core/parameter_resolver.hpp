@@ -231,6 +231,13 @@ struct ParameterResolver {
         }
         return this->const_value;
     }
+    template <typename U = T, typename = std::enable_if_t<std::is_same_v<T, U> && !traits::is_complex_v<U>>>
+    explicit operator traits::to_cmplx_type_t<U>() const {
+        if (!IsConst()) {
+            throw std::runtime_error("ParameterResolver: cannot convert to const value since not const!");
+        }
+        return static_cast<traits::to_cmplx_type_t<T>>(this->const_value);
+    }
 
     size_t Size() const {
         return this->data_.size();

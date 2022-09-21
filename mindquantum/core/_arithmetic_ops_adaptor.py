@@ -37,45 +37,67 @@ class CppArithmeticAdaptor:
 
     def __add__(self, other):
         """Add a number or a CppArithmeticAdaptor."""
+        if hasattr(other, '_cpp_obj'):
+            return self.__class__(self._cpp_obj + other._cpp_obj)
         return self.__class__(self._cpp_obj + other)
 
     def __iadd__(self, other):
         """Inplace add a number or a CppArithmeticAdaptor."""
-        self._cpp_obj += other
+        if hasattr(other, '_cpp_obj'):
+            self._cpp_obj += other._cpp_obj
+        else:
+            self._cpp_obj += other
         return self
 
     def __radd__(self, other):
         """Right add a number or a CppArithmeticAdaptor."""
+        if hasattr(other, '_cpp_obj'):
+            return self.__class__(self._cpp_obj + other._cpp_obj)
         return self.__class__(self._cpp_obj + other)
 
     # ----------------------------------
 
     def __sub__(self, other):
         """Subtract a number or a CppArithmeticAdaptor."""
+        if hasattr(other, '_cpp_obj'):
+            return self.__class__(self._cpp_obj - other._cpp_obj)
         return self.__class__(self._cpp_obj - other)
 
     def __isub__(self, other):
         """Inplace subtraction a number or a CppArithmeticAdaptor."""
-        self._cpp_obj -= other
+        if hasattr(other, '_cpp_obj'):
+            self._cpp_obj -= other._cpp_obj
+        else:
+            self._cpp_obj -= other
+
         return self
 
     def __rsub__(self, other):
         """Subtrack a number or a CppArithmeticAdaptor with this CppArithmeticAdaptor."""
+        if hasattr(other, '_cpp_obj'):
+            return self.__class__(other._cpp_obj - self._cpp_obj)
         return self.__class__(other - self._cpp_obj)
 
     # ----------------------------------
 
     def __mul__(self, other):
         """Multiple a number or a CppArithmeticAdaptor."""
+        if hasattr(other, '_cpp_obj'):
+            return self.__class__(self._cpp_obj * other._cpp_obj)
         return self.__class__(self._cpp_obj * other)
 
     def __imul__(self, other):
         """Inplace multiply a number or a CppArithmeticAdaptor."""
-        self._cpp_obj *= other
+        if hasattr(other, '_cpp_obj'):
+            self._cpp_obj *= other._cpp_obj
+        else:
+            self._cpp_obj *= other
         return self
 
     def __rmul__(self, other):
         """Right multiple a number or a CppArithmeticAdaptor."""
+        if hasattr(other, '_cpp_obj'):
+            return self.__class__(other._cpp_obj * self._cpp_obj)
         return self.__class__(other * self._cpp_obj)
 
     # ----------------------------------
@@ -91,7 +113,7 @@ class CppArithmeticAdaptor:
 
     # ----------------------------------
 
-    def __power__(self, exponent: int):
+    def __pow__(self, exponent: int):
         """Exponential of CppArithmeticAdaptors."""
         return self.__class__(self._cpp_obj**exponent)
 

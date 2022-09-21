@@ -55,12 +55,15 @@ class TermsOperator(CppArithmeticAdaptor, metaclass=ABCMeta):
         if isinstance(term, self.cxx_base_klass):
             self._cpp_obj = term
         else:
-            print(type(term), term, type(coeff), coeff)
             self._cpp_obj = self.__class__.create_cpp_obj(term, coeff)
+
+    def __copy__(self, memodict) -> 'TermsOperator':
+        """Deep copy this TermsOperator."""
+        return self.__class__(self._cpp_obj.__copy__())
 
     def __deepcopy__(self, memodict) -> 'TermsOperator':
         """Deep copy this TermsOperator."""
-        return self.__class__(self.__class__.create_cpp_obj(self._cpp_obj.get_terms()))
+        return self.__class__(self._cpp_obj.__copy__())
 
     def __str__(self) -> str:
         """Return string expression of a TermsOperator."""
@@ -210,9 +213,9 @@ class TermsOperator(CppArithmeticAdaptor, metaclass=ABCMeta):
             >>> obj == f
             True
         """
-        if dtype == real_pr:
+        if dtype == real_pr or dtype == float:
             klass = cls.real_pr_klass
-        elif dtype == complex_pr:
+        elif dtype == complex_pr or dtype == complex:
             klass = cls.complex_pr_klass
         else:
             raise TypeError(f'Unsupported dtype ({dtype})!')
@@ -250,9 +253,9 @@ class TermsOperator(CppArithmeticAdaptor, metaclass=ABCMeta):
 
     def subs(self, params_value: ParameterResolver):
         """Replace the symbolical representation with the corresponding value."""
-        if isinstance(self.real_pr_klass):
-            return self.__class__(self._cpp_obj.subs(DoublePRSubsProxy(real_pr(params_value._cpp_obj))))
-        return self.__class__(self._cpp_obj.subs(CmplxPRSubsProxy(complex_pr(params_value._cpp_obj))))
+        if isinstance(self, self.real_pr_klass):
+            return self.__class__(self._cpp_obj.subs(DoublePRSubsProxy(params_value._cpp_obj)))
+        return self.__class__(self._cpp_obj.subs(CmplxPRSubsProxy(params_value._cpp_obj)))
 
     @property
     def is_singlet(self) -> bool:
@@ -330,7 +333,7 @@ class TermsOperator(CppArithmeticAdaptor, metaclass=ABCMeta):
                 raise ValueError(f'Cannot convert parameterized {self.__class__.name} to OpenFermion format')
             terms[tuple((i, TermValue[j]) for i, j in term)] = pr.const
 
-        operator = self.openfermion_klass()
+        operator = self.__class__.openfermion_klass()
         operator.terms = terms
         return operator
 

@@ -28,11 +28,16 @@ namespace bindops {
 #define PYBIND11_DEFINE_BINOP_IMPL(py_name, lhs_t, rhs_t, op)                                                          \
     def(                                                                                                               \
         py_name, [](lhs_t lhs, rhs_t rhs) { return lhs op rhs; }, pybind11::is_operator())
+#define PYBIND11_DEFINE_BINOP_REV_IMPL(py_name, lhs_t, rhs_t, op)                                                      \
+    def(                                                                                                               \
+        py_name, [](lhs_t lhs, rhs_t rhs) { return rhs op lhs; }, pybind11::is_operator())
 #define PYBIND11_DEFINE_BINOP(py_name, lhs_t, rhs_t, op) PYBIND11_DEFINE_BINOP_IMPL(#py_name, lhs_t, rhs_t, op)
 #define PYBIND11_DEFINE_BINOP_INPLACE(py_name, lhs_t, rhs_t, op)                                                       \
     PYBIND11_DEFINE_BINOP_IMPL(TO_STRING(CONCAT3(__i, py_name, __)), lhs_t, rhs_t, CONCAT2(op, =))
 #define PYBIND11_DEFINE_BINOP_EXT(py_name, lhs_t, rhs_t, op)                                                           \
     PYBIND11_DEFINE_BINOP_IMPL(TO_STRING(CONCAT3(__, py_name, __)), lhs_t, rhs_t, op)
+#define PYBIND11_DEFINE_BINOP_REV(py_name, lhs_t, rhs_t, op)                                                           \
+    PYBIND11_DEFINE_BINOP_REV_IMPL(TO_STRING(CONCAT3(__r, py_name, __)), lhs_t, rhs_t, op)
 #define PYBIND11_DEFINE_UNOP(py_name, lhs_t, op)                                                                       \
     def(                                                                                                               \
         #py_name, [](lhs_t base) { return op base; }, pybind11::is_operator())
@@ -50,6 +55,11 @@ namespace details {
         static constexpr void external(py_klass_t& klass) {                                                            \
             using op_t = typename py_klass_t::type;                                                                    \
             klass.PYBIND11_DEFINE_BINOP_EXT(py_name, const op_t&, T, op);                                              \
+        }                                                                                                              \
+        template <typename py_klass_t>                                                                                 \
+        static constexpr void reverse(py_klass_t& klass) {                                                             \
+            using op_t = typename py_klass_t::type;                                                                    \
+            klass.PYBIND11_DEFINE_BINOP_REV(py_name, const op_t&, T, op);                                              \
         }                                                                                                              \
     }
 
@@ -71,6 +81,8 @@ struct binop_definition {
         }
         static constexpr void external(py_klass_t& klass) {
         }
+        static constexpr void reverse(py_klass_t& klass) {
+        }
     };
 
     template <typename... args_t>
@@ -80,6 +92,10 @@ struct binop_definition {
     template <typename... args_t>
     static constexpr void external(py_klass_t& klass) {
         helper_t<args_t...>::external(klass);
+    }
+    template <typename... args_t>
+    static constexpr void reverse(py_klass_t& klass) {
+        helper_t<args_t...>::reverse(klass);
     }
 };
 
@@ -94,10 +110,19 @@ struct binop_definition<func_t, py_klass_t>::helper_t<T, args_t...> {
         func_t<T>::external(klass);
         helper_t<args_t...>::external(klass);
     }
+    static constexpr void reverse(py_klass_t& klass) {
+        func_t<T>::reverse(klass);
+        helper_t<args_t...>::reverse(klass);
+    }
 };
 template <template <typename... others_t> class func_t, typename py_klass_t>
 template <typename... args_t>
 struct binop_definition<func_t, py_klass_t>::helper_t<std::tuple<args_t...>> : helper_t<args_t...> {};
+
+template <template <typename... others_t> class func_t, typename py_klass_t>
+template <typename... args_t, typename... other_args_t>
+struct binop_definition<func_t, py_klass_t>::helper_t<std::tuple<args_t...>, other_args_t...>
+    : helper_t<args_t..., other_args_t...> {};
 
 }  // namespace bindops
 

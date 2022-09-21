@@ -51,7 +51,7 @@ void disable_logging() {
 void mindquantum::python::init_logging(pybind11::module& module) {
     using namespace pybind11::literals;
 
-    py::enum_<spdlog::level::level_enum>(module, "TermValue")
+    py::enum_<spdlog::level::level_enum>(module, "LogLevel")
         .value("OFF", spdlog::level::off)
         .value("TRACE", spdlog::level::trace)
         .value("DEBUG", spdlog::level::debug)

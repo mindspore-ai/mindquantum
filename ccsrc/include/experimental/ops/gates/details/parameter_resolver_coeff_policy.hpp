@@ -59,7 +59,7 @@ struct CoeffSubsProxy<ParameterResolver<float_t>> {
     }
 
     void apply(coeff_t& coeff) const {
-        coeff.Combination(params);
+        coeff = coeff.Combination(params);
     }
 
     subs_t params;

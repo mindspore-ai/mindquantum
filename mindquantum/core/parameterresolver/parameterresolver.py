@@ -85,7 +85,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             elif isinstance(data, numbers.Complex):
                 self._cpp_obj = complex_pr_(data)
             elif isinstance(data, ParameterResolver):
-                self._cpp_obj = data.__copy__()
+                self._cpp_obj = data._cpp_obj.__copy__()
             else:
                 if const is None:
                     const = 0.0j
@@ -292,7 +292,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
 
     def __repr__(self) -> str:
         """Return the repr of this parameter resolver."""
-        return str(self._cpp_obj)
+        return f'ParameterResolver({repr(self._cpp_obj)})'
 
     def __float__(self):
         """Convert the constant part to float. Raise error if it's not constant."""
@@ -564,7 +564,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             {'b'}
         """
         _check_input_type('other', ParameterResolver, other)
-        self._cpp_obj.update(other)
+        self._cpp_obj.update(other._cpp_obj)
 
     @property
     def requires_grad_parameters(self):
