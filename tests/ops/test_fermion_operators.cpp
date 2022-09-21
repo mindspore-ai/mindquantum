@@ -164,3 +164,52 @@ TEST_CASE("FermionOperator normal_ordered", "[terms_op][ops]") {
 }
 
 // =============================================================================
+
+TEST_CASE("FermionOperator matrix", "[fermion_op][ops]") {
+    namespace Op = tweedledum::Op;
+    using matrix_t = FermionOperatorCD::sparse_matrix_t;
+
+    std::optional<matrix_t> ref_mat;
+    std::optional<matrix_t> actual_mat;
+
+    static constexpr auto do_test = [](const auto& ref_mat, const auto& actual_mat) {
+        if (ref_mat.has_value()) {
+            const auto& ref = ref_mat.value();
+            REQUIRE(actual_mat.has_value());
+            const auto& mat = actual_mat.value();
+
+            REQUIRE(mat.rows() == ref.rows());
+            REQUIRE(mat.cols() == ref.cols());
+            CHECK(mat == ref);
+        } else {
+            CHECK(!actual_mat.has_value());
+        }
+    };
+
+    SECTION("Invalid empty") {
+        actual_mat = FermionOperatorCD().sparse_matrix();
+        do_test(ref_mat, actual_mat);
+    }
+
+    SECTION("I") {
+        ref_mat = matrix_t{2, 2};
+        ref_mat.value().setIdentity();
+
+        actual_mat = FermionOperatorCD::identity().sparse_matrix(1);
+        do_test(ref_mat, actual_mat);
+    }
+    SECTION("0") {
+        ref_mat = matrix_t{2, 2};
+        ref_mat->insert(0, 1) = 1.;
+        actual_mat = FermionOperatorCD("0").sparse_matrix();
+        do_test(ref_mat, actual_mat);
+    }
+    SECTION("0^") {
+        ref_mat = matrix_t{2, 2};
+        ref_mat->insert(1, 0) = 1.;
+        actual_mat = FermionOperatorCD("0^").sparse_matrix();
+        do_test(ref_mat, actual_mat);
+    }
+}
+
+// =============================================================================

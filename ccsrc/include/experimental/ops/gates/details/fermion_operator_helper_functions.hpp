@@ -92,9 +92,9 @@ auto single_fermion_word(const std::tuple<std::size_t, bool, std::size_t>& data)
     const auto& [idx, is_adg, n_qubits] = data;
     auto result = matrix_t{2, 2};
     if (is_adg) {
-        result.insert(0, 1) = static_cast<coeff_t>(1.);
-    } else {
         result.insert(1, 0) = static_cast<coeff_t>(1.);
+    } else {
+        result.insert(0, 1) = static_cast<coeff_t>(1.);
     }
     return Eigen::kroneckerProduct(n_identity<coeff_t>(n_qubits - 1 - idx),
                                    Eigen::kroneckerProduct(result, n_sz<coeff_t>(idx)).eval())
