@@ -210,6 +210,42 @@ TEST_CASE("FermionOperator matrix", "[fermion_op][ops]") {
         actual_mat = FermionOperatorCD("0^").sparse_matrix();
         do_test(ref_mat, actual_mat);
     }
+    SECTION("1") {
+        ref_mat = matrix_t{4, 4};
+        ref_mat->insert(0, 2) = 1.;
+        ref_mat->insert(1, 3) = -1.;
+        actual_mat = FermionOperatorCD("1").sparse_matrix();
+        do_test(ref_mat, actual_mat);
+    }
+    SECTION("1^") {
+        ref_mat = matrix_t{4, 4};
+        ref_mat->insert(2, 0) = 1.;
+        ref_mat->insert(3, 1) = -1.;
+        actual_mat = FermionOperatorCD("1^").sparse_matrix();
+        do_test(ref_mat, actual_mat);
+    }
+
+    // ---------------------------------
+
+#define ADD_SECTION_FOR(terms_str, x_idx, y_idx, value)                                                                \
+    SECTION(terms_str) {                                                                                               \
+        ref_mat = matrix_t{4, 4};                                                                                      \
+        ref_mat->insert(x_idx, y_idx) = value;                                                                         \
+        actual_mat = FermionOperatorCD(terms_str).sparse_matrix();                                                     \
+        do_test(ref_mat, actual_mat);                                                                                  \
+    }
+
+    ADD_SECTION_FOR("0 1", 0, 3, -1.)
+    ADD_SECTION_FOR("0 1^", 2, 1, -1.)
+    ADD_SECTION_FOR("0^ 1", 1, 2, 1.)
+    ADD_SECTION_FOR("0^ 1^", 3, 0, 1.)
+
+    // ---------------------------------
+
+    ADD_SECTION_FOR("1 0", 0, 3, 1.)
+    ADD_SECTION_FOR("1 0^", 1, 2, -1.)
+    ADD_SECTION_FOR("1^ 0", 2, 1, 1.)
+    ADD_SECTION_FOR("1^ 0^", 3, 0, -1.)
 }
 
 // =============================================================================
