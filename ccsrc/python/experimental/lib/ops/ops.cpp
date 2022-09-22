@@ -44,6 +44,7 @@
 #include "experimental/ops/transform/parity.hpp"
 
 #include "python/bindings.hpp"
+#include "python/core/tsl_ordered_map.hpp"
 #include "python/ops/gate_adapter.hpp"
 
 namespace ops = mindquantum::ops;
