@@ -33,7 +33,7 @@ struct fmt::formatter<std::complex<float_t>, char_type> : public fmt::formatter<
         return base::parse(ctx);
     }
     template <typename FormatCtx>
-    auto format(const std::complex<float_t>& number, FormatCtx& ctx) -> decltype(ctx.out()) {
+    auto format(const std::complex<float_t>& number, FormatCtx& ctx) const -> decltype(ctx.out()) {
         const auto& real = number.real();
         const auto& imag = number.imag();
         if (real && !imag) {
