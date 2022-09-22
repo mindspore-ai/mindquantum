@@ -15,6 +15,7 @@
 #ifndef PYTHON_TSL_ORDERED_MAP_HPP
 #define PYTHON_TSL_ORDERED_MAP_HPP
 
+#include <fmt/ranges.h>
 #include <pybind11/cast.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
