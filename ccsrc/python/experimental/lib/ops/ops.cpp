@@ -104,8 +104,6 @@ auto bind_ops(pybind11::module& module, const std::string_view& name) {
         .def(py::init<const ops::terms_t&, coeff_t>(), "terms"_a, "coeff"_a = op_t::coeff_policy_t::one)
         .def(py::init<const ops::py_terms_t&, coeff_t>(), "terms"_a, "coeff"_a = op_t::coeff_policy_t::one)
         .def(py::init<const typename op_t::coeff_term_dict_t&>(), "coeff_terms"_a)
-        .def(py::init<const ops::list_terms_t&, const typename op_t::list_coefficient_t&>(), "list_terms"_a,
-             "list_coefficients"_a)
         .def(py::init<std::string_view, coeff_t>(), "terms_string"_a, "coeff"_a = op_t::coeff_policy_t::one)
         .def("num_targets", &op_t::num_targets)
         .def("count_qubits", &op_t::count_qubits)

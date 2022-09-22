@@ -19,6 +19,7 @@
 #include <type_traits>
 #include <utility>
 
+#include <fmt/ranges.h>
 #include <nlohmann/detail/exceptions.hpp>
 #include <nlohmann/json.hpp>
 #include <tsl/ordered_map.h>
@@ -53,6 +54,8 @@ MQ_NODISCARD constexpr iterator_t remove_if(iterator_t first, iterator_t last, p
     return first;
 }
 }  // namespace tsl
+
+// =============================================================================
 
 namespace nlohmann {
 template <typename key_t, typename value_t, typename hash_t>
