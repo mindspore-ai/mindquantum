@@ -25,7 +25,7 @@ def test_qubit_ops_num_coeff():
     Expectation:
     """
     q1 = QubitOperator('Z1 Z2') + QubitOperator('X1')
-    assert str(q1) == '1 [X1] +\n1 [Z1 Z2] '
+    assert str(q1) == '1 [Z1 Z2] +\n1 [X1] '
     q5 = QubitOperator('X1') * QubitOperator('Y1')
     assert str(q5) == '(1j) [Z1] '
     q6 = QubitOperator('Y1') * QubitOperator('Z1')

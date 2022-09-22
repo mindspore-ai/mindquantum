@@ -117,6 +117,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(TermValue, {
 
 using term_t = std::pair<uint32_t, TermValue>;
 using terms_t = std::vector<term_t>;
+using list_terms_t = std::vector<terms_t>;
 
 using py_term_t = std::pair<uint32_t, uint32_t>;
 using py_terms_t = std::vector<py_term_t>;
@@ -139,6 +140,7 @@ class TermsOperatorBase {
     using non_const_num_targets = void;
     using terms_operator_tag = void;
     using coefficient_t = coefficient_t_;
+    using list_coefficient_t = std::vector<coefficient_t>;
 
     using coeff_policy_t = details::CoeffPolicy<coefficient_t>;
     using term_policy_t = term_policy_t_<coefficient_t>;
@@ -203,6 +205,8 @@ class TermsOperatorBase {
     explicit TermsOperatorBase(const py_terms_t& terms, coefficient_t coeff = coeff_policy_t::one);
 
     explicit TermsOperatorBase(const coeff_term_dict_t& terms);
+
+    explicit TermsOperatorBase(const list_terms_t& list_terms, const list_coefficient_t& list_coefficients);
 
     template <typename other_coeff_t>
     explicit TermsOperatorBase(const derived_t_<other_coeff_t>& other);

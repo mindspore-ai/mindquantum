@@ -104,6 +104,20 @@ TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase
 
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
+TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(
+    const list_terms_t& list_terms, const list_coefficient_t& list_coefficients) {
+    assert(list_terms.size()==list_coeffcients.size());
+    for (size_t i = 0; i<list_terms.size();i++) {
+        terms_.emplace(term_policy_t::sort_terms(list_terms[i], list_coefficients[i]));
+    }
+
+    calculate_num_targets_();
+}
+
+// -----------------------------------------------------------------------------
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
 TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(std::string_view terms_string,
                                                                                  coefficient_t coeff)
     : TermsOperatorBase(term_policy_t::parse_terms_string(terms_string), coeff) {

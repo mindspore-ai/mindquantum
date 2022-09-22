@@ -33,6 +33,7 @@ from .._mindquantum_cxx.ops import (
     QubitOperatorPRD,
 )
 from ._terms_operators import TermsOperator
+from .. import TermValue
 
 # ==============================================================================
 
@@ -114,6 +115,12 @@ class QubitOperator(TermsOperator):
             klass = QubitOperatorPRD
         elif isinstance(coeff, complex_pr):
             klass = QubitOperatorPRCD
+        elif isinstance(coeff, dict):
+            coeff = ParameterResolver(coeff)
+            if isinstance(coeff._cpp_obj, complex_pr):
+                klass = QubitOperatorPRCD
+            else:
+                klass = QubitOperatorPRD
         elif coeff is not None:
             return TypeError(f'QubitOperator does not support {type(coeff)} as coefficient type.')
 
@@ -122,6 +129,16 @@ class QubitOperator(TermsOperator):
         if coeff is None:
             return klass(term)
         return klass(term, coeff)
+
+    def __str__(self) -> str:
+        """Return string expression of a TermsOperator."""
+        out = []
+        for terms, coeff in self.terms.items():
+            terms_str = ' '.join([f"{TermValue[pauli]}{idx}" for idx, pauli in terms])
+            out.append(f"{coeff.expression()} [{terms_str}] ")
+        if not out:
+            return "0"
+        return "+\n".join(out)
 
     def count_gates(self):
         """

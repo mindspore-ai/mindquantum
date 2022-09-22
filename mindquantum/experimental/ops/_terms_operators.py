@@ -13,6 +13,7 @@
 #   limitations under the License.
 
 from abc import ABCMeta, abstractmethod
+import numbers
 from typing import Dict, Tuple, Union
 
 from mindquantum.core.parameterresolver import ParameterResolver
@@ -24,8 +25,8 @@ from .._mindquantum_cxx.ops import (
     EQ_TOLERANCE,
     CmplxPRSubsProxy,
     DoublePRSubsProxy,
-    TermValue,
 )
+from .. import TermValue
 
 
 class TermsOperator(CppArithmeticAdaptor, metaclass=ABCMeta):
@@ -65,13 +66,9 @@ class TermsOperator(CppArithmeticAdaptor, metaclass=ABCMeta):
         """Deep copy this TermsOperator."""
         return self.__class__(self._cpp_obj.__copy__())
 
-    def __str__(self) -> str:
-        """Return string expression of a TermsOperator."""
-        return str(self._cpp_obj)
-
     def __repr__(self) -> str:
         """Return string expression of a TermsOperator."""
-        return repr(self._cpp_obj)
+        return self.__str__()
 
     def __iter__(self):
         """Iterate every single term."""
@@ -253,9 +250,11 @@ class TermsOperator(CppArithmeticAdaptor, metaclass=ABCMeta):
 
     def subs(self, params_value: ParameterResolver):
         """Replace the symbolical representation with the corresponding value."""
-        if isinstance(self, self.real_pr_klass):
+        if isinstance(params_value, dict):
+            params_value = ParameterResolver(params_value)
+        if isinstance(self._cpp_obj, self.real_pr_klass):
             return self.__class__(self._cpp_obj.subs(DoublePRSubsProxy(params_value._cpp_obj)))
-        return self.__class__(self._cpp_obj.subs(CmplxPRSubsProxy(params_value._cpp_obj)))
+        return self.__class__(self._cpp_obj.subs(CmplxPRSubsProxy((params_value._cpp_obj.to_complex()))))
 
     @property
     def is_singlet(self) -> bool:
@@ -349,8 +348,17 @@ class TermsOperator(CppArithmeticAdaptor, metaclass=ABCMeta):
             TermsOperator, terms operator from mindquantum.
         """
         _check_input_type('of_ops', cls.openfermion_klass, of_ops)
-
-        terms = {}
+        klass = cls.real_pr_klass
+        c = 1
+        for v in of_ops.terms.values():
+            if isinstance(v, numbers.Complex) and not isinstance(v, numbers.Real):
+                klass = cls.complex_pr_klass
+                c = 1 + 0j
+                break
+        list_terms = []
+        list_coeff = []
         for k, v in of_ops.terms.items():
-            terms[tuple((i, TermValue[j]) for i, j in k)] = ParameterResolver(v)
-        return cls(terms)
+            list_terms.append(tuple((i, TermValue[j]) for i, j in k))
+            list_coeff.append((ParameterResolver(v) * c)._cpp_obj)
+        cpp_obj = klass(list_terms, list_coeff)
+        return cls(cpp_obj)

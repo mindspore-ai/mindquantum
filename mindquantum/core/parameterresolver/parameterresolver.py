@@ -74,7 +74,6 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
         >>> ParameterResolver('a')
         {'a': 1.0}, const: 0.0
     """
-
     def __init__(self, data=None, const=None):
         """Initialize a ParameterResolver object."""
         if isinstance(data, (complex_pr_, real_pr_)):
@@ -87,13 +86,21 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             elif isinstance(data, ParameterResolver):
                 self._cpp_obj = data._cpp_obj.__copy__()
             else:
+                klass = real_pr_
                 if const is None:
-                    const = 0.0j
+                    const = 0.0
+                if isinstance(const, numbers.Complex) and not isinstance(const, numbers.Real):
+                    klass = complex_pr_
                 if data is None:
                     data = {}
                 if isinstance(data, str):
-                    data = {data: 1.0 + 0.0j}
-                self._cpp_obj = complex_pr_(data, const)
+                    data = {data: 1.0}
+                if isinstance(data, dict):
+                    for v in data.values():
+                        if isinstance(v, numbers.Complex) and not isinstance(v, numbers.Real):
+                            klass = complex_pr_
+                            break
+                self._cpp_obj = klass(data, const)
 
     @property
     def const(self) -> numbers.Number:
@@ -917,7 +924,6 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
 
 # ==============================================================================
 
-
 ParameterResolver.__len__.__doc__ = """
     Get the number of parameters in this parameter resolver.
 
@@ -970,32 +976,22 @@ ParameterResolver.__add__.__doc__ = """
         {'a': 6.0}, const: 0.0
     """
 
-
 ParameterResolver.__radd__.__doc__ = """Add a number or ParameterResolver."""
-
 
 ParameterResolver.__isub__.__doc__ = """Self subtract a number or ParameterResolver."""
 
-
 ParameterResolver.__sub__.__doc__ = """Subtract a number or ParameterResolver."""
-
 
 ParameterResolver.__rsub__.__doc__ = """Self subtract a number or ParameterResolver."""
 
-
 ParameterResolver.__imul__.__doc__ = """Self multiply a number or ParameterResolver."""
-
 
 ParameterResolver.__mul__.__doc__ = """Multiply a number or ParameterResolver."""
 
-
 ParameterResolver.__rmul__.__doc__ = """Multiply a number or ParameterResolver."""
-
 
 ParameterResolver.__neg__.__doc__ = """Return the negative of this parameter resolver."""
 
-
 ParameterResolver.__itruediv__.__doc__ = """Divide a number inplace."""
-
 
 ParameterResolver.__truediv__.__doc__ = """Divide a number."""

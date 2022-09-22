@@ -30,6 +30,7 @@ from .._mindquantum_cxx.ops import (
     FermionOperatorPRD,
 )
 from ._terms_operators import TermsOperator
+from .. import TermValue
 
 # ==============================================================================
 
@@ -111,6 +112,12 @@ class FermionOperator(TermsOperator):
         elif isinstance(coeff, str):
             klass = FermionOperatorPRCD
             coeff = complex_pr(coeff)
+        elif isinstance(coeff, dict):
+            coeff = ParameterResolver(coeff)._cpp_obj
+            if isinstance(coeff, complex_pr):
+                klass = FermionOperatorPRCD
+            else:
+                klass = FermionOperatorPRD
         elif coeff is not None:
             raise TypeError(f'FermionOperator does not support {type(coeff)} as coefficient type.')
 
@@ -119,6 +126,16 @@ class FermionOperator(TermsOperator):
         if coeff is None:
             return klass(term)
         return klass(term, coeff)
+
+    def __str__(self) -> str:
+        """Return string expression of a TermsOperator."""
+        out = []
+        for terms, coeff in self.terms.items():
+            terms_str = ' '.join([f"{idx}{'^' if TermValue[fermion] else ''}" for idx, fermion in terms])
+            out.append(f"{coeff.expression()} [{terms_str}] ")
+        if not out:
+            return "0"
+        return "+\n".join(out)
 
     def normal_ordered(self) -> "FermionOperator":
         """
