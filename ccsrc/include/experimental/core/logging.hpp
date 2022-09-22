@@ -16,24 +16,26 @@
 #define MQ_LOGGING_HPP
 
 #ifdef ENABLE_LOGGING
-
 #    include <string>
+
+// NB: setting this to WARN will disable at compile time any log calls lower than that
+#    if !(defined MQ_LOG_ACTIVE_LEVEL) && (defined SPDLOG_ACTIVE_LEVEL)
+#        define MQ_LOG_ACTIVE_LEVEL SPDLOG_ACTIVE_LEVEL
+#    endif  // !MQ_LOG_ACTIVE_LEVEL && SPDLOG_ACTIVE_LEVEL
+#    if !(defined SPDLOG_ACTIVE_LEVEL) && (defined MQ_LOG_ACTIVE_LEVEL)
+#        define SPDLOG_ACTIVE_LEVEL MQ_LOG_ACTIVE_LEVEL
+#    endif  // !SPDLOG_ACTIVE_LEVEL && MQ_LOG_ACTIVE_LEVEL
+
+#    if !(defined SPDLOG_ACTIVE_LEVEL) && !(MQ_LOG_ACTIVE_LEVEL)
+#        define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_WARN
+#        define MQ_LOG_ACTIVE_LEVEL SPDLOG_LEVEL_WARN
+#    endif  // !SPDLOG_ACTIVE_LEVEL && !MQ_LOG_ACTIVE_LEVEL
 
 #    include <spdlog/spdlog.h>
 
 namespace mindquantum::logging {
 void set_log_file(const std::string& filename);
 }  // namespace mindquantum::logging
-
-// NB: setting this to WARN will disable any log calls lower than
-#    ifdef SPDLOG_ACTIVE_LEVEL
-#        define MQ_LOG_ACTIVE_LEVEL SPDLOG_ACTIVE_LEVEL
-#    elif (defined MQ_LOG_ACTIVE_LEVEL)
-#        define SPDLOG_ACTIVE_LEVEL MQ_LOG_ACTIVE_LEVEL
-#    else
-#        define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_WARN
-#        define MQ_LOG_ACTIVE_LEVEL SPDLOG_LEVEL_WARN
-#    endif  // SPDLOG_ACTIVE_LEVEL
 
 #    define MQ_DEBUG(...)                SPDLOG_DEBUG(__VA_ARGS__)
 #    define MQ_LOGGER_DEBUG(logger, ...) SPDLOG_LOGGER_DEBUG(logger, __VA_ARGS__)
