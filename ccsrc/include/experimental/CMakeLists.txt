@@ -23,6 +23,7 @@ target_link_libraries(
   PUBLIC include_lib
          mindquantum::boost_headers
          mindquantum::fmt
+         mindquantum::pybind11_module
          mindquantum::eigen
          mindquantum::tweedledum
          mindquantum::ordered_map
