@@ -36,8 +36,6 @@
 class UnitTestAccessor;
 #endif  // UNIT_TESTS
 
-namespace mindquantum::ops::test {}  // namespace mindquantum::ops::test
-
 namespace mindquantum::ops {
 class FermionOperatorBase {};  // Empty base class
 
@@ -104,6 +102,17 @@ class FermionOperator
     static self_t normal_ordered_term_(terms_t local_ops, coefficient_t coeff);
 };
 }  // namespace mindquantum::ops
+
+namespace mindquantum::traits {
+template <typename float_t>
+struct to_real_type<ops::FermionOperator<float_t>> {
+    using type = ops::FermionOperator<to_real_type_t<float_t>>;
+};
+template <typename float_t>
+struct to_cmplx_type<ops::FermionOperator<float_t>> {
+    using type = ops::FermionOperator<to_cmplx_type_t<float_t>>;
+};
+}  // namespace mindquantum::traits
 
 #include "experimental/ops/gates/fermion_operator.tpp"
 

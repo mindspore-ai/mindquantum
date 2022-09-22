@@ -36,12 +36,12 @@
 
 #include "experimental/ops/gates.hpp"
 #include "experimental/ops/gates/details/coeff_policy.hpp"
+#include "experimental/ops/gates/details/parameter_resolver_coeff_policy.hpp"
 #include "experimental/ops/gates/fermion_operator.hpp"
 #include "experimental/ops/gates/qubit_operator.hpp"
 #include "experimental/ops/parametric/angle_gates.hpp"
 #include "experimental/ops/transform/jordan_wigner.hpp"
 #include "experimental/ops/transform/parity.hpp"
-#include "experimental/ops/transform/reverse_jordan_wigner.hpp"
 
 #include "python/bindings.hpp"
 #include "python/ops/gate_adapter.hpp"
@@ -480,9 +480,26 @@ void init_transform(py::module& module) {
     using namespace pybind11::literals;
 
     namespace transform = mindquantum::ops::transform;
-    module.def("parity", &transform::parity, "ops"_a, "n_qubits"_a = -1);
-    module.def("reverse_jordan_wigner", &transform::reverse_jordan_wigner);
-    module.def("jordan_wigner", &transform::jordan_wigner);
+
+    using bindops::fop_t;
+    using bindops::qop_t;
+    using pr_t = mindquantum::ParameterResolver<double>;
+    using pr_cmplx_t = mindquantum::ParameterResolver<std::complex<double>>;
+
+    module.def("parity", &transform::parity<fop_t<double>>, "ops"_a, "n_qubits"_a = -1);
+    module.def("parity", &transform::parity<fop_t<std::complex<double>>>, "ops"_a, "n_qubits"_a = -1);
+    module.def("parity", &transform::parity<fop_t<pr_t>>, "ops"_a, "n_qubits"_a = -1);
+    module.def("parity", &transform::parity<fop_t<pr_cmplx_t>>, "ops"_a, "n_qubits"_a = -1);
+
+    module.def("reverse_jordan_wigner", &transform::reverse_jordan_wigner<qop_t<double>>);
+    module.def("reverse_jordan_wigner", &transform::reverse_jordan_wigner<qop_t<std::complex<double>>>);
+    module.def("reverse_jordan_wigner", &transform::reverse_jordan_wigner<qop_t<pr_t>>);
+    module.def("reverse_jordan_wigner", &transform::reverse_jordan_wigner<qop_t<pr_cmplx_t>>);
+
+    module.def("jordan_wigner", &transform::jordan_wigner<fop_t<double>>);
+    module.def("jordan_wigner", &transform::jordan_wigner<fop_t<std::complex<double>>>);
+    module.def("jordan_wigner", &transform::jordan_wigner<fop_t<pr_t>>);
+    module.def("jordan_wigner", &transform::jordan_wigner<fop_t<pr_cmplx_t>>);
 }
 
 void mindquantum::python::init_ops(pybind11::module& module) {

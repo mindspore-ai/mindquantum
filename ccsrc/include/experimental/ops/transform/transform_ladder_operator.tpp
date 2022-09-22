@@ -1,4 +1,4 @@
-//   Copyright 2021 <Huawei Technologies Co., Ltd>
+//   Copyright 2022 <Huawei Technologies Co., Ltd>
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -13,15 +13,17 @@
 //   limitations under the License.
 
 #include "experimental/ops/transform/transform_ladder_operator.hpp"
-
-#include <algorithm>
+#include "experimental/ops/transform/types.hpp"
 
 namespace mindquantum::ops::transform {
-// template <typename fermion_t, typename qubit_t>
-qubit_t transform_ladder_operator(const TermValue& value, const qlist_t& x1, const qlist_t& y1, const qlist_t& z1,
-                                  const qlist_t& x2, const qlist_t& y2, const qlist_t& z2) {
-    auto coefficient_1 = qubit_t::coefficient_t(0.5);
-    auto coefficient_2 = qubit_t::coefficient_t(std::complex<double>(0, -0.5));
+template <typename fermion_op_t>
+auto transform_ladder_operator(const TermValue& value, const qlist_t& x1, const qlist_t& y1, const qlist_t& z1,
+                               const qlist_t& x2, const qlist_t& y2, const qlist_t& z2)
+    -> to_qubit_operator_t<fermion_op_t> {
+    using qubit_op_t = to_qubit_operator_t<fermion_op_t>;
+
+    auto coefficient_1 = qubit_op_t::coefficient_t(0.5);
+    auto coefficient_2 = qubit_op_t::coefficient_t(std::complex<double>(0, -0.5));
     if (value == TermValue::a) {
         coefficient_2 *= -1;
     }
@@ -35,8 +37,9 @@ qubit_t transform_ladder_operator(const TermValue& value, const qlist_t& x1, con
     std::for_each(begin(x2), end(x2), [&t2](const auto& qubit_id) { t2.emplace_back(qubit_id, TermValue::X); });
     std::for_each(begin(y2), end(y2), [&t2](const auto& qubit_id) { t2.emplace_back(qubit_id, TermValue::Y); });
     std::for_each(begin(z2), end(z2), [&t2](const auto& qubit_id) { t2.emplace_back(qubit_id, TermValue::Z); });
-    qubit_t out = qubit_t(t1, coefficient_1);
-    out += qubit_t(t2, coefficient_2);
+    qubit_op_t out = qubit_op_t(t1, coefficient_1);
+    out += qubit_op_t(t2, coefficient_2);
     return out;
 }
+
 }  // namespace mindquantum::ops::transform

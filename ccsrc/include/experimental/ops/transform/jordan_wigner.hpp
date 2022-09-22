@@ -15,14 +15,19 @@
 #ifndef JORDAN_WIGNER_TRANSFORM_HPP
 #define JORDAN_WIGNER_TRANSFORM_HPP
 
+#include "config/type_traits.hpp"
+
 #include "experimental/ops/transform/types.hpp"
 
 namespace mindquantum::ops::transform {
+template <typename fermion_op_t>
+MQ_NODISCARD to_qubit_operator_t<fermion_op_t> jordan_wigner(const fermion_op_t& ops);
 
-//! Jordan Wigner transform that transform a Fermion operator to qubit operator.
-// TODO(xusheng): Why cannot use template, otherwise undefined symbol error occur.
-// template <typename fermion_t, typename qubit_t>
-MQ_NODISCARD qubit_t jordan_wigner(const fermion_t& ops);
+template <typename qubit_op_t>
+MQ_NODISCARD to_fermion_operator_t<traits::to_cmplx_type_t<qubit_op_t>> reverse_jordan_wigner(const qubit_op_t& ops,
+                                                                                              int n_qubits = -1);
 }  // namespace mindquantum::ops::transform
+
+#include "experimental/ops/transform/jordan_wigner.tpp"
 
 #endif

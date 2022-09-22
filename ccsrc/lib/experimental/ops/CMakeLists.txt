@@ -22,11 +22,6 @@ target_sources(
           ${CMAKE_CURRENT_LIST_DIR}/gates/details/qubit_operator_term_policy.cpp
           ${CMAKE_CURRENT_LIST_DIR}/gates/details/std_complex_coeff_policy.cpp
           ${CMAKE_CURRENT_LIST_DIR}/gates/details/symengine_coeff_policy.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/parametric/register_gate_type.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/transform/jordan_wigner.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/transform/reverse_jordan_wigner.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/transform/parity.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/transform/fermion_number_operator.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/transform/transform_ladder_operator.cpp)
+          ${CMAKE_CURRENT_LIST_DIR}/parametric/register_gate_type.cpp)
 
 target_link_libraries(mq_cxx_nextgen PUBLIC mindquantum::symengine)

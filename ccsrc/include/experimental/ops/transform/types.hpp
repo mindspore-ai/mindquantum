@@ -17,15 +17,40 @@
 
 #include <vector>
 
-#include "core/parameter_resolver.hpp"
-
-#include "experimental/ops/gates/details/parameter_resolver_coeff_policy.hpp"
 #include "experimental/ops/gates/fermion_operator.hpp"
 #include "experimental/ops/gates/qubit_operator.hpp"
 
+// =============================================================================
+
 namespace mindquantum::ops::transform {
-using qubit_t = QubitOperator<ParameterResolver<std::complex<double>>>;
-using fermion_t = FermionOperator<ParameterResolver<std::complex<double>>>;
+template <typename fermion_op_t>
+struct to_qubit_operator;
+
+template <typename coeff_t>
+struct to_qubit_operator<FermionOperator<coeff_t>> {
+    using type = QubitOperator<coeff_t>;
+};
+
+template <typename fermion_op_t>
+using to_qubit_operator_t = typename to_qubit_operator<fermion_op_t>::type;
+
+// -----------------------------------------------------------------------------
+
+template <typename qubit_op_t>
+struct to_fermion_operator;
+
+template <typename coeff_t>
+struct to_fermion_operator<QubitOperator<coeff_t>> {
+    using type = QubitOperator<coeff_t>;
+};
+
+template <typename fermion_op_t>
+using to_fermion_operator_t = typename to_fermion_operator<fermion_op_t>::type;
+
+// -----------------------------------------------------------------------------
+
 using qlist_t = std::vector<term_t::first_type>;
 }  // namespace mindquantum::ops::transform
+
+// =============================================================================
 #endif

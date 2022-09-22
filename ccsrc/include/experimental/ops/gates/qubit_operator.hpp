@@ -105,6 +105,17 @@ class QubitOperator
 };
 }  // namespace mindquantum::ops
 
+namespace mindquantum::traits {
+template <typename float_t>
+struct to_real_type<ops::QubitOperator<float_t>> {
+    using type = ops::QubitOperator<to_real_type_t<float_t>>;
+};
+template <typename float_t>
+struct to_cmplx_type<ops::QubitOperator<float_t>> {
+    using type = ops::QubitOperator<to_cmplx_type_t<float_t>>;
+};
+}  // namespace mindquantum::traits
+
 #include "experimental/ops/gates/qubit_operator.tpp"
 
 #endif /* QUBITOPERATOR_OP_HPP */

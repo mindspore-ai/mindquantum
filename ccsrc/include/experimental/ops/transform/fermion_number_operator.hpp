@@ -20,9 +20,12 @@
 namespace mindquantum::ops::transform {
 
 //! Jordan Wigner transform that transform a Fermion operator to qubit operator.
-// template <typename fermion_t, typename qubit_t>
-MQ_NODISCARD fermion_t fermion_number_operator(int n_modes, int mode = -1,
-                                               fermion_t::coefficient_t coeff = fermion_t::coeff_policy_t::one);
+template <typename fermion_op_t>
+MQ_NODISCARD fermion_op_t fermion_number_operator(int n_modes, int mode = -1,
+                                                  typename fermion_op_t::coefficient_t coeff
+                                                  = fermion_op_t::coeff_policy_t::one);
 }  // namespace mindquantum::ops::transform
+
+#include "experimental/ops/transform/fermion_number_operator.tpp"
 
 #endif

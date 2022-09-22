@@ -1,4 +1,4 @@
-//   Copyright 2020 <Huawei Technologies Co., Ltd>
+//   Copyright 2022 <Huawei Technologies Co., Ltd>
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -12,17 +12,26 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef REVERSE_JORDAN_WIGNER_TRANSFORM_HPP
-#define REVERSE_JORDAN_WIGNER_TRANSFORM_HPP
+#ifndef FERMION_NUMBER_OPERATOR_TPP
+#define FERMION_NUMBER_OPERATOR_TPP
 
+#include "experimental/ops/transform/fermion_number_operator.hpp"
 #include "experimental/ops/transform/types.hpp"
 
 namespace mindquantum::ops::transform {
+template <typename fermion_op_t>
+fermion_op_t fermion_number_operator(int n_modes, int mode, typename fermion_op_t::coefficient_t coeff) {
+    fermion_op_t out{};
+    if (mode < 0) {
+        for (auto m = 0; m < n_modes; m++) {
+            out += fermion_number_operator<fermion_op_t>(n_modes, m, coeff);
+        }
+    } else {
+        out += fermion_op_t({{mode, TermValue::adg}, {mode, TermValue::a}}, coeff);
+    }
+    return out;
+}
 
-//! Reverse Jordan Wigner transform that transform a Qubit operator to Fermion operator.
-// TODO(xusheng): Why cannot use template, otherwise undefined symbol error occur.
-// template <typename fermion_t, typename qubit_t>
-MQ_NODISCARD fermion_t reverse_jordan_wigner(const qubit_t& ops, int n_qubits = -1);
 }  // namespace mindquantum::ops::transform
 
-#endif
+#endif /* FERMION_NUMBER_OPERATOR_TPP */
