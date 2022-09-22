@@ -6,6 +6,8 @@ constParameter:tests/*
 
 constVariable:ccsrc/lib/experimental/core/cpp_core.cpp:282
 
+duplicateBreak:ccsrc/python/experimental/include/python/core/tsl_ordered_map.hpp:39
+
 duplicateExpression:ccsrc/include/core/parameter_resolver.h:707
 duplicateExpression:ccsrc/python/mqbackend/lib/binding.cc
 
@@ -38,7 +40,7 @@ unusedStructMember:ccsrc/include/experimental/ops/parametric/param_names.hpp
 unusedStructMember:ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp
 
 useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.hpp:32
-useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.hpp:74
+useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.hpp:70
 useStlAlgorithm:ccsrc/include/experimental/core/control.hpp:79
 useStlAlgorithm:ccsrc/lib/experimental/core/circuit_manager.cpp
 

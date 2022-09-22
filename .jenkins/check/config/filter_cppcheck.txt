@@ -2,6 +2,8 @@
 
 "mindquantum/ccsrc/lib/experimental/core/cpp_core.cpp:282"                                  "constVariable"
 
+"mindquantum/ccsrc/python/experimental/include/python/core/tsl_ordered_map.hpp:39"          "duplicateBreak"
+
 "mindquantum/ccsrc/include/core/parameter_resolver.h:707"                                   "duplicateExpression"
 "mindquantum/ccsrc/python/mqbackend/lib/binding.cc"                                         "duplicateExpression"
 
@@ -34,7 +36,7 @@
 "mindquantum/ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp"                 "unusedStructMember"
 
 "mindquantum/ccsrc/include/config/tsl_ordered_map.hpp:32"                                   "useStlAlgorithm"
-"mindquantum/ccsrc/include/config/tsl_ordered_map.hpp:74"                                   "useStlAlgorithm"
+"mindquantum/ccsrc/include/config/tsl_ordered_map.hpp:70"                                   "useStlAlgorithm"
 "mindquantum/ccsrc/include/experimental/core/control.hpp:79"                                "useStlAlgorithm"
 "mindquantum/ccsrc/lib/experimental/core/circuit_manager.cpp"                               "useStlAlgorithm"
 
