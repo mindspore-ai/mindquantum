@@ -21,7 +21,7 @@
 
 namespace mindquantum::ops::transform {
 template <typename fermion_op_t>
-MQ_NODISCARD to_qubit_operator_t<fermion_op_t> jordan_wigner(const fermion_op_t& ops);
+MQ_NODISCARD to_qubit_operator_t<traits::to_cmplx_type_t<fermion_op_t>> jordan_wigner(const fermion_op_t& ops);
 
 template <typename qubit_op_t>
 MQ_NODISCARD to_fermion_operator_t<traits::to_cmplx_type_t<qubit_op_t>> reverse_jordan_wigner(const qubit_op_t& ops,

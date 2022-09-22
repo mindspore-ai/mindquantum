@@ -22,11 +22,13 @@
 
 namespace mindquantum::ops::transform {
 template <typename fermion_op_t>
-auto jordan_wigner(const fermion_op_t& ops) -> to_qubit_operator_t<fermion_op_t> {
-    using qubit_op_t = to_qubit_operator_t<fermion_op_t>;
+auto jordan_wigner(const fermion_op_t& ops) -> to_qubit_operator_t<traits::to_cmplx_type_t<fermion_op_t>> {
+    using qubit_op_t = to_qubit_operator_t<traits::to_cmplx_type_t<fermion_op_t>>;
+    using coefficient_t = typename qubit_op_t::coefficient_t;
+
     auto transf_op = qubit_op_t();
     for (const auto& [term, coeff] : ops.get_terms()) {
-        auto transformed_term = qubit_op_t(terms_t{}, coeff);
+        auto transformed_term = qubit_op_t(terms_t{}, static_cast<coefficient_t>(coeff));
         for (const auto& [idx, value] : term) {
             qlist_t z = {};
             for (auto i = 0; i < idx; i++) {

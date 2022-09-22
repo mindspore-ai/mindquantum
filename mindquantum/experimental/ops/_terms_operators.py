@@ -12,8 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from abc import ABCMeta, abstractmethod
 import numbers
+from abc import ABCMeta, abstractmethod
 from typing import Dict, Tuple, Union
 
 from mindquantum.core.parameterresolver import ParameterResolver
@@ -21,12 +21,8 @@ from mindquantum.mqbackend import complex_pr, real_pr
 from mindquantum.utils.type_value_check import _check_input_type
 
 from ...core._arithmetic_ops_adaptor import CppArithmeticAdaptor
-from .._mindquantum_cxx.ops import (
-    EQ_TOLERANCE,
-    CmplxPRSubsProxy,
-    DoublePRSubsProxy,
-)
 from .. import TermValue
+from .._mindquantum_cxx.ops import EQ_TOLERANCE, CmplxPRSubsProxy, DoublePRSubsProxy
 
 
 class TermsOperator(CppArithmeticAdaptor, metaclass=ABCMeta):
@@ -68,7 +64,7 @@ class TermsOperator(CppArithmeticAdaptor, metaclass=ABCMeta):
 
     def __repr__(self) -> str:
         """Return string expression of a TermsOperator."""
-        return self.__str__()
+        return f'{self.__class__.__name__}({repr(self._cpp_obj)})'
 
     def __iter__(self):
         """Iterate every single term."""
@@ -254,7 +250,7 @@ class TermsOperator(CppArithmeticAdaptor, metaclass=ABCMeta):
             params_value = ParameterResolver(params_value)
         if isinstance(self._cpp_obj, self.real_pr_klass):
             return self.__class__(self._cpp_obj.subs(DoublePRSubsProxy(params_value._cpp_obj)))
-        return self.__class__(self._cpp_obj.subs(CmplxPRSubsProxy((params_value._cpp_obj.to_complex()))))
+        return self.__class__(self._cpp_obj.subs(CmplxPRSubsProxy(params_value._cpp_obj.to_complex())))
 
     @property
     def is_singlet(self) -> bool:

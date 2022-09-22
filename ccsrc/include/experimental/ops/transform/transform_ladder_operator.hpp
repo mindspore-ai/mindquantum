@@ -20,10 +20,11 @@
 namespace mindquantum::ops::transform {
 //! Ladder operator transform.
 template <typename fermion_op_t>
-MQ_NODISCARD to_qubit_operator_t<fermion_op_t> transform_ladder_operator(const TermValue& value, const qlist_t& x1,
-                                                                         const qlist_t& y1, const qlist_t& z1,
-                                                                         const qlist_t& x2, const qlist_t& y2,
-                                                                         const qlist_t& z2);
+MQ_NODISCARD to_qubit_operator_t<traits::to_cmplx_type_t<fermion_op_t>> transform_ladder_operator(
+    const TermValue& value, const qlist_t& x1, const qlist_t& y1, const qlist_t& z1, const qlist_t& x2,
+    const qlist_t& y2, const qlist_t& z2);
 }  // namespace mindquantum::ops::transform
+
+#include "experimental/ops/transform/transform_ladder_operator.tpp"
 
 #endif

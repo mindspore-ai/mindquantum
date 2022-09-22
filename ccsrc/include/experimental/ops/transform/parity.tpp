@@ -20,8 +20,9 @@
 
 namespace mindquantum::ops::transform {
 template <typename fermion_op_t>
-auto parity(const fermion_op_t& ops, int n_qubits) -> to_qubit_operator_t<fermion_op_t> {
-    using qubit_op_t = to_qubit_operator_t<fermion_op_t>;
+auto parity(const fermion_op_t& ops, int n_qubits) -> to_qubit_operator_t<traits::to_cmplx_type_t<fermion_op_t>> {
+    using qubit_op_t = to_qubit_operator_t<traits::to_cmplx_type_t<fermion_op_t>>;
+    using coefficient_t = typename qubit_op_t::coefficient_t;
 
     auto local_n_qubits = ops.count_qubits();
     if (n_qubits <= 0) {
@@ -32,7 +33,7 @@ auto parity(const fermion_op_t& ops, int n_qubits) -> to_qubit_operator_t<fermio
     }
     auto transf_op = qubit_op_t();
     for (const auto& [term, coeff] : ops.get_terms()) {
-        auto transformed_term = qubit_op_t(terms_t{}, coeff);
+        auto transformed_term = qubit_op_t(terms_t{}, static_cast<coefficient_t>(coeff));
         for (const auto& [idx, value] : term) {
             qlist_t x1 = {}, z1 = {}, x2 = {};
             for (auto i = idx; i < n_qubits; i++) {

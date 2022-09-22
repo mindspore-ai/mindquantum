@@ -21,7 +21,8 @@ namespace mindquantum::ops::transform {
 
 //! Jordan Wigner transform that transform a Fermion operator to qubit operator.
 template <typename fermion_op_t>
-MQ_NODISCARD to_qubit_operator_t<fermion_op_t> parity(const fermion_op_t& ops, int n_qubits = -1);
+MQ_NODISCARD to_qubit_operator_t<traits::to_cmplx_type_t<fermion_op_t>> parity(const fermion_op_t& ops,
+                                                                               int n_qubits = -1);
 }  // namespace mindquantum::ops::transform
 
 #include "experimental/ops/transform/parity.tpp"

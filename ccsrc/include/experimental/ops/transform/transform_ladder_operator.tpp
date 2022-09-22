@@ -19,11 +19,12 @@ namespace mindquantum::ops::transform {
 template <typename fermion_op_t>
 auto transform_ladder_operator(const TermValue& value, const qlist_t& x1, const qlist_t& y1, const qlist_t& z1,
                                const qlist_t& x2, const qlist_t& y2, const qlist_t& z2)
-    -> to_qubit_operator_t<fermion_op_t> {
-    using qubit_op_t = to_qubit_operator_t<fermion_op_t>;
+    -> to_qubit_operator_t<traits::to_cmplx_type_t<fermion_op_t>> {
+    using qubit_op_t = to_qubit_operator_t<traits::to_cmplx_type_t<fermion_op_t>>;
+    using coefficient_t = typename qubit_op_t::coefficient_t;
 
-    auto coefficient_1 = qubit_op_t::coefficient_t(0.5);
-    auto coefficient_2 = qubit_op_t::coefficient_t(std::complex<double>(0, -0.5));
+    auto coefficient_1 = coefficient_t(0.5);
+    auto coefficient_2 = coefficient_t(std::complex<double>(0, -0.5));
     if (value == TermValue::a) {
         coefficient_2 *= -1;
     }
