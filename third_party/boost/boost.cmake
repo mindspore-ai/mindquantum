@@ -18,11 +18,7 @@
 
 # cmake-lint: disable=C0103
 
-# NB: Ubuntu 20.04 LTS has 1.71.0, Debian Buster 1.67.0
-set(VER 1.78.0) # Version provided by Ubuntu 20.04 LTS
-if(MQ_FORCE_LOCAL_PKGS OR MQ_BOOST_FORCE_LOCAL)
-  set(VER 1.78.0)
-endif()
+set(VER 1.78.0)
 
 set(_version_for_download 1.78.0)
 string(REPLACE "." "_" _ver "${_version_for_download}")
