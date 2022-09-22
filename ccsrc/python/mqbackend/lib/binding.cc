@@ -112,13 +112,15 @@ void BindPRPython(py::module &m) {
 }
 
 template <typename T>
-void BindPR(py::module &module, const std::string &name) {
+auto BindPR(py::module &module, const std::string &name) {
     using mindquantum::MST;
     using mindquantum::ParameterResolver;
     using mindquantum::SS;
 
-    py::class_<mindquantum::ParameterResolver<T>, std::shared_ptr<mindquantum::ParameterResolver<T>>>(module,
-                                                                                                      name.c_str())
+    using namespace pybind11::literals;
+
+    return py::class_<mindquantum::ParameterResolver<T>, std::shared_ptr<mindquantum::ParameterResolver<T>>>(
+               module, name.c_str())
         .def(py::init<T>())
         .def(py::init([](ParameterResolver<T> &pr, bool copy) {
             if (copy) {
@@ -127,7 +129,11 @@ void BindPR(py::module &module, const std::string &name) {
             return std::move(pr);
         }))
         .def(py::init<std::string>())
-        .def(py::init<const MST<T> &, T>())
+
+        .def(py::init<const MST<T> &>(), "data"_a)
+
+        .def(py::init<const MST<T> &, T>(), "data"_a, "coeff"_a)
+
         .def(py::init<const MST<T> &, T, const SS &, const SS &>())
         .def_property_readonly("const", [](const ParameterResolver<T> &pr) { return pr.const_value; })
         .def_readonly("data", &ParameterResolver<T>::data_)
@@ -188,6 +194,7 @@ void BindPR(py::module &module, const std::string &name) {
 
 // Interface with python
 PYBIND11_MODULE(mqbackend, m) {
+    using namespace pybind11::literals;
     using mindquantum::BasicGate;
     using mindquantum::CsrHdMatrix;
     using mindquantum::CT;
@@ -236,8 +243,11 @@ PYBIND11_MODULE(mqbackend, m) {
     m.def("get_gate_by_name", &GetGateByName<MT>);
     m.def("get_measure_gate", &GetMeasureGate<MT>);
     // parameter resolver
-    BindPR<MT>(m, "real_pr");
-    BindPR<std::complex<MT>>(m, "complex_pr");
+    auto real_pr = BindPR<MT>(m, "real_pr");
+    auto complex_pr = BindPR<std::complex<MT>>(m, "complex_pr");
+    complex_pr.def(py::init<MT>())
+        .def(py::init<const mindquantum::MST<MT> &>(), "data"_a)
+        .def(py::init<const mindquantum::MST<MT> &, MT>(), "data"_a, "coeff"_a = 0.);
     BindPRPython(m);
 
     // pauli mat

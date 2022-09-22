@@ -186,28 +186,78 @@ struct ParameterResolver {
     T const_value = static_cast<T>(0);
     SS no_grad_parameters_{};
     SS encoder_parameters_{};
-    explicit ParameterResolver(T const_value) : const_value(const_value) {
-    }
-    template <typename U, typename = std::enable_if_t<std::is_floating_point_v<U> || traits::is_std_complex_v<U>>>
+
+    template <typename U,
+              typename = std::enable_if_t<
+                  std::is_arithmetic_v<std::remove_cvref_t<U>> || traits::is_std_complex_v<std::remove_cvref_t<U>>>>
     explicit ParameterResolver(U&& const_value) : const_value(static_cast<T>(std::forward<U>(const_value))) {
     }
-    ParameterResolver(const MST<T>& data, T const_value) : data_(data), const_value(const_value) {
+
+    //! Constructor from a dictionary [string -> T] and a constant of type T
+    explicit ParameterResolver(const MST<T>& data, T const_value = static_cast<T>(0))
+        : data_(data), const_value(const_value) {
         for (ITER(param, this->data_)) {
             if (param->first == "") {
                 throw std::runtime_error("Parameter name cannot be empty.");
             }
         }
     }
+
+    //! Constructor from a dictionary [string -> T] and a constant of type T and gradient parameters
     ParameterResolver(const MST<T>& data, T const_value, SS no_grad_parameters, SS encoder_parameters)
         : data_(data)
         , const_value(const_value)
         , no_grad_parameters_(std::move(no_grad_parameters))
         , encoder_parameters_(std::move(encoder_parameters)) {
     }
-    explicit ParameterResolver(const std::string& param) {
-        this->data_[param] = 1;
+
+    //! Constructor from a dictionary [string -> some_type] without a constant
+    /*!
+     * \note \c some_type does not need to be the same as \c T
+     */
+    template <typename U,
+              typename = std::enable_if_t<
+                  std::is_arithmetic_v<std::remove_cvref_t<U>> || traits::is_std_complex_v<std::remove_cvref_t<U>>>>
+    explicit ParameterResolver(const MST<U>& data) : ParameterResolver(data, static_cast<T>(0.)) {
     }
-    template <typename U, typename = std::enable_if_t<std::is_floating_point_v<U> || traits::is_std_complex_v<U>>>
+    //! Constructor from a dictionary [string -> some_type] and a constant of some other_type
+    /*!
+     * \note \c some_type  and \c other_type do not need to be the same as \c T
+     */
+    template <
+        typename U, typename V,
+        typename = std::enable_if_t<
+            (std::is_arithmetic_v<std::remove_cvref_t<U>> || traits::is_std_complex_v<std::remove_cvref_t<U>>) &&(
+                std::is_arithmetic_v<std::remove_cvref_t<V>> || traits::is_std_complex_v<std::remove_cvref_t<V>>)>>
+    ParameterResolver(const MST<U>& data, V const_value) : const_value(static_cast<T>(const_value)) {
+        for (const auto& [key, value] : data) {
+            data_.emplace(key, static_cast<T>(value));
+        }
+        for (ITER(param, this->data_)) {
+            if (param->first == "") {
+                throw std::runtime_error("Parameter name cannot be empty.");
+            }
+        }
+    }
+    template <
+        typename U, typename V,
+        typename = std::enable_if_t<
+            (std::is_arithmetic_v<std::remove_cvref_t<U>> || traits::is_std_complex_v<std::remove_cvref_t<U>>) &&(
+                std::is_arithmetic_v<std::remove_cvref_t<V>> || traits::is_std_complex_v<std::remove_cvref_t<V>>)>>
+    ParameterResolver(const MST<U>& data, V&& const_value, SS no_grad_parameters, SS encoder_parameters)
+        : const_value(static_cast<T>(std::forward<V>(const_value)))
+        , no_grad_parameters_(std::move(no_grad_parameters))
+        , encoder_parameters_(std::move(encoder_parameters)) {
+        for (const auto& [key, value] : data) {
+            data_.emplace(key, static_cast<T>(value));
+        }
+    }
+    explicit ParameterResolver(const std::string& param) {
+        this->data_[param] = static_cast<T>(1);
+    }
+    template <typename U,
+              typename = std::enable_if_t<
+                  std::is_arithmetic_v<std::remove_cvref_t<U>> || traits::is_std_complex_v<std::remove_cvref_t<U>>>>
     explicit ParameterResolver(const ParameterResolver<U>& other)
         : const_value{static_cast<T>(other.const_value)}
         , no_grad_parameters_{other.no_grad_parameters_}
@@ -231,7 +281,9 @@ struct ParameterResolver {
         }
         return this->const_value;
     }
-    template <typename U = T, typename = std::enable_if_t<std::is_same_v<T, U> && !traits::is_complex_v<U>>>
+    template <typename U = T,
+              typename = std::enable_if_t<
+                  std::is_same_v<T, std::remove_cvref_t<U>> && !traits::is_complex_v<std::remove_cvref_t<U>>>>
     explicit operator traits::to_cmplx_type_t<U>() const {
         if (!IsConst()) {
             throw std::runtime_error("ParameterResolver: cannot convert to const value since not const!");

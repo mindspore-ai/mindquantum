@@ -74,33 +74,40 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
         >>> ParameterResolver('a')
         {'a': 1.0}, const: 0.0
     """
+
     def __init__(self, data=None, const=None):
         """Initialize a ParameterResolver object."""
-        if isinstance(data, (complex_pr_, real_pr_)):
-            self._cpp_obj = data
+        if isinstance(data, ParameterResolver):
+            self._cpp_obj = data._cpp_obj.__copy__()
+        elif isinstance(data, (complex_pr_, real_pr_)):
+            self._cpp_obj = data.__copy__()
         else:
-            if isinstance(data, numbers.Real):
-                self._cpp_obj = real_pr_(data)
-            elif isinstance(data, numbers.Complex):
-                self._cpp_obj = complex_pr_(data)
-            elif isinstance(data, ParameterResolver):
-                self._cpp_obj = data._cpp_obj.__copy__()
-            else:
+
+            def get_klass_from(value):
+                """Get a klass from the type of the input argument."""
+                if isinstance(value, numbers.Real):
+                    return real_pr_
+                elif isinstance(value, numbers.Complex):
+                    return complex_pr_
+                else:
+                    raise TypeError(f'Unsupported constant type: {type(value)}')
+
+            klass = real_pr_
+            if const is not None:
+                klass = get_klass_from(const)
+            elif data is None:
                 klass = real_pr_
-                if const is None:
-                    const = 0.0
-                if isinstance(const, numbers.Complex) and not isinstance(const, numbers.Real):
-                    klass = complex_pr_
-                if data is None:
-                    data = {}
-                if isinstance(data, str):
-                    data = {data: 1.0}
-                if isinstance(data, dict):
-                    for v in data.values():
-                        if isinstance(v, numbers.Complex) and not isinstance(v, numbers.Real):
-                            klass = complex_pr_
-                            break
+                data = {}
+            elif isinstance(data, numbers.Number):
+                klass = get_klass_from(data)
+            elif isinstance(data, str):
+                klass = real_pr_
+
+            if const is None:
+                self._cpp_obj = klass(data)
+            else:
                 self._cpp_obj = klass(data, const)
+                print(type(data), type(const))
 
     @property
     def const(self) -> numbers.Number:
