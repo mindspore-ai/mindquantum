@@ -23,6 +23,8 @@ from openfermion import FermionOperator as OFFermionOperator
 from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.mqbackend import complex_pr, real_pr
 
+from .. import TermValue
+
 # NB: C++ actually supports FermionOperatorD and FermionOperatorCD that are purely numerical FermionOperator classes
 from .._mindquantum_cxx.ops import (
     FermionOperatorBase,
@@ -30,7 +32,6 @@ from .._mindquantum_cxx.ops import (
     FermionOperatorPRD,
 )
 from ._terms_operators import TermsOperator
-from .. import TermValue
 
 # ==============================================================================
 

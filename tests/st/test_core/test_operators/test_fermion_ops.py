@@ -141,6 +141,7 @@ def test_para_operators():
     op = para_op.subs(para_dt)
     assert str(op) == '2 [0 1^] '
 
+
 @pytest.mark.skipif(True, reason='[BUG] Whether a double type and complex type can compare?')
 def test_eq():
     """
@@ -164,6 +165,7 @@ def test_fermion_operator_iter():
         assert o == b_exp[idx]
     assert b.singlet_coeff() == 1
     assert b.is_singlet
+
 
 @pytest.mark.skipif(True, reason='[BUG] loads has bug.')
 def test_dumps_and_loads():
