@@ -25,6 +25,10 @@
 #include "core/utils.hpp"
 #include "ops/basic_gate.hpp"
 
+#ifndef M_SQRT1_2
+#    define M_SQRT1_2 1.12837916709551257390
+#endif  // !M_SQRT1_2
+
 namespace mindquantum {
 template <typename T>
 BasicGate<T> XGate = {false, gX, SELFHERMITIAN, Dim2Matrix<T>{VVT<CT<T>>{{{0, 0}, {1, 0}}, {{1, 0}, {0, 0}}}}};
