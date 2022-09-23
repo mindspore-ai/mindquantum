@@ -16,16 +16,8 @@
 #
 # ==============================================================================
 
-add_subdirectory(core)
+add_library(mq_python_core INTERFACE)
+target_include_directories(mq_python_core INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+                                                    $<INSTALL_INTERFACE:${MQ_INSTALL_INCLUDEDIR}>)
 
-# ==============================================================================
-
-add_subdirectory(mqbackend)
-
-# ==============================================================================
-
-if(ENABLE_CXX_EXPERIMENTAL)
-  add_subdirectory(experimental)
-endif()
-
-# ==============================================================================
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/python DESTINATION ${MQ_INSTALL_INCLUDEDIR})

@@ -37,7 +37,7 @@
 #include "ops/gates.hpp"
 #include "ops/hamiltonian.hpp"
 
-#include "python/PRPython.hpp"
+#include "python/details/create_from_container_class.hpp"
 
 namespace py = pybind11;
 
@@ -53,74 +53,18 @@ using mindquantum::projectq::InnerProduct;
 using mindquantum::projectq::Projectq;
 #endif
 
-void BindPRPython(py::module &m) {
-    using mindquantum::MST;
-    using mindquantum::PRPython;
-    using mindquantum::PRTypeID;
-
-    py::class_<PRPython, std::shared_ptr<PRPython>>(m, "pr_python")
-        .def(py::init<double>())
-        .def(py::init<std::complex<double>>())
-        .def(py::init<const MST<double>, double>())
-        .def(py::init<const MST<std::complex<double>>, std::complex<double>>())
-        .def(py::init([](const PRPython &pr) { return std::make_shared<PRPython>(pr); }))
-        .def(py::init<std::string, PRTypeID>())
-        .def("set_const", py::overload_cast<double>(&PRPython::SetConst))
-        .def("set_const", py::overload_cast<std::complex<double>>(&PRPython::SetConst))
-        .def("params_name", &PRPython::ParamsName)
-        .def("display", &PRPython::PrintInfo)
-        .def("__len__", &PRPython::Size)
-        .def("size", &PRPython::Size)
-        .def("__bool__", &PRPython::IsNotZero)
-        .def("__repr__", &PRPython::ToString)
-        .def("__str__", &PRPython::ToString)
-        .def("__contains__", &PRPython::Contains)
-        .def("__copy__", [](const PRPython &pr) { return pr; })
-        .def("get_key", &PRPython::GetKey)
-        .def(py::self += double(), py::is_operator())
-        .def(py::self += std::complex<double>(), py::is_operator())
-        .def(py::self += py::self, py::is_operator())
-        .def(py::self -= double(), py::is_operator())
-        .def(py::self -= std::complex<double>(), py::is_operator())
-        .def(py::self -= py::self, py::is_operator())
-        .def(py::self *= double(), py::is_operator())
-        .def(py::self *= std::complex<double>(), py::is_operator())
-        .def(py::self *= py::self, py::is_operator())
-        .def(py::self /= double(), py::is_operator())
-        .def(py::self /= std::complex<double>(), py::is_operator())
-        .def(py::self /= py::self, py::is_operator())
-        .def("is_const", &PRPython::IsConst)
-        .def("is_const", &PRPython::IsConst)
-        .def("requires_grad", &PRPython::RequiresGrad)
-        .def("no_grad", &PRPython::NoGrad)
-        .def("no_grad_part", &PRPython::NoGradPart)
-        .def("requires_grad_part", &PRPython::RequiresGradPart)
-        .def("as_encoder", &PRPython::AsEncoder)
-        .def("as_ansatz", &PRPython::AsAnsatz)
-        .def("encoder_part", &PRPython::EncoderPart)
-        .def("ansatz_part", &PRPython::AnsatzPart)
-        .def("update", py::overload_cast<const PRPython &>(&PRPython::Update))
-        .def("conjugate", &PRPython::Conjugate)
-        .def("combination", &PRPython::Combination)
-        .def("real", &PRPython::Real)
-        .def("imag", &PRPython::Imag)
-        // .def("pop", &PRPython::Pop)
-        .def("is_hermitian", &PRPython::IsHermitian)
-        .def("is_anti_hermitian", &PRPython::IsAntiHermitian)
-        .def("to_complex", &PRPython::ToComplexPR)
-        .def("is_complex_pr", &PRPython::IsComplexPR);
-}
-
 template <typename T>
 auto BindPR(py::module &module, const std::string &name) {
     using mindquantum::MST;
     using mindquantum::ParameterResolver;
     using mindquantum::SS;
+    using mindquantum::python::create_from_python_container_class;
+
+    using pr_t = mindquantum::ParameterResolver<T>;
 
     using namespace pybind11::literals;
 
-    return py::class_<mindquantum::ParameterResolver<T>, std::shared_ptr<mindquantum::ParameterResolver<T>>>(
-               module, name.c_str())
+    return py::class_<pr_t, std::shared_ptr<pr_t>>(module, name.c_str())
         .def(py::init<T>())
         .def(py::init([](ParameterResolver<T> &pr, bool copy) {
             if (copy) {
@@ -129,12 +73,12 @@ auto BindPR(py::module &module, const std::string &name) {
             return std::move(pr);
         }))
         .def(py::init<std::string>())
-
         .def(py::init<const MST<T> &>(), "data"_a)
-
         .def(py::init<const MST<T> &, T>(), "data"_a, "coeff"_a)
-
         .def(py::init<const MST<T> &, T, const SS &, const SS &>())
+        //! *VERY* important: this overload below needs to be the LAST
+        .def(pybind11::init(&create_from_python_container_class<pr_t>), "py_class"_a,
+             "Constructor from the encapsulating Python class (using a _cpp_obj attribute)")
         .def_property_readonly("const", [](const ParameterResolver<T> &pr) { return pr.const_value; })
         .def_readonly("data", &ParameterResolver<T>::data_)
         .def_readonly("no_grad_parameters", &ParameterResolver<T>::no_grad_parameters_)
@@ -248,7 +192,6 @@ PYBIND11_MODULE(mqbackend, m) {
     complex_pr.def(py::init<MT>())
         .def(py::init<const mindquantum::MST<MT> &>(), "data"_a)
         .def(py::init<const mindquantum::MST<MT> &, MT>(), "data"_a, "coeff"_a = 0.);
-    BindPRPython(m);
 
     // pauli mat
     py::class_<PauliMat<MT>, std::shared_ptr<PauliMat<MT>>>(m, "pauli_mat")

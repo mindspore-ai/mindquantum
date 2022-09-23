@@ -32,7 +32,7 @@
 #include "config/constexpr_type_name.hpp"
 
 #include "core/parameter_resolver.hpp"
-#include "details/define_binary_operator_helpers.hpp"
+#include "details/define_terms_ops.hpp"
 
 #include "experimental/ops/gates.hpp"
 #include "experimental/ops/gates/details/coeff_policy.hpp"
@@ -116,148 +116,8 @@ void init_tweedledum_ops(pybind11::module& module) {
     py::class_<ops::Rz>(module, "Rz").def(py::init<const double>()).def("__str__", &::to_string_angle<ops::Rz>);
     py::class_<ops::Rzz>(module, "Rzz").def(py::init<const double>()).def("__str__", &::to_string_angle<ops::Rzz>);
 }
-namespace bindops {
-using namespace pybind11::literals;
 
-// -----------------------------------------------------------------------------
-
-template <class op_t, class base_t>
-auto bind_ops(pybind11::module& module, const std::string_view& name) {
-    using coeff_t = typename op_t::coefficient_t;
-    return py::class_<op_t, base_t, std::shared_ptr<op_t>>(module, name.data())
-        .def(py::init<>())
-        .def(py::init([](op_t& op, bool copy) {
-            if (copy) {
-                return op;
-            }
-            return std::move(op);
-        }))
-        .def(py::init<const ops::term_t&, coeff_t>(), "term"_a, "coeff"_a = op_t::coeff_policy_t::one)
-        .def(py::init<const ops::terms_t&, coeff_t>(), "terms"_a, "coeff"_a = op_t::coeff_policy_t::one)
-        .def(py::init<const ops::py_terms_t&, coeff_t>(), "terms"_a, "coeff"_a = op_t::coeff_policy_t::one)
-        .def(py::init<const typename op_t::coeff_term_dict_t&>(), "coeff_terms"_a)
-        .def(py::init<std::string_view, coeff_t>(), "terms_string"_a, "coeff"_a = op_t::coeff_policy_t::one)
-        .def("num_targets", &op_t::num_targets)
-        .def("count_qubits", &op_t::count_qubits)
-        .def("is_identity", &op_t::is_identity, "abs_tol"_a = op_t::EQ_TOLERANCE)
-        .def_static("identity", &op_t::identity)
-        .def("subs", &op_t::subs, "subs_proxy"_a)
-        .def_property("constant", static_cast<coeff_t (op_t::*)() const>(&op_t::constant),
-                      static_cast<coeff_t (op_t::*)() const>(&op_t::constant))
-        .def_property_readonly("is_singlet", &op_t::is_singlet)
-        .def("singlet", &op_t::singlet)
-        .def("singlet_coeff", &op_t::singlet_coeff)
-        .def("split", &op_t::split)
-        .def("terms", &op_t::get_terms_pair)
-        .def_property_readonly("real", &op_t::real)
-        .def_property_readonly("imag", &op_t::imag)
-        .def("hermitian", &op_t::hermitian)
-        .def_property_readonly("size", &op_t::size)
-        .def("compress", &op_t::compress, "abs_tol"_a = op_t::EQ_TOLERANCE)
-        .def("dumps", &op_t::dumps, "indent"_a = 4)
-        .def_static("loads", op_t::loads, "string_data"_a)
-        .def("__len__", &op_t::size, py::is_operator())
-        .def(
-            "__copy__", [](const op_t& base) -> op_t { return base; }, py::is_operator())
-        .def(
-            "__str__", [](const op_t& base) { return base.to_string(); }, py::is_operator())
-        .def(
-            "__repr__",
-            [](const op_t& base) {
-                return fmt::format("{}({})", mindquantum::get_type_name<op_t>(), base.to_string());
-            },
-            py::is_operator())
-        .def("get_coeff", &op_t::get_coeff)
-        .PYBIND11_DEFINE_BINOP_INPLACE(add, op_t&, const op_t&, +)
-        .PYBIND11_DEFINE_BINOP_EXT(add, const op_t&, const op_t&, +)
-        .PYBIND11_DEFINE_BINOP_INPLACE(sub, op_t&, const op_t&, -)
-        .PYBIND11_DEFINE_BINOP_EXT(sub, const op_t&, const op_t&, -)
-        .PYBIND11_DEFINE_BINOP_INPLACE(mul, op_t&, const op_t&, *)
-        .PYBIND11_DEFINE_BINOP_EXT(mul, const op_t&, const op_t&, *)
-        .PYBIND11_DEFINE_UNOP(__neg__, const op_t&, -)
-        .PYBIND11_DEFINE_BINOP(__eq__, const op_t&, const op_t&, ==)
-        .def(
-            "__pow__", [](const op_t& base, unsigned int exponent) { return base.pow(exponent); }, py::is_operator())
-        .def("matrix", &op_t::sparse_matrix, "n_qubits"_a);
-}
-
-template <typename T>
-using fop_t = ops::FermionOperator<T>;
-
-template <typename T>
-using qop_t = ops::QubitOperator<T>;
-
-template <typename T>
-using py_fop_t = py::class_<fop_t<T>, ops::FermionOperatorBase, std::shared_ptr<fop_t<T>>>;
-
-template <typename T>
-using py_qop_t = py::class_<qop_t<T>, ops::QubitOperatorBase, std::shared_ptr<qop_t<T>>>;
-
-template <typename T, typename... args_t>
-struct define_fermion_ops {
-    template <typename... strings_t>
-    static auto apply(pybind11::module& module, std::string_view name, strings_t&&... names) {
-        static_assert(sizeof...(args_t) == sizeof...(strings_t));
-        return std::tuple_cat(define_fermion_ops<T>::apply(module, name),
-                              define_fermion_ops<args_t...>::apply(module, std::forward<strings_t>(names)...));
-    }
-};
-template <typename T>
-struct define_fermion_ops<T> {
-    static auto apply(pybind11::module& module, std::string_view name) {
-        return std::make_tuple(bind_ops<fop_t<T>, ops::FermionOperatorBase>(module, name)
-                                   .def("normal_ordered", &fop_t<T>::normal_ordered));
-    }
-};
-
-template <typename T, typename... args_t>
-struct define_qubit_ops {
-    template <typename... strings_t>
-    static auto apply(pybind11::module& module, std::string_view name, strings_t&&... names) {
-        static_assert(sizeof...(args_t) == sizeof...(strings_t));
-        return std::tuple_cat(define_qubit_ops<T>::apply(module, name),
-                              define_qubit_ops<args_t...>::apply(module, std::forward<strings_t>(names)...));
-    }
-};
-template <typename T>
-struct define_qubit_ops<T> {
-    static auto apply(pybind11::module& module, std::string_view name) {
-        return std::make_tuple(
-            bind_ops<qop_t<T>, ops::QubitOperatorBase>(module, name).def("count_gates", &qop_t<T>::count_gates));
-    }
-};
-
-template <typename self_t, typename... types_t>
-struct cast_helper_impl;
-
-template <typename self_t>
-struct cast_helper_impl<self_t> {
-    static py::object try_cast(const self_t& /* self */, const pybind11::object& /* type */) {
-        throw std::runtime_error("Invalid type passed to cast() member function!");
-        return py::none();
-    }
-};
-
-template <typename self_t, typename T, typename... types_t>
-struct cast_helper_impl<self_t, T, types_t...> {
-    static py::object try_cast(const self_t& self, const pybind11::object& type) {
-        if (type.is(py::type::of<T>())) {
-            const auto value = self.template cast<T>();
-            return py::cast(value);
-        }
-        return cast_helper_impl<self_t, types_t...>::try_cast(self, type);
-    }
-};
-
-template <typename self_t, typename... types_t>
-py::object cast(const self_t& self, const pybind11::object& type) {
-    if (!PyType_Check(type.ptr())) {
-        throw pybind11::type_error("Expect type as argument!");
-    }
-    return cast_helper_impl<self_t, types_t...>::try_cast(self, type);
-}
-
-}  // namespace bindops
+// =============================================================================
 
 void init_mindquantum_ops(pybind11::module& module) {
     using namespace pybind11::literals;
@@ -323,9 +183,6 @@ void init_mindquantum_ops(pybind11::module& module) {
     auto [fop_double, fop_cmplx_double, fop_pr_double, fop_pr_cmplx_double]
         = bindops::define_fermion_ops<double, std::complex<double>, pr_t, pr_cmplx_t>::apply(
             module, "FermionOperatorD", "FermionOperatorCD", "FermionOperatorPRD", "FermionOperatorPRCD");
-
-    static_assert(std::is_same_v<decltype(fop_double), bindops::py_fop_t<double>>);
-    static_assert(std::is_same_v<decltype(fop_cmplx_double), bindops::py_fop_t<std::complex<double>>>);
 
     // ---------------------------------
 
@@ -416,11 +273,6 @@ void init_mindquantum_ops(pybind11::module& module) {
     auto [qop_double, qop_cmplx_double, qop_pr_double, qop_pr_cmplx_double]
         = bindops::define_qubit_ops<double, std::complex<double>, pr_t, pr_cmplx_t>::apply(
             module, "QubitOperatorD", "QubitOperatorCD", "QubitOperatorPRD", "QubitOperatorPRCD");
-
-    // ---------------------------------
-
-    static_assert(std::is_same_v<decltype(qop_double), bindops::py_qop_t<double>>);
-    static_assert(std::is_same_v<decltype(qop_cmplx_double), bindops::py_qop_t<std::complex<double>>>);
 
     // ---------------------------------
 

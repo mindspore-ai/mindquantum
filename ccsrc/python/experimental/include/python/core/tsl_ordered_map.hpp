@@ -35,8 +35,6 @@ struct type_caster<tsl::ordered_map<key_t, value_t, hash_t>> {
     bool load(handle src, bool) {
         if (!(isinstance<pybind11::tuple>(src) || isinstance<pybind11::list>(src))) {
             MQ_DEBUG("tsl::ordered_map<> requires Tuple[List[], List[]] but received: {}", src.ptr()->ob_type->tp_name);
-            throw type_error(fmt::format("tsl::ordered_map<> requires Tuple[List[], List[]] but received: {}",
-                                         src.ptr()->ob_type->tp_name));
             return false;
         }
         const auto args = src.cast<pybind11::tuple>();

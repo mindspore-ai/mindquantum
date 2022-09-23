@@ -42,7 +42,7 @@ pybind11_add_module(
   ${CMAKE_CURRENT_LIST_DIR}/lib/simulator/simulator.cpp
   MODULE
   OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}/experimental")
-target_link_libraries(_mindquantum_cxx PRIVATE mq_cxx_nextgen mindquantum_python_interface)
+target_link_libraries(_mindquantum_cxx PRIVATE mq_cxx_nextgen mindquantum_python_interface mq_python_core)
 
 # ==============================================================================
 
@@ -60,7 +60,7 @@ pybind11_add_module(
   MODULE
   OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}/experimental")
 
-target_link_libraries(_mindquantum_cxx_core PRIVATE mq_cxx_nextgen mindquantum_python_interface)
+target_link_libraries(_mindquantum_cxx_core PRIVATE mq_cxx_nextgen mindquantum_python_interface mq_python_core)
 set_output_directory_auto(_mindquantum_cxx_core mindquantum/experimental)
 
 # ==============================================================================
@@ -78,7 +78,7 @@ pybind11_add_module(
   MODULE
   OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}/experimental")
 
-target_link_libraries(_mindquantum_cxx_cengines PRIVATE mq_cxx_nextgen mindquantum_python_interface)
+target_link_libraries(_mindquantum_cxx_cengines PRIVATE mq_cxx_nextgen mindquantum_python_interface mq_python_core)
 set_output_directory_auto(_mindquantum_cxx_cengines mindquantum/experimental)
 
 # ==============================================================================
