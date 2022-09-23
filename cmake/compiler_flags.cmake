@@ -290,6 +290,10 @@ elseif(MINGW)
       endif()
     endif()
   endforeach()
+elseif(CYGWIN)
+  mq_add_compile_definitions(_USE_MATH_DEFINES)
+elseif(MSYS)
+  mq_add_compile_definitions(_USE_MATH_DEFINES)
 endif()
 
 # ==============================================================================
