@@ -23,7 +23,6 @@ void init_ops(pybind11::module& module);
 void init_optimizer(pybind11::module& module);
 void init_symengine(pybind11::module& module);
 void init_simulator(pybind11::module& module);
-void init_logging(pybind11::module& module);
 }  // namespace mindquantum::python
 
 #endif /* PYTHON_BINDINGS_HPP */

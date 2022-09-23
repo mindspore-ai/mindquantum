@@ -14,13 +14,14 @@
 
 #include "config/logging.hpp"
 
-#include "python/bindings.hpp"
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
 // -----------------------------------------------------------------------------
 
 #ifndef ENABLE_LOGGING
+#    include <iostream>
 namespace spdlog::level {
 enum level_enum : int {
     trace = 0,
@@ -39,16 +40,21 @@ enum level_enum : int {
 void enable_logging(spdlog::level::level_enum level) {
 #ifdef ENABLE_LOGGING
     spdlog::default_logger()->set_level(level);
+#else
+    std::cout << "Cannot enable logging because this version of MindQuantum was not compiled with it!\n";
 #endif  // ENABLE_LOGGING
 }
 
 void disable_logging() {
 #ifdef ENABLE_LOGGING
     spdlog::default_logger()->set_level(spdlog::level::off);
+#else
+    std::cout << "Cannot disable logging because this version of MindQuantum was not compiled with it!\n";
 #endif  // ENABLE_LOGGING
 }
 
-void mindquantum::python::init_logging(pybind11::module& module) {
+namespace mindquantum::python {
+void init_logging(pybind11::module& module) {
     using namespace pybind11::literals;
 
     py::enum_<spdlog::level::level_enum>(module, "LogLevel")
@@ -66,3 +72,4 @@ void mindquantum::python::init_logging(pybind11::module& module) {
     // NB: disable logging by default on init
     disable_logging();
 }
+}  // namespace mindquantum::python

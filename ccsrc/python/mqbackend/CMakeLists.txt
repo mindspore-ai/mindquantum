@@ -16,7 +16,8 @@
 #
 # ==============================================================================
 
-pybind11_add_module(mqbackend MODULE OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}" ${CMAKE_CURRENT_LIST_DIR}/lib/binding.cc)
+pybind11_add_module(mqbackend MODULE OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}" ${CMAKE_CURRENT_LIST_DIR}/lib/binding.cc
+                                                                             ${CMAKE_CURRENT_LIST_DIR}/lib/logging.cpp)
 
 target_compile_definitions(mqbackend PUBLIC $<$<BOOL:${ENABLE_PROJECTQ}>:ENABLE_PROJECTQ>)
 target_include_directories(mqbackend PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)

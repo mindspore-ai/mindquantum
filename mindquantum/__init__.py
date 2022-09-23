@@ -18,6 +18,10 @@ import os
 import sys
 import warnings
 
+from .mqbackend import logging
+
+# isort: split
+
 from . import algorithm, config, core, engine, framework, io, simulator, utils
 from .algorithm import *
 from .config import *

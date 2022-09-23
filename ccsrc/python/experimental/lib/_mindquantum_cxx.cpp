@@ -36,7 +36,4 @@ PYBIND11_MODULE(_mindquantum_cxx, module) {
 
     py::module symengine = module.def_submodule("symengine", "MindQuantum light wrapper for SymEngine");
     python::init_symengine(symengine);
-
-    py::module logging = module.def_submodule("logging", "MindQuantum-C++ logging module");
-    python::init_logging(logging);
 }

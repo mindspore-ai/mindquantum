@@ -136,6 +136,10 @@ auto BindPR(py::module &module, const std::string &name) {
         .def("is_complex_pr", &ParameterResolver<T>::IsComplexPR);
 }
 
+namespace mindquantum::python {
+void init_logging(pybind11::module &module);
+}  // namespace mindquantum::python
+
 // Interface with python
 PYBIND11_MODULE(mqbackend, m) {
     using namespace pybind11::literals;
@@ -154,7 +158,10 @@ PYBIND11_MODULE(mqbackend, m) {
     using mindquantum::VT;
     using mindquantum::VVT;
 
-    m.doc() = "MindQuantum c plugin";
+    m.doc() = "MindQuantum C++ plugin";
+
+    py::module logging = m.def_submodule("logging", "MindQuantum-C++ logging module");
+    mindquantum::python::init_logging(logging);
 
     // matrix
     py::class_<Dim2Matrix<MT>, std::shared_ptr<Dim2Matrix<MT>>>(m, "dim2matrix")
