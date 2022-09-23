@@ -15,6 +15,7 @@
 # pylint: disable=useless-suppression
 """Experimental C++ backend for MindQuantum."""
 
+import os
 import sys
 
 try:
@@ -38,4 +39,5 @@ try:
 
     symengine.symbols = _symengine_utilities.symbols
 except ImportError:
-    pass
+    if int(os.environ.get('MQ_DEBUG', 0)):
+        raise
