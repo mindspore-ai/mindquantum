@@ -28,6 +28,10 @@ option(ENABLE_GITEE "Use Gitee instead of GitHub for checking out third-party de
 option(ENABLE_CXX_EXPERIMENTAL "Enable the new (experimental) C++ backend" OFF)
 option(ENABLE_DOCUMENTATION "Enable building of the documentation using Doxygen" OFF)
 option(ENABLE_LOGGING "Enable the use of logging in C++" OFF)
+cmake_dependent_option(ENABLE_LOGGING_TRACE_LEVEL "If logging is enabled, log everything down to the TRACE level" OFF
+                       "ENABLE_LOGGING" OFF)
+cmake_dependent_option(ENABLE_LOGGING_DEBUG_LEVEL "If logging is enabled, log everything down to the DEBUG level" OFF
+                       "ENABLE_LOGGING" OFF)
 option(ENABLE_LONG_DOUBLE "Enable the use of the `long double` type in certain areas" OFF)
 option(ENABLE_COLOR_COMPILER "Use color in compiler diagnostic messages" ON)
 
@@ -126,6 +130,14 @@ option(ENABLE_CMAKE_DEBUG "Enable verbose output to debug CMake issues" OFF)
 option(USE_VERBOSE_MAKEFILE "Use verbose Makefiles" ON)
 
 # ==============================================================================
+# ==============================================================================
+# MindQuantum feature selection
+
+if(ENABLE_LOGGING_TRACE_LEVEL AND ENABLE_LOGGING_DEBUG_LEVEL)
+  message(
+    FATAL_ERROR "Cannot have *both* ENABLE_LOGGING_TRACE_LEVEL and ENABLE_LOGGING_DEBUG_LEVEL set at the same time")
+endif()
+
 # ==============================================================================
 # Python related options
 

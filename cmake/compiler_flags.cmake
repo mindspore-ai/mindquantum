@@ -257,8 +257,12 @@ include(compiler_test)
 # --------------------------------------
 
 mq_add_compile_definitions(
-  "$<$<BOOL:${USE_OPENMP}>:USE_OPENMP>" "$<$<BOOL:${USE_PARALLEL_STL}>:USE_PARALLEL_STL>"
-  "$<$<BOOL:${ENABLE_LOGGING}>:ENABLE_LOGGING>" "$<$<AND:$<CONFIG:RELEASE>,$<COMPILE_LANGUAGE:CXX>>:_FORTIFY_SOURCE=2>")
+  "$<$<BOOL:${USE_OPENMP}>:USE_OPENMP>"
+  "$<$<BOOL:${USE_PARALLEL_STL}>:USE_PARALLEL_STL>"
+  "$<$<BOOL:${ENABLE_LOGGING_DEBUG_LEVEL}>:MQ_LOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG>"
+  "$<$<BOOL:${ENABLE_LOGGING_TRACE_LEVEL}>:MQ_LOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE>"
+  "$<$<BOOL:${ENABLE_LOGGING}>:ENABLE_LOGGING>"
+  "$<$<AND:$<CONFIG:RELEASE>,$<COMPILE_LANGUAGE:CXX>>:_FORTIFY_SOURCE=2>")
 
 # ==============================================================================
 # Platform specific flags
