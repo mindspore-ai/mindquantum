@@ -50,7 +50,7 @@ def amplitude_encoder(x, n_qubits):
         The vector should be normalized.
 
     Args:
-        x (list[float] or numpy.array(list[float]): the vector of data you want to encode, which should be normalized.
+        x (list[float] or numpy.array(list[float])): the vector of data you want to encode, which should be normalized.
         n_qubits (int): the number of qubits of the encoder circuit.
 
     Returns:

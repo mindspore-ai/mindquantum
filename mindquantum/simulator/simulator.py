@@ -758,7 +758,7 @@ class GradOpsWrapper:  # pylint: disable=too-many-instance-attributes
     Wrapper the gradient operator that with the information that generate this gradient operator.
 
     Args:
-        grad_ops (Union[FunctionType, MethodType])): A function or a method
+        grad_ops (Union[FunctionType, MethodType]): A function or a method
             that return forward value and gradient w.r.t parameters.
         hams (Hamiltonian): The hamiltonian that generate this grad ops.
         circ_right (Circuit): The right circuit that generate this grad ops.
