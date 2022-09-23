@@ -22,12 +22,13 @@ target_link_libraries(
   mq_cxx_nextgen
   PUBLIC include_lib
          mindquantum::boost_headers
-         mindquantum::fmt
-         mindquantum::pybind11_module
+         mindquantum::cereal
          mindquantum::eigen
-         mindquantum::tweedledum
-         mindquantum::ordered_map
+         mindquantum::fmt
          mindquantum::lru_cache
+         mindquantum::ordered_map
+         mindquantum::pybind11_module
+         mindquantum::tweedledum
          mq_base)
 
 # ------------------------------------------------------------------------------

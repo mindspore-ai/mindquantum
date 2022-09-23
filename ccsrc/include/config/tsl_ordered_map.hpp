@@ -20,7 +20,6 @@
 #include <utility>
 
 #include <fmt/ranges.h>
-#include <nlohmann/detail/exceptions.hpp>
 #include <nlohmann/json.hpp>
 #include <tsl/ordered_map.h>
 
