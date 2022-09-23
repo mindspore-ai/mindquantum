@@ -21,7 +21,7 @@
 #include <tweedledum/IR/Circuit.h>
 #include <tweedledum/IR/Instruction.h>
 
-#include "experimental/core/logging.hpp"
+#include "config/logging.hpp"
 
 #ifdef ENABLE_LOGGING
 #    include <spdlog/async.h>

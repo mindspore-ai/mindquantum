@@ -27,7 +27,8 @@
 #include <tweedledum/Operators/Standard/Y.h>
 #include <tweedledum/Operators/Standard/Z.h>
 
-#include "experimental/core/logging.hpp"
+#include "config/logging.hpp"
+
 #include "experimental/ops/gates/details/eigen_sparse_identity.hpp"
 #include "experimental/ops/gates/qubit_operator.hpp"
 

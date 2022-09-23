@@ -19,10 +19,11 @@
 #include <boost/fusion/include/std_pair.hpp>
 #include <boost/spirit/home/x3.hpp>
 
+#include "config/logging.hpp"
+
 #include "boost_x3_get_info_impl.hpp"
 #include "boost_x3_parse_object.hpp"
 
-#include "experimental/core/logging.hpp"
 #include "experimental/core/parser/boost_x3_error_handler.hpp"
 #include "experimental/ops/gates/qubit_operator.hpp"
 

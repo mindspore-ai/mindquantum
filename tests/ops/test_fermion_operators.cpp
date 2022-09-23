@@ -16,10 +16,11 @@
 #include <string>
 #include <string_view>
 
+#include "config/logging.hpp"
+
 #include "ops/test_utils.hpp"
 
 #include "experimental/core/circuit_block.hpp"
-#include "experimental/core/logging.hpp"
 #include "experimental/ops/gates/details/floating_point_coeff_policy.hpp"
 #include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 #include "experimental/ops/gates/fermion_operator.hpp"

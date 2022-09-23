@@ -22,7 +22,8 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
 
-#include "experimental/core/logging.hpp"
+#include "config/logging.hpp"
+
 #include "experimental/ops/gates/details/qubit_operator_term_policy.hpp"
 
 namespace mindquantum::ops::details {

@@ -24,7 +24,8 @@
 #include <boost/spirit/home/x3/directive/with.hpp>
 #include <boost/spirit/home/x3/support/utility/error_reporting.hpp>
 
-#include "experimental/core/logging.hpp"
+#include "config/logging.hpp"
+
 #include "experimental/core/parser/boost_x3_error_handler.hpp"
 
 namespace mindquantum::parser {

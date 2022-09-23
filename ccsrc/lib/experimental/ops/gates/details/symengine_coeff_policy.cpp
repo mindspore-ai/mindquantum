@@ -23,7 +23,7 @@
 
 #include <cereal/archives/json.hpp>
 
-#include "experimental/core/logging.hpp"
+#include "config/logging.hpp"
 
 // ==============================================================================
 

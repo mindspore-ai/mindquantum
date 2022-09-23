@@ -19,7 +19,8 @@
 #include <utility>
 #include <vector>
 
-#include "experimental/core/logging.hpp"
+#include "config/logging.hpp"
+
 #include "experimental/ops/gates/details/fermion_operator_helper_functions.hpp"
 #include "experimental/ops/gates/fermion_operator.hpp"
 

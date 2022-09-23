@@ -28,7 +28,7 @@
 
 #include <nlohmann/detail/input/position_t.hpp>
 
-#include "experimental/core/logging.hpp"
+#include "config/logging.hpp"
 
 namespace mindquantum::parser {
 

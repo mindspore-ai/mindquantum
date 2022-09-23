@@ -26,12 +26,12 @@
 #include <boost/range/combine.hpp>
 
 #include "config/detected.hpp"
+#include "config/logging.hpp"
 #include "config/type_traits.hpp"
 
 #include "core/parameter_resolver.hpp"
 #include "ops/test_utils.hpp"
 
-#include "experimental/core/logging.hpp"
 #include "experimental/ops/gates/details/floating_point_coeff_policy.hpp"
 #include "experimental/ops/gates/details/parameter_resolver_coeff_policy.hpp"
 #include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"

@@ -28,7 +28,7 @@ target_link_libraries(
          mindquantum::tweedledum
          mindquantum::ordered_map
          mindquantum::lru_cache
-         $<$<BOOL:${ENABLE_LOGGING}>:mindquantum::spdlog>)
+         mq_base)
 
 # ------------------------------------------------------------------------------
 

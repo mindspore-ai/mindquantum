@@ -34,9 +34,9 @@
 
 #include "config/constexpr_type_name.hpp"
 #include "config/format/std_complex.hpp"
+#include "config/logging.hpp"
 #include "config/real_cast.hpp"
 
-#include "experimental/core/logging.hpp"
 #include "experimental/ops/gates/terms_operator_base.hpp"
 #include "experimental/ops/gates/traits.hpp"
 #include "experimental/ops/meta/dagger.hpp"
