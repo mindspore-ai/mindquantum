@@ -73,9 +73,9 @@
 
         参数：
             - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 想要绘制平行于xy平面的圆的Axes。
-            - **args** () - 传入给 `Axes3D.plot` 的位置参数。
-            - **angle** () - 圆相对于z轴的仰角。默认值：π / 2。
-            - **kwargs** () - 传入给 `Axes3D.plot` 的关键字参数。
+            - **args** (tuple) - 传入给 `Axes3D.plot` 的位置参数。
+            - **angle** (numbers.Number) - 圆相对于z轴的仰角。默认值：π / 2。
+            - **kwargs** (dict) - 传入给 `Axes3D.plot` 的关键字参数。
 
     .. py:method:: circle_yz(ax, *args, angle=0, **kwargs)
 
@@ -108,9 +108,9 @@
             - **y** (numpy.ndarray) - 参考面的y轴坐标。
             - **z** (numpy.ndarray) - 参考面的z轴坐标。
             - **frame_color** (str) - 边框的颜色。
-            - **frame_alpha** (numpy.ndarray) - 边框的透明度。
+            - **frame_alpha** (numbers.Number) - 边框的透明度。
             - **surface_color** (str) - 参考面的颜色。
-            - **surface_alpha** (numpy.ndarray) - 参考面的透明度。
+            - **surface_alpha** (numbers.Number) - 参考面的透明度。
             - **frame_args** (tuple) - 传入给 `Axes3D.plot_wireframe` 的其他位置参数。
             - **frame_kwargs** (dict) - 传入给 `Axes3D.plot_wireframe` 的其他关键字参数。
             - **surface_args** (tuple) - 传入给 `Axes3D.plot_surface` 的其他位置参数。
