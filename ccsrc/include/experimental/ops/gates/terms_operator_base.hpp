@@ -26,6 +26,7 @@
 
 #include <boost/container_hash/extensions.hpp>
 
+#include <fmt/format.h>
 #include <nlohmann/json.hpp>
 
 #include "config/config.hpp"
@@ -102,6 +103,8 @@ enum class TermValue : uint8_t {
     a = 0,
     adg = 1,
 };
+
+// -----------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(*avoid-c-arrays,readability-identifier-length)
 NLOHMANN_JSON_SERIALIZE_ENUM(TermValue, {
@@ -451,12 +454,39 @@ class TermsOperatorBase {
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(base_t, num_targets_, terms_);
 };
-
-// =============================================================================
-// =============================================================================
-// Implement free arithmetic operators
-
 }  // namespace mindquantum::ops
+
+// =============================================================================
+
+template <typename char_t>
+struct fmt::formatter<mindquantum::ops::TermValue, char_t> {
+    FMT_CONSTEXPR auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
+        return ctx.begin();
+    }
+
+    template <typename format_context_t>
+    auto format(const mindquantum::ops::TermValue& value, format_context_t& ctx) const -> decltype(ctx.out()) {
+        if (value == mindquantum::ops::TermValue::I) {
+            return fmt::format_to(ctx.out(), "I");
+        }
+        if (value == mindquantum::ops::TermValue::X) {
+            return fmt::format_to(ctx.out(), "X");
+        }
+        if (value == mindquantum::ops::TermValue::Y) {
+            return fmt::format_to(ctx.out(), "Y");
+        }
+        if (value == mindquantum::ops::TermValue::Z) {
+            return fmt::format_to(ctx.out(), "Z");
+        }
+        if (value == mindquantum::ops::TermValue::a) {
+            return fmt::format_to(ctx.out(), "");
+        }
+        if (value == mindquantum::ops::TermValue::adg) {
+            return fmt::format_to(ctx.out(), "^");
+        }
+        return fmt::format_to(ctx.out(), "Invalid <mindquantum::ops::TermValue>");
+    }
+};
 
 #include "experimental/ops/gates/terms_operator_base.tpp"
 

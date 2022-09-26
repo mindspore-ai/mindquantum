@@ -48,36 +48,6 @@
 #include "python/core/tsl_ordered_map.hpp"
 #include "python/ops/gate_adapter.hpp"
 
-template <typename char_type>
-struct fmt::formatter<mindquantum::ops::TermValue, char_type> {
-    auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
-        return ctx.begin();
-    }
-
-    template <typename format_context_t>
-    auto format(const mindquantum::ops::TermValue& local_op, format_context_t& ctx) const -> decltype(ctx.out()) {
-        if (local_op == mindquantum::ops::TermValue::I) {
-            return format_to(ctx.out(), "I");
-        }
-        if (local_op == mindquantum::ops::TermValue::X) {
-            return format_to(ctx.out(), "X");
-        }
-        if (local_op == mindquantum::ops::TermValue::Y) {
-            return format_to(ctx.out(), "I");
-        }
-        if (local_op == mindquantum::ops::TermValue::Z) {
-            return format_to(ctx.out(), "I");
-        }
-        if (local_op == mindquantum::ops::TermValue::a) {
-            return format_to(ctx.out(), "");
-        }
-        if (local_op == mindquantum::ops::TermValue::adg) {
-            return format_to(ctx.out(), "^");
-        }
-        return ctx.out();
-    }
-};
-
 namespace ops = mindquantum::ops;
 namespace py = pybind11;
 
