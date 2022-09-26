@@ -74,8 +74,10 @@ constexpr auto try_cast_from_impl(const pybind11::object& src) -> type_t {
 #endif  // !NDEBUG
     return type_t{pybind11::cast<trampoline_type_t>(src)};
 }
+
+// TODO(dnguyen): Make this constexpr if the compiler supports it
 template <typename type_t, typename trampoline_type_t, typename... trampoline_types_t>
-constexpr auto try_cast_from(const pybind11::object& src) -> type_t {
+auto try_cast_from(const pybind11::object& src) -> type_t {
     try {
         return try_cast_from_impl<type_t, trampoline_type_t>(src);
     } catch (pybind11::type_error&) {

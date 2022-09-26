@@ -25,11 +25,12 @@
 #include "config/logging.hpp"
 
 #include "experimental/ops/gates/details/qubit_operator_term_policy.hpp"
+#include "experimental/ops/gates/terms_operator_base.hpp"
 
 namespace mindquantum::ops::details {
 
-constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermValue& left_op,
-                                                                     const TermValue& right_op) {
+template <typename number_t>
+constexpr std::tuple<number_t, TermValue> pauli_products_real(const TermValue& left_op, const TermValue& right_op) {
     if (left_op == TermValue::I && right_op == TermValue::X) {
         return {1., TermValue::X};
     }
@@ -57,6 +58,12 @@ constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermV
     if (left_op == TermValue::Z && right_op == TermValue::Z) {
         return {1., TermValue::I};
     }
+
+    return {1., TermValue::I};
+}
+
+constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermValue& left_op,
+                                                                     const TermValue& right_op) {
     if (left_op == TermValue::X && right_op == TermValue::Y) {
         return {{0, 1.}, TermValue::Z};
     }
@@ -76,7 +83,7 @@ constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermV
         return {{0, -1.}, TermValue::X};
     }
 
-    return {1., TermValue::I};
+    return pauli_products_real<std::complex<double>>(left_op, right_op);
 }
 
 // =============================================================================
@@ -84,36 +91,59 @@ constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermV
 template <typename coefficient_t>
 auto QubitOperatorTermPolicy<coefficient_t>::simplify(terms_t terms, coefficient_t coeff)
     -> std::tuple<terms_t, coefficient_t> {
-    if constexpr (!traits::is_complex_v<coefficient_t>) {
-        MQ_INFO("Cannot simplify a real-valued QubitOperator! Please cast to a complex-valued operator and retry.");
-        return {terms, coeff};
-    } else {
-        if (std::empty(terms)) {
-            return {terms_t{}, coeff};
-        }
-        std::stable_sort(
-            begin(terms), end(terms), [](const auto& lhs, const auto& rhs) constexpr { return lhs.first < rhs.first; });
+    if (std::empty(terms)) {
+        return {terms_t{}, coeff};
+    }
+    std::stable_sort(
+        begin(terms), end(terms), [](const auto& lhs, const auto& rhs) constexpr { return lhs.first < rhs.first; });
 
-        terms_t reduced_terms;
-        auto left_term = terms.front();
-        for (auto it(begin(terms) + 1); it != end(terms); ++it) {
-            const auto& [left_qubit_id, left_operator] = left_term;
-            const auto& [right_qubit_id, right_operator] = *it;
-
+    terms_t reduced_terms;
+    auto left_term = terms.front();
+    for (auto it(begin(terms) + 1); it != end(terms); ++it) {
+        const auto& [left_qubit_id, left_operator] = left_term;
+        const auto& [right_qubit_id, right_operator] = *it;
+        if constexpr (traits::is_complex_v<coefficient_t>) {
             if (left_qubit_id == right_qubit_id) {
                 const auto [new_coeff, new_op] = pauli_products(left_operator, right_operator);
                 left_term = term_t{left_qubit_id, new_op};
                 coeff *= static_cast<coefficient_t>(new_coeff);
             } else {
-                if (left_term.second != TermValue::I) {
+                if (left_operator != TermValue::I) {
+                    reduced_terms.emplace_back(left_term);
+                }
+                left_term = *it;
+            }
+        } else {
+            if (left_qubit_id == right_qubit_id) {
+                if ((left_operator == TermValue::X && right_operator == TermValue::Y)
+                    || (left_operator == TermValue::X && right_operator == TermValue::Z)
+                    || (left_operator == TermValue::Y && right_operator == TermValue::X)
+                    || (left_operator == TermValue::Y && right_operator == TermValue::Z)
+                    || (left_operator == TermValue::Z && right_operator == TermValue::X)
+                    || (left_operator == TermValue::Z && right_operator == TermValue::Y)) {
+                    MQ_INFO(
+                        "Cannot simplify a real-valued QubitOperator with terms {}-{}. "
+                        "Please cast to a complex-valued operator and retry.",
+                        left_operator, right_operator);
+                    if (left_operator != TermValue::I) {
+                        reduced_terms.emplace_back(left_term);
+                    }
+                    left_term = *it;
+                } else {
+                    const auto [new_coeff, new_op] = pauli_products_real<double>(left_operator, right_operator);
+                    left_term = term_t{left_qubit_id, new_op};
+                    coeff *= static_cast<coefficient_t>(new_coeff);
+                }
+            } else {
+                if (left_operator != TermValue::I) {
                     reduced_terms.emplace_back(left_term);
                 }
                 left_term = *it;
             }
         }
-        reduced_terms.emplace_back(left_term);
-        return {std::move(reduced_terms), coeff};
     }
+    reduced_terms.emplace_back(left_term);
+    return {std::move(reduced_terms), coeff};
 }
 
 // -----------------------------------------------------------------------------

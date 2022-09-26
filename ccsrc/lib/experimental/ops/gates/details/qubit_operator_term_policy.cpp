@@ -42,7 +42,8 @@ using terms_t = mindquantum::ops::terms_t;
 
 struct TermOp : x3::symbols<TermValue> {
     TermOp() {
-        add("X", TermValue::X)("Y", TermValue::Y)("Z", TermValue::Z);
+        add("X", TermValue::X)("x", TermValue::X)("Y", TermValue::Y)("y", TermValue::Y)("Z", TermValue::Z)(
+            "z", TermValue::Z);
     }
 } const term_op;
 }  // namespace ast::qb_op
