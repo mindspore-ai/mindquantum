@@ -43,9 +43,10 @@ docker run -it swr.cn-south-1.myhuaweicloud.com/mindspore/mindspore-cpu:{tag} /b
 
 ```python
 import numpy as np
-from mindspore import context, ops, Tensor
+import mindspore as ms
+from mindspore import set_context, ops, Tensor
 
-context.set_context(mode=context.PYNATIVE_MODE, device_target="CPU")
+set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
 
 x = Tensor(np.ones([1, 3, 3, 4]).astype(np.float32))
 y = Tensor(np.ones([1, 3, 3, 4]).astype(np.float32))
