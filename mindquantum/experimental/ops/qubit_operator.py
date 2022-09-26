@@ -19,11 +19,8 @@
 
 """This is the module for the Qubit Operator."""
 
-import numbers
-
 from openfermion import QubitOperator as OFQubitOperator
 
-from ...core.parameterresolver import ParameterResolver
 from ...mqbackend import complex_pr, real_pr
 from .. import TermValue
 
@@ -84,51 +81,12 @@ class QubitOperator(TermsOperator):
     complex_pr_klass = QubitOperatorPRCD
     openfermion_klass = OFQubitOperator
 
-    @classmethod
-    def create_cpp_obj(cls, term, coeff):
-        """
-        Create a C++ QubitOperator object based on the coefficient type.
-
-        Args:
-            term (str): The input term of fermion operator. Default: None.
-            coeff (Union[numbers.Number, str, ParameterResolver]): The coefficient for the corresponding single
-                operators.
-                Default: 1.0.
-        """
-        klass = None
-
-        if isinstance(coeff, numbers.Real):
-            if coeff is not None:
-                coeff = real_pr(coeff)
-            klass = QubitOperatorPRD
-        elif isinstance(coeff, numbers.Complex):
-            if coeff is not None:
-                coeff = complex_pr(coeff)
-            klass = QubitOperatorPRCD
-        elif isinstance(coeff, ParameterResolver):
-            if isinstance(coeff._cpp_obj, real_pr):
-                klass = QubitOperatorPRD
-            else:
-                klass = QubitOperatorPRCD
-            coeff = coeff._cpp_obj
-        elif isinstance(coeff, real_pr):
-            klass = QubitOperatorPRD
-        elif isinstance(coeff, complex_pr):
-            klass = QubitOperatorPRCD
-        elif isinstance(coeff, dict):
-            coeff = ParameterResolver(coeff)
-            if isinstance(coeff._cpp_obj, complex_pr):
-                klass = QubitOperatorPRCD
-            else:
-                klass = QubitOperatorPRD
-        elif coeff is not None:
-            return TypeError(f'QubitOperator does not support {type(coeff)} as coefficient type.')
-
-        if term is None:
-            return klass()
-        if coeff is None:
-            return klass(term)
-        return klass(term, coeff)
+    _type_conversion_table = {
+        complex_pr: complex_pr_klass,
+        complex: complex_pr_klass,
+        real_pr: real_pr_klass,
+        float: real_pr_klass,
+    }
 
     def __str__(self) -> str:
         """Return string expression of a TermsOperator."""

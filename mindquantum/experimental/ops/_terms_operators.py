@@ -13,7 +13,6 @@
 #   limitations under the License.
 
 import numbers
-from abc import ABCMeta, abstractmethod
 from typing import Dict, Tuple, Union
 
 from mindquantum.core.parameterresolver import ParameterResolver
@@ -25,17 +24,17 @@ from .. import TermValue
 from .._mindquantum_cxx.ops import EQ_TOLERANCE, CmplxPRSubsProxy, DoublePRSubsProxy
 
 
-class TermsOperator(CppArithmeticAdaptor, metaclass=ABCMeta):
+class TermsOperator(CppArithmeticAdaptor):
     """Abstract base class for terms operators (FermionOperator and QubitOperator)."""
 
     cxx_base_klass: type
     real_pr_klass: type
     complex_pr_klass: type
     openfermion_klass: type
+    _type_conversion_table: type
 
     @classmethod
-    @abstractmethod
-    def create_cpp_obj(cls, term, coeff):
+    def create_cpp_obj(cls, term, coeff=None, cxx_dtype=None):
         """
         Create a new instance of a C++ child class.
 
@@ -44,15 +43,83 @@ class TermsOperator(CppArithmeticAdaptor, metaclass=ABCMeta):
             coeff (Union[numbers.Number, str, ParameterResolver]): The coefficient of this qubit operator, could be a
                 number or a variable represent by a string or a symbol or a parameter resolver.
                 Default: 1.0.
+            cxx_dtype (Type): Python type used to decide which type of C++ object to instantiate. If specified, this
+                takes precedence over looking at the type of `coeff` (if not None).
         """
-        pass
+        klass = cls._type_conversion_table[complex]
 
-    def __init__(self, term=None, coeff=1.0):
-        """Initialize a TermsOperator object."""
-        if isinstance(term, self.cxx_base_klass):
-            self._cpp_obj = term
+        if term is None:
+            return klass()
+
+        # ----------------------------------------------------------------------
+
+        if cxx_dtype is None:
+            if isinstance(coeff, numbers.Real):
+                if coeff is not None:
+                    coeff = real_pr(coeff)
+                cxx_dtype = float
+            elif isinstance(coeff, numbers.Complex):
+                if coeff is not None:
+                    coeff = complex_pr(coeff)
+                cxx_dtype = complex
+            elif isinstance(coeff, ParameterResolver):
+                coeff = coeff._cpp_obj
+                cxx_dtype = type(coeff)
+            elif isinstance(coeff, (real_pr, complex_pr)):
+                cxx_dtype = type(coeff)
+            elif isinstance(coeff, str):
+                cxx_dtype = complex
+                coeff = complex_pr(coeff)
+            elif isinstance(coeff, dict):
+                coeff = ParameterResolver(coeff)._cpp_obj
+                cxx_dtype = type(coeff)
+            elif coeff is not None:
+                raise TypeError(f'{cls.__name__} does not support {type(coeff)} as coefficient type.')
+
+        klass = cls._type_conversion_table[cxx_dtype]
+
+        if coeff is None:
+            return klass(term)
+        return klass(term, coeff)
+
+    def __init__(self, *args):
+        """
+        Initialize a TermsOperator instance.
+
+        Args:
+            *args: Variable length argument list:
+                - Any (ie. TermsOperator (C++ instance))
+                - Dict[List[Tuple[Int, TermValue]], Union[ParameterResolver, int, float]]
+                - List[Tuple[Int, TermValue]] (with default coefficient set to 1.0)
+        """
+        if len(args) == 1:
+            if isinstance(args[0], self.cxx_base_klass):
+                self._cpp_obj = args[0]
+            elif isinstance(args[0], dict):
+                values = list(args[0].values())
+                cxx_dtype = list({type(v) for v in values})
+                if len(cxx_dtype) == 1:
+                    cxx_dtype = cxx_dtype[0]
+                    if cxx_dtype is ParameterResolver:
+                        cxx_dtype = type(values[0]._cpp_obj)
+                else:
+                    if complex_pr in cxx_dtype:
+                        cxx_dtype = complex_pr
+                    elif real_pr in cxx_dtype:
+                        cxx_dtype = real_pr
+                    elif complex in cxx_dtype:
+                        cxx_dtype = complex
+                    else:
+                        cxx_dtype = float
+                    values = [cxx_dtype(v) for v in values]
+                keys = list(args[0].keys())
+                self._cpp_obj = self.__class__.create_cpp_obj([keys, values], cxx_dtype=cxx_dtype)
+            else:
+                self._cpp_obj = self.__class__.create_cpp_obj(args[0], 1.0)
+        elif len(args) == 2:
+            self._cpp_obj = self.__class__.create_cpp_obj(*args)
         else:
-            self._cpp_obj = self.__class__.create_cpp_obj(term, coeff)
+            raise TypeError(f'{self.__class__.__name__}.__init__() supports either 1 or 2 arguments')
 
     def __copy__(self, memodict) -> 'TermsOperator':
         """Deep copy this TermsOperator."""
@@ -206,12 +273,10 @@ class TermsOperator(CppArithmeticAdaptor, metaclass=ABCMeta):
             >>> obj == f
             True
         """
-        if dtype == real_pr or dtype == float:
-            klass = cls.real_pr_klass
-        elif dtype == complex_pr or dtype == complex:
-            klass = cls.complex_pr_klass
-        else:
-            raise TypeError(f'Unsupported dtype ({dtype})!')
+        try:
+            klass = cls._type_conversion_table[dtype]
+        except KeyError as err:
+            raise TypeError(f'Unsupported dtype ({dtype})!') from err
 
         return cls(klass.loads(strs))
 
@@ -356,5 +421,6 @@ class TermsOperator(CppArithmeticAdaptor, metaclass=ABCMeta):
         for k, v in of_ops.terms.items():
             list_terms.append(tuple((i, TermValue[j]) for i, j in k))
             list_coeff.append((ParameterResolver(v) * c)._cpp_obj)
-        cpp_obj = klass(list_terms, list_coeff)
+        # NB: build C++ object using the tsl::ordered_map constructor
+        cpp_obj = klass([list_terms, list_coeff])
         return cls(cpp_obj)

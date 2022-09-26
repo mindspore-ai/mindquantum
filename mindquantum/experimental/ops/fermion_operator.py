@@ -16,11 +16,8 @@
 # pylint: disable=duplicate-code
 """This module is generated the Fermion Operator."""
 
-import numbers
-
 from openfermion import FermionOperator as OFFermionOperator
 
-from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.mqbackend import complex_pr, real_pr
 
 from .. import TermValue
@@ -80,53 +77,12 @@ class FermionOperator(TermsOperator):
     complex_pr_klass = FermionOperatorPRCD
     openfermion_klass = OFFermionOperator
 
-    @classmethod
-    def create_cpp_obj(cls, term, coeff):
-        """
-        Create a C++ FermionOperator object based on the coefficient type.
-
-        Args:
-            term (str): The input term of fermion operator. Default: None.
-            coeff (Union[numbers.Number, str, ParameterResolver]): The coefficient for the corresponding single
-                operators Default: 1.0.
-        """
-        klass = FermionOperatorPRCD
-
-        if isinstance(coeff, numbers.Real):
-            if coeff is not None:
-                coeff = real_pr(coeff)
-            klass = FermionOperatorPRD
-        elif isinstance(coeff, numbers.Complex):
-            if coeff is not None:
-                coeff = complex_pr(coeff)
-            klass = FermionOperatorPRCD
-        elif isinstance(coeff, ParameterResolver):
-            if isinstance(coeff._cpp_obj, real_pr):
-                klass = FermionOperatorPRD
-            else:
-                klass = FermionOperatorPRCD
-            coeff = coeff._cpp_obj
-        elif isinstance(coeff, real_pr):
-            klass = FermionOperatorPRD
-        elif isinstance(coeff, complex_pr):
-            klass = FermionOperatorPRCD
-        elif isinstance(coeff, str):
-            klass = FermionOperatorPRCD
-            coeff = complex_pr(coeff)
-        elif isinstance(coeff, dict):
-            coeff = ParameterResolver(coeff)._cpp_obj
-            if isinstance(coeff, complex_pr):
-                klass = FermionOperatorPRCD
-            else:
-                klass = FermionOperatorPRD
-        elif coeff is not None:
-            raise TypeError(f'FermionOperator does not support {type(coeff)} as coefficient type.')
-
-        if term is None:
-            return klass()
-        if coeff is None:
-            return klass(term)
-        return klass(term, coeff)
+    _type_conversion_table = {
+        complex_pr: complex_pr_klass,
+        complex: complex_pr_klass,
+        real_pr: real_pr_klass,
+        float: real_pr_klass,
+    }
 
     def __str__(self) -> str:
         """Return string expression of a TermsOperator."""
