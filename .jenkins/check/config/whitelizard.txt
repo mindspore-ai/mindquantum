@@ -27,5 +27,5 @@ mindquantum/ccsrc/include/experimental/ops/gates/qubit_operator.tpp:mindquantum:
 
 TEST_CASE
 DummyOperator::TermsOperator::operator == ; } ; } using coefficient_t = DummyOperator :: coefficient_t ; using coeff_term_dict_t = DummyOperator :: coeff_term_dict_t ; TEST_CASE
-
+mindquantum::ops::details::mindquantum::ops::details::pauli_products.QubitOperatorTermPolicy<coefficient_t>::simplify
 mindquantum/tests/st/test_io/test_svg.py:test_measure_svg
