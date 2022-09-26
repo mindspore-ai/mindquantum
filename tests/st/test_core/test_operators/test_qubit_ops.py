@@ -16,6 +16,7 @@
 
 """The test function for QubitOperator."""
 
+from mindquantum.core import ParameterResolver
 from mindquantum.core.operators import QubitOperator
 
 
@@ -83,13 +84,13 @@ def test_qubit_ops_symbol_coeff():
     Expectation:
     """
     q1 = QubitOperator('Z1 Z2', 'a') + QubitOperator('X1', 'b')
-    assert str(q1) == 'b [X1] +\na [Z1 Z2] '
+    assert str(q1) in ('b [X1] +\na [Z1 Z2] ', 'a [Z1 Z2] +\nb [X1] ')
 
     q2 = QubitOperator('Z1 Z2', 'a') + 'a' * QubitOperator('Z2 Z1')
     assert str(q2) == '2*a [Z1 Z2] '
 
     q8 = QubitOperator('Z1 z2')
-    q8 *= 'a'
+    q8 *= ParameterResolver('a')
     assert str(q8) == 'a [Z1 Z2] '
 
     q9 = QubitOperator('Z1 z2')
@@ -153,7 +154,7 @@ def test_qubit_ops_dumps_and_loads():
     """
     ops = QubitOperator('X0 Y1', 1.2) + QubitOperator('Z0 X1', {'a': 2.1})
     strings = ops.dumps()
-    obj = QubitOperator.loads(strings)
+    obj = QubitOperator.loads(strings, dtype=float)
     assert obj == ops
 
 
