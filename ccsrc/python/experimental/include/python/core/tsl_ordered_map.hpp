@@ -17,11 +17,14 @@
 
 #include <fmt/ranges.h>
 #include <pybind11/cast.h>
+#include <pybind11/detail/typeid.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
 
 #include "config/logging.hpp"
 #include "config/tsl_ordered_map.hpp"
+
+#include "python/details/create_from_container_class.hpp"
 
 // =============================================================================
 
@@ -31,7 +34,18 @@ struct type_caster<tsl::ordered_map<key_t, value_t, hash_t>> {
     using value_type = tsl::ordered_map<key_t, value_t, hash_t>;
     PYBIND11_TYPE_CASTER(value_type, const_name("tsl::ordered_map"));
 
+    //! Python to C++ conversion
+    /*!
+     * Load a \c tsl::ordered_map from a Python tuple/list of 2 elements:
+     *   - the first one needs to be a tuple/list of keys
+     *   - the second one needs to be a tuple/list of values
+     *
+     * \param src Python object to convert
+     */
     bool load(handle src, bool) {
+        MQ_DEBUG("type_caster<tsl::ordered_map<{},{},{}>>::load({})", pybind11::type_id<key_t>(),
+                 pybind11::type_id<value_t>(), pybind11::type_id<hash_t>(),
+                 mindquantum::python::get_fully_qualified_tp_name(src));
         if (!(isinstance<pybind11::tuple>(src) || isinstance<pybind11::list>(src))) {
             MQ_DEBUG("tsl::ordered_map<> requires Tuple[List[], List[]] but received: {}", src.ptr()->ob_type->tp_name);
             return false;

@@ -58,82 +58,102 @@ auto BindPR(py::module &module, const std::string &name) {
     using mindquantum::MST;
     using mindquantum::ParameterResolver;
     using mindquantum::SS;
-    using mindquantum::python::create_from_python_container_class;
+    using mindquantum::python::create_from_python_container_class_with_trampoline;
 
     using pr_t = mindquantum::ParameterResolver<T>;
 
+    // NB: this below is required because of GCC < 9
+    using factory_func_t = decltype(&create_from_python_container_class_with_trampoline<pr_t, MST<T>>);
+
     using namespace pybind11::literals;
 
-    return py::class_<pr_t, std::shared_ptr<pr_t>>(module, name.c_str())
-        .def(py::init<T>())
-        .def(py::init([](ParameterResolver<T> &pr, bool copy) {
-            if (copy) {
-                return pr;
-            }
-            return std::move(pr);
-        }))
-        .def(py::init<std::string>())
-        .def(py::init<const MST<T> &>(), "data"_a)
-        .def(py::init<const MST<T> &, T>(), "data"_a, "coeff"_a)
-        .def(py::init<const MST<T> &, T, const SS &, const SS &>())
-        //! *VERY* important: this overload below needs to be the LAST
-        .def(pybind11::init(&create_from_python_container_class<pr_t>), "py_class"_a,
-             "Constructor from the encapsulating Python class (using a _cpp_obj attribute)")
-        .def_property_readonly("const", [](const ParameterResolver<T> &pr) { return pr.const_value; })
-        .def_readonly("data", &ParameterResolver<T>::data_)
-        .def_readonly("no_grad_parameters", &ParameterResolver<T>::no_grad_parameters_)
-        .def_readonly("encoder_parameters", &ParameterResolver<T>::encoder_parameters_)
-        .def("set_const", &ParameterResolver<T>::SetConst)
-        .def("params_name", &ParameterResolver<T>::ParamsName)
-        .def("display", &ParameterResolver<T>::PrintInfo)
-        .def("__setitem__", &ParameterResolver<T>::SetItem)
-        .def("__getitem__", py::overload_cast<size_t>(&ParameterResolver<T>::GetItem, py::const_))
-        .def("__getitem__", py::overload_cast<const std::string &>(&ParameterResolver<T>::GetItem, py::const_))
-        .def("__len__", &ParameterResolver<T>::Size)
-        .def("size", &ParameterResolver<T>::Size)
-        .def("__bool__", &ParameterResolver<T>::IsNotZero)
-        .def("__repr__",
-             [](const ParameterResolver<T> &pr) {
-                 return fmt::format("ParameterResolver<{}>({})", mindquantum::get_type_name<T>(), pr.ToString());
-             })
-        .def("__str__", &ParameterResolver<T>::ToString)
-        .def("__contains__", &ParameterResolver<T>::Contains)
-        .def("__copy__", &ParameterResolver<T>::Copy)
-        .def("get_key", &ParameterResolver<T>::GetKey)
-        .def(py::self + py::self)
-        .def(T() + py::self)
-        .def(py::self + T())
-        .def(py::self - py::self)
-        .def(T() - py::self)
-        .def(py::self - T())
-        .def(py::self * py::self)
-        .def(py::self * T())
-        .def(T() * py::self)
-        .def(py::self / py::self)
-        .def(T() / py::self)
-        .def(py::self / T())
-        .def(py::self == T())
-        .def(py::self == py::self)
-        .def(-py::self)
-        .def("is_const", &ParameterResolver<T>::IsConst)
-        .def("requires_grad", &ParameterResolver<T>::RequiresGrad)
-        .def("no_grad", &ParameterResolver<T>::NoGrad)
-        .def("no_grad_part", &ParameterResolver<T>::NoGradPart)
-        .def("requires_grad_part", &ParameterResolver<T>::RequiresGradPart)
-        .def("as_encoder", &ParameterResolver<T>::AsEncoder)
-        .def("as_ansatz", &ParameterResolver<T>::AsAnsatz)
-        .def("encoder_part", &ParameterResolver<T>::EncoderPart)
-        .def("ansatz_part", &ParameterResolver<T>::AnsatzPart)
-        .def("update", &ParameterResolver<T>::Update)
-        .def("conjugate", &ParameterResolver<T>::Conjugate)
-        .def("combination", &ParameterResolver<T>::Combination)
-        .def("real", &ParameterResolver<T>::Real)
-        .def("imag", &ParameterResolver<T>::Imag)
-        .def("pop", &ParameterResolver<T>::Pop)
-        .def("is_hermitian", &ParameterResolver<T>::IsHermitian)
-        .def("is_anti_hermitian", &ParameterResolver<T>::IsAntiHermitian)
-        .def("to_complex", &ParameterResolver<T>::ToComplexPR)
-        .def("is_complex_pr", &ParameterResolver<T>::IsComplexPR);
+    auto klass
+        = py::class_<pr_t, std::shared_ptr<pr_t>>(module, name.c_str())
+              .def(py::init<T>())
+              .def(py::init([](ParameterResolver<T> &pr, bool copy) {
+                  if (copy) {
+                      return pr;
+                  }
+                  return std::move(pr);
+              }))
+              .def(py::init<std::string>())
+              .def(py::init<int>())
+              .def(py::init<T>())
+              .def(py::init<const MST<T> &>(), "data"_a)
+              .def(py::init<const MST<T> &, T>(), "data"_a, "coeff"_a)
+              .def(py::init<const MST<T> &, T, const SS &, const SS &>())
+              //! *VERY* important: these overload below needs to be the LAST
+              .def(pybind11::init(
+                       static_cast<factory_func_t>(&create_from_python_container_class_with_trampoline<pr_t, MST<T>>)),
+                   "py_class"_a, "Constructor from the encapsulating Python class (using a _cpp_obj attribute)")
+              .def_property_readonly("const", [](const ParameterResolver<T> &pr) { return pr.const_value; })
+              .def_readonly("data", &ParameterResolver<T>::data_)
+              .def("no_grad_parameters", [](const ParameterResolver<T> &pr) { return pr.no_grad_parameters_; })
+              .def("encoder_parameters", [](const ParameterResolver<T> &pr) { return pr.encoder_parameters_; })
+              .def("set_const", &ParameterResolver<T>::SetConst)
+              .def("params_name", &ParameterResolver<T>::ParamsName)
+              .def("display", &ParameterResolver<T>::PrintInfo)
+              .def("__setitem__", &ParameterResolver<T>::SetItem)
+              .def("__getitem__", py::overload_cast<size_t>(&ParameterResolver<T>::GetItem, py::const_))
+              .def("__getitem__", py::overload_cast<const std::string &>(&ParameterResolver<T>::GetItem, py::const_))
+              .def("__len__", &ParameterResolver<T>::Size)
+              .def("size", &ParameterResolver<T>::Size)
+              .def("__bool__", &ParameterResolver<T>::IsNotZero)
+              .def("__repr__",
+                   [](const ParameterResolver<T> &pr) {
+                       return fmt::format("ParameterResolver<{}>({})", mindquantum::get_type_name<T>(), pr.ToString());
+                   })
+              .def("__str__", &ParameterResolver<T>::ToString)
+              .def("__contains__", &ParameterResolver<T>::Contains)
+              .def("__copy__", &ParameterResolver<T>::Copy)
+              .def("get_key", &ParameterResolver<T>::GetKey)
+              .def(py::self + py::self)
+              .def(py::self += py::self)
+              .def(T() + py::self)
+              .def(py::self + T())
+              .def(py::self += T())
+              .def(py::self - py::self)
+              .def(py::self -= py::self)
+              .def(T() - py::self)
+              .def(py::self - T())
+              .def(py::self -= T())
+              .def(py::self * py::self)
+              .def(py::self *= py::self)
+              .def(py::self * T())
+              .def(py::self *= T())
+              .def(T() * py::self)
+              .def(py::self / py::self)
+              .def(py::self /= py::self)
+              .def(T() / py::self)
+              .def(py::self / T())
+              .def(py::self /= T())
+              .def(py::self == T())
+              .def(py::self == py::self)
+              .def(-py::self)
+              .def("is_const", &ParameterResolver<T>::IsConst)
+              .def("requires_grad", &ParameterResolver<T>::RequiresGrad)
+              .def("no_grad", &ParameterResolver<T>::NoGrad)
+              .def("no_grad_part", &ParameterResolver<T>::NoGradPart)
+              .def("requires_grad_part", &ParameterResolver<T>::RequiresGradPart)
+              .def("as_encoder", &ParameterResolver<T>::AsEncoder)
+              .def("as_ansatz", &ParameterResolver<T>::AsAnsatz)
+              .def("encoder_part", &ParameterResolver<T>::EncoderPart)
+              .def("ansatz_part", &ParameterResolver<T>::AnsatzPart)
+              .def("update", &ParameterResolver<T>::Update)
+              .def("conjugate", &ParameterResolver<T>::Conjugate)
+              .def("combination", &ParameterResolver<T>::Combination)
+              .def("real", &ParameterResolver<T>::Real)
+              .def("keep_real", &ParameterResolver<T>::KeepReal)
+              .def("keep_imag", &ParameterResolver<T>::KeepImag)
+              .def("imag", &ParameterResolver<T>::Imag)
+              .def("pop", &ParameterResolver<T>::Pop)
+              .def("is_hermitian", &ParameterResolver<T>::IsHermitian)
+              .def("is_anti_hermitian", &ParameterResolver<T>::IsAntiHermitian)
+              .def("to_complex", &ParameterResolver<T>::ToComplexPR)
+              .def("is_complex_pr", &ParameterResolver<T>::IsComplexPR);
+
+    pybind11::implicitly_convertible<pybind11::object, pr_t>();
+    return klass;
 }
 
 namespace mindquantum::python {

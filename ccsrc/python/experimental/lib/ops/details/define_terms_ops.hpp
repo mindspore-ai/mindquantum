@@ -46,65 +46,71 @@ using namespace pybind11::literals;
 template <class op_t, class base_t>
 auto bind_ops(pybind11::module& module, const std::string_view& name) {
     using coeff_t = typename op_t::coefficient_t;
-    return pybind11::class_<op_t, base_t, std::shared_ptr<op_t>>(module, name.data())
-        .def(pybind11::init<>())
-        .def(pybind11::init([](op_t& op, bool copy) {
-            if (copy) {
-                return op;
-            }
-            return std::move(op);
-        }))
-        .def(pybind11::init<const ops::term_t&, coeff_t>(), "term"_a, "coeff"_a = op_t::coeff_policy_t::one)
-        .def(pybind11::init<const ops::terms_t&, coeff_t>(), "terms"_a, "coeff"_a = op_t::coeff_policy_t::one)
-        .def(pybind11::init<const ops::py_terms_t&, coeff_t>(), "terms"_a, "coeff"_a = op_t::coeff_policy_t::one)
-        .def(pybind11::init<const typename op_t::coeff_term_dict_t&>(), "coeff_terms"_a)
-        .def(pybind11::init<std::string_view, coeff_t>(), "terms_string"_a, "coeff"_a = op_t::coeff_policy_t::one)
-        //! *VERY* important: this overload below needs to be the LAST
-        .def(pybind11::init(&python::create_from_python_container_class<op_t>), "py_class"_a,
-             "Constructor from the encapsulating Python class (using a _cpp_obj attribute)")
-        .def("num_targets", &op_t::num_targets)
-        .def("count_qubits", &op_t::count_qubits)
-        .def("is_identity", &op_t::is_identity, "abs_tol"_a = op_t::EQ_TOLERANCE)
-        .def_static("identity", &op_t::identity)
-        .def("subs", &op_t::subs, "subs_proxy"_a)
-        .def_property("constant", static_cast<coeff_t (op_t::*)() const>(&op_t::constant),
-                      static_cast<coeff_t (op_t::*)() const>(&op_t::constant))
-        .def_property_readonly("is_singlet", &op_t::is_singlet)
-        .def("singlet", &op_t::singlet)
-        .def("singlet_coeff", &op_t::singlet_coeff)
-        .def("split", &op_t::split)
-        .def("terms", &op_t::get_terms_pair)
-        .def_property_readonly("real", &op_t::real)
-        .def_property_readonly("imag", &op_t::imag)
-        .def("hermitian", &op_t::hermitian)
-        .def_property_readonly("size", &op_t::size)
-        .def("compress", &op_t::compress, "abs_tol"_a = op_t::EQ_TOLERANCE)
-        .def("dumps", &op_t::dumps, "indent"_a = 4)
-        .def_static("loads", op_t::loads, "string_data"_a)
-        .def("__len__", &op_t::size, pybind11::is_operator())
-        .def(
-            "__copy__", [](const op_t& base) -> op_t { return base; }, pybind11::is_operator())
-        .def(
-            "__str__", [](const op_t& base) { return base.to_string(); }, pybind11::is_operator())
-        .def(
-            "__repr__",
-            [](const op_t& base) {
-                return fmt::format("{}({})", mindquantum::get_type_name<op_t>(), base.to_string());
-            },
-            pybind11::is_operator())
-        .def("get_coeff", &op_t::get_coeff)
-        .PYBIND11_DEFINE_BINOP_INPLACE(add, op_t&, const op_t&, +)
-        .PYBIND11_DEFINE_BINOP_EXT(add, const op_t&, const op_t&, +)
-        .PYBIND11_DEFINE_BINOP_INPLACE(sub, op_t&, const op_t&, -)
-        .PYBIND11_DEFINE_BINOP_EXT(sub, const op_t&, const op_t&, -)
-        .PYBIND11_DEFINE_BINOP_INPLACE(mul, op_t&, const op_t&, *)
-        .PYBIND11_DEFINE_BINOP_EXT(mul, const op_t&, const op_t&, *)
-        .PYBIND11_DEFINE_UNOP(__neg__, const op_t&, -)
-        .PYBIND11_DEFINE_BINOP(__eq__, const op_t&, const op_t&, ==)
-        .def(
-            "__pow__", [](const op_t& base, unsigned int exponent) { return base.pow(exponent); },
-            pybind11::is_operator())
-        .def("matrix", &op_t::sparse_matrix, "n_qubits"_a);
+    // NB: this below is required because of GCC < 9
+    using factory_func_t = decltype(&python::create_from_python_container_class<op_t>);
+
+    auto klass
+        = pybind11::class_<op_t, base_t, std::shared_ptr<op_t>>(module, name.data())
+              .def(pybind11::init<>())
+              .def(pybind11::init([](op_t& op, bool copy) {
+                  if (copy) {
+                      return op;
+                  }
+                  return std::move(op);
+              }))
+              .def(pybind11::init<const ops::term_t&, coeff_t>(), "term"_a, "coeff"_a = op_t::coeff_policy_t::one)
+              .def(pybind11::init<const ops::terms_t&, coeff_t>(), "terms"_a, "coeff"_a = op_t::coeff_policy_t::one)
+              .def(pybind11::init<const ops::py_terms_t&, coeff_t>(), "terms"_a, "coeff"_a = op_t::coeff_policy_t::one)
+              .def(pybind11::init<const typename op_t::coeff_term_dict_t&>(), "coeff_terms"_a)
+              .def(pybind11::init<std::string_view, coeff_t>(), "terms_string"_a, "coeff"_a = op_t::coeff_policy_t::one)
+              //! *VERY* important: this overload below needs to be the LAST
+              .def(pybind11::init(static_cast<factory_func_t>(&python::create_from_python_container_class<op_t>)),
+                   "py_class"_a, "Constructor from the encapsulating Python class (using a _cpp_obj attribute)")
+              .def("num_targets", &op_t::num_targets)
+              .def("count_qubits", &op_t::count_qubits)
+              .def("is_identity", &op_t::is_identity, "abs_tol"_a = op_t::EQ_TOLERANCE)
+              .def_static("identity", &op_t::identity)
+              .def("subs", &op_t::subs, "subs_proxy"_a)
+              .def_property("constant", static_cast<coeff_t (op_t::*)() const>(&op_t::constant),
+                            static_cast<coeff_t (op_t::*)() const>(&op_t::constant))
+              .def_property_readonly("is_singlet", &op_t::is_singlet)
+              .def("singlet", &op_t::singlet)
+              .def("singlet_coeff", &op_t::singlet_coeff)
+              .def("split", &op_t::split)
+              .def("terms", &op_t::get_terms_pair)
+              .def_property_readonly("real", &op_t::real)
+              .def_property_readonly("imag", &op_t::imag)
+              .def("hermitian", &op_t::hermitian)
+              .def_property_readonly("size", &op_t::size)
+              .def("compress", &op_t::compress, "abs_tol"_a = op_t::EQ_TOLERANCE)
+              .def("dumps", &op_t::dumps, "indent"_a = 4)
+              .def_static("loads", op_t::loads, "string_data"_a)
+              .def("__len__", &op_t::size, pybind11::is_operator())
+              .def(
+                  "__copy__", [](const op_t& base) -> op_t { return base; }, pybind11::is_operator())
+              .def(
+                  "__str__", [](const op_t& base) { return base.to_string(); }, pybind11::is_operator())
+              .def(
+                  "__repr__",
+                  [](const op_t& base) {
+                      return fmt::format("{}({})", mindquantum::get_type_name<op_t>(), base.to_string());
+                  },
+                  pybind11::is_operator())
+              .def("get_coeff", &op_t::get_coeff)
+              .PYBIND11_DEFINE_BINOP_INPLACE(add, op_t&, const op_t&, +)
+              .PYBIND11_DEFINE_BINOP_EXT(add, const op_t&, const op_t&, +)
+              .PYBIND11_DEFINE_BINOP_INPLACE(sub, op_t&, const op_t&, -)
+              .PYBIND11_DEFINE_BINOP_EXT(sub, const op_t&, const op_t&, -)
+              .PYBIND11_DEFINE_BINOP_INPLACE(mul, op_t&, const op_t&, *)
+              .PYBIND11_DEFINE_BINOP_EXT(mul, const op_t&, const op_t&, *)
+              .PYBIND11_DEFINE_UNOP(__neg__, const op_t&, -)
+              .PYBIND11_DEFINE_BINOP(__eq__, const op_t&, const op_t&, ==)
+              .def(
+                  "__pow__", [](const op_t& base, unsigned int exponent) { return base.pow(exponent); },
+                  pybind11::is_operator())
+              .def("matrix", &op_t::sparse_matrix, "n_qubits"_a);
+    pybind11::implicitly_convertible<pybind11::object, op_t>();
+    return klass;
 }
 
 template <typename T>
