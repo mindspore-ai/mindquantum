@@ -50,7 +50,7 @@ grad_ops = sim.get_expectation_with_grad(
 
 import mindspore as ms
 
-ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target='CPU')
+ms.set_context(mode=ms.PYNATIVE_MODE, device_target='CPU')
 net = MQLayer(grad_ops)
 encoder_data = ms.Tensor(np.array([[np.pi / 2, np.pi / 2]]))
 opti = ms.nn.Adam(net.trainable_params(), learning_rate=0.1)
