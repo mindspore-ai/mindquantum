@@ -96,8 +96,8 @@ auto BindPR(py::module &module, const std::string &name) {
               // Properties
               .def_property_readonly("const", [](const pr_t &pr) { return pr.const_value; })
               .def_readonly("data", &pr_t::data_)
-              .def_property_readonly(
-                  "is_complex", [](const pr_t &) constexpr { return mindquantum::traits::is_complex_v<T>; })
+              .def_property_readonly("is_complex",
+                                     [](const pr_t &) constexpr { return mindquantum::traits::is_complex_v<T>; })
               // ------------------------------
               // Member functions
               .def("ansatz_part", &pr_t::AnsatzPart)

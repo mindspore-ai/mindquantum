@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <complex>
 #include <iomanip>
+#include <iostream>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -41,6 +42,22 @@
 // =============================================================================
 
 namespace mindquantum {
+template <typename float_t>
+class ParameterResolver;
+
+namespace details::pr {
+template <typename float_t>
+struct conversion_helper {
+    static auto apply(const float_t& scalar) {
+        return scalar;
+    }
+    template <typename scalar_t>
+    static auto apply(const scalar_t& scalar) {
+        return static_cast<scalar_t>(scalar);
+    }
+};
+}  // namespace details::pr
+
 namespace details {
 template <RealCastType cast_type, typename float_t>
 struct real_cast_impl<cast_type, ParameterResolver<float_t>> {
@@ -124,7 +141,38 @@ template <typename float_t, typename float2_t>
 struct common_type<std::complex<float_t>, ParameterResolver<float2_t>> {
     using type = ParameterResolver<common_type_t<std::complex<float_t>, float2_t>>;
 };
+
+template <typename T>
+struct is_parameter_resolver : std::false_type {};
+
+template <typename T>
+struct is_parameter_resolver<ParameterResolver<T>> : std::true_type {};
+
+template <typename T>
+inline constexpr auto is_parameter_resolver_v = is_parameter_resolver<std::remove_cvref_t<T>>::value;
+
+template <typename T>
+inline constexpr auto is_parameter_resolver_scalar_v = ((
+    std::is_arithmetic_v<
+        std::remove_cvref_t<T>> || traits::is_complex_v<std::remove_cvref_t<T>>) &&!traits::is_parameter_resolver_v<T>);
 }  // namespace traits
+
+// -----------------------------------------------------------------------------
+
+#if MQ_HAS_CONCEPTS
+namespace concepts {
+template <typename type_t>
+concept parameter_resolver = traits::is_parameter_resolver_v<std::remove_cvref_t<type_t>>;
+
+// clang-format off
+template <typename type_t>
+concept parameter_resolver_scalar = ((std::floating_point<std::remove_cvref_t<type_t>>
+                                      || std::integral<std::remove_cvref_t<type_t>>
+                                      || traits::is_complex_v<std::remove_cvref_t<type_t>>)
+                                     && !traits::is_parameter_resolver_v<type_t>);
+// clang-format on
+}  // namespace concepts
+#endif  // MQ_HAS_CONCEPTS
 
 // =============================================================================
 
@@ -186,30 +234,18 @@ struct ParameterResolver {
     T const_value = static_cast<T>(0);
     SS no_grad_parameters_{};
     SS encoder_parameters_{};
+    using value_type = T;
 
     template <typename U,
               typename = std::enable_if_t<
                   std::is_arithmetic_v<std::remove_cvref_t<U>> || traits::is_std_complex_v<std::remove_cvref_t<U>>>>
-    explicit ParameterResolver(U&& const_value) : const_value(static_cast<T>(std::forward<U>(const_value))) {
-    }
+    explicit ParameterResolver(U&& const_value);
 
     //! Constructor from a dictionary [string -> T] and a constant of type T
-    explicit ParameterResolver(const MST<T>& data, T const_value = static_cast<T>(0))
-        : data_(data), const_value(const_value) {
-        for (ITER(param, this->data_)) {
-            if (param->first == "") {
-                throw std::runtime_error("Parameter name cannot be empty.");
-            }
-        }
-    }
+    explicit ParameterResolver(const MST<T>& data, T const_value = static_cast<T>(0));
 
     //! Constructor from a dictionary [string -> T] and a constant of type T and gradient parameters
-    ParameterResolver(const MST<T>& data, T const_value, SS no_grad_parameters, SS encoder_parameters)
-        : data_(data)
-        , const_value(const_value)
-        , no_grad_parameters_(std::move(no_grad_parameters))
-        , encoder_parameters_(std::move(encoder_parameters)) {
-    }
+    ParameterResolver(const MST<T>& data, T const_value, SS no_grad_parameters, SS encoder_parameters);
 
     //! Constructor from a dictionary [string -> some_type] without a constant
     /*!
@@ -218,8 +254,8 @@ struct ParameterResolver {
     template <typename U,
               typename = std::enable_if_t<
                   std::is_arithmetic_v<std::remove_cvref_t<U>> || traits::is_std_complex_v<std::remove_cvref_t<U>>>>
-    explicit ParameterResolver(const MST<U>& data) : ParameterResolver(data, static_cast<T>(0.)) {
-    }
+    explicit ParameterResolver(const MST<U>& data);
+
     //! Constructor from a dictionary [string -> some_type] and a constant of some other_type
     /*!
      * \note \c some_type  and \c other_type do not need to be the same as \c T
@@ -229,44 +265,21 @@ struct ParameterResolver {
         typename = std::enable_if_t<
             (std::is_arithmetic_v<std::remove_cvref_t<U>> || traits::is_std_complex_v<std::remove_cvref_t<U>>) &&(
                 std::is_arithmetic_v<std::remove_cvref_t<V>> || traits::is_std_complex_v<std::remove_cvref_t<V>>)>>
-    ParameterResolver(const MST<U>& data, V const_value) : const_value(static_cast<T>(const_value)) {
-        for (const auto& [key, value] : data) {
-            data_.emplace(key, static_cast<T>(value));
-        }
-        for (ITER(param, this->data_)) {
-            if (param->first == "") {
-                throw std::runtime_error("Parameter name cannot be empty.");
-            }
-        }
-    }
+    ParameterResolver(const MST<U>& data, V const_value);
+
     template <
         typename U, typename V,
         typename = std::enable_if_t<
             (std::is_arithmetic_v<std::remove_cvref_t<U>> || traits::is_std_complex_v<std::remove_cvref_t<U>>) &&(
                 std::is_arithmetic_v<std::remove_cvref_t<V>> || traits::is_std_complex_v<std::remove_cvref_t<V>>)>>
-    ParameterResolver(const MST<U>& data, V&& const_value, SS no_grad_parameters, SS encoder_parameters)
-        : const_value(static_cast<T>(std::forward<V>(const_value)))
-        , no_grad_parameters_(std::move(no_grad_parameters))
-        , encoder_parameters_(std::move(encoder_parameters)) {
-        for (const auto& [key, value] : data) {
-            data_.emplace(key, static_cast<T>(value));
-        }
-    }
-    explicit ParameterResolver(const std::string& param) {
-        this->data_[param] = static_cast<T>(1);
-    }
+    ParameterResolver(const MST<U>& data, V&& const_value, SS no_grad_parameters, SS encoder_parameters);
+
+    explicit ParameterResolver(const std::string& param);
+
     template <typename U,
               typename = std::enable_if_t<
                   std::is_arithmetic_v<std::remove_cvref_t<U>> || traits::is_std_complex_v<std::remove_cvref_t<U>>>>
-    explicit ParameterResolver(const ParameterResolver<U>& other)
-        : const_value{static_cast<T>(other.const_value)}
-        , no_grad_parameters_{other.no_grad_parameters_}
-        , encoder_parameters_{other.encoder_parameters_} {
-        std::transform(begin(other.data_), end(other.data_), std::inserter(data_, end(data_)),
-                       [](const auto& param) -> typename MST<T>::value_type {
-                           return {param.first, static_cast<T>(param.second)};
-                       });
-    }
+    explicit ParameterResolver(const ParameterResolver<U>& other);
 
     ParameterResolver() = default;
     ParameterResolver(const ParameterResolver&) = default;
@@ -275,129 +288,56 @@ struct ParameterResolver {
     ParameterResolver& operator=(ParameterResolver&&) noexcept = default;
     ~ParameterResolver() noexcept = default;
 
-    explicit operator T() const {
-        if (!IsConst()) {
-            throw std::runtime_error("ParameterResolver: cannot convert to const value since not const!");
-        }
-        return this->const_value;
-    }
+    explicit operator T() const;
     template <typename U = T,
               typename = std::enable_if_t<
                   std::is_same_v<T, std::remove_cvref_t<U>> && !traits::is_complex_v<std::remove_cvref_t<U>>>>
-    explicit operator traits::to_cmplx_type_t<U>() const {
-        if (!IsConst()) {
-            throw std::runtime_error("ParameterResolver: cannot convert to const value since not const!");
-        }
-        return static_cast<traits::to_cmplx_type_t<T>>(this->const_value);
-    }
+    explicit operator traits::to_cmplx_type_t<U>() const;
 
-    size_t Size() const {
-        return this->data_.size();
-    }
+    size_t Size() const;
 
-    inline void SetConst(T const_value) {
-        this->const_value = const_value;
-    }
+    inline void SetConst(T const_value);
 
-    inline auto NIndex(size_t n) const {
-        if (n >= this->Size()) {
-            throw std::runtime_error("ParameterResolver: Index out of range.");
-        }
-        auto index_p = this->data_.begin();
-        std::advance(index_p, n);
-        return index_p;
-    }
+    inline auto NIndex(size_t n) const;
 
-    std::string GetKey(size_t index) const {
-        return this->NIndex(index)->first;
-    }
+    std::string GetKey(size_t index) const;
 
-    T GetItem(const std::string& key) const {
-        if (!this->Contains(key)) {
-            throw std::runtime_error("parameter " + key + " not in this parameter resolver.");
-        }
-        return this->data_.at(key);
-    }
+    T GetItem(const std::string& key) const;
 
-    T GetItem(size_t index) const {
-        return this->NIndex(index)->second;
-    }
+    T GetItem(size_t index) const;
 
-    inline void SetItem(const std::string& key, T value) {
-        data_[key] = value;
-    }
+    inline void SetItem(const std::string& key, T value);
 
-    inline void SetItems(const VS& name, const VT<T>& data) {
-        if (name.size() != data.size()) {
-            throw std::runtime_error("size of name and data mismatch.");
-        }
-        for (size_t i = 0; i < name.size(); i++) {
-            this->SetItem(name[i], data[i]);
-        }
-    }
+    inline void SetItems(const VS& name, const VT<T>& data);
 
-    bool IsConst() const {
-        if (this->data_.size() == 0) {
-            return true;
-        }
-        for (ITER(p, this->data_)) {
-            if (!IsTwoNumberClose(p->second, static_cast<T>(0.0))) {
-                return false;
-            }
-        }
-        return true;
-    }
+    bool IsConst() const;
 
-    bool IsNotZero() const {
-        if (!IsTwoNumberClose(this->const_value, 0.0)) {
-            return true;
-        }
-        for (ITER(p, this->data_)) {
-            if (!IsTwoNumberClose(p->second, 0.0)) {
-                return true;
-            }
-        }
-        return false;
-    }
+    bool IsNotZero() const;
 
-    inline bool Contains(const std::string& key) const {
-        return this->data_.find(key) != this->data_.end();
-    }
+    inline bool Contains(const std::string& key) const;
 
-    inline bool NoGradContains(const std::string& key) const {
-        return this->no_grad_parameters_.find(key) != this->no_grad_parameters_.end();
-    }
+    inline bool NoGradContains(const std::string& key) const;
 
-    inline bool EncoderContains(const std::string& key) const {
-        return this->encoder_parameters_.find(key) != this->encoder_parameters_.end();
-    }
+    inline bool EncoderContains(const std::string& key) const;
 
-    inline SS GetAllParameters() const {
-        SS all_params = {};
-        for (ITER(p, this->data_)) {
-            all_params.insert(p->first);
-        }
-        return all_params;
-    }
+    inline SS GetAllParameters() const;
 
-    inline SS GetRequiresGradParameters() const {
-        return this->GetAllParameters() - this->no_grad_parameters_;
-    }
+    inline SS GetRequiresGradParameters() const;
 
-    inline SS GetAnsatzParameters() const {
-        return this->GetAllParameters() - this->encoder_parameters_;
-    }
+    inline SS GetAnsatzParameters() const;
 
     ParameterResolver<T>& operator+=(T value) {
         this->const_value += value;
         return *this;
     }
 
-    ParameterResolver<T>& operator+=(const ParameterResolver<T>& other) {
+    template <typename other_t>
+    ParameterResolver<T>& operator+=(const ParameterResolver<other_t>& other) {
+        using conv_helper_t = details::pr::conversion_helper<T>;
         if ((this->encoder_parameters_.size() == 0) & (this->no_grad_parameters_.size() == 0)
             & (other.encoder_parameters_.size() == 0) & (other.no_grad_parameters_.size() == 0)) {
             for (ITER(p, other.data_)) {
-                this->data_[p->first] += p->second;
+                this->data_[p->first] += conv_helper_t::apply(p->second);
             }
         } else {
             if (((this->encoder_parameters_ & other.GetAnsatzParameters()).size() != 0)
@@ -411,7 +351,7 @@ struct ParameterResolver {
 
             for (ITER(p, other.data_)) {
                 auto& key = p->first;
-                const auto& value = p->second;
+                const auto& value = conv_helper_t::apply(p->second);
                 if (this->Contains(key)) {
                     this->data_[key] += value;
                 } else {
@@ -425,20 +365,8 @@ struct ParameterResolver {
                 }
             }
         }
-        this->const_value += other.const_value;
+        this->const_value += conv_helper_t::apply(other.const_value);
         return *this;
-    }
-
-    const ParameterResolver<T> operator+(T value) const {
-        auto pr = *this;
-        pr += value;
-        return pr;
-    }
-
-    const ParameterResolver<T> operator+(const ParameterResolver<T>& pr) const {
-        auto out = *this;
-        out += pr;
-        return out;
     }
 
     const ParameterResolver<T> operator-() const {
@@ -455,21 +383,10 @@ struct ParameterResolver {
         return *this;
     }
 
-    ParameterResolver<T>& operator-=(const ParameterResolver<T>& other) {
-        auto tmp = other;
-        *this += (-tmp);
+    template <typename other_t>
+    ParameterResolver<T>& operator-=(const ParameterResolver<other_t>& other) {
+        *this += (-other);
         return *this;
-    }
-
-    const ParameterResolver<T> operator-(const ParameterResolver<T>& pr) const {
-        auto out = pr;
-        return *this + (-out);
-    }
-
-    const ParameterResolver<T> operator-(T value) const {
-        auto out = *this;
-        out -= value;
-        return out;
     }
 
     ParameterResolver<T>& operator*=(T value) {
@@ -480,10 +397,12 @@ struct ParameterResolver {
         return *this;
     }
 
-    ParameterResolver<T>& operator*=(const ParameterResolver<T> other) {
+    template <typename other_t>
+    ParameterResolver<T>& operator*=(const ParameterResolver<other_t> other) {
+        using conv_helper_t = details::pr::conversion_helper<T>;
         if (this->IsConst()) {
             for (ITER(p, other.data_)) {
-                this->data_[p->first] = this->const_value * p->second;
+                this->data_[p->first] = this->const_value * conv_helper_t::apply(p->second);
                 if (!this->Contains(p->first)) {
                     if (other.EncoderContains(p->first)) {
                         this->encoder_parameters_.insert(p->first);
@@ -492,32 +411,20 @@ struct ParameterResolver {
                         this->no_grad_parameters_.insert(p->first);
                     }
                 }
-                this->const_value = 0;
+                this->const_value = static_cast<T>(0);
             }
         } else {
             if (other.IsConst()) {
                 for (ITER(p, this->data_)) {
-                    this->data_[p->first] *= other.const_value;
+                    this->data_[p->first] *= conv_helper_t::apply(other.const_value);
                 }
-                this->const_value *= other.const_value;
+                this->const_value *= conv_helper_t::apply(other.const_value);
             } else {
                 throw std::runtime_error("Parameter resolver only support first order variable.");
             }
         }
-        this->const_value *= other.const_value;
+        this->const_value *= conv_helper_t::apply(other.const_value);
         return *this;
-    }
-
-    const ParameterResolver<T> operator*(T value) const {
-        auto pr = *this;
-        pr *= value;
-        return pr;
-    }
-
-    const ParameterResolver<T> operator*(const ParameterResolver<T> other) const {
-        auto pr = *this;
-        pr *= other;
-        return pr;
     }
 
     ParameterResolver<T>& operator/=(T value) {
@@ -528,324 +435,70 @@ struct ParameterResolver {
         return *this;
     }
 
-    ParameterResolver<T>& operator/=(const ParameterResolver<T> other) {
+    template <typename other_t>
+    ParameterResolver<T>& operator/=(const ParameterResolver<other_t> other) {
+        using conv_helper_t = details::pr::conversion_helper<T>;
         if (!other.IsConst()) {
             throw std::runtime_error("Cannot div a non constant ParameterResolver.");
         }
         for (ITER(p, this->data_)) {
-            this->data_[p->first] /= other.const_value;
+            this->data_[p->first] /= conv_helper_t::apply(other.const_value);
         }
-        this->const_value /= other.const_value;
+        this->const_value /= conv_helper_t::apply(other.const_value);
         return *this;
     }
 
-    const ParameterResolver<T> operator/(T value) const {
-        auto pr = *this;
-        pr /= value;
-        return pr;
-    }
+    void PrintInfo() const;
 
-    const ParameterResolver<T> operator/(const ParameterResolver<T> other) const {
-        auto out = *this;
-        out /= other;
-        return out;
-    }
+    std::string ToString() const;
 
-    void PrintInfo() const {
-        std::cout << *this << std::endl;
-    }
+    ParameterResolver<T> Copy();
 
-    std::string ToString() const {
-        auto& pr = *this;
-        std::ostringstream os;
-        size_t i = 0;
-        os << "{";
-        for (ITER(p, pr.data_)) {
-            os << "'" << p->first << "': " << p->second;
-            if (i < pr.Size() - 1) {
-                os << ", ";
-            }
-            i++;
-        }
-        os << "}, const: " << pr.const_value;
-        return os.str();
-    }
+    template <typename other_t>
+    bool IsEqual(other_t value) const;
 
-    ParameterResolver<T> Copy() {
-        auto out = *this;
-        return out;
-    }
+    template <typename other_t>
+    bool IsEqual(const ParameterResolver<other_t> pr) const;
 
-    bool operator==(T value) const {
-        if (this->Size() != 0) {
-            return false;
-        }
-        return IsTwoNumberClose(this->const_value, value);
-    }
+    std::vector<std::string> ParamsName() const;
 
-    bool operator==(const ParameterResolver<T> pr) const {
-        if (!IsTwoNumberClose(this->const_value, pr.const_value)) {
-            return false;
-        }
-        if (this->data_.size() != pr.data_.size()) {
-            return false;
-        }
-        if (this->no_grad_parameters_.size() != pr.no_grad_parameters_.size()) {
-            return false;
-        }
-        if (this->encoder_parameters_.size() != pr.encoder_parameters_.size()) {
-            return false;
-        }
-        for (ITER(p, this->data_)) {
-            if (!pr.Contains(p->first)) {
-                return false;
-            }
-            if (!IsTwoNumberClose(p->second, pr.GetItem(p->first))) {
-                return false;
-            }
-        }
-        for (ITER(p, this->no_grad_parameters_)) {
-            if (!pr.NoGradContains(*p)) {
-                return false;
-            }
-        }
-        for (ITER(p, this->encoder_parameters_)) {
-            if (!pr.EncoderContains(*p)) {
-                return false;
-            }
-        }
-        return true;
-    }
+    std::vector<T> ParaValue() const;
 
-    std::vector<std::string> ParamsName() const {
-        std::vector<std::string> pn;
-        for (ITER(p, this->data_)) {
-            pn.push_back(p->first);
-        }
-        return pn;
-    }
+    void RequiresGrad();
 
-    std::vector<T> ParaValue() const {
-        std::vector<T> pv;
-        for (ITER(p, this->data_)) {
-            pv.push_back(p->second);
-        }
-        return pv;
-    }
+    void NoGrad();
 
-    void RequiresGrad() {
-        this->no_grad_parameters_ = {};
-    }
+    void RequiresGradPart(const std::vector<std::string>& names);
 
-    void NoGrad() {
-        this->no_grad_parameters_ = {};
-        for (ITER(p, this->data_)) {
-            this->no_grad_parameters_.insert(p->first);
-        }
-    }
+    void NoGradPart(const std::vector<std::string>& names);
 
-    void RequiresGradPart(const std::vector<std::string>& names) {
-        for (auto& name : names) {
-            if (this->NoGradContains(name)) {
-                this->no_grad_parameters_.erase(name);
-            }
-        }
-    }
+    void AnsatzPart(const std::vector<std::string>& names);
 
-    void NoGradPart(const std::vector<std::string>& names) {
-        for (auto& name : names) {
-            if (this->Contains(name)) {
-                this->no_grad_parameters_.insert(name);
-            }
-        }
-    }
+    void EncoderPart(const std::vector<std::string>& names);
 
-    void AnsatzPart(const std::vector<std::string>& names) {
-        for (auto& name : names) {
-            if (this->EncoderContains(name)) {
-                this->encoder_parameters_.erase(name);
-            }
-        }
-    }
+    void AsEncoder();
+    void AsAnsatz();
 
-    void EncoderPart(const std::vector<std::string>& names) {
-        for (auto& name : names) {
-            if (this->Contains(name)) {
-                this->encoder_parameters_.insert(name);
-            }
-        }
-    }
+    void Update(const ParameterResolver<T>& other);
 
-    void AsEncoder() {
-        for (ITER(p, this->data_)) {
-            this->encoder_parameters_.insert(p->first);
-        }
-    }
+    ParameterResolver<T> Conjugate() const;
 
-    void AsAnsatz() {
-        this->encoder_parameters_ = {};
-    }
+    ParameterResolver<T> Combination(const ParameterResolver<T>& pr) const;
 
-    void Update(const ParameterResolver<T>& other) {
-        if ((this->encoder_parameters_.size() == 0) & (this->no_grad_parameters_.size() == 0)
-            & (other.encoder_parameters_.size() == 0) & (other.no_grad_parameters_.size() == 0)) {
-            for (ITER(p, other.data_)) {
-                this->data_[p->first] = p->second;
-            }
-        } else {
-            if (((this->encoder_parameters_ & other.GetAnsatzParameters()).size() != 0)
-                | ((this->GetAnsatzParameters() & other.encoder_parameters_).size() != 0)) {
-                throw std::runtime_error("encoder or ansatz property of parameter conflict.");
-            }
-            if (((this->no_grad_parameters_ & other.GetRequiresGradParameters()).size() != 0)
-                | ((this->GetRequiresGradParameters() & other.no_grad_parameters_).size() != 0)) {
-                throw std::runtime_error("gradient property of parameter conflict.");
-            }
+    auto Real() const;
+    void KeepReal();
+    void KeepImag();
+    auto Imag() const;
 
-            for (ITER(p, other.data_)) {
-                auto& key = p->first;
-                const auto& value = p->second;
-                if (this->Contains(key)) {
-                    this->data_[key] = value;
-                } else {
-                    this->SetItem(key, value);
-                    if (other.EncoderContains(key)) {
-                        this->encoder_parameters_.insert(key);
-                    }
-                    if (other.NoGradContains(key)) {
-                        this->no_grad_parameters_.insert(key);
-                    }
-                }
-            }
-        }
-        this->const_value = other.const_value;
-    }
+    T Pop(const std::string& key);
 
-    ParameterResolver<T> Conjugate() const {
-        auto out = *this;
-        for (ITER(p, out.data_)) {
-            out.data_[p->first] = Conj(p->second);
-        }
-        out.const_value = Conj(out.const_value);
-        return out;
-    }
+    bool IsHermitian() const;
 
-    ParameterResolver<T> Combination(const ParameterResolver<T>& pr) const {
-        auto c = this->const_value;
-        for (ITER(p, this->data_)) {
-            c += p->second * pr.GetItem(p->first);
-        }
-        return ParameterResolver<T>(c);
-    }
-
-    auto Real() const {
-        using real_t = typename traits::to_real_type_t<T>;
-        ParameterResolver<real_t> pr = {};
-        pr.const_value = std::real(this->const_value);
-        for (ITER(p, this->data_)) {
-            auto& key = p->first;
-            pr.data_[p->first] = std::real(p->second);
-            if (this->EncoderContains(key)) {
-                pr.encoder_parameters_.insert(key);
-            }
-            if (this->NoGradContains(key)) {
-                pr.no_grad_parameters_.insert(key);
-            }
-        }
-        return pr;
-    }
-    void KeepReal() {
-        this->const_value = std::real(this->const_value);
-        for (auto& [name, value] : this->data_) {
-            value = std::real(value);
-        }
-    }
-    void KeepImag() {
-        this->const_value = std::imag(this->const_value);
-        for (auto& [name, value] : this->data_) {
-            value = std::imag(value);
-        }
-    }
-    auto Imag() const {
-        using real_t = typename traits::to_real_type_t<T>;
-        ParameterResolver<real_t> pr = {};
-        pr.const_value = std::imag(this->const_value);
-        for (ITER(p, this->data_)) {
-            auto& key = p->first;
-            pr.data_[p->first] = std::imag(p->second);
-            if (this->EncoderContains(key)) {
-                pr.encoder_parameters_.insert(key);
-            }
-            if (this->NoGradContains(key)) {
-                pr.no_grad_parameters_.insert(key);
-            }
-        }
-        return pr;
-    }
-
-    T Pop(const std::string& key) {
-        auto out = this->GetItem(key);
-        this->data_.erase(key);
-        if (this->EncoderContains(key)) {
-            this->encoder_parameters_.erase(key);
-        }
-        if (this->NoGradContains(key)) {
-            this->no_grad_parameters_.erase(key);
-        }
-        return out;
-    }
-
-    bool IsHermitian() const {
-        if constexpr (traits::is_complex_v<T>) {
-            return *this == this->Conjugate();
-        } else {
-            return true;
-        }
-    }
-
-    bool IsAntiHermitian() const {
-        if constexpr (traits::is_complex_v<T>) {
-            return *this == -this->Conjugate();
-        } else {
-            return false;
-        }
-    }
+    bool IsAntiHermitian() const;
 
     template <typename number_t>
-    auto Cast() const {
-        if constexpr (std::is_same_v<T, number_t>) {
-            return *this;
-        } else {
-            ParameterResolver<number_t> out;
-            for (ITER(param, this->data_)) {
-                const auto& key = param->first;
-                const auto& value = param->second;
-                out.data_[param->first] = static_cast<number_t>(value);
-                if (this->EncoderContains(key)) {
-                    out.encoder_parameters_.insert(key);
-                }
-                if (this->NoGradContains(key)) {
-                    out.no_grad_parameters_.insert(key);
-                }
-            }
-            out.const_value = static_cast<number_t>(const_value);
-            return out;
-        }
-    }
+    auto Cast() const;
 };
-
-template <typename T>
-ParameterResolver<T> operator+(T value, const ParameterResolver<T>& pr) {
-    auto out = pr;
-    out += value;
-    return out;
-}
-
-template <typename T>
-ParameterResolver<T> operator-(T value, const ParameterResolver<T>& pr) {
-    auto out = pr;
-    return (-out) + value;
-}
 
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const ParameterResolver<T>& pr) {
@@ -853,18 +506,9 @@ std::ostream& operator<<(std::ostream& os, const ParameterResolver<T>& pr) {
     return os;
 }
 
-template <typename T>
-ParameterResolver<T> operator*(T value, const ParameterResolver<T>& pr) {
-    auto out = pr;
-    out *= value;
-    return out;
-}
-
-template <typename T>
-ParameterResolver<T> operator/(T value, const ParameterResolver<T>& pr) {
-    return ParameterResolver<T>(value) / pr;
-}
-
 }  // namespace mindquantum
+
+#include "core/parameter_resolver.tpp"
+#include "core/parameter_resolver_external_ops.hpp"
 
 #endif  // MINDQUANTUM_PR_PARAMETER_RESOLVER_H_

@@ -71,10 +71,7 @@ concept terms_op = requires(op_t) {
 };
 
 template <typename op_t>
-concept not_terms_op = !terms_op<op_t>;
-
-template <typename T, typename U>
-concept is_not_same_as = !std::is_same_v<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
+concept not_terms_op = (!terms_op<op_t>);
 
 template <typename op_t, typename ref_op_t>
 concept compat_terms_op = requires(op_t, ref_op_t) {
