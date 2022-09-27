@@ -20,12 +20,7 @@ from collections import OrderedDict
 import numpy as np
 
 from mindquantum.core.circuit import Circuit, decompose_single_term_time_evolution
-from mindquantum.core.operators import (
-    FermionOperator,
-    down_index,
-    get_fermion_operator,
-    up_index,
-)
+from mindquantum.core.operators import FermionOperator, down_index, up_index
 from mindquantum.third_party.interaction_operator import InteractionOperator
 
 from .transform import Transform
@@ -206,7 +201,7 @@ def generate_uccsd(molecular, threshold=0):
     uccsd_circuit = _pauli2circuit(pauli_ansatz)
     ham_of = mol.get_molecular_hamiltonian()
     inter_ops = InteractionOperator(*ham_of.n_body_tensors.values())
-    ham_hiq = get_fermion_operator(inter_ops)
+    ham_hiq = FermionOperator(inter_ops)
     qubit_hamiltonian = Transform(ham_hiq).jordan_wigner()
     qubit_hamiltonian.compress()
 

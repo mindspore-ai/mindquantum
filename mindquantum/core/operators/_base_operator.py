@@ -103,8 +103,7 @@ class _Operator(metaclass=ABCMeta):
         elif isinstance(coefficient, ParameterResolver):
             self.coefficient = coefficient
         elif isinstance(coefficient, numbers.Number):
-            self.coefficient = ParameterResolver()
-            self.coefficient.const = coefficient
+            self.coefficient = ParameterResolver(coefficient)
         if term is None:
             self.terms = {}
 

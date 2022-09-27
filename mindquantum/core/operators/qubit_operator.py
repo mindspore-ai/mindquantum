@@ -19,9 +19,11 @@ import warnings
 
 try:
     if int(os.environ.get('MQ_PY_TERMSOP', False)):
+        warnings.warn("Using Python QubitOperator class")
         raise ImportError()
 
+    from ...experimental.ops import TermValue
     from ...experimental.ops.qubit_operator import QubitOperator
 except ImportError:
-    warnings.warn("Using Python QubitOperator class")
+    TermValue = {k: k for k in ('X', 'Y', 'Z', 'I')}
     from ._qubit_operator import QubitOperator  # noqa: F401

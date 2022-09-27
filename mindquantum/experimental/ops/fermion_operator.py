@@ -18,15 +18,16 @@
 
 from openfermion import FermionOperator as OFFermionOperator
 
-from mindquantum.mqbackend import complex_pr, real_pr
-
-from .. import TermValue
+from ...core.operators.polynomial_tensor import PolynomialTensor
+from ...core.parameterresolver import ParameterResolver
+from ...mqbackend import complex_pr, real_pr
 
 # NB: C++ actually supports FermionOperatorD and FermionOperatorCD that are purely numerical FermionOperator classes
 from .._mindquantum_cxx.ops import (
     FermionOperatorBase,
     FermionOperatorPRCD,
     FermionOperatorPRD,
+    TermValue,
 )
 from ._terms_operators import TermsOperator
 
@@ -83,6 +84,23 @@ class FermionOperator(TermsOperator):
         real_pr: real_pr_klass,
         float: real_pr_klass,
     }
+
+    def __init__(self, *args):
+        """
+        Initialize a FermionOperator instance.
+
+        Args:
+            *args: Variable length argument list:
+                - PolynomialTensor
+                - Any type as specified by TermsOperator.__init__
+        """
+        if len(args) == 1 and isinstance(args[0], PolynomialTensor):
+            terms = {}
+            for term in args[0]:
+                terms[tuple((i, TermValue[j]) for i, j in term)] = ParameterResolver(args[0][term])
+            super().__init__(terms)
+        else:
+            super().__init__(*args)
 
     def __str__(self) -> str:
         """Return string expression of a TermsOperator."""

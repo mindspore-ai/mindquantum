@@ -21,7 +21,6 @@ import numpy as np
 
 from mindquantum.utils.type_value_check import _check_input_type
 
-from ...experimental import TermValue
 from ..parameterresolver.parameterresolver import ParameterResolver
 from .circuit import Circuit, apply
 
@@ -61,6 +60,8 @@ def decompose_single_term_time_evolution(term, para):  # pylint: disable=too-man
     # pylint: disable=import-outside-toplevel,cyclic-import
     from mindquantum.core import gates
     from mindquantum.utils.type_value_check import _num_type
+
+    from ..operators import TermValue
 
     if not isinstance(term, tuple):
         try:
@@ -138,6 +139,8 @@ def pauli_word_to_circuits(qubitops):
 
     from mindquantum import operators as ops
     from mindquantum.core import gates
+
+    from ..operators import TermValue
 
     allow_ops = (pq_ops.QubitOperator, of_ops.QubitOperator, ops.QubitOperator, ops.Hamiltonian)
     if not isinstance(qubitops, allow_ops):

@@ -405,12 +405,14 @@ class QubitOperator(_Operator):
         return json.dumps(dic, indent=indent)
 
     @staticmethod
-    def loads(strs):
+    def loads(strs, dtype=type):
         """
         Load JSON(JavaScript Object Notation) into QubitOperator.
 
         Args:
             strs (str): The dumped qubit operator string.
+            dtype (type): (ignored by this class) Type of QubitOperator to create
+                (ie. real, complex, real_pr, complex_pr)
 
         Returns:
             QubitOperator`, the QubitOperator load from strings
@@ -423,6 +425,7 @@ class QubitOperator(_Operator):
             True
         """
         _check_input_type('strs', str, strs)
+        _check_input_type('dtype', type, dtype)
         dic = json.loads(strs)
         f_op = QubitOperator()
         for k, v in dic.items():

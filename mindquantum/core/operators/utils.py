@@ -15,9 +15,6 @@
 
 """This module provide some useful function related to operators."""
 
-from mindquantum.experimental import TermValue
-
-from ...core.parameterresolver import ParameterResolver
 from ..operators.fermion_operator import FermionOperator
 from ..operators.polynomial_tensor import PolynomialTensor
 from ..operators.qubit_excitation_operator import QubitExcitationOperator
@@ -116,43 +113,6 @@ def commutator(left_operator, right_operator):
     return result
 
 
-def _normal_ordered_term(term, coefficient):
-    r"""
-    Return the normal order order of a fermion operator with larger index and creation operator in front.
-
-    eg. :math:`a_4\dagger a3_\dagger a_2 a_1`.
-    """
-    term = list(term)
-    ordered_term = FermionOperator()
-    for i in range(1, len(term)):
-        for j in range(i, 0, -1):
-            left_sub_term = term[j - 1]
-            right_sub_term = term[j]
-            # Swap operators if left operator is annihilation op and right operator is
-            # a\dagger operator
-            if left_sub_term[1] == TermValue.a and right_sub_term[1] == TermValue.adg:
-                term[j], term[j - 1] = left_sub_term, right_sub_term
-                coefficient = coefficient * -1
-                # If indice are same, employ the anti-commutation relationship
-                # And generate the new term
-                if left_sub_term[0] == right_sub_term[0]:
-                    new_term = term[: (j - 1)] + term[(j + 1) :]  # noqa: E203
-                    ordered_term += _normal_ordered_term(new_term, -coefficient)
-            # Deal with the case with same operator
-            elif left_sub_term[1] == right_sub_term[1]:
-                # If indice are same,evaluate it to zero.
-                if left_sub_term[0] == right_sub_term[0]:
-                    return ordered_term
-                # Swap them if same operator but lower index on left
-                if left_sub_term[0] < right_sub_term[0]:
-                    term[j], term[j - 1] = left_sub_term, right_sub_term
-                    coefficient = coefficient * -1
-
-    # Add the term and return.
-    ordered_term += FermionOperator(tuple(term), coefficient)
-    return ordered_term
-
-
 def normal_ordered(fermion_operator):
     r"""
     Calculate and return the normal order of the FermionOperator.
@@ -176,24 +136,6 @@ def normal_ordered(fermion_operator):
     if not isinstance(fermion_operator, FermionOperator):
         raise ValueError("The operator should be FermionOperator!")
     return fermion_operator.normal_ordered()
-
-
-def get_fermion_operator(operator):
-    """Convert the tensor (PolynomialTensor) to FermionOperator.
-
-    Args:
-        operator (PolynomialTensor): The `PolynomialTensor` you want to convert to `FermionOperator`.
-
-    Returns:
-        FermionOperator, An instance of the FermionOperator class.
-    """
-    terms = {}
-    if isinstance(operator, PolynomialTensor):
-        for term in operator:
-            terms[tuple((i, TermValue[j]) for i, j in term)] = ParameterResolver(operator[term])
-        return FermionOperator(terms)
-
-    raise TypeError(f"Unsupported type of oeprator {operator}")
 
 
 def number_operator(n_modes=None, mode=None, coefficient=1.0):

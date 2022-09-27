@@ -19,9 +19,11 @@ import warnings
 
 try:
     if int(os.environ.get('MQ_PY_TERMSOP', False)):
+        warnings.warn("Using Python FermionOperator class")
         raise ImportError()
 
+    from ...experimental.ops import TermValue
     from ...experimental.ops.fermion_operator import FermionOperator
 except ImportError:
-    warnings.warn("Using Python FermionOperator class")
+    TermValue = {k: k for k in ('X', 'Y', 'Z', 'I')}
     from ._fermion_operator import FermionOperator  # noqa: F401

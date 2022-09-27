@@ -180,6 +180,10 @@ class TermsOperator(CppArithmeticAdaptor):
         """Get the terms of a TermsOperator."""
         return {tuple(i): ParameterResolver(j) for i, j in self._cpp_obj.terms()}
 
+    def cast_complex(self):
+        """Cast a TermsOperator into its complex equivalent."""
+        return self.__class__(self._cpp_obj.cast_complex())
+
     def compress(self, abs_tol=EQ_TOLERANCE):
         """
         Eliminate the very small terms that close to zero.

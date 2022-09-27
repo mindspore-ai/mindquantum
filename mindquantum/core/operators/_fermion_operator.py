@@ -27,6 +27,7 @@ from mindquantum.utils.type_value_check import _check_input_type, _check_int_typ
 
 from ..parameterresolver import ParameterResolver
 from ._base_operator import _Operator
+from .polynomial_tensor import PolynomialTensor
 
 
 @lru_cache()
@@ -129,20 +130,37 @@ class FermionOperator(_Operator):
 
     __hash__ = None
 
-    def __init__(self, term=None, coefficient=1.0):
-        """Initialize a FermionOperator object."""
-        super().__init__(term, coefficient)
-        _check_valid_fermion_operator_term(term)
-        self.operators = {1: '^', 0: '', '^': '^', '': ''}
-        self.gates_number = 0
-        self.qubit_type = False
+    def __init__(self, *args):
+        """
+        Initialize a FermionOperator instance.
 
-        if term is not None:
-            if term == '':
-                term = self._parse_term(())
-            else:
-                term = self._parse_term(term)
-            self.terms[term] = self.coefficient
+        Args:
+            *args: Variable length argument list:
+                - Any (ie. TermsOperator (C++ instance))
+                - str
+                - Dict[List[Tuple[Int, TermValue]], Union[ParameterResolver, int, float]]
+                - List[Tuple[Int, TermValue]] (with default coefficient set to 1.0)
+        """
+        if len(args) == 1 and isinstance(args[0], PolynomialTensor):
+            super().__init__()
+            for term in args[0]:
+                self += FermionOperator(term, args[0][term])
+        else:
+            term = args[0] if args else None
+            coefficient = args[1] if len(args) > 1 else 1.0
+
+            super().__init__(term, coefficient)
+            _check_valid_fermion_operator_term(term)
+            self.operators = {1: '^', 0: '', '^': '^', '': ''}
+            self.gates_number = 0
+            self.qubit_type = False
+
+            if term is not None:
+                if term == '':
+                    term = self._parse_term(())
+                else:
+                    term = self._parse_term(term)
+                self.terms[term] = self.coefficient
 
     def _simplify(self, terms, coefficient=1.0):
         """Simplify a term."""
@@ -407,12 +425,14 @@ class FermionOperator(_Operator):
         return json.dumps(dic, indent=indent)
 
     @staticmethod
-    def loads(strs):
+    def loads(strs, dtype=type):
         """
         Load JSON(JavaScript Object Notation) into FermionOperator.
 
         Args:
             strs (str): The dumped fermion operator string.
+            dtype (type): (ignored by this class) Type of QubitOperator to create
+                (ie. real, complex, real_pr, complex_pr)
 
         Returns:
             FermionOperator, the FermionOperator load from strings
@@ -425,6 +445,7 @@ class FermionOperator(_Operator):
             True
         """
         _check_input_type('strs', str, strs)
+        _check_input_type('dtype', type, dtype)
         dic = json.loads(strs)
         f_op = FermionOperator()
         for k, v in dic.items():

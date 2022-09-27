@@ -22,7 +22,7 @@ from openfermion import get_sparse_operator
 from openfermion.chem import MolecularData
 
 from mindquantum.algorithm.nisq import Transform
-from mindquantum.core.operators import get_fermion_operator
+from mindquantum.core.operators import FermionOperator
 from mindquantum.third_party.interaction_operator import InteractionOperator
 
 
@@ -40,7 +40,7 @@ def test_sparsing_operator():
 
     ham_of = mol.get_molecular_hamiltonian()
     inter_ops = InteractionOperator(*ham_of.n_body_tensors.values())
-    ham_hiq = get_fermion_operator(inter_ops)
+    ham_hiq = FermionOperator(inter_ops)
 
     ham = Transform(ham_hiq).jordan_wigner()
 

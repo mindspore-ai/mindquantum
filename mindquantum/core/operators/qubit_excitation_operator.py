@@ -17,12 +17,21 @@
 
 """This module implements qubit-excitation operators."""
 
+import os
+
 from mindquantum.core.parameterresolver import ParameterResolver
-from mindquantum.experimental import TermValue
 
 from ._base_operator import _Operator
 from .fermion_operator import FermionOperator
 from .qubit_operator import QubitOperator
+
+try:
+    if int(os.environ.get('MQ_PY_TERMSOP', False)):
+        raise ImportError()
+
+    from ...experimental.ops import TermValue
+except ImportError:
+    TermValue = {'X': 'Y', 'Y': 'Y'}
 
 
 def _check_valid_qubit_excitation_operator_term(qeo_term):

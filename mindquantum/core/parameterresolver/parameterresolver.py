@@ -128,7 +128,13 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
     @const.setter
     def const(self, const_value):
         """Setter method for const."""
-        self._cpp_obj.set_const(const_value)
+        if isinstance(const_value, (ParameterResolver, real_pr_, complex_pr_)):
+            const_value = const_value.const
+        try:
+            self._cpp_obj.set_const(const_value)
+        except TypeError:
+            print(type(const_value), const_value)
+            raise
 
     def keys(self):
         """
