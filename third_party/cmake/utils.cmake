@@ -311,7 +311,7 @@ endfunction()
 #     installation configuration file but has otherwise no effect.
 # ~~~
 function(__create_target_aliases pkg_name skip_in_install_config)
-  # cmake-lint: disable=R0915
+  # cmake-lint: disable=R0915,R0912
   list(LENGTH ARGN n_args)
   if(NOT n_args)
     return()
@@ -363,6 +363,21 @@ function(__create_target_aliases pkg_name skip_in_install_config)
     get_target_property(_imported_global ${tgt_name} IMPORTED_GLOBAL)
     if(_imported AND NOT _imported_global)
       set_property(TARGET ${tgt_name} PROPERTY IMPORTED_GLOBAL TRUE)
+    endif()
+
+    if(_imported)
+      if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+        __get_library_imported_location(${tgt_name} _imported_location)
+        if(_imported_location)
+          foreach(_config DEBUG MINSIZEREL RELWITHDEBINFO)
+            get_target_property(_config_location ${tgt_name} IMPORTED_LOCATION_${_config})
+            if(NOT _config_location)
+              debug_print(STATUS "Propagating ${_imported_location} to IMPORTED_LOCATION_${_config}")
+              set_target_properties(${tgt_name} PROPERTIES IMPORTED_LOCATION_${_config} ${_imported_location})
+            endif()
+          endforeach()
+        endif()
+      endif()
     endif()
 
     get_target_property(_aliased ${tgt_name} ALIASED_TARGET)
