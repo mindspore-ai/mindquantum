@@ -46,39 +46,43 @@ target_link_libraries(_mindquantum_cxx PRIVATE mq_cxx_nextgen mindquantum_python
 
 # ==============================================================================
 
-pybind11_add_module(
-  _mindquantum_cxx_core
-  ${CMAKE_CURRENT_LIST_DIR}/lib/_mindquantum_cxx_core.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/base.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/engine_list.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/mapping.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/optimisation.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/printer.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/resource_counter.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/lib/core/core.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/lib/ops/command.cpp
-  MODULE
-  OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}/experimental")
+# ~~~
+# pybind11_add_module(
+#   _mindquantum_cxx_core
+#   ${CMAKE_CURRENT_LIST_DIR}/lib/_mindquantum_cxx_core.cpp
+#   ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/base.cpp
+#   ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/engine_list.cpp
+#   ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/mapping.cpp
+#   ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/optimisation.cpp
+#   ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/printer.cpp
+#   ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/resource_counter.cpp
+#   ${CMAKE_CURRENT_LIST_DIR}/lib/core/core.cpp
+#   ${CMAKE_CURRENT_LIST_DIR}/lib/ops/command.cpp
+#   MODULE
+#   OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}/experimental")
 
-target_link_libraries(_mindquantum_cxx_core PRIVATE mq_cxx_nextgen mindquantum_python_interface mq_python_core)
-set_output_directory_auto(_mindquantum_cxx_core mindquantum/experimental)
+# target_link_libraries(_mindquantum_cxx_core PRIVATE mq_cxx_nextgen mindquantum_python_interface mq_python_core)
+# set_output_directory_auto(_mindquantum_cxx_core mindquantum/experimental)
+# ~~~
 
 # ==============================================================================
 
-pybind11_add_module(
-  _mindquantum_cxx_cengines
-  ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/base.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/cengines.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/engine_list.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/mapping.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/optimisation.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/printer.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/resource_counter.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/lib/ops/command.cpp
-  MODULE
-  OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}/experimental")
+# ~~~
+# pybind11_add_module(
+#   _mindquantum_cxx_cengines
+#   ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/base.cpp
+#   ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/cengines.cpp
+#   ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/engine_list.cpp
+#   ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/mapping.cpp
+#   ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/optimisation.cpp
+#   ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/printer.cpp
+#   ${CMAKE_CURRENT_LIST_DIR}/lib/cengines/resource_counter.cpp
+#   ${CMAKE_CURRENT_LIST_DIR}/lib/ops/command.cpp
+#   MODULE
+#   OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}/experimental")
 
-target_link_libraries(_mindquantum_cxx_cengines PRIVATE mq_cxx_nextgen mindquantum_python_interface mq_python_core)
-set_output_directory_auto(_mindquantum_cxx_cengines mindquantum/experimental)
+# target_link_libraries(_mindquantum_cxx_cengines PRIVATE mq_cxx_nextgen mindquantum_python_interface mq_python_core)
+# set_output_directory_auto(_mindquantum_cxx_cengines mindquantum/experimental)
+# ~~~
 
 # ==============================================================================
