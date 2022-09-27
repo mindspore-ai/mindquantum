@@ -22,8 +22,6 @@ PYBIND11_MODULE(_mindquantum_cxx, module) {
     namespace py = pybind11;
     namespace python = mindquantum::python;
 
-    py::module_::import("mqbackend");
-
     module.doc() = "Python-C++ bindings for MindQuantum";
 
     py::module circuit = module.def_submodule("circuit", "MindQuantum-C++ circuit interface");
