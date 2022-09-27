@@ -44,6 +44,8 @@ class CppArithmeticAdaptor:
     def __iadd__(self, other):
         """Inplace add a number or a CppArithmeticAdaptor."""
         if hasattr(other, '_cpp_obj'):
+            if not self._cpp_obj.is_complex and other._cpp_obj.is_complex:
+                self._cpp_obj = self._cpp_obj.cast_complex()
             self._cpp_obj += other._cpp_obj
         else:
             self._cpp_obj += other
@@ -66,6 +68,8 @@ class CppArithmeticAdaptor:
     def __isub__(self, other):
         """Inplace subtraction a number or a CppArithmeticAdaptor."""
         if hasattr(other, '_cpp_obj'):
+            if not self._cpp_obj.is_complex and other._cpp_obj.is_complex:
+                self._cpp_obj = self._cpp_obj.cast_complex()
             self._cpp_obj -= other._cpp_obj
         else:
             self._cpp_obj -= other
@@ -89,6 +93,8 @@ class CppArithmeticAdaptor:
     def __imul__(self, other):
         """Inplace multiply a number or a CppArithmeticAdaptor."""
         if hasattr(other, '_cpp_obj'):
+            if not self._cpp_obj.is_complex and other._cpp_obj.is_complex:
+                self._cpp_obj = self._cpp_obj.cast_complex()
             self._cpp_obj *= other._cpp_obj
         else:
             self._cpp_obj *= other
@@ -121,6 +127,8 @@ class CppArithmeticAdaptor:
 
     def __eq__(self, other) -> bool:
         """Check whether two CppArithmeticAdaptors equal."""
+        if hasattr(other, '_cpp_obj') and not self._cpp_obj.is_complex and other.is_complex:
+            return self._cpp_obj.cast_complex() == other._cpp_obj
         return self._cpp_obj == other._cpp_obj
 
     def __ne__(self, other) -> bool:
