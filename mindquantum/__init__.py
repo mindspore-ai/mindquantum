@@ -52,3 +52,23 @@ __all__.extend(framework.__all__)
 __all__.extend(io.__all__)
 __all__.extend(config.__all__)
 __all__.sort()
+
+
+try:
+    import mindquantum.experimental
+
+    _orig_enable_logging = logging.enable
+    _orig_disable_logging = logging.disable
+
+    def _enable_logging(level):
+        _orig_enable_logging(level)
+        mindquantum.experimental.logging.enable(level)
+
+    def _disable_logging():
+        _orig_disable_logging()
+        mindquantum.experimental.logging.disable()
+
+    logging.enable = _enable_logging
+    logging.disable = _disable_logging
+except ImportError:
+    pass

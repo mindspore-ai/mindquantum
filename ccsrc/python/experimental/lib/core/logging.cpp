@@ -61,14 +61,15 @@ namespace mindquantum::python {
 void init_logging(pybind11::module& module) {
     using namespace pybind11::literals;
 
-    py::enum_<spdlog::level::level_enum>(module, "LogLevel")
-        .value("OFF", spdlog::level::off)
-        .value("TRACE", spdlog::level::trace)
-        .value("DEBUG", spdlog::level::debug)
-        .value("INFO", spdlog::level::info)
-        .value("WARN", spdlog::level::warn)
-        .value("ERROR", spdlog::level::err)
-        .value("CRITICAL", spdlog::level::critical);
+    // NB: This type should already be registered by mqbackend
+    // py::enum_<spdlog::level::level_enum>(module, "LogLevel")
+    //     .value("OFF", spdlog::level::off)
+    //     .value("TRACE", spdlog::level::trace)
+    //     .value("DEBUG", spdlog::level::debug)
+    //     .value("INFO", spdlog::level::info)
+    //     .value("WARN", spdlog::level::warn)
+    //     .value("ERROR", spdlog::level::err)
+    //     .value("CRITICAL", spdlog::level::critical);
 
     module.attr("log_level_") = current_level_;
     module.def("enable", enable_logging, "level"_a = spdlog::level::info);

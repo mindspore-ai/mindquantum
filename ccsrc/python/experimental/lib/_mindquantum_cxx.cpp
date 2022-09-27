@@ -14,11 +14,15 @@
 
 #include <pybind11/pybind11.h>
 
+#include "config/logging.hpp"
+
 #include "python/bindings.hpp"
 
 PYBIND11_MODULE(_mindquantum_cxx, module) {
     namespace py = pybind11;
     namespace python = mindquantum::python;
+
+    py::module_::import("mqbackend");
 
     module.doc() = "Python-C++ bindings for MindQuantum";
 
@@ -36,4 +40,7 @@ PYBIND11_MODULE(_mindquantum_cxx, module) {
 
     py::module symengine = module.def_submodule("symengine", "MindQuantum light wrapper for SymEngine");
     python::init_symengine(symengine);
+
+    py::module logging = module.def_submodule("logging", "MindQuantum-C++ logging module");
+    python::init_logging(logging);
 }
