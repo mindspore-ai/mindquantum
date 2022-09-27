@@ -21,6 +21,8 @@
 #include <fmt/ranges.h>
 #include <pybind11/pytypes.h>
 
+#include "python/details/get_fully_qualified_tp_name.hpp"
+
 //! Very basic fmtlib formatter for Pybind11 Python types
 template <typename char_type>
 struct fmt::formatter<pybind11::handle, char_type> {
@@ -54,7 +56,7 @@ struct fmt::formatter<pybind11::handle, char_type> {
         if (pybind11::isinstance<pybind11::none>(src)) {
             return fmt::format_to(ctx.out(), "None");
         }
-        return fmt::format_to(ctx.out(), "UNKNOWN");
+        return fmt::format_to(ctx.out(), "{}", mindquantum::python::get_fully_qualified_tp_name(src));
     }
 };
 
