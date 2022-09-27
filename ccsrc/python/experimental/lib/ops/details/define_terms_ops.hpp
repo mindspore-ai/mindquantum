@@ -31,13 +31,12 @@
 #include "config/constexpr_type_name.hpp"
 #include "config/type_traits.hpp"
 
-#include "define_binary_operator_helpers.hpp"
-
 #include "experimental/ops/gates/fermion_operator.hpp"
 #include "experimental/ops/gates/qubit_operator.hpp"
 #include "experimental/ops/gates/terms_operator_base.hpp"
 
 #include "python/details/create_from_container_class.hpp"
+#include "python/details/define_binary_operator_helpers.hpp"
 #include "python/details/get_fully_qualified_tp_name.hpp"
 
 namespace bindops {
