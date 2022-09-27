@@ -77,6 +77,8 @@ auto bind_ops(pybind11::module& module, const std::string_view& name) {
               .def_property("constant", static_cast<coeff_t (op_t::*)() const>(&op_t::constant),
                             static_cast<coeff_t (op_t::*)() const>(&op_t::constant))
               .def_property_readonly("imag", &op_t::imag)
+              .def_property_readonly(
+                  "is_complex", [](const op_t&) constexpr { return !op_t::is_real_valued; })
               .def_property_readonly("is_singlet", &op_t::is_singlet)
               .def_property_readonly("real", &op_t::real)
               .def_property_readonly("size", &op_t::size)
@@ -88,8 +90,6 @@ auto bind_ops(pybind11::module& module, const std::string_view& name) {
               .def("dumps", &op_t::dumps, "indent"_a = 4)
               .def("get_coeff", &op_t::get_coeff)
               .def("hermitian", &op_t::hermitian)
-              .def(
-                  "is_complex", [](const op_t&) constexpr { return !op_t::is_real_valued; })
               .def("is_identity", &op_t::is_identity, "abs_tol"_a = op_t::EQ_TOLERANCE)
               .def("matrix", &op_t::sparse_matrix, "n_qubits"_a)
               .def("num_targets", &op_t::num_targets)
