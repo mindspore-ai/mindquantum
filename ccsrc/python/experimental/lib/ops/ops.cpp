@@ -34,6 +34,7 @@
 #include "core/parameter_resolver.hpp"
 #include "details/define_terms_ops.hpp"
 
+#include "experimental/cengines/write_projectq.hpp"
 #include "experimental/ops/gates.hpp"
 #include "experimental/ops/gates/details/coeff_policy.hpp"
 #include "experimental/ops/gates/details/parameter_resolver_coeff_policy.hpp"
@@ -164,16 +165,25 @@ void init_mindquantum_ops(pybind11::module& module) {
     using all_fop_types_t = std::tuple<double, std::complex<double>, pr_t, pr_cmplx_t, FermionOperatorD,
                                        FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD>;
 
-    fop_double.def("cast", bindops::cast<FermionOperatorD, FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD>,
-                   "Supported types: FermionOperatorD, FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD");
-    fop_cmplx_double.def("cast", bindops::cast<FermionOperatorCD, FermionOperatorPRCD>,
-                         "Supported types: FermionOperatorCD, FermionOperatorPRCD");
+    fop_double.def("cast",
+                   bindops::cast<FermionOperatorD, double, std::complex<double>, pr_t, pr_cmplx_t, FermionOperatorD,
+                                 FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD>,
+                   "Supported types: float, complex, ParameterResolver<double>, ParameterResolver<complex>, "
+                   "FermionOperatorD, FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD");
+    fop_cmplx_double.def(
+        "cast",
+        bindops::cast<FermionOperatorCD, std::complex<double>, pr_cmplx_t, FermionOperatorCD, FermionOperatorPRCD>,
+        "Supported types: complex, ParameterResolver<complex>, FermionOperatorCD, FermionOperatorPRCD");
 
     fop_pr_double.def("cast",
-                      bindops::cast<FermionOperatorD, FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD>,
-                      "Supported types: FermionOperatorD, FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD");
-    fop_pr_cmplx_double.def("cast", bindops::cast<FermionOperatorCD, FermionOperatorPRCD>,
-                            "Supported types: FermionOperatorCD, FermionOperatorPRCD");
+                      bindops::cast<FermionOperatorPRD, double, std::complex<double>, pr_t, pr_cmplx_t,
+                                    FermionOperatorD, FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD>,
+                      "Supported types: float, complex, ParameterResolver<double>, ParameterResolver<complex>, "
+                      "FermionOperatorD, FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD");
+    fop_pr_cmplx_double.def(
+        "cast",
+        bindops::cast<FermionOperatorPRCD, std::complex<double>, pr_cmplx_t, FermionOperatorCD, FermionOperatorPRCD>,
+        "Supported types: complex, ParameterResolver<complex>, FermionOperatorCD, FermionOperatorPRCD");
 
     // ---------------------------------
 
@@ -254,15 +264,23 @@ void init_mindquantum_ops(pybind11::module& module) {
     using all_qop_types_t = std::tuple<double, std::complex<double>, pr_t, pr_cmplx_t, QubitOperatorD, QubitOperatorCD,
                                        QubitOperatorPRD, QubitOperatorPRCD>;
 
-    qop_double.def("cast", bindops::cast<QubitOperatorD, QubitOperatorCD, QubitOperatorPRD, QubitOperatorPRCD>,
-                   "Supported types: QubitOperatorD, QubitOperatorCD, QubitOperatorPRD, QubitOperatorPRCD");
-    qop_cmplx_double.def("cast", bindops::cast<QubitOperatorCD, QubitOperatorPRCD>,
-                         "Supported types: QubitOperatorCD, QubitOperatorPRCD");
+    qop_double.def("cast",
+                   bindops::cast<QubitOperatorD, double, std::complex<double>, pr_t, pr_cmplx_t, QubitOperatorD,
+                                 QubitOperatorCD, QubitOperatorPRD, QubitOperatorPRCD>,
+                   "Supported types: float, complex, ParameterResolver<double>, ParameterResolver<complex>, "
+                   "QubitOperatorD, QubitOperatorCD, QubitOperatorPRD, QubitOperatorPRCD");
+    qop_cmplx_double.def(
+        "cast", bindops::cast<QubitOperatorCD, std::complex<double>, pr_cmplx_t, QubitOperatorCD, QubitOperatorPRCD>,
+        "Supported types: complex, ParameterResolver<complex>, QubitOperatorCD, QubitOperatorPRCD");
 
-    qop_pr_double.def("cast", bindops::cast<QubitOperatorD, QubitOperatorCD, QubitOperatorPRD, QubitOperatorPRCD>,
-                      "Supported types: QubitOperatorD, QubitOperatorCD, QubitOperatorPRD, QubitOperatorPRCD");
-    qop_pr_cmplx_double.def("cast", bindops::cast<QubitOperatorCD, QubitOperatorPRCD>,
-                            "Supported types: QubitOperatorCD, QubitOperatorPRCD");
+    qop_pr_double.def("cast",
+                      bindops::cast<QubitOperatorPRD, double, std::complex<double>, pr_t, pr_cmplx_t, QubitOperatorD,
+                                    QubitOperatorCD, QubitOperatorPRD, QubitOperatorPRCD>,
+                      "Supported types: float, complex, ParameterResolver<double>, ParameterResolver<complex>, "
+                      "QubitOperatorD, QubitOperatorCD, QubitOperatorPRD, QubitOperatorPRCD");
+    qop_pr_cmplx_double.def(
+        "cast", bindops::cast<QubitOperatorPRCD, std::complex<double>, pr_cmplx_t, QubitOperatorCD, QubitOperatorPRCD>,
+        "Supported types: complex, ParameterResolver<complex>, QubitOperatorCD, QubitOperatorPRCD");
 
     // ---------------------------------
 

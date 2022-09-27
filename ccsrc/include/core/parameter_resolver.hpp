@@ -811,16 +811,16 @@ struct ParameterResolver {
         }
     }
 
-    auto ToComplexPR() const {
-        if constexpr (traits::is_complex_v<T>) {
+    template <typename number_t>
+    auto Cast() const {
+        if constexpr (std::is_same_v<T, number_t>) {
             return *this;
         } else {
-            using cmplx_t = typename traits::to_cmplx_type_t<T>;
-            ParameterResolver<cmplx_t> out;
+            ParameterResolver<number_t> out;
             for (ITER(param, this->data_)) {
                 const auto& key = param->first;
                 const auto& value = param->second;
-                out.data_[param->first] = static_cast<cmplx_t>(value);
+                out.data_[param->first] = static_cast<number_t>(value);
                 if (this->EncoderContains(key)) {
                     out.encoder_parameters_.insert(key);
                 }
@@ -828,13 +828,9 @@ struct ParameterResolver {
                     out.no_grad_parameters_.insert(key);
                 }
             }
-            out.const_value = static_cast<cmplx_t>(const_value);
+            out.const_value = static_cast<number_t>(const_value);
             return out;
         }
-    }
-
-    bool IsComplexPR() const {
-        return traits::is_complex_v<T>;
     }
 };
 

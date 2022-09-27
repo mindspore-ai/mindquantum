@@ -84,6 +84,9 @@ concept compat_terms_op = requires(op_t, ref_op_t) {
                                             std::remove_cvref_t<ref_op_t>::is_real_valued>;
 };
 
+template <typename scalar_t>
+concept termsop_number = traits::is_termsop_number_v<scalar_t>;
+
 template <typename scalar_t, typename ref_op_t>
 concept compat_terms_op_scalar = requires(scalar_t, ref_op_t) {
     requires traits::is_compatible_scalar_v<std::remove_cvref_t<scalar_t>,
@@ -279,6 +282,13 @@ class TermsOperatorBase {
     MQ_NODISCARD std::vector<std::pair<coefficient_t, derived_t>> split() const;
 
     // -------------------------------------------------------------------------
+
+#if MQ_HAS_CONCEPTS && !(defined _MSC_VER)
+    template <concepts::termsop_number number_t>
+#else
+    template <typename number_t, typename = std::enable_if_t<traits::is_termsop_number_v<number_t>>>
+#endif  // MQ_HAS_CONCEPTS && !(defined _MSC_VER)
+    MQ_NODISCARD derived_t_<number_t> cast() const;
 
 #if MQ_HAS_CONCEPTS && !(defined _MSC_VER)
     template <concepts::terms_op op_t>
