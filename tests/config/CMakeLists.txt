@@ -16,5 +16,5 @@
 #
 # ==============================================================================
 
-add_test_executable(test_common_type LIBS include_lib cmake_config mindquantum::json)
-add_test_executable(test_constexpr_type_name LIBS include_lib cmake_config)
+add_test_executable(test_common_type LIBS include_lib cmake_config mindquantum::json mindquantum::fmt)
+add_test_executable(test_constexpr_type_name LIBS include_lib cmake_config mindquantum::fmt)
