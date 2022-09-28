@@ -40,6 +40,7 @@
 #include "ops/hamiltonian.hpp"
 
 #include "python/details/create_from_container_class.hpp"
+#include "python/details/define_binary_operator_helpers.hpp"
 
 namespace py = pybind11;
 
@@ -87,11 +88,6 @@ auto BindPR(py::module &module, const std::string &name) {
               .def(py::init<const MST<T> &>(), "data"_a)
               .def(py::init<const MST<T> &, T>(), "data"_a, "coeff"_a)
               .def(py::init<const MST<T> &, T, const SS &, const SS &>())
-              // NB: VERY* important: these overload below needs to be the LAST
-              // NB2: the cast is only required for older compilers (typically GCC < 9)
-              .def(pybind11::init(
-                       static_cast<factory_func_t>(&create_from_python_container_class_with_trampoline<pr_t, MST<T>>)),
-                   "py_class"_a, "Constructor from the encapsulating Python class (using a _cpp_obj attribute)")
               // ------------------------------
               // Properties
               .def_property_readonly("const", [](const pr_t &pr) { return pr.const_value; })
@@ -144,29 +140,22 @@ auto BindPR(py::module &module, const std::string &name) {
               .def("__str__", &pr_t::ToString)
               // ------------------------------
               // Python arithmetic operators
-              .def(py::self + py::self)
-              .def(py::self += py::self)
-              .def(T() + py::self)
-              .def(py::self + T())
-              .def(py::self += T())
-              .def(py::self - py::self)
-              .def(py::self -= py::self)
-              .def(T() - py::self)
-              .def(py::self - T())
-              .def(py::self -= T())
-              .def(py::self * py::self)
-              .def(py::self *= py::self)
-              .def(py::self * T())
-              .def(py::self *= T())
-              .def(T() * py::self)
-              .def(py::self / py::self)
-              .def(py::self /= py::self)
-              .def(T() / py::self)
-              .def(py::self / T())
-              .def(py::self /= T())
               .def(py::self == T())
               .def(py::self == py::self)
               .def(-py::self);
+
+    if constexpr (mindquantum::traits::is_std_complex_v<T>) {
+        using real_t = mindquantum::traits::to_real_type_t<T>;
+        klass.def(py::init<MST<real_t>>())
+            .def(py::init<const mindquantum::MST<real_t> &>(), "data"_a)
+            .def(py::init<const mindquantum::MST<real_t> &, real_t>(), "data"_a, "coeff"_a);
+    }
+
+    // NB: VERY* important: these overload below needs to be the LAST
+    // NB2: the cast is only required for older compilers (typically GCC < 9)
+    klass.def(
+        pybind11::init(static_cast<factory_func_t>(&create_from_python_container_class_with_trampoline<pr_t, MST<T>>)),
+        "py_class"_a, "Constructor from the encapsulating Python class (using a _cpp_obj attribute)");
 
     pybind11::implicitly_convertible<pybind11::object, pr_t>();
     return klass;
@@ -232,9 +221,41 @@ PYBIND11_MODULE(mqbackend, m) {
     // parameter resolver
     auto real_pr = BindPR<MT>(m, "real_pr");
     auto complex_pr = BindPR<std::complex<MT>>(m, "complex_pr");
-    complex_pr.def(py::init<MT>())
-        .def(py::init<const mindquantum::MST<MT> &>(), "data"_a)
-        .def(py::init<const mindquantum::MST<MT> &, MT>(), "data"_a, "coeff"_a = 0.);
+
+    namespace op = bindops::details;
+
+    using real_pr_t = decltype(real_pr);
+    using pr_t = real_pr_t::type;
+    using complex_pr_t = decltype(complex_pr);
+    using pr_cmplx_t = complex_pr_t::type;
+
+    using all_scalar_types_t = std::tuple<double, std::complex<double>, pr_t, pr_cmplx_t>;
+
+    bindops::binop_definition<op::plus, real_pr_t>::inplace<double, pr_t>(real_pr);
+    bindops::binop_definition<op::plus, real_pr_t>::external<all_scalar_types_t>(real_pr);
+    bindops::binop_definition<op::plus, real_pr_t>::reverse<all_scalar_types_t>(real_pr);
+    bindops::binop_definition<op::minus, real_pr_t>::inplace<double, pr_t>(real_pr);
+    bindops::binop_definition<op::minus, real_pr_t>::external<all_scalar_types_t>(real_pr);
+    bindops::binop_definition<op::minus, real_pr_t>::reverse<all_scalar_types_t>(real_pr);
+    bindops::binop_definition<op::times, real_pr_t>::inplace<double, pr_t>(real_pr);
+    bindops::binop_definition<op::times, real_pr_t>::external<all_scalar_types_t>(real_pr);
+    bindops::binop_definition<op::times, real_pr_t>::reverse<all_scalar_types_t>(real_pr);
+    bindops::binop_definition<op::divides, real_pr_t>::inplace<double, pr_t>(real_pr);
+    bindops::binop_definition<op::divides, real_pr_t>::external<all_scalar_types_t>(real_pr);
+    bindops::binop_definition<op::divides, real_pr_t>::reverse<all_scalar_types_t>(real_pr);
+
+    bindops::binop_definition<op::plus, complex_pr_t>::inplace<all_scalar_types_t>(complex_pr);
+    bindops::binop_definition<op::plus, complex_pr_t>::external<all_scalar_types_t>(complex_pr);
+    bindops::binop_definition<op::plus, complex_pr_t>::reverse<all_scalar_types_t>(complex_pr);
+    bindops::binop_definition<op::minus, complex_pr_t>::inplace<all_scalar_types_t>(complex_pr);
+    bindops::binop_definition<op::minus, complex_pr_t>::external<all_scalar_types_t>(complex_pr);
+    bindops::binop_definition<op::minus, complex_pr_t>::reverse<all_scalar_types_t>(complex_pr);
+    bindops::binop_definition<op::times, complex_pr_t>::inplace<all_scalar_types_t>(complex_pr);
+    bindops::binop_definition<op::times, complex_pr_t>::external<all_scalar_types_t>(complex_pr);
+    bindops::binop_definition<op::times, complex_pr_t>::reverse<all_scalar_types_t>(complex_pr);
+    bindops::binop_definition<op::divides, complex_pr_t>::inplace<all_scalar_types_t>(complex_pr);
+    bindops::binop_definition<op::divides, complex_pr_t>::external<all_scalar_types_t>(complex_pr);
+    bindops::binop_definition<op::divides, complex_pr_t>::reverse<all_scalar_types_t>(complex_pr);
 
     // pauli mat
     py::class_<PauliMat<MT>, std::shared_ptr<PauliMat<MT>>>(m, "pauli_mat")
