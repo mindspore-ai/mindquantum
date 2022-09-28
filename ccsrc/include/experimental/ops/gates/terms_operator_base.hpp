@@ -58,6 +58,9 @@ struct is_terms_operator<T, std::void_t<typename std::remove_cvref_t<T>::terms_o
 
 template <typename T>
 inline constexpr auto is_terms_operator_v = is_terms_operator<T>::value;
+
+template <typename T>
+inline constexpr auto is_terms_operator_decay_v = is_terms_operator_v<std::remove_cvref_t<T>>;
 }  // namespace mindquantum::traits
 
 // -----------------------------------------------------------------------------
@@ -82,12 +85,11 @@ concept compat_terms_op = requires(op_t, ref_op_t) {
 };
 
 template <typename scalar_t>
-concept termsop_number = traits::is_termsop_number_v<scalar_t>;
+concept termsop_number = traits::is_scalar_decay_v<scalar_t>;
 
 template <typename scalar_t, typename ref_op_t>
 concept compat_terms_op_scalar = requires(scalar_t, ref_op_t) {
-    requires traits::is_compatible_scalar_v<std::remove_cvref_t<scalar_t>,
-                                            std::remove_cvref_t<ref_op_t>::is_real_valued>;
+    requires traits::is_compatible_scalar_decay_v<scalar_t, std::remove_cvref_t<ref_op_t>::is_real_valued>;
 };
 }  // namespace mindquantum::concepts
 #endif  // MQ_HAS_CONCEPTS
@@ -281,11 +283,11 @@ class TermsOperatorBase {
     // -------------------------------------------------------------------------
 
 #if MQ_HAS_CONCEPTS && !(defined _MSC_VER)
-    template <concepts::termsop_number number_t>
+    template <concepts::scalar scalar_t>
 #else
-    template <typename number_t, typename = std::enable_if_t<traits::is_termsop_number_v<number_t>>>
+    template <typename scalar_t, typename = std::enable_if_t<traits::is_scalar_decay_v<scalar_t>>>
 #endif  // MQ_HAS_CONCEPTS && !(defined _MSC_VER)
-    MQ_NODISCARD derived_t_<number_t> cast() const;
+    MQ_NODISCARD derived_t_<scalar_t> cast() const;
 
 #if MQ_HAS_CONCEPTS && !(defined _MSC_VER)
     template <concepts::terms_op op_t>

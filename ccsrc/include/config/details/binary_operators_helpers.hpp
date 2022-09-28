@@ -130,16 +130,20 @@ auto arithmetic_scalar_op_impl(lhs_t&& lhs, scalar_t&& scalar) {
 }
 }  // namespace mindquantum::config::details
 
+// =============================================================================
+
 #define MQ_BINOP_COMMA ,
 #define MQ_BINOP_IMPL_(op_impl, op_impl_t, lhs, rhs)                                                                   \
     config::details::op_impl<op_impl_t>(std::forward<lhs##_t>(lhs), std::forward<rhs##_t>(rhs))
+
+// -----------------------------------------------------------------------------
+
 #if MQ_HAS_CONCEPTS
 #    define MQ_DEFINE_BINOP_SCALAR_LEFT_(op, op_impl, traits_t, lhs_concept, rhs_concept)                              \
         template <lhs_concept scalar_t, rhs_concept rhs_t>                                                             \
         auto operator op(scalar_t&& scalar, rhs_t&& rhs) {                                                             \
             return MQ_BINOP_IMPL_(arithmetic_scalar_op_impl, op_impl MQ_BINOP_COMMA traits_t, rhs, scalar);            \
         }
-
 #    define MQ_DEFINE_BINOP_SCALAR_RIGHT_(op, op_impl, traits_t, lhs_concept, rhs_concept)                             \
         template <lhs_concept lhs_t, rhs_concept scalar_t>                                                             \
         auto operator op(lhs_t&& lhs, scalar_t&& scalar) {                                                             \
@@ -152,6 +156,7 @@ auto arithmetic_scalar_op_impl(lhs_t&& lhs, scalar_t&& scalar) {
         }
 #else
 #    define MQ_BINOP_COMPLETE_IMPL_(terms_op, lhs_terms_op, rhs_terms_op, lhs_concept, rhs_concept)                    \
+        static_assert(lhs_concept || rhs_concept);                                                                     \
         if constexpr (lhs_concept && rhs_concept) {                                                                    \
             return terms_op;                                                                                           \
         } else if constexpr (lhs_concept) {                                                                            \
@@ -178,10 +183,12 @@ auto arithmetic_scalar_op_impl(lhs_t&& lhs, scalar_t&& scalar) {
                 lhs_concept<lhs_t>, rhs_concept<rhs_t>)                                                                \
         }
 #    define MQ_DEFINE_BINOP_SCALAR_RIGHT_ONLY_IMPL(op, op_impl, traits_t, enabling_traits_v)                           \
-        template <typename lhs_t, typename rhs_t, typename = std::enable_if_t<enabling_traits_v<lhs_t, rhs_t>>>        \
-        auto operator op(lhs_t&& lhs, rhs_t&& rhs) {                                                                   \
-            return MQ_BINOP_IMPL_(arithmetic_scalar_op_impl, op_impl MQ_BINOP_COMMA traits_t, lhs, rhs);               \
+        template <typename lhs_t, typename scalar_t, typename = std::enable_if_t<enabling_traits_v<lhs_t, scalar_t>>>  \
+        auto operator op(lhs_t&& lhs, scalar_t&& scalar) {                                                             \
+            return MQ_BINOP_IMPL_(arithmetic_scalar_op_impl, op_impl MQ_BINOP_COMMA traits_t, lhs, scalar);            \
         }
 #endif  // MQ_HAS_CONCEPTS
+
+// =============================================================================
 
 #endif /* MQ_CONFIG_BINARY_OPERATORS_HELPERS_HPP */

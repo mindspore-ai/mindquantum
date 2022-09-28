@@ -39,6 +39,10 @@
 
 #include "core/utils.hpp"
 
+#if MQ_HAS_CONCEPTS
+#    include "config/concepts.hpp"
+#endif  // MQ_HAS_CONCEPTS
+
 // =============================================================================
 
 namespace mindquantum {
@@ -142,6 +146,9 @@ struct common_type<std::complex<float_t>, ParameterResolver<float2_t>> {
     using type = ParameterResolver<common_type_t<std::complex<float_t>, float2_t>>;
 };
 
+// -----------------------------------------------------------------------------
+// Type traits to identity a ParameterResolver<T>
+
 template <typename T>
 struct is_parameter_resolver : std::false_type {};
 
@@ -149,28 +156,27 @@ template <typename T>
 struct is_parameter_resolver<ParameterResolver<T>> : std::true_type {};
 
 template <typename T>
-inline constexpr auto is_parameter_resolver_v = is_parameter_resolver<std::remove_cvref_t<T>>::value;
+inline constexpr auto is_parameter_resolver_v = is_parameter_resolver<T>::value;
 
 template <typename T>
-inline constexpr auto is_parameter_resolver_scalar_v = ((
-    std::is_arithmetic_v<
-        std::remove_cvref_t<T>> || traits::is_complex_v<std::remove_cvref_t<T>>) &&!traits::is_parameter_resolver_v<T>);
-}  // namespace traits
+inline constexpr auto is_parameter_resolver_decay_v = is_parameter_resolver_v<std::remove_cvref_t<T>>;
 
 // -----------------------------------------------------------------------------
+// Template specialitations for mindquantum::traits::is_scalar<...>
+
+template <typename T>
+struct is_scalar<ParameterResolver<T>> : std::true_type {};
+}  // namespace traits
+
+// =============================================================================
 
 #if MQ_HAS_CONCEPTS
 namespace concepts {
 template <typename type_t>
 concept parameter_resolver = traits::is_parameter_resolver_v<std::remove_cvref_t<type_t>>;
 
-// clang-format off
 template <typename type_t>
-concept parameter_resolver_scalar = ((std::floating_point<std::remove_cvref_t<type_t>>
-                                      || std::integral<std::remove_cvref_t<type_t>>
-                                      || traits::is_complex_v<std::remove_cvref_t<type_t>>)
-                                     && !traits::is_parameter_resolver_v<type_t>);
-// clang-format on
+concept parameter_resolver_scalar = concepts::scalar<type_t> && !parameter_resolver<type_t>;
 }  // namespace concepts
 #endif  // MQ_HAS_CONCEPTS
 
@@ -194,16 +200,6 @@ std::set<T> operator&(const std::set<T>& s1, const std::set<T>& s2) {
     std::set_intersection(s1.begin(), s1.end(), s2.begin(), s2.end(), std::inserter(out, out.begin()));
     return out;
 }
-
-// template <typename T>
-// std::ostream& operator<<(std::ostream& os, const std::set<T>& s) {
-//     os << "(";
-//     for (ITER(p, s)) {
-//         os << *p << ", ";
-//     }
-//     os << ")";
-//     return os;
-// }
 
 template <typename T>
 void Print(std::ostream& os, const std::set<T>& s) {

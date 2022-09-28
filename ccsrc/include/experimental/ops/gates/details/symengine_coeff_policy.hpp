@@ -47,7 +47,7 @@
 namespace mindquantum {
 namespace traits {
 template <>
-inline constexpr auto is_termsop_number_v<SymEngine::RCP<const SymEngine::Basic>> = true;
+struct is_scalar<SymEngine::RCP<const SymEngine::Basic>> : std::true_type {};
 }  // namespace traits
 
 // -----------------------------------------------------------------------------

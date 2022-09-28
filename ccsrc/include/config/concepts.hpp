@@ -18,10 +18,14 @@
 #include <concepts>
 
 #include "config/config.hpp"
+#include "config/type_traits.hpp"
 
 namespace mindquantum::concepts {
 template <typename T, typename U>
 concept same_decay_as = std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
+
+template <typename T>
+concept scalar = traits::is_scalar_decay_v<T>;
 }  // namespace mindquantum::concepts
 
 #endif /* MQ_CONFIG_CONCEPTS_HPP */

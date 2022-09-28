@@ -374,12 +374,12 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::split() cons
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 #if MQ_HAS_CONCEPTS && !(defined _MSC_VER)
-template <mindquantum::concepts::termsop_number number_t>
+template <mindquantum::concepts::scalar scalar_t>
 #else
-template <typename number_t, typename>
+template <typename scalar_t, typename>
 #endif  // MQ_HAS_CONCEPTS && !(defined _MSC_VER)
-auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::cast() const -> derived_t_<number_t> {
-    return cast<derived_t_<number_t>>();
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::cast() const -> derived_t_<scalar_t> {
+    return cast<derived_t_<scalar_t>>();
 }
 
 // -----------------------------------------------------------------------------

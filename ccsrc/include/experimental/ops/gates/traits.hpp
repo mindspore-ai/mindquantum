@@ -16,33 +16,30 @@
 #define OPS_GATES_TRAITS_HPP
 
 #include <complex>
+#include <type_traits>
+
+#include "config/type_traits.hpp"
 
 #include "experimental/core/traits.hpp"
 
 namespace mindquantum::traits {
-template <typename T, typename = void>
-inline constexpr auto is_termsop_real_number_v = std::is_floating_point_v<T>;
-
-template <typename T, typename = void>
-inline constexpr auto is_termsop_number_v = is_termsop_real_number_v<T> || is_std_complex_v<T>;
-
-// -----------------------------------------------------------------------------
-
 template <typename scalar_t, bool is_real, typename = void>
 struct is_compatible_scalar : std::false_type {};
 
 // NB: If the ref coefficient is complex, then we accept all scalar types
 template <typename scalar_t>
-struct is_compatible_scalar<scalar_t, false, std::enable_if_t<is_termsop_number_v<std::remove_cvref_t<scalar_t>>>>
-    : std::true_type {};
+struct is_compatible_scalar<scalar_t, false, std::enable_if_t<is_scalar_v<scalar_t>>> : std::true_type {};
 
 // NB: If the ref coefficient is real-valued, then we accept only real-valued scalar types
 template <typename scalar_t>
-struct is_compatible_scalar<scalar_t, true, std::enable_if_t<is_termsop_real_number_v<std::remove_cvref_t<scalar_t>>>>
+struct is_compatible_scalar<scalar_t, true, std::enable_if_t<is_scalar_v<scalar_t> && !is_complex_v<scalar_t>>>
     : std::true_type {};
 
 template <typename scalar_t, bool is_real>
 inline constexpr auto is_compatible_scalar_v = is_compatible_scalar<scalar_t, is_real>::value;
+
+template <typename scalar_t, bool is_real>
+inline constexpr auto is_compatible_scalar_decay_v = is_compatible_scalar_v<std::remove_cvref_t<scalar_t>, is_real>;
 
 // Real numbers
 static_assert(is_compatible_scalar_v<float, true>);

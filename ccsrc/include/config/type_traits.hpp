@@ -24,22 +24,23 @@
 #include "details/cxx20_compatibility.hpp"
 
 namespace mindquantum::traits {
-template <typename T, typename U>
-struct is_same_decay : std::is_same<std::remove_cvref_t<T>, std::remove_cvref_t<U>> {};
 
 template <typename T, typename U>
-inline constexpr auto is_same_decay_v = is_same_decay<T, U>::value;
+inline constexpr auto is_same_decay_v = std::is_same_v<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
 
 // =============================================================================
 
-template <typename... Ts>
+template <typename T>
 struct is_tuple : std::false_type {};
 
 template <typename... Ts>
 struct is_tuple<std::tuple<Ts...>> : std::true_type {};
 
-template <typename... Ts>
-inline constexpr auto is_tuple_v = is_tuple<Ts...>::value;
+template <typename T>
+inline constexpr auto is_tuple_v = is_tuple<T>::value;
+
+template <typename T>
+inline constexpr auto is_tuple_decay_v = is_tuple_v<std::remove_cvref_t<T>>;
 
 // =============================================================================
 
@@ -52,6 +53,9 @@ struct is_std_complex<std::complex<T>> : std::true_type {};
 template <typename T>
 inline constexpr auto is_std_complex_v = is_std_complex<T>::value;
 
+template <typename T>
+inline constexpr auto is_std_complex_decay_v = is_std_complex_v<std::remove_cvref_t<T>>;
+
 // -----------------------------------------------------------------------------
 
 template <typename T>
@@ -59,6 +63,21 @@ struct is_complex : is_std_complex<T> {};
 
 template <typename T>
 inline constexpr auto is_complex_v = is_complex<T>::value;
+
+template <typename T>
+inline constexpr auto is_complex_decay_v = is_complex_v<std::remove_cvref_t<T>>;
+
+// =============================================================================
+
+template <typename T>
+struct is_scalar
+    : std::conditional_t<std::is_arithmetic_v<T> || is_std_complex_v<T>, std::true_type, std::false_type> {};
+
+template <typename T>
+inline constexpr auto is_scalar_v = is_scalar<T>::value;
+
+template <typename T>
+inline constexpr auto is_scalar_decay_v = is_scalar_v<std::remove_cvref_t<T>>;
 
 // =============================================================================
 
@@ -102,6 +121,8 @@ static_assert(std::is_same_v<std::complex<double>, to_cmplx_type_t<double>>);
 static_assert(std::is_same_v<std::complex<double>, to_cmplx_type_t<std::complex<double>>>);
 static_assert(std::is_same_v<double, to_real_type_t<double>>);
 static_assert(std::is_same_v<double, to_real_type_t<std::complex<double>>>);
+
+// =============================================================================
 
 }  // namespace mindquantum::traits
 

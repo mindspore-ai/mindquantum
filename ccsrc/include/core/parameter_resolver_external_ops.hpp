@@ -43,19 +43,19 @@ struct parameter_resolver_binop {
 
 // -----------------------------------------------------------------------------+
 
+#define MQ_PR_TRAITS details::pr::traits::parameter_resolver_binop
+
 #if MQ_HAS_CONCEPTS
 #    define MQ_DEFINE_PR_BINOP_COMMUTATIVE(op, op_impl)                                                                \
-        MQ_DEFINE_BINOP_SCALAR_LEFT_(op, op_impl, details::pr::traits::parameter_resolver_binop,                       \
-                                     concepts::parameter_resolver_scalar, concepts::parameter_resolver)                \
-        MQ_DEFINE_BINOP_SCALAR_RIGHT_(op, op_impl, details::pr::traits::parameter_resolver_binop,                      \
-                                      concepts::parameter_resolver, concepts::parameter_resolver_scalar)               \
-        MQ_DEFINE_BINOP_TERMS_(op, op_impl, details::pr::traits::parameter_resolver_binop,                             \
-                               concepts::parameter_resolver, concepts::parameter_resolver)
+        MQ_DEFINE_BINOP_SCALAR_LEFT_(op, op_impl, MQ_PR_TRAITS, concepts::parameter_resolver_scalar,                   \
+                                     concepts::parameter_resolver)                                                     \
+        MQ_DEFINE_BINOP_SCALAR_RIGHT_(op, op_impl, MQ_PR_TRAITS, concepts::parameter_resolver,                         \
+                                      concepts::parameter_resolver_scalar)                                             \
+        MQ_DEFINE_BINOP_TERMS_(op, op_impl, MQ_PR_TRAITS, concepts::parameter_resolver, concepts::parameter_resolver)
 #    define MQ_DEFINE_PR_BINOP_NON_COMMUTATIVE(op, op_impl, op_inv)                                                    \
-        MQ_DEFINE_BINOP_TERMS_(op, op_impl, details::pr::traits::parameter_resolver_binop,                             \
-                               concepts::parameter_resolver, concepts::parameter_resolver)                             \
-        MQ_DEFINE_BINOP_SCALAR_RIGHT_(op, op_impl, details::pr::traits::parameter_resolver_binop,                      \
-                                      concepts::parameter_resolver, concepts::parameter_resolver_scalar)               \
+        MQ_DEFINE_BINOP_TERMS_(op, op_impl, MQ_PR_TRAITS, concepts::parameter_resolver, concepts::parameter_resolver)  \
+        MQ_DEFINE_BINOP_SCALAR_RIGHT_(op, op_impl, MQ_PR_TRAITS, concepts::parameter_resolver,                         \
+                                      concepts::parameter_resolver_scalar)                                             \
         template <concepts::parameter_resolver_scalar scalar_t, concepts::parameter_resolver rhs_t>                    \
         auto operator op(scalar_t&& lhs, rhs_t&& rhs) {                                                                \
             return (op_inv);                                                                                           \
@@ -63,39 +63,28 @@ struct parameter_resolver_binop {
 #else
 namespace details::pr::traits {
 namespace mq_traits = mindquantum::traits;
-template <typename lhs_t, typename rhs_t, typename = void>
-struct lhs_and_scalar : std::false_type {};
-template <typename lhs_t, typename rhs_t>
-struct lhs_and_scalar<
-    lhs_t, rhs_t,
-    std::enable_if_t<mq_traits::is_parameter_resolver_v<lhs_t> && mq_traits::is_parameter_resolver_scalar_v<rhs_t>>>
-    : std::true_type {};
 
 template <typename lhs_t, typename rhs_t>
-inline constexpr auto lhs_and_scalar_v = lhs_and_scalar<lhs_t, rhs_t>::value;
+inline constexpr auto lhs_and_scalar_v
+    = mq_traits::is_parameter_resolver_decay_v<lhs_t>&& mq_traits::is_scalar_decay_v<rhs_t>;
 
-template <typename lhs_t, typename rhs_t, typename = void>
-struct scalar_and_rhs : std::false_type {};
 template <typename lhs_t, typename rhs_t>
-struct scalar_and_rhs<
-    lhs_t, rhs_t,
-    std::enable_if_t<mq_traits::is_parameter_resolver_scalar_v<lhs_t> && mq_traits::is_parameter_resolver_v<rhs_t>>>
-    : std::true_type {};
+inline constexpr auto scalar_and_rhs_v
+    = mq_traits::is_scalar_decay_v<lhs_t>&& mq_traits::is_parameter_resolver_decay_v<rhs_t>;
 
 template <typename lhs_t, typename rhs_t>
 inline constexpr auto is_compatible_v
-    = (mq_traits::is_parameter_resolver_v<lhs_t> && mq_traits::is_parameter_resolver_v<rhs_t>)
-      || lhs_and_scalar_v<lhs_t, rhs_t> || scalar_and_rhs<lhs_t, rhs_t>::value;
+    = (mq_traits::is_parameter_resolver_decay_v<lhs_t> && mq_traits::is_parameter_resolver_decay_v<rhs_t>)
+      || lhs_and_scalar_v<lhs_t, rhs_t> || scalar_and_rhs_v<lhs_t, rhs_t>;
 }  // namespace details::pr::traits
 
 #    define MQ_DEFINE_PR_BINOP_COMMUTATIVE(op, op_impl)                                                                \
-        MQ_DEFINE_BINOP_COMMUTATIVE_IMPL(op, op_impl, details::pr::traits::parameter_resolver_binop,                   \
-                                         details::pr::traits::is_compatible_v, traits::is_parameter_resolver_v,        \
-                                         traits::is_parameter_resolver_v)
+        MQ_DEFINE_BINOP_COMMUTATIVE_IMPL(op, op_impl, MQ_PR_TRAITS, details::pr::traits::is_compatible_v,              \
+                                         traits::is_parameter_resolver_decay_v, traits::is_parameter_resolver_decay_v)
 #    define MQ_DEFINE_PR_BINOP_NON_COMMUTATIVE(op, op_impl, op_inv)                                                    \
-        MQ_DEFINE_BINOP_NON_COMMUTATIVE_IMPL(op, op_impl, op_inv, details::pr::traits::parameter_resolver_binop,       \
-                                             details::pr::traits::is_compatible_v, traits::is_parameter_resolver_v,    \
-                                             traits::is_parameter_resolver_v)
+        MQ_DEFINE_BINOP_NON_COMMUTATIVE_IMPL(op, op_impl, op_inv, MQ_PR_TRAITS, details::pr::traits::is_compatible_v,  \
+                                             traits::is_parameter_resolver_decay_v,                                    \
+                                             traits::is_parameter_resolver_decay_v)
 #endif  // MQ_HAS_CONCEPTS
 
 MQ_DEFINE_PR_BINOP_COMMUTATIVE(+, config::details::plus_equal)
@@ -103,6 +92,7 @@ MQ_DEFINE_PR_BINOP_COMMUTATIVE(*, config::details::multiplies_equal)
 MQ_DEFINE_PR_BINOP_NON_COMMUTATIVE(-, config::details::minus_equal, (-rhs + lhs))
 MQ_DEFINE_PR_BINOP_COMMUTATIVE(/, config::details::divides_equal)
 
+#undef MQ_PR_TRAITS
 #undef MQ_DEFINE_PR_BINOP_COMMUTATIVE
 #undef MQ_DEFINE_PR_BINOP_NON_COMMUTATIVE
 #undef MQ_DEFINE_PR_BINOP_SCALAR_RIGHT_ONLY
@@ -124,10 +114,9 @@ auto operator==(const lhs_t& lhs, const rhs_t& rhs) {
 }
 #else
 template <typename lhs_t, typename rhs_t,
-          typename = std::enable_if_t<
-              (traits::is_parameter_resolver_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)
-              || (traits::is_parameter_resolver_v<lhs_t> && traits::is_parameter_resolver_scalar_v<rhs_t>)
-              || (traits::is_parameter_resolver_scalar_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)>>
+          typename = std::enable_if_t<(traits::is_parameter_resolver_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)
+                                      || (traits::is_parameter_resolver_v<lhs_t> && traits::is_scalar_decay_v<rhs_t>)
+                                      || (traits::is_scalar_decay_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)>>
 auto operator==(const lhs_t& lhs, const rhs_t& rhs) {
     return lhs.IsEqual(rhs);
 }
@@ -151,10 +140,9 @@ auto operator!=(const lhs_t& lhs, const rhs_t& rhs) {
 }
 #    else
 template <typename lhs_t, typename rhs_t,
-          typename = std::enable_if_t<
-              (traits::is_parameter_resolver_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)
-              || (traits::is_parameter_resolver_v<lhs_t> && traits::is_parameter_resolver_scalar_v<rhs_t>)
-              || (traits::is_parameter_resolver_scalar_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)>>
+          typename = std::enable_if_t<(traits::is_parameter_resolver_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)
+                                      || (traits::is_parameter_resolver_v<lhs_t> && traits::is_scalar_decay_v<rhs_t>)
+                                      || (traits::is_scalar_decay_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)>>
 auto operator!=(const lhs_t& lhs, const rhs_t& rhs) {
     return !lhs.IsEqual(rhs);
 }

@@ -35,21 +35,6 @@
 
 // =============================================================================
 
-namespace mindquantum::traits {
-template <typename float_t>
-inline constexpr auto
-    is_termsop_number_v<ParameterResolver<float_t>, std::enable_if_t<is_termsop_number_v<float_t>>> = true;
-
-template <typename float_t>
-inline constexpr auto is_termsop_real_number_v<ParameterResolver<std::complex<float_t>>> = false;
-
-template <typename float_t>
-inline constexpr auto
-    is_termsop_real_number_v<ParameterResolver<float_t>, std::enable_if_t<std::is_floating_point_v<float_t>>> = true;
-}  // namespace mindquantum::traits
-
-// -----------------------------------------------------------------------------
-
 namespace mindquantum::ops::details {
 template <typename float_t>
 struct CoeffSubsProxy<ParameterResolver<float_t>> {
@@ -64,11 +49,9 @@ struct CoeffSubsProxy<ParameterResolver<float_t>> {
 
     subs_t params;
 };
-}  // namespace mindquantum::ops::details
 
 // -----------------------------------------------------------------------------
 
-namespace mindquantum::ops::details {
 template <typename float_t>
 struct CoeffPolicy<ParameterResolver<float_t>> : CoeffPolicyBase<ParameterResolver<float_t>> {
     using coeff_t = ParameterResolver<float_t>;
