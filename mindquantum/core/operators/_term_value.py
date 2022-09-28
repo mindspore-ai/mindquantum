@@ -12,18 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-"""This is the module for the Fermion Operator."""
+"""Module used for (temporary) compatibility with Python terms operators."""
 
-import os
-import warnings
-
-try:
-    if int(os.environ.get('MQ_PY_TERMSOP', False)):
-        warnings.warn("Using Python FermionOperator class")
-        raise ImportError()
-
-    from ...experimental.ops.fermion_operator import FermionOperator
-    from ...experimental.utils import TermValue
-except ImportError:
-    from ._fermion_operator import FermionOperator  # noqa: F401
-    from ._term_value import TermValue
+TermValue = {k: k for k in ('X', 'Y', 'Z', 'I')}
+TermValue['a'] = 0
+TermValue['adg'] = 1

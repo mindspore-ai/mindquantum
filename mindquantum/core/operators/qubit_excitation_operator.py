@@ -31,7 +31,7 @@ try:
 
     from ...experimental.utils import TermValue
 except ImportError:
-    TermValue = {k: k for k in ('X', 'Y', 'Z', 'I')}
+    from ._term_value import TermValue
 
 
 def _check_valid_qubit_excitation_operator_term(qeo_term):

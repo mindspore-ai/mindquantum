@@ -18,6 +18,8 @@ from mindquantum.experimental._mindquantum_cxx.ops import TermValue as TermValue
 term_map = {
     0: TermValue_.a,
     1: TermValue_.adg,
+    'a': TermValue_.a,
+    'adg': TermValue_.adg,
     'X': TermValue_.X,
     'Y': TermValue_.Y,
     'Z': TermValue_.Z,

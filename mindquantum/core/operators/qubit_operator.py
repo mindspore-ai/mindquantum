@@ -25,5 +25,5 @@ try:
     from ...experimental.ops import TermValue
     from ...experimental.ops.qubit_operator import QubitOperator
 except ImportError:
-    TermValue = {k: k for k in ('X', 'Y', 'Z', 'I')}
     from ._qubit_operator import QubitOperator  # noqa: F401
+    from ._term_value import TermValue
