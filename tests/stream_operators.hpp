@@ -24,7 +24,10 @@
 #include <utility>
 #include <vector>
 
-#include "experimental/ops/gates/terms_operator_base.hpp"  // For mindquantum::ops::TermValue
+#ifndef NO_CXX_EXPERIMENTAL
+// For mindquantum::ops::TermValue
+#    include "experimental/ops/gates/terms_operator_base.hpp"
+#endif  // !NO_CXX_EXPERIMENTAL
 
 // =============================================================================
 
@@ -39,6 +42,7 @@ std::ostream& operator<<(std::ostream& out, const std::map<key_t, value_t, comp_
 
 // -----------------------------------------------------------------------------
 
+#ifndef NO_CXX_EXPERIMENTAL
 inline std::ostream& operator<<(std::ostream& out, mindquantum::ops::TermValue val) {
     using TermValue = mindquantum::ops::TermValue;
     if (val == TermValue::I) {
@@ -58,6 +62,7 @@ inline std::ostream& operator<<(std::ostream& out, mindquantum::ops::TermValue v
     }
     return out;
 }
+#endif  // !NO_CXX_EXPERIMENTAL
 
 // -----------------------------------------------------------------------------
 
