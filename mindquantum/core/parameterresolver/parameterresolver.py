@@ -75,6 +75,10 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
         {'a': 1.0}, const: 0.0
     """
 
+    @staticmethod
+    def _valid_other(other):
+        return isinstance(other, (numbers.Number, ParameterResolver))
+
     def __init__(self, data=None, const=None):
         """Initialize a ParameterResolver object."""
         if isinstance(data, ParameterResolver):

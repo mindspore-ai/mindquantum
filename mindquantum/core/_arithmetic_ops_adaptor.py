@@ -40,6 +40,8 @@ class CppArithmeticAdaptor:
 
     def __add__(self, other):
         """Add a number or a CppArithmeticAdaptor."""
+        if not self.__class__._valid_other(other):
+            return NotImplemented
         if hasattr(other, '_cpp_obj'):
             return self.__class__(self._cpp_obj + other._cpp_obj)
         return self.__class__(self._cpp_obj + other)
@@ -57,6 +59,8 @@ class CppArithmeticAdaptor:
 
     def __radd__(self, other):
         """Right add a number or a CppArithmeticAdaptor."""
+        if not self.__class__._valid_other(other):
+            return NotImplemented
         if hasattr(other, '_cpp_obj'):
             return self.__class__(self._cpp_obj + other._cpp_obj)
         return self.__class__(self._cpp_obj + other)
@@ -65,6 +69,8 @@ class CppArithmeticAdaptor:
 
     def __sub__(self, other):
         """Subtract a number or a CppArithmeticAdaptor."""
+        if not self.__class__._valid_other(other):
+            return NotImplemented
         if hasattr(other, '_cpp_obj'):
             return self.__class__(self._cpp_obj - other._cpp_obj)
         return self.__class__(self._cpp_obj - other)
@@ -83,6 +89,9 @@ class CppArithmeticAdaptor:
 
     def __rsub__(self, other):
         """Subtrack a number or a CppArithmeticAdaptor with this CppArithmeticAdaptor."""
+        if not self.__class__._valid_other(other):
+            return NotImplemented
+
         if hasattr(other, '_cpp_obj'):
             return self.__class__(other._cpp_obj - self._cpp_obj)
         return self.__class__(other - self._cpp_obj)
@@ -91,6 +100,8 @@ class CppArithmeticAdaptor:
 
     def __mul__(self, other):
         """Multiply by a number or a CppArithmeticAdaptor."""
+        if not self.__class__._valid_other(other):
+            return NotImplemented
         if hasattr(other, '_cpp_obj'):
             return self.__class__(self._cpp_obj * other._cpp_obj)
         return self.__class__(self._cpp_obj * other)
@@ -108,6 +119,9 @@ class CppArithmeticAdaptor:
 
     def __rmul__(self, other):
         """Right multiply by a number or a CppArithmeticAdaptor."""
+        if not self.__class__._valid_other(other):
+            return NotImplemented
+
         if hasattr(other, '_cpp_obj'):
             return self.__class__(other._cpp_obj * self._cpp_obj)
         return self.__class__(other * self._cpp_obj)
@@ -116,6 +130,10 @@ class CppArithmeticAdaptor:
 
     def __truediv__(self, other):
         """Divide a number."""
+        if not self.__class__._valid_other(other):
+            return NotImplemented
+        if hasattr(other, '_cpp_obj'):
+            return self.__class__(self._cpp_obj * other._cpp_obj)
         return self.__class__(self._cpp_obj / other)
 
     def __itruediv__(self, other):
@@ -139,10 +157,10 @@ class CppArithmeticAdaptor:
 
     def __eq__(self, other) -> bool:
         """Check whether two CppArithmeticAdaptors equal."""
-        if hasattr(other, '_cpp_obj') and not self._cpp_obj.is_complex and other.is_complex:
+        if not self.is_complex and (isinstance(other, numbers.Complex) or other.is_complex):
             return self._cpp_obj.cast_complex() == other._cpp_obj
         return self._cpp_obj == other._cpp_obj
 
     def __ne__(self, other) -> bool:
         """Check whether two CppArithmeticAdaptors not equal."""
-        return self._cpp_obj != other._cpp_obj
+        return not (self._cpp_obj == other._cpp_obj)

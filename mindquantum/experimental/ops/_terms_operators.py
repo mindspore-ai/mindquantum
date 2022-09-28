@@ -33,6 +33,10 @@ class TermsOperator(CppArithmeticAdaptor):
     openfermion_klass: type
     _type_conversion_table: type
 
+    @staticmethod
+    def _valid_other(other):
+        return isinstance(other, (numbers.Number, TermsOperator, ParameterResolver))
+
     @classmethod
     def create_cpp_obj(cls, term, coeff=None, cxx_dtype=None):
         """
