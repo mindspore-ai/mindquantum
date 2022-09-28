@@ -43,6 +43,25 @@ try:
             "MQN2EncoderOnlyOps",
         ]
     )
+    try:
+        import importlib.metadata as importlib_metadata
+    except ImportError:
+        import importlib_metadata
+    import packaging.version
+
+    ms_version = importlib_metadata.version('mindspore')
+
+    ms_requires = packaging.version.parse('1.4.0')
+    if packaging.version.parse(ms_version) < ms_requires:
+        warnings.warn(
+            "Current version of MindSpore is not compatible with MindSpore Quantum. "
+            "Some functions might not work or even raise error. Please install MindSpore "
+            "version >= 1.4.0. For more details about dependency setting, please check "
+            "the instructions at MindSpore official website https://www.mindspore.cn/install "
+            "or check the README.md at https://gitee.com/mindspore/mindquantum",
+            stacklevel=2,
+        )
+
 except ImportError:
     warnings.warn(
         "MindSpore not installed, you may not be able to use hybrid quantum classical neural network.",
