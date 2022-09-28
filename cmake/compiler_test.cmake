@@ -271,6 +271,11 @@ int main() {
 }
 ]])
 
+if(NOT compiler_has_concepts)
+  message(WARNING "You are using an older compiler that does not support C++20 concepts. The code will probably "
+                  "compile and run fine, but you should really be upgrading your compiler.")
+endif()
+
 # --------------------------------------
 
 check_cxx_code_compiles(
