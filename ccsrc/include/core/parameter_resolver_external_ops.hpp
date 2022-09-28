@@ -31,42 +31,44 @@
 // =============================================================================
 
 namespace mindquantum {
-namespace details {
+namespace details::pr::traits {
 template <typename type_t>
-struct parameter_resolver_binop_traits {
+struct parameter_resolver_binop {
     using type = typename std::remove_cvref_t<type_t>::value_type;
 
     template <typename other_t>
     using new_type_t = ParameterResolver<other_t>;
 };
-}  // namespace details
+}  // namespace details::pr::traits
 
 // -----------------------------------------------------------------------------+
 
 #if MQ_HAS_CONCEPTS
 #    define MQ_DEFINE_PR_BINOP_COMMUTATIVE(op, op_impl)                                                                \
-        MQ_DEFINE_BINOP_SCALAR_LEFT_(op, op_impl, details::parameter_resolver_binop_traits,                            \
+        MQ_DEFINE_BINOP_SCALAR_LEFT_(op, op_impl, details::pr::traits::parameter_resolver_binop,                       \
                                      concepts::parameter_resolver_scalar, concepts::parameter_resolver)                \
-        MQ_DEFINE_BINOP_SCALAR_RIGHT_(op, op_impl, details::parameter_resolver_binop_traits,                           \
+        MQ_DEFINE_BINOP_SCALAR_RIGHT_(op, op_impl, details::pr::traits::parameter_resolver_binop,                      \
                                       concepts::parameter_resolver, concepts::parameter_resolver_scalar)               \
-        MQ_DEFINE_BINOP_TERMS_(op, op_impl, details::parameter_resolver_binop_traits, concepts::parameter_resolver,    \
-                               concepts::parameter_resolver)
+        MQ_DEFINE_BINOP_TERMS_(op, op_impl, details::pr::traits::parameter_resolver_binop,                             \
+                               concepts::parameter_resolver, concepts::parameter_resolver)
 #    define MQ_DEFINE_PR_BINOP_NON_COMMUTATIVE(op, op_impl, op_inv)                                                    \
-        MQ_DEFINE_BINOP_TERMS_(op, op_impl, details::parameter_resolver_binop_traits, concepts::parameter_resolver,    \
-                               concepts::parameter_resolver)                                                           \
-        MQ_DEFINE_BINOP_SCALAR_RIGHT_(op, op_impl, details::parameter_resolver_binop_traits,                           \
+        MQ_DEFINE_BINOP_TERMS_(op, op_impl, details::pr::traits::parameter_resolver_binop,                             \
+                               concepts::parameter_resolver, concepts::parameter_resolver)                             \
+        MQ_DEFINE_BINOP_SCALAR_RIGHT_(op, op_impl, details::pr::traits::parameter_resolver_binop,                      \
                                       concepts::parameter_resolver, concepts::parameter_resolver_scalar)               \
         template <concepts::parameter_resolver_scalar scalar_t, concepts::parameter_resolver rhs_t>                    \
         auto operator op(scalar_t&& lhs, rhs_t&& rhs) {                                                                \
             return (op_inv);                                                                                           \
         }
 #else
-namespace details::pr {
+namespace details::pr::traits {
+namespace mq_traits = mindquantum::traits;
 template <typename lhs_t, typename rhs_t, typename = void>
 struct lhs_and_scalar : std::false_type {};
 template <typename lhs_t, typename rhs_t>
 struct lhs_and_scalar<
-    lhs_t, rhs_t, std::enable_if_t<traits::is_parameter_resolver_v<lhs_t> && !traits::is_parameter_resolver_v<rhs_t>>>
+    lhs_t, rhs_t,
+    std::enable_if_t<mq_traits::is_parameter_resolver_v<lhs_t> && mq_traits::is_parameter_resolver_scalar_v<rhs_t>>>
     : std::true_type {};
 
 template <typename lhs_t, typename rhs_t>
@@ -76,21 +78,23 @@ template <typename lhs_t, typename rhs_t, typename = void>
 struct scalar_and_rhs : std::false_type {};
 template <typename lhs_t, typename rhs_t>
 struct scalar_and_rhs<
-    lhs_t, rhs_t, std::enable_if_t<!traits::is_parameter_resolver_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>>>
+    lhs_t, rhs_t,
+    std::enable_if_t<mq_traits::is_parameter_resolver_scalar_v<lhs_t> && mq_traits::is_parameter_resolver_v<rhs_t>>>
     : std::true_type {};
 
 template <typename lhs_t, typename rhs_t>
 inline constexpr auto is_compatible_v
-    = (traits::is_parameter_resolver_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)
+    = (mq_traits::is_parameter_resolver_v<lhs_t> && mq_traits::is_parameter_resolver_v<rhs_t>)
       || lhs_and_scalar_v<lhs_t, rhs_t> || scalar_and_rhs<lhs_t, rhs_t>::value;
-}  // namespace details::pr
+}  // namespace details::pr::traits
 
 #    define MQ_DEFINE_PR_BINOP_COMMUTATIVE(op, op_impl)                                                                \
-        MQ_DEFINE_BINOP_COMMUTATIVE_IMPL(op, op_impl, details::terms_op_binop_traits, details::pr::is_compatible_v,    \
-                                         traits::is_parameter_resolver_v, traits::is_parameter_resolver_v)
+        MQ_DEFINE_BINOP_COMMUTATIVE_IMPL(op, op_impl, details::pr::traits::parameter_resolver_binop,                   \
+                                         details::pr::traits::is_compatible_v, traits::is_parameter_resolver_v,        \
+                                         traits::is_parameter_resolver_v)
 #    define MQ_DEFINE_PR_BINOP_NON_COMMUTATIVE(op, op_impl, op_inv)                                                    \
-        MQ_DEFINE_BINOP_NON_COMMUTATIVE_IMPL(op, op_impl, op_inv, details::terms_op_binop_traits,                      \
-                                             details::pr::is_compatible_v, traits::is_parameter_resolver_v,            \
+        MQ_DEFINE_BINOP_NON_COMMUTATIVE_IMPL(op, op_impl, op_inv, details::pr::traits::parameter_resolver_binop,       \
+                                             details::pr::traits::is_compatible_v, traits::is_parameter_resolver_v,    \
                                              traits::is_parameter_resolver_v)
 #endif  // MQ_HAS_CONCEPTS
 
@@ -107,69 +111,55 @@ MQ_DEFINE_PR_BINOP_COMMUTATIVE(/, config::details::divides_equal)
 
 #if MQ_HAS_CONCEPTS
 template <concepts::parameter_resolver lhs_t, concepts::parameter_resolver rhs_t>
-#else
-template <typename lhs_t, typename rhs_t,
-          typename
-          = std::enable_if_t<(traits::is_parameter_resolver_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)>>
-#endif  // MQ_HAS_CONCEPTS
 auto operator==(const lhs_t& lhs, const rhs_t& rhs) {
     return lhs.IsEqual(rhs);
 }
-#if MQ_HAS_CONCEPTS
 template <concepts::parameter_resolver lhs_t, concepts::parameter_resolver_scalar rhs_t>
-#else
-template <typename lhs_t, typename rhs_t,
-          typename
-          = std::enable_if_t<(traits::is_parameter_resolver_v<lhs_t> && traits::is_parameter_resolver_scalar_v<rhs_t>)>>
-#endif  // MQ_HAS_CONCEPTS
 auto operator==(const lhs_t& lhs, const rhs_t& rhs) {
     return lhs.IsEqual(rhs);
 }
-#if MQ_HAS_CONCEPTS
 template <concepts::parameter_resolver_scalar lhs_t, concepts::parameter_resolver rhs_t>
-#else
-template <typename lhs_t, typename rhs_t,
-          typename
-          = std::enable_if_t<(traits::is_parameter_resolver_scalar_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)>>
-#endif  // MQ_HAS_CONCEPTS
 auto operator==(const lhs_t& lhs, const rhs_t& rhs) {
     return rhs.IsEqual(lhs);
 }
+#else
+template <typename lhs_t, typename rhs_t,
+          typename = std::enable_if_t<
+              (traits::is_parameter_resolver_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)
+              || (traits::is_parameter_resolver_v<lhs_t> && traits::is_parameter_resolver_scalar_v<rhs_t>)
+              || (traits::is_parameter_resolver_scalar_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)>>
+auto operator==(const lhs_t& lhs, const rhs_t& rhs) {
+    return lhs.IsEqual(rhs);
+}
+#endif  // MQ_HAS_CONCEPTS
 
 // =============================================================================
 
 #if !MQ_HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
 #    if MQ_HAS_CONCEPTS
 template <concepts::parameter_resolver lhs_t, concepts::parameter_resolver rhs_t>
-#    else
-template <typename lhs_t, typename rhs_t,
-          typename
-          = std::enable_if_t<(traits::is_parameter_resolver_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)>>
-#    endif  // MQ_HAS_CONCEPTS
 auto operator!=(const lhs_t& lhs, const rhs_t& rhs) {
     return !lhs.IsEqual(rhs);
 }
-#    if MQ_HAS_CONCEPTS
 template <concepts::parameter_resolver lhs_t, concepts::parameter_resolver_scalar rhs_t>
-#    else
-template <typename lhs_t, typename rhs_t,
-          typename
-          = std::enable_if_t<(traits::is_parameter_resolver_v<lhs_t> && traits::is_parameter_resolver_scalar_v<rhs_t>)>>
-#    endif  // MQ_HAS_CONCEPTS
 auto operator!=(const lhs_t& lhs, const rhs_t& rhs) {
     return !lhs.IsEqual(rhs);
 }
-#    if MQ_HAS_CONCEPTS
 template <concepts::parameter_resolver_scalar lhs_t, concepts::parameter_resolver rhs_t>
-#    else
-template <typename lhs_t, typename rhs_t,
-          typename
-          = std::enable_if_t<(traits::is_parameter_resolver_scalar_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)>>
-#    endif  // MQ_HAS_CONCEPTS
 auto operator!=(const lhs_t& lhs, const rhs_t& rhs) {
     return !rhs.IsEqual(lhs);
 }
-#endif  // !MQ_HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
+#    else
+template <typename lhs_t, typename rhs_t,
+          typename = std::enable_if_t<
+              (traits::is_parameter_resolver_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)
+              || (traits::is_parameter_resolver_v<lhs_t> && traits::is_parameter_resolver_scalar_v<rhs_t>)
+              || (traits::is_parameter_resolver_scalar_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)>>
+auto operator!=(const lhs_t& lhs, const rhs_t& rhs) {
+    return !lhs.IsEqual(rhs);
+}
+#    endif  // MQ_HAS_CONCEPTS
+#endif      // !MQ_HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
 }  // namespace mindquantum
 
 #endif /* PARAMETER_RESOLVER_EXTERNAL_OPS_HPP */

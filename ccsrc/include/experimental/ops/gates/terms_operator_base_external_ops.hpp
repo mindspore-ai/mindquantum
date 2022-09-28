@@ -36,7 +36,7 @@
 // =============================================================================
 
 namespace mindquantum::ops {
-namespace details {
+namespace details::terms_op {
 template <typename type_t>
 struct terms_op_binop_traits {
     using type = typename std::remove_cvref_t<type_t>::coefficient_t;
@@ -44,36 +44,39 @@ struct terms_op_binop_traits {
     template <typename other_t>
     using new_type_t = typename std::remove_cvref_t<type_t>::template new_derived_t<other_t>;
 };
-}  // namespace details
+}  // namespace details::terms_op
 
 // -----------------------------------------------------------------------------
 
 #if MQ_HAS_CONCEPTS
 #    define MQ_DEFINE_TERMSOP_BINOP_COMMUTATIVE(op, op_impl)                                                           \
-        MQ_DEFINE_BINOP_SCALAR_LEFT_(op, op_impl, details::terms_op_binop_traits, concepts::not_terms_op,              \
+        MQ_DEFINE_BINOP_SCALAR_LEFT_(op, op_impl, details::terms_op::terms_op_binop_traits, concepts::not_terms_op,    \
                                      concepts::terms_op)                                                               \
-        MQ_DEFINE_BINOP_SCALAR_RIGHT_(op, op_impl, details::terms_op_binop_traits, concepts::terms_op,                 \
+        MQ_DEFINE_BINOP_SCALAR_RIGHT_(op, op_impl, details::terms_op::terms_op_binop_traits, concepts::terms_op,       \
                                       concepts::not_terms_op)                                                          \
-        MQ_DEFINE_BINOP_TERMS_(op, op_impl, details::terms_op_binop_traits, concepts::terms_op, concepts::terms_op)
+        MQ_DEFINE_BINOP_TERMS_(op, op_impl, details::terms_op::terms_op_binop_traits, concepts::terms_op,              \
+                               concepts::terms_op)
 #    define MQ_DEFINE_TERMSOP_BINOP_NON_COMMUTATIVE(op, op_impl, op_inv)                                               \
-        MQ_DEFINE_BINOP_TERMS_(op, op_impl, details::terms_op_binop_traits, concepts::terms_op, concepts::terms_op)    \
-        MQ_DEFINE_BINOP_SCALAR_RIGHT_(op, op_impl, details::terms_op_binop_traits, concepts::terms_op,                 \
+        MQ_DEFINE_BINOP_TERMS_(op, op_impl, details::terms_op::terms_op_binop_traits, concepts::terms_op,              \
+                               concepts::terms_op)                                                                     \
+        MQ_DEFINE_BINOP_SCALAR_RIGHT_(op, op_impl, details::terms_op::terms_op_binop_traits, concepts::terms_op,       \
                                       concepts::not_terms_op)                                                          \
         template <concepts::not_terms_op scalar_t, concepts::terms_op rhs_t>                                           \
         auto operator op(scalar_t&& lhs, rhs_t&& rhs) {                                                                \
             return (op_inv);                                                                                           \
         }
 #    define MQ_DEFINE_TERMSOP_BINOP_SCALAR_RIGHT_ONLY(op, op_impl)                                                     \
-        MQ_DEFINE_BINOP_SCALAR_RIGHT_(op, op_impl, details::terms_op_binop_traits, concepts::terms_op,                 \
+        MQ_DEFINE_BINOP_SCALAR_RIGHT_(op, op_impl, details::terms_op::terms_op_binop_traits, concepts::terms_op,       \
                                       concepts::not_terms_op)
 
 #else
-namespace details::terms_op {
+namespace details::terms_op::traits {
+namespace mq_traits = mindquantum::traits;
 template <typename lhs_t, typename rhs_t, typename = void>
 struct lhs_and_scalar : std::false_type {};
 template <typename lhs_t, typename rhs_t>
 struct lhs_and_scalar<lhs_t, rhs_t,
-                      std::enable_if_t<traits::is_terms_operator_v<lhs_t> && !traits::is_terms_operator_v<rhs_t>>>
+                      std::enable_if_t<mq_traits::is_terms_operator_v<lhs_t> && !mq_traits::is_terms_operator_v<rhs_t>>>
     : std::true_type {};
 
 template <typename lhs_t, typename rhs_t>
@@ -83,24 +86,25 @@ template <typename lhs_t, typename rhs_t, typename = void>
 struct scalar_and_rhs : std::false_type {};
 template <typename lhs_t, typename rhs_t>
 struct scalar_and_rhs<lhs_t, rhs_t,
-                      std::enable_if_t<!traits::is_terms_operator_v<lhs_t> && traits::is_terms_operator_v<rhs_t>>>
+                      std::enable_if_t<!mq_traits::is_terms_operator_v<lhs_t> && mq_traits::is_terms_operator_v<rhs_t>>>
     : std::true_type {};
 
 template <typename lhs_t, typename rhs_t>
-inline constexpr auto is_compatible_v = (traits::is_terms_operator_v<lhs_t> && traits::is_terms_operator_v<rhs_t>)
+inline constexpr auto is_compatible_v = (mq_traits::is_terms_operator_v<lhs_t> && mq_traits::is_terms_operator_v<rhs_t>)
                                         || lhs_and_scalar_v<lhs_t, rhs_t> || scalar_and_rhs<lhs_t, rhs_t>::value;
-}  // namespace details::terms_op
+}  // namespace details::terms_op::traits
 
 #    define MQ_DEFINE_TERMSOP_BINOP_COMMUTATIVE(op, op_impl)                                                           \
-        MQ_DEFINE_BINOP_COMMUTATIVE_IMPL(op, op_impl, details::terms_op_binop_traits,                                  \
-                                         details::terms_op::is_compatible_v, traits::is_terms_operator_v,              \
+        MQ_DEFINE_BINOP_COMMUTATIVE_IMPL(op, op_impl, details::terms_op::terms_op_binop_traits,                        \
+                                         details::terms_op::traits::is_compatible_v, traits::is_terms_operator_v,      \
                                          traits::is_terms_operator_v)
 #    define MQ_DEFINE_TERMSOP_BINOP_NON_COMMUTATIVE(op, op_impl, op_inv)                                               \
-        MQ_DEFINE_BINOP_NON_COMMUTATIVE_IMPL(op, op_impl, op_inv, details::terms_op_binop_traits,                      \
-                                             details::terms_op::is_compatible_v, traits::is_terms_operator_v,          \
+        MQ_DEFINE_BINOP_NON_COMMUTATIVE_IMPL(op, op_impl, op_inv, details::terms_op::terms_op_binop_traits,            \
+                                             details::terms_op::traits::is_compatible_v, traits::is_terms_operator_v,  \
                                              traits::is_terms_operator_v)
 #    define MQ_DEFINE_TERMSOP_BINOP_SCALAR_RIGHT_ONLY(op, op_impl)                                                     \
-        MQ_DEFINE_BINOP_SCALAR_RIGHT_ONLY_IMPL(op, op_impl, details::terms_op_binop_traits, details::lhs_and_scalar_v)
+        MQ_DEFINE_BINOP_SCALAR_RIGHT_ONLY_IMPL(op, op_impl, details::terms_op::terms_op_binop_traits,                  \
+                                               details::terms_op::traits::lhs_and_scalar_v)
 #endif  // MQ_HAS_CONCEPTS
 
 MQ_DEFINE_TERMSOP_BINOP_COMMUTATIVE(+, config::details::plus_equal)
