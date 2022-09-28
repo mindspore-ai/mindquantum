@@ -16,18 +16,27 @@ Module implementing a conversion from fermion type operators to qubit type opera
 
 Thus can be simulated in quantum computer.
 """
+
+import os
 from math import floor, log
 
 import numpy as np
 
+from mindquantum.core.operators import TermValue
 from mindquantum.core.operators.utils import (
     FermionOperator,
     QubitOperator,
     count_qubits,
     normal_ordered,
 )
-from mindquantum.experimental import TermValue
-from mindquantum.experimental._mindquantum_cxx.ops import transform as transform_
+
+try:
+    if int(os.environ.get('MQ_PY_TERMSOP', False)):
+        raise ImportError()
+
+    from mindquantum.experimental._mindquantum_cxx.ops import transform as transform_
+except ImportError:
+    from . import transform_  # noqa: F401
 
 
 class Transform:
@@ -263,7 +272,7 @@ class Transform:
                 u = set(at) | set(a)
 
                 # Second term in pair to transform
-                term_t = tuple((i, TermValue.adg) for i in a) + tuple((j, TermValue.a) for j in at)
+                term_t = tuple((i, TermValue['adg']) for i in a) + tuple((j, TermValue['a']) for j in at)
 
                 # Check equality between numbers of creation and annihilation
                 # operators in term

@@ -116,19 +116,25 @@ class QubitOperator(_Operator):
 
     def __init__(self, term=None, coefficient=1.0, dtype=None):
         """Initialize a QubitOperator object."""
-        super().__init__(term, coefficient)
-        _check_valid_qubit_operator_term(term)
-        self.operators = ('X', 'Y', 'Z')
-        self.gates_number = 0
-        self.qubit_type = True
+        if isinstance(term, QubitOperator):
+            self.operators = term.operators
+            self.gates_number = term.gates_number
+            self.qubit_type = term.qubit_type
+            self.terms = term.terms
+        else:
+            super().__init__(term, coefficient)
+            _check_valid_qubit_operator_term(term)
+            self.operators = ('X', 'Y', 'Z')
+            self.gates_number = 0
+            self.qubit_type = True
 
-        if term is not None:
-            if term == '':
-                term = self._parse_term(())
-            else:
-                term = self._parse_term(term)
-            self.coefficient, term = self._simplify(term, self.coefficient)
-            self.terms[term] = self.coefficient
+            if term is not None:
+                if term == '':
+                    term = self._parse_term(())
+                else:
+                    term = self._parse_term(term)
+                self.coefficient, term = self._simplify(term, self.coefficient)
+                self.terms[term] = self.coefficient
 
     def count_gates(self):
         """
