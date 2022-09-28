@@ -43,8 +43,9 @@
 "mindquantum/ccsrc/lib/experimental/ops/gates/fermion_operator.cpp"                         "containerOutOfBounds"
 "mindquantum/ccsrc/lib/experimental/ops/gates/fermion_operator_parameter_resolver.cpp"      "containerOutOfBounds"
 
-"mindquantum/ccsrc/python/mqbackend/lib/binding.cc:184"                                     "syntaxError"
+"mindquantum/ccsrc/include/core/parameter_resolver_external_ops.hpp:90"                     "syntaxError"
 "mindquantum/ccsrc/include/core/sparse/algo.hpp:73"                                         "syntaxError"
-"mindquantum/ccsrc/include/core/parameter_resolver_external_ops.hpp:101"                    "syntaxError"
+"mindquantum/ccsrc/include/experimental/ops/gates/terms_operator_base_external_ops.hpp:95"  "syntaxError"
+"mindquantum/ccsrc/python/mqbackend/lib/binding.cc:184"                                     "syntaxError"
 
 "mindquantum/ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp:29"              "unusedStructMember"
