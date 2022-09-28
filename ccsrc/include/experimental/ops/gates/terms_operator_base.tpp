@@ -706,6 +706,7 @@ bool TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::is_equal(con
     std::set_intersection(
         begin(terms_), end(terms_), begin(other.terms_), end(other.terms_), std::back_inserter(intersection),
         [](const auto& lhs, const auto& rhs) constexpr { return lhs.first < rhs.first; });
+    MQ_DEBUG("Set intersection: {}", intersection);
 
     for (const auto& term : intersection) {
         const auto& left = terms_.at(term.first);
@@ -713,6 +714,7 @@ bool TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::is_equal(con
         static_assert(std::is_same_v<std::remove_cvref_t<decltype(left)>, coefficient_t>);
         static_assert(std::is_same_v<std::remove_cvref_t<decltype(right)>, coefficient_t>);
         if (!policy_t::equal(left, conv_helper_t::apply(right))) {
+            MQ_DEBUG("{} != {}", left, conv_helper_t::apply(right));
             return false;
         }
     }
@@ -720,6 +722,7 @@ bool TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::is_equal(con
     std::set_symmetric_difference(begin(terms_), end(terms_), begin(other.terms_), end(other.terms_),
                                   std::back_inserter(symmetric_differences),
                                   [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; });
+    MQ_DEBUG("Symmetric differences: {}", symmetric_differences);
     return std::empty(symmetric_differences);
 }
 

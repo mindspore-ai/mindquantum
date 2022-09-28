@@ -22,6 +22,8 @@
 #include <pybind11/stl_bind.h>
 
 #include "config/constexpr_type_name.hpp"
+#include "config/format/parameter_resolver.hpp"
+#include "config/format/std_complex.hpp"
 #include "config/type_traits.hpp"
 
 #include "ops/basic_gate.hpp"

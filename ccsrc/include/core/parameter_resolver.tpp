@@ -20,7 +20,14 @@
 #include <utility>
 #include <vector>
 
+#include "config/logging.hpp"
+
 #include "core/parameter_resolver.hpp"
+
+//
+
+// Needs to be *after* core/parameter_resolver.hpp
+#include "config/format/parameter_resolver.hpp"
 
 namespace mindquantum {
 template <typename T>
@@ -540,11 +547,13 @@ ParameterResolver<T>& ParameterResolver<T>::operator+=(other_t value) {
 template <typename T>
 template <typename other_t>
 ParameterResolver<T>& ParameterResolver<T>::operator+=(const ParameterResolver<other_t>& other) {
-    using conv_helper_t = traits::conversion_helper<T>;
+    MQ_TRACE("{} ({}) += {} ({})", *this, this->IsConst(), other, other.IsConst());
+
     if ((this->encoder_parameters_.size() == 0) && (this->no_grad_parameters_.size() == 0)
         && (other.encoder_parameters_.size() == 0) && (other.no_grad_parameters_.size() == 0)) {
+        MQ_TRACE("other.data_ = {}", other.data_);
         for (ITER(p, other.data_)) {
-            this->data_[p->first] += conv_helper_t::apply(p->second);
+            this->data_[p->first] += p->second;
         }
     } else {
         if (((this->encoder_parameters_ & other.GetAnsatzParameters()).size() != 0)
@@ -556,12 +565,15 @@ ParameterResolver<T>& ParameterResolver<T>::operator+=(const ParameterResolver<o
             throw std::runtime_error("gradient property of parameter conflict.");
         }
 
+        MQ_TRACE("other.data_ = {}", other.data_);
         for (ITER(p, other.data_)) {
             auto& key = p->first;
-            const auto& value = conv_helper_t::apply(p->second);
+            const auto& value = p->second;
             if (this->Contains(key)) {
+                MQ_TRACE("data_[{}] ({}) += {}", key, this->data_[key], value);
                 this->data_[key] += value;
             } else {
+                MQ_TRACE("SetItem({}, {})", key, value);
                 this->SetItem(key, value);
                 if (other.EncoderContains(key)) {
                     this->encoder_parameters_.insert(key);
@@ -572,7 +584,8 @@ ParameterResolver<T>& ParameterResolver<T>::operator+=(const ParameterResolver<o
             }
         }
     }
-    this->const_value += conv_helper_t::apply(other.const_value);
+    MQ_TRACE("{} += {}", this->const_value, other.const_value);
+    this->const_value += other.const_value;
     return *this;
 }
 
@@ -613,10 +626,25 @@ ParameterResolver<T>& ParameterResolver<T>::operator*=(other_t value) {
 template <typename T>
 template <typename other_t>
 ParameterResolver<T>& ParameterResolver<T>::operator*=(const ParameterResolver<other_t>& other) {
-    using conv_helper_t = traits::conversion_helper<T>;
+    MQ_TRACE("{} ({}) *= {} ({})", *this, this->IsConst(), other, other.IsConst());
+
+    /* WARNING: This algorithm is *not* symmetric!
+     * e.g. if: X = {'b': (1e-09,0)}, const: (0,0)
+     *          Y = {}, const: (-0,-1)
+     *      then:
+     *          X *= Y -> {'b': (1e-09,0)}, const: (0,-0)
+     *          Y *= X -> {'b': (0,-1e-09)}, const: (0,0)
+     *      with
+     *          X == Y (since PRECISION is 1.e-8 by default)
+     *
+     * This is because in both cases, the first branch below is taken (since IsConst() evaluates to true in both cases).
+     * However, in the first case, other.data_ is empty and in the second case it is not.
+     */
     if (this->IsConst()) {
+        MQ_TRACE("other.data_ = {}", other.data_);
         for (ITER(p, other.data_)) {
-            this->data_[p->first] = this->const_value * conv_helper_t::apply(p->second);
+            MQ_TRACE("{} * {}", this->const_value, p->second);
+            this->data_[p->first] = this->const_value * p->second;
             if (!this->Contains(p->first)) {
                 if (other.EncoderContains(p->first)) {
                     this->encoder_parameters_.insert(p->first);
@@ -625,19 +653,19 @@ ParameterResolver<T>& ParameterResolver<T>::operator*=(const ParameterResolver<o
                     this->no_grad_parameters_.insert(p->first);
                 }
             }
-            this->const_value = static_cast<T>(0);
+        }
+    } else if (other.IsConst()) {
+        MQ_TRACE("this->data_ = {}", this->data_);
+        for (ITER(p, this->data_)) {
+            MQ_TRACE("{} * {}", this->data_[p->first], other.const_value);
+            this->data_[p->first] *= other.const_value;
         }
     } else {
-        if (other.IsConst()) {
-            for (ITER(p, this->data_)) {
-                this->data_[p->first] *= conv_helper_t::apply(other.const_value);
-            }
-            this->const_value *= conv_helper_t::apply(other.const_value);
-        } else {
-            throw std::runtime_error("Parameter resolver only support first order variable.");
-        }
+        throw std::runtime_error("Parameter resolver only support first order variable.");
     }
-    this->const_value *= conv_helper_t::apply(other.const_value);
+
+    MQ_TRACE("{} *= {}", this->const_value, other.const_value);
+    this->const_value *= other.const_value;
     return *this;
 }
 
@@ -654,14 +682,13 @@ ParameterResolver<T>& ParameterResolver<T>::operator/=(other_t value) {
 template <typename T>
 template <typename other_t>
 ParameterResolver<T>& ParameterResolver<T>::operator/=(const ParameterResolver<other_t>& other) {
-    using conv_helper_t = traits::conversion_helper<T>;
     if (!other.IsConst()) {
         throw std::runtime_error("Cannot div a non constant ParameterResolver.");
     }
     for (ITER(p, this->data_)) {
-        this->data_[p->first] /= conv_helper_t::apply(other.const_value);
+        this->data_[p->first] /= other.const_value;
     }
-    this->const_value /= conv_helper_t::apply(other.const_value);
+    this->const_value /= other.const_value;
     return *this;
 }
 

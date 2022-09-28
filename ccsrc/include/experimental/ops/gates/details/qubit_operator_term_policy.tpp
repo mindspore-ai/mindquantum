@@ -105,10 +105,15 @@ auto QubitOperatorTermPolicy<coefficient_t>::simplify(terms_t terms, coefficient
         if constexpr (traits::is_complex_v<coefficient_t>) {
             if (left_qubit_id == right_qubit_id) {
                 const auto [new_coeff, new_op] = pauli_products(left_operator, right_operator);
+                MQ_TRACE("{} x {} = {} ({})", left_operator, right_operator, new_op, new_coeff);
                 left_term = term_t{left_qubit_id, new_op};
+                MQ_TRACE("({}) * ({}) | ({})", coeff, static_cast<coefficient_t>(new_coeff),
+                         coeff * static_cast<coefficient_t>(new_coeff));
                 coeff *= static_cast<coefficient_t>(new_coeff);
+                MQ_TRACE("{} ({})", left_term, coeff);
             } else {
                 if (left_operator != TermValue::I) {
+                    MQ_TRACE("appending {}", left_term);
                     reduced_terms.emplace_back(left_term);
                 }
                 left_term = *it;
@@ -126,16 +131,19 @@ auto QubitOperatorTermPolicy<coefficient_t>::simplify(terms_t terms, coefficient
                         "Please cast to a complex-valued operator and retry.",
                         left_operator, right_operator);
                     if (left_operator != TermValue::I) {
+                        MQ_TRACE("appending {}", left_term);
                         reduced_terms.emplace_back(left_term);
                     }
                     left_term = *it;
                 } else {
                     const auto [new_coeff, new_op] = pauli_products_real<double>(left_operator, right_operator);
+                    MQ_TRACE("{} x {} = {} ({})", left_operator, right_operator, new_op, new_coeff);
                     left_term = term_t{left_qubit_id, new_op};
                     coeff *= static_cast<coefficient_t>(new_coeff);
                 }
             } else {
                 if (left_operator != TermValue::I) {
+                    MQ_TRACE("appending {}", left_term);
                     reduced_terms.emplace_back(left_term);
                 }
                 left_term = *it;
@@ -143,8 +151,10 @@ auto QubitOperatorTermPolicy<coefficient_t>::simplify(terms_t terms, coefficient
         }
     }
     if (left_term.second != TermValue::I) {
+        MQ_TRACE("appending {}", left_term);
         reduced_terms.emplace_back(left_term);
     }
+    MQ_TRACE("simplified: {}, {}", coeff, reduced_terms);
     return {std::move(reduced_terms), coeff};
 }
 

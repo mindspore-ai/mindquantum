@@ -16,6 +16,7 @@
 #define FORMAT_PARAMETER_RESOLVER_HPP
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include "core/parameter_resolver.hpp"
 

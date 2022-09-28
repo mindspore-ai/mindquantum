@@ -123,8 +123,8 @@ class CppArithmeticAdaptor:
             return NotImplemented
 
         if hasattr(other, '_cpp_obj'):
-            return self.__class__(other._cpp_obj * self._cpp_obj)
-        return self.__class__(other * self._cpp_obj)
+            return self.__class__(self._cpp_obj * other._cpp_obj)
+        return self.__class__(self._cpp_obj * other)
 
     # ----------------------------------
 
