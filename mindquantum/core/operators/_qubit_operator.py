@@ -114,7 +114,7 @@ class QubitOperator(_Operator):
 
     __hash__ = None
 
-    def __init__(self, term=None, coefficient=1.0):
+    def __init__(self, term=None, coefficient=1.0, dtype=None):
         """Initialize a QubitOperator object."""
         super().__init__(term, coefficient)
         _check_valid_qubit_operator_term(term)
@@ -158,12 +158,14 @@ class QubitOperator(_Operator):
         return qubit_operator
 
     @staticmethod
-    def from_openfermion(of_ops):
+    def from_openfermion(of_ops, dtype=None):
         """
         Convert qubit operator from openfermion to mindquantum format.
 
         Args:
             of_ops (openfermion.QubitOperator): Qubit operator from openfermion.
+            dtype (type): Type of TermsOperator to generate (ie. real `float` or complex `complex`)
+                          NB: this parameter is ignored in the Python version of the QubitOperator
 
         Returns:
             QubitOperator, qubit operator from mindquantum.

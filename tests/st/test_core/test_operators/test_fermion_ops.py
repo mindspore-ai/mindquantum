@@ -142,7 +142,6 @@ def test_para_operators():
     assert str(op) == '2 [0 1^] '
 
 
-@pytest.mark.skipif(True, reason='[BUG] Whether a double type and complex type can compare?')
 def test_eq():
     """
     Description: Test equal

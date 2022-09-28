@@ -227,12 +227,14 @@ class FermionOperator(_Operator):
         return fermion_operator
 
     @staticmethod
-    def from_openfermion(of_ops):
+    def from_openfermion(of_ops, dtype=None):
         """
         Convert openfermion fermion operator to mindquantum format.
 
         Args:
             of_ops (openfermion.FermionOperator): fermion operator from openfermion.
+            dtype (type): Type of TermsOperator to generate (ie. real `float` or complex `complex`)
+                          NB: this parameter is ignored in the Python version of the QubitOperator
 
         Returns:
             FermionOperator, fermion operator from mindquantum.

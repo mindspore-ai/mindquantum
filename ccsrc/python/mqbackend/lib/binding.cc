@@ -118,7 +118,7 @@ auto BindPR(py::module &module, const std::string &name) {
               .def("requires_grad_part", &pr_t::RequiresGradPart)
               .def("set_const", &pr_t::SetConst)
               .def("size", &pr_t::Size)
-              .def("update", &pr_t::Update)
+              .def("update", &pr_t::template Update<T>)
               // ------------------------------
               // Python magic methods
               .def("__bool__", &pr_t::IsNotZero)
@@ -214,6 +214,7 @@ PYBIND11_MODULE(mqbackend, m) {
     m.def("get_gate_by_name", &GetGateByName<MT>);
     m.def("get_measure_gate", &GetMeasureGate<MT>);
     // parameter resolver
+
     auto real_pr = BindPR<MT>(m, "real_pr");
     auto complex_pr = BindPR<std::complex<MT>>(m, "complex_pr");
 
@@ -225,6 +226,8 @@ PYBIND11_MODULE(mqbackend, m) {
     using pr_cmplx_t = complex_pr_t::type;
 
     using all_scalar_types_t = std::tuple<double, std::complex<double>, pr_t, pr_cmplx_t>;
+
+    complex_pr.def("update", &pr_cmplx_t::Update<MT>);
 
     bindops::binop_definition<op::plus, real_pr_t>::inplace<double, pr_t>(real_pr);
     bindops::binop_definition<op::plus, real_pr_t>::external<all_scalar_types_t>(real_pr);

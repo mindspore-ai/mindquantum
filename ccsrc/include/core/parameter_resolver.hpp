@@ -367,7 +367,8 @@ struct ParameterResolver {
     void AsEncoder();
     void AsAnsatz();
 
-    void Update(const ParameterResolver<T>& other);
+    template <typename other_t>
+    void Update(const ParameterResolver<other_t>& other);
 
     ParameterResolver<T> Conjugate() const;
 

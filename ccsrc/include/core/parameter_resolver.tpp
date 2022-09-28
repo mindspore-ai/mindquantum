@@ -378,7 +378,8 @@ void ParameterResolver<T>::AsAnsatz() {
 }
 
 template <typename T>
-void ParameterResolver<T>::Update(const ParameterResolver<T>& other) {
+template <typename other_t>
+void ParameterResolver<T>::Update(const ParameterResolver<other_t>& other) {
     if ((this->encoder_parameters_.size() == 0) & (this->no_grad_parameters_.size() == 0)
         & (other.encoder_parameters_.size() == 0) & (other.no_grad_parameters_.size() == 0)) {
         for (ITER(p, other.data_)) {
@@ -643,7 +644,7 @@ ParameterResolver<T>& ParameterResolver<T>::operator*=(const ParameterResolver<o
     if (this->IsConst()) {
         MQ_TRACE("other.data_ = {}", other.data_);
         for (ITER(p, other.data_)) {
-            MQ_TRACE("{} * {}", this->const_value, p->second);
+            MQ_TRACE("data_[{}] = {} * {}", p->first, this->const_value, p->second);
             this->data_[p->first] = this->const_value * p->second;
             if (!this->Contains(p->first)) {
                 if (other.EncoderContains(p->first)) {
@@ -657,14 +658,14 @@ ParameterResolver<T>& ParameterResolver<T>::operator*=(const ParameterResolver<o
     } else if (other.IsConst()) {
         MQ_TRACE("this->data_ = {}", this->data_);
         for (ITER(p, this->data_)) {
-            MQ_TRACE("{} * {}", this->data_[p->first], other.const_value);
+            MQ_TRACE("data_[{}] ({}) *= {}", p->first, this->data_[p->first], other.const_value);
             this->data_[p->first] *= other.const_value;
         }
     } else {
         throw std::runtime_error("Parameter resolver only support first order variable.");
     }
 
-    MQ_TRACE("{} *= {}", this->const_value, other.const_value);
+    MQ_TRACE("const_value: {} *= {}", this->const_value, other.const_value);
     this->const_value *= other.const_value;
     return *this;
 }

@@ -38,7 +38,7 @@ class TermsOperator(CppArithmeticAdaptor):
         return isinstance(other, (numbers.Number, TermsOperator, ParameterResolver))
 
     @classmethod
-    def create_cpp_obj(cls, term, coeff=None, cxx_dtype=None):
+    def create_cpp_obj(cls, term, coeff=None, dtype=None):
         """
         Create a new instance of a C++ child class.
 
@@ -47,42 +47,43 @@ class TermsOperator(CppArithmeticAdaptor):
             coeff (Union[numbers.Number, str, ParameterResolver]): The coefficient of this qubit operator, could be a
                 number or a variable represent by a string or a symbol or a parameter resolver.
                 Default: 1.0.
-            cxx_dtype (Type): Python type used to decide which type of C++ object to instantiate. If specified, this
-                takes precedence over looking at the type of `coeff` (if not None).
+            dtype (Type): Python type used to decide which type of C++ object to instantiate. If specified, this takes
+                precedence over looking at the type of `coeff` (if not None).
         """
-        klass = cls._type_conversion_table[complex]
+        klass = cls._type_conversion_table[float]
 
         if term is None:
             return klass()
 
         # ----------------------------------------------------------------------
 
-        if cxx_dtype is None:
+        if dtype is None:
             if isinstance(coeff, numbers.Real):
                 if coeff is not None:
                     coeff = real_pr(coeff)
-                cxx_dtype = float
+                dtype = float
             elif isinstance(coeff, numbers.Complex):
                 if coeff is not None:
                     coeff = complex_pr(coeff)
-                cxx_dtype = complex
+                dtype = complex
             elif isinstance(coeff, ParameterResolver):
                 coeff = coeff._cpp_obj
-                cxx_dtype = type(coeff)
+                dtype = type(coeff)
             elif isinstance(coeff, (real_pr, complex_pr)):
-                cxx_dtype = type(coeff)
+                dtype = type(coeff)
             elif isinstance(coeff, str):
-                cxx_dtype = complex
-                coeff = complex_pr(coeff)
+                dtype = float
+                coeff = real_pr(coeff)
             elif isinstance(coeff, dict):
                 coeff = ParameterResolver(coeff)._cpp_obj
-                cxx_dtype = type(coeff)
+                dtype = type(coeff)
             elif coeff is not None:
                 raise TypeError(f'{cls.__name__} does not support {type(coeff)} as coefficient type.')
 
         if cls.ensure_complex_coeff:
             coeff = coeff.cast_complex()
-        klass = cls._type_conversion_table[cxx_dtype]
+            dtype = complex
+        klass = cls._type_conversion_table[dtype]
 
         if coeff is None:
             return klass(term)
@@ -121,7 +122,7 @@ class TermsOperator(CppArithmeticAdaptor):
                         cxx_dtype = float
                     values = [cxx_dtype(v) for v in values]
                 keys = list(args[0].keys())
-                self._cpp_obj = self.__class__.create_cpp_obj([keys, values], cxx_dtype=cxx_dtype)
+                self._cpp_obj = self.__class__.create_cpp_obj([keys, values], dtype=cxx_dtype)
             else:
                 self._cpp_obj = self.__class__.create_cpp_obj(args[0], 1.0)
         elif len(args) == 2:
@@ -415,29 +416,35 @@ class TermsOperator(CppArithmeticAdaptor):
         return operator
 
     @classmethod
-    def from_openfermion(cls, of_ops):
+    def from_openfermion(cls, of_ops, dtype=None):
         """
         Convert openfermion fermion operator to mindquantum format.
 
         Args:
             of_ops: fermion operator from openfermion.
+            dtype (type): Type of TermsOperator to generate (ie. real `float` or complex `complex`)
 
         Returns:
             TermsOperator, terms operator from mindquantum.
         """
         _check_input_type('of_ops', cls.openfermion_klass, of_ops)
-        klass = cls.real_pr_klass
-        c = 1
-        for v in of_ops.terms.values():
-            if isinstance(v, numbers.Complex) and not isinstance(v, numbers.Real):
-                klass = cls.complex_pr_klass
-                c = 1 + 0j
-                break
+
+        if dtype is not None:
+            klass = cls._type_conversion_table[dtype]
+        else:
+            klass = cls.real_pr_klass
+            for v in of_ops.terms.values():
+                if isinstance(v, numbers.Complex) and not isinstance(v, numbers.Real):
+                    klass = cls.complex_pr_klass
+                    break
+
+        pr_klass = complex_pr if klass is cls.complex_pr_klass else real_pr
+
         list_terms = []
         list_coeff = []
         for k, v in of_ops.terms.items():
             list_terms.append(tuple((i, TermValue[j]) for i, j in k))
-            list_coeff.append((ParameterResolver(v) * c)._cpp_obj)
+            list_coeff.append(pr_klass(v))
         # NB: build C++ object using the tsl::ordered_map constructor
         cpp_obj = klass([list_terms, list_coeff])
         return cls(cpp_obj)
