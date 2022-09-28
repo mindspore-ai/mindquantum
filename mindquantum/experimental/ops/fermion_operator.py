@@ -27,8 +27,8 @@ from .._mindquantum_cxx.ops import (
     FermionOperatorBase,
     FermionOperatorPRCD,
     FermionOperatorPRD,
-    TermValue,
 )
+from ..utils import TermValue
 from ._terms_operators import TermsOperator
 
 # ==============================================================================

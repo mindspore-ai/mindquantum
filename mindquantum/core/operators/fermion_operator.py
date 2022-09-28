@@ -22,8 +22,8 @@ try:
         warnings.warn("Using Python FermionOperator class")
         raise ImportError()
 
-    from ...experimental.ops import TermValue
     from ...experimental.ops.fermion_operator import FermionOperator
+    from ...experimental.utils import TermValue
 except ImportError:
     TermValue = {k: k for k in ('X', 'Y', 'Z', 'I')}
     from ._fermion_operator import FermionOperator  # noqa: F401

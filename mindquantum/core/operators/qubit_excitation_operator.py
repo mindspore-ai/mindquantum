@@ -29,7 +29,7 @@ try:
     if int(os.environ.get('MQ_PY_TERMSOP', False)):
         raise ImportError()
 
-    from ...experimental.ops import TermValue
+    from ...experimental.utils import TermValue
 except ImportError:
     TermValue = {'X': 'Y', 'Y': 'Y'}
 

@@ -20,7 +20,7 @@ from mindquantum.core import ParameterResolver
 from mindquantum.core.operators import QubitOperator
 
 
-def get_qubit_op_terms(qubit_op):
+def _get_terms_as_set(qubit_op):
     return {s.strip() for s in str(qubit_op).split('+')}
 
 
@@ -30,61 +30,61 @@ def test_qubit_ops_num_coeff():
     Expectation:
     """
     q1 = QubitOperator('Z1 Z2') + QubitOperator('X1')
-    assert get_qubit_op_terms(q1) == {'1 [Z1 Z2]', '1 [X1]'}
+    assert _get_terms_as_set(q1) == {'1 [Z1 Z2]', '1 [X1]'}
     q5 = QubitOperator('X1') * QubitOperator('Y1')
-    assert get_qubit_op_terms(q5) == {'(1j) [Z1]'}
+    assert _get_terms_as_set(q5) == {'(1j) [Z1]'}
     q6 = QubitOperator('Y1') * QubitOperator('Z1')
-    assert get_qubit_op_terms(q6) == {'(1j) [X1]'}
+    assert _get_terms_as_set(q6) == {'(1j) [X1]'}
     q7 = QubitOperator('Z1') * QubitOperator('X1')
-    assert get_qubit_op_terms(q7) == {'(1j) [Y1]'}
+    assert _get_terms_as_set(q7) == {'(1j) [Y1]'}
 
     q8 = QubitOperator('Z1 z2')
     q8 *= 2
-    assert get_qubit_op_terms(q8) == {'2 [Z1 Z2]'}
+    assert _get_terms_as_set(q8) == {'2 [Z1 Z2]'}
 
     q9 = QubitOperator('Z1 z2')
     q10 = QubitOperator('X1 X2')
     q9 = q9 * q10
-    assert get_qubit_op_terms(q9) == {'-1 [Y1 Y2]'}
+    assert _get_terms_as_set(q9) == {'-1 [Y1 Y2]'}
 
     q9 = q9 * 2
-    assert get_qubit_op_terms(q9) == {'-2 [Y1 Y2]'}
+    assert _get_terms_as_set(q9) == {'-2 [Y1 Y2]'}
 
     q9 = 2 * q9
-    assert get_qubit_op_terms(q9) == {'-4 [Y1 Y2]'}
+    assert _get_terms_as_set(q9) == {'-4 [Y1 Y2]'}
 
     q9 = q9 / 2.0
-    assert get_qubit_op_terms(q9) == {'-2 [Y1 Y2]'}
+    assert _get_terms_as_set(q9) == {'-2 [Y1 Y2]'}
 
     q10 = QubitOperator('Z1 z2')
     q10 *= q10
-    assert get_qubit_op_terms(q10) == {'1 []'}
+    assert _get_terms_as_set(q10) == {'1 []'}
 
     q11 = QubitOperator('Z1 z2') + 1e-9 * QubitOperator('X1 z2')
-    assert get_qubit_op_terms(q11.compress()) == {'1 [Z1 Z2]'}
+    assert _get_terms_as_set(q11.compress()) == {'1 [Z1 Z2]'}
 
     q12 = QubitOperator('Z1 Z2') + 1e-4 * QubitOperator('X1 Z2')
     q13 = QubitOperator('Z3 X2') + 1e-5 * QubitOperator('X1 Y2')
     q14 = q12 * q13
-    assert get_qubit_op_terms(q14) == {
+    assert _get_terms_as_set(q14) == {
         '(1/10000j) [X1 Y2 Z3]',
         '1/100000 [Y1 X2]',
         '(1j) [Z1 Y2 Z3]',
         '(-1/1000000000j) [X2]',
     }
-    assert get_qubit_op_terms(q14.compress()) == {'(1/10000j) [X1 Y2 Z3]', '1/100000 [Y1 X2]', '(1j) [Z1 Y2 Z3]'}
+    assert _get_terms_as_set(q14.compress()) == {'(1/10000j) [X1 Y2 Z3]', '1/100000 [Y1 X2]', '(1j) [Z1 Y2 Z3]'}
 
     iden = QubitOperator('')
-    assert get_qubit_op_terms(iden) == {'1 []'}
+    assert _get_terms_as_set(iden) == {'1 []'}
 
     zero_op = QubitOperator()
-    assert get_qubit_op_terms(zero_op) == {'0'}
+    assert _get_terms_as_set(zero_op) == {'0'}
 
     iden = -QubitOperator('')
-    assert get_qubit_op_terms(iden) == {'-1 []'}
+    assert _get_terms_as_set(iden) == {'-1 []'}
 
     ham = QubitOperator('X0 Y3', 0.5) + 0.6 * QubitOperator('X0 Y3')
-    assert get_qubit_op_terms(ham) == {'1.1 [X0 Y3]'}
+    assert _get_terms_as_set(ham) == {'1.1 [X0 Y3]'}
 
 
 def test_qubit_ops_symbol_coeff():
@@ -93,22 +93,22 @@ def test_qubit_ops_symbol_coeff():
     Expectation:
     """
     q1 = QubitOperator('Z1 Z2', 'a') + QubitOperator('X1', 'b')
-    assert get_qubit_op_terms(q1) == {'b [X1]', 'a [Z1 Z2]'}
+    assert _get_terms_as_set(q1) == {'b [X1]', 'a [Z1 Z2]'}
 
     q2 = QubitOperator('Z1 Z2', 'a') + ParameterResolver('a') * QubitOperator('Z2 Z1')
-    assert get_qubit_op_terms(q2) == {'2*a [Z1 Z2] '}
+    assert _get_terms_as_set(q2) == {'2*a [Z1 Z2] '}
 
     q8 = QubitOperator('Z1 z2')
     q8 *= ParameterResolver('a')
-    assert get_qubit_op_terms(q8) == {'a [Z1 Z2]'}
+    assert _get_terms_as_set(q8) == {'a [Z1 Z2]'}
 
     q9 = QubitOperator('Z1 z2')
     q10 = QubitOperator('X1 X2', 'a')
     q9 = q9 * q10
-    assert get_qubit_op_terms(q9) == {'-a [Y1 Y2]'}
+    assert _get_terms_as_set(q9) == {'-a [Y1 Y2]'}
 
     q9 = q9 / 2.0
-    assert get_qubit_op_terms(q9) == {'-1/2*a [Y1 Y2]'}
+    assert _get_terms_as_set(q9) == {'-1/2*a [Y1 Y2]'}
 
     q12 = QubitOperator('Z1 Z2') + 1e-4 * QubitOperator('X1 Z2')
     q13 = QubitOperator('Z3 X2') + 1e-5 * QubitOperator('X1 Y2', 'b')

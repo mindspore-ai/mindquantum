@@ -92,7 +92,9 @@ class TermsOperator(CppArithmeticAdaptor):
                 - Dict[List[Tuple[Int, TermValue]], Union[ParameterResolver, int, float]]
                 - List[Tuple[Int, TermValue]] (with default coefficient set to 1.0)
         """
-        if len(args) == 1:
+        if len(args) == 0:
+            self._cpp_obj = self.__class__.create_cpp_obj(None)
+        elif len(args) == 1:
             if isinstance(args[0], self.cxx_base_klass):
                 self._cpp_obj = args[0]
             elif isinstance(args[0], dict):
@@ -141,6 +143,11 @@ class TermsOperator(CppArithmeticAdaptor):
     def __len__(self) -> int:
         """Return the size of term."""
         return self._cpp_obj.size
+
+    @property
+    def is_complex(self):
+        """Return whether the TermsOperator instance is currently using complex coefficients."""
+        return self._cpp_obj.is_complex
 
     @property
     def imag(self):
@@ -319,7 +326,7 @@ class TermsOperator(CppArithmeticAdaptor):
             params_value = ParameterResolver(params_value)
         if isinstance(self._cpp_obj, self.real_pr_klass):
             return self.__class__(self._cpp_obj.subs(DoublePRSubsProxy(params_value._cpp_obj)))
-        return self.__class__(self._cpp_obj.subs(CmplxPRSubsProxy(params_value._cpp_obj.to_complex())))
+        return self.__class__(self._cpp_obj.subs(CmplxPRSubsProxy(params_value._cpp_obj.cast_complex())))
 
     @property
     def is_singlet(self) -> bool:
