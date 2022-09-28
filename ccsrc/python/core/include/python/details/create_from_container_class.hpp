@@ -15,6 +15,8 @@
 #ifndef MQ_PYTHON_CORE_CREATE_FROM_CONTAINER_CLASS_HPP
 #define MQ_PYTHON_CORE_CREATE_FROM_CONTAINER_CLASS_HPP
 
+#include <string>
+
 #include <fmt/format.h>
 #include <pybind11/cast.h>
 #include <pybind11/detail/common.h>
@@ -25,7 +27,6 @@
 #include "config/logging.hpp"
 
 #include "python/details/get_fully_qualified_tp_name.hpp"
-#include "python/format/pytypes.hpp"
 
 namespace mindquantum::python {
 template <typename type_t>
@@ -33,11 +34,7 @@ auto create_from_python_container_class(const pybind11::object& src) {
     MQ_DEBUG("Called create_from_python_container_class<{}>({})", get_type_name<type_t>(),
              get_fully_qualified_tp_name(src));
 #ifndef NDEBUG
-    if (pybind11::isinstance<pybind11::dict>(src)) {
-        MQ_DEBUG("Python value is: {}", src.cast<pybind11::dict>());
-    } else {
-        MQ_DEBUG("Python value is: {}", src);
-    }
+    MQ_DEBUG("Python value is: {}", static_cast<std::string>(pybind11::str(src)));
 #endif  // !NDEBUG
 
     if (!pybind11::hasattr(src, "_cpp_obj")) {
@@ -66,11 +63,7 @@ template <typename type_t, typename trampoline_type_t>
 constexpr auto try_cast_from_impl(const pybind11::object& src) -> type_t {
     MQ_DEBUG("Try casting {} to C++ {}", get_fully_qualified_tp_name(src), get_type_name<trampoline_type_t>());
 #ifndef NDEBUG
-    if (pybind11::isinstance<pybind11::dict>(src)) {
-        MQ_DEBUG("Python value is: {}", src.cast<pybind11::dict>());
-    } else {
-        MQ_DEBUG("Python value is: {}", src);
-    }
+    MQ_DEBUG("Python value is: {}", static_cast<std::string>(pybind11::repr(src)));
 #endif  // !NDEBUG
     return type_t{pybind11::cast<trampoline_type_t>(src)};
 }
@@ -95,11 +88,7 @@ auto create_from_python_container_class_with_trampoline(const pybind11::object& 
     MQ_DEBUG("Called create_from_python_container_class<{}, ...>({})", get_type_name<type_t>(),
              get_fully_qualified_tp_name(src));
 #ifndef NDEBUG
-    if (pybind11::isinstance<pybind11::dict>(src)) {
-        MQ_DEBUG("Python value is: {}", src.cast<pybind11::dict>());
-    } else {
-        MQ_DEBUG("Python value is: {}", src);
-    }
+    MQ_DEBUG("Python value is: {}", static_cast<std::string>(pybind11::repr(src)));
 #endif  // !NDEBUG
 
     if (!pybind11::hasattr(src, "_cpp_obj")) {

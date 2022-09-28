@@ -57,12 +57,6 @@ auto bind_ops(pybind11::module& module, const std::string_view& name) {
               // ------------------------------
               // Constructors
               .def(pybind11::init<>())
-              .def(pybind11::init([](op_t& op, bool copy) {
-                  if (copy) {
-                      return op;
-                  }
-                  return std::move(op);
-              }))
               .def(pybind11::init<const ops::term_t&, coeff_t>(), "term"_a, "coeff"_a = op_t::coeff_policy_t::one)
               .def(pybind11::init<const ops::terms_t&, coeff_t>(), "terms"_a, "coeff"_a = op_t::coeff_policy_t::one)
               .def(pybind11::init<const ops::py_terms_t&, coeff_t>(), "terms"_a, "coeff"_a = op_t::coeff_policy_t::one)

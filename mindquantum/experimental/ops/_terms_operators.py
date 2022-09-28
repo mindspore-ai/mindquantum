@@ -76,6 +76,8 @@ class TermsOperator(CppArithmeticAdaptor):
             elif coeff is not None:
                 raise TypeError(f'{cls.__name__} does not support {type(coeff)} as coefficient type.')
 
+        if cls.ensure_complex_coeff:
+            coeff = coeff.cast_complex()
         klass = cls._type_conversion_table[cxx_dtype]
 
         if coeff is None:

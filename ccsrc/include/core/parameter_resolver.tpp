@@ -25,11 +25,11 @@
 namespace mindquantum {
 template <typename T>
 template <typename U, typename>
-ParameterResolver<T>::ParameterResolver(U&& const_value) : const_value(static_cast<T>(std::forward<U>(const_value))) {
+ParameterResolver<T>::ParameterResolver(U&& value) : const_value(static_cast<T>(std::forward<U>(value))) {
 }
 
 template <typename T>
-ParameterResolver<T>::ParameterResolver(const MST<T>& data, T const_value) : data_(data), const_value(const_value) {
+ParameterResolver<T>::ParameterResolver(const MST<T>& data, T value) : data_(data), const_value(value) {
     for (ITER(param, this->data_)) {
         if (param->first == "") {
             throw std::runtime_error("Parameter name cannot be empty.");
@@ -38,9 +38,9 @@ ParameterResolver<T>::ParameterResolver(const MST<T>& data, T const_value) : dat
 }
 
 template <typename T>
-ParameterResolver<T>::ParameterResolver(const MST<T>& data, T const_value, SS no_grad_parameters, SS encoder_parameters)
+ParameterResolver<T>::ParameterResolver(const MST<T>& data, T value, SS no_grad_parameters, SS encoder_parameters)
     : data_(data)
-    , const_value(const_value)
+    , const_value(value)
     , no_grad_parameters_(std::move(no_grad_parameters))
     , encoder_parameters_(std::move(encoder_parameters)) {
 }
@@ -51,7 +51,7 @@ ParameterResolver<T>::ParameterResolver(const MST<U>& data) : ParameterResolver(
 }
 template <typename T>
 template <typename U, typename V, typename>
-ParameterResolver<T>::ParameterResolver(const MST<U>& data, V const_value) : const_value(static_cast<T>(const_value)) {
+ParameterResolver<T>::ParameterResolver(const MST<U>& data, V value) : const_value(static_cast<T>(value)) {
     for (const auto& [key, value] : data) {
         data_.emplace(key, static_cast<T>(value));
     }
@@ -63,9 +63,8 @@ ParameterResolver<T>::ParameterResolver(const MST<U>& data, V const_value) : con
 }
 template <typename T>
 template <typename U, typename V, typename>
-ParameterResolver<T>::ParameterResolver(const MST<U>& data, V&& const_value, SS no_grad_parameters,
-                                        SS encoder_parameters)
-    : const_value(static_cast<T>(std::forward<V>(const_value)))
+ParameterResolver<T>::ParameterResolver(const MST<U>& data, V&& value, SS no_grad_parameters, SS encoder_parameters)
+    : const_value(static_cast<T>(std::forward<V>(value)))
     , no_grad_parameters_(std::move(no_grad_parameters))
     , encoder_parameters_(std::move(encoder_parameters)) {
     for (const auto& [key, value] : data) {
@@ -530,6 +529,141 @@ auto ParameterResolver<T>::Cast() const {
 }
 // =============================================================================
 // Arithmetic operators
+
+template <typename T>
+template <typename other_t>
+ParameterResolver<T>& ParameterResolver<T>::operator+=(other_t value) {
+    this->const_value += value;
+    return *this;
+}
+
+template <typename T>
+template <typename other_t>
+ParameterResolver<T>& ParameterResolver<T>::operator+=(const ParameterResolver<other_t>& other) {
+    using conv_helper_t = traits::conversion_helper<T>;
+    if ((this->encoder_parameters_.size() == 0) && (this->no_grad_parameters_.size() == 0)
+        && (other.encoder_parameters_.size() == 0) && (other.no_grad_parameters_.size() == 0)) {
+        for (ITER(p, other.data_)) {
+            this->data_[p->first] += conv_helper_t::apply(p->second);
+        }
+    } else {
+        if (((this->encoder_parameters_ & other.GetAnsatzParameters()).size() != 0)
+            || ((this->GetAnsatzParameters() & other.encoder_parameters_).size() != 0)) {
+            throw std::runtime_error("encoder or ansatz property of parameter conflict.");
+        }
+        if (((this->no_grad_parameters_ & other.GetRequiresGradParameters()).size() != 0)
+            || ((this->GetRequiresGradParameters() & other.no_grad_parameters_).size() != 0)) {
+            throw std::runtime_error("gradient property of parameter conflict.");
+        }
+
+        for (ITER(p, other.data_)) {
+            auto& key = p->first;
+            const auto& value = conv_helper_t::apply(p->second);
+            if (this->Contains(key)) {
+                this->data_[key] += value;
+            } else {
+                this->SetItem(key, value);
+                if (other.EncoderContains(key)) {
+                    this->encoder_parameters_.insert(key);
+                }
+                if (other.NoGradContains(key)) {
+                    this->no_grad_parameters_.insert(key);
+                }
+            }
+        }
+    }
+    this->const_value += conv_helper_t::apply(other.const_value);
+    return *this;
+}
+
+template <typename T>
+ParameterResolver<T> ParameterResolver<T>::operator-() const {
+    auto out = *this;
+    out.const_value = -out.const_value;
+    for (ITER(p, out.data_)) {
+        out.data_[p->first] = -out.data_[p->first];
+    }
+    return out;
+}
+
+template <typename T>
+template <typename other_t>
+ParameterResolver<T>& ParameterResolver<T>::operator-=(other_t value) {
+    *this += (-value);
+    return *this;
+}
+
+template <typename T>
+template <typename other_t>
+ParameterResolver<T>& ParameterResolver<T>::operator-=(const ParameterResolver<other_t>& other) {
+    *this += (-other);
+    return *this;
+}
+
+template <typename T>
+template <typename other_t>
+ParameterResolver<T>& ParameterResolver<T>::operator*=(other_t value) {
+    this->const_value *= value;
+    for (ITER(p, this->data_)) {
+        this->data_[p->first] *= value;
+    }
+    return *this;
+}
+
+template <typename T>
+template <typename other_t>
+ParameterResolver<T>& ParameterResolver<T>::operator*=(const ParameterResolver<other_t>& other) {
+    using conv_helper_t = traits::conversion_helper<T>;
+    if (this->IsConst()) {
+        for (ITER(p, other.data_)) {
+            this->data_[p->first] = this->const_value * conv_helper_t::apply(p->second);
+            if (!this->Contains(p->first)) {
+                if (other.EncoderContains(p->first)) {
+                    this->encoder_parameters_.insert(p->first);
+                }
+                if (other.NoGradContains(p->first)) {
+                    this->no_grad_parameters_.insert(p->first);
+                }
+            }
+            this->const_value = static_cast<T>(0);
+        }
+    } else {
+        if (other.IsConst()) {
+            for (ITER(p, this->data_)) {
+                this->data_[p->first] *= conv_helper_t::apply(other.const_value);
+            }
+            this->const_value *= conv_helper_t::apply(other.const_value);
+        } else {
+            throw std::runtime_error("Parameter resolver only support first order variable.");
+        }
+    }
+    this->const_value *= conv_helper_t::apply(other.const_value);
+    return *this;
+}
+
+template <typename T>
+template <typename other_t>
+ParameterResolver<T>& ParameterResolver<T>::operator/=(other_t value) {
+    this->const_value /= value;
+    for (ITER(p, this->data_)) {
+        this->data_[p->first] /= value;
+    }
+    return *this;
+}
+
+template <typename T>
+template <typename other_t>
+ParameterResolver<T>& ParameterResolver<T>::operator/=(const ParameterResolver<other_t>& other) {
+    using conv_helper_t = traits::conversion_helper<T>;
+    if (!other.IsConst()) {
+        throw std::runtime_error("Cannot div a non constant ParameterResolver.");
+    }
+    for (ITER(p, this->data_)) {
+        this->data_[p->first] /= conv_helper_t::apply(other.const_value);
+    }
+    this->const_value /= conv_helper_t::apply(other.const_value);
+    return *this;
+}
 
 // =============================================================================
 }  // namespace mindquantum

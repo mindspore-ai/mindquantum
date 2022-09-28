@@ -78,6 +78,8 @@ class FermionOperator(TermsOperator):
     complex_pr_klass = FermionOperatorPRCD
     openfermion_klass = OFFermionOperator
 
+    ensure_complex_coeff = False
+
     _type_conversion_table = {
         complex_pr: complex_pr_klass,
         complex: complex_pr_klass,

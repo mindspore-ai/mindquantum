@@ -76,16 +76,22 @@ class QubitOperator(TermsOperator):
         6/5 [X0 Y3]
     """
 
+    # NB: In principle, we support real-valued qubit operators. Unfortunately, in this case, not all coefficient
+    #     simplifications are possible.
+    #     For now, we simply force any Python code to create complex qubit operators...
+
     cxx_base_klass = QubitOperatorBase
     real_pr_klass = QubitOperatorPRD
     complex_pr_klass = QubitOperatorPRCD
     openfermion_klass = OFQubitOperator
 
+    ensure_complex_coeff = True
+
     _type_conversion_table = {
         complex_pr: complex_pr_klass,
         complex: complex_pr_klass,
-        real_pr: real_pr_klass,
-        float: real_pr_klass,
+        real_pr: complex_pr_klass,
+        float: complex_pr_klass,
     }
 
     def __str__(self) -> str:

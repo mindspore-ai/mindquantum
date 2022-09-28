@@ -96,7 +96,7 @@ def test_qubit_ops_symbol_coeff():
     assert _get_terms_as_set(q1) == {'b [X1]', 'a [Z1 Z2]'}
 
     q2 = QubitOperator('Z1 Z2', 'a') + ParameterResolver('a') * QubitOperator('Z2 Z1')
-    assert _get_terms_as_set(q2) == {'2*a [Z1 Z2] '}
+    assert _get_terms_as_set(q2) == {'2*a [Z1 Z2]'}
 
     q8 = QubitOperator('Z1 z2')
     q8 *= ParameterResolver('a')
@@ -113,13 +113,13 @@ def test_qubit_ops_symbol_coeff():
     q12 = QubitOperator('Z1 Z2') + 1e-4 * QubitOperator('X1 Z2')
     q13 = QubitOperator('Z3 X2') + 1e-5 * QubitOperator('X1 Y2', 'b')
     q14 = q12 * q13
-    assert {s.strip() for s in str(q14).split('+')} == {
+    assert _get_terms_as_set(q14) == {
         '(1/10000j) [X1 Y2 Z3]',
         '1/100000*b [Y1 X2]',
         '(1j) [Z1 Y2 Z3]',
-        '(-1/1000000000j)*b [X2] ',
+        '(-1/1000000000j)*b [X2]',
     }
-    assert str(q14.compress()) == str(q14)
+    assert _get_terms_as_set(q14.compress()) == _get_terms_as_set(q14)
 
     ham = QubitOperator('X0 Y3', 'a') + 'a' * QubitOperator('X0 Y3')
     assert str(ham).strip() == '2*a [X0 Y3]'

@@ -107,7 +107,6 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
                 self._cpp_obj = klass(data)
             else:
                 self._cpp_obj = klass(data, const)
-                print(type(data), type(const))
 
     @property
     def const(self) -> numbers.Number:
@@ -130,11 +129,9 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
         """Setter method for const."""
         if isinstance(const_value, (ParameterResolver, real_pr_, complex_pr_)):
             const_value = const_value.const
-        try:
-            self._cpp_obj.set_const(const_value)
-        except TypeError:
-            print(type(const_value), const_value)
-            raise
+        if isinstance(const_value, numbers.Complex) and not self.is_complex:
+            self._cpp_obj = self._cpp_obj.cast_complex()
+        self._cpp_obj.set_const(const_value)
 
     def keys(self):
         """
@@ -712,6 +709,11 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             1.0
         """
         return self._cpp_obj.pop(v)
+
+    @property
+    def is_complex(self):
+        """Return whether the ParameterResolver instance is currently using complex coefficients."""
+        return self._cpp_obj.is_complex
 
     @property
     def real(self):

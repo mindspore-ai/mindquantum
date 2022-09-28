@@ -223,13 +223,13 @@ struct ParameterResolver {
     template <typename U,
               typename = std::enable_if_t<
                   std::is_arithmetic_v<std::remove_cvref_t<U>> || traits::is_std_complex_v<std::remove_cvref_t<U>>>>
-    explicit ParameterResolver(U&& const_value);
+    explicit ParameterResolver(U&& value);
 
     //! Constructor from a dictionary [string -> T] and a constant of type T
-    explicit ParameterResolver(const MST<T>& data, T const_value = static_cast<T>(0));
+    explicit ParameterResolver(const MST<T>& data, T value = static_cast<T>(0));
 
     //! Constructor from a dictionary [string -> T] and a constant of type T and gradient parameters
-    ParameterResolver(const MST<T>& data, T const_value, SS no_grad_parameters, SS encoder_parameters);
+    ParameterResolver(const MST<T>& data, T value, SS no_grad_parameters, SS encoder_parameters);
 
     //! Constructor from a dictionary [string -> some_type] without a constant
     /*!
@@ -249,14 +249,14 @@ struct ParameterResolver {
         typename = std::enable_if_t<
             (std::is_arithmetic_v<std::remove_cvref_t<U>> || traits::is_std_complex_v<std::remove_cvref_t<U>>) &&(
                 std::is_arithmetic_v<std::remove_cvref_t<V>> || traits::is_std_complex_v<std::remove_cvref_t<V>>)>>
-    ParameterResolver(const MST<U>& data, V const_value);
+    ParameterResolver(const MST<U>& data, V value);
 
     template <
         typename U, typename V,
         typename = std::enable_if_t<
             (std::is_arithmetic_v<std::remove_cvref_t<U>> || traits::is_std_complex_v<std::remove_cvref_t<U>>) &&(
                 std::is_arithmetic_v<std::remove_cvref_t<V>> || traits::is_std_complex_v<std::remove_cvref_t<V>>)>>
-    ParameterResolver(const MST<U>& data, V&& const_value, SS no_grad_parameters, SS encoder_parameters);
+    ParameterResolver(const MST<U>& data, V&& value, SS no_grad_parameters, SS encoder_parameters);
 
     explicit ParameterResolver(const std::string& param);
 
@@ -310,127 +310,31 @@ struct ParameterResolver {
 
     inline SS GetAnsatzParameters() const;
 
-    ParameterResolver<T>& operator+=(T value) {
-        this->const_value += value;
-        return *this;
-    }
+    template <typename other_t>
+    ParameterResolver<T>& operator+=(other_t value);
 
     template <typename other_t>
-    ParameterResolver<T>& operator+=(const ParameterResolver<other_t>& other) {
-        using conv_helper_t = traits::conversion_helper<T>;
-        if ((this->encoder_parameters_.size() == 0) & (this->no_grad_parameters_.size() == 0)
-            & (other.encoder_parameters_.size() == 0) & (other.no_grad_parameters_.size() == 0)) {
-            for (ITER(p, other.data_)) {
-                this->data_[p->first] += conv_helper_t::apply(p->second);
-            }
-        } else {
-            if (((this->encoder_parameters_ & other.GetAnsatzParameters()).size() != 0)
-                | ((this->GetAnsatzParameters() & other.encoder_parameters_).size() != 0)) {
-                throw std::runtime_error("encoder or ansatz property of parameter conflict.");
-            }
-            if (((this->no_grad_parameters_ & other.GetRequiresGradParameters()).size() != 0)
-                | ((this->GetRequiresGradParameters() & other.no_grad_parameters_).size() != 0)) {
-                throw std::runtime_error("gradient property of parameter conflict.");
-            }
+    ParameterResolver<T>& operator+=(const ParameterResolver<other_t>& other);
 
-            for (ITER(p, other.data_)) {
-                auto& key = p->first;
-                const auto& value = conv_helper_t::apply(p->second);
-                if (this->Contains(key)) {
-                    this->data_[key] += value;
-                } else {
-                    this->SetItem(key, value);
-                    if (other.EncoderContains(key)) {
-                        this->encoder_parameters_.insert(key);
-                    }
-                    if (other.NoGradContains(key)) {
-                        this->no_grad_parameters_.insert(key);
-                    }
-                }
-            }
-        }
-        this->const_value += conv_helper_t::apply(other.const_value);
-        return *this;
-    }
-
-    const ParameterResolver<T> operator-() const {
-        auto out = *this;
-        out.const_value = -out.const_value;
-        for (ITER(p, out.data_)) {
-            out.data_[p->first] = -out.data_[p->first];
-        }
-        return out;
-    }
-
-    ParameterResolver<T>& operator-=(T value) {
-        *this += (-value);
-        return *this;
-    }
+    ParameterResolver<T> operator-() const;
 
     template <typename other_t>
-    ParameterResolver<T>& operator-=(const ParameterResolver<other_t>& other) {
-        *this += (-other);
-        return *this;
-    }
-
-    ParameterResolver<T>& operator*=(T value) {
-        this->const_value *= value;
-        for (ITER(p, this->data_)) {
-            this->data_[p->first] *= value;
-        }
-        return *this;
-    }
+    ParameterResolver<T>& operator-=(other_t value);
 
     template <typename other_t>
-    ParameterResolver<T>& operator*=(const ParameterResolver<other_t> other) {
-        using conv_helper_t = traits::conversion_helper<T>;
-        if (this->IsConst()) {
-            for (ITER(p, other.data_)) {
-                this->data_[p->first] = this->const_value * conv_helper_t::apply(p->second);
-                if (!this->Contains(p->first)) {
-                    if (other.EncoderContains(p->first)) {
-                        this->encoder_parameters_.insert(p->first);
-                    }
-                    if (other.NoGradContains(p->first)) {
-                        this->no_grad_parameters_.insert(p->first);
-                    }
-                }
-                this->const_value = static_cast<T>(0);
-            }
-        } else {
-            if (other.IsConst()) {
-                for (ITER(p, this->data_)) {
-                    this->data_[p->first] *= conv_helper_t::apply(other.const_value);
-                }
-                this->const_value *= conv_helper_t::apply(other.const_value);
-            } else {
-                throw std::runtime_error("Parameter resolver only support first order variable.");
-            }
-        }
-        this->const_value *= conv_helper_t::apply(other.const_value);
-        return *this;
-    }
-
-    ParameterResolver<T>& operator/=(T value) {
-        for (ITER(p, this->data_)) {
-            this->data_[p->first] /= value;
-        }
-        this->const_value /= value;
-        return *this;
-    }
+    ParameterResolver<T>& operator-=(const ParameterResolver<other_t>& other);
 
     template <typename other_t>
-    ParameterResolver<T>& operator/=(const ParameterResolver<other_t> other) {
-        using conv_helper_t = traits::conversion_helper<T>;
-        if (!other.IsConst()) {
-            throw std::runtime_error("Cannot div a non constant ParameterResolver.");
-        }
-        for (ITER(p, this->data_)) {
-            this->data_[p->first] /= conv_helper_t::apply(other.const_value);
-        }
-        this->const_value /= conv_helper_t::apply(other.const_value);
-        return *this;
-    }
+    ParameterResolver<T>& operator*=(other_t value);
+
+    template <typename other_t>
+    ParameterResolver<T>& operator*=(const ParameterResolver<other_t>& other);
+
+    template <typename other_t>
+    ParameterResolver<T>& operator/=(other_t value);
+
+    template <typename other_t>
+    ParameterResolver<T>& operator/=(const ParameterResolver<other_t>& other);
 
     void PrintInfo() const;
 

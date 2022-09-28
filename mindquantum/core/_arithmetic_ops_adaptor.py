@@ -13,6 +13,9 @@
 #   limitations under the License.
 
 
+import numbers
+
+
 class CppArithmeticAdaptor:
     """
     Adaptor class to handle a Python class with a C++ underlying object.
@@ -94,7 +97,7 @@ class CppArithmeticAdaptor:
 
     def __imul__(self, other):
         """Inplace multiply by a number or a CppArithmeticAdaptor."""
-        if not self.is_complex and other.is_complex:
+        if not self.is_complex and (isinstance(other, numbers.Complex) or other.is_complex):
             self._cpp_obj = self._cpp_obj.cast_complex()
 
         if hasattr(other, '_cpp_obj'):

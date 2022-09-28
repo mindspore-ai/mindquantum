@@ -76,15 +76,8 @@ auto BindPR(py::module &module, const std::string &name) {
               // ------------------------------
               // Constructors
               .def(py::init<T>())
-              .def(py::init([](ParameterResolver<T> &pr, bool copy) {
-                  if (copy) {
-                      return pr;
-                  }
-                  return std::move(pr);
-              }))
               .def(py::init<std::string>())
               .def(py::init<int>())
-              .def(py::init<T>())
               .def(py::init<const MST<T> &>(), "data"_a)
               .def(py::init<const MST<T> &, T>(), "data"_a, "coeff"_a)
               .def(py::init<const MST<T> &, T, const SS &, const SS &>())
@@ -92,8 +85,8 @@ auto BindPR(py::module &module, const std::string &name) {
               // Properties
               .def_property_readonly("const", [](const pr_t &pr) { return pr.const_value; })
               .def_readonly("data", &pr_t::data_)
-              .def_property_readonly("is_complex",
-                                     [](const pr_t &) constexpr { return mindquantum::traits::is_complex_v<T>; })
+              .def_property_readonly(
+                  "is_complex", [](const pr_t &) constexpr { return mindquantum::traits::is_complex_v<T>; })
               // ------------------------------
               // Member functions
               .def("ansatz_part", &pr_t::AnsatzPart)
