@@ -18,8 +18,10 @@
 #include <sstream>
 #include <string>
 
-#include <tweedledum/IR/Circuit.h>
-#include <tweedledum/IR/Instruction.h>
+#ifndef NO_CXX_EXPERIMENTAL
+#    include <tweedledum/IR/Circuit.h>
+#    include <tweedledum/IR/Instruction.h>
+#endif  // !NO_CXX_EXPERIMENTAL
 
 #include "config/logging.hpp"
 
@@ -28,8 +30,10 @@
 #    include <spdlog/sinks/ostream_sink.h>
 #endif  // ENABLE_LOGGING
 
-#include "experimental/ops/gates.hpp"
-#include "experimental/ops/meta/dagger.hpp"
+#ifndef NO_CXX_EXPERIMENTAL
+#    include "experimental/ops/gates.hpp"
+#    include "experimental/ops/meta/dagger.hpp"
+#endif  // !NO_CXX_EXPERIMENTAL
 
 // =============================================================================
 // NB: Need to have those defined *before* including Catch2
@@ -43,6 +47,7 @@
 
 // =============================================================================
 
+#ifndef NO_CXX_EXPERIMENTAL
 namespace Catch {
 template <>
 struct StringMaker<tweedledum::Circuit> {
@@ -154,6 +159,7 @@ struct CircuitEquals : Catch::MatcherBase<tweedledum::Circuit> {
 inline auto Equals(const tweedledum::Circuit& circuit) {
     return CircuitEquals(circuit);
 }
+#endif  // !NO_CXX_EXPERIMENTAL
 
 // =============================================================================
 
@@ -175,7 +181,7 @@ int main(int argc, char* argv[]) {
 
 #    ifdef ENABLE_LOGGING
     if (enable_logging) {
-        spdlog::default_logger()->set_level(spdlog::level::info);
+        spdlog::default_logger()->set_level(spdlog::level::trace);
     } else {
         spdlog::default_logger()->set_level(spdlog::level::off);
     }
