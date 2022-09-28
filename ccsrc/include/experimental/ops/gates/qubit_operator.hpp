@@ -72,12 +72,19 @@ class QubitOperator
     using typename base_t::coeff_term_dict_t;
     using typename base_t::coefficient_real_t;
     using typename base_t::coefficient_t;
+    using typename base_t::derived_cmplx_t;
     using typename base_t::term_policy_t;
     using self_t = QubitOperator<coefficient_t>;
 
     using matrix_coeff_t = traits::to_cmplx_type_t<typename coeff_policy_t::matrix_coeff_t>;
     using matrix_t = tweedledum::UMatrix;
     using sparse_matrix_t = types::csr_matrix_t<matrix_coeff_t>;
+
+    // -------------------------------------------------------------------
+
+    static derived_cmplx_t simplify(const self_t& qubit_op);
+
+    // -------------------------------------------------------------------
 
     using TermsOperatorBase<QubitOperator, coeff_t, details::QubitOperatorTermPolicy>::TermsOperatorBase;
     QubitOperator() = default;

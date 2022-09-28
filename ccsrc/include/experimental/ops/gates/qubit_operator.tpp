@@ -29,6 +29,7 @@
 
 #include "config/conversion.hpp"
 #include "config/logging.hpp"
+#include "config/type_traits.hpp"
 
 #include "experimental/ops/gates/details/eigen_sparse_identity.hpp"
 #include "experimental/ops/gates/qubit_operator.hpp"
@@ -36,6 +37,25 @@
 // =============================================================================
 
 namespace mindquantum::ops {
+
+template <typename coeff_t>
+auto QubitOperator<coeff_t>::simplify(const self_t& qubit_op) -> derived_cmplx_t {
+    if constexpr (!is_real_valued) {
+        return qubit_op;
+    } else {
+        using conv_helper_t = traits::conversion_helper<typename derived_cmplx_t::coefficient_t>;
+
+        typename derived_cmplx_t::coeff_term_dict_t terms;
+        for (const auto& [local_ops, coeff] : qubit_op.get_terms()) {
+            const auto [new_terms, new_coeff] = derived_cmplx_t::term_policy_t::simplify(local_ops,
+                                                                                         conv_helper_t::apply(coeff));
+            terms.emplace(new_terms, new_coeff);
+        }
+        return derived_cmplx_t{std::move(terms)};
+    }
+}
+
+// =============================================================================
 
 template <typename coeff_t>
 uint32_t QubitOperator<coeff_t>::count_gates() const noexcept {

@@ -284,6 +284,13 @@ void init_mindquantum_ops(pybind11::module& module) {
 
     // ---------------------------------
 
+    qop_double.def_static("simplify", QubitOperatorD::simplify);
+    qop_cmplx_double.def_static("simplify", QubitOperatorCD::simplify);
+    qop_pr_double.def_static("simplify", QubitOperatorPRD::simplify);
+    qop_pr_cmplx_double.def_static("simplify", QubitOperatorPRCD::simplify);
+
+    // ---------------------------------
+
     using qop_t = decltype(qop_double);
     bindops::binop_definition<op::plus, qop_t>::inplace<double>(qop_double);
     bindops::binop_definition<op::plus, qop_t>::external<all_qop_types_t>(qop_double);

@@ -90,6 +90,15 @@ TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase
 
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
+TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(coeff_term_dict_t&& terms)
+    : terms_(std::move(terms)) {
+    calculate_num_targets_();
+}
+
+// -----------------------------------------------------------------------------
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
 TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(std::string_view terms_string,
                                                                                  coefficient_t coeff)
     : TermsOperatorBase(term_policy_t::parse_terms_string(terms_string), coeff) {

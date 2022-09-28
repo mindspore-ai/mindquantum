@@ -50,6 +50,7 @@ containerOutOfBounds:ccsrc/lib/experimental/ops/gates/fermion_operator_parameter
 syntaxError:ccsrc/include/core/parameter_resolver_external_ops.hpp:90
 syntaxError:ccsrc/include/core/sparse/algo.hpp:73
 syntaxError:ccsrc/include/experimental/ops/gates/terms_operator_base_external_ops.hpp:95
+syntaxError:ccsrc/python/experimental/lib/ops/details/define_terms_ops.hpp:117
 syntaxError:ccsrc/python/mqbackend/lib/binding.cc:184
 
 unusedStructMember:ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp:29

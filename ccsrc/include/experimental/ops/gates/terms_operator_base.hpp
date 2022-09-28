@@ -156,6 +156,7 @@ class TermsOperatorBase {
 
     using derived_t = derived_t_<coefficient_t>;
     using derived_real_t = derived_t_<coefficient_real_t>;
+    using derived_cmplx_t = derived_t_<traits::to_cmplx_type_t<coefficient_t>>;
 
     using base_t = TermsOperatorBase<derived_t_, coefficient_t, term_policy_t_>;
 
@@ -209,6 +210,8 @@ class TermsOperatorBase {
     explicit TermsOperatorBase(const py_terms_t& terms, coefficient_t coeff = coeff_policy_t::one);
 
     explicit TermsOperatorBase(const coeff_term_dict_t& terms);
+
+    explicit TermsOperatorBase(coeff_term_dict_t&& terms);
 
     template <typename other_coeff_t>
     explicit TermsOperatorBase(const derived_t_<other_coeff_t>& other);
