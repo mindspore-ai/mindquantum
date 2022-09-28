@@ -248,6 +248,15 @@ class FermionOperator(_Operator):
             fermion_operator.terms[k] = ParameterResolver(v)
         return fermion_operator
 
+    def hermitian(self):
+        """Return Hermitian conjugate of FermionOperator."""
+        conjugate_operator = FermionOperator()
+        for term, coefficient in self.terms.items():
+            # reverse the order and change the action from 0(1) to 1(0)
+            conjugate_term = tuple((index, 1 - op) for (index, op) in reversed(term))
+            conjugate_operator.terms[conjugate_term] = coefficient.conjugate()
+        return conjugate_operator
+
     def __str__(self):  # pylint: disable=too-many-branches
         """Return an easy-to-read string representation of the FermionOperator."""
         if not self.terms:

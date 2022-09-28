@@ -344,6 +344,13 @@ class QubitOperator(_Operator):
             reduced_terms.append((left_term[0], left_term[1].upper()))
         return coefficient, tuple(reduced_terms)
 
+    def hermitian(self):
+        """Return Hermitian conjugate of QubitOperator."""
+        conjugate_operator = QubitOperator()
+        for term, coefficient in self.terms.items():
+            conjugate_operator.terms[term] = coefficient.conjugate()
+        return conjugate_operator
+
     def __str__(self):
         """Return an easy-to-read string representation of the QubitOperator."""
         if not self.terms:

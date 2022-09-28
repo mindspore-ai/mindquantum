@@ -31,7 +31,7 @@ try:
 
     from ...experimental.utils import TermValue
 except ImportError:
-    TermValue = {'X': 'Y', 'Y': 'Y'}
+    TermValue = {k: k for k in ('X', 'Y', 'Z', 'I')}
 
 
 def _check_valid_qubit_excitation_operator_term(qeo_term):
@@ -155,6 +155,15 @@ class QubitExcitationOperator(_Operator):
             qubit_operator_i *= coeff_i
             qubit_operator += qubit_operator_i
         return qubit_operator
+
+    def hermitian(self):
+        """Return Hermitian conjugate of QubitExcitationOperator."""
+        conjugate_operator = QubitExcitationOperator()
+        for term, coefficient in self.terms.items():
+            # reverse the order and change the action from 0(1) to 1(0)
+            conjugate_term = tuple((index, 1 - op) for (index, op) in reversed(term))
+            conjugate_operator.terms[conjugate_term] = coefficient.conjugate()
+        return conjugate_operator
 
     def _simplify(self, terms, coefficient=1.0):
         """Simplify a term."""
