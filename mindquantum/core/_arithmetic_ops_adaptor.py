@@ -43,9 +43,10 @@ class CppArithmeticAdaptor:
 
     def __iadd__(self, other):
         """Inplace add a number or a CppArithmeticAdaptor."""
+        if not self.is_complex and other.is_complex:
+            self._cpp_obj = self._cpp_obj.cast_complex()
+
         if hasattr(other, '_cpp_obj'):
-            if not self._cpp_obj.is_complex and other._cpp_obj.is_complex:
-                self._cpp_obj = self._cpp_obj.cast_complex()
             self._cpp_obj += other._cpp_obj
         else:
             self._cpp_obj += other
@@ -67,9 +68,10 @@ class CppArithmeticAdaptor:
 
     def __isub__(self, other):
         """Inplace subtraction a number or a CppArithmeticAdaptor."""
+        if not self.is_complex and other.is_complex:
+            self._cpp_obj = self._cpp_obj.cast_complex()
+
         if hasattr(other, '_cpp_obj'):
-            if not self._cpp_obj.is_complex and other._cpp_obj.is_complex:
-                self._cpp_obj = self._cpp_obj.cast_complex()
             self._cpp_obj -= other._cpp_obj
         else:
             self._cpp_obj -= other
@@ -85,23 +87,24 @@ class CppArithmeticAdaptor:
     # ----------------------------------
 
     def __mul__(self, other):
-        """Multiple a number or a CppArithmeticAdaptor."""
+        """Multiply by a number or a CppArithmeticAdaptor."""
         if hasattr(other, '_cpp_obj'):
             return self.__class__(self._cpp_obj * other._cpp_obj)
         return self.__class__(self._cpp_obj * other)
 
     def __imul__(self, other):
-        """Inplace multiply a number or a CppArithmeticAdaptor."""
+        """Inplace multiply by a number or a CppArithmeticAdaptor."""
+        if not self.is_complex and other.is_complex:
+            self._cpp_obj = self._cpp_obj.cast_complex()
+
         if hasattr(other, '_cpp_obj'):
-            if not self._cpp_obj.is_complex and other._cpp_obj.is_complex:
-                self._cpp_obj = self._cpp_obj.cast_complex()
             self._cpp_obj *= other._cpp_obj
         else:
             self._cpp_obj *= other
         return self
 
     def __rmul__(self, other):
-        """Right multiple a number or a CppArithmeticAdaptor."""
+        """Right multiply by a number or a CppArithmeticAdaptor."""
         if hasattr(other, '_cpp_obj'):
             return self.__class__(other._cpp_obj * self._cpp_obj)
         return self.__class__(other * self._cpp_obj)
@@ -113,8 +116,14 @@ class CppArithmeticAdaptor:
         return self.__class__(self._cpp_obj / other)
 
     def __itruediv__(self, other):
-        """Divide a number."""
-        self._cpp_obj /= other
+        """Divide by a number or a CppArithmeticAdaptor."""
+        if not self.is_complex and other.is_complex:
+            self._cpp_obj = self._cpp_obj.cast_complex()
+
+        if hasattr(other, '_cpp_obj'):
+            self._cpp_obj /= other._cpp_obj
+        else:
+            self._cpp_obj /= other
         return self
 
     # ----------------------------------
