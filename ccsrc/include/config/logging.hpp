@@ -37,6 +37,8 @@ namespace mindquantum::logging {
 void set_log_file(const std::string& filename);
 }  // namespace mindquantum::logging
 
+#    define MQ_TRACE(...)                SPDLOG_TRACE(__VA_ARGS__)
+#    define MQ_LOGGER_TRACE(logger, ...) SPDLOG_LOGGER_TRACE(logger, __VA_ARGS__)
 #    define MQ_DEBUG(...)                SPDLOG_DEBUG(__VA_ARGS__)
 #    define MQ_LOGGER_DEBUG(logger, ...) SPDLOG_LOGGER_DEBUG(logger, __VA_ARGS__)
 #    define MQ_ERROR(...)                SPDLOG_ERROR(__VA_ARGS__)
@@ -46,6 +48,8 @@ void set_log_file(const std::string& filename);
 #    define MQ_WARN(...)                 SPDLOG_WARN(__VA_ARGS__)
 #    define MQ_LOGGER_WARN(logger, ...)  SPDLOG_LOGGER_WARN(logger, __VA_ARGS__)
 #else
+#    define MQ_TRACE(...)                static_cast<void>(0)
+#    define MQ_LOGGER_TRACE(logger, ...) static_cast<void>(0)
 #    define MQ_DEBUG(...)                static_cast<void>(0)
 #    define MQ_LOGGER_DEBUG(logger, ...) static_cast<void>(0)
 #    define MQ_ERROR(...)                static_cast<void>(0)
