@@ -142,7 +142,9 @@ auto QubitOperatorTermPolicy<coefficient_t>::simplify(terms_t terms, coefficient
             }
         }
     }
-    reduced_terms.emplace_back(left_term);
+    if (left_term.second != TermValue::I) {
+        reduced_terms.emplace_back(left_term);
+    }
     return {std::move(reduced_terms), coeff};
 }
 
