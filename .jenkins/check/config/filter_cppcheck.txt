@@ -46,7 +46,7 @@
 "mindquantum/ccsrc/include/core/parameter_resolver_external_ops.hpp:90"                     "syntaxError"
 "mindquantum/ccsrc/include/core/sparse/algo.hpp:73"                                         "syntaxError"
 "mindquantum/ccsrc/include/experimental/ops/gates/terms_operator_base_external_ops.hpp:95"  "syntaxError"
-"mindquantum/ccsrc/python/experimental/lib/ops/details/define_terms_ops.hpp:117"            "syntaxError"
+"mindquantum/ccsrc/python/experimental/lib/ops/details/define_terms_ops.hpp:111"            "syntaxError"
 "mindquantum/ccsrc/python/mqbackend/lib/binding.cc:184"                                     "syntaxError"
 
 "mindquantum/ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp:29"              "unusedStructMember"
