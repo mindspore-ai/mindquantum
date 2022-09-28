@@ -33,6 +33,7 @@
 #include <boost/range/any_range.hpp>
 
 #include "config/constexpr_type_name.hpp"
+#include "config/conversion.hpp"
 #include "config/format/std_complex.hpp"
 #include "config/logging.hpp"
 #include "config/real_cast.hpp"
@@ -40,21 +41,6 @@
 #include "experimental/ops/gates/terms_operator_base.hpp"
 #include "experimental/ops/gates/traits.hpp"
 #include "experimental/ops/meta/dagger.hpp"
-
-// =============================================================================
-
-namespace details {
-template <typename coefficient_t>
-struct conversion_helper {
-    static auto apply(const coefficient_t& scalar) {
-        return scalar;
-    }
-    template <typename scalar_t>
-    static auto apply(const scalar_t& scalar) {
-        return static_cast<coefficient_t>(scalar);
-    }
-};
-}  // namespace details
 
 // =============================================================================
 
@@ -126,7 +112,7 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
 template <typename other_coeff_t>
 TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(const derived_t_<other_coeff_t>& other)
     : num_targets_(other.num_targets_) {
-    using conv_helper_t = ::details::conversion_helper<coefficient_t>;
+    using conv_helper_t = traits::conversion_helper<coefficient_t>;
     std::transform(begin(other.terms_), end(other.terms_), std::inserter(terms_, end(terms_)), [](const auto& term) {
         return typename coeff_term_dict_t::value_type{term.first, conv_helper_t::apply(term.second)};
     });
@@ -628,7 +614,7 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 template <mindquantum::concepts::compat_terms_op_scalar<derived_t_<coefficient_t_>> scalar_t>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator*=(const scalar_t& scalar) -> derived_t& {
-    using conv_helper_t = ::details::conversion_helper<coefficient_t>;
+    using conv_helper_t = traits::conversion_helper<coefficient_t>;
     // NB: cannot use the usual range-for loop since that uses operator*() implicitly and using tsl::ordered_map the
     //     values accessed in this way are constants
     for (auto it(begin(terms_)), it_end(end(terms_)); it != it_end; ++it) {
@@ -649,7 +635,7 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator*=(c
     if constexpr (traits::is_terms_operator_v<type_t>) {
         return mul_impl_(op_or_scalar);
     } else {
-        using conv_helper_t = ::details::conversion_helper<coefficient_t>;
+        using conv_helper_t = traits::conversion_helper<coefficient_t>;
         // NB: cannot use the usual range-for loop since that uses operator*() implicitly and using tsl::ordered_map the
         //     values accessed in this way are constants
         for (auto it(begin(terms_)), it_end(end(terms_)); it != it_end; ++it) {
@@ -675,7 +661,7 @@ template <mindquantum::concepts::compat_terms_op_scalar<derived_t_<coefficient_t
 template <typename scalar_t, typename>
 #endif  // MQ_HAS_CONCEPTS && !_MSC_VER
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator/=(const scalar_t& scalar) -> derived_t& {
-    using conv_helper_t = ::details::conversion_helper<coefficient_t>;
+    using conv_helper_t = traits::conversion_helper<coefficient_t>;
     return *this *= static_cast<coefficient_t>(1.) / conv_helper_t::apply(scalar);
 }
 
@@ -703,7 +689,7 @@ template <typename op_t, typename>
 #endif  // MQ_HAS_CONCEPTS && !(defined _MSC_VER)
 bool TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::is_equal(const op_t& other) const {
     using policy_t = coeff_policy_t;
-    using conv_helper_t = ::details::conversion_helper<coefficient_t>;
+    using conv_helper_t = traits::conversion_helper<coefficient_t>;
 
     std::vector<typename coeff_term_dict_t::value_type> intersection;
     std::vector<typename coeff_term_dict_t::value_type> symmetric_differences;
@@ -757,7 +743,7 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::add_sub_impl
                                                                                   assign_modify_op_t&& assign_modify_op,
                                                                                   coeff_unary_op_t&& coeff_unary_op)
     -> derived_t& {
-    using conv_helper_t = ::details::conversion_helper<coefficient_t>;
+    using conv_helper_t = traits::conversion_helper<coefficient_t>;
     for (const auto& [term, coeff] : other.terms_) {
         auto it = terms_.find(term);
         if (it != terms_.end()) {
@@ -782,7 +768,7 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 template <typename other_t>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::mul_impl_(const other_t& other) -> derived_t& {
-    using conv_helper_t = ::details::conversion_helper<coefficient_t>;
+    using conv_helper_t = traits::conversion_helper<coefficient_t>;
     coeff_term_dict_t product_results;
     for (const auto& [left_op, left_coeff] : terms_) {
         for (const auto& [right_op, right_coeff] : other.get_terms()) {

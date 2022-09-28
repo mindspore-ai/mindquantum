@@ -33,6 +33,7 @@
 #include <nlohmann/json.hpp>
 
 #include "config/common_type.hpp"
+#include "config/conversion.hpp"
 #include "config/real_cast.hpp"
 #include "config/type_promotion.hpp"
 #include "config/type_traits.hpp"
@@ -48,19 +49,6 @@
 namespace mindquantum {
 template <typename float_t>
 class ParameterResolver;
-
-namespace details::pr {
-template <typename float_t>
-struct conversion_helper {
-    static auto apply(const float_t& scalar) {
-        return scalar;
-    }
-    template <typename scalar_t>
-    static auto apply(const scalar_t& scalar) {
-        return static_cast<scalar_t>(scalar);
-    }
-};
-}  // namespace details::pr
 
 namespace details {
 template <RealCastType cast_type, typename float_t>
@@ -329,7 +317,7 @@ struct ParameterResolver {
 
     template <typename other_t>
     ParameterResolver<T>& operator+=(const ParameterResolver<other_t>& other) {
-        using conv_helper_t = details::pr::conversion_helper<T>;
+        using conv_helper_t = traits::conversion_helper<T>;
         if ((this->encoder_parameters_.size() == 0) & (this->no_grad_parameters_.size() == 0)
             & (other.encoder_parameters_.size() == 0) & (other.no_grad_parameters_.size() == 0)) {
             for (ITER(p, other.data_)) {
@@ -395,7 +383,7 @@ struct ParameterResolver {
 
     template <typename other_t>
     ParameterResolver<T>& operator*=(const ParameterResolver<other_t> other) {
-        using conv_helper_t = details::pr::conversion_helper<T>;
+        using conv_helper_t = traits::conversion_helper<T>;
         if (this->IsConst()) {
             for (ITER(p, other.data_)) {
                 this->data_[p->first] = this->const_value * conv_helper_t::apply(p->second);
@@ -433,7 +421,7 @@ struct ParameterResolver {
 
     template <typename other_t>
     ParameterResolver<T>& operator/=(const ParameterResolver<other_t> other) {
-        using conv_helper_t = details::pr::conversion_helper<T>;
+        using conv_helper_t = traits::conversion_helper<T>;
         if (!other.IsConst()) {
             throw std::runtime_error("Cannot div a non constant ParameterResolver.");
         }

@@ -27,6 +27,7 @@
 #include <tweedledum/Operators/Standard/Y.h>
 #include <tweedledum/Operators/Standard/Z.h>
 
+#include "config/conversion.hpp"
 #include "config/logging.hpp"
 
 #include "experimental/ops/gates/details/eigen_sparse_identity.hpp"
