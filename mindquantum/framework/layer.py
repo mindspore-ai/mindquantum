@@ -60,7 +60,7 @@ class MQLayer(nn.Cell):  # pylint: disable=too-few-public-methods
         >>> from mindquantum.framework import MQLayer
         >>> from mindquantum.simulator import Simulator
         >>> ms.set_seed(42)
-        >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
+        >>> ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
         >>> enc = Circuit().ry('a', 0).as_encoder()
         >>> ans = Circuit().h(0).rx('b', 0).as_ansatz()
         >>> ham = Hamiltonian(QubitOperator('Z0'))
@@ -135,7 +135,7 @@ class MQN2Layer(nn.Cell):  # pylint: disable=too-few-public-methods
         >>> from mindquantum.framework import MQN2Layer
         >>> from mindquantum.simulator import Simulator
         >>> ms.set_seed(42)
-        >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
+        >>> ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
         >>> enc = Circuit().ry('a', 0).as_encoder()
         >>> ans = Circuit().h(0).rx('b', 0).as_ansatz()
         >>> ham = Hamiltonian(QubitOperator('Z0'))
@@ -205,7 +205,7 @@ class MQAnsatzOnlyLayer(nn.Cell):  # pylint: disable=too-few-public-methods
         >>> from mindquantum.framework import MQAnsatzOnlyLayer
         >>> from mindquantum.simulator import Simulator
         >>> ms.set_seed(42)
-        >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
+        >>> ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
         >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0)
         >>> ham = Hamiltonian(QubitOperator('Z0'))
         >>> sim = Simulator('projectq', 1)
@@ -276,7 +276,7 @@ class MQN2AnsatzOnlyLayer(nn.Cell):  # pylint: disable=too-few-public-methods
         >>> from mindquantum.framework import MQN2AnsatzOnlyLayer
         >>> from mindquantum.simulator import Simulator
         >>> ms.set_seed(43)
-        >>> ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
+        >>> ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
         >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0)
         >>> ham = Hamiltonian(QubitOperator('Z0'))
         >>> sim = Simulator('projectq', 1)
