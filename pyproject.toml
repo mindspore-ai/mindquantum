@@ -178,6 +178,7 @@ filterwarnings = [
     'ignore:.*Please use `OptimizeResult`.*is deprecated:DeprecationWarning',
     'ignore:.*`np.str` is a deprecated alias for the builtin `str`.*:DeprecationWarning',
     'ignore:.*MindSpore not installed.*:UserWarning',
+    'ignore:.*distutils Version classes are deprecated. Use packaging.version instead:DeprecationWarning'
 ]
 
 
