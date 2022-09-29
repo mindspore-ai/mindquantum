@@ -108,6 +108,9 @@ struct CoeffPolicy<ParameterResolver<float_t>> : CoeffPolicyBase<ParameterResolv
     }
 
     // Misc. math functions
+    static auto conjugate(const coeff_t& coeff) {
+        return coeff.Conjugate();
+    }
     static auto is_zero(const coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
         if (coeff.IsConst()) {
             return std::abs(coeff.const_value) <= abs_tol;

@@ -90,6 +90,9 @@ struct CoeffPolicy<std::complex<float_t>> : CoeffPolicyBase<std::complex<float_t
     }
 
     // Misc. functions
+    static auto conjugate(const coeff_t& coeff) {
+        return std::conj(coeff);
+    }
     static auto is_zero(const coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
         return std::abs(coeff) <= abs_tol;
     }
