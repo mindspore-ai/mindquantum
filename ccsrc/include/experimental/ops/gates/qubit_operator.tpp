@@ -28,6 +28,8 @@
 #include <tweedledum/Operators/Standard/Z.h>
 
 #include "config/conversion.hpp"
+#include "config/format/eigen_matrices.hpp"
+#include "config/format/std_optional.hpp"
 #include "config/logging.hpp"
 #include "config/type_traits.hpp"
 
@@ -69,6 +71,7 @@ uint32_t QubitOperator<coeff_t>::count_gates() const noexcept {
 
 template <typename coeff_t>
 auto QubitOperator<coeff_t>::matrix() const -> std::optional<matrix_t> {
+    MQ_TRACE("Calling QubitOperator<{}>::matrix()", get_type_name<coeff_t>());
     return std::nullopt;
 }
 
@@ -76,6 +79,7 @@ auto QubitOperator<coeff_t>::matrix() const -> std::optional<matrix_t> {
 
 template <typename coeff_t>
 auto QubitOperator<coeff_t>::sparse_matrix(std::optional<uint32_t> n_qubits) const -> std::optional<sparse_matrix_t> {
+    MQ_TRACE("Calling QubitOperator<{}>::sparse_matrix({})", get_type_name<coeff_t>(), n_qubits);
     namespace Op = tweedledum::Op;
     using scalar_t = typename sparse_matrix_t::Scalar;
     using dense_2x2_t = Eigen::Matrix<scalar_t, 2, 2>;

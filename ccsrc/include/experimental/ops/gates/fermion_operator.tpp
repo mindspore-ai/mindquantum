@@ -19,6 +19,8 @@
 #include <utility>
 #include <vector>
 
+#include "config/format/eigen_matrices.hpp"
+#include "config/format/std_optional.hpp"
 #include "config/logging.hpp"
 
 #include "experimental/ops/gates/details/fermion_operator_helper_functions.hpp"
@@ -42,6 +44,7 @@ namespace mindquantum::ops {
 
 template <typename coeff_t>
 auto FermionOperator<coeff_t>::matrix() const -> std::optional<matrix_t> {
+    MQ_TRACE("Calling FermionOperator<{}>::matrix()", get_type_name<coeff_t>());
     return std::nullopt;
 }
 
@@ -49,6 +52,7 @@ auto FermionOperator<coeff_t>::matrix() const -> std::optional<matrix_t> {
 
 template <typename coeff_t>
 auto FermionOperator<coeff_t>::sparse_matrix(std::optional<uint32_t> n_qubits) const -> std::optional<sparse_matrix_t> {
+    MQ_TRACE("Calling FermionOperator<{}>::sparse_matrix({})", get_type_name<coeff_t>(), n_qubits);
     using scalar_t = typename sparse_matrix_t::Scalar;
     if (std::empty(base_t::terms_)) {
         return std::nullopt;
@@ -71,6 +75,7 @@ auto FermionOperator<coeff_t>::sparse_matrix(std::optional<uint32_t> n_qubits) c
     const auto n_qubits_value = n_qubits.value_or(n_qubits_local);
 
     const auto process_term = [n_qubits_value](const auto& local_ops) -> sparse_matrix_t {
+        MQ_TRACE("process_term({})", local_ops);
         if (std::empty(local_ops)) {
             return details::n_identity<scalar_t>(n_qubits_value);
         }
@@ -87,23 +92,28 @@ auto FermionOperator<coeff_t>::sparse_matrix(std::optional<uint32_t> n_qubits) c
         }
 
         auto process_group = [n_qubits_value](const auto& group) constexpr {
+            MQ_TRACE("process_group({})", group);
             assert(group.size() == 1 || group.size() == 2);
             if (std::size(group) == 2) {
+                MQ_TRACE("2FW:, {}, {}, {}, {}, {}", group[0].first, group[0].second == TermValue::adg, group[1].first,
+                         group[1].second == TermValue::adg, n_qubits_value);
                 return details::two_fermion_word<scalar_t>(group[0].first, group[0].second == TermValue::adg,
                                                            group[1].first, group[1].second == TermValue::adg,
                                                            n_qubits_value);
             }
+            MQ_TRACE("1FW:, {}, {}, {}", group[0].first, group[0].second == TermValue::adg, n_qubits_value);
             return details::single_fermion_word<scalar_t>(group[0].first, group[0].second == TermValue::adg,
                                                           n_qubits_value);
         };
 
         assert(!std::empty(groups));
-        auto tmp = process_group(groups.front());
 
+        auto tmp = process_group(groups.front());
         for (auto it(begin(groups) + 1); it != end(groups); ++it) {
-            tmp = tmp * process_group(*it);
+            tmp = (tmp * process_group(*it)).eval();
         }
 
+        MQ_TRACE("tmp has {} non-zero coefficients", tmp.nonZeros());
         return tmp;
     };
 

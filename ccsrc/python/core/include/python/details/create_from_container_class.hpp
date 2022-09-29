@@ -31,10 +31,10 @@
 namespace mindquantum::python {
 template <typename type_t>
 auto create_from_python_container_class(const pybind11::object& src) {
-    MQ_DEBUG("Called create_from_python_container_class<{}>({})", get_type_name<type_t>(),
+    MQ_TRACE("Called create_from_python_container_class<{}>({})", get_type_name<type_t>(),
              get_fully_qualified_tp_name(src));
 #ifndef NDEBUG
-    MQ_DEBUG("Python value is: {}", static_cast<std::string>(pybind11::str(src)));
+    MQ_TRACE("Python value is: {}", static_cast<std::string>(pybind11::str(src)));
 #endif  // !NDEBUG
 
     if (!pybind11::hasattr(src, "_cpp_obj")) {
@@ -54,16 +54,16 @@ auto create_from_python_container_class(const pybind11::object& src) {
             fmt::format("{} is not a C++ {}", get_fully_qualified_tp_name(cpp_obj), get_type_name<type_t>()));
     }
 
-    MQ_DEBUG("Casting {} to C++ {}", get_fully_qualified_tp_name(cpp_obj), get_type_name<type_t>());
+    MQ_TRACE("Casting {} to C++ {}", get_fully_qualified_tp_name(cpp_obj), get_type_name<type_t>());
     return cpp_obj.cast<type_t>();
 }
 
 namespace details {
 template <typename type_t, typename trampoline_type_t>
 constexpr auto try_cast_from_impl(const pybind11::object& src) -> type_t {
-    MQ_DEBUG("Try casting {} to C++ {}", get_fully_qualified_tp_name(src), get_type_name<trampoline_type_t>());
+    MQ_TRACE("Try casting {} to C++ {}", get_fully_qualified_tp_name(src), get_type_name<trampoline_type_t>());
 #ifndef NDEBUG
-    MQ_DEBUG("Python value is: {}", static_cast<std::string>(pybind11::repr(src)));
+    MQ_TRACE("Python value is: {}", static_cast<std::string>(pybind11::repr(src)));
 #endif  // !NDEBUG
     return type_t{pybind11::cast<trampoline_type_t>(src)};
 }
@@ -85,10 +85,10 @@ auto try_cast_from(const pybind11::object& src) -> type_t {
 
 template <typename type_t, typename... cpp_trampoline_types_t>
 auto create_from_python_container_class_with_trampoline(const pybind11::object& src) {
-    MQ_DEBUG("Called create_from_python_container_class<{}, ...>({})", get_type_name<type_t>(),
+    MQ_TRACE("Called create_from_python_container_class<{}, ...>({})", get_type_name<type_t>(),
              get_fully_qualified_tp_name(src));
 #ifndef NDEBUG
-    MQ_DEBUG("Python value is: {}", static_cast<std::string>(pybind11::repr(src)));
+    MQ_TRACE("Python value is: {}", static_cast<std::string>(pybind11::repr(src)));
 #endif  // !NDEBUG
 
     if (!pybind11::hasattr(src, "_cpp_obj")) {

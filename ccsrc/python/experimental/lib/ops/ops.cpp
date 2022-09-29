@@ -21,13 +21,13 @@
 #include <fmt/format.h>
 #include <pybind11/cast.h>
 #include <pybind11/complex.h>
-#include <pybind11/detail/common.h>
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 
 #include "config/constexpr_type_name.hpp"
 
