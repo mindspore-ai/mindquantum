@@ -117,6 +117,8 @@ help_message() {
     echo "                       Defaults to: $n_jobs_default"
     echo '  --local-pkgs         Compile third-party dependencies locally'
     echo '  --logging            Enable logging in C++ code'
+    echo '  --logging-debug      Enable DEBUG level logging macros (implies --logging)'
+    echo '  --logging-trace      Enable TRACE level logging macros (implies --logging --logging-debug)'
     echo '  --no-config          Ignore any configuration file'
     echo '  --ninja              Build using Ninja instead of make'
     echo '  --quiet              Disable verbose build rules'
@@ -243,6 +245,14 @@ while getopts "${getopts_args}" OPT; do
                             ;;
         logging )           no_arg;
                             set_var enable_logging
+                            ;;
+        logging-debug )     no_arg;
+                            set_var enable_logging
+                            set_var logging_enable_debug
+                            ;;
+        logging-trace )     no_arg;
+                            set_var logging_enable_debug
+                            set_var logging_enable_trace
                             ;;
         n )                 no_arg;
                             set_var dry_run

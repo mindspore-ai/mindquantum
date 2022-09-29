@@ -187,6 +187,18 @@ rem ============================================================================
     shift & goto :initial
   )
 
+  if /I "%1" == "/LoggingDebug" (
+    set enable_logging=1
+    set logging_enable_debug=1
+    shift & goto :initial
+  )
+
+  if /I "%1" == "/LoggingTrace" (
+    set enable_logging=1
+    set logging_enable_trace=1
+    shift & goto :initial
+  )
+
   if /I "%1" == "/Ninja" (
     set ninja=1
     shift & goto :initial
@@ -306,6 +318,8 @@ call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CUDA !enable_gpu!
 call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CXX_EXPERIMENTAL !enable_cxx!
 call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_GITEE !enable_gitee!
 call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_LOGGING !enable_logging!
+call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_LOGGING_DEBUG_LEVEL !logging_enable_debug!
+call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_LOGGING_TRACE_LEVEL !logging_enable_trace!
 call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_PROJECTQ !enable_projectq!
 
 set args=!args! %RETVAL%
@@ -417,6 +431,8 @@ rem ============================================================================
   echo                       Defaults to: !n_jobs_default!
   echo   /LocalPkgs          Compile third-party dependencies locally
   echo   /Logging            Enable logging in C++ code
+  echo   /LoggingDebug       Enable DEBUG level logging macros (implies /Logging)
+  echo   /LoggingTrace       Enable TRACE level logging macros (implies /Logging /LoggingDebug)'
   echo   /Ninja              Use the Ninja CMake generator
   echo   /NoDelocate         Disable delocating the binary wheels after build is finished
   echo   /NoIsolation        Pass --no-isolation to python3 -m build

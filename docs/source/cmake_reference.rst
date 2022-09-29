@@ -54,6 +54,12 @@ Descriptions
 +-----------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_GITEE``                  | Use Gitee instead of GitHub for (some) third-party dependencies       |
 +-----------------------------------+-----------------------------------------------------------------------+
+| ``ENABLE_LOGGING``                | Enable the use of logging in C++                                      |
++-----------------------------------+-----------------------------------------------------------------------+
+| ``ENABLE_LOGGING_DEBUG_LEVEL``    | If logging is enabled, log everything down to the DEBUG level         |
++-----------------------------------+-----------------------------------------------------------------------+
+| ``ENABLE_LOGGING_TRACE_LEVEL``    | If logging is enabled, log everything down to the TRACE level         |
++-----------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_MD``                     | Use /MD, /MDd flags when compiling (MSVC only)                        |
 +-----------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_MT``                     | Use /MT, /MTd flags when compiling (MSVC only)                        |

@@ -167,6 +167,8 @@ $cmake_option_names = @{
     enable_gpu = 'ENABLE_CUDA'
     enable_projectq = 'ENABLE_PROJECTQ'
     enable_logging = 'ENABLE_LOGGING'
+    logging_enable_debug = 'ENABLE_LOGGING_DEBUG_LEVEL'
+    logging_enable_debug = 'ENABLE_LOGGING_TRACE_LEVEL'
     enable_tests = 'BUILD_TESTING'
     do_clean_3rdparty = 'CLEAN_3RDPARTY_INSTALL_DIR'
 }

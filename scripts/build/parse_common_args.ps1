@@ -81,6 +81,8 @@ function Help-Message() {
     Write-Output ("                      Defaults to: {0}" -f $n_jobs_default)
     Write-Output '  -LocalPkgs          Compile third-party dependencies locally'
     Write-Output '  -Logging            Enable logging in C++ code'
+    Write-Output '  -LoggingDebug       Enable DEBUG level logging macros (implies -Logging)'
+    Write-Output '  -LoggingTrace       Enable TRACE level logging macros (implies -Logging -LoggingDebug)'
     Write-Output '  -NoConfig           Ignore any configuration file'
     Write-Output '  -NoGitee            Do not favor Gitee over Github/Gitlab'
     Write-Output '  -Ninja              Build using Ninja instead of make'
@@ -186,6 +188,14 @@ if ($LocalPkgs.IsPresent) {
 
 if ($Logging.IsPresent) {
     Set-Value 'enable_logging'
+}
+if ($LoggingDebug.IsPresent) {
+    Set-Value 'enable_logging'
+    Set-Value 'logging_enable_debug'
+}
+if ($LoggingTrace.IsPresent) {
+    Set-Value 'enable_logging'
+    Set-Value 'logging_enable_trace'
 }
 
 if ($Quiet.IsPresent) {

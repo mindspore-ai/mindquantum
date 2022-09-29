@@ -148,6 +148,8 @@ set_AA cmake_option_names enable_gitee ENABLE_GITEE
 set_AA cmake_option_names enable_gpu ENABLE_CUDA
 set_AA cmake_option_names enable_projectq ENABLE_PROJECTQ
 set_AA cmake_option_names enable_logging ENABLE_LOGGING
+set_AA cmake_option_names logging_enable_debug ENABLE_LOGGING_DEBUG_LEVEL
+set_AA cmake_option_names logging_enable_trace ENABLE_LOGGING_TRACE_LEVEL
 set_AA cmake_option_names enable_tests BUILD_TESTING
 set_AA cmake_option_names do_clean_3rdparty CLEAN_3RDPARTY_INSTALL_DIR
 

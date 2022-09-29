@@ -40,6 +40,8 @@ Param(
     [Alias("J")][ValidateRange("Positive")][int]$Jobs,
     [switch]$LocalPkgs,
     [switch]$Logging,
+    [switch]$LoggingDebug,
+    [switch]$LoggingTrace,
     [switch]$Ninja,
     [switch]$NoConfig,
     [switch]$NoGitee,
@@ -210,6 +212,8 @@ $cmake_args = @('-DIN_PLACE_BUILD:BOOL=ON'
                 "-DENABLE_DOCUMENTATION:BOOL={0}" -f $CMAKE_BOOL[$do_docs]
                 "-DENABLE_GITEE:BOOL={0}" -f $CMAKE_BOOL[$enable_gitee]
                 "-DENABLE_LOGGING:BOOL={0}" -f $CMAKE_BOOL[$enable_logging]
+                "-DENABLE_LOGGING_DEBUG_LEVEL:BOOL={0}" -f $CMAKE_BOOL[$logging_enable_debug]
+                "-DENABLE_LOGGING_TRACE_LEVEL:BOOL={0}" -f $CMAKE_BOOL[$logging_enable_trace]
                 "-DBUILD_TESTING:BOOL={0}" -f $CMAKE_BOOL[$enable_tests]
                 "-DCLEAN_3RDPARTY_INSTALL_DIR:BOOL={0}" -f $CMAKE_BOOL[$do_clean_3rdparty]
                 "-DUSE_VERBOSE_MAKEFILE:BOOL={0}" -f $CMAKE_BOOL[-not $cmake_make_silent]
@@ -405,6 +409,12 @@ Compile third-party dependencies locally
 
 .PARAMETER Logging
 Enable logging in C++ code
+
+.PARAMETER LoggingDebug
+Enable DEBUG level logging macros (implies -Logging)
+
+.PARAMETER LoggingTrace
+Enable TRACE level logging macros (implies -Logging -LoggingDebug)
 
 .PARAMETER Ninja
 Build using Ninja instead of make

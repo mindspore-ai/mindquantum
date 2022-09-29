@@ -182,6 +182,18 @@ rem ============================================================================
     shift & goto :initial
   )
 
+  if /I "%1" == "/LoggingDebug" (
+    set enable_logging=1
+    set logging_enable_debug=1
+    shift & goto :initial
+  )
+
+  if /I "%1" == "/LoggingTrace" (
+    set enable_logging=1
+    set logging_enable_trace=1
+    shift & goto :initial
+  )
+
   if /I "%1" == "/Ninja" (
     set ninja=1
     shift & goto :initial
@@ -311,6 +323,8 @@ call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_CXX_EXPERIMENTAL !ena
 call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_DOCUMENTATION !do_docs!
 call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_GITEE !enable_gitee!
 call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_LOGGING !enable_logging!
+call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_LOGGING_DEBUG_LEVEL !logging_enable_debug!
+call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_LOGGING_TRACE_LEVEL !logging_enable_trace!
 call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_PROJECTQ !enable_projectq!
 
 set cmake_args=!cmake_args! %RETVAL%
@@ -494,6 +508,10 @@ exit /B 0
   echo                       Defaults to: !n_jobs_default!
   echo   /LocalPkgs          Compile third-party dependencies locally
   echo   /Logging            Enable logging in C++ code
+  echo   /LoggingDebug       Enable DEBUG level logging macros (implies /Logging)
+  echo   /LoggingTrace       Enable TRACE level logging macros (implies /Logging /LoggingDebug)'
+  echo   /LoggingDebug       Enable DEBUG level logging macros (implies /Logging)
+  echo   /LoggingTrace       Enable TRACE level logging macros (implies /Logging /LoggingDebug)'
   echo   /Ninja              Use the Ninja CMake generator
   echo   /Prefix             Specify installation prefix
   echo   /Quiet              Disable verbose build rules
