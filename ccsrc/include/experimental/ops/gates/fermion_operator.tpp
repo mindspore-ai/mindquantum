@@ -132,7 +132,7 @@ auto FermionOperator<coeff_t>::sparse_matrix(std::optional<uint32_t> n_qubits) c
             MQ_ERROR("Coeff is not const! ({})", it->second);
             return {};
         }
-        result = result * process_term(it->first) * coeff_policy_t::get_num(it->second);
+        result = (result + process_term(it->first) * coeff_policy_t::get_num(it->second)).eval();
     }
 
     return result;
