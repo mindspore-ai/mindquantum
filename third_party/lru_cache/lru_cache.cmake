@@ -38,8 +38,10 @@ mindquantum_add_pkg(
   PATCHES ${PATCHES}
   FORCE_LOCAL_PKG
   TARGET_ALIAS mindquantum::lru_cache lru_cache::lru_cache)
-target_compile_features(lru_cache::lru_cache INTERFACE cxx_std_17)
-if(ENABLE_ABSEIL_CPP)
-  target_link_libraries(lru_cache::lru_cache INTERFACE mindquantum::absl_node_hash_set)
-  target_compile_definitions(lru_cache::lru_cache INTERFACE LRU_CACHE_HAS_ABSEIL_CPP)
+if(TARGET lru_cache::lru_cache)
+  target_compile_features(lru_cache::lru_cache INTERFACE cxx_std_17)
+  if(ENABLE_ABSEIL_CPP)
+    target_link_libraries(lru_cache::lru_cache INTERFACE mindquantum::absl_node_hash_set)
+    target_compile_definitions(lru_cache::lru_cache INTERFACE LRU_CACHE_HAS_ABSEIL_CPP)
+  endif()
 endif()
