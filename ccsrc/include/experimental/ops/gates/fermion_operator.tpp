@@ -111,6 +111,9 @@ auto FermionOperator<coeff_t>::sparse_matrix(std::optional<uint32_t> n_qubits) c
         auto tmp = process_group(groups.front());
         for (auto it(begin(groups) + 1); it != end(groups); ++it) {
             tmp = (tmp * process_group(*it)).eval();
+            if (tmp.nonZeros() == 0) {
+                return decltype(tmp){tmp.rows(), tmp.cols()};
+            }
         }
 
         MQ_TRACE("tmp has {} non-zero coefficients", tmp.nonZeros());
