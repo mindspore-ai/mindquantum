@@ -104,6 +104,7 @@ help_message() {
     echo '  --clean-builddir     Delete build directory before building'
     echo '  --clean-cache        Re-run CMake with a clean CMake cache'
     echo '  --clean-venv         Delete Python virtualenv before building'
+    echo '  --cmake-no-registry  Do not use the CMake registry to find packages'
     echo '  --config=[dir]       Path to INI configuration file with default values for the parameters'
     echo "                       Defaults to: $config_file"
     echo '                       NB: command line arguments always take precedence over configuration file values'

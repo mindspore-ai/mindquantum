@@ -69,6 +69,7 @@ function Help-Message() {
     Write-Output '  -CleanBuildDir      Delete build directory before building'
     Write-Output '  -CleanCache         Re-run CMake with a clean CMake cache'
     Write-Output '  -CleanVenv          Delete Python virtualenv before building'
+    Write-Output '  -CMakeNoRegistry    Do not use the CMake registry to find packages'
     Write-Output '  -Config [dir]       Path to INI configuration file with default values for the parameters'
     Write-Output ("                      Defaults to: {0}" -f $config_file)
     Write-Output '                      NB: command line arguments always take precedence over configuration file values'

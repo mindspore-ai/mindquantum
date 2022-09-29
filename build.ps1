@@ -364,6 +364,9 @@ Re-run CMake with a clean CMake cache
 .PARAMETER CleanVenv
 Delete Python virtualenv before building
 
+.PARAMETER CMakeNoRegistry
+Do not use the CMake registry to find packages
+
 .PARAMETER Config
 Path to INI configuration file with default values for the parameters
 
