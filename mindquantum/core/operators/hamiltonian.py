@@ -21,7 +21,8 @@ import numpy as np
 import scipy.sparse as sp
 
 from mindquantum import mqbackend as mb
-from mindquantum.core.operators import TermValue
+
+from ._term_value import TermValue
 
 
 class HowTo(Enum):

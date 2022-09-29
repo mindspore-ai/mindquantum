@@ -12,6 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+"""Base class for terms operators based on a C++ class."""
+
 import numbers
 from typing import Dict, Tuple, Union
 
@@ -21,13 +23,16 @@ from mindquantum.utils.type_value_check import _check_input_type
 
 from ...core._arithmetic_ops_adaptor import CppArithmeticAdaptor
 from .. import TermValue
-from .._mindquantum_cxx.ops import EQ_TOLERANCE, CmplxPRSubsProxy, DoublePRSubsProxy
+from .. import _mindquantum_cxx as mqcxx
+
+# pylint: disable=protected-access,no-member
 
 
-class TermsOperator(CppArithmeticAdaptor):
+class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-methods
     """Abstract base class for terms operators (FermionOperator and QubitOperator)."""
 
     cxx_base_klass: type
+    ensure_complex_coeff: False
     real_pr_klass: type
     complex_pr_klass: type
     openfermion_klass: type
@@ -38,7 +43,7 @@ class TermsOperator(CppArithmeticAdaptor):
         return isinstance(other, (numbers.Number, TermsOperator, ParameterResolver))
 
     @classmethod
-    def create_cpp_obj(cls, term, coeff=None, dtype=None):
+    def create_cpp_obj(cls, term, coeff=None, dtype=None):  # pylint: disable=too-many-branches
         """
         Create a new instance of a C++ child class.
 
@@ -89,7 +94,7 @@ class TermsOperator(CppArithmeticAdaptor):
             return klass(term)
         return klass(term, coeff)
 
-    def __init__(self, *args):
+    def __init__(self, *args):  # pylint: disable=too-many-branches
         """
         Initialize a TermsOperator instance.
 
@@ -130,7 +135,7 @@ class TermsOperator(CppArithmeticAdaptor):
         else:
             raise TypeError(f'{self.__class__.__name__}.__init__() supports either 1 or 2 arguments')
 
-    def __copy__(self, memodict) -> 'TermsOperator':
+    def __copy__(self) -> 'TermsOperator':
         """Deep copy this TermsOperator."""
         return self.__class__(self._cpp_obj.__copy__())
 
@@ -198,7 +203,7 @@ class TermsOperator(CppArithmeticAdaptor):
         """Cast a TermsOperator into its complex equivalent."""
         return self.__class__(self._cpp_obj.cast_complex())
 
-    def compress(self, abs_tol=EQ_TOLERANCE):
+    def compress(self, abs_tol=mqcxx.ops.EQ_TOLERANCE):
         """
         Eliminate the very small terms that close to zero.
 
@@ -332,8 +337,8 @@ class TermsOperator(CppArithmeticAdaptor):
         if isinstance(params_value, dict):
             params_value = ParameterResolver(params_value)
         if isinstance(self._cpp_obj, self.real_pr_klass):
-            return self.__class__(self._cpp_obj.subs(DoublePRSubsProxy(params_value._cpp_obj)))
-        return self.__class__(self._cpp_obj.subs(CmplxPRSubsProxy(params_value._cpp_obj.cast_complex())))
+            return self.__class__(self._cpp_obj.subs(mqcxx.ops.DoublePRSubsProxy(params_value._cpp_obj)))
+        return self.__class__(self._cpp_obj.subs(mqcxx.ops.CmplxPRSubsProxy(params_value._cpp_obj.cast_complex())))
 
     @property
     def is_singlet(self) -> bool:
@@ -408,7 +413,7 @@ class TermsOperator(CppArithmeticAdaptor):
         terms = {}
         for term, pr in self.terms.items():
             if not pr.is_const:
-                raise ValueError(f'Cannot convert parameterized {self.__class__.name} to OpenFermion format')
+                raise ValueError(f'Cannot convert parameterized {self.__class__.__name__} to OpenFermion format')
             terms[tuple((i, TermValue[j]) for i, j in term)] = pr.const
 
         operator = self.__class__.openfermion_klass()

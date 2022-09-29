@@ -12,8 +12,12 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+"""Base class to define arithmetic operators for some classes encapsulating a C++ object."""
+
 
 import numbers
+
+# pylint: disable=attribute-defined-outside-init
 
 
 class CppArithmeticAdaptor:
@@ -25,6 +29,17 @@ class CppArithmeticAdaptor:
     Attributes:
         _cpp_obj (object): The underlying C++ object to which we should forward all operations
     """
+
+    @property
+    def is_complex(self):
+        """Return whether the current instance is complex valued."""
+        return NotImplemented
+
+    @staticmethod
+    def _valid_other(other):  # pylint: disable=unused-argument
+        return NotImplemented
+
+    # ----------------------------------
 
     def __len__(self):
         """Return length of CppArithmeticAdaptor."""
@@ -163,4 +178,4 @@ class CppArithmeticAdaptor:
 
     def __ne__(self, other) -> bool:
         """Check whether two CppArithmeticAdaptors not equal."""
-        return not (self._cpp_obj == other._cpp_obj)
+        return not self._cpp_obj == other._cpp_obj

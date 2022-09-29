@@ -26,7 +26,7 @@ operatorEqVarError:ccsrc/include/experimental/decompositions/decomposition_atom.
 preprocessorErrorDirective:ccsrc/include/config/details/cxx20_compatibility.hpp:20
 preprocessorErrorDirective:ccsrc/include/experimental/decompositions/rules/config.hpp
 preprocessorErrorDirective:ccsrc/include/experimental/ops/parametric/angle_base.hpp
-preprocessorErrorDirective:ccsrc/python/experimental/lib/ops/details/define_binary_operator_helpers.hpp
+preprocessorErrorDirective:ccsrc/python/core/include/python/details/define_binary_operator_helpers.hpp
 preprocessorErrorDirective:ccsrc/python/experimental/lib/ops/ops.cpp
 preprocessorErrorDirective:tests/decompositions/test_apply_atoms.cpp:48
 preprocessorErrorDirective:tests/ops/test_angle_parametric_gates.cpp:28
@@ -34,13 +34,14 @@ preprocessorErrorDirective:tests/ops/test_angle_parametric_gates.cpp:28
 unknownMacro:ccsrc/include/core/sparse/paulimat.hpp:58
 unknownMacro:ccsrc/python/experimental/include/python/cengines/resource_counter.hpp:25
 unknownMacro:ccsrc/python/experimental/include/python/ops/command.hpp:26
+unknownMacro:third_party/projectq/projectq.h:119
 unknownMacro:third_party/projectq/projectq.h:190
 
 unusedStructMember:ccsrc/include/experimental/ops/parametric/param_names.hpp
 unusedStructMember:ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp
 
 useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.hpp:32
-useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.hpp:70
+useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.hpp:69
 useStlAlgorithm:ccsrc/include/experimental/core/control.hpp:79
 useStlAlgorithm:ccsrc/lib/experimental/core/circuit_manager.cpp
 

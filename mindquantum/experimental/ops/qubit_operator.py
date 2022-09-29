@@ -22,15 +22,13 @@
 from openfermion import QubitOperator as OFQubitOperator
 
 from ...mqbackend import complex_pr, real_pr
-from .. import TermValue
+from .. import _mindquantum_cxx as mqcxx
+from ..utils import TermValue
+from ._terms_operators import TermsOperator
+
+# pylint: disable=no-member
 
 # NB: C++ actually supports FermionOperatorD and FermionOperatorCD that are purely numerical FermionOperator classes
-from .._mindquantum_cxx.ops import (
-    QubitOperatorBase,
-    QubitOperatorPRCD,
-    QubitOperatorPRD,
-)
-from ._terms_operators import TermsOperator
 
 # ==============================================================================
 
@@ -80,9 +78,9 @@ class QubitOperator(TermsOperator):
     #     simplifications are possible.
     #     For now, we simply force any Python code to create complex qubit operators...
 
-    cxx_base_klass = QubitOperatorBase
-    real_pr_klass = QubitOperatorPRD
-    complex_pr_klass = QubitOperatorPRCD
+    cxx_base_klass = mqcxx.ops.QubitOperatorBase
+    real_pr_klass = mqcxx.ops.QubitOperatorPRD
+    complex_pr_klass = mqcxx.ops.QubitOperatorPRCD
     openfermion_klass = OFQubitOperator
 
     ensure_complex_coeff = True

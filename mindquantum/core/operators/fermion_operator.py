@@ -17,13 +17,13 @@
 import os
 import warnings
 
+# pylint: disable=unused-import
+
 try:
     if int(os.environ.get('MQ_PY_TERMSOP', False)):
         warnings.warn("Using Python FermionOperator class")
         raise ImportError()
 
     from ...experimental.ops.fermion_operator import FermionOperator
-    from ...experimental.utils import TermValue
 except ImportError:
     from ._fermion_operator import FermionOperator  # noqa: F401
-    from ._term_value import TermValue  # noqa: F401

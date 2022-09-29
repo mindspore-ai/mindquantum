@@ -114,7 +114,7 @@ class QubitOperator(_Operator):
 
     __hash__ = None
 
-    def __init__(self, term=None, coefficient=1.0, dtype=None):
+    def __init__(self, term=None, coefficient=1.0, dtype=None):  # pylint: disable=unused-argument
         """Initialize a QubitOperator object."""
         if isinstance(term, QubitOperator):
             self.operators = term.operators
@@ -164,7 +164,7 @@ class QubitOperator(_Operator):
         return qubit_operator
 
     @staticmethod
-    def from_openfermion(of_ops, dtype=None):
+    def from_openfermion(of_ops, dtype=None):  # pylint: disable=unused-argument
         """
         Convert qubit operator from openfermion to mindquantum format.
 

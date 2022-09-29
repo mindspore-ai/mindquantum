@@ -21,9 +21,11 @@ Contains classes representing:
 - TimeEvolution operator
 
 """
+
 from mindquantum.third_party.interaction_operator import InteractionOperator
 
-from .fermion_operator import FermionOperator, TermValue
+from ._term_value import TermValue
+from .fermion_operator import FermionOperator
 from .hamiltonian import Hamiltonian
 from .polynomial_tensor import PolynomialTensor
 from .projector import Projector

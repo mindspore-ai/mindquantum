@@ -16,6 +16,7 @@
 # pylint: disable=too-many-lines
 """Parameter resolver."""
 
+import copy
 import json
 import numbers
 from typing import Iterable
@@ -37,7 +38,9 @@ def is_type_upgrade(origin_v, other_v):
     return not isinstance(tmp, type(origin_v))
 
 
-# pylint: disable=invalid-overridden-method
+# pylint: disable=protected-access
+
+
 class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-public-methods
     """
     A ParameterRsolver can set the parameter of parameterized quantum gate or parameterized quantum circuit.
@@ -82,19 +85,18 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
     def __init__(self, data=None, const=None):
         """Initialize a ParameterResolver object."""
         if isinstance(data, ParameterResolver):
-            self._cpp_obj = data._cpp_obj.__copy__()
+            self._cpp_obj = copy.copy(data._cpp_obj)
         elif isinstance(data, (complex_pr_, real_pr_)):
-            self._cpp_obj = data.__copy__()
+            self._cpp_obj = copy.copy(data)
         else:
 
             def get_klass_from(value):
                 """Get a klass from the type of the input argument."""
                 if isinstance(value, numbers.Real):
                     return real_pr_
-                elif isinstance(value, numbers.Complex):
+                if isinstance(value, numbers.Complex):
                     return complex_pr_
-                else:
-                    raise TypeError(f'Unsupported constant type: {type(value)}')
+                raise TypeError(f'Unsupported constant type: {type(value)}')
 
             klass = real_pr_
             if const is not None:
@@ -735,7 +737,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             >>> pr.real
             {'a': 1.0}, const: 3.0
         """
-        out = ParameterResolver(self._cpp_obj.__copy__())
+        out = ParameterResolver(copy.copy(self._cpp_obj))
         out._cpp_obj.keep_real()
         return out
 
@@ -755,7 +757,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             >>> pr.imag
             {'a': 1.0}, const: 4.0
         """
-        out = ParameterResolver(self._cpp_obj.__copy__())
+        out = ParameterResolver(copy.copy(self._cpp_obj))
         out._cpp_obj.keep_imag()
         return out
 

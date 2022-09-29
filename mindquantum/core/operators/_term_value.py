@@ -14,6 +14,14 @@
 
 """Module used for (temporary) compatibility with Python terms operators."""
 
-TermValue = {k: k for k in ('X', 'Y', 'Z', 'I')}
-TermValue['a'] = 0
-TermValue['adg'] = 1
+import os
+
+try:
+    if int(os.environ.get('MQ_PY_TERMSOP', False)):
+        raise ImportError()
+
+    from ...experimental.utils import TermValue
+except ImportError:
+    TermValue = {k: k for k in ('X', 'Y', 'Z', 'I')}
+    TermValue['a'] = 0
+    TermValue['adg'] = 1

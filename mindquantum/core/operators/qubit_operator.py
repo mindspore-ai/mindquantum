@@ -17,6 +17,8 @@
 import os
 import warnings
 
+# pylint: disable=unused-import
+
 try:
     if int(os.environ.get('MQ_PY_TERMSOP', False)):
         warnings.warn("Using Python QubitOperator class")

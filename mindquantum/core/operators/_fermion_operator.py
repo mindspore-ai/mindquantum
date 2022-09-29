@@ -227,7 +227,7 @@ class FermionOperator(_Operator):
         return fermion_operator
 
     @staticmethod
-    def from_openfermion(of_ops, dtype=None):
+    def from_openfermion(of_ops, dtype=None):  # pylint: disable=unused-argument
         """
         Convert openfermion fermion operator to mindquantum format.
 
