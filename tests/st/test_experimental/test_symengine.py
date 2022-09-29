@@ -24,6 +24,16 @@ except ImportError:
     pytest.skip("MindQuantum experimental C++ module not present", allow_module_level=True)
 
 
+def _ids(x):
+    if isinstance(x, type):
+        return x
+    if isinstance(x, str):
+        return f'{x}'
+    if isinstance(x, set):
+        return f'{{{sorted(x)}}}'
+    return str(x)
+
+
 @pytest.mark.symengine
 def test_symbols_function_simple():
     """
@@ -57,7 +67,7 @@ def test_symbols_function_simple():
         ('x:z', {}, tuple, 3),
         ('x((a:b))', {}, tuple, 2),
     ],
-    ids=lambda x: x if isinstance(x, type) else (f'"{x}"' if isinstance(x, str) else str(x)),
+    ids=_ids,
 )
 def test_symbols_function(symbol_str, kwargs, symbols_type, length):
     """
