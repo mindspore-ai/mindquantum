@@ -94,6 +94,7 @@ jobs:
         run: >-
           ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache --no-gitee --debug
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
+          --cmake-no-registry
           -- -DPython_FIND_UNVERSIONED_NAMES:STRING='FIRST'
 
       - name: Build
@@ -235,6 +236,7 @@ jobs:
         run: >-
           ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache --only-pytest --no-gitee --debug
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
+          --cmake-no-registry
 
       - name: Build
         run: ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache
@@ -319,6 +321,7 @@ jobs:
         run: >-
           ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache --only-pytest --no-gitee --debug
           --configure-only -c --logging --clean-3rdparty --prefix="${{ github.workspace }}/install"
+          --cmake-no-registry
 
       - name: Build
         run: ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache
@@ -409,6 +412,7 @@ jobs:
         run: >-
           ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache --only-pytest --no-gitee --debug
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
+          --cmake-no-registry
 
       # Due to compiler segmentation fault with Clang 8 in debug mode
       - name: Configure (Clang 8)
@@ -416,6 +420,7 @@ jobs:
         run: >-
           ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache --only-pytest --no-gitee
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
+          --cmake-no-registry
 
       - name: Build
         run: ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache
@@ -497,6 +502,7 @@ jobs:
         run: >-
            ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -CCache -OnlyPytest -NoGitee
            -ConfigureOnly -C -Clean3rdParty -Prefix "${{ github.workspace }}/install"
+           -CMakeNoRegistry
            -DUSE_PARALLEL_STL=OFF
 
       - name: Build
@@ -593,6 +599,7 @@ jobs:
         run: >-
            ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -OnlyPytest -NoGitee
            -ConfigureOnly -C -Clean3rdParty -Prefix "${{ github.workspace }}/install"
+           -CMakeNoRegistry
            -G "MinGW Makefiles" -DUSE_PARALLEL_STL=OFF
 
       - name: Build
@@ -743,6 +750,7 @@ jobs:
         run: >-
           ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache -v --only-pytest --no-gitee
           --configure-only -c --clean-3rdparty --prefix="$PWD/install"
+          --cmake-no-registry
           ${{ matrix.cmake_generator }}
 
       - name: Build
@@ -869,6 +877,7 @@ jobs:
           export PATH="$PATH:$PWD/ccache/bin"
           ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache -v --only-pytest --no-gitee \
           --configure-only -c --clean-3rdparty --prefix=$PWD/install \
+          --cmake-no-registry
           ${{ matrix.cmake_generator }}
 
       - name: Build
@@ -972,6 +981,7 @@ jobs:
         run: >-
           ./build_locally.sh --cxx --with-projectq --debug-cmake --gpu --test --ccache --only-pytest --no-gitee
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
+          --cmake-no-registry
 
       - name: Build
         run: ./build_locally.sh --cxx --with-projectq --debug-cmake --gpu --test --ccache
