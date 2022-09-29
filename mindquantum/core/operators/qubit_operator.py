@@ -22,8 +22,6 @@ try:
         warnings.warn("Using Python QubitOperator class")
         raise ImportError()
 
-    from ...experimental.ops import TermValue
     from ...experimental.ops.qubit_operator import QubitOperator
 except ImportError:
     from ._qubit_operator import QubitOperator  # noqa: F401
-    from ._term_value import TermValue

@@ -61,10 +61,10 @@ from .channel import (
     BitFlipChannel,
     BitPhaseFlipChannel,
     DepolarizingChannel,
+    KrausChannel,
     PauliChannel,
     PhaseDampingChannel,
     PhaseFlipChannel,
-    KrausChannel,
 )
 from .measurement import Measure, MeasureResult
 

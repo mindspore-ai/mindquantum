@@ -16,7 +16,6 @@
 # pylint: disable=invalid-name
 
 """Test fermion operator."""
-import pytest
 
 from mindquantum.core.operators import FermionOperator
 
@@ -166,7 +165,6 @@ def test_fermion_operator_iter():
     assert b.is_singlet
 
 
-@pytest.mark.skipif(True, reason='[BUG] loads has bug.')
 def test_dumps_and_loads():
     """
     Description: Test fermion operator dumps to json and json loads to fermion operator
@@ -174,7 +172,7 @@ def test_dumps_and_loads():
     """
     f = FermionOperator('0', 1 + 2j) + FermionOperator('0^', 'a')
     strings = f.dumps()
-    obj = FermionOperator.loads(strings)
+    obj = FermionOperator.loads(strings, dtype=complex)
     assert obj == f
 
 

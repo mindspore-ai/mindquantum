@@ -26,4 +26,4 @@ try:
     from ...experimental.utils import TermValue
 except ImportError:
     from ._fermion_operator import FermionOperator  # noqa: F401
-    from ._term_value import TermValue
+    from ._term_value import TermValue  # noqa: F401

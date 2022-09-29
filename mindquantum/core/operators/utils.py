@@ -193,13 +193,10 @@ def hermitian_conjugated(operator):
     """
     # Handle FermionOperator and QubitOperator
     if isinstance(operator, (FermionOperator, QubitOperator, QubitExcitationOperator)):
-        conjugate_operator = operator.hermitian()
+        return operator.hermitian()
 
     # Unsupported type
-    else:
-        raise TypeError(f'Taking the hermitian conjugate of a {type(operator).__name__} is not supported.')
-
-    return conjugate_operator
+    raise TypeError(f'Taking the hermitian conjugate of a {type(operator).__name__} is not supported.')
 
 
 def up_index(index):

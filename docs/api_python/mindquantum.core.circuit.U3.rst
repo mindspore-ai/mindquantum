@@ -6,7 +6,7 @@
 
     .. math::
 
-        U3(\theta, \phi, \lambda) = 
+        U3(\theta, \phi, \lambda) =
         \begin{pmatrix}
            cos \left( \frac{\theta}{2} \right) & -e^{i \lambda} sin \left( \frac{\theta}{2} \\
         e^{i \phi} sin \left( \frac{\theta}{2} & e^{i (\phi + \lambda)} cos \left( \frac{\theta}{2}
@@ -15,7 +15,7 @@
     它可以被分解为：
 
     .. math::
-    
+
         U3(\theta, \phi, \lambda) = RZ(\phi) RX(-\pi/2) RZ(\theta) RX(\pi/2) RZ(\lambda)
 
     参数：

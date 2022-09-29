@@ -13,14 +13,12 @@
 # limitations under the License.
 # ============================================================================
 """Test TimeEvolution."""
-import pytest
 
 from mindquantum.core import gates as G
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.operators import QubitOperator, TimeEvolution
 
 
-@pytest.mark.skipif(True, reason='QubitOperator should be in insert order.')
 def test_time_evolution():
     """
     Description: Test TimeEvolution
