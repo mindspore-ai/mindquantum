@@ -21,6 +21,8 @@ if(ENABLE_CXX_EXPERIMENTAL)
 
   include(CTest)
   include(Catch)
+
+  add_subdirectory(utils)
 endif()
 
 # ==============================================================================

@@ -25,21 +25,18 @@
 #include <tweedledum/Passes/Mapping/sabre_map.h>
 #include <tweedledum/Target/Device.h>
 
+#include "../test_utils.hpp"
+#include "mindquantum/catch2/midnquantum.hpp"
+#include "mindquantum/catch2/tweedledum.hpp"
+
 #include "experimental/core/circuit_block.hpp"
-
-// -----------------------------------------------------------------------------
-
-std::ostream& operator<<(std::ostream& out, const mindquantum::QubitID& qubit_id) {
-    return out << qubit_id.get();
-}
-
-// -----------------------------------------------------------------------------
-
-#include "core/test_utils.hpp"
-
 #include "experimental/ops/gates/measure.hpp"
 
 #include <catch2/catch_all.hpp>
+
+// -----------------------------------------------------------------------------
+
+using namespace mindquantum::catch2;
 namespace td = tweedledum;
 
 // =============================================================================

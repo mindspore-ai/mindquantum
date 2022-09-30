@@ -17,3 +17,7 @@
 # ==============================================================================
 
 add_library(mindquantum_catch2_main STATIC ${CMAKE_CURRENT_LIST_DIR}/catch2_main.cpp)
+
+add_library(mindquantum_catch2_utils INTERFACE)
+
+target_include_directories(mindquantum_catch2_utils INTERFACE ${CMAKE_CURRENT_LIST_DIR})

@@ -14,11 +14,13 @@
 
 #include <tweedledum/Operators/Standard.h>
 
-#include "core/test_utils.hpp"
+#include "../test_utils.hpp"
 
 #include "experimental/core/circuit_manager.hpp"
 
 #include <catch2/catch_all.hpp>
+
+using namespace mindquantum::catch2;
 
 // =============================================================================
 

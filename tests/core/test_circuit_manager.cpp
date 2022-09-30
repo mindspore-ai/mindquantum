@@ -14,7 +14,8 @@
 
 #include <tweedledum/Operators/Standard.h>
 
-#include "core/test_utils.hpp"
+#include "../test_utils.hpp"
+#include "mindquantum/catch2/tweedledum.hpp"
 
 #include "experimental/core/circuit_block.hpp"
 #include "experimental/core/circuit_manager.hpp"
@@ -22,6 +23,7 @@
 
 #include <catch2/catch_all.hpp>
 
+using namespace mindquantum::catch2;
 namespace td = tweedledum;
 
 // =============================================================================

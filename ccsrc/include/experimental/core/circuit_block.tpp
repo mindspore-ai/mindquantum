@@ -36,6 +36,17 @@
 
 // =============================================================================
 
+//! Custom formatter for a QubitID
+template <typename char_type>
+struct fmt::formatter<mindquantum::QubitID, char_type> {
+    template <typename format_context_t>
+    auto format(const mindquantum::QubitID& qubit_id, format_context_t& ctx) const -> decltype(ctx.out()) {
+        return fmt::format_to(ctx.out(), "Q[{}]", static_cast<uint32_t>(qubit_id));
+    }
+};
+
+// =============================================================================
+
 namespace mindquantum {
 template <typename OpT>
 auto CircuitBlock::apply_operator(OpT&& optor, const qubit_ids_t& control_qubits, const qubit_ids_t& target_qubits)
