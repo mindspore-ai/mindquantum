@@ -268,6 +268,10 @@ mq_add_compile_definitions(
 # ==============================================================================
 # Platform specific flags
 
+if(WIN32 AND MINDSPORE_CI)
+  mq_add_compile_definitions(HAVE_SNPRINTF)
+endif()
+
 if(MSVC)
   if(NOT "${CMAKE_C_COMPILER_LAUNCHER}" STREQUAL "" AND NOT "${CMAKE_CXX_COMPILER_LAUNCHER}" STREQUAL "")
     message(STATUS "Replacing /Zi with /Z7 in compiler flags")
