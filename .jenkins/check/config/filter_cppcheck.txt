@@ -1,3 +1,6 @@
+"unusedFunction"
+"missingInclude"
+"missingReturn"
 
 "mindquantum/tests/"                                                                        "constParameter"
 "mindquantum/tests/"                                                                        "unreadVariable"
