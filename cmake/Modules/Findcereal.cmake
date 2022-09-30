@@ -16,7 +16,7 @@
 #
 # ==============================================================================
 
-# lint_cmake: -package/consistency,-convention/filename
+# lint_cmake: -package/consistency,-convention/filename,-whitespace/extra,-whitespace/indent
 
 #[=======================================================================[.rst:
 Findcereal
