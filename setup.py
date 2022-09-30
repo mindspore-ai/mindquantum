@@ -26,6 +26,7 @@ import shutil
 import subprocess
 import sys
 import sysconfig
+import warnings
 from distutils.command.clean import clean  # pylint: disable=deprecated-module
 from pathlib import Path
 
@@ -172,16 +173,22 @@ class CMakeBuildExt(build_ext):
         python_exec = get_python_executable()
         if not python_exec:
             raise RuntimeError('Unable to locate Python executable!')
+
+        pkg_name = self.distribution.get_name()
+        if pkg_name == 'UNKNOWN':
+            warnings.warn('Unable to determine package name automatically... defaulting to `mindquantum`')
+            pkg_name = 'mindquantum'
+
         cmake_args = [
             '-DPython_EXECUTABLE:FILEPATH=' + python_exec,
             '-DBUILD_TESTING:BOOL=OFF',
             '-DIN_PLACE_BUILD:BOOL=OFF',
             '-DIS_PYTHON_BUILD:BOOL=ON',
             f'-DVERSION_INFO="{self.distribution.get_version()}"',
-            f'-DMQ_PYTHON_PACKAGE_NAME:STRING={self.distribution.get_name()}',
+            f'-DMQ_PYTHON_PACKAGE_NAME:STRING={pkg_name}',
             # NB: make sure that the install path is absolute!
             f'-DCMAKE_INSTALL_PREFIX:FILEPATH={Path(self.build_lib, Path().resolve().name).resolve()}',
-        ]  # yapf: disable
+        ]
 
         if self.no_arch_native:
             cmake_args += ['-DUSE_NATIVE_INTRINSICS=OFF']
