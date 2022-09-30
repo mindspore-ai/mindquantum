@@ -321,7 +321,7 @@ jobs:
         run: >-
           ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache --only-pytest --no-gitee --debug
           --configure-only -c --logging --clean-3rdparty --prefix="${{ github.workspace }}/install"
-          --cmake-no-registry
+          --cmake-no-registry -- -DENABLE_STACK_PROTECTION=ON
 
       - name: Build
         run: ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache
@@ -412,7 +412,7 @@ jobs:
         run: >-
           ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache --only-pytest --no-gitee --debug
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
-          --cmake-no-registry
+          --cmake-no-registry -- -DENABLE_STACK_PROTECTION=ON
 
       # Due to compiler segmentation fault with Clang 8 in debug mode
       - name: Configure (Clang 8)
@@ -420,7 +420,7 @@ jobs:
         run: >-
           ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache --only-pytest --no-gitee
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
-          --cmake-no-registry
+          --cmake-no-registry -- -DENABLE_STACK_PROTECTION=ON
 
       - name: Build
         run: ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache
