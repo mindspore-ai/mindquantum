@@ -118,7 +118,7 @@ repos:
     rev: v2.38.0
     hooks:
       - id: pyupgrade
-        args: [--py36-plus, --keep-mock]
+        args: [--py37-plus, --keep-mock]
 
   - repo: https://gitee.com/mirrors/flake8
     rev: 5.0.4

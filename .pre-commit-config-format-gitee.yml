@@ -115,7 +115,7 @@ repos:
     rev: v2.38.0
     hooks:
       - id: pyupgrade
-        args: [--py36-plus, --keep-mock]
+        args: [--py37-plus, --keep-mock]
 
   - repo: https://gitee.com/dnguyen/cmake-pre-commit-hooks-mirror
     rev: 'v1.5.3'
