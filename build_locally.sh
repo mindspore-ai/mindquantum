@@ -96,7 +96,7 @@ function parse_extra_args() {
         prefix)          needs_arg;
                          set_var prefix_dir "$2"
                          ;;
-        ??* )            die "Illegal option --OPT: $1"
+        ??* )            return 2  # Delegate error handling to main argument parsing function
                          ;;
     esac
 }

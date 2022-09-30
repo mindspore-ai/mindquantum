@@ -132,6 +132,9 @@ help_message() {
     echo '  --without-<library>  Do not build the third-party library from source'
     echo '                       (ignored if --local-pkgs is passed, except for projectq)'
     echo ''
+    echo 'You may negate any flag argument (ie. arguments that do not require a value) by prefixing them with "--no-"'
+    echo 'e.g. --no-logging to disable logging'
+    echo ''
     echo 'Test related options:'
     echo '  --test               Build C++ tests and install dependencies for Python testing as well'
     echo '  --only-pytest        Only install pytest and its dependencies when creating/building the virtualenv'
@@ -184,6 +187,12 @@ while getopts "${getopts_args}" OPT; do
         library=${BASH_REMATCH[1]}
     fi
 
+    flag_value=1
+    if [[ ! $OPT == "no-config" && $OPT =~ ^no-([a-zA-Z0-9_-]+) ]]; then
+        OPT="${BASH_REMATCH[1]}"
+        flag_value=0
+    fi
+
     case "$OPT" in
         h | help )          no_arg;
                             help_message >&2
@@ -193,70 +202,67 @@ while getopts "${getopts_args}" OPT; do
                             set_var build_dir "$OPTARG"
                             ;;
         ccache )            no_arg;
-                            set_var enable_ccache
+                            set_var enable_ccache $flag_value
                             ;;
         cmake-no-registry ) no_arg;
-                            set_var cmake_no_registry
+                            set_var cmake_no_registry $flag_value
                             ;;
         config )            needs_arg;
                             set_var config_file "$OPTARG"
                             ;;
         clean-3rdparty )    no_arg;
-                            set_var do_clean_3rdparty
+                            set_var do_clean_3rdparty $flag_value
                             ;;
         clean-all )         no_arg;
-                            set_var do_clean_venv
-                            set_var do_clean_build_dir
+                            set_var do_clean_venv $flag_value
+                            set_var do_clean_build_dir $flag_value
                             ;;
         clean-builddir )    no_arg;
-                            set_var do_clean_build_dir
+                            set_var do_clean_build_dir $flag_value
                             ;;
         clean-cache )       no_arg
-                            set_var do_clean_cache
+                            set_var do_clean_cache $flag_value
                             ;;
         clean-venv )        no_arg;
-                            set_var do_clean_venv
+                            set_var do_clean_venv $flag_value
                             ;;
         cuda-arch )         needs_arg;
                             set_var cuda_arch "$(echo "$OPTARG" | tr ',' ';')"
                             ;;
         cxx )               no_arg;
-                            set_var enable_cxx
+                            set_var enable_cxx $flag_value
                             ;;
         debug )             no_arg;
                             set_var build_type 'Debug'
                             ;;
         debug-cmake )       no_arg;
-                            set_var cmake_debug_mode
+                            set_var cmake_debug_mode $flag_value
                              ;;
         gitee )             no_arg;
-                            set_var enable_gitee
-                            ;;
-        no-gitee )          no_arg;
-                            set_var enable_gitee 0
+                            set_var enable_gitee $flag_value
                             ;;
         gpu )               no_arg;
-                            set_var enable_gpu
+                            set_var enable_gpu $flag_value
                             ;;
         j | jobs )          needs_arg;
                             set_var n_jobs "$OPTARG"
                             ;;
         local-pkgs )        no_arg;
-                            set_var force_local_pkgs
+                            set_var force_local_pkgs $flag_value
                             ;;
         logging )           no_arg;
-                            set_var enable_logging
+                            set_var enable_logging $flag_value
                             ;;
         logging-debug )     no_arg;
-                            set_var enable_logging
-                            set_var logging_enable_debug
+                            set_var enable_logging $flag_value
+                            set_var logging_enable_debug $flag_value
                             ;;
         logging-trace )     no_arg;
-                            set_var logging_enable_debug
-                            set_var logging_enable_trace
+                            set_var logging_enable_debug $flag_value
+                            set_var logging_enable_trace $flag_value
                             ;;
         n )                 no_arg;
-                            set_var dry_run
+                            set_var dry_run $flag_value
                             ;;
         no-config )         no_arg;
                             set_var config_file '__disabled_config__'
@@ -265,23 +271,23 @@ while getopts "${getopts_args}" OPT; do
                             set_var cmake_generator 'Ninja'
                             ;;
         only-pytest )       no_arg;
-                            set_var only_install_pytest
+                            set_var only_install_pytest $flag_value
                             ;;
         quiet )             no_arg;
-                            set_var cmake_make_silent
+                            set_var cmake_make_silent $flag_value
                             ;;
         show-libraries )    no_arg;
                             print_show_libraries
                             exit 1
                             ;;
         test )              no_arg;
-                            set_var enable_tests
+                            set_var enable_tests $flag_value
                             ;;
         update-venv )       no_arg;
-                            set_var do_update_venv
+                            set_var do_update_venv $flag_value
                             ;;
         v | verbose )       no_arg;
-                            set_var verbose
+                            set_var verbose $flag_value
                             ;;
         venv )              needs_arg;
                             set_var python_venv_path "$OPTARG"
@@ -292,16 +298,21 @@ while getopts "${getopts_args}" OPT; do
         \? )                # bad short option (error reported via getopts)
                             exit 2
                             ;;
-         * )                success=0
+        * )                 success=0
                             if [ $has_extra_args -eq 1 ]; then
                                 parse_extra_args "$OPT" "$OPTARG"
                                 success="$?"
                             fi
                             if [ $success -ne 0 ]; then
-                                die "Illegal option: $OPT or --$OPT"
+                                if [ $flag_value -eq 1 ]; then
+                                    die "Illegal option: $OPT or --$OPT"
+                                else
+                                    # NB: we were looking for --no-$OPT
+                                    die "No option found for $OPT or --$OPT (received --no-$OPT on cmdline)"
+                                fi
                             fi
-                           ;;
-   esac
+                            ;;
+    esac
 done
 shift $((OPTIND-1)) # remove parsed options and args from $@ list
 

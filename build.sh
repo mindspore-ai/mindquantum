@@ -90,7 +90,7 @@ function parse_extra_args() {
         p | plat-name )      needs_arg;
                              set_var platform_name "$2"
                              ;;
-        ??* )                die "Illegal option --OPT: $1"
+        ??* )                return 2  # Delegate error handling to main argument parsing function
                              ;;
     esac
 }
