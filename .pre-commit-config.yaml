@@ -164,16 +164,16 @@ repos:
       - id: clang-format
         require_serial: false
         args: [-i]
-        files: (.*\.hpp|.*\.h|.*\.tpp|.*\.cpp)$
+        files: .*\.(h|hpp|tpp|cpp|cc)$
         additional_dependencies: ['clang-format']
       - id: cpplint
         require_serial: false
         args: [--quiet]
-        files: (.*\.hpp|.*\.h|.*\.tpp|.*\.cpp)$
+        files: .*\.(h|hpp|tpp|cpp|cc)$
         additional_dependencies: ['cpplint']
       - id: lizard
         require_serial: false
-        files: .*(\.hpp|\.h|\.tpp|\.cpp|\.py)$
+        files: .*\.(h|hpp|tpp|cpp|cc|py)$
         args: [-l, cpp, -l, python, -l, java, -C, '19', -L, '100',
                -x, '*/tests/*', -x, '*/test/*', -x, '*/third_party/*',
                -W.whitelizard.txt, -w]

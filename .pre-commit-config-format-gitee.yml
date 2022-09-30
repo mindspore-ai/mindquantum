@@ -123,5 +123,5 @@ repos:
       - id: clang-format
         require_serial: false
         args: [-i]
-        files: (.*\.hpp|.*\.h|.*\.tpp|.*\.cpp)$
+        files: .*\.(h|hpp|tpp|cpp|cc)$
         additional_dependencies: ['clang-format']
