@@ -16,6 +16,8 @@
 #
 # ==============================================================================
 
+# lint_cmake: -whitespace/indent
+
 set(MQ_BASE_HEADERS
     config/popcnt.hpp
     config/config.hpp

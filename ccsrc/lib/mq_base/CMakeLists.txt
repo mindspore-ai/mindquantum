@@ -16,6 +16,8 @@
 #
 # ==============================================================================
 
+# lint_cmake: -whitespace/indent
+
 target_sources(mq_base PRIVATE ${CMAKE_CURRENT_LIST_DIR}/utils.cc
                                $<$<BOOL:${ENABLE_LOGGING}>:${CMAKE_CURRENT_LIST_DIR}/logging.cpp>)
 

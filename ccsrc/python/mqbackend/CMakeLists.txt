@@ -16,6 +16,8 @@
 #
 # ==============================================================================
 
+# lint_cmake: -whitespace/indent
+
 pybind11_add_module(mqbackend MODULE OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}" ${CMAKE_CURRENT_LIST_DIR}/lib/binding.cc
                                                                              ${CMAKE_CURRENT_LIST_DIR}/lib/logging.cpp)
 

@@ -16,6 +16,8 @@
 #
 # ==============================================================================
 
+# lint_cmake: -whitespace/indent
+
 find_package(Threads REQUIRED)
 
 # Set names of each component of abseil-cpp

@@ -107,17 +107,18 @@ This module reads hints about search locations from variables:
 ``cereal_NO_SYSTEM_PATHS``
   Set to ``ON`` to disable searching in locations not specified by these hint variables. Default is ``OFF``.
 
-Users may set these hints or results as ``CACHE`` entries.  Projects should not read these entries directly but
-instead use the above result variables.  Note that some hint names start in upper-case ``cereal``.  One may specify these
-as environment variables if they are not specified as CMake variables or cache entries.
+Users may set these hints or results as ``CACHE`` entries.  Projects should not read these entries directly but instead
+use the above result variables.  Note that some hint names start in upper-case ``cereal``.  One may specify these as
+environment variables if they are not specified as CMake variables or cache entries.
 
-This module first searches for the cereal header files using the above hint variables (excluding ``cereal_LIBRARYDIR``) and
-saves the result in ``cereal_INCLUDE_DIR``.  Then it searches for requested component libraries using the above hints
-(excluding ``cereal_INCLUDEDIR``), "lib" directories near ``cereal_INCLUDE_DIR``, and the library name configuration
-settings below.  It saves the library directories in ``cereal_LIBRARY_DIR_DEBUG`` and ``cereal_LIBRARY_DIR_RELEASE`` and
-individual library locations in ``cereal_<COMPONENT>_LIBRARY_DEBUG`` and ``cereal_<COMPONENT>_LIBRARY_RELEASE``.  When one
-changes settings used by previous searches in the same build tree (excluding environment variables) this module
-discards previous search results affected by the changes and searches again.
+This module first searches for the cereal header files using the above hint variables (excluding ``cereal_LIBRARYDIR``)
+and saves the result in ``cereal_INCLUDE_DIR``.  Then it searches for requested component libraries using the above
+hints (excluding ``cereal_INCLUDEDIR``), "lib" directories near ``cereal_INCLUDE_DIR``, and the library name
+configuration settings below.  It saves the library directories in ``cereal_LIBRARY_DIR_DEBUG`` and
+``cereal_LIBRARY_DIR_RELEASE`` and individual library locations in ``cereal_<COMPONENT>_LIBRARY_DEBUG`` and
+``cereal_<COMPONENT>_LIBRARY_RELEASE``.  When one changes settings used by previous searches in the same build tree
+(excluding environment variables) this module discards previous search results affected by the changes and searches
+again.
 
 Imported Targets
 ^^^^^^^^^^^^^^^^
@@ -195,10 +196,10 @@ Find cereal headers and some *static* (release only) libraries:
 cereal CMake
 ^^^^^^^^^^^
 
-If cereal was built using CMake, it provides a package configuration file for use with find_package's config mode.
-This module looks for the package configuration file called ``cerealConfig.cmake`` and stores the result in ``CACHE``
-entry ``cereal_DIR``.  If found, the package configuration file is loaded and this module returns with no further action.
-See documentation of the cereal CMake package configuration for details on what it provides.
+If cereal was built using CMake, it provides a package configuration file for use with find_package's config mode.  This
+module looks for the package configuration file called ``cerealConfig.cmake`` and stores the result in ``CACHE`` entry
+``cereal_DIR``.  If found, the package configuration file is loaded and this module returns with no further action.  See
+documentation of the cereal CMake package configuration for details on what it provides.
 
 Set ``cereal_NO_CMAKE`` to ``ON``, to disable the search for tbb-cmake.
 
