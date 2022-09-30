@@ -72,7 +72,7 @@ repos:
     hooks:
       - id: codespell
         require_serial: false
-        files: (.*ccsrc/.*|.*mindquantum/.*|.*\.py|.*\.txt|.*\.cmake|.*\.md|.*\.rst|.*\.sh|.*\.ps1)
+        files: .*\.(py|txt|cmake|md|rst|sh|ps1|hpp|tpp|cpp|cc)$
         args: [-S, '.git,third_party', -I, .codespell.allow]
 
   - repo: https://gitee.com/mirrors_adrienverge/yamllint.git

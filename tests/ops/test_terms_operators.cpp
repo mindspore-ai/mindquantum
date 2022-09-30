@@ -1189,14 +1189,14 @@ TEST_CASE("TermsOperator split", "[terms_op][ops]") {
 
     const auto get = [](const auto& op) { return op.first * op.second; };
 
-    const auto splitted = qubit_op.split();
-    REQUIRE(std::size(splitted) == 2);
-    if (get(splitted[0]) == lhs) {
-        CHECK(get(splitted[0]) == lhs);
-        CHECK(get(splitted[1]) == rhs);
+    const auto splitted_operator = qubit_op.split();
+    REQUIRE(std::size(splitted_operator) == 2);
+    if (get(splitted_operator[0]) == lhs) {
+        CHECK(get(splitted_operator[0]) == lhs);
+        CHECK(get(splitted_operator[1]) == rhs);
     } else {
-        CHECK(get(splitted[0]) == rhs);
-        CHECK(get(splitted[1]) == lhs);
+        CHECK(get(splitted_operator[0]) == rhs);
+        CHECK(get(splitted_operator[1]) == lhs);
     }
 }
 

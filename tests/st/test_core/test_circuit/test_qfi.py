@@ -31,7 +31,7 @@ from mindquantum.simulator import Simulator
 def test_qfi():
     """
     Description: Test qfi
-    Expectation: succee
+    Expectation: success
     """
     a = PR('a')
     b = PR('b')
