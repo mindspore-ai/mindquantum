@@ -255,6 +255,7 @@ class CircuitManager {
 
 #include "details/external_view.hpp"
 #include "details/physical_view.hpp"
-#include "experimental/core/circuit_manager.tpp"
+//
+#include "circuit_manager.tpp"
 
 #endif /* CIRCUIT_MANAGER_HPP */

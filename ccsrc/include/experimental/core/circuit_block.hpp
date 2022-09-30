@@ -369,6 +369,6 @@ class CircuitBlock {
 };
 }  // namespace mindquantum
 
-#include "experimental/core/circuit_block.tpp"
+#include "circuit_block.tpp"
 
 #endif /* CIRCUIT_BLOCK_HPP */

@@ -249,14 +249,14 @@ struct ParameterResolver {
         typename = std::enable_if_t<
             (std::is_arithmetic_v<std::remove_cvref_t<U>> || traits::is_std_complex_v<std::remove_cvref_t<U>>) &&(
                 std::is_arithmetic_v<std::remove_cvref_t<V>> || traits::is_std_complex_v<std::remove_cvref_t<V>>)>>
-    ParameterResolver(const MST<U>& data, V value);
+    ParameterResolver(const MST<U>& data, V value_const);
 
     template <
         typename U, typename V,
         typename = std::enable_if_t<
             (std::is_arithmetic_v<std::remove_cvref_t<U>> || traits::is_std_complex_v<std::remove_cvref_t<U>>) &&(
                 std::is_arithmetic_v<std::remove_cvref_t<V>> || traits::is_std_complex_v<std::remove_cvref_t<V>>)>>
-    ParameterResolver(const MST<U>& data, V&& value, SS no_grad_parameters, SS encoder_parameters);
+    ParameterResolver(const MST<U>& data, V&& value_const, SS no_grad_parameters, SS encoder_parameters);
 
     explicit ParameterResolver(const std::string& param);
 
@@ -397,7 +397,8 @@ std::ostream& operator<<(std::ostream& os, const ParameterResolver<T>& pr) {
 
 }  // namespace mindquantum
 
-#include "core/parameter_resolver.tpp"
+#include "parameter_resolver.tpp"
+//
 #include "core/parameter_resolver_external_ops.hpp"
 
 #endif  // MINDQUANTUM_PR_PARAMETER_RESOLVER_H_

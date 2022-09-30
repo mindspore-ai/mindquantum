@@ -114,6 +114,6 @@ struct to_cmplx_type<ops::FermionOperator<float_t>> {
 };
 }  // namespace mindquantum::traits
 
-#include "experimental/ops/gates/fermion_operator.tpp"
+#include "fermion_operator.tpp"
 
 #endif /* FERMION_OPERATOR_HPP */

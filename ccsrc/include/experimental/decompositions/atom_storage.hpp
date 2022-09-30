@@ -195,6 +195,6 @@ class AtomStorage {
 };
 }  // namespace mindquantum::decompositions
 
-#include "experimental/decompositions/atom_storage.tpp"
+#include "atom_storage.tpp"
 
 #endif /* ATOM_STORAGE_HPP */

@@ -105,6 +105,6 @@ template <typename op_t, num_control_t num_controls_ = any_control>
 using ParametricSimpleAtom = ParametricAtom<op_t, traits::num_targets<op_t>, num_controls_>;
 }  // namespace mindquantum::decompositions
 
-#include "experimental/decompositions/parametric_atom.tpp"
+#include "parametric_atom.tpp"
 
 #endif /* PARAMETRIC_ATOM_HPP */

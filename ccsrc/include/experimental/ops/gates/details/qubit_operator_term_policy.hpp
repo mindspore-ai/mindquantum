@@ -86,6 +86,6 @@ struct QubitOperatorTermPolicy : QubitOperatorTermPolicyBase {
 };
 }  // namespace mindquantum::ops::details
 
-#include "experimental/ops/gates/details/qubit_operator_term_policy.tpp"
+#include "qubit_operator_term_policy.tpp"
 
 #endif /* DETAILS_QUBIT_OPERATOR_TERM_POLICY_HPP */

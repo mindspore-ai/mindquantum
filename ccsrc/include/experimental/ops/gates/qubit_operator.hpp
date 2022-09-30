@@ -123,6 +123,6 @@ struct to_cmplx_type<ops::QubitOperator<float_t>> {
 };
 }  // namespace mindquantum::traits
 
-#include "experimental/ops/gates/qubit_operator.tpp"
+#include "qubit_operator.tpp"
 
 #endif /* QUBITOPERATOR_OP_HPP */

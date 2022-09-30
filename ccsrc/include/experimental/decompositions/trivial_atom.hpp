@@ -95,6 +95,6 @@ template <typename op_t, num_control_t num_controls_ = any_control>
 using TrivialSimpleAtom = TrivialAtom<op_t, traits::num_targets<op_t>, num_controls_>;
 }  // namespace mindquantum::decompositions
 
-#include "experimental/decompositions/trivial_atom.tpp"
+#include "trivial_atom.tpp"
 
 #endif /* TRIVIAL_ATOM_HPP */

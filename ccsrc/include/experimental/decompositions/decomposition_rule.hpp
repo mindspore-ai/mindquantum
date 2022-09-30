@@ -122,6 +122,6 @@ class DecompositionRule {
 };
 }  // namespace mindquantum::decompositions
 
-#include "experimental/decompositions/decomposition_rule.tpp"
+#include "decomposition_rule.tpp"
 
 #endif /* DECOMPOSITION_RULE_HPP */

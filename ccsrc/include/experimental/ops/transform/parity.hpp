@@ -25,6 +25,6 @@ MQ_NODISCARD to_qubit_operator_t<traits::to_cmplx_type_t<fermion_op_t>> parity(c
                                                                                int n_qubits = -1);
 }  // namespace mindquantum::ops::transform
 
-#include "experimental/ops/transform/parity.tpp"
+#include "parity.tpp"
 
 #endif

@@ -81,6 +81,6 @@ struct FermionOperatorTermPolicy : FermionOpteratorTermPolicyBase {
 };
 }  // namespace mindquantum::ops::details
 
-#include "experimental/ops/gates/details/fermion_operator_term_policy.tpp"
+#include "fermion_operator_term_policy.tpp"
 
 #endif /* DETAILS_FERMION_OPERATOR_TERM_POLICY_HPP */

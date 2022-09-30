@@ -99,6 +99,6 @@ class GateDecompositionRuleCXX17
 };
 }  // namespace mindquantum::decompositions
 
-#include "experimental/decompositions/details/gate_decomposition_rule_cxx17.tpp"
+#include "gate_decomposition_rule_cxx17.tpp"
 
 #endif /* GATE_DECOMPOSITION_RULE_CXX17_HPP */

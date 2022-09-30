@@ -65,6 +65,6 @@ class BaseSimulator {
 };
 }  // namespace mindquantum::simulation
 
-#include "experimental/simulator/simulator_base.tpp"
+#include "simulator_base.tpp"
 
 #endif /* SIMULATOR_BASE_HPP */

@@ -500,8 +500,7 @@ struct fmt::formatter<mindquantum::ops::TermValue, char_t> {
     }
 };
 
-#include "experimental/ops/gates/terms_operator_base.tpp"
-
-#include "experimental/ops/gates/terms_operator_base_external_ops.hpp"
+#include "terms_operator_base.tpp"
+#include "terms_operator_base_external_ops.hpp"
 
 #endif /* TERMS_OPERATOR_BASE_HPP */

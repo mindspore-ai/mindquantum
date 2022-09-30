@@ -59,6 +59,6 @@ MQ_NODISCARD auto create_subs_from_params(std::index_sequence<indices...> /*unus
 }  // namespace details
 }  // namespace mindquantum::ops::parametric
 
-#include "experimental/ops/parametric/substitutions.tpp"
+#include "substitutions.tpp"
 
 #endif /* PARAMETRIC_SUBSTITUTIONS_HPP */

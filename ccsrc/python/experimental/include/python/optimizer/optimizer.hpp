@@ -36,6 +36,6 @@ class GateCancellation {
 };
 }  // namespace mindquantum::python
 
-#include "python/optimizer/optimizer.tpp"
+#include "optimizer.tpp"
 
 #endif /* PYTHON_OPTIMIZTE_HPP */

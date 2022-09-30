@@ -58,7 +58,7 @@ ParameterResolver<T>::ParameterResolver(const MST<U>& data) : ParameterResolver(
 }
 template <typename T>
 template <typename U, typename V, typename>
-ParameterResolver<T>::ParameterResolver(const MST<U>& data, V value) : const_value(static_cast<T>(value)) {
+ParameterResolver<T>::ParameterResolver(const MST<U>& data, V value_const) : const_value(static_cast<T>(value_const)) {
     for (const auto& [key, value] : data) {
         data_.emplace(key, static_cast<T>(value));
     }
@@ -70,8 +70,9 @@ ParameterResolver<T>::ParameterResolver(const MST<U>& data, V value) : const_val
 }
 template <typename T>
 template <typename U, typename V, typename>
-ParameterResolver<T>::ParameterResolver(const MST<U>& data, V&& value, SS no_grad_parameters, SS encoder_parameters)
-    : const_value(static_cast<T>(std::forward<V>(value)))
+ParameterResolver<T>::ParameterResolver(const MST<U>& data, V&& value_const, SS no_grad_parameters,
+                                        SS encoder_parameters)
+    : const_value(static_cast<T>(std::forward<V>(value_const)))
     , no_grad_parameters_(std::move(no_grad_parameters))
     , encoder_parameters_(std::move(encoder_parameters)) {
     for (const auto& [key, value] : data) {

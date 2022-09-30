@@ -26,6 +26,6 @@ MQ_NODISCARD fermion_op_t fermion_number_operator(int n_modes, int mode = -1,
                                                   = fermion_op_t::coeff_policy_t::one);
 }  // namespace mindquantum::ops::transform
 
-#include "experimental/ops/transform/fermion_number_operator.tpp"
+#include "fermion_number_operator.tpp"
 
 #endif

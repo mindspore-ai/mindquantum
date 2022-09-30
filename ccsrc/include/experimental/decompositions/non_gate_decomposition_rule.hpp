@@ -62,6 +62,6 @@ class NonGateDecompositionRule : public DecompositionRule<derived_t, atoms_t...>
 };
 }  // namespace mindquantum::decompositions
 
-#include "experimental/decompositions/non_gate_decomposition_rule.tpp"
+#include "non_gate_decomposition_rule.tpp"
 
 #endif /* NON_GATE_DECOMPOSITION_RULE_HPP */

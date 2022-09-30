@@ -106,6 +106,6 @@ class GateDecomposer {
 };
 }  // namespace mindquantum::decompositions
 
-#include "experimental/decompositions/gate_decomposer.tpp"
+#include "gate_decomposer.tpp"
 
 #endif /* GATE_DECOMPOSER_HPP */

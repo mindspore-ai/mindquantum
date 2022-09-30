@@ -28,6 +28,6 @@ MQ_NODISCARD to_fermion_operator_t<traits::to_cmplx_type_t<qubit_op_t>> reverse_
                                                                                               int n_qubits = -1);
 }  // namespace mindquantum::ops::transform
 
-#include "experimental/ops/transform/jordan_wigner.tpp"
+#include "jordan_wigner.tpp"
 
 #endif
