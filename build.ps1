@@ -56,16 +56,20 @@ $ROOTDIR = $BASEPATH
 $PROGRAM = Split-Path $MyInvocation.MyCommand.Path -Leaf
 
 # Test for MindSpore CI
-$_IS_MINDSPORE_CI=0
+$_IS_MINDSPORE_CI = $false
 if ("$Env:JENKINS_URL" -Match 'https?://build.mindspore.cn' -And [bool]$Env:CI) {
     Write-Output "Detected MindSpore/MindQuantum CI"
-    $_IS_MINDSPORE_CI=1
+    $_IS_MINDSPORE_CI = $true
 }
 
 # ==============================================================================
 # Default values
 
 $python_extra_pkgs = @('wheel-filename>1.2')
+
+if ($_IS_MINDSPORE_CI ) {
+    $enable_gitee = $true
+}
 
 . (Join-Path $ROOTDIR 'scripts\build\common_functions.ps1')
 
@@ -201,6 +205,10 @@ foreach ($el in $cmake_option_names.GetEnumerator()) {
     else {
         $build_args += '--unset', "$($el.Value)"
     }
+}
+
+if ($_IS_MINDSPORE_CI ) {
+    $build_args += '--set', 'MINDSPORE_CI'
 }
 
 if ($cmake_make_silent) {

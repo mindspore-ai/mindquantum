@@ -257,6 +257,7 @@ include(compiler_test)
 # --------------------------------------
 
 mq_add_compile_definitions(
+  "$<$<BOOL:${MINDSPORE_CI}>:MQ_MINDSPORE_CI>"
   "$<$<BOOL:${USE_OPENMP}>:USE_OPENMP>"
   "$<$<BOOL:${USE_PARALLEL_STL}>:USE_PARALLEL_STL>"
   "$<$<BOOL:${ENABLE_LOGGING_DEBUG_LEVEL}>:MQ_LOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG>"

@@ -161,6 +161,10 @@ for var in $(get_AA_keys cmake_option_names); do
     fi
 done
 
+if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
+    args+=(--set MINDSPORE_CI)
+fi
+
 if [ "$cmake_make_silent" -eq 0 ]; then
     args+=(--set USE_VERBOSE_MAKEFILE)
 else

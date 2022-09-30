@@ -15,12 +15,38 @@
 #ifndef GET_FULLY_QUALIFIED_TP_NAME_HPP
 #define GET_FULLY_QUALIFIED_TP_NAME_HPP
 
+#include <string>
+#include <utility>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
+// =============================================================================
+
+namespace mindquantum::python::pybind11_details {
+#ifdef MQ_MINDSPORE_CI
+std::string get_fully_qualified_tp_name(PyTypeObject* type) {
+#    if !defined(PYPY_VERSION)
+    return type->tp_name;
+#    else
+    auto module_name = pybind11::handle(reinterpret_cast<PyObject*>(type)).attr("__module__").cast<std::string>();
+    if (module_name == "builtins") {
+        return type->tp_name;
+    } else {
+        return std::move(module_name) + "." + type->tp_name;
+    }
+#    endif
+}
+#else
+using pybind11::detail::get_fully_qualified_tp_name;
+#endif  // MQ_MINDSPORE_CI
+}  // namespace mindquantum::python::pybind11_details
+
+// =============================================================================
+
 namespace mindquantum::python {
 inline auto get_fully_qualified_tp_name(const pybind11::handle& src) {
-    return pybind11::detail::get_fully_qualified_tp_name(Py_TYPE(src.ptr()));
+    return pybind11_details::get_fully_qualified_tp_name(Py_TYPE(src.ptr()));
 }
 }  // namespace mindquantum::python
 

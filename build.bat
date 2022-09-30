@@ -40,13 +40,17 @@ if NOT %JENKINS_URL% == "" (
 rem ============================================================================
 rem Default values for this particular script
 
-set enable_gitee=1
+set enable_gitee=0
 set has_build_dir=0
 set delocate_wheel=1
 set build_isolation=1
 set output_path=%ROOTDIR%\output
 set platform_name=
 set python_extra_pkgs=setuptools-scm[toml] wheel-filename>1.2
+
+if !_IS_MINDSPORE_CI! == 1 (
+   set enable_gitee=1
+)
 
 call %SCRIPTDIR%\default_values.bat
 
@@ -323,6 +327,10 @@ call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_LOGGING_TRACE_LEVEL !logging_
 call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_PROJECTQ !enable_projectq!
 
 set args=!args! %RETVAL%
+
+if !_IS_MINDSPORE_CI! == 1 (
+   set args=!args! -C--global-option=--set -C--global-option=MINDSPORE_CI
+)
 
 if !cmake_make_silent! == 0 (
    set args=!args! -C--global-option=--set -C--global-option=USE_VERBOSE_MAKEFILE
