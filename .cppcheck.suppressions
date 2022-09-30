@@ -3,9 +3,7 @@ missingInclude
 missingReturn
 
 constParameter:tests/*
-constParameter:mindquantum/tests/*
 unreadVariable:tests/*
-unreadVariable:mindquantum/tests/*
 
 constStatement:ccsrc/lib/experimental/ops/gates/details/fermion_operator_term_policy.cpp
 constStatement:ccsrc/lib/experimental/ops/gates/details/qubit_operator_term_policy.cpp
