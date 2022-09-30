@@ -113,24 +113,28 @@ function Extra-Help {
 
 . (Join-Path $ROOTDIR 'scripts\build\parse_common_args.ps1') @args
 
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
+
 # ------------------------------------------------------------------------------
 
-if ($Clean.IsPresent) {
+if (([bool]$Clean)) {
     Set-Value 'do_clean'
 }
 
-if ($C.IsPresent -or $Configure.IsPresent) {
+if (([bool]$C) -or ([bool]$Configure)) {
     Set-Value 'do_configure'
 }
-if ($ConfigureOnly.IsPresent) {
+if (([bool]$ConfigureOnly)) {
     Set-Value 'configure_only'
 }
 
-if ($Doc.IsPresent) {
+if (([bool]$Doc)) {
     Set-Value 'do_docs'
 }
 
-if ($Install.IsPresent) {
+if (([bool]$Install)) {
     Set-Value 'do_install'
 }
 
@@ -142,6 +146,10 @@ if ([bool]$Prefix) {
 # Locate python or python3
 
 . (Join-Path $ROOTDIR 'scripts\build\locate_python3.ps1')
+
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
 
 # ==============================================================================
 
@@ -174,6 +182,10 @@ if ($do_clean_build_dir) {
 # NB: `created_venv` variable can be used to detect if a virtualenv was created or not
 . (Join-Path $ROOTDIR 'scripts\build\python_virtualenv_activate.ps1')
 
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
+
 if ($dry_run -ne 1) {
     # Make sure the root directory is in the virtualenv PATH
     $site_pkg_dir = Invoke-Expression -Command "$PYTHON -c 'import site; print(site.getsitepackages()[0])'"
@@ -191,10 +203,18 @@ if ($dry_run -ne 1) {
 # NB: `cmake_from_venv` variable is set by this script (and is used by python_virtualenv_update.sh)
 . (Join-Path $ROOTDIR 'scripts\build\locate_cmake.ps1')
 
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
+
 # ------------------------------------------------------------------------------
 # Update Python virtualenv (if requested/necessary)
 
 . (Join-Path $ROOTDIR 'scripts\build\python_virtualenv_update.ps1')
+
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
 
 # ------------------------------------------------------------------------------
 # Setup arguments for build
@@ -298,6 +318,7 @@ elseif ($do_clean_cache) {
     Write-Output "Removing CMake files at: $build_dir/cmake-ldtest*"
     Call-Cmd Remove-Item -Force -Recurse "'$build_dir/cmake-ldtest*'" -ErrorAction SilentlyContinue
 }
+
 
 if ($do_configure) {
     Call-CMake -S "'$source_dir'" -B "'$build_dir'" @cmake_args @unparsed_args

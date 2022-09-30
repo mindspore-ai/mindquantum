@@ -100,17 +100,21 @@ function Extra-Help {
 
 . (Join-Path $ROOTDIR 'scripts\build\parse_common_args.ps1') @args
 
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
+
 # ------------------------------------------------------------------------------
 
-if ($Delocate.IsPresent) {
+if (([bool]$Delocate)) {
     Set-Value 'delocate_wheel'
 }
 
-if ($NoDelocate.IsPresent) {
+if (([bool]$NoDelocate)) {
     Set-Value 'delocate_wheel' $false
 }
 
-if ($NoBuildIsolation.IsPresent) {
+if (([bool]$NoBuildIsolation)) {
     Set-Value 'no_build_isolation'
 }
 
@@ -127,6 +131,10 @@ if ([bool]$PlatName) {
 
 . (Join-Path $ROOTDIR 'scripts\build\locate_python3.ps1')
 
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
+
 # ==============================================================================
 
 $ErrorActionPreference = 'Stop'
@@ -140,6 +148,9 @@ cd "$ROOTDIR"
 # NB: `created_venv` variable can be used to detect if a virtualenv was created or not
 . (Join-Path $ROOTDIR 'scripts\build\python_virtualenv_activate.ps1')
 
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
 
 # ------------------------------------------------------------------------------
 # Locate cmake or cmake3
@@ -147,11 +158,19 @@ cd "$ROOTDIR"
 # NB: `cmake_from_venv` variable is set by this script (and is used by python_virtualenv_update.sh)
 . (Join-Path $ROOTDIR 'scripts\build\locate_cmake.ps1')
 
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
+
 # ------------------------------------------------------------------------------
 
 # Update Python virtualenv (if requested/necessary)
 
 . (Join-Path $ROOTDIR 'scripts\build\python_virtualenv_update.ps1')
+
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
 
 # ------------------------------------------------------------------------------
 # Setup arguments for build
@@ -304,7 +323,7 @@ else {
 
 Call-Cmd "$PYTHON" -m build @build_args @fixed_args @unparsed_args
 if ($LastExitCode -ne 0) {
-    exit 1
+    exit $LastExitCode
 }
 
 # ------------------------------------------------------------------------------
