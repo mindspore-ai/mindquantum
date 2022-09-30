@@ -64,7 +64,7 @@ void decompose_time_evolution_commuting(circuit_t& result, const instruction_t& 
 
     auto time = time_evolution.get_time();
     const auto& hamiltonian = time_evolution.get_hamiltonian();
-    auto num_targets = time_evolution.num_targets();
+    // auto num_targets = time_evolution.num_targets();
     const auto& qubits = inst.qubits();
 
     for (const auto& term : hamiltonian.get_terms()) {

@@ -192,7 +192,10 @@ repos:
     rev: v1.3.5
     hooks:
       - id: cppcheck
+        files: .*\.(h|hpp|tpp|cpp|cc)$
         args: [--force,
+               --enable=all,
+               --error-exitcode=1,
                --inline-suppr,
                --std=c++20,
                --language=c++,
