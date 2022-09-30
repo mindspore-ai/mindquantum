@@ -268,7 +268,7 @@ mq_add_compile_definitions(
 # ==============================================================================
 # Platform specific flags
 
-if(WIN32 AND MINDSPORE_CI)
+if(WIN32 AND Python_VERSION VERSION_LESS 3.9)
   mq_add_compile_definitions(HAVE_SNPRINTF)
 endif()
 
