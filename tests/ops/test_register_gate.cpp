@@ -26,7 +26,7 @@
 #include "experimental/ops/parametric/config.hpp"
 #include "experimental/ops/parametric/register_gate_type.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 // =============================================================================
 

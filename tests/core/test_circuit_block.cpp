@@ -39,8 +39,7 @@ std::ostream& operator<<(std::ostream& out, const mindquantum::QubitID& qubit_id
 
 #include "experimental/ops/gates/measure.hpp"
 
-#include <catch2/catch.hpp>
-
+#include <catch2/catch_all.hpp>
 namespace td = tweedledum;
 
 // =============================================================================

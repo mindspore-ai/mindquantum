@@ -14,7 +14,7 @@
 
 #include <complex>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #if __has_include("tweedledum/../../tests/check_unitary.h")
 #    include "tweedledum/../../tests/check_unitary.h"

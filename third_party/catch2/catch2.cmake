@@ -20,18 +20,18 @@
 
 # cmake-lint: disable=C0103
 
-set(VER 2.13.9)
+set(VER 3.1.0)
 
 if(ENABLE_GITEE)
-  set(REQ_URL "https://gitee.com/czy233/Catch2/repository/archive/v${VER}.tar.gz")
-  set(MD5 "8a934426e0241b3561fa1b8ea897ef29")
+  set(REQ_URL "https://gitee.com/zhaozonggang100/Catch/repository/archive/v${VER}.tar.gz")
+  set(MD5 "a553afdcef5becdb2550c671a57962d5")
 else()
   set(REQ_URL "https://github.com/catchorg/Catch2/archive/refs/tags/v${VER}.tar.gz")
-  set(MD5 "feda9b6fd01621d404537d38df56ff83")
+  set(MD5 "730ddfe3a57b5316f790b0347c217651")
 endif()
 
-set(CMAKE_OPTION -DCATCH_BUILD_TESTING=OFF -DCATCH_INSTALL_DOCS=OFF -DCATCH_INSTALL_HELPERS=ON
-                 -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+set(CMAKE_OPTION -DCATCH_BUILD_TESTING=OFF -DCATCH_INSTALL_DOCS=OFF -DCATCH_INSTALL_EXTRAS=ON -DCATCH_CONFIG_WCHAR=OFF
+                 -DCATCH_CONFIG_ENABLE_ALL_STRINGMAKERS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
 
 mindquantum_add_pkg(
   Catch2

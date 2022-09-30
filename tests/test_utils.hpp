@@ -43,7 +43,7 @@
 
 // -----------------------------------------------------------------------------
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 // =============================================================================
 
@@ -162,32 +162,4 @@ inline auto Equals(const tweedledum::Circuit& circuit) {
 #endif  // !NO_CXX_EXPERIMENTAL
 
 // =============================================================================
-
-#ifndef CATCH_CONFIG_MAIN
-int main(int argc, char* argv[]) {
-    Catch::Session session;
-
-    bool enable_logging(false);
-
-    auto cli = session.cli()
-               | Catch::clara::Opt(enable_logging)["--enable-logging"]("Enable logging output during testing");
-
-    session.cli(cli);
-
-    auto returnCode = session.applyCommandLine(argc, argv);
-    if (returnCode != 0) {
-        return returnCode;
-    }
-
-#    ifdef ENABLE_LOGGING
-    if (enable_logging) {
-        spdlog::default_logger()->set_level(spdlog::level::trace);
-    } else {
-        spdlog::default_logger()->set_level(spdlog::level::off);
-    }
-#    endif  // ENABLE_LOGGING
-
-    return session.run();
-}
-#endif  // !CATCH_CONFIG_MAIN
-#endif  /* TESTS_UTILS_HPP */
+#endif /* TESTS_UTILS_HPP */

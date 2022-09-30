@@ -44,7 +44,7 @@ IncludeCategories:
   #    9. Any local config header
   #   10. Local headers
   #   11. Catch2 headers
-  - Regex: '[<"](catch2/catch.hpp)[>"]'  # Make sure Catch2 is included last
+  - Regex: '[<"](catch2/([A-Za-z0-9.\/\-_])+)[>"]'  # Make sure Catch2 is included last
     Priority: 110
   - Regex: '[<"]tweedledum/([A-Za-z0-9.\/\-_])+[>"]'
     Priority: 60

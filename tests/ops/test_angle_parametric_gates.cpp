@@ -23,7 +23,7 @@
 
 #include "experimental/ops/parametric/angle_base.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #if __has_include(<numbers>) && __cplusplus > 201703L
 static constexpr auto PI_VAL = std::numbers::pi;

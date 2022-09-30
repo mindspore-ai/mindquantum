@@ -49,7 +49,7 @@
 
 #include "experimental/optimisation/gate_cancellation.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 namespace td = tweedledum;
 

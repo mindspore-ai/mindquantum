@@ -23,7 +23,7 @@
 #include "experimental/decompositions/non_gate_decomposition_rule.hpp"
 #include "experimental/ops/gates.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 using namespace std::literals::string_literals;
 using namespace std::literals::string_view_literals;

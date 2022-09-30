@@ -30,7 +30,7 @@
 #include "experimental/decompositions/trivial_atom.hpp"
 #include "experimental/ops/gates.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 using namespace std::literals::string_literals;
 using namespace std::literals::string_view_literals;

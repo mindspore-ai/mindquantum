@@ -20,7 +20,7 @@
 #include "experimental/core/circuit_manager.hpp"
 #include "experimental/ops/gates/measure.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 namespace td = tweedledum;
 

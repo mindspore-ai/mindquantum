@@ -37,7 +37,7 @@
 #include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 #include "experimental/ops/gates/terms_operator_base.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 using namespace std::literals::complex_literals;
 using namespace std::literals::string_literals;
