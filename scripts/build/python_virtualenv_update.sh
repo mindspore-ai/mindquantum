@@ -38,7 +38,7 @@ fi
 # ==============================================================================
 
 if [[ "${created_venv:-0}" -eq 1 || "${do_update_venv:-0}" -eq 1 ]]; then
-    critical_pkgs=(pip setuptools wheel build)
+    critical_pkgs=(pip setuptools wheel wheel-filename build)
     echo "Updating critical Python packages: $PYTHON -m pip install -U ${critical_pkgs[*]}"
     call_cmd "$PYTHON" -m pip install -U "${critical_pkgs[@]}"
 
