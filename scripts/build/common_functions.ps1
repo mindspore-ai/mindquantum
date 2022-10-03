@@ -22,6 +22,21 @@ $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 
 # ==============================================================================
 
+function ConvertStringToBool ([string]$value) {
+    $value = $value.ToLower();
+
+    switch ($value) {
+        '$true' { return $true; }
+        "true" { return $true; }
+        "1" { return $true; }
+        '$false' { return $false; }
+        "false" { return $false; }
+        "0" { return $false; }
+    }
+}
+
+# ==============================================================================
+
 function Assign-Value([switch]$Script, [switch]$OnlyOutput) {
     $name = $args[0]
     $value = $args[1]

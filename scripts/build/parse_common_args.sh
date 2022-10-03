@@ -300,7 +300,7 @@ while getopts "${getopts_args}" OPT; do
                             ;;
         * )                 success=0
                             if [ $has_extra_args -eq 1 ]; then
-                                parse_extra_args "$OPT" "$OPTARG"
+                                parse_extra_args "$OPT" "$OPTARG" "$flag_value"
                                 success="$?"
                             fi
                             if [ $success -ne 0 ]; then

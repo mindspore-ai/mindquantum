@@ -74,6 +74,7 @@ function extra_help() {
 getopts_args_extra='o:p:'
 
 function parse_extra_args() {
+    # input args: OPT OPTARG flag_value
     case "$1" in
         delocate )           no_arg;
                              set_var delocate_wheel
@@ -81,8 +82,8 @@ function parse_extra_args() {
         no-delocate )        no_arg;
                              set_var delocate_wheel 0
                              ;;
-        no-build-isolation ) no_arg;
-                             set_var no_build_isolation
+        build-isolation )    no_arg;
+                             set_var build_isolation "$3"
                              ;;
         o | output )         needs_arg;
                              set_var output_path "$2"
@@ -244,7 +245,7 @@ for arg in "${args[@]}"; do
 done
 
 args=("-w")
-if [ "$no_build_isolation" -eq 1 ]; then
+if [ "$build_isolation" -eq 0 ]; then
     args+=("--no-isolation")
 fi
 

@@ -14,6 +14,7 @@
 
 Param(
     [Alias("B")][ValidateNotNullOrEmpty()][string]$Build,
+    [switch]$BuildIsolation,
     [switch]$CCache,
     [switch]$CMakeNoRegistry,
     [switch]$Clean3rdParty,
@@ -35,8 +36,8 @@ Param(
     [Alias("J")][ValidateRange("Positive")][int]$Jobs,
     [switch]$LocalPkgs,
     [switch]$Logging,
-    [switch]$NoConfig,
     [switch]$Ninja,
+    [switch]$NoConfig,
     [switch]$NoBuildIsolation,
     [switch]$NoDelocate,
     [switch]$NoGitee,
@@ -87,9 +88,9 @@ function Help-Header {
 
 function Extra-Help {
     Write-Output 'Extra options:'
-    Write-Output '  -Delocate            Delocate the binary wheels after build is finished'
+    Write-Output '  -(No)BuildIsolation  Pass --no-isolation to python3 -m build'
+    Write-Output '  -(No)Delocate        Delocate the binary wheels after build is finished'
     Write-Output '                       (enabled by default; pass -NoDelocate to disable)'
-    Write-Output '  -NoBuildIsolation    Pass --no-isolation to python3 -m build'
     Write-Output '  -O,-Output [dir]     Output directory for built wheels'
     Write-Output '  -P,-PlatName [dir]   Platform name to use for wheel delocation'
     Write-Output '                       (only effective if -Delocate is used)'
@@ -118,8 +119,12 @@ if (([bool]$NoDelocate)) {
     Set-Value 'delocate_wheel' $false
 }
 
+if (([bool]$BuildIsolation)) {
+    Set-Value 'build_isolation'
+}
+
 if (([bool]$NoBuildIsolation)) {
-    Set-Value 'no_build_isolation'
+    Set-Value 'build_isolation' $false
 }
 
 if ([bool]$Output) {
@@ -191,7 +196,7 @@ $cmake_option_names = @{
     enable_projectq = 'ENABLE_PROJECTQ'
     enable_logging = 'ENABLE_LOGGING'
     logging_enable_debug = 'ENABLE_LOGGING_DEBUG_LEVEL'
-    logging_enable_debug = 'ENABLE_LOGGING_TRACE_LEVEL'
+    logging_enable_trace = 'ENABLE_LOGGING_TRACE_LEVEL'
     enable_tests = 'BUILD_TESTING'
     do_clean_3rdparty = 'CLEAN_3RDPARTY_INSTALL_DIR'
 }
@@ -294,7 +299,7 @@ foreach($arg in $build_args) {
 }
 
 $build_args = @('-w')
-if ($no_build_isolation) {
+if (-Not $build_isolation) {
     $build_args += "--no-isolation"
 }
 
@@ -368,6 +373,9 @@ to the Python PATH without the need to modify PYTHONPATH.
 
 .PARAMETER Build
 Specify build directory. Defaults to: Path\To\Script\build
+
+.PARAMETER BuildIsolation
+Do not pass --no-isolation to python3 -m build
 
 .PARAMETER CCache
 If ccache or sccache are found within the PATH, use them with CMake

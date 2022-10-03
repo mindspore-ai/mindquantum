@@ -87,6 +87,11 @@ rem ============================================================================
     shift & shift & goto :initial
   )
 
+  if /I "%1" == "/BuildIsolation" (
+    set build_isolation=1
+    shift & goto :initial
+  )
+
   if /I "%1" == "/Clean" (
     set do_clean=1
     shift & goto :initial
@@ -203,6 +208,11 @@ rem ============================================================================
     shift & goto :initial
   )
 
+  if /I "%1" == "/NoBuildIsolation" (
+    set build_isolation=0
+    shift & goto :initial
+  )
+
   if /I "%1" == "/Ninja" (
     set ninja=1
     shift & goto :initial
@@ -210,11 +220,6 @@ rem ============================================================================
 
   if /I "%1" == "/OnlyPytest" (
     set install_only_pytest=1
-    shift & goto :initial
-  )
-
-  if /I "%1" == "/NoIsolation" (
-    set build_isolation=0
     shift & goto :initial
   )
 
