@@ -18,6 +18,7 @@
 
 if(ENABLE_CXX_EXPERIMENTAL)
   find_package(Catch2 CONFIG REQUIRED)
+  list(APPEND CMAKE_MODULE_PATH "${Catch2_DIR}")
 
   include(CTest)
   include(Catch)

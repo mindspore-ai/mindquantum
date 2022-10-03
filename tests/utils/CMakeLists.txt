@@ -17,7 +17,11 @@
 # ==============================================================================
 
 add_library(mindquantum_catch2_main STATIC ${CMAKE_CURRENT_LIST_DIR}/catch2_main.cpp)
+target_link_libraries(mindquantum_catch2_main PUBLIC Catch2::Catch2)
+
+# ==============================================================================
 
 add_library(mindquantum_catch2_utils INTERFACE)
-
 target_include_directories(mindquantum_catch2_utils INTERFACE ${CMAKE_CURRENT_LIST_DIR})
+
+# ==============================================================================
