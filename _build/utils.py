@@ -14,6 +14,7 @@
 
 """Helper functions for building MindQuantum."""
 
+import contextlib
 import errno
 import logging
 import os
@@ -28,6 +29,48 @@ sys.path.append(str(Path(__file__).parent.parent / 'mindquantum' / 'utils'))
 from fdopen import (  # noqa: E402 pylint: disable=wrong-import-position,import-error
     fdopen,
 )
+
+# ==============================================================================
+
+
+@contextlib.contextmanager
+def modified_environ(*remove, **update):
+    """
+    Temporarily updates the ``os.environ`` dictionary in-place.
+
+    The `os.environ` dictionary is updated in-place so that the modification is sure to work in all situations.
+
+    Args:
+        remove (List[str]): Environment variables to remove.
+        update (Dict[str, str]): Dictionary of environment variables and values to add/update.
+    """
+    env = os.environ
+
+    def convert_values(value):
+        if value is None:
+            return ''
+        if isinstance(value, str):
+            return value
+        if isinstance(value, bool):
+            return f'{int(value)}'
+        return str(value)
+
+    update = {k: convert_values(v) for k, v in update.items()} or {}
+    remove = remove or []
+
+    stomped = (set(update.keys()) | set(remove)) & set(env.keys())
+    update_after = {k: env[k] for k in stomped}
+    remove_after = frozenset(k for k in update if k not in env)
+
+    # pylint: disable=expression-not-assigned
+    try:
+        env.update(update)
+        [env.pop(k, None) for k in remove]
+        yield
+    finally:
+        env.update(update_after)
+        [env.pop(k) for k in remove_after]
+
 
 # ==============================================================================
 

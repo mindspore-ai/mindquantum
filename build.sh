@@ -56,13 +56,16 @@ function help_header() {
 
 function extra_help() {
     echo 'Extra options:'
-    echo '  --delocate           Delocate the binary wheels after build is finished'
-    echo '                       (enabled by default; pass --no-delocate to disable)'
-    echo '  --no-delocate        Disable delocating the binary wheels after build is finished'
-    echo '  --no-build-isolation Pass --no-isolation to python3 -m build'
-    echo '  -o,--output=[dir]    Output directory for built wheels'
-    echo '  -p,--plat-name=[dir] Platform name to use for wheel delocation'
-    echo '                       (only effective if --delocate is used)'
+    echo '  --(no-)build-isolation Pass --no-isolation to python3 -m build'
+    echo '  --(no-)delocate        Delocate the binary wheels after build is finished'
+    echo '                         (enabled by default; pass --no-delocate to disable)'
+    echo '  --(no-)fast-build      If possible use an existing CMake directory to build the C++ Python extensions'
+    echo '                         instead of using the normal Python bdist_wheel process.'
+    echo '                         Use this with caution. CI build should not be using this.'
+    echo '  --fast-build-dir       Specify build directory when performing a fast-build'
+    echo '  -o,--output=[dir]      Output directory for built wheels'
+    echo '  -p,--plat-name=[dir]   Platform name to use for wheel delocation'
+    echo '                         (only effective if --delocate is used)'
     echo -e '\nExample calls:'
     echo "$PROGRAM"
     echo "$PROGRAM --gpu"
@@ -76,11 +79,14 @@ getopts_args_extra='o:p:'
 function parse_extra_args() {
     # input args: OPT OPTARG flag_value
     case "$1" in
-        delocate )           no_arg;
-                             set_var delocate_wheel
+        fast-build )         no_arg;
+                             set_var fast_build "$3"
                              ;;
-        no-delocate )        no_arg;
-                             set_var delocate_wheel 0
+        fast-build-dir )     needs_arg;
+                             set_var fast_build_dir "$2"
+                             ;;
+        delocate )           no_arg;
+                             set_var delocate_wheel "$3"
                              ;;
         build-isolation )    no_arg;
                              set_var build_isolation "$3"
@@ -182,6 +188,14 @@ fi
 
 if [ -n "$cmake_generator" ]; then
     args+=(-G "${cmake_generator}")
+fi
+
+if [ "$fast_build" -eq 1 ]; then
+    args+=(bdist_wheel --fast-build)
+
+    if [ -n "$fast_build_dir" ]; then
+        args+=(bdist_wheel --fast-build-dir="$fast_build_dir")
+    fi
 fi
 
 if [ "$n_jobs" -ne -1 ]; then

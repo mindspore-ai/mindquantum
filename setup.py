@@ -32,6 +32,7 @@ from pathlib import Path
 
 import setuptools
 from setuptools.command.build_ext import build_ext
+from wheel.bdist_wheel import bdist_wheel
 
 sys.path.append(str(Path(__file__).parent.resolve()))
 
@@ -39,6 +40,7 @@ from _build.utils import (  # pylint: disable=wrong-import-position  # noqa: E40
     fdopen,
     get_cmake_command,
     get_executable,
+    modified_environ,
     parse_toml,
     remove_tree,
 )
@@ -111,7 +113,7 @@ class CMakeExtension(setuptools.Extension):  # pylint: disable=too-few-public-me
 # ------------------------------------------------------------------------------
 
 
-class CMakeBuildExt(build_ext):
+class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
     """Custom build_ext command class."""
 
     user_options = build_ext.user_options + [
@@ -139,6 +141,14 @@ class CMakeBuildExt(build_ext):
         self.clean_build = self.clean_build or False
         self.build_dir = self.build_dir or None
         self.install_light = self.install_light or False
+        self.fast_bdist_wheel = bool(int(os.getenv('MQ_FAST_BDIST_WHEEL', '0')))
+        self.fast_bdist_wheel_dir = os.getenv('MQ_FAST_BDIST_DIR', None)
+
+        if self.fast_bdist_wheel and Path(self.fast_bdist_wheel_dir).exists():
+            self.build_dir = self.fast_bdist_wheel_dir
+        elif self.fast_bdist_wheel:
+            logging.warning('WARN: Disabling fast-build because specified build directory does not exist')
+            self.fast_bdist_wheel = False
 
     def build_extensions(self):
         """Build a C/C++ extension using CMake."""
@@ -158,9 +168,16 @@ class CMakeBuildExt(build_ext):
         self.cmake_cmd = [cmake_cmd]
         logging.info('using cmake command: %s', ' '.join(self.cmake_cmd))
 
-        self.configure_extensions()
+        if not self.fast_bdist_wheel:
+            self.configure_extensions()
+        else:
+            self.build_args = []
+
         build_ext.build_extensions(self)
-        if not self.install_light:
+
+        if self.fast_bdist_wheel:
+            logging.info('Doing a fast-build wheel build, skipping install step')
+        elif not self.install_light:
             self.cmake_install()
 
     def configure_extensions(self):
@@ -255,6 +272,18 @@ class CMakeBuildExt(build_ext):
                 self.cmake_cmd + ['--build', '.', '--target', ext.target] + self.build_args,
                 cwd=cwd,
             )
+            if self.fast_bdist_wheel:
+                dest_path = Path(self.get_ext_fullpath(ext.lib_filepath)).resolve()
+
+                for library_path in (
+                    cur_dir / Path(ext.lib_filepath).parent / dest_path.name,
+                    cur_dir / dest_path.name,
+                ):
+                    if library_path.exists():
+                        shutil.copyfile(library_path, dest_path)
+                        break
+                else:
+                    raise RuntimeError(f'Unable to locate output file for {ext.name}')
         except ext_errors as err:
             if not ext.optional:
                 raise BuildFailedError() from err
@@ -319,6 +348,42 @@ class CMakeBuildExt(build_ext):
         if self.build_dir:
             return self.build_dir
         return str(Path(self.build_temp, Path(src_dir).name))
+
+
+# ==============================================================================
+
+
+class BdistWheel(bdist_wheel):
+    """Custom wheel building command."""
+
+    user_options = bdist_wheel.user_options + [
+        ('fast-build-dir=', None, 'Specify the location of an existing build directory (defaults to `build`'),
+        ('fast-build', None, 'Do a `fast` wheel build (requires a CMake build with IN_PLACE_BUILD set to `ON`'),
+    ]
+
+    boolean_options = bdist_wheel.boolean_options + ['fast-build']
+
+    def initialize_options(self):
+        """Initialize all options of this custom command."""
+        super().initialize_options()
+        self.fast_build = None
+        self.fast_build_dir = None
+
+    def finalize_options(self):
+        """Finalize all options."""
+        # pylint: disable=attribute-defined-outside-init
+        super().finalize_options()
+        self.fast_build = self.fast_build or False
+        self.fast_build_dir = self.fast_build_dir or 'build'
+
+    def run(self):
+        """Run the bdist_wheel command."""
+        if self.fast_build:
+            logging.info('doing a fast-build')
+            with modified_environ(MQ_FAST_BDIST_WHEEL=True, MQ_FAST_BDIST_DIR=self.fast_build_dir):
+                super().run()
+        else:
+            super().run()
 
 
 # ==============================================================================
@@ -473,6 +538,7 @@ if __name__ == '__main__':
 
     setuptools.setup(
         cmdclass={
+            'bdist_wheel': BdistWheel,
             'build_ext': CMakeBuildExt,
             'clean': Clean,
             'gen_reqfile': GenerateRequirementFile,

@@ -29,6 +29,8 @@ Param(
     [switch]$DebugCMake,
     [switch]$Delocate,
     [Alias("N")][switch]$DryRun,
+    [switch]$FastBuild,
+    [ValidateNotNullOrEmpty()][string]$FastBuildDir,
     [ValidateNotNullOrEmpty()][string]$G,
     [switch]$Gitee,
     [switch]$Gpu,
@@ -40,6 +42,7 @@ Param(
     [switch]$NoConfig,
     [switch]$NoBuildIsolation,
     [switch]$NoDelocate,
+    [switch]$NoFastBuild,
     [switch]$NoGitee,
     [switch]$OnlyPytest,
     [Alias("O")][ValidateNotNullOrEmpty()][string]$Output,
@@ -91,6 +94,10 @@ function Extra-Help {
     Write-Output '  -(No)BuildIsolation  Pass --no-isolation to python3 -m build'
     Write-Output '  -(No)Delocate        Delocate the binary wheels after build is finished'
     Write-Output '                       (enabled by default; pass -NoDelocate to disable)'
+    Write-Output '  -(No)FastBuild       If possible use an existing CMake directory to build the C++ Python extensions'
+    Write-Output '                       instead of using the normal Python bdist_wheel process.'
+    Write-Output '                       Use this with caution. CI build should not be using this.'
+    Write-Output '  -FastBuildDir        Specify build directory when performing a fast-build'
     Write-Output '  -O,-Output [dir]     Output directory for built wheels'
     Write-Output '  -P,-PlatName [dir]   Platform name to use for wheel delocation'
     Write-Output '                       (only effective if -Delocate is used)'
@@ -125,6 +132,18 @@ if (([bool]$BuildIsolation)) {
 
 if (([bool]$NoBuildIsolation)) {
     Set-Value 'build_isolation' $false
+}
+
+if (([bool]$FastBuild)) {
+    Set-Value 'fast_build'
+}
+
+if (([bool]$NoFastBuild)) {
+    Set-Value 'fast_build' $false
+}
+
+if ([bool]$FastBuildDir) {
+    Set-Value 'fast_build_dir' "$FastBuildDir"
 }
 
 if ([bool]$Output) {
@@ -236,12 +255,20 @@ if ([bool]$cmake_generator) {
     $build_args += '-G', "$cmake_generator"
 }
 
+if ($fast_build) {
+    $build_args += 'bdist_wheel', '--fast-build'
+
+    if ([bool]$fast_build_dir) {
+        $build_args += 'bdist_wheel', '--fast-build-dir', "$fast_build_dir"
+    }
+}
+
 if ($n_jobs -ne -1) {
     $build_args += 'build', "--parallel=$n_jobs"
 }
 
 if ($build_type -eq 'Debug') {
-    $build_args += 'build', "--debug"
+    $build_args += 'build', '--debug'
 }
 
 if ($_build_dir_was_set) {
@@ -420,6 +447,14 @@ Dry run; only print commands but do not execute them
 .PARAMETER Delocate
 Delocate the binary wheels after build is finished (enabled by default; pass -NoDelocate to disable)
 
+.PARAMETER FastBuild
+If possible use an existing CMake directory to build the C++ Python extensions instead of using the normal Python
+bdist_wheel process.Use this with caution.
+CI build should not be using this.
+
+.PARAMETER FastBuildDir
+Specify build directory when performing a fast-build
+
 .PARAMETER Gitee
 Use Gitee (where possible) instead of Github/Gitlab
 
@@ -449,6 +484,9 @@ Ignore any configuration file
 
 .PARAMETER NoDelocate
 Do not delocate the binary wheels after build is finished (pass -Delocate to enable)
+
+.PARAMETER NoFastBuild
+Do not use a "fast" build process when building a wheel. See doc for -FastBuild.
 
 .PARAMETER NoGitee
 Do not favor Gitee over Github/Gitlab
