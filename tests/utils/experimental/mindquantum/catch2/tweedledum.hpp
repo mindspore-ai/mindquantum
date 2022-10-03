@@ -124,7 +124,7 @@ struct TweedledumCircuitMatcher : Catch::Matchers::MatcherGenericBase {
     }
 
     std::string describe() const override {
-        return std::format("Equals: {}", ref_circuit);
+        return fmt::format("Equals: {}", ref_circuit);
     }
 
  private:
@@ -145,7 +145,7 @@ class InstructionPtrRange : public Catch::Matchers::MatcherGenericBase {
     explicit InstructionPtrRange(const Range& range) : range_{range} {
     }
 
-    bool match(const Range& other) const override {
+    bool match(const Range& other) const {
         if (std::size(range_) != std::size(other)) {
             std::cout << "Range size not equal!" << std::endl;
             return false;

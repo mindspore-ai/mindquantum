@@ -30,9 +30,17 @@
 
 // =============================================================================
 
+namespace mindquantum::fmt_details {
+struct formatter_base {
+    FMT_CONSTEXPR auto parse(::fmt::format_parse_context& ctx) -> decltype(ctx.begin()) {
+        return ctx.begin();
+    }
+};
+}  // namespace mindquantum::fmt_details
+
 //! Custom formatter for a tweedledum::Qubit:::Polarity
 template <typename char_type>
-struct fmt::formatter<tweedledum::Qubit::Polarity, char_type> {
+struct fmt::formatter<tweedledum::Qubit::Polarity, char_type> : mindquantum::fmt_details::formatter_base {
     using type_t = tweedledum::Qubit::Polarity;
 
     template <typename format_context_t>
@@ -46,7 +54,7 @@ struct fmt::formatter<tweedledum::Qubit::Polarity, char_type> {
 
 //! Custom formatter for a tweedledum::Qubit
 template <typename char_type>
-struct fmt::formatter<tweedledum::Qubit, char_type> {
+struct fmt::formatter<tweedledum::Qubit, char_type> : mindquantum::fmt_details::formatter_base {
     using type_t = tweedledum::Qubit;
 
     template <typename format_context_t>
@@ -59,7 +67,7 @@ struct fmt::formatter<tweedledum::Qubit, char_type> {
 
 //! Custom formatter for a tweedledum::Cbit:::Polarity
 template <typename char_type>
-struct fmt::formatter<tweedledum::Cbit::Polarity, char_type> {
+struct fmt::formatter<tweedledum::Cbit::Polarity, char_type> : mindquantum::fmt_details::formatter_base {
     using type_t = tweedledum::Cbit::Polarity;
 
     template <typename format_context_t>
@@ -73,7 +81,7 @@ struct fmt::formatter<tweedledum::Cbit::Polarity, char_type> {
 
 //! Custom formatter for a tweedledum::Cbit
 template <typename char_type>
-struct fmt::formatter<tweedledum::Cbit, char_type> {
+struct fmt::formatter<tweedledum::Cbit, char_type> : mindquantum::fmt_details::formatter_base {
     using type_t = tweedledum::Cbit;
 
     template <typename format_context_t>
@@ -86,7 +94,7 @@ struct fmt::formatter<tweedledum::Cbit, char_type> {
 
 //! Custom formatter for a tweedledum::Operator
 template <typename char_type>
-struct fmt::formatter<tweedledum::Operator, char_type> {
+struct fmt::formatter<tweedledum::Operator, char_type> : mindquantum::fmt_details::formatter_base {
     using type_t = tweedledum::Operator;
 
     template <typename format_context_t>
@@ -122,7 +130,7 @@ struct fmt::formatter<tweedledum::Operator, char_type> {
 
 //! Custom formatter for a tweedledum::Instruction
 template <typename char_type>
-struct fmt::formatter<tweedledum::Instruction, char_type> {
+struct fmt::formatter<tweedledum::Instruction, char_type> : mindquantum::fmt_details::formatter_base {
     using type_t = tweedledum::Instruction;
 
     template <typename format_context_t>
@@ -135,12 +143,8 @@ struct fmt::formatter<tweedledum::Instruction, char_type> {
 
 //! Custom formatter for a tweedledum::Circuit
 template <typename char_type>
-struct fmt::formatter<tweedledum::Circuit, char_type> {
+struct fmt::formatter<tweedledum::Circuit, char_type> : mindquantum::fmt_details::formatter_base {
     using type_t = tweedledum::Circuit;
-
-    auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
-        return ctx.begin();
-    }
 
     template <typename format_context_t>
     auto format(const type_t& circuit, format_context_t& ctx) const -> decltype(ctx.out()) {

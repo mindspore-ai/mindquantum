@@ -21,6 +21,8 @@
 #include "experimental/core/circuit_block.hpp"
 #include "experimental/ops/gates/terms_operator_base.hpp"
 
+#include <catch2/catch_tostring.hpp>
+
 // =============================================================================
 
 namespace Catch {

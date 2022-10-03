@@ -26,10 +26,10 @@
 #include <tweedledum/Target/Device.h>
 
 #include "../test_utils.hpp"
-#include "mindquantum/catch2/midnquantum.hpp"
-#include "mindquantum/catch2/tweedledum.hpp"
 
 #include "experimental/core/circuit_block.hpp"
+#include "experimental/mindquantum/catch2/mindquantum.hpp"
+#include "experimental/mindquantum/catch2/tweedledum.hpp"
 #include "experimental/ops/gates/measure.hpp"
 
 #include <catch2/catch_all.hpp>

@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     bool enable_logging(false);
 
     auto cli = session.cli()
-               | Catch::clara::Opt(enable_logging)["--enable-logging"]("Enable logging output during testing");
+               | Catch::Clara::Opt(enable_logging)["--enable-logging"]("Enable logging output during testing");
 
     session.cli(cli);
 
