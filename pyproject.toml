@@ -80,7 +80,6 @@ mindquantum-config = 'mindquantum_config:main'
 [tool.setuptools]
 
 zip-safe = false
-package-data = { '*'=['*.so', '*.so*', '*.pyd']}
 
 [tool.setuptools.dynamic]
 
@@ -88,7 +87,7 @@ version = {file = "VERSION.txt"}
 
 [tool.setuptools.packages.find]
 
-include = ['mindquantum']
+include = ['mindquantum*']
 
 # ==============================================================================
 
