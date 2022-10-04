@@ -15,6 +15,8 @@
 #ifndef MQ_CATCH2_EIGEN_HPP
 #define MQ_CATCH2_EIGEN_HPP
 
+#include <string>
+
 #include <Eigen/SparseCore>
 
 #include <catch2/matchers/catch_matchers_templated.hpp>

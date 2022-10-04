@@ -30,8 +30,10 @@
 #include "config/type_traits.hpp"
 
 #include "core/parameter_resolver.hpp"
-#include "ops/test_utils.hpp"
 
+#include "experimental/mindquantum/catch2/mindquantum.hpp"
+#include "experimental/mindquantum/catch2/symengine.hpp"
+#include "experimental/mindquantum/catch2/tweedledum.hpp"
 #include "experimental/ops/gates/details/floating_point_coeff_policy.hpp"
 #include "experimental/ops/gates/details/parameter_resolver_coeff_policy.hpp"
 #include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
@@ -1121,7 +1123,7 @@ TEST_CASE("TermsOperator arithmetic operators (/)", "[terms_op][ops]") {
             do_multiply(ref_terms, divisor);
         }
 
-        CHECK_THAT(op.get_terms(), Catch::Predicate<coeff_term_dict_t>(approx_equal, "Approx equal terms"));
+        CHECK_THAT(op.get_terms(), Catch::Matchers::Predicate<coeff_term_dict_t>(approx_equal, "Approx equal terms"));
         CHECK(!std::empty(op));
     }
 }

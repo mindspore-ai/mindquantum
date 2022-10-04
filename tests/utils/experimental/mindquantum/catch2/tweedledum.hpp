@@ -33,7 +33,6 @@
 // =============================================================================
 
 namespace Catch {
-
 template <>
 struct StringMaker<tweedledum::Qubit::Polarity> {
     static std::string convert(tweedledum::Qubit::Polarity value) {
@@ -182,7 +181,6 @@ auto Equals(const std::vector<T*>& range) {
 }
 
 // =============================================================================
-
 }  // namespace mindquantum::catch2
 
 #endif /* MQ_CATCH2_TWEEDLEDUM_HPP */

@@ -15,6 +15,8 @@
 #ifndef MQ_CATCH2_CATCH2_FMT_FORMATTER_HPP
 #define MQ_CATCH2_CATCH2_FMT_FORMATTER_HPP
 
+#include <string>
+
 #include <fmt/format.h>
 
 namespace mindquantum::details {

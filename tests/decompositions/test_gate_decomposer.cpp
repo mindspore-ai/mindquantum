@@ -35,6 +35,7 @@
 using namespace std::literals::string_literals;
 using namespace std::literals::string_view_literals;
 
+using mindquantum::catch2::Equals;
 namespace ops = mindquantum::ops;
 namespace decompositions = mindquantum::decompositions;
 

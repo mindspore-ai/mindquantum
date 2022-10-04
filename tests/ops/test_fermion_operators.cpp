@@ -18,9 +18,10 @@
 
 #include "config/logging.hpp"
 
-#include "ops/test_utils.hpp"
-
 #include "experimental/core/circuit_block.hpp"
+#include "experimental/mindquantum/catch2/mindquantum.hpp"
+#include "experimental/mindquantum/catch2/symengine.hpp"
+#include "experimental/mindquantum/catch2/tweedledum.hpp"
 #include "experimental/ops/gates/details/floating_point_coeff_policy.hpp"
 #include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 #include "experimental/ops/gates/fermion_operator.hpp"

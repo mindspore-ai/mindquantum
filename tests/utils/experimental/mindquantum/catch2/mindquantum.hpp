@@ -15,6 +15,8 @@
 #ifndef MQ_CATCH2_MINDQUANTUM_HPP
 #define MQ_CATCH2_MINDQUANTUM_HPP
 
+#include <string>
+
 #include "mindquantum/catch2/catch2_fmt_formatter.hpp"
 #include "mindquantum/catch2/mindquantum.hpp"
 

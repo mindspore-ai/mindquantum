@@ -20,8 +20,9 @@
 #include <symengine/real_double.h>
 #include <symengine/symengine_exception.h>
 
-#include "ops/test_utils.hpp"
-
+#include "experimental/mindquantum/catch2/mindquantum.hpp"
+#include "experimental/mindquantum/catch2/symengine.hpp"
+#include "experimental/mindquantum/catch2/tweedledum.hpp"
 #include "experimental/ops/parametric/angle_base.hpp"
 #include "experimental/ops/parametric/config.hpp"
 #include "experimental/ops/parametric/register_gate_type.hpp"

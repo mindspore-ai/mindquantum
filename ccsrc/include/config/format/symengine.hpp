@@ -50,15 +50,14 @@ struct fmt::formatter<SymEngine::RCP<const SymEngine::Basic>, char_type> {
 
     FMT_CONSTEXPR auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
         auto it = ctx.begin();
-        const auto end = ctx.end();
-        for (auto it(ctx.begin()); it != end; ++it) {
-            if (*it == 'j') {
-                json_output = true;
-            }
+        if (*it == 'j') {
+            json_output = true;
+            ++it;
         }
+        const auto end = ctx.end();
 
         if (it != end && *it != '}') {
-            FMT_THROW(format_error("invalid type specifier"));
+            ctx.error_handler().on_error("invalid type specifier");
         }
 
         return it;

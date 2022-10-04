@@ -1,4 +1,4 @@
-//   Copyright 2021 <Huawei Technologies Co., Ltd>
+//   Copyright 2022 <Huawei Technologies Co., Ltd>
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -12,43 +12,42 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef TESTS_OPS_UTILS_HPP
-#define TESTS_OPS_UTILS_HPP
+#ifndef MQ_CATCH2_SYMENGINE_HPP
+#define MQ_CATCH2_SYMENGINE_HPP
 
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 
 #include <symengine/expression.h>
 
-#include "../test_utils.hpp"
+#include <fmt/ranges.h>
 
-#include <catch2/catch_all.hpp>
+#include "config/format/symengine.hpp"
+
+#include "mindquantum/catch2/catch2_fmt_formatter.hpp"
+#include "mindquantum/catch2/mindquantum.hpp"
+
+#include <catch2/catch_tostring.hpp>
+#include <catch2/matchers/catch_matchers_templated.hpp>
 
 // =============================================================================
 
 namespace Catch {
 template <>
-struct StringMaker<SymEngine::RCP<const SymEngine::Basic>> {
-    static std::string convert(const SymEngine::RCP<const SymEngine::Basic>& a) {
-        return str(*a);
-    }
-};
-template <>
-struct StringMaker<SymEngine::Expression> {
-    static std::string convert(const SymEngine::Expression& e) {
-        return str(e);
-    }
-};
+struct StringMaker<SymEngine::RCP<const SymEngine::Basic>>
+    : mindquantum::details::FmtStringMakerBase<SymEngine::RCP<const SymEngine::Basic>> {};
 }  // namespace Catch
 
-struct SymEngineEquals : Catch::MatcherBase<std::vector<SymEngine::RCP<const SymEngine::Basic>>> {
+// =============================================================================
+
+namespace mindquantum::catch2 {
+struct SymEngineArrayMatcher : Catch::Matchers::MatcherGenericBase {
     template <typename... Ts>
-    explicit SymEngineEquals(Ts&&... ts) : comparator_{{std::forward<Ts>(ts)...}} {
+    explicit SymEngineArrayMatcher(Ts&&... ts) : comparator_{{std::forward<Ts>(ts)...}} {
     }
 
-    bool match(const std::vector<SymEngine::RCP<const SymEngine::Basic>>& v) const override {
+    bool match(const std::vector<SymEngine::RCP<const SymEngine::Basic>>& v) const {
         if (comparator_.size() != v.size()) {
             return false;
         }
@@ -59,13 +58,20 @@ struct SymEngineEquals : Catch::MatcherBase<std::vector<SymEngine::RCP<const Sym
         }
         return true;
     }
-    std::string describe() const override {
-        return "Equals: " + ::Catch::Detail::stringify(comparator_);
+    std::string describe() const {
+        return fmt::format("Equals: {}", comparator_);
     }
 
     const std::vector<SymEngine::RCP<const SymEngine::Basic>> comparator_;
 };
 
-// =============================================================================
+// -----------------------------------------------------------------------------
 
-#endif /* TESTS_OPS_UTILS_HPP */
+template <typename... Ts>
+auto Equals(Ts&&... ts) {
+    return SymEngineArrayMatcher(std::forward<Ts>(ts)...);
+}
+// =============================================================================
+}  // namespace mindquantum::catch2
+
+#endif /* MQ_CATCH2_SYMENGINE_HPP */
