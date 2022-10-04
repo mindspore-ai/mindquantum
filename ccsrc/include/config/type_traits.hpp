@@ -24,7 +24,6 @@
 #include "details/cxx20_compatibility.hpp"
 
 namespace mindquantum::traits {
-
 template <typename T, typename U>
 inline constexpr auto is_same_decay_v = std::is_same_v<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
 
@@ -123,7 +122,6 @@ static_assert(std::is_same_v<double, to_real_type_t<double>>);
 static_assert(std::is_same_v<double, to_real_type_t<std::complex<double>>>);
 
 // =============================================================================
-
 }  // namespace mindquantum::traits
 
 #endif /* MQ_CONFIG_TRAITS_HPP */

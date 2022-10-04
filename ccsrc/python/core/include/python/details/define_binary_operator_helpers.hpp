@@ -123,7 +123,6 @@ template <template <typename... others_t> class func_t, typename py_klass_t>
 template <typename... args_t, typename... other_args_t>
 struct binop_definition<func_t, py_klass_t>::helper_t<std::tuple<args_t...>, other_args_t...>
     : helper_t<args_t..., other_args_t...> {};
-
 }  // namespace bindops
 
 #endif /* DEFINE_BINARY_OPERATOR_HELPERS_HPP */

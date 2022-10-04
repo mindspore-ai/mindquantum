@@ -18,7 +18,6 @@
 #include "config/type_traits.hpp"
 
 namespace mindquantum::ops::details {
-
 #if MQ_HAS_CONCEPTS
 template <typename coefficient_t>
 struct CoeffPolicy;

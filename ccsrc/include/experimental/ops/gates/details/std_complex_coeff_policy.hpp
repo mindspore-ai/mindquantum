@@ -115,7 +115,6 @@ struct CoeffPolicy<std::complex<float_t>> : CoeffPolicyBase<std::complex<float_t
 
 using CmplxFloatCoeffPolicy = CoeffPolicy<std::complex<float>>;
 using CmplxDoubleCoeffPolicy = CoeffPolicy<std::complex<double>>;
-
 }  // namespace mindquantum::ops::details
 
 #endif /* DETAILS_STD_COMPLEX_DOUBLE_COEFF_POLICY_HPP */

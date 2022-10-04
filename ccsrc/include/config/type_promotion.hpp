@@ -23,7 +23,6 @@
 
 namespace mindquantum {
 namespace traits {
-
 template <typename T>
 struct type_promotion;
 

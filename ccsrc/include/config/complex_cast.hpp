@@ -22,7 +22,6 @@
 #include "config/type_traits.hpp"
 
 namespace mindquantum {
-
 template <typename coeff_t>
 class ParameterResolver;
 

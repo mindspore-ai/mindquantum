@@ -394,7 +394,6 @@ std::ostream& operator<<(std::ostream& os, const ParameterResolver<T>& pr) {
     os << pr.ToString();
     return os;
 }
-
 }  // namespace mindquantum
 
 #include "parameter_resolver.tpp"

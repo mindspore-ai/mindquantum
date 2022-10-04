@@ -18,7 +18,6 @@
 #include "experimental/ops/transform/types.hpp"
 
 namespace mindquantum::ops::transform {
-
 //! Jordan Wigner transform that transform a Fermion operator to qubit operator.
 template <typename fermion_op_t>
 MQ_NODISCARD fermion_op_t fermion_number_operator(int n_modes, int mode = -1,

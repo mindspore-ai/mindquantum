@@ -114,5 +114,4 @@ auto FermionOpteratorTermPolicyBase::parse_terms_string(std::string_view terms_s
 }
 
 // =============================================================================
-
 }  // namespace mindquantum::ops::details

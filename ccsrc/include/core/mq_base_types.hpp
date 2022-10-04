@@ -89,29 +89,29 @@ struct PauliMask {
     Index num_z = 0;
 };
 
-const char kNThreads[] = "n_threads";
-const char kNQubits[] = "n_qubits";
-const char kParamNames[] = "param_names";
-const char kEncoderParamsNames[] = "encoder_params_names";
-const char kAnsatzParamsNames[] = "ansatz_params_names";
-const char kGateNames[] = "gate_names";
-const char kGateMatrix[] = "gate_matrix";
-const char kGateObjQubits[] = "gate_obj_qubits";
-const char kGateCtrlQubits[] = "gate_ctrl_qubits";
-const char kGateThetas[] = "gate_thetas";
-const char kNPG[] = "npg";
-const char kGateParamsNames[] = "gate_params_names";
-const char kGateCoeff[] = "gate_coeff";
-const char kGateRequiresGrad[] = "gate_requires_grad";
-const char kHamsPauliCoeff[] = "hams_pauli_coeff";
-const char kHamsPauliWord[] = "hams_pauli_word";
-const char kHamsPauliQubit[] = "hams_pauli_qubit";
-const char kHowTo[] = "how_to";
-const char kHamsSparseData[] = "hams_sparse_data";
-const char kHamsSparseIndice[] = "hams_sparse_indice";
-const char kHamsSparseIndptr[] = "hams_sparse_indptr";
-const char kIsProjector[] = "is_projector";
-const char kProjectors[] = "projectors";
+constexpr const char kNThreads[] = "n_threads";
+constexpr const char kNQubits[] = "n_qubits";
+constexpr const char kParamNames[] = "param_names";
+constexpr const char kEncoderParamsNames[] = "encoder_params_names";
+constexpr const char kAnsatzParamsNames[] = "ansatz_params_names";
+constexpr const char kGateNames[] = "gate_names";
+constexpr const char kGateMatrix[] = "gate_matrix";
+constexpr const char kGateObjQubits[] = "gate_obj_qubits";
+constexpr const char kGateCtrlQubits[] = "gate_ctrl_qubits";
+constexpr const char kGateThetas[] = "gate_thetas";
+constexpr const char kNPG[] = "npg";
+constexpr const char kGateParamsNames[] = "gate_params_names";
+constexpr const char kGateCoeff[] = "gate_coeff";
+constexpr const char kGateRequiresGrad[] = "gate_requires_grad";
+constexpr const char kHamsPauliCoeff[] = "hams_pauli_coeff";
+constexpr const char kHamsPauliWord[] = "hams_pauli_word";
+constexpr const char kHamsPauliQubit[] = "hams_pauli_qubit";
+constexpr const char kHowTo[] = "how_to";
+constexpr const char kHamsSparseData[] = "hams_sparse_data";
+constexpr const char kHamsSparseIndice[] = "hams_sparse_indice";
+constexpr const char kHamsSparseIndptr[] = "hams_sparse_indptr";
+constexpr const char kIsProjector[] = "is_projector";
+constexpr const char kProjectors[] = "projectors";
 
 enum SparseHow : int64_t {
     ORIGIN = 0,
@@ -123,28 +123,28 @@ enum HermitianProp : int64_t {
     DOHERMITIAN,
     PARAMSOPPOSITE,
 };
-const char gX[] = "X";
-const char gY[] = "Y";
-const char gZ[] = "Z";
-const char gI[] = "I";
-const char gH[] = "H";
-const char gT[] = "T";
-const char gS[] = "S";
-const char gCNOT[] = "CNOT";
-const char gCZ[] = "CZ";
-const char gSWAP[] = "SWAP";
-const char gISWAP[] = "ISWAP";
-const char gRX[] = "RX";
-const char gRY[] = "RY";
-const char gRZ[] = "RZ";
-const char gGP[] = "GP";
-const char gPS[] = "PS";
-const char gXX[] = "XX";
-const char gYY[] = "YY";
-const char gZZ[] = "ZZ";
-const char cPL[] = "PL";  // Pauli channel
-const char cAD[] = "AD";  // amplitude damping channel
-const char cPD[] = "PD";  // phase damping channel
+constexpr const char gX[] = "X";
+constexpr const char gY[] = "Y";
+constexpr const char gZ[] = "Z";
+constexpr const char gI[] = "I";
+constexpr const char gH[] = "H";
+constexpr const char gT[] = "T";
+constexpr const char gS[] = "S";
+constexpr const char gCNOT[] = "CNOT";
+constexpr const char gCZ[] = "CZ";
+constexpr const char gSWAP[] = "SWAP";
+constexpr const char gISWAP[] = "ISWAP";
+constexpr const char gRX[] = "RX";
+constexpr const char gRY[] = "RY";
+constexpr const char gRZ[] = "RZ";
+constexpr const char gGP[] = "GP";
+constexpr const char gPS[] = "PS";
+constexpr const char gXX[] = "XX";
+constexpr const char gYY[] = "YY";
+constexpr const char gZZ[] = "ZZ";
+constexpr const char cPL[] = "PL";  // Pauli channel
+constexpr const char cAD[] = "AD";  // amplitude damping channel
+constexpr const char cPD[] = "PD";  // phase damping channel
 
 /**
  * The qubits number threshold for a simulator to use OpenMP or not.

@@ -237,7 +237,7 @@ except ImportError:
                     shift = 1
                     if line.startswith('requires'):
                         (name, pkgs, shift) = _parse_list(data[idx:])
-                        result['build-system'][name] = pkgs
+                        result.setdefault('build-system', {})[name] = pkgs
                     idx += shift
 
                 # ----------------------
@@ -249,13 +249,13 @@ except ImportError:
                 while idx < N:
                     line = data[idx]
                     shift = 1
-                    if _parse_string_value(result['project'], 'name', line):
+                    if _parse_string_value(result.setdefault('project', {}), 'name', line):
                         pass
-                    elif _parse_string_value(result['project'], 'description', line):
+                    elif _parse_string_value(result.setdefault('project', {}), 'description', line):
                         pass
                     elif line.startswith('dependencies'):
                         (name, pkgs, shift) = _parse_list(data[idx:])
-                        result['project'][name] = pkgs
+                        result.setdefault('project', {})[name] = pkgs
                     idx += shift
 
                 # ----------------------
@@ -266,6 +266,6 @@ except ImportError:
                 N = len(data)  # noqa: N806
                 while idx < N:
                     (opt_name, opt_pkgs, shift) = _parse_list(data[idx:])
-                    result['project']['optional-dependencies'][opt_name] = opt_pkgs
+                    result.setdefault('project', {}).setdefault('optional-dependencies', {})[opt_name] = opt_pkgs
                     idx += shift
                 return result

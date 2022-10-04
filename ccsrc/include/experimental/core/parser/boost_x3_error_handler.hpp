@@ -31,7 +31,6 @@
 #include "config/logging.hpp"
 
 namespace mindquantum::parser {
-
 template <typename iterator_t>
 class error_handler;
 

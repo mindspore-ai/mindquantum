@@ -110,5 +110,4 @@ auto QubitOperatorTermPolicyBase::parse_terms_string(std::string_view terms_stri
 }
 
 // =============================================================================
-
 }  // namespace mindquantum::ops::details

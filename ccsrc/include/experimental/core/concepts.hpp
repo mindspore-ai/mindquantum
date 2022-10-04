@@ -44,6 +44,5 @@ concept complex_number = std::same_as<std::complex<double>, T>;
 
 template <typename T>
 concept number = real_number<std::remove_cvref_t<T>> || complex_number<std::remove_cvref_t<T>>;
-
 }  // namespace mindquantum::concepts
 #endif /* CORE_CONCEPTS_HPP */

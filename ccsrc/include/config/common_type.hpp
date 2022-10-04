@@ -77,7 +77,6 @@ struct common_type<T, U, args_t...> : common_type_fold<common_type<T, U>, common
 
 template <typename... args_t>
 using common_type_t = typename common_type<args_t...>::type;
-
 }  // namespace mindquantum::traits
 
 // =============================================================================

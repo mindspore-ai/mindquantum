@@ -51,7 +51,6 @@ static_assert(is_compatible_scalar_v<float, false>);
 static_assert(is_compatible_scalar_v<double, false>);
 static_assert(is_compatible_scalar_v<std::complex<float>, false>);
 static_assert(is_compatible_scalar_v<std::complex<double>, false>);
-
 }  // namespace mindquantum::traits
 
 #endif /* OPS_GATES_TRAITS_HPP */
