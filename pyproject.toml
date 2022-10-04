@@ -176,7 +176,14 @@ filterwarnings = [
     'ignore:.*Please use `OptimizeResult`.*is deprecated:DeprecationWarning',
     'ignore:.*`np.str` is a deprecated alias for the builtin `str`.*:DeprecationWarning',
     'ignore:.*MindSpore not installed.*:UserWarning',
-    'ignore:.*distutils Version classes are deprecated. Use packaging.version instead:DeprecationWarning'
+    'ignore:.*distutils Version classes are deprecated. Use packaging.version instead:DeprecationWarning',
+    'ignore:.*ParameterResolver.__float__ returned non-float.*:DeprecationWarning',
+    'ignore:.*the matrix subclass is not the recommended way to represent.*:PendingDeprecationWarning',
+    # From external packages
+    'ignore:.*Call to deprecated create function Descriptor.*:DeprecationWarning',  # from cirq_google
+    'ignore:.*Call to deprecated create function EnumDescriptor.*:DeprecationWarning',  # from cirq_google
+    'ignore:.*Call to deprecated create function EnumValueDescriptor.*:DeprecationWarning',  # from cirq_google
+    'ignore:.*Call to deprecated create function FieldDescriptor.*:DeprecationWarning'  # from cirq_google
 ]
 
 

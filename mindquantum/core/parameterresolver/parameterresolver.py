@@ -135,7 +135,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
         """Setter method for const."""
         if isinstance(const_value, (ParameterResolver, real_pr_, complex_pr_)):
             const_value = const_value.const
-        if isinstance(const_value, numbers.Complex) and not self.is_complex:
+        if not isinstance(const_value, numbers.Real) and not self.is_complex:
             self._cpp_obj = self._cpp_obj.cast_complex()
         self._cpp_obj.set_const(const_value)
 
@@ -229,6 +229,8 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             _check_input_type("parameter value", numbers.Number, values)
             if not keys.strip():
                 raise KeyError("parameter name cannot be empty string.")
+            if not self._cpp_obj.is_complex and not isinstance(values, numbers.Real):
+                self._cpp_obj = self._cpp_obj.cast_complex()
             self._cpp_obj[keys] = values
         elif isinstance(keys, Iterable):
             if not isinstance(values, Iterable):
