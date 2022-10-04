@@ -17,15 +17,13 @@
 #include <set>
 #include <sstream>
 
-#include "tweedledum/Passes/Utility/shallow_duplicate.h"
-#include "tweedledum/Target/Placement.h"
 #include <tweedledum/Operators/Standard.h>
 #include <tweedledum/Passes/Mapping/Placer/TrivialPlacer.h>
 #include <tweedledum/Passes/Mapping/jit_map.h>
 #include <tweedledum/Passes/Mapping/sabre_map.h>
+#include <tweedledum/Passes/Utility/shallow_duplicate.h>
 #include <tweedledum/Target/Device.h>
-
-#include "../test_utils.hpp"
+#include <tweedledum/Target/Placement.h>
 
 #include "experimental/core/circuit_block.hpp"
 #include "experimental/mindquantum/catch2/mindquantum.hpp"

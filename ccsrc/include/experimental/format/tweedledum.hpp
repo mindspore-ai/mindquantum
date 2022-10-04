@@ -135,7 +135,7 @@ struct fmt::formatter<tweedledum::Instruction, char_type> : mindquantum::fmt_det
 
     template <typename format_context_t>
     auto format(const type_t& inst, format_context_t& ctx) const -> decltype(ctx.out()) {
-        return fmt::format_to(ctx.out(), "{} [{}]", static_cast<tweedledum::Operator>(inst), inst.qubits());
+        return fmt::format_to(ctx.out(), "{} [{}]", static_cast<const tweedledum::Operator&>(inst), inst.qubits());
     }
 };
 

@@ -21,8 +21,6 @@
 #include <tweedledum/IR/Instruction.h>
 #include <tweedledum/Passes/Utility/shallow_duplicate.h>
 
-#include "../test_utils.hpp"
-
 #include "experimental/decompositions/atom_meta.hpp"
 #include "experimental/decompositions/atom_storage.hpp"
 #include "experimental/decompositions/config.hpp"
@@ -43,6 +41,8 @@
 #include "experimental/decompositions/rules/swap2cnot.hpp"
 #include "experimental/decompositions/rules/toffoli2cnotandtgate.hpp"
 #include "experimental/decompositions/trivial_atom.hpp"
+#include "experimental/mindquantum/catch2/mindquantum.hpp"
+#include "experimental/mindquantum/catch2/tweedledum.hpp"
 #include "experimental/ops/gates.hpp"
 #include "experimental/ops/gates/invalid.hpp"
 #include "experimental/ops/gates/sqrtswap.hpp"

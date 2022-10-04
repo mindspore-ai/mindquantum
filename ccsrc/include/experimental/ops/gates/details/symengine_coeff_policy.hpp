@@ -35,7 +35,7 @@
 #include <symengine/sets.h>
 #include <symengine/symengine_casts.h>
 
-#include "config/format/symengine_basic.hpp"
+#include "config/format/symengine.hpp"
 #include "config/real_cast.hpp"
 
 #include "experimental/core/config.hpp"

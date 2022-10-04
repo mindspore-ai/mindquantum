@@ -14,8 +14,6 @@
 
 #include <tweedledum/Passes/Utility/shallow_duplicate.h>
 
-#include "ops/test_utils.hpp"
-
 #include "experimental/core/compute.hpp"
 #include "experimental/core/control.hpp"
 #include "experimental/decompositions/atom_meta.hpp"
@@ -28,6 +26,8 @@
 #include "experimental/decompositions/gate_decomposition_rule.hpp"
 #include "experimental/decompositions/non_gate_decomposition_rule.hpp"
 #include "experimental/decompositions/trivial_atom.hpp"
+#include "experimental/mindquantum/catch2/mindquantum.hpp"
+#include "experimental/mindquantum/catch2/tweedledum.hpp"
 #include "experimental/ops/gates.hpp"
 
 #include <catch2/catch_all.hpp>
