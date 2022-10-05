@@ -273,7 +273,7 @@ endfunction()
 # ~~~
 # Extract a number of elements from a list
 #
-# __create_target_aliases(<start_idx>, <stop_idx> <var_name>)
+# __extract_n_args(<start_idx> <stop_idx> <var_name>)
 # ~~~
 function(__extract_n_args start stop var)
   # cmake-lint: disable=E1120
@@ -405,6 +405,67 @@ function(__create_target_aliases pkg_name skip_in_install_config)
   endif()
 
   list(POP_BACK CMAKE_MESSAGE_INDENT)
+endfunction()
+
+# ------------------------------------------------------------------------------
+
+# ~~~
+# Append some target properties to an (imported) target.
+#
+# <type> must be one of:
+#   - COMPILE_DEFINITIONS
+#   - COMPILE_OPTIONS
+#   - INCLUDE_DIRECTORIES
+#   - LINK_LIBRARIES
+#   - LINK_OPTIONS
+#
+# __append_target_properties(<type> [TARGET <tgt_name> [<properties>, ...]] ...)
+#
+# Examples:
+# __append_target_properties(COMPILE_DEFINITIONS TARGET mylib::mylib HAS_CXX20)
+#   -> effectively call target_compile_definitions(mylib::mylib INTERFACE HAS_CXX20)
+# ~~~
+function(__append_target_properties type)
+  list(LENGTH ARGN n_args)
+  if(NOT n_args)
+    return()
+  endif()
+
+  # Minimum is 3, because at least `TARGET` `<tgt_name>` and one `<property>`
+  if(n_args LESS 3)
+    message(FATAL_ERROR "Number of arguments to __append_target_property() must be at least 3!")
+  endif()
+
+  set(idx 0)
+  while(idx LESS n_args)
+    list(GET ARGN ${idx} _arg)
+    if(NOT "${_arg}" STREQUAL "TARGET")
+      message(
+        FATAL_ERROR "Argument ${idx} of __append_target_property needs to be `TARGET` followed by a valid target name")
+    elseif(NOT idx LESS n_args)
+      message(FATAL_ERROR "`TARGET` needs to be followed by a target name!")
+    endif()
+    math(EXPR idx "${idx} + 1")
+    list(GET ARGN ${idx} tgt_name)
+    math(EXPR idx "${idx} + 1")
+    if(NOT idx LESS n_args)
+      message(FATAL_ERROR "Need to have at least one property!")
+    endif()
+    list(GET ARGN ${idx} _arg)
+    set(_properties)
+    while(idx LESS n_args AND NOT "${_arg}" STREQUAL "TARGET")
+      list(GET ARGN ${idx} _arg)
+      list(APPEND _properties "${_arg}")
+      math(EXPR idx "${idx} + 1")
+    endwhile()
+
+    message(STATUS "Modifying ${type} property of ${tgt_name}")
+
+    set(_cmake_command "target_${type}")
+    string(TOLOWER "${_cmake_command}" _cmake_command)
+    debug_print(STATUS "Calling ${_cmake_command}(${tgt_name} INTERFACE ${_properties})")
+    cmake_language(CALL ${_cmake_command} ${tgt_name} INTERFACE ${_properties})
+  endwhile()
 endfunction()
 
 # ------------------------------------------------------------------------------
@@ -961,6 +1022,7 @@ endfunction()
 #                      [ONLY_MAKE_LIBS <directory> [... <directory>]]
 #                      [PATCHES <patch-file> [... <patch-file>]]
 #                      [PRE_CONFIGURE_COMMAND <command> [... <args>]]
+#                      [SYSTEM_EXTRA_DEFINES [TARGET <target> <defines> [... <defines>]]...]
 #                      [TARGET_ALIAS <alias-name> <target-library>|
 #                         TARGET_ALIAS <num> <alias-name> <target-library> [...<target-library>]]
 # )
@@ -968,6 +1030,9 @@ endfunction()
 # BUILD_DEPENDENCIES is a list of lists of arguments to pass onto to `find_package()` prior to start building the
 # package.
 # e.g. (... BUILD_DEPENDENCIES "Git REQUIRED" "Boost COMPONENTS system" ...)
+#
+# SYSTEM_EXTRA_DEFINES can be used to set some additional COMPILE_DEFINITIONS in the case the specified target is found
+# in the system (as opposed to the case where the package was built locally)
 # ~~~
 function(mindquantum_add_pkg pkg_name)
   # cmake-lint: disable=R0912,R0915,C0103,E1126
@@ -1007,6 +1072,7 @@ function(mindquantum_add_pkg pkg_name)
       ONLY_MAKE_LIBS
       PATCHES
       PRE_CONFIGURE_COMMAND
+      SYSTEM_EXTRA_DEFINES
       TARGET_ALIAS)
   cmake_parse_arguments(PKG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -1057,6 +1123,11 @@ function(mindquantum_add_pkg pkg_name)
       if(${pkg_name}_DIR)
         message(STATUS "Package CMake config dir: ${${pkg_name}_DIR}")
       endif()
+      if(_${pkg_name}_SYSTEM)
+        if(NOT "${PKG_SYSTEM_EXTRA_DEFINES}" STREQUAL "")
+          __append_target_properties(COMPILE_DEFINITIONS ${PKG_SYSTEM_EXTRA_DEFINES})
+        endif()
+      endif()
       if(NOT PKG_SKIP_IN_INSTALL_CONFIG)
         __setup_install_target(${pkg_name} ${_args})
       endif()
@@ -1087,6 +1158,11 @@ function(mindquantum_add_pkg pkg_name)
       if(${pkg_name}_DIR)
         message(STATUS "Package CMake config dir: ${${pkg_name}_DIR}")
       endif()
+
+      if(NOT "${PKG_SYSTEM_EXTRA_DEFINES}" STREQUAL "")
+        __append_target_properties(COMPILE_DEFINITIONS ${PKG_SYSTEM_EXTRA_DEFINES})
+      endif()
+
       if(NOT PKG_SKIP_IN_INSTALL_CONFIG)
         __setup_install_target(${pkg_name} ${_args})
       endif()

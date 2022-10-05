@@ -166,6 +166,7 @@ parse:
         ONLY_MAKE_LIBS: +
         PATCHES: +
         PRE_CONFIGURE_COMMAND: +
+        SYSTEM_EXTRA_DEFINES: +
         TARGET_ALIAS: +
 lint:
   argument_var_pattern: _?[a-z][a-z0-9_]+
