@@ -20,7 +20,7 @@
 #include "experimental/mindquantum/catch2/tweedledum.hpp"
 #include "experimental/ops/gates/measure.hpp"
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 using namespace mindquantum::catch2;
 namespace td = tweedledum;

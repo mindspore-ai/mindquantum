@@ -12,7 +12,6 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#include <catch2/catch_all.hpp>
 #if __has_include("tweedledum/../../tests/check_unitary.h")
 #    include "tweedledum/../../tests/check_unitary.h"
 #else
@@ -46,6 +45,8 @@
 #include "experimental/ops/gates.hpp"
 #include "experimental/ops/gates/invalid.hpp"
 #include "experimental/ops/gates/sqrtswap.hpp"
+
+#include <catch2/catch_test_macros.hpp>
 
 using namespace std::literals::string_literals;
 using namespace std::literals::string_view_literals;

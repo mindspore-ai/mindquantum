@@ -34,7 +34,6 @@ if(ENABLE_CXX_EXPERIMENTAL)
   add_subdirectory(decompositions)
   add_subdirectory(mapping)
   add_subdirectory(ops)
-  add_subdirectory(optimisation)
 endif()
 
 # ==============================================================================

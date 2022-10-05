@@ -28,7 +28,7 @@
 #include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 #include "experimental/ops/gates/fermion_operator.hpp"
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 // =============================================================================
 

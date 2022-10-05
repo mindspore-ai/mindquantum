@@ -14,8 +14,6 @@
 
 #include <complex>
 
-#include <catch2/catch_all.hpp>
-
 #if __has_include("tweedledum/../../tests/check_unitary.h")
 #    include "tweedledum/../../tests/check_unitary.h"
 #else
@@ -38,6 +36,8 @@
 #include "experimental/ops/gates.hpp"
 #include "experimental/ops/parametric/angle_gates.hpp"
 #include "experimental/ops/parametric/register_gate_type.hpp"
+
+#include <catch2/catch_test_macros.hpp>
 
 using namespace std::literals::string_literals;
 using namespace std::literals::string_view_literals;

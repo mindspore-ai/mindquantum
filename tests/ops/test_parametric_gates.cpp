@@ -25,9 +25,7 @@
 #include "experimental/mindquantum/catch2/tweedledum.hpp"
 #include "experimental/ops/parametric/gate_base.hpp"
 
-// -----------------------------------------------------------------------------
-
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 // =============================================================================
 

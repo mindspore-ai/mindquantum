@@ -39,7 +39,8 @@
 #include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 #include "experimental/ops/gates/terms_operator_base.hpp"
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_predicate.hpp>
 
 using namespace std::literals::complex_literals;
 using namespace std::literals::string_literals;

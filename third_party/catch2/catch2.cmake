@@ -40,6 +40,7 @@ set(CMAKE_OPTION
     -DCMAKE_CXX_EXTENSIONS=${CMAKE_CXX_EXTENSIONS}
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
 
+# cmake-lint: disable=E1122
 mindquantum_add_pkg(
   Catch2
   VER ${VER}
@@ -48,5 +49,6 @@ mindquantum_add_pkg(
   CMAKE_PKG_NO_COMPONENTS
   CMAKE_OPTION ${CMAKE_OPTION}
   TARGET_ALIAS mindquantum::catch2 Catch2::Catch2
+  TARGET_ALIAS mindquantum::catch2_main Catch2::Catch2WithMain
   SKIP_IN_INSTALL_CONFIG
   SYSTEM_EXTRA_DEFINES TARGET Catch2::Catch2 CATCH_CONFIG_ENABLE_ALL_STRINGMAKERS)
