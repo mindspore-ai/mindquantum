@@ -16,6 +16,10 @@
 
 import warnings
 
+import pytest
+
+from mindquantum.simulator import get_supported_simulator
+
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore', category=UserWarning, message='MindSpore not installed.*')
     warnings.filterwarnings(
@@ -26,13 +30,14 @@ with warnings.catch_warnings():
     from mindquantum.simulator import Simulator
 
 
-def test_amplitude_encoder():
+@pytest.mark.parametrize('backend', get_supported_simulator())
+def test_amplitude_encoder(backend):
     '''
     Feature: amplitude_encoder
     Description: test amplitude encoder.
     Expectation: success.
     '''
-    sim = Simulator('projectq', 3)
+    sim = Simulator(backend, 3)
     circuit, params = amplitude_encoder([0.5, 0.5, 0.5, 0.5], 3)
     sim.apply_circuit(circuit, params)
     state = sim.get_qs(False)

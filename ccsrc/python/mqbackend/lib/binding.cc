@@ -62,7 +62,7 @@ using mindquantum::projectq::Projectq;
 #endif
 
 template <typename T>
-auto BindPR(py::module &module, const std::string &name) {
+auto BindPR(py::module &module, const std::string &name) {  // NOLINT(runtime/references)
     using mindquantum::MST;
     using mindquantum::ParameterResolver;
     using mindquantum::SS;
@@ -74,7 +74,7 @@ auto BindPR(py::module &module, const std::string &name) {
     using factory_func_t = decltype(&create_from_python_container_class_with_trampoline<pr_t, MST<T>>);
     using cast_complex_func_t = decltype(&pr_t::template Cast<mindquantum::traits::to_cmplx_type_t<T>>);
 
-    using namespace pybind11::literals;
+    using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
 
     auto klass
         = py::class_<pr_t, std::shared_ptr<pr_t>>(module, name.c_str())
@@ -160,12 +160,12 @@ auto BindPR(py::module &module, const std::string &name) {
 }
 
 namespace mindquantum::python {
-void init_logging(pybind11::module &module);
+void init_logging(pybind11::module &module);  // NOLINT(runtime/references)
 }  // namespace mindquantum::python
 
 // Interface with python
 PYBIND11_MODULE(mqbackend, m) {
-    using namespace pybind11::literals;
+    using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
     using mindquantum::BasicGate;
     using mindquantum::CsrHdMatrix;
     using mindquantum::CT;

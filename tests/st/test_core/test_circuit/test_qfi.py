@@ -17,6 +17,7 @@
 
 """Test quantum fisher information."""
 import numpy as np
+import pytest
 
 from mindquantum.core.circuit import (
     Circuit,
@@ -25,10 +26,11 @@ from mindquantum.core.circuit import (
     qfi,
 )
 from mindquantum.core.parameterresolver import ParameterResolver as PR
-from mindquantum.simulator import Simulator
+from mindquantum.simulator import Simulator, get_supported_simulator
 
 
-def test_qfi():
+@pytest.mark.parametrize('backend', get_supported_simulator())
+def test_qfi(backend):
     """
     Description: Test qfi
     Expectation: success
@@ -37,7 +39,7 @@ def test_qfi():
     b = PR('b')
     val = PR({'a': 1, 'b': 2})
     circ = Circuit().rx(a, 0).ry(b, 0)
-    sim = Simulator('projectq', 1)
+    sim = Simulator(backend, 1)
     sim.apply_gate(circ[0], val, True)
     sim.apply_gate(circ[1], val, False)
     partial_psi_a = sim.get_qs()

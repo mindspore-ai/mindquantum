@@ -18,6 +18,8 @@
 import numpy as np
 import pytest
 
+from mindquantum.simulator import get_supported_simulator
+
 _HAS_MINDSPORE = True
 try:
     import mindspore as ms
@@ -33,8 +35,9 @@ except ImportError:
     _HAS_MINDSPORE = False
 
 
+@pytest.mark.parametrize('backend', get_supported_simulator())
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_mindquantum_ansatz_only_ops():
+def test_mindquantum_ansatz_only_ops(backend):
     """
     Description: Test MQAnsatzOnlyOps
     Expectation:
@@ -42,7 +45,7 @@ def test_mindquantum_ansatz_only_ops():
     circ = Circuit(G.RX('a').on(0))
     data = ms.Tensor(np.array([0.5]).astype(np.float32))
     ham = Hamiltonian(QubitOperator('Z0'))
-    sim = Simulator('projectq', circ.n_qubits)
+    sim = Simulator(backend, circ.n_qubits)
 
     evol = MQAnsatzOnlyOps(sim.get_expectation_with_grad(ham, circ))
     output = evol(data)

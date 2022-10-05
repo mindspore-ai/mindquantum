@@ -57,13 +57,13 @@ concept cold_start_t = requires(func_t func, device_t device, circuit_t circuit)
     // clang-format off
                {func(device, circuit)} -> std::same_as<std::pair<circuit_t, mapping_t>>;
     // clang-format on
-};
+}
 template <typename func_t>
 concept hot_start_t = requires(func_t func, device_t device, circuit_t circuit, placement_t placement) {
     // clang-format off
                {func(device, circuit, placement)} -> std::same_as<std::pair<circuit_t, mapping_t>>;
     // clang-format on
-};
+}
 }  // namespace concepts
 #endif  // MQ_HAS_CONCEPTS
 
@@ -371,6 +371,6 @@ class CircuitBlock {
 };
 }  // namespace mindquantum
 
-#include "circuit_block.tpp"
+#include "experimental/core/circuit_block.tpp"  // NOLINT(build/include)
 
 #endif /* CIRCUIT_BLOCK_HPP */

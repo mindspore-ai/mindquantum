@@ -20,6 +20,8 @@ import os
 import numpy as np
 import pytest
 
+from mindquantum.simulator import get_supported_simulator
+
 os.environ.setdefault('OMP_NUM_THREADS', '8')
 
 
@@ -37,8 +39,9 @@ except ImportError:
     _HAS_MINDSPORE = False
 
 
+@pytest.mark.parametrize('backend', get_supported_simulator())
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_max_2_sat():
+def test_max_2_sat(backend):
     """
     Description:
     Expectation:
@@ -46,7 +49,7 @@ def test_max_2_sat():
     clauses = [(1, 2), (1, -2), (-1, 2), (-1, -2), (1, 3)]
     depth = 3
     max2sat = Max2SATAnsatz(clauses, depth)
-    sim = Simulator('projectq', max2sat.circuit.n_qubits)
+    sim = Simulator(backend, max2sat.circuit.n_qubits)
     ham = max2sat.hamiltonian
     f_g_ops = sim.get_expectation_with_grad(Hamiltonian(ham), max2sat.circuit)
     ms.set_seed(42)

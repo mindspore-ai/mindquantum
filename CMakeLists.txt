@@ -102,7 +102,7 @@ include(linker_flags)
 is_language_enabled(C, _c_enabled)
 add_library(mindquantum_setup INTERFACE)
 target_link_libraries(mindquantum_setup INTERFACE CXX_mindquantum $<$<BOOL:${_c_enabled}>:C_mindquantum>
-                                                  $<$<BOOL:${ENABLE_CUDA}>:CUDA_mindquantum;NVCXX_mindquantum>)
+                                                  $<$<BOOL:${ENABLE_CUDA}>:CUDA_mindquantum>)
 append_to_property(mq_install_targets GLOBAL mindquantum_setup)
 
 if(ENABLE_CMAKE_DEBUG)
@@ -114,7 +114,7 @@ if(ENABLE_CMAKE_DEBUG)
     list(APPEND _targets C_mindquantum)
   endif()
   if(ENABLE_CUDA)
-    list(APPEND _targets CUDA_mindquantum NVCXX_mindquantum)
+    list(APPEND _targets CUDA_mindquantum)
   endif()
 
   include(CMakePrintHelpers)

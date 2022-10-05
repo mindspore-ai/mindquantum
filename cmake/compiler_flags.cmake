@@ -107,52 +107,32 @@ if(ENABLE_CUDA)
     LANGS CUDA
     FLAGS "-allow-unsupported-compiler"
     CMAKE_OPTION CUDA_ALLOW_UNSUPPORTED_COMPILER)
+  # set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -std=c++17")
+  # test_compile_option( cuda_extended_lambda_flag FLAGCHECK LANGS CUDA FLAGS "--extended-lambda" ) test_compile_option(
+  # cuda_cxx_standard_flags FLAGCHECK LANGS CUDA FLAGS "-std=c++20 -std=c++17" ) set(CMAKE_CUDA_FLAGS
+  # "${CMAKE_CUDA_FLAGS} --extended-lambda -std=c++17") test_compile_option( nvhpc_flagcheck_flags FLAGCHECK LANGS NVCXX
+  # FLAGS "--flagcheck" NO_MQ_TARGET NO_TRYCOMPILE_TARGET)
 
-  test_compile_option(
-    nvhpc_flagcheck_flags FLAGCHECK
-    LANGS NVCXX
-    FLAGS "--flagcheck"
-    NO_MQ_TARGET NO_TRYCOMPILE_TARGET)
+  # test_compile_option( nvhpc_cxx_standard_flags FLAGCHECK LANGS NVCXX FLAGS "-std=c++20 -std=c++17")
 
-  test_compile_option(
-    nvhpc_cxx_standard_flags FLAGCHECK
-    LANGS NVCXX
-    FLAGS "-std=c++20 -std=c++17")
+  # set(_flag -gpu=cuda${MQ_CUDA_VERSION}) test_compile_option( nvhpc_cuda_version_flags FLAGCHECK LANGS NVCXX FLAGS
+  # "${_flag}")
 
-  set(_flag -gpu=cuda${MQ_CUDA_VERSION})
-  test_compile_option(
-    nvhpc_cuda_version_flags FLAGCHECK
-    LANGS NVCXX
-    FLAGS "${_flag}")
-
-  if(NOT nvhpc_cuda_version_flags_NVCXX)
-    disable_cuda("NVHPC not supporting ${_flag}")
-  endif()
+  # if(NOT nvhpc_cuda_version_flags_NVCXX) disable_cuda("NVHPC not supporting ${_flag}") endif()
   unset(_flag)
 
-  set(_args)
-  foreach(_cc ${CMAKE_CUDA_ARCHITECTURES})
-    test_compile_option(
-      nvhpc_gpu_compute_capability FLAGCHECK
-      LANGS NVCXX
-      FLAGS "-gpu=cc${_cc}" ${_args})
-    # Only add multiple -gpu=ccXX for the "real" target and no the try_compile ones in order to speed up the
-    # compilations in the case of calls to try_compile()
-    set(_args NO_TRYCOMPILE_TARGET NO_TRYCOMPILE_FLAGCHECK_TARGET)
-  endforeach()
+  # set(_args) foreach(_cc ${CMAKE_CUDA_ARCHITECTURES}) test_compile_option( nvhpc_gpu_compute_capability FLAGCHECK
+  # LANGS NVCXX FLAGS "-gpu=cc${_cc}" ${_args}) # Only add multiple -gpu=ccXX for the "real" target and no the
+  # try_compile ones in order to speed up the # compilations in the case of calls to try_compile() set(_args
+  # NO_TRYCOMPILE_TARGET NO_TRYCOMPILE_FLAGCHECK_TARGET) endforeach()
 
-  test_compile_option(
-    nvhpc_cuda_flags FLAGCHECK
-    LANGS NVCXX
-    FLAGS "-stdpar" "-cuda")
+  # test_compile_option( nvhpc_cuda_flags FLAGCHECK LANGS NVCXX FLAGS "-stdpar" "-cuda")
 
-  if(NOT nvhpc_cuda_flags_NVCXX)
-    disable_cuda("NVHPC not supporting -stdpar -cuda")
-  endif()
+  # if(NOT nvhpc_cuda_flags_NVCXX) disable_cuda("NVHPC not supporting -stdpar -cuda") endif()
 
-  # For all the languages except NVCXX, use NVHPC's filename extension detection for the language
-  target_compile_options(NVCXX_mindquantum INTERFACE "$<$<AND:$<OR:$<C_COMPILER_ID:NVHPC>,\
-$<CXX_COMPILER_ID:NVHPC>,$<CUDA_COMPILER_ID:NVHPC>>,$<NOT:$<COMPILE_LANGUAGE:NVCXX>>>:-x none>")
+  # # For all the languages except NVCXX, use NVHPC's filename extension detection for the language
+  # target_compile_options(NVCXX_mindquantum INTERFACE "$<$<AND:$<OR:$<C_COMPILER_ID:NVHPC>,\
+  # $<CXX_COMPILER_ID:NVHPC>,$<CUDA_COMPILER_ID:NVHPC>>,$<NOT:$<COMPILE_LANGUAGE:NVCXX>>>:-x none>")
 endif()
 
 # ------------------------------------------------------------------------------

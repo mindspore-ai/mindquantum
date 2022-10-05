@@ -106,6 +106,6 @@ class GateDecomposer {
 };
 }  // namespace mindquantum::decompositions
 
-#include "gate_decomposer.tpp"
+#include "experimental/decompositions/gate_decomposer.tpp"  // NOLINT(build/include)
 
 #endif /* GATE_DECOMPOSER_HPP */

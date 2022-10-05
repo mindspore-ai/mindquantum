@@ -14,7 +14,9 @@
 # ============================================================================
 """Quantum simulator that simulate evolution of quantum system."""
 
-from .simulator import GradOpsWrapper, Simulator, get_supported_simulator, inner_product
+from .mq_blas import MQBlas
+from .simulator import Simulator, get_supported_simulator, inner_product
+from .utils import GradOpsWrapper
 
-__all__ = ['Simulator', 'GradOpsWrapper', 'get_supported_simulator', 'inner_product']
+__all__ = ['Simulator', 'GradOpsWrapper', 'get_supported_simulator', 'inner_product', 'MQBlas']
 __all__.sort()

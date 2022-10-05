@@ -19,6 +19,8 @@ import os
 import numpy as np
 import pytest
 
+from mindquantum.simulator import get_supported_simulator
+
 os.environ.setdefault('OMP_NUM_THREADS', '8')
 
 _HAS_MINDSPORE = True
@@ -36,8 +38,9 @@ except ImportError:
     _HAS_MINDSPORE = False
 
 
+@pytest.mark.parametrize('backend', get_supported_simulator())
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_hardware_efficient():
+def test_hardware_efficient(backend):
     """
     Description: Test hardware efficient ansatz
     Expectation:
@@ -46,7 +49,7 @@ def test_hardware_efficient():
     n_qubits = 3
     hea = HardwareEfficientAnsatz(n_qubits, [RX, RY, RX], X, 'all', depth)
     ham = QubitOperator('Z0 Z1 Z2')
-    sim = Simulator('projectq', hea.circuit.n_qubits)
+    sim = Simulator(backend, hea.circuit.n_qubits)
     f_g_ops = sim.get_expectation_with_grad(Hamiltonian(ham), hea.circuit)
     ms.set_seed(42)
     net = MQAnsatzOnlyLayer(f_g_ops)

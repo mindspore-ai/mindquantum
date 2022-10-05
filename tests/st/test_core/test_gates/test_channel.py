@@ -13,32 +13,34 @@
 # limitations under the License.
 # ============================================================================
 """Test channel."""
-
 import numpy as np
+import pytest
 
 import mindquantum.core.gates.channel as C
 from mindquantum.core.gates import X
-from mindquantum.simulator import Simulator
+from mindquantum.simulator import Simulator, get_supported_simulator
 
 
-def test_pauli_channel():
+@pytest.mark.parametrize('backend', get_supported_simulator())
+def test_pauli_channel(backend):
     """
     Description: Test pauli channel
     Expectation: success.
     """
-    sim = Simulator('projectq', 1)
+    sim = Simulator(backend, 1)
     sim.apply_gate(C.PauliChannel(1, 0, 0).on(0))
     sim.apply_gate(C.PauliChannel(0, 0, 1).on(0))
     sim.apply_gate(C.PauliChannel(0, 1, 0).on(0))
     assert np.allclose(sim.get_qs(), np.array([0.0 + 1.0j, 0.0 + 0.0j]))
 
 
-def test_flip_channel():
+@pytest.mark.parametrize('backend', get_supported_simulator())
+def test_flip_channel(backend):
     """
     Description: Test flip channel
     Expectation: success.
     """
-    sim1 = Simulator('projectq', 1)
+    sim1 = Simulator(backend, 1)
     sim1.apply_gate(C.BitFlipChannel(1).on(0))
     assert np.allclose(sim1.get_qs(), np.array([0.0 + 0.0j, 1.0 + 0.0j]))
     sim1.apply_gate(C.PhaseFlipChannel(1).on(0))
@@ -47,34 +49,37 @@ def test_flip_channel():
     assert np.allclose(sim1.get_qs(), np.array([0.0 + 1.0j, 0.0 + 0.0j]))
 
 
-def test_depolarizing_channel():
+@pytest.mark.parametrize('backend', get_supported_simulator())
+def test_depolarizing_channel(backend):
     """
     Description: Test depolarizing channel
     Expectation: success.
     """
-    sim2 = Simulator('projectq', 1)
+    sim2 = Simulator(backend, 1)
     sim2.apply_gate(C.DepolarizingChannel(0).on(0))
     assert np.allclose(sim2.get_qs(), np.array([1.0 + 0.0j, 0.0 + 0.0j]))
 
 
-def test_damping_channel():
+@pytest.mark.parametrize('backend', get_supported_simulator())
+def test_damping_channel(backend):
     """
     Description: Test damping channel
     Expectation: success.
     """
-    sim = Simulator('projectq', 2)
+    sim = Simulator(backend, 2)
     sim.apply_gate(X.on(0))
     sim.apply_gate(X.on(1))
     sim.apply_gate(C.AmplitudeDampingChannel(1).on(0))
     assert np.allclose(sim.get_qs(), np.array([0, 0, 1, 0]))
-    sim2 = Simulator('projectq', 2)
+    sim2 = Simulator(backend, 2)
     sim2.apply_gate(X.on(0))
     sim2.apply_gate(X.on(1))
     sim2.apply_gate(C.PhaseDampingChannel(0.5).on(0))
     assert np.allclose(sim2.get_qs(), np.array([0, 0, 0, 1]))
 
 
-def test_kraus_channel():
+@pytest.mark.parametrize('backend', get_supported_simulator())
+def test_kraus_channel(backend):
     """
     Description: Test kraus channel
     Expectation: success.
@@ -82,7 +87,7 @@ def test_kraus_channel():
     kmat0 = [[1, 0], [0, 0]]
     kmat1 = [[0, 1], [0, 0]]
     kraus = C.KrausChannel("amplitude_damping", [kmat0, kmat1])
-    sim = Simulator('projectq', 2)
+    sim = Simulator(backend, 2)
     sim.apply_gate(X.on(0))
     sim.apply_gate(X.on(1))
     sim.apply_gate(kraus.on(0))

@@ -68,5 +68,9 @@
 "mindquantum/ccsrc/lib/experimental/core/circuit_manager.cpp"                               "useStlAlgorithm"
 "mindquantum/ccsrc/lib/experimental/simulator/projectq_simulator.cpp"                       "useStlAlgorithm"
 "mindquantum/ccsrc/python/experimental/lib/ops/command.cpp"                                 "useStlAlgorithm"
-
+"mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy.cpp"                       "syntaxError"
+"mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_gate_expec.cpp"            "syntaxError"
+"mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_single_ops.cpp"            "unknownMacro"
+"mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_xlike.cpp"                 "unknownMacro"
+"mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_zlike.cpp"                 "unknownMacro"
 "mindquantum/tests/core/test_circuit_block.cpp"                                             "ctuOneDefinitionRuleViolation"

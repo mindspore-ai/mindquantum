@@ -53,3 +53,5 @@
 "mindquantum/ccsrc/cxx_experimental/include/decompositions/decomposition_rule.hpp"                    "whitespace/semicolon"
 "mindquantum/ccsrc/cxx_experimental/include/decompositions/details/decomposition_param.hpp"           "whitespace/semicolon"
 "mindquantum/ccsrc/cxx_experimental/include/ops/parametric/register_gate_type.hpp"                    "whitespace/semicolon"
+
+"mindquantum/ccsrc/include/simulator/vector/detail/cpu_vector_policy.hpp"                             "readability/casting"

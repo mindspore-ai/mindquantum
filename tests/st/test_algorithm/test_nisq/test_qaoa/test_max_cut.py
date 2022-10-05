@@ -20,6 +20,8 @@ import os
 import numpy as np
 import pytest
 
+from mindquantum.simulator import get_supported_simulator
+
 os.environ.setdefault('OMP_NUM_THREADS', '8')
 
 _HAS_MINDSPORE = True
@@ -36,8 +38,9 @@ except ImportError:
     _HAS_MINDSPORE = False
 
 
+@pytest.mark.parametrize('backend', get_supported_simulator())
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_max_cut():
+def test_max_cut(backend):
     """
     Description: test maxcut ansatz.
     Expectation: success.
@@ -45,7 +48,7 @@ def test_max_cut():
     graph = [(0, 1), (1, 2), (2, 3), (3, 4), (1, 4)]
     depth = 3
     maxcut = MaxCutAnsatz(graph, depth)
-    sim = Simulator('projectq', maxcut.circuit.n_qubits)
+    sim = Simulator(backend, maxcut.circuit.n_qubits)
     ham = maxcut.hamiltonian
     f_g_ops = sim.get_expectation_with_grad(Hamiltonian(-ham), maxcut.circuit)
     ms.set_seed(42)

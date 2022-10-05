@@ -18,6 +18,8 @@ import os
 
 import pytest
 
+from mindquantum.simulator import get_supported_simulator
+
 os.environ.setdefault('OMP_NUM_THREADS', '8')
 
 _HAS_MINDSPORE = True
@@ -36,8 +38,9 @@ except ImportError:
     _HAS_MINDSPORE = False
 
 
+@pytest.mark.parametrize('backend', get_supported_simulator())
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_vqe_net():  # pylint: disable=too-many-locals
+def test_vqe_net(backend):  # pylint: disable=too-many-locals
     """
     Description: Test vqe
     Expectation:
@@ -53,7 +56,7 @@ def test_vqe_net():  # pylint: disable=too-many-locals
     ) = generate_uccsd('./tests/st/H4.hdf5', threshold=-1)
     hf_circuit = Circuit([G.X.on(i) for i in range(n_electrons)])
     vqe_circuit = hf_circuit + ansatz_circuit
-    sim = Simulator('projectq', vqe_circuit.n_qubits)
+    sim = Simulator(backend, vqe_circuit.n_qubits)
     f_g_ops = sim.get_expectation_with_grad(Hamiltonian(hamiltonian_qubitop.real), vqe_circuit)
     molecule_pqcnet = MQAnsatzOnlyLayer(f_g_ops)
     optimizer = ms.nn.Adagrad(molecule_pqcnet.trainable_params(), learning_rate=4e-2)

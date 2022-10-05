@@ -13,27 +13,31 @@
 # limitations under the License.
 # ============================================================================
 """Simulator."""
-import warnings
+from functools import partial
 
 import numpy as np
 
 import mindquantum.mqbackend as mb
 
-from ..core.circuit import Circuit
-from ..core.gates import BarrierGate, BasicGate, Measure, MeasureResult
 from ..core.operators import Hamiltonian
-from ..core.operators.hamiltonian import HowTo
-from ..core.parameterresolver import ParameterResolver
-from ..utils.string_utils import ket_string
 from ..utils.type_value_check import (
-    _check_and_generate_pr_type,
     _check_input_type,
     _check_int_type,
     _check_seed,
     _check_value_should_not_less,
 )
+from .backend_base import BackendBase
+from .mq_blas import MQBlas
+from .mqsim import MQ_SIM_GPU_SUPPORTED, MQSim
+from .projectq_sim import Projectq
 
-SUPPORTED_SIMULATOR = ['projectq']
+SUPPORTED_SIMULATOR = {
+    'projectq': Projectq,
+    'mqvector': partial(MQSim, 'mqvector'),
+}
+
+if MQ_SIM_GPU_SUPPORTED:
+    SUPPORTED_SIMULATOR['mqvector_gpu'] = partial(MQSim, 'mqvector_gpu')
 
 
 def get_supported_simulator():
@@ -43,7 +47,7 @@ def get_supported_simulator():
     Returns:
         list, The supported simulator list.
     """
-    return SUPPORTED_SIMULATOR
+    return list(SUPPORTED_SIMULATOR)
 
 
 class Simulator:
@@ -74,21 +78,26 @@ class Simulator:
         array([0.5+0.j, 0.5+0.j, 0.5+0.j, 0.5+0.j])
     """
 
-    def __init__(self, backend, n_qubits, seed=None):
+    def __init__(self, backend, n_qubits, *args, seed=None, **kwargs):
         """Initialize a Simulator object."""
-        _check_input_type('backend', str, backend)
-        _check_int_type('n_qubits', n_qubits)
-        _check_value_should_not_less('n_qubits', 0, n_qubits)
-        if seed is None:
-            seed = np.random.randint(1, 2**23)
-        _check_seed(seed)
-        if backend not in SUPPORTED_SIMULATOR:
-            raise ValueError(f"backend {backend} not supported, now we support {SUPPORTED_SIMULATOR}!")
-        self.backend = backend
-        self.seed = seed
-        self.n_qubits = n_qubits
-        if backend == 'projectq':
-            self.sim = mb.projectq(seed, n_qubits)
+        if isinstance(backend, BackendBase):
+            self.backend = backend
+        else:
+            _check_input_type('backend', str, backend)
+            _check_int_type('n_qubits', n_qubits)
+            _check_value_should_not_less('n_qubits', 0, n_qubits)
+            if seed is None:
+                seed = np.random.randint(1, 2**23)
+            _check_seed(seed)
+            try:
+                self.backend = SUPPORTED_SIMULATOR[backend](n_qubits, seed, *args, **kwargs)
+            except KeyError:
+                raise ValueError(f"backend {backend} not supported, now we support: {', '.join(SUPPORTED_SIMULATOR)}!")
+
+    @property
+    def n_qubits(self):
+        """Get simulator qubit."""
+        return self.backend.n_qubits
 
     def copy(self):
         """
@@ -110,24 +119,15 @@ class Simulator:
             Current quantum state:
             1¦0⟩
         """
-        sim = Simulator(self.backend, self.n_qubits, self.seed)
-        sim.sim = self.sim.copy()
-        return sim
+        return self.__class__(self.backend.copy(), None)
 
     def __str__(self):
         """Return a string representation of the object."""
-        state = self.get_qs()
-        ret = f"{self.backend} simulator with {self.n_qubits} qubit{'s' if self.n_qubits > 1 else ''} (little endian)."
-        ret += "\nCurrent quantum state:\n"
-        if self.n_qubits < 4:
-            ret += '\n'.join(ket_string(state))
-        else:
-            ret += state.__str__()
-        return ret
+        return self.backend.__str__()
 
     def __repr__(self):
         """Return a string representation of the object."""
-        return self.__str__()
+        return self.backend.__repr__()
 
     def reset(self):
         """
@@ -142,7 +142,7 @@ class Simulator:
             >>> sim.get_qs()
             array([1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j])
         """
-        self.sim.reset()
+        self.backend.reset()
 
     def flush(self):
         """
@@ -159,8 +159,7 @@ class Simulator:
             >>> sim.apply_gate(H.on(0))
             >>> sim.flush()
         """
-        if self.backend == 'projectq':
-            self.sim.run()
+        self.backend.flush()
 
     def apply_gate(self, gate, pr=None, diff=False):
         """
@@ -195,21 +194,7 @@ class Simulator:
             >>> sim.get_qs()
             array([0.+0.j, 1.+0.j])
         """
-        _check_input_type('gate', BasicGate, gate)
-        if not isinstance(gate, BarrierGate):
-            gate_max = max(max(gate.obj_qubits, gate.ctrl_qubits))
-            if self.n_qubits < gate_max:
-                raise ValueError(f"qubits of gate {gate} is higher than simulator qubits.")
-            if isinstance(gate, Measure):
-                return self.sim.apply_measure(gate.get_cpp_obj())
-            if pr is None:
-                if gate.parameterized:
-                    raise ValueError("apply a parameterized gate needs a parameter_resolver")
-                self.sim.apply_gate(gate.get_cpp_obj())
-            else:
-                pr = _check_and_generate_pr_type(pr, gate.coeff.params_name)
-                self.sim.apply_gate(gate.get_cpp_obj(), pr.to_real_obj(), diff)
-        return None
+        return self.backend.apply_gate(gate, pr, diff)
 
     def apply_circuit(self, circuit, pr=None):
         """
@@ -248,30 +233,7 @@ class Simulator:
                        │
             {'11': 1}
         """
-        _check_input_type('circuit', Circuit, circuit)
-        if self.n_qubits < circuit.n_qubits:
-            raise ValueError(f"Circuit has {circuit.n_qubits} qubits, which is more than simulator qubits.")
-        if circuit.has_measure_gate:
-            res = MeasureResult()
-            res.add_measure(circuit.all_measures.keys())
-        if circuit.params_name:
-            if pr is None:
-                raise ValueError("Applying a parameterized circuit needs a parameter_resolver")
-            pr = _check_and_generate_pr_type(pr, circuit.params_name)
-        else:
-            pr = ParameterResolver()
-        if circuit.has_measure_gate:
-            samples = np.array(
-                self.sim.apply_circuit_with_measure(circuit.get_cpp_obj(), pr.to_real_obj(), res.keys_map)
-            )
-            samples = samples.reshape((1, -1))
-            res.collect_data(samples)
-            return res
-        if circuit.params_name:
-            self.sim.apply_circuit(circuit.get_cpp_obj(), pr.to_real_obj())
-        else:
-            self.sim.apply_circuit(circuit.get_cpp_obj())
-        return None
+        return self.backend.apply_circuit(circuit, pr)
 
     def sampling(self, circuit, pr=None, shots=1, seed=None):
         """
@@ -313,38 +275,7 @@ class Simulator:
                               │
             {'000': 18, '011': 9, '100': 49, '111': 24}
         """
-        if not circuit.all_measures.map:
-            raise ValueError("circuit must have at least one measurement gate.")
-        _check_input_type("circuit", Circuit, circuit)
-        if self.n_qubits < circuit.n_qubits:
-            raise ValueError(f"Circuit has {circuit.n_qubits} qubits, which is more than simulator qubits.")
-        _check_int_type("sampling shots", shots)
-        _check_value_should_not_less("sampling shots", 1, shots)
-        if circuit.parameterized:
-            if pr is None:
-                raise ValueError("Sampling a parameterized circuit need a ParameterResolver")
-            if not isinstance(pr, (dict, ParameterResolver)):
-                raise TypeError(f"pr requires a dict or a ParameterResolver, but get {type(pr)}!")
-            pr = ParameterResolver(pr)
-        else:
-            pr = ParameterResolver()
-        if seed is None:
-            seed = int(np.random.randint(1, 2 << 20))
-        else:
-            _check_seed(seed)
-        res = MeasureResult()
-        res.add_measure(circuit.all_measures.keys())
-        sim = self
-        if circuit.is_measure_end and not circuit.is_noise_circuit:
-            sim = Simulator(self.backend, self.n_qubits, self.seed)
-            sim.set_qs(self.get_qs())
-            sim.apply_circuit(circuit.remove_measure(), pr)
-            circuit = Circuit(circuit.all_measures.keys())
-        samples = np.array(
-            sim.sim.sampling(circuit.get_cpp_obj(), pr.to_real_obj(), shots, res.keys_map, seed)
-        ).reshape((shots, -1))
-        res.collect_data(samples)
-        return res
+        return self.backend.sampling(circuit, pr, shots, seed)
 
     def apply_hamiltonian(self, hamiltonian: Hamiltonian):
         """
@@ -375,9 +306,7 @@ class Simulator:
             >>> sim.get_qs()
             array([1.+0.j, 3.+0.j])
         """
-        _check_input_type('hamiltonian', Hamiltonian, hamiltonian)
-        _check_hamiltonian_qubits_number(hamiltonian, self.n_qubits)
-        self.sim.apply_hamiltonian(hamiltonian.get_cpp_obj())
+        self.backend.apply_hamiltonian(hamiltonian)
 
     def get_expectation(self, hamiltonian):
         r"""
@@ -403,10 +332,7 @@ class Simulator:
             >>> sim.get_expectation(ham)
             (0.36235775447667357+0j)
         """
-        if not isinstance(hamiltonian, Hamiltonian):
-            raise TypeError(f"hamiltonian requires a Hamiltonian, but got {type(hamiltonian)}")
-        _check_hamiltonian_qubits_number(hamiltonian, self.n_qubits)
-        return self.sim.get_expectation(hamiltonian.get_cpp_obj())
+        return self.backend.get_expectation(self, hamiltonian)
 
     def get_qs(self, ket=False):
         """
@@ -427,12 +353,7 @@ class Simulator:
             >>> sim.get_qs()
             array([0.5+0.j, 0.5+0.j, 0.5+0.j, 0.5+0.j])
         """
-        if not isinstance(ket, bool):
-            raise TypeError(f"ket requires a bool, but get {type(ket)}")
-        state = np.array(self.sim.get_qs())
-        if ket:
-            return '\n'.join(ket_string(state))
-        return state
+        return self.backend.get_qs(ket)
 
     def set_qs(self, quantum_state):
         """
@@ -451,28 +372,14 @@ class Simulator:
             >>> sim.get_qs()
             array([0.70710678+0.j, 0.70710678+0.j])
         """
-        if not isinstance(quantum_state, np.ndarray):
-            raise TypeError(f"quantum state must be a ndarray, but get {type(quantum_state)}")
-        if len(quantum_state.shape) != 1:
-            raise ValueError(f"vec requires a 1-dimensional array, but get {quantum_state.shape}")
-        n_qubits = np.log2(quantum_state.shape[0])
-        if n_qubits % 1 != 0:
-            raise ValueError(f"vec size {quantum_state.shape[0]} is not power of 2")
-        n_qubits = int(n_qubits)
-        if self.n_qubits != n_qubits:
-            raise ValueError(f"{n_qubits} qubits vec does not match with simulation qubits ({self.n_qubits})")
-        self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state) ** 2)))
+        self.backend.set_qs(quantum_state)
 
-    # pylint: disable=too-many-arguments
-    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     def get_expectation_with_grad(
         self,
         hams,
         circ_right,
         circ_left=None,
         simulator_left=None,
-        encoder_params_name=None,
-        ansatz_params_name=None,
         parallel_worker=None,
     ):
         r"""
@@ -530,269 +437,13 @@ class Simulator:
             >>> f
             array([[0.99999989-7.52279618e-05j]])
         """
-        if isinstance(hams, Hamiltonian):
-            hams = [hams]
-        elif not isinstance(hams, list):
-            raise TypeError(f"hams requires a Hamiltonian or a list of Hamiltonian, but get {type(hams)}")
-        for h_tmp in hams:
-            _check_input_type("hams's element", Hamiltonian, h_tmp)
-            _check_hamiltonian_qubits_number(h_tmp, self.n_qubits)
-        _check_input_type("circ_right", Circuit, circ_right)
-        if circ_right.is_noise_circuit:
-            raise ValueError("noise circuit not support yet.")
-        non_hermitian = False
-        if circ_left is not None:
-            _check_input_type("circ_left", Circuit, circ_left)
-            if circ_left.is_noise_circuit:
-                raise ValueError("noise circuit not support yet.")
-            non_hermitian = True
-        if simulator_left is not None:
-            _check_input_type("simulator_left", Simulator, simulator_left)
-            if self.backend != simulator_left.backend:
-                raise ValueError(
-                    "simulator_left should have the same backend as this simulator, ",
-                    f"which is {self.backend}, but get {simulator_left.backend}",
-                )
-            if self.n_qubits != simulator_left.n_qubits:
-                raise ValueError(
-                    "simulator_left should have the same n_qubits as this simulator, ",
-                    f"which is {self.n_qubits}, but get {simulator_left.n_qubits}",
-                )
-            non_hermitian = True
-        if non_hermitian and simulator_left is None:
-            simulator_left = self
-        if circ_left is None:
-            circ_left = circ_right
-        if circ_left.has_measure_gate or circ_right.has_measure_gate:
-            raise ValueError("circuit for variational algorithm cannot have measure gate")
-        if parallel_worker is not None:
-            _check_int_type("parallel_worker", parallel_worker)
-        url = "https://mindspore.cn/mindquantum/docs/zh-CN/master/get_gradient_of_PQC_with_mindquantum.html"
-        if encoder_params_name is not None:
-            warnings.warn(
-                (
-                    "Setting encoder_params_name is perecated from version 0.7.0, please call '.as_encoder()'"
-                    " of the circuit you want to work as encoder, and do not set in this API. "
-                    f"Please refer to tutorial {url}"
-                ),
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            encoder_params_name_old_api = encoder_params_name
-        else:
-            encoder_params_name_old_api = []
-        if ansatz_params_name is not None:
-            warnings.warn(
-                (
-                    "Setting ansatz_params_name is perecated from version 0.7.0, please call '.as_ansatz()' "
-                    "of the circuit you want to work as ansatz, and do not set in this API. "
-                    f"Please refer to tutorial {url}"
-                ),
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            ansatz_params_name_old_api = ansatz_params_name
-        else:
-            ansatz_params_name_old_api = []
-
-        ansatz_params_name = circ_right.all_ansatz.keys()
-        encoder_params_name = circ_right.all_encoder.keys()
-        if not encoder_params_name_old_api:
-            encoder_params_name_old_api = encoder_params_name
-        if not ansatz_params_name_old_api:
-            ansatz_params_name_old_api = ansatz_params_name
-        if non_hermitian:
-            for i in circ_left.all_ansatz.keys():
-                if i not in ansatz_params_name:
-                    ansatz_params_name.append(i)
-            for i in circ_left.all_encoder.keys():
-                if i not in encoder_params_name:
-                    encoder_params_name.append(i)
-        if set(ansatz_params_name) & set(encoder_params_name):
-            raise RuntimeError("Parameter cannot be both encoder and ansatz parameter.")
-        if set(encoder_params_name_old_api) != set(encoder_params_name):
-            raise RuntimeError(
-                "You set wrong encoder parameters. Please do not set encoder_params_name anymore, "
-                "but call '.as_encoder()' of circuit that you want to work as encoder."
-            )
-        if set(ansatz_params_name_old_api) != set(ansatz_params_name):
-            raise RuntimeError(
-                "You set wrong ansatz parameters. Please do not set ansatz_params_name anymore, "
-                "but call '.as_ansatz()' of circuit that you want to work as ansatz."
-            )
-        version = "both"
-        if not ansatz_params_name:
-            version = "encoder"
-        if not encoder_params_name:
-            version = "ansatz"
-
-        circ_n_qubits = max(circ_left.n_qubits, circ_right.n_qubits)
-        if self.n_qubits < circ_n_qubits:
-            raise ValueError(f"Simulator has {self.n_qubits} qubits, but circuit has {circ_n_qubits} qubits.")
-
-        def grad_ops(*inputs):
-            if version == "both" and len(inputs) != 2:
-                raise ValueError("Need two inputs!")
-            if version in ("encoder", "ansatz") and len(inputs) != 1:
-                raise ValueError("Need one input!")
-            if version == "both":
-                _check_encoder(inputs[0], len(encoder_params_name))
-                _check_ansatz(inputs[1], len(ansatz_params_name))
-                batch_threads, mea_threads = _thread_balance(inputs[0].shape[0], len(hams), parallel_worker)
-                inputs0 = inputs[0]
-                inputs1 = inputs[1]
-            if version == "encoder":
-                _check_encoder(inputs[0], len(encoder_params_name))
-                batch_threads, mea_threads = _thread_balance(inputs[0].shape[0], len(hams), parallel_worker)
-                inputs0 = inputs[0]
-                inputs1 = np.array([])
-            if version == "ansatz":
-                _check_ansatz(inputs[0], len(ansatz_params_name))
-                batch_threads, mea_threads = _thread_balance(1, len(hams), parallel_worker)
-                inputs0 = np.array([[]])
-                inputs1 = inputs[0]
-            if non_hermitian:
-                f_g1_g2 = self.sim.non_hermitian_measure_with_grad(
-                    [i.get_cpp_obj() for i in hams],
-                    [i.get_cpp_obj(hermitian=True) for i in hams],
-                    circ_left.get_cpp_obj(),
-                    circ_left.get_cpp_obj(hermitian=True),
-                    circ_right.get_cpp_obj(),
-                    circ_right.get_cpp_obj(hermitian=True),
-                    inputs0,
-                    inputs1,
-                    encoder_params_name,
-                    ansatz_params_name,
-                    batch_threads,
-                    mea_threads,
-                    simulator_left.sim,
-                )
-            else:
-                f_g1_g2 = self.sim.hermitian_measure_with_grad(
-                    [i.get_cpp_obj() for i in hams],
-                    circ_right.get_cpp_obj(),
-                    circ_right.get_cpp_obj(hermitian=True),
-                    inputs0,
-                    inputs1,
-                    encoder_params_name,
-                    ansatz_params_name,
-                    batch_threads,
-                    mea_threads,
-                )
-            res = np.array(f_g1_g2)
-            if version == 'both':
-                return (
-                    res[:, :, 0],
-                    res[:, :, 1 : 1 + len(encoder_params_name)],  # noqa:E203
-                    res[:, :, 1 + len(encoder_params_name) :],  # noqa:E203
-                )  # f, g1, g2
-            return res[:, :, 0], res[:, :, 1:]  # f, g
-
-        grad_wrapper = GradOpsWrapper(
-            grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name, parallel_worker
+        return self.backend.get_expectation_with_grad(
+            hams,
+            circ_right,
+            circ_left,
+            (simulator_left.backend if simulator_left is not None else None),
+            parallel_worker,
         )
-        grad_str = f'{self.n_qubits} qubit' + ('' if self.n_qubits == 1 else 's')
-        grad_str += f' {self.backend} VQA Operator'
-        grad_wrapper.set_str(grad_str)
-        return grad_wrapper
-
-
-def _check_encoder(data, encoder_params_size):
-    if not isinstance(data, np.ndarray):
-        raise ValueError(f"encoder parameters need numpy array, but get {type(data)}")
-    data_shape = data.shape
-    if len(data_shape) != 2:
-        raise ValueError("encoder data requires a two dimension numpy array")
-    if data_shape[1] != encoder_params_size:
-        raise ValueError(
-            "encoder parameters size do not match with encoder parameters name, ",
-            f"need {encoder_params_size} but get {data_shape[1]}.",
-        )
-
-
-def _check_ansatz(data, ansatz_params_size):
-    """Check ansatz."""
-    if not isinstance(data, np.ndarray):
-        raise ValueError(f"ansatz parameters need numpy array, but get {type(data)}")
-    data_shape = data.shape
-    if len(data_shape) != 1:
-        raise ValueError("ansatz data requires a one dimension numpy array")
-    if data_shape[0] != ansatz_params_size:
-        raise ValueError(
-            "ansatz parameters size do not match with ansatz parameters name, "
-            f"need {ansatz_params_size} but get {data_shape[0]}"
-        )
-
-
-def _thread_balance(n_prs, n_meas, parallel_worker):
-    """Thread balance."""
-    if parallel_worker is None:
-        parallel_worker = n_meas * n_prs
-    if n_meas * n_prs <= parallel_worker:
-        batch_threads = n_prs
-        mea_threads = n_meas
-    else:
-        if n_meas < n_prs:
-            batch_threads = min(n_prs, parallel_worker)
-            mea_threads = min(n_meas, max(1, parallel_worker // batch_threads))
-        else:
-            mea_threads = min(n_meas, parallel_worker)
-            batch_threads = min(n_prs, max(1, parallel_worker // mea_threads))
-    return batch_threads, mea_threads
-
-
-def _check_hamiltonian_qubits_number(hamiltonian, sim_qubits):
-    """Check hamiltonian qubits number."""
-    if hamiltonian.how_to != HowTo.ORIGIN:
-        if hamiltonian.n_qubits != sim_qubits:
-            raise ValueError(
-                f"Hamiltonian qubits is {hamiltonian.n_qubits}, not match with simulator qubits number {sim_qubits}"
-            )
-    else:
-        if hamiltonian.n_qubits > sim_qubits:
-            raise ValueError(f"Hamiltonian qubits is {hamiltonian.n_qubits}, which is bigger than simulator qubits.")
-
-
-class GradOpsWrapper:  # pylint: disable=too-many-instance-attributes
-    """
-    Wrapper the gradient operator that with the information that generate this gradient operator.
-
-    Args:
-        grad_ops (Union[FunctionType, MethodType]): A function or a method
-            that return forward value and gradient w.r.t parameters.
-        hams (Hamiltonian): The hamiltonian that generate this grad ops.
-        circ_right (Circuit): The right circuit that generate this grad ops.
-        circ_left (Circuit): The left circuit that generate this grad ops.
-        encoder_params_name (list[str]): The encoder parameters name.
-        ansatz_params_name (list[str]): The ansatz parameters name.
-        parallel_worker (int): The number of parallel worker to run the batch.
-    """
-
-    def __init__(
-        self, grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name, parallel_worker
-    ):  # pylint: disable=too-many-arguments
-        """Initialize a GradOpsWrapper object."""
-        self.grad_ops = grad_ops
-        self.hams = hams
-        self.circ_right = circ_right
-        self.circ_left = circ_left
-        self.encoder_params_name = encoder_params_name
-        self.ansatz_params_name = ansatz_params_name
-        self.parallel_worker = parallel_worker
-        self.str = ''
-
-    def __call__(self, *args):
-        """Definition of a function call operator."""
-        return self.grad_ops(*args)
-
-    def set_str(self, grad_str):
-        """
-        Set expression for gradient operator.
-
-        Args:
-            grad_str (str): The string of QNN operator.
-        """
-        self.str = grad_str
 
 
 def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
@@ -823,13 +474,15 @@ def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
             "Two simulator should have same quantum state, "
             f"but get {bra_simulator.n_qubits} and {ket_simulator.n_qubits}."
         )
-    if bra_simulator.backend != ket_simulator.backend:
+    if bra_simulator.backend.name != ket_simulator.backend.name:
         raise ValueError("The backend of two simulator should be same.")
-    if bra_simulator.backend == 'projectq' and ket_simulator.backend == 'projectq':
+    if isinstance(bra_simulator.backend, Projectq) and isinstance(ket_simulator.backend, Projectq):
         bra_simulator.flush()
         ket_simulator.flush()
-        return mb.cpu_projectq_inner_product(bra_simulator.sim, ket_simulator.sim)
-    raise ValueError(f"backend for {bra_simulator.backend} not implement.")
+        return mb.cpu_projectq_inner_product(bra_simulator.backend.sim, ket_simulator.backend.sim)
+    if isinstance(bra_simulator.backend, MQSim):
+        return MQBlas.inner_product(bra_simulator.backend, ket_simulator.backend)
+    raise NotImplementedError(f"inner_product for backend {bra_simulator.backend} not implement.")
 
 
-__all__ = ['Simulator', 'get_supported_simulator', 'GradOpsWrapper', 'inner_product']
+__all__ = ['Simulator', 'get_supported_simulator', 'inner_product']

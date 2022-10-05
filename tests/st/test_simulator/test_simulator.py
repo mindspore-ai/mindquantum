@@ -27,7 +27,7 @@ from mindquantum.core import gates as G
 from mindquantum.core.circuit import UN, Circuit
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.core.parameterresolver import ParameterResolver as PR
-from mindquantum.simulator import Simulator, inner_product
+from mindquantum.simulator import Simulator, get_supported_simulator, inner_product
 
 _HAS_MINDSPORE = True
 try:
@@ -42,7 +42,8 @@ except ImportError:
     _HAS_MINDSPORE = False
 
 
-def _test_init_reset(virtual_qc):
+@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+def test_init_reset(virtual_qc):
     """
     test
     Description:
@@ -59,7 +60,8 @@ def _test_init_reset(virtual_qc):
     assert np.allclose(v1, v3)
 
 
-def _test_apply_circuit_and_hermitian(virtual_qc):
+@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+def test_apply_circuit_and_hermitian(virtual_qc):
     """
     test
     Description:
@@ -95,7 +97,8 @@ def _test_apply_circuit_and_hermitian(virtual_qc):
     assert np.allclose(v, v1)
 
 
-def _test_set_and_get(virtual_qc):
+@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+def test_set_and_get(virtual_qc):
     """
     test
     Description:
@@ -109,7 +112,8 @@ def _test_set_and_get(virtual_qc):
     assert np.allclose(qs2, np.array([1, 1]) / np.sqrt(2))
 
 
-def _test_non_hermitian_grad_ops(virtual_qc):
+@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+def test_non_hermitian_grad_ops1(virtual_qc):
     """
     test
     Description:
@@ -167,7 +171,9 @@ def generate_test_circuit():
     return circuit
 
 
-def _test_all_gate_with_simulator(virtual_qc):  # pylint: disable=too-many-locals
+@pytest.mark.xfail
+@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+def test_all_gate_with_simulator(virtual_qc):  # pylint: disable=too-many-locals
     """
     Description:
     Expectation:
@@ -203,8 +209,10 @@ def _test_all_gate_with_simulator(virtual_qc):  # pylint: disable=too-many-local
     assert np.allclose(g_a_1, g_a_2, atol=1e-4)
 
 
+@pytest.mark.xfail
+@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def _test_optimization_with_custom_gate(virtual_qc):  # pylint: disable=too-many-locals
+def test_optimization_with_custom_gate(virtual_qc):  # pylint: disable=too-many-locals
     """
     Description:
     Expectation:
@@ -244,39 +252,26 @@ def _test_optimization_with_custom_gate(virtual_qc):  # pylint: disable=too-many
     assert np.allclose(train1().asnumpy(), train2().asnumpy())
 
 
-def _test_fid():
+@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+def test_fid(virtual_qc):
     """
     Description:
     Expectation:
     """
-    sim1 = Simulator('projectq', 1)
+    sim1 = Simulator(virtual_qc, 1)
     prep_circ = Circuit().h(0)
     ansatz = Circuit().ry('a', 0).rz('b', 0).ry('c', 0)
     sim1.apply_circuit(prep_circ)
-    sim2 = Simulator('projectq', 1)
+    sim2 = Simulator(virtual_qc, 1)
     ham = Hamiltonian(QubitOperator(""))
     grad_ops = sim2.get_expectation_with_grad(ham, ansatz, Circuit(), simulator_left=sim1)
     f, _ = grad_ops(np.array([7.902762e-01, 2.139225e-04, 7.795934e-01]))
     assert np.allclose(np.abs(f), np.array([1]))
 
 
-def test_virtual_quantum_computer():
-    """
-    Description: Test mindquantum supported virtual quantum computers
-    Expectation:
-    """
-    vqcs = ['projectq']
-    for virtual_qc in vqcs:
-        _test_init_reset(virtual_qc)
-        _test_apply_circuit_and_hermitian(virtual_qc)
-        _test_set_and_get(virtual_qc)
-        _test_non_hermitian_grad_ops(virtual_qc)
-        _test_all_gate_with_simulator(virtual_qc)
-        _test_optimization_with_custom_gate(virtual_qc)
-        _test_fid()
-
-
-def test_non_hermitian_grad_ops():
+@pytest.mark.xfail
+@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+def test_non_hermitian_grad_ops2(virtual_qc):
     """
     Description: test non hermitian grad ops
     Expectation: success.
@@ -284,7 +279,7 @@ def test_non_hermitian_grad_ops():
     circuit1 = Circuit([G.RX('a').on(0)])
     circuit2 = Circuit([G.RY('b').on(0)])
     ham = Hamiltonian(csr_matrix([[1, 2], [3, 4]]))
-    sim = Simulator('projectq', 1)
+    sim = Simulator(virtual_qc, 1)
     grad_ops = sim.get_expectation_with_grad(ham, circuit2, circuit1)
     f, _ = grad_ops(np.array([1, 2]))
     f_exp = np.conj(G.RX(2).matrix().T) @ ham.sparse_mat.toarray() @ G.RY(1).matrix()
@@ -292,26 +287,28 @@ def test_non_hermitian_grad_ops():
     assert np.allclose(f, f_exp)
 
 
-def test_inner_product():
+@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+def test_inner_product(virtual_qc):
     """
     Description: test inner product of two simulator
     Expectation: success.
     """
-    sim1 = Simulator('projectq', 1)
+    sim1 = Simulator(virtual_qc, 1)
     sim1.apply_gate(G.RX(1.2).on(0))
-    sim2 = Simulator('projectq', 1)
+    sim2 = Simulator(virtual_qc, 1)
     sim2.apply_gate(G.RY(2.1).on(0))
     val_exp = np.vdot(sim1.get_qs(), sim2.get_qs())
     val = inner_product(sim1, sim2)
     assert np.allclose(val_exp, val)
 
 
-def test_copy():
+@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+def test_copy(virtual_qc):
     """
     Description: test copy a simulator
     Expectation: success.
     """
-    sim = Simulator('projectq', 1)
+    sim = Simulator(virtual_qc, 1)
     sim.apply_gate(G.RX(1).on(0))
     sim.flush()
     sim2 = sim.copy()

@@ -138,6 +138,10 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             self._cpp_obj = self._cpp_obj.cast_complex()
         self._cpp_obj.set_const(const_value)
 
+    def get_cpp_obj(self):
+        """Get the cpp object of this parameter resolver."""
+        return self._cpp_obj
+
     def keys(self):
         """
         Return an iterator that yields the name and value of all parameters.
@@ -738,9 +742,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             >>> pr.real
             {'a': 1.0}, const: 3.0
         """
-        out = ParameterResolver(copy.copy(self._cpp_obj))
-        out._cpp_obj.keep_real()
-        return out
+        return ParameterResolver(self._cpp_obj.real())
 
     @property
     def imag(self):
@@ -758,9 +760,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             >>> pr.imag
             {'a': 1.0}, const: 4.0
         """
-        out = ParameterResolver(copy.copy(self._cpp_obj))
-        out._cpp_obj.keep_imag()
-        return out
+        return ParameterResolver(self._cpp_obj.imag())
 
     def to_real_obj(self):
         """Convert to real type."""

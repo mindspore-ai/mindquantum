@@ -21,6 +21,9 @@
 #include <initializer_list>
 #include <string>
 
+#include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
+
 #include "core/parameter_resolver.hpp"
 #include "core/two_dim_matrix.hpp"
 #include "core/utils.hpp"
@@ -48,6 +51,7 @@ inline VVT<CT<T>> CastArray(const py::object& fun, T theta) {
     }
     return m;
 }
+
 template <typename T>
 struct BasicGate {
     bool parameterized_ = false;

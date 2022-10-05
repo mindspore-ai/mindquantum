@@ -96,7 +96,7 @@ def _qfi_matrix_base(circuit: Circuit, which_part='both', backend='projectq'):
                 idx_i = new_idx_map[gate.coeff.params_name[0]]
                 bra = Simulator(backend, pure_circ.n_qubits)
                 ket_tmp = ket.copy()
-                ket_tmp.sim.apply_gate(g_cpp, pr_cpp, True)
+                ket_tmp.backend.sim.apply_gate(g_cpp, pr_cpp, True)
                 if which_part != 'B':
                     grad_current = inner_product(ket_tmp, ket_tmp)
                     part_a[idx_i, idx_i] = grad_current
@@ -108,23 +108,23 @@ def _qfi_matrix_base(circuit: Circuit, which_part='both', backend='projectq'):
                         for k in range(j, i + 1):
                             g_k = pure_circ[k]
                             g_cpp_k = cpp_obj[k]
-                            apply_gate(bra_tmp.sim, g_k, g_cpp_k, pr_cpp, (k == j))
+                            apply_gate(bra_tmp.backend.sim, g_k, g_cpp_k, pr_cpp, (k == j))
 
                     if g_j.parameterized:
-                        bra.sim.apply_gate(g_cpp_j, pr_cpp, False)
+                        bra.backend.sim.apply_gate(g_cpp_j, pr_cpp, False)
                         if which_part != 'B':
                             idx_j = new_idx_map[g_j.coeff.params_name[0]]
                             part_a[idx_j, idx_i] = inner_product(bra_tmp, ket_tmp)
                             part_a[idx_i, idx_j] = np.conj(part_a[idx_j, idx_i])
                     else:
-                        bra.sim.apply_gate(g_cpp_j)
+                        bra.backend.sim.apply_gate(g_cpp_j)
                     bra.flush()
-                bra.sim.apply_gate(g_cpp, pr_cpp, False)
+                bra.backend.sim.apply_gate(g_cpp, pr_cpp, False)
                 if which_part != 'A':
                     part_b[idx_i] = np.conj(inner_product(bra, ket_tmp))
-                ket.sim.apply_gate(g_cpp, pr_cpp, False)
+                ket.backend.sim.apply_gate(g_cpp, pr_cpp, False)
             else:
-                ket.sim.apply_gate(g_cpp)
+                ket.backend.sim.apply_gate(g_cpp)
             ket.flush()
         if which_part != 'B':
             first_part = jac.T @ part_a @ jac

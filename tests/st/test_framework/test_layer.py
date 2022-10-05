@@ -17,6 +17,8 @@
 import numpy as np
 import pytest
 
+from mindquantum.simulator import get_supported_simulator
+
 _HAS_MINDSPORE = True
 try:
     import mindspore as ms
@@ -32,8 +34,9 @@ except ImportError:
     _HAS_MINDSPORE = False
 
 
+@pytest.mark.parametrize('backend', get_supported_simulator())
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_mindquantumlayer():
+def test_mindquantumlayer(backend):
     """
     Description: Test MQLayer
     Expectation:
@@ -47,7 +50,7 @@ def test_mindquantumlayer():
     ham = Hamiltonian(QubitOperator('Z0'))
     ms.set_seed(55)
     circ = encoder.as_encoder() + ansatz.as_ansatz()
-    sim = Simulator('projectq', circ.n_qubits)
+    sim = Simulator(backend, circ.n_qubits)
     f_g_ops = sim.get_expectation_with_grad(ham, circ)
     net = MQLayer(f_g_ops)
     encoder_data = ms.Tensor(np.array([[0.1, 0.2]]).astype(np.float32))

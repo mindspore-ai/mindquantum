@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """Type and value check helper."""
 
 import numbers
@@ -20,6 +19,47 @@ import numbers
 import numpy as np
 
 _num_type = (int, float, complex, np.int32, np.int64, np.float32, np.float64)
+
+
+def _check_encoder(data, encoder_params_size):
+    if not isinstance(data, np.ndarray):
+        raise ValueError(f"encoder parameters need numpy array, but get {type(data)}")
+    data_shape = data.shape
+    if len(data_shape) != 2:
+        raise ValueError("encoder data requires a two dimension numpy array")
+    if data_shape[1] != encoder_params_size:
+        raise ValueError(
+            "encoder parameters size do not match with encoder parameters name, ",
+            f"need {encoder_params_size} but get {data_shape[1]}.",
+        )
+
+
+def _check_ansatz(data, ansatz_params_size):
+    """Check ansatz."""
+    if not isinstance(data, np.ndarray):
+        raise ValueError(f"ansatz parameters need numpy array, but get {type(data)}")
+    data_shape = data.shape
+    if len(data_shape) != 1:
+        raise ValueError("ansatz data requires a one dimension numpy array")
+    if data_shape[0] != ansatz_params_size:
+        raise ValueError(
+            "ansatz parameters size do not match with ansatz parameters name, "
+            f"need {ansatz_params_size} but get {data_shape[0]}"
+        )
+
+
+def _check_hamiltonian_qubits_number(hamiltonian, sim_qubits):
+    """Check hamiltonian qubits number."""
+    from mindquantum.core.operators.hamiltonian import HowTo  # noqa: E402
+
+    if hamiltonian.how_to != HowTo.ORIGIN:
+        if hamiltonian.n_qubits != sim_qubits:
+            raise ValueError(
+                f"Hamiltonian qubits is {hamiltonian.n_qubits}, not match with simulator qubits number {sim_qubits}"
+            )
+    else:
+        if hamiltonian.n_qubits > sim_qubits:
+            raise ValueError(f"Hamiltonian qubits is {hamiltonian.n_qubits}, which is bigger than simulator qubits.")
 
 
 def _check_np_dtype(dtype):

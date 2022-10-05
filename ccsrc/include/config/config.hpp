@@ -16,7 +16,11 @@
 #define MQ_CORE_CONFIG_HPP
 
 #include "config/cmake_config.hpp"
-#include "config/cxx20_config.hpp"
+#ifdef ENABLE_GPU
+#    include "config/cxx20_config_gpu.hpp"
+#else
+#    include "config/cxx20_config.hpp"
+#endif
 #include "config/details/clang_version.hpp"
 #include "config/details/cxx20_compatibility.hpp"
 #include "config/details/macros.hpp"

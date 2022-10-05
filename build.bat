@@ -349,7 +349,9 @@ if !ninja! == 1 (
    if !n_jobs! == -1 set n_jobs=!n_jobs_default!
 )
 
-if NOT !n_jobs! == -1 set args=!args! -C--global-option=build -C--global-option=--parallel  -C--global-option=!n_jobs!
+@REM FIXME(xuxs): when build in parallel, mq_base object will have conflict when building mqbackend and _mq_vector.
+@REM              This only happens in windows system.
+if NOT !n_jobs! == -1 set args=!args! -C--global-option=build -C--global-option=--parallel  -C--global-option=1
 
 if "!build_type!" == "Debug" set args=!args! -C--global-option=build -C--global-option=--debug
 

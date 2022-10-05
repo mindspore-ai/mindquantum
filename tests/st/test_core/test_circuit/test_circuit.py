@@ -17,11 +17,12 @@
 
 """Test circuit."""
 import numpy as np
+import pytest
 
 from mindquantum.core import gates as G
 from mindquantum.core.circuit import Circuit, add_prefix, shift
 from mindquantum.core.parameterresolver import ParameterResolver
-from mindquantum.simulator import Simulator
+from mindquantum.simulator import Simulator, get_supported_simulator
 
 
 def test_circuit_qubits_grad():
@@ -69,7 +70,8 @@ def test_circuit_apply():
     assert circuit == circuit_exp
 
 
-def test_evolution_state():
+@pytest.mark.parametrize('backend', get_supported_simulator())
+def test_evolution_state(backend):
     """
     test
     Description:
@@ -77,7 +79,7 @@ def test_evolution_state():
     """
     a, b = 0.3, 0.5
     circ = Circuit([G.RX('a').on(0), G.RX('b').on(1)])
-    simulator = Simulator('projectq', circ.n_qubits)
+    simulator = Simulator(backend, circ.n_qubits)
     simulator.apply_circuit(circ, ParameterResolver({'a': a, 'b': b}))
     state = simulator.get_qs()
     state_exp = [0.9580325796404553, -0.14479246283091116j, -0.2446258794777393j, -0.036971585637570345]
