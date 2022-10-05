@@ -16,9 +16,11 @@
 #define MQ_CATCH2_SYMENGINE_HPP
 
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
+#include <symengine/basic.h>
 #include <symengine/expression.h>
 
 #include <fmt/ranges.h>
@@ -58,7 +60,7 @@ struct SymEngineArrayMatcher : Catch::Matchers::MatcherGenericBase {
         }
         return true;
     }
-    std::string describe() const {
+    std::string describe() const override {
         return fmt::format("Equals: {}", comparator_);
     }
 
@@ -67,9 +69,30 @@ struct SymEngineArrayMatcher : Catch::Matchers::MatcherGenericBase {
 
 // -----------------------------------------------------------------------------
 
-template <typename... Ts>
-auto Equals(Ts&&... ts) {
-    return SymEngineArrayMatcher(std::forward<Ts>(ts)...);
+namespace mq_traits {
+template <typename type_t>
+struct is_symengine_rcp : std::false_type {};
+
+template <typename type_t>
+struct is_symengine_rcp<SymEngine::RCP<type_t>> : std::true_type {};
+
+// clang-format off
+template <typename... types_t>
+struct are_symengine
+    : std::integral_constant<
+          bool, ((std::is_base_of_v<SymEngine::Basic, std::remove_cvref_t<types_t>>
+                  || is_symengine_rcp<types_t>::value
+                  || std::is_same_v<SymEngine::Expression, std::remove_cvref_t<types_t>>)
+                 &&...)> {};
+// clang-format on
+
+template <typename... types_t>
+inline constexpr auto are_symengine_v = are_symengine<types_t...>::value;
+}  // namespace mq_traits
+
+template <typename... types_t, typename = std::enable_if_t<mq_traits::are_symengine_v<types_t...>>>
+auto Equals(types_t&&... values) {
+    return SymEngineArrayMatcher(std::forward<types_t>(values)...);
 }
 // =============================================================================
 }  // namespace mindquantum::catch2

@@ -22,6 +22,8 @@
 
 #include "config/logging.hpp"
 
+#include "mindquantum/catch2/eigen.hpp"
+
 #include "experimental/mindquantum/catch2/mindquantum.hpp"
 #include "experimental/mindquantum/catch2/symengine.hpp"
 #include "experimental/mindquantum/catch2/tweedledum.hpp"
@@ -32,9 +34,11 @@
 
 // =============================================================================
 
-namespace ops = mindquantum::ops;
 using namespace std::literals::complex_literals;
 using namespace std::literals::string_literals;
+
+namespace ops = mindquantum::ops;
+using mindquantum::catch2::Equals;
 
 using QubitOperatorCD = ops::QubitOperator<std::complex<double>>;
 using TermValue = ops::TermValue;
@@ -243,7 +247,7 @@ TEST_CASE("QubitOperator matrix", "[qubit_op][ops]") {
 
         REQUIRE(mat.rows() == ref.rows());
         REQUIRE(mat.cols() == ref.cols());
-        CHECK(mat == ref);
+        CHECK_THAT(mat, Equals(ref));
     } else {
         CHECK(!actual_mat.has_value());
     }

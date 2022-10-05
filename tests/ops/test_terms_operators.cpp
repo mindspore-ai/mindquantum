@@ -1089,13 +1089,13 @@ TEST_CASE("TermsOperator arithmetic operators (/)", "[terms_op][ops]") {
                 const auto& [local_ops_ref, coeff_ref] = ref;
                 const auto& [local_ops_other, coeff_other] = other;
                 if (local_ops_ref != local_ops_other) {
-                    FAIL_CHECK(local_ops_ref << " != " << local_ops_other);
+                    FAIL_CHECK(fmt::format("{} != {}", local_ops_ref, local_ops_other));
                     return false;
                 }
                 const auto rel_diff = std::abs((coeff_ref - coeff_other)
                                                / std::min(std::abs(coeff_ref), std::abs(coeff_other)));
                 if (rel_diff > 1.e-8) {
-                    FAIL_CHECK(coeff_ref << " != " << coeff_other << '(' << rel_diff << ')');
+                    FAIL_CHECK(fmt::format("{} != {} ({})", coeff_ref, coeff_other, rel_diff));
                     return false;
                 }
             }

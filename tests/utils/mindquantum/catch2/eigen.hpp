@@ -32,7 +32,7 @@ struct EigenSparseMatrixMatcher : Catch::Matchers::MatcherGenericBase {
 
     template <typename other_scalar_t, int other_options, typename other_index_t>
     bool match(const Eigen::SparseMatrix<other_scalar_t, other_options, other_index_t>& matrix) const {
-        return lhs.isApprox(rhs);
+        return matrix.isApprox(ref_matrix);
     }
 
     std::string describe() const override {
