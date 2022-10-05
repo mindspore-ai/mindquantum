@@ -37,14 +37,3 @@ if(ENABLE_CXX_EXPERIMENTAL)
 endif()
 
 # ==============================================================================
-
-if(ENABLE_CXX_EXPERIMENTAL)
-  install(FILES ${CMAKE_CURRENT_LIST_DIR}/test_utils.hpp DESTINATION ${MQ_INSTALL_INCLUDEDIR}/tests)
-  install(
-    DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/core ${CMAKE_CURRENT_LIST_DIR}/ops
-    DESTINATION ${MQ_INSTALL_INCLUDEDIR}/tests
-    FILES_MATCHING
-    PATTERN "*.hpp")
-endif()
-
-# ==============================================================================
