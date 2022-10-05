@@ -69,6 +69,7 @@ function Help-Message() {
     Write-Output '  -CleanBuildDir      Delete build directory before building'
     Write-Output '  -CleanCache         Re-run CMake with a clean CMake cache'
     Write-Output '  -CleanVenv          Delete Python virtualenv before building'
+    Write-Output '  -CMakeNoRegistry    Do not use the CMake registry to find packages'
     Write-Output '  -Config [dir]       Path to INI configuration file with default values for the parameters'
     Write-Output ("                      Defaults to: {0}" -f $config_file)
     Write-Output '                      NB: command line arguments always take precedence over configuration file values'
@@ -80,6 +81,9 @@ function Help-Message() {
     Write-Output '  -J,-Jobs [N]        Number of parallel jobs for building'
     Write-Output ("                      Defaults to: {0}" -f $n_jobs_default)
     Write-Output '  -LocalPkgs          Compile third-party dependencies locally'
+    Write-Output '  -Logging            Enable logging in C++ code'
+    Write-Output '  -LoggingDebug       Enable DEBUG level logging macros (implies -Logging)'
+    Write-Output '  -LoggingTrace       Enable TRACE level logging macros (implies -Logging -LoggingDebug)'
     Write-Output '  -NoConfig           Ignore any configuration file'
     Write-Output '  -NoGitee            Do not favor Gitee over Github/Gitlab'
     Write-Output '  -Ninja              Build using Ninja instead of make'
@@ -92,6 +96,10 @@ function Help-Message() {
     Write-Output '                      (ignored if --local-pkgs is passed, except for projectq)'
     Write-Output '  -Without<library>   Do not build the third-party library from source (<library> is case-insensitive)'
     Write-Output '                      (ignored if --local-pkgs is passed, except for projectq)'
+    Write-Output ''
+    Write-Output 'You may negate any flag argument (ie. arguments that do not require a value) by prefixing them with "-No-"'
+    Write-Output 'e.g. -NoLogging or -No-Logging to disable logging.'
+    Write-Output 'NB: due to PowerShell limitations, if you specify both -NoLogging and -Logging, -NoLogging takes precedence.'
     Write-Output ''
     Write-Output 'Test related options'
     Write-Output '  -Test               Build C++ tests and install dependencies for Python testing as well'
@@ -122,80 +130,107 @@ if ($Help.IsPresent) {
 
 if($ShowLibraries.IsPresent) {
     Print-Show-Libraries
-    exit 0
+    exit 1
 }
 
 # ==============================================================================
 
-if ($CMakeNoRegistry.IsPresent) {
+$local_args = @()
+
+foreach($arg in $args) {
+    if ("$arg" -match "-No-?(.*)") {
+        $s = $Matches[1]
+        Write-Debug "Setting $s to `$false"
+        Invoke-Expression -Command "`$$s=`$false"
+    }
+    else {
+        $local_args += $arg
+    }
+}
+
+# =============================================================================)=
+
+if (([bool]$CMakeNoRegistry)) {
     Set-Value 'cmake_no_registry'
 }
 
-if ($DryRun.IsPresent) {
+if (([bool]$DryRun)) {
     Set-Value 'dry_run'
 }
 
-if ($CCache.IsPresent) {
+if (([bool]$CCache)) {
     Set-Value 'enable_ccache'
 }
 
-if ($Clean3rdParty.IsPresent) {
+if (([bool]$Clean3rdParty)) {
     Set-Value 'do_clean_3rdparty'
 }
-if ($CleanAll.IsPresent) {
+if (([bool]$CleanAll)) {
     Set-Value 'do_clean_venv'
     Set-Value 'do_clean_build_dir'
 }
-if ($CleanBuildDir.IsPresent) {
+if (([bool]$CleanBuildDir)) {
     Set-Value 'do_clean_build_dir'
 }
-if ($CleanCache.IsPresent) {
+if (([bool]$CleanCache)) {
     Set-Value 'do_clean_cache'
 }
-if ($CleanVenv.IsPresent) {
+if (([bool]$CleanVenv)) {
     Set-Value 'do_clean_venv'
 }
 
-if ($Cxx.IsPresent) {
+if (([bool]$Cxx)) {
     Set-Value 'enable_cxx'
 }
 
-if ($Debug.IsPresent) {
+if (([bool]$Debug)) {
     Set-Value 'build_type' 'Debug'
 }
 
-if ($DebugCMake.IsPresent) {
+if (([bool]$DebugCMake)) {
     Set-Value 'cmake_debug_mode'
 }
 
-if ($Gitee.IsPresent) {
+if (([bool]$Gitee)) {
     Set-Value 'enable_gitee'
 }
-if ($NoGitee.IsPresent) {
+if (([bool]$NoGitee)) {
     Set-Value 'enable_gitee' $false
 }
 
-if ($Gpu.IsPresent) {
+if (([bool]$Gpu)) {
     Set-Value 'enable_gpu'
 }
 
-if ($LocalPkgs.IsPresent) {
+if (([bool]$LocalPkgs)) {
     Set-Value 'force_local_pkgs'
 }
 
-if ($Quiet.IsPresent) {
+if (([bool]$Logging)) {
+    Set-Value 'enable_logging'
+}
+if (([bool]$LoggingDebug)) {
+    Set-Value 'enable_logging'
+    Set-Value 'logging_enable_debug'
+}
+if (([bool]$LoggingTrace)) {
+    Set-Value 'enable_logging'
+    Set-Value 'logging_enable_trace'
+}
+
+if (([bool]$Quiet)) {
     Set-Value 'cmake_make_silent'
 }
 
-if ($Test.IsPresent) {
+if (([bool]$Test)) {
     Set-Value 'enable_tests'
 }
 
-if ($OnlyPytest.IsPresent) {
+if (([bool]$OnlyPytest)) {
     Set-Value 'only_install_pytest'
 }
 
-if ($UpdateVenv.IsPresent) {
+if (([bool]$UpdateVenv)) {
     Set-Value 'do_update_venv'
 }
 
@@ -206,7 +241,7 @@ if ([bool]$Build) {
 if ([bool]$Config) {
     Set-Value 'config_file' "$Config"
 }
-if ($NoConfig.IsPresent) {
+if (([bool]$NoConfig)) {
     Set-Value 'config_file' '__disabled_config__'
 }
 
@@ -222,17 +257,18 @@ if ([bool]$Venv) {
     Set-Value 'python_venv_path' "$Venv"
 }
 
-if ($Ninja.IsPresent) {
+if (([bool]$Ninja)) {
     Set-Value 'cmake_generator' 'Ninja'
 }
 elseif ($n_jobs -eq -1){
     $n_jobs = $n_jobs_default
 }
 
+# -----------------------------------------------------------------------------
 
 $unparsed_args = @()
 
-foreach($arg in $args) {
+foreach($arg in $local_args) {
     if ("$arg" -match "[Ww]ith[Oo]ut-?([a-zA-Z0-9_]+)") {
         $enable_lib = $false
         $library = ($Matches[1]).Tolower()

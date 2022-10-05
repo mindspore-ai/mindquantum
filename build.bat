@@ -40,13 +40,17 @@ if NOT %JENKINS_URL% == "" (
 rem ============================================================================
 rem Default values for this particular script
 
-set enable_gitee=1
+set enable_gitee=0
 set has_build_dir=0
 set delocate_wheel=1
 set build_isolation=1
 set output_path=%ROOTDIR%\output
 set platform_name=
 set python_extra_pkgs=setuptools-scm[toml] wheel-filename>1.2
+
+if !_IS_MINDSPORE_CI! == 1 (
+   set enable_gitee=1
+)
 
 call %SCRIPTDIR%\default_values.bat
 
@@ -81,6 +85,11 @@ rem ============================================================================
     set has_build_dir=1
     set build_dir=!value!
     shift & shift & goto :initial
+  )
+
+  if /I "%1" == "/BuildIsolation" (
+    set build_isolation=1
+    shift & goto :initial
   )
 
   if /I "%1" == "/Clean" (
@@ -182,6 +191,28 @@ rem ============================================================================
     shift & goto :initial
   )
 
+  if /I "%1" == "/Logging" (
+    set enable_logging=1
+    shift & goto :initial
+  )
+
+  if /I "%1" == "/LoggingDebug" (
+    set enable_logging=1
+    set logging_enable_debug=1
+    shift & goto :initial
+  )
+
+  if /I "%1" == "/LoggingTrace" (
+    set enable_logging=1
+    set logging_enable_trace=1
+    shift & goto :initial
+  )
+
+  if /I "%1" == "/NoBuildIsolation" (
+    set build_isolation=0
+    shift & goto :initial
+  )
+
   if /I "%1" == "/Ninja" (
     set ninja=1
     shift & goto :initial
@@ -189,11 +220,6 @@ rem ============================================================================
 
   if /I "%1" == "/OnlyPytest" (
     set install_only_pytest=1
-    shift & goto :initial
-  )
-
-  if /I "%1" == "/NoIsolation" (
-    set build_isolation=0
     shift & goto :initial
   )
 
@@ -294,15 +320,22 @@ set args=-w
 if !build_isolation! == 0 set args=!args! --no-isolation
 
 set RETVAL=
-call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CMAKE_DEBUG !cmake_debug_mode!
-call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CXX_EXPERIMENTAL !enable_cxx!
-call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CUDA !enable_gpu!
-call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_GITEE !enable_gitee!
-call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_PROJECTQ !enable_projectq!
 call %SCRIPTDIR%\dos\build_cmake_option.bat BUILD_TESTING !enable_tests!
 call %SCRIPTDIR%\dos\build_cmake_option.bat CLEAN_3RDPARTY_INSTALL_DIR !do_clean_3rdparty!
+call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CMAKE_DEBUG !cmake_debug_mode!
+call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CUDA !enable_gpu!
+call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CXX_EXPERIMENTAL !enable_cxx!
+call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_GITEE !enable_gitee!
+call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_LOGGING !enable_logging!
+call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_LOGGING_DEBUG_LEVEL !logging_enable_debug!
+call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_LOGGING_TRACE_LEVEL !logging_enable_trace!
+call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_PROJECTQ !enable_projectq!
 
 set args=!args! %RETVAL%
+
+if !_IS_MINDSPORE_CI! == 1 (
+   set args=!args! -C--global-option=--set -C--global-option=MINDSPORE_CI
+)
 
 if !cmake_make_silent! == 0 (
    set args=!args! -C--global-option=--set -C--global-option=USE_VERBOSE_MAKEFILE
@@ -410,6 +443,9 @@ rem ============================================================================
   echo   /j,/Jobs [N]        Number of parallel jobs for building
   echo                       Defaults to: !n_jobs_default!
   echo   /LocalPkgs          Compile third-party dependencies locally
+  echo   /Logging            Enable logging in C++ code
+  echo   /LoggingDebug       Enable DEBUG level logging macros (implies /Logging)
+  echo   /LoggingTrace       Enable TRACE level logging macros (implies /Logging /LoggingDebug)'
   echo   /Ninja              Use the Ninja CMake generator
   echo   /NoDelocate         Disable delocating the binary wheels after build is finished
   echo   /NoIsolation        Pass --no-isolation to python3 -m build

@@ -1906,7 +1906,7 @@ diff -Npur projectq-orig/projectq/backends/_sim/_cppkernels/intrin/kernels.hpp p
 +
  #include "alignedallocator.hpp"
 +#include "cintrin.hpp"
-+#include "core/details/omp_compat.hpp"
++#include "experimental/core/details/omp_compat.hpp"
  
  #define LOOP_COLLAPSE1 2
  #define LOOP_COLLAPSE2 3
@@ -3117,7 +3117,7 @@ diff -Npur projectq-orig/projectq/backends/_sim/_cppkernels/nointrin/kernels.hpp
 +#include <vector>
 +
  #include "../intrin/alignedallocator.hpp"
-+#include "core/details/omp_compat.hpp"
++#include "experimental/core/details/omp_compat.hpp"
  
  template <class T>
 -inline T add(T a, T b){ return a+b; }
@@ -3156,9 +3156,9 @@ diff -Npur projectq-orig/projectq/backends/_sim/_cppkernels/simulator.hpp projec
 +#    include <omp.h>
 +#endif  // USE_OPENMP  // NOLINT
 +
-+#include "core/config.hpp"
++#include "experimental/core/config.hpp"
 +
-+#include "core/details/omp_compat.hpp"
++#include "experimental/core/details/omp_compat.hpp"
 +#include "fusion.hpp"
 +#include "intrin/alignedallocator.hpp"
  

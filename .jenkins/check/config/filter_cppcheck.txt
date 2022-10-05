@@ -1,13 +1,72 @@
-# MindQuantum
+"unusedFunction"
+"missingInclude"
+"missingReturn"
 
-"mindquantum/ccsrc/mqbackend/binding.cc"                                    "syntaxError"
+"mindquantum/tests/"                                                                        "constParameter"
+"mindquantum/tests/"                                                                        "unreadVariable"
 
-"mindquantum/ccsrc/cxx_experimental/lib/core/circuit_manager.cpp"           "useStlAlgorithm"
-"mindquantum/ccsrc/cxx_experimental/lib/simulator/projectq_simulator.cpp"   "useStlAlgorithm"
-"mindquantum/ccsrc/cxx_experimental/python/lib/ops/command.cpp"             "useStlAlgorithm"
+"mindquantum/ccsrc/lib/experimental/ops/gates/details/fermion_operator_term_policy.cpp"     "constStatement"
+"mindquantum/ccsrc/lib/experimental/ops/gates/details/qubit_operator_term_policy.cpp"       "constStatement"
 
-"mindquantum/ccsrc/cxx_experimental/lib/cengines/write_projectq.cpp"        "stlIfFind"
-"mindquantum/ccsrc/cxx_experimental/lib/decompositions/atom_storage.cpp"    "stlIfFind"
-"mindquantum/ccsrc/cxx_experimental/lib/decompositions/gate_decomposer.cpp" "stlIfFind"
+"mindquantum/ccsrc/lib/experimental/core/cpp_core.cpp:282"                                  "constVariable"
 
-"mindquantum/tests/mapping/test_partial_placer.cpp"                          "unreadVariable"
+"mindquantum/ccsrc/include/experimental/ops/gates/fermion_operator.tpp:111"                 "containerOutOfBounds"
+"mindquantum/ccsrc/lib/experimental/ops/gates/fermion_operator.cpp"                         "containerOutOfBounds"
+"mindquantum/ccsrc/lib/experimental/ops/gates/fermion_operator_parameter_resolver.cpp"      "containerOutOfBounds"
+
+"mindquantum/ccsrc/python/experimental/include/python/core/tsl_ordered_map.hpp:40"          "duplicateBreak"
+
+"mindquantum/ccsrc/include/core/parameter_resolver.h:707"                                   "duplicateExpression"
+"mindquantum/ccsrc/python/mqbackend/lib/binding.cc"                                         "duplicateExpression"
+
+"mindquantum/ccsrc/include/experimental/decompositions/decomposition_atom.hpp:41"           "noExplicitConstructor"
+"mindquantum/ccsrc/include/experimental/ops/parametric/gate_base.hpp"                       "noExplicitConstructor"
+
+"mindquantum/ccsrc/include/config/config.hpp"                                               "noValidConfiguration"
+"mindquantum/ccsrc/include/config/details/cxx20_compatibility.hpp"                          "noValidConfiguration"
+"mindquantum/ccsrc/include/config/type_traits.hpp"                                          "noValidConfiguration"
+"mindquantum/ccsrc/include/experimental/ops/parametric/angle_base.hpp"                      "noValidConfiguration"
+"mindquantum/ccsrc/include/experimental/ops/parametric/angle_gates.hpp"                     "noValidConfiguration"
+"mindquantum/tests/decompositions/test_apply_atoms.cpp"                                     "noValidConfiguration"
+
+"mindquantum/ccsrc/include/experimental/decompositions/decomposition_atom.hpp"              "operatorEqVarError"
+
+"mindquantum/ccsrc/include/config/details/cxx20_compatibility.hpp:20"                       "preprocessorErrorDirective"
+"mindquantum/ccsrc/include/experimental/decompositions/rules/config.hpp"                    "preprocessorErrorDirective"
+"mindquantum/ccsrc/include/experimental/ops/parametric/angle_base.hpp"                      "preprocessorErrorDirective"
+"mindquantum/ccsrc/python/core/include/python/details/define_binary_operator_helpers.hpp"   "preprocessorErrorDirective"
+"mindquantum/ccsrc/python/experimental/lib/ops/ops.cpp"                                     "preprocessorErrorDirective"
+"mindquantum/tests/decompositions/test_apply_atoms.cpp:48"                                  "preprocessorErrorDirective"
+"mindquantum/tests/ops/test_angle_parametric_gates.cpp:28"                                  "preprocessorErrorDirective"
+
+"mindquantum/ccsrc/lib/experimental/cengines/write_projectq.cpp"                            "stlIfFind"
+"mindquantum/ccsrc/lib/experimental/decompositions/atom_storage.cpp"                        "stlIfFind"
+"mindquantum/ccsrc/lib/experimental/decompositions/gate_decomposer.cpp"                     "stlIfFind"
+
+"mindquantum/ccsrc/include/core/parameter_resolver_external_ops.hpp:90"                     "syntaxError"
+"mindquantum/ccsrc/include/core/sparse/algo.hpp:73"                                         "syntaxError"
+"mindquantum/ccsrc/include/experimental/ops/gates/terms_operator_base_external_ops.hpp:95"  "syntaxError"
+"mindquantum/ccsrc/python/experimental/lib/ops/details/define_terms_ops.hpp:111"            "syntaxError"
+"mindquantum/ccsrc/python/mqbackend/lib/binding.cc:184"                                     "syntaxError"
+
+"mindquantum/ccsrc/include/core/sparse/paulimat.hpp:58"                                     "unknownMacro"
+"mindquantum/ccsrc/python/experimental/include/python/cengines/resource_counter.hpp:25"     "unknownMacro"
+"mindquantum/ccsrc/python/experimental/include/python/ops/command.hpp:26"                   "unknownMacro"
+"mindquantum/third_party/projectq/projectq.h:119"                                           "unknownMacro"
+"mindquantum/third_party/projectq/projectq.h:190"                                           "unknownMacro"
+
+"mindquantum/ccsrc/lib/experimental/decompositions/time_evolution.cpp"                      "unreadVariable"
+
+"mindquantum/ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp:29"              "unusedStructMember"
+
+"mindquantum/ccsrc/include/experimental/ops/parametric/param_names.hpp"                     "unusedStructMember"
+"mindquantum/ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp"                 "unusedStructMember"
+
+"mindquantum/ccsrc/include/config/tsl_ordered_map.hpp"                                      "useStlAlgorithm"
+"mindquantum/ccsrc/include/experimental/core/control.hpp:79"                                "useStlAlgorithm"
+"mindquantum/ccsrc/include/experimental/ops/gates/terms_operator_base.tpp"                  "useStlAlgorithm"
+"mindquantum/ccsrc/lib/experimental/core/circuit_manager.cpp"                               "useStlAlgorithm"
+"mindquantum/ccsrc/lib/experimental/simulator/projectq_simulator.cpp"                       "useStlAlgorithm"
+"mindquantum/ccsrc/python/experimental/lib/ops/command.cpp"                                 "useStlAlgorithm"
+
+"mindquantum/tests/core/test_circuit_block.cpp"                                             "ctuOneDefinitionRuleViolation"

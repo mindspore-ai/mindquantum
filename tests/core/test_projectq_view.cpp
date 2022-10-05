@@ -12,11 +12,13 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#include <catch2/catch.hpp>
 #include <tweedledum/Operators/Standard.h>
 
-#include "core/circuit_manager.hpp"
-#include "core/utils.hpp"
+#include "core/test_utils.hpp"
+
+#include "experimental/core/circuit_manager.hpp"
+
+#include <catch2/catch.hpp>
 
 // =============================================================================
 

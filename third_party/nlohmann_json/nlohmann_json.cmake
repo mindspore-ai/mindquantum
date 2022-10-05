@@ -32,14 +32,14 @@ else()
   set(nlohmann_json_CFLAGS "-D_FORTIFY_SOURCE=2 -O2")
 endif()
 
-set(VER 3.10.5)
+set(VER 3.11.2)
 
 if(ENABLE_GITEE)
   set(REQ_URL "https://gitee.com/mirrors/JSON-for-Modern-CPP/repository/archive/v${VER}.tar.gz")
-  set(MD5 "31e2d5a5f33329b9a327299641a4e38a")
+  set(MD5 "03c61931b62a1095034dc6a0b5118260")
 else()
   set(REQ_URL "https://github.com/nlohmann/json/archive/v${VER}.tar.gz")
-  set(MD5 "5b946f7d892fa55eabec45e76a20286b")
+  set(MD5 "e8d56bc54621037842ee9f0aeae27746")
 endif()
 
 mindquantum_add_pkg(

@@ -23,6 +23,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED OFF)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# ------------------------------------------------------------------------------
+
 # Always generate position independent code
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # set(CMAKE_CXX_VISIBILITY_PRESET hidden)
@@ -50,6 +52,16 @@ if(APPLE)
   list(REMOVE_ITEM CMAKE_CUDA_IMPLICIT_INCLUDE_DIRECTORIES /usr/local/include)
   list(REMOVE_ITEM CMAKE_C_IMPLICIT_LINK_DIRECTORIES /usr/local/lib)
   list(REMOVE_ITEM CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES /usr/local/lib)
+endif()
+
+# ------------------------------------------------------------------------------
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  test_compile_option(
+    compile_color_flags
+    LANGS C CXX
+    FLAGS "-fdiagnostics-color=always -fcolor-diagnostics"
+    CMAKE_OPTION ENABLE_COLOR_COMPILER NO_TRYCOMPILER_TARGET NO_TRY_COMPILE_FLAGCHECK_TARGET)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -153,6 +165,16 @@ test_compile_option(
 
 # --------------------------------------
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.0)
+  test_compile_option(
+    compile_flags_no_finite_math
+    LANGS C CXX DPCXX
+    FLAGS "-fno-finite-math-only"
+    GENEX "$<OR:$<CONFIG:RELEASE>,$<CONFIG:RELWITHDEBINFO>>")
+endif()
+
+# --------------------------------------
+
 if(X86_64)
   test_compile_option(
     intrin_flag
@@ -234,11 +256,21 @@ include(compiler_test)
 
 # --------------------------------------
 
-mq_add_compile_definitions("$<$<BOOL:${USE_OPENMP}>:USE_OPENMP>" "$<$<BOOL:${USE_PARALLEL_STL}>:USE_PARALLEL_STL>"
-                           "$<$<AND:$<CONFIG:RELEASE>,$<COMPILE_LANGUAGE:CXX>>:_FORTIFY_SOURCE=2>")
+mq_add_compile_definitions(
+  "$<$<BOOL:${MINDSPORE_CI}>:MQ_MINDSPORE_CI>"
+  "$<$<BOOL:${USE_OPENMP}>:USE_OPENMP>"
+  "$<$<BOOL:${USE_PARALLEL_STL}>:USE_PARALLEL_STL>"
+  "$<$<BOOL:${ENABLE_LOGGING_DEBUG_LEVEL}>:MQ_LOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG>"
+  "$<$<BOOL:${ENABLE_LOGGING_TRACE_LEVEL}>:MQ_LOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE>"
+  "$<$<BOOL:${ENABLE_LOGGING}>:ENABLE_LOGGING>"
+  "$<$<AND:$<CONFIG:RELEASE>,$<COMPILE_LANGUAGE:CXX>>:_FORTIFY_SOURCE=2>")
 
 # ==============================================================================
 # Platform specific flags
+
+if(WIN32 AND Python_VERSION VERSION_LESS 3.9)
+  mq_add_compile_definitions(HAVE_SNPRINTF)
+endif()
 
 if(MSVC)
   if(NOT "${CMAKE_C_COMPILER_LAUNCHER}" STREQUAL "" AND NOT "${CMAKE_CXX_COMPILER_LAUNCHER}" STREQUAL "")
@@ -267,11 +299,17 @@ elseif(MINGW)
       endif()
     endif()
   endforeach()
+elseif(CYGWIN)
+  mq_add_compile_definitions(_USE_MATH_DEFINES)
+elseif(MSYS)
+  mq_add_compile_definitions(_USE_MATH_DEFINES)
 endif()
 
 # ==============================================================================
 
-configure_file(${CMAKE_CURRENT_LIST_DIR}/cmake_config.hpp.in ${PROJECT_BINARY_DIR}/core/cmake_config.hpp)
+set(MQ_HAS_ABSEIL_CPP ${ENABLE_ABSEIL_CPP})
+set(MQ_HAS_LONG_DOUBLE ${ENABLE_LONG_DOUBLE})
+configure_file(${CMAKE_CURRENT_LIST_DIR}/cmake_config.hpp.in ${PROJECT_BINARY_DIR}/config/cmake_config.hpp)
 
 add_library(cmake_config INTERFACE)
 target_include_directories(cmake_config INTERFACE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>)
@@ -279,6 +317,6 @@ target_include_directories(cmake_config INTERFACE $<BUILD_INTERFACE:${PROJECT_BI
 # ------------------------------------------------------------------------------
 
 append_to_property(mq_install_targets GLOBAL cmake_config)
-install(FILES ${PROJECT_BINARY_DIR}/core/cmake_config.hpp DESTINATION ${MQ_INSTALL_INCLUDEDIR}/experimental/core)
+install(FILES ${PROJECT_BINARY_DIR}/config/cmake_config.hpp DESTINATION ${MQ_INSTALL_INCLUDEDIR}/config)
 
 # ==============================================================================

@@ -18,11 +18,7 @@
 
 # cmake-lint: disable=C0103
 
-# NB: Ubuntu 20.04 LTS has 1.71.0, Debian Buster 1.67.0
-set(VER 1.67.0) # Version provided by Ubuntu 20.04 LTS
-if(MQ_FORCE_LOCAL_PKGS OR MQ_BOOST_FORCE_LOCAL)
-  set(VER 1.78.0)
-endif()
+set(VER 1.78.0)
 
 set(_version_for_download 1.78.0)
 string(REPLACE "." "_" _ver "${_version_for_download}")
@@ -45,25 +41,37 @@ endif()
 
 set(TARGET_ALIAS mindquantum::boost_headers Boost::headers)
 
-set(LIBS CMAKE_PKG_NO_COMPONENTS)
-set(INSTALL_COMMAND ./b2 --with-headers --prefix=@PREFIX@)
+set(LIBS serialization)
+set(INSTALL_COMMAND ./b2 --with-headers --prefix=@PREFIX@ --with-serialization)
+list(APPEND TARGET_ALIAS mindquantum::boost_serialization Boost::serialization)
 if(NOT MQ_HAS_STD_FILESYSTEM)
-  set(LIBS LIBS filesystem system)
+  list(APPEND LIBS filesystem system)
   list(APPEND INSTALL_COMMAND --with-system --with-filesystem)
   list(APPEND TARGET_ALIAS mindquantum::boost_system Boost::system)
   list(APPEND TARGET_ALIAS mindquantum::boost_filesystem Boost::filesystem)
-  list(APPEND INSTALL_COMMAND variant=debug,release)
-  if(UNIX)
-    list(APPEND INSTALL_COMMAND --layout=tagged)
-  endif()
 endif()
+list(APPEND INSTALL_COMMAND variant=debug,release)
+if(UNIX)
+  list(APPEND INSTALL_COMMAND --layout=tagged)
+endif()
+
 if("${OS_NAME}" STREQUAL "MinGW")
+  list(APPEND INSTALL_COMMAND toolset=gcc)
+elseif(MSYS AND NOT "${OS_NAME}" STREQUAL "MSYS-MSYS")
+  message(WARNING "Build of Boost on MSYS2 (${OS_NAME}) is broken. Make sure to install the corresponding "
+                  "mingw-w64-*-boost package instead.")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  list(APPEND PRE_CONFIGURE_COMMAND --with-toolset=clang)
+  list(APPEND INSTALL_COMMAND toolset=clang)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  list(APPEND PRE_CONFIGURE_COMMAND --with-toolset=gcc)
   list(APPEND INSTALL_COMMAND toolset=gcc)
 endif()
 list(APPEND INSTALL_COMMAND install)
 
 mindquantum_add_pkg(
-  Boost ${LIBS}
+  Boost
+  LIBS ${LIBS}
   VER ${VER}
   URL ${REQ_URL}
   MD5 ${MD5}

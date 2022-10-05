@@ -18,14 +18,14 @@
 
 # cmake-lint: disable=C0103
 
-set(VER 8.1.1)
+set(VER 9.1.0)
 
 if(ENABLE_GITEE)
-  set(REQ_URL "https://gitee.com/jinyubaba/fmt/repository/archive/${VER}.tar.gz")
-  set(MD5 "fe7f1585844b14c647bd332ad5562832")
+  set(REQ_URL "https://gitee.com/mirrors_trending/fmt/repository/archive/${VER}.tar.gz")
+  set(MD5 "21fac48cae8f3b4a5783ae06b443973a")
 else()
   set(REQ_URL "https://github.com/fmtlib/fmt/archive/${VER}.tar.gz")
-  set(MD5 "fe7f1585844b14c647bd332ad5562832")
+  set(MD5 "21fac48cae8f3b4a5783ae06b443973a")
 endif()
 
 set(CMAKE_OPTION -DFMT_TEST=OFF -DFMT_DOC=OFF -DFMT_SYSTEM_HEADERS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON)

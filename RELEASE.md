@@ -301,12 +301,6 @@ For improving MindQuantum's package structure, we did some refactoring on MindQu
 `mindquantum.core.operators.normal_ordered`
 </td></tr><tr><td>
 
-`mindquantum.utils.get_fermion_operator`
-</td><td>
-
-`mindquantum.core.operators.get_fermion_operator`
-</td></tr><tr><td>
-
 `mindquantum.utils.number_operator`
 </td><td>
 

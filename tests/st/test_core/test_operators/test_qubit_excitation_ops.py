@@ -161,11 +161,10 @@ def test_convert_to_qubit_operator():
     op = QubitExcitationOperator(((4, 1), (1, 0)), 2.0j)
     qubit_op = (
         QubitOperator("X1 X4", 0.5j)
-        + QubitOperator("X1 Y4", 0.5)
         + QubitOperator("Y1 X4", -0.5)
+        + QubitOperator("X1 Y4", 0.5)
         + QubitOperator("Y1 Y4", 0.5j)
     )
-
     assert op.to_qubit_operator().compress() == qubit_op
 
 

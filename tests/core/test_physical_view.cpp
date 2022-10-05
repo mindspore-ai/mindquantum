@@ -17,12 +17,14 @@
 #endif  // MQ_HAS_CONCEPTS
 #include <type_traits>
 
-#include <catch2/catch.hpp>
 #include <tweedledum/Operators/Standard.h>
 #include <tweedledum/Passes/Mapping/Placer/TrivialPlacer.h>
 
-#include "core/circuit_manager.hpp"
-#include "core/utils.hpp"
+#include "core/test_utils.hpp"
+
+#include "experimental/core/circuit_manager.hpp"
+
+#include <catch2/catch.hpp>
 
 namespace td = tweedledum;
 

@@ -14,6 +14,7 @@
 
 """Helper functions for building MindQuantum."""
 
+import contextlib
 import errno
 import logging
 import os
@@ -21,12 +22,55 @@ import shutil
 import stat
 import subprocess
 import sys
+from operator import itemgetter
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent / 'mindquantum' / 'utils'))
 from fdopen import (  # noqa: E402 pylint: disable=wrong-import-position,import-error
     fdopen,
 )
+
+# ==============================================================================
+
+
+@contextlib.contextmanager
+def modified_environ(*remove, **update):
+    """
+    Temporarily updates the ``os.environ`` dictionary in-place.
+
+    The `os.environ` dictionary is updated in-place so that the modification is sure to work in all situations.
+
+    Args:
+        remove (List[str]): Environment variables to remove.
+        update (Dict[str, str]): Dictionary of environment variables and values to add/update.
+    """
+    env = os.environ
+
+    def convert_values(value):
+        if value is None:
+            return ''
+        if isinstance(value, str):
+            return value
+        if isinstance(value, bool):
+            return f'{int(value)}'
+        return str(value)
+
+    update = {k: convert_values(v) for k, v in update.items()} or {}
+    remove = remove or []
+
+    stomped = (set(update.keys()) | set(remove)) & set(env.keys())
+    update_after = {k: env[k] for k in stomped}
+    remove_after = frozenset(k for k in update if k not in env)
+
+    # pylint: disable=expression-not-assigned
+    try:
+        env.update(update)
+        [env.pop(k, None) for k in remove]
+        yield
+    finally:
+        env.update(update_after)
+        [env.pop(k) for k in remove_after]
+
 
 # ==============================================================================
 
@@ -108,3 +152,120 @@ def get_cmake_command():
     # CMake not in PATH, should have installed the Python CMake module
     # -> try to find out where it is
     return get_executable('cmake')
+
+
+# ==============================================================================
+
+try:
+    import tomllib
+
+    def parse_toml(filename):
+        """Parse a TOML file."""
+        with fdopen(str(filename), 'rb') as toml_file:
+            return tomllib.load(toml_file)
+
+except ImportError:
+    try:
+        import toml
+
+        def parse_toml(filename):
+            """Parse a TOML file."""
+            return toml.load(filename)
+
+    except ImportError:
+
+        try:
+            import tomli
+
+            def parse_toml(filename):
+                """Parse a TOML file."""
+                with fdopen(str(filename), "rb") as toml_file:
+                    return tomli.load(toml_file)
+
+        except ImportError:
+
+            def _find_toml_section_end(lines, start):
+                """Find the index of the start of the next section."""
+                return (
+                    next(filter(itemgetter(1), enumerate(line.startswith('[') for line in lines[start + 1 :])))[0]
+                    + start
+                    + 1
+                )
+
+            def _parse_list(lines):
+                """Parse a TOML list into a Python list."""
+                # NB: This function expects the TOML list to be formatted like so (ignoring leading and trailing
+                #     spaces):
+                #     name = [
+                #          '...',
+                #     ]
+                #     Any other format is not supported.
+                name = None
+                elements = []
+
+                for idx, line in enumerate(lines):
+                    if name is None and not line.startswith("'"):
+                        name = line.split('=')[0].strip()
+                        continue
+                    if line.startswith("]"):
+                        return (name, elements, idx + 1)
+                    elements.append(line.rstrip(',').strip("'").strip('"'))
+
+                raise RuntimeError(f'Failed to locate closing "]" for {name}')
+
+            def _parse_string_value(data, key, line):
+                if line.startswith(key):
+                    data[key] = line.split('=')[1].strip().strip("'")
+                    return True
+                return False
+
+            def parse_toml(filename):
+                """Very simple parser routine for pyproject.toml."""
+                result = {'project': {'optional-dependencies': {}}, 'build-sytem': {}}
+                with fdopen(filename, mode='r') as toml_file:
+                    lines = [line.strip() for line in toml_file.readlines()]
+                lines = [line for line in lines if line and not line.startswith('#')]
+
+                # ----------------------
+
+                start = lines.index('[build-system]')
+                data = lines[start : _find_toml_section_end(lines, start)]
+                idx = 0
+                N = len(data)  # noqa: N806
+                while idx < N:
+                    line = data[idx]
+                    shift = 1
+                    if line.startswith('requires'):
+                        (name, pkgs, shift) = _parse_list(data[idx:])
+                        result.setdefault('build-system', {})[name] = pkgs
+                    idx += shift
+
+                # ----------------------
+
+                start = lines.index('[project]')
+                data = lines[start : _find_toml_section_end(lines, start)]
+                idx = 0
+                N = len(data)  # noqa: N806
+                while idx < N:
+                    line = data[idx]
+                    shift = 1
+                    if _parse_string_value(result.setdefault('project', {}), 'name', line):
+                        pass
+                    elif _parse_string_value(result.setdefault('project', {}), 'description', line):
+                        pass
+                    elif line.startswith('dependencies'):
+                        (name, pkgs, shift) = _parse_list(data[idx:])
+                        result.setdefault('project', {})[name] = pkgs
+                    idx += shift
+
+                # ----------------------
+
+                start = lines.index('[project.optional-dependencies]')
+                data = lines[start + 1 : _find_toml_section_end(lines, start)]
+                idx = 0
+                N = len(data)  # noqa: N806
+                while idx < N:
+                    (opt_name, opt_pkgs, shift) = _parse_list(data[idx:])
+                    result.setdefault('project', {}).setdefault('optional-dependencies', {})[opt_name] = opt_pkgs
+                    idx += shift
+                return result

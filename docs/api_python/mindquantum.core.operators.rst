@@ -30,8 +30,6 @@ MindQuantum算子库。算子由一个或多个基本门的组合而成。
 
 .. include:: mindquantum.core.operators.down_index.rst
 
-.. include:: mindquantum.core.operators.get_fermion_operator.rst
-
 .. include:: mindquantum.core.operators.hermitian_conjugated.rst
 
 .. include:: mindquantum.core.operators.normal_ordered.rst

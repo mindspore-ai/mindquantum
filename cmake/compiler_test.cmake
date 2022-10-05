@@ -16,7 +16,7 @@
 #
 # ==============================================================================
 
-# lint_cmake: -whitespace/indent
+# lint_cmake: -whitespace/indent,-whitespace/extra
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0.0)
   message(FATAL_ERROR "Clang < 7.0.0 is currently not supported!")
@@ -57,6 +57,7 @@ __test_cxx20_memory()
 
 if(NOT _MQ_MEMORY_CXX20_WORKS)
   set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
 # --------------------------------------
@@ -177,6 +178,23 @@ int main() { std::map<int, double> m{{0, 1.}, {1, 2.}}; return m.contains(1); }
 # --------------------------------------
 
 check_cxx_code_compiles(
+  compiler_has_map_erase_if
+  MQ_HAS_MAP_ERASE_IF
+  cxx_std_20
+  [[
+#include <map>
+int main() {
+     std::map<int, double> m{{0, 1.}, {1, 2.}};
+     return std::erase_if(m, [](const auto& item) {
+        auto const& [key, value] = item;
+        return (key & 1) == 1;
+    });
+}
+]])
+
+# --------------------------------------
+
+check_cxx_code_compiles(
   compiler_has_detected_ts2
   MQ_HAS_DETECTED_TS2
   cxx_std_17
@@ -253,6 +271,11 @@ int main() {
 }
 ]])
 
+if(NOT compiler_has_concepts)
+  message(WARNING "You are using an older compiler that does not support C++20 concepts. The code will probably "
+                  "compile and run fine, but you should really be upgrading your compiler.")
+endif()
+
 # --------------------------------------
 
 check_cxx_code_compiles(
@@ -296,6 +319,44 @@ elseif(compiler_has_concepts) # C++20 concepts + concepts library
   set(MQ_HAS_CONCEPT_DESTRUCTIBLE TRUE)
 else()
   set(MQ_HAS_CONCEPT_DESTRUCTIBLE FALSE)
+endif()
+
+# --------------------------------------
+
+if(compiler_has_concepts)
+  check_cxx_code_compiles(
+    compiler_supports_external_dependent_concepts
+    MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
+    cxx_std_20
+    [[
+#include <type_traits>
+
+template <typename T, typename U>
+concept number = requires(T, U) {
+    requires std::is_floating_point_v<T>;
+    requires std::is_floating_point_v<U>;
+};
+
+template <typename T>
+struct A {
+    using type = T;
+
+    template <number<type> other_t>
+    static int foo();
+};
+
+template <typename T>
+template <number<typename A<T>::type> other_t>
+int A<T>::foo() {
+    return 42;
+}
+
+int main() {
+    return A<double>::foo<float>();
+}
+]])
+else()
+  set(MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS FALSE)
 endif()
 
 # --------------------------------------
@@ -351,9 +412,124 @@ int main() {
 }
 ]])
 
+# --------------------------------------
+
+check_cxx_code_compiles(
+  compiler_has_cxx20_format
+  MQ_HAS_CXX20_FORMAT
+  cxx_std_20
+  [[
+#ifdef __has_include
+#    if __has_include(<version>)
+#        include <version>
+#    endif
+#endif
+#include <format>
+#include <complex>
+
+int main() {
+#if __cpp_lib_format >= 201907L
+    const auto res = std::format("{}", std::complex<double>{1, 2});
+    return res.size();
+#else
+#    error C++20 std::format not supported
+#endif
+    return 0;
+}
+]])
+
+# --------------------------------------
+
+check_cxx_code_compiles(
+  compiler_has_cxx20_span
+  MQ_HAS_CXX20_SPAN
+  cxx_std_20
+  [[
+#ifdef __has_include
+#    if __has_include(<version>)
+#        include <version>
+#    endif
+#endif
+#include <span>
+#include <vector>
+
+int main() {
+#if __cpp_lib_span >= 202002L
+    std::vector<int> vec = {1, 2, 3, 4, 5};
+    return std::span<int, 4>{vec}.size();
+#else
+#    error C++20 std::span not supported
+#endif
+    return 0;
+}
+]])
+
+# --------------------------------------
+
+check_cxx_code_compiles(
+  compiler_has_cxx20_ranges
+  MQ_HAS_CXX20_RANGES
+  cxx_std_20
+  [[
+#ifdef __has_include
+#    if __has_include(<version>)
+#        include <version>
+#    endif
+#endif
+#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <numeric>
+#include <ranges>
+#include <vector>
+
+int main() {
+#if __cpp_lib_ranges >= 201911L
+    std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    std::partial_sum(v.cbegin(), v.cend(), v.begin());
+    std::ranges::copy(v, std::ostream_iterator<int>(std::cout, " "));
+    auto divisible_by = [](int d) { return [d](int m) { return m % d == 0; }; };
+    if (std::ranges::any_of(v, divisible_by(7))) {
+        std::cout << "At least one number is divisible by 7" << std::endl;
+    }
+#else
+#    error C++20 ranges not supported
+#endif
+    return 0;
+}
+]])
+
+# --------------------------------------
+
+check_cxx_code_compiles(
+  compiler_std_accumulate_use_move
+  MQ_STD_ACCUMULATE_USE_MOVE
+  cxx_std_20
+  [[
+#include <numeric>
+#include <vector>
+
+int main() {
+    std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    return std::accumulate(begin(v), end(v), int{0},
+                           [](int&& init, int value) -> decltype(auto) { return init += value; });
+    return 0;
+}
+]])
+
 # ==============================================================================
 
-configure_file(${CMAKE_CURRENT_LIST_DIR}/cxx20_config.hpp.in ${PROJECT_BINARY_DIR}/core/cxx20_config.hpp)
+# NB: second condition is workardoung for Clang < 9.0
+if(cxx_std_20 IN_LIST CMAKE_CXX_COMPILE_FEATURES AND CMAKE_CXX_STANDARD EQUAL 20)
+  target_compile_features(CXX_mindquantum INTERFACE cxx_std_20)
+else()
+  target_compile_features(CXX_mindquantum INTERFACE cxx_std_17)
+endif()
+set_target_properties(CXX_mindquantum PROPERTIES CXX_STANDARD_REQUIRED ON)
+
+# ------------------------------------------------------------------------------
+
+configure_file(${CMAKE_CURRENT_LIST_DIR}/cxx20_config.hpp.in ${PROJECT_BINARY_DIR}/config/cxx20_config.hpp)
 
 add_library(cxx20_compat INTERFACE)
 target_include_directories(cxx20_compat INTERFACE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>)
@@ -361,6 +537,6 @@ target_include_directories(cxx20_compat INTERFACE $<BUILD_INTERFACE:${PROJECT_BI
 # ------------------------------------------------------------------------------
 
 append_to_property(mq_install_targets GLOBAL cxx20_compat)
-install(FILES ${PROJECT_BINARY_DIR}/core/cxx20_config.hpp DESTINATION ${MQ_INSTALL_INCLUDEDIR}/experimental/core)
+install(FILES ${PROJECT_BINARY_DIR}/config/cxx20_config.hpp DESTINATION ${MQ_INSTALL_INCLUDEDIR}/config)
 
 # ==============================================================================

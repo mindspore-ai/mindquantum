@@ -19,7 +19,34 @@
 # lint_cmake: -whitespace/indent
 
 include(debug_print)
+include(mq_link_libraries)
 
+# ==============================================================================
+# Math lib
+
+if(UNIX AND "${CMAKE_PROJECT_NAME}" STREQUAL "MindQuantum")
+  include(CheckLibraryExists)
+  check_library_exists(m sin "" HAVE_LIB_M)
+
+  if(HAVE_LIB_M)
+    if(NOT TARGET libm)
+      add_library(libm INTERFACE)
+    endif()
+    target_link_libraries(libm INTERFACE m)
+    if(NOT TARGET mindquantum::math)
+      add_library(mindquantum::math ALIAS libm)
+    endif()
+    append_to_property(mq_install_targets GLOBAL libm)
+  else()
+    message(FATAL_ERROR "Math library (m) required on UNIX systems")
+  endif()
+endif()
+
+if(TARGET libm AND NOT TARGET mindquantum::math)
+  add_library(mindquantum::math ALIAS libm)
+endif()
+
+# ==============================================================================
 # OpenMP
 
 set(PARALLEL_LIBS)
@@ -165,19 +192,11 @@ find_package(${_python_find_args})
 if("${CMAKE_PROJECT_NAME}" STREQUAL "MindQuantum")
   if(NOT MQ_PYTHON_PACKAGE_NAME)
     execute_process(
-      COMMAND
-        "${Python_EXECUTABLE}" -c [=[
-import sys
-try:
-    from setuptools.config.setupcfg import read_configuration
-except ImportError:
-    from setuptools.config import read_configuration
-
-sys.stdout.write(read_configuration("setup.cfg")["metadata"]["name"])
-]=]
+      COMMAND "${Python_EXECUTABLE}" setup.py --name
       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
       RESULT_VARIABLE result
-      OUTPUT_VARIABLE MQ_PYTHON_PACKAGE_NAME)
+      OUTPUT_VARIABLE MQ_PYTHON_PACKAGE_NAME
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
 
     if(NOT result EQUAL 0)
       message(FATAL_ERROR "Unable to determine MindQuantum's Python package name")

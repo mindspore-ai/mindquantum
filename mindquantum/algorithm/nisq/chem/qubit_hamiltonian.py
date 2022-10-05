@@ -14,7 +14,7 @@
 # ============================================================================
 """Get qubit hamiltonian."""
 
-from mindquantum.core.operators import InteractionOperator, get_fermion_operator
+from mindquantum.core.operators import FermionOperator, InteractionOperator
 
 from .transform import Transform
 
@@ -31,5 +31,5 @@ def get_qubit_hamiltonian(mol):
     """
     m_ham = mol.get_molecular_hamiltonian()
     int_ham = InteractionOperator(*(m_ham.n_body_tensors.values()))
-    f_ham = get_fermion_operator(int_ham)
+    f_ham = FermionOperator(int_ham)
     return Transform(f_ham).jordan_wigner()

@@ -1,0 +1,41 @@
+diff -Npur symengine-orig/cmake/FindCEREAL.cmake symengine-src/cmake/FindCEREAL.cmake
+--- symengine-orig/cmake/FindCEREAL.cmake	2022-08-17 15:20:47.812921024 +0200
++++ symengine-src/cmake/FindCEREAL.cmake	1970-01-01 01:00:00.000000000 +0100
+@@ -1,10 +0,0 @@
+-include(LibFindMacros)
+-
+-libfind_include(cereal/types/vector.hpp cereal)
+-
+-set(CEREAL_INCLUDE_DIRS ${CEREAL_INCLUDE_DIR})
+-
+-include(FindPackageHandleStandardArgs)
+-find_package_handle_standard_args(CEREAL DEFAULT_MSG CEREAL_INCLUDE_DIRS)
+-
+-mark_as_advanced(CEREAL_INCLUDE_DIR)
+diff -Npur symengine-orig/CMakeLists.txt symengine-src/CMakeLists.txt
+--- symengine-orig/CMakeLists.txt	2022-08-17 15:20:47.806254039 +0200
++++ symengine-src/CMakeLists.txt	2022-08-17 15:24:14.939207013 +0200
+@@ -271,12 +271,20 @@ endif()
+ 
+ set(WITH_SYSTEM_CEREAL no CACHE BOOL "Build with system cereal instead of vendored files")
+ if (WITH_SYSTEM_CEREAL)
+-    find_package(CEREAL REQUIRED)
+-    set(PKGS ${PKGS} "CEREAL")
++    cmake_policy(SET CMP0074 NEW)
++    find_package(cereal REQUIRED)
++    set(LIBS ${LIBS} cereal::cereal)
++    set(SYMENGINE_PKG_FINDS "${SYMENGINE_PKG_FINDS}\ncmake_policy(PUSH)\ncmake_policy(SET CMP0074 NEW)")
++    if(cereal_ROOT)
++      set(SYMENGINE_PKG_FINDS "${SYMENGINE_PKG_FINDS}\n\nset(cereal_ROOT \"${cereal_ROOT}\")")
++    endif()
++    if(cereal_DIR)
++      set(SYMENGINE_PKG_FINDS "${SYMENGINE_PKG_FINDS}\n\nset(cereal_DIR \"${cereal_DIR}\")")
++    endif()
++    set(SYMENGINE_PKG_FINDS "${SYMENGINE_PKG_FINDS}\nfind_package(cereal REQUIRED)\ncmake_policy(POP)")
+ else()
+     set(CEREAL_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/symengine/utilities/cereal/include")
+ endif()
+-include_directories(SYSTEM ${CEREAL_INCLUDE_DIRS})
+ 
+ # PTHREAD
+ set(WITH_PTHREAD no

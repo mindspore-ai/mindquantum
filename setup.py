@@ -26,11 +26,13 @@ import shutil
 import subprocess
 import sys
 import sysconfig
+import warnings
 from distutils.command.clean import clean  # pylint: disable=deprecated-module
 from pathlib import Path
 
 import setuptools
 from setuptools.command.build_ext import build_ext
+from wheel.bdist_wheel import bdist_wheel
 
 sys.path.append(str(Path(__file__).parent.resolve()))
 
@@ -38,6 +40,8 @@ from _build.utils import (  # pylint: disable=wrong-import-position  # noqa: E40
     fdopen,
     get_cmake_command,
     get_executable,
+    modified_environ,
+    parse_toml,
     remove_tree,
 )
 
@@ -109,7 +113,7 @@ class CMakeExtension(setuptools.Extension):  # pylint: disable=too-few-public-me
 # ------------------------------------------------------------------------------
 
 
-class CMakeBuildExt(build_ext):
+class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
     """Custom build_ext command class."""
 
     user_options = build_ext.user_options + [
@@ -137,6 +141,14 @@ class CMakeBuildExt(build_ext):
         self.clean_build = self.clean_build or False
         self.build_dir = self.build_dir or None
         self.install_light = self.install_light or False
+        self.fast_bdist_wheel = bool(int(os.getenv('MQ_FAST_BDIST_WHEEL', '0')))
+        self.fast_bdist_wheel_dir = os.getenv('MQ_FAST_BDIST_DIR', None)
+
+        if self.fast_bdist_wheel and Path(self.fast_bdist_wheel_dir).exists():
+            self.build_dir = self.fast_bdist_wheel_dir
+        elif self.fast_bdist_wheel:
+            logging.warning('WARN: Disabling fast-build because specified build directory does not exist')
+            self.fast_bdist_wheel = False
 
     def build_extensions(self):
         """Build a C/C++ extension using CMake."""
@@ -156,9 +168,16 @@ class CMakeBuildExt(build_ext):
         self.cmake_cmd = [cmake_cmd]
         logging.info('using cmake command: %s', ' '.join(self.cmake_cmd))
 
-        self.configure_extensions()
+        if not self.fast_bdist_wheel:
+            self.configure_extensions()
+        else:
+            self.build_args = []
+
         build_ext.build_extensions(self)
-        if not self.install_light:
+
+        if self.fast_bdist_wheel:
+            logging.info('Doing a fast-build wheel build, skipping install step')
+        elif not self.install_light:
             self.cmake_install()
 
     def configure_extensions(self):
@@ -171,16 +190,22 @@ class CMakeBuildExt(build_ext):
         python_exec = get_python_executable()
         if not python_exec:
             raise RuntimeError('Unable to locate Python executable!')
+
+        pkg_name = self.distribution.get_name()
+        if pkg_name == 'UNKNOWN':
+            warnings.warn('Unable to determine package name automatically... defaulting to `mindquantum`')
+            pkg_name = 'mindquantum'
+
         cmake_args = [
             '-DPython_EXECUTABLE:FILEPATH=' + python_exec,
             '-DBUILD_TESTING:BOOL=OFF',
             '-DIN_PLACE_BUILD:BOOL=OFF',
             '-DIS_PYTHON_BUILD:BOOL=ON',
             f'-DVERSION_INFO="{self.distribution.get_version()}"',
-            f'-DMQ_PYTHON_PACKAGE_NAME:STRING={self.distribution.get_name()}',
+            f'-DMQ_PYTHON_PACKAGE_NAME:STRING={pkg_name}',
             # NB: make sure that the install path is absolute!
             f'-DCMAKE_INSTALL_PREFIX:FILEPATH={Path(self.build_lib, Path().resolve().name).resolve()}',
-        ]  # yapf: disable
+        ]
 
         if self.no_arch_native:
             cmake_args += ['-DUSE_NATIVE_INTRINSICS=OFF']
@@ -189,7 +214,6 @@ class CMakeBuildExt(build_ext):
         self.build_args = ['--config', cfg]
 
         if platform.system() == 'Windows':
-            # self.build_args += ['--', '/m']
             pass
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
@@ -248,6 +272,18 @@ class CMakeBuildExt(build_ext):
                 self.cmake_cmd + ['--build', '.', '--target', ext.target] + self.build_args,
                 cwd=cwd,
             )
+            if self.fast_bdist_wheel:
+                dest_path = Path(self.get_ext_fullpath(ext.lib_filepath)).resolve()
+
+                for library_path in (
+                    cur_dir / Path(ext.lib_filepath).parent / dest_path.name,
+                    cur_dir / dest_path.name,
+                ):
+                    if library_path.exists():
+                        shutil.copyfile(library_path, dest_path)
+                        break
+                else:
+                    raise RuntimeError(f'Unable to locate output file for {ext.name}')
         except ext_errors as err:
             if not ext.optional:
                 raise BuildFailedError() from err
@@ -317,6 +353,42 @@ class CMakeBuildExt(build_ext):
 # ==============================================================================
 
 
+class BdistWheel(bdist_wheel):
+    """Custom wheel building command."""
+
+    user_options = bdist_wheel.user_options + [
+        ('fast-build-dir=', None, 'Specify the location of an existing build directory (defaults to `build`'),
+        ('fast-build', None, 'Do a `fast` wheel build (requires a CMake build with IN_PLACE_BUILD set to `ON`'),
+    ]
+
+    boolean_options = bdist_wheel.boolean_options + ['fast-build']
+
+    def initialize_options(self):
+        """Initialize all options of this custom command."""
+        super().initialize_options()
+        self.fast_build = None
+        self.fast_build_dir = None
+
+    def finalize_options(self):
+        """Finalize all options."""
+        # pylint: disable=attribute-defined-outside-init
+        super().finalize_options()
+        self.fast_build = self.fast_build or False
+        self.fast_build_dir = self.fast_build_dir or 'build'
+
+    def run(self):
+        """Run the bdist_wheel command."""
+        if self.fast_build:
+            logging.info('doing a fast-build')
+            with modified_environ(MQ_FAST_BDIST_WHEEL=True, MQ_FAST_BDIST_DIR=self.fast_build_dir):
+                super().run()
+        else:
+            super().run()
+
+
+# ==============================================================================
+
+
 class Clean(clean):
     """Custom clean command."""
 
@@ -354,6 +426,7 @@ class GenerateRequirementFile(setuptools.Command):
         self.include_all_extras = None
         self.output = None
         self.extra_pkgs = []
+        self.dependencies = []
 
     def finalize_options(self):
         """Finalize this command's options."""
@@ -363,30 +436,22 @@ class GenerateRequirementFile(setuptools.Command):
         else:
             self.output = Path(self.output)
 
-        if self.include_extras:
-            include_extras = self.include_extras.split(',')
-        else:
-            include_extras = []
+        include_extras = self.include_extras.split(',') if self.include_extras else []
+        pyproject_toml = parse_toml(Path(__file__).parent / 'pyproject.toml')
 
-        try:
-            for name, pkgs in self.distribution.extras_require.items():
-                if self.include_all_extras or name in include_extras:
-                    self.extra_pkgs.extend(pkgs)
+        for name, pkgs in pyproject_toml['project']['optional-dependencies'].items():
+            if self.include_all_extras or name in include_extras:
+                self.extra_pkgs.extend(pkgs)
 
-        except TypeError:  # Mostly for old setuptools (< 30.x)
-            for name, pkgs in self.distribution.command_options['options.extras_require'].items():
-                if self.include_all_extras or name in include_extras:
-                    self.extra_pkgs.extend(pkgs)
+        self.dependencies = self.distribution.install_requires
+        if not self.dependencies:
+            self.dependencies = pyproject_toml['project']['dependencies']
 
     def run(self):
         """Execute this command."""
         with fdopen(str(self.output), 'w') as req_file:
-            try:
-                for pkg in self.distribution.install_requires:
-                    req_file.write(f'{pkg}\n')
-            except TypeError:  # Mostly for old setuptools (< 30.x)
-                for pkg in self.distribution.command_options['options']['install_requires']:
-                    req_file.write(f'{pkg}\n')
+            for pkg in self.dependencies:
+                req_file.write(f'{pkg}\n')
             req_file.write('\n')
             for pkg in self.extra_pkgs:
                 req_file.write(f'{pkg}\n')
@@ -405,7 +470,7 @@ ext_modules = [
 # ==============================================================================
 
 
-class ArgsCMakeFlag(argparse.Action):  # pylint: disable=too-few-public-methods
+class ArgsCMakeFlag(argparse.Action):
     """Custom argparse action for CMake flags."""
 
     def __call__(self, parser, namespace, values, option_string=None):
@@ -418,7 +483,7 @@ class ArgsCMakeFlag(argparse.Action):  # pylint: disable=too-few-public-methods
         setattr(namespace, self.dest, True)
 
 
-class ArgsCMakeDefinition(argparse.Action):  # pylint: disable=too-few-public-methods
+class ArgsCMakeDefinition(argparse.Action):
     """Custom argparse action to set boolean CMake variables."""
 
     def __init__(self, cmake_value, *args, **kwargs):
@@ -437,7 +502,7 @@ class ArgsCMakeDefinition(argparse.Action):  # pylint: disable=too-few-public-me
             cmake_extra_options.append(f'-D{values}:BOOL=OFF')
 
 
-class ArgsCMakeVariable(argparse.Action):  # pylint: disable=too-few-public-methods
+class ArgsCMakeVariable(argparse.Action):
     """Custom argparse action to set string CMake variables."""
 
     def __call__(self, parser, namespace, values, option_string=None):
@@ -473,6 +538,7 @@ if __name__ == '__main__':
 
     setuptools.setup(
         cmdclass={
+            'bdist_wheel': BdistWheel,
             'build_ext': CMakeBuildExt,
             'clean': Clean,
             'gen_reqfile': GenerateRequirementFile,

@@ -28,23 +28,7 @@ include(CheckLinkerFlag)
 
 # ==============================================================================
 
-# Check if a language has been enabled without attempting to enable it
-#
-# is_language_enabled(<lang> <resultvar>)
-#
-# If the language <lang> has already been enabled, <resultvar> is set to TRUE. Otherwise it is set to FALSE.
-function(is_language_enabled _lang _var)
-  get_property(_supported_languages GLOBAL PROPERTY ENABLED_LANGUAGES)
-  if(NOT _lang IN_LIST _supported_languages)
-    set(${_var}
-        FALSE
-        PARENT_SCOPE)
-  else()
-    set(${_var}
-        TRUE
-        PARENT_SCOPE)
-  endif()
-endfunction()
+include(is_language_enabled)
 
 # ------------------------------------------------------------------------------
 
@@ -221,18 +205,25 @@ function(_apply_patch_file)
     INPUT_FILE "${APF_INPUT_FILE}"
     WORKING_DIRECTORY "${APF_WORKING_DIRECTORY}"
     OUTPUT_VARIABLE _stdout
-    ERROR_VARIABLE _stderr RESULTS_VARIABLE _results
+    COMMAND_ECHO NONE
+    ERROR_VARIABLE _stderr
+    RESULTS_VARIABLE _results
     RESULT_VARIABLE _result)
 
   if(_result EQUAL "0")
-    message("${_stdout}")
+    string(REGEX REPLACE "\n" ";" _stdout "${_stdout}")
+    foreach(_line ${_stdout})
+      message(STATUS "     :: ${_line}")
+    endforeach()
     debug_print(STATUS "  -> dry-run patch successful, applying patch for real")
     execute_process(
       COMMAND "${Patch_EXECUTABLE}" ${APF_PATCH_ARGS}
       INPUT_FILE "${APF_INPUT_FILE}"
       WORKING_DIRECTORY "${APF_WORKING_DIRECTORY}"
       OUTPUT_VARIABLE _stdout
-      ERROR_VARIABLE _stderr RESULTS_VARIABLE _results
+      COMMAND_ECHO NONE
+      ERROR_VARIABLE _stderr
+      RESULTS_VARIABLE _results
       RESULT_VARIABLE _result)
   else()
     debug_print(STATUS "  -> application of patch failed (dry-run)")

@@ -25,11 +25,11 @@
 #include <thread>
 #include <vector>
 
-#include "core/utils.h"
-#include "gate/basic_gate.h"
-#include "gate/gates.h"
-#include "hamiltonian/hamiltonian.h"
-#include "pr/parameter_resolver.h"
+#include "core/parameter_resolver.hpp"
+#include "core/utils.hpp"
+#include "ops/basic_gate.hpp"
+#include "ops/gates.hpp"
+#include "ops/hamiltonian.hpp"
 #include "projectq/backends/_sim/_cppkernels/simulator.hpp"
 #include "projectq_utils.h"
 
@@ -134,7 +134,7 @@ class Projectq : public ::projectq::Simulator {
         if (gate.name_ == "PL") {  // pauli channel; gate is constructed be like: BasicGate(cPL, true, px, py, pz)
             Projectq::ApplyPauliChannel(gate);
         } else if (gate.name_ == "ADC" || gate.name_ == "PDC") {  // damping channel
-           Projectq::ApplyDampingChannel(gate);
+            Projectq::ApplyDampingChannel(gate);
         } else if (gate.kraus_operator_set_.size() != 0) {  // Kraus channel
             Projectq::ApplyKrausChannel(gate);
         } else {
@@ -154,14 +154,14 @@ class Projectq : public ::projectq::Simulator {
             gate_index = 0;
         }
         BasicGate<T> gate_ = gate_list_[gate_index];  // Select the gate to execute according to r.
-                                                        //            std::cout << gate_.name_ << std::endl;
+                                                      //            std::cout << gate_.name_ << std::endl;
         Projectq::apply_controlled_gate(MCast<T>(gate_.base_matrix_.matrix_), VCast(gate.obj_qubits_),
                                         VCast(gate.ctrl_qubits_));
     }
 
     void ApplyDampingChannel(const BasicGate<T> &gate) {
-        VT<size_t> idx_of_zero; // the 01 base index of object qubit that being '0'
-        VT<size_t> idx_of_one;  // the 01 base index of object qubit that being '1'
+        VT<size_t> idx_of_zero;  // the 01 base index of object qubit that being '0'
+        VT<size_t> idx_of_one;   // the 01 base index of object qubit that being '1'
         for (size_t i = 0; i < (1 << n_qubits_); ++i) {
             if ((i >> gate.obj_qubits_[0]) & 1) {
                 idx_of_one.push_back(i);
@@ -215,8 +215,8 @@ class Projectq : public ::projectq::Simulator {
     }
 
     void ApplyKrausChannel(const BasicGate<T> &gate) {
-        VT<size_t> idx_of_zero; // the 01 base index of object qubit that being '0'
-        VT<size_t> idx_of_one;  // the 01 base index of object qubit that being '1'
+        VT<size_t> idx_of_zero;  // the 01 base index of object qubit that being '0'
+        VT<size_t> idx_of_one;   // the 01 base index of object qubit that being '1'
         for (size_t i = 0; i < (1 << n_qubits_); ++i) {
             if ((i >> gate.obj_qubits_[0]) & 1) {
                 idx_of_one.push_back(i);
@@ -227,21 +227,21 @@ class Projectq : public ::projectq::Simulator {
         VT<CT<T>> curr_state = Projectq::cheat();
         unsigned n_kraus = (gate.kraus_operator_set_).size();
         double prob = 0;
-        for(unsigned i = 0; i < n_kraus; ++i) {
+        for (unsigned i = 0; i < n_kraus; ++i) {
             VT<CT<T>> updated_state(curr_state.size());
-            const VVT<CT<T>>& kraus_mat = gate.kraus_operator_set_[i];
+            const VVT<CT<T>> &kraus_mat = gate.kraus_operator_set_[i];
             double renormal_factor_square = 0;
             for (size_t j = 0; j < idx_of_zero.size(); ++j) {
                 updated_state[idx_of_zero[j]] = curr_state[idx_of_zero[j]] * kraus_mat[0][0]
                                                 + curr_state[idx_of_one[j]] * kraus_mat[0][1];
-                renormal_factor_square += (updated_state[idx_of_zero[j]]
-                                        * std::conj(updated_state[idx_of_zero[j]])).real();
+                renormal_factor_square
+                    += (updated_state[idx_of_zero[j]] * std::conj(updated_state[idx_of_zero[j]])).real();
             }
             for (size_t j = 0; j < idx_of_one.size(); ++j) {
                 updated_state[idx_of_one[j]] = curr_state[idx_of_zero[j]] * kraus_mat[1][0]
-                                                + curr_state[idx_of_one[j]] * kraus_mat[1][1];
-                renormal_factor_square += (updated_state[idx_of_one[j]]
-                                        * std::conj(updated_state[idx_of_one[j]])).real();
+                                               + curr_state[idx_of_one[j]] * kraus_mat[1][1];
+                renormal_factor_square
+                    += (updated_state[idx_of_one[j]] * std::conj(updated_state[idx_of_one[j]])).real();
             }
             double renormal_factor = sqrt(renormal_factor_square);
             prob = renormal_factor_square / (1 - prob);

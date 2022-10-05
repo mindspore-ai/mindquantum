@@ -12,19 +12,19 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+#include <tweedledum/Passes/Utility/shallow_duplicate.h>
+
+#include "../test_utils.hpp"
+
+#include "experimental/decompositions/atom_meta.hpp"
+#include "experimental/decompositions/atom_storage.hpp"
+#include "experimental/decompositions/config.hpp"
+#include "experimental/decompositions/decomposition_atom.hpp"
+#include "experimental/decompositions/gate_decomposition_rule.hpp"
+#include "experimental/decompositions/trivial_atom.hpp"
+#include "experimental/ops/gates.hpp"
+
 #include <catch2/catch.hpp>
-
-#include "tweedledum/Passes/Utility/shallow_duplicate.h"
-
-#include "decompositions/config.hpp"
-
-#include "../utils.hpp"
-#include "decompositions/atom_meta.hpp"
-#include "decompositions/atom_storage.hpp"
-#include "decompositions/decomposition_atom.hpp"
-#include "decompositions/gate_decomposition_rule.hpp"
-#include "decompositions/trivial_atom.hpp"
-#include "ops/gates.hpp"
 
 using namespace std::literals::string_literals;
 using namespace std::literals::string_view_literals;

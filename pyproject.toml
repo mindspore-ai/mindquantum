@@ -1,14 +1,100 @@
 [build-system]
-requires = ['setuptools>=45', 'wheel', 'pybind11>=2.6.2', 'wheel-filename>1.2']
+requires = [
+    'setuptools>=61;python_version>="3.7"',
+    'wheel',
+    'pybind11>=2.9.0',
+    'wheel-filename>1.2'
+]
 build-backend = 'backend'
-backend-path = ['_build']
+backend-path = [
+    '_build'
+]
+
+# ==============================================================================
+
+[project]
+name = 'mindquantum'
+authors = [
+     {name = 'The MindSpore Authors', email = 'contact@mindspore.cn'}
+]
+description = 'A hybrid quantum-classic framework for quantum computing'
+requires-python = '>= 3.7'
+license = {text= 'Apache License Version 2.0'}
+readme = 'README.md'
+classifiers = [
+    'License :: OSI Approved :: Apache Software License',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+    'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10'
+]
+dynamic = ["version"]
+
+dependencies = [
+    'numpy >= 1.17.0',
+    'scipy >= 1.5.3',
+    'projectq >= 0.5.1',
+    'openfermion>=1.0.0',
+    'sympy >= 1.4',
+    'matplotlib <= 3.4.3',
+    'rich >= 10.9.0',
+    'importlib-metadata>=0.9;python_version<"3.8"'
+]
+
+[project.urls]
+'Homepage' = 'http://www.projectq.ch'
+'Download (Gitee)' = 'https://gitee.com/mindspore/mindquantum/tags'
+'Source (Gitee)' = 'https://gitee.com/mindspore/mindquantum'
+'Issue Tracker' = 'https://gitee.com/mindspore/mindquantum/issues'
+'Download (GitHub)' = 'https://github.com/mindspore-ai/mindquantum/tags'
+'Source (GitHub)' = 'https://github.com/mindspore-ai/mindquantum'
+'Documentation' = 'https://www.mindspore.cn/mindquantum/docs/en/master/index.html'
+
+[project.optional-dependencies]
+
+docs = [
+    'sphinx',
+    'sphinx_rtd_theme',
+    'breathe',
+    'myst-parser'
+]
+
+test = [
+    'pytest',
+    'pytest-cov',
+    'pytest-mock',
+    'mock'
+]
+
+mindspore = [
+    'mindspore'
+]
+
+[project.scripts]
+mindquantum-config = 'mindquantum_config:main'
+
+# ------------------------------------------------------------------------------
+
+[tool.setuptools]
+
+zip-safe = false
+
+[tool.setuptools.dynamic]
+
+version = {file = "VERSION.txt"}
+
+[tool.setuptools.packages.find]
+
+include = ['mindquantum*']
 
 # ==============================================================================
 
 [tool.black]
-    line-length = 120
-    target-version = ['py36','py37','py38', 'py39']
-    skip-string-normalization = true
+line-length = 120
+target-version = ['py37','py38', 'py39', 'py310']
+skip-string-normalization = true
 
 
 [tool.coverage]
@@ -90,6 +176,14 @@ filterwarnings = [
     'ignore:.*Please use `OptimizeResult`.*is deprecated:DeprecationWarning',
     'ignore:.*`np.str` is a deprecated alias for the builtin `str`.*:DeprecationWarning',
     'ignore:.*MindSpore not installed.*:UserWarning',
+    'ignore:.*distutils Version classes are deprecated. Use packaging.version instead:DeprecationWarning',
+    'ignore:.*ParameterResolver.__float__ returned non-float.*:DeprecationWarning',
+    'ignore:.*the matrix subclass is not the recommended way to represent.*:PendingDeprecationWarning',
+    # From external packages
+    'ignore:.*Call to deprecated create function Descriptor.*:DeprecationWarning',  # from cirq_google
+    'ignore:.*Call to deprecated create function EnumDescriptor.*:DeprecationWarning',  # from cirq_google
+    'ignore:.*Call to deprecated create function EnumValueDescriptor.*:DeprecationWarning',  # from cirq_google
+    'ignore:.*Call to deprecated create function FieldDescriptor.*:DeprecationWarning'  # from cirq_google
 ]
 
 

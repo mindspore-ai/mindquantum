@@ -16,17 +16,27 @@ Module implementing a conversion from fermion type operators to qubit type opera
 
 Thus can be simulated in quantum computer.
 """
+
+import os
 from math import floor, log
 
 import numpy as np
 
+from mindquantum.core.operators import TermValue
 from mindquantum.core.operators.utils import (
     FermionOperator,
     QubitOperator,
     count_qubits,
     normal_ordered,
-    number_operator,
 )
+
+try:
+    if int(os.environ.get('MQ_PY_TERMSOP', False)):
+        raise ImportError()
+
+    from mindquantum.experimental._mindquantum_cxx.ops import transform as transform_
+except ImportError:
+    from . import transform_  # noqa: F401
 
 
 class Transform:
@@ -102,25 +112,7 @@ class Transform:
         """
         if not isinstance(self.operator, FermionOperator):
             raise TypeError('This method can be only applied for FermionOperator.')
-        transf_op = QubitOperator()
-        for term in self.operator.terms:
-            # Initialize identity matrix.
-            transformed_term = QubitOperator((), 1 * self.operator.terms[term])
-
-            # Loop through operators, transform and multiply.
-            for ladder_operator in term:
-                # Define lists of qubits to apply Pauli gates
-                index = ladder_operator[0]
-                x1 = [index]
-                y1 = []
-                z1 = list(range(index))
-                x2 = []
-                y2 = [index]
-                z2 = list(range(index))
-                transformed_term *= _transform_ladder_operator(ladder_operator, x1, y1, z1, x2, y2, z2)
-            transf_op += transformed_term
-
-        return transf_op
+        return QubitOperator(transform_.jordan_wigner(self.operator))
 
     def parity(self):
         r"""
@@ -161,27 +153,9 @@ class Transform:
         """
         if not isinstance(self.operator, FermionOperator):
             raise TypeError('This method can be only applied for FermionOperator.')
-        transf_op = QubitOperator()
-        for term in self.operator.terms:
-            # Initialize identity matrix.
-            transformed_term = QubitOperator((), 1 * self.operator.terms[term])
+        return QubitOperator(transform_.parity(self.operator, self.n_qubits))
 
-            # Loop through operators, transform and multiply.
-            for ladder_operator in term:
-                # Define lists of qubits to apply Pauli gates
-                index = ladder_operator[0]
-                x1 = list(range(index, self.n_qubits))
-                y1 = []
-                z1 = [index - 1] if index > 0 else []
-                x2 = list(range(index + 1, self.n_qubits))
-                y2 = [index]
-                z2 = []
-                transformed_term *= _transform_ladder_operator(ladder_operator, x1, y1, z1, x2, y2, z2)
-            transf_op += transformed_term
-
-        return transf_op
-
-    def bravyi_kitaev(self):
+    def bravyi_kitaev(self):  # pylint: disable=too-many-locals
         r"""
         Apply Bravyi-Kitaev transform.
 
@@ -229,9 +203,9 @@ class Transform:
         if not isinstance(self.operator, FermionOperator):
             raise TypeError('This method can be only applied for FermionOperator.')
         transf_op = QubitOperator()
-        for term in self.operator.terms:
+        for term, value in self.operator.terms.items():
             # Initialize identity matrix.
-            transformed_term = QubitOperator((), 1 * self.operator.terms[term])
+            transformed_term = QubitOperator((), value)
 
             # Loop through operators, transform and multiply.
             for ladder_operator in term:
@@ -286,7 +260,7 @@ class Transform:
         self.n_qubits = len(edge_enum) // 2
 
         # Initialize identity matrix
-        transf_op = QubitOperator((), fermion_operator.terms[()])
+        transf_op = QubitOperator((), fermion_operator.constant)
         transformed_terms = [()]
 
         for term in fermion_operator:
@@ -298,7 +272,7 @@ class Transform:
                 u = set(at) | set(a)
 
                 # Second term in pair to transform
-                term_t = tuple((i, 1) for i in a) + tuple((j, 0) for j in at)
+                term_t = tuple((i, TermValue['adg']) for i in a) + tuple((j, TermValue['a']) for j in at)
 
                 # Check equality between numbers of creation and annihilation
                 # operators in term
@@ -306,7 +280,7 @@ class Transform:
                     raise ValueError("Terms in hamiltonian must consist f pairs of creation/annihilation operators")
 
                 # Check whether fermion operator is hermitian
-                if abs(fermion_operator.terms[term] - fermion_operator.terms[term_t]) > 1e-8:
+                if abs(fermion_operator.get_coeff(term) - fermion_operator.get_coeff(term_t)) > 1e-8:
                     raise ValueError('Fermion operator must be hermitian.')
 
                 # Case of a^i aj
@@ -314,16 +288,15 @@ class Transform:
                     # Case of number operator (i=j)
                     if len(u) == 1:
                         i = u.pop()
-                        transf_op += (
-                            _transformed_number_operator(i, edge_matrix, edge_enum) * fermion_operator.terms[term]
-                        )
+                        transf_op += _transformed_number_operator(
+                            i, edge_matrix, edge_enum
+                        ) * fermion_operator.get_coeff(term)
                     # Case of excitation operator
                     else:
                         i, j = at[0]
-                        transf_op += (
-                            _transformed_excitation_operator(i, j, edge_matrix, edge_enum)
-                            * fermion_operator.terms[term]
-                        )
+                        transf_op += _transformed_excitation_operator(
+                            i, j, edge_matrix, edge_enum
+                        ) * fermion_operator.get_coeff(term)
 
                 # Case of a^i a^j ak al
                 elif len(at) == 2:
@@ -332,7 +305,7 @@ class Transform:
                         i, j = at[0], at[1]
                         transf_op += (
                             _transformed_exchange_operator(i, j, edge_matrix, edge_enum)
-                            * fermion_operator.terms[term]
+                            * fermion_operator.get_coeff(term)
                             * (-1)
                         )
                         # -1 factor because of normal ordering (a^i a^j ai aj,
@@ -345,7 +318,7 @@ class Transform:
                         k = (u - set(at)).pop()
                         transf_op += (
                             _transformed_number_excitation_operator(i, j, k, edge_matrix, edge_enum)
-                            * fermion_operator.terms[term]
+                            * fermion_operator.get_coeff(term)
                             * (-1) ** ((i > j) ^ (j > k))
                         )
                         # -1 factor because of normal ordering
@@ -353,10 +326,9 @@ class Transform:
                     # Case of double excitation operator
                     elif len(u) == 4:
                         i, j, k, _ = at[0], at[1], a[0], a[1]
-                        transf_op += (
-                            _transformed_double_excitation_operator(at[0], at[1], a[0], a[1], edge_matrix, edge_enum)
-                            * fermion_operator.terms[term]
-                        )
+                        transf_op += _transformed_double_excitation_operator(
+                            at[0], at[1], a[0], a[1], edge_matrix, edge_enum
+                        ) * fermion_operator.get_coeff(term)
 
                 # Adding terms in transformed pair
                 transformed_terms.append(term)
@@ -381,9 +353,9 @@ class Transform:
         if not isinstance(self.operator, FermionOperator):
             raise TypeError('This method can be only applied for FermionOperator.')
         transf_op = QubitOperator()
-        for term in self.operator.terms:
+        for term, value in self.operator.terms.items():
             # Initialize identity matrix.
-            transformed_term = QubitOperator((), 1 * self.operator.terms[term])
+            transformed_term = QubitOperator((), value)
 
             # Loop through operators, transform and multiply.
             for ladder_operator in term:
@@ -436,53 +408,8 @@ class Transform:
         """
         if not isinstance(self.operator, QubitOperator):
             raise TypeError('This method can be only applied for QubitOperator.')
-        transf_op = FermionOperator()
 
-        # Loop through terms.
-        for term in self.operator.terms:
-            transformed_term = FermionOperator(())
-            if term:
-                working_term = QubitOperator(term)
-                pauli_operator = term[-1]
-                while pauli_operator is not None:
-
-                    # Handle Pauli Z.
-                    if pauli_operator[1] == 'Z':
-                        transformed_pauli = FermionOperator(()) + number_operator(None, pauli_operator[0], -2.0)
-
-                    # Handle Pauli X and Y.
-                    else:
-                        raising_term = FermionOperator(((pauli_operator[0], 1),))
-                        lowering_term = FermionOperator(((pauli_operator[0], 0),))
-                        if pauli_operator[1] == 'Y':
-                            raising_term *= 1.0j
-                            lowering_term *= -1.0j
-
-                        transformed_pauli = raising_term + lowering_term
-
-                        # Account for the phase terms.
-                        for j in reversed(range(pauli_operator[0])):
-                            z_term = QubitOperator(((j, 'Z'),))
-                            working_term = z_term * working_term
-                        term_key = list(working_term.terms)[0]
-                        transformed_pauli *= working_term.terms[term_key]
-                        working_term.terms[list(working_term.terms)[0]] = 1.0
-
-                    # Get next non-identity operator acting below
-                    # 'working_qubit'.
-                    working_qubit = pauli_operator[0] - 1
-                    for working_operator in reversed(list(working_term.terms)[0]):
-                        if working_operator[0] <= working_qubit:
-                            pauli_operator = working_operator
-                            break
-                        pauli_operator = None
-
-                    # Multiply term by transformed operator.
-                    transformed_term *= transformed_pauli
-            # Account for overall coefficient
-            transformed_term *= self.operator.terms[term]
-            transf_op += transformed_term
-        return transf_op
+        return FermionOperator(transform_.reverse_jordan_wigner(self.operator, self.n_qubits))
 
 
 def _get_qubit_index(p, i):  # pylint: disable=invalid-name
@@ -517,11 +444,15 @@ def _transform_ladder_operator(ladder_operator, x1, y1, z1, x2, y2, z2):  # pyli
     coefficient_1 = 0.5
     coefficient_2 = -0.5j if ladder_operator[1] else 0.5j
     transf_op_1 = QubitOperator(
-        tuple((index, 'X') for index in x1) + tuple((index, 'Y') for index in y1) + tuple((index, 'Z') for index in z1),
+        tuple((index, TermValue['X']) for index in x1)
+        + tuple((index, TermValue['Y']) for index in y1)
+        + tuple((index, TermValue['Z']) for index in z1),
         coefficient_1,
     )
     transf_op_2 = QubitOperator(
-        tuple((index, 'X') for index in x2) + tuple((index, 'Y') for index in y2) + tuple((index, 'Z') for index in z2),
+        tuple((index, TermValue['X']) for index in x2)
+        + tuple((index, TermValue['Y']) for index in y2)
+        + tuple((index, TermValue['Z']) for index in z2),
         coefficient_2,
     )
     return transf_op_1 + transf_op_2

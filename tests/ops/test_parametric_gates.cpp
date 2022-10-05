@@ -14,15 +14,19 @@
 
 #include <string_view>
 
-#include <catch2/catch.hpp>
 #include <symengine/basic.h>
 #include <symengine/expression.h>
 #include <symengine/real_double.h>
 #include <symengine/symengine_exception.h>
 
-#include "core/operator_traits.hpp"
-#include "ops/parametric/gate_base.hpp"
-#include "ops/utils.hpp"
+#include "ops/test_utils.hpp"  // NOLINT(build/include_subdir)
+
+#include "experimental/core/operator_traits.hpp"
+#include "experimental/ops/parametric/gate_base.hpp"
+
+// -----------------------------------------------------------------------------
+
+#include <catch2/catch.hpp>
 
 // =============================================================================
 
@@ -153,8 +157,8 @@ TEST_CASE("ParametricGate/Basic", "[parametric][ops]") {
         REQUIRE(gate2 == gate2_bis);
         REQUIRE(gate2_bis == gate2);
 
-        REQUIRE_THAT(gate1.params(), Equals(x));
-        REQUIRE_THAT(gate2.params(), Equals(expand(-(x + y))));
+        REQUIRE_THAT(gate1.params(), SymEngineEquals(x));
+        REQUIRE_THAT(gate2.params(), SymEngineEquals(expand(-(x + y))));
 
         ParamOne num1{12};
         CHECK(is_a<Integer>(*num1.param(0)));
@@ -172,7 +176,7 @@ TEST_CASE("ParametricGate/Basic", "[parametric][ops]") {
         static_assert(gate1.param_name(1) == real::beta::name);
 
         const auto param_ref = std::vector<Expression>{x, y};
-        CHECK_THAT(gate1.params(), Equals(x, y));
+        CHECK_THAT(gate1.params(), SymEngineEquals(x, y));
 
         ParamTwo gate2{x + y, y};
 
@@ -197,9 +201,9 @@ TEST_CASE("ParametricGate/Evaluation", "[parametric][ops]") {
     ParamTwo gate2{x + y, y};
     ParamTwo gate3{x + y, y + z};
 
-    CHECK_THAT(gate1.params(), Equals(x));
-    CHECK_THAT(gate2.params(), Equals(expand(x + y), y));
-    CHECK_THAT(gate3.params(), Equals(expand(x + y), expand(y + z)));
+    CHECK_THAT(gate1.params(), SymEngineEquals(x));
+    CHECK_THAT(gate2.params(), SymEngineEquals(expand(x + y), y));
+    CHECK_THAT(gate3.params(), SymEngineEquals(expand(x + y), expand(y + z)));
 
     SymEngine::map_basic_basic subs;
     subs[x] = SymEngine::integer(x_num);
@@ -223,7 +227,7 @@ TEST_CASE("ParametricGate/Evaluation", "[parametric][ops]") {
 
     const auto gate3_partial = gate3.eval(subs);
     CHECK(gate3_partial.kind() == gate3.kind());
-    CHECK_THAT(gate3_partial.params(), Equals(SymEngine::number(x_num + y_num), y_num + z));
+    CHECK_THAT(gate3_partial.params(), SymEngineEquals(SymEngine::number(x_num + y_num), y_num + z));
 
     const auto gate3_num = gate3_partial.eval_full(subs2);
     CHECK(gate3_num.kind() == ParamTwo::non_param_type::kind());

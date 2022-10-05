@@ -17,11 +17,12 @@
 
 """Quantum channel."""
 
-from mindquantum import mqbackend as mb
 import numpy as np
+
+from mindquantum import mqbackend as mb
 from mindquantum.utils.f import _check_num_array
 
-from .basic import BasicGate, NoiseGate, SelfHermitianGate, NonHermitianGate
+from .basic import BasicGate, NoiseGate, NonHermitianGate, SelfHermitianGate
 
 
 class PauliChannel(NoiseGate, SelfHermitianGate):
@@ -545,4 +546,3 @@ class KrausChannel(NoiseGate, NonHermitianGate):
     def __str_in_circ__(self):
         """Return a string representation of the object in a quantum circuit."""
         return self.name
-    

@@ -17,11 +17,21 @@
 
 """This module implements qubit-excitation operators."""
 
+import os
+
 from mindquantum.core.parameterresolver import ParameterResolver
 
 from ._base_operator import _Operator
 from .fermion_operator import FermionOperator
 from .qubit_operator import QubitOperator
+
+try:
+    if int(os.environ.get('MQ_PY_TERMSOP', False)):
+        raise ImportError()
+
+    from ...experimental.utils import TermValue
+except ImportError:
+    from ._term_value import TermValue
 
 
 def _check_valid_qubit_excitation_operator_term(qeo_term):
@@ -137,14 +147,23 @@ class QubitExcitationOperator(_Operator):
             for (idx, excit) in term_i:
                 qubit_op_ = None
                 if excit == 0:
-                    qubit_op_ = QubitOperator(((idx, "X"),), 1) + QubitOperator(((idx, "Y"),), 1j)
+                    qubit_op_ = QubitOperator(((idx, TermValue["X"]),), 1) + QubitOperator(((idx, TermValue["Y"]),), 1j)
                 else:
-                    qubit_op_ = QubitOperator(((idx, "X"),), 1) - QubitOperator(((idx, "Y"),), 1j)
+                    qubit_op_ = QubitOperator(((idx, TermValue["X"]),), 1) - QubitOperator(((idx, TermValue["Y"]),), 1j)
                 qubit_op_ *= 0.5
                 qubit_operator_i *= qubit_op_
             qubit_operator_i *= coeff_i
             qubit_operator += qubit_operator_i
         return qubit_operator
+
+    def hermitian(self):
+        """Return Hermitian conjugate of QubitExcitationOperator."""
+        conjugate_operator = QubitExcitationOperator()
+        for term, coefficient in self.terms.items():
+            # reverse the order and change the action from 0(1) to 1(0)
+            conjugate_term = tuple((index, 1 - op) for (index, op) in reversed(term))
+            conjugate_operator.terms[conjugate_term] = coefficient.conjugate()
+        return conjugate_operator
 
     def _simplify(self, terms, coefficient=1.0):
         """Simplify a term."""

@@ -19,6 +19,8 @@ BASEPATH=$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}" )" &> /dev/null && pwd 
 ROOTDIR="$BASEPATH"
 PROGRAM=$(basename "${BASH_SOURCE[0]:-$0}")
 
+echo "Called with: $*"
+
 # Test for MindSpore CI
 _IS_MINDSPORE_CI=0
 if [[ "${JENKINS_URL:-0}" =~ https?://build.mindspore.cn && ! "${CI:-0}" =~ ^(false|0)$ ]]; then
@@ -54,13 +56,16 @@ function help_header() {
 
 function extra_help() {
     echo 'Extra options:'
-    echo '  --delocate           Delocate the binary wheels after build is finished'
-    echo '                       (enabled by default; pass --no-delocate to disable)'
-    echo '  --no-delocate        Disable delocating the binary wheels after build is finished'
-    echo '  --no-build-isolation Pass --no-isolation to python3 -m build'
-    echo '  -o,--output=[dir]    Output directory for built wheels'
-    echo '  -p,--plat-name=[dir] Platform name to use for wheel delocation'
-    echo '                       (only effective if --delocate is used)'
+    echo '  --(no-)build-isolation Pass --no-isolation to python3 -m build'
+    echo '  --(no-)delocate        Delocate the binary wheels after build is finished'
+    echo '                         (enabled by default; pass --no-delocate to disable)'
+    echo '  --(no-)fast-build      If possible use an existing CMake directory to build the C++ Python extensions'
+    echo '                         instead of using the normal Python bdist_wheel process.'
+    echo '                         Use this with caution. CI build should not be using this.'
+    echo '  --fast-build-dir       Specify build directory when performing a fast-build'
+    echo '  -o,--output=[dir]      Output directory for built wheels'
+    echo '  -p,--plat-name=[dir]   Platform name to use for wheel delocation'
+    echo '                         (only effective if --delocate is used)'
     echo -e '\nExample calls:'
     echo "$PROGRAM"
     echo "$PROGRAM --gpu"
@@ -72,15 +77,19 @@ function extra_help() {
 getopts_args_extra='o:p:'
 
 function parse_extra_args() {
+    # input args: OPT OPTARG flag_value
     case "$1" in
+        fast-build )         no_arg;
+                             set_var fast_build "$3"
+                             ;;
+        fast-build-dir )     needs_arg;
+                             set_var fast_build_dir "$2"
+                             ;;
         delocate )           no_arg;
-                             set_var delocate_wheel
+                             set_var delocate_wheel "$3"
                              ;;
-        no-delocate )        no_arg;
-                             set_var delocate_wheel 0
-                             ;;
-        no-build-isolation ) no_arg;
-                             set_var no_build_isolation
+        build-isolation )    no_arg;
+                             set_var build_isolation "$3"
                              ;;
         o | output )         needs_arg;
                              set_var output_path "$2"
@@ -88,7 +97,7 @@ function parse_extra_args() {
         p | plat-name )      needs_arg;
                              set_var platform_name "$2"
                              ;;
-        ??* )                die "Illegal option --OPT: $1"
+        ??* )                return 2  # Delegate error handling to main argument parsing function
                              ;;
     esac
 }
@@ -105,8 +114,6 @@ function parse_extra_args() {
 # ==============================================================================
 
 set -e
-
-echo "Called with: $*"
 
 cd "${ROOTDIR}"
 
@@ -147,6 +154,9 @@ set_AA cmake_option_names enable_cxx ENABLE_CXX_EXPERIMENTAL
 set_AA cmake_option_names enable_gitee ENABLE_GITEE
 set_AA cmake_option_names enable_gpu ENABLE_CUDA
 set_AA cmake_option_names enable_projectq ENABLE_PROJECTQ
+set_AA cmake_option_names enable_logging ENABLE_LOGGING
+set_AA cmake_option_names logging_enable_debug ENABLE_LOGGING_DEBUG_LEVEL
+set_AA cmake_option_names logging_enable_trace ENABLE_LOGGING_TRACE_LEVEL
 set_AA cmake_option_names enable_tests BUILD_TESTING
 set_AA cmake_option_names do_clean_3rdparty CLEAN_3RDPARTY_INSTALL_DIR
 
@@ -157,6 +167,10 @@ for var in $(get_AA_keys cmake_option_names); do
         args+=(--unset "$(get_AA_value cmake_option_names "$var")")
     fi
 done
+
+if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
+    args+=(--set MINDSPORE_CI)
+fi
 
 if [ "$cmake_make_silent" -eq 0 ]; then
     args+=(--set USE_VERBOSE_MAKEFILE)
@@ -174,6 +188,14 @@ fi
 
 if [ -n "$cmake_generator" ]; then
     args+=(-G "${cmake_generator}")
+fi
+
+if [ "$fast_build" -eq 1 ]; then
+    args+=(bdist_wheel --fast-build)
+
+    if [ -n "$fast_build_dir" ]; then
+        args+=(bdist_wheel --fast-build-dir="$fast_build_dir")
+    fi
 fi
 
 if [ "$n_jobs" -ne -1 ]; then
@@ -237,7 +259,7 @@ for arg in "${args[@]}"; do
 done
 
 args=("-w")
-if [ "$no_build_isolation" -eq 1 ]; then
+if [ "$build_isolation" -eq 0 ]; then
     args+=("--no-isolation")
 fi
 

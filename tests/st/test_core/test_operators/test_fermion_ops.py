@@ -172,7 +172,7 @@ def test_dumps_and_loads():
     """
     f = FermionOperator('0', 1 + 2j) + FermionOperator('0^', 'a')
     strings = f.dumps()
-    obj = FermionOperator.loads(strings)
+    obj = FermionOperator.loads(strings, dtype=complex)
     assert obj == f
 
 
@@ -187,5 +187,4 @@ def test_of_fermion_trans():
     ofo_ops = OFFermionOperator("1^ 0", 1)
     mq_ops = FermionOperator('1^ 0', 1)
     assert mq_ops.to_openfermion() == ofo_ops
-    print(type(FermionOperator.from_openfermion(ofo_ops)), type(mq_ops))
     assert mq_ops == FermionOperator.from_openfermion(ofo_ops)

@@ -33,27 +33,27 @@ endif()
 
 # =============================================================================
 
+include(${CMAKE_CURRENT_LIST_DIR}/eigen3/eigen3.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/fmt/fmt.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/pybind11/pybind11.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/nlohmann_json/nlohmann_json.cmake)
+if(ENABLE_LOGGING)
+  include(${CMAKE_CURRENT_LIST_DIR}/spdlog/spdlog.cmake)
+endif()
 
 if(ENABLE_CXX_EXPERIMENTAL)
-  set(_include_boost FALSE)
-
-  if(NOT MQ_HAS_STD_FILESYSTEM)
-    set(_include_boost TRUE)
-  endif()
+  include(${CMAKE_CURRENT_LIST_DIR}/boost/boost.cmake)
 
   if(NOT MSVC AND NOT "${OS_NAME}" STREQUAL "MinGW")
     include(${CMAKE_CURRENT_LIST_DIR}/gmp/gmp.cmake)
-  else()
-    set(_include_boost TRUE)
   endif()
 
-  if(_include_boost)
-    include(${CMAKE_CURRENT_LIST_DIR}/boost/boost.cmake)
+  if(ENABLE_ABSEIL_CPP)
+    include(${CMAKE_CURRENT_LIST_DIR}/abseil_cpp/abseil_cpp.cmake)
   endif()
-  include(${CMAKE_CURRENT_LIST_DIR}/nlohmann_json/nlohmann_json.cmake)
-  include(${CMAKE_CURRENT_LIST_DIR}/fmt/fmt.cmake)
-  include(${CMAKE_CURRENT_LIST_DIR}/eigen3/eigen3.cmake)
+  include(${CMAKE_CURRENT_LIST_DIR}/ordered_map/ordered_map.cmake)
+  include(${CMAKE_CURRENT_LIST_DIR}/lru_cache/lru_cache.cmake)
+  include(${CMAKE_CURRENT_LIST_DIR}/cereal/cereal.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/symengine/symengine.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/tweedledum/tweedledum.cmake)
 

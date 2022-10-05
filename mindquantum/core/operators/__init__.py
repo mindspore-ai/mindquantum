@@ -21,8 +21,10 @@ Contains classes representing:
 - TimeEvolution operator
 
 """
+
 from mindquantum.third_party.interaction_operator import InteractionOperator
 
+from ._term_value import TermValue
 from .fermion_operator import FermionOperator
 from .hamiltonian import Hamiltonian
 from .polynomial_tensor import PolynomialTensor
@@ -34,7 +36,6 @@ from .utils import (
     commutator,
     count_qubits,
     down_index,
-    get_fermion_operator,
     hermitian_conjugated,
     normal_ordered,
     number_operator,
@@ -50,10 +51,10 @@ __all__ = [
     "QubitExcitationOperator",
     "QubitOperator",
     "TimeEvolution",
+    "TermValue",
     "count_qubits",
     "commutator",
     "normal_ordered",
-    "get_fermion_operator",
     "number_operator",
     "hermitian_conjugated",
     "up_index",

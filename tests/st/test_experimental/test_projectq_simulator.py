@@ -27,6 +27,8 @@ try:
 except ImportError:
     pytest.skip("MindQuantum experimental C++ module not present", allow_module_level=True)
 
+pytest.skip("Disabled until new C++ simulator is merged", allow_module_level=True)
+
 _HAS_PROJECTQ = True
 try:
     from projectq import ops as pq_ops

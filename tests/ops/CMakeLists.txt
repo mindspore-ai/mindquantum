@@ -16,6 +16,10 @@
 #
 # ==============================================================================
 
-add_test_executable(test_parametric_gates LIBS mindquantum_cxx mindquantum::symengine)
-add_test_executable(test_angle_parametric_gates LIBS mindquantum_cxx mindquantum::symengine)
-add_test_executable(test_register_gate LIBS mindquantum_cxx mindquantum::symengine)
+add_test_executable(test_parametric_gates LIBS mq_cxx_nextgen mindquantum::symengine)
+add_test_executable(test_angle_parametric_gates LIBS mq_cxx_nextgen mindquantum::symengine)
+add_test_executable(test_register_gate LIBS mq_cxx_nextgen mindquantum::symengine)
+
+add_test_executable(test_terms_operators LIBS mq_cxx_nextgen)
+add_test_executable(test_qubit_operators LIBS mq_cxx_nextgen DEFINES UNIT_TESTS)
+add_test_executable(test_fermion_operators LIBS mq_cxx_nextgen DEFINES UNIT_TESTS)

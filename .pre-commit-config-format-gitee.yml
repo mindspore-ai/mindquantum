@@ -36,8 +36,8 @@ repos:
         exclude: ^(.*patch[0-9]*)$
 
   # Changes tabs to spaces
-  - repo: https://gitee.com/mirrors_pre-commit/pre-commit-hooks
-    rev: v1.3.0
+  - repo: https://gitee.com/dnguyen/lukas-c-pre-commit-hooks-mirror.git
+    rev: v1.3.1
     hooks:
       - id: remove-tabs
         exclude: ^(.*Makefile|.*patch[0-9]*)$
@@ -50,10 +50,11 @@ repos:
         additional_dependencies: [toml]
 
   - repo: https://gitee.com/mirrors_PyCQA/doc8.git
-    rev: 0.11.2
+    rev: v1.0.0
     hooks:
       - id: doc8
         require_serial: false
+        additional_dependencies: [tomli]
         args: [--ignore-path-errors, docs/api_python/mindquantum.algorithm.nisq.uccsd0_singlet_generator.rst;D001,
                --ignore-path-errors, docs/api_python/mindquantum.algorithm.nisq.quccsd_generator.rst;D001,
                --ignore-path-errors,
@@ -67,15 +68,15 @@ repos:
         args: [-x]
 
   - repo: https://gitee.com/mirrors_codespell-project/codespell
-    rev: v2.1.0
+    rev: v2.2.1
     hooks:
       - id: codespell
         require_serial: false
-        files: (.*ccsrc/.*|.*mindquantum/.*|.*\.py|.*\.txt|.*\.cmake|.*\.md|.*\.rst|.*\.sh|.*\.ps1)
+        files: .*\.(py|txt|cmake|md|rst|sh|ps1|hpp|tpp|cpp|cc)$
         args: [-S, '.git,third_party', -I, .codespell.allow]
 
   - repo: https://gitee.com/mirrors_adrienverge/yamllint.git
-    rev: v1.27.1
+    rev: v1.28.0
     hooks:
       - id: yamllint
         require_serial: false
@@ -92,13 +93,13 @@ repos:
         additional_dependencies: [pyyaml]
 
   - repo: https://gitee.com/mirrors_pre-commit/mirrors-isort
-    rev: 5.10.1
+    rev: v5.10.1
     hooks:
       - id: isort
         name: isort (python)
 
   - repo: https://gitee.com/mirrors_psf/black.git
-    rev: 22.6.0
+    rev: 22.8.0
     hooks:
       - id: black
         language_version: python3
@@ -108,13 +109,13 @@ repos:
     hooks:
       - id: blacken-docs
         args: [-S, -l, '120']
-        additional_dependencies: [black==22.3.0]
+        additional_dependencies: [black==22.8.0]
 
   - repo: https://gitee.com/mirrors_asottile/pyupgrade
-    rev: v2.37.1
+    rev: v2.38.0
     hooks:
       - id: pyupgrade
-        args: [--py36-plus, --keep-mock]
+        args: [--py37-plus, --keep-mock]
 
   - repo: https://gitee.com/dnguyen/cmake-pre-commit-hooks-mirror
     rev: 'v1.5.3'
@@ -122,10 +123,5 @@ repos:
       - id: clang-format
         require_serial: false
         args: [-i]
-        files: (.*\.hpp|.*\.h|.*\.tpp|.*\.cpp)$
+        files: .*\.(h|hpp|tpp|cpp|cc)$
         additional_dependencies: ['clang-format']
-      - id: cpplint
-        require_serial: false
-        args: [--quiet]
-        files: (.*\.hpp|.*\.h|.*\.tpp|.*\.cpp)$
-        additional_dependencies: ['cpplint']

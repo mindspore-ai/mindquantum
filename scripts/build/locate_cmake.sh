@@ -84,6 +84,7 @@ fi
 
 if [ $has_cmake -eq 0 ]; then
     echo "Installing CMake inside the Python virtual environment"
+    call_cmd "$PYTHON" -m pip install -U pip
     call_cmd "$PYTHON" -m pip install "${pip_args[@]}" "cmake>=$cmake_version_min"
     CMAKE="$python_venv_path/bin/cmake"
 fi

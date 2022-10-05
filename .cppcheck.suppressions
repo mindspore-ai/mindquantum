@@ -3,28 +3,70 @@ missingInclude
 missingReturn
 
 constParameter:tests/*
+unreadVariable:tests/*
 
-duplicateExpression:ccsrc/mq_base/pr/parameter_resolver.h:707
+constStatement:ccsrc/lib/experimental/ops/gates/details/fermion_operator_term_policy.cpp
+constStatement:ccsrc/lib/experimental/ops/gates/details/qubit_operator_term_policy.cpp
 
-noExplicitConstructor:ccsrc/cxx_experimental/include/decompositions/decomposition_atom.hpp:42
-noExplicitConstructor:ccsrc/cxx_experimental/include/ops/parametric/gate_base.hpp
+constVariable:ccsrc/lib/experimental/core/cpp_core.cpp:282
 
-noValidConfiguration:ccsrc/cxx_experimental/include/core/details/cxx20_compatibility.hpp
-noValidConfiguration:ccsrc/cxx_experimental/include/ops/parametric/angle_base.hpp
-noValidConfiguration:ccsrc/cxx_experimental/include/ops/parametric/angle_gates.hpp
+containerOutOfBounds:ccsrc/include/experimental/ops/gates/fermion_operator.tpp:111
+containerOutOfBounds:ccsrc/lib/experimental/ops/gates/fermion_operator.cpp
+containerOutOfBounds:ccsrc/lib/experimental/ops/gates/fermion_operator_parameter_resolver.cpp
 
-operatorEqVarError:ccsrc/cxx_experimental/include/decompositions/decomposition_atom.hpp
+duplicateBreak:ccsrc/python/experimental/include/python/core/tsl_ordered_map.hpp:40
 
-preprocessorErrorDirective:ccsrc/cxx_experimental/include/core/details/cxx20_compatibility.hpp:20
-preprocessorErrorDirective:ccsrc/cxx_experimental/include/decompositions/rules/config.hpp
-preprocessorErrorDirective:ccsrc/cxx_experimental/include/ops/parametric/angle_base.hpp
+duplicateExpression:ccsrc/include/core/parameter_resolver.h:707
+duplicateExpression:ccsrc/python/mqbackend/lib/binding.cc
+
+noExplicitConstructor:ccsrc/include/experimental/decompositions/decomposition_atom.hpp:41
+noExplicitConstructor:ccsrc/include/experimental/ops/parametric/gate_base.hpp
+
+noValidConfiguration:ccsrc/include/config/config.hpp
+noValidConfiguration:ccsrc/include/config/details/cxx20_compatibility.hpp
+noValidConfiguration:ccsrc/include/config/type_traits.hpp
+noValidConfiguration:ccsrc/include/experimental/ops/parametric/angle_base.hpp
+noValidConfiguration:ccsrc/include/experimental/ops/parametric/angle_gates.hpp
+noValidConfiguration:tests/decompositions/test_apply_atoms.cpp
+
+operatorEqVarError:ccsrc/include/experimental/decompositions/decomposition_atom.hpp
+
+preprocessorErrorDirective:ccsrc/include/config/details/cxx20_compatibility.hpp:20
+preprocessorErrorDirective:ccsrc/include/experimental/decompositions/rules/config.hpp
+preprocessorErrorDirective:ccsrc/include/experimental/ops/parametric/angle_base.hpp
+preprocessorErrorDirective:ccsrc/python/core/include/python/details/define_binary_operator_helpers.hpp
+preprocessorErrorDirective:ccsrc/python/experimental/lib/ops/ops.cpp
 preprocessorErrorDirective:tests/decompositions/test_apply_atoms.cpp:48
-preprocessorErrorDirective:tests/ops/test_angle_parametric_gates.cpp:26
+preprocessorErrorDirective:tests/ops/test_angle_parametric_gates.cpp:28
 
-unknownMacro:ccsrc/cxx_experimental/python/include/python/cengines/resource_counter.hpp:24
-unknownMacro:ccsrc/cxx_experimental/python/include/python/ops/command.hpp:28
+stlIfFind:ccsrc/lib/experimental/cengines/write_projectq.cpp
+stlIfFind:ccsrc/lib/experimental/decompositions/atom_storage.cpp
+stlIfFind:ccsrc/lib/experimental/decompositions/gate_decomposer.cpp
 
-unusedStructMember:ccsrc/cxx_experimental/include/ops/parametric/param_names.hpp
+syntaxError:ccsrc/include/core/parameter_resolver_external_ops.hpp:90
+syntaxError:ccsrc/include/core/sparse/algo.hpp:73
+syntaxError:ccsrc/include/experimental/ops/gates/terms_operator_base_external_ops.hpp:95
+syntaxError:ccsrc/python/experimental/lib/ops/details/define_terms_ops.hpp:111
+syntaxError:ccsrc/python/mqbackend/lib/binding.cc:184
 
-useStlAlgorithm:ccsrc/cxx_experimental/include/core/control.hpp:79
-useStlAlgorithm:ccsrc/cxx_experimental/lib/core/circuit_manager.cpp
+unknownMacro:ccsrc/include/core/sparse/paulimat.hpp:58
+unknownMacro:ccsrc/python/experimental/include/python/cengines/resource_counter.hpp:25
+unknownMacro:ccsrc/python/experimental/include/python/ops/command.hpp:26
+unknownMacro:third_party/projectq/projectq.h:119
+unknownMacro:third_party/projectq/projectq.h:190
+
+unreadVariable:ccsrc/lib/experimental/decompositions/time_evolution.cpp
+
+unusedStructMember:ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp:29
+
+unusedStructMember:ccsrc/include/experimental/ops/parametric/param_names.hpp
+unusedStructMember:ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp
+
+useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.hpp
+useStlAlgorithm:ccsrc/include/experimental/core/control.hpp:79
+useStlAlgorithm:ccsrc/include/experimental/ops/gates/terms_operator_base.tpp
+useStlAlgorithm:ccsrc/lib/experimental/core/circuit_manager.cpp
+useStlAlgorithm:ccsrc/lib/experimental/simulator/projectq_simulator.cpp
+useStlAlgorithm:ccsrc/python/experimental/lib/ops/command.cpp
+
+ctuOneDefinitionRuleViolation:tests/core/test_circuit_block.cpp

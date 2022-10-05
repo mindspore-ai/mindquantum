@@ -21,23 +21,23 @@
 #else
 #    include <tweedledum/test/check_unitary.h>
 #endif
-#include "tweedledum/IR/Instruction.h"
-#include "tweedledum/Passes/Utility/shallow_duplicate.h"
+#include <tweedledum/IR/Instruction.h>
+#include <tweedledum/Passes/Utility/shallow_duplicate.h>
 
-#include "decompositions/config.hpp"
+#include "../test_utils.hpp"
 
-#include "../utils.hpp"
-#include "core/circuit_block.hpp"
-#include "decompositions/atom_meta.hpp"
-#include "decompositions/atom_storage.hpp"
-#include "decompositions/decomposition_atom.hpp"
-#include "decompositions/details/decomposition_param.hpp"
-#include "decompositions/details/traits.hpp"
-#include "decompositions/gate_decomposition_rule.hpp"
-#include "decompositions/trivial_atom.hpp"
-#include "ops/gates.hpp"
-#include "ops/parametric/angle_gates.hpp"
-#include "ops/parametric/register_gate_type.hpp"
+#include "experimental/core/circuit_block.hpp"
+#include "experimental/decompositions/atom_meta.hpp"
+#include "experimental/decompositions/atom_storage.hpp"
+#include "experimental/decompositions/config.hpp"
+#include "experimental/decompositions/decomposition_atom.hpp"
+#include "experimental/decompositions/details/decomposition_param.hpp"
+#include "experimental/decompositions/details/traits.hpp"
+#include "experimental/decompositions/gate_decomposition_rule.hpp"
+#include "experimental/decompositions/trivial_atom.hpp"
+#include "experimental/ops/gates.hpp"
+#include "experimental/ops/parametric/angle_gates.hpp"
+#include "experimental/ops/parametric/register_gate_type.hpp"
 
 using namespace std::literals::string_literals;
 using namespace std::literals::string_view_literals;

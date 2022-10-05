@@ -165,10 +165,17 @@ function(__download_pkg pkg_name pkg_url pkg_md5)
   if(_local_server)
     get_filename_component(_url_file_name ${pkg_url} NAME)
     set(pkg_url "${_local_server}/libs/${pkg_name}/${_url_file_name}" ${pkg_url})
+    debug_print(STATUS "Using local server URL: ${pkg_url}")
   endif()
 
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
+    set(_opts DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+  endif()
+
+  set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE NEVER)
   FetchContent_Declare(
     ${pkg_name}
+    ${_opts}
     URL ${pkg_url}
     URL_HASH MD5=${pkg_md5})
 
@@ -177,13 +184,22 @@ endfunction()
 
 # Fetch some content by downloading a Git repository (or from an archive on the local server with a specific commit)
 function(__download_pkg_with_git pkg_name pkg_url pkg_git_commit pkg_md5)
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
+    set(_opts DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+  endif()
+  set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE NEVER)
+
   if(_local_server)
     set(pkg_url "${_local_server}/libs/${pkg_name}/${pkg_git_commit}")
+    debug_print(STATUS "Using local server URL: ${pkg_url}")
     FetchContent_Declare(
       ${pkg_name}
+      ${_opts}
       URL ${pkg_url}
       URL_HASH MD5=${pkg_md5})
   else()
+    debug_print(STATUS "GIT_REPOSITORY = ${GIT_REPOSITORY}")
+    debug_print(STATUS "GIT_TAG = ${GIT_TAG}")
     FetchContent_Declare(
       ${pkg_name}
       GIT_REPOSITORY ${pkg_url}
@@ -295,7 +311,7 @@ endfunction()
 #     installation configuration file but has otherwise no effect.
 # ~~~
 function(__create_target_aliases pkg_name skip_in_install_config)
-  # cmake-lint: disable=R0915
+  # cmake-lint: disable=R0915,R0912
   list(LENGTH ARGN n_args)
   if(NOT n_args)
     return()
@@ -347,6 +363,21 @@ function(__create_target_aliases pkg_name skip_in_install_config)
     get_target_property(_imported_global ${tgt_name} IMPORTED_GLOBAL)
     if(_imported AND NOT _imported_global)
       set_property(TARGET ${tgt_name} PROPERTY IMPORTED_GLOBAL TRUE)
+    endif()
+
+    if(_imported)
+      if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+        __get_library_imported_location(${tgt_name} _imported_location)
+        if(_imported_location)
+          foreach(_config DEBUG MINSIZEREL RELWITHDEBINFO)
+            get_target_property(_config_location ${tgt_name} IMPORTED_LOCATION_${_config})
+            if(NOT _config_location)
+              debug_print(STATUS "Propagating ${_imported_location} to IMPORTED_LOCATION_${_config}")
+              set_target_properties(${tgt_name} PROPERTIES IMPORTED_LOCATION_${_config} ${_imported_location})
+            endif()
+          endforeach()
+        endif()
+      endif()
     endif()
 
     get_target_property(_aliased ${tgt_name} ALIASED_TARGET)
@@ -874,7 +905,6 @@ function(__setup_install_target pkg_name)
       list(APPEND _find_pkg_str "# ${pkg_name} (system)")
     else()
       list(APPEND _find_pkg_str "# ${pkg_name} (local)")
-      # TODO(dnguyen): Replace value of PATHS arguments
       set(_args_patched)
       foreach(_value ${_find_pkg_args})
         if(_value MATCHES "^${_mq_local_prefix}/(.*)")
@@ -1096,7 +1126,9 @@ function(mindquantum_add_pkg pkg_name)
 
   message(STATUS "${pkg_name} config hash: ${${pkg_name}_CONFIG_HASH}")
 
-  set(${pkg_name}_BASE_DIR ${_mq_local_prefix}/${pkg_name}_${PKG_VER}_${${pkg_name}_CONFIG_HASH})
+  set(${pkg_name}_BASE_DIR
+      ${_mq_local_prefix}/${pkg_name}_${PKG_VER}_${${pkg_name}_CONFIG_HASH}
+      CACHE STRING INTERNAL)
   set(${pkg_name}_DIRPATH
       ${${pkg_name}_BASE_DIR}
       CACHE STRING INTERNAL)

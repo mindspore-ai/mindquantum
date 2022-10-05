@@ -124,6 +124,9 @@ function needs_arg() {
     if [ -z "$OPTARG" ]; then
         die "No arg for --$OPT option"
     fi
+    if [ "$flag_value" -eq 0 ]; then
+        die "Cannot specify --no-$OPT for non-flag argument --$OPT"
+    fi
 }
 
 # ------------------------------------------------------------------------------

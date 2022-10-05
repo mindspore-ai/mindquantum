@@ -44,6 +44,8 @@ Descriptions
 +-----------------------------------+-----------------------------------------------------------------------+
 | ``DISABLE_FORTRAN_COMPILER``      | Forcefully disable the Fortran compiler for some 3rd party libraries  |
 +-----------------------------------+-----------------------------------------------------------------------+
+| ``ENABLE_ABSEIL_CPP``             | Enable the use of the abseil-cpp library                              |
++-----------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_CMAKE_DEBUG``            | Enable verbose output to debug CMake issues                           |
 +-----------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_CUDA``                   | Enable the use of CUDA code                                           |
@@ -51,6 +53,12 @@ Descriptions
 | ``ENABLE_CXX_EXPERIMENTAL``       | Enable the building of the (new) experimental C++ backend             |
 +-----------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_GITEE``                  | Use Gitee instead of GitHub for (some) third-party dependencies       |
++-----------------------------------+-----------------------------------------------------------------------+
+| ``ENABLE_LOGGING``                | Enable the use of logging in C++                                      |
++-----------------------------------+-----------------------------------------------------------------------+
+| ``ENABLE_LOGGING_DEBUG_LEVEL``    | If logging is enabled, log everything down to the DEBUG level         |
++-----------------------------------+-----------------------------------------------------------------------+
+| ``ENABLE_LOGGING_TRACE_LEVEL``    | If logging is enabled, log everything down to the TRACE level         |
 +-----------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_MD``                     | Use /MD, /MDd flags when compiling (MSVC only)                        |
 +-----------------------------------+-----------------------------------------------------------------------+

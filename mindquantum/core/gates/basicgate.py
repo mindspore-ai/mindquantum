@@ -972,7 +972,7 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
             if not self.parameterized:
                 cpp_gate.apply_value(self.coeff.const)
             else:
-                cpp_gate.params = self.coeff.get_cpp_obj()
+                cpp_gate.params = self.coeff.to_real_obj()
             return cpp_gate
 
     return _ParamNonHerm

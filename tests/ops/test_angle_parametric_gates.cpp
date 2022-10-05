@@ -14,14 +14,16 @@
 
 #include <string_view>
 
-#include <catch2/catch.hpp>
 #include <symengine/basic.h>
 #include <symengine/expression.h>
 #include <symengine/real_double.h>
 #include <symengine/symengine_exception.h>
 
-#include "ops/parametric/angle_base.hpp"
-#include "ops/utils.hpp"
+#include "ops/test_utils.hpp"
+
+#include "experimental/ops/parametric/angle_base.hpp"
+
+#include <catch2/catch.hpp>
 
 #if __has_include(<numbers>) && __cplusplus > 201703L
 static constexpr auto PI_VAL = std::numbers::pi;

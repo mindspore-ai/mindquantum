@@ -13,13 +13,16 @@
 #   limitations under the License.
 
 # pylint: disable=useless-suppression
-
 """Experimental C++ backend for MindQuantum."""
 
+import os
 import sys
 
 try:
-    from ._mindquantum_cxx import circuit, ops, optimizer, simulator, symengine
+    import mindquantum.mqbackend as mb
+
+    from ._mindquantum_cxx import circuit, logging, optimizer, simulator, symengine
+    from .utils import TermValue
 
     # isort: split
 
@@ -28,7 +31,7 @@ try:
     # NB: These below will allow `from mindquantum.experimental.XXX import YYY` but not
     #     `from minquantum.experimental.XXX.YYY import ZZZ` for example
     sys.modules[f'{__name__}.circuit'] = circuit
-    sys.modules[f'{__name__}.ops'] = ops
+    sys.modules[f'{__name__}.logging'] = logging
     sys.modules[f'{__name__}.optimizer'] = optimizer
     sys.modules[f'{__name__}.simulator'] = simulator
     sys.modules[f'{__name__}.simulator.projectq'] = simulator.projectq  # pylint: disable=no-member
@@ -36,4 +39,5 @@ try:
 
     symengine.symbols = _symengine_utilities.symbols
 except ImportError:
-    pass
+    if int(os.environ.get('MQ_DEBUG', 0)):
+        raise

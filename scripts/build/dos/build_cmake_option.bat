@@ -14,7 +14,7 @@ rem See the License for the specific language governing permissions and
 rem limitations under the License.
 rem ============================================================================
 
-rem build_cmake_option <out-var> <opt_name> <variable>
+rem build_cmake_option <opt_name> <variable>
 
 :build_cmake_option
    if %~2 == 1 (

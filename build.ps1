@@ -14,6 +14,7 @@
 
 Param(
     [Alias("B")][ValidateNotNullOrEmpty()][string]$Build,
+    [switch]$BuildIsolation,
     [switch]$CCache,
     [switch]$CMakeNoRegistry,
     [switch]$Clean3rdParty,
@@ -28,15 +29,20 @@ Param(
     [switch]$DebugCMake,
     [switch]$Delocate,
     [Alias("N")][switch]$DryRun,
+    [switch]$FastBuild,
+    [ValidateNotNullOrEmpty()][string]$FastBuildDir,
     [ValidateNotNullOrEmpty()][string]$G,
     [switch]$Gitee,
     [switch]$Gpu,
     [Alias("H")][switch]$Help,
     [Alias("J")][ValidateRange("Positive")][int]$Jobs,
-    [switch]$NoConfig,
+    [switch]$LocalPkgs,
+    [switch]$Logging,
     [switch]$Ninja,
+    [switch]$NoConfig,
     [switch]$NoBuildIsolation,
     [switch]$NoDelocate,
+    [switch]$NoFastBuild,
     [switch]$NoGitee,
     [switch]$OnlyPytest,
     [Alias("O")][ValidateNotNullOrEmpty()][string]$Output,
@@ -54,16 +60,20 @@ $ROOTDIR = $BASEPATH
 $PROGRAM = Split-Path $MyInvocation.MyCommand.Path -Leaf
 
 # Test for MindSpore CI
-$_IS_MINDSPORE_CI=0
+$_IS_MINDSPORE_CI = $false
 if ("$Env:JENKINS_URL" -Match 'https?://build.mindspore.cn' -And [bool]$Env:CI) {
     Write-Output "Detected MindSpore/MindQuantum CI"
-    $_IS_MINDSPORE_CI=1
+    $_IS_MINDSPORE_CI = $true
 }
 
 # ==============================================================================
 # Default values
 
 $python_extra_pkgs = @('wheel-filename>1.2')
+
+if ($_IS_MINDSPORE_CI ) {
+    $enable_gitee = $true
+}
 
 . (Join-Path $ROOTDIR 'scripts\build\common_functions.ps1')
 
@@ -81,9 +91,13 @@ function Help-Header {
 
 function Extra-Help {
     Write-Output 'Extra options:'
-    Write-Output '  -Delocate            Delocate the binary wheels after build is finished'
+    Write-Output '  -(No)BuildIsolation  Pass --no-isolation to python3 -m build'
+    Write-Output '  -(No)Delocate        Delocate the binary wheels after build is finished'
     Write-Output '                       (enabled by default; pass -NoDelocate to disable)'
-    Write-Output '  -NoBuildIsolation    Pass --no-isolation to python3 -m build'
+    Write-Output '  -(No)FastBuild       If possible use an existing CMake directory to build the C++ Python extensions'
+    Write-Output '                       instead of using the normal Python bdist_wheel process.'
+    Write-Output '                       Use this with caution. CI build should not be using this.'
+    Write-Output '  -FastBuildDir        Specify build directory when performing a fast-build'
     Write-Output '  -O,-Output [dir]     Output directory for built wheels'
     Write-Output '  -P,-PlatName [dir]   Platform name to use for wheel delocation'
     Write-Output '                       (only effective if -Delocate is used)'
@@ -98,18 +112,38 @@ function Extra-Help {
 
 . (Join-Path $ROOTDIR 'scripts\build\parse_common_args.ps1') @args
 
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
+
 # ------------------------------------------------------------------------------
 
-if ($Delocate.IsPresent) {
+if (([bool]$Delocate)) {
     Set-Value 'delocate_wheel'
 }
 
-if ($NoDelocate.IsPresent) {
+if (([bool]$NoDelocate)) {
     Set-Value 'delocate_wheel' $false
 }
 
-if ($NoBuildIsolation.IsPresent) {
-    Set-Value 'no_build_isolation'
+if (([bool]$BuildIsolation)) {
+    Set-Value 'build_isolation'
+}
+
+if (([bool]$NoBuildIsolation)) {
+    Set-Value 'build_isolation' $false
+}
+
+if (([bool]$FastBuild)) {
+    Set-Value 'fast_build'
+}
+
+if (([bool]$NoFastBuild)) {
+    Set-Value 'fast_build' $false
+}
+
+if ([bool]$FastBuildDir) {
+    Set-Value 'fast_build_dir' "$FastBuildDir"
 }
 
 if ([bool]$Output) {
@@ -125,6 +159,10 @@ if ([bool]$PlatName) {
 
 . (Join-Path $ROOTDIR 'scripts\build\locate_python3.ps1')
 
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
+
 # ==============================================================================
 
 $ErrorActionPreference = 'Stop'
@@ -138,6 +176,9 @@ cd "$ROOTDIR"
 # NB: `created_venv` variable can be used to detect if a virtualenv was created or not
 . (Join-Path $ROOTDIR 'scripts\build\python_virtualenv_activate.ps1')
 
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
 
 # ------------------------------------------------------------------------------
 # Locate cmake or cmake3
@@ -145,11 +186,19 @@ cd "$ROOTDIR"
 # NB: `cmake_from_venv` variable is set by this script (and is used by python_virtualenv_update.sh)
 . (Join-Path $ROOTDIR 'scripts\build\locate_cmake.ps1')
 
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
+
 # ------------------------------------------------------------------------------
 
 # Update Python virtualenv (if requested/necessary)
 
 . (Join-Path $ROOTDIR 'scripts\build\python_virtualenv_update.ps1')
+
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
 
 # ------------------------------------------------------------------------------
 # Setup arguments for build
@@ -164,6 +213,9 @@ $cmake_option_names = @{
     enable_gitee = 'ENABLE_GITEE'
     enable_gpu = 'ENABLE_CUDA'
     enable_projectq = 'ENABLE_PROJECTQ'
+    enable_logging = 'ENABLE_LOGGING'
+    logging_enable_debug = 'ENABLE_LOGGING_DEBUG_LEVEL'
+    logging_enable_trace = 'ENABLE_LOGGING_TRACE_LEVEL'
     enable_tests = 'BUILD_TESTING'
     do_clean_3rdparty = 'CLEAN_3RDPARTY_INSTALL_DIR'
 }
@@ -177,6 +229,10 @@ foreach ($el in $cmake_option_names.GetEnumerator()) {
     else {
         $build_args += '--unset', "$($el.Value)"
     }
+}
+
+if ($_IS_MINDSPORE_CI ) {
+    $build_args += '--set', 'MINDSPORE_CI'
 }
 
 if ($cmake_make_silent) {
@@ -199,12 +255,20 @@ if ([bool]$cmake_generator) {
     $build_args += '-G', "$cmake_generator"
 }
 
+if ($fast_build) {
+    $build_args += 'bdist_wheel', '--fast-build'
+
+    if ([bool]$fast_build_dir) {
+        $build_args += 'bdist_wheel', '--fast-build-dir', "$fast_build_dir"
+    }
+}
+
 if ($n_jobs -ne -1) {
     $build_args += 'build', "--parallel=$n_jobs"
 }
 
 if ($build_type -eq 'Debug') {
-    $build_args += 'build', "--debug"
+    $build_args += 'build', '--debug'
 }
 
 if ($_build_dir_was_set) {
@@ -262,7 +326,7 @@ foreach($arg in $build_args) {
 }
 
 $build_args = @('-w')
-if ($no_build_isolation) {
+if (-Not $build_isolation) {
     $build_args += "--no-isolation"
 }
 
@@ -299,7 +363,7 @@ else {
 
 Call-Cmd "$PYTHON" -m build @build_args @fixed_args @unparsed_args
 if ($LastExitCode -ne 0) {
-    exit 1
+    exit $LastExitCode
 }
 
 # ------------------------------------------------------------------------------
@@ -337,6 +401,9 @@ to the Python PATH without the need to modify PYTHONPATH.
 .PARAMETER Build
 Specify build directory. Defaults to: Path\To\Script\build
 
+.PARAMETER BuildIsolation
+Do not pass --no-isolation to python3 -m build
+
 .PARAMETER CCache
 If ccache or sccache are found within the PATH, use them with CMake
 
@@ -359,6 +426,9 @@ Re-run CMake with a clean CMake cache
 .PARAMETER CleanVenv
 Delete Python virtualenv before building
 
+.PARAMETER CMakeNoRegistry
+Do not use the CMake registry to find packages
+
 .PARAMETER Config
 Path to INI configuration file with default values for the parameters
 
@@ -377,6 +447,14 @@ Dry run; only print commands but do not execute them
 .PARAMETER Delocate
 Delocate the binary wheels after build is finished (enabled by default; pass -NoDelocate to disable)
 
+.PARAMETER FastBuild
+If possible use an existing CMake directory to build the C++ Python extensions instead of using the normal Python
+bdist_wheel process.Use this with caution.
+CI build should not be using this.
+
+.PARAMETER FastBuildDir
+Specify build directory when performing a fast-build
+
 .PARAMETER Gitee
 Use Gitee (where possible) instead of Github/Gitlab
 
@@ -392,6 +470,9 @@ Number of parallel jobs for building
 .PARAMETER LocalPkgs
 Compile third-party dependencies locally
 
+.PARAMETER Logging
+Enable logging in C++ code
+
 .PARAMETER Ninja
 Build using Ninja instead of make
 
@@ -403,6 +484,9 @@ Ignore any configuration file
 
 .PARAMETER NoDelocate
 Do not delocate the binary wheels after build is finished (pass -Delocate to enable)
+
+.PARAMETER NoFastBuild
+Do not use a "fast" build process when building a wheel. See doc for -FastBuild.
 
 .PARAMETER NoGitee
 Do not favor Gitee over Github/Gitlab

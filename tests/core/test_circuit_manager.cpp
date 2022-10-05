@@ -12,13 +12,15 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#include <catch2/catch.hpp>
 #include <tweedledum/Operators/Standard.h>
 
-#include "core/circuit_block.hpp"
-#include "core/circuit_manager.hpp"
-#include "core/utils.hpp"
-#include "ops/gates/measure.hpp"
+#include "core/test_utils.hpp"
+
+#include "experimental/core/circuit_block.hpp"
+#include "experimental/core/circuit_manager.hpp"
+#include "experimental/ops/gates/measure.hpp"
+
+#include <catch2/catch.hpp>
 
 namespace td = tweedledum;
 

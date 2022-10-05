@@ -16,14 +16,14 @@
 #
 # ==============================================================================
 
-set(VER 2.9.1)
+set(VER 2.10.0)
 
 if(ENABLE_GITEE)
   set(REQ_URL "https://gitee.com/mirrors/pybind11/repository/archive/v${VER}.tar.gz")
-  set(MD5 "47bd7a20616521d9b213677cdec7f684")
+  set(MD5 "77c55946fb1faa1a3f038b02464b702d")
 else()
   set(REQ_URL "https://github.com/pybind/pybind11/archive/v${VER}.tar.gz")
-  set(MD5 "7609dcb4e6e18eee9dc1a5f26572ded1")
+  set(MD5 "da561ebf81594930d368a9f9aae0d035")
 endif()
 
 set(CMAKE_OPTION -DPYBIND11_TEST=OFF)

@@ -27,6 +27,8 @@ if [[ "${JENKINS_URL:-0}" =~ https?://build.mindspore.cn && ! "${CI:-0}" =~ ^(fa
     _IS_MINDSPORE_CI=1
 fi
 
+echo "Called with: $*"
+
 # ==============================================================================
 
 # Load common bash helper functions
@@ -94,7 +96,7 @@ function parse_extra_args() {
         prefix)          needs_arg;
                          set_var prefix_dir "$2"
                          ;;
-        ??* )            die "Illegal option --OPT: $1"
+        ??* )            return 2  # Delegate error handling to main argument parsing function
                          ;;
     esac
 }
@@ -110,8 +112,6 @@ function parse_extra_args() {
 # ==============================================================================
 
 set -e
-
-echo "Called with: $*"
 
 cd "${ROOTDIR}"
 
@@ -163,6 +163,9 @@ cmake_args=(-DIN_PLACE_BUILD:BOOL=ON
             -DENABLE_CXX_EXPERIMENTAL:BOOL="${CMAKE_BOOL[$enable_cxx]}"
             -DENABLE_DOCUMENTATION:BOOL="${CMAKE_BOOL[$do_docs]}"
             -DENABLE_GITEE:BOOL="${CMAKE_BOOL[$enable_gitee]}"
+            -DENABLE_LOGGING:BOOL="${CMAKE_BOOL[$enable_logging]}"
+            -DENABLE_LOGGING_DEBUG_LEVEL:BOOL="${CMAKE_BOOL[$logging_enable_debug]}"
+            -DENABLE_LOGGING_TRACE_LEVEL:BOOL="${CMAKE_BOOL[$logging_enable_trace]}"
             -DBUILD_TESTING:BOOL="${CMAKE_BOOL[$enable_tests]}"
             -DCLEAN_3RDPARTY_INSTALL_DIR:BOOL="${CMAKE_BOOL[$do_clean_3rdparty]}"
             -DUSE_VERBOSE_MAKEFILE:BOOL="${CMAKE_BOOL[! $cmake_make_silent]}"

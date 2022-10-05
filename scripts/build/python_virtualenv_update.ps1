@@ -34,7 +34,7 @@ if ($ROOTDIR -eq $null) {
 # ==============================================================================
 
 if ($created_venv -or $do_update_venv) {
-    $critical_pkgs = @('pip', 'setuptools', 'wheel', 'build')
+    $critical_pkgs = @('pip', 'setuptools', 'wheel', 'wheel-filename', 'build')
     Write-Output ("Updating critical Python packages: $PYTHON -m pip install -U " + ($critical_pkgs -Join ' '))
     Call-Cmd "$PYTHON" -m pip install -U @critical_pkgs
 

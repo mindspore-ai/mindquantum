@@ -40,7 +40,7 @@ goto :EOF
 
 :update_venv
 
-set critical_pkgs=pip setuptools wheel build
+set critical_pkgs=pip setuptools wheel wheel-filename build
 echo Updating critical Python packages: !PYTHON! -m pip install -U !critical_pkgs!
 call %BASEPATH%\dos\call_cmd.bat !PYTHON! -m pip install -U !critical_pkgs!
 

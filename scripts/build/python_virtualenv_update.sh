@@ -38,7 +38,7 @@ fi
 # ==============================================================================
 
 if [[ "${created_venv:-0}" -eq 1 || "${do_update_venv:-0}" -eq 1 ]]; then
-    critical_pkgs=(pip setuptools wheel build)
+    critical_pkgs=(pip setuptools wheel wheel-filename build)
     echo "Updating critical Python packages: $PYTHON -m pip install -U ${critical_pkgs[*]}"
     call_cmd "$PYTHON" -m pip install -U "${critical_pkgs[@]}"
 
@@ -72,7 +72,7 @@ if [[ "${created_venv:-0}" -eq 1 || "${do_update_venv:-0}" -eq 1 ]]; then
                     if [ -n "$line" ]; then
                         pkgs+=("$line")
                     fi
-                done < "$(grep '\S' "$tmp_file")"
+                done < "$tmp_file"
             else
                 mapfile -t -O "${#pkgs[@]}" pkgs <<< "$(grep '\S' "$tmp_file")"
             fi

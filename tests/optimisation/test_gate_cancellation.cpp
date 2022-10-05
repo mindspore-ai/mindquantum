@@ -41,12 +41,15 @@
 
 #include <vector>
 
-#include <catch2/catch.hpp>
 #include <tweedledum/IR/Circuit.h>
 #include <tweedledum/Operators/Ising.h>
 #include <tweedledum/Operators/Standard.h>
 
-#include "optimisation/gate_cancellation.hpp"
+#include "../utils.hpp"
+
+#include "experimental/optimisation/gate_cancellation.hpp"
+
+#include <catch2/catch.hpp>
 
 namespace td = tweedledum;
 
