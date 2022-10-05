@@ -38,6 +38,7 @@
 #include "experimental/core/traits.hpp"
 #include "experimental/core/types.hpp"
 #include "experimental/ops/gates/details/coeff_policy.hpp"
+#include "experimental/ops/gates/term_value.hpp"
 #include "experimental/ops/gates/traits.hpp"
 #include "experimental/ops/meta/dagger.hpp"
 
@@ -97,35 +98,6 @@ concept compat_terms_op_scalar = requires(scalar_t, ref_op_t) {
 // =============================================================================
 
 namespace mindquantum::ops {
-enum class TermValue : uint8_t {
-    I = 10,
-    X = 11,
-    Y = 12,
-    Z = 13,
-    a = 0,
-    adg = 1,
-};
-
-// -----------------------------------------------------------------------------
-
-// NOLINTNEXTLINE(*avoid-c-arrays,readability-identifier-length)
-NLOHMANN_JSON_SERIALIZE_ENUM(TermValue, {
-                                            {TermValue::I, "I"},
-                                            {TermValue::X, "X"},
-                                            {TermValue::Y, "Y"},
-                                            {TermValue::Z, "Z"},
-                                            {TermValue::a, "v"},
-                                            {TermValue::adg, "^"},
-                                        });
-
-// =============================================================================
-
-using term_t = std::pair<uint32_t, TermValue>;
-using terms_t = std::vector<term_t>;
-
-using py_term_t = std::pair<uint32_t, uint32_t>;
-using py_terms_t = std::vector<py_term_t>;
-
 // NB: using boost hash since std::hash is non-copyable (at least for recent GCC and Clang versions)
 template <typename coefficient_t>
 using term_dict_t = tsl::ordered_map<terms_t, coefficient_t, boost::hash<terms_t>>;
@@ -169,6 +141,7 @@ class TermsOperatorBase {
     using py_coeff_term_list_t = std::vector<std::pair<mindquantum::ops::terms_t, coefficient_t>>;
 
 #if !MQ_HAS_CONCEPTS || (defined _MSC_VER)
+
  private:
     template <typename op_t, typename = void>
     struct is_compat_terms_op_ : std::false_type {};

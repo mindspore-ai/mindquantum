@@ -21,7 +21,7 @@
 #include "mindquantum/catch2/mindquantum.hpp"
 
 #include "experimental/core/circuit_block.hpp"
-#include "experimental/ops/gates/terms_operator_base.hpp"
+#include "experimental/ops/gates/term_value.hpp"
 
 #include <catch2/catch_tostring.hpp>
 

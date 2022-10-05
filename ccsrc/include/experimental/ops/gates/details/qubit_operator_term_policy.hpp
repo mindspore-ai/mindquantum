@@ -27,7 +27,7 @@
 
 #include "core/parameter_resolver.hpp"
 
-#include "experimental/ops/gates/terms_operator_base.hpp"
+#include "experimental/ops/gates/term_value.hpp"
 
 namespace mindquantum::ops::details {
 struct QubitOperatorTermPolicyBase {
