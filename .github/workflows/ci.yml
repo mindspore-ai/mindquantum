@@ -333,6 +333,17 @@ jobs:
           cd build
           catchsegv ctest --output-on-failure
 
+      - name: Save tests executable in case of failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-executables-gcc-${{ matrix.gcc }}
+          retention-days: 5
+          path: |
+            build/tests
+            !build/tests/**/Makefile
+            !build/tests/**/*.*
+
   # ============================================================================
 
   clang:
@@ -431,6 +442,17 @@ jobs:
         run: |
           cd build
           catchsegv ctest --output-on-failure
+
+      - name: Save tests executable in case of failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-executables-clang-${{ matrix.clang }}
+          retention-days: 5
+          path: |
+            build/tests
+            !build/tests/**/Makefile
+            !build/tests/**/*.*
 
   # ============================================================================
 
