@@ -40,9 +40,11 @@ set(CMAKE_OPTION
     -DCMAKE_CXX_EXTENSIONS=${CMAKE_CXX_EXTENSIONS}
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
 
-set(PATCHES)
 if(CYGWIN OR OS_NAME STREQUAL "MSYS-MSYS")
-  list(APPEND PATCHES ${CMAKE_CURRENT_LIST_DIR}/patch/windows-fix-strnlen.patch001)
+  # NB: 200809 because of strnlen()
+  set(Catch2_CFLAGS "-D_POSIX_C_SOURCE=200809")
+  set(Catch2_CXXFLAGS "-D_POSIX_C_SOURCE=200809")
+  mq_add_compile_definitions(_POSIX_C_SOURCE=200809)
 endif()
 
 # cmake-lint: disable=E1122
@@ -51,7 +53,6 @@ mindquantum_add_pkg(
   VER ${VER}
   URL ${REQ_URL}
   MD5 ${MD5}
-  PATCHES ${PATCHES}
   CMAKE_PKG_NO_COMPONENTS
   CMAKE_OPTION ${CMAKE_OPTION}
   TARGET_ALIAS mindquantum::catch2 Catch2::Catch2
