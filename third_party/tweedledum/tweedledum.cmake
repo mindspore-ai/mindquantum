@@ -60,11 +60,14 @@ else()
     set(tweedledum_CFLAGS "-DNT64")
     set(tweedledum_CXXFLAGS "-DNT64")
     mq_add_compile_definitions(NT64)
-  elseif("${OS_NAME}" STREQUAL "MSYS-MSYS" OR CYGWIN)
-    # NB: 200809 because of strdup() (otherwise 200112 for posix_memalign())
-    set(tweedledum_CFLAGS "-D_POSIX_C_SOURCE=200809")
-    set(tweedledum_CXXFLAGS "-D_POSIX_C_SOURCE=200809")
-    mq_add_compile_definitions(_POSIX_C_SOURCE=200809)
+  endif()
+
+  set(tweedledum_SYSTEM_EXTRA_DEFINES)
+
+  if(POSIX_C_SOURCE)
+    list(APPEND tweedledum_SYSTEM_EXTRA_DEFINES TARGET tweedledum::tweedledum "_POSIX_C_SOURCE=${POSIX_C_SOURCE}")
+    set(tweedledum_CFLAGS "-D_POSIX_C_SOURCE=${POSIX_C_SOURCE}")
+    set(tweedledum_CXXFLAGS "-D_POSIX_C_SOURCE=${POSIX_C_SOURCE}")
   endif()
 
   set(PATCHES
@@ -101,7 +104,8 @@ else()
     CMAKE_OPTION
       ${CMAKE_OPTION} -DEigen3_DIR=${Eigen3_DIR} -Dfmt_DIR=${fmt_DIR} -Dnlohmann_json_DIR=${nlohmann_json_DIR}
       -Dpybind11_DIR=${pybind11_DIR} -DSymEngine_DIR=${SymEngine_DIR}
-    TARGET_ALIAS mindquantum::tweedledum tweedledum::tweedledum)
+    TARGET_ALIAS mindquantum::tweedledum tweedledum::tweedledum
+    SYSTEM_EXTRA_DEFINES ${tweedledum_SYSTEM_EXTRA_DEFINES})
 
   foreach(
     _comp

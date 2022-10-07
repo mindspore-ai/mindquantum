@@ -33,6 +33,14 @@ endif()
 
 # =============================================================================
 
+set(POSIX_C_SOURCE 0)
+if("${OS_NAME}" STREQUAL "MSYS-MSYS" OR CYGWIN)
+  # 200809 because of strdup() or strnlen() (otherwise 200112 for posix_memalign()
+  set(POSIX_C_SOURCE 200809)
+endif()
+
+# ------------------------------------------------------------------------------
+
 include(${CMAKE_CURRENT_LIST_DIR}/eigen3/eigen3.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/fmt/fmt.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/pybind11/pybind11.cmake)
