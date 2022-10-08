@@ -161,6 +161,7 @@ parse:
         INSTALL_INCS: +
         INSTALL_LIBS: +
         LIBS: +
+        LOCAL_EXTRA_DEFINES: +
         ONLY_COPY_DIRS: +
         ONLY_MAKE_INCS: +
         ONLY_MAKE_LIBS: +

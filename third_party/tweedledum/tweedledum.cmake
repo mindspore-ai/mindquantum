@@ -62,9 +62,11 @@ else()
     mq_add_compile_definitions(NT64)
   endif()
 
+  set(tweedledum_LOCAL_EXTRA_DEFINES)
   set(tweedledum_SYSTEM_EXTRA_DEFINES)
 
   if(POSIX_C_SOURCE)
+    list(APPEND tweedledum_LOCAL_EXTRA_DEFINES TARGET tweedledum::tweedledum "_POSIX_C_SOURCE=${POSIX_C_SOURCE}")
     list(APPEND tweedledum_SYSTEM_EXTRA_DEFINES TARGET tweedledum::tweedledum "_POSIX_C_SOURCE=${POSIX_C_SOURCE}")
     set(tweedledum_CFLAGS "-D_POSIX_C_SOURCE=${POSIX_C_SOURCE}")
     set(tweedledum_CXXFLAGS "-D_POSIX_C_SOURCE=${POSIX_C_SOURCE}")
@@ -105,6 +107,7 @@ else()
       ${CMAKE_OPTION} -DEigen3_DIR=${Eigen3_DIR} -Dfmt_DIR=${fmt_DIR} -Dnlohmann_json_DIR=${nlohmann_json_DIR}
       -Dpybind11_DIR=${pybind11_DIR} -DSymEngine_DIR=${SymEngine_DIR}
     TARGET_ALIAS mindquantum::tweedledum tweedledum::tweedledum
+    LOCAL_EXTRA_DEFINES ${tweedledum_LOCAL_EXTRA_DEFINES}
     SYSTEM_EXTRA_DEFINES ${tweedledum_SYSTEM_EXTRA_DEFINES})
 
   foreach(
