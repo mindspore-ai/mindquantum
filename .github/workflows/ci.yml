@@ -8,6 +8,9 @@ on:
     branches-ignore:
       - 'test'
 
+env:
+  CMAKE_VERSION: 3.22.3
+
 jobs:
   standard:
     strategy:
@@ -27,8 +30,6 @@ jobs:
             VENV_PYTHON_TEST_PKGS:
           - python: 3.8
             test_bdist_wheel: true
-    env:
-      CMAKE_VERSION: 3.22.3
     name: "Python ${{ matrix.python }} • ${{ matrix.runs-on }} • x64"
     runs-on: ${{ matrix.runs-on }}
 
@@ -262,8 +263,6 @@ jobs:
           - 10
           - 11
           - 12
-    env:
-      CMAKE_VERSION: 3.22.3
     name: "GCC ${{ matrix.gcc }} • x64"
     container: "gcc:${{ matrix.gcc }}"
     steps:
@@ -363,7 +362,6 @@ jobs:
     env:
       CC: clang
       CXX: clang++
-      CMAKE_VERSION: 3.22.3
 
     name: "Clang ${{ matrix.clang }} • x64"
     container: "silkeh/clang:${{ matrix.clang }}"
@@ -943,7 +941,6 @@ jobs:
           - 21.5-devel-cuda11.3
           - 22.3-devel-cuda11.6
     env:
-      CMAKE_VERSION: 3.22.3
       CC: gcc
       CXX: g++
     name: "NVHPC ${{ matrix.nvhpc }} • x64"
