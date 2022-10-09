@@ -10,6 +10,7 @@ on:
 
 env:
   CMAKE_VERSION: 3.22.3
+  OMP_NUM_THREADS: 1
 
 jobs:
   standard:
