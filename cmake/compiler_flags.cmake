@@ -257,6 +257,7 @@ include(compiler_test)
 # --------------------------------------
 
 mq_add_compile_definitions(
+  "$<$<BOOL:${POSIX_C_SOURCE}>:_POSIX_C_SOURCE=${POSIX_C_SOURCE}>"
   "$<$<BOOL:${MINDSPORE_CI}>:MQ_MINDSPORE_CI>"
   "$<$<BOOL:${USE_OPENMP}>:USE_OPENMP>"
   "$<$<BOOL:${USE_PARALLEL_STL}>:USE_PARALLEL_STL>"
