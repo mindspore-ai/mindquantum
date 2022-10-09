@@ -23,6 +23,3 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/mapping)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ops)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/optimisation)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/simulator)
-
-target_link_libraries(mq_cxx_nextgen PUBLIC include_lib mindquantum::tweedledum mindquantum::json ${OpenMP_tgt}
-                                            Threads::Threads)

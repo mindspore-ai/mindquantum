@@ -21,12 +21,4 @@
 target_sources(mq_base PRIVATE ${CMAKE_CURRENT_LIST_DIR}/utils.cc
                                $<$<BOOL:${ENABLE_LOGGING}>:${CMAKE_CURRENT_LIST_DIR}/logging.cpp>)
 
-if(ENABLE_CUDA)
-  target_compile_definitions(mq_base PUBLIC GPUACCELERATED)
-  target_link_libraries(mq_base PUBLIC $<IF:$<BOOL:${CUDA_STATIC}>,CUDA::cudart_static,CUDA::cudart>)
-endif()
-
-target_link_libraries(mq_base PUBLIC ${MQ_OPENMP_TARGET} mindquantum::json
-                                     $<$<BOOL:${ENABLE_LOGGING}>:mindquantum::spdlog>)
-
 # ==============================================================================

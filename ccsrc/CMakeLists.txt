@@ -21,7 +21,23 @@ set_target_properties(mq_base PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 target_compile_features(mq_base PUBLIC $<IF:$<COMPILE_FEATURES:cxx_std_20>,cxx_std_20,cxx_std_17>)
 append_to_property(mq_install_targets GLOBAL mq_base)
 force_at_least_cxx17_workaround(mq_base)
-target_link_libraries(mq_base PUBLIC cxx20_compat cmake_config mindquantum_setup)
+target_link_libraries(
+  mq_base
+  PUBLIC ${MQ_OPENMP_TARGET}
+         cxx20_compat
+         cmake_config
+         mindquantum::eigen
+         mindquantum::fmt
+         mindquantum::json
+         mindquantum_setup
+         $<$<BOOL:${ENABLE_LOGGING}>:mindquantum::spdlog>)
+
+if(ENABLE_CUDA)
+  target_compile_definitions(mq_base PUBLIC GPUACCELERATED)
+  target_link_libraries(mq_base PUBLIC $<IF:$<BOOL:${CUDA_STATIC}>,CUDA::cudart_static,CUDA::cudart>)
+endif()
+
+# ==============================================================================
 
 if(ENABLE_CXX_EXPERIMENTAL)
   add_library(mq_cxx_nextgen STATIC)
@@ -30,8 +46,19 @@ if(ENABLE_CXX_EXPERIMENTAL)
   target_compile_features(mq_cxx_nextgen PUBLIC $<IF:$<COMPILE_FEATURES:cxx_std_20>,cxx_std_20,cxx_std_17>)
   force_at_least_cxx17_workaround(mq_cxx_nextgen)
 
-  target_link_libraries(mq_cxx_nextgen PUBLIC cxx20_compat cmake_config mindquantum_setup mq_projectq_exp mq_base
-                                              ${MQ_OPENMP_TARGET})
+  target_link_libraries(
+    mq_cxx_nextgen
+    PUBLIC ${MQ_OPENMP_TARGET}
+           Threads::Threads
+           cxx20_compat
+           cmake_config
+           include_lib
+           mindquantum::json
+           mindquantum::symengine
+           mindquantum::tweedledum
+           mq_base
+           mq_projectq_exp
+           mindquantum_setup)
 endif()
 
 # ==============================================================================
