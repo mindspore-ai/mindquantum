@@ -94,7 +94,7 @@ auto AtomStorage::add_or_replace_atom(args_t&&... args) -> atom_t* {
 
     map_t::iterator it_match(atoms_end);
 
-    if (num_controls == any_control && it_begin->first.second == any_control) {
+    if (num_controls == any_control && it_begin != atoms_end && it_begin->first.second == any_control) {
         // Do replacement
         it_match = it_begin;
     } else {
