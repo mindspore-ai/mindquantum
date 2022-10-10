@@ -12,8 +12,8 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef FORMAT_COMPLEX_HPP
-#define FORMAT_COMPLEX_HPP
+#ifndef MQ_FORMAT_COMPLEX_HPP
+#define MQ_FORMAT_COMPLEX_HPP
 
 #include <complex>
 
@@ -72,4 +72,4 @@ struct nlohmann::adl_serializer<std::complex<T>> {
     }
 };
 
-#endif /* FORMAT_COMPLEX_HPP */
+#endif /* MQ_FORMAT_COMPLEX_HPP */
