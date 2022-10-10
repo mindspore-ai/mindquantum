@@ -31,10 +31,10 @@ auto GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p
                                                       const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m,
                                                       index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
-    auto m00 = m[0][0];
-    auto m01 = m[0][1];
-    auto m10 = m[1][0];
-    auto m11 = m[1][1];
+    qs_data_t m00 = m[0][0];
+    qs_data_t m01 = m[0][1];
+    qs_data_t m10 = m[1][0];
+    qs_data_t m11 = m[1][1];
     thrust::counting_iterator<size_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
     auto obj_low_mask = mask.obj_low_mask;
@@ -99,7 +99,7 @@ auto GPUVectorPolicyBase::ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const q
     auto c = -0.5 * std::sin(val / 2);
     auto is = 0.5 * std::cos(val / 2) * qs_data_t(0, -1);
     std::vector<py_qs_datas_t> gate = {{c, is}, {is, c}};
-    return GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, m, dim);
+    return GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
 }
 
 auto GPUVectorPolicyBase::ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
@@ -108,7 +108,7 @@ auto GPUVectorPolicyBase::ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const q
     auto c = -0.5 * std::sin(val / 2);
     auto s = 0.5 * std::cos(val / 2);
     std::vector<py_qs_datas_t> gate = {{c, -s}, {s, c}};
-    return GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, m, dim);
+    return GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
 }
 
 auto GPUVectorPolicyBase::ExpectDiffRZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
@@ -119,7 +119,7 @@ auto GPUVectorPolicyBase::ExpectDiffRZ(qs_data_p_t bra, qs_data_p_t ket, const q
     auto e0 = c + qs_data_t(0, -1) * s;
     auto e1 = c + qs_data_t(0, 1) * s;
     std::vector<py_qs_datas_t> gate = {{e0, 0}, {0, e1}};
-    return GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, m, dim);
+    return GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
 }
 
 auto GPUVectorPolicyBase::ExpectDiffXX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
