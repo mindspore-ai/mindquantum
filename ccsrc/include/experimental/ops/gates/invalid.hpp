@@ -15,6 +15,7 @@
 #ifndef INVALID_OP_HPP
 #define INVALID_OP_HPP
 
+#include <cstdint>
 #include <string_view>
 
 namespace mindquantum::ops {
@@ -23,6 +24,17 @@ class Invalid {
     static constexpr std::string_view kind() {
         return "projectq.invalid";
     }
+
+    Invalid() = default;
+    Invalid(uint64_t num_targets) : num_targets_(num_targets) {
+    }
+
+    auto num_targets() const noexcept {
+        return num_targets_;
+    }
+
+ private:
+    uint32_t num_targets_ = 1;
 };
 }  // namespace mindquantum::ops
 
