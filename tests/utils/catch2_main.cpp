@@ -12,6 +12,8 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+#include "config/logging.hpp"
+
 #include <catch2/catch_session.hpp>
 
 int main(int argc, char* argv[]) {

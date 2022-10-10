@@ -99,6 +99,7 @@ function(add_test_executable target)
                                           ${${target}_LIBS})
   catch_discover_tests(${target})
   target_compile_definitions(${target} PRIVATE ${${target}_DEFINES})
+  append_to_property(_test_exec_targets GLOBAL ${target})
 endfunction()
 
 # ==============================================================================
