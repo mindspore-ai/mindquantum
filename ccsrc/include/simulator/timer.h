@@ -25,7 +25,7 @@
 #include <vector>
 
 namespace mindquantum::timer {
-using TimePoint =typename std::chrono::steady_clock::time_point;
+using TimePoint = typename std::chrono::steady_clock::time_point;
 
 TimePoint NOW();
 
