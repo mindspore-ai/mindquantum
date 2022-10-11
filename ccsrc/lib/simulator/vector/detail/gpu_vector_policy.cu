@@ -163,8 +163,7 @@ void GPUVectorPolicyBase::SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, ind
 auto GPUVectorPolicyBase::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim)
     -> qs_data_p_t {
     qs_data_p_t out = GPUVectorPolicyBase::InitState(dim, false);
-    for (const auto& pauli_term : ham) {
-        const auto& [pauli_string, coeff] = pauli_term;
+    for (const auto& [pauli_string, coeff] : ham) {
         auto mask = GenPauliMask(pauli_string);
         auto mask_f = mask.mask_x | mask.mask_y;
         if (dim >= (1UL << 18)) {
