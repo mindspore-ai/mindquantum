@@ -114,10 +114,14 @@ skip-string-normalization = true
 
     extension-pkg-whitelist = [
       'mindquantum.mqbackend',
+      'mindquantum._mq_vector',
+      'mindquantum._mq_vector_gpu',
       'mindquantum.experimental._mindquantum_cxx',
     ]
     extension-pkg-allow-list = [
       'mindquantum.mqbackend',
+      'mindquantum._mq_vector',
+      'mindquantum._mq_vector_gpu',
       'mindquantum.experimental._mindquantum_cxx',
     ]
 

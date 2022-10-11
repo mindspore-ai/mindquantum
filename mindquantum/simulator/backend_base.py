@@ -74,7 +74,7 @@ class BackendBase:
         """Get expectation of given hamiltonian."""
         raise NotImplementedError(f"get_expectation not implemented for {self.device_name()}")
 
-    def get_expectation_with_grad(
+    def get_expectation_with_grad(  # pylint: disable=too-many-arguments
         self,
         hams: List[Hamiltonian],
         circ_right: Circuit,

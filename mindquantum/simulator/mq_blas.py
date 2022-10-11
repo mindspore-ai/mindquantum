@@ -24,7 +24,7 @@ if MQ_SIM_GPU_SUPPORTED:
     from mindquantum import _mq_vector_gpu
 
 
-class MQBlas:
+class MQBlas:  # pylint: disable=too-few-public-methods
     """MindQuantum blas module."""
 
     @staticmethod
@@ -40,10 +40,10 @@ class MQBlas:
         return blas.inner_product(bra.sim, ket.sim)
 
     @staticmethod
-    def _get_blas(qs: MQSim):
+    def _get_blas(simulator: MQSim):
         """Get blas module w.r.t given backend."""
-        if qs.name == 'mqvector':
+        if simulator.name == 'mqvector':
             return _mq_vector.blas
-        if qs.name == 'mqvector_gpu':
+        if simulator.name == 'mqvector_gpu':
             return _mq_vector_gpu.blas
-        raise ValueError(f"Backend {qs.device_name()} unknown.")
+        raise ValueError(f"Backend {simulator.device_name()} unknown.")

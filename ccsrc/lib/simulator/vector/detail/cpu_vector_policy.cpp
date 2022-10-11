@@ -209,11 +209,11 @@ auto CPUVectorPolicyBase::ZeroStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t
                 res_real += bra[i].real() * ket[i].real() + bra[i].imag() * ket[i].imag();
                 res_imag += bra[i].real() * ket[i].imag() - bra[i].imag() * ket[i].real();
             })
-    // clang-format off
+    // clang-format on
     return {res_real, res_imag};
 }
 
-auto CPUVectorPolicyBase::GetQS(qs_data_p_t qs, index_t dim) -> py_qs_datas_t{
+auto CPUVectorPolicyBase::GetQS(qs_data_p_t qs, index_t dim) -> py_qs_datas_t {
     py_qs_datas_t out(dim);
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { out[i] = qs[i]; })

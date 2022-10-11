@@ -45,10 +45,12 @@ namespace mindquantum::sim::vector::intrin {
         } while (0)
 
 #    define INTRIN_m256_to_host(device_res, host_res)                                                                  \
-        _mm256_storeu2_m128d((calc_type*) (host_res), ((calc_type*) (host_res)) + 2, device_res);
+        _mm256_storeu2_m128d(reinterpret_cast<calc_type*>(host_res), (reinterpret_cast<calc_type*>(host_res)) + 2,     \
+                             device_res);
 
 #    define INTRIN_m256_to_host2(device_res, host_res_first, host_res_second)                                          \
-        _mm256_storeu2_m128d((calc_type*) (host_res_second), ((calc_type*) (host_res_first)), device_res);  // NOLINT
+        _mm256_storeu2_m128d(reinterpret_cast<calc_type*>(host_res_second),                                            \
+                             (reinterpret_cast<calc_type*>(host_res_first)), device_res);  // NOLINT
 
 #    define INTRIN_gene_2d_mm_and_mmt(matrix, mm, mmt, neg)                                                            \
         do {                                                                                                           \

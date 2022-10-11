@@ -91,8 +91,10 @@ class Simulator:
             _check_seed(seed)
             try:
                 self.backend = SUPPORTED_SIMULATOR[backend](n_qubits, seed, *args, **kwargs)
-            except KeyError:
-                raise ValueError(f"backend {backend} not supported, now we support: {', '.join(SUPPORTED_SIMULATOR)}!")
+            except KeyError as err:
+                raise ValueError(
+                    f"backend {backend} not supported, now we support: {', '.join(SUPPORTED_SIMULATOR)}!"
+                ) from err
 
     @property
     def n_qubits(self):
@@ -374,7 +376,7 @@ class Simulator:
         """
         self.backend.set_qs(quantum_state)
 
-    def get_expectation_with_grad(
+    def get_expectation_with_grad(  # pylint: disable=too-many-arguments
         self,
         hams,
         circ_right,

@@ -117,9 +117,8 @@ class MQSim(BackendBase):
                 pr = _check_and_generate_pr_type(pr, gate.coeff.params_name)
             else:
                 pr = ParameterResolver()
-            res = self.sim.apply_gate(gate.get_cpp_obj(), pr.get_cpp_obj(), diff)
             if isinstance(gate, Measure):
-                return res
+                return self.sim.apply_gate(gate.get_cpp_obj(), pr.get_cpp_obj(), diff)
         return None
 
     def apply_hamiltonian(self, hamiltonian: Hamiltonian):
@@ -143,7 +142,7 @@ class MQSim(BackendBase):
     def flush(self):
         """Execute all command."""
 
-    def get_expectation_with_grad(
+    def get_expectation_with_grad(  # pylint: disable=R0912,R0913,R0914,R0915
         self,
         hams: List[Hamiltonian],
         circ_right: Circuit,
