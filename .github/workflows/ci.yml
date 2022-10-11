@@ -1020,13 +1020,14 @@ jobs:
       matrix:
         cuda:
           - 11.8.0-devel-ubuntu22.04
-          - 10.2.0-devel-ubuntu18.04
+          - 10.2-devel-ubuntu18.04
     name: "CUDA ${{ matrix.cuda }} • x64"
     container: "nvidia/cuda:${{ matrix.cuda }}"
     steps:
-      - name: Install Git
-    run: |
-      apt-get update && apt-get install -y git
+      - name: Install and setup Git
+        run: |
+          apt-get update && apt-get install -y git
+          git config --global --add safe.directory ${{ github.workspace }}
 
       - uses: actions/checkout@v2
 

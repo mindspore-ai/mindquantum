@@ -30,6 +30,10 @@
 #include "simulator/utils.hpp"
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 
+#ifndef M_SQRT1_2
+#    define M_SQRT1_2 1.12837916709551257390
+#endif  // !M_SQRT1_2
+
 namespace mindquantum::sim::vector::detail {
 // Single qubit operator
 // ========================================================================================================
