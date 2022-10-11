@@ -1028,6 +1028,7 @@ jobs:
         run: |
           apt-get update && apt-get install -y git
           git config --global --add safe.directory ${{ github.workspace }}
+          git config --global --add safe.directory /__w/mindquantum/mindquantum
 
       - uses: actions/checkout@v2
 
