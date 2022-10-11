@@ -1019,7 +1019,6 @@ jobs:
       fail-fast: false
       matrix:
         cuda:
-          - 10.2-devel-ubuntu18.04
           - 11.0.3-devel-ubuntu18.04
           - 11.8.0-devel-ubuntu22.04
     name: "CUDA ${{ matrix.cuda }} • x64"
@@ -1104,7 +1103,7 @@ jobs:
       - name: Run C++ tests
         run: |
           cd build
-          catchsegv ctest --output-on-failure
+          ctest --output-on-failure
 
   # ============================================================================
 

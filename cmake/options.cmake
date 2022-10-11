@@ -191,6 +191,8 @@ if(ENABLE_CUDA)
   if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 11.0)
     list(APPEND CMAKE_CUDA_ARCHITECTURES 80)
     list(SORT CMAKE_CUDA_ARCHITECTURES ORDER DESCENDING)
+  else()
+    disable_cuda("CUDA compiler version is too old (${CMAKE_CUDA_COMPILER_VERSION} < 11.0)")
   endif()
 
   # Now look if we find NVHPC
