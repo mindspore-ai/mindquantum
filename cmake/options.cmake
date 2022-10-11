@@ -169,14 +169,7 @@ if(ENABLE_CUDA)
   if(NOT CMAKE_CUDA_ARCHITECTURES AND "$ENV{CUDAARCHS}" STREQUAL "")
     set(_default_cudaarchs TRUE)
     # Default architectures list supported by NVHPC when using -stdpar -cuda -gpu=ccXX (taken from NVHPC 22.3)
-    set(CMAKE_CUDA_ARCHITECTURES
-        60
-        61
-        62
-        70
-        72
-        75
-        80)
+    set(CMAKE_CUDA_ARCHITECTURES 60 61 62 70 72 75)
 
     # NB: CUDAARCHS requires CMake 3.20+
     message(STATUS "Neither of CMAKE_CUDA_ARCHITECTURES (CMake variable) or CUDAARCHS (env. variable; CMake 3.20+) "
@@ -193,6 +186,11 @@ if(ENABLE_CUDA)
     setup_language(CUDA)
   else()
     disable_cuda("missing/unable to locate CUDA compiler")
+  endif()
+
+  if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 11.0)
+    list(APPEND CMAKE_CUDA_ARCHITECTURES 80)
+    list(SORT CMAKE_CUDA_ARCHITECTURES ORDER DESCENDING)
   endif()
 
   # Now look if we find NVHPC
