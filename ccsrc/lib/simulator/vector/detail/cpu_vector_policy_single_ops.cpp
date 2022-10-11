@@ -23,6 +23,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include <boost/iterator/detail/facade_iterator_category.hpp>
+
 #include "config/openmp.hpp"
 
 #include "core/utils.hpp"
@@ -33,6 +35,11 @@
 #ifndef M_SQRT1_2
 #    define M_SQRT1_2 1.12837916709551257390
 #endif  // !M_SQRT1_2
+
+// TODO(dnguyen): Temporary fix...
+#ifdef _MSC_VER
+#    undef INTRIN
+#endif  // _MSC_VER
 
 namespace mindquantum::sim::vector::detail {
 // Single qubit operator
