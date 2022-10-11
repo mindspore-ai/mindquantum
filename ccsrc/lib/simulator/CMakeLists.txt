@@ -32,7 +32,7 @@ add_library(
   ${CMAKE_CURRENT_LIST_DIR}/vector/detail/cpu_vector_policy_single_ops.cpp
   ${CMAKE_CURRENT_LIST_DIR}/vector/detail/cpu_vector_policy_gate_expec.cpp)
 
-target_include_directories(mqsim_vector_cpu PUBLIC ${MQSIM_VECTOR_CPU_HEAD})
+target_sources(mqsim_vector_cpu PRIVATE ${MQSIM_VECTOR_CPU_HEAD})
 target_link_libraries(mqsim_vector_cpu PUBLIC mqsim_common "$<$<BOOL:${ENABLE_PROJECTQ}>:mq_projectq>")
 target_compile_definitions(mqsim_vector_cpu PUBLIC INTRIN)
 force_at_least_cxx17_workaround(mqsim_vector_cpu)
@@ -50,7 +50,7 @@ if(ENABLE_CUDA)
     ${CMAKE_CURRENT_LIST_DIR}/vector/detail/gpu_vector_policy_gate_expec.cu
     ${CMAKE_CURRENT_LIST_DIR}/vector/detail/gpu_vector_core_policy.cu)
 
-  target_include_directories(mqsim_vector_gpu PUBLIC ${MQSIM_VECTOR_GPU_HEAD})
+  target_sources(mqsim_vector_gpu PRIVATE ${MQSIM_VECTOR_GPU_HEAD})
   target_link_libraries(mqsim_vector_gpu PUBLIC mqsim_common)
   force_at_least_cxx17_workaround(mqsim_vector_gpu)
   append_to_property(mq_install_targets GLOBAL mqsim_vector_gpu)

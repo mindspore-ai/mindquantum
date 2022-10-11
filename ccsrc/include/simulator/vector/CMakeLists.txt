@@ -18,14 +18,15 @@
 
 # lint_cmake: -whitespace/indent
 
-set(MQSIM_VECTOR_HEAD vector_state.hpp vector_state.tpp blas.hpp)
+set(MQSIM_VECTOR_HEAD ${CMAKE_CURRENT_LIST_DIR}/vector_state.hpp ${CMAKE_CURRENT_LIST_DIR}/vector_state.tpp
+                      ${CMAKE_CURRENT_LIST_DIR}/blas.hpp)
 
-set(MQSIM_VECTOR_CPU_HEAD detail/cpu_vector_policy.hpp)
+set(MQSIM_VECTOR_CPU_HEAD ${CMAKE_CURRENT_LIST_DIR}/detail/cpu_vector_policy.hpp)
 list(APPEND MQSIM_VECTOR_CPU_HEAD ${MQSIM_VECTOR_HEAD})
 
 # =============================================================================
 
 if(ENABLE_CUDA)
-  set(MQSIM_VECTOR_GPU_HEAD detail/cpu_vector_policy.hpp)
+  set(MQSIM_VECTOR_GPU_HEAD ${CMAKE_CURRENT_LIST_DIR}/detail/cpu_vector_policy.hpp)
   list(APPEND MQSIM_VECTOR_GPU_HEAD ${MQSIM_VECTOR_HEAD})
 endif()
