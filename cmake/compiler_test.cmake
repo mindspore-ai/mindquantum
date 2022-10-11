@@ -95,11 +95,15 @@ function(check_code_compiles cmake_identifier var lang_standard code)
       list(APPEND _lang_list CUDA)
     endif()
   endif()
+
+  set(_cmake_identifer ${cmake_identifier})
+  set(_var ${var})
+
   foreach(_lang ${_lang_list})
     string(TOUPPER "${_lang}" LANG)
     string(TOLOWER "${_lang}" lang)
-    set(cmake_identifier "${lang}_${cmake_identifier}")
-    set(var "MQ_${LANG}_${var}")
+    set(cmake_identifier "${lang}_${_cmake_identifer}")
+    set(var "MQ_${LANG}_${_var}")
 
     if(lang_standard MATCHES "std_([0-9]+)")
       set(CMAKE_${LANG}_STANDARD ${CMAKE_MATCH_1})
