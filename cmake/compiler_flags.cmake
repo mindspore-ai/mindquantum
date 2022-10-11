@@ -108,7 +108,13 @@ endif()
 
 if(ENABLE_CUDA)
   test_compile_option(
-    cuda_allow_unsupported_flag FLAGCHECK
+    cuda_extended_lambda
+    LANGS CUDA
+    FLAGS "--extended-lambda"
+    NO_TRYCOMPILE_TARGET NO_TRYCOMPILE_FLAGCHECK_TARGET)
+
+  test_compile_option(
+    cuda_allow_unsupported_flag
     LANGS CUDA
     FLAGS "-allow-unsupported-compiler"
     CMAKE_OPTION CUDA_ALLOW_UNSUPPORTED_COMPILER)

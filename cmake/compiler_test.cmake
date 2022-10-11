@@ -567,12 +567,14 @@ else()
 endif()
 set_target_properties(CXX_mindquantum PROPERTIES CXX_STANDARD_REQUIRED ON)
 
-if(cuda_std_20 IN_LIST CMAKE_CUDA_COMPILE_FEATURES)
-  target_compile_features(CUDA_mindquantum INTERFACE cuda_std_20)
-else()
-  target_compile_features(CUDA_mindquantum INTERFACE cuda_std_17)
+if(ENABLE_CUDA)
+  if(cuda_std_20 IN_LIST CMAKE_CUDA_COMPILE_FEATURES)
+    target_compile_features(CUDA_mindquantum INTERFACE cuda_std_20)
+  else()
+    target_compile_features(CUDA_mindquantum INTERFACE cuda_std_17)
+  endif()
+  set_target_properties(CUDA_mindquantum PROPERTIES CUDA_STANDARD_REQUIRED ON)
 endif()
-set_target_properties(CUDA_mindquantum PROPERTIES CUDA_STANDARD_REQUIRED ON)
 
 # ------------------------------------------------------------------------------
 

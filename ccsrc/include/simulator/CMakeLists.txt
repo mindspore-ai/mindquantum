@@ -18,7 +18,8 @@
 
 # lint_cmake: -whitespace/indent
 
-set(MQSIM_COMMON_HEAD timer.h types.hpp utils.hpp)
+set(MQSIM_COMMON_HEAD ${CMAKE_CURRENT_LIST_DIR}/timer.h ${CMAKE_CURRENT_LIST_DIR}/types.hpp
+                      ${CMAKE_CURRENT_LIST_DIR}/utils.hpp)
 
 # ------------------------------------------------------------------------------
 
