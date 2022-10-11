@@ -15,14 +15,23 @@
 #include <pybind11/pybind11.h>
 
 #include "python/vector/bind_vec_state.h"
+
 #define _mq_vector _mq_vector_gpu
 
 namespace mindquantum::sim::bind {
 PYBIND11_MODULE(_mq_vector, module) {
+#ifdef ENABLE_GPU
+    using vec_sim
+        = mindquantum::sim::vector::detail::VectorState<mindquantum::sim::vector::detail::GPUVectorPolicyBase>;
+#else
+    using vec_sim
+        = mindquantum::sim::vector::detail::VectorState<mindquantum::sim::vector::detail::CPUVectorPolicyBase>;
+#endif
+
     module.doc() = "MindQuantum c++ vector state simulator.";
     BindSim<vec_sim>(module, "mqvector");
 
-    py::module blas = module.def_submodule("blas", "MindQuantum simulator algebra module.");
+    pybind11::module blas = module.def_submodule("blas", "MindQuantum simulator algebra module.");
     BindBlas<vec_sim>(blas);
 }
 }  // namespace mindquantum::sim::bind
