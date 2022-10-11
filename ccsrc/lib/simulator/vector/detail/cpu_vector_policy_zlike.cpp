@@ -23,6 +23,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include "config/openmp.hpp"
+
 #include "core/utils.hpp"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
@@ -37,13 +39,13 @@ void CPUVectorPolicyBase::ApplyZLike(qs_data_p_t qs, const qbits_t& objs, const 
     SingleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t l = 0; l < (dim / 2); l++) {
+            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask) + mask.obj_mask;
                 qs[i] *= val;
             })
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t l = 0; l < (dim / 2); l++) {
+            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask) + mask.obj_mask;
                 if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                     qs[i] *= val;
@@ -81,7 +83,7 @@ void CPUVectorPolicyBase::ApplyPS(qs_data_p_t qs, const qbits_t& objs, const qbi
         auto e = -std::sin(val) + IMAGE_I * std::cos(val);
         if (!mask.ctrl_mask) {
             THRESHOLD_OMP_FOR(
-                dim, DimTh, for (index_t l = 0; l < (dim / 2); l++) {
+                dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
                     auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                     auto j = i + mask.obj_mask;
                     qs[i] = 0;
@@ -89,7 +91,7 @@ void CPUVectorPolicyBase::ApplyPS(qs_data_p_t qs, const qbits_t& objs, const qbi
                 })
         } else {
             THRESHOLD_OMP_FOR(
-                dim, DimTh, for (index_t l = 0; l < (dim / 2); l++) {
+                dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
                     auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                     if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto j = i + mask.obj_mask;

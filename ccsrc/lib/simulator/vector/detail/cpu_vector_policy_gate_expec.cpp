@@ -23,6 +23,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include "config/openmp.hpp"
+
 #include "core/utils.hpp"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
@@ -43,12 +45,12 @@ auto CPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
         // clang-format off
+#ifdef INTRIN
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (index_t l = 0; l < (dim / 2); l++) {
+                for (omp::idx_t l = 0; l < (dim / 2); l++) {
                     auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                     auto j = i + mask.obj_mask;
-#ifdef INTRIN
                     __m256d mul_res;
                     INTRIN_M2_dot_V2(ket, i, j, mm, mmt, mul_res);
                     __m256d res;
@@ -57,14 +59,20 @@ auto CPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p
                     INTRIN_m256_to_host(res, ress);
                     res_real += ress[0].real() + ress[1].real();
                     res_imag += ress[0].imag() + ress[1].imag();
+                });
 #else
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                for (omp::idx_t l = 0; l < (dim / 2); l++) {
+                    auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+                    auto j = i + mask.obj_mask;
                     auto t1 = m[0][0] * ket[i] + m[0][1] * ket[j];
                     auto t2 = m[1][0] * ket[i] + [1][1] * ket[j];
                     auto this_res = std::conj(bra[i]) * t1 + std::conj(bra[j]) * t2;
                     res_real += this_res.real();
                     res_imag += this_res.imag();
-#endif
                 });
+#endif
         // clang-format on
     } else {
         if (mask.ctrl_qubits.size() == 1) {
@@ -81,13 +89,13 @@ auto CPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p
             auto first_high_mask = ~first_low_mask;
             auto second_high_mask = ~second_low_mask;
             // clang-format off
+#ifdef INTRIN
             THRESHOLD_OMP(
                 MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                    for (index_t l = 0; l < (dim / 4); l++) {
+                    for (omp::idx_t l = 0; l < (dim / 4); l++) {
                         auto i = ((l & first_high_mask) << 1) + (l & first_low_mask);
                         i = ((i & second_high_mask) << 1) + (i & second_low_mask) + mask.ctrl_mask;
                         auto j = i + mask.obj_mask;
-#ifdef INTRIN
                         __m256d mul_res;
                         INTRIN_M2_dot_V2(ket, i, j, mm, mmt, mul_res);
                         __m256d res;
@@ -96,24 +104,31 @@ auto CPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p
                         INTRIN_m256_to_host(res, ress);
                         res_real += ress[0].real() + ress[1].real();
                         res_imag += ress[0].imag() + ress[1].imag();
+                    });
 #else
+            THRESHOLD_OMP(
+                MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                    for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                        auto i = ((l & first_high_mask) << 1) + (l & first_low_mask);
+                        i = ((i & second_high_mask) << 1) + (i & second_low_mask) + mask.ctrl_mask;
+                        auto j = i + mask.obj_mask;
                         auto t1 = m[0][0] * ket[i] + m[0][1] * ket[j];
                         auto t2 = m[1][0] * ket[i] + m[1][1] * ket[j];
                         auto this_res = std::conj(bra[i]) * t1 + std::conj(bra[j]) * t2;
                         res_real += this_res.real();
                         res_imag += this_res.imag();
-#endif
                     });
+#endif
             // clang-format on
         } else {
             // clang-format off
+#ifdef INTRIN
             THRESHOLD_OMP(
                 MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                    for (index_t l = 0; l < (dim / 2); l++) {
+                    for (omp::idx_t l = 0; l < (dim / 2); l++) {
                         auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                         if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                             auto j = i + mask.obj_mask;
-#ifdef INTRIN
                             __m256d mul_res;
                             INTRIN_M2_dot_V2(ket, i, j, mm, mmt, mul_res);
                             __m256d res;
@@ -122,15 +137,23 @@ auto CPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p
                             INTRIN_m256_to_host(res, ress);
                             res_real += ress[0].real() + ress[1].real();
                             res_imag += ress[0].imag() + ress[1].imag();
+                        }
+                    });
 #else
+            THRESHOLD_OMP(
+                MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                    for (omp::idx_t l = 0; l < (dim / 2); l++) {
+                        auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                            auto j = i + mask.obj_mask;
                             auto t1 = m[0][0] * ket[i] + m[0][1] * ket[j];
                             auto t2 = m[1][0] * ket[i] + m[1][1] * ket[j];
                             auto this_res = std::conj(bra[i]) * t1 + std::conj(bra[j]) * t2;
                             res_real += this_res.real();
                             res_imag += this_res.imag();
-#endif
                         }
                     });
+#endif
             // clang-format on
         }
     }
@@ -175,7 +198,7 @@ auto CPUVectorPolicyBase::ExpectDiffPS(qs_data_p_t bra, qs_data_p_t ket, const q
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (index_t l = 0; l < (dim / 2); l++) {
+                for (omp::idx_t l = 0; l < (dim / 2); l++) {
                     auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                     auto j = i + mask.obj_mask;
                     auto this_res = std::conj(bra[j]) * ket[j] * e;
@@ -188,7 +211,7 @@ auto CPUVectorPolicyBase::ExpectDiffPS(qs_data_p_t bra, qs_data_p_t ket, const q
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (index_t l = 0; l < (dim / 2); l++) {
+                for (omp::idx_t l = 0; l < (dim / 2); l++) {
                     auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                     if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto j = i + mask.obj_mask;
@@ -212,7 +235,7 @@ auto CPUVectorPolicyBase::ExpectDiffXX(qs_data_p_t bra, qs_data_p_t ket, const q
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (index_t l = 0; l < (dim / 4); l++) {
+                                                    for (omp::idx_t l = 0; l < (dim / 4); l++) {
                                                         index_t i;
                                                         SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
                                                                       mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
@@ -233,7 +256,7 @@ auto CPUVectorPolicyBase::ExpectDiffXX(qs_data_p_t bra, qs_data_p_t ket, const q
     } else {
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (index_t l = 0; l < (dim / 4); l++) {
+                                                    for (omp::idx_t l = 0; l < (dim / 4); l++) {
                                                         index_t i;
                                                         SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
                                                                       mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
@@ -267,7 +290,7 @@ auto CPUVectorPolicyBase::ExpectDiffYY(qs_data_p_t bra, qs_data_p_t ket, const q
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (index_t l = 0; l < (dim / 4); l++) {
+                                                    for (omp::idx_t l = 0; l < (dim / 4); l++) {
                                                         index_t i;
                                                         SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
                                                                       mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
@@ -288,7 +311,7 @@ auto CPUVectorPolicyBase::ExpectDiffYY(qs_data_p_t bra, qs_data_p_t ket, const q
     } else {
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (index_t l = 0; l < (dim / 4); l++) {
+                                                    for (omp::idx_t l = 0; l < (dim / 4); l++) {
                                                         index_t i;
                                                         SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
                                                                       mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
@@ -325,7 +348,7 @@ auto CPUVectorPolicyBase::ExpectDiffZZ(qs_data_p_t bra, qs_data_p_t ket, const q
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (index_t l = 0; l < (dim / 4); l++) {
+                                                    for (omp::idx_t l = 0; l < (dim / 4); l++) {
                                                         index_t i;
                                                         SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
                                                                       mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
@@ -342,7 +365,7 @@ auto CPUVectorPolicyBase::ExpectDiffZZ(qs_data_p_t bra, qs_data_p_t ket, const q
     } else {
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (index_t l = 0; l < (dim / 4); l++) {
+                                                    for (omp::idx_t l = 0; l < (dim / 4); l++) {
                                                         index_t i;
                                                         SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
                                                                       mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
