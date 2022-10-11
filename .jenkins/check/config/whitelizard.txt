@@ -11,15 +11,19 @@ mindquantum/mindquantum/algorithm/nisq/chem/uccsd0.py:uccsd0_singlet_generator
 mindquantum/mindquantum/io/display/bloch_plt_drawer.py:add_state
 mindquantum/mindquantum/io/qasm/hiqasm.py:to_string
 mindquantum/mindquantum/io/qasm/hiqasm.py:trans_v01
+mindquantum/mindquantum/simulator/mqsim.py:get_expectation_with_grad
+mindquantum/mindquantum/simulator/projectq_sim.py:get_expectation_with_grad
 mindquantum/mindquantum/simulator/simulator.py:get_expectation_with_grad
-mindquantum/mindquantum/src/binding.cc:mindquantum::PYBIND11_MODULE
 mindquantum/mindquantum/third_party/unitary_cc.py:uccsd_singlet_generator
 
 mindquantum/mindquantum/experimental/_symengine_utilities.py:symbols
 
+mindquantum/mindquantum/src/binding.cc:mindquantum::PYBIND11_MODULE
 mindquantum/ccsrc/include/experimental/ops/gates/qubit_operator.tpp:mindquantum::ops::QubitOperator<coeff_t>::sparse_matrix
 mindquantum/ccsrc/include/ops/gates.hpp:mindquantum::GetGateByName
+mindquantum/ccsrc/include/simulator/vector/vector_state.tpp:mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::ApplyGate
 mindquantum/ccsrc/lib/experimental/core/cpp_core.cpp:mindquantum::core::CppCore::flush
+mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_gate_expec.cpp:mindquantum::sim::vector::detail::CPUVectorPolicyBase::ExpectDiffSingleQubitMatrix
 mindquantum/ccsrc/python/experimental/lib/core/symengine.cpp:mindquantum::python::init_symengine_basic_types
 mindquantum/ccsrc/python/experimental/lib/ops/command.cpp:mindquantum::details::load_gate
 mindquantum/ccsrc/python/experimental/lib/ops/ops.cpp:init_mindquantum_ops
