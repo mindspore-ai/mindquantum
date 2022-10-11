@@ -57,7 +57,7 @@ constexpr bool kind_compare(std::string_view kind) {
     using kinds_t = typename atom_t::kinds_t;
     static_assert(is_tuple_v<kinds_t>);
     return impl::tuple_kind_match<std::string_view, kinds_t>::apply(kind);
-};
+}
 
 // =========================================================================
 

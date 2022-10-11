@@ -156,10 +156,10 @@ class ComputeCircuitProxy {
 }  // namespace details
 }  // namespace mindquantum::cengines
 
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage,readability/braces)
 #define MQ_WITH_COMPUTE_IMPL(original, name, unique_name)                                                              \
     mindquantum::cengines::ComputeCircuit unique_name{original};                                                       \
-    mindquantum::circuit_t&(name){(unique_name).non_compute()};                                                        \
+    mindquantum::circuit_t&(name) ((unique_name).non_compute());                                                       \
     if (mindquantum::cengines::details::ComputeCircuitProxy proxy{(unique_name)}; true) {                              \
         auto&(unique_name) = static_cast<mindquantum::circuit_t&>(proxy);
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
