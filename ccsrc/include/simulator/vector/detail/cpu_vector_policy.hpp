@@ -22,11 +22,11 @@
 
 #include "core/mq_base_types.hpp"
 #include "simulator/types.hpp"
+
 #ifdef INTRIN
 #    include "projectq/backends/_sim/_cppkernels/intrin/alignedallocator.hpp"
 #    include "projectq/backends/_sim/_cppkernels/intrin/cintrin.hpp"
-#endif
-#ifdef INTRIN
+
 namespace mindquantum::sim::vector::intrin {
 #    define INTRIN_M2_dot_V2(ket, i, j, mm, mmt, res)                                                                  \
         do {                                                                                                           \

@@ -23,6 +23,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include "config/openmp.hpp"
+
 #include "core/utils.hpp"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
@@ -45,7 +47,7 @@ void CPUVectorPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t de
 #endif
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t l = 0; l < (dim / 2); l++) {
+            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                 auto j = i + mask.obj_mask;
 #ifdef INTRIN
@@ -61,7 +63,7 @@ void CPUVectorPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t de
             })
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t l = 0; l < (dim / 2); l++) {
+            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                 if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                     auto j = i + mask.obj_mask;
