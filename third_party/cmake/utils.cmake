@@ -1033,6 +1033,7 @@ endfunction()
 #                      [INSTALL_COMMAND  <command> [... <args>]]
 #                      [INSTALL_INCS <directory> [... <directory>]]
 #                      [INSTALL_LIBS <directory> [... <directory>]]
+#                      [LANGS <lang> [... <lang>]]
 #                      [LIBS <lib-names> [... <lib-names>]]
 #                      [LOCAL_EXTRA_DEFINES [TARGET <target> <defines> [... <defines>]]...]
 #                      [ONLY_COPY_DIRS <directory> [... <directory>]]
@@ -1048,6 +1049,8 @@ endfunction()
 # BUILD_DEPENDENCIES is a list of lists of arguments to pass onto to `find_package()` prior to start building the
 # package.
 # e.g. (... BUILD_DEPENDENCIES "Git REQUIRED" "Boost COMPONENTS system" ...)
+#
+# LANG is a list of languages to activate by default for a third-party library. This defaults to C++ (and C if enabled).
 #
 # LOCAL_EXTRA_DEFINES can be used to set some additional COMPILE_DEFINITIONS in the case the specified target is built
 # locally (as opposed to the case where the package is found as a system library)
@@ -1087,6 +1090,7 @@ function(mindquantum_add_pkg pkg_name)
       INSTALL_COMMAND
       INSTALL_INCS
       INSTALL_LIBS
+      LANGS
       LIBS
       LOCAL_EXTRA_DEFINES
       ONLY_COPY_DIRS
@@ -1100,6 +1104,10 @@ function(mindquantum_add_pkg pkg_name)
 
   if(NOT PKG_NS_NAME)
     set(PKG_NS_NAME ${pkg_name})
+  endif()
+
+  if(NOT PKG_LANGS)
+    set(PKG_LANGS C CXX)
   endif()
 
   set(_components ${PKG_LIBS} ${PKG_EXE})
@@ -1219,7 +1227,7 @@ function(mindquantum_add_pkg pkg_name)
   string(REPLACE "${PROJECT_BINARY_DIR}" "<binary-dir>" _purged_ARGN "${ARGN}")
   string(REPLACE "${PROJECT_SOURCE_DIR}" "<source-dir>" _purged_ARGN "${_purged_ARGN}")
   set(${pkg_name}_CONFIG_TXT
-      "${CMAKE_CXX_COMPILER_VERSION}-${CMAKE_C_COMPILER_VERSION}
+      "${CMAKE_CXX_COMPILER_VERSION}-${CMAKE_C_COMPILER_VERSION}-${CMAKE_CUDA_COMPILER_VERSION}
             ${_purged_ARGN} - ${${pkg_name}_USE_STATIC_LIBS}- ${${pkg_name}_PATCHES_HASH}
             ${${pkg_name}_CXXFLAGS}--${${pkg_name}_CFLAGS}--${${pkg_name}_LDFLAGS}")
   string(REPLACE ";" "-" ${pkg_name}_CONFIG_TXT ${${pkg_name}_CONFIG_TXT})
@@ -1342,15 +1350,11 @@ function(mindquantum_add_pkg pkg_name)
 
     elseif(NOT "${PKG_CMAKE_OPTION}" STREQUAL "")
       set(${pkg_name}_CMAKE_COMPILERS)
-      if(CMAKE_C_COMPILER)
-        list(APPEND ${pkg_name}_CMAKE_COMPILERS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER})
-      endif()
-      if(CMAKE_CXX_COMPILER)
-        list(APPEND ${pkg_name}_CMAKE_COMPILERS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER})
-      endif()
-      if(CMAKE_CUDA_COMPILER)
-        list(APPEND ${pkg_name}_CMAKE_COMPILERS -DCMAKE_CUDA_COMPILER=${CMAKE_CUDA_COMPILER})
-      endif()
+      foreach(_lang ${PKG_LANGS})
+        if(CMAKE_${_lang}_COMPILER)
+          list(APPEND ${pkg_name}_CMAKE_COMPILERS -DCMAKE_${_lang}_COMPILER=${CMAKE_${_lang}_COMPILER})
+        endif()
+      endforeach()
 
       if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
         set(_cmake_build_dir "${${pkg_name}_SOURCE_DIR}/_build")
@@ -1410,17 +1414,33 @@ function(mindquantum_add_pkg pkg_name)
       set(MAKE ${_make_exec})
 
       set(${pkg_name}_COMPILERS)
-      if(CMAKE_C_COMPILER)
-        list(APPEND ${pkg_name}_COMPILERS "CC=${CMAKE_C_COMPILER}")
-      endif()
-      if(CMAKE_CXX_COMPILER)
-        list(APPEND ${pkg_name}_COMPILERS "CXX=${CMAKE_CXX_COMPILER}")
-      endif()
+      foreach(_lang ${PKG_LANGS})
+        if(CMAKE_${_lang}_COMPILER)
+          if("${_lang}" STREQUAL "C")
+            set(_var C)
+          elseif("${_lang}" STREQUAL "CXX")
+            set(_var CC)
+          elseif("${_lang}" STREQUAL "CUDA")
+            set(_var CUDACXX)
+          else()
+            message(WARNING "Unsupported language: ${_lang} -> skipping setting compiler environment variable")
+            continue()
+          endif()
+          list(APPEND ${pkg_name}_COMPILERS ${_var}=${CMAKE_${_lang}_COMPILER})
+        endif()
+      endforeach()
+
       if(${pkg_name}_CFLAGS)
         set(${pkg_name}_MAKE_CFLAGS "CFLAGS=${${pkg_name}_CFLAGS}")
       endif()
       if(${pkg_name}_CXXFLAGS)
         set(${pkg_name}_MAKE_CXXFLAGS "CXXFLAGS=${${pkg_name}_CXXFLAGS}")
+      endif()
+      if(${pkg_name}_CUDAFLAGS)
+        if(NOT CUDA IN_LIST ${PKG_LANGS})
+          message(WARNING "Set ${pkg_name}_CUDAFLAGS but CUDA was not passed in the <LANGS> argument!")
+        endif()
+        set(${pkg_name}_MAKE_CUDAFLAGS "CUDAFLAGS=${${pkg_name}_CUDAFLAGS}")
       endif()
       if(${pkg_name}_LDFLAGS)
         set(${pkg_name}_MAKE_LDFLAGS "LDFLAGS=${${pkg_name}_LDFLAGS}")
@@ -1434,8 +1454,9 @@ function(mindquantum_add_pkg pkg_name)
       if(PKG_CONFIGURE_COMMAND)
         message(STATUS "Calling configure script for ${pkg_name}")
         __exec_cmd(
-          COMMAND ${PKG_CONFIGURE_COMMAND} ${${pkg_name}_COMPILERS} ${${pkg_name}_MAKE_CFLAGS}
-                  ${${pkg_name}_MAKE_CXXFLAGS} ${${pkg_name}_MAKE_LDFLAGS} --prefix=${${pkg_name}_BASE_DIR}
+          COMMAND
+            ${PKG_CONFIGURE_COMMAND} ${${pkg_name}_COMPILERS} ${${pkg_name}_MAKE_CFLAGS} ${${pkg_name}_MAKE_CXXFLAGS}
+            ${${pkg_name}_MAKE_CUDAFLAGS} ${${pkg_name}_MAKE_LDFLAGS} --prefix=${${pkg_name}_BASE_DIR}
           WORKING_DIRECTORY ${${pkg_name}_SOURCE_DIR})
       endif()
       string(CONFIGURE "${PKG_BUILD_OPTION}" PKG_BUILD_OPTION @ONLY ESCAPE_QUOTES)

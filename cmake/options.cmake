@@ -162,43 +162,67 @@ include(CheckLanguage)
 
 set(_mq_added_nvcxx_module_path FALSE)
 if(ENABLE_CUDA)
-  # set(_mq_added_nvcxx_module_path TRUE) list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/NVCXX)
+  set(_mq_added_nvcxx_module_path TRUE)
+  list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/NVCXX)
 
-  # # NB: NVHPC < 20.11 will fail this test since they do not support -x c++
+  set(_default_cudaarchs FALSE)
+  if(NOT CMAKE_CUDA_ARCHITECTURES AND "$ENV{CUDAARCHS}" STREQUAL "")
+    set(_default_cudaarchs TRUE)
+    # Default architectures list supported by NVHPC when using -stdpar -cuda -gpu=ccXX (taken from NVHPC 22.3)
+    set(CMAKE_CUDA_ARCHITECTURES
+        60
+        61
+        62
+        70
+        72
+        75
+        80)
+
+    # NB: CUDAARCHS requires CMake 3.20+
+    message(STATUS "Neither of CMAKE_CUDA_ARCHITECTURES (CMake variable) or CUDAARCHS (env. variable; CMake 3.20+) "
+                   "have been defined. Defaulting to ${CMAKE_CUDA_ARCHITECTURES}")
+  elseif(NOT "$ENV{CUDAARCHS}" STREQUAL "")
+    message(STATUS "CUDAARCHS environment variable present: $ENV{CUDAARCHS}")
+  endif()
+  list(SORT CMAKE_CUDA_ARCHITECTURES ORDER DESCENDING)
+
+  # First try to activate CUDA
   check_language(CUDA)
-
   if(CMAKE_CUDA_COMPILER)
     enable_language(CUDA)
-
-    if(NOT CMAKE_CUDA_ARCHITECTURES AND "$ENV{CUDAARCHS}" STREQUAL "")
-      # Default architectures list supported by NVHPC when using -stdpar -cuda -gpu=ccXX (taken from NVHPC 22.3)
-      set(CMAKE_CUDA_ARCHITECTURES
-          60
-          61
-          62
-          70
-          72
-          75
-          80)
-      # if(CMAKE_NVCXX_COMPILER_VERSION VERSION_GREATER_EQUAL 21.5) list(APPEND CMAKE_CUDA_ARCHITECTURES 86) endif()
-
-      # NB: CUDAARCHS requires CMake 3.20+
-      message(STATUS "Neither of CMAKE_CUDA_ARCHITECTURES (CMake variable) or CUDAARCHS (env. variable; CMake 3.20+) "
-                     "have been defined. Defaulting to ${CMAKE_CUDA_ARCHITECTURES}")
-    elseif(NOT "$ENV{CUDAARCHS}" STREQUAL "")
-      message(STATUS "CUDAARCHS environment variable present: $ENV{CUDAARCHS}")
-    endif()
-    list(SORT CMAKE_CUDA_ARCHITECTURES ORDER DESCENDING)
-
-    # setup_language(NVCXX) enable_language(CUDA)
     setup_language(CUDA)
-
-    # if(CMAKE_NVCXX_COMPILER_VERSION VERSION_LESS 21.5) # * NVCXX < 20.11 : missing '-x c++' argument for CMake flag
-    # detection # * NVCXX < 21.3  : can only specify one CUDA_ARCHITECTURE # * NVCXX < 21.5  : extraction of GPU kernels
-    # from shared library is broken message( FATAL_ERROR "MindQuantum is not compatible with the current version of
-    # NVHPC (${CMAKE_NVCXX_COMPILER_VERSION})" "Required is at least 21.5.") endif()
   else()
-    disable_cuda()
+    disable_cuda("missing/unable to locate CUDA compiler")
+  endif()
+
+  # Now look if we find NVHPC
+  if(ENABLE_CUDA)
+    # NB: NVHPC < 20.11 will fail this test since they do not support -x c++
+    check_language(NVCXX)
+
+    if(CMAKE_NVCXX_COMPILER)
+      enable_language(NVCXX)
+
+      if(_default_cudaarchs AND CMAKE_NVCXX_COMPILER_VERSION VERSION_GREATER_EQUAL 21.5)
+        list(APPEND CMAKE_CUDA_ARCHITECTURES 86)
+        list(SORT CMAKE_CUDA_ARCHITECTURES ORDER DESCENDING)
+      endif()
+      list(SORT CMAKE_CUDA_ARCHITECTURES ORDER DESCENDING)
+
+      setup_language(NVCXX)
+
+      if(CMAKE_NVCXX_COMPILER_VERSION VERSION_LESS 21.5)
+        # * NVCXX < 20.11 : missing '-x c++' argument for CMake flag detection
+        # * NVCXX < 21.3  : can only specify one CUDA_ARCHITECTURE
+        # * NVCXX < 21.5  : extraction of GPU kernels from shared library is broken
+        message(
+          FATAL_ERROR
+            "MindQuantum is not compatible with the current version of NVHPC (${CMAKE_NVCXX_COMPILER_VERSION})"
+            "Required is at least 21.5.")
+      endif()
+    else()
+      message(STATUS "NVHPC compiler not found. NVHPC features will be disabled")
+    endif()
   endif()
 endif()
 

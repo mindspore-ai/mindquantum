@@ -160,6 +160,7 @@ parse:
         INSTALL_COMMAND: +
         INSTALL_INCS: +
         INSTALL_LIBS: +
+        LANGS: +
         LIBS: +
         LOCAL_EXTRA_DEFINES: +
         ONLY_COPY_DIRS: +

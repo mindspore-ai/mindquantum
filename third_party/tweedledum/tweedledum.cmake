@@ -81,7 +81,7 @@ else()
       ${CMAKE_CURRENT_LIST_DIR}/patch/misc_changes.patch006
       ${CMAKE_CURRENT_LIST_DIR}/patch/fix-msvc-platform-detection.patch007)
 
-  if(NOT MQ_HAS_STD_LAUNDER)
+  if(NOT MQ_CXX_HAS_STD_LAUNDER)
     list(APPEND PATCHES ${CMAKE_CURRENT_LIST_DIR}/patch/fix-missing-std-launder.patch008)
   endif()
 

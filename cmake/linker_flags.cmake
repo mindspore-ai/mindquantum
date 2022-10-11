@@ -18,6 +18,8 @@
 
 # lint_cmake: -whitespace/indent
 
+is_language_enabled(NVCXX, _nvcxx_enabled)
+
 test_linker_option(
   linker_flags
   LANGS C CXX DPCXX CUDA NVCXX
@@ -48,20 +50,33 @@ test_linker_option(
 
 # ------------------------------------------------------------------------------
 
-# if(ENABLE_CUDA) # NB: simply copy over the compiler options to linker options since they are the same
-# foreach(_src_target nvhpc_cuda_flags_NVCXX nvhpc_cuda_version_flags_NVCXX) get_target_property(_flag ${_src_target}
-# INTERFACE_COMPILE_OPTIONS) foreach(_dst_target ${_src_target} NVCXX_mindquantum NVCXX_try_compile
-# NVCXX_try_compile_flagcheck) target_link_options(${_dst_target} INTERFACE ${_flag}) endforeach() endforeach()
+if(ENABLE_CUDA AND _nvcxx_enabled)
+  # NB: simply copy over the compiler options to linker options since they are the same
+  foreach(_src_target nvhpc_cuda_flags_NVCXX nvhpc_cuda_version_flags_NVCXX)
+    get_target_property(_flag ${_src_target} INTERFACE_COMPILE_OPTIONS)
+    foreach(_dst_target ${_src_target} NVCXX_mindquantum NVCXX_try_compile NVCXX_try_compile_flagcheck)
+      target_link_options(${_dst_target} INTERFACE ${_flag})
+    endforeach()
+  endforeach()
 
-# get_target_property(_flag nvhpc_gpu_compute_capability_NVCXX INTERFACE_COMPILE_OPTIONS) foreach(_dst_target
-# nvhpc_gpu_compute_capability_NVCXX NVCXX_mindquantum) target_link_options(${_dst_target} INTERFACE ${_flag})
-# endforeach()
+  get_target_property(_flag nvhpc_gpu_compute_capability_NVCXX INTERFACE_COMPILE_OPTIONS)
+  foreach(_dst_target nvhpc_gpu_compute_capability_NVCXX NVCXX_mindquantum)
+    target_link_options(${_dst_target} INTERFACE ${_flag})
+  endforeach()
 
-# # NB: only copy one of the -gpu=ccXX flags for try_compile targets list(GET _flag 0 _flag) foreach(_dst_target
-# NVCXX_try_compile NVCXX_try_compile_flagcheck) target_link_options(${_dst_target} INTERFACE ${_flag}) endforeach()
+  # NB: only copy one of the -gpu=ccXX flags for try_compile targets
+  list(GET _flag 0 _flag)
+  foreach(_dst_target NVCXX_try_compile NVCXX_try_compile_flagcheck)
+    target_link_options(${_dst_target} INTERFACE ${_flag})
+  endforeach()
 
-# test_linker_option( nvhpc_static_flags LANGS NVCXX FLAGS "-static-nvidia" "-Mnorpath" CMAKE_OPTION CUDA_STATIC
-# VERBATIM) endif()
+  test_linker_option(
+    nvhpc_static_flags
+    LANGS NVCXX
+    FLAGS "-static-nvidia" "-Mnorpath"
+    CMAKE_OPTION CUDA_STATIC
+    VERBATIM)
+endif()
 
 # ------------------------------------------------------------------------------
 

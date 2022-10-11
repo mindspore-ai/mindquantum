@@ -154,7 +154,7 @@ macro(disable_cuda)
   else()
     set(_msg "inexistent CUDA/NVHPC compiler, NVHPC < 20.11")
   endif()
-  message(STATUS "Disabling CUDA due to ${_msg} or error during compiler setup")
+  message(WARNING "Disabling CUDA due to ${_msg} or error during compiler setup")
   # cmake-lint: disable=C0103
   set(ENABLE_CUDA
       OFF
