@@ -148,7 +148,7 @@ static_assert(mindquantum::concepts::compat_terms_op_scalar<std::complex<double>
 // -----------------------------------------------------------------------------
 
 template <typename lhs_t, typename rhs_t, typename binop_t>
-using binop_valid = decltype(binop_t{}(std::declval<lhs_t>(), std::declval<rhs_t>()));
+using binop_valid = decltype(binop_t{}(std::declval<lhs_t>(), std::declval<rhs_t>()));  // NOLINT(whitespace/braces)
 
 template <typename lhs_t, typename rhs_t, typename binop_t>
 inline constexpr auto is_binop_defined_v = mindquantum::is_detected_v<binop_valid, lhs_t, rhs_t, binop_t>;
