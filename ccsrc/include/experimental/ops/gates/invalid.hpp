@@ -26,7 +26,7 @@ class Invalid {
     }
 
     Invalid() = default;
-    Invalid(uint64_t num_targets) : num_targets_(num_targets) {
+    explicit Invalid(uint64_t num_targets) : num_targets_(num_targets) {
     }
 
     auto num_targets() const noexcept {
