@@ -17,7 +17,6 @@ from typing import Dict, List, Union
 
 import numpy as np
 
-from mindquantum import _mq_vector
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import BarrierGate, BasicGate, Measure, MeasureResult
 from mindquantum.core.operators import Hamiltonian
@@ -34,9 +33,15 @@ from mindquantum.utils.type_value_check import (
     _check_value_should_not_less,
 )
 
+# This import is required to register some of the C++ types (e.g. ParameterResolver)
+from .. import mqbackend  # noqa: F401  # pylint: disable=unused-import
 from ..utils.string_utils import ket_string
 from .backend_base import BackendBase
 from .utils import GradOpsWrapper, _thread_balance
+
+# isort: split
+
+from mindquantum import _mq_vector  # pylint: disable=wrong-import-order
 
 try:
     from mindquantum import _mq_vector_gpu

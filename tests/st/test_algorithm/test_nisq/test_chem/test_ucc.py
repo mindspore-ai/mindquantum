@@ -19,8 +19,6 @@ import os
 import numpy as np
 import pytest
 
-from mindquantum.simulator import get_supported_simulator
-
 os.environ.setdefault('OMP_NUM_THREADS', '8')
 
 _HAS_MINDSPORE = True
@@ -32,11 +30,15 @@ try:
     from mindquantum.core.gates import X
     from mindquantum.core.operators import Hamiltonian, QubitOperator
     from mindquantum.framework import MQAnsatzOnlyLayer
-    from mindquantum.simulator import Simulator
+    from mindquantum.simulator import Simulator, get_supported_simulator
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
     _HAS_MINDSPORE = False
+
+    def get_supported_simulator():
+        """Dummy function."""
+        return []
 
 
 @pytest.mark.parametrize('backend', get_supported_simulator())
