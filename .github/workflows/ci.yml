@@ -1066,6 +1066,21 @@ jobs:
           apt-get install -y autoconf automake binutils coreutils m4 gawk libtool gettext wget curl
           --no-install-recommends
 
+      - name: Cache CMake installer
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh
+          key: cmake-${{ env.CMAKE_VERSION }}
+
+      - name: Install latest CMake
+        run: |
+          if [ ! -e cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh ]; then
+            url_base='https://github.com/Kitware/CMake/releases/download'
+            wget ${url_base}/v${{ env.CMAKE_VERSION }}/cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh
+          fi
+          bash cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh --skip-license --prefix=/usr/local
+
       - name: Setup CCache
         uses: hendrikmuhs/ccache-action@v1.2.2
         with:
