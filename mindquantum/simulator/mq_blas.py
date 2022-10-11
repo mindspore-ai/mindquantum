@@ -13,15 +13,20 @@
 # limitations under the License.
 # ============================================================================
 """BLAS operator of Mindquantum simulator."""
+
 from typing import Union
 
-from mindquantum import _mq_vector
 from mindquantum.utils.type_value_check import _check_input_type
 
+from .. import mqbackend
+
+# isort: split
+
+from .. import _mq_vector
 from .mqsim import MQ_SIM_GPU_SUPPORTED, MQSim
 
 if MQ_SIM_GPU_SUPPORTED:
-    from mindquantum import _mq_vector_gpu
+    from .. import _mq_vector_gpu
 
 
 class MQBlas:  # pylint: disable=too-few-public-methods

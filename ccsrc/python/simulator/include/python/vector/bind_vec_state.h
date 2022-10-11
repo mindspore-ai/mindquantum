@@ -32,26 +32,19 @@
 
 #include "simulator/vector/blas.hpp"
 #include "simulator/vector/vector_state.hpp"
-namespace py = pybind11;
-
-namespace mindquantum::sim::bind {
-using namespace pybind11::literals;  // NOLINT
-
-using namespace mindquantum::sim::vector::detail;  // NOLINT
-
-#ifdef ENABLE_GPU
-using vec_sim = VectorState<GPUVectorPolicyBase>;
-#else
-using vec_sim = VectorState<CPUVectorPolicyBase>;
-#endif
 
 template <typename sim_t>
-auto BindSim(py::module& module, const std::string_view& name) {  // NOLINT
-    py::class_<sim_t>(module, name.data())
-        .def(py::init<qbit_t, unsigned>(), "n_qubits"_a, "seed"_a = 42)
+auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLINT
+    using namespace pybind11::literals;                                 // NOLINT
+    using qbit_t = mindquantum::sim::qbit_t;
+    using calc_type = mindquantum::sim::calc_type;
+
+    pybind11::class_<sim_t>(module, name.data())
+        .def(pybind11::init<qbit_t, unsigned>(), "n_qubits"_a, "seed"_a = 42)
         .def("display", &sim_t::Display, "qubits_limit"_a = 10)
-        .def("apply_gate", &sim_t::ApplyGate, "gate"_a, "pr"_a = ParameterResolver<calc_type>(), "diff"_a = false)
-        .def("apply_circuit", &sim_t::ApplyCircuit, "gate"_a, "pr"_a = ParameterResolver<calc_type>())
+        .def("apply_gate", &sim_t::ApplyGate, "gate"_a, "pr"_a = mindquantum::ParameterResolver<calc_type>(),
+             "diff"_a = false)
+        .def("apply_circuit", &sim_t::ApplyCircuit, "gate"_a, "pr"_a = mindquantum::ParameterResolver<calc_type>())
         .def("reset", &sim_t::Reset)
         .def("get_qs", &sim_t::GetQS)
         .def("set_qs", &sim_t::SetQS)
@@ -66,10 +59,9 @@ auto BindSim(py::module& module, const std::string_view& name) {  // NOLINT
 }
 
 template <typename sim_t>
-auto BindBlas(py::module& module) {  // NOLINT
+auto BindBlas(pybind11::module& module) {  // NOLINT
     using qs_policy_t = typename sim_t::qs_policy_t;
-    module.def("inner_product", BLAS<qs_policy_t>::InnerProduct);
+    module.def("inner_product", mindquantum::sim::vector::detail::BLAS<qs_policy_t>::InnerProduct);
 }
-}  // namespace mindquantum::sim::bind
 
 #endif
