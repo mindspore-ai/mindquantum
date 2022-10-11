@@ -17,6 +17,10 @@
 
         定义对应的 `projectq` 中的量子门。
 
+    .. py:method:: get_cpp_obj()
+
+        获取底层c++对象。
+
     .. py:method:: hermitian()
 
         返回该量子门的厄米共轭形式。
@@ -51,7 +55,3 @@
     .. py:method:: requires_grad()
 
         设置该量子门在梯度计算相关算法中要计算梯度。在默认情况下，参数化量子门在构造时就是需要计算梯度。
-
-    .. py:method:: get_cpp_obj()
-
-        获取底层c++对象。

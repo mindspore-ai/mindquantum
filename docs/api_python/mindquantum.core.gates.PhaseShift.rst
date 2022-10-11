@@ -10,16 +10,6 @@
     参数：
         - **pr** (Union[int, float, str, dict, ParameterResolver]) - 参数化门的参数，详细解释请参见上文。
 
-    .. py:method:: matrix(pr=None)
-
-        参数门的矩阵形式。
-
-        参数：
-            - **pr** (Union[ParameterResolver, dict]) - 参数门的矩阵形式。默认值：None。
-
-        返回：
-            numpy.ndarray，量子门的矩阵形式。
-
     .. py:method:: diff_matrix(pr=None, about_what=None)
 
         参数门的倒数矩阵形式。
@@ -30,3 +20,13 @@
 
         返回：
             numpy.ndarray, 量子门的导数形式的矩阵。
+
+    .. py:method:: matrix(pr=None)
+
+        参数门的矩阵形式。
+
+        参数：
+            - **pr** (Union[ParameterResolver, dict]) - 参数门的矩阵形式。默认值：None。
+
+        返回：
+            numpy.ndarray，量子门的矩阵形式。
