@@ -1024,6 +1024,10 @@ jobs:
     name: "CUDA ${{ matrix.cuda }} • x64"
     container: "nvidia/cuda:${{ matrix.cuda }}"
     steps:
+      - name: Install Git
+    run: |
+      apt-get update && apt-get install -y git
+
       - uses: actions/checkout@v2
 
       - name: Get history and tags for SCM versioning to work
