@@ -12,8 +12,8 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef OMP_COMPAT_HPP
-#define OMP_COMPAT_HPP
+#ifndef MQ_CONFIG_OPENMP_HPP
+#define MQ_CONFIG_OPENMP_HPP
 
 #include <cstdint>
 
@@ -25,4 +25,4 @@ using idx_t = uint64_t;
 #endif  // _MSC_VER
 }  // namespace omp
 
-#endif  // OMP_COMPAT_HPP
+#endif /* MQ_CONFIG_OPENMP_HPP */

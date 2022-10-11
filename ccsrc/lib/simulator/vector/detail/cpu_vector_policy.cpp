@@ -25,6 +25,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include "config/openmp.hpp"
+
 #include "core/utils.hpp"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
@@ -40,7 +42,7 @@ auto CPUVectorPolicyBase::InitState(index_t dim, bool zero_state) -> qs_data_p_t
 
 void CPUVectorPolicyBase::Reset(qs_data_p_t qs, index_t dim) {
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (index_t i = 0; i < dim; i++) { qs[i] = 0; })
+        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { qs[i] = 0; })
     qs[0] = 1;
 }
 
@@ -62,7 +64,7 @@ void CPUVectorPolicyBase::Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limi
 
 void CPUVectorPolicyBase::SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim) {
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (index_t i = 0; i < dim; i++) {
+        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
             if ((i & ctrl_mask) != ctrl_mask) {
                 qs[i] = 0;
             }
@@ -75,7 +77,7 @@ void CPUVectorPolicyBase::ConditionalBinary(qs_data_p_t src, qs_data_p_t des, in
                                             const binary_op& op) {
     // if index mask satisfied condition, multiply by succe_coeff, otherwise multiply fail_coeff
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (index_t i = 0; i < dim; i++) {
+        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
             if ((i & mask) == condi) {
                 des[i] = op(src[i], succ_coeff);
             } else {
@@ -89,7 +91,7 @@ void CPUVectorPolicyBase::ConditionalBinary(qs_data_p_t src, qs_data_p_t des, qs
                                             qs_data_t fail_coeff, index_t dim, const binary_op& op) {
     // if index mask satisfied condition, multiply by succe_coeff, otherwise multiply fail_coeff
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (index_t i = 0; i < dim; i++) {
+        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
             if ((i & mask) == condi) {
                 des[i] = op(src[i], succ_coeff);
             } else {
@@ -125,7 +127,7 @@ auto CPUVectorPolicyBase::ConditionalCollect(qs_data_p_t qs, index_t mask, index
     if (abs) {
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+: res_real)), dim, DimTh,
-                         for (index_t i = 0; i < dim; i++) {
+                         for (omp::idx_t i = 0; i < dim; i++) {
                              if ((i & mask) == condi) {
                                  res_real += qs[i].real() * qs[i].real() + qs[i].imag() * qs[i].imag();
                              }
@@ -133,7 +135,7 @@ auto CPUVectorPolicyBase::ConditionalCollect(qs_data_p_t qs, index_t mask, index
     } else {
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+: res_real, res_imag)), dim, DimTh,
-                         for (index_t i = 0; i < dim; i++) {
+                         for (omp::idx_t i = 0; i < dim; i++) {
                              if ((i & mask) == condi) {
                                  res_real += qs[i].real();
                                  res_imag += qs[i].imag();
@@ -146,7 +148,7 @@ auto CPUVectorPolicyBase::ConditionalCollect(qs_data_p_t qs, index_t mask, index
 auto CPUVectorPolicyBase::Copy(qs_data_p_t qs, index_t dim) -> qs_data_p_t {
     qs_data_p_t out = CPUVectorPolicyBase::InitState(dim, false);
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (index_t i = 0; i < dim; i++) { out[i] = qs[i]; })
+        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { out[i] = qs[i]; })
     return out;
 };
 
@@ -214,7 +216,7 @@ auto CPUVectorPolicyBase::ZeroStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t
 auto CPUVectorPolicyBase::GetQS(qs_data_p_t qs, index_t dim) -> py_qs_datas_t{
     py_qs_datas_t out(dim);
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (index_t i = 0; i < dim; i++) { out[i] = qs[i]; })
+        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { out[i] = qs[i]; })
     return out;
 }
 
@@ -223,7 +225,7 @@ void CPUVectorPolicyBase::SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, ind
         throw std::invalid_argument("state size not match");
     }
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (index_t i = 0; i < dim; i++) { qs[i] = qs_out[i]; })
+        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { qs[i] = qs_out[i]; })
 }
 
 auto CPUVectorPolicyBase::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim)
@@ -234,7 +236,7 @@ auto CPUVectorPolicyBase::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm
         auto mask_f = mask.mask_x | mask.mask_y;
         auto coeff = coeff_;
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t i = 0; i < dim; i++) {
+            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
                 auto j = (i ^ mask_f);
                 if (i <= j) {
                     auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
@@ -254,8 +256,8 @@ void CPUVectorPolicyBase::ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const q
     DoubleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t l = 0; l < (dim / 4); l++) {
-                index_t i;
+            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
                 auto j = i + mask.obj_min_mask;
@@ -266,8 +268,8 @@ void CPUVectorPolicyBase::ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const q
             })
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t l = 0; l < (dim / 4); l++) {
-                index_t i;
+            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
                 if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
@@ -285,8 +287,8 @@ void CPUVectorPolicyBase::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const 
     DoubleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t l = 0; l < (dim / 4); l++) {
-                index_t i;
+            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
                 auto tmp = qs[i + mask.obj_min_mask];
@@ -295,8 +297,8 @@ void CPUVectorPolicyBase::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const 
             })
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t l = 0; l < (dim / 4); l++) {
-                index_t i;
+            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
                 if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
@@ -319,8 +321,8 @@ void CPUVectorPolicyBase::ApplyXX(qs_data_p_t qs, const qbits_t& objs, const qbi
     }
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t l = 0; l < (dim / 4); l++) {
-                index_t i;
+            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
                 auto m = i + mask.obj_mask;
@@ -337,8 +339,8 @@ void CPUVectorPolicyBase::ApplyXX(qs_data_p_t qs, const qbits_t& objs, const qbi
             })
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t l = 0; l < (dim / 4); l++) {
-                index_t i;
+            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
                 if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
@@ -372,8 +374,8 @@ void CPUVectorPolicyBase::ApplyYY(qs_data_p_t qs, const qbits_t& objs, const qbi
     }
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t l = 0; l < (dim / 4); l++) {
-                index_t i;
+            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
                 auto m = i + mask.obj_mask;
@@ -390,8 +392,8 @@ void CPUVectorPolicyBase::ApplyYY(qs_data_p_t qs, const qbits_t& objs, const qbi
             })
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t l = 0; l < (dim / 4); l++) {
-                index_t i;
+            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
                 if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
@@ -427,7 +429,7 @@ void CPUVectorPolicyBase::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbi
     auto me = c + IMAGE_MI * s;
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t l = 0; l < (dim / 4); l++) {
+            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
                 index_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -441,7 +443,7 @@ void CPUVectorPolicyBase::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbi
             })
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t l = 0; l < (dim / 4); l++) {
+            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
                 index_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
