@@ -15,12 +15,12 @@
 
 |论文名称|选手ID|
 |-|-|
-|02: [Qubit-ADAPT-VQE: An Adaptive Algorithm for Constructing Hardware-Efficient Ansätze on a Quantum Processor](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/2_hw86909202/main.ipynb)|@xie-qingxing|
-|04: [Reachability Deficits in Quantum Approximate Optimization](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/4_Magi/main.ipynb)|@Magi_karp|
+|02: [Qubit-ADAPT-VQE: An Adaptive Algorithm for Constructing Hardware-Efficient Ansätze on a Quantum Processor](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/02_hw86909202/main.ipynb)|@xie-qingxing|
+|04: [Reachability Deficits in Quantum Approximate Optimization](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/04_Magi/main.ipynb)|@Magi_karp|
 |05: [Microcanonical and finite-temperature ab initio molecular dynamics simulations on quantum computers](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/05_hw_008615959957849_01/main.ipynb)|@Franke_cdk|
-|06: [Accelerated variational algorithms for digital quantum simulation of the many-body ground states](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/6_hw08624896/main.ipynb)|@he-tianshen|
+|06: [Accelerated variational algorithms for digital quantum simulation of the many-body ground states](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/06_hw08624896/main.ipynb)|@he-tianshen|
 |09: [Quantum generative adversarial networks](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/09_big91987/main.ipynb)|@big91987|
-|10: [An aritifical neuron implemented on an actual quantum processor](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/%E8%AE%BA%E6%96%8710_Mr_Tang754/main.ipynb)|@tang-love-coke|
+|10: [An aritifical neuron implemented on an actual quantum processor](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/10_Mr_Tang754/main.ipynb)|@tang-love-coke|
 |12: [Barren Plateaus in Quantum Neural Network Training Landscape](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/12_hid_b4uryzmyfxuzzn1/main.ipynb)|@zishen-li|
 |13: [Universal quantum state preparation via revised greedy algorithm](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/13_waikikilck/main.ipynb)|@herunhong|
 |15: [When does reinforcement learning stand out in quantum control? A comparative study on state preparation](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/15_firing_feather/main.ipynb)|@yuanjzhang|
@@ -31,7 +31,7 @@
 |24: [Quantum simulation with hybrid tensor networks](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/24_hw_008613816232674_01/main.ipynb)|@overshiki|
 |28: [Introduction to Quantum Reinforcement Learning: Theory and PennyLane-based Implementation](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/28_hid_r3jndb66c0zbhr9/main.ipynb)|@xianyu256|
 |30: [Stochastic gradient descent for hybrid quantum-classical optimization](https://gitee.com/mindspore/mindquantum/tree/research/paper_recurrence/30_hw_008613571866975_01)|@weifuchuan123|
-|35: [A hybrid classical-quantum approach for multi-class classification](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/%E8%AE%BA%E6%96%8735_Mr_Tang754/main.ipynb)|@tang-love-coke|
+|35: [A hybrid classical-quantum approach for multi-class classification](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/35_Mr_Tang754/main.ipynb)|@tang-love-coke|
 |48: [Grand Unification of Quantum Algorithms](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/48_kyrrego/main.ipynb)|@yr_zhang|
 |50: [Variational ansatz-based quantum simulation of imaginary time evolution](https://gitee.com/mindspore/mindquantum/blob/research/paper_recurrence/50_hw_008613816232674_01/main.ipynb)|@overshiki|
 
