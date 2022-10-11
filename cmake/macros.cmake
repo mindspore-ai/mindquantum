@@ -176,7 +176,25 @@ function(force_at_least_cxx17_workaround target)
 
   # NVCC (up to 11.8) only supports C++17
   if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
-    set_target_properties(${target} PROPERTIES CUDA_STANDARD 17 CUDA_STANDARD_REQUIRED TRUE)
+    if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 11.0)
+      set_target_properties(${target} PROPERTIES CUDA_STANDARD 17 CUDA_STANDARD_REQUIRED TRUE)
+    else()
+      set(pname _old_cuda_warning)
+      get_property(
+        _value GLOBAL
+        PROPERTY ${pname}
+        DEFINED)
+      if(NOT _value)
+        message(WARNING "You are using an older version of CUDA (10.X or older): do this at your own risks!"
+                        "\nForcing C++14 instead of C++17.")
+        define_property(
+          GLOBAL
+          PROPERTY ${pname}
+          BRIEF_DOCS "${name}"
+          FULL_DOCS "${name}")
+      endif()
+      set_target_properties(${target} PROPERTIES CUDA_STANDARD 14 CUDA_STANDARD_REQUIRED TRUE)
+    endif()
   endif()
 endfunction()
 

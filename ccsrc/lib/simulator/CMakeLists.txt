@@ -18,7 +18,7 @@
 
 add_library(mqsim_common STATIC ${CMAKE_CURRENT_LIST_DIR}/utils.cpp ${CMAKE_CURRENT_LIST_DIR}/timer.cpp)
 target_sources(mqsim_common PRIVATE ${MQSIM_COMMON_HEAD})
-target_link_libraries(mqsim_common PUBLIC mq_base)
+target_link_libraries(mqsim_common PUBLIC mq_base mindquantum::boost_headers)
 force_at_least_cxx17_workaround(mqsim_common)
 append_to_property(mq_install_targets GLOBAL mqsim_common)
 
