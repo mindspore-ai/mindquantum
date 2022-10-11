@@ -234,6 +234,9 @@ if [ "$enable_ccache" -eq 1 ]; then
         ccache_exec=$(which "$ccache_exec")
         args+=(--var CMAKE_C_COMPILER_LAUNCHER "$ccache_exec")
         args+=(--var CMAKE_CXX_COMPILER_LAUNCHER "$ccache_exec")
+        if [ "$enable_gpu" -eq 1 ]; then
+            args+=(--var CMAKE_CUDA_COMPILER_LAUNCHER "$ccache_exec")
+        fi
     fi
 fi
 

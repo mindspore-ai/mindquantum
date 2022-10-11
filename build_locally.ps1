@@ -263,6 +263,9 @@ if ($enable_ccache) {
         $ccache_exec = (Get-Command "$ccache_exec").Source
         $cmake_args += "-DCMAKE_C_COMPILER_LAUNCHER=`"$ccache_exec`""
         $cmake_args += "-DCMAKE_CXX_COMPILER_LAUNCHER=`"$ccache_exec`""
+        if([bool]$enable_gpu) {
+            $cmake_args += "-DCMAKE_CUDA_COMPILER_LAUNCHER=`"$ccache_exec`""
+        }
     }
 }
 

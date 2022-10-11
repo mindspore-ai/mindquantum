@@ -301,6 +301,9 @@ if ($enable_ccache) {
         $ccache_exec = (Get-Command "$ccache_exec").Source
         $build_args += '--var', 'CMAKE_C_COMPILER_LAUNCHER', "$ccache_exec"
         $build_args += '--var', 'CMAKE_CXX_COMPILER_LAUNCHER', "$ccache_exec"
+        if([bool]$enable_gpu) {
+            $build_args += '--var', 'CMAKE_CUDA_COMPILER_LAUNCHER', "$ccache_exec"
+        }
     }
 }
 
