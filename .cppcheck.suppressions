@@ -48,9 +48,9 @@ stlIfFind:ccsrc/lib/experimental/decompositions/gate_decomposer.cpp
 syntaxError:ccsrc/include/core/parameter_resolver_external_ops.hpp:90
 syntaxError:ccsrc/include/core/sparse/algo.hpp:73
 syntaxError:ccsrc/include/experimental/ops/gates/terms_operator_base_external_ops.hpp:95
-syntaxError:ccsrc/lib/simulator/vector/detail/cpu_vector_policy.cpp:129
-syntaxError:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_gate_expec.cpp:47
-syntaxError:ccsrc/python/experimental/lib/ops/details/define_terms_ops.hpp:111
+syntaxError:ccsrc/lib/simulator/vector/detail/cpu_vector_policy.cpp
+syntaxError:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_gate_expec.cpp
+syntaxError:ccsrc/python/experimental/lib/ops/details/define_terms_ops.hpp
 syntaxError:ccsrc/python/mqbackend/lib/binding.cc:184
 
 unknownMacro:ccsrc/include/core/sparse/paulimat.hpp:58
