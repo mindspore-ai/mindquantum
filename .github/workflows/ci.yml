@@ -1013,6 +1013,70 @@ jobs:
 
   # ============================================================================
 
+  cuda:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        cuda:
+          - 11.8.0-devel-ubuntu22.04
+          - 10.2.0-devel-ubuntu18.04
+    name: "CUDA ${{ matrix.cuda }} • x64"
+    container: "nvidia/cuda:${{ matrix.cuda }}"
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get history and tags for SCM versioning to work
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Prepare env
+        run: >
+          apt-get update && apt-get install -y python3-dev python3-pip python3-setuptools python3-wheel python3-venv
+          libboost-filesystem-dev --no-install-recommends
+
+      - name: Setup CCache
+        uses: hendrikmuhs/ccache-action@v1.2.2
+        with:
+          key: nvhpc-${{ matrix.nvhpc }}-ccache
+          max-size: 75M
+
+      - name: Cache Python virtualenv
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: venv
+          key: >-
+            cuda-${{ matrix.cuda }}-python-venv-${{ hashFiles('build_locally.sh', 'scripts/build/**.sh') }}
+            -${{ secrets.cache_ver }}
+
+      - name: Cache compiled third-party libraries
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: build/.mqlibs
+          key: cuda-${{ matrix.cuda }}-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
+
+      - name: Configure
+        run: >-
+          ./build_locally.sh --cxx --with-projectq --debug-cmake --gpu --test --ccache --only-pytest --no-gitee
+          --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
+          --cmake-no-registry
+
+      - name: Build
+        run: ./build_locally.sh --cxx --with-projectq --debug-cmake --gpu --test --ccache
+
+      - name: Install
+        run: ./build_locally.sh --install
+
+      - name: Run C++ tests
+        run: |
+          cd build
+          catchsegv ctest --output-on-failure
+
+  # ============================================================================
+
   nvhpc:
     runs-on: ubuntu-latest
     strategy:
