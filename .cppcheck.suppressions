@@ -5,7 +5,7 @@ missingReturn
 constParameter:tests/*
 unreadVariable:tests/*
 
-assignBoolToPointer:ccsrc/python/simulator/include/python/vector/bind_vec_state.h:53
+assignBoolToPointer:ccsrc/python/simulator/include/python/vector/bind_vec_state.h:46
 
 constStatement:ccsrc/lib/experimental/ops/gates/details/fermion_operator_term_policy.cpp
 constStatement:ccsrc/lib/experimental/ops/gates/details/qubit_operator_term_policy.cpp
