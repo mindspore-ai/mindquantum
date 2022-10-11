@@ -11,6 +11,10 @@
         - **ctrl_qubits** (Union[int, List[int]]) - 量子门受哪些量子比特控制。默认值： `None` 。
         - **kwargs** (dict) - 量子门的其他参数。
 
+    .. py:method:: get_cpp_obj()
+
+        返回量子门的c++对象。
+
     .. py:method:: no_grad_part(names)
 
         设置某些不需要求梯度的参数。此操作将会原位改变线路参数梯度属性。
@@ -21,6 +25,14 @@
         返回：
             BasicGate，其中有些参数不需要更新梯度。
 
+    .. py:method:: no_grad()
+
+        设置量子门中的所有参数都不需要求导数。
+
+    .. py:method:: requires_grad()
+
+        设置量子门中的所有参数都需要求导数。
+
     .. py:method:: requires_grad_part(names)
 
         设置哪部分参数需要求导。原地操作。
@@ -30,15 +42,3 @@
 
         返回：
             BasicGate，其中有些参数需要更新梯度。
-
-    .. py:method:: no_grad()
-
-        设置量子门中的所有参数都不需要求导数。
-
-    .. py:method:: requires_grad()
-
-        设置量子门中的所有参数都需要求导数。
-
-    .. py:method:: get_cpp_obj()
-
-        返回量子门的c++对象。
