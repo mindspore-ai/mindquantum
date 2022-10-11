@@ -164,6 +164,9 @@ function __set_variable_from_ini {
             value_lower=${value,,}
         fi
 
+        # Remove trailing comments and trim value string
+        value_lower=$(echo "$value_lower" | sed -e "s/\s*#.*$//" -e 's/^[ \t]*//;s/[ \t]*$//')
+
         eval_str=''
         # shellcheck disable=SC2016
         null_test='-z "${%s}"'
