@@ -20,22 +20,27 @@
 
 set(VER 1.78.0)
 
-set(_version_for_download 1.78.0)
-string(REPLACE "." "_" _ver "${_version_for_download}")
+if(ENABLE_GITEE)
+  set(REQ_URL "https://gitee.com/mirrors/boost/repository/archive/boost-${VER}.tar.gz")
+  set(MD5 "7e3c531def83de1d400faf15818e4130")
+else()
+  string(REPLACE "." "_" _ver "${VER}")
+
+  if(MSVC OR "${OS_NAME}" STREQUAL "MinGW")
+    set(REQ_URL "https://boostorg.jfrog.io/artifactory/main/release/${VER}/source/boost_${_ver}.zip")
+    set(MD5 "e193e5089060ed6ce5145c8eb05e67e3")
+  else()
+    set(REQ_URL "https://boostorg.jfrog.io/artifactory/main/release/${VER}/source/boost_${_ver}.tar.gz")
+    set(MD5 "c2f6428ac52b0e5a3c9b2e1d8cc832b5")
+  endif()
+endif()
 
 if(MSVC OR "${OS_NAME}" STREQUAL "MinGW")
-  set(REQ_URL "https://boostorg.jfrog.io/artifactory/main/release/${_version_for_download}/source/boost_${_ver}.zip")
-  set(MD5 "e193e5089060ed6ce5145c8eb05e67e3")
-
-  if(MSVC)
-    set(PRE_CONFIGURE_COMMAND bootstrap.bat)
-  else()
-    set(PRE_CONFIGURE_COMMAND bootstrap.bat mingw)
+  set(PRE_CONFIGURE_COMMAND bootstrap.bat)
+  if(NOT MSVC)
+    list(APPEND PRE_CONFIGURE_COMMAND mingw)
   endif()
 else()
-  set(REQ_URL "https://boostorg.jfrog.io/artifactory/main/release/${_version_for_download}/source/boost_${_ver}.tar.gz")
-  set(MD5 "c2f6428ac52b0e5a3c9b2e1d8cc832b5")
-
   set(PRE_CONFIGURE_COMMAND ./bootstrap.sh)
 endif()
 
