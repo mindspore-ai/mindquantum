@@ -42,12 +42,12 @@
 namespace bindops {
 namespace ops = mindquantum::ops;
 namespace python = mindquantum::python;
-using namespace pybind11::literals;
+using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
 
 // -----------------------------------------------------------------------------
 
 template <class op_t, class base_t>
-auto bind_ops(pybind11::module& module, const std::string_view& name) {
+auto bind_ops(pybind11::module& module, const std::string_view& name) {  // NOLINT
     using coeff_t = typename op_t::coefficient_t;
     // NB: this below is required because of GCC < 9
     using factory_func_t = decltype(&python::create_from_python_container_class<op_t>);
@@ -141,7 +141,7 @@ using qop_t = ops::QubitOperator<T>;
 template <typename... args_t>
 struct define_fermion_ops {
     template <typename... strings_t>
-    static auto apply(pybind11::module& module, strings_t&&... names) {
+    static auto apply(pybind11::module& module, strings_t&&... names) {  // NOLINT
         static_assert(sizeof...(args_t) == sizeof...(strings_t));
         return std::tuple_cat(
             std::make_tuple(bind_ops<fop_t<args_t>, ops::FermionOperatorBase>(module, std::forward<strings_t>(names))
@@ -152,7 +152,7 @@ struct define_fermion_ops {
 template <typename... args_t>
 struct define_qubit_ops {
     template <typename... strings_t>
-    static auto apply(pybind11::module& module, strings_t&&... names) {
+    static auto apply(pybind11::module& module, strings_t&&... names) {  // NOLINT
         static_assert(sizeof...(args_t) == sizeof...(strings_t));
         return std::make_tuple(bind_ops<qop_t<args_t>, ops::QubitOperatorBase>(module, std::forward<strings_t>(names))
                                    .def("count_gates", &qop_t<args_t>::count_gates)...);
