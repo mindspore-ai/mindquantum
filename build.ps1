@@ -67,6 +67,10 @@ if ("$Env:JENKINS_URL" -Match 'https?://build.mindspore.cn' -And [bool]$Env:CI) 
 }
 
 # ==============================================================================
+
+. (Join-Path $ROOTDIR 'scripts\build\common_functions.ps1')
+
+# ------------------------------------------------------------------------------
 # Default values
 
 $python_extra_pkgs = @('wheel-filename>1.2')
@@ -75,8 +79,6 @@ if ($_IS_MINDSPORE_CI ) {
     Set-Value 'enable_gitee' $true
     Set-Value 'enable_gpu' $true
 }
-
-. (Join-Path $ROOTDIR 'scripts\build\common_functions.ps1')
 
 # ------------------------------------------------------------------------------
 

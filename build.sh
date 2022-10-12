@@ -29,6 +29,13 @@ if [[ "${JENKINS_URL:-0}" =~ https?://build.mindspore.cn && ! "${CI:-0}" =~ ^(fa
 fi
 
 # ==============================================================================
+
+# Load common bash helper functions
+. "$ROOTDIR/scripts/build/common_functions.sh"
+
+check_for_verbose "$@"
+
+# ------------------------------------------------------------------------------
 # Default values for this particular script
 
 python_extra_pkgs=('wheel-filename>1.2')
@@ -37,11 +44,6 @@ if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
     set_var enable_gitee true
     set_var enable_gpu true
 fi
-
-# ------------------------------------------------------------------------------
-
-# Load common bash helper functions
-. "$ROOTDIR/scripts/build/common_functions.sh"
 
 # ==============================================================================
 

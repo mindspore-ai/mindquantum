@@ -49,6 +49,18 @@ unset ncolors
 
 # ==============================================================================
 
+function check_for_verbose() {
+    for arg in "$@"; do
+        if [[ "$arg" == '-v' || $arg == '--verbose' ]]; then
+            # shellcheck disable=SC2034
+            verbose=1
+            break
+        fi
+    done
+}
+
+# ==============================================================================
+
 function debug_print() {
     if [ "${verbose:-0}" -eq 1 ]; then
         echo "${_YELLOW}DEBUG $*${_NORMAL}" >&2
