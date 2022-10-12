@@ -117,10 +117,11 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
     """Custom build_ext command class."""
 
     user_options = build_ext.user_options + [
-        ('no-arch-native', None, 'Do not use the -march=native flag when compiling'),
-        ('clean-build', None, 'Build in a clean build environment'),
         ('build-dir=', None, 'Specify a location for the build directory'),
+        ('clean-build', None, 'Build in a clean build environment'),
         ('install-light', None, 'Install a "light" version of MindQuantum (ie. no development libraries)'),
+        ('jobs=', None, 'Number of concurrent jobs for sub-build processes'),
+        ('no-arch-native', None, 'Do not use the -march=native flag when compiling'),
     ]
 
     boolean_options = build_ext.boolean_options + ['no-arch-native', 'clean-build', 'install-light']
@@ -132,17 +133,19 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
         self.clean_build = None
         self.build_dir = None
         self.install_light = None
+        self.jobs = None
 
     def finalize_options(self):
         """Finalize all options."""
         super().finalize_options()
         # pylint: disable=attribute-defined-outside-init
-        self.no_arch_native = self.no_arch_native or False
-        self.clean_build = self.clean_build or False
         self.build_dir = self.build_dir or None
-        self.install_light = self.install_light or False
+        self.clean_build = self.clean_build or False
         self.fast_bdist_wheel = bool(int(os.getenv('MQ_FAST_BDIST_WHEEL', '0')))
         self.fast_bdist_wheel_dir = os.getenv('MQ_FAST_BDIST_DIR', None)
+        self.install_light = self.install_light or False
+        self.jobs = self.jobs or multiprocessing.cpu_count()
+        self.no_arch_native = self.no_arch_native or False
 
         if self.fast_bdist_wheel and Path(self.fast_bdist_wheel_dir).exists():
             self.build_dir = self.fast_bdist_wheel_dir
@@ -217,13 +220,7 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
             pass
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
-            if platform.system() == 'Darwin' and 'TRAVIS' in os.environ:
-                self.build_args += ['--']
-            else:
-                self.build_args += [
-                    f'-j {self.parallel if self.parallel else multiprocessing.cpu_count()}',
-                    '--',
-                ]
+            self.build_args += [f'-j {self.jobs}', '--']
 
         cmake_args.extend(cmake_extra_options)
 
