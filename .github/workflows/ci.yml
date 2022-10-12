@@ -35,7 +35,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         if: env.ACT != 'true'
@@ -44,10 +44,10 @@ jobs:
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*¨
 
       - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
-          architecture: 'x64'
+          cache: 'pip'
 
       - name: Prepare env
         run: sudo apt-get update && sudo apt-get install -y libboost-filesystem-dev --no-install-recommends
@@ -196,7 +196,7 @@ jobs:
           # - "Xcode_13.3.1"  # macos-12 only
           # - "Xcode_13.4.1"  # macos-12 only
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         if: env.ACT != 'true'
@@ -205,10 +205,10 @@ jobs:
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*¨
 
       - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
-          architecture: 'x64'
+          cache: 'pip'
 
       - name: Prepare env
         run: brew install libomp ccache
@@ -267,7 +267,7 @@ jobs:
     name: "GCC ${{ matrix.gcc }} • x64"
     container: "gcc:${{ matrix.gcc }}"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -407,7 +407,7 @@ jobs:
     name: "Clang ${{ matrix.clang }} • x64"
     container: "silkeh/clang:${{ matrix.clang }}"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -539,7 +539,7 @@ jobs:
     runs-on: windows-latest
     name: "MSVC • x64"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -638,7 +638,7 @@ jobs:
       BOOST_VERSION: 1.78.0
       BOOST_PATH: ${{github.workspace}}/boost/boost
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -683,7 +683,7 @@ jobs:
       #     key: boost-${{ env.BOOST_VERSION }}
 
       - name: Download and install Boost
-        uses: MarkusJx/install-boost@v2.3.0
+        uses: MarkusJx/install-boost@v2.4.0
         if: steps.cache-boost.outputs.cache-hit != 'true'
         id: install-boost
         with:
@@ -785,7 +785,7 @@ jobs:
 
     name: "MSYS2 ${{ matrix.msystem }} • x64"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -892,7 +892,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf input
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -1034,7 +1034,7 @@ jobs:
           apt-get update && apt-get install -y git
           git config --global --add safe.directory $PWD
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -1105,7 +1105,7 @@ jobs:
     name: "NVHPC ${{ matrix.nvhpc }} • x64"
     container: "nvcr.io/nvidia/nvhpc:${{ matrix.nvhpc }}-ubuntu20.04"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -1193,7 +1193,7 @@ jobs:
   #     CC: ${{ matrix.cc }}
   #     CXX: ${{ matrix.cxx }}
   #   steps:
-  #     - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v3
 
   #     - name: Get history and tags for SCM versioning to work
   #       run: |
