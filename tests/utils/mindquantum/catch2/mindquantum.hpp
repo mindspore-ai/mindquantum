@@ -12,17 +12,7 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef TESTS_EQUALITY_OPERATORS_HPP
-#define TESTS_EQUALITY_OPERATORS_HPP
+#ifndef MQ_CATCH2_MINDQUANTUM_HPP
+#define MQ_CATCH2_MINDQUANTUM_HPP
 
-#include <Eigen/SparseCore>
-
-namespace Eigen {
-template <typename scalar_t, int options, typename index_t>
-auto operator==(const Eigen::SparseMatrix<scalar_t, options, index_t>& lhs,
-                const Eigen::SparseMatrix<scalar_t, options, index_t>& rhs) {
-    return lhs.isApprox(rhs);
-}
-}  // namespace Eigen
-
-#endif /* TESTS_EQUALITY_OPERATORS_HPP */
+#endif /* MQ_CATCH2_MINDQUANTUM_HPP */

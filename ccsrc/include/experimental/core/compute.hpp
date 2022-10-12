@@ -60,7 +60,7 @@ class ComputeCircuit {
             if (const auto& op = inst.adjoint(); op) {
                 original.apply_operator(op.value(), inst.qubits(), inst.cbits());
             } else {
-                original.apply_operator(ops::Invalid(), inst.qubits(), inst.cbits());
+                original.apply_operator(ops::Invalid(inst.num_qubits()), inst.qubits(), inst.cbits());
             }
         });
     }

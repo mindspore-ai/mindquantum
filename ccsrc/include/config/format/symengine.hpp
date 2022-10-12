@@ -18,6 +18,7 @@
 #include <string>
 
 #include <symengine/basic.h>
+#include <symengine/expression.h>
 #include <symengine/serialize-cereal.h>
 
 #include <cereal/archives/json.hpp>
@@ -45,13 +46,44 @@ template <typename char_type>
 struct fmt::formatter<SymEngine::RCP<const SymEngine::Basic>, char_type> {
     using basic_t = SymEngine::RCP<const SymEngine::Basic>;
 
-    auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
-        return ctx.begin();
+    bool json_output = false;
+
+    FMT_CONSTEXPR auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
+        auto it = ctx.begin();
+        if (*it == 'j') {
+            json_output = true;
+            ++it;
+        }
+        const auto end = ctx.end();
+
+        if (it != end && *it != '}') {
+            ctx.error_handler().on_error("invalid type specifier");
+        }
+
+        return it;
     }
 
     template <typename format_context_t>
     auto format(const basic_t& symengine_expr, format_context_t& ctx) const -> decltype(ctx.out()) {
-        return fmt::format_to(ctx.out(), "{}", mindquantum::format::details::dumps(symengine_expr));
+        if (json_output) {
+            return fmt::format_to(ctx.out(), "{}", mindquantum::format::details::dumps(symengine_expr));
+        }
+        return fmt::format_to(ctx.out(), "{}", SymEngine::str(*symengine_expr));
+    }
+};
+
+//! Custom formatter for a SymEngine::Expression
+template <typename char_type>
+struct fmt::formatter<SymEngine::Expression, char_type> {
+    using expr_t = SymEngine::Expression;
+
+    FMT_CONSTEXPR auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
+        return ctx.begin();
+    }
+
+    template <typename format_context_t>
+    auto format(const expr_t& symengine_expr, format_context_t& ctx) const -> decltype(ctx.out()) {
+        return fmt::format_to(ctx.out(), "{}", SymEngine::str(symengine_expr));
     }
 };
 
@@ -61,7 +93,7 @@ struct fmt::formatter<SymEngine::RCP<const SymEngine::Basic>, char_type> {
 template <>
 struct nlohmann::adl_serializer<SymEngine::RCP<const SymEngine::Basic>> {
     static void to_json(json& json_data, const SymEngine::RCP<const SymEngine::Basic>& symengine_expr) {
-        json_data = fmt::format("{}", symengine_expr);
+        json_data = fmt::format("{:j}", symengine_expr);
         // TODO(dnguyen): This would probably better, but I don't know how to best de-serializing below
         // json_data = nlohmann::json::parse(fmt::format("{}", symengine_expr));
     }

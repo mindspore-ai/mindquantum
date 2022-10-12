@@ -17,30 +17,24 @@
 #include <set>
 #include <sstream>
 
-#include "tweedledum/Passes/Utility/shallow_duplicate.h"
-#include "tweedledum/Target/Placement.h"
 #include <tweedledum/Operators/Standard.h>
 #include <tweedledum/Passes/Mapping/Placer/TrivialPlacer.h>
 #include <tweedledum/Passes/Mapping/jit_map.h>
 #include <tweedledum/Passes/Mapping/sabre_map.h>
+#include <tweedledum/Passes/Utility/shallow_duplicate.h>
 #include <tweedledum/Target/Device.h>
+#include <tweedledum/Target/Placement.h>
 
 #include "experimental/core/circuit_block.hpp"
-
-// -----------------------------------------------------------------------------
-
-std::ostream& operator<<(std::ostream& out, const mindquantum::QubitID& qubit_id) {
-    return out << qubit_id.get();
-}
-
-// -----------------------------------------------------------------------------
-
-#include "core/test_utils.hpp"
-
+#include "experimental/mindquantum/catch2/mindquantum.hpp"
+#include "experimental/mindquantum/catch2/tweedledum.hpp"
 #include "experimental/ops/gates/measure.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
+// -----------------------------------------------------------------------------
+
+using namespace mindquantum::catch2;
 namespace td = tweedledum;
 
 // =============================================================================

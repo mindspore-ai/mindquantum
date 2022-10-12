@@ -25,7 +25,6 @@
 #include "config/logging.hpp"
 
 #include "experimental/ops/gates/details/qubit_operator_term_policy.hpp"
-#include "experimental/ops/gates/terms_operator_base.hpp"
 
 namespace mindquantum::ops::details {
 

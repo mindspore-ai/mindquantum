@@ -77,7 +77,7 @@ void DecompositionRule<derived_t, atoms_t...>::apply(circuit_t& circuit, const o
 
 template <typename derived_t, typename... atoms_t>
 void DecompositionRule<derived_t, atoms_t...>::invalid_op_(circuit_t& circuit, const qubits_t& qubits) {
-    circuit.apply_operator(ops::Invalid{}, qubits);
+    circuit.apply_operator(ops::Invalid{std::size(qubits)}, qubits);
 }
 
 template <typename derived_t, typename... atoms_t>

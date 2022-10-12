@@ -14,14 +14,15 @@
 
 #include <tweedledum/Operators/Standard.h>
 
-#include "core/test_utils.hpp"
-
 #include "experimental/core/circuit_block.hpp"
 #include "experimental/core/circuit_manager.hpp"
+#include "experimental/mindquantum/catch2/mindquantum.hpp"
+#include "experimental/mindquantum/catch2/tweedledum.hpp"
 #include "experimental/ops/gates/measure.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
+using namespace mindquantum::catch2;
 namespace td = tweedledum;
 
 // =============================================================================

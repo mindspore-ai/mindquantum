@@ -20,5 +20,3 @@ target_sources(
   mq_cxx_nextgen
   PRIVATE ${CMAKE_CURRENT_LIST_DIR}/qubit_operator2single_qubit.cpp ${CMAKE_CURRENT_LIST_DIR}/time_evolution.cpp
           ${CMAKE_CURRENT_LIST_DIR}/gate_decomposer.cpp ${CMAKE_CURRENT_LIST_DIR}/atom_storage.cpp)
-
-target_link_libraries(mq_cxx_nextgen PUBLIC mindquantum::symengine)

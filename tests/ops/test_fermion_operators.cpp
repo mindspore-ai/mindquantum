@@ -18,20 +18,25 @@
 
 #include "config/logging.hpp"
 
-#include "ops/test_utils.hpp"
+#include "mindquantum/catch2/eigen.hpp"
 
 #include "experimental/core/circuit_block.hpp"
+#include "experimental/mindquantum/catch2/mindquantum.hpp"
+#include "experimental/mindquantum/catch2/symengine.hpp"
+#include "experimental/mindquantum/catch2/tweedledum.hpp"
 #include "experimental/ops/gates/details/floating_point_coeff_policy.hpp"
 #include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 #include "experimental/ops/gates/fermion_operator.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 // =============================================================================
 
-namespace ops = mindquantum::ops;
 using namespace std::literals::complex_literals;
 using namespace std::literals::string_literals;
+
+namespace ops = mindquantum::ops;
+using mindquantum::catch2::Equals;
 
 using FermionOperatorCD = ops::FermionOperator<std::complex<double>>;
 using TermValue = mindquantum::ops::TermValue;
@@ -181,7 +186,7 @@ TEST_CASE("FermionOperator matrix", "[fermion_op][ops]") {
 
             REQUIRE(mat.rows() == ref.rows());
             REQUIRE(mat.cols() == ref.cols());
-            CHECK(mat == ref);
+            CHECK_THAT(mat, Equals(ref));
         } else {
             CHECK(!actual_mat.has_value());
         }

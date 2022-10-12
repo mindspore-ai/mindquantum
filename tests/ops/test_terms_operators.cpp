@@ -30,14 +30,17 @@
 #include "config/type_traits.hpp"
 
 #include "core/parameter_resolver.hpp"
-#include "ops/test_utils.hpp"
 
+#include "experimental/mindquantum/catch2/mindquantum.hpp"
+#include "experimental/mindquantum/catch2/symengine.hpp"
+#include "experimental/mindquantum/catch2/tweedledum.hpp"
 #include "experimental/ops/gates/details/floating_point_coeff_policy.hpp"
 #include "experimental/ops/gates/details/parameter_resolver_coeff_policy.hpp"
 #include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 #include "experimental/ops/gates/terms_operator_base.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_predicate.hpp>
 
 using namespace std::literals::complex_literals;
 using namespace std::literals::string_literals;
@@ -145,7 +148,7 @@ static_assert(mindquantum::concepts::compat_terms_op_scalar<std::complex<double>
 // -----------------------------------------------------------------------------
 
 template <typename lhs_t, typename rhs_t, typename binop_t>
-using binop_valid = decltype(binop_t{}(std::declval<lhs_t>(), std::declval<rhs_t>()));
+using binop_valid = decltype(binop_t{}(std::declval<lhs_t>(), std::declval<rhs_t>()));  // NOLINT(whitespace/braces)
 
 template <typename lhs_t, typename rhs_t, typename binop_t>
 inline constexpr auto is_binop_defined_v = mindquantum::is_detected_v<binop_valid, lhs_t, rhs_t, binop_t>;
@@ -1087,13 +1090,13 @@ TEST_CASE("TermsOperator arithmetic operators (/)", "[terms_op][ops]") {
                 const auto& [local_ops_ref, coeff_ref] = ref;
                 const auto& [local_ops_other, coeff_other] = other;
                 if (local_ops_ref != local_ops_other) {
-                    FAIL_CHECK(local_ops_ref << " != " << local_ops_other);
+                    FAIL_CHECK(fmt::format("{} != {}", local_ops_ref, local_ops_other));
                     return false;
                 }
                 const auto rel_diff = std::abs((coeff_ref - coeff_other)
                                                / std::min(std::abs(coeff_ref), std::abs(coeff_other)));
                 if (rel_diff > 1.e-8) {
-                    FAIL_CHECK(coeff_ref << " != " << coeff_other << '(' << rel_diff << ')');
+                    FAIL_CHECK(fmt::format("{} != {} ({})", coeff_ref, coeff_other, rel_diff));
                     return false;
                 }
             }
@@ -1121,7 +1124,7 @@ TEST_CASE("TermsOperator arithmetic operators (/)", "[terms_op][ops]") {
             do_multiply(ref_terms, divisor);
         }
 
-        CHECK_THAT(op.get_terms(), Catch::Predicate<coeff_term_dict_t>(approx_equal, "Approx equal terms"));
+        CHECK_THAT(op.get_terms(), Catch::Matchers::Predicate<coeff_term_dict_t>(approx_equal, "Approx equal terms"));
         CHECK(!std::empty(op));
     }
 }

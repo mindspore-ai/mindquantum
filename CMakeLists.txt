@@ -171,6 +171,15 @@ else()
   add_custom_target(test COMMENT "Dummy target for CI builds")
 endif()
 
+# ------------------------------------------------------------------------------
+# Convenience target to automatically build all C++ test executables
+
+get_property(_targets GLOBAL PROPERTY _test_exec_targets)
+add_custom_target(
+  test-exec
+  DEPENDS ${_targets}
+  COMMENT "Build all test C++ modules")
+
 # ==============================================================================
 
 if(NOT IS_PYTHON_BUILD AND ENABLE_DOCUMENTATION)

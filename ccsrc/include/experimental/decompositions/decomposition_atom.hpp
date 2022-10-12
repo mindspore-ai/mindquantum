@@ -305,7 +305,7 @@ struct DecompositionAtom::Model<atom_t, false> {
         if constexpr (concepts::GateDecomposition<atom_t>) {
             self_cast(self)->operator_->apply(circuit, op, qubits, cbits);
         } else {
-            circuit.apply_operator(ops::Invalid{}, qubits);
+            circuit.apply_operator(ops::Invalid{std::size(qubits)}, qubits);
         }
     }
 

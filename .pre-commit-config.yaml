@@ -165,7 +165,7 @@ repos:
         require_serial: false
         args: [-i]
         files: .*\.(h|hpp|tpp|cpp|cc)$
-        additional_dependencies: ['clang-format']
+        additional_dependencies: ['clang-format==14.*']
       - id: cpplint
         require_serial: false
         args: [--quiet]

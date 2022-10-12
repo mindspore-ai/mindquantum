@@ -14,8 +14,6 @@
 
 #include <complex>
 
-#include <catch2/catch.hpp>
-
 #if __has_include("tweedledum/../../tests/check_unitary.h")
 #    include "tweedledum/../../tests/check_unitary.h"
 #else
@@ -23,8 +21,6 @@
 #endif
 #include <tweedledum/IR/Instruction.h>
 #include <tweedledum/Passes/Utility/shallow_duplicate.h>
-
-#include "../test_utils.hpp"
 
 #include "experimental/core/circuit_block.hpp"
 #include "experimental/decompositions/atom_meta.hpp"
@@ -35,9 +31,13 @@
 #include "experimental/decompositions/details/traits.hpp"
 #include "experimental/decompositions/gate_decomposition_rule.hpp"
 #include "experimental/decompositions/trivial_atom.hpp"
+#include "experimental/mindquantum/catch2/mindquantum.hpp"
+#include "experimental/mindquantum/catch2/tweedledum.hpp"
 #include "experimental/ops/gates.hpp"
 #include "experimental/ops/parametric/angle_gates.hpp"
 #include "experimental/ops/parametric/register_gate_type.hpp"
+
+#include <catch2/catch_test_macros.hpp>
 
 using namespace std::literals::string_literals;
 using namespace std::literals::string_view_literals;

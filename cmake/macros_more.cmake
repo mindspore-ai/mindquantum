@@ -95,20 +95,11 @@ function(add_test_executable target)
   set_target_properties(${target} PROPERTIES BUILD_WITH_INSTALL_RPATH FALSE SKIP_BUILD_RPATH FALSE)
   target_include_directories(${target} PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/tests>
                                                $<INSTALL_INTERFACE:${MQ_INSTALL_INCLUDEDIR}/include/tests>)
-  target_link_libraries(${target} PRIVATE Catch2::Catch2 ${${target}_LIBS})
+  target_link_libraries(${target} PRIVATE Catch2::Catch2 mindquantum_catch2_main mindquantum_catch2_utils
+                                          ${${target}_LIBS})
   catch_discover_tests(${target})
-  set_property(
-    SOURCE ${target}.cpp
-    APPEND_STRING
-    PROPERTY COMPILE_DEFINITIONS CATCH_CONFIG_RUNNER)
-  # ~~~
-  # set_property(
-  #   SOURCE ${target}.cpp
-  #   APPEND_STRING
-  #   PROPERTY COMPILE_DEFINITIONS CATCH_CONFIG_MAIN)
-  # ~~~
-
   target_compile_definitions(${target} PRIVATE ${${target}_DEFINES})
+  append_to_property(_test_exec_targets GLOBAL ${target})
 endfunction()
 
 # ==============================================================================

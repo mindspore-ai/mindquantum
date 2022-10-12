@@ -31,6 +31,8 @@
 #include <tweedledum/Target/Mapping.h>
 #include <tweedledum/Target/Placement.h>
 
+#include <fmt/format.h>
+
 #include "experimental/core/config.hpp"
 #include "experimental/core/types.hpp"
 

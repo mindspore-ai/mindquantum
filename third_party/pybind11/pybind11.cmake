@@ -32,6 +32,15 @@ if(WIN32)
   set(TARGET_ALIAS_EXTRA TARGET_ALIAS mindquantum::windows_extra pybind11::windows_extras)
 endif()
 
+# cmake-lint: disable=C0103
+set(pybinbd11_LOCAL_EXTRA_DEFINES)
+set(pybinbd11_SYSTEM_EXTRA_DEFINES)
+
+if(POSIX_C_SOURCE)
+  list(APPEND pybinbd11_LOCAL_EXTRA_DEFINES TARGET pybind11::headers "_POSIX_C_SOURCE=${POSIX_C_SOURCE}")
+  list(APPEND pybinbd11_SYSTEM_EXTRA_DEFINES TARGET pybind11::headers "_POSIX_C_SOURCE=${POSIX_C_SOURCE}")
+endif()
+
 # cmake-lint: disable=E1122
 mindquantum_add_pkg(
   pybind11
@@ -39,6 +48,8 @@ mindquantum_add_pkg(
   URL ${REQ_URL}
   MD5 ${MD5}
   CMAKE_OPTION ${CMAKE_OPTION}
+  LOCAL_EXTRA_DEFINES ${pybinbd11_LOCAL_EXTRA_DEFINES}
+  SYSTEM_EXTRA_DEFINES ${pybinbd11_SYSTEM_EXTRA_DEFINES}
   TARGET_ALIAS mindquantum::pybind11_headers pybind11::headers
   TARGET_ALIAS mindquantum::pybind11_module pybind11::module
   TARGET_ALIAS mindquantum::pybind11_lto pybind11::lto ${TARGET_ALIAS_EXTRA}) # cmake-lint: disable=E1122

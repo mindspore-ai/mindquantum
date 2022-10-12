@@ -23,5 +23,3 @@ target_sources(
           ${CMAKE_CURRENT_LIST_DIR}/gates/details/std_complex_coeff_policy.cpp
           ${CMAKE_CURRENT_LIST_DIR}/gates/details/symengine_coeff_policy.cpp
           ${CMAKE_CURRENT_LIST_DIR}/parametric/register_gate_type.cpp)
-
-target_link_libraries(mq_cxx_nextgen PUBLIC mindquantum::symengine)

@@ -17,17 +17,18 @@
 
 #include <tweedledum/Passes/Utility/shallow_duplicate.h>
 
-#include "../test_utils.hpp"
-
 #include "experimental/decompositions/config.hpp"
 #include "experimental/decompositions/non_gate_decomposition_rule.hpp"
+#include "experimental/mindquantum/catch2/mindquantum.hpp"
+#include "experimental/mindquantum/catch2/tweedledum.hpp"
 #include "experimental/ops/gates.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 using namespace std::literals::string_literals;
 using namespace std::literals::string_view_literals;
 
+using mindquantum::catch2::Equals;
 namespace ops = mindquantum::ops;
 namespace decompositions = mindquantum::decompositions;
 
