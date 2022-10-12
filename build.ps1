@@ -266,9 +266,11 @@ if ($fast_build) {
     }
 }
 
-if ($n_jobs -ne -1) {
-    $build_args += 'build', "--parallel=$n_jobs"
-}
+# TODO(dnguyen): This will attempt to build multiple extensions in parallel which leads to some errors
+#                Need to pass the number of jobs in a separate variable
+# if ($n_jobs -ne -1) {
+#     $build_args += 'build', "--parallel=$n_jobs"
+# }
 
 if ($build_type -eq 'Debug') {
     $build_args += 'build', '--debug'
