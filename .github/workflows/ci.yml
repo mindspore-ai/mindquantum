@@ -1020,6 +1020,7 @@ jobs:
       matrix:
         cuda:
           - 11.0.3-devel-ubuntu20.04
+          - 11.1.1-devel-ubuntu20.04
           - 11.8.0-devel-ubuntu22.04
     name: "CUDA ${{ matrix.cuda }} • x64"
     container: "nvidia/cuda:${{ matrix.cuda }}"
@@ -1027,6 +1028,7 @@ jobs:
       - name: Install and setup Git
         run: |
           apt-get update && apt-get upgrade -y
+          DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
           apt-get install -y software-properties-common
           add-apt-repository -y ppa:git-core/ppa
           apt-get update && apt-get install -y git
