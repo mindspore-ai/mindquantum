@@ -209,7 +209,7 @@ jobs:
       - name: Setup Python ${{ matrix.python }}
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python }}
+          python-version: 3.9
           cache: 'pip'
 
       - name: Prepare env
