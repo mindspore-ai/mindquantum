@@ -78,10 +78,19 @@ endif()
 # Local prefix path for installing packages from source if we cannot find any suitable versions on the system
 
 if(DEFINED ENV{MQLIBS_CACHE_PATH})
-  set(_mq_local_prefix $ENV{MQLIBS_CACHE_PATH}) # similarly to MindSpore
+  debug_print(STATUS "Using cache path from MQLIBS_CACHE_PATH environment variable")
+  set(_mq_local_prefix "$ENV{MQLIBS_CACHE_PATH}")
+elseif(DEFINED ENV{MSLIBS_CACHE_PATH})
+  debug_print(STATUS "Using cache path from MSLIBS_CACHE_PATH environment variable")
+  set(_mq_local_prefix "$ENV{MSLIBS_CACHE_PATH}") # compatibility with MindSpore CI
 elseif(DEFINED ENV{MQLIBS_LOCAL_PREFIX_PATH})
-  set(_mq_local_prefix $ENV{MQLIBS_LOCAL_PREFIX_PATH})
+  debug_print(STATUS "Using cache path from MQLIBS_LOCAL_PREFIX_PATH environment variable")
+  set(_mq_local_prefix "$ENV{MQLIBS_LOCAL_PREFIX_PATH}")
+elseif(DEFINED ENV{MSLIBS_LOCAL_PREFIX_PATH})
+  debug_print(STATUS "Using cache path from MSLIBS_LOCAL_PREFIX_PATH environment variable")
+  set(_mq_local_prefix "$ENV{MSLIBS_LOCAL_PREFIX_PATH}") # compatibility with MindSpore CI
 else()
+  debug_print(STATUS "Using default cache path")
   set(_mq_local_prefix ${PROJECT_BINARY_DIR}/.mqlibs)
 endif()
 message(STATUS "MQ local prefix:  ${_mq_local_prefix}")
@@ -104,13 +113,19 @@ endif()
 # If desired (e.g. like on CIs), a local server can be used to download the source of packages that need to be built
 # locally.
 
+debug_print(STATUS "ENV{MQLIBS_SERVER} = $ENV{MQLIBS_SERVER}")
+debug_print(STATUS "ENV{MSLIBS_SERVER} = $ENV{MSLIBS_SERVER}")
+
 if(DEFINED ENV{MQLIBS_SERVER} AND NOT ENABLE_GITEE)
-  set(_local_server $ENV{MQLIBS_SERVER})
+  set(_local_server "$ENV{MQLIBS_SERVER}")
+elseif(DEFINED ENV{MSLIBS_SERVER} AND NOT ENABLE_GITEE)
+  set(_local_server "$ENV{MSLIBS_SERVER}")
 elseif(LOCAL_LIBS_SERVER)
-  set(_local_server ${LOCAL_LIBS_SERVER})
+  set(_local_server "${LOCAL_LIBS_SERVER}")
 endif()
 
 if(_local_server)
+  debug_print(STATUS "Raw local server URL: ${_local_server}")
   if(_local_server MATCHES "(http|https|ssh|ftp)://(.*)")
     set(_local_server_protocol ${CMAKE_MATCH_1})
     set(_local_server ${CMAKE_MATCH_2})
@@ -164,7 +179,7 @@ endmacro()
 function(__download_pkg pkg_name pkg_url pkg_md5)
   if(_local_server)
     get_filename_component(_url_file_name ${pkg_url} NAME)
-    set(pkg_url "${_local_server}/libs/${pkg_name}/${_url_file_name}" ${pkg_url})
+    set(pkg_url "${_local_server}/libs/${pkg_name}/${_url_file_name}")
     debug_print(STATUS "Using local server URL: ${pkg_url}")
   endif()
 
