@@ -50,7 +50,9 @@ jobs:
           cache: 'pip'
 
       - name: Prepare env
-        run: sudo apt-get update && sudo apt-get install -y libboost-filesystem-dev --no-install-recommends
+        run: |
+          python3 -m pip install -U wheel build
+          sudo apt-get update && sudo apt-get install -y libboost-filesystem-dev --no-install-recommends
 
       - name: Setup CCache
         uses: hendrikmuhs/ccache-action@v1.2.2
@@ -211,7 +213,9 @@ jobs:
           cache: 'pip'
 
       - name: Prepare env
-        run: brew install libomp ccache
+        run: |
+          python3 -m pip install -U wheel build
+          brew install libomp ccache
 
       - name: Setup CCache
         uses: hendrikmuhs/ccache-action@v1.2.2
