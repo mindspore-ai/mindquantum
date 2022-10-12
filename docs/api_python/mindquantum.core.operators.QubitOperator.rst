@@ -1,4 +1,4 @@
-.. py:class:: mindquantum.core.operators.QubitOperator(term=None, coefficient=1.0)
+.. py:class:: mindquantum.core.operators.QubitOperator(term=None, coefficient=1.0, dtype=None)
 
     作用于量子比特的项的总和，例如 0.5 * 'X1 X5' + 0.3 * 'Z1 Z2'。
     项是一个作用于n个量子比特的运算符，可以表示为：coefficient * local_operator[0] x ... x local_operator[n-1]，其中x是张量乘积。
@@ -12,6 +12,7 @@
     参数：
         - **term** (str) - 量子比特运算符的输入项。默认值：None。
         - **coefficient** (Union[numbers.Number, str, ParameterResolver]) - 此量子比特运算符的系数，可以是由字符串、符号或参数解析器表示的数字或变量。默认值：1.0。
+        - **dtype** (type) - 此量子比特运算符的值类型。默认值：None。
 
     .. py:method:: count_gates()
 
@@ -30,13 +31,15 @@
         返回：
             JSON(strings)，QubitOperator的JSON字符串。
 
-    .. py:method:: from_openfermion(of_ops)
+    .. py:method:: from_openfermion(of_ops, dtype=None)
         :staticmethod:
 
         将openfermion格式的量子比特算符转换为mindquantum格式。
 
         参数：
             - **of_ops** (openfermion.QubitOperator) - openfermion框架中的量子比特算符。
+            - **dtype** (type) - 要生成的TermsOperator的类型（即实数“float”或复数“complex”）。
+                                注意：此参数在 Python 版本的 QubitOperator 中被忽略
 
         返回：
             QubitOperator，mindquantum框架中的量子比特算符。
@@ -49,13 +52,14 @@
         返回：
             QubitOperator，此量子算符的虚部。
 
-    .. py:method:: loads(strs)
+    .. py:method:: loads(strs, dtype)
         :staticmethod:
 
         将JSON（JavaScript对象表示法）加载到QubitOperator中。
 
         参数：
             - **strs** (str) - 转储的量子比特算符字符串。
+            - **dtype** (type) - （被此类忽略）要创建的 QubitOperator 的类型（即real，complex，real_pr，complex_pr）。
 
         返回：
             FermionOperator，从字符串加载的QubitOperator。
@@ -85,3 +89,7 @@
     .. py:method:: to_openfermion()
 
         将量子比特算符转换为openfermion格式。
+
+    .. py:method:: hermitian()
+
+        返回QubitOperator的厄米共轭。

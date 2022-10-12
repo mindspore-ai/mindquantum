@@ -1,11 +1,10 @@
-.. py:class:: mindquantum.core.parameterresolver.ParameterResolver(data=None, const=None, dtype=None)
+.. py:class:: mindquantum.core.parameterresolver.ParameterResolver(data=None, const=None)
 
     ParameterResolver可以设置参数化量子门或参数化量子线路的参数。
 
     参数：
         - **data** (Union[dict, numbers.Number, str, ParameterResolver]) - 初始参数名称及其值。如果数据是dict，则键将是参数名称，值将是参数值。如果数据是数字，则此数字将是此参数解析器的常量值。如果数据是字符串，则此字符串将是系数为1的唯一参数。默认值：None。
         - **const** (number.Number) - 此参数解析器的常量部分。默认值：None。
-        - **dtype** (type) - 此参数解析器的值类型。默认值：None。
 
     .. py:method:: ansatz_parameters
         :property:
@@ -38,17 +37,6 @@
 
         返回：
             ParameterResolver，参数解析器。
-
-    .. py:method:: astype(dtype, inplace=False)
-
-        更改此参数解析器的数据类型。
-
-        参数：
-            - **dtype** (type) - 数据类型。
-            - **inplace** (bool) - 是否原地更改类型。默认值：False。
-
-        返回：
-            ParameterResolver，具有给定数据类型的参数解析器。
 
     .. py:method:: combination(other)
 
@@ -109,10 +97,6 @@
 
         返回：
             str，此参数解析器的字符串表达式。
-
-    .. py:method:: get_cpp_obj()
-
-        获取此参数解析器的 cpp 对象。
 
     .. py:method:: imag
         :property:
@@ -259,3 +243,11 @@
     .. py:method:: values()
 
         生成所有参数值的迭代器。
+
+    .. py:method:: to_real_obj()
+
+        转化为实数类型。
+
+    .. py:method:: is_complex()
+
+        返回此参数解析器实例当前是否正在使用复数系数。
