@@ -50,6 +50,7 @@ set python_extra_pkgs=setuptools-scm[toml] wheel-filename>1.2
 
 if !_IS_MINDSPORE_CI! == 1 (
    set enable_gitee=1
+   set enable_gpu=1
 )
 
 call %SCRIPTDIR%\default_values.bat

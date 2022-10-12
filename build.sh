@@ -34,8 +34,8 @@ fi
 python_extra_pkgs=('wheel-filename>1.2')
 
 if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
-    enable_gitee=1
-    enable_gpu=1
+    set_var enable_gitee true
+    set_var enable_gpu true
 fi
 
 # ------------------------------------------------------------------------------
