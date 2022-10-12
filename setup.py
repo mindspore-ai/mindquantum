@@ -464,8 +464,6 @@ ext_modules = [
     CMakeExtension(pymod='mindquantum._mq_vector'),
     CMakeExtension(pymod='mindquantum._mq_vector_gpu', optional=True),
     CMakeExtension(pymod='mindquantum.experimental._mindquantum_cxx', optional=True),
-    CMakeExtension(pymod='mindquantum.experimental._mindquantum_cxx_core', optional=True),
-    CMakeExtension(pymod='mindquantum.experimental._mindquantum_cxx_cengines', optional=True),
 ]
 
 
