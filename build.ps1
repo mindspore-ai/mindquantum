@@ -78,6 +78,7 @@ $python_extra_pkgs = @('wheel-filename>1.2')
 if ($_IS_MINDSPORE_CI ) {
     Set-Value 'enable_gitee' $true
     Set-Value 'enable_gpu' $true
+    Set-Value 'cmake_debug_mode' $true
 }
 
 # ------------------------------------------------------------------------------
