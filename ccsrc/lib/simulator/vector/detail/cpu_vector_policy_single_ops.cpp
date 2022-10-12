@@ -23,8 +23,6 @@
 #include <stdexcept>
 #include <vector>
 
-#include <boost/iterator/detail/facade_iterator_category.hpp>
-
 #include "config/openmp.hpp"
 
 #include "core/utils.hpp"
