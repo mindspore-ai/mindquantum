@@ -19,13 +19,12 @@
 # cmake-lint: disable=C0103
 
 set(VER 1.78.0)
+string(REPLACE "." "_" _ver "${VER}")
 
 if(ENABLE_GITEE)
-  set(REQ_URL "https://gitee.com/mirrors/boost/repository/archive/boost-${VER}.tar.gz")
-  set(MD5 "7e3c531def83de1d400faf15818e4130")
+  set(REQ_URL "https://udomain.dl.sourceforge.net/project/boost/boost/${VER}/boost_${_ver}.tar.gz")
+  set(MD5 "c2f6428ac52b0e5a3c9b2e1d8cc832b5")
 else()
-  string(REPLACE "." "_" _ver "${VER}")
-
   if(MSVC OR "${OS_NAME}" STREQUAL "MinGW")
     set(REQ_URL "https://boostorg.jfrog.io/artifactory/main/release/${VER}/source/boost_${_ver}.zip")
     set(MD5 "e193e5089060ed6ce5145c8eb05e67e3")
