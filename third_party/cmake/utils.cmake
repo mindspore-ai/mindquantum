@@ -1141,6 +1141,54 @@ function(mindquantum_add_pkg pkg_name)
     list(APPEND _find_package_args COMPONENTS ${_components})
   endif()
 
+  # ----------------------------------------------------------------------------
+
+  set(${pkg_name}_PATCHES_HASH)
+  foreach(_patch ${PKG_PATCHES})
+    file(MD5 ${_patch} _patch_md5)
+    set(${pkg_name}_PATCHES_HASH "${${pkg_name}_PATCHES_HASH},${_patch_md5}")
+  endforeach()
+
+  # check options
+  string(REPLACE "${PROJECT_BINARY_DIR}" "<binary-dir>" _purged_ARGN "${ARGN}")
+  string(REPLACE "${PROJECT_SOURCE_DIR}" "<source-dir>" _purged_ARGN "${_purged_ARGN}")
+  set(${pkg_name}_CONFIG_TXT
+      "${CMAKE_CXX_COMPILER_VERSION}-${CMAKE_C_COMPILER_VERSION}-${CMAKE_CUDA_COMPILER_VERSION}
+            ${_purged_ARGN} - ${${pkg_name}_USE_STATIC_LIBS}- ${${pkg_name}_PATCHES_HASH}
+            ${${pkg_name}_CXXFLAGS}--${${pkg_name}_CFLAGS}--${${pkg_name}_LDFLAGS}")
+  string(REPLACE ";" "-" ${pkg_name}_CONFIG_TXT ${${pkg_name}_CONFIG_TXT})
+  string(MD5 ${pkg_name}_CONFIG_HASH ${${pkg_name}_CONFIG_TXT})
+
+  if(NOT _${pkg_name}_SYSTEM AND NOT "${pkg_name}_BASE_DIR" STREQUAL "")
+    # Package is not from the system and from a previous CMake run -> check if the config hash has changed
+    if(EXISTS "${${pkg_name}_BASE_DIR}/options.txt")
+      file(MD5 "${${pkg_name}_BASE_DIR}/options.txt" _old_config_hash)
+      if(NOT _old_config_hash STREQUAL ${pkg_name}_CONFIG_HASH)
+        # Config hash has changed -> remove all relevant directories:
+        #
+        # * local install prefix (BASE_DIR)
+        # * unpacked source
+        # * unpacked source subbuild directory
+        # * unpacked source build directory
+
+        message(STATUS "Old config hash does not match new config hash")
+        foreach(_dir
+                "${${pkg_name}_BASE_DIR}" "${_mq_local_prefix}/../_deps/${pkg_name}-src"
+                "${_mq_local_prefix}/../_deps/${pkg_name}-subbuild" "${_mq_local_prefix}/../_deps/${pkg_name}-build")
+          if(NOT "${_dir}" STREQUAL "" AND EXISTS "${_dir}")
+            message(STATUS "  - deleting ${_dir}")
+            file(REMOVE_RECURSE "${_dir}")
+          endif()
+        endforeach()
+
+        unset(${pkg_name}_DIR)
+        unset(${pkg_name}_DIR CACHE)
+      endif()
+    endif()
+  endif()
+
+  # ============================================================================
+
   # NB: this branch will only be taken if not the first CMake configure call (or if manually set)
   if(${pkg_name}_DIR)
     set(_args
@@ -1232,30 +1280,16 @@ function(mindquantum_add_pkg pkg_name)
       FALSE
       CACHE BOOL "Found ${pkg_name} in the system folders")
 
-  set(${pkg_name}_PATCHES_HASH)
-  foreach(_patch ${PKG_PATCHES})
-    file(MD5 ${_patch} _patch_md5)
-    set(${pkg_name}_PATCHES_HASH "${${pkg_name}_PATCHES_HASH},${_patch_md5}")
-  endforeach()
-
-  # check options
-  string(REPLACE "${PROJECT_BINARY_DIR}" "<binary-dir>" _purged_ARGN "${ARGN}")
-  string(REPLACE "${PROJECT_SOURCE_DIR}" "<source-dir>" _purged_ARGN "${_purged_ARGN}")
-  set(${pkg_name}_CONFIG_TXT
-      "${CMAKE_CXX_COMPILER_VERSION}-${CMAKE_C_COMPILER_VERSION}-${CMAKE_CUDA_COMPILER_VERSION}
-            ${_purged_ARGN} - ${${pkg_name}_USE_STATIC_LIBS}- ${${pkg_name}_PATCHES_HASH}
-            ${${pkg_name}_CXXFLAGS}--${${pkg_name}_CFLAGS}--${${pkg_name}_LDFLAGS}")
-  string(REPLACE ";" "-" ${pkg_name}_CONFIG_TXT ${${pkg_name}_CONFIG_TXT})
-  string(MD5 ${pkg_name}_CONFIG_HASH ${${pkg_name}_CONFIG_TXT})
-
   message(STATUS "${pkg_name} config hash: ${${pkg_name}_CONFIG_HASH}")
 
+  # NB: If the package is not found on the system, this is where we will be looking for it
   set(${pkg_name}_BASE_DIR
       ${_mq_local_prefix}/${pkg_name}_${PKG_VER}_${${pkg_name}_CONFIG_HASH}
-      CACHE STRING INTERNAL)
+      CACHE FILEPATH INTERNAL)
+
   set(${pkg_name}_DIRPATH
       ${${pkg_name}_BASE_DIR}
-      CACHE STRING INTERNAL)
+      CACHE FILEPATH INTERNAL)
 
   if(CLEAN_3RDPARTY_INSTALL_DIR)
     file(GLOB _installations ${_mq_local_prefix}/${pkg_name}_${PKG_VER}_*)
@@ -1311,6 +1345,10 @@ function(mindquantum_add_pkg pkg_name)
   endif()
   file(WRITE ${${pkg_name}_BASE_DIR}/options.txt ${${pkg_name}_CONFIG_TXT})
   message(STATUS "${pkg_name}_SOURCE_DIR : ${${pkg_name}_SOURCE_DIR}")
+
+  set(${pkg_name}_SOURCE_DIR
+      ${${pkg_name}_SOURCE_DIR}
+      CACHE FILEPATH INTERNAL)
 
   apply_patches("${${pkg_name}_SOURCE_DIR}" ${PKG_PATCHES})
 
