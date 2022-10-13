@@ -39,7 +39,7 @@ preprocessorErrorDirective:ccsrc/include/experimental/ops/parametric/angle_base.
 preprocessorErrorDirective:ccsrc/python/core/include/python/details/define_binary_operator_helpers.hpp
 preprocessorErrorDirective:ccsrc/python/experimental/lib/ops/ops.cpp
 preprocessorErrorDirective:tests/decompositions/test_apply_atoms.cpp:48
-preprocessorErrorDirective:tests/ops/test_angle_parametric_gates.cpp:28
+preprocessorErrorDirective:tests/ops/test_angle_parametric_gates.cpp:29
 
 stlIfFind:ccsrc/lib/experimental/cengines/write_projectq.cpp
 stlIfFind:ccsrc/lib/experimental/decompositions/atom_storage.cpp

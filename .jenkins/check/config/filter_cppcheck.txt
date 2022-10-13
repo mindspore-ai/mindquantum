@@ -39,7 +39,7 @@
 "mindquantum/ccsrc/python/core/include/python/details/define_binary_operator_helpers.hpp"   "preprocessorErrorDirective"
 "mindquantum/ccsrc/python/experimental/lib/ops/ops.cpp"                                     "preprocessorErrorDirective"
 "mindquantum/tests/decompositions/test_apply_atoms.cpp:48"                                  "preprocessorErrorDirective"
-"mindquantum/tests/ops/test_angle_parametric_gates.cpp:28"                                  "preprocessorErrorDirective"
+"mindquantum/tests/ops/test_angle_parametric_gates.cpp:29"                                  "preprocessorErrorDirective"
 
 "mindquantum/ccsrc/lib/experimental/cengines/write_projectq.cpp"                            "stlIfFind"
 "mindquantum/ccsrc/lib/experimental/decompositions/atom_storage.cpp"                        "stlIfFind"
