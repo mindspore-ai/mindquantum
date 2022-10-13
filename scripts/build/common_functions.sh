@@ -190,9 +190,11 @@ function __set_variable_from_ini {
                 fi
             fi
             eval_str="declare_var $var $value"
-        elif [[ ${value_lower} =~ ^(true|yes)$ ]]; then
+            # NB: second part of the condition below is an attempt at compatibility with older BASH
+        elif [[ ${value_lower} =~ ^(true|yes)$ || "${value_lower}" == "true" ]]; then
             eval_str="declare_bool_true $var"
-        elif [[ ${value_lower} =~ ^(false|no)$ ]]; then
+            # NB: second part of the condition below is an attempt at compatibility with older BASH
+        elif [[ ${value_lower} =~ ^(false|no)$ || "${value_lower}" == "false" ]]; then
             eval_str="declare_bool_false $var"
         elif [[ ${value} =~ ^.*\|.*$ ]]; then
             if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
