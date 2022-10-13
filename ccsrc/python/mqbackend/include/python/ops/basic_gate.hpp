@@ -16,6 +16,7 @@
 #define MQ_PYTHON_BASIC_GATE_HPP
 
 #include <string>
+#include <utility>
 
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
@@ -51,10 +52,10 @@ struct BasicGate : mindquantum::BasicGate<T> {
 
     using base_t = mindquantum::BasicGate<T>;
 
-    BasicGate(const mindquantum::BasicGate<T>& gate) : base_t(gate) {
+    BasicGate(const mindquantum::BasicGate<T>& gate) : base_t(gate) {  // NOLINT
     }
 
-    BasicGate(mindquantum::BasicGate<T>&& gate) : base_t(std::move(gate)) {
+    BasicGate(mindquantum::BasicGate<T>&& gate) : base_t(std::move(gate)) {  // NOLINT
     }
 
     BasicGate(const std::string& name, int64_t hermitian_prop, pybind11::object matrix_fun,
