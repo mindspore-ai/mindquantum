@@ -18,6 +18,17 @@
 
 # lint_cmake: -whitespace/indent
 
+add_library(mqbackend_python_interface INTERFACE)
+target_include_directories(mqbackend_python_interface INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+                                                                $<INSTALL_INTERFACE:${MQ_INSTALL_INCLUDEDIR}>)
+append_to_property(mq_install_targets GLOBAL mqbackend_python_interface)
+
+# ------------------------------------------------------------------------------
+
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/python DESTINATION ${MQ_INSTALL_INCLUDEDIR})
+
+# ==============================================================================
+
 pybind11_add_module(mqbackend MODULE OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}" ${CMAKE_CURRENT_LIST_DIR}/lib/binding.cc
                                                                              ${CMAKE_CURRENT_LIST_DIR}/lib/logging.cpp)
 
@@ -26,7 +37,7 @@ target_include_directories(mqbackend PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_L
 
 force_at_least_cxx17_workaround(mqbackend)
 target_link_libraries(mqbackend PUBLIC ${MQ_OPENMP_TARGET} "$<$<BOOL:${ENABLE_PROJECTQ}>:mq_projectq>" mq_base
-                                       mq_python_core)
+                                       mq_python_core mqbackend_python_interface)
 
 get_target_property(_mqbackend_output_dir mqbackend LIBRARY_OUTPUT_DIRECTORY)
 if(NOT _mqbackend_output_dir)
