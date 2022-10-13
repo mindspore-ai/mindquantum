@@ -15,6 +15,7 @@
 
 """OpenQASM support module."""
 
+from mindspore.ops import isinstance_
 import numpy as np
 
 from mindquantum.utils import fdopen
@@ -95,6 +96,11 @@ def isgateinstance(gate, gates):
     return False
 
 
+def _gate_not_implement_to_openqasm(gate):
+    """Raise an error that cannot convert gate to openqasm."""
+    raise ValueError(f"cannot convert {gate} to openqasm.")
+
+
 class OpenQASM:
     """
     Convert a circuit to openqasm format.
@@ -143,7 +149,7 @@ class OpenQASM:
             raise TypeError(f"circuit requires Circuit, but get {type(circuit)}.")
         if not isinstance(version, str):
             raise TypeError(f"version requires a str, but get {type(version)}")
-        single_np = [gates.XGate, gates.YGate, gates.ZGate]
+        single_np = [gates.XGate, gates.YGate, gates.ZGate, gates.HGate, gates.SGate, gates.TGate]
         single_p = [gates.RX, gates.RY, gates.RZ, gates.PhaseShift]
         double_np = [gates.SWAPGate, gates.CNOTGate]
         double_p = [gates.XX, gates.YY, gates.ZZ]
@@ -153,6 +159,50 @@ class OpenQASM:
             self.cmds.append(f"qreg q[{circuit.n_qubits}];")
             for gate in self.circuit:
                 if isgateinstance(gate, (single_np, single_p)):
+                    if isinstance(gate, gates.XGate):
+                        if len(gate.ctrl_qubits) == 0:
+                            self.cmds.append(f"x q[{gate.obj_qubits[0]}];")
+                            continue
+                        if len(gate.ctrl_qubits) == 1:
+                            self.cmds.append(f"cx q[{gate.ctrl_qubits[0]}],q[{gate.obj_qubits[0]}];")
+                            continue
+                        if len(gate.ctrl_qubits) == 2:
+                            c0, c1 = gate.ctrl_qubits
+                            o0 = gate.obj_qubits[0]
+                            self.cmds.append(f"ccx q[{c0}],q[{c1}],q[{o0}]")
+                            continue
+                        _gate_not_implement_to_openqasm(gate)
+                    if isinstance(gate, gates.TGate):
+                        t_name = 'tdg' if gate.hermitianed else 't'
+                        if not len(gate.ctrl_qubits):
+                            self.cmds.append(f"{t_name} q[{gate.obj_qubits[0]}]")
+                            continue
+                        _gate_not_implement_to_openqasm(gate)
+                    if isinstance(gate, gates.SGate):
+                        s_name = 'sdg' if gate.hermitianed else 's'
+                        if not len(gate.ctrl_qubits):
+                            self.cmds.append(f"{s_name} q[{gate.obj_qubits[0]}]")
+                            continue
+                        _gate_not_implement_to_openqasm(gate)
+                    if isinstance(gate, gates.HGate):
+                        if not len(gate.ctrl_qubits):
+                            self.cmds.append(f"h q[{gate.obj_qubits[0]}]")
+                            continue
+                        if len(gate.ctrl_qubits) == 1:
+                            self.cmds.append(f"ch q[{gate.ctrl_qubits[0]}],q[{gate.obj_qubits[0]}]")
+                            continue
+                        _gate_not_implement_to_openqasm(gate)
+                    if isinstance(gate, gates.PhaseShift):
+                        param = gate.coeff
+                        if not param.is_const():
+                            raise ValueError(f"Cannot convert parameterized gate {gate} to OpenQASM.")
+                        if not gate.ctrl_qubits:
+                            self.cmds.append(f"u1({param.const}) q[{gate.obj_qubits[0]}]")
+                            continue
+                        if len(gate.ctrl_qubits) == 1:
+                            self.cmds.append(f"cu1({param.const}) q[{gate.ctrl_qubits[0]}],q[{gate.obj_qubits[0]}]")
+                            continue
+                        _gate_not_implement_to_openqasm(gate)
                     if len(gate.ctrl_qubits) > 1:
                         raise ValueError(f"Multiple control for gate {gate} not implement")
                     if isgateinstance(gate, single_np):
