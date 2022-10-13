@@ -83,17 +83,17 @@ struct BasicGate {
         if (!parameterized_) {
             base_matrix_.PrintInfo();
         }
-        if (obj_qubits_.size() != 0) {
+        if (!obj_qubits_.empty()) {
             std::cout << "Obj qubits: ";
-            for (auto o : obj_qubits_) {
-                std::cout << o << " ";
+            for (auto qubit_id : obj_qubits_) {
+                std::cout << qubit_id << " ";
             }
             std::cout << std::endl;
         }
-        if (ctrl_qubits_.size() != 0) {
+        if (!ctrl_qubits_.empty()) {
             std::cout << "Control qubits: ";
-            for (auto o : ctrl_qubits_) {
-                std::cout << o << " ";
+            for (auto qubit_id : ctrl_qubits_) {
+                std::cout << qubit_id << " ";
             }
             std::cout << std::endl;
         }

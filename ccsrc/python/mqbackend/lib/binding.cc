@@ -44,6 +44,7 @@
 #include "ops/gates.hpp"
 #include "ops/hamiltonian.hpp"
 
+#include "python/core/sparse/csrhdmatrix.hpp"
 #include "python/details/create_from_container_class.hpp"
 #include "python/details/define_binary_operator_helpers.hpp"
 #include "python/ops/basic_gate.hpp"
@@ -166,7 +167,6 @@ void init_logging(pybind11::module &module);  // NOLINT(runtime/references)
 // Interface with python
 PYBIND11_MODULE(mqbackend, m) {
     using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
-    using mindquantum::CsrHdMatrix;
     using mindquantum::CT;
     using mindquantum::Dim2Matrix;
     using mindquantum::GetGateByName;
@@ -180,6 +180,7 @@ PYBIND11_MODULE(mqbackend, m) {
     using mindquantum::VT;
     using mindquantum::VVT;
     using mindquantum::python::BasicGate;
+    using mindquantum::python::CsrHdMatrix;
 
     m.doc() = "MindQuantum C++ plugin";
 

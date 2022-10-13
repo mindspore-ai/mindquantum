@@ -15,9 +15,6 @@
 #ifndef INCLUDE_VECTOR_VECTORSTATE_TPP
 #define INCLUDE_VECTOR_VECTORSTATE_TPP
 
-#ifndef INCLUDE_VECTOR_VECTORSTATE_HPP
-#    error This file must only be included by vector_state.hpp
-#endif
 #include <cmath>
 
 #include <algorithm>
@@ -41,7 +38,9 @@
 #include "ops/basic_gate.hpp"
 #include "ops/gates.hpp"
 #include "ops/hamiltonian.hpp"
+#include "simulator/types.hpp"
 #include "simulator/vector/vector_state.hpp"
+
 namespace mindquantum::sim::vector::detail {
 
 template <typename qs_policy_t_>

@@ -38,6 +38,7 @@
 #include "simulator/timer.h"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
+
 namespace mindquantum::sim::vector::detail {
 template <typename qs_policy_t_>
 struct BLAS;

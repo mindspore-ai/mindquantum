@@ -28,14 +28,13 @@ using mindquantum::sparse::TransposeCsrHdMatrix;
 
 template <typename T>
 struct Hamiltonian {
-    int64_t how_to_;
-    Index n_qubits_;
+    int64_t how_to_ = 0;
+    Index n_qubits_ = 0;
     VT<PauliTerm<T>> ham_;
     std::shared_ptr<CsrHdMatrix<T>> ham_sparse_main_;
     std::shared_ptr<CsrHdMatrix<T>> ham_sparse_second_;
 
-    Hamiltonian() {
-    }
+    Hamiltonian() = default;
 
     explicit Hamiltonian(const VT<PauliTerm<T>> &ham) : how_to_(ORIGIN), ham_(ham) {
     }
