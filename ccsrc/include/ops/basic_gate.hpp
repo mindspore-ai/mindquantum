@@ -27,29 +27,6 @@
 #include "core/utils.hpp"
 
 namespace mindquantum {
-namespace py = pybind11;
-template <typename T>
-inline VVT<CT<T>> CastArray(const py::object& fun, T theta) {
-    py::array_t<CT<T>> a = fun(theta);
-    py::buffer_info buf = a.request();
-    if (buf.ndim != 2) {
-        throw std::runtime_error("Gate matrix must be two dimension!");
-    }
-    if (buf.shape[0] != buf.shape[1]) {
-        throw std::runtime_error("Gate matrix need a square matrix!");
-    }
-    CTP<T> ptr = static_cast<CTP<T>>(buf.ptr);
-
-    VVT<CT<T>> m;
-    for (size_t i = 0; i < buf.shape[0]; i++) {
-        m.push_back({});
-        for (size_t j = 0; j < buf.shape[1]; j++) {
-            m[i].push_back(ptr[i * buf.shape[1] + j]);
-        }
-    }
-    return m;
-}
-
 template <typename T>
 struct BasicGate {
     bool parameterized_ = false;
