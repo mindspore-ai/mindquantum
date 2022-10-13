@@ -25,6 +25,8 @@
 
 #include <fmt/format.h>
 
+#include "config/format/std_complex.hpp"
+
 #include "core/parameter_resolver.hpp"
 
 #include "experimental/ops/gates/term_value.hpp"

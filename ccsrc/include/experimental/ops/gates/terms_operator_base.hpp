@@ -441,38 +441,6 @@ class TermsOperatorBase {
 };
 }  // namespace mindquantum::ops
 
-// =============================================================================
-
-template <typename char_t>
-struct fmt::formatter<mindquantum::ops::TermValue, char_t> {
-    FMT_CONSTEXPR auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
-        return ctx.begin();
-    }
-
-    template <typename format_context_t>
-    auto format(const mindquantum::ops::TermValue& value, format_context_t& ctx) const -> decltype(ctx.out()) {
-        if (value == mindquantum::ops::TermValue::I) {
-            return fmt::format_to(ctx.out(), "I");
-        }
-        if (value == mindquantum::ops::TermValue::X) {
-            return fmt::format_to(ctx.out(), "X");
-        }
-        if (value == mindquantum::ops::TermValue::Y) {
-            return fmt::format_to(ctx.out(), "Y");
-        }
-        if (value == mindquantum::ops::TermValue::Z) {
-            return fmt::format_to(ctx.out(), "Z");
-        }
-        if (value == mindquantum::ops::TermValue::a) {
-            return fmt::format_to(ctx.out(), "");
-        }
-        if (value == mindquantum::ops::TermValue::adg) {
-            return fmt::format_to(ctx.out(), "^");
-        }
-        return fmt::format_to(ctx.out(), "Invalid <mindquantum::ops::TermValue>");
-    }
-};
-
 #include "terms_operator_base.tpp"
 #include "terms_operator_base_external_ops.hpp"
 
