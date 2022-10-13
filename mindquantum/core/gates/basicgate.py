@@ -732,7 +732,14 @@ class BarrierGate(FunctionalGate):
         Returns:
             Gate, Return a new gate.
         """
-        raise RuntimeError("Cannot call on for BarrierGate.")
+        new = super().on(obj_qubits, ctrl_qubits)
+        obj_max = max(new.obj_qubits)
+        obj_min = min(new.obj_qubits)
+        if (obj_max - obj_min) != len(new.obj_qubits) - 1:
+            raise ValueError("BarrierGate only works in continues qubits.")
+        if new.ctrl_qubits:
+            raise ValueError("BarrierGate cannot have ctrl_qubits.")
+        return new
 
 
 class GlobalPhase(RotSelfHermMat):

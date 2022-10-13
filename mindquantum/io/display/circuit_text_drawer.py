@@ -44,7 +44,10 @@ def brick_model(circ, qubits_name=None):  # pylint: disable=too-many-locals
     qubit_hight = np.zeros(n, dtype=int)
     for gate in circ:
         if isinstance(gate, gates.BarrierGate):
-            qrange = range(n)
+            if gate.obj_qubits:
+                qrange = _get_qubit_range(gate)
+            else:
+                qrange = range(n)
         else:
             qrange = _get_qubit_range(gate)
         max_hight = np.max(qubit_hight[range(min(qrange), max(qrange) + 1)])
@@ -81,6 +84,8 @@ def _single_gate_drawer(gate):
     main_text = gate.__str_in_circ__()
     if isinstance(gate, gates.SWAPGate):
         main_text = _text_drawer_config['swap_mask'][0]
+    if isinstance(gate, gates.BarrierGate):
+        main_text = _text_drawer_config['barrier']
     main_text = _text_drawer_config['edge'] + main_text + _text_drawer_config['edge']
     res = {}
     for i in gate.obj_qubits:
@@ -104,7 +109,7 @@ def _single_block_drawer(block, n_qubits):  # pylint: disable=too-many-branches,
 
     v_n = _text_drawer_config['v_n']
     text_gates = {}
-    if isinstance(block[0], gates.BarrierGate):
+    if isinstance(block[0], gates.BarrierGate) and not block[0].obj_qubits:
         if not block[0].show:
             tmp = ''
         else:
@@ -122,10 +127,13 @@ def _single_block_drawer(block, n_qubits):  # pylint: disable=too-many-branches,
             else:
                 text_gates[ind] = _text_drawer_config['cross_mask']
                 text_gates[ind] = text_gates[ind].center(text_gate['len'], _text_drawer_config['circ_line'])
+        ctrl_line = _text_drawer_config['ctrl_line']
+        if isinstance(gate, gates.BarrierGate):
+            ctrl_line = _text_drawer_config['barrier']
         for qubit in range(min(qrange), max(qrange)):
             for i in range(v_n):
                 ind = qubit * (v_n + 1) + i + 1
-                text = _text_drawer_config['ctrl_line']
+                text = ctrl_line
                 text_gates[ind] = text
                 text_gates[ind] = text.center(text_gate.get('len', 0), ' ')
     max_l = max(len(j) for j in text_gates.values())
