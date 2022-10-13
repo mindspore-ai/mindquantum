@@ -18,6 +18,8 @@ import os
 
 from mindquantum import logging
 
+# pylint: disable=no-member
+
 level = os.getenv('MQ_LOG', logging.LogLevel.INFO)
 if isinstance(level, str):
     level = getattr(logging.LogLevel, level)

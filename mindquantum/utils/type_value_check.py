@@ -50,9 +50,8 @@ def _check_ansatz(data, ansatz_params_size):
 
 def _check_hamiltonian_qubits_number(hamiltonian, sim_qubits):
     """Check hamiltonian qubits number."""
-    from mindquantum.core.operators.hamiltonian import (  # noqa: E402  # pylint: disable=import-outside-toplevel
-        HowTo,
-    )
+    # pylint: disable=import-outside-toplevel,cyclic-import
+    from mindquantum.core.operators.hamiltonian import HowTo  # noqa: E402
 
     if hamiltonian.how_to != HowTo.ORIGIN:
         if hamiltonian.n_qubits != sim_qubits:
