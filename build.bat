@@ -49,7 +49,11 @@ set platform_name=
 set python_extra_pkgs=setuptools-scm[toml] wheel-filename>1.2
 
 if !_IS_MINDSPORE_CI! == 1 (
+   set cmake_debug_mode=1
+   set do_clean_3rdparty=1
    set enable_gitee=1
+   set enable_gpu=1
+   set enable_projectq=1
 )
 
 call %SCRIPTDIR%\default_values.bat
@@ -349,7 +353,10 @@ if !ninja! == 1 (
    if !n_jobs! == -1 set n_jobs=!n_jobs_default!
 )
 
-if NOT !n_jobs! == -1 set args=!args! -C--global-option=build -C--global-option=--parallel  -C--global-option=!n_jobs!
+if NOT !n_jobs! == -1 (
+  set args=!args! -C--global-option=--var -C--global-option=JOBS -C--global-option=!n_jobs!
+  set args=!args! -C--global-option=build_ext -C--global-option=--jobs -C--global-option=!n_jobs!
+)
 
 if "!build_type!" == "Debug" set args=!args! -C--global-option=build -C--global-option=--debug
 

@@ -138,7 +138,7 @@ class Max2SATAnsatz(Ansatz):
                 * sign(1, clause[1])
                 * QubitOperator(f'Z{abs(clause[0]) - 1} Z{abs(clause[1]) - 1}', 'beta')
             ) / 4
-        return TimeEvolution(ham).circuit
+        return TimeEvolution(ham.real).circuit
 
     def _build_hb(self, clauses):
         """Build hb circuit."""

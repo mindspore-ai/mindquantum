@@ -20,8 +20,6 @@ import os
 import numpy as np
 import pytest
 
-os.environ.setdefault('OMP_NUM_THREADS', '8')
-
 _HAS_MINDSPORE = True
 try:
     import mindspore as ms
@@ -31,15 +29,23 @@ try:
     from mindquantum.core.gates import X
     from mindquantum.core.operators import Hamiltonian, QubitOperator
     from mindquantum.framework import MQAnsatzOnlyLayer
-    from mindquantum.simulator import Simulator
+    from mindquantum.simulator import Simulator, get_supported_simulator
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
     _HAS_MINDSPORE = False
 
+    def get_supported_simulator():
+        """Dummy function."""
+        return []
 
+
+os.environ.setdefault('OMP_NUM_THREADS', '8')
+
+
+@pytest.mark.parametrize('backend', get_supported_simulator())
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_quccsd():  # pylint: disable=too-many-locals
+def test_quccsd(backend):  # pylint: disable=too-many-locals
     """
     Description:
     Expectation:
@@ -74,7 +80,7 @@ def test_quccsd():  # pylint: disable=too-many-locals
         total_circuit += X.on(i)
     total_circuit += ucc.circuit
 
-    sim = Simulator('projectq', total_circuit.n_qubits)
+    sim = Simulator(backend, total_circuit.n_qubits)
     f_g_ops = sim.get_expectation_with_grad(Hamiltonian(ham.real), total_circuit)
     net = MQAnsatzOnlyLayer(f_g_ops)
     opti = ms.nn.Adagrad(net.trainable_params(), learning_rate=4e-2)

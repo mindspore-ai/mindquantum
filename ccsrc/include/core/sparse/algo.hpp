@@ -15,6 +15,7 @@
  */
 #ifndef MINDQUANTUM_SPARSE_ALGO_H_
 #define MINDQUANTUM_SPARSE_ALGO_H_
+
 #include <memory>
 
 #include "core/sparse/csrhdmatrix.hpp"
@@ -22,8 +23,7 @@
 #include "core/sparse/sparse_utils.hpp"
 #include "core/utils.hpp"
 
-namespace mindquantum {
-namespace sparse {
+namespace mindquantum::sparse {
 template <typename T>
 std::shared_ptr<CsrHdMatrix<T>> TransposeCsrHdMatrix(std::shared_ptr<CsrHdMatrix<T>> a) {
     auto &dim = a->dim_;
@@ -31,9 +31,9 @@ std::shared_ptr<CsrHdMatrix<T>> TransposeCsrHdMatrix(std::shared_ptr<CsrHdMatrix
     auto &a_indices = a->indices_;
     auto &a_indptr = a->indptr_;
     auto &a_data = a->data_;
-    Index *indices = reinterpret_cast<Index *>(malloc(sizeof(Index) * nnz));
-    Index *indptr = reinterpret_cast<Index *>(malloc(sizeof(Index) * (dim + 1)));
-    CTP<T> data = reinterpret_cast<CTP<T>>(malloc(sizeof(CT<T>) * nnz));
+    auto *indices = reinterpret_cast<Index *>(malloc(sizeof(Index) * nnz));
+    auto *indptr = reinterpret_cast<Index *>(malloc(sizeof(Index) * (dim + 1)));
+    auto data = reinterpret_cast<CTP<T>>(malloc(sizeof(CT<T>) * nnz));
     std::fill(indptr, indptr + dim, 0);
     for (Index n = 0; n < nnz; n++) {
         indptr[a_indices[n]]++;
@@ -192,6 +192,5 @@ T2 *Csr_Dot_Vec(std::shared_ptr<CsrHdMatrix<T>> a, std::shared_ptr<CsrHdMatrix<T
     free(vec);
     return reinterpret_cast<T2 *>(new_vec);
 }
-}  // namespace sparse
-}  // namespace mindquantum
+}  // namespace mindquantum::sparse
 #endif  // MINDQUANTUM_SPARSE_ALGO_H_

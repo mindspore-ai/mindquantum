@@ -67,15 +67,21 @@ if ("$Env:JENKINS_URL" -Match 'https?://build.mindspore.cn' -And [bool]$Env:CI) 
 }
 
 # ==============================================================================
+
+. (Join-Path $ROOTDIR 'scripts\build\common_functions.ps1')
+
+# ------------------------------------------------------------------------------
 # Default values
 
 $python_extra_pkgs = @('wheel-filename>1.2')
 
 if ($_IS_MINDSPORE_CI ) {
-    $enable_gitee = $true
+    Set-Value 'cmake_debug_mode' $true
+    Set-Value 'do_clean_3rdparty' $true
+    Set-Value 'enable_gitee' $true
+    Set-Value 'enable_gpu' $true
+    Set-Value 'enable_projectq' $true
 }
-
-. (Join-Path $ROOTDIR 'scripts\build\common_functions.ps1')
 
 # ------------------------------------------------------------------------------
 
@@ -209,15 +215,15 @@ $build_args = @()
 
 $cmake_option_names = @{
     cmake_debug_mode = 'ENABLE_CMAKE_DEBUG'
+    do_clean_3rdparty = 'CLEAN_3RDPARTY_INSTALL_DIR'
     enable_cxx = 'ENABLE_CXX_EXPERIMENTAL'
     enable_gitee = 'ENABLE_GITEE'
     enable_gpu = 'ENABLE_CUDA'
-    enable_projectq = 'ENABLE_PROJECTQ'
     enable_logging = 'ENABLE_LOGGING'
+    enable_projectq = 'ENABLE_PROJECTQ'
+    enable_tests = 'BUILD_TESTING'
     logging_enable_debug = 'ENABLE_LOGGING_DEBUG_LEVEL'
     logging_enable_trace = 'ENABLE_LOGGING_TRACE_LEVEL'
-    enable_tests = 'BUILD_TESTING'
-    do_clean_3rdparty = 'CLEAN_3RDPARTY_INSTALL_DIR'
 }
 
 foreach ($el in $cmake_option_names.GetEnumerator()) {
@@ -264,7 +270,8 @@ if ($fast_build) {
 }
 
 if ($n_jobs -ne -1) {
-    $build_args += 'build', "--parallel=$n_jobs"
+    $build_args += '--var', 'JOBS', '$n_jobs'
+    $build_args += 'build_ext', "--jobs=$n_jobs"
 }
 
 if ($build_type -eq 'Debug') {
@@ -301,6 +308,9 @@ if ($enable_ccache) {
         $ccache_exec = (Get-Command "$ccache_exec").Source
         $build_args += '--var', 'CMAKE_C_COMPILER_LAUNCHER', "$ccache_exec"
         $build_args += '--var', 'CMAKE_CXX_COMPILER_LAUNCHER', "$ccache_exec"
+        if([bool]$enable_gpu) {
+            $build_args += '--var', 'CMAKE_CUDA_COMPILER_LAUNCHER', "$ccache_exec"
+        }
     }
 }
 

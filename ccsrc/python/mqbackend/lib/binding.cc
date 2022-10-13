@@ -44,8 +44,10 @@
 #include "ops/gates.hpp"
 #include "ops/hamiltonian.hpp"
 
+#include "python/core/sparse/csrhdmatrix.hpp"
 #include "python/details/create_from_container_class.hpp"
 #include "python/details/define_binary_operator_helpers.hpp"
+#include "python/ops/basic_gate.hpp"
 
 namespace py = pybind11;
 
@@ -56,17 +58,16 @@ using mindquantum::sparse::PauliMatToCsrHdMatrix;
 using mindquantum::sparse::SparseHamiltonian;
 using mindquantum::sparse::TransposeCsrHdMatrix;
 
-#ifdef ENABLE_PROJECTQ
-using mindquantum::projectq::InnerProduct;
-using mindquantum::projectq::Projectq;
-#endif
-
 template <typename T>
-auto BindPR(py::module &module, const std::string &name) {
+auto BindPR(py::module &module, const std::string &name) {  // NOLINT(runtime/references)
     using mindquantum::MST;
     using mindquantum::ParameterResolver;
     using mindquantum::SS;
     using mindquantum::python::create_from_python_container_class_with_trampoline;
+#ifdef ENABLE_PROJECTQ
+    using mindquantum::projectq::InnerProduct;
+    using mindquantum::projectq::Projectq;
+#endif
 
     using pr_t = mindquantum::ParameterResolver<T>;
 
@@ -74,7 +75,7 @@ auto BindPR(py::module &module, const std::string &name) {
     using factory_func_t = decltype(&create_from_python_container_class_with_trampoline<pr_t, MST<T>>);
     using cast_complex_func_t = decltype(&pr_t::template Cast<mindquantum::traits::to_cmplx_type_t<T>>);
 
-    using namespace pybind11::literals;
+    using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
 
     auto klass
         = py::class_<pr_t, std::shared_ptr<pr_t>>(module, name.c_str())
@@ -160,14 +161,12 @@ auto BindPR(py::module &module, const std::string &name) {
 }
 
 namespace mindquantum::python {
-void init_logging(pybind11::module &module);
+void init_logging(pybind11::module &module);  // NOLINT(runtime/references)
 }  // namespace mindquantum::python
 
 // Interface with python
 PYBIND11_MODULE(mqbackend, m) {
-    using namespace pybind11::literals;
-    using mindquantum::BasicGate;
-    using mindquantum::CsrHdMatrix;
+    using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
     using mindquantum::CT;
     using mindquantum::Dim2Matrix;
     using mindquantum::GetGateByName;
@@ -180,6 +179,8 @@ PYBIND11_MODULE(mqbackend, m) {
     using mindquantum::VS;
     using mindquantum::VT;
     using mindquantum::VVT;
+    using mindquantum::python::BasicGate;
+    using mindquantum::python::CsrHdMatrix;
 
     m.doc() = "MindQuantum C++ plugin";
 
@@ -192,7 +193,31 @@ PYBIND11_MODULE(mqbackend, m) {
         .def(py::init<const VVT<CT<MT>> &>())
         .def("PrintInfo", &Dim2Matrix<MT>::PrintInfo);
     // basic gate
-    py::class_<BasicGate<MT>, std::shared_ptr<BasicGate<MT>>>(m, "basic_gate")
+    py::class_<mindquantum::BasicGate<MT>, std::shared_ptr<mindquantum::BasicGate<MT>>>(m, "basic_gate_cxx")
+        .def(py::init<>())
+        .def(py::init<bool, std::string, int64_t, Dim2Matrix<MT>>())
+        .def(py::init<std::string, bool, MT, MT, MT>())
+        .def(py::init<std::string, bool, MT>())
+        .def(py::init<std::string, bool, VT<VVT<CT<MT>>>>())
+        .def("PrintInfo", &BasicGate<MT>::PrintInfo)
+        .def("apply_value", &BasicGate<MT>::ApplyValue)
+        .def_readwrite("obj_qubits", &BasicGate<MT>::obj_qubits_)
+        .def_readwrite("ctrl_qubits", &BasicGate<MT>::ctrl_qubits_)
+        .def_readwrite("params", &BasicGate<MT>::params_)
+        .def_readwrite("daggered", &BasicGate<MT>::daggered_)
+        .def_readwrite("applied_value", &BasicGate<MT>::applied_value_)
+        .def_readwrite("is_measure", &BasicGate<MT>::is_measure_)
+        .def_readwrite("base_matrix", &BasicGate<MT>::base_matrix_)
+        .def_readwrite("hermitian_prop", &BasicGate<MT>::hermitian_prop_)
+        .def_readwrite("is_channel", &BasicGate<MT>::is_channel_)
+        .def_readwrite("gate_list", &BasicGate<MT>::gate_list_)
+        .def_readwrite("probs", &BasicGate<MT>::probs_)
+        .def_readwrite("cumulative_probs", &BasicGate<MT>::cumulative_probs_)
+        .def_readwrite("kraus_operator_set", &BasicGate<MT>::kraus_operator_set_);
+    m.def("get_gate_by_name", &GetGateByName<MT>);
+    m.def("get_measure_gate", &GetMeasureGate<MT>);
+
+    py::class_<BasicGate<MT>, mindquantum::BasicGate<MT>, std::shared_ptr<BasicGate<MT>>>(m, "basic_gate")
         .def(py::init<>())
         .def(py::init<bool, std::string, int64_t, Dim2Matrix<MT>>())
         .def(py::init<std::string, bool, MT, MT, MT>())
@@ -214,8 +239,6 @@ PYBIND11_MODULE(mqbackend, m) {
         .def_readwrite("probs", &BasicGate<MT>::probs_)
         .def_readwrite("cumulative_probs", &BasicGate<MT>::cumulative_probs_)
         .def_readwrite("kraus_operator_set", &BasicGate<MT>::kraus_operator_set_);
-    m.def("get_gate_by_name", &GetGateByName<MT>);
-    m.def("get_measure_gate", &GetMeasureGate<MT>);
     // parameter resolver
 
     auto real_pr = BindPR<MT>(m, "real_pr");
@@ -292,18 +315,21 @@ PYBIND11_MODULE(mqbackend, m) {
     m.def("sparse_hamiltonian", &SparseHamiltonian<MT>);
 
 #ifdef ENABLE_PROJECTQ
+    using mindquantum::projectq::InnerProduct;
+    using mindquantum::projectq::Projectq;
+
     // projectq simulator
     py::class_<Projectq<MT>, std::shared_ptr<Projectq<MT>>>(m, "projectq")
         .def(py::init<>())
         .def(py::init<unsigned, unsigned>())
         .def("reset", py::overload_cast<>(&Projectq<MT>::InitializeSimulator))
         .def("apply_measure", &Projectq<MT>::ApplyMeasure)
-        .def("apply_gate", py::overload_cast<const BasicGate<MT> &>(&Projectq<MT>::ApplyGate))
-        .def("apply_gate",
-             py::overload_cast<const BasicGate<MT> &, const ParameterResolver<MT> &, bool>(&Projectq<MT>::ApplyGate))
-        .def("apply_circuit", py::overload_cast<const VT<BasicGate<MT>> &>(&Projectq<MT>::ApplyCircuit))
-        .def("apply_circuit",
-             py::overload_cast<const VT<BasicGate<MT>> &, const ParameterResolver<MT> &>(&Projectq<MT>::ApplyCircuit))
+        .def("apply_gate", py::overload_cast<const mindquantum::BasicGate<MT> &>(&Projectq<MT>::ApplyGate))
+        .def("apply_gate", py::overload_cast<const mindquantum::BasicGate<MT> &, const ParameterResolver<MT> &, bool>(
+                               &Projectq<MT>::ApplyGate))
+        .def("apply_circuit", py::overload_cast<const VT<mindquantum::BasicGate<MT>> &>(&Projectq<MT>::ApplyCircuit))
+        .def("apply_circuit", py::overload_cast<const VT<mindquantum::BasicGate<MT>> &, const ParameterResolver<MT> &>(
+                                  &Projectq<MT>::ApplyCircuit))
         .def("apply_circuit_with_measure", &Projectq<MT>::ApplyCircuitWithMeasure)
         .def("sampling", &Projectq<MT>::Sampling)
         .def("apply_hamiltonian", &Projectq<MT>::ApplyHamiltonian)
@@ -315,12 +341,13 @@ PYBIND11_MODULE(mqbackend, m) {
         .def("get_circuit_matrix", &Projectq<MT>::GetCircuitMatrix)
         .def("copy", &Projectq<MT>::Copy)
         .def("hermitian_measure_with_grad",
-             py::overload_cast<const VT<Hamiltonian<MT>> &, const VT<BasicGate<MT>> &, const VT<BasicGate<MT>> &,
-                               const VVT<MT> &, const VT<MT> &, const VS &, const VS &, size_t, size_t>(
-                 &Projectq<MT>::HermitianMeasureWithGrad))
+             py::overload_cast<const VT<Hamiltonian<MT>> &, const VT<mindquantum::BasicGate<MT>> &,
+                               const VT<mindquantum::BasicGate<MT>> &, const VVT<MT> &, const VT<MT> &, const VS &,
+                               const VS &, size_t, size_t>(&Projectq<MT>::HermitianMeasureWithGrad))
         .def("non_hermitian_measure_with_grad",
-             py::overload_cast<const VT<Hamiltonian<MT>> &, const VT<Hamiltonian<MT>> &, const VT<BasicGate<MT>> &,
-                               const VT<BasicGate<MT>> &, const VT<BasicGate<MT>> &, const VT<BasicGate<MT>> &,
+             py::overload_cast<const VT<Hamiltonian<MT>> &, const VT<Hamiltonian<MT>> &,
+                               const VT<mindquantum::BasicGate<MT>> &, const VT<mindquantum::BasicGate<MT>> &,
+                               const VT<mindquantum::BasicGate<MT>> &, const VT<mindquantum::BasicGate<MT>> &,
                                const VVT<MT> &, const VT<MT> &, const VS &, const VS &, size_t, size_t,
                                const Projectq<MT> &>(&Projectq<MT>::NonHermitianMeasureWithGrad));
     m.def("cpu_projectq_inner_product", &InnerProduct<MT>);

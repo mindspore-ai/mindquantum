@@ -19,8 +19,6 @@ import os
 import numpy as np
 import pytest
 
-os.environ.setdefault('OMP_NUM_THREADS', '8')
-
 _HAS_MINDSPORE = True
 try:
     import mindspore as ms
@@ -29,15 +27,23 @@ try:
     from mindquantum.core.gates import RX, RY, X
     from mindquantum.core.operators import Hamiltonian, QubitOperator
     from mindquantum.framework import MQAnsatzOnlyLayer
-    from mindquantum.simulator import Simulator
+    from mindquantum.simulator import Simulator, get_supported_simulator
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
     _HAS_MINDSPORE = False
 
+    def get_supported_simulator():
+        """Dummy function."""
+        return []
 
+
+os.environ.setdefault('OMP_NUM_THREADS', '8')
+
+
+@pytest.mark.parametrize('backend', get_supported_simulator())
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_hardware_efficient():
+def test_hardware_efficient(backend):
     """
     Description: Test hardware efficient ansatz
     Expectation:
@@ -46,7 +52,7 @@ def test_hardware_efficient():
     n_qubits = 3
     hea = HardwareEfficientAnsatz(n_qubits, [RX, RY, RX], X, 'all', depth)
     ham = QubitOperator('Z0 Z1 Z2')
-    sim = Simulator('projectq', hea.circuit.n_qubits)
+    sim = Simulator(backend, hea.circuit.n_qubits)
     f_g_ops = sim.get_expectation_with_grad(Hamiltonian(ham), hea.circuit)
     ms.set_seed(42)
     net = MQAnsatzOnlyLayer(f_g_ops)

@@ -5,6 +5,8 @@
 "mindquantum/tests/"                                                                        "constParameter"
 "mindquantum/tests/"                                                                        "unreadVariable"
 
+"mindquantum/ccsrc/python/simulator/include/python/vector/bind_vec_state.h:46"              "assignBoolToPointer"
+
 "mindquantum/ccsrc/lib/experimental/ops/gates/details/fermion_operator_term_policy.cpp"     "constStatement"
 "mindquantum/ccsrc/lib/experimental/ops/gates/details/qubit_operator_term_policy.cpp"       "constStatement"
 
@@ -37,7 +39,7 @@
 "mindquantum/ccsrc/python/core/include/python/details/define_binary_operator_helpers.hpp"   "preprocessorErrorDirective"
 "mindquantum/ccsrc/python/experimental/lib/ops/ops.cpp"                                     "preprocessorErrorDirective"
 "mindquantum/tests/decompositions/test_apply_atoms.cpp:48"                                  "preprocessorErrorDirective"
-"mindquantum/tests/ops/test_angle_parametric_gates.cpp:28"                                  "preprocessorErrorDirective"
+"mindquantum/tests/ops/test_angle_parametric_gates.cpp:29"                                  "preprocessorErrorDirective"
 
 "mindquantum/ccsrc/lib/experimental/cengines/write_projectq.cpp"                            "stlIfFind"
 "mindquantum/ccsrc/lib/experimental/decompositions/atom_storage.cpp"                        "stlIfFind"
@@ -46,13 +48,18 @@
 "mindquantum/ccsrc/include/core/parameter_resolver_external_ops.hpp:90"                     "syntaxError"
 "mindquantum/ccsrc/include/core/sparse/algo.hpp:73"                                         "syntaxError"
 "mindquantum/ccsrc/include/experimental/ops/gates/terms_operator_base_external_ops.hpp:95"  "syntaxError"
-"mindquantum/ccsrc/python/experimental/lib/ops/details/define_terms_ops.hpp:111"            "syntaxError"
+"mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy.cpp"                       "syntaxError"
+"mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_gate_expec.cpp"            "syntaxError"
+"mindquantum/ccsrc/python/experimental/lib/ops/details/define_terms_ops.hpp"                "syntaxError"
 "mindquantum/ccsrc/python/mqbackend/lib/binding.cc:184"                                     "syntaxError"
 
 "mindquantum/ccsrc/include/core/sparse/paulimat.hpp:58"                                     "unknownMacro"
+"mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_single_ops.cpp"            "unknownMacro"
+"mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_xlike.cpp"                 "unknownMacro"
+"mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_zlike.cpp"                 "unknownMacro"
 "mindquantum/ccsrc/python/experimental/include/python/cengines/resource_counter.hpp:25"     "unknownMacro"
 "mindquantum/ccsrc/python/experimental/include/python/ops/command.hpp:26"                   "unknownMacro"
-"mindquantum/third_party/projectq/projectq.h:119"                                           "unknownMacro"
+"mindquantum/third_party/projectq/projectq.h:113"                                           "unknownMacro"
 "mindquantum/third_party/projectq/projectq.h:190"                                           "unknownMacro"
 
 "mindquantum/ccsrc/lib/experimental/decompositions/time_evolution.cpp"                      "unreadVariable"

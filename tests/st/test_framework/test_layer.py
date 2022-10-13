@@ -25,15 +25,20 @@ try:
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.operators import Hamiltonian, QubitOperator
     from mindquantum.framework import MQLayer
-    from mindquantum.simulator import Simulator
+    from mindquantum.simulator import Simulator, get_supported_simulator
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
     _HAS_MINDSPORE = False
 
+    def get_supported_simulator():
+        """Dummy function."""
+        return []
 
+
+@pytest.mark.parametrize('backend', get_supported_simulator())
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_mindquantumlayer():
+def test_mindquantumlayer(backend):
     """
     Description: Test MQLayer
     Expectation:
@@ -47,7 +52,7 @@ def test_mindquantumlayer():
     ham = Hamiltonian(QubitOperator('Z0'))
     ms.set_seed(55)
     circ = encoder.as_encoder() + ansatz.as_ansatz()
-    sim = Simulator('projectq', circ.n_qubits)
+    sim = Simulator(backend, circ.n_qubits)
     f_g_ops = sim.get_expectation_with_grad(ham, circ)
     net = MQLayer(f_g_ops)
     encoder_data = ms.Tensor(np.array([[0.1, 0.2]]).astype(np.float32))

@@ -23,41 +23,60 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND CMAKE_CXX_COMPILER_VERSION VER
 endif()
 include(CheckCXXSourceCompiles)
 
+is_language_enabled(CUDA _cuda_enabled)
+is_language_enabled(NVCXX _nvcxx_enabled)
+
+if(_cuda_enabled)
+  include(CheckCUDASourceCompiles)
+endif()
+
 # ==============================================================================
 
 # Dummy function to create a new variable scope
-function(__test_cxx20_memory)
-  set(CMAKE_CXX_STANDARD 20)
+function(__test_lang20_memory LANG) # cmake-lint: disable=C0103
+  string(TOUPPER "${LANG}" LANG)
+  string(TOLOWER "${LANG}" lang)
+  set(CMAKE_${LANG}_STANDARD 20)
 
-  # NB: This below fails with Clang < 9.0.0
-  check_cxx_source_compiles(
+  # NB: This below fails with Clang < 9.0.0 for C++
+  cmake_language(
+    CALL
+    check_${lang}_source_compiles
     [[
 #include <memory>
 int main() {
   return 0;
 }
 ]]
-    compiler_cxx20_memory_works)
+    compiler_${lang}20_memory_works)
 
-  set(_MQ_MEMORY_CXX20_WORKS FALSE)
-  if(compiler_cxx20_memory_works)
-    set(_MQ_MEMORY_CXX20_WORKS TRUE)
+  set(_MQ_MEMORY_${LANG}20_WORKS FALSE)
+  if(compiler_${lang}20_memory_works)
+    set(_MQ_MEMORY_${LANG}20_WORKS TRUE)
   endif()
 
-  set(_MQ_MEMORY_CXX20_WORKS
-      ${_MQ_MEMORY_CXX20_WORKS}
+  set(_MQ_MEMORY_${LANG}20_WORKS
+      ${_MQ_MEMORY_${LANG}20_WORKS}
       PARENT_SCOPE)
 
-  set(_MQ_MEMORY_CXX20_WORKS
-      ${_MQ_MEMORY_CXX20_WORKS}
-      CACHE INTERNAL compiler_cxx20_memory_works)
+  set(_MQ_MEMORY_${LANG}20_WORKS
+      ${_MQ_MEMORY_${LANG}20_WORKS}
+      CACHE INTERNAL compiler_${lang}20_memory_works)
 endfunction()
 
-__test_cxx20_memory()
+__test_lang20_memory(CXX)
 
 if(NOT _MQ_MEMORY_CXX20_WORKS)
   set(CMAKE_CXX_STANDARD 17)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
+endif()
+
+if(_cuda_enabled)
+  __test_lang20_memory(CUDA)
+  if(NOT _MQ_MEMORY_CUDA20_WORKS)
+    set(CMAKE_CUDA_STANDARD 17)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+  endif()
 endif()
 
 # --------------------------------------
@@ -65,43 +84,62 @@ endif()
 # ~~~
 # Check whether some C++ code compiles
 #
-# check_cxx_code_compiles(<cmake_identifier> <out-var> <cxx_standard> <code>)
+# check_cxx_code_compiles(<lang> <cmake_identifier> <out-var> <lang_standard> <code> [<lang>, ...])
 # ~~~
-function(check_cxx_code_compiles cmake_identifier var cxx_standard code)
-  if(cxx_standard MATCHES "cxx_std_([0-9]+)")
-    set(CMAKE_CXX_STANDARD ${CMAKE_MATCH_1})
+function(check_code_compiles cmake_identifier var lang_standard code)
+  if(NOT "${ARGN}" STREQUAL "")
+    set(_lang_list "${ARGN}")
+  else()
+    set(_lang_list CXX)
+    if(_cuda_enabled)
+      list(APPEND _lang_list CUDA)
+    endif()
   endif()
 
-  if(CMAKE_CXX_STANDARD EQUAL 20 AND NOT _MQ_MEMORY_CXX20_WORKS)
-    set(CMAKE_CXX_STANDARD 17)
-  endif()
+  set(_cmake_identifer ${cmake_identifier})
+  set(_var ${var})
 
-  if(MSVC)
-    get_property(_msvc_flags GLOBAL PROPERTY _compile_msvc_flags_CXX)
-    set(CMAKE_REQUIRED_FLAGS ${_msvc_flags})
-  endif()
+  foreach(_lang ${_lang_list})
+    string(TOUPPER "${_lang}" LANG)
+    string(TOLOWER "${_lang}" lang)
+    set(cmake_identifier "${lang}_${_cmake_identifer}")
+    set(var "MQ_${LANG}_${_var}")
 
-  check_cxx_source_compiles("${code}" "${cmake_identifier}")
+    if(lang_standard MATCHES "std_([0-9]+)")
+      set(CMAKE_${LANG}_STANDARD ${CMAKE_MATCH_1})
+    endif()
 
-  set(${var}
-      ${${cmake_identifier}}
-      PARENT_SCOPE)
+    if(CMAKE_${LANG}_STANDARD EQUAL 20 AND NOT _MQ_MEMORY_${LANG}20_WORKS)
+      set(CMAKE_${LANG}_STANDARD 17)
+    endif()
 
-  set(${var} FALSE)
-  if(${cmake_identifier})
-    set(${var} TRUE)
-  endif()
-  set(${var}
-      ${${var}}
-      CACHE INTERNAL "${cmake_identifier}")
+    if(MSVC)
+      get_property(_msvc_flags GLOBAL PROPERTY _compile_msvc_flags_${LANG})
+      set(CMAKE_REQUIRED_FLAGS ${_msvc_flags})
+    endif()
+
+    cmake_language(CALL check_${lang}_source_compiles "${code}" "${cmake_identifier}")
+
+    set(${var}
+        ${${cmake_identifier}}
+        PARENT_SCOPE)
+
+    set(${var} FALSE)
+    if(${cmake_identifier})
+      set(${var} TRUE)
+    endif()
+    set(${var}
+        ${${var}}
+        CACHE INTERNAL "${cmake_identifier}")
+  endforeach()
 endfunction()
 
 # ==============================================================================
 
-check_cxx_code_compiles(
+check_code_compiles(
   compiler_has_cxx20_operator_not_equal_synthesis
-  MQ_HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
-  cxx_std_20
+  HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
+  std_20
   [[
 struct A {
     bool operator==(const A& other) const {
@@ -117,10 +155,10 @@ int main() {
 
 # --------------------------------------
 
-check_cxx_code_compiles(
+check_code_compiles(
   compiler_has_implicit_template_deduction_guides
-  MQ_HAS_IMPLICIT_TEMPLATE_DEDUCTION_GUIDES
-  cxx_std_20
+  HAS_IMPLICIT_TEMPLATE_DEDUCTION_GUIDES
+  std_20
   [[
 #ifdef __has_include
 # if __has_include(<version>)
@@ -142,10 +180,10 @@ int main() {
 
 # --------------------------------------
 
-check_cxx_code_compiles(
+check_code_compiles(
   compiler_has_remove_cvref_t
-  MQ_HAS_REMOVE_CVREF_T
-  cxx_std_20
+  HAS_REMOVE_CVREF_T
+  std_20
   [[
 #ifdef __has_include
 # if __has_include(<version>)
@@ -166,10 +204,10 @@ int main() {
 
 # --------------------------------------
 
-check_cxx_code_compiles(
+check_code_compiles(
   compiler_has_map_contains
-  MQ_HAS_MAP_CONTAINS
-  cxx_std_20
+  HAS_MAP_CONTAINS
+  std_20
   [[
 #include <map>
 int main() { std::map<int, double> m{{0, 1.}, {1, 2.}}; return m.contains(1); }
@@ -177,10 +215,10 @@ int main() { std::map<int, double> m{{0, 1.}, {1, 2.}}; return m.contains(1); }
 
 # --------------------------------------
 
-check_cxx_code_compiles(
+check_code_compiles(
   compiler_has_map_erase_if
-  MQ_HAS_MAP_ERASE_IF
-  cxx_std_20
+  HAS_MAP_ERASE_IF
+  std_20
   [[
 #include <map>
 int main() {
@@ -194,9 +232,9 @@ int main() {
 
 # --------------------------------------
 
-check_cxx_code_compiles(
+check_code_compiles(
   compiler_has_detected_ts2
-  MQ_HAS_DETECTED_TS2
+  HAS_DETECTED_TS2
   cxx_std_17
   [[
 #include <experimental/type_traits>
@@ -210,9 +248,9 @@ int main() { return 0; }
 
 # --------------------------------------
 
-check_cxx_code_compiles(
+check_code_compiles(
   compiler_has_std_filesystem
-  MQ_HAS_STD_FILESYSTEM
+  HAS_STD_FILESYSTEM
   cxx_std_17
   [[
 #ifdef __has_include
@@ -231,10 +269,10 @@ int main() {
 
 # --------------------------------------
 
-check_cxx_code_compiles(
+check_code_compiles(
   compiler_has_class_non_type_template_args
-  MQ_HAS_CLASS_NON_TYPE_TEMPLATE_ARGS
-  cxx_std_20
+  HAS_CLASS_NON_TYPE_TEMPLATE_ARGS
+  std_20
   [[
 #ifdef __has_include
 # if __has_include(<version>)
@@ -252,10 +290,10 @@ int main() {
 
 # --------------------------------------
 
-check_cxx_code_compiles(
+check_code_compiles(
   compiler_has_concepts
-  MQ_HAS_CONCEPTS
-  cxx_std_20
+  HAS_CONCEPTS
+  std_20
   [[
 #ifdef __has_include
 # if __has_include(<version>)
@@ -271,17 +309,17 @@ int main() {
 }
 ]])
 
-if(NOT compiler_has_concepts)
+if(NOT cxx_compiler_has_concepts)
   message(WARNING "You are using an older compiler that does not support C++20 concepts. The code will probably "
                   "compile and run fine, but you should really be upgrading your compiler.")
 endif()
 
 # --------------------------------------
 
-check_cxx_code_compiles(
+check_code_compiles(
   compiler_has_concepts_library
-  MQ_HAS_CONCEPT_LIBRARY
-  cxx_std_20
+  HAS_CONCEPT_LIBRARY
+  std_20
   [[
 #ifdef __has_include
 # if __has_include(<version>)
@@ -299,11 +337,11 @@ int main() {
 
 # --------------------------------------
 
-if(compiler_has_concepts AND NOT compiler_has_concepts_library)
-  check_cxx_code_compiles(
-    compiler_has_concept_destructible
-    MQ_HAS_CONCEPT_DESTRUCTIBLE
-    cxx_std_20
+if(cxx_compiler_has_concepts AND NOT cxx_compiler_has_concepts_library)
+  check_code_compiles(
+    cxx_compiler_has_concept_destructible
+    HAS_CONCEPT_DESTRUCTIBLE
+    std_20
     [[
 #include <concepts>
 
@@ -314,20 +352,21 @@ int main() {
   auto* a = new A;
   foo(a);
 }
-]])
-elseif(compiler_has_concepts) # C++20 concepts + concepts library
-  set(MQ_HAS_CONCEPT_DESTRUCTIBLE TRUE)
+]]
+    CXX)
+elseif(cxx_compiler_has_concepts) # C++20 concepts + concepts library
+  set(MQ_CXX_HAS_CONCEPT_DESTRUCTIBLE TRUE)
 else()
-  set(MQ_HAS_CONCEPT_DESTRUCTIBLE FALSE)
+  set(MQ_CXX_HAS_CONCEPT_DESTRUCTIBLE FALSE)
 endif()
 
 # --------------------------------------
 
-if(compiler_has_concepts)
-  check_cxx_code_compiles(
+if(cxx_compiler_has_concepts)
+  check_code_compiles(
     compiler_supports_external_dependent_concepts
-    MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS
-    cxx_std_20
+    SUPPORTS_EXT_DEPENDENT_CONCEPTS
+    std_20
     [[
 #include <type_traits>
 
@@ -356,14 +395,15 @@ int main() {
 }
 ]])
 else()
-  set(MQ_SUPPORTS_EXT_DEPENDENT_CONCEPTS FALSE)
+  set(MQ_CXX_SUPPORTS_EXT_DEPENDENT_CONCEPTS FALSE)
+  set(MQ_CUDA_SUPPORTS_EXT_DEPENDENT_CONCEPTS FALSE)
 endif()
 
 # --------------------------------------
 
-check_cxx_code_compiles(
+check_code_compiles(
   compiler_has_std_launder
-  MQ_HAS_STD_LAUNDER
+  HAS_STD_LAUNDER
   cxx_std_17
   [[
 #ifdef __has_include
@@ -386,10 +426,10 @@ int main() {
 
 # --------------------------------------
 
-check_cxx_code_compiles(
+check_code_compiles(
   compiler_has_constexpr_std_vector
-  MQ_HAS_CONSTEXPR_STD_VECTOR
-  cxx_std_20
+  HAS_CONSTEXPR_STD_VECTOR
+  std_20
   [[
 #ifdef __has_include
 #    if __has_include(<version>)
@@ -414,10 +454,10 @@ int main() {
 
 # --------------------------------------
 
-check_cxx_code_compiles(
+check_code_compiles(
   compiler_has_cxx20_format
-  MQ_HAS_CXX20_FORMAT
-  cxx_std_20
+  HAS_CXX20_FORMAT
+  std_20
   [[
 #ifdef __has_include
 #    if __has_include(<version>)
@@ -440,10 +480,10 @@ int main() {
 
 # --------------------------------------
 
-check_cxx_code_compiles(
+check_code_compiles(
   compiler_has_cxx20_span
-  MQ_HAS_CXX20_SPAN
-  cxx_std_20
+  HAS_CXX20_SPAN
+  std_20
   [[
 #ifdef __has_include
 #    if __has_include(<version>)
@@ -466,10 +506,10 @@ int main() {
 
 # --------------------------------------
 
-check_cxx_code_compiles(
+check_code_compiles(
   compiler_has_cxx20_ranges
-  MQ_HAS_CXX20_RANGES
-  cxx_std_20
+  HAS_CXX20_RANGES
+  std_20
   [[
 #ifdef __has_include
 #    if __has_include(<version>)
@@ -501,10 +541,10 @@ int main() {
 
 # --------------------------------------
 
-check_cxx_code_compiles(
+check_code_compiles(
   compiler_std_accumulate_use_move
-  MQ_STD_ACCUMULATE_USE_MOVE
-  cxx_std_20
+  STD_ACCUMULATE_USE_MOVE
+  std_20
   [[
 #include <numeric>
 #include <vector>
@@ -527,16 +567,40 @@ else()
 endif()
 set_target_properties(CXX_mindquantum PROPERTIES CXX_STANDARD_REQUIRED ON)
 
+if(ENABLE_CUDA)
+  if(cuda_std_20 IN_LIST CMAKE_CUDA_COMPILE_FEATURES)
+    target_compile_features(CUDA_mindquantum INTERFACE cuda_std_20)
+  elseif(cuda_std_17 IN_LIST CMAKE_CUDA_COMPILE_FEATURES)
+    target_compile_features(CUDA_mindquantum INTERFACE cuda_std_17)
+  else()
+    target_compile_features(CUDA_mindquantum INTERFACE cuda_std_14)
+  endif()
+  set_target_properties(CUDA_mindquantum PROPERTIES CUDA_STANDARD_REQUIRED ON)
+endif()
+
 # ------------------------------------------------------------------------------
 
-configure_file(${CMAKE_CURRENT_LIST_DIR}/cxx20_config.hpp.in ${PROJECT_BINARY_DIR}/config/cxx20_config.hpp)
+set(_lang_list CXX)
+if(_cuda_enabled)
+  list(APPEND _lang_list CUDA)
+endif()
 
-add_library(cxx20_compat INTERFACE)
-target_include_directories(cxx20_compat INTERFACE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>)
+set(_configured_headers)
+foreach(_lang ${_lang_list})
+  set(LANG ${_lang})
+  string(TOLOWER "${_lang}" lang)
+  set(MQ_DEFINE_MACRO "#cmakedefine01")
+  configure_file(${CMAKE_CURRENT_LIST_DIR}/lang20_config.hpp.in.in ${PROJECT_BINARY_DIR}/${lang}20_config.hpp.in @ONLY)
+  configure_file(${PROJECT_BINARY_DIR}/${lang}20_config.hpp.in ${PROJECT_BINARY_DIR}/config/${lang}20_config.hpp)
+  list(APPEND _configured_headers "${PROJECT_BINARY_DIR}/config/${lang}20_config.hpp")
+
+  add_library(${lang}20_compat INTERFACE)
+  target_include_directories(${lang}20_compat INTERFACE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>)
+  append_to_property(mq_install_targets GLOBAL ${lang}20_compat)
+endforeach()
 
 # ------------------------------------------------------------------------------
 
-append_to_property(mq_install_targets GLOBAL cxx20_compat)
-install(FILES ${PROJECT_BINARY_DIR}/config/cxx20_config.hpp DESTINATION ${MQ_INSTALL_INCLUDEDIR}/config)
+install(FILES ${_configured_headers} DESTINATION ${MQ_INSTALL_INCLUDEDIR}/config)
 
 # ==============================================================================

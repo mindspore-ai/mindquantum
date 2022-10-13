@@ -49,6 +49,18 @@ unset ncolors
 
 # ==============================================================================
 
+function check_for_verbose() {
+    for arg in "$@"; do
+        if [[ "$arg" == '-v' || $arg == '--verbose' ]]; then
+            # shellcheck disable=SC2034
+            verbose=1
+            break
+        fi
+    done
+}
+
+# ==============================================================================
+
 function debug_print() {
     if [ "${verbose:-0}" -eq 1 ]; then
         echo "${_YELLOW}DEBUG $*${_NORMAL}" >&2
@@ -164,6 +176,9 @@ function __set_variable_from_ini {
             value_lower=${value,,}
         fi
 
+        # Remove trailing comments and trim value string
+        value_lower=$(echo "$value_lower" | sed -e "s/\s*#.*$//" -e 's/^[ \t]*//;s/[ \t]*$//')
+
         eval_str=''
         # shellcheck disable=SC2016
         null_test='-z "${%s}"'
@@ -175,9 +190,11 @@ function __set_variable_from_ini {
                 fi
             fi
             eval_str="declare_var $var $value"
-        elif [[ ${value_lower} =~ ^(true|yes)$ ]]; then
+            # NB: second part of the condition below is an attempt at compatibility with older BASH
+        elif [[ ${value_lower} =~ ^(true|yes)$ || "${value_lower}" == "true" ]]; then
             eval_str="declare_bool_true $var"
-        elif [[ ${value_lower} =~ ^(false|no)$ ]]; then
+            # NB: second part of the condition below is an attempt at compatibility with older BASH
+        elif [[ ${value_lower} =~ ^(false|no)$ || "${value_lower}" == "false" ]]; then
             eval_str="declare_bool_false $var"
         elif [[ ${value} =~ ^.*\|.*$ ]]; then
             if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then

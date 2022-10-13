@@ -26,15 +26,20 @@ try:
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.operators import Hamiltonian, QubitOperator
     from mindquantum.framework import MQAnsatzOnlyOps
-    from mindquantum.simulator import Simulator
+    from mindquantum.simulator import Simulator, get_supported_simulator
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
     _HAS_MINDSPORE = False
 
+    def get_supported_simulator():
+        """Dummy function."""
+        return []
 
+
+@pytest.mark.parametrize('backend', get_supported_simulator())
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_mindquantum_ansatz_only_ops():
+def test_mindquantum_ansatz_only_ops(backend):
     """
     Description: Test MQAnsatzOnlyOps
     Expectation:
@@ -42,7 +47,7 @@ def test_mindquantum_ansatz_only_ops():
     circ = Circuit(G.RX('a').on(0))
     data = ms.Tensor(np.array([0.5]).astype(np.float32))
     ham = Hamiltonian(QubitOperator('Z0'))
-    sim = Simulator('projectq', circ.n_qubits)
+    sim = Simulator(backend, circ.n_qubits)
 
     evol = MQAnsatzOnlyOps(sim.get_expectation_with_grad(ham, circ))
     output = evol(data)

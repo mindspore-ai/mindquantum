@@ -18,6 +18,8 @@
 
 # lint_cmake: -whitespace/indent
 
+is_language_enabled(NVCXX, _nvcxx_enabled)
+
 test_linker_option(
   linker_flags
   LANGS C CXX DPCXX CUDA NVCXX
@@ -48,7 +50,7 @@ test_linker_option(
 
 # ------------------------------------------------------------------------------
 
-if(ENABLE_CUDA)
+if(ENABLE_CUDA AND _nvcxx_enabled)
   # NB: simply copy over the compiler options to linker options since they are the same
   foreach(_src_target nvhpc_cuda_flags_NVCXX nvhpc_cuda_version_flags_NVCXX)
     get_target_property(_flag ${_src_target} INTERFACE_COMPILE_OPTIONS)

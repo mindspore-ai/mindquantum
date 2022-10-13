@@ -25,6 +25,8 @@
 
 #include <fmt/format.h>
 
+#include "config/format/std_complex.hpp"
+
 #include "core/parameter_resolver.hpp"
 
 #include "experimental/ops/gates/term_value.hpp"
@@ -32,7 +34,7 @@
 namespace mindquantum::ops::details {
 struct QubitOperatorTermPolicyBase {
     static auto to_string(const TermValue& value) {
-        using namespace std::literals::string_literals;
+        using namespace std::literals::string_literals;  // NOLINT
         if (value == TermValue::X) {
             return "X"s;
         }
@@ -86,6 +88,6 @@ struct QubitOperatorTermPolicy : QubitOperatorTermPolicyBase {
 };
 }  // namespace mindquantum::ops::details
 
-#include "qubit_operator_term_policy.tpp"
+#include "qubit_operator_term_policy.tpp"  // NOLINT
 
 #endif /* DETAILS_QUBIT_OPERATOR_TERM_POLICY_HPP */

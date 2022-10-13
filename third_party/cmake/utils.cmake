@@ -78,10 +78,19 @@ endif()
 # Local prefix path for installing packages from source if we cannot find any suitable versions on the system
 
 if(DEFINED ENV{MQLIBS_CACHE_PATH})
-  set(_mq_local_prefix $ENV{MQLIBS_CACHE_PATH}) # similarly to MindSpore
+  debug_print(STATUS "Using cache path from MQLIBS_CACHE_PATH environment variable")
+  set(_mq_local_prefix "$ENV{MQLIBS_CACHE_PATH}")
+elseif(DEFINED ENV{MSLIBS_CACHE_PATH})
+  debug_print(STATUS "Using cache path from MSLIBS_CACHE_PATH environment variable")
+  set(_mq_local_prefix "$ENV{MSLIBS_CACHE_PATH}") # compatibility with MindSpore CI
 elseif(DEFINED ENV{MQLIBS_LOCAL_PREFIX_PATH})
-  set(_mq_local_prefix $ENV{MQLIBS_LOCAL_PREFIX_PATH})
+  debug_print(STATUS "Using cache path from MQLIBS_LOCAL_PREFIX_PATH environment variable")
+  set(_mq_local_prefix "$ENV{MQLIBS_LOCAL_PREFIX_PATH}")
+elseif(DEFINED ENV{MSLIBS_LOCAL_PREFIX_PATH})
+  debug_print(STATUS "Using cache path from MSLIBS_LOCAL_PREFIX_PATH environment variable")
+  set(_mq_local_prefix "$ENV{MSLIBS_LOCAL_PREFIX_PATH}") # compatibility with MindSpore CI
 else()
+  debug_print(STATUS "Using default cache path")
   set(_mq_local_prefix ${PROJECT_BINARY_DIR}/.mqlibs)
 endif()
 message(STATUS "MQ local prefix:  ${_mq_local_prefix}")
@@ -104,13 +113,19 @@ endif()
 # If desired (e.g. like on CIs), a local server can be used to download the source of packages that need to be built
 # locally.
 
+debug_print(STATUS "ENV{MQLIBS_SERVER} = $ENV{MQLIBS_SERVER}")
+debug_print(STATUS "ENV{MSLIBS_SERVER} = $ENV{MSLIBS_SERVER}")
+
 if(DEFINED ENV{MQLIBS_SERVER} AND NOT ENABLE_GITEE)
-  set(_local_server $ENV{MQLIBS_SERVER})
+  set(_local_server "$ENV{MQLIBS_SERVER}")
+elseif(DEFINED ENV{MSLIBS_SERVER} AND NOT ENABLE_GITEE)
+  set(_local_server "$ENV{MSLIBS_SERVER}")
 elseif(LOCAL_LIBS_SERVER)
-  set(_local_server ${LOCAL_LIBS_SERVER})
+  set(_local_server "${LOCAL_LIBS_SERVER}")
 endif()
 
 if(_local_server)
+  debug_print(STATUS "Raw local server URL: ${_local_server}")
   if(_local_server MATCHES "(http|https|ssh|ftp)://(.*)")
     set(_local_server_protocol ${CMAKE_MATCH_1})
     set(_local_server ${CMAKE_MATCH_2})
@@ -164,7 +179,7 @@ endmacro()
 function(__download_pkg pkg_name pkg_url pkg_md5)
   if(_local_server)
     get_filename_component(_url_file_name ${pkg_url} NAME)
-    set(pkg_url "${_local_server}/libs/${pkg_name}/${_url_file_name}" ${pkg_url})
+    set(pkg_url "${_local_server}/libs/${pkg_name}/${_url_file_name}")
     debug_print(STATUS "Using local server URL: ${pkg_url}")
   endif()
 
@@ -1033,6 +1048,7 @@ endfunction()
 #                      [INSTALL_COMMAND  <command> [... <args>]]
 #                      [INSTALL_INCS <directory> [... <directory>]]
 #                      [INSTALL_LIBS <directory> [... <directory>]]
+#                      [LANGS <lang> [... <lang>]]
 #                      [LIBS <lib-names> [... <lib-names>]]
 #                      [LOCAL_EXTRA_DEFINES [TARGET <target> <defines> [... <defines>]]...]
 #                      [ONLY_COPY_DIRS <directory> [... <directory>]]
@@ -1048,6 +1064,8 @@ endfunction()
 # BUILD_DEPENDENCIES is a list of lists of arguments to pass onto to `find_package()` prior to start building the
 # package.
 # e.g. (... BUILD_DEPENDENCIES "Git REQUIRED" "Boost COMPONENTS system" ...)
+#
+# LANG is a list of languages to activate by default for a third-party library. This defaults to C++ (and C if enabled).
 #
 # LOCAL_EXTRA_DEFINES can be used to set some additional COMPILE_DEFINITIONS in the case the specified target is built
 # locally (as opposed to the case where the package is found as a system library)
@@ -1087,6 +1105,7 @@ function(mindquantum_add_pkg pkg_name)
       INSTALL_COMMAND
       INSTALL_INCS
       INSTALL_LIBS
+      LANGS
       LIBS
       LOCAL_EXTRA_DEFINES
       ONLY_COPY_DIRS
@@ -1100,6 +1119,10 @@ function(mindquantum_add_pkg pkg_name)
 
   if(NOT PKG_NS_NAME)
     set(PKG_NS_NAME ${pkg_name})
+  endif()
+
+  if(NOT PKG_LANGS)
+    set(PKG_LANGS C CXX)
   endif()
 
   set(_components ${PKG_LIBS} ${PKG_EXE})
@@ -1117,6 +1140,54 @@ function(mindquantum_add_pkg pkg_name)
   if(NOT PKG_CMAKE_PKG_NO_COMPONENTS AND NOT "${_components}" STREQUAL "")
     list(APPEND _find_package_args COMPONENTS ${_components})
   endif()
+
+  # ----------------------------------------------------------------------------
+
+  set(${pkg_name}_PATCHES_HASH)
+  foreach(_patch ${PKG_PATCHES})
+    file(MD5 ${_patch} _patch_md5)
+    set(${pkg_name}_PATCHES_HASH "${${pkg_name}_PATCHES_HASH},${_patch_md5}")
+  endforeach()
+
+  # check options
+  string(REPLACE "${PROJECT_BINARY_DIR}" "<binary-dir>" _purged_ARGN "${ARGN}")
+  string(REPLACE "${PROJECT_SOURCE_DIR}" "<source-dir>" _purged_ARGN "${_purged_ARGN}")
+  set(${pkg_name}_CONFIG_TXT
+      "${CMAKE_CXX_COMPILER_VERSION}-${CMAKE_C_COMPILER_VERSION}-${CMAKE_CUDA_COMPILER_VERSION}
+            ${_purged_ARGN} - ${${pkg_name}_USE_STATIC_LIBS}- ${${pkg_name}_PATCHES_HASH}
+            ${${pkg_name}_CXXFLAGS}--${${pkg_name}_CFLAGS}--${${pkg_name}_LDFLAGS}")
+  string(REPLACE ";" "-" ${pkg_name}_CONFIG_TXT ${${pkg_name}_CONFIG_TXT})
+  string(MD5 ${pkg_name}_CONFIG_HASH ${${pkg_name}_CONFIG_TXT})
+
+  if(NOT _${pkg_name}_SYSTEM AND NOT "${pkg_name}_BASE_DIR" STREQUAL "")
+    # Package is not from the system and from a previous CMake run -> check if the config hash has changed
+    if(EXISTS "${${pkg_name}_BASE_DIR}/options.txt")
+      file(MD5 "${${pkg_name}_BASE_DIR}/options.txt" _old_config_hash)
+      if(NOT _old_config_hash STREQUAL ${pkg_name}_CONFIG_HASH)
+        # Config hash has changed -> remove all relevant directories:
+        #
+        # * local install prefix (BASE_DIR)
+        # * unpacked source
+        # * unpacked source subbuild directory
+        # * unpacked source build directory
+
+        message(STATUS "Old config hash does not match new config hash")
+        foreach(_dir
+                "${${pkg_name}_BASE_DIR}" "${_mq_local_prefix}/../_deps/${pkg_name}-src"
+                "${_mq_local_prefix}/../_deps/${pkg_name}-subbuild" "${_mq_local_prefix}/../_deps/${pkg_name}-build")
+          if(NOT "${_dir}" STREQUAL "" AND EXISTS "${_dir}")
+            message(STATUS "  - deleting ${_dir}")
+            file(REMOVE_RECURSE "${_dir}")
+          endif()
+        endforeach()
+
+        unset(${pkg_name}_DIR)
+        unset(${pkg_name}_DIR CACHE)
+      endif()
+    endif()
+  endif()
+
+  # ============================================================================
 
   # NB: this branch will only be taken if not the first CMake configure call (or if manually set)
   if(${pkg_name}_DIR)
@@ -1209,30 +1280,16 @@ function(mindquantum_add_pkg pkg_name)
       FALSE
       CACHE BOOL "Found ${pkg_name} in the system folders")
 
-  set(${pkg_name}_PATCHES_HASH)
-  foreach(_patch ${PKG_PATCHES})
-    file(MD5 ${_patch} _patch_md5)
-    set(${pkg_name}_PATCHES_HASH "${${pkg_name}_PATCHES_HASH},${_patch_md5}")
-  endforeach()
-
-  # check options
-  string(REPLACE "${PROJECT_BINARY_DIR}" "<binary-dir>" _purged_ARGN "${ARGN}")
-  string(REPLACE "${PROJECT_SOURCE_DIR}" "<source-dir>" _purged_ARGN "${_purged_ARGN}")
-  set(${pkg_name}_CONFIG_TXT
-      "${CMAKE_CXX_COMPILER_VERSION}-${CMAKE_C_COMPILER_VERSION}
-            ${_purged_ARGN} - ${${pkg_name}_USE_STATIC_LIBS}- ${${pkg_name}_PATCHES_HASH}
-            ${${pkg_name}_CXXFLAGS}--${${pkg_name}_CFLAGS}--${${pkg_name}_LDFLAGS}")
-  string(REPLACE ";" "-" ${pkg_name}_CONFIG_TXT ${${pkg_name}_CONFIG_TXT})
-  string(MD5 ${pkg_name}_CONFIG_HASH ${${pkg_name}_CONFIG_TXT})
-
   message(STATUS "${pkg_name} config hash: ${${pkg_name}_CONFIG_HASH}")
 
+  # NB: If the package is not found on the system, this is where we will be looking for it
   set(${pkg_name}_BASE_DIR
       ${_mq_local_prefix}/${pkg_name}_${PKG_VER}_${${pkg_name}_CONFIG_HASH}
-      CACHE STRING INTERNAL)
+      CACHE FILEPATH INTERNAL)
+
   set(${pkg_name}_DIRPATH
       ${${pkg_name}_BASE_DIR}
-      CACHE STRING INTERNAL)
+      CACHE FILEPATH INTERNAL)
 
   if(CLEAN_3RDPARTY_INSTALL_DIR)
     file(GLOB _installations ${_mq_local_prefix}/${pkg_name}_${PKG_VER}_*)
@@ -1289,6 +1346,10 @@ function(mindquantum_add_pkg pkg_name)
   file(WRITE ${${pkg_name}_BASE_DIR}/options.txt ${${pkg_name}_CONFIG_TXT})
   message(STATUS "${pkg_name}_SOURCE_DIR : ${${pkg_name}_SOURCE_DIR}")
 
+  set(${pkg_name}_SOURCE_DIR
+      ${${pkg_name}_SOURCE_DIR}
+      CACHE FILEPATH INTERNAL)
+
   apply_patches("${${pkg_name}_SOURCE_DIR}" ${PKG_PATCHES})
 
   file(
@@ -1342,15 +1403,11 @@ function(mindquantum_add_pkg pkg_name)
 
     elseif(NOT "${PKG_CMAKE_OPTION}" STREQUAL "")
       set(${pkg_name}_CMAKE_COMPILERS)
-      if(CMAKE_C_COMPILER)
-        list(APPEND ${pkg_name}_CMAKE_COMPILERS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER})
-      endif()
-      if(CMAKE_CXX_COMPILER)
-        list(APPEND ${pkg_name}_CMAKE_COMPILERS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER})
-      endif()
-      if(CMAKE_CUDA_COMPILER)
-        list(APPEND ${pkg_name}_CMAKE_COMPILERS -DCMAKE_CUDA_COMPILER=${CMAKE_CUDA_COMPILER})
-      endif()
+      foreach(_lang ${PKG_LANGS})
+        if(CMAKE_${_lang}_COMPILER)
+          list(APPEND ${pkg_name}_CMAKE_COMPILERS -DCMAKE_${_lang}_COMPILER=${CMAKE_${_lang}_COMPILER})
+        endif()
+      endforeach()
 
       if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
         set(_cmake_build_dir "${${pkg_name}_SOURCE_DIR}/_build")
@@ -1410,17 +1467,33 @@ function(mindquantum_add_pkg pkg_name)
       set(MAKE ${_make_exec})
 
       set(${pkg_name}_COMPILERS)
-      if(CMAKE_C_COMPILER)
-        list(APPEND ${pkg_name}_COMPILERS "CC=${CMAKE_C_COMPILER}")
-      endif()
-      if(CMAKE_CXX_COMPILER)
-        list(APPEND ${pkg_name}_COMPILERS "CXX=${CMAKE_CXX_COMPILER}")
-      endif()
+      foreach(_lang ${PKG_LANGS})
+        if(CMAKE_${_lang}_COMPILER)
+          if("${_lang}" STREQUAL "C")
+            set(_var C)
+          elseif("${_lang}" STREQUAL "CXX")
+            set(_var CC)
+          elseif("${_lang}" STREQUAL "CUDA")
+            set(_var CUDACXX)
+          else()
+            message(WARNING "Unsupported language: ${_lang} -> skipping setting compiler environment variable")
+            continue()
+          endif()
+          list(APPEND ${pkg_name}_COMPILERS ${_var}=${CMAKE_${_lang}_COMPILER})
+        endif()
+      endforeach()
+
       if(${pkg_name}_CFLAGS)
         set(${pkg_name}_MAKE_CFLAGS "CFLAGS=${${pkg_name}_CFLAGS}")
       endif()
       if(${pkg_name}_CXXFLAGS)
         set(${pkg_name}_MAKE_CXXFLAGS "CXXFLAGS=${${pkg_name}_CXXFLAGS}")
+      endif()
+      if(${pkg_name}_CUDAFLAGS)
+        if(NOT CUDA IN_LIST ${PKG_LANGS})
+          message(WARNING "Set ${pkg_name}_CUDAFLAGS but CUDA was not passed in the <LANGS> argument!")
+        endif()
+        set(${pkg_name}_MAKE_CUDAFLAGS "CUDAFLAGS=${${pkg_name}_CUDAFLAGS}")
       endif()
       if(${pkg_name}_LDFLAGS)
         set(${pkg_name}_MAKE_LDFLAGS "LDFLAGS=${${pkg_name}_LDFLAGS}")
@@ -1434,8 +1507,9 @@ function(mindquantum_add_pkg pkg_name)
       if(PKG_CONFIGURE_COMMAND)
         message(STATUS "Calling configure script for ${pkg_name}")
         __exec_cmd(
-          COMMAND ${PKG_CONFIGURE_COMMAND} ${${pkg_name}_COMPILERS} ${${pkg_name}_MAKE_CFLAGS}
-                  ${${pkg_name}_MAKE_CXXFLAGS} ${${pkg_name}_MAKE_LDFLAGS} --prefix=${${pkg_name}_BASE_DIR}
+          COMMAND
+            ${PKG_CONFIGURE_COMMAND} ${${pkg_name}_COMPILERS} ${${pkg_name}_MAKE_CFLAGS} ${${pkg_name}_MAKE_CXXFLAGS}
+            ${${pkg_name}_MAKE_CUDAFLAGS} ${${pkg_name}_MAKE_LDFLAGS} --prefix=${${pkg_name}_BASE_DIR}
           WORKING_DIRECTORY ${${pkg_name}_SOURCE_DIR})
       endif()
       string(CONFIGURE "${PKG_BUILD_OPTION}" PKG_BUILD_OPTION @ONLY ESCAPE_QUOTES)

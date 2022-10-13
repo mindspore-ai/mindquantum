@@ -25,6 +25,8 @@
 #include <thread>
 #include <vector>
 
+#include "config/openmp.hpp"
+
 #include "core/parameter_resolver.hpp"
 #include "core/utils.hpp"
 #include "ops/basic_gate.hpp"
@@ -34,14 +36,6 @@
 #include "projectq_utils.h"
 
 namespace mindquantum {
-namespace omp {
-#ifdef _MSC_VER
-typedef int64_t idx_t;
-#else
-typedef uint64_t idx_t;
-#endif  // _MSC_VER
-}  // namespace omp
-
 namespace projectq {
 template <typename T>
 class Projectq : public ::projectq::Simulator {

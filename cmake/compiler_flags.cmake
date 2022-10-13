@@ -23,6 +23,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED OFF)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# CUDA standard flags
+set(CMAKE_CUDA_STANDARD 20)
+set(CMAKE_CUDA_STANDARD_REQUIRED OFF)
+set(CMAKE_CUDA_EXTENSIONS OFF)
+
 # ------------------------------------------------------------------------------
 
 # Always generate position independent code
@@ -103,7 +108,13 @@ endif()
 
 if(ENABLE_CUDA)
   test_compile_option(
-    cuda_allow_unsupported_flag FLAGCHECK
+    cuda_extended_lambda
+    LANGS CUDA
+    FLAGS "--extended-lambda"
+    NO_TRYCOMPILE_TARGET NO_TRYCOMPILE_FLAGCHECK_TARGET)
+
+  test_compile_option(
+    cuda_allow_unsupported_flag
     LANGS CUDA
     FLAGS "-allow-unsupported-compiler"
     CMAKE_OPTION CUDA_ALLOW_UNSUPPORTED_COMPILER)
@@ -125,8 +136,8 @@ if(ENABLE_CUDA)
     LANGS NVCXX
     FLAGS "${_flag}")
 
-  if(NOT nvhpc_cuda_version_flags_NVCXX)
-    disable_cuda("NVHPC not supporting ${_flag}")
+  if(NOT nvhpc_cuda_version_flags_NVCXX AND CMAKE_NVCXX_COMPILER)
+    message(WARNING "NVHPC does not support ${_flag}. Proceed at your own risk!")
   endif()
   unset(_flag)
 
@@ -146,13 +157,15 @@ if(ENABLE_CUDA)
     LANGS NVCXX
     FLAGS "-stdpar" "-cuda")
 
-  if(NOT nvhpc_cuda_flags_NVCXX)
-    disable_cuda("NVHPC not supporting -stdpar -cuda")
+  if(NOT nvhpc_cuda_flags_NVCXX AND CMAKE_NVCXX_COMPILER)
+    message(WARNING "NVHPC does not support ${_flag}. Proceed at your own risk!")
   endif()
 
-  # For all the languages except NVCXX, use NVHPC's filename extension detection for the language
-  target_compile_options(NVCXX_mindquantum INTERFACE "$<$<AND:$<OR:$<C_COMPILER_ID:NVHPC>,\
+  if(TARGET NVCXX_mindquantum)
+    # For all the languages except NVCXX, use NVHPC's filename extension detection for the language
+    target_compile_options(NVCXX_mindquantum INTERFACE "$<$<AND:$<OR:$<C_COMPILER_ID:NVHPC>,\
 $<CXX_COMPILER_ID:NVHPC>,$<CUDA_COMPILER_ID:NVHPC>>,$<NOT:$<COMPILE_LANGUAGE:NVCXX>>>:-x none>")
+  endif()
 endif()
 
 # ------------------------------------------------------------------------------

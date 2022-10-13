@@ -154,7 +154,7 @@ macro(disable_cuda)
   else()
     set(_msg "inexistent CUDA/NVHPC compiler, NVHPC < 20.11")
   endif()
-  message(STATUS "Disabling CUDA due to ${_msg} or error during compiler setup")
+  message(WARNING "Disabling CUDA due to ${_msg} or error during compiler setup")
   # cmake-lint: disable=C0103
   set(ENABLE_CUDA
       OFF
@@ -172,6 +172,11 @@ endmacro()
 function(force_at_least_cxx17_workaround target)
   if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0)
     set_target_properties(${target} PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED TRUE)
+  endif()
+
+  # NVCC (up to 11.8) only supports C++17
+  if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
+    set_target_properties(${target} PROPERTIES CUDA_STANDARD 17 CUDA_STANDARD_REQUIRED TRUE)
   endif()
 endfunction()
 

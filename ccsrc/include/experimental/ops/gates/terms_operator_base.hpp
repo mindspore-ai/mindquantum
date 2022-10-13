@@ -72,7 +72,7 @@ template <typename op_t>
 concept terms_op = requires(op_t) {
     typename std::remove_cvref_t<op_t>::terms_operator_tag;
     { std::remove_cvref_t<op_t>::is_real_valued } -> same_decay_as<bool>;
-};
+};  // NOLINT
 
 template <typename op_t>
 concept not_terms_op = (!terms_op<op_t>);
@@ -83,7 +83,7 @@ concept compat_terms_op = requires(op_t, ref_op_t) {
     requires terms_op<ref_op_t>;
     requires traits::is_compatible_scalar_v<typename std::remove_cvref_t<op_t>::coefficient_t,
                                             std::remove_cvref_t<ref_op_t>::is_real_valued>;
-};
+};  // NOLINT
 
 template <typename scalar_t>
 concept termsop_number = traits::is_scalar_decay_v<scalar_t>;
@@ -91,7 +91,7 @@ concept termsop_number = traits::is_scalar_decay_v<scalar_t>;
 template <typename scalar_t, typename ref_op_t>
 concept compat_terms_op_scalar = requires(scalar_t, ref_op_t) {
     requires traits::is_compatible_scalar_decay_v<scalar_t, std::remove_cvref_t<ref_op_t>::is_real_valued>;
-};
+};  // NOLINT
 }  // namespace mindquantum::concepts
 #endif  // MQ_HAS_CONCEPTS
 
@@ -441,39 +441,7 @@ class TermsOperatorBase {
 };
 }  // namespace mindquantum::ops
 
-// =============================================================================
-
-template <typename char_t>
-struct fmt::formatter<mindquantum::ops::TermValue, char_t> {
-    FMT_CONSTEXPR auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
-        return ctx.begin();
-    }
-
-    template <typename format_context_t>
-    auto format(const mindquantum::ops::TermValue& value, format_context_t& ctx) const -> decltype(ctx.out()) {
-        if (value == mindquantum::ops::TermValue::I) {
-            return fmt::format_to(ctx.out(), "I");
-        }
-        if (value == mindquantum::ops::TermValue::X) {
-            return fmt::format_to(ctx.out(), "X");
-        }
-        if (value == mindquantum::ops::TermValue::Y) {
-            return fmt::format_to(ctx.out(), "Y");
-        }
-        if (value == mindquantum::ops::TermValue::Z) {
-            return fmt::format_to(ctx.out(), "Z");
-        }
-        if (value == mindquantum::ops::TermValue::a) {
-            return fmt::format_to(ctx.out(), "");
-        }
-        if (value == mindquantum::ops::TermValue::adg) {
-            return fmt::format_to(ctx.out(), "^");
-        }
-        return fmt::format_to(ctx.out(), "Invalid <mindquantum::ops::TermValue>");
-    }
-};
-
-#include "terms_operator_base.tpp"
+#include "terms_operator_base.tpp"  // NOLINT
 #include "terms_operator_base_external_ops.hpp"
 
 #endif /* TERMS_OPERATOR_BASE_HPP */

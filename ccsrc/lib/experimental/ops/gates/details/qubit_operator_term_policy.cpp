@@ -55,7 +55,7 @@ namespace ast = ::ast::qb_op;
 
 struct term_class : mindquantum::parser::x3::rule::error_handler {};
 const x3::rule<term_class, ast::term_t> term = "QubitOperator term (ie. [XYZ][0-9]+)";
-static const auto term_def = x3::lexeme[((ast::term_op > x3::uint_)[([](auto& ctx) {
+static const auto term_def = x3::lexeme[((ast::term_op > x3::uint_)[([](auto& ctx) {  // NOLINT(runtime/references)
     x3::_val(ctx) = std::make_pair(boost::fusion::at_c<1>(x3::_attr(ctx)), boost::fusion::at_c<0>(x3::_attr(ctx)));
 })])];
 
@@ -96,7 +96,7 @@ auto QubitOperatorTermPolicyBase::hermitian(const terms_t& terms) -> terms_t {
 }
 
 auto QubitOperatorTermPolicyBase::to_string(const term_t& term) -> std::string {
-    return fmt::format("{}{}", std::get<0>(term), to_string(std::get<1>(term)));
+    return fmt::format("{}{}", to_string(std::get<1>(term)), std::get<0>(term));
 }
 
 auto QubitOperatorTermPolicyBase::parse_terms_string(std::string_view terms_string) -> terms_t {

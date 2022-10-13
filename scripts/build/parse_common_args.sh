@@ -31,13 +31,10 @@ fi
 
 : "${config_file=$ROOTDIR/build.conf}"
 
-for arg in "$@"; do
-    if [[ "$arg" == '-v' || $arg == '--verbose' ]]; then
-        # shellcheck disable=SC2034
-        verbose=1
-        break
-    fi
-done
+# shellcheck source=SCRIPTDIR/common_functions.sh
+. "$BASEPATH/common_functions.sh"
+
+check_for_verbose "$@"
 
 # Read default values from default config file (without overriding any defined Bash variables)
 echo "Reading INI/Unix default configuration"
@@ -46,9 +43,6 @@ set_variable_from_ini -C "$BASEPATH/default_values.conf"
 # Other default values (ie. those not present in the config file)
 # shellcheck source=SCRIPTDIR/default_values.sh
 . "$BASEPATH/default_values.sh"
-
-# shellcheck source=SCRIPTDIR/common_functions.sh
-. "$BASEPATH/common_functions.sh"
 
 # ==============================================================================
 

@@ -12,8 +12,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-# pylint: disable=no-member
-
 """Tests for mindquantum.experimental.symengine"""
 
 import pytest
@@ -40,7 +38,7 @@ def test_symbols_function_simple():
     Description: Test symbols() generating iterables.
     Expectation: Success
     """
-    # pylint: disable=invalid-name
+    # pylint: disable=invalid-name,no-member
 
     x, y, z = symengine.symbols('x,y,z')
     assert isinstance(x, symengine.Symbol)
@@ -74,6 +72,7 @@ def test_symbols_function(symbol_str, kwargs, symbols_type, length):
     Description: Test symbols() generating iterables.
     Expectation: Success
     """
+    # pylint: disable=no-member
     symbols = symengine.symbols(symbol_str, **kwargs)
     assert isinstance(symbols, symbols_type)
 

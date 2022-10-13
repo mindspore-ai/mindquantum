@@ -35,7 +35,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         if: env.ACT != 'true'
@@ -44,13 +44,15 @@ jobs:
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*¨
 
       - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
-          architecture: 'x64'
+          cache: 'pip'
 
       - name: Prepare env
-        run: sudo apt-get update && sudo apt-get install -y libboost-filesystem-dev --no-install-recommends
+        run: |
+          python3 -m pip install -U wheel build
+          sudo apt-get update && sudo apt-get install -y libboost-filesystem-dev --no-install-recommends
 
       - name: Setup CCache
         uses: hendrikmuhs/ccache-action@v1.2.2
@@ -196,7 +198,7 @@ jobs:
           # - "Xcode_13.3.1"  # macos-12 only
           # - "Xcode_13.4.1"  # macos-12 only
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         if: env.ACT != 'true'
@@ -205,13 +207,15 @@ jobs:
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*¨
 
       - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python }}
-          architecture: 'x64'
+          python-version: 3.9
+          cache: 'pip'
 
       - name: Prepare env
-        run: brew install libomp ccache
+        run: |
+          python3 -m pip install -U wheel build
+          brew install libomp ccache
 
       - name: Setup CCache
         uses: hendrikmuhs/ccache-action@v1.2.2
@@ -267,7 +271,7 @@ jobs:
     name: "GCC ${{ matrix.gcc }} • x64"
     container: "gcc:${{ matrix.gcc }}"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -407,7 +411,7 @@ jobs:
     name: "Clang ${{ matrix.clang }} • x64"
     container: "silkeh/clang:${{ matrix.clang }}"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -539,7 +543,7 @@ jobs:
     runs-on: windows-latest
     name: "MSVC • x64"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -638,7 +642,7 @@ jobs:
       BOOST_VERSION: 1.78.0
       BOOST_PATH: ${{github.workspace}}/boost/boost
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -683,7 +687,7 @@ jobs:
       #     key: boost-${{ env.BOOST_VERSION }}
 
       - name: Download and install Boost
-        uses: MarkusJx/install-boost@v2.3.0
+        uses: MarkusJx/install-boost@v2.4.0
         if: steps.cache-boost.outputs.cache-hit != 'true'
         id: install-boost
         with:
@@ -785,7 +789,7 @@ jobs:
 
     name: "MSYS2 ${{ matrix.msystem }} • x64"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -892,7 +896,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf input
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -1013,6 +1017,84 @@ jobs:
 
   # ============================================================================
 
+  cuda:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        cuda:
+          - 11.0.3-devel-ubuntu20.04
+          - 11.1.1-devel-ubuntu20.04
+          - 11.8.0-devel-ubuntu22.04
+    name: "CUDA ${{ matrix.cuda }} • x64"
+    container: "nvidia/cuda:${{ matrix.cuda }}"
+    steps:
+      - name: Install and setup Git
+        run: |
+          apt-get update && apt-get upgrade -y
+          DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
+          apt-get install -y software-properties-common
+          add-apt-repository -y ppa:git-core/ppa
+          apt-get update && apt-get install -y git
+          git config --global --add safe.directory $PWD
+
+      - uses: actions/checkout@v3
+
+      - name: Get history and tags for SCM versioning to work
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Install Python
+        run: >-
+          apt-get install -y python3-dev python3-pip python3-setuptools python3-wheel
+          python3-venv --no-install-recommends
+
+      - name: Prepare env
+        run: >-
+          apt-get install -y autoconf automake binutils coreutils m4 gawk libtool gettext wget curl
+          --no-install-recommends
+
+      - name: Setup CCache
+        uses: hendrikmuhs/ccache-action@v1.2.2
+        with:
+          key: nvhpc-${{ matrix.nvhpc }}-ccache
+          max-size: 75M
+
+      - name: Cache Python virtualenv
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: venv
+          key: >-
+            cuda-${{ matrix.cuda }}-python-venv-${{ hashFiles('build_locally.sh', 'scripts/build/**.sh') }}
+            -${{ secrets.cache_ver }}
+
+      - name: Cache compiled third-party libraries
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: build/.mqlibs
+          key: cuda-${{ matrix.cuda }}-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
+
+      - name: Configure
+        run: >-
+          ./build_locally.sh --cxx --with-projectq --debug-cmake --gpu --test --ccache --only-pytest --no-gitee
+          --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
+          --cmake-no-registry
+
+      - name: Build
+        run: ./build_locally.sh --cxx --with-projectq --debug-cmake --gpu --test --ccache
+
+      - name: Install
+        run: ./build_locally.sh --install
+
+      - name: Run C++ tests
+        run: |
+          make -C build test
+
+  # ============================================================================
+
   nvhpc:
     runs-on: ubuntu-latest
     strategy:
@@ -1027,7 +1109,7 @@ jobs:
     name: "NVHPC ${{ matrix.nvhpc }} • x64"
     container: "nvcr.io/nvidia/nvhpc:${{ matrix.nvhpc }}-ubuntu20.04"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -1115,7 +1197,7 @@ jobs:
   #     CC: ${{ matrix.cc }}
   #     CXX: ${{ matrix.cxx }}
   #   steps:
-  #     - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v3
 
   #     - name: Get history and tags for SCM versioning to work
   #       run: |

@@ -29,18 +29,25 @@ if [[ "${JENKINS_URL:-0}" =~ https?://build.mindspore.cn && ! "${CI:-0}" =~ ^(fa
 fi
 
 # ==============================================================================
+
+# Load common bash helper functions
+. "$ROOTDIR/scripts/build/common_functions.sh"
+
+check_for_verbose "$@"
+
+# ------------------------------------------------------------------------------
 # Default values for this particular script
 
 python_extra_pkgs=('wheel-filename>1.2')
 
 if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
-    enable_gitee=1
+    verbose=1
+    set_var cmake_debug_mode true
+    set_var do_clean_3rdparty true
+    set_var enable_gitee true
+    set_var enable_gpu true
+    set_var enable_projectq true
 fi
-
-# ------------------------------------------------------------------------------
-
-# Load common bash helper functions
-. "$ROOTDIR/scripts/build/common_functions.sh"
 
 # ==============================================================================
 
@@ -150,15 +157,15 @@ args=()
 
 declare_AA cmake_option_names
 set_AA cmake_option_names cmake_debug_mode ENABLE_CMAKE_DEBUG
+set_AA cmake_option_names do_clean_3rdparty CLEAN_3RDPARTY_INSTALL_DIR
 set_AA cmake_option_names enable_cxx ENABLE_CXX_EXPERIMENTAL
 set_AA cmake_option_names enable_gitee ENABLE_GITEE
 set_AA cmake_option_names enable_gpu ENABLE_CUDA
-set_AA cmake_option_names enable_projectq ENABLE_PROJECTQ
 set_AA cmake_option_names enable_logging ENABLE_LOGGING
+set_AA cmake_option_names enable_projectq ENABLE_PROJECTQ
+set_AA cmake_option_names enable_tests BUILD_TESTING
 set_AA cmake_option_names logging_enable_debug ENABLE_LOGGING_DEBUG_LEVEL
 set_AA cmake_option_names logging_enable_trace ENABLE_LOGGING_TRACE_LEVEL
-set_AA cmake_option_names enable_tests BUILD_TESTING
-set_AA cmake_option_names do_clean_3rdparty CLEAN_3RDPARTY_INSTALL_DIR
 
 for var in $(get_AA_keys cmake_option_names); do
     if [ "${!var}" -eq 1 ]; then
@@ -199,7 +206,8 @@ if [ "$fast_build" -eq 1 ]; then
 fi
 
 if [ "$n_jobs" -ne -1 ]; then
-    args+=(build --parallel="$n_jobs")
+    args+=(--var JOBS "$n_jobs")
+    args+=(build_ext --jobs="$n_jobs")
 fi
 
 if [[ "$build_type" == 'Debug' ]]; then
@@ -234,6 +242,9 @@ if [ "$enable_ccache" -eq 1 ]; then
         ccache_exec=$(which "$ccache_exec")
         args+=(--var CMAKE_C_COMPILER_LAUNCHER "$ccache_exec")
         args+=(--var CMAKE_CXX_COMPILER_LAUNCHER "$ccache_exec")
+        if [ "$enable_gpu" -eq 1 ]; then
+            args+=(--var CMAKE_CUDA_COMPILER_LAUNCHER "$ccache_exec")
+        fi
     fi
 fi
 

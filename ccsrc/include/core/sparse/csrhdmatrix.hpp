@@ -15,15 +15,10 @@
  */
 #ifndef MINDQUANTUM_SPARSE_CSR_HD_MATRIX_H_
 #define MINDQUANTUM_SPARSE_CSR_HD_MATRIX_H_
-#include <pybind11/complex.h>
-#include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
 
 #include "core/utils.hpp"
 
-namespace mindquantum {
-namespace sparse {
-namespace py = pybind11;
+namespace mindquantum::sparse {
 template <typename T>
 struct CsrHdMatrix {
     Index dim_;
@@ -60,22 +55,6 @@ struct CsrHdMatrix {
     CsrHdMatrix(Index dim, Index nnz, Index *indptr, Index *indices, CTP<T> data)
         : dim_(dim), nnz_(nnz), indptr_(indptr), indices_(indices), data_(data) {
     }
-    CsrHdMatrix(Index dim, Index nnz, py::array_t<Index> indptr, py::array_t<Index> indices, py::array_t<CT<T>> data)
-        : dim_(dim), nnz_(nnz) {
-        indptr_ = reinterpret_cast<Index *>(malloc(indptr.size() * sizeof(Index)));
-        indices_ = reinterpret_cast<Index *>(malloc(indices.size() * sizeof(Index)));
-        data_ = (CTP<T>) malloc(data.size() * sizeof(CT<T>));
-        Index *indptr_py = static_cast<Index *>(indptr.request().ptr);
-        Index *indices_py = static_cast<Index *>(indices.request().ptr);
-        CTP<T> data_py = static_cast<CT<T> *>(data.request().ptr);
-        for (size_t i = 0; i < data.size(); i++) {
-            indices_[i] = indices_py[i];
-            data_[i] = data_py[i];
-        }
-        for (size_t i = 0; i < indptr.size(); i++) {
-            indptr_[i] = indptr_py[i];
-        }
-    }
     void PrintInfo() {
         std::cout << "<--Csr Half Diag Matrix with Dimension: ";
         std::cout << dim_ << " X " << dim_ << ", and nnz: " << nnz_ << std::endl;
@@ -106,6 +85,5 @@ struct CsrHdMatrix {
         std::cout << "-->\n\n";
     }
 };
-}  // namespace sparse
-}  // namespace mindquantum
+}  // namespace mindquantum::sparse
 #endif  // MINDQUANTUM_SPARSE_CSR_HD_MATRIX_H_
