@@ -16,6 +16,8 @@
 #
 # ==============================================================================
 
+# lint_cmake: -whitespace/indent
+
 add_library(mq_cxx_python_interface INTERFACE)
 target_include_directories(mq_cxx_python_interface INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
                                                              $<INSTALL_INTERFACE:${MQ_INSTALL_INCLUDEDIR}>)

@@ -23,7 +23,6 @@
 #include "ops/basic_gate.hpp"
 
 namespace mindquantum::python {
-
 template <typename T>
 inline VVT<CT<T>> CastArray(const pybind11::object& fun, T theta) {
     pybind11::array_t<CT<T>> a = fun(theta);

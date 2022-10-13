@@ -56,12 +56,13 @@ NLOHMANN_JSON_SERIALIZE_ENUM(TermValue, {
 
 template <typename char_t>
 struct fmt::formatter<mindquantum::ops::TermValue, char_t> {
-    FMT_CONSTEXPR auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
+    FMT_CONSTEXPR auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {  // NOLINT(runtime/references)
         return ctx.begin();
     }
 
     template <typename format_context_t>
-    auto format(const mindquantum::ops::TermValue& value, format_context_t& ctx) const -> decltype(ctx.out()) {
+    auto format(const mindquantum::ops::TermValue& value, format_context_t& ctx) const  // NOLINT(runtime/references)
+        -> decltype(ctx.out()) {
         if (value == mindquantum::ops::TermValue::I) {
             return fmt::format_to(ctx.out(), "I");
         }
