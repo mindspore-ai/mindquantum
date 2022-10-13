@@ -183,10 +183,11 @@ class BasicGate:
         _check_input_type("ctrl_qubits", (int, Iterable), ctrl_qubits)
         if set(obj_qubits) & set(ctrl_qubits):
             raise ValueError("Obj_qubit and ctrl_qubit cannot have same qubits.")
-        if len(obj_qubits) != self.n_qubits:
-            raise ValueError(
-                f"{self.name} gate requires {s_quantifier(self.n_qubits, 'qubit')}, but get {len(obj_qubits)}"
-            )
+        if self.n_qubits:
+            if len(obj_qubits) != self.n_qubits:
+                raise ValueError(
+                    f"{self.name} gate requires {s_quantifier(self.n_qubits, 'qubit')}, but get {len(obj_qubits)}"
+                )
         new = copy.deepcopy(self)
         new.obj_qubits = []
         new.ctrl_qubits = []

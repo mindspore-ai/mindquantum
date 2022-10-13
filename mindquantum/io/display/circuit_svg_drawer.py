@@ -994,7 +994,10 @@ class SVGCircuit(SVGContainer):
         gate_container = GateContainer(circuit.n_qubits, svg_config)
         for gate in circuit:
             if isinstance(gate, BarrierGate):
-                gate_container.add(SVGBarrier(circuit.n_qubits, svg_config, gate.show))
+                if gate.obj_qubits:
+                    gate_container.add(SVGBarrier(gate.obj_qubits, svg_config))
+                else:
+                    gate_container.add(SVGBarrier(range(circuit.n_qubits), svg_config, gate.show))
             elif isinstance(gate, Measure):
                 gate_container.add(SVGMeasure(gate, svg_config))
             elif isinstance(gate, XGate) and len(gate.ctrl_qubits) == 1:
@@ -1074,15 +1077,15 @@ class SVGCircuitLine(Line):
 class SVGBarrier(SVGContainer):  # pylint: disable=too-many-instance-attributes
     """SVG barrier."""
 
-    def __init__(self, n_qubits, svg_config, show=True):
+    def __init__(self, obj_qubits, svg_config, show=True):
         """Initialize an SVGBarrier object."""
         super().__init__()
         self.svg_config = svg_config
-        self.n_qubits = n_qubits
-        self.obj_qubits = list(range(n_qubits))
+        self.n_qubits = len(obj_qubits)
+        self.obj_qubits = obj_qubits
         self.ctrl_qubits = []
-        self.all_qubits = list(range(n_qubits))
-        self.all_qubits_range = list(range(n_qubits))
+        self.all_qubits = self.obj_qubits
+        self.all_qubits_range = self.obj_qubits
         self.show = show
         self.rect = Rect(
             0,
@@ -1093,6 +1096,7 @@ class SVGBarrier(SVGContainer):  # pylint: disable=too-many-instance-attributes
         self.rect.fill(self.svg_config['barrier_fill'])
         self.rect.fill_opacity(self.svg_config['barrier_opacity'])
         self.add(self.rect)
+        self.shift(0, min(self.obj_qubits) * self.svg_config['circuit_line_distance'])
 
 
 class SVGMeasure(SVGBasicGate):
