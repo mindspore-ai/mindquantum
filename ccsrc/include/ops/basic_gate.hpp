@@ -27,7 +27,6 @@
 
 namespace mindquantum {
 namespace py = pybind11;
-
 template <typename T>
 inline VVT<CT<T>> CastArray(const py::object& fun, T theta) {
     py::array_t<CT<T>> a = fun(theta);
