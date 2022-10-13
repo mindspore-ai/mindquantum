@@ -41,3 +41,7 @@
 
         返回：
             QubitOperator，根据量子比特激发算符定义相对应的泡利算符。
+
+    .. py:method:: hermitian()
+
+        返回量子比特激发算子的厄米共轭。
