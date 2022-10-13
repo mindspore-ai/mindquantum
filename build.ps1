@@ -77,6 +77,7 @@ $python_extra_pkgs = @('wheel-filename>1.2')
 
 if ($_IS_MINDSPORE_CI ) {
     Set-Value 'cmake_debug_mode' $true
+    Set-Value 'do_clean_3rdparty' $true
     Set-Value 'enable_gitee' $true
     Set-Value 'enable_gpu' $true
     Set-Value 'enable_projectq' $true
@@ -214,15 +215,15 @@ $build_args = @()
 
 $cmake_option_names = @{
     cmake_debug_mode = 'ENABLE_CMAKE_DEBUG'
+    do_clean_3rdparty = 'CLEAN_3RDPARTY_INSTALL_DIR'
     enable_cxx = 'ENABLE_CXX_EXPERIMENTAL'
     enable_gitee = 'ENABLE_GITEE'
     enable_gpu = 'ENABLE_CUDA'
-    enable_projectq = 'ENABLE_PROJECTQ'
     enable_logging = 'ENABLE_LOGGING'
+    enable_projectq = 'ENABLE_PROJECTQ'
+    enable_tests = 'BUILD_TESTING'
     logging_enable_debug = 'ENABLE_LOGGING_DEBUG_LEVEL'
     logging_enable_trace = 'ENABLE_LOGGING_TRACE_LEVEL'
-    enable_tests = 'BUILD_TESTING'
-    do_clean_3rdparty = 'CLEAN_3RDPARTY_INSTALL_DIR'
 }
 
 foreach ($el in $cmake_option_names.GetEnumerator()) {
