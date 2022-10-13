@@ -1,0 +1,2 @@
+Download datasets from:
+https://storage.googleapis.com/download.tensorflow.org/data/quantum/spin_systems/TFI_chain.zip
