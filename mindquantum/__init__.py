@@ -62,11 +62,13 @@ try:
 
     def _enable_logging(level):
         _orig_enable_logging(level)
-        mindquantum.experimental.logging.enable(level)
+        if hasattr(mindquantum.experimental, 'logging'):
+            mindquantum.experimental.logging.enable(level)
 
     def _disable_logging():
         _orig_disable_logging()
-        mindquantum.experimental.logging.disable()
+        if hasattr(mindquantum.experimental, 'logging'):
+            mindquantum.experimental.logging.disable()
 
     logging.enable = _enable_logging
     logging.disable = _disable_logging
