@@ -11,6 +11,7 @@ mindquantum/mindquantum/algorithm/nisq/chem/uccsd0.py:uccsd0_singlet_generator
 mindquantum/mindquantum/io/display/bloch_plt_drawer.py:add_state
 mindquantum/mindquantum/io/qasm/hiqasm.py:to_string
 mindquantum/mindquantum/io/qasm/hiqasm.py:trans_v01
+mindquantum/mindquantum/io/qasm/openqasm.py:to_string
 mindquantum/mindquantum/simulator/mqsim.py:get_expectation_with_grad
 mindquantum/mindquantum/simulator/projectq_sim.py:get_expectation_with_grad
 mindquantum/mindquantum/simulator/simulator.py:get_expectation_with_grad
