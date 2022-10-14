@@ -117,7 +117,7 @@ class SVGMeasure(SVGContainer):
         shots_text = Text(0, 0, f"Shots:\n {str(self.res.shots)}")
         shots_text.text_anchor("start")
         shots_text.shift(0, (shots_text.bottom - shots_text.top) / 2)
-        keys_text = Text(0, 0, f"Keys: {' '.join(self.res.keys)}")
+        keys_text = Text(0, 0, f"Keys: {' '.join(self.res.keys[::-1])}")
         keys_text.text_anchor("start")
         keys_text.shift(0, (shots_text.bottom - shots_text.top) / 2 + shots_text.bottom)
         text = SVGContainer()
