@@ -15,7 +15,6 @@
 
 """OpenQASM support module."""
 
-from mindspore.ops import isinstance_
 import numpy as np
 
 from mindquantum.utils import fdopen
@@ -160,7 +159,7 @@ class OpenQASM:
             for gate in self.circuit:
                 if isgateinstance(gate, (single_np, single_p)):
                     if isinstance(gate, gates.XGate):
-                        if len(gate.ctrl_qubits) == 0:
+                        if gate.ctrl_qubits:
                             self.cmds.append(f"x q[{gate.obj_qubits[0]}];")
                             continue
                         if len(gate.ctrl_qubits) == 1:
@@ -174,18 +173,18 @@ class OpenQASM:
                         _gate_not_implement_to_openqasm(gate)
                     if isinstance(gate, gates.TGate):
                         t_name = 'tdg' if gate.hermitianed else 't'
-                        if not len(gate.ctrl_qubits):
+                        if not gate.ctrl_qubits:
                             self.cmds.append(f"{t_name} q[{gate.obj_qubits[0]}]")
                             continue
                         _gate_not_implement_to_openqasm(gate)
                     if isinstance(gate, gates.SGate):
                         s_name = 'sdg' if gate.hermitianed else 's'
-                        if not len(gate.ctrl_qubits):
+                        if not gate.ctrl_qubits:
                             self.cmds.append(f"{s_name} q[{gate.obj_qubits[0]}]")
                             continue
                         _gate_not_implement_to_openqasm(gate)
                     if isinstance(gate, gates.HGate):
-                        if not len(gate.ctrl_qubits):
+                        if not gate.ctrl_qubits:
                             self.cmds.append(f"h q[{gate.obj_qubits[0]}]")
                             continue
                         if len(gate.ctrl_qubits) == 1:
