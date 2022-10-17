@@ -23,6 +23,7 @@
 
 "mindquantum/ccsrc/include/experimental/decompositions/decomposition_atom.hpp:41"           "noExplicitConstructor"
 "mindquantum/ccsrc/include/experimental/ops/parametric/gate_base.hpp"                       "noExplicitConstructor"
+"mindquantum/ccsrc/python/mqbackend/include/python/ops/basic_gate.hpp"                      "noExplicitConstructor"
 
 "mindquantum/ccsrc/include/config/config.hpp"                                               "noValidConfiguration"
 "mindquantum/ccsrc/include/config/details/cxx20_compatibility.hpp"                          "noValidConfiguration"
