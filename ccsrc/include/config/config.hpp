@@ -17,7 +17,7 @@
 
 #include "config/cmake_config.hpp"
 #ifdef ENABLE_GPU
-#    include "config/cxx20_config_gpu.hpp"
+#    include "config/cuda20_config.hpp"
 #else
 #    include "config/cxx20_config.hpp"
 #endif
