@@ -36,6 +36,7 @@ if(ENABLE_CUDA)
   set_target_properties(_mq_vector_gpu PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
   force_at_least_cxx17_workaround(_mq_vector_gpu)
   target_link_libraries(_mq_vector_gpu PUBLIC mq_python_core mqsim_vector_gpu)
+  set_target_properties(_mq_vector_gpu PROPERTIES CUDA_RUNTIME_LIBRARY $<IF:$<BOOL:${CUDA_STATIC}>,Static,Shared>)
 endif()
 
 # ------------------------------------------------------------------------------
