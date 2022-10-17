@@ -68,7 +68,7 @@ repos:
         args: [-x]
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.1
+    rev: v2.2.2
     hooks:
       - id: codespell
         require_serial: false
@@ -99,7 +99,7 @@ repos:
         name: isort (python)
 
   - repo: https://github.com/psf/black
-    rev: 22.8.0
+    rev: 22.10.0
     hooks:
       - id: black
         language_version: python3
@@ -112,7 +112,7 @@ repos:
         additional_dependencies: [black==22.3.0]
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.38.0
+    rev: v3.1.0
     hooks:
       - id: pyupgrade
         args: [--py37-plus, --keep-mock]
