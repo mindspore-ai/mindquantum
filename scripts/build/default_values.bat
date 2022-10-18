@@ -59,3 +59,4 @@ rem ============================================================================
 rem Other helper variables
 
 if NOT DEFINED cmake_from_venv set cmake_from_venv=0
+if NOT DEFINED ninja_from_venv set ninja_from_venv=0

@@ -76,3 +76,4 @@ $third_party_libraries = ((Get-ChildItem -Path "$ROOTDIR\third_party" -Directory
 # Other helper variables
 
 if ($cmake_from_venv -eq $null) { $cmake_from_venv = $false }
+if ($ninja_from_venv -eq $null) { $ninja_from_venv = $false }

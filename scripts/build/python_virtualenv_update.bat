@@ -48,6 +48,8 @@ set pkgs=pybind11
 
 if !cmake_from_venv! == 1 set pkgs=!pkgs! cmake
 
+if !ninja_from_venv! == 1 set pkgs=!pkgs! ninja
+
 if !enable_tests! == 1 (
   if NOT "%VENV_PYTHON_TEST_PKGS%" == "" (
     set pkgs=!pkgs! %VENV_PYTHON_TEST_PKGS%

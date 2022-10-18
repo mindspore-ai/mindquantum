@@ -135,6 +135,13 @@ cd "${ROOTDIR}"
 # NB: `cmake_from_venv` variable is set by this script (and is used by python_virtualenv_update.sh)
 . "$ROOTDIR/scripts/build/locate_cmake.sh"
 
+# ------------------------------------------------------------------------------
+# Locate ninja if needed
+
+if [ "$cmake_generator" == "Ninja" ]; then
+    # NB: `ninja_from_venv` variable is set by this script (and is used by python_virtualenv_update.sh)
+    . "$ROOTDIR/scripts/build/locate_ninja.sh"
+fi
 # -----------------------------------------------------------------------------------------
 # Locate patchelf
 
