@@ -38,3 +38,4 @@ fi
 # Other helper variables
 
 : "${cmake_from_venv=0}"
+: "${ninja_from_venv=0}"

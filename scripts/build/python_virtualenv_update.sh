@@ -54,6 +54,10 @@ if [[ "${created_venv:-0}" -eq 1 || "${do_update_venv:-0}" -eq 1 ]]; then
         pkgs+=(cmake)
     fi
 
+    if [ "${ninja_from_venv:-0}" -eq 1 ]; then
+        pkgs+=(ninja)
+    fi
+
     if [ "${enable_tests:-0}" -eq 1 ]; then
         if [[ -n "$VENV_PYTHON_TEST_PKGS" ]]; then
             read -ra test_pkgs <<< "$VENV_PYTHON_TEST_PKGS"

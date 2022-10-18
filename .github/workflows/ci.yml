@@ -550,9 +550,6 @@ jobs:
           git fetch --prune --unshallow
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
-      - name: Install ninja-build tool
-        uses: seanmiddleditch/gha-setup-ninja@v3
-
       - name: Enable Developer Command Prompt
         uses: ilammy/msvc-dev-cmd@v1.12.0
 
@@ -648,9 +645,6 @@ jobs:
         run: |
           git fetch --prune --unshallow
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-
-      - name: Install ninja-build tool
-        uses: seanmiddleditch/gha-setup-ninja@v3
 
       # - name: Setup CCache
       #   uses: hendrikmuhs/ccache-action@v1.2.2

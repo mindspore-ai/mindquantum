@@ -51,6 +51,10 @@ if ($created_venv -or $do_update_venv) {
         $pkgs += 'cmake'
     }
 
+    if ($ninja_from_venv) {
+        $pkgs += 'ninja'
+    }
+
     if ($enable_tests) {
         if ("$Env:VENV_PYTHON_TEST_PKGS" -ne "") {
             $pkgs += ( "$Env:VENV_PYTHON_TEST_PKGS" -Split ' ' )

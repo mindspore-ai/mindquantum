@@ -208,6 +208,18 @@ if ($LastExitCode -ne 0) {
 }
 
 # ------------------------------------------------------------------------------
+# Locate ninja if needed
+
+if (([bool]$Ninja)) {
+    # NB: `ninja_from_venv` variable is set by this script (and is used by python_virtualenv_update.sh)
+    . (Join-Path $ROOTDIR 'scripts\build\locate_ninja.ps1')
+
+    if ($LastExitCode -ne 0) {
+        exit $LastExitCode
+    }
+}
+
+# ------------------------------------------------------------------------------
 # Update Python virtualenv (if requested/necessary)
 
 . (Join-Path $ROOTDIR 'scripts\build\python_virtualenv_update.ps1')
