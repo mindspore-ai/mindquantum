@@ -12,21 +12,95 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 #include <cmath>
-#include <complex>
 
 #include <cassert>
+#include <complex>
 #include <stdexcept>
 
 #include <thrust/transform_reduce.h>
 
+#include "simulator/types.hpp"
+#include "simulator/utils.hpp"
+#include "simulator/vector/detail/gpu_vector_policy.cuh"
 #include "thrust/device_ptr.h"
 #include "thrust/functional.h"
 #include "thrust/inner_product.h"
-#include "simulator/vector/detail/gpu_vector_policy.cuh"
-#include "simulator/types.hpp"
-#include "simulator/utils.hpp"
 
 namespace mindquantum::sim::vector::detail {
+auto GPUVectorPolicyBase::ExpectDiffTwoQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                                    const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m,
+                                                    index_t dim) -> qs_data_t {
+    DoubleQubitGateMask mask(objs, ctrls);
+    qs_data_t m00 = m[0][0];
+    qs_data_t m01 = m[0][1];
+    qs_data_t m02 = m[0][2];
+    qs_data_t m03 = m[0][3];
+    qs_data_t m10 = m[1][0];
+    qs_data_t m11 = m[1][1];
+    qs_data_t m12 = m[1][2];
+    qs_data_t m13 = m[1][3];
+    qs_data_t m20 = m[2][0];
+    qs_data_t m21 = m[2][1];
+    qs_data_t m22 = m[2][2];
+    qs_data_t m23 = m[2][3];
+    qs_data_t m30 = m[3][0];
+    qs_data_t m31 = m[3][1];
+    qs_data_t m32 = m[3][2];
+    qs_data_t m33 = m[3][3];
+    thrust::counting_iterator<size_t> l(0);
+    auto obj_high_mask = mask.obj_high_mask;
+    auto obj_rev_high_mask = mask.obj_rev_high_mask;
+    auto obj_low_mask = mask.obj_low_mask;
+    auto obj_rev_low_mask = mask.obj_rev_low_mask;
+    auto obj_mask = mask.obj_mask;
+    auto obj_min_mask = mask.obj_min_mask;
+    auto obj_max_mask = mask.obj_max_mask;
+    auto ctrl_mask = mask.ctrl_mask;
+    if (!mask.ctrl_mask) {
+        return thrust::transform_reduce(
+            l, l + dim / 4,
+            [=] __device__(size_t l) {
+                index_t i;
+                SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
+                auto m = i + obj_mask;
+                auto j = i + obj_min_mask;
+                auto k = i + obj_max_mask;
+                auto v00 = m00 * ket[i] + m01 * ket[j] + m02 * ket[k] + m03 * ket[m];
+                auto v01 = m10 * ket[i] + m11 * ket[j] + m12 * ket[k] + m13 * ket[m];
+                auto v10 = m20 * ket[i] + m21 * ket[j] + m22 * ket[k] + m23 * ket[m];
+                auto v11 = m30 * ket[i] + m31 * ket[j] + m32 * ket[k] + m33 * ket[m];
+                auto this_res = thrust::conj(bra[i]) * v00;
+                this_res += thrust::conj(bra[j]) * v01;
+                this_res += thrust::conj(bra[k]) * v10;
+                this_res += thrust::conj(bra[m]) * v11;
+                return this_res;
+            },
+            qs_data_t(0, 0), thrust::plus<qs_data_t>());
+    }
+    return thrust::transform_reduce(
+        l, l + dim / 4,
+        [=] __device__(size_t l) {
+            index_t i;
+            SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
+            if ((i & ctrl_mask) != ctrl_mask) {
+                return qs_data_t(0, 0);
+            }
+            auto m = i + obj_mask;
+            auto j = i + obj_min_mask;
+            auto k = i + obj_max_mask;
+            auto v00 = m00 * ket[i] + m01 * ket[j] + m02 * ket[k] + m03 * ket[m];
+            auto v01 = m10 * ket[i] + m11 * ket[j] + m12 * ket[k] + m13 * ket[m];
+            auto v10 = m20 * ket[i] + m21 * ket[j] + m22 * ket[k] + m23 * ket[m];
+            auto v11 = m30 * ket[i] + m31 * ket[j] + m32 * ket[k] + m33 * ket[m];
+            auto this_res = thrust::conj(bra[i]) * v00;
+            this_res += thrust::conj(bra[j]) * v01;
+            this_res += thrust::conj(bra[k]) * v10;
+            this_res += thrust::conj(bra[m]) * v11;
+            return this_res;
+        },
+        qs_data_t(0, 0), thrust::plus<qs_data_t>());
+}
+
 auto GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
                                                       const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m,
                                                       index_t dim) -> qs_data_t {

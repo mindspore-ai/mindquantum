@@ -21,6 +21,7 @@
 
 #include <string>
 
+#include "core/parameter_resolver.hpp"
 #include "core/two_dim_matrix.hpp"
 #include "core/utils.hpp"
 #include "ops/basic_gate.hpp"
@@ -190,6 +191,108 @@ BasicGate<T> GetMeasureGate(const std::string& name) {
     out.is_measure_ = true;
     return out;
 }
+
+template <typename T>
+Dim2Matrix<T> U3Matrix(T theta, T phi, T lambda) {
+    auto ct_2 = std::cos(theta / 2);
+    auto st_2 = std::sin(theta / 2);
+    auto el = std::exp(std::complex<T>(0, lambda));
+    auto ep = std::exp(std::complex<T>(0, phi));
+    auto elp = el * ep;
+    return Dim2Matrix<T>({{ct_2, -el * st_2}, {ep * st_2, elp * ct_2}});
+}
+
+template <typename T>
+Dim2Matrix<T> FSimMatrix(T theta, T phi) {
+    auto a = std::cos(theta);
+    auto b = CT<T>(0, -std::sin(theta));
+    auto c = std::exp(std::complex<T>(0, phi));
+    return Dim2Matrix<T>({{1, 0, 0, 0}, {0, a, b, 0}, {0, b, a, 0}, {0, 0, 0, c}});
+}
+
+template <typename T>
+Dim2Matrix<T> U3DiffThetaMatrix(T theta, T phi, T lambda) {
+    auto m = U3Matrix(theta + M_PI, phi, lambda);
+    Dim2MatrixBinary<T>(&m, 0.5, std::multiplies<CT<T>>());
+    return m;
+}
+template <typename T>
+Dim2Matrix<T> FSimDiffThetaMatrix(T theta) {
+    auto a = -std::sin(theta);
+    auto b = CT<T>(0, -std::cos(theta));
+    return Dim2Matrix<T>({{0, 0, 0, 0}, {0, a, b, 0}, {0, b, a, 0}, {0, 0, 0, 0}});
+}
+
+template <typename T>
+Dim2Matrix<T> U3DiffPhiMatrix(T theta, T phi, T lambda) {
+    auto m = U3Matrix(theta, phi + M_PI_2, lambda);
+    m.matrix_[0][0] = 0;
+    m.matrix_[0][1] = 0;
+    return m;
+}
+
+template <typename T>
+Dim2Matrix<T> FSimDiffPhiMatrix(T phi) {
+    auto c = std::exp(std::complex<T>(0, phi + M_PI_2));
+    return Dim2Matrix<T>({{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, c}});
+}
+
+template <typename T>
+Dim2Matrix<T> U3DiffLambdaMatrix(T theta, T phi, T lambda) {
+    auto m = U3Matrix(theta, phi, lambda + M_PI_2);
+    m.matrix_[0][0] = 0;
+    m.matrix_[1][0] = 0;
+    return m;
+}
+
+template <typename T>
+struct U3 : BasicGate<T> {
+    ParameterResolver<T> theta;
+    ParameterResolver<T> phi;
+    ParameterResolver<T> lambda;
+    std::pair<MST<size_t>, Dim2Matrix<T>> jacobi;
+    VT<ParameterResolver<T>> prs;
+    U3(const ParameterResolver<T>& theta, const ParameterResolver<T>& phi, const ParameterResolver<T>& lambda,
+       const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits)
+        : theta(theta), phi(phi), lambda(lambda) {
+        this->name_ = "U3";
+        this->parameterized_ = false;
+        if (!this->theta.IsConst() || !this->phi.IsConst() || !this->lambda.IsConst()) {
+            this->parameterized_ = true;
+        }
+        this->obj_qubits_ = obj_qubits;
+        this->ctrl_qubits_ = ctrl_qubits;
+        if (!this->parameterized_) {
+            this->base_matrix_ = U3Matrix(theta.const_value, phi.const_value, lambda.const_value);
+        }
+        prs = {this->theta, this->phi, this->lambda};
+        jacobi = Jacobi(prs);
+    }
+};
+
+template <typename T>
+struct FSim : BasicGate<T> {
+    ParameterResolver<T> theta;
+    ParameterResolver<T> phi;
+    std::pair<MST<size_t>, Dim2Matrix<T>> jacobi;
+    VT<ParameterResolver<T>> prs;
+    FSim(const ParameterResolver<T>& theta, const ParameterResolver<T>& phi, const VT<Index>& obj_qubits,
+         const VT<Index>& ctrl_qubits)
+        : theta(theta), phi(phi) {
+        this->name_ = "FSim";
+        this->parameterized_ = false;
+        if (!this->theta.IsConst() || !this->phi.IsConst()) {
+            this->parameterized_ = true;
+        }
+        this->obj_qubits_ = obj_qubits;
+        this->ctrl_qubits_ = ctrl_qubits;
+        if (!this->parameterized_) {
+            this->base_matrix_ = FSimMatrix(theta.const_value, phi.const_value);
+        }
+        prs = {this->theta, this->phi};
+        jacobi = Jacobi(prs);
+    }
+};
 
 template <typename T>
 BasicGate<T> GetGateByName(const std::string& name) {

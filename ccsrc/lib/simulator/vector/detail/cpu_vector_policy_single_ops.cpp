@@ -37,7 +37,50 @@
 namespace mindquantum::sim::vector::detail {
 // Single qubit operator
 // ========================================================================================================
-
+void CPUVectorPolicyBase::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
+                                               const qbits_t& ctrls, const std::vector<std::vector<py_qs_data_t>>& gate,
+                                               index_t dim) {
+    DoubleQubitGateMask mask(objs, ctrls);
+    if (!mask.ctrl_mask) {
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                omp::idx_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
+                              i);
+                auto j = i + mask.obj_min_mask;
+                auto k = i + mask.obj_max_mask;
+                auto m = i + mask.obj_mask;
+                auto v00 = gate[0][0] * src[i] + gate[0][1] * src[j] + gate[0][2] * src[k] + gate[0][3] * src[m];
+                auto v01 = gate[1][0] * src[i] + gate[1][1] * src[j] + gate[1][2] * src[k] + gate[1][3] * src[m];
+                auto v10 = gate[2][0] * src[i] + gate[2][1] * src[j] + gate[2][2] * src[k] + gate[2][3] * src[m];
+                auto v11 = gate[3][0] * src[i] + gate[3][1] * src[j] + gate[3][2] * src[k] + gate[3][3] * src[m];
+                des[i] = v00;
+                des[j] = v01;
+                des[k] = v10;
+                des[m] = v11;
+            })
+    } else {
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                omp::idx_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
+                              i);
+                if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                    auto j = i + mask.obj_min_mask;
+                    auto k = i + mask.obj_max_mask;
+                    auto m = i + mask.obj_mask;
+                    auto v00 = gate[0][0] * src[i] + gate[0][1] * src[j] + gate[0][2] * src[k] + gate[0][3] * src[m];
+                    auto v01 = gate[1][0] * src[i] + gate[1][1] * src[j] + gate[1][2] * src[k] + gate[1][3] * src[m];
+                    auto v10 = gate[2][0] * src[i] + gate[2][1] * src[j] + gate[2][2] * src[k] + gate[2][3] * src[m];
+                    auto v11 = gate[3][0] * src[i] + gate[3][1] * src[j] + gate[3][2] * src[k] + gate[3][3] * src[m];
+                    des[i] = v00;
+                    des[j] = v01;
+                    des[k] = v10;
+                    des[m] = v11;
+                }
+            })
+    }
+}
 void CPUVectorPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
                                                  const qbits_t& ctrls, const std::vector<std::vector<py_qs_data_t>>& m,
                                                  index_t dim) {

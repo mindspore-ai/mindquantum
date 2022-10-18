@@ -55,6 +55,7 @@ from .basicgate import (
     Z,
     ZGate,
     gene_univ_parameterized_gate,
+    U3,
 )
 from .channel import (
     AmplitudeDampingChannel,
@@ -116,6 +117,7 @@ __all__ = [
     "AmplitudeDampingChannel",
     "PhaseDampingChannel",
     "KrausChannel",
+    "U3",
 ]
 
 __all__.sort()

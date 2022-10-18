@@ -88,6 +88,7 @@ class VectorState {
     //! Apply a quantum gate on this quantum state, quantum gate can be normal quantum gate, measurement gate and noise
     //! channel
     index_t ApplyGate(const std::shared_ptr<BasicGate<calc_type>>& gate,
+
                       const ParameterResolver<calc_type>& pr = ParameterResolver<calc_type>(), bool diff = false);
 
     //! Apply a measurement gate on this quantum state, return the collapsed qubit state
@@ -111,6 +112,12 @@ class VectorState {
                                        const std::shared_ptr<BasicGate<calc_type>>& gate,
                                        const ParameterResolver<calc_type>& pr, index_t dim);
 
+    static Dim2Matrix<calc_type> ExpectDiffU3(qs_data_p_t bra, qs_data_p_t ket,
+                                              const std::shared_ptr<BasicGate<calc_type>>& gate,
+                                              const ParameterResolver<calc_type>& pr, index_t dim);
+    static Dim2Matrix<calc_type> ExpectDiffFSim(qs_data_p_t bra, qs_data_p_t ket,
+                                              const std::shared_ptr<BasicGate<calc_type>>& gate,
+                                              const ParameterResolver<calc_type>& pr, index_t dim);
     //! Apply a quantum circuit on this quantum state
     auto ApplyCircuit(const circuit_t& circ, const ParameterResolver<calc_type>& pr = ParameterResolver<calc_type>());
 
