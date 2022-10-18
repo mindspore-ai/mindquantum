@@ -554,7 +554,7 @@ jobs:
         uses: seanmiddleditch/gha-setup-ninja@v3
 
       - name: Enable Developer Command Prompt
-        uses: ilammy/msvc-dev-cmd@v1.10.0
+        uses: ilammy/msvc-dev-cmd@v1.12.0
 
       - name: Install Scoop && Scoop packages
         run: |
@@ -571,7 +571,7 @@ jobs:
       - name: Restore cache for CCache
         if: env.ACT != 'true'
         id: ccache-cache
-        uses: martijnhols/actions-cache/restore@v3
+        uses: martijnhols/actions-cache/restore@v3.0.11
         with:
           path: ccache
           key: msvc-ccache-${{ steps.get-date.outputs.date }}
@@ -626,7 +626,7 @@ jobs:
 
       - name: Save cache for CCache
         if: env.ACT != 'true'
-        uses: martijnhols/actions-cache/save@v3
+        uses: martijnhols/actions-cache/save@v3.0.11
         with:
           path: ccache
           key: msvc-ccache-${{ steps.get-date.outputs.date }}
@@ -812,7 +812,7 @@ jobs:
       - name: Restore cache for CCache
         if: env.ACT != 'true' && matrix.msystem != 'MSYS'
         id: ccache-cache
-        uses: martijnhols/actions-cache/restore@v3
+        uses: martijnhols/actions-cache/restore@v3.0.11
         with:
           path: ccache
           key: msys2-${{ matrix.msystem }}-ccache-${{ steps.get-date.outputs.date }}
@@ -879,7 +879,7 @@ jobs:
 
       - name: Save cache for CCache
         if: env.ACT != 'true' && matrix.msystem != 'MSYS'
-        uses: martijnhols/actions-cache/save@v3
+        uses: martijnhols/actions-cache/save@v3.0.11
         with:
           path: ccache
           key: msys2-${{ matrix.msystem }}-ccache-${{ steps.get-date.outputs.date }}
@@ -924,7 +924,7 @@ jobs:
       - name: Restore cache for CCache
         if: env.ACT != 'true'
         id: ccache-cache
-        uses: martijnhols/actions-cache/restore@v3
+        uses: martijnhols/actions-cache/restore@v3.0.11
         with:
           path: ccache
           key: cygwin-ccache-${{ steps.get-date.outputs.date }}
@@ -1007,7 +1007,7 @@ jobs:
 
       - name: Save cache for CCache
         if: env.ACT != 'true'
-        uses: martijnhols/actions-cache/save@v3
+        uses: martijnhols/actions-cache/save@v3.0.11
         with:
           path: ccache
           key: cygwin-ccache-${{ steps.get-date.outputs.date }}

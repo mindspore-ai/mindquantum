@@ -16,11 +16,11 @@
 #define MQ_CORE_CONFIG_HPP
 
 #include "config/cmake_config.hpp"
-#ifdef ENABLE_GPU
+#ifdef __CUDACC__
 #    include "config/cuda20_config.hpp"
 #else
 #    include "config/cxx20_config.hpp"
-#endif
+#endif  // __CUDACC__
 #include "config/details/clang_version.hpp"
 #include "config/details/cxx20_compatibility.hpp"
 #include "config/details/macros.hpp"

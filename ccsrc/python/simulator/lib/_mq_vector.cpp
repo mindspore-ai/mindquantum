@@ -17,13 +17,13 @@
 #include "python/vector/bind_vec_state.h"
 
 PYBIND11_MODULE(_mq_vector, module) {
-#ifdef ENABLE_GPU
-    using vec_sim
-        = mindquantum::sim::vector::detail::VectorState<mindquantum::sim::vector::detail::GPUVectorPolicyBase>;
+#ifdef __CUDACC__
+    using policy_t = mindquantum::sim::vector::detail::GPUVectorPolicyBase;
 #else
-    using vec_sim
-        = mindquantum::sim::vector::detail::VectorState<mindquantum::sim::vector::detail::CPUVectorPolicyBase>;
-#endif
+    using policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyBase;
+#endif  // __CUDACC__
+
+    using vec_sim = mindquantum::sim::vector::detail::VectorState<policy_t>;
 
     module.doc() = "MindQuantum c++ vector state simulator.";
     BindSim<vec_sim>(module, "mqvector");
