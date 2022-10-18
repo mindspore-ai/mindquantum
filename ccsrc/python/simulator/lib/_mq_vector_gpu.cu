@@ -20,7 +20,7 @@
 
 namespace mindquantum::sim::bind {
 PYBIND11_MODULE(_mq_vector, module) {
-#ifdef ENABLE_GPU
+#ifdef __CUDACC__
     using vec_sim
         = mindquantum::sim::vector::detail::VectorState<mindquantum::sim::vector::detail::GPUVectorPolicyBase>;
 #else

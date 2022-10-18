@@ -24,11 +24,11 @@
 #include "core/parameter_resolver.hpp"
 #include "simulator/types.hpp"
 
-#ifdef ENABLE_GPU
+#ifdef __CUDACC__
 #    include "simulator/vector/detail/gpu_vector_policy.cuh"
 #else
 #    include "simulator/vector/detail/cpu_vector_policy.hpp"
-#endif
+#endif  // __CUDACC__
 
 #include "simulator/vector/blas.hpp"
 #include "simulator/vector/vector_state.hpp"

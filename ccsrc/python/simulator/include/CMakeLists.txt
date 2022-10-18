@@ -21,11 +21,3 @@ target_include_directories(bind_lib INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_
 target_link_libraries(_mq_vector PUBLIC bind_lib)
 append_to_property(mq_install_targets GLOBAL bind_lib)
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/python DESTINATION ${MQ_INSTALL_INCLUDEDIR})
-
-if(ENABLE_GPU)
-  add_library(bind_lib_gpu INTERFACE)
-  target_include_directories(bind_lib_gpu INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>)
-  target_link_libraries(_mq_vector_gpu PUBLIC bind_lib_gpu)
-  append_to_property(mq_install_targets GLOBAL bind_lib_gpu)
-  target_compile_definitions(bind_lib_gpu PUBLIC ENABLE_GPU)
-endif()

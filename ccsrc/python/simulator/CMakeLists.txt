@@ -32,7 +32,6 @@ if(ENABLE_CUDA)
                       OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}")
 
   target_include_directories(_mq_vector_gpu PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
-  target_compile_definitions(_mq_vector_gpu PUBLIC ENABLE_GPU)
   force_at_least_cxx17_workaround(_mq_vector_gpu)
   target_link_libraries(_mq_vector_gpu PUBLIC mq_python_core mqsim_vector_gpu)
   set_target_properties(_mq_vector_gpu PROPERTIES CUDA_RUNTIME_LIBRARY $<IF:$<BOOL:${CUDA_STATIC}>,Static,Shared>)
