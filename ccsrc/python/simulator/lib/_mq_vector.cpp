@@ -18,12 +18,12 @@
 
 PYBIND11_MODULE(_mq_vector, module) {
 #ifdef __CUDACC__
-    using vec_sim
-        = mindquantum::sim::vector::detail::VectorState<mindquantum::sim::vector::detail::GPUVectorPolicyBase>;
+    using policy_t = mindquantum::sim::vector::detail::GPUVectorPolicyBase;
 #else
-    using vec_sim
-        = mindquantum::sim::vector::detail::VectorState<mindquantum::sim::vector::detail::CPUVectorPolicyBase>;
-#endif
+    using policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyBase;
+#endif  // __CUDACC__
+
+    using vec_sim = mindquantum::sim::vector::detail::VectorState<policy_t>;
 
     module.doc() = "MindQuantum c++ vector state simulator.";
     BindSim<vec_sim>(module, "mqvector");
