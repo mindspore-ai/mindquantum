@@ -55,7 +55,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y libboost-filesystem-dev --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.2
+        uses: hendrikmuhs/ccache-action@v1.2.3
         with:
           key: ${{ matrix.runs-on }}-python-${{ matrix.python }}-ccache
           max-size: 75M
@@ -218,7 +218,7 @@ jobs:
           brew install libomp ccache
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.2
+        uses: hendrikmuhs/ccache-action@v1.2.3
         with:
           key: macos-${{ matrix.xcode }}-ccache
           max-size: 75M
@@ -284,7 +284,7 @@ jobs:
           libboost-filesystem-dev gdb --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.2
+        uses: hendrikmuhs/ccache-action@v1.2.3
         with:
           key: gcc-${{ matrix.gcc }}-ccache
           max-size: 75M
@@ -424,7 +424,7 @@ jobs:
           gdb --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.2
+        uses: hendrikmuhs/ccache-action@v1.2.3
         with:
           key: clang-${{ matrix.clang }}-ccache
           max-size: 75M
@@ -455,7 +455,7 @@ jobs:
 
       - name: Cache compiled third-party libraries
         if: env.ACT != 'true'
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: build/.mqlibs
           key: clang-${{ matrix.clang }}-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
@@ -647,7 +647,7 @@ jobs:
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
       # - name: Setup CCache
-      #   uses: hendrikmuhs/ccache-action@v1.2.2
+      #   uses: hendrikmuhs/ccache-action@v1.2.3
       #   with:
       #     key: mingw64-ccache
       #     max-size: 75M
@@ -674,7 +674,7 @@ jobs:
           platform: x64
 
       # - name: Cache boost
-      #   uses: actions/cache@v2
+      #   uses: actions/cache@v3
       #   id: cache-boost
       #   with:
       #     path: ${{ env.BOOST_PATH }}
@@ -1050,7 +1050,7 @@ jobs:
           --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.2
+        uses: hendrikmuhs/ccache-action@v1.2.3
         with:
           key: nvhpc-${{ matrix.nvhpc }}-ccache
           max-size: 75M
@@ -1116,7 +1116,7 @@ jobs:
           libboost-filesystem-dev --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.2
+        uses: hendrikmuhs/ccache-action@v1.2.3
         with:
           key: nvhpc-${{ matrix.nvhpc }}-ccache
           max-size: 75M
@@ -1213,7 +1213,7 @@ jobs:
   #         --no-install-recommends
 
   #     - name: Setup CCache
-  #       uses: hendrikmuhs/ccache-action@v1.2.2
+  #       uses: hendrikmuhs/ccache-action@v1.2.3
   #       with:
   #         key: nvhpc-${{ matrix.nvhpc }}-ccache
   #         max-size: 75M
