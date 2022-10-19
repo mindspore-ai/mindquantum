@@ -42,8 +42,9 @@ void CPUVectorPolicyBase::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des,
                                                index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
+        // clang-format off
+        THRESHOLD_OMP_FOR(dim, DimTh,
+            for (omp::idx_t l = 0; l < (dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -59,6 +60,7 @@ void CPUVectorPolicyBase::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des,
                 des[k] = v10;
                 des[m] = v11;
             })
+        // clang-format on
     } else {
         THRESHOLD_OMP_FOR(
             dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {

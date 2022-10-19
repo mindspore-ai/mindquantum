@@ -228,6 +228,7 @@ def test_u3():
                       [-0.19951142 + 0.43594041j, -0.70306967 + 0.52520872j]])
     assert np.allclose(u3.matrix({'a': 1.0, 'b': 2.0}), m_exp)
 
+
 def test_fsim():
     """
     Description: Test FSim gate
@@ -237,7 +238,7 @@ def test_fsim():
     assert str(fsim) == "FSim(𝜃=a, 𝜑=1/2|0 1)"
     assert str(fsim.hermitian()) == "FSim(𝜃=-a, 𝜑=-1/2|0 1)"
     m_exp = np.array([[1. + 0.j, 0. + 0.j, 0. + 0.j, 0. + 0.j],
-                       [0. + 0.j, 0.54030231 + 0.j, 0. - 0.84147098j, 0. + 0.j],
-                       [0. + 0.j, 0. - 0.84147098j, 0.54030231 + 0.j, 0. + 0.j],
-                       [0. + 0.j, 0. + 0.j, 0. + 0.j, 0.87758256 + 0.47942554j]])
-    assert np.allclose(fsim.matrix({'a':1.0}), m_exp)
+                      [0. + 0.j, 0.54030231 + 0.j, 0. - 0.84147098j, 0. + 0.j],
+                      [0. + 0.j, 0. - 0.84147098j, 0.54030231 + 0.j, 0. + 0.j],
+                      [0. + 0.j, 0. + 0.j, 0. + 0.j, 0.87758256 + 0.47942554j]])
+    assert np.allclose(fsim.matrix({'a': 1.0}), m_exp)
