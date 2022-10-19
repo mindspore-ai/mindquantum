@@ -1,4 +1,4 @@
-.. py:class:: mindquantum.simulator.Simulator(backend, n_qubits, seed=None)
+.. py:class:: mindquantum.simulator.Simulator(backend, n_qubits, seed=None, *args, **kwargs)
 
     模拟量子线路的量子模拟器。
 

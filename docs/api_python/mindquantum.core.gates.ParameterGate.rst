@@ -15,6 +15,10 @@
 
         返回量子门的c++对象。
 
+    .. py:method:: no_grad()
+
+        设置量子门中的所有参数都不需要求导数。
+    
     .. py:method:: no_grad_part(names)
 
         设置某些不需要求梯度的参数。此操作将会原位改变线路参数梯度属性。
@@ -24,10 +28,6 @@
 
         返回：
             BasicGate，其中有些参数不需要更新梯度。
-
-    .. py:method:: no_grad()
-
-        设置量子门中的所有参数都不需要求导数。
 
     .. py:method:: requires_grad()
 

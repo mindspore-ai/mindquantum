@@ -29,10 +29,14 @@
         参数：
             - **of_ops** (openfermion.FermionOperator) - openfermion中的费米子算符。
             - **dtype** (type) - 要生成的TermsOperator的类型（即实数“float”或复数“complex”）。
-                                注意：此参数在 Python 版本的 QubitOperator 中被忽略
+              注意：此参数在 Python 版本的 QubitOperator 中被忽略。
 
         返回：
             FermionOperator，mindquantum中的费米子算符。
+
+    .. py:method:: hermitian()
+
+        返回费米子运算符的厄米共轭。
 
     .. py:method:: imag
         :property:
@@ -86,7 +90,3 @@
     .. py:method:: to_openfermion()
 
         将费米子运算符转换为openfermion格式。
-
-    .. py:method:: hermitian()
-
-        返回费米子运算符的厄米共轭。
