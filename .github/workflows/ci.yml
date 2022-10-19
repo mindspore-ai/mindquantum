@@ -95,6 +95,8 @@ jobs:
 
       - name: Configure
         run: >-
+          unset Python_ROOT_DIR  # Avoid that CMake finds the installed system Python over the virtualenv
+
           ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache --no-gitee --debug
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
           --cmake-no-registry
@@ -152,6 +154,7 @@ jobs:
         if: matrix.test_install
         run: |
           . venv/bin/activate
+          unset Python_ROOT_DIR  # Avoid that CMake finds the installed system Python over the virtualenv
           hash -r
           cmake -S other -B other/local_build -Dmindquantum_DEBUG=ON -Dmindquantum_ROOT=${{ github.workspace }}/build
           cmake --build other/local_build --target all -v
@@ -160,6 +163,7 @@ jobs:
         if: matrix.test_install
         run: |
           . venv/bin/activate
+          unset Python_ROOT_DIR  # Avoid that CMake finds the installed system Python over the virtualenv
           hash -r
           cmake -S other -B other/build -Dmindquantum_DEBUG=ON  -Dmindquantum_ROOT="${{ github.workspace }}/install"
           cmake --build other/build --target all -v

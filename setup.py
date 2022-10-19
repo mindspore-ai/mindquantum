@@ -275,6 +275,7 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
                     cur_dir / Path(ext.lib_filepath).parent / dest_path.name,
                     cur_dir / dest_path.name,
                 ):
+                    logging.info('[FASTBUILD] trying to locate lib in %s', str(library_path))
                     if library_path.exists():
                         shutil.copyfile(library_path, dest_path)
                         break

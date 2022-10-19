@@ -178,13 +178,9 @@ if(DEFINED PYTHON_EXECUTABLE)
   set(Python_EXECUTABLE ${PYTHON_EXECUTABLE}) # cmake-lint: disable=C0103
 endif()
 
-set(_python_find_args Python 3.6.0 COMPONENTS Interpreter)
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
-  list(APPEND _python_find_args Development.Module)
-else()
-  list(APPEND _python_find_args Development)
-endif()
-find_package(${_python_find_args})
+debug_print(STATUS "ENV{Python_ROOT_DIR} = $ENV{Python_ROOT_DIR}")
+debug_print(STATUS "ENV{VIRTUAL_ENV} = $ENV{VIRTUAL_ENV}")
+find_package(Python 3.7.0 COMPONENTS Interpreter Development.Module)
 
 # ------------------------------------------------------------------------------
 
