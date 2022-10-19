@@ -101,7 +101,8 @@ function Extra-Help {
     Write-Output '  -(No)Delocate        Delocate the binary wheels after build is finished'
     Write-Output '                       (enabled by default; pass -NoDelocate to disable)'
     Write-Output '  -(No)FastBuild       If possible use an existing CMake directory to build the C++ Python extensions'
-    Write-Output '                       instead of using the normal Python bdist_wheel process.'
+    Write-Output '                       instead of using the normal Python bdist_wheel process. Assumes that '
+    Write-Output '                       IN_PLACE_BUILD=ON'
     Write-Output '                       Use this with caution. CI build should not be using this.'
     Write-Output '  -FastBuildDir        Specify build directory when performing a fast-build'
     Write-Output '  -O,-Output [dir]     Output directory for built wheels'
@@ -475,7 +476,7 @@ bdist_wheel process.Use this with caution.
 CI build should not be using this.
 
 .PARAMETER FastBuildDir
-Specify build directory when performing a fast-build
+Specify build directory when performing a fast-build. See help message using -Help.
 
 .PARAMETER Gitee
 Use Gitee (where possible) instead of Github/Gitlab
