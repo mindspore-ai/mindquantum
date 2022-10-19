@@ -98,6 +98,10 @@
         返回：
             str，此参数解析器的字符串表达式。
 
+    .. py:method:: get_cpp_obj()
+
+        返回此参数解析器的c++对象。
+
     .. py:method:: imag
         :property:
 

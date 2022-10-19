@@ -93,6 +93,8 @@ class QubitOperator(_Operator):
         coefficient (Union[numbers.Number, str, ParameterResolver]): The
             coefficient of this qubit operator, could be a number or a variable
             represent by a string or a symbol or a parameter resolver. Default: 1.0.
+        dtype (type): (ignored by this class) Type of QubitOperator to create
+            (ie. real, complex, real_pr, complex_pr)
 
     Examples:
         >>> from mindquantum.core.operators import QubitOperator
