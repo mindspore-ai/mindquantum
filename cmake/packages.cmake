@@ -207,6 +207,7 @@ if("${CMAKE_PROJECT_NAME}" STREQUAL "MindQuantum")
         CACHE STRING "MindQuantum's Python package name")
     mark_as_advanced(MQ_PYTHON_PACKAGE_NAME)
   endif()
+  debug_print(STATUS "Python package name: ${MQ_PYTHON_PACKAGE_NAME}")
 
   # ----------------------------------------------------------------------------
 
@@ -242,6 +243,7 @@ sys.stdout.write(str(platlib.relative_to(platbase)))
         CACHE FILEPATH "Python path to site-packages sub-directory")
     mark_as_advanced(MQ_INSTALL_PYTHONDIR)
   endif()
+  debug_print(STATUS "Python path to site-packages sub-directory: ${MQ_INSTALL_PYTHONDIR}")
 
   GNUInstallDirs_get_absolute_install_dir(MQ_INSTALL_FULL_PYTHONDIR MQ_INSTALL_PYTHONDIR PYTHONDIR)
 endif()
