@@ -137,6 +137,8 @@ struct CPUVectorPolicyBase {
 
     static void ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit, const qbits_t& ctrls,
                                        const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
+    static void ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
+                                     const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
     static void ApplyH(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyRX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
@@ -157,6 +159,9 @@ struct CPUVectorPolicyBase {
     // gate_expec
     // ========================================================================================================
     static qs_data_t ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                                 const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m,
+                                                 index_t dim);
+    static qs_data_t ExpectDiffTwoQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
                                                  const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m,
                                                  index_t dim);
     static qs_data_t ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,

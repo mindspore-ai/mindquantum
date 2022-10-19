@@ -19,6 +19,7 @@ import numpy as np
 
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import BarrierGate, BasicGate, Measure, MeasureResult
+from mindquantum.core.gates.basicgate import U3, FSim
 from mindquantum.core.operators import Hamiltonian
 from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.mqbackend import projectq
@@ -40,7 +41,6 @@ from .utils import GradOpsWrapper, _thread_balance
 
 class Projectq(BackendBase):
     """A ProjectQ backend."""
-
     def __init__(
         self,
         n_qubits: int,
@@ -72,6 +72,9 @@ class Projectq(BackendBase):
     ):
         """Apply a quantum circuit."""
         _check_input_type('circuit', Circuit, circuit)
+        for g in circuit:
+            if isinstance(g, (U3, FSim)):
+                raise ValueError(f"{g.name} is not supported by projectq simulator.")
         if self.n_qubits < circuit.n_qubits:
             raise ValueError(f"Circuit has {circuit.n_qubits} qubits, which is more than simulator qubits.")
         if circuit.has_measure_gate:
@@ -85,8 +88,7 @@ class Projectq(BackendBase):
             pr = ParameterResolver()
         if circuit.has_measure_gate:
             samples = np.array(
-                self.sim.apply_circuit_with_measure(circuit.get_cpp_obj(), pr.get_cpp_obj(), res.keys_map)
-            )
+                self.sim.apply_circuit_with_measure(circuit.get_cpp_obj(), pr.get_cpp_obj(), res.keys_map))
             samples = samples.reshape((1, -1))
             res.collect_data(samples)
             return res
@@ -105,6 +107,8 @@ class Projectq(BackendBase):
         """Apply a gate."""
         _check_input_type('gate', BasicGate, gate)
         if not isinstance(gate, BarrierGate):
+            if isinstance(gate, (U3, FSim)):
+                raise ValueError(f"{gate.name} gate not supported by projectq simulator.")
             gate_max = max(max(gate.obj_qubits, gate.ctrl_qubits))
             if self.n_qubits < gate_max:
                 raise ValueError(f"qubits of gate {gate} is higher than simulator qubits.")
@@ -221,6 +225,12 @@ class Projectq(BackendBase):
         circ_n_qubits = max(circ_left.n_qubits, circ_right.n_qubits)
         if self.n_qubits < circ_n_qubits:
             raise ValueError(f"Simulator has {self.n_qubits} qubits, but circuit has {circ_n_qubits} qubits.")
+        for g in circ_right:
+            if isinstance(g, (U3, FSim)):
+                raise ValueError(f"{g.name} gate not supported by projectq simulator.")
+        for g in circ_left:
+            if isinstance(g, (U3, FSim)):
+                raise ValueError(f"{g.name} gate not supported by projectq simulator.")
 
         def grad_ops(*inputs):
             if version == "both" and len(inputs) != 2:
@@ -275,14 +285,13 @@ class Projectq(BackendBase):
             if version == 'both':
                 return (
                     res[:, :, 0],
-                    res[:, :, 1 : 1 + len(encoder_params_name)],  # noqa:E203
-                    res[:, :, 1 + len(encoder_params_name) :],  # noqa:E203
+                    res[:, :, 1:1 + len(encoder_params_name)],  # noqa:E203
+                    res[:, :, 1 + len(encoder_params_name):],  # noqa:E203
                 )  # f, g1, g2
             return res[:, :, 0], res[:, :, 1:]  # f, g
 
-        grad_wrapper = GradOpsWrapper(
-            grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name, parallel_worker
-        )
+        grad_wrapper = GradOpsWrapper(grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name,
+                                      parallel_worker)
         grad_str = f'{self.n_qubits} qubit' + ('' if self.n_qubits == 1 else 's')
         grad_str += f' {self.name} VQA Operator'
         grad_wrapper.set_str(grad_str)
@@ -336,9 +345,8 @@ class Projectq(BackendBase):
             sim.set_qs(self.get_qs())
             sim.apply_circuit(circuit.remove_measure(), pr)
             circuit = Circuit(circuit.all_measures.keys())
-        samples = np.array(
-            sim.sim.sampling(circuit.get_cpp_obj(), pr.get_cpp_obj(), shots, res.keys_map, seed)
-        ).reshape((shots, -1))
+        samples = np.array(sim.sim.sampling(circuit.get_cpp_obj(), pr.get_cpp_obj(), shots, res.keys_map,
+                                            seed)).reshape((shots, -1))
         res.collect_data(samples)
         return res
 
@@ -354,4 +362,4 @@ class Projectq(BackendBase):
         n_qubits = int(n_qubits)
         if self.n_qubits != n_qubits:
             raise ValueError(f"{n_qubits} qubits vec does not match with simulation qubits ({self.n_qubits})")
-        self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state) ** 2)))
+        self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state)**2)))

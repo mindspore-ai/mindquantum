@@ -75,6 +75,8 @@ void init_logging(pybind11::module& module) {
     module.def("disable", disable_logging);
 
     // NB: disable logging by default on init
+#ifdef ENABLE_LOGGING
     disable_logging();
+#endif // ENABLE_LOGGING
 }
 }  // namespace mindquantum::python

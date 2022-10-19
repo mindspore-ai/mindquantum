@@ -291,9 +291,10 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
 
     def _collect_parameterized_gate(self, gate: ParameterGate):
         """Collect parameterized gate information."""
-        self.all_paras.collect(list(gate.coeff.keys()))
-        gate_ansatz = list(gate.coeff.ansatz_parameters)
-        gate_encoder = list(gate.coeff.encoder_parameters)
+        keys, ansatz_params, encoder_params = gate.__params_prop__()
+        self.all_paras.collect(keys)
+        gate_ansatz = list(ansatz_params)
+        gate_encoder = list(encoder_params)
         for k in gate_ansatz:
             if k in self.all_encoder.map:
                 raise RuntimeError(f"Parameter '{k}' already set to encoder parameter.")

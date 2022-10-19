@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <complex>
+#include <cstddef>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -38,6 +39,8 @@
 #include "config/type_promotion.hpp"
 #include "config/type_traits.hpp"
 
+#include "core/mq_base_types.hpp"
+#include "core/two_dim_matrix.hpp"
 #include "core/utils.hpp"
 
 #if MQ_HAS_CONCEPTS
@@ -387,12 +390,43 @@ struct ParameterResolver {
 
     template <typename number_t>
     auto Cast() const;
+
+    bool HasRequireGradParams() {
+        return this->data_.size() > this->no_grad_parameters_.size();
+    }
 };
 
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const ParameterResolver<T>& pr) {
     os << pr.ToString();
     return os;
+}
+
+template <typename T>
+MST<size_t> GetRequiresGradParameters(const VT<ParameterResolver<T>>& prs) {
+    MST<size_t> title = {};
+    size_t idx = 0;
+    for (auto& pr : prs) {
+        for (auto& name : pr.GetRequiresGradParameters()) {
+            if (!title.count(name)) {
+                title[name] = idx;
+                ++idx;
+            }
+        }
+    }
+    return title;
+}
+
+template <typename T>
+std::pair<MST<size_t>, Dim2Matrix<T>> Jacobi(const VT<ParameterResolver<T>>& prs) {
+    auto title = GetRequiresGradParameters(prs);
+    VVT<CT<T>> jacobi(prs.size(), VT<CT<T>>(title.size(), CT<T>(0.0, 0.0)));
+    for (size_t i = 0; i < prs.size(); i++) {
+        for (auto& name : prs[i].GetRequiresGradParameters()) {
+            jacobi[i][title.at(name)] = prs[i].data_.at(name);
+        }
+    }
+    return {title, Dim2Matrix<T>(jacobi)};
 }
 }  // namespace mindquantum
 

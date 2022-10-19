@@ -214,6 +214,12 @@ PYBIND11_MODULE(mqbackend, m) {
         .def_readwrite("probs", &BasicGate<MT>::probs_)
         .def_readwrite("cumulative_probs", &BasicGate<MT>::cumulative_probs_)
         .def_readwrite("kraus_operator_set", &BasicGate<MT>::kraus_operator_set_);
+    py::class_<mindquantum::U3<MT>, mindquantum::BasicGate<MT>, std::shared_ptr<mindquantum::U3<MT>>>(m, "u3").def(
+        py::init<const ParameterResolver<MT> &, const ParameterResolver<MT> &, const ParameterResolver<MT> &,
+                 const VT<Index> &, const VT<Index> &>());
+    py::class_<mindquantum::FSim<MT>, mindquantum::BasicGate<MT>, std::shared_ptr<mindquantum::FSim<MT>>>(m, "fsim")
+        .def(py::init<const ParameterResolver<MT> &, const ParameterResolver<MT> &, const VT<Index> &,
+                      const VT<Index> &>());
     m.def("get_gate_by_name", &GetGateByName<MT>);
     m.def("get_measure_gate", &GetMeasureGate<MT>);
 

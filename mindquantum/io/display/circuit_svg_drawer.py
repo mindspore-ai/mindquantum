@@ -931,13 +931,7 @@ class SVGParameterGate(SVGBasicGate):
         self.rect1.stroke_width(self.svg_config['gate_stroke_width'])
         self.name_text = self.create_name_text(self.name)
         self.name_text.shift(0, self.rect1.get('height') / 2 - self.svg_config['gate_size'] / 10)
-        coeff_str = ""
-        if gate.parameterized:
-            coeff_str = f'{gate.coeff.expression()}'
-        else:
-            coeff_str = f'{gate.coeff.expression()}'
-            if coeff_str == str(gate.coeff.const):
-                coeff_str = str(round(gate.coeff.const, 4))
+        coeff_str = f"{gate.__type_specific_str__()}"
 
         self.coeff_text = self.create_name_text(coeff_str)
         self.coeff_text.shift(0, self.rect1.get('height') / 2 + self.svg_config['gate_size'] * 0.3)

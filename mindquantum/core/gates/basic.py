@@ -458,6 +458,9 @@ class ParameterGate(QuantumGate):
         """Equality comparison operator."""
         return super().__eq__(other) and self.coeff == other.coeff
 
+    def __params_prop__(self):
+        return list(self.coeff.keys()), list(self.coeff.ansatz_parameters), list(self.coeff.encoder_parameters)
+
 
 class ParameterOppsGate(ParameterGate):
     """ParameterOppsGate class."""

@@ -14,10 +14,12 @@
 # ============================================================================
 
 # pylint: disable=abstract-method,import-outside-toplevel
-
 """Basic module for quantum gate."""
 
+from functools import reduce
 import numbers
+import copy
+from typing import List, Tuple
 
 import numpy as np
 from scipy.linalg import fractional_matrix_power
@@ -33,6 +35,7 @@ from .basic import (
     FunctionalGate,
     NoneParamNonHermMat,
     NoneParamSelfHermMat,
+    ParameterGate,
     ParameterOppsGate,
     ParamNonHerm,
     PauliGate,
@@ -59,7 +62,6 @@ class UnivMathGate(NoneParamNonHermMat):
         >>> print(x1)
         X(0 <-: 1)
     """
-
     def __init__(self, name, matrix_value):
         """Initialize a UnivMathGate object."""
         if len(matrix_value.shape) != 2:
@@ -93,7 +95,6 @@ class HGate(NoneParamSelfHermMat):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
-
     def __init__(self):
         """Initialize an HGate object."""
         super().__init__(
@@ -146,7 +147,6 @@ class XGate(PauliGate):
         >>> (x1**{'a' : 2}).coeff
         {'a': 6.283185307179586}, const: 0.0
     """
-
     def __init__(self):
         """Initialize an XGate object."""
         super().__init__(
@@ -179,7 +179,6 @@ class YGate(PauliGate):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
-
     def __init__(self):
         """Initialize a YGate object."""
         super().__init__(
@@ -201,7 +200,6 @@ class ZGate(PauliGate):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
-
     def __init__(self):
         """Initialize a ZGate object."""
         super().__init__(
@@ -223,7 +221,6 @@ class IGate(PauliGate):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
-
     def __init__(self):
         """Initialize an IGate object."""
         super().__init__(
@@ -244,7 +241,6 @@ class CNOTGate(NoneParamSelfHermMat):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
-
     def __init__(self):
         """Initialize a CNOTGate object."""
         super().__init__(
@@ -294,7 +290,6 @@ class SWAPGate(NoneParamSelfHermMat):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
-
     def __init__(self):
         """Initialize a SWAPGate object."""
         super().__init__(
@@ -320,7 +315,6 @@ class ISWAPGate(NoneParamNonHermMat):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
-
     def __init__(self):
         """Initialize an ISWAPGate object."""
         super().__init__(
@@ -348,7 +342,6 @@ class TGate(NoneParamNonHermMat):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
-
     def __init__(self):
         """Initialize a TGate object."""
         super().__init__(
@@ -369,7 +362,6 @@ class SGate(NoneParamNonHermMat):
 
     More usage, please see :class:`mindquantum.core.gates.XGate`.
     """
-
     def __init__(self):
         """Initialize an SGate object."""
         super().__init__(
@@ -433,7 +425,6 @@ class RX(RotSelfHermMat):
         >>> rx3.coeff
         {'a': 0.2, 'b': 0.5}
     """
-
     def __init__(self, pr):
         """Initialize an RX gate."""
         super().__init__(
@@ -457,7 +448,6 @@ class RY(RotSelfHermMat):
         pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation.
     """
-
     def __init__(self, pr):
         """Initialize an RY object."""
         super().__init__(
@@ -481,7 +471,6 @@ class RZ(RotSelfHermMat):
         pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation.
     """
-
     def __init__(self, pr):
         """Initialize an RZ object."""
         super().__init__(
@@ -504,7 +493,6 @@ class ZZ(RotSelfHermMat):
         pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation.
     """
-
     def __init__(self, pr):
         """Initialize a ZZ object."""
         super().__init__(
@@ -569,7 +557,6 @@ class XX(RotSelfHermMat):
         pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation.
     """
-
     def __init__(self, pr):
         """Initialize an XX object."""
         super().__init__(
@@ -642,7 +629,6 @@ class YY(RotSelfHermMat):
         pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation.
     """
-
     def __init__(self, pr):
         """Initialize an YY object."""
         super().__init__(
@@ -712,7 +698,6 @@ class BarrierGate(FunctionalGate):
     Args:
         show (bool): whether show the barrier gate. Default: True.
     """
-
     def __init__(self, show=True):
         """Initialize a BarrierGate object."""
         super().__init__(name='BARRIER', n_qubits=0)
@@ -755,7 +740,6 @@ class GlobalPhase(RotSelfHermMat):
         pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation.
     """
-
     def __init__(self, pr):
         """Initialize a GlobalPhase object."""
         super().__init__(
@@ -809,7 +793,6 @@ class PhaseShift(ParameterOppsGate):
         pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
             parameterized gate, see above for detail explanation.
     """
-
     def __init__(self, pr):
         """Initialize a PhaseShift object."""
         super().__init__(
@@ -879,7 +862,6 @@ class Power(NoneParamNonHermMat):
         >>> rx2 = RX(1)
         >>> assert np.all(np.isclose(Power(rx2,0.5).matrix(), rx1.matrix()))
     """
-
     def __init__(self, gate, exponent=0.5):
         """Initialize a Power object."""
         _check_input_type('t', numbers.Number, exponent)
@@ -953,7 +935,6 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
 
     class _ParamNonHerm(ParamNonHerm):
         """The customer parameterized gate."""
-
         def __init__(self, pr):
             super().__init__(
                 pr=ParameterResolver(pr),
@@ -983,6 +964,299 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
             return cpp_gate
 
     return _ParamNonHerm
+
+
+class MultiParamsGate(ParameterGate):
+    """Gate with multi intrinc parameters."""
+    def __init__(self, name: str, n_qubits: int, prs: List[ParameterResolver]):
+        super().__init__(pr=None, name=name, n_qubits=n_qubits, obj_qubits=None, ctrl_qubits=None)
+        self.prs = prs
+
+    def __type_specific_str__(self) -> str:
+        """Get parameter string."""
+        return ', '.join([pr.expression() for pr in self.prs])
+
+    def __call__(self, prs: List[ParameterResolver]) -> "MultiParamsGate":
+        """Generate new one with given parameters."""
+        new = copy.deepcopy(self)
+        new.prs = prs
+        return new
+
+    def __params_prop__(self) -> Tuple[List[str], List[str], List[str]]:
+        """Get properties of all parameters.
+
+        Returns:
+            (List[str], List[str], List[str]), a tuple with first element is all
+            parameters, second one is all ansatz parameters, and the third one is
+            all encoder parameters.
+        """
+        def extend(x, y):
+            """Extend element."""
+            x.extend(y)
+            return x
+
+        keys = []
+        ansatz_params = []
+        encoder_parameters = []
+        reduce(extend, [list(pr.keys()) for pr in self.prs], keys)
+        reduce(extend, [list(pr.ansatz_parameters) for pr in self.prs], ansatz_params)
+        reduce(extend, [list(pr.encoder_parameters) for pr in self.prs], encoder_parameters)
+        return keys, ansatz_params, encoder_parameters
+
+    @property
+    def parameterized(self) -> bool:
+        """Check whether this gate is a parameterized gate."""
+        for pr in self.prs:
+            if not pr.is_const():
+                return True
+        return False
+
+    def no_grad(self):
+        """Set all parameters do not require gradient."""
+        for pr in self.prs:
+            pr.no_grad()
+        return self
+
+    def requires_grad(self):
+        """Set all parameters require gradient."""
+        for pr in self.prs:
+            pr.requires_grad()
+        return self
+
+    def requires_grad_part(self, names: List[str]):
+        """Set part of parameters require gradient."""
+        for pr in self.prs:
+            pr.requires_grad_part(names)
+        return self
+
+    def no_grad_part(self, names: List[str]):
+        """Set part of parameters not require gradient."""
+        for pr in self.prs:
+            pr.no_grad_part(names)
+        return self
+
+
+class U3(MultiParamsGate):
+    r"""
+    U3 gate represent arbitrary single qubit gate.
+
+    U3 gate with matrix as:
+
+    .. math::
+
+        U3(\theta, \phi, \lambda) =
+        \begin{pmatrix}
+           cos \left( \frac{\theta}{2} \right) & -e^{i \lambda} sin \left( \frac{\theta}{2} \\
+        e^{i \phi} sin \left( \frac{\theta}{2} & e^{i (\phi + \lambda)} cos \left( \frac{\theta}{2}
+        \end{pmatrix}
+
+    It can be decomposed as:
+
+    .. math::
+
+        U3(\theta, \phi, \lambda) = RZ(\phi) RX(-\pi/2) RZ(\theta) RX(\pi/2) RZ(\lambda)
+
+    Args:
+        theta (Union[numbers.Number, dict, ParameterResolver]): First parameter for U3 gate.
+        phi (Union[numbers.Number, dict, ParameterResolver]): Second parameter for U3 gate.
+        lam (Union[numbers.Number, dict, ParameterResolver]): Third parameter for U3 gate.
+
+    Examples:
+        >>> from mindquantum.core.gates import U3
+        >>> U3('theta','phi','lambda').on(0, 1)
+        U3(𝜃=theta, 𝜑=phi, 𝜆=lambda|0 <-: 1)
+    """
+    def __init__(self, theta: ParameterResolver, phi: ParameterResolver, lamda: ParameterResolver):
+        """Initialize U3 gate."""
+        prs = [ParameterResolver(theta), ParameterResolver(phi), ParameterResolver(lamda)]
+        super().__init__(name="U3", n_qubits=1, prs=prs)
+
+    def __type_specific_str__(self) -> str:
+        """Get parameter string."""
+        return f"𝜃={self.theta.expression()}, 𝜑={self.phi.expression()}, 𝜆={self.lamda.expression()}"
+
+    def __call__(self, theta: ParameterResolver, phi: ParameterResolver, lamda: ParameterResolver) -> "U3":
+        """Call the U3 gate with new parameters."""
+        theta = ParameterResolver(theta)
+        phi = ParameterResolver(phi)
+        lamda = ParameterResolver(lamda)
+        prs = [theta, phi, lamda]
+        return super().__call__(self, prs)
+
+    @property
+    def theta(self) -> ParameterResolver:
+        """
+        Get theta parameter of U3 gate.
+
+        Returns:
+            ParameterResolver, the theta.
+        """
+        return self.prs[0]
+
+    @property
+    def phi(self) -> ParameterResolver:
+        """
+        Get phi parameter of U3 gate.
+
+        Returns:
+            ParameterResolver, the phi.
+        """
+        return self.prs[1]
+
+    @property
+    def lamda(self) -> ParameterResolver:
+        """
+        Get lamda parameter of U3 gate.
+
+        Returns:
+            ParameterResolver, the lamda.
+        """
+        return self.prs[2]
+
+    def hermitian(self) -> "U3":
+        """
+        Get hermitian form of U3 gate.
+
+        Examples:
+            >>> from mindquantum.core.gates import U3
+            >>> u3 = U3('a', 'b', 0.5).on(0)
+            >>> u3.hermitian()
+            U3(𝜃=-a, 𝜑=-1/2, 𝜆=-b|0)
+        """
+        out = U3(-self.theta, -self.lamda, -self.phi)
+        out.obj_qubits = self.obj_qubits
+        out.ctrl_qubits = self.ctrl_qubits
+        return out
+
+    def matrix(self, pr: ParameterResolver = None) -> np.ndarray:
+        """Get the matrix of U3 gate."""
+        theta = self.theta
+        phi = self.phi
+        lamda = self.lamda
+        if self.parameterized:
+            if pr is None:
+                raise ValueError("Parameterized gate need a parameter resolver to get matrix.")
+            theta = theta.combination(pr)
+            phi = phi.combination(pr)
+            lamda = lamda.combination(pr)
+            if not theta.is_const():
+                raise ValueError("Theta not set completed.")
+            if not phi.is_const():
+                raise ValueError("Phi not set completed.")
+            if not lamda.is_const():
+                raise ValueError("Lambda not set completed.")
+        theta = theta.const
+        phi = phi.const
+        lamda = lamda.const
+        return np.array([[np.cos(theta / 2), -np.exp(1j * lamda) * np.sin(theta / 2)],
+                         [np.exp(1j * phi) * np.sin(theta / 2),
+                          np.exp(1j * (phi + lamda)) * np.cos(theta / 2)]])
+
+    def get_cpp_obj(self):
+        """Get cpp obj."""
+        return mb.u3(self.theta.get_cpp_obj(), self.phi.get_cpp_obj(), self.lamda.get_cpp_obj(), self.obj_qubits,
+                     self.ctrl_qubits)
+
+
+class FSim(MultiParamsGate):
+    r"""
+    FSim gate represent fermionic simulation gate. The matrix is:
+
+    .. math::
+
+        FSim(\theta, \phi) =
+        \begin{pmatrix}
+            1 & 0 & 0 & 0\\
+            0 & \cos(\theta) & -i\sin(\theta) & 0\\
+            0 & -i\sin(\theta) & \cos(\theta) & 0\\
+            0 & 0 & 0 & e^{i\phi}\\
+        \end{pmatrix}
+
+    Args:
+        theta (Union[numbers.Number, dict, ParameterResolver]): First parameter for FSim gate.
+        phi (Union[numbers.Number, dict, ParameterResolver]): Second parameter for FSim gate.
+
+    Examples:
+        >>> from mindquantum.core.gates import FSim
+        >>> fsim = FSim('a', 'b').on([0, 1])
+        >>> fsim
+        FSim(𝜃=a, 𝜑=b|0 1)
+    """
+    def __init__(self, theta: ParameterResolver, phi: ParameterResolver):
+        """Initialize FSim gate."""
+        prs = [ParameterResolver(theta), ParameterResolver(phi)]
+        super().__init__(name="FSim", n_qubits=2, prs=prs)
+
+    def __type_specific_str__(self) -> str:
+        """Get parameter string."""
+        return f"𝜃={self.theta.expression()}, 𝜑={self.phi.expression()}"
+
+    def __call__(self, theta: ParameterResolver, phi: ParameterResolver) -> "FSim":
+        """Generate a new FSim gate with given parameters."""
+        theta = ParameterResolver(theta)
+        phi = ParameterResolver(phi)
+        prs = [theta, phi]
+        return super().__call__(self, prs)
+
+    @property
+    def theta(self) -> ParameterResolver:
+        """
+        Get theta parameter of FSim gate.
+
+        Returns:
+            ParameterResolver, the theta.
+        """
+        return self.prs[0]
+
+    @property
+    def phi(self) -> ParameterResolver:
+        """
+        Get phi parameter of FSim gate.
+
+        Returns:
+            ParameterResolver, the phi.
+        """
+        return self.prs[1]
+
+    def hermitian(self) -> "FSim":
+        """
+        Get the hermitian gate of FSim.
+
+        Examples:
+            >>> from mindquantum.core.gates import FSim
+            >>> fsim = FSim('a', 'b').on([0, 1])
+            >>> fsim.hermitian()
+            FSim(𝜃=-a, 𝜑=-b|0 1)
+        """
+        out = FSim(-self.theta, -self.phi)
+        out.obj_qubits = self.obj_qubits
+        out.ctrl_qubits = self.ctrl_qubits
+        return out
+
+    def matrix(self, pr: ParameterResolver = None) -> np.ndarray:
+        """Get the matrix of FSim."""
+        theta = self.theta
+        phi = self.phi
+        if self.parameterized:
+            if pr is None:
+                raise ValueError("Parameterized gate need a parameter resolver to get matrix.")
+            theta = theta.combination(pr)
+            phi = phi.combination(pr)
+            if not theta.is_const():
+                raise ValueError("Theta not set completed.")
+            if not phi.is_const():
+                raise ValueError("Phi not set completed.")
+        theta = theta.const
+        phi = phi.const
+        a = np.cos(theta)
+        b = -1j * np.sin(theta)
+        c = np.exp(1j * phi)
+        return np.array([[1, 0, 0, 0], [0, a, b, 0], [0, b, a, 0], [0, 0, 0, c]])
+
+    def get_cpp_obj(self):
+        """Get cpp object."""
+        obj = mb.fsim(self.theta.get_cpp_obj(), self.phi.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits)
+        return obj
 
 
 X = XGate()
