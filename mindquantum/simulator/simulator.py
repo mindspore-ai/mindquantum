@@ -376,7 +376,8 @@ class Simulator:
         """
         self.backend.set_qs(quantum_state)
 
-    def get_expectation_with_grad(  # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments
+    def get_expectation_with_grad(
         self,
         hams,
         circ_right,

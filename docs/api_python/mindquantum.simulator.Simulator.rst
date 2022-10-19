@@ -111,6 +111,13 @@
         返回：
             numpy.ndarray，当前量子态。
 
+    .. py:method:: n_qubits()
+
+        获取模拟器的量子比特数。
+
+        返回：
+            int，当前模拟器的量子比特数。
+
     .. py:method:: reset()
 
         将模拟器重置为0态。

@@ -101,9 +101,12 @@ class FermionOperator(_Operator):
     The FermionOperator are follows the anti-commutation relationship.
 
     Args:
-        terms (str): The input term of fermion operator. Default: None.
-        coefficient (Union[numbers.Number, str, ParameterResolver]): The coefficient for the corresponding single
-            operators Default: 1.0.
+        *args: Variable length argument list:
+
+            - Any (ie. TermsOperator (C++ instance))
+            - str
+            - Dict[List[Tuple[Int, TermValue]], Union[ParameterResolver, int, float]]
+            - List[Tuple[Int, TermValue]] (with default coefficient set to 1.0)
 
     Examples:
         >>> from mindquantum.core.operators import FermionOperator
@@ -436,7 +439,7 @@ class FermionOperator(_Operator):
         return json.dumps(dic, indent=indent)
 
     @staticmethod
-    def loads(strs, dtype=type):
+    def loads(strs, dtype:type):
         """
         Load JSON(JavaScript Object Notation) into FermionOperator.
 
