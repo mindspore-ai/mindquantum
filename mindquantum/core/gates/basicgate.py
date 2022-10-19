@@ -19,7 +19,7 @@
 from functools import reduce
 import numbers
 import copy
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 from scipy.linalg import fractional_matrix_power
@@ -972,42 +972,24 @@ class MultiParamsGate(ParameterGate):
         super().__init__(pr=None, name=name, n_qubits=n_qubits, obj_qubits=None, ctrl_qubits=None)
         self.prs = prs
 
-    def __type_specific_str__(self):
+    def __type_specific_str__(self) -> str:
+        """Get parameter string."""
         return ', '.join([pr.expression() for pr in self.prs])
 
-    def __call__(self, prs: List[ParameterResolver]):
+    def __call__(self, prs: List[ParameterResolver]) -> "MultiParamsGate":
+        """Generate new one with given parameters."""
         new = copy.deepcopy(self)
         new.prs = prs
+        return new
 
-    def no_grad(self):
-        for pr in self.prs:
-            pr.no_grad()
-        return self
+    def __params_prop__(self) -> Tuple[List[str], List[str], List[str]]:
+        """Get properties of all parameters.
 
-    def requires_grad(self):
-        for pr in self.prs:
-            pr.requires_grad()
-        return self
-
-    def requires_grad_part(self, names):
-        for pr in self.prs:
-            pr.requires_grad_part(names)
-        return self
-
-    def no_grad_part(self, names):
-        for pr in self.prs:
-            pr.no_grad_part(names)
-        return self
-
-    @property
-    def parameterized(self):
-        """Check whether this gate is a parameterized gate."""
-        for pr in self.prs:
-            if not pr.is_const():
-                return True
-        return False
-
-    def __params_prop__(self):
+        Returns:
+            (List[str], List[str], List[str]), a tuple with first element is all
+            parameters, second one is all ansatz parameters, and the third one is
+            all encoder parameters.
+        """
         def extend(x, y):
             """Extend element."""
             x.extend(y)
@@ -1020,6 +1002,38 @@ class MultiParamsGate(ParameterGate):
         reduce(extend, [list(pr.ansatz_parameters) for pr in self.prs], ansatz_params)
         reduce(extend, [list(pr.encoder_parameters) for pr in self.prs], encoder_parameters)
         return keys, ansatz_params, encoder_parameters
+
+    @property
+    def parameterized(self) -> bool:
+        """Check whether this gate is a parameterized gate."""
+        for pr in self.prs:
+            if not pr.is_const():
+                return True
+        return False
+
+    def no_grad(self):
+        """Set all parameters do not require gradient."""
+        for pr in self.prs:
+            pr.no_grad()
+        return self
+
+    def requires_grad(self):
+        """Set all parameters require gradient."""
+        for pr in self.prs:
+            pr.requires_grad()
+        return self
+
+    def requires_grad_part(self, names: List[str]):
+        """Set part of parameters require gradient."""
+        for pr in self.prs:
+            pr.requires_grad_part(names)
+        return self
+
+    def no_grad_part(self, names: List[str]):
+        """Set part of parameters not require gradient."""
+        for pr in self.prs:
+            pr.no_grad_part(names)
+        return self
 
 
 class U3(MultiParamsGate):
@@ -1069,6 +1083,36 @@ class U3(MultiParamsGate):
         prs = [theta, phi, lamda]
         return super().__call__(self, prs)
 
+    @property
+    def theta(self) -> ParameterResolver:
+        """
+        Get theta parameter of U3 gate.
+
+        Returns:
+            ParameterResolver, the theta.
+        """
+        return self.prs[0]
+
+    @property
+    def phi(self) -> ParameterResolver:
+        """
+        Get phi parameter of U3 gate.
+
+        Returns:
+            ParameterResolver, the phi.
+        """
+        return self.prs[1]
+
+    @property
+    def lamda(self) -> ParameterResolver:
+        """
+        Get lamda parameter of U3 gate.
+
+        Returns:
+            ParameterResolver, the lamda.
+        """
+        return self.prs[2]
+
     def hermitian(self) -> "U3":
         """
         Get hermitian form of U3 gate.
@@ -1107,36 +1151,6 @@ class U3(MultiParamsGate):
         return np.array([[np.cos(theta / 2), -np.exp(1j * lamda) * np.sin(theta / 2)],
                          [np.exp(1j * phi) * np.sin(theta / 2),
                           np.exp(1j * (phi + lamda)) * np.cos(theta / 2)]])
-
-    @property
-    def theta(self) -> ParameterResolver:
-        """
-        Get theta parameter of U3 gate.
-
-        Returns:
-            ParameterResolver, the theta.        
-        """
-        return self.prs[0]
-
-    @property
-    def phi(self) -> ParameterResolver:
-        """
-        Get phi parameter of U3 gate.
-
-        Returns:
-            ParameterResolver, the phi.
-        """
-        return self.prs[1]
-
-    @property
-    def lamda(self) -> ParameterResolver:
-        """
-        Get lamda parameter of U3 gate.
-
-        Returns:
-            ParameterResolver, the lamda.
-        """
-        return self.prs[2]
 
     def get_cpp_obj(self):
         """Get cpp obj."""
@@ -1184,6 +1198,26 @@ class FSim(MultiParamsGate):
         prs = [theta, phi]
         return super().__call__(self, prs)
 
+    @property
+    def theta(self) -> ParameterResolver:
+        """
+        Get theta parameter of FSim gate.
+
+        Returns:
+            ParameterResolver, the theta.
+        """
+        return self.prs[0]
+
+    @property
+    def phi(self) -> ParameterResolver:
+        """
+        Get phi parameter of FSim gate.
+
+        Returns:
+            ParameterResolver, the phi.
+        """
+        return self.prs[1]
+
     def hermitian(self) -> "FSim":
         """
         Get the hermitian gate of FSim.
@@ -1192,7 +1226,7 @@ class FSim(MultiParamsGate):
             >>> from mindquantum.core.gates import FSim
             >>> fsim = FSim('a', 'b').on([0, 1])
             >>> fsim.hermitian()
-            FSim(𝜃=-a, 𝜑=-b|0 1)       
+            FSim(𝜃=-a, 𝜑=-b|0 1)
         """
         out = FSim(-self.theta, -self.phi)
         out.obj_qubits = self.obj_qubits
@@ -1218,26 +1252,6 @@ class FSim(MultiParamsGate):
         b = -1j * np.sin(theta)
         c = np.exp(1j * phi)
         return np.array([[1, 0, 0, 0], [0, a, b, 0], [0, b, a, 0], [0, 0, 0, c]])
-
-    @property
-    def theta(self) -> ParameterResolver:
-        """
-        Get theta parameter of FSim gate.
-
-        Returns:
-            ParameterResolver, the theta.        
-        """
-        return self.prs[0]
-
-    @property
-    def phi(self) -> ParameterResolver:
-        """
-        Get phi parameter of FSim gate.
-
-        Returns:
-            ParameterResolver, the phi.
-        """
-        return self.prs[1]
 
     def get_cpp_obj(self):
         """Get cpp object."""

@@ -428,7 +428,6 @@ std::pair<MST<size_t>, Dim2Matrix<T>> Jacobi(const VT<ParameterResolver<T>>& prs
     }
     return {title, Dim2Matrix<T>(jacobi)};
 }
-
 }  // namespace mindquantum
 
 #include "parameter_resolver.tpp"
