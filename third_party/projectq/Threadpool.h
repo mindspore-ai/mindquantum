@@ -10,6 +10,7 @@
 #include <queue>
 #include <stdexcept>
 #include <thread>
+#include <type_traits>
 #include <vector>
 class Threadpool {
  private:
@@ -61,7 +62,7 @@ class Threadpool {
     }
 
     template <class T, class... Args>
-    auto Push(T &&t, Args &&...args) -> std::future<typename std::result_of<T(Args...)>::type> {
+    auto Push(T &&t, Args &&...args) -> std::future<std::invoke_result_t<T, Args...>> {
         // receive task from tasks
         std::function<decltype(t(args...))()> recv_fun = std::bind(std::forward<T>(t), std::forward<Args>(args)...);
         auto ptr = std::make_shared<std::packaged_task<decltype(t(args...))()>>(recv_fun);
