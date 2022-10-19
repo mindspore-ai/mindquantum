@@ -14,7 +14,6 @@
 # ============================================================================
 
 # pylint: disable=invalid-name
-
 """Test simulator."""
 
 import numpy as np
@@ -34,8 +33,7 @@ try:
     import mindspore as ms
 
     from mindquantum.framework.layer import (  # pylint: disable=ungrouped-imports
-        MQAnsatzOnlyLayer,
-    )
+        MQAnsatzOnlyLayer, )
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
@@ -180,18 +178,16 @@ def test_all_gate_with_simulator(virtual_qc):  # pylint: disable=too-many-locals
     """
     c = generate_test_circuit()
     qs = c.get_qs(backend=virtual_qc, pr={'a': 1, 'b': 2, 'c': 3})
-    qs_exp = np.array(
-        [
-            0.09742526 + 0.00536111j,
-            -0.17279339 - 0.32080812j,
-            0.03473879 - 0.22046017j,
-            -0.0990812 + 0.05735119j,
-            -0.11858329 - 0.05715877j,
-            0.37406968 + 0.19326249j,
-            0.46926914 + 0.52135788j,
-            -0.17429908 + 0.27887826j,
-        ]
-    )
+    qs_exp = np.array([
+        0.09742526 + 0.00536111j,
+        -0.17279339 - 0.32080812j,
+        0.03473879 - 0.22046017j,
+        -0.0990812 + 0.05735119j,
+        -0.11858329 - 0.05715877j,
+        0.37406968 + 0.19326249j,
+        0.46926914 + 0.52135788j,
+        -0.17429908 + 0.27887826j,
+    ])
     assert np.allclose(qs, qs_exp)
     sim = Simulator(virtual_qc, c.n_qubits)
     ham = ops.Hamiltonian(ops.QubitOperator('Z0'))
@@ -224,9 +220,8 @@ def test_optimization_with_custom_gate(virtual_qc):  # pylint: disable=too-many-
         return np.array([[np.cos(theta / 2), -1j * np.sin(theta / 2)], [-1j * np.sin(theta / 2), np.cos(theta / 2)]])
 
     def _diff_matrix(theta):
-        return 0.5 * np.array(
-            [[-np.sin(theta / 2), -1j * np.cos(theta / 2)], [-1j * np.cos(theta / 2), -np.sin(theta / 2)]]
-        )
+        return 0.5 * np.array([[-np.sin(theta / 2), -1j * np.cos(theta / 2)],
+                               [-1j * np.cos(theta / 2), -np.sin(theta / 2)]])
 
     h = G.UnivMathGate('H', G.H.matrix())
     rx = G.gene_univ_parameterized_gate('RX', _matrix, _diff_matrix)
@@ -317,3 +312,28 @@ def test_copy(virtual_qc):
     qs1 = sim.get_qs()
     qs2 = sim2.get_qs()
     assert np.allclose(qs1, qs2)
+
+
+@pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'projectq'])
+def test_multi_params_gate(virtual_qc):
+    """
+    Description: test multi params gate
+    Expectation: success.
+    """
+    sim = Simulator(virtual_qc, 2)
+    circ = Circuit() + G.U3('a', 'b', 1.0).on(0) + G.U3('c', 'd', 2.0).on(1) + G.X.on(0, 1)
+    circ += G.FSim('e', 3.0).on([0, 1])
+    p0 = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    sim.apply_circuit(circ, pr=dict(zip(circ.params_name, p0)))
+    qs_exp = np.array([0.06207773 + 0.j, 0.12413139 + 0.44906334j, 0.10068061 - 0.05143708j, 0.65995413 + 0.57511569j])
+    assert np.allclose(qs_exp, sim.get_qs())
+    sim.reset()
+    ham = Hamiltonian(QubitOperator("X0 Y1"))
+    grad_ops = sim.get_expectation_with_grad(ham, circ)
+    f, g = grad_ops(p0)
+    f_exp = np.array([[-0.0317901 + 0.j]])
+    g_exp = np.array([[[
+        -2.27903141e-01 + 0.j, 4.32795462e-18 + 0.j, -6.63057399e-01 + 0.j, 9.97267089e-02 + 0.j, -4.08568259e-01 + 0.j
+    ]]])
+    assert np.allclose(f, f_exp)
+    assert np.allclose(g, g_exp)
