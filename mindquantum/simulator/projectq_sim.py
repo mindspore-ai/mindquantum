@@ -107,7 +107,7 @@ class Projectq(BackendBase):
         """Apply a gate."""
         _check_input_type('gate', BasicGate, gate)
         if not isinstance(gate, BarrierGate):
-            if (isinstance(gate, (U3, FSim))):
+            if isinstance(gate, (U3, FSim)):
                 raise ValueError(f"{gate.name} gate not supported by projectq simulator.")
             gate_max = max(max(gate.obj_qubits, gate.ctrl_qubits))
             if self.n_qubits < gate_max:

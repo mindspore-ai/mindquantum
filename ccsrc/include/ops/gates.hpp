@@ -19,7 +19,9 @@
 
 #include <cmath>
 
+#include <functional>
 #include <string>
+#include <utility>
 
 #include "core/parameter_resolver.hpp"
 #include "core/two_dim_matrix.hpp"

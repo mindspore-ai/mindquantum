@@ -20,7 +20,6 @@ from functools import reduce
 import numbers
 import copy
 from typing import List
-from cirq import ParamResolver
 
 import numpy as np
 from scipy.linalg import fractional_matrix_power
@@ -1036,28 +1035,57 @@ class U3(MultiParamsGate):
            cos \left( \frac{\theta}{2} \right) & -e^{i \lambda} sin \left( \frac{\theta}{2} \\
         e^{i \phi} sin \left( \frac{\theta}{2} & e^{i (\phi + \lambda)} cos \left( \frac{\theta}{2}
         \end{pmatrix}
+
+    It can be decomposed as:
+
+    .. math::
+
+        U3(\theta, \phi, \lambda) = RZ(\phi) RX(-\pi/2) RZ(\theta) RX(\pi/2) RZ(\lambda)
+
+    Args:
+        theta (Union[numbers.Number, dict, ParameterResolver]): First parameter for U3 gate.
+        phi (Union[numbers.Number, dict, ParameterResolver]): Second parameter for U3 gate.
+        lam (Union[numbers.Number, dict, ParameterResolver]): Third parameter for U3 gate.
+
+    Examples:
+        >>> from mindquantum.core.gates import U3
+        >>> U3('theta','phi','lambda').on(0, 1)
+        U3(𝜃=theta, 𝜑=phi, 𝜆=lambda|0 <-: 1)
     """
     def __init__(self, theta: ParameterResolver, phi: ParameterResolver, lamda: ParameterResolver):
+        """Initialize U3 gate."""
         prs = [ParameterResolver(theta), ParameterResolver(phi), ParameterResolver(lamda)]
         super().__init__(name="U3", n_qubits=1, prs=prs)
 
-    def __type_specific_str__(self):
+    def __type_specific_str__(self) -> str:
+        """Get parameter string."""
         return f"𝜃={self.theta.expression()}, 𝜑={self.phi.expression()}, 𝜆={self.lamda.expression()}"
 
-    def __call__(self, theta, phi, lamda):
+    def __call__(self, theta: ParameterResolver, phi: ParameterResolver, lamda: ParameterResolver) -> "U3":
+        """Call the U3 gate with new parameters."""
         theta = ParameterResolver(theta)
         phi = ParameterResolver(phi)
         lamda = ParameterResolver(lamda)
         prs = [theta, phi, lamda]
         return super().__call__(self, prs)
 
-    def hermitian(self):
+    def hermitian(self) -> "U3":
+        """
+        Get hermitian form of U3 gate.
+
+        Examples:
+            >>> from mindquantum.core.gates import U3
+            >>> u3 = U3('a', 'b', 0.5).on(0)
+            >>> u3.hermitian()
+            U3(𝜃=-a, 𝜑=-1/2, 𝜆=-b|0)
+        """
         out = U3(-self.theta, -self.lamda, -self.phi)
         out.obj_qubits = self.obj_qubits
         out.ctrl_qubits = self.ctrl_qubits
         return out
 
-    def matrix(self, pr=None):
+    def matrix(self, pr: ParameterResolver = None) -> np.ndarray:
+        """Get the matrix of U3 gate."""
         theta = self.theta
         phi = self.phi
         lamda = self.lamda
@@ -1081,18 +1109,37 @@ class U3(MultiParamsGate):
                           np.exp(1j * (phi + lamda)) * np.cos(theta / 2)]])
 
     @property
-    def theta(self):
+    def theta(self) -> ParameterResolver:
+        """
+        Get theta parameter of U3 gate.
+
+        Returns:
+            ParameterResolver, the theta.        
+        """
         return self.prs[0]
 
     @property
-    def phi(self):
+    def phi(self) -> ParameterResolver:
+        """
+        Get phi parameter of U3 gate.
+
+        Returns:
+            ParameterResolver, the phi.
+        """
         return self.prs[1]
 
     @property
-    def lamda(self):
+    def lamda(self) -> ParameterResolver:
+        """
+        Get lamda parameter of U3 gate.
+
+        Returns:
+            ParameterResolver, the lamda.
+        """
         return self.prs[2]
 
     def get_cpp_obj(self):
+        """Get cpp obj."""
         return mb.u3(self.theta.get_cpp_obj(), self.phi.get_cpp_obj(), self.lamda.get_cpp_obj(), self.obj_qubits,
                      self.ctrl_qubits)
 
@@ -1110,28 +1157,50 @@ class FSim(MultiParamsGate):
             0 & -i\sin(\theta) & \cos(\theta) & 0\\
             0 & 0 & 0 & e^{i\phi}\\
         \end{pmatrix}
+
+    Args:
+        theta (Union[numbers.Number, dict, ParameterResolver]): First parameter for FSim gate.
+        phi (Union[numbers.Number, dict, ParameterResolver]): Second parameter for FSim gate.
+
+    Examples:
+        >>> from mindquantum.core.gates import FSim
+        >>> fsim = FSim('a', 'b').on([0, 1])
+        >>> fsim
+        FSim(𝜃=a, 𝜑=b|0 1)
     """
     def __init__(self, theta: ParameterResolver, phi: ParameterResolver):
+        """Initialize FSim gate."""
         prs = [ParameterResolver(theta), ParameterResolver(phi)]
         super().__init__(name="FSim", n_qubits=2, prs=prs)
 
-    def __type_specific_str__(self):
+    def __type_specific_str__(self) -> str:
+        """Get parameter string."""
         return f"𝜃={self.theta.expression()}, 𝜑={self.phi.expression()}"
 
-    def __call__(self, theta, phi, lamda):
+    def __call__(self, theta: ParameterResolver, phi: ParameterResolver) -> "FSim":
+        """Generate a new FSim gate with given parameters."""
         theta = ParameterResolver(theta)
         phi = ParameterResolver(phi)
-        lamda = ParameterResolver(lamda)
-        prs = [theta, phi, lamda]
+        prs = [theta, phi]
         return super().__call__(self, prs)
 
-    def hermitian(self):
+    def hermitian(self) -> "FSim":
+        """
+        Get the hermitian gate of FSim.
+
+        Examples:
+            >>> from mindquantum.core.gates import FSim
+            >>> fsim = FSim('a', 'b').on([0, 1])
+            >>> fsim.hermitian()
+            FSim(𝜃=-a, 𝜑=-b|0 1)       
+        """
         out = FSim(-self.theta, -self.phi)
         out.obj_qubits = self.obj_qubits
         out.ctrl_qubits = self.ctrl_qubits
         return out
 
-    def matrix(self, pr=None):
+    def matrix(self, pr: ParameterResolver = None) -> np.ndarray:
+        """Get the matrix of FSim."""
         theta = self.theta
         phi = self.phi
         if self.parameterized:
@@ -1151,15 +1220,28 @@ class FSim(MultiParamsGate):
         return np.array([[1, 0, 0, 0], [0, a, b, 0], [0, b, a, 0], [0, 0, 0, c]])
 
     @property
-    def theta(self):
+    def theta(self) -> ParameterResolver:
+        """
+        Get theta parameter of FSim gate.
+
+        Returns:
+            ParameterResolver, the theta.        
+        """
         return self.prs[0]
 
     @property
-    def phi(self):
+    def phi(self) -> ParameterResolver:
+        """
+        Get phi parameter of FSim gate.
+
+        Returns:
+            ParameterResolver, the phi.
+        """
         return self.prs[1]
 
     def get_cpp_obj(self):
-        obj= mb.fsim(self.theta.get_cpp_obj(), self.phi.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits)
+        """Get cpp object."""
+        obj = mb.fsim(self.theta.get_cpp_obj(), self.phi.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits)
         return obj
 
 

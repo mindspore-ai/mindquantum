@@ -78,3 +78,4 @@
 "mindquantum/ccsrc/python/experimental/lib/ops/command.cpp"                                 "useStlAlgorithm"
 
 "mindquantum/tests/core/test_circuit_block.cpp"                                             "ctuOneDefinitionRuleViolation"
+"mindquantum/ccsrc/include/simulator/vector/vector_state.tpp"                               "cppcheckError"
