@@ -1052,7 +1052,7 @@ jobs:
       - name: Setup CCache
         uses: hendrikmuhs/ccache-action@v1.2.3
         with:
-          key: nvhpc-${{ matrix.nvhpc }}-ccache
+          key: cuda-${{ matrix.cuda }}-ccache
           max-size: 75M
 
       - name: Cache Python virtualenv
