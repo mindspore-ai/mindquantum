@@ -459,6 +459,7 @@ class ParameterGate(QuantumGate):
         return super().__eq__(other) and self.coeff == other.coeff
 
     def __params_prop__(self):
+        """Get properties of all parameters."""
         return list(self.coeff.keys()), list(self.coeff.ansatz_parameters), list(self.coeff.encoder_parameters)
 
 

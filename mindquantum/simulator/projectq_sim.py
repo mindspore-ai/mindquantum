@@ -41,6 +41,7 @@ from .utils import GradOpsWrapper, _thread_balance
 
 class Projectq(BackendBase):
     """A ProjectQ backend."""
+
     def __init__(
         self,
         n_qubits: int,
@@ -88,7 +89,8 @@ class Projectq(BackendBase):
             pr = ParameterResolver()
         if circuit.has_measure_gate:
             samples = np.array(
-                self.sim.apply_circuit_with_measure(circuit.get_cpp_obj(), pr.get_cpp_obj(), res.keys_map))
+                self.sim.apply_circuit_with_measure(circuit.get_cpp_obj(), pr.get_cpp_obj(), res.keys_map)
+            )
             samples = samples.reshape((1, -1))
             res.collect_data(samples)
             return res
@@ -286,13 +288,14 @@ class Projectq(BackendBase):
             if version == 'both':
                 return (
                     res[:, :, 0],
-                    res[:, :, 1:1 + len(encoder_params_name)],  # noqa:E203
-                    res[:, :, 1 + len(encoder_params_name):],  # noqa:E203
+                    res[:, :, 1 : 1 + len(encoder_params_name)],  # noqa:E203
+                    res[:, :, 1 + len(encoder_params_name) :],  # noqa:E203
                 )  # f, g1, g2
             return res[:, :, 0], res[:, :, 1:]  # f, g
 
-        grad_wrapper = GradOpsWrapper(grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name,
-                                      parallel_worker)
+        grad_wrapper = GradOpsWrapper(
+            grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name, parallel_worker
+        )
         grad_str = f'{self.n_qubits} qubit' + ('' if self.n_qubits == 1 else 's')
         grad_str += f' {self.name} VQA Operator'
         grad_wrapper.set_str(grad_str)
@@ -346,8 +349,9 @@ class Projectq(BackendBase):
             sim.set_qs(self.get_qs())
             sim.apply_circuit(circuit.remove_measure(), pr)
             circuit = Circuit(circuit.all_measures.keys())
-        samples = np.array(sim.sim.sampling(circuit.get_cpp_obj(), pr.get_cpp_obj(), shots, res.keys_map,
-                                            seed)).reshape((shots, -1))
+        samples = np.array(
+            sim.sim.sampling(circuit.get_cpp_obj(), pr.get_cpp_obj(), shots, res.keys_map, seed)
+        ).reshape((shots, -1))
         res.collect_data(samples)
         return res
 
@@ -363,4 +367,4 @@ class Projectq(BackendBase):
         n_qubits = int(n_qubits)
         if self.n_qubits != n_qubits:
             raise ValueError(f"{n_qubits} qubits vec does not match with simulation qubits ({self.n_qubits})")
-        self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state)**2)))
+        self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state) ** 2)))

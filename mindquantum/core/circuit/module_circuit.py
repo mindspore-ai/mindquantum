@@ -15,8 +15,8 @@
 
 """Module circuit."""
 
-from collections.abc import Iterable
 import warnings
+from collections.abc import Iterable
 
 import numpy as np
 
@@ -151,8 +151,10 @@ class U3(Circuit):
 
     def __init__(self, theta, phi, lam, obj_qubit=None):
         """Initialize a U3 object."""
-        warnings.warn("U3 from circuit is deprecated, please use U3 as a gate from mindquantum.core.gates.",
-                      category=DeprecationWarning)
+        warnings.warn(
+            "U3 from circuit is deprecated, please use U3 as a gate from mindquantum.core.gates.",
+            category=DeprecationWarning,
+        )
         if obj_qubit is None:
             obj_qubit = 0
         circ = Circuit()
