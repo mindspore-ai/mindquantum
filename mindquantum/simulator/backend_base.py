@@ -106,3 +106,6 @@ class BackendBase:
     def set_qs(self, quantum_state: np.ndarray):
         """Set quantum state of this backend."""
         raise NotImplementedError(f"set_qs not implemented for {self.device_name()}")
+
+    def set_threads_number(self,number):
+        raise NotImplementedError(f"set_threads_number not implemented for {self.device_name()}")

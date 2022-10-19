@@ -143,6 +143,9 @@ class Projectq(BackendBase):
         """Get the matrix of given circuit."""
         return np.array(self.sim.get_circuit_matrix(circuit.get_cpp_obj(), pr.get_cpp_obj())).T
 
+    def set_threads_number(self,number):
+        self.sim.set_threads_number(number)
+
     def get_expectation(self, hamiltonian: Hamiltonian) -> np.ndarray:
         """Get expectation of a hamiltonian."""
         if not isinstance(hamiltonian, Hamiltonian):

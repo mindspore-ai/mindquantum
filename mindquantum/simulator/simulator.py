@@ -336,6 +336,9 @@ class Simulator:
         """
         return self.backend.get_expectation(self, hamiltonian)
 
+    def set_threads_number(self,number):
+        return self.backend.set_threads_number(number)
+
     def get_qs(self, ket=False):
         """
         Get current quantum state of this simulator.

@@ -339,6 +339,7 @@ PYBIND11_MODULE(mqbackend, m) {
         .def("get_qs", &Projectq<MT>::cheat)
         .def("set_qs", &Projectq<MT>::SetState)
         .def("get_circuit_matrix", &Projectq<MT>::GetCircuitMatrix)
+        .def("set_threads_number", &Projectq<MT>::SetThreadsNumber)
         .def("copy", &Projectq<MT>::Copy)
         .def("hermitian_measure_with_grad",
              py::overload_cast<const VT<Hamiltonian<MT>> &, const VT<mindquantum::BasicGate<MT>> &,

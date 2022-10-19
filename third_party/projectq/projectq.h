@@ -27,6 +27,7 @@
 
 #include "config/openmp.hpp"
 
+#include "Threadpool.h"
 #include "core/parameter_resolver.hpp"
 #include "core/utils.hpp"
 #include "ops/basic_gate.hpp"
@@ -92,6 +93,10 @@ class Projectq : public ::projectq::Simulator {
 
     void SetState(VT<CT<T>> vec) {
         set_wavefunction(reinterpret_cast<calc_type *>(vec.data()), ordering_);
+    }
+
+    void SetThreadsNumber(size_t number) {
+        Threadpool::GetInstance().ReSize(number);
     }
 
     void ApplyGate(const BasicGate<T> &gate) {
@@ -412,8 +417,6 @@ class Projectq : public ::projectq::Simulator {
             }
             output[0] = f_g;
         } else {
-            std::vector<std::thread> tasks;
-            tasks.reserve(mea_threads);
             size_t end = 0;
             size_t offset = n_hams / mea_threads;
             size_t left = n_hams % mea_threads;
@@ -433,10 +436,12 @@ class Projectq : public ::projectq::Simulator {
                         output[n] = f_g;
                     }
                 };
-                tasks.emplace_back(task);
+                Threadpool::GetInstance().Push(task);
             }
-            for (auto &t : tasks) {
-                t.join();
+            while (true) {
+                if (Threadpool::GetInstance().IsTasksEmpty() && Threadpool::GetInstance().GetIdle() == 0) {
+                    break;
+                }
             }
         }
         return output;
