@@ -9,6 +9,10 @@
         - **terms** (Union[str, tuple]) - 量子比特激发算子的输入项。默认值：None。
         - **coefficient** (Union[numbers.Number, str, ParameterResolver]) - 相应单个运算符的系数。默认值：1.0。
 
+    .. py:method:: hermitian()
+
+        返回量子比特激发算子的厄米共轭。
+
     .. py:method:: imag
         :property:
 
@@ -41,7 +45,3 @@
 
         返回：
             QubitOperator，根据量子比特激发算符定义相对应的泡利算符。
-
-    .. py:method:: hermitian()
-
-        返回量子比特激发算子的厄米共轭。

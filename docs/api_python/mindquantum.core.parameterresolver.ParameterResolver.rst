@@ -113,6 +113,10 @@
         返回：
             bool，参数解析器是否为反厄米。
 
+    .. py:method:: is_complex()
+
+        返回此参数解析器实例当前是否正在使用复数系数。
+
     .. py:method:: is_const()
 
         检查此参数解析器是否表示常量，这意味着此参数解析器中没有具有非零系数的参数。
@@ -230,6 +234,10 @@
         返回：
             ParameterResolver，参数解析器本身。
 
+    .. py:method:: to_real_obj()
+
+        转化为实数类型。
+
     .. py:method:: update(other)
 
         使用其它参数解析器更新此参数解析器。
@@ -243,11 +251,3 @@
     .. py:method:: values()
 
         生成所有参数值的迭代器。
-
-    .. py:method:: to_real_obj()
-
-        转化为实数类型。
-
-    .. py:method:: is_complex()
-
-        返回此参数解析器实例当前是否正在使用复数系数。
