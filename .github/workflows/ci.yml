@@ -94,12 +94,11 @@ jobs:
             -${{ secrets.cache_ver }}
 
       - name: Configure
-        run: >-
-          unset Python_ROOT_DIR  # Avoid that CMake finds the installed system Python over the virtualenv
-
-          ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache --no-gitee --debug
-          --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
-          --cmake-no-registry
+        run: |
+          unset Python_ROOT_DIR
+          ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache --no-gitee --debug \
+          --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install" \
+          --cmake-no-registry \
           -- -DPython_FIND_UNVERSIONED_NAMES:STRING='FIRST'
 
       - name: Build
@@ -154,7 +153,7 @@ jobs:
         if: matrix.test_install
         run: |
           . venv/bin/activate
-          unset Python_ROOT_DIR  # Avoid that CMake finds the installed system Python over the virtualenv
+          unset Python_ROOT_DIR
           hash -r
           cmake -S other -B other/local_build -Dmindquantum_DEBUG=ON -Dmindquantum_ROOT=${{ github.workspace }}/build
           cmake --build other/local_build --target all -v
@@ -163,7 +162,7 @@ jobs:
         if: matrix.test_install
         run: |
           . venv/bin/activate
-          unset Python_ROOT_DIR  # Avoid that CMake finds the installed system Python over the virtualenv
+          unset Python_ROOT_DIR
           hash -r
           cmake -S other -B other/build -Dmindquantum_DEBUG=ON  -Dmindquantum_ROOT="${{ github.workspace }}/install"
           cmake --build other/build --target all -v
@@ -175,6 +174,7 @@ jobs:
         env:
           VENV_PYTHON_TEST_PKGS: ${{ matrix.VENV_PYTHON_TEST_PKGS }}
         run: |
+          unset Python_ROOT_DIR
           mkdir -p "${{ github.workspace }}/wheel_build"
           cp -r "${{ github.workspace }}/build/.mqlibs" "${{ github.workspace }}/wheel_build"
           ./build.sh --cxx --with-projectq --debug-cmake --test --build="${{ github.workspace }}/wheel_build" \
