@@ -173,9 +173,7 @@ jobs:
         env:
           VENV_PYTHON_TEST_PKGS: ${{ matrix.VENV_PYTHON_TEST_PKGS }}
         run: |
-          mkdir -p "${{ github.workspace }}/wheel_build"
-          cp -r "${{ github.workspace }}/build/.mqlibs" "${{ github.workspace }}/wheel_build"
-          ./build.sh --cxx --with-projectq --debug-cmake --test --build="${{ github.workspace }}/wheel_build" \
+          ./build.sh --cxx --with-projectq --debug-cmake --test \
             --fast-build --no-build-isolation --no-delocate --ccache --cmake-no-registry --no-gitee
 
   # ============================================================================
