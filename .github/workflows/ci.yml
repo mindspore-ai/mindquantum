@@ -95,7 +95,6 @@ jobs:
 
       - name: Configure
         run: |
-          unset Python_ROOT_DIR
           ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache --no-gitee --debug \
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install" \
           --cmake-no-registry \
@@ -174,7 +173,6 @@ jobs:
         env:
           VENV_PYTHON_TEST_PKGS: ${{ matrix.VENV_PYTHON_TEST_PKGS }}
         run: |
-          unset Python_ROOT_DIR
           mkdir -p "${{ github.workspace }}/wheel_build"
           cp -r "${{ github.workspace }}/build/.mqlibs" "${{ github.workspace }}/wheel_build"
           ./build.sh --cxx --with-projectq --debug-cmake --test --build="${{ github.workspace }}/wheel_build" \
