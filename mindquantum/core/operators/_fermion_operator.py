@@ -439,7 +439,7 @@ class FermionOperator(_Operator):
         return json.dumps(dic, indent=indent)
 
     @staticmethod
-    def loads(strs, dtype:type):
+    def loads(strs, dtype: type):
         """
         Load JSON(JavaScript Object Notation) into FermionOperator.
 

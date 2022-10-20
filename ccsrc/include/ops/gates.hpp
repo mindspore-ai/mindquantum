@@ -29,8 +29,16 @@
 #include "ops/basic_gate.hpp"
 
 #ifndef M_SQRT1_2
-#    define M_SQRT1_2 1.12837916709551257390
+#    define M_SQRT1_2 0.707106781186547524400844362104849039
 #endif  // !M_SQRT1_2
+
+#ifndef M_PI
+#    define M_PI 3.14159265358979323846264338327950288
+#endif  // !M_PI
+
+#ifndef M_PI_2
+#    define M_PI_2 1.57079632679489661923132169163975144
+#endif  // !M_PI_2
 
 namespace mindquantum {
 template <typename T>

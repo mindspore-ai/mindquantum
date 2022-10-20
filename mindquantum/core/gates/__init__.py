@@ -29,11 +29,13 @@ from .basicgate import (
     RY,
     RZ,
     SWAP,
+    U3,
     XX,
     YY,
     ZZ,
     BarrierGate,
     CNOTGate,
+    FSim,
     GlobalPhase,
     H,
     HGate,
@@ -55,8 +57,6 @@ from .basicgate import (
     Z,
     ZGate,
     gene_univ_parameterized_gate,
-    U3,
-    FSim
 )
 from .channel import (
     AmplitudeDampingChannel,
@@ -119,7 +119,7 @@ __all__ = [
     "PhaseDampingChannel",
     "KrausChannel",
     "U3",
-    "FSim"
+    "FSim",
 ]
 
 __all__.sort()

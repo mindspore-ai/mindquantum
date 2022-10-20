@@ -60,8 +60,7 @@ unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_xlike.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_zlike.cpp
 unknownMacro:ccsrc/python/experimental/include/python/cengines/resource_counter.hpp:25
 unknownMacro:ccsrc/python/experimental/include/python/ops/command.hpp:26
-unknownMacro:third_party/projectq/projectq.h:113
-unknownMacro:third_party/projectq/projectq.h:190
+unknownMacro:third_party/projectq/projectq.h
 
 unreadVariable:ccsrc/lib/experimental/decompositions/time_evolution.cpp
 

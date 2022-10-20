@@ -18,7 +18,7 @@
     .. py:method:: no_grad()
 
         设置量子门中的所有参数都不需要求导数。
-    
+
     .. py:method:: no_grad_part(names)
 
         设置某些不需要求梯度的参数。此操作将会原位改变线路参数梯度属性。

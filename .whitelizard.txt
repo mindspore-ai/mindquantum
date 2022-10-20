@@ -11,6 +11,7 @@ mindquantum/algorithm/nisq/chem/uccsd0.py:uccsd0_singlet_generator
 mindquantum/io/display/bloch_plt_drawer.py:add_state
 mindquantum/io/qasm/hiqasm.py:to_string
 mindquantum/io/qasm/hiqasm.py:trans_v01
+mindquantum/io/qasm/openqasm.py:to_string
 mindquantum/simulator/mqsim.py:get_expectation_with_grad
 mindquantum/simulator/projectq_sim.py:get_expectation_with_grad
 mindquantum/simulator/simulator.py:get_expectation_with_grad
@@ -21,7 +22,6 @@ mindquantum/experimental/_symengine_utilities.py:symbols
 mindquantum/src/binding.cc:mindquantum::PYBIND11_MODULE
 ccsrc/include/experimental/ops/gates/qubit_operator.tpp:mindquantum::ops::QubitOperator<coeff_t>::sparse_matrix
 ccsrc/include/ops/gates.hpp:mindquantum::GetGateByName
-ccsrc/include/simulator/vector/vector_state.tpp:mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::ApplyGate
 ccsrc/lib/experimental/core/cpp_core.cpp:mindquantum::core::CppCore::flush
 ccsrc/lib/simulator/vector/detail/cpu_vector_policy_gate_expec.cpp:mindquantum::sim::vector::detail::CPUVectorPolicyBase::ExpectDiffSingleQubitMatrix
 ccsrc/python/experimental/lib/core/symengine.cpp:mindquantum::python::init_symengine_basic_types
@@ -30,6 +30,9 @@ ccsrc/python/experimental/lib/ops/ops.cpp:init_mindquantum_ops
 ccsrc/python/mqbackend/lib/binding.cc:PYBIND11_MODULE
 
 TEST_CASE
+mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::ApplyGate
+mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::GetExpectationWithGradOneMulti
+mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::LeftSizeGradOneMulti
 DummyOperator::TermsOperator::operator == ; } ; } using coefficient_t = DummyOperator :: coefficient_t ; using coeff_term_dict_t = DummyOperator :: coeff_term_dict_t ; TEST_CASE
 mindquantum::ops::details::mindquantum::ops::details::pauli_products.QubitOperatorTermPolicy<coefficient_t>::simplify
 tests/st/test_io/test_svg.py:test_measure_svg

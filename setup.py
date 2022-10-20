@@ -179,7 +179,7 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
         build_ext.build_extensions(self)
 
         if self.fast_bdist_wheel:
-            logging.info('Doing a fast-build wheel build, skipping install step')
+            self.cmake_install_fast_build()
         elif not self.install_light:
             self.cmake_install()
 
@@ -229,15 +229,14 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
         # This can in principle handle the compilation of extensions outside the main CMake directory (ie. outside the
         # one containing this setup.py file)
         for src_dir, extensions in itertools.groupby(sorted(self.extensions, key=_src_dir_pred), key=_src_dir_pred):
-            self.cmake_configure_build(str(src_dir), extensions, cmake_args, env)
+            args = cmake_args.copy()
+            for ext in extensions:
+                dest_path = Path(self.get_ext_fullpath(ext.lib_filepath)).resolve().parent
+                args.append(f'-D{ext.target.upper()}_OUTPUT_DIR={dest_path}')
+            self.cmake_configure_build(str(src_dir), args, env)
 
-    def cmake_configure_build(self, src_dir, extensions, cmake_args, env):
+    def cmake_configure_build(self, src_dir, cmake_args, env):
         """Run a CMake build command for a list of extensions."""
-        args = cmake_args.copy()
-        for ext in extensions:
-            dest_path = Path(self.get_ext_fullpath(ext.lib_filepath)).resolve().parent
-            args.append(f'-D{ext.target.upper()}_OUTPUT_DIR={dest_path}')
-
         build_temp = self._get_temp_dir(src_dir)
         if self.clean_build:
             remove_tree(build_temp)
@@ -247,10 +246,10 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
         build_temp = str(build_temp)
 
         logging.info(' Configuring from %s '.center(80, '-'), src_dir)
-        logging.info('CMake command: %s', ' '.join(self.cmake_cmd + [src_dir] + args))
+        logging.info('CMake command: %s', ' '.join(self.cmake_cmd + [src_dir] + cmake_args))
         logging.info('   cwd: %s', str(build_temp))
         try:
-            subprocess.check_call(self.cmake_cmd + [src_dir] + args, cwd=build_temp, env=env)
+            subprocess.check_call(self.cmake_cmd + [src_dir] + cmake_args, cwd=build_temp, env=env)
         except ext_errors as err:
             raise BuildFailedError() from err
         finally:
@@ -276,6 +275,7 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
                     cur_dir / Path(ext.lib_filepath).parent / dest_path.name,
                     cur_dir / dest_path.name,
                 ):
+                    logging.info('[FASTBUILD] trying to locate lib in %s', str(library_path))
                     if library_path.exists():
                         shutil.copyfile(library_path, dest_path)
                         break
@@ -303,6 +303,47 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
             )
         finally:
             logging.info(' End building target install '.center(80, '-'))
+
+    def cmake_install_fast_build(self):
+        """Run the CMake installation step for a fast-build."""
+        # First save the original installation directory
+        install_prefix = None
+        with fdopen(str(Path(self.build_dir) / 'CMakeCache.txt'), 'r') as cache_file:
+            data = cache_file.readlines()
+            cmake_install_prefix = [line.strip() for line in data if line.startswith('CMAKE_INSTALL_PREFIX')]
+            if len(cmake_install_prefix) == 1:
+                install_prefix = cmake_install_prefix[0].split('=')[1]
+
+        if not install_prefix:
+            logging.info('Unable to locate the original installation prefix in %s', self.build_dir)
+            logging.info('-> Skipping installation step')
+            return
+
+        # ------------------------------
+
+        env = os.environ.copy()
+
+        def _src_dir_pred(ext):
+            return ext.src_dir
+
+        # Change the original installation prefix path
+        for src_dir, _ in itertools.groupby(sorted(self.extensions, key=_src_dir_pred), key=_src_dir_pred):
+            self.cmake_configure_build(
+                str(src_dir),
+                [f'-DCMAKE_INSTALL_PREFIX:FILEPATH={Path(self.build_lib, Path().resolve().name).resolve()}'],
+                env,
+            )
+
+        # Perform a normal CMake installation
+        self.cmake_install()
+
+        # Restore the original installation prefix path
+        for src_dir, _ in itertools.groupby(sorted(self.extensions, key=_src_dir_pred), key=_src_dir_pred):
+            self.cmake_configure_build(
+                str(src_dir),
+                [f'-DCMAKE_INSTALL_PREFIX:FILEPATH={install_prefix}'],
+                env,
+            )
 
     def copy_extensions_to_source(self):
         """Copy the extensions."""

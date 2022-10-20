@@ -162,8 +162,7 @@ struct CPUVectorPolicyBase {
                                                  const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m,
                                                  index_t dim);
     static qs_data_t ExpectDiffTwoQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                 const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m,
-                                                 index_t dim);
+                                               const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m, index_t dim);
     static qs_data_t ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                   calc_type val, index_t dim);
     static qs_data_t ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,

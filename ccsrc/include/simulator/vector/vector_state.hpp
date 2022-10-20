@@ -116,8 +116,8 @@ class VectorState {
                                               const std::shared_ptr<BasicGate<calc_type>>& gate,
                                               const ParameterResolver<calc_type>& pr, index_t dim);
     static Dim2Matrix<calc_type> ExpectDiffFSim(qs_data_p_t bra, qs_data_p_t ket,
-                                              const std::shared_ptr<BasicGate<calc_type>>& gate,
-                                              const ParameterResolver<calc_type>& pr, index_t dim);
+                                                const std::shared_ptr<BasicGate<calc_type>>& gate,
+                                                const ParameterResolver<calc_type>& pr, index_t dim);
     //! Apply a quantum circuit on this quantum state
     auto ApplyCircuit(const circuit_t& circ, const ParameterResolver<calc_type>& pr = ParameterResolver<calc_type>());
 

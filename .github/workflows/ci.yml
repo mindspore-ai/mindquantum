@@ -55,7 +55,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y libboost-filesystem-dev --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.2
+        uses: hendrikmuhs/ccache-action@v1.2.3
         with:
           key: ${{ matrix.runs-on }}-python-${{ matrix.python }}-ccache
           max-size: 75M
@@ -94,10 +94,10 @@ jobs:
             -${{ secrets.cache_ver }}
 
       - name: Configure
-        run: >-
-          ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache --no-gitee --debug
-          --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
-          --cmake-no-registry
+        run: |
+          ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache --no-gitee --debug \
+          --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install" \
+          --cmake-no-registry \
           -- -DPython_FIND_UNVERSIONED_NAMES:STRING='FIRST'
 
       - name: Build
@@ -152,6 +152,7 @@ jobs:
         if: matrix.test_install
         run: |
           . venv/bin/activate
+          unset Python_ROOT_DIR
           hash -r
           cmake -S other -B other/local_build -Dmindquantum_DEBUG=ON -Dmindquantum_ROOT=${{ github.workspace }}/build
           cmake --build other/local_build --target all -v
@@ -160,6 +161,7 @@ jobs:
         if: matrix.test_install
         run: |
           . venv/bin/activate
+          unset Python_ROOT_DIR
           hash -r
           cmake -S other -B other/build -Dmindquantum_DEBUG=ON  -Dmindquantum_ROOT="${{ github.workspace }}/install"
           cmake --build other/build --target all -v
@@ -171,10 +173,8 @@ jobs:
         env:
           VENV_PYTHON_TEST_PKGS: ${{ matrix.VENV_PYTHON_TEST_PKGS }}
         run: |
-          mkdir -p "${{ github.workspace }}/wheel_build"
-          cp -r "${{ github.workspace }}/build/.mqlibs" "${{ github.workspace }}/wheel_build"
-          ./build.sh --cxx --with-projectq --debug-cmake --test --build="${{ github.workspace }}/wheel_build" \
-            --no-delocate --ccache --cmake-no-registry --no-gitee
+          ./build.sh --cxx --with-projectq --debug-cmake --test \
+            --fast-build --no-build-isolation --no-delocate --ccache --cmake-no-registry --no-gitee
 
   # ============================================================================
 
@@ -218,7 +218,7 @@ jobs:
           brew install libomp ccache
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.2
+        uses: hendrikmuhs/ccache-action@v1.2.3
         with:
           key: macos-${{ matrix.xcode }}-ccache
           max-size: 75M
@@ -284,7 +284,7 @@ jobs:
           libboost-filesystem-dev gdb --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.2
+        uses: hendrikmuhs/ccache-action@v1.2.3
         with:
           key: gcc-${{ matrix.gcc }}-ccache
           max-size: 75M
@@ -424,7 +424,7 @@ jobs:
           gdb --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.2
+        uses: hendrikmuhs/ccache-action@v1.2.3
         with:
           key: clang-${{ matrix.clang }}-ccache
           max-size: 75M
@@ -455,7 +455,7 @@ jobs:
 
       - name: Cache compiled third-party libraries
         if: env.ACT != 'true'
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: build/.mqlibs
           key: clang-${{ matrix.clang }}-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
@@ -568,7 +568,7 @@ jobs:
       - name: Restore cache for CCache
         if: env.ACT != 'true'
         id: ccache-cache
-        uses: martijnhols/actions-cache/restore@v3.0.11
+        uses: martijnhols/actions-cache/restore@v3.0.11b
         with:
           path: ccache
           key: msvc-ccache-${{ steps.get-date.outputs.date }}
@@ -623,7 +623,7 @@ jobs:
 
       - name: Save cache for CCache
         if: env.ACT != 'true'
-        uses: martijnhols/actions-cache/save@v3.0.11
+        uses: martijnhols/actions-cache/save@v3.0.11b
         with:
           path: ccache
           key: msvc-ccache-${{ steps.get-date.outputs.date }}
@@ -647,7 +647,7 @@ jobs:
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
       # - name: Setup CCache
-      #   uses: hendrikmuhs/ccache-action@v1.2.2
+      #   uses: hendrikmuhs/ccache-action@v1.2.3
       #   with:
       #     key: mingw64-ccache
       #     max-size: 75M
@@ -674,7 +674,7 @@ jobs:
           platform: x64
 
       # - name: Cache boost
-      #   uses: actions/cache@v2
+      #   uses: actions/cache@v3
       #   id: cache-boost
       #   with:
       #     path: ${{ env.BOOST_PATH }}
@@ -806,7 +806,7 @@ jobs:
       - name: Restore cache for CCache
         if: env.ACT != 'true' && matrix.msystem != 'MSYS'
         id: ccache-cache
-        uses: martijnhols/actions-cache/restore@v3.0.11
+        uses: martijnhols/actions-cache/restore@v3.0.11b
         with:
           path: ccache
           key: msys2-${{ matrix.msystem }}-ccache-${{ steps.get-date.outputs.date }}
@@ -873,7 +873,7 @@ jobs:
 
       - name: Save cache for CCache
         if: env.ACT != 'true' && matrix.msystem != 'MSYS'
-        uses: martijnhols/actions-cache/save@v3.0.11
+        uses: martijnhols/actions-cache/save@v3.0.11b
         with:
           path: ccache
           key: msys2-${{ matrix.msystem }}-ccache-${{ steps.get-date.outputs.date }}
@@ -918,7 +918,7 @@ jobs:
       - name: Restore cache for CCache
         if: env.ACT != 'true'
         id: ccache-cache
-        uses: martijnhols/actions-cache/restore@v3.0.11
+        uses: martijnhols/actions-cache/restore@v3.0.11b
         with:
           path: ccache
           key: cygwin-ccache-${{ steps.get-date.outputs.date }}
@@ -1001,7 +1001,7 @@ jobs:
 
       - name: Save cache for CCache
         if: env.ACT != 'true'
-        uses: martijnhols/actions-cache/save@v3.0.11
+        uses: martijnhols/actions-cache/save@v3.0.11b
         with:
           path: ccache
           key: cygwin-ccache-${{ steps.get-date.outputs.date }}
@@ -1050,9 +1050,9 @@ jobs:
           --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.2
+        uses: hendrikmuhs/ccache-action@v1.2.3
         with:
-          key: nvhpc-${{ matrix.nvhpc }}-ccache
+          key: cuda-${{ matrix.cuda }}-ccache
           max-size: 75M
 
       - name: Cache Python virtualenv
@@ -1116,7 +1116,7 @@ jobs:
           libboost-filesystem-dev --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.2
+        uses: hendrikmuhs/ccache-action@v1.2.3
         with:
           key: nvhpc-${{ matrix.nvhpc }}-ccache
           max-size: 75M
@@ -1213,7 +1213,7 @@ jobs:
   #         --no-install-recommends
 
   #     - name: Setup CCache
-  #       uses: hendrikmuhs/ccache-action@v1.2.2
+  #       uses: hendrikmuhs/ccache-action@v1.2.3
   #       with:
   #         key: nvhpc-${{ matrix.nvhpc }}-ccache
   #         max-size: 75M

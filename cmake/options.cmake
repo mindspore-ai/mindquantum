@@ -18,6 +18,7 @@
 
 # lint_cmake: -whitespace/indent
 
+include(debug_print)
 include(CMakeDependentOption)
 
 # ==============================================================================
@@ -45,6 +46,9 @@ else()
   option(PYTHON_VIRTUALENV_COMPAT "(Mac OS X) Make CMake search for Python Framework *after* any available\
   unix-style package. Can be useful in case of virtual environments." OFF)
 endif()
+
+option(PYTHON_VIRTUALENV_OVER_ROOT_DIR
+       "Ignore Python_ROOT_DIR if present at the same time as the VIRTUAL_ENV env. variable." ON)
 
 option(IS_PYTHON_BUILD "Is CMake called from setup.py? (e.g. python3 setup.py install?)" OFF)
 option(IN_PLACE_BUILD "Are we building in-place for testing/development?" ON)
@@ -143,6 +147,17 @@ endif()
 
 if(PYTHON_VIRTUALENV_COMPAT)
   set(CMAKE_FIND_FRAMEWORK LAST)
+endif()
+
+debug_print(STATUS "ENV{Python_ROOT_DIR} = $ENV{Python_ROOT_DIR}")
+debug_print(STATUS "ENV{VIRTUAL_ENV} = $ENV{VIRTUAL_ENV}")
+
+if(PYTHON_VIRTUALENV_OVER_ROOT_DIR)
+  if(DEFINED ENV{Python_ROOT_DIR} AND DEFINED ENV{VIRTUAL_ENV})
+    message(STATUS "Both Python_ROOT_DIR and VIRTUAL_ENV environment variables are defined")
+    message(STATUS "Removing Python_ROOT_DIR to favour VIRTUAL_ENV")
+    unset(ENV{Python_ROOT_DIR})
+  endif()
 endif()
 
 # ------------------------------------------------------------------------------
