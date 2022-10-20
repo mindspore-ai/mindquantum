@@ -76,7 +76,6 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
         >>> ParameterResolver('a')
         {'a': 1.0}, const: 0.0
     """
-
     @staticmethod
     def _valid_other(other):
         return isinstance(other, (numbers.Number, ParameterResolver))
@@ -100,6 +99,10 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             klass = real_pr_
             if const is not None:
                 klass = get_klass_from(const)
+                if not isinstance(data, (dict, str)):
+                    raise ValueError(f"data requires a dict or a string, but get {type(data)}")
+                if isinstance(data, str):
+                    data = {data: 1 + const * 0}
             elif data is None:
                 klass = real_pr_
                 data = {}
@@ -107,7 +110,9 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
                 klass = get_klass_from(data)
             elif isinstance(data, str):
                 klass = real_pr_
-
+            if not isinstance(data, (dict, numbers.Number, str)):
+                raise ValueError("data requires a dict or a ParameterResolver or a number "
+                                 f"or a string, but get {type(data)}")
             if const is None:
                 self._cpp_obj = klass(data)
             else:
