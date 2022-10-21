@@ -1,0 +1,79 @@
+nodes number:  10 nodes:  [0, 1, 3, 4, 2, 5, 7, 8, 6, 9]
+edges number:  12 deges:  [(0, 1), (0, 3), (0, 4), (3, 4), (3, 8), (4, 8), (2, 5), (2, 7), (2, 8), (7, 8), (8, 6), (6, 9)]
+MaxCut is:  10
+epoch:  100 , MBE loss:  -0.5586406 , MBE MaxCut:  7.0
+epoch:  200 , MBE loss:  -2.004627 , MBE MaxCut:  7.0
+epoch:  300 , MBE loss:  -3.1063008 , MBE MaxCut:  10.0
+total training step: 300
+
+nodes number:  9 nodes:  [0, 5, 6, 7, 1, 8, 2, 4, 3]
+edges number:  15 deges:  [(0, 5), (0, 6), (0, 7), (5, 2), (5, 7), (5, 8), (6, 1), (6, 2), (6, 4), (7, 2), (7, 3), (1, 8), (8, 3), (2, 4), (4, 3)]
+MaxCut is:  12
+epoch:  100 , MBE loss:  -2.2671974 , MBE MaxCut:  11.0
+epoch:  200 , MBE loss:  -3.1308713 , MBE MaxCut:  12.0
+total training step: 200
+
+nodes number:  8 nodes:  [0, 1, 6, 7, 2, 3, 4, 5]
+edges number:  11 deges:  [(0, 1), (0, 6), (1, 7), (6, 3), (6, 5), (6, 7), (7, 4), (7, 5), (2, 3), (2, 4), (4, 5)]
+MaxCut is:  9
+epoch:  100 , MBE loss:  -0.77565753 , MBE MaxCut:  7.0
+epoch:  200 , MBE loss:  -1.1791966 , MBE MaxCut:  7.0
+epoch:  300 , MBE loss:  -1.5123367 , MBE MaxCut:  7.0
+epoch:  400 , MBE loss:  -2.1429126 , MBE MaxCut:  9.0
+total training step: 400
+
+nodes number:  7 nodes:  [0, 1, 2, 4, 3, 6, 5]
+edges number:  7 deges:  [(0, 1), (0, 2), (0, 4), (1, 3), (2, 4), (4, 6), (6, 5)]
+MaxCut is:  6
+epoch:  100 , MBE loss:  -0.14932993 , MBE MaxCut:  4.0
+epoch:  200 , MBE loss:  -1.0106199 , MBE MaxCut:  5.0
+epoch:  300 , MBE loss:  -1.5313833 , MBE MaxCut:  5.0
+epoch:  400 , MBE loss:  -1.8043599 , MBE MaxCut:  6.0
+total training step: 400
+
+nodes number:  6 nodes:  [0, 5, 1, 3, 4, 2]
+edges number:  5 deges:  [(0, 5), (5, 3), (1, 3), (1, 4), (3, 2)]
+MaxCut is:  5
+epoch:  100 , MBE loss:  -1.0930079 , MBE MaxCut:  4.0
+epoch:  200 , MBE loss:  -1.2265725 , MBE MaxCut:  4.0
+epoch:  300 , MBE loss:  -1.4832363 , MBE MaxCut:  4.0
+epoch:  400 , MBE loss:  -1.8707719 , MBE MaxCut:  5.0
+total training step: 400
+
+nodes number:  5 nodes:  [0, 2, 3, 1, 4]
+edges number:  4 deges:  [(0, 2), (0, 3), (2, 1), (2, 4)]
+MaxCut is:  4
+epoch:  100 , MBE loss:  0.119440734 , MBE MaxCut:  2.0
+epoch:  200 , MBE loss:  -0.8543621 , MBE MaxCut:  3.0
+epoch:  300 , MBE loss:  -1.5568329 , MBE MaxCut:  4.0
+total training step: 300
+
+nodes number:  4 nodes:  [0, 1, 3, 2]
+edges number:  3 deges:  [(0, 1), (0, 3), (1, 2)]
+MaxCut is:  3
+epoch:  100 , MBE loss:  -0.255132 , MBE MaxCut:  2.0
+epoch:  200 , MBE loss:  -0.3988145 , MBE MaxCut:  2.0
+epoch:  300 , MBE loss:  -0.41354868 , MBE MaxCut:  2.0
+epoch:  400 , MBE loss:  -0.41983926 , MBE MaxCut:  2.0
+epoch:  500 , MBE loss:  -0.42504686 , MBE MaxCut:  2.0
+epoch:  600 , MBE loss:  -0.4312461 , MBE MaxCut:  2.0
+epoch:  700 , MBE loss:  -0.45134246 , MBE MaxCut:  2.0
+epoch:  800 , MBE loss:  -0.63864696 , MBE MaxCut:  2.0
+epoch:  900 , MBE loss:  -1.0603049 , MBE MaxCut:  3.0
+total training step: 900
+
+nodes number:  3 nodes:  [0, 1, 2]
+edges number:  2 deges:  [(0, 1), (1, 2)]
+MaxCut is:  2
+epoch:  100 , MBE loss:  0.076523244 , MBE MaxCut:  1.0
+epoch:  200 , MBE loss:  -0.38771158 , MBE MaxCut:  1.0
+epoch:  300 , MBE loss:  -0.8609061 , MBE MaxCut:  2.0
+total training step: 300
+
+nodes number:  2 nodes:  [0, 1]
+edges number:  1 deges:  [(0, 1)]
+MaxCut is:  1
+epoch:  100 , MBE loss:  -0.35456645 , MBE MaxCut:  1.0
+total training step: 100
+
+

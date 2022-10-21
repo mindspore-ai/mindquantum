@@ -1,0 +1,5 @@
+mindquantum==0.7.0
+mindspore==1.6.1
+numpy==1.21.5
+networkx===2.6.3
+
