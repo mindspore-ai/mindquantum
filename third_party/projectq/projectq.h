@@ -338,10 +338,17 @@ class Projectq : public ::projectq::Simulator {
         if (ham.how_to_ == ORIGIN) {
             Projectq::apply_qubit_operator(HCast<T>(ham.ham_), Projectq::ordering_);
         } else if (ham.how_to_ == BACKEND) {
-            Projectq::vec_ = sparse::Csr_Dot_Vec<T, double>(ham.ham_sparse_main_, ham.ham_sparse_second_,
-                                                            Projectq::vec_);
+            auto out = sparse::Csr_Dot_Vec<T, double>(ham.ham_sparse_main_, ham.ham_sparse_second_, Projectq::vec_);
+            if (Projectq::vec_ != nullptr) {
+                free(Projectq::vec_);
+            }
+            Projectq::vec_ = out;
         } else {
-            Projectq::vec_ = sparse::Csr_Dot_Vec<T, double>(ham.ham_sparse_main_, Projectq::vec_);
+            auto out = sparse::Csr_Dot_Vec<T, double>(ham.ham_sparse_main_, Projectq::vec_);
+            if (Projectq::vec_ != nullptr) {
+                free(Projectq::vec_);
+            }
+            Projectq::vec_ = out;
         }
     }
 

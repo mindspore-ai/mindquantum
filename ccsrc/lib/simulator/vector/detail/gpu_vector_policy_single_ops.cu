@@ -128,6 +128,18 @@ void GPUVectorPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t de
     }
 }
 
+
+void GPUVectorPolicyBase::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
+                                          const std::vector<std::vector<py_qs_data_t>>& m, index_t dim) {
+    if (objs.size() == 1) {
+        ApplySingleQubitMatrix(src, des, objs[0], ctrls, m, dim);
+    } else if (objs.size() == 2) {
+        ApplyTwoQubitsMatrix(src, des, objs, ctrls, m, dim);
+    } else {
+        throw std::runtime_error("Can not custom " + std::to_string(objs.size()) + " qubits gate for gpu backend.");
+    }
+}
+
 void GPUVectorPolicyBase::ApplyH(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
     std::vector<std::vector<py_qs_data_t>> m{{M_SQRT1_2, M_SQRT1_2}, {M_SQRT1_2, -M_SQRT1_2}};
     ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);

@@ -494,6 +494,7 @@ class NoneParamNonHermMat(NoneParameterGate, MatrixGate, NonHermitianGate):
         cpp_obj = super().get_cpp_obj()
         if self.hermitianed:
             cpp_obj.base_matrix = mb.dim2matrix(self.matrix())
+        cpp_obj.daggered = self.hermitianed
         return cpp_obj
 
     def __eq__(self, other):
@@ -643,10 +644,7 @@ class ParamNonHerm(ParameterGate, NonHermitianGate):
             if not new.is_const():
                 raise ValueError("Parameter not set completed.")
             val = new.const
-        matrix = self.matrix_generator(val)
-        if self.hermitianed:
-            return np.conj(matrix.T)
-        return matrix
+        return self.matrix_generator(val)
 
     def diff_matrix(self, pr=None, about_what=None):
         """
@@ -678,10 +676,7 @@ class ParamNonHerm(ParameterGate, NonHermitianGate):
                 raise ValueError("Should specific which parameter are going to do derivation.")
             for i in self.coeff:
                 about_what = i
-        matrix = self.coeff[about_what] * self.diff_matrix_generator(val)
-        if self.hermitianed:
-            return np.conj(matrix.T)
-        return matrix
+        return self.coeff[about_what] * self.diff_matrix_generator(val)
 
 
 class NoiseGate(NoneParameterGate):

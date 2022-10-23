@@ -21,12 +21,14 @@
 #include <cstddef>
 #include <cstdlib>
 #include <functional>
+#include <memory>
 #include <ratio>
 #include <stdexcept>
 #include <vector>
 
 #include "config/openmp.hpp"
 
+#include "core/sparse/algo.hpp"
 #include "core/utils.hpp"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
@@ -283,8 +285,13 @@ void CPUVectorPolicyBase::ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const q
     }
 }
 
-void CPUVectorPolicyBase::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
+void CPUVectorPolicyBase::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, bool daggered,
+                                     index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
+    double frac = 1.0;
+    if (daggered) {
+        frac = -1.0;
+    }
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
             dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
@@ -292,8 +299,8 @@ void CPUVectorPolicyBase::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const 
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
                 auto tmp = qs[i + mask.obj_min_mask];
-                qs[i + mask.obj_min_mask] = qs[i + mask.obj_max_mask] * IMAGE_I;
-                qs[i + mask.obj_max_mask] = tmp * IMAGE_I;
+                qs[i + mask.obj_min_mask] = frac * qs[i + mask.obj_max_mask] * IMAGE_I;
+                qs[i + mask.obj_max_mask] = frac * tmp * IMAGE_I;
             })
     } else {
         THRESHOLD_OMP_FOR(
@@ -303,8 +310,8 @@ void CPUVectorPolicyBase::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const 
                               i);
                 if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                     auto tmp = qs[i + mask.obj_min_mask];
-                    qs[i + mask.obj_min_mask] = qs[i + mask.obj_max_mask] * IMAGE_I;
-                    qs[i + mask.obj_max_mask] = tmp * IMAGE_I;
+                    qs[i + mask.obj_min_mask] = frac * qs[i + mask.obj_max_mask] * IMAGE_I;
+                    qs[i + mask.obj_max_mask] = frac * tmp * IMAGE_I;
                 }
             })
     }
@@ -461,5 +468,23 @@ void CPUVectorPolicyBase::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbi
             CPUVectorPolicyBase::SetToZeroExcept(qs, mask.ctrl_mask, dim);
         }
     }
+}
+
+auto CPUVectorPolicyBase::CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, qs_data_p_t vec,
+                                    index_t dim) -> qs_data_p_t {
+    if (dim != a->dim_) {
+        throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
+    }
+    auto out = sparse::Csr_Dot_Vec<calc_type, calc_type>(a, reinterpret_cast<calc_type*>(vec));
+    return reinterpret_cast<qs_data_p_t>(out);
+}
+auto CPUVectorPolicyBase::CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
+                                    const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& b, qs_data_p_t vec,
+                                    index_t dim) -> qs_data_p_t {
+    if ((dim != a->dim_) || (dim != b->dim_)) {
+        throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
+    }
+    auto out = sparse::Csr_Dot_Vec<calc_type, calc_type>(a, b, reinterpret_cast<calc_type*>(vec));
+    return reinterpret_cast<qs_data_p_t>(out);
 }
 }  // namespace mindquantum::sim::vector::detail

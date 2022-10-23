@@ -17,9 +17,11 @@
 
 #include <cstddef>
 #include <iostream>
+#include <memory>
 #include <vector>
 
 #include "core/mq_base_types.hpp"
+#include "core/sparse/csrhdmatrix.hpp"
 #include "simulator/types.hpp"
 #include "thrust/complex.h"
 #include "thrust/functional.h"
@@ -61,6 +63,11 @@ struct GPUVectorPolicyBase {
     static py_qs_data_t OneStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit, index_t dim);
     static py_qs_data_t ZeroStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit, index_t dim);
     static py_qs_data_t Vdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim);
+    static qs_data_p_t CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, qs_data_p_t vec,
+                                 index_t dim);
+    static qs_data_p_t CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
+                                 const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& b, qs_data_p_t vec,
+                                 index_t dim);
 
     // X like operator
     // ========================================================================================================
@@ -89,6 +96,8 @@ struct GPUVectorPolicyBase {
                                        const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
     static void ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
                                      const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
+    static void ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
+                                const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
     static void ApplyH(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyRX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
@@ -98,7 +107,7 @@ struct GPUVectorPolicyBase {
                         bool diff = false);
 
     static void ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, bool daggered, index_t dim);
     static void ApplyXX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
     static void ApplyYY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
@@ -113,6 +122,8 @@ struct GPUVectorPolicyBase {
                                                  index_t dim);
     static qs_data_t ExpectDiffTwoQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
                                                const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m, index_t dim);
+    static qs_data_t ExpectDiffMatrixGate(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
+                                          const std::vector<py_qs_datas_t>& m, index_t dim);
     static qs_data_t ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                   calc_type val, index_t dim);
     static qs_data_t ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,

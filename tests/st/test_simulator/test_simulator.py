@@ -170,7 +170,6 @@ def generate_test_circuit():
     return circuit
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 def test_all_gate_with_simulator(virtual_qc):  # pylint: disable=too-many-locals
     """
@@ -208,7 +207,6 @@ def test_all_gate_with_simulator(virtual_qc):  # pylint: disable=too-many-locals
     assert np.allclose(g_a_1, g_a_2, atol=1e-4)
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
 def test_optimization_with_custom_gate(virtual_qc):  # pylint: disable=too-many-locals
@@ -268,7 +266,6 @@ def test_fid(virtual_qc):
     assert np.allclose(np.abs(f), np.array([1]))
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 def test_non_hermitian_grad_ops2(virtual_qc):
     """

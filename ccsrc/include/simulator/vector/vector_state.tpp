@@ -140,7 +140,20 @@ template <typename qs_policy_t_>
 index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate<calc_type>>& gate,
                                              const ParameterResolver<calc_type>& pr, bool diff) {
     auto name = gate->name_;
-    if (name == gI) {
+    if (gate->is_custom_) {
+        std::remove_reference_t<decltype(*gate)>::matrix_t mat;
+        if (!gate->parameterized_) {
+            mat = gate->base_matrix_;
+        } else {
+            calc_type val = gate->params_.Combination(pr).const_value;
+            if (!diff) {
+                mat = gate->param_matrix_(val);
+            } else {
+                mat = gate->param_diff_matrix_(val);
+            }
+        }
+        qs_policy_t::ApplyMatrixGate(qs, qs, gate->obj_qubits_, gate->ctrl_qubits_, mat.matrix_, dim);
+    } else if (name == gI) {
     } else if (name == gX) {
         qs_policy_t::ApplyX(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
     } else if (name == gCNOT) {
@@ -169,7 +182,7 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate<cal
     } else if (name == gSWAP) {
         qs_policy_t::ApplySWAP(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
     } else if (name == gISWAP) {
-        qs_policy_t::ApplyISWAP(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+        qs_policy_t::ApplyISWAP(qs, gate->obj_qubits_, gate->ctrl_qubits_, gate->daggered_, dim);
     } else if (name == gRX) {
         auto val = gate->applied_value_;
         if (!gate->parameterized_) {
@@ -363,7 +376,10 @@ auto VectorState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t bra, qs_data_p_t ket,
                                                const ParameterResolver<calc_type>& pr, index_t dim) -> py_qs_data_t {
     auto name = gate->name_;
     auto val = gate->params_.Combination(pr).const_value;
-
+    if (gate->is_custom_) {
+        std::remove_reference_t<decltype(*gate)>::matrix_t mat = gate->param_diff_matrix_(val);
+        return qs_policy_t::ExpectDiffMatrixGate(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, mat.matrix_, dim);
+    }
     if (name == gRX) {
         return qs_policy_t::ExpectDiffRX(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
     }
@@ -459,7 +475,14 @@ auto VectorState<qs_policy_t_>::ApplyCircuit(const circuit_t& circ, const Parame
 
 template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::ApplyHamiltonian(const Hamiltonian<calc_type>& ham) {
-    auto new_qs = qs_policy_t::ApplyTerms(qs, ham.ham_, dim);
+    qs_data_p_t new_qs;
+    if (ham.how_to_ == ORIGIN) {
+        new_qs = qs_policy_t::ApplyTerms(qs, ham.ham_, dim);
+    } else if (ham.how_to_ == BACKEND) {
+        new_qs = qs_policy_t::CsrDotVec(ham.ham_sparse_main_, ham.ham_sparse_second_, qs, dim);
+    } else {
+        new_qs = qs_policy_t::CsrDotVec(ham.ham_sparse_main_, qs, dim);
+    }
     qs_policy_t::FreeState(qs);
     qs = new_qs;
 }

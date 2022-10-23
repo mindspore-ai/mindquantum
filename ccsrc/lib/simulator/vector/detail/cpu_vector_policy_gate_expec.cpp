@@ -21,6 +21,7 @@
 #include <functional>
 #include <ratio>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 #include "config/openmp.hpp"
@@ -214,6 +215,18 @@ auto CPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p
     }
     return {res_real, res_imag};
 };
+
+auto CPUVectorPolicyBase::ExpectDiffMatrixGate(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                               const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m, index_t dim)
+    -> qs_data_t {
+    if (objs.size() == 1) {
+        return ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, m, dim);
+    }
+    if (objs.size() == 2) {
+        return ExpectDiffTwoQubitsMatrix(bra, ket, objs, ctrls, m, dim);
+    }
+    throw std::runtime_error("Expectation of " + std::to_string(objs.size()) + " not implement for cpu backend.");
+}
 
 auto CPUVectorPolicyBase::ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                        calc_type val, index_t dim) -> qs_data_t {

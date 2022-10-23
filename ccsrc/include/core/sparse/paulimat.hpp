@@ -22,7 +22,6 @@
 
 namespace mindquantum {
 namespace sparse {
-namespace py = pybind11;
 template <typename T>
 struct PauliMat {
     char *coeff_;

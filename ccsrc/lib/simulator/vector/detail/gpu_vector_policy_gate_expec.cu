@@ -168,6 +168,18 @@ auto GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p
         qs_data_t(0, 0), thrust::plus<qs_data_t>());
 }
 
+auto GPUVectorPolicyBase::ExpectDiffMatrixGate(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                               const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m, index_t dim)
+    -> qs_data_t {
+    if (objs.size() == 1) {
+        return ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, m, dim);
+    }
+    if (objs.size() == 2) {
+        return ExpectDiffTwoQubitsMatrix(bra, ket, objs, ctrls, m, dim);
+    }
+    throw std::runtime_error("Expectation of " + std::to_string(objs.size()) + " not implement for gpu backend.");
+}
+
 auto GPUVectorPolicyBase::ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                        calc_type val, index_t dim) -> qs_data_t {
     auto c = -0.5 * std::sin(val / 2);
