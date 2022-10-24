@@ -1,0 +1,4 @@
+mindquantum==0.6.0
+mindspore==1.7.0
+numpy==1.23.0
+

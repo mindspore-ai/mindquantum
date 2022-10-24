@@ -1,0 +1,354 @@
+config of training------------
+qubits numbers : 4    
+additional data: False
+random seed    : 33   
+
+batch size     : 4    
+repeat sise    : 1    
+learning rate  : 0.001
+epochs         : 20
+
+
+
+summary of encoder:
+========================Circuit Summary========================
+|Total number of gates  : 20.                                 |
+|Parameter gates        : 16.                                 |
+|with 4 parameters are  : theta_0, theta_2, theta_1, theta_3. |
+|Number qubit of circuit: 4                                   |
+===============================================================
+parameters of encoder:  ['theta_0', 'theta_2', 'theta_1', 'theta_3']
+
+total data number: 80
+params in one sample: 4
+
+train sample: 64, x_train shape: (64, 4), y_train shape: (64, 1)
+test  sample: 64, x_test  shape: (16, 4), y_test  shape: (16, 1)
+
+summary of ansatz(QCNN):
+=========================================================Circuit Summary=========================================================
+|Total number of gates  : 75.                                                                                                   |
+|Parameter gates        : 72.                                                                                                   |
+|with 63 parameters are : l1c1_px0, l1c1_px1, l1c1_py0, l1c1_py1, l1c1_pz0, l1c1_pz1, l1c1_pzz, l1c1_pyy, l1c1_pxx, l1c1_px2... |
+|Number qubit of circuit: 4                                                                                                     |
+=================================================================================================================================
+
+begin training:  --------------
+epoch:  1, training loss:  1.71907, accuracy:   0.5, testing loss:  1.61342, accuracy:   0.5
+epoch:  2, training loss:    1.607, accuracy:   0.5, testing loss:    1.487, accuracy:   0.5
+epoch:  3, training loss:  1.45226, accuracy:   0.5, testing loss:  1.33111, accuracy:   0.5
+epoch:  4, training loss:  1.27881, accuracy:   0.5, testing loss:  1.17502, accuracy:   0.5
+epoch:  5, training loss:  1.12212, accuracy:   0.5, testing loss:   1.0476, accuracy:   0.5
+epoch:  6, training loss:  1.00244, accuracy:   0.5, testing loss: 0.955501, accuracy:   0.5
+epoch:  7, training loss: 0.916119, accuracy:   0.5, testing loss: 0.888569, accuracy:   0.5
+epoch:  8, training loss: 0.850394, accuracy: 0.7969, testing loss: 0.835147, accuracy: 0.8125
+epoch:  9, training loss: 0.795145, accuracy: 0.8594, testing loss: 0.788009, accuracy: 0.8125
+epoch: 10, training loss: 0.744908, accuracy: 0.9062, testing loss: 0.743816, accuracy: 0.8125
+epoch: 11, training loss: 0.697478, accuracy: 0.9062, testing loss:  0.70156, accuracy: 0.875
+epoch: 12, training loss: 0.652523, accuracy: 0.9219, testing loss: 0.661465, accuracy: 0.875
+epoch: 13, training loss: 0.610602, accuracy: 0.9219, testing loss: 0.624262, accuracy: 0.9375
+epoch: 14, training loss: 0.572524, accuracy: 0.9375, testing loss:  0.59071, accuracy: 0.9375
+epoch: 15, training loss:  0.53894, accuracy: 0.9375, testing loss: 0.561324, accuracy: 0.9375
+epoch: 16, training loss: 0.510141, accuracy: 0.9375, testing loss: 0.536265, accuracy: 0.9375
+epoch: 17, training loss: 0.486039, accuracy: 0.9375, testing loss: 0.515367, accuracy: 0.9375
+epoch: 18, training loss: 0.466255, accuracy: 0.9375, testing loss: 0.498245, accuracy:   1.0
+epoch: 19, training loss: 0.450249, accuracy: 0.9375, testing loss: 0.484394, accuracy:   1.0
+epoch: 20, training loss: 0.437428, accuracy: 0.9375, testing loss: 0.473291, accuracy:   1.0
+
+
+
+
+config of training------------
+qubits numbers : 8
+additional data: False
+random seed    : 33
+
+batch size     : 4
+repeat sise    : 1
+learning rate  : 0.001
+epochs         : 20
+
+
+
+summary of encoder:
+==========================================Circuit Summary==========================================
+|Total number of gates  : 72.                                                                     |
+|Parameter gates        : 64.                                                                     |
+|with 8 parameters are  : theta_0, theta_4, theta_1, theta_5, theta_2, theta_6, theta_3, theta_7. |
+|Number qubit of circuit: 8                                                                       |
+===================================================================================================
+parameters of encoder:  ['theta_0', 'theta_4', 'theta_1', 'theta_5', 'theta_2', 'theta_6', 'theta_3', 'theta_7']
+
+total data number: 80
+params in one sample: 8
+
+train sample: 64, x_train shape: (64, 8), y_train shape: (64, 1)
+test  sample: 64, x_test  shape: (16, 8), y_test  shape: (16, 1)
+
+summary of ansatz(QCNN):
+=========================================================Circuit Summary=========================================================
+|Total number of gates  : 175.                                                                                                  |
+|Parameter gates        : 168.                                                                                                  |
+|with 147 parameters are: l1c1_px0, l1c1_px1, l1c1_py0, l1c1_py1, l1c1_pz0, l1c1_pz1, l1c1_pzz, l1c1_pyy, l1c1_pxx, l1c1_px2... |
+|Number qubit of circuit: 8                                                                                                     |
+=================================================================================================================================
+
+begin training:  --------------
+epoch:  1, training loss:  1.08659, accuracy: 0.6406, testing loss: 0.973109, accuracy: 0.5625
+epoch:  2, training loss:  0.96351, accuracy: 0.6094, testing loss: 0.891468, accuracy: 0.5625
+epoch:  3, training loss: 0.891074, accuracy: 0.6562, testing loss: 0.842616, accuracy: 0.6875
+epoch:  4, training loss: 0.825178, accuracy: 0.8281, testing loss:  0.78011, accuracy: 0.8125
+epoch:  5, training loss: 0.748073, accuracy: 0.9219, testing loss: 0.709391, accuracy: 0.9375
+epoch:  6, training loss: 0.672062, accuracy: 0.9531, testing loss: 0.645607, accuracy:   1.0
+epoch:  7, training loss: 0.607525, accuracy: 0.9844, testing loss: 0.594549, accuracy:   1.0
+epoch:  8, training loss:   0.5568, accuracy:   1.0, testing loss: 0.555572, accuracy:   1.0
+epoch:  9, training loss: 0.517945, accuracy:   1.0, testing loss: 0.525802, accuracy:   1.0
+epoch: 10, training loss: 0.487817, accuracy:   1.0, testing loss: 0.502366, accuracy:   1.0
+epoch: 11, training loss: 0.463888, accuracy:   1.0, testing loss: 0.483433, accuracy:   1.0
+epoch: 12, training loss: 0.444517, accuracy:   1.0, testing loss: 0.467819, accuracy:   1.0
+epoch: 13, training loss: 0.428453, accuracy: 0.9844, testing loss: 0.454514, accuracy:   1.0
+epoch: 14, training loss: 0.414618, accuracy: 0.9844, testing loss: 0.442654, accuracy:   1.0
+epoch: 15, training loss: 0.402171, accuracy:   1.0, testing loss: 0.431619, accuracy:   1.0
+epoch: 16, training loss: 0.390565, accuracy:   1.0, testing loss: 0.421048, accuracy:   1.0
+epoch: 17, training loss: 0.379506, accuracy:   1.0, testing loss: 0.410765, accuracy:   1.0
+epoch: 18, training loss: 0.368856, accuracy:   1.0, testing loss:   0.4007, accuracy:   1.0
+epoch: 19, training loss: 0.358558, accuracy:   1.0, testing loss: 0.390836, accuracy:   1.0
+epoch: 20, training loss: 0.348587, accuracy:   1.0, testing loss:  0.38118, accuracy:   1.0
+
+
+
+
+config of training------------
+qubits numbers : 12
+additional data: False
+random seed    : 33
+
+batch size     : 4
+repeat sise    : 1
+learning rate  : 0.001
+epochs         : 20
+
+
+
+summary of encoder:
+====================================================Circuit Summary====================================================
+|Total number of gates  : 156.                                                                                        |
+|Parameter gates        : 144.                                                                                        |
+|with 12 parameters are : theta_0, theta_6, theta_1, theta_7, theta_2, theta_8, theta_3, theta_9, theta_4, theta_10...|
+|Number qubit of circuit: 12                                                                                          |
+=======================================================================================================================
+parameters of encoder:  ['theta_0', 'theta_6', 'theta_1', 'theta_7', 'theta_2', 'theta_8', 'theta_3', 'theta_9', 'theta_4', 'theta_10', 'theta_5', 'theta_11']
+
+total data number: 80
+params in one sample: 12
+
+train sample: 64, x_train shape: (64, 12), y_train shape: (64, 1)
+test  sample: 64, x_test  shape: (16, 12), y_test  shape: (16, 1)
+
+summary of ansatz(QCNN):
+=========================================================Circuit Summary=========================================================
+|Total number of gates  : 275.                                                                                                  |
+|Parameter gates        : 264.                                                                                                  |
+|with 231 parameters are: l1c1_px0, l1c1_px1, l1c1_py0, l1c1_py1, l1c1_pz0, l1c1_pz1, l1c1_pzz, l1c1_pyy, l1c1_pxx, l1c1_px2... |
+|Number qubit of circuit: 12                                                                                                    |
+=================================================================================================================================
+
+begin training:  --------------
+epoch:  1, training loss: 0.946636, accuracy:   0.5, testing loss: 0.922872, accuracy:   0.5
+epoch:  2, training loss: 0.894085, accuracy:   0.5, testing loss: 0.883466, accuracy:   0.5
+epoch:  3, training loss: 0.858681, accuracy: 0.7188, testing loss: 0.854688, accuracy: 0.6875
+epoch:  4, training loss: 0.827895, accuracy: 0.7969, testing loss:  0.82484, accuracy: 0.8125
+epoch:  5, training loss: 0.795132, accuracy: 0.8906, testing loss: 0.795463, accuracy: 0.8125
+epoch:  6, training loss: 0.764939, accuracy: 0.9844, testing loss:  0.77118, accuracy:   1.0
+epoch:  7, training loss: 0.741073, accuracy: 0.9375, testing loss: 0.753046, accuracy:   1.0
+epoch:  8, training loss: 0.723422, accuracy: 0.9375, testing loss: 0.739586, accuracy: 0.9375
+epoch:  9, training loss: 0.710168, accuracy: 0.9219, testing loss:  0.72903, accuracy: 0.9375
+epoch: 10, training loss: 0.699684, accuracy: 0.9219, testing loss:  0.72023, accuracy: 0.9375
+epoch: 11, training loss: 0.690958, accuracy: 0.9219, testing loss: 0.712566, accuracy: 0.9375
+epoch: 12, training loss: 0.683406, accuracy: 0.9219, testing loss: 0.705697, accuracy: 0.9375
+epoch: 13, training loss: 0.676678, accuracy: 0.9219, testing loss: 0.699423, accuracy: 0.9375
+epoch: 14, training loss: 0.670569, accuracy: 0.9219, testing loss: 0.693626, accuracy: 0.9375
+epoch: 15, training loss: 0.664964, accuracy: 0.9219, testing loss: 0.688237, accuracy: 0.9375
+epoch: 16, training loss: 0.659793, accuracy: 0.9375, testing loss: 0.683214, accuracy: 0.9375
+epoch: 17, training loss: 0.655007, accuracy: 0.9375, testing loss: 0.678522, accuracy: 0.9375
+epoch: 18, training loss: 0.650566, accuracy: 0.9375, testing loss: 0.674135, accuracy: 0.9375
+epoch: 19, training loss: 0.646437, accuracy: 0.9375, testing loss: 0.670027, accuracy: 0.9375
+epoch: 20, training loss: 0.642592, accuracy: 0.9375, testing loss: 0.666178, accuracy: 0.9375
+
+
+
+
+config of training------------
+qubits numbers : 4
+additional data: True
+random seed    : 33
+
+batch size     : 4
+repeat sise    : 1
+learning rate  : 0.001
+epochs         : 20
+
+summary of encoder:
+========================Circuit Summary========================
+|Total number of gates  : 20.                                 |
+|Parameter gates        : 16.                                 |
+|with 4 parameters are  : theta_0, theta_2, theta_1, theta_3. |
+|Number qubit of circuit: 4                                   |
+===============================================================
+parameters of encoder:  ['theta_0', 'theta_2', 'theta_1', 'theta_3']
+
+total data number: 960
+params in one sample: 4
+
+train sample: 768, x_train shape: (768, 4), y_train shape: (768, 1)
+test  sample: 768, x_test  shape: (192, 4), y_test  shape: (192, 1)
+
+summary of ansatz(QCNN):
+=========================================================Circuit Summary=========================================================
+|Total number of gates  : 75.                                                                                                   |
+|Parameter gates        : 72.                                                                                                   |
+|with 63 parameters are : l1c1_px0, l1c1_px1, l1c1_py0, l1c1_py1, l1c1_pz0, l1c1_pz1, l1c1_pzz, l1c1_pyy, l1c1_pxx, l1c1_px2... |
+|Number qubit of circuit: 4                                                                                                     |
+=================================================================================================================================
+
+begin training:  --------------
+epoch:  1, training loss:   1.0602, accuracy: 0.849, testing loss: 0.614144, accuracy: 0.8854
+epoch:  2, training loss: 0.490626, accuracy: 0.9193, testing loss: 0.400552, accuracy: 0.9583
+epoch:  3, training loss: 0.420938, accuracy: 0.9284, testing loss: 0.387441, accuracy: 0.9583
+epoch:  4, training loss: 0.415707, accuracy: 0.931, testing loss: 0.385453, accuracy: 0.9583
+epoch:  5, training loss:  0.41375, accuracy: 0.9323, testing loss: 0.383884, accuracy: 0.9583
+epoch:  6, training loss:  0.41196, accuracy: 0.9349, testing loss: 0.382288, accuracy: 0.9583
+epoch:  7, training loss: 0.410165, accuracy: 0.9362, testing loss: 0.380624, accuracy: 0.9583
+epoch:  8, training loss: 0.408331, accuracy: 0.9375, testing loss: 0.378879, accuracy: 0.9583
+epoch:  9, training loss: 0.406446, accuracy: 0.9388, testing loss: 0.377072, accuracy: 0.9583
+epoch: 10, training loss:  0.40454, accuracy: 0.9414, testing loss: 0.375264, accuracy: 0.9583
+epoch: 11, training loss: 0.402684, accuracy: 0.9427, testing loss: 0.373557, accuracy: 0.9583
+epoch: 12, training loss: 0.400981, accuracy: 0.9427, testing loss: 0.372066, accuracy: 0.9583
+epoch: 13, training loss:  0.39952, accuracy: 0.9427, testing loss: 0.370861, accuracy: 0.9635
+epoch: 14, training loss: 0.398338, accuracy: 0.944, testing loss: 0.369944, accuracy: 0.9635
+epoch: 15, training loss: 0.397416, accuracy: 0.944, testing loss:  0.36927, accuracy: 0.9635
+epoch: 16, training loss: 0.396701, accuracy: 0.9453, testing loss: 0.368772, accuracy: 0.9635
+epoch: 17, training loss: 0.396134, accuracy: 0.9466, testing loss: 0.368387, accuracy: 0.9635
+epoch: 18, training loss: 0.395664, accuracy: 0.9466, testing loss: 0.368072, accuracy: 0.9635
+epoch: 19, training loss: 0.395256, accuracy: 0.9466, testing loss: 0.367796, accuracy: 0.9635
+epoch: 20, training loss: 0.394889, accuracy: 0.9466, testing loss: 0.367544, accuracy: 0.9688
+
+
+
+
+config of training------------
+qubits numbers : 8
+additional data: True
+random seed    : 33
+
+batch size     : 4
+repeat sise    : 1
+learning rate  : 0.001
+epochs         : 20
+
+
+
+summary of encoder:
+==========================================Circuit Summary==========================================
+|Total number of gates  : 72.                                                                     |
+|Parameter gates        : 64.                                                                     |
+|with 8 parameters are  : theta_0, theta_4, theta_1, theta_5, theta_2, theta_6, theta_3, theta_7. |
+|Number qubit of circuit: 8                                                                       |
+===================================================================================================
+parameters of encoder:  ['theta_0', 'theta_4', 'theta_1', 'theta_5', 'theta_2', 'theta_6', 'theta_3', 'theta_7']
+
+total data number: 960
+params in one sample: 8
+
+train sample: 768, x_train shape: (768, 8), y_train shape: (768, 1)
+test  sample: 768, x_test  shape: (192, 8), y_test  shape: (192, 1)
+
+summary of ansatz(QCNN):
+=========================================================Circuit Summary=========================================================
+|Total number of gates  : 175.                                                                                                  |
+|Parameter gates        : 168.                                                                                                  |
+|with 147 parameters are: l1c1_px0, l1c1_px1, l1c1_py0, l1c1_py1, l1c1_pz0, l1c1_pz1, l1c1_pzz, l1c1_pyy, l1c1_pxx, l1c1_px2... |
+|Number qubit of circuit: 8                                                                                                     |
+=================================================================================================================================
+
+begin training:  --------------
+epoch:  1, training loss: 0.719708, accuracy: 0.9922, testing loss: 0.472089, accuracy: 0.9896
+epoch:  2, training loss: 0.388139, accuracy: 0.9922, testing loss: 0.334638, accuracy: 0.9948
+epoch:  3, training loss: 0.291204, accuracy: 0.9987, testing loss: 0.255512, accuracy: 0.9948
+epoch:  4, training loss: 0.244078, accuracy: 0.9922, testing loss: 0.225275, accuracy: 0.9948
+epoch:  5, training loss: 0.220468, accuracy: 0.987, testing loss: 0.208665, accuracy: 0.9844
+epoch:  6, training loss: 0.201996, accuracy: 0.9857, testing loss: 0.189272, accuracy: 0.9844
+epoch:  7, training loss: 0.181909, accuracy: 0.9857, testing loss: 0.171906, accuracy: 0.9844
+epoch:  8, training loss:  0.16923, accuracy: 0.9857, testing loss: 0.164257, accuracy: 0.9792
+epoch:  9, training loss: 0.163127, accuracy: 0.9844, testing loss: 0.160473, accuracy: 0.9792
+epoch: 10, training loss:  0.15927, accuracy: 0.9831, testing loss: 0.157629, accuracy: 0.9792
+epoch: 11, training loss: 0.156047, accuracy: 0.9831, testing loss: 0.155001, accuracy: 0.9792
+epoch: 12, training loss: 0.152983, accuracy: 0.9818, testing loss: 0.152367, accuracy: 0.9792
+epoch: 13, training loss: 0.149886, accuracy: 0.9818, testing loss: 0.149619, accuracy: 0.9792
+epoch: 14, training loss: 0.146841, accuracy: 0.9818, testing loss: 0.147103, accuracy: 0.974
+epoch: 15, training loss: 0.144317, accuracy: 0.9818, testing loss: 0.145389, accuracy: 0.974
+epoch: 16, training loss: 0.142607, accuracy: 0.9818, testing loss: 0.144403, accuracy: 0.974
+epoch: 17, training loss: 0.141519, accuracy: 0.9805, testing loss: 0.143811, accuracy: 0.974
+epoch: 18, training loss: 0.140794, accuracy: 0.9805, testing loss: 0.143416, accuracy: 0.974
+epoch: 19, training loss:  0.14028, accuracy: 0.9805, testing loss: 0.143126, accuracy: 0.974
+epoch: 20, training loss: 0.139894, accuracy: 0.9805, testing loss:   0.1429, accuracy: 0.974
+
+
+
+
+config of training------------
+qubits numbers : 12
+additional data: True
+random seed    : 33
+
+batch size     : 4
+repeat sise    : 1
+learning rate  : 0.001
+epochs         : 20
+
+
+
+summary of encoder:
+====================================================Circuit Summary====================================================
+|Total number of gates  : 156.                                                                                        |
+|Parameter gates        : 144.                                                                                        |
+|with 12 parameters are : theta_0, theta_6, theta_1, theta_7, theta_2, theta_8, theta_3, theta_9, theta_4, theta_10...|
+|Number qubit of circuit: 12                                                                                          |
+=======================================================================================================================
+parameters of encoder:  ['theta_0', 'theta_6', 'theta_1', 'theta_7', 'theta_2', 'theta_8', 'theta_3', 'theta_9', 'theta_4', 'theta_10', 'theta_5', 'theta_11']
+
+total data number: 960
+params in one sample: 12
+
+train sample: 768, x_train shape: (768, 12), y_train shape: (768, 1)
+test  sample: 768, x_test  shape: (192, 12), y_test  shape: (192, 1)
+
+summary of ansatz(QCNN):
+=========================================================Circuit Summary=========================================================
+|Total number of gates  : 275.                                                                                                  |
+|Parameter gates        : 264.                                                                                                  |
+|with 231 parameters are: l1c1_px0, l1c1_px1, l1c1_py0, l1c1_py1, l1c1_pz0, l1c1_pz1, l1c1_pzz, l1c1_pyy, l1c1_pxx, l1c1_px2... |
+|Number qubit of circuit: 12                                                                                                    |
+=================================================================================================================================
+
+begin training:  --------------
+epoch:  1, training loss: 0.798914, accuracy: 0.8438, testing loss: 0.723291, accuracy: 0.8854
+epoch:  2, training loss: 0.675396, accuracy: 0.8919, testing loss: 0.661348, accuracy: 0.9271
+epoch:  3, training loss: 0.627685, accuracy: 0.9492, testing loss: 0.607081, accuracy: 0.9688
+epoch:  4, training loss:  0.57007, accuracy: 0.9648, testing loss: 0.531935, accuracy: 0.9844
+epoch:  5, training loss: 0.423865, accuracy:   1.0, testing loss: 0.312034, accuracy:   1.0
+epoch:  6, training loss: 0.251048, accuracy: 0.9792, testing loss: 0.228098, accuracy: 0.9688
+epoch:  7, training loss: 0.203236, accuracy: 0.974, testing loss: 0.204058, accuracy: 0.9688
+epoch:  8, training loss: 0.184051, accuracy: 0.9714, testing loss: 0.189283, accuracy: 0.9688
+epoch:  9, training loss: 0.171548, accuracy: 0.9714, testing loss: 0.179264, accuracy: 0.9688
+epoch: 10, training loss: 0.163703, accuracy: 0.9701, testing loss: 0.173757, accuracy: 0.9688
+epoch: 11, training loss:  0.15961, accuracy: 0.9701, testing loss: 0.171069, accuracy: 0.9688
+epoch: 12, training loss: 0.157542, accuracy: 0.9701, testing loss: 0.169576, accuracy: 0.9688
+epoch: 13, training loss: 0.156325, accuracy: 0.9701, testing loss: 0.168527, accuracy: 0.9688
+epoch: 14, training loss: 0.155444, accuracy: 0.9701, testing loss: 0.167643, accuracy: 0.9688
+epoch: 15, training loss: 0.154692, accuracy: 0.9701, testing loss: 0.166804, accuracy: 0.9688
+epoch: 16, training loss:  0.15398, accuracy: 0.9701, testing loss: 0.165957, accuracy: 0.9688
+epoch: 17, training loss: 0.153277, accuracy: 0.9701, testing loss: 0.165093, accuracy: 0.9688
+epoch: 18, training loss: 0.152596, accuracy: 0.9714, testing loss: 0.164244, accuracy: 0.9688
+epoch: 19, training loss: 0.151966, accuracy: 0.9714, testing loss:  0.16346, accuracy: 0.9688
+epoch: 20, training loss: 0.151408, accuracy: 0.9714, testing loss: 0.162777, accuracy: 0.9688
