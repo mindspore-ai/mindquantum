@@ -30,7 +30,6 @@ target_link_libraries(
          mindquantum::fmt
          mindquantum::json
          mindquantum_setup
-         mindquantum::pybind11_module
          $<$<BOOL:${ENABLE_LOGGING}>:mindquantum::spdlog>)
 
 # ==============================================================================

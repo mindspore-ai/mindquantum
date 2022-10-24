@@ -16,8 +16,6 @@
 #ifndef MINDQUANTUM_SPARSE_PAULI_MAT_H_
 #define MINDQUANTUM_SPARSE_PAULI_MAT_H_
 
-#include <pybind11/numpy.h>
-
 #include "core/utils.hpp"
 
 namespace mindquantum {
