@@ -484,7 +484,7 @@ class KrausChannel(NoiseGate, NonHermitianGate):
 
         \epsilon(\rho) = \sum_{k=0}^{m-1} E_k \rho E_k^\dagger
 
-    where :math:`\rho` is quantum state as density matrix type; {:math:`\E_k`} is Kraus operator,
+    where :math:`\rho` is quantum state as density matrix type; {:math:`E_k`} is Kraus operator,
     and it should satisfy the completeness condition: :math:`\sum_k E_k^\dagger E_k = I`.
 
     Args:

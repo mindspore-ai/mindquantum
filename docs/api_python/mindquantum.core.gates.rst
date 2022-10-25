@@ -18,14 +18,16 @@ functional
      - :class:`mindquantum.core.gates.CNOTGate`
    * - mindquantum.core.gates.I
      - :class:`mindquantum.core.gates.IGate`
+   * - mindquantum.core.gates.ISWAP
+     - :class:`mindquantum.core.gates.ISWAPGate`
    * - mindquantum.core.gates.H
      - :class:`mindquantum.core.gates.HGate`
    * - mindquantum.core.gates.S
      - :class:`mindquantum.core.gates.PhaseShift` (numpy.pi/2)
-   * - mindquantum.core.gates.S
-     - :class:`mindquantum.core.gates.PhaseShift` (numpy.pi/4)
    * - mindquantum.core.gates.SWAP
      - :class:`mindquantum.core.gates.SWAPGate`
+   * - mindquantum.core.gates.T
+     - :class:`mindquantum.core.gates.PhaseShift` (numpy.pi/4)
    * - mindquantum.core.gates.X
      - :class:`mindquantum.core.gates.XGate`
    * - mindquantum.core.gates.Y
