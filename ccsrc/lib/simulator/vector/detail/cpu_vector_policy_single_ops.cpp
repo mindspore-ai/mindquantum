@@ -21,6 +21,7 @@
 #include <functional>
 #include <ratio>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 #include "config/openmp.hpp"
@@ -140,6 +141,17 @@ void CPUVectorPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t de
                 }
             });
 #endif
+    }
+}
+
+void CPUVectorPolicyBase::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
+                                          const std::vector<std::vector<py_qs_data_t>>& m, index_t dim) {
+    if (objs.size() == 1) {
+        ApplySingleQubitMatrix(src, des, objs[0], ctrls, m, dim);
+    } else if (objs.size() == 2) {
+        ApplyTwoQubitsMatrix(src, des, objs, ctrls, m, dim);
+    } else {
+        throw std::runtime_error("Can not custom " + std::to_string(objs.size()) + " qubits gate for cpu backend.");
     }
 }
 

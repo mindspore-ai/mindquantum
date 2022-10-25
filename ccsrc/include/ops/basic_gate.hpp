@@ -29,6 +29,7 @@
 namespace mindquantum {
 template <typename T>
 struct BasicGate {
+    using matrix_t = Dim2Matrix<T>;
     bool parameterized_ = false;
     std::string name_;
     VT<Index> obj_qubits_;
@@ -44,6 +45,7 @@ struct BasicGate {
     // Dim2Matrix<T> (*param_matrix_)(T para);
     // Dim2Matrix<T> (*param_diff_matrix_)(T para);
     bool is_channel_ = false;
+    bool is_custom_ = false;
     VT<BasicGate<T>> gate_list_;
     VT<T> probs_;
     VT<T> cumulative_probs_;

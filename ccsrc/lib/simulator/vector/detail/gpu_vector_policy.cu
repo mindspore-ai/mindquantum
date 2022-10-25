@@ -15,10 +15,12 @@
 
 #include <cassert>
 #include <complex>
+#include <cstdlib>
 #include <stdexcept>
 
 #include <thrust/transform_reduce.h>
 
+#include "core/sparse/algo.hpp"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
 #include "simulator/vector/detail/gpu_vector_policy.cuh"
@@ -290,7 +292,8 @@ void GPUVectorPolicyBase::ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const q
     }
 }
 
-void GPUVectorPolicyBase::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
+void GPUVectorPolicyBase::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, bool daggered,
+                                     index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
     thrust::counting_iterator<index_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
@@ -300,13 +303,17 @@ void GPUVectorPolicyBase::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const 
     auto obj_min_mask = mask.obj_min_mask;
     auto obj_max_mask = mask.obj_max_mask;
     auto ctrl_mask = mask.ctrl_mask;
+    double frac = 1.0;
+    if (daggered) {
+        frac = -1.0;
+    }
     if (!mask.ctrl_mask) {
         thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
             index_t i;
             SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
             auto tmp = qs[i + obj_min_mask];
-            qs[i + obj_min_mask] = qs[i + obj_max_mask] * qs_data_t(0, 1);
-            qs[i + obj_max_mask] = tmp * qs_data_t(0, 1);
+            qs[i + obj_min_mask] = frac * qs[i + obj_max_mask] * qs_data_t(0, 1);
+            qs[i + obj_max_mask] = frac * tmp * qs_data_t(0, 1);
         });
     } else {
         thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
@@ -314,8 +321,8 @@ void GPUVectorPolicyBase::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const 
             SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
             if ((i & ctrl_mask) == ctrl_mask) {
                 auto tmp = qs[i + obj_min_mask];
-                qs[i + obj_min_mask] = qs[i + obj_max_mask] * qs_data_t(0, 1);
-                qs[i + obj_max_mask] = tmp * qs_data_t(0, 1);
+                qs[i + obj_min_mask] = frac * qs[i + obj_max_mask] * qs_data_t(0, 1);
+                qs[i + obj_max_mask] = frac * tmp * qs_data_t(0, 1);
             }
         });
     }
@@ -487,5 +494,44 @@ void GPUVectorPolicyBase::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbi
             GPUVectorPolicyBase::SetToZeroExcept(qs, ctrl_mask, dim);
         }
     }
+}
+auto GPUVectorPolicyBase::CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, qs_data_p_t vec,
+                                    index_t dim) -> qs_data_p_t {
+    if (dim != a->dim_) {
+        throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
+    }
+    auto host = reinterpret_cast<std::complex<calc_type>*>(malloc(dim * sizeof(std::complex<calc_type>)));
+    cudaMemcpy(host, vec, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
+    auto host_res = sparse::Csr_Dot_Vec<calc_type, calc_type>(a, reinterpret_cast<calc_type*>(host));
+    auto out = InitState(dim);
+    cudaMemcpy(out, reinterpret_cast<std::complex<calc_type>*>(host_res), sizeof(qs_data_t) * dim,
+               cudaMemcpyHostToDevice);
+    if (host != nullptr) {
+        free(host);
+    }
+    if (host_res != nullptr) {
+        free(host_res);
+    }
+    return out;
+}
+auto GPUVectorPolicyBase::CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
+                                    const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& b, qs_data_p_t vec,
+                                    index_t dim) -> qs_data_p_t {
+    if ((dim != a->dim_) || (dim != b->dim_)) {
+        throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
+    }
+    auto host = reinterpret_cast<std::complex<calc_type>*>(malloc(dim * sizeof(std::complex<calc_type>)));
+    cudaMemcpy(host, vec, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
+    auto host_res = sparse::Csr_Dot_Vec<calc_type, calc_type>(a, b, reinterpret_cast<calc_type*>(host));
+    auto out = InitState(dim);
+    cudaMemcpy(out, reinterpret_cast<std::complex<calc_type>*>(host_res), sizeof(qs_data_t) * dim,
+               cudaMemcpyHostToDevice);
+    if (host != nullptr) {
+        free(host);
+    }
+    if (host_res != nullptr) {
+        free(host_res);
+    }
+    return out;
 }
 }  // namespace mindquantum::sim::vector::detail

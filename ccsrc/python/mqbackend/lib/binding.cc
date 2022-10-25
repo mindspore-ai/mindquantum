@@ -241,6 +241,7 @@ PYBIND11_MODULE(mqbackend, m) {
         .def_readwrite("base_matrix", &BasicGate<MT>::base_matrix_)
         .def_readwrite("hermitian_prop", &BasicGate<MT>::hermitian_prop_)
         .def_readwrite("is_channel", &BasicGate<MT>::is_channel_)
+        .def_readwrite("is_custom", &BasicGate<MT>::is_custom_)
         .def_readwrite("gate_list", &BasicGate<MT>::gate_list_)
         .def_readwrite("probs", &BasicGate<MT>::probs_)
         .def_readwrite("cumulative_probs", &BasicGate<MT>::cumulative_probs_)

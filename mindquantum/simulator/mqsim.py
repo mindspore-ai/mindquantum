@@ -20,7 +20,6 @@ import numpy as np
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import BarrierGate, BasicGate, Measure, MeasureResult
 from mindquantum.core.operators import Hamiltonian
-from mindquantum.core.operators.hamiltonian import HowTo
 from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.utils.type_value_check import (
     _check_and_generate_pr_type,
@@ -131,8 +130,6 @@ class MQSim(BackendBase):
         """Apply a hamiltonian."""
         _check_input_type('hamiltonian', Hamiltonian, hamiltonian)
         _check_hamiltonian_qubits_number(hamiltonian, self.n_qubits)
-        if hamiltonian.how_to == HowTo.FRONTEND:
-            raise NotImplementedError("Cannot apply this kind of hamiltonian.")
         self.sim.apply_hamiltonian(hamiltonian.get_cpp_obj())
 
     def copy(self) -> "BackendBase":
@@ -164,8 +161,6 @@ class MQSim(BackendBase):
         for h_tmp in hams:
             _check_input_type("hams's element", Hamiltonian, h_tmp)
             _check_hamiltonian_qubits_number(h_tmp, self.n_qubits)
-            if h_tmp.how_to == HowTo.FRONTEND:
-                raise NotImplementedError("Cannot evaluate this kind of hamiltonian.")
         _check_input_type("circ_right", Circuit, circ_right)
         if circ_right.is_noise_circuit:
             raise ValueError("noise circuit not support yet.")

@@ -161,7 +161,6 @@ T2 *Csr_Dot_Vec(std::shared_ptr<CsrHdMatrix<T>> a, T2 *vec) {
             }
             new_vec[i] = sum;
         })
-    free(vec);
     return reinterpret_cast<T2 *>(new_vec);
 }
 
@@ -189,7 +188,6 @@ T2 *Csr_Dot_Vec(std::shared_ptr<CsrHdMatrix<T>> a, std::shared_ptr<CsrHdMatrix<T
             }
             new_vec[i] = sum;
         })
-    free(vec);
     return reinterpret_cast<T2 *>(new_vec);
 }
 }  // namespace mindquantum::sparse

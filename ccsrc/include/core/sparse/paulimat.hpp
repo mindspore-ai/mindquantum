@@ -16,13 +16,10 @@
 #ifndef MINDQUANTUM_SPARSE_PAULI_MAT_H_
 #define MINDQUANTUM_SPARSE_PAULI_MAT_H_
 
-#include <pybind11/numpy.h>
-
 #include "core/utils.hpp"
 
 namespace mindquantum {
 namespace sparse {
-namespace py = pybind11;
 template <typename T>
 struct PauliMat {
     char *coeff_;

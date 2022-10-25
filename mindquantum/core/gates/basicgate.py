@@ -81,6 +81,7 @@ class UnivMathGate(NoneParamNonHermMat):
         cpp_gate.daggered = self.hermitianed
         cpp_gate.obj_qubits = self.obj_qubits
         cpp_gate.ctrl_qubits = self.ctrl_qubits
+        cpp_gate.is_custom = True
         return cpp_gate
 
 
@@ -904,6 +905,7 @@ class Power(NoneParamNonHermMat):
         cpp_gate.daggered = self.hermitianed
         cpp_gate.obj_qubits = self.obj_qubits
         cpp_gate.ctrl_qubits = self.ctrl_qubits
+        cpp_gate.is_custom = True
         return cpp_gate
 
     def __eq__(self, other):
@@ -954,6 +956,14 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
     matrix = matrix_generator(0)
     n_qubits = int(np.log2(matrix.shape[0]))
 
+    def herm_matrix_generator(x):
+        """Generate hermitian conjugate matrix."""
+        return np.conj(matrix_generator(x)).T
+
+    def herm_diff_matrix_generator(x):
+        """Generate hermitian conjugate diff matrix."""
+        return np.conj(diff_matrix_generator(x)).T
+
     class _ParamNonHerm(ParamNonHerm):
         """The customer parameterized gate."""
 
@@ -966,19 +976,31 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
                 diff_matrix_generator=diff_matrix_generator,
             )
 
+        def __deepcopy__(self, memo):
+            """Deep copy this gate."""
+            g = _ParamNonHerm(self.coeff)
+            g.obj_qubits = self.obj_qubits
+            g.ctrl_qubits = self.ctrl_qubits
+            g.hermitianed = self.hermitianed
+            return g
+
+        def hermitian(self):
+            """Get hermitian conjugate gate."""
+            g = _ParamNonHerm(self.coeff)
+            g.obj_qubits = self.obj_qubits
+            g.ctrl_qubits = self.ctrl_qubits
+            g.hermitianed = not self.hermitianed
+            if g.hermitianed:
+                g.matrix_generator = herm_matrix_generator
+                g.diff_matrix_generator = herm_diff_matrix_generator
+            return g
+
         def get_cpp_obj(self):
-            if not self.hermitianed:
-                cpp_gate = mb.basic_gate(self.name, 1, self.matrix_generator, self.diff_matrix_generator)
-            else:
-                cpp_gate = mb.basic_gate(
-                    self.name,
-                    1,
-                    lambda x: np.conj(self.matrix_generator(x).T),
-                    lambda x: np.conj(self.diff_matrix_generator(x).T),
-                )
+            cpp_gate = mb.basic_gate(self.name, 1, self.matrix_generator, self.diff_matrix_generator)
             cpp_gate.daggered = self.hermitianed
             cpp_gate.obj_qubits = self.obj_qubits
             cpp_gate.ctrl_qubits = self.ctrl_qubits
+            cpp_gate.is_custom = True
             if not self.parameterized:
                 cpp_gate.apply_value(self.coeff.const)
             else:

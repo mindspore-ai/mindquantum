@@ -17,12 +17,8 @@
 #ifndef MINDQUANTUM_UTILS_HPP_
 #define MINDQUANTUM_UTILS_HPP_
 
-#include <cstdint>
-#ifdef USE_OPENMP
-#    include <omp.h>
-#endif  // USE_OPENMP  // NOLINT
-
 #include <complex>
+#include <cstdint>
 #include <cstdlib>
 #include <ctime>
 #include <map>
