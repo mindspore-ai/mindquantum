@@ -1091,11 +1091,8 @@ class U3(MultiParamsGate):
 
     .. math::
 
-        U3(\theta, \phi, \lambda) =
-        \begin{pmatrix}
-           cos \left( \frac{\theta}{2} \right) & -e^{i \lambda} sin \left( \frac{\theta}{2} \\
-        e^{i \phi} sin \left( \frac{\theta}{2} & e^{i (\phi + \lambda)} cos \left( \frac{\theta}{2}
-        \end{pmatrix}
+        U3(\theta, \phi, \lambda) =\begin{pmatrix}\cos(\theta/2)&-e^{i\lambda}\sin(\theta/2)\\
+            e^{i\phi}\sin(\theta/2)&e^{i(\phi+\lambda)}\cos(\theta/2)\end{pmatrix}
 
     It can be decomposed as:
 
