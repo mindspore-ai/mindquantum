@@ -111,8 +111,13 @@ class Projectq : public ::projectq::Simulator {
     void ApplyGate(const BasicGate<T> &gate, const ParameterResolver<T> &pr, bool diff = false) {
         T theta = gate.params_.Combination(pr).const_value;
         if (diff) {
-            Projectq::apply_controlled_gate(MCast<T>(gate.param_diff_matrix_(theta).matrix_), VCast(gate.obj_qubits_),
-                                            VCast(gate.ctrl_qubits_));
+            if (gate.is_custom_) {
+                Projectq::apply_controlled_gate(MCast<T>(gate.numba_param_diff_matrix_(theta).matrix_),
+                                                VCast(gate.obj_qubits_), VCast(gate.ctrl_qubits_));
+            } else {
+                Projectq::apply_controlled_gate(MCast<T>(gate.param_diff_matrix_(theta).matrix_),
+                                                VCast(gate.obj_qubits_), VCast(gate.ctrl_qubits_));
+            }
             if (gate.ctrl_qubits_.size() != 0) {
                 auto ctrl_mask = GetControlMask(gate.ctrl_qubits_);
                 THRESHOLD_OMP_FOR(
@@ -124,8 +129,13 @@ class Projectq : public ::projectq::Simulator {
                     })
             }
         } else {
-            Projectq::apply_controlled_gate(MCast<T>(gate.param_matrix_(theta).matrix_), VCast(gate.obj_qubits_),
-                                            VCast(gate.ctrl_qubits_));
+            if (gate.is_custom_) {
+                Projectq::apply_controlled_gate(MCast<T>(gate.numba_param_matrix_(theta).matrix_),
+                                                VCast(gate.obj_qubits_), VCast(gate.ctrl_qubits_));
+            } else {
+                Projectq::apply_controlled_gate(MCast<T>(gate.param_matrix_(theta).matrix_), VCast(gate.obj_qubits_),
+                                                VCast(gate.ctrl_qubits_));
+            }
         }
     }
 
