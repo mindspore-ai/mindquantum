@@ -42,7 +42,7 @@ except ImportError:
 
 _HAS_NUMBA = True
 try:
-    import numba as nb
+    import numba as nb  # pylint: disable=unused-import
 except ImportError:
     _HAS_NUMBA = False
 
