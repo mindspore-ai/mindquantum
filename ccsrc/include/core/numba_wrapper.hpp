@@ -18,7 +18,6 @@
 
 #include "core/two_dim_matrix.hpp"
 namespace mindquantum {
-
 struct NumbaMatFunWrapper {
     using mat_t = void (*)(double, std::complex<double>*);
     NumbaMatFunWrapper() = default;
@@ -26,7 +25,7 @@ struct NumbaMatFunWrapper {
         if (dim != 2 && dim != 4) {
             throw std::runtime_error("Can only custom one or two qubits matrix.");
         }
-        fun = (mat_t) (addr);
+        fun = reinterpret_cast<mat_t>(addr);
     }
 
     mindquantum::Dim2Matrix<double> operator()(double coeff) const {

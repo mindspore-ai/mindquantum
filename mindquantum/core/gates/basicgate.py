@@ -923,6 +923,10 @@ class Power(NoneParamNonHermMat):
 
 def wrapper_numba(compiled_fun):
     """Wrap a compiled function with numba."""
+    try:
+        import numba as nb
+    except ImportError:
+        raise ImportError("To use customed parameterized gate, please install numba with 'pip install numba'.")
 
     @nb.cfunc(nb.types.void(nb.types.double, nb.types.CPointer(nb.types.complex128)))
     def fun(theta, out_):
