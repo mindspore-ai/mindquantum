@@ -22,7 +22,7 @@ namespace mindquantum {
 struct NumbaMatFunWrapper {
     using mat_t = void (*)(double, std::complex<double>*);
     NumbaMatFunWrapper() = default;
-    NumbaMatFunWrapper(unsigned long long addr, int dim) : dim(dim) {
+    NumbaMatFunWrapper(unsigned long long int addr, int dim) : dim(dim) {
         if (dim != 2 && dim != 4) {
             throw std::runtime_error("Can only custom one or two qubits matrix.");
         }

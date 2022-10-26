@@ -351,6 +351,11 @@ def test_multi_params_gate(virtual_qc):
 
 @pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'projectq'])
 def test_custom_gate_in_parallel(virtual_qc):
+    """
+    Features: parallel custom gate.
+    Description: test custom gate in parallel mode.
+    Expectation: success.
+    """
     circ = generate_test_circuit().as_encoder()
     sim = Simulator(virtual_qc, circ.n_qubits)
     ham = [Hamiltonian(QubitOperator('Y0')), Hamiltonian(QubitOperator('X2'))]
