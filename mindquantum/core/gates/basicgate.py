@@ -22,7 +22,6 @@ from functools import reduce
 from inspect import signature
 from typing import List, Tuple
 
-import numba as nb
 import numpy as np
 from scipy.linalg import fractional_matrix_power
 
@@ -973,6 +972,10 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
         >>> circ.get_qs(pr={'a': 1.2})
         array([0.25622563+0.65905116j, 0.25622563-0.65905116j])
     """
+    try:
+        import numba as nb
+    except ImportError:
+        raise ImportError("To use customed parameterized gate, please install numba with 'pip install numba'.")
     matrix_sig = signature(matrix_generator)
     diff_matrix_sig = signature(diff_matrix_generator)
     if len(matrix_sig.parameters) != 1:

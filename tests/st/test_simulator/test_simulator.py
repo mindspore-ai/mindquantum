@@ -40,6 +40,11 @@ try:
 except ImportError:
     _HAS_MINDSPORE = False
 
+_HAS_NUMBA = True
+try:
+    import numba as nb
+except ImportError:
+    _HAS_NUMBA = False
 
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 def test_init_reset(virtual_qc):
@@ -170,6 +175,7 @@ def generate_test_circuit():
 
 
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+@pytest.mask.shipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_all_gate_with_simulator(virtual_qc):  # pylint: disable=too-many-locals
     """
     Description:
@@ -350,6 +356,7 @@ def test_multi_params_gate(virtual_qc):
 
 
 @pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'projectq'])
+@pytest.mask.shipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_custom_gate_in_parallel(virtual_qc):
     """
     Features: parallel custom gate.

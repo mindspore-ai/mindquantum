@@ -118,7 +118,7 @@ struct BasicGate {
         , param_matrix_(std::move(param_matrix))
         , param_diff_matrix_(std::move(param_diff_matrix)) {
     }
-    BasicGate(std::string name, int64_t hermitian_prop, unsigned long long int m_addr, unsigned long long int dm_addr, int dim)
+    BasicGate(std::string name, int64_t hermitian_prop, uint64_t m_addr, uint64_t dm_addr, int dim)
         : parameterized_(true)
         , name_(std::move(name))
         , hermitian_prop_(hermitian_prop)
