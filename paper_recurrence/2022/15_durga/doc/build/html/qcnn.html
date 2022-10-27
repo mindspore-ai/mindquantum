@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>qcnn module &mdash; qcnn_tfi 1.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> qcnn_tfi
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">qcnn module</a><ul>
+<li><a class="reference internal" href="#qcnn.LossMonitor"><code class="docutils literal notranslate"><span class="pre">LossMonitor</span></code></a><ul>
+<li><a class="reference internal" href="#qcnn.LossMonitor.step_end"><code class="docutils literal notranslate"><span class="pre">LossMonitor.step_end()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#qcnn.QCNN"><code class="docutils literal notranslate"><span class="pre">QCNN</span></code></a><ul>
+<li><a class="reference internal" href="#qcnn.QCNN.build_dataset"><code class="docutils literal notranslate"><span class="pre">QCNN.build_dataset()</span></code></a></li>
+<li><a class="reference internal" href="#qcnn.QCNN.build_grad_ops"><code class="docutils literal notranslate"><span class="pre">QCNN.build_grad_ops()</span></code></a></li>
+<li><a class="reference internal" href="#qcnn.QCNN.build_model"><code class="docutils literal notranslate"><span class="pre">QCNN.build_model()</span></code></a></li>
+<li><a class="reference internal" href="#qcnn.QCNN.data_ext"><code class="docutils literal notranslate"><span class="pre">QCNN.data_ext()</span></code></a></li>
+<li><a class="reference internal" href="#qcnn.QCNN.export_trained_parameters"><code class="docutils literal notranslate"><span class="pre">QCNN.export_trained_parameters()</span></code></a></li>
+<li><a class="reference internal" href="#qcnn.QCNN.gen_encoder"><code class="docutils literal notranslate"><span class="pre">QCNN.gen_encoder()</span></code></a></li>
+<li><a class="reference internal" href="#qcnn.QCNN.gen_qcnn_ansatz"><code class="docutils literal notranslate"><span class="pre">QCNN.gen_qcnn_ansatz()</span></code></a></li>
+<li><a class="reference internal" href="#qcnn.QCNN.load_data"><code class="docutils literal notranslate"><span class="pre">QCNN.load_data()</span></code></a></li>
+<li><a class="reference internal" href="#qcnn.QCNN.load_trained_parameters"><code class="docutils literal notranslate"><span class="pre">QCNN.load_trained_parameters()</span></code></a></li>
+<li><a class="reference internal" href="#qcnn.QCNN.predict"><code class="docutils literal notranslate"><span class="pre">QCNN.predict()</span></code></a></li>
+<li><a class="reference internal" href="#qcnn.QCNN.q_convolution"><code class="docutils literal notranslate"><span class="pre">QCNN.q_convolution()</span></code></a></li>
+<li><a class="reference internal" href="#qcnn.QCNN.q_pooling"><code class="docutils literal notranslate"><span class="pre">QCNN.q_pooling()</span></code></a></li>
+<li><a class="reference internal" href="#qcnn.QCNN.split_qlist"><code class="docutils literal notranslate"><span class="pre">QCNN.split_qlist()</span></code></a></li>
+<li><a class="reference internal" href="#qcnn.QCNN.train"><code class="docutils literal notranslate"><span class="pre">QCNN.train()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#qcnn.StepAcc"><code class="docutils literal notranslate"><span class="pre">StepAcc</span></code></a><ul>
+<li><a class="reference internal" href="#qcnn.StepAcc.step_end"><code class="docutils literal notranslate"><span class="pre">StepAcc.step_end()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">qcnn_tfi</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>qcnn module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/qcnn.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-qcnn">
+<span id="qcnn-module"></span><h1>qcnn module<a class="headerlink" href="#module-qcnn" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="qcnn.LossMonitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qcnn.</span></span><span class="sig-name descname"><span class="pre">LossMonitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">per_print_times</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.LossMonitor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qcnn.LossMonitor.step_end">
+<span class="sig-name descname"><span class="pre">step_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.LossMonitor.step_end" title="Permalink to this definition"></a></dt>
+<dd><p>Print training loss at the end of step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>run_context</strong> (<em>RunContext</em>) – Context of the train running.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcnn.QCNN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qcnn.</span></span><span class="sig-name descname"><span class="pre">QCNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">qubits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">closed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.QCNN" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Quantum Convolutional Neural Network Class</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qcnn.QCNN.build_dataset">
+<span class="sig-name descname"><span class="pre">build_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.QCNN.build_dataset" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcnn.QCNN.build_grad_ops">
+<span class="sig-name descname"><span class="pre">build_grad_ops</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.QCNN.build_grad_ops" title="Permalink to this definition"></a></dt>
+<dd><p>Generate the total qcnn circuit, the Hamiltonian operator and build the grad ops wrapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the grad ops wrapper</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>grad_ops</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcnn.QCNN.build_model">
+<span class="sig-name descname"><span class="pre">build_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.QCNN.build_model" title="Permalink to this definition"></a></dt>
+<dd><p>Set the loss function, optimizer and build the qcnn model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcnn.QCNN.data_ext">
+<span class="sig-name descname"><span class="pre">data_ext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.QCNN.data_ext" title="Permalink to this definition"></a></dt>
+<dd><p>Enhance the original data based on linear interpolation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> – array or list, the original data X</p></li>
+<li><p><strong>Y</strong> – array or list, the original label data Y</p></li>
+<li><p><strong>factor</strong> – int, data size enhancement factor, default to 10.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>extended data Xext, Yext</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcnn.QCNN.export_trained_parameters">
+<span class="sig-name descname"><span class="pre">export_trained_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.QCNN.export_trained_parameters" title="Permalink to this definition"></a></dt>
+<dd><p>Export the parameters of model and save model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcnn.QCNN.gen_encoder">
+<span class="sig-name descname"><span class="pre">gen_encoder</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.QCNN.gen_encoder" title="Permalink to this definition"></a></dt>
+<dd><p>Generate encoder circuit:
+based on the qubits of <code class="docutils literal notranslate"><span class="pre">qcnn</span></code>, the <code class="docutils literal notranslate"><span class="pre">layers</span></code> is set to <code class="docutils literal notranslate"><span class="pre">int(qubits/2)</span></code>, each layer of encoder is construct by <code class="docutils literal notranslate"><span class="pre">ZZ</span></code> and <code class="docutils literal notranslate"><span class="pre">RX</span></code> gates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>encoder circuit</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">src.qcnn</span> <span class="k">as</span> <span class="nn">qcn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qcnn</span> <span class="o">=</span> <span class="n">qcn</span><span class="o">.</span><span class="n">QCNN</span><span class="p">(</span><span class="n">qubits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">opt</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">encoder</span> <span class="o">=</span> <span class="n">qcnn</span><span class="o">.</span><span class="n">gen_encoder</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">encoder</span><span class="p">)</span>
+<span class="go">q0: ──H────ZZ(alpha_0_0)────RX(alpha_0_1)──────────────────────────────────────ZZ(alpha_0_0)────ZZ(alpha_1_0)────RX(alpha_1_1)──────────────────────────────────────ZZ(alpha_1_0)───────────────────</span>
+<span class="go">                 │                                                                   │                │                                                                   │</span>
+<span class="go">q1: ──H────ZZ(alpha_0_0)────ZZ(alpha_0_0)────RX(alpha_0_1)───────────────────────────┼──────────ZZ(alpha_1_0)────ZZ(alpha_1_0)────RX(alpha_1_1)───────────────────────────┼─────────────────────────</span>
+<span class="go">                                  │                                                  │                                 │                                                  │</span>
+<span class="go">q2: ──H─────────────────────ZZ(alpha_0_0)────ZZ(alpha_0_0)────RX(alpha_0_1)──────────┼───────────────────────────ZZ(alpha_1_0)────ZZ(alpha_1_0)────RX(alpha_1_1)──────────┼─────────────────────────</span>
+<span class="go">                                                   │                                 │                                                  │                                 │</span>
+<span class="go">q3: ──H──────────────────────────────────────ZZ(alpha_0_0)─────────────────────ZZ(alpha_0_0)────RX(alpha_0_1)─────────────────────ZZ(alpha_1_0)─────────────────────ZZ(alpha_1_0)────RX(alpha_1_1)──</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcnn.QCNN.gen_qcnn_ansatz">
+<span class="sig-name descname"><span class="pre">gen_qcnn_ansatz</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.QCNN.gen_qcnn_ansatz" title="Permalink to this definition"></a></dt>
+<dd><p>Generate the ansatz circuit of qcnn: based on the <code class="docutils literal notranslate"><span class="pre">q_convolution,</span> <span class="pre">q_pooling</span></code> functions, generate ansatz circuit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>ansatz circuit</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>circ</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcnn.QCNN.load_data">
+<span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.QCNN.load_data" title="Permalink to this definition"></a></dt>
+<dd><p>Load data from local folder: <code class="docutils literal notranslate"><span class="pre">tfi_chain/spin_systems/TFI_chain/closed</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcnn.QCNN.load_trained_parameters">
+<span class="sig-name descname"><span class="pre">load_trained_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.QCNN.load_trained_parameters" title="Permalink to this definition"></a></dt>
+<dd><p>Load model parameters by checkpoint data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcnn.QCNN.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">origin_test_x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#qcnn.QCNN.predict" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcnn.QCNN.q_convolution">
+<span class="sig-name descname"><span class="pre">q_convolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qubits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.QCNN.q_convolution" title="Permalink to this definition"></a></dt>
+<dd><p>Generate 2 qubits convolution circuit: given by two qubits index, generate the convolution block which is constructed by <code class="docutils literal notranslate"><span class="pre">RX,RY,RZ,XX,YY,ZZ</span></code> gates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>label</strong> – str, name of the convolution block</p></li>
+<li><p><strong>qubits</strong> – array or list, the qubits index list of the convolution block</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>convolution circuit</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">conv</span> <span class="o">=</span> <span class="n">qcnn</span><span class="o">.</span><span class="n">q_convolution</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">,[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span>
+<span class="go">q0: ──RX(cov_0_0)────RY(cov_0_1)────RZ(cov_0_2)────XX(cov_0_6)────YY(cov_0_7)────ZZ(cov_0_8)────RX(cov_0_9)─────RY(cov_0_10)────RZ(cov_0_11)──</span>
+<span class="go">                                                        │              │              │</span>
+<span class="go">q1: ──RX(cov_0_3)────RY(cov_0_4)────RZ(cov_0_5)────XX(cov_0_6)────YY(cov_0_7)────ZZ(cov_0_8)────RX(cov_0_11)────RY(cov_0_12)────RZ(cov_0_13)──</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcnn.QCNN.q_pooling">
+<span class="sig-name descname"><span class="pre">q_pooling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qubits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.QCNN.q_pooling" title="Permalink to this definition"></a></dt>
+<dd><p>Generate 2 qubits pooling circuit: given by two qubits index, generate the pooling block which is constructed by <code class="docutils literal notranslate"><span class="pre">RX,RY,RZ,X</span></code> gates.
+When optimized settings are taken (<code class="docutils literal notranslate"><span class="pre">self.opt</span></code> is set to <code class="docutils literal notranslate"><span class="pre">True</span></code>), the pooling circuit is optimized.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>label</strong> – str, name of the pooling block</p></li>
+<li><p><strong>qubits</strong> – array or list, the qubits index list of the pooling block</p></li>
+<li><p><strong>last</strong> – bool, used to determine whether the pooling block is the last one</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>pooling circuit</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pool</span> <span class="o">=</span> <span class="n">qcnn</span><span class="o">.</span><span class="n">q_pooling</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">,[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">pool</span><span class="p">)</span>
+<span class="go">q0: ──RX(p_0_0)────RY(p_0_1)────RZ(p_0_2)────●────────────────────────────────────────────</span>
+<span class="go">                                             │</span>
+<span class="go">q1: ──RX(p_0_3)────RY(p_0_4)────RZ(p_0_5)────X────RZ(-p_0_5)────RY(-p_0_4)────RX(-p_0_3)──</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcnn.QCNN.split_qlist">
+<span class="sig-name descname"><span class="pre">split_qlist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">qlist</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.QCNN.split_qlist" title="Permalink to this definition"></a></dt>
+<dd><p>Generate the index list of convolution and pooling block: given by the qubits index list, generate the fisrt and the second qubit index for convolution and pooling block.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>qlist</strong> – array or list, the qubits index list</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the list of the fisrt qubit index
+slist: the list of the second qubit index</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>flist</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qcnn.QCNN.train">
+<span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callbacks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.QCNN.train" title="Permalink to this definition"></a></dt>
+<dd><p>Training the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num</strong> – int, the epoch of training</p></li>
+<li><p><strong>callbacks</strong> – list, the list of callbacks</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qcnn.StepAcc">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qcnn.</span></span><span class="sig-name descname"><span class="pre">StepAcc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qnet</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qubits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.StepAcc" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qcnn.StepAcc.step_end">
+<span class="sig-name descname"><span class="pre">step_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qcnn.StepAcc.step_end" title="Permalink to this definition"></a></dt>
+<dd><p>Record training accuracy and save model at the end of step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>run_context</strong> (<em>RunContext</em>) – Context of the train running.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, rongge, levitan.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
