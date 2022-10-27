@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "core/numba_wrapper.hpp"
 #include "core/parameter_resolver.hpp"
 #include "core/two_dim_matrix.hpp"
 #include "core/utils.hpp"
@@ -42,6 +43,8 @@ struct BasicGate {
     Dim2Matrix<T> base_matrix_;
     std::function<Dim2Matrix<T>(T)> param_matrix_;
     std::function<Dim2Matrix<T>(T)> param_diff_matrix_;
+    NumbaMatFunWrapper numba_param_matrix_;
+    NumbaMatFunWrapper numba_param_diff_matrix_;
     // Dim2Matrix<T> (*param_matrix_)(T para);
     // Dim2Matrix<T> (*param_diff_matrix_)(T para);
     bool is_channel_ = false;
@@ -114,6 +117,14 @@ struct BasicGate {
         , hermitian_prop_(hermitian_prop)
         , param_matrix_(std::move(param_matrix))
         , param_diff_matrix_(std::move(param_diff_matrix)) {
+    }
+    BasicGate(std::string name, int64_t hermitian_prop, uint64_t m_addr, uint64_t dm_addr, int dim)
+        : parameterized_(true)
+        , name_(std::move(name))
+        , hermitian_prop_(hermitian_prop)
+        , numba_param_matrix_(m_addr, dim)
+        , numba_param_diff_matrix_(dm_addr, dim)
+        , is_custom_(true) {
     }
 };
 }  // namespace mindquantum

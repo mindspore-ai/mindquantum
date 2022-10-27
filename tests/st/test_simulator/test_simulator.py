@@ -40,6 +40,12 @@ try:
 except ImportError:
     _HAS_MINDSPORE = False
 
+_HAS_NUMBA = True
+try:
+    import numba as nb  # pylint: disable=unused-import
+except ImportError:
+    _HAS_NUMBA = False
+
 
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 def test_init_reset(virtual_qc):
@@ -137,13 +143,12 @@ def generate_test_circuit():
     Description:
     Expectation:
     """
-    tmpg = G.RX('a')
 
     def rx_matrix_generator(x):
-        return tmpg.matrix({'a': x})
+        return np.array([[np.cos(x / 2), -1j * np.sin(x / 2)], [-1j * np.sin(x / 2), np.cos(x / 2)]])
 
     def rx_diff_matrix_generator(x):
-        return tmpg.diff_matrix({'a': x}, 'a')
+        return np.array([[np.sin(x / 2), 1j * np.cos(x / 2)], [1j * np.cos(x / 2), np.sin(x / 2)]]) / -2
 
     circuit = Circuit()
     circuit += UN(G.H, 3)
@@ -171,6 +176,7 @@ def generate_test_circuit():
 
 
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+@pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_all_gate_with_simulator(virtual_qc):  # pylint: disable=too-many-locals
     """
     Description:
@@ -209,6 +215,7 @@ def test_all_gate_with_simulator(virtual_qc):  # pylint: disable=too-many-locals
 
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
+@pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_optimization_with_custom_gate(virtual_qc):  # pylint: disable=too-many-locals
     """
     Description:
@@ -348,3 +355,24 @@ def test_multi_params_gate(virtual_qc):
     )
     assert np.allclose(f, f_exp)
     assert np.allclose(g, g_exp)
+
+
+@pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'projectq'])
+@pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
+def test_custom_gate_in_parallel(virtual_qc):
+    """
+    Features: parallel custom gate.
+    Description: test custom gate in parallel mode.
+    Expectation: success.
+    """
+    circ = generate_test_circuit().as_encoder()
+    sim = Simulator(virtual_qc, circ.n_qubits)
+    ham = [Hamiltonian(QubitOperator('Y0')), Hamiltonian(QubitOperator('X2'))]
+    np.random.seed(42)
+    p0 = np.random.uniform(0, 1, size=(2, len(circ.params_name)))
+    grad_ops = sim.get_expectation_with_grad(ham, circ, parallel_worker=4)
+    f, g = grad_ops(p0)
+    f_sum_exp = 0.8396650072427185
+    g_sum_exp = 0.06041889360878677
+    assert np.allclose(np.sum(f), f_sum_exp)
+    assert np.allclose(np.sum(g), g_sum_exp)

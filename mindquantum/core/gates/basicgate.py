@@ -19,6 +19,7 @@
 import copy
 import numbers
 from functools import reduce
+from inspect import signature
 from typing import List, Tuple
 
 import numpy as np
@@ -920,6 +921,28 @@ class Power(NoneParamNonHermMat):
         return False
 
 
+def wrapper_numba(compiled_fun):
+    """Wrap a compiled function with numba."""
+    try:
+        import numba as nb
+    except ImportError:
+        raise ImportError("To use customed parameterized gate, please install numba with 'pip install numba'.")
+
+    @nb.cfunc(nb.types.void(nb.types.double, nb.types.CPointer(nb.types.complex128)))
+    def fun(theta, out_):
+        """Map data to array."""
+        out = nb.carray(
+            out_,
+            (2, 2),
+        )
+        m = compiled_fun(theta)
+        for i in range(2):
+            for j in range(2):
+                out[i][j] = m[i][j]
+
+    return fun.address
+
+
 def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
     """
     Generate a customer parameterized gate based on the single parameter defined unitary matrix.
@@ -953,16 +976,47 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
         >>> circ.get_qs(pr={'a': 1.2})
         array([0.25622563+0.65905116j, 0.25622563-0.65905116j])
     """
-    matrix = matrix_generator(0)
+    try:
+        import numba as nb
+    except ImportError:
+        raise ImportError("To use customed parameterized gate, please install numba with 'pip install numba'.")
+    matrix_sig = signature(matrix_generator)
+    diff_matrix_sig = signature(diff_matrix_generator)
+    if len(matrix_sig.parameters) != 1:
+        raise ValueError(f"matrix_generator can only have one argument, but get {len(matrix_sig.parameters)}.")
+    if len(diff_matrix_sig.parameters) != 1:
+        raise ValueError(f"diff_matrix_generator can only have one argument, but get {len(diff_matrix_sig.parameters)}")
+
+    matrix = matrix_generator(0.123)
+    diff_matrix = diff_matrix_generator(0.123)
+    if matrix.shape != diff_matrix.shape:
+        raise ValueError("matrix_generator and diff_matrix_generator should generate same shape matrix.")
+    if not isinstance(matrix, np.ndarray) or matrix.dtype != complex:
+        raise ValueError(f"matrix_generator should return numpy array with complex type, but get {type(matrix)}.")
+    if not isinstance(diff_matrix, np.ndarray) or diff_matrix.dtype != complex:
+        raise ValueError(
+            f"diff_matrix_generator should return numpy arraywith complex type, but get {type(diff_matrix)}"
+        )
+
     n_qubits = int(np.log2(matrix.shape[0]))
+    if n_qubits not in [1, 2]:
+        raise ValueError(f"Can only custom one or two qubits gate, but get {n_qubits} qubits")
+    c_sig = nb.types.Array(nb.types.complex128, 2, 'C')(nb.types.double)
+    c_matrix_generator = nb.cfunc(c_sig)(matrix_generator)
+    c_diff_matrix_generator = nb.cfunc(c_sig)(diff_matrix_generator)
 
     def herm_matrix_generator(x):
         """Generate hermitian conjugate matrix."""
-        return np.conj(matrix_generator(x)).T
+        return np.conj(c_matrix_generator(x)).T.copy()
 
     def herm_diff_matrix_generator(x):
         """Generate hermitian conjugate diff matrix."""
-        return np.conj(diff_matrix_generator(x)).T
+        return np.conj(c_diff_matrix_generator(x)).T.copy()
+
+    matrix_addr = wrapper_numba(c_matrix_generator)
+    diff_matrix_addr = wrapper_numba(c_diff_matrix_generator)
+    herm_matrix_addr = wrapper_numba(nb.cfunc(c_sig)(herm_matrix_generator))
+    herm_diff_matrix_addr = wrapper_numba(nb.cfunc(c_sig)(herm_diff_matrix_generator))
 
     class _ParamNonHerm(ParamNonHerm):
         """The customer parameterized gate."""
@@ -996,7 +1050,9 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
             return g
 
         def get_cpp_obj(self):
-            cpp_gate = mb.basic_gate(self.name, 1, self.matrix_generator, self.diff_matrix_generator)
+            cpp_gate = mb.basic_gate(self.name, 1, matrix_addr, diff_matrix_addr, 1 << n_qubits)
+            if self.hermitianed:
+                cpp_gate = mb.basic_gate(self.name, 1, herm_matrix_addr, herm_diff_matrix_addr, 1 << n_qubits)
             cpp_gate.daggered = self.hermitianed
             cpp_gate.obj_qubits = self.obj_qubits
             cpp_gate.ctrl_qubits = self.ctrl_qubits

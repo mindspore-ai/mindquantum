@@ -147,9 +147,9 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate<cal
         } else {
             calc_type val = gate->params_.Combination(pr).const_value;
             if (!diff) {
-                mat = gate->param_matrix_(val);
+                mat = gate->numba_param_matrix_(val);
             } else {
-                mat = gate->param_diff_matrix_(val);
+                mat = gate->numba_param_diff_matrix_(val);
             }
         }
         qs_policy_t::ApplyMatrixGate(qs, qs, gate->obj_qubits_, gate->ctrl_qubits_, mat.matrix_, dim);
@@ -377,7 +377,7 @@ auto VectorState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t bra, qs_data_p_t ket,
     auto name = gate->name_;
     auto val = gate->params_.Combination(pr).const_value;
     if (gate->is_custom_) {
-        std::remove_reference_t<decltype(*gate)>::matrix_t mat = gate->param_diff_matrix_(val);
+        std::remove_reference_t<decltype(*gate)>::matrix_t mat = gate->numba_param_diff_matrix_(val);
         return qs_policy_t::ExpectDiffMatrixGate(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, mat.matrix_, dim);
     }
     if (name == gRX) {

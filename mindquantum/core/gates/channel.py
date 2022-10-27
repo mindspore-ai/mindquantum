@@ -89,9 +89,9 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
         if not isinstance(pz, (int, float)):
             raise TypeError(f"Unsupported type for pz, get {type(pz)}.")
         if 0 <= px + py + pz <= 1:
-            self.px = px
-            self.py = py
-            self.pz = pz
+            self.px = float(px)
+            self.py = float(py)
+            self.pz = float(pz)
         else:
             raise ValueError("Required total probability P = px + py + pz ∈ [0,1].")
 

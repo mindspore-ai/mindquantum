@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <memory>
+
 #include <fmt/format.h>
 #include <pybind11/cast.h>
 #include <pybind11/complex.h>
-#include <pybind11/eigen.h>
+// #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
@@ -199,6 +201,7 @@ PYBIND11_MODULE(mqbackend, m) {
         .def(py::init<std::string, bool, MT, MT, MT>())
         .def(py::init<std::string, bool, MT>())
         .def(py::init<std::string, bool, VT<VVT<CT<MT>>>>())
+        .def(py::init<std::string, int64_t, uint64_t, uint64_t, int>())
         .def("PrintInfo", &BasicGate<MT>::PrintInfo)
         .def("apply_value", &BasicGate<MT>::ApplyValue)
         .def_readwrite("obj_qubits", &BasicGate<MT>::obj_qubits_)
@@ -230,6 +233,7 @@ PYBIND11_MODULE(mqbackend, m) {
         .def(py::init<std::string, bool, MT>())
         .def(py::init<std::string, bool, VT<VVT<CT<MT>>>>())
         .def(py::init<std::string, int64_t, py::object, py::object>())
+        .def(py::init<std::string, int64_t, uint64_t, uint64_t, int>())
         .def("PrintInfo", &BasicGate<MT>::PrintInfo)
         .def("apply_value", &BasicGate<MT>::ApplyValue)
         .def_readwrite("obj_qubits", &BasicGate<MT>::obj_qubits_)
