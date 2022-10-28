@@ -153,7 +153,7 @@ class U3(Circuit):
         """Initialize a U3 object."""
         warnings.warn(
             "U3 from circuit is deprecated, please use U3 as a gate from mindquantum.core.gates.",
-            category=DeprecationWarning,
+            category=DeprecationWarning, stacklevel=2
         )
         if obj_qubit is None:
             obj_qubit = 0

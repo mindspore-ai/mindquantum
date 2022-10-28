@@ -14,6 +14,7 @@
 # ============================================================================
 """Simulator."""
 from functools import partial
+import warnings
 
 import numpy as np
 
@@ -89,6 +90,11 @@ class Simulator:
             if seed is None:
                 seed = np.random.randint(1, 2**23)
             _check_seed(seed)
+            if backend == 'projectq':
+                warnings.warn(
+                    "projectq will be deprecated in next version, please use mqvector.",
+                    category=DeprecationWarning, stacklevel=2
+                )
             try:
                 self.backend = SUPPORTED_SIMULATOR[backend](n_qubits, seed, *args, **kwargs)
             except KeyError as err:
