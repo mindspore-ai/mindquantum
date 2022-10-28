@@ -194,9 +194,9 @@ if __name__ == '__main__':
     ansatz_names = ansatz.params_name
     ham = Hamiltonian(QubitOperator('Z0'))
 
-    circ = encoder_circuit + ansatz
-    sim = Simulator('projectq', circ.n_qubits)
-    grad_ops = sim.get_expectation_with_grad(ham, circ, None, None, encoder_names, ansatz_names, parallel_worker)
+    circ = encoder_circuit.as_encoder() + ansatz.as_ansatz()
+    sim = Simulator('mqvector', circ.n_qubits)
+    grad_ops = sim.get_expectation_with_grad(ham, circ, parallel_worker=parallel_worker)
     mql = MQLayer(grad_ops, 'normal')
 
     mnist_net = MnistNet(mql)

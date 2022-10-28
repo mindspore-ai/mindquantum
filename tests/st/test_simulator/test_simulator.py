@@ -40,9 +40,14 @@ try:
 except ImportError:
     _HAS_MINDSPORE = False
 
-_HAS_NUMBA = True
 try:
-    import numba as nb  # pylint: disable=unused-import
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
+
+try:
+    importlib_metadata.import_module("numba")
+    _HAS_NUMBA = True
 except ImportError:
     _HAS_NUMBA = False
 

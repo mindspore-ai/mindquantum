@@ -80,7 +80,7 @@ ham = Hamiltonian(ham)
 
 circ = circuit_qaoa(n_layers)
 ansatz_name = circ.params_name
-net = MQAnsatzOnlyLayer(Simulator('projectq', circ.n_qubits).get_expectation_with_grad(ham, circ))
+net = MQAnsatzOnlyLayer(Simulator('mqvector', circ.n_qubits).get_expectation_with_grad(ham, circ))
 train_loader = ds.NumpySlicesDataset(
     {'x': np.array([[0]]).astype(np.float32), 'y': np.array([0]).astype(np.float32)}
 ).batch(1)

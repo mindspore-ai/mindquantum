@@ -35,7 +35,7 @@ c += qft(range(n_qubits)).hermitian()
 print(c)
 
 
-sim = Simulator('projectq', c.n_qubits)
+sim = Simulator('mqvector', c.n_qubits)
 phi = 0.125
 sim.apply_circuit(c, {'phi': 2 * np.pi * phi})
 qs = sim.get_qs()

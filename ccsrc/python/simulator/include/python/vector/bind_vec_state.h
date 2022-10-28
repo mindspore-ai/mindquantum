@@ -51,6 +51,8 @@ auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLIN
         .def("apply_hamiltonian", &sim_t::ApplyHamiltonian)
         .def("copy", [](const sim_t& sim) { return sim; })
         .def("sampling", &sim_t::Sampling)
+        .def("get_circuit_matrix", &sim_t::GetCircuitMatrix)
+        .def("get_expectation", &sim_t::GetExpectation)
         .def("get_expectation_with_grad_one_one", &sim_t::GetExpectationWithGradOneOne)
         .def("get_expectation_with_grad_one_multi", &sim_t::GetExpectationWithGradOneMulti)
         .def("get_expectation_with_grad_multi_multi", &sim_t::GetExpectationWithGradMultiMulti)

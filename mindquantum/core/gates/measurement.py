@@ -50,10 +50,10 @@ class Measure(FunctionalGate):
         q0: ──H────PS(π/2)─────────@────M(q0)──
                       │            │
         q1: ──────────●───────H────@────M(q1)──
-        >>> sim = Simulator('projectq', circ.n_qubits)
+        >>> sim = Simulator('mqvector', circ.n_qubits)
         >>> sim.apply_circuit(Circuit().h(0).x(1, 0))
         >>> sim
-        projectq simulator with 2 qubits (little endian).
+        mqvector simulator with 2 qubits (little endian).
         Current quantum state:
         √2/2¦00⟩
         √2/2¦11⟩
@@ -70,13 +70,13 @@ class Measure(FunctionalGate):
                    │
         {'00': 993, '10': 506, '11': 501}
         >>> sim
-        projectq simulator with 2 qubits (little endian).
+        mqvector simulator with 2 qubits (little endian).
         Current quantum state:
         √2/2¦00⟩
         √2/2¦11⟩
         >>> sim.apply_circuit(circ[:-2])
         >>> sim
-        projectq simulator with 2 qubits (little endian).
+        mqvector simulator with 2 qubits (little endian).
         Current quantum state:
         √2/2¦00⟩
         (√2/4-√2/4j)¦10⟩
@@ -158,7 +158,7 @@ class MeasureResult:
     Examples:
         >>> from mindquantum.algorithm.library import qft
         >>> from mindquantum.simulator import Simulator
-        >>> sim = Simulator('projectq', 2)
+        >>> sim = Simulator('mqvector', 2)
         >>> res = sim.sampling(qft(range(2)).measure_all(), shots=1000, seed=42)
         >>> res
         shots: 1000
@@ -249,7 +249,7 @@ class MeasureResult:
             q0: ──H────PS(π/2)─────────@────M(q0_0)────H────M(q0_1)──
                           │            │
             q1: ──────────●───────H────@────M(q1_0)──────────────────
-            >>> sim = Simulator('projectq', circ.n_qubits)
+            >>> sim = Simulator('mqvector', circ.n_qubits)
             >>> res = sim.sampling(circ, shots=500, seed=42)
             >>> new_res = res.select_keys('q0_1', 'q1_0')
             >>> new_res

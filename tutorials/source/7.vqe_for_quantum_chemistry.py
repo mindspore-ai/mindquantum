@@ -66,14 +66,14 @@ total_circuit = hartreefock_wfn_circuit + ansatz_circuit
 total_circuit.summary()
 print(f"Number of parameters: {len(ansatz_parameter_names)}")
 
-sim = Simulator('projectq', total_circuit.n_qubits)
+sim = Simulator('mqvector', total_circuit.n_qubits)
 molecule_pqc = sim.get_expectation_with_grad(Hamiltonian(hamiltonian_qubit_op), total_circuit)
 
 
 molecule_pqcnet = MQAnsatzOnlyLayer(molecule_pqc, 'Zeros')
 
 initial_energy = molecule_pqcnet()
-print(f"Initial energy: {initial_energy.asnumpy():20.16f}")
+print(f"Initial energy: {float(initial_energy.asnumpy()):20.16f}")
 
 optimizer = ms.nn.Adagrad(molecule_pqcnet.trainable_params(), learning_rate=4e-2)
 train_pqcnet = ms.nn.TrainOneStepCell(molecule_pqcnet, optimizer)
@@ -91,7 +91,7 @@ while abs(energy_diff) > eps:
     iter_idx += 1
 
 print(f"Optimization completed at step {int(iter_idx - 1):3}")
-print(f"Optimized energy: {energy_i:20.16f}")
+print(f"Optimized energy: {float(energy_i):20.16f}")
 print("Optimized amplitudes: \n", molecule_pqcnet.weight.asnumpy())
 
 
@@ -112,7 +112,7 @@ init_amplitudes_ccsd = uccsd_singlet_get_packed_amplitudes(
 )
 init_amplitudes_ccsd = [init_amplitudes_ccsd[param_i] for param_i in ansatz_parameter_names]
 
-grad_ops = Simulator('projectq', total_circuit.n_qubits).get_expectation_with_grad(
+grad_ops = Simulator('mqvector', total_circuit.n_qubits).get_expectation_with_grad(
     Hamiltonian(hamiltonian_qubit_op.real), total_circuit
 )
 
@@ -120,7 +120,7 @@ molecule_pqcnet = MQAnsatzOnlyLayer(grad_ops)
 
 molecule_pqcnet.weight = Parameter(ms.Tensor(init_amplitudes_ccsd, molecule_pqcnet.weight.dtype))
 initial_energy = molecule_pqcnet()
-print(f"Initial energy: {initial_energy.asnumpy():20.16f}")
+print(f"Initial energy: {float(initial_energy.asnumpy()):20.16f}")
 
 optimizer = ms.nn.Adagrad(molecule_pqcnet.trainable_params(), learning_rate=4e-2)
 train_pqcnet = ms.nn.TrainOneStepCell(molecule_pqcnet, optimizer)
@@ -138,5 +138,5 @@ while abs(energy_diff) > eps:
     iter_idx += 1
 
 print(f"Optimization completed at step {int(iter_idx - 1):3}")
-print(f"Optimized energy: {energy_i:20.16f}")
+print(f"Optimized energy: {float(energy_i):20.16f}")
 print("Optimized amplitudes: \n", molecule_pqcnet.weight.asnumpy())

@@ -379,6 +379,15 @@ auto GPUVectorPolicyBase::ExpectDiffZZ(qs_data_p_t bra, qs_data_p_t ket, const q
         qs_data_t(0, 0), thrust::plus<qs_data_t>());
 }
 
+auto GPUVectorPolicyBase::ExpectDiffGP(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
+                                       calc_type val, index_t dim) -> qs_data_t {
+    SingleQubitGateMask mask(objs, ctrls);
+    auto e = std::complex<calc_type>(0, -1);
+    e *= std::exp(std::complex<calc_type>(0, -val));
+    std::vector<py_qs_datas_t> gate = {{e, 0}, {0, e}};
+    GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
+}
+
 auto GPUVectorPolicyBase::ExpectDiffPS(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                        calc_type val, index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);

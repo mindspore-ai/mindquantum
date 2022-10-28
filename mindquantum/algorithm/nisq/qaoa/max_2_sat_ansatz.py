@@ -178,7 +178,7 @@ class Max2SATAnsatz(Ansatz):
         """
         _check_int_type('max_n', max_n)
         _check_value_should_between_close_set('max_n', 1, 1 << self._circuit.n_qubits, max_n)
-        sim = Simulator('projectq', self._circuit.n_qubits)
+        sim = Simulator('mqvector', self._circuit.n_qubits)
         sim.apply_circuit(self._circuit, weight)
         state = sim.get_qs()
         idxs = np.argpartition(np.abs(state), -max_n)[-max_n:]

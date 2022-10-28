@@ -38,7 +38,7 @@ def apply_gate(sim, gate, g_cpp, pr_cpp, diff):
 
 
 # pylint: disable=too-many-statements,too-many-locals
-def _qfi_matrix_base(circuit: Circuit, which_part='both', backend='projectq'):
+def _qfi_matrix_base(circuit: Circuit, which_part='both', backend='mqvector'):
     """Calculate Quantum Fisher Information (QFI)."""
     from ...simulator import (  # pylint: disable=import-outside-toplevel,cyclic-import
         Simulator,
@@ -139,7 +139,7 @@ def _qfi_matrix_base(circuit: Circuit, which_part='both', backend='projectq'):
     return qfi_ops
 
 
-def qfi(circuit: Circuit, backend='projectq'):
+def qfi(circuit: Circuit, backend='mqvector'):
     r"""
     Calculate the quantum fisher information of the given parameterized circuit with given parameters.
 
@@ -166,7 +166,7 @@ def qfi(circuit: Circuit, backend='projectq'):
     Args:
         circuit (Circuit): A parameterized quantum circuit.
         backend (str): A supported simulator backend. Please refer description
-            of :class:`mindquantum.simulator.Simulator`. Default: 'projectq'.
+            of :class:`mindquantum.simulator.Simulator`. Default: 'mqvector'.
 
     Returns:
         Function, a function that can calculate quantum fisher information.
@@ -192,7 +192,7 @@ def qfi(circuit: Circuit, backend='projectq'):
     return qfi_ops
 
 
-def partial_psi_partial_psi(circuit: Circuit, backend='projectq'):
+def partial_psi_partial_psi(circuit: Circuit, backend='mqvector'):
     r"""
     Calculate the following value of the given parameterized quantum circuit.
 
@@ -204,7 +204,7 @@ def partial_psi_partial_psi(circuit: Circuit, backend='projectq'):
     Args:
         circuit (Circuit): A parameterized quantum circuit.
         backend (str): A supported simulator backend. Please refer description
-            of :class:`mindquantum.simulator.Simulator`. Default: 'projectq'.
+            of :class:`mindquantum.simulator.Simulator`. Default: 'mqvector'.
 
     Returns:
         Function, a function that can calculate inner product of partial psi and partial psi.
@@ -225,7 +225,7 @@ def partial_psi_partial_psi(circuit: Circuit, backend='projectq'):
     return _qfi_matrix_base(circuit, 'A', backend=backend)
 
 
-def partial_psi_psi(circuit: Circuit, backend='projectq'):
+def partial_psi_psi(circuit: Circuit, backend='mqvector'):
     r"""
     Calculate the following value of the given parameterized quantum circuit.
 
@@ -236,7 +236,7 @@ def partial_psi_psi(circuit: Circuit, backend='projectq'):
     Args:
         circuit (Circuit): A parameterized quantum circuit.
         backend (str): A supported simulator backend. Please refer description
-            of :class:`mindquantum.simulator.Simulator`. Default: 'projectq'.
+            of :class:`mindquantum.simulator.Simulator`. Default: 'mqvector'.
 
     Returns:
         Function, a function that can calculate inner product of partial psi and psi.

@@ -107,7 +107,7 @@ print(hams)
 
 ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 ms.set_seed(1)
-sim = Simulator('projectq', circuit.n_qubits)
+sim = Simulator('mqvector', circuit.n_qubits)
 grad_ops = sim.get_expectation_with_grad(hams, circuit, parallel_worker=5)
 QuantumNet = MQLayer(grad_ops)
 QuantumNet

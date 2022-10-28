@@ -78,7 +78,7 @@ init_state_circ = UN(H, g.nodes)
 ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 
 circ = init_state_circ + ansatz
-sim = Simulator('projectq', circ.n_qubits)
+sim = Simulator('mqvector', circ.n_qubits)
 grad_ops = sim.get_expectation_with_grad(ham, circ)
 net = MQAnsatzOnlyLayer(grad_ops)
 opti = nn.Adam(net.trainable_params(), learning_rate=0.05)
