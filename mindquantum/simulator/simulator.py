@@ -72,7 +72,7 @@ class Simulator:
     Examples:
         >>> from mindquantum.algorithm.library import qft
         >>> from mindquantum.simulator import Simulator
-        >>> sim = Simulator('projectq', 2)
+        >>> sim = Simulator('mqvector', 2)
         >>> sim.apply_circuit(qft(range(2)))
         >>> sim.get_qs()
         array([0.5+0.j, 0.5+0.j, 0.5+0.j, 0.5+0.j])
@@ -111,13 +111,13 @@ class Simulator:
         Examples:
             >>> from mindquantum.core.gates import RX
             >>> from mindquantum.simulator import Simulator
-            >>> sim = Simulator('projectq', 1)
+            >>> sim = Simulator('mqvector', 1)
             >>> sim.apply_gate(RX(1).on(0))
             >>> sim.flush()
             >>> sim2 = sim.copy()
             >>> sim2.apply_gate(RX(-1).on(0))
             >>> sim2
-            projectq simulator with 1 qubit (little endian).
+            mqvector simulator with 1 qubit (little endian).
             Current quantum state:
             1¦0⟩
         """
@@ -138,7 +138,7 @@ class Simulator:
         Examples:
             >>> from mindquantum.algorithm.library import qft
             >>> from mindquantum.simulator import Simulator
-            >>> sim = Simulator('projectq', 2)
+            >>> sim = Simulator('mqvector', 2)
             >>> sim.apply_circuit(qft(range(2)))
             >>> sim.reset()
             >>> sim.get_qs()
@@ -187,7 +187,7 @@ class Simulator:
             >>> import numpy as np
             >>> from mindquantum.core.gates import RY, Measure
             >>> from mindquantum.simulator import Simulator
-            >>> sim = Simulator('projectq', 1)
+            >>> sim = Simulator('mqvector', 1)
             >>> sim.apply_gate(RY('a').on(0), np.pi/2)
             >>> sim.get_qs()
             array([0.70710678+0.j, 0.70710678+0.j])
@@ -217,11 +217,11 @@ class Simulator:
             >>> from mindquantum.core.circuit import Circuit
             >>> from mindquantum.core.gates import H
             >>> from mindquantum.simulator import Simulator
-            >>> sim = Simulator('projectq', 2)
+            >>> sim = Simulator('mqvector', 2)
             >>> sim.apply_circuit(Circuit().un(H, 2))
             >>> sim.apply_circuit(Circuit().ry('a', 0).ry('b', 1), np.array([1.1, 2.2]))
             >>> sim
-            projectq simulator with 2 qubits  (little endian).
+            mqvector simulator with 2 qubits  (little endian).
             Current quantum state:
             -0.0721702531972066¦00⟩
             -0.30090405886869676¦01⟩
@@ -261,7 +261,7 @@ class Simulator:
             >>> circ += Measure('q0_0').on(0)
             >>> circ += Measure('q0_1').on(0)
             >>> circ += Measure('q1').on(1)
-            >>> sim = Simulator('projectq', circ.n_qubits)
+            >>> sim = Simulator('mqvector', circ.n_qubits)
             >>> res = sim.sampling(circ, {'a': 1.1, 'b': 2.2}, shots=100, seed=42)
             >>> res
             shots: 100
@@ -294,7 +294,7 @@ class Simulator:
             >>> from mindquantum.core.operators import QubitOperator, Hamiltonian
             >>> from mindquantum.simulator import Simulator
             >>> import scipy.sparse as sp
-            >>> sim = Simulator('projectq', 1)
+            >>> sim = Simulator('mqvector', 1)
             >>> sim.apply_circuit(Circuit().h(0))
             >>> sim.get_qs()
             array([0.70710678+0.j, 0.70710678+0.j])
@@ -328,13 +328,13 @@ class Simulator:
             >>> from mindquantum.core.circuit import Circuit
             >>> from mindquantum.core.operators import QubitOperator, Hamiltonian
             >>> from mindquantum.simulator import Simulator
-            >>> sim = Simulator('projectq', 1)
+            >>> sim = Simulator('mqvector', 1)
             >>> sim.apply_circuit(Circuit().ry(1.2, 0))
             >>> ham = Hamiltonian(QubitOperator('Z0'))
             >>> sim.get_expectation(ham)
             (0.36235775447667357+0j)
         """
-        return self.backend.get_expectation(self, hamiltonian)
+        return self.backend.get_expectation(hamiltonian)
 
     def set_threads_number(self, number):
         """Set maximum number of threads."""
@@ -354,7 +354,7 @@ class Simulator:
         Examples:
             >>> from mindquantum.algorithm.library import qft
             >>> from mindquantum.simulator import Simulator
-            >>> sim = Simulator('projectq', 2)
+            >>> sim = Simulator('mqvector', 2)
             >>> sim.apply_circuit(qft(range(2)))
             >>> sim.get_qs()
             array([0.5+0.j, 0.5+0.j, 0.5+0.j, 0.5+0.j])
@@ -371,7 +371,7 @@ class Simulator:
         Examples:
             >>> import numpy as np
             >>> from mindquantum.simulator import Simulator
-            >>> sim = Simulator('projectq', 1)
+            >>> sim = Simulator('mqvector', 1)
             >>> sim.get_qs()
             array([1.+0.j, 0.+0.j])
             >>> sim.set_qs(np.array([1, 1]))
@@ -429,15 +429,15 @@ class Simulator:
             >>> from mindquantum.simulator import Simulator
             >>> circ = Circuit().ry('a', 0)
             >>> ham = Hamiltonian(QubitOperator('Z0'))
-            >>> sim = Simulator('projectq', 1)
+            >>> sim = Simulator('mqvector', 1)
             >>> grad_ops = sim.get_expectation_with_grad(ham, circ)
             >>> grad_ops(np.array([1.0]))
             (array([[0.54030231+0.j]]), array([[[-0.84147098+0.j]]]))
-            >>> sim1 = Simulator('projectq', 1)
+            >>> sim1 = Simulator('mqvector', 1)
             >>> prep_circ = Circuit().h(0)
             >>> ansatz = Circuit().ry('a', 0).rz('b', 0).ry('c', 0)
             >>> sim1.apply_circuit(prep_circ)
-            >>> sim2 = Simulator('projectq', 1)
+            >>> sim2 = Simulator('mqvector', 1)
             >>> ham = Hamiltonian(QubitOperator(""))
             >>> grad_ops = sim2.get_expectation_with_grad(ham, ansatz, Circuit(), simulator_left=sim1)
             >>> f, g = grad_ops(np.array([7.902762e-01, 2.139225e-04, 7.795934e-01]))
@@ -467,9 +467,9 @@ def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
     Examples:
         >>> from mindquantum.core.gates import RX, RY
         >>> from mindquantum.simulator import inner_product, Simulator
-        >>> bra_simulator = Simulator('projectq', 1)
+        >>> bra_simulator = Simulator('mqvector', 1)
         >>> bra_simulator.apply_gate(RY(1.2).on(0))
-        >>> ket_simulator = Simulator('projectq', 1)
+        >>> ket_simulator = Simulator('mqvector', 1)
         >>> ket_simulator.apply_gate(RX(2.3).on(0))
         >>> inner_product(bra_simulator, ket_simulator)
         (0.33713923320500694-0.5153852888544989j)

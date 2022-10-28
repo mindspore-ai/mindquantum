@@ -114,7 +114,7 @@ def generate_ansatz_circuit(n_qubits, layers, prefix=''):
     circ = Circuit()
     for layer in range(layers):
         for i in range(n_qubits):
-            circ += RY(f"{prefix + layer}_{i}").on(i)
+            circ += RY(f"{prefix + str(layer)}_{i}").on(i)
         for i in range(layer % 2, n_qubits, 2):
             if i < n_qubits and i + 1 < n_qubits:
                 circ += X.on(i + 1, i)
@@ -155,7 +155,7 @@ def q_embedding(num_embedding, embedding_dim, window, layers, n_threads):
         circ += ansatz
         encoder_param_name.extend(encoder.params_name)
         ansatz_param_name.extend(ansatz.params_name)
-    grad_ops = Simulator('projectq', circ.n_qubits).get_expectation_with_grad(hams, circ, parallel_worker=n_threads)
+    grad_ops = Simulator('mqvector', circ.n_qubits).get_expectation_with_grad(hams, circ, parallel_worker=n_threads)
     return MQLayer(grad_ops)
 
 

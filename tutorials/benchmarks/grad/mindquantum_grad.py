@@ -93,7 +93,7 @@ x_train_circ = [convert_to_circuit(x, range(1, n_qubits)) for x in x_train_bin]
 
 ansatz, ham = create_quantum_model(n_qubits)
 model_params_names = ansatz.params_name
-ops = Simulator('projectq', ansatz.n_qubits).get_expectation_with_grad(
+ops = Simulator('mqvector', ansatz.n_qubits).get_expectation_with_grad(
     ham, ansatz, parallel_worker=args.parallel_worker
 )
 

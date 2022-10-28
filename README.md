@@ -86,7 +86,7 @@ circuit.svg()
 
 ```python
 ansatz = CPN(encoder.hermitian(), {'a0': 'b0', 'a1': 'b1'})
-sim = Simulator('projectq', 2)
+sim = Simulator('mqvector', 2)
 ham = Hamiltonian(-QubitOperator('Z0 Z1'))
 grad_ops = sim.get_expectation_with_grad(
     ham,

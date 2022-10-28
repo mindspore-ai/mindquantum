@@ -59,7 +59,7 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
                     │
         q1: ────────PC────M(q1)──
         >>> from mindquantum.simulator import Simulator
-        >>> sim = Simulator('projectq', 2)
+        >>> sim = Simulator('mqvector', 2)
         >>> sim.sampling(circ, shots=1000, seed=42)
         shots: 1000
         Keys: q1 q0│0.00     0.2         0.4         0.6         0.8         1.0

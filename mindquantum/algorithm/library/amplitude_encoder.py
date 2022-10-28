@@ -61,7 +61,7 @@ def amplitude_encoder(x, n_qubits):
     Examples:
         >>> from mindquantum.algorithm.library import amplitude_encoder
         >>> from mindquantum.simulator import Simulator
-        >>> sim = Simulator('projectq', 8)
+        >>> sim = Simulator('mqvector', 8)
         >>> encoder, parameterResolver = amplitude_encoder([0.5, -0.5, 0.5, 0.5], 8)
         >>> sim.apply_circuit(encoder, parameterResolver)
         >>> print(sim.get_qs(True))

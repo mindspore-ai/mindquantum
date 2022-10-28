@@ -45,7 +45,7 @@ encoder_names = ['a', 'b']
 ansatz_names = ['p1', 'p2']
 
 total_circuit = encoder.as_encoder() + ansatz.as_ansatz()
-sim = Simulator('projectq', total_circuit.n_qubits)
+sim = Simulator('mqvector', total_circuit.n_qubits)
 grad_ops = sim.get_expectation_with_grad(ham, total_circuit)
 encoder_data = np.array([[0.1, 0.2]])
 ansatz_data = np.array([0.3, 0.4])

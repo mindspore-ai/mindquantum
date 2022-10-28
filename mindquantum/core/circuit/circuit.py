@@ -707,7 +707,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         """
         return list(self.all_ansatz.keys())
 
-    def matrix(self, pr=None, big_end=False, backend='projectq', seed=None):
+    def matrix(self, pr=None, big_end=False, backend='mqvector', seed=None):
         """
         Get the matrix of this circuit.
 
@@ -715,7 +715,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             pr (ParameterResolver, dict, numpy.ndarray, list, numbers.Number): The parameter
                 resolver for parameterized quantum circuit. Default: None.
             big_end (bool): The low index qubit is place in the end or not. Default: False.
-            backend (str): The backend to do simulation. Default: 'projectq'.
+            backend (str): The backend to do simulation. Default: 'mqvector'.
             seed (int): The random to generate circuit matrix, if the circuit has noise channel.
 
         Returns:
@@ -1066,12 +1066,12 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         self += UN(gate, maps_obj, maps_ctrl)
         return self
 
-    def get_qs(self, backend='projectq', pr=None, ket=False, seed=None):
+    def get_qs(self, backend='mqvector', pr=None, ket=False, seed=None):
         """
         Get the final quantum state of this circuit.
 
         Args:
-            backend (str): Which backend you want to use. Default: 'projectq'.
+            backend (str): Which backend you want to use. Default: 'mqvector'.
             pr (Union[numbers.Number, ParameterResolver, dict, numpy.ndarray]): The parameter of this circuit,
                 if this circuit is parameterized. Default: None.
             ket (str): Whether to return the quantum state in ket format. Default: False.

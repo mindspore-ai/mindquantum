@@ -280,7 +280,7 @@ class MQSim(BackendBase):
         return grad_wrapper
 
     def get_qs(self, ket=False) -> np.ndarray:
-        """Get quantum state of projectq simulator."""
+        """Get quantum state of mqvector simulator."""
         if not isinstance(ket, bool):
             raise TypeError(f"ket requires a bool, but get {type(ket)}")
         state = np.array(self.sim.get_qs())
@@ -333,7 +333,7 @@ class MQSim(BackendBase):
         return res
 
     def set_qs(self, quantum_state: np.ndarray):
-        """Set quantum state of projectq simulator."""
+        """Set quantum state of mqvector simulator."""
         if not isinstance(quantum_state, np.ndarray):
             raise TypeError(f"quantum state must be a ndarray, but get {type(quantum_state)}")
         if len(quantum_state.shape) != 1:

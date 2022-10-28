@@ -78,12 +78,12 @@
         参数：
             - **hermitian** (bool) - 是否获取线路cpp object的hermitian版本。默认值： `False` 。
 
-    .. py:method:: get_qs(backend='projectq', pr=None, ket=False, seed=None)
+    .. py:method:: get_qs(backend='mqvector', pr=None, ket=False, seed=None)
 
         获取线路的最终量子态。
 
         参数：
-            - **backend** (str) - 使用的后端。默认值：'projectq'。
+            - **backend** (str) - 使用的后端。默认值：'mqvector'。
             - **pr** (Union[numbers.Number, ParameterResolver, dict, numpy.ndarray]) - 线路的参数，线路含参数时提供。默认值：None。
             - **ket** (str) - 是否以ket格式返回量子态。默认值：False。
             - **seed** (int) - 模拟器的随机种子。默认值：None。
@@ -132,14 +132,14 @@
         返回：
             bool，线路是否有噪声信道。
 
-    .. py:method:: matrix(pr=None, big_end=False, backend='projectq', seed=None)
+    .. py:method:: matrix(pr=None, big_end=False, backend='mqvector', seed=None)
 
         获取线路的矩阵表示。
 
         参数：
             - **pr** (ParameterResolver, dict, numpy.ndarray, list, numbers.Number) - 含参量子线路的参数。默认值： `None`。
             - **big_end** (bool) - 低索引量子比特是否放置在末尾。默认值： `False`。
-            - **backend** (str) - 进行模拟的后端。默认值： `'projectq'`。
+            - **backend** (str) - 进行模拟的后端。默认值： `'mqvector'`。
             - **seed** (int) - 生成线路矩阵的随机数，如果线路包含噪声信道。
 
         返回：

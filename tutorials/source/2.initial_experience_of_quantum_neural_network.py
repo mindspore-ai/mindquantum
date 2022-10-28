@@ -61,7 +61,7 @@ print('encoder_names = ', encoder.params_name, '\nansatz_names =', ansatz.params
 
 # 导入Simulator模块
 
-sim = Simulator('projectq', circuit.n_qubits)
+sim = Simulator('mqvector', circuit.n_qubits)
 
 grad_ops = sim.get_expectation_with_grad(ham, circuit)
 

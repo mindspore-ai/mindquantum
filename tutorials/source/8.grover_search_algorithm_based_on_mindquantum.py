@@ -57,7 +57,7 @@ def bitphaseflip_operator(phase_inversion_qubit, n_qubits):  # pylint: disable=t
 
 
 n_qubits = 3
-sim = Simulator('projectq', n_qubits)
+sim = Simulator('mqvector', n_qubits)
 
 circuit = Circuit()
 circuit += UN(H, n_qubits)
@@ -83,7 +83,7 @@ print(sim.get_qs(True))
 print(int('100', 2))
 
 n_qubits = 3
-sim1 = Simulator('projectq', n_qubits)
+sim1 = Simulator('mqvector', n_qubits)
 
 operator1 = bitphaseflip_operator(list(range(1, pow(2, n_qubits))), n_qubits)
 
@@ -115,7 +115,7 @@ M = len(phase_inversion_qubit)
 
 r = int(pi / 4 * sqrt(N / M))
 
-sim2 = Simulator('projectq', n_qubits)
+sim2 = Simulator('mqvector', n_qubits)
 
 circuit2 = Circuit()
 circuit2 += UN(H, n_qubits)
@@ -146,7 +146,7 @@ M = len(phase_inversion_qubit)
 
 r = int(pi / 4 * sqrt(N / M))
 
-sim3 = Simulator('projectq', n_qubits)
+sim3 = Simulator('mqvector', n_qubits)
 
 circuit3 = Circuit()
 circuit3 += UN(H, n_qubits)
