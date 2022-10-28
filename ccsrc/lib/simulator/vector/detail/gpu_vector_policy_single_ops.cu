@@ -176,6 +176,13 @@ void GPUVectorPolicyBase::ApplyH(qs_data_p_t qs, const qbits_t& objs, const qbit
     ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
 }
 
+void GPUVectorPolicyBase::ApplyGP(qs_data_p_t qs, qbit_t obj_qubit, const qbits_t& ctrls, calc_type val, index_t dim,
+                                  bool diff) {
+    auto c = std::exp(std::complex<calc_type>(0, -val));
+    std::vector<std::vector<py_qs_data_t>> m = {{c, 0}, {0, c}};
+    ApplySingleQubitMatrix(qs, qs, obj_qubit, ctrls, m, dim);
+}
+
 void GPUVectorPolicyBase::ApplyRY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                                   bool diff) {
     SingleQubitGateMask mask(objs, ctrls);

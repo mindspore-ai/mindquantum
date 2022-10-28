@@ -124,6 +124,16 @@ class VectorState {
     //! Apply a hamiltonian on this quantum state
     void ApplyHamiltonian(const Hamiltonian<calc_type>& ham);
 
+    //! Get the matrix of quantum circuit.
+    VT<py_qs_datas_t> GetCircuitMatrix(const circuit_t& circ, const ParameterResolver<calc_type>& pr);
+
+    //! Get expectation of given hamiltonian
+    py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham) {
+        auto ket = *this;
+        ket.ApplyHamiltonian(ham);
+        return qs_policy_t::Vdot(this->qs, ket.qs, dim);
+    }
+
     //! Get the expectation of hamiltonian
     //! Here a single hamiltonian and single parameter data are needed
     py_qs_datas_t GetExpectationWithGradOneOne(const Hamiltonian<calc_type>& ham, const circuit_t& circ,

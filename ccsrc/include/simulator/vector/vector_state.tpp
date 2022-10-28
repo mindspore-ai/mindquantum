@@ -239,6 +239,14 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate<cal
             val = gate->params_.Combination(pr).const_value;
         }
         qs_policy_t::ApplyPS(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+    } else if (name == gGP) {
+        auto val = gate->applied_value_;
+        if (!gate->parameterized_) {
+            diff = false;
+        } else {
+            val = gate->params_.Combination(pr).const_value;
+        }
+        qs_policy_t::ApplyGP(qs, gate->obj_qubits_[0], gate->ctrl_qubits_, val, dim, diff);
     } else if (name == gU3) {
         if (diff) {
             std::runtime_error("Can not apply differential format of U3 gate on quatum states currently.");
@@ -401,6 +409,9 @@ auto VectorState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t bra, qs_data_p_t ket,
     if (name == gPS) {
         return qs_policy_t::ExpectDiffPS(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
     }
+    if (name == gGP) {
+        return qs_policy_t::ExpectDiffGP(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+    }
     throw std::invalid_argument("Expectation of gate " + name + " not implement.");
 }
 
@@ -485,6 +496,18 @@ void VectorState<qs_policy_t_>::ApplyHamiltonian(const Hamiltonian<calc_type>& h
     }
     qs_policy_t::FreeState(qs);
     qs = new_qs;
+}
+
+template <typename qs_policy_t_>
+auto VectorState<qs_policy_t_>::GetCircuitMatrix(const circuit_t& circ, const ParameterResolver<calc_type>& pr)
+    -> VT<py_qs_datas_t> {
+    VVT<CT<calc_type>> out((1 << n_qubits));
+    for (size_t i = 0; i < (1UL << n_qubits); i++) {
+        auto sim = VectorState<qs_policy_t>(n_qubits, seed);
+        sim.ApplyCircuit(circ, pr);
+        out[i] = sim.GetQS();
+    }
+    return out;
 }
 
 template <typename qs_policy_t_>

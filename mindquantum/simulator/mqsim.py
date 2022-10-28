@@ -145,6 +145,17 @@ class MQSim(BackendBase):
     def flush(self):
         """Execute all command."""
 
+    def get_circuit_matrix(self, circuit: Circuit, pr: ParameterResolver) -> np.ndarray:
+        """Get the matrix of given circuit."""
+        return np.array(self.sim.get_circuit_matrix(circuit.get_cpp_obj(), pr.get_cpp_obj())).T
+
+    def get_expectation(self, hamiltonian: Hamiltonian) -> np.ndarray:
+        """Get expectation of a hamiltonian."""
+        if not isinstance(hamiltonian, Hamiltonian):
+            raise TypeError(f"hamiltonian requires a Hamiltonian, but got {type(hamiltonian)}")
+        _check_hamiltonian_qubits_number(hamiltonian, self.n_qubits)
+        return self.sim.get_expectation(hamiltonian.get_cpp_obj())
+
     def get_expectation_with_grad(  # pylint: disable=R0912,R0913,R0914,R0915
         self,
         hams: List[Hamiltonian],
