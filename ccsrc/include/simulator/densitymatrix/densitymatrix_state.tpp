@@ -179,11 +179,10 @@ auto DensityMatrixState<qs_policy_t_>::ApplyCircuit(const circuit_t& circ, const
     std::map<std::string, int> result;
     for (auto& g : circ) {
         ApplyGate(g, pr, false);
-        }
     }
     return result;
 }
 
-}  // namespace mindquantum::sim::vector::detail
+}  // namespace mindquantum::sim::densitymatrix::detail
 
 #endif

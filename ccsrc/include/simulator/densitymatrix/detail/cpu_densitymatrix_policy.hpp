@@ -29,7 +29,7 @@ struct CPUDensityMatrixPolicyBase {
     using qs_data_t = std::complex<calc_type>;
     using qs_data_p_t = qs_data_t*;
     using py_qs_data_t = std::complex<calc_type>;
-    using py_qs_datas_t = std::vector<py_qs_data_t>;
+    using py_qs_datas_t = std::vector<std::vector<py_qs_data_t>>;
     static constexpr index_t DimTh = 1UL << 13;
     static constexpr qs_data_t IMAGE_MI = {0, -1};
     static constexpr qs_data_t IMAGE_I = {0, 1};
@@ -41,7 +41,8 @@ struct CPUDensityMatrixPolicyBase {
     static void Reset(qs_data_p_t qs, index_t n_elements);
     static void FreeState(qs_data_p_t qs);
     static void Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit = 10);
-    static py_qs_datas_t GetQS(qs_data_p_t qs, index_t dim, index_t n_elements);
+    static py_qs_datas_t GetQS(qs_data_p_t qs, index_t dim);
+    static void DisplayQS(qs_data_p_t qs, qbit_t n_qubits, index_t dim);
     static void SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, index_t dim, index_t n_elements);
     static qs_data_p_t Copy(qs_data_p_t qs, index_t n_elements);
 

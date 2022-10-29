@@ -42,12 +42,14 @@ void CPUDensityMatrixPolicyBase::ApplyXLike(qs_data_p_t qs, const qbits_t& objs,
             dim, DimTh, for (omp::idx_t k = 0; k < (dim / 2); k++) {
                 auto i = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
                 auto j = i | mask.obj_mask;
-                dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
+                for (index_t l = 0; l < (dim / 2); l++) {
                     auto m = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                     auto n = m | mask.obj_mask;
-                    auto tmp = qs[i][m];
-                    qs[i][m] = qs[j][n] * v1;
-                    qs[j][n] = tmp * v2;
+                    auto idx_i_m = (i * i + i) / 2 + m;
+                    auto idx_j_n = (j * j + j) / 2 + n;
+                    auto tmp = qs[idx_i_m];
+                    qs[idx_i_m] = qs[idx_j_n] * v1;
+                    qs[idx_j_n] = tmp * v2;
                 }
             })
 
@@ -57,12 +59,14 @@ void CPUDensityMatrixPolicyBase::ApplyXLike(qs_data_p_t qs, const qbits_t& objs,
                 auto i = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
                 if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                     auto j = i | mask.obj_mask;
-                    dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
+                    for (index_t l = 0; l < (dim / 2); l++) {
                         auto m = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                         auto n = m | mask.obj_mask;
-                        auto tmp = qs[i][m];
-                        qs[i][m] = qs[j][n] * v1;
-                        qs[j][n] = tmp * v2;
+                        auto idx_i_m = (i * i + i) / 2 + m;
+                        auto idx_j_n = (j * j + j) / 2 + n;
+                        auto tmp = qs[idx_i_m];
+                        qs[idx_i_m] = qs[idx_j_n] * v1;
+                        qs[idx_j_n] = tmp * v2;
                     }
                 }
             })

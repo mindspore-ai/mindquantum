@@ -41,14 +41,14 @@ void CPUDensityMatrixPolicyBase::ApplyZLike(qs_data_p_t qs, const qbits_t& objs,
         THRESHOLD_OMP_FOR(
             dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask) + mask.obj_mask;
-                qs[i][i] *= val;
+                qs[(i * i + i) / 2 + i] *= val;
             })
     } else {
         THRESHOLD_OMP_FOR(
             dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask) + mask.obj_mask;
                 if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                    qs[i][i] *= val;
+                    qs[(i * i + i) / 2 + i] *= val;
                 }
             })
     }
