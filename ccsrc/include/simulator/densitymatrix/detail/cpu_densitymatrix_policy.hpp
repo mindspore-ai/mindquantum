@@ -25,6 +25,9 @@
 
 
 namespace mindquantum::sim::densitymatrix::detail {
+
+index_t Idx(index_t x, index_t y);
+
 struct CPUDensityMatrixPolicyBase {
     using qs_data_t = std::complex<calc_type>;
     using qs_data_p_t = qs_data_t*;
@@ -45,6 +48,7 @@ struct CPUDensityMatrixPolicyBase {
     static void DisplayQS(qs_data_p_t qs, qbit_t n_qubits, index_t dim);
     static void SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, index_t dim, index_t n_elements);
     static qs_data_p_t Copy(qs_data_p_t qs, index_t n_elements);
+    static bool IsPure(qs_data_p_t qs, index_t dim, index_t n_elements);
 
     // X like operator
     // ========================================================================================================

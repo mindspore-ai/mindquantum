@@ -39,34 +39,40 @@ void CPUDensityMatrixPolicyBase::ApplyXLike(qs_data_p_t qs, const qbits_t& objs,
     SingleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t k = 0; k < (dim / 2); k++) {
+            dim, DimTh, for (index_t k = 0; k < (dim / 2); k++) {
                 auto i = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
                 auto j = i | mask.obj_mask;
                 for (index_t l = 0; l < (dim / 2); l++) {
                     auto m = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                     auto n = m | mask.obj_mask;
-                    auto idx_i_m = (i * i + i) / 2 + m;
-                    auto idx_j_n = (j * j + j) / 2 + n;
-                    auto tmp = qs[idx_i_m];
-                    qs[idx_i_m] = qs[idx_j_n] * v1;
-                    qs[idx_j_n] = tmp * v2;
+                    // auto idx_i_m = (i * i + i) / 2 + m;
+                    // auto idx_j_n = (j * j + j) / 2 + n;
+                    // auto tmp = qs[idx_i_m];
+                    // qs[idx_i_m] = qs[idx_j_n] * v1;
+                    // qs[idx_j_n] = tmp * v2;
+                    auto tmp = qs[Idx(i, m)];
+                    qs[Idx(i, m)] = qs[Idx(j, n)] * v1;
+                    qs[Idx(j, n)] = tmp * v2;
                 }
             })
 
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t k = 0; k < (dim / 2); k++) {
+            dim, DimTh, for (index_t k = 0; k < (dim / 2); k++) {
                 auto i = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
                 if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                     auto j = i | mask.obj_mask;
                     for (index_t l = 0; l < (dim / 2); l++) {
                         auto m = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                         auto n = m | mask.obj_mask;
-                        auto idx_i_m = (i * i + i) / 2 + m;
-                        auto idx_j_n = (j * j + j) / 2 + n;
-                        auto tmp = qs[idx_i_m];
-                        qs[idx_i_m] = qs[idx_j_n] * v1;
-                        qs[idx_j_n] = tmp * v2;
+                        // auto idx_i_m = (i * i + i) / 2 + m;
+                        // auto idx_j_n = (j * j + j) / 2 + n;
+                        // auto tmp = qs[idx_i_m];
+                        // qs[idx_i_m] = qs[idx_j_n] * v1;
+                        // qs[idx_j_n] = tmp * v2;
+                        auto tmp = qs[Idx(i, m)];
+                        qs[Idx(i, m)] = qs[Idx(j, n)] * v1;
+                        qs[Idx(j, n)] = tmp * v2;
                     }
                 }
             })

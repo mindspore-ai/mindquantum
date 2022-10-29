@@ -32,6 +32,11 @@
 #include "simulator/utils.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
+
+index_t Idx(index_t x, index_t y) {
+    return (x * x + x) / 2 + y;
+}
+
 auto CPUDensityMatrixPolicyBase::InitState(index_t n_elements, bool zero_state) -> qs_data_p_t {
     auto qs = reinterpret_cast<qs_data_p_t>(calloc(n_elements, sizeof(qs_data_t)));
     if (zero_state) {
@@ -74,41 +79,48 @@ auto CPUDensityMatrixPolicyBase::GetQS(qs_data_p_t qs, index_t dim) -> py_qs_dat
     py_qs_datas_t out(dim, std::vector<py_qs_data_t>(dim));
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
-            for (index_t j = 0; j<=i;j++){
-                out[i][j] = qs[(i * i + i) / 2 + j];
+            for (index_t j = 0; j <= i; j++) {
+                out[i][j] = qs[Idx(i, j)];
             }
-            for (index_t j = i + 1; j < dim; j++){
-                out[i][j] = std::conj(qs[(j * j + j) / 2 + i]);
+            for (index_t j = i + 1; j < dim; j++) {
+                out[i][j] = std::conj(qs[Idx(j, i)]);
             }
-        }
-    )
+        })
     return out;
 }
 
-// need to fix
+// can be imporved
 bool CPUDensityMatrixPolicyBase::IsPure(qs_data_p_t qs, index_t dim, index_t n_elements) {
-    THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
-            for (index_t j = 0; j <= i; j++){
-                out[i][j] = qs[(i * i + i) / 2 + j];
-            }
-            for (index_t j = i + 1; j < dim; j++){
-                out[i][j] = std::conj(qs[(j * j + j) / 2 + i]);
-            }
+    auto qs_square = reinterpret_cast<qs_data_p_t>(calloc(n_elements, sizeof(qs_data_t)));
+    index_t row = 0;
+    index_t col = 0;
+    for (index_t element = 0; element < n_elements; element++) {
+        for (index_t i = 0; i < dim; i++) {
+            qs_square[element] += qs[Idx(row, i)] * qs[Idx(i, col)];
         }
-    )
-    return out;
+        if (qs_square[element] != qs[element]) {
+            return false;
+        }
+        if (col == row) {
+            row += 1;
+            col = 0;
+        } else {
+            col += 1;
+        }
+    }
+    return true;
 }
 
-auto CPUDensityMatrixPolicyBase::MatrixMul(qs_data_p_t qs, )
+// auto CPUDensityMatrixPolicyBase::MatrixMul(qs_data_p_t qs, )
 
 void CPUDensityMatrixPolicyBase::DisplayQS(qs_data_p_t qs, qbit_t n_qubits, index_t dim) {
     auto out = CPUDensityMatrixPolicyBase::GetQS(qs, dim);
     std::cout << n_qubits << " qubits cpu simulator (little endian)." << std::endl;
     for (index_t i = 0; i < dim; i++) {
-    for (index_t j = 0; j < dim; j++) {
-        std::cout << "(" << out[i][j].real() << ", " << out[i][j].imag() << ")"<<",";
-    }
+        for (index_t j = 0; j < dim; j++) {
+            std::cout << "(" << out[i][j].real() << ", " << out[i][j].imag() << ")"
+                      << ",";
+        }
         std::cout << std::endl;
     }
 }

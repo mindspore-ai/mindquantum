@@ -6,10 +6,11 @@
 
 using namespace mindquantum::sim::densitymatrix::detail;
 
-int main(){
+int main() {
     auto qs = CPUDensityMatrixPolicyBase::InitState(10, 1);
-    CPUDensityMatrixPolicyBase::ApplyX(qs, {1},{0}, 2);
-    // CPUDensityMatrixPolicyBase::ApplyX(qs, {1},{}, 2);
-    CPUDensityMatrixPolicyBase::ApplyT(qs, {0},{}, 2);
+    // CPUDensityMatrixPolicyBase::ApplyX(qs, {1}, {0}, 2);
+    CPUDensityMatrixPolicyBase::ApplyX(qs, {1},{}, 2);
+    CPUDensityMatrixPolicyBase::ApplyT(qs, {1}, {}, 2);
     CPUDensityMatrixPolicyBase::DisplayQS(qs, 2, 4);
+    std::cout << CPUDensityMatrixPolicyBase::IsPure(qs, 2, 4) << std::endl;
 }
