@@ -33,7 +33,7 @@
 
 namespace mindquantum::sim::densitymatrix::detail {
 
-index_t Idx(index_t x, index_t y) {
+index_t IdxMap(index_t x, index_t y) {
     return (x * x + x) / 2 + y;
 }
 
@@ -80,10 +80,10 @@ auto CPUDensityMatrixPolicyBase::GetQS(qs_data_p_t qs, index_t dim) -> py_qs_dat
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
             for (index_t j = 0; j <= i; j++) {
-                out[i][j] = qs[Idx(i, j)];
+                out[i][j] = qs[IdxMap(i, j)];
             }
             for (index_t j = i + 1; j < dim; j++) {
-                out[i][j] = std::conj(qs[Idx(j, i)]);
+                out[i][j] = std::conj(qs[IdxMap(j, i)]);
             }
         })
     return out;
@@ -96,7 +96,7 @@ bool CPUDensityMatrixPolicyBase::IsPure(qs_data_p_t qs, index_t dim, index_t n_e
     index_t col = 0;
     for (index_t element = 0; element < n_elements; element++) {
         for (index_t i = 0; i < dim; i++) {
-            qs_square[element] += qs[Idx(row, i)] * qs[Idx(i, col)];
+            qs_square[element] += qs[IdxMap(row, i)] * qs[IdxMap(i, col)];
         }
         if (qs_square[element] != qs[element]) {
             return false;

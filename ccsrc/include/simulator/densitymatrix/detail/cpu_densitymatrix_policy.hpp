@@ -26,7 +26,7 @@
 
 namespace mindquantum::sim::densitymatrix::detail {
 
-index_t Idx(index_t x, index_t y);
+index_t IdxMap(index_t x, index_t y);
 
 struct CPUDensityMatrixPolicyBase {
     using qs_data_t = std::complex<calc_type>;

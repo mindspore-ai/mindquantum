@@ -50,9 +50,9 @@ void CPUDensityMatrixPolicyBase::ApplyXLike(qs_data_p_t qs, const qbits_t& objs,
                     // auto tmp = qs[idx_i_m];
                     // qs[idx_i_m] = qs[idx_j_n] * v1;
                     // qs[idx_j_n] = tmp * v2;
-                    auto tmp = qs[Idx(i, m)];
-                    qs[Idx(i, m)] = qs[Idx(j, n)] * v1;
-                    qs[Idx(j, n)] = tmp * v2;
+                    auto tmp = qs[IdxMap(i, m)];
+                    qs[IdxMap(i, m)] = qs[IdxMap(j, n)] * v1;
+                    qs[IdxMap(j, n)] = tmp * v2;
                 }
             })
 
@@ -70,9 +70,9 @@ void CPUDensityMatrixPolicyBase::ApplyXLike(qs_data_p_t qs, const qbits_t& objs,
                         // auto tmp = qs[idx_i_m];
                         // qs[idx_i_m] = qs[idx_j_n] * v1;
                         // qs[idx_j_n] = tmp * v2;
-                        auto tmp = qs[Idx(i, m)];
-                        qs[Idx(i, m)] = qs[Idx(j, n)] * v1;
-                        qs[Idx(j, n)] = tmp * v2;
+                        auto tmp = qs[IdxMap(i, m)];
+                        qs[IdxMap(i, m)] = qs[IdxMap(j, n)] * v1;
+                        qs[IdxMap(j, n)] = tmp * v2;
                     }
                 }
             })
