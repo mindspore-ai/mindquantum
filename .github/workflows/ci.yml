@@ -563,7 +563,7 @@ jobs:
       - name: Get Date
         id: get-date
         shell: bash
-        run: echo "::set-output name=date::$(date -Iseconds)"
+        run: echo "date=$(date -Iseconds)" >> $GITHUB_OUTPUT
 
       - name: Restore cache for CCache
         if: env.ACT != 'true'
@@ -785,7 +785,7 @@ jobs:
       - name: Get Date
         id: get-date
         shell: msys2 {0}
-        run: echo "::set-output name=date::$(date -Iseconds)"
+        run: echo "date=$(date -Iseconds)" >> $GITHUB_OUTPUT
 
       - name: Restore cache for CCache
         if: env.ACT != 'true' && matrix.msystem != 'MSYS'
@@ -894,8 +894,7 @@ jobs:
       - name: Get Date
         id: get-date
         shell: bash --login -eo pipefail -o igncr {0}
-        run: |
-          echo "::set-output name=date::$(date -Iseconds)"
+        run: echo "date=$(date -Iseconds)" >> $GITHUB_OUTPUT
 
       - name: Restore cache for CCache
         if: env.ACT != 'true'
