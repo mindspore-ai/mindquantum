@@ -316,6 +316,7 @@ function join_by {
 # ==============================================================================
 
 function version_less_equal() {
+    debug_print "  comparing version '$1' with '$2'"
     local a_major a_minor b_major b_minor
     a_major=$(echo "$1" | cut -d. -f1)
     a_minor=$(echo "$1" | cut -d. -f2)
