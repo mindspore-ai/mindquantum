@@ -73,9 +73,20 @@ if ("$Env:JENKINS_URL" -Match 'https?://build.mindspore.cn' -And [bool]$Env:CI) 
 # ------------------------------------------------------------------------------
 # Default values
 
-$python_extra_pkgs = @('wheel-filename>1.2')
+$python_extra_pkgs = @('wheel-filename>1.2', 'build')
 
 if ($_IS_MINDSPORE_CI ) {
+    foreach ($var in @('CUDA_HOME', 'CUDA_PATH')) {
+        $value = [Environment]::GetEnvironmentVariable($var)
+        if ([bool]$value) {
+            Write-Output "$var = $value"
+            if (-Not (Test-Path -Path $value)) {
+                Write-Warning "$var is set, but location does not exist!"
+            }
+        }
+    }
+
+    $DebugPreference = 'Continue'
     Set-Value 'cmake_debug_mode' $true
     Set-Value 'do_clean_3rdparty' $true
     Set-Value 'enable_gitee' $true
@@ -341,6 +352,19 @@ if([bool]$Env:CUDACXX) {
 
 Write-Debug 'Will be passing these arguments to setup.py:'
 Write-Debug "    $build_args"
+
+# ==============================================================================
+
+if ([bool]$enable_gpu) {
+    # Older CMake using find_package(CUDA) would rely on CUDA_HOME, but newer CMake only look at CUDACXX and CUDA_PATH
+    if ([bool]$Env:CUDA_HOME -And -Not [bool]$Env:CUDA_PATH) {
+        Write-Output 'CUDA_HOME is defined, but CUDA_PATH is not. Setting CUDA_PATH=CUDA_HOME'
+        [System.Environment]::SetEnvironmentVariable('CUDA_PATH',"$Env:CUDA_HOME",[System.EnvironmentVariableTarget]::Process)
+    }
+    Write-Debug "CUDA_PATH = $Env:CUDA_PATH"
+}
+
+# ==============================================================================
 
 # Convert the CMake arguments for passing them using -C to python3 -m build
 $fixed_args = @()

@@ -71,6 +71,8 @@ if ("$Env:JENKINS_URL" -Match 'https?://build.mindspore.cn' -And [bool]$Env:CI) 
 
 . (Join-Path $ROOTDIR 'scripts\build\common_functions.ps1')
 
+Push-EnvironmentVariables
+
 # ------------------------------------------------------------------------------
 
 function Help-Header {
@@ -319,6 +321,17 @@ if($do_install) {
 }
 
 # ------------------------------------------------------------------------------
+
+if ([bool]$enable_gpu) {
+    # Older CMake using find_package(CUDA) would rely on CUDA_HOME, but newer CMake only look at CUDACXX and CUDA_PATH
+    if ([bool]$Env:CUDA_HOME -And -Not [bool]$Env:CUDA_PATH) {
+        Write-Output 'CUDA_HOME is defined, but CUDA_PATH is not. Setting CUDA_PATH=CUDA_HOME'
+        Push-EnvironmentVariable 'CUDA_PATH' "$Env:CUDA_HOME"
+    }
+    Write-Debug "CUDA_PATH = $Env:CUDA_PATH"
+}
+
+# ------------------------------------------------------------------------------
 # Build
 
 if (-Not (Test-Path -Path "$build_dir" -PathType Container) -or $do_clean_build_dir) {
@@ -352,6 +365,10 @@ if($do_docs) {
 }
 
 Call-CMake --build "'$build_dir'" --config "'$build_type'" @target_args @make_args
+
+# ==============================================================================
+
+Pop-AllEnvironmentVariables
 
 # ==============================================================================
 

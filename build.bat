@@ -46,7 +46,7 @@ set delocate_wheel=1
 set build_isolation=1
 set output_path=%ROOTDIR%\output
 set platform_name=
-set python_extra_pkgs=setuptools-scm[toml] wheel-filename>1.2
+set python_extra_pkgs=wheel-filename>1.2 build
 
 if !_IS_MINDSPORE_CI! == 1 (
    set cmake_debug_mode=1
@@ -381,6 +381,21 @@ if !has_build_dir! == 1 set args=!args! -C--global-option=build_ext -C--global-o
 if NOT "!CC!" == "" set args=!args! -C--global-option=--var -C--global-option=CMAKE_C_COMPILER -C--global-option=!CC!
 if NOT "!CXX!" == "" set args=!args! -C--global-option=--var -C--global-option=CMAKE_CXX_COMPILER -C--global-option=!CXX!
 if NOT "!CUDACXX!" == "" set args=!args! -C--global-option=--var -C--global-option=CMAKE_CUDA_COMPILER -C--global-option=!CUDACXX!
+
+rem ============================================================================
+
+if !enable_gpu! == 1 (
+  if "!CUDA_PATH" == "" (
+    if NOT "!CUDA_HOME!" == "" (
+       rem Older CMake using find_package(CUDA) would rely on CUDA_HOME, but newer CMake only look at CUDACXX and
+       rem CUDA_PATH
+       echo CUDA_HOME is defined, but CUDA_PATH is not. Setting CUDA_PATH=CUDA_HOME
+       set CUDA_PATH=!CUDA_HOME!
+    )
+  )
+  echo CUDA_HOME = !CUDA_HOME!
+  echo CUDA_PATH = !CUDA_PATH!
+)
 
 rem ============================================================================
 rem Build the wheels

@@ -32,6 +32,7 @@ if ($PYTHON -eq $null) {
     }
     else {
         Write-Output 'Unable to locate python or python3!'
+        Pop-AllEnvironmentVariables
         exit 1
     }
 

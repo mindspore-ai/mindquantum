@@ -125,11 +125,13 @@ function Help-Message() {
 
 if ($Help.IsPresent) {
     Help-Message
+    Pop-AllEnvironmentVariables
     exit 1
 }
 
 if($ShowLibraries.IsPresent) {
     Print-Show-Libraries
+    Pop-AllEnvironmentVariables
     exit 1
 }
 
@@ -284,6 +286,7 @@ foreach($arg in $local_args) {
 
     if (-Not [bool](($third_party_libraries -eq $library) -join " ")) {
         Write-Output ('Unkown library for {0}' -f $arg)
+        Pop-AllEnvironmentVariables
         exit 1
     }
 

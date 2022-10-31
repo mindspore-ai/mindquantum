@@ -385,7 +385,7 @@ auto GPUVectorPolicyBase::ExpectDiffGP(qs_data_p_t bra, qs_data_p_t ket, const q
     auto e = std::complex<calc_type>(0, -1);
     e *= std::exp(std::complex<calc_type>(0, -val));
     std::vector<py_qs_datas_t> gate = {{e, 0}, {0, e}};
-    GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
+    return GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
 }
 
 auto GPUVectorPolicyBase::ExpectDiffPS(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,

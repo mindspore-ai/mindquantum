@@ -136,6 +136,7 @@ function Set-VariableFromIni([string]$Path,
 
 function die {
     Write-Error "$args"
+    Pop-AllEnvironmentVariables
     exit 2
 }
 
@@ -147,6 +148,11 @@ function Call-Cmd {
     }
     else {
         Write-Output "$args"
+    }
+
+    if ($LastExitCode -ne 0) {
+        Pop-AllEnvironmentVariables
+        exit $LastExitCode
     }
 }
 
@@ -183,6 +189,41 @@ function Test-CommandExists{
     Finally {
         $ErrorActionPreference=$oldPreference
     }
+}
+
+# ==============================================================================
+
+$global:_env_var_stack = [System.Collections.ArrayList]@()
+
+function Push-EnvironmentVariables {
+    $global:_env_var_stack.Insert(0, @{})
+}
+
+function Pop-EnvironmentVariables {
+    if (-Not [bool]$global:_env_var_stack) {
+        return
+    }
+
+    foreach ($h in $global:_env_var_stack[0].GetEnumerator() )
+    {
+        Write-Debug ("Resetting {0} to '{1}'" -f $h.Name, $h.Value)
+        [System.Environment]::SetEnvironmentVariable($h.Name, $h.Value,[System.EnvironmentVariableTarget]::Process)
+    }
+
+    $global:_env_var_stack.RemoveAt(0)
+}
+
+function Pop-AllEnvironmentVariables {
+    while ([bool]$global:_env_var_stack) {
+        Pop-EnvironmentVariables
+    }
+}
+
+function Push-EnvironmentVariable([string]$name, [string]$value) {
+    $old_value = [System.Environment]::GetEnvironmentVariable($name, [System.EnvironmentVariableTarget]::Process)
+    $global:_env_var_stack[0][$name] = $old_value
+    Write-Debug "Locally modifying Env:${name}: replacing old value '$old_value' with '$value'"
+    [System.Environment]::SetEnvironmentVariable($name, $value,[System.EnvironmentVariableTarget]::Process)
 }
 
 # ==============================================================================

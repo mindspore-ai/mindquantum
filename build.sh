@@ -38,9 +38,45 @@ check_for_verbose "$@"
 # ------------------------------------------------------------------------------
 # Default values for this particular script
 
-python_extra_pkgs=('wheel-filename>1.2')
+python_extra_pkgs=('wheel-filename>1.2' 'build')
 
 if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
+    for var in CUDA_HOME CUDA_PATH; do
+        if [ -n "${!var}" ]; then
+            echo "$var = ${!var}"
+            if [ ! -d "${!var}" ]; then
+                print_warning "$var is set, but location does not exist!"
+            else
+                echo "Adding $var/lib64 and $var/lib to LD_LIBRARY_PATH"
+                if [ -z "$LD_LIBRARY_PATH" ]; then
+                    export LD_LIBRARY_PATH="${!var}/lib64:${!var}/lib"
+                else
+                    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${!var}/lib64:${!var}/lib"
+                fi
+            fi
+        fi
+    done
+
+    echo '----------------------------------------'
+    echo 'Environment info'
+    echo "PATH = $PATH"
+    echo "LD_LIBRARY_PATH = $LD_LIBRARY_PATH"
+    echo '----------------------------------------'
+
+    if [[ "$(uname)" == "Linux" ]]; then
+        PY_EXEC="$(which python)"
+        echo '----------------------------------------'
+        echo "PY_EXEC = $PY_EXEC"
+        echo '----------------------------------------'
+        echo 'System Python environment'
+        "$PY_EXEC" -m pip freeze
+        echo '----------------------------------------'
+        echo 'Force update the system pybind11'
+        sudo LD_LIBRARY_PATH="$LD_LIBRARY_PATH" "$PY_EXEC" -m pip install -U pybind11
+        "$PY_EXEC" -m pip show pybind11
+        echo '----------------------------------------'
+    fi
+
     verbose=1
     set_var cmake_debug_mode true
     set_var do_clean_3rdparty true
@@ -271,6 +307,20 @@ fi
 debug_print "Will be passing these arguments to setup.py:"
 debug_print "    ${args[*]}"
 
+# ==============================================================================
+
+if [ "$enable_gpu" -eq 1 ]; then
+    # Older CMake using find_package(CUDA) would rely on CUDA_HOME, but newer CMake only look at CUDACXX and CUDA_PATH
+    if [[ -n "$CUDA_HOME" && -z "$CUDA_PATH" ]]; then
+        echo 'CUDA_HOME is defined, but CUDA_PATH is not. Setting CUDA_PATH=CUDA_HOME'
+        export CUDA_PATH="$CUDA_HOME"
+    fi
+
+    debug_print "CUDA_PATH = $CUDA_PATH"
+fi
+
+# ==============================================================================
+
 # Convert the CMake arguments for passing them using -C to python3 -m build
 fixed_args=()
 for arg in "${args[@]}"; do
@@ -300,7 +350,7 @@ if [ "${_build_dir_was_set:-0}" -eq 1 ]; then
 fi
 
 if [ "$delocate_wheel" -eq 1 ]; then
-    env_vars=(MQ_DELOCATE_WHEEL=1)
+    env_vars=(MQ_DELOCATE_WHEEL=1 LD_LIBRARY_PATH="$LD_LIBRARY_PATH")
 
     if [ -n "$platform_name" ]; then
         env_vars+=(MQ_DELOCATE_WHEEL_PLAT="$platform_name")

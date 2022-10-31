@@ -371,6 +371,23 @@ if NOT "!CC!" == "" set cmake_args=!cmake_args! -DCMAKE_C_COMPILER:FILEPATH=!CC!
 if NOT "!CXX!" == "" set cmake_args=!cmake_args! -DCMAKE_CXX_COMPILER:FILEPATH=!CXX!
 if NOT "!CUDACXX!" == "" set cmake_args=!cmake_args! -DCMAKE_CUDA_COMPILER:FILEPATH=!CUDACXX!
 
+rem ----------------------------------------------------------------------------
+
+if !enable_gpu! == 1 (
+  if "!CUDA_PATH" == "" (
+    if NOT "!CUDA_HOME!" == "" (
+       rem Older CMake using find_package(CUDA) would rely on CUDA_HOME, but newer CMake only look at CUDACXX and
+       rem CUDA_PATH
+       echo CUDA_HOME is defined, but CUDA_PATH is not. Setting CUDA_PATH=CUDA_HOME
+       set CUDA_PATH=!CUDA_HOME!
+    )
+  )
+  echo CUDA_HOME = !CUDA_HOME!
+  echo CUDA_PATH = !CUDA_PATH!
+)
+
+rem ----------------------------------------------------------------------------
+
 set target_args=
 if !do_install! == 1 set target_args=!target_args! --target install
 

@@ -235,6 +235,18 @@ if [ -n "$CUDACXX" ]; then
 fi
 
 # ------------------------------------------------------------------------------
+
+if [ "$enable_gpu" -eq 1 ]; then
+    # Older CMake using find_package(CUDA) would rely on CUDA_HOME, but newer CMake only look at CUDACXX and CUDA_PATH
+    if [[ -n "$CUDA_HOME" && -z "$CUDA_PATH" ]]; then
+        echo 'CUDA_HOME is defined, but CUDA_PATH is not. Setting CUDA_PATH=CUDA_HOME'
+        export CUDA_PATH="$CUDA_HOME"
+    fi
+
+    debug_print "CUDA_PATH = $CUDA_PATH"
+fi
+
+# ------------------------------------------------------------------------------
 # Build
 
 if [[ ! -d "$build_dir" || "$do_clean_build_dir" -eq 1 ]]; then

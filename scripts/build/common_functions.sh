@@ -69,7 +69,7 @@ function debug_print() {
 
 function print_warning() {
     echo "${_GREEN}**********${_NORMAL}" >&2
-    echo "${_GREEN}WARN $*${_NORMAL}" >&2
+    echo "${_STANDOUT}${_GREEN}WARN $*${_NORMAL}" >&2
     echo "${_GREEN}**********${_NORMAL}" >&2
 }
 
@@ -281,6 +281,7 @@ function set_variable_from_ini {
 
 call_cmd() {
     if [ "${dry_run:-0}" -ne 1 ]; then
+        debug_print "Calling command: $*"
         if ! "$@"; then
             die "Command failed: $*"
         fi
