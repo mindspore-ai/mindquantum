@@ -156,8 +156,8 @@ class Simulator:
         """
         Flush gate that works for projectq simulator.
 
-        The projectq simulator will cache several gate and fushion these gate into a bigger gate, and than act on the
-        quantum state. The flush command will ask the simulator to fushion currently stored gate and act on the quantum
+        The projectq simulator will cache several gate and fusion these gate into a bigger gate, and than act on the
+        quantum state. The flush command will ask the simulator to fusion currently stored gate and act on the quantum
         state.
 
         Examples:
@@ -245,7 +245,7 @@ class Simulator:
 
     def sampling(self, circuit, pr=None, shots=1, seed=None):
         """
-        Samping the measure qubit in circuit. Sampling do not change the origin quantum state of this simulator.
+        Sampling the measure qubit in circuit. Sampling do not change the origin quantum state of this simulator.
 
         Args:
             circuit (Circuit): The circuit that you want to evolution and do sampling.

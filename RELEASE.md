@@ -2,6 +2,22 @@
 
 [查看中文](./RELEASE_CN.md)
 
+## MindQu  0.8.0 Release Notes
+
+### Major Feature and Improvements
+
+#### Gates
+
+- [STABLE] [`FSim`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.FSim): Fermionic simulation gate supported, and this gate also works in variational quantum algorithm.
+- [STABLE] [`U3`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.U3): The single qubit arbitrary gate U3 now will work as a single gate but not a piece of quantum circuit. U3 gate also works in variational quantum algorithm.
+- [STABLE] Customed parameterized gate. Customed parameterized gate now will compiled to machine code by [numba](https://numba.pydata.org), and the simulator backend can call customed parameterized gate in parallel thread.
+- [STABLE] [`BarrierGate`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.BarrierGate): BarrierGate now can be acted on certain qubits.
+- [STABLE] [`KrausChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.KrausChannel): Design a customed kraus channel for quantum simulator.
+
+#### Simulator
+
+- [STABLE] **New simulator supported**. `mqvector` and `mqvector_gpu` are two mindquantum simulate that prepared for cpu and gpu. And `projectq` simulator will be deprecated.
+
 ## MindQuantum 0.7.0 Release Notes
 
 ### Major Features and Improvements

@@ -133,7 +133,7 @@ class MQSim(BackendBase):
         self.sim.apply_hamiltonian(hamiltonian.get_cpp_obj())
 
     def copy(self) -> "BackendBase":
-        """Copy a projecq simulator."""
+        """Copy a projectq simulator."""
         sim = MQSim(self.name, self.n_qubits, self.seed)
         sim.sim = self.sim.copy()
         return sim

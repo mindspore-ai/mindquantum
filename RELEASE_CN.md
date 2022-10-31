@@ -2,6 +2,22 @@
 
 [View English](./RELEASE.md)
 
+## MindQuantum 0.8.0 Release Notes
+
+### 主要特性和增强
+
+#### Gates
+
+- [STABLE] [`FSim`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.FSim): 支持费米子算符模拟门 fSim，fSim 门在变分量子算法中可以有效的运行。
+- [STABLE] [`U3`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.U3): 单比特的任何量子门 U3 将会以一个单独的量子门存在，而不是一段量子线路。且 U3 门在变分量子算法中可以有效的运行。
+- [STABLE] 自定义量子门。自定义量子门现在会被 [numba](https://numba.pydata.org) 编译成机器码，以提高运行效率。且编译后的自定义量子门可以在模拟器后端的多线程场景中运行。
+- [STABLE] [`BarrierGate`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.BarrierGate): BarrierGate 现在可以只作用在某些特定比特上，而不是全部比特。
+- [STABLE] [`KrausChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.KrausChannel): 用户可自定义 kraus 量子信道。
+
+#### Simulator
+
+- [STABLE] **全新量子模拟器**. 新版本中我们推出了全新的 cpu 和 gpu 模拟 `mqvector` 和 `mqvector_gpu`. 就版本中的 `projectq` 模拟器将会在下个版本中被弃用。
+
 ## MindQuantum 0.7.0 Release Notes
 
 ### 主要特性和增强

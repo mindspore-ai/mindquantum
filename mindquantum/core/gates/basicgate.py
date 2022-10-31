@@ -269,7 +269,7 @@ class CNOTGate(NoneParamSelfHermMat):
 
         Args:
             obj_qubits (int, list[int]): Specific which qubits the gate act on.
-            ctrl_qubits (int, list[int]): Specific the control qbits. Default, None.
+            ctrl_qubits (int, list[int]): Specific the control qubits. Default, None.
 
         Returns:
             Gate, Return a new gate.
@@ -400,10 +400,10 @@ class RX(RotSelfHermMat):
 
     2. If you initialize it with a single str, then it will be a
     parameterized gate with only one parameter and the default
-    coefficience is one.
+    coefficient is one.
 
     3. If you initialize it with a dict, e.g. `{'a':1,'b':2}`, this gate
-    can have multiple parameters with certain coefficiences. In this case,
+    can have multiple parameters with certain coefficients. In this case,
     it can be expressed as:
 
 
@@ -710,9 +710,7 @@ class YY(RotSelfHermMat):
 
 class BarrierGate(FunctionalGate):
     """
-    Barrier gate do nothing but set a barrier for drawing circuit.
-
-    The system will not draw quantum gates around barrier gate.
+    Barrier gate will separate two gate in two different layer.
 
     Args:
         show (bool): whether show the barrier gate. Default: True.
@@ -725,14 +723,13 @@ class BarrierGate(FunctionalGate):
 
     def on(self, obj_qubits, ctrl_qubits=None):
         """
-        Define which qubit the gate act on and the control qubit.
-
-        Note:
-            This implementation will always raise a runtime error since this is not supported with BarrierGate objects.
+        Define which qubits the gate act on. The control qubits should always be none,
+        since this gate can never be controlled by other qubits.
 
         Args:
-            obj_qubits (int, list[int]): Specific which qubits the gate act on.
-            ctrl_qubits (int, list[int]): Specific the control qbits. Default, None.
+            obj_qubits (int, list[int]): Specific which qubits the gate act on, can be
+                a single qubit or a set of consecutive qubits.
+            ctrl_qubits (int, list[int]): Specific the control qubits. Default, None.
 
         Returns:
             Gate, Return a new gate.
@@ -790,7 +787,7 @@ class GlobalPhase(RotSelfHermMat):
         Args:
             pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
             about_what (str): calculate the gradient w.r.t which parameter. Default: None.
-            kwargs (dict): othet key arguments.
+            kwargs (dict): other key arguments.
 
         Returns:
             numpy.ndarray, the differential form matrix.
@@ -875,7 +872,7 @@ class Power(NoneParamNonHermMat):
 
     Args:
         gates (:class:`mindquantum.core.gates.NoneParameterGate`): The basic gate you need to apply power operator.
-        exponent (int, float): The exponenet. Default: 0.5.
+        exponent (int, float): The exponent. Default: 0.5.
 
     Examples:
         >>> from mindquantum.core.gates import Power
@@ -926,7 +923,7 @@ def wrapper_numba(compiled_fun):
     try:
         import numba as nb
     except ImportError:
-        raise ImportError("To use customed parameterized gate, please install numba with 'pip install numba'.")
+        raise ImportError("To use customized parameterized gate, please install numba with 'pip install numba'.")
 
     @nb.cfunc(nb.types.void(nb.types.double, nb.types.CPointer(nb.types.complex128)))
     def fun(theta, out_):
@@ -979,7 +976,7 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
     try:
         import numba as nb
     except ImportError:
-        raise ImportError("To use customed parameterized gate, please install numba with 'pip install numba'.")
+        raise ImportError("To use customized parameterized gate, please install numba with 'pip install numba'.")
     matrix_sig = signature(matrix_generator)
     diff_matrix_sig = signature(diff_matrix_generator)
     if len(matrix_sig.parameters) != 1:
@@ -995,7 +992,7 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
         raise ValueError(f"matrix_generator should return numpy array with complex type, but get {type(matrix)}.")
     if not isinstance(diff_matrix, np.ndarray) or diff_matrix.dtype != complex:
         raise ValueError(
-            f"diff_matrix_generator should return numpy arraywith complex type, but get {type(diff_matrix)}"
+            f"diff_matrix_generator should return numpy array with complex type, but get {type(diff_matrix)}"
         )
 
     n_qubits = int(np.log2(matrix.shape[0]))
@@ -1067,7 +1064,7 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
 
 
 class MultiParamsGate(ParameterGate):
-    """Gate with multi intrinc parameters."""
+    """Gate with multi intrinsic parameters."""
 
     def __init__(self, name: str, n_qubits: int, prs: List[ParameterResolver]):
         """Initialize a MultiParamsGate object."""
