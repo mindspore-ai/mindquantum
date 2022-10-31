@@ -1,0 +1,5 @@
+matplotlib==3.5.1
+mindquantum==0.6.0rc1
+mindspore==1.8.1
+numpy==1.22.3
+scikit_learn==1.1.2
