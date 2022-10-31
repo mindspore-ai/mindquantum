@@ -113,7 +113,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
                 klass = real_pr_
             if not isinstance(data, (dict, numbers.Number, str)):
                 raise ValueError(
-                    "data requires a dict or a ParameterResolver or a number " f"or a string, but get {type(data)}"
+                    "data requires a number or a ParameterResolver or a dict " f"or a string, but get {type(data)}"
                 )
             if const is None:
                 self._cpp_obj = klass(data)
