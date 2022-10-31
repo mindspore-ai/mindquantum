@@ -82,7 +82,7 @@ if(-Not $has_cmake) {
 }
 
 if (-Not $has_cmake) {
-    $pip_args = @()
+    $pip_args = @('--prefer-binary')
     if ($_IS_MINDSPORE_CI) {
         $pip_args += '-i', 'https://mirror.baidu.com/pypi/simple'
     }

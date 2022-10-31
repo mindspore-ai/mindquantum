@@ -102,7 +102,7 @@ if !cmake_major_min! LEQ !cmake_major! (
 
 :install_cmake
 
-set pip_args=
+set pip_args=--prefer-binary
 if %_IS_MINDSPORE_CI% == 1 set pip_args=!pip_args! -i https://mirror.baidu.com/pypi/simple
 
 echo Installing CMake inside the Python virtual environment
