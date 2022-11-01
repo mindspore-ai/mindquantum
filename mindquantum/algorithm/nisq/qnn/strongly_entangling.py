@@ -69,7 +69,7 @@ class StronglyEntangling(Ansatz):
             circ += add_prefix(rot_part_ansatz, f'l{l}')
             for idx in range(self.n_qubits):
                 if self.gate_qubits == 1:
-                    circ += entangle_gate.on(idx, (idx + l) % self.n_qubits)
+                    circ += entangle_gate.on((idx + l + 1) % self.n_qubits, idx)
                 else:
-                    circ += entangle_gate.on([idx, (idx + l) % self.n_qubits])
+                    circ += entangle_gate.on([(idx + l + 1) % self.n_qubits, idx])
         self._circuit = circ
