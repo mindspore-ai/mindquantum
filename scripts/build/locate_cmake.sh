@@ -77,7 +77,7 @@ if [ $has_cmake -ne 1 ]; then
     fi
 fi
 
-pip_args=()
+pip_args=(--prefer-binary)
 if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
     pip_args+=(-i https://mirror.baidu.com/pypi/simple)
 fi

@@ -563,7 +563,7 @@ jobs:
       - name: Get Date
         id: get-date
         shell: bash
-        run: echo "::set-output name=date::$(date -Iseconds)"
+        run: echo "date=$(date -Iseconds)" >> $GITHUB_OUTPUT
 
       - name: Restore cache for CCache
         if: env.ACT != 'true'
@@ -731,7 +731,6 @@ jobs:
               mingw-w64-x86_64-boost
               mingw-w64-x86_64-python
               mingw-w64-x86_64-python-pip
-            cmake_generator: -- -G "MSYS Makefiles"
             CC: gcc
             CXX: g++
 
@@ -748,7 +747,6 @@ jobs:
               mingw-w64-clang-x86_64-boost
               mingw-w64-clang-x86_64-python
               mingw-w64-clang-x86_64-python-pip
-            cmake_generator: -- -G "MSYS Makefiles"
             CC: clang
             CXX: clang++
 
@@ -764,20 +762,6 @@ jobs:
               mingw-w64-ucrt-x86_64-boost
               mingw-w64-ucrt-x86_64-python
               mingw-w64-ucrt-x86_64-python-pip
-            cmake_generator: -- -G "MSYS Makefiles"
-            CC: gcc
-            CXX: g++
-
-          - msystem: MSYS
-            installdeps: >-
-              git
-              base-devel
-              gcc
-              cmake
-              python-devel
-              python-pip
-              gmp-devel
-            cmake_generator:
             CC: gcc
             CXX: g++
 
@@ -801,7 +785,7 @@ jobs:
       - name: Get Date
         id: get-date
         shell: msys2 {0}
-        run: echo "::set-output name=date::$(date -Iseconds)"
+        run: echo "date=$(date -Iseconds)" >> $GITHUB_OUTPUT
 
       - name: Restore cache for CCache
         if: env.ACT != 'true' && matrix.msystem != 'MSYS'
@@ -813,7 +797,6 @@ jobs:
           restore-keys: msys2-${{ matrix.msystem }}-ccache-
 
       - name: Configure CCache
-        if: matrix.msystem != 'MSYS'
         shell: msys2 {0}
         run: |
           which ccache
@@ -849,7 +832,7 @@ jobs:
           ./build_locally.sh --cxx --with-projectq --debug-cmake --test --ccache -v --only-pytest --no-gitee
           --configure-only -c --clean-3rdparty --prefix="$PWD/install"
           --cmake-no-registry
-          ${{ matrix.cmake_generator }}
+          -- -G "MSYS Makefiles"
 
       - name: Build
         shell: msys2 {0}
@@ -866,13 +849,12 @@ jobs:
         run: ./build_locally.sh --install
 
       - name: Print CCache statistics
-        if: matrix.msystem != 'MSYS'
         shell: msys2 {0}
         run: |
           ccache -sv
 
       - name: Save cache for CCache
-        if: env.ACT != 'true' && matrix.msystem != 'MSYS'
+        if: env.ACT != 'true'
         uses: martijnhols/actions-cache/save@v3.0.11b
         with:
           path: ccache
@@ -912,8 +894,7 @@ jobs:
       - name: Get Date
         id: get-date
         shell: bash --login -eo pipefail -o igncr {0}
-        run: |
-          echo "::set-output name=date::$(date -Iseconds)"
+        run: echo "date=$(date -Iseconds)" >> $GITHUB_OUTPUT
 
       - name: Restore cache for CCache
         if: env.ACT != 'true'
