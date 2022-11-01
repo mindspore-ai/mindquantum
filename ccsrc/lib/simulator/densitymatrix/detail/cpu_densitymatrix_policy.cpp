@@ -68,6 +68,19 @@ void CPUDensityMatrixPolicyBase::Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t
     }
 }
 
+void CPUDensityMatrixPolicyBase::SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim) {
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (index_t i = 0; i < dim; i++) {
+            if ((i & ctrl_mask) != ctrl_mask) {
+                for (index_t j = 0; j < (dim / 2); j++) {
+                    if ((j & ctrl_mask) != ctrl_mask){
+                        qs[IdxMap(i, j)] = 0;
+                    }
+                }
+            }
+        })
+}
+
 auto CPUDensityMatrixPolicyBase::Copy(qs_data_p_t qs, index_t n_elements) -> qs_data_p_t {
     qs_data_p_t out = CPUDensityMatrixPolicyBase::InitState(n_elements, false);
     THRESHOLD_OMP_FOR(
