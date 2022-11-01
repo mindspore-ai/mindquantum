@@ -14,7 +14,6 @@
 # ============================================================================
 
 # pylint: disable=invalid-name,too-few-public-methods,duplicate-code
-
 """Benchmark for mnist classification with MindQuantum."""
 
 import os
@@ -24,9 +23,8 @@ import mindspore as ms
 import mindspore.dataset as ds
 import numpy as np
 from _parse_args import parser
-from mindspore import Model, Tensor, nn
-from mindspore.ops import operations as ops
-from mindspore.train.callback import Callback
+from mindspore import Tensor, nn
+from mindspore import ops
 
 from mindquantum.core import RX, XX, ZZ, Circuit, H, Hamiltonian, QubitOperator, X, Z
 from mindquantum.framework import MQLayer
@@ -36,31 +34,6 @@ args = parser.parse_args()
 os.environ['OMP_NUM_THREADS'] = str(args.omp_num_threads)
 
 ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
-
-
-class FPSMonitor(Callback):
-    """A fps monitor."""
-
-    def __init__(self, forget_first_n=2):
-        """Initialize a FPSMonitor object."""
-        super().__init__()
-        self.forget_first_n = forget_first_n
-        self.step = 0
-        self.times = np.array([])
-
-    def step_begin(self, run_context):
-        """Step initialization method."""
-        run_context.original_args()
-        self.step += 1
-        if self.step > self.forget_first_n:
-            self.times = np.append(self.times, time.time())
-
-    def step_end(self, run_context):
-        """Step finalization method."""
-        run_context.original_args()
-        if self.times.size > 0:
-            self.times[-1] = time.time() - self.times[-1]
-            print(f"\rAverage: {self.times.mean() * 1000:.6}ms/step", end="")
 
 
 class Hinge(nn.MSELoss):
@@ -75,22 +48,9 @@ class Hinge(nn.MSELoss):
 
     def construct(self, base, target):
         """Construct a Hinge node (?)."""
-        x = 1 - self.mul(base, target)
+        x = 1 - self.mul(base.squeeze(), target.squeeze())
         x = self.maximum(x, self.zero)
         return self.get_loss(x)
-
-
-class MnistNet(nn.Cell):
-    """Net for mnist dataset."""
-
-    def __init__(self, net):
-        """Initialize a MnistNet object."""
-        super().__init__()
-        self.net = net
-
-    def construct(self, x):
-        """Construct a MnistNet node (?)."""
-        return self.net(x)
 
 
 def encoder_circuit_builder(n_qubits_range, prefix='encoder'):
@@ -168,14 +128,63 @@ def generate_dataset(data_file_path, n_qubits, sampling_num, batch_num, eval_siz
     y_test_nocon = np.array(y_test_nocon).astype(np.int32)[:, None]
     y_train_nocon = y_train_nocon * 2 - 1
     y_test_nocon = y_test_nocon * 2 - 1
-    train = ds.NumpySlicesDataset(
-        {"image": x_train_encoder[:sampling_num], "label": y_train_nocon[:sampling_num]}, shuffle=False
-    ).batch(batch_num)
+    train = ds.NumpySlicesDataset({
+        "image": x_train_encoder[:sampling_num],
+        "label": y_train_nocon[:sampling_num]
+    },
+                                  shuffle=False).batch(batch_num)
 
-    test = ds.NumpySlicesDataset(
-        {"image": x_test_encoder[:eval_size_num], "label": y_test_nocon[:eval_size_num]}, shuffle=False
-    ).batch(eval_size_num)
+    test = ds.NumpySlicesDataset({
+        "image": x_test_encoder[:eval_size_num],
+        "label": y_test_nocon[:eval_size_num]
+    },
+                                 shuffle=False).batch(eval_size_num)
     return train, test
+
+
+def train_loop(model, dataset, loss_fn, optimizer):
+    """Define train loop."""
+
+    def forward_fn(data, label):
+        """Define forward function."""
+        pred = model(data)
+        loss = loss_fn(pred, label)
+        return loss, pred
+
+    grad_fn = ops.value_and_grad(forward_fn, None, optimizer.parameters, has_aux=True)
+
+    def train_step(data, label):
+        """Define train step."""
+        (loss, _), grads = grad_fn(data, label)
+        loss = ops.depend(loss, optimizer(grads))
+        return loss
+
+    size = dataset.get_dataset_size()
+    model.set_train()
+    batch_begin = time.time()
+    for batch, (data, label) in enumerate(dataset.create_tuple_iterator()):
+        loss = train_step(data, label)
+        if batch % 1 == 0:
+            loss, current = loss.asnumpy(), batch
+            print(f"loss: {float(loss):>7f}  [{current:>3d}/{size:>3d}]  Time: {time.time() - batch_begin:>4f}")
+            batch_begin = time.time()
+
+
+def test_loop(model, dataset, loss_fn):
+    """Test loop"""
+    num_batches = dataset.get_dataset_size()
+    model.set_train(False)
+    total, test_loss, correct = 0, 0, 0
+    for data, label in dataset.create_tuple_iterator():
+        pred = model(data)
+        total += len(data)
+        test_loss = loss_fn(pred, label).asnumpy()
+        correct += ((pred > 0) == (label > 0)).asnumpy().sum()
+    test_loss /= num_batches
+    correct /= total
+    correct = float(correct)
+    test_loss = float(test_loss)
+    print(f"Test: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
 
 if __name__ == '__main__':
@@ -199,21 +208,14 @@ if __name__ == '__main__':
     grad_ops = sim.get_expectation_with_grad(ham, circ, parallel_worker=parallel_worker)
     mql = MQLayer(grad_ops, 'normal')
 
-    mnist_net = MnistNet(mql)
     net_loss = Hinge()
-    net_opt = nn.Adam(mnist_net.trainable_params())
-    model = Model(mnist_net, net_loss, net_opt)
-    fps = FPSMonitor(5)
+    net_opt = nn.Adam(mql.trainable_params())
     t0 = time.time()
-    model.train(epochs, train_loader, callbacks=[fps])
+    for epoc in range(epochs):
+        print(f"Epoch {epoc+1}\n-------------------------------")
+        train_loop(mql, train_loader, net_loss, net_opt)
     t1 = time.time()
-    print(
-        f"\nNum sampling:{args.num_sampling}\nBatchs:{args.batchs}\n"
-        f"Parallel worker:{args.parallel_worker}\n"
-        f"\nOMP THREADS:{args.omp_num_threads}\nTotal time: {t1 - t0}s"
-    )
-    res = np.array([])
-    for train_x, train_y in train_loader:
-        y_pred = mnist_net(train_x)
-        res = np.append(res, (train_y.asnumpy() > 0) == (y_pred.asnumpy() > 0))
-    print(f'Acc: {np.mean(res)}')
+    test_loop(mql, test_loader, net_loss)
+    print(f"\nNum sampling:{args.num_sampling}\nBatchs:{args.batchs}\n"
+          f"Parallel worker:{args.parallel_worker}\n"
+          f"\nOMP THREADS:{args.omp_num_threads}\nTotal time: {t1 - t0}s")
