@@ -17,6 +17,7 @@
 from mindquantum.algorithm.nisq import StronglyEntangling
 from mindquantum.core.gates import X
 
+
 def test_strongly_entangling_ansatz():
     """
     Description: Test strongly_entangling_ansatz
