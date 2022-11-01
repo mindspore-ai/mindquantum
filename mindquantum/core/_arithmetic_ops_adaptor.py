@@ -11,9 +11,7 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-
 """Base class to define arithmetic operators for some classes encapsulating a C++ object."""
-
 
 import numbers
 
@@ -123,8 +121,12 @@ class CppArithmeticAdaptor:
 
     def __imul__(self, other):
         """Inplace multiply by a number or a CppArithmeticAdaptor."""
-        if not self.is_complex and (isinstance(other, numbers.Complex) or other.is_complex):
-            self._cpp_obj = self._cpp_obj.cast_complex()
+        if not self.is_complex:
+            if isinstance(other, numbers.Complex):
+                if not isinstance(other, numbers.Real):
+                    self._cpp_obj = self._cpp_obj.cast_complex()
+            elif hasattr(other, 'is_complex') and other.is_complex:
+                self._cpp_obj = self._cpp_obj.cast_complex()
 
         if hasattr(other, '_cpp_obj'):
             self._cpp_obj *= other._cpp_obj
@@ -172,8 +174,12 @@ class CppArithmeticAdaptor:
 
     def __eq__(self, other) -> bool:
         """Check whether two CppArithmeticAdaptors equal."""
-        if not self.is_complex and (isinstance(other, numbers.Complex) or other.is_complex):
-            return self._cpp_obj.cast_complex() == other._cpp_obj
+        if not self.is_complex:
+            if isinstance(other, numbers.Complex) and not isinstance(other, numbers.Real):
+                return self._cpp_obj.cast_complex() == other._cpp_obj
+            if hasattr(other, "is_complex"):
+                if other.is_complex:
+                    return self._cpp_obj.cast_complex() == other._cpp_obj
         return self._cpp_obj == other._cpp_obj
 
     def __ne__(self, other) -> bool:

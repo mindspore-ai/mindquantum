@@ -1111,6 +1111,10 @@ class MultiParamsGate(ParameterGate):
                 return True
         return False
 
+    def get_parameters(self) -> List[ParameterResolver]:
+        """Return a list of parameters of parameterized gate."""
+        return self.prs
+
     def no_grad(self):
         """Set all parameters do not require gradient."""
         for pr in self.prs:
@@ -1179,7 +1183,7 @@ class U3(MultiParamsGate):
         phi = ParameterResolver(phi)
         lamda = ParameterResolver(lamda)
         prs = [theta, phi, lamda]
-        return super().__call__(self, prs)
+        return super().__call__(prs)
 
     @property
     def theta(self) -> ParameterResolver:
@@ -1305,7 +1309,7 @@ class FSim(MultiParamsGate):
         theta = ParameterResolver(theta)
         phi = ParameterResolver(phi)
         prs = [theta, phi]
-        return super().__call__(self, prs)
+        return super().__call__(prs)
 
     @property
     def theta(self) -> ParameterResolver:

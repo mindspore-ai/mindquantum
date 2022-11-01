@@ -13,8 +13,8 @@
 # limitations under the License.
 # ============================================================================
 """Simulator."""
-from functools import partial
 import warnings
+from functools import partial
 
 import numpy as np
 
@@ -93,7 +93,8 @@ class Simulator:
             if backend == 'projectq':
                 warnings.warn(
                     "projectq will be deprecated in next version, please use mqvector.",
-                    category=DeprecationWarning, stacklevel=2
+                    category=DeprecationWarning,
+                    stacklevel=2,
                 )
             try:
                 self.backend = SUPPORTED_SIMULATOR[backend](n_qubits, seed, *args, **kwargs)

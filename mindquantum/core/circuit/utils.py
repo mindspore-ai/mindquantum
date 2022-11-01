@@ -19,6 +19,7 @@ from types import FunctionType, MethodType
 
 import numpy as np
 
+from mindquantum.core.gates.basic import ParameterGate
 from mindquantum.utils.type_value_check import _check_input_type
 
 from ..parameterresolver.parameterresolver import ParameterResolver
@@ -288,24 +289,54 @@ def dagger(circuit_fn):
     raise TypeError("circuit_fn need a circuit or a function that can generate a circuit.")
 
 
-def _add_prefix(circ, prefix):
+def _add_prefix_or_suffix(circ: Circuit, fix: str, is_prefix: bool):
     """Add prefix to every parameters in circuit."""
     out = Circuit()
+    gate: ParameterGate
     for gate in circ:
-        gate = copy.deepcopy(gate)
         if gate.parameterized:
-            origin_encoder = gate.coeff.encoder_parameters
-            pr = ParameterResolver()
-            for k, v in gate.coeff.items():
-                pr[f'{prefix}_{k}'] = v
-                if k in origin_encoder:
-                    pr.encoder_part(f'{prefix}_{k}')
-            gate.coeff = pr
-        out += gate
+            new_prs = []
+            for coeff in gate.get_parameters():
+                origin_encoder = coeff.encoder_parameters
+                origin_req_grad = coeff.requires_grad_parameters
+                pr = ParameterResolver(coeff.const)
+                for k, v in dict(coeff).items():
+                    new_name = ''
+                    if is_prefix:
+                        new_name = f'{fix}_{k}'
+                    else:
+                        new_name = f'{k}_{fix}'
+                    pr[new_name] = v
+                    if k in origin_encoder:
+                        pr.encoder_part(new_name)
+                    if k in origin_req_grad:
+                        pr.requires_grad_part(new_name)
+                new_prs.append(pr)
+            out += gate(*new_prs).on(gate.obj_qubits, gate.ctrl_qubits)
+        else:
+            out += copy.deepcopy(gate)
     return out
 
 
-def add_prefix(circuit_fn, prefix):
+def add_prefix_or_suffix(circuit_fn, fix: str, is_prefix: bool):
+    """Add prefix or suffix of the parameters of quantum circuit."""
+    if not isinstance(fix, str):
+        raise TypeError(f"prefix or suffix need string, but get {type(fix)}")
+    if isinstance(circuit_fn, (FunctionType, MethodType)):
+
+        def wrapper(*arg, **keywords):
+            circ = circuit_fn(*arg, **keywords)
+            if not isinstance(circ, Circuit):
+                return add_prefix_or_suffix(circ, fix, is_prefix)
+            return _add_prefix_or_suffix(circ, fix, is_prefix)
+
+        return wrapper
+    if isinstance(circuit_fn, Circuit):
+        return _add_prefix_or_suffix(circuit_fn, fix, is_prefix)
+    raise TypeError("circuit_fn need a circuit or a function that can generate a circuit.")
+
+
+def add_prefix(circuit_fn, prefix: str):
     """
     Add a prefix on the parameter of a parameterized quantum circuit or a parameterized quantum operator.
 
@@ -337,20 +368,42 @@ def add_prefix(circuit_fn, prefix):
         >>> u3
         q0: ──H────RX(ansatz_a)──
     """
-    if not isinstance(prefix, str):
-        raise TypeError(f"prefix need string, but get {type(prefix)}")
-    if isinstance(circuit_fn, (FunctionType, MethodType)):
+    return add_prefix_or_suffix(circuit_fn, prefix, True)
 
-        def wrapper(*arg, **keywords):
-            circ = circuit_fn(*arg, **keywords)
-            if not isinstance(circ, Circuit):
-                return add_prefix(circ, prefix)
-            return _add_prefix(circ, prefix)
 
-        return wrapper
-    if isinstance(circuit_fn, Circuit):
-        return _add_prefix(circuit_fn, prefix)
-    raise TypeError("circuit_fn need a circuit or a function that can generate a circuit.")
+def add_suffix(circuit_fn, suffix: str):
+    """
+    Add a suffix on the parameter of a parameterized quantum circuit or a parameterized quantum operator.
+
+    (a function that can generate a parameterized quantum circuit).
+
+    Args:
+        circuit_fn (Union[Circuit, FunctionType, MethodType]): A quantum circuit,
+            or a function that can generate a quantum circuit.
+        suffix (str): The suffix you want to add to every parameters.
+
+    Returns:
+        Circuit or a function that can generate a Circuit.
+
+    Raises:
+        TypeError: If suffix is not a string.
+        TypeError: circuit_fn is not a Circuit or can not return a Circuit.
+
+    Examples:
+        >>> from mindquantum.algorithm.library import qft
+        >>> from mindquantum.core.circuit import add_suffix
+        >>> from mindquantum import RX, H, Circuit
+        >>> u = lambda qubit: Circuit([H.on(0), RX('a').on(qubit)])
+        >>> u1 = u(0)
+        >>> u2 = add_suffix(u1, '1')
+        >>> u3 = add_suffix(u, '1')
+        >>> u3 = u3(0)
+        >>> u2
+        q0: ──H────RX(a_1)──
+        >>> u3
+        q0: ──H────RX(a_1)──
+    """
+    return add_prefix_or_suffix(circuit_fn, suffix, False)
 
 
 def shift(circ, inc):
@@ -384,19 +437,26 @@ def shift(circ, inc):
 def _change_param_name(circ, name_map):
     """Change the parameter of circuit according to the name map."""
     out = Circuit()
+    gate: ParameterGate
     for gate in circ:
-        gate = copy.deepcopy(gate)
         if gate.parameterized:
-            origin_encoder = gate.coeff.encoder_parameters
-            pr = ParameterResolver()
-            for k, v in gate.coeff.items():
-                if k not in name_map:
-                    raise KeyError(f"Original parameter {k} not in name_map!")
-                pr[name_map[k]] = v
-                if k in origin_encoder:
-                    pr.encoder_part(name_map[k])
-            gate.coeff = pr
-        out += gate
+            new_prs = []
+            for coeff in gate.get_parameters():
+                origin_encoder = coeff.encoder_parameters
+                origin_req_grad = coeff.requires_grad_parameters
+                pr = ParameterResolver(coeff.const)
+                for k, v in dict(coeff).items():
+                    if k not in name_map:
+                        raise KeyError(f"Original parameter {k} not in name_map!")
+                    pr[name_map[k]] = v
+                    if k in origin_encoder:
+                        pr.encoder_part(name_map[k])
+                    if k in origin_req_grad:
+                        pr.requires_grad_part(name_map[k])
+                new_prs.append(pr)
+            out += gate(*new_prs).on(gate.obj_qubits, gate.ctrl_qubits)
+        else:
+            out += copy.deepcopy(gate)
     return out
 
 

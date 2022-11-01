@@ -14,7 +14,6 @@
 # ============================================================================
 
 # pylint: disable=too-many-lines
-
 """Circuit module."""
 
 import copy
@@ -415,9 +414,10 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         self.all_qubits.delete(old_v.obj_qubits)
         self.all_qubits.delete(old_v.ctrl_qubits)
         if old_v.parameterized:
-            self.all_paras.delete(list(old_v.coeff.keys()))
-            self.all_ansatz.delete(list(old_v.coeff.ansatz_parameters))
-            self.all_encoder.delete(list(old_v.coeff.encoder_parameters))
+            for coeff in old_v.get_parameters():
+                self.all_paras.delete(list(coeff.keys()))
+                self.all_ansatz.delete(list(coeff.ansatz_parameters))
+                self.all_encoder.delete(list(coeff.encoder_parameters))
         if isinstance(old_v, mq_gates.Measure):
             self.all_measures.delete(old_v)
         if isinstance(old_v, mq_gates.NoiseGate):
@@ -630,8 +630,8 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             >>> from mindquantum.core.gates import RX
             >>> circ = Circuit(RX({'a': 0.2}).on(0))
             >>> herm_circ = circ.hermitian()
-            >>> print(herm_circ[0].coeff.expression())
-            -1/5*a
+            >>> print(herm_circ)
+            q0: ──RX(-1/5*a)──
         """
         return Circuit([gate.hermitian() for gate in self[::-1]])
 
@@ -792,11 +792,15 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             if not gate.parameterized:
                 circuit += gate
             else:
-                if set(gate.coeff.params_name).issubset(pr):
-                    coeff = gate.coeff.combination(pr)
-                else:
-                    coeff = 1 * gate.coeff
-                circuit += gate.__class__(coeff).on(gate.obj_qubits, gate.ctrl_qubits)
+                coeffs = []
+                for coeff in gate.get_parameters():
+                    coeff = coeff * 1
+                    for k, v in dict(coeff).items():
+                        if k in pr:
+                            coeff.const += pr[k] * v
+                            coeff.pop(k)
+                    coeffs.append(coeff)
+                circuit += gate.__class__(*coeffs).on(gate.obj_qubits, gate.ctrl_qubits)
         return circuit
 
     def remove_barrier(self):
@@ -1173,7 +1177,8 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             circ = self * 1
         for gate in circ:
             if gate.parameterized:
-                gate.coeff.as_encoder()
+                for coeff in gate.get_parameters():
+                    coeff.as_encoder()
         circ.all_encoder.merge(circ.all_ansatz)
         circ.all_ansatz.map = {}
         circ.has_cpp_obj = False
@@ -1191,9 +1196,11 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             circ = self
         else:
             circ = self * 1
+        gate: ParameterGate
         for gate in circ:
             if gate.parameterized:
-                gate.coeff.as_ansatz()
+                for coeff in gate.get_parameters():
+                    coeff.as_ansatz()
         circ.all_ansatz.merge(circ.all_encoder)
         circ.all_encoder.map = {}
         circ.has_cpp_obj = False
