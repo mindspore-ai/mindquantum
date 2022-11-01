@@ -15,7 +15,7 @@
 """Strongly entangling ansatz."""
 
 from mindquantum.core.circuit import add_prefix
-from mindquantum.core.gates import BasicGate, X
+from mindquantum.core.gates import BasicGate
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates.basicgate import U3
 from mindquantum.utils.type_value_check import (
