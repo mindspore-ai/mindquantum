@@ -42,7 +42,7 @@ void CPUDensityMatrixPolicyBase::ApplyXLike(qs_data_p_t qs, const qbits_t& objs,
             dim, DimTh, for (index_t k = 0; k < (dim / 2); k++) {
                 auto i = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
                 auto j = i | mask.obj_mask;
-                for (index_t l = 0; l < (dim / 2); l++) {
+                for (index_t l = 0; l <= k; l++) {
                     auto m = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                     auto n = m | mask.obj_mask;
                     // auto idx_i_m = (i * i + i) / 2 + m;
@@ -62,7 +62,7 @@ void CPUDensityMatrixPolicyBase::ApplyXLike(qs_data_p_t qs, const qbits_t& objs,
                 auto i = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
                 if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                     auto j = i | mask.obj_mask;
-                    for (index_t l = 0; l < (dim / 2); l++) {
+                    for (index_t l = 0; l <= k; l++) {
                         auto m = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                         auto n = m | mask.obj_mask;
                         // auto idx_i_m = (i * i + i) / 2 + m;

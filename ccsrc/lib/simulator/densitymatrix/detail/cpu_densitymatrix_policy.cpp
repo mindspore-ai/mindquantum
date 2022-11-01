@@ -33,8 +33,17 @@
 
 namespace mindquantum::sim::densitymatrix::detail {
 
-index_t IdxMap(index_t x, index_t y) {
+// Warning: only correct when x >= y
+index_t CPUDensityMatrixPolicyBase::IdxMap(index_t x, index_t y) {
     return (x * x + x) / 2 + y;
+}
+
+CPUDensityMatrixPolicyBase::qs_data_t CPUDensityMatrixPolicyBase::GetValue(qs_data_p_t qs, index_t x, index_t y) {
+    if (x >= y) {
+        return qs[IdxMap(x, y)];
+    } else {
+        return std::conj(qs[IdxMap(y, x)]);
+    }
 }
 
 auto CPUDensityMatrixPolicyBase::InitState(index_t n_elements, bool zero_state) -> qs_data_p_t {
@@ -73,7 +82,7 @@ void CPUDensityMatrixPolicyBase::SetToZeroExcept(qs_data_p_t qs, index_t ctrl_ma
         dim, DimTh, for (index_t i = 0; i < dim; i++) {
             if ((i & ctrl_mask) != ctrl_mask) {
                 for (index_t j = 0; j < (dim / 2); j++) {
-                    if ((j & ctrl_mask) != ctrl_mask){
+                    if ((j & ctrl_mask) != ctrl_mask) {
                         qs[IdxMap(i, j)] = 0;
                     }
                 }
