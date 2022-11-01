@@ -16,6 +16,8 @@
 
 import numpy as np
 
+from mindquantum.core.gates.basicgate import MultiParamsGate
+
 from ...utils.type_value_check import _check_and_generate_pr_type, _check_input_type
 from ..parameterresolver import ParameterResolver
 from .circuit import Circuit
@@ -61,6 +63,8 @@ def _qfi_matrix_base(circuit: Circuit, which_part='both', backend='mqvector'):
     jac = {}
     pr_map = {}
     for gate in circuit:
+        if isinstance(gate, MultiParamsGate):
+            raise ValueError(f"qfi doesn't support multi parameters gate: {gate}")
         if gate.parameterized:
             n_params += 1
             new_p = f'p{n_params}'

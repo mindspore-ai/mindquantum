@@ -18,7 +18,7 @@
 """Basic module for quantum gate."""
 
 import copy
-from typing import Iterable
+from typing import Iterable, List
 
 import numpy as np
 import scipy
@@ -417,6 +417,10 @@ class ParameterGate(QuantumGate):
         else:
             cpp_gate.params = self.coeff.real.to_real_obj()
         return cpp_gate
+
+    def get_parameters(self) -> List[ParameterResolver]:
+        """Return a list of parameters of parameterized gate."""
+        return [self.coeff]
 
     def no_grad(self):
         """Mark all parameters as *not* requiring gradient calculations."""
