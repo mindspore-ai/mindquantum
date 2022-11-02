@@ -55,7 +55,7 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data
                     if (i > q) {
                         src_iq = src[IdxMap(i, q)];
                     } else {
-                        src_iq = std::conj(src[IdxMap(i, q)]);
+                        src_iq = std::conj(src[IdxMap(q, i)]);
                     }
                     auto des_ip = m[0][0] * m[0][0] * src_ip + m[0][0] * m[0][1] * (src_iq + src_jp)
                                   + m[0][1] * m[0][1] * src_jq;

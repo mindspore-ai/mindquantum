@@ -101,10 +101,10 @@ auto CPUDensityMatrixPolicyBase::GetQS(qs_data_p_t qs, index_t dim) -> py_qs_dat
     py_qs_datas_t out(dim, std::vector<py_qs_data_t>(dim));
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
-            for (index_t j = 0; j <= i; j++) {
+            for (index_t j = 0; j < i; j++) {
                 out[i][j] = qs[IdxMap(i, j)];
             }
-            for (index_t j = i + 1; j < dim; j++) {
+            for (index_t j = i; j < dim; j++) {
                 out[i][j] = std::conj(qs[IdxMap(j, i)]);
             }
         })
