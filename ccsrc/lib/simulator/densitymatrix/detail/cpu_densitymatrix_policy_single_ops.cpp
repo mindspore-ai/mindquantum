@@ -67,7 +67,6 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data
                     auto des_jp = m[1][0] * std::conj(m[0][0]) * src_ip + m[1][0] * std::conj(m[0][1]) * src_iq
                                   + m[1][1] * std::conj(m[0][0]) * src_jp + m[1][1] * std::conj(m[0][1]) * src_jq;
 
-                    std::cout << m[1][0] << std::endl;
                     des[IdxMap(i, p)] = des_ip;
                     des[IdxMap(j, q)] = des_jq;
                     des[IdxMap(j, p)] = des_jp;
@@ -153,7 +152,6 @@ void CPUDensityMatrixPolicyBase::ApplyRX(qs_data_p_t qs, const qbits_t& objs, co
     SingleQubitGateMask mask(objs, ctrls);
     auto a = std::cos(val / 2);
     auto b = -std::sin(val / 2);
-    std::cout << b << std::endl;
     if (diff) {
         a = -0.5 * std::sin(val / 2);
         b = -0.5 * std::cos(val / 2);

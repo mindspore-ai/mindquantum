@@ -4,7 +4,7 @@ from qutip import *
 import numpy as np
 from qutip.qip.operations import rx
 
-qc = QubitCircuit(N=2)
+qc = QubitCircuit(N=3)
 
 def user_gate1(arg_value):
      # controlled rotation X
@@ -15,10 +15,10 @@ def user_gate1(arg_value):
 
 qc.user_gates = {"CTRLRX": user_gate1}
 
-qc.add_gate("SNOT", 0)
+qc.add_gate("SNOT", 1)
 # qc.add_gate("RX", 1, arg_value=pi)
-qc.add_gate("CTRLRX", targets=[0,1], arg_value=np.pi)
+qc.add_gate("CTRLRX", targets=[1,2], arg_value=np.pi)
 # qc.add_gate("X", 0)
-zero_state = tensor(basis(2, 0), basis(2, 0))
+zero_state = tensor(basis(2, 0), basis(2, 0), basis(2, 0))
 result = qc.run(state=zero_state)
 print(ket2dm(result))

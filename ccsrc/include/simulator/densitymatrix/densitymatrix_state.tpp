@@ -33,11 +33,11 @@
 #include <type_traits>
 #include <vector>
 
-#include "core/mq_base_types.hpp"
-#include "core/parameter_resolver.hpp"
-#include "ops/basic_gate.hpp"
-#include "ops/gates.hpp"
-#include "ops/hamiltonian.hpp"
+// #include "core/mq_base_types.hpp"
+// #include "core/parameter_resolver.hpp"
+// #include "ops/basic_gate.hpp"
+// #include "ops/gates.hpp"
+// #include "ops/hamiltonian.hpp"
 #include "simulator/types.hpp"
 #include "simulator/densitymatrix/densitymatrix_state.hpp"
 
@@ -45,32 +45,31 @@ namespace mindquantum::sim::densitymatrix::detail {
 
 template <typename qs_policy_t_>
 DensityMatrixState<qs_policy_t_>::DensityMatrixState(qbit_t n_qubits, unsigned seed)
-    : n_qubits(n_qubits), dim(1UL << n_qubits), n_elements((dim * dim + dim) / 2), seed(seed), rnd_eng_(seed) {
-    qs = qs_policy_t::InitState(n_elements);
+    : n_qubits(n_qubits), dim(1UL << n_qubits), seed(seed), rnd_eng_(seed) {
+    qs = qs_policy_t::InitState(dim);
     std::uniform_real_distribution<double> dist(0., 1.);
     rng_ = std::bind(dist, std::ref(rnd_eng_));
 }
 
 template <typename qs_policy_t_>
 DensityMatrixState<qs_policy_t_>::DensityMatrixState(qbit_t n_qubits, unsigned seed, qs_data_p_t vec)
-    : n_qubits(n_qubits), dim(1UL << n_qubits), n_elements((dim * dim + dim) / 2), seed(seed), rnd_eng_(seed) {
-    qs = qs_policy_t::Copy(vec, n_elements);
+    : n_qubits(n_qubits), dim(1UL << n_qubits), seed(seed), rnd_eng_(seed) {
+    qs = qs_policy_t::Copy(vec, dim);
     std::uniform_real_distribution<double> dist(0., 1.);
     rng_ = std::bind(dist, std::ref(rnd_eng_));
 }
 
 template <typename qs_policy_t_>
 DensityMatrixState<qs_policy_t_>::DensityMatrixState(qs_data_p_t qs, qbit_t n_qubits, unsigned seed)
-    : qs(qs), n_qubits(n_qubits), dim(1UL << n_qubits), n_elements((dim * dim + dim) / 2), seed(seed), rnd_eng_(seed) {
+    : qs(qs), n_qubits(n_qubits), dim(1UL << n_qubits), seed(seed), rnd_eng_(seed) {
     std::uniform_real_distribution<double> dist(0., 1.);
     rng_ = std::bind(dist, std::ref(rnd_eng_));
 }
 
 template <typename qs_policy_t_>
 DensityMatrixState<qs_policy_t_>::DensityMatrixState(const DensityMatrixState<qs_policy_t>& sim) {
-    this->qs = qs_policy_t::Copy(sim.qs, sim.n_elements);
+    this->qs = qs_policy_t::Copy(sim.qs, sim.dim);
     this->dim = sim.dim;
-    this->n_elements = sim.n_elements;
     this->n_qubits = sim.n_qubits;
     this->seed = sim.seed;
     this->rnd_eng_ = RndEngine(seed);
@@ -81,9 +80,8 @@ DensityMatrixState<qs_policy_t_>::DensityMatrixState(const DensityMatrixState<qs
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::operator=(const DensityMatrixState<qs_policy_t>& sim) -> derived_t& {
     qs_policy_t::FreeState(this->qs);
-    this->qs = qs_policy_t::Copy(sim.qs, sim.n_elements);
+    this->qs = qs_policy_t::Copy(sim.qs, sim.dim);
     this->dim = sim.dim;
-    this->n_elements = sim.n_elements;
     this->n_qubits = sim.n_qubits;
     this->seed = sim.seed;
     this->rnd_eng_ = RndEngine(seed);
@@ -96,7 +94,6 @@ template <typename qs_policy_t_>
 DensityMatrixState<qs_policy_t_>::DensityMatrixState(DensityMatrixState<qs_policy_t>&& sim) {
     this->qs = sim.qs;
     this->dim = sim.dim;
-    this->n_elements = sim.n_elements;
     this->n_qubits = sim.n_qubits;
     this->seed = sim.seed;
     sim.qs = nullptr;
@@ -110,7 +107,6 @@ auto DensityMatrixState<qs_policy_t_>::operator=(DensityMatrixState<qs_policy_t>
     qs_policy_t::FreeState(this->qs);
     this->qs = sim.qs;
     this->dim = sim.dim;
-    this->n_elements = sim.n_elements;
     this->n_qubits = sim.n_qubits;
     this->seed = sim.seed;
     sim.qs = nullptr;
@@ -122,7 +118,7 @@ auto DensityMatrixState<qs_policy_t_>::operator=(DensityMatrixState<qs_policy_t>
 
 template <typename qs_policy_t_>
 void DensityMatrixState<qs_policy_t_>::Reset() {
-    qs_policy_t::Reset(qs, n_elements);
+    qs_policy_t::Reset(qs, dim);
 }
 
 template <typename qs_policy_t_>
@@ -132,12 +128,12 @@ void DensityMatrixState<qs_policy_t_>::Display(qbit_t qubits_limit) const {
 
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::GetQS() const -> py_qs_datas_t {
-    return qs_policy_t::GetQS(qs, dim, n_elements);
+    return qs_policy_t::GetQS(qs, dim);
 }
 
 template <typename qs_policy_t_>
 void DensityMatrixState<qs_policy_t_>::SetQS(const py_qs_datas_t& qs_out) {
-    qs_policy_t::SetQS(qs, qs_out, dim, n_elements);
+    qs_policy_t::SetQS(qs, qs_out, dim);
 }
 
 template <typename qs_policy_t_>

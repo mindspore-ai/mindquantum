@@ -40,16 +40,16 @@ struct CPUDensityMatrixPolicyBase {
     static index_t IdxMap(index_t x, index_t y);
     static qs_data_t GetValue(qs_data_p_t qs, index_t x, index_t y);
 
-    static qs_data_p_t InitState(index_t n_elements, bool zero_state = true);
-    static void Reset(qs_data_p_t qs, index_t n_elements);
+    static qs_data_p_t InitState(index_t dim, bool zero_state = true);
+    static void Reset(qs_data_p_t qs, index_t dim);
     static void FreeState(qs_data_p_t qs);
     static void Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit = 10);
     static void SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim);
     static py_qs_datas_t GetQS(qs_data_p_t qs, index_t dim);
     static void DisplayQS(qs_data_p_t qs, qbit_t n_qubits, index_t dim);
-    static void SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, index_t dim, index_t n_elements);
-    static qs_data_p_t Copy(qs_data_p_t qs, index_t n_elements);
-    static bool IsPure(qs_data_p_t qs, index_t dim, index_t n_elements);
+    static void SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, index_t dim);
+    static qs_data_p_t Copy(qs_data_p_t qs, index_t dim);
+    static bool IsPure(qs_data_p_t qs, index_t dim);
     static qs_data_p_t PureStateVector(qs_data_p_t qs, index_t dim);
 
     // X like operator

@@ -18,6 +18,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fopenmp -O3 -ffast-math")
 # openmp support
 find_package(OpenMP)
 
+# ==============================================================================
+# python support
+find_package (Python3 COMPONENTS Interpreter Development)
+
+# ==============================================================================
+# pybind support
+find_package (pybind11)
 
 # include_directories(/Users/jedzhou/VscodeProjects/mindquantum/ccsrc/include)
 
@@ -45,7 +52,9 @@ add_library(include_lib INTERFACE)
 target_include_directories(
   include_lib INTERFACE ${Python3_INCLUDE_DIRS} ${pybind11_INCLUDE_DIRS}
   /Users/jedzhou/VscodeProjects/mindquantum/ccsrc/include
-  /Users/jedzhou/VscodeProjects/mindquantum/ccsrc/lib/mq_base)
+  # /Users/jedzhou/VscodeProjects/mindquantum/ccsrc/lib/mq_base
+  /Users/jedzhou/VscodeProjects/mindquantum/third_party/mindquantum/ccsrc/mq_base
+  )
 
 target_link_libraries(mindquantum_sim PUBLIC include_lib ${Python3_LIBRARIES})
 
@@ -60,9 +69,12 @@ target_link_libraries(mqsim_common PUBLIC mq_base include_lib)
 
 # =================================================================================
 
-add_executable(test_dm main.cpp)
+add_executable(test_policy test_policy.cpp)
 
-target_include_directories(
-  test_dm PRIVATE )
+target_link_libraries(test_policy PUBLIC mindquantum_sim)
 
-  target_link_libraries(test_dm PUBLIC mindquantum_sim)
+# =================================================================================
+
+add_executable(test_state test_state.cpp)
+
+target_link_libraries(test_state PUBLIC mindquantum_sim)

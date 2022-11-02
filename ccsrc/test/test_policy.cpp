@@ -10,11 +10,11 @@ int main() {
 
     auto qs = CPUDensityMatrixPolicyBase::InitState(36, 1);
     CPUDensityMatrixPolicyBase::ApplyH(qs, {1}, {}, 8);
-    CPUDensityMatrixPolicyBase::ApplyRX(qs, {0}, {1}, 4, 8);
+    CPUDensityMatrixPolicyBase::ApplyRX(qs, {0}, {1}, M_PI, 8);
     // CPUDensityMatrixPolicyBase::ApplyT(qs, {1}, {}, 2);
-    CPUDensityMatrixPolicyBase::DisplayQS(qs, 4, 8);
-    std::cout << CPUDensityMatrixPolicyBase::IsPure(qs, 8, 36) << std::endl;
+    CPUDensityMatrixPolicyBase::DisplayQS(qs, 3, 8);
+    std::cout << CPUDensityMatrixPolicyBase::IsPure(qs, 8) << std::endl;
 
     auto v = CPUDensityMatrixPolicyBase::PureStateVector(qs, 8);
-    CPUDensityMatrixPolicyBase::Display(v, 4);
+    CPUDensityMatrixPolicyBase::Display(v, 3);
 }

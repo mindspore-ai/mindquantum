@@ -35,7 +35,7 @@
 // #include "ops/basic_gate.hpp"
 // #include "ops/gates.hpp"
 // #include "ops/hamiltonian.hpp"
-#include "core/type.h"
+// #include "core/type.h"
 #include "gate/basic_gate.h"
 #include "gate/gates.h"
 #include "hamiltonian/hamiltonian.h"
@@ -103,7 +103,6 @@ class DensityMatrixState {
     qs_data_p_t qs = nullptr;
     qbit_t n_qubits = 0;
     index_t dim = 0;
-    index_t n_elements = 0;
     unsigned seed = 0;
     RndEngine rnd_eng_;
     std::function<double()> rng_;
