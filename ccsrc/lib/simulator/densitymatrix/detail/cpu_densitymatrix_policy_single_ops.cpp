@@ -30,7 +30,7 @@
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
 
-constexpr double m_sqrt1_2 = 0.707106781186547524400844362104849039;
+constexpr double m_sqrt1_2{0.707106781186547524400844362104849039};
 
 namespace mindquantum::sim::densitymatrix::detail {
 // Single qubit operator
@@ -48,27 +48,30 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data
                 for (index_t b = 0; b <= a; b++) {
                     auto p = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
                     auto q = p + mask.obj_mask;
-                    auto t1 = m[0][0] * m[0][0] * GetValue(src, i, p)
-                              + m[0][0] * m[0][1] * (GetValue(src, i, q) + GetValue(src, j, p))
-                              + m[0][1] * m[0][1] * GetValue(src, j, q);
-                    auto t2 = m[1][0] * m[1][0] * GetValue(src, i, p)
-                              + m[1][0] * m[1][1] * (GetValue(src, i, q) + GetValue(src, j, p))
-                              + m[1][1] * m[1][1] * GetValue(src, j, q);
-                    auto t3 = m[0][0] * m[1][0] * GetValue(src, i, p) + m[0][0] * m[1][1] * GetValue(src, i, q)
-                              + m[0][1] * m[1][0] * GetValue(src, j, p) + m[0][1] * m[1][1] * GetValue(src, j, q);
-                    auto t4 = m[1][0] * m[0][0] * GetValue(src, i, p) + m[1][0] * m[0][1] * GetValue(src, i, q)
-                              + m[1][1] * m[0][0] * GetValue(src, j, p) + m[1][1] * m[0][1] * GetValue(src, j, q);
-                    des[IdxMap(i, p)] = t1;
-                    des[IdxMap(j, q)] = t2;
+                    qs_data_t src_ip{src[IdxMap(i, p)]};
+                    qs_data_t src_jq{src[IdxMap(j, q)]};
+                    qs_data_t src_jp{src[IdxMap(j, p)]};
+                    qs_data_t src_iq;
                     if (i > q) {
-                        des[IdxMap(i, q)] = t3;
+                        src_iq = src[IdxMap(i, q)];
                     } else {
-                        des[IdxMap(q, i)] = std::conj(t3);
+                        src_iq = std::conj(src[IdxMap(i, q)]);
                     }
-                    if (j > p) {
-                        des[IdxMap(j, p)] = t4;
+                    auto des_ip = m[0][0] * m[0][0] * src_ip + m[0][0] * m[0][1] * (src_iq + src_jp)
+                                  + m[0][1] * m[0][1] * src_jq;
+                    auto des_jq = m[1][0] * m[1][0] * src_ip + m[1][0] * m[1][1] * (src_iq + src_jp)
+                                  + m[1][1] * m[1][1] * src_jq;
+                    auto des_iq = m[0][0] * m[1][0] * src_ip + m[0][0] * m[1][1] * src_iq + m[0][1] * m[1][0] * src_jp
+                                  + m[0][1] * m[1][1] * src_jq;
+                    auto des_jp = m[1][0] * m[0][0] * src_ip + m[1][0] * m[0][1] * src_iq + m[1][1] * m[0][0] * src_jp
+                                  + m[1][1] * m[0][1] * src_jq;
+                    des[IdxMap(i, p)] = des_ip;
+                    des[IdxMap(j, q)] = des_jq;
+                    des[IdxMap(j, p)] = des_jp;
+                    if (i > q) {
+                        des[IdxMap(i, q)] = des_iq;
                     } else {
-                        des[IdxMap(p, j)] = std::conj(t4);
+                        des[IdxMap(q, i)] = std::conj(des_iq);
                     }
                 }
             })
@@ -81,27 +84,30 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data
                     for (index_t b = 0; b <= a; b++) {
                         auto p = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
                         auto q = p + mask.obj_mask;
-                        auto t1 = m[0][0] * m[0][0] * GetValue(src, i, p)
-                                  + m[0][0] * m[0][1] * (GetValue(src, i, q) + GetValue(src, j, p))
-                                  + m[0][1] * m[0][1] * GetValue(src, j, q);
-                        auto t2 = m[1][0] * m[1][0] * GetValue(src, i, p)
-                                  + m[1][0] * m[1][1] * (GetValue(src, i, q) + GetValue(src, j, p))
-                                  + m[1][1] * m[1][1] * GetValue(src, j, q);
-                        auto t3 = m[0][0] * m[1][0] * GetValue(src, i, p) + m[0][0] * m[1][1] * GetValue(src, i, q)
-                                  + m[0][1] * m[1][0] * GetValue(src, j, p) + m[0][1] * m[1][1] * GetValue(src, j, q);
-                        auto t4 = m[1][0] * m[0][0] * GetValue(src, i, p) + m[1][0] * m[0][1] * GetValue(src, i, q)
-                                  + m[1][1] * m[0][0] * GetValue(src, j, p) + m[1][1] * m[0][1] * GetValue(src, j, q);
-                        des[IdxMap(i, p)] = t1;
-                        des[IdxMap(j, q)] = t2;
+                        qs_data_t src_ip{src[IdxMap(i, p)]};
+                        qs_data_t src_jq{src[IdxMap(j, q)]};
+                        qs_data_t src_jp{src[IdxMap(j, p)]};
+                        qs_data_t src_iq;
                         if (i > q) {
-                            des[IdxMap(i, q)] = t3;
+                            src_iq = src[IdxMap(i, q)];
                         } else {
-                            des[IdxMap(q, i)] = std::conj(t3);
+                            src_iq = std::conj(src[IdxMap(i, q)]);
                         }
-                        if (j > p) {
-                            des[IdxMap(j, p)] = t4;
+                        auto des_ip = m[0][0] * m[0][0] * src_ip + m[0][0] * m[0][1] * (src_iq + src_jp)
+                                      + m[0][1] * m[0][1] * src_jq;
+                        auto des_jq = m[1][0] * m[1][0] * src_ip + m[1][0] * m[1][1] * (src_iq + src_jp)
+                                      + m[1][1] * m[1][1] * src_jq;
+                        auto des_iq = m[0][0] * m[1][0] * src_ip + m[0][0] * m[1][1] * src_iq
+                                      + m[0][1] * m[1][0] * src_jp + m[0][1] * m[1][1] * src_jq;
+                        auto des_jp = m[1][0] * m[0][0] * src_ip + m[1][0] * m[0][1] * src_iq
+                                      + m[1][1] * m[0][0] * src_jp + m[1][1] * m[0][1] * src_jq;
+                        des[IdxMap(i, p)] = des_ip;
+                        des[IdxMap(j, q)] = des_jq;
+                        des[IdxMap(j, p)] = des_jp;
+                        if (i > q) {
+                            des[IdxMap(i, q)] = des_iq;
                         } else {
-                            des[IdxMap(p, j)] = std::conj(t4);
+                            des[IdxMap(q, i)] = std::conj(des_iq);
                         }
                     }
                 }

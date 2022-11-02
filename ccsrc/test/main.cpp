@@ -13,5 +13,5 @@ int main() {
     CPUDensityMatrixPolicyBase::ApplyH(qs, {1}, {}, 2);
     // CPUDensityMatrixPolicyBase::ApplyT(qs, {1}, {}, 2);
     CPUDensityMatrixPolicyBase::DisplayQS(qs, 2, 4);
-    std::cout << CPUDensityMatrixPolicyBase::IsPure(qs, 2, 4) << std::endl;
+    std::cout << CPUDensityMatrixPolicyBase::IsPure(qs, 4, 10) << std::endl;
 }

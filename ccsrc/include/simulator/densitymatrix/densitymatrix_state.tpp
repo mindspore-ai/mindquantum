@@ -45,7 +45,7 @@ namespace mindquantum::sim::densitymatrix::detail {
 
 template <typename qs_policy_t_>
 DensityMatrixState<qs_policy_t_>::DensityMatrixState(qbit_t n_qubits, unsigned seed)
-    : n_qubits(n_qubits), dim(1UL << n_qubits), n_elements(dim * dim / 2), seed(seed), rnd_eng_(seed) {
+    : n_qubits(n_qubits), dim(1UL << n_qubits), n_elements((dim * dim + dim) / 2), seed(seed), rnd_eng_(seed) {
     qs = qs_policy_t::InitState(n_elements);
     std::uniform_real_distribution<double> dist(0., 1.);
     rng_ = std::bind(dist, std::ref(rnd_eng_));
@@ -53,7 +53,7 @@ DensityMatrixState<qs_policy_t_>::DensityMatrixState(qbit_t n_qubits, unsigned s
 
 template <typename qs_policy_t_>
 DensityMatrixState<qs_policy_t_>::DensityMatrixState(qbit_t n_qubits, unsigned seed, qs_data_p_t vec)
-    : n_qubits(n_qubits), dim(1UL << n_qubits), n_elements(dim * dim / 2), seed(seed), rnd_eng_(seed) {
+    : n_qubits(n_qubits), dim(1UL << n_qubits), n_elements((dim * dim + dim) / 2), seed(seed), rnd_eng_(seed) {
     qs = qs_policy_t::Copy(vec, n_elements);
     std::uniform_real_distribution<double> dist(0., 1.);
     rng_ = std::bind(dist, std::ref(rnd_eng_));
@@ -61,7 +61,7 @@ DensityMatrixState<qs_policy_t_>::DensityMatrixState(qbit_t n_qubits, unsigned s
 
 template <typename qs_policy_t_>
 DensityMatrixState<qs_policy_t_>::DensityMatrixState(qs_data_p_t qs, qbit_t n_qubits, unsigned seed)
-    : qs(qs), n_qubits(n_qubits), dim(1UL << n_qubits), n_elements(dim * dim / 2), seed(seed), rnd_eng_(seed) {
+    : qs(qs), n_qubits(n_qubits), dim(1UL << n_qubits), n_elements((dim * dim + dim) / 2), seed(seed), rnd_eng_(seed) {
     std::uniform_real_distribution<double> dist(0., 1.);
     rng_ = std::bind(dist, std::ref(rnd_eng_));
 }

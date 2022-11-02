@@ -111,16 +111,21 @@ auto CPUDensityMatrixPolicyBase::GetQS(qs_data_p_t qs, index_t dim) -> py_qs_dat
     return out;
 }
 
-// can be imporved
 bool CPUDensityMatrixPolicyBase::IsPure(qs_data_p_t qs, index_t dim, index_t n_elements) {
     auto qs_square = reinterpret_cast<qs_data_p_t>(calloc(n_elements, sizeof(qs_data_t)));
     index_t row = 0;
     index_t col = 0;
     for (index_t element = 0; element < n_elements; element++) {
-        for (index_t i = 0; i < dim; i++) {
+        for (index_t i = 0; i < col; i++) {
+            qs_square[element] += qs[IdxMap(row, i)] * std::conj(qs[IdxMap(col, i)]);
+        }
+        for (index_t i = col; i < row; i++) {
             qs_square[element] += qs[IdxMap(row, i)] * qs[IdxMap(i, col)];
         }
-        if (qs_square[element] != qs[element]) {
+        for (index_t i = row; i < dim; i++) {
+            qs_square[element] += std::conj(qs[IdxMap(i, row)]) * qs[IdxMap(i, col)];
+        }
+        if (abs(qs_square[element] - qs[element]) > 10e-8) {
             return false;
         }
         if (col == row) {
