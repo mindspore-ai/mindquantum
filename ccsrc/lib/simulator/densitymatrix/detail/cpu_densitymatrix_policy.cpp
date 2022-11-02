@@ -38,7 +38,7 @@ index_t CPUDensityMatrixPolicyBase::IdxMap(index_t x, index_t y) {
     return (x * x + x) / 2 + y;
 }
 
-CPUDensityMatrixPolicyBase::qs_data_t CPUDensityMatrixPolicyBase::GetValue(qs_data_p_t qs, index_t x, index_t y) {
+auto CPUDensityMatrixPolicyBase::GetValue(qs_data_p_t qs, index_t x, index_t y) -> qs_data_t {
     if (x >= y) {
         return qs[IdxMap(x, y)];
     } else {
@@ -112,6 +112,8 @@ auto CPUDensityMatrixPolicyBase::GetQS(qs_data_p_t qs, index_t dim) -> py_qs_dat
 }
 
 bool CPUDensityMatrixPolicyBase::IsPure(qs_data_p_t qs, index_t dim, index_t n_elements) {
+    // index_t n_elements = (dim * dim + dim) / 2;
+    // std::cout<<n_elements<<std::endl;
     auto qs_square = reinterpret_cast<qs_data_p_t>(calloc(n_elements, sizeof(qs_data_t)));
     index_t row = 0;
     index_t col = 0;
@@ -138,6 +140,17 @@ bool CPUDensityMatrixPolicyBase::IsPure(qs_data_p_t qs, index_t dim, index_t n_e
     return true;
 }
 
+auto CPUDensityMatrixPolicyBase::PureStateVector(qs_data_p_t qs, index_t dim) -> qs_data_p_t {
+    if (!IsPure(qs, dim, (dim * dim + dim)/2)) {
+        throw(std::runtime_error("PureStateVector(): Cannot transform mixd density matrix to vector."));
+    }
+    auto qs_vector = reinterpret_cast<qs_data_p_t>(calloc(dim, sizeof(qs_data_t)));
+    for (index_t i = 0; i < dim; i++) {
+        qs_vector[i] = sqrt(qs[IdxMap(i, i)]);
+    }
+    return qs_vector;
+    
+}
 // auto CPUDensityMatrixPolicyBase::MatrixMul(qs_data_p_t qs, )
 
 void CPUDensityMatrixPolicyBase::DisplayQS(qs_data_p_t qs, qbit_t n_qubits, index_t dim) {

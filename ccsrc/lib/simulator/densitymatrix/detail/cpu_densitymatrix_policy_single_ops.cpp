@@ -36,6 +36,7 @@ namespace mindquantum::sim::densitymatrix::detail {
 // Single qubit operator
 // ========================================================================================================
 
+// method is based on 'mq_vector' simulator, extended to densitymatrix
 void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
                                                         const qbits_t& ctrls,
                                                         const std::vector<std::vector<py_qs_data_t>>& m, index_t dim) {
@@ -52,19 +53,21 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data
                     qs_data_t src_jq{src[IdxMap(j, q)]};
                     qs_data_t src_jp{src[IdxMap(j, p)]};
                     qs_data_t src_iq;
-                    if (i > q) {
+                    if (i > q) {  // for qs[row, col], only in this case (row < col) is possible
                         src_iq = src[IdxMap(i, q)];
                     } else {
                         src_iq = std::conj(src[IdxMap(q, i)]);
                     }
-                    auto des_ip = m[0][0] * m[0][0] * src_ip + m[0][0] * m[0][1] * (src_iq + src_jp)
-                                  + m[0][1] * m[0][1] * src_jq;
-                    auto des_jq = m[1][0] * m[1][0] * src_ip + m[1][0] * m[1][1] * (src_iq + src_jp)
-                                  + m[1][1] * m[1][1] * src_jq;
-                    auto des_iq = m[0][0] * m[1][0] * src_ip + m[0][0] * m[1][1] * src_iq + m[0][1] * m[1][0] * src_jp
-                                  + m[0][1] * m[1][1] * src_jq;
-                    auto des_jp = m[1][0] * m[0][0] * src_ip + m[1][0] * m[0][1] * src_iq + m[1][1] * m[0][0] * src_jp
-                                  + m[1][1] * m[0][1] * src_jq;
+                    auto des_ip = m[0][0] * std::conj(m[0][0]) * src_ip + m[0][0] * std::conj(m[0][1]) * src_iq
+                                  + m[0][1] * std::conj(m[0][0]) * src_jp + m[0][1] * std::conj(m[0][1]) * src_jq;
+                    auto des_jq = m[1][0] * std::conj(m[1][0]) * src_ip + m[1][0] * std::conj(m[1][1]) * src_iq
+                                  + m[1][1] * std::conj(m[1][0]) * src_jp + m[1][1] * std::conj(m[1][1]) * src_jq;
+                    auto des_iq = m[0][0] * std::conj(m[1][0]) * src_ip + m[0][0] * std::conj(m[1][1]) * src_iq
+                                  + m[0][1] * std::conj(m[1][0]) * src_jp + m[0][1] * std::conj(m[1][1]) * src_jq;
+                    auto des_jp = m[1][0] * std::conj(m[0][0]) * src_ip + m[1][0] * std::conj(m[0][1]) * src_iq
+                                  + m[1][1] * std::conj(m[0][0]) * src_jp + m[1][1] * std::conj(m[0][1]) * src_jq;
+
+                    std::cout << m[1][0] << std::endl;
                     des[IdxMap(i, p)] = des_ip;
                     des[IdxMap(j, q)] = des_jq;
                     des[IdxMap(j, p)] = des_jp;
@@ -78,29 +81,54 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data
     } else {
         THRESHOLD_OMP_FOR(
             dim, DimTh, for (index_t a = 0; a < (dim / 2); a++) {
-                auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
-                if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                    auto j = i + mask.obj_mask;
-                    for (index_t b = 0; b <= a; b++) {
-                        auto p = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
+                for (index_t b = 0; b <= a; b++) {
+                    auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
+                    auto p = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
+                    if (((i & mask.ctrl_mask) != mask.ctrl_mask)
+                        && ((p & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
+                        continue;
+                    } else {
+                        auto j = i + mask.obj_mask;
                         auto q = p + mask.obj_mask;
                         qs_data_t src_ip{src[IdxMap(i, p)]};
                         qs_data_t src_jq{src[IdxMap(j, q)]};
                         qs_data_t src_jp{src[IdxMap(j, p)]};
                         qs_data_t src_iq;
-                        if (i > q) {
+                        if (i > q) {  // for qs[row, col], only in this case (row < col) is possible
                             src_iq = src[IdxMap(i, q)];
                         } else {
-                            src_iq = std::conj(src[IdxMap(i, q)]);
+                            src_iq = std::conj(src[IdxMap(q, i)]);
                         }
-                        auto des_ip = m[0][0] * m[0][0] * src_ip + m[0][0] * m[0][1] * (src_iq + src_jp)
-                                      + m[0][1] * m[0][1] * src_jq;
-                        auto des_jq = m[1][0] * m[1][0] * src_ip + m[1][0] * m[1][1] * (src_iq + src_jp)
-                                      + m[1][1] * m[1][1] * src_jq;
-                        auto des_iq = m[0][0] * m[1][0] * src_ip + m[0][0] * m[1][1] * src_iq
-                                      + m[0][1] * m[1][0] * src_jp + m[0][1] * m[1][1] * src_jq;
-                        auto des_jp = m[1][0] * m[0][0] * src_ip + m[1][0] * m[0][1] * src_iq
-                                      + m[1][1] * m[0][0] * src_jp + m[1][1] * m[0][1] * src_jq;
+                        qs_data_t des_ip;
+                        qs_data_t des_jq;
+                        qs_data_t des_iq;
+                        qs_data_t des_jp;
+                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                            if ((p & mask.ctrl_mask) == mask.ctrl_mask) {  // both in control
+                                des_ip = m[0][0] * std::conj(m[0][0]) * src_ip + m[0][0] * std::conj(m[0][1]) * src_iq
+                                         + m[0][1] * std::conj(m[0][0]) * src_jp
+                                         + m[0][1] * std::conj(m[0][1]) * src_jq;
+                                des_jq = m[1][0] * std::conj(m[1][0]) * src_ip + m[1][0] * std::conj(m[1][1]) * src_iq
+                                         + m[1][1] * std::conj(m[1][0]) * src_jp
+                                         + m[1][1] * std::conj(m[1][1]) * src_jq;
+                                des_iq = m[0][0] * std::conj(m[1][0]) * src_ip + m[0][0] * std::conj(m[1][1]) * src_iq
+                                         + m[0][1] * std::conj(m[1][0]) * src_jp
+                                         + m[0][1] * std::conj(m[1][1]) * src_jq;
+                                des_jp = m[1][0] * std::conj(m[0][0]) * src_ip + m[1][0] * std::conj(m[0][1]) * src_iq
+                                         + m[1][1] * std::conj(m[0][0]) * src_jp
+                                         + m[1][1] * std::conj(m[0][1]) * src_jq;
+                            } else {  // row in control but not column
+                                des_ip = m[0][0] * src_ip + m[0][1] * src_jp;
+                                des_jp = m[1][0] * src_ip + m[1][1] * src_jp;
+                                des_iq = m[0][0] * src_iq + m[0][1] * src_jq;
+                                des_jq = m[1][0] * src_iq + m[1][1] * src_jq;
+                            }
+                        } else {  // column in control but not row
+                            des_ip = std::conj(m[0][0]) * src_ip + std::conj(m[0][1]) * src_iq;
+                            des_iq = std::conj(m[1][0]) * src_ip + std::conj(m[1][1]) * src_iq;
+                            des_jp = std::conj(m[0][0]) * src_jp + std::conj(m[0][1]) * src_jq;
+                            des_jq = std::conj(m[1][0]) * src_jp + std::conj(m[1][1]) * src_jq;
+                        }
                         des[IdxMap(i, p)] = des_ip;
                         des[IdxMap(j, q)] = des_jq;
                         des[IdxMap(j, p)] = des_jp;
@@ -125,6 +153,7 @@ void CPUDensityMatrixPolicyBase::ApplyRX(qs_data_p_t qs, const qbits_t& objs, co
     SingleQubitGateMask mask(objs, ctrls);
     auto a = std::cos(val / 2);
     auto b = -std::sin(val / 2);
+    std::cout << b << std::endl;
     if (diff) {
         a = -0.5 * std::sin(val / 2);
         b = -0.5 * std::cos(val / 2);

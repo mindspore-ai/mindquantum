@@ -50,6 +50,7 @@ struct CPUDensityMatrixPolicyBase {
     static void SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, index_t dim, index_t n_elements);
     static qs_data_p_t Copy(qs_data_p_t qs, index_t n_elements);
     static bool IsPure(qs_data_p_t qs, index_t dim, index_t n_elements);
+    static qs_data_p_t PureStateVector(qs_data_p_t qs, index_t dim);
 
     // X like operator
     // ========================================================================================================
