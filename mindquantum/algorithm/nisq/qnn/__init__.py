@@ -16,5 +16,6 @@
 """Algorithm for IQP Encoding."""
 
 from .iqp_encoding import IQPEncoding
+from .strongly_entangling import StronglyEntangling
 
-__all__ = ['IQPEncoding']
+__all__ = ['IQPEncoding', 'StronglyEntangling']

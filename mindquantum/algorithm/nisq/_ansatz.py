@@ -40,7 +40,7 @@ class Ansatz:  # pylint: disable=too-few-public-methods
         """Implement of ansatz."""
 
     @property
-    def circuit(self):
+    def circuit(self) -> Circuit:
         """
         Get the quantum circuit of this ansatz.
 
