@@ -56,7 +56,7 @@
         返回：
             QubitOperator，此量子算符的虚部。
 
-    .. py:method:: loads(strs, dtype)
+    .. py:method:: loads(strs, dtype: type)
         :staticmethod:
 
         将JSON（JavaScript对象表示法）加载到QubitOperator中。
