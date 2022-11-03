@@ -53,7 +53,7 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data
                     qs_data_t src_jq{src[IdxMap(j, q)]};
                     qs_data_t src_jp{src[IdxMap(j, p)]};
                     qs_data_t src_iq;
-                    if (i > q) {  // for qs[row, col], only in this case (row < col) is possible
+                    if (i > q) {  // for matrix[row, col], only in this case (row < col) is possible
                         src_iq = src[IdxMap(i, q)];
                     } else {
                         src_iq = std::conj(src[IdxMap(q, i)]);
@@ -80,20 +80,20 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data
     } else {
         THRESHOLD_OMP_FOR(
             dim, DimTh, for (index_t a = 0; a < (dim / 2); a++) {
+                auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
+                auto j = i + mask.obj_mask;
                 for (index_t b = 0; b <= a; b++) {
-                    auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                     auto p = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
                     if (((i & mask.ctrl_mask) != mask.ctrl_mask)
                         && ((p & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
                         continue;
                     } else {
-                        auto j = i + mask.obj_mask;
                         auto q = p + mask.obj_mask;
                         qs_data_t src_ip{src[IdxMap(i, p)]};
                         qs_data_t src_jq{src[IdxMap(j, q)]};
                         qs_data_t src_jp{src[IdxMap(j, p)]};
                         qs_data_t src_iq;
-                        if (i > q) {  // for qs[row, col], only in this case (row < col) is possible
+                        if (i > q) {  // for qs[row, col], only in this case that (row < col) is possible
                             src_iq = src[IdxMap(i, q)];
                         } else {
                             src_iq = std::conj(src[IdxMap(q, i)]);

@@ -50,13 +50,13 @@ target_sources(
 add_library(include_lib INTERFACE)
 
 target_include_directories(
-  include_lib INTERFACE ${Python3_INCLUDE_DIRS} ${pybind11_INCLUDE_DIRS}
+  include_lib INTERFACE ${pybind11_INCLUDE_DIRS}
   /Users/jedzhou/VscodeProjects/mindquantum/ccsrc/include
   # /Users/jedzhou/VscodeProjects/mindquantum/ccsrc/lib/mq_base
   /Users/jedzhou/VscodeProjects/mindquantum/third_party/mindquantum/ccsrc/mq_base
   )
 
-target_link_libraries(mindquantum_sim PUBLIC include_lib ${Python3_LIBRARIES})
+target_link_libraries(mindquantum_sim PUBLIC include_lib)
 
 # ================================================================================
 # add mqsim_common

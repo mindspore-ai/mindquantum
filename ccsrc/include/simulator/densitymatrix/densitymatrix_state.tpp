@@ -38,8 +38,8 @@
 // #include "ops/basic_gate.hpp"
 // #include "ops/gates.hpp"
 // #include "ops/hamiltonian.hpp"
-#include "simulator/types.hpp"
 #include "simulator/densitymatrix/densitymatrix_state.hpp"
+#include "simulator/types.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
 
@@ -127,6 +127,11 @@ void DensityMatrixState<qs_policy_t_>::Display(qbit_t qubits_limit) const {
 }
 
 template <typename qs_policy_t_>
+void DensityMatrixState<qs_policy_t_>::DisplayQS() const {
+    qs_policy_t::DisplayQS(qs, n_qubits, dim);
+}
+
+template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::GetQS() const -> py_qs_datas_t {
     return qs_policy_t::GetQS(qs, dim);
 }
@@ -138,7 +143,7 @@ void DensityMatrixState<qs_policy_t_>::SetQS(const py_qs_datas_t& qs_out) {
 
 template <typename qs_policy_t_>
 index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate<calc_type>>& gate,
-                                             const ParameterResolver<calc_type>& pr, bool diff) {
+                                                    const ParameterResolver<calc_type>& pr, bool diff) {
     auto name = gate->name_;
     if (name == gI) {
     } else if (name == gX) {
@@ -152,7 +157,9 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
         qs_policy_t::ApplyY(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
     } else if (name == gZ) {
         qs_policy_t::ApplyZ(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-    }  else if (name == gS) {
+    } else if (name == gH) {
+        qs_policy_t::ApplyH(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+    } else if (name == gS) {
         if (gate->daggered_) {
             qs_policy_t::ApplySdag(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
         } else {
@@ -164,6 +171,30 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
         } else {
             qs_policy_t::ApplyT(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
         }
+    } else if (name == gRX) {
+        auto val = gate->applied_value_;
+        if (!gate->parameterized_) {
+            diff = false;
+        } else {
+            val = gate->params_.Combination(pr).const_value;
+        }
+        qs_policy_t::ApplyRX(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+    } else if (name == gRY) {
+        auto val = gate->applied_value_;
+        if (!gate->parameterized_) {
+            diff = false;
+        } else {
+            val = gate->params_.Combination(pr).const_value;
+        }
+        qs_policy_t::ApplyRY(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+    } else if (name == gRZ) {
+        auto val = gate->applied_value_;
+        if (!gate->parameterized_) {
+            diff = false;
+        } else {
+            val = gate->params_.Combination(pr).const_value;
+        }
+        qs_policy_t::ApplyRZ(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
     } else {
         throw std::invalid_argument("gate " + name + " not implement.");
     }

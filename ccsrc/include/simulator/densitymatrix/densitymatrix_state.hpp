@@ -40,7 +40,6 @@
 #include "gate/gates.h"
 #include "hamiltonian/hamiltonian.h"
 #include "pr/parameter_resolver.h"
-
 #include "simulator/timer.h"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
@@ -84,6 +83,8 @@ class DensityMatrixState {
 
     //! Display basic information of this quantum state
     void Display(qbit_t qubits_limit = 10) const;
+
+    void DisplayQS() const;
 
     //! Get the quantum state value
     py_qs_datas_t GetQS() const;

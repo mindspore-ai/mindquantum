@@ -8,13 +8,13 @@ using namespace mindquantum::sim::densitymatrix::detail;
 
 int main() {
 
-    auto qs = CPUDensityMatrixPolicyBase::InitState(36, 1);
-    CPUDensityMatrixPolicyBase::ApplyH(qs, {1}, {}, 8);
-    CPUDensityMatrixPolicyBase::ApplyRX(qs, {0}, {1}, M_PI, 8);
-    // CPUDensityMatrixPolicyBase::ApplyT(qs, {1}, {}, 2);
-    CPUDensityMatrixPolicyBase::DisplayQS(qs, 3, 8);
-    std::cout << CPUDensityMatrixPolicyBase::IsPure(qs, 8) << std::endl;
+    auto qs = CPUDensityMatrixPolicyBase::InitState(4, 1);
+    CPUDensityMatrixPolicyBase::ApplyH(qs, {0}, {}, 4);
+    // CPUDensityMatrixPolicyBase::ApplyRX(qs, {0}, {1}, M_PI, 8);
+    CPUDensityMatrixPolicyBase::ApplyY(qs, {1}, {0}, 4);
+    CPUDensityMatrixPolicyBase::DisplayQS(qs, 2, 4);
+    std::cout << CPUDensityMatrixPolicyBase::IsPure(qs, 4) << std::endl;
 
-    auto v = CPUDensityMatrixPolicyBase::PureStateVector(qs, 8);
-    CPUDensityMatrixPolicyBase::Display(v, 3);
+    auto v = CPUDensityMatrixPolicyBase::PureStateVector(qs, 4);
+    CPUDensityMatrixPolicyBase::Display(v, 2);
 }
