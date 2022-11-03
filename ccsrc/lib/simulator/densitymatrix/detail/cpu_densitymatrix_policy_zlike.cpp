@@ -34,6 +34,7 @@ namespace mindquantum::sim::densitymatrix::detail {
 // Z like operator
 // ========================================================================================================
 
+// need to test
 void CPUDensityMatrixPolicyBase::ApplyZLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, qs_data_t val,
                                      index_t dim) {
     SingleQubitGateMask mask(objs, ctrls);

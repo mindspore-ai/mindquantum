@@ -65,11 +65,11 @@ void CPUDensityMatrixPolicyBase::ApplyXLike(qs_data_p_t qs, const qbits_t& objs,
                 auto j = i | mask.obj_mask;
                 for (index_t l = 0; l <= k; l++) {
                     auto m = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
-                    auto n = m | mask.obj_mask;
                     if (((i & mask.ctrl_mask) != mask.ctrl_mask)
                         && ((m & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
                         continue;
                     }
+                    auto n = m | mask.obj_mask;
                     if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                         if ((m & mask.ctrl_mask) == mask.ctrl_mask) {  // both in control
                             auto tmp = qs[IdxMap(i, m)];

@@ -87,55 +87,50 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data
                     if (((i & mask.ctrl_mask) != mask.ctrl_mask)
                         && ((p & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
                         continue;
+                    }
+                    auto q = p + mask.obj_mask;
+                    qs_data_t src_ip{src[IdxMap(i, p)]};
+                    qs_data_t src_jq{src[IdxMap(j, q)]};
+                    qs_data_t src_jp{src[IdxMap(j, p)]};
+                    qs_data_t src_iq;
+                    if (i > q) {  // for qs[row, col], only in this case that (row < col) is possible
+                        src_iq = src[IdxMap(i, q)];
                     } else {
-                        auto q = p + mask.obj_mask;
-                        qs_data_t src_ip{src[IdxMap(i, p)]};
-                        qs_data_t src_jq{src[IdxMap(j, q)]};
-                        qs_data_t src_jp{src[IdxMap(j, p)]};
-                        qs_data_t src_iq;
-                        if (i > q) {  // for qs[row, col], only in this case that (row < col) is possible
-                            src_iq = src[IdxMap(i, q)];
-                        } else {
-                            src_iq = std::conj(src[IdxMap(q, i)]);
+                        src_iq = std::conj(src[IdxMap(q, i)]);
+                    }
+                    qs_data_t des_ip;
+                    qs_data_t des_jq;
+                    qs_data_t des_iq;
+                    qs_data_t des_jp;
+                    if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                        if ((p & mask.ctrl_mask) == mask.ctrl_mask) {  // both in control
+                            des_ip = m[0][0] * std::conj(m[0][0]) * src_ip + m[0][0] * std::conj(m[0][1]) * src_iq
+                                     + m[0][1] * std::conj(m[0][0]) * src_jp + m[0][1] * std::conj(m[0][1]) * src_jq;
+                            des_jq = m[1][0] * std::conj(m[1][0]) * src_ip + m[1][0] * std::conj(m[1][1]) * src_iq
+                                     + m[1][1] * std::conj(m[1][0]) * src_jp + m[1][1] * std::conj(m[1][1]) * src_jq;
+                            des_iq = m[0][0] * std::conj(m[1][0]) * src_ip + m[0][0] * std::conj(m[1][1]) * src_iq
+                                     + m[0][1] * std::conj(m[1][0]) * src_jp + m[0][1] * std::conj(m[1][1]) * src_jq;
+                            des_jp = m[1][0] * std::conj(m[0][0]) * src_ip + m[1][0] * std::conj(m[0][1]) * src_iq
+                                     + m[1][1] * std::conj(m[0][0]) * src_jp + m[1][1] * std::conj(m[0][1]) * src_jq;
+                        } else {  // row in control but not column
+                            des_ip = m[0][0] * src_ip + m[0][1] * src_jp;
+                            des_jp = m[1][0] * src_ip + m[1][1] * src_jp;
+                            des_iq = m[0][0] * src_iq + m[0][1] * src_jq;
+                            des_jq = m[1][0] * src_iq + m[1][1] * src_jq;
                         }
-                        qs_data_t des_ip;
-                        qs_data_t des_jq;
-                        qs_data_t des_iq;
-                        qs_data_t des_jp;
-                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                            if ((p & mask.ctrl_mask) == mask.ctrl_mask) {  // both in control
-                                des_ip = m[0][0] * std::conj(m[0][0]) * src_ip + m[0][0] * std::conj(m[0][1]) * src_iq
-                                         + m[0][1] * std::conj(m[0][0]) * src_jp
-                                         + m[0][1] * std::conj(m[0][1]) * src_jq;
-                                des_jq = m[1][0] * std::conj(m[1][0]) * src_ip + m[1][0] * std::conj(m[1][1]) * src_iq
-                                         + m[1][1] * std::conj(m[1][0]) * src_jp
-                                         + m[1][1] * std::conj(m[1][1]) * src_jq;
-                                des_iq = m[0][0] * std::conj(m[1][0]) * src_ip + m[0][0] * std::conj(m[1][1]) * src_iq
-                                         + m[0][1] * std::conj(m[1][0]) * src_jp
-                                         + m[0][1] * std::conj(m[1][1]) * src_jq;
-                                des_jp = m[1][0] * std::conj(m[0][0]) * src_ip + m[1][0] * std::conj(m[0][1]) * src_iq
-                                         + m[1][1] * std::conj(m[0][0]) * src_jp
-                                         + m[1][1] * std::conj(m[0][1]) * src_jq;
-                            } else {  // row in control but not column
-                                des_ip = m[0][0] * src_ip + m[0][1] * src_jp;
-                                des_jp = m[1][0] * src_ip + m[1][1] * src_jp;
-                                des_iq = m[0][0] * src_iq + m[0][1] * src_jq;
-                                des_jq = m[1][0] * src_iq + m[1][1] * src_jq;
-                            }
-                        } else {  // column in control but not row
-                            des_ip = std::conj(m[0][0]) * src_ip + std::conj(m[0][1]) * src_iq;
-                            des_iq = std::conj(m[1][0]) * src_ip + std::conj(m[1][1]) * src_iq;
-                            des_jp = std::conj(m[0][0]) * src_jp + std::conj(m[0][1]) * src_jq;
-                            des_jq = std::conj(m[1][0]) * src_jp + std::conj(m[1][1]) * src_jq;
-                        }
-                        des[IdxMap(i, p)] = des_ip;
-                        des[IdxMap(j, q)] = des_jq;
-                        des[IdxMap(j, p)] = des_jp;
-                        if (i > q) {
-                            des[IdxMap(i, q)] = des_iq;
-                        } else {
-                            des[IdxMap(q, i)] = std::conj(des_iq);
-                        }
+                    } else {  // column in control but not row
+                        des_ip = std::conj(m[0][0]) * src_ip + std::conj(m[0][1]) * src_iq;
+                        des_iq = std::conj(m[1][0]) * src_ip + std::conj(m[1][1]) * src_iq;
+                        des_jp = std::conj(m[0][0]) * src_jp + std::conj(m[0][1]) * src_jq;
+                        des_jq = std::conj(m[1][0]) * src_jp + std::conj(m[1][1]) * src_jq;
+                    }
+                    des[IdxMap(i, p)] = des_ip;
+                    des[IdxMap(j, q)] = des_jq;
+                    des[IdxMap(j, p)] = des_jp;
+                    if (i > q) {
+                        des[IdxMap(i, q)] = des_iq;
+                    } else {
+                        des[IdxMap(q, i)] = std::conj(des_iq);
                     }
                 }
             })
