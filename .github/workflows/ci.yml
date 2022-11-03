@@ -670,8 +670,35 @@ jobs:
       - name: Set up MinGW64
         uses: egor-tensin/setup-mingw@v2
         id: mingw64-setup
+        continue-on-error: true
         with:
           platform: x64
+
+      - name: Setup CC and CXX
+        if: steps.mingw64-setup.outcome == 'success'
+        env:
+          CC: ${{ steps.mingw64-setup.outputs.gcc }}
+          CXX: ${{ steps.mingw64-setup.outputs.gxx }}
+        run: |
+          "CC='$Env:CC'" >> $Env:GITHUB_ENV
+          "CXX='$Env:CXX'" >> $Env:GITHUB_ENV
+
+      - name: Set up MinGW64 (2nd try)
+        uses: egor-tensin/setup-mingw@v2
+        if: ${{ failure() }}
+        id: mingw64-setup-2
+        continue-on-error: false
+        with:
+          platform: x64
+
+      - name: Setup CC and CXX
+        if: steps.mingw64-setup-2.outcome == 'success'
+        env:
+          CC: ${{ steps.mingw64-setup-2.outputs.gcc }}
+          CXX: ${{ steps.mingw64-setup-2.outputs.gxx }}
+        run: |
+          "CC='$Env:CC'" >> $Env:GITHUB_ENV
+          "CXX='$Env:CXX'" >> $Env:GITHUB_ENV
 
       # - name: Cache boost
       #   uses: actions/cache@v3
@@ -692,8 +719,6 @@ jobs:
       - name: Configure
         env:
           BOOST_ROOT: ${{ env.BOOST_PATH }}
-          CC: ${{ steps.mingw64-setup.outputs.gcc }}
-          CXX: ${{ steps.mingw64-setup.outputs.gxx }}
         run: >-
            ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -OnlyPytest -NoGitee
            -ConfigureOnly -C -Clean3rdParty -Prefix "${{ github.workspace }}/install"
