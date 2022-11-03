@@ -6,10 +6,11 @@
 
     参数：
         - **\*args** - 可变长度参数列表：
-                 - 任意（即TermsOperator（C++ 实例））
-                 - str
-                 - Dict[List[Tuple[Int, TermValue]], Union[ParameterResolver, int, float]]
-                 - List[Tuple[Int, TermValue]]（默认系数设置为 1.0）
+          
+          - 任意（即TermsOperator（C++ 实例））
+          - str
+          - Dict[List[Tuple[Int, TermValue]], Union[ParameterResolver, int, float]]
+          - List[Tuple[Int, TermValue]]（默认系数设置为 1.0）
 
     .. py:method:: dumps(indent=4)
 
@@ -46,7 +47,7 @@
         返回：
             FermionOperator，这个FermionOperator的虚部。
 
-    .. py:method:: loads(strs, dtype)
+    .. py:method:: loads(strs, dtype: type)
         :staticmethod:
 
         将JSON（JavaScript对象表示法）加载到FermionOperator中。
