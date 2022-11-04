@@ -906,6 +906,20 @@ jobs:
 
       - name: Setup Cygwin
         uses: cygwin/cygwin-install-action@v2
+        continue-on-error: true
+        with:
+          packages: >-
+            cygwin cygwin-devel
+            autoconf automake coreutils m4 make cmake patch git
+            gawk sed libtool gettext wget curl grep dos2unix
+            gzip bzip2 tar xz
+            binutils gcc-core gcc-g++
+            libgmp-devel libzstd-devel
+            python3 python3-devel python3-pip python3-virtualenv
+
+      - name: Setup Cygwin (2nd try)
+        uses: cygwin/cygwin-install-action@v2
+        if: ${{ failure() }}
         with:
           packages: >-
             cygwin cygwin-devel
