@@ -31,7 +31,7 @@ namespace py = pybind11;
 
 // =============================================================================
 
-template <typename caster_t>
+template <typename caster_t>  // NOLINTNEXTLINE(runtime/references)
 bool convert_engine(pybind11::handle src, mindquantum::cengines::engine_t& engine, std::string_view type_name) {
     if (caster_t caster; caster.load(src, true)) {
         engine = caster;

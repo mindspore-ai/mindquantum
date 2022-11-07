@@ -25,9 +25,10 @@
 #include <tweedledum/Target/Device.h>
 #include <tweedledum/Target/Placement.h>
 
+#include "mindquantum/catch2/mindquantum.hpp"
+#include "mindquantum/catch2/tweedledum.hpp"
+
 #include "experimental/core/circuit_block.hpp"
-#include "experimental/mindquantum/catch2/mindquantum.hpp"
-#include "experimental/mindquantum/catch2/tweedledum.hpp"
 #include "experimental/ops/gates/measure.hpp"
 
 #include <catch2/catch_test_macros.hpp>

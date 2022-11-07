@@ -33,14 +33,14 @@
 
 #include "core/parameter_resolver.hpp"
 #include "details/define_terms_ops.hpp"
+#include "ops/gates/details/coeff_policy.hpp"
+#include "ops/gates/details/parameter_resolver_coeff_policy.hpp"
+#include "ops/gates/fermion_operator.hpp"
+#include "ops/gates/qubit_operator.hpp"
+#include "ops/gates/terms_operator_base.hpp"
 
 #include "experimental/cengines/write_projectq.hpp"
 #include "experimental/ops/gates.hpp"
-#include "experimental/ops/gates/details/coeff_policy.hpp"
-#include "experimental/ops/gates/details/parameter_resolver_coeff_policy.hpp"
-#include "experimental/ops/gates/fermion_operator.hpp"
-#include "experimental/ops/gates/qubit_operator.hpp"
-#include "experimental/ops/gates/terms_operator_base.hpp"
 #include "experimental/ops/parametric/angle_gates.hpp"
 #include "experimental/ops/transform/jordan_wigner.hpp"
 #include "experimental/ops/transform/parity.hpp"
@@ -64,7 +64,7 @@ std::string to_string_angle(const operator_t& op) {
 }
 }  // namespace
 
-void init_tweedledum_ops(pybind11::module& module) {
+void init_tweedledum_ops(pybind11::module& module) {  // NOLINT(runtime/references)
     py::class_<ops::Barrier>(module, "Barrier").def(py::init<>()).def("__str__", &::to_string<ops::Barrier>);
     py::class_<ops::H>(module, "H").def(py::init<>()).def("__str__", &::to_string<ops::H>);
     py::class_<ops::Measure>(module, "Measure").def(py::init<>()).def("__str__", &::to_string<ops::Measure>);
@@ -90,8 +90,8 @@ void init_tweedledum_ops(pybind11::module& module) {
 
 // =============================================================================
 
-void init_mindquantum_ops(pybind11::module& module) {
-    using namespace pybind11::literals;
+void init_mindquantum_ops(pybind11::module& module) {  // NOLINT(runtime/references)
+    using namespace pybind11::literals;                // NOLINT(build/namespaces_literals)
 
     py::class_<ops::SqrtSwap>(module, "SqrtSwap").def(py::init<>()).def("__str__", &::to_string<ops::SqrtSwap>);
 
@@ -355,8 +355,8 @@ void init_mindquantum_ops(pybind11::module& module) {
     // py::class_<ops::parametric::Rzz>(module, "Rzz").def(py::init<const double>());
 }
 
-void init_transform(py::module& module) {
-    using namespace pybind11::literals;
+void init_transform(py::module& module) {  // NOLINT(runtime/references)
+    using namespace pybind11::literals;    // NOLINT(build/namespaces_literals)
 
     namespace transform = mindquantum::ops::transform;
 

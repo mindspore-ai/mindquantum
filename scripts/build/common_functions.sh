@@ -177,7 +177,16 @@ function __set_variable_from_ini {
         fi
 
         # Remove trailing comments and trim value string
-        value_lower=$(echo "$value_lower" | sed -e "s/\s*#.*$//" -e 's/^[ \t]*//;s/[ \t]*$//')
+        if [ "$(uname)" == "Darwin" ]; then
+            if command -v gsed >/dev/null 2>&1; then
+                value_lower=$(echo "$value_lower" | gsed -e 's/\s*#.*$//;s/^[ \t]*//;s/[ \t]*$//')
+            else
+                # The default sed on macOS does not play well with '\t'
+                value_lower=$(echo "$value_lower" | sed -E 's/\s*#.*$//g;s/^[ ]*//g;s/[ ]*$//g')
+            fi
+        else
+            value_lower=$(echo "$value_lower" | sed -e 's/\s*#.*$//;s/^[ \t]*//;s/[ \t]*$//')
+        fi
 
         eval_str=''
         # shellcheck disable=SC2016

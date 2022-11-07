@@ -22,14 +22,21 @@ set(VER 1.78.0)
 string(REPLACE "." "_" _ver "${VER}")
 
 if(ENABLE_GITEE)
-  set(REQ_URL "https://udomain.dl.sourceforge.net/project/boost/boost/${VER}/boost_${_ver}.tar.gz")
-  set(MD5 "c2f6428ac52b0e5a3c9b2e1d8cc832b5")
-else()
+  set(URL_ARGS GIT_REPOSITORY "https://gitee.com/dnguyen/boost-source-code")
+
   if(MSVC OR "${OS_NAME}" STREQUAL "MinGW")
-    set(REQ_URL "https://boostorg.jfrog.io/artifactory/main/release/${VER}/source/boost_${_ver}.zip")
+    list(APPEND URL_ARGS GIT_TAG "v${VER}-win")
+  else()
+    list(APPEND URL_ARGS GIT_TAG "v${VER}")
+  endif()
+  set(MD5 "xxxxx")
+else()
+  set(URL_ARGS URL)
+  if(MSVC OR "${OS_NAME}" STREQUAL "MinGW")
+    list(APPEND URL_ARGS "https://boostorg.jfrog.io/artifactory/main/release/${VER}/source/boost_${_ver}.zip")
     set(MD5 "e193e5089060ed6ce5145c8eb05e67e3")
   else()
-    set(REQ_URL "https://boostorg.jfrog.io/artifactory/main/release/${VER}/source/boost_${_ver}.tar.gz")
+    list(APPEND URL_ARGS "https://boostorg.jfrog.io/artifactory/main/release/${VER}/source/boost_${_ver}.tar.gz")
     set(MD5 "c2f6428ac52b0e5a3c9b2e1d8cc832b5")
   endif()
 endif()
@@ -74,10 +81,9 @@ endif()
 list(APPEND INSTALL_COMMAND install)
 
 mindquantum_add_pkg(
-  Boost
+  Boost ${URL_ARGS}
   LIBS ${LIBS}
   VER ${VER}
-  URL ${REQ_URL}
   MD5 ${MD5}
   PRE_CONFIGURE_COMMAND ${PRE_CONFIGURE_COMMAND}
   SKIP_BUILD_STEP

@@ -18,18 +18,8 @@
 
 # lint_cmake: -whitespace/indent
 
-target_link_libraries(
-  mq_cxx_nextgen
-  PUBLIC include_lib
-         mindquantum::boost_headers
-         mindquantum::cereal
-         mindquantum::eigen
-         mindquantum::fmt
-         mindquantum::lru_cache
-         mindquantum::ordered_map
-         mindquantum::pybind11_module
-         mindquantum::tweedledum
-         mq_base)
+target_link_libraries(mq_cxx_nextgen PUBLIC include_lib mindquantum::cereal mindquantum::pybind11_module
+                                            mindquantum::tweedledum mq_base)
 
 # ------------------------------------------------------------------------------
 

@@ -16,7 +16,7 @@
 
 #include <pybind11/stl.h>
 
-void init_decomposition(pybind11::module& m) {
+void init_decomposition(pybind11::module& m) {  // NOLINT(runtime/references)
     namespace py = pybind11;
     namespace python = mindquantum::python;
 

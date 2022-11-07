@@ -14,7 +14,7 @@
 
 #include "python/cengines/printer.hpp"
 
-void init_printer(pybind11::module& m) {
+void init_printer(pybind11::module& m) {  // NOLINT(runtime/references)
     namespace py = pybind11;
     namespace python = mindquantum::python;
     using language_t = python::CommandPrinter::language_t;

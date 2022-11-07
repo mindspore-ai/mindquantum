@@ -15,4 +15,34 @@
 #ifndef MQ_CATCH2_MINDQUANTUM_HPP
 #define MQ_CATCH2_MINDQUANTUM_HPP
 
+#include <string>
+
+#include "mindquantum/catch2/catch2_fmt_formatter.hpp"
+#include "mindquantum/catch2/mindquantum.hpp"
+#include "ops/gates/term_value.hpp"
+
+#include "experimental/core/circuit_block.hpp"
+
+#include <catch2/catch_tostring.hpp>
+
+// =============================================================================
+
+namespace Catch {
+template <>
+struct StringMaker<mindquantum::QubitID> : mindquantum::details::FmtStringMakerBase<mindquantum::QubitID> {};
+
+template <>
+struct StringMaker<mindquantum::ops::TermValue> {
+    static std::string convert(mindquantum::ops::TermValue value) {
+        using mindquantum::ops::TermValue;
+        static const auto& enumInfo = ::Catch::getMutableRegistryHub().getMutableEnumValuesRegistry().registerEnum(
+            "mindquantum::ops::TermValue", "I, X, Y, Z, a, adg",
+            {TermValue::I, TermValue::X, TermValue::Y, TermValue::Z, TermValue::a, TermValue::adg});
+        return static_cast<std::string>(enumInfo.lookup(static_cast<int>(value)));
+    }
+};
+}  // namespace Catch
+
+// =============================================================================
+
 #endif /* MQ_CATCH2_MINDQUANTUM_HPP */

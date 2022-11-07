@@ -20,10 +20,11 @@
 #include <tweedledum/Operators/Standard/Rz.h>
 #include <tweedledum/Operators/Standard/X.h>
 
+#include "ops/gates/qubit_operator.hpp"
+
 #include "experimental/core/compute.hpp"
 #include "experimental/core/dagger.hpp"
 #include "experimental/decompositions.hpp"
-#include "experimental/ops/gates/qubit_operator.hpp"
 
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846 /* pi */
@@ -56,7 +57,7 @@ bool recognize_time_evolution_commuting(const instruction_t& inst) {
     }
 }
 
-void decompose_time_evolution_commuting(circuit_t& result, const instruction_t& inst) {
+void decompose_time_evolution_commuting(circuit_t& result, const instruction_t& inst) {  // NOLINT
     assert(inst.kind() == "projectq.timeevolution");
     assert(recognize_time_evolution_commuting(inst));
 
@@ -86,7 +87,7 @@ bool recognize_time_evolution_individual_terms(const instruction_t& inst) {
 
 namespace impl {
 template <typename CircuitType>
-void decompose_time_evolution_individual_terms(CircuitType& result, const instruction_t& inst) {
+void decompose_time_evolution_individual_terms(CircuitType& result, const instruction_t& inst) {  // NOLINT
     assert(inst.kind() == "projectq.timeevolution");
     assert(recognize_time_evolution_individual_terms(inst));
 
@@ -154,7 +155,7 @@ void decompose_time_evolution_individual_terms(CircuitType& result, const instru
 }
 }  // namespace impl
 
-void decompose_time_evolution_individual_terms(circuit_t& result, const instruction_t& inst) {
+void decompose_time_evolution_individual_terms(circuit_t& result, const instruction_t& inst) {  // NOLINT
     assert(inst.kind() == "projectq.timeevolution");
 
     impl::decompose_time_evolution_individual_terms(result, inst);

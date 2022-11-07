@@ -18,14 +18,31 @@
 
 # lint_cmake: -whitespace/indent
 
-target_sources(mq_base PRIVATE ${CMAKE_CURRENT_LIST_DIR}/utils.cc
-                               $<$<BOOL:${ENABLE_LOGGING}>:${CMAKE_CURRENT_LIST_DIR}/logging.cpp>)
+target_sources(
+  mq_base
+  PRIVATE ${CMAKE_CURRENT_LIST_DIR}/utils.cc
+          $<$<BOOL:${ENABLE_LOGGING}>:${CMAKE_CURRENT_LIST_DIR}/logging.cpp>
+          ${CMAKE_CURRENT_LIST_DIR}/gates/details/fermion_operator_term_policy.cpp
+          ${CMAKE_CURRENT_LIST_DIR}/gates/details/qubit_operator_term_policy.cpp
+          ${CMAKE_CURRENT_LIST_DIR}/gates/details/std_complex_coeff_policy.cpp
+          # ${CMAKE_CURRENT_LIST_DIR}/gates/details/symengine_coeff_policy.cpp
+)
 
 if(ENABLE_CUDA)
   target_compile_definitions(mq_base PUBLIC GPUACCELERATED)
 endif()
 
-target_link_libraries(mq_base PUBLIC ${MQ_OPENMP_TARGET} mindquantum::json
-                                     $<$<BOOL:${ENABLE_LOGGING}>:mindquantum::spdlog>)
+target_link_libraries(
+  mq_base
+  PUBLIC ${MQ_OPENMP_TARGET}
+         mindquantum::boost_headers
+         mindquantum::eigen
+         mindquantum::fmt
+         mindquantum::json
+         mindquantum::lru_cache
+         mindquantum::lru_cache
+         mindquantum::ordered_map
+         mindquantum::ordered_map
+         $<$<BOOL:${ENABLE_LOGGING}>:mindquantum::spdlog>)
 
 # ==============================================================================

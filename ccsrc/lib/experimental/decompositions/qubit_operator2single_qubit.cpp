@@ -17,15 +17,16 @@
 #include <tweedledum/Operators/Standard/Y.h>
 #include <tweedledum/Operators/Standard/Z.h>
 
+#include "ops/gates/details/std_complex_coeff_policy.hpp"
+#include "ops/gates/qubit_operator.hpp"
+
 #include "experimental/decompositions.hpp"
-#include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
 #include "experimental/ops/gates/ph.hpp"
-#include "experimental/ops/gates/qubit_operator.hpp"
 
 namespace mindquantum::decompositions {
 namespace td = tweedledum;
 
-void decompose_qubitop2onequbit(circuit_t& result, const instruction_t& inst) {
+void decompose_qubitop2onequbit(circuit_t& result, const instruction_t& inst) {  // NOLINT
     auto qubits = inst.qubits();
     const auto& terms = inst.cast<ops::QubitOperator<std::complex<double>>>().get_terms();
     decltype(qubits) targets(std::end(qubits) - inst.num_targets(), std::end(qubits));

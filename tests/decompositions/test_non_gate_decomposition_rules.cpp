@@ -17,10 +17,11 @@
 
 #include <tweedledum/Passes/Utility/shallow_duplicate.h>
 
+#include "mindquantum/catch2/mindquantum.hpp"
+#include "mindquantum/catch2/tweedledum.hpp"
+
 #include "experimental/decompositions/config.hpp"
 #include "experimental/decompositions/non_gate_decomposition_rule.hpp"
-#include "experimental/mindquantum/catch2/mindquantum.hpp"
-#include "experimental/mindquantum/catch2/tweedledum.hpp"
 #include "experimental/ops/gates.hpp"
 
 #include <catch2/catch_test_macros.hpp>

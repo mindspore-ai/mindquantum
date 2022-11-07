@@ -16,6 +16,7 @@
 
 import argparse
 import sys
+from distutils.util import get_platform
 from pathlib import Path
 
 try:
@@ -32,13 +33,14 @@ def print_includes():
     """Print a list of include directories using the -I<dir> syntax."""
     dirs = [
         _ROOT / 'mindquantum' / 'include' / 'mindquantum',
-        _ROOT / 'ccsrc' / 'mq_base',
-        _ROOT / 'ccsrc' / 'cxx_experimental' / 'include',
-        _ROOT / 'ccsrc' / 'cxx_experimental' / 'python' / 'include',
+        _ROOT / 'ccsrc' / 'include',
+        _ROOT / 'ccsrc' / 'python' / 'core' / 'include',
+        _ROOT / 'ccsrc' / 'python' / 'experimental' / 'include',
+        _ROOT / 'ccsrc' / 'python' / 'mqbackend' / 'include',
+        _ROOT / 'ccsrc' / 'python' / 'simulator' / 'include',
     ]
 
     root = _ROOT / 'mindquantum' / 'lib' / 'mindquantum' / 'third_party'
-    print(f'root = {root}')
     if root.exists():
         for folder in root.iterdir():
             if (folder / 'include').exists():
@@ -90,6 +92,15 @@ def get_cmake_dir(as_string=True):
 # ==============================================================================
 
 
+def print_temp_dir():
+    """Print the default build directory used by setup.py."""
+    # Based on setuptools/_distutils/command/build.py
+    print(str(Path('build') / f"temp.{get_platform()}-{sys.implementation.cache_tag}" / 'mindquantum'))
+
+
+# ==============================================================================
+
+
 def print_version():
     """Print MindQuantum's version."""
     try:
@@ -105,7 +116,8 @@ def print_version():
 def main():
     """Implement main functionality."""
     parser = argparse.ArgumentParser()
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         "--cmakedir",
         action="store_true",
         help=(
@@ -113,12 +125,17 @@ def main():
             "CMake."
         ),
     )
-    parser.add_argument(
+    group.add_argument(
         "--includes",
         action="store_true",
         help="Include flags for MindQuantum",
     )
-    parser.add_argument(
+    group.add_argument(
+        "--tempdir",
+        action="store_true",
+        help="Print the default build directory used by setup.py",
+    )
+    group.add_argument(
         "--version",
         action="store_true",
         help="Print out MindQuantum's version",
@@ -132,6 +149,8 @@ def main():
         print_includes()
     if args.cmakedir:
         print(get_cmake_dir())
+    if args.tempdir:
+        print_temp_dir()
 
 
 if __name__ == "__main__":

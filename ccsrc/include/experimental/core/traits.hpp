@@ -23,25 +23,4 @@
 
 #include "experimental/core/config.hpp"
 
-namespace mindquantum::traits {
-//! C++ type-traits that is true if and only if the list of types passed in as argument only contains unique types.
-template <typename...>
-inline constexpr auto is_unique = std::true_type{};
-
-template <typename T, typename... Ts>
-inline constexpr auto is_unique<T, Ts...> = std::bool_constant<
-    std::conjunction_v<std::negation<std::is_same<T, Ts>>...> && is_unique<Ts...>>{};
-
-// ---------------------------------
-
-//! C++ type-traits that is true if and only the type passed in argument can be found inside the type list of the tuple
-template <typename T, typename Tuple>
-inline constexpr auto tuple_contains = false;
-
-template <typename T, typename... Us>
-inline constexpr auto tuple_contains<T, std::tuple<Us...>> = std::disjunction_v<std::is_same<T, Us>...>;
-
-// =============================================================================
-}  // namespace mindquantum::traits
-
 #endif /* CORE_TRAITS_HPP */

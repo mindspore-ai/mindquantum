@@ -15,8 +15,3 @@
 """Definitions of C++ gates and operators."""
 
 from .._mindquantum_cxx.ops import *  # pylint: disable=import-error
-
-# isort: split
-
-from .fermion_operator import FermionOperator
-from .qubit_operator import QubitOperator

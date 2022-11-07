@@ -45,9 +45,16 @@ include(${CMAKE_CURRENT_LIST_DIR}/eigen3/eigen3.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/fmt/fmt.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/pybind11/pybind11.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/nlohmann_json/nlohmann_json.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/boost/boost.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/ordered_map/ordered_map.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/lru_cache/lru_cache.cmake)
 
 if(ENABLE_LOGGING)
   include(${CMAKE_CURRENT_LIST_DIR}/spdlog/spdlog.cmake)
+endif()
+
+if(BUILD_TESTING)
+  include(${CMAKE_CURRENT_LIST_DIR}/catch2/catch2.cmake)
 endif()
 
 if(ENABLE_CXX_EXPERIMENTAL)
@@ -55,20 +62,12 @@ if(ENABLE_CXX_EXPERIMENTAL)
     include(${CMAKE_CURRENT_LIST_DIR}/gmp/gmp.cmake)
   endif()
 
-  include(${CMAKE_CURRENT_LIST_DIR}/boost/boost.cmake)
-
   if(ENABLE_ABSEIL_CPP)
     include(${CMAKE_CURRENT_LIST_DIR}/abseil_cpp/abseil_cpp.cmake)
   endif()
-  include(${CMAKE_CURRENT_LIST_DIR}/ordered_map/ordered_map.cmake)
-  include(${CMAKE_CURRENT_LIST_DIR}/lru_cache/lru_cache.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/cereal/cereal.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/symengine/symengine.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/tweedledum/tweedledum.cmake)
-
-  if(BUILD_TESTING)
-    include(${CMAKE_CURRENT_LIST_DIR}/catch2/catch2.cmake)
-  endif()
 endif()
 
 # ==============================================================================

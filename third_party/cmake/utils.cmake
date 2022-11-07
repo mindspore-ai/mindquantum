@@ -50,6 +50,11 @@ endif()
 message(STATUS "Calling make using ${JOBS} jobs")
 
 # ------------------------------------------------------------------------------
+
+set(_local_libs_path_file "${PROJECT_BINARY_DIR}/ld_library_paths.txt")
+file(WRITE "${_local_libs_path_file}" "")
+
+# ------------------------------------------------------------------------------
 # Allow the user to specify some packages to always built from source locally
 
 if(MQ_FORCE_LOCAL_PKGS)
@@ -213,8 +218,8 @@ function(__download_pkg_with_git pkg_name pkg_url pkg_git_commit pkg_md5)
       URL ${pkg_url}
       URL_HASH MD5=${pkg_md5})
   else()
-    debug_print(STATUS "GIT_REPOSITORY = ${GIT_REPOSITORY}")
-    debug_print(STATUS "GIT_TAG = ${GIT_TAG}")
+    debug_print(STATUS "GIT_REPOSITORY = ${pkg_url}")
+    debug_print(STATUS "GIT_TAG = ${pkg_git_commit}")
     FetchContent_Declare(
       ${pkg_name}
       GIT_REPOSITORY ${pkg_url}
@@ -1206,7 +1211,9 @@ function(mindquantum_add_pkg pkg_name)
         file(GLOB _installations ${_mq_local_prefix}/${pkg_name}_${PKG_VER}_*)
         message(STATUS "Deleting old installation directories (if any):")
         foreach(_dir ${_installations})
-          if(NOT "${_dir}" STREQUAL "${${pkg_name}_DIRPATH}")
+          cmake_path(CONVERT "${_dir}" TO_CMAKE_PATH_LIST _dir NORMALIZE)
+          cmake_path(CONVERT "${${pkg_name}_DIRPATH}" TO_CMAKE_PATH_LIST _dirpath NORMALIZE)
+          if(NOT "${_dir}" STREQUAL "${_dirpath}")
             message(STATUS "  - ${_dir}")
             file(REMOVE_RECURSE "${_dir}")
           endif()
@@ -1220,6 +1227,7 @@ function(mindquantum_add_pkg pkg_name)
         set(_defines_type SYSTEM)
       else()
         set(_defines_type LOCAL)
+        file(APPEND "${_local_libs_path_file}" "${${pkg_name}_DIRPATH}\n")
       endif()
       if(NOT "${PKG_${_defines_type}_EXTRA_DEFINES}" STREQUAL "")
         __append_target_properties(COMPILE_DEFINITIONS ${PKG_${_defines_type}_EXTRA_DEFINES})
@@ -1290,12 +1298,15 @@ function(mindquantum_add_pkg pkg_name)
   set(${pkg_name}_DIRPATH
       ${${pkg_name}_BASE_DIR}
       CACHE FILEPATH INTERNAL)
+  file(APPEND "${_local_libs_path_file}" "${${pkg_name}_DIRPATH}\n")
 
   if(CLEAN_3RDPARTY_INSTALL_DIR)
     file(GLOB _installations ${_mq_local_prefix}/${pkg_name}_${PKG_VER}_*)
     message(STATUS "Deleting old installation directories (if any):")
     foreach(_dir ${_installations})
-      if(NOT "${_dir}" STREQUAL "${${pkg_name}_BASE_DIR}")
+      cmake_path(CONVERT "${_dir}" TO_CMAKE_PATH_LIST _dir NORMALIZE)
+      cmake_path(CONVERT "${${pkg_name}_BASE_DIR}" TO_CMAKE_PATH_LIST _basedir NORMALIZE)
+      if(NOT "${_dir}" STREQUAL "${_basedir}")
         message(STATUS "  - ${_dir}")
         file(REMOVE_RECURSE "${_dir}")
       endif()

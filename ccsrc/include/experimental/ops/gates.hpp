@@ -18,6 +18,8 @@
 #include <tweedledum/Operators/Ising.h>
 #include <tweedledum/Operators/Standard.h>
 
+#include "ops/gates/qubit_operator.hpp"
+
 #include "experimental/ops/gates/allocate.hpp"
 #include "experimental/ops/gates/deallocate.hpp"
 #include "experimental/ops/gates/entangle.hpp"
@@ -25,7 +27,6 @@
 #include "experimental/ops/gates/measure.hpp"
 #include "experimental/ops/gates/ph.hpp"
 #include "experimental/ops/gates/qft.hpp"
-#include "experimental/ops/gates/qubit_operator.hpp"
 #include "experimental/ops/gates/sqrtswap.hpp"
 #include "experimental/ops/gates/time_evolution.hpp"
 

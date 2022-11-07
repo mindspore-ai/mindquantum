@@ -16,6 +16,7 @@
 #define MQ_CONFIG_CONCEPTS_HPP
 
 #include <concepts>
+#include <tuple>
 
 #include "config/config.hpp"
 #include "config/type_traits.hpp"
@@ -26,6 +27,20 @@ concept same_decay_as = std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t
 
 template <typename T>
 concept scalar = traits::is_scalar_decay_v<T>;
+
+template <typename T, typename... Ts>
+concept tuple_contains = traits::tuple_contains<T, std::tuple<Ts...>>;
+
+template <typename T>
+concept std_complex = traits::is_std_complex_v<T>;
+
+template <typename T>
+concept real_number = std::integral<T> || std::floating_point<T>;
+template <typename T>
+concept complex_number = std::same_as<std::complex<double>, T>;
+
+template <typename T>
+concept number = real_number<std::remove_cvref_t<T>> || complex_number<std::remove_cvref_t<T>>;
 }  // namespace mindquantum::concepts
 
 #endif /* MQ_CONFIG_CONCEPTS_HPP */

@@ -19,6 +19,7 @@ import hashlib
 import logging
 import os
 import platform
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -34,6 +35,7 @@ def call_auditwheel(*args, **kwargs):
     """Call auditwheel."""
     args = ['auditwheel', *(str(s) for s in args)]
     logging.info('auditwheel command: %s', ' '.join(args))
+    logging.info('  location of executable: %s', shutil.which('auditwheel'))
 
     try:
         subprocess.check_call(args)
@@ -51,6 +53,7 @@ def call_delocate_wheel(*args):
     """Call delocate-wheel."""
     args = ['delocate-wheel', *(str(s) for s in args)]
     logging.info('delocate-wheel command: %s', ' '.join(args))
+    logging.info('  location of executable: %s', shutil.which('delocate-wheel'))
 
     subprocess.check_call(args)
     return True
@@ -87,6 +90,107 @@ def get_delocated_wheel_name(name_full, delocated_wheel_directory):
             return new_wheel
     logging.warning('Unable to locate delocated wheel: %s', str(name_full))
     return None
+
+
+# ==============================================================================
+
+
+def update_library_path_var(ld_path_var, dir_list):
+    """Update a XXX_LIBRARY_PATH environment variable."""
+    ld_library_path = os.getenv(ld_path_var)
+    if ld_library_path:
+        dir_list.append(ld_library_path)
+
+    logging.info('Setting %s = %s', ld_path_var, ':'.join(dir_list))
+    os.environ[ld_path_var] = ':'.join(dir_list)
+
+
+# ------------------------------------------------------------------------------
+
+
+def update_library_path_from_file(ld_path_var, filename):
+    """Update XXX_LIBRARY_PATH environment variables based on a path list in a file."""
+    if not filename or not Path(filename).exists():
+        raise FileNotFoundError(filename)
+
+    logging.info('----------------------------------------')
+    logging.info('Reading library paths from: %s', filename)
+
+    paths = []
+    with fdopen(filename, 'r') as path_file:
+        paths = [Path(line.strip()) for line in path_file.readlines()]
+
+    ld_lib_paths = []
+    for deps_dir in paths:
+        deps_dir = deps_dir / 'lib'
+        if deps_dir.is_dir() and deps_dir.exists():
+            logging.info('  prepending path to %s: %s', ld_path_var, deps_dir)
+            ld_lib_paths.append(str(deps_dir))
+
+    update_library_path_var(ld_path_var, ld_lib_paths)
+    logging.info('----------------------------------------')
+
+
+# ------------------------------------------------------------------------------
+
+
+def update_library_path_from_env(ld_path_var, install_prefix):
+    """Update XXX_LIBRARY_PATH environment variables based on some folder path."""
+    if not install_prefix:
+        raise FileNotFoundError(install_prefix)
+
+    logging.info('----------------------------------------')
+    logging.info('Looking into installation prefix: %s', install_prefix)
+    ld_lib_paths = []
+    for deps_dir in (
+        deps_dir / 'lib' for deps_dir in Path(install_prefix).iterdir() if deps_dir.is_dir() and deps_dir.exists()
+    ):
+        if deps_dir.exists() and deps_dir.is_dir():
+            logging.info('  prepending path to %s: %s', ld_path_var, deps_dir)
+            ld_lib_paths.append(str(deps_dir))
+
+    update_library_path_var(ld_path_var, ld_lib_paths)
+    logging.info('----------------------------------------')
+
+
+# ------------------------------------------------------------------------------
+
+
+def update_library_path(ld_path_var):
+    """Update XXX_LIBRARY_PATH environment variable."""
+    mq_lib_paths = os.getenv('MQ_LIB_PATHS', '')
+    try:
+        update_library_path_from_file(ld_path_var, mq_lib_paths)
+        return
+    except FileNotFoundError:
+        pass
+
+    try:
+        prefix = 'build/temp.macosx'
+        if platform.system() == 'Darwin' and mq_lib_paths.startswith(prefix):
+            re_match = re.match(r'build/temp\.macosx-([^-]+)-(.*)', mq_lib_paths)
+            if re_match:
+                macos_ver = os.getenv('MACOSX_DEPLOYMENT_TARGET', 'NA')
+                suffix = re_match.group(2)
+                filename = Path(f'{prefix}-{macos_ver}-{suffix}')
+                if filename.exists():
+                    update_library_path_from_file(ld_path_var, str(filename))
+                    return
+    except FileNotFoundError:
+        pass
+
+    for install_prefix in (
+        'MQLIBS_CACHE_PATH',
+        'MSLIBS_CACHE_PATH',
+        'MQLIBS_LOCAL_PREFIX_PATH',
+        'MSLIBS_LOCAL_PREFIX_PATH',
+        'MQ_BUILD_DIR',
+    ):
+        try:
+            update_library_path_from_env(ld_path_var, os.getenv(install_prefix, ''))
+            return
+        except FileNotFoundError:
+            pass
 
 
 # ==============================================================================
@@ -137,11 +241,14 @@ def build_sdist(sdist_directory, config_settings=None):
 
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     """Build a wheel from this project."""
-    if platform.system() == 'Darwin' and (
-        '-p' not in config_settings['--global-option'] and '--plat-name' not in config_settings['--global-option']
-    ):
-        os.environ.setdefault('MACOSX_DEPLOYMENT_TARGET', '10.13')
-        os.environ.setdefault('_PYTHON_HOST_PLATFORM', f'macosx-10.13-{platform.machine()}')
+    if platform.system() == 'Linux':
+        logging.info('Running on Linux %s', platform.uname().release)
+    elif platform.system() == 'Darwin':
+        logging.info('Running on macOS v%s', platform.mac_ver()[0])
+        if '-p' not in config_settings['--global-option'] and '--plat-name' not in config_settings['--global-option']:
+            macos_ver = '12.0'  # platform.mac_ver()[0]
+            os.environ.setdefault('MACOSX_DEPLOYMENT_TARGET', macos_ver)
+            os.environ.setdefault('_PYTHON_HOST_PLATFORM', f'macosx-{macos_ver}-{platform.machine()}')
 
     temp_wheel_directory = Path(wheel_directory, 'temp')
     temp_wheel_directory.mkdir(parents=True, exist_ok=True)
@@ -163,6 +270,8 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     if delocate_wheel and platform.system() == 'Linux':
         delocated_wheel_directory.mkdir(parents=True, exist_ok=True)
         plat = os.environ.get('MQ_DELOCATE_WHEEL_PLAT', '')
+
+        update_library_path('LD_LIBRARY_PATH')
 
         call_auditwheel('show', name_full)
         if plat:
@@ -190,8 +299,17 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
             dest_wheel = move_delocated_wheel(delocated_wheel, wheel_directory)
     elif delocate_wheel and platform.system() == 'Darwin':
         delocated_wheel_directory.mkdir(parents=True, exist_ok=True)
+
+        update_library_path('DYLD_LIBRARY_PATH')
+
         call_delocate_wheel(
-            '-v', '-k', '-w', str(delocated_wheel_directory), f'--require-archs={platform.machine()}', name_full
+            '--verbose',
+            '--check-archs',
+            '--dylibs-only',
+            '-w',
+            str(delocated_wheel_directory),
+            f'--require-archs={platform.machine()}',
+            name_full,
         )
         delocated_wheel = get_delocated_wheel_name(name_full, delocated_wheel_directory)
         if delocated_wheel:

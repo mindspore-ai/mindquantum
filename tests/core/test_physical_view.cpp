@@ -20,9 +20,10 @@
 #include <tweedledum/Operators/Standard.h>
 #include <tweedledum/Passes/Mapping/Placer/TrivialPlacer.h>
 
+#include "mindquantum/catch2/mindquantum.hpp"
+#include "mindquantum/catch2/tweedledum.hpp"
+
 #include "experimental/core/circuit_manager.hpp"
-#include "experimental/mindquantum/catch2/mindquantum.hpp"
-#include "experimental/mindquantum/catch2/tweedledum.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 

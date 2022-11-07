@@ -17,11 +17,11 @@
 #include <algorithm>
 #include <cstdint>
 
+#include "ops/gates/qubit_operator.hpp"
 #include "projectq/backends/_sim/_cppkernels/simulator.hpp"
 
 #include "experimental/core/types.hpp"
 #include "experimental/ops/gates.hpp"
-#include "experimental/ops/gates/qubit_operator.hpp"
 
 namespace mindquantum::simulation::projectq {
 Simulator::Simulator(uint32_t seed) : base_t{seed} {

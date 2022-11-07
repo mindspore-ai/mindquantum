@@ -15,8 +15,9 @@
 #include <tweedledum/IR/Circuit.h>
 #include <tweedledum/Target/Placement.h>
 
+#include "mindquantum/catch2/mindquantum.hpp"
+
 #include "experimental/mapping/partial_placer.hpp"
-#include "experimental/mindquantum/catch2/mindquantum.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 

@@ -30,14 +30,13 @@
 #include "config/type_traits.hpp"
 
 #include "core/parameter_resolver.hpp"
-
-#include "experimental/mindquantum/catch2/mindquantum.hpp"
-#include "experimental/mindquantum/catch2/symengine.hpp"
-#include "experimental/mindquantum/catch2/tweedledum.hpp"
-#include "experimental/ops/gates/details/floating_point_coeff_policy.hpp"
-#include "experimental/ops/gates/details/parameter_resolver_coeff_policy.hpp"
-#include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
-#include "experimental/ops/gates/terms_operator_base.hpp"
+#include "mindquantum/catch2/mindquantum.hpp"
+#include "mindquantum/catch2/symengine.hpp"
+#include "mindquantum/catch2/tweedledum.hpp"
+#include "ops/gates/details/floating_point_coeff_policy.hpp"
+#include "ops/gates/details/parameter_resolver_coeff_policy.hpp"
+#include "ops/gates/details/std_complex_coeff_policy.hpp"
+#include "ops/gates/terms_operator_base.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_predicate.hpp>

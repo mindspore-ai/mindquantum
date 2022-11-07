@@ -28,21 +28,7 @@ class CircuitBlock;
 }  // namespace mindquantum
 
 namespace mindquantum::concepts {
-template <typename T, typename... Ts>
-concept tuple_contains = traits::tuple_contains<T, std::tuple<Ts...>>;
-
-template <typename T>
-concept std_complex = traits::is_std_complex_v<T>;
-
 template <typename T>
 concept CircuitLike = (concepts::same_decay_as<circuit_t, T> || concepts::same_decay_as<CircuitBlock, T>);
-
-template <typename T>
-concept real_number = std::integral<T> || std::floating_point<T>;
-template <typename T>
-concept complex_number = std::same_as<std::complex<double>, T>;
-
-template <typename T>
-concept number = real_number<std::remove_cvref_t<T>> || complex_number<std::remove_cvref_t<T>>;
 }  // namespace mindquantum::concepts
 #endif /* CORE_CONCEPTS_HPP */

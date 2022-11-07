@@ -19,9 +19,10 @@
 #include <symengine/real_double.h>
 #include <symengine/symengine_exception.h>
 
-#include "experimental/mindquantum/catch2/mindquantum.hpp"
-#include "experimental/mindquantum/catch2/symengine.hpp"
-#include "experimental/mindquantum/catch2/tweedledum.hpp"
+#include "mindquantum/catch2/mindquantum.hpp"
+#include "mindquantum/catch2/symengine.hpp"
+#include "mindquantum/catch2/tweedledum.hpp"
+
 #include "experimental/ops/parametric/angle_base.hpp"
 
 #include <catch2/catch_test_macros.hpp>

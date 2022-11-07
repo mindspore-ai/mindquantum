@@ -12,8 +12,8 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef MQ_CORE_CONFIG_HPP
-#define MQ_CORE_CONFIG_HPP
+#ifndef MQ_CONFIG_CONFIG_HPP
+#define MQ_CONFIG_CONFIG_HPP
 
 #include "config/cmake_config.hpp"
 #ifdef __CUDACC__
@@ -97,4 +97,4 @@
 
 // =============================================================================
 
-#endif /* MQ_CORE_CONFIG_HPP */
+#endif /* MQ_CONFIG_CONFIG_HPP */

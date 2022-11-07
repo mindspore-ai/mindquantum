@@ -40,6 +40,14 @@ check_for_verbose "$@"
 
 python_extra_pkgs=('wheel-filename>1.2' 'build')
 
+if [ "$(uname)" == "Linux" ]; then
+    LD_PATH_VAR=LD_LIBRARY_PATH
+elif [ "$(uname)" == "Darwin" ]; then
+    LD_PATH_VAR=DYLD_LIBRARY_PATH
+else
+    die "Unsupported platform (only Linux and macOS are supported"
+fi
+
 if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
     for var in CUDA_HOME CUDA_PATH; do
         if [ -n "${!var}" ]; then
@@ -48,10 +56,10 @@ if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
                 print_warning "$var is set, but location does not exist!"
             else
                 echo "Adding $var/lib64 and $var/lib to LD_LIBRARY_PATH"
-                if [ -z "$LD_LIBRARY_PATH" ]; then
-                    export LD_LIBRARY_PATH="${!var}/lib64:${!var}/lib"
+                if [ -z "${!LD_PATH_VAR}" ]; then
+                    export ${LD_PATH_VAR}="${!var}/lib64:${!var}/lib"
                 else
-                    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${!var}/lib64:${!var}/lib"
+                    export ${LD_PATH_VAR}="${!LD_PATH_VAR}:${!var}/lib64:${!var}/lib"
                 fi
             fi
         fi
@@ -60,7 +68,7 @@ if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
     echo '----------------------------------------'
     echo 'Environment info'
     echo "PATH = $PATH"
-    echo "LD_LIBRARY_PATH = $LD_LIBRARY_PATH"
+    echo "${LD_PATH_VAR} = ${!LD_PATH_VAR}"
     echo '----------------------------------------'
 
     if [[ "$(uname)" == "Linux" ]]; then
@@ -72,7 +80,7 @@ if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
         "$PY_EXEC" -m pip freeze
         echo '----------------------------------------'
         echo 'Force update the system pybind11'
-        sudo LD_LIBRARY_PATH="$LD_LIBRARY_PATH" "$PY_EXEC" -m pip install -U pybind11
+        sudo ${LD_PATH_VAR}="${!LD_PATH_VAR}" "$PY_EXEC" -m pip install -U pybind11
         "$PY_EXEC" -m pip show pybind11
         echo '----------------------------------------'
     fi
@@ -350,7 +358,17 @@ if [ "${_build_dir_was_set:-0}" -eq 1 ]; then
 fi
 
 if [ "$delocate_wheel" -eq 1 ]; then
-    env_vars=(MQ_DELOCATE_WHEEL=1 LD_LIBRARY_PATH="$LD_LIBRARY_PATH")
+    env_vars=(MQ_DELOCATE_WHEEL=1
+              "${LD_PATH_VAR}=${!LD_PATH_VAR}")
+
+    if [[ "${_build_dir_was_set:-0}" -eq 1 || "${fast_build:-0}" -eq 1 ]]; then
+        build_dir_for_env="$build_dir"
+    elif [ "${_fast_build_dir_was_set:-0}" -eq 1 ]; then
+        build_dir_for_env="$fast_build_dir"
+    else
+        build_dir_for_env=$("$PYTHON" -m mindquantum_config --tempdir)
+    fi
+    env_vars+=(MQ_LIB_PATHS="$build_dir_for_env/ld_library_paths.txt" MQ_BUILD_DIR="$build_dir_for_env")
 
     if [ -n "$platform_name" ]; then
         env_vars+=(MQ_DELOCATE_WHEEL_PLAT="$platform_name")

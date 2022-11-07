@@ -24,6 +24,6 @@ try:
         warnings.warn("Using Python FermionOperator class")
         raise ImportError()
 
-    from ...experimental.ops.fermion_operator import FermionOperator
+    from ._cxx_fermion_operator import FermionOperator
 except ImportError:
     from ._fermion_operator import FermionOperator  # noqa: F401

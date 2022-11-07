@@ -21,9 +21,10 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
+#include "ops/gates/qubit_operator.hpp"
+
 #include "experimental/cengines/write_projectq.hpp"
 #include "experimental/ops/gates/ph.hpp"
-#include "experimental/ops/gates/qubit_operator.hpp"
 #include "experimental/ops/gates/time_evolution.hpp"
 
 #include "python/details/python2cpp_conv.hpp"
@@ -39,7 +40,7 @@ using PSG = mindquantum::details::PythonScopeGuard;
 
 // =============================================================================
 
-void init_resource_counter(pybind11::module& m) {
+void init_resource_counter(pybind11::module& m) {  // NOLINT(runtime/references)
     namespace py = pybind11;
     namespace details = mindquantum::details;
 

@@ -19,14 +19,14 @@
 #include "config/logging.hpp"
 
 #include "mindquantum/catch2/eigen.hpp"
+#include "mindquantum/catch2/mindquantum.hpp"
+#include "mindquantum/catch2/symengine.hpp"
+#include "mindquantum/catch2/tweedledum.hpp"
+#include "ops/gates/details/floating_point_coeff_policy.hpp"
+#include "ops/gates/details/std_complex_coeff_policy.hpp"
+#include "ops/gates/fermion_operator.hpp"
 
 #include "experimental/core/circuit_block.hpp"
-#include "experimental/mindquantum/catch2/mindquantum.hpp"
-#include "experimental/mindquantum/catch2/symengine.hpp"
-#include "experimental/mindquantum/catch2/tweedledum.hpp"
-#include "experimental/ops/gates/details/floating_point_coeff_policy.hpp"
-#include "experimental/ops/gates/details/std_complex_coeff_policy.hpp"
-#include "experimental/ops/gates/fermion_operator.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 

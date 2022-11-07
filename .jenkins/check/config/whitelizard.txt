@@ -3,11 +3,15 @@
 # Scene2:
 #    file_path:function_name1, function_name2
 #
+_build/backend.py:build_wheel
+mindquantum/mindquantum/_build/backend.py:build_wheel
 mindquantum/mindquantum/algorithm/nisq/chem/qubit_ucc_ansatz.py:_implement
 mindquantum/mindquantum/algorithm/nisq/chem/quccsd.py:quccsd_generator
 mindquantum/mindquantum/algorithm/nisq/chem/transform.py:bravyi_kitaev_superfast
 mindquantum/mindquantum/algorithm/nisq/chem/uccsd.py:_para_uccsd_singlet_generator
 mindquantum/mindquantum/algorithm/nisq/chem/uccsd0.py:uccsd0_singlet_generator
+mindquantum/mindquantum/core/circuit/qfi.py:_qfi_matrix_base
+mindquantum/mindquantum/core/gates/basicgate.py:gene_univ_parameterized_gate
 mindquantum/mindquantum/io/display/bloch_plt_drawer.py:add_state
 mindquantum/mindquantum/io/qasm/hiqasm.py:to_string
 mindquantum/mindquantum/io/qasm/hiqasm.py:trans_v01
@@ -20,7 +24,8 @@ mindquantum/mindquantum/third_party/unitary_cc.py:uccsd_singlet_generator
 mindquantum/mindquantum/experimental/_symengine_utilities.py:symbols
 
 mindquantum/mindquantum/src/binding.cc:mindquantum::PYBIND11_MODULE
-mindquantum/ccsrc/include/experimental/ops/gates/qubit_operator.tpp:mindquantum::ops::QubitOperator<coeff_t>::sparse_matrix
+mindquantum/ccsrc/include/ops/gates/qubit_operator.tpp:mindquantum::ops::mindquantum::ops::QubitOperator<coeff_t>::get_op_matrix.QubitOperator<coeff_t>::sparse_matrix
+mindquantum/ccsrc/include/ops/gates/qubit_operator.tpp:mindquantum::ops::QubitOperator<coeff_t>::sparse_matrix
 mindquantum/ccsrc/include/ops/gates.hpp:mindquantum::GetGateByName
 mindquantum/ccsrc/lib/experimental/core/cpp_core.cpp:mindquantum::core::CppCore::flush
 mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_gate_expec.cpp:mindquantum::sim::vector::detail::CPUVectorPolicyBase::ExpectDiffSingleQubitMatrix

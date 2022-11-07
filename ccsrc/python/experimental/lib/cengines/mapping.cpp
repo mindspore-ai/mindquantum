@@ -21,7 +21,7 @@
 
 // =============================================================================
 
-void init_mapping(pybind11::module& m) {
+void init_mapping(pybind11::module& m) {  // NOLINT(runtime/references)
     namespace python = mindquantum::python;
     namespace py = pybind11;
 

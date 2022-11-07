@@ -23,12 +23,11 @@
 #include "config/logging.hpp"
 
 #include "mindquantum/catch2/eigen.hpp"
-
-#include "experimental/mindquantum/catch2/mindquantum.hpp"
-#include "experimental/mindquantum/catch2/symengine.hpp"
-#include "experimental/mindquantum/catch2/tweedledum.hpp"
-#include "experimental/ops/gates/details/eigen_sparse_identity.hpp"
-#include "experimental/ops/gates/qubit_operator.hpp"
+#include "mindquantum/catch2/mindquantum.hpp"
+#include "mindquantum/catch2/symengine.hpp"
+#include "mindquantum/catch2/tweedledum.hpp"
+#include "ops/gates/details/eigen_sparse_identity.hpp"
+#include "ops/gates/qubit_operator.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -202,35 +201,35 @@ TEST_CASE("QubitOperator matrix", "[qubit_op][ops]") {
         actual_mat = QubitOperatorCD::identity().sparse_matrix(1);
     }
     SECTION("X0") {
-        ref_mat = matrix_t{Op::X::matrix().sparseView()};
+        ref_mat = matrix_t{QubitOperatorCD::get_op_matrix(QubitOperatorCD::Op::X).sparseView()};
         actual_mat = QubitOperatorCD("X0").sparse_matrix();
     }
     SECTION("Y0") {
-        ref_mat = matrix_t{Op::Y::matrix().sparseView()};
+        ref_mat = matrix_t{QubitOperatorCD::get_op_matrix(QubitOperatorCD::Op::Y).sparseView()};
         actual_mat = QubitOperatorCD("Y0").sparse_matrix();
     }
     SECTION("Z0") {
-        ref_mat = matrix_t{Op::Z::matrix().sparseView()};
+        ref_mat = matrix_t{QubitOperatorCD::get_op_matrix(QubitOperatorCD::Op::Z).sparseView()};
         actual_mat = QubitOperatorCD("Z0").sparse_matrix();
     }
     SECTION("X1") {
-        ref_mat = matrix_t{Op::X::matrix().sparseView()};
+        ref_mat = matrix_t{QubitOperatorCD::get_op_matrix(QubitOperatorCD::Op::X).sparseView()};
         ref_mat = Eigen::kroneckerProduct(ref_mat.value(), ops::details::n_identity<matrix_t::Scalar>(1)).eval();
         actual_mat = QubitOperatorCD("X1").sparse_matrix();
     }
     SECTION("Y1") {
-        ref_mat = matrix_t{Op::Y::matrix().sparseView()};
+        ref_mat = matrix_t{QubitOperatorCD::get_op_matrix(QubitOperatorCD::Op::Y).sparseView()};
         ref_mat = Eigen::kroneckerProduct(ref_mat.value(), ops::details::n_identity<matrix_t::Scalar>(1)).eval();
         actual_mat = QubitOperatorCD("Y1").sparse_matrix();
     }
     SECTION("Z1") {
-        ref_mat = matrix_t{Op::Z::matrix().sparseView()};
+        ref_mat = matrix_t{QubitOperatorCD::get_op_matrix(QubitOperatorCD::Op::Z).sparseView()};
         ref_mat = Eigen::kroneckerProduct(ref_mat.value(), ops::details::n_identity<matrix_t::Scalar>(1)).eval();
         actual_mat = QubitOperatorCD("Z1").sparse_matrix();
     }
     SECTION("Independent of order") {
-        ref_mat = Eigen::kroneckerProduct(matrix_t{Op::Y::matrix().sparseView()},
-                                          matrix_t{Op::X::matrix().sparseView()})
+        ref_mat = Eigen::kroneckerProduct(matrix_t{QubitOperatorCD::get_op_matrix(QubitOperatorCD::Op::Y).sparseView()},
+                                          matrix_t{QubitOperatorCD::get_op_matrix(QubitOperatorCD::Op::X).sparseView()})
                       .eval();
         SECTION("Y1 X0") {
             actual_mat = QubitOperatorCD("Y1 X0").sparse_matrix();
