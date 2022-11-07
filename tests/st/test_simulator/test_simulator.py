@@ -52,6 +52,10 @@ except ImportError:
     _HAS_NUMBA = False
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 def test_init_reset(virtual_qc):
     """
