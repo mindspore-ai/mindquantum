@@ -50,6 +50,8 @@ Quantum Gates
 
 .. include:: mindquantum.core.gates.DepolarizingChannel.rst
 
+.. include:: mindquantum.core.gates.FSim.rst
+
 .. include:: mindquantum.core.gates.GlobalPhase.rst
 
 .. include:: mindquantum.core.gates.HGate.rst
@@ -87,6 +89,8 @@ Quantum Gates
 .. include:: mindquantum.core.gates.SWAPGate.rst
 
 .. include:: mindquantum.core.gates.TGate.rst
+
+.. include:: mindquantum.core.gates.U3.rst
 
 .. include:: mindquantum.core.gates.UnivMathGate.rst
 

@@ -105,7 +105,12 @@ class Simulator:
 
     @property
     def n_qubits(self):
-        """Get simulator qubit."""
+        """
+        Get simulator qubit.
+
+        Args:
+            int, the qubit number of simulator.
+        """
         return self.backend.n_qubits
 
     def copy(self):
@@ -418,11 +423,6 @@ class Simulator:
             simulator_left (Simulator): The simulator that contains :math:`\left|\varphi\right>`. If
                 None, then :math:`\left|\varphi\right>` is assumed to be equals to :math:`\left|\psi\right>`.
                 Default: None.
-            encoder_params_name (list[str]): To specific which parameters belongs to encoder,
-                that will encoder the input data into quantum state. The encoder data
-                can be a batch. Default: None.
-            ansatz_params_name (list[str]): To specific which parameters belongs to ansatz,
-                that will be trained during training. Default: None.
             parallel_worker (int): The parallel worker numbers. The parallel workers can handle
                 batch in parallel threads. Default: None.
 

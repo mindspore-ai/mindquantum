@@ -1231,7 +1231,12 @@ class U3(MultiParamsGate):
         return out
 
     def matrix(self, pr: ParameterResolver = None) -> np.ndarray:
-        """Get the matrix of U3 gate."""
+        """
+        Get the matrix of U3 gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter for U3 gate.
+        """
         theta = self.theta
         phi = self.phi
         lamda = self.lamda
@@ -1347,7 +1352,12 @@ class FSim(MultiParamsGate):
         return out
 
     def matrix(self, pr: ParameterResolver = None) -> np.ndarray:
-        """Get the matrix of FSim."""
+        """
+        Get the matrix of FSim.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter of fSim gate. Default: None.
+        """
         theta = self.theta
         phi = self.phi
         if self.parameterized:

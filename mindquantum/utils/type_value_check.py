@@ -144,7 +144,7 @@ def _check_gate_has_obj(gate):
 
     if not isinstance(gate, BarrierGate):
         if not gate.obj_qubits:
-            raise ValueError("Gate shuould act on some qubits first.")
+            raise ValueError("Gate should act on some qubits first.")
 
 
 def _check_qubit_id(qubit_id):
