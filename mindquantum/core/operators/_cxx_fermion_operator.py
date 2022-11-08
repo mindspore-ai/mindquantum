@@ -21,7 +21,7 @@ from openfermion import FermionOperator as OFFermionOperator
 from ... import mqbackend
 from ...core.operators.polynomial_tensor import PolynomialTensor
 from ...core.parameterresolver import ParameterResolver
-from ...utils import TermValue
+from ._term_value import TermValue
 from ._terms_operators import TermsOperator
 
 # NB: C++ actually supports FermionOperatorD and FermionOperatorCD that are purely numerical FermionOperator classes
@@ -68,9 +68,9 @@ class FermionOperator(TermsOperator):
         2 [0 1^]
     """
 
-    cxx_base_klass = mqbackend.ops.FermionOperatorBase
-    real_pr_klass = mqbackend.ops.FermionOperatorPRD
-    complex_pr_klass = mqbackend.ops.FermionOperatorPRCD
+    cxx_base_klass = mqbackend.FermionOperatorBase
+    real_pr_klass = mqbackend.FermionOperatorPRD
+    complex_pr_klass = mqbackend.FermionOperatorPRCD
     openfermion_klass = OFFermionOperator
 
     ensure_complex_coeff = False

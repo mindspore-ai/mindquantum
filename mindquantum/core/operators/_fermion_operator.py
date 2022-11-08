@@ -27,6 +27,7 @@ from mindquantum.utils.type_value_check import _check_input_type, _check_int_typ
 
 from ..parameterresolver import ParameterResolver
 from ._base_operator import _Operator
+from ._term_value import TermValue
 from .polynomial_tensor import PolynomialTensor
 
 
@@ -82,9 +83,8 @@ def _check_valid_fermion_operator_term(fo_term):
                 if (
                     len(term) != 2
                     or not isinstance(term[0], int)
-                    or not isinstance(term[1], int)
                     or term[0] < 0
-                    or term[1] not in [0, 1]
+                    or term[1] not in (TermValue[0], TermValue[1], 0, 1)
                 ):
                     raise ValueError(f'Invalid fermion operator term {term}')
 
@@ -154,7 +154,14 @@ class FermionOperator(_Operator):
 
             super().__init__(term, coefficient)
             _check_valid_fermion_operator_term(term)
-            self.operators = {1: '^', 0: '', '^': '^', '': ''}
+            self.operators = {
+                1: TermValue['adg'],
+                0: TermValue['a'],
+                '^': TermValue['adg'],
+                '': TermValue['a'],
+                TermValue['a']: TermValue['a'],
+                TermValue['adg']: TermValue['adg'],
+            }
             self.gates_number = 0
             self.qubit_type = False
 
@@ -187,7 +194,7 @@ class FermionOperator(_Operator):
 
         def map_operator_to_integer_rep(operator):
             """Map operator to integer."""
-            return 1 if operator == '^' else 0
+            return TermValue.adg if operator == '^' else TermValue.a
 
         terms = terms_string.split()
         terms_to_tuple = []
@@ -224,7 +231,7 @@ class FermionOperator(_Operator):
         for k, v in self.terms.items():
             if not v.is_const():
                 raise ValueError("Cannot convert parameteized fermion operator to openfermion format")
-            terms[k] = v.const
+            terms[tuple((t[0], TermValue[t[1]]) for t in k)] = v.const
         fermion_operator = OFFermionOperator()
         fermion_operator.terms = terms
         return fermion_operator
@@ -248,7 +255,7 @@ class FermionOperator(_Operator):
         _check_input_type('of_ops', OFFermionOperator, of_ops)
         fermion_operator = FermionOperator()
         for k, v in of_ops.terms.items():
-            fermion_operator.terms[k] = ParameterResolver(v)
+            fermion_operator.terms[tuple((t[0], TermValue[t[1]]) for t in k)] = ParameterResolver(v)
         return fermion_operator
 
     def hermitian(self):
@@ -256,7 +263,9 @@ class FermionOperator(_Operator):
         conjugate_operator = FermionOperator()
         for term, coefficient in self.terms.items():
             # reverse the order and change the action from 0(1) to 1(0)
-            conjugate_term = tuple((index, 1 - op) for (index, op) in reversed(term))
+            conjugate_term = tuple(
+                (index, TermValue.adg if op == TermValue.a else TermValue.a) for (index, op) in reversed(term)
+            )
             conjugate_operator.terms[conjugate_term] = coefficient.conjugate()
         return conjugate_operator
 
@@ -498,7 +507,7 @@ def _normal_ordered_term(term, coefficient):
             right_sub_term = term[j]
             # Swap operators if left operator is a and right operator is
             # a^\dagger
-            if not left_sub_term[1] and right_sub_term[1]:
+            if left_sub_term[1] == TermValue.a and right_sub_term[1] == TermValue.adg:
                 term[j], term[j - 1] = left_sub_term, right_sub_term
                 coefficient = -1 * coefficient
                 # If indice are same, employ the anti-commutation relationship
@@ -523,7 +532,7 @@ def _normal_ordered_term(term, coefficient):
 def _fermion_tuple_to_string(term):
     string = []
     for i in term:
-        if i[1] == 1:
+        if i[1] == TermValue[1]:
             string.append(f'{i[0]}^')
         else:
             string.append(str(i[0]))

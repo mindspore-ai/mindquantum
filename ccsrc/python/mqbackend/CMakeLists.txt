@@ -29,8 +29,29 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/python DESTINATION ${MQ_INST
 
 # ==============================================================================
 
-pybind11_add_module(mqbackend MODULE OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}" ${CMAKE_CURRENT_LIST_DIR}/lib/binding.cc
-                                                                             ${CMAKE_CURRENT_LIST_DIR}/lib/logging.cpp)
+set(_lto_workaround FALSE)
+if(CMAKE_COMPILER_IS_GNUCXX
+   AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0.0
+   AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 7.3.0)
+  # NB: enable workaround for GCC 7.X
+  set(_lto_workaround TRUE)
+endif()
+
+if(_lto_workaround)
+  # NB: workaround some internal compiler error linked to LTO
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF)
+endif()
+
+pybind11_add_module(
+  mqbackend MODULE
+  OUTPUT_HINT
+    "${MQ_PYTHON_PACKAGE_NAME}"
+    ${CMAKE_CURRENT_LIST_DIR}/lib/binding.cc ${CMAKE_CURRENT_LIST_DIR}/lib/terms_operators.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lib/logging.cpp)
+
+if(_lto_workaround)
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+endif()
 
 target_compile_definitions(mqbackend PUBLIC $<$<BOOL:${ENABLE_PROJECTQ}>:ENABLE_PROJECTQ>)
 target_include_directories(mqbackend PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
@@ -38,6 +59,8 @@ target_include_directories(mqbackend PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_L
 force_at_least_cxx17_workaround(mqbackend)
 target_link_libraries(mqbackend PUBLIC ${MQ_OPENMP_TARGET} "$<$<BOOL:${ENABLE_PROJECTQ}>:mq_projectq>" mq_base
                                        mq_python_core mqbackend_python_interface)
+
+# ------------------------------------------------------------------------------
 
 get_target_property(_mqbackend_output_dir mqbackend LIBRARY_OUTPUT_DIRECTORY)
 if(NOT _mqbackend_output_dir)

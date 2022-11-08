@@ -42,21 +42,21 @@ def test_spin_adapted_t2():
     term1 = set(t2_3210_list[0].terms)
     assert len(term1) == 4
     term1_check = {
-        ((7, TermValue['adg']), (4, TermValue['adg']), (0, TermValue['a']), (3, TermValue['a'])),
-        ((7, TermValue['adg']), (4, TermValue['adg']), (2, TermValue['a']), (1, TermValue['a'])),
-        ((5, TermValue['adg']), (6, TermValue['adg']), (0, TermValue['a']), (3, TermValue['a'])),
-        ((5, TermValue['adg']), (6, TermValue['adg']), (2, TermValue['a']), (1, TermValue['a'])),
+        ((7, TermValue.adg), (4, TermValue.adg), (0, TermValue.a), (3, TermValue.a)),
+        ((7, TermValue.adg), (4, TermValue.adg), (2, TermValue.a), (1, TermValue.a)),
+        ((5, TermValue.adg), (6, TermValue.adg), (0, TermValue.a), (3, TermValue.a)),
+        ((5, TermValue.adg), (6, TermValue.adg), (2, TermValue.a), (1, TermValue.a)),
     }
     assert term1 == term1_check
     term2 = set(t2_3210_list[1].terms)
     assert len(term2) == 6
     term2_check = {
-        ((0, TermValue['a']), (2, TermValue['a']), (6, TermValue['adg']), (4, TermValue['adg'])),
-        ((1, TermValue['a']), (3, TermValue['a']), (7, TermValue['adg']), (5, TermValue['adg'])),
-        ((0, TermValue['a']), (3, TermValue['a']), (7, TermValue['adg']), (4, TermValue['adg'])),
-        ((0, TermValue['a']), (3, TermValue['a']), (5, TermValue['adg']), (6, TermValue['adg'])),
-        ((2, TermValue['a']), (1, TermValue['a']), (7, TermValue['adg']), (4, TermValue['adg'])),
-        ((2, TermValue['a']), (1, TermValue['a']), (5, TermValue['adg']), (6, TermValue['adg'])),
+        ((0, TermValue.a), (2, TermValue.a), (6, TermValue.adg), (4, TermValue.adg)),
+        ((1, TermValue.a), (3, TermValue.a), (7, TermValue.adg), (5, TermValue.adg)),
+        ((0, TermValue.a), (3, TermValue.a), (7, TermValue.adg), (4, TermValue.adg)),
+        ((0, TermValue.a), (3, TermValue.a), (5, TermValue.adg), (6, TermValue.adg)),
+        ((2, TermValue.a), (1, TermValue.a), (7, TermValue.adg), (4, TermValue.adg)),
+        ((2, TermValue.a), (1, TermValue.a), (5, TermValue.adg), (6, TermValue.adg)),
     }
     assert term2 == term2_check
 
@@ -69,12 +69,12 @@ def test_uccsd0():
     h2_uccsd0 = uccsd0_singlet_generator(4, 2)
     h2_uccsd0_terms = set(h2_uccsd0.terms)
     h2_uccsd0_terms_check = {
-        ((2, TermValue['adg']), (0, TermValue['a'])),
-        ((3, TermValue['adg']), (1, TermValue['a'])),
-        ((0, TermValue['adg']), (2, TermValue['a'])),
-        ((1, TermValue['adg']), (3, TermValue['a'])),
-        ((3, TermValue['adg']), (2, TermValue['adg']), (1, TermValue['a']), (0, TermValue['a'])),
-        ((1, TermValue['adg']), (0, TermValue['adg']), (3, TermValue['a']), (2, TermValue['a'])),
+        ((2, TermValue.adg), (0, TermValue.a)),
+        ((3, TermValue.adg), (1, TermValue.a)),
+        ((0, TermValue.adg), (2, TermValue.a)),
+        ((1, TermValue.adg), (3, TermValue.a)),
+        ((3, TermValue.adg), (2, TermValue.adg), (1, TermValue.a), (0, TermValue.a)),
+        ((1, TermValue.adg), (0, TermValue.adg), (3, TermValue.a), (2, TermValue.a)),
     }
     assert h2_uccsd0_terms == h2_uccsd0_terms_check
 

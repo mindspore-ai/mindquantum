@@ -51,8 +51,8 @@
 "mindquantum/ccsrc/include/ops/gates/terms_operator_base_external_ops.hpp:92"               "syntaxError"
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy.cpp"                       "syntaxError"
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_gate_expec.cpp"            "syntaxError"
-"mindquantum/ccsrc/python/experimental/lib/ops/details/define_terms_ops.hpp"                "syntaxError"
 "mindquantum/ccsrc/python/mqbackend/lib/binding.cc:184"                                     "syntaxError"
+"mindquantum/ccsrc/python/mqbackend/lib/details/define_terms_ops.hpp"                       "syntaxError"
 
 "mindquantum/ccsrc/include/core/sparse/paulimat.hpp:58"                                     "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_single_ops.cpp"            "unknownMacro"

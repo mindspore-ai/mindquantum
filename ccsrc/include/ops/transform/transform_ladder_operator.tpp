@@ -12,8 +12,8 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#include "experimental/ops/transform/transform_ladder_operator.hpp"
-#include "experimental/ops/transform/types.hpp"
+#include "ops/transform/transform_ladder_operator.hpp"
+#include "ops/transform/types.hpp"
 
 namespace mindquantum::ops::transform {
 template <typename fermion_op_t>

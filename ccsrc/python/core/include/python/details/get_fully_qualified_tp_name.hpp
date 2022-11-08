@@ -25,7 +25,7 @@
 
 namespace mindquantum::python::pybind11_details {
 #ifdef MQ_MINDSPORE_CI
-std::string get_fully_qualified_tp_name(PyTypeObject* type) {
+inline std::string get_fully_qualified_tp_name(PyTypeObject* type) {
 #    if !defined(PYPY_VERSION)
     return type->tp_name;
 #    else

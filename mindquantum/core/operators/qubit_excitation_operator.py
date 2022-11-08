@@ -17,21 +17,12 @@
 
 """This module implements qubit-excitation operators."""
 
-import os
-
 from mindquantum.core.parameterresolver import ParameterResolver
 
 from ._base_operator import _Operator
+from ._term_value import TermValue
 from .fermion_operator import FermionOperator
 from .qubit_operator import QubitOperator
-
-try:
-    if int(os.environ.get('MQ_PY_TERMSOP', False)):
-        raise ImportError()
-
-    from ...experimental.utils import TermValue
-except ImportError:
-    from ._term_value import TermValue
 
 
 def _check_valid_qubit_excitation_operator_term(qeo_term):
@@ -50,9 +41,8 @@ def _check_valid_qubit_excitation_operator_term(qeo_term):
                 if (
                     len(term) != 2
                     or not isinstance(term[0], int)
-                    or not isinstance(term[1], int)
                     or term[0] < 0
-                    or term[1] not in [0, 1]
+                    or term[1] not in (TermValue[0], TermValue[1], 0, 1)
                 ):
                     raise ValueError(f'Invalid qubit excitation operator term {term}')
 
@@ -111,7 +101,14 @@ class QubitExcitationOperator(_Operator):
         """Initialize a QubitExcitationOperator object."""
         super().__init__(term, coefficient)
         _check_valid_qubit_excitation_operator_term(term)
-        self.operators = {1: '^', 0: '', '^': '^', '': ''}
+        self.operators = {
+            1: TermValue['adg'],
+            0: TermValue['a'],
+            '^': TermValue['adg'],
+            '': TermValue['a'],
+            TermValue['a']: TermValue['a'],
+            TermValue['adg']: TermValue['adg'],
+        }
         self.gates_number = 0
         self.qubit_type = False
 
@@ -146,7 +143,7 @@ class QubitExcitationOperator(_Operator):
             qubit_operator_i = QubitOperator((), 1)
             for (idx, excit) in term_i:
                 qubit_op_ = None
-                if excit == 0:
+                if excit == TermValue[0]:
                     qubit_op_ = QubitOperator(((idx, TermValue["X"]),), 1) + QubitOperator(((idx, TermValue["Y"]),), 1j)
                 else:
                     qubit_op_ = QubitOperator(((idx, TermValue["X"]),), 1) - QubitOperator(((idx, TermValue["Y"]),), 1j)
@@ -161,7 +158,9 @@ class QubitExcitationOperator(_Operator):
         conjugate_operator = QubitExcitationOperator()
         for term, coefficient in self.terms.items():
             # reverse the order and change the action from 0(1) to 1(0)
-            conjugate_term = tuple((index, 1 - op) for (index, op) in reversed(term))
+            conjugate_term = tuple(
+                (index, TermValue.adg if op == TermValue.a else TermValue.a) for (index, op) in reversed(term)
+            )
             conjugate_operator.terms[conjugate_term] = coefficient.conjugate()
         return conjugate_operator
 
@@ -186,7 +185,7 @@ class QubitExcitationOperator(_Operator):
 
         def map_operator_to_integer_rep(operator):
             """Operator to integer conversion function."""
-            return 1 if operator == '^' else 0
+            return TermValue.adg if operator == '^' else TermValue.a
 
         terms = terms_string.split()
         terms_to_tuple = []
@@ -339,7 +338,7 @@ def _normal_ordered_term(term, coefficient):
             right_sub_term = term[j]
             # Swap operators if left operator is a and right operator is
             # Q^{\dagger}
-            if not left_sub_term[1] and right_sub_term[1]:
+            if left_sub_term[1] == TermValue.a and right_sub_term[1] == TermValue.adg:
                 term[j], term[j - 1] = left_sub_term, right_sub_term
                 # If indice are same, employ the commutation relationship
                 # And generate the new term
@@ -362,7 +361,7 @@ def _normal_ordered_term(term, coefficient):
 def _qubit_excitation_tuple_to_string(term):
     string = []
     for i in term:
-        if i[1] == 1:
+        if i[1] == TermValue.adg:
             string.append(f'{i[0]}^')
         else:
             string.append(str(i[0]))

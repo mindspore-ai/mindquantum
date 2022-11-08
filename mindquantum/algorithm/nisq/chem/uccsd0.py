@@ -24,6 +24,7 @@ import numpy
 
 from mindquantum.core.operators import (
     FermionOperator,
+    TermValue,
     hermitian_conjugated,
     normal_ordered,
 )
@@ -49,8 +50,8 @@ def _pij(i: int, j: int):
     ib = i * 2 + 1
     ja = j * 2 + 0
     jb = j * 2 + 1
-    term1 = FermionOperator(((ja, 0), (ib, 0)), 1.0)
-    term2 = FermionOperator(((ia, 0), (jb, 0)), 1.0)
+    term1 = FermionOperator(((ja, TermValue.a), (ib, TermValue.a)), 1.0)
+    term2 = FermionOperator(((ia, TermValue.a), (jb, TermValue.a)), 1.0)
     return numpy.sqrt(0.5) * (term1 + term2)
 
 
@@ -72,7 +73,7 @@ def _qij_plus(i: int, j: int):
     # pylint: disable=invalid-name
     ia = i * 2 + 0
     ja = j * 2 + 0
-    return FermionOperator(((ja, 0), (ia, 0)), 1.0)
+    return FermionOperator(((ja, TermValue.a), (ia, TermValue.a)), 1.0)
 
 
 def _qij_minus(i: int, j: int):
@@ -84,7 +85,7 @@ def _qij_minus(i: int, j: int):
     # pylint: disable=invalid-name
     ib = i * 2 + 1
     jb = j * 2 + 1
-    return FermionOperator(((jb, 0), (ib, 0)), 1.0)
+    return FermionOperator(((jb, TermValue.a), (ib, TermValue.a)), 1.0)
 
 
 def _qij_0(i: int, j: int):
@@ -98,8 +99,8 @@ def _qij_0(i: int, j: int):
     ib = i * 2 + 1
     ja = j * 2 + 0
     jb = j * 2 + 1
-    term1 = FermionOperator(((ja, 0), (ib, 0)), 1.0)
-    term2 = FermionOperator(((ia, 0), (jb, 0)), 1.0)
+    term1 = FermionOperator(((ja, TermValue.a), (ib, TermValue.a)), 1.0)
+    term2 = FermionOperator(((ia, TermValue.a), (jb, TermValue.a)), 1.0)
     return numpy.sqrt(0.5) * (term1 - term2)
 
 

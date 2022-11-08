@@ -12,19 +12,21 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef TRANSFORM_TRANSFORM_LADDER_OPERATOR_HPP
-#define TRANSFORM_TRANSFORM_LADDER_OPERATOR_HPP
+#ifndef FERMION_NUMBER_OPERATOR_HPP
+#define FERMION_NUMBER_OPERATOR_HPP
 
-#include "experimental/ops/transform/types.hpp"
+#include "config/config.hpp"
+
+#include "ops/transform/types.hpp"
 
 namespace mindquantum::ops::transform {
-//! Ladder operator transform.
+//! Jordan Wigner transform that transform a Fermion operator to qubit operator.
 template <typename fermion_op_t>
-MQ_NODISCARD to_qubit_operator_t<traits::to_cmplx_type_t<fermion_op_t>> transform_ladder_operator(
-    const TermValue& value, const qlist_t& x1, const qlist_t& y1, const qlist_t& z1, const qlist_t& x2,
-    const qlist_t& y2, const qlist_t& z2);
+MQ_NODISCARD fermion_op_t fermion_number_operator(int n_modes, int mode = -1,
+                                                  typename fermion_op_t::coefficient_t coeff
+                                                  = fermion_op_t::coeff_policy_t::one);
 }  // namespace mindquantum::ops::transform
 
-#include "transform_ladder_operator.tpp"
+#include "fermion_number_operator.tpp"  // NOLINT
 
 #endif

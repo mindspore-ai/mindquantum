@@ -14,14 +14,69 @@
 
 """Module used for (temporary) compatibility with Python terms operators."""
 
-import os
+from ...mqbackend import TermValue as TermValue_
 
-try:
-    if int(os.environ.get('MQ_PY_TERMSOP', False)):
-        raise ImportError()
+term_map = {
+    0: TermValue_.a,
+    1: TermValue_.adg,
+    'a': TermValue_.a,
+    'adg': TermValue_.adg,
+    '': TermValue_.a,
+    '^': TermValue_.adg,
+    'X': TermValue_.X,
+    'Y': TermValue_.Y,
+    'Z': TermValue_.Z,
+    'I': TermValue_.I,
+    'x': TermValue_.X,
+    'y': TermValue_.Y,
+    'z': TermValue_.Z,
+    'i': TermValue_.I,
+    TermValue_.a: 0,
+    TermValue_.adg: 1,
+    TermValue_.X: 'X',
+    TermValue_.Y: 'Y',
+    TermValue_.Z: 'Z',
+    TermValue_.I: 'I',
+}
 
-    from ...experimental.utils import TermValue
-except ImportError:
-    TermValue = {k: k for k in ('X', 'Y', 'Z', 'I')}
-    TermValue['a'] = 0
-    TermValue['adg'] = 1
+
+class TermValue__:
+    """Bind TermValue to python."""
+
+    # pylint: disable=invalid-name
+    @property
+    def I(self):  # noqa: E743,E741,N802
+        """Bind pauli I operator."""
+        return TermValue_.I
+
+    @property
+    def X(self):  # noqa: N802
+        """Bind pauli X operator."""
+        return TermValue_.X
+
+    @property
+    def Y(self):  # noqa: N802
+        """Bind pauli Y operator."""
+        return TermValue_.Y
+
+    @property
+    def Z(self):  # noqa: N802
+        """Bind pauli Z operator."""
+        return TermValue_.Z
+
+    @property
+    def a(self):
+        """Bind annihilation operator."""
+        return TermValue_.a
+
+    @property
+    def adg(self):
+        """Bind creation operator."""
+        return TermValue_.adg
+
+    def __getitem__(self, val):
+        """Get operator."""
+        return term_map[val]
+
+
+TermValue = TermValue__()

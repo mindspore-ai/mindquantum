@@ -22,7 +22,6 @@ try:
     import mindquantum.mqbackend as mb
 
     from ._mindquantum_cxx import circuit, logging, optimizer, simulator, symengine
-    from .utils import TermValue
 
     # isort: split
 

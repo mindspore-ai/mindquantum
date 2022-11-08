@@ -22,7 +22,7 @@
 from openfermion import QubitOperator as OFQubitOperator
 
 from ... import mqbackend
-from ...utils import TermValue
+from ._term_value import TermValue
 from ._terms_operators import TermsOperator
 
 # NB: C++ actually supports FermionOperatorD and FermionOperatorCD that are purely numerical FermionOperator classes
@@ -75,9 +75,9 @@ class QubitOperator(TermsOperator):
     #     simplifications are possible.
     #     For now, we simply force any Python code to create complex qubit operators...
 
-    cxx_base_klass = mqbackend.ops.QubitOperatorBase
-    real_pr_klass = mqbackend.ops.QubitOperatorPRD
-    complex_pr_klass = mqbackend.ops.QubitOperatorPRCD
+    cxx_base_klass = mqbackend.QubitOperatorBase
+    real_pr_klass = mqbackend.QubitOperatorPRD
+    complex_pr_klass = mqbackend.QubitOperatorPRCD
     openfermion_klass = OFQubitOperator
 
     ensure_complex_coeff = True

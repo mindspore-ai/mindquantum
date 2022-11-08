@@ -18,6 +18,7 @@
 
 # lint_cmake: -whitespace/indent
 
+target_compile_definitions(mq_cxx_nextgen PUBLIC MINDQUANTUM_CXX_EXPERIMENTAL)
 target_link_libraries(mq_cxx_nextgen PUBLIC include_lib mindquantum::cereal mindquantum::pybind11_module
                                             mindquantum::tweedledum mq_base)
 

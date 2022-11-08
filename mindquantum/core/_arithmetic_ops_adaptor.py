@@ -155,8 +155,12 @@ class CppArithmeticAdaptor:
 
     def __itruediv__(self, other):
         """Divide by a number or a CppArithmeticAdaptor."""
-        if not self.is_complex and other.is_complex:
-            self._cpp_obj = self._cpp_obj.cast_complex()
+        if not self.is_complex:
+            if isinstance(other, numbers.Complex):
+                if not isinstance(other, numbers.Real):
+                    self._cpp_obj = self._cpp_obj.cast_complex()
+            elif hasattr(other, 'is_complex') and other.is_complex:
+                self._cpp_obj = self._cpp_obj.cast_complex()
 
         if hasattr(other, '_cpp_obj'):
             self._cpp_obj /= other._cpp_obj

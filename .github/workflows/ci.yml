@@ -685,7 +685,7 @@ jobs:
 
       - name: Set up MinGW64 (2nd try)
         uses: egor-tensin/setup-mingw@v2
-        if: ${{ failure() }}
+        if: steps.mingw64-setup.outcome == 'failure'
         id: mingw64-setup-2
         continue-on-error: false
         with:
@@ -906,6 +906,7 @@ jobs:
 
       - name: Setup Cygwin
         uses: cygwin/cygwin-install-action@v2
+        id: setup-cygwin
         continue-on-error: true
         with:
           packages: >-
@@ -919,7 +920,7 @@ jobs:
 
       - name: Setup Cygwin (2nd try)
         uses: cygwin/cygwin-install-action@v2
-        if: ${{ failure() }}
+        if: steps.setup-cygwin.outcome == 'failure'
         with:
           packages: >-
             cygwin cygwin-devel

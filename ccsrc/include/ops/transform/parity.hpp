@@ -12,22 +12,20 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef JORDAN_WIGNER_TRANSFORM_HPP
-#define JORDAN_WIGNER_TRANSFORM_HPP
+#ifndef PARITY_TRANSFORM_HPP
+#define PARITY_TRANSFORM_HPP
 
-#include "config/type_traits.hpp"
+#include "config/config.hpp"
 
-#include "experimental/ops/transform/types.hpp"
+#include "ops/transform/types.hpp"
 
 namespace mindquantum::ops::transform {
+//! Jordan Wigner transform that transform a Fermion operator to qubit operator.
 template <typename fermion_op_t>
-MQ_NODISCARD to_qubit_operator_t<traits::to_cmplx_type_t<fermion_op_t>> jordan_wigner(const fermion_op_t& ops);
-
-template <typename qubit_op_t>
-MQ_NODISCARD to_fermion_operator_t<traits::to_cmplx_type_t<qubit_op_t>> reverse_jordan_wigner(const qubit_op_t& ops,
-                                                                                              int n_qubits = -1);
+MQ_NODISCARD to_qubit_operator_t<traits::to_cmplx_type_t<fermion_op_t>> parity(const fermion_op_t& ops,
+                                                                               int n_qubits = -1);
 }  // namespace mindquantum::ops::transform
 
-#include "jordan_wigner.tpp"
+#include "parity.tpp"  // NOLINT
 
 #endif

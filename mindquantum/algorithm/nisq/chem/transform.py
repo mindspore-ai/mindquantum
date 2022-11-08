@@ -17,7 +17,8 @@ Module implementing a conversion from fermion type operators to qubit type opera
 Thus can be simulated in quantum computer.
 """
 
-import os
+# pylint: disable=no-member
+
 from math import floor, log
 
 import numpy as np
@@ -29,14 +30,7 @@ from mindquantum.core.operators.utils import (
     count_qubits,
     normal_ordered,
 )
-
-try:
-    if int(os.environ.get('MQ_PY_TERMSOP', False)):
-        raise ImportError()
-
-    from mindquantum.experimental._mindquantum_cxx.ops import transform as transform_
-except ImportError:
-    from . import transform_  # noqa: F401
+from mindquantum.mqbackend import transform as transform_
 
 
 class Transform:
@@ -59,8 +53,8 @@ class Transform:
         >>> op1 = FermionOperator('1^')
         >>> op1
         1.0 [1^]
-        >>> from mindquantum.algorithm.nisq import Transform
         >>> op_transform = Transform(op1)
+        >>> from mindquantum.algorithm.nisq import Transform
         >>> op_transform.jordan_wigner()
         0.5 [Z0 X1] +
         -0.5j [Z0 Y1]

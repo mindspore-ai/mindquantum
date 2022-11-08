@@ -16,24 +16,25 @@
 #
 # ==============================================================================
 
-if(ENABLE_CXX_EXPERIMENTAL)
-  find_package(Catch2 CONFIG REQUIRED)
-  list(APPEND CMAKE_MODULE_PATH "${Catch2_DIR}")
+find_package(Catch2 CONFIG REQUIRED)
+list(APPEND CMAKE_MODULE_PATH "${Catch2_DIR}")
 
-  include(CTest)
-  include(Catch)
+include(CTest)
+include(Catch)
 
-  add_subdirectory(utils)
-endif()
+add_subdirectory(utils)
 
 # ==============================================================================
+
+add_subdirectory(ops)
+
+# ------------------------------------------------------------------------------
 
 if(ENABLE_CXX_EXPERIMENTAL)
   add_subdirectory(config)
   add_subdirectory(core)
   add_subdirectory(decompositions)
   add_subdirectory(mapping)
-  add_subdirectory(ops)
 endif()
 
 # ==============================================================================

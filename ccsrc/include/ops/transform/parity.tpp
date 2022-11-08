@@ -15,8 +15,8 @@
 #ifndef PARITY_TPP
 #define PARITY_TPP
 
-#include "experimental/ops/transform/parity.hpp"
-#include "experimental/ops/transform/types.hpp"
+#include "ops/transform/parity.hpp"
+#include "ops/transform/types.hpp"
 
 namespace mindquantum::ops::transform {
 template <typename fermion_op_t>

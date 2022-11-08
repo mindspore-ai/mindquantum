@@ -17,6 +17,7 @@
 from mindquantum.core.operators.utils import number_operator
 
 from ....core.operators import FermionOperator, QubitOperator
+from ....core.operators._term_value import TermValue
 
 
 def _transform_ladder_operator(ladder_operator, x1, y1, z1, x2, y2, z2):  # pylint: disable=too-many-arguments
@@ -41,11 +42,15 @@ def _transform_ladder_operator(ladder_operator, x1, y1, z1, x2, y2, z2):  # pyli
     coefficient_1 = 0.5
     coefficient_2 = -0.5j if ladder_operator[1] else 0.5j
     transf_op_1 = QubitOperator(
-        tuple((index, 'X') for index in x1) + tuple((index, 'Y') for index in y1) + tuple((index, 'Z') for index in z1),
+        tuple((index, TermValue.X) for index in x1)
+        + tuple((index, TermValue.Y) for index in y1)
+        + tuple((index, TermValue.Z) for index in z1),
         coefficient_1,
     )
     transf_op_2 = QubitOperator(
-        tuple((index, 'X') for index in x2) + tuple((index, 'Y') for index in y2) + tuple((index, 'Z') for index in z2),
+        tuple((index, TermValue.X) for index in x2)
+        + tuple((index, TermValue.Y) for index in y2)
+        + tuple((index, TermValue.Z) for index in z2),
         coefficient_2,
     )
     return transf_op_1 + transf_op_2
@@ -108,14 +113,14 @@ def reversed_jordan_wigner(self):
             while pauli_operator is not None:
 
                 # Handle Pauli Z.
-                if pauli_operator[1] == 'Z':
+                if pauli_operator[1] == TermValue.Z:
                     transformed_pauli = FermionOperator(()) + number_operator(None, pauli_operator[0], -2.0)
 
                 # Handle Pauli X and Y.
                 else:
-                    raising_term = FermionOperator(((pauli_operator[0], 1),))
-                    lowering_term = FermionOperator(((pauli_operator[0], 0),))
-                    if pauli_operator[1] == 'Y':
+                    raising_term = FermionOperator(((pauli_operator[0], TermValue.adg),))
+                    lowering_term = FermionOperator(((pauli_operator[0], TermValue.a),))
+                    if pauli_operator[1] == TermValue.Y:
                         raising_term *= 1.0j
                         lowering_term *= -1.0j
 
@@ -123,7 +128,7 @@ def reversed_jordan_wigner(self):
 
                     # Account for the phase terms.
                     for j in reversed(range(pauli_operator[0])):
-                        z_term = QubitOperator(((j, 'Z'),))
+                        z_term = QubitOperator(((j, TermValue.Z),))
                         working_term = z_term * working_term
                     term_key = list(working_term.terms)[0]
                     transformed_pauli *= working_term.terms[term_key]

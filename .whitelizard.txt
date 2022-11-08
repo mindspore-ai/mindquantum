@@ -33,6 +33,7 @@ ccsrc/python/experimental/lib/core/symengine.cpp:mindquantum::python::init_symen
 ccsrc/python/experimental/lib/ops/command.cpp:mindquantum::details::load_gate
 ccsrc/python/experimental/lib/ops/ops.cpp:init_mindquantum_ops
 ccsrc/python/mqbackend/lib/binding.cc:PYBIND11_MODULE
+ccsrc/python/mqbackend/lib/terms_operators.cpp:init_terms_operators
 
 TEST_CASE
 mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::ApplyGate

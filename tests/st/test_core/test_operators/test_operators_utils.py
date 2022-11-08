@@ -18,6 +18,7 @@ from mindquantum.core.operators import (
     FermionOperator,
     QubitExcitationOperator,
     QubitOperator,
+    TermValue,
     commutator,
     count_qubits,
     down_index,
@@ -55,8 +56,8 @@ def test_commutator():
 
     assert commutator(qub_op1, qub_op1) == QubitOperator()
 
-    qubit_exc_op1 = QubitExcitationOperator(((4, 1), (1, 0)), 2.0j)
-    qubit_exc_op2 = QubitExcitationOperator(((3, 1), (2, 0)), 2.0j)
+    qubit_exc_op1 = QubitExcitationOperator(((4, TermValue.adg), (1, TermValue.a)), 2.0j)
+    qubit_exc_op2 = QubitExcitationOperator(((3, TermValue.adg), (2, TermValue.a)), 2.0j)
     qubit_exc_op3 = QubitExcitationOperator("3^ 2 4^ 1", 4.0) + QubitExcitationOperator("4^ 1 3^ 2", -4.0)
     assert commutator(qubit_exc_op1, qubit_exc_op2).compress() == qubit_exc_op3
 
@@ -97,6 +98,6 @@ def test_hermitian_conjugated():
     fer_op2 = FermionOperator("2^ 1")
     assert hermitian_conjugated(fer_op1) == fer_op2
 
-    qubit_exc_op1 = QubitExcitationOperator(((4, 1), (1, 0)), 2.0j).normal_ordered()
-    qubit_exc_op2 = QubitExcitationOperator(((4, 0), (1, 1)), -2.0j).normal_ordered()
+    qubit_exc_op1 = QubitExcitationOperator(((4, TermValue.adg), (1, TermValue.a)), 2.0j).normal_ordered()
+    qubit_exc_op2 = QubitExcitationOperator(((4, TermValue.a), (1, TermValue.adg)), -2.0j).normal_ordered()
     assert hermitian_conjugated(qubit_exc_op1) == qubit_exc_op2

@@ -27,4 +27,8 @@ add_subdirectory(vector)
 
 # ------------------------------------------------------------------------------
 
-install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR} DESTINATION ${MQ_INSTALL_INCLUDEDIR}/)
+install(
+  DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+  DESTINATION ${MQ_INSTALL_INCLUDEDIR}
+  PATTERN "CMakeLists.txt" EXCLUDE
+  PATTERN "CPPLINT.cfg" EXCLUDE)

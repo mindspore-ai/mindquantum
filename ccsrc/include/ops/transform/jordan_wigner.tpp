@@ -15,10 +15,10 @@
 #ifndef JORDAN_WIGNER_TRANSFORM_TPP
 #define JORDAN_WIGNER_TRANSFORM_TPP
 
-#include "experimental/ops/transform/fermion_number_operator.hpp"
-#include "experimental/ops/transform/jordan_wigner.hpp"
-#include "experimental/ops/transform/transform_ladder_operator.hpp"
-#include "experimental/ops/transform/types.hpp"
+#include "ops/transform/fermion_number_operator.hpp"
+#include "ops/transform/jordan_wigner.hpp"
+#include "ops/transform/transform_ladder_operator.hpp"
+#include "ops/transform/types.hpp"
 
 namespace mindquantum::ops::transform {
 template <typename fermion_op_t>

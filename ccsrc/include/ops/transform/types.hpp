@@ -17,6 +17,8 @@
 
 #include <vector>
 
+#include "config/config.hpp"
+
 #include "ops/gates/fermion_operator.hpp"
 #include "ops/gates/qubit_operator.hpp"
 

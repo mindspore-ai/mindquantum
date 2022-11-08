@@ -25,6 +25,7 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 
 from ..parameterresolver import ParameterResolver
+from ._term_value import TermValue
 
 EQ_TOLERANCE = 1e-8
 
@@ -138,13 +139,13 @@ class _Operator(metaclass=ABCMeta):
             return ()
         if isinstance(terms[0], int):
             self._validate_term(tuple(terms))
-            return (terms,)
+            return tuple(terms[0], TermValue[terms[1]] if isinstance(terms[1], (str, int)) else terms[1])
 
         for sub_term in terms:
             self._validate_term(sub_term)
         if self.qubit_type:
             terms = sorted(terms, key=lambda term: term[0])
-        return tuple(terms)
+        return tuple((term[0], TermValue[term[1]] if isinstance(term[1], (str, int)) else term[1]) for term in terms)
 
     def _validate_term(self, term):
         """Check whether the tuple term e.g.(2, 'X') is valid."""
@@ -152,6 +153,8 @@ class _Operator(metaclass=ABCMeta):
             raise ValueError(f"Invalid type of format {term}")
 
         index, operator = term
+        if isinstance(operator, str):
+            operator = TermValue[operator.upper()]
         if operator not in self.operators:
             raise ValueError(f"Invalid operator {term}. Valid operator should be {self.operators}")
 

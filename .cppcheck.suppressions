@@ -51,8 +51,8 @@ syntaxError:ccsrc/include/core/sparse/algo.hpp:73
 syntaxError:ccsrc/include/ops/gates/terms_operator_base_external_ops.hpp:92
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_vector_policy.cpp
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_gate_expec.cpp
-syntaxError:ccsrc/python/experimental/lib/ops/details/define_terms_ops.hpp
 syntaxError:ccsrc/python/mqbackend/lib/binding.cc:184
+syntaxError:ccsrc/python/mqbackend/lib/details/define_terms_ops.hpp
 
 unknownMacro:ccsrc/include/core/sparse/paulimat.hpp:58
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_single_ops.cpp

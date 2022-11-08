@@ -18,15 +18,17 @@
 #include <string>
 
 #include "mindquantum/catch2/catch2_fmt_formatter.hpp"
-#include "mindquantum/catch2/mindquantum.hpp"
 #include "ops/gates/term_value.hpp"
 
-#include "experimental/core/circuit_block.hpp"
+#ifdef MINDQUANTUM_CXX_EXPERIMENTAL
+#    include "experimental/core/circuit_block.hpp"
+#endif  // MINDQUANTUM_CXX_EXPERIMENTAL
 
 #include <catch2/catch_tostring.hpp>
 
 // =============================================================================
 
+#ifdef MINDQUANTUM_CXX_EXPERIMENTAL
 namespace Catch {
 template <>
 struct StringMaker<mindquantum::QubitID> : mindquantum::details::FmtStringMakerBase<mindquantum::QubitID> {};
@@ -42,6 +44,7 @@ struct StringMaker<mindquantum::ops::TermValue> {
     }
 };
 }  // namespace Catch
+#endif  // MINDQUANTUM_CXX_EXPERIMENTAL
 
 // =============================================================================
 

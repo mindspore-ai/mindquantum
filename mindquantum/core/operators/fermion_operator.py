@@ -14,16 +14,5 @@
 
 """This is the module for the Fermion Operator."""
 
-import os
-import warnings
-
 # pylint: disable=unused-import
-
-try:
-    if int(os.environ.get('MQ_PY_TERMSOP', False)):
-        warnings.warn("Using Python FermionOperator class")
-        raise ImportError()
-
-    from ._cxx_fermion_operator import FermionOperator
-except ImportError:
-    from ._fermion_operator import FermionOperator  # noqa: F401
+from ._cxx_fermion_operator import FermionOperator  # noqa: F401

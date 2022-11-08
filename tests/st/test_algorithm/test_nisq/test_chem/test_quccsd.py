@@ -18,6 +18,7 @@ import warnings
 
 from mindquantum.algorithm.nisq import quccsd_generator
 from mindquantum.core.operators import TimeEvolution, count_qubits
+from mindquantum.core.operators._term_value import TermValue
 
 
 def test_quccsd():
@@ -28,16 +29,16 @@ def test_quccsd():
     h2_quccsd = quccsd_generator(4, 2)
     h2_quccsd_terms = set(h2_quccsd.terms)
     h2_quccsd_terms_check = {
-        ((3, 1), (0, 0)),
-        ((3, 1), (1, 0)),
-        ((1, 1), (2, 0)),
-        ((1, 1), (3, 0)),
-        ((2, 1), (0, 0)),
-        ((2, 1), (1, 0)),
-        ((0, 1), (2, 0)),
-        ((0, 1), (3, 0)),
-        ((3, 1), (2, 1), (1, 0), (0, 0)),
-        ((1, 1), (0, 1), (3, 0), (2, 0)),
+        ((3, TermValue.adg), (0, TermValue.a)),
+        ((3, TermValue.adg), (1, TermValue.a)),
+        ((1, TermValue.adg), (2, TermValue.a)),
+        ((1, TermValue.adg), (3, TermValue.a)),
+        ((2, TermValue.adg), (0, TermValue.a)),
+        ((2, TermValue.adg), (1, TermValue.a)),
+        ((0, TermValue.adg), (2, TermValue.a)),
+        ((0, TermValue.adg), (3, TermValue.a)),
+        ((3, TermValue.adg), (2, TermValue.adg), (1, TermValue.a), (0, TermValue.a)),
+        ((1, TermValue.adg), (0, TermValue.adg), (3, TermValue.a), (2, TermValue.a)),
     }
     assert h2_quccsd_terms == h2_quccsd_terms_check
 

@@ -15,8 +15,8 @@
 #ifndef FERMION_NUMBER_OPERATOR_TPP
 #define FERMION_NUMBER_OPERATOR_TPP
 
-#include "experimental/ops/transform/fermion_number_operator.hpp"
-#include "experimental/ops/transform/types.hpp"
+#include "ops/transform/fermion_number_operator.hpp"
+#include "ops/transform/types.hpp"
 
 namespace mindquantum::ops::transform {
 template <typename fermion_op_t>

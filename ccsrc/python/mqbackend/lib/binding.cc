@@ -18,7 +18,7 @@
 #include <fmt/format.h>
 #include <pybind11/cast.h>
 #include <pybind11/complex.h>
-// #include <pybind11/eigen.h>
+#include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
@@ -32,6 +32,7 @@
 #include "config/type_traits.hpp"
 
 #include "ops/basic_gate.hpp"
+#include "ops/gates/term_value.hpp"
 
 #ifdef ENABLE_PROJECTQ
 #    include "projectq.h"
@@ -59,6 +60,8 @@ using mindquantum::sparse::PauliMat;
 using mindquantum::sparse::PauliMatToCsrHdMatrix;
 using mindquantum::sparse::SparseHamiltonian;
 using mindquantum::sparse::TransposeCsrHdMatrix;
+
+void init_terms_operators(pybind11::module &module);  // NOLINT(runtime/references)
 
 template <typename T>
 auto BindPR(py::module &module, const std::string &name) {  // NOLINT(runtime/references)
@@ -364,4 +367,7 @@ PYBIND11_MODULE(mqbackend, m) {
                                const Projectq<MT> &>(&Projectq<MT>::NonHermitianMeasureWithGrad));
     m.def("cpu_projectq_inner_product", &InnerProduct<MT>);
 #endif
+
+    // NB: needs to be *after* declaration of ParameterResolver to pybind11
+    init_terms_operators(m);
 }

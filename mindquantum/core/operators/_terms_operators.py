@@ -14,18 +14,24 @@
 
 """Base class for terms operators based on a C++ class."""
 
+import copy
 import numbers
 from typing import Dict, Tuple, Union
 
 from mindquantum.core.parameterresolver import ParameterResolver
-from mindquantum.mqbackend import complex_pr, real_pr
+from mindquantum.mqbackend import (
+    EQ_TOLERANCE,
+    CmplxPRSubsProxy,
+    DoublePRSubsProxy,
+    complex_pr,
+    real_pr,
+)
 from mindquantum.utils.type_value_check import _check_input_type
 
 from ...core._arithmetic_ops_adaptor import CppArithmeticAdaptor
-from .. import TermValue
-from .. import _mindquantum_cxx as mqcxx
+from ._term_value import TermValue
 
-# pylint: disable=protected-access,no-member
+# pylint: disable=protected-access
 
 
 class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-methods
@@ -90,6 +96,9 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
             dtype = complex
         klass = cls._type_conversion_table[dtype]
 
+        if isinstance(term, tuple) and len(term) == 1 and isinstance(term[0], tuple) and len(term[0]) == 2:
+            term = term[0]
+
         if coeff is None:
             return klass(term)
         return klass(term, coeff)
@@ -109,6 +118,8 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
         elif len(args) == 1:
             if isinstance(args[0], self.cxx_base_klass):
                 self._cpp_obj = args[0]
+            elif isinstance(args[0], TermsOperator):
+                self._cpp_obj = copy.copy(args[0]._cpp_obj)
             elif isinstance(args[0], dict):
                 values = list(args[0].values())
                 cxx_dtype = list({type(v) for v in values})
@@ -131,7 +142,7 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
             else:
                 self._cpp_obj = self.__class__.create_cpp_obj(args[0], 1.0)
         elif len(args) == 2:
-            self._cpp_obj = self.__class__.create_cpp_obj(*args)  # pylint: disable=no-value-for-parameter
+            self._cpp_obj = self.__class__.create_cpp_obj(*args)
         else:
             raise TypeError(f'{self.__class__.__name__}.__init__() supports either 1 or 2 arguments')
 
@@ -203,7 +214,7 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
         """Cast a TermsOperator into its complex equivalent."""
         return self.__class__(self._cpp_obj.cast_complex())
 
-    def compress(self, abs_tol=mqcxx.ops.EQ_TOLERANCE):
+    def compress(self, abs_tol=EQ_TOLERANCE):
         """
         Eliminate the very small terms that close to zero.
 
@@ -337,8 +348,8 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
         if isinstance(params_value, dict):
             params_value = ParameterResolver(params_value)
         if isinstance(self._cpp_obj, self.real_pr_klass):
-            return self.__class__(self._cpp_obj.subs(mqcxx.ops.DoublePRSubsProxy(params_value._cpp_obj)))
-        return self.__class__(self._cpp_obj.subs(mqcxx.ops.CmplxPRSubsProxy(params_value._cpp_obj.cast_complex())))
+            return self.__class__(self._cpp_obj.subs(DoublePRSubsProxy(params_value._cpp_obj)))
+        return self.__class__(self._cpp_obj.subs(CmplxPRSubsProxy(params_value._cpp_obj.cast_complex())))
 
     @property
     def is_singlet(self) -> bool:

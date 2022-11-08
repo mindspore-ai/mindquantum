@@ -20,13 +20,9 @@
 
 #include "mindquantum/catch2/eigen.hpp"
 #include "mindquantum/catch2/mindquantum.hpp"
-#include "mindquantum/catch2/symengine.hpp"
-#include "mindquantum/catch2/tweedledum.hpp"
 #include "ops/gates/details/floating_point_coeff_policy.hpp"
 #include "ops/gates/details/std_complex_coeff_policy.hpp"
 #include "ops/gates/fermion_operator.hpp"
-
-#include "experimental/core/circuit_block.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -172,7 +168,6 @@ TEST_CASE("FermionOperator normal_ordered", "[terms_op][ops]") {
 // =============================================================================
 
 TEST_CASE("FermionOperator matrix", "[fermion_op][ops]") {
-    namespace Op = tweedledum::Op;
     using matrix_t = FermionOperatorCD::sparse_matrix_t;
 
     std::optional<matrix_t> ref_mat;

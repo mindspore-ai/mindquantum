@@ -47,8 +47,10 @@ append_to_property(mq_install_targets GLOBAL include_lib)
 
 # ------------------------------------------------------------------------------
 
-install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/config ${CMAKE_CURRENT_LIST_DIR}/core ${CMAKE_CURRENT_LIST_DIR}/ops
-        DESTINATION ${MQ_INSTALL_INCLUDEDIR}/)
+install(
+  DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/config ${CMAKE_CURRENT_LIST_DIR}/core ${CMAKE_CURRENT_LIST_DIR}/ops
+  DESTINATION ${MQ_INSTALL_INCLUDEDIR}/
+  PATTERN "CPPLINT.cfg" EXCLUDE)
 
 # =============================================================================
 

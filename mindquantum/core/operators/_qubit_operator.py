@@ -27,28 +27,29 @@ from scipy.sparse import csr_matrix, kron
 from ...utils.type_value_check import _check_input_type, _check_int_type
 from ..operators._base_operator import _Operator
 from ..parameterresolver import ParameterResolver
+from ._term_value import TermValue
 
 EQ_TOLERANCE = 1e-8
 
 # Define products of all Pauli operators for symbolic multiplication.
 # Note can translate all the lowercase to uppercase 'i'->'I'
 _PAULI_OPERATOR_PRODUCTS = {
-    ('I', 'I'): (1.0, 'I'),
-    ('I', 'X'): (1.0, 'X'),
-    ('I', 'Y'): (1.0, 'Y'),
-    ('I', 'Z'): (1.0, 'Z'),
-    ('X', 'I'): (1.0, 'X'),
-    ('X', 'X'): (1.0, 'I'),
-    ('X', 'Y'): (1.0j, 'Z'),
-    ('X', 'Z'): (-1.0j, 'Y'),
-    ('Y', 'I'): (1.0, 'Y'),
-    ('Y', 'X'): (-1.0j, 'Z'),
-    ('Y', 'Y'): (1.0, 'I'),
-    ('Y', 'Z'): (1.0j, 'X'),
-    ('Z', 'I'): (1.0, 'Z'),
-    ('Z', 'X'): (1.0j, 'Y'),
-    ('Z', 'Y'): (-1.0j, 'X'),
-    ('Z', 'Z'): (1.0, 'I'),
+    (TermValue.I, TermValue.I): (1.0, TermValue.I),
+    (TermValue.I, TermValue.X): (1.0, TermValue.X),
+    (TermValue.I, TermValue.Y): (1.0, TermValue.Y),
+    (TermValue.I, TermValue.Z): (1.0, TermValue.Z),
+    (TermValue.X, TermValue.I): (1.0, TermValue.X),
+    (TermValue.X, TermValue.X): (1.0, TermValue.I),
+    (TermValue.X, TermValue.Y): (1.0j, TermValue.Z),
+    (TermValue.X, TermValue.Z): (-1.0j, TermValue.Y),
+    (TermValue.Y, TermValue.I): (1.0, TermValue.Y),
+    (TermValue.Y, TermValue.X): (-1.0j, TermValue.Z),
+    (TermValue.Y, TermValue.Y): (1.0, TermValue.I),
+    (TermValue.Y, TermValue.Z): (1.0j, TermValue.X),
+    (TermValue.Z, TermValue.I): (1.0, TermValue.Z),
+    (TermValue.Z, TermValue.X): (1.0j, TermValue.Y),
+    (TermValue.Z, TermValue.Y): (-1.0j, TermValue.X),
+    (TermValue.Z, TermValue.Z): (1.0, TermValue.I),
 }
 
 
@@ -58,16 +59,17 @@ def _check_valid_qubit_operator_term(qo_term):
         if not isinstance(qo_term, (str, tuple)):
             raise ValueError(f'Qubit operator requires a string or a tuple, but get {type(qo_term)}')
 
-        operators = ('X', 'Y', 'Z')
+        operators = (TermValue['X'], TermValue['Y'], TermValue['Z'])
         if isinstance(qo_term, str):
             terms = qo_term.split(' ')
             for term in terms:
-                if len(term) < 2 or term[0].upper() not in operators or not term[1:].isdigit():
+                if len(term) < 2 or TermValue[term[0].upper()] not in operators or not term[1:].isdigit():
                     if term:
                         raise ValueError(f'Invalid qubit operator term {term}.')
         if isinstance(qo_term, tuple):
             for term in qo_term:
-                if len(term) != 2 or not isinstance(term[0], int) or term[0] < 0 or term[1].upper() not in operators:
+                operator = TermValue[term[1]] if len(term) > 1 and isinstance(term[1], str) else term[1]
+                if len(term) != 2 or not isinstance(term[0], int) or term[0] < 0 or operator not in operators:
                     raise ValueError(f'Invalid qubit operator term {term}.')
 
 
@@ -126,7 +128,7 @@ class QubitOperator(_Operator):
         else:
             super().__init__(term, coefficient)
             _check_valid_qubit_operator_term(term)
-            self.operators = ('X', 'Y', 'Z')
+            self.operators = (TermValue['X'], TermValue['Y'], TermValue['Z'])
             self.gates_number = 0
             self.qubit_type = True
 
@@ -160,7 +162,7 @@ class QubitOperator(_Operator):
         for k, v in self.terms.items():
             if not v.is_const():
                 raise ValueError("Cannot convert parameteized fermion operator to openfermion format")
-            terms[k] = v.const
+            terms[tuple((t[0], TermValue[t[1]]) for t in k)] = v.const
         qubit_operator = OFQubitOperator()
         qubit_operator.terms = terms
         return qubit_operator
@@ -184,7 +186,7 @@ class QubitOperator(_Operator):
         _check_input_type('of_ops', OFQubitOperator, of_ops)
         qubit_operator = QubitOperator()
         for k, v in of_ops.terms.items():
-            qubit_operator.terms[k] = ParameterResolver(v)
+            qubit_operator.terms[tuple((t[0], TermValue[t[1]]) for t in k)] = ParameterResolver(v)
         return qubit_operator
 
     def _parse_string(self, terms_string):
@@ -205,7 +207,7 @@ class QubitOperator(_Operator):
         for sub_term in terms:
             operator = sub_term[0]
             index = sub_term[1:]
-            if operator.upper() not in self.operators:
+            if TermValue[operator.upper()] not in self.operators:
                 raise ValueError(
                     f'Invalid type of operator {operator}.'
                     'The Qubit Pauli operator should be one of this {self.operators}'
@@ -213,7 +215,7 @@ class QubitOperator(_Operator):
             if not index.isdigit() or int(index) < 0:
                 raise ValueError(f"Invalid index {self.operators}.The qubit index should be nonnegative integer")
 
-            terms_to_tuple.append((int(index), operator))
+            terms_to_tuple.append((int(index), TermValue[operator]))
             terms_to_tuple = sorted(terms_to_tuple, key=lambda item: item[0])
         return tuple(terms_to_tuple)
 
@@ -233,10 +235,10 @@ class QubitOperator(_Operator):
         )
 
         pauli_map = {
-            'X': csr_matrix(X.matrix().astype(np.complex128)),
-            'Y': csr_matrix(Y.matrix().astype(np.complex128)),
-            'Z': csr_matrix(Z.matrix().astype(np.complex128)),
-            'I': csr_matrix(I.matrix().astype(np.complex128)),
+            TermValue.X: csr_matrix(X.matrix().astype(np.complex128)),
+            TermValue.Y: csr_matrix(Y.matrix().astype(np.complex128)),
+            TermValue.Z: csr_matrix(Z.matrix().astype(np.complex128)),
+            TermValue.I: csr_matrix(I.matrix().astype(np.complex128)),
         }
         if not self.terms:
             raise ValueError("Cannot convert empty qubit operator to matrix")
@@ -262,7 +264,7 @@ class QubitOperator(_Operator):
                 out += csr_matrix(np.identity(2**n_qubits, dtype=np.complex128)) * coeff
             else:
                 tmp = np.array([1], dtype=np.complex128) * coeff
-                total = [pauli_map['I'] for _ in range(n_qubits)]
+                total = [pauli_map[TermValue['I']] for _ in range(n_qubits)]
                 for idx, local_op in term:
                     total[idx] = pauli_map[local_op]
                 for i in total:
@@ -338,18 +340,17 @@ class QubitOperator(_Operator):
         for right_term in terms[1:]:
             left_index, left_operator = left_term
             right_index, right_operator = right_term
-            left_operator, right_operator = left_operator.upper(), right_operator.upper()
             if left_index == right_index:
                 new_coefficient, new_operator = _PAULI_OPERATOR_PRODUCTS[(left_operator, right_operator)]
                 left_term = (left_index, new_operator)
                 coefficient *= new_coefficient
 
             else:
-                if left_term[1].upper() != 'I':
-                    reduced_terms.append((left_term[0], left_term[1].upper()))
+                if left_term[1] != TermValue['I']:
+                    reduced_terms.append((left_term[0], left_term[1]))
                 left_term = right_term
-        if left_term[1].upper() != 'I':
-            reduced_terms.append((left_term[0], left_term[1].upper()))
+        if left_term[1] != TermValue['I']:
+            reduced_terms.append((left_term[0], left_term[1]))
         return coefficient, tuple(reduced_terms)
 
     def hermitian(self):
@@ -384,6 +385,7 @@ class QubitOperator(_Operator):
                     # check validity, if checked before,
                     # then we can take away this step
                     if operator in self.operators:
+                        print(f'{str(operator)} {repr(operator)}')
                         tmp_string += f'{operator}{index} '
             if term_cnt < len(self.terms):
                 string_rep += f'{tmp_string.strip()}] +\n'

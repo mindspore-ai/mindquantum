@@ -14,16 +14,6 @@
 
 """This is the module for the Qubit Operator."""
 
-import os
-import warnings
-
-# pylint: disable=unused-import
-
-try:
-    if int(os.environ.get('MQ_PY_TERMSOP', False)):
-        warnings.warn("Using Python QubitOperator class")
-        raise ImportError()
-
-    from ._cxx_qubit_operator import QubitOperator
-except ImportError:
-    from ._qubit_operator import QubitOperator  # noqa: F401
+from ._cxx_qubit_operator import (  # noqa: F401  # pylint: disable=unused-import
+    QubitOperator,
+)

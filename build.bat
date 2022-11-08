@@ -50,7 +50,6 @@ set python_extra_pkgs=wheel-filename>1.2 build
 
 if !_IS_MINDSPORE_CI! == 1 (
    set cmake_debug_mode=1
-   set do_clean_3rdparty=1
    set enable_gitee=1
    set enable_gpu=1
    set enable_projectq=1
