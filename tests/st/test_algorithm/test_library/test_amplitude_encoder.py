@@ -30,6 +30,10 @@ with warnings.catch_warnings():
     from mindquantum.simulator import Simulator
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
 def test_amplitude_encoder(backend):
     '''

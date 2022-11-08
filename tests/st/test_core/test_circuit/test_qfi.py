@@ -29,6 +29,10 @@ from mindquantum.core.parameterresolver import ParameterResolver as PR
 from mindquantum.simulator import Simulator, get_supported_simulator
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
 def test_qfi(backend):
     """

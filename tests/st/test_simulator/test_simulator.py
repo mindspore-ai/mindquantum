@@ -74,6 +74,10 @@ def test_init_reset(virtual_qc):
     assert np.allclose(v1, v3)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 def test_apply_circuit_and_hermitian(virtual_qc):
     """
@@ -111,6 +115,10 @@ def test_apply_circuit_and_hermitian(virtual_qc):
     assert np.allclose(v, v1)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 def test_set_and_get(virtual_qc):
     """
@@ -126,6 +134,10 @@ def test_set_and_get(virtual_qc):
     assert np.allclose(qs2, np.array([1, 1]) / np.sqrt(2))
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 def test_non_hermitian_grad_ops1(virtual_qc):
     """
@@ -184,6 +196,10 @@ def generate_test_circuit():
     return circuit
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_all_gate_with_simulator(virtual_qc):  # pylint: disable=too-many-locals
@@ -222,6 +238,10 @@ def test_all_gate_with_simulator(virtual_qc):  # pylint: disable=too-many-locals
     assert np.allclose(g_a_1, g_a_2, atol=1e-4)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
@@ -265,6 +285,10 @@ def test_optimization_with_custom_gate(virtual_qc):  # pylint: disable=too-many-
     assert np.allclose(train1().asnumpy(), train2().asnumpy())
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 def test_fid(virtual_qc):
     """
@@ -282,6 +306,10 @@ def test_fid(virtual_qc):
     assert np.allclose(np.abs(f), np.array([1]))
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 def test_non_hermitian_grad_ops2(virtual_qc):
     """
@@ -299,6 +327,10 @@ def test_non_hermitian_grad_ops2(virtual_qc):
     assert np.allclose(f, f_exp)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 def test_inner_product(virtual_qc):
     """
@@ -314,6 +346,10 @@ def test_inner_product(virtual_qc):
     assert np.allclose(val_exp, val)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 def test_copy(virtual_qc):
     """
@@ -331,6 +367,10 @@ def test_copy(virtual_qc):
     assert np.allclose(qs1, qs2)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'projectq'])
 def test_multi_params_gate(virtual_qc):
     """
@@ -366,6 +406,10 @@ def test_multi_params_gate(virtual_qc):
     assert np.allclose(g, g_exp)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'projectq'])
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_custom_gate_in_parallel(virtual_qc):
