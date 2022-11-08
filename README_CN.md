@@ -91,9 +91,7 @@ sim = Simulator('mqvector', 2)
 ham = Hamiltonian(-QubitOperator('Z0 Z1'))
 grad_ops = sim.get_expectation_with_grad(
     ham,
-    encoder + ansatz,
-    encoder_params_name=encoder.params_name,
-    ansatz_params_name=ansatz.params_name,
+    encoder.as_encoder() + ansatz.as_ansatz(),
 )
 
 import mindspore as ms
