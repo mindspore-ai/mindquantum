@@ -26,9 +26,9 @@
 #include "config/openmp.hpp"
 
 #include "core/utils.hpp"
+#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
-#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
 // Z like operator
@@ -36,20 +36,63 @@ namespace mindquantum::sim::densitymatrix::detail {
 
 // need to test
 void CPUDensityMatrixPolicyBase::ApplyZLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, qs_data_t val,
-                                     index_t dim) {
+                                            index_t dim) {
     SingleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
-                auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask) + mask.obj_mask;
-                qs[(i * i + i) / 2 + i] *= val;
+            dim, DimTh, for (index_t k = 0; k < (dim / 2); k++) {
+                auto i = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
+                auto j = i | mask.obj_mask;
+                for (index_t l = 0; l <= k; l++) {
+                    auto m = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+                    auto n = m | mask.obj_mask;
+                    qs[IdxMap(j, n)] *= val * std::conj(val);
+                    qs[IdxMap(j, m)] *= val;
+                    if (i > n) {
+                        qs[IdxMap(i, n)] *= std::conj(val);
+                    } else {
+                        qs[IdxMap(n, i)] *= val;
+                    }
+                }
             })
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
-                auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask) + mask.obj_mask;
-                if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                    qs[(i * i + i) / 2 + i] *= val;
+            dim, DimTh, for (index_t k = 0; k < (dim / 2); k++) {
+                auto i = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
+                auto j = i | mask.obj_mask;
+                for (index_t l = 0; l < k; l++) {
+                    auto m = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+                    if (((i & mask.ctrl_mask) != mask.ctrl_mask)
+                        && ((m & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
+                        continue;
+                    }
+                    auto n = m | mask.obj_mask;
+                    if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                        if ((m & mask.ctrl_mask) == mask.ctrl_mask) {  // both in control
+                            qs[IdxMap(j, n)] *= val * std::conj(val);
+                            qs[IdxMap(j, m)] *= val;
+                            if (i > n) {
+                                qs[IdxMap(i, n)] *= std::conj(val);
+                            } else {
+                                qs[IdxMap(n, i)] *= val;
+                            }
+                        } else {  // row in control but not column
+                            qs[IdxMap(j, n)] *= val;
+                            qs[IdxMap(j, m)] *= val;
+                        }
+                    } else {  // column in control but not row
+                        qs[IdxMap(j, n)] *= std::conj(val);
+                        if (i > n) {
+                            qs[IdxMap(i, n)] *= std::conj(val);
+                        } else {
+                            qs[IdxMap(n, i)] *= val;
+                        }
+                    }
+                    // diagonal case
+                    if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                        qs[IdxMap(j, i)] *= val;
+                        qs[IdxMap(j, j)] *= val * std::conj(val);
+                    }
                 }
             })
     }

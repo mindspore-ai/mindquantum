@@ -16,6 +16,9 @@ def user_gate1(arg_value):
 qc.user_gates = {"CTRLRX": user_gate1}
 
 qc.add_gate("SNOT", 1)
+qc.add_gate('X', 2)
+# qc.add_gate('Y', 1)
+qc.add_gate('CS', 1, 2)
 # qc.add_gate("RX", 1, arg_value=pi)
 # qc.add_gate("CTRLRX", targets=[1,2], arg_value=np.pi)
 # qc.add_gate("X", 0)
