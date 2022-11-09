@@ -17,6 +17,15 @@
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 
 
+def test_params_name_order():
+    """
+    Description: Test parameters name of ansatz and encoder parameters
+    Expectation: success
+    """
+    pr = PR(dict(zip([str(i) for i in range(10)], range(10))))
+    assert pr.params_name == pr.ansatz_parameters
+
+
 def test_parameter_resolve():
     """
     Description: Test parameter resolver
@@ -35,8 +44,8 @@ def test_parameter_resolve():
     assert list(pr.para_value) == [4.0, 8.0, 12.0, 16.0, 5.0, 6.0]
     pr.requires_grad_part('e')
     pr.no_grad_part('b')
-    assert pr.requires_grad_parameters == {'a', 'c', 'd', 'e'}
-    assert pr.no_grad_parameters == {'b', 'f'}
+    assert pr.requires_grad_parameters == ['a', 'c', 'd', 'e']
+    assert pr.no_grad_parameters == ['b', 'f']
     pr.requires_grad()
     assert not pr.no_grad_parameters
 

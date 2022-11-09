@@ -615,7 +615,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             >>> a.requires_grad_parameters
             {'a', 'b'}
         """
-        return set(self.params_name) - self.no_grad_parameters
+        return [i for i in self.params_name if i not in self.no_grad_parameters]
 
     @property
     def no_grad_parameters(self):
@@ -632,7 +632,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             >>> a.no_grad_parameters
             {'a', 'b'}
         """
-        return self._cpp_obj.no_grad_parameters()
+        return [i for i in self.params_name if i in self._cpp_obj.no_grad_parameters()]
 
     @property
     def encoder_parameters(self):
@@ -649,7 +649,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             >>> a.encoder_parameters
             {'a', 'b'}
         """
-        return self._cpp_obj.encoder_parameters()
+        return [i for i in self.params_name if i in self._cpp_obj.encoder_parameters()]
 
     @property
     def ansatz_parameters(self):
@@ -665,7 +665,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             >>> a.ansatz_parameters
             {'a', 'b'}
         """
-        return set(self.params_name) - self.encoder_parameters
+        return [i for i in self.params_name if i not in self.encoder_parameters]
 
     def conjugate(self):
         """
