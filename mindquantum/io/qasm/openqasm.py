@@ -159,7 +159,7 @@ class OpenQASM:
             for gate in self.circuit:
                 if isgateinstance(gate, (single_np, single_p)):
                     if isinstance(gate, gates.XGate):
-                        if gate.ctrl_qubits:
+                        if not gate.ctrl_qubits:
                             self.cmds.append(f"x q[{gate.obj_qubits[0]}];")
                             continue
                         if len(gate.ctrl_qubits) == 1:
@@ -168,27 +168,27 @@ class OpenQASM:
                         if len(gate.ctrl_qubits) == 2:
                             c0, c1 = gate.ctrl_qubits
                             o0 = gate.obj_qubits[0]
-                            self.cmds.append(f"ccx q[{c0}],q[{c1}],q[{o0}]")
+                            self.cmds.append(f"ccx q[{c0}],q[{c1}],q[{o0}];")
                             continue
                         _gate_not_implement_to_openqasm(gate)
                     if isinstance(gate, gates.TGate):
                         t_name = 'tdg' if gate.hermitianed else 't'
                         if not gate.ctrl_qubits:
-                            self.cmds.append(f"{t_name} q[{gate.obj_qubits[0]}]")
+                            self.cmds.append(f"{t_name} q[{gate.obj_qubits[0]}];")
                             continue
                         _gate_not_implement_to_openqasm(gate)
                     if isinstance(gate, gates.SGate):
                         s_name = 'sdg' if gate.hermitianed else 's'
                         if not gate.ctrl_qubits:
-                            self.cmds.append(f"{s_name} q[{gate.obj_qubits[0]}]")
+                            self.cmds.append(f"{s_name} q[{gate.obj_qubits[0]}];")
                             continue
                         _gate_not_implement_to_openqasm(gate)
                     if isinstance(gate, gates.HGate):
                         if not gate.ctrl_qubits:
-                            self.cmds.append(f"h q[{gate.obj_qubits[0]}]")
+                            self.cmds.append(f"h q[{gate.obj_qubits[0]}];")
                             continue
                         if len(gate.ctrl_qubits) == 1:
-                            self.cmds.append(f"ch q[{gate.ctrl_qubits[0]}],q[{gate.obj_qubits[0]}]")
+                            self.cmds.append(f"ch q[{gate.ctrl_qubits[0]}],q[{gate.obj_qubits[0]}];")
                             continue
                         _gate_not_implement_to_openqasm(gate)
                     if isinstance(gate, gates.PhaseShift):
@@ -196,10 +196,10 @@ class OpenQASM:
                         if not param.is_const():
                             raise ValueError(f"Cannot convert parameterized gate {gate} to OpenQASM.")
                         if not gate.ctrl_qubits:
-                            self.cmds.append(f"u1({param.const}) q[{gate.obj_qubits[0]}]")
+                            self.cmds.append(f"p({param.const}) q[{gate.obj_qubits[0]}];")
                             continue
                         if len(gate.ctrl_qubits) == 1:
-                            self.cmds.append(f"cu1({param.const}) q[{gate.ctrl_qubits[0]}],q[{gate.obj_qubits[0]}]")
+                            self.cmds.append(f"cp({param.const}) q[{gate.ctrl_qubits[0]}],q[{gate.obj_qubits[0]}];")
                             continue
                         _gate_not_implement_to_openqasm(gate)
                     if len(gate.ctrl_qubits) > 1:
@@ -228,15 +228,13 @@ class OpenQASM:
                     if isgateinstance(gate, double_np):
                         obj = gate.obj_qubits
                         if isinstance(gate, gates.SWAPGate):
-                            self.cmds.append(f"cx q[{obj[1]}],q[{obj[0]}];")
-                            self.cmds.append(f"cx q[{obj[0]}],q[{obj[1]}];")
-                            self.cmds.append(f"cx q[{obj[1]}],q[{obj[0]}];")
+                            self.cmds.append(f"swap q[{obj[0]}],q[{obj[1]}];")
                         if isinstance(gate, gates.CNOTGate):
                             self.cmds.append(f"cx q[{obj[1]}],q[{obj[0]}];")
                     else:
                         obj = gate.obj_qubits
-                        param = gate.coeff
-                        self.cmds.append(f"{gate.name.lower()}({param}) q[{obj[0]}],q[{obj[1]}];")
+                        param = ",".join([str(i.const) for i in gate.get_parameters()])
+                        self.cmds.append(f"r{gate.name.lower()}({param}) q[{obj[0]}],q[{obj[1]}];")
         else:
             raise NotImplementedError(f"openqasm version {version} not implement")
         return '\n'.join(self.cmds)
