@@ -51,6 +51,22 @@ struct CPUDensityMatrixPolicyBase {
     static qs_data_p_t Copy(qs_data_p_t qs, index_t dim);
     static bool IsPure(qs_data_p_t qs, index_t dim);
     static qs_data_p_t PureStateVector(qs_data_p_t qs, index_t dim);
+    static calc_type DiagonalConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi, bool abs, index_t dim);
+    template <index_t mask, index_t condi, class binary_op>
+    static void ConditionalBinary(qs_data_p_t src, qs_data_p_t des, qs_data_t succ_coeff, qs_data_t fail_coeff,
+                                  index_t dim, const binary_op& op);
+    template <class binary_op>
+    static void ConditionalBinary(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
+                                  qs_data_t fail_coeff, index_t dim, const binary_op& op);
+    static void ConditionalAdd(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
+                               qs_data_t fail_coeff, index_t dim);
+    static void ConditionalMinus(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
+                                 qs_data_t fail_coeff, index_t dim);
+    static void ConditionalMul(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
+                               qs_data_t fail_coeff, index_t dim);
+    static void ConditionalDiv(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
+                               qs_data_t fail_coeff, index_t dim);
+    static void QSMulValue(qs_data_p_t src, qs_data_p_t des, qs_data_t value, index_t dim);
 
     // X like operator
     // ========================================================================================================

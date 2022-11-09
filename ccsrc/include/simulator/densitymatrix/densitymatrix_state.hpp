@@ -100,6 +100,9 @@ class DensityMatrixState {
     //! Apply a quantum circuit on this quantum state
     auto ApplyCircuit(const circuit_t& circ, const ParameterResolver<calc_type>& pr = ParameterResolver<calc_type>());
 
+    auto ApplyMeasure(const std::shared_ptr<BasicGate<calc_type>>& gate);
+ 
+
  private:
     qs_data_p_t qs = nullptr;
     qbit_t n_qubits = 0;

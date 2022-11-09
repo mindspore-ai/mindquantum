@@ -210,6 +210,17 @@ auto DensityMatrixState<qs_policy_t_>::ApplyCircuit(const circuit_t& circ, const
     return result;
 }
 
+template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate<calc_type>>& gate) {
+    assert(gate->is_measure_);
+    index_t one_mask = (1UL << gate->obj_qubits_[0]);
+    auto one_amp = qs_policy_t::DiagonalConditionalCollect(qs, one_mask, one_mask, true, dim);
+    index_t collapse_mask = (static_cast<index_t>(rng_() < one_amp) << gate->obj_qubits_[0]);
+    qs_data_t norm_fact = (collapse_mask == 0) ? 1 / (1 - one_amp) : 1 / one_amp;
+    qs_policy_t::ConditionalMul(qs, qs, one_mask, collapse_mask, norm_fact, 0.0, dim);
+    return static_cast<index_t>(collapse_mask != 0);
+}
+
 }  // namespace mindquantum::sim::densitymatrix::detail
 
 #endif

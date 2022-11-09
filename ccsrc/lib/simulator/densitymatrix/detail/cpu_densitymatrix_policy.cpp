@@ -93,7 +93,7 @@ void CPUDensityMatrixPolicyBase::SetToZeroExcept(qs_data_p_t qs, index_t ctrl_ma
 }
 
 auto CPUDensityMatrixPolicyBase::Copy(qs_data_p_t qs, index_t dim) -> qs_data_p_t {
-    index_t n_elements = (dim * dim + dim) /2;
+    index_t n_elements = (dim * dim + dim) / 2;
     qs_data_p_t out = CPUDensityMatrixPolicyBase::InitState(n_elements, false);
     THRESHOLD_OMP_FOR(
         n_elements, DimTh, for (omp::idx_t i = 0; i < n_elements; i++) { out[i] = qs[i]; })
@@ -174,4 +174,98 @@ void CPUDensityMatrixPolicyBase::DisplayQS(qs_data_p_t qs, qbit_t n_qubits, inde
 //     THRESHOLD_OMP_FOR(
 //         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { qs[i] = qs_out[i][i]; })
 // }
+
+auto CPUDensityMatrixPolicyBase::DiagonalConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi, bool abs,
+                                                            index_t dim) -> calc_type {
+    // collect amplitude with index mask satisfied condition.
+    calc_type res_real = 0;
+    if (abs) {
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+: res_real)), dim, DimTh,
+                         for (omp::idx_t i = 0; i < dim; i++) {
+                             if ((i & mask) == condi) {
+                                 auto _ii = IdxMap(i, i);
+                                 res_real += qs[_ii].real();
+                             }
+                         });
+    } else {
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+: res_real)), dim, DimTh,
+                         for (omp::idx_t i = 0; i < dim; i++) {
+                             if ((i & mask) == condi) {
+                                 res_real += qs[IdxMap(i, i)].real();
+                             }
+                         });
+    }
+    return res_real;
+}
+
+template <class binary_op>
+void CPUDensityMatrixPolicyBase::ConditionalBinary(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
+                                                   qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim,
+                                                   const binary_op& op) {
+    // if index mask satisfied condition, multiply by succe_coeff, otherwise multiply fail_coeff
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (index_t i = 0; i < dim; i++) {
+            auto _i_0 = IdxMap(i, 0);
+            if ((i & mask) == condi) {
+                for (index_t j = 0; j <= i; j++) {
+                    if ((j & mask) == condi) {
+                        des[_i_0 + j] = op(src[_i_0 + j], succ_coeff);
+                    } else {
+                        des[_i_0 + j] = op(src[_i_0 + j], fail_coeff);
+                    }
+                }
+            } else {
+                for (index_t j = 0; j <= i; j++) {
+                    des[_i_0 + j] = op(src[_i_0 + j], fail_coeff);
+                }
+            }
+        })
+}
+
+template <index_t mask, index_t condi, class binary_op>
+void CPUDensityMatrixPolicyBase::ConditionalBinary(qs_data_p_t src, qs_data_p_t des, qs_data_t succ_coeff,
+                                                   qs_data_t fail_coeff, index_t dim, const binary_op& op) {
+    // if index mask satisfied condition, multiply by succe_coeff, otherwise multiply fail_coeff
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (index_t i = 0; i < dim; i++) {
+            auto _i_0 = IdxMap(i, 0);
+            if ((i & mask) == condi) {
+                for (index_t j = 0; j <= i; j++) {
+                    if ((j & mask) == condi) {
+                        des[_i_0 + j] = op(src[_i_0 + j], succ_coeff);
+                    } else {
+                        des[_i_0 + j] = op(src[_i_0 + j], fail_coeff);
+                    }
+                }
+            } else {
+                for (index_t j = 0; j <= i; j++) {
+                    des[_i_0 + j] = op(src[_i_0 + j], fail_coeff);
+                }
+            }
+        })
+}
+
+void CPUDensityMatrixPolicyBase::QSMulValue(qs_data_p_t src, qs_data_p_t des, qs_data_t value, index_t dim) {
+    ConditionalBinary<0, 0>(src, des, value, 0, dim, std::multiplies<qs_data_t>());
+}
+
+void CPUDensityMatrixPolicyBase::ConditionalAdd(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
+                                                qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim) {
+    ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::plus<qs_data_t>());
+}
+void CPUDensityMatrixPolicyBase::ConditionalMinus(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
+                                                  qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim) {
+    ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::minus<qs_data_t>());
+}
+void CPUDensityMatrixPolicyBase::ConditionalMul(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
+                                                qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim) {
+    ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::multiplies<qs_data_t>());
+}
+void CPUDensityMatrixPolicyBase::ConditionalDiv(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
+                                                qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim) {
+    ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::divides<qs_data_t>());
+}
+
 }  // namespace mindquantum::sim::densitymatrix::detail

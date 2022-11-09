@@ -21,9 +21,20 @@ int main() {
     h.ctrl_qubits_ = {};
     std::shared_ptr<BasicGate<double>> p_h = std::make_shared<BasicGate<double>>(h);
 
+    auto h2 = HGate<double>;
+    h2.obj_qubits_ = {1};
+    h2.ctrl_qubits_ = {};
+    std::shared_ptr<BasicGate<double>> p_h2 = std::make_shared<BasicGate<double>>(h2);
+
+    auto measure = GetMeasureGate<double>(std::string("q0"));
+    measure.obj_qubits_ = {0};
+    std::shared_ptr<BasicGate<double>> p_measure = std::make_shared<BasicGate<double>>(measure);
+
     
-    auto dm = DensityMatrixState<CPUDensityMatrixPolicyBase>(2, 1);
+    auto dm = DensityMatrixState<CPUDensityMatrixPolicyBase>(2, 3);
     dm.ApplyGate(p_h);
     dm.ApplyGate(p_x);
+    // dm.ApplyGate(p_x);
+    dm.ApplyMeasure(p_measure);
     dm.DisplayQS();
 }
