@@ -15,6 +15,10 @@
 
         返回量子门的c++对象。
 
+    .. py:method:: get_parameters()
+
+        返回参数化门的参数列表。
+
     .. py:method:: no_grad()
 
         设置量子门中的所有参数都不需要求导数。
