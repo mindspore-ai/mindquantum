@@ -1160,7 +1160,7 @@ class U3(MultiParamsGate):
     Args:
         theta (Union[numbers.Number, dict, ParameterResolver]): First parameter for U3 gate.
         phi (Union[numbers.Number, dict, ParameterResolver]): Second parameter for U3 gate.
-        lam (Union[numbers.Number, dict, ParameterResolver]): Third parameter for U3 gate.
+        lamda (Union[numbers.Number, dict, ParameterResolver]): Third parameter for U3 gate.
 
     Examples:
         >>> from mindquantum.core.gates import U3

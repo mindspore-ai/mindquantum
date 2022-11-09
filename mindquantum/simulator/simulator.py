@@ -108,7 +108,7 @@ class Simulator:
         """
         Get simulator qubit.
 
-        Args:
+        Returns:
             int, the qubit number of simulator.
         """
         return self.backend.n_qubits
