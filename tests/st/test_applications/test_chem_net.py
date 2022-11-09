@@ -13,7 +13,7 @@
 #   limitations under the License.
 
 """Test VQE."""
-
+from pathlib import Path
 import os
 
 import pytest
@@ -41,6 +41,10 @@ except ImportError:
 os.environ.setdefault('OMP_NUM_THREADS', '8')
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
 def test_vqe_net(backend):  # pylint: disable=too-many-locals
@@ -56,7 +60,7 @@ def test_vqe_net(backend):  # pylint: disable=too-many-locals
         hamiltonian_qubitop,
         _,  # n_qubits
         n_electrons,
-    ) = generate_uccsd('./tests/st/H4.hdf5', threshold=-1)
+    ) = generate_uccsd(str(Path(__file__).parent.parent / 'H4.hdf5'), threshold=-1)
     hf_circuit = Circuit([G.X.on(i) for i in range(n_electrons)])
     vqe_circuit = hf_circuit + ansatz_circuit
     sim = Simulator(backend, vqe_circuit.n_qubits)

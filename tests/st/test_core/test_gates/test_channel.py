@@ -21,6 +21,10 @@ from mindquantum.core.gates import X
 from mindquantum.simulator import Simulator, get_supported_simulator
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
 def test_pauli_channel(backend):
     """
@@ -34,6 +38,10 @@ def test_pauli_channel(backend):
     assert np.allclose(sim.get_qs(), np.array([0.0 + 1.0j, 0.0 + 0.0j]))
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
 def test_flip_channel(backend):
     """
@@ -49,6 +57,10 @@ def test_flip_channel(backend):
     assert np.allclose(sim1.get_qs(), np.array([0.0 + 1.0j, 0.0 + 0.0j]))
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
 def test_depolarizing_channel(backend):
     """
@@ -60,6 +72,10 @@ def test_depolarizing_channel(backend):
     assert np.allclose(sim2.get_qs(), np.array([1.0 + 0.0j, 0.0 + 0.0j]))
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
 def test_damping_channel(backend):
     """
@@ -78,6 +94,10 @@ def test_damping_channel(backend):
     assert np.allclose(sim2.get_qs(), np.array([0, 0, 0, 1]))
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
 def test_kraus_channel(backend):
     """
