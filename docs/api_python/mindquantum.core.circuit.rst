@@ -16,6 +16,8 @@ Quantum Circuit
 
 .. include:: mindquantum.core.circuit.add_prefix.rst
 
+.. include:: mindquantum.core.circuit.add_suffix.rst
+
 .. include:: mindquantum.core.circuit.apply.rst
 
 .. include:: mindquantum.core.circuit.as_ansatz.rst

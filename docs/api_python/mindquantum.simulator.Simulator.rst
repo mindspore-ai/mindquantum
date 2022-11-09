@@ -139,3 +139,7 @@
 
         参数：
             - **quantum_state** (numpy.ndarray) - 想设置的量子态。
+
+    .. py:method:: set_threads_number(number)
+
+        设置最大线程数。

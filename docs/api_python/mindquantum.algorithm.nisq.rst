@@ -15,6 +15,8 @@ NISQ算法。
 
 .. include:: mindquantum.algorithm.nisq.QubitUCCAnsatz.rst
 
+.. include:: mindquantum.algorithm.nisq.StrongEntangling.rst
+
 .. include:: mindquantum.algorithm.nisq.Transform.rst
 
 .. include:: mindquantum.algorithm.nisq.UCCAnsatz.rst
