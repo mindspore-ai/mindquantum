@@ -78,7 +78,7 @@ q1: ──RY(a1)──────────────
 
 ```python
 circuit = (qft(range(3)) + BarrierGate(True)).measure_all()
-circuit.svg()
+circuit.svg()  # circuit.svg('light')
 ```
 
 <img src="https://gitee.com/mindspore/mindquantum/raw/master/docs/circuit_svg.png" alt="Circuit SVG" width="600"/>
@@ -171,18 +171,32 @@ pip install mindquantum
 
 2. 编译MindQuantum
 
-    Linux系统下请确保安装好CMake >= 3.18.3，然后运行如下命令：
+    **Linux系统**下请确保安装好CMake >= 3.18.3，然后运行如下命令：
 
     ```bash
     cd ~/mindquantum
-    bash build.sh
+    bash build.sh --gitee
     ```
 
-    Windows系统下请确保安装好MinGW-W64和CMake >= 3.18.3，然后运行如下命令：
+    这里 `--gitee` 让脚本从gitee代码托管平台下载第三方依赖。如果需要编译GPU版本，请先安装好 CUDA 11.x，和对应的显卡驱动，然后执行如下编译指令：
 
     ```bash
-    cd mindquantum
+    cd ~/mindquantum
+    bash build.sh --gitee --gpu
+    ```
+
+    **Windows系统**下请确保安装好MinGW-W64和CMake >= 3.18.3，然后运行如下命令：
+
+    ```bash
+    cd ~/mindquantum
     ./build.bat -G "MinGW Makefiles"
+    ```
+
+    **Mac系统**下请确保安装好openmp和CMake >= 3.18.3，然后运行如下命令：
+
+    ```bash
+    cd ~/mindquantum
+    bash build.sh --gitee
     ```
 
 3. 安装编译好的whl包
@@ -215,7 +229,7 @@ export OMP_NUM_THREADS=4
 
 ## 构建二进制whl包
 
-如果你想构建用于分发的二进制whl包，请参考[二进制whl包构建指南](./build_binary_wheels.md)
+如果你想构建用于分发的二进制whl包，请参考[二进制whl包构建指南](./INSTALL_cn.md)
 
 ## 快速入门
 

@@ -10,13 +10,13 @@
 
 - [STABLE] [`FSim`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.FSim): Fermionic simulation gate supported, and this gate also works in variational quantum algorithm.
 - [STABLE] [`U3`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.U3): The single qubit arbitrary gate U3 now will work as a single gate but not a piece of quantum circuit. U3 gate also works in variational quantum algorithm.
-- [STABLE] Customed parameterized gate. Customed parameterized gate now will compiled to machine code by [numba](https://numba.pydata.org), and the simulator backend can call customed parameterized gate in parallel thread.
+- [STABLE] [`Customed parameterized gate`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantum.core.gates.gene_univ_parameterized_gate). Customed parameterized gate now will compiled to machine code by jit compiler [numba](https://numba.pydata.org), and the simulator backend can call customed parameterized gate in parallel thread.
 - [STABLE] [`BarrierGate`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.BarrierGate): BarrierGate now can be acted on certain qubits.
 - [STABLE] [`KrausChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.KrausChannel): Design a customed kraus channel for quantum simulator.
 
 #### Simulator
 
-- [STABLE] **New simulator supported**. `mqvector` and `mqvector_gpu` are two mindquantum simulate that prepared for cpu and gpu. And `projectq` simulator will be deprecated.
+- [STABLE] **New simulator supported**. `mqvector` and `mqvector_gpu` are two mindquantum simulate that prepared for cpu and gpu. And `projectq` simulator will be deprecated. The new simulator is total compatible with old one, what you only to do is to change the backend name when you initialize the simulator.
 
 ## MindQuantum 0.7.0 Release Notes
 

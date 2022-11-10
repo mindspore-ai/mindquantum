@@ -77,7 +77,7 @@ In jupyter notebook, we can just call `svg()` of any circuit to display the circ
 
 ```python
 circuit = (qft(range(3)) + BarrierGate(True)).measure_all()
-circuit.svg()
+circuit.svg()  # circuit.svg('light')
 ```
 
 <img src="https://gitee.com/mindspore/mindquantum/raw/master/docs/circuit_svg.png" alt="Circuit SVG" width="600"/>
@@ -172,6 +172,49 @@ Please refer to [MindSpore installation guide](https://www.mindspore.cn/install)
 pip install mindquantum
 ```
 
+### Build from source
+
+1. Clone source.
+
+    ```bash
+    cd ~
+    git clone https://gitee.com/mindspore/mindquantum.git
+    ```
+
+2. Build MindQuantum
+
+    For **linux system**, please make sure your cmake version >= 3.18.3, and then run code:
+
+    ```bash
+    cd ~/mindquantum
+    bash build.sh --gitee
+    ```
+
+    Here `--gitee` is telling the script to download third party from gitee. If you want to download from github, you can ignore this flag. If you want to build under GPU, please make sure you have install CUDA 11.x and the GPU driver, and then run code:
+
+    ```bash
+    cd ~/mindquantum
+    bash build.sh --gitee --gpu
+    ```
+
+    For **windows system**, please make sure you have install MinGW-W64 and CMake >= 3.18.3, and then run:
+
+    ```bash
+    cd ~/mindquantum
+    ./build.bat -G "MinGW Makefiles"
+    ```
+
+    For **Mac system**, please make sure you have install openmp and CMake >= 3.18.3, and then run:
+
+    ```bash
+    cd ~/mindquantum
+    bash build.sh --gitee
+    ```
+
+3. Install whl
+
+    Please go to output, and install mindquantum wheel package by `pip`.
+
 ## Verifying Successful Installation
 
 Successfully installed, if there is no error message such as No module named 'mindquantum' when execute the following command:
@@ -196,7 +239,7 @@ For large servers, please set the number of parallel kernels appropriately accor
 
 ## Building binary wheels
 
-If you would like to build some binary wheels for redistribution, please have a look to our [binary wheel building guide](./build_binary_wheels_en.md)
+If you would like to build some binary wheels for redistribution, please have a look to our [binary wheel building guide](./INSTALL.md)
 
 ## Quick Start
 
