@@ -83,6 +83,28 @@ if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
         sudo ${LD_PATH_VAR}="${!LD_PATH_VAR}" "$PY_EXEC" -m pip install -U pybind11
         "$PY_EXEC" -m pip show pybind11
         echo '----------------------------------------'
+    elif [[ "$(uname)" == "Darwin" ]]; then
+        if [ -z "$MACOSX_DEPLOYMENT_TARGET" ]; then
+            MACOSX_DEPLOYMENT_TARGET=10.15
+        fi
+        export MACOSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET"
+
+        if [ -z "$_PYTHON_HOST_PLATFORM" ]; then
+            _PYTHON_HOST_PLATFORM="macosx-${MACOSX_DEPLOYMENT_TARGET}-$(uname -m)"
+        fi
+        export _PYTHON_HOST_PLATFORM="$_PYTHON_HOST_PLATFORM"
+
+
+        PY_EXEC="$(which python)"
+        echo '----------------------------------------'
+        echo "PY_EXEC = $PY_EXEC"
+        echo '----------------------------------------'
+        echo 'System Python environment'
+        "$PY_EXEC" -m pip freeze
+        echo '----------------------------------------'
+        echo "MACOSX_DEPLOYMENT_TARGET = $MACOSX_DEPLOYMENT_TARGET"
+        echo "_PYTHON_HOST_PLATFORM = $_PYTHON_HOST_PLATFORM"
+        echo '----------------------------------------'
     fi
 
     verbose=1
