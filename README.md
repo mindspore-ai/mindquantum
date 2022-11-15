@@ -201,7 +201,7 @@ pip install mindquantum
 
     ```bash
     cd ~/mindquantum
-    ./build.bat -G "MinGW Makefiles"
+    ./build.bat /Gitee
     ```
 
     For **Mac system**, please make sure you have install openmp and CMake >= 3.18.3, and then run:

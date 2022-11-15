@@ -22,6 +22,7 @@ set SCRIPTDIR=%BASEPATH%\scripts\build
 set PROGRAM=%~nx0
 
 set _IS_MINDSPORE_CI=0
+if "%CI%" == "" goto :DONE_CI
 if /I "%CI%" == "true" goto :CI_TRUE
 if %CI% == 1 goto :CI_TRUE
 goto :DONE_CI
@@ -145,6 +146,16 @@ rem ============================================================================
   if /I "%1" == "/Docs" set result=true
   if "%result%" == "true" (
     set do_docs=1
+    shift & goto :initial
+  )
+
+  if /I "%1" == "/NoGitee" (
+    set enable_gitee=0
+    shift & goto :initial
+  )
+
+  if /I "%1" == "/Gitee" (
+    set enable_gitee=1
     shift & goto :initial
   )
 
@@ -527,6 +538,7 @@ exit /B 0
   echo   /DebugCMake         Enable debugging mode for CMake configuration step
   echo   /Doc, /Docs         Setup the Python virtualenv for building the documentation and ask CMake to build the
   echo                       documentation
+  echo   /Gitee              Use Gitee (where possible) instead of Github/Gitlab
   echo   /Gpu                Enable GPU support
   echo   /Install            Build the 'install' target
   echo   /J,/Jobs [N]        Number of parallel jobs for building
@@ -538,6 +550,7 @@ exit /B 0
   echo   /LoggingDebug       Enable DEBUG level logging macros (implies /Logging)
   echo   /LoggingTrace       Enable TRACE level logging macros (implies /Logging /LoggingDebug)'
   echo   /Ninja              Use the Ninja CMake generator
+  echo   /NoGitee            Do not favor Gitee over Github/Gitlab
   echo   /Prefix             Specify installation prefix
   echo   /Quiet              Disable verbose build rules
   echo   /ShowLibraries      Show all known third-party libraries

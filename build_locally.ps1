@@ -37,7 +37,7 @@ Param(
     [switch]$Gpu,
     [Alias("H")][switch]$Help,
     [switch]$Install,
-    [Alias("J")][ValidateRange("Positive")][int]$Jobs,
+    [Alias("J")][ValidateRange(1,100000)][int]$Jobs,
     [switch]$LocalPkgs,
     [switch]$Logging,
     [switch]$LoggingDebug,

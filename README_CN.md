@@ -189,7 +189,7 @@ pip install mindquantum
 
     ```bash
     cd ~/mindquantum
-    ./build.bat -G "MinGW Makefiles"
+    ./build.bat /Gitee
     ```
 
     **Mac系统**下请确保安装好openmp和CMake >= 3.18.3，然后运行如下命令：

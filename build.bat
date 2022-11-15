@@ -24,6 +24,7 @@ set SCRIPTDIR=%BASEPATH%\scripts\build
 set PROGRAM=%~nx0
 
 set _IS_MINDSPORE_CI=0
+if "%CI%" == "" goto :DONE_CI
 if /I "%CI%" == "true" goto :CI_TRUE
 if %CI% == 1 goto :CI_TRUE
 goto :DONE_CI
@@ -162,6 +163,16 @@ rem ============================================================================
   )
   if /I "%1" == "/NoDelocate" (
     set delocate_wheel=0
+    shift & goto :initial
+  )
+
+  if /I "%1" == "/NoGitee" (
+    set enable_gitee=0
+    shift & goto :initial
+  )
+
+  if /I "%1" == "/Gitee" (
+    set enable_gitee=1
     shift & goto :initial
   )
 
@@ -468,6 +479,7 @@ rem ============================================================================
   echo   /Debug              Build in debug mode
   echo   /Delocate           Delocate the binary wheels after build is finished
   echo                       (enabled by default; pass /NoDelocate to disable)
+  echo   /Gitee              Use Gitee (where possible) instead of Github/Gitlab
   echo   /Gpu                Enable GPU support
   echo   /j,/Jobs [N]        Number of parallel jobs for building
   echo                       Defaults to: !n_jobs_default!
@@ -477,6 +489,7 @@ rem ============================================================================
   echo   /LoggingTrace       Enable TRACE level logging macros (implies /Logging /LoggingDebug)'
   echo   /Ninja              Use the Ninja CMake generator
   echo   /NoDelocate         Disable delocating the binary wheels after build is finished
+  echo   /NoGitee            Do not favor Gitee over Github/Gitlab
   echo   /NoIsolation        Pass --no-isolation to python3 -m build
   echo   /O, /Output [dir]   Output directory for built wheels
   echo   /PlatName           Platform name to use for wheel delocation

@@ -35,7 +35,7 @@ Param(
     [switch]$Gitee,
     [switch]$Gpu,
     [Alias("H")][switch]$Help,
-    [Alias("J")][ValidateRange("Positive")][int]$Jobs,
+    [Alias("J")][ValidateRange(1,10000)][int]$Jobs,
     [switch]$LocalPkgs,
     [switch]$Logging,
     [switch]$Ninja,
