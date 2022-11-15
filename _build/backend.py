@@ -246,9 +246,11 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     elif platform.system() == 'Darwin':
         logging.info('Running on macOS v%s', platform.mac_ver()[0])
         if '-p' not in config_settings['--global-option'] and '--plat-name' not in config_settings['--global-option']:
-            macos_ver = '12.0'  # platform.mac_ver()[0]
+            macos_ver = '10.15'
             os.environ.setdefault('MACOSX_DEPLOYMENT_TARGET', macos_ver)
             os.environ.setdefault('_PYTHON_HOST_PLATFORM', f'macosx-{macos_ver}-{platform.machine()}')
+        logging.info(f'MACOSX_DEPLOYMENT_TARGET = {os.environ.get("MACOSX_DEPLOYMENT_TARGET")}')
+        logging.info(f'_PYTHON_HOST_PLATFORM = {os.environ.get("_PYTHON_HOST_PLATFORM")}')
 
     temp_wheel_directory = Path(wheel_directory, 'temp')
     temp_wheel_directory.mkdir(parents=True, exist_ok=True)

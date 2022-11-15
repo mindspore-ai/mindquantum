@@ -62,8 +62,13 @@ if(NOT MQ_CXX_HAS_STD_FILESYSTEM)
   list(APPEND TARGET_ALIAS mindquantum::boost_filesystem Boost::filesystem)
 endif()
 list(APPEND INSTALL_COMMAND variant=debug,release)
+
 if(UNIX)
   list(APPEND INSTALL_COMMAND --layout=tagged)
+endif()
+
+if(APPLE)
+  list(APPEND INSTALL_COMMAND toolset=darwin)
 endif()
 
 if("${OS_NAME}" STREQUAL "MinGW")

@@ -247,6 +247,9 @@ function(__exec_cmd)
     "      WORKING_DIRECTORY ${EXEC_WORKING_DIRECTORY}"
     "      ...)"
   )
+  if(APPLE)
+    debug_print(STATUS "   MACOSX_DEPLOYMENT_TARGET = $ENV{MACOSX_DEPLOYMENT_TARGET}")
+  endif()
   execute_process(
     COMMAND ${EXEC_COMMAND}
     WORKING_DIRECTORY ${EXEC_WORKING_DIRECTORY}
