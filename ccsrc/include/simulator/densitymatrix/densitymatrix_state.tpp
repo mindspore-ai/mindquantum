@@ -202,15 +202,6 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
 }
 
 template <typename qs_policy_t_>
-auto DensityMatrixState<qs_policy_t_>::ApplyCircuit(const circuit_t& circ, const ParameterResolver<calc_type>& pr) {
-    std::map<std::string, int> result;
-    for (auto& g : circ) {
-        ApplyGate(g, pr, false);
-    }
-    return result;
-}
-
-template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate<calc_type>>& gate) {
     assert(gate->is_measure_);
     index_t one_mask = (1UL << gate->obj_qubits_[0]);
@@ -219,6 +210,19 @@ auto DensityMatrixState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicG
     qs_data_t norm_fact = (collapse_mask == 0) ? 1 / (1 - one_amp) : 1 / one_amp;
     qs_policy_t::ConditionalMul(qs, qs, one_mask, collapse_mask, norm_fact, 0.0, dim);
     return static_cast<index_t>(collapse_mask != 0);
+}
+
+template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::ApplyCircuit(const circuit_t& circ, const ParameterResolver<calc_type>& pr) {
+    std::map<std::string, int> result;
+    for (auto& g : circ) {
+        if (g->is_measure_) {
+            result[g->name_] = ApplyMeasure(g);
+        } else {
+            ApplyGate(g, pr, false);
+        }
+    }
+    return result;
 }
 
 }  // namespace mindquantum::sim::densitymatrix::detail

@@ -42,6 +42,7 @@ target_sources(
   /Users/jedzhou/VscodeProjects/mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_densitymatrix_policy_single_ops.cpp 
   /Users/jedzhou/VscodeProjects/mindquantum/ccsrc/lib/simulator/utils.cpp
 /Users/jedzhou/VscodeProjects/mindquantum/ccsrc/lib/mq_base/utils.cc
+/Users/jedzhou/VscodeProjects/mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_densitymatrix_policy_gate_expec.cpp
 )
 
 

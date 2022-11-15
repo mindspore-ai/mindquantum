@@ -43,10 +43,10 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data
     SingleQubitGateMask mask({obj_qubit}, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t a = 0; a < (dim / 2); a++) {
+            dim, DimTh, for (index_t a = 0; a < (dim / 2); a++) { // loop on the row
                 auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                 auto j = i + mask.obj_mask;
-                for (index_t b = 0; b <= a; b++) {
+                for (index_t b = 0; b <= a; b++) { // loop on the column
                     auto p = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
                     auto q = p + mask.obj_mask;
                     qs_data_t src_ip{src[IdxMap(i, p)]};
@@ -79,10 +79,10 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data
             })
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t a = 0; a < (dim / 2); a++) {
+            dim, DimTh, for (index_t a = 0; a < (dim / 2); a++) { // loop on the row
                 auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                 auto j = i + mask.obj_mask;
-                for (index_t b = 0; b <= a; b++) {
+                for (index_t b = 0; b <= a; b++) { // loop on the column
                     auto p = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
                     if (((i & mask.ctrl_mask) != mask.ctrl_mask)
                         && ((p & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control

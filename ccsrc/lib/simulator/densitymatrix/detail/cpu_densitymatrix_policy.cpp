@@ -56,9 +56,8 @@ auto CPUDensityMatrixPolicyBase::InitState(index_t dim, bool zero_state) -> qs_d
 }
 
 void CPUDensityMatrixPolicyBase::Reset(qs_data_p_t qs, index_t dim) {
-    index_t n_elements = (dim * dim + dim) / 2;
     THRESHOLD_OMP_FOR(
-        n_elements, DimTh, for (omp::idx_t i = 0; i < n_elements; i++) { qs[i] = 0; })
+        dim, DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { qs[i] = 0; })
     qs[0] = 1;
 }
 
@@ -93,10 +92,9 @@ void CPUDensityMatrixPolicyBase::SetToZeroExcept(qs_data_p_t qs, index_t ctrl_ma
 }
 
 auto CPUDensityMatrixPolicyBase::Copy(qs_data_p_t qs, index_t dim) -> qs_data_p_t {
-    index_t n_elements = (dim * dim + dim) / 2;
-    qs_data_p_t out = CPUDensityMatrixPolicyBase::InitState(n_elements, false);
+    qs_data_p_t out = CPUDensityMatrixPolicyBase::InitState(dim, false);
     THRESHOLD_OMP_FOR(
-        n_elements, DimTh, for (omp::idx_t i = 0; i < n_elements; i++) { out[i] = qs[i]; })
+        dim, DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { out[i] = qs[i]; })
     return out;
 }
 
@@ -177,7 +175,7 @@ void CPUDensityMatrixPolicyBase::DisplayQS(qs_data_p_t qs, qbit_t n_qubits, inde
 
 auto CPUDensityMatrixPolicyBase::DiagonalConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi, bool abs,
                                                             index_t dim) -> calc_type {
-    // collect amplitude with index mask satisfied condition.
+    // collect diagonal amplitude with index mask satisfied condition.
     calc_type res_real = 0;
     if (abs) {
         THRESHOLD_OMP(
@@ -250,7 +248,6 @@ void CPUDensityMatrixPolicyBase::ConditionalBinary(qs_data_p_t src, qs_data_p_t 
 void CPUDensityMatrixPolicyBase::QSMulValue(qs_data_p_t src, qs_data_p_t des, qs_data_t value, index_t dim) {
     ConditionalBinary<0, 0>(src, des, value, 0, dim, std::multiplies<qs_data_t>());
 }
-
 void CPUDensityMatrixPolicyBase::ConditionalAdd(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
                                                 qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim) {
     ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::plus<qs_data_t>());
@@ -267,5 +264,117 @@ void CPUDensityMatrixPolicyBase::ConditionalDiv(qs_data_p_t src, qs_data_p_t des
                                                 qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim) {
     ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::divides<qs_data_t>());
 }
+
+auto CPUDensityMatrixPolicyBase::SelfHermitanHam(const py_qs_datas_t& m, const qbits_t& objs, const qbits_t& ctrls,
+                                                 index_t dim) -> qs_data_p_t {
+    index_t n_elements = (dim * dim + dim) / 2;
+    auto qs = reinterpret_cast<qs_data_p_t>(calloc(n_elements, sizeof(qs_data_t)));
+    for (int i = 0; i < dim; i++) {
+        qs[IdxMap(i, i)] = 1;
+    }
+    SingleQubitGateMask mask(objs, ctrls);
+    if (!mask.ctrl_mask) {
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
+                auto j = i + mask.obj_mask;
+                for (index_t b = 0; b <= a; b++) {
+                    auto p = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
+                    auto q = p + mask.obj_mask;
+                    qs_data_t _i_p = m[0][0] * qs[IdxMap(i, p)] + m[0][1] * qs[IdxMap(j, p)];
+                    qs_data_t _j_p = m[1][0] * qs[IdxMap(i, p)] + m[1][1] * qs[IdxMap(j, p)];
+                    qs[IdxMap(i, p)] = _i_p;
+                    qs[IdxMap(j, p)] = _j_p;
+                    qs_data_t _i_q;
+                    qs_data_t _j_q;
+                    if (i > q) {
+                        _i_q = m[0][0] * qs[IdxMap(i, q)] + m[0][1] * qs[IdxMap(j, q)];
+                        _j_q = m[1][0] * qs[IdxMap(i, q)] + m[1][1] * qs[IdxMap(j, q)];
+                        qs[IdxMap(i, q)] = _i_q;
+                        qs[IdxMap(j, q)] = _j_q;
+                    } else {
+                        _i_q = m[0][0] * std::conj(qs[IdxMap(q, i)]) + m[0][1] * qs[IdxMap(j, q)];
+                        _j_q = m[1][0] * std::conj(qs[IdxMap(q, i)]) + m[1][1] * qs[IdxMap(j, q)];
+                        qs[IdxMap(q, i)] = std::conj(_i_q);
+                        qs[IdxMap(j, q)] = _j_q;
+                    }
+                }
+            });
+    } else {
+        if (mask.ctrl_qubits.size() == 1) {
+            index_t ctrl_low = 0UL;
+            for (qbit_t i = 0; i < mask.ctrl_qubits[0]; i++) {
+                ctrl_low = (ctrl_low << 1) + 1;
+            }
+            index_t first_low_mask = mask.obj_low_mask;
+            index_t second_low_mask = ctrl_low;
+            if (mask.obj_low_mask > ctrl_low) {
+                first_low_mask = ctrl_low;
+                second_low_mask = mask.obj_low_mask;
+            }
+            auto first_high_mask = ~first_low_mask;
+            auto second_high_mask = ~second_low_mask;
+
+            THRESHOLD_OMP_FOR(
+                dim, DimTh, for (index_t a = 0; a < (dim / 2); a++) {
+                    auto i = ((a & first_high_mask) << 1) + (a & first_low_mask);
+                    i = ((i & second_high_mask) << 1) + (i & second_low_mask) + mask.ctrl_mask;
+                    auto j = i + mask.obj_mask;
+                    for (index_t b = 0; b <= a; b++) {
+                        auto p = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
+                        auto q = p + mask.obj_mask;
+                        qs_data_t _i_p = m[0][0] * qs[IdxMap(i, p)] + m[0][1] * qs[IdxMap(j, p)];
+                        qs_data_t _j_p = m[1][0] * qs[IdxMap(i, p)] + m[1][1] * qs[IdxMap(j, p)];
+                        qs[IdxMap(i, p)] = _i_p;
+                        qs[IdxMap(j, p)] = _j_p;
+                        qs_data_t _i_q;
+                        qs_data_t _j_q;
+                        if (i > q) {
+                            _i_q = m[0][0] * qs[IdxMap(i, q)] + m[0][1] * qs[IdxMap(j, q)];
+                            _j_q = m[1][0] * qs[IdxMap(i, q)] + m[1][1] * qs[IdxMap(j, q)];
+                            qs[IdxMap(i, q)] = _i_q;
+                            qs[IdxMap(j, q)] = _j_q;
+                        } else {
+                            _i_q = m[0][0] * std::conj(qs[IdxMap(q, i)]) + m[0][1] * qs[IdxMap(j, q)];
+                            _j_q = m[1][0] * std::conj(qs[IdxMap(q, i)]) + m[1][1] * qs[IdxMap(j, q)];
+
+                            qs[IdxMap(q, i)] = std::conj(_i_q);
+                            qs[IdxMap(j, q)] = _j_q;
+                        }
+                    }
+                });
+        } else {
+            THRESHOLD_OMP_FOR(
+                dim, DimTh, for (index_t a = 0; a < (dim / 2); a++) {
+                    auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
+                    if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                        auto j = i + mask.obj_mask;
+                        for (index_t b = 0; b <= a; b++) {
+                            auto p = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
+                            auto q = p + mask.obj_mask;
+                            qs_data_t _i_p = m[0][0] * qs[IdxMap(i, p)] + m[0][1] * qs[IdxMap(j, p)];
+                            qs_data_t _j_p = m[1][0] * qs[IdxMap(i, p)] + m[1][1] * qs[IdxMap(j, p)];
+                            qs[IdxMap(i, p)] = _i_p;
+                            qs[IdxMap(j, p)] = _j_p;
+                            qs_data_t _i_q;
+                            qs_data_t _j_q;
+                            if (i > q) {
+                                _i_q = m[0][0] * qs[IdxMap(i, q)] + m[0][1] * qs[IdxMap(j, q)];
+                                _j_q = m[1][0] * qs[IdxMap(i, q)] + m[1][1] * qs[IdxMap(j, q)];
+                                qs[IdxMap(i, q)] = _i_q;
+                                qs[IdxMap(j, q)] = _j_q;
+                            } else {
+                                _i_q = m[0][0] * std::conj(qs[IdxMap(q, i)]) + m[0][1] * qs[IdxMap(j, q)];
+                                _j_q = m[1][0] * std::conj(qs[IdxMap(q, i)]) + m[1][1] * qs[IdxMap(j, q)];
+                                qs[IdxMap(q, i)] = std::conj(_i_q);
+                                qs[IdxMap(j, q)] = _j_q;
+                            }
+                        }
+                    }
+                });
+        }
+    }
+    return qs;
+};
 
 }  // namespace mindquantum::sim::densitymatrix::detail

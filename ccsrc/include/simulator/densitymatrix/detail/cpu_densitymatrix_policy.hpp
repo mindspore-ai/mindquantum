@@ -68,6 +68,8 @@ struct CPUDensityMatrixPolicyBase {
                                qs_data_t fail_coeff, index_t dim);
     static void QSMulValue(qs_data_p_t src, qs_data_p_t des, qs_data_t value, index_t dim);
 
+    static qs_data_p_t SelfHermitanHam(const py_qs_datas_t& m, const qbits_t& objs, const qbits_t& ctrls,
+                                                 index_t dim);
     // X like operator
     // ========================================================================================================
 
@@ -114,7 +116,7 @@ struct CPUDensityMatrixPolicyBase {
     // gate_expec
     // ========================================================================================================
     static qs_data_t ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                 const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m,
+                                                 const qbits_t& ctrls, const py_qs_datas_t& m,
                                                  index_t dim);
     static qs_data_t ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                   calc_type val, index_t dim);
