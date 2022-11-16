@@ -31,6 +31,31 @@
 #include "simulator/utils.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
+
+auto CPUDensityMatrixPolicyBase::SelfAdjointHam(const std::vector<PauliTerm<calc_type>>& ham, index_t dim)
+    -> qs_data_p_t {
+    qs_data_p_t out = CPUDensityMatrixPolicyBase::InitState(dim, false);
+    for (const auto& [pauli_string, coeff_] : ham) {
+        auto mask = GenPauliMask(pauli_string);
+        auto mask_f = mask.mask_x | mask.mask_y;
+        auto coeff = coeff_;
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+                auto j = (i ^ mask_f);
+                if (i <= j) {
+                    auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
+                    auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
+                    auto c = POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)];
+                    out[IdxMap(j, i)] = coeff * c;
+                    // if (i != j) {
+                    //     out[IdxMap(i, j)] = coeff / c;
+                    // }
+                }
+            })
+    }
+    return out;
+}
+
 auto CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_data_p_t evolved_ham,
                                                              const qbits_t& objs, const qbits_t& ctrls,
                                                              const py_qs_datas_t& m, index_t dim) -> qs_data_t {
