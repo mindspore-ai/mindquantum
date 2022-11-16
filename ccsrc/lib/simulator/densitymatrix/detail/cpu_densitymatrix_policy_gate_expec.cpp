@@ -32,7 +32,7 @@
 
 namespace mindquantum::sim::densitymatrix::detail {
 
-auto CPUDensityMatrixPolicyBase::SelfAdjointHam(const std::vector<PauliTerm<calc_type>>& ham, index_t dim)
+auto CPUDensityMatrixPolicyBase::HamiltonianMatrix(const std::vector<PauliTerm<calc_type>>& ham, index_t dim)
     -> qs_data_p_t {
     qs_data_p_t out = CPUDensityMatrixPolicyBase::InitState(dim, false);
     for (const auto& [pauli_string, coeff_] : ham) {
@@ -56,7 +56,7 @@ auto CPUDensityMatrixPolicyBase::SelfAdjointHam(const std::vector<PauliTerm<calc
     return out;
 }
 
-auto CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_data_p_t evolved_ham,
+auto CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_data_p_t ham_matrix,
                                                              const qbits_t& objs, const qbits_t& ctrls,
                                                              const py_qs_datas_t& m, index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
@@ -66,23 +66,22 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_
             MQ_DO_PRAGMA(omp parallel for reduction(+:res) schedule(static)), dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {
                     auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                     auto j = i + mask.obj_mask;
+                    qs_data_t _i_col;
+                    qs_data_t _j_col;
                     for (index_t col = 0; col < dim; col++) {
-                        if (j >= col) {
-                            qs_data_t _i_col = m[0][0] * qs[IdxMap(i, col)] + m[0][1] * qs[IdxMap(j, col)];
-                            qs_data_t _j_col = m[1][0] * qs[IdxMap(i, col)] + m[1][1] * qs[IdxMap(j, col)];
-                            res += _i_col * std::conj(evolved_ham[IdxMap(i, col)])
-                                   + _j_col * std::conj(evolved_ham[IdxMap(j, col)]);
-                        } else if (i < col) {
-                            qs_data_t _i_col = m[0][0] * std::conj(qs[IdxMap(col, i)])
-                                               + m[0][1] * std::conj(qs[IdxMap(col, j)]);
-                            qs_data_t _j_col = m[1][0] * std::conj(qs[IdxMap(col, i)])
-                                               + m[1][1] * std::conj(qs[IdxMap(col, j)]);
-                            res += _i_col * evolved_ham[IdxMap(col, i)] + _j_col * evolved_ham[IdxMap(col, j)];
+                        if (i >= col) {
+                            _i_col = m[0][0] * qs[IdxMap(i, col)] + m[0][1] * qs[IdxMap(j, col)];
+                            _j_col = m[1][0] * qs[IdxMap(i, col)] + m[1][1] * qs[IdxMap(j, col)];
+                            res += _i_col * std::conj(ham_matrix[IdxMap(i, col)])
+                                   + _j_col * std::conj(ham_matrix[IdxMap(j, col)]);
+                        } else if (j < col) {
+                            _i_col = m[0][0] * std::conj(qs[IdxMap(col, i)]) + m[0][1] * std::conj(qs[IdxMap(col, j)]);
+                            _j_col = m[1][0] * std::conj(qs[IdxMap(col, i)]) + m[1][1] * std::conj(qs[IdxMap(col, j)]);
+                            res += _i_col * ham_matrix[IdxMap(col, i)] + _j_col * ham_matrix[IdxMap(col, j)];
                         } else {
-                            qs_data_t _i_col = m[0][0] * qs[IdxMap(i, col)] + m[0][1] * std::conj(qs[IdxMap(col, j)]);
-                            qs_data_t _j_col = m[1][0] * qs[IdxMap(i, col)] + m[1][1] * std::conj(qs[IdxMap(col, j)]);
-                            res += _i_col * std::conj(evolved_ham[IdxMap(i, col)])
-                                   + _j_col * evolved_ham[IdxMap(col, j)];
+                            _i_col = m[0][0] * std::conj(qs[IdxMap(col, i)]) + m[0][1] * qs[IdxMap(j, col)];
+                            _j_col = m[1][0] * std::conj(qs[IdxMap(col, i)]) + m[1][1] * qs[IdxMap(j, col)];
+                            res += _i_col * ham_matrix[IdxMap(col, i)] + _j_col * std::conj(ham_matrix[IdxMap(j, col)]);
                         }
                     }
                 });
@@ -106,23 +105,25 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_
                         auto i = ((a & first_high_mask) << 1) + (a & first_low_mask);
                         i = ((i & second_high_mask) << 1) + (i & second_low_mask) + mask.ctrl_mask;
                         auto j = i + mask.obj_mask;
-                        for (index_t b = 0; b <= a; b++) {
-                            auto p = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
-                            auto q = p + mask.obj_mask;
-                            qs_data_t _i_p = m[0][0] * qs[IdxMap(i, p)] + m[0][1] * qs[IdxMap(j, p)];
-                            qs_data_t _j_p = m[1][0] * qs[IdxMap(i, p)] + m[1][1] * qs[IdxMap(j, p)];
-                            qs_data_t _i_q;
-                            qs_data_t _j_q;
-                            if (i > q) {
-                                _i_q = m[0][0] * qs[IdxMap(i, q)] + m[0][1] * qs[IdxMap(j, q)];
-                                _j_q = m[1][0] * qs[IdxMap(i, q)] + m[1][1] * qs[IdxMap(j, q)];
-                                res += _i_p * evolved_ham[IdxMap(i, p)] + _j_p * evolved_ham[IdxMap(j, p)]
-                                       + _i_q * evolved_ham[IdxMap(i, q)] + _j_q * evolved_ham[IdxMap(j, q)];
+                        qs_data_t _i_col;
+                        qs_data_t _j_col;
+                        for (index_t col = 0; col < dim; col++) {
+                            if (i >= col) {
+                                _i_col = m[0][0] * qs[IdxMap(i, col)] + m[0][1] * qs[IdxMap(j, col)];
+                                _j_col = m[1][0] * qs[IdxMap(i, col)] + m[1][1] * qs[IdxMap(j, col)];
+                                res += _i_col * std::conj(ham_matrix[IdxMap(i, col)])
+                                       + _j_col * std::conj(ham_matrix[IdxMap(j, col)]);
+                            } else if (j < col) {
+                                _i_col = m[0][0] * std::conj(qs[IdxMap(col, i)])
+                                         + m[0][1] * std::conj(qs[IdxMap(col, j)]);
+                                _j_col = m[1][0] * std::conj(qs[IdxMap(col, i)])
+                                         + m[1][1] * std::conj(qs[IdxMap(col, j)]);
+                                res += _i_col * ham_matrix[IdxMap(col, i)] + _j_col * ham_matrix[IdxMap(col, j)];
                             } else {
-                                _i_q = m[0][0] * std::conj(qs[IdxMap(q, i)]) + m[0][1] * qs[IdxMap(j, q)];
-                                _j_q = m[1][0] * std::conj(qs[IdxMap(q, i)]) + m[1][1] * qs[IdxMap(j, q)];
-                                res += _i_p * evolved_ham[IdxMap(i, p)] + _j_p * evolved_ham[IdxMap(j, p)]
-                                       + _i_q * std::conj(evolved_ham[IdxMap(q, i)]) + _j_q * evolved_ham[IdxMap(j, q)];
+                                _i_col = m[0][0] * std::conj(qs[IdxMap(col, i)]) + m[0][1] * qs[IdxMap(j, col)];
+                                _j_col = m[1][0] * std::conj(qs[IdxMap(col, i)]) + m[1][1] * qs[IdxMap(j, col)];
+                                res += _i_col * ham_matrix[IdxMap(col, i)]
+                                       + _j_col * std::conj(ham_matrix[IdxMap(j, col)]);
                             }
                         }
                     });
@@ -132,261 +133,55 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_
                         auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                         if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                             auto j = i + mask.obj_mask;
-                            for (index_t b = 0; b <= a; b++) {
-                                auto p = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
-                                auto q = p + mask.obj_mask;
-                                qs_data_t _i_p = m[0][0] * qs[IdxMap(i, p)] + m[0][1] * qs[IdxMap(j, p)];
-                                qs_data_t _j_p = m[1][0] * qs[IdxMap(i, p)] + m[1][1] * qs[IdxMap(j, p)];
-                                qs_data_t _i_q;
-                                qs_data_t _j_q;
-                                if (i > q) {
-                                    _i_q = m[0][0] * qs[IdxMap(i, q)] + m[0][1] * qs[IdxMap(j, q)];
-                                    _j_q = m[1][0] * qs[IdxMap(i, q)] + m[1][1] * qs[IdxMap(j, q)];
-                                    res += _i_p * evolved_ham[IdxMap(i, p)] + _j_p * evolved_ham[IdxMap(j, p)]
-                                           + _i_q * evolved_ham[IdxMap(i, q)] + _j_q * evolved_ham[IdxMap(j, q)];
+                            qs_data_t _i_col;
+                            qs_data_t _j_col;
+                            for (index_t col = 0; col < dim; col++) {
+                                if (i >= col) {
+                                    _i_col = m[0][0] * qs[IdxMap(i, col)] + m[0][1] * qs[IdxMap(j, col)];
+                                    _j_col = m[1][0] * qs[IdxMap(i, col)] + m[1][1] * qs[IdxMap(j, col)];
+                                    res += _i_col * std::conj(ham_matrix[IdxMap(i, col)])
+                                           + _j_col * std::conj(ham_matrix[IdxMap(j, col)]);
+                                } else if (j < col) {
+                                    _i_col = m[0][0] * std::conj(qs[IdxMap(col, i)])
+                                             + m[0][1] * std::conj(qs[IdxMap(col, j)]);
+                                    _j_col = m[1][0] * std::conj(qs[IdxMap(col, i)])
+                                             + m[1][1] * std::conj(qs[IdxMap(col, j)]);
+                                    res += _i_col * ham_matrix[IdxMap(col, i)] + _j_col * ham_matrix[IdxMap(col, j)];
                                 } else {
-                                    _i_q = m[0][0] * std::conj(qs[IdxMap(q, i)]) + m[0][1] * qs[IdxMap(j, q)];
-                                    _j_q = m[1][0] * std::conj(qs[IdxMap(q, i)]) + m[1][1] * qs[IdxMap(j, q)];
-                                    res += _i_p * evolved_ham[IdxMap(i, p)] + _j_p * evolved_ham[IdxMap(j, p)]
-                                           + _i_q * std::conj(evolved_ham[IdxMap(q, i)])
-                                           + _j_q * evolved_ham[IdxMap(j, q)];
+                                    _i_col = m[0][0] * std::conj(qs[IdxMap(col, i)]) + m[0][1] * qs[IdxMap(j, col)];
+                                    _j_col = m[1][0] * std::conj(qs[IdxMap(col, i)]) + m[1][1] * qs[IdxMap(j, col)];
+                                    res += _i_col * ham_matrix[IdxMap(col, i)]
+                                           + _j_col * std::conj(ham_matrix[IdxMap(j, col)]);
                                 }
                             }
                         }
                     });
         }
     }
-    return res;
+    return res + std::conj(res);
 };
 
 auto CPUDensityMatrixPolicyBase::ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
                                               const qbits_t& ctrls, calc_type val, index_t dim) -> qs_data_t {
-    qs_data_t c = -0.5 * std::sin(val / 2);
-    qs_data_t is = 0.5 * std::cos(val / 2) * IMAGE_MI;
-    // py_qs_datas_t gate = {{c, is}, {is, c}};
-
-    qs_data_t cosTheta = std::cos(val / 2);
-    qs_data_t iSinTheta = std::sin(val / 2) * IMAGE_MI;
-    py_qs_datas_t gate = {{c * cosTheta + is * iSinTheta, c * iSinTheta + is * cosTheta},
-                          {c * iSinTheta + is * cosTheta, c * cosTheta + is * iSinTheta}};
-    std::cout << c * cosTheta + is * iSinTheta << c * iSinTheta + is * cosTheta << std::endl;
+    py_qs_datas_t gate = {{0, 0.5 * IMAGE_MI}, {0.5 * IMAGE_MI, 0}};
     return CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
 };
 
 auto CPUDensityMatrixPolicyBase::ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
                                               const qbits_t& ctrls, calc_type val, index_t dim) -> qs_data_t {
-    SingleQubitGateMask mask(objs, ctrls);
-    qs_data_t c = -0.5 * std::sin(val / 2);
-    qs_data_t s = 0.5 * std::cos(val / 2);
-    py_qs_datas_t gate = {{c, -s}, {s, c}};
+    py_qs_datas_t gate = {{0, -0.5}, {0.5, 0}};
     return CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
 };
 
 auto CPUDensityMatrixPolicyBase::ExpectDiffRZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
                                               const qbits_t& ctrls, calc_type val, index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
-    qs_data_t c = -0.5 * std::sin(val / 2);
-    qs_data_t s = 0.5 * std::cos(val / 2);
-    qs_data_t e0 = c + IMAGE_MI * s;
-    qs_data_t e1 = c + IMAGE_I * s;
+    qs_data_t s = std::sin(val);
+    qs_data_t c = std::cos(val);
+    qs_data_t e0 = 0.5 * IMAGE_MI * c - 0.5 * s;
+    qs_data_t e1 = 0.5 * IMAGE_I * c - 0.5 * s;
     py_qs_datas_t gate = {{e0, 0}, {0, e1}};
     return CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
 };
 
-auto CPUDensityMatrixPolicyBase::ExpectDiffPS(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                              const qbits_t& ctrls, calc_type val, index_t dim) -> qs_data_t {
-    SingleQubitGateMask mask(objs, ctrls);
-    calc_type res_real = 0, res_imag = 0;
-
-    if (!mask.ctrl_mask) {
-        auto e = std::cos(val) + IMAGE_I * std::sin(val);
-        // clang-format off
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t l = 0; l < (dim / 2); l++) {
-                    auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
-                    auto j = i + mask.obj_mask;
-                    auto this_res = std::conj(bra[j]) * ket[j] * e;
-                    res_real += this_res.real();
-                    res_imag += this_res.imag();
-                })
-        // clang-format on
-    } else {
-        auto e = -std::sin(val) + IMAGE_I * std::cos(val);
-        // clang-format off
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t l = 0; l < (dim / 2); l++) {
-                    auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
-                    if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                        auto j = i + mask.obj_mask;
-                        auto this_res = std::conj(bra[j]) * ket[j] * e;
-                        res_real += this_res.real();
-                        res_imag += this_res.imag();
-                    }
-                })
-        // clang-format on
-    }
-    return {res_real, res_imag};
-};
-
-auto CPUDensityMatrixPolicyBase::ExpectDiffXX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                              const qbits_t& ctrls, calc_type val, index_t dim) -> qs_data_t {
-    DoubleQubitGateMask mask(objs, ctrls);
-    auto c = -std::sin(val);
-    auto s = std::cos(val) * IMAGE_MI;
-    // TODO(xuxs): INTRIN
-    calc_type res_real = 0, res_imag = 0;
-    if (!mask.ctrl_mask) {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < (dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        auto m = i + mask.obj_mask;
-                                                        auto j = i + mask.obj_min_mask;
-                                                        auto k = i + mask.obj_max_mask;
-                                                        auto v00 = c * ket[i] + s * ket[m];
-                                                        auto v01 = c * ket[j] + s * ket[k];
-                                                        auto v10 = c * ket[k] + s * ket[j];
-                                                        auto v11 = c * ket[m] + s * ket[i];
-                                                        auto this_res = std::conj(bra[i]) * v00;
-                                                        this_res += std::conj(bra[j]) * v01;
-                                                        this_res += std::conj(bra[k]) * v10;
-                                                        this_res += std::conj(bra[m]) * v11;
-                                                        res_real += this_res.real();
-                                                        res_imag += this_res.imag();
-                                                    })
-    } else {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < (dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                                                            auto m = i + mask.obj_mask;
-                                                            auto j = i + mask.obj_min_mask;
-                                                            auto k = i + mask.obj_max_mask;
-                                                            auto v00 = c * ket[i] + s * ket[m];
-                                                            auto v01 = c * ket[j] + s * ket[k];
-                                                            auto v10 = c * ket[k] + s * ket[j];
-                                                            auto v11 = c * ket[m] + s * ket[i];
-                                                            auto this_res = std::conj(bra[i]) * v00;
-                                                            this_res += std::conj(bra[j]) * v01;
-                                                            this_res += std::conj(bra[k]) * v10;
-                                                            this_res += std::conj(bra[m]) * v11;
-                                                            res_real += this_res.real();
-                                                            res_imag += this_res.imag();
-                                                        }
-                                                    })
-    }
-    return {res_real, res_imag};
-};
-
-auto CPUDensityMatrixPolicyBase::ExpectDiffYY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                              const qbits_t& ctrls, calc_type val, index_t dim) -> qs_data_t {
-    DoubleQubitGateMask mask(objs, ctrls);
-    auto c = -std::sin(val);
-    auto s = std::cos(val) * IMAGE_I;
-    calc_type res_real = 0, res_imag = 0;
-    // TODO(xuxs): INTRIN
-    if (!mask.ctrl_mask) {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < (dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        auto m = i + mask.obj_mask;
-                                                        auto j = i + mask.obj_min_mask;
-                                                        auto k = i + mask.obj_max_mask;
-                                                        auto v00 = c * ket[i] + s * ket[m];
-                                                        auto v01 = c * ket[j] - s * ket[k];
-                                                        auto v10 = c * ket[k] - s * ket[j];
-                                                        auto v11 = c * ket[m] + s * ket[i];
-                                                        auto this_res = std::conj(bra[i]) * v00;
-                                                        this_res += std::conj(bra[j]) * v01;
-                                                        this_res += std::conj(bra[k]) * v10;
-                                                        this_res += std::conj(bra[m]) * v11;
-                                                        res_real += this_res.real();
-                                                        res_imag += this_res.imag();
-                                                    })
-    } else {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < (dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                                                            auto m = i + mask.obj_mask;
-                                                            auto j = i + mask.obj_min_mask;
-                                                            auto k = i + mask.obj_max_mask;
-                                                            auto v00 = c * ket[i] + s * ket[m];
-                                                            auto v01 = c * ket[j] - s * ket[k];
-                                                            auto v10 = c * ket[k] - s * ket[j];
-                                                            auto v11 = c * ket[m] + s * ket[i];
-                                                            auto this_res = std::conj(bra[i]) * v00;
-                                                            this_res += std::conj(bra[j]) * v01;
-                                                            this_res += std::conj(bra[k]) * v10;
-                                                            this_res += std::conj(bra[m]) * v11;
-                                                            res_real += this_res.real();
-                                                            res_imag += this_res.imag();
-                                                        }
-                                                    })
-    }
-    return {res_real, res_imag};
-};
-
-auto CPUDensityMatrixPolicyBase::ExpectDiffZZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                              const qbits_t& ctrls, calc_type val, index_t dim) -> qs_data_t {
-    DoubleQubitGateMask mask(objs, ctrls);
-
-    auto c = -std::sin(val);
-    auto s = std::cos(val);
-    auto e = c + IMAGE_I * s;
-    auto me = c + IMAGE_MI * s;
-    calc_type res_real = 0, res_imag = 0;
-    // TODO(xuxs): INTRIN
-    if (!mask.ctrl_mask) {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < (dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        auto m = i + mask.obj_mask;
-                                                        auto j = i + mask.obj_min_mask;
-                                                        auto k = i + mask.obj_max_mask;
-                                                        auto this_res = std::conj(bra[i]) * ket[i] * me;
-                                                        this_res += std::conj(bra[j]) * ket[j] * e;
-                                                        this_res += std::conj(bra[k]) * ket[k] * e;
-                                                        this_res += std::conj(bra[m]) * ket[m] * me;
-                                                        res_real += this_res.real();
-                                                        res_imag += this_res.imag();
-                                                    })
-    } else {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < (dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                                                            auto m = i + mask.obj_mask;
-                                                            auto j = i + mask.obj_min_mask;
-                                                            auto k = i + mask.obj_max_mask;
-                                                            auto this_res = std::conj(bra[i]) * ket[i] * me;
-                                                            this_res += std::conj(bra[j]) * ket[j] * e;
-                                                            this_res += std::conj(bra[k]) * ket[k] * e;
-                                                            this_res += std::conj(bra[m]) * ket[m] * me;
-                                                            res_real += this_res.real();
-                                                            res_imag += this_res.imag();
-                                                        }
-                                                    })
-    }
-    return {res_real, res_imag};
-};
 }  // namespace mindquantum::sim::densitymatrix::detail

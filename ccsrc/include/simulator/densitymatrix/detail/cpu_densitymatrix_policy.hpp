@@ -67,7 +67,7 @@ struct CPUDensityMatrixPolicyBase {
     static void ConditionalDiv(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
                                qs_data_t fail_coeff, index_t dim);
     static void QSMulValue(qs_data_p_t src, qs_data_p_t des, qs_data_t value, index_t dim);
-    static qs_data_p_t SelfAdjointHam(const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
+    static qs_data_p_t HamiltonianMatrix(const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
     // X like operator
     // ========================================================================================================
 

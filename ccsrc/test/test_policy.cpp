@@ -35,18 +35,31 @@ auto test_Time() {
 
 auto test_SelfAdjointHam() {
     using namespace mindquantum;
-    // auto qs = dm_base::InitState(4, 1);
-    // dm_base::ApplyRX(qs, {0}, {}, 3, 4);
     PauliWord pw{0, 'Y'};
     PauliWord pw2{1, 'X'};
     VT<PauliWord> v{pw, pw2};
     PauliTerm<double> ham{v, 1};
-    auto a = dm_base::SelfAdjointHam({ham}, 4);
+    auto a = dm_base::HamiltonianMatrix({ham}, 4);
     dm_base::DisplayQS(a, 2, 4);
-    // auto res = dm_base::ExpectDiffRX(qs, ham, {0}, {}, 3, 8);
-    // return res;
+}
+
+auto test_ExpectDiffSingleQubitMatrix() {
+    using namespace mindquantum;
+    auto qs = dm_base::InitState(8, 1);
+    // dm_base::ApplyX(qs, {1}, {}, 8);
+    // dm_base::ApplyX(qs, {2}, {}, 8);
+    dm_base::ApplyRX(qs, {0}, {1, 2}, 3, 8);
+    dm_base::DisplayQS(qs,3,8);
+    PauliWord pw{0, 'Z'};
+    VT<PauliWord> v{pw};
+    PauliTerm<double> ham{v, 1};
+    auto ham_matrix = dm_base::HamiltonianMatrix({ham}, 8);
+    dm_base::DisplayQS(ham_matrix,3,8);
+    auto res = dm_base::ExpectDiffRX(qs, ham_matrix, {0}, {}, 3, 8);
+    return res;
 }
 
 int main() {
-    test_SelfAdjointHam();
+    auto a = test_ExpectDiffSingleQubitMatrix();
+    std::cout<<a<<std::endl;
 }
