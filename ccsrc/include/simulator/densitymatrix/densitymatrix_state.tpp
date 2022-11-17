@@ -202,6 +202,30 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
 }
 
 template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicGate<calc_type>>& gate) {
+    assert(gate->is_channel_);
+    if (gate->name_ == "ADC") {
+        qs_policy_t::ApplyAmplitudeDamping(gate);
+    } else if (gate->name_ == "PDC") {
+        qs_policy_t::ApplyPhaseDamping(gate);
+    } else if (gate->name_ == "PL") {
+        qs_policy_t::ApplyPauli(gate);
+    } else if (gate->name_ == "Dep") {
+        qs_policy_t::ApplyDepolarizing(gate);
+    } else if (gate->name_ == "BF") {
+        qs_policy_t::ApplyBitFlip(gate);
+    } else if (gate->name_ == "PF") {
+        qs_policy_t::ApplyPhaseFlip(gate);
+    } else if (gate->name_ == "BPF") {
+        qs_policy_t::ApplyBitPhaseFlip(gate);
+    } else if (gate->kraus_operator_set_.size() != 0) {
+        qs_policy_t::ApplyKrausChannel(gate);
+    } else {
+        throw std::runtime_error("This noise channel not implemented.");
+    }
+}
+
+template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate<calc_type>>& gate) {
     assert(gate->is_measure_);
     index_t one_mask = (1UL << gate->obj_qubits_[0]);
@@ -214,8 +238,9 @@ auto DensityMatrixState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicG
 
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t qs, qs_data_p_t ham_matrix,
-                                               const std::shared_ptr<BasicGate<calc_type>>& gate,
-                                               const ParameterResolver<calc_type>& pr, index_t dim) -> py_qs_data_t {
+                                                      const std::shared_ptr<BasicGate<calc_type>>& gate,
+                                                      const ParameterResolver<calc_type>& pr, index_t dim)
+    -> py_qs_data_t {
     auto name = gate->name_;
     auto val = gate->params_.Combination(pr).const_value;
 
@@ -270,7 +295,6 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationReversibleWithGrad(const Ha
         }
         sim_ham.ApplyGate(g, pr);
         sim_qs.ApplyGate(g, pr);
-        
     }
     // timer.End("Second part");
     // timer.Analyze();
@@ -279,10 +303,10 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationReversibleWithGrad(const Ha
 
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::GetExpectationNonReversibleWithGrad(const Hamiltonian<calc_type>& ham,
-                                                                        const circuit_t& circ,
-                                                                        const circuit_t& herm_circ,
-                                                                        const ParameterResolver<calc_type>& pr,
-                                                                        const MST<size_t>& p_map) -> py_qs_datas_t {
+                                                                           const circuit_t& circ,
+                                                                           const circuit_t& herm_circ,
+                                                                           const ParameterResolver<calc_type>& pr,
+                                                                           const MST<size_t>& p_map) -> py_qs_datas_t {
     // auto timer = Timer();
     // timer.Start("First part");
     py_qs_datas_t f_and_g(1 + p_map.size(), 0);
@@ -303,7 +327,6 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationNonReversibleWithGrad(const
         }
         sim_ham.ApplyGate(g, pr);
         sim_qs.ApplyGate(g, pr);
-        
     }
     // timer.End("Second part");
     // timer.Analyze();

@@ -98,6 +98,8 @@ class DensityMatrixState {
     index_t ApplyGate(const std::shared_ptr<BasicGate<calc_type>>& gate,
                       const ParameterResolver<calc_type>& pr = ParameterResolver<calc_type>(), bool diff = false);
 
+    auto ApplyChannel(const std::shared_ptr<BasicGate<calc_type>>& gate);
+
     //! Apply a quantum circuit on this quantum state
     auto ApplyCircuit(const circuit_t& circ, const ParameterResolver<calc_type>& pr = ParameterResolver<calc_type>());
 
