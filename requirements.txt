@@ -1,7 +1,8 @@
 numpy>=1.17.0
 scipy>=1.5.3
 projectq>=0.5.1
-openfermion>=1.0.0
+cirq>=1.0.0
+openfermion>=1.5.0
 sympy>=1.4
 matplotlib>=3.4.3
 rich>=10.9.0

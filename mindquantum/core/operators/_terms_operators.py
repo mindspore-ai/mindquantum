@@ -377,6 +377,8 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
             >>> print(ops.singlet())
             [1 [1^] , 1 [2] ]
         """
+        if not self.is_singlet:
+            raise ValueError("Can not be singlet, operator has multiple terms")
         return [self.__class__(i) for i in self._cpp_obj.singlet()]
 
     def singlet_coeff(self) -> ParameterResolver:
@@ -395,6 +397,8 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
             >>> print(ops.singlet_coeff())
             {'a': (1,0)}, const: (0,0)
         """
+        if not self.is_singlet:
+            raise ValueError("Can not be singlet, operator has multiple terms")
         return ParameterResolver(self._cpp_obj.singlet_coeff())
 
     @property
