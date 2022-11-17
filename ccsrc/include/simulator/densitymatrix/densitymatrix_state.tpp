@@ -277,6 +277,39 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationReversibleWithGrad(const Ha
     return f_and_g;
 }
 
+template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::GetExpectationNonReversibleWithGrad(const Hamiltonian<calc_type>& ham,
+                                                                        const circuit_t& circ,
+                                                                        const circuit_t& herm_circ,
+                                                                        const ParameterResolver<calc_type>& pr,
+                                                                        const MST<size_t>& p_map) -> py_qs_datas_t {
+    // auto timer = Timer();
+    // timer.Start("First part");
+    py_qs_datas_t f_and_g(1 + p_map.size(), 0);
+    DensityMatrixState<qs_policy_t> sim_qs = *this;
+    sim_qs.ApplyCircuit(circ, pr);
+    auto ham_matrix = qs_policy_t::HamiltonianMatrix(ham.ham_, dim);
+    DensityMatrixState<qs_policy_t> sim_ham{ham_matrix, n_qubits, seed};
+    f_and_g[0] = qs_policy_t::GetExpectation(sim_qs.qs, ham.ham_, dim);
+    // timer.EndAndStartOther("First part", "Second part");
+    for (const auto& g : herm_circ) {
+        if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
+            // timer.Start("ExpectDiffGate");
+            auto gi = ExpectDiffGate(sim_qs.qs, sim_ham.qs, g, pr, dim);
+            // timer.End("ExpectDiffGate");
+            for (auto& it : g->params_.GetRequiresGradParameters()) {
+                f_and_g[1 + p_map.at(it)] += 2 * std::real(gi) * g->params_.data_.at(it);
+            }
+        }
+        sim_ham.ApplyGate(g, pr);
+        sim_qs.ApplyGate(g, pr);
+        
+    }
+    // timer.End("Second part");
+    // timer.Analyze();
+    return f_and_g;
+}
+
 }  // namespace mindquantum::sim::densitymatrix::detail
 
 #endif

@@ -113,6 +113,19 @@ struct CPUDensityMatrixPolicyBase {
     static void ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
 
+    // Channel operator
+    // ========================================================================================================
+    static void ApplySingleQubitChannel(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
+                                        const VT<matrix_t>& kraus_set, index_t dim);
+
+    static void ApplyAmplitudeDamping(qs_data_p_t qs, const qbits_t& objs, calc_type gamma, index_t dim);
+    static void ApplyPhaseDamping(qs_data_p_t qs, const qbits_t& objs, calc_type gamma, index_t dim);
+    static void ApplyPauli(qs_data_p_t qs, const qbits_t& objs, calc_type px, calc_type py, calc_type pz, index_t dim);
+    static void ApplyDepolarizing(qs_data_p_t qs, const qbits_t& objs, calc_type p, index_t dim);
+    static void ApplyBitFlip(qs_data_p_t qs, const qbits_t& objs, calc_type p, index_t dim);
+    static void ApplyPhaseFlip(qs_data_p_t qs, const qbits_t& objs, calc_type p, index_t dim);
+    static void ApplyBitPhaseFlip(qs_data_p_t qs, const qbits_t& objs, calc_type p, index_t dim);
+
     // gate_expec
     // ========================================================================================================
     static qs_data_t ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,

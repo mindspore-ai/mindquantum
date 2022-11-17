@@ -111,6 +111,10 @@ class DensityMatrixState {
                                                    const circuit_t& herm_circ, const ParameterResolver<calc_type>& pr,
                                                    const MST<size_t>& p_map);
 
+    py_qs_datas_t GetExpectationNonReversibleWithGrad(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
+                                                      const circuit_t& herm_circ,
+                                                      const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map);
+
  private:
     qs_data_p_t qs = nullptr;
     qbit_t n_qubits = 0;
