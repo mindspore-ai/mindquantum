@@ -93,18 +93,19 @@ void CPUDensityMatrixPolicyBase::ApplyPhaseDamping(qs_data_p_t qs, const qbits_t
     ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
 }
 
-void CPUDensityMatrixPolicyBase::ApplyPauli(qs_data_p_t qs, const qbits_t& objs, calc_type px, calc_type py,
-                                            calc_type pz, index_t dim) {
-    auto p0 = 1 - px - py - pz;
-    VT<matrix_t> kraus_set{
-        {{p0, 0}, {0, p0}}, {{0, px}, {px, 0}}, {{0, py * IMAGE_MI}, {py * IMAGE_I, 0}}, {{pz, 0}, {0, -pz}}};
+void CPUDensityMatrixPolicyBase::ApplyPauli(qs_data_p_t qs, const qbits_t& objs, VT<calc_type>& probs, index_t dim) {
+    VT<matrix_t> kraus_set{{{probs[3], 0}, {0, probs[3]}},
+                           {{0, probs[0]}, {probs[0], 0}},
+                           {{0, probs[1] * IMAGE_MI}, {probs[1] * IMAGE_I, 0}},
+                           {{probs[2], 0}, {0, -probs[2]}}};
     ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
 }
 
 void CPUDensityMatrixPolicyBase::ApplyDepolarizing(qs_data_p_t qs, const qbits_t& objs, calc_type p, index_t dim) {
-    calc_type s = p / 3;
-    VT<matrix_t> kraus_set{
-        {{1 - p, 0}, {0, 1 - p}}, {{0, s}, {s, 0}}, {{0, s * IMAGE_MI}, {s * IMAGE_I, 0}}, {{s, 0}, {0, -s}}};
+    VT<matrix_t> kraus_set{{{1 - (3 * p), 0}, {0, 1 - (3 * p)}},
+                           {{0, p}, {p, 0}},
+                           {{0, p * IMAGE_MI}, {p * IMAGE_I, 0}},
+                           {{p, 0}, {0, -p}}};
     ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
 }
 
@@ -120,6 +121,16 @@ void CPUDensityMatrixPolicyBase::ApplyPhaseFlip(qs_data_p_t qs, const qbits_t& o
 
 void CPUDensityMatrixPolicyBase::ApplyBitPhaseFlip(qs_data_p_t qs, const qbits_t& objs, calc_type p, index_t dim) {
     VT<matrix_t> kraus_set{{{1 - p, 0}, {0, 1 - p}}, {{0, p * IMAGE_MI}, {p * IMAGE_I, 0}}};
+    ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
+}
+
+void CPUDensityMatrixPolicyBase::ApplyKraus(qs_data_p_t qs, const qbits_t& objs, VT<matrix_t>& kraus_set, index_t dim) {
+    ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
+}
+
+void CPUDensityMatrixPolicyBase::ApplyHermitianAmplitudeDamping(qs_data_p_t qs, const qbits_t& objs, calc_type gamma,
+                                                                index_t dim) {
+    VT<matrix_t> kraus_set{{{1, 0}, {0, sqrt(1 - gamma)}}, {{0, 0}, {sqrt(gamma), 0}}};
     ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
 }
 

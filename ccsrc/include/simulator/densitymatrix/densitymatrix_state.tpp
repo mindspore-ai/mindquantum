@@ -205,21 +205,21 @@ template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicGate<calc_type>>& gate) {
     assert(gate->is_channel_);
     if (gate->name_ == "ADC") {
-        qs_policy_t::ApplyAmplitudeDamping(gate);
+        qs_policy_t::ApplyAmplitudeDamping(qs, gate->obj_qubits_, gate->damping_coeff_, dim);
     } else if (gate->name_ == "PDC") {
-        qs_policy_t::ApplyPhaseDamping(gate);
+        qs_policy_t::ApplyPhaseDamping(qs, gate->obj_qubits_, gate->damping_coeff_, dim);
     } else if (gate->name_ == "PL") {
-        qs_policy_t::ApplyPauli(gate);
+        qs_policy_t::ApplyPauli(qs, gate->obj_qubits_, gate->probs_, dim);
     } else if (gate->name_ == "Dep") {
-        qs_policy_t::ApplyDepolarizing(gate);
+        qs_policy_t::ApplyDepolarizing(qs, gate->obj_qubits_, gate->probs_[0], dim);
     } else if (gate->name_ == "BF") {
-        qs_policy_t::ApplyBitFlip(gate);
+        qs_policy_t::ApplyBitFlip(qs, gate->obj_qubits_, gate->probs_[0], dim);
     } else if (gate->name_ == "PF") {
-        qs_policy_t::ApplyPhaseFlip(gate);
+        qs_policy_t::ApplyPhaseFlip(qs, gate->obj_qubits_, gate->probs_[2], dim);
     } else if (gate->name_ == "BPF") {
-        qs_policy_t::ApplyBitPhaseFlip(gate);
+        qs_policy_t::ApplyBitPhaseFlip(qs, gate->obj_qubits_, gate->probs_[1], dim);
     } else if (gate->kraus_operator_set_.size() != 0) {
-        qs_policy_t::ApplyKrausChannel(gate);
+        qs_policy_t::ApplyKrausChannel(qs, gate->obj_qubits_, gate->kraus_operator_set_, dim);
     } else {
         throw std::runtime_error("This noise channel not implemented.");
     }
