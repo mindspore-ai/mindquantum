@@ -39,7 +39,7 @@ namespace mindquantum::sim::densitymatrix::detail {
 // method is based on 'mq_vector' simulator, extended to densitymatrix
 void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
                                                         const qbits_t& ctrls,
-                                                        const std::vector<std::vector<py_qs_data_t>>& m, index_t dim) {
+                                                        const matrix_t& m, index_t dim) {
     SingleQubitGateMask mask({obj_qubit}, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
@@ -138,7 +138,7 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data
 }
 
 void CPUDensityMatrixPolicyBase::ApplyH(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    std::vector<std::vector<py_qs_data_t>> m{{m_sqrt1_2, m_sqrt1_2}, {m_sqrt1_2, -m_sqrt1_2}};
+    matrix_t m{{m_sqrt1_2, m_sqrt1_2}, {m_sqrt1_2, -m_sqrt1_2}};
     ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
 }
 
@@ -151,7 +151,7 @@ void CPUDensityMatrixPolicyBase::ApplyRX(qs_data_p_t qs, const qbits_t& objs, co
         a = -0.5 * std::sin(val / 2);
         b = -0.5 * std::cos(val / 2);
     }
-    std::vector<std::vector<py_qs_data_t>> m{{{a, 0}, {0, b}}, {{0, b}, {a, 0}}};
+    matrix_t m{{{a, 0}, {0, b}}, {{0, b}, {a, 0}}};
     ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
         SetToZeroExcept(qs, mask.ctrl_mask, dim);
@@ -167,7 +167,7 @@ void CPUDensityMatrixPolicyBase::ApplyRY(qs_data_p_t qs, const qbits_t& objs, co
         a = -0.5 * std::sin(val / 2);
         b = 0.5 * std::cos(val / 2);
     }
-    std::vector<std::vector<py_qs_data_t>> m{{{a, 0}, {-b, 0}}, {{b, 0}, {a, 0}}};
+    matrix_t m{{{a, 0}, {-b, 0}}, {{b, 0}, {a, 0}}};
     ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
         SetToZeroExcept(qs, mask.ctrl_mask, dim);
@@ -183,7 +183,7 @@ void CPUDensityMatrixPolicyBase::ApplyRZ(qs_data_p_t qs, const qbits_t& objs, co
         a = -0.5 * std::sin(val / 2);
         b = 0.5 * std::cos(val / 2);
     }
-    std::vector<std::vector<py_qs_data_t>> m{{{a, -b}, {0, 0}}, {{0, 0}, {a, b}}};
+    matrix_t m{{{a, -b}, {0, 0}}, {{0, 0}, {a, b}}};
     ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
         SetToZeroExcept(qs, mask.ctrl_mask, dim);

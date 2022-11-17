@@ -47,18 +47,38 @@ auto CPUDensityMatrixPolicyBase::HamiltonianMatrix(const std::vector<PauliTerm<c
                     auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
                     auto c = POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)];
                     out[IdxMap(j, i)] = coeff * c;
-                    // if (i != j) {
-                    //     out[IdxMap(i, j)] = coeff / c;
-                    // }
                 }
             })
     }
     return out;
 }
 
+auto CPUDensityMatrixPolicyBase::GetExpectation(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim) -> qs_data_t {
+    qs_data_t expectation_value{0};
+    for (const auto& [pauli_string, coeff_] : ham) {
+        auto mask = GenPauliMask(pauli_string);
+        auto mask_f = mask.mask_x | mask.mask_y;
+        auto coeff = coeff_;
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+                auto j = (i ^ mask_f);
+                if (i <= j) {
+                    auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
+                    auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
+                    auto c = POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)];
+                    expectation_value += std::conj(qs[IdxMap(j, i)]) * coeff * c;
+                    if (i != j) {
+                        expectation_value += qs[IdxMap(j, i)] * coeff / c;
+                    }
+                }
+            })
+    }
+    return expectation_value;
+}
+
 auto CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_data_p_t ham_matrix,
                                                              const qbits_t& objs, const qbits_t& ctrls,
-                                                             const py_qs_datas_t& m, index_t dim) -> qs_data_t {
+                                                             const matrix_t& m, index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
     qs_data_t res;
     if (!mask.ctrl_mask) {
@@ -158,18 +178,18 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_
                     });
         }
     }
-    return res + std::conj(res);
+    return res;
 };
 
 auto CPUDensityMatrixPolicyBase::ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
                                               const qbits_t& ctrls, calc_type val, index_t dim) -> qs_data_t {
-    py_qs_datas_t gate = {{0, 0.5 * IMAGE_MI}, {0.5 * IMAGE_MI, 0}};
+    matrix_t gate = {{0, 0.5 * IMAGE_MI}, {0.5 * IMAGE_MI, 0}};
     return CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
 };
 
 auto CPUDensityMatrixPolicyBase::ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
                                               const qbits_t& ctrls, calc_type val, index_t dim) -> qs_data_t {
-    py_qs_datas_t gate = {{0, -0.5}, {0.5, 0}};
+    matrix_t gate = {{0, -0.5}, {0.5, 0}};
     return CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
 };
 
@@ -180,7 +200,7 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffRZ(qs_data_p_t bra, qs_data_p_t ket, 
     qs_data_t c = std::cos(val);
     qs_data_t e0 = 0.5 * IMAGE_MI * c - 0.5 * s;
     qs_data_t e1 = 0.5 * IMAGE_I * c - 0.5 * s;
-    py_qs_datas_t gate = {{e0, 0}, {0, e1}};
+    matrix_t gate = {{e0, 0}, {0, e1}};
     return CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
 };
 

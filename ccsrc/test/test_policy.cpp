@@ -56,7 +56,22 @@ auto test_ExpectDiffSingleQubitMatrix() {
     auto ham_matrix = dm_base::HamiltonianMatrix({ham}, 8);
     dm_base::DisplayQS(ham_matrix,3,8);
     auto res = dm_base::ExpectDiffRX(qs, ham_matrix, {0}, {}, 3, 8);
-    return res;
+    return 2* std::real(res);
+}
+auto test_GetExpectationReversibleWithGrad(){
+    using namespace mindquantum;
+    auto qs = dm_base::InitState(8, 1);
+    // dm_base::ApplyX(qs, {1}, {}, 8);
+    // dm_base::ApplyX(qs, {2}, {}, 8);
+    dm_base::ApplyRX(qs, {0}, {1, 2}, 3, 8);
+    // dm_base::DisplayQS(qs,3,8);
+    PauliWord pw{0, 'Z'};
+    VT<PauliWord> v{pw};
+    PauliTerm<double> ham{v, 1};
+    auto ham_matrix = dm_base::HamiltonianMatrix({ham}, 8);
+    // dm_base::DisplayQS(ham_matrix,3,8);
+    auto res = dm_base::ExpectDiffRX(qs, ham_matrix, {0}, {}, 3, 8);
+    return 2* std::real(res);
 }
 
 int main() {

@@ -98,8 +98,8 @@ auto CPUDensityMatrixPolicyBase::Copy(qs_data_p_t qs, index_t dim) -> qs_data_p_
     return out;
 }
 
-auto CPUDensityMatrixPolicyBase::GetQS(qs_data_p_t qs, index_t dim) -> py_qs_datas_t {
-    py_qs_datas_t out(dim, std::vector<py_qs_data_t>(dim));
+auto CPUDensityMatrixPolicyBase::GetQS(qs_data_p_t qs, index_t dim) -> matrix_t {
+    matrix_t out(dim, py_qs_datas_t(dim));
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
             for (index_t j = 0; j < i; j++) {
