@@ -28,7 +28,7 @@
 
     .. py:method:: lamda()
 
-        获取 U3 门的参数 theta。
+        获取 U3 门的参数 lamda。
 
         返回：
             ParameterResolver，参数 lamda。

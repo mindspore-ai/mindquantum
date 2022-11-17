@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 
-# pylint: disable=abstract-method,import-outside-toplevel
+# pylint: disable=abstract-method,import-outside-toplevel,too-many-lines
 """Basic module for quantum gate."""
 
 import copy
@@ -723,8 +723,9 @@ class BarrierGate(FunctionalGate):
 
     def on(self, obj_qubits, ctrl_qubits=None):
         """
-        Define which qubits the gate act on. The control qubits should always be none,
-        since this gate can never be controlled by other qubits.
+        Define which qubits the gate act on.
+
+        The control qubits should always be none, since this gate can never be controlled by other qubits.
 
         Args:
             obj_qubits (int, list[int]): Specific which qubits the gate act on, can be
@@ -734,14 +735,25 @@ class BarrierGate(FunctionalGate):
         Returns:
             Gate, Return a new gate.
         """
+        from mindquantum.core.circuit import Circuit
+
         new = super().on(obj_qubits, ctrl_qubits)
-        obj_max = max(new.obj_qubits)
-        obj_min = min(new.obj_qubits)
-        if (obj_max - obj_min) != len(new.obj_qubits) - 1:
-            raise ValueError("BarrierGate only works in continues qubits.")
         if new.ctrl_qubits:
             raise ValueError("BarrierGate cannot have ctrl_qubits.")
-        return new
+        all_qubits = sorted(new.obj_qubits)
+        qubits = []
+        for i in all_qubits:
+            if not qubits:
+                qubits.append([i])
+            else:
+                if i - qubits[-1][-1] == 1:
+                    qubits[-1].append(i)
+                else:
+                    qubits.append([i])
+        if len(qubits) == 1:
+            new.show = self.show
+            return new
+        return Circuit([BarrierGate(self.show).on(i) for i in qubits])
 
 
 class GlobalPhase(RotSelfHermMat):
@@ -922,8 +934,10 @@ def wrapper_numba(compiled_fun):
     """Wrap a compiled function with numba."""
     try:
         import numba as nb
-    except ImportError:
-        raise ImportError("To use customized parameterized gate, please install numba with 'pip install numba'.")
+    except ImportError as exc:
+        raise ImportError(
+            "To use customized parameterized gate, please install numba with 'pip install \"numba>=0.53.1\"'."
+        ) from exc
 
     @nb.cfunc(nb.types.void(nb.types.double, nb.types.CPointer(nb.types.complex128)))
     def fun(theta, out_):
@@ -932,14 +946,15 @@ def wrapper_numba(compiled_fun):
             out_,
             (2, 2),
         )
-        m = compiled_fun(theta)
+        matrix = compiled_fun(theta)
         for i in range(2):
             for j in range(2):
-                out[i][j] = m[i][j]
+                out[i][j] = matrix[i][j]
 
     return fun.address
 
 
+# pylint: disable=too-many-locals,too-many-statements
 def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
     """
     Generate a customer parameterized gate based on the single parameter defined unitary matrix.
@@ -975,8 +990,10 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
     """
     try:
         import numba as nb
-    except ImportError:
-        raise ImportError("To use customized parameterized gate, please install numba with 'pip install numba'.")
+    except ImportError as exc:
+        raise ImportError(
+            "To use customized parameterized gate, please install numba with 'pip install numba'."
+        ) from exc
     matrix_sig = signature(matrix_generator)
     diff_matrix_sig = signature(diff_matrix_generator)
     if len(matrix_sig.parameters) != 1:
@@ -1029,22 +1046,22 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
 
         def __deepcopy__(self, memo):
             """Deep copy this gate."""
-            g = _ParamNonHerm(self.coeff)
-            g.obj_qubits = self.obj_qubits
-            g.ctrl_qubits = self.ctrl_qubits
-            g.hermitianed = self.hermitianed
-            return g
+            copied_gate = _ParamNonHerm(self.coeff)
+            copied_gate.obj_qubits = self.obj_qubits
+            copied_gate.ctrl_qubits = self.ctrl_qubits
+            copied_gate.hermitianed = self.hermitianed
+            return copied_gate
 
         def hermitian(self):
             """Get hermitian conjugate gate."""
-            g = _ParamNonHerm(self.coeff)
-            g.obj_qubits = self.obj_qubits
-            g.ctrl_qubits = self.ctrl_qubits
-            g.hermitianed = not self.hermitianed
-            if g.hermitianed:
-                g.matrix_generator = herm_matrix_generator
-                g.diff_matrix_generator = herm_diff_matrix_generator
-            return g
+            hermitian_gate = _ParamNonHerm(self.coeff)
+            hermitian_gate.obj_qubits = self.obj_qubits
+            hermitian_gate.ctrl_qubits = self.ctrl_qubits
+            hermitian_gate.hermitianed = not self.hermitianed
+            if hermitian_gate.hermitianed:
+                hermitian_gate.matrix_generator = herm_matrix_generator
+                hermitian_gate.diff_matrix_generator = herm_diff_matrix_generator
+            return hermitian_gate
 
         def get_cpp_obj(self):
             cpp_gate = mb.basic_gate(self.name, 1, matrix_addr, diff_matrix_addr, 1 << n_qubits)
@@ -1230,6 +1247,7 @@ class U3(MultiParamsGate):
         out.ctrl_qubits = self.ctrl_qubits
         return out
 
+    # pylint: disable=arguments-differ
     def matrix(self, pr: ParameterResolver = None) -> np.ndarray:
         """
         Get the matrix of U3 gate.
@@ -1351,6 +1369,7 @@ class FSim(MultiParamsGate):
         out.ctrl_qubits = self.ctrl_qubits
         return out
 
+    # pylint: disable=arguments-differ
     def matrix(self, pr: ParameterResolver = None) -> np.ndarray:
         """
         Get the matrix of FSim.
@@ -1371,10 +1390,10 @@ class FSim(MultiParamsGate):
                 raise ValueError("Phi not set completed.")
         theta = theta.const
         phi = phi.const
-        a = np.cos(theta)
-        b = -1j * np.sin(theta)
-        c = np.exp(1j * phi)
-        return np.array([[1, 0, 0, 0], [0, a, b, 0], [0, b, a, 0], [0, 0, 0, c]])
+        ele_a = np.cos(theta)
+        ele_b = -1j * np.sin(theta)
+        ele_c = np.exp(1j * phi)
+        return np.array([[1, 0, 0, 0], [0, ele_a, ele_b, 0], [0, ele_b, ele_a, 0], [0, 0, 0, ele_c]])
 
     def get_cpp_obj(self):
         """Get cpp object."""
