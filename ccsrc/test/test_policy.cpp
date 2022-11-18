@@ -26,7 +26,7 @@ auto test_Time() {
     auto qs = dm_base::InitState(4);
     auto start = clock();
     for (int i = 0; i < 1000000; i++) {
-        dm_base::ApplyBitFlip(qs, {0}, 0.1, 4);
+        
     }
     auto end = clock();
     auto time = end - start;

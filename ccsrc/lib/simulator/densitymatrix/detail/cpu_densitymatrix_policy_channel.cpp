@@ -94,33 +94,19 @@ void CPUDensityMatrixPolicyBase::ApplyPhaseDamping(qs_data_p_t qs, const qbits_t
 }
 
 void CPUDensityMatrixPolicyBase::ApplyPauli(qs_data_p_t qs, const qbits_t& objs, VT<calc_type>& probs, index_t dim) {
-    VT<matrix_t> kraus_set{{{probs[3], 0}, {0, probs[3]}},
-                           {{0, probs[0]}, {probs[0], 0}},
-                           {{0, probs[1] * IMAGE_MI}, {probs[1] * IMAGE_I, 0}},
-                           {{probs[2], 0}, {0, -probs[2]}}};
-    ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
-}
-
-void CPUDensityMatrixPolicyBase::ApplyDepolarizing(qs_data_p_t qs, const qbits_t& objs, calc_type p, index_t dim) {
-    VT<matrix_t> kraus_set{{{1 - (3 * p), 0}, {0, 1 - (3 * p)}},
-                           {{0, p}, {p, 0}},
-                           {{0, p * IMAGE_MI}, {p * IMAGE_I, 0}},
-                           {{p, 0}, {0, -p}}};
-    ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
-}
-
-void CPUDensityMatrixPolicyBase::ApplyBitFlip(qs_data_p_t qs, const qbits_t& objs, calc_type p, index_t dim) {
-    VT<matrix_t> kraus_set{{{1 - p, 0}, {0, 1 - p}}, {{0, p}, {p, 0}}};
-    ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
-}
-
-void CPUDensityMatrixPolicyBase::ApplyPhaseFlip(qs_data_p_t qs, const qbits_t& objs, calc_type p, index_t dim) {
-    VT<matrix_t> kraus_set{{{1 - p, 0}, {0, 1 - p}}, {{p, 0}, {0, -p}}};
-    ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
-}
-
-void CPUDensityMatrixPolicyBase::ApplyBitPhaseFlip(qs_data_p_t qs, const qbits_t& objs, calc_type p, index_t dim) {
-    VT<matrix_t> kraus_set{{{1 - p, 0}, {0, 1 - p}}, {{0, p * IMAGE_MI}, {p * IMAGE_I, 0}}};
+    VT<matrix_t> kraus_set;
+    if (probs[0] != 0) {
+        kraus_set.push_back({{0, probs[0]}, {probs[0], 0}});
+    }
+    if (probs[1] != 0) {
+        kraus_set.push_back({{0, probs[1] * IMAGE_MI}, {probs[1] * IMAGE_I, 0}});
+    }
+    if (probs[2] != 0) {
+        kraus_set.push_back({{probs[2], 0}, {0, -probs[2]}});
+    }
+    if (probs[3] != 0) {
+        kraus_set.push_back({{probs[3], 0}, {0, probs[3]}});
+    }
     ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
 }
 

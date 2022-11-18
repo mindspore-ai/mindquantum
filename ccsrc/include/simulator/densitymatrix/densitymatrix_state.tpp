@@ -219,14 +219,6 @@ auto DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicG
         qs_policy_t::ApplyPhaseDamping(qs, gate->obj_qubits_, gate->damping_coeff_, dim);
     } else if (gate->name_ == "PL") {
         qs_policy_t::ApplyPauli(qs, gate->obj_qubits_, gate->probs_, dim);
-    } else if (gate->name_ == "Dep") {
-        qs_policy_t::ApplyDepolarizing(qs, gate->obj_qubits_, gate->probs_[0], dim);
-    } else if (gate->name_ == "BF") {
-        qs_policy_t::ApplyBitFlip(qs, gate->obj_qubits_, gate->probs_[0], dim);
-    } else if (gate->name_ == "PF") {
-        qs_policy_t::ApplyPhaseFlip(qs, gate->obj_qubits_, gate->probs_[2], dim);
-    } else if (gate->name_ == "BPF") {
-        qs_policy_t::ApplyBitPhaseFlip(qs, gate->obj_qubits_, gate->probs_[1], dim);
     } else if (gate->kraus_operator_set_.size() != 0) {
         qs_policy_t::ApplyKraus(qs, gate->obj_qubits_, gate->kraus_operator_set_, dim);
     } else if (gate->name_ == "hADC") {
@@ -349,7 +341,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationNonReversibleWithGrad(const
         }
         sim_ham.ApplyGate(herm_circ[i], pr);
     }
-    
+
     // timer.End("Second part");
     // timer.Analyze();
     qs_policy_t::FreeState(ham_matrix);
@@ -358,7 +350,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationNonReversibleWithGrad(const
 
 template <typename qs_policy_t_>
 VT<unsigned> DensityMatrixState<qs_policy_t_>::Sampling(const circuit_t& circ, const ParameterResolver<calc_type>& pr,
-                                                 size_t shots, const MST<size_t>& key_map, unsigned int seed) {
+                                                        size_t shots, const MST<size_t>& key_map, unsigned int seed) {
     auto key_size = key_map.size();
     VT<unsigned> res(shots * key_size);
     RndEngine rnd_eng = RndEngine(seed);
