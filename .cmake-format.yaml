@@ -39,19 +39,22 @@ parse:
         nargs: 2+
         flags:
           - FLAGCHECK
+      kwargs:
+        LINKER_FLAGS: 1
     test_compile_option:
       pargs:
         nargs: 1+
         flags:
           - FLAGCHECK
           - NO_MQ_TARGET
-          - NO_TRYCOMPILE_TARGET
           - NO_TRYCOMPILE_FLAGCHECK_TARGET
+          - NO_TRYCOMPILE_TARGET
       kwargs:
-        LANGS: +
-        FLAGS: +
         CMAKE_OPTION: 1
+        FLAGS: +
         GENEX: 1
+        LANGS: +
+        LINKER_FLAGS: 1
     check_link_flags:
       pargs:
         nargs: 2+

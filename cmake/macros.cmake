@@ -371,7 +371,7 @@ endfunction()
 # FLAGCHECK is passed as an argument)
 # ~~~
 function(check_compiler_flags lang out_var)
-  cmake_parse_arguments(PARSE_ARGV 2 CCF "FLAGCHECK" "" "")
+  cmake_parse_arguments(PARSE_ARGV 2 CCF "FLAGCHECK" "LINKER_FLAGS" "")
 
   # cmake-lint: disable=C0103,E1120
   set(_${lang}_opts)
@@ -400,6 +400,9 @@ function(check_compiler_flags lang out_var)
 
       if(NOT CCF_FLAGCHECK)
         set(CMAKE_REQUIRED_FLAGS ${_required_flags})
+        if(CCF_LINKER_FLAGS)
+          set(CMAKE_REQUIRED_LINK_OPTIONS "${CCF_LINKER_FLAGS}")
+        endif()
         cmake_check_compiler_flag(${lang} ${_flag} ${lang}_compiler_has_${_flag_name})
       else()
         set(_var ${lang}_compiler_has_${_flag_name})
@@ -458,6 +461,7 @@ endfunction()
 #                     FLAGS <flags1> [<flags2>...]
 #                     [FLAGCHECK, NO_MQ_TARGET, NO_TRYCOMPILE_TARGET, NO_TRYCOMPILE_FLAGCHECK_TARGET]
 #                     [GENEX <genex>]
+#                     [LINKER_FLAGS <flag>]
 #                     [CMAKE_OPTION <option>])
 #
 # Check that a compiler option can be applied to each of the specified languages <langN>. For each set of compiler
@@ -480,7 +484,7 @@ endfunction()
 function(test_compile_option name)
   # cmake-lint: disable=R0912,R0915,C0103
   cmake_parse_arguments(PARSE_ARGV 1 TCO "FLAGCHECK;NO_MQ_TARGET;NO_TRYCOMPILE_TARGET;NO_TRYCOMPILE_FLAGCHECK_TARGET"
-                        "CMAKE_OPTION;GENEX" "LANGS;FLAGS")
+                        "CMAKE_OPTION;GENEX;LINKER_FLAGS" "LANGS;FLAGS")
 
   if(NOT TCO_LANGS)
     message(FATAL_ERROR "Missing LANGS argument")
@@ -504,6 +508,10 @@ function(test_compile_option name)
   set(_ccf_args)
   if(TCO_FLAGCHECK)
     list(APPEND _ccf_args FLAGCHECK)
+  endif()
+
+  if(TCO_LINKER_FLAGS)
+    list(APPEND _ccf_args LINKER_FLAGS "${TCO_LINKER_FLAGS}")
   endif()
 
   # ------------------------------------
