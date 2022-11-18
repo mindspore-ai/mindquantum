@@ -198,19 +198,19 @@ Detailed descriptions
     ``/path/to/build/.mqlibs``) _except_ the ones that are currently needed based on the hashes of the third-party
     libraries.
 
-``ENABLE_SANITIZERS``
-    This enables a new CMake build types (on top of the usual ``Release, Debug, RelWithDebInfo, MinSizeRel``):
-      - ``Sanitize``
-
-    You can control which sanitizer is enabled by using the ``ENABLE_SANITIZER_ADDRESS`` and
-    ``ENABLE_SANITIZER_UNDEFINED`` CMake options. See also ``SANITIZER_USE_O1`` and ``SANITIZER_USE_Og``.
-
 ``DISABLE_FORTRAN_COMPILER``
     This currently only has an effect when installing Eigen3.
 
 ``ENABLE_ITERATOR_DEBUG``
     If this is turned on, the ``_ITERATOR_DEBUG`` preprocessor macro will be defined to the value of
     ``MQ_ITERATOR_DEBUG`` (see more documentation below).
+
+``ENABLE_SANITIZERS``
+    This enables a new CMake build types (on top of the usual ``Release, Debug, RelWithDebInfo, MinSizeRel``):
+      - ``Sanitize``
+
+    You can control which sanitizer is enabled by using the ``ENABLE_SANITIZER_ADDRESS`` and
+    ``ENABLE_SANITIZER_UNDEFINED`` CMake options. See also ``SANITIZER_USE_O1`` and ``SANITIZER_USE_Og``.
 
 CMake variables
 ---------------
