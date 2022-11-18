@@ -16,6 +16,8 @@
 #
 # ==============================================================================
 
+# cmake-lint: disable=C0103
+
 # lint_cmake: -whitespace/indent
 
 set(VER 1.10.0)
@@ -43,6 +45,11 @@ set(CMAKE_OPTION
     -DSPDLOG_INSTALL=ON
     -DSPDLOG_TIDY=OFF
     -Dfmt_DIR=${fmt_DIR})
+
+if(MSVC)
+  set(spdlog_CFLAGS "/D_ITERATOR_DEBUG_LEVEL=0")
+  set(spdlog_CXXFLAGS "/D_ITERATOR_DEBUG_LEVEL=0 /Zc:__cplusplus")
+endif()
 
 if(_fmt_use_header_only)
   list(APPEND CMAKE_OPTION -DSPDLOG_FMT_EXTERNAL_HO=ON)
