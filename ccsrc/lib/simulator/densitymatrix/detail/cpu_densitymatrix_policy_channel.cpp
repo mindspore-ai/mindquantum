@@ -46,19 +46,19 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitChannel(qs_data_p_t src, qs_dat
             for (index_t b = 0; b <= a; b++) {  // loop on the column
                 auto p = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
                 auto q = p + mask.obj_mask;
-                qs_data_t src_ip{src[IdxMap(i, p)]};
-                qs_data_t src_jq{src[IdxMap(j, q)]};
-                qs_data_t src_jp{src[IdxMap(j, p)]};
+                qs_data_t src_ip = src[IdxMap(i, p)];
+                qs_data_t src_jq = src[IdxMap(j, q)];
+                qs_data_t src_jp = src[IdxMap(j, p)];
                 qs_data_t src_iq;
                 if (i > q) {  // for matrix[row, col], only in this case (row < col) is possible
                     src_iq = src[IdxMap(i, q)];
                 } else {
                     src_iq = std::conj(src[IdxMap(q, i)]);
                 }
-                qs_data_t des_ip{0};
-                qs_data_t des_jq{0};
-                qs_data_t des_iq{0};
-                qs_data_t des_jp{0};
+                qs_data_t des_ip = 0;
+                qs_data_t des_jq = 0;
+                qs_data_t des_iq = 0;
+                qs_data_t des_jp = 0;
                 for (const auto& m : kraus_set) {
                     des_ip += m[0][0] * std::conj(m[0][0]) * src_ip + m[0][0] * std::conj(m[0][1]) * src_iq
                               + m[0][1] * std::conj(m[0][0]) * src_jp + m[0][1] * std::conj(m[0][1]) * src_jq;

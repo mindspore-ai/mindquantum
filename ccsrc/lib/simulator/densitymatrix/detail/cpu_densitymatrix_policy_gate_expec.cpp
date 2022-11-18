@@ -54,7 +54,7 @@ auto CPUDensityMatrixPolicyBase::HamiltonianMatrix(const std::vector<PauliTerm<c
 }
 
 auto CPUDensityMatrixPolicyBase::GetExpectation(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim) -> qs_data_t {
-    qs_data_t expectation_value{0};
+    qs_data_t expectation_value = 0;
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
         auto mask_f = mask.mask_x | mask.mask_y;
@@ -80,7 +80,7 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_
                                                              const qbits_t& objs, const qbits_t& ctrls,
                                                              const matrix_t& m, index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
-    qs_data_t res;
+    qs_data_t res = 0;
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res) schedule(static)), dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {

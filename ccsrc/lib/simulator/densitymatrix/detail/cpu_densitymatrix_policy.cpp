@@ -126,7 +126,7 @@ void CPUDensityMatrixPolicyBase::SetQS(qs_data_p_t qs, const qs_data_p_t qs_out,
 }
 
 auto CPUDensityMatrixPolicyBase::Purity(qs_data_p_t qs, index_t dim) -> calc_type {
-    calc_type p{0};
+    calc_type p = 0;
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+: p)), dim, DimTh,
                      for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { p += 2 * std::norm(qs[i]); })
@@ -137,7 +137,7 @@ auto CPUDensityMatrixPolicyBase::Purity(qs_data_p_t qs, index_t dim) -> calc_typ
 }
 
 bool CPUDensityMatrixPolicyBase::IsPure(qs_data_p_t qs, index_t dim) {
-    auto p{Purity(qs, dim)};
+    auto p = Purity(qs, dim);
     if (std::abs(p - 1) < 1e-8) {
         return true;
     } else {

@@ -49,9 +49,9 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data
                 for (index_t b = 0; b <= a; b++) { // loop on the column
                     auto p = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
                     auto q = p + mask.obj_mask;
-                    qs_data_t src_ip{src[IdxMap(i, p)]};
-                    qs_data_t src_jq{src[IdxMap(j, q)]};
-                    qs_data_t src_jp{src[IdxMap(j, p)]};
+                    qs_data_t src_ip = src[IdxMap(i, p)];
+                    qs_data_t src_jq = src[IdxMap(j, q)];
+                    qs_data_t src_jp = src[IdxMap(j, p)];
                     qs_data_t src_iq;
                     if (i > q) {  // for matrix[row, col], only in this case (row < col) is possible
                         src_iq = src[IdxMap(i, q)];
@@ -89,9 +89,9 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data
                         continue;
                     }
                     auto q = p + mask.obj_mask;
-                    qs_data_t src_ip{src[IdxMap(i, p)]};
-                    qs_data_t src_jq{src[IdxMap(j, q)]};
-                    qs_data_t src_jp{src[IdxMap(j, p)]};
+                    qs_data_t src_ip = src[IdxMap(i, p)];
+                    qs_data_t src_jq = src[IdxMap(j, q)];
+                    qs_data_t src_jp = src[IdxMap(j, p)];
                     qs_data_t src_iq;
                     if (i > q) {  // for qs[row, col], only in this case that (row < col) is possible
                         src_iq = src[IdxMap(i, q)];
