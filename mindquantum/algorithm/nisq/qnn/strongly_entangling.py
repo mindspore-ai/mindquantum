@@ -14,21 +14,22 @@
 # ============================================================================
 """Strongly entangling ansatz."""
 
-from mindquantum.core.circuit import add_prefix
+from mindquantum.core.circuit import Circuit, add_prefix
 from mindquantum.core.gates import BasicGate
-from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates.basicgate import U3
 from mindquantum.utils.type_value_check import (
     _check_int_type,
     _check_value_should_not_less,
 )
+
 from .._ansatz import Ansatz
 
 
-class StronglyEntangling(Ansatz):
+class StronglyEntangling(Ansatz):  # pylint: disable=too-few-public-methods
     """
-    Strongly entangling ansatz, please refers `Circuit-centric quantum
-    classifiers <https://arxiv.org/pdf/1804.00633.pdf>`_.
+    Strongly entangling ansatz.
+
+    Please refers `Circuit-centric quantum classifiers <https://arxiv.org/pdf/1804.00633.pdf>`_.
 
     Args:
         n_qubits (int): number of qubit that this ansatz act on.
@@ -43,6 +44,7 @@ class StronglyEntangling(Ansatz):
         >>> ansatz = StronglyEntangling(3, 2, X)
         >>> ansatz.circuit
     """
+
     def __init__(self, n_qubits: int, depth: int, entangle_gate: BasicGate):
         """Initialize a strongly entangling ansatz."""
         _check_int_type('n_qubits', n_qubits)
@@ -57,19 +59,20 @@ class StronglyEntangling(Ansatz):
         elif m_dim == 4:
             self.gate_qubits = 2
         else:
-            raise ValueError("error gate, entangle_gate can only be one qubit or two "
-                             f"qubits, but get dimension with {m_dim}")
+            raise ValueError(
+                f"error gate, entangle_gate can only be one qubit or two qubits, but get dimension with {m_dim}"
+            )
         super().__init__('Strongly Entangling', n_qubits, depth, entangle_gate)
 
-    def _implement(self, depth, entangle_gate):
+    def _implement(self, depth, entangle_gate):  # pylint: disable=arguments-differ
         """Implement of strongly entangling ansatz."""
         rot_part_ansatz = Circuit([U3(f'a{i}', f'b{i}', f'c{i}').on(i) for i in range(self.n_qubits)])
         circ = Circuit()
-        for l in range(depth):
-            circ += add_prefix(rot_part_ansatz, f'l{l}')
+        for current_depth in range(depth):
+            circ += add_prefix(rot_part_ansatz, f'l{current_depth}')
             for idx in range(self.n_qubits):
                 if self.gate_qubits == 1:
-                    circ += entangle_gate.on((idx + l + 1) % self.n_qubits, idx)
+                    circ += entangle_gate.on((idx + current_depth + 1) % self.n_qubits, idx)
                 else:
-                    circ += entangle_gate.on([(idx + l + 1) % self.n_qubits, idx])
+                    circ += entangle_gate.on([(idx + current_depth + 1) % self.n_qubits, idx])
         self._circuit = circ

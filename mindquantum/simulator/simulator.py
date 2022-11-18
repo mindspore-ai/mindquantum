@@ -251,7 +251,9 @@ class Simulator:
 
     def sampling(self, circuit, pr=None, shots=1, seed=None):
         """
-        Sampling the measure qubit in circuit. Sampling do not change the origin quantum state of this simulator.
+        Sample the measure qubit in circuit.
+
+        Sampling does not change the origin quantum state of this simulator.
 
         Args:
             circuit (Circuit): The circuit that you want to evolution and do sampling.

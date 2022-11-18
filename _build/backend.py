@@ -25,7 +25,7 @@ import subprocess
 from pathlib import Path
 
 import setuptools.build_meta
-from utils import fdopen, get_cmake_command  # pylint: disable=import-error
+from utils import fdopen, get_cmake_command
 from wheel_filename import parse_wheel_filename
 
 # ==============================================================================
@@ -239,7 +239,7 @@ def build_sdist(sdist_directory, config_settings=None):
 # ==============================================================================
 
 
-def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
+def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):  # pylint: disable=too-many-branches
     """Build a wheel from this project."""
     if platform.system() == 'Linux':
         logging.info('Running on Linux %s', platform.uname().release)
@@ -249,8 +249,8 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
             macos_ver = '10.15'
             os.environ.setdefault('MACOSX_DEPLOYMENT_TARGET', macos_ver)
             os.environ.setdefault('_PYTHON_HOST_PLATFORM', f'macosx-{macos_ver}-{platform.machine()}')
-        logging.info(f'MACOSX_DEPLOYMENT_TARGET = {os.environ.get("MACOSX_DEPLOYMENT_TARGET")}')
-        logging.info(f'_PYTHON_HOST_PLATFORM = {os.environ.get("_PYTHON_HOST_PLATFORM")}')
+        logging.info('MACOSX_DEPLOYMENT_TARGET = %s', os.environ.get("MACOSX_DEPLOYMENT_TARGET"))
+        logging.info('_PYTHON_HOST_PLATFORM = %s', os.environ.get("_PYTHON_HOST_PLATFORM"))
 
     temp_wheel_directory = Path(wheel_directory, 'temp')
     temp_wheel_directory.mkdir(parents=True, exist_ok=True)

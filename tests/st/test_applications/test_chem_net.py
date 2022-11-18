@@ -13,8 +13,8 @@
 #   limitations under the License.
 
 """Test VQE."""
-from pathlib import Path
 import os
+from pathlib import Path
 
 import pytest
 
