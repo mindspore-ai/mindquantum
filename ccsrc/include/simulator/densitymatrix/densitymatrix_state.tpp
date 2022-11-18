@@ -289,11 +289,11 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationReversibleWithGrad(const Ha
     // auto timer = Timer();
     // timer.Start("First part");
     py_qs_datas_t f_and_g(1 + p_map.size(), 0);
-    DensityMatrixState<qs_policy_t> sim_qs = *this;
+    derived_t sim_qs = *this;
     sim_qs.ApplyCircuit(circ, pr);
     f_and_g[0] = qs_policy_t::GetExpectation(sim_qs.qs, ham.ham_, dim);
     auto ham_matrix = qs_policy_t::HamiltonianMatrix(ham.ham_, dim);
-    DensityMatrixState<qs_policy_t> sim_ham{ham_matrix, n_qubits, seed};
+    derived_t sim_ham{ham_matrix, n_qubits, seed};
     // timer.EndAndStartOther("First part", "Second part");
     for (const auto& g : herm_circ) {
         if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
@@ -322,12 +322,12 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationNonReversibleWithGrad(const
     // auto timer = Timer();
     // timer.Start("First part");
     py_qs_datas_t f_and_g(1 + p_map.size(), 0);
-    DensityMatrixState<qs_policy_t> sim_qs = *this;
+    derived_t sim_qs = *this;
     sim_qs.ApplyCircuit(circ, pr);
     f_and_g[0] = qs_policy_t::GetExpectation(sim_qs.qs, ham.ham_, dim);
     sim_qs.SetQS(this->qs);
     auto ham_matrix = qs_policy_t::HamiltonianMatrix(ham.ham_, dim);
-    DensityMatrixState<qs_policy_t> sim_ham{ham_matrix, n_qubits, seed};
+    derived_t sim_ham{ham_matrix, n_qubits, seed};
     // timer.EndAndStartOther("First part", "Second part");
     if (circ.size() != herm_circ.size()) {
         std::runtime_error("In density matrix mode, circ and herm_circ must be the same size.");
@@ -354,6 +354,28 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationNonReversibleWithGrad(const
     // timer.Analyze();
     qs_policy_t::FreeState(ham_matrix);
     return f_and_g;
+}
+
+template <typename qs_policy_t_>
+VT<unsigned> DensityMatrixState<qs_policy_t_>::Sampling(const circuit_t& circ, const ParameterResolver<calc_type>& pr,
+                                                 size_t shots, const MST<size_t>& key_map, unsigned int seed) {
+    auto key_size = key_map.size();
+    VT<unsigned> res(shots * key_size);
+    RndEngine rnd_eng = RndEngine(seed);
+    std::uniform_real_distribution<double> dist(1.0, (1 << 20) * 1.0);
+    std::function<double()> rng = std::bind(dist, std::ref(rnd_eng));
+    for (size_t i = 0; i < shots; i++) {
+        auto sim = derived_t(n_qubits, static_cast<unsigned>(rng()), qs);
+        auto res0 = sim.ApplyCircuit(circ, pr);
+        VT<unsigned> res1(key_map.size());
+        for (const auto& [name, val] : key_map) {
+            res1[val] = res0[name];
+        }
+        for (size_t j = 0; j < key_size; j++) {
+            res[i * key_size + j] = res1[j];
+        }
+    }
+    return res;
 }
 
 }  // namespace mindquantum::sim::densitymatrix::detail

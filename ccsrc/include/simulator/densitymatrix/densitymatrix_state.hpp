@@ -118,6 +118,9 @@ class DensityMatrixState {
                                                       const circuit_t& herm_circ,
                                                       const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map);
 
+    VT<unsigned> Sampling(const circuit_t& circ, const ParameterResolver<calc_type>& pr, size_t shots,
+                          const MST<size_t>& key_map, unsigned int seed);
+
  private:
     qs_data_p_t qs = nullptr;
     qbit_t n_qubits = 0;
