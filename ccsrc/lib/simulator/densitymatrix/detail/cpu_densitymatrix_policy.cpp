@@ -68,7 +68,7 @@ void CPUDensityMatrixPolicyBase::FreeState(qs_data_p_t qs) {
 }
 
 // need to fix
-void CPUDensityMatrixPolicyBase::Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit) {
+void CPUDensityMatrixPolicyBase::Display(py_qs_datas_t& qs, qbit_t n_qubits, qbit_t q_limit) {
     if (n_qubits > q_limit) {
         n_qubits = q_limit;
     }
@@ -112,42 +112,48 @@ auto CPUDensityMatrixPolicyBase::GetQS(qs_data_p_t qs, index_t dim) -> matrix_t 
     return out;
 }
 
-bool CPUDensityMatrixPolicyBase::IsPure(qs_data_p_t qs, index_t dim) {
-    index_t n_elements = (dim * dim + dim) / 2;
-    auto qs_square = reinterpret_cast<qs_data_p_t>(calloc(n_elements, sizeof(qs_data_t)));
-    index_t row = 0;
-    index_t col = 0;
-    for (index_t element = 0; element < n_elements; element++) {
-        for (index_t i = 0; i < col; i++) {
-            qs_square[element] += qs[IdxMap(row, i)] * std::conj(qs[IdxMap(col, i)]);
-        }
-        for (index_t i = col; i < row; i++) {
-            qs_square[element] += qs[IdxMap(row, i)] * qs[IdxMap(i, col)];
-        }
-        for (index_t i = row; i < dim; i++) {
-            qs_square[element] += std::conj(qs[IdxMap(i, row)]) * qs[IdxMap(i, col)];
-        }
-        if (abs(qs_square[element] - qs[element]) > 10e-8) {
-            return false;
-        }
-        if (col == row) {
-            row += 1;
-            col = 0;
-        } else {
-            col += 1;
-        }
+void CPUDensityMatrixPolicyBase::SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, index_t dim) {
+    if (qs_out.size() != dim) {
+        throw std::invalid_argument("state size not match");
     }
-    return true;
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { qs[i] = qs_out[i]; })
 }
 
-auto CPUDensityMatrixPolicyBase::PureStateVector(qs_data_p_t qs, index_t dim) -> qs_data_p_t {
+void CPUDensityMatrixPolicyBase::SetQS(qs_data_p_t qs, const qs_data_p_t qs_out, index_t dim) {
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { qs[i] = qs_out[i]; })
+}
+
+auto CPUDensityMatrixPolicyBase::Purity(qs_data_p_t qs, index_t dim) -> calc_type {
+    calc_type p{0};
+    THRESHOLD_OMP(
+        MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+: p)), dim, DimTh,
+                     for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { p += 2 * std::norm(qs[i]); })
+    THRESHOLD_OMP(
+        MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+: p)), dim, DimTh,
+                     for (omp::idx_t i = 0; i < dim; i++) { p += -std::norm(qs[IdxMap(i, i)]); })
+    return p;
+}
+
+bool CPUDensityMatrixPolicyBase::IsPure(qs_data_p_t qs, index_t dim) {
+    auto p{Purity(qs, dim)};
+    if (std::abs(p - 1) < 1e-8) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+auto CPUDensityMatrixPolicyBase::PureStateVector(qs_data_p_t qs, index_t dim) -> py_qs_datas_t {
     if (!IsPure(qs, dim)) {
         throw(std::runtime_error("PureStateVector(): Cannot transform mixd density matrix to vector."));
     }
-    auto qs_vector = reinterpret_cast<qs_data_p_t>(calloc(dim, sizeof(qs_data_t)));
-    for (index_t i = 0; i < dim; i++) {
+    py_qs_datas_t qs_vector(dim);
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++){
         qs_vector[i] = sqrt(qs[IdxMap(i, i)]);
-    }
+    })
     return qs_vector;
 }
 // auto CPUDensityMatrixPolicyBase::MatrixMul(qs_data_p_t qs, )

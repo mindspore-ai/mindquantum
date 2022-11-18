@@ -142,6 +142,11 @@ void DensityMatrixState<qs_policy_t_>::SetQS(const py_qs_datas_t& qs_out) {
 }
 
 template <typename qs_policy_t_>
+void DensityMatrixState<qs_policy_t_>::SetQS(const qs_data_p_t& qs_out) {
+    qs_policy_t::SetQS(qs, qs_out, dim);
+}
+
+template <typename qs_policy_t_>
 index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate<calc_type>>& gate,
                                                     const ParameterResolver<calc_type>& pr, bool diff) {
     auto name = gate->name_;
@@ -195,6 +200,10 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
             val = gate->params_.Combination(pr).const_value;
         }
         qs_policy_t::ApplyRZ(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+    } else if (gate->is_measure_) {
+        return ApplyMeasure(gate);
+    } else if (gate->is_channel_) {
+        ApplyChannel(gate);
     } else {
         throw std::invalid_argument("gate " + name + " not implement.");
     }
@@ -219,7 +228,9 @@ auto DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicG
     } else if (gate->name_ == "BPF") {
         qs_policy_t::ApplyBitPhaseFlip(qs, gate->obj_qubits_, gate->probs_[1], dim);
     } else if (gate->kraus_operator_set_.size() != 0) {
-        qs_policy_t::ApplyKrausChannel(qs, gate->obj_qubits_, gate->kraus_operator_set_, dim);
+        qs_policy_t::ApplyKraus(qs, gate->obj_qubits_, gate->kraus_operator_set_, dim);
+    } else if (gate->name_ == "hADC") {
+        qs_policy_t::ApplyHermitianAmplitudeDamping(qs, gate->obj_qubits_, gate->damping_coeff_, dim);
     } else {
         throw std::runtime_error("This noise channel not implemented.");
     }
@@ -280,9 +291,9 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationReversibleWithGrad(const Ha
     py_qs_datas_t f_and_g(1 + p_map.size(), 0);
     DensityMatrixState<qs_policy_t> sim_qs = *this;
     sim_qs.ApplyCircuit(circ, pr);
+    f_and_g[0] = qs_policy_t::GetExpectation(sim_qs.qs, ham.ham_, dim);
     auto ham_matrix = qs_policy_t::HamiltonianMatrix(ham.ham_, dim);
     DensityMatrixState<qs_policy_t> sim_ham{ham_matrix, n_qubits, seed};
-    f_and_g[0] = qs_policy_t::GetExpectation(sim_qs.qs, ham.ham_, dim);
     // timer.EndAndStartOther("First part", "Second part");
     for (const auto& g : herm_circ) {
         if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
@@ -298,6 +309,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationReversibleWithGrad(const Ha
     }
     // timer.End("Second part");
     // timer.Analyze();
+    qs_policy_t::FreeState(ham_matrix);
     return f_and_g;
 }
 
@@ -312,24 +324,35 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationNonReversibleWithGrad(const
     py_qs_datas_t f_and_g(1 + p_map.size(), 0);
     DensityMatrixState<qs_policy_t> sim_qs = *this;
     sim_qs.ApplyCircuit(circ, pr);
+    f_and_g[0] = qs_policy_t::GetExpectation(sim_qs.qs, ham.ham_, dim);
+    sim_qs.SetQS(this->qs);
     auto ham_matrix = qs_policy_t::HamiltonianMatrix(ham.ham_, dim);
     DensityMatrixState<qs_policy_t> sim_ham{ham_matrix, n_qubits, seed};
-    f_and_g[0] = qs_policy_t::GetExpectation(sim_qs.qs, ham.ham_, dim);
     // timer.EndAndStartOther("First part", "Second part");
-    for (const auto& g : herm_circ) {
-        if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
-            // timer.Start("ExpectDiffGate");
-            auto gi = ExpectDiffGate(sim_qs.qs, sim_ham.qs, g, pr, dim);
-            // timer.End("ExpectDiffGate");
-            for (auto& it : g->params_.GetRequiresGradParameters()) {
-                f_and_g[1 + p_map.at(it)] += 2 * std::real(gi) * g->params_.data_.at(it);
-            }
-        }
-        sim_ham.ApplyGate(g, pr);
-        sim_qs.ApplyGate(g, pr);
+    if (circ.size() != herm_circ.size()) {
+        std::runtime_error("In density matrix mode, circ and herm_circ must be the same size.");
     }
+    index_t n = circ.size();
+    for (index_t i = 0; i < herm_circ.size(); i++) {
+        --n;
+        if (circ[n]->params_.data_.size() != circ[n]->params_.no_grad_parameters_.size()) {
+            // timer.Start("ExpectDiffGate");
+            for (index_t j = 0; j <= n; j++) {
+                sim_qs.ApplyGate(circ[j], pr);
+            }
+            auto gi = ExpectDiffGate(sim_qs.qs, sim_ham.qs, circ[n], pr, dim);
+            // timer.End("ExpectDiffGate");
+            for (auto& it : circ[n]->params_.GetRequiresGradParameters()) {
+                f_and_g[1 + p_map.at(it)] += 2 * std::real(gi) * circ[n]->params_.data_.at(it);
+            }
+            sim_qs.SetQS(this->qs);
+        }
+        sim_ham.ApplyGate(herm_circ[i], pr);
+    }
+    
     // timer.End("Second part");
     // timer.Analyze();
+    qs_policy_t::FreeState(ham_matrix);
     return f_and_g;
 }
 

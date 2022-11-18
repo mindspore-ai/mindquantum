@@ -69,6 +69,33 @@ auto test_GetExpectationReversibleWithGrad() {
     std::cout << res[0] << std::endl;
 }
 
+auto test_GetExpectationNonReversibleWithGrad() {
+    auto dm = DensityMatrixState<CPUDensityMatrixPolicyBase>(3);
+    // dm_base::ApplyX(qs, {1}, {}, 8);
+    // dm_base::ApplyX(qs, {2}, {}, 8);
+    DensityMatrixState<CPUDensityMatrixPolicyBase>::circuit_t circ{{GetPrGate("RX", {0}, {})}};
+    DensityMatrixState<CPUDensityMatrixPolicyBase>::circuit_t herm_circ{{GetPrGate("RX", {0}, {})}};
+    circ.push_back(GetPrGate("X", {0}, {}));
+    MST<size_t> p_map;
+    p_map.insert({"RX", 0});
+    MST<double> pr_map;
+    pr_map.insert({"a", 3});
+    ParameterResolver<double> pr{pr_map, 1};
+    // dm.ApplyCircuit(circ);
+    // dm_base::DisplayQS(qs,3,8);
+    PauliWord pw{0, 'Z'};
+    VT<PauliWord> v{pw};
+    PauliTerm<double> pt{v, 1};
+    Hamiltonian<double> ham{{pt}, 3};
+
+    // dm_base::DisplayQS(ham_matrix,3,8);
+    auto res = dm.GetExpectationNonReversibleWithGrad(ham, circ, herm_circ, pr, p_map);
+    dm.ApplyCircuit(circ, pr);
+    dm.DisplayQS();
+
+    std::cout << res[0] << std::endl;
+}
+
 int main() {
     test_GetExpectationReversibleWithGrad();
 }

@@ -34,7 +34,7 @@ namespace mindquantum::sim::densitymatrix::detail {
 
 auto CPUDensityMatrixPolicyBase::HamiltonianMatrix(const std::vector<PauliTerm<calc_type>>& ham, index_t dim)
     -> qs_data_p_t {
-    qs_data_p_t out = CPUDensityMatrixPolicyBase::InitState(dim, false);
+    qs_data_p_t out = InitState(dim, false);
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
         auto mask_f = mask.mask_x | mask.mask_y;

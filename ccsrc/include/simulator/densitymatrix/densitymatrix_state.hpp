@@ -92,6 +92,7 @@ class DensityMatrixState {
 
     //! Set the quantum state value
     void SetQS(const py_qs_datas_t& qs_out);
+    void SetQS(const qs_data_p_t& qs_out);
 
     //! Apply a quantum gate on this quantum state, quantum gate can be normal quantum gate, measurement gate and noise
     //! channel

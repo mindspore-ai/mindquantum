@@ -59,7 +59,7 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitChannel(qs_data_p_t src, qs_dat
                 qs_data_t des_jq{0};
                 qs_data_t des_iq{0};
                 qs_data_t des_jp{0};
-                for (auto m : kraus_set) {
+                for (const auto& m : kraus_set) {
                     des_ip += m[0][0] * std::conj(m[0][0]) * src_ip + m[0][0] * std::conj(m[0][1]) * src_iq
                               + m[0][1] * std::conj(m[0][0]) * src_jp + m[0][1] * std::conj(m[0][1]) * src_jq;
                     des_jq += m[1][0] * std::conj(m[1][0]) * src_ip + m[1][0] * std::conj(m[1][1]) * src_iq
