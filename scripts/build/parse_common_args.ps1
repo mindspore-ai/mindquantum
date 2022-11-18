@@ -12,19 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if ($_sourced_parse_common_args -eq $null) { $_sourced_parse_common_args=1 } else { return }
+if ($null -eq $_sourced_parse_common_args) { $_sourced_parse_common_args=1 } else { return }
 
 $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 
 # ==============================================================================
 
-if ($ROOTDIR -eq $null) {
+if ($null -eq $ROOTDIR) {
     die '(internal error): ROOTDIR variable not defined!'
 }
 
 # ==============================================================================
 
-if( $config_file -eq $null) { $config_file = "$ROOTDIR\build.conf" }
+if ($null -eq  $config_file) {
+    $config_file = "$ROOTDIR\build.conf"
+}
 
 if ($Verbose.IsPresent -Or $Debug.IsPresent) {
     $DebugPreference = 'Continue'

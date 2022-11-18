@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if ($_sourced_locate_cmake -eq $null) { $_sourced_locate_cmake=1 } else { return }
+if ($null -eq $_sourced_locate_cmake) { $_sourced_locate_cmake=1 } else { return }
 
 $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 
@@ -23,13 +23,13 @@ $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 
 # ==============================================================================
 
-if ($ROOTDIR -eq $null) {
+if ($null -eq $ROOTDIR) {
     die '(internal error): ROOTDIR variable not defined!'
 }
-if ($PYTHON -eq $null) {
+if ($null -eq $PYTHON) {
     die '(internal error): PYTHON variable not defined!'
 }
-if ($python_venv_path -eq $null) {
+if ($null -eq $python_venv_path) {
     die '(internal error): python_venv_path variable not defined!'
 }
 
