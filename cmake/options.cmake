@@ -100,6 +100,12 @@ endif()
 option(ENABLE_PROFILING "Enable compilation with profiling flags." OFF)
 option(ENABLE_STACK_PROTECTION "Enable the use of -fstack-protector during compilation" ON)
 
+option(ENABLE_SANITIZERS "Enable additional CMake build types for sanitizers" ON)
+cmake_dependent_option(ENABLE_SANITIZER_ADDRESS "Enable the address sanitizer" ON "ENABLE_SANITIZERS" OFF)
+cmake_dependent_option(ENABLE_SANITIZER_UNDEFINED "Enable the undefined behavior sanitizer" ON "ENABLE_SANITIZERS" OFF)
+cmake_dependent_option(SANITIZER_USE_O1 "Use -O1 when the build type is for a sanitizer" OFF "ENABLE_SANITIZERS" OFF)
+cmake_dependent_option(SANITIZER_USE_Og "Use -O1 when the build type is for a sanitizer" OFF "ENABLE_SANITIZERS" OFF)
+
 # ==============================================================================
 # Linking options
 
@@ -245,6 +251,12 @@ endif()
 
 # ==============================================================================
 # Compilation options
+
+if(ENABLE_SANITIZERS)
+  if(SANITIZER_USE_O1 AND SANITIZER_USE_Og)
+    message(FATAL_ERROR "Cannot define SANITIZER_USE_O1=ON and SANITIZER_USE_Og=ON at the same time!")
+  endif()
+endif()
 
 if(MSVC)
   if(NOT DEFINED MQ_ITERATOR_DEBUG)

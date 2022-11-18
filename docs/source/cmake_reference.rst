@@ -74,6 +74,12 @@ Descriptions
 +-------------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_RUNPATH``                  | Prefer RUNPATH over RPATH when linking                                |
 +-------------------------------------+-----------------------------------------------------------------------+
+| ``ENABLE_SANITIZERS`` *             | Enable additional CMake build types for sanitizers                    |
++-------------------------------------+-----------------------------------------------------------------------+
+| ``ENABLE_SANITIZER_ADDRESS``        | Enable the address sanitizer for the sanitizer build type             |
++-------------------------------------+-----------------------------------------------------------------------+
+| ``ENABLE_SANITIZER_UNDEFINED``      | Enable the undefined behavior sanitizer for the sanitizer build type  |
++-------------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_STACK_PROTECTION``         | Enable stack protection during compilation                            |
 +-------------------------------------+-----------------------------------------------------------------------+
 | ``IN_PLACE_BUILD``                  | Build the C++ MindQuantum libraries in-place                          |
@@ -93,6 +99,10 @@ Descriptions
 | ``LINKER_STRIP_ALL``                | Use `--strip-all` during linking (if supported)                       |
 +-------------------------------------+-----------------------------------------------------------------------+
 | ``PYTHON_VIRTUALENV_OVER_ROOT_DIR`` | Ignore Python_ROOT_DIR if present at the same time as VIRTUAL_ENV     |
++-------------------------------------+-----------------------------------------------------------------------+
+| ``SANITIZER_USE_O1``                | Sanitizer build uses ``-O1``                                          |
++-------------------------------------+-----------------------------------------------------------------------+
+| ``SANITIZER_USE_Og``                | Sanitizer build uses ``-Og``                                          |
 +-------------------------------------+-----------------------------------------------------------------------+
 | ``USE_OPENMP``                      | Use the OpenMP library for parallelisation                            |
 +-------------------------------------+-----------------------------------------------------------------------+
@@ -139,6 +149,12 @@ Default values
 +-------------------------------------+------------------------------+
 | ``ENABLE_RUNPATH``                  | ON                           |
 +-------------------------------------+------------------------------+
+| ``ENABLE_SANITIZERS``               | ON                           |
++-------------------------------------+------------------------------+
+| ``ENABLE_SANITIZERS_ADDRESS``       | ON                           |
++-------------------------------------+------------------------------+
+| ``ENABLE_SANITIZERS_UNDEFINED``     | ON                           |
++-------------------------------------+------------------------------+
 | ``ENABLE_STACK_PROTECTION``         | ON                           |
 +-------------------------------------+------------------------------+
 | ``IN_PLACE_BUILD``                  | OFF                          |
@@ -159,6 +175,10 @@ Default values
 +-------------------------------------+------------------------------+
 | ``PYTHON_VIRTUALENV_OVER_ROOT_DIR`` | ON                           |
 +-------------------------------------+------------------------------+
+| ``SANITIZER_USE_O1``                | OFF                          |
++-------------------------------------+------------------------------+
+| ``SANITIZER_USE_Og``                | OFF                          |
++-------------------------------------+------------------------------+
 | ``USE_OPENMP``                      | ON                           |
 +-------------------------------------+------------------------------+
 | ``USE_PARALLEL_STL``                | OFF                          |
@@ -173,6 +193,13 @@ Detailed descriptions
     This will delete any pre-existing installations within the local installation directory (by default
     ``/path/to/build/.mqlibs``) _except_ the ones that are currently needed based on the hashes of the third-party
     libraries.
+
+``ENABLE_SANITIZERS``
+    This enables a new CMake build types (on top of the usual ``Release, Debug, RelWithDebInfo, MinSizeRel``):
+      - ``Sanitize``
+
+    You can control which sanitizer is enabled by using the ``ENABLE_SANITIZER_ADDRESS`` and
+    ``ENABLE_SANITIZER_UNDEFINED`` CMake options. See also ``SANITIZER_USE_O1`` and ``SANITIZER_USE_Og``.
 
 ``DISABLE_FORTRAN_COMPILER``
     This currently only has an effect when installing Eigen3.
