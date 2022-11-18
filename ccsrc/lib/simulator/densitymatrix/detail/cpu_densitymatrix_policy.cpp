@@ -152,7 +152,7 @@ auto CPUDensityMatrixPolicyBase::PureStateVector(qs_data_p_t qs, index_t dim) ->
     py_qs_datas_t qs_vector(dim);
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++){
-        qs_vector[i] = sqrt(qs[IdxMap(i, i)]);
+        qs_vector[i] = std::sqrt(qs[IdxMap(i, i)]);
     })
     return qs_vector;
 }
