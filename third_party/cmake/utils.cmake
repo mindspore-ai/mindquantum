@@ -389,17 +389,15 @@ function(__create_target_aliases pkg_name skip_in_install_config)
     endif()
 
     if(_imported)
-      if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-        __get_library_imported_location(${tgt_name} _imported_location)
-        if(_imported_location)
-          foreach(_config RELEASE DEBUG MINSIZEREL RELWITHDEBINFO)
-            get_target_property(_config_location ${tgt_name} IMPORTED_LOCATION_${_config})
-            if(NOT _config_location)
-              debug_print(STATUS "Propagating ${_imported_location} to IMPORTED_LOCATION_${_config}")
-              set_target_properties(${tgt_name} PROPERTIES IMPORTED_LOCATION_${_config} ${_imported_location})
-            endif()
-          endforeach()
-        endif()
+      __get_library_imported_location(${tgt_name} _imported_location)
+      if(_imported_location)
+        foreach(_config RELEASE DEBUG MINSIZEREL RELWITHDEBINFO)
+          get_target_property(_config_location ${tgt_name} IMPORTED_LOCATION_${_config})
+          if(NOT _config_location)
+            debug_print(STATUS "Propagating ${_imported_location} to IMPORTED_LOCATION_${_config}")
+            set_target_properties(${tgt_name} PROPERTIES IMPORTED_LOCATION_${_config} ${_imported_location})
+          endif()
+        endforeach()
       endif()
     endif()
 
@@ -1165,12 +1163,13 @@ function(mindquantum_add_pkg pkg_name)
             ${_purged_ARGN} - ${${pkg_name}_USE_STATIC_LIBS}- ${${pkg_name}_PATCHES_HASH}
             ${${pkg_name}_CXXFLAGS}--${${pkg_name}_CFLAGS}--${${pkg_name}_LDFLAGS}")
   string(REPLACE ";" "-" ${pkg_name}_CONFIG_TXT ${${pkg_name}_CONFIG_TXT})
-  string(MD5 ${pkg_name}_CONFIG_HASH ${${pkg_name}_CONFIG_TXT})
+  string(MD5 ${pkg_name}_CONFIG_HASH "${${pkg_name}_CONFIG_TXT}")
 
   if(NOT _${pkg_name}_SYSTEM AND NOT "${pkg_name}_BASE_DIR" STREQUAL "")
     # Package is not from the system and from a previous CMake run -> check if the config hash has changed
     if(EXISTS "${${pkg_name}_BASE_DIR}/options.txt")
-      file(MD5 "${${pkg_name}_BASE_DIR}/options.txt" _old_config_hash)
+      file(READ "${${pkg_name}_BASE_DIR}/options.txt" _old_config_txt)
+      string(MD5 _old_config_hash "${_old_config_txt}")
       if(NOT _old_config_hash STREQUAL ${pkg_name}_CONFIG_HASH)
         # Config hash has changed -> remove all relevant directories:
         #
@@ -1423,10 +1422,17 @@ function(mindquantum_add_pkg pkg_name)
         endif()
       endforeach()
 
-      if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+      set(_build_types Debug Release RelWithDebInfo MinSizeRel)
+      set(_cmake_build_type "${CMAKE_BUILD_TYPE}")
+      if(NOT "${CMAKE_BUILD_TYPE}" IN_LIST _build_types)
+        set(_cmake_build_type RelWithDebInfo)
+        debug_print("${CMAKE_BUILD_TYPE} not in known build types, using ${_cmake_build_type} instead")
+      endif()
+
+      if("${_cmake_build_type}" STREQUAL "Release")
         set(_cmake_build_dir "${${pkg_name}_SOURCE_DIR}/_build")
       else()
-        string(TOLOWER "${CMAKE_BUILD_TYPE}" _build_type)
+        string(TOLOWER "${_cmake_build_type}" _build_type)
         set(_cmake_build_dir "${${pkg_name}_SOURCE_DIR}/_build_${_build_type}")
       endif()
 
@@ -1461,10 +1467,10 @@ function(mindquantum_add_pkg pkg_name)
       __exec_cmd(
         COMMAND
           ${CMAKE_COMMAND} ${${pkg_name}_CMAKE_COMPILERS} "-DCMAKE_MODULE_PATH=${_cmake_module_path}"
-          -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE} -G${CMAKE_GENERATOR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-          ${PKG_CMAKE_OPTION} ${${pkg_name}_CMAKE_CFLAGS} ${${pkg_name}_CMAKE_CXXFLAGS} ${${pkg_name}_CL_RT_FLAG}
-          ${${pkg_name}_CMAKE_LDFLAGS} -DCMAKE_INSTALL_PREFIX=${${pkg_name}_BASE_DIR}
-          ${${pkg_name}_SOURCE_DIR}/${PKG_CMAKE_PATH}
+          -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE} -G${CMAKE_GENERATOR}
+          -DCMAKE_BUILD_TYPE=${_cmake_build_type} ${PKG_CMAKE_OPTION} ${${pkg_name}_CMAKE_CFLAGS}
+          ${${pkg_name}_CMAKE_CXXFLAGS} ${${pkg_name}_CL_RT_FLAG} ${${pkg_name}_CMAKE_LDFLAGS}
+          -DCMAKE_INSTALL_PREFIX=${${pkg_name}_BASE_DIR} ${${pkg_name}_SOURCE_DIR}/${PKG_CMAKE_PATH}
         WORKING_DIRECTORY ${_cmake_build_dir})
 
       message(STATUS "Building CMake targets for ${pkg_name}")

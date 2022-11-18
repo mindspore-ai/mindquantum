@@ -63,7 +63,7 @@ auto QubitOperator<coeff_t>::simplify(const self_t& qubit_op) -> derived_cmplx_t
         for (const auto& [local_ops, coeff] : qubit_op.get_terms()) {
             const auto [new_terms, new_coeff] = derived_cmplx_t::term_policy_t::simplify(local_ops,
                                                                                          conv_helper_t::apply(coeff));
-            terms.emplace(new_terms, new_coeff);
+            terms.emplace_back(new_terms, new_coeff);
         }
         return derived_cmplx_t{std::move(terms)};
     }
@@ -113,8 +113,7 @@ auto QubitOperator<coeff_t>::sparse_matrix(std::optional<uint32_t> n_qubits) con
         return std::nullopt;
     }
 
-    // NB: this is assuming that num_targets_ is up-to-date
-    const auto& n_qubits_local = base_t::num_targets_;
+    const auto& n_qubits_local = base_t::num_targets();
 
     if (n_qubits_local == 0UL && !n_qubits) {
         MQ_ERROR("You should specify n_qubits for converting an identity qubit operator.");

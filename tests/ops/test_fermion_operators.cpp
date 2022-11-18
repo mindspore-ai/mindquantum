@@ -117,7 +117,7 @@ TEST_CASE("FermionOperator constructor", "[terms_op][ops]") {
     CHECK(std::size(fermion_op) == 1);
     CHECK(fermion_op.get_terms() == ref_terms);
 
-    const auto [it, inserted] = ref_terms.emplace(terms_t{{1, TermValue::adg}}, 3.2);
+    const auto [it, inserted] = ref_terms.emplace_back(terms_t{{1, TermValue::adg}}, 3.2);
     fermion_op += FermionOperatorCD("1^", it->second);
 
     CHECK(std::size(fermion_op) == 2);

@@ -155,7 +155,6 @@ macro(disable_cuda)
     set(_msg "inexistent CUDA/NVHPC compiler, NVHPC < 20.11")
   endif()
   message(WARNING "Disabling CUDA due to ${_msg} or error during compiler setup")
-  # cmake-lint: disable=C0103
   set(ENABLE_CUDA
       OFF
       CACHE INTERNAL "Enable building of CUDA/NVHPC libraries")

@@ -105,6 +105,7 @@ option(ENABLE_RUNPATH "Prefer RUNPATH over RPATH when linking" ON)
 
 option(LINKER_DTAGS "Use --enable-new-dtags or --disable-new-dtags during linking" ON)
 option(LINKER_NOEXECSTACK "Use -z,noexecstack during linking" ON)
+option(LINKER_NOW "Use -z,now during linking for certain targets" ON)
 option(LINKER_RELRO "Use -z,relro during linking for certain targets" ON)
 option(LINKER_RPATH "Enable the use of RPATH/RUNPATH related flags during linking" ON)
 option(LINKER_STRIP_ALL "Use --strip-all during linking" ON)

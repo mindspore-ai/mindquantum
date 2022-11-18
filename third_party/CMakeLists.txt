@@ -46,7 +46,6 @@ include(${CMAKE_CURRENT_LIST_DIR}/fmt/fmt.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/pybind11/pybind11.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/nlohmann_json/nlohmann_json.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/boost/boost.cmake)
-include(${CMAKE_CURRENT_LIST_DIR}/ordered_map/ordered_map.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/lru_cache/lru_cache.cmake)
 
 if(ENABLE_LOGGING)

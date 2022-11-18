@@ -31,13 +31,14 @@
 
 #include "config/config.hpp"
 #include "config/real_cast.hpp"
-#include "config/tsl_ordered_map.hpp"
 #include "config/type_traits.hpp"
 
 #include "ops/gates/details/coeff_policy.hpp"
 #include "ops/gates/term_value.hpp"
+#include "ops/gates/terms_coeff_dict.hpp"
 #include "ops/gates/traits.hpp"
 #include "ops/gates/types.hpp"
+
 // #include "ops/meta/dagger.hpp"
 
 #if MQ_HAS_CONCEPTS
@@ -94,12 +95,6 @@ concept compat_terms_op_scalar = requires(scalar_t, ref_op_t) {
 // =============================================================================
 
 namespace mindquantum::ops {
-// NB: using boost hash since std::hash is non-copyable (at least for recent GCC and Clang versions)
-template <typename coefficient_t>
-using term_dict_t = tsl::ordered_map<terms_t, coefficient_t, boost::hash<terms_t>>;
-
-// =============================================================================
-
 //! Base class for term operators (like qubit or fermion operators)
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
@@ -217,6 +212,8 @@ class TermsOperatorBase {
     MQ_NODISCARD term_t::first_type count_qubits() const;
 
     MQ_NODISCARD static derived_t identity();
+
+    MQ_NODISCARD static derived_t identity(const coefficient_t& coeff);
 
     //! Set parameter with given params PR
     MQ_NODISCARD derived_t subs(const details::CoeffSubsProxy<coefficient_t>& subs_param) const;
@@ -427,10 +424,10 @@ class TermsOperatorBase {
     derived_t& mul_impl_(const other_t& other);
 
     //! Calculate the number of target qubits of a TermOperator.
-    void calculate_num_targets_() noexcept;
+    void calculate_num_targets_() const noexcept;
 
  protected:
-    uint32_t num_targets_{0UL};
+    mutable uint32_t num_targets_{0UL};
     coeff_term_dict_t terms_;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(base_t, num_targets_, terms_);

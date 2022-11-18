@@ -62,6 +62,7 @@ struct CoeffPolicy<float_t, std::enable_if_t<std::is_floating_point_v<float_t>>>
     using coeff_policy_real_t = typename base_t::coeff_policy_real_t;
     using matrix_coeff_t = coeff_t;
 
+    static constexpr auto zero = coeff_t{0.};
     static constexpr auto one = coeff_t{1.};
 
     // Getter
@@ -83,25 +84,25 @@ struct CoeffPolicy<float_t, std::enable_if_t<std::is_floating_point_v<float_t>>>
     }
 
     // Binary operators
-    static auto iadd(coeff_t& lhs, const coeff_t& rhs) {
+    static auto iadd(coeff_t& lhs, const coeff_t& rhs) {  // NOLINT(runtime/references)
         return lhs += rhs;
     }
     static auto add(const coeff_t& lhs, const coeff_t& rhs) {
         return lhs + rhs;
     }
-    static auto isub(coeff_t& lhs, const coeff_t& rhs) {
+    static auto isub(coeff_t& lhs, const coeff_t& rhs) {  // NOLINT(runtime/references)
         return lhs -= rhs;
     }
     static auto sub(const coeff_t& lhs, const coeff_t& rhs) {
         return lhs - rhs;
     }
-    static auto imul(coeff_t& lhs, const coeff_t& rhs) {
+    static auto imul(coeff_t& lhs, const coeff_t& rhs) {  // NOLINT(runtime/references)
         return lhs *= rhs;
     }
     static auto mul(const coeff_t& lhs, const coeff_t& rhs) {
         return lhs * rhs;
     }
-    static auto idiv(coeff_t& lhs, const coeff_t& rhs) {
+    static auto idiv(coeff_t& lhs, const coeff_t& rhs) {  // NOLINT(runtime/references)
         return lhs /= rhs;
     }
     static auto div(const coeff_t& lhs, const coeff_t& rhs) {
@@ -115,12 +116,12 @@ struct CoeffPolicy<float_t, std::enable_if_t<std::is_floating_point_v<float_t>>>
     static auto is_zero(const coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
         return std::abs(coeff) <= abs_tol;
     }
-    static auto discard_imag(coeff_t& coeff) {
+    static auto discard_imag(coeff_t& coeff) {  // NOLINT(runtime/references)
         coeff = 0.;
     }
-    static auto discard_real(coeff_t& coeff) {
+    static auto discard_real(coeff_t& coeff) {  // NOLINT(runtime/references)
     }
-    static auto compress(coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
+    static auto compress(coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {  // NOLINT(runtime/references)
         if (std::abs(coeff) <= abs_tol) {
             coeff = coeff_t{0.};
         }

@@ -46,6 +46,7 @@ using TermValue = mindquantum::ops::TermValue;
 
 // =============================================================================
 
+namespace order = mindquantum::ops::order;
 using mindquantum::ops::py_terms_t;
 using mindquantum::ops::term_t;
 using mindquantum::ops::terms_t;
@@ -117,7 +118,9 @@ using coeff_term_dict_t = DummyOperatorCD::coeff_term_dict_t;
 // =============================================================================
 // Static (ie. compile-time) testing
 
+#if !((defined __GNUC__) && __GNUC__ == 7 && __GNUC_MINOR__ < 5)
 static_assert(std::size(DummyOperatorCD::kind()) >= 35 /* = len(DummyOperator<std::complex<double>>) */);
+#endif  // GCC < 7.5
 
 namespace {
 #if MQ_HAS_CONCEPTS
@@ -354,7 +357,7 @@ TEST_CASE("TermsOperator constructor", "[terms_op][ops]") {
     }
     SECTION("Single term constructor") {
         const auto ref_term = term_t{0, TermValue::X};
-        ref_terms.emplace(terms_t{ref_term}, 1);
+        ref_terms.emplace_back(terms_t{ref_term}, 1);
 
         DummyOperatorCD op{ref_term};
         CHECK(!std::empty(op));
@@ -371,7 +374,7 @@ TEST_CASE("TermsOperator constructor", "[terms_op][ops]") {
     SECTION("Single term multiple local_ops constructor") {
         const auto ref_term = terms_t{{0, TermValue::X}, {1, TermValue::X}};
         const auto coeff = 0.5;
-        ref_terms.emplace(ref_term, coeff);
+        ref_terms.emplace_back(ref_term, coeff);
 
         DummyOperatorCD op{ref_term, coeff};
         CHECK(!std::empty(op));
@@ -399,8 +402,8 @@ TEST_CASE("TermsOperator constructor", "[terms_op][ops]") {
         }
     }
     SECTION("Multiple terms constructor") {
-        ref_terms.emplace(terms_t{{0, TermValue::Y}, {3, TermValue::Z}}, 0.75i);
-        ref_terms.emplace(terms_t{{1, TermValue::X}}, 2.);
+        ref_terms.emplace_back(terms_t{{0, TermValue::Y}, {3, TermValue::Z}}, 0.75i);
+        ref_terms.emplace_back(terms_t{{1, TermValue::X}}, 2.);
 
         DummyOperatorCD op{ref_terms};
         CHECK(!std::empty(op));
@@ -457,8 +460,8 @@ TEST_CASE("TermsOperator identity", "[terms_op][ops]") {
     }
     SECTION("Single term multiple local_ops operator") {
         auto terms = coeff_term_dict_t{};
-        terms.emplace(terms_t{{0, TermValue::Y}}, 1.e-5);
-        terms.emplace(terms_t{{2, TermValue::Z}, {4, TermValue::X}}, 1.e-6);
+        terms.emplace_back(terms_t{{0, TermValue::Y}}, 1.e-5);
+        terms.emplace_back(terms_t{{2, TermValue::Z}, {4, TermValue::X}}, 1.e-6);
         DummyOperatorCD op{terms};
         CHECK(!op.is_identity());
         CHECK(!op.is_identity(1.e-6));
@@ -466,9 +469,9 @@ TEST_CASE("TermsOperator identity", "[terms_op][ops]") {
     }
     SECTION("Single term multiple local_ops including I operator") {
         auto terms = coeff_term_dict_t{};
-        terms.emplace(terms_t{{0, TermValue::I}, {1, TermValue::I}}, 2i);
-        terms.emplace(terms_t{{3, TermValue::X}}, DummyOperatorCD::EQ_TOLERANCE / 10.);
-        terms.emplace(terms_t{{1, TermValue::I}}, 1);
+        terms.emplace_back(terms_t{{0, TermValue::I}, {1, TermValue::I}}, 2i);
+        terms.emplace_back(terms_t{{3, TermValue::X}}, DummyOperatorCD::EQ_TOLERANCE / 10.);
+        terms.emplace_back(terms_t{{1, TermValue::I}}, 1);
         DummyOperatorCD op{terms};
         CHECK(op.is_identity());
         CHECK(!op.is_singlet());
@@ -479,8 +482,8 @@ TEST_CASE("TermsOperator identity", "[terms_op][ops]") {
 
 TEST_CASE("TermsOperator cast", "[terms_op][ops]") {
     auto terms = DummyOperatorD::coeff_term_dict_t{};
-    terms.emplace(terms_t{{0, TermValue::Y}}, 1.);
-    terms.emplace(terms_t{{2, TermValue::Z}, {4, TermValue::X}}, 3.2);
+    terms.emplace_back(terms_t{{0, TermValue::Y}}, 1.);
+    terms.emplace_back(terms_t{{2, TermValue::Z}, {4, TermValue::X}}, 3.2);
 
     DummyOperatorD real_op{terms};
 
@@ -504,8 +507,8 @@ TEST_CASE("TermsOperator cast", "[terms_op][ops]") {
 
 TEST_CASE("TermsOperator real/imag cast", "[terms_op][ops]") {
     auto terms = coeff_term_dict_t{};
-    terms.emplace(terms_t{{0, TermValue::Y}}, 1. + 2.i);
-    terms.emplace(terms_t{{2, TermValue::Z}, {4, TermValue::X}}, 3. + 4.i);
+    terms.emplace_back(terms_t{{0, TermValue::Y}}, 1. + 2.i);
+    terms.emplace_back(terms_t{{2, TermValue::Z}, {4, TermValue::X}}, 3. + 4.i);
     DummyOperatorCD op{terms};
 
     auto real = op.real();
@@ -532,8 +535,8 @@ TEST_CASE("TermsOperator compression", "[terms_op][ops]") {
     const auto terms2 = terms_t{{2, TermValue::Z}, {4, TermValue::X}};
 
     auto terms = coeff_term_dict_t{};
-    terms.emplace(terms1, coeff1);
-    terms.emplace(terms2, coeff2);
+    terms.emplace_back(terms1, coeff1);
+    terms.emplace_back(terms2, coeff2);
     DummyOperatorCD op{terms};
 
     REQUIRE(std::size(op) == 2);
@@ -594,6 +597,7 @@ TEST_CASE("DummyOperatorD dumps", "[terms_op][ops]") {
                      {1, TermValue::a}, {2, TermValue::adg}, {3, TermValue::X}, {4, TermValue::Y}, {5, TermValue::Z}},
                  1.2i)
              + DummyOperatorCD::identity();
+        const auto num_targets = op.num_targets();
         ref_json = R"s({
     "num_targets_": 6,
     "terms_": [
@@ -770,9 +774,12 @@ TEST_CASE("TermsOperator JSON save - load", "[terms_op][ops]") {
 // =============================================================================
 
 TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
+    using value_t = coeff_term_dict_t::value_type;
+
     SECTION("Addition (TermsOperator)") {
         DummyOperatorCD op;
         coeff_term_dict_t ref_terms;
+        auto& ordered_index = ref_terms.get<order::insertion>();
 
         CHECK(std::empty(op));
 
@@ -780,7 +787,7 @@ TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
         CHECK(std::empty(op));
 
         // op = {'X3': 2.3}
-        auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
+        auto [it1, inserted1] = ref_terms.emplace_back(terms_t{{3, TermValue::X}}, 2.3);
         REQUIRE(inserted1);
         op += DummyOperatorCD(it1->first, it1->second);
         REQUIRE(!std::empty(op));
@@ -788,7 +795,7 @@ TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
         CHECK(op.get_terms() == ref_terms);
 
         // op = {'X3': 2.3,  'X1': 1.}
-        auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::X}}, 1.);
+        auto [it2, inserted2] = ref_terms.emplace_back(terms_t{{1, TermValue::X}}, 1.);
         REQUIRE(inserted2);
         op += DummyOperatorCD(it2->first, it2->second);
         REQUIRE(!std::empty(op));
@@ -798,14 +805,15 @@ TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
         // op = {'X3': 2.3 + 1.85i,  'X1': 1.}
         const auto term3 = it1->first.front();
         const auto coeff3 = 1.85i;
-        it1.value() += coeff3;
+        ordered_index.modify(it1, [&coeff3](value_t& value) { value.second += coeff3; });
+
         op += DummyOperatorCD(term3, coeff3);
         REQUIRE(!std::empty(op));
         CHECK(std::size(op) == 2);
         CHECK(op.get_terms() == ref_terms);
 
         // op = {'X3': 2.3 + 1.85i,  'X1': 1.,  'Y1': 10.}
-        auto [it3, inserted3] = ref_terms.emplace(terms_t{{1, TermValue::Y}}, 10.);
+        auto [it3, inserted3] = ref_terms.emplace_back(terms_t{{1, TermValue::Y}}, 10.);
         REQUIRE(inserted3);
         op += DummyOperatorCD(it3->first, it3->second);
         REQUIRE(!std::empty(op));
@@ -824,8 +832,9 @@ TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
 
     SECTION("Addition (numbers)") {
         coeff_term_dict_t ref_terms;
+        auto& ordered_index = ref_terms.get<order::insertion>();
 
-        auto [it, inserted] = ref_terms.emplace(terms_t{}, 1.);
+        auto [it, inserted] = ref_terms.emplace_back(terms_t{}, 1.);
         DummyOperatorCD op = DummyOperatorCD::identity();
 
         CHECK(!std::empty(op));
@@ -843,14 +852,14 @@ TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
             UNSCOPED_INFO("Double");
             const auto addend = 2.34;
             op += addend;
-            it.value() += addend;
+            ordered_index.modify(it, [&addend](value_t& value) { value.second += addend; });
         }
 
         SECTION("Complex double") {
             UNSCOPED_INFO("Complex double");
             const auto addend = 5. + 2.34i;
             op += addend;
-            it.value() += addend;
+            ordered_index.modify(it, [&addend](value_t& value) { value.second += addend; });
         }
 
         // NB: important to have this check here first (UNSCOPED_INFO)
@@ -861,10 +870,13 @@ TEST_CASE("TermsOperator arithmetic operators (+)", "[terms_op][ops]") {
 }
 
 TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
+    using value_t = coeff_term_dict_t::value_type;
+
     SECTION("Subtraction (TermsOperator)") {
         // NB: careful with the signs of coefficients!
         DummyOperatorCD op;
         coeff_term_dict_t ref_terms;
+        auto& ordered_index = ref_terms.get<order::insertion>();
 
         CHECK(std::empty(op));
 
@@ -872,7 +884,7 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
         CHECK(std::empty(op));
 
         // op = {'X3': 2.3}
-        auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
+        auto [it1, inserted1] = ref_terms.emplace_back(terms_t{{3, TermValue::X}}, 2.3);
         REQUIRE(inserted1);
         op -= DummyOperatorCD(it1->first, -it1->second);
         REQUIRE(!std::empty(op));
@@ -880,7 +892,7 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
         CHECK(op.get_terms() == ref_terms);
 
         // op = {'X3': 2.3,  'X1': 1.}
-        auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::X}}, 1.);
+        auto [it2, inserted2] = ref_terms.emplace_back(terms_t{{1, TermValue::X}}, 1.);
         REQUIRE(inserted2);
         op -= DummyOperatorCD(it2->first, -it2->second);
         REQUIRE(!std::empty(op));
@@ -890,14 +902,14 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
         // op = {'X3': 2.3 - 1.85i,  'X1': 1.}
         const auto term3 = it1->first.front();
         const auto coeff3 = 1.85i;
-        it1.value() -= coeff3;
+        ordered_index.modify(it1, [&coeff3](value_t& value) { value.second -= coeff3; });
         op -= DummyOperatorCD(term3, coeff3);
         REQUIRE(!std::empty(op));
         CHECK(std::size(op) == 2);
         CHECK(op.get_terms() == ref_terms);
 
         // op = {'X3': 2.3 - 1.85i,  'X1': 1.,  'Y1': 10.}
-        auto [it3, inserted3] = ref_terms.emplace(terms_t{{1, TermValue::Y}}, 10.);
+        auto [it3, inserted3] = ref_terms.emplace_back(terms_t{{1, TermValue::Y}}, 10.);
         REQUIRE(inserted3);
         op -= DummyOperatorCD(it3->first, -it3->second);
         REQUIRE(!std::empty(op));
@@ -916,8 +928,9 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
 
     SECTION("Subtraction (numbers)") {
         coeff_term_dict_t ref_terms;
+        auto& ordered_index = ref_terms.get<order::insertion>();
 
-        auto [it, inserted] = ref_terms.emplace(terms_t{}, 1.);
+        auto [it, inserted] = ref_terms.emplace_back(terms_t{}, 1.);
         DummyOperatorCD op = DummyOperatorCD::identity();
 
         CHECK(!std::empty(op));
@@ -947,17 +960,17 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
             SECTION("In-place subtraction") {
                 UNSCOPED_INFO("In-place subtraction");
                 op -= subtrahend;
-                it.value() -= subtrahend;
+                ordered_index.modify(it, [&subtrahend](value_t& value) { value.second -= subtrahend; });
             }
             SECTION("Left subtraction") {
                 UNSCOPED_INFO("Left subtraction");
                 op = op - subtrahend;
-                it.value() -= subtrahend;
+                ordered_index.modify(it, [&subtrahend](value_t& value) { value.second -= subtrahend; });
             }
             SECTION("Right subtraction") {
                 UNSCOPED_INFO("Right subtraction");
                 op = subtrahend - op;
-                it.value() = subtrahend - it->second;
+                ordered_index.modify(it, [&subtrahend](value_t& value) { value.second = subtrahend - value.second; });
             }
         }
 
@@ -966,17 +979,17 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
             SECTION("In-place subtraction") {
                 UNSCOPED_INFO("In-place subtraction");
                 op -= subtrahend;
-                it.value() -= subtrahend;
+                ordered_index.modify(it, [&subtrahend](value_t& value) { value.second -= subtrahend; });
             }
             SECTION("Left subtraction") {
                 UNSCOPED_INFO("Left subtraction");
                 op = op - subtrahend;
-                it.value() -= subtrahend;
+                ordered_index.modify(it, [&subtrahend](value_t& value) { value.second -= subtrahend; });
             }
             SECTION("Right subtraction") {
                 UNSCOPED_INFO("Right subtraction");
                 op = subtrahend - op;
-                it.value() = subtrahend - it->second;
+                ordered_index.modify(it, [&subtrahend](value_t& value) { value.second = subtrahend - value.second; });
             }
         }
 
@@ -988,19 +1001,21 @@ TEST_CASE("TermsOperator arithmetic operators (-)", "[terms_op][ops]") {
 }
 
 TEST_CASE("TermsOperator arithmetic operators (*)", "[terms_op][ops]") {
+    using value_t = coeff_term_dict_t::value_type;
+
     SECTION("Multiplication (TermsOperator)") {
         DummyOperatorCD op;
         coeff_term_dict_t ref_terms;
 
         // op = {'X3': 2.3}
-        auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
+        auto [it1, inserted1] = ref_terms.emplace_back(terms_t{{3, TermValue::X}}, 2.3);
         REQUIRE(inserted1);
         op += DummyOperatorCD(it1->first, it1->second);
 
         // op = {'X3 Y1': 4.255}
         const auto term = term_t{1, TermValue::Y};
         const auto coeff = 1.85;
-        auto [it2, inserted2] = ref_terms.emplace(terms_t{it1->first.front(), term}, it1->second * coeff);
+        auto [it2, inserted2] = ref_terms.emplace_back(terms_t{it1->first.front(), term}, it1->second * coeff);
         REQUIRE(inserted2);
         ref_terms.erase(it1);
 
@@ -1019,15 +1034,15 @@ TEST_CASE("TermsOperator arithmetic operators (*)", "[terms_op][ops]") {
             {terms_t{{0, TermValue::X}}, 2.34},
             {terms_t{{3, TermValue::Z}}, 2.3i},
         };
-
         DummyOperatorCD op{ref_terms};
 
         CHECK(!std::empty(op));
         CHECK(op.get_terms() == ref_terms);
 
         const auto do_multiply = [](auto& terms, const auto& multiplier) constexpr {
+            auto& ordered_index = terms.template get<order::insertion>();
             for (auto it(begin(terms)), it_end(end(terms)); it != it_end; ++it) {
-                it.value() *= multiplier;
+                ordered_index.modify(it, [&multiplier](value_t& value) { value.second *= multiplier; });
             }
             // for (auto& [_, coeff] : terms) {
             //     coeff *= multiplier;
@@ -1062,6 +1077,8 @@ TEST_CASE("TermsOperator arithmetic operators (*)", "[terms_op][ops]") {
 }
 
 TEST_CASE("TermsOperator arithmetic operators (/)", "[terms_op][ops]") {
+    using value_t = coeff_term_dict_t::value_type;
+
     SECTION("Division (numbers)") {
         coeff_term_dict_t ref_terms{
             {terms_t{{0, TermValue::X}}, 2.34},
@@ -1074,8 +1091,9 @@ TEST_CASE("TermsOperator arithmetic operators (/)", "[terms_op][ops]") {
         CHECK(op.get_terms() == ref_terms);
 
         const auto do_multiply = [](auto& terms, const auto& multiplier) constexpr {
-            for (auto it(begin(terms)), it_end(end(terms)); it != it_end; ++it) {
-                it.value() /= multiplier;
+            auto& ordered_index = terms.template get<order::insertion>();
+            for (auto it(begin(ordered_index)), it_end(end(ordered_index)); it != it_end; ++it) {
+                ordered_index.modify(it, [&multiplier](value_t& value) { value.second /= multiplier; });
             }
             // for (auto& [_, coeff] : terms) {
             //     coeff /= multiplier;
@@ -1127,11 +1145,13 @@ TEST_CASE("TermsOperator arithmetic operators (/)", "[terms_op][ops]") {
 }
 
 TEST_CASE("TermsOperator unary operators", "[terms_op][ops]") {
+    using value_t = coeff_term_dict_t::value_type;
+
     SECTION("Unary minus (TermsOperator)") {
         coeff_term_dict_t ref_terms;
 
-        auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
-        auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::X}}, 1.);
+        auto [it1, inserted1] = ref_terms.emplace_back(terms_t{{3, TermValue::X}}, 2.3);
+        auto [it2, inserted2] = ref_terms.emplace_back(terms_t{{1, TermValue::X}}, 1.);
         REQUIRE(inserted1);
         REQUIRE(inserted2);
 
@@ -1143,12 +1163,10 @@ TEST_CASE("TermsOperator unary operators", "[terms_op][ops]") {
         CHECK(op.get_terms() == ref_terms);
 
         const auto result = -op;
-        for (auto it(begin(ref_terms)), it_end(end(ref_terms)); it != it_end; ++it) {
-            it.value() *= -1;
+        auto& ordered_index = ref_terms.get<order::insertion>();
+        for (auto it(begin(ordered_index)), it_end(end(ordered_index)); it != it_end; ++it) {
+            ordered_index.modify(it, [](value_t& value) { value.second *= -1; });
         }
-        // for (auto& [local_ops, coeff] : ref_terms) {
-        //     coeff *= -1;
-        // }
 
         REQUIRE(!std::empty(result));
         REQUIRE(op == ref);
@@ -1162,8 +1180,8 @@ TEST_CASE("TermsOperator mathmetic operators (pow)", "[terms_op][ops]") {
     SECTION("Addition (TermsOperator)") {
         coeff_term_dict_t ref_terms;
 
-        auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
-        auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::X}}, 1.);
+        auto [it1, inserted1] = ref_terms.emplace_back(terms_t{{3, TermValue::X}}, 2.3);
+        auto [it2, inserted2] = ref_terms.emplace_back(terms_t{{1, TermValue::X}}, 1.);
         REQUIRE(inserted1);
         REQUIRE(inserted2);
 
@@ -1203,8 +1221,8 @@ TEST_CASE("TermsOperator split", "[terms_op][ops]") {
 TEST_CASE("TermsOperator comparison operators", "[terms_op][ops]") {
     coeff_term_dict_t ref_terms;
 
-    auto [it1, inserted1] = ref_terms.emplace(terms_t{{3, TermValue::X}}, 2.3);
-    auto [it2, inserted2] = ref_terms.emplace(terms_t{{1, TermValue::X}}, 1.);
+    auto [it1, inserted1] = ref_terms.emplace_back(terms_t{{3, TermValue::X}}, 2.3);
+    auto [it2, inserted2] = ref_terms.emplace_back(terms_t{{1, TermValue::X}}, 1.);
     REQUIRE(inserted1);
     REQUIRE(inserted2);
 

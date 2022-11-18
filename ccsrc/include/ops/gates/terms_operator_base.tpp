@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <iterator>
 #include <numeric>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -31,6 +32,8 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/any_range.hpp>
+
+#include <fmt/ranges.h>
 
 #include "config/constexpr_type_name.hpp"
 #include "config/conversion.hpp"
@@ -58,8 +61,7 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
 TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(const terms_t& terms,
                                                                                  coefficient_t coeff) {
     const auto [new_terms, new_coeff] = term_policy_t::simplify(terms, coeff);
-    terms_.emplace(new_terms, new_coeff);
-    calculate_num_targets_();
+    terms_.emplace_back(new_terms, new_coeff);
 }
 
 // -----------------------------------------------------------------------------
@@ -69,8 +71,7 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
 TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(const py_terms_t& terms,
                                                                                  coefficient_t coeff) {
     const auto [new_terms, new_coeff] = term_policy_t::simplify(terms, coeff);
-    terms_.emplace(new_terms, new_coeff);
-    calculate_num_targets_();
+    terms_.emplace_back(new_terms, new_coeff);
 }
 
 // -----------------------------------------------------------------------------
@@ -80,10 +81,8 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
 TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(const coeff_term_dict_t& terms) {
     for (const auto& [local_ops, coeff] : terms) {
         // NB: not calling simplify() here... assuming that the terms are simplified already.
-        terms_.emplace(term_policy_t::sort_terms(local_ops, coeff));
+        terms_.emplace_back(term_policy_t::sort_terms(local_ops, coeff));
     }
-
-    calculate_num_targets_();
 }
 
 // -----------------------------------------------------------------------------
@@ -92,7 +91,6 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(coeff_term_dict_t&& terms)
     : terms_(std::move(terms)) {
-    calculate_num_targets_();
 }
 
 // -----------------------------------------------------------------------------
@@ -111,7 +109,6 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
 TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(coeff_term_dict_t terms,
                                                                                  sorted_constructor_t /* unused */)
     : terms_{std::move(terms)} {
-    calculate_num_targets_();
 }
 
 // -----------------------------------------------------------------------------
@@ -122,7 +119,7 @@ template <typename other_coeff_t>
 TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::TermsOperatorBase(const derived_t_<other_coeff_t>& other)
     : num_targets_(other.num_targets_) {
     using conv_helper_t = traits::conversion_helper<coefficient_t>;
-    std::transform(begin(other.terms_), end(other.terms_), std::inserter(terms_, end(terms_)), [](const auto& term) {
+    std::transform(begin(other.terms_), end(other.terms_), std::back_inserter(terms_), [](const auto& term) {
         return typename coeff_term_dict_t::value_type{term.first, conv_helper_t::apply(term.second)};
     });
 }
@@ -140,6 +137,7 @@ constexpr auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::ki
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 uint32_t TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::num_targets() const {
+    calculate_num_targets_();
     return num_targets_;
 }
 
@@ -188,7 +186,11 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::get_coeff(const terms_t& term) const
     -> coefficient_t {
-    return terms_.at(term);
+    auto& hashed_index = terms_.template get<order::hashed>();
+    if (auto it = hashed_index.find(term); it != hashed_index.cend()) {
+        return it->second;
+    }
+    throw std::out_of_range(fmt::format("Term not found in TermsOperator: {}", term));
 }
 
 // -----------------------------------------------------------------------------
@@ -249,23 +251,28 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::identity() -
     return derived_t{terms_t{}};
 }
 
+// -----------------------------------------------------------------------------
+
+template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
+          template <typename coeff_t> class term_policy_t_>
+auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::identity(const coefficient_t& coeff) -> derived_t {
+    return derived_t{{terms_t{}, coeff}};
+}
+
 // =============================================================================
 
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::subs(
     const details::CoeffSubsProxy<coefficient_t>& subs_params) const -> derived_t {
+    using value_t = typename coeff_term_dict_t::value_type;
+
     auto out(*static_cast<const derived_t*>(this));
 
-    // NB: cannot use the usual range-for loop or std::algorithm since that uses operator*() implicitly and using
-    //     tsl::ordered_map the values accessed in this way are constants.
-    for (auto it(begin(out.terms_)), it_end(end(out.terms_)); it != it_end; ++it) {
-        subs_params.apply(it.value());
+    auto& ordered_index = out.terms_.template get<order::insertion>();
+    for (auto it = begin(ordered_index); it != end(ordered_index); ++it) {
+        ordered_index.modify(it, [&subs_params](value_t& value) { subs_params.apply(value.second); });
     }
-    // NB: This would work for normal std::map/std::unordered_map
-    // for (auto& [local_ops, coeff] : out.terms_) {
-    //     subs_params.apply(coeff);
-    // }
     return out;
 }
 
@@ -276,7 +283,7 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::hermitian() const -> derived_t {
     coeff_term_dict_t terms;
     for (auto& [local_ops, coeff] : terms_) {
-        terms.emplace(std::move(term_policy_t::hermitian(local_ops)), std::move(coeff_policy_t::conjugate(coeff)));
+        terms.emplace_back(std::move(term_policy_t::hermitian(local_ops)), coeff_policy_t::conjugate(coeff));
     }
     return derived_t{std::move(terms)};
 }
@@ -298,7 +305,8 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::hermitian() 
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::constant() const noexcept -> coefficient_t {
-    if (const auto it = terms_.find({}); it != end(terms_)) {
+    auto& hashed_index = terms_.template get<order::hashed>();
+    if (const auto it = hashed_index.find(terms_t{}); it != hashed_index.cend()) {
         assert(std::empty(it->first));
         return it->second;
     }
@@ -310,7 +318,15 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::constant() c
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::constant(const coefficient_t& coeff) -> void {
-    terms_[{}] = coeff;
+    using value_t = typename coeff_term_dict_t::value_type;
+
+    auto& hashed_index = terms_.template get<order::hashed>();
+    if (const auto it = hashed_index.find(terms_t{}); it != hashed_index.cend()) {
+        assert(std::empty(it->first));
+        hashed_index.modify(it, [&coeff](value_t& value) { value.second = coeff; });
+    } else {
+        terms_.emplace_back(terms_t{}, coeff);
+    }
 }
 
 // =============================================================================
@@ -438,26 +454,27 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::imag() const
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::compress(double abs_tol) -> derived_t& {
-    auto new_end = tsl::remove_if(begin(terms_), end(terms_), [abs_tol](const auto& term) -> bool {
-        return coeff_policy_t::is_zero(term.second, abs_tol);
-    });
-    terms_.erase(new_end, end(terms_));
+    // terms_.remove_if([abs_tol](const auto& term) -> bool { return coeff_policy_t::is_zero(term.second, abs_tol); });
 
-    for (auto it(begin(terms_)), it_end(end(terms_)); it != it_end; ++it) {
-        coeff_policy_t::compress(it.value(), abs_tol);
-    }
-
-    // NB: cannot use this with tsl::ordered_map since iterators are invalidated after calling erase()
-    // const auto end_it = end(terms_);
-    // for (auto it = begin(terms_); it != end_it;) {
-    //     if (coeff_policy_t::is_zero(it->second, abs_tol)) {
-    //         it = terms_.erase(it);
-    //         continue;
-    //     }
+    // auto ordered_index = terms_.template get<order::insertion>();
+    // for (auto it(ordered_index.begin()), it_end(ordered_index.end()); it != it_end; ++it) {
     //     coeff_policy_t::compress(it.value(), abs_tol);
-    //     ++it;
     // }
-    calculate_num_targets_();
+
+    using value_t = typename coeff_term_dict_t::value_type;
+
+    auto& ordered_index = terms_.template get<order::insertion>();
+    const auto end_it = ordered_index.cend();
+    for (auto it = ordered_index.begin(); it != end_it;) {
+        if (coeff_policy_t::is_zero(it->second, abs_tol)) {
+            // NB: this is safe as long as the elements are completely unique (which they are by design)
+            it = ordered_index.erase(it);
+            continue;
+        }
+
+        ordered_index.modify(it, [abs_tol](value_t& term) { coeff_policy_t::compress(term.second, abs_tol); });
+        ++it;
+    }
     return *static_cast<derived_t*>(this);
 }
 
@@ -624,15 +641,14 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
 template <mindquantum::concepts::compat_terms_op_scalar<derived_t_<coefficient_t_>> scalar_t>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator*=(const scalar_t& scalar) -> derived_t& {
     using conv_helper_t = traits::conversion_helper<coefficient_t>;
-    // NB: cannot use the usual range-for loop since that uses operator*() implicitly and using tsl::ordered_map the
-    //     values accessed in this way are constants
-    for (auto it(begin(terms_)), it_end(end(terms_)); it != it_end; ++it) {
-        coeff_policy_t::imul(it.value(), conv_helper_t::apply(scalar));
+    using value_t = typename coeff_term_dict_t::value_type;
+
+    auto& ordered_index = terms_.template get<order::insertion>();
+    for (auto it = begin(ordered_index); it != end(ordered_index); ++it) {
+        ordered_index.modify(it, [scalar = conv_helper_t::apply(scalar)](value_t& value) {
+            coeff_policy_t::imul(value.second, scalar);
+        });
     }
-    // NB: This would work for normal std::map/std::unordered_map
-    // for (auto& [term, coeff] : terms_) {
-    //     coeff_policy_t::imul(coeff.value(), number);
-    // }
     return *static_cast<derived_t*>(this);
 }
 #else
@@ -645,15 +661,13 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::operator*=(c
         return mul_impl_(op_or_scalar);
     } else {
         using conv_helper_t = traits::conversion_helper<coefficient_t>;
-        // NB: cannot use the usual range-for loop since that uses operator*() implicitly and using tsl::ordered_map the
-        //     values accessed in this way are constants
-        for (auto it(begin(terms_)), it_end(end(terms_)); it != it_end; ++it) {
-            coeff_policy_t::imul(it.value(), conv_helper_t::apply(op_or_scalar));
+        using value_t = typename coeff_term_dict_t::value_type;
+        auto& ordered_index = terms_.template get<order::insertion>();
+        for (auto it = begin(ordered_index); it != end(ordered_index); ++it) {
+            ordered_index.modify(it, [scalar = conv_helper_t::apply(op_or_scalar)](value_t& value) {
+                coeff_policy_t::imul(value.second, scalar);
+            });
         }
-        // NB: This would work for normal std::map/std::unordered_map
-        // for (auto& [term, coeff] : terms_) {
-        //     coeff_policy_t::imul(coeff.value(), op_or_scalar);
-        // }
         return *static_cast<derived_t*>(this);
     }
 }
@@ -709,8 +723,8 @@ bool TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::is_equal(con
     MQ_DEBUG("Set intersection: {}", intersection);
 
     for (const auto& term : intersection) {
-        const auto& left = terms_.at(term.first);
-        const auto& right = other.get_terms().at(term.first);
+        const auto& left = terms_.template get<order::hashed>().find(term.first)->second;
+        const auto& right = other.get_terms().template get<order::hashed>().find(term.first)->second;
         static_assert(std::is_same_v<std::remove_cvref_t<decltype(left)>, coefficient_t>);
         static_assert(std::is_same_v<std::remove_cvref_t<decltype(right)>, coefficient_t>);
         if (!policy_t::equal(left, conv_helper_t::apply(right))) {
@@ -739,10 +753,9 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::cast_(const 
 
     other_terms_t real_terms;
     auto out(*static_cast<const derived_t*>(this));
-    std::transform(begin(terms_), end(terms_), std::inserter(real_terms, end(real_terms)),
-                   [&cast_func](const auto& term) {
-                       return other_value_t{term.first, cast_func(term.second)};
-                   });
+    std::transform(begin(terms_), end(terms_), std::back_inserter(real_terms), [&cast_func](const auto& term) {
+        return other_value_t{term.first, cast_func(term.second)};
+    });
     return return_t{real_terms};
 }
 
@@ -756,20 +769,22 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::add_sub_impl
                                                                                   coeff_unary_op_t&& coeff_unary_op)
     -> derived_t& {
     using conv_helper_t = traits::conversion_helper<coefficient_t>;
-    for (const auto& [term, coeff] : other.terms_) {
-        auto it = terms_.find(term);
-        if (it != terms_.end()) {
-            assign_modify_op(it.value(), conv_helper_t::apply(coeff));
-        } else {
-            it = terms_.emplace(term, coeff_unary_op(conv_helper_t::apply(coeff))).first;
-        }
+    using value_t = typename coeff_term_dict_t::value_type;
 
-        if (coeff_policy_t::is_zero(it->second)) {
-            terms_.erase(it);
+    for (const auto& [term, coeff] : other.terms_) {
+        auto conv_coeff = conv_helper_t::apply(coeff);
+        auto& hashed_index = terms_.template get<order::hashed>();
+        if (auto it = hashed_index.find(term); it != hashed_index.cend()) {
+            hashed_index.modify(it, [&assign_modify_op, &conv_coeff](value_t& term_coeff) {
+                assign_modify_op(term_coeff.second, conv_coeff);
+            });
+            if (coeff_policy_t::is_zero(it->second)) {
+                hashed_index.erase(it);
+            }
+        } else if (!coeff_policy_t::is_zero(conv_coeff)) {
+            terms_.emplace_back(term, coeff_unary_op(conv_coeff));
         }
     }
-
-    calculate_num_targets_();
 
     return *static_cast<derived_t*>(this);
 }
@@ -781,6 +796,8 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
 template <typename other_t>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::mul_impl_(const other_t& other) -> derived_t& {
     using conv_helper_t = traits::conversion_helper<coefficient_t>;
+    using value_t = typename coeff_term_dict_t::value_type;
+
     coeff_term_dict_t product_results;
     for (const auto& [left_op, left_coeff] : terms_) {
         for (const auto& [right_op, right_coeff] : other.get_terms()) {
@@ -788,16 +805,18 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::mul_impl_(co
             new_op.insert(end(new_op), begin(right_op), end(right_op));
             const auto [new_terms, new_coeff] = term_policy_t::simplify(
                 new_op, coeff_policy_t::mul(left_coeff, conv_helper_t::apply(right_coeff)));
-            if (auto it = product_results.find(new_terms); it != end(product_results)) {
-                coeff_policy_t::iadd(it.value(), new_coeff);
+            auto& hashed_index = product_results.template get<order::hashed>();
+            if (auto it = hashed_index.find(new_terms); it != hashed_index.cend()) {
+                hashed_index.modify(it, [new_coeff = new_coeff](value_t& term_coeff) {
+                    coeff_policy_t::iadd(term_coeff.second, new_coeff);
+                });
             } else {
-                product_results.emplace(std::move(new_terms), std::move(new_coeff));
+                product_results.emplace_back(std::move(new_terms), std::move(new_coeff));
             }
         }
     }
     terms_ = std::move(product_results);
 
-    calculate_num_targets_();
     return *static_cast<derived_t*>(this);
 }
 
@@ -805,7 +824,7 @@ auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::mul_impl_(co
 
 template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
-void TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::calculate_num_targets_() noexcept {
+void TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::calculate_num_targets_() const noexcept {
     num_targets_ = count_qubits();
 }
 

@@ -110,3 +110,39 @@ else
 fi
 
 # ==============================================================================
+
+adjust_python=1
+for subdir in bin Scripts; do
+    for ext in '' .exe; do
+        python_exec="$VIRTUAL_ENV/$subdir/$PYTHON$ext"
+        if [ -f "$python_exec" ]; then
+            adjust_python=0
+            break
+        fi
+    done
+done
+
+if [ "${adjust_python:-0}" -eq 1 ]; then
+    echo "$PYTHON not found in $VIRTUAL_ENV"
+    echo "  -> looking for Python executables in $VIRTUAL_ENV"
+
+    found=0
+    for subdir in bin Scripts; do
+        for exec in python3 python python3.exe python.exe; do
+            python_exec="$VIRTUAL_ENV/$subdir/$exec"
+            if [ -f "$python_exec" ]; then
+                PYTHON="$exec"
+                found=1
+                break
+            fi
+        done
+    done
+
+    if [ "${found:-0}" -ne 1 ]; then
+        die 'Unable to locate python or python3 in virtual environment!'
+    fi
+
+    echo "  -> using $PYTHON"
+fi
+
+# ==============================================================================

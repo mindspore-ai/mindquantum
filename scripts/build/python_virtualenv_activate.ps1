@@ -76,3 +76,43 @@ if (-Not $dry_run) {
 }
 
 # ==============================================================================
+
+$adjust_python = $true
+
+foreach ($subdir in @('bin', 'Scripts')) {
+    foreach ($ext in @('', '.exe')) {
+        $python_exec = "${Env:VIRTUAL_ENV}\$subdir\$PYTHON$ext"
+        if (Test-Path -Path $python_exec) {
+            $adjust_python = $false
+            break
+        }
+    }
+}
+
+if ($adjust_python) {
+    Write-Output "$PYTHON not found in $Env:VIRTUAL_ENV"
+    Write-Output "  -> looking for Python executables in $ENV:VIRTUAL_ENV"
+
+    $found = $false
+    foreach ($subdir in @('bin', 'Scripts')) {
+        foreach ($exec in @('python3', 'python', 'python3.exe', 'python.exe')) {
+            $python_exec = "${Env:VIRTUAL_ENV}\$subdir\$exec"
+            if (Test-Path -Path $python_exec) {
+                $PYTHON = $exec
+                $found = $true
+                break
+            }
+        }
+    }
+
+    if (-Not $found) {
+        Write-Error 'Unable to locate python or python3 in virtual environment!'
+        Pop-AllEnvironmentVariables
+        exit 1
+    }
+
+    Write-Output "  -> using $PYTHON"
+}
+
+
+# ==============================================================================

@@ -169,19 +169,14 @@ class Projectq : public ::projectq::Simulator {
     }
 
     void ApplyDampingChannel(const BasicGate<T> &gate) {
-        VT<size_t> idx_of_zero;  // the 01 base index of object qubit that being '0'
-        VT<size_t> idx_of_one;   // the 01 base index of object qubit that being '1'
-        for (size_t i = 0; i < (1 << n_qubits_); ++i) {
-            if ((i >> gate.obj_qubits_[0]) & 1) {
-                idx_of_one.push_back(i);
-            } else {
-                idx_of_zero.push_back(i);
+        double reduced_factor_b_square = 0;
+        auto obj_mask = (1UL << gate.obj_qubits_[0]);
+        run();
+        for (size_t i = 0; i < (1UL << n_qubits_); ++i) {
+            if ((i & obj_mask) == obj_mask) {
+                reduced_factor_b_square += this->vec_[2 * i] * this->vec_[2 * i] + this->vec_[2 * i + 1]
+                                           + this->vec_[2 * i + 1];
             }
-        }
-        VT<CT<T>> curr_state = Projectq::cheat();
-        double reduced_factor_b_square = 0;  // reduced quantum state (a, b) of the object qubit
-        for (size_t idx : idx_of_one) {
-            reduced_factor_b_square += (curr_state[idx] * std::conj(curr_state[idx])).real();
         }
         double reduced_factor_b = sqrt(reduced_factor_b_square);
         if (reduced_factor_b < 1e-8) {
@@ -189,37 +184,39 @@ class Projectq : public ::projectq::Simulator {
         }
         double prob = gate.damping_coeff_ * reduced_factor_b_square;
         double r = static_cast<double>(rng_());
-        if (r <= prob) {  // change to '0' or '1' state
-            VT<CT<T>> updated_state(curr_state.size());
+        if (r <= prob) {                // change to '0' or '1' state
             if (gate.name_ == "ADC") {  // Amplitude damping channel case
-                for (size_t j = 0; j < idx_of_zero.size(); ++j) {
-                    updated_state[idx_of_zero[j]] = curr_state[idx_of_one[j]] / reduced_factor_b;
-                }
-                for (size_t idx : idx_of_one) {
-                    updated_state[idx] = 0;
+                for (size_t i = 0; i < (1UL << n_qubits_); i++) {
+                    if ((i & obj_mask) == 0) {
+                        this->vec_[2 * i] = this->vec_[2 * (i + obj_mask)] / reduced_factor_b;
+                        this->vec_[2 * i + 1] = this->vec_[2 * (i + obj_mask) + 1] / reduced_factor_b;
+                        this->vec_[2 * (i + obj_mask)] = 0;
+                        this->vec_[2 * (i + obj_mask) + 1] = 0;
+                    }
                 }
             } else {  // Phase damping channel case
-                for (size_t idx : idx_of_one) {
-                    updated_state[idx] = curr_state[idx] / reduced_factor_b;
-                }
-                for (size_t idx : idx_of_zero) {
-                    updated_state[idx] = 0;
+                for (size_t i = 0; i < (1UL << n_qubits_); i++) {
+                    if ((i & obj_mask) == obj_mask) {
+                        this->vec_[i * 2] /= reduced_factor_b;
+                        this->vec_[i * 2 + 1] /= reduced_factor_b;
+                    } else {
+                        this->vec_[i * 2] = 0;
+                        this->vec_[i * 2 + 1] = 0;
+                    }
                 }
             }
-            Projectq::SetState(updated_state);
         } else {  // change to remained state
             double coeff_a = 1 / sqrt(1 - prob);
             double coeff_b = sqrt(1 - gate.damping_coeff_) / sqrt(1 - prob);
-            size_t counter = 0;
-            for (size_t i = 0; i < (curr_state.size()); ++i) {
-                if (i == idx_of_zero[counter]) {
-                    curr_state[i] *= coeff_a;
-                    counter += 1;
+            for (size_t i = 0; i < (1UL << n_qubits_); ++i) {
+                if ((i & obj_mask) == 0) {
+                    this->vec_[2 * i] *= coeff_a;
+                    this->vec_[2 * i + 1] *= coeff_a;
                 } else {
-                    curr_state[i] *= coeff_b;
+                    this->vec_[2 * i] *= coeff_b;
+                    this->vec_[2 * i + 1] *= coeff_b;
                 }
             }
-            Projectq::SetState(curr_state);
         }
     }
 

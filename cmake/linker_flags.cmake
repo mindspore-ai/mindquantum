@@ -24,13 +24,15 @@ test_linker_option(
   linker_flags
   LANGS C CXX DPCXX CUDA NVCXX
   FLAGS "--strip-all -s"
-  GENEX "$<OR:$<CONFIG:RELEASE>,$<CONFIG:RELWITHDEBINFO>>"
+  # GENEX "$<OR:$<CONFIG:RELEASE>,$<CONFIG:RELWITHDEBINFO>>"
+  GENEX "$<CONFIG:RELEASE>"
   CMAKE_OPTION LINKER_STRIP_ALL)
 
 test_linker_option(
   linker_flags
   LANGS C CXX DPCXX CUDA NVCXX
-  FLAGS "-z,now")
+  FLAGS "-z,now"
+  CMAKE_OPTION LINKER_NOW)
 
 # ------------------------------------------------------------------------------
 
@@ -116,7 +118,6 @@ if(UNIX AND NOT APPLE)
     else()
       message(STATUS "Readelf program not found -> skipping RPATH/RUNPATH check")
     endif()
-    # cmake-lint: disable=C0103
     set(_cmake_rpath_check
         ${_cmake_rpath_check}
         CACHE BOOL "Do an extended CMake test to make sure no RPATH are set?")
@@ -246,7 +247,6 @@ set(CMAKE_NVCXX_LDFLAGS_INIT \"${CMAKE_NVCXX_LDFLAGS_INIT} -v\")")
       list(POP_BACK CMAKE_MESSAGE_INDENT)
       if(_test_result)
         message(CHECK_PASS "succeeded")
-        # cmake-lint: disable=C0103
 
         # Only perform the RPATH/RUNPATH check once
         set(_cmake_rpath_check

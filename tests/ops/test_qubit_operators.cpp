@@ -122,7 +122,7 @@ TEST_CASE("QubitOperator constructor", "[qubit_op][ops]") {
     CHECK(std::size(op) == 1);
     CHECK(op.get_terms() == ref_terms);
 
-    const auto [it, inserted] = ref_terms.emplace(terms_t{{1, TermValue::Y}}, 3.2);
+    const auto [it, inserted] = ref_terms.emplace_back(terms_t{{1, TermValue::Y}}, 3.2);
     op += QubitOperatorCD("Y1", it->second);
 
     CHECK(std::size(op) == 2);

@@ -68,3 +68,45 @@ if EXIST !python_venv_path!\Scripts\activate.bat (
 )
 
 rem ============================================================================
+
+if EXIST !python_venv_path!\bin\!PYTHON! (
+   goto :done_adjust_python
+)
+if EXIST !python_venv_path!\bin\!PYTHON!.exe (
+   goto :done_adjust_python
+)
+if EXIST !python_venv_path!\Scripts\!PYTHON! (
+   goto :done_adjust_python
+)
+if EXIST !python_venv_path!\Scripts\!PYTHON!.exe (
+   goto :done_adjust_python
+)
+
+:adjust_python
+
+echo !PYTHON! not found in !VIRTUAL_ENV!
+echo   -> looking for Pythone executables in !VIRTUAL_ENV!
+
+if EXIST !python_venv_path!\bin\python3 (
+   set PYTHON=python3
+   goto :done_adjust_python
+)
+if EXIST !python_venv_path!\bin\python (
+   set PYTHON=python
+   goto :done_adjust_python
+)
+if EXIST !python_venv_path!\bin\python3.exe (
+   set PYTHON=python3.exe
+   goto :done_adjust_python
+)
+if EXIST !python_venv_path!\bin\python.exe (
+   set PYTHON=python.exe
+   goto :done_adjust_python
+)
+
+echo "Unable to locate python or python3 in virtual environment!"
+exit /B 1
+
+:done_adjust_python
+
+rem ============================================================================

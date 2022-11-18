@@ -68,13 +68,16 @@ auto bind_ops(pybind11::module& module, const std::string_view& name) {  // NOLI
 
     // ------------------------------
     // Properties
-#if (defined __GNUC__) && __GNUC__ == 7 && __GNUC_MINOR__ == 5
+#if (defined __GNUC__) && __GNUC__ == 7 && __GNUC_MINOR__ <= 5
     const auto read_func = static_cast<coeff_t (op_t::*)() const>(&op_t::constant);
     const auto write_func = static_cast<coeff_t (op_t::*)() const>(&op_t::constant);
-    klass.def_property("constant", read_func, write_func);
+    const auto identity_func = static_cast<op_t (*)()>(&op_t::identity);
+    klass.def_property("constant", read_func, write_func).def_static("identity", identity_func);
 #else
-    klass.def_property("constant", static_cast<coeff_t (op_t::*)() const>(&op_t::constant),
-                       static_cast<coeff_t (op_t::*)() const>(&op_t::constant));
+    klass
+        .def_property("constant", static_cast<coeff_t (op_t::*)() const>(&op_t::constant),
+                      static_cast<coeff_t (op_t::*)() const>(&op_t::constant))
+        .def_static("identity", static_cast<op_t (*)()>(&op_t::identity));
 #endif /* GCC 7.5.X */
     klass.def_property_readonly("imag", &op_t::imag)
         .def_property_readonly(
@@ -98,7 +101,6 @@ auto bind_ops(pybind11::module& module, const std::string_view& name) {  // NOLI
         .def("split", &op_t::split)
         .def("subs", &op_t::subs, "subs_proxy"_a)
         .def("terms", &op_t::get_terms_pair)
-        .def_static("identity", &op_t::identity)
         .def_static("loads", op_t::loads, "string_data"_a)
         // ------------------------------
         // Python magic methods

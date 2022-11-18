@@ -41,7 +41,7 @@ struct CoeffSubsProxy<ParameterResolver<float_t>> {
     explicit CoeffSubsProxy(subs_t params_a) : params(std::move(params_a)) {
     }
 
-    void apply(coeff_t& coeff) const {
+    void apply(coeff_t& coeff) const {  // NOLINT(runtime/references)
         coeff = coeff.Combination(params);
     }
 
@@ -57,6 +57,7 @@ struct CoeffPolicy<ParameterResolver<float_t>> : CoeffPolicyBase<ParameterResolv
     using coeff_policy_real_t = typename base_t::coeff_policy_real_t;
     using matrix_coeff_t = float_t;
 
+    static const coeff_t zero;
     static const coeff_t one;
     static constexpr auto is_complex_valued = traits::is_std_complex_v<float_t>;
 
@@ -80,25 +81,25 @@ struct CoeffPolicy<ParameterResolver<float_t>> : CoeffPolicyBase<ParameterResolv
     }
 
     // Binary operators
-    static auto iadd(coeff_t& lhs, const coeff_t& rhs) {
+    static auto iadd(coeff_t& lhs, const coeff_t& rhs) {  // NOLINT(runtime/references)
         return lhs += rhs;
     }
     static auto add(const coeff_t& lhs, const coeff_t& rhs) {
         return lhs + rhs;
     }
-    static auto isub(coeff_t& lhs, const coeff_t& rhs) {
+    static auto isub(coeff_t& lhs, const coeff_t& rhs) {  // NOLINT(runtime/references)
         return lhs -= rhs;
     }
     static auto sub(const coeff_t& lhs, const coeff_t& rhs) {
         return lhs - rhs;
     }
-    static auto imul(coeff_t& lhs, const coeff_t& rhs) {
+    static auto imul(coeff_t& lhs, const coeff_t& rhs) {  // NOLINT(runtime/references)
         return lhs *= rhs;
     }
     static auto mul(const coeff_t& lhs, const coeff_t& rhs) {
         return lhs * rhs;
     }
-    static auto idiv(coeff_t& lhs, const coeff_t& rhs) {
+    static auto idiv(coeff_t& lhs, const coeff_t& rhs) {  // NOLINT(runtime/references)
         return lhs /= rhs;
     }
     static auto div(const coeff_t& lhs, const coeff_t& rhs) {
@@ -115,17 +116,17 @@ struct CoeffPolicy<ParameterResolver<float_t>> : CoeffPolicyBase<ParameterResolv
         }
         return false;
     }
-    static auto discard_imag(coeff_t& coeff) {
+    static auto discard_imag(coeff_t& coeff) {  // NOLINT(runtime/references)
         if constexpr (is_complex_valued) {
             coeff.const_value.imag(0.);
             std::for_each(begin(coeff.data_), end(coeff.data_), [](auto& param) { std::get<1>(param).imag(0.); });
         }
     }
-    static auto discard_real(coeff_t& coeff) {
+    static auto discard_real(coeff_t& coeff) {  // NOLINT(runtime/references)
         coeff.const_value.real(0.);
         std::for_each(begin(coeff.data_), end(coeff.data_), [](auto& param) { std::get<1>(param).real(0.); });
     }
-    static auto compress(coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
+    static auto compress(coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {  // NOLINT(runtime/references)
         // NB: This assumes a complex API similar to std::complex
         if constexpr (is_complex_valued) {
             if (coeff.IsConst()) {
@@ -149,6 +150,10 @@ using FloatPRCoeffPolicy = CoeffPolicy<ParameterResolver<float>>;
 using DoublePRCoeffPolicy = CoeffPolicy<ParameterResolver<double>>;
 using CmplxFloatPRCoeffPolicy = CoeffPolicy<ParameterResolver<std::complex<float>>>;
 using CmplxDoublePRCoeffPolicy = CoeffPolicy<ParameterResolver<std::complex<double>>>;
+
+template <typename float_t>
+inline const typename CoeffPolicy<ParameterResolver<float_t>>::coeff_t CoeffPolicy<ParameterResolver<float_t>>::zero{
+    typename CoeffPolicy<ParameterResolver<float_t>>::coeff_t{0.0}};
 
 template <typename float_t>
 inline const typename CoeffPolicy<ParameterResolver<float_t>>::coeff_t CoeffPolicy<ParameterResolver<float_t>>::one{

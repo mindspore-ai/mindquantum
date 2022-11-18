@@ -173,8 +173,26 @@ endif()
 test_compile_option(
   compile_flags_release
   LANGS C CXX DPCXX
-  FLAGS "-ffast-math /fp:fast -fast" "-O3 /Ox"
+  FLAGS "-ffast-math /fp:fast -fast"
   GENEX "$<OR:$<CONFIG:RELEASE>,$<CONFIG:RELWITHDEBINFO>>")
+
+# --------------------------------------
+
+if(CMAKE_COMPILER_IS_GNUCXX
+   AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.5.0
+   AND MINGW)
+  message(STATUS "Replacing -O3 with -O2 to workaround old GCC bug")
+  foreach(_config RELEASE DEBUG MINSIZEREL RELWITHDEBINFO)
+    string(REPLACE "-O3" "-O2" _cxx_flags "${CMAKE_CXX_FLAGS_${_config}}")
+    set(CMAKE_CXX_FLAGS_${_config}
+        "${_cxx_flags}"
+        CACHE STRING "Flags used by the CXX compiler during ${_config} builds." FORCE)
+    string(REPLACE "-O3" "-O2" _c_flags "${CMAKE_C_FLAGS_${_config}}")
+    set(CMAKE_C_FLAGS_${_config}
+        "${_c_flags}"
+        CACHE STRING "Flags used by the C compiler during ${_config} builds." FORCE)
+  endforeach()
+endif()
 
 # --------------------------------------
 

@@ -58,8 +58,7 @@ auto FermionOperator<coeff_t>::sparse_matrix(std::optional<uint32_t> n_qubits) c
         return std::nullopt;
     }
 
-    // NB: this is assuming that num_targets_ is up-to-date
-    const auto& n_qubits_local = base_t::num_targets_;
+    const auto& n_qubits_local = base_t::num_targets();
 
     if (n_qubits_local == 0UL && !n_qubits) {
         MQ_ERROR("You should specify n_qubits for converting an identity qubit operator.");

@@ -16,8 +16,6 @@
 "mindquantum/ccsrc/lib/ops/gates/fermion_operator.cpp"                                      "containerOutOfBounds"
 "mindquantum/ccsrc/lib/ops/gates/fermion_operator_parameter_resolver.cpp"                   "containerOutOfBounds"
 
-"mindquantum/ccsrc/python/experimental/include/python/core/tsl_ordered_map.hpp:40"          "duplicateBreak"
-
 "mindquantum/ccsrc/include/core/parameter_resolver.h:707"                                   "duplicateExpression"
 "mindquantum/ccsrc/python/mqbackend/lib/binding.cc"                                         "duplicateExpression"
 
@@ -69,7 +67,6 @@
 "mindquantum/ccsrc/include/experimental/ops/parametric/param_names.hpp"                     "unusedStructMember"
 "mindquantum/ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp"                 "unusedStructMember"
 
-"mindquantum/ccsrc/include/config/tsl_ordered_map.hpp"                                      "useStlAlgorithm"
 "mindquantum/ccsrc/include/experimental/core/control.hpp:79"                                "useStlAlgorithm"
 "mindquantum/ccsrc/include/ops/gates/terms_operator_base.tpp"                               "useStlAlgorithm"
 "mindquantum/ccsrc/lib/experimental/core/circuit_manager.cpp"                               "useStlAlgorithm"

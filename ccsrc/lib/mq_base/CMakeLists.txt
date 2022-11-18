@@ -32,17 +32,4 @@ if(ENABLE_CUDA)
   target_compile_definitions(mq_base PUBLIC GPUACCELERATED)
 endif()
 
-target_link_libraries(
-  mq_base
-  PUBLIC ${MQ_OPENMP_TARGET}
-         mindquantum::boost_headers
-         mindquantum::eigen
-         mindquantum::fmt
-         mindquantum::json
-         mindquantum::lru_cache
-         mindquantum::lru_cache
-         mindquantum::ordered_map
-         mindquantum::ordered_map
-         $<$<BOOL:${ENABLE_LOGGING}>:mindquantum::spdlog>)
-
 # ==============================================================================

@@ -123,7 +123,6 @@ if(USE_OPENMP)
     list(APPEND PARALLEL_LIBS ${OpenMP_target})
   else()
     set(MQ_OPENMP_TARGET)
-    # cmake-lint: disable=C0103
     set(USE_OPENMP
         FALSE
         CACHE INTERNAL "Disabled OpenMP support")
@@ -164,7 +163,6 @@ if(ENABLE_CUDA)
     set(MQ_CUDA_VERSION "${CUDAToolkit_VERSION_MAJOR}.${CUDAToolkit_VERSION_MINOR}")
   else()
     message(STATUS "Disabling CUDA since unable to locate CUDAToolkit")
-    # cmake-lint: disable=C0103
     set(ENABLE_CUDA
         OFF
         CACHE INTERNAL "Enable building of CUDA/NVHPC libraries")

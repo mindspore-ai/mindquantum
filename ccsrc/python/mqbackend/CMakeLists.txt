@@ -47,6 +47,7 @@ pybind11_add_module(
   OUTPUT_HINT
     "${MQ_PYTHON_PACKAGE_NAME}"
     ${CMAKE_CURRENT_LIST_DIR}/lib/binding.cc ${CMAKE_CURRENT_LIST_DIR}/lib/terms_operators.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lib/fermion_operators.cpp ${CMAKE_CURRENT_LIST_DIR}/lib/qubit_operators.cpp
     ${CMAKE_CURRENT_LIST_DIR}/lib/logging.cpp)
 
 if(_lto_workaround)

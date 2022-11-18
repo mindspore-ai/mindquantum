@@ -77,7 +77,7 @@ struct CoeffSubsProxy<SymEngine::RCP<const SymEngine::Basic>> {
     explicit CoeffSubsProxy(subs_t params_a) : params(std::move(params_a)) {
     }
 
-    void apply(coeff_t& coeff) const {
+    void apply(coeff_t& coeff) const {  // NOLINT(runtime/references)
         coeff = SymEngine::expand(coeff->subs(params));
     }
 
@@ -92,6 +92,7 @@ struct CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>> {
     using coeff_policy_real_t = self_t;
     using matrix_coeff_t = std::complex<double>;
 
+    static const coeff_t zero;
     static const coeff_t one;
 
     // Getter
@@ -127,26 +128,26 @@ struct CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>> {
         // return SymEngine::Add{SymEngine::zero,
         //                       SymEngine::umap_basic_num{{lhs, SymEngine::one}, {rhs, SymEngine::one}}};
     }
-    static auto iadd(coeff_t& lhs, const coeff_t& rhs) {
+    static auto iadd(coeff_t& lhs, const coeff_t& rhs) {  // NOLINT(runtime/references)
         return lhs = self_t::add(lhs, rhs);
         // return lhs = self_t::add(lhs, rhs).rcp_from_this();
     }
     static auto sub(const coeff_t& lhs, const coeff_t& rhs) {
         return SymEngine::sub(lhs, rhs);
     }
-    static auto isub(coeff_t& lhs, const coeff_t& rhs) {
+    static auto isub(coeff_t& lhs, const coeff_t& rhs) {  // NOLINT(runtime/references)
         return lhs = self_t::sub(lhs, rhs);
     }
     static auto mul(const coeff_t& lhs, const coeff_t& rhs) {
         return SymEngine::mul(lhs, rhs);
     }
-    static auto imul(coeff_t& lhs, const coeff_t& rhs) {
+    static auto imul(coeff_t& lhs, const coeff_t& rhs) {  // NOLINT(runtime/references)
         return lhs = self_t::mul(lhs, rhs);
     }
     static auto div(const coeff_t& lhs, const coeff_t& rhs) {
         return SymEngine::div(lhs, rhs);
     }
-    static auto idiv(coeff_t& lhs, const coeff_t& rhs) {
+    static auto idiv(coeff_t& lhs, const coeff_t& rhs) {  // NOLINT(runtime/references)
         return lhs = self_t::div(lhs, rhs);
     }
 
@@ -164,17 +165,17 @@ struct CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>> {
         }
         return false;
     }
-    static auto discard_imag(coeff_t& coeff) {
+    static auto discard_imag(coeff_t& coeff) {  // NOLINT(runtime/references)
         if (SymEngine::is_a_Complex(*coeff)) {
             coeff = SymEngine::complex_double(SymEngine::eval_complex_double(*coeff).real());
         }
     }
-    static auto discard_real(coeff_t& coeff) {
+    static auto discard_real(coeff_t& coeff) {  // NOLINT(runtime/references)
         if (SymEngine::is_a_Complex(*coeff)) {
             coeff = SymEngine::complex_double(SymEngine::eval_complex_double(*coeff).imag());
         }
     }
-    static auto compress(coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {
+    static auto compress(coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {  // NOLINT(runtime/references)
         if (SymEngine::is_a_Complex(*coeff)) {
             auto tmp = SymEngine::eval_complex_double(*coeff);
             CoeffPolicy<std::complex<double>>::compress(tmp, abs_tol);
@@ -182,6 +183,10 @@ struct CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>> {
         }
     }
 };
+
+inline const CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>>::coeff_t
+    CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>>::zero
+    = SymEngine::zero;
 
 inline const CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>>::coeff_t
     CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>>::one

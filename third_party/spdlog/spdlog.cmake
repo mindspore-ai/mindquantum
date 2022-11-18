@@ -42,8 +42,13 @@ set(CMAKE_OPTION
     -DSPDLOG_BUILD_WARNINGS=OFF
     -DSPDLOG_INSTALL=ON
     -DSPDLOG_TIDY=OFF
-    -DSPDLOG_FMT_EXTERNAL=ON
     -Dfmt_DIR=${fmt_DIR})
+
+if(_fmt_use_header_only)
+  list(APPEND CMAKE_OPTION -DSPDLOG_FMT_EXTERNAL_HO=ON)
+else()
+  list(APPEND CMAKE_OPTION -DSPDLOG_FMT_EXTERNAL=ON)
+endif()
 
 mindquantum_add_pkg(
   spdlog

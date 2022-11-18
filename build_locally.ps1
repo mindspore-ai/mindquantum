@@ -260,6 +260,8 @@ if ([bool]$cmake_generator) {
     $cmake_args += "-G", "$cmake_generator"
 }
 
+$cmake_args += $cmake_extra_args
+
 if([bool]$prefix_dir) {
     $cmake_args += "-DCMAKE_INSTALL_PREFIX:FILEPATH=`"${prefix_dir}`""
 }

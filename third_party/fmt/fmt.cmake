@@ -44,3 +44,16 @@ mindquantum_add_pkg(
   CMAKE_PKG_NO_COMPONENTS
   CMAKE_OPTION ${CMAKE_OPTION}
   TARGET_ALIAS 3 mindquantum::fmt fmt::fmt-header-only fmt::fmt)
+
+get_target_property(_aliased_target mindquantum::fmt ALIASED_TARGET)
+if(_aliased_target)
+  if("${_aliased_target}" STREQUAL "fmt::fmt")
+    set(_fmt_use_header_only
+        FALSE
+        CACHE BOOL "Is mindquantum::fmt using fmt::fmt-header-only")
+  else()
+    set(_fmt_use_header_only
+        TRUE
+        CACHE BOOL "Is mindquantum::fmt using fmt::fmt-header-only")
+  endif()
+endif()
