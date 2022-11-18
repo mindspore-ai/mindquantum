@@ -280,6 +280,18 @@ test_compile_option(
 
 # ------------------------------------------------------------------------------
 
+# NB: in principle we could also use --analyze for Clang, but Clang does not produce valid object file in this mode so
+# the linking step will inevitably fail
+
+test_compile_option(
+  compiler_sanitizer
+  LANGS C CXX
+  FLAGS "-fanalyzer /analyze" # for GCC and MSVC
+  CMAKE_OPTION ENABLE_ANALYZER
+  NO_TRYCOMPILE_TARGET NO_TRYCOMPILE_FLAGCHECK_TARGET)
+
+# ------------------------------------------------------------------------------
+
 if(NOT VERSION_INFO)
   execute_process(
     COMMAND ${Python_EXECUTABLE} setup.py --version

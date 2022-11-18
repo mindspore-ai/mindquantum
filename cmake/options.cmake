@@ -100,6 +100,8 @@ endif()
 option(ENABLE_PROFILING "Enable compilation with profiling flags." OFF)
 option(ENABLE_STACK_PROTECTION "Enable the use of -fstack-protector during compilation" ON)
 
+option(ENABLE_ANALYZER "Enable compiler static analysis tools (e.g. -fanalyzer for GCC)" OFF)
+
 option(ENABLE_SANITIZERS "Enable additional CMake build types for sanitizers" ON)
 cmake_dependent_option(ENABLE_SANITIZER_ADDRESS "Enable the address sanitizer" ON "ENABLE_SANITIZERS" OFF)
 cmake_dependent_option(ENABLE_SANITIZER_UNDEFINED "Enable the undefined behavior sanitizer" ON "ENABLE_SANITIZERS" OFF)
