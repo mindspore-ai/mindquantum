@@ -52,6 +52,26 @@ test_linker_option(
 
 # ------------------------------------------------------------------------------
 
+test_linker_option(
+  link_sanitize_address
+  LANGS C CXX
+  FLAGS "-fsanitize=address"
+  VERBATIM
+  CMAKE_OPTION ENABLE_SANITIZER_ADDRESS
+  GENEX "$<CONFIG:SANITIZER>")
+
+# --------------------------------------
+
+test_linker_option(
+  link_sanitize_undefined
+  LANGS C CXX
+  FLAGS "-fsanitize=undefined"
+  VERBATIM
+  CMAKE_OPTION ENABLE_SANITIZER_UNDEFINED
+  GENEX "$<CONFIG:SANITIZER>")
+
+# ------------------------------------------------------------------------------
+
 if(ENABLE_CUDA AND _nvcxx_enabled)
   # NB: simply copy over the compiler options to linker options since they are the same
   foreach(_src_target nvhpc_cuda_flags_NVCXX nvhpc_cuda_version_flags_NVCXX)

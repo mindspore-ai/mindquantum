@@ -251,6 +251,35 @@ test_compile_option(
 
 # ------------------------------------------------------------------------------
 
+test_compile_option(
+  sanitize_address_main
+  LANGS C CXX
+  FLAGS "-fsanitize=address"
+  LINKER_FLAGS "-fsanitize=address"
+  CMAKE_OPTION ENABLE_SANITIZER_ADDRESS
+  GENEX "$<CONFIG:SANITIZER>"
+  NO_TRYCOMPILE_TARGET NO_TRYCOMPILE_FLAGCHECK_TARGET)
+
+test_compile_option(
+  sanitize_address_auxiliary
+  LANGS C CXX
+  FLAGS "-fno-omit-frame-pointer" "-fno-optimize-sibling-calls"
+  CMAKE_OPTION ENABLE_SANITIZER_ADDRESS
+  GENEX "$<CONFIG:SANITIZER>"
+  NO_TRYCOMPILE_TARGET NO_TRYCOMPILE_FLAGCHECK_TARGET)
+
+# --------------------------------------
+
+test_compile_option(
+  sanitize_undefined
+  LANGS C CXX
+  FLAGS "-fsanitize=undefined"
+  CMAKE_OPTION ENABLE_SANITIZER_UNDEFINED
+  GENEX "$<CONFIG:SANITIZER>"
+  NO_TRYCOMPILE_TARGET NO_TRYCOMPILE_FLAGCHECK_TARGET)
+
+# ------------------------------------------------------------------------------
+
 if(NOT VERSION_INFO)
   execute_process(
     COMMAND ${Python_EXECUTABLE} setup.py --version
