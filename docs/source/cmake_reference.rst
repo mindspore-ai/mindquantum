@@ -56,6 +56,8 @@ Descriptions
 +-------------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_CXX_EXPERIMENTAL``         | Enable the building of the (new) experimental C++ backend             |
 +-------------------------------------+-----------------------------------------------------------------------+
+| ``ENABLE_GCC_DEBUG_MODE`` *         | Enable the debug mode for GCC and libstdc++                           |
++-------------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_GITEE``                    | Use Gitee instead of GitHub for (some) third-party dependencies       |
 +-------------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_ITERATOR_DEBUG`` *         | Enable the definition of _ITERATOR_DEBUG compiler defines             |
@@ -139,6 +141,8 @@ Default values
 +-------------------------------------+------------------------------+
 | ``ENABLE_CXX_EXPERIMENTAL``         | OFF                          |
 +-------------------------------------+------------------------------+
+| ``ENABLE_GCC_DEBUG_MODE``           | OFF                          |
++-------------------------------------+------------------------------+
 | ``ENABLE_GITEE``                    | OFF                          |
 +-------------------------------------+------------------------------+
 | ``ENABLE_ITERATOR_DEBUG``           | OFF                          |
@@ -200,6 +204,9 @@ Detailed descriptions
 
 ``DISABLE_FORTRAN_COMPILER``
     This currently only has an effect when installing Eigen3.
+
+``ENABLE_GCC_DEBUG_MODE``
+    This enables compilation with ``-D_GLIBCXX_DEBUG`` for improved debugging. Requires that the compiler is GCC.
 
 ``ENABLE_ITERATOR_DEBUG``
     If this is turned on, the ``_ITERATOR_DEBUG`` preprocessor macro will be defined to the value of

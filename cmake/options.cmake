@@ -100,6 +100,8 @@ endif()
 option(ENABLE_PROFILING "Enable compilation with profiling flags." OFF)
 option(ENABLE_STACK_PROTECTION "Enable the use of -fstack-protector during compilation" ON)
 
+option(ENABLE_GCC_DEBUG_MODE "Enable the debug mode for GCC and libstdc++" OFF)
+
 option(ENABLE_ANALYZER "Enable compiler static analysis tools (e.g. -fanalyzer for GCC)" OFF)
 
 option(ENABLE_SANITIZERS "Enable additional CMake build types for sanitizers" ON)
@@ -253,6 +255,12 @@ endif()
 
 # ==============================================================================
 # Compilation options
+
+if(ENABLE_GCC_DEBUG_MODE)
+  message(
+    WARNING "Support for ENABLE_GCC_DEBUG_MODE is still experimental and may lead to compilation or link issues!"
+            "You might also want to force all third-party libraries to be locally built and force a complete rebuild.")
+endif()
 
 if(ENABLE_SANITIZERS)
   if(SANITIZER_USE_O1 AND SANITIZER_USE_Og)

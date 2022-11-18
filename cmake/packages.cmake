@@ -47,6 +47,27 @@ if(TARGET libm AND NOT TARGET mindquantum::math)
 endif()
 
 # ==============================================================================
+# libstdc++
+
+if(UNIX
+   AND "${CMAKE_PROJECT_NAME}" STREQUAL "MindQuantum"
+   AND ENABLE_GCC_DEBUG_MODE
+   AND CMAKE_COMPILER_IS_GNUCXX)
+
+  if(NOT TARGET libstdc++)
+    add_library(libstdc++ INTERFACE)
+  endif()
+  target_link_libraries(libstdc++ INTERFACE $<$<AND:$<LINK_LANGUAGE:CXX>,$<BOOL:${CMAKE_COMPILER_IS_GNUCXX}>>:stdc++>)
+  append_to_property(mq_install_targets GLOBAL libstdc++)
+  if(TARGET libstdc++ AND NOT TARGET mindquantum::stdcxx)
+    add_library(mindquantum::stdcxx ALIAS libstdc++)
+  endif()
+
+  # If ENABLE_GCC_DEBUG_MODE is enabled we need to explicitly link to libstdc++
+  target_link_libraries(CXX_mindquantum INTERFACE mindquantum::stdcxx)
+endif()
+
+# ==============================================================================
 # OpenMP
 
 set(PARALLEL_LIBS)
