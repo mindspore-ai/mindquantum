@@ -934,6 +934,20 @@ def wrapper_numba(compiled_fun):
     """Wrap a compiled function with numba."""
     try:
         import numba as nb
+
+        try:
+            import importlib.metadata as importlib_metadata
+        except ImportError:
+            import importlib_metadata
+        import packaging.version
+
+        nb_version = importlib_metadata.version('numba')
+
+        nb_requires = packaging.version.parse('0.53,1')
+        if packaging.version.parse(nb_version) < nb_requires:
+            raise ImportError(
+                "To use customized parameterized gate, please install numba with 'pip install \"numba>=0.53.1\"'."
+            )
     except ImportError as exc:
         raise ImportError(
             "To use customized parameterized gate, please install numba with 'pip install \"numba>=0.53.1\"'."
@@ -990,9 +1004,23 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
     """
     try:
         import numba as nb
+
+        try:
+            import importlib.metadata as importlib_metadata
+        except ImportError:
+            import importlib_metadata
+        import packaging.version
+
+        nb_version = importlib_metadata.version('numba')
+
+        nb_requires = packaging.version.parse('0.53,1')
+        if packaging.version.parse(nb_version) < nb_requires:
+            raise ImportError(
+                "To use customized parameterized gate, please install numba with 'pip install \"numba>=0.53.1\"'."
+            )
     except ImportError as exc:
         raise ImportError(
-            "To use customized parameterized gate, please install numba with 'pip install numba'."
+            "To use customized parameterized gate, please install numba with 'pip install \"numba>=0.53.1\"'."
         ) from exc
     matrix_sig = signature(matrix_generator)
     diff_matrix_sig = signature(diff_matrix_generator)
