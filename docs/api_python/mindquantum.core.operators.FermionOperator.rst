@@ -6,7 +6,7 @@
 
     参数：
         - **\*args** - 可变长度参数列表：
-          
+
           - 任意（即TermsOperator（C++ 实例））
           - str
           - Dict[List[Tuple[Int, TermValue]], Union[ParameterResolver, int, float]]
