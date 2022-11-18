@@ -1422,14 +1422,16 @@ function(mindquantum_add_pkg pkg_name)
         endif()
       endforeach()
 
-      set(_build_types Debug Release RelWithDebInfo MinSizeRel)
+      get_property(_is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+
+      set(_cmake_original_build_types Debug Release RelWithDebInfo MinSizeRel)
       set(_cmake_build_type "${CMAKE_BUILD_TYPE}")
-      if(NOT "${CMAKE_BUILD_TYPE}" IN_LIST _build_types)
+      if(NOT "${CMAKE_BUILD_TYPE}" IN_LIST _cmake_original_build_types)
         set(_cmake_build_type RelWithDebInfo)
         debug_print("${CMAKE_BUILD_TYPE} not in known build types, using ${_cmake_build_type} instead")
       endif()
 
-      if("${_cmake_build_type}" STREQUAL "Release")
+      if("${_cmake_build_type}" STREQUAL "Release" OR _is_multi_config)
         set(_cmake_build_dir "${${pkg_name}_SOURCE_DIR}/_build")
       else()
         string(TOLOWER "${_cmake_build_type}" _build_type)
@@ -1463,15 +1465,25 @@ function(mindquantum_add_pkg pkg_name)
 
       string(REPLACE ";" "\\\\\;" _cmake_module_path "${CMAKE_MODULE_PATH}")
 
+      set(_cmake_args
+          ${${pkg_name}_CMAKE_COMPILERS}
+          "-DCMAKE_MODULE_PATH=${_cmake_module_path}"
+          -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
+          -G${CMAKE_GENERATOR}
+          ${PKG_CMAKE_OPTION}
+          ${${pkg_name}_CMAKE_CFLAGS}
+          ${${pkg_name}_CMAKE_CXXFLAGS}
+          ${${pkg_name}_CL_RT_FLAG}
+          ${${pkg_name}_CMAKE_LDFLAGS}
+          -DCMAKE_INSTALL_PREFIX=${${pkg_name}_BASE_DIR}
+          ${${pkg_name}_SOURCE_DIR}/${PKG_CMAKE_PATH})
+
+      if(NOT _is_multi_config)
+        list(APPEND _cmake_args -DCMAKE_BUILD_TYPE=${_cmake_build_type})
+      endif()
+
       message(STATUS "Calling CMake configure for ${pkg_name}")
-      __exec_cmd(
-        COMMAND
-          ${CMAKE_COMMAND} ${${pkg_name}_CMAKE_COMPILERS} "-DCMAKE_MODULE_PATH=${_cmake_module_path}"
-          -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE} -G${CMAKE_GENERATOR}
-          -DCMAKE_BUILD_TYPE=${_cmake_build_type} ${PKG_CMAKE_OPTION} ${${pkg_name}_CMAKE_CFLAGS}
-          ${${pkg_name}_CMAKE_CXXFLAGS} ${${pkg_name}_CL_RT_FLAG} ${${pkg_name}_CMAKE_LDFLAGS}
-          -DCMAKE_INSTALL_PREFIX=${${pkg_name}_BASE_DIR} ${${pkg_name}_SOURCE_DIR}/${PKG_CMAKE_PATH}
-        WORKING_DIRECTORY ${_cmake_build_dir})
+      __exec_cmd(COMMAND ${CMAKE_COMMAND} ${_cmake_args} WORKING_DIRECTORY ${_cmake_build_dir})
 
       message(STATUS "Building CMake targets for ${pkg_name}")
       if(MSVC)
