@@ -61,6 +61,10 @@ set(CMAKE_SHARED_LINKER_FLAGS_${_build_type}
     "${CMAKE_SHARED_LINKER_FLAGS_${ASAN_INHERIT_TYPE}} ${_asan_linker_flags}"
     CACHE STRING "Linker lags to be used to create shared libraries for Asan build type." FORCE)
 
+set(CMAKE_MODULE_LINKER_FLAGS_${_build_type}
+    "${CMAKE_SHARED_LINKER_FLAGS_${ASAN_INHERIT_TYPE}}"
+    CACHE STRING "Linker lags to be used to create modules for Asan build type." FORCE)
+
 unset(_asan_common_flags)
 unset(_asan_compiler_flags)
 unset(_asan_linker_flags)
