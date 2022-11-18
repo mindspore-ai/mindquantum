@@ -25,6 +25,7 @@ if NOT DEFINED do_clean_cache set do_clean_cache=0
 if NOT DEFINED do_clean_venv set do_clean_venv=0
 if NOT DEFINED do_update_venv set do_update_venv=0
 if NOT DEFINED dry_run set dry_run=0
+if NOT DEFINED enable_analyzer set enable_analyzer=0
 if NOT DEFINED enable_ccache set enable_ccache=0
 if NOT DEFINED enable_cxx set enable_cxx=0
 if NOT DEFINED enable_gitee set enable_gitee=0

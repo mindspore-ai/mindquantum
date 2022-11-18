@@ -13,6 +13,7 @@
 # limitations under the License.
 
 Param(
+    [switch]$Analyzer,
     [Alias("B")][ValidateNotNullOrEmpty()][string]$Build,
     [switch]$BuildIsolation,
     [switch]$CCache,
@@ -239,6 +240,7 @@ $build_args = @()
 $cmake_option_names = @{
     cmake_debug_mode = 'ENABLE_CMAKE_DEBUG'
     do_clean_3rdparty = 'CLEAN_3RDPARTY_INSTALL_DIR'
+    enable_analyzer = 'ENABLE_ANALYZER'
     enable_cxx = 'ENABLE_CXX_EXPERIMENTAL'
     enable_gitee = 'ENABLE_GITEE'
     enable_gpu = 'ENABLE_CUDA'
@@ -443,6 +445,9 @@ knows how to find them.
 
 A pth-file will be created in the virtualenv site-packages directory so that the MindQuantum root folder will be added
 to the Python PATH without the need to modify PYTHONPATH.
+
+.PARAMETER Analyzer
+Use the compiler static analysis tool during compilation (GCC & MSVC)
 
 .PARAMETER Build
 Specify build directory. Defaults to: Path\To\Script\build

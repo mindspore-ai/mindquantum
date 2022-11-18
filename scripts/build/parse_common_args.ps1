@@ -64,6 +64,7 @@ function Help-Message() {
     Write-Output ''
     Write-Output '  -B,-Build [dir]     Specify build directory'
     Write-Output ("                      Defaults to: {0}" -f $build_dir)
+    Write-Output '  -Analyzer           Use the compiler static analysis tool during compilation (GCC & MSVC)'
     Write-Output '  -CCache             If ccache or sccache are found within the PATH, use them with CMake'
     Write-Output '  -Clean3rdParty      Clean 3rd party installation directory'
     Write-Output '  -CleanAll           Clean everything before building.'
@@ -153,6 +154,10 @@ foreach($arg in $args) {
 }
 
 # =============================================================================)=
+
+if (([bool]$Analyzer)) {
+    Set-Value 'enable_analyzer'
+}
 
 if (([bool]$CMakeNoRegistry)) {
     Set-Value 'cmake_no_registry'
