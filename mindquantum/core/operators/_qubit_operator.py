@@ -161,7 +161,7 @@ class QubitOperator(_Operator):
         terms = {}
         for k, v in self.terms.items():
             if not v.is_const():
-                raise ValueError("Cannot convert parameteized fermion operator to openfermion format")
+                raise ValueError("Cannot convert parameterized fermion operator to openfermion format")
             terms[tuple((t[0], TermValue[t[1]]) for t in k)] = v.const
         qubit_operator = OFQubitOperator()
         qubit_operator.terms = terms
@@ -314,7 +314,7 @@ class QubitOperator(_Operator):
         return out
 
     def _simplify(self, terms, coefficient=1.0):
-        r"""Simplify the list by using the commuation and       anti-commutation relationship.
+        r"""Simplify the list by using the commutation and anti-commutation relationship.
 
         Args:
             terms (str, list((int, str),), tuple((int, str),)): The input terms_lst could be a sorted list or unsorted
@@ -333,8 +333,7 @@ class QubitOperator(_Operator):
             terms = list(terms)
         elif isinstance(terms[0], int):
             return coefficient, tuple(terms)
-        else:
-            terms = sorted(terms, key=lambda term: term[0])
+        terms = sorted(terms, key=lambda term: term[0])
         reduced_terms = []
         left_term = terms[0]
         for right_term in terms[1:]:

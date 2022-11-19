@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """Hardware efficient ansatz."""
 
 import itertools
@@ -61,7 +60,7 @@ class HardwareEfficientAnsatz(Ansatz):
             gate, than the control version will be used. Default: XGate.
         entangle_mapping (Union[str, list[tuple[int]]]): The entanglement mapping of entanglement gate.
             'linear' means the entanglement gate will be act on every neighboring qubits. 'all' means
-            the entanglemtn gate will be act on any two qbuits. Besides, you can specific which two
+            the entanglement gate will be act on any two qubits. Besides, you can specific which two
             qubits you want to do entanglement by setting the entangle_mapping to a list of two qubits
             tuple. Default: "linear".
         depth (int): The depth of ansatz. Default: 1.

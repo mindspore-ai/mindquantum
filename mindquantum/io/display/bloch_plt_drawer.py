@@ -101,13 +101,13 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
 
     def __init__(self, config=None):
         """Initialize a BlochScene object."""
-        supported_stype = {'default': _bloch_default_style_, 'dark': _bloch_default_style_dark_}
+        supported_style = {'default': _bloch_default_style_, 'dark': _bloch_default_style_dark_}
         if config is None:
             config = 'default'
         if isinstance(config, str):
-            if config not in supported_stype:
-                raise ValueError(f"Support style: {list(supported_stype.keys())}, but get {config}")
-            config = supported_stype[config]
+            if config not in supported_style:
+                raise ValueError(f"Support style: {list(supported_style.keys())}, but get {config}")
+            config = supported_style.get(config)
         _check_input_type("config", (dict, str), config)
         self.config = config
         self.c_ang = np.linspace(0, 2 * np.pi, 100)
@@ -194,9 +194,9 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
             y (numpy.ndarray): The y coordinate of reference plane.
             z (numpy.ndarray): The z coordinate of reference plane.
             frame_color (str): The wire frame color.
-            frame_alpha (numbers.Number): The frame transparence.
+            frame_alpha (numbers.Number): The frame transparency.
             surface_color (str): The surface color.
-            surface_alpha (numbers.Number): The surface transparence.
+            surface_alpha (numbers.Number): The surface transparency.
             frame_args (tuple): The other args for `Axes3D.plot_wireframe`.
             frame_kwargs (dict): The other key word args for `Axes3D.plot_wireframe`.
             surface_args (tuple): The other args for `Axes3D.plot_surface`.

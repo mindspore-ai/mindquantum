@@ -51,7 +51,7 @@ class QubitUCCAnsatz(Ansatz):
     wave function can be approximated using qubit excitation operators at
     the expense of a higher order of Trotterization.
 
-    The greatest advantange of qUCC is that the number of CNOT gates is much
+    The greatest advantage of qUCC is that the number of CNOT gates is much
     smaller than the original version of UCC, even using a 3rd or 4th order
     Trotterization. Also, the accuracy is greatly improved despite that the
     number of variational parameters is increased.
@@ -241,7 +241,7 @@ class QubitUCCAnsatz(Ansatz):
         n_vir_spin = len(vir_indices_spin)
 
         ansatz_circuit = Circuit()
-        # Record the perator pool, which can be used for qubit-ADAPT-VQE or other iterative ansatz.
+        # Record the operator pool, which can be used for qubit-ADAPT-VQE or other iterative ansatz.
         generator_quccsd_singles = []
         generator_quccsd_doubles = []
         for trotter_idx in range(trotter_step):

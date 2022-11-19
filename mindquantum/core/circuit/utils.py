@@ -33,7 +33,7 @@ def decompose_single_term_time_evolution(term, para):  # pylint: disable=too-man
     This function only works for the hamiltonian with only single pauli word.
     For example, exp(-i * t * ham), ham can only be a single pauli word, such
     as ham = X0 x Y1 x Z2, and at this time, term will be
-    ((0, 'X'), (1, 'Y'), (2, 'Z')). When the evolution time is expressd as
+    ((0, 'X'), (1, 'Y'), (2, 'Z')). When the evolution time is expressed as
     t = a*x + b*y, para would be {'x':a, 'y':b}.
 
     Args:
@@ -73,7 +73,7 @@ def decompose_single_term_time_evolution(term, para):  # pylint: disable=too-man
             raise TypeError(f"Not supported type:{type(term)}") from exc
     if not isinstance(para, _num_type):
         if not isinstance(para, (dict, ParameterResolver)):
-            raise TypeError(f'para requiers a number or a dict or a ParameterResolver, but get {type(para)}')
+            raise TypeError(f'para requires a number or a dict or a ParameterResolver, but get {type(para)}')
         para = ParameterResolver(para)
     para = 2 * ParameterResolver(para)
     out = []
@@ -122,7 +122,7 @@ def pauli_word_to_circuits(qubitops):
     Raises:
         TypeError: If qubitops is not a QubitOperator or a Hamiltonian.
         ValueError: If qubitops is Hamiltonian but not in origin mode.
-        ValueError: If qubitops has more than one pauliwords.
+        ValueError: If qubitops has more than one pauli words.
 
     Examples:
         >>> from mindquantum.core import X
@@ -151,7 +151,7 @@ def pauli_word_to_circuits(qubitops):
             raise ValueError("Hamiltonian should be in origin mode.")
         qubitops = qubitops.hamiltonian
     if len(qubitops.terms) > 1:
-        raise ValueError("Onle work for QubitOperator with single pauliword!")
+        raise ValueError("Only work for QubitOperator with single pauli word!")
     gate_map = {TermValue['X']: gates.X, TermValue['Y']: gates.Y, TermValue['Z']: gates.Z}
     for operator in qubitops.terms.keys():
         circ = Circuit()

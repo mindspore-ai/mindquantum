@@ -16,8 +16,7 @@
 #   This module we develop is default being licensed under Apache 2.0 license,
 #   and also uses or refactor Fermilib and OpenFermion licensed under
 #   Apache 2.0 license.
-
-"""This is the base class that to represent fermionic molecualr or Hamiltonian."""
+"""This is the base class that to represent fermionic molecular or Hamiltonian."""
 
 import copy
 import itertools
@@ -281,12 +280,12 @@ class PolynomialTensor:
             self.n_body_tensors[key] = numpy.negative(self.n_body_tensors[key])
         return self
 
-    def __isub__(self, subtractend):
+    def __isub__(self, subtracted):
         """
         In-place method for -= subtraction of PolynomialTensor.
 
         Args:
-            subtractend (PolynomialTensor): subtractend.
+            subtracted (PolynomialTensor): subtracted.
 
         Returns:
             subtract (PolynomialTensor), Mutated self.
@@ -294,38 +293,38 @@ class PolynomialTensor:
         Raises:
             TypeError: Cannot sub invalid addend type.
         """
-        if not isinstance(subtractend, type(self)):
+        if not isinstance(subtracted, type(self)):
             raise PolynomialTensorError(f"Cannot sub invalid type! \n Expect {type(self)}")
         # check dimension, self.n_qubits
-        if self.n_qubits != subtractend.n_qubits:
+        if self.n_qubits != subtracted.n_qubits:
             raise PolynomialTensorError("Cannot sub invalid type, the shape does not match!")
         # sub the common part
         self_keys = set(self.n_body_tensors.keys())
-        sub_keys = set(subtractend.n_body_tensors.keys())
+        sub_keys = set(subtracted.n_body_tensors.keys())
         for key in self_keys.intersection(sub_keys):
-            self.n_body_tensors[key] = numpy.subtract(self.n_body_tensors[key], subtractend.n_body_tensors[key])
+            self.n_body_tensors[key] = numpy.subtract(self.n_body_tensors[key], subtracted.n_body_tensors[key])
         for key in sub_keys.difference(self_keys):  # the term in sub but not in self
             if key:
-                self.n_body_tensors[key] = numpy.negative(subtractend.n_body_tensors[key])
+                self.n_body_tensors[key] = numpy.negative(subtracted.n_body_tensors[key])
         return self
 
-    def __sub__(self, subtractend):
+    def __sub__(self, subtracted):
         """
         Subtraction of PolynomialTensor.
 
         Args:
-            subtractend(PolynomialTensor): The subtractend.
+            subtracted(PolynomialTensor): The subtracted.
 
         Returns:
-            subtractend (PolynomialTensor), un-mutated self,
+            subtracted (PolynomialTensor), un-mutated self,
             but has new instance
 
         Raises:
             TypeError: Cannot sub invalid operator type.
         """
-        subend = copy.deepcopy(self)
-        subend -= subtractend
-        return subend
+        res = copy.deepcopy(self)
+        res -= subtracted
+        return res
 
     def __imul__(self, multiplier):
         """

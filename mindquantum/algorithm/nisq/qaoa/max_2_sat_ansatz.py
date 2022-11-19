@@ -191,7 +191,7 @@ class Max2SATAnsatz(Ansatz):
         The string is a str that satisfies all the clauses of the given max-2-sat problem.
 
         Args:
-            string (str): a string of the max-2-sat problem consided.
+            string (str): a string of the max-2-sat problem considered.
 
         Returns:
             int, sat_value under the given string.

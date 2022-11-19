@@ -728,7 +728,7 @@ class CtrlDots(SVGContainer):
     """SVG dot for control qubits."""
 
     def __init__(self, obj_qubits, ctrl_qubits, svg_config):
-        """Initialize a CtdlDots object."""
+        """Initialize a CtrlDots object."""
         super().__init__()
         self.svg_config = svg_config
         if ctrl_qubits:
@@ -1300,7 +1300,7 @@ def super_align(target, source, t_des, s_des, direction=None, relative=False):  
         t_des ([str, numbers.Number]): if str, should be 'left', 'right', 'top', 'bottom' or 'middle'.
         s_des ([str, numbers.Number]): if str, should be 'left', 'right', 'top', 'bottom' or 'middle'.
         direction (str): should 'v' for vertical or 'h' for horizontal.
-        relative (bool): if true, t_des and s_des should be number and will be tride as a percentage.
+        relative (bool): if true, t_des and s_des should be number and will be regard as a percentage.
     """
 
     def relative_to_num(des, direction, box_data):
@@ -1323,7 +1323,7 @@ def super_align(target, source, t_des, s_des, direction=None, relative=False):  
             return box_data['cy']
         return box_data['cx']
 
-    def determain_direction(t_des, s_des, direction):
+    def determine_direction(t_des, s_des, direction):
         """Check the direction."""
         v_key = ['left', 'right']
         h_key = ['top', 'bottom']
@@ -1337,7 +1337,7 @@ def super_align(target, source, t_des, s_des, direction=None, relative=False):  
 
     tar_box = box(target)
     sour_box = box(source)
-    direction = determain_direction(t_des, s_des, direction)
+    direction = determine_direction(t_des, s_des, direction)
     if isinstance(t_des, str):
         t_des = str_to_num(t_des, direction, tar_box)
     elif relative:

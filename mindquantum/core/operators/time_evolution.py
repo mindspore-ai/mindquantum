@@ -21,7 +21,7 @@ from .qubit_operator import QubitOperator
 
 class TimeEvolution:  # pylint: disable=too-few-public-methods
     r"""
-    The time evolution operator that can generate a crosponded circuit.
+    The time evolution operator that can generate a corresponded circuit.
 
     The time evolution operator will do the following evolution:
 

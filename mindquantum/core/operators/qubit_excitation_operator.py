@@ -141,9 +141,9 @@ class QubitExcitationOperator(_Operator):
         qubit_operator = QubitOperator()
         for term_i, coeff_i in self.terms.items():
             qubit_operator_i = QubitOperator((), 1)
-            for (idx, excit) in term_i:
+            for (idx, excite) in term_i:
                 qubit_op_ = None
-                if excit == TermValue[0]:
+                if excite == TermValue[0]:
                     qubit_op_ = QubitOperator(((idx, TermValue["X"]),), 1) + QubitOperator(((idx, TermValue["Y"]),), 1j)
                 else:
                     qubit_op_ = QubitOperator(((idx, TermValue["X"]),), 1) - QubitOperator(((idx, TermValue["Y"]),), 1j)
@@ -173,7 +173,7 @@ class QubitExcitationOperator(_Operator):
         Parse a term given as a string type.
 
         e.g. For QubitExcitationOperator: 4^ 3  -> ((4, 1),(3, 0))
-        Note here the '1' and '0' in the second col represents creation and annihilaiton operator respectively
+        Note here the '1' and '0' in the second col represents creation and annihilation operator respectively
 
         Returns:
             tuple, return a tuple list, such as ((4, 1),(3, 0))
@@ -325,7 +325,7 @@ class QubitExcitationOperator(_Operator):
 
 def _normal_ordered_term(term, coefficient):
     r"""
-    Return the normal ordered term of the QubitExcitationOperator with high indexand creation operator in front.
+    Return the normal ordered term of the QubitExcitationOperator with high index and creation operator in front.
 
     eg. :math:`Q_{3}^{\dagger} Q_{2}^{\dagger} Q_{1} Q_{0}`
 
@@ -340,13 +340,13 @@ def _normal_ordered_term(term, coefficient):
             # Q^{\dagger}
             if left_sub_term[1] == TermValue.a and right_sub_term[1] == TermValue.adg:
                 term[j], term[j - 1] = left_sub_term, right_sub_term
-                # If indice are same, employ the commutation relationship
+                # If indices are same, employ the commutation relationship
                 # And generate the new term
                 if left_sub_term[0] == right_sub_term[0]:
                     new_term = term[: (j - 1)] + term[(j + 1) :]  # noqa: E203
                     ordered_term += _normal_ordered_term(new_term, coefficient)
             elif left_sub_term[1] == right_sub_term[1]:
-                # If indice are same, evaluate it to zero.
+                # If indices are same, evaluate it to zero.
                 if left_sub_term[0] == right_sub_term[0]:
                     return ordered_term
                 # Swap them if same operator but lower index on left

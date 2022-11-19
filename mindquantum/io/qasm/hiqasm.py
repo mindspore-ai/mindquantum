@@ -286,7 +286,7 @@ class HiQASM:
 
         n_ctrl_qubits = len(ctrl_qubits)
         if gate.parameterized:
-            raise ValueError(f"Cannot convert parameterzed gate {gate} to hiqasm format.")
+            raise ValueError(f"Cannot convert parameterized gate {gate} to hiqasm format.")
 
         if isinstance(gate, (gates.RX, gates.RY, gates.RZ)):
             if n_ctrl_qubits == 0:

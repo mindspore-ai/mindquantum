@@ -48,7 +48,7 @@ class _Operator(metaclass=ABCMeta):
     which could be represents by  {1: '^', 0: '', '^': '^', '': ''},
     respectively. While for Operator, the 'quantum_operator' is refers to
     Pauli operators, which is the set
-    {'X','Y','Z'}. Note here the Operator capation does not matter here.
+    {'X','Y','Z'}. Note here the Operator caption does not matter here.
     {'x','y','z'} is also ok.
     The coefficients of the terms are stored in a dictionary data structure
     who keys are the terms.
@@ -283,19 +283,17 @@ class _Operator(metaclass=ABCMeta):
                 else:
                     if not self.terms[term]:
                         self.terms.pop(term)
-        elif isinstance(operator, numbers.Number):
-            substract_operator = copy.deepcopy(self)
-            substract_operator -= operator * self.__class__("")
-            return substract_operator
-        else:
-            raise TypeError(f'Cannot sub invalid operator type to {type(self)}.')
-
-        return self
+            return self
+        if isinstance(operator, numbers.Number):
+            subtract_operator = copy.deepcopy(self)
+            subtract_operator -= operator * self.__class__("")
+            return subtract_operator
+        raise TypeError(f'Cannot sub invalid operator type to {type(self)}.')
 
     def __sub__(self, operator):
-        substract_operator = copy.deepcopy(self)
-        substract_operator -= operator
-        return substract_operator
+        subtract_operator = copy.deepcopy(self)
+        subtract_operator -= operator
+        return subtract_operator
 
     def __rsub__(self, operator):
         return operator + (-1) * self

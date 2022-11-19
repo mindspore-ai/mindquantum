@@ -283,7 +283,7 @@ class MeasureResult:
         Get the sampling data.
 
         Returns:
-            dict, The samping data.
+            dict, The sampling data.
         """
         return self.bit_string_data
 

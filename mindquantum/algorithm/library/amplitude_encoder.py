@@ -25,18 +25,18 @@ from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.utils.type_value_check import _check_input_type
 
 
-def controlled_gate(circuit, gate, tqubit, cqubits, zero_qubit):
+def controlled_gate(circuit, gate, t_qubit, c_qubits, zero_qubit):
     """Add an extended quantum controlled gate."""
     tmp = []
-    for i, control in enumerate(cqubits):
+    for i, control in enumerate(c_qubits):
         tmp.append(control)
         if control < 0 or (control == 0 and zero_qubit == 0):
             circuit += X.on(abs(control))
             tmp[i] = -tmp[i]
 
-    circuit += gate.on(tqubit, tmp)
+    circuit += gate.on(t_qubit, tmp)
 
-    for control in cqubits:
+    for control in c_qubits:
         if control < 0 or (control == 0 and zero_qubit == 0):
             circuit += X.on(abs(control))
 

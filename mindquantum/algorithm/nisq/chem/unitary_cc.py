@@ -46,7 +46,7 @@ class UCCAnsatz(Ansatz):
     where :math:`\hat{\tau}` are anti-Hermitian operators.
 
     Note:
-        Currently, the circuit is construncted using JW transformation.
+        Currently, the circuit is constructed using JW transformation.
         In addition, the reference state wave function (Hartree-Fock) will NOT be
         included.
 

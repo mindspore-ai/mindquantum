@@ -40,8 +40,8 @@ class IQPEncoding(Ansatz):
 
     Args:
         n_feature (int): The number of feature of data you want to encode with IQPEncoding.
-        first_rotation_gate (ParamaterGate): One of the rotation gate RX, RY or RZ.
-        second_rotation_gate (ParamaterGate): One of the rotation gate RX, RY or RZ.
+        first_rotation_gate (ParameterGate): One of the rotation gate RX, RY or RZ.
+        second_rotation_gate (ParameterGate): One of the rotation gate RX, RY or RZ.
         num_repeats (int): Number of encoding iterations.
 
     Examples:

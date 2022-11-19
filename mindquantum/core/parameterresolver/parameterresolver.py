@@ -43,7 +43,7 @@ def is_type_upgrade(origin_v, other_v):
 
 class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-public-methods
     """
-    A ParameterRsolver can set the parameter of parameterized quantum gate or parameterized quantum circuit.
+    A ParameterResolver can set the parameter of parameterized quantum gate or parameterized quantum circuit.
 
     Args:
         data (Union[dict, numbers.Number, str, ParameterResolver]): initial parameter names and

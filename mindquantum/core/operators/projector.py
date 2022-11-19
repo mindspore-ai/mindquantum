@@ -23,7 +23,7 @@ def _check_projector_str(proj):
         raise TypeError(f"Projector requires a string, but get {type(proj)}!")
     for i in proj:
         if i not in ['0', '1', 'I']:
-            raise ValueError(f"Unkonw character '{i}' for a projector. Projector must onstructed by '0', '1' and 'I'.")
+            raise ValueError(f"Unknown character '{i}' for a projector. Projector must obstructed by '0', '1' and 'I'.")
 
 
 class Projector:

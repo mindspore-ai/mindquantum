@@ -555,7 +555,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         return string
 
     def _repr_html_(self):
-        """Repr for jupyter nontebook."""
+        """Repr for jupyter notebook."""
         # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum.io.display._config import _CIRCUIT_STYLE, CIRCUIT_HTML_FORMAT
 
@@ -1029,15 +1029,15 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             self.append(mq_gates.Measure(key).on(obj_qubit))
         return self
 
-    def measure_all(self, subfix=None):
+    def measure_all(self, suffix=None):
         """
         Measure all qubits.
 
         Args:
-            subfix (str): The subfix string you want to add to the name of measure gate.
+            suffix (str): The suffix string you want to add to the name of measure gate.
         """
         for i in range(self.n_qubits):
-            string = f"q{i}" if subfix is None else f"q{i}_{subfix}"
+            string = f"q{i}" if suffix is None else f"q{i}_{suffix}"
             self += mq_gates.Measure(string).on(i)
         return self
 

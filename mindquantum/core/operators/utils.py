@@ -52,7 +52,7 @@ def count_qubits(operator):
     import projectq.ops as pqops
 
     # Handle FermionOperator.
-    valueable_type = (
+    valuable_type = (
         FermionOperator,
         QubitOperator,
         QubitExcitationOperator,
@@ -63,7 +63,7 @@ def count_qubits(operator):
     if hasattr(operator, 'count_qubits'):
         return operator.count_qubits()
 
-    if isinstance(operator, valueable_type):
+    if isinstance(operator, valuable_type):
         num_qubits = 0
         for term in operator.terms:
             # a tuple compose of single (qubit_index,operator) subterms
@@ -104,8 +104,8 @@ def commutator(left_operator, right_operator):
     """
     if not isinstance(left_operator, type(right_operator)):
         raise TypeError('operator_a and operator_b are not of the same type.')
-    valueable_type = (QubitOperator, FermionOperator, QubitExcitationOperator)
-    if not isinstance(left_operator, valueable_type):
+    valuable_type = (QubitOperator, FermionOperator, QubitExcitationOperator)
+    if not isinstance(left_operator, valuable_type):
         raise TypeError("Operator should be QubitOperator, FermionOperator or QubitExcitationOperator.")
 
     result = left_operator * right_operator
@@ -153,8 +153,8 @@ def number_operator(n_modes=None, mode=None, coefficient=1.0):
 
     Examples:
         >>> from mindquantum.core.operators import FermionOperator, number_operator
-        >>> nmode = 3
-        >>> number_operator(nmode)
+        >>> n_mode = 3
+        >>> number_operator(n_mode)
         1 [0^ 0] +
         1 [1^ 1] +
         1 [2^ 2]

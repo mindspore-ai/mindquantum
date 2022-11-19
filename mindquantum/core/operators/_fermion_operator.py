@@ -182,7 +182,7 @@ class FermionOperator(_Operator):
 
         e.g. For FermionOperator:
                  4^ 3  -> ((4, 1),(3, 0))
-        Note here the '1' and '0' in the second col represents creation and annihilaiton operator respectively
+        Note here the '1' and '0' in the second col represents creation and annihilation operator respectively
 
         Returns:
             tuple, return a tuple list, such as ((4, 1),(3, 0))
@@ -230,7 +230,7 @@ class FermionOperator(_Operator):
         terms = {}
         for k, v in self.terms.items():
             if not v.is_const():
-                raise ValueError("Cannot convert parameteized fermion operator to openfermion format")
+                raise ValueError("Cannot convert parameterized fermion operator to openfermion format")
             terms[tuple((t[0], TermValue[t[1]]) for t in k)] = v.const
         fermion_operator = OFFermionOperator()
         fermion_operator.terms = terms
@@ -510,13 +510,13 @@ def _normal_ordered_term(term, coefficient):
             if left_sub_term[1] == TermValue.a and right_sub_term[1] == TermValue.adg:
                 term[j], term[j - 1] = left_sub_term, right_sub_term
                 coefficient = -1 * coefficient
-                # If indice are same, employ the anti-commutation relationship
+                # If indices are same, employ the anti-commutation relationship
                 # And generate the new term
                 if left_sub_term[0] == right_sub_term[0]:
                     new_term = term[: (j - 1)] + term[(j + 1) :]  # noqa: E203
                     ordered_term += _normal_ordered_term(new_term, -1 * coefficient)
             elif left_sub_term[1] == right_sub_term[1]:
-                # If indice are same,evaluate it to zero.
+                # If indices are same,evaluate it to zero.
                 if left_sub_term[0] == right_sub_term[0]:
                     return ordered_term
                 # Swap them if same operator but lower index on left

@@ -315,7 +315,7 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
         return cls(klass.loads(strs))
 
     def get_coeff(self, term):
-        """Get coefference of given term."""
+        """Get coefficient of given term."""
         return ParameterResolver(self._cpp_obj.get_coeff(term))
 
     def hermitian(self):

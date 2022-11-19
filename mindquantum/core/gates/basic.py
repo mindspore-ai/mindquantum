@@ -51,7 +51,7 @@ class BasicGate:
         name (str): the name of this gate.
         n_qubits (int): how many qubits is this gate.
         obj_qubits (int, list[int]): Specific which qubits the gate act on.
-        ctrl_qubits (int, list[int]): Specific the control qbits. Default, None.
+        ctrl_qubits (int, list[int]): Specific the control qubits. Default, None.
     """
 
     def __init__(self, name, n_qubits, obj_qubits=None, ctrl_qubits=None):
@@ -85,8 +85,8 @@ class BasicGate:
         Decompose this gate into more basic gate.
 
         Returns:
-            None, if the decomposation is not defined.
-            List[Circuit], all possible decomposations.
+            None, if the decomposition is not defined.
+            List[Circuit], all possible decompositions.
         """
         return
 
@@ -157,7 +157,7 @@ class BasicGate:
 
         Args:
             obj_qubits (int, list[int]): Specific which qubits the gate act on.
-            ctrl_qubits (int, list[int]): Specific the control qbits. Default, None.
+            ctrl_qubits (int, list[int]): Specific the control qubits. Default, None.
 
         Returns:
             Gate, Return a new gate.
@@ -294,7 +294,7 @@ class NonHermitianGate(QuantumGate):
         name (str): the name of this gate.
         n_qubits (int): how many qubits is this gate.
         obj_qubits (int, list[int]): Specific which qubits the gate act on.
-        ctrl_qubits (int, list[int]): Specific the control qbits. Default, None.
+        ctrl_qubits (int, list[int]): Specific the control qubits. Default, None.
     """
 
     def __init__(self, name, n_qubits, *args, obj_qubits=None, ctrl_qubits=None, hermitianed=False, **kwargs):
@@ -359,7 +359,7 @@ class NoneParameterGate(QuantumGate):
         name (str): the name of this gate.
         n_qubits (int): how many qubits is this gate.
         obj_qubits (int, list[int]): Specific which qubits the gate act on.
-        ctrl_qubits (int, list[int]): Specific the control qbits. Default, None.
+        ctrl_qubits (int, list[int]): Specific the control qubits. Default, None.
     """
 
     def __call__(self, obj_qubits, ctrl_qubits=None):
@@ -518,7 +518,7 @@ class PauliGate(NoneParamSelfHermMat):
     """Pauli Gate."""
 
     def __pow__(self, coeff):
-        """Calculate the power of a Ppauli gate."""
+        """Calculate the power of a Pauli gate."""
         from .basicgate import (  # pylint: disable=import-outside-toplevel,cyclic-import
             RX,
             RY,

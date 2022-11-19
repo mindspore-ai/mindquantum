@@ -187,7 +187,7 @@ class MaxCutAnsatz(Ansatz):
         The partition is a list that contains two lists, each list contains the nodes of the given graph.
 
         Args:
-            partition (list): a partition of the graph consided.
+            partition (list): a partition of the graph considered.
 
         Returns:
             int, cut_value under the given partition.

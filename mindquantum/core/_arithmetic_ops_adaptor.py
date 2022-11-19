@@ -101,7 +101,7 @@ class CppArithmeticAdaptor:
         return self
 
     def __rsub__(self, other):
-        """Subtrack a number or a CppArithmeticAdaptor with this CppArithmeticAdaptor."""
+        """Subtract a number or a CppArithmeticAdaptor with this CppArithmeticAdaptor."""
         if not self.__class__._valid_other(other):
             return NotImplemented
 

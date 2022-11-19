@@ -49,7 +49,7 @@ def _qfi_matrix_base(circuit: Circuit, which_part='both', backend='mqvector'):
 
     _check_input_type('circuit', Circuit, circuit)
     if which_part not in ['A', 'B', 'both']:
-        raise ValueError(f"which part shoude be 'A', 'B' or 'both', but get {which_part}.")
+        raise ValueError(f"which part should be 'A', 'B' or 'both', but get {which_part}.")
     circuit = circuit.remove_barrier()
     if circuit.has_measure_gate:
         raise ValueError("circuit can not has measure gate for calculate qfi similar value.")
