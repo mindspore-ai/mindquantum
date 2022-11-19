@@ -71,7 +71,7 @@ repos:
         args: [-x, --severity=warning]
 
   - repo: https://gitee.com/mirrors_codespell-project/codespell
-    rev: v2.2.1
+    rev: v2.2.2
     hooks:
       - id: codespell
         require_serial: false
@@ -115,7 +115,7 @@ repos:
         additional_dependencies: [black==22.10.0]
 
   - repo: https://gitee.com/mirrors_asottile/pyupgrade
-    rev: v2.38.0
+    rev: v3.2.2
     hooks:
       - id: pyupgrade
         args: [--py37-plus, --keep-mock]
@@ -137,7 +137,7 @@ repos:
                                   flake8-eradicate, flake8-mutable, flake8-return]
 
   - repo: https://gitee.com/mirrors_PyCQA/pylint
-    rev: v2.15.2
+    rev: v2.15.5
     hooks:
       - id: pylint
         name: pylint-strict

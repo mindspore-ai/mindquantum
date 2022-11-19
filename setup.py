@@ -403,6 +403,7 @@ class BdistWheel(bdist_wheel):
 
     def initialize_options(self):
         """Initialize all options of this custom command."""
+        # pylint: disable=attribute-defined-outside-init
         super().initialize_options()
         self.fast_build = None
         self.fast_build_dir = None

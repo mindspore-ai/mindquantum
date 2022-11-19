@@ -30,7 +30,7 @@ def _get_qubit_range(gate):
     return out
 
 
-def brick_model(circ, qubits_name=None):  # pylint: disable=too-many-locals
+def brick_model(circ, qubits_name=None):  # pylint: disable=too-many-locals,too-many-branches
     """Split a circuit into layers."""
     from mindquantum import (  # pylint: disable=import-outside-toplevel,cyclic-import
         gates,

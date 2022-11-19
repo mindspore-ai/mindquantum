@@ -73,9 +73,9 @@ class Projectq(BackendBase):
     ):
         """Apply a quantum circuit."""
         _check_input_type('circuit', Circuit, circuit)
-        for g in circuit:
-            if isinstance(g, (U3, FSim)):
-                raise ValueError(f"{g.name} is not supported by projectq simulator.")
+        for gate in circuit:
+            if isinstance(gate, (U3, FSim)):
+                raise ValueError(f"{gate.name} is not supported by projectq simulator.")
         if self.n_qubits < circuit.n_qubits:
             raise ValueError(f"Circuit has {circuit.n_qubits} qubits, which is more than simulator qubits.")
         if circuit.has_measure_gate:
@@ -228,12 +228,12 @@ class Projectq(BackendBase):
         circ_n_qubits = max(circ_left.n_qubits, circ_right.n_qubits)
         if self.n_qubits < circ_n_qubits:
             raise ValueError(f"Simulator has {self.n_qubits} qubits, but circuit has {circ_n_qubits} qubits.")
-        for g in circ_right:
-            if isinstance(g, (U3, FSim)):
-                raise ValueError(f"{g.name} gate not supported by projectq simulator.")
-        for g in circ_left:
-            if isinstance(g, (U3, FSim)):
-                raise ValueError(f"{g.name} gate not supported by projectq simulator.")
+        for gate in circ_right:
+            if isinstance(gate, (U3, FSim)):
+                raise ValueError(f"{gate.name} gate not supported by projectq simulator.")
+        for gate in circ_left:
+            if isinstance(gate, (U3, FSim)):
+                raise ValueError(f"{gate.name} gate not supported by projectq simulator.")
 
         def grad_ops(*inputs):
             if version == "both" and len(inputs) != 2:

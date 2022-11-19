@@ -124,7 +124,7 @@ class OpenQASM:
         self.circuit = Circuit()
         self.cmds = []
 
-    def to_string(self, circuit, version="2.0"):  # pylint: disable=too-many-branches,too-many-statements
+    def to_string(self, circuit, version="2.0"):  # pylint: disable=R0912,R0914,R0915
         """
         Convert circuit to openqasm.
 
@@ -166,9 +166,9 @@ class OpenQASM:
                             self.cmds.append(f"cx q[{gate.ctrl_qubits[0]}],q[{gate.obj_qubits[0]}];")
                             continue
                         if len(gate.ctrl_qubits) == 2:
-                            c0, c1 = gate.ctrl_qubits
-                            o0 = gate.obj_qubits[0]
-                            self.cmds.append(f"ccx q[{c0}],q[{c1}],q[{o0}];")
+                            ctrl0, ctrl1 = gate.ctrl_qubits
+                            obj0 = gate.obj_qubits[0]
+                            self.cmds.append(f"ccx q[{ctrl0}],q[{ctrl1}],q[{obj0}];")
                             continue
                         _gate_not_implement_to_openqasm(gate)
                     if isinstance(gate, gates.TGate):

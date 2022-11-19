@@ -16,7 +16,7 @@
 
 import argparse
 import sys
-from distutils.util import get_platform
+from distutils.util import get_platform  # pylint: disable=deprecated-module
 from pathlib import Path
 
 try:

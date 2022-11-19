@@ -14,6 +14,7 @@
 #ifndef MQ_CORE_NUMBER_WRAPPER_HPP_
 #define MQ_CORE_NUMBER_WRAPPER_HPP_
 
+#include <memory>
 #include <stdexcept>
 
 #include "core/two_dim_matrix.hpp"
@@ -28,17 +29,17 @@ struct NumbaMatFunWrapper {
         fun = reinterpret_cast<mat_t>(addr);
     }
 
-    mindquantum::Dim2Matrix<double> operator()(double coeff) const {
+    auto operator()(double coeff) const {
         mindquantum::Dim2Matrix<double> out;
-        std::complex<double>* tmp = new std::complex<double>[dim * dim];
-        fun(coeff, tmp);
+        auto tmp = std::make_unique<std::complex<double>[]>(dim * dim);
+        fun(coeff, tmp.get());
         mindquantum::VVT<std::complex<double>> m(dim, mindquantum::VT<std::complex<double>>(dim, 0.0));
         for (int i = 0; i < dim; i++) {
             for (int j = 0; j < dim; j++) {
                 m[i][j] = tmp[i * dim + j];
             }
         }
-        delete[] tmp;
+
         out = mindquantum::Dim2Matrix<double>(m);
         return out;
     }

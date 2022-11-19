@@ -23,8 +23,7 @@ import mindspore as ms
 import mindspore.dataset as ds
 import numpy as np
 from _parse_args import parser
-from mindspore import Tensor, nn
-from mindspore import ops
+from mindspore import Tensor, nn, ops
 
 from mindquantum.core import RX, XX, ZZ, Circuit, H, Hamiltonian, QubitOperator, X, Z
 from mindquantum.framework import MQLayer
@@ -128,17 +127,13 @@ def generate_dataset(data_file_path, n_qubits, sampling_num, batch_num, eval_siz
     y_test_nocon = np.array(y_test_nocon).astype(np.int32)[:, None]
     y_train_nocon = y_train_nocon * 2 - 1
     y_test_nocon = y_test_nocon * 2 - 1
-    train = ds.NumpySlicesDataset({
-        "image": x_train_encoder[:sampling_num],
-        "label": y_train_nocon[:sampling_num]
-    },
-                                  shuffle=False).batch(batch_num)
+    train = ds.NumpySlicesDataset(
+        {"image": x_train_encoder[:sampling_num], "label": y_train_nocon[:sampling_num]}, shuffle=False
+    ).batch(batch_num)
 
-    test = ds.NumpySlicesDataset({
-        "image": x_test_encoder[:eval_size_num],
-        "label": y_test_nocon[:eval_size_num]
-    },
-                                 shuffle=False).batch(eval_size_num)
+    test = ds.NumpySlicesDataset(
+        {"image": x_test_encoder[:eval_size_num], "label": y_test_nocon[:eval_size_num]}, shuffle=False
+    ).batch(eval_size_num)
     return train, test
 
 
@@ -156,8 +151,7 @@ def train_loop(model, dataset, loss_fn, optimizer):
     def train_step(data, label):
         """Define train step."""
         (loss, _), grads = grad_fn(data, label)
-        loss = ops.depend(loss, optimizer(grads))
-        return loss
+        return ops.depend(loss, optimizer(grads))
 
     size = dataset.get_dataset_size()
     model.set_train()
@@ -171,7 +165,7 @@ def train_loop(model, dataset, loss_fn, optimizer):
 
 
 def test_loop(model, dataset, loss_fn):
-    """Test loop"""
+    """Test loop."""
     num_batches = dataset.get_dataset_size()
     model.set_train(False)
     total, test_loss, correct = 0, 0, 0
@@ -216,6 +210,8 @@ if __name__ == '__main__':
         train_loop(mql, train_loader, net_loss, net_opt)
     t1 = time.time()
     test_loop(mql, test_loader, net_loss)
-    print(f"\nNum sampling:{args.num_sampling}\nBatchs:{args.batchs}\n"
-          f"Parallel worker:{args.parallel_worker}\n"
-          f"\nOMP THREADS:{args.omp_num_threads}\nTotal time: {t1 - t0}s")
+    print(
+        f"\nNum sampling:{args.num_sampling}\nBatchs:{args.batchs}\n"
+        f"Parallel worker:{args.parallel_worker}\n"
+        f"\nOMP THREADS:{args.omp_num_threads}\nTotal time: {t1 - t0}s"
+    )

@@ -158,7 +158,6 @@ skip-string-normalization = true
 
     [tool.pylint.messages_control]
     enable = [
-         'useless-suppression',
     ]
     disable = [
          'no-name-in-module',  # due to dynamic importing of symbols

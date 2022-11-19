@@ -12,7 +12,7 @@
 
 "mindquantum/ccsrc/lib/experimental/core/cpp_core.cpp:282"                                  "constVariable"
 
-"mindquantum/ccsrc/include/ops/gates/fermion_operator.tpp:111"                              "containerOutOfBounds"
+"mindquantum/ccsrc/include/ops/gates/fermion_operator.tpp"                                  "containerOutOfBounds"
 "mindquantum/ccsrc/lib/ops/gates/fermion_operator.cpp"                                      "containerOutOfBounds"
 "mindquantum/ccsrc/lib/ops/gates/fermion_operator_parameter_resolver.cpp"                   "containerOutOfBounds"
 
@@ -52,6 +52,9 @@
 "mindquantum/ccsrc/python/mqbackend/lib/binding.cc:184"                                     "syntaxError"
 "mindquantum/ccsrc/python/mqbackend/lib/details/define_terms_ops.hpp"                       "syntaxError"
 
+"mindquantum/ccsrc/include/core/numba_wrapper.hpp"                                          "uninitMemberVar"
+
+"mindquantum/ccsrc/include/core/sparse/paulimat.hpp"                                        "unknownMacro"
 "mindquantum/ccsrc/include/core/sparse/paulimat.hpp:58"                                     "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_single_ops.cpp"            "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_xlike.cpp"                 "unknownMacro"
@@ -67,7 +70,9 @@
 "mindquantum/ccsrc/include/experimental/ops/parametric/param_names.hpp"                     "unusedStructMember"
 "mindquantum/ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp"                 "unusedStructMember"
 
+"mindquantum/ccsrc/include/config/tsl_ordered_map.hpp"                                      "useStlAlgorithm"
 "mindquantum/ccsrc/include/experimental/core/control.hpp:79"                                "useStlAlgorithm"
+"mindquantum/ccsrc/include/ops/gates/terms_coeff_dict.hpp"                                  "useStlAlgorithm"
 "mindquantum/ccsrc/include/ops/gates/terms_operator_base.tpp"                               "useStlAlgorithm"
 "mindquantum/ccsrc/lib/experimental/core/circuit_manager.cpp"                               "useStlAlgorithm"
 "mindquantum/ccsrc/lib/experimental/simulator/projectq_simulator.cpp"                       "useStlAlgorithm"

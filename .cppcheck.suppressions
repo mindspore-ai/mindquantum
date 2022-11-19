@@ -12,7 +12,7 @@ constStatement:ccsrc/lib/mq_base/gates/details/qubit_operator_term_policy.cpp
 
 constVariable:ccsrc/lib/experimental/core/cpp_core.cpp:282
 
-containerOutOfBounds:ccsrc/include/ops/gates/fermion_operator.tpp:111
+containerOutOfBounds:ccsrc/include/ops/gates/fermion_operator.tpp
 containerOutOfBounds:ccsrc/lib/ops/gates/fermion_operator.cpp
 containerOutOfBounds:ccsrc/lib/ops/gates/fermion_operator_parameter_resolver.cpp
 
@@ -52,6 +52,9 @@ syntaxError:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_gate_expec.cpp
 syntaxError:ccsrc/python/mqbackend/lib/binding.cc:184
 syntaxError:ccsrc/python/mqbackend/lib/details/define_terms_ops.hpp
 
+uninitMemberVar:ccsrc/include/core/numba_wrapper.hpp
+
+unknownMacro:ccsrc/include/core/sparse/paulimat.hpp
 unknownMacro:ccsrc/include/core/sparse/paulimat.hpp:58
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_single_ops.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_xlike.cpp
@@ -67,7 +70,9 @@ unusedStructMember:ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp
 unusedStructMember:ccsrc/include/experimental/ops/parametric/param_names.hpp
 unusedStructMember:ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp
 
+useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.hpp
 useStlAlgorithm:ccsrc/include/experimental/core/control.hpp:79
+useStlAlgorithm:ccsrc/include/ops/gates/terms_coeff_dict.hpp
 useStlAlgorithm:ccsrc/include/ops/gates/terms_operator_base.tpp
 useStlAlgorithm:ccsrc/lib/experimental/core/circuit_manager.cpp
 useStlAlgorithm:ccsrc/lib/experimental/simulator/projectq_simulator.cpp
