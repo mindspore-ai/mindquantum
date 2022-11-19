@@ -38,8 +38,11 @@ elseif(cereal_DIR)
 endif()
 
 if(MSVC)
-  set(SymEngine_CFLAGS "/D_ITERATOR_DEBUG_LEVEL=0")
-  set(SymEngine_CXXFLAGS "/D_ITERATOR_DEBUG_LEVEL=0 /Zc:__cplusplus /EHsc")
+  set(SymEngine_CXXFLAGS "/Zc:__cplusplus /EHsc")
+  if(ENABLE_ITERATOR_DEBUG)
+    set(SymEngine_CFLAGS "/D_ITERATOR_DEBUG_LEVEL=${MQ_ITERATOR_DEBUG}")
+    set(SymEngine_CXXFLAGS "${SymEngine_CXXFLAGS} /D_ITERATOR_DEBUG_LEVEL=${MQ_ITERATOR_DEBUG}")
+  endif()
   list(APPEND CMAKE_OPTION -DINTEGER_CLASS=boostmp -DCMAKE_DEBUG_POSTFIX=d)
 
   if(Boost_DIRPATH)

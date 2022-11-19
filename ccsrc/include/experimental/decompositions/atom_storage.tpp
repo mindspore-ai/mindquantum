@@ -125,11 +125,11 @@ auto AtomStorage::add_or_replace_atom(args_t&&... args) -> atom_t* {
 // =========================================================================
 // ::add_or_non_replace_atom_
 
-template <typename o_atom_t, typename ctrl_comp_t, std::size_t idx, typename... args_t>
+template <typename o_atom_t, typename ctrl_comp_t, std::size_t kind_idx, typename... args_t>
 auto AtomStorage::add_or_non_replace_atom_(args_t&&... args) -> atom_t* {
     static constexpr auto num_controls = o_atom_t::num_controls();
 
-    const auto kind = std::tuple_element_t<idx, typename o_atom_t::kinds_t>::kind();
+    const auto kind = std::tuple_element_t<kind_idx, typename o_atom_t::kinds_t>::kind();
     const auto atoms_end = end(atoms_);
 
 #ifdef _MSC_VER

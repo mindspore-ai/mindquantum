@@ -90,6 +90,8 @@ option(USE_PARALLEL_STL
 if(MSVC)
   option(ENABLE_MD "Enable compilation using the /MD,/MDd flags" OFF)
   option(ENABLE_MT "Enable compilation using the /MT,/MTd flags" OFF)
+  option(ENABLE_ITERATOR_DEBUG
+         "Enable the definition of _ITERATOR_DEBUG compiler defines (use MQ_ITERATOR_DEBUG to specify the value)" OFF)
   option(DISABLE_FORTRAN_COMPILER "Forcefully disable the Fortran compiler for some 3rd party libraries" ON)
 endif()
 
@@ -243,6 +245,15 @@ endif()
 
 # ==============================================================================
 # Compilation options
+
+if(MSVC)
+  if(NOT DEFINED MQ_ITERATOR_DEBUG)
+    set(MQ_ITERATOR_DEBUG
+        2
+        CACHE STRING "Value to define the _ITERATOR_DEBUG compiler define to \
+(requires ENABLE_ITERATOR_DEBUG to have an effect)")
+  endif()
+endif()
 
 # ==============================================================================
 # Other CMake related options

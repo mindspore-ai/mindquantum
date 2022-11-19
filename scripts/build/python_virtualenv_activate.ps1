@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if ($_sourced_python_virtualenv_activate -eq $null) { $_sourced_python_virtualenv_activate=1 } else { return }
+if ($null -eq $_sourced_python_virtualenv_activate) { $_sourced_python_virtualenv_activate=1 } else { return }
 
 $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 
@@ -23,13 +23,14 @@ $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 
 # ==============================================================================
 
-if ($ROOTDIR -eq $null) {
+if ($null -eq $ROOTDIR) {
+
     die '(internal error): ROOTDIR variable not defined!'
 }
-if ($PYTHON -eq $null) {
+if ($null -eq $PYTHON) {
     die '(internal error): PYTHON variable not defined!'
 }
-if ($python_venv_path -eq $null) {
+if ($null -eq $python_venv_path) {
     die '(internal error): python_venv_path variable not defined!'
 }
 
@@ -69,50 +70,58 @@ if (Test-Path -Path (Join-Path $python_venv_path 'Scripts\Activate.ps1') -PathTy
     $activate_path = (Join-Path $python_venv_path 'Scripts\Activate.ps1')
 }
 
+$activated_venv = $false
 if (-Not $dry_run) {
     . $activate_path
+    $activated_venv = $true
 } else {
     Write-Output ". $activate_path"
+
+    if (Test-Path -Type Leaf -Path $activate_path) {
+        . $activate_path
+        $activated_venv = $true
+    }
 }
 
 # ==============================================================================
 
-$adjust_python = $true
+if ($activated_venv) {
+    $adjust_python = $true
 
-foreach ($subdir in @('bin', 'Scripts')) {
-    foreach ($ext in @('', '.exe')) {
-        $python_exec = "${Env:VIRTUAL_ENV}\$subdir\$PYTHON$ext"
-        if (Test-Path -Path $python_exec) {
-            $adjust_python = $false
-            break
-        }
-    }
-}
-
-if ($adjust_python) {
-    Write-Output "$PYTHON not found in $Env:VIRTUAL_ENV"
-    Write-Output "  -> looking for Python executables in $ENV:VIRTUAL_ENV"
-
-    $found = $false
     foreach ($subdir in @('bin', 'Scripts')) {
-        foreach ($exec in @('python3', 'python', 'python3.exe', 'python.exe')) {
-            $python_exec = "${Env:VIRTUAL_ENV}\$subdir\$exec"
+        foreach ($ext in @('', '.exe')) {
+            $python_exec = "${Env:VIRTUAL_ENV}\$subdir\$PYTHON$ext"
             if (Test-Path -Path $python_exec) {
-                $PYTHON = $exec
-                $found = $true
+                $adjust_python = $false
                 break
             }
         }
     }
 
-    if (-Not $found) {
-        Write-Error 'Unable to locate python or python3 in virtual environment!'
-        Pop-AllEnvironmentVariables
-        exit 1
+    if ($adjust_python) {
+        Write-Output "$PYTHON not found in $Env:VIRTUAL_ENV"
+        Write-Output "  -> looking for Python executables in $ENV:VIRTUAL_ENV"
+
+        $found = $false
+        foreach ($subdir in @('bin', 'Scripts')) {
+            foreach ($exec in @('python3', 'python', 'python3.exe', 'python.exe')) {
+                $python_exec = "${Env:VIRTUAL_ENV}\$subdir\$exec"
+                if (Test-Path -Path $python_exec) {
+                    $PYTHON = $exec
+                    $found = $true
+                    break
+                }
+            }
+        }
+
+        if (-Not $found) {
+            Write-Error 'Unable to locate python or python3 in virtual environment!'
+            Pop-AllEnvironmentVariables
+            exit 1
+        }
+
+        Write-Output "  -> using $PYTHON"
     }
-
-    Write-Output "  -> using $PYTHON"
 }
-
 
 # ==============================================================================

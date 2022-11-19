@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if ($_sourced_python_virtualenv_update -eq $null) { $_sourced_python_virtualenv_update=1 } else { return }
+if ($null -eq $_sourced_python_virtualenv_update) { $_sourced_python_virtualenv_update=1 } else { return }
 
 $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 
@@ -23,11 +23,11 @@ $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 
 # ==============================================================================
 
-if ($PYTHON -eq $null) {
+if ($null -eq $PYTHON) {
     die '(internal error): PYTHON variable not defined!'
 }
 
-if ($ROOTDIR -eq $null) {
+if ($null -eq $ROOTDIR) {
     die '(internal error): ROOTDIR variable not defined!'
 }
 
@@ -65,9 +65,10 @@ if ($created_venv -or $do_update_venv) {
         else {
             $tmp_file = (New-TemporaryFile).Name
 
-            pushd "$ROOTDIR"
+            Push-Location "$ROOTDIR"
             Invoke-Expression -Command "$PYTHON setup.py gen_reqfile --include-extras=test --output `"$tmp_file`""
-            popd
+            Pop-Location
+
 
             $tmp = Get-Content -Path "$tmp_file" | Select-String -Pattern '^\s*$' -NotMatch
             $pkgs += $tmp -Split '\n'

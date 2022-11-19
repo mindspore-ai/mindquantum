@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if ($_sourced_default_values -eq $null) { $_sourced_default_values=1 } else { return }
+if ($null -eq $_sourced_default_values) { $_sourced_default_values=1 } else { return }
 
 $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 
@@ -47,7 +47,7 @@ function Test-CommandExists{
 
 # ------------------------------------------------------------------------------
 
-if ($n_jobs_default -eq $null) {
+if ($null -eq $n_jobs_default) {
     $n_jobs_default = 8
     if(Test-CommandExists nproc) {
         $n_jobs_default = nproc
@@ -75,5 +75,5 @@ $third_party_libraries = ((Get-ChildItem -Path "$ROOTDIR\third_party" -Directory
 # ==============================================================================
 # Other helper variables
 
-if ($cmake_from_venv -eq $null) { $cmake_from_venv = $false }
-if ($ninja_from_venv -eq $null) { $ninja_from_venv = $false }
+if ($null -eq $cmake_from_venv) { $cmake_from_venv = $false }
+if ($null -eq $ninja_from_venv) { $ninja_from_venv = $false }

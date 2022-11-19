@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if ($_sourced_common_functions -eq $null) { $_sourced_common_functions=1 } else { return }
+if ($null -eq $_sourced_common_functions) { $_sourced_common_functions=1 } else { return }
 
 $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 

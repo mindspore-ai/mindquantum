@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if ($_sourced_locate_python3 -eq $null) { $_sourced_locate_python3=1 } else { return }
+if ($null -eq $_sourced_locate_python3) { $_sourced_locate_python3=1 } else { return }
 
 $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 
@@ -23,7 +23,7 @@ $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 
 # ==============================================================================
 
-if ($PYTHON -eq $null) {
+if ($null -eq $PYTHON) {
     if(Test-CommandExists python3) {
         $PYTHON = "python3"
     }
