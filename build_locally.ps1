@@ -14,6 +14,7 @@
 
 Param(
     [ValidateNotNullOrEmpty()][string]$A,
+    [switch]$Analyzer,
     [Alias("B")][ValidateNotNullOrEmpty()][string]$Build,
     [switch]$CCache,
     [switch]$CMakeNoRegistry,
@@ -239,6 +240,7 @@ $cmake_args = @('-DIN_PLACE_BUILD:BOOL=ON'
                 '-DIS_PYTHON_BUILD:BOOL=OFF'
                 '-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON'
                 "-DCMAKE_BUILD_TYPE:STRING={0}" -f $build_type
+                "-DENABLE_ANALYZER:BOOL={0}" -f $CMAKE_BOOL[$enable_analyzer]
                 "-DENABLE_PROJECTQ:BOOL={0}" -f $CMAKE_BOOL[$enable_projectq]
                 "-DENABLE_CMAKE_DEBUG:BOOL={0}" -f $CMAKE_BOOL[$cmake_debug_mode]
                 "-DENABLE_CUDA:BOOL={0}" -f $CMAKE_BOOL[$enable_gpu]
@@ -391,6 +393,9 @@ knows how to find them.
 
 A pth-file will be created in the virtualenv site-packages directory so that the MindQuantum root folder will be added
 to the Python PATH without the need to modify PYTHONPATH.
+
+.PARAMETER Analyzer
+Use the compiler static analysis tool during compilation (GCC & MSVC)
 
 .PARAMETER Build
 Specify build directory. Defaults to: Path\To\Script\build

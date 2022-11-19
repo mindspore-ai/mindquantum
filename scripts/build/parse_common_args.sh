@@ -91,6 +91,7 @@ help_message() {
     echo ''
     echo '  -B,--build=[dir]       Specify build directory'
     echo "                         Defaults to: $build_dir"
+    echo '  --analyzer             Use the compiler static analysis tool during compilation (GCC & MSVC)'
     echo '  --ccache               If ccache or sccache are found within the PATH, use them with CMake'
     echo '  --clean-3rdparty       Clean 3rd party installation directory'
     echo '  --clean-all            Clean everything before building.'
@@ -194,6 +195,9 @@ while getopts "${getopts_args}" OPT; do
         B | build)          needs_arg;
                             # shellcheck disable=SC2034
                             set_var build_dir "$OPTARG"
+                            ;;
+        analyzer )          no_arg;
+                            set_var enable_analyzer $flag_value
                             ;;
         ccache )            no_arg;
                             set_var enable_ccache $flag_value

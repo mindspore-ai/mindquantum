@@ -46,6 +46,8 @@ Descriptions
 +-------------------------------------+-----------------------------------------------------------------------+
 | ``DISABLE_FORTRAN_COMPILER`` *      | Forcefully disable the Fortran compiler for some 3rd party libraries  |
 +-------------------------------------+-----------------------------------------------------------------------+
+| ``ENABLE_ANALYZER``                 | Enable compiler static analysis tools (e.g. -fanalyzer for GCC)       |
++-------------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_ABSEIL_CPP``               | Enable the use of the abseil-cpp library                              |
 +-------------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_CMAKE_DEBUG``              | Enable verbose output to debug CMake issues                           |
@@ -53,6 +55,8 @@ Descriptions
 | ``ENABLE_CUDA``                     | Enable the use of CUDA code                                           |
 +-------------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_CXX_EXPERIMENTAL``         | Enable the building of the (new) experimental C++ backend             |
++-------------------------------------+-----------------------------------------------------------------------+
+| ``ENABLE_GCC_DEBUG_MODE`` *         | Enable the debug mode for GCC and libstdc++                           |
 +-------------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_GITEE``                    | Use Gitee instead of GitHub for (some) third-party dependencies       |
 +-------------------------------------+-----------------------------------------------------------------------+
@@ -74,6 +78,12 @@ Descriptions
 +-------------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_RUNPATH``                  | Prefer RUNPATH over RPATH when linking                                |
 +-------------------------------------+-----------------------------------------------------------------------+
+| ``ENABLE_SANITIZERS`` *             | Enable additional CMake build types for sanitizers                    |
++-------------------------------------+-----------------------------------------------------------------------+
+| ``ENABLE_SANITIZER_ADDRESS``        | Enable the address sanitizer for the sanitizer build type             |
++-------------------------------------+-----------------------------------------------------------------------+
+| ``ENABLE_SANITIZER_UNDEFINED``      | Enable the undefined behavior sanitizer for the sanitizer build type  |
++-------------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_STACK_PROTECTION``         | Enable stack protection during compilation                            |
 +-------------------------------------+-----------------------------------------------------------------------+
 | ``IN_PLACE_BUILD``                  | Build the C++ MindQuantum libraries in-place                          |
@@ -93,6 +103,10 @@ Descriptions
 | ``LINKER_STRIP_ALL``                | Use `--strip-all` during linking (if supported)                       |
 +-------------------------------------+-----------------------------------------------------------------------+
 | ``PYTHON_VIRTUALENV_OVER_ROOT_DIR`` | Ignore Python_ROOT_DIR if present at the same time as VIRTUAL_ENV     |
++-------------------------------------+-----------------------------------------------------------------------+
+| ``SANITIZER_USE_O1``                | Sanitizer build uses ``-O1``                                          |
++-------------------------------------+-----------------------------------------------------------------------+
+| ``SANITIZER_USE_Og``                | Sanitizer build uses ``-Og``                                          |
 +-------------------------------------+-----------------------------------------------------------------------+
 | ``USE_OPENMP``                      | Use the OpenMP library for parallelisation                            |
 +-------------------------------------+-----------------------------------------------------------------------+
@@ -119,11 +133,15 @@ Default values
 +-------------------------------------+------------------------------+
 | ``DISABLE_FORTRAN_COMPILER``        | ON                           |
 +-------------------------------------+------------------------------+
+| ``ENABLE_ANALYZER``                 | OFF                          |
++-------------------------------------+------------------------------+
 | ``ENABLE_CMAKE_DEBUG``              | OFF                          |
 +-------------------------------------+------------------------------+
 | ``ENABLE_CUDA``                     | OFF                          |
 +-------------------------------------+------------------------------+
 | ``ENABLE_CXX_EXPERIMENTAL``         | OFF                          |
++-------------------------------------+------------------------------+
+| ``ENABLE_GCC_DEBUG_MODE``           | OFF                          |
 +-------------------------------------+------------------------------+
 | ``ENABLE_GITEE``                    | OFF                          |
 +-------------------------------------+------------------------------+
@@ -138,6 +156,12 @@ Default values
 | ``ENABLE_PROJECTQ``                 | ON                           |
 +-------------------------------------+------------------------------+
 | ``ENABLE_RUNPATH``                  | ON                           |
++-------------------------------------+------------------------------+
+| ``ENABLE_SANITIZERS``               | ON                           |
++-------------------------------------+------------------------------+
+| ``ENABLE_SANITIZERS_ADDRESS``       | ON                           |
++-------------------------------------+------------------------------+
+| ``ENABLE_SANITIZERS_UNDEFINED``     | ON                           |
 +-------------------------------------+------------------------------+
 | ``ENABLE_STACK_PROTECTION``         | ON                           |
 +-------------------------------------+------------------------------+
@@ -159,6 +183,10 @@ Default values
 +-------------------------------------+------------------------------+
 | ``PYTHON_VIRTUALENV_OVER_ROOT_DIR`` | ON                           |
 +-------------------------------------+------------------------------+
+| ``SANITIZER_USE_O1``                | OFF                          |
++-------------------------------------+------------------------------+
+| ``SANITIZER_USE_Og``                | OFF                          |
++-------------------------------------+------------------------------+
 | ``USE_OPENMP``                      | ON                           |
 +-------------------------------------+------------------------------+
 | ``USE_PARALLEL_STL``                | OFF                          |
@@ -177,9 +205,19 @@ Detailed descriptions
 ``DISABLE_FORTRAN_COMPILER``
     This currently only has an effect when installing Eigen3.
 
+``ENABLE_GCC_DEBUG_MODE``
+    This enables compilation with ``-D_GLIBCXX_DEBUG`` for improved debugging. Requires that the compiler is GCC.
+
 ``ENABLE_ITERATOR_DEBUG``
     If this is turned on, the ``_ITERATOR_DEBUG`` preprocessor macro will be defined to the value of
     ``MQ_ITERATOR_DEBUG`` (see more documentation below).
+
+``ENABLE_SANITIZERS``
+    This enables a new CMake build types (on top of the usual ``Release, Debug, RelWithDebInfo, MinSizeRel``):
+      - ``Sanitize``
+
+    You can control which sanitizer is enabled by using the ``ENABLE_SANITIZER_ADDRESS`` and
+    ``ENABLE_SANITIZER_UNDEFINED`` CMake options. See also ``SANITIZER_USE_O1`` and ``SANITIZER_USE_Og``.
 
 CMake variables
 ---------------

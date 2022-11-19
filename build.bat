@@ -71,6 +71,11 @@ rem ============================================================================
     goto :END
   )
 
+  if /I "%1" == "/analyzer" (
+    set enable_analyzer=1
+    shift & goto :initial
+  )
+
   if /I "%1" == "/N" (
     set dry_run=1
     shift & goto :initial
@@ -344,6 +349,7 @@ if !build_isolation! == 0 set args=!args! --no-isolation
 set RETVAL=
 call %SCRIPTDIR%\dos\build_cmake_option.bat BUILD_TESTING !enable_tests!
 call %SCRIPTDIR%\dos\build_cmake_option.bat CLEAN_3RDPARTY_INSTALL_DIR !do_clean_3rdparty!
+call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_ANALYZER !enable_analyzer!
 call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CMAKE_DEBUG !cmake_debug_mode!
 call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CUDA !enable_gpu!
 call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CXX_EXPERIMENTAL !enable_cxx!
@@ -467,6 +473,7 @@ rem ============================================================================
   echo   /H,/help            Show this help message and exit
   echo   /N                  Dry run; only print commands but do not execute them
   echo
+  echo   /Analyzer           Use the compiler static analysis tool during compilation (GCC & MSVC)
   echo   /B,/Build [dir]     Specify build directory
   echo                       Defaults to: %build_dir%
   echo   /Clean3rdParty      Clean 3rd party installation directory

@@ -251,6 +251,47 @@ test_compile_option(
 
 # ------------------------------------------------------------------------------
 
+test_compile_option(
+  sanitize_address_main
+  LANGS C CXX
+  FLAGS "-fsanitize=address"
+  LINKER_FLAGS "-fsanitize=address"
+  CMAKE_OPTION ENABLE_SANITIZER_ADDRESS
+  GENEX "$<CONFIG:SANITIZER>"
+  NO_TRYCOMPILE_TARGET NO_TRYCOMPILE_FLAGCHECK_TARGET)
+
+test_compile_option(
+  sanitize_address_auxiliary
+  LANGS C CXX
+  FLAGS "-fno-omit-frame-pointer" "-fno-optimize-sibling-calls"
+  CMAKE_OPTION ENABLE_SANITIZER_ADDRESS
+  GENEX "$<CONFIG:SANITIZER>"
+  NO_TRYCOMPILE_TARGET NO_TRYCOMPILE_FLAGCHECK_TARGET)
+
+# --------------------------------------
+
+test_compile_option(
+  sanitize_undefined
+  LANGS C CXX
+  FLAGS "-fsanitize=undefined"
+  CMAKE_OPTION ENABLE_SANITIZER_UNDEFINED
+  GENEX "$<CONFIG:SANITIZER>"
+  NO_TRYCOMPILE_TARGET NO_TRYCOMPILE_FLAGCHECK_TARGET)
+
+# ------------------------------------------------------------------------------
+
+# NB: in principle we could also use --analyze for Clang, but Clang does not produce valid object file in this mode so
+# the linking step will inevitably fail
+
+test_compile_option(
+  compiler_sanitizer
+  LANGS C CXX
+  FLAGS "-fanalyzer /analyze" # for GCC and MSVC
+  CMAKE_OPTION ENABLE_ANALYZER
+  NO_TRYCOMPILE_TARGET NO_TRYCOMPILE_FLAGCHECK_TARGET)
+
+# ------------------------------------------------------------------------------
+
 if(NOT VERSION_INFO)
   execute_process(
     COMMAND ${Python_EXECUTABLE} setup.py --version
@@ -294,6 +335,7 @@ mq_add_compile_definitions(
   "$<$<BOOL:${ENABLE_LOGGING_DEBUG_LEVEL}>:MQ_LOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG>"
   "$<$<BOOL:${ENABLE_LOGGING_TRACE_LEVEL}>:MQ_LOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE>"
   "$<$<BOOL:${ENABLE_LOGGING}>:ENABLE_LOGGING>"
+  "$<$<AND:$<BOOL:${ENABLE_GCC_DEBUG_MODE}>,$<BOOL:${CMAKE_COMPILER_IS_GNUCXX}>>:_GLIBCXX_DEBUG>"
   "$<$<AND:$<CONFIG:RELEASE>,$<COMPILE_LANGUAGE:CXX>>:_FORTIFY_SOURCE=2>")
 
 # ==============================================================================
