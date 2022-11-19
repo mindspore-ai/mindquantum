@@ -20,7 +20,7 @@ mindquantum/simulator/mqsim.py:get_expectation_with_grad
 mindquantum/simulator/projectq_sim.py:get_expectation_with_grad
 mindquantum/simulator/simulator.py:get_expectation_with_grad
 mindquantum/third_party/unitary_cc.py:uccsd_singlet_generator
-
+mindquantum/io/display/circuit_text_drawer.py:brick_model
 mindquantum/experimental/_symengine_utilities.py:symbols
 
 ccsrc/include/ops/gates.hpp:mindquantum::GetGateByName

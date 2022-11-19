@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """Text draw a circuit."""
 
 import numpy as np
@@ -30,7 +29,8 @@ def _get_qubit_range(gate):
     return out
 
 
-def brick_model(circ, qubits_name=None):  # pylint: disable=too-many-locals,too-many-branches
+# pylint: disable=too-many-statements,too-many-branches
+def brick_model(circ, qubits_name=None, width=np.inf):  # pylint: disable=too-many-locals
     """Split a circuit into layers."""
     from mindquantum import (  # pylint: disable=import-outside-toplevel,cyclic-import
         gates,
@@ -67,10 +67,37 @@ def brick_model(circ, qubits_name=None):  # pylint: disable=too-many-locals,too-
         if i != n - 1:
             for j in range(v_n):
                 res[i * (v_n + 1) + j + 1] = ' ' * max_q
+    text_circ = {i: [j] for i, j in res.items()}
+    current_width = max_q
+    continue_left = _text_drawer_config.get('continue_left')
+    continue_right = _text_drawer_config.get('continue_right')
+    continue_buff = len(continue_left) + len(continue_right)
+
+    if max_q >= width - continue_buff:
+        raise ValueError("Window width too small to display circuit.")
+    n_split = 1
+    block_widths = []
     for block in blocks:
+        block_widths.append(max(len(j) for j in block.values()))
+        if block_widths[-1] + max_q >= width - 4:
+            raise ValueError("Window width too small to display a single gate.")
+    for block_id, block in enumerate(blocks):
+        if current_width + block_widths[block_id] >= width - continue_buff:
+            for i, j in res.items():
+                text_circ[i][-1] += continue_right
+                text_circ[i].append(j + continue_left)
+            n_split += 1
+            current_width = max_q
         for k, v in block.items():
-            res[k] += v
-    return [res[i].rstrip() for i in range((n - 1) * (v_n + 1) + 1)]
+            text_circ[k][-1] += v
+        current_width += block_widths[block_id]
+    output = []
+    for j in range(n_split):
+        for i in range((n - 1) * (v_n + 1) + 1):
+            output.append(text_circ[i][j].rstrip())
+        if j != n_split - 1:
+            output.append(_text_drawer_config['horizontal_split'] * width)
+    return output
 
 
 def _single_gate_drawer(gate):

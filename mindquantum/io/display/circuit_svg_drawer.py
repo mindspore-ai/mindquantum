@@ -131,6 +131,11 @@ class HasStroke(BaseComponent):
         self.stroke(color)
         return self
 
+    def stroke_dasharray(self, width_a, width_b):
+        """Set stroke dash array."""
+        self.prop['stroke-dasharray'] = f"{width_a} {width_b}"
+        return self
+
 
 class HasFill(HasStroke):
     """A svg component that has fill property."""
@@ -973,63 +978,152 @@ class GateContainer(SVGContainer):
         return self
 
 
+def create_qubit_container(qubit_name, svg_config):
+    """Create qubit container."""
+    qubit_container = SVGContainer()
+    for i, j in enumerate(qubit_name):
+        qubit_container.add(SVGQubit(0, i * svg_config['circuit_line_distance'], j, svg_config))
+    qubit_container.shift(svg_config['padding_x'], svg_config['padding_y'] + svg_config['gate_size'] / 2)
+    return qubit_container
+
+
+def create_circuit_line_container(n_qubits, circ_len, svg_config):
+    """Create circuit line container."""
+    circuit_line_container = SVGContainer()
+    for i in range(n_qubits):
+        circuit_line_container.add(
+            SVGCircuitLine(
+                0,
+                circ_len,
+                i * svg_config['circuit_line_distance'],
+                i * svg_config['circuit_line_distance'],
+                svg_config,
+            )
+        )
+    return circuit_line_container
+
+
+def add_to_gate_container(gate_container: GateContainer, gate, svg_config, n_qubits):
+    """Add gate to gate container."""
+    if isinstance(gate, BarrierGate):
+        if gate.obj_qubits:
+            gate_container.add(SVGBarrier(gate.obj_qubits, svg_config))
+        else:
+            gate_container.add(SVGBarrier(range(n_qubits), svg_config, gate.show))
+    elif isinstance(gate, Measure):
+        gate_container.add(SVGMeasure(gate, svg_config))
+    elif isinstance(gate, XGate) and len(gate.ctrl_qubits) == 1:
+        gate_container.add(SVGCNOTGate(gate, svg_config))
+    elif isinstance(gate, CNOTGate):
+        gate_container.add(SVGCNOTGate(gate, svg_config))
+    elif isinstance(gate, SWAPGate):
+        gate_container.add(SVGSWAPGate(gate, svg_config))
+    elif isinstance(gate, ParameterGate) and not isinstance(gate, (TGate, SGate)):
+        gate_container.add(SVGParameterGate(gate, svg_config))
+    else:
+        gate_container.add(SVGGate(gate, svg_config))
+
+
+def create_connecter(width, connect_high, arrow_size, svg_config):
+    """Create connecter."""
+    line_1 = (
+        Line(0, width, 0, 0)
+        .stroke(svg_config['circuit_line_stroke'])
+        .stroke_width(svg_config['circuit_line_stroke_width'])
+        .stroke_dasharray(5, 5)
+    )
+    line_2 = (
+        Line(0, 0, -connect_high, 0)
+        .stroke(svg_config['circuit_line_stroke'])
+        .stroke_width(svg_config['circuit_line_stroke_width'])
+        .stroke_dasharray(5, 5)
+    )
+    line_3 = (
+        Line(0, 0, 0, connect_high)
+        .stroke(svg_config['circuit_line_stroke'])
+        .stroke_width(svg_config['circuit_line_stroke_width'])
+        .stroke_dasharray(5, 5)
+    )
+    line_2.shift(width, 0)
+    line_4 = (
+        Line(-arrow_size, 0, -arrow_size, 0)
+        .stroke(svg_config['circuit_line_stroke'])
+        .stroke_width(2 * svg_config['circuit_line_stroke_width'])
+    )
+    line_5 = (
+        Line(arrow_size, 0, -arrow_size, 0)
+        .stroke(svg_config['circuit_line_stroke'])
+        .stroke_width(2 * svg_config['circuit_line_stroke_width'])
+    )
+    line_4.shift(0, connect_high)
+    line_5.shift(0, connect_high)
+    out = SVGContainer()
+    out.add(line_1)
+    out.add(line_2)
+    out.add(line_3)
+    out.add(line_4)
+    out.add(line_5)
+    out.shift(-out.left, -out.top)
+    return out
+
+
 class SVGCircuit(SVGContainer):
     """SVG circuit component."""
 
-    def __init__(self, circuit, svg_config):
+    # pylint: disable=too-many-locals
+    def __init__(self, circuit, svg_config, len_limit):
         """Initialize an SVGCircuit object."""
         super().__init__()
         self.svg_config = svg_config
         _check_input_type("circuit", Circuit, circuit)
         old_qubits = sorted(circuit.all_qubits.keys())
-        circuit = circuit.compress()
-        qubit_container = SVGContainer()
-        circuit_line_container = SVGContainer()
-        gate_container = GateContainer(circuit.n_qubits, svg_config)
-        for gate in circuit:
-            if isinstance(gate, BarrierGate):
-                if gate.obj_qubits:
-                    gate_container.add(SVGBarrier(gate.obj_qubits, svg_config))
-                else:
-                    gate_container.add(SVGBarrier(range(circuit.n_qubits), svg_config, gate.show))
-            elif isinstance(gate, Measure):
-                gate_container.add(SVGMeasure(gate, svg_config))
-            elif isinstance(gate, XGate) and len(gate.ctrl_qubits) == 1:
-                gate_container.add(SVGCNOTGate(gate, svg_config))
-            elif isinstance(gate, CNOTGate):
-                gate_container.add(SVGCNOTGate(gate, svg_config))
-            elif isinstance(gate, SWAPGate):
-                gate_container.add(SVGSWAPGate(gate, svg_config))
-            elif isinstance(gate, ParameterGate) and not isinstance(gate, (TGate, SGate)):
-                gate_container.add(SVGParameterGate(gate, svg_config))
-            else:
-                gate_container.add(SVGGate(gate, svg_config))
-        circ_len = gate_container.right - gate_container.left + 2 * self.svg_config['gate_start_distance']
-        for i in range(circuit.n_qubits):
-            qubit_container.add(SVGQubit(0, i * self.svg_config['circuit_line_distance'], old_qubits[i], svg_config))
-            circuit_line_container.add(
-                SVGCircuitLine(
-                    0,
-                    circ_len,
-                    i * self.svg_config['circuit_line_distance'],
-                    i * self.svg_config['circuit_line_distance'],
-                    self.svg_config,
-                )
-            )
-        qubit_container.shift(
-            self.svg_config['padding_x'], self.svg_config['padding_y'] + self.svg_config['gate_size'] / 2
-        )
+        qubit_container = create_qubit_container(old_qubits, self.svg_config)
+        qubit_container_right = qubit_container.right
 
+        circuit = circuit.compress()
+        n_qubits = circuit.n_qubits
+        gate_containers = [GateContainer(n_qubits, svg_config)]
+        try_gate_container = GateContainer(n_qubits, svg_config)
+        circ_split_dist = svg_config['circuit_line_distance'] * 0.2
+        for gate in circuit:
+            add_to_gate_container(try_gate_container, gate, self.svg_config, n_qubits)
+            try_width = try_gate_container.right - try_gate_container.left + 2 * self.svg_config['gate_start_distance']
+            if try_width + qubit_container_right >= len_limit:
+                gate_containers.append(GateContainer(n_qubits, svg_config))
+                try_gate_container = GateContainer(n_qubits, svg_config)
+            add_to_gate_container(gate_containers[-1], gate, self.svg_config, n_qubits)
+        max_len = max(
+            gate_container.right - gate_container.left + 2 * self.svg_config['gate_start_distance']
+            for gate_container in gate_containers
+        )
+        connecter = create_connecter(max_len, 24, 10, self.svg_config)
+        connecter.shift(qubit_container.right, 0)
+        circuit_line_container = create_circuit_line_container(n_qubits, max_len, self.svg_config)
         circuit_line_container.shift(
             qubit_container.right, self.svg_config['padding_y'] + self.svg_config['gate_size'] / 2
         )
-        gate_container.shift(
-            circuit_line_container.left + self.svg_config['gate_start_distance'], self.svg_config['padding_y']
-        )
+        for gate_container in gate_containers:
+            gate_container.shift(
+                circuit_line_container.left + self.svg_config['gate_start_distance'], self.svg_config['padding_y']
+            )
         self.front = SVGContainer()
-        self.front.add(qubit_container)
-        self.front.add(circuit_line_container)
-        self.front.add(gate_container)
+        bottom = 0
+        for i, gate_container in enumerate(gate_containers):
+            q_container = copy.deepcopy(qubit_container)
+            if i != 0:
+                conn = copy.deepcopy(connecter)
+                conn.shift(0, i * circ_split_dist + bottom)
+            if i != 0:
+                self.front.add(conn)
+                bottom = self.front.bottom
+            q_container.shift(0, (i != 0) * circ_split_dist + bottom)
+            cl_container = copy.deepcopy(circuit_line_container)
+            cl_container.shift(0, (i != 0) * circ_split_dist + bottom)
+            gate_container.shift(0, (i != 0) * circ_split_dist + bottom)
+            self.front.add(q_container)
+            self.front.add(cl_container)
+            self.front.add(gate_container)
+            bottom = self.front.bottom
         front_box = box(self.front)
         self.background = Rect(
             front_box['left'],

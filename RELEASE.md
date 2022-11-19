@@ -14,6 +14,10 @@
 - [STABLE] [`BarrierGate`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.BarrierGate): BarrierGate now can be acted on certain qubits.
 - [STABLE] [`KrausChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.KrausChannel): Design a customed kraus channel for quantum simulator.
 
+#### Circuit
+
+- [STABLE] [`svg`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.svg): Now you can the `width` to split the svg circuit, so that you can copy it into your paper.
+
 #### Simulator
 
 - [STABLE] **New simulator supported**. `mqvector` and `mqvector_gpu` are two mindquantum simulate that prepared for cpu and gpu. And `projectq` simulator will be deprecated. The new simulator is total compatible with old one, what you only to do is to change the backend name when you initialize the simulator.

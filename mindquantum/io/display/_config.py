@@ -46,6 +46,9 @@ _text_drawer_config = {
     'swap_mask': ['@', '@'],  # ✖, ⨯⨯
     'edge_num': 2,
     'barrier': '‖',
+    'continue_left': '<<',
+    'continue_right': '>>',
+    'horizontal_split': "/",
 }
 
 _text_drawer_config['edge'] = _text_drawer_config['circ_line'] * _text_drawer_config['edge_num']

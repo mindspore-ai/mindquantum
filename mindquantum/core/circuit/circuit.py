@@ -544,12 +544,11 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum.io.display._config import _CIRCUIT_STYLE
 
-        circ = self.compress()
-        string = brick_model(circ, sorted(self.all_qubits.map))
-        string = '\n'.join(string)
         console = Console(record=True)
+        circ = self.compress()
+        string = brick_model(circ, sorted(self.all_qubits.map), console.width)
+        string = '\n'.join(string)
         if not console.is_jupyter:
-            console.width = len(string)
             with console.capture() as capture:
                 console.print(string, style=_CIRCUIT_STYLE, width=len(string))
             return capture.get()
@@ -562,9 +561,8 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
 
         console = Console(record=True)
         circ = self.compress()
-        string = brick_model(circ, sorted(self.all_qubits.map))
+        string = brick_model(circ, sorted(self.all_qubits.map), console.width)
         string = '\n'.join(string)
-        console.width = len(string)
         with console.capture() as _:
             console.print(string, style=_CIRCUIT_STYLE, width=len(string))
         string = console.export_html(code_format=CIRCUIT_HTML_FORMAT, inline_styles=True)
@@ -1111,13 +1109,14 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         """
         return apply(self, [self.n_qubits - 1 - i for i in self.all_qubits.keys()])
 
-    def svg(self, style=None):
+    def svg(self, style=None, width=None):
         """
         Display current quantum circuit into SVG picture in jupyter notebook.
 
         Args:
             style (dict, str): the style to set svg circuit. Currently, we support
                 'official', 'light' and 'dark'. Default: None.
+            width (numbers.Number): the max width of circuit. Default: None.
         """
         # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum.io.display._config import (
@@ -1127,6 +1126,12 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         )
         from mindquantum.io.display.circuit_svg_drawer import SVGCircuit
 
+        if width is None:
+            width = np.inf
+        if not isinstance(width, (int, float)):
+            raise TypeError(f"width requires a int or a float, but get {type(width)}")
+        if width < 250:
+            raise ValueError("Windows too small to display svg circuit, width should be more than 250.")
         supported_style = {
             'official': _svg_config_official,
             'dark': _svg_config_dark,
@@ -1134,11 +1139,12 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         }
         if style is None:
             style = _svg_config_official
+        _check_input_type("style", (dict, str), style)
         if isinstance(style, str):
             if style not in supported_style:
                 raise ValueError(f"Style not found, currently we support {list(supported_style.keys())}")
             style = supported_style[style]
-        return SVGCircuit(self, style)
+        return SVGCircuit(self, style, width)
 
     def remove_noise(self):
         """Remove all noise gate."""

@@ -41,4 +41,4 @@ def test_circuit_svg():
     """
     # pylint: disable=protected-access
     text = (qft(range(3)) + RX({'a': 1.2}).on(1) + BarrierGate()).measure_all().svg()._repr_svg_().strip()
-    assert len(text) in (7072, 7073)
+    assert len(text) in (7079,)

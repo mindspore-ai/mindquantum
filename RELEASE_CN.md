@@ -14,6 +14,10 @@
 - [STABLE] [`BarrierGate`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.BarrierGate): BarrierGate 现在可以只作用在某些特定比特上，而不是全部比特。
 - [STABLE] [`KrausChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.KrausChannel): 用户可自定义 kraus 量子信道。
 
+#### Circuit
+
+- [STABLE] [`svg`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.svg): 现在可以通过设置 `width` 参数来将量子线路分段，从而可以将量子线路图以更美观的方式复制到论文中。
+
 #### Simulator
 
 - [STABLE] **全新量子模拟器**. 新版本中我们推出了全新的 cpu 和 gpu 模拟 `mqvector` 和 `mqvector_gpu`. 旧版本中的 `projectq` 模拟器将会在下个版本中被弃用。全新一代模拟器与旧模拟器完全兼容，只需在模拟器声明时修改后端名称即可。
