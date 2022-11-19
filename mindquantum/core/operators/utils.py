@@ -47,18 +47,11 @@ def count_qubits(operator):
         >>> count_qubits(fer_op)
         2
     """
-    # pylint: disable=import-outside-toplevel
-    import openfermion.ops as ofops
-    import projectq.ops as pqops
-
     # Handle FermionOperator.
     valuable_type = (
         FermionOperator,
         QubitOperator,
         QubitExcitationOperator,
-        ofops.FermionOperator,
-        ofops.QubitOperator,
-        pqops.QubitOperator,
     )
     if hasattr(operator, 'count_qubits'):
         return operator.count_qubits()

@@ -170,3 +170,15 @@ def _check_control_num(ctrl_qubits, require_n):
 
     if len(ctrl_qubits) != require_n:
         raise RuntimeError(f"requires {s_quantifier(require_n,'control qubit')}, but get {len(ctrl_qubits)}")
+
+
+def _require_package(pkg_name: str, low_version: str = None, high_version: str = None):
+    if low_version is not None and high_version is not None:
+        raise ImportError(
+            f"Requires {pkg_name}, please install with 'pip install \"{pkg_name}>={low_version},<={high_version}\"'"
+        )
+    if low_version is not None:
+        raise ImportError(f"Requires {pkg_name}, please install with 'pip install \"{pkg_name}>={low_version}\"'")
+    if high_version is not None:
+        raise ImportError(f"Requires {pkg_name}, please install with 'pip install \"{pkg_name}<={high_version}\"'")
+    raise ImportError(f"Requires {pkg_name}, please install with 'pip install {pkg_name}'")

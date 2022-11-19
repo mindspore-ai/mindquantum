@@ -26,7 +26,7 @@ from mindquantum.mqbackend import (
     complex_pr,
     real_pr,
 )
-from mindquantum.utils.type_value_check import _check_input_type
+from mindquantum.utils.type_value_check import _require_package
 
 from ...core._arithmetic_ops_adaptor import CppArithmeticAdaptor
 from ._term_value import TermValue
@@ -41,7 +41,6 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
     ensure_complex_coeff: False
     real_pr_klass: type
     complex_pr_klass: type
-    openfermion_klass: type
     _type_conversion_table: type
 
     @staticmethod
@@ -425,13 +424,25 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
 
     def to_openfermion(self):
         """Convert a TermsOperator openfermion format."""
+        # pylint: disable=import-outside-toplevel
+
+        try:
+            from openfermion import FermionOperator, QubitOperator
+        except ImportError:
+            _require_package("openfermion", "1.5.0")
+
         terms = {}
         for term, pr in self.terms.items():
             if not pr.is_const:
-                raise ValueError(f'Cannot convert parameterized {self.__class__.__name__} to OpenFermion format')
+                raise ValueError(f'Cannot convert parameterized {self.__class__.__name__} to OpenFermion format.')
             terms[tuple((i, TermValue[j]) for i, j in term)] = pr.const
 
-        operator = self.__class__.openfermion_klass()
+        if self.__class__.__name__ == 'FermionOperator':
+            operator = FermionOperator()
+        elif self.__class__.__name__ == 'QubitOperator':
+            operator = QubitOperator()
+        else:
+            raise ValueError(f"Cannot convert {self.__class__.__name__} to OpenFermion format.")
         operator.terms = terms
         return operator
 
@@ -447,8 +458,17 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
         Returns:
             TermsOperator, terms operator from mindquantum.
         """
-        _check_input_type('of_ops', cls.openfermion_klass, of_ops)
+        # pylint: disable=import-outside-toplevel
 
+        try:
+            from openfermion import FermionOperator, QubitOperator
+        except ImportError:
+            _require_package("openfermion", "1.5.0")
+        if not isinstance(of_ops, (FermionOperator, QubitOperator)):
+            raise TypeError(
+                "of_ops should be a FermionOperator or a QubitOperator"
+                f" from openfermion framework, but get type {type(of_ops)}"
+            )
         if dtype is not None:
             klass = cls._type_conversion_table[dtype]
         else:

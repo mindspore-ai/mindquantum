@@ -17,14 +17,21 @@
 from pathlib import Path
 
 import numpy as np
-from openfermion import get_sparse_operator
-from openfermion.chem import MolecularData
+import pytest
 
 from mindquantum.algorithm.nisq import Transform
 from mindquantum.core.operators import FermionOperator
 from mindquantum.third_party.interaction_operator import InteractionOperator
 
+_HAS_OPENFERMION = True
+try:
+    from openfermion import get_sparse_operator
+    from openfermion.chem import MolecularData
+except ImportError:
+    _HAS_OPENFERMION = False
 
+
+@pytest.mark.skipif(not _HAS_OPENFERMION, reason='OpenFermion is not installed')
 def test_sparsing_operator():
     """
     Description: Test sparsing operator

@@ -16,8 +16,16 @@
 
 """The test function for QubitOperator."""
 
+import pytest
+
 from mindquantum.core import ParameterResolver
 from mindquantum.core.operators import QubitOperator
+
+_HAS_OPENFERMION = True
+try:
+    from openfermion import QubitOperator as OFQubitOperator
+except ImportError:
+    _HAS_OPENFERMION = False
 
 
 def _get_terms_as_set(qubit_op):
@@ -180,14 +188,12 @@ def test_qubit_ops_dumps_and_loads():
     assert obj == ops
 
 
+@pytest.mark.skipif(not _HAS_OPENFERMION, reason='OpenFermion is not installed')
 def test_qubit_ops_trans():
     """
     Description: Test transfor fermion operator to openfermion back and force.
     Expectation: success.
     """
-    # pylint: disable=import-outside-toplevel
-    from openfermion import QubitOperator as OFQubitOperator
-
     ofo_ops = OFQubitOperator("X0 Y1 Z2", 1)
     mq_ops = QubitOperator("X0 Y1 Z2", 1)
 
