@@ -82,7 +82,7 @@ macro(define_compiler_linker_flags build_type inherited_build_type)
       CACHE STRING "Linker lags to be used to create modules for Asan build type." FORCE)
 
   mark_as_advanced(CMAKE_C_FLAGS_${_build_type} CMAKE_CXX_FLAGS_${_build_type} CMAKE_EXE_LINKER_FLAGS_${_build_type}
-                   CMAKE_SHARED_LINKER_FLAGS_${_build_type} CMAKE_MODULE_LINKER_FLAGS_${_build_type})
+                  CMAKE_SHARED_LINKER_FLAGS_${_build_type} CMAKE_MODULE_LINKER_FLAGS_${_build_type})
 endmacro()
 
 # ==============================================================================
