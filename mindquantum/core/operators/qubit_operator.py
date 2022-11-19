@@ -19,8 +19,6 @@
 
 """This is the module for the Qubit Operator."""
 
-from openfermion import QubitOperator as OFQubitOperator
-
 from ... import mqbackend
 from ._term_value import TermValue
 from ._terms_operators import TermsOperator
@@ -78,7 +76,6 @@ class QubitOperator(TermsOperator):
     cxx_base_klass = mqbackend.QubitOperatorBase
     real_pr_klass = mqbackend.QubitOperatorPRD
     complex_pr_klass = mqbackend.QubitOperatorPRCD
-    openfermion_klass = OFQubitOperator
 
     ensure_complex_coeff = True
 

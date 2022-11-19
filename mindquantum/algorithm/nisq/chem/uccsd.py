@@ -22,6 +22,7 @@ import numpy as np
 from mindquantum.core.circuit import Circuit, decompose_single_term_time_evolution
 from mindquantum.core.operators import FermionOperator, down_index, up_index
 from mindquantum.third_party.interaction_operator import InteractionOperator
+from mindquantum.utils.type_value_check import _require_package
 
 from .transform import Transform
 
@@ -186,9 +187,11 @@ def generate_uccsd(molecular, threshold=0):
         - **n_qubits** (int), the number of qubits in simulation.
         - **n_electrons** (int), the number of electrons of the molecule.
     """
-    # pylint: disable=import-outside-toplevel
-    from openfermion.chem import MolecularData
-
+    try:
+        # pylint: disable=import-outside-toplevel
+        from openfermion.chem import MolecularData
+    except ImportError:
+        _require_package("openfermion", "1.5.0")
     if isinstance(molecular, str):
         mol = MolecularData(filename=molecular)
         mol.load()

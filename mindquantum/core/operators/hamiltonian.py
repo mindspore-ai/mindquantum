@@ -50,13 +50,10 @@ class Hamiltonian:
     def __init__(self, hamiltonian):
         """Initialize a Hamiltonian object."""
         # pylint: disable=import-outside-toplevel
-        import openfermion.ops as of_ops
-        import projectq.ops as pq_ops
-
         from .qubit_operator import QubitOperator as HiQOperator
         from .utils import count_qubits
 
-        support_type = (pq_ops.QubitOperator, of_ops.QubitOperator, HiQOperator, sp.csr_matrix)
+        support_type = (HiQOperator, sp.csr_matrix)
         if not isinstance(hamiltonian, support_type):
             raise TypeError(f"Require a QubitOperator or a csr_matrix, but get {type(hamiltonian)}!")
         if isinstance(hamiltonian, sp.csr_matrix):

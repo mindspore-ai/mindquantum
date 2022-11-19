@@ -17,7 +17,15 @@
 
 """Test fermion operator."""
 
+import pytest
+
 from mindquantum.core.operators import FermionOperator
+
+_HAS_OPENFERMION = True
+try:
+    from openfermion import FermionOperator as OFFermionOperator
+except ImportError:
+    _HAS_OPENFERMION = False
 
 
 def test_fermion_ops_num_coeff():
@@ -176,14 +184,12 @@ def test_dumps_and_loads():
     assert obj == f
 
 
+@pytest.mark.skipif(not _HAS_OPENFERMION, reason='OpenFermion is not installed')
 def test_of_fermion_trans():
     """
-    Description: Test transfor fermion operator to openfermion back and force.
+    Description: Test transform fermion operator to openfermion back and force.
     Expectation: success.
     """
-    # pylint: disable=import-outside-toplevel
-    from openfermion import FermionOperator as OFFermionOperator
-
     ofo_ops = OFFermionOperator("1^ 0", 1)
     mq_ops = FermionOperator('1^ 0', 1)
     assert mq_ops.to_openfermion() == ofo_ops

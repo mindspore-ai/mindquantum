@@ -16,8 +16,6 @@
 # pylint: disable=duplicate-code
 """This module is generated the Fermion Operator."""
 
-from openfermion import FermionOperator as OFFermionOperator
-
 from ... import mqbackend
 from ...core.operators.polynomial_tensor import PolynomialTensor
 from ...core.parameterresolver import ParameterResolver
@@ -71,7 +69,6 @@ class FermionOperator(TermsOperator):
     cxx_base_klass = mqbackend.FermionOperatorBase
     real_pr_klass = mqbackend.FermionOperatorPRD
     complex_pr_klass = mqbackend.FermionOperatorPRCD
-    openfermion_klass = OFFermionOperator
 
     ensure_complex_coeff = False
 
