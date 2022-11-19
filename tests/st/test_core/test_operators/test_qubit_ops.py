@@ -23,7 +23,7 @@ from mindquantum.core.operators import QubitOperator
 
 _HAS_OPENFERMION = True
 try:
-    from openfermion import QuadOperator as OFQubitOperator
+    from openfermion import QubitOperator as OFQubitOperator
 except ImportError:
     _HAS_OPENFERMION = False
 
