@@ -190,7 +190,7 @@ def generate_uccsd(molecular, threshold=0):
     try:
         # pylint: disable=import-outside-toplevel
         from openfermion.chem import MolecularData
-    except ImportError:
+    except (ImportError, AttributeError):
         _require_package("openfermion", "1.5.0")
     if isinstance(molecular, str):
         mol = MolecularData(filename=molecular)

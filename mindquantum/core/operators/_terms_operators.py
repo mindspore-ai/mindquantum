@@ -428,7 +428,7 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
 
         try:
             from openfermion import FermionOperator, QubitOperator
-        except ImportError:
+        except (ImportError, AttributeError):
             _require_package("openfermion", "1.5.0")
 
         terms = {}
@@ -462,7 +462,7 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
 
         try:
             from openfermion import FermionOperator, QubitOperator
-        except ImportError:
+        except (ImportError, AttributeError):
             _require_package("openfermion", "1.5.0")
         if not isinstance(of_ops, (FermionOperator, QubitOperator)):
             raise TypeError(

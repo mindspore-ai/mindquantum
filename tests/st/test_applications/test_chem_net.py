@@ -38,6 +38,14 @@ except ImportError:
         return []
 
 
+_HAS_OPENFERMION = True
+try:
+    # pylint: disable=unused-import
+    from openfermion import FermionOperator as OFFermionOperator
+except ImportError:
+    _HAS_OPENFERMION = False
+_FORCE_TEST = bool(os.environ.get("FORCE_TEST", False))
+
 os.environ.setdefault('OMP_NUM_THREADS', '8')
 
 
@@ -47,6 +55,8 @@ os.environ.setdefault('OMP_NUM_THREADS', '8')
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
+@pytest.mark.skipif(not _HAS_OPENFERMION, reason='openfermion is not installed')
+@pytest.mark.skipif(not _FORCE_TEST, reason='Set not force test')
 def test_vqe_net(backend):  # pylint: disable=too-many-locals
     """
     Description: Test vqe

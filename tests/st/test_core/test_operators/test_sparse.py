@@ -28,12 +28,13 @@ _HAS_OPENFERMION = True
 try:
     from openfermion import get_sparse_operator
     from openfermion.chem import MolecularData
-except ImportError:
+except (ImportError, AttributeError):
     _HAS_OPENFERMION = False
 _FORCE_TEST = bool(os.environ.get("FORCE_TEST", False))
 
 
 @pytest.mark.skipif(not _HAS_OPENFERMION or not _FORCE_TEST, reason='OpenFermion is not installed')
+@pytest.mark.skipif(not _FORCE_TEST, reason='set not force test')
 def test_sparsing_operator():
     """
     Description: Test sparsing operator

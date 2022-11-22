@@ -32,7 +32,8 @@ except ImportError:
 _FORCE_TEST = bool(os.environ.get("FORCE_TEST", False))
 
 
-@pytest.mark.skipif(not _HAS_OPENFERMION or not _FORCE_TEST, reason='OpenFermion is not installed')
+@pytest.mark.skipif(not _HAS_OPENFERMION, reason='OpenFermion is not installed')
+@pytest.mark.skipif(not _FORCE_TEST, reason='Set not force test')
 def test_generate_uccsd():
     """
     Description: Test generate_uccsd

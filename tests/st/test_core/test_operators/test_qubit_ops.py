@@ -26,7 +26,7 @@ from mindquantum.core.operators import QubitOperator
 _HAS_OPENFERMION = True
 try:
     from openfermion import QubitOperator as OFQubitOperator
-except ImportError:
+except (ImportError, AttributeError):
     _HAS_OPENFERMION = False
 
 _FORCE_TEST = bool(os.environ.get("FORCE_TEST", False))
@@ -193,6 +193,7 @@ def test_qubit_ops_dumps_and_loads():
 
 
 @pytest.mark.skipif(not _HAS_OPENFERMION or not _FORCE_TEST, reason='OpenFermion is not installed')
+@pytest.mark.skipif(not _FORCE_TEST, reason='set not force test')
 def test_qubit_ops_trans():
     """
     Description: Test transfor fermion operator to openfermion back and force.
