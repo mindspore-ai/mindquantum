@@ -20,7 +20,7 @@
 
 #### Simulator
 
-- [STABLE] **全新量子模拟器**. 新版本中我们推出了全新的 cpu 和 gpu 模拟 `mqvector` 和 `mqvector_gpu`. 旧版本中的 `projectq` 模拟器将会在下个版本中被弃用。全新一代模拟器与旧模拟器完全兼容，只需在模拟器声明时修改后端名称即可。
+- [STABLE] **全新量子模拟器**. 新版本中我们推出了全新的 cpu 和 gpu 模拟器： `mqvector` 和 `mqvector_gpu`. 旧版本中的 `projectq` 模拟器将会在下个版本中被弃用。全新一代模拟器与旧模拟器完全兼容，只需在模拟器声明时修改后端名称即可。
 
 ## MindQuantum 0.7.0 Release Notes
 

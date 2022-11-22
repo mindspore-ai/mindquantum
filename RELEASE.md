@@ -16,7 +16,7 @@
 
 #### Circuit
 
-- [STABLE] [`svg`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.svg): Now you can the `width` to split the svg circuit, so that you can copy it into your paper.
+- [STABLE] [`svg`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.svg): Now you can set the `width` to split the svg circuit, so that you can copy it into your paper.
 
 #### Simulator
 
