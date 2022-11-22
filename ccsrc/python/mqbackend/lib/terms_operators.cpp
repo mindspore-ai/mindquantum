@@ -31,8 +31,11 @@
 #include "ops/gates/fermion_operator.hpp"
 #include "ops/gates/qubit_operator.hpp"
 #include "ops/gates/terms_operator_base.hpp"
+#include "ops/transform/bravyi_kitaev.hpp"
+#include "ops/transform/bravyi_kitaev_superfast.hpp"
 #include "ops/transform/jordan_wigner.hpp"
 #include "ops/transform/parity.hpp"
+#include "ops/transform/ternary_tree.hpp"
 
 #include "python/core/boost_multi_index.hpp"
 
@@ -107,10 +110,10 @@ void init_transform(py::module& module) {  // NOLINT(runtime/references)
     using pr_t = mindquantum::ParameterResolver<double>;
     using pr_cmplx_t = mindquantum::ParameterResolver<std::complex<double>>;
 
-    module.def("parity", &transform::parity<fop_t<double>>, "ops"_a, "n_qubits"_a = -1);
-    module.def("parity", &transform::parity<fop_t<std::complex<double>>>, "ops"_a, "n_qubits"_a = -1);
-    module.def("parity", &transform::parity<fop_t<pr_t>>, "ops"_a, "n_qubits"_a = -1);
-    module.def("parity", &transform::parity<fop_t<pr_cmplx_t>>, "ops"_a, "n_qubits"_a = -1);
+    module.def("parity", &transform::parity<fop_t<double>>, "ops"_a, "n_qubits"_a);
+    module.def("parity", &transform::parity<fop_t<std::complex<double>>>, "ops"_a, "n_qubits"_a);
+    module.def("parity", &transform::parity<fop_t<pr_t>>, "ops"_a, "n_qubits"_a);
+    module.def("parity", &transform::parity<fop_t<pr_cmplx_t>>, "ops"_a, "n_qubits"_a);
 
     module.def("reverse_jordan_wigner", &transform::reverse_jordan_wigner<qop_t<double>>);
     module.def("reverse_jordan_wigner", &transform::reverse_jordan_wigner<qop_t<std::complex<double>>>);
@@ -121,4 +124,19 @@ void init_transform(py::module& module) {  // NOLINT(runtime/references)
     module.def("jordan_wigner", &transform::jordan_wigner<fop_t<std::complex<double>>>);
     module.def("jordan_wigner", &transform::jordan_wigner<fop_t<pr_t>>);
     module.def("jordan_wigner", &transform::jordan_wigner<fop_t<pr_cmplx_t>>);
+
+    module.def("bravyi_kitaev", &transform::bravyi_kitaev<fop_t<double>>, "ops"_a, "n_qubits"_a);
+    module.def("bravyi_kitaev", &transform::bravyi_kitaev<fop_t<std::complex<double>>>, "ops"_a, "n_qubits"_a);
+    module.def("bravyi_kitaev", &transform::bravyi_kitaev<fop_t<pr_t>>, "ops"_a, "n_qubits"_a);
+    module.def("bravyi_kitaev", &transform::bravyi_kitaev<fop_t<pr_cmplx_t>>, "ops"_a, "n_qubits"_a);
+
+    module.def("bravyi_kitaev_superfast", &transform::bravyi_kitaev_superfast<fop_t<double>>);
+    module.def("bravyi_kitaev_superfast", &transform::bravyi_kitaev_superfast<fop_t<std::complex<double>>>);
+    module.def("bravyi_kitaev_superfast", &transform::bravyi_kitaev_superfast<fop_t<pr_t>>);
+    module.def("bravyi_kitaev_superfast", &transform::bravyi_kitaev_superfast<fop_t<pr_cmplx_t>>);
+
+    module.def("ternary_tree", &transform::ternary_tree<fop_t<double>>, "ops"_a, "n_qubits"_a);
+    module.def("ternary_tree", &transform::ternary_tree<fop_t<std::complex<double>>>, "ops"_a, "n_qubits"_a);
+    module.def("ternary_tree", &transform::ternary_tree<fop_t<pr_t>>, "ops"_a, "n_qubits"_a);
+    module.def("ternary_tree", &transform::ternary_tree<fop_t<pr_cmplx_t>>, "ops"_a, "n_qubits"_a);
 }

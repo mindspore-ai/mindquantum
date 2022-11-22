@@ -42,7 +42,7 @@ _HAS_OPENFERMION = True
 try:
     # pylint: disable=unused-import
     from openfermion import FermionOperator as OFFermionOperator
-except ImportError:
+except (ImportError, AttributeError):
     _HAS_OPENFERMION = False
 _FORCE_TEST = bool(os.environ.get("FORCE_TEST", False))
 

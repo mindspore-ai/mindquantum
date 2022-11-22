@@ -101,15 +101,15 @@ MQ_DEFINE_PR_BINOP_COMMUTATIVE(/, config::details::divides_equal)
 
 #if MQ_HAS_CONCEPTS
 template <concepts::parameter_resolver lhs_t, concepts::parameter_resolver rhs_t>
-auto operator==(const lhs_t& lhs, const rhs_t& rhs) {
+bool operator==(const lhs_t& lhs, const rhs_t& rhs) {
     return lhs.IsEqual(rhs);
 }
 template <concepts::parameter_resolver lhs_t, concepts::parameter_resolver_scalar rhs_t>
-auto operator==(const lhs_t& lhs, const rhs_t& rhs) {
+bool operator==(const lhs_t& lhs, const rhs_t& rhs) {
     return lhs.IsEqual(rhs);
 }
 template <concepts::parameter_resolver_scalar lhs_t, concepts::parameter_resolver rhs_t>
-auto operator==(const lhs_t& lhs, const rhs_t& rhs) {
+bool operator==(const lhs_t& lhs, const rhs_t& rhs) {
     return rhs.IsEqual(lhs);
 }
 #else

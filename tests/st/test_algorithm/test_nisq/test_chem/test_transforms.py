@@ -23,7 +23,7 @@ def _get_terms_as_set(qubit_op):
     return {s.strip() for s in str(qubit_op).split('+')}
 
 
-def test_transform():
+def test_transform_jordan_wigner():
     """
     Description: Test transform
     Expectation:
@@ -33,11 +33,36 @@ def test_transform():
     op1_jordan_wigner = op_transform.jordan_wigner()
     assert _get_terms_as_set(op1_jordan_wigner) == {'1/2 [Z0 X1]', '(-1/2j) [Z0 Y1]'}
 
+
+def test_transform_parity():
+    """
+    Description: Test transform
+    Expectation:
+    """
+    op1 = FermionOperator('1^')
+    op_transform = Transform(op1)
+
     op1_parity = op_transform.parity()
     assert _get_terms_as_set(op1_parity) == {'1/2 [Z0 X1]', '(-1/2j) [Y1]'}
 
+
+def test_transform_bravyi_kitaev():
+    """
+    Description: Test transform
+    Expectation:
+    """
+    op1 = FermionOperator('1^')
+    op_transform = Transform(op1)
     op1_bravyi_kitaev = op_transform.bravyi_kitaev()
     assert _get_terms_as_set(op1_bravyi_kitaev) == {'1/2 [Z0 X1]', '(-1/2j) [Y1]'}
 
+
+def test_transform_ternary_tree():
+    """
+    Description: Test transform
+    Expectation:
+    """
+    op1 = FermionOperator('1^')
+    op_transform = Transform(op1)
     op1_ternary_tree = op_transform.ternary_tree()
     assert _get_terms_as_set(op1_ternary_tree) == {'1/2 [X0 Z1]', '(-1/2j) [Y0 X2]'}

@@ -192,7 +192,7 @@ def test_qubit_ops_dumps_and_loads():
     assert obj == ops
 
 
-@pytest.mark.skipif(not _HAS_OPENFERMION or not _FORCE_TEST, reason='OpenFermion is not installed')
+@pytest.mark.skipif(not _HAS_OPENFERMION, reason='OpenFermion is not installed')
 @pytest.mark.skipif(not _FORCE_TEST, reason='set not force test')
 def test_qubit_ops_trans():
     """
