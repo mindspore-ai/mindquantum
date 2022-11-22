@@ -65,25 +65,20 @@ if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
         fi
     done
 
+    PY_EXEC="$(which python)"
+
     echo '----------------------------------------'
     echo 'Environment info'
     echo "PATH = $PATH"
     echo "${LD_PATH_VAR} = ${!LD_PATH_VAR}"
     echo '----------------------------------------'
+    echo "PY_EXEC = $PY_EXEC"
+    echo '----------------------------------------'
+    echo 'System Python environment'
+    "$PY_EXEC" -m pip freeze
+    echo '----------------------------------------'
 
-    if [[ "$(uname)" == "Linux" ]]; then
-        PY_EXEC="$(which python)"
-        echo '----------------------------------------'
-        echo "PY_EXEC = $PY_EXEC"
-        echo '----------------------------------------'
-        echo 'System Python environment'
-        "$PY_EXEC" -m pip freeze
-        echo '----------------------------------------'
-        echo 'Force update the system pybind11'
-        sudo ${LD_PATH_VAR}="${!LD_PATH_VAR}" "$PY_EXEC" -m pip install -U pybind11
-        "$PY_EXEC" -m pip show pybind11
-        echo '----------------------------------------'
-    elif [[ "$(uname)" == "Darwin" ]]; then
+    if [[ "$(uname)" == "Darwin" ]]; then
         if [ -z "$MACOSX_DEPLOYMENT_TARGET" ]; then
             MACOSX_DEPLOYMENT_TARGET=10.15
         fi
@@ -94,14 +89,6 @@ if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
         fi
         export _PYTHON_HOST_PLATFORM="$_PYTHON_HOST_PLATFORM"
 
-
-        PY_EXEC="$(which python)"
-        echo '----------------------------------------'
-        echo "PY_EXEC = $PY_EXEC"
-        echo '----------------------------------------'
-        echo 'System Python environment'
-        "$PY_EXEC" -m pip freeze
-        echo '----------------------------------------'
         echo "MACOSX_DEPLOYMENT_TARGET = $MACOSX_DEPLOYMENT_TARGET"
         echo "_PYTHON_HOST_PLATFORM = $_PYTHON_HOST_PLATFORM"
         echo '----------------------------------------'
@@ -222,6 +209,36 @@ fi
 # Update Python virtualenv (if requested/necessary)
 
 . "$ROOTDIR/scripts/build/python_virtualenv_update.sh"
+
+# ------------------------------------------------------------------------------
+
+if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
+    if [[ "$(uname)" == "Linux" ]]; then
+        echo '----------------------------------------'
+        echo 'Getting pybind11 include directory flag'
+        pybind11_include_flag=$("$PYTHON" -m pybind11 --includes | cut -d ' ' -f2)
+        echo "  pybind11_include_flag = $pybind11_include_flag"
+
+
+        echo 'Generating GCC spec files'
+        gcc_specs="$ROOTDIR/gcc-gitee.specs"
+
+        cc1_options="$(gcc -dumpspecs | sed -n '/*cc1_options:/,/^$/p' | grep -v 'cc1_options')"
+
+        cat > "$gcc_specs" <<EOF
+*cc1_options:
+$pybind11_include_flag $cc1_options
+EOF
+        export CFLAGS="-specs=$gcc_specs $CFLAGS"
+        export CXXFLAGS="-specs=$gcc_specs $CXXFLAGS"
+        export CUDAFLAGS="-Xcompiler -specs=$gcc_specs $CUDAFLAGS"
+
+        echo "  CFLAGS = $CFLAGS"
+        echo "  CXXFLAGS = $CXXFLAGS"
+        echo "  CUDAFLAGS = $CUDAFLAGS"
+        echo '----------------------------------------'
+    fi
+fi
 
 # ------------------------------------------------------------------------------
 # Setup arguments for build
