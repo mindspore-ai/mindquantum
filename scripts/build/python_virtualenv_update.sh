@@ -25,6 +25,9 @@ BASEPATH=$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}" )" &> /dev/null && pwd 
 # shellcheck source=SCRIPTDIR/common_functions.sh
 . "$BASEPATH/common_functions.sh"
 
+# shellcheck source=SCRIPTDIR/../parse_toml.sh
+. "$BASEPATH/../parse_toml.sh"
+
 # ==============================================================================
 
 if [ -z "$PYTHON" ]; then
@@ -38,7 +41,11 @@ fi
 # ==============================================================================
 
 if [[ "${created_venv:-0}" -eq 1 || "${do_update_venv:-0}" -eq 1 ]]; then
-    critical_pkgs=(pip setuptools wheel wheel-filename build)
+    critical_pkgs=(pip build)
+
+    read_build_system_requires "$ROOTDIR/pyproject.toml"
+    critical_pkgs+=("${build_requires[@]}")
+
     echo "Updating critical Python packages: $PYTHON -m pip install -U ${critical_pkgs[*]}"
     call_cmd "$PYTHON" -m pip install -U "${critical_pkgs[@]}"
 

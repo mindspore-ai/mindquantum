@@ -176,6 +176,11 @@ rem ============================================================================
     shift & goto :initial
   )
 
+  if /I "%1" == "/NoIsolation" (
+    set build_isolation=0
+    shift & goto :initial
+  )
+
   if /I "%1" == "/Gitee" (
     set enable_gitee=1
     shift & goto :initial

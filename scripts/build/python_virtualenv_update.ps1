@@ -20,6 +20,7 @@ $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 
 . (Join-Path $BASEPATH 'default_values.ps1')
 . (Join-Path $BASEPATH 'common_functions.ps1')
+. (Join-Path $BASEPATH '..' 'parse_toml.ps1')
 
 # ==============================================================================
 
@@ -34,7 +35,11 @@ if ($null -eq $ROOTDIR) {
 # ==============================================================================
 
 if ($created_venv -or $do_update_venv) {
-    $critical_pkgs = @('pip', 'setuptools', 'wheel', 'wheel-filename', 'build')
+    $critical_pkgs = @('pip')
+
+    $build_requires = Read-BuildSystemRequires "$ROOTDIR/pyproject.toml"
+    $critical_pkgs += $build_requires
+
     Write-Output ("Updating critical Python packages: $PYTHON -m pip install -U " + ($critical_pkgs -Join ' '))
     Call-Cmd "$PYTHON" -m pip install -U @critical_pkgs
 

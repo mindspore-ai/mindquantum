@@ -95,11 +95,11 @@ if EXIST !python_venv_path!\bin\python (
    set PYTHON=python
    goto :done_adjust_python
 )
-if EXIST !python_venv_path!\bin\python3.exe (
+if EXIST !python_venv_path!\Scripts\python3.exe (
    set PYTHON=python3.exe
    goto :done_adjust_python
 )
-if EXIST !python_venv_path!\bin\python.exe (
+if EXIST !python_venv_path!\Scripts\python.exe (
    set PYTHON=python.exe
    goto :done_adjust_python
 )

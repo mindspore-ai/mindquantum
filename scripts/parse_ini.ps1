@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if ($_sourced_parse_ini -eq $null) { $_sourced_parse_ini=1 } else { return }
+if ($null -eq $_sourced_parse_ini) { $_sourced_parse_ini=1 } else { return }
 
 # ==============================================================================
 

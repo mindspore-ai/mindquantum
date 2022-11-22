@@ -83,7 +83,7 @@ function parse_ini_file() {
     # shellcheck disable=SC2034
     declare_AA configuration_main
     for section in $sections; do
-        array_name="configuration_${section/./_}"
+        array_name="configuration_${section//./_}"
         declare_AA "${array_name}"
         configuration_sections+=( "${section}" )
     done

@@ -89,7 +89,8 @@ fi
 
 echo "Activating Python virtual environment: $python_venv_path"
 if [ -f "$python_venv_path/bin/activate" ]; then
-    call_cmd source "$python_venv_path/bin/activate"
+    # shellcheck disable=SC1091
+    source "$python_venv_path/bin/activate"
     debug_print "PATH=$PATH"
     hash -r
     debug_print "PYTHON = $(which "$PYTHON")"
