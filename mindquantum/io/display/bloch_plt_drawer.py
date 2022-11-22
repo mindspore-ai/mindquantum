@@ -528,7 +528,8 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
         console = rich.console.Console()
         if console.is_jupyter:
             warnings.warn(
-                "jupyter environment detected, if animation not work, please run '%matplotlib ipympl' in cell."
+                "jupyter environment detected, if animation not work, please install ipympl with "
+                "'!pip install ipympl' in jupyter notebook and run '%matplotlib ipympl' in cell."
             )
         _check_input_type('fig', Figure, fig)
         _check_input_type('ax', Axes3D, ax)

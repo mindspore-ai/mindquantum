@@ -13,15 +13,26 @@
 # limitations under the License.
 # ============================================================================
 """Test uccsd."""
+import os
 import warnings
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from mindquantum.algorithm.nisq import generate_uccsd
 from mindquantum.core import gates as G
 
+_HAS_OPENFERMION = True
+try:
+    # pylint: disable=unused-import
+    from openfermion import FermionOperator as OFFermionOperator
+except ImportError:
+    _HAS_OPENFERMION = False
+_FORCE_TEST = bool(os.environ.get("FORCE_TEST", False))
 
+
+@pytest.mark.skipif(not _HAS_OPENFERMION or not _FORCE_TEST, reason='OpenFermion is not installed')
 def test_generate_uccsd():
     """
     Description: Test generate_uccsd

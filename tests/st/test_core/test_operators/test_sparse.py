@@ -14,6 +14,7 @@
 # ============================================================================
 """Test operator sparsing."""
 
+import os
 from pathlib import Path
 
 import numpy as np
@@ -29,9 +30,10 @@ try:
     from openfermion.chem import MolecularData
 except ImportError:
     _HAS_OPENFERMION = False
+_FORCE_TEST = bool(os.environ.get("FORCE_TEST", False))
 
 
-@pytest.mark.skipif(not _HAS_OPENFERMION, reason='OpenFermion is not installed')
+@pytest.mark.skipif(not _HAS_OPENFERMION or not _FORCE_TEST, reason='OpenFermion is not installed')
 def test_sparsing_operator():
     """
     Description: Test sparsing operator
