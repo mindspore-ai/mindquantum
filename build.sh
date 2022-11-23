@@ -23,10 +23,8 @@ echo "Called with: $*"
 
 # Test for MindSpore CI
 _IS_MINDSPORE_CI=0
-if [[ "${JENKINS_URL:-0}" =~ https?://build.mindspore.cn && ! "${CI:-0}" =~ ^(false|0)$ ]]; then
-    echo "Detected MindSpore/MindQuantum CI"
-    _IS_MINDSPORE_CI=1
-fi
+echo "Detected MindSpore/MindQuantum CI"
+_IS_MINDSPORE_CI=1
 
 # ==============================================================================
 
