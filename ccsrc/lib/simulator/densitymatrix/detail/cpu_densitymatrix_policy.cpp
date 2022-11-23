@@ -46,6 +46,14 @@ auto CPUDensityMatrixPolicyBase::GetValue(qs_data_p_t qs, index_t x, index_t y) 
     }
 }
 
+void CPUDensityMatrixPolicyBase::SetValue(qs_data_p_t qs, index_t x, index_t y, qs_data_t data) {
+    if (x >= y) {
+        qs[IdxMap(x, y)] = data;
+    } else {
+        qs[IdxMap(y, x)] = std::conj(data);
+    }
+}
+
 auto CPUDensityMatrixPolicyBase::InitState(index_t dim, bool zero_state) -> qs_data_p_t {
     index_t n_elements = (dim * dim + dim) / 2;
     auto qs = reinterpret_cast<qs_data_p_t>(calloc(n_elements, sizeof(qs_data_t)));
@@ -267,118 +275,6 @@ void CPUDensityMatrixPolicyBase::ConditionalMul(qs_data_p_t src, qs_data_p_t des
 void CPUDensityMatrixPolicyBase::ConditionalDiv(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
                                                 qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim) {
     ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::divides<qs_data_t>());
-}
-
-void CPUDensityMatrixPolicyBase::ApplyXX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                         index_t dim, bool diff) {
-    DoubleQubitGateMask mask(objs, ctrls);
-    auto c = std::cos(val);
-    auto s = std::sin(val) * IMAGE_MI;
-    if (diff) {
-        c = -std::sin(val);
-        s = std::cos(val) * IMAGE_MI;
-    }
-    VT<VT<qs_data_t>> m{{c, 0, 0, s}, {0, c, s, 0}, {0, s, c, 0}, {s, 0, 0, c}};
-    if (!mask.ctrl_mask) {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
-                VT<index_t> row(4);  // row index of reduced matrix entry
-                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
-                              row[0]);
-                row[3] = row[0] + mask.obj_mask;
-                row[1] = row[0] + mask.obj_min_mask;
-                row[2] = row[0] + mask.obj_max_mask;
-                for (index_t b = 0; b <= a; b++) {
-                    VT<index_t> col(4);  // column index of reduced matrix entry
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
-                                  b, col[0]);
-                    col[3] = col[0] + mask.obj_mask;
-                    col[1] = col[0] + mask.obj_min_mask;
-                    col[2] = col[0] + mask.obj_max_mask;
-
-                    VT<VT<qs_data_t>> tmp_mat(4, VT<qs_data_t>(4));
-                    for (int i = 0; i < 4; i++) {
-                        for (int j = 0; j < 4; j++) {
-                            tmp_mat[i][j] = c * GetValue(qs, row[i], col[j]) + s * GetValue(qs, row[3 - i], col[j]);
-                        }
-                    }
-                    auto conj_s = std::conj(s);
-                    for (int i = 0; i < 4; i++) {
-                        for (int j = 0; j < 4; j++) {
-                            if (row[i] >= col[j]) {
-                                qs[IdxMap(row[i], col[j])] = c * tmp_mat[i][j] + conj_s * tmp_mat[i][3 - j];
-                            } else {
-                                qs[IdxMap(row[j], col[i])] = std::conj(c * tmp_mat[i][j] + conj_s * tmp_mat[i][3 - j]);
-                            }
-                        }
-                    }
-                }
-            })
-    } else {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
-                VT<index_t> row(4);  // row index of reduced matrix entry
-                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
-                              row[0]);
-                row[3] = row[0] + mask.obj_mask;
-                row[1] = row[0] + mask.obj_min_mask;
-                row[2] = row[0] + mask.obj_max_mask;
-                for (index_t b = 0; b <= a; b++) {
-                    VT<index_t> col(4);  // column index of reduced matrix entry
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
-                                  b, col[0]);
-                    if ((row[0] & mask.ctrl_mask) != mask.ctrl_mask) {
-                        if ((col[0] & mask.ctrl_mask) != mask.ctrl_mask) {  // both not in control
-                            continue;
-                        }
-                        col[3] = col[0] + mask.obj_mask;
-                        col[1] = col[0] + mask.obj_min_mask;
-                        col[2] = col[0] + mask.obj_max_mask;
-                        VT<VT<qs_data_t>> tmp_mat(4, VT<qs_data_t>(4));
-                        if ((row[0] & mask.ctrl_mask) == mask.ctrl_mask) {  // row in control
-                            for (int i = 0; i < 4; i++) {
-                                for (int j = 0; j < 4; j++) {
-                                    tmp_mat[i][j] = c * GetValue(qs, row[i], col[j])
-                                                    + s * GetValue(qs, row[3 - i], col[j]);
-                                }
-                            }
-                        } else {  // row not in control
-                            for (int i = 0; i < 4; i++) {
-                                for (int j = 0; j < 4; j++) {
-                                    tmp_mat[i][j] = GetValue(qs, row[i], col[j]);
-                                }
-                            }
-                        }
-                        auto conj_s = std::conj(s);
-                        if ((col[0] & mask.ctrl_mask) == mask.ctrl_mask) {  // column in control
-                            for (int i = 0; i < 4; i++) {
-                                for (int j = 0; j < 4; j++) {
-                                    if (row[i] >= col[j]) {
-                                        qs[IdxMap(row[i], col[j])] = c * tmp_mat[i][j] + conj_s * tmp_mat[i][3 - j];
-                                    } else {
-                                        qs[IdxMap(row[j], col[i])] = std::conj(c * tmp_mat[i][j]
-                                                                               + conj_s * tmp_mat[i][3 - j]);
-                                    }
-                                }
-                            }
-                        } else {  // column not in control
-                            for (int i = 0; i < 4; i++) {
-                                for (int j = 0; j < 4; j++) {
-                                    if (row[i] >= col[j]) {
-                                        qs[IdxMap(row[i], col[j])] = tmp_mat[i][j];
-                                    } else {
-                                        qs[IdxMap(row[j], col[i])] = std::conj(tmp_mat[i][j]);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            })
-        if (diff) {
-            CPUDensityMatrixPolicyBase::SetToZeroExcept(qs, mask.ctrl_mask, dim);
-        }
-    }
 }
 
 }  // namespace mindquantum::sim::densitymatrix::detail
