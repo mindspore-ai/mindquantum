@@ -5,12 +5,8 @@
     FermionOperator遵循反交换关系。
 
     参数：
-        - **\*args** - 可变长度参数列表：
-
-          - 任意（即TermsOperator（C++ 实例））
-          - str
-          - Dict[List[Tuple[Int, TermValue]], Union[ParameterResolver, int, float]]
-          - List[Tuple[Int, TermValue]]（默认系数设置为 1.0）
+        - **terms** (str) - 费米子算符的输入项。默认值：None。
+        - **coefficient** (Union[numbers.Number, str, ParameterResolver]) - 单费米子算符的系数。默认值：1.0。
 
     .. py:method:: dumps(indent=4)
 

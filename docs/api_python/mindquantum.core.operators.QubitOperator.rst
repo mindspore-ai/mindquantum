@@ -12,7 +12,6 @@
     参数：
         - **term** (str) - 量子比特运算符的输入项。默认值：None。
         - **coefficient** (Union[numbers.Number, str, ParameterResolver]) - 此量子比特运算符的系数，可以是由字符串、符号或参数解析器表示的数字或变量。默认值：1.0。
-        - **dtype** (type) - 此量子比特运算符的值类型。默认值：None。
 
     .. py:method:: count_gates()
 
