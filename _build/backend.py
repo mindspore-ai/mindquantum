@@ -122,9 +122,9 @@ def update_library_path_from_file(ld_path_var, filename):
         paths = [Path(line.strip()) for line in path_file.readlines()]
 
     ld_lib_paths = []
-    for deps_dir in paths:
+    for paths_root in paths:
         for suffix in ('lib64', 'lib'):
-            deps_dir = deps_dir / suffix
+            deps_dir = paths_root / suffix
             if deps_dir.is_dir() and deps_dir.exists():
                 logging.info('  prepending path to %s: %s', ld_path_var, deps_dir)
                 ld_lib_paths.append(str(deps_dir))
