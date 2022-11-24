@@ -1116,7 +1116,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Args:
             style (dict, str): the style to set svg circuit. Currently, we support
                 'official', 'light' and 'dark'. Default: None.
-            width (numbers.Number): the max width of circuit. Default: None.
+            width (int, float): the max width of circuit. Default: None.
         """
         # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum.io.display._config import (
