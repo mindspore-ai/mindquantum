@@ -32,6 +32,14 @@
 
 namespace mindquantum::sim::densitymatrix::detail {
 
+void CPUDensityMatrixPolicyBase::SelfMultiply(qs_data_p_t qs, index_t x, index_t y, qs_data_t data) {
+    if (x >= y) {
+        qs[IdxMap(x, y)] *= data;
+    } else {
+        qs[IdxMap(y, x)] *= std::conj(data);
+    }
+}
+
 void CPUDensityMatrixPolicyBase::ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
@@ -441,6 +449,7 @@ void CPUDensityMatrixPolicyBase::ApplyYY(qs_data_p_t qs, const qbits_t& objs, co
                             }
                             tmp_mat.swap(res_mat);
                         }  // do nothing if column not in control
+                        
                         for (int i = 0; i < 4; i++) {
                             for (int j = 0; j < 4; j++) {
                                 SetValue(qs, row[i], col[j], tmp_mat[i][j]);
@@ -466,6 +475,8 @@ void CPUDensityMatrixPolicyBase::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, co
     }
     auto e = c + IMAGE_I * s;
     auto me = c + IMAGE_MI * s;
+    auto me2 = me * me;
+    auto e2 = e * e;
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
             dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
@@ -483,31 +494,15 @@ void CPUDensityMatrixPolicyBase::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, co
                     col[1] = col[0] + mask.obj_min_mask;
                     col[2] = col[0] + mask.obj_max_mask;
 
-                    for (int i = 0; i < 4; i++) {
-                        for (int j = 0; j < 4; j++) {
-                            if (i == 0 || i == 3) {
-                                if (j == 0 || j == 3) {
-                                    continue;
-                                } else {
-                                    if (row[i] >= col[j]) {
-                                        qs[IdxMap(row[i], col[j])] *= me * me;
-                                    } else {
-                                        qs[IdxMap(row[j], col[i])] *= std::conj(me * me);
-                                    }
-                                }
-                            } else {
-                                if (j == 0 || j == 3) {
-                                    if (row[i] >= col[j]) {
-                                        qs[IdxMap(row[i], col[j])] *= e * e;
-                                    } else {
-                                        qs[IdxMap(row[j], col[i])] *= std::conj(e * e);
-                                    }
-                                } else {
-                                    continue;
-                                }
-                            }
-                        }
-                    }
+                    SelfMultiply(qs, row[0], col[1], me2);
+                    SelfMultiply(qs, row[0], col[2], me2);
+                    SelfMultiply(qs, row[3], col[1], me2);
+                    SelfMultiply(qs, row[3], col[2], me2);
+
+                    SelfMultiply(qs, row[1], col[0], e2);
+                    SelfMultiply(qs, row[2], col[0], e2);
+                    SelfMultiply(qs, row[1], col[3], e2);
+                    SelfMultiply(qs, row[2], col[3], e2);
                 }
             })
     } else {
@@ -534,67 +529,29 @@ void CPUDensityMatrixPolicyBase::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, co
 
                     if ((row[0] & mask.ctrl_mask) == mask.ctrl_mask) {
                         if ((col[0] & mask.ctrl_mask) == mask.ctrl_mask) {  // both in control
-                            for (int i = 0; i < 4; i++) {
-                                for (int j = 0; j < 4; j++) {
-                                    if (i == 0 || i == 3) {
-                                        if (j == 0 || j == 3) {
-                                            continue;
-                                        } else {
-                                            if (row[i] >= col[j]) {
-                                                qs[IdxMap(row[i], col[j])] *= me * me;
-                                            } else {
-                                                qs[IdxMap(row[j], col[i])] *= e * e;
-                                            }
-                                        }
-                                    } else {
-                                        if (j == 0 || j == 3) {
-                                            if (row[i] >= col[j]) {
-                                                qs[IdxMap(row[i], col[j])] *= e * e;
-                                            } else {
-                                                qs[IdxMap(row[j], col[i])] *= me * me;
-                                            }
-                                        } else {
-                                            continue;
-                                        }
-                                    }
-                                }
-                            }
+                            SelfMultiply(qs, row[0], col[1], me2);
+                            SelfMultiply(qs, row[0], col[2], me2);
+                            SelfMultiply(qs, row[3], col[1], me2);
+                            SelfMultiply(qs, row[3], col[2], me2);
+
+                            SelfMultiply(qs, row[1], col[0], e2);
+                            SelfMultiply(qs, row[2], col[0], e2);
+                            SelfMultiply(qs, row[1], col[3], e2);
+                            SelfMultiply(qs, row[2], col[3], e2);
                         } else {  // only row in control
-                            for (int i = 0; i < 4; i++) {
-                                for (int j = 0; j < 4; j++) {
-                                    if (i == 0 || i == 3) {
-                                        if (row[i] >= col[j]) {
-                                            qs[IdxMap(row[i], col[j])] *= me;
-                                        } else {
-                                            qs[IdxMap(row[j], col[i])] *= e;
-                                        }
-                                    } else {
-                                        if (row[i] >= col[j]) {
-                                            qs[IdxMap(row[i], col[j])] *= e;
-                                        } else {
-                                            qs[IdxMap(row[j], col[i])] *= me;
-                                        }
-                                    }
-                                }
+                            for (int j = 0; j < 4; j++) {
+                                SelfMultiply(qs, row[0], col[j], me);
+                                SelfMultiply(qs, row[3], col[j], me);
+                                SelfMultiply(qs, row[1], col[j], e);
+                                SelfMultiply(qs, row[2], col[j], e);
                             }
                         }
                     } else {  // only column in control
                         for (int i = 0; i < 4; i++) {
-                            for (int j = 0; j < 4; j++) {
-                                if (j == 0 || j == 3) {
-                                    if (row[i] >= col[j]) {
-                                        qs[IdxMap(row[i], col[j])] *= e;
-                                    } else {
-                                        qs[IdxMap(row[j], col[i])] *= me;
-                                    }
-                                } else {
-                                    if (row[i] >= col[j]) {
-                                        qs[IdxMap(row[i], col[j])] *= me;
-                                    } else {
-                                        qs[IdxMap(row[j], col[i])] *= e;
-                                    }
-                                }
-                            }
+                            SelfMultiply(qs, row[i], col[0], e);
+                            SelfMultiply(qs, row[i], col[3], e);
+                            SelfMultiply(qs, row[i], col[1], me);
+                            SelfMultiply(qs, row[i], col[2], me);
                         }
                     }
                 }

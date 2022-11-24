@@ -41,6 +41,7 @@ struct CPUDensityMatrixPolicyBase {
     static index_t IdxMap(index_t x, index_t y);
     static qs_data_t GetValue(qs_data_p_t qs, index_t x, index_t y);
     static void SetValue(qs_data_p_t qs, index_t x, index_t y, qs_data_t data);
+    static void SelfMultiply(qs_data_p_t qs, index_t x, index_t y, qs_data_t data);
 
     static qs_data_p_t InitState(index_t dim, bool zero_state = true);
     static void Reset(qs_data_p_t qs, index_t dim);
