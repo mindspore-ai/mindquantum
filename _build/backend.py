@@ -128,6 +128,8 @@ def update_library_path_from_file(ld_path_var, filename):
             if deps_dir.is_dir() and deps_dir.exists():
                 logging.info('  prepending path to %s: %s', ld_path_var, deps_dir)
                 ld_lib_paths.append(str(deps_dir))
+            else:
+                logging.info('  directory does not exist: %s', deps_dir)
 
     update_library_path_var(ld_path_var, ld_lib_paths)
     logging.info('----------------------------------------')
@@ -139,7 +141,7 @@ def update_library_path_from_file(ld_path_var, filename):
 def update_library_path_from_env(ld_path_var, install_prefix):
     """Update XXX_LIBRARY_PATH environment variables based on some folder path."""
     if not install_prefix:
-        logging.info('Could not locate install prefix at %s', install_prefix)
+        logging.info('Could not locate install prefix at "%s"', install_prefix)
         raise FileNotFoundError(install_prefix)
 
     logging.info('----------------------------------------')

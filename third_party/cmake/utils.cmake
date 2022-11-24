@@ -1229,6 +1229,7 @@ function(mindquantum_add_pkg pkg_name)
         set(_defines_type SYSTEM)
       else()
         set(_defines_type LOCAL)
+        debug_print("Adding ${${pkg_name}_DIRPATH} to ${_local_libs_path_file}")
         file(APPEND "${_local_libs_path_file}" "${${pkg_name}_DIRPATH}\n")
       endif()
       if(NOT "${PKG_${_defines_type}_EXTRA_DEFINES}" STREQUAL "")
@@ -1300,6 +1301,7 @@ function(mindquantum_add_pkg pkg_name)
   set(${pkg_name}_DIRPATH
       ${${pkg_name}_BASE_DIR}
       CACHE FILEPATH INTERNAL)
+  debug_print("Adding ${${pkg_name}_DIRPATH} to ${_local_libs_path_file}")
   file(APPEND "${_local_libs_path_file}" "${${pkg_name}_DIRPATH}\n")
 
   if(CLEAN_3RDPARTY_INSTALL_DIR)
