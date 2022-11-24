@@ -40,58 +40,46 @@ void CPUDensityMatrixPolicyBase::ApplyZLike(qs_data_p_t qs, const qbits_t& objs,
     SingleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t k = 0; k < (dim / 2); k++) { // loop on the row
-                auto i = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
-                auto j = i | mask.obj_mask;
-                for (index_t l = 0; l <= k; l++) { // loop on the column
-                    auto m = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
-                    auto n = m | mask.obj_mask;
-                    qs[IdxMap(j, n)] *= val * std::conj(val);
-                    qs[IdxMap(j, m)] *= val;
-                    if (i > n) {
-                        qs[IdxMap(i, n)] *= std::conj(val);
-                    } else {
-                        qs[IdxMap(n, i)] *= val;
-                    }
+            dim, DimTh, for (index_t k = 0; k < (dim / 2); k++) {  // loop on the row
+                auto r0 = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
+                auto r1 = r0 | mask.obj_mask;
+                for (index_t l = 0; l <= k; l++) {  // loop on the column
+                    auto c0 = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+                    auto c1 = c0 | mask.obj_mask;
+                    qs[IdxMap(r1, c1)] *= std::norm(val);
+                    qs[IdxMap(r1, c0)] *= val;
+                    SelfMultiply(qs, r0, c1, std::conj(val));
                 }
             })
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t k = 0; k < (dim / 2); k++) { // loop on the row
-                auto i = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
-                auto j = i | mask.obj_mask;
-                for (index_t l = 0; l < k; l++) { // loop on the column
-                    auto m = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
-                    if (((i & mask.ctrl_mask) != mask.ctrl_mask)
-                        && ((m & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
+            dim, DimTh, for (index_t k = 0; k < (dim / 2); k++) {  // loop on the row
+                auto r0 = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
+                auto r1 = r0 | mask.obj_mask;
+                for (index_t l = 0; l < k; l++) {  // loop on the column
+                    auto c0 = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+                    if (((r0 & mask.ctrl_mask) != mask.ctrl_mask)
+                        && ((c0 & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
                         continue;
                     }
-                    auto n = m | mask.obj_mask;
-                    if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                        if ((m & mask.ctrl_mask) == mask.ctrl_mask) {  // both in control
-                            qs[IdxMap(j, n)] *= val * std::conj(val);
-                            qs[IdxMap(j, m)] *= val;
-                            if (i > n) {
-                                qs[IdxMap(i, n)] *= std::conj(val);
-                            } else {
-                                qs[IdxMap(n, i)] *= val;
-                            }
+                    auto c1 = c0 | mask.obj_mask;
+                    if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
+                        if ((c0 & mask.ctrl_mask) == mask.ctrl_mask) {  // both in control
+                            qs[IdxMap(r1, c1)] *= std::norm(val);
+                            qs[IdxMap(r1, c0)] *= val;
+                            SelfMultiply(qs, r0, c1, std::conj(val));
                         } else {  // row in control but not column
-                            qs[IdxMap(j, n)] *= val;
-                            qs[IdxMap(j, m)] *= val;
+                            qs[IdxMap(r1, c1)] *= val;
+                            qs[IdxMap(r1, c0)] *= val;
                         }
                     } else {  // column in control but not row
-                        qs[IdxMap(j, n)] *= std::conj(val);
-                        if (i > n) {
-                            qs[IdxMap(i, n)] *= std::conj(val);
-                        } else {
-                            qs[IdxMap(n, i)] *= val;
-                        }
+                        qs[IdxMap(r1, c1)] *= std::conj(val);
+                        SelfMultiply(qs, r0, c1, std::conj(val));
                     }
                     // diagonal case
-                    if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                        qs[IdxMap(j, i)] *= val;
-                        qs[IdxMap(j, j)] *= val * std::conj(val);
+                    if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
+                        qs[IdxMap(r1, r0)] *= val;
+                        qs[IdxMap(r1, r1)] *= std::norm(val);
                     }
                 }
             })
@@ -117,4 +105,63 @@ void CPUDensityMatrixPolicyBase::ApplyT(qs_data_p_t qs, const qbits_t& objs, con
 void CPUDensityMatrixPolicyBase::ApplyTdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
     ApplyZLike(qs, objs, ctrls, qs_data_t(1, -1) / std::sqrt(2.0), dim);
 }
+
+void CPUDensityMatrixPolicyBase::ApplyPS(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+                                         index_t dim, bool diff) {
+    if (!diff) {
+        ApplyZLike(qs, objs, ctrls, qs_data_t(std::cos(val), std::sin(val)), dim);
+    } else {
+        SingleQubitGateMask mask(objs, ctrls);
+        auto e = -std::sin(val) + IMAGE_I * std::cos(val);
+        if (!mask.ctrl_mask) {
+            THRESHOLD_OMP_FOR(
+                dim, DimTh, for (index_t k = 0; k < (dim / 2); k++) {  // loop on the row
+                    auto r0 = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
+                    auto r1 = r0 | mask.obj_mask;
+                    for (index_t l = 0; l <= k; l++) {  // loop on the column
+                        auto c0 = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+                        auto c1 = c0 | mask.obj_mask;
+                        qs[IdxMap(r0, c0)] = 0;
+                        qs[IdxMap(r0, c1)] = 0;
+                        qs[IdxMap(r1, c0)] = 0;
+                    }
+                })
+        } else {
+            THRESHOLD_OMP_FOR(
+                dim, DimTh, for (index_t k = 0; k < (dim / 2); k++) {  // loop on the row
+                    auto r0 = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
+                    auto r1 = r0 | mask.obj_mask;
+                    for (index_t l = 0; l <= k; l++) {  // loop on the column
+                        auto c0 = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+
+                        if ((r0 & mask.ctrl_mask) != mask.ctrl_mask) {
+                            if ((c0 & mask.ctrl_mask) != mask.ctrl_mask) {  // both not in control
+                                continue;
+                            }
+                        }
+                        auto c1 = c0 | mask.obj_mask;
+                        if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
+                            if ((c0 & mask.ctrl_mask) == mask.ctrl_mask) {  // both in control
+                                qs[IdxMap(r0, c0)] = 0;
+                                qs[IdxMap(r0, c1)] = 0;
+                                qs[IdxMap(r1, c0)] = 0;
+                            } else {  // only row in control
+                                qs[IdxMap(r0, c0)] = 0;
+                                qs[IdxMap(r0, c1)] = 0;
+                                qs[IdxMap(r1, c0)] *= e;
+                                qs[IdxMap(r1, c1)] *= e;
+                            }
+                        } else {  // only column on control
+                            qs[IdxMap(r0, c0)] = 0;
+                            qs[IdxMap(r0, c1)] *= std::conj(e);
+                            qs[IdxMap(r1, c0)] = 0;
+                            qs[IdxMap(r1, c1)] *= std::conj(e);
+                        }
+                    }
+                })
+            CPUDensityMatrixPolicyBase::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        }
+    }
+}
+
 }  // namespace mindquantum::sim::densitymatrix::detail

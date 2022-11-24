@@ -54,6 +54,14 @@ void CPUDensityMatrixPolicyBase::SetValue(qs_data_p_t qs, index_t x, index_t y, 
     }
 }
 
+void CPUDensityMatrixPolicyBase::SelfMultiply(qs_data_p_t qs, index_t x, index_t y, qs_data_t data) {
+    if (x >= y) {
+        qs[IdxMap(x, y)] *= data;
+    } else {
+        qs[IdxMap(y, x)] *= std::conj(data);
+    }
+}
+
 auto CPUDensityMatrixPolicyBase::InitState(index_t dim, bool zero_state) -> qs_data_p_t {
     index_t n_elements = (dim * dim + dim) / 2;
     auto qs = reinterpret_cast<qs_data_p_t>(calloc(n_elements, sizeof(qs_data_t)));

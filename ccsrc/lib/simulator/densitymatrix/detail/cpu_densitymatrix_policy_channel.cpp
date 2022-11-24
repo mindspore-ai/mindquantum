@@ -41,43 +41,34 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitChannel(qs_data_p_t src, qs_dat
 
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (index_t a = 0; a < (dim / 2); a++) {  // loop on the row
-            auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
-            auto j = i + mask.obj_mask;
+            auto r0 = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
+            auto r1 = r0 + mask.obj_mask;
             for (index_t b = 0; b <= a; b++) {  // loop on the column
-                auto p = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
-                auto q = p + mask.obj_mask;
-                qs_data_t src_ip = src[IdxMap(i, p)];
-                qs_data_t src_jq = src[IdxMap(j, q)];
-                qs_data_t src_jp = src[IdxMap(j, p)];
-                qs_data_t src_iq;
-                if (i > q) {  // for matrix[row, col], only in this case (row < col) is possible
-                    src_iq = src[IdxMap(i, q)];
-                } else {
-                    src_iq = std::conj(src[IdxMap(q, i)]);
-                }
-                qs_data_t des_ip = 0;
-                qs_data_t des_jq = 0;
-                qs_data_t des_iq = 0;
-                qs_data_t des_jp = 0;
+                auto c0 = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
+                auto c1 = c0 + mask.obj_mask;
+                qs_data_t src_00 = src[IdxMap(r0, c0)];
+                qs_data_t src_11 = src[IdxMap(r1, c1)];
+                qs_data_t src_10 = src[IdxMap(r1, c0)];
+                qs_data_t src_01 = GetValue(src, r0, c1);
+                qs_data_t des_00 = 0;
+                qs_data_t des_11 = 0;
+                qs_data_t des_01 = 0;
+                qs_data_t des_10 = 0;
                 for (const auto& m : kraus_set) {
-                    des_ip += m[0][0] * std::conj(m[0][0]) * src_ip + m[0][0] * std::conj(m[0][1]) * src_iq
-                              + m[0][1] * std::conj(m[0][0]) * src_jp + m[0][1] * std::conj(m[0][1]) * src_jq;
-                    des_jq += m[1][0] * std::conj(m[1][0]) * src_ip + m[1][0] * std::conj(m[1][1]) * src_iq
-                              + m[1][1] * std::conj(m[1][0]) * src_jp + m[1][1] * std::conj(m[1][1]) * src_jq;
-                    des_iq += m[0][0] * std::conj(m[1][0]) * src_ip + m[0][0] * std::conj(m[1][1]) * src_iq
-                              + m[0][1] * std::conj(m[1][0]) * src_jp + m[0][1] * std::conj(m[1][1]) * src_jq;
-                    des_jp += m[1][0] * std::conj(m[0][0]) * src_ip + m[1][0] * std::conj(m[0][1]) * src_iq
-                              + m[1][1] * std::conj(m[0][0]) * src_jp + m[1][1] * std::conj(m[0][1]) * src_jq;
+                    des_00 += m[0][0] * std::conj(m[0][0]) * src_00 + m[0][0] * std::conj(m[0][1]) * src_01
+                              + m[0][1] * std::conj(m[0][0]) * src_10 + m[0][1] * std::conj(m[0][1]) * src_11;
+                    des_11 += m[1][0] * std::conj(m[1][0]) * src_00 + m[1][0] * std::conj(m[1][1]) * src_01
+                              + m[1][1] * std::conj(m[1][0]) * src_10 + m[1][1] * std::conj(m[1][1]) * src_11;
+                    des_01 += m[0][0] * std::conj(m[1][0]) * src_00 + m[0][0] * std::conj(m[1][1]) * src_01
+                              + m[0][1] * std::conj(m[1][0]) * src_10 + m[0][1] * std::conj(m[1][1]) * src_11;
+                    des_10 += m[1][0] * std::conj(m[0][0]) * src_00 + m[1][0] * std::conj(m[0][1]) * src_01
+                              + m[1][1] * std::conj(m[0][0]) * src_10 + m[1][1] * std::conj(m[0][1]) * src_11;
                 }
 
-                des[IdxMap(i, p)] = des_ip;
-                des[IdxMap(j, q)] = des_jq;
-                des[IdxMap(j, p)] = des_jp;
-                if (i > q) {
-                    des[IdxMap(i, q)] = des_iq;
-                } else {
-                    des[IdxMap(q, i)] = std::conj(des_iq);
-                }
+                des[IdxMap(r0, c0)] = des_00;
+                des[IdxMap(r1, c1)] = des_11;
+                des[IdxMap(r1, c0)] = des_10;
+                SetValue(des, r0, c1, des_01);
             }
         })
 }

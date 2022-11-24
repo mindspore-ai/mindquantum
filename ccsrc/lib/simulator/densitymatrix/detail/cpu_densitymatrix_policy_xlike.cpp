@@ -39,75 +39,57 @@ void CPUDensityMatrixPolicyBase::ApplyXLike(qs_data_p_t qs, const qbits_t& objs,
     SingleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t k = 0; k < (dim / 2); k++) { // loop on the row
-                auto i = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
-                auto j = i | mask.obj_mask;
-                for (index_t l = 0; l <= k; l++) { // loop on the column
-                    auto m = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
-                    auto n = m | mask.obj_mask;
-                    auto tmp = qs[IdxMap(i, m)];
-                    qs[IdxMap(i, m)] = qs[IdxMap(j, n)] * v1 * std::conj(v1);
-                    qs[IdxMap(j, n)] = tmp * v2 * std::conj(v2);
-                    tmp = qs[IdxMap(j, m)];
-                    qs[IdxMap(j, m)] = tmp * v2 * std::conj(v1);
-                    if (i > n) {
-                        qs[IdxMap(i, n)] = qs[IdxMap(j, m)] * v1 * std::conj(v2);
-                    } else {
-                        qs[IdxMap(n, i)] = std::conj(qs[IdxMap(j, m)] * v1) * v2;
-                    }
+            dim, DimTh, for (index_t k = 0; k < (dim / 2); k++) {  // loop on the row
+                auto r0 = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
+                auto r1 = r0 | mask.obj_mask;
+                for (index_t l = 0; l <= k; l++) {  // loop on the column
+                    auto c0 = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+                    auto c1 = c0 | mask.obj_mask;
+                    auto tmp = qs[IdxMap(r0, c0)];
+                    qs[IdxMap(r0, c0)] = qs[IdxMap(r1, c1)] * v1 * std::conj(v1);
+                    qs[IdxMap(r1, c1)] = tmp * v2 * std::conj(v2);
+                    tmp = qs[IdxMap(r1, c0)];
+                    qs[IdxMap(r1, c0)] = tmp * v2 * std::conj(v1);
+                    // for matrix[row, col], only in this case that (row < col) is possible
+                    SetValue(qs, r0, c1, qs[IdxMap(r1, c0)] * v1 * std::conj(v2));
                 }
             })
 
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t k = 0; k < (dim / 2); k++) { // loop on the row
-                auto i = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
-                auto j = i | mask.obj_mask;
-                for (index_t l = 0; l <= k; l++) { // loop on the column
-                    auto m = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
-                    if (((i & mask.ctrl_mask) != mask.ctrl_mask)
-                        && ((m & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
+            dim, DimTh, for (index_t k = 0; k < (dim / 2); k++) {  // loop on the row
+                auto r0 = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
+                auto r1 = r0 | mask.obj_mask;
+                for (index_t l = 0; l <= k; l++) {  // loop on the column
+                    auto c0 = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+                    if (((r0 & mask.ctrl_mask) != mask.ctrl_mask)
+                        && ((c0 & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
                         continue;
                     }
-                    auto n = m | mask.obj_mask;
-                    if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                        if ((m & mask.ctrl_mask) == mask.ctrl_mask) {  // both in control
-                            auto tmp = qs[IdxMap(i, m)];
-                            qs[IdxMap(i, m)] = qs[IdxMap(j, n)] * v1 * std::conj(v1);
-                            qs[IdxMap(j, n)] = tmp * v2 * std::conj(v2);
-                            tmp = qs[IdxMap(j, m)];
-                            qs[IdxMap(j, m)] = tmp * v2 * std::conj(v1);
-                            if (i > n) {  // for matrix[row, col], only in this case that (row < col) is possible
-                                qs[IdxMap(i, n)] = qs[IdxMap(j, m)] * v1 * std::conj(v2);
-                            } else {
-                                qs[IdxMap(n, i)] = std::conj(qs[IdxMap(j, m)] * v1) * v2;
-                            }
+                    auto c1 = c0 | mask.obj_mask;
+                    if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
+                        if ((c0 & mask.ctrl_mask) == mask.ctrl_mask) {  // both in control
+                            auto tmp = qs[IdxMap(r0, c0)];
+                            qs[IdxMap(r0, c0)] = qs[IdxMap(r1, c1)] * v1 * std::conj(v1);
+                            qs[IdxMap(r1, c1)] = tmp * v2 * std::conj(v2);
+                            tmp = qs[IdxMap(r1, c0)];
+                            qs[IdxMap(r1, c0)] = tmp * v2 * std::conj(v1);
+                            SetValue(qs, r0, c1, qs[IdxMap(r1, c0)] * v1 * std::conj(v2));
                         } else {  // row in control but not column
-                            auto tmp = qs[IdxMap(i, m)];
-                            qs[IdxMap(i, m)] = qs[IdxMap(j, m)] * v1;
-                            qs[IdxMap(j, m)] = tmp * v2;
-                            if (i > n) {
-                                tmp = qs[IdxMap(i, n)];
-                                qs[IdxMap(i, n)] = qs[IdxMap(j, n)] * v1;
-                                qs[IdxMap(j, n)] = tmp * v2;
-                            } else {
-                                tmp = std::conj(qs[IdxMap(n, i)]);
-                                qs[IdxMap(n, i)] = std::conj(qs[IdxMap(j, n)] * v1);
-                                qs[IdxMap(j, n)] = tmp * v2;
-                            }
+                            auto tmp = qs[IdxMap(r0, c0)];
+                            qs[IdxMap(r0, c0)] = qs[IdxMap(r1, c0)] * v1;
+                            qs[IdxMap(r1, c0)] = tmp * v2;
+                            tmp = GetValue(qs, r0, c1);
+                            SetValue(qs, r0, c1, qs[IdxMap(r1, c1)] * v1);
+                            qs[IdxMap(r1, c1)] = tmp * v2;
                         }
                     } else {  // column in control but not row
-                        auto tmp = qs[IdxMap(j, m)];
-                        qs[IdxMap(j, m)] = qs[IdxMap(j, n)] * std::conj(v1);
-                        qs[IdxMap(j, n)] = tmp * std::conj(v2);
-                        tmp = qs[IdxMap(i, m)];
-                        if (i > n) {
-                            qs[IdxMap(i, m)] = qs[IdxMap(i, n)] * std::conj(v1);
-                            qs[IdxMap(i, n)] = tmp * std::conj(v2);
-                        } else {
-                            qs[IdxMap(i, m)] = std::conj(qs[IdxMap(n, i)]) * v1;
-                            qs[IdxMap(n, i)] = std::conj(tmp) * v2;
-                        }
+                        auto tmp = qs[IdxMap(r1, c0)];
+                        qs[IdxMap(r1, c0)] = qs[IdxMap(r1, c1)] * std::conj(v1);
+                        qs[IdxMap(r1, c1)] = tmp * std::conj(v2);
+                        tmp = qs[IdxMap(r0, c0)];
+                        qs[IdxMap(r0, c0)] = GetValue(qs, r0, c1) * std::conj(v1);
+                        SetValue(qs, r0, c1, tmp * std::conj(v2));
                     }
                 }
             })

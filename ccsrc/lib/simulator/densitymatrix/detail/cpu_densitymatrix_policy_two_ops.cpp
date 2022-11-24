@@ -32,14 +32,6 @@
 
 namespace mindquantum::sim::densitymatrix::detail {
 
-void CPUDensityMatrixPolicyBase::SelfMultiply(qs_data_p_t qs, index_t x, index_t y, qs_data_t data) {
-    if (x >= y) {
-        qs[IdxMap(x, y)] *= data;
-    } else {
-        qs[IdxMap(y, x)] *= std::conj(data);
-    }
-}
-
 void CPUDensityMatrixPolicyBase::ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
@@ -449,7 +441,7 @@ void CPUDensityMatrixPolicyBase::ApplyYY(qs_data_p_t qs, const qbits_t& objs, co
                             }
                             tmp_mat.swap(res_mat);
                         }  // do nothing if column not in control
-                        
+
                         for (int i = 0; i < 4; i++) {
                             for (int j = 0; j < 4; j++) {
                                 SetValue(qs, row[i], col[j], tmp_mat[i][j]);
