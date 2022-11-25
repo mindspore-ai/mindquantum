@@ -110,7 +110,7 @@ if(NOT _whitespace EQUAL -1)
     WARNING
       [[
     There appear to be some whitespace in the path to the local prefix path. This could lead to some of the
-    third-party libraries not installing properly
+    third-party libraries not installing properly.
   ]])
 endif()
 
@@ -164,12 +164,39 @@ if(_local_server)
 endif()
 
 # ==============================================================================
+# Helper functions for argument parsing and checking
+
+# ~~~
+# Check that only one of the values passed as argument evaluates to TRUE
+#  __check_only_one_of(<prefix> <var> [... <var>])
+# ~~~
+function(__check_only_one_of prefix)
+  set(_value 0)
+  set(_value_list)
+  set(_err_msg "")
+  debug_print(STATUS "ARGN = ${ARGN}")
+  foreach(_arg ${ARGN})
+    list(APPEND _value_list "${_arg_for_print}")
+    string(REPLACE "${prefix}_" "" _arg_for_print "${_arg}")
+    if(${_arg})
+      set(_err_msg "${_err_msg}\n  - ${_arg_for_print} = ${${_arg}}")
+      math(EXPR _value "${_value} + 1" OUTPUT_FORMAT DECIMAL)
+    endif()
+  endforeach()
+
+  string(JOIN "," _value_list ${_value_list})
+  if(NOT _value LESS_EQUAL 1)
+    message(FATAL_ERROR "Cannot specify more than one of ${_value_list}.\n" "Reason for error:${_err_msg}")
+  endif()
+endfunction()
+
+# ==============================================================================
 # Functions to download a package from a URL or a GIT repository
 
 # Wrapper around the FetchContent_XXX macros
 macro(__do_fetch_content pkg_name pkg_url)
   FetchContent_GetProperties(${pkg_name})
-  message(STATUS "download: ${${pkg_name}_SOURCE_DIR}, ${pkg_name}, ${pkg_url}")
+  message(STATUS "Fetching content for ${pkg_name} using ${pkg_url} in ${${pkg_name}_SOURCE_DIR}")
 
   if(NOT ${pkg_name}_POPULATED)
     FetchContent_Populate(${pkg_name})
@@ -182,6 +209,7 @@ endmacro()
 
 # Fetch some content by downloading an archive
 function(__download_pkg pkg_name pkg_url pkg_md5)
+  debug_print(STATUS "URL = ${pkg_url}")
   if(_local_server)
     get_filename_component(_url_file_name ${pkg_url} NAME)
     set(pkg_url "${_local_server}/libs/${pkg_name}/${_url_file_name}")
@@ -209,6 +237,8 @@ function(__download_pkg_with_git pkg_name pkg_url pkg_git_commit pkg_md5)
   endif()
   set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE NEVER)
 
+  debug_print(STATUS "GIT_REPOSITORY = ${pkg_url}")
+  debug_print(STATUS "GIT_TAG = ${pkg_git_commit}")
   if(_local_server)
     set(pkg_url "${_local_server}/libs/${pkg_name}/${pkg_git_commit}")
     debug_print(STATUS "Using local server URL: ${pkg_url}")
@@ -218,8 +248,6 @@ function(__download_pkg_with_git pkg_name pkg_url pkg_git_commit pkg_md5)
       URL ${pkg_url}
       URL_HASH MD5=${pkg_md5})
   else()
-    debug_print(STATUS "GIT_REPOSITORY = ${pkg_url}")
-    debug_print(STATUS "GIT_TAG = ${pkg_git_commit}")
     FetchContent_Declare(
       ${pkg_name}
       GIT_REPOSITORY ${pkg_url}
@@ -888,11 +916,13 @@ endfunction()
 # ~~~
 # Find a package.
 #
-# In practice this calls find_package() and performs some additional checks
+# In practice this simply calls find_package() and prints out some additional information to the console
 #
 # __find_package(<pkg_name>
 #                [SEARCH_NAME <search_name>]
 #                [<arg1> <arg2> ... <argn>])
+#
+# <SEARCH_NAME> is used to print an informational message to distinguish between different find_package() calls.
 # ~~~
 macro(__find_package pkg_name) # cmake-lint: disable=R0913
   cmake_parse_arguments(FP "" "SEARCH_NAME" "" ${ARGN})
@@ -921,7 +951,13 @@ endmacro()
 # ~~~
 # Make sure that a package was located in a specific root directory
 #
-# __check_package_location(<base_dir> <pkg_name> <pkg_namespace>)
+# __check_package_location(<base_dir> <pkg_name> <pkg_namespace> [<component>, ...])
+#
+# This function will look at the IMPORTED_LOCATION* properties of each of the <pkg_namespace>::<component> targets and
+# make sure that it is located within the local installation prefix directory.
+#
+# <pkg_name> is used to locate the local installation prefix by looking at the value of <pkg_name>_BASE_DIR CMake
+# variable.
 # ~~~
 function(__check_package_location pkg_name pkg_namespace)
   file(TO_CMAKE_PATH "${${pkg_name}_BASE_DIR}" _base_dir)
@@ -957,6 +993,9 @@ endfunction()
 # Make imported targets global (also make alias global if possible)
 #
 # __make_target_global(<pkg_namespace> [<target>, ...])
+#
+# Iterate through each of the <pkg_namespace>::<target> targets and make them either ALIAS_GLOBAL or IMPORTED_GLOBAL
+# depending on their target type.
 # ~~~
 function(__make_target_global pkg_namespace)
   foreach(_tgt ${ARGN})
@@ -1034,54 +1073,202 @@ endfunction()
 # Add an external dependency
 #
 # mindquantum_add_pkg(<pkg_name>
-#                     [CMAKE_PKG_NO_COMPONENTS, FORCE_CONFIG_SEARCH, FORCE_EXACT_VERSION, FORCE_LOCAL_PKG,
-#                        GEN_CMAKE_CONFIG, ONLY_MAKE, SKIP_BUILD_STEP, SKIP_INSTALL_STEP, SKIP_IN_INSTALL_CONFIG]
-#                      [CMAKE_PATH <path-to-cmakefiles-txt>]
-#                      [CUSTOM_CMAKE <custom_cmake>]
-#                      [DIR <pkg-cache-directory>]
-#                      [EXE <exec-name>]
-#                      [GIT_REPOSITORY <git-url>]
-#                      [GIT_TAG <tag>]
-#                      [MD5 <archive-md5>]
-#                      [NS_NAME <ns_name>]
-#                      [URL <archive-url>]
-#                      [VER <version-num>]
-#                      [BUILD_COMMAND  <command> [... <args>]]
-#                      [BUILD_DEPENDENCIES <package> [... <package>]]
-#                      [BUILD_OPTION <option> [... <option>]]
-#                      [CMAKE_OPTION <cmake_option> [... <cmake_option>]]
-#                      [CONFIGURE_COMMAND  <command> [... <args>]]
-#                      [INSTALL_COMMAND  <command> [... <args>]]
-#                      [INSTALL_INCS <directory> [... <directory>]]
-#                      [INSTALL_LIBS <directory> [... <directory>]]
-#                      [LANGS <lang> [... <lang>]]
-#                      [LIBS <lib-names> [... <lib-names>]]
-#                      [LOCAL_EXTRA_DEFINES [TARGET <target> <defines> [... <defines>]]...]
-#                      [ONLY_COPY_DIRS <directory> [... <directory>]]
-#                      [ONLY_MAKE_INCS <directory> [... <directory>]]
-#                      [ONLY_MAKE_LIBS <directory> [... <directory>]]
-#                      [PATCHES <patch-file> [... <patch-file>]]
-#                      [PRE_CONFIGURE_COMMAND <command> [... <args>]]
-#                      [SYSTEM_EXTRA_DEFINES [TARGET <target> <defines> [... <defines>]]...]
-#                      [TARGET_ALIAS <alias-name> <target-library>|
-#                         TARGET_ALIAS <num> <alias-name> <target-library> [...<target-library>]]
-# )
+#                     # Mandatory options
+#                     [VER <version-num>]
+#                     [[GIT_REPOSITORY <git-url>] [GIT_TAG <tag>] |
+#                      [URL <archive-url>] [MD5 <archive-md5>]]
+#                     [LIBS <lib-names> [... <lib-names>]]
+#                     [EXE <exec-name>]
 #
-# BUILD_DEPENDENCIES is a list of lists of arguments to pass onto to `find_package()` prior to start building the
+#                     # General flags/options
+#                     [CMAKE_PKG_NO_COMPONENTS, FORCE_CONFIG_SEARCH, FORCE_EXACT_VERSION,
+#                        FORCE_LOCAL_PKG, SKIP_IN_INSTALL_CONFIG]
+#                     [BUILD_DEPENDENCIES <package> [... <package>]]
+#                     [LANGS <lang> [... <lang>]]
+#                     [LOCAL_EXTRA_DEFINES [TARGET <target> <defines> [... <defines>]]...]
+#                     [PATCHES <patch-file> [... <patch-file>]]
+#                     [SYSTEM_EXTRA_DEFINES [TARGET <target> <defines> [... <defines>]]...]
+#                     [TARGET_ALIAS <alias-name> <target-library>|
+#                        TARGET_ALIAS <num> <alias-name> <target-library> [...<target-library>]]
+#
+#                     <other-options>)
+#
+# The purpose of this function is to manage the download, configuration and build of third-party libraries while
+# executing the CMake configure step for MindQuantum. This function will always attempt to locate the third-party
+# library on the system (unless otherwise specified) before downloading and compiling the third-party locally. If
+# compiled locally, the third-party will be installed within the local installation prefix.
+#
+# The actual location of the installation prefix defaults to `.mqlibs` inside the build directory, but may be influenced
+# by specifying one of the following environment variables:
+#   - `MQLIBS_CACHE_PATH`
+#   - `MSLIBS_CACHE_PATH`
+#   - `MQLIBS_LOCAL_PREFIX_PATH`
+#   - `MSLIBS_LOCAL_PREFIX_PATH`
+#
+# The minimum amount of arguments you need to specify are either:
+#   - <pkg_name>, <VER>, <URL>, <MD5>
+#   - <pkg_name>, <VER>, <GIT_REPOSITORY>, <GIT_TAG> *
+#
+# * You might need to specify <MD5> as well for the Git case. More information about that below or on the wiki on Gitee.
+#
+# and at least one element for either <EXE> or <LIBS> to specify which compiled executable or library you are looking
+# for within the build third-party library. The function will then checkout the code, either by downloading an archive
+# or checking out a Git repository, and then start building the third-party library given the instructions specified.
+#
+# By specifying <TARGET_ALIAS> argument you may define some alias targets. There are two valid syntax for this argument:
+#   - TARGET_ALIAS <alias-name> <target-library>
+#   - TARGET_ALIAS <num> <alias-name> <target-library> [... <target-library>]
+# In the second case, `<num>` needs to be the number arguments to consume. The function will then try them one by one
+# until it finds a valid target.
+#
+# <BUILD_DEPENDENCIES> is a list of lists of arguments to pass onto to `find_package()` prior to start building the
 # package.
 # e.g. (... BUILD_DEPENDENCIES "Git REQUIRED" "Boost COMPONENTS system" ...)
 #
-# LANG is a list of languages to activate by default for a third-party library. This defaults to C++ (and C if enabled).
+# Use <CMAKE_PKG_NO_COMPONENTS>, <FORCE_CONFIG_SEARCH> and <FORCE_EXACT_VERSION> to customize how the function looks for
+# the third-party library using find_package(). The former makes sure that no `COMPONENTS` argument gets added to the
+# call while the latter two add either `CONFIG` or `EXACT` to the list of arguments to find_package().
 #
-# LOCAL_EXTRA_DEFINES can be used to set some additional COMPILE_DEFINITIONS in the case the specified target is built
+# You can force a particular third-party library to *always* be compiled locally by specifying <FORCE_LOCAL_PKG>.
+#
+# <LANG> is a list of languages to activate by default for a third-party library. This defaults to C++ (and C if
+# enabled).
+#
+# <LOCAL_EXTRA_DEFINES> can be used to set some additional COMPILE_DEFINITIONS in the case the specified target is built
 # locally (as opposed to the case where the package is found as a system library)
 #
-# SYSTEM_EXTRA_DEFINES can be used to set some additional COMPILE_DEFINITIONS in the case the specified target is found
-# in the system (as opposed to the case where the package was built locally)
+# <PATCHES> can be used to specify a list of patches to apply to the unpacked source code before any other build steps
+# is run. Once a patch has been applied once, a checksum of the patch is stored inside of the source directory and
+# subsequent rebuilds of the third-party library (which may include re-configuration, etc.) will not be run if the patch
+# checksum has not changed. If you change a patch the patch application might fail and you will get a CMake error
+# message that will let you know how to solve that issue.
+#
+# The <SKIP_IN_INSTALL_CONFIG> option can be used to prevent certain alias targets of being defined inside MindQuantum's
+# installation configuration file.
+#
+# <SYSTEM_EXTRA_DEFINES> can be used to set some additional COMPILE_DEFINITIONS in the case the specified target is
+# found in the system (as opposed to the case where the package was built locally)
+#
+# ========== CMake projects ==========
+#
+# mindquantum_add_pkg(...
+#                     [BUILD_USING_CMAKE, USE_STATIC_LIBS]
+#                     [CMAKE_OPTION <cmake_option> [... <cmake_option>]]
+#                     [CMAKE_PATH <path-to-cmakefiles-txt>])
+#
+# If your third-party library is a CMake project, either specify <BUILD_USING_CMAKE> or a non-empty value for
+# <CMAKE_OPTION>. The function will then run CMake in order to build and install the third-party library.
+#
+# The function will automatically pass on the following variables to the sub-CMake process:
+#   - CMAKE_<lang>_COMPILER (for all activated languages or languages passed in <LANGS>)
+#   - CMAKE_BUILD_TYPE
+#   - CMAKE_GENERATOR
+#   - CMAKE_MODULE_PATH
+#   - CMAKE_VERBOSE_MAKEFILE
+#
+# You may use the <CMAKE_PATH> option to specify a path to the CMakeLists.txt file (relative to the unpacked source
+# directory) you wish to use. By default it assumes that a `CMakeLists.txt` file is located at the root of the unpacked
+# source directory.
+#
+# By specifying <USE_STATIC_LIBS> you will force the build of static libraries (by setting BUILD_SHARED_LIBS=OFF)
+#
+# In addition to passing flags or options to this function, you may also define the following CMake variables in order
+# to further customize the build of the third-party dependency:
+#   - <pkg_name>_CFLAGS
+#   - <pkg_name>_CUDAFLAGS
+#   - <pkg_name>_CXXFLAGS
+#   - <pkg_name>_LDFLAGS
+# These will be passed as their corresponding CMake variable equivalents.
+#
+# ======== Non-CMake projects ========
+#
+# mindquantum_add_pkg(...
+#                     ONLY_COPY_DIRS <directory> [... <directory>])
+#
+# In this mode, the function will only unpack the third-party source code and then attempt to copy some directories
+# specified by the <ONLY_COPY_DIRS> CMake list into the installation prefix. The paths for each element of
+# <ONLY_COPY_DIRS> is taken relative to the unpacked source directory.
+#
+# Note that in this mode <GEN_CMAKE_CONFIG> always implied and a pseudo-CMake installation configuration file will
+# always be generated.
+#
+#
+# mindquantum_add_pkg(...
+#                     ONLY_MAKE
+#                     [GEN_CMAKE_CONFIG]
+#                     [ONLY_MAKE_INCS <directory> [... <directory>]]
+#                     [ONLY_MAKE_LIBS <directory> [... <directory>]])
+#
+# When using this form, the function will only attempt to call `make all` from within the unpacked source directory.
+#
+# The folders stored within <ONLY_MAKE_INCS> and/or <ONLY_MAKE_LIBS> will be copied to the local installation prefix
+# under `<prefix>/include` and `<prefix>/lib` respectively. The paths are taken relative to the source directory.
+#
+# By specifying <GEN_CMAKE_CONFIG>, you are instructing the function to generate some pseudo CMake installation
+# configuration files (like mindquantumConfig.cmake, mindquantumConfigVersion.cmake, etc.). Use this for third-party
+# libraries that do not use CMake for building.
+#
+# mindquantum_add_pkg(...
+#                     [GEN_CMAKE_CONFIG, SKIP_BUILD_STEP, SKIP_INSTALL_STEP]
+#                     [PRE_CONFIGURE_COMMAND <command> [... <args>]]
+#                     [CONFIGURE_COMMAND  <command> [... <args>]]
+#                     [[BUILD_COMMAND  <command> [... <args>]]
+#                         | [BUILD_OPTION <option> [... <option>]>
+#                     [[INSTALL_INCS <directory> [... <directory>]]
+#                      [INSTALL_LIBS <directory> [... <directory>]]
+#                         | [INSTALL_COMMAND  <command> [... <args>]]])
+#
+# <PRE_CONFIGURE_COMMAND>, <CONFIGURE_COMMAND>, <BUILD_COMMAND> and <INSTALL_COMMAND> can be used for non-CMake projects
+# to specify the commands to run in order to configure, build and install the third-party library.
+#
+# If <PRE_CONFIGURE_COMMAND> or <CONFIGURE_COMMAND> are not specified, these steps are simply skipped. If
+# <BUILD_COMMAND> and/or <INSTALL_COMMAND> are not present, they default to `make all` and `make install` respectively
+# unless <SKIP_BUILD_STEP> and/or <SKIP_INSTALL_STEP> are present.
+#
+# During the configure step, the function will append the following `key=value` pairs to the call if the corresponding
+# values are not empty strings:
+#   - CC=<compiler>, CXX=<compiler>, CUDACXX=<compiler> (depending on active languages or languages passed in <LANGS>)
+#   - CFLAGS=<pkg_name>_CFLAGS, CXXFLAGS=<pkg_name>_CXXFLAGS, CUDAFLAGS=<pkg_name>_CUDAFLAGS
+#   - LDFLAGS=<pkg_name>_LDFLAGS
+#
+# If no <CONFIGURE_COMMAND> is present, the above variables are added to the <BUILD_COMMAND> list of arguments.
+#
+# <BUILD_OPTION> can be used if no <BUILD_COMMAND> is specified in order to pass some more argument to the build
+# command. These options will be passed on *before* the variable described above.
+#
+# If either of <INSTALL_INCS> or <INSTALL_LIBS> are present, instead of calling the <INSTALL_COMMAND>, the function will
+# simply copy the folders listed in those variables (taken relative to the unpacked source directory) into the local
+# installation prefix under `<prefix>/include` and `<prefix>/lib` respectively.
+#
+# By specifying <GEN_CMAKE_CONFIG>, you are instructing the function to generate some pseudo CMake installation
+# configuration files (like mindquantumConfig.cmake, mindquantumConfigVersion.cmake, etc.). Use this for third-party
+# libraries that do not use CMake for building.
+#
+# ========== Advanced topic ==========
+#
+# This function is also able to use a local server to download the third-party library archives. Note that this is also
+# valid for the cases where <GIT_REPOSITORY> is specified. In order to use this functionality, either specify
+#   - `MQLIBS_SERVER` environment variable (only if `ENABLE_GITEE=OFF`)
+#   - `MSLIBS_SERVER` environment variable (only if `ENABLE_GITEE=OFF`)
+#   - `LOCAL_LIBS_SERVER` CMake variable
+#
+# In each case, the variable should contain the address of a web server that will be used to download the archives
+# instead of using either <URL> or <GIT_REPOSITORY>. The value must be a valid URL with port (port defaults to 8081 if
+# left unspecified).
+#
+# The function expects the following paths to be present on the server:
+#   - <server-url>/libs/<pkg_name>/<pkg_archive_name>
+#   - <server-url>/libs/<pkg_name>/<pkg_git_tag>
+# NB: <pkg_archive_name> is the name of file taken from the <URL>.
+#
+# If you are using the local server, you *must* specify a <MD5> value, even for <GIT_REPOSITORY>, <GIT_TAG> case, so
+# that the function may check the downloaded archive MD5 checksum.
+#
 # ~~~
 function(mindquantum_add_pkg pkg_name)
   # cmake-lint: disable=R0912,R0915,C0103,E1126
   set(options
+      BUILD_USING_CMAKE
       CMAKE_PKG_NO_COMPONENTS
       FORCE_CONFIG_SEARCH
       FORCE_EXACT_VERSION
@@ -1093,13 +1280,10 @@ function(mindquantum_add_pkg pkg_name)
       SKIP_IN_INSTALL_CONFIG)
   set(oneValueArgs
       CMAKE_PATH
-      CUSTOM_CMAKE
-      DIR
       EXE
       GIT_REPOSITORY
       GIT_TAG
       MD5
-      NS_NAME
       URL
       VER)
   set(multiValueArgs
@@ -1123,12 +1307,14 @@ function(mindquantum_add_pkg pkg_name)
       TARGET_ALIAS)
   cmake_parse_arguments(PKG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  if(NOT PKG_NS_NAME)
-    set(PKG_NS_NAME ${pkg_name})
-  endif()
+  set(PKG_NS_NAME ${pkg_name})
 
   if(NOT PKG_LANGS)
     set(PKG_LANGS C CXX)
+  endif()
+
+  if(NOT PKG_MD5)
+    set(PKG_MD5 XXXX)
   endif()
 
   set(_components ${PKG_LIBS} ${PKG_EXE})
@@ -1145,6 +1331,20 @@ function(mindquantum_add_pkg pkg_name)
 
   if(NOT PKG_CMAKE_PKG_NO_COMPONENTS AND NOT "${_components}" STREQUAL "")
     list(APPEND _find_package_args COMPONENTS ${_components})
+  endif()
+
+  # ------------------------------------------------------------------------------
+
+  __check_only_one_of(PKG PKG_ONLY_COPY_DIRS PKG_ONLY_MAKE)
+  __check_only_one_of(PKG PKG_BUILD_COMMAND PKG_BUILD_OPTION PKG_SKIP_BUILD_STEP)
+  __check_only_one_of(PKG PKG_INSTALL_COMMAND PKG_SKIP_INSTALL_STEP)
+
+  if((PKG_INSTALL_INCS OR PKG_INSTALL_LIBS) AND (PKG_INSTALL_COMMAND OR PKG_SKIP_INSTALL_STEP))
+    message(
+      FATAL_ERROR
+        [[
+Cannot specify either of <INSTALL_INCS> or <INSTALL_LIBS> with either of <INSTALL_COMMAND> or <SKIP_INSTALL_STEP>
+]])
   endif()
 
   # ----------------------------------------------------------------------------
@@ -1348,15 +1548,12 @@ function(mindquantum_add_pkg pkg_name)
     endif()
   endif()
 
-  if(NOT PKG_DIR)
+  if(PKG_GIT_REPOSITORY)
     message(STATUS "PKG_GIT_REPOSITORY = ${PKG_GIT_REPOSITORY}")
-    if(PKG_GIT_REPOSITORY)
-      __download_pkg_with_git(${pkg_name} ${PKG_GIT_REPOSITORY} ${PKG_GIT_TAG} ${PKG_MD5})
-    else()
-      __download_pkg(${pkg_name} ${PKG_URL} ${PKG_MD5})
-    endif()
+    __download_pkg_with_git(${pkg_name} ${PKG_GIT_REPOSITORY} ${PKG_GIT_TAG} ${PKG_MD5})
   else()
-    set(${pkg_name}_SOURCE_DIR ${PKG_DIR})
+    message(STATUS "PKG_URL = ${PKG_URL}")
+    __download_pkg(${pkg_name} ${PKG_URL} ${PKG_MD5})
   endif()
   file(WRITE ${${pkg_name}_BASE_DIR}/options.txt ${${pkg_name}_CONFIG_TXT})
   message(STATUS "${pkg_name}_SOURCE_DIR : ${${pkg_name}_SOURCE_DIR}")
@@ -1379,11 +1576,6 @@ function(mindquantum_add_pkg pkg_name)
     600)
   if(NOT ${pkg_name}_LOCK_RET EQUAL "0")
     message(FATAL_ERROR "error! when try lock ${${pkg_name}_BASE_DIR} : ${${pkg_name}_LOCK_RET}")
-  endif()
-
-  if(PKG_CUSTOM_CMAKE)
-    file(GLOB ${pkg_name}_cmake ${PKG_CUSTOM_CMAKE}/CMakeLists.txt)
-    file(COPY ${${pkg_name}_cmake} DESTINATION ${${pkg_name}_SOURCE_DIR})
   endif()
 
   if(${pkg_name}_SOURCE_DIR)
@@ -1416,7 +1608,7 @@ function(mindquantum_add_pkg pkg_name)
       file(COPY ${${pkg_name}_INSTALL_INCS} DESTINATION ${${pkg_name}_BASE_DIR}/include)
       file(COPY ${${pkg_name}_INSTALL_LIBS} DESTINATION ${${pkg_name}_BASE_DIR}/lib)
 
-    elseif(NOT "${PKG_CMAKE_OPTION}" STREQUAL "")
+    elseif(NOT "${PKG_CMAKE_OPTION}" STREQUAL "" OR PKG_BUILD_USING_CMAKE)
       set(${pkg_name}_CMAKE_COMPILERS)
       foreach(_lang ${PKG_LANGS})
         if(CMAKE_${_lang}_COMPILER)
@@ -1449,6 +1641,10 @@ function(mindquantum_add_pkg pkg_name)
         set(${pkg_name}_CMAKE_CXXFLAGS "-DCMAKE_CXX_FLAGS=${${pkg_name}_CXXFLAGS}")
       endif()
 
+      if(${pkg_name}_CUDAFLAGS)
+        set(${pkg_name}_CMAKE_CUDAFLAGS "-DCMAKE_CUDA_FLAGS=${${pkg_name}_CUDAFLAGS}")
+      endif()
+
       if(MSVC)
         if(ENABLE_MT)
           set(${pkg_name}_CL_RT_FLAG "-DCMAKE_CXX_FLAGS_DEBUG=/MTd" "-DCMAKE_CXX_FLAGS_RELEASE=/MT")
@@ -1459,7 +1655,8 @@ function(mindquantum_add_pkg pkg_name)
 
       if(${pkg_name}_LDFLAGS)
         if(${pkg_name}_USE_STATIC_LIBS)
-          # set(${pkg_name}_CMAKE_LDFLAGS "-DCMAKE_STATIC_LINKER_FLAGS=${${pkg_name}_LDFLAGS}")
+          list(APPEND _cmake_args "-DBUILD_SHARED_LIBS=OFF")
+          set(${pkg_name}_CMAKE_LDFLAGS "-DCMAKE_STATIC_LINKER_FLAGS=${${pkg_name}_LDFLAGS}")
         else()
           set(${pkg_name}_CMAKE_LDFLAGS "-DCMAKE_SHARED_LINKER_FLAGS=${${pkg_name}_LDFLAGS}")
         endif()
@@ -1477,7 +1674,7 @@ function(mindquantum_add_pkg pkg_name)
         COMMAND
           ${CMAKE_COMMAND} ${${pkg_name}_CMAKE_COMPILERS} "-DCMAKE_MODULE_PATH=${_cmake_module_path}"
           -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE} -G${CMAKE_GENERATOR} ${PKG_CMAKE_OPTION}
-          ${${pkg_name}_CMAKE_CFLAGS} ${${pkg_name}_CMAKE_CXXFLAGS} ${${pkg_name}_CL_RT_FLAG}
+          ${${pkg_name}_CMAKE_CFLAGS} ${${pkg_name}_CMAKE_CXXFLAGS} ${${pkg_name}_CUDAFLAGS} ${${pkg_name}_CL_RT_FLAG}
           ${${pkg_name}_CMAKE_LDFLAGS} -DCMAKE_INSTALL_PREFIX=${${pkg_name}_BASE_DIR}
           ${${pkg_name}_SOURCE_DIR}/${PKG_CMAKE_PATH} ${_cmake_args}
         WORKING_DIRECTORY ${_cmake_build_dir})
@@ -1541,12 +1738,6 @@ function(mindquantum_add_pkg pkg_name)
             ${${pkg_name}_MAKE_CUDAFLAGS} ${${pkg_name}_MAKE_LDFLAGS} --prefix=${${pkg_name}_BASE_DIR}
           WORKING_DIRECTORY ${${pkg_name}_SOURCE_DIR})
       endif()
-      string(CONFIGURE "${PKG_BUILD_OPTION}" PKG_BUILD_OPTION @ONLY ESCAPE_QUOTES)
-      set(${pkg_name}_BUILD_OPTION ${PKG_BUILD_OPTION})
-      if(NOT PKG_CONFIGURE_COMMAND)
-        set(${pkg_name}_BUILD_OPTION ${${pkg_name}_BUILD_OPTION} ${${pkg_name}_MAKE_CFLAGS}
-                                     ${${pkg_name}_MAKE_CXXFLAGS} ${${pkg_name}_MAKE_LDFLAGS})
-      endif()
 
       if(PKG_BUILD_COMMAND)
         message(STATUS "Calling build command for ${pkg_name}")
@@ -1554,6 +1745,13 @@ function(mindquantum_add_pkg pkg_name)
         __exec_cmd(COMMAND ${PKG_BUILD_COMMAND} -j${JOBS} WORKING_DIRECTORY ${${pkg_name}_SOURCE_DIR})
       elseif(NOT PKG_SKIP_BUILD_STEP)
         message(STATUS "Calling build command for ${pkg_name}")
+        string(CONFIGURE "${PKG_BUILD_OPTION}" PKG_BUILD_OPTION @ONLY ESCAPE_QUOTES)
+        set(${pkg_name}_BUILD_OPTION ${PKG_BUILD_OPTION})
+        if(NOT PKG_CONFIGURE_COMMAND)
+          set(${pkg_name}_BUILD_OPTION ${${pkg_name}_BUILD_OPTION} ${${pkg_name}_MAKE_CFLAGS}
+                                       ${${pkg_name}_MAKE_CXXFLAGS} ${${pkg_name}_MAKE_LDFLAGS})
+        endif()
+
         __exec_cmd(COMMAND ${_make_exec} ${${pkg_name}_BUILD_OPTION} -j${JOBS}
                    WORKING_DIRECTORY ${${pkg_name}_SOURCE_DIR})
       endif()

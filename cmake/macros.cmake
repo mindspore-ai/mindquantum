@@ -340,7 +340,16 @@ function(apply_patches working_directory)
                       "RESULTS OUT (LF):\n${_lf_results_out}")
           debug_print(SEND_ERROR "STDOUT(CRLF):\n${_crlf_stdout}" "STDERR(CRLF):\n${_crlf_stderr}"
                       "RESULTS OUT (CRLF):\n${_crlf_results_out}")
-          message(FATAL_ERROR "Failed patches: ${_lf_patch_file} and ${_crlf_patch_file}")
+          message(
+            FATAL_ERROR
+              "\
+All attempts at applying ${_patch_file} have failed. This includes the following generated files:
+  - ${_lf_patch_file}
+  - ${_crlf_patch_file}
+
+Did you by any change make a modification to the patch file and forgot to revert the old version of the patch?
+You might want to remove the ${working_directory} directory completely and re-run CMake.
+")
         else()
           file(TOUCH ${_crlf_patch_lock_file})
         endif()

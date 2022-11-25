@@ -97,6 +97,7 @@ parse:
       pargs:
         nargs: 1
         flags:
+          - BUILD_USING_CMAKE
           - CMAKE_PKG_NO_COMPONENTS
           - FORCE_CONFIG_SEARCH
           - FORCE_EXACT_VERSION
@@ -106,15 +107,13 @@ parse:
           - SKIP_BUILD_STEP
           - SKIP_INSTALL_STEP
           - SKIP_IN_INSTALL_CONFIG
+          - USE_STATIC_LIBS
       kwargs:
         CMAKE_PATH: 1
-        CUSTOM_CMAKE: 1
-        DIR: 1
         EXE: 1
         GIT_REPOSITORY: 1
         GIT_TAG: 1
         MD5: 1
-        NS_NAME: 1
         URL: 1
         VER: 1
         BUILD_COMMAND: +
