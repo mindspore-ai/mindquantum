@@ -87,7 +87,7 @@ void CPUVectorPolicyBase::ApplyPS(qs_data_p_t qs, const qbits_t& objs, const qbi
                     auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                     auto j = i + mask.obj_mask;
                     qs[i] = 0;
-                    qs[j] = e;
+                    qs[j] *= e;
                 })
         } else {
             THRESHOLD_OMP_FOR(
@@ -96,11 +96,11 @@ void CPUVectorPolicyBase::ApplyPS(qs_data_p_t qs, const qbits_t& objs, const qbi
                     if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto j = i + mask.obj_mask;
                         qs[i] = 0;
-                        qs[j] = e;
+                        qs[j] *= e;
                     }
                 })
+            CPUVectorPolicyBase::SetToZeroExcept(qs, mask.ctrl_mask, dim);
         }
-        CPUVectorPolicyBase::SetToZeroExcept(qs, mask.ctrl_mask, dim);
     }
 }
 }  // namespace mindquantum::sim::vector::detail
