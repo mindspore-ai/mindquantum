@@ -95,7 +95,7 @@ def get_cmake_dir(as_string=True):
 def print_temp_dir():
     """Print the default build directory used by setup.py."""
     # Based on setuptools/_distutils/command/build.py
-    print(str(Path('build') / f"temp.{get_platform()}-{sys.implementation.cache_tag}" / 'mindquantum'))
+    print(str(Path('build') / f"temp.{get_platform()}-{sys.implementation.cache_tag}" / _ROOT.name))
 
 
 # ==============================================================================

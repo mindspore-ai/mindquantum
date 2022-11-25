@@ -62,7 +62,11 @@ $PROGRAM = Split-Path $MyInvocation.MyCommand.Path -Leaf
 
 # Test for MindSpore CI
 $_IS_MINDSPORE_CI = $false
-if ("$Env:JENKINS_URL" -Match 'https?://build.mindspore.cn' -And [bool]$Env:CI) {
+if ("$Env:JENKINS_URL" -Match 'https?://build.mindspore.cn' -And [bool]$Env:CI -And $Env:CI -eq 1) {
+    Write-Output "Detected MindSpore/MindQuantum CI"
+    $_IS_MINDSPORE_CI = $true
+}
+if ([bool]$Env:DEVCLOUD_CI -And $Env:DEVCLOUD_CI -eq 1) {
     Write-Output "Detected MindSpore/MindQuantum CI"
     $_IS_MINDSPORE_CI = $true
 }

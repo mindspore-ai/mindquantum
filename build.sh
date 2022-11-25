@@ -27,6 +27,10 @@ if [[ "${JENKINS_URL:-0}" =~ https?://build.mindspore.cn && ! "${CI:-0}" =~ ^(fa
     echo "Detected MindSpore/MindQuantum CI"
     _IS_MINDSPORE_CI=1
 fi
+if [[ "${DEVCLOUD_CI:-0}" == "1" ]]; then
+    echo "Detected MindSpore/MindQuantum CI"
+    _IS_MINDSPORE_CI=1
+fi
 
 # ==============================================================================
 

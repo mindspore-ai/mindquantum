@@ -24,19 +24,35 @@ set SCRIPTDIR=%BASEPATH%\scripts\build
 set PROGRAM=%~nx0
 
 set _IS_MINDSPORE_CI=0
-if "%CI%" == "" goto :DONE_CI
-if /I "%CI%" == "true" goto :CI_TRUE
-if %CI% == 1 goto :CI_TRUE
-goto :DONE_CI
 
-:CI_TRUE
+if NOT "%DEVCLOUD_CI%" == "" goto :CI_DEVCLOUD
+if NOT "%CI%" == "" goto :CI_JENKINS
+
+goto :CI_FALSE
+
+:CI_DEVCLOUD
+if /I "%DEVCLOUD_CI%" == "true" goto :CI_TRUE
+if %DEVCLOUD_CI% == 1 goto :CI_TRUE
+goto :CI_FALSE
+
+:CI_JENKINS
+if /I "%CI%" == "false" goto :CI_FALSE
+if %CI% == 0 goto :CI_FALSE
 
 if NOT %JENKINS_URL% == "" (
    echo %JENKINS_URL% | findstr /r "^https*://build.mindspore.cn">nul 2>&1
-   if %errorlevel% == 0 set _IS_MINDSPORE_CI=1
+   if %errorlevel% == 0 goto :CI_TRUE
 )
 
-:DONE_CI
+:CI_FALSE
+set _IS_MINDSPORE_CI=0
+goto :CI_DONE
+
+:CI_TRUE
+echo Detected MindSpore/MindQuantum CI
+set _IS_MINDSPORE_CI=1
+
+:CI_DONE
 
 rem ============================================================================
 rem Default values for this particular script

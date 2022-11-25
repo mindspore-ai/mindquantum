@@ -111,6 +111,7 @@ def update_library_path_var(ld_path_var, dir_list):
 def update_library_path_from_file(ld_path_var, filename):
     """Update XXX_LIBRARY_PATH environment variables based on a path list in a file."""
     if not filename or not Path(filename).exists():
+        logging.info('Could not locate %s', filename)
         raise FileNotFoundError(filename)
 
     logging.info('----------------------------------------')
@@ -121,11 +122,14 @@ def update_library_path_from_file(ld_path_var, filename):
         paths = [Path(line.strip()) for line in path_file.readlines()]
 
     ld_lib_paths = []
-    for deps_dir in paths:
-        deps_dir = deps_dir / 'lib'
-        if deps_dir.is_dir() and deps_dir.exists():
-            logging.info('  prepending path to %s: %s', ld_path_var, deps_dir)
-            ld_lib_paths.append(str(deps_dir))
+    for paths_root in paths:
+        for suffix in ('lib64', 'lib'):
+            deps_dir = paths_root / suffix
+            if deps_dir.is_dir() and deps_dir.exists():
+                logging.info('  prepending path to %s: %s', ld_path_var, deps_dir)
+                ld_lib_paths.append(str(deps_dir))
+            else:
+                logging.info('  directory does not exist: %s', deps_dir)
 
     update_library_path_var(ld_path_var, ld_lib_paths)
     logging.info('----------------------------------------')
@@ -137,14 +141,19 @@ def update_library_path_from_file(ld_path_var, filename):
 def update_library_path_from_env(ld_path_var, install_prefix):
     """Update XXX_LIBRARY_PATH environment variables based on some folder path."""
     if not install_prefix:
+        logging.info('Could not locate install prefix at "%s"', install_prefix)
         raise FileNotFoundError(install_prefix)
 
     logging.info('----------------------------------------')
     logging.info('Looking into installation prefix: %s', install_prefix)
     ld_lib_paths = []
-    for deps_dir in (
+    deps_dir_list = tuple(
+        deps_dir / 'lib64' for deps_dir in Path(install_prefix).iterdir() if deps_dir.is_dir() and deps_dir.exists()
+    )
+    deps_dir_list += tuple(
         deps_dir / 'lib' for deps_dir in Path(install_prefix).iterdir() if deps_dir.is_dir() and deps_dir.exists()
-    ):
+    )
+    for deps_dir in deps_dir_list:
         if deps_dir.exists() and deps_dir.is_dir():
             logging.info('  prepending path to %s: %s', ld_path_var, deps_dir)
             ld_lib_paths.append(str(deps_dir))
