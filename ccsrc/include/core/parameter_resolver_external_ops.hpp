@@ -117,7 +117,7 @@ template <typename lhs_t, typename rhs_t,
           typename = std::enable_if_t<(traits::is_parameter_resolver_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)
                                       || (traits::is_parameter_resolver_v<lhs_t> && traits::is_scalar_decay_v<rhs_t>)
                                       || (traits::is_scalar_decay_v<lhs_t> && traits::is_parameter_resolver_v<rhs_t>)>>
-auto operator==(const lhs_t& lhs, const rhs_t& rhs) {
+bool operator==(const lhs_t& lhs, const rhs_t& rhs) {
     return lhs.IsEqual(rhs);
 }
 #endif  // MQ_HAS_CONCEPTS

@@ -31,7 +31,7 @@ function Read-BuildSystemRequires([string]$Path) {
     }
 
     $build_requires = $content.Split(' ') `
-      | ForEach-Object{$_ -replace "'", '' -replace  ',$', '' -replace '\n', '' -replace '"', "'"} `
+      | ForEach-Object{$_ -replace "'|\n|\r", '' -replace  ',$', '' -replace '"', "'"} `
       | Where-Object {$_} | ForEach-Object{ "`"$_`""}
 
     Write-Debug ("  read {0}" -f ($build_requires -Join ' '))
