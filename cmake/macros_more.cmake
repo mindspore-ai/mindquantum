@@ -56,6 +56,15 @@ function(pybind11_add_module target)
 
   _pybind11_add_module(${target} ${PAM_UNPARSED_ARGUMENTS})
 
+  # Do we need to apply a workaround to compile using the correct pybind11? (see mindspore_ci.cmake for more
+  # information)
+  if(_mq_pybind11_prepend_to_link_libraries)
+    get_target_property(_link_libraries ${target} LINK_LIBRARIES)
+    list(PREPEND _link_libraries "${_mq_pybind11_prepend_to_link_libraries}")
+    list(REMOVE_DUPLICATES _link_libraries)
+    set_target_properties(${target} PROPERTIES LINK_LIBRARIES "${_link_libraries}")
+  endif()
+
   append_to_property(_doc_targets GLOBAL ${target})
   append_to_property(_python_targets GLOBAL ${target})
 

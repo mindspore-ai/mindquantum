@@ -25,7 +25,7 @@ import subprocess
 from pathlib import Path
 
 import setuptools.build_meta
-from utils import fdopen, get_cmake_command
+from utils import fdopen, get_executable_in_path
 from wheel_filename import parse_wheel_filename
 
 # ==============================================================================
@@ -203,15 +203,22 @@ def get_requires_for_build_wheel(config_settings=None):
     """Identify packages required for building a wheel."""
     requirements = setuptools.build_meta.get_requires_for_build_wheel(config_settings=config_settings)
 
-    if get_cmake_command() is None:
-        requirements.append('cmake')
+    executable_list = ['cmake']
+    if int(os.environ.get('MQ_USE_NINJA', False)):
+        executable_list.append('ninja')
 
     delocate_wheel = int(os.environ.get('MQ_DELOCATE_WHEEL', False))
     if delocate_wheel:
         if platform.system() == 'Linux':
             requirements.append('auditwheel')
+            executable_list.append('patchelf')
         elif platform.system() == 'Darwin':
             requirements.append('delocate')
+
+    for exec_name in executable_list:
+        if get_executable_in_path(exec_name) is None:
+            requirements.append(exec_name)
+
     return requirements
 
 

@@ -211,36 +211,6 @@ fi
 . "$ROOTDIR/scripts/build/python_virtualenv_update.sh"
 
 # ------------------------------------------------------------------------------
-
-if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
-    if [[ "$(uname)" == "Linux" ]]; then
-        echo '----------------------------------------'
-        echo 'Getting pybind11 include directory flag'
-        pybind11_include_flag=$("$PYTHON" -m pybind11 --includes | cut -d ' ' -f2)
-        echo "  pybind11_include_flag = $pybind11_include_flag"
-
-
-        echo 'Generating GCC spec files'
-        gcc_specs="$ROOTDIR/gcc-gitee.specs"
-
-        cc1_options="$(gcc -dumpspecs | sed -n '/*cc1_options:/,/^$/p' | grep -v 'cc1_options')"
-
-        cat > "$gcc_specs" <<EOF
-*cc1_options:
-$pybind11_include_flag $cc1_options
-EOF
-        export CFLAGS="-specs=$gcc_specs $CFLAGS"
-        export CXXFLAGS="-specs=$gcc_specs $CXXFLAGS"
-        export CUDAFLAGS="-Xcompiler -specs=$gcc_specs $CUDAFLAGS"
-
-        echo "  CFLAGS = $CFLAGS"
-        echo "  CXXFLAGS = $CXXFLAGS"
-        echo "  CUDAFLAGS = $CUDAFLAGS"
-        echo '----------------------------------------'
-    fi
-fi
-
-# ------------------------------------------------------------------------------
 # Setup arguments for build
 
 args=()
@@ -380,25 +350,40 @@ if [ "$build_isolation" -eq 0 ]; then
 fi
 
 # ------------------------------------------------------------------------------
-# Build the wheels
+# Clean build directory if requested and possible
 
+temp_build_dir=$("$PYTHON" -m mindquantum_config --tempdir)
 if [ "${_build_dir_was_set:-0}" -eq 1 ]; then
+    build_dir_for_cleaning="$build_dir"
+elif [ -d "$temp_build_dir" ]; then
+    build_dir_for_cleaning="$temp_build_dir"
+fi
+
+if [ -n "$build_dir_for_cleaning" ]; then
     if [ "$do_clean_build_dir" -eq 1 ]; then
-        echo "Deleting build folder: $build_dir"
-        call_cmd rm -rf "$build_dir"
+        echo "Deleting build folder: $build_dir_for_cleaning"
+        call_cmd rm -rf "$build_dir_for_cleaning"
     elif [ "$do_clean_cache" -eq 1 ]; then
-        echo "Removing CMake cache at: $build_dir/CMakeCache.txt"
-        call_cmd rm -f "$build_dir/CMakeCache.txt"
-        echo "Removing CMake files at: $build_dir/CMakeFiles"
-        call_cmd  rm -rf "$build_dir/CMakeFiles"
-        echo "Removing CMake files at: $build_dir/cmake-ldtest*"
-        call_cmd  rm -rf "$build_dir/cmake-ldtest*"
+        echo "Removing CMake cache at: $build_dir_for_cleaning/CMakeCache.txt"
+        call_cmd rm -f "$build_dir_for_cleaning/CMakeCache.txt"
+        echo "Removing CMake files at: $build_dir_for_cleaning/CMakeFiles"
+        call_cmd  rm -rf "$build_dir_for_cleaning/CMakeFiles"
+        echo "Removing CMake files at: $build_dir_for_cleaning/cmake-ldtest*"
+        call_cmd  rm -rf "$build_dir_for_cleaning/cmake-ldtest*"
     fi
 fi
 
+# ------------------------------------------------------------------------------
+# Build the wheels
+
+env_vars=()
+if [ "$cmake_generator" == "Ninja" ]; then
+    env_vars+=(MQ_USE_NINJA=1)
+fi
+
 if [ "$delocate_wheel" -eq 1 ]; then
-    env_vars=(MQ_DELOCATE_WHEEL=1
-              "${LD_PATH_VAR}=${!LD_PATH_VAR}")
+    env_vars+=(MQ_DELOCATE_WHEEL=1
+               "${LD_PATH_VAR}=${!LD_PATH_VAR}")
 
     if [[ "${_build_dir_was_set:-0}" -eq 1 || "${fast_build:-0}" -eq 1 ]]; then
         build_dir_for_env="$build_dir"
@@ -412,10 +397,9 @@ if [ "$delocate_wheel" -eq 1 ]; then
     if [ -n "$platform_name" ]; then
         env_vars+=(MQ_DELOCATE_WHEEL_PLAT="$platform_name")
     fi
-    call_cmd env "${env_vars[@]}" "${PYTHON}" -m build "${args[@]}" "${fixed_args[@]}" "$@"
-else
-    call_cmd "${PYTHON}" -m build "${args[@]}" "${fixed_args[@]}" "$@"
 fi
+
+call_cmd env "${env_vars[@]}" "${PYTHON}" -m build "${args[@]}" "${fixed_args[@]}" "$@"
 
 # ------------------------------------------------------------------------------
 # Move the wheels to the output directory

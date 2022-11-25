@@ -99,6 +99,11 @@ def remove_tree(directory):
 def get_executable(exec_name):
     """Try to locate an executable in a Python virtual environment."""
     try:
+        if os.environ.get('PEP517_BUILD_BACKEND', ''):
+            # We are being called from `python3 -m build` -> we actually need to ignore the VIRTUAL_ENV variable in
+            # order to get the proper path to the Python executable.
+            logging.info('Detected PEP517 build frontend')
+            raise KeyError('')
         root_path = os.environ['VIRTUAL_ENV']
         python = os.path.basename(sys.executable)
     except KeyError:
@@ -138,20 +143,27 @@ def get_executable(exec_name):
     return None
 
 
-def get_cmake_command():
-    """Retrieve the path to the CMake executable."""
+def get_executable_in_path(exec_name):
+    """
+    Retrieve the path to an executable.
+
+    First lookup inside the PATH and then within a virtualenv.
+    """
     try:
-        cmd = shutil.which('cmake')
+        logging.info('trying to locate %s inside the PATH', exec_name)
+        cmd = shutil.which(exec_name)
         if cmd is not None:
             with fdopen(os.devnull, 'w') as devnull:
                 subprocess.check_call([cmd, '--version'], stdout=devnull, stderr=devnull)
+            logging.info('  -> found at %s', cmd)
             return cmd
     except (OSError, subprocess.CalledProcessError):
         pass
+    logging.info('  -> not found in PATH')
 
-    # CMake not in PATH, should have installed the Python CMake module
+    # Executable not in PATH, should have installed the Python CMake module
     # -> try to find out where it is
-    return get_executable('cmake')
+    return get_executable(exec_name)
 
 
 # ==============================================================================
@@ -231,8 +243,8 @@ except ImportError:
                 start = lines.index('[build-system]')
                 data = lines[start : _find_toml_section_end(lines, start)]
                 idx = 0
-                N = len(data)  # noqa: N806
-                while idx < N:
+                data_length = len(data)
+                while idx < data_length:
                     line = data[idx]
                     shift = 1
                     if line.startswith('requires'):
@@ -245,8 +257,8 @@ except ImportError:
                 start = lines.index('[project]')
                 data = lines[start : _find_toml_section_end(lines, start)]
                 idx = 0
-                N = len(data)  # noqa: N806
-                while idx < N:
+                data_length = len(data)
+                while idx < data_length:
                     line = data[idx]
                     shift = 1
                     if _parse_string_value(result.setdefault('project', {}), 'name', line):
@@ -263,8 +275,8 @@ except ImportError:
                 start = lines.index('[project.optional-dependencies]')
                 data = lines[start + 1 : _find_toml_section_end(lines, start)]
                 idx = 0
-                N = len(data)  # noqa: N806
-                while idx < N:
+                data_length = len(data)
+                while idx < data_length:
                     (opt_name, opt_pkgs, shift) = _parse_list(data[idx:])
                     result.setdefault('project', {}).setdefault('optional-dependencies', {})[opt_name] = opt_pkgs
                     idx += shift

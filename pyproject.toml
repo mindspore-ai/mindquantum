@@ -3,7 +3,7 @@ requires = [
     'setuptools>=61,<=65.5.1;python_version<"3.12"',
     'setuptools>=61;python_version>="3.12"',
     'wheel',
-    'pybind11>=2.9.0',
+    'pybind11>=2.9.2',
     'wheel-filename>1.2'
 ]
 build-backend = 'backend'
@@ -169,8 +169,13 @@ addopts = "--ignore='tests/quick_test.py'"
 norecursedirs = ['third_party', 'mindquantum/ccsrc']
 mock_use_standalone_module = true
 markers = [
-    'symengine: test using the mindquantum.symengine module',
     'cxx_exp_projectq: tests involving the ProjectQ simulator',
+    'env_onecard: test marker used on MindSpore CI for certain GPU runs',
+    'level0: test marker used on MindSpore CI',
+    'level1: test marker used on MindSpore CI',
+    'platform_x86_cpu: test marker used on MindSpore CI for certain CPU runs',
+    'platform_x86_gpu_training: test marker used on MindSpore CI for certain GPU runs',
+    'symengine: test using the mindquantum.symengine module'
 ]
 filterwarnings = [
     'ignore:.*Please use `OptimizeResult`.*is deprecated:DeprecationWarning',

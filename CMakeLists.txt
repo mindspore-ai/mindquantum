@@ -117,12 +117,14 @@ if(ENABLE_CMAKE_DEBUG)
 endif()
 
 # ==============================================================================
-# Some more macro definitions
-
-# ==============================================================================
 
 # First add third-party libraries
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party)
+
+# Include workarounds for mindspore CI if necessary
+if(MINDSPORE_CI)
+  include(mindspore_ci)
+endif()
 
 # Then re-define some CMake macros/functions
 include(macros_more)

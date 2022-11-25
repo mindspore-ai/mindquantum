@@ -44,9 +44,11 @@ endif()
 # cmake-lint: disable=E1122
 mindquantum_add_pkg(
   pybind11
+  LIBS module headers pybind11 lto pybind11_headers python_headers
   VER ${VER}
   URL ${REQ_URL}
   MD5 ${MD5}
+  CMAKE_PKG_NO_COMPONENTS
   CMAKE_OPTION ${CMAKE_OPTION}
   LOCAL_EXTRA_DEFINES ${pybinbd11_LOCAL_EXTRA_DEFINES}
   SYSTEM_EXTRA_DEFINES ${pybinbd11_SYSTEM_EXTRA_DEFINES}

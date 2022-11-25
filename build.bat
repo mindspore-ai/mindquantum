@@ -384,7 +384,7 @@ if !ninja! == 1 (
 
 if NOT !n_jobs! == -1 (
   set args=!args! -C--global-option=--var -C--global-option=JOBS -C--global-option=!n_jobs!
-  set args=!args! -C--global-option=build_ext -C--global-option=--jobs -C--global-option=!n_jobs!
+  set args=!args! -C--global-option=build_ext -C--global-option=--jobs=!n_jobs!
 )
 
 if "!build_type!" == "Debug" set args=!args! -C--global-option=build -C--global-option=--debug

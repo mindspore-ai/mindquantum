@@ -38,8 +38,8 @@ sys.path.append(str(Path(__file__).parent.resolve()))
 
 from _build.utils import (  # pylint: disable=wrong-import-position  # noqa: E402
     fdopen,
-    get_cmake_command,
     get_executable,
+    get_executable_in_path,
     modified_environ,
     parse_toml,
     remove_tree,
@@ -165,7 +165,7 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
                     logging.info('creating empty file at %s', dest_path)
                     dest_path.write_text('', encoding='utf-8')
             return
-        cmake_cmd = get_cmake_command()
+        cmake_cmd = get_executable_in_path('cmake')
         if cmake_cmd is None:
             raise RuntimeError('Unable to locate the CMake command!')
         self.cmake_cmd = [cmake_cmd]
