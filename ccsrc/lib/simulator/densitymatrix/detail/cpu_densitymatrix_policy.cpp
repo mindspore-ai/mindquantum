@@ -83,14 +83,22 @@ void CPUDensityMatrixPolicyBase::FreeState(qs_data_p_t qs) {
     }
 }
 
-// need to fix
-void CPUDensityMatrixPolicyBase::Display(py_qs_datas_t& qs, qbit_t n_qubits, qbit_t q_limit) {
+void CPUDensityMatrixPolicyBase::Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit) {
     if (n_qubits > q_limit) {
         n_qubits = q_limit;
     }
+    index_t dim = 1UL << n_qubits;
     std::cout << n_qubits << " qubits cpu simulator (little endian)." << std::endl;
-    for (index_t i = 0; i < (1UL << n_qubits); i++) {
-        std::cout << "(" << qs[i].real() << ", " << qs[i].imag() << ")" << std::endl;
+    for (index_t i = 0; i < dim; i++) {
+        for (index_t j = 0; j <= i; j++) {
+            std::cout << "(" << qs[IdxMap(i, j)].real() << ", " << qs[IdxMap(i, j)].imag() << ")"
+                      << ",";
+        }
+        for (index_t j = i + 1; j < dim; j++) {
+            std::cout << "(" << qs[IdxMap(j, i)].real() << ", " << -qs[IdxMap(j, i)].imag() << ")"
+                      << ",";
+        }
+        std::cout << std::endl;
     }
 }
 
@@ -136,7 +144,7 @@ void CPUDensityMatrixPolicyBase::SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_o
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { qs[i] = qs_out[i]; })
 }
 
-void CPUDensityMatrixPolicyBase::SetQS(qs_data_p_t qs, const qs_data_p_t qs_out, index_t dim) {
+void CPUDensityMatrixPolicyBase::CopyQS(qs_data_p_t qs, const qs_data_p_t qs_out, index_t dim) {
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { qs[i] = qs_out[i]; })
 }
@@ -170,28 +178,6 @@ auto CPUDensityMatrixPolicyBase::PureStateVector(qs_data_p_t qs, index_t dim) ->
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { qs_vector[i] = std::sqrt(qs[IdxMap(i, i)]); })
     return qs_vector;
 }
-// auto CPUDensityMatrixPolicyBase::MatrixMul(qs_data_p_t qs, )
-
-void CPUDensityMatrixPolicyBase::DisplayQS(qs_data_p_t qs, qbit_t n_qubits, index_t dim) {
-    auto out = CPUDensityMatrixPolicyBase::GetQS(qs, dim);
-    std::cout << n_qubits << " qubits cpu simulator (little endian)." << std::endl;
-    for (index_t i = 0; i < dim; i++) {
-        for (index_t j = 0; j < dim; j++) {
-            std::cout << "(" << out[i][j].real() << ", " << out[i][j].imag() << ")"
-                      << ",";
-        }
-        std::cout << std::endl;
-    }
-}
-
-// // need to fix
-// void CPUDensityMatrixPolicyBase::SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, index_t dim) {
-//     if (qs_out.size() != dim) {
-//         throw std::invalid_argument("state size not match");
-//     }
-//     THRESHOLD_OMP_FOR(
-//         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { qs[i] = qs_out[i][i]; })
-// }
 
 auto CPUDensityMatrixPolicyBase::DiagonalConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi, bool abs,
                                                             index_t dim) -> calc_type {
@@ -217,6 +203,42 @@ auto CPUDensityMatrixPolicyBase::DiagonalConditionalCollect(qs_data_p_t qs, inde
     }
     return res_real;
 }
+
+auto CPUDensityMatrixPolicyBase::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim)
+    -> qs_data_p_t {
+    qs_data_p_t out = CPUDensityMatrixPolicyBase::InitState(dim, false);
+    for (const auto& [pauli_string, coeff_] : ham) {
+        auto mask = GenPauliMask(pauli_string);
+        auto mask_f = mask.mask_x | mask.mask_y;
+        auto coeff = coeff_;
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (index_t i = 0; i < dim; i++) {
+                auto j = (i ^ mask_f);
+                for (index_t a = 0; a < dim; a++) {
+                    auto b = (a ^ mask_f);
+                    if (i <= j) {
+                        if (a <= b) {
+                            auto axis2power_l = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
+                            auto axis3power_l = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
+                            auto c_l = POLAR[static_cast<char>((mask.num_y + 2 * axis3power_l + 2 * axis2power_l) & 3)];
+
+                            auto axis2power_r = CountOne(static_cast<int64_t>(a & mask.mask_z));  // -1
+                            auto axis3power_r = CountOne(static_cast<int64_t>(a & mask.mask_y));  // -1j
+                            auto c_r = POLAR[static_cast<char>((mask.num_y + 2 * axis3power_r + 2 * axis2power_r) & 3)];
+                            SetValue(out, b, j, qs[IdxMap(i, a)] * coeff * coeff * c_l * std::conj(c_r));
+                            // out[IdxMap(b, j)] += qs[IdxMap(i, a)] * coeff * coeff * c_l * std::conj(c_r);
+                            // if (i != j) {
+                            //     if (a != b) {
+                            //         out[IdxMap(i, a)] += qs[IdxMap(b, j)] / c_l / std::conj(c_r);
+                            //     }
+                            // }
+                        }
+                    }
+                }
+            })
+    }
+    return out;
+};
 
 template <class binary_op>
 void CPUDensityMatrixPolicyBase::ConditionalBinary(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,

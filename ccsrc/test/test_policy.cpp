@@ -15,11 +15,10 @@ auto test_Gate() {
     dm_base::ApplyX(qs, {0}, {}, 8);
     // dm_base::ApplyRX(qs, {0}, {1}, M_PI, 8);
     dm_base::ApplySGate(qs, {1}, {0}, 8);
-    dm_base::DisplayQS(qs, 3, 8);
+    dm_base::Display(qs, 3, 8);
     std::cout << dm_base::IsPure(qs, 8) << std::endl;
 
     auto v = dm_base::PureStateVector(qs, 8);
-    dm_base::Display(v, 3);
 }
 
 auto test_Time() {
@@ -40,7 +39,7 @@ auto test_SelfAdjointHam() {
     VT<PauliWord> v{pw, pw2};
     PauliTerm<double> ham{v, 1};
     auto a = dm_base::HamiltonianMatrix({ham}, 4);
-    dm_base::DisplayQS(a, 2, 4);
+    dm_base::Display(a, 2, 4);
 }
 
 auto test_ExpectDiffSingleQubitMatrix() {
@@ -49,12 +48,12 @@ auto test_ExpectDiffSingleQubitMatrix() {
     // dm_base::ApplyX(qs, {1}, {}, 8);
     // dm_base::ApplyX(qs, {2}, {}, 8);
     dm_base::ApplyRX(qs, {0}, {1, 2}, 3, 8);
-    dm_base::DisplayQS(qs,3,8);
+    dm_base::Display(qs,3,8);
     PauliWord pw{0, 'Z'};
     VT<PauliWord> v{pw};
     PauliTerm<double> ham{v, 1};
     auto ham_matrix = dm_base::HamiltonianMatrix({ham}, 8);
-    dm_base::DisplayQS(ham_matrix,3,8);
+    dm_base::Display(ham_matrix,3,8);
     auto res = dm_base::ExpectDiffRX(qs, ham_matrix, {0}, {}, 3, 8);
     return 2* std::real(res);
 }
@@ -81,7 +80,7 @@ auto test_Channel(){
     
     // dm_base::ApplyRX(qs, {0}, {1}, M_PI, 8);
     // dm_base::ApplySGate(qs, {1}, {0}, 8);
-    dm_base::DisplayQS(qs, 3, 8);
+    dm_base::Display(qs, 3, 8);
     std::cout << dm_base::IsPure(qs, 8) << std::endl;
 
     // auto v = dm_base::PureStateVector(qs, 8);

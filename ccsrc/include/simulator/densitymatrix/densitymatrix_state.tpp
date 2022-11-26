@@ -132,7 +132,7 @@ void DensityMatrixState<qs_policy_t_>::DisplayQS() const {
 }
 
 template <typename qs_policy_t_>
-auto DensityMatrixState<qs_policy_t_>::GetQS() const -> py_qs_datas_t {
+auto DensityMatrixState<qs_policy_t_>::GetQS() const -> matrix_t {
     return qs_policy_t::GetQS(qs, dim);
 }
 
@@ -142,8 +142,8 @@ void DensityMatrixState<qs_policy_t_>::SetQS(const py_qs_datas_t& qs_out) {
 }
 
 template <typename qs_policy_t_>
-void DensityMatrixState<qs_policy_t_>::SetQS(const qs_data_p_t& qs_out) {
-    qs_policy_t::SetQS(qs, qs_out, dim);
+void DensityMatrixState<qs_policy_t_>::CopyQS(const qs_data_p_t& qs_out) {
+    qs_policy_t::CopyQS(qs, qs_out, dim);
 }
 
 template <typename qs_policy_t_>
@@ -226,6 +226,13 @@ auto DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicG
     } else {
         throw std::runtime_error("This noise channel not implemented.");
     }
+}
+
+template <typename qs_policy_t_>
+void DensityMatrixState<qs_policy_t_>::ApplyHamiltonian(const Hamiltonian<calc_type>& ham) {
+    auto new_qs = qs_policy_t::ApplyTerms(qs, ham.ham_, dim);
+    qs_policy_t::FreeState(qs);
+    qs = new_qs;
 }
 
 template <typename qs_policy_t_>
@@ -317,7 +324,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationNonReversibleWithGrad(const
     derived_t sim_qs = *this;
     sim_qs.ApplyCircuit(circ, pr);
     f_and_g[0] = qs_policy_t::GetExpectation(sim_qs.qs, ham.ham_, dim);
-    sim_qs.SetQS(this->qs);
+    sim_qs.CopyQS(this->qs);
     auto ham_matrix = qs_policy_t::HamiltonianMatrix(ham.ham_, dim);
     derived_t sim_ham{ham_matrix, n_qubits, seed};
     // timer.EndAndStartOther("First part", "Second part");
@@ -337,7 +344,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationNonReversibleWithGrad(const
             for (auto& it : circ[n]->params_.GetRequiresGradParameters()) {
                 f_and_g[1 + p_map.at(it)] += 2 * std::real(gi) * circ[n]->params_.data_.at(it);
             }
-            sim_qs.SetQS(this->qs);
+            sim_qs.CopyQS(this->qs);
         }
         sim_ham.ApplyGate(herm_circ[i], pr);
     }

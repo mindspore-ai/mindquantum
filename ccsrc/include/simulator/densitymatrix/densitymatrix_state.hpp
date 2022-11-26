@@ -88,11 +88,14 @@ class DensityMatrixState {
     void DisplayQS() const;
 
     //! Get the quantum state value
-    py_qs_datas_t GetQS() const;
+    matrix_t GetQS() const;
 
     //! Set the quantum state value
     void SetQS(const py_qs_datas_t& qs_out);
-    void SetQS(const qs_data_p_t& qs_out);
+    void CopyQS(const qs_data_p_t& qs_out);
+
+    //! Apply a hamiltonian on this quantum state
+    void ApplyHamiltonian(const Hamiltonian<calc_type>& ham);
 
     //! Apply a quantum gate on this quantum state, quantum gate can be normal quantum gate, measurement gate and noise
     //! channel

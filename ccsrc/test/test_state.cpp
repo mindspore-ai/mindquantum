@@ -39,7 +39,7 @@ auto test_Gate() {
     dm.ApplyGate(GetNoPrGate("X", {1}, {}));
     // dm.ApplyGate(p_x);
     dm.ApplyMeasure(GetMeasure({0}));
-    dm.DisplayQS();
+    dm.Display();
 }
 
 auto test_GetExpectationReversibleWithGrad() {
@@ -64,7 +64,7 @@ auto test_GetExpectationReversibleWithGrad() {
     // dm_base::DisplayQS(ham_matrix,3,8);
     auto res = dm.GetExpectationReversibleWithGrad(ham, circ, herm_circ, pr, p_map);
     dm.ApplyCircuit(circ, pr);
-    dm.DisplayQS();
+    dm.Display();
 
     std::cout << res[0] << std::endl;
 }
@@ -91,7 +91,7 @@ auto test_GetExpectationNonReversibleWithGrad() {
     // dm_base::DisplayQS(ham_matrix,3,8);
     auto res = dm.GetExpectationNonReversibleWithGrad(ham, circ, herm_circ, pr, p_map);
     dm.ApplyCircuit(circ, pr);
-    dm.DisplayQS();
+    dm.Display();
 
     std::cout << res[0] << std::endl;
 }
