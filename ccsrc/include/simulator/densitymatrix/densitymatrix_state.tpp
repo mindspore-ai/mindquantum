@@ -176,6 +176,10 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
         } else {
             qs_policy_t::ApplyT(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
         }
+    } else if (name == gSWAP) {
+        qs_policy_t::ApplySWAP(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+    } else if (name == gISWAP) {
+        qs_policy_t::ApplyISWAP(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
     } else if (name == gRX) {
         auto val = gate->applied_value_;
         if (!gate->parameterized_) {
@@ -200,6 +204,38 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
             val = gate->params_.Combination(pr).const_value;
         }
         qs_policy_t::ApplyRZ(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+    } else if (name == gXX) {
+        auto val = gate->applied_value_;
+        if (!gate->parameterized_) {
+            diff = false;
+        } else {
+            val = gate->params_.Combination(pr).const_value;
+        }
+        qs_policy_t::ApplyXX(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+    } else if (name == gZZ) {
+        auto val = gate->applied_value_;
+        if (!gate->parameterized_) {
+            diff = false;
+        } else {
+            val = gate->params_.Combination(pr).const_value;
+        }
+        qs_policy_t::ApplyZZ(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+    } else if (name == gYY) {
+        auto val = gate->applied_value_;
+        if (!gate->parameterized_) {
+            diff = false;
+        } else {
+            val = gate->params_.Combination(pr).const_value;
+        }
+        qs_policy_t::ApplyYY(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+    } else if (name == gPS) {
+        auto val = gate->applied_value_;
+        if (!gate->parameterized_) {
+            diff = false;
+        } else {
+            val = gate->params_.Combination(pr).const_value;
+        }
+        qs_policy_t::ApplyPS(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
     } else if (gate->is_measure_) {
         return ApplyMeasure(gate);
     } else if (gate->is_channel_) {
@@ -262,6 +298,18 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t qs, qs_data_p_
     }
     if (name == gRZ) {
         return qs_policy_t::ExpectDiffRZ(qs, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+    }
+    if (name == gXX) {
+        return qs_policy_t::ExpectDiffXX(qs, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+    }
+    if (name == gZZ) {
+        return qs_policy_t::ExpectDiffZZ(qs, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+    }
+    if (name == gYY) {
+        return qs_policy_t::ExpectDiffYY(qs, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+    }
+    if (name == gPS) {
+        return qs_policy_t::ExpectDiffPS(qs, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
     }
     throw std::invalid_argument("gate " + name + " not implement.");
 }

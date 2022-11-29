@@ -34,7 +34,6 @@ namespace mindquantum::sim::densitymatrix::detail {
 // Z like operator
 // ========================================================================================================
 
-// need to test
 void CPUDensityMatrixPolicyBase::ApplyZLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, qs_data_t val,
                                             index_t dim) {
     SingleQubitGateMask mask(objs, ctrls);
@@ -43,13 +42,16 @@ void CPUDensityMatrixPolicyBase::ApplyZLike(qs_data_p_t qs, const qbits_t& objs,
             dim, DimTh, for (index_t k = 0; k < (dim / 2); k++) {  // loop on the row
                 auto r0 = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
                 auto r1 = r0 | mask.obj_mask;
-                for (index_t l = 0; l <= k; l++) {  // loop on the column
+                for (index_t l = 0; l < k; l++) {  // loop on the column
                     auto c0 = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                     auto c1 = c0 | mask.obj_mask;
                     qs[IdxMap(r1, c1)] *= std::norm(val);
                     qs[IdxMap(r1, c0)] *= val;
                     SelfMultiply(qs, r0, c1, std::conj(val));
                 }
+                // diagonal case
+                qs[IdxMap(r1, r1)] *= std::norm(val);
+                qs[IdxMap(r1, r0)] *= val;
             })
     } else {
         THRESHOLD_OMP_FOR(
@@ -76,12 +78,12 @@ void CPUDensityMatrixPolicyBase::ApplyZLike(qs_data_p_t qs, const qbits_t& objs,
                         qs[IdxMap(r1, c1)] *= std::conj(val);
                         SelfMultiply(qs, r0, c1, std::conj(val));
                     }
-                    // diagonal case
+                }
+                // diagonal case
                     if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
                         qs[IdxMap(r1, r0)] *= val;
                         qs[IdxMap(r1, r1)] *= std::norm(val);
                     }
-                }
             })
     }
 }

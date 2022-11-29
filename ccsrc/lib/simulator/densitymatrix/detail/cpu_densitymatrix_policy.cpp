@@ -141,7 +141,11 @@ void CPUDensityMatrixPolicyBase::SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_o
         throw std::invalid_argument("state size not match");
     }
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { qs[i] = qs_out[i]; })
+        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+            for (index_t j = 0; j <= i; j++) {
+                qs[IdxMap(i, j)] = qs_out[i] * qs_out[j];
+            }
+        })
 }
 
 void CPUDensityMatrixPolicyBase::CopyQS(qs_data_p_t qs, const qs_data_p_t qs_out, index_t dim) {
