@@ -54,7 +54,7 @@ void CPUVectorPolicyBase::ApplyXLike(qs_data_p_t qs, const qbits_t& objs, const 
                     auto j = i | mask.obj_mask;
                     auto tmp = qs[i];
                     qs[i] = qs[j] * v1;
-                    qs[j] = tmp * v1;
+                    qs[j] = tmp * v2;
                 }
             })
     }
