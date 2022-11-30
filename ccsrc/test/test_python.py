@@ -1,6 +1,165 @@
+from mindquantum import *
+import numpy as np
 
-from . import _mq_densitymatrix as mqmatrix
-from mindquantum import X
+def test_gate():
+    circ = Circuit()
+    circ += H.on(0)
+    circ += H.on(1, 2)
+    circ += X.on(2)
+    circ += UN(H, circ.n_qubits)
+    circ += X.on(0, 1)
+    circ += UN(H, circ.n_qubits)
+    circ += Y.on(1)
+    circ += UN(H, circ.n_qubits)
+    # circ += Y.on(0,1)
+    circ += UN(H, circ.n_qubits)
+    circ += Z.on(0)
+    circ += UN(H, circ.n_qubits)
+    circ += Z.on(1,2)
+    circ += UN(H, circ.n_qubits)
+    circ += S.on(1)
+    circ += UN(H, circ.n_qubits)
+    circ += S.on(2,0)
+    circ += UN(H, circ.n_qubits)
+    circ += T.on(2)
+    circ += UN(H, circ.n_qubits)
+    circ += T.on(0,1)
+    circ += UN(H, circ.n_qubits)
+    circ += S.hermitian().on(0)
+    circ += UN(H, circ.n_qubits)
+    circ += S.hermitian().on(1,2)
+    circ += UN(H, circ.n_qubits)
+    circ += T.hermitian().on(0)
+    circ += UN(H, circ.n_qubits)
+    circ += T.hermitian().on(1,2)
 
-sim = mqmatrix(3, 42)
-sim.apply_gate(X.on(0))
+    circ += UN(H, circ.n_qubits)
+    circ += PhaseShift(1).on(0)
+    circ += UN(H, circ.n_qubits)
+    circ += PhaseShift(1).on(1,2)
+
+    circ += UN(H, circ.n_qubits)
+    circ += XX(1).on([0,1])
+    circ += UN(H, circ.n_qubits)
+    circ += XX(1).on([1,2], 0)
+    circ += UN(H, circ.n_qubits)
+    circ += YY(1).on([0,1])
+    circ += UN(H, circ.n_qubits)
+    circ += YY(1).on([1,2], 0)
+    circ += UN(H, circ.n_qubits)
+    circ += ZZ(1).on([0,1])
+    circ += UN(H, circ.n_qubits)
+    circ += ZZ(1).on([1,2], 0)
+    circ += UN(H, circ.n_qubits)
+    circ += SWAP.on([0,1])
+    circ += UN(H, circ.n_qubits)
+    circ += SWAP.on([1,2], 0)
+    circ += UN(H, circ.n_qubits)
+    circ += ISWAP.on([1,2])
+    circ += UN(H, circ.n_qubits)
+    circ += ISWAP.on([1,0], 2)
+    
+    circ += UN(H, circ.n_qubits)
+    circ += RX(1).on(0)
+    circ += UN(H, circ.n_qubits)
+    circ += RX(1).on(1,2)
+    circ += UN(H, circ.n_qubits)
+    circ += RY(1).on(1)
+    circ += UN(H, circ.n_qubits)
+    circ += RY(1).on(2,0)
+    circ += UN(H, circ.n_qubits)
+    circ += RZ(1).on(2)
+    circ += UN(H, circ.n_qubits)
+    circ += RZ(1).on(0, 1)
+    
+
+    m_sim = Simulator('mqmatrix', 3)
+    m_sim.set_qs(np.array([1,2,3,4, 5, 6, 7, 8]))
+    # m_sim = Simulator('mqmatrix', 2)
+    # m_sim.set_qs(np.array([1,2,3,4]))
+
+    m_sim.apply_circuit(circ)
+    qs0 = m_sim.get_qs()
+
+    v_sim = Simulator('mqvector', 3)
+    v_sim.set_qs(np.array([1,2,3,4,5, 6, 7, 8]))
+    # v_sim = Simulator('mqvector', 2)
+    # v_sim.set_qs(np.array([1,2,3,4]))
+    v_sim.apply_circuit(circ)
+    vec = v_sim.get_qs()
+    qs1 = np.outer(vec, vec.conj())
+    # print(qs0)
+    # print()
+    # print(qs1)
+    is_equal = np.allclose(qs0,qs1)
+    print('test_gate:', is_equal)
+    
+def test_hamiltonian():
+    ham = Hamiltonian(QubitOperator('X0', 1))
+    circ = random_circuit(2, 100)
+    
+    m_sim = Simulator('mqmatrix', 2)
+    m_sim.set_qs(np.array([1,2,3,4]))
+    v_sim = Simulator('mqvector', 2)
+    v_sim.set_qs(np.array([1,2,3,4]))
+    
+    m_sim.apply_circuit(circ)
+    m_sim.apply_hamiltonian(ham)
+    qs0 = m_sim.get_qs()
+    v_sim.apply_circuit(circ)
+    v_sim.apply_hamiltonian(ham)
+    
+    vec = v_sim.get_qs()
+    qs1 = np.outer(vec, vec.conj())
+    print(qs0)
+    print()
+    print(qs1)
+    is_equal = np.allclose(qs0,qs1)
+    print('test_hamiltonian:', is_equal)
+    
+def test_expectation():
+    ham = Hamiltonian(QubitOperator('X0', 1))
+    circ = random_circuit(2, 100)
+    
+    m_sim = Simulator('mqmatrix', 2)
+    m_sim.set_qs(np.array([1,2,3,4]))
+    v_sim = Simulator('mqvector', 2)
+    v_sim.set_qs(np.array([1,2,3,4]))
+    
+    m_sim.apply_circuit(circ)
+    m_ept = m_sim.get_expectation(ham)
+    v_sim.apply_circuit(circ)
+    v_ept = v_sim.get_expectation(ham)
+    
+    print(m_ept)
+    print()
+    print(v_ept)
+    is_equal = np.allclose(m_ept,v_ept)
+    print('test_expectation:', is_equal)
+    
+def test_grad():
+    ham = Hamiltonian(QubitOperator('X0', 1))
+    circ = random_circuit(2, 100)
+    
+    m_sim = Simulator('mqmatrix', 2)
+    m_sim.set_qs(np.array([1,2,3,4]))
+    v_sim = Simulator('mqvector', 2)
+    v_sim.set_qs(np.array([1,2,3,4]))
+    
+    m_grad_ops = m_sim.get_expectation_with_grad(ham, circ)
+    v_grad_ops = v_sim.get_expectation_with_grad(ham, circ)
+    
+    # m_fg = m_grad_ops(np.array([]))
+    v_fg = v_grad_ops(np.array([]))
+    
+    # print(m_fg)
+    print()
+    print(v_fg)
+    # is_equal = np.allclose(m_fg,v_fg)
+    # print('test_expectation_with_grad:', is_equal)
+    
+if __name__=='__main__':
+    test_expectation()
+    
+
+    

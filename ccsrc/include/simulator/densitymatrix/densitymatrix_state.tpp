@@ -283,7 +283,7 @@ auto DensityMatrixState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicG
 }
 
 template <typename qs_policy_t_>
-auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t qs, qs_data_p_t ham_matrix,
+auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
                                                       const std::shared_ptr<BasicGate<calc_type>>& gate,
                                                       const ParameterResolver<calc_type>& pr, index_t dim)
     -> py_qs_data_t {
@@ -291,25 +291,25 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t qs, qs_data_p_
     auto val = gate->params_.Combination(pr).const_value;
 
     if (name == gRX) {
-        return qs_policy_t::ExpectDiffRX(qs, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        return qs_policy_t::ExpectDiffRX(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
     }
     if (name == gRY) {
-        return qs_policy_t::ExpectDiffRY(qs, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        return qs_policy_t::ExpectDiffRY(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
     }
     if (name == gRZ) {
-        return qs_policy_t::ExpectDiffRZ(qs, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        return qs_policy_t::ExpectDiffRZ(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
     }
     if (name == gXX) {
-        return qs_policy_t::ExpectDiffXX(qs, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        return qs_policy_t::ExpectDiffXX(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
     }
     if (name == gZZ) {
-        return qs_policy_t::ExpectDiffZZ(qs, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        return qs_policy_t::ExpectDiffZZ(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
     }
     if (name == gYY) {
-        return qs_policy_t::ExpectDiffYY(qs, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        return qs_policy_t::ExpectDiffYY(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
     }
     if (name == gPS) {
-        return qs_policy_t::ExpectDiffPS(qs, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        return qs_policy_t::ExpectDiffPS(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
     }
     throw std::invalid_argument("gate " + name + " not implement.");
 }
@@ -325,6 +325,11 @@ auto DensityMatrixState<qs_policy_t_>::ApplyCircuit(const circuit_t& circ, const
         }
     }
     return result;
+}
+
+template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham) -> py_qs_data_t {
+    return qs_policy_t::GetExpectation(qs, ham.ham_, dim);
 }
 
 template <typename qs_policy_t_>
