@@ -124,4 +124,95 @@ class FermionOperator(TermsOperator):
         return FermionOperator(self._cpp_obj.normal_ordered())
 
 
+FermionOperator.dumps.__doc__ = r"""
+        Dump FermionOperator into JSON(JavaScript Object Notation).
+
+        Args:
+            indent (int): Then JSON array elements and object members will be
+                pretty-printed with that indent level. Default: 4.
+
+        Returns:
+            JSON (str), the JSON strings of FermionOperator
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> f = FermionOperator('0', 1 + 2j) + FermionOperator('0^', 'a')
+            >>> len(f.dumps())
+            443
+        """
+FermionOperator.from_openfermion.__doc__ = """
+        Convert openfermion fermion operator to mindquantum format.
+
+        Args:
+            of_ops (openfermion.FermionOperator): fermion operator from openfermion.
+            dtype (type): Type of TermsOperator to generate (ie. real `float` or complex `complex`)
+                          NB: this parameter is ignored in the Python version of the QubitOperator
+
+        Returns:
+            FermionOperator, fermion operator from mindquantum.
+        """
+FermionOperator.hermitian.__doc__ = """Return Hermitian conjugate of FermionOperator."""
+FermionOperator.imag.__doc__ = """
+        Convert the coefficient to its imag part.
+
+        Returns:
+            FermionOperator, the imag part of this fermion operator.
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> f = FermionOperator('0', 1 + 2j) + FermionOperator('0^', 'a')
+            >>> f.imag.compress()
+            2.0 [0]
+        """
+FermionOperator.loads.__doc__ = """
+        Load JSON(JavaScript Object Notation) into FermionOperator.
+
+        Args:
+            strs (str): The dumped fermion operator string.
+            dtype (type): (ignored by this class) Type of QubitOperator to create
+                (ie. real, complex, real_pr, complex_pr)
+
+        Returns:
+            FermionOperator, the FermionOperator load from strings
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> f = FermionOperator('0', 1 + 2j) + FermionOperator('0^', 'a')
+            >>> obj = FermionOperator.loads(f.dumps())
+            >>> obj == f
+            True
+        """
+FermionOperator.matrix.__doc__ = """
+        Convert this fermion operator to csr_matrix under jordan_wigner mapping.
+
+        Args:
+            n_qubits (int): The total qubit of final matrix. If None, the value will be
+                the maximum local qubit number. Default: None.
+        """
+FermionOperator.real.__doc__ = """
+        Convert the coefficient to its real part.
+
+        Returns:
+            FermionOperator, the real part of this fermion operator.
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> f = FermionOperator('0', 1 + 2j) + FermionOperator('0^', 'a')
+            >>> f.real.compress()
+            1.0 [0] +
+            a [0^]
+        """
+FermionOperator.split.__doc__ = """
+        Split the coefficient and the operator.
+
+        Returns:
+            List[List[ParameterResolver, FermionOperator]], the split result.
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> a = FermionOperator('0', 'a') + FermionOperator('1^', 1.2)
+            >>> list(a.split())
+            [[{'a': 1}, const: 0, 1 [0] ], [{}, const: 1.2, 1 [1^] ]]
+        """
+FermionOperator.to_openfermion.__doc__ = """Convert fermion operator to openfermion format."""
 __all__ = ['FermionOperator']

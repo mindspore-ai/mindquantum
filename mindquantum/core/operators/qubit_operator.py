@@ -112,4 +112,95 @@ class QubitOperator(TermsOperator):
         return self._cpp_obj.count_gates()
 
 
+QubitOperator.dumps.__doc__ = r"""
+        Dump QubitOperator into JSON(JavaScript Object Notation).
+
+        Args:
+            indent (int): Then JSON array elements and object members will be
+                pretty-printed with that indent level. Default: 4.
+
+        Returns:
+            JSON(strings), the JSON strings of QubitOperator
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> ops = QubitOperator('X0 Y1', 1.2) + QubitOperator('Z0 X1', {'a': 2.1})
+            >>> len(ops.dumps())
+            448
+        """
+QubitOperator.from_openfermion.__doc__ = """
+        Convert qubit operator from openfermion to mindquantum format.
+
+        Args:
+            of_ops (openfermion.QubitOperator): Qubit operator from openfermion.
+            dtype (type): Type of TermsOperator to generate (ie. real `float` or complex `complex`)
+                          NB: this parameter is ignored in the Python version of the QubitOperator
+
+        Returns:
+            QubitOperator, qubit operator from mindquantum.
+        """
+QubitOperator.hermitian.__doc__ = """Return Hermitian conjugate of QubitOperator."""
+QubitOperator.imag.__doc__ = """
+        Convert the coefficient to its imag part.
+
+        Returns:
+            QubitOperator, the imag part of this qubit operator.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> f = QubitOperator('X0', 1 + 2j) + QubitOperator('Y0', 'a')
+            >>> f.imag.compress()
+            2 [X0]
+        """
+QubitOperator.loads.__doc__ = """
+        Load JSON(JavaScript Object Notation) into QubitOperator.
+
+        Args:
+            strs (str): The dumped qubit operator string.
+            dtype (type): (ignored by this class) Type of QubitOperator to create
+                (ie. real, complex, real_pr, complex_pr)
+
+        Returns:
+            QubitOperator`, the QubitOperator load from strings
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> ops = QubitOperator('X0 Y1', 1.2) + QubitOperator('Z0 X1', {'a': 2.1})
+            >>> obj = QubitOperator.loads(ops.dumps())
+            >>> obj == ops
+            True
+        """
+QubitOperator.matrix.__doc__ = """
+        Convert this qubit operator to csr_matrix.
+
+        Args:
+            n_qubits (int): The total qubits of final matrix. If None, the value will be
+                the maximum local qubit number. Default: None.
+        """
+QubitOperator.real.__doc__ = """
+        Convert the coefficient to its real part.
+
+        Returns:
+            QubitOperator, the real part of this qubit operator.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> f = QubitOperator('X0', 1 + 2j) + QubitOperator('Y0', 'a')
+            >>> f.real.compress()
+            1 [X0] +
+            a [Y0]
+        """
+QubitOperator.split.__doc__ = """
+        Split the coefficient and the operator.
+
+        Returns:
+            List[List[ParameterResolver, QubitOperator]], the split result.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> a = QubitOperator('X0', 'a') + QubitOperator('Z1', 1.2)
+            >>> list(a.split())
+            [[{'a': 1}, const: 0, 1 [X0] ], [{}, const: 1.2, 1 [Z1] ]]
+        """
+QubitOperator.to_openfermion.__doc__ = """Convert qubit operator to openfermion format."""
 __all__ = ['QubitOperator']
