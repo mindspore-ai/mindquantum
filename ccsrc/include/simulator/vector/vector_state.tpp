@@ -504,6 +504,11 @@ auto VectorState<qs_policy_t_>::GetCircuitMatrix(const circuit_t& circ, const Pa
     VVT<CT<calc_type>> out((1 << n_qubits));
     for (size_t i = 0; i < (1UL << n_qubits); i++) {
         auto sim = VectorState<qs_policy_t>(n_qubits, seed);
+        for (qbit_t j = 0; j < n_qubits; ++j) {
+            if ((i >> j) & 1) {
+                qs_policy_t_::ApplyX(sim.qs, qbits_t({j}), qbits_t({}), sim.dim);
+            }
+        }
         sim.ApplyCircuit(circ, pr);
         out[i] = sim.GetQS();
     }

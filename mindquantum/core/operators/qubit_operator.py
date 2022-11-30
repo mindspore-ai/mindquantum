@@ -16,10 +16,10 @@
 #   This module we develop is default being licensed under Apache 2.0 license,
 #   and also uses or refactor Fermilib and OpenFermion licensed under
 #   Apache 2.0 license.
-
 """This is the module for the Qubit Operator."""
 
 from ... import mqbackend
+from ...core.parameterresolver import ParameterResolver
 from ._term_value import TermValue
 from ._terms_operators import TermsOperator
 
@@ -96,6 +96,76 @@ class QubitOperator(TermsOperator):
             return "0"
         return "+\n".join(out)
 
+    @property
+    def imag(self):
+        """
+        Convert the coefficient to its imag part.
+
+        Returns:
+            QubitOperator, the imag part of this qubit operator.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> f = QubitOperator('X0', 1 + 2j) + QubitOperator('Y0', 'a')
+            >>> f.imag.compress()
+            2 [X0]
+        """
+        return self.__class__(self._cpp_obj.imag)
+
+    @property
+    def real(self):
+        """
+        Convert the coefficient to its real part.
+
+        Returns:
+            QubitOperator, the real part of this qubit operator.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> f = QubitOperator('X0', 1 + 2j) + QubitOperator('Y0', 'a')
+            >>> f.real.compress()
+            1 [X0] +
+            a [Y0]
+        """
+        return self.__class__(self._cpp_obj.real)
+
+    @classmethod
+    def from_openfermion(cls, of_ops, dtype=None):
+        """
+        Convert qubit operator from openfermion to mindquantum format.
+
+        Args:
+            of_ops (openfermion.QubitOperator): Qubit operator from openfermion.
+            dtype (type): Type of TermsOperator to generate (ie. real `float` or complex `complex`)
+                          NB: this parameter is ignored in the Python version of the QubitOperator
+
+        Returns:
+            QubitOperator, qubit operator from mindquantum.
+        """
+        return super().from_openfermion(of_ops, dtype)
+
+    @classmethod
+    def loads(cls, strs: str, dtype: type):
+        """
+        Load JSON(JavaScript Object Notation) into QubitOperator.
+
+        Args:
+            strs (str): The dumped qubit operator string.
+            dtype (type): (ignored by this class) Type of QubitOperator to create
+                (ie. real, complex, real_pr, complex_pr)
+
+        Returns:
+            QubitOperator`, the QubitOperator load from strings
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> ops = QubitOperator('X0 Y1', 1.2) + QubitOperator('Z0 X1', {'a': 2.1})
+            >>> obj = QubitOperator.loads(ops.dumps())
+            >>> obj == ops
+            True
+        """
+        return super().loads(strs, dtype)
+
     def count_gates(self):
         """
         Return the gate number when treated in single Hamiltonian.
@@ -110,6 +180,60 @@ class QubitOperator(TermsOperator):
             4
         """
         return self._cpp_obj.count_gates()
+
+    def dumps(self, indent: int = 4) -> str:
+        r"""
+        Dump QubitOperator into JSON(JavaScript Object Notation).
+
+        Args:
+            indent (int): Then JSON array elements and object members will be
+                pretty-printed with that indent level. Default: 4.
+
+        Returns:
+            JSON(strings), the JSON strings of QubitOperator
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> ops = QubitOperator('X0 Y1', 1.2) + QubitOperator('Z0 X1', {'a': 2.1})
+            >>> len(ops.dumps())
+            448
+        """
+        return self._cpp_obj.dumps(indent)
+
+    def hermitian(self):
+        """Return Hermitian conjugate of QubitOperator."""
+        return self.__class__(self._cpp_obj.hermitian())
+
+    def matrix(self, n_qubits: int = None):
+        """
+        Convert this qubit operator to csr_matrix.
+
+        Args:
+            n_qubits (int): The total qubits of final matrix. If None, the value will be
+                the maximum local qubit number. Default: None.
+        """
+        return self._cpp_obj.matrix(n_qubits)
+
+    def split(self):
+        """
+        Split the coefficient and the operator.
+
+        Returns:
+            List[List[ParameterResolver, QubitOperator]], the split result.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> a = QubitOperator('X0', 'a') + QubitOperator('Z1', 1.2)
+            >>> list(a.split())
+            [[{'a': 1}, const: 0, 1 [X0] ], [{}, const: 1.2, 1 [Z1] ]]
+        """
+        for i, j in self._cpp_obj.split():
+            yield [ParameterResolver(i), self.__class__(j)]
+
+    # pylint: disable=useless-super-delegation
+    def to_openfermion(self):
+        """Convert qubit operator to openfermion format."""
+        return super().to_openfermion()
 
 
 __all__ = ['QubitOperator']
