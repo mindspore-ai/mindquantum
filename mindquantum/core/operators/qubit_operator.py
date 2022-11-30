@@ -230,9 +230,9 @@ class QubitOperator(TermsOperator):
         for i, j in self._cpp_obj.split():
             yield [ParameterResolver(i), self.__class__(j)]
 
+    # pylint: disable=useless-parent-delegation
     def to_openfermion(self):
         """Convert qubit operator to openfermion format."""
-        # pylint: disable=useless-parent-delegation
         return super().to_openfermion()
 
 
