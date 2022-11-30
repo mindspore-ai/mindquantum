@@ -242,7 +242,7 @@ class FermionOperator(TermsOperator):
         for i, j in self._cpp_obj.split():
             yield [ParameterResolver(i), self.__class__(j)]
 
-    # pylint: disable=useless-parent-delegation
+    # pylint: disable=useless-super-delegation
     def to_openfermion(self):
         """Convert fermion operator to openfermion format."""
         return super().to_openfermion()
