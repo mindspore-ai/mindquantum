@@ -45,6 +45,10 @@ if(MSVC)
   endif()
   list(APPEND CMAKE_OPTION -DINTEGER_CLASS=boostmp -DCMAKE_DEBUG_POSTFIX=d)
 
+  if(CMAKE_MT)
+    list(APPEND CMAKE_OPTION -DCMAKE_MT=${CMAKE_MT})
+  endif()
+
   if(Boost_DIRPATH)
     # Boost was locally built, make sure we use that one
     list(APPEND CMAKE_OPTION -DBOOST_ROOT=${Boost_DIRPATH} -DBoost_NO_SYSTEM_PATHS:BOOL=ON)
