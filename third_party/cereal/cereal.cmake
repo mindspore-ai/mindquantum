@@ -38,6 +38,10 @@ set(CMAKE_OPTION
     -DWITH_WERROR=OFF
     -DSKIP_PERFORMANCE_COMPARISON=ON)
 
+if(MSVC AND CMAKE_MT)
+  list(APPEND CMAKE_OPTION -DCMAKE_MT=${CMAKE_MT})
+endif()
+
 mindquantum_add_pkg(
   cereal
   VER ${VER}
