@@ -4,6 +4,8 @@ import numpy as np
 def test_gate():
     circ = Circuit()
     circ += H.on(0)
+    circ += S.on(2)
+    circ += T.on(1)
     circ += H.on(1, 2)
     circ += X.on(2)
     circ += UN(H, circ.n_qubits)
@@ -11,7 +13,7 @@ def test_gate():
     circ += UN(H, circ.n_qubits)
     circ += Y.on(1)
     circ += UN(H, circ.n_qubits)
-    # circ += Y.on(0,1)
+    circ += Y.on(0,1)
     circ += UN(H, circ.n_qubits)
     circ += Z.on(0)
     circ += UN(H, circ.n_qubits)
@@ -94,6 +96,95 @@ def test_gate():
     is_equal = np.allclose(qs0,qs1)
     print('test_gate:', is_equal)
     
+def test_measure():
+    circ = random_circuit(3,100)
+    # circ += H.on(0)
+    # circ += H.on(1)
+    circ.measure(0)
+    circ.measure(1)
+    m_sim = Simulator('mqmatrix', 3, seed=42)
+    m_sim.set_qs(np.array([1,2,3,4,5,6,7,8]))
+    v_sim = Simulator('mqvector', 3, seed=42)
+    v_sim.set_qs(np.array([1,2,3,4,5,6,7,8]))
+    m_sim.apply_circuit(circ)
+    v_sim.apply_circuit(circ)
+    qs0 = m_sim.get_qs()
+    vec = v_sim.get_qs()
+    qs1 = np.outer(vec, vec.conj())
+    # print(qs0)
+    # print(qs1)
+    is_equal = np.allclose(qs0,qs1)
+    print('test_measure:', is_equal)
+    
+def test_sampling():
+    circ = random_circuit(3,100)
+    circ.measure(0)
+    circ.measure(1)
+    m_sim = Simulator('mqmatrix', 3, seed=42)
+    m_sim.set_qs(np.array([1,2,3,4,5,6,7,8]))
+    v_sim = Simulator('mqvector', 3, seed=42)
+    v_sim.set_qs(np.array([1,2,3,4,5,6,7,8]))
+    res0 = m_sim.sampling(circ, shots=100, seed=42)
+    res1=v_sim.sampling(circ,shots=100, seed=42)
+    # print(res0.data)
+    # print(res1.data)
+    is_equal = (res0.data==res1.data)
+    print('test_sampling:', is_equal)
+    
+def test_channel():
+    from cmath import sqrt
+    gamma = 0.1
+    kmat0 = [[1, 0], [0, sqrt(1 - gamma)]]
+    kmat1 = [[0, sqrt(gamma)], [0, 0]]
+    import paddle_quantum
+    paddle_quantum.set_backend('density_matrix')
+    num_qubits = 3
+    p_circ = paddle_quantum.ansatz.Circuit(num_qubits)
+    p_circ.h(0)
+    p_circ.h(1)
+    p_circ.cx([0,2])
+    p_circ.s(2)
+    p_circ.s(1)
+    p_circ.t(0)
+    p_circ.amplitude_damping(0.1, 2)
+    p_circ.phase_damping(0.1, 1)
+    p_circ.bit_flip(0.1, 0)
+    p_circ.phase_flip(0.1, 2)
+    p_circ.bit_phase_flip(0.1, 1)
+    p_circ.depolarizing(0.1,0)
+    p_circ.bit_flip(0.1, 2)
+    # p_circ.pauli_channel([0.01,0.01,0.01],2)
+    p_circ.amplitude_damping(0.1, 1)
+    init_state = paddle_quantum.state.zero_state(num_qubits)
+    final_state = p_circ(init_state)
+    p_qs = final_state.numpy()
+    
+    m_circ = Circuit()
+    m_circ += H.on(1)
+    m_circ += H.on(2)
+    m_circ += X.on(0,2)
+    m_circ += S.on(0)
+    m_circ += S.on(1)
+    m_circ += T.on(2)
+    m_circ += AmplitudeDampingChannel(0.1).on(0)
+    m_circ += PhaseDampingChannel(0.1).on(1)
+    m_circ += BitFlipChannel(0.1).on(2)
+    m_circ += PhaseFlipChannel(0.1).on(0)
+    m_circ += BitPhaseFlipChannel(0.1).on(1)
+    m_circ += DepolarizingChannel(0.1).on(2)
+    m_circ += PauliChannel(0.1,0,0).on(0)
+    m_circ += KrausChannel('k',[kmat0,kmat1]).on(1)
+    m_sim = Simulator('mqmatrix', 3,seed=42)
+    # m_sim.set_qs(np.array([1,2,3,4,5,6,7,8]))
+    m_sim.apply_circuit(m_circ)
+    m_qs = m_sim.get_qs()
+    # print(p_qs)
+    # print()
+    # print(m_qs)
+    is_equal = np.allclose(p_qs, m_qs)
+    print('test_channel:', is_equal)
+    
+    
 def test_hamiltonian():
     ham = Hamiltonian(QubitOperator('X0', 1))
     circ = random_circuit(2, 100)
@@ -118,13 +209,13 @@ def test_hamiltonian():
     print('test_hamiltonian:', is_equal)
     
 def test_expectation():
-    ham = Hamiltonian(QubitOperator('X0', 1))
+    ham = Hamiltonian(QubitOperator('X0 Y2', 0.5) + 0.6 * QubitOperator('X0 Z1'))
     circ = random_circuit(2, 100)
     
-    m_sim = Simulator('mqmatrix', 2)
-    m_sim.set_qs(np.array([1,2,3,4]))
-    v_sim = Simulator('mqvector', 2)
-    v_sim.set_qs(np.array([1,2,3,4]))
+    m_sim = Simulator('mqmatrix', 3)
+    m_sim.set_qs(np.array([1,2,3,4,5,6,7,8]))
+    v_sim = Simulator('mqvector', 3)
+    v_sim.set_qs(np.array([1,2,3,4,5,6,7,8]))
     
     m_sim.apply_circuit(circ)
     m_ept = m_sim.get_expectation(ham)
@@ -132,34 +223,39 @@ def test_expectation():
     v_ept = v_sim.get_expectation(ham)
     
     print(m_ept)
-    print()
     print(v_ept)
     is_equal = np.allclose(m_ept,v_ept)
     print('test_expectation:', is_equal)
     
 def test_grad():
-    ham = Hamiltonian(QubitOperator('X0', 1))
-    circ = random_circuit(2, 100)
+    ham = Hamiltonian(QubitOperator('X0 Y1', 0.5))
+    circ = Circuit()
+    circ += RX('a').on(0)
+    circ += RY('b').on(0)
+    
+    pr = ParameterResolver({'a':1,'b':2},1)
+    print(type(dict(pr.items())))
     
     m_sim = Simulator('mqmatrix', 2)
     m_sim.set_qs(np.array([1,2,3,4]))
     v_sim = Simulator('mqvector', 2)
     v_sim.set_qs(np.array([1,2,3,4]))
     
-    m_grad_ops = m_sim.get_expectation_with_grad(ham, circ)
+    m_fg = m_sim.get_expectationd_with_grad(ham, circ, pr)
+    print(m_fg)
     v_grad_ops = v_sim.get_expectation_with_grad(ham, circ)
     
     # m_fg = m_grad_ops(np.array([]))
-    v_fg = v_grad_ops(np.array([]))
+    v_fg = v_grad_ops(np.array([1,2]))
     
-    # print(m_fg)
+    print(m_fg)
     print()
     print(v_fg)
     # is_equal = np.allclose(m_fg,v_fg)
     # print('test_expectation_with_grad:', is_equal)
     
 if __name__=='__main__':
-    test_expectation()
+    test_gate()
     
 
     

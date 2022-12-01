@@ -140,8 +140,9 @@ constexpr const char gRZZ[] = "Rzz";
 constexpr const char gU3[] = "U3";
 constexpr const char gFSim[] = "FSim";
 constexpr const char cPL[] = "PL";  // Pauli channel
-constexpr const char cAD[] = "AD";  // amplitude damping channel
-constexpr const char cPD[] = "PD";  // phase damping channel
+constexpr const char cAD[] = "ADC";  // amplitude damping channel
+constexpr const char cPD[] = "PDC";  // phase damping channel
+constexpr const char hcAD[] = "HADC";  // hermitian amplitude damping channel
 
 /**
  * The qubits number threshold for a simulator to use OpenMP or not.

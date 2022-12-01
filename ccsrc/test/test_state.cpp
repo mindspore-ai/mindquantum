@@ -2,8 +2,8 @@
 #include <functional>
 #include <iostream>
 
-#include "gate/basic_gate.h"
-#include "gate/gates.h"
+// #include "gate/basic_gate.h"
+// #include "gate/gates.h"
 #include "simulator/densitymatrix/densitymatrix_state.hpp"
 #include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 
@@ -62,11 +62,11 @@ auto test_GetExpectationReversibleWithGrad() {
     Hamiltonian<double> ham{{pt}, 3};
 
     // dm_base::DisplayQS(ham_matrix,3,8);
-    auto res = dm.GetExpectationReversibleWithGrad(ham, circ, herm_circ, pr, p_map);
+    // auto res = dm.GetExpectationReversibleWithGrad(ham, circ, herm_circ, pr, p_map);
     dm.ApplyCircuit(circ, pr);
     dm.Display();
 
-    std::cout << res[0] << std::endl;
+    // std::cout << res[0] << std::endl;
 }
 
 auto test_GetExpectationNonReversibleWithGrad() {

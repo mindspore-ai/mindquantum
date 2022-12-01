@@ -30,16 +30,11 @@
 #include <type_traits>
 #include <vector>
 
-// #include "core/mq_base_types.hpp"
-// #include "core/parameter_resolver.hpp"
-// #include "ops/basic_gate.hpp"
-// #include "ops/gates.hpp"
-// #include "ops/hamiltonian.hpp"
-// #include "core/type.h"
-#include "gate/basic_gate.h"
-#include "gate/gates.h"
-#include "hamiltonian/hamiltonian.h"
-#include "pr/parameter_resolver.h"
+#include "core/mq_base_types.hpp"
+#include "core/parameter_resolver.hpp"
+#include "ops/basic_gate.hpp"
+#include "ops/gates.hpp"
+#include "ops/hamiltonian.hpp"
 #include "simulator/timer.h"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
@@ -66,7 +61,6 @@ class DensityMatrixState {
     //! ctor
     DensityMatrixState() = default;
     explicit DensityMatrixState(qbit_t n_qubits, unsigned seed = 42);
-    DensityMatrixState(qbit_t n_qubits, unsigned seed, qs_data_p_t vec);
     DensityMatrixState(qs_data_p_t qs, qbit_t n_qubits, unsigned seed = 42);
 
     DensityMatrixState(const DensityMatrixState<qs_policy_t>& sim);
@@ -84,8 +78,6 @@ class DensityMatrixState {
 
     //! Display basic information of this quantum state
     void Display(qbit_t qubits_limit = 10) const;
-
-    void DisplayQS() const;
 
     //! Get the quantum state value
     matrix_t GetQS() const;
@@ -116,8 +108,7 @@ class DensityMatrixState {
     py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham);
 
     py_qs_datas_t GetExpectationReversibleWithGrad(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
-                                                   const circuit_t& herm_circ, const ParameterResolver<calc_type>& pr,
-                                                   const MST<size_t>& p_map);
+                                                   const circuit_t& herm_circ, const ParameterResolver<calc_type>& pr);
 
     py_qs_datas_t GetExpectationNonReversibleWithGrad(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
                                                       const circuit_t& herm_circ,

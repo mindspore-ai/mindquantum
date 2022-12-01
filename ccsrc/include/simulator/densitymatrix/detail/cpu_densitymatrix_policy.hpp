@@ -124,7 +124,7 @@ struct CPUDensityMatrixPolicyBase {
 
     static void ApplyAmplitudeDamping(qs_data_p_t qs, const qbits_t& objs, calc_type gamma, index_t dim);
     static void ApplyPhaseDamping(qs_data_p_t qs, const qbits_t& objs, calc_type gamma, index_t dim);
-    static void ApplyPauli(qs_data_p_t qs, const qbits_t& objs, VT<calc_type>& probs, index_t dim);
+    static void ApplyPauli(qs_data_p_t qs, const qbits_t& objs, const VT<calc_type>& probs, index_t dim);
     static void ApplyKraus(qs_data_p_t qs, const qbits_t& objs, VT<matrix_t>& kraus_set, index_t dim);
     static void ApplyHermitianAmplitudeDamping(qs_data_p_t qs, const qbits_t& objs, calc_type gamma, index_t dim);
 

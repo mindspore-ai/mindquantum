@@ -84,19 +84,19 @@ void CPUDensityMatrixPolicyBase::ApplyPhaseDamping(qs_data_p_t qs, const qbits_t
     ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
 }
 
-void CPUDensityMatrixPolicyBase::ApplyPauli(qs_data_p_t qs, const qbits_t& objs, VT<calc_type>& probs, index_t dim) {
+void CPUDensityMatrixPolicyBase::ApplyPauli(qs_data_p_t qs, const qbits_t& objs, const VT<calc_type>& probs, index_t dim) {
     VT<matrix_t> kraus_set;
     if (std::abs(probs[0]) > 1e-8) {
-        kraus_set.push_back({{0, probs[0]}, {probs[0], 0}});
+        kraus_set.push_back({{0, std::sqrt(probs[0])}, {std::sqrt(probs[0]), 0}});
     }
     if (std::abs(probs[1]) > 1e-8) {
-        kraus_set.push_back({{0, probs[1] * IMAGE_MI}, {probs[1] * IMAGE_I, 0}});
+        kraus_set.push_back({{0, std::sqrt(probs[1]) * IMAGE_MI}, {std::sqrt(probs[1]) * IMAGE_I, 0}});
     }
     if (std::abs(probs[2]) > 1e-8) {
-        kraus_set.push_back({{probs[2], 0}, {0, -probs[2]}});
+        kraus_set.push_back({{std::sqrt(probs[2]), 0}, {0, -std::sqrt(probs[2])}});
     }
     if (std::abs(probs[3]) > 1e-8) {
-        kraus_set.push_back({{probs[3], 0}, {0, probs[3]}});
+        kraus_set.push_back({{std::sqrt(probs[3]), 0}, {0, std::sqrt(probs[3])}});
     }
     ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
 }

@@ -136,14 +136,14 @@ auto CPUDensityMatrixPolicyBase::GetQS(qs_data_p_t qs, index_t dim) -> matrix_t 
     return out;
 }
 
-void CPUDensityMatrixPolicyBase::SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, index_t dim) {
-    if (qs_out.size() != dim) {
+void CPUDensityMatrixPolicyBase::SetQS(qs_data_p_t qs, const py_qs_datas_t& vec_out, index_t dim) {
+    if (vec_out.size() != dim) {
         throw std::invalid_argument("state size not match");
     }
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
             for (index_t j = 0; j <= i; j++) {
-                qs[IdxMap(i, j)] = qs_out[i] * qs_out[j];
+                qs[IdxMap(i, j)] = vec_out[i] * vec_out[j];
             }
         })
 }

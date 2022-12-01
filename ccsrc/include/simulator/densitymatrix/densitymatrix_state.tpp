@@ -12,8 +12,8 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef INCLUDE_VECTOR_VECTORSTATE_TPP
-#define INCLUDE_VECTOR_VECTORSTATE_TPP
+#ifndef INCLUDE_DENSITYMATRIX_DENSITYMATRIXSTATE_TPP
+#define INCLUDE_DENSITYMATRIX_DENSITYMATRIXSTATE_TPP
 
 #include <cmath>
 
@@ -33,11 +33,11 @@
 #include <type_traits>
 #include <vector>
 
-// #include "core/mq_base_types.hpp"
-// #include "core/parameter_resolver.hpp"
-// #include "ops/basic_gate.hpp"
-// #include "ops/gates.hpp"
-// #include "ops/hamiltonian.hpp"
+#include "core/mq_base_types.hpp"
+#include "core/parameter_resolver.hpp"
+#include "ops/basic_gate.hpp"
+#include "ops/gates.hpp"
+#include "ops/hamiltonian.hpp"
 #include "simulator/densitymatrix/densitymatrix_state.hpp"
 #include "simulator/types.hpp"
 
@@ -47,14 +47,6 @@ template <typename qs_policy_t_>
 DensityMatrixState<qs_policy_t_>::DensityMatrixState(qbit_t n_qubits, unsigned seed)
     : n_qubits(n_qubits), dim(1UL << n_qubits), seed(seed), rnd_eng_(seed) {
     qs = qs_policy_t::InitState(dim);
-    std::uniform_real_distribution<double> dist(0., 1.);
-    rng_ = std::bind(dist, std::ref(rnd_eng_));
-}
-
-template <typename qs_policy_t_>
-DensityMatrixState<qs_policy_t_>::DensityMatrixState(qbit_t n_qubits, unsigned seed, qs_data_p_t vec)
-    : n_qubits(n_qubits), dim(1UL << n_qubits), seed(seed), rnd_eng_(seed) {
-    qs = qs_policy_t::Copy(vec, dim);
     std::uniform_real_distribution<double> dist(0., 1.);
     rng_ = std::bind(dist, std::ref(rnd_eng_));
 }
@@ -124,11 +116,6 @@ void DensityMatrixState<qs_policy_t_>::Reset() {
 template <typename qs_policy_t_>
 void DensityMatrixState<qs_policy_t_>::Display(qbit_t qubits_limit) const {
     qs_policy_t::Display(qs, n_qubits, qubits_limit);
-}
-
-template <typename qs_policy_t_>
-void DensityMatrixState<qs_policy_t_>::DisplayQS() const {
-    qs_policy_t::DisplayQS(qs, n_qubits, dim);
 }
 
 template <typename qs_policy_t_>
@@ -248,16 +235,15 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
 
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicGate<calc_type>>& gate) {
-    assert(gate->is_channel_);
-    if (gate->name_ == "ADC") {
+    if (gate->name_ == cAD) {
         qs_policy_t::ApplyAmplitudeDamping(qs, gate->obj_qubits_, gate->damping_coeff_, dim);
-    } else if (gate->name_ == "PDC") {
+    } else if (gate->name_ == cPD) {
         qs_policy_t::ApplyPhaseDamping(qs, gate->obj_qubits_, gate->damping_coeff_, dim);
-    } else if (gate->name_ == "PL") {
+    } else if (gate->name_ == cPL) {
         qs_policy_t::ApplyPauli(qs, gate->obj_qubits_, gate->probs_, dim);
     } else if (gate->kraus_operator_set_.size() != 0) {
         qs_policy_t::ApplyKraus(qs, gate->obj_qubits_, gate->kraus_operator_set_, dim);
-    } else if (gate->name_ == "hADC") {
+    } else if (gate->name_ == hcAD) {
         qs_policy_t::ApplyHermitianAmplitudeDamping(qs, gate->obj_qubits_, gate->damping_coeff_, dim);
     } else {
         throw std::runtime_error("This noise channel not implemented.");
@@ -336,11 +322,10 @@ template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::GetExpectationReversibleWithGrad(const Hamiltonian<calc_type>& ham,
                                                                         const circuit_t& circ,
                                                                         const circuit_t& herm_circ,
-                                                                        const ParameterResolver<calc_type>& pr,
-                                                                        const MST<size_t>& p_map) -> py_qs_datas_t {
+                                                                        const ParameterResolver<calc_type>& pr) -> py_qs_datas_t {
     // auto timer = Timer();
     // timer.Start("First part");
-    py_qs_datas_t f_and_g(1 + p_map.size(), 0);
+    py_qs_datas_t f_and_g(1 + pr.data_.size(), 0);
     derived_t sim_qs = *this;
     sim_qs.ApplyCircuit(circ, pr);
     f_and_g[0] = qs_policy_t::GetExpectation(sim_qs.qs, ham.ham_, dim);
@@ -353,7 +338,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationReversibleWithGrad(const Ha
             auto gi = ExpectDiffGate(sim_qs.qs, sim_ham.qs, g, pr, dim);
             // timer.End("ExpectDiffGate");
             for (auto& it : g->params_.GetRequiresGradParameters()) {
-                f_and_g[1 + p_map.at(it)] += 2 * std::real(gi) * g->params_.data_.at(it);
+                f_and_g[1 + pr.data_.at(it)] += 2 * std::real(gi) * g->params_.data_.at(it);
             }
         }
         sim_ham.ApplyGate(g, pr);
@@ -361,7 +346,6 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationReversibleWithGrad(const Ha
     }
     // timer.End("Second part");
     // timer.Analyze();
-    qs_policy_t::FreeState(ham_matrix);
     return f_and_g;
 }
 
@@ -417,7 +401,8 @@ VT<unsigned> DensityMatrixState<qs_policy_t_>::Sampling(const circuit_t& circ, c
     std::uniform_real_distribution<double> dist(1.0, (1 << 20) * 1.0);
     std::function<double()> rng = std::bind(dist, std::ref(rnd_eng));
     for (size_t i = 0; i < shots; i++) {
-        auto sim = derived_t(n_qubits, static_cast<unsigned>(rng()), qs);
+        derived_t sim{n_qubits, static_cast<unsigned>(rng())};
+        qs_policy_t::CopyQS(sim.qs, qs, dim);
         auto res0 = sim.ApplyCircuit(circ, pr);
         VT<unsigned> res1(key_map.size());
         for (const auto& [name, val] : key_map) {

@@ -27,7 +27,7 @@
 
 namespace mindquantum {
 template <typename coeff_t>
-class ParameterResolver;
+struct ParameterResolver;
 
 enum class RealCastType { REAL, IMAG };
 enum class VType { Float, Double, Complex64, Complex128, Invalid };
