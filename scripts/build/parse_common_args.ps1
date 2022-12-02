@@ -267,7 +267,7 @@ if ([bool]$Venv) {
 }
 
 if (([bool]$Ninja)) {
-    Set-Value 'cmake_generator' 'Ninja'
+    Set-Value 'cmake_generator' 'Ninja Multi-Config'
 }
 elseif ($n_jobs -eq -1){
     $n_jobs = $n_jobs_default

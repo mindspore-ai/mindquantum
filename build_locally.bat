@@ -370,7 +370,7 @@ if !force_local_pkgs! == 1 (
 if NOT "!prefix_dir!" == "" set cmake_args=!cmake_args! -DCMAKE_INSTALL_PREFIX:FILEPATH=!prefix_dir!
 
 if !ninja! == 1 (
-  set cmake_args=!cmake_args! -GNinja
+  set cmake_args=!cmake_args! -G"Ninja Multi-Config"
 ) else (
   if !n_jobs! == -1 set n_jobs=!n_jobs_default!
 )

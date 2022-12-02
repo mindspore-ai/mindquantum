@@ -381,7 +381,7 @@ fi
 # Build the wheels
 
 env_vars=()
-if [ "$cmake_generator" == "Ninja" ]; then
+if [[ "$cmake_generator" == "Ninja" || "$cmake_generator" == "Ninja Multi-Config" ]]; then
     env_vars+=(MQ_USE_NINJA=1)
 fi
 

@@ -393,7 +393,7 @@ if !cmake_make_silent! == 0 (
 )
 
 if !ninja! == 1 (
-   set args=!args! -C--global-option=-GNinja
+   set args=!args! -C--global-option=-G"Ninja Multi-Config"
 ) else (
    if !n_jobs! == -1 set n_jobs=!n_jobs_default!
 )
