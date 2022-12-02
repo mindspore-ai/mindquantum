@@ -53,6 +53,7 @@ repos:
     rev: v1.0.0
     hooks:
       - id: doc8
+        alias: doc8-lint
         require_serial: false
         additional_dependencies: [tomli]
         args: [--ignore-path-errors, docs/api_python/mindquantum.algorithm.nisq.uccsd0_singlet_generator.rst;D001,

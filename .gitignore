@@ -1,34 +1,57 @@
-/tmp/
+# Python temp files
 *.coverage
-/.idea
-/.vscode
-.vscode
-__pycache__/
+*.pdb
 *.pyc
 *.pyd
+.eggs
+.ipynb_checkpoints
+requirements.txt
+
+# Python temp directories
+*.egg-info/
+.pytest_cache/
+__pycache__/
+
+# Local editor config
+/.idea
+/.vscode
+
+# Binary files
 *.dll
-*.so
 *.dylib
-*.so.*
+*.gch
 *.o
 *.out
-*.gch
-/build
-*.egg-info
-output
-local_script/
-.ipynb_checkpoints
-somas_meta
-analyze_fail.dat
-requirements.txt
-.eggs
-cmake-build-debug
-venv
-docs/doxygen
-Testing
-# clangd local cache directory
-.cache
- stat
+*.so
+*.so.*
+
+# Python venv
+/venv/
+
+# Local build directories
+/build/
+/clang*/
+/cmake-build-debug/
+/docs/build/
+/gcc*/
+/install/
+/ninja/
+
+# Temp or local directories
+/.cache
+/dist/
+/docs/doxygen
+/local_script/
+/output/
+/tmp/
+Testing/
+somas_meta/
+stat/
+
+# Misc. temp or local files
+/.dir-locals.el
+/analyze_fail.dat
 /build.conf
-docs/build
-dist
+/settings.json
+/test*.*
+/tmp*

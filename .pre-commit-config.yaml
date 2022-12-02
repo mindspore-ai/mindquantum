@@ -56,6 +56,7 @@ repos:
     rev: v1.0.0
     hooks:
       - id: doc8
+        alias: doc8-lint
         require_serial: false
         additional_dependencies: [tomli]
         args: [--ignore-path-errors, docs/api_python/mindquantum.algorithm.nisq.uccsd0_singlet_generator.rst;D001,
@@ -156,6 +157,7 @@ repos:
     rev: '0.48'
     hooks:
       - id: check-manifest
+        stages: [manual]
         additional_dependencies: ['pybind11>=2.9.2']
 
   - repo: https://github.com/Takishima/cmake-pre-commit-hooks/
