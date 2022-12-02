@@ -1542,7 +1542,7 @@ Cannot specify either of <INSTALL_INCS> or <INSTALL_LIBS> with either of <INSTAL
       ${${pkg_name}_SOURCE_DIR}
       CACHE FILEPATH INTERNAL)
 
-  apply_patches("${${pkg_name}_SOURCE_DIR}" ${PKG_PATCHES})
+  apply_patches(WORKING_DIRECTORY "${${pkg_name}_SOURCE_DIR}" TRY_GIT_RESET ${PKG_PATCHES})
 
   file(
     LOCK

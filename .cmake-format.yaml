@@ -43,6 +43,13 @@ parse:
         nargs: 1+
       kwargs:
         SEARCH_NAME: 1
+    apply_patches:
+      pargs:
+        nargs: +
+        flags:
+          - TRY_GIT_RESET
+      kwargs:
+        WORKING_DIRECTORY: 1
     define_compiler_linker_flags:
       pargs:
         nargs: 2
