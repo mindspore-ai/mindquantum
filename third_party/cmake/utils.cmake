@@ -261,41 +261,6 @@ endfunction()
 # ==============================================================================
 # Some helper functions
 
-# Wrapper over execute_process()
-function(__exec_cmd)
-  set(options)
-  set(oneValueArgs WORKING_DIRECTORY)
-  set(multiValueArgs COMMAND)
-
-  cmake_parse_arguments(EXEC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-  # cmake-format: off
-  debug_print(
-    STATUS "  execute_process("
-    "      COMMAND ${EXEC_COMMAND}"
-    "      WORKING_DIRECTORY ${EXEC_WORKING_DIRECTORY}"
-    "      ...)"
-  )
-  if(APPLE)
-    debug_print(STATUS "   MACOSX_DEPLOYMENT_TARGET = $ENV{MACOSX_DEPLOYMENT_TARGET}")
-  endif()
-  execute_process(
-    COMMAND ${EXEC_COMMAND}
-    WORKING_DIRECTORY ${EXEC_WORKING_DIRECTORY}
-    OUTPUT_VARIABLE _stdout
-    ERROR_VARIABLE _stderr
-    RESULTS_VARIABLE _results_out
-    RESULT_VARIABLE RESULT
-  )
-  # cmake-format: on
-  if(NOT RESULT EQUAL "0")
-    debug_print(SEND_ERROR "STDOUT:\n${_stdout}" "STDERR:\n${_stderr}" "RESULTS OUT:\n${_results_out}")
-    message(FATAL_ERROR "error! when ${EXEC_COMMAND} in ${EXEC_WORKING_DIRECTORY}")
-  endif()
-endfunction()
-
-# ------------------------------------------------------------------------------
-
 # Function to check that patches are valid
 function(__check_patches pkg_patches)
   # check patches
