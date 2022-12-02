@@ -537,7 +537,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneMulti(
                 for (int j = start; j < end; j++) {
                     auto gi = ExpectDiffGate(sim_qs.qs, sim_hams[j - start].qs, circ[n], dim);
                     for (auto& it : circ[n]->params_.GetRequiresGradParameters()) {
-                        f_and_g[j][1 + p_map.at(it)] += 2 * std::real(gi) * -circ[n]->params_.data_.at(it);
+                        f_and_g[j][1 + p_map.at(it)] += 2 * std::real(gi) * circ[n]->params_.data_.at(it);
                     }
                 }
                 sim_qs.CopyQS(this->qs);
