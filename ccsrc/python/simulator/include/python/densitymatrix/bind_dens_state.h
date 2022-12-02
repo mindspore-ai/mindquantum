@@ -22,10 +22,9 @@
 #include <pybind11/stl.h>
 
 #include "core/parameter_resolver.hpp"
-#include "simulator/types.hpp"
-
-#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 #include "simulator/densitymatrix/densitymatrix_state.hpp"
+#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
+#include "simulator/types.hpp"
 
 template <typename sim_t>
 auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLINT
@@ -46,8 +45,8 @@ auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLIN
         .def("copy", [](const sim_t& sim) { return sim; })
         .def("sampling", &sim_t::Sampling)
         .def("get_expectation", &sim_t::GetExpectation)
-        .def("get_expectation_with_grad_reversible", &sim_t::GetExpectationReversibleWithGrad)
-        .def("get_expectation_with_grad_nonreversible", &sim_t::GetExpectationNonReversibleWithGrad);
+        .def("get_expectation_with_grad_multi_multi", &sim_t::GetExpectationWithReversibleGradMultiMulti)
+        .def("get_expectation_with_noise_grad_multi_multi", &sim_t::GetExpectationWithNoiseGradMultiMulti);
 }
 
 #endif

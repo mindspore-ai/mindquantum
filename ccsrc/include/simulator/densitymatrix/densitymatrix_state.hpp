@@ -102,17 +102,36 @@ class DensityMatrixState {
     auto ApplyMeasure(const std::shared_ptr<BasicGate<calc_type>>& gate);
 
     py_qs_data_t ExpectDiffGate(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
-                                const std::shared_ptr<BasicGate<calc_type>>& gate,
-                                const ParameterResolver<calc_type>& pr, index_t dim);
+                                const std::shared_ptr<BasicGate<calc_type>>& gate, index_t dim);
 
     py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham);
 
-    py_qs_datas_t GetExpectationReversibleWithGrad(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
-                                                   const circuit_t& herm_circ, const ParameterResolver<calc_type>& pr);
+    py_qs_datas_t GetExpectationWithReversibleGradOneOne(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
+                                                         const circuit_t& herm_circ, const VVT<calc_type>& enc_data,
+                                                         const VT<calc_type>& ans_data, const VS& enc_name,
+                                                         const VS& ans_name);
 
-    py_qs_datas_t GetExpectationNonReversibleWithGrad(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
-                                                      const circuit_t& herm_circ,
-                                                      const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map);
+    VT<py_qs_datas_t> GetExpectationWithReversibleGradOneMulti(
+        const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
+        const circuit_t& herm_circ, const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map, int n_thread);
+
+    VT<VT<py_qs_datas_t>> GetExpectationWithReversibleGradMultiMulti(
+        const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
+        const circuit_t& herm_circ, const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name,
+        const VS& ans_name, size_t batch_threads, size_t mea_threads);
+
+    py_qs_datas_t GetExpectationWithNoiseGradOneOne(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
+                                                    const circuit_t& herm_circ, const ParameterResolver<calc_type>& pr,
+                                                    const MST<size_t>& p_map);
+
+    VT<py_qs_datas_t> GetExpectationWithNoiseGradOneMulti(
+        const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
+        const circuit_t& herm_circ, const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map, int n_thread);
+
+    VT<VT<py_qs_datas_t>> GetExpectationWithNoiseGradMultiMulti(
+        const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
+        const circuit_t& herm_circ, const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name,
+        const VS& ans_name, size_t batch_threads, size_t mea_threads);
 
     VT<unsigned> Sampling(const circuit_t& circ, const ParameterResolver<calc_type>& pr, size_t shots,
                           const MST<size_t>& key_map, unsigned int seed);

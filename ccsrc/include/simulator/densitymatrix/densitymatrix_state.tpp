@@ -270,32 +270,30 @@ auto DensityMatrixState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicG
 
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
-                                                      const std::shared_ptr<BasicGate<calc_type>>& gate,
-                                                      const ParameterResolver<calc_type>& pr, index_t dim)
+                                                      const std::shared_ptr<BasicGate<calc_type>>& gate, index_t dim)
     -> py_qs_data_t {
     auto name = gate->name_;
-    auto val = gate->params_.Combination(pr).const_value;
 
     if (name == gRX) {
-        return qs_policy_t::ExpectDiffRX(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        return qs_policy_t::ExpectDiffRX(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
     }
     if (name == gRY) {
-        return qs_policy_t::ExpectDiffRY(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        return qs_policy_t::ExpectDiffRY(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
     }
     if (name == gRZ) {
-        return qs_policy_t::ExpectDiffRZ(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        return qs_policy_t::ExpectDiffRZ(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
     }
     if (name == gXX) {
-        return qs_policy_t::ExpectDiffXX(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        return qs_policy_t::ExpectDiffXX(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
     }
     if (name == gZZ) {
-        return qs_policy_t::ExpectDiffZZ(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        return qs_policy_t::ExpectDiffZZ(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
     }
     if (name == gYY) {
-        return qs_policy_t::ExpectDiffYY(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        return qs_policy_t::ExpectDiffYY(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
     }
     if (name == gPS) {
-        return qs_policy_t::ExpectDiffPS(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        return qs_policy_t::ExpectDiffPS(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
     }
     throw std::invalid_argument("gate " + name + " not implement.");
 }
@@ -319,44 +317,154 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_typ
 }
 
 template <typename qs_policy_t_>
-auto DensityMatrixState<qs_policy_t_>::GetExpectationReversibleWithGrad(const Hamiltonian<calc_type>& ham,
-                                                                        const circuit_t& circ,
-                                                                        const circuit_t& herm_circ,
-                                                                        const ParameterResolver<calc_type>& pr) -> py_qs_datas_t {
-    // auto timer = Timer();
-    // timer.Start("First part");
-    py_qs_datas_t f_and_g(1 + pr.data_.size(), 0);
+auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneOne(
+    const Hamiltonian<calc_type>& ham, const circuit_t& circ, const circuit_t& herm_circ,
+    const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name, const VS& ans_name)
+    -> py_qs_datas_t {
+    MST<size_t> p_map;
+    for (size_t i = 0; i < enc_name.size(); i++) {
+        p_map[enc_name[i]] = i;
+    }
+    for (size_t i = 0; i < ans_name.size(); i++) {
+        p_map[ans_name[i]] = i + enc_name.size();
+    }
+    ParameterResolver<calc_type> pr = ParameterResolver<calc_type>();
+    pr.SetItems(enc_name, enc_data[0]);
+    pr.SetItems(ans_name, ans_data);
+    py_qs_datas_t f_and_g(1 + p_map.size(), 0);
     derived_t sim_qs = *this;
     sim_qs.ApplyCircuit(circ, pr);
     f_and_g[0] = qs_policy_t::GetExpectation(sim_qs.qs, ham.ham_, dim);
     auto ham_matrix = qs_policy_t::HamiltonianMatrix(ham.ham_, dim);
     derived_t sim_ham{ham_matrix, n_qubits, seed};
-    // timer.EndAndStartOther("First part", "Second part");
     for (const auto& g : herm_circ) {
         if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
-            // timer.Start("ExpectDiffGate");
-            auto gi = ExpectDiffGate(sim_qs.qs, sim_ham.qs, g, pr, dim);
-            // timer.End("ExpectDiffGate");
+            auto gi = ExpectDiffGate(sim_qs.qs, sim_ham.qs, g, dim);
             for (auto& it : g->params_.GetRequiresGradParameters()) {
-                f_and_g[1 + pr.data_.at(it)] += 2 * std::real(gi) * g->params_.data_.at(it);
+                f_and_g[1 + p_map.at(it)] += 2 * std::real(gi) * -g->params_.data_.at(it);
             }
         }
         sim_ham.ApplyGate(g, pr);
         sim_qs.ApplyGate(g, pr);
     }
-    // timer.End("Second part");
-    // timer.Analyze();
     return f_and_g;
 }
 
 template <typename qs_policy_t_>
-auto DensityMatrixState<qs_policy_t_>::GetExpectationNonReversibleWithGrad(const Hamiltonian<calc_type>& ham,
-                                                                           const circuit_t& circ,
-                                                                           const circuit_t& herm_circ,
-                                                                           const ParameterResolver<calc_type>& pr,
-                                                                           const MST<size_t>& p_map) -> py_qs_datas_t {
-    // auto timer = Timer();
-    // timer.Start("First part");
+auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneMulti(
+    const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ, const circuit_t& herm_circ,
+    const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map, int n_thread) -> VT<py_qs_datas_t> {
+    auto n_hams = hams.size();
+    int max_thread = 15;
+    if (n_thread > max_thread) {
+        n_thread = max_thread;
+    }
+    if (n_thread > static_cast<int>(n_hams)) {
+        n_thread = n_hams;
+    }
+    VT<py_qs_datas_t> f_and_g(n_hams, py_qs_datas_t((1 + p_map.size()), 0));
+    derived_t sim_qs = *this;
+    sim_qs.ApplyCircuit(circ, pr);
+    int n_group = n_hams / n_thread;
+    if (n_hams % n_thread) {
+        n_group += 1;
+    }
+    for (int i = 0; i < n_group; i++) {
+        int start = i * n_thread;
+        int end = (i + 1) * n_thread;
+        if (end > static_cast<int>(n_hams)) {
+            end = n_hams;
+        }
+        std::vector<derived_t> sim_hams(end - start);
+        for (int j = start; j < end; j++) {
+            f_and_g[j][0] = qs_policy_t::GetExpectation(sim_qs.qs, hams[j]->ham_, dim);
+            auto ham_matrix = qs_policy_t::HamiltonianMatrix(hams[j]->ham_, dim);
+            sim_hams[j - start] = std::move(derived_t{ham_matrix, n_qubits, seed});
+        }
+        for (const auto& g : herm_circ) {
+            if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
+                for (int j = start; j < end; j++) {
+                    auto gi = ExpectDiffGate(sim_qs.qs, sim_hams[j - start].qs, g, dim);
+                    for (auto& it : g->params_.GetRequiresGradParameters()) {
+                        f_and_g[j][1 + p_map.at(it)] += 2 * std::real(gi) * -g->params_.data_.at(it);
+                    }
+                }
+            }
+            for (int j = start; j < end; j++) {
+                sim_hams[j - start].ApplyGate(g, pr);
+            }
+            sim_qs.ApplyGate(g, pr);
+        }
+    }
+    return f_and_g;
+}
+
+template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradMultiMulti(
+    const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ, const circuit_t& herm_circ,
+    const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name, const VS& ans_name,
+    size_t batch_threads, size_t mea_threads) -> VT<VT<py_qs_datas_t>> {
+    auto n_hams = hams.size();
+    auto n_prs = enc_data.size();
+    auto n_params = enc_name.size() + ans_name.size();
+    VT<VT<py_qs_datas_t>> output;
+    for (size_t i = 0; i < n_prs; i++) {
+        output.push_back({});
+        for (size_t j = 0; j < n_hams; j++) {
+            output[i].push_back({});
+            for (size_t k = 0; k < n_params + 1; k++) {
+                output[i][j].push_back({0, 0});
+            }
+        }
+    }
+    MST<size_t> p_map;
+    for (size_t i = 0; i < enc_name.size(); i++) {
+        p_map[enc_name[i]] = i;
+    }
+    for (size_t i = 0; i < ans_name.size(); i++) {
+        p_map[ans_name[i]] = i + enc_name.size();
+    }
+    if (n_prs == 1) {
+        ParameterResolver<calc_type> pr = ParameterResolver<calc_type>();
+        pr.SetItems(enc_name, enc_data[0]);
+        pr.SetItems(ans_name, ans_data);
+        output[0] = GetExpectationWithReversibleGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
+    } else {
+        std::vector<std::thread> tasks;
+        tasks.reserve(batch_threads);
+        size_t end = 0;
+        size_t offset = n_prs / batch_threads;
+        size_t left = n_prs % batch_threads;
+        for (size_t i = 0; i < batch_threads; ++i) {
+            size_t start = end;
+            end = start + offset;
+            if (i < left) {
+                end += 1;
+            }
+            auto task = [&, start, end]() {
+                for (size_t n = start; n < end; n++) {
+                    ParameterResolver<calc_type> pr = ParameterResolver<calc_type>();
+                    pr.SetItems(enc_name, enc_data[n]);
+                    pr.SetItems(ans_name, ans_data);
+                    auto f_g = GetExpectationWithReversibleGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
+                    output[n] = f_g;
+                }
+            };
+            tasks.emplace_back(task);
+        }
+        for (auto& t : tasks) {
+            t.join();
+        }
+    }
+    return output;
+}
+
+template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneOne(const Hamiltonian<calc_type>& ham,
+                                                                         const circuit_t& circ,
+                                                                         const circuit_t& herm_circ,
+                                                                         const ParameterResolver<calc_type>& pr,
+                                                                         const MST<size_t>& p_map) -> py_qs_datas_t {
     py_qs_datas_t f_and_g(1 + p_map.size(), 0);
     derived_t sim_qs = *this;
     sim_qs.ApplyCircuit(circ, pr);
@@ -364,7 +472,6 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationNonReversibleWithGrad(const
     sim_qs.CopyQS(this->qs);
     auto ham_matrix = qs_policy_t::HamiltonianMatrix(ham.ham_, dim);
     derived_t sim_ham{ham_matrix, n_qubits, seed};
-    // timer.EndAndStartOther("First part", "Second part");
     if (circ.size() != herm_circ.size()) {
         std::runtime_error("In density matrix mode, circ and herm_circ must be the same size.");
     }
@@ -372,12 +479,10 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationNonReversibleWithGrad(const
     for (index_t i = 0; i < herm_circ.size(); i++) {
         --n;
         if (circ[n]->params_.data_.size() != circ[n]->params_.no_grad_parameters_.size()) {
-            // timer.Start("ExpectDiffGate");
             for (index_t j = 0; j <= n; j++) {
                 sim_qs.ApplyGate(circ[j], pr);
             }
-            auto gi = ExpectDiffGate(sim_qs.qs, sim_ham.qs, circ[n], pr, dim);
-            // timer.End("ExpectDiffGate");
+            auto gi = ExpectDiffGate(sim_qs.qs, sim_ham.qs, circ[n], dim);
             for (auto& it : circ[n]->params_.GetRequiresGradParameters()) {
                 f_and_g[1 + p_map.at(it)] += 2 * std::real(gi) * circ[n]->params_.data_.at(it);
             }
@@ -385,11 +490,126 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationNonReversibleWithGrad(const
         }
         sim_ham.ApplyGate(herm_circ[i], pr);
     }
-
-    // timer.End("Second part");
-    // timer.Analyze();
-    qs_policy_t::FreeState(ham_matrix);
     return f_and_g;
+}
+
+template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneMulti(
+    const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ, const circuit_t& herm_circ,
+    const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map, int n_thread) -> VT<py_qs_datas_t> {
+    auto n_hams = hams.size();
+    int max_thread = 15;
+    if (n_thread > max_thread) {
+        n_thread = max_thread;
+    }
+    if (n_thread > static_cast<int>(n_hams)) {
+        n_thread = n_hams;
+    }
+    VT<py_qs_datas_t> f_and_g(n_hams, py_qs_datas_t((1 + p_map.size()), 0));
+    derived_t sim_qs = *this;
+    sim_qs.ApplyCircuit(circ, pr);
+    int n_group = n_hams / n_thread;
+    if (n_hams % n_thread) {
+        n_group += 1;
+    }
+    for (int i = 0; i < n_group; i++) {
+        int start = i * n_thread;
+        int end = (i + 1) * n_thread;
+        if (end > static_cast<int>(n_hams)) {
+            end = n_hams;
+        }
+        std::vector<derived_t> sim_hams(end - start);
+        for (int j = start; j < end; j++) {
+            f_and_g[j][0] = qs_policy_t::GetExpectation(sim_qs.qs, hams[j]->ham_, dim);
+            auto ham_matrix = qs_policy_t::HamiltonianMatrix(hams[j]->ham_, dim);
+            sim_hams[j - start] = std::move(derived_t{ham_matrix, n_qubits, seed});
+        }
+        sim_qs.CopyQS(this->qs);
+
+        if (circ.size() != herm_circ.size()) {
+            std::runtime_error("In density matrix mode, circ and herm_circ must be the same size.");
+        }
+        index_t n = circ.size();
+        for (index_t a = 0; a < herm_circ.size(); a++) {
+            --n;
+            if (circ[n]->params_.data_.size() != circ[n]->params_.no_grad_parameters_.size()) {
+                for (index_t b = 0; b <= n; b++) {
+                    sim_qs.ApplyGate(circ[b], pr);
+                }
+                for (int j = start; j < end; j++) {
+                    auto gi = ExpectDiffGate(sim_qs.qs, sim_hams[j - start].qs, circ[n], dim);
+                    for (auto& it : circ[n]->params_.GetRequiresGradParameters()) {
+                        f_and_g[j][1 + p_map.at(it)] += 2 * std::real(gi) * -circ[n]->params_.data_.at(it);
+                    }
+                }
+                sim_qs.CopyQS(this->qs);
+            }
+            for (int j = start; j < end; j++) {
+                sim_hams[j - start].ApplyGate(herm_circ[a], pr);
+            }
+        }
+    }
+    return f_and_g;
+}
+
+template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradMultiMulti(
+    const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ, const circuit_t& herm_circ,
+    const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name, const VS& ans_name,
+    size_t batch_threads, size_t mea_threads) -> VT<VT<py_qs_datas_t>> {
+    auto n_hams = hams.size();
+    auto n_prs = enc_data.size();
+    auto n_params = enc_name.size() + ans_name.size();
+    VT<VT<py_qs_datas_t>> output;
+    for (size_t i = 0; i < n_prs; i++) {
+        output.push_back({});
+        for (size_t j = 0; j < n_hams; j++) {
+            output[i].push_back({});
+            for (size_t k = 0; k < n_params + 1; k++) {
+                output[i][j].push_back({0, 0});
+            }
+        }
+    }
+    MST<size_t> p_map;
+    for (size_t i = 0; i < enc_name.size(); i++) {
+        p_map[enc_name[i]] = i;
+    }
+    for (size_t i = 0; i < ans_name.size(); i++) {
+        p_map[ans_name[i]] = i + enc_name.size();
+    }
+    if (n_prs == 1) {
+        ParameterResolver<calc_type> pr = ParameterResolver<calc_type>();
+        pr.SetItems(enc_name, enc_data[0]);
+        pr.SetItems(ans_name, ans_data);
+        output[0] = GetExpectationWithNoiseGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
+    } else {
+        std::vector<std::thread> tasks;
+        tasks.reserve(batch_threads);
+        size_t end = 0;
+        size_t offset = n_prs / batch_threads;
+        size_t left = n_prs % batch_threads;
+        for (size_t i = 0; i < batch_threads; ++i) {
+            size_t start = end;
+            end = start + offset;
+            if (i < left) {
+                end += 1;
+            }
+            auto task = [&, start, end]() {
+                for (size_t n = start; n < end; n++) {
+                    ParameterResolver<calc_type> pr = ParameterResolver<calc_type>();
+                    pr.SetItems(enc_name, enc_data[n]);
+                    pr.SetItems(ans_name, ans_data);
+                    auto f_g = GetExpectationWithReversibleGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
+                    output[n] = f_g;
+                }
+            };
+            tasks.emplace_back(task);
+        }
+        for (auto& t : tasks) {
+            t.join();
+        }
+    }
+    return output;
 }
 
 template <typename qs_policy_t_>

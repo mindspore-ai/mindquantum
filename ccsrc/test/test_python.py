@@ -34,12 +34,10 @@ def test_gate():
     circ += T.hermitian().on(0)
     circ += UN(H, circ.n_qubits)
     circ += T.hermitian().on(1,2)
-
     circ += UN(H, circ.n_qubits)
     circ += PhaseShift(1).on(0)
     circ += UN(H, circ.n_qubits)
     circ += PhaseShift(1).on(1,2)
-
     circ += UN(H, circ.n_qubits)
     circ += XX(1).on([0,1])
     circ += UN(H, circ.n_qubits)
@@ -60,7 +58,6 @@ def test_gate():
     circ += ISWAP.on([1,2])
     circ += UN(H, circ.n_qubits)
     circ += ISWAP.on([1,0], 2)
-    
     circ += UN(H, circ.n_qubits)
     circ += RX(1).on(0)
     circ += UN(H, circ.n_qubits)
@@ -74,19 +71,12 @@ def test_gate():
     circ += UN(H, circ.n_qubits)
     circ += RZ(1).on(0, 1)
     
-
     m_sim = Simulator('mqmatrix', 3)
     m_sim.set_qs(np.array([1,2,3,4, 5, 6, 7, 8]))
-    # m_sim = Simulator('mqmatrix', 2)
-    # m_sim.set_qs(np.array([1,2,3,4]))
-
     m_sim.apply_circuit(circ)
     qs0 = m_sim.get_qs()
-
     v_sim = Simulator('mqvector', 3)
     v_sim.set_qs(np.array([1,2,3,4,5, 6, 7, 8]))
-    # v_sim = Simulator('mqvector', 2)
-    # v_sim.set_qs(np.array([1,2,3,4]))
     v_sim.apply_circuit(circ)
     vec = v_sim.get_qs()
     qs1 = np.outer(vec, vec.conj())
@@ -98,8 +88,6 @@ def test_gate():
     
 def test_measure():
     circ = random_circuit(3,100)
-    # circ += H.on(0)
-    # circ += H.on(1)
     circ.measure(0)
     circ.measure(1)
     m_sim = Simulator('mqmatrix', 3, seed=42)
@@ -175,7 +163,6 @@ def test_channel():
     m_circ += PauliChannel(0.1,0,0).on(0)
     m_circ += KrausChannel('k',[kmat0,kmat1]).on(1)
     m_sim = Simulator('mqmatrix', 3,seed=42)
-    # m_sim.set_qs(np.array([1,2,3,4,5,6,7,8]))
     m_sim.apply_circuit(m_circ)
     m_qs = m_sim.get_qs()
     # print(p_qs)
@@ -211,51 +198,71 @@ def test_hamiltonian():
 def test_expectation():
     ham = Hamiltonian(QubitOperator('X0 Y2', 0.5) + 0.6 * QubitOperator('X0 Z1'))
     circ = random_circuit(2, 100)
-    
     m_sim = Simulator('mqmatrix', 3)
     m_sim.set_qs(np.array([1,2,3,4,5,6,7,8]))
     v_sim = Simulator('mqvector', 3)
     v_sim.set_qs(np.array([1,2,3,4,5,6,7,8]))
-    
     m_sim.apply_circuit(circ)
     m_ept = m_sim.get_expectation(ham)
     v_sim.apply_circuit(circ)
     v_ept = v_sim.get_expectation(ham)
-    
-    print(m_ept)
-    print(v_ept)
+    # print(m_ept)
+    # print(v_ept)
     is_equal = np.allclose(m_ept,v_ept)
     print('test_expectation:', is_equal)
     
-def test_grad():
-    ham = Hamiltonian(QubitOperator('X0 Y1', 0.5))
+def test_reversible_grad():
+    ham = Hamiltonian(QubitOperator('X0', 2)+QubitOperator('X1', 1))
+    ham1 = Hamiltonian(QubitOperator('Y1', 1))
     circ = Circuit()
-    circ += RX('a').on(0)
+    circ += H.on(0)
+    circ += H.on(1)
+    circ += PhaseShift(2).on(2)
+    circ += H.on(3)
+    circ += XX('a').on([0,1])
+    circ += S.on(3)
+    circ += RX({'a':0.2,'b':0.5}).on(1)
+    circ += X.on(1,0)
     circ += RY('b').on(0)
+    circ += H.on(2,1)
+    circ += RZ(1).on(3)
+    circ += RZ('b').on(3)
+    circ += RX(1).on(2)
+    circ2 = Circuit()
+    circ2 += RX('c').on(2)
+    circ2 += H.on(3,0)
+    circ2 += RY('d').on(0)
+    circ2 += T.on(1)
+    circ2 += RZ('d').on(1)
+    circ2 += X.on(0,2)
+    circ2 += YY('c').on([2,1])
+    circ2 += ZZ('d').on([3,2])
+    circ2 = as_encoder(circ2)
+    circ = as_ansatz(circ)
+    circ = circ2 + circ
+    m_sim = Simulator('mqmatrix', 4)
+    v_sim = Simulator('mqvector', 4)
+    m_grad_ops = m_sim.get_expectation_with_grad([ham,ham1], circ)
+    v_grad_ops = v_sim.get_expectation_with_grad([ham,ham1], circ)
+    mf, mg1, mg2 = m_grad_ops(np.array([[2,5],[3,0.2]]),np.array([1,2]))
+    vf, vg1, vg2 = v_grad_ops(np.array([[2,5],[3,0.2]]),np.array([1,2]))
+    is_equal = np.allclose(mf,vf) & np.allclose(mg1,vg1) & np.allclose(mg2,vg2)
+    print('test_expectation_with_grad:', is_equal)
     
-    pr = ParameterResolver({'a':1,'b':2},1)
-    print(type(dict(pr.items())))
-    
-    m_sim = Simulator('mqmatrix', 2)
-    m_sim.set_qs(np.array([1,2,3,4]))
-    v_sim = Simulator('mqvector', 2)
-    v_sim.set_qs(np.array([1,2,3,4]))
-    
-    m_fg = m_sim.get_expectationd_with_grad(ham, circ, pr)
-    print(m_fg)
-    v_grad_ops = v_sim.get_expectation_with_grad(ham, circ)
-    
-    # m_fg = m_grad_ops(np.array([]))
-    v_fg = v_grad_ops(np.array([1,2]))
-    
-    print(m_fg)
-    print()
-    print(v_fg)
-    # is_equal = np.allclose(m_fg,v_fg)
-    # print('test_expectation_with_grad:', is_equal)
+    # test noise grad
+    noise_circ = circ.with_noise(AmplitudeDampingChannel(0))
+    noise_grad_ops = m_sim.get_expectation_with_grad([ham,ham1], noise_circ)
+    nf, ng1, ng2 = noise_grad_ops(np.array([[2,5],[3,0.2]]),np.array([1,2]))
+    n_is_equal = np.allclose(nf,vf) & np.allclose(ng1,vg1) & np.allclose(ng2,vg2)
+    print('test_expectation_with_noise_grad:', n_is_equal)
     
 if __name__=='__main__':
-    test_gate()
+    # test_gate()
+    # test_channel()
+    # test_expectation()
+    # test_measure()
+    # test_sampling()
+    test_reversible_grad()
     
 
     

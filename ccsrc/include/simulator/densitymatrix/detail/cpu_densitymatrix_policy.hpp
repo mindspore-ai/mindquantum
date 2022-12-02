@@ -130,22 +130,20 @@ struct CPUDensityMatrixPolicyBase {
 
     // gate_expec
     // ========================================================================================================
-    static qs_data_t ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                 const qbits_t& ctrls, const matrix_t& m, index_t dim);
     static qs_data_t ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
+                                  index_t dim);
     static qs_data_t ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
+                                  index_t dim);
     static qs_data_t ExpectDiffRZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
+                                  index_t dim);
     static qs_data_t ExpectDiffXX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
+                                  index_t dim);
     static qs_data_t ExpectDiffYY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
+                                  index_t dim);
     static qs_data_t ExpectDiffZZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
+                                  index_t dim);
     static qs_data_t ExpectDiffPS(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
+                                  index_t dim);
 };
 }  // namespace mindquantum::sim::densitymatrix::detail
 
