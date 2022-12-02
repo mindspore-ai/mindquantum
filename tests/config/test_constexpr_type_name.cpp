@@ -51,7 +51,7 @@ static_assert(get_type_name<sub::D<double>>() == "mindquantum::sub::D<double>"sv
 
 #if (defined __clang__) && (MQ_CLANG_MAJOR > 10)
 static_assert(get_type_name<sub::E<sub::D<int>>>() == "mindquantum::sub::E<mindquantum::sub::D<int>>"sv);
-#elif defined _MSC_VER
+#elif (defined _MSC_VER) && !(defined __clang__)
 static_assert(get_type_name<sub::E<sub::D<int>>>() == "mindquantum::sub::E<class mindquantum::sub::D<int> >"sv);
 #else
 static_assert(get_type_name<sub::E<sub::D<int>>>() == "mindquantum::sub::E<mindquantum::sub::D<int> >"sv);
