@@ -46,7 +46,7 @@ else()
       -DPython_VERSION=${Python_VERSION})
 
   if(MSVC)
-    set(tweedledum_CXXFLAGS "/Zc:__cplusplus /EHsc")
+    set(tweedledum_CXXFLAGS "/Zc:__cplusplus /EHsc /D_USE_MATH_DEFINES /D_CRT_SECURE_NO_WARNINGS /DWIN32_LEAN_AND_MEAN")
     if(ENABLE_ITERATOR_DEBUG)
       set(tweedledum_CFLAGS "/D_ITERATOR_DEBUG_LEVEL=${MQ_ITERATOR_DEBUG}")
       set(tweedledum_CXXFLAGS "${tweedledum_CXXFLAGS} /D_ITERATOR_DEBUG_LEVEL=${MQ_ITERATOR_DEBUG}")

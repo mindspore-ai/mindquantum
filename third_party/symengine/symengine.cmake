@@ -38,7 +38,7 @@ elseif(cereal_DIR)
 endif()
 
 if(MSVC)
-  set(SymEngine_CXXFLAGS "/Zc:__cplusplus /EHsc")
+  set(SymEngine_CXXFLAGS "/Zc:__cplusplus /EHsc /D_USE_MATH_DEFINES /D_CRT_SECURE_NO_WARNINGS /DWIN32_LEAN_AND_MEAN")
   if(ENABLE_ITERATOR_DEBUG)
     set(SymEngine_CFLAGS "/D_ITERATOR_DEBUG_LEVEL=${MQ_ITERATOR_DEBUG}")
     set(SymEngine_CXXFLAGS "${SymEngine_CXXFLAGS} /D_ITERATOR_DEBUG_LEVEL=${MQ_ITERATOR_DEBUG}")

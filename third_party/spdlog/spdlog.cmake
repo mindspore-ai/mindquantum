@@ -47,16 +47,14 @@ set(CMAKE_OPTION
     -Dfmt_DIR=${fmt_DIR})
 
 if(MSVC)
-  set(spdlog_CXXFLAGS "/Zc:__cplusplus")
-  if(COMPILER_IS_CLANG_CL)
-    set(spdlog_CXXFLAGS "${fmt_CXXFLAGS} /EHsc")
-  endif()
-  if(CMAKE_MT)
-    list(APPEND CMAKE_OPTION -DCMAKE_MT=${CMAKE_MT})
-  endif()
+  set(spdlog_CXXFLAGS "/Zc:__cplusplus /EHsc /D_USE_MATH_DEFINES /D_CRT_SECURE_NO_WARNINGS /DWIN32_LEAN_AND_MEAN")
   if(ENABLE_ITERATOR_DEBUG)
     set(spdlog_CFLAGS "/D_ITERATOR_DEBUG_LEVEL=${MQ_ITERATOR_DEBUG}")
     set(spdlog_CXXFLAGS "${spdlog_CXXFLAGS} /D_ITERATOR_DEBUG_LEVEL=${MQ_ITERATOR_DEBUG}")
+  endif()
+
+  if(CMAKE_MT)
+    list(APPEND CMAKE_OPTION -DCMAKE_MT=${CMAKE_MT})
   endif()
 endif()
 
