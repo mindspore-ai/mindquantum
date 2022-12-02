@@ -53,6 +53,9 @@ jobs:
         run: |
           python3 -m pip install -U wheel build
           sudo apt-get update && sudo apt-get install -y libboost-filesystem-dev --no-install-recommends
+          if [ ! "$(cat /etc/os-release | grep VERSION_ID | cut -d= -f2 | tr -d '"')" == "20.04" ]; then
+            sudo apt-get install -y glibc-tools --no-install-recommends
+          fi
 
       - name: Setup CCache
         uses: hendrikmuhs/ccache-action@v1.2.5
