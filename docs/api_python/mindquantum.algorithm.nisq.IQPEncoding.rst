@@ -6,8 +6,8 @@
 
     参数：
         - **n_feature** (int) - IQP编码所需编码的数据的特征数。
-        - **first_rotation_gate** (ParamaterGate) - 旋转门RX、RY或RZ之一。
-        - **second_rotation_gate** (ParamaterGate) - 旋转门RX、RY或RZ之一。
+        - **first_rotation_gate** (ParameterGate) - 旋转门RX、RY或RZ之一。
+        - **second_rotation_gate** (ParameterGate) - 旋转门RX、RY或RZ之一。
         - **num_repeats** (int) - 编码迭代次数。
 
     .. py:method:: data_preparation(data)
