@@ -1,0 +1,20 @@
+diff --git a/include/tweedledum/Utils/Intrinsics.h b/include/tweedledum/Utils/Intrinsics.h
+index defc341..2b46393 100644
+--- a/include/tweedledum/Utils/Intrinsics.h
++++ b/include/tweedledum/Utils/Intrinsics.h
+@@ -4,7 +4,7 @@
+ *-----------------------------------------------------------------------------*/
+ #pragma once
+ 
+-#ifdef _MSC_VER
++#if (defined _MSC_VER) && !(defined __clang__)
+     #include <intrin.h>
+ 
+ static inline int __builtin_ctz(unsigned x)
+@@ -16,4 +16,4 @@ static inline int __builtin_ctz(unsigned x)
+ 
+     #define __builtin_popcount __popcnt
+ 
+-#endif
+\ No newline at end of file
++#endif
