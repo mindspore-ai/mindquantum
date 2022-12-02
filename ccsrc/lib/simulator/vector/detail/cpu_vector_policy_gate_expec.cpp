@@ -269,9 +269,9 @@ auto CPUVectorPolicyBase::ExpectDiffPS(qs_data_p_t bra, qs_data_p_t ket, const q
                                        calc_type val, index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
+    auto e = -std::sin(val) + IMAGE_I * std::cos(val);
 
     if (!mask.ctrl_mask) {
-        auto e = std::cos(val) + IMAGE_I * std::sin(val);
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
@@ -284,7 +284,6 @@ auto CPUVectorPolicyBase::ExpectDiffPS(qs_data_p_t bra, qs_data_p_t ket, const q
                 })
         // clang-format on
     } else {
-        auto e = -std::sin(val) + IMAGE_I * std::cos(val);
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
