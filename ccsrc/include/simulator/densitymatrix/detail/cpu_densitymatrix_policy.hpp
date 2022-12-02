@@ -44,7 +44,7 @@ struct CPUDensityMatrixPolicyBase {
     static void SelfMultiply(qs_data_p_t qs, index_t x, index_t y, qs_data_t data);
 
     static qs_data_p_t InitState(index_t dim, bool zero_state = true);
-    static void Reset(qs_data_p_t qs, index_t dim);
+    static void Reset(qs_data_p_t qs, index_t dim, bool zero_state = false);
     static void FreeState(qs_data_p_t qs);
     static void Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit = 10);
     static void SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim);
@@ -55,7 +55,7 @@ struct CPUDensityMatrixPolicyBase {
     static calc_type Purity(qs_data_p_t qs, index_t dim);
     static bool IsPure(qs_data_p_t qs, index_t dim);
     static py_qs_datas_t PureStateVector(qs_data_p_t qs, index_t dim);
-    static qs_data_p_t ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
+    static void ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
     static calc_type DiagonalConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi, bool abs, index_t dim);
     template <index_t mask, index_t condi, class binary_op>
     static void ConditionalBinary(qs_data_p_t src, qs_data_p_t des, qs_data_t succ_coeff, qs_data_t fail_coeff,

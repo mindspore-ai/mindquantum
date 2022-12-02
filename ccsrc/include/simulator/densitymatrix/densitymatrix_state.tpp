@@ -252,9 +252,7 @@ auto DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicG
 
 template <typename qs_policy_t_>
 void DensityMatrixState<qs_policy_t_>::ApplyHamiltonian(const Hamiltonian<calc_type>& ham) {
-    auto new_qs = qs_policy_t::ApplyTerms(qs, ham.ham_, dim);
-    qs_policy_t::FreeState(qs);
-    qs = new_qs;
+    qs_policy_t::ApplyTerms(qs, ham.ham_, dim);
 }
 
 template <typename qs_policy_t_>

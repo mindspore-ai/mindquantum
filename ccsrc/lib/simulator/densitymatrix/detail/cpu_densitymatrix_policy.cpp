@@ -71,10 +71,12 @@ auto CPUDensityMatrixPolicyBase::InitState(index_t dim, bool zero_state) -> qs_d
     return qs;
 }
 
-void CPUDensityMatrixPolicyBase::Reset(qs_data_p_t qs, index_t dim) {
+void CPUDensityMatrixPolicyBase::Reset(qs_data_p_t qs, index_t dim, bool zero_state) {
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { qs[i] = 0; })
-    qs[0] = 1;
+    if (!zero_state) {
+        qs[0] = 1;
+    }
 }
 
 void CPUDensityMatrixPolicyBase::FreeState(qs_data_p_t qs) {
@@ -208,40 +210,53 @@ auto CPUDensityMatrixPolicyBase::DiagonalConditionalCollect(qs_data_p_t qs, inde
     return res_real;
 }
 
-auto CPUDensityMatrixPolicyBase::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim)
-    -> qs_data_p_t {
-    qs_data_p_t out = CPUDensityMatrixPolicyBase::InitState(dim, false);
+void CPUDensityMatrixPolicyBase::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim) {
+    matrix_t tmp(dim, VT<qs_data_t>(dim));
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
         auto mask_f = mask.mask_x | mask.mask_y;
         auto coeff = coeff_;
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (index_t i = 0; i < dim; i++) {
+            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
                 auto j = (i ^ mask_f);
-                for (index_t a = 0; a < dim; a++) {
-                    auto b = (a ^ mask_f);
-                    if (i <= j) {
-                        if (a <= b) {
-                            auto axis2power_l = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
-                            auto axis3power_l = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
-                            auto c_l = POLAR[static_cast<char>((mask.num_y + 2 * axis3power_l + 2 * axis2power_l) & 3)];
-
-                            auto axis2power_r = CountOne(static_cast<int64_t>(a & mask.mask_z));  // -1
-                            auto axis3power_r = CountOne(static_cast<int64_t>(a & mask.mask_y));  // -1j
-                            auto c_r = POLAR[static_cast<char>((mask.num_y + 2 * axis3power_r + 2 * axis2power_r) & 3)];
-                            SetValue(out, b, j, qs[IdxMap(i, a)] * coeff * coeff * c_l * std::conj(c_r));
-                            // out[IdxMap(b, j)] += qs[IdxMap(i, a)] * coeff * coeff * c_l * std::conj(c_r);
-                            // if (i != j) {
-                            //     if (a != b) {
-                            //         out[IdxMap(i, a)] += qs[IdxMap(b, j)] / c_l / std::conj(c_r);
-                            //     }
-                            // }
+                if (i <= j) {
+                    auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
+                    auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
+                    auto c = POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)];
+                    for (index_t col = 0; col < dim; col++) {
+                        tmp[j][col] += GetValue(qs, i, col) * coeff * c;
+                    }
+                    if (i != j) {
+                        for (index_t col = 0; col < dim; col++) {
+                            tmp[i][col] += GetValue(qs, j, col) * coeff / c;
                         }
                     }
                 }
             })
     }
-    return out;
+    Reset(qs, dim, true);
+    for (const auto& [pauli_string, coeff_] : ham) {
+        auto mask = GenPauliMask(pauli_string);
+        auto mask_f = mask.mask_x | mask.mask_y;
+        auto coeff = coeff_;
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+                auto j = (i ^ mask_f);
+                if (i <= j) {
+                    auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
+                    auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
+                    auto c = POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)];
+                    for (index_t row = 0; row <= i; row++) {
+                        qs[IdxMap(i, row)] += std::conj(tmp[row][j] * coeff * c);
+                    }
+                    if (i != j) {
+                        for (index_t row = 0; row <= j; row++) {
+                            qs[IdxMap(j, row)] += std::conj(tmp[row][i] * coeff / c);
+                        }
+                    }
+                }
+            })
+    }
 };
 
 template <class binary_op>
