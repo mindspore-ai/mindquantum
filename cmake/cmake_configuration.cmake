@@ -18,7 +18,7 @@
 
 include(CMakeParseArguments)
 
-set(_allowed_build_types Debug Release RelWithDebInfo MinSizeRel)
+set(_allowed_build_types Release RelWithDebInfo MinSizeRel Debug)
 
 if(ENABLE_SANITIZERS)
   if(SANITIZER_USE_O1)
@@ -82,7 +82,7 @@ macro(define_compiler_linker_flags build_type inherited_build_type)
       CACHE STRING "Linker lags to be used to create modules for Asan build type." FORCE)
 
   mark_as_advanced(CMAKE_C_FLAGS_${_build_type} CMAKE_CXX_FLAGS_${_build_type} CMAKE_EXE_LINKER_FLAGS_${_build_type}
-                  CMAKE_SHARED_LINKER_FLAGS_${_build_type} CMAKE_MODULE_LINKER_FLAGS_${_build_type})
+                   CMAKE_SHARED_LINKER_FLAGS_${_build_type} CMAKE_MODULE_LINKER_FLAGS_${_build_type})
 endmacro()
 
 # ==============================================================================
@@ -111,6 +111,11 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE
       Release
       CACHE STRING "Choose the type of build." FORCE)
+endif()
+if(NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_CONFIGURATION_TYPES
+      "${_allowed_build_types}"
+      CACHE INTERNAL "Allowed build types")
 endif()
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${_allowed_build_types}")
 

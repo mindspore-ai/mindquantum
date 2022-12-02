@@ -1695,7 +1695,7 @@ Cannot specify either of <INSTALL_INCS> or <INSTALL_LIBS> with either of <INSTAL
         WORKING_DIRECTORY ${_cmake_build_dir})
 
       message(STATUS "Building CMake targets for ${pkg_name}")
-      if(MSVC)
+      if(_is_multi_config)
         __exec_cmd(COMMAND ${CMAKE_COMMAND} --build . --target install -j${JOBS} --config Debug
                    WORKING_DIRECTORY ${_cmake_build_dir})
         __exec_cmd(COMMAND ${CMAKE_COMMAND} --build . --target install -j${JOBS} --config Release
