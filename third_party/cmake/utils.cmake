@@ -41,6 +41,8 @@ elseif(NOT WIN32)
     DOC "Path to make command" REQUIRED)
 endif()
 
+find_package(Git REQUIRED)
+
 # ------------------------------------------------------------------------------
 
 if(NOT JOBS)
@@ -1074,8 +1076,9 @@ endfunction()
 # mindquantum_add_pkg(<pkg_name>
 #                     # Mandatory options
 #                     [VER <version-num>]
-#                     [[GIT_REPOSITORY <git-url>] [GIT_TAG <tag>] |
-#                      [URL <archive-url>] [MD5 <archive-md5>]]
+#                     [MD5 <archive-md5>]
+#                     [[GIT_REPOSITORY <git-url>] [GIT_TAG <tag>]  |
+#                      [URL <archive-url>]]
 #                     [LIBS <lib-names> [... <lib-names>]]
 #                     [EXE <exec-name>]
 #
@@ -1334,6 +1337,8 @@ function(mindquantum_add_pkg pkg_name)
 
   # ------------------------------------------------------------------------------
 
+  __check_only_one_of(PKG PKG_URL PKG_GIT_REPOSITORY)
+  __check_only_one_of(PKG PKG_URL PKG_GIT_TAG)
   __check_only_one_of(PKG PKG_ONLY_COPY_DIRS PKG_ONLY_MAKE)
   __check_only_one_of(PKG PKG_BUILD_COMMAND PKG_BUILD_OPTION PKG_SKIP_BUILD_STEP)
   __check_only_one_of(PKG PKG_INSTALL_COMMAND PKG_SKIP_INSTALL_STEP)
@@ -1376,14 +1381,25 @@ Cannot specify either of <INSTALL_INCS> or <INSTALL_LIBS> with either of <INSTAL
         # * unpacked source
         # * unpacked source subbuild directory
         # * unpacked source build directory
+        #
+        # If the third-party has a Git repository, then simply run git stash --all within the repository
 
         message(STATUS "Old config hash does not match new config hash")
-        foreach(_dir
-                "${${pkg_name}_BASE_DIR}" "${_mq_local_prefix}/../_deps/${pkg_name}-src"
-                "${_mq_local_prefix}/../_deps/${pkg_name}-subbuild" "${_mq_local_prefix}/../_deps/${pkg_name}-build")
-          if(NOT "${_dir}" STREQUAL "" AND EXISTS "${_dir}")
-            message(STATUS "  - deleting ${_dir}")
-            file(REMOVE_RECURSE "${_dir}")
+        set(_directories_to_clean "${${pkg_name}_BASE_DIR}" "${_mq_local_prefix}/../_deps/${pkg_name}-src")
+        if(NOT PKG_GIT_REPOSITORY)
+          list(APPEND _directories_to_clean "${_mq_local_prefix}/../_deps/${pkg_name}-subbuild"
+               "${_mq_local_prefix}/../_deps/${pkg_name}-build")
+        endif()
+        foreach(_dir ${_directories_to_clean})
+          if(NOT "${_dir}" STREQUAL "")
+            if(EXISTS "${_dir}/.git")
+              message(STATUS "  - resetting git repository: ${_dir}")
+              __exec_cmd(COMMAND ${GIT_EXECUTABLE} stash --all WORKING_DIRECTORY ${_dir})
+              __exec_cmd(COMMAND ${GIT_EXECUTABLE} stash drop WORKING_DIRECTORY ${_dir})
+            elseif(EXISTS "${_dir}")
+              message(STATUS "  - deleting ${_dir}")
+              file(REMOVE_RECURSE "${_dir}")
+            endif()
           endif()
         endforeach()
 
