@@ -6,7 +6,7 @@ index e4b8df56..4167abd3 100644
  
  #endif
  
-+#ifdef _MSC_VER
++#if (defined _MSC_VER) && !(defined __clang__)
 +
 +#include <intrin.h>
 +
@@ -36,7 +36,7 @@ index e4b8df56..4167abd3 100644
 +                                         (__int64)(__old_val)) == (__int64)(__old_val);
 +}
 +
-+#endif // _MSC_VER
++#endif // _MSC_VER && !__clang__
 +
  #include <limits.h>
  
@@ -45,11 +45,11 @@ index e4b8df56..4167abd3 100644
      T*  data;
      int sz;
      int cap;
-+#ifdef _MSC_VER
++#if (defined _MSC_VER) && !(defined __clang__)
 +    long lock;
 +#else
      bool lock;
-+#endif // _MSC_VER
++#endif // _MSC_VER && !__clang__
      int nbusers;
  
      // Don't allow copying (error prone):
