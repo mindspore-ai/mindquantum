@@ -597,7 +597,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradMultiMulti(
                     ParameterResolver<calc_type> pr = ParameterResolver<calc_type>();
                     pr.SetItems(enc_name, enc_data[n]);
                     pr.SetItems(ans_name, ans_data);
-                    auto f_g = GetExpectationWithReversibleGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
+                    auto f_g = GetExpectationWithNoiseGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
                     output[n] = f_g;
                 }
             };
