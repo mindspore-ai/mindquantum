@@ -42,6 +42,7 @@ from .utils import GradOpsWrapper, _thread_balance
 # isort: split
 
 from mindquantum import _mq_vector  # pylint: disable=wrong-import-order
+from mindquantum import _mq_matrix  # pylint: disable=wrong-import-order
 
 try:
     from mindquantum import _mq_vector_gpu
@@ -177,7 +178,7 @@ class MQSim(BackendBase):
             _check_input_type("hams's element", Hamiltonian, h_tmp)
             _check_hamiltonian_qubits_number(h_tmp, self.n_qubits)
         _check_input_type("circ_right", Circuit, circ_right)
-        if circ_right.is_noise_circuit:
+        if circ_right.is_noise_circuit and self.name != "mqmatrix":
             raise ValueError("noise circuit not support yet.")
         non_hermitian = False
         if circ_left is not None:
@@ -262,6 +263,18 @@ class MQSim(BackendBase):
                     encoder_params_name,
                     ansatz_params_name,
                     simulator_left.sim,
+                    batch_threads,
+                    mea_threads,
+                )
+            elif circ_right.is_noise_circuit:
+                f_g1_g2 = self.sim.get_expectation_with_noise_grad_multi_multi(
+                    [i.get_cpp_obj() for i in hams],
+                    circ_right.get_cpp_obj(),
+                    circ_right.get_cpp_obj(hermitian=True),
+                    inputs0,
+                    inputs1,
+                    encoder_params_name,
+                    ansatz_params_name,
                     batch_threads,
                     mea_threads,
                 )

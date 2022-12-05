@@ -30,6 +30,7 @@ from .mqsim import MQ_SIM_GPU_SUPPORTED, MQSim
 
 SUPPORTED_SIMULATOR = {
     'mqvector': partial(MQSim, 'mqvector'),
+    'mqmatrix': partial(MQSim, 'mqmatrix'),
 }
 
 if MQ_SIM_GPU_SUPPORTED:
@@ -429,6 +430,11 @@ class Simulator:
             >>> f
             array([[0.99999989-7.52279618e-05j]])
         """
+        if self.backend.name == "mqmatrix":
+            if circ_left is not None:
+                raise ValueError("Density matrix simulator doesn't support circ_left.")
+            if simulator_left is not None:
+                raise ValueError("Density matrix simulator doesn't support simulator_left.")
         return self.backend.get_expectation_with_grad(
             hams,
             circ_right,
