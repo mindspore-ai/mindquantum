@@ -40,7 +40,7 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitChannel(qs_data_p_t src, qs_dat
     SingleQubitGateMask mask({obj_qubit}, {});
 
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (index_t a = 0; a < (dim / 2); a++) {  // loop on the row
+        dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {  // loop on the row
             auto r0 = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
             auto r1 = r0 + mask.obj_mask;
             for (index_t b = 0; b <= a; b++) {  // loop on the column

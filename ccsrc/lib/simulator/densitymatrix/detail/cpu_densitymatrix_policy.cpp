@@ -106,7 +106,7 @@ void CPUDensityMatrixPolicyBase::Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t
 
 void CPUDensityMatrixPolicyBase::SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim) {
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (index_t i = 0; i < dim; i++) {
+        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
             if ((i & ctrl_mask) != ctrl_mask) {
                 for (index_t j = 0; j < (dim / 2); j++) {
                     if ((j & ctrl_mask) != ctrl_mask) {
@@ -265,7 +265,7 @@ void CPUDensityMatrixPolicyBase::ConditionalBinary(qs_data_p_t src, qs_data_p_t 
                                                    const binary_op& op) {
     // if index mask satisfied condition, multiply by succe_coeff, otherwise multiply fail_coeff
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (index_t i = 0; i < dim; i++) {
+        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
             auto _i_0 = IdxMap(i, 0);
             if ((i & mask) == condi) {
                 for (index_t j = 0; j <= i; j++) {
@@ -288,7 +288,7 @@ void CPUDensityMatrixPolicyBase::ConditionalBinary(qs_data_p_t src, qs_data_p_t 
                                                    qs_data_t fail_coeff, index_t dim, const binary_op& op) {
     // if index mask satisfied condition, multiply by succe_coeff, otherwise multiply fail_coeff
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (index_t i = 0; i < dim; i++) {
+        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
             auto _i_0 = IdxMap(i, 0);
             if ((i & mask) == condi) {
                 for (index_t j = 0; j <= i; j++) {
