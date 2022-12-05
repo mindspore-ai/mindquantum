@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+[CmdletBinding(PositionalBinding=$false)]
+
 Param(
     [switch]$Analyzer,
     [Alias("B")][ValidateNotNullOrEmpty()][string]$Build,
@@ -26,13 +28,11 @@ Param(
     [ValidateNotNullOrEmpty()][string]$Config,
     [ValidateNotNullOrEmpty()][string]$CudaArch,
     [switch]$Cxx,
-    [switch]$Debug,
     [switch]$DebugCMake,
     [switch]$Delocate,
     [Alias("N")][switch]$DryRun,
     [switch]$FastBuild,
     [ValidateNotNullOrEmpty()][string]$FastBuildDir,
-    [ValidateNotNullOrEmpty()][string]$G,
     [switch]$Gitee,
     [switch]$Gpu,
     [Alias("H")][switch]$Help,
@@ -52,13 +52,14 @@ Param(
     [switch]$ShowLibraries,
     [switch]$Test,
     [switch]$UpdateVenv,
-    [Alias("V")][switch]$Verbose,
-    [ValidateNotNullOrEmpty()][string]$Venv
+    [ValidateNotNullOrEmpty()][string]$Venv,
+    [Parameter(Position=1, ValueFromRemainingArguments)]$unparsed_args
 )
 
 $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 $ROOTDIR = $BASEPATH
 $PROGRAM = Split-Path $MyInvocation.MyCommand.Path -Leaf
+$PARAMETERLIST = (Get-Command -Name ".\$PROGRAM").Parameters
 
 # Test for MindSpore CI
 $_IS_MINDSPORE_CI = $false
@@ -132,7 +133,14 @@ function Extra-Help {
 
 # ------------------------------------------------------------------------------
 
-. (Join-Path $ROOTDIR 'scripts\build\parse_common_args.ps1') @args
+. (Join-Path $ROOTDIR 'scripts\build\parse_common_args.ps1') @args @unparsed_args
+
+Write-Debug 'Bound PowerShell parameters'
+foreach ($Parameter in $PARAMETERLIST) {
+    Get-Variable -Name $Parameter.Values.Name -ErrorAction SilentlyContinue `
+      | ForEach-Object { Write-Debug ("{0,-40} {1}" -f $_.Name, $_.Value)}
+}
+
 
 if ($LastExitCode -ne 0) {
     exit $LastExitCode
@@ -377,6 +385,11 @@ foreach($arg in $build_args) {
     $fixed_args += "-C--global-option=$arg"
 }
 
+$unparsed_args = $unparsed_args | Where-Object {$_} | ForEach-Object { "'$_'" }
+if ([bool]$unparsed_args) {
+    $fixed_args += $unparsed_args
+}
+
 $build_args = @('-w')
 if (-Not $build_isolation) {
     $build_args += "--no-isolation"
@@ -413,7 +426,7 @@ else {
     $Env:MQ_DELOCATE_WHEEL = 0
 }
 
-Call-Cmd "$PYTHON" -m build @build_args @fixed_args @unparsed_args
+Call-Cmd "$PYTHON" -m build @build_args @fixed_args
 if ($LastExitCode -ne 0) {
     exit $LastExitCode
 }
@@ -576,9 +589,6 @@ Update the python virtual environment
 .PARAMETER CudaArch
 Comma-separated list of architectures to generate device code for.
 Only useful if -Gpu is passed. See CMAKE_CUDA_ARCHITECTURES for more information.
-
-.PARAMETER G
-CMake argument: Specify a build system generator.
 
 .INPUTS
 

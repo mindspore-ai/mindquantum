@@ -28,7 +28,8 @@ if ($null -eq  $config_file) {
     $config_file = "$ROOTDIR\build.conf"
 }
 
-if ($Verbose.IsPresent -Or $Debug.IsPresent) {
+if ($PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent `
+  -Or $PSCmdlet.MyInvocation.BoundParameters["debug"].IsPresent) {
     $DebugPreference = 'Continue'
     Assign-Value -Script '_verbose_was_set' $true
 }
@@ -192,7 +193,7 @@ if (([bool]$Cxx)) {
     Set-Value 'enable_cxx'
 }
 
-if (([bool]$Debug)) {
+if ($PSCmdlet.MyInvocation.BoundParameters["debug"].IsPresent) {
     Set-Value 'build_type' 'Debug'
 }
 
@@ -309,6 +310,8 @@ foreach($arg in $local_args) {
         Assign-Value -Script '_local_pkgs_was_set' $true
     }
 }
+
+Write-Debug "Unparsed args: $unparsed_args"
 
 $local_pkgs = ($local_pkgs -join ',')
 
