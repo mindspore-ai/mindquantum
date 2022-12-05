@@ -76,7 +76,7 @@ target_link_libraries(mqsim_common PUBLIC mq_base include_lib)
 # =================================================================================
 # add pybind
 
-pybind11_add_module(_mq_densitymatrix MODULE /Users/jedzhou/VscodeProjects/mindquantum/ccsrc/python/simulator/lib/_mq_densitymatrix.cpp)
+pybind11_add_module(_mq_densitymatrix MODULE /Users/jedzhou/VscodeProjects/mindquantum/ccsrc/python/simulator/lib/_mq_matrix.cpp)
 
 target_include_directories(_mq_densitymatrix PRIVATE $<BUILD_INTERFACE:/Users/jedzhou/VscodeProjects/mindquantum/ccsrc/python/simulator/include>)
 target_link_libraries(_mq_densitymatrix PUBLIC mindquantum_sim)

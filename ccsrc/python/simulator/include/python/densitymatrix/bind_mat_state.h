@@ -11,8 +11,8 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
-#ifndef PYTHON_LIB_QUANTUMSTATE_BIND_DENS_STATE_HPP
-#define PYTHON_LIB_QUANTUMSTATE_BIND_DENS_STATE_HPP
+#ifndef PYTHON_LIB_QUANTUMSTATE_BIND_MAT_STATE_HPP
+#define PYTHON_LIB_QUANTUMSTATE_BIND_MAT_STATE_HPP
 #include <memory>
 #include <string_view>
 

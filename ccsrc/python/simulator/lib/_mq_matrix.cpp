@@ -14,13 +14,13 @@
 
 #include <pybind11/pybind11.h>
 
-#include "python/densitymatrix/bind_dens_state.h"
+#include "python/densitymatrix/bind_mat_state.h"
 
-PYBIND11_MODULE(_mq_densitymatrix, module) {
+PYBIND11_MODULE(_mq_matrix, module) {
 
-using dens_sim = mindquantum::sim::densitymatrix::detail::DensityMatrixState<mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase>;
+using mat_sim = mindquantum::sim::densitymatrix::detail::DensityMatrixState<mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase>;
 
 
     module.doc() = "MindQuantum c++ density matrix state simulator.";
-    BindSim<dens_sim>(module, "mqmatrix");
+    BindSim<mat_sim>(module, "mqmatrix");
 }

@@ -260,29 +260,56 @@ def test_grad():
     noise_circ = circ.with_noise(AmplitudeDampingChannel(0))
     noise_grad_ops = m_sim.get_expectation_with_grad([ham,ham1], noise_circ)
     nf, ng1, ng2 = noise_grad_ops(np.array([[2,5],[3,0.2]]),np.array([1,2]))
+    # print(ng2)
+    # print()
+    # print(vg2)
     n_is_equal = np.allclose(nf,vf) & np.allclose(ng1,vg1) & np.allclose(ng2,vg2)
     print('test_expectation_with_noise_grad:', n_is_equal)
     
 def test_noise_grad():
     ham = Hamiltonian(QubitOperator('Z0', 1))
-    circ = Circuit()
-    circ += RX('a').on(0)
-    circ += RX('b').on(0)
+    ansatz = Circuit()
+    ansatz += RX('a').on(0)
+    encoder = Circuit()
+    encoder += RX('b').on(0)
     
+    circ = encoder.as_encoder()+ansatz.as_ansatz()
     m_sim = Simulator('mqmatrix', 1)
     m_grad_ops = m_sim.get_expectation_with_grad(ham, circ)
-    mf, mg = m_grad_ops(np.array([np.pi/2, 0]))
-    print(mg)
-    noise_circ = circ.with_noise(PhaseFlipChannel(0.1))
-    # noise_circ = circ.with_noise(DepolarizingChannel(0.1))
+    mf, mg1,mg2 = m_grad_ops(np.array([[np.pi/2]]), np.array([0]))
     
-    # noise_circ += AmplitudeDampingChannel(0.1).on(0)
-
+    noise_circ = circ.with_noise(AmplitudeDampingChannel(0.1))
     noise_grad_ops = m_sim.get_expectation_with_grad(ham, noise_circ)
-    nf, ng = noise_grad_ops(np.array([np.pi/2, 0]))
-    print(ng)
+    nf, ng1,ng2 = noise_grad_ops(np.array([[np.pi/2]]), np.array([0]))
+    # print(nf)
+    # print(ng1)
+    n_is_equal = np.allclose(nf,[[0.19+0.j]]) & np.allclose(ng1,[[[-0.81+0.j]]]) & np.allclose(ng2,[[[-0.85381497+0.j]]])
+    print('test_expectation_with_noise_grad2:', n_is_equal)
     # print()
     # print(ng1)
+    # print(ng2)
+    
+def test_others():
+    m_sim = Simulator('mqmatrix', 3)
+    m_sim.set_qs(np.array([1,2,3,4,5, 6, 7, 8]))
+    m_sim.apply_gate(H.on(0))
+    m_sim.apply_gate(RX('a').on(0), 1, True)
+    qs0 = m_sim.get_qs()
+    
+    v_sim = Simulator('mqvector', 3)
+    v_sim.set_qs(np.array([1,2,3,4,5, 6, 7, 8]))
+    v_sim.apply_gate(H.on(0))
+    v_sim.apply_gate(RX('a').on(0), 1, True)
+    vec = v_sim.get_qs()
+    qs1 = np.outer(vec, vec.conj())
+    print('test_apply_gate:', np.allclose(qs0, qs1))
+    
+    m_sim2 = m_sim.copy()
+    print('test_copy:', np.allclose(m_sim2.get_qs(), qs1))
+    
+    m_sim.reset()
+    v_sim.reset()
+    print('test_reset', np.allclose(m_sim.get_qs(),np.outer(v_sim.get_qs(), v_sim.get_qs())))
     
     
 if __name__=='__main__':
@@ -293,4 +320,5 @@ if __name__=='__main__':
     test_sampling()
     test_grad()
     test_hamiltonian()
-    # test_noise_grad()
+    test_noise_grad()
+    test_others()
