@@ -30,6 +30,8 @@
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
 
+constexpr double m_sqrt1_2{0.707106781186547524400844362104849039};
+
 namespace mindquantum::sim::densitymatrix::detail {
 // Z like operator
 // ========================================================================================================
@@ -80,10 +82,10 @@ void CPUDensityMatrixPolicyBase::ApplyZLike(qs_data_p_t qs, const qbits_t& objs,
                     }
                 }
                 // diagonal case
-                    if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
-                        qs[IdxMap(r1, r0)] *= val;
-                        qs[IdxMap(r1, r1)] *= std::norm(val);
-                    }
+                if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
+                    qs[IdxMap(r1, r0)] *= val;
+                    qs[IdxMap(r1, r1)] *= std::norm(val);
+                }
             })
     }
 }
@@ -101,11 +103,11 @@ void CPUDensityMatrixPolicyBase::ApplySdag(qs_data_p_t qs, const qbits_t& objs, 
 }
 
 void CPUDensityMatrixPolicyBase::ApplyT(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    ApplyZLike(qs, objs, ctrls, qs_data_t(1, 1) / std::sqrt(2.0), dim);
+    ApplyZLike(qs, objs, ctrls, qs_data_t(1, 1) * m_sqrt1_2, dim);
 }
 
 void CPUDensityMatrixPolicyBase::ApplyTdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    ApplyZLike(qs, objs, ctrls, qs_data_t(1, -1) / std::sqrt(2.0), dim);
+    ApplyZLike(qs, objs, ctrls, qs_data_t(1, -1) * m_sqrt1_2, dim);
 }
 
 void CPUDensityMatrixPolicyBase::ApplyPS(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
@@ -136,10 +138,9 @@ void CPUDensityMatrixPolicyBase::ApplyPS(qs_data_p_t qs, const qbits_t& objs, co
                     for (index_t l = 0; l <= k; l++) {  // loop on the column
                         auto c0 = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
 
-                        if ((r0 & mask.ctrl_mask) != mask.ctrl_mask) {
-                            if ((c0 & mask.ctrl_mask) != mask.ctrl_mask) {  // both not in control
-                                continue;
-                            }
+                        if (((r0 & mask.ctrl_mask) != mask.ctrl_mask)
+                            && ((c0 & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
+                            continue;
                         }
                         auto c1 = c0 | mask.obj_mask;
                         if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {

@@ -105,10 +105,9 @@ void CPUDensityMatrixPolicyBase::ApplySWAP(qs_data_p_t qs, const qbits_t& objs, 
                     VT<index_t> col(4);  // column index of reduced matrix entry
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   b, col[0]);
-                    if ((row[0] & mask.ctrl_mask) != mask.ctrl_mask) {
-                        if ((col[0] & mask.ctrl_mask) != mask.ctrl_mask) {  // both not in control
-                            continue;
-                        }
+                    if (((row[0] & mask.ctrl_mask) != mask.ctrl_mask)
+                        && ((col[0] & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
+                        continue;
                     }
                     col[3] = col[0] + mask.obj_mask;
                     col[1] = col[0] + mask.obj_min_mask;
@@ -248,10 +247,9 @@ void CPUDensityMatrixPolicyBase::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs,
                     VT<index_t> col(4);  // column index of reduced matrix entry
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   b, col[0]);
-                    if ((row[0] & mask.ctrl_mask) != mask.ctrl_mask) {
-                        if ((col[0] & mask.ctrl_mask) != mask.ctrl_mask) {  // both not in control
-                            continue;
-                        }
+                    if (((row[0] & mask.ctrl_mask) != mask.ctrl_mask)
+                        && ((col[0] & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
+                        continue;
                     }
                     col[3] = col[0] + mask.obj_mask;
                     col[1] = col[0] + mask.obj_min_mask;
@@ -370,10 +368,9 @@ void CPUDensityMatrixPolicyBase::ApplyXX(qs_data_p_t qs, const qbits_t& objs, co
                     VT<index_t> col(4);  // column index of reduced matrix entry
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   b, col[0]);
-                    if ((row[0] & mask.ctrl_mask) != mask.ctrl_mask) {
-                        if ((col[0] & mask.ctrl_mask) != mask.ctrl_mask) {  // both not in control
-                            continue;
-                        }
+                    if (((row[0] & mask.ctrl_mask) != mask.ctrl_mask)
+                        && ((col[0] & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
+                        continue;
                     }
                     col[3] = col[0] + mask.obj_mask;
                     col[1] = col[0] + mask.obj_min_mask;
@@ -472,10 +469,9 @@ void CPUDensityMatrixPolicyBase::ApplyYY(qs_data_p_t qs, const qbits_t& objs, co
                     VT<index_t> col(4);  // column index of reduced matrix entry
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   b, col[0]);
-                    if ((row[0] & mask.ctrl_mask) != mask.ctrl_mask) {
-                        if ((col[0] & mask.ctrl_mask) != mask.ctrl_mask) {  // both not in control
-                            continue;
-                        }
+                    if (((row[0] & mask.ctrl_mask) != mask.ctrl_mask)
+                        && ((col[0] & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
+                        continue;
                     }
                     col[3] = col[0] + mask.obj_mask;
                     col[1] = col[0] + mask.obj_min_mask;
@@ -578,10 +574,9 @@ void CPUDensityMatrixPolicyBase::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, co
                     VT<index_t> col(4);  // column index of reduced matrix entry
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   b, col[0]);
-                    if ((row[0] & mask.ctrl_mask) != mask.ctrl_mask) {
-                        if ((col[0] & mask.ctrl_mask) != mask.ctrl_mask) {  // both not in control
-                            continue;
-                        }
+                    if (((row[0] & mask.ctrl_mask) != mask.ctrl_mask)
+                        && ((col[0] & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
+                        continue;
                     }
                     col[3] = col[0] + mask.obj_mask;
                     col[1] = col[0] + mask.obj_min_mask;

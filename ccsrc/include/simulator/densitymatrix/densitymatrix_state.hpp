@@ -89,8 +89,10 @@ class DensityMatrixState {
     //! Apply a hamiltonian on this quantum state
     void ApplyHamiltonian(const Hamiltonian<calc_type>& ham);
 
-    //! Apply a quantum gate on this quantum state, quantum gate can be normal quantum gate, measurement gate and noise
-    //! channel
+    /*!
+     * \brief Apply a quantum gate on this quantum state, quantum gate can be
+     *normal quantum gate, measurement gate and noise channel
+     */
     index_t ApplyGate(const std::shared_ptr<BasicGate<calc_type>>& gate,
                       const ParameterResolver<calc_type>& pr = ParameterResolver<calc_type>(), bool diff = false);
 

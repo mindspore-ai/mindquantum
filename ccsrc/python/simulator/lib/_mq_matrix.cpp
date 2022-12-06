@@ -14,7 +14,7 @@
 
 #include <pybind11/pybind11.h>
 
-#include "python/densitymatrix/bind_mat_state.h"
+#include "python/densitymatrix/bind_mat_state.hpp"
 
 PYBIND11_MODULE(_mq_matrix, module) {
 
