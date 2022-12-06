@@ -32,6 +32,7 @@
 #include <thread>
 #include <type_traits>
 #include <vector>
+#include <utility>
 
 #include "core/mq_base_types.hpp"
 #include "core/parameter_resolver.hpp"

@@ -257,7 +257,7 @@ void CPUDensityMatrixPolicyBase::ApplyTerms(qs_data_p_t qs, const std::vector<Pa
                 }
             })
     }
-};
+}
 
 template <class binary_op>
 void CPUDensityMatrixPolicyBase::ConditionalBinary(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,

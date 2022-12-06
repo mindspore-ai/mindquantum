@@ -84,7 +84,8 @@ void CPUDensityMatrixPolicyBase::ApplyPhaseDamping(qs_data_p_t qs, const qbits_t
     ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
 }
 
-void CPUDensityMatrixPolicyBase::ApplyPauli(qs_data_p_t qs, const qbits_t& objs, const VT<calc_type>& probs, index_t dim) {
+void CPUDensityMatrixPolicyBase::ApplyPauli(qs_data_p_t qs, const qbits_t& objs, const VT<calc_type>& probs,
+                                            index_t dim) {
     VT<matrix_t> kraus_set;
     if (probs[0] > 1e-8) {
         kraus_set.push_back({{0, std::sqrt(probs[0])}, {std::sqrt(probs[0]), 0}});
@@ -101,7 +102,8 @@ void CPUDensityMatrixPolicyBase::ApplyPauli(qs_data_p_t qs, const qbits_t& objs,
     ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
 }
 
-void CPUDensityMatrixPolicyBase::ApplyKraus(qs_data_p_t qs, const qbits_t& objs, VT<matrix_t>& kraus_set, index_t dim) {
+void CPUDensityMatrixPolicyBase::ApplyKraus(qs_data_p_t qs, const qbits_t& objs, const VT<matrix_t>& kraus_set,
+                                            index_t dim) {
     ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
 }
 
