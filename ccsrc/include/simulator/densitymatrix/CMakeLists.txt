@@ -16,13 +16,7 @@
 #
 # ==============================================================================
 
-# lint_cmake: -whitespace/indent
-
-set(MQSIM_DENSITYMATRIX_HEAD ${CMAKE_CURRENT_LIST_DIR}/densitymatrix_state.hpp ${CMAKE_CURRENT_LIST_DIR}/densitymatrix_state.tpp)
-
-set(MQSIM_DENSITYMATRIX_CPU_HEAD ${CMAKE_CURRENT_LIST_DIR}/detail/cpu_densitymatrix_policy.hpp)
-list(APPEND MQSIM_DENSITYMATRIX_CPU_HEAD ${MQSIM_DENSITYMATRIX_HEAD})
-
-# =============================================================================
-
-
+add_library(
+  mqsim_densitymatrix_cpu STATIC
+  ${CMAKE_CURRENT_LIST_DIR}/densitymatrix_state.hpp ${CMAKE_CURRENT_LIST_DIR}/densitymatrix_state.tpp
+  ${CMAKE_CURRENT_LIST_DIR}/detail/cpu_densitymatrix_policy.hpp)
