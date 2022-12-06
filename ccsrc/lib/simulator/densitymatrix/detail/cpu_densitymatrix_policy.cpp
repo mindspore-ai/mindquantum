@@ -35,7 +35,7 @@ namespace mindquantum::sim::densitymatrix::detail {
 
 // Warning: only correct when x >= y
 index_t CPUDensityMatrixPolicyBase::IdxMap(index_t x, index_t y) {
-    return (x * x + x) / 2 + y;
+    return (x * (x + 1)) / 2 + y;
 }
 
 auto CPUDensityMatrixPolicyBase::GetValue(qs_data_p_t qs, index_t x, index_t y) -> qs_data_t {
