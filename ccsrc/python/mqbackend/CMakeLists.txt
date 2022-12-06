@@ -30,10 +30,13 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/python DESTINATION ${MQ_INST
 # ==============================================================================
 
 set(_lto_workaround FALSE)
-if(CMAKE_COMPILER_IS_GNUCXX
-   AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0.0
-   AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 7.3.0)
-  # NB: enable workaround for GCC 7.X
+if((CMAKE_COMPILER_IS_GNUCXX
+    AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0.0
+    AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 7.3.0)
+   OR (MSVC
+       AND COMPILER_IS_CLANG_CL
+       AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15.0.0))
+  # NB: enable workaround for GCC 7.X or Clang-Cl < 15.0.0
   set(_lto_workaround TRUE)
 endif()
 
