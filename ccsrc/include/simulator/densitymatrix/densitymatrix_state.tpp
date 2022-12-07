@@ -31,8 +31,8 @@
 #include <string>
 #include <thread>
 #include <type_traits>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "core/mq_base_types.hpp"
 #include "core/parameter_resolver.hpp"
@@ -355,6 +355,9 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneMulti(
     const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map, int n_thread) -> VT<py_qs_datas_t> {
     auto n_hams = hams.size();
     int max_thread = 15;
+    if (n_thread == 0) {
+        throw std::runtime_error("n_thread cannot be zero.");
+    }
     if (n_thread > max_thread) {
         n_thread = max_thread;
     }
@@ -429,6 +432,9 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradMultiMult
         pr.SetItems(ans_name, ans_data);
         output[0] = GetExpectationWithReversibleGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
     } else {
+        if (batch_threads == 0) {
+            throw std::runtime_error("batch_thread cannot be zero.");
+        }
         std::vector<std::thread> tasks;
         tasks.reserve(batch_threads);
         size_t end = 0;
@@ -498,6 +504,9 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneMulti(
     const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map, int n_thread) -> VT<py_qs_datas_t> {
     auto n_hams = hams.size();
     int max_thread = 15;
+    if (n_thread == 0) {
+        throw std::runtime_error("n_thread cannot be zero.");
+    }
     if (n_thread > max_thread) {
         n_thread = max_thread;
     }
@@ -582,6 +591,9 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradMultiMulti(
         pr.SetItems(ans_name, ans_data);
         output[0] = GetExpectationWithNoiseGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
     } else {
+        if (batch_threads == 0) {
+            throw std::runtime_error("batch_threads cannot be zero.");
+        }
         std::vector<std::thread> tasks;
         tasks.reserve(batch_threads);
         size_t end = 0;

@@ -668,6 +668,10 @@ auto VectorState<qs_policy_t_>::LeftSizeGradOneMulti(const std::vector<std::shar
                                                      const derived_t& simulator_right) -> VVT<py_qs_data_t> {
     auto n_hams = hams.size();
     int max_thread = 15;
+    if (n_thread == 0) {
+        throw std::runtime_error("n_thread cannot be zero.");
+    }
+
     if (n_thread > max_thread) {
         n_thread = max_thread;
     }
@@ -723,6 +727,9 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradOneMulti(
     const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map, int n_thread) -> VVT<py_qs_data_t> {
     auto n_hams = hams.size();
     int max_thread = 15;
+    if (n_thread == 0) {
+        throw std::runtime_error("n_thread cannot be zero.");
+    }
     if (n_thread > max_thread) {
         n_thread = max_thread;
     }
@@ -805,6 +812,9 @@ auto VectorState<qs_policy_t_>::GetExpectationNonHermitianWithGradMultiMulti(
         output[0] = GetExpectationNonHermitianWithGradOneMulti(hams, herm_hams, left_circ, herm_left_circ, right_circ,
                                                                herm_right_circ, pr, p_map, mea_threads, simulator_left);
     } else {
+        if (batch_threads == 0) {
+            throw std::runtime_error("batch_threads cannot be zero.");
+        }
         std::vector<std::thread> tasks;
         tasks.reserve(batch_threads);
         size_t end = 0;
@@ -867,6 +877,9 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradMultiMulti(
         pr.SetItems(ans_name, ans_data);
         output[0] = GetExpectationWithGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
     } else {
+        if (batch_threads == 0) {
+            throw std::runtime_error("batch_threads cannot be zero.");
+        }
         std::vector<std::thread> tasks;
         tasks.reserve(batch_threads);
         size_t end = 0;
