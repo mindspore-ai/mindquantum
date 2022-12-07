@@ -180,6 +180,7 @@ def update_library_path_from_env(ld_path_var, install_prefix):
 
 def update_library_path(ld_path_var):
     """Update XXX_LIBRARY_PATH environment variable."""
+    logging.info('Updating %s environment variable', ld_path_var)
     mq_lib_paths = os.getenv('MQ_LIB_PATHS', '')
     try:
         update_library_path_from_file(ld_path_var, mq_lib_paths)
@@ -302,6 +303,7 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     delocated_wheel = None
 
     if delocate_wheel:
+        logging.info('Attempting to delocate the generated Python wheel')
         delocated_wheel_directory.mkdir(parents=True, exist_ok=True)
         ld_lib_var = 'LD_LIBRARY_PATH'
         if platform.system() == 'Darwin':
@@ -357,6 +359,8 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
 
         else:
             logging.warning('Do not know how to delocate wheels on %s', platform.system())
+    else:
+        logging.info('Not delocating the Python wheel')
 
     if done_delocate:
         delocated_wheel = get_delocated_wheel_name(name_full, delocated_wheel_directory)
