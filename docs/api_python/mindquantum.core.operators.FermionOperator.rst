@@ -8,7 +8,7 @@
         - **terms** (str) - 费米子算符的输入项。默认值：None。
         - **coefficient** (Union[numbers.Number, str, ParameterResolver]) - 单费米子算符的系数。默认值：1.0。
 
-    .. py:method:: dumps(indent: int=4)
+    .. py:method:: dumps(indent: int = 4)
 
         将FermionOperator转储到JSON（JavaScript对象表示法）。
 
@@ -55,7 +55,7 @@
         返回：
             FermionOperator，从字符串加载的FermionOperator。
 
-    .. py:method:: matrix(n_qubits: int=None)
+    .. py:method:: matrix(n_qubits: int = None)
 
         将此费米子运算符转换为jordan_wigner映射下的csr_matrix。
 

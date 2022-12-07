@@ -20,7 +20,7 @@
         返回：
             int，单量子门的数量。
 
-    .. py:method:: dumps(indent: int=4)
+    .. py:method:: dumps(indent: int = 4)
 
         将QubitOperator转储到JSON（JavaScript对象表示法）。
 
@@ -67,7 +67,7 @@
         返回：
             FermionOperator，从字符串加载的QubitOperator。
 
-    .. py:method:: matrix(n_qubits: int=None)
+    .. py:method:: matrix(n_qubits: int = None)
 
         将此量子比特算符转换为csr_matrix。
 
