@@ -421,12 +421,26 @@ if ($delocate_wheel) {
     if ([bool]$platform_name) {
         $Env:MQ_DELOCATE_WHEEL_PLAT = "$platform_name"
     }
+
+    if ([bool]$_build_dir_was_set -Or [bool]$fast_build) {
+        $build_dir_for_env = $build_dir
+    }
+    elseif ([bool]$_fast_build_dir_was_set) {
+        $build_dir_for_env = $fast_build_dir
+    }
+    else {
+        $build_dir_for_env = (&"$PYTHON" -m mindquantum_config --tempdir)
+    }
+    $Env:MQ_LIB_PATHS = "$build_dir_for_env/ld_library_paths.txt"
+    $Env:MQ_BUILD_DIR = "$build_dir_for_env"
 }
 else {
     $Env:MQ_DELOCATE_WHEEL = 0
 }
 
 Call-Cmd "$PYTHON" -m build @build_args @fixed_args
+$Env:MQ_LIB_PATHS = ''
+$Env:MQ_BUILD_DIR = ''
 if ($LastExitCode -ne 0) {
     exit $LastExitCode
 }
@@ -439,7 +453,7 @@ if (Test-Path -Path "$output_path") {
 
 Call-Cmd New-Item -Path "'$output_path'" -ItemType "directory"
 
-Call-Cmd Move-Item -Path "'$ROOTDIR\*'" -Destination "$output_path"
+Call-Cmd Move-Item -Path "'$ROOTDIR\dist\*.whl'" -Destination "$output_path"
 
 Call-Cmd Write-Output "------Successfully created mindquantum package------"
 
