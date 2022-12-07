@@ -31,7 +31,6 @@
 #include "simulator/utils.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
-
 auto CPUDensityMatrixPolicyBase::HamiltonianMatrix(const std::vector<PauliTerm<calc_type>>& ham, index_t dim)
     -> qs_data_p_t {
     qs_data_p_t out = InitState(dim, false);
@@ -342,5 +341,4 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffZZ(qs_data_p_t qs, qs_data_p_t ham_ma
     }
     return res;
 };
-
 }  // namespace mindquantum::sim::densitymatrix::detail

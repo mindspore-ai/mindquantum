@@ -59,7 +59,6 @@ void CPUDensityMatrixPolicyBase::ApplyXLike(qs_data_p_t qs, const qbits_t& objs,
                 qs[IdxMap(r1, r1)] = tmp * std::norm(v2);
                 qs[IdxMap(r1, r0)] = std::conj(qs[IdxMap(r1, r0)]) * v2 * std::conj(v1);
             })
-
     } else {
         THRESHOLD_OMP_FOR(
             dim, DimTh, for (omp::idx_t k = 0; k < (dim / 2); k++) {  // loop on the row

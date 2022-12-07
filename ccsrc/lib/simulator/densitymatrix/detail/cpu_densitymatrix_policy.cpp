@@ -32,7 +32,6 @@
 #include "simulator/utils.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
-
 // Warning: only correct when x >= y
 index_t CPUDensityMatrixPolicyBase::IdxMap(index_t x, index_t y) {
     return (x * (x + 1)) / 2 + y;
@@ -59,6 +58,19 @@ void CPUDensityMatrixPolicyBase::SelfMultiply(qs_data_p_t qs, index_t x, index_t
         qs[IdxMap(x, y)] *= data;
     } else {
         qs[IdxMap(y, x)] *= std::conj(data);
+    }
+}
+
+void CPUDensityMatrixPolicyBase::SwapValue(qs_data_p_t qs, index_t x0, index_t y0, index_t x1, index_t y1,
+                                           qs_data_t coeff) {
+    if (x0 >= y0) {
+        qs_data_t tmp = qs[IdxMap(x0, y0)];
+        qs[IdxMap(x0, y0)] = coeff * GetValue(qs, x1, y1);
+        SetValue(qs, x1, y1, coeff * tmp);
+    } else {
+        qs_data_t tmp = std::conj(qs[IdxMap(y0, x0)]);
+        qs[IdxMap(y0, x0)] = std::conj(coeff * GetValue(qs, x1, y1));
+        SetValue(qs, x1, y1, coeff * tmp);
     }
 }
 
@@ -325,5 +337,4 @@ void CPUDensityMatrixPolicyBase::ConditionalDiv(qs_data_p_t src, qs_data_p_t des
                                                 qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim) {
     ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::divides<qs_data_t>());
 }
-
 }  // namespace mindquantum::sim::densitymatrix::detail

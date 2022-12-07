@@ -24,7 +24,6 @@
 #include "simulator/types.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
-
 struct CPUDensityMatrixPolicyBase {
     using qs_data_t = std::complex<calc_type>;
     using qs_data_p_t = qs_data_t*;
@@ -42,6 +41,7 @@ struct CPUDensityMatrixPolicyBase {
     static qs_data_t GetValue(qs_data_p_t qs, index_t x, index_t y);
     static void SetValue(qs_data_p_t qs, index_t x, index_t y, qs_data_t data);
     static void SelfMultiply(qs_data_p_t qs, index_t x, index_t y, qs_data_t data);
+    static void SwapValue(qs_data_p_t qs, index_t x0, index_t y0, index_t x1, index_t y1, qs_data_t coeff);
 
     static qs_data_p_t InitState(index_t dim, bool zero_state = true);
     static void Reset(qs_data_p_t qs, index_t dim, bool zero_state = false);

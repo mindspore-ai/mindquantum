@@ -244,7 +244,7 @@ auto DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicG
         qs_policy_t::ApplyPauli(qs, gate->obj_qubits_, gate->probs_, dim);
     } else if (gate->kraus_operator_set_.size() != 0) {
         qs_policy_t::ApplyKraus(qs, gate->obj_qubits_, gate->kraus_operator_set_, dim);
-    } else if (gate->name_ == hcAD) {
+    } else if (gate->name_ == cHAD) {
         qs_policy_t::ApplyHermitianAmplitudeDamping(qs, gate->obj_qubits_, gate->damping_coeff_, dim);
     } else {
         throw std::runtime_error("This noise channel not implemented.");

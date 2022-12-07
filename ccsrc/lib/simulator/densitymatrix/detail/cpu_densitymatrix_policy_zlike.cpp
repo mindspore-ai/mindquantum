@@ -166,5 +166,4 @@ void CPUDensityMatrixPolicyBase::ApplyPS(qs_data_p_t qs, const qbits_t& objs, co
         }
     }
 }
-
 }  // namespace mindquantum::sim::densitymatrix::detail

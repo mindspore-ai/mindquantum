@@ -112,5 +112,4 @@ void CPUDensityMatrixPolicyBase::ApplyHermitianAmplitudeDamping(qs_data_p_t qs, 
     VT<matrix_t> kraus_set{{{1, 0}, {0, std::sqrt(1 - gamma)}}, {{0, 0}, {std::sqrt(gamma), 0}}};
     ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
 }
-
 }  // namespace mindquantum::sim::densitymatrix::detail
