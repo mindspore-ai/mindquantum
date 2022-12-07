@@ -70,21 +70,3 @@ get_target_property(_mqbackend_output_dir mqbackend LIBRARY_OUTPUT_DIRECTORY)
 if(NOT _mqbackend_output_dir)
   set(_mqbackend_output_dir "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 endif()
-
-if(WIN32)
-  get_filename_component(CXX_DIR ${CMAKE_CXX_COMPILER} PATH)
-  file(
-    GLOB
-    LIB_LIST
-    ${CXX_DIR}/libstdc++-6.dll
-    ${CXX_DIR}/libwinpthread-1.dll
-    ${CXX_DIR}/libssp-0.dll
-    ${CXX_DIR}/libgcc_s_*-1.dll
-    ${CXX_DIR}/libgomp-1.dll)
-  foreach(win_dep_lib ${LIB_LIST})
-    if(EXISTS "${win_dep_lib}")
-      message("COPYING ${win_dep_lib}")
-      file(COPY ${win_dep_lib} DESTINATION ${_mqbackend_output_dir} FOLLOW_SYMLINK_CHAIN)
-    endif()
-  endforeach()
-endif()
