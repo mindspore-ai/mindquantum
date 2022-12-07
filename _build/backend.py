@@ -270,7 +270,7 @@ def build_sdist(sdist_directory, config_settings=None):
 # ==============================================================================
 
 
-def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):  # pylint: disable=too-many-branches
+def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):  # pylint: disable=R0912,R0914,R0915
     """Build a wheel from this project."""
     if platform.system() == 'Linux':
         logging.info('Running on Linux %s', platform.uname().release)
