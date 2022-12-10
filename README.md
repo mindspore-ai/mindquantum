@@ -42,7 +42,7 @@
 
 ## What is MindQuantum
 
-MindQuantum is a general quantum computing framework developed by [MindSpore](https://www.mindspore.cn/en) and [HiQ](https://hiq.huaweicloud.com/), that can be used to build and train different quantum neural networks. Thanks to the powerful algorithm of quantum software group of Huawei and High-performance automatic differentiation ability of MindSpore, MindQuantum can efficiently handle problems such as  quantum machine learning, quantum chemistry simulation, and quantum optimization, which provides an efficient platform for researchers, teachers and students to quickly design and verify quantum machine learning algorithms.
+MindSpore Quantum is a new-generation quantum computing framework based on MindSpore, focusing on the implementation of NISQ algorithms. It combines the HiQ high-performance quantum computing simulator with the parallel automatic differentiation capability of MindSpore. MindSpore Quantum is easy-to-use with ultra-high performance. It can efficiently handle problems like quantum machine learning, quantum chemistry simulation, and quantum optimization. MindSpore Quantum provides an efficient platform for researchers, teachers and students to quickly design and verify quantum algorithms, making quantum computing at your fingertips.
 <img src="docs/MindQuantum-architecture_EN.png" alt="MindQuantum Architecture" width="600"/>
 
 ## First experience
