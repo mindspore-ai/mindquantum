@@ -41,6 +41,8 @@ auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLIN
         .def("reset", &sim_t::Reset)
         .def("get_qs", &sim_t::GetQS)
         .def("set_qs", &sim_t::SetQS)
+        .def("is_pure", &sim_t::IsPure)
+        .def("pure_state_vector", &sim_t::PureStateVector)
         .def("apply_hamiltonian", &sim_t::ApplyHamiltonian)
         .def("copy", [](const sim_t& sim) { return sim; })
         .def("sampling", &sim_t::Sampling)

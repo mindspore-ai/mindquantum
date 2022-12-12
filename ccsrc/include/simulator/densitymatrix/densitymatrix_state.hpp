@@ -86,6 +86,12 @@ class DensityMatrixState {
     void SetQS(const py_qs_datas_t& qs_out);
     void CopyQS(const qs_data_p_t& qs_out);
 
+    //! Judge whether the density matrix is pure
+    bool IsPure();
+
+    //! Transform to vector from a pure density matrix (with an unknown global phase)
+    py_qs_datas_t PureStateVector();
+
     //! Apply a hamiltonian on this quantum state
     void ApplyHamiltonian(const Hamiltonian<calc_type>& ham);
 

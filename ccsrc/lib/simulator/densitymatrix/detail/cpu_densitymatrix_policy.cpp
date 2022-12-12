@@ -193,15 +193,17 @@ auto CPUDensityMatrixPolicyBase::PureStateVector(qs_data_p_t qs, index_t dim) ->
     }
     py_qs_datas_t qs_vector(dim);
     index_t base;
-    for (index_t i = 0; i < dim; i++) {
+    calc_type base_value;
+    for (index_t i = 0; i < dim; i++) {;
         if (qs[IdxMap(i, i)].real() > 1e-8) {
             base = i;
+            base_value = std::sqrt(qs[IdxMap(i, i)].real());
+            qs_vector[i] = base_value;
             break;
         }
     }
     THRESHOLD_OMP_FOR(
-        dim, DimTh,
-        for (omp::idx_t i = base + 1; i < dim; i++) { qs_vector[i] = qs[IdxMap(i, base)] / qs_vector[base]; })
+        dim, DimTh, for (omp::idx_t i = base + 1; i < dim; i++) { qs_vector[i] = qs[IdxMap(i, base)] / base_value; })
     return qs_vector;
 }
 
@@ -335,8 +337,8 @@ void CPUDensityMatrixPolicyBase::ConditionalDiv(qs_data_p_t src, qs_data_p_t des
     ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::divides<qs_data_t>());
 }
 
-void CPUDensityMatrixPolicyBase::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
-                                          const matrix_t& m, index_t dim) {
+void CPUDensityMatrixPolicyBase::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
+                                                 const qbits_t& ctrls, const matrix_t& m, index_t dim) {
     if (objs.size() == 1) {
         ApplySingleQubitMatrix(src, des, objs[0], ctrls, m, dim);
     } else if (objs.size() == 2) {
