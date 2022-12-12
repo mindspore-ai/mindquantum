@@ -83,6 +83,8 @@ if (-Not $dry_run) {
     }
 }
 
+Write-Debug "  activated_venv = $activated_venv"
+
 # ==============================================================================
 
 if ($activated_venv) {
@@ -90,7 +92,8 @@ if ($activated_venv) {
 
     foreach ($subdir in @('bin', 'Scripts')) {
         foreach ($ext in @('', '.exe')) {
-            $python_exec = "${Env:VIRTUAL_ENV}\$subdir\$PYTHON$ext"
+            $python_exec = "${Env:VIRTUAL_ENV}\${subdir}\${PYTHON}${ext}"
+            Write-Debug "    trying '$python_exec'"
             if (Test-Path -Path $python_exec) {
                 $adjust_python = $false
                 break
@@ -105,7 +108,8 @@ if ($activated_venv) {
         $found = $false
         foreach ($subdir in @('bin', 'Scripts')) {
             foreach ($exec in @('python3', 'python', 'python3.exe', 'python.exe')) {
-                $python_exec = "${Env:VIRTUAL_ENV}\$subdir\$exec"
+                $python_exec = "${Env:VIRTUAL_ENV}\${subdir}\${exec}"
+                Write-Debug "    trying '$python_exec'"
                 if (Test-Path -Path $python_exec) {
                     $PYTHON = $exec
                     $found = $true
