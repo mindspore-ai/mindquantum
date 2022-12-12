@@ -104,7 +104,8 @@ function Extra-Help {
     Write-Output '  -Install            Build the ´install´ target'
     Write-Output '  -Prefix             Specify installation prefix'
     Write-Output ''
-    Write-Output 'Any options not matching one of the above will be passed on to CMake during the configuration step'
+    Write-Output 'Any options not matching one of the above will be passed on to CMake during the configuration step. In addition, any'
+    Wirte-Output 'options after "--%" will be passed onto CMake during the configuration step'
     Write-Output ''
     Write-Output 'Example calls:'
     Write-Output ("{0} -B build" -f $PROGRAM)
@@ -318,8 +319,12 @@ if($do_install) {
     $target_args += '--target', 'install'
 }
 
-$unparsed_args = $unparsed_args | Where-Object {$_} | ForEach-Object { "'$_'" }
 if ([bool]$unparsed_args) {
+    $unparsed_args = $unparsed_args | Where-Object {$_ -And $_ -Ne "--%"}
+    $unparsed_args = Convert-StringToArgList $unparsed_args `
+      | Where-Object {$_ -And $_ -Ne "--%"} `
+      | ForEach-Object { $_ -replace "'", '"' } `
+      | ForEach-Object { "'$_'" }
     $cmake_args += $unparsed_args
 }
 

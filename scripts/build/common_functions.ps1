@@ -227,3 +227,13 @@ function Push-EnvironmentVariable([string]$name, [string]$value) {
 }
 
 # ==============================================================================
+
+function Protect-ExecString([string]$string) {
+    # NB: This will actually work with mis-formatted strings like "AAAA ; BBB'
+    return $string -replace "(?!\B('|`")[^`"']*);(?![^`"']*(?:`"|')\B)", '`;'
+}
+
+function Convert-StringToArgList([Parameter(ValueFromPipeline=$true)][string]$commandline) {
+    $var = Invoke-Expression ("Write-Output {0}" -f (Protect-ExecString $commandline))
+    return $var
+}

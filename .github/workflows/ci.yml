@@ -823,7 +823,7 @@ jobs:
            ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -OnlyPytest -NoGitee
            -ConfigureOnly -C -Clean3rdParty -Prefix "${{ github.workspace }}/install"
            -CMakeNoRegistry
-           -G "MinGW Makefiles" -DUSE_PARALLEL_STL=OFF
+           --% -G "MinGW Makefiles" -DUSE_PARALLEL_STL=OFF
 
       - name: Build
         run: ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test
