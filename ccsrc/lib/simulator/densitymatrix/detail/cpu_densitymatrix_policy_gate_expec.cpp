@@ -76,6 +76,155 @@ auto CPUDensityMatrixPolicyBase::GetExpectation(qs_data_p_t qs, const std::vecto
     return expectation_value;
 }
 
+auto CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_data_p_t ham_matrix,
+                                                             const qbits_t& objs, const qbits_t& ctrls,
+                                                             const matrix_t& m, index_t dim) -> qs_data_t {
+    SingleQubitGateMask mask(objs, ctrls);
+    calc_type res_real = 0, res_imag = 0;
+    if (!mask.ctrl_mask) {
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                    auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
+                    auto j = i + mask.obj_mask;
+                    qs_data_t this_res = 0;
+                    for (index_t col = 0; col < dim; col++) {
+                        this_res += (m[0][0] * GetValue(qs, i, col) + m[0][1] * GetValue(qs, j, col))
+                                    * GetValue(ham_matrix, col, i);
+                        this_res += (m[1][0] * GetValue(qs, i, col) + m[1][1] * GetValue(qs, j, col))
+                                    * GetValue(ham_matrix, col, j);
+                    }
+                    res_real += this_res.real();
+                    res_imag += this_res.imag();
+                });
+    } else {
+        if (mask.ctrl_qubits.size() == 1) {
+            index_t ctrl_low = 0UL;
+            for (qbit_t i = 0; i < mask.ctrl_qubits[0]; i++) {
+                ctrl_low = (ctrl_low << 1) + 1;
+            }
+            index_t first_low_mask = mask.obj_low_mask;
+            index_t second_low_mask = ctrl_low;
+            if (mask.obj_low_mask > ctrl_low) {
+                first_low_mask = ctrl_low;
+                second_low_mask = mask.obj_low_mask;
+            }
+            auto first_high_mask = ~first_low_mask;
+            auto second_high_mask = ~second_low_mask;
+
+            THRESHOLD_OMP(
+                MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                        auto i = ((a & first_high_mask) << 1) + (a & first_low_mask);
+                        i = ((i & second_high_mask) << 1) + (i & second_low_mask) + mask.ctrl_mask;
+                        auto j = i + mask.obj_mask;
+                        qs_data_t this_res = 0;
+                        for (index_t col = 0; col < dim; col++) {
+                            this_res += (m[0][0] * GetValue(qs, i, col) + m[0][1] * GetValue(qs, j, col))
+                                        * GetValue(ham_matrix, col, i);
+                            this_res += (m[1][0] * GetValue(qs, i, col) + m[1][1] * GetValue(qs, j, col))
+                                        * GetValue(ham_matrix, col, j);
+                        }
+                        res_real += this_res.real();
+                        res_imag += this_res.imag();
+                    });
+        } else {
+            THRESHOLD_OMP(
+                MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                        auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
+                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                            auto j = i + mask.obj_mask;
+                            qs_data_t this_res = 0;
+                            for (index_t col = 0; col < dim; col++) {
+                                this_res += (m[0][0] * GetValue(qs, i, col) + m[0][1] * GetValue(qs, j, col))
+                                            * GetValue(ham_matrix, col, i);
+                                this_res += (m[1][0] * GetValue(qs, i, col) + m[1][1] * GetValue(qs, j, col))
+                                            * GetValue(ham_matrix, col, j);
+                            }
+                            res_real += this_res.real();
+                            res_imag += this_res.imag();
+                        }
+                    });
+        }
+    }
+    return {res_real, res_imag};
+};
+
+auto CPUDensityMatrixPolicyBase::ExpectDiffTwoQubitsMatrix(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+                                                           const qbits_t& ctrls, const matrix_t& m, index_t dim)
+    -> qs_data_t {
+    DoubleQubitGateMask mask(objs, ctrls);
+    calc_type res_real = 0, res_imag = 0;
+    if (!mask.ctrl_mask) {
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                    index_t r0;  // row index of reduced matrix entry
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  a, r0);
+                    auto r3 = r0 + mask.obj_mask;
+                    auto r1 = r0 + mask.obj_min_mask;
+                    auto r2 = r0 + mask.obj_max_mask;
+                    qs_data_t this_res = 0;
+                    for (index_t col = 0; col < dim; col++) {
+                        this_res += (m[0][0] * GetValue(qs, r0, col) + m[0][1] * GetValue(qs, r1, col)
+                                     + m[0][2] * GetValue(qs, r2, col) + m[0][3] * GetValue(qs, r3, col))
+                                    * GetValue(ham_matrix, col, r0);
+                        this_res += (m[1][0] * GetValue(qs, r0, col) + m[1][1] * GetValue(qs, r1, col)
+                                     + m[1][2] * GetValue(qs, r2, col) + m[1][3] * GetValue(qs, r3, col))
+                                    * GetValue(ham_matrix, col, r1);
+                        this_res += (m[2][0] * GetValue(qs, r0, col) + m[2][1] * GetValue(qs, r1, col)
+                                     + m[2][2] * GetValue(qs, r2, col) + m[2][3] * GetValue(qs, r3, col))
+                                    * GetValue(ham_matrix, col, r2);
+                        this_res += (m[3][0] * GetValue(qs, r0, col) + m[3][1] * GetValue(qs, r1, col)
+                                     + m[3][2] * GetValue(qs, r2, col) + m[3][3] * GetValue(qs, r3, col))
+                                    * GetValue(ham_matrix, col, r3);
+                    }
+                    res_real += this_res.real();
+                    res_imag += this_res.imag();
+                });
+    } else {
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                    index_t r0;  // row index of reduced matrix entry
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  a, r0);
+                    if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
+                        auto r3 = r0 + mask.obj_mask;
+                        auto r1 = r0 + mask.obj_min_mask;
+                        auto r2 = r0 + mask.obj_max_mask;
+                        qs_data_t this_res = 0;
+                        for (index_t col = 0; col < dim; col++) {
+                            this_res += (m[0][0] * GetValue(qs, r0, col) + m[0][1] * GetValue(qs, r1, col)
+                                         + m[0][2] * GetValue(qs, r2, col) + m[0][3] * GetValue(qs, r3, col))
+                                        * GetValue(ham_matrix, col, r0);
+                            this_res += (m[1][0] * GetValue(qs, r0, col) + m[1][1] * GetValue(qs, r1, col)
+                                         + m[1][2] * GetValue(qs, r2, col) + m[1][3] * GetValue(qs, r3, col))
+                                        * GetValue(ham_matrix, col, r1);
+                            this_res += (m[2][0] * GetValue(qs, r0, col) + m[2][1] * GetValue(qs, r1, col)
+                                         + m[2][2] * GetValue(qs, r2, col) + m[2][3] * GetValue(qs, r3, col))
+                                        * GetValue(ham_matrix, col, r2);
+                            this_res += (m[3][0] * GetValue(qs, r0, col) + m[3][1] * GetValue(qs, r1, col)
+                                         + m[3][2] * GetValue(qs, r2, col) + m[3][3] * GetValue(qs, r3, col))
+                                        * GetValue(ham_matrix, col, r3);
+                        }
+                        res_real += this_res.real();
+                        res_imag += this_res.imag();
+                    }
+                });
+    }
+    return {res_real, res_imag};
+};
+
+auto CPUDensityMatrixPolicyBase::ExpectDiffMatrixGate(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+                                               const qbits_t& ctrls, const matrix_t& m, index_t dim)
+    -> qs_data_t {
+    if (objs.size() == 1) {
+        return ExpectDiffSingleQubitMatrix(qs, ham_matrix, objs, ctrls, m, dim);
+    }
+    if (objs.size() == 2) {
+        return ExpectDiffTwoQubitsMatrix(qs, ham_matrix, objs, ctrls, m, dim);
+    }
+    throw std::runtime_error("Expectation of " + std::to_string(objs.size()) + " not implement for cpu backend.");
+}
+
 auto CPUDensityMatrixPolicyBase::ExpectDiffRX(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
                                               const qbits_t& ctrls, index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);

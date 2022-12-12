@@ -138,7 +138,20 @@ template <typename qs_policy_t_>
 index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate<calc_type>>& gate,
                                                     const ParameterResolver<calc_type>& pr, bool diff) {
     auto name = gate->name_;
-    if (name == gI) {
+    if (gate->is_custom_) {
+        std::remove_reference_t<decltype(*gate)>::matrix_t mat;
+        if (!gate->parameterized_) {
+            mat = gate->base_matrix_;
+        } else {
+            calc_type val = gate->params_.Combination(pr).const_value;
+            if (!diff) {
+                mat = gate->numba_param_matrix_(val);
+            } else {
+                mat = gate->numba_param_diff_matrix_(val);
+            }
+        }
+        qs_policy_t::ApplyMatrixGate(qs, qs, gate->obj_qubits_, gate->ctrl_qubits_, mat.matrix_, dim);
+    } else if (name == gI) {
     } else if (name == gX) {
         qs_policy_t::ApplyX(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
     } else if (name == gCNOT) {
@@ -224,6 +237,35 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
             val = gate->params_.Combination(pr).const_value;
         }
         qs_policy_t::ApplyPS(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+    } else if (name == gU3) {
+        if (diff) {
+            std::runtime_error("Can not apply differential format of U3 gate on quatum states currently.");
+        }
+        auto u3 = static_cast<U3<calc_type>*>(gate.get());
+        Dim2Matrix<calc_type> m;
+        if (!gate->parameterized_) {
+            m = gate->base_matrix_;
+        } else {
+            auto theta = u3->theta.Combination(pr).const_value;
+            auto phi = u3->phi.Combination(pr).const_value;
+            auto lambda = u3->lambda.Combination(pr).const_value;
+            m = U3Matrix<calc_type>(theta, phi, lambda);
+        }
+        qs_policy_t::ApplySingleQubitMatrix(qs, qs, gate->obj_qubits_[0], gate->ctrl_qubits_, m.matrix_, dim);
+    } else if (name == gFSim) {
+        if (diff) {
+            std::runtime_error("Can not apply differential format of FSim gate on quatum states currently.");
+        }
+        auto fsim = static_cast<FSim<calc_type>*>(gate.get());
+        Dim2Matrix<calc_type> m;
+        if (!gate->parameterized_) {
+            m = gate->base_matrix_;
+        } else {
+            auto theta = fsim->theta.Combination(pr).const_value;
+            auto phi = fsim->phi.Combination(pr).const_value;
+            m = FSimMatrix<calc_type>(theta, phi);
+        }
+        qs_policy_t::ApplyTwoQubitsMatrix(qs, qs, gate->obj_qubits_, gate->ctrl_qubits_, m.matrix_, dim);
     } else if (gate->is_measure_) {
         return ApplyMeasure(gate);
     } else if (gate->is_channel_) {
@@ -260,7 +302,7 @@ template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate<calc_type>>& gate) {
     assert(gate->is_measure_);
     index_t one_mask = (1UL << gate->obj_qubits_[0]);
-    auto one_amp = qs_policy_t::DiagonalConditionalCollect(qs, one_mask, one_mask, true, dim);
+    auto one_amp = qs_policy_t::DiagonalConditionalCollect(qs, one_mask, one_mask, dim);
     index_t collapse_mask = (static_cast<index_t>(rng_() < one_amp) << gate->obj_qubits_[0]);
     qs_data_t norm_fact = (collapse_mask == 0) ? 1 / (1 - one_amp) : 1 / one_amp;
     qs_policy_t::ConditionalMul(qs, qs, one_mask, collapse_mask, norm_fact, 0.0, dim);
@@ -295,6 +337,62 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t dens_matrix, q
         return qs_policy_t::ExpectDiffPS(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
     }
     throw std::invalid_argument("gate " + name + " not implement.");
+}
+
+template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::ExpectDiffU3(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
+                                                    const std::shared_ptr<BasicGate<calc_type>>& gate,
+                                                    const ParameterResolver<calc_type>& pr, index_t dim)
+    -> Dim2Matrix<calc_type> {
+    py_qs_datas_t grad = {0, 0, 0};
+    auto u3 = static_cast<U3<calc_type>*>(gate.get());
+    if (u3->parameterized_) {
+        Dim2Matrix<calc_type> m;
+        auto theta = u3->theta.Combination(pr).const_value;
+        auto phi = u3->phi.Combination(pr).const_value;
+        auto lambda = u3->lambda.Combination(pr).const_value;
+        if (u3->theta.data_.size() != u3->theta.no_grad_parameters_.size()) {
+            m = Dim2MatrixMatMul<calc_type>(U3DiffThetaMatrix(theta, phi, lambda), U3Matrix(theta, phi, lambda));
+            grad[0] = qs_policy_t::ExpectDiffSingleQubitMatrix(dens_matrix, ham_matrix, u3->obj_qubits_, u3->ctrl_qubits_, m.matrix_,
+                                                               dim);
+        }
+        if (u3->phi.data_.size() != u3->phi.no_grad_parameters_.size()) {
+            m = Dim2MatrixMatMul<calc_type>(U3DiffPhiMatrix(theta, phi, lambda), U3Matrix(theta, phi, lambda));
+            grad[1] = qs_policy_t::ExpectDiffSingleQubitMatrix(dens_matrix, ham_matrix, u3->obj_qubits_, u3->ctrl_qubits_, m.matrix_,
+                                                               dim);
+        }
+        if (u3->lambda.data_.size() != u3->lambda.no_grad_parameters_.size()) {
+            m = Dim2MatrixMatMul<calc_type>(U3DiffLambdaMatrix(theta, phi, lambda), U3Matrix(theta, phi, lambda));
+            grad[2] = qs_policy_t::ExpectDiffSingleQubitMatrix(dens_matrix, ham_matrix, u3->obj_qubits_, u3->ctrl_qubits_, m.matrix_,
+                                                               dim);
+        }
+    }
+    return Dim2Matrix<calc_type>({grad});
+}
+
+template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::ExpectDiffFSim(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
+                                                      const std::shared_ptr<BasicGate<calc_type>>& gate,
+                                                      const ParameterResolver<calc_type>& pr, index_t dim)
+    -> Dim2Matrix<calc_type> {
+    py_qs_datas_t grad = {0, 0};
+    auto fsim = static_cast<FSim<calc_type>*>(gate.get());
+    if (fsim->parameterized_) {
+        Dim2Matrix<calc_type> m;
+        auto theta = fsim->theta.Combination(pr).const_value;
+        auto phi = fsim->phi.Combination(pr).const_value;
+        if (fsim->theta.data_.size() != fsim->theta.no_grad_parameters_.size()) {
+            m = Dim2MatrixMatMul<calc_type>(FSimDiffThetaMatrix(theta), FSimMatrix(theta, phi));  // can be optimized.
+            grad[0] = qs_policy_t::ExpectDiffTwoQubitsMatrix(dens_matrix, ham_matrix, fsim->obj_qubits_,
+                                                             fsim->ctrl_qubits_, m.matrix_, dim);
+        }
+        if (fsim->phi.data_.size() != fsim->phi.no_grad_parameters_.size()) {
+            m = Dim2MatrixMatMul<calc_type>(FSimDiffThetaMatrix(phi), FSimMatrix(theta, phi));
+            grad[1] = qs_policy_t::ExpectDiffTwoQubitsMatrix(dens_matrix, ham_matrix, fsim->obj_qubits_,
+                                                             fsim->ctrl_qubits_, m.matrix_, dim);
+        }
+    }
+    return Dim2Matrix<calc_type>({grad});
 }
 
 template <typename qs_policy_t_>
@@ -337,7 +435,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneOne(
     auto ham_matrix = qs_policy_t::HamiltonianMatrix(ham.ham_, dim);
     derived_t sim_ham{ham_matrix, n_qubits, seed};
     for (const auto& g : herm_circ) {
-        if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
+         if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
             auto gi = ExpectDiffGate(sim_qs.qs, sim_ham.qs, g, dim);
             for (auto& it : g->params_.GetRequiresGradParameters()) {
                 f_and_g[1 + p_map.at(it)] += 2 * std::real(gi) * -g->params_.data_.at(it);
@@ -384,7 +482,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneMulti(
             sim_hams[j - start] = std::move(derived_t{ham_matrix, n_qubits, seed});
         }
         for (const auto& g : herm_circ) {
-            if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
+             if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
                 for (int j = start; j < end; j++) {
                     auto gi = ExpectDiffGate(sim_qs.qs, sim_hams[j - start].qs, g, dim);
                     for (auto& it : g->params_.GetRequiresGradParameters()) {

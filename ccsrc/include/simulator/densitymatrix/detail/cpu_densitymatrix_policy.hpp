@@ -30,7 +30,7 @@ struct CPUDensityMatrixPolicyBase {
     using py_qs_data_t = std::complex<calc_type>;
     using py_qs_datas_t = std::vector<py_qs_data_t>;
     using matrix_t = std::vector<py_qs_datas_t>;
-    static constexpr index_t DimTh = 1UL << 13;
+    static constexpr index_t DimTh = 1UL << 8;
     static constexpr qs_data_t IMAGE_MI = {0, -1};
     static constexpr qs_data_t IMAGE_I = {0, 1};
 
@@ -56,7 +56,7 @@ struct CPUDensityMatrixPolicyBase {
     static bool IsPure(qs_data_p_t qs, index_t dim);
     static py_qs_datas_t PureStateVector(qs_data_p_t qs, index_t dim);
     static void ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
-    static calc_type DiagonalConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi, bool abs, index_t dim);
+    static calc_type DiagonalConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi, index_t dim);
     template <index_t mask, index_t condi, class binary_op>
     static void ConditionalBinary(qs_data_p_t src, qs_data_p_t des, qs_data_t succ_coeff, qs_data_t fail_coeff,
                                   index_t dim, const binary_op& op);
@@ -95,7 +95,7 @@ struct CPUDensityMatrixPolicyBase {
     static void ApplyPS(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
 
-    // Single qubit operator
+    // Qubit operator
     // ========================================================================================================
 
     static void ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit, const qbits_t& ctrls,
@@ -108,6 +108,8 @@ struct CPUDensityMatrixPolicyBase {
     static void ApplyRZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
 
+    static void ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
+                                     const matrix_t& m, index_t dim);
     static void ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyXX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
@@ -116,7 +118,8 @@ struct CPUDensityMatrixPolicyBase {
                         bool diff = false);
     static void ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
-
+    static void ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
+                                const matrix_t& m, index_t dim);
     // Channel operator
     // ========================================================================================================
     static void ApplySingleQubitChannel(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
@@ -130,6 +133,12 @@ struct CPUDensityMatrixPolicyBase {
 
     // gate_expec
     // ========================================================================================================
+    static qs_data_t ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+                                                 const qbits_t& ctrls, const matrix_t& m, index_t dim);
+    static qs_data_t ExpectDiffTwoQubitsMatrix(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+                                               const qbits_t& ctrls, const matrix_t& m, index_t dim);
+    static qs_data_t ExpectDiffMatrixGate(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+                                          const qbits_t& ctrls, const matrix_t& m, index_t dim);
     static qs_data_t ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                   index_t dim);
     static qs_data_t ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,

@@ -189,36 +189,33 @@ bool CPUDensityMatrixPolicyBase::IsPure(qs_data_p_t qs, index_t dim) {
 
 auto CPUDensityMatrixPolicyBase::PureStateVector(qs_data_p_t qs, index_t dim) -> py_qs_datas_t {
     if (!IsPure(qs, dim)) {
-        throw(std::runtime_error("PureStateVector(): Cannot transform mixd density matrix to vector."));
+        throw(std::runtime_error("PureStateVector(): Cannot transform mixed density matrix to vector."));
     }
     py_qs_datas_t qs_vector(dim);
+    index_t base;
+    for (index_t i = 0; i < dim; i++) {
+        if (qs[IdxMap(i, i)].real() > 1e-8) {
+            base = i;
+            break;
+        }
+    }
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { qs_vector[i] = std::sqrt(qs[IdxMap(i, i)]); })
+        dim, DimTh,
+        for (omp::idx_t i = base + 1; i < dim; i++) { qs_vector[i] = qs[IdxMap(i, base)] / qs_vector[base]; })
     return qs_vector;
 }
 
-auto CPUDensityMatrixPolicyBase::DiagonalConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi, bool abs,
-                                                            index_t dim) -> calc_type {
+auto CPUDensityMatrixPolicyBase::DiagonalConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi, index_t dim)
+    -> calc_type {
     // collect diagonal amplitude with index mask satisfied condition.
     calc_type res_real = 0;
-    if (abs) {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+: res_real)), dim, DimTh,
-                         for (omp::idx_t i = 0; i < dim; i++) {
-                             if ((i & mask) == condi) {
-                                 auto _ii = IdxMap(i, i);
-                                 res_real += qs[_ii].real();
-                             }
-                         });
-    } else {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+: res_real)), dim, DimTh,
-                         for (omp::idx_t i = 0; i < dim; i++) {
-                             if ((i & mask) == condi) {
-                                 res_real += qs[IdxMap(i, i)].real();
-                             }
-                         });
-    }
+    THRESHOLD_OMP(
+        MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+: res_real)), dim, DimTh,
+                     for (omp::idx_t i = 0; i < dim; i++) {
+                         if ((i & mask) == condi) {
+                             res_real += qs[IdxMap(i, i)].real();
+                         }
+                     });
     return res_real;
 }
 
@@ -337,4 +334,16 @@ void CPUDensityMatrixPolicyBase::ConditionalDiv(qs_data_p_t src, qs_data_p_t des
                                                 qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim) {
     ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::divides<qs_data_t>());
 }
+
+void CPUDensityMatrixPolicyBase::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
+                                          const matrix_t& m, index_t dim) {
+    if (objs.size() == 1) {
+        ApplySingleQubitMatrix(src, des, objs[0], ctrls, m, dim);
+    } else if (objs.size() == 2) {
+        ApplyTwoQubitsMatrix(src, des, objs, ctrls, m, dim);
+    } else {
+        throw std::runtime_error("Can not custom " + std::to_string(objs.size()) + " qubits gate for cpu backend.");
+    }
+}
+
 }  // namespace mindquantum::sim::densitymatrix::detail

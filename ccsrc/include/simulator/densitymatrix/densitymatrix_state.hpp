@@ -106,6 +106,14 @@ class DensityMatrixState {
     py_qs_data_t ExpectDiffGate(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
                                 const std::shared_ptr<BasicGate<calc_type>>& gate, index_t dim);
 
+    Dim2Matrix<calc_type> ExpectDiffU3(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
+                                                        const std::shared_ptr<BasicGate<calc_type>>& gate,
+                                                        const ParameterResolver<calc_type>& pr, index_t dim);
+
+    Dim2Matrix<calc_type> ExpectDiffFSim(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
+                                                          const std::shared_ptr<BasicGate<calc_type>>& gate,
+                                                          const ParameterResolver<calc_type>& pr, index_t dim);
+
     py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham);
 
     py_qs_datas_t GetExpectationWithReversibleGradOneOne(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
