@@ -698,16 +698,16 @@ jobs:
         run: >-
            ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -CCache -OnlyPytest -NoGitee
            -ConfigureOnly -C -Clean3rdParty -Prefix "${{ github.workspace }}/install"
-           -CMakeNoRegistry
+           -CMakeNoRegistry -Verbose
            -DUSE_PARALLEL_STL=OFF
 
       - name: Build
-        run: ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -CCache
+        run: ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -CCache -Verbose
 
       - name: Build wheel
         run: |
-          python -m pip install -U build wheel
-          ./build.ps1 -FastBuild -Delocate
+          ./venv/Scripts/python -m pip install -U build wheel virtualenv
+          ./build.ps1 -FastBuild -Delocate -Verbose
 
       - name: Install
         run: ./build_locally.ps1 -Install
