@@ -41,9 +41,11 @@ else()
   endif()
 endif()
 
+set(PATCHES)
 if(MSVC OR "${OS_NAME}" STREQUAL "MinGW")
   set(PRE_CONFIGURE_COMMAND bootstrap.bat)
   if(NOT MSVC)
+    list(APPEND PATCHES ${CMAKE_CURRENT_LIST_DIR}/patches/fix-bootstrap-mingw.patch001)
     list(APPEND PRE_CONFIGURE_COMMAND mingw)
   endif()
 else()
@@ -93,6 +95,7 @@ mindquantum_add_pkg(
   LIBS ${LIBS}
   VER ${VER}
   MD5 ${MD5}
+  PATCHES ${PATCHES}
   PRE_CONFIGURE_COMMAND ${PRE_CONFIGURE_COMMAND}
   SKIP_BUILD_STEP
   INSTALL_COMMAND ${INSTALL_COMMAND}
