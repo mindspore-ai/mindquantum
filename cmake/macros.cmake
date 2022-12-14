@@ -417,8 +417,8 @@ You might want to remove the ${AP_WORKING_DIRECTORY} directory completely and re
 
   if(_try_git_reset)
     message(STATUS "Some patches failed. Attempting `git stash -all` and re-applying all patches.")
-    __exec_cmd(COMMAND ${GIT_EXECUTABLE} stash --all WORKING_DIRECTORY ${_dir})
-    __exec_cmd(COMMAND ${GIT_EXECUTABLE} stash drop WORKING_DIRECTORY ${_dir})
+    __exec_cmd(COMMAND ${GIT_EXECUTABLE} stash --all WORKING_DIRECTORY ${AP_WORKING_DIRECTORY})
+    __exec_cmd(COMMAND ${GIT_EXECUTABLE} stash drop WORKING_DIRECTORY ${AP_WORKING_DIRECTORY})
 
     set(_args ${ARGN})
     list(REMOVE_ITEM _args TRY_GIT_RESET)
