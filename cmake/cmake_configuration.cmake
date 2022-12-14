@@ -16,6 +16,8 @@
 #
 # ==============================================================================
 
+# lint_cmake: -whitespace/indent
+
 include(CMakeParseArguments)
 
 set(_allowed_build_types Release RelWithDebInfo MinSizeRel Debug)
