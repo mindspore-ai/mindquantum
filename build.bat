@@ -451,9 +451,27 @@ if !has_build_dir! == 1 (
   )
 )
 
-set MQ_DELOCATE_WHEEL=!delocate_wheel!
-set MQ_DELOCATE_WHEEL_PLAT=
-if NOT "!platform_name!" == "" set MQ_DELOCATE_WHEEL_PLAT=!platform_name!
+if !delocate_wheel! == 1 (
+  set MQ_DELOCATE_WHEEL=1
+  set MQ_DELOCATE_WHEEL_PLAT=
+  if NOT "!platform_name!" == "" set MQ_DELOCATE_WHEEL_PLAT=!platform_name!
+
+  if !has_build_dir! == 1 (
+    set build_dir_for_env=!build_dir!
+  ) else (
+    if "!fast_build_dir!" == "" (
+      for /F "delims=" %%i IN ('!PYTHON! -m mindquantum_config --tempdir') DO set build_dir_for_env=%%i
+    ) else (
+      set build_dir_for_env=!fast_build_dir!
+    )
+  )
+
+  set MQ_LIB_PATHS=!build_dir_for_env!\ld_library_paths.txt
+  set MQ_BUILD_DIR=!build_dir_for_env!
+
+  echo MQ_LIB_PATHS = !MQ_LIB_PATHS!
+  echo MQ_BUILD_DIR = !MQ_BUILD_DIR!
+)
 
 call %SCRIPTDIR%\dos\call_cmd.bat !PYTHON! -m build !args! !unparsed_args!
 
@@ -462,6 +480,8 @@ if DEFINED unparsed_args set unparsed_args=
 
 if DEFINED MQ_DELOCATE_WHEEL set MQ_DELOCATE_WHEEL=
 if DEFINED MQ_DELOCATE_WHEEL_PLAT set MQ_DELOCATE_WHEEL_PLAT=
+if DEFINED MQ_LIB_PATHS set MQ_LIB_PATHS=
+if DEFINED MQ_BUILD_DIR set MQ_BUILD_DIR=
 
 rem -----------------------------------------------------------------------------
 rem Move the wheels to the output directory
@@ -521,7 +541,7 @@ rem ============================================================================
   echo   /NoIsolation        Pass --no-isolation to python3 -m build
   echo   /O, /Output [dir]   Output directory for built wheels
   echo   /PlatName           Platform name to use for wheel delocation
-  echo                       (only effective if --delocate is used)
+  echo                       (only effective if --delocate is used)
   echo   /Quiet              Disable verbose build rules
   echo   /ShowLibraries      Show all known third-party libraries
   echo   /Venv *path*        Path to Python virtual environment
