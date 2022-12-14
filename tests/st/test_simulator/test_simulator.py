@@ -74,8 +74,12 @@ def test_init_reset(virtual_qc, dtype):
     s1.reset()
     v3 = s1.get_qs()
     v = np.array([1, 0, 0, 0], dtype=np.complex128)
-    assert np.allclose(v1, v)
-    assert np.allclose(v1, v3)
+    if virtual_qc == "mqmatrix":
+        assert np.allclose(v1, np.outer(v, v.conj()))
+        assert np.allclose(v1, v3)
+    else:
+        assert np.allclose(v1, v)
+        assert np.allclose(v1, v3)
 
 
 @pytest.mark.level0
@@ -110,7 +114,11 @@ def test_apply_circuit_and_hermitian(virtual_qc, dtype):
     matrix = G.Rzz(10).matrix() @ matrix
     matrix = (np.kron(G.I.matrix(), sv0) + np.kron(G.Z.matrix(), sv1)) @ matrix
     v = matrix[:, 0]
-    assert np.allclose(v, v1)
+    if virtual_qc == "mqmatrix":
+        m = np.outer(v, v.conj())
+        assert np.allclose(m, v1)
+    else:
+        assert np.allclose(v, v1)
 
     circ2 = circ.hermitian()
     s1.reset()
@@ -118,7 +126,11 @@ def test_apply_circuit_and_hermitian(virtual_qc, dtype):
     matrix = np.conj(matrix.T)
     v1 = s1.get_qs()
     v = matrix[:, 0]
-    assert np.allclose(v, v1)
+    if virtual_qc == "mqmatrix":
+        m = np.outer(v, v.conj())
+        assert np.allclose(m, v1)
+    else:
+        assert np.allclose(v, v1)
 
 
 @pytest.mark.level0
@@ -136,10 +148,16 @@ def test_set_and_get(virtual_qc, dtype):
     Context.set_dtype(dtype)
     sim = Simulator(virtual_qc, 1)
     qs1 = sim.get_qs()
-    assert np.allclose(qs1, np.array([1, 0]))
+    if virtual_qc == "mqmatrix":
+        assert np.allclose(qs1, np.array([[1, 0], [0, 0]]))
+    else:
+        assert np.allclose(qs1, np.array([1, 0]))
     sim.set_qs(np.array([1, 1]))
     qs2 = sim.get_qs()
-    assert np.allclose(qs2, np.array([1, 1]) / np.sqrt(2))
+    if virtual_qc == "mqmatrix":
+        assert np.allclose(qs2, np.array([[0.5, 0.5], [0.5, 0.5]]))
+    else:
+        assert np.allclose(qs2, np.array([1, 1]) / np.sqrt(2))
 
 
 @pytest.mark.level0
@@ -233,7 +251,10 @@ def test_all_gate_with_simulator(virtual_qc, dtype):  # pylint: disable=too-many
             -0.17429908 + 0.27887826j,
         ]
     )
-    assert np.allclose(qs, qs_exp)
+    if virtual_qc == "mqmatrix":
+        assert np.allclose(qs, np.outer(qs_exp, qs_exp.conj()))
+    else:
+        assert np.allclose(qs, qs_exp)
     sim = Simulator(virtual_qc, c.n_qubits)
     ham = ops.Hamiltonian(ops.QubitOperator('Z0'))
     grad_ops = sim.get_expectation_with_grad(ham, c)
@@ -431,7 +452,10 @@ def test_multi_params_gate(virtual_qc, dtype):
     p0 = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
     sim.apply_circuit(circ, pr=dict(zip(circ.params_name, p0)))
     qs_exp = np.array([0.06207773 + 0.0j, 0.12413139 + 0.44906334j, 0.10068061 - 0.05143708j, 0.65995413 + 0.57511569j])
-    assert np.allclose(qs_exp, sim.get_qs())
+    if virtual_qc == "mqmatrix":
+        assert np.allclose(np.outer(qs_exp, qs_exp.conj()), sim.get_qs())
+    else:
+        assert np.allclose(qs_exp, sim.get_qs())
     sim.reset()
     ham = Hamiltonian(QubitOperator("X0 Y1"))
     grad_ops = sim.get_expectation_with_grad(ham, circ)

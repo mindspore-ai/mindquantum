@@ -357,24 +357,21 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffU3(qs_data_p_t dens_matrix, qs_
     py_qs_datas_t grad = {0, 0, 0};
     auto u3 = static_cast<U3<calc_type>*>(gate.get());
     if (u3->parameterized_) {
-        Dim2Matrix<calc_type> m;
         auto theta = u3->theta.Combination(pr).const_value;
         auto phi = u3->phi.Combination(pr).const_value;
         auto lambda = u3->lambda.Combination(pr).const_value;
         if (u3->theta.data_.size() != u3->theta.no_grad_parameters_.size()) {
-            m = Dim2MatrixMatMul<calc_type>(U3DiffThetaMatrix(theta, phi, lambda), U3Matrix(theta, phi, lambda));
-            grad[0] = qs_policy_t::ExpectDiffSingleQubitMatrix(dens_matrix, ham_matrix, u3->obj_qubits_,
-                                                               u3->ctrl_qubits_, m.matrix_, dim);
+            grad[0] = qs_policy_t::ExpectDiffU3Theta(dens_matrix, ham_matrix, u3->obj_qubits_, u3->ctrl_qubits_, phi,
+                                                     dim);
         }
         if (u3->phi.data_.size() != u3->phi.no_grad_parameters_.size()) {
-            m = Dim2MatrixMatMul<calc_type>(U3DiffPhiMatrix(theta, phi, lambda), U3Matrix(theta, phi, lambda));
-            grad[1] = qs_policy_t::ExpectDiffSingleQubitMatrix(dens_matrix, ham_matrix, u3->obj_qubits_,
-                                                               u3->ctrl_qubits_, m.matrix_, dim);
+            grad[1] = qs_policy_t::ExpectDiffU3Phi(dens_matrix, ham_matrix, u3->obj_qubits_, u3->ctrl_qubits_, dim);
         }
         if (u3->lambda.data_.size() != u3->lambda.no_grad_parameters_.size()) {
-            m = Dim2MatrixMatMul<calc_type>(U3DiffLambdaMatrix(theta, phi, lambda), U3Matrix(theta, phi, lambda));
+            Dim2Matrix<calc_type> diff_m{U3DiffLambdaMatrix(theta, phi, lambda)};
+            Dim2Matrix<calc_type> herm_m{U3Matrix(-theta, -lambda, -phi)};
             grad[2] = qs_policy_t::ExpectDiffSingleQubitMatrix(dens_matrix, ham_matrix, u3->obj_qubits_,
-                                                               u3->ctrl_qubits_, m.matrix_, dim);
+                                                               u3->ctrl_qubits_, diff_m.matrix_, herm_m.matrix_, dim);
         }
     }
     return Dim2Matrix<calc_type>({grad});
@@ -388,18 +385,13 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffFSim(qs_data_p_t dens_matrix, q
     py_qs_datas_t grad = {0, 0};
     auto fsim = static_cast<FSim<calc_type>*>(gate.get());
     if (fsim->parameterized_) {
-        Dim2Matrix<calc_type> m;
-        auto theta = fsim->theta.Combination(pr).const_value;
-        auto phi = fsim->phi.Combination(pr).const_value;
         if (fsim->theta.data_.size() != fsim->theta.no_grad_parameters_.size()) {
-            m = Dim2MatrixMatMul<calc_type>(FSimDiffThetaMatrix(theta), FSimMatrix(theta, phi));  // can be optimized.
-            grad[0] = qs_policy_t::ExpectDiffTwoQubitsMatrix(dens_matrix, ham_matrix, fsim->obj_qubits_,
-                                                             fsim->ctrl_qubits_, m.matrix_, dim);
+            grad[0] = qs_policy_t::ExpectDiffFSimTheta(dens_matrix, ham_matrix, fsim->obj_qubits_, fsim->ctrl_qubits_,
+                                                       dim);
         }
         if (fsim->phi.data_.size() != fsim->phi.no_grad_parameters_.size()) {
-            m = Dim2MatrixMatMul<calc_type>(FSimDiffThetaMatrix(phi), FSimMatrix(theta, phi));
-            grad[1] = qs_policy_t::ExpectDiffTwoQubitsMatrix(dens_matrix, ham_matrix, fsim->obj_qubits_,
-                                                             fsim->ctrl_qubits_, m.matrix_, dim);
+            grad[1] = qs_policy_t::ExpectDiffFSimPhi(dens_matrix, ham_matrix, fsim->obj_qubits_, fsim->ctrl_qubits_,
+                                                     dim);
         }
     }
     return Dim2Matrix<calc_type>({grad});
@@ -424,31 +416,58 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_typ
 }
 
 template <typename qs_policy_t_>
-auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneOne(
-    const Hamiltonian<calc_type>& ham, const circuit_t& circ, const circuit_t& herm_circ,
-    const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name, const VS& ans_name)
+auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneOne(const Hamiltonian<calc_type>& ham,
+                                                                              const circuit_t& circ,
+                                                                              const circuit_t& herm_circ,
+                                                                              const ParameterResolver<calc_type>& pr,
+                                                                              const MST<size_t>& p_map, int n_thread)
     -> py_qs_datas_t {
-    MST<size_t> p_map;
-    for (size_t i = 0; i < enc_name.size(); i++) {
-        p_map[enc_name[i]] = i;
+    if (circ.size() != herm_circ.size()) {
+        std::runtime_error("In density matrix mode, circ and herm_circ must be the same size.");
     }
-    for (size_t i = 0; i < ans_name.size(); i++) {
-        p_map[ans_name[i]] = i + enc_name.size();
-    }
-    ParameterResolver<calc_type> pr = ParameterResolver<calc_type>();
-    pr.SetItems(enc_name, enc_data[0]);
-    pr.SetItems(ans_name, ans_data);
     py_qs_datas_t f_and_g(1 + p_map.size(), 0);
     derived_t sim_qs = *this;
     sim_qs.ApplyCircuit(circ, pr);
     f_and_g[0] = qs_policy_t::GetExpectation(sim_qs.qs, ham.ham_, dim);
     auto ham_matrix = qs_policy_t::HamiltonianMatrix(ham.ham_, dim);
     derived_t sim_ham{ham_matrix, n_qubits, seed};
+    index_t n = circ.size();
     for (const auto& g : herm_circ) {
-        if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
-            auto gi = ExpectDiffGate(sim_qs.qs, sim_ham.qs, g, dim);
-            for (auto& it : g->params_.GetRequiresGradParameters()) {
-                f_and_g[1 + p_map.at(it)] += 2 * std::real(gi) * -g->params_.data_.at(it);
+        --n;
+        if (g->name_ == gU3) {
+            auto u3 = static_cast<U3<calc_type>*>(circ[n].get());
+            if (const auto& [title, jac] = u3->jacobi; title.size() != 0) {
+                auto intrin_grad = ExpectDiffU3(sim_qs.qs, sim_ham.qs, circ[n], pr, dim);
+                auto u3_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                for (const auto& [name, idx] : title) {
+                    f_and_g[1 + p_map.at(name)] += 2 * std::real(u3_grad.matrix_[0][idx]);
+                }
+            }
+        } else if (g->name_ == gFSim) {
+            auto fsim = static_cast<FSim<calc_type>*>(circ[n].get());
+            if (const auto& [title, jac] = fsim->jacobi; title.size() != 0) {
+                auto intrin_grad = ExpectDiffFSim(sim_qs.qs, sim_ham.qs, circ[n], pr, dim);
+                auto fsim_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                for (const auto& [name, idx] : title) {
+                    f_and_g[1 + p_map.at(name)] += 2 * std::real(fsim_grad.matrix_[0][idx]);
+                }
+            }
+        } else if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
+            if (g->is_custom_) {
+                auto val = circ[n]->params_.Combination(pr).const_value;
+                auto herm_val = g->params_.Combination(pr).const_value;
+                Dim2Matrix<calc_type> diff_m = circ[n]->numba_param_diff_matrix_(val);
+                Dim2Matrix<calc_type> herm_m = g->numba_param_matrix_(herm_val);
+                auto gi = qs_policy_t::ExpectDiffMatrixGate(sim_qs.qs, sim_ham.qs, g->obj_qubits_, g->ctrl_qubits_,
+                                                            diff_m.matrix_, herm_m.matrix_, dim);
+                for (auto& it : circ[n]->params_.GetRequiresGradParameters()) {
+                    f_and_g[1 + p_map.at(it)] += 2 * std::real(gi) * circ[n]->params_.data_.at(it);
+                }
+            } else {
+                auto gi = ExpectDiffGate(sim_qs.qs, sim_ham.qs, circ[n], dim);
+                for (auto& it : circ[n]->params_.GetRequiresGradParameters()) {
+                    f_and_g[1 + p_map.at(it)] += 2 * std::real(gi) * circ[n]->params_.data_.at(it);
+                }
             }
         }
         sim_ham.ApplyGate(g, pr);
@@ -463,6 +482,9 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneMulti(
     const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map, int n_thread) -> VT<py_qs_datas_t> {
     auto n_hams = hams.size();
     int max_thread = 15;
+    if (circ.size() != herm_circ.size()) {
+        std::runtime_error("In density matrix mode, circ and herm_circ must be the same size.");
+    }
     if (n_thread == 0) {
         throw std::runtime_error("n_thread cannot be zero.");
     }
@@ -491,12 +513,51 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneMulti(
             auto ham_matrix = qs_policy_t::HamiltonianMatrix(hams[j]->ham_, dim);
             sim_hams[j - start] = std::move(derived_t{ham_matrix, n_qubits, seed});
         }
+        index_t n = circ.size();
         for (const auto& g : herm_circ) {
-            if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
-                for (int j = start; j < end; j++) {
-                    auto gi = ExpectDiffGate(sim_qs.qs, sim_hams[j - start].qs, g, dim);
-                    for (auto& it : g->params_.GetRequiresGradParameters()) {
-                        f_and_g[j][1 + p_map.at(it)] += 2 * std::real(gi) * -g->params_.data_.at(it);
+            --n;
+            if (g->name_ == gU3) {
+                auto u3 = static_cast<U3<calc_type>*>(circ[n].get());
+                if (const auto& [title, jac] = u3->jacobi; title.size() != 0) {
+                    for (int j = start; j < end; j++) {
+                        auto intrin_grad = ExpectDiffU3(sim_qs.qs, sim_hams[j - start].qs, circ[n], pr, dim);
+                        auto u3_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                        for (const auto& [name, idx] : title) {
+                            f_and_g[j][1 + p_map.at(name)] += 2 * std::real(u3_grad.matrix_[0][idx]);
+                        }
+                    }
+                }
+            } else if (g->name_ == gFSim) {
+                auto fsim = static_cast<FSim<calc_type>*>(circ[n].get());
+                if (const auto& [title, jac] = fsim->jacobi; title.size() != 0) {
+                    for (int j = start; j < end; j++) {
+                        auto intrin_grad = ExpectDiffFSim(sim_qs.qs, sim_hams[j - start].qs, circ[n], pr, dim);
+                        auto fsim_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                        for (const auto& [name, idx] : title) {
+                            f_and_g[j][1 + p_map.at(name)] += 2 * std::real(fsim_grad.matrix_[0][idx]);
+                        }
+                    }
+                }
+            } else if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
+                if (g->is_custom_) {
+                    auto val = circ[n]->params_.Combination(pr).const_value;
+                    auto herm_val = g->params_.Combination(pr).const_value;
+                    Dim2Matrix<calc_type> diff_m = circ[n]->numba_param_diff_matrix_(val);
+                    Dim2Matrix<calc_type> herm_m = g->numba_param_matrix_(herm_val);
+                    for (int j = start; j < end; j++) {
+                        auto gi = qs_policy_t::ExpectDiffMatrixGate(sim_qs.qs, sim_hams[j - start].qs, g->obj_qubits_,
+                                                                    g->ctrl_qubits_, diff_m.matrix_, herm_m.matrix_,
+                                                                    dim);
+                        for (auto& it : circ[n]->params_.GetRequiresGradParameters()) {
+                            f_and_g[j][1 + p_map.at(it)] += 2 * std::real(gi) * circ[n]->params_.data_.at(it);
+                        }
+                    }
+                } else {
+                    for (int j = start; j < end; j++) {
+                        auto gi = ExpectDiffGate(sim_qs.qs, sim_hams[j - start].qs, circ[n], dim);
+                        for (auto& it : circ[n]->params_.GetRequiresGradParameters()) {
+                            f_and_g[j][1 + p_map.at(it)] += 2 * std::real(gi) * circ[n]->params_.data_.at(it);
+                        }
                     }
                 }
             }
@@ -578,6 +639,9 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneOne(const H
                                                                          const circuit_t& herm_circ,
                                                                          const ParameterResolver<calc_type>& pr,
                                                                          const MST<size_t>& p_map) -> py_qs_datas_t {
+    if (circ.size() != herm_circ.size()) {
+        std::runtime_error("In density matrix mode, circ and herm_circ must be the same size.");
+    }
     py_qs_datas_t f_and_g(1 + p_map.size(), 0);
     derived_t sim_qs = *this;
     sim_qs.ApplyCircuit(circ, pr);
@@ -585,23 +649,58 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneOne(const H
     sim_qs.CopyQS(this->qs);
     auto ham_matrix = qs_policy_t::HamiltonianMatrix(ham.ham_, dim);
     derived_t sim_ham{ham_matrix, n_qubits, seed};
-    if (circ.size() != herm_circ.size()) {
-        std::runtime_error("In density matrix mode, circ and herm_circ must be the same size.");
-    }
     index_t n = circ.size();
-    for (index_t i = 0; i < herm_circ.size(); i++) {
+    for (const auto& g : herm_circ) {
         --n;
-        if (circ[n]->params_.data_.size() != circ[n]->params_.no_grad_parameters_.size()) {
-            for (index_t j = 0; j <= n; j++) {
-                sim_qs.ApplyGate(circ[j], pr);
+        if (g->name_ == gU3) {
+            auto u3 = static_cast<U3<calc_type>*>(circ[n].get());
+            if (const auto& [title, jac] = u3->jacobi; title.size() != 0) {
+                for (index_t a = 0; a <= n; a++) {
+                    sim_qs.ApplyGate(circ[a], pr);
+                }
+                auto intrin_grad = ExpectDiffU3(sim_qs.qs, sim_ham.qs, circ[n], pr, dim);
+                auto u3_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                for (const auto& [name, idx] : title) {
+                    f_and_g[1 + p_map.at(name)] += 2 * std::real(u3_grad.matrix_[0][idx]);
+                }
+                sim_qs.CopyQS(this->qs);
             }
-            auto gi = ExpectDiffGate(sim_qs.qs, sim_ham.qs, circ[n], dim);
-            for (auto& it : circ[n]->params_.GetRequiresGradParameters()) {
-                f_and_g[1 + p_map.at(it)] += 2 * std::real(gi) * circ[n]->params_.data_.at(it);
+        } else if (g->name_ == gFSim) {
+            auto fsim = static_cast<FSim<calc_type>*>(circ[n].get());
+            if (const auto& [title, jac] = fsim->jacobi; title.size() != 0) {
+                for (index_t a = 0; a <= n; a++) {
+                    sim_qs.ApplyGate(circ[a], pr);
+                }
+                auto intrin_grad = ExpectDiffFSim(sim_qs.qs, sim_ham.qs, circ[n], pr, dim);
+                auto fsim_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                for (const auto& [name, idx] : title) {
+                    f_and_g[1 + p_map.at(name)] += 2 * std::real(fsim_grad.matrix_[0][idx]);
+                }
+                sim_qs.CopyQS(this->qs);
+            }
+        } else if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
+            for (index_t a = 0; a <= n; a++) {
+                sim_qs.ApplyGate(circ[a], pr);
+            }
+            if (g->is_custom_) {
+                auto val = circ[n]->params_.Combination(pr).const_value;
+                auto herm_val = g->params_.Combination(pr).const_value;
+                Dim2Matrix<calc_type> diff_m = circ[n]->numba_param_diff_matrix_(val);
+                Dim2Matrix<calc_type> herm_m = g->numba_param_matrix_(herm_val);
+                auto gi = qs_policy_t::ExpectDiffMatrixGate(sim_qs.qs, sim_ham.qs, g->obj_qubits_, g->ctrl_qubits_,
+                                                            diff_m.matrix_, herm_m.matrix_, dim);
+                for (auto& it : circ[n]->params_.GetRequiresGradParameters()) {
+                    f_and_g[1 + p_map.at(it)] += 2 * std::real(gi) * circ[n]->params_.data_.at(it);
+                }
+            } else {
+                auto gi = ExpectDiffGate(sim_qs.qs, sim_ham.qs, circ[n], dim);
+                for (auto& it : circ[n]->params_.GetRequiresGradParameters()) {
+                    f_and_g[1 + p_map.at(it)] += 2 * std::real(gi) * circ[n]->params_.data_.at(it);
+                }
             }
             sim_qs.CopyQS(this->qs);
         }
-        sim_ham.ApplyGate(herm_circ[i], pr);
+        sim_ham.ApplyGate(g, pr);
     }
     return f_and_g;
 }
@@ -610,6 +709,9 @@ template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneMulti(
     const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ, const circuit_t& herm_circ,
     const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map, int n_thread) -> VT<py_qs_datas_t> {
+    if (circ.size() != herm_circ.size()) {
+        std::runtime_error("In density matrix mode, circ and herm_circ must be the same size.");
+    }
     auto n_hams = hams.size();
     int max_thread = 15;
     if (n_thread == 0) {
@@ -641,27 +743,68 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneMulti(
             sim_hams[j - start] = std::move(derived_t{ham_matrix, n_qubits, seed});
         }
         sim_qs.CopyQS(this->qs);
-
-        if (circ.size() != herm_circ.size()) {
-            std::runtime_error("In density matrix mode, circ and herm_circ must be the same size.");
-        }
         index_t n = circ.size();
-        for (index_t a = 0; a < herm_circ.size(); a++) {
+        for (const auto& g : herm_circ) {
             --n;
-            if (circ[n]->params_.data_.size() != circ[n]->params_.no_grad_parameters_.size()) {
-                for (index_t b = 0; b <= n; b++) {
-                    sim_qs.ApplyGate(circ[b], pr);
+            if (g->name_ == gU3) {
+                auto u3 = static_cast<U3<calc_type>*>(circ[n].get());
+                if (const auto& [title, jac] = u3->jacobi; title.size() != 0) {
+                    for (index_t a = 0; a <= n; a++) {
+                        sim_qs.ApplyGate(circ[a], pr);
+                    }
+                    for (int j = start; j < end; j++) {
+                        auto intrin_grad = ExpectDiffU3(sim_qs.qs, sim_hams[j - start].qs, circ[n], pr, dim);
+                        auto u3_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                        for (const auto& [name, idx] : title) {
+                            f_and_g[j][1 + p_map.at(name)] += 2 * std::real(u3_grad.matrix_[0][idx]);
+                        }
+                    }
+                    sim_qs.CopyQS(this->qs);
                 }
-                for (int j = start; j < end; j++) {
-                    auto gi = ExpectDiffGate(sim_qs.qs, sim_hams[j - start].qs, circ[n], dim);
-                    for (auto& it : circ[n]->params_.GetRequiresGradParameters()) {
-                        f_and_g[j][1 + p_map.at(it)] += 2 * std::real(gi) * circ[n]->params_.data_.at(it);
+            } else if (g->name_ == gFSim) {
+                auto fsim = static_cast<FSim<calc_type>*>(circ[n].get());
+                if (const auto& [title, jac] = fsim->jacobi; title.size() != 0) {
+                    for (index_t a = 0; a <= n; a++) {
+                        sim_qs.ApplyGate(circ[a], pr);
+                    }
+                    for (int j = start; j < end; j++) {
+                        auto intrin_grad = ExpectDiffFSim(sim_qs.qs, sim_hams[j - start].qs, circ[n], pr, dim);
+                        auto fsim_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                        for (const auto& [name, idx] : title) {
+                            f_and_g[j][1 + p_map.at(name)] += 2 * std::real(fsim_grad.matrix_[0][idx]);
+                        }
+                    }
+                    sim_qs.CopyQS(this->qs);
+                }
+            } else if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
+                for (index_t a = 0; a <= n; a++) {
+                    sim_qs.ApplyGate(circ[a], pr);
+                }
+                if (g->is_custom_) {
+                    auto val = circ[n]->params_.Combination(pr).const_value;
+                    auto herm_val = g->params_.Combination(pr).const_value;
+                    Dim2Matrix<calc_type> diff_m = circ[n]->numba_param_diff_matrix_(val);
+                    Dim2Matrix<calc_type> herm_m = g->numba_param_matrix_(herm_val);
+                    for (int j = start; j < end; j++) {
+                        auto gi = qs_policy_t::ExpectDiffMatrixGate(sim_qs.qs, sim_hams[j - start].qs, g->obj_qubits_,
+                                                                    g->ctrl_qubits_, diff_m.matrix_, herm_m.matrix_,
+                                                                    dim);
+                        for (auto& it : circ[n]->params_.GetRequiresGradParameters()) {
+                            f_and_g[j][1 + p_map.at(it)] += 2 * std::real(gi) * circ[n]->params_.data_.at(it);
+                        }
+                    }
+                } else {
+                    for (int j = start; j < end; j++) {
+                        auto gi = ExpectDiffGate(sim_qs.qs, sim_hams[j - start].qs, circ[n], dim);
+                        for (auto& it : circ[n]->params_.GetRequiresGradParameters()) {
+                            f_and_g[j][1 + p_map.at(it)] += 2 * std::real(gi) * circ[n]->params_.data_.at(it);
+                        }
                     }
                 }
                 sim_qs.CopyQS(this->qs);
             }
             for (int j = start; j < end; j++) {
-                sim_hams[j - start].ApplyGate(herm_circ[a], pr);
+                sim_hams[j - start].ApplyGate(g, pr);
             }
         }
     }
