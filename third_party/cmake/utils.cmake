@@ -53,7 +53,12 @@ message(STATUS "Calling make using ${JOBS} jobs")
 
 # ------------------------------------------------------------------------------
 
-set(_local_libs_path_file "${PROJECT_BINARY_DIR}/ld_library_paths.txt")
+if(MINDSPORE_CI)
+  set(_libs_path_file_dest "${PROJECT_SOURCE_DIR}")
+else()
+  set(_libs_path_file_dest "${PROJECT_BINARY_DIR}")
+endif()
+set(_local_libs_path_file "${_libs_path_file_dest}/ld_library_paths.txt")
 file(WRITE "${_local_libs_path_file}" "")
 
 # ------------------------------------------------------------------------------

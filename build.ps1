@@ -274,7 +274,7 @@ foreach ($el in $cmake_option_names.GetEnumerator()) {
     }
 }
 
-if ($_IS_MINDSPORE_CI ) {
+if ($_IS_MINDSPORE_CI) {
     $build_args += '--set', 'MINDSPORE_CI'
 }
 
@@ -429,8 +429,17 @@ if ($delocate_wheel) {
     else {
         $build_dir_for_env = (&"$PYTHON" -m mindquantum_config --tempdir)
     }
-    $Env:MQ_LIB_PATHS = "$build_dir_for_env/ld_library_paths.txt"
+
+    if ($_IS_MINDSPORE_CI) {
+        $Env:MQ_LIB_PATHS = "$ROOTDIR/ld_library_paths.txt"
+    }
+    else {
+        $Env:MQ_LIB_PATHS = "$build_dir_for_env/ld_library_paths.txt"
+    }
     $Env:MQ_BUILD_DIR = "$build_dir_for_env"
+
+    Write-Debug "MQ_LIB_PATHS = $Env:MQ_LIB_PATHS"
+    Write-Debug "MQ_BUILD_DIR = $Env:MQ_BUILD_DIR"
 }
 else {
     $Env:MQ_DELOCATE_WHEEL = 0

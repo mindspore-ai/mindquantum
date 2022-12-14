@@ -468,7 +468,11 @@ if !delocate_wheel! == 1 (
     )
   )
 
-  set MQ_LIB_PATHS=!build_dir_for_env!\ld_library_paths.txt
+  if !_IS_MINDSPORE_CI! == 1 (
+    set MQ_LIB_PATHS=!ROOTDIR!\ld_library_paths.txt
+  ) else (
+    set MQ_LIB_PATHS=!build_dir_for_env!\ld_library_paths.txt
+  )
   set MQ_BUILD_DIR=!build_dir_for_env!
 
   echo MQ_LIB_PATHS = !MQ_LIB_PATHS!

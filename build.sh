@@ -396,7 +396,14 @@ if [ "$delocate_wheel" -eq 1 ]; then
     else
         build_dir_for_env=$("$PYTHON" -m mindquantum_config --tempdir)
     fi
-    env_vars+=(MQ_LIB_PATHS="$build_dir_for_env/ld_library_paths.txt" MQ_BUILD_DIR="$build_dir_for_env")
+
+    if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
+        env_vars+=(MQ_LIB_PATHS="$ROOTDIR/ld_library_paths.txt")
+    else
+        env_vars+=(MQ_LIB_PATHS="$build_dir_for_env/ld_library_paths.txt")
+    fi
+
+    env_vars+=(MQ_BUILD_DIR="$build_dir_for_env")
 
     if [ -n "$platform_name" ]; then
         env_vars+=(MQ_DELOCATE_WHEEL_PLAT="$platform_name")
