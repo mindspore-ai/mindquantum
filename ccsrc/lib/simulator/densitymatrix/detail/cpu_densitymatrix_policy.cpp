@@ -194,7 +194,7 @@ auto CPUDensityMatrixPolicyBase::PureStateVector(qs_data_p_t qs, index_t dim) ->
     py_qs_datas_t qs_vector(dim);
     index_t base;
     calc_type base_value;
-    for (index_t i = 0; i < dim; i++) {;
+    for (index_t i = 0; i < dim; i++) {
         if (qs[IdxMap(i, i)].real() > 1e-8) {
             base = i;
             base_value = std::sqrt(qs[IdxMap(i, i)].real());

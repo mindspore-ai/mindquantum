@@ -26,6 +26,7 @@ mindquantum/ccsrc/include/ops/gates.hpp:mindquantum::GetGateByName
 mindquantum/ccsrc/include/ops/gates/qubit_operator.tpp:mindquantum::ops::QubitOperator<coeff_t>::sparse_matrix
 mindquantum/ccsrc/include/ops/gates/qubit_operator.tpp:mindquantum::ops::mindquantum::ops::QubitOperator<coeff_t>::get_op_matrix.QubitOperator<coeff_t>::sparse_matrix
 mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_gate_expec.cpp:mindquantum::sim::vector::detail::CPUVectorPolicyBase::ExpectDiffSingleQubitMatrix
+mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_densitymatrix_policy_two_ops.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase::ApplyTwoQubitsMatrix
 mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_densitymatrix_policy_two_ops.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase::ApplyXX
 mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_densitymatrix_policy_two_ops.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase::ApplyYY
 mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_densitymatrix_policy_two_ops.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase::ApplyZZ

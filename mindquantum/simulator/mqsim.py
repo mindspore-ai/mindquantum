@@ -41,7 +41,7 @@ from .utils import GradOpsWrapper, _thread_balance
 
 # isort: split
 
-from mindquantum import _mq_vector, _mq_matrix  # pylint: disable=wrong-import-order
+from mindquantum import _mq_matrix, _mq_vector  # pylint: disable=wrong-import-order
 
 try:
     from mindquantum import _mq_vector_gpu

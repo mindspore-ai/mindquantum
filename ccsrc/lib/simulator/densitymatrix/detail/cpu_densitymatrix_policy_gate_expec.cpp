@@ -88,7 +88,8 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {
+            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                for (omp::idx_t a = 0; a < (dim / 2); a++) {
                     auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                     auto j = i + mask.obj_mask;
                     qs_data_t this_res = 0;
@@ -117,7 +118,8 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_
             auto second_high_mask = ~second_low_mask;
 
             THRESHOLD_OMP(
-                MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                    for (omp::idx_t a = 0; a < (dim / 2); a++) {
                         auto i = ((a & first_high_mask) << 1) + (a & first_low_mask);
                         i = ((i & second_high_mask) << 1) + (i & second_low_mask) + mask.ctrl_mask;
                         auto j = i + mask.obj_mask;
@@ -133,7 +135,8 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_
                     });
         } else {
             THRESHOLD_OMP(
-                MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                    for (omp::idx_t a = 0; a < (dim / 2); a++) {
                         auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                         if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                             auto j = i + mask.obj_mask;
@@ -168,10 +171,11 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffTwoQubitsMatrix(qs_data_p_t qs, qs_da
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {
+            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                for (omp::idx_t a = 0; a < (dim / 2); a++) {
                     index_t r0;  // row index of reduced matrix entry
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
-                                  a, r0);
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                        mask.obj_high_mask, mask.obj_rev_high_mask, a, r0);
                     auto r3 = r0 + mask.obj_mask;
                     auto r1 = r0 + mask.obj_min_mask;
                     auto r2 = r0 + mask.obj_max_mask;
@@ -195,10 +199,11 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffTwoQubitsMatrix(qs_data_p_t qs, qs_da
                 });
     } else {
         THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {
+            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                for (omp::idx_t a = 0; a < (dim / 2); a++) {
                     index_t r0;  // row index of reduced matrix entry
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
-                                  a, r0);
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                        mask.obj_high_mask, mask.obj_rev_high_mask, a, r0);
                     if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto r3 = r0 + mask.obj_mask;
                         auto r1 = r0 + mask.obj_min_mask;

@@ -139,9 +139,9 @@ constexpr const char gRYY[] = "Ryy";
 constexpr const char gRZZ[] = "Rzz";
 constexpr const char gU3[] = "U3";
 constexpr const char gFSim[] = "FSim";
-constexpr const char cPL[] = "PL";  // Pauli channel
-constexpr const char cAD[] = "ADC";  // amplitude damping channel
-constexpr const char cPD[] = "PDC";  // phase damping channel
+constexpr const char cPL[] = "PL";     // Pauli channel
+constexpr const char cAD[] = "ADC";    // amplitude damping channel
+constexpr const char cPD[] = "PDC";    // phase damping channel
 constexpr const char cHAD[] = "HADC";  // hermitian amplitude damping channel
 
 /**

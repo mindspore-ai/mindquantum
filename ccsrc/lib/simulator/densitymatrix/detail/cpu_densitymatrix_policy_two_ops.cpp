@@ -31,8 +31,8 @@
 #include "simulator/utils.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
-void CPUDensityMatrixPolicyBase::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
-                                                      const matrix_t& m, index_t dim) {
+void CPUDensityMatrixPolicyBase::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
+                                                      const qbits_t& ctrls, const matrix_t& m, index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
@@ -109,8 +109,10 @@ void CPUDensityMatrixPolicyBase::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p
                     if ((col[0] & mask.ctrl_mask) == mask.ctrl_mask) {  // column in control
                         for (int i = 0; i < 4; i++) {
                             for (int j = 0; j < 4; j++) {
-                                auto new_value = tmp_mat[i][0] * std::conj(m[j][0]) + tmp_mat[i][1] * std::conj(m[j][1])
-                                                 + tmp_mat[i][2] * std::conj(m[j][2]) + tmp_mat[i][3] * std::conj(m[j][3]);
+                                auto new_value = tmp_mat[i][0] * std::conj(m[j][0])
+                                                 + tmp_mat[i][1] * std::conj(m[j][1])
+                                                 + tmp_mat[i][2] * std::conj(m[j][2])
+                                                 + tmp_mat[i][3] * std::conj(m[j][3]);
                                 SetValue(des, row[i], col[j], new_value);
                             }
                         }
