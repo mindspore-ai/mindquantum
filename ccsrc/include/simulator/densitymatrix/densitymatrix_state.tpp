@@ -436,7 +436,8 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneOne(co
         --n;
         if (g->name_ == gU3) {
             auto u3 = static_cast<U3<calc_type>*>(circ[n].get());
-            if (const auto& [title, jac] = u3->jacobi; title.size() != 0) {
+            const auto& [title, jac] = u3->jacobi;
+            if (title.size() != 0) {
                 auto intrin_grad = ExpectDiffU3(sim_qs.qs, sim_ham.qs, circ[n], pr, dim);
                 auto u3_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
                 for (const auto& [name, idx] : title) {
@@ -445,7 +446,8 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneOne(co
             }
         } else if (g->name_ == gFSim) {
             auto fsim = static_cast<FSim<calc_type>*>(circ[n].get());
-            if (const auto& [title, jac] = fsim->jacobi; title.size() != 0) {
+            const auto& [title, jac] = fsim->jacobi;
+            if (title.size() != 0) {
                 auto intrin_grad = ExpectDiffFSim(sim_qs.qs, sim_ham.qs, circ[n], pr, dim);
                 auto fsim_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
                 for (const auto& [name, idx] : title) {
@@ -518,7 +520,8 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneMulti(
             --n;
             if (g->name_ == gU3) {
                 auto u3 = static_cast<U3<calc_type>*>(circ[n].get());
-                if (const auto& [title, jac] = u3->jacobi; title.size() != 0) {
+                const auto& [title, jac] = u3->jacobi;
+                if (title.size() != 0) {
                     for (int j = start; j < end; j++) {
                         auto intrin_grad = ExpectDiffU3(sim_qs.qs, sim_hams[j - start].qs, circ[n], pr, dim);
                         auto u3_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
@@ -529,7 +532,8 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneMulti(
                 }
             } else if (g->name_ == gFSim) {
                 auto fsim = static_cast<FSim<calc_type>*>(circ[n].get());
-                if (const auto& [title, jac] = fsim->jacobi; title.size() != 0) {
+                const auto& [title, jac] = fsim->jacobi;
+                if (title.size() != 0) {
                     for (int j = start; j < end; j++) {
                         auto intrin_grad = ExpectDiffFSim(sim_qs.qs, sim_hams[j - start].qs, circ[n], pr, dim);
                         auto fsim_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
@@ -654,7 +658,8 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneOne(const H
         --n;
         if (g->name_ == gU3) {
             auto u3 = static_cast<U3<calc_type>*>(circ[n].get());
-            if (const auto& [title, jac] = u3->jacobi; title.size() != 0) {
+            const auto& [title, jac] = u3->jacobi;
+            if (title.size() != 0) {
                 for (index_t a = 0; a <= n; a++) {
                     sim_qs.ApplyGate(circ[a], pr);
                 }
@@ -667,7 +672,8 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneOne(const H
             }
         } else if (g->name_ == gFSim) {
             auto fsim = static_cast<FSim<calc_type>*>(circ[n].get());
-            if (const auto& [title, jac] = fsim->jacobi; title.size() != 0) {
+            const auto& [title, jac] = fsim->jacobi;
+            if (title.size() != 0) {
                 for (index_t a = 0; a <= n; a++) {
                     sim_qs.ApplyGate(circ[a], pr);
                 }
@@ -748,7 +754,8 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneMulti(
             --n;
             if (g->name_ == gU3) {
                 auto u3 = static_cast<U3<calc_type>*>(circ[n].get());
-                if (const auto& [title, jac] = u3->jacobi; title.size() != 0) {
+                const auto& [title, jac] = u3->jacobi;
+                if (title.size() != 0) {
                     for (index_t a = 0; a <= n; a++) {
                         sim_qs.ApplyGate(circ[a], pr);
                     }
@@ -763,7 +770,8 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneMulti(
                 }
             } else if (g->name_ == gFSim) {
                 auto fsim = static_cast<FSim<calc_type>*>(circ[n].get());
-                if (const auto& [title, jac] = fsim->jacobi; title.size() != 0) {
+                const auto& [title, jac] = fsim->jacobi;
+                if (title.size() != 0) {
                     for (index_t a = 0; a <= n; a++) {
                         sim_qs.ApplyGate(circ[a], pr);
                     }

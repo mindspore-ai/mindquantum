@@ -347,5 +347,4 @@ void CPUDensityMatrixPolicyBase::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t de
         throw std::runtime_error("Can not custom " + std::to_string(objs.size()) + " qubits gate for cpu backend.");
     }
 }
-
 }  // namespace mindquantum::sim::densitymatrix::detail
