@@ -16,10 +16,7 @@
 #
 # ==============================================================================
 
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/cengines)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/core)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/decompositions)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/mapping)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ops)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/optimisation)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/simulator)

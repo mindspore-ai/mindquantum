@@ -10,8 +10,6 @@
 "mindquantum/ccsrc/lib/mq_base/gates/details/fermion_operator_term_policy.cpp"              "constStatement"
 "mindquantum/ccsrc/lib/mq_base/gates/details/qubit_operator_term_policy.cpp"                "constStatement"
 
-"mindquantum/ccsrc/lib/experimental/core/cpp_core.cpp:282"                                  "constVariable"
-
 "mindquantum/ccsrc/include/ops/gates/fermion_operator.tpp"                                  "containerOutOfBounds"
 "mindquantum/ccsrc/lib/ops/gates/fermion_operator.cpp"                                      "containerOutOfBounds"
 "mindquantum/ccsrc/lib/ops/gates/fermion_operator_parameter_resolver.cpp"                   "containerOutOfBounds"
@@ -40,7 +38,6 @@
 "mindquantum/tests/decompositions/test_apply_atoms.cpp"                                     "preprocessorErrorDirective"
 "mindquantum/tests/ops/test_angle_parametric_gates.cpp"                                     "preprocessorErrorDirective"
 
-"mindquantum/ccsrc/lib/experimental/cengines/write_projectq.cpp"                            "stlIfFind"
 "mindquantum/ccsrc/lib/experimental/decompositions/atom_storage.cpp"                        "stlIfFind"
 "mindquantum/ccsrc/lib/experimental/decompositions/gate_decomposer.cpp"                     "stlIfFind"
 
@@ -59,8 +56,6 @@
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_single_ops.cpp"            "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_xlike.cpp"                 "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_zlike.cpp"                 "unknownMacro"
-"mindquantum/ccsrc/python/experimental/include/python/cengines/resource_counter.hpp:25"     "unknownMacro"
-"mindquantum/ccsrc/python/experimental/include/python/ops/command.hpp:26"                   "unknownMacro"
 "mindquantum/third_party/projectq/projectq.h"                                               "unknownMacro"
 
 "mindquantum/ccsrc/lib/experimental/decompositions/time_evolution.cpp"                      "unreadVariable"
@@ -74,9 +69,6 @@
 "mindquantum/ccsrc/include/experimental/core/control.hpp:79"                                "useStlAlgorithm"
 "mindquantum/ccsrc/include/ops/gates/terms_coeff_dict.hpp"                                  "useStlAlgorithm"
 "mindquantum/ccsrc/include/ops/gates/terms_operator_base.tpp"                               "useStlAlgorithm"
-"mindquantum/ccsrc/lib/experimental/core/circuit_manager.cpp"                               "useStlAlgorithm"
 "mindquantum/ccsrc/lib/experimental/simulator/projectq_simulator.cpp"                       "useStlAlgorithm"
-"mindquantum/ccsrc/python/experimental/lib/ops/command.cpp"                                 "useStlAlgorithm"
 
 "mindquantum/tests/core/test_circuit_block.cpp"                                             "ctuOneDefinitionRuleViolation"
-"mindquantum/ccsrc/include/simulator/vector/vector_state.tpp"                               "cppcheckError"

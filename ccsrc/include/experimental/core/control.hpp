@@ -20,14 +20,13 @@
 
 #include <tweedledum/Passes/Utility/shallow_duplicate.h>
 
-#include "experimental/cengines/config.hpp"
+#include "experimental/core/config.hpp"
+#include "experimental/core/types.hpp"
 
 namespace mindquantum::cengines {
 class ControlledCircuit {
  public:
-    using cbit_t = tweedledum::Cbit;
-
-    ControlledCircuit(circuit_t& original, const qubits_t& controls)
+    ControlledCircuit(circuit_t& original, const qubits_t& controls)  // NOLINT(runtime/references)
         : processed_(empty(controls))
         , original_(original)
         , circuit_(empty(controls) ? circuit_t{} : tweedledum::shallow_duplicate(original))

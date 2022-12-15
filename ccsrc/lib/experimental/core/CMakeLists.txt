@@ -18,6 +18,4 @@
 
 # lint_cmake: -whitespace/indent
 
-target_sources(
-  mq_cxx_nextgen PRIVATE ${CMAKE_CURRENT_LIST_DIR}/circuit_block.cpp ${CMAKE_CURRENT_LIST_DIR}/circuit_manager.cpp
-                         ${CMAKE_CURRENT_LIST_DIR}/cpp_core.cpp)
+target_sources(mq_cxx_nextgen PRIVATE ${CMAKE_CURRENT_LIST_DIR}/circuit_block.cpp)

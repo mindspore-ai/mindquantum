@@ -20,7 +20,6 @@ This document describes the new C++ backend API to MindQuantum.
 .. toctree::
    :maxdepth: 1
 
-   cxx_experimental/cengines
    cxx_experimental/core
    cxx_experimental/decompositions
    cxx_experimental/ops

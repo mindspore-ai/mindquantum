@@ -33,12 +33,10 @@
 
 #include "core/parameter_resolver.hpp"
 
-#include "experimental/cengines/write_projectq.hpp"
 #include "experimental/ops/gates.hpp"
 #include "experimental/ops/parametric/angle_gates.hpp"
 
 #include "python/bindings.hpp"
-#include "python/ops/gate_adapter.hpp"
 
 namespace ops = mindquantum::ops;
 namespace py = pybind11;

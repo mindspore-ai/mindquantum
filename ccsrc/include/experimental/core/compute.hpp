@@ -21,20 +21,18 @@
 #include <tweedledum/IR/Circuit.h>
 #include <tweedledum/Passes/Utility/shallow_duplicate.h>
 
-#include "experimental/cengines/config.hpp"
+#include "experimental/core/types.hpp"
 #include "experimental/ops/gates/invalid.hpp"
 
 namespace mindquantum::cengines {
 //! Circuit wrapper class that implements the compute-uncompute pattern
 class ComputeCircuit {
  public:
-    using cbit_t = tweedledum::Cbit;
-
     //! Constructor
     /*!
      * \param original A quantum circuit
      */
-    explicit ComputeCircuit(circuit_t& original)
+    explicit ComputeCircuit(circuit_t& original)  // NOLINT(runtime/references)
         : original_(original)
         , do_compute_(true)
         , no_bits_added_(true)
@@ -89,7 +87,8 @@ class ComputeCircuit {
     }
 
  private:
-    static void add_missing_qubits_cbits_(const circuit_t& reference, circuit_t& circuit) {
+    static void add_missing_qubits_cbits_(const circuit_t& reference,
+                                          circuit_t& circuit) {  // NOLINT(runtime/references)
         reference.foreach_qubit([&circuit](const qubit_t& qubit, std::string_view name) {
             if (qubit >= circuit.num_qubits()) {
 #ifndef NDEBUG

@@ -24,14 +24,8 @@ target_link_libraries(mq_cxx_nextgen PUBLIC include_lib mindquantum::cereal mind
 
 # ------------------------------------------------------------------------------
 
-install(
-  DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/cengines
-            ${CMAKE_CURRENT_LIST_DIR}/core
-            ${CMAKE_CURRENT_LIST_DIR}/decompositions
-            ${CMAKE_CURRENT_LIST_DIR}/details
-            ${CMAKE_CURRENT_LIST_DIR}/mapping
-            ${CMAKE_CURRENT_LIST_DIR}/ops
-            ${CMAKE_CURRENT_LIST_DIR}/simulator
-  DESTINATION ${MQ_INSTALL_INCLUDEDIR}/experimental)
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/core ${CMAKE_CURRENT_LIST_DIR}/decompositions
+                  ${CMAKE_CURRENT_LIST_DIR}/mapping ${CMAKE_CURRENT_LIST_DIR}/ops ${CMAKE_CURRENT_LIST_DIR}/simulator
+        DESTINATION ${MQ_INSTALL_INCLUDEDIR}/experimental)
 
 # ==============================================================================

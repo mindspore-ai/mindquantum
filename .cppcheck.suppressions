@@ -10,8 +10,6 @@ assignBoolToPointer:ccsrc/python/simulator/include/python/vector/bind_vec_state.
 constStatement:ccsrc/lib/mq_base/gates/details/fermion_operator_term_policy.cpp
 constStatement:ccsrc/lib/mq_base/gates/details/qubit_operator_term_policy.cpp
 
-constVariable:ccsrc/lib/experimental/core/cpp_core.cpp:282
-
 containerOutOfBounds:ccsrc/include/ops/gates/fermion_operator.tpp
 containerOutOfBounds:ccsrc/lib/ops/gates/fermion_operator.cpp
 containerOutOfBounds:ccsrc/lib/ops/gates/fermion_operator_parameter_resolver.cpp
@@ -40,7 +38,6 @@ preprocessorErrorDirective:ccsrc/python/experimental/lib/ops/ops.cpp
 preprocessorErrorDirective:tests/decompositions/test_apply_atoms.cpp
 preprocessorErrorDirective:tests/ops/test_angle_parametric_gates.cpp
 
-stlIfFind:ccsrc/lib/experimental/cengines/write_projectq.cpp
 stlIfFind:ccsrc/lib/experimental/decompositions/atom_storage.cpp
 stlIfFind:ccsrc/lib/experimental/decompositions/gate_decomposer.cpp
 
@@ -59,8 +56,6 @@ unknownMacro:ccsrc/include/core/sparse/paulimat.hpp:58
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_single_ops.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_xlike.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_zlike.cpp
-unknownMacro:ccsrc/python/experimental/include/python/cengines/resource_counter.hpp:25
-unknownMacro:ccsrc/python/experimental/include/python/ops/command.hpp:26
 unknownMacro:third_party/projectq/projectq.h
 
 unreadVariable:ccsrc/lib/experimental/decompositions/time_evolution.cpp
@@ -74,8 +69,6 @@ useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.hpp
 useStlAlgorithm:ccsrc/include/experimental/core/control.hpp:79
 useStlAlgorithm:ccsrc/include/ops/gates/terms_coeff_dict.hpp
 useStlAlgorithm:ccsrc/include/ops/gates/terms_operator_base.tpp
-useStlAlgorithm:ccsrc/lib/experimental/core/circuit_manager.cpp
 useStlAlgorithm:ccsrc/lib/experimental/simulator/projectq_simulator.cpp
-useStlAlgorithm:ccsrc/python/experimental/lib/ops/command.cpp
 
 ctuOneDefinitionRuleViolation:tests/core/test_circuit_block.cpp

@@ -36,9 +36,7 @@
 "mindquantum/ccsrc/cxx_experimental/include/ops/parametric"                                           "runtime/indentation_namespace"
 "mindquantum/ccsrc/cxx_experimental/include/ops/parametric"                                           "whitespace/parens"
 
-"mindquantum/ccsrc/cxx_experimental/include/cengines/cpp_printer.hpp"                                 "build/include"
 "mindquantum/ccsrc/cxx_experimental/include/core/circuit_block.hpp"                                   "build/include"
-"mindquantum/ccsrc/cxx_experimental/include/core/circuit_manager.hpp"                                 "build/include"
 "mindquantum/ccsrc/cxx_experimental/include/decompositions/atom_storage.hpp"                          "build/include"
 "mindquantum/ccsrc/cxx_experimental/include/decompositions/decomposition_rule.hpp"                    "build/include"
 "mindquantum/ccsrc/cxx_experimental/include/decompositions/details/gate_decomposition_rule_cxx17.hpp" "build/include"
@@ -50,7 +48,6 @@
 "mindquantum/ccsrc/cxx_experimental/include/ops/parametric/register_gate_type.hpp"                    "build/include"
 "mindquantum/ccsrc/cxx_experimental/include/ops/parametric/substitutions.hpp"                         "build/include"
 "mindquantum/ccsrc/cxx_experimental/include/simulator/simulator_base.hpp"                             "build/include"
-"mindquantum/ccsrc/cxx_experimental/python/include/python/optimizer/optimizer.hpp"                    "build/include"
 "mindquantum/ccsrc/cxx_experimental/include/decompositions/decomposition_atom.hpp"                    "readability/casting"
 "mindquantum/ccsrc/cxx_experimental/include/decompositions/details/decomposition_param.hpp"           "whitespace/line_length"
 "mindquantum/ccsrc/cxx_experimental/include/decompositions/decomposition_atom.hpp"                    "whitespace/semicolon"
