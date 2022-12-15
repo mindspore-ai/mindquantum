@@ -374,6 +374,9 @@ jobs:
               if [ -z "$program" ]; then
                   echo "  -> skipping because cannot extract program from command line!"
                   continue
+              elif [ ! -x "$program" ]; then
+                  echo "  -> skipping because program is not an executable! ($program)"
+                  continue
               fi
 
               gdb --batch -ex 'run' -ex 'thread apply all bt' -ex 'quit' --args "$program" "$args"
@@ -704,18 +707,13 @@ jobs:
       - name: Build
         run: ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -CCache -Verbose
 
-      - name: Build wheel
-        run: |
-          ./venv/Scripts/python -m pip install -U build wheel virtualenv
-          ./build.ps1 -FastBuild -Delocate -Verbose
-
       - name: Install
         run: ./build_locally.ps1 -Install
 
-      # - name: Run C++ tests
-      #   run: |
-      #     cd build
-      #     ctest --output-on-failure
+      - name: Run C++ tests
+        run: |
+          cd build
+          ctest --output-on-failure
 
       - name: Print CCache statistics
         run: |

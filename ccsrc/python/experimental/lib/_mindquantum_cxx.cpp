@@ -30,9 +30,6 @@ PYBIND11_MODULE(_mindquantum_cxx, module) {
     py::module ops = module.def_submodule("ops", "MindQuantum-C++ operators interface");
     python::init_ops(ops);
 
-    py::module optimizer = module.def_submodule("optimizer", "MindQuantum-C++ C++ optimisation");
-    python::init_optimizer(optimizer);
-
     py::module simulator = module.def_submodule("simulator", "MindQuantum-C++ C++ simulators");
     python::init_simulator(simulator);
 

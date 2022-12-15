@@ -18,12 +18,11 @@
 #include <pybind11/pybind11.h>
 
 namespace mindquantum::python {
-void init_circuit(pybind11::module& module);
-void init_ops(pybind11::module& module);
-void init_optimizer(pybind11::module& module);
-void init_symengine(pybind11::module& module);
-void init_simulator(pybind11::module& module);
-void init_logging(pybind11::module& module);
+void init_circuit(pybind11::module& module);    // NOLINT(runtime/references)
+void init_ops(pybind11::module& module);        // NOLINT(runtime/references)
+void init_symengine(pybind11::module& module);  // NOLINT(runtime/references)
+void init_simulator(pybind11::module& module);  // NOLINT(runtime/references)
+void init_logging(pybind11::module& module);    // NOLINT(runtime/references)
 }  // namespace mindquantum::python
 
 #endif /* PYTHON_BINDINGS_HPP */
