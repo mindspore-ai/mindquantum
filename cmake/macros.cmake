@@ -28,6 +28,41 @@ include(CheckLinkerFlag)
 
 # ==============================================================================
 
+# Wrapper over execute_process()
+function(__exec_cmd)
+  set(options)
+  set(oneValueArgs WORKING_DIRECTORY)
+  set(multiValueArgs COMMAND)
+
+  cmake_parse_arguments(EXEC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  # cmake-format: off
+  debug_print(
+    STATUS "  execute_process("
+    "      COMMAND ${EXEC_COMMAND}"
+    "      WORKING_DIRECTORY ${EXEC_WORKING_DIRECTORY}"
+    "      ...)"
+  )
+  if(APPLE)
+    debug_print(STATUS "   MACOSX_DEPLOYMENT_TARGET = $ENV{MACOSX_DEPLOYMENT_TARGET}")
+  endif()
+  execute_process(
+    COMMAND ${EXEC_COMMAND}
+    WORKING_DIRECTORY ${EXEC_WORKING_DIRECTORY}
+    OUTPUT_VARIABLE _stdout
+    ERROR_VARIABLE _stderr
+    RESULTS_VARIABLE _results_out
+    RESULT_VARIABLE RESULT
+  )
+  # cmake-format: on
+  if(NOT RESULT EQUAL "0")
+    debug_print(SEND_ERROR "STDOUT:\n${_stdout}" "STDERR:\n${_stderr}" "RESULTS OUT:\n${_results_out}")
+    message(FATAL_ERROR "error! when ${EXEC_COMMAND} in ${EXEC_WORKING_DIRECTORY}")
+  endif()
+endfunction()
+
+# ------------------------------------------------------------------------------
+
 include(is_language_enabled)
 
 # ------------------------------------------------------------------------------
@@ -254,9 +289,23 @@ endfunction()
 #
 # apply_patches(<working_directory> [<patch-file> [... <patch-file>]])
 # ~~~
-function(apply_patches working_directory)
+function(apply_patches)
+  # cmake-lint: disable=R0912,R0915
+  cmake_parse_arguments(PARSE_ARGV 0 AP "TRY_GIT_RESET" "WORKING_DIRECTORY" "")
+
+  if(NOT AP_WORKING_DIRECTORY)
+    message(FATAL_ERROR "Missing <working-directory> argument!")
+  endif()
+
+  if(AP_TRY_GIT_RESET)
+    find_package(Git REQUIRED)
+  endif()
+
+  # ------------------------------------
+
+  set(_try_git_reset FALSE)
   # cmake-lint: disable=R0915
-  foreach(_patch_file ${ARGN})
+  foreach(_patch_file ${AP_UNPARSED_ARGUMENTS})
     # NB: All these shenanigans with file(CONFIGURE ...) are just to make sure that we get a file with LF line
     # endings...
     get_filename_component(_patch_file_name ${_patch_file} NAME)
@@ -291,8 +340,8 @@ function(apply_patches working_directory)
 
     file(MD5 "${_lf_patch_file}" _lf_md5)
     file(MD5 "${_crlf_patch_file}" _crlf_md5)
-    set(_lf_patch_lock_file "${working_directory}/mq_applied_patch_${_lf_md5}")
-    set(_crlf_patch_lock_file "${working_directory}/mq_applied_patch_${_crlf_md5}")
+    set(_lf_patch_lock_file "${AP_WORKING_DIRECTORY}/mq_applied_patch_${_lf_md5}")
+    set(_crlf_patch_lock_file "${AP_WORKING_DIRECTORY}/mq_applied_patch_${_crlf_md5}")
 
     if(NOT EXISTS "${_lf_patch_lock_file}" AND NOT EXISTS "${_crlf_patch_lock_file}")
       message(STATUS "Applying patch ${_patch_file}")
@@ -305,7 +354,7 @@ function(apply_patches working_directory)
       _apply_patch_file(
         PATCH_ARGS ${_patch_args}
         INPUT_FILE "${_lf_patch_file}"
-        WORKING_DIRECTORY "${working_directory}"
+        WORKING_DIRECTORY "${AP_WORKING_DIRECTORY}"
         OUTPUT_VARIABLE _lf_stdout
         ERROR_VARIABLE _lf_stderr
         RESULTS_VARIABLE _lf_results_out
@@ -317,7 +366,7 @@ function(apply_patches working_directory)
         _apply_patch_file(
           PATCH_ARGS -p1
           INPUT_FILE "${_lf_patch_file}"
-          WORKING_DIRECTORY "${working_directory}"
+          WORKING_DIRECTORY "${AP_WORKING_DIRECTORY}"
           OUTPUT_VARIABLE _lf_stdout
           ERROR_VARIABLE _lf_stderr
           RESULTS_VARIABLE _lf_results_out
@@ -330,12 +379,17 @@ function(apply_patches working_directory)
         _apply_patch_file(
           PATCH_ARGS -p1
           INPUT_FILE "${_crlf_patch_file}"
-          WORKING_DIRECTORY "${working_directory}"
+          WORKING_DIRECTORY "${AP_WORKING_DIRECTORY}"
           OUTPUT_VARIABLE _crlf_stdout
           ERROR_VARIABLE _crlf_stderr
           RESULTS_VARIABLE _crlf_results_out
           RESULT_VARIABLE _result)
+
         if(NOT _result EQUAL "0")
+          if(AP_TRY_GIT_RESET AND EXISTS "${AP_WORKING_DIRECTORY}/.git")
+            set(_try_git_reset TRUE)
+            break()
+          endif()
           debug_print(SEND_ERROR "STDOUT(LF):\n${_lf_stdout}" "STDERR(LF):\n${_lf_stderr}"
                       "RESULTS OUT (LF):\n${_lf_results_out}")
           debug_print(SEND_ERROR "STDOUT(CRLF):\n${_crlf_stdout}" "STDERR(CRLF):\n${_crlf_stderr}"
@@ -348,7 +402,7 @@ All attempts at applying ${_patch_file} have failed. This includes the following
   - ${_crlf_patch_file}
 
 Did you by any change make a modification to the patch file and forgot to revert the old version of the patch?
-You might want to remove the ${working_directory} directory completely and re-run CMake.
+You might want to remove the ${AP_WORKING_DIRECTORY} directory completely and re-run CMake.
 ")
         else()
           file(TOUCH ${_crlf_patch_lock_file})
@@ -360,6 +414,17 @@ You might want to remove the ${working_directory} directory completely and re-ru
       message(STATUS "Skipping patch ${_patch_file} since already applied.")
     endif()
   endforeach()
+
+  if(_try_git_reset)
+    message(STATUS "Some patches failed. Attempting `git stash -all` and re-applying all patches.")
+    __exec_cmd(COMMAND ${GIT_EXECUTABLE} stash --all WORKING_DIRECTORY ${AP_WORKING_DIRECTORY})
+    __exec_cmd(COMMAND ${GIT_EXECUTABLE} stash drop WORKING_DIRECTORY ${AP_WORKING_DIRECTORY})
+
+    set(_args ${ARGN})
+    list(REMOVE_ITEM _args TRY_GIT_RESET)
+    debug_print(STATUS "Calling apply_patches(${_args})")
+    apply_patches(${_args})
+  endif()
 endfunction()
 
 # ==============================================================================

@@ -41,6 +41,8 @@ elseif(NOT WIN32)
     DOC "Path to make command" REQUIRED)
 endif()
 
+find_package(Git REQUIRED)
+
 # ------------------------------------------------------------------------------
 
 if(NOT JOBS)
@@ -51,7 +53,12 @@ message(STATUS "Calling make using ${JOBS} jobs")
 
 # ------------------------------------------------------------------------------
 
-set(_local_libs_path_file "${PROJECT_BINARY_DIR}/ld_library_paths.txt")
+if(MINDSPORE_CI)
+  set(_libs_path_file_dest "${PROJECT_SOURCE_DIR}")
+else()
+  set(_libs_path_file_dest "${PROJECT_BINARY_DIR}")
+endif()
+set(_local_libs_path_file "${_libs_path_file_dest}/ld_library_paths.txt")
 file(WRITE "${_local_libs_path_file}" "")
 
 # ------------------------------------------------------------------------------
@@ -258,41 +265,6 @@ endfunction()
 
 # ==============================================================================
 # Some helper functions
-
-# Wrapper over execute_process()
-function(__exec_cmd)
-  set(options)
-  set(oneValueArgs WORKING_DIRECTORY)
-  set(multiValueArgs COMMAND)
-
-  cmake_parse_arguments(EXEC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-  # cmake-format: off
-  debug_print(
-    STATUS "  execute_process("
-    "      COMMAND ${EXEC_COMMAND}"
-    "      WORKING_DIRECTORY ${EXEC_WORKING_DIRECTORY}"
-    "      ...)"
-  )
-  if(APPLE)
-    debug_print(STATUS "   MACOSX_DEPLOYMENT_TARGET = $ENV{MACOSX_DEPLOYMENT_TARGET}")
-  endif()
-  execute_process(
-    COMMAND ${EXEC_COMMAND}
-    WORKING_DIRECTORY ${EXEC_WORKING_DIRECTORY}
-    OUTPUT_VARIABLE _stdout
-    ERROR_VARIABLE _stderr
-    RESULTS_VARIABLE _results_out
-    RESULT_VARIABLE RESULT
-  )
-  # cmake-format: on
-  if(NOT RESULT EQUAL "0")
-    debug_print(SEND_ERROR "STDOUT:\n${_stdout}" "STDERR:\n${_stderr}" "RESULTS OUT:\n${_results_out}")
-    message(FATAL_ERROR "error! when ${EXEC_COMMAND} in ${EXEC_WORKING_DIRECTORY}")
-  endif()
-endfunction()
-
-# ------------------------------------------------------------------------------
 
 # Function to check that patches are valid
 function(__check_patches pkg_patches)
@@ -1074,8 +1046,9 @@ endfunction()
 # mindquantum_add_pkg(<pkg_name>
 #                     # Mandatory options
 #                     [VER <version-num>]
-#                     [[GIT_REPOSITORY <git-url>] [GIT_TAG <tag>] |
-#                      [URL <archive-url>] [MD5 <archive-md5>]]
+#                     [MD5 <archive-md5>]
+#                     [[GIT_REPOSITORY <git-url>] [GIT_TAG <tag>]  |
+#                      [URL <archive-url>]]
 #                     [LIBS <lib-names> [... <lib-names>]]
 #                     [EXE <exec-name>]
 #
@@ -1334,6 +1307,8 @@ function(mindquantum_add_pkg pkg_name)
 
   # ------------------------------------------------------------------------------
 
+  __check_only_one_of(PKG PKG_URL PKG_GIT_REPOSITORY)
+  __check_only_one_of(PKG PKG_URL PKG_GIT_TAG)
   __check_only_one_of(PKG PKG_ONLY_COPY_DIRS PKG_ONLY_MAKE)
   __check_only_one_of(PKG PKG_BUILD_COMMAND PKG_BUILD_OPTION PKG_SKIP_BUILD_STEP)
   __check_only_one_of(PKG PKG_INSTALL_COMMAND PKG_SKIP_INSTALL_STEP)
@@ -1376,14 +1351,25 @@ Cannot specify either of <INSTALL_INCS> or <INSTALL_LIBS> with either of <INSTAL
         # * unpacked source
         # * unpacked source subbuild directory
         # * unpacked source build directory
+        #
+        # If the third-party has a Git repository, then simply run git stash --all within the repository
 
         message(STATUS "Old config hash does not match new config hash")
-        foreach(_dir
-                "${${pkg_name}_BASE_DIR}" "${_mq_local_prefix}/../_deps/${pkg_name}-src"
-                "${_mq_local_prefix}/../_deps/${pkg_name}-subbuild" "${_mq_local_prefix}/../_deps/${pkg_name}-build")
-          if(NOT "${_dir}" STREQUAL "" AND EXISTS "${_dir}")
-            message(STATUS "  - deleting ${_dir}")
-            file(REMOVE_RECURSE "${_dir}")
+        set(_directories_to_clean "${${pkg_name}_BASE_DIR}" "${_mq_local_prefix}/../_deps/${pkg_name}-src")
+        if(NOT PKG_GIT_REPOSITORY)
+          list(APPEND _directories_to_clean "${_mq_local_prefix}/../_deps/${pkg_name}-subbuild"
+               "${_mq_local_prefix}/../_deps/${pkg_name}-build")
+        endif()
+        foreach(_dir ${_directories_to_clean})
+          if(NOT "${_dir}" STREQUAL "")
+            if(EXISTS "${_dir}/.git")
+              message(STATUS "  - resetting git repository: ${_dir}")
+              __exec_cmd(COMMAND ${GIT_EXECUTABLE} stash --all WORKING_DIRECTORY ${_dir})
+              __exec_cmd(COMMAND ${GIT_EXECUTABLE} stash drop WORKING_DIRECTORY ${_dir})
+            elseif(EXISTS "${_dir}")
+              message(STATUS "  - deleting ${_dir}")
+              file(REMOVE_RECURSE "${_dir}")
+            endif()
           endif()
         endforeach()
 
@@ -1561,7 +1547,7 @@ Cannot specify either of <INSTALL_INCS> or <INSTALL_LIBS> with either of <INSTAL
       ${${pkg_name}_SOURCE_DIR}
       CACHE FILEPATH INTERNAL)
 
-  apply_patches("${${pkg_name}_SOURCE_DIR}" ${PKG_PATCHES})
+  apply_patches(WORKING_DIRECTORY "${${pkg_name}_SOURCE_DIR}" TRY_GIT_RESET ${PKG_PATCHES})
 
   file(
     LOCK
@@ -1679,7 +1665,7 @@ Cannot specify either of <INSTALL_INCS> or <INSTALL_LIBS> with either of <INSTAL
         WORKING_DIRECTORY ${_cmake_build_dir})
 
       message(STATUS "Building CMake targets for ${pkg_name}")
-      if(MSVC)
+      if(_is_multi_config)
         __exec_cmd(COMMAND ${CMAKE_COMMAND} --build . --target install -j${JOBS} --config Debug
                    WORKING_DIRECTORY ${_cmake_build_dir})
         __exec_cmd(COMMAND ${CMAKE_COMMAND} --build . --target install -j${JOBS} --config Release

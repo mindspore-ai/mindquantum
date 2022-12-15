@@ -62,6 +62,19 @@ def call_delocate_wheel(*args):
 # ------------------------------------------------------------------------------
 
 
+def call_delvewheel(*args):
+    """Call delvewheel."""
+    args = ['delvewheel', *(str(s) for s in args)]
+    logging.info('delvewheel command: %s', ' '.join(args))
+    logging.info('  location of executable: %s', shutil.which('delvewheel'))
+
+    subprocess.check_call(args)
+    return True
+
+
+# ------------------------------------------------------------------------------
+
+
 def move_delocated_wheel(delocated_wheel, wheel_directory):
     """Move delocated wheel to destination directory."""
     logging.info('Delocated wheel found at: %s', str(delocated_wheel))
@@ -101,8 +114,8 @@ def update_library_path_var(ld_path_var, dir_list):
     if ld_library_path:
         dir_list.append(ld_library_path)
 
-    logging.info('Setting %s = %s', ld_path_var, ':'.join(dir_list))
-    os.environ[ld_path_var] = ':'.join(dir_list)
+    logging.info('Setting %s = %s', ld_path_var, os.pathsep.join(dir_list))
+    os.environ[ld_path_var] = os.pathsep.join(dir_list)
 
 
 # ------------------------------------------------------------------------------
@@ -167,6 +180,7 @@ def update_library_path_from_env(ld_path_var, install_prefix):
 
 def update_library_path(ld_path_var):
     """Update XXX_LIBRARY_PATH environment variable."""
+    logging.info('Updating %s environment variable', ld_path_var)
     mq_lib_paths = os.getenv('MQ_LIB_PATHS', '')
     try:
         update_library_path_from_file(ld_path_var, mq_lib_paths)
@@ -223,6 +237,8 @@ def get_requires_for_build_wheel(config_settings=None):
             executable_list.append('patchelf')
         elif platform.system() == 'Darwin':
             requirements.append('delocate')
+        elif platform.system() == 'Windows':
+            requirements.append('delvewheel')
 
     for exec_name in executable_list:
         if get_executable_in_path(exec_name) is None:
@@ -255,7 +271,7 @@ def build_sdist(sdist_directory, config_settings=None):
 # ==============================================================================
 
 
-def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):  # pylint: disable=too-many-branches
+def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):  # pylint: disable=R0912,R0914,R0915
     """Build a wheel from this project."""
     if platform.system() == 'Linux':
         logging.info('Running on Linux %s', platform.uname().release)
@@ -276,7 +292,6 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
         config_settings=config_settings,
         metadata_directory=metadata_directory,
     )
-
     name_full = temp_wheel_directory / name
 
     # ==========================================================================
@@ -284,58 +299,73 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
 
     delocated_wheel_directory = Path(wheel_directory, 'delocated')
     delocate_wheel = int(os.environ.get('MQ_DELOCATE_WHEEL', False))
+    done_delocate = False
     delocated_wheel = None
-    if delocate_wheel and platform.system() == 'Linux':
+
+    if delocate_wheel:
+        logging.info('Attempting to delocate the generated Python wheel')
         delocated_wheel_directory.mkdir(parents=True, exist_ok=True)
-        plat = os.environ.get('MQ_DELOCATE_WHEEL_PLAT', '')
+        ld_lib_var = 'LD_LIBRARY_PATH'
+        if platform.system() == 'Darwin':
+            ld_lib_var = 'DYLD_LIBRARY_PATH'
+        elif platform.system() == 'Windows':
+            ld_lib_var = 'MQ_LIB'  # Name of variable intentionally custom
+        update_library_path(ld_lib_var)
 
-        update_library_path('LD_LIBRARY_PATH')
+        if platform.system() == 'Linux':
+            done_delocate = True
+            plat = os.environ.get('MQ_DELOCATE_WHEEL_PLAT', '')
 
-        call_auditwheel('show', name_full)
-        if plat:
-            call_auditwheel('repair', '--plat', plat, '-w', delocated_wheel_directory, name_full)
-        else:
-            logging.info('No platform specified, trying a few from older specifications to more recent')
-            for plat in (
-                'manylinux2010_x86_64',  # NB: equivalent to manylinux_2_5_x86_64
-                'manylinux2014_x86_64',  # NB: equivalent to manylinux_2_17_x86_64
-                'manylinux_2_24_x86_64',
-                'manylinux_2_27_x86_64',
-                'manylinux_2_28_x86_64',
-                'manylinux_2_31_x86_64',
-                'linux_x86_64',
-            ):
-                logging.info('----------------------------------------')
-                logging.info('Trying to delocate to platform: %s', plat)
-                if call_auditwheel(
-                    'repair', '--plat', plat, '-w', delocated_wheel_directory, name_full, allow_failure=True
+            call_auditwheel('show', name_full)
+            if plat:
+                call_auditwheel('repair', '--plat', plat, '-w', delocated_wheel_directory, name_full)
+            else:
+                logging.info('No platform specified, trying a few from older specifications to more recent')
+                for plat in (
+                    'manylinux2010_x86_64',  # NB: equivalent to manylinux_2_5_x86_64
+                    'manylinux2014_x86_64',  # NB: equivalent to manylinux_2_17_x86_64
+                    'manylinux_2_24_x86_64',
+                    'manylinux_2_27_x86_64',
+                    'manylinux_2_28_x86_64',
+                    'manylinux_2_31_x86_64',
+                    'linux_x86_64',
                 ):
-                    break
+                    logging.info('----------------------------------------')
+                    logging.info('Trying to delocate to platform: %s', plat)
+                    if call_auditwheel(
+                        'repair', '--plat', plat, '-w', delocated_wheel_directory, name_full, allow_failure=True
+                    ):
+                        break
+        elif platform.system() == 'Darwin':
+            done_delocate = True
+            call_delocate_wheel(
+                '--verbose',
+                '--check-archs',
+                '--dylibs-only',
+                '-w',
+                str(delocated_wheel_directory),
+                f'--require-archs={platform.machine()}',
+                name_full,
+            )
+        elif platform.system() == 'Windows':
+            done_delocate = True
+            args = []
+            ld_libs_paths = os.getenv(ld_lib_var)
+            if ld_libs_paths:
+                args.extend(('--add-path', ld_libs_paths))
 
+            call_delvewheel('show', *args, name_full)
+            call_delvewheel('repair', '-v', '-w', str(delocated_wheel_directory), *args, name_full)
+
+        else:
+            logging.warning('Do not know how to delocate wheels on %s', platform.system())
+    else:
+        logging.info('Not delocating the Python wheel')
+
+    if done_delocate:
         delocated_wheel = get_delocated_wheel_name(name_full, delocated_wheel_directory)
-        if delocated_wheel:
-            dest_wheel = move_delocated_wheel(delocated_wheel, wheel_directory)
-    elif delocate_wheel and platform.system() == 'Darwin':
-        delocated_wheel_directory.mkdir(parents=True, exist_ok=True)
-
-        update_library_path('DYLD_LIBRARY_PATH')
-
-        call_delocate_wheel(
-            '--verbose',
-            '--check-archs',
-            '--dylibs-only',
-            '-w',
-            str(delocated_wheel_directory),
-            f'--require-archs={platform.machine()}',
-            name_full,
-        )
-        delocated_wheel = get_delocated_wheel_name(name_full, delocated_wheel_directory)
-        if delocated_wheel:
-            dest_wheel = move_delocated_wheel(delocated_wheel, wheel_directory)
-    elif delocate_wheel:
-        logging.warning('Do not know how to delocate wheels on %s', platform.system())
-
-    if not delocated_wheel:
+        dest_wheel = move_delocated_wheel(delocated_wheel, wheel_directory)
+    else:
         logging.info('Delocated wheel not found -> using original wheel instead')
         dest_wheel = Path(wheel_directory, name_full.name)
         shutil.move(str(name_full), str(dest_wheel))

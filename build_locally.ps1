@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+[CmdletBinding(PositionalBinding=$false)]
+
 Param(
-    [ValidateNotNullOrEmpty()][string]$A,
     [switch]$Analyzer,
     [Alias("B")][ValidateNotNullOrEmpty()][string]$Build,
     [switch]$CCache,
@@ -29,11 +30,9 @@ Param(
     [switch]$ConfigureOnly,
     [ValidateNotNullOrEmpty()][string]$CudaArch,
     [switch]$Cxx,
-    [switch]$Debug,
     [switch]$DebugCMake,
     [Alias("N")][switch]$DryRun,
     [Alias("Docs")][switch]$Doc,
-    [ValidateNotNullOrEmpty()][string]$G,
     [switch]$Gitee,
     [switch]$Gpu,
     [Alias("H")][switch]$Help,
@@ -52,13 +51,15 @@ Param(
     [switch]$ShowLibraries,
     [switch]$Test,
     [switch]$UpdateVenv,
-    [Alias("V")][switch]$Verbose,
-    [ValidateNotNullOrEmpty()][string]$Venv
+    [ValidateNotNullOrEmpty()][string]$Venv,
+    [Parameter(Position=1, ValueFromRemainingArguments)]$unparsed_args
 )
+
 
 $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 $ROOTDIR = $BASEPATH
 $PROGRAM = Split-Path $MyInvocation.MyCommand.Path -Leaf
+$PARAMETERLIST = (Get-Command -Name ".\$PROGRAM").Parameters
 
 # Test for MindSpore CI
 $_IS_MINDSPORE_CI=$false
@@ -103,7 +104,8 @@ function Extra-Help {
     Write-Output '  -Install            Build the ´install´ target'
     Write-Output '  -Prefix             Specify installation prefix'
     Write-Output ''
-    Write-Output 'Any options not matching one of the above will be passed on to CMake during the configuration step'
+    Write-Output 'Any options not matching one of the above will be passed on to CMake during the configuration step. In addition, any'
+    Wirte-Output 'options after "--%" will be passed onto CMake during the configuration step'
     Write-Output ''
     Write-Output 'Example calls:'
     Write-Output ("{0} -B build" -f $PROGRAM)
@@ -114,7 +116,14 @@ function Extra-Help {
 
 # ------------------------------------------------------------------------------
 
-. (Join-Path $ROOTDIR 'scripts\build\parse_common_args.ps1') @args
+. (Join-Path $ROOTDIR 'scripts\build\parse_common_args.ps1') @args @unparsed_args
+
+
+Write-Debug 'Bound PowerShell parameters'
+foreach ($Parameter in $PARAMETERLIST) {
+    Get-Variable -Name $Parameter.Values.Name -ErrorAction SilentlyContinue `
+      | ForEach-Object { Write-Debug ("{0,-40} {1}" -f $_.Name, $_.Value)}
+}
 
 if ($LastExitCode -ne 0) {
     exit $LastExitCode
@@ -152,18 +161,6 @@ if ([bool]$Prefix) {
 
 if ($LastExitCode -ne 0) {
     exit $LastExitCode
-}
-
-# ==============================================================================
-
-# Parse -With<library> and -Without<library>
-$cmake_extra_args = @()
-
-if([bool]$G) {
-    $cmake_extra_args += "-G `"$G`""
-}
-if([bool]$A) {
-    $cmake_extra_args += "-A `"$A`""
 }
 
 # ==============================================================================
@@ -259,10 +256,8 @@ $cmake_args = @('-DIN_PLACE_BUILD:BOOL=ON'
 $make_args = @()
 
 if ([bool]$cmake_generator) {
-    $cmake_args += "-G", "$cmake_generator"
+    $cmake_args += "-G", "'$cmake_generator'"
 }
-
-$cmake_args += $cmake_extra_args
 
 if([bool]$prefix_dir) {
     $cmake_args += "-DCMAKE_INSTALL_PREFIX:FILEPATH=`"${prefix_dir}`""
@@ -324,6 +319,15 @@ if($do_install) {
     $target_args += '--target', 'install'
 }
 
+if ([bool]$unparsed_args) {
+    $unparsed_args = $unparsed_args | Where-Object {$_ -And $_ -Ne "--%"}
+    $unparsed_args = Convert-StringToArgList $unparsed_args `
+      | Where-Object {$_ -And $_ -Ne "--%"} `
+      | ForEach-Object { $_ -replace "'", '"' } `
+      | ForEach-Object { "'$_'" }
+    $cmake_args += $unparsed_args
+}
+
 # ------------------------------------------------------------------------------
 
 if ([bool]$enable_gpu) {
@@ -351,9 +355,8 @@ elseif ($do_clean_cache) {
     Call-Cmd Remove-Item -Force -Recurse "'$build_dir/cmake-ldtest*'" -ErrorAction SilentlyContinue
 }
 
-
 if ($do_configure) {
-    Call-CMake -S "'$source_dir'" -B "'$build_dir'" @cmake_args @unparsed_args
+    Call-CMake -S "'$source_dir'" -B "'$build_dir'" @cmake_args
 }
 
 if ($configure_only) {
@@ -515,15 +518,6 @@ Update the python virtual environment
 .PARAMETER CudaArch
 Comma-separated list of architectures to generate device code for.
 Only useful if -Gpu is passed. See CMAKE_CUDA_ARCHITECTURES for more information.
-
-.PARAMETER G
-CMake argument: Specify a build system generator.
-
-.PARAMETER A
-CMake argument: Specify platform name if supported by generator.
-
-.PARAMETER D
-CMake argument: Create or update a cmake cache entry.
 
 .INPUTS
 

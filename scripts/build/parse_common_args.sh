@@ -266,7 +266,7 @@ while getopts "${getopts_args}" OPT; do
                             set_var config_file '__disabled_config__'
                             ;;
         ninja )             no_arg;
-                            set_var cmake_generator 'Ninja'
+                            set_var cmake_generator 'Ninja Multi-Config'
                             ;;
         only-pytest )       no_arg;
                             set_var only_install_pytest $flag_value

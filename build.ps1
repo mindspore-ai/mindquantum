@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+[CmdletBinding(PositionalBinding=$false)]
+
 Param(
     [switch]$Analyzer,
     [Alias("B")][ValidateNotNullOrEmpty()][string]$Build,
@@ -26,13 +28,11 @@ Param(
     [ValidateNotNullOrEmpty()][string]$Config,
     [ValidateNotNullOrEmpty()][string]$CudaArch,
     [switch]$Cxx,
-    [switch]$Debug,
     [switch]$DebugCMake,
     [switch]$Delocate,
     [Alias("N")][switch]$DryRun,
     [switch]$FastBuild,
     [ValidateNotNullOrEmpty()][string]$FastBuildDir,
-    [ValidateNotNullOrEmpty()][string]$G,
     [switch]$Gitee,
     [switch]$Gpu,
     [Alias("H")][switch]$Help,
@@ -52,13 +52,14 @@ Param(
     [switch]$ShowLibraries,
     [switch]$Test,
     [switch]$UpdateVenv,
-    [Alias("V")][switch]$Verbose,
-    [ValidateNotNullOrEmpty()][string]$Venv
+    [ValidateNotNullOrEmpty()][string]$Venv,
+    [Parameter(Position=1, ValueFromRemainingArguments)]$unparsed_args
 )
 
 $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 $ROOTDIR = $BASEPATH
 $PROGRAM = Split-Path $MyInvocation.MyCommand.Path -Leaf
+$PARAMETERLIST = (Get-Command -Name ".\$PROGRAM").Parameters
 
 # Test for MindSpore CI
 $_IS_MINDSPORE_CI = $false
@@ -132,7 +133,14 @@ function Extra-Help {
 
 # ------------------------------------------------------------------------------
 
-. (Join-Path $ROOTDIR 'scripts\build\parse_common_args.ps1') @args
+. (Join-Path $ROOTDIR 'scripts\build\parse_common_args.ps1') @args @unparsed_args
+
+Write-Debug 'Bound PowerShell parameters'
+foreach ($Parameter in $PARAMETERLIST) {
+    Get-Variable -Name $Parameter.Values.Name -ErrorAction SilentlyContinue `
+      | ForEach-Object { Write-Debug ("{0,-40} {1}" -f $_.Name, $_.Value)}
+}
+
 
 if ($LastExitCode -ne 0) {
     exit $LastExitCode
@@ -266,7 +274,7 @@ foreach ($el in $cmake_option_names.GetEnumerator()) {
     }
 }
 
-if ($_IS_MINDSPORE_CI ) {
+if ($_IS_MINDSPORE_CI) {
     $build_args += '--set', 'MINDSPORE_CI'
 }
 
@@ -377,6 +385,11 @@ foreach($arg in $build_args) {
     $fixed_args += "-C--global-option=$arg"
 }
 
+$unparsed_args = $unparsed_args | Where-Object {$_} | ForEach-Object { "'$_'" }
+if ([bool]$unparsed_args) {
+    $fixed_args += $unparsed_args
+}
+
 $build_args = @('-w')
 if (-Not $build_isolation) {
     $build_args += "--no-isolation"
@@ -395,8 +408,6 @@ if ($_build_dir_was_set) {
         Call-Cmd Remove-Item -Force "'$build_dir/CMakeCache.txt'" -ErrorAction SilentlyContinue
         Write-Output "Removing CMake files at: $build_dir/CMakeFiles"
         Call-Cmd Remove-Item -Force -Recurse "'$build_dir/CMakeFiles'" -ErrorAction SilentlyContinue
-        Write-Output "Removing CMake files at: $build_dir/CMakeFiles"
-        Call-Cmd Remove-Item -Force -Recurse "'$build_dir/CMakeFiles'" -ErrorAction SilentlyContinue
         Write-Output "Removing CMake files at: $build_dir/cmake-ldtest*"
         Call-Cmd Remove-Item -Force -Recurse "'$build_dir/cmake-ldtest*'" -ErrorAction SilentlyContinue
     }
@@ -408,12 +419,35 @@ if ($delocate_wheel) {
     if ([bool]$platform_name) {
         $Env:MQ_DELOCATE_WHEEL_PLAT = "$platform_name"
     }
+
+    if ([bool]$_build_dir_was_set -Or [bool]$fast_build) {
+        $build_dir_for_env = $build_dir
+    }
+    elseif ([bool]$_fast_build_dir_was_set) {
+        $build_dir_for_env = $fast_build_dir
+    }
+    else {
+        $build_dir_for_env = (&"$PYTHON" -m mindquantum_config --tempdir)
+    }
+
+    if ($_IS_MINDSPORE_CI) {
+        $Env:MQ_LIB_PATHS = "$ROOTDIR/ld_library_paths.txt"
+    }
+    else {
+        $Env:MQ_LIB_PATHS = "$build_dir_for_env/ld_library_paths.txt"
+    }
+    $Env:MQ_BUILD_DIR = "$build_dir_for_env"
+
+    Write-Debug "MQ_LIB_PATHS = $Env:MQ_LIB_PATHS"
+    Write-Debug "MQ_BUILD_DIR = $Env:MQ_BUILD_DIR"
 }
 else {
     $Env:MQ_DELOCATE_WHEEL = 0
 }
 
-Call-Cmd "$PYTHON" -m build @build_args @fixed_args @unparsed_args
+Call-Cmd "$PYTHON" -m build @build_args @fixed_args
+$Env:MQ_LIB_PATHS = ''
+$Env:MQ_BUILD_DIR = ''
 if ($LastExitCode -ne 0) {
     exit $LastExitCode
 }
@@ -426,7 +460,7 @@ if (Test-Path -Path "$output_path") {
 
 Call-Cmd New-Item -Path "'$output_path'" -ItemType "directory"
 
-Call-Cmd Move-Item -Path "'$ROOTDIR\*'" -Destination "$output_path"
+Call-Cmd Move-Item -Path "'$ROOTDIR\dist\*.whl'" -Destination "$output_path"
 
 Call-Cmd Write-Output "------Successfully created mindquantum package------"
 
@@ -576,9 +610,6 @@ Update the python virtual environment
 .PARAMETER CudaArch
 Comma-separated list of architectures to generate device code for.
 Only useful if -Gpu is passed. See CMAKE_CUDA_ARCHITECTURES for more information.
-
-.PARAMETER G
-CMake argument: Specify a build system generator.
 
 .INPUTS
 

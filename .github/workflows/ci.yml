@@ -633,6 +633,103 @@ jobs:
 
   # ============================================================================
 
+  clang-cl:
+    runs-on: windows-latest
+    name: "Clang-Cl • x64"
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get history and tags for SCM versioning to work
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Enable Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1.12.0
+
+      - name: Install Scoop && Scoop packages
+        run: |
+          iwr -useb get.scoop.sh -outfile 'install.ps1'
+          .\install.ps1 -RunAsAdmin
+          Join-Path (Resolve-Path ~).Path "scoop\shims" >> $Env:GITHUB_PATH
+          scoop install ccache
+
+      - name: Get Date
+        id: get-date
+        shell: bash
+        run: echo "date=$(date -Iseconds)" >> $GITHUB_OUTPUT
+
+      - name: Restore cache for CCache
+        if: env.ACT != 'true'
+        id: ccache-cache
+        uses: martijnhols/actions-cache/restore@v3.0.11b
+        with:
+          path: ccache
+          key: clang-cl-ccache-${{ steps.get-date.outputs.date }}
+          restore-keys: clang-cl-ccache-
+
+      - name: Configure CCache
+        run: |
+          ccache --set-config=cache_dir="$PWD/ccache"
+          ccache --set-config=max_size=70M
+          ccache --set-config=compression=true
+          ccache -pz
+          ccache -sv
+
+      - name: Cache Python virtualenv
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: venv
+          key: >
+            clang-cl-python-venv-${{ hashFiles('build_locally.ps1', 'scripts/build/**.ps1') }}-${{ secrets.cache_ver }}
+
+      - name: Cache compiled third-party libraries
+        if: env.ACT != 'true'
+        uses: actions/cache@v3
+        with:
+          path: build/.mqlibs
+          key: clang-cl-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
+
+      - name: Configure
+        env:
+          CC: clang-cl
+          CXX: clang-cl
+        run: >-
+           ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -CCache -OnlyPytest -NoGitee
+           -ConfigureOnly -C -Clean3rdParty -Prefix "${{ github.workspace }}/install"
+           -CMakeNoRegistry -Verbose
+           -DUSE_PARALLEL_STL=OFF
+
+      - name: Build
+        run: ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -CCache -Verbose
+
+      - name: Build wheel
+        run: |
+          ./venv/Scripts/python -m pip install -U build wheel virtualenv
+          ./build.ps1 -FastBuild -Delocate -Verbose
+
+      - name: Install
+        run: ./build_locally.ps1 -Install
+
+      # - name: Run C++ tests
+      #   run: |
+      #     cd build
+      #     ctest --output-on-failure
+
+      - name: Print CCache statistics
+        run: |
+          ccache -sv
+
+      - name: Save cache for CCache
+        if: env.ACT != 'true'
+        uses: martijnhols/actions-cache/save@v3.0.11b
+        with:
+          path: ccache
+          key: clang-cl-ccache-${{ steps.get-date.outputs.date }}
+
+  # ============================================================================
+
   mingw64:
     runs-on: windows-2022
     strategy:
@@ -711,7 +808,7 @@ jobs:
       #     key: boost-${{ env.BOOST_VERSION }}
 
       - name: Download and install Boost
-        uses: MarkusJx/install-boost@v2.4.1
+        uses: MarkusJx/install-boost@v2.4.3
         if: steps.cache-boost.outputs.cache-hit != 'true'
         id: install-boost
         with:
@@ -726,7 +823,7 @@ jobs:
            ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test -OnlyPytest -NoGitee
            -ConfigureOnly -C -Clean3rdParty -Prefix "${{ github.workspace }}/install"
            -CMakeNoRegistry
-           -G "MinGW Makefiles" -DUSE_PARALLEL_STL=OFF
+           --% -G "MinGW Makefiles" -DUSE_PARALLEL_STL=OFF
 
       - name: Build
         run: ./build_locally.ps1 -Cxx -WithProjectq -DebugCmake -Ninja -Test

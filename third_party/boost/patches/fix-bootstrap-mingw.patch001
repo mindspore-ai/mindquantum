@@ -1,0 +1,12 @@
+diff -Npur boost-orig/bootstrap.bat boost-src/bootstrap.bat
+--- boost-orig/bootstrap.bat	2022-12-13 13:52:08.155962399 +0100
++++ boost-src/bootstrap.bat	2022-12-13 13:52:16.049336741 +0100
+@@ -12,7 +12,7 @@ ECHO Building Boost.Build engine
+ if exist ".\tools\build\src\engine\b2.exe" del tools\build\src\engine\b2.exe
+ pushd tools\build\src\engine
+ 
+-call .\build.bat
++call .\build.bat %1
+ @ECHO OFF
+ 
+ popd

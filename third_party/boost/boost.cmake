@@ -41,9 +41,13 @@ else()
   endif()
 endif()
 
+set(PATCHES)
 if(MSVC OR "${OS_NAME}" STREQUAL "MinGW")
   set(PRE_CONFIGURE_COMMAND bootstrap.bat)
   if(NOT MSVC)
+    if(NOT ENABLE_GITEE)
+      list(APPEND PATCHES ${CMAKE_CURRENT_LIST_DIR}/patches/fix-bootstrap-mingw.patch001)
+    endif()
     list(APPEND PRE_CONFIGURE_COMMAND mingw)
   endif()
 else()
@@ -76,6 +80,9 @@ if("${OS_NAME}" STREQUAL "MinGW")
 elseif(MSYS AND NOT "${OS_NAME}" STREQUAL "MSYS-MSYS")
   message(WARNING "Build of Boost on MSYS2 (${OS_NAME}) is broken. Make sure to install the corresponding "
                   "mingw-w64-*-boost package instead.")
+elseif(MSVC AND COMPILER_IS_CLANG_CL)
+  list(APPEND PRE_CONFIGURE_COMMAND --with-toolset=clang-win)
+  list(APPEND INSTALL_COMMAND toolset=clang-win)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   list(APPEND PRE_CONFIGURE_COMMAND --with-toolset=clang)
   list(APPEND INSTALL_COMMAND toolset=clang)
@@ -90,6 +97,7 @@ mindquantum_add_pkg(
   LIBS ${LIBS}
   VER ${VER}
   MD5 ${MD5}
+  PATCHES ${PATCHES}
   PRE_CONFIGURE_COMMAND ${PRE_CONFIGURE_COMMAND}
   SKIP_BUILD_STEP
   INSTALL_COMMAND ${INSTALL_COMMAND}

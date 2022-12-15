@@ -38,12 +38,26 @@ elseif(cereal_DIR)
 endif()
 
 if(MSVC)
-  set(SymEngine_CXXFLAGS "/Zc:__cplusplus /EHsc")
+  set(SymEngine_CXXFLAGS "/Zc:__cplusplus /EHsc /D_USE_MATH_DEFINES /D_CRT_SECURE_NO_WARNINGS /DWIN32_LEAN_AND_MEAN")
   if(ENABLE_ITERATOR_DEBUG)
     set(SymEngine_CFLAGS "/D_ITERATOR_DEBUG_LEVEL=${MQ_ITERATOR_DEBUG}")
     set(SymEngine_CXXFLAGS "${SymEngine_CXXFLAGS} /D_ITERATOR_DEBUG_LEVEL=${MQ_ITERATOR_DEBUG}")
   endif()
   list(APPEND CMAKE_OPTION -DINTEGER_CLASS=boostmp -DCMAKE_DEBUG_POSTFIX=d)
+
+  if(CMAKE_MT)
+    list(APPEND CMAKE_OPTION -DCMAKE_MT=${CMAKE_MT})
+  endif()
+
+  if(COMPILER_IS_CLANG_CL)
+    set(_release_c_flags "${CMAKE_C_FLAGS_RELEASE} /MD")
+    set(_release_cxx_flags "${CMAKE_CXX_FLAGS_RELEASE} /MD")
+    set(_debug_c_flags "${CMAKE_C_FLAGS_DEBUG} /MDd")
+    set(_debug_cxx_flags "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+    list(APPEND CMAKE_OPTION -DCMAKE_C_FLAGS_DEBUG=${_debug_c_flags} -DCMAKE_C_FLAGS_RELEASE=${_release_c_flags})
+    list(APPEND CMAKE_OPTION -DCMAKE_CXX_FLAGS_DEBUG=${_debug_cxx_flags}
+         -DCMAKE_CXX_FLAGS_RELEASE=${_release_cxx_flags})
+  endif()
 
   if(Boost_DIRPATH)
     # Boost was locally built, make sure we use that one

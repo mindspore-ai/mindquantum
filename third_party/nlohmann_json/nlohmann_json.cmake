@@ -24,12 +24,16 @@ set(CMAKE_OPTION -DBUILD_TESTING=OFF -DJSON_MultipleHeaders=ON -DJSON_BuildTests
                  -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
 
 if(MSVC)
-  set(nlohmann_json_CXXFLAGS "/Zc:__cplusplus")
+  set(nlohmann_json_CXXFLAGS
+      "/Zc:__cplusplus /EHsc /D_USE_MATH_DEFINES /D_CRT_SECURE_NO_WARNINGS /DWIN32_LEAN_AND_MEAN")
   if(ENABLE_ITERATOR_DEBUG)
     set(nlohmann_json_CFLAGS "/D_ITERATOR_DEBUG_LEVEL=${MQ_ITERATOR_DEBUG}")
     set(nlohmann_json_CXXFLAGS "${nlohmann_json_CXXFLAGS} /D_ITERATOR_DEBUG_LEVEL=${MQ_ITERATOR_DEBUG}")
   endif()
   list(APPEND CMAKE_OPTION -DCMAKE_DEBUG_POSTFIX=d)
+  if(CMAKE_MT)
+    list(APPEND CMAKE_OPTION -DCMAKE_MT=${CMAKE_MT})
+  endif()
 else()
   set(nlohmann_json_CXXFLAGS "-D_FORTIFY_SOURCE=2 -O2")
   set(nlohmann_json_CFLAGS "-D_FORTIFY_SOURCE=2 -O2")

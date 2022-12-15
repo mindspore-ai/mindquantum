@@ -46,12 +46,16 @@ else()
       -DPython_VERSION=${Python_VERSION})
 
   if(MSVC)
-    set(tweedledum_CXXFLAGS "/Zc:__cplusplus /EHsc")
+    set(tweedledum_CXXFLAGS "/Zc:__cplusplus /EHsc /D_USE_MATH_DEFINES /D_CRT_SECURE_NO_WARNINGS /DWIN32_LEAN_AND_MEAN")
     if(ENABLE_ITERATOR_DEBUG)
       set(tweedledum_CFLAGS "/D_ITERATOR_DEBUG_LEVEL=${MQ_ITERATOR_DEBUG}")
       set(tweedledum_CXXFLAGS "${tweedledum_CXXFLAGS} /D_ITERATOR_DEBUG_LEVEL=${MQ_ITERATOR_DEBUG}")
     endif()
     list(APPEND CMAKE_OPTION -DCMAKE_DEBUG_POSTFIX=d)
+
+    if(CMAKE_MT)
+      list(APPEND CMAKE_OPTION -DCMAKE_MT=${CMAKE_MT})
+    endif()
   elseif(MSYS AND NOT "${OS_NAME}" STREQUAL "MSYS-MSYS")
     set(tweedledum_CFLAGS "-DNT64")
     set(tweedledum_CXXFLAGS "-DNT64")
@@ -92,6 +96,10 @@ else()
      AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 8.0
      AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.2)
     list(APPEND PATCHES ${CMAKE_CURRENT_LIST_DIR}/patch/gcc-8.1-cleanup-hpp.patch009)
+  endif()
+
+  if(MSVC AND COMPILER_IS_CLANG_CL)
+    list(APPEND PATCHES ${CMAKE_CURRENT_LIST_DIR}/patch/clang-cl-compatibility.patch010)
   endif()
 
   if(Boost_DIR)

@@ -3,6 +3,7 @@
 *.pdb
 *.pyc
 *.pyd
+*.pyd.manifest
 .eggs
 .ipynb_checkpoints
 requirements.txt

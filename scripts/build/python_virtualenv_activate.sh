@@ -116,6 +116,7 @@ adjust_python=1
 for subdir in bin Scripts; do
     for ext in '' .exe; do
         python_exec="$VIRTUAL_ENV/$subdir/$PYTHON$ext"
+        debug_print "    trying $python_exec"
         if [ -f "$python_exec" ]; then
             adjust_python=0
             break
@@ -131,6 +132,7 @@ if [ "${adjust_python:-0}" -eq 1 ]; then
     for subdir in bin Scripts; do
         for exec in python3 python python3.exe python.exe; do
             python_exec="$VIRTUAL_ENV/$subdir/$exec"
+            debug_print "    trying '$python_exec'"
             if [ -f "$python_exec" ]; then
                 PYTHON="$exec"
                 found=1
