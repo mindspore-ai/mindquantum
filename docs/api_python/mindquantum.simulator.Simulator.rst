@@ -143,3 +143,6 @@
     .. py:method:: set_threads_number(number)
 
         设置最大线程数。
+
+        参数：
+            - **number** (int) - 设置模拟器中线程池所使用的线程数。
