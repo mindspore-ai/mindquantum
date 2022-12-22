@@ -98,6 +98,8 @@ auto BindPR(py::module &module, const std::string &name) {  // NOLINT(runtime/re
               .def_readonly("data", &pr_t::data_)
               .def_property_readonly(
                   "is_complex", [](const pr_t &) constexpr { return mindquantum::traits::is_complex_v<T>; })
+              .def_property_readonly("encoder_parameters", [](const pr_t &pr) { return pr.encoder_parameters_; })
+              .def_property_readonly("no_grad_parameters", [](const pr_t &pr) { return pr.no_grad_parameters_; })
               // ------------------------------
               // Member functions
               .def("ansatz_part", &pr_t::AnsatzPart)
@@ -108,7 +110,6 @@ auto BindPR(py::module &module, const std::string &name) {  // NOLINT(runtime/re
                    static_cast<cast_complex_func_t>(&pr_t::template Cast<mindquantum::traits::to_cmplx_type_t<T>>))
               .def("conjugate", &pr_t::Conjugate)
               .def("display", &pr_t::PrintInfo)
-              .def("encoder_parameters", [](const pr_t &pr) { return pr.encoder_parameters_; })
               .def("encoder_part", &pr_t::EncoderPart)
               .def("get_key", &pr_t::GetKey)
               .def("imag", &pr_t::Imag)
@@ -118,7 +119,6 @@ auto BindPR(py::module &module, const std::string &name) {  // NOLINT(runtime/re
               .def("keep_imag", &pr_t::KeepImag)
               .def("keep_real", &pr_t::KeepReal)
               .def("no_grad", &pr_t::NoGrad)
-              .def("no_grad_parameters", [](const pr_t &pr) { return pr.no_grad_parameters_; })
               .def("no_grad_part", &pr_t::NoGradPart)
               .def("params_name", &pr_t::ParamsName)
               .def("pop", &pr_t::Pop)
