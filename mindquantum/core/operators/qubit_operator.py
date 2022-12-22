@@ -86,6 +86,13 @@ class QubitOperator(TermsOperator):
         float: complex_pr_klass,
     }
 
+    def __init__(self, terms=None, coefficient=1.0):
+        """Initialize a QubitOperator instance."""
+        if isinstance(terms, mqbackend.QubitOperatorBase):
+            super().__init__(terms)
+        else:
+            super().__init__(terms, coefficient)
+
     def __str__(self) -> str:
         """Return string expression of a TermsOperator."""
         out = []

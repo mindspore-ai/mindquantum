@@ -79,22 +79,17 @@ class FermionOperator(TermsOperator):
         float: real_pr_klass,
     }
 
-    def __init__(self, *args):
-        """
-        Initialize a FermionOperator instance.
-
-        Args:
-            *args: Variable length argument list:
-                - PolynomialTensor
-                - Any type as specified by TermsOperator.__init__
-        """
-        if len(args) == 1 and isinstance(args[0], PolynomialTensor):
-            terms = {}
-            for term in args[0]:
-                terms[tuple((i, TermValue[j]) for i, j in term)] = ParameterResolver(args[0][term])
+    def __init__(self, terms=None, coefficient=1.0):
+        """Initialize a FermionOperator instance."""
+        if isinstance(terms, PolynomialTensor):
+            terms_ = {}
+            for term in terms:
+                terms_[tuple((i, TermValue[j]) for i, j in term)] = ParameterResolver(terms[term])
+            super().__init__(terms_)
+        elif isinstance(terms, mqbackend.FermionOperatorBase):
             super().__init__(terms)
         else:
-            super().__init__(*args)
+            super().__init__(terms, coefficient)
 
     def __str__(self) -> str:
         """Return string expression of a TermsOperator."""
