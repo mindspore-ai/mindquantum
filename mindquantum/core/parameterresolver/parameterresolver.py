@@ -632,7 +632,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             >>> a.no_grad_parameters
             {'a', 'b'}
         """
-        return [i for i in self.params_name if i in self._cpp_obj.no_grad_parameters()]
+        return [i for i in self.params_name if i in self._cpp_obj.no_grad_parameters]
 
     @property
     def encoder_parameters(self):
@@ -649,7 +649,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             >>> a.encoder_parameters
             {'a', 'b'}
         """
-        return [i for i in self.params_name if i in self._cpp_obj.encoder_parameters()]
+        return [i for i in self.params_name if i in self._cpp_obj.encoder_parameters]
 
     @property
     def ansatz_parameters(self):
