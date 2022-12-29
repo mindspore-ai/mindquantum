@@ -31,20 +31,15 @@
 #include "config/format/std_complex.hpp"
 #include "config/type_traits.hpp"
 
-#include "ops/basic_gate.hpp"
-#include "ops/gates/term_value.hpp"
-
-#ifdef ENABLE_PROJECTQ
-#    include "projectq.h"
-#endif
-
 #include "core/mq_base_types.hpp"
 #include "core/parameter_resolver.hpp"
 #include "core/sparse/algo.hpp"
 #include "core/sparse/csrhdmatrix.hpp"
 #include "core/sparse/paulimat.hpp"
 #include "core/two_dim_matrix.hpp"
+#include "ops/basic_gate.hpp"
 #include "ops/gates.hpp"
+#include "ops/gates/term_value.hpp"
 #include "ops/hamiltonian.hpp"
 
 #include "python/core/sparse/csrhdmatrix.hpp"
@@ -69,11 +64,6 @@ auto BindPR(py::module &module, const std::string &name) {  // NOLINT(runtime/re
     using mindquantum::ParameterResolver;
     using mindquantum::SS;
     using mindquantum::python::create_from_python_container_class_with_trampoline;
-#ifdef ENABLE_PROJECTQ
-    using mindquantum::projectq::InnerProduct;
-    using mindquantum::projectq::Projectq;
-#endif
-
     using pr_t = mindquantum::ParameterResolver<T>;
 
     // NB: this below is required because of GCC < 9
@@ -327,46 +317,6 @@ PYBIND11_MODULE(mqbackend, m) {
         .def_readwrite("ham_sparse_main", &Hamiltonian<MT>::ham_sparse_main_)
         .def_readwrite("ham_sparse_second", &Hamiltonian<MT>::ham_sparse_second_);
     m.def("sparse_hamiltonian", &SparseHamiltonian<MT>);
-
-#ifdef ENABLE_PROJECTQ
-    using mindquantum::projectq::InnerProduct;
-    using mindquantum::projectq::Projectq;
-
-    // projectq simulator
-    py::class_<Projectq<MT>, std::shared_ptr<Projectq<MT>>>(m, "projectq")
-        .def(py::init<>())
-        .def(py::init<unsigned, unsigned>())
-        .def("reset", py::overload_cast<>(&Projectq<MT>::InitializeSimulator))
-        .def("apply_measure", &Projectq<MT>::ApplyMeasure)
-        .def("apply_gate", py::overload_cast<const mindquantum::BasicGate<MT> &>(&Projectq<MT>::ApplyGate))
-        .def("apply_gate", py::overload_cast<const mindquantum::BasicGate<MT> &, const ParameterResolver<MT> &, bool>(
-                               &Projectq<MT>::ApplyGate))
-        .def("apply_circuit", py::overload_cast<const VT<mindquantum::BasicGate<MT>> &>(&Projectq<MT>::ApplyCircuit))
-        .def("apply_circuit", py::overload_cast<const VT<mindquantum::BasicGate<MT>> &, const ParameterResolver<MT> &>(
-                                  &Projectq<MT>::ApplyCircuit))
-        .def("apply_circuit_with_measure", &Projectq<MT>::ApplyCircuitWithMeasure)
-        .def("sampling", &Projectq<MT>::Sampling)
-        .def("apply_hamiltonian", &Projectq<MT>::ApplyHamiltonian)
-        .def("get_expectation", &Projectq<MT>::GetExpectation)
-        .def("PrintInfo", &Projectq<MT>::PrintInfo)
-        .def("run", &Projectq<MT>::run)
-        .def("get_qs", &Projectq<MT>::cheat)
-        .def("set_qs", &Projectq<MT>::SetState)
-        .def("get_circuit_matrix", &Projectq<MT>::GetCircuitMatrix)
-        .def("set_threads_number", &Projectq<MT>::SetThreadsNumber)
-        .def("copy", &Projectq<MT>::Copy)
-        .def("hermitian_measure_with_grad",
-             py::overload_cast<const VT<Hamiltonian<MT>> &, const VT<mindquantum::BasicGate<MT>> &,
-                               const VT<mindquantum::BasicGate<MT>> &, const VVT<MT> &, const VT<MT> &, const VS &,
-                               const VS &, size_t, size_t>(&Projectq<MT>::HermitianMeasureWithGrad))
-        .def("non_hermitian_measure_with_grad",
-             py::overload_cast<const VT<Hamiltonian<MT>> &, const VT<Hamiltonian<MT>> &,
-                               const VT<mindquantum::BasicGate<MT>> &, const VT<mindquantum::BasicGate<MT>> &,
-                               const VT<mindquantum::BasicGate<MT>> &, const VT<mindquantum::BasicGate<MT>> &,
-                               const VVT<MT> &, const VT<MT> &, const VS &, const VS &, size_t, size_t,
-                               const Projectq<MT> &>(&Projectq<MT>::NonHermitianMeasureWithGrad));
-    m.def("cpu_projectq_inner_product", &InnerProduct<MT>);
-#endif
 
     // NB: needs to be *after* declaration of ParameterResolver to pybind11
     init_terms_operators(m);

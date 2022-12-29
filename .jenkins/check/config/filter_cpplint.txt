@@ -20,7 +20,6 @@
 "mindquantum/ccsrc/cxx_experimental"                         "whitespace/newline"
 
 "mindquantum/ccsrc"                                          "build/include_subdir"
-"mindquantum/ccsrc/backends/projectq"                        "build/include_subdir"
 "mindquantum/ccsrc/gate"                                     "build/include_subdir"
 "mindquantum/ccsrc/hamiltonian"                              "build/include_subdir"
 "mindquantum/ccsrc/matrix"                                   "build/include_subdir"
@@ -57,3 +56,5 @@
 
 "mindquantum/ccsrc/include/simulator/vector/detail/cpu_vector_policy.hpp"                             "readability/casting"
 "mindquantum/ccsrc/include/core/parameter_resolver.hpp"                                               "build/include"
+
+"mindquantum/ccsrc/include/simulator/alignedallocator.hpp"                                            "whitespace/parens"

@@ -14,8 +14,9 @@ containerOutOfBounds:ccsrc/include/ops/gates/fermion_operator.tpp
 containerOutOfBounds:ccsrc/lib/ops/gates/fermion_operator.cpp
 containerOutOfBounds:ccsrc/lib/ops/gates/fermion_operator_parameter_resolver.cpp
 
+cstyleCast:ccsrc/include/simulator/cintrin.hpp
+
 duplicateExpression:ccsrc/include/core/parameter_resolver.h:707
-duplicateExpression:ccsrc/python/mqbackend/lib/binding.cc
 
 noExplicitConstructor:ccsrc/include/experimental/decompositions/decomposition_atom.hpp:41
 noExplicitConstructor:ccsrc/include/experimental/ops/parametric/gate_base.hpp
@@ -56,7 +57,6 @@ unknownMacro:ccsrc/include/core/sparse/paulimat.hpp:58
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_single_ops.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_xlike.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_zlike.cpp
-unknownMacro:third_party/projectq/projectq.h
 
 unreadVariable:ccsrc/lib/experimental/decompositions/time_evolution.cpp
 
@@ -70,5 +70,7 @@ useStlAlgorithm:ccsrc/include/experimental/core/control.hpp:79
 useStlAlgorithm:ccsrc/include/ops/gates/terms_coeff_dict.hpp
 useStlAlgorithm:ccsrc/include/ops/gates/terms_operator_base.tpp
 useStlAlgorithm:ccsrc/lib/experimental/simulator/projectq_simulator.cpp
+
+useInitializationList:ccsrc/include/simulator/cintrin.hpp
 
 ctuOneDefinitionRuleViolation:tests/core/test_circuit_block.cpp

@@ -62,10 +62,6 @@ class BackendBase:
         """Return the device name of this backend."""
         return self.name
 
-    def flush(self):
-        """Flush command to backend."""
-        raise NotImplementedError(f"reset not implemented for {self.device_name()}")
-
     def get_circuit_matrix(self, circuit: Circuit, pr: ParameterResolver) -> np.ndarray:
         """Get the matrix of given circuit."""
         raise NotImplementedError(f"get_circuit_matrix not implemented for {self.device_name()}")

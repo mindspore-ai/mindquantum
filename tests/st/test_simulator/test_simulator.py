@@ -358,7 +358,6 @@ def test_copy(virtual_qc):
     """
     sim = Simulator(virtual_qc, 1)
     sim.apply_gate(G.RX(1).on(0))
-    sim.flush()
     sim2 = sim.copy()
     sim2.apply_gate(G.RX(-1).on(0))
     sim.reset()
@@ -371,7 +370,7 @@ def test_copy(virtual_qc):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'projectq'])
+@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 def test_multi_params_gate(virtual_qc):
     """
     Description: test multi params gate
@@ -410,7 +409,7 @@ def test_multi_params_gate(virtual_qc):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'projectq'])
+@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_custom_gate_in_parallel(virtual_qc):
     """

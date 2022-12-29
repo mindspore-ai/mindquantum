@@ -102,7 +102,7 @@ if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
     set_var cmake_debug_mode true
     set_var enable_gitee true
     set_var enable_gpu true
-    set_var enable_projectq true
+    set_var enable_projectq false
 fi
 
 # ==============================================================================

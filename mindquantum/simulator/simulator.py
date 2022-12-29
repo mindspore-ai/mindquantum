@@ -13,12 +13,9 @@
 # limitations under the License.
 # ============================================================================
 """Simulator."""
-import warnings
 from functools import partial
 
 import numpy as np
-
-import mindquantum.mqbackend as mb
 
 from ..core.operators import Hamiltonian
 from ..utils.type_value_check import (
@@ -30,10 +27,8 @@ from ..utils.type_value_check import (
 from .backend_base import BackendBase
 from .mq_blas import MQBlas
 from .mqsim import MQ_SIM_GPU_SUPPORTED, MQSim
-from .projectq_sim import Projectq
 
 SUPPORTED_SIMULATOR = {
-    'projectq': Projectq,
     'mqvector': partial(MQSim, 'mqvector'),
 }
 
@@ -90,12 +85,6 @@ class Simulator:
             if seed is None:
                 seed = np.random.randint(1, 2**23)
             _check_seed(seed)
-            if backend == 'projectq':
-                warnings.warn(
-                    "projectq will be deprecated in next version, please use mqvector.",
-                    category=DeprecationWarning,
-                    stacklevel=2,
-                )
             try:
                 self.backend = SUPPORTED_SIMULATOR[backend](n_qubits, seed, *args, **kwargs)
             except KeyError as err:
@@ -125,7 +114,6 @@ class Simulator:
             >>> from mindquantum.simulator import Simulator
             >>> sim = Simulator('mqvector', 1)
             >>> sim.apply_gate(RX(1).on(0))
-            >>> sim.flush()
             >>> sim2 = sim.copy()
             >>> sim2.apply_gate(RX(-1).on(0))
             >>> sim2
@@ -157,23 +145,6 @@ class Simulator:
             array([1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j])
         """
         self.backend.reset()
-
-    def flush(self):
-        """
-        Flush gate that works for projectq simulator.
-
-        The projectq simulator will cache several gate and fusion these gate into a bigger gate, and than act on the
-        quantum state. The flush command will ask the simulator to fusion currently stored gate and act on the quantum
-        state.
-
-        Examples:
-            >>> from mindquantum.core.gates import H
-            >>> from mindquantum.simulator import Simulator
-            >>> sim = Simulator('projectq', 1)
-            >>> sim.apply_gate(H.on(0))
-            >>> sim.flush()
-        """
-        self.backend.flush()
 
     def apply_gate(self, gate, pr=None, diff=False):
         """
@@ -497,10 +468,6 @@ def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
         )
     if bra_simulator.backend.name != ket_simulator.backend.name:
         raise ValueError("The backend of two simulator should be same.")
-    if isinstance(bra_simulator.backend, Projectq) and isinstance(ket_simulator.backend, Projectq):
-        bra_simulator.flush()
-        ket_simulator.flush()
-        return mb.cpu_projectq_inner_product(bra_simulator.backend.sim, ket_simulator.backend.sim)
     if isinstance(bra_simulator.backend, MQSim):
         return MQBlas.inner_product(bra_simulator.backend, ket_simulator.backend)
     raise NotImplementedError(f"inner_product for backend {bra_simulator.backend} not implement.")

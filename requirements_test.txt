@@ -1,5 +1,4 @@
 scipy>=1.5.3
-projectq>=0.5.1
 cirq>=1.0.0
 openfermion>=1.5.0
 matplotlib>=3.4.3

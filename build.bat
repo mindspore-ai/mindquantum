@@ -69,7 +69,7 @@ if !_IS_MINDSPORE_CI! == 1 (
    set cmake_debug_mode=1
    set enable_gitee=1
    set enable_gpu=1
-   set enable_projectq=1
+   set enable_projectq=0
 )
 
 call %SCRIPTDIR%\default_values.bat
@@ -547,7 +547,8 @@ rem ============================================================================
   echo   /NoIsolation        Pass --no-isolation to python3 -m build
   echo   /O, /Output [dir]   Output directory for built wheels
   echo   /PlatName           Platform name to use for wheel delocation
-  echo                       (only effective if --delocate is used)
+  echo                       (only effective if --delocate is used)
+
   echo   /Quiet              Disable verbose build rules
   echo   /ShowLibraries      Show all known third-party libraries
   echo   /Venv *path*        Path to Python virtual environment

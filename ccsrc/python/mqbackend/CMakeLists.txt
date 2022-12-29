@@ -57,12 +57,10 @@ if(_lto_workaround)
   set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 endif()
 
-target_compile_definitions(mqbackend PUBLIC $<$<BOOL:${ENABLE_PROJECTQ}>:ENABLE_PROJECTQ>)
 target_include_directories(mqbackend PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
 
 force_at_least_cxx17_workaround(mqbackend)
-target_link_libraries(mqbackend PUBLIC ${MQ_OPENMP_TARGET} "$<$<BOOL:${ENABLE_PROJECTQ}>:mq_projectq>" mq_base
-                                       mq_python_core mqbackend_python_interface)
+target_link_libraries(mqbackend PUBLIC ${MQ_OPENMP_TARGET} mq_base mq_python_core mqbackend_python_interface)
 
 # ------------------------------------------------------------------------------
 

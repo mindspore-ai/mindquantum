@@ -96,7 +96,7 @@ if ($_IS_MINDSPORE_CI ) {
     Set-Value 'cmake_debug_mode' $true
     Set-Value 'enable_gitee' $true
     Set-Value 'enable_gpu' $true
-    Set-Value 'enable_projectq' $true
+    Set-Value 'enable_projectq' $false
 }
 
 # ------------------------------------------------------------------------------

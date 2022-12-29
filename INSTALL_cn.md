@@ -101,7 +101,7 @@ MQ_DELOCATE_WHEEL=1 python3 -m build .
 | ENABLE_MD                       | 编译时使用 /MD, /MDd 标志 (仅MSVC)                        | OFF                 |
 | ENABLE_MT                       | 编译时使用 /MT, /MTd 标志 (仅MSVC)                        | OFF                 |
 | ENABLE_PROFILING                | 启用编译分析标志                               | OFF                 |
-| ENABLE_PROJECTQ                 | 启用 ProjectQ 支持                                               | ON                  |
+| ENABLE_PROJECTQ                 | 启用 ProjectQ 支持                                               | OFF                  |
 | ENABLE_RUNPATH                  | link时优先使用 RUNPATH 而不是 RPATH                               | ON                  |
 | ENABLE_STACK_PROTECTION         | 启用 编译期栈保护                            | ON                  |
 | IN_PLACE_BUILD                  | 原地构建 C++ MindQuantum 库                         | OFF                 |

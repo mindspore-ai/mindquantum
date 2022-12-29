@@ -133,7 +133,7 @@ class MQSim(BackendBase):
         self.sim.apply_hamiltonian(hamiltonian.get_cpp_obj())
 
     def copy(self) -> "BackendBase":
-        """Copy a projectq simulator."""
+        """Copy a simulator."""
         sim = MQSim(self.name, self.n_qubits, self.seed)
         sim.sim = self.sim.copy()
         return sim
@@ -141,9 +141,6 @@ class MQSim(BackendBase):
     def device_name(self) -> str:
         """Return the device name."""
         return f"{self.n_qubits} qubits {self.name} simulator."
-
-    def flush(self):
-        """Execute all command."""
 
     def get_circuit_matrix(self, circuit: Circuit, pr: ParameterResolver) -> np.ndarray:
         """Get the matrix of given circuit."""

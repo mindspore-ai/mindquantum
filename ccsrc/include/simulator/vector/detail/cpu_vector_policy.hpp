@@ -26,9 +26,8 @@
 #include "simulator/types.hpp"
 
 #ifdef INTRIN
-#    include "projectq/backends/_sim/_cppkernels/intrin/alignedallocator.hpp"
-#    include "projectq/backends/_sim/_cppkernels/intrin/cintrin.hpp"
-
+#    include "simulator/alignedallocator.hpp"
+#    include "simulator/cintrin.hpp"
 namespace mindquantum::sim::vector::intrin {
 #    define INTRIN_M2_dot_V2(ket, i, j, mm, mmt, res)                                                                  \
         do {                                                                                                           \

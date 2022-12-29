@@ -56,7 +56,6 @@
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_single_ops.cpp"            "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_xlike.cpp"                 "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_zlike.cpp"                 "unknownMacro"
-"mindquantum/third_party/projectq/projectq.h"                                               "unknownMacro"
 
 "mindquantum/ccsrc/lib/experimental/decompositions/time_evolution.cpp"                      "unreadVariable"
 

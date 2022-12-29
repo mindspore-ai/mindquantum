@@ -102,7 +102,7 @@ Here is an exhaustive list of all CMake options available for customization
 | ENABLE_MD                       | Use /MD, /MDd flags when compiling (MSVC only)                        | OFF                 |
 | ENABLE_MT                       | Use /MT, /MTd flags when compiling (MSVC only)                        | OFF                 |
 | ENABLE_PROFILING                | Enable compilation with profiling flags                               | OFF                 |
-| ENABLE_PROJECTQ                 | Enable ProjectQ support                                               | ON                  |
+| ENABLE_PROJECTQ                 | Enable ProjectQ support                                               | OFF                  |
 | ENABLE_RUNPATH                  | Prefer RUNPATH over RPATH when linking                                | ON                  |
 | ENABLE_STACK_PROTECTION         | Enable stack protection during compilation                            | ON                  |
 | IN_PLACE_BUILD                  | Build the C++ MindQuantum libraries in-place                          | OFF                 |
