@@ -162,7 +162,7 @@ class QubitOperator(TermsOperator):
                 (ie. real, complex, real_pr, complex_pr)
 
         Returns:
-            QubitOperator`, the QubitOperator load from strings
+            QubitOperator, the QubitOperator load from strings
 
         Examples:
             >>> from mindquantum.core.operators import QubitOperator

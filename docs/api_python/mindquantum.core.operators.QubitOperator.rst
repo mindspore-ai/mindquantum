@@ -1,4 +1,4 @@
-.. py:class:: mindquantum.core.operators.QubitOperator(term=None, coefficient=1.0)
+.. py:class:: mindquantum.core.operators.QubitOperator(terms=None, coefficient=1.0)
 
     作用于量子比特的项的总和，例如 0.5 * 'X1 X5' + 0.3 * 'Z1 Z2'。
     项是一个作用于n个量子比特的运算符，可以表示为：coefficient * local_operator[0] x ... x local_operator[n-1]，其中x是张量乘积。
