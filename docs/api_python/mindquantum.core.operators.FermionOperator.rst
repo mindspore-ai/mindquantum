@@ -1,4 +1,4 @@
-.. py:class:: mindquantum.core.operators.FermionOperator(term=None, coefficient=1.0)
+.. py:class:: mindquantum.core.operators.FermionOperator(terms=None, coefficient=1.0)
 
     费米子算子，如FermionOperator('4^ 3 9 3^')表示 :math:`a_4^\dagger a_3 a_9 a_3^\dagger`。
     这些是描述费米子系统的基本运算符，如分子系统。

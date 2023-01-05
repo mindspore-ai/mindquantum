@@ -122,7 +122,7 @@ class XGate(PauliGate):
 
         {\rm X}=\begin{pmatrix}0&1\\1&0\end{pmatrix}
 
-    For simplicity, we define ```X``` as a instance of ```XGate()```. For more
+    For simplicity, we define ``X`` as a instance of ``XGate()``. For more
     redefine, please refer to the functional table below.
 
     Note:
