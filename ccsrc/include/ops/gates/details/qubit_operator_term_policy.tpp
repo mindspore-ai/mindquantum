@@ -61,8 +61,7 @@ constexpr std::tuple<number_t, TermValue> pauli_products_real(const TermValue& l
     return {1., TermValue::I};
 }
 
-constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermValue& left_op,
-                                                                     const TermValue& right_op) {
+constexpr std::tuple<std::complex<MT>, TermValue> pauli_products(const TermValue& left_op, const TermValue& right_op) {
     if (left_op == TermValue::X && right_op == TermValue::Y) {
         return {{0, 1.}, TermValue::Z};
     }
@@ -82,7 +81,7 @@ constexpr std::tuple<std::complex<double>, TermValue> pauli_products(const TermV
         return {{0, -1.}, TermValue::X};
     }
 
-    return pauli_products_real<std::complex<double>>(left_op, right_op);
+    return pauli_products_real<std::complex<MT>>(left_op, right_op);
 }
 
 // =============================================================================
@@ -135,7 +134,7 @@ auto QubitOperatorTermPolicy<coefficient_t>::simplify(terms_t terms, coefficient
                     }
                     left_term = *it;
                 } else {
-                    const auto [new_coeff, new_op] = pauli_products_real<double>(left_operator, right_operator);
+                    const auto [new_coeff, new_op] = pauli_products_real<MT>(left_operator, right_operator);
                     MQ_TRACE("{} x {} = {} ({})", left_operator, right_operator, new_op, new_coeff);
                     left_term = term_t{left_qubit_id, new_op};
                     coeff *= static_cast<coefficient_t>(new_coeff);

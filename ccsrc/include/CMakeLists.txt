@@ -37,6 +37,7 @@ set(MQ_BASE_HEADERS
 target_sources(mq_base PRIVATE $<BUILD_INTERFACE:${MQ_BASE_HEADERS}>)
 target_include_directories(mq_base PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
                                           $<INSTALL_INTERFACE:${MQ_INSTALL_INCLUDEDIR}>)
+target_compile_definitions(mq_base PUBLIC FLOAT)
 
 # ==============================================================================
 

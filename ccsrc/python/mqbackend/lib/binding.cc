@@ -255,20 +255,20 @@ PYBIND11_MODULE(mqbackend, m) {
     using complex_pr_t = decltype(complex_pr);
     using pr_cmplx_t = complex_pr_t::type;
 
-    using all_scalar_types_t = std::tuple<double, std::complex<double>, pr_t, pr_cmplx_t>;
+    using all_scalar_types_t = std::tuple<MT, std::complex<MT>, pr_t, pr_cmplx_t>;
 
     complex_pr.def("update", &pr_cmplx_t::Update<MT>);
 
-    bindops::binop_definition<op::plus, real_pr_t>::inplace<double, pr_t>(real_pr);
+    bindops::binop_definition<op::plus, real_pr_t>::inplace<MT, pr_t>(real_pr);
     bindops::binop_definition<op::plus, real_pr_t>::external<all_scalar_types_t>(real_pr);
     bindops::binop_definition<op::plus, real_pr_t>::reverse<all_scalar_types_t>(real_pr);
-    bindops::binop_definition<op::minus, real_pr_t>::inplace<double, pr_t>(real_pr);
+    bindops::binop_definition<op::minus, real_pr_t>::inplace<MT, pr_t>(real_pr);
     bindops::binop_definition<op::minus, real_pr_t>::external<all_scalar_types_t>(real_pr);
     bindops::binop_definition<op::minus, real_pr_t>::reverse<all_scalar_types_t>(real_pr);
-    bindops::binop_definition<op::times, real_pr_t>::inplace<double, pr_t>(real_pr);
+    bindops::binop_definition<op::times, real_pr_t>::inplace<MT, pr_t>(real_pr);
     bindops::binop_definition<op::times, real_pr_t>::external<all_scalar_types_t>(real_pr);
     bindops::binop_definition<op::times, real_pr_t>::reverse<all_scalar_types_t>(real_pr);
-    bindops::binop_definition<op::divides, real_pr_t>::inplace<double, pr_t>(real_pr);
+    bindops::binop_definition<op::divides, real_pr_t>::inplace<MT, pr_t>(real_pr);
     bindops::binop_definition<op::divides, real_pr_t>::external<all_scalar_types_t>(real_pr);
     bindops::binop_definition<op::divides, real_pr_t>::reverse<all_scalar_types_t>(real_pr);
 

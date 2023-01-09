@@ -38,14 +38,15 @@
 
 namespace ops = mindquantum::ops;
 namespace py = pybind11;
+using MT = mindquantum::MT;
 
 void init_fermion_operators(py::module& module) {  // NOLINT(runtime/references)
     namespace mq = mindquantum;
     namespace op = bindops::details;
 
-    using pr_t = mq::ParameterResolver<double>;
-    using pr_cmplx_t = mq::ParameterResolver<std::complex<double>>;
-    using all_scalar_types_t = std::tuple<double, std::complex<double>, pr_t, pr_cmplx_t>;
+    using pr_t = mq::ParameterResolver<MT>;
+    using pr_cmplx_t = mq::ParameterResolver<std::complex<MT>>;
+    using all_scalar_types_t = std::tuple<MT, std::complex<MT>, pr_t, pr_cmplx_t>;
 
     // Register empty base class (for instance(X, FermionOperatorBase) purposes
     py::class_<ops::FermionOperatorBase, std::shared_ptr<ops::FermionOperatorBase>>(
@@ -54,9 +55,9 @@ void init_fermion_operators(py::module& module) {  // NOLINT(runtime/references)
         "is_fermion_operator(obj)");
     module.def("is_fermion_operator", &pybind11::isinstance<ops::FermionOperatorBase>);
 
-    // NB: pybind11 maps both float and double to Python float
+    // NB: pybind11 maps both float and MT to Python float
     auto [fop_double, fop_cmplx_double, fop_pr_double, fop_pr_cmplx_double]
-        = bindops::define_fermion_ops<double, std::complex<double>, pr_t, pr_cmplx_t>::apply(
+        = bindops::define_fermion_ops<MT, std::complex<MT>, pr_t, pr_cmplx_t>::apply(
             module, "FermionOperatorD", "FermionOperatorCD", "FermionOperatorPRD", "FermionOperatorPRCD");
 
     // ---------------------------------
@@ -66,68 +67,67 @@ void init_fermion_operators(py::module& module) {  // NOLINT(runtime/references)
     using FermionOperatorPRD = decltype(fop_pr_double)::type;
     using FermionOperatorPRCD = decltype(fop_pr_cmplx_double)::type;
 
-    using all_fop_types_t = std::tuple<double, std::complex<double>, pr_t, pr_cmplx_t, FermionOperatorD,
-                                       FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD>;
+    using all_fop_types_t = std::tuple<MT, std::complex<MT>, pr_t, pr_cmplx_t, FermionOperatorD, FermionOperatorCD,
+                                       FermionOperatorPRD, FermionOperatorPRCD>;
 
     fop_double.def("cast",
-                   bindops::cast<FermionOperatorD, double, std::complex<double>, pr_t, pr_cmplx_t, FermionOperatorD,
+                   bindops::cast<FermionOperatorD, MT, std::complex<MT>, pr_t, pr_cmplx_t, FermionOperatorD,
                                  FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD>,
-                   "Supported types: float, complex, ParameterResolver<double>, ParameterResolver<complex>, "
+                   "Supported types: float, complex, ParameterResolver<MT>, ParameterResolver<complex>, "
                    "FermionOperatorD, FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD");
     fop_cmplx_double.def(
-        "cast",
-        bindops::cast<FermionOperatorCD, std::complex<double>, pr_cmplx_t, FermionOperatorCD, FermionOperatorPRCD>,
+        "cast", bindops::cast<FermionOperatorCD, std::complex<MT>, pr_cmplx_t, FermionOperatorCD, FermionOperatorPRCD>,
         "Supported types: complex, ParameterResolver<complex>, FermionOperatorCD, FermionOperatorPRCD");
 
     fop_pr_double.def("cast",
-                      bindops::cast<FermionOperatorPRD, double, std::complex<double>, pr_t, pr_cmplx_t,
-                                    FermionOperatorD, FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD>,
-                      "Supported types: float, complex, ParameterResolver<double>, ParameterResolver<complex>, "
+                      bindops::cast<FermionOperatorPRD, MT, std::complex<MT>, pr_t, pr_cmplx_t, FermionOperatorD,
+                                    FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD>,
+                      "Supported types: float, complex, ParameterResolver<MT>, ParameterResolver<complex>, "
                       "FermionOperatorD, FermionOperatorCD, FermionOperatorPRD, FermionOperatorPRCD");
     fop_pr_cmplx_double.def(
         "cast",
-        bindops::cast<FermionOperatorPRCD, std::complex<double>, pr_cmplx_t, FermionOperatorCD, FermionOperatorPRCD>,
+        bindops::cast<FermionOperatorPRCD, std::complex<MT>, pr_cmplx_t, FermionOperatorCD, FermionOperatorPRCD>,
         "Supported types: complex, ParameterResolver<complex>, FermionOperatorCD, FermionOperatorPRCD");
 
     // ---------------------------------
 
     using fop_t = decltype(fop_double);
-    bindops::binop_definition<op::plus, fop_t>::inplace<double>(fop_double);
+    bindops::binop_definition<op::plus, fop_t>::inplace<MT>(fop_double);
     bindops::binop_definition<op::plus, fop_t>::external<all_scalar_types_t>(fop_double);
     bindops::binop_definition<op::plus, fop_t>::reverse<all_fop_types_t>(fop_double);
-    bindops::binop_definition<op::minus, fop_t>::inplace<double>(fop_double);
+    bindops::binop_definition<op::minus, fop_t>::inplace<MT>(fop_double);
     bindops::binop_definition<op::minus, fop_t>::external<all_scalar_types_t>(fop_double);
     bindops::binop_definition<op::minus, fop_t>::reverse<all_fop_types_t>(fop_double);
-    bindops::binop_definition<op::times, fop_t>::inplace<double>(fop_double);
+    bindops::binop_definition<op::times, fop_t>::inplace<MT>(fop_double);
     bindops::binop_definition<op::times, fop_t>::external<all_scalar_types_t>(fop_double);
     bindops::binop_definition<op::times, fop_t>::reverse<all_fop_types_t>(fop_double);
-    bindops::binop_definition<op::divides, fop_t>::inplace<double>(fop_double);
+    bindops::binop_definition<op::divides, fop_t>::inplace<MT>(fop_double);
     bindops::binop_definition<op::divides, fop_t>::external<all_scalar_types_t>(fop_double);
 
     using fop_cmplx_t = decltype(fop_cmplx_double);
-    bindops::binop_definition<op::plus, fop_cmplx_t>::inplace<double, std::complex<double>>(fop_cmplx_double);
+    bindops::binop_definition<op::plus, fop_cmplx_t>::inplace<MT, std::complex<MT>>(fop_cmplx_double);
     bindops::binop_definition<op::plus, fop_cmplx_t>::external<all_scalar_types_t>(fop_cmplx_double);
     bindops::binop_definition<op::plus, fop_cmplx_t>::reverse<all_fop_types_t>(fop_cmplx_double);
-    bindops::binop_definition<op::minus, fop_cmplx_t>::inplace<double, std::complex<double>>(fop_cmplx_double);
+    bindops::binop_definition<op::minus, fop_cmplx_t>::inplace<MT, std::complex<MT>>(fop_cmplx_double);
     bindops::binop_definition<op::minus, fop_cmplx_t>::external<all_scalar_types_t>(fop_cmplx_double);
     bindops::binop_definition<op::minus, fop_cmplx_t>::reverse<all_fop_types_t>(fop_cmplx_double);
-    bindops::binop_definition<op::times, fop_cmplx_t>::inplace<double, std::complex<double>>(fop_cmplx_double);
+    bindops::binop_definition<op::times, fop_cmplx_t>::inplace<MT, std::complex<MT>>(fop_cmplx_double);
     bindops::binop_definition<op::times, fop_cmplx_t>::external<all_scalar_types_t>(fop_cmplx_double);
     bindops::binop_definition<op::times, fop_cmplx_t>::reverse<all_fop_types_t>(fop_cmplx_double);
-    bindops::binop_definition<op::divides, fop_cmplx_t>::inplace<double, std::complex<double>>(fop_cmplx_double);
+    bindops::binop_definition<op::divides, fop_cmplx_t>::inplace<MT, std::complex<MT>>(fop_cmplx_double);
     bindops::binop_definition<op::divides, fop_cmplx_t>::external<all_scalar_types_t>(fop_cmplx_double);
 
     using fop_pr_t = decltype(fop_pr_double);
-    bindops::binop_definition<op::plus, fop_pr_t>::inplace<double, pr_t>(fop_pr_double);
+    bindops::binop_definition<op::plus, fop_pr_t>::inplace<MT, pr_t>(fop_pr_double);
     bindops::binop_definition<op::plus, fop_pr_t>::external<all_scalar_types_t>(fop_pr_double);
     bindops::binop_definition<op::plus, fop_pr_t>::reverse<all_fop_types_t>(fop_pr_double);
-    bindops::binop_definition<op::minus, fop_pr_t>::inplace<double, pr_t>(fop_pr_double);
+    bindops::binop_definition<op::minus, fop_pr_t>::inplace<MT, pr_t>(fop_pr_double);
     bindops::binop_definition<op::minus, fop_pr_t>::external<all_scalar_types_t>(fop_pr_double);
     bindops::binop_definition<op::minus, fop_pr_t>::reverse<all_fop_types_t>(fop_pr_double);
-    bindops::binop_definition<op::times, fop_pr_t>::inplace<double, pr_t>(fop_pr_double);
+    bindops::binop_definition<op::times, fop_pr_t>::inplace<MT, pr_t>(fop_pr_double);
     bindops::binop_definition<op::times, fop_pr_t>::external<all_scalar_types_t>(fop_pr_double);
     bindops::binop_definition<op::times, fop_pr_t>::reverse<all_fop_types_t>(fop_pr_double);
-    bindops::binop_definition<op::divides, fop_pr_t>::inplace<double, pr_t>(fop_pr_double);
+    bindops::binop_definition<op::divides, fop_pr_t>::inplace<MT, pr_t>(fop_pr_double);
     bindops::binop_definition<op::divides, fop_pr_t>::external<all_scalar_types_t>(fop_pr_double);
 
     using fop_pr_cmplx_t = decltype(fop_pr_cmplx_double);

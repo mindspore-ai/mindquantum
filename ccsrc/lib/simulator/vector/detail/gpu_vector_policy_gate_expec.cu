@@ -182,8 +182,8 @@ auto GPUVectorPolicyBase::ExpectDiffMatrixGate(qs_data_p_t bra, qs_data_p_t ket,
 
 auto GPUVectorPolicyBase::ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                        calc_type val, index_t dim) -> qs_data_t {
-    auto c = -0.5 * std::sin(val / 2);
-    auto is = 0.5 * std::cos(val / 2) * qs_data_t(0, -1);
+    auto c = static_cast<calc_type>(-0.5 * std::sin(val / 2));
+    auto is = static_cast<calc_type>(0.5 * std::cos(val / 2)) * qs_data_t(0, -1);
     std::vector<py_qs_datas_t> gate = {{c, is}, {is, c}};
     return GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
 }
@@ -191,8 +191,8 @@ auto GPUVectorPolicyBase::ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const q
 auto GPUVectorPolicyBase::ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                        calc_type val, index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
-    auto c = -0.5 * std::sin(val / 2);
-    auto s = 0.5 * std::cos(val / 2);
+    auto c = static_cast<calc_type>(-0.5 * std::sin(val / 2));
+    auto s = static_cast<calc_type>(0.5 * std::cos(val / 2));
     std::vector<py_qs_datas_t> gate = {{c, -s}, {s, c}};
     return GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
 }
@@ -200,8 +200,8 @@ auto GPUVectorPolicyBase::ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const q
 auto GPUVectorPolicyBase::ExpectDiffRZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                        calc_type val, index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
-    auto c = -0.5 * std::sin(val / 2);
-    auto s = 0.5 * std::cos(val / 2);
+    auto c = static_cast<calc_type>(-0.5 * std::sin(val / 2));
+    auto s = static_cast<calc_type>(0.5 * std::cos(val / 2));
     auto e0 = c + qs_data_t(0, -1) * s;
     auto e1 = c + qs_data_t(0, 1) * s;
     std::vector<py_qs_datas_t> gate = {{e0, 0}, {0, e1}};
@@ -211,8 +211,8 @@ auto GPUVectorPolicyBase::ExpectDiffRZ(qs_data_p_t bra, qs_data_p_t ket, const q
 auto GPUVectorPolicyBase::ExpectDiffXX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                        calc_type val, index_t dim) -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
-    auto c = -std::sin(val);
-    auto s = std::cos(val) * qs_data_t(0, -1);
+    auto c = static_cast<calc_type>(-std::sin(val));
+    auto s = static_cast<calc_type>(std::cos(val)) * qs_data_t(0, -1);
     thrust::counting_iterator<size_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
     auto obj_rev_high_mask = mask.obj_rev_high_mask;
@@ -270,8 +270,8 @@ auto GPUVectorPolicyBase::ExpectDiffXX(qs_data_p_t bra, qs_data_p_t ket, const q
 auto GPUVectorPolicyBase::ExpectDiffYY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                        calc_type val, index_t dim) -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
-    auto c = -std::sin(val);
-    auto s = std::cos(val) * qs_data_t(0, 1);
+    auto c = static_cast<calc_type>(-std::sin(val));
+    auto s = static_cast<calc_type>(std::cos(val)) * qs_data_t(0, 1);
     thrust::counting_iterator<size_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
     auto obj_rev_high_mask = mask.obj_rev_high_mask;
@@ -329,8 +329,8 @@ auto GPUVectorPolicyBase::ExpectDiffYY(qs_data_p_t bra, qs_data_p_t ket, const q
 auto GPUVectorPolicyBase::ExpectDiffZZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                        calc_type val, index_t dim) -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
-    auto c = -std::sin(val);
-    auto s = std::cos(val);
+    auto c = static_cast<calc_type>(-std::sin(val));
+    auto s = static_cast<calc_type>(std::cos(val));
     auto e = c + qs_data_t(0, 1) * s;
     auto me = c + qs_data_t(0, -1) * s;
     thrust::counting_iterator<size_t> l(0);
@@ -391,7 +391,7 @@ auto GPUVectorPolicyBase::ExpectDiffGP(qs_data_p_t bra, qs_data_p_t ket, const q
 auto GPUVectorPolicyBase::ExpectDiffPS(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                        calc_type val, index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
-    auto e = std::cos(val) + qs_data_t(0, 1) * std::sin(val);
+    auto e = static_cast<calc_type>(std::cos(val)) + qs_data_t(0, 1) * static_cast<calc_type>(std::sin(val));
     thrust::counting_iterator<size_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
     auto obj_low_mask = mask.obj_low_mask;

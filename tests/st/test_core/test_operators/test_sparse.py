@@ -62,5 +62,5 @@ def test_sparsing_operator():
     eigen_v1.sort()
     eigen_v2.sort()
     eigen_v3.sort()
-    assert np.allclose(eigen_v1, eigen_v2)
-    assert np.allclose(eigen_v1, eigen_v3)
+    assert np.allclose(eigen_v1, eigen_v2, atol=1e-6)
+    assert np.allclose(eigen_v1, eigen_v3, atol=1e-6)

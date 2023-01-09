@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Test Hamiltonian."""
+import numpy as np
 
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 
@@ -23,4 +24,8 @@ def test_hamiltonian():
     Expectation:
     """
     ham = Hamiltonian(QubitOperator('Z0 Y1', 0.3))
-    assert ham.ham_termlist == [(((0, 'Z'), (1, 'Y')), 0.3)]
+    terms = ham.ham_termlist
+    paulis = terms[0][0]
+    coeff = terms[0][1]
+    assert paulis == ((0, 'Z'), (1, 'Y'))
+    assert np.allclose(coeff, 0.3, atol=1e-6)

@@ -88,24 +88,7 @@ void CPUVectorPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t de
                                                  const qbits_t& ctrls, const std::vector<std::vector<py_qs_data_t>>& m,
                                                  index_t dim) {
     SingleQubitGateMask mask({obj_qubit}, ctrls);
-#ifdef INTRIN
-    gate_matrix_t gate = {{m[0][0], m[0][1]}, {m[1][0], m[1][1]}};
-    __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
-    __m256d mm[2];
-    __m256d mmt[2];
-    INTRIN_gene_2d_mm_and_mmt(gate, mm, mmt, neg);
-#endif
     if (!mask.ctrl_mask) {
-#ifdef INTRIN
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
-                auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
-                auto j = i + mask.obj_mask;
-                __m256d mul_res;
-                INTRIN_M2_dot_V2(src, i, j, mm, mmt, mul_res);
-                INTRIN_m256_to_host2(mul_res, des + i, des + j);
-            })
-#else
         THRESHOLD_OMP_FOR(
             dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
@@ -115,20 +98,7 @@ void CPUVectorPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t de
                 des[i] = t1;
                 des[j] = t2;
             })
-#endif
     } else {
-#ifdef INTRIN
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
-                auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
-                if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                    auto j = i + mask.obj_mask;
-                    __m256d mul_res;
-                    INTRIN_M2_dot_V2(src, i, j, mm, mmt, mul_res);
-                    INTRIN_m256_to_host2(mul_res, des + i, des + j);
-                }
-            });
-#else
         THRESHOLD_OMP_FOR(
             dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
@@ -140,7 +110,6 @@ void CPUVectorPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t de
                     des[j] = t2;
                 }
             });
-#endif
     }
 }
 

@@ -41,6 +41,7 @@
 
 namespace ops = mindquantum::ops;
 namespace py = pybind11;
+using MT = mindquantum::MT;
 
 void init_transform(py::module& module);          // NOLINT(runtime/references)
 void init_fermion_operators(py::module& module);  // NOLINT(runtime/references)
@@ -69,19 +70,19 @@ void init_terms_operators(pybind11::module& module) {  // NOLINT(runtime/referen
         [](const mindquantum::ops::TermValue& value) -> pybind11::str { return fmt::format("{}", value); },
         pybind11::name("name"), pybind11::is_method(term_value));
 
-    using pr_t = mq::ParameterResolver<double>;
-    using pr_cmplx_t = mq::ParameterResolver<std::complex<double>>;
+    using pr_t = mq::ParameterResolver<MT>;
+    using pr_cmplx_t = mq::ParameterResolver<std::complex<MT>>;
 
     /* These types are used when one wants to replace some parameters inside a FermionOperator or QubitOperator.
-     * The two types for double and std::complex<double> do not do anything in practice but are defined anyway in order
+     * The two types for MT and std::complex<MT> do not do anything in practice but are defined anyway in order
      * to have a consistent API.
      */
-    py::class_<ops::details::CoeffSubsProxy<double>>(module, "DoubleSubsProxy",
-                                                     "Substitution proxy class for floating point numbers")
-        .def(py::init<double>());
-    py::class_<ops::details::CoeffSubsProxy<std::complex<double>>>(module, "CmplxDoubleSubsProxy",
-                                                                   "Substitution proxy class for complex numbers")
-        .def(py::init<std::complex<double>>());
+    py::class_<ops::details::CoeffSubsProxy<MT>>(module, "DoubleSubsProxy",
+                                                 "Substitution proxy class for floating point numbers")
+        .def(py::init<MT>());
+    py::class_<ops::details::CoeffSubsProxy<std::complex<MT>>>(module, "CmplxDoubleSubsProxy",
+                                                               "Substitution proxy class for complex numbers")
+        .def(py::init<std::complex<MT>>());
     py::class_<ops::details::CoeffSubsProxy<pr_t>>(module, "DoublePRSubsProxy",
                                                    "Substitution proxy class for mqbackend.real_pr")
         .def(py::init<pr_t>());
@@ -107,36 +108,36 @@ void init_transform(py::module& module) {  // NOLINT(runtime/references)
 
     using bindops::fop_t;
     using bindops::qop_t;
-    using pr_t = mindquantum::ParameterResolver<double>;
-    using pr_cmplx_t = mindquantum::ParameterResolver<std::complex<double>>;
+    using pr_t = mindquantum::ParameterResolver<MT>;
+    using pr_cmplx_t = mindquantum::ParameterResolver<std::complex<MT>>;
 
-    module.def("parity", &transform::parity<fop_t<double>>, "ops"_a, "n_qubits"_a);
-    module.def("parity", &transform::parity<fop_t<std::complex<double>>>, "ops"_a, "n_qubits"_a);
+    module.def("parity", &transform::parity<fop_t<MT>>, "ops"_a, "n_qubits"_a);
+    module.def("parity", &transform::parity<fop_t<std::complex<MT>>>, "ops"_a, "n_qubits"_a);
     module.def("parity", &transform::parity<fop_t<pr_t>>, "ops"_a, "n_qubits"_a);
     module.def("parity", &transform::parity<fop_t<pr_cmplx_t>>, "ops"_a, "n_qubits"_a);
 
-    module.def("reverse_jordan_wigner", &transform::reverse_jordan_wigner<qop_t<double>>);
-    module.def("reverse_jordan_wigner", &transform::reverse_jordan_wigner<qop_t<std::complex<double>>>);
+    module.def("reverse_jordan_wigner", &transform::reverse_jordan_wigner<qop_t<MT>>);
+    module.def("reverse_jordan_wigner", &transform::reverse_jordan_wigner<qop_t<std::complex<MT>>>);
     module.def("reverse_jordan_wigner", &transform::reverse_jordan_wigner<qop_t<pr_t>>);
     module.def("reverse_jordan_wigner", &transform::reverse_jordan_wigner<qop_t<pr_cmplx_t>>);
 
-    module.def("jordan_wigner", &transform::jordan_wigner<fop_t<double>>);
-    module.def("jordan_wigner", &transform::jordan_wigner<fop_t<std::complex<double>>>);
+    module.def("jordan_wigner", &transform::jordan_wigner<fop_t<MT>>);
+    module.def("jordan_wigner", &transform::jordan_wigner<fop_t<std::complex<MT>>>);
     module.def("jordan_wigner", &transform::jordan_wigner<fop_t<pr_t>>);
     module.def("jordan_wigner", &transform::jordan_wigner<fop_t<pr_cmplx_t>>);
 
-    module.def("bravyi_kitaev", &transform::bravyi_kitaev<fop_t<double>>, "ops"_a, "n_qubits"_a);
-    module.def("bravyi_kitaev", &transform::bravyi_kitaev<fop_t<std::complex<double>>>, "ops"_a, "n_qubits"_a);
+    module.def("bravyi_kitaev", &transform::bravyi_kitaev<fop_t<MT>>, "ops"_a, "n_qubits"_a);
+    module.def("bravyi_kitaev", &transform::bravyi_kitaev<fop_t<std::complex<MT>>>, "ops"_a, "n_qubits"_a);
     module.def("bravyi_kitaev", &transform::bravyi_kitaev<fop_t<pr_t>>, "ops"_a, "n_qubits"_a);
     module.def("bravyi_kitaev", &transform::bravyi_kitaev<fop_t<pr_cmplx_t>>, "ops"_a, "n_qubits"_a);
 
-    module.def("bravyi_kitaev_superfast", &transform::bravyi_kitaev_superfast<fop_t<double>>);
-    module.def("bravyi_kitaev_superfast", &transform::bravyi_kitaev_superfast<fop_t<std::complex<double>>>);
+    module.def("bravyi_kitaev_superfast", &transform::bravyi_kitaev_superfast<fop_t<MT>>);
+    module.def("bravyi_kitaev_superfast", &transform::bravyi_kitaev_superfast<fop_t<std::complex<MT>>>);
     module.def("bravyi_kitaev_superfast", &transform::bravyi_kitaev_superfast<fop_t<pr_t>>);
     module.def("bravyi_kitaev_superfast", &transform::bravyi_kitaev_superfast<fop_t<pr_cmplx_t>>);
 
-    module.def("ternary_tree", &transform::ternary_tree<fop_t<double>>, "ops"_a, "n_qubits"_a);
-    module.def("ternary_tree", &transform::ternary_tree<fop_t<std::complex<double>>>, "ops"_a, "n_qubits"_a);
+    module.def("ternary_tree", &transform::ternary_tree<fop_t<MT>>, "ops"_a, "n_qubits"_a);
+    module.def("ternary_tree", &transform::ternary_tree<fop_t<std::complex<MT>>>, "ops"_a, "n_qubits"_a);
     module.def("ternary_tree", &transform::ternary_tree<fop_t<pr_t>>, "ops"_a, "n_qubits"_a);
     module.def("ternary_tree", &transform::ternary_tree<fop_t<pr_cmplx_t>>, "ops"_a, "n_qubits"_a);
 }

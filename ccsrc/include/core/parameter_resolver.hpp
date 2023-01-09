@@ -61,6 +61,7 @@ struct real_cast_impl<cast_type, ParameterResolver<float_t>> {
         return coeff;
     }
 };
+// TODO(xusheng) Apply need to fix.
 template <RealCastType cast_type, typename float_t>
 struct real_cast_impl<cast_type, ParameterResolver<std::complex<float_t>>> {
     using type = ParameterResolver<std::complex<float_t>>;

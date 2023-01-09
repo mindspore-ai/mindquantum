@@ -21,7 +21,7 @@ namespace mindquantum::sim {
 #ifndef FLOAT
 using calc_type = double;
 #else
-using cacl_type = float;
+using calc_type = float;
 #endif
 
 using qbit_t = int64_t;

@@ -233,9 +233,9 @@ def test_all_gate_with_simulator(virtual_qc):  # pylint: disable=too-many-locals
     g_a = ((f2 - f1) / delta)[0, 0]
     g_a_1 = g1[0, 0, 0]
     g_a_2 = g2[0, 0, 0]
-    assert np.allclose(g_a, g_a_1, atol=1e-4)
-    assert np.allclose(g_a, g_a_2, atol=1e-4)
-    assert np.allclose(g_a_1, g_a_2, atol=1e-4)
+    assert np.allclose(g_a, g_a_1, atol=1e-3)
+    assert np.allclose(g_a, g_a_2, atol=1e-3)
+    assert np.allclose(g_a_1, g_a_2, atol=1e-3)
 
 
 @pytest.mark.level0
@@ -401,8 +401,8 @@ def test_multi_params_gate(virtual_qc):
             ]
         ]
     )
-    assert np.allclose(f, f_exp)
-    assert np.allclose(g, g_exp)
+    assert np.allclose(f, f_exp, atol=1e-6)
+    assert np.allclose(g, g_exp, atol=1e-6)
 
 
 @pytest.mark.level0

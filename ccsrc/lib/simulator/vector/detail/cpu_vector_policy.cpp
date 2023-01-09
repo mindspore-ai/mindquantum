@@ -288,7 +288,7 @@ void CPUVectorPolicyBase::ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const q
 void CPUVectorPolicyBase::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, bool daggered,
                                      index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
-    double frac = 1.0;
+    MT frac = 1.0;
     if (daggered) {
         frac = -1.0;
     }

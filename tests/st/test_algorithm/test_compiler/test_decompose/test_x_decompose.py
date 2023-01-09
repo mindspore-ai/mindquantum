@@ -32,7 +32,7 @@ def circuit_equal_test(gate, decompose_circ):
     require two circuits are equal.
     """
     orig_circ = Circuit() + gate
-    assert np.allclose(orig_circ.matrix(), decompose_circ.matrix())
+    assert np.allclose(orig_circ.matrix(), decompose_circ.matrix(), atol=1e-6)
 
 
 def test_ccx():

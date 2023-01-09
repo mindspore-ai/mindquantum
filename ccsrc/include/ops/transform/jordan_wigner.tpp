@@ -26,6 +26,7 @@
 namespace lru_cache {
 template <typename coeff_t>
 using qo_t = mindquantum::ops::QubitOperator<coeff_t>;
+using MT = mindquantum::MT;
 
 // -----------------------------------------------------------------------------
 
@@ -48,14 +49,14 @@ struct StaticLruCacheOptionsBoostBase {
 };
 
 template <std::size_t cache_size, bool by_access_order>
-struct StaticLruCacheOptions<mindquantum::ops::term_t, qo_t<std::complex<double>>, cache_size, by_access_order>
-    : public StaticLruCacheOptionsBoostBase<mindquantum::ops::term_t, qo_t<std::complex<double>>, cache_size,
+struct StaticLruCacheOptions<mindquantum::ops::term_t, qo_t<std::complex<MT>>, cache_size, by_access_order>
+    : public StaticLruCacheOptionsBoostBase<mindquantum::ops::term_t, qo_t<std::complex<MT>>, cache_size,
                                             by_access_order> {};
 template <std::size_t cache_size, bool by_access_order>
-struct StaticLruCacheOptions<mindquantum::ops::term_t, qo_t<mindquantum::ParameterResolver<std::complex<double>>>,
+struct StaticLruCacheOptions<mindquantum::ops::term_t, qo_t<mindquantum::ParameterResolver<std::complex<MT>>>,
                              cache_size, by_access_order>
     : public StaticLruCacheOptionsBoostBase<mindquantum::ops::term_t,
-                                            qo_t<mindquantum::ParameterResolver<std::complex<double>>>, cache_size,
+                                            qo_t<mindquantum::ParameterResolver<std::complex<MT>>>, cache_size,
                                             by_access_order> {};
 }  // namespace lru_cache
 
@@ -117,8 +118,8 @@ auto reverse_jordan_wigner(const qubit_op_t& ops, int n_qubits)
                     auto raising_term = fermion_op_t({idx, TermValue::adg});
                     auto lowering_term = fermion_op_t({idx, TermValue::a});
                     if (value == TermValue::Y) {
-                        raising_term *= coefficient_t(std::complex<double>(0, 1));
-                        lowering_term *= coefficient_t(std::complex<double>(0, -1));
+                        raising_term *= coefficient_t(std::complex<MT>(0, 1));
+                        lowering_term *= coefficient_t(std::complex<MT>(0, -1));
                     }
                     trans_pauli += raising_term;
                     trans_pauli += lowering_term;

@@ -303,7 +303,7 @@ void GPUVectorPolicyBase::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const 
     auto obj_min_mask = mask.obj_min_mask;
     auto obj_max_mask = mask.obj_max_mask;
     auto ctrl_mask = mask.ctrl_mask;
-    double frac = 1.0;
+    MT frac = 1.0;
     if (daggered) {
         frac = -1.0;
     }
@@ -341,10 +341,10 @@ void GPUVectorPolicyBase::ApplyXX(qs_data_p_t qs, const qbits_t& objs, const qbi
     auto ctrl_mask = mask.ctrl_mask;
     auto obj_mask = mask.obj_mask;
     auto c = static_cast<qs_data_t>(std::cos(val));
-    auto s = std::sin(val) * qs_data_t(0, -1);
+    auto s = static_cast<calc_type>(std::sin(val)) * qs_data_t(0, -1);
     if (diff) {
         c = static_cast<qs_data_t>(-std::sin(val));
-        s = std::cos(val) * qs_data_t(0, -1);
+        s = static_cast<calc_type>(std::cos(val)) * qs_data_t(0, -1);
     }
     if (!mask.ctrl_mask) {
         thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
@@ -399,10 +399,10 @@ void GPUVectorPolicyBase::ApplyYY(qs_data_p_t qs, const qbits_t& objs, const qbi
     auto ctrl_mask = mask.ctrl_mask;
     auto obj_mask = mask.obj_mask;
     auto c = static_cast<qs_data_t>(std::cos(val));
-    auto s = std::sin(val) * qs_data_t(0, 1);
+    auto s = static_cast<calc_type>(std::sin(val)) * qs_data_t(0, 1);
     if (diff) {
         c = static_cast<qs_data_t>(-std::sin(val));
-        s = std::cos(val) * qs_data_t(0, 1);
+        s = static_cast<qs_data_t>(std::cos(val)) * qs_data_t(0, 1);
     }
     if (!mask.ctrl_mask) {
         thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
@@ -456,11 +456,11 @@ void GPUVectorPolicyBase::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbi
     auto obj_max_mask = mask.obj_max_mask;
     auto ctrl_mask = mask.ctrl_mask;
     auto obj_mask = mask.obj_mask;
-    auto c = std::cos(val);
-    auto s = std::sin(val);
+    auto c = static_cast<calc_type>(std::cos(val));
+    auto s = static_cast<calc_type>(std::sin(val));
     if (diff) {
-        c = -std::sin(val);
-        s = std::cos(val);
+        c = static_cast<calc_type>(-std::sin(val));
+        s = static_cast<calc_type>(std::cos(val));
     }
     auto e = c + qs_data_t(0, 1) * s;
     auto me = c + qs_data_t(0, -1) * s;

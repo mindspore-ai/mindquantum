@@ -90,7 +90,7 @@ struct CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>> {
     using self_t = CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>>;
     using base_t = CoeffPolicyBase<coeff_t>;
     using coeff_policy_real_t = self_t;
-    using matrix_coeff_t = std::complex<double>;
+    using matrix_coeff_t = std::complex<MT>;
 
     static const coeff_t zero;
     static const coeff_t one;
@@ -101,7 +101,7 @@ struct CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>> {
         if (SymEngine::is_a_Complex(*coeff)) {
             return SymEngine::eval_complex_double(*coeff);
         }
-        return static_cast<std::complex<double>>(SymEngine::eval_double(*coeff));
+        return static_cast<std::complex<MT>>(SymEngine::eval_double(*coeff));
     }
 
     // Comparisons/Checks
@@ -178,7 +178,7 @@ struct CoeffPolicy<SymEngine::RCP<const SymEngine::Basic>> {
     static auto compress(coeff_t& coeff, double abs_tol = EQ_TOLERANCE) {  // NOLINT(runtime/references)
         if (SymEngine::is_a_Complex(*coeff)) {
             auto tmp = SymEngine::eval_complex_double(*coeff);
-            CoeffPolicy<std::complex<double>>::compress(tmp, abs_tol);
+            CoeffPolicy<std::complex<MT>>::compress(tmp, abs_tol);
             coeff = SymEngine::complex_double(tmp);
         }
     }
