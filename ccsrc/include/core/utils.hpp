@@ -30,7 +30,7 @@
 #include <vector>
 
 #include "config/config.hpp"
-
+#include "config/popcnt.hpp"
 #include "core/mq_base_types.hpp"
 
 namespace mindquantum {
@@ -100,30 +100,19 @@ inline uint64_t CountOne(int64_t n) {
     return CountOne(uint64_t(n));
 }
 #else
-inline uint32_t CountOne(uint32_t n) {
-    int result;
-    asm("popcnt %1,%0" : "=r"(result) : "r"(n));
-    return result;
+inline int CountOne(uint64_t n) {
+  uint8_t *p = reinterpret_cast<uint8_t *>(&n);
+  return POPCNTTABLE[p[0]] + POPCNTTABLE[p[1]] + POPCNTTABLE[p[2]] +
+         POPCNTTABLE[p[3]] + POPCNTTABLE[p[4]] + POPCNTTABLE[p[5]] +
+         POPCNTTABLE[p[6]] + POPCNTTABLE[p[7]];
 }
 
-inline uint64_t CountOne(int64_t n) {
-    uint32_t *p = reinterpret_cast<uint32_t *>(&n);
-    return CountOne(p[0]) + CountOne(p[1]);
+inline int CountOne32(uint32_t n) {
+  uint8_t *p = reinterpret_cast<uint8_t *>(&n);
+  return POPCNTTABLE[p[0]] + POPCNTTABLE[p[1]] + POPCNTTABLE[p[2]] +
+         POPCNTTABLE[p[3]];
 }
 #endif  // _MSC_VER
-
-// inline int CountOne(uint64_t n) {
-//   uint8_t *p = reinterpret_cast<uint8_t *>(&n);
-//   return POPCNTTABLE[p[0]] + POPCNTTABLE[p[1]] + POPCNTTABLE[p[2]] +
-//          POPCNTTABLE[p[3]] + POPCNTTABLE[p[4]] + POPCNTTABLE[p[5]] +
-//          POPCNTTABLE[p[6]] + POPCNTTABLE[p[7]];
-// }
-
-// inline int CountOne(uint32_t n) {
-//   uint8_t *p = reinterpret_cast<uint8_t *>(&n);
-//   return POPCNTTABLE[p[0]] + POPCNTTABLE[p[1]] + POPCNTTABLE[p[2]] +
-//          POPCNTTABLE[p[3]];
-// }
 
 template <typename T>
 PauliTerm<T> GenerateRandomPauliTerm(Index n_qubits) {

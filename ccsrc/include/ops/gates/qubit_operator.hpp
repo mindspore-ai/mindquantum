@@ -30,6 +30,7 @@
 #include "config/type_traits.hpp"
 
 #include "ops/gates/details/coeff_policy.hpp"
+#include "ops/gates/details/eigen_sparse_identity.hpp"
 #include "ops/gates/details/qubit_operator_term_policy.hpp"
 #include "ops/gates/terms_operator_base.hpp"
 #include "ops/gates/types.hpp"
