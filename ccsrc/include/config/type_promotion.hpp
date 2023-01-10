@@ -123,12 +123,12 @@ struct ComplexCast {
     }
 };
 
-template <typename src, typename des>
-struct ComplexCast<src, des, std::enable_if_t<std::is_same_v<src, des>>> {
-    static auto apply(const src& value) {
-        return value;
-    }
-};
+// template <typename src, typename des>
+// struct ComplexCast<src, des, std::enable_if_t<std::is_same_v<src, des> && !traits::is_complex_v<src>>> {
+//     static auto apply(const src& value) {
+//         return value;
+//     }
+// };
 
 template <typename src, typename des>
 struct ComplexCast<src, des, std::enable_if_t<std::is_same_v<typename traits::type_promotion<src>::up_cast_t, des>>> {
