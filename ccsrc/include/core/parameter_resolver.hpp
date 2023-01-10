@@ -87,7 +87,7 @@ struct real_cast_impl<cast_type, ParameterResolver<std::complex<float_t>>> {
 // =============================================================================
 
 namespace traits {
-// Template specialisations to support real-to-complex (and inverse) for ParameterResolver
+// Template specializations to support real-to-complex (and inverse) for ParameterResolver
 template <typename float_t>
 struct to_real_type<ParameterResolver<float_t>> {
     using type = ParameterResolver<to_real_type_t<float_t>>;
@@ -98,19 +98,19 @@ struct to_cmplx_type<ParameterResolver<float_t>> {
 };
 
 // -----------------------------------------------------------------------------
-// Template specialitation for is_complex<T>
+// Template specialization for is_complex<T>
 
 template <typename float_t>
 struct is_complex<ParameterResolver<float_t>> : is_complex<float_t> {};
 
 // -----------------------------------------------------------------------------
-// Template specialitation to support up_cast<...> and down_cast<...> for ParameterResolver<T>
+// Template specialization to support up_cast<...> and down_cast<...> for ParameterResolver<T>
 
 template <typename T>
 struct type_promotion<ParameterResolver<T>> : details::type_promotion_encapsulated_fp<T, ParameterResolver> {};
 
 // -----------------------------------------------------------------------------
-// Template specialitations for mindquantum::common_type<...>
+// Template specializations for mindquantum::common_type<...>
 
 template <typename float_t, typename U>
 struct common_type<ParameterResolver<float_t>, U> {
@@ -154,7 +154,7 @@ template <typename T>
 inline constexpr auto is_parameter_resolver_decay_v = is_parameter_resolver_v<std::remove_cvref_t<T>>;
 
 // -----------------------------------------------------------------------------
-// Template specialitations for mindquantum::traits::is_scalar<...>
+// Template specializations for mindquantum::traits::is_scalar<...>
 
 template <typename T>
 struct is_scalar<ParameterResolver<T>> : std::true_type {};
