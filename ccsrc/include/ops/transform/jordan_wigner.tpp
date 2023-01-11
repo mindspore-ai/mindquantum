@@ -48,14 +48,14 @@ struct StaticLruCacheOptionsBoostBase {
 };
 
 template <std::size_t cache_size, bool by_access_order>
-struct StaticLruCacheOptions<mindquantum::ops::term_t, qo_t<std::complex<MT>>, cache_size, by_access_order>
-    : public StaticLruCacheOptionsBoostBase<mindquantum::ops::term_t, qo_t<std::complex<MT>>, cache_size,
+struct StaticLruCacheOptions<mindquantum::ops::term_t, qo_t<std::complex<double>>, cache_size, by_access_order>
+    : public StaticLruCacheOptionsBoostBase<mindquantum::ops::term_t, qo_t<std::complex<double>>, cache_size,
                                             by_access_order> {};
 template <std::size_t cache_size, bool by_access_order>
-struct StaticLruCacheOptions<mindquantum::ops::term_t, qo_t<mindquantum::ParameterResolver<std::complex<MT>>>,
+struct StaticLruCacheOptions<mindquantum::ops::term_t, qo_t<mindquantum::ParameterResolver<std::complex<double>>>,
                              cache_size, by_access_order>
     : public StaticLruCacheOptionsBoostBase<mindquantum::ops::term_t,
-                                            qo_t<mindquantum::ParameterResolver<std::complex<MT>>>, cache_size,
+                                            qo_t<mindquantum::ParameterResolver<std::complex<double>>>, cache_size,
                                             by_access_order> {};
 }  // namespace lru_cache
 

@@ -647,5 +647,5 @@ PYBIND11_MODULE(mqbackend, m) {
     py::module mqbackend_double = m.def_submodule("circuit", "MindQuantum-C++ double backend");
     py::module mqbackend_float = m.def_submodule("circuit", "MindQuantum-C++ float backend");
     BindOther<double>(mqbackend_double, "mqbackend_double");
-    BindOther<float>(mqbackend_float, "mqbackend_float");
+    // BindOther<float>(mqbackend_float, "mqbackend_float");
 }
