@@ -26,6 +26,7 @@
 #include <mutex>
 #include <random>
 #include <stdexcept>
+#include <string_view>
 #include <thread>
 #include <type_traits>
 #include <vector>
@@ -72,6 +73,8 @@ class VectorState {
     ~VectorState() {
         qs_policy_t::FreeState(qs);
     }
+
+    std::string_view DType();
 
     //! Reset the quantum state to quantum zero state
     void Reset();

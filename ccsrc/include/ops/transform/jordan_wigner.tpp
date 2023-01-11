@@ -26,7 +26,6 @@
 namespace lru_cache {
 template <typename coeff_t>
 using qo_t = mindquantum::ops::QubitOperator<coeff_t>;
-using MT = mindquantum::MT;
 
 // -----------------------------------------------------------------------------
 
@@ -118,8 +117,8 @@ auto reverse_jordan_wigner(const qubit_op_t& ops, int n_qubits)
                     auto raising_term = fermion_op_t({idx, TermValue::adg});
                     auto lowering_term = fermion_op_t({idx, TermValue::a});
                     if (value == TermValue::Y) {
-                        raising_term *= coefficient_t(std::complex<MT>(0, 1));
-                        lowering_term *= coefficient_t(std::complex<MT>(0, -1));
+                        raising_term *= coefficient_t(std::complex<typename fermion_op_t::coefficient_real_t>(0, 1));
+                        lowering_term *= coefficient_t(std::complex<typename fermion_op_t::coefficient_real_t>(0, -1));
                     }
                     trans_pauli += raising_term;
                     trans_pauli += lowering_term;

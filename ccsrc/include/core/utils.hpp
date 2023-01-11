@@ -48,7 +48,7 @@ namespace mindquantum {
 #define THRESHOLD_OMP_FOR(n, n_th, ...)                                                                                \
     THRESHOLD_OMP(MQ_DO_PRAGMA(omp parallel for schedule(static)), n, n_th, __VA_ARGS__)
 
-extern const VT<CT<MT>> POLAR;
+extern const VT<CT<double>> POLAR;
 template <typename T, typename ST>
 CT<T> ComplexInnerProduct(const ST *v1, const ST *v2, Index len) {
     // len is (1UL>>n_qubits)*2

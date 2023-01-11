@@ -27,6 +27,16 @@ target_link_libraries(_mq_vector PUBLIC mq_python_core mqsim_vector_cpu)
 
 # ------------------------------------------------------------------------------
 
+pybind11_add_module(_mq_vector_float MODULE ${CMAKE_CURRENT_SOURCE_DIR}/lib/_mq_vector.cpp
+                    OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}")
+
+target_include_directories(_mq_vector_float PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
+force_at_least_cxx17_workaround(_mq_vector_float)
+target_link_libraries(_mq_vector_float PUBLIC mq_python_core mqsim_vector_cpu)
+target_compile_definitions(_mq_vector_float PUBLIC FLOAT)
+
+# ------------------------------------------------------------------------------
+
 if(ENABLE_CUDA)
   pybind11_add_module(_mq_vector_gpu MODULE ${CMAKE_CURRENT_SOURCE_DIR}/lib/_mq_vector_gpu.cu
                       OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}")

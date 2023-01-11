@@ -230,7 +230,7 @@ to_qubit_operator_t<traits::to_cmplx_type_t<fermion_op_t>> transformed_excitatio
     to_qubit_operator_t<traits::to_cmplx_type_t<fermion_op_t>> a_ij = get_a<fermion_op_t>(i, j, edge_matrix, edge_enum);
     return (a_ij * get_b<fermion_op_t>(j, edge_matrix, edge_enum)
             + get_b<fermion_op_t>(i, edge_matrix, edge_enum) * a_ij)
-           * std::complex<MT>(0, -0.5);
+           * std::complex<typename fermion_op_t::coefficient_real_t>(0, -0.5);
 }
 
 template <typename fermion_op_t>
@@ -251,7 +251,7 @@ to_qubit_operator_t<traits::to_cmplx_type_t<fermion_op_t>> transformed_number_ex
         (a_ik * get_b<fermion_op_t>(k, edge_matrix, edge_enum) + get_b<fermion_op_t>(i, edge_matrix, edge_enum) * a_ik)
         * (to_qubit_operator_t<traits::to_cmplx_type_t<fermion_op_t>>(terms_t{})
            - get_b<fermion_op_t>(j, edge_matrix, edge_enum))
-        * std::complex<MT>(0, -0.25));
+        * std::complex<typename fermion_op_t::coefficient_real_t>(0, -0.25));
 }
 
 template <typename fermion_op_t>

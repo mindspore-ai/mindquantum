@@ -82,7 +82,7 @@ class QubitOperator
     // -------------------------------------------------------------------
 
     enum class Op : uint8_t { X, Y, Z };
-    using op_matrix_t = Eigen::Map<const Eigen::Matrix<std::complex<MT>, 2, 2>>;
+    using op_matrix_t = Eigen::Map<const Eigen::Matrix<std::complex<coefficient_real_t>, 2, 2>>;
 
     static op_matrix_t get_op_matrix(Op op_type);
 

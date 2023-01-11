@@ -29,6 +29,7 @@
 #include <random>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <type_traits>
 #include <vector>
@@ -114,6 +115,15 @@ auto VectorState<qs_policy_t_>::operator=(VectorState<qs_policy_t>&& sim) -> der
     std::uniform_real_distribution<double> dist(0., 1.);
     this->rng_ = std::bind(dist, std::ref(this->rnd_eng_));
     return *this;
+}
+
+template <typename qs_policy_t_>
+std::string_view VectorState<qs_policy_t_>::DType() {
+#ifdef FLOAT
+    return "float";
+#else
+    return "double";
+#endif
 }
 
 template <typename qs_policy_t_>

@@ -303,7 +303,7 @@ void GPUVectorPolicyBase::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const 
     auto obj_min_mask = mask.obj_min_mask;
     auto obj_max_mask = mask.obj_max_mask;
     auto ctrl_mask = mask.ctrl_mask;
-    MT frac = 1.0;
+    calc_type frac = 1.0;
     if (daggered) {
         frac = -1.0;
     }
