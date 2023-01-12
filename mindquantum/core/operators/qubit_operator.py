@@ -22,7 +22,7 @@ from ... import mqbackend
 from ...core.parameterresolver import ParameterResolver
 from ._term_value import TermValue
 from ._terms_operators import TermsOperator
-
+from ...config import Context
 # NB: C++ actually supports FermionOperatorD and FermionOperatorCD that are purely numerical FermionOperator classes
 
 # ==============================================================================
@@ -74,20 +74,23 @@ class QubitOperator(TermsOperator):
     #     For now, we simply force any Python code to create complex qubit operators...
 
     cxx_base_klass = mqbackend.QubitOperatorBase
-    real_pr_klass = mqbackend.QubitOperatorPRD
-    complex_pr_klass = mqbackend.QubitOperatorPRCD
+    float_pr_klass = mqbackend.float.QubitOperatorPRD
+    complex64_pr_klass = mqbackend.float.QubitOperatorPRCD
+    double_pr_klass = mqbackend.double.QubitOperatorPRD
+    complex128_pr_klass = mqbackend.double.QubitOperatorPRCD
 
     ensure_complex_coeff = True
 
     _type_conversion_table = {
-        mqbackend.complex_pr: complex_pr_klass,
-        complex: complex_pr_klass,
-        mqbackend.real_pr: complex_pr_klass,
-        float: complex_pr_klass,
+        mqbackend.float.real_pr: float_pr_klass,
+        mqbackend.double.real_pr: double_pr_klass,
+        mqbackend.float.complex_pr: complex64_pr_klass,
+        mqbackend.double.complex_pr: complex128_pr_klass,
     }
 
     def __init__(self, terms=None, coefficient=1.0):
         """Initialize a QubitOperator instance."""
+        self.arithmetic_type = Context.get_dtype()
         if isinstance(terms, mqbackend.QubitOperatorBase):
             super().__init__(terms)
         else:

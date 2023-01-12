@@ -21,6 +21,7 @@ from ...core.operators.polynomial_tensor import PolynomialTensor
 from ...core.parameterresolver import ParameterResolver
 from ._term_value import TermValue
 from ._terms_operators import TermsOperator
+from ...config import Context
 
 # NB: C++ actually supports FermionOperatorD and FermionOperatorCD that are purely numerical FermionOperator classes
 
@@ -67,20 +68,23 @@ class FermionOperator(TermsOperator):
     """
 
     cxx_base_klass = mqbackend.FermionOperatorBase
-    real_pr_klass = mqbackend.FermionOperatorPRD
-    complex_pr_klass = mqbackend.FermionOperatorPRCD
+    float_pr_klass = mqbackend.float.FermionOperatorPRD
+    complex64_pr_klass = mqbackend.float.FermionOperatorPRCD
+    double_pr_klass = mqbackend.double.FermionOperatorPRD
+    complex128_pr_klass = mqbackend.double.FermionOperatorPRCD
 
     ensure_complex_coeff = False
 
     _type_conversion_table = {
-        mqbackend.complex_pr: complex_pr_klass,
-        complex: complex_pr_klass,
-        mqbackend.real_pr: real_pr_klass,
-        float: real_pr_klass,
+        mqbackend.float.complex_pr: complex64_pr_klass,
+        mqbackend.float.real_pr: float_pr_klass,
+        mqbackend.double.complex_pr: complex128_pr_klass,
+        mqbackend.double.real_pr: double_pr_klass,
     }
 
     def __init__(self, terms=None, coefficient=1.0):
         """Initialize a FermionOperator instance."""
+        self.arithmetic_type = Context.get_dtype()
         if isinstance(terms, PolynomialTensor):
             terms_ = {}
             for term in terms:

@@ -34,8 +34,10 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
 
     cxx_base_klass: type
     ensure_complex_coeff: False
-    real_pr_klass: type
-    complex_pr_klass: type
+    float_pr_klass: type
+    complex64_pr_klass: type
+    double_pr_klass: type
+    complex128_pr_klass: type
     _type_conversion_table: type
 
     @staticmethod
@@ -55,7 +57,7 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
             dtype (Type): Python type used to decide which type of C++ object to instantiate. If specified, this takes
                 precedence over looking at the type of `coeff` (if not None).
         """
-        klass = cls._type_conversion_table[float]
+        klass = cls._type_conversion_table[cls.double_pr_klass]
         backend = getattr(mqbackend, arithmetic_type)
         if term is None:
             return klass()
@@ -63,22 +65,17 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
         # ----------------------------------------------------------------------
 
         if dtype is None:
-            if isinstance(coeff, numbers.Real):
-                if coeff is not None:
-                    coeff = backend.real_pr(coeff)
-                dtype = float
+            if isinstance(coeff, (numbers.Real, str)):
+                coeff = backend.real_pr(coeff)
+                dtype = type(coeff)
             elif isinstance(coeff, numbers.Complex):
-                if coeff is not None:
-                    coeff = backend.complex_pr(coeff)
-                dtype = complex
+                coeff = backend.complex_pr(coeff)
+                dtype = type(coeff)
             elif isinstance(coeff, ParameterResolver):
                 coeff = coeff._cpp_obj
                 dtype = type(coeff)
             elif isinstance(coeff, (backend.real_pr, backend.complex_pr)):
                 dtype = type(coeff)
-            elif isinstance(coeff, str):
-                dtype = float
-                coeff = backend.real_pr(coeff)
             elif isinstance(coeff, dict):
                 coeff = ParameterResolver(coeff)._cpp_obj
                 dtype = type(coeff)
