@@ -11,23 +11,18 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-
 """Base class for terms operators based on a C++ class."""
 
 import copy
 import numbers
 from typing import Dict, Tuple, Union
 
+from mindquantum import mqbackend
 from mindquantum.core.parameterresolver import ParameterResolver
-from mindquantum.mqbackend import (
-    EQ_TOLERANCE,
-    CmplxPRSubsProxy,
-    DoublePRSubsProxy,
-    complex_pr,
-    real_pr,
-)
+from mindquantum.mqbackend import EQ_TOLERANCE
 from mindquantum.utils.type_value_check import _require_package
 
+from ...config import Context
 from ...core._arithmetic_ops_adaptor import CppArithmeticAdaptor
 from ._term_value import TermValue
 
@@ -48,7 +43,7 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
         return isinstance(other, (numbers.Number, TermsOperator, ParameterResolver))
 
     @classmethod
-    def create_cpp_obj(cls, term, coeff=None, dtype=None):  # pylint: disable=too-many-branches
+    def create_cpp_obj(cls, term, coeff=None, dtype=None, arithmetic_type=None):  # pylint: disable=too-many-branches
         """
         Create a new instance of a C++ child class.
 
@@ -61,7 +56,7 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
                 precedence over looking at the type of `coeff` (if not None).
         """
         klass = cls._type_conversion_table[float]
-
+        backend = getattr(mqbackend, arithmetic_type)
         if term is None:
             return klass()
 
@@ -70,20 +65,20 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
         if dtype is None:
             if isinstance(coeff, numbers.Real):
                 if coeff is not None:
-                    coeff = real_pr(coeff)
+                    coeff = backend.real_pr(coeff)
                 dtype = float
             elif isinstance(coeff, numbers.Complex):
                 if coeff is not None:
-                    coeff = complex_pr(coeff)
+                    coeff = backend.complex_pr(coeff)
                 dtype = complex
             elif isinstance(coeff, ParameterResolver):
                 coeff = coeff._cpp_obj
                 dtype = type(coeff)
-            elif isinstance(coeff, (real_pr, complex_pr)):
+            elif isinstance(coeff, (backend.real_pr, backend.complex_pr)):
                 dtype = type(coeff)
             elif isinstance(coeff, str):
                 dtype = float
-                coeff = real_pr(coeff)
+                coeff = backend.real_pr(coeff)
             elif isinstance(coeff, dict):
                 coeff = ParameterResolver(coeff)._cpp_obj
                 dtype = type(coeff)
@@ -112,8 +107,10 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
                 - Dict[List[Tuple[Int, TermValue]], Union[ParameterResolver, int, float]]
                 - List[Tuple[Int, TermValue]] (with default coefficient set to 1.0)
         """
+        self.arithmetic_type = Context.get_dtype()
+        backend = getattr(mqbackend, self.arithmetic_type)
         if not args:
-            self._cpp_obj = self.__class__.create_cpp_obj(None)
+            self._cpp_obj = self.__class__.create_cpp_obj(None, arithmetic_type=self.arithmetic_type)
         elif len(args) == 1:
             if isinstance(args[0], self.cxx_base_klass):
                 self._cpp_obj = args[0]
@@ -127,21 +124,23 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
                     if cxx_dtype is ParameterResolver:
                         cxx_dtype = type(values[0]._cpp_obj)
                 else:
-                    if complex_pr in cxx_dtype:
-                        cxx_dtype = complex_pr
-                    elif real_pr in cxx_dtype:
-                        cxx_dtype = real_pr
+                    if backend.complex_pr in cxx_dtype:
+                        cxx_dtype = backend.complex_pr
+                    elif backend.real_pr in cxx_dtype:
+                        cxx_dtype = backend.real_pr
                     elif complex in cxx_dtype:
                         cxx_dtype = complex
                     else:
                         cxx_dtype = float
                     values = [cxx_dtype(v) for v in values]
                 keys = list(args[0].keys())
-                self._cpp_obj = self.__class__.create_cpp_obj([keys, values], dtype=cxx_dtype)
+                self._cpp_obj = self.__class__.create_cpp_obj(
+                    [keys, values], dtype=cxx_dtype, arithmetic_type=self.arithmetic_type
+                )
             else:
-                self._cpp_obj = self.__class__.create_cpp_obj(args[0], 1.0)
+                self._cpp_obj = self.__class__.create_cpp_obj(args[0], 1.0, arithmetic_type=self.arithmetic_type)
         elif len(args) == 2:
-            self._cpp_obj = self.__class__.create_cpp_obj(*args)
+            self._cpp_obj = self.__class__.create_cpp_obj(*args, arithmetic_type=self.arithmetic_type)
         else:
             raise TypeError(f'{self.__class__.__name__}.__init__() supports either 1 or 2 arguments')
 
@@ -344,11 +343,12 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
 
     def subs(self, params_value: ParameterResolver):
         """Replace the symbolical representation with the corresponding value."""
+        backend = getattr(mqbackend, self.arithmetic_type)
         if isinstance(params_value, dict):
             params_value = ParameterResolver(params_value)
         if isinstance(self._cpp_obj, self.real_pr_klass):
-            return self.__class__(self._cpp_obj.subs(DoublePRSubsProxy(params_value._cpp_obj)))
-        return self.__class__(self._cpp_obj.subs(CmplxPRSubsProxy(params_value._cpp_obj.cast_complex())))
+            return self.__class__(self._cpp_obj.subs(backend.DoublePRSubsProxy(params_value._cpp_obj)))
+        return self.__class__(self._cpp_obj.subs(backend.CmplxPRSubsProxy(params_value._cpp_obj.cast_complex())))
 
     @property
     def is_singlet(self) -> bool:

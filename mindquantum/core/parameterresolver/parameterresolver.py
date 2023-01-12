@@ -23,12 +23,12 @@ from typing import Iterable
 
 import numpy as np
 
-from mindquantum.mqbackend import complex_pr as complex_pr_
-from mindquantum.mqbackend import real_pr as real_pr_
+from mindquantum import mqbackend
 from mindquantum.utils.f import is_two_number_close
 from mindquantum.utils.string_utils import join_without_empty, string_expression
 from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
 
+from ...config import Context
 from .._arithmetic_ops_adaptor import CppArithmeticAdaptor
 
 
@@ -83,21 +83,23 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
 
     def __init__(self, data=None, const=None):
         """Initialize a ParameterResolver object."""
+        self.arithmetic_type = Context.get_dtype()
+        backend = getattr(mqbackend, self.arithmetic_type)
         if isinstance(data, ParameterResolver):
             self._cpp_obj = copy.copy(data._cpp_obj)
-        elif isinstance(data, (complex_pr_, real_pr_)):
+        elif isinstance(data, (backend.complex_pr, backend.real_pr)):
             self._cpp_obj = copy.copy(data)
         else:
 
             def get_klass_from(value):
                 """Get a klass from the type of the input argument."""
                 if isinstance(value, numbers.Real):
-                    return real_pr_
+                    return backend.real_pr
                 if isinstance(value, numbers.Complex):
-                    return complex_pr_
+                    return backend.complex_pr
                 raise TypeError(f'Unsupported constant type: {type(value)}')
 
-            klass = real_pr_
+            klass = backend.real_pr
             if const is not None:
                 klass = get_klass_from(const)
                 if not isinstance(data, (dict, str)):
@@ -105,12 +107,12 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
                 if isinstance(data, str):
                     data = {data: 1 + const * 0}
             elif data is None:
-                klass = real_pr_
+                klass = backend.real_pr
                 data = {}
             elif isinstance(data, numbers.Number):
                 klass = get_klass_from(data)
             elif isinstance(data, str):
-                klass = real_pr_
+                klass = backend.real_pr
             if not isinstance(data, (dict, numbers.Number, str)):
                 raise ValueError(
                     "data requires a number or a ParameterResolver or a dict " f"or a string, but get {type(data)}"
@@ -139,7 +141,8 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
     @const.setter
     def const(self, const_value):
         """Setter method for const."""
-        if isinstance(const_value, (ParameterResolver, real_pr_, complex_pr_)):
+        backend = getattr(mqbackend, self.arithmetic_type)
+        if isinstance(const_value, (ParameterResolver, backend.real_pr, backend.complex_pr)):
             const_value = const_value.const
         if not isinstance(const_value, numbers.Real) and not self.is_complex:
             self._cpp_obj = self._cpp_obj.cast_complex()
@@ -333,7 +336,8 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
         """Convert the constant part to float. Raise error if it's not constant."""
         if not self._cpp_obj.is_const():
             raise ValueError("parameter resolver is not constant, cannot convert to float.")
-        if isinstance(self._cpp_obj, real_pr_):
+        backend = getattr(mqbackend, self.arithmetic_type)
+        if isinstance(self._cpp_obj, backend.real_pr):
             return self._cpp_obj.const
         return np.float64(self._cpp_obj.const.real)
 
@@ -886,7 +890,8 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
             _check_int_type('indent', indent)
         dic = {}
         dic['pr_data'] = {i: (j.real, j.imag) for i, j in self.items()}
-        if isinstance(self._cpp_obj, real_pr_):
+        backend = getattr(mqbackend, self.arithmetic_type)
+        if isinstance(self._cpp_obj, backend.real_pr):
             dic['const'] = self._cpp_obj.const
             dic['dtype'] = 'float'
         else:

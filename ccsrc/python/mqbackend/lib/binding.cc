@@ -336,8 +336,6 @@ void init_terms_operators(pybind11::module &module) {  // NOLINT(runtime/referen
                                                          "Substitution proxy class for mqbackend.complex_pr")
         .def(py::init<pr_cmplx_t>());
 
-    module.attr("EQ_TOLERANCE") = py::float_(ops::details::EQ_TOLERANCE);
-
     // -----------------------------------------------------------------------------
 
     init_fermion_operators<T>(module);
@@ -449,7 +447,7 @@ void init_logging(pybind11::module &module);  // NOLINT(runtime/references)
 }  // namespace mindquantum::python
 
 template <typename T>
-auto BindOther(py::module &module, const std::string &name) {
+auto BindOther(py::module &module) {
     using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
     using mindquantum::CT;
     using mindquantum::Dim2Matrix;
@@ -642,12 +640,15 @@ PYBIND11_MODULE(mqbackend, m) {
         m, "QubitOperatorBase",
         "Base class for all C++ qubit operators. Use only for isinstance(obj, QubitOperatorBase) or use "
         "is_qubit_operator(obj)");
+
+    m.attr("EQ_TOLERANCE") = py::float_(ops::details::EQ_TOLERANCE);
+
     m.def("is_qubit_operator", &pybind11::isinstance<ops::QubitOperatorBase>);
 
     m.def("is_fermion_operator", &pybind11::isinstance<ops::FermionOperatorBase>);
 
-    py::module mqbackend_double = m.def_submodule("mqbackend_double", "MindQuantum-C++ double backend");
-    py::module mqbackend_float = m.def_submodule("mqbackend_float", "MindQuantum-C++ float backend");
-    BindOther<double>(mqbackend_double, "mqbackend_double");
-    BindOther<float>(mqbackend_float, "mqbackend_float");
+    py::module mqbackend_double = m.def_submodule("double", "MindQuantum-C++ double backend");
+    py::module mqbackend_float = m.def_submodule("float", "MindQuantum-C++ float backend");
+    BindOther<double>(mqbackend_double);
+    BindOther<float>(mqbackend_float);
 }
