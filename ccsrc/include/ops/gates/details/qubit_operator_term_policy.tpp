@@ -93,7 +93,7 @@ template <typename coefficient_t>
 auto QubitOperatorTermPolicy<coefficient_t>::simplify(terms_t terms, coefficient_t coeff)
     -> std::tuple<terms_t, coefficient_t> {
     using coeff_policy_t = details::CoeffPolicy<coefficient_t>;
-    using coefficient_real_t = typename coeff_policy_t::coeff_policy_real_t::coeff_t;
+    using float_t = typename coeff_policy_t::core_arithmetic_t;
 
     if (std::empty(terms)) {
         return {terms_t{}, coeff};
@@ -108,7 +108,7 @@ auto QubitOperatorTermPolicy<coefficient_t>::simplify(terms_t terms, coefficient
         const auto& [right_qubit_id, right_operator] = *it;
         if constexpr (traits::is_complex_v<coefficient_t>) {
             if (left_qubit_id == right_qubit_id) {
-                const auto [new_coeff, new_op] = pauli_products<coefficient_real_t>(left_operator, right_operator);
+                const auto [new_coeff, new_op] = pauli_products<float_t>(left_operator, right_operator);
                 MQ_TRACE("{} x {} = {} ({})", left_operator, right_operator, new_op, new_coeff);
                 left_term = term_t{left_qubit_id, new_op};
                 MQ_TRACE("({}) * ({}) | ({})", coeff, static_cast<coefficient_t>(new_coeff),
@@ -140,8 +140,7 @@ auto QubitOperatorTermPolicy<coefficient_t>::simplify(terms_t terms, coefficient
                     }
                     left_term = *it;
                 } else {
-                    const auto [new_coeff, new_op] = pauli_products_real<coefficient_real_t>(left_operator,
-                                                                                             right_operator);
+                    const auto [new_coeff, new_op] = pauli_products_real<float_t>(left_operator, right_operator);
                     MQ_TRACE("{} x {} = {} ({})", left_operator, right_operator, new_op, new_coeff);
                     left_term = term_t{left_qubit_id, new_op};
                     coeff *= static_cast<coefficient_t>(new_coeff);

@@ -78,13 +78,6 @@ void init_fermion_operators(py::module &module) {  // NOLINT(runtime/references)
     using pr_cmplx_t = mq::ParameterResolver<std::complex<T>>;
     using all_scalar_types_t = std::tuple<T, std::complex<T>, pr_t, pr_cmplx_t>;
 
-    // Register empty base class (for instance(X, FermionOperatorBase) purposes
-    py::class_<ops::FermionOperatorBase, std::shared_ptr<ops::FermionOperatorBase>>(
-        module, "FermionOperatorBase",
-        "Base class for all C++ fermion operators. Use only for isinstance(obj, FermionOperatorBase) or use "
-        "is_fermion_operator(obj)");
-    module.def("is_fermion_operator", &pybind11::isinstance<ops::FermionOperatorBase>);
-
     // NB: pybind11 maps both float and T to Python float
     auto [fop_double, fop_cmplx_double, fop_pr_double, fop_pr_cmplx_double]
         = bindops::define_fermion_ops<T, std::complex<T>, pr_t, pr_cmplx_t>::apply(
@@ -181,13 +174,6 @@ void init_qubit_operators(py::module &module) {  // NOLINT(runtime/references)
     using pr_t = mq::ParameterResolver<T>;
     using pr_cmplx_t = mq::ParameterResolver<std::complex<T>>;
     using all_scalar_types_t = std::tuple<T, std::complex<T>, pr_t, pr_cmplx_t>;
-
-    // Register empty base class (for instance(X, QubitOperatorBase) purposes
-    py::class_<ops::QubitOperatorBase, std::shared_ptr<ops::QubitOperatorBase>>(
-        module, "QubitOperatorBase",
-        "Base class for all C++ qubit operators. Use only for isinstance(obj, QubitOperatorBase) or use "
-        "is_qubit_operator(obj)");
-    module.def("is_qubit_operator", &pybind11::isinstance<ops::QubitOperatorBase>);
 
     // NB: pybind11 maps both float and T to Python float
     auto [qop_double, qop_cmplx_double, qop_pr_double, qop_pr_cmplx_double]
@@ -329,26 +315,6 @@ void init_transform(py::module &module) {  // NOLINT(runtime/references)
 template <typename T>
 void init_terms_operators(pybind11::module &module) {  // NOLINT(runtime/references)
     namespace mq = mindquantum;
-
-    auto term_value = py::enum_<mindquantum::ops::TermValue>(module, "TermValue")
-                          .value("I", mindquantum::ops::TermValue::I)
-                          .value("X", mindquantum::ops::TermValue::X)
-                          .value("Y", mindquantum::ops::TermValue::Y)
-                          .value("Z", mindquantum::ops::TermValue::Z)
-                          .value("a", mindquantum::ops::TermValue::a)
-                          .value("adg", mindquantum::ops::TermValue::adg)
-                          .def(
-                              "__lt__",
-                              [](const mindquantum::ops::TermValue &lhs, const mindquantum::ops::TermValue &rhs)
-                                  -> bool { return static_cast<uint8_t>(lhs) < static_cast<uint8_t>(rhs); },
-                              pybind11::is_operator());
-
-    term_value.attr("__repr__") = pybind11::cpp_function(
-        [](const mindquantum::ops::TermValue &value) -> pybind11::str { return fmt::format("TermValue.{}", value); },
-        pybind11::name("name"), pybind11::is_method(term_value));
-    term_value.attr("__str__") = pybind11::cpp_function(
-        [](const mindquantum::ops::TermValue &value) -> pybind11::str { return fmt::format("{}", value); },
-        pybind11::name("name"), pybind11::is_method(term_value));
 
     using pr_t = mq::ParameterResolver<T>;
     using pr_cmplx_t = mq::ParameterResolver<std::complex<T>>;
@@ -644,8 +610,44 @@ PYBIND11_MODULE(mqbackend, m) {
 
     py::module logging = m.def_submodule("logging", "MindQuantum-C++ logging module");
     mindquantum::python::init_logging(logging);
-    py::module mqbackend_double = m.def_submodule("circuit", "MindQuantum-C++ double backend");
-    py::module mqbackend_float = m.def_submodule("circuit", "MindQuantum-C++ float backend");
+
+    auto term_value = py::enum_<mindquantum::ops::TermValue>(m, "TermValue")
+                          .value("I", mindquantum::ops::TermValue::I)
+                          .value("X", mindquantum::ops::TermValue::X)
+                          .value("Y", mindquantum::ops::TermValue::Y)
+                          .value("Z", mindquantum::ops::TermValue::Z)
+                          .value("a", mindquantum::ops::TermValue::a)
+                          .value("adg", mindquantum::ops::TermValue::adg)
+                          .def(
+                              "__lt__",
+                              [](const mindquantum::ops::TermValue &lhs, const mindquantum::ops::TermValue &rhs)
+                                  -> bool { return static_cast<uint8_t>(lhs) < static_cast<uint8_t>(rhs); },
+                              pybind11::is_operator());
+
+    term_value.attr("__repr__") = pybind11::cpp_function(
+        [](const mindquantum::ops::TermValue &value) -> pybind11::str { return fmt::format("TermValue.{}", value); },
+        pybind11::name("name"), pybind11::is_method(term_value));
+    term_value.attr("__str__") = pybind11::cpp_function(
+        [](const mindquantum::ops::TermValue &value) -> pybind11::str { return fmt::format("{}", value); },
+        pybind11::name("name"), pybind11::is_method(term_value));
+
+    // Register empty base class (for instance(X, FermionOperatorBase) purposes
+    py::class_<ops::FermionOperatorBase, std::shared_ptr<ops::FermionOperatorBase>>(
+        m, "FermionOperatorBase",
+        "Base class for all C++ fermion operators. Use only for isinstance(obj, FermionOperatorBase) or use "
+        "is_fermion_operator(obj)");
+
+    // Register empty base class (for instance(X, QubitOperatorBase) purposes
+    py::class_<ops::QubitOperatorBase, std::shared_ptr<ops::QubitOperatorBase>>(
+        m, "QubitOperatorBase",
+        "Base class for all C++ qubit operators. Use only for isinstance(obj, QubitOperatorBase) or use "
+        "is_qubit_operator(obj)");
+    m.def("is_qubit_operator", &pybind11::isinstance<ops::QubitOperatorBase>);
+
+    m.def("is_fermion_operator", &pybind11::isinstance<ops::FermionOperatorBase>);
+
+    py::module mqbackend_double = m.def_submodule("mqbackend_double", "MindQuantum-C++ double backend");
+    py::module mqbackend_float = m.def_submodule("mqbackend_float", "MindQuantum-C++ float backend");
     BindOther<double>(mqbackend_double, "mqbackend_double");
-    // BindOther<float>(mqbackend_float, "mqbackend_float");
+    BindOther<float>(mqbackend_float, "mqbackend_float");
 }

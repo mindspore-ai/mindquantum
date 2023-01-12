@@ -11,8 +11,8 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
-#ifndef PYTHON_LIB_QUANTUMSTATE_BIND_VEC_STATE_HPP
-#define PYTHON_LIB_QUANTUMSTATE_BIND_VEC_STATE_HPP
+#ifndef PYTHON_LIB_QUANTUM_STATE_BIND_VEC_STATE_HPP
+#define PYTHON_LIB_QUANTUM_STATE_BIND_VEC_STATE_HPP
 #include <memory>
 #include <string_view>
 
@@ -37,7 +37,7 @@ template <typename sim_t>
 auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLINT
     using namespace pybind11::literals;                                 // NOLINT
     using qbit_t = mindquantum::sim::qbit_t;
-    using calc_type = mindquantum::sim::calc_type;
+    using calc_type = typename sim_t::calc_type;
 
     pybind11::class_<sim_t>(module, name.data())
         .def(pybind11::init<qbit_t, unsigned>(), "n_qubits"_a, "seed"_a = 42)

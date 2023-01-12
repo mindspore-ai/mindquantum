@@ -23,17 +23,7 @@ pybind11_add_module(_mq_vector MODULE ${CMAKE_CURRENT_SOURCE_DIR}/lib/_mq_vector
 
 target_include_directories(_mq_vector PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
 force_at_least_cxx17_workaround(_mq_vector)
-target_link_libraries(_mq_vector PUBLIC mq_python_core mqsim_vector_cpu)
-
-# ------------------------------------------------------------------------------
-
-pybind11_add_module(_mq_vector_float MODULE ${CMAKE_CURRENT_SOURCE_DIR}/lib/_mq_vector.cpp
-                    OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}")
-
-target_include_directories(_mq_vector_float PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
-force_at_least_cxx17_workaround(_mq_vector_float)
-target_link_libraries(_mq_vector_float PUBLIC mq_python_core mqsim_vector_cpu)
-target_compile_definitions(_mq_vector_float PUBLIC FLOAT)
+target_link_libraries(_mq_vector PUBLIC mq_python_core mqsim_common)
 
 # ------------------------------------------------------------------------------
 
@@ -43,7 +33,7 @@ if(ENABLE_CUDA)
 
   target_include_directories(_mq_vector_gpu PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
   force_at_least_cxx17_workaround(_mq_vector_gpu)
-  target_link_libraries(_mq_vector_gpu PUBLIC mq_python_core mqsim_vector_gpu)
+  target_link_libraries(_mq_vector_gpu PUBLIC mq_python_core mqsim_common)
   set_target_properties(_mq_vector_gpu PROPERTIES CUDA_RUNTIME_LIBRARY $<IF:$<BOOL:${CUDA_STATIC}>,Static,Shared>)
 endif()
 

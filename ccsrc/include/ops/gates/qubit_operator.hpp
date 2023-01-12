@@ -76,13 +76,14 @@ class QubitOperator
     using self_t = QubitOperator<coefficient_t>;
 
     using matrix_coeff_t = traits::to_cmplx_type_t<typename coeff_policy_t::matrix_coeff_t>;
+    using core_arithmetic_t = typename coeff_policy_t::core_arithmetic_t;
     using matrix_t = Eigen::Matrix<matrix_coeff_t, Eigen::Dynamic, Eigen::Dynamic>;
     using sparse_matrix_t = types::csr_matrix_t<matrix_coeff_t>;
 
     // -------------------------------------------------------------------
 
     enum class Op : uint8_t { X, Y, Z };
-    using op_matrix_t = Eigen::Map<const Eigen::Matrix<std::complex<coefficient_real_t>, 2, 2>>;
+    using op_matrix_t = Eigen::Map<const Eigen::Matrix<std::complex<core_arithmetic_t>, 2, 2>>;
 
     static op_matrix_t get_op_matrix(Op op_type);
 

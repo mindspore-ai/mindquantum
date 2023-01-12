@@ -26,11 +26,12 @@
 #include "simulator/types.hpp"
 
 namespace mindquantum::sim::vector::detail {
+template <typename calc_type_>
 struct CPUVectorPolicyBase {
+    using calc_type = calc_type_;
     using qs_data_t = std::complex<calc_type>;
     using qs_data_p_t = qs_data_t*;
     using py_qs_data_t = std::complex<calc_type>;
-    using py_qs_datas_t = std::vector<py_qs_data_t>;
     static constexpr index_t DimTh = 1UL << 13;
 
     static constexpr qs_data_t IMAGE_MI = {0, -1};
@@ -60,8 +61,8 @@ struct CPUVectorPolicyBase {
                                qs_data_t fail_coeff, index_t dim);
     static void QSMulValue(qs_data_p_t src, qs_data_p_t des, qs_data_t value, index_t dim);
     static qs_data_t ConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi, bool abs, index_t dim);
-    static py_qs_datas_t GetQS(qs_data_p_t qs, index_t dim);
-    static void SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, index_t dim);
+    static VT<py_qs_data_t> GetQS(qs_data_p_t qs, index_t dim);
+    static void SetQS(qs_data_p_t qs, const VT<qs_data_t>& qs_out, index_t dim);
     static qs_data_p_t ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
     static qs_data_p_t Copy(qs_data_p_t qs, index_t dim);
     template <index_t mask, index_t condi>
@@ -123,15 +124,14 @@ struct CPUVectorPolicyBase {
     static void ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
 
-    // gate_expec
+    // gate_expectation
     // ========================================================================================================
     static qs_data_t ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                 const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m,
-                                                 index_t dim);
+                                                 const qbits_t& ctrls, const VVT<py_qs_data_t>& m, index_t dim);
     static qs_data_t ExpectDiffTwoQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                               const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m, index_t dim);
+                                               const qbits_t& ctrls, const VVT<py_qs_data_t>& m, index_t dim);
     static qs_data_t ExpectDiffMatrixGate(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                          const std::vector<py_qs_datas_t>& m, index_t dim);
+                                          const VVT<py_qs_data_t>& m, index_t dim);
     static qs_data_t ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                   calc_type val, index_t dim);
     static qs_data_t ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
@@ -150,5 +150,7 @@ struct CPUVectorPolicyBase {
                                   calc_type val, index_t dim);
 };
 }  // namespace mindquantum::sim::vector::detail
+
+#include "simulator/vector/detail/cpu_vector_policy.tpp"  // NOLINT
 
 #endif

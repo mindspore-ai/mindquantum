@@ -5,7 +5,7 @@
 "mindquantum/tests/"                                                                        "constParameter"
 "mindquantum/tests/"                                                                        "unreadVariable"
 
-"mindquantum/ccsrc/python/simulator/include/python/vector/bind_vec_state.h:46"              "assignBoolToPointer"
+"mindquantum/ccsrc/python/simulator/include/python/vector/bind_vec_state.h"                 "assignBoolToPointer"
 
 "mindquantum/ccsrc/lib/mq_base/gates/details/fermion_operator_term_policy.cpp"              "constStatement"
 "mindquantum/ccsrc/lib/mq_base/gates/details/qubit_operator_term_policy.cpp"                "constStatement"

@@ -57,6 +57,16 @@ struct StaticLruCacheOptions<mindquantum::ops::term_t, qo_t<mindquantum::Paramet
     : public StaticLruCacheOptionsBoostBase<mindquantum::ops::term_t,
                                             qo_t<mindquantum::ParameterResolver<std::complex<double>>>, cache_size,
                                             by_access_order> {};
+template <std::size_t cache_size, bool by_access_order>
+struct StaticLruCacheOptions<mindquantum::ops::term_t, qo_t<std::complex<float>>, cache_size, by_access_order>
+    : public StaticLruCacheOptionsBoostBase<mindquantum::ops::term_t, qo_t<std::complex<float>>, cache_size,
+                                            by_access_order> {};
+template <std::size_t cache_size, bool by_access_order>
+struct StaticLruCacheOptions<mindquantum::ops::term_t, qo_t<mindquantum::ParameterResolver<std::complex<float>>>,
+                             cache_size, by_access_order>
+    : public StaticLruCacheOptionsBoostBase<mindquantum::ops::term_t,
+                                            qo_t<mindquantum::ParameterResolver<std::complex<float>>>, cache_size,
+                                            by_access_order> {};
 }  // namespace lru_cache
 
 namespace mindquantum::ops::transform {
@@ -117,8 +127,8 @@ auto reverse_jordan_wigner(const qubit_op_t& ops, int n_qubits)
                     auto raising_term = fermion_op_t({idx, TermValue::adg});
                     auto lowering_term = fermion_op_t({idx, TermValue::a});
                     if (value == TermValue::Y) {
-                        raising_term *= coefficient_t(std::complex<typename fermion_op_t::coefficient_real_t>(0, 1));
-                        lowering_term *= coefficient_t(std::complex<typename fermion_op_t::coefficient_real_t>(0, -1));
+                        raising_term *= coefficient_t(std::complex<typename fermion_op_t::core_arithmetic_t>(0, 1));
+                        lowering_term *= coefficient_t(std::complex<typename fermion_op_t::core_arithmetic_t>(0, -1));
                     }
                     trans_pauli += raising_term;
                     trans_pauli += lowering_term;

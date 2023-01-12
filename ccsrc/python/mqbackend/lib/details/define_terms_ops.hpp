@@ -190,12 +190,12 @@ struct cast_helper_impl<self_t, T, types_t...> {
                                        pybind11::detail::make_caster<std::remove_cvref_t<T>>>::value) {
             if constexpr (self_t::is_real_valued) {
                 if (PyFloat_Check(type.ptr())) {
-                    const auto value = self.template cast<typename self_t::coefficient_real_t>();
+                    const auto value = self.template cast<typename self_t::core_arithmetic_t>();
                     return pybind11::cast(value);
                 }
             }
             if (PyComplex_Check(type.ptr())) {
-                const auto value = self.template cast<std::complex<typename self_t::coefficient_real_t>>();
+                const auto value = self.template cast<std::complex<typename self_t::core_arithmetic_t>>();
                 return pybind11::cast(value);
             }
         } else {

@@ -28,7 +28,9 @@
 
 namespace mindquantum::sim::vector::detail {
 
+template <typename calc_type_>
 struct GPUVectorPolicyBase {
+    using calc_type = calc_type_;
     using qs_data_t = thrust::complex<calc_type>;
     using qs_data_p_t = qs_data_t*;
     using py_qs_data_t = std::complex<calc_type>;
@@ -144,16 +146,41 @@ struct GPUVectorPolicyBase {
                                   calc_type val, index_t dim);
 };
 
-struct conj_a_dot_b
-    : public thrust::binary_function<GPUVectorPolicyBase::qs_data_t, GPUVectorPolicyBase::qs_data_t,
-                                     GPUVectorPolicyBase::qs_data_t> {
-    __host__ __device__ GPUVectorPolicyBase::qs_data_t operator()(GPUVectorPolicyBase::qs_data_t a,
-                                                                  GPUVectorPolicyBase::qs_data_t b) {
+template <typename qs_data_t>
+struct conj_a_dot_b : public thrust::binary_function<qs_data_t, qs_data_t, qs_data_t> {
+    __host__ __device__ qs_data_t operator()(qs_data_t a, qs_data_t b) {
         return thrust::conj(a) * b;
     }
 };
-__global__ void ApplyTerm(GPUVectorPolicyBase::qs_data_p_t des, GPUVectorPolicyBase::qs_data_p_t src, calc_type coeff,
-                          index_t num_y, index_t mask_y, index_t mask_z, index_t mask_f, index_t dim);
+
+template <typename qs_data_t, typename qs_data_p_t, typename calc_type>
+__global__ void ApplyTerm(qs_data_p_t des, qs_data_p_t src, calc_type coeff, index_t num_y, index_t mask_y,
+                          index_t mask_z, index_t mask_f, index_t dim) {
+    index_t index = threadIdx.x + blockIdx.x * blockDim.x;
+    index_t stride = blockDim.x * gridDim.x;
+    for (index_t i = index; i < dim; i += stride) {
+        auto j = (i ^ mask_f);
+        if (i <= j) {
+            auto axis2power = __popcll(i & mask_z);
+            auto axis3power = __popcll(i & mask_y);
+            auto idx = (num_y + 2 * axis3power + 2 * axis2power) & 3;
+            auto c = qs_data_t(1, 0);
+            if (idx == 1) {
+                c = qs_data_t(0, 1);
+            } else if (idx == 2) {
+                c = qs_data_t(-1, 0);
+            } else if (idx == 3) {
+                c = qs_data_t(0, -1);
+            }
+            des[j] += src[i] * coeff * c;
+            if (i != j) {
+                des[i] += src[j] * coeff / c;
+            }
+        }
+    }
+};
 }  // namespace mindquantum::sim::vector::detail
+
+#include "simulator/vector/detail/gpu_vector_policy.tpp"  // NOLINT
 
 #endif
