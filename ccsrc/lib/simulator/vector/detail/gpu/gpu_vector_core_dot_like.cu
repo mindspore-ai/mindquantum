@@ -11,11 +11,15 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
-#include "config/openmp.hpp"
+#include <thrust/transform_reduce.h>
 
-#include "core/parameter_resolver.hpp"
+#include "config/openmp.hpp"
+#include "core/sparse/algo.hpp"
 #include "simulator/utils.hpp"
 #include "simulator/vector/detail/gpu_vector_policy.cuh"
+#include "thrust/device_ptr.h"
+#include "thrust/functional.h"
+#include "thrust/inner_product.h"
 
 namespace mindquantum::sim::vector::detail {
 template <typename calc_type_>
@@ -84,7 +88,7 @@ auto GPUVectorPolicyBase<calc_type_>::CsrDotVec(const std::shared_ptr<sparse::Cs
     }
     auto host = reinterpret_cast<std::complex<calc_type>*>(malloc(dim * sizeof(std::complex<calc_type>)));
     cudaMemcpy(host, vec, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
-    auto host_res = sparse::Csr_Dot_Vec<calc_type, calc_type>(a, reinterpret_cast<calc_type*>(host));
+    auto host_res = sparse::Csr_Dot_Vec<calc_type_, calc_type_>(a, reinterpret_cast<calc_type*>(host));
     auto out = InitState(dim);
     cudaMemcpy(out, reinterpret_cast<std::complex<calc_type>*>(host_res), sizeof(qs_data_t) * dim,
                cudaMemcpyHostToDevice);
@@ -105,7 +109,7 @@ auto GPUVectorPolicyBase<calc_type_>::CsrDotVec(const std::shared_ptr<sparse::Cs
     }
     auto host = reinterpret_cast<std::complex<calc_type>*>(malloc(dim * sizeof(std::complex<calc_type>)));
     cudaMemcpy(host, vec, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
-    auto host_res = sparse::Csr_Dot_Vec<calc_type, calc_type>(a, b, reinterpret_cast<calc_type*>(host));
+    auto host_res = sparse::Csr_Dot_Vec<calc_type_, calc_type_>(a, b, reinterpret_cast<calc_type*>(host));
     auto out = InitState(dim);
     cudaMemcpy(out, reinterpret_cast<std::complex<calc_type>*>(host_res), sizeof(qs_data_t) * dim,
                cudaMemcpyHostToDevice);

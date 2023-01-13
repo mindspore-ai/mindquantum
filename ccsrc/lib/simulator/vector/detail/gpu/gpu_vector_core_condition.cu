@@ -12,10 +12,13 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 #include "config/openmp.hpp"
+#include <thrust/transform_reduce.h>
 
-#include "core/parameter_resolver.hpp"
 #include "simulator/utils.hpp"
 #include "simulator/vector/detail/gpu_vector_policy.cuh"
+#include "thrust/device_ptr.h"
+#include "thrust/functional.h"
+#include "thrust/inner_product.h"
 
 namespace mindquantum::sim::vector::detail {
 
