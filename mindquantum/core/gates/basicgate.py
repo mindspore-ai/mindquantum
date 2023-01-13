@@ -30,6 +30,7 @@ from mindquantum.config.config import _GLOBAL_MAT_VALUE
 from mindquantum.utils.f import is_power_of_two
 from mindquantum.utils.type_value_check import _check_gate_type, _check_input_type
 
+from ...config import Context
 from ..parameterresolver import ParameterResolver
 from .basic import (
     BasicGate,
@@ -77,8 +78,8 @@ class UnivMathGate(NoneParamNonHermMat):
 
     def get_cpp_obj(self):
         """Get the underlying C++ object."""
-        mat = mb.dim2matrix(self.matrix())
-        cpp_gate = mb.basic_gate(False, self.name, 1, mat)
+        mat = getattr(mb, Context.get_dtype()).dim2matrix(self.matrix())
+        cpp_gate = getattr(mb, Context.get_dtype()).basic_gate(False, self.name, 1, mat)
         cpp_gate.daggered = self.hermitianed
         cpp_gate.obj_qubits = self.obj_qubits
         cpp_gate.ctrl_qubits = self.ctrl_qubits
@@ -910,8 +911,8 @@ class Power(NoneParamNonHermMat):
 
     def get_cpp_obj(self):
         """Get the underlying C++ object."""
-        mat = mb.dim2matrix(self.matrix())
-        cpp_gate = mb.basic_gate(False, self.name, 1, mat)
+        mat = getattr(mb, Context.get_dtype()).dim2matrix(self.matrix())
+        cpp_gate = getattr(mb, Context.get_dtype()).basic_gate(False, self.name, 1, mat)
         cpp_gate.daggered = self.hermitianed
         cpp_gate.obj_qubits = self.obj_qubits
         cpp_gate.ctrl_qubits = self.ctrl_qubits
@@ -1092,9 +1093,13 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
             return hermitian_gate
 
         def get_cpp_obj(self):
-            cpp_gate = mb.basic_gate(self.name, 1, matrix_addr, diff_matrix_addr, 1 << n_qubits)
+            cpp_gate = getattr(mb, Context.get_dtype()).basic_gate(
+                self.name, 1, matrix_addr, diff_matrix_addr, 1 << n_qubits
+            )
             if self.hermitianed:
-                cpp_gate = mb.basic_gate(self.name, 1, herm_matrix_addr, herm_diff_matrix_addr, 1 << n_qubits)
+                cpp_gate = getattr(mb, Context.get_dtype()).basic_gate(
+                    self.name, 1, herm_matrix_addr, herm_diff_matrix_addr, 1 << n_qubits
+                )
             cpp_gate.daggered = self.hermitianed
             cpp_gate.obj_qubits = self.obj_qubits
             cpp_gate.ctrl_qubits = self.ctrl_qubits
@@ -1310,7 +1315,7 @@ class U3(MultiParamsGate):
 
     def get_cpp_obj(self):
         """Get cpp obj."""
-        return mb.u3(
+        return getattr(mb, Context.get_dtype()).u3(
             self.theta.get_cpp_obj(),
             self.phi.get_cpp_obj(),
             self.lamda.get_cpp_obj(),
@@ -1425,7 +1430,9 @@ class FSim(MultiParamsGate):
 
     def get_cpp_obj(self):
         """Get cpp object."""
-        return mb.fsim(self.theta.get_cpp_obj(), self.phi.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits)
+        return getattr(mb, Context.get_dtype()).fsim(
+            self.theta.get_cpp_obj(), self.phi.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
+        )
 
 
 X = XGate()

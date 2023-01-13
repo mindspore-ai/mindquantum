@@ -78,7 +78,7 @@ class Context:
             float
         """
         _check_input_type('dtype', str, dtype)
-        if 'dtype' not in ['float', 'double']:
+        if dtype not in ['float', 'double']:
             raise ValueError(f"dtype should be 'float' or 'double', but get {dtype}")
         _GLOBAL_CONFIG['DTYPE'] = dtype
 

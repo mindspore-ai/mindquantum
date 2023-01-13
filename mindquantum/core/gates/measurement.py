@@ -26,6 +26,7 @@ from mindquantum import mqbackend as mb
 from mindquantum.io.display import measure_text_drawer
 from mindquantum.utils.string_utils import join_without_empty
 
+from ...config import Context
 from .basic import FunctionalGate
 
 
@@ -92,7 +93,7 @@ class Measure(FunctionalGate):
 
     def get_cpp_obj(self):
         """Get the underlying C++ object."""
-        out = mb.get_measure_gate(self.key)
+        out = getattr(mb, Context.get_dtype()).get_measure_gate(self.key)
         out.obj_qubits = self.obj_qubits
         return out
 

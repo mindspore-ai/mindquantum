@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """Hamiltonian module."""
 
 from enum import Enum
@@ -22,6 +21,7 @@ import scipy.sparse as sp
 
 from mindquantum import mqbackend as mb
 
+from ...config import Context
 from ._term_value import TermValue
 
 
@@ -119,16 +119,16 @@ class Hamiltonian:
         if not hermitian:
             if self.ham_cpp is None:
                 if self.how_to == HowTo.ORIGIN:
-                    ham = mb.hamiltonian(self.ham_termlist)
+                    ham = getattr(mb, Context.get_dtype()).hamiltonian(self.ham_termlist)
                 elif self.how_to == HowTo.BACKEND:
-                    ham = mb.hamiltonian(self.ham_termlist, self.n_qubits)
+                    ham = getattr(mb, Context.get_dtype()).hamiltonian(self.ham_termlist, self.n_qubits)
                 else:
                     dim = self.sparse_mat.shape[0]
                     nnz = self.sparse_mat.nnz
-                    csr_mat = mb.csr_hd_matrix(
+                    csr_mat = getattr(mb, Context.get_dtype()).csr_hd_matrix(
                         dim, nnz, self.sparse_mat.indptr, self.sparse_mat.indices, self.sparse_mat.data
                     )
-                    ham = mb.hamiltonian(csr_mat, self.n_qubits)
+                    ham = getattr(mb, Context.get_dtype()).hamiltonian(csr_mat, self.n_qubits)
                 self.ham_cpp = ham
             return self.ham_cpp
         if self.how_to in (HowTo.BACKEND, HowTo.ORIGIN):
@@ -137,8 +137,10 @@ class Hamiltonian:
             herm_sparse_mat = self.sparse_mat.conjugate().T.tocsr()
             dim = herm_sparse_mat.shape[0]
             nnz = herm_sparse_mat.nnz
-            csr_mat = mb.csr_hd_matrix(dim, nnz, herm_sparse_mat.indptr, herm_sparse_mat.indices, herm_sparse_mat.data)
-            self.herm_ham_cpp = mb.hamiltonian(csr_mat, self.n_qubits)
+            csr_mat = getattr(mb, Context.get_dtype()).csr_hd_matrix(
+                dim, nnz, herm_sparse_mat.indptr, herm_sparse_mat.indices, herm_sparse_mat.data
+            )
+            self.herm_ham_cpp = getattr(mb, Context.get_dtype()).hamiltonian(csr_mat, self.n_qubits)
         return self.herm_ham_cpp
 
 

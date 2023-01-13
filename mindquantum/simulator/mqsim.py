@@ -61,7 +61,7 @@ class MQSim(BackendBase):
             self.sim = getattr(_mq_vector, self.arithmetic_type).mqvector(n_qubits, seed)
         elif name == 'mqvector_gpu':
             if MQ_SIM_GPU_SUPPORTED:
-                self.sim = getattr(_mq_vector, self.arithmetic_type).mqvector(n_qubits, seed)
+                self.sim = getattr(_mq_vector_gpu, self.arithmetic_type).mqvector(n_qubits, seed)
         else:
             raise NotImplementedError(f"{name} backend not implemented.")
 

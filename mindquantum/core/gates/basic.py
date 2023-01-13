@@ -34,6 +34,7 @@ from mindquantum.utils.type_value_check import (
     _check_qubit_id,
 )
 
+from ...config import Context
 from ..parameterresolver import ParameterResolver
 
 HERMITIAN_PROPERTIES = {
@@ -242,7 +243,7 @@ class BasicGate:
 
     def get_cpp_obj(self):
         """Get the underlying C++ object."""
-        cpp_gate = mb.get_gate_by_name(self.name)
+        cpp_gate = getattr(mb, Context.get_dtype()).get_gate_by_name(self.name)
         cpp_gate.obj_qubits = self.obj_qubits
         cpp_gate.ctrl_qubits = self.ctrl_qubits
         return cpp_gate
@@ -497,7 +498,7 @@ class NoneParamNonHermMat(NoneParameterGate, MatrixGate, NonHermitianGate):
         """Get the underlying C++ object."""
         cpp_obj = super().get_cpp_obj()
         if self.hermitianed:
-            cpp_obj.base_matrix = mb.dim2matrix(self.matrix())
+            cpp_obj.base_matrix = getattr(mb, Context.get_dtype()).dim2matrix(self.matrix())
         cpp_obj.daggered = self.hermitianed
         return cpp_obj
 

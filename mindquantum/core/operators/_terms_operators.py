@@ -57,8 +57,8 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
             dtype (Type): Python type used to decide which type of C++ object to instantiate. If specified, this takes
                 precedence over looking at the type of `coeff` (if not None).
         """
-        klass = cls._type_conversion_table[cls.double_pr_klass]
         backend = getattr(mqbackend, arithmetic_type)
+        klass = cls._type_conversion_table[backend.real_pr]
         if term is None:
             return klass()
 
@@ -84,7 +84,7 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
 
         if cls.ensure_complex_coeff:
             coeff = coeff.cast_complex()
-            dtype = complex
+            dtype = type(coeff)
         klass = cls._type_conversion_table[dtype]
 
         if isinstance(term, tuple) and len(term) == 1 and isinstance(term[0], tuple) and len(term[0]) == 2:
@@ -303,7 +303,18 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
             True
         """
         try:
-            klass = cls._type_conversion_table[dtype]
+            dtype = strs.split('\n')[1].split("\"")[-2]
+            print(dtype)
+            if dtype == 'float':
+                klass = cls._type_conversion_table[mqbackend.float.real_pr]
+            elif dtype == 'double':
+                klass = cls._type_conversion_table[mqbackend.double.real_pr]
+            elif dtype == 'complex64':
+                klass = cls._type_conversion_table[mqbackend.float.complex_pr]
+            elif dtype == 'complex128':
+                klass = cls._type_conversion_table[mqbackend.double.complex_pr]
+            else:
+                raise KeyError
         except KeyError as err:
             raise TypeError(f'Unsupported dtype ({dtype})!') from err
 
@@ -343,7 +354,7 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
         backend = getattr(mqbackend, self.arithmetic_type)
         if isinstance(params_value, dict):
             params_value = ParameterResolver(params_value)
-        if isinstance(self._cpp_obj, self.real_pr_klass):
+        if isinstance(self._cpp_obj, (self.double_pr_klass, self.float_pr_klass)):
             return self.__class__(self._cpp_obj.subs(backend.DoublePRSubsProxy(params_value._cpp_obj)))
         return self.__class__(self._cpp_obj.subs(backend.CmplxPRSubsProxy(params_value._cpp_obj.cast_complex())))
 
@@ -469,13 +480,17 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
         if dtype is not None:
             klass = cls._type_conversion_table[dtype]
         else:
-            klass = cls.real_pr_klass
+            klass = cls._type_conversion_table[getattr(mqbackend, Context.get_dtype()).real_pr]
             for v in of_ops.terms.values():
                 if isinstance(v, numbers.Complex) and not isinstance(v, numbers.Real):
-                    klass = cls.complex_pr_klass
+                    klass = cls._type_conversion_table[getattr(mqbackend, Context.get_dtype()).complex_pr]
                     break
 
-        pr_klass = complex_pr if klass is cls.complex_pr_klass else real_pr
+        pr_klass = (
+            getattr(mqbackend, Context.get_dtype()).real_pr
+            if klass is cls._type_conversion_table[getattr(mqbackend, Context.get_dtype()).complex_pr]
+            else getattr(mqbackend, Context.get_dtype()).real_pr
+        )
 
         list_terms = []
         list_coeff = []

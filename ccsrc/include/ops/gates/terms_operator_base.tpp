@@ -25,6 +25,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -535,6 +536,7 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::dumps(std::size_t indent) const -> std::string {
     nlohmann::json json(*this);
+    json["dtype"] = VTypeToString<VTypeMap<coefficient_t_>::v>();
     return json.dump(static_cast<int>(indent), ' ', true);
 }
 
@@ -544,7 +546,9 @@ template <template <typename coeff_t> class derived_t_, typename coefficient_t_,
           template <typename coeff_t> class term_policy_t_>
 auto TermsOperatorBase<derived_t_, coefficient_t_, term_policy_t_>::loads(std::string_view string_data)
     -> std::optional<derived_t> {
-    return nlohmann::json::parse(string_data).get<derived_t>();
+    auto json = nlohmann::json::parse(string_data);
+    json.erase("dtype");
+    return json.get<derived_t>();
 }
 
 // =============================================================================

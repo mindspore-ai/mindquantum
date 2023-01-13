@@ -49,7 +49,7 @@ class MQBlas:  # pylint: disable=too-few-public-methods
     def _get_blas(simulator: MQSim):
         """Get blas module w.r.t given backend."""
         if simulator.name == 'mqvector':
-            return _mq_vector.blas
+            return getattr(_mq_vector, simulator.arithmetic_type).blas
         if simulator.name == 'mqvector_gpu':
-            return _mq_vector_gpu.blas
+            return getattr(_mq_vector_gpu, simulator.arithmetic_type).blas
         raise ValueError(f"Backend {simulator.device_name()} unknown.")
