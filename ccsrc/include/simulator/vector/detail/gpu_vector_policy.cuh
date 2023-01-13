@@ -181,6 +181,4 @@ __global__ void ApplyTerm(qs_data_p_t des, qs_data_p_t src, calc_type coeff, ind
 };
 }  // namespace mindquantum::sim::vector::detail
 
-#include "simulator/vector/detail/gpu_vector_policy.tpp"  // NOLINT
-
 #endif

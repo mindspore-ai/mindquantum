@@ -21,6 +21,11 @@ target_link_libraries(mqsim_common PUBLIC mq_base)
 force_at_least_cxx17_workaround(mqsim_common)
 append_to_property(mq_install_targets GLOBAL mqsim_common)
 
+add_library(mqsim_vector_cpu STATIC)
+target_link_libraries(mqsim_vector_cpu PUBLIC mqsim_common)
+force_at_least_cxx17_workaround(mqsim_vector_cpu)
+append_to_property(mq_install_targets GLOBAL mqsim_vector_cpu)
+
 # ==============================================================================
 
 # add_library( mqsim_vector_cpu STATIC ${CMAKE_CURRENT_LIST_DIR}/vector/detail/cpu_vector_policy.cpp
@@ -34,13 +39,12 @@ append_to_property(mq_install_targets GLOBAL mqsim_common)
 
 # ==============================================================================
 
-# if(ENABLE_CUDA) add_library( mqsim_vector_gpu STATIC ${CMAKE_CURRENT_LIST_DIR}/vector/detail/gpu_vector_policy.cu
-# ${CMAKE_CURRENT_LIST_DIR}/vector/detail/gpu_vector_policy_zlike.cu
-# ${CMAKE_CURRENT_LIST_DIR}/vector/detail/gpu_vector_policy_xlike.cu
-# ${CMAKE_CURRENT_LIST_DIR}/vector/detail/gpu_vector_policy_single_ops.cu
-# ${CMAKE_CURRENT_LIST_DIR}/vector/detail/gpu_vector_policy_gate_expec.cu
-# ${CMAKE_CURRENT_LIST_DIR}/vector/detail/gpu_vector_core_policy.cu)
+if(ENABLE_CUDA)
+  add_library(mqsim_vector_gpu STATIC)
+  target_link_libraries(mqsim_vector_gpu PUBLIC mqsim_common)
+  set_target_properties(mqsim_vector_gpu PROPERTIES CUDA_RUNTIME_LIBRARY $<IF:$<BOOL:${CUDA_STATIC}>,Static,Shared>)
+  force_at_least_cxx17_workaround(mqsim_vector_gpu)
+  append_to_property(mq_install_targets GLOBAL mqsim_vector_gpu)
+endif()
 
-# target_link_libraries(mqsim_vector_gpu PUBLIC mqsim_common) set_target_properties(mqsim_vector_gpu PROPERTIES
-# CUDA_RUNTIME_LIBRARY $<IF:$<BOOL:${CUDA_STATIC}>,Static,Shared>) force_at_least_cxx17_workaround(mqsim_vector_gpu)
-# append_to_property(mq_install_targets GLOBAL mqsim_vector_gpu) endif()
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/vector/detail)

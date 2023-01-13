@@ -150,7 +150,4 @@ struct CPUVectorPolicyBase {
                                   calc_type val, index_t dim);
 };
 }  // namespace mindquantum::sim::vector::detail
-
-#include "simulator/vector/detail/cpu_vector_policy.tpp"  // NOLINT
-
 #endif
