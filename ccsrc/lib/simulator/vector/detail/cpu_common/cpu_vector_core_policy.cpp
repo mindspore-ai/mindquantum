@@ -19,8 +19,8 @@
 
 namespace mindquantum::sim::vector::detail {
 
-template <typename calc_type_>
-auto CPUVectorPolicyBase<calc_type_>::InitState(index_t dim, bool zero_state) -> qs_data_p_t {
+template <typename derived_, typename calc_type_>
+auto CPUVectorPolicyBase<derived_, calc_type_>::InitState(index_t dim, bool zero_state) -> qs_data_p_t {
     auto qs = reinterpret_cast<qs_data_p_t>(calloc(dim, sizeof(qs_data_t)));
     if (zero_state) {
         qs[0] = 1;
@@ -28,22 +28,22 @@ auto CPUVectorPolicyBase<calc_type_>::InitState(index_t dim, bool zero_state) ->
     return qs;
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::Reset(qs_data_p_t qs, index_t dim) {
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t qs, index_t dim) {
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { qs[i] = 0; })
     qs[0] = 1;
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::FreeState(qs_data_p_t qs) {
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::FreeState(qs_data_p_t qs) {
     if (qs != nullptr) {
         free(qs);
     }
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit) {
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit) {
     if (n_qubits > q_limit) {
         n_qubits = q_limit;
     }
@@ -53,8 +53,8 @@ void CPUVectorPolicyBase<calc_type_>::Display(qs_data_p_t qs, qbit_t n_qubits, q
     }
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim) {
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim) {
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
             if ((i & ctrl_mask) != ctrl_mask) {
@@ -63,24 +63,24 @@ void CPUVectorPolicyBase<calc_type_>::SetToZeroExcept(qs_data_p_t qs, index_t ct
         })
 }
 
-template <typename calc_type_>
-auto CPUVectorPolicyBase<calc_type_>::Copy(qs_data_p_t qs, index_t dim) -> qs_data_p_t {
+template <typename derived_, typename calc_type_>
+auto CPUVectorPolicyBase<derived_, calc_type_>::Copy(qs_data_p_t qs, index_t dim) -> qs_data_p_t {
     qs_data_p_t out = CPUVectorPolicyBase::InitState(dim, false);
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { out[i] = qs[i]; })
     return out;
 };
 
-template <typename calc_type_>
-auto CPUVectorPolicyBase<calc_type_>::GetQS(qs_data_p_t qs, index_t dim) -> VT<py_qs_data_t> {
+template <typename derived_, typename calc_type_>
+auto CPUVectorPolicyBase<derived_, calc_type_>::GetQS(qs_data_p_t qs, index_t dim) -> VT<py_qs_data_t> {
     VT<py_qs_data_t> out(dim);
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { out[i] = qs[i]; })
     return out;
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::SetQS(qs_data_p_t qs, const VT<py_qs_data_t>& qs_out, index_t dim) {
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t qs, const VT<py_qs_data_t>& qs_out, index_t dim) {
     if (qs_out.size() != dim) {
         throw std::invalid_argument("state size not match");
     }
@@ -88,8 +88,8 @@ void CPUVectorPolicyBase<calc_type_>::SetQS(qs_data_p_t qs, const VT<py_qs_data_
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { qs[i] = qs_out[i]; })
 }
 
-template <typename calc_type_>
-auto CPUVectorPolicyBase<calc_type_>::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham,
+template <typename derived_, typename calc_type_>
+auto CPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham,
                                                  index_t dim) -> qs_data_p_t {
     qs_data_p_t out = CPUVectorPolicyBase::InitState(dim, false);
     for (const auto& [pauli_string, coeff_] : ham) {
@@ -114,7 +114,7 @@ auto CPUVectorPolicyBase<calc_type_>::ApplyTerms(qs_data_p_t qs, const std::vect
     return out;
 };
 
-template struct CPUVectorPolicyBase<float>;
-template struct CPUVectorPolicyBase<double>;
+template struct CPUVectorPolicyBase<CPUVectorPolicyAvxFloat, float>;
+template struct CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double>;
 
 }  // namespace mindquantum::sim::vector::detail

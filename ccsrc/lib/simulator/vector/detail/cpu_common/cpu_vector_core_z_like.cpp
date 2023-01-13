@@ -18,8 +18,8 @@
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 
 namespace mindquantum::sim::vector::detail {
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplyZLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyZLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
                                                  qs_data_t val, index_t dim) {
     SingleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
@@ -39,36 +39,36 @@ void CPUVectorPolicyBase<calc_type_>::ApplyZLike(qs_data_p_t qs, const qbits_t& 
     }
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplyZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
     ApplyZLike(qs, objs, ctrls, -1, dim);
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplySGate(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplySGate(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
                                                  index_t dim) {
     ApplyZLike(qs, objs, ctrls, qs_data_t(0, 1), dim);
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplySdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplySdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
                                                 index_t dim) {
     ApplyZLike(qs, objs, ctrls, qs_data_t(0, -1), dim);
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplyT(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyT(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
     ApplyZLike(qs, objs, ctrls, qs_data_t(1, 1) / static_cast<calc_type>(std::sqrt(2.0)), dim);
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplyTdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyTdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
                                                 index_t dim) {
     ApplyZLike(qs, objs, ctrls, qs_data_t(1, -1) / static_cast<calc_type>(std::sqrt(2.0)), dim);
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplyPS(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyPS(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
                                               index_t dim, bool diff) {
     if (!diff) {
         ApplyZLike(qs, objs, ctrls, qs_data_t(std::cos(val), std::sin(val)), dim);
@@ -97,7 +97,8 @@ void CPUVectorPolicyBase<calc_type_>::ApplyPS(qs_data_p_t qs, const qbits_t& obj
         }
     }
 }
-template struct CPUVectorPolicyBase<float>;
-template struct CPUVectorPolicyBase<double>;
+
+template struct CPUVectorPolicyBase<CPUVectorPolicyAvxFloat, float>;
+template struct CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double>;
 
 }  // namespace mindquantum::sim::vector::detail

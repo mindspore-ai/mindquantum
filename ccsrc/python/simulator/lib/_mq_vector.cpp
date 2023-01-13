@@ -13,6 +13,7 @@
 //   limitations under the License.
 
 #include <pybind11/pybind11.h>
+#include "simulator/vector/detail/cpu_vector_policy.hpp"
 
 #include "python/vector/bind_vec_state.h"
 
@@ -21,8 +22,8 @@ PYBIND11_MODULE(_mq_vector, module) {
     using float_policy_t = mindquantum::sim::vector::detail::GPUVectorPolicyBase<float>;
     using double_policy_t = mindquantum::sim::vector::detail::GPUVectorPolicyBase<double>;
 #else
-    using float_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyBase<float>;
-    using double_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyBase<double>;
+    using float_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyAvxFloat;
+    using double_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyAvxDouble;
 #endif  // __CUDACC__
 
     using float_vec_sim = mindquantum::sim::vector::detail::VectorState<float_policy_t>;

@@ -18,8 +18,8 @@
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 
 namespace mindquantum::sim::vector::detail {
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplyXX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyXX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
                                               index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
     auto c = std::cos(val);
@@ -72,8 +72,8 @@ void CPUVectorPolicyBase<calc_type_>::ApplyXX(qs_data_p_t qs, const qbits_t& obj
     }
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplyYY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyYY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
                                               index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
     auto c = std::cos(val);
@@ -126,8 +126,8 @@ void CPUVectorPolicyBase<calc_type_>::ApplyYY(qs_data_p_t qs, const qbits_t& obj
     }
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
                                               index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
     auto c = std::cos(val);
@@ -174,8 +174,8 @@ void CPUVectorPolicyBase<calc_type_>::ApplyZZ(qs_data_p_t qs, const qbits_t& obj
     }
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplyRX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
                                               index_t dim, bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
     auto a = std::cos(val / 2);
@@ -191,8 +191,8 @@ void CPUVectorPolicyBase<calc_type_>::ApplyRX(qs_data_p_t qs, const qbits_t& obj
     }
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplyRY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
                                               index_t dim, bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
     auto a = std::cos(val / 2);
@@ -208,8 +208,8 @@ void CPUVectorPolicyBase<calc_type_>::ApplyRY(qs_data_p_t qs, const qbits_t& obj
     }
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplyRZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
                                               index_t dim, bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
     auto a = std::cos(val / 2);
@@ -225,7 +225,7 @@ void CPUVectorPolicyBase<calc_type_>::ApplyRZ(qs_data_p_t qs, const qbits_t& obj
     }
 }
 
-template struct CPUVectorPolicyBase<float>;
-template struct CPUVectorPolicyBase<double>;
+template struct CPUVectorPolicyBase<CPUVectorPolicyAvxFloat, float>;
+template struct CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double>;
 
 }  // namespace mindquantum::sim::vector::detail

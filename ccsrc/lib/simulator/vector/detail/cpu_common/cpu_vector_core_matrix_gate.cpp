@@ -18,11 +18,11 @@
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 
 namespace mindquantum::sim::vector::detail {
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
-                                                           const qbits_t& ctrls,
-                                                           const std::vector<std::vector<py_qs_data_t>>& gate,
-                                                           index_t dim) {
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des,
+                                                                   const qbits_t& objs, const qbits_t& ctrls,
+                                                                   const std::vector<std::vector<py_qs_data_t>>& gate,
+                                                                   index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         // clang-format off
@@ -66,11 +66,11 @@ void CPUVectorPolicyBase<calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_d
             })
     }
 }
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
-                                                             const qbits_t& ctrls,
-                                                             const std::vector<std::vector<py_qs_data_t>>& m,
-                                                             index_t dim) {
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
+                                                                     const qbits_t& ctrls,
+                                                                     const std::vector<std::vector<py_qs_data_t>>& m,
+                                                                     index_t dim) {
     SingleQubitGateMask mask({obj_qubit}, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
@@ -97,10 +97,11 @@ void CPUVectorPolicyBase<calc_type_>::ApplySingleQubitMatrix(qs_data_p_t src, qs
     }
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
-                                                      const qbits_t& ctrls,
-                                                      const std::vector<std::vector<py_qs_data_t>>& m, index_t dim) {
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
+                                                                const qbits_t& ctrls,
+                                                                const std::vector<std::vector<py_qs_data_t>>& m,
+                                                                index_t dim) {
     if (objs.size() == 1) {
         ApplySingleQubitMatrix(src, des, objs[0], ctrls, m, dim);
     } else if (objs.size() == 2) {
@@ -110,7 +111,7 @@ void CPUVectorPolicyBase<calc_type_>::ApplyMatrixGate(qs_data_p_t src, qs_data_p
     }
 }
 
-template struct CPUVectorPolicyBase<float>;
-template struct CPUVectorPolicyBase<double>;
+template struct CPUVectorPolicyBase<CPUVectorPolicyAvxFloat, float>;
+template struct CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double>;
 
 }  // namespace mindquantum::sim::vector::detail

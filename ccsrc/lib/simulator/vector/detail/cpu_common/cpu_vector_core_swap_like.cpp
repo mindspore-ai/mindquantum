@@ -18,8 +18,8 @@
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 
 namespace mindquantum::sim::vector::detail {
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
                                                 index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
@@ -51,8 +51,8 @@ void CPUVectorPolicyBase<calc_type_>::ApplySWAP(qs_data_p_t qs, const qbits_t& o
     }
 }
 
-template <typename calc_type_>
-void CPUVectorPolicyBase<calc_type_>::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
                                                  bool daggered, index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type frac = 1.0;
@@ -84,7 +84,7 @@ void CPUVectorPolicyBase<calc_type_>::ApplyISWAP(qs_data_p_t qs, const qbits_t& 
     }
 }
 
-template struct CPUVectorPolicyBase<float>;
-template struct CPUVectorPolicyBase<double>;
+template struct CPUVectorPolicyBase<CPUVectorPolicyAvxFloat, float>;
+template struct CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double>;
 
 }  // namespace mindquantum::sim::vector::detail

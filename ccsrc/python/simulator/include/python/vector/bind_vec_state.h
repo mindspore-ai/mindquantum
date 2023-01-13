@@ -27,6 +27,8 @@
 #ifdef __CUDACC__
 #    include "simulator/vector/detail/gpu_vector_policy.cuh"
 #else
+#    include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
 #    include "simulator/vector/detail/cpu_vector_policy.hpp"
 #endif  // __CUDACC__
 

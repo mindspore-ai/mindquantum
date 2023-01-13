@@ -19,8 +19,8 @@
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 
 namespace mindquantum::sim::vector::detail {
-template <typename calc_type_>
-auto CPUVectorPolicyBase<calc_type_>::Vdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim) -> py_qs_data_t {
+template <typename derived_, typename calc_type_>
+auto CPUVectorPolicyBase<derived_, calc_type_>::Vdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim) -> py_qs_data_t {
     calc_type res_real = 0, res_imag = 0;
     // clang-format off
     THRESHOLD_OMP(
@@ -33,9 +33,10 @@ auto CPUVectorPolicyBase<calc_type_>::Vdot(qs_data_p_t bra, qs_data_p_t ket, ind
     return {res_real, res_imag};
 }
 
-template <typename calc_type_>
+template <typename derived_, typename calc_type_>
 template <index_t mask, index_t condi>
-auto CPUVectorPolicyBase<calc_type_>::ConditionVdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim) -> py_qs_data_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::ConditionVdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim)
+    -> py_qs_data_t {
     calc_type res_real = 0, res_imag = 0;
     // clang-format off
     THRESHOLD_OMP(
@@ -50,9 +51,9 @@ auto CPUVectorPolicyBase<calc_type_>::ConditionVdot(qs_data_p_t bra, qs_data_p_t
     return {res_real, res_imag};
 }
 
-template <typename calc_type_>
-auto CPUVectorPolicyBase<calc_type_>::OneStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit, index_t dim)
-    -> py_qs_data_t {
+template <typename derived_, typename calc_type_>
+auto CPUVectorPolicyBase<derived_, calc_type_>::OneStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit,
+                                                             index_t dim) -> py_qs_data_t {
     SingleQubitGateMask mask({obj_qubit}, {});
     calc_type res_real = 0, res_imag = 0;
     // clang-format off
@@ -67,9 +68,9 @@ auto CPUVectorPolicyBase<calc_type_>::OneStateVdot(qs_data_p_t bra, qs_data_p_t 
     return {res_real, res_imag};
 }
 
-template <typename calc_type_>
-auto CPUVectorPolicyBase<calc_type_>::ZeroStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit, index_t dim)
-    -> py_qs_data_t {
+template <typename derived_, typename calc_type_>
+auto CPUVectorPolicyBase<derived_, calc_type_>::ZeroStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit,
+                                                            index_t dim) -> py_qs_data_t {
     SingleQubitGateMask mask({obj_qubit}, {});
     calc_type res_real = 0, res_imag = 0;
     // clang-format off
@@ -84,8 +85,8 @@ auto CPUVectorPolicyBase<calc_type_>::ZeroStateVdot(qs_data_p_t bra, qs_data_p_t
     return {res_real, res_imag};
 }
 
-template <typename calc_type_>
-auto CPUVectorPolicyBase<calc_type_>::CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
+template <typename derived_, typename calc_type_>
+auto CPUVectorPolicyBase<derived_, calc_type_>::CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
                                                 qs_data_p_t vec, index_t dim) -> qs_data_p_t {
     if (dim != a->dim_) {
         throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
@@ -94,8 +95,8 @@ auto CPUVectorPolicyBase<calc_type_>::CsrDotVec(const std::shared_ptr<sparse::Cs
     return reinterpret_cast<qs_data_p_t>(out);
 }
 
-template <typename calc_type_>
-auto CPUVectorPolicyBase<calc_type_>::CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
+template <typename derived_, typename calc_type_>
+auto CPUVectorPolicyBase<derived_, calc_type_>::CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
                                                 const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& b,
                                                 qs_data_p_t vec, index_t dim) -> qs_data_p_t {
     if ((dim != a->dim_) || (dim != b->dim_)) {
@@ -105,7 +106,7 @@ auto CPUVectorPolicyBase<calc_type_>::CsrDotVec(const std::shared_ptr<sparse::Cs
     return reinterpret_cast<qs_data_p_t>(out);
 }
 
-template struct CPUVectorPolicyBase<float>;
-template struct CPUVectorPolicyBase<double>;
+template struct CPUVectorPolicyBase<CPUVectorPolicyAvxFloat, float>;
+template struct CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double>;
 
 }  // namespace mindquantum::sim::vector::detail
