@@ -14,9 +14,10 @@
 # ============================================================================
 
 # pylint: disable=invalid-name
-
 """Test qubit excitation operator."""
+import pytest
 
+from mindquantum.config import Context
 from mindquantum.core.operators import (
     FermionOperator,
     QubitExcitationOperator,
@@ -24,11 +25,17 @@ from mindquantum.core.operators import (
 )
 
 
-def test_qubit_excitation_ops_num_coeff():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_qubit_excitation_ops_num_coeff(dtype):
     """
     Description: check the creation operator
     Expectation:
     """
+    Context.set_dtype(dtype)
     a_p_dagger = QubitExcitationOperator('1^')
     assert str(a_p_dagger) == '1 [Q1^] '
 
@@ -45,22 +52,34 @@ def test_qubit_excitation_ops_num_coeff():
     assert str(identity) == '1 [] '
 
 
-def test_power():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_power(dtype):
     """
     Description: check power and multiply
     Expectation:
     """
+    Context.set_dtype(dtype)
     w = (1 + 2j) * QubitExcitationOperator(' 4^ 3 9 3^ ') + 4 * QubitExcitationOperator(' 2 ')
     w_2 = w * w
     w_3 = w**2
     assert w_2 == w_3
 
 
-def test_normal_order():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_normal_order(dtype):
     """
     Description: Test normal order
     Expectation:
     """
+    Context.set_dtype(dtype)
     origin = QubitExcitationOperator('0 1^')
     # Coefficient will not be affected for qubit-excitation operators
     normal_order = QubitExcitationOperator('1^ 0', 1)
@@ -68,11 +87,17 @@ def test_normal_order():
     assert origin.normal_ordered() == normal_order
 
 
-def test_multiplier():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_multiplier(dtype):
     """
     Description: Test multiplier
     Expectation:
     """
+    Context.set_dtype(dtype)
     origin = QubitExcitationOperator('0 1^')
     after_mul = QubitExcitationOperator('0 1^', 2)
     assert after_mul == 2 * origin
@@ -90,11 +115,17 @@ def test_multiplier():
     assert str(origin) == '1 [Q0 Q1^] '
 
 
-def test_add_sub():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_add_sub(dtype):
     """
     Description: Test add ans sub
     Expectation:
     """
+    Context.set_dtype(dtype)
     # Test in place add
     w1 = QubitExcitationOperator(' 4^ 3 9 3^ ') + 4 * QubitExcitationOperator(' 2 ')
     w2 = 4 * QubitExcitationOperator(' 2 ')
@@ -102,11 +133,17 @@ def test_add_sub():
     assert str(w1) == '1 [Q4^ Q3 Q9 Q3^] '
 
 
-def test_compress():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_compress(dtype):
     """
     Description: Test compress
     Expectation:
     """
+    Context.set_dtype(dtype)
     w1 = QubitExcitationOperator('4^ 3') + QubitExcitationOperator('2', 1e-9)
     w2 = QubitExcitationOperator('4^ 3')
     assert w1.compress() == w2
@@ -118,22 +155,34 @@ def test_compress():
     assert d.terms == {}
 
 
-def test_constant():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_constant(dtype):
     """
     Description: Test constant
     Expectation:
     """
+    Context.set_dtype(dtype)
     w1 = (
         QubitExcitationOperator('4^ 3 9 3^') + 6.0 * QubitExcitationOperator('2 3^') + 2.0 * QubitExcitationOperator('')
     )
     assert w1.constant == 2.0
 
 
-def test_para_operators():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_para_operators(dtype):
     """
     Description: Test para operators
     Expectation:
     """
+    Context.set_dtype(dtype)
     para_op = QubitExcitationOperator('0 1^', 'x')
     assert str(para_op) == 'x [Q0 Q1^] '
 
@@ -143,21 +192,33 @@ def test_para_operators():
     assert str(op) == '2 [Q0 Q1^] '
 
 
-def test_eq():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_eq(dtype):
     """
     Description: Test equal
     Expectation:
     """
+    Context.set_dtype(dtype)
     a = QubitExcitationOperator('0 1^', 'x')
     assert a.subs({'x': 1}) == QubitExcitationOperator('0 1^')
 
 
-def test_convert_to_qubit_operator():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_convert_to_qubit_operator(dtype):
     """
     Description: Check if the qubit excitation operator can correctly convert to
         the qubit operator correctly according to the definition.
     Expectation:
     """
+    Context.set_dtype(dtype)
     op = QubitExcitationOperator(((4, 1), (1, 0)), 2.0j)
     qubit_op = (
         QubitOperator("X1 X4", 0.5j)
@@ -168,11 +229,17 @@ def test_convert_to_qubit_operator():
     assert op.to_qubit_operator().compress() == qubit_op
 
 
-def test_fermion_op():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_fermion_op(dtype):
     """
     Description: Test the "Fermion excitation version" of a qubit excitation operator
     Expectation:
     """
+    Context.set_dtype(dtype)
     op = QubitExcitationOperator(((4, 1), (1, 0)), 2.0j)
     ferm_op = FermionOperator(((4, 1), (1, 0)), 2.0j)
 

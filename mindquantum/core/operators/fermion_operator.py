@@ -13,15 +13,15 @@
 # limitations under the License.
 # ============================================================================
 
-# pylint: disable=duplicate-code
+# pylint: disable=duplicate-code,no-member
 """This module is generated the Fermion Operator."""
 
 from ... import mqbackend
+from ...config import Context
 from ...core.operators.polynomial_tensor import PolynomialTensor
 from ...core.parameterresolver import ParameterResolver
 from ._term_value import TermValue
 from ._terms_operators import TermsOperator
-from ...config import Context
 
 # NB: C++ actually supports FermionOperatorD and FermionOperatorCD that are purely numerical FermionOperator classes
 
@@ -139,19 +139,17 @@ class FermionOperator(TermsOperator):
         return self.__class__(self._cpp_obj.real)
 
     @classmethod
-    def from_openfermion(cls, of_ops, dtype=None):
+    def from_openfermion(cls, of_ops):
         """
         Convert openfermion fermion operator to mindquantum format.
 
         Args:
             of_ops (openfermion.FermionOperator): fermion operator from openfermion.
-            dtype (type): Type of TermsOperator to generate (ie. real `float` or complex `complex`)
-                          NB: this parameter is ignored in the Python version of the QubitOperator
 
         Returns:
             FermionOperator, fermion operator from mindquantum.
         """
-        return super().from_openfermion(of_ops, dtype)
+        return super().from_openfermion(of_ops)
 
     @classmethod
     def loads(cls, strs: str, dtype: type):

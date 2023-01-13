@@ -16,6 +16,7 @@
 import warnings
 
 import numpy as np
+import pytest
 
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore', category=UserWarning, message='MindSpore not installed.*')
@@ -23,6 +24,7 @@ with warnings.catch_warnings():
         'ignore', category=DeprecationWarning, message=r'Please use `OptimizeResult` from the `scipy\.optimize`'
     )
     from mindquantum.algorithm.compiler.decompose import ccx_decompose
+    from mindquantum.config import Context
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.gates import X
 
@@ -35,11 +37,17 @@ def circuit_equal_test(gate, decompose_circ):
     assert np.allclose(orig_circ.matrix(), decompose_circ.matrix(), atol=1e-6)
 
 
-def test_ccx():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_ccx(dtype):
     """
     Description: Test ccx decompose
     Expectation: success
     """
+    Context.set_dtype(dtype)
     ccx = X.on(1, [0, 2])
     for solution in ccx_decompose(ccx):
         circuit_equal_test(ccx, solution)

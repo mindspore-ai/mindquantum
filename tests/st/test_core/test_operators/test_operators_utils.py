@@ -13,7 +13,9 @@
 # limitations under the License.
 # ============================================================================
 """Test operator_utils."""
+import pytest
 
+from mindquantum.config import Context
 from mindquantum.core.operators import (
     FermionOperator,
     QubitExcitationOperator,
@@ -29,8 +31,14 @@ from mindquantum.core.operators import (
 )
 
 
-def test_count_qubits():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_count_qubits(dtype):
     """Test count_qubits"""
+    Context.set_dtype(dtype)
     qubit_op = QubitOperator("X1 Y2")
     assert count_qubits(qubit_op) == 3
 
@@ -41,14 +49,26 @@ def test_count_qubits():
     assert count_qubits(qubit_exc_op) == 5
 
 
-def test_normal_ordered():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_normal_ordered(dtype):
     """Test normal_ordered function"""
+    Context.set_dtype(dtype)
     fermion_operator = FermionOperator("3 4^")
     assert str(normal_ordered(fermion_operator)) == '-1 [4^ 3] '
 
 
-def test_commutator():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_commutator(dtype):
     """Test commutator"""
+    Context.set_dtype(dtype)
     qub_op1 = QubitOperator("X1 Y2")
     qub_op2 = QubitOperator("X1 Z2")
     qub_op3 = 2j * QubitOperator("X2")
@@ -64,8 +84,14 @@ def test_commutator():
     assert commutator(qubit_exc_op1, qubit_exc_op1) == QubitExcitationOperator()
 
 
-def test_number_operator():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_number_operator(dtype):
     """Test number operator"""
+    Context.set_dtype(dtype)
     nmode = 3
     # other parameters by default
     check_str = '1 [0^ 0] +\n1 [1^ 1] +\n1 [2^ 2] '
@@ -75,20 +101,38 @@ def test_number_operator():
     assert str(number_operator(None, nmode)) == check_str2
 
 
-def test_up_index():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_up_index(dtype):
     """This is for labelling the spin-orbital index with spin alpha"""
+    Context.set_dtype(dtype)
     alpha = 2
     assert up_index(alpha) == 4
 
 
-def test_down_index():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_down_index(dtype):
     """This is for labelling the spin-orbital index with spin beta"""
+    Context.set_dtype(dtype)
     beta = 1
     assert down_index(beta) == 3
 
 
-def test_hermitian_conjugated():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_hermitian_conjugated(dtype):
     """Test hermitian_conjugated for the QubitOperator and Fermion Operator"""
+    Context.set_dtype(dtype)
     qub_op1 = -1j * QubitOperator("X1 Y2") + QubitOperator("X1")
     qub_op2 = 1j * QubitOperator("X1 Y2") + QubitOperator("X1")
 

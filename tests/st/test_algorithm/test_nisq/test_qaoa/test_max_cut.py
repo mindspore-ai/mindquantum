@@ -12,21 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """Test max_cut"""
-
-import os
 
 import numpy as np
 import pytest
-
-os.environ.setdefault('OMP_NUM_THREADS', '8')
 
 _HAS_MINDSPORE = True
 try:
     import mindspore as ms
 
     from mindquantum.algorithm.nisq import MaxCutAnsatz
+    from mindquantum.config import Context
     from mindquantum.core.operators import Hamiltonian
     from mindquantum.framework import MQAnsatzOnlyLayer
     from mindquantum.simulator import Simulator, get_supported_simulator
@@ -45,12 +41,14 @@ except ImportError:
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
+@pytest.mark.parametrize('dtype', ['float', 'double'])
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_max_cut(backend):
+def test_max_cut(backend, dtype):
     """
     Description: test maxcut ansatz.
     Expectation: success.
     """
+    Context.set_dtype(dtype)
     graph = [(0, 1), (1, 2), (2, 3), (3, 4), (1, 4)]
     depth = 3
     maxcut = MaxCutAnsatz(graph, depth)

@@ -16,16 +16,25 @@
 
 import warnings
 
+import pytest
+
 from mindquantum.algorithm.nisq import quccsd_generator
+from mindquantum.config import Context
 from mindquantum.core.operators import TimeEvolution, count_qubits
 from mindquantum.core.operators._term_value import TermValue
 
 
-def test_quccsd():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_quccsd(dtype):
     """
     Description: Test quccsd
     Expectation:
     """
+    Context.set_dtype(dtype)
     h2_quccsd = quccsd_generator(4, 2)
     h2_quccsd_terms = set(h2_quccsd.terms)
     h2_quccsd_terms_check = {

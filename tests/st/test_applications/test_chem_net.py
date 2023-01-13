@@ -23,6 +23,7 @@ try:
     import mindspore as ms
 
     from mindquantum.algorithm.nisq import generate_uccsd
+    from mindquantum.config import Context
     from mindquantum.core import gates as G
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.operators import Hamiltonian
@@ -46,22 +47,22 @@ except (ImportError, AttributeError):
     _HAS_OPENFERMION = False
 _FORCE_TEST = bool(os.environ.get("FORCE_TEST", False))
 
-os.environ.setdefault('OMP_NUM_THREADS', '8')
-
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
+@pytest.mark.parametrize('dtype', ['float', 'double'])
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
 @pytest.mark.skipif(not _HAS_OPENFERMION, reason='openfermion is not installed')
 @pytest.mark.skipif(not _FORCE_TEST, reason='Set not force test')
-def test_vqe_net(backend):  # pylint: disable=too-many-locals
+def test_vqe_net(backend, dtype):  # pylint: disable=too-many-locals
     """
     Description: Test vqe
     Expectation:
     """
+    Context.set_dtype(dtype)
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
     (
         ansatz_circuit,

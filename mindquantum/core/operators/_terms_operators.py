@@ -12,6 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """Base class for terms operators based on a C++ class."""
+# pylint: disable=no-member
 
 import copy
 import numbers
@@ -56,9 +57,10 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
                 Default: 1.0.
             dtype (Type): Python type used to decide which type of C++ object to instantiate. If specified, this takes
                 precedence over looking at the type of `coeff` (if not None).
+            arithmetic_type (str): Arithmetic type of this operator, can be 'float' or 'double'.
         """
         backend = getattr(mqbackend, arithmetic_type)
-        klass = cls._type_conversion_table[backend.real_pr]
+        klass = cls._type_conversion_table[backend.complex_pr]
         if term is None:
             return klass()
 
@@ -455,7 +457,7 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
         return operator
 
     @classmethod
-    def from_openfermion(cls, of_ops, dtype=None):
+    def from_openfermion(cls, of_ops):
         """
         Convert openfermion fermion operator to mindquantum format.
 
@@ -477,17 +479,14 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
                 "of_ops should be a FermionOperator or a QubitOperator"
                 f" from openfermion framework, but get type {type(of_ops)}"
             )
-        if dtype is not None:
-            klass = cls._type_conversion_table[dtype]
-        else:
-            klass = cls._type_conversion_table[getattr(mqbackend, Context.get_dtype()).real_pr]
-            for v in of_ops.terms.values():
-                if isinstance(v, numbers.Complex) and not isinstance(v, numbers.Real):
-                    klass = cls._type_conversion_table[getattr(mqbackend, Context.get_dtype()).complex_pr]
-                    break
+        klass = cls._type_conversion_table[getattr(mqbackend, Context.get_dtype()).complex_pr]
+        for v in of_ops.terms.values():
+            if isinstance(v, numbers.Complex) and not isinstance(v, numbers.Real):
+                klass = cls._type_conversion_table[getattr(mqbackend, Context.get_dtype()).complex_pr]
+                break
 
         pr_klass = (
-            getattr(mqbackend, Context.get_dtype()).real_pr
+            getattr(mqbackend, Context.get_dtype()).complex_pr
             if klass is cls._type_conversion_table[getattr(mqbackend, Context.get_dtype()).complex_pr]
             else getattr(mqbackend, Context.get_dtype()).real_pr
         )

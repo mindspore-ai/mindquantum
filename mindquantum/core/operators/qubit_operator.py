@@ -17,12 +17,14 @@
 #   and also uses or refactor Fermilib and OpenFermion licensed under
 #   Apache 2.0 license.
 """This is the module for the Qubit Operator."""
+# pylint: disable=no-member
 
 from ... import mqbackend
+from ...config import Context
 from ...core.parameterresolver import ParameterResolver
 from ._term_value import TermValue
 from ._terms_operators import TermsOperator
-from ...config import Context
+
 # NB: C++ actually supports FermionOperatorD and FermionOperatorCD that are purely numerical FermionOperator classes
 
 # ==============================================================================
@@ -140,19 +142,17 @@ class QubitOperator(TermsOperator):
         return self.__class__(self._cpp_obj.real)
 
     @classmethod
-    def from_openfermion(cls, of_ops, dtype=None):
+    def from_openfermion(cls, of_ops):
         """
         Convert qubit operator from openfermion to mindquantum format.
 
         Args:
             of_ops (openfermion.QubitOperator): Qubit operator from openfermion.
-            dtype (type): Type of TermsOperator to generate (ie. real `float` or complex `complex`)
-                          NB: this parameter is ignored in the Python version of the QubitOperator
 
         Returns:
             QubitOperator, qubit operator from mindquantum.
         """
-        return super().from_openfermion(of_ops, dtype)
+        return super().from_openfermion(of_ops)
 
     @classmethod
     def loads(cls, strs: str, dtype: type):

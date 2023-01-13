@@ -14,13 +14,13 @@
 # ============================================================================
 
 # pylint: disable=invalid-name
-
 """Test fermion operator."""
 
 import os
 
 import pytest
 
+from mindquantum.config import Context
 from mindquantum.core.operators import FermionOperator
 
 _HAS_OPENFERMION = True
@@ -31,11 +31,17 @@ except (ImportError, AttributeError):
 _FORCE_TEST = bool(os.environ.get("FORCE_TEST", False))
 
 
-def test_fermion_ops_num_coeff():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_fermion_ops_num_coeff(dtype):
     """
     Description: Test fermion ops num coeff
     Expectation:
     """
+    Context.set_dtype(dtype)
     # check the creation operator
     a_p_dagger = FermionOperator('1^')
     assert str(a_p_dagger) == '1 [1^] '
@@ -53,11 +59,17 @@ def test_fermion_ops_num_coeff():
     assert str(identity) == '1 [] '
 
 
-def test_power():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_power(dtype):
     """
     Description: Test fermion operator power
     Expectation:
     """
+    Context.set_dtype(dtype)
     # check power and multiply
     w = (1 + 2j) * FermionOperator(' 4^ 3 9 3^ ') + 4 * FermionOperator(' 2 ')
     w_2 = w * w
@@ -65,11 +77,17 @@ def test_power():
     assert w_2 == w_3
 
 
-def test_normal_order():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_normal_order(dtype):
     """
     Description: Test normal order
     Expectation:
     """
+    Context.set_dtype(dtype)
     origin = FermionOperator('0 1^')
 
     normal_order = FermionOperator('1^ 0', -1)
@@ -77,11 +95,17 @@ def test_normal_order():
     assert origin.normal_ordered() == normal_order
 
 
-def test_multiplier():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_multiplier(dtype):
     """
     Description: Test multiplier
     Expectation:
     """
+    Context.set_dtype(dtype)
     origin = FermionOperator('0 1^')
     after_mul = FermionOperator('0 1^', 2)
     assert after_mul == 2 * origin
@@ -99,11 +123,17 @@ def test_multiplier():
     assert str(origin) == '1 [0 1^] '
 
 
-def test_add_sub():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_add_sub(dtype):
     """
     Description: Test add and sub
     Expectation:
     """
+    Context.set_dtype(dtype)
     # Test in place add
     w1 = FermionOperator(' 4^ 3 9 3^ ') + 4 * FermionOperator(' 2 ')
     w2 = 4 * FermionOperator(' 2 ')
@@ -111,11 +141,17 @@ def test_add_sub():
     assert str(w1) == '1 [4^ 3 9 3^] '
 
 
-def test_compress():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_compress(dtype):
     """
     Description: Test compress
     Expectation:
     """
+    Context.set_dtype(dtype)
     # test compress
     w1 = FermionOperator('4^ 3') + FermionOperator('2', 1e-9)
     w2 = FermionOperator('4^ 3')
@@ -128,21 +164,33 @@ def test_compress():
     assert d.terms == {}
 
 
-def test_constant():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_constant(dtype):
     """
     Description: Test constant
     Expectation:
     """
+    Context.set_dtype(dtype)
     # test constant
     w1 = FermionOperator('4^ 3 9 3^') + 6.0 * FermionOperator('2 3^') + 2.0 * FermionOperator('')
     assert w1.constant == 2.0
 
 
-def test_para_operators():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_para_operators(dtype):
     """
     Description: Test para operators
     Expectation:
     """
+    Context.set_dtype(dtype)
     para_op = FermionOperator('0 1^', 'x')
     assert str(para_op) == 'x [0 1^] '
 
@@ -152,20 +200,32 @@ def test_para_operators():
     assert str(op) == '2 [0 1^] '
 
 
-def test_eq():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_eq(dtype):
     """
     Description: Test equal
     Expectation:
     """
+    Context.set_dtype(dtype)
     a = FermionOperator('0 1^', 'x')
     assert a.subs({'x': 1}) == FermionOperator('0 1^')
 
 
-def test_fermion_operator_iter():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_fermion_operator_iter(dtype):
     """
     Description: Test fermion operator iter
     Expectation: success.
     """
+    Context.set_dtype(dtype)
     a = FermionOperator('0 1^') + FermionOperator('2^ 3', {"a": -3})
     assert a == sum(list(a))
     b = FermionOperator('0 1^')
@@ -176,24 +236,36 @@ def test_fermion_operator_iter():
     assert b.is_singlet
 
 
-def test_dumps_and_loads():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_dumps_and_loads(dtype):
     """
     Description: Test fermion operator dumps to json and json loads to fermion operator
     Expectation:
     """
+    Context.set_dtype(dtype)
     f = FermionOperator('0', 1 + 2j) + FermionOperator('0^', 'a')
     strings = f.dumps()
     obj = FermionOperator.loads(strings, dtype=complex)
     assert obj == f
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
 @pytest.mark.skipif(not _HAS_OPENFERMION or not _FORCE_TEST, reason='OpenFermion is not installed')
 @pytest.mark.skipif(not _FORCE_TEST, reason='Set not force test')
-def test_of_fermion_trans():
+def test_of_fermion_trans(dtype):
     """
     Description: Test transform fermion operator to openfermion back and force.
     Expectation: success.
     """
+    Context.set_dtype(dtype)
     ofo_ops = OFFermionOperator("1^ 0", 1)
     mq_ops = FermionOperator('1^ 0', 1)
     assert mq_ops.to_openfermion() == ofo_ops

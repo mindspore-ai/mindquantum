@@ -15,8 +15,6 @@
 
 """Test max_2_sat"""
 
-import os
-
 import numpy as np
 import pytest
 
@@ -25,6 +23,7 @@ try:
     import mindspore as ms
 
     from mindquantum.algorithm.nisq import Max2SATAnsatz
+    from mindquantum.config import Context
     from mindquantum.core.operators import Hamiltonian
     from mindquantum.framework import MQAnsatzOnlyLayer
     from mindquantum.simulator import Simulator, get_supported_simulator
@@ -38,20 +37,19 @@ except ImportError:
         return []
 
 
-os.environ.setdefault('OMP_NUM_THREADS', '8')
-
-
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
+@pytest.mark.parametrize('dtype', ['float', 'double'])
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_max_2_sat(backend):
+def test_max_2_sat(backend, dtype):
     """
     Description:
     Expectation:
     """
+    Context.set_dtype(dtype)
     clauses = [(1, 2), (1, -2), (-1, 2), (-1, -2), (1, 3)]
     depth = 3
     max2sat = Max2SATAnsatz(clauses, depth)

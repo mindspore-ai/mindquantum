@@ -15,17 +15,25 @@
 """Bitphaseflip operator."""
 
 import numpy as np
+import pytest
 
 from mindquantum import UN, H
 from mindquantum.algorithm.library import bitphaseflip_operator
+from mindquantum.config import Context
 from mindquantum.core.circuit import Circuit
 
 
-def test_bitphaseflip_operator():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_bitphaseflip_operator(dtype):
     """
     Description: Test bitphaseflip_operator
     Expectation:
     """
+    Context.set_dtype(dtype)
     circuit = Circuit()
     circuit += UN(H, 3)
     circuit += bitphaseflip_operator([2], 3)

@@ -37,7 +37,7 @@ _GLOBAL_MAT_VALUE = {
 }
 
 _GLOBAL_CONFIG = {
-    'DTYPE': 'float',
+    'DTYPE': 'double',
     'PRECISION': 1e-10,
 }
 
