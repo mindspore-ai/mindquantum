@@ -15,12 +15,13 @@
 
 #include "core/parameter_resolver.hpp"
 #include "simulator/utils.hpp"
+#include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
+#include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
-
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::ApplyXX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                              index_t dim, bool diff) {
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyXX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                        calc_type val, index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
     auto c = std::cos(val);
     auto s = std::sin(val) * IMAGE_MI;
@@ -67,14 +68,14 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyXX(qs_data_p_t qs, const qb
                 }
             })
         if (diff) {
-            CPUVectorPolicyBase::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+            derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
         }
     }
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::ApplyYY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                              index_t dim, bool diff) {
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyYY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                        calc_type val, index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
     auto c = std::cos(val);
     auto s = std::sin(val) * IMAGE_I;
@@ -121,14 +122,14 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyYY(qs_data_p_t qs, const qb
                 }
             })
         if (diff) {
-            CPUVectorPolicyBase::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+            derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
         }
     }
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                              index_t dim, bool diff) {
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                        calc_type val, index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
     auto c = std::cos(val);
     auto s = std::sin(val);
@@ -169,14 +170,14 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyZZ(qs_data_p_t qs, const qb
                 }
             })
         if (diff) {
-            CPUVectorPolicyBase::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+            derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
         }
     }
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                              index_t dim, bool diff) {
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                        calc_type val, index_t dim, bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
     auto a = std::cos(val / 2);
     auto b = -std::sin(val / 2);
@@ -185,15 +186,15 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRX(qs_data_p_t qs, const qb
         b = -0.5 * std::cos(val / 2);
     }
     std::vector<std::vector<py_qs_data_t>> m{{{a, 0}, {0, b}}, {{0, b}, {a, 0}}};
-    ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
-        SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
     }
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                              index_t dim, bool diff) {
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                        calc_type val, index_t dim, bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
     auto a = std::cos(val / 2);
     auto b = std::sin(val / 2);
@@ -202,15 +203,15 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRY(qs_data_p_t qs, const qb
         b = 0.5 * std::cos(val / 2);
     }
     std::vector<std::vector<py_qs_data_t>> m{{{a, 0}, {-b, 0}}, {{b, 0}, {a, 0}}};
-    ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
-        SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
     }
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                              index_t dim, bool diff) {
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                        calc_type val, index_t dim, bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
     auto a = std::cos(val / 2);
     auto b = std::sin(val / 2);
@@ -219,9 +220,9 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRZ(qs_data_p_t qs, const qb
         b = 0.5 * std::cos(val / 2);
     }
     std::vector<std::vector<py_qs_data_t>> m{{{a, -b}, {0, 0}}, {{0, 0}, {a, b}}};
-    ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
-        SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
     }
 }
 

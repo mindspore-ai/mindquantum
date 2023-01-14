@@ -15,14 +15,15 @@
 
 #include "core/parameter_resolver.hpp"
 #include "simulator/utils.hpp"
+#include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
+#include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
-
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
 void CPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des,
-                                                                   const qbits_t& objs, const qbits_t& ctrls,
-                                                                   const std::vector<std::vector<py_qs_data_t>>& gate,
-                                                                   index_t dim) {
+                                                                     const qbits_t& objs, const qbits_t& ctrls,
+                                                                     const std::vector<std::vector<py_qs_data_t>>& gate,
+                                                                     index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         // clang-format off
@@ -67,10 +68,10 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t
     }
 }
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
-                                                                     const qbits_t& ctrls,
-                                                                     const std::vector<std::vector<py_qs_data_t>>& m,
-                                                                     index_t dim) {
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des,
+                                                                       qbit_t obj_qubit, const qbits_t& ctrls,
+                                                                       const std::vector<std::vector<py_qs_data_t>>& m,
+                                                                       index_t dim) {
     SingleQubitGateMask mask({obj_qubit}, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(

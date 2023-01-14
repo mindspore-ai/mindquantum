@@ -16,6 +16,8 @@
 #include "config/openmp.hpp"
 
 #include "simulator/utils.hpp"
+#include "simulator/vector/detail/gpu_vector_double_policy.cuh"
+#include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_policy.cuh"
 #include "thrust/device_ptr.h"
 #include "thrust/functional.h"
@@ -23,9 +25,9 @@
 
 namespace mindquantum::sim::vector::detail {
 
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
-                                                index_t dim) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                          index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
     thrust::counting_iterator<index_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
@@ -56,9 +58,9 @@ void GPUVectorPolicyBase<calc_type_>::ApplySWAP(qs_data_p_t qs, const qbits_t& o
     }
 }
 
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
-                                                 bool daggered, index_t dim) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                           bool daggered, index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
     thrust::counting_iterator<index_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
@@ -93,7 +95,7 @@ void GPUVectorPolicyBase<calc_type_>::ApplyISWAP(qs_data_p_t qs, const qbits_t& 
     }
 }
 
-template struct GPUVectorPolicyBase<float>;
-template struct GPUVectorPolicyBase<double>;
+template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
+template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;
 
 }  // namespace mindquantum::sim::vector::detail

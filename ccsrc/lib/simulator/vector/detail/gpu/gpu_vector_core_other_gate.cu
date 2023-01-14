@@ -16,6 +16,8 @@
 #include "config/openmp.hpp"
 
 #include "simulator/utils.hpp"
+#include "simulator/vector/detail/gpu_vector_double_policy.cuh"
+#include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_policy.cuh"
 #include "thrust/device_ptr.h"
 #include "thrust/functional.h"
@@ -23,21 +25,22 @@
 
 namespace mindquantum::sim::vector::detail {
 
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::ApplyH(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyH(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                       index_t dim) {
     std::vector<std::vector<py_qs_data_t>> m{{M_SQRT1_2, M_SQRT1_2}, {M_SQRT1_2, -M_SQRT1_2}};
-    ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
 }
 
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::ApplyGP(qs_data_p_t qs, qbit_t obj_qubit, const qbits_t& ctrls, calc_type val,
-                                              index_t dim, bool diff) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyGP(qs_data_p_t qs, qbit_t obj_qubit, const qbits_t& ctrls,
+                                                        calc_type val, index_t dim, bool diff) {
     auto c = std::exp(std::complex<calc_type>(0, -val));
     std::vector<std::vector<py_qs_data_t>> m = {{c, 0}, {0, c}};
-    ApplySingleQubitMatrix(qs, qs, obj_qubit, ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(qs, qs, obj_qubit, ctrls, m, dim);
 }
 
-template struct GPUVectorPolicyBase<float>;
-template struct GPUVectorPolicyBase<double>;
+template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
+template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;
 
 }  // namespace mindquantum::sim::vector::detail

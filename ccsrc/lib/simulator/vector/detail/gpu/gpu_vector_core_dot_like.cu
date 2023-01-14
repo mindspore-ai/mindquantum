@@ -14,16 +14,19 @@
 #include <thrust/transform_reduce.h>
 
 #include "config/openmp.hpp"
+
 #include "core/sparse/algo.hpp"
 #include "simulator/utils.hpp"
+#include "simulator/vector/detail/gpu_vector_double_policy.cuh"
+#include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_policy.cuh"
 #include "thrust/device_ptr.h"
 #include "thrust/functional.h"
 #include "thrust/inner_product.h"
 
 namespace mindquantum::sim::vector::detail {
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::Vdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim) -> py_qs_data_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::Vdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim) -> py_qs_data_t {
     thrust::device_ptr<qs_data_t> dev_bra(bra);
     thrust::device_ptr<qs_data_t> dev_ket(ket);
     qs_data_t res = thrust::inner_product(dev_bra, dev_bra + dim, dev_ket, qs_data_t(0, 0), thrust::plus<qs_data_t>(),
@@ -31,9 +34,10 @@ auto GPUVectorPolicyBase<calc_type_>::Vdot(qs_data_p_t bra, qs_data_p_t ket, ind
     return res;
 }
 
-template <typename calc_type_>
+template <typename derived_, typename calc_type_>
 template <index_t mask, index_t condi>
-auto GPUVectorPolicyBase<calc_type_>::ConditionVdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim) -> py_qs_data_t {
+auto GPUVectorPolicyBase<derived_, calc_type_>::ConditionVdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim)
+    -> py_qs_data_t {
     thrust::counting_iterator<size_t> i(0);
     return thrust::transform_reduce(
         i, i + dim,
@@ -47,9 +51,9 @@ auto GPUVectorPolicyBase<calc_type_>::ConditionVdot(qs_data_p_t bra, qs_data_p_t
         qs_data_t(0, 0), thrust::plus<qs_data_t>());
 }
 
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::OneStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit, index_t dim)
-    -> py_qs_data_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::OneStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit,
+                                                             index_t dim) -> py_qs_data_t {
     SingleQubitGateMask mask({obj_qubit}, {});
     auto obj_high_mask = mask.obj_high_mask;
     auto obj_low_mask = mask.obj_low_mask;
@@ -64,9 +68,9 @@ auto GPUVectorPolicyBase<calc_type_>::OneStateVdot(qs_data_p_t bra, qs_data_p_t 
         qs_data_t(0, 0), thrust::plus<qs_data_t>());
 }
 
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::ZeroStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit, index_t dim)
-    -> py_qs_data_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::ZeroStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit,
+                                                              index_t dim) -> py_qs_data_t {
     SingleQubitGateMask mask({obj_qubit}, {});
     auto obj_high_mask = mask.obj_high_mask;
     auto obj_low_mask = mask.obj_low_mask;
@@ -80,9 +84,9 @@ auto GPUVectorPolicyBase<calc_type_>::ZeroStateVdot(qs_data_p_t bra, qs_data_p_t
         qs_data_t(0, 0), thrust::plus<qs_data_t>());
 }
 
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
-                                                qs_data_p_t vec, index_t dim) -> qs_data_p_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
+                                                          qs_data_p_t vec, index_t dim) -> qs_data_p_t {
     if (dim != a->dim_) {
         throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
     }
@@ -100,10 +104,10 @@ auto GPUVectorPolicyBase<calc_type_>::CsrDotVec(const std::shared_ptr<sparse::Cs
     }
     return out;
 }
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
-                                                const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& b,
-                                                qs_data_p_t vec, index_t dim) -> qs_data_p_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
+                                                          const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& b,
+                                                          qs_data_p_t vec, index_t dim) -> qs_data_p_t {
     if ((dim != a->dim_) || (dim != b->dim_)) {
         throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
     }
@@ -122,7 +126,7 @@ auto GPUVectorPolicyBase<calc_type_>::CsrDotVec(const std::shared_ptr<sparse::Cs
     return out;
 }
 
-template struct GPUVectorPolicyBase<float>;
-template struct GPUVectorPolicyBase<double>;
+template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
+template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;
 
 }  // namespace mindquantum::sim::vector::detail

@@ -15,8 +15,9 @@
 
 #include "core/parameter_resolver.hpp"
 #include "simulator/utils.hpp"
+#include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
+#include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
-
 namespace mindquantum::sim::vector::detail {
 
 template <typename derived_, typename calc_type_>
@@ -90,7 +91,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t qs, const VT<p
 
 template <typename derived_, typename calc_type_>
 auto CPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham,
-                                                 index_t dim) -> qs_data_p_t {
+                                                           index_t dim) -> qs_data_p_t {
     qs_data_p_t out = CPUVectorPolicyBase::InitState(dim, false);
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);

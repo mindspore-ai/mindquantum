@@ -16,14 +16,16 @@
 #include "config/openmp.hpp"
 
 #include "simulator/utils.hpp"
+#include "simulator/vector/detail/gpu_vector_double_policy.cuh"
+#include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_policy.cuh"
 #include "thrust/device_ptr.h"
 #include "thrust/functional.h"
 #include "thrust/inner_product.h"
 
 namespace mindquantum::sim::vector::detail {
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::InitState(index_t dim, bool zero_state) -> qs_data_p_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::InitState(index_t dim, bool zero_state) -> qs_data_p_t {
     qs_data_p_t qs;
     cudaMalloc((void**) &qs, sizeof(qs_data_t) * dim);  // NOLINT
     cudaMemset(qs, 0, sizeof(qs_data_t) * dim);
@@ -34,22 +36,22 @@ auto GPUVectorPolicyBase<calc_type_>::InitState(index_t dim, bool zero_state) ->
     return qs;
 }
 
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::FreeState(qs_data_p_t qs) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::FreeState(qs_data_p_t qs) {
     if (qs != nullptr) {
         cudaFree(qs);
     }
 }
 
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::Reset(qs_data_p_t qs, index_t dim) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t qs, index_t dim) {
     cudaMemset(qs, 0, sizeof(qs_data_t) * dim);
     qs_data_t one(1, 0);
     cudaMemcpy(qs, &one, sizeof(qs_data_t), cudaMemcpyHostToDevice);
 }
 
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit) {
     if (n_qubits > q_limit) {
         n_qubits = q_limit;
     }
@@ -63,8 +65,8 @@ void GPUVectorPolicyBase<calc_type_>::Display(qs_data_p_t qs, qbit_t n_qubits, q
     free(h_qs);
 }
 
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim) {
     thrust::counting_iterator<index_t> i(0);
     thrust::for_each(i, i + dim, [=] __device__(index_t i) {
         if ((i & ctrl_mask) != ctrl_mask) {
@@ -73,25 +75,25 @@ void GPUVectorPolicyBase<calc_type_>::SetToZeroExcept(qs_data_p_t qs, index_t ct
     });
 }
 
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::GetQS(qs_data_p_t qs, index_t dim) -> py_qs_datas_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::GetQS(qs_data_p_t qs, index_t dim) -> py_qs_datas_t {
     py_qs_datas_t out(dim);
     cudaMemcpy(out.data(), qs, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
     return out;
 }
 
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, index_t dim) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, index_t dim) {
     if (qs_out.size() != dim) {
         throw std::invalid_argument("state size not match");
     }
     cudaMemcpy(qs, qs_out.data(), sizeof(qs_data_t) * dim, cudaMemcpyHostToDevice);
 }
 
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham,
-                                                 index_t dim) -> qs_data_p_t {
-    qs_data_p_t out = GPUVectorPolicyBase::InitState(dim, false);
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham,
+                                                           index_t dim) -> qs_data_p_t {
+    qs_data_p_t out = derived::InitState(dim, false);
     for (const auto& [pauli_string, coeff] : ham) {
         auto mask = GenPauliMask(pauli_string);
         auto mask_f = mask.mask_x | mask.mask_y;
@@ -107,13 +109,13 @@ auto GPUVectorPolicyBase<calc_type_>::ApplyTerms(qs_data_p_t qs, const std::vect
                     auto axis2power = __popcll(i & mask_z);
                     auto axis3power = __popcll(i & mask_y);
                     auto idx = (num_y + 2 * axis3power + 2 * axis2power) & 3;
-                    auto c = GPUVectorPolicyBase::qs_data_t(1, 0);
+                    auto c = qs_data_t(1, 0);
                     if (idx == 1) {
-                        c = GPUVectorPolicyBase::qs_data_t(0, 1);
+                        c = qs_data_t(0, 1);
                     } else if (idx == 2) {
-                        c = GPUVectorPolicyBase::qs_data_t(-1, 0);
+                        c = qs_data_t(-1, 0);
                     } else if (idx == 3) {
-                        c = GPUVectorPolicyBase::qs_data_t(0, -1);
+                        c = qs_data_t(0, -1);
                     }
                     out[j] += qs[i] * this_coeff * c;
                     if (i != j) {
@@ -128,15 +130,15 @@ auto GPUVectorPolicyBase<calc_type_>::ApplyTerms(qs_data_p_t qs, const std::vect
     }
     return out;
 };
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::Copy(qs_data_p_t qs, index_t dim) -> qs_data_p_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::Copy(qs_data_p_t qs, index_t dim) -> qs_data_p_t {
     qs_data_p_t out;
     cudaMalloc((void**) &out, sizeof(qs_data_t) * dim);  // NOLINT
     cudaMemcpy(out, qs, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToDevice);
     return out;
 };
 
-template struct GPUVectorPolicyBase<float>;
-template struct GPUVectorPolicyBase<double>;
+template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
+template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;
 
 }  // namespace mindquantum::sim::vector::detail

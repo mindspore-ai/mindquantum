@@ -15,12 +15,13 @@
 
 #include "core/parameter_resolver.hpp"
 #include "simulator/utils.hpp"
+#include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
+#include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
-
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
 void CPUVectorPolicyBase<derived_, calc_type_>::ApplyZLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
-                                                 qs_data_t val, index_t dim) {
+                                                           qs_data_t val, index_t dim) {
     SingleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
@@ -40,38 +41,40 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyZLike(qs_data_p_t qs, const
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::ApplyZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    ApplyZLike(qs, objs, ctrls, -1, dim);
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                       index_t dim) {
+    derived::ApplyZLike(qs, objs, ctrls, -1, dim);
 }
 
 template <typename derived_, typename calc_type_>
 void CPUVectorPolicyBase<derived_, calc_type_>::ApplySGate(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
-                                                 index_t dim) {
-    ApplyZLike(qs, objs, ctrls, qs_data_t(0, 1), dim);
+                                                           index_t dim) {
+    derived::ApplyZLike(qs, objs, ctrls, qs_data_t(0, 1), dim);
 }
 
 template <typename derived_, typename calc_type_>
 void CPUVectorPolicyBase<derived_, calc_type_>::ApplySdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
-                                                index_t dim) {
-    ApplyZLike(qs, objs, ctrls, qs_data_t(0, -1), dim);
+                                                          index_t dim) {
+    derived::ApplyZLike(qs, objs, ctrls, qs_data_t(0, -1), dim);
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::ApplyT(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    ApplyZLike(qs, objs, ctrls, qs_data_t(1, 1) / static_cast<calc_type>(std::sqrt(2.0)), dim);
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyT(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                       index_t dim) {
+    derived::ApplyZLike(qs, objs, ctrls, qs_data_t(1, 1) / static_cast<calc_type>(std::sqrt(2.0)), dim);
 }
 
 template <typename derived_, typename calc_type_>
 void CPUVectorPolicyBase<derived_, calc_type_>::ApplyTdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
-                                                index_t dim) {
-    ApplyZLike(qs, objs, ctrls, qs_data_t(1, -1) / static_cast<calc_type>(std::sqrt(2.0)), dim);
+                                                          index_t dim) {
+    derived::ApplyZLike(qs, objs, ctrls, qs_data_t(1, -1) / static_cast<calc_type>(std::sqrt(2.0)), dim);
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::ApplyPS(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                              index_t dim, bool diff) {
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyPS(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                        calc_type val, index_t dim, bool diff) {
     if (!diff) {
-        ApplyZLike(qs, objs, ctrls, qs_data_t(std::cos(val), std::sin(val)), dim);
+        derived::ApplyZLike(qs, objs, ctrls, qs_data_t(std::cos(val), std::sin(val)), dim);
     } else {
         SingleQubitGateMask mask(objs, ctrls);
         auto e = -std::sin(val) + IMAGE_I * std::cos(val);
@@ -93,7 +96,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyPS(qs_data_p_t qs, const qb
                         qs[j] *= e;
                     }
                 })
-            CPUVectorPolicyBase::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+            derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
         }
     }
 }

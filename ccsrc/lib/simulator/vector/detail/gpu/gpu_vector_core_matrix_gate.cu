@@ -16,17 +16,19 @@
 #include "config/openmp.hpp"
 
 #include "simulator/utils.hpp"
+#include "simulator/vector/detail/gpu_vector_double_policy.cuh"
+#include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_policy.cuh"
 #include "thrust/device_ptr.h"
 #include "thrust/functional.h"
 #include "thrust/inner_product.h"
 namespace mindquantum::sim::vector::detail {
 
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
-                                                           const qbits_t& ctrls,
-                                                           const std::vector<std::vector<py_qs_data_t>>& m,
-                                                           index_t dim) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des,
+                                                                     const qbits_t& objs, const qbits_t& ctrls,
+                                                                     const std::vector<std::vector<py_qs_data_t>>& m,
+                                                                     index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
     qs_data_t m00 = m[0][0];
     qs_data_t m01 = m[0][1];
@@ -89,11 +91,11 @@ void GPUVectorPolicyBase<calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_d
         });
     }
 }
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
-                                                             const qbits_t& ctrls,
-                                                             const std::vector<std::vector<py_qs_data_t>>& m,
-                                                             index_t dim) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des,
+                                                                       qbit_t obj_qubit, const qbits_t& ctrls,
+                                                                       const std::vector<std::vector<py_qs_data_t>>& m,
+                                                                       index_t dim) {
     SingleQubitGateMask mask({obj_qubit}, ctrls);
     qs_data_t m00 = m[0][0];
     qs_data_t m01 = m[0][1];
@@ -127,20 +129,21 @@ void GPUVectorPolicyBase<calc_type_>::ApplySingleQubitMatrix(qs_data_p_t src, qs
     }
 }
 
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
-                                                      const qbits_t& ctrls,
-                                                      const std::vector<std::vector<py_qs_data_t>>& m, index_t dim) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
+                                                                const qbits_t& ctrls,
+                                                                const std::vector<std::vector<py_qs_data_t>>& m,
+                                                                index_t dim) {
     if (objs.size() == 1) {
-        ApplySingleQubitMatrix(src, des, objs[0], ctrls, m, dim);
+        derived::ApplySingleQubitMatrix(src, des, objs[0], ctrls, m, dim);
     } else if (objs.size() == 2) {
-        ApplyTwoQubitsMatrix(src, des, objs, ctrls, m, dim);
+        derived::ApplyTwoQubitsMatrix(src, des, objs, ctrls, m, dim);
     } else {
         throw std::runtime_error("Can not custom " + std::to_string(objs.size()) + " qubits gate for gpu backend.");
     }
 }
 
-template struct GPUVectorPolicyBase<float>;
-template struct GPUVectorPolicyBase<double>;
+template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
+template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;
 
 }  // namespace mindquantum::sim::vector::detail

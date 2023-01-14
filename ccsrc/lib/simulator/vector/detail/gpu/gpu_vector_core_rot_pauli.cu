@@ -16,15 +16,17 @@
 #include "config/openmp.hpp"
 
 #include "simulator/utils.hpp"
+#include "simulator/vector/detail/gpu_vector_double_policy.cuh"
+#include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_policy.cuh"
 #include "thrust/device_ptr.h"
 #include "thrust/functional.h"
 #include "thrust/inner_product.h"
 
 namespace mindquantum::sim::vector::detail {
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::ApplyRX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                              index_t dim, bool diff) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyRX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                        calc_type val, index_t dim, bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
     auto a = static_cast<calc_type>(std::cos(val / 2));
     auto b = static_cast<calc_type>(-std::sin(val / 2));
@@ -33,16 +35,15 @@ void GPUVectorPolicyBase<calc_type_>::ApplyRX(qs_data_p_t qs, const qbits_t& obj
         b = static_cast<calc_type>(-0.5 * std::cos(val / 2));
     }
     std::vector<std::vector<py_qs_data_t>> m{{{a, 0}, {0, b}}, {{0, b}, {a, 0}}};
-    ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
-        SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
     }
 }
 
-
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::ApplyRY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                              index_t dim, bool diff) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyRY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                        calc_type val, index_t dim, bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
     auto a = static_cast<calc_type>(std::cos(val / 2));
     auto b = static_cast<calc_type>(std::sin(val / 2));
@@ -51,15 +52,15 @@ void GPUVectorPolicyBase<calc_type_>::ApplyRY(qs_data_p_t qs, const qbits_t& obj
         b = static_cast<calc_type>(0.5 * std::cos(val / 2));
     }
     std::vector<std::vector<py_qs_data_t>> m{{{a, 0}, {-b, 0}}, {{b, 0}, {a, 0}}};
-    ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
-        SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
     }
 }
 
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::ApplyRZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                              index_t dim, bool diff) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyRZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                        calc_type val, index_t dim, bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
     auto a = static_cast<calc_type>(std::cos(val / 2));
     auto b = static_cast<calc_type>(std::sin(val / 2));
@@ -68,14 +69,14 @@ void GPUVectorPolicyBase<calc_type_>::ApplyRZ(qs_data_p_t qs, const qbits_t& obj
         b = static_cast<calc_type>(0.5 * std::cos(val / 2));
     }
     std::vector<std::vector<py_qs_data_t>> m{{{a, -b}, {0, 0}}, {{0, 0}, {a, b}}};
-    ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
-        SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
     }
 }
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                              index_t dim, bool diff) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                        calc_type val, index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
     thrust::counting_iterator<index_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
@@ -121,14 +122,14 @@ void GPUVectorPolicyBase<calc_type_>::ApplyZZ(qs_data_p_t qs, const qbits_t& obj
             }
         });
         if (diff) {
-            GPUVectorPolicyBase::SetToZeroExcept(qs, ctrl_mask, dim);
+            derived::SetToZeroExcept(qs, ctrl_mask, dim);
         }
     }
 }
 
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::ApplyXX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                              index_t dim, bool diff) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyXX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                        calc_type val, index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
     thrust::counting_iterator<index_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
@@ -180,14 +181,14 @@ void GPUVectorPolicyBase<calc_type_>::ApplyXX(qs_data_p_t qs, const qbits_t& obj
             }
         });
         if (diff) {
-            GPUVectorPolicyBase::SetToZeroExcept(qs, ctrl_mask, dim);
+            derived::SetToZeroExcept(qs, ctrl_mask, dim);
         }
     }
 }
 
-template <typename calc_type_>
-void GPUVectorPolicyBase<calc_type_>::ApplyYY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                              index_t dim, bool diff) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyYY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                        calc_type val, index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
     thrust::counting_iterator<index_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
@@ -239,12 +240,12 @@ void GPUVectorPolicyBase<calc_type_>::ApplyYY(qs_data_p_t qs, const qbits_t& obj
             }
         });
         if (diff) {
-            GPUVectorPolicyBase::SetToZeroExcept(qs, ctrl_mask, dim);
+            derived::SetToZeroExcept(qs, ctrl_mask, dim);
         }
     }
 }
 
-template struct GPUVectorPolicyBase<float>;
-template struct GPUVectorPolicyBase<double>;
+template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
+template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;
 
 }  // namespace mindquantum::sim::vector::detail

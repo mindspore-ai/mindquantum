@@ -16,17 +16,19 @@
 #include "config/openmp.hpp"
 
 #include "simulator/utils.hpp"
+#include "simulator/vector/detail/gpu_vector_double_policy.cuh"
+#include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_policy.cuh"
 #include "thrust/device_ptr.h"
 #include "thrust/functional.h"
 #include "thrust/inner_product.h"
 
 namespace mindquantum::sim::vector::detail {
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::ExpectDiffTwoQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                                const qbits_t& ctrls,
-                                                                const std::vector<py_qs_datas_t>& m, index_t dim)
-    -> qs_data_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket,
+                                                                          const qbits_t& objs, const qbits_t& ctrls,
+                                                                          const std::vector<py_qs_datas_t>& m,
+                                                                          index_t dim) -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
     qs_data_t m00 = m[0][0];
     qs_data_t m01 = m[0][1];
@@ -98,11 +100,11 @@ auto GPUVectorPolicyBase<calc_type_>::ExpectDiffTwoQubitsMatrix(qs_data_p_t bra,
         qs_data_t(0, 0), thrust::plus<qs_data_t>());
 }
 
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                                  const qbits_t& ctrls,
-                                                                  const std::vector<py_qs_datas_t>& m, index_t dim)
-    -> qs_data_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p_t ket,
+                                                                            const qbits_t& objs, const qbits_t& ctrls,
+                                                                            const std::vector<py_qs_datas_t>& m,
+                                                                            index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
     qs_data_t m00 = m[0][0];
     qs_data_t m01 = m[0][1];
@@ -167,53 +169,58 @@ auto GPUVectorPolicyBase<calc_type_>::ExpectDiffSingleQubitMatrix(qs_data_p_t br
         qs_data_t(0, 0), thrust::plus<qs_data_t>());
 }
 
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::ExpectDiffMatrixGate(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                           const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m,
-                                                           index_t dim) -> qs_data_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffMatrixGate(qs_data_p_t bra, qs_data_p_t ket,
+                                                                     const qbits_t& objs, const qbits_t& ctrls,
+                                                                     const std::vector<py_qs_datas_t>& m, index_t dim)
+    -> qs_data_t {
     if (objs.size() == 1) {
-        return ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, m, dim);
+        return derived::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, m, dim);
     }
     if (objs.size() == 2) {
-        return ExpectDiffTwoQubitsMatrix(bra, ket, objs, ctrls, m, dim);
+        return derived::ExpectDiffTwoQubitsMatrix(bra, ket, objs, ctrls, m, dim);
     }
     throw std::runtime_error("Expectation of " + std::to_string(objs.size()) + " not implement for gpu backend.");
 }
 
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                   const qbits_t& ctrls, calc_type val, index_t dim) -> qs_data_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                                             const qbits_t& ctrls, calc_type val, index_t dim)
+    -> qs_data_t {
     auto c = static_cast<calc_type>(-0.5 * std::sin(val / 2));
     auto is = static_cast<calc_type>(0.5 * std::cos(val / 2)) * qs_data_t(0, -1);
     std::vector<py_qs_datas_t> gate = {{c, is}, {is, c}};
-    return GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
+    return derived::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
 }
 
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                   const qbits_t& ctrls, calc_type val, index_t dim) -> qs_data_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                                             const qbits_t& ctrls, calc_type val, index_t dim)
+    -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
     auto c = static_cast<calc_type>(-0.5 * std::sin(val / 2));
     auto s = static_cast<calc_type>(0.5 * std::cos(val / 2));
     std::vector<py_qs_datas_t> gate = {{c, -s}, {s, c}};
-    return GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
+    return derived::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
 }
 
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::ExpectDiffRZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                   const qbits_t& ctrls, calc_type val, index_t dim) -> qs_data_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                                             const qbits_t& ctrls, calc_type val, index_t dim)
+    -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
     auto c = static_cast<calc_type>(-0.5 * std::sin(val / 2));
     auto s = static_cast<calc_type>(0.5 * std::cos(val / 2));
     auto e0 = c + qs_data_t(0, -1) * s;
     auto e1 = c + qs_data_t(0, 1) * s;
     std::vector<py_qs_datas_t> gate = {{e0, 0}, {0, e1}};
-    return GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
+    return derived::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
 }
 
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::ExpectDiffXX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                   const qbits_t& ctrls, calc_type val, index_t dim) -> qs_data_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffXX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                                             const qbits_t& ctrls, calc_type val, index_t dim)
+    -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
     auto c = static_cast<calc_type>(-std::sin(val));
     auto s = static_cast<calc_type>(std::cos(val)) * qs_data_t(0, -1);
@@ -271,9 +278,10 @@ auto GPUVectorPolicyBase<calc_type_>::ExpectDiffXX(qs_data_p_t bra, qs_data_p_t 
         qs_data_t(0, 0), thrust::plus<qs_data_t>());
 }
 
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::ExpectDiffYY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                   const qbits_t& ctrls, calc_type val, index_t dim) -> qs_data_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffYY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                                             const qbits_t& ctrls, calc_type val, index_t dim)
+    -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
     auto c = static_cast<calc_type>(-std::sin(val));
     auto s = static_cast<calc_type>(std::cos(val)) * qs_data_t(0, 1);
@@ -331,9 +339,10 @@ auto GPUVectorPolicyBase<calc_type_>::ExpectDiffYY(qs_data_p_t bra, qs_data_p_t 
         qs_data_t(0, 0), thrust::plus<qs_data_t>());
 }
 
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::ExpectDiffZZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                   const qbits_t& ctrls, calc_type val, index_t dim) -> qs_data_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffZZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                                             const qbits_t& ctrls, calc_type val, index_t dim)
+    -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
     auto c = static_cast<calc_type>(-std::sin(val));
     auto s = static_cast<calc_type>(std::cos(val));
@@ -385,19 +394,21 @@ auto GPUVectorPolicyBase<calc_type_>::ExpectDiffZZ(qs_data_p_t bra, qs_data_p_t 
         qs_data_t(0, 0), thrust::plus<qs_data_t>());
 }
 
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::ExpectDiffGP(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                   const qbits_t& ctrls, calc_type val, index_t dim) -> qs_data_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffGP(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                                             const qbits_t& ctrls, calc_type val, index_t dim)
+    -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
     auto e = std::complex<calc_type>(0, -1);
     e *= std::exp(std::complex<calc_type>(0, -val));
     std::vector<py_qs_datas_t> gate = {{e, 0}, {0, e}};
-    return GPUVectorPolicyBase::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
+    return derived::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, gate, dim);
 }
 
-template <typename calc_type_>
-auto GPUVectorPolicyBase<calc_type_>::ExpectDiffPS(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                   const qbits_t& ctrls, calc_type val, index_t dim) -> qs_data_t {
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffPS(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                                             const qbits_t& ctrls, calc_type val, index_t dim)
+    -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
     auto e = static_cast<calc_type>(std::cos(val)) + qs_data_t(0, 1) * static_cast<calc_type>(std::sin(val));
     thrust::counting_iterator<size_t> l(0);
@@ -453,7 +464,7 @@ auto GPUVectorPolicyBase<calc_type_>::ExpectDiffPS(qs_data_p_t bra, qs_data_p_t 
         qs_data_t(0, 0), thrust::plus<qs_data_t>());
 }
 
-template struct GPUVectorPolicyBase<float>;
-template struct GPUVectorPolicyBase<double>;
+template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
+template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;
 
 }  // namespace mindquantum::sim::vector::detail

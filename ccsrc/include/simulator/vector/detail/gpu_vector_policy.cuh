@@ -27,9 +27,12 @@
 #include "thrust/functional.h"
 
 namespace mindquantum::sim::vector::detail {
+struct GPUVectorPolicyFloat;
+struct GPUVectorPolicyDouble;
 
-template <typename calc_type_>
+template <typename derived_, typename calc_type_>
 struct GPUVectorPolicyBase {
+    using derived = derived_;
     using calc_type = calc_type_;
     using qs_data_t = thrust::complex<calc_type>;
     using qs_data_p_t = qs_data_t*;

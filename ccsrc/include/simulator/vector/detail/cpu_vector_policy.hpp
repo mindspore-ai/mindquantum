@@ -31,6 +31,7 @@ struct CPUVectorPolicyAvxDouble;
 
 template <typename derived_, typename calc_type_>
 struct CPUVectorPolicyBase {
+    using derived = derived_;
     using calc_type = calc_type_;
     using qs_data_t = std::complex<calc_type>;
     using qs_data_p_t = qs_data_t*;

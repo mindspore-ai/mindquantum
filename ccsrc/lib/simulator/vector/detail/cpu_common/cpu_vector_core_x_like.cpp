@@ -15,12 +15,13 @@
 
 #include "core/parameter_resolver.hpp"
 #include "simulator/utils.hpp"
+#include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
+#include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
-
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
 void CPUVectorPolicyBase<derived_, calc_type_>::ApplyXLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
-                                                 qs_data_t v1, qs_data_t v2, index_t dim) {
+                                                           qs_data_t v1, qs_data_t v2, index_t dim) {
     SingleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
@@ -46,13 +47,15 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyXLike(qs_data_p_t qs, const
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::ApplyX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    ApplyXLike(qs, objs, ctrls, 1, 1, dim);
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                       index_t dim) {
+    derived::ApplyXLike(qs, objs, ctrls, 1, 1, dim);
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::ApplyY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    ApplyXLike(qs, objs, ctrls, IMAGE_MI, IMAGE_I, dim);
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                       index_t dim) {
+    derived::ApplyXLike(qs, objs, ctrls, IMAGE_MI, IMAGE_I, dim);
 }
 template struct CPUVectorPolicyBase<CPUVectorPolicyAvxFloat, float>;
 template struct CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double>;
