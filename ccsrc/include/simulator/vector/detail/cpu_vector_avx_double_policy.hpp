@@ -16,6 +16,9 @@
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 
 namespace mindquantum::sim::vector::detail {
-struct CPUVectorPolicyAvxDouble : public CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double> {};
+struct CPUVectorPolicyAvxDouble : public CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double> {
+    void ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit, const qbits_t& ctrls,
+                                const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
+};
 }  // namespace mindquantum::sim::vector::detail
 #endif
