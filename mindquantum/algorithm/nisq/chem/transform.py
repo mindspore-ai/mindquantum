@@ -17,13 +17,14 @@ Module implementing a conversion from fermion type operators to qubit type opera
 Thus can be simulated in quantum computer.
 """
 
+from mindquantum import mqbackend
+
 # pylint: disable=no-member
 from mindquantum.core.operators.utils import (
     FermionOperator,
     QubitOperator,
     count_qubits,
 )
-from mindquantum import mqbackend
 
 
 class Transform:
@@ -191,7 +192,8 @@ class Transform:
         if not isinstance(self.operator, FermionOperator):
             raise TypeError('This method can be only applied for FermionOperator.')
         return QubitOperator(
-            getattr(mqbackend, self.arithmetic_type).transform.bravyi_kitaev(self.operator, self.n_qubits))
+            getattr(mqbackend, self.arithmetic_type).transform.bravyi_kitaev(self.operator, self.n_qubits)
+        )
 
     def bravyi_kitaev_superfast(self):
         r"""
@@ -229,7 +231,8 @@ class Transform:
         if not isinstance(self.operator, FermionOperator):
             raise TypeError('This method can be only applied for FermionOperator.')
         return QubitOperator(
-            getattr(mqbackend, self.arithmetic_type).transform.ternary_tree(self.operator, self.n_qubits))
+            getattr(mqbackend, self.arithmetic_type).transform.ternary_tree(self.operator, self.n_qubits)
+        )
 
     def reversed_jordan_wigner(self):
         """
@@ -242,4 +245,5 @@ class Transform:
             raise TypeError('This method can be only applied for QubitOperator.')
 
         return FermionOperator(
-            getattr(mqbackend, self.arithmetic_type).transform.reverse_jordan_wigner(self.operator, self.n_qubits))
+            getattr(mqbackend, self.arithmetic_type).transform.reverse_jordan_wigner(self.operator, self.n_qubits)
+        )
