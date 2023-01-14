@@ -22,7 +22,7 @@ force_at_least_cxx17_workaround(mqsim_common)
 append_to_property(mq_install_targets GLOBAL mqsim_common)
 
 add_library(mqsim_vector_cpu STATIC)
-target_link_libraries(mqsim_vector_cpu PUBLIC mqsim_common)
+target_link_libraries(mqsim_vector_cpu PUBLIC mqsim_common intrin_flag_CXX)
 force_at_least_cxx17_workaround(mqsim_vector_cpu)
 append_to_property(mq_install_targets GLOBAL mqsim_vector_cpu)
 

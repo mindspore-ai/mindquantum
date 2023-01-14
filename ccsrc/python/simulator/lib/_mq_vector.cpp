@@ -14,13 +14,14 @@
 
 #include <pybind11/pybind11.h>
 
-#include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
-#include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
-#include "simulator/vector/detail/cpu_vector_policy.hpp"
 #ifdef __CUDACC__
 #    include "simulator/vector/detail/gpu_vector_double_policy.cuh"
 #    include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #    include "simulator/vector/detail/gpu_vector_policy.cuh"
+#else
+#    include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_policy.hpp"
 #endif
 
 #include "python/vector/bind_vec_state.h"

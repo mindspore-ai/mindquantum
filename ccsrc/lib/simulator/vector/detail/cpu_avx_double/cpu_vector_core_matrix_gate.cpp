@@ -16,7 +16,6 @@
 #include "core/parameter_resolver.hpp"
 #include "simulator/utils.hpp"
 #include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
-#include "simulator/cintrin.hpp"
 
 namespace mindquantum::sim::vector::detail {
 void CPUVectorPolicyAvxDouble::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
