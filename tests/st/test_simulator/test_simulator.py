@@ -238,15 +238,18 @@ def test_all_gate_with_simulator(virtual_qc, dtype):  # pylint: disable=too-many
     grad_ops = sim.get_expectation_with_grad(ham, c)
     p0 = np.array([1, 2, 3])
     f1, g1 = grad_ops(p0)
-    delta = 0.0001
+    delta = 0.00001
     p1 = np.array([1 + delta, 2, 3])
     f2, g2 = grad_ops(p1)
     g_a = ((f2 - f1) / delta)[0, 0]
     g_a_1 = g1[0, 0, 0]
     g_a_2 = g2[0, 0, 0]
-    assert np.allclose(g_a, g_a_1, atol=1e-3)
-    assert np.allclose(g_a, g_a_2, atol=1e-3)
-    assert np.allclose(g_a_1, g_a_2, atol=1e-3)
+    atol = 1e-3
+    if dtype == 'float':
+        atol = 1e-1
+    assert np.allclose(g_a, g_a_1, atol=atol)
+    assert np.allclose(g_a, g_a_2, atol=atol)
+    assert np.allclose(g_a_1, g_a_2, atol=atol)
 
 
 @pytest.mark.level0

@@ -18,6 +18,5 @@
 
 # lint_cmake: -whitespace/indent
 
-target_sources(
-  mqsim_vector_cpu
-  PRIVATE ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_matrix_gate.cpp)
+target_sources(mqsim_vector_cpu PRIVATE ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_matrix_gate.cpp
+                                        ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_gate_expect.cpp)
