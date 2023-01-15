@@ -13,8 +13,13 @@
 //   limitations under the License.
 
 #include "core/parameter_resolver.hpp"
+#ifdef __x86_64__
 #include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
 #include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
+#elif defined(__amd64)
+#include "simulator/vector/detail/cpu_vector_arm_double_policy.hpp"
+#include "simulator/vector/detail/cpu_vector_arm_float_policy.hpp"
+#endif
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 namespace mindquantum::sim::vector::detail {
 
@@ -33,7 +38,12 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyGP(qs_data_p_t qs, qbit_t o
     ApplySingleQubitMatrix(qs, qs, obj_qubit, ctrls, m, dim);
 }
 
+#ifdef __x86_64__
 template struct CPUVectorPolicyBase<CPUVectorPolicyAvxFloat, float>;
 template struct CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double>;
+#elif defined(__amd64)
+template struct CPUVectorPolicyBase<CPUVectorPolicyArmFloat, float>;
+template struct CPUVectorPolicyBase<CPUVectorPolicyArmDouble, double>;
+#endif
 
 }  // namespace mindquantum::sim::vector::detail

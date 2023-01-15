@@ -16,8 +16,13 @@
 
 #include "core/parameter_resolver.hpp"
 #include "simulator/utils.hpp"
+#ifdef __x86_64__
 #include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
 #include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
+#elif defined(__amd64)
+#include "simulator/vector/detail/cpu_vector_arm_double_policy.hpp"
+#include "simulator/vector/detail/cpu_vector_arm_float_policy.hpp"
+#endif
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
@@ -406,7 +411,12 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffZZ(qs_data_p_t bra, qs
     }
     return {res_real, res_imag};
 };
+#ifdef __x86_64__
 template struct CPUVectorPolicyBase<CPUVectorPolicyAvxFloat, float>;
 template struct CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double>;
+#elif defined(__amd64)
+template struct CPUVectorPolicyBase<CPUVectorPolicyArmFloat, float>;
+template struct CPUVectorPolicyBase<CPUVectorPolicyArmDouble, double>;
+#endif
 
 }  // namespace mindquantum::sim::vector::detail
