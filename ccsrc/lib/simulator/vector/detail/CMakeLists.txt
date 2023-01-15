@@ -19,7 +19,11 @@
 # lint_cmake: -whitespace/indent
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/cpu_common)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/cpu_avx_double)
+
+if(X86_64)
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/cpu_avx_double)
+endif()
+
 if(ENABLE_CUDA)
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gpu)
 endif()

@@ -18,9 +18,13 @@
 #    include "simulator/vector/detail/gpu_vector_double_policy.cuh"
 #    include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #    include "simulator/vector/detail/gpu_vector_policy.cuh"
-#else
+#elif defined(__x86_64__)
 #    include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
 #    include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_policy.hpp"
+#elif defined(__amd64)
+#    include "simulator/vector/detail/cpu_vector_arm_double_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_arm_float_policy.hpp"
 #    include "simulator/vector/detail/cpu_vector_policy.hpp"
 #endif
 
@@ -30,9 +34,12 @@ PYBIND11_MODULE(_mq_vector, module) {
 #ifdef __CUDACC__
     using float_policy_t = mindquantum::sim::vector::detail::GPUVectorPolicyFloat;
     using double_policy_t = mindquantum::sim::vector::detail::GPUVectorPolicyDouble;
-#else
+#elif defined(__x86_64__)
     using float_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyAvxFloat;
     using double_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyAvxDouble;
+#elif defined(__amd64)
+    using float_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyArmFloat;
+    using double_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyArmDouble;
 #endif  // __CUDACC__
 
     using float_vec_sim = mindquantum::sim::vector::detail::VectorState<float_policy_t>;
