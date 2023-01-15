@@ -14,11 +14,11 @@
 
 #include "core/parameter_resolver.hpp"
 #ifdef __x86_64__
-#include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
-#include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
 #elif defined(__amd64)
-#include "simulator/vector/detail/cpu_vector_arm_double_policy.hpp"
-#include "simulator/vector/detail/cpu_vector_arm_float_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_arm_double_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_arm_float_policy.hpp"
 #endif
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 namespace mindquantum::sim::vector::detail {
