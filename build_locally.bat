@@ -79,7 +79,7 @@ rem ============================================================================
     if not defined value goto :arg_build
     if "!value:~0,1!" == "/" (
       :arg_build
-      echo %BASENAME%: option requires an argument -- '/B,/Build'
+      echo %PROGRAM%: option requires an argument -- '/B,/Build'
       goto :END
     )
     set build_dir=!value!
@@ -124,7 +124,7 @@ rem ============================================================================
     if not defined value goto :arg_cuda_arch
     if "!value:~0,1!" == "/" (
       :arg_cuda_arch
-      echo %BASENAME%: option requires an argument -- '/CudaArch'
+      echo %PROGRAM%: option requires an argument -- '/CudaArch'
       goto :END
     )
     call :ToCMakeList value
@@ -181,7 +181,7 @@ rem ============================================================================
     if not defined value goto :arg_build
     if "!value:~0,1!" == "/" (
       :arg_build
-      echo %BASENAME%: option requires an argument -- '/B,/Build'
+      echo %PROGRAM%: option requires an argument -- '/B,/Build'
       goto :END
     )
     set n_jobs=!value!
@@ -225,7 +225,7 @@ rem ============================================================================
     if not defined value goto :arg_prefix
     if "!value:~0,1!" == "/" (
       :arg_prefix
-      echo %BASENAME%: option requires an argument -- '/Prefix'
+      echo %PROGRAM%: option requires an argument -- '/Prefix'
       goto :END
     )
     set prefix_dir=!value!
@@ -257,7 +257,7 @@ rem ============================================================================
     if not defined value goto :arg_venv
     if "!value:~0,1!" == "/" (
       :arg_venv
-      echo %BASENAME%: option requires an argument -- '/Venv'
+      echo %PROGRAM%: option requires an argument -- '/Venv'
       goto :END
     )
     set python_venv_path=!value!
@@ -284,7 +284,6 @@ rem ============================================================================
 
 rem ============================================================================
 rem Locate python or python3
-
 call %SCRIPTDIR%\locate_python3.bat
 if %ERRORLEVEL% NEQ 0 exit /B %ERRORLEVEL%
 
@@ -524,12 +523,12 @@ exit /B 0
   echo without the need to modify PYTHONPATH.
   echo:
   echo Usage:
-  echo   %BASENAME% [options]
+  echo   %PROGRAM% [options]
   echo:
   echo Options:
   echo   /H,/Help            Show this help message and exit
   echo   /N                  Dry run; only print commands but do not execute them
-  echo   /Analyzer           Use the compiler static analysis tool during compilation (GCC & MSVC)
+  echo   /Analyzer           Use the compiler static analysis tool during compilation (GCC or MSVC)
   echo   /B,/Build [dir]     Specify build directory
   echo                       Defaults to: %build_dir%
   echo   /C,/Clean           Run make clean before building
@@ -582,10 +581,10 @@ exit /B 0
   echo NB: any unknown arguments will be passed onto the CMake during the configuration step.
   echo:
   echo Example calls:
-  echo %BASENAME% /B build
-  echo %BASENAME% /B build /gpu
-  echo %BASENAME% /B build /cxx /WithBoost
-  echo %BASENAME% /B build "-DCMAKE_CUDA_COMPILER^=/opt/cuda/bin/nvcc"
+  echo %PROGRAM% /B build
+  echo %PROGRAM% /B build /gpu
+  echo %PROGRAM% /B build /cxx /WithBoost
+  echo %PROGRAM% /B build "-DCMAKE_CUDA_COMPILER^=/opt/cuda/bin/nvcc"
   EXIT /B 0
 
 rem ============================================================================
