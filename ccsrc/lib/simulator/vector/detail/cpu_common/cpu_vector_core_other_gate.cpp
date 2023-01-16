@@ -22,7 +22,6 @@
 #endif
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 namespace mindquantum::sim::vector::detail {
-
 template <typename derived_, typename calc_type_>
 void CPUVectorPolicyBase<derived_, calc_type_>::ApplyH(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
                                                        index_t dim) {
@@ -45,5 +44,4 @@ template struct CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double>;
 template struct CPUVectorPolicyBase<CPUVectorPolicyArmFloat, float>;
 template struct CPUVectorPolicyBase<CPUVectorPolicyArmDouble, double>;
 #endif
-
 }  // namespace mindquantum::sim::vector::detail

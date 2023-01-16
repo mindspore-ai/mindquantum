@@ -11,6 +11,8 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
+#include <stdexcept>
+
 #include "config/openmp.hpp"
 
 #include "core/parameter_resolver.hpp"
@@ -24,9 +26,11 @@
 #endif
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 namespace mindquantum::sim::vector::detail {
-
 template <typename derived_, typename calc_type_>
 auto CPUVectorPolicyBase<derived_, calc_type_>::InitState(index_t dim, bool zero_state) -> qs_data_p_t {
+    if (dim == 0 || dim > (~0UL)) {
+        throw std::runtime_error("Dimension too large.");
+    }
     auto qs = reinterpret_cast<qs_data_p_t>(calloc(dim, sizeof(qs_data_t)));
     if (zero_state) {
         qs[0] = 1;
@@ -127,5 +131,4 @@ template struct CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double>;
 template struct CPUVectorPolicyBase<CPUVectorPolicyArmFloat, float>;
 template struct CPUVectorPolicyBase<CPUVectorPolicyArmDouble, double>;
 #endif
-
 }  // namespace mindquantum::sim::vector::detail

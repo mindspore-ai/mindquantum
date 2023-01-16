@@ -102,5 +102,4 @@ auto CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_d
     }
     return {res_real, res_imag};
 };
-
 }  // namespace mindquantum::sim::vector::detail

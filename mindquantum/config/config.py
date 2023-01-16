@@ -90,7 +90,7 @@ class Context:
         Returns:
             str, precision name of mindquantum.
         """
-        return _GLOBAL_CONFIG['DTYPE']
+        return _GLOBAL_CONFIG.get('DTYPE')
 
     @staticmethod
     def set_precision(atol):

@@ -23,7 +23,6 @@
 #endif
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 namespace mindquantum::sim::vector::detail {
-
 template <typename derived_, typename calc_type_>
 template <class binary_op>
 void CPUVectorPolicyBase<derived_, calc_type_>::ConditionalBinary(qs_data_p_t src, qs_data_p_t des, index_t mask,
