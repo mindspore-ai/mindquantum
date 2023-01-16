@@ -37,7 +37,11 @@ from mindquantum.core.operators import (
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_count_qubits(dtype):
-    """Test count_qubits"""
+    """
+    Feature: count_qubits.
+    Description: Test count_qubits.
+    Expectation: success.
+    """
     Context.set_dtype(dtype)
     qubit_op = QubitOperator("X1 Y2")
     assert count_qubits(qubit_op) == 3
@@ -55,7 +59,11 @@ def test_count_qubits(dtype):
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_normal_ordered(dtype):
-    """Test normal_ordered function"""
+    """
+    Feature: normal_ordered
+    Description: Test normal_ordered.
+    Expectation: success.
+    """
     Context.set_dtype(dtype)
     fermion_operator = FermionOperator("3 4^")
     assert str(normal_ordered(fermion_operator)) == '-1 [4^ 3] '
@@ -67,7 +75,11 @@ def test_normal_ordered(dtype):
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_commutator(dtype):
-    """Test commutator"""
+    """
+    Feature: commutator.
+    Description: Test commutator.
+    Expectation: success.
+    """
     Context.set_dtype(dtype)
     qub_op1 = QubitOperator("X1 Y2")
     qub_op2 = QubitOperator("X1 Z2")
@@ -90,7 +102,11 @@ def test_commutator(dtype):
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_number_operator(dtype):
-    """Test number operator"""
+    """
+    Feature: number operator.
+    Description: Test number_operator.
+    Expectation: success.
+    """
     Context.set_dtype(dtype)
     nmode = 3
     # other parameters by default
@@ -107,7 +123,11 @@ def test_number_operator(dtype):
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_up_index(dtype):
-    """This is for labelling the spin-orbital index with spin alpha"""
+    """
+    Feature: up index.
+    Description: Test labelling the spin-orbital index with spin beta.
+    Expectation: success.
+    """
     Context.set_dtype(dtype)
     alpha = 2
     assert up_index(alpha) == 4
@@ -119,7 +139,11 @@ def test_up_index(dtype):
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_down_index(dtype):
-    """This is for labelling the spin-orbital index with spin beta"""
+    """
+    Feature: down index.
+    Description: Test labelling the spin-orbital index with spin beta.
+    Expectation: success.
+    """
     Context.set_dtype(dtype)
     beta = 1
     assert down_index(beta) == 3
@@ -131,7 +155,11 @@ def test_down_index(dtype):
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_hermitian_conjugated(dtype):
-    """Test hermitian_conjugated for the QubitOperator and Fermion Operator"""
+    """
+    Feature: hermitian conjugated.
+    Description: Test hermitian_conjugated for the QubitOperator and Fermion Operator.
+    Expectation: success.
+    """
     Context.set_dtype(dtype)
     qub_op1 = -1j * QubitOperator("X1 Y2") + QubitOperator("X1")
     qub_op2 = 1j * QubitOperator("X1 Y2") + QubitOperator("X1")

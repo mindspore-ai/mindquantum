@@ -74,14 +74,16 @@ template <typename derived_, typename calc_type_>
 void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalMul(qs_data_p_t src, qs_data_p_t des, index_t mask,
                                                                index_t condi, qs_data_t succ_coeff,
                                                                qs_data_t fail_coeff, index_t dim) {
-    derived::template ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, thrust::multiplies<qs_data_t>());
+    derived::template ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim,
+                                        thrust::multiplies<qs_data_t>());
 }
 
 template <typename derived_, typename calc_type_>
 void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalDiv(qs_data_p_t src, qs_data_p_t des, index_t mask,
                                                                index_t condi, qs_data_t succ_coeff,
                                                                qs_data_t fail_coeff, index_t dim) {
-    derived::template ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, thrust::divides<qs_data_t>());
+    derived::template ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim,
+                                        thrust::divides<qs_data_t>());
 }
 
 template <typename derived_, typename calc_type_>
