@@ -101,7 +101,7 @@ class Transform:
         """
         if not isinstance(self.operator, FermionOperator):
             raise TypeError('This method can be only applied for FermionOperator.')
-        return QubitOperator(getattr(mqbackend, self.arithmetic_type).transform.jordan_wigner(self.operator))
+        return QubitOperator(getattr(mqbackend, self.arithmetic_type).transform.jordan_wigner(self.operator._cpp_obj))
 
     def parity(self):
         r"""
@@ -142,7 +142,8 @@ class Transform:
         """
         if not isinstance(self.operator, FermionOperator):
             raise TypeError('This method can be only applied for FermionOperator.')
-        return QubitOperator(getattr(mqbackend, self.arithmetic_type).transform.parity(self.operator, self.n_qubits))
+        return QubitOperator(
+            getattr(mqbackend, self.arithmetic_type).transform.parity(self.operator._cpp_obj, self.n_qubits))
 
     def bravyi_kitaev(self):  # pylint: disable=too-many-locals
         r"""
@@ -192,8 +193,7 @@ class Transform:
         if not isinstance(self.operator, FermionOperator):
             raise TypeError('This method can be only applied for FermionOperator.')
         return QubitOperator(
-            getattr(mqbackend, self.arithmetic_type).transform.bravyi_kitaev(self.operator, self.n_qubits)
-        )
+            getattr(mqbackend, self.arithmetic_type).transform.bravyi_kitaev(self.operator._cpp_obj, self.n_qubits))
 
     def bravyi_kitaev_superfast(self):
         r"""
@@ -216,7 +216,8 @@ class Transform:
         """
         if not isinstance(self.operator, FermionOperator):
             raise TypeError('This method can be only applied for FermionOperator.')
-        return QubitOperator(getattr(mqbackend, self.arithmetic_type).transform.bravyi_kitaev_superfast(self.operator))
+        return QubitOperator(
+            getattr(mqbackend, self.arithmetic_type).transform.bravyi_kitaev_superfast(self.operator._cpp_obj))
 
     def ternary_tree(self):  # pylint: disable=too-many-locals
         """
@@ -231,8 +232,7 @@ class Transform:
         if not isinstance(self.operator, FermionOperator):
             raise TypeError('This method can be only applied for FermionOperator.')
         return QubitOperator(
-            getattr(mqbackend, self.arithmetic_type).transform.ternary_tree(self.operator, self.n_qubits)
-        )
+            getattr(mqbackend, self.arithmetic_type).transform.ternary_tree(self.operator._cpp_obj, self.n_qubits))
 
     def reversed_jordan_wigner(self):
         """
@@ -245,5 +245,5 @@ class Transform:
             raise TypeError('This method can be only applied for QubitOperator.')
 
         return FermionOperator(
-            getattr(mqbackend, self.arithmetic_type).transform.reverse_jordan_wigner(self.operator, self.n_qubits)
-        )
+            getattr(mqbackend,
+                    self.arithmetic_type).transform.reverse_jordan_wigner(self.operator._cpp_obj, self.n_qubits))
