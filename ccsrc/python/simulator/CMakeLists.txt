@@ -26,6 +26,7 @@ force_at_least_cxx17_workaround(_mq_vector)
 target_link_libraries(_mq_vector PUBLIC mq_python_core mqsim_vector_cpu)
 add_executable(op_test ${CMAKE_CURRENT_SOURCE_DIR}/lib/test.cpp)
 target_link_libraries(op_test PUBLIC mq_python_core mqsim_vector_cpu)
+force_at_least_cxx17_workaround(op_test)
 
 # ------------------------------------------------------------------------------
 
