@@ -24,9 +24,6 @@ pybind11_add_module(_mq_vector MODULE ${CMAKE_CURRENT_SOURCE_DIR}/lib/_mq_vector
 target_include_directories(_mq_vector PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
 force_at_least_cxx17_workaround(_mq_vector)
 target_link_libraries(_mq_vector PUBLIC mq_python_core mqsim_vector_cpu)
-add_executable(op_test ${CMAKE_CURRENT_SOURCE_DIR}/lib/test.cpp)
-target_link_libraries(op_test PUBLIC mq_python_core mqsim_vector_cpu)
-force_at_least_cxx17_workaround(op_test)
 
 # ------------------------------------------------------------------------------
 

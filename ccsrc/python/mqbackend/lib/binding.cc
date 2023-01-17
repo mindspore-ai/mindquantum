@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <complex>
 #include <memory>
 
 #include <fmt/format.h>
+#include <pybind11/attr.h>
 #include <pybind11/cast.h>
 #include <pybind11/complex.h>
 #include <pybind11/eigen.h>
@@ -72,7 +74,6 @@ namespace ops = mindquantum::ops;
 template <typename T>
 void init_fermion_operators(py::module &module) {  // NOLINT(runtime/references)
     namespace mq = mindquantum;
-    namespace op = bindops::details;
 
     using pr_t = mq::ParameterResolver<T>;
     using pr_cmplx_t = mq::ParameterResolver<std::complex<T>>;
@@ -112,64 +113,107 @@ void init_fermion_operators(py::module &module) {  // NOLINT(runtime/references)
         "Supported types: complex, ParameterResolver<complex>, FermionOperatorCD, FermionOperatorPRCD");
 
     // ---------------------------------
+    fop_pr_double.PYBIND11_DEFINE_BINOP_INPLACE(add, FermionOperatorPRD, T, +);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_INPLACE(add, FermionOperatorPRD, const pr_t &, +);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(add, const FermionOperatorPRD &, T, +);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(add, const FermionOperatorPRD &, std::complex<T>, +);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(add, const FermionOperatorPRD &, const pr_t &, +);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(add, const FermionOperatorPRD &, const pr_cmplx_t &, +);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(add, const FermionOperatorPRD &, const FermionOperatorPRCD &, +);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_REV(add, const FermionOperatorPRD &, T, +);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_REV(add, const FermionOperatorPRD &, std::complex<T>, +);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_REV(add, const FermionOperatorPRD &, const pr_t &, +);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_REV(add, const FermionOperatorPRD &, const pr_cmplx_t &, +);
 
-    using fop_t = decltype(fop_double);
-    bindops::binop_definition<op::plus, fop_t>::template inplace<T>(fop_double);
-    bindops::binop_definition<op::plus, fop_t>::template external<all_scalar_types_t>(fop_double);
-    bindops::binop_definition<op::plus, fop_t>::template reverse<all_fop_types_t>(fop_double);
-    bindops::binop_definition<op::minus, fop_t>::template inplace<T>(fop_double);
-    bindops::binop_definition<op::minus, fop_t>::template external<all_scalar_types_t>(fop_double);
-    bindops::binop_definition<op::minus, fop_t>::template reverse<all_fop_types_t>(fop_double);
-    bindops::binop_definition<op::times, fop_t>::template inplace<T>(fop_double);
-    bindops::binop_definition<op::times, fop_t>::template external<all_scalar_types_t>(fop_double);
-    bindops::binop_definition<op::times, fop_t>::template reverse<all_fop_types_t>(fop_double);
-    bindops::binop_definition<op::divides, fop_t>::template inplace<T>(fop_double);
-    bindops::binop_definition<op::divides, fop_t>::template external<all_scalar_types_t>(fop_double);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(add, FermionOperatorPRCD, T, +);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(add, FermionOperatorPRCD, std::complex<T>, +);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(add, FermionOperatorPRCD, const pr_t &, +);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(add, FermionOperatorPRCD, const pr_cmplx_t &, +);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(add, FermionOperatorPRCD, const FermionOperatorPRD &, +);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(add, const FermionOperatorPRCD &, T, +);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(add, const FermionOperatorPRCD &, std::complex<T>, +);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(add, const FermionOperatorPRCD &, const pr_t &, +);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(add, const FermionOperatorPRCD &, const pr_cmplx_t &, +);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(add, const FermionOperatorPRCD &, const FermionOperatorPRD &, +);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(add, const FermionOperatorPRCD &, T, +);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(add, const FermionOperatorPRCD &, std::complex<T>, +);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(add, const FermionOperatorPRCD &, const pr_t &, +);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(add, const FermionOperatorPRCD &, const pr_cmplx_t &, +);
 
-    using fop_cmplx_t = decltype(fop_cmplx_double);
-    bindops::binop_definition<op::plus, fop_cmplx_t>::template inplace<T, std::complex<T>>(fop_cmplx_double);
-    bindops::binop_definition<op::plus, fop_cmplx_t>::template external<all_scalar_types_t>(fop_cmplx_double);
-    bindops::binop_definition<op::plus, fop_cmplx_t>::template reverse<all_fop_types_t>(fop_cmplx_double);
-    bindops::binop_definition<op::minus, fop_cmplx_t>::template inplace<T, std::complex<T>>(fop_cmplx_double);
-    bindops::binop_definition<op::minus, fop_cmplx_t>::template external<all_scalar_types_t>(fop_cmplx_double);
-    bindops::binop_definition<op::minus, fop_cmplx_t>::template reverse<all_fop_types_t>(fop_cmplx_double);
-    bindops::binop_definition<op::times, fop_cmplx_t>::template inplace<T, std::complex<T>>(fop_cmplx_double);
-    bindops::binop_definition<op::times, fop_cmplx_t>::template external<all_scalar_types_t>(fop_cmplx_double);
-    bindops::binop_definition<op::times, fop_cmplx_t>::template reverse<all_fop_types_t>(fop_cmplx_double);
-    bindops::binop_definition<op::divides, fop_cmplx_t>::template inplace<T, std::complex<T>>(fop_cmplx_double);
-    bindops::binop_definition<op::divides, fop_cmplx_t>::template external<all_scalar_types_t>(fop_cmplx_double);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_INPLACE(sub, FermionOperatorPRD, T, -);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_INPLACE(sub, FermionOperatorPRD, const pr_t &, -);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(sub, const FermionOperatorPRD &, T, -);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(sub, const FermionOperatorPRD &, std::complex<T>, -);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(sub, const FermionOperatorPRD &, const pr_t &, -);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(sub, const FermionOperatorPRD &, const pr_cmplx_t &, -);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(sub, const FermionOperatorPRD &, const FermionOperatorPRCD &, -);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_REV(sub, const FermionOperatorPRD &, T, -);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_REV(sub, const FermionOperatorPRD &, std::complex<T>, -);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_REV(sub, const FermionOperatorPRD &, const pr_t &, -);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_REV(sub, const FermionOperatorPRD &, const pr_cmplx_t &, -);
 
-    using fop_pr_t = decltype(fop_pr_double);
-    bindops::binop_definition<op::plus, fop_pr_t>::template inplace<T, pr_t>(fop_pr_double);
-    bindops::binop_definition<op::plus, fop_pr_t>::template external<all_scalar_types_t>(fop_pr_double);
-    bindops::binop_definition<op::plus, fop_pr_t>::template reverse<all_fop_types_t>(fop_pr_double);
-    bindops::binop_definition<op::minus, fop_pr_t>::template inplace<T, pr_t>(fop_pr_double);
-    bindops::binop_definition<op::minus, fop_pr_t>::template external<all_scalar_types_t>(fop_pr_double);
-    bindops::binop_definition<op::minus, fop_pr_t>::template reverse<all_fop_types_t>(fop_pr_double);
-    bindops::binop_definition<op::times, fop_pr_t>::template inplace<T, pr_t>(fop_pr_double);
-    bindops::binop_definition<op::times, fop_pr_t>::template external<all_scalar_types_t>(fop_pr_double);
-    bindops::binop_definition<op::times, fop_pr_t>::template reverse<all_fop_types_t>(fop_pr_double);
-    bindops::binop_definition<op::divides, fop_pr_t>::template inplace<T, pr_t>(fop_pr_double);
-    bindops::binop_definition<op::divides, fop_pr_t>::template external<all_scalar_types_t>(fop_pr_double);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(sub, FermionOperatorPRCD, T, -);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(sub, FermionOperatorPRCD, std::complex<T>, -);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(sub, FermionOperatorPRCD, const pr_t &, -);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(sub, FermionOperatorPRCD, const pr_cmplx_t &, -);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(sub, FermionOperatorPRCD, const FermionOperatorPRD &, -);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(sub, const FermionOperatorPRCD &, T, -);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(sub, const FermionOperatorPRCD &, std::complex<T>, -);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(sub, const FermionOperatorPRCD &, const pr_t &, -);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(sub, const FermionOperatorPRCD &, const pr_cmplx_t &, -);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(sub, const FermionOperatorPRCD &, const FermionOperatorPRD &, -);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(sub, const FermionOperatorPRCD &, T, -);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(sub, const FermionOperatorPRCD &, std::complex<T>, -);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(sub, const FermionOperatorPRCD &, const pr_t &, -);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(sub, const FermionOperatorPRCD &, const pr_cmplx_t &, -);
 
-    using fop_pr_cmplx_t = decltype(fop_pr_cmplx_double);
-    bindops::binop_definition<op::plus, fop_pr_cmplx_t>::template inplace<all_scalar_types_t>(fop_pr_cmplx_double);
-    bindops::binop_definition<op::plus, fop_pr_cmplx_t>::template external<all_scalar_types_t>(fop_pr_cmplx_double);
-    bindops::binop_definition<op::plus, fop_pr_cmplx_t>::template reverse<all_fop_types_t>(fop_pr_cmplx_double);
-    bindops::binop_definition<op::minus, fop_pr_cmplx_t>::template inplace<all_scalar_types_t>(fop_pr_cmplx_double);
-    bindops::binop_definition<op::minus, fop_pr_cmplx_t>::template external<all_scalar_types_t>(fop_pr_cmplx_double);
-    bindops::binop_definition<op::minus, fop_pr_cmplx_t>::template reverse<all_fop_types_t>(fop_pr_cmplx_double);
-    bindops::binop_definition<op::times, fop_pr_cmplx_t>::template inplace<all_scalar_types_t>(fop_pr_cmplx_double);
-    bindops::binop_definition<op::times, fop_pr_cmplx_t>::template external<all_scalar_types_t>(fop_pr_cmplx_double);
-    bindops::binop_definition<op::times, fop_pr_cmplx_t>::template reverse<all_fop_types_t>(fop_pr_cmplx_double);
-    bindops::binop_definition<op::divides, fop_pr_cmplx_t>::template inplace<all_scalar_types_t>(fop_pr_cmplx_double);
-    bindops::binop_definition<op::divides, fop_pr_cmplx_t>::template external<all_scalar_types_t>(fop_pr_cmplx_double);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_INPLACE(mul, FermionOperatorPRD, T, *);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_INPLACE(mul, FermionOperatorPRD, const pr_t &, *);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(mul, const FermionOperatorPRD &, T, *);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(mul, const FermionOperatorPRD &, std::complex<T>, *);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(mul, const FermionOperatorPRD &, const pr_t &, *);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(mul, const FermionOperatorPRD &, const pr_cmplx_t &, *);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(mul, const FermionOperatorPRD &, const FermionOperatorPRCD &, *);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_REV(mul, const FermionOperatorPRD &, T, *);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_REV(mul, const FermionOperatorPRD &, std::complex<T>, *);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_REV(mul, const FermionOperatorPRD &, const pr_t &, *);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_REV(mul, const FermionOperatorPRD &, const pr_cmplx_t &, *);
+
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(mul, FermionOperatorPRCD, T, *);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(mul, FermionOperatorPRCD, std::complex<T>, *);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(mul, FermionOperatorPRCD, const pr_t &, *);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(mul, FermionOperatorPRCD, const pr_cmplx_t &, *);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(mul, FermionOperatorPRCD, const FermionOperatorPRD &, *);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(mul, const FermionOperatorPRCD &, T, *);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(mul, const FermionOperatorPRCD &, std::complex<T>, *);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(mul, const FermionOperatorPRCD &, const pr_t &, *);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(mul, const FermionOperatorPRCD &, const pr_cmplx_t &, *);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(mul, const FermionOperatorPRCD &, const FermionOperatorPRD &, *);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(mul, const FermionOperatorPRCD &, T, *);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(mul, const FermionOperatorPRCD &, std::complex<T>, *);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(mul, const FermionOperatorPRCD &, const pr_t &, *);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(mul, const FermionOperatorPRCD &, const pr_cmplx_t &, *);
+
+    fop_pr_double.PYBIND11_DEFINE_BINOP_INPLACE(truediv, FermionOperatorPRD, T, /);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_INPLACE(truediv, FermionOperatorPRD, const pr_t &, /);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(truediv, const FermionOperatorPRD &, T, /);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(truediv, const FermionOperatorPRD &, std::complex<T>, /);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(truediv, const FermionOperatorPRD &, const pr_t &, /);
+    fop_pr_double.PYBIND11_DEFINE_BINOP_EXT(truediv, const FermionOperatorPRD &, const pr_cmplx_t &, /);
+
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(truediv, FermionOperatorPRCD, T, /);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(truediv, FermionOperatorPRCD, std::complex<T>, /);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(truediv, FermionOperatorPRCD, const pr_t &, /);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(truediv, FermionOperatorPRCD, const pr_cmplx_t &, /);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(truediv, const FermionOperatorPRCD &, T, /);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(truediv, const FermionOperatorPRCD &, std::complex<T>, /);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(truediv, const FermionOperatorPRCD &, const pr_t &, /);
+    fop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(truediv, const FermionOperatorPRCD &, const pr_cmplx_t &, /);
 }
 
 template <typename T>
 void init_qubit_operators(py::module &module) {  // NOLINT(runtime/references)
     namespace mq = mindquantum;
-    namespace op = bindops::details;
 
     using pr_t = mq::ParameterResolver<T>;
     using pr_cmplx_t = mq::ParameterResolver<std::complex<T>>;
@@ -216,58 +260,102 @@ void init_qubit_operators(py::module &module) {  // NOLINT(runtime/references)
     qop_pr_cmplx_double.def_static("simplify", QubitOperatorPRCD::simplify);
 
     // ---------------------------------
+    qop_pr_double.PYBIND11_DEFINE_BINOP_INPLACE(add, QubitOperatorPRD, T, +);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_INPLACE(add, QubitOperatorPRD, const pr_t &, +);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(add, const QubitOperatorPRD &, T, +);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(add, const QubitOperatorPRD &, std::complex<T>, +);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(add, const QubitOperatorPRD &, const pr_t &, +);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(add, const QubitOperatorPRD &, const pr_cmplx_t &, +);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(add, const QubitOperatorPRD &, const QubitOperatorPRCD &, +);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_REV(add, const QubitOperatorPRD &, T, +);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_REV(add, const QubitOperatorPRD &, std::complex<T>, +);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_REV(add, const QubitOperatorPRD &, const pr_t &, +);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_REV(add, const QubitOperatorPRD &, const pr_cmplx_t &, +);
 
-    using qop_t = decltype(qop_double);
-    bindops::binop_definition<op::plus, qop_t>::template inplace<T>(qop_double);
-    bindops::binop_definition<op::plus, qop_t>::template external<all_qop_types_t>(qop_double);
-    bindops::binop_definition<op::plus, qop_t>::template reverse<all_qop_types_t>(qop_double);
-    bindops::binop_definition<op::minus, qop_t>::template inplace<T>(qop_double);
-    bindops::binop_definition<op::minus, qop_t>::template external<all_qop_types_t>(qop_double);
-    bindops::binop_definition<op::minus, qop_t>::template reverse<all_qop_types_t>(qop_double);
-    bindops::binop_definition<op::times, qop_t>::template inplace<T>(qop_double);
-    bindops::binop_definition<op::times, qop_t>::template external<all_qop_types_t>(qop_double);
-    bindops::binop_definition<op::times, qop_t>::template reverse<all_qop_types_t>(qop_double);
-    bindops::binop_definition<op::divides, qop_t>::template inplace<T>(qop_double);
-    bindops::binop_definition<op::divides, qop_t>::template external<all_scalar_types_t>(qop_double);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(add, QubitOperatorPRCD, T, +);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(add, QubitOperatorPRCD, std::complex<T>, +);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(add, QubitOperatorPRCD, const pr_t &, +);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(add, QubitOperatorPRCD, const pr_cmplx_t &, +);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(add, QubitOperatorPRCD, const QubitOperatorPRD &, +);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(add, const QubitOperatorPRCD &, T, +);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(add, const QubitOperatorPRCD &, std::complex<T>, +);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(add, const QubitOperatorPRCD &, const pr_t &, +);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(add, const QubitOperatorPRCD &, const pr_cmplx_t &, +);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(add, const QubitOperatorPRCD &, const QubitOperatorPRD &, +);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(add, const QubitOperatorPRCD &, T, +);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(add, const QubitOperatorPRCD &, std::complex<T>, +);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(add, const QubitOperatorPRCD &, const pr_t &, +);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(add, const QubitOperatorPRCD &, const pr_cmplx_t &, +);
 
-    using qop_cmplx_t = decltype(qop_cmplx_double);
-    bindops::binop_definition<op::plus, qop_cmplx_t>::template inplace<T, std::complex<T>>(qop_cmplx_double);
-    bindops::binop_definition<op::plus, qop_cmplx_t>::template external<all_qop_types_t>(qop_cmplx_double);
-    bindops::binop_definition<op::plus, qop_cmplx_t>::template reverse<all_qop_types_t>(qop_cmplx_double);
-    bindops::binop_definition<op::minus, qop_cmplx_t>::template inplace<T, std::complex<T>>(qop_cmplx_double);
-    bindops::binop_definition<op::minus, qop_cmplx_t>::template external<all_qop_types_t>(qop_cmplx_double);
-    bindops::binop_definition<op::minus, qop_cmplx_t>::template reverse<all_qop_types_t>(qop_cmplx_double);
-    bindops::binop_definition<op::times, qop_cmplx_t>::template inplace<T, std::complex<T>>(qop_cmplx_double);
-    bindops::binop_definition<op::times, qop_cmplx_t>::template external<all_qop_types_t>(qop_cmplx_double);
-    bindops::binop_definition<op::times, qop_cmplx_t>::template reverse<all_qop_types_t>(qop_cmplx_double);
-    bindops::binop_definition<op::divides, qop_cmplx_t>::template inplace<T, std::complex<T>>(qop_cmplx_double);
-    bindops::binop_definition<op::divides, qop_cmplx_t>::template external<all_scalar_types_t>(qop_cmplx_double);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_INPLACE(sub, QubitOperatorPRD, T, -);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_INPLACE(sub, QubitOperatorPRD, const pr_t &, -);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(sub, const QubitOperatorPRD &, T, -);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(sub, const QubitOperatorPRD &, std::complex<T>, -);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(sub, const QubitOperatorPRD &, const pr_t &, -);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(sub, const QubitOperatorPRD &, const pr_cmplx_t &, -);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(sub, const QubitOperatorPRD &, const QubitOperatorPRCD &, -);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_REV(sub, const QubitOperatorPRD &, T, -);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_REV(sub, const QubitOperatorPRD &, std::complex<T>, -);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_REV(sub, const QubitOperatorPRD &, const pr_t &, -);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_REV(sub, const QubitOperatorPRD &, const pr_cmplx_t &, -);
 
-    using qop_pr_t = decltype(qop_pr_double);
-    bindops::binop_definition<op::plus, qop_pr_t>::template inplace<T, pr_t>(qop_pr_double);
-    bindops::binop_definition<op::plus, qop_pr_t>::template external<all_qop_types_t>(qop_pr_double);
-    bindops::binop_definition<op::plus, qop_pr_t>::template reverse<all_qop_types_t>(qop_pr_double);
-    bindops::binop_definition<op::minus, qop_pr_t>::template inplace<T, pr_t>(qop_pr_double);
-    bindops::binop_definition<op::minus, qop_pr_t>::template external<all_qop_types_t>(qop_pr_double);
-    bindops::binop_definition<op::minus, qop_pr_t>::template reverse<all_qop_types_t>(qop_pr_double);
-    bindops::binop_definition<op::times, qop_pr_t>::template inplace<T, pr_t>(qop_pr_double);
-    bindops::binop_definition<op::times, qop_pr_t>::template external<all_qop_types_t>(qop_pr_double);
-    bindops::binop_definition<op::times, qop_pr_t>::template reverse<all_qop_types_t>(qop_pr_double);
-    bindops::binop_definition<op::divides, qop_pr_t>::template inplace<T, pr_t>(qop_pr_double);
-    bindops::binop_definition<op::divides, qop_pr_t>::template external<all_scalar_types_t>(qop_pr_double);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(sub, QubitOperatorPRCD, T, -);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(sub, QubitOperatorPRCD, std::complex<T>, -);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(sub, QubitOperatorPRCD, const pr_t &, -);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(sub, QubitOperatorPRCD, const pr_cmplx_t &, -);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(sub, QubitOperatorPRCD, const QubitOperatorPRD &, -);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(sub, const QubitOperatorPRCD &, T, -);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(sub, const QubitOperatorPRCD &, std::complex<T>, -);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(sub, const QubitOperatorPRCD &, const pr_t &, -);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(sub, const QubitOperatorPRCD &, const pr_cmplx_t &, -);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(sub, const QubitOperatorPRCD &, const QubitOperatorPRD &, -);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(sub, const QubitOperatorPRCD &, T, -);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(sub, const QubitOperatorPRCD &, std::complex<T>, -);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(sub, const QubitOperatorPRCD &, const pr_t &, -);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(sub, const QubitOperatorPRCD &, const pr_cmplx_t &, -);
 
-    using qop_pr_cmplx_t = decltype(qop_pr_cmplx_double);
-    bindops::binop_definition<op::plus, qop_pr_cmplx_t>::template inplace<all_scalar_types_t>(qop_pr_cmplx_double);
-    bindops::binop_definition<op::plus, qop_pr_cmplx_t>::template external<all_qop_types_t>(qop_pr_cmplx_double);
-    bindops::binop_definition<op::plus, qop_pr_cmplx_t>::template reverse<all_qop_types_t>(qop_pr_cmplx_double);
-    bindops::binop_definition<op::minus, qop_pr_cmplx_t>::template inplace<all_scalar_types_t>(qop_pr_cmplx_double);
-    bindops::binop_definition<op::minus, qop_pr_cmplx_t>::template external<all_qop_types_t>(qop_pr_cmplx_double);
-    bindops::binop_definition<op::minus, qop_pr_cmplx_t>::template reverse<all_qop_types_t>(qop_pr_cmplx_double);
-    bindops::binop_definition<op::times, qop_pr_cmplx_t>::template inplace<all_scalar_types_t>(qop_pr_cmplx_double);
-    bindops::binop_definition<op::times, qop_pr_cmplx_t>::template external<all_qop_types_t>(qop_pr_cmplx_double);
-    bindops::binop_definition<op::times, qop_pr_cmplx_t>::template reverse<all_qop_types_t>(qop_pr_cmplx_double);
-    bindops::binop_definition<op::divides, qop_pr_cmplx_t>::template inplace<all_scalar_types_t>(qop_pr_cmplx_double);
-    bindops::binop_definition<op::divides, qop_pr_cmplx_t>::template external<all_scalar_types_t>(qop_pr_cmplx_double);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_INPLACE(mul, QubitOperatorPRD, T, *);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_INPLACE(mul, QubitOperatorPRD, const pr_t &, *);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(mul, const QubitOperatorPRD &, T, *);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(mul, const QubitOperatorPRD &, std::complex<T>, *);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(mul, const QubitOperatorPRD &, const pr_t &, *);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(mul, const QubitOperatorPRD &, const pr_cmplx_t &, *);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(mul, const QubitOperatorPRD &, const QubitOperatorPRCD &, *);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_REV(mul, const QubitOperatorPRD &, T, *);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_REV(mul, const QubitOperatorPRD &, std::complex<T>, *);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_REV(mul, const QubitOperatorPRD &, const pr_t &, *);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_REV(mul, const QubitOperatorPRD &, const pr_cmplx_t &, *);
+
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(mul, QubitOperatorPRCD, T, *);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(mul, QubitOperatorPRCD, std::complex<T>, *);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(mul, QubitOperatorPRCD, const pr_t &, *);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(mul, QubitOperatorPRCD, const pr_cmplx_t &, *);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(mul, QubitOperatorPRCD, const QubitOperatorPRD &, *);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(mul, const QubitOperatorPRCD &, T, *);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(mul, const QubitOperatorPRCD &, std::complex<T>, *);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(mul, const QubitOperatorPRCD &, const pr_t &, *);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(mul, const QubitOperatorPRCD &, const pr_cmplx_t &, *);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(mul, const QubitOperatorPRCD &, const QubitOperatorPRD &, *);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(mul, const QubitOperatorPRCD &, T, *);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(mul, const QubitOperatorPRCD &, std::complex<T>, *);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(mul, const QubitOperatorPRCD &, const pr_t &, *);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_REV(mul, const QubitOperatorPRCD &, const pr_cmplx_t &, *);
+
+    qop_pr_double.PYBIND11_DEFINE_BINOP_INPLACE(truediv, QubitOperatorPRD, T, /);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_INPLACE(truediv, QubitOperatorPRD, const pr_t &, /);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(truediv, const QubitOperatorPRD &, T, /);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(truediv, const QubitOperatorPRD &, std::complex<T>, /);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(truediv, const QubitOperatorPRD &, const pr_t &, /);
+    qop_pr_double.PYBIND11_DEFINE_BINOP_EXT(truediv, const QubitOperatorPRD &, const pr_cmplx_t &, /);
+
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(truediv, QubitOperatorPRCD, T, /);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(truediv, QubitOperatorPRCD, std::complex<T>, /);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(truediv, QubitOperatorPRCD, const pr_t &, /);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_INPLACE(truediv, QubitOperatorPRCD, const pr_cmplx_t &, /);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(truediv, const QubitOperatorPRCD &, T, /);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(truediv, const QubitOperatorPRCD &, std::complex<T>, /);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(truediv, const QubitOperatorPRCD &, const pr_t &, /);
+    qop_pr_cmplx_double.PYBIND11_DEFINE_BINOP_EXT(truediv, const QubitOperatorPRCD &, const pr_cmplx_t &, /);
 }
 
 template <typename T>
@@ -373,8 +461,8 @@ auto BindPR(py::module &module, const std::string &name) {  // NOLINT(runtime/re
               // Properties
               .def_property_readonly("const", [](const pr_t &pr) { return pr.const_value; })
               .def_readonly("data", &pr_t::data_)
-              .def_property_readonly(
-                  "is_complex", [](const pr_t &) constexpr { return mindquantum::traits::is_complex_v<T>; })
+              .def_property_readonly("is_complex",
+                                     [](const pr_t &) constexpr { return mindquantum::traits::is_complex_v<T>; })
               .def_property_readonly("encoder_parameters", [](const pr_t &pr) { return pr.encoder_parameters_; })
               .def_property_readonly("no_grad_parameters", [](const pr_t &pr) { return pr.no_grad_parameters_; })
               // ------------------------------
