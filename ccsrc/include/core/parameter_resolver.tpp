@@ -181,11 +181,11 @@ bool ParameterResolver<T>::IsConst() const {
 
 template <typename T>
 bool ParameterResolver<T>::IsNotZero() const {
-    if (!IsTwoNumberClose(this->const_value, 0.0)) {
+    if (!IsTwoNumberClose(this->const_value, static_cast<T>(0.0))) {
         return true;
     }
     for (ITER(p, this->data_)) {
-        if (!IsTwoNumberClose(p->second, 0.0)) {
+        if (!IsTwoNumberClose(p->second, static_cast<T>(0.0))) {
             return true;
         }
     }

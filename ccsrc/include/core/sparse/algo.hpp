@@ -18,6 +18,8 @@
 
 #include <memory>
 
+#include "config/type_promotion.hpp"
+
 #include "core/sparse/csrhdmatrix.hpp"
 #include "core/sparse/paulimat.hpp"
 #include "core/sparse/sparse_utils.hpp"
@@ -84,9 +86,9 @@ std::shared_ptr<CsrHdMatrix<T>> PauliMatToCsrHdMatrix(std::shared_ptr<PauliMat<T
         if (i <= col[i]) {
             indptr[i + 1] = indptr[i] + 1;
             if (i == col[i]) {
-                data[j] = p * POLAR[coeff[i]] * (T) (0.5);
+                data[j] = p * ComplexCast<double, T>::apply(POLAR[coeff[i]]) * (T) (0.5);
             } else {
-                data[j] = p * POLAR[coeff[i]];
+                data[j] = p * ComplexCast<double, T>::apply(POLAR[coeff[i]]);
             }
             indices[j] = col[i];
             j++;

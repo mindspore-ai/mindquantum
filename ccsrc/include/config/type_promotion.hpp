@@ -20,6 +20,7 @@
 #include <utility>
 
 #include "config/config.hpp"
+#include "config/type_traits.hpp"
 
 namespace mindquantum {
 namespace traits {
@@ -89,6 +90,12 @@ auto up_cast(float_t&& value) {
         std::forward<float_t>(value));
 }
 
+template <typename float_t, std::enable_if_t<traits::is_complex_decay_v<float_t>>>
+auto up_cast(float_t&& value) {
+    using up_type = typename traits::type_promotion<std::remove_cvref_t<float_t>>::up_cast_t;
+    return up_type(up_cast(std::real(value)), up_cast(std::imag(value)));
+}
+
 //! Cast from a floating point representation (or similar) to a smaller type representation.
 /*!
  * This function uses static_cast<> to perform the actual conversion.
@@ -103,6 +110,39 @@ auto down_cast(float_t&& value) {
         std::forward<float_t>(value));
 }
 
+template <typename float_t, std::enable_if_t<traits::is_complex_decay_v<float_t>>>
+auto down_cast(float_t&& value) {
+    using down_type = typename traits::type_promotion<std::remove_cvref_t<float_t>>::up_cast_t;
+    return down_type(down_cast(std::real(value)), up_cast(std::imag(value)));
+}
+
+template <typename src, typename des, typename = void>
+struct ComplexCast {
+    static auto apply(const src& value) {
+        return des(std::real(value), std::imag(value));
+    }
+};
+
+// template <typename src, typename des>
+// struct ComplexCast<src, des, std::enable_if_t<std::is_same_v<src, des> && !traits::is_complex_v<src>>> {
+//     static auto apply(const src& value) {
+//         return value;
+//     }
+// };
+
+template <typename src, typename des>
+struct ComplexCast<src, des, std::enable_if_t<std::is_same_v<typename traits::type_promotion<src>::up_cast_t, des>>> {
+    static auto apply(const std::complex<src>& value) {
+        return up_cast(value);
+    }
+};
+
+template <typename src, typename des>
+struct ComplexCast<src, des, std::enable_if_t<std::is_same_v<typename traits::type_promotion<src>::down_cast_t, des>>> {
+    static auto apply(const std::complex<src>& value) {
+        return down_cast(value);
+    }
+};
 }  // namespace mindquantum
 
 #endif /* MQ_CONFIG_TYPE_PROMOTION_HPP */

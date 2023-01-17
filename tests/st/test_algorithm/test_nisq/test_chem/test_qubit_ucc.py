@@ -25,6 +25,7 @@ try:
     import mindspore as ms
 
     from mindquantum.algorithm.nisq import QubitUCCAnsatz
+    from mindquantum.config import Context
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.gates import X
     from mindquantum.core.operators import Hamiltonian, QubitOperator
@@ -48,12 +49,14 @@ os.environ.setdefault('OMP_NUM_THREADS', '8')
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
+@pytest.mark.parametrize('dtype', ['float', 'double'])
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_quccsd(backend):  # pylint: disable=too-many-locals
+def test_quccsd(backend, dtype):  # pylint: disable=too-many-locals
     """
     Description:
     Expectation:
     """
+    Context.set_dtype(dtype)
     # Hydrogen molecule
     ham = (
         QubitOperator("", (-0.5339363487727398 + 0j))

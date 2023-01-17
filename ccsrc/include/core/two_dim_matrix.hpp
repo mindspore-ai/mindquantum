@@ -71,7 +71,7 @@ Dim2Matrix<T> Dim2MatrixFromRI(const VT<VS> &real, const VT<VS> &imag) {
 }
 
 // TODO(xuxs): In the next version, we will use eigen for all matrix element. But
-// currently, we just custom some mathmatic operator for Dim2Matrix.
+// currently, we just custom some mathematic operator for Dim2Matrix.
 
 template <typename T, class binary_ops>
 Dim2Matrix<T> Dim2MatrixBinary(const Dim2Matrix<T> &m1, const Dim2Matrix<T> &m2, const binary_ops &ops) {
@@ -87,7 +87,7 @@ Dim2Matrix<T> Dim2MatrixBinary(const Dim2Matrix<T> &m1, const Dim2Matrix<T> &m2,
 }
 template <typename T>
 Dim2Matrix<T> Dim2MatrixMatMul(const Dim2Matrix<T> &m1, const Dim2Matrix<T> &m2) {
-    // Be carefule! We will check dimension.
+    // Be careful! We will check dimension.
     VVT<CT<T>> m(m1.matrix_.size(), VT<CT<T>>(m2.matrix_[0].size(), CT<T>(0.0, 0.0)));
     for (size_t i = 0; i < m1.matrix_.size(); i++) {
         for (size_t k = 0; k < m2.matrix_[0].size(); k++) {

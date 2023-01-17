@@ -21,6 +21,7 @@ _HAS_MINDSPORE = True
 try:
     import mindspore as ms
 
+    from mindquantum.config import Context
     from mindquantum.core import gates as G
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.operators import Hamiltonian, QubitOperator
@@ -41,12 +42,14 @@ except ImportError:
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
+@pytest.mark.parametrize('dtype', ['float', 'double'])
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_mindquantumlayer(backend):
+def test_mindquantumlayer(backend, dtype):
     """
     Description: Test MQLayer
     Expectation:
     """
+    Context.set_dtype(dtype)
     encoder = Circuit()
     ansatz = Circuit()
     encoder += G.RX('e1').on(0)

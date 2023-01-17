@@ -203,4 +203,4 @@ def test_qubit_ops_trans():
     mq_ops = QubitOperator("X0 Y1 Z2", 1)
 
     assert mq_ops.to_openfermion() == ofo_ops
-    assert mq_ops == QubitOperator.from_openfermion(ofo_ops, dtype=complex)
+    assert mq_ops == QubitOperator.from_openfermion(ofo_ops)

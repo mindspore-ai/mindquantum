@@ -19,6 +19,7 @@
 import numpy as np
 import pytest
 
+from mindquantum.config import Context
 from mindquantum.core import gates as G
 from mindquantum.core.circuit import Circuit, add_prefix, shift
 from mindquantum.core.parameterresolver import ParameterResolver
@@ -46,14 +47,21 @@ def test_circuit_qubits_grad():
     assert len(circuit3.parameter_resolver()) == 1
 
 
-def test_get_matrix():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('backend', get_supported_simulator())
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_get_matrix(backend, dtype):
     """
     test
     Description:
     Expectation:
     """
+    Context.set_dtype(dtype)
     circ = Circuit().ry('a', 0).rz('b', 0).ry('c', 0)
-    matrix = circ.matrix(np.array([7.902762e-01, 2.139225e-04, 7.795934e-01]))
+    matrix = circ.matrix(np.array([7.902762e-01, 2.139225e-04, 7.795934e-01]), backend=backend)
     assert np.allclose(matrix[0, 0], 0.70743435 - 1.06959724e-04j)
 
 

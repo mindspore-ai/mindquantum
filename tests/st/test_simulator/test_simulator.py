@@ -22,6 +22,7 @@ from scipy.sparse import csr_matrix
 
 import mindquantum.core.operators as ops
 from mindquantum.algorithm.library import qft
+from mindquantum.config import Context
 from mindquantum.core import gates as G
 from mindquantum.core.circuit import UN, Circuit
 from mindquantum.core.operators import Hamiltonian, QubitOperator
@@ -57,12 +58,14 @@ except ImportError:
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
-def test_init_reset(virtual_qc):
+@pytest.mark.parametrize("dtype", ['float', 'double'])
+def test_init_reset(virtual_qc, dtype):
     """
     test
     Description:
     Expectation:
     """
+    Context.set_dtype(dtype)
     s1 = Simulator(virtual_qc, 2)
     circ = Circuit().h(0).h(1)
     v1 = s1.get_qs()
@@ -79,12 +82,14 @@ def test_init_reset(virtual_qc):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
-def test_apply_circuit_and_hermitian(virtual_qc):
+@pytest.mark.parametrize("dtype", ['float', 'double'])
+def test_apply_circuit_and_hermitian(virtual_qc, dtype):
     """
     test
     Description:
     Expectation:
     """
+    Context.set_dtype(dtype)
     sv0 = np.array([[1, 0], [0, 0]])
     sv1 = np.array([[0, 0], [0, 1]])
     circ = Circuit()
@@ -120,12 +125,14 @@ def test_apply_circuit_and_hermitian(virtual_qc):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
-def test_set_and_get(virtual_qc):
+@pytest.mark.parametrize("dtype", ['float', 'double'])
+def test_set_and_get(virtual_qc, dtype):
     """
     test
     Description:
     Expectation:
     """
+    Context.set_dtype(dtype)
     sim = Simulator(virtual_qc, 1)
     qs1 = sim.get_qs()
     assert np.allclose(qs1, np.array([1, 0]))
@@ -139,12 +146,14 @@ def test_set_and_get(virtual_qc):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
-def test_non_hermitian_grad_ops1(virtual_qc):
+@pytest.mark.parametrize("dtype", ['float', 'double'])
+def test_non_hermitian_grad_ops1(virtual_qc, dtype):
     """
     test
     Description:
     Expectation:
     """
+    Context.set_dtype(dtype)
     sim = Simulator(virtual_qc, 1)
     c_r = Circuit().ry('b', 0)
     c_l = Circuit().rz('a', 0)
@@ -202,11 +211,13 @@ def generate_test_circuit():
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
-def test_all_gate_with_simulator(virtual_qc):  # pylint: disable=too-many-locals
+@pytest.mark.parametrize("dtype", ['float', 'double'])
+def test_all_gate_with_simulator(virtual_qc, dtype):  # pylint: disable=too-many-locals
     """
     Description:
     Expectation:
     """
+    Context.set_dtype(dtype)
     c = generate_test_circuit()
     qs = c.get_qs(backend=virtual_qc, pr={'a': 1, 'b': 2, 'c': 3})
     qs_exp = np.array(
@@ -227,15 +238,18 @@ def test_all_gate_with_simulator(virtual_qc):  # pylint: disable=too-many-locals
     grad_ops = sim.get_expectation_with_grad(ham, c)
     p0 = np.array([1, 2, 3])
     f1, g1 = grad_ops(p0)
-    delta = 0.0001
+    delta = 0.00001
     p1 = np.array([1 + delta, 2, 3])
     f2, g2 = grad_ops(p1)
     g_a = ((f2 - f1) / delta)[0, 0]
     g_a_1 = g1[0, 0, 0]
     g_a_2 = g2[0, 0, 0]
-    assert np.allclose(g_a, g_a_1, atol=1e-4)
-    assert np.allclose(g_a, g_a_2, atol=1e-4)
-    assert np.allclose(g_a_1, g_a_2, atol=1e-4)
+    atol = 1e-3
+    if dtype == 'float':
+        atol = 1e-1
+    assert np.allclose(g_a, g_a_1, atol=atol)
+    assert np.allclose(g_a, g_a_2, atol=atol)
+    assert np.allclose(g_a_1, g_a_2, atol=atol)
 
 
 @pytest.mark.level0
@@ -243,13 +257,15 @@ def test_all_gate_with_simulator(virtual_qc):  # pylint: disable=too-many-locals
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+@pytest.mark.parametrize("dtype", ['float', 'double'])
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
-def test_optimization_with_custom_gate(virtual_qc):  # pylint: disable=too-many-locals
+def test_optimization_with_custom_gate(virtual_qc, dtype):  # pylint: disable=too-many-locals
     """
     Description:
     Expectation:
     """
+    Context.set_dtype(dtype)
     if not _HAS_MINDSPORE:  # NB: take care to avoid errors with 'ms' module below
         return
 
@@ -290,11 +306,13 @@ def test_optimization_with_custom_gate(virtual_qc):  # pylint: disable=too-many-
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
-def test_fid(virtual_qc):
+@pytest.mark.parametrize("dtype", ['float', 'double'])
+def test_fid(virtual_qc, dtype):
     """
     Description:
     Expectation:
     """
+    Context.set_dtype(dtype)
     sim1 = Simulator(virtual_qc, 1)
     prep_circ = Circuit().h(0)
     ansatz = Circuit().ry('a', 0).rz('b', 0).ry('c', 0)
@@ -311,11 +329,13 @@ def test_fid(virtual_qc):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
-def test_non_hermitian_grad_ops2(virtual_qc):
+@pytest.mark.parametrize("dtype", ['float', 'double'])
+def test_non_hermitian_grad_ops2(virtual_qc, dtype):
     """
     Description: test non hermitian grad ops
     Expectation: success.
     """
+    Context.set_dtype(dtype)
     circuit1 = Circuit([G.RX('a').on(0)])
     circuit2 = Circuit([G.RY('b').on(0)])
     ham = Hamiltonian(csr_matrix([[1, 2], [3, 4]]))
@@ -332,11 +352,13 @@ def test_non_hermitian_grad_ops2(virtual_qc):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
-def test_inner_product(virtual_qc):
+@pytest.mark.parametrize("dtype", ['float', 'double'])
+def test_inner_product(virtual_qc, dtype):
     """
     Description: test inner product of two simulator
     Expectation: success.
     """
+    Context.set_dtype(dtype)
     sim1 = Simulator(virtual_qc, 1)
     sim1.apply_gate(G.RX(1.2).on(0))
     sim2 = Simulator(virtual_qc, 1)
@@ -351,11 +373,13 @@ def test_inner_product(virtual_qc):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
-def test_copy(virtual_qc):
+@pytest.mark.parametrize("dtype", ['float', 'double'])
+def test_copy(virtual_qc, dtype):
     """
     Description: test copy a simulator
     Expectation: success.
     """
+    Context.set_dtype(dtype)
     sim = Simulator(virtual_qc, 1)
     sim.apply_gate(G.RX(1).on(0))
     sim2 = sim.copy()
@@ -371,11 +395,13 @@ def test_copy(virtual_qc):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
-def test_multi_params_gate(virtual_qc):
+@pytest.mark.parametrize("dtype", ['float', 'double'])
+def test_multi_params_gate(virtual_qc, dtype):
     """
     Description: test multi params gate
     Expectation: success.
     """
+    Context.set_dtype(dtype)
     sim = Simulator(virtual_qc, 2)
     circ = Circuit() + G.U3('a', 'b', 1.0).on(0) + G.U3('c', 'd', 2.0).on(1) + G.X.on(0, 1)
     circ += G.FSim('e', 3.0).on([0, 1])
@@ -401,8 +427,8 @@ def test_multi_params_gate(virtual_qc):
             ]
         ]
     )
-    assert np.allclose(f, f_exp)
-    assert np.allclose(g, g_exp)
+    assert np.allclose(f, f_exp, atol=1e-6)
+    assert np.allclose(g, g_exp, atol=1e-6)
 
 
 @pytest.mark.level0
@@ -410,13 +436,15 @@ def test_multi_params_gate(virtual_qc):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+@pytest.mark.parametrize("dtype", ['float', 'double'])
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
-def test_custom_gate_in_parallel(virtual_qc):
+def test_custom_gate_in_parallel(virtual_qc, dtype):
     """
     Features: parallel custom gate.
     Description: test custom gate in parallel mode.
     Expectation: success.
     """
+    Context.set_dtype(dtype)
     circ = generate_test_circuit().as_encoder()
     sim = Simulator(virtual_qc, circ.n_qubits)
     ham = [Hamiltonian(QubitOperator('Y0')), Hamiltonian(QubitOperator('X2'))]

@@ -11,25 +11,22 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
-#include <cmath>
-#include <complex>
-
-#include <cassert>
-#include <stdexcept>
-
 #include <thrust/transform_reduce.h>
 
+#include "config/openmp.hpp"
+
+#include "simulator/utils.hpp"
+#include "simulator/vector/detail/gpu_vector_double_policy.cuh"
+#include "simulator/vector/detail/gpu_vector_float_policy.cuh"
+#include "simulator/vector/detail/gpu_vector_policy.cuh"
 #include "thrust/device_ptr.h"
 #include "thrust/functional.h"
 #include "thrust/inner_product.h"
-#include "simulator/vector/detail/gpu_vector_policy.cuh"
-#include "simulator/types.hpp"
-#include "simulator/utils.hpp"
 
 namespace mindquantum::sim::vector::detail {
-
-void GPUVectorPolicyBase::ApplyXLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, qs_data_t v1,
-                                     qs_data_t v2, index_t dim) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyXLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                           qs_data_t v1, qs_data_t v2, index_t dim) {
     SingleQubitGateMask mask(objs, ctrls);
     thrust::counting_iterator<index_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
@@ -57,12 +54,19 @@ void GPUVectorPolicyBase::ApplyXLike(qs_data_p_t qs, const qbits_t& objs, const 
     }
 }
 
-void GPUVectorPolicyBase::ApplyX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    ApplyXLike(qs, objs, ctrls, 1, 1, dim);
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                       index_t dim) {
+    derived::ApplyXLike(qs, objs, ctrls, 1, 1, dim);
 }
 
-void GPUVectorPolicyBase::ApplyY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    ApplyXLike(qs, objs, ctrls, qs_data_t(0, -1), qs_data_t(0, 1), dim);
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                       index_t dim) {
+    derived::ApplyXLike(qs, objs, ctrls, qs_data_t(0, -1), qs_data_t(0, 1), dim);
 }
+
+template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
+template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;
 
 }  // namespace mindquantum::sim::vector::detail

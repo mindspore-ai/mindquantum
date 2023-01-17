@@ -520,7 +520,7 @@ rem ============================================================================
   echo   /H,/help            Show this help message and exit
   echo   /N                  Dry run; only print commands but do not execute them
   echo
-  echo   /Analyzer           Use the compiler static analysis tool during compilation (GCC & MSVC)
+  echo   /Analyzer           Use the compiler static analysis tool during compilation (GCC or MSVC)
   echo   /B,/Build [dir]     Specify build directory
   echo                       Defaults to: %build_dir%
   echo   /Clean3rdParty      Clean 3rd party installation directory

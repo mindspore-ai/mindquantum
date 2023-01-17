@@ -17,7 +17,7 @@
 #include "core/utils.hpp"
 
 namespace mindquantum {
-const VT<CT<MT>> POLAR = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+const VT<CT<double>> POLAR = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 TimePoint NOW() {
     return std::chrono::steady_clock::now();
 }

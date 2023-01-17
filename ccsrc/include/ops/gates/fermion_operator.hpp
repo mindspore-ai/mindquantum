@@ -68,6 +68,7 @@ class FermionOperator
     using self_t = FermionOperator<coefficient_t>;
 
     using matrix_coeff_t = typename coeff_policy_t::matrix_coeff_t;
+    using core_arithmetic_t = typename coeff_policy_t::core_arithmetic_t;
     using matrix_t = Eigen::Matrix<matrix_coeff_t, Eigen::Dynamic, Eigen::Dynamic>;
     using sparse_matrix_t = types::csr_matrix_t<matrix_coeff_t>;
 

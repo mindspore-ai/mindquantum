@@ -16,6 +16,9 @@
 #define MQ_CONFIG_REAL_CAST_HPP
 
 #include <complex>
+#include <cstddef>
+#include <stdexcept>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 
@@ -27,6 +30,69 @@ template <typename coeff_t>
 class ParameterResolver;
 
 enum class RealCastType { REAL, IMAG };
+enum class VType { Float, Double, Complex64, Complex128, Invalid };
+
+template <VType v>
+std::string_view VTypeToString() {
+    switch (v) {
+        case VType::Float:
+            return "float";
+        case VType::Double:
+            return "double";
+        case VType::Complex64:
+            return "complex64";
+        case VType::Complex128:
+            return "complex128";
+        case VType::Invalid:
+        default:
+            throw std::runtime_error("Unknown vtype.");
+    }
+}
+
+template <typename T>
+struct VTypeMap {
+    constexpr static VType v = VType::Invalid;
+};
+
+template <>
+struct VTypeMap<float> {
+    constexpr static VType v = VType::Float;
+};
+
+template <>
+struct VTypeMap<double> {
+    constexpr static VType v = VType::Double;
+};
+
+template <>
+struct VTypeMap<std::complex<float>> {
+    constexpr static VType v = VType::Complex64;
+};
+
+template <>
+struct VTypeMap<std::complex<double>> {
+    constexpr static VType v = VType::Complex128;
+};
+
+template <>
+struct VTypeMap<ParameterResolver<float>> {
+    constexpr static VType v = VType::Float;
+};
+
+template <>
+struct VTypeMap<ParameterResolver<double>> {
+    constexpr static VType v = VType::Double;
+};
+
+template <>
+struct VTypeMap<ParameterResolver<std::complex<float>>> {
+    constexpr static VType v = VType::Complex64;
+};
+
+template <>
+struct VTypeMap<ParameterResolver<std::complex<double>>> {
+    constexpr static VType v = VType::Complex128;
+};
 
 namespace details {
 template <RealCastType type, typename complex_t, typename = void>

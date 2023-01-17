@@ -61,6 +61,7 @@ struct CoeffPolicy<float_t, std::enable_if_t<std::is_floating_point_v<float_t>>>
     using base_t = CoeffPolicyBase<coeff_t>;
     using coeff_policy_real_t = typename base_t::coeff_policy_real_t;
     using matrix_coeff_t = coeff_t;
+    using core_arithmetic_t = float_t;
 
     static constexpr auto zero = coeff_t{0.};
     static constexpr auto one = coeff_t{1.};

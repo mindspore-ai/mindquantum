@@ -45,13 +45,8 @@ if(_lto_workaround)
   set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF)
 endif()
 
-pybind11_add_module(
-  mqbackend MODULE
-  OUTPUT_HINT
-    "${MQ_PYTHON_PACKAGE_NAME}"
-    ${CMAKE_CURRENT_LIST_DIR}/lib/binding.cc ${CMAKE_CURRENT_LIST_DIR}/lib/terms_operators.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/lib/fermion_operators.cpp ${CMAKE_CURRENT_LIST_DIR}/lib/qubit_operators.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/lib/logging.cpp)
+pybind11_add_module(mqbackend MODULE OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}" ${CMAKE_CURRENT_LIST_DIR}/lib/binding.cc
+                                                                             ${CMAKE_CURRENT_LIST_DIR}/lib/logging.cpp)
 
 if(_lto_workaround)
   set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)

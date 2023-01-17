@@ -20,6 +20,8 @@
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/spirit/home/x3.hpp>
 
+#include "core/mq_base_types.hpp"
+
 namespace mindquantum::ast {
 template <typename T>
 struct complex_number {
@@ -34,7 +36,7 @@ struct complex_number {
     }
 };
 }  // namespace mindquantum::ast
-BOOST_FUSION_ADAPT_STRUCT(mindquantum::ast::complex_number<double>, real, imag);
+BOOST_FUSION_ADAPT_STRUCT(mindquantum::ast::complex_number<mindquantum::MT>, real, imag);
 
 namespace mindquantum::parser {
 namespace boost_x3 = boost::spirit::x3;
@@ -43,7 +45,7 @@ const boost_x3::rule<imag_unit_class, boost_x3::unused_type> imag_unit = "Imagin
 const auto imag_unit_def = boost_x3::char_("ijIJ");
 
 struct complex_class {};
-const boost_x3::rule<complex_class, ast::complex_number<double>> complex = "Complex number ('X', 'Yj', or '(X+Yj)')";
+const boost_x3::rule<complex_class, ast::complex_number<MT>> complex = "Complex number ('X', 'Yj', or '(X+Yj)')";
 static const auto complex_def = ('(' >> boost_x3::double_ >> -(boost_x3::double_ >> imag_unit) >> ')')
                                 // | (x3::double_ >> x3::double_ >> imag_unit)
                                 | (boost_x3::attr(0.) >> boost_x3::double_ >> imag_unit)

@@ -22,6 +22,7 @@ import numpy as np
 from mindquantum import mqbackend as mb
 from mindquantum.utils.f import _check_num_array
 
+from ...config import Context
 from .basic import BasicGate, NoiseGate, NonHermitianGate, SelfHermitianGate
 
 
@@ -101,7 +102,7 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
-        cpp_gate = mb.basic_gate('PL', True, self.px, self.py, self.pz)
+        cpp_gate = getattr(mb, Context.get_dtype()).basic_gate('PL', True, self.px, self.py, self.pz)
         cpp_gate.obj_qubits = self.obj_qubits
         cpp_gate.ctrl_qubits = self.ctrl_qubits
         return cpp_gate
@@ -384,7 +385,7 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
-        cpp_gate = mb.basic_gate('ADC', True, self.gamma)
+        cpp_gate = getattr(mb, Context.get_dtype()).basic_gate('ADC', True, self.gamma)
         cpp_gate.obj_qubits = self.obj_qubits
         cpp_gate.ctrl_qubits = self.ctrl_qubits
         return cpp_gate
@@ -453,7 +454,7 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
-        cpp_gate = mb.basic_gate('PDC', True, self.gamma)
+        cpp_gate = getattr(mb, Context.get_dtype()).basic_gate('PDC', True, self.gamma)
         cpp_gate.obj_qubits = self.obj_qubits
         cpp_gate.ctrl_qubits = self.ctrl_qubits
         return cpp_gate
@@ -534,7 +535,7 @@ class KrausChannel(NoiseGate, NonHermitianGate):
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
-        cpp_gate = mb.basic_gate(self.name, True, self.kraus_op)
+        cpp_gate = getattr(mb, Context.get_dtype()).basic_gate(self.name, True, self.kraus_op)
         cpp_gate.obj_qubits = self.obj_qubits
         cpp_gate.ctrl_qubits = self.ctrl_qubits
         return cpp_gate

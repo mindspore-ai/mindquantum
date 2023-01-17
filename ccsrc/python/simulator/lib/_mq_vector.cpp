@@ -14,20 +14,46 @@
 
 #include <pybind11/pybind11.h>
 
+#ifdef __CUDACC__
+#    include "simulator/vector/detail/gpu_vector_double_policy.cuh"
+#    include "simulator/vector/detail/gpu_vector_float_policy.cuh"
+#    include "simulator/vector/detail/gpu_vector_policy.cuh"
+#elif defined(__x86_64__)
+#    include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_policy.hpp"
+#elif defined(__amd64)
+#    include "simulator/vector/detail/cpu_vector_arm_double_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_arm_float_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_policy.hpp"
+#endif
+
 #include "python/vector/bind_vec_state.h"
 
 PYBIND11_MODULE(_mq_vector, module) {
 #ifdef __CUDACC__
-    using policy_t = mindquantum::sim::vector::detail::GPUVectorPolicyBase;
-#else
-    using policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyBase;
+    using float_policy_t = mindquantum::sim::vector::detail::GPUVectorPolicyFloat;
+    using double_policy_t = mindquantum::sim::vector::detail::GPUVectorPolicyDouble;
+#elif defined(__x86_64__)
+    using float_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyAvxFloat;
+    using double_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyAvxDouble;
+#elif defined(__amd64)
+    using float_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyArmFloat;
+    using double_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyArmDouble;
 #endif  // __CUDACC__
 
-    using vec_sim = mindquantum::sim::vector::detail::VectorState<policy_t>;
+    using float_vec_sim = mindquantum::sim::vector::detail::VectorState<float_policy_t>;
+    using double_vec_sim = mindquantum::sim::vector::detail::VectorState<double_policy_t>;
 
     module.doc() = "MindQuantum c++ vector state simulator.";
-    BindSim<vec_sim>(module, "mqvector");
+    pybind11::module float_sim = module.def_submodule("float", "float simulator");
+    pybind11::module double_sim = module.def_submodule("double", "double simulator");
 
-    pybind11::module blas = module.def_submodule("blas", "MindQuantum simulator algebra module.");
-    BindBlas<vec_sim>(blas);
+    BindSim<float_vec_sim>(float_sim, "mqvector");
+    BindSim<double_vec_sim>(double_sim, "mqvector");
+
+    pybind11::module float_blas = float_sim.def_submodule("blas", "MindQuantum simulator algebra module.");
+    pybind11::module double_blas = double_sim.def_submodule("blas", "MindQuantum simulator algebra module.");
+    BindBlas<float_vec_sim>(float_blas);
+    BindBlas<double_vec_sim>(double_blas);
 }

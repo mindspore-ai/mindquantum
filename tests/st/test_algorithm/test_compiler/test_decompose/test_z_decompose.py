@@ -17,8 +17,10 @@
 
 '''test decompose rule'''
 import numpy as np
+import pytest
 
 from mindquantum.algorithm.compiler.decompose import cz_decompose
+from mindquantum.config import Context
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import Z
 
@@ -31,11 +33,17 @@ def circuit_equal_test(gate, decompose_circ):
     assert np.allclose(orig_circ.matrix(), decompose_circ.matrix())
 
 
-def test_cz():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_cz(dtype):
     """
     Description: Test cz decompose
     Expectation: success
     """
+    Context.set_dtype(dtype)
     cz = Z.on(1, 0)
     for solution in cz_decompose(cz):
         circuit_equal_test(cz, solution)

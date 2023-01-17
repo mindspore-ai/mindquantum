@@ -16,27 +16,42 @@
 
 import warnings
 
+import pytest
+
 from mindquantum.algorithm.nisq import Transform, uccsd0_singlet_generator
 from mindquantum.algorithm.nisq.chem.uccsd0 import spin_adapted_t1, spin_adapted_t2
+from mindquantum.config import Context
 from mindquantum.core.operators import TermValue, TimeEvolution, count_qubits
 
 
-def test_spin_adapted_t1():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_spin_adapted_t1(dtype):
     """
     Description: Test spin adapted t1
     Expectation:
     """
+    Context.set_dtype(dtype)
     t1_20 = spin_adapted_t1(2, 0)[0]
     assert str(t1_20) == '1 [4^ 0] +\n1 [5^ 1] '
     t1_00 = spin_adapted_t1(0, 0)[0]
     assert str(t1_00) == '1 [0^ 0] +\n1 [1^ 1] '
 
 
-def test_spin_adapted_t2():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_spin_adapted_t2(dtype):
     """
     Description: Test spin adapted t2
     Expectation:
     """
+    Context.set_dtype(dtype)
     t2_3210_list = spin_adapted_t2([3, 2], [1, 0])
     assert len(t2_3210_list) == 2
     term1 = set(t2_3210_list[0].terms)
@@ -61,11 +76,18 @@ def test_spin_adapted_t2():
     assert term2 == term2_check
 
 
-def test_uccsd0():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_uccsd0(dtype):
     """
     Description: Test uccsd0
     Expectation:
     """
+    # pylint: disable=too-many-locals
+    Context.set_dtype(dtype)
     h2_uccsd0 = uccsd0_singlet_generator(4, 2)
     h2_uccsd0_terms = set(h2_uccsd0.terms)
     h2_uccsd0_terms_check = {

@@ -43,12 +43,12 @@ set cmake_from_venv=0
 if exist !python_venv_path!\Scripts\cmake.exe (
    set CMAKE=!python_venv_path!\Scripts\cmake.exe
    set cmake_from_venv=1
-   goto: done_cmake
+   goto :done_cmake
 ) else (
   if exist !python_venv_path!\bin\cmake.exe (
      set CMAKE=!python_venv_path!\bin\cmake.exe
      set cmake_from_venv=1
-     goto: done_cmake
+     goto :done_cmake
   )
 )
 

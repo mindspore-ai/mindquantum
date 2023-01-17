@@ -17,8 +17,10 @@
 
 '''test decompose rule'''
 import numpy as np
+import pytest
 
 from mindquantum.algorithm.compiler.decompose import cyy_decompose, yy_decompose
+from mindquantum.config import Context
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import YY
 
@@ -31,21 +33,33 @@ def circuit_equal_test(gate, decompose_circ):
     assert np.allclose(orig_circ.matrix(), decompose_circ.matrix())
 
 
-def test_yy():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_yy(dtype):
     """
     Description: Test yy decompose
     Expectation: success
     """
+    Context.set_dtype(dtype)
     yy = YY(1).on([0, 1])
     for solution in yy_decompose(yy):
         circuit_equal_test(yy, solution)
 
 
-def test_cyy():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_cyy(dtype):
     """
     Description: Test cyy decompose
     Expectation: success
     """
+    Context.set_dtype(dtype)
     cyy = YY(2).on([0, 1], [2, 3])
     for solution in cyy_decompose(cyy):
         circuit_equal_test(cyy, solution)

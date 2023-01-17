@@ -11,8 +11,8 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
-#ifndef PYTHON_LIB_QUANTUMSTATE_BIND_VEC_STATE_HPP
-#define PYTHON_LIB_QUANTUMSTATE_BIND_VEC_STATE_HPP
+#ifndef PYTHON_LIB_QUANTUM_STATE_BIND_VEC_STATE_HPP
+#define PYTHON_LIB_QUANTUM_STATE_BIND_VEC_STATE_HPP
 #include <memory>
 #include <string_view>
 
@@ -25,8 +25,16 @@
 #include "simulator/types.hpp"
 
 #ifdef __CUDACC__
+#    include "simulator/vector/detail/gpu_vector_double_policy.cuh"
+#    include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #    include "simulator/vector/detail/gpu_vector_policy.cuh"
-#else
+#elif defined(__x86_64__)
+#    include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_policy.hpp"
+#elif defined(__amd64)
+#    include "simulator/vector/detail/cpu_vector_arm_double_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_arm_float_policy.hpp"
 #    include "simulator/vector/detail/cpu_vector_policy.hpp"
 #endif  // __CUDACC__
 
@@ -37,10 +45,11 @@ template <typename sim_t>
 auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLINT
     using namespace pybind11::literals;                                 // NOLINT
     using qbit_t = mindquantum::sim::qbit_t;
-    using calc_type = mindquantum::sim::calc_type;
+    using calc_type = typename sim_t::calc_type;
 
     pybind11::class_<sim_t>(module, name.data())
         .def(pybind11::init<qbit_t, unsigned>(), "n_qubits"_a, "seed"_a = 42)
+        .def("dtype", &sim_t::DType)
         .def("display", &sim_t::Display, "qubits_limit"_a = 10)
         .def("apply_gate", &sim_t::ApplyGate, "gate"_a, "pr"_a = mindquantum::ParameterResolver<calc_type>(),
              "diff"_a = false)

@@ -1,7 +1,4 @@
 CompileFlags:
-    Remove:
-        [
-            "-forward-unknown-to-host-compiler",
-            "--generate-code=arch=compute_52,code=[compute_52,sm_52]",
-            "--extended-lambda",
-        ]
+    Remove: [--generate-code*, -forward-unknown-to-host-compiler, --extended-lambda]
+Diagnostics:
+    Suppress: pp_including_mainfile_in_preamble

@@ -24,6 +24,7 @@ try:
     import mindspore as ms
 
     from mindquantum.algorithm.nisq import HardwareEfficientAnsatz
+    from mindquantum.config import Context
     from mindquantum.core.gates import RX, RY, X
     from mindquantum.core.operators import Hamiltonian, QubitOperator
     from mindquantum.framework import MQAnsatzOnlyLayer
@@ -46,12 +47,14 @@ os.environ.setdefault('OMP_NUM_THREADS', '8')
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
+@pytest.mark.parametrize('dtype', ['float', 'double'])
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_hardware_efficient(backend):
+def test_hardware_efficient(backend, dtype):
     """
     Description: Test hardware efficient ansatz
     Expectation:
     """
+    Context.set_dtype(dtype)
     depth = 3
     n_qubits = 3
     hea = HardwareEfficientAnsatz(n_qubits, [RX, RY, RX], X, 'all', depth)

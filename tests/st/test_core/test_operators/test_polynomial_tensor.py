@@ -15,15 +15,23 @@
 Test the polynomial_tensor in the ops module.
 """
 import numpy as np
+import pytest
 
+from mindquantum.config import Context
 from mindquantum.core.operators import PolynomialTensor
 
 
-def test_polynomial_tensor():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_polynomial_tensor(dtype):
     """
     Description: Test polynomial tensor
     Expectation:
     """
+    Context.set_dtype(dtype)
     one_body_term = np.array([[1, 0], [0, 1]])
     two_body_term = np.array([[[[1, 0], [0, 1]], [[1, 0], [0, 1]]], [[[1, 0], [0, 1]], [[1, 0], [0, 1]]]])
     n_body_tensors = {(): 1, (1, 0): one_body_term, (1, 1, 0, 0): two_body_term}

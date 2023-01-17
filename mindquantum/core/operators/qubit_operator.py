@@ -17,8 +17,10 @@
 #   and also uses or refactor Fermilib and OpenFermion licensed under
 #   Apache 2.0 license.
 """This is the module for the Qubit Operator."""
+# pylint: disable=no-member
 
 from ... import mqbackend
+from ...config import Context
 from ...core.parameterresolver import ParameterResolver
 from ._term_value import TermValue
 from ._terms_operators import TermsOperator
@@ -74,20 +76,23 @@ class QubitOperator(TermsOperator):
     #     For now, we simply force any Python code to create complex qubit operators...
 
     cxx_base_klass = mqbackend.QubitOperatorBase
-    real_pr_klass = mqbackend.QubitOperatorPRD
-    complex_pr_klass = mqbackend.QubitOperatorPRCD
+    float_pr_klass = mqbackend.float.QubitOperatorPRD
+    complex64_pr_klass = mqbackend.float.QubitOperatorPRCD
+    double_pr_klass = mqbackend.double.QubitOperatorPRD
+    complex128_pr_klass = mqbackend.double.QubitOperatorPRCD
 
     ensure_complex_coeff = True
 
     _type_conversion_table = {
-        mqbackend.complex_pr: complex_pr_klass,
-        complex: complex_pr_klass,
-        mqbackend.real_pr: complex_pr_klass,
-        float: complex_pr_klass,
+        mqbackend.float.real_pr: float_pr_klass,
+        mqbackend.double.real_pr: double_pr_klass,
+        mqbackend.float.complex_pr: complex64_pr_klass,
+        mqbackend.double.complex_pr: complex128_pr_klass,
     }
 
     def __init__(self, terms=None, coefficient=1.0):
         """Initialize a QubitOperator instance."""
+        self.arithmetic_type = Context.get_dtype()
         if isinstance(terms, mqbackend.QubitOperatorBase):
             super().__init__(terms)
         else:
@@ -137,19 +142,17 @@ class QubitOperator(TermsOperator):
         return self.__class__(self._cpp_obj.real)
 
     @classmethod
-    def from_openfermion(cls, of_ops, dtype=None):
+    def from_openfermion(cls, of_ops):
         """
         Convert qubit operator from openfermion to mindquantum format.
 
         Args:
             of_ops (openfermion.QubitOperator): Qubit operator from openfermion.
-            dtype (type): Type of TermsOperator to generate (ie. real `float` or complex `complex`)
-                          NB: this parameter is ignored in the Python version of the QubitOperator
 
         Returns:
             QubitOperator, qubit operator from mindquantum.
         """
-        return super().from_openfermion(of_ops, dtype)
+        return super().from_openfermion(of_ops)
 
     @classmethod
     def loads(cls, strs: str, dtype: type):

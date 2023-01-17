@@ -19,6 +19,7 @@
 import numpy as np
 import pytest
 
+from mindquantum.config import Context
 from mindquantum.core.circuit import (
     Circuit,
     partial_psi_partial_psi,
@@ -34,11 +35,14 @@ from mindquantum.simulator import Simulator, get_supported_simulator
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
-def test_qfi(backend):
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_qfi(backend, dtype):
     """
     Description: Test qfi
     Expectation: success
     """
+    # pylint: disable=too-many-locals
+    Context.set_dtype(dtype)
     a = PR('a')
     b = PR('b')
     val = PR({'a': 1, 'b': 2})

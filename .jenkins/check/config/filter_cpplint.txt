@@ -31,6 +31,7 @@
 "mindquantum/ccsrc/python/mqbackend/lib/logging.cpp"                                                  "build/namespaces_literals"
 "mindquantum/ccsrc/python/experimental/lib/core/logging.cpp"                                          "runtime/references"
 "mindquantum/ccsrc/python/mqbackend/lib/logging.cpp"                                                  "runtime/references"
+"mindquantum/ccsrc/python/mqbackend/lib/binding.cc"                                                   "runtime/references"
 "mindquantum/ccsrc/cxx_experimental/include/ops/parametric"                                           "runtime/explicit"
 "mindquantum/ccsrc/cxx_experimental/include/ops/parametric"                                           "runtime/indentation_namespace"
 "mindquantum/ccsrc/cxx_experimental/include/ops/parametric"                                           "whitespace/parens"
@@ -58,3 +59,4 @@
 "mindquantum/ccsrc/include/core/parameter_resolver.hpp"                                               "build/include"
 
 "mindquantum/ccsrc/include/simulator/alignedallocator.hpp"                                            "whitespace/parens"
+"mindquantum/ccsrc/include/ops/transform/bravyi_kitaev_superfast.tpp"                                 "runtime/references"

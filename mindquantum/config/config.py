@@ -37,6 +37,7 @@ _GLOBAL_MAT_VALUE = {
 }
 
 _GLOBAL_CONFIG = {
+    'DTYPE': 'double',
     'PRECISION': 1e-10,
 }
 
@@ -47,15 +48,49 @@ class Context:
 
     See the below table for detail:
 
-    +------------------------+-----------------------------+
-    |Configuration Parameters|Description                  |
-    +========================+=============================+
-    |precision               |Set the atol number precision|
-    +------------------------+-----------------------------+
+    +------------------------+-------------------------------+
+    |Configuration Parameters|Description                    |
+    +========================+===============================+
+    |dtype                   |Set simulator backend data type|
+    +------------------------+-------------------------------+
+    |precision               |Set the atol number precision  |
+    +------------------------+-------------------------------+
 
     Note:
         For every parameter, a setter or a getter method is implemented.
     """
+
+    @staticmethod
+    def set_dtype(dtype: str):
+        """
+        Set the simulation backend data precision of mindquantum.
+
+        Simulator like mqvector or mqvector_gpu will use this precision.
+
+        Args:
+            dtype (str): data type precision of mindquantum framework, should be
+                'float' or 'double'.
+
+        Examples:
+            >>> from mindquantum import Context
+            >>> Context.set_dtype('float')
+            >>> Context.get_dtype()
+            float
+        """
+        _check_input_type('dtype', str, dtype)
+        if dtype not in ['float', 'double']:
+            raise ValueError(f"dtype should be 'float' or 'double', but get {dtype}")
+        _GLOBAL_CONFIG['DTYPE'] = dtype
+
+    @staticmethod
+    def get_dtype() -> str:
+        """
+        Get the data type precision of mindquantum framework.
+
+        Returns:
+            str, precision name of mindquantum.
+        """
+        return _GLOBAL_CONFIG.get('DTYPE')
 
     @staticmethod
     def set_precision(atol):

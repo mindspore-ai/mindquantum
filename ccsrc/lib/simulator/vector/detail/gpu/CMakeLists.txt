@@ -1,6 +1,6 @@
 # ==============================================================================
 #
-# Copyright 2022 <Huawei Technologies Co., Ltd>
+# Copyright 2020 <Huawei Technologies Co., Ltd>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,17 +18,15 @@
 
 # lint_cmake: -whitespace/indent
 
-set(MQSIM_COMMON_HEAD ${CMAKE_CURRENT_LIST_DIR}/timer.h ${CMAKE_CURRENT_LIST_DIR}/types.hpp
-                      ${CMAKE_CURRENT_LIST_DIR}/utils.hpp)
-
-# ------------------------------------------------------------------------------
-
-add_subdirectory(vector)
-
-# ------------------------------------------------------------------------------
-
-install(
-  DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-  DESTINATION ${MQ_INSTALL_INCLUDEDIR}
-  PATTERN "CMakeLists.txt" EXCLUDE
-  PATTERN "CPPLINT.cfg" EXCLUDE)
+target_sources(
+  mqsim_vector_gpu
+  PRIVATE ${CMAKE_CURRENT_LIST_DIR}/gpu_vector_core_x_like.cu
+          ${CMAKE_CURRENT_LIST_DIR}/gpu_vector_core_condition.cu
+          ${CMAKE_CURRENT_LIST_DIR}/gpu_vector_core_dot_like.cu
+          ${CMAKE_CURRENT_LIST_DIR}/gpu_vector_core_gate_expect.cu
+          ${CMAKE_CURRENT_LIST_DIR}/gpu_vector_core_matrix_gate.cu
+          ${CMAKE_CURRENT_LIST_DIR}/gpu_vector_core_other_gate.cu
+          ${CMAKE_CURRENT_LIST_DIR}/gpu_vector_core_policy.cu
+          ${CMAKE_CURRENT_LIST_DIR}/gpu_vector_core_rot_pauli.cu
+          ${CMAKE_CURRENT_LIST_DIR}/gpu_vector_core_swap_like.cu
+          ${CMAKE_CURRENT_LIST_DIR}/gpu_vector_core_z_like.cu)

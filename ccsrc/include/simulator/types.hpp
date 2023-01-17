@@ -18,12 +18,6 @@
 #include <vector>
 
 namespace mindquantum::sim {
-#ifndef FLOAT
-using calc_type = double;
-#else
-using cacl_type = float;
-#endif
-
 using qbit_t = int64_t;
 using qbits_t = std::vector<qbit_t>;
 using index_t = std::size_t;

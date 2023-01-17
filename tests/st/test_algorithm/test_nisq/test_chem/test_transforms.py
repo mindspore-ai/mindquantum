@@ -14,8 +14,10 @@
 """
 Test the transforms in the hiqfermion module.
 """
+import pytest
 
 from mindquantum.algorithm.nisq import Transform
+from mindquantum.config import Context
 from mindquantum.core.operators import FermionOperator
 
 
@@ -23,22 +25,34 @@ def _get_terms_as_set(qubit_op):
     return {s.strip() for s in str(qubit_op).split('+')}
 
 
-def test_transform_jordan_wigner():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_transform_jordan_wigner(dtype):
     """
     Description: Test transform
     Expectation:
     """
+    Context.set_dtype(dtype)
     op1 = FermionOperator('1^')
     op_transform = Transform(op1)
     op1_jordan_wigner = op_transform.jordan_wigner()
     assert _get_terms_as_set(op1_jordan_wigner) == {'1/2 [Z0 X1]', '(-1/2j) [Z0 Y1]'}
 
 
-def test_transform_parity():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_transform_parity(dtype):
     """
     Description: Test transform
     Expectation:
     """
+    Context.set_dtype(dtype)
     op1 = FermionOperator('1^')
     op_transform = Transform(op1)
 
@@ -46,22 +60,34 @@ def test_transform_parity():
     assert _get_terms_as_set(op1_parity) == {'1/2 [Z0 X1]', '(-1/2j) [Y1]'}
 
 
-def test_transform_bravyi_kitaev():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_transform_bravyi_kitaev(dtype):
     """
     Description: Test transform
     Expectation:
     """
+    Context.set_dtype(dtype)
     op1 = FermionOperator('1^')
     op_transform = Transform(op1)
     op1_bravyi_kitaev = op_transform.bravyi_kitaev()
     assert _get_terms_as_set(op1_bravyi_kitaev) == {'1/2 [Z0 X1]', '(-1/2j) [Y1]'}
 
 
-def test_transform_ternary_tree():
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_transform_ternary_tree(dtype):
     """
     Description: Test transform
     Expectation:
     """
+    Context.set_dtype(dtype)
     op1 = FermionOperator('1^')
     op_transform = Transform(op1)
     op1_ternary_tree = op_transform.ternary_tree()

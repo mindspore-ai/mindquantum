@@ -222,7 +222,7 @@ Dim2Matrix<T> FSimMatrix(T theta, T phi) {
 
 template <typename T>
 Dim2Matrix<T> U3DiffThetaMatrix(T theta, T phi, T lambda) {
-    auto m = U3Matrix(theta + M_PI, phi, lambda);
+    auto m = U3Matrix(theta + static_cast<T>(M_PI), phi, lambda);
     Dim2MatrixBinary<T>(&m, 0.5, std::multiplies<CT<T>>());
     return m;
 }
@@ -235,7 +235,7 @@ Dim2Matrix<T> FSimDiffThetaMatrix(T theta) {
 
 template <typename T>
 Dim2Matrix<T> U3DiffPhiMatrix(T theta, T phi, T lambda) {
-    auto m = U3Matrix(theta, phi + M_PI_2, lambda);
+    auto m = U3Matrix(theta, phi + static_cast<T>(M_PI_2), lambda);
     m.matrix_[0][0] = 0;
     m.matrix_[0][1] = 0;
     return m;
@@ -243,13 +243,13 @@ Dim2Matrix<T> U3DiffPhiMatrix(T theta, T phi, T lambda) {
 
 template <typename T>
 Dim2Matrix<T> FSimDiffPhiMatrix(T phi) {
-    auto c = std::exp(std::complex<T>(0, phi + M_PI_2));
+    auto c = std::exp(std::complex<T>(0, phi + static_cast<T>(M_PI_2)));
     return Dim2Matrix<T>({{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, c}});
 }
 
 template <typename T>
 Dim2Matrix<T> U3DiffLambdaMatrix(T theta, T phi, T lambda) {
-    auto m = U3Matrix(theta, phi, lambda + M_PI_2);
+    auto m = U3Matrix(theta, phi, lambda + static_cast<T>(M_PI_2));
     m.matrix_[0][0] = 0;
     m.matrix_[1][0] = 0;
     return m;

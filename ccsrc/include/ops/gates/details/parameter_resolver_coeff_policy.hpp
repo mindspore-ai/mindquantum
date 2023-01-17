@@ -15,6 +15,8 @@
 #ifndef DETAILS_PARAMETERRESOLVER_COEFF_POLICY_HPP
 #define DETAILS_PARAMETERRESOLVER_COEFF_POLICY_HPP
 
+#include <cmath>
+
 #include <optional>
 #include <utility>
 
@@ -56,6 +58,7 @@ struct CoeffPolicy<ParameterResolver<float_t>> : CoeffPolicyBase<ParameterResolv
     using base_t = CoeffPolicyBase<coeff_t>;
     using coeff_policy_real_t = typename base_t::coeff_policy_real_t;
     using matrix_coeff_t = float_t;
+    using core_arithmetic_t = traits::to_real_type_t<float_t>;
 
     static const coeff_t zero;
     static const coeff_t one;

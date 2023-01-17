@@ -11,25 +11,24 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
-#include <cmath>
-
-#include <cassert>
-#include <complex>
-#include <stdexcept>
-
 #include <thrust/transform_reduce.h>
 
-#include "simulator/types.hpp"
+#include "config/openmp.hpp"
+
 #include "simulator/utils.hpp"
+#include "simulator/vector/detail/gpu_vector_double_policy.cuh"
+#include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_policy.cuh"
 #include "thrust/device_ptr.h"
 #include "thrust/functional.h"
 #include "thrust/inner_product.h"
-
 namespace mindquantum::sim::vector::detail {
-void GPUVectorPolicyBase::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
-                                               const qbits_t& ctrls, const std::vector<std::vector<py_qs_data_t>>& m,
-                                               index_t dim) {
+
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des,
+                                                                     const qbits_t& objs, const qbits_t& ctrls,
+                                                                     const std::vector<std::vector<py_qs_data_t>>& m,
+                                                                     index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
     qs_data_t m00 = m[0][0];
     qs_data_t m01 = m[0][1];
@@ -92,9 +91,11 @@ void GPUVectorPolicyBase::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des,
         });
     }
 }
-void GPUVectorPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
-                                                 const qbits_t& ctrls, const std::vector<std::vector<py_qs_data_t>>& m,
-                                                 index_t dim) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des,
+                                                                       qbit_t obj_qubit, const qbits_t& ctrls,
+                                                                       const std::vector<std::vector<py_qs_data_t>>& m,
+                                                                       index_t dim) {
     SingleQubitGateMask mask({obj_qubit}, ctrls);
     qs_data_t m00 = m[0][0];
     qs_data_t m01 = m[0][1];
@@ -128,74 +129,21 @@ void GPUVectorPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t de
     }
 }
 
-void GPUVectorPolicyBase::ApplyRX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
-                                  bool diff) {
-    SingleQubitGateMask mask(objs, ctrls);
-    auto a = std::cos(val / 2);
-    auto b = -std::sin(val / 2);
-    if (diff) {
-        a = -0.5 * std::sin(val / 2);
-        b = -0.5 * std::cos(val / 2);
-    }
-    std::vector<std::vector<py_qs_data_t>> m{{{a, 0}, {0, b}}, {{0, b}, {a, 0}}};
-    ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
-    if (diff && mask.ctrl_mask) {
-        SetToZeroExcept(qs, mask.ctrl_mask, dim);
-    }
-}
-
-void GPUVectorPolicyBase::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
-                                          const std::vector<std::vector<py_qs_data_t>>& m, index_t dim) {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
+                                                                const qbits_t& ctrls,
+                                                                const std::vector<std::vector<py_qs_data_t>>& m,
+                                                                index_t dim) {
     if (objs.size() == 1) {
-        ApplySingleQubitMatrix(src, des, objs[0], ctrls, m, dim);
+        derived::ApplySingleQubitMatrix(src, des, objs[0], ctrls, m, dim);
     } else if (objs.size() == 2) {
-        ApplyTwoQubitsMatrix(src, des, objs, ctrls, m, dim);
+        derived::ApplyTwoQubitsMatrix(src, des, objs, ctrls, m, dim);
     } else {
         throw std::runtime_error("Can not custom " + std::to_string(objs.size()) + " qubits gate for gpu backend.");
     }
 }
 
-void GPUVectorPolicyBase::ApplyRZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
-                                  bool diff) {
-    SingleQubitGateMask mask(objs, ctrls);
-    auto a = std::cos(val / 2);
-    auto b = std::sin(val / 2);
-    if (diff) {
-        a = -0.5 * std::sin(val / 2);
-        b = 0.5 * std::cos(val / 2);
-    }
-    std::vector<std::vector<py_qs_data_t>> m{{{a, -b}, {0, 0}}, {{0, 0}, {a, b}}};
-    ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
-    if (diff && mask.ctrl_mask) {
-        SetToZeroExcept(qs, mask.ctrl_mask, dim);
-    }
-}
+template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
+template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;
 
-void GPUVectorPolicyBase::ApplyH(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    std::vector<std::vector<py_qs_data_t>> m{{M_SQRT1_2, M_SQRT1_2}, {M_SQRT1_2, -M_SQRT1_2}};
-    ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
-}
-
-void GPUVectorPolicyBase::ApplyGP(qs_data_p_t qs, qbit_t obj_qubit, const qbits_t& ctrls, calc_type val, index_t dim,
-                                  bool diff) {
-    auto c = std::exp(std::complex<calc_type>(0, -val));
-    std::vector<std::vector<py_qs_data_t>> m = {{c, 0}, {0, c}};
-    ApplySingleQubitMatrix(qs, qs, obj_qubit, ctrls, m, dim);
-}
-
-void GPUVectorPolicyBase::ApplyRY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
-                                  bool diff) {
-    SingleQubitGateMask mask(objs, ctrls);
-    auto a = std::cos(val / 2);
-    auto b = std::sin(val / 2);
-    if (diff) {
-        a = -0.5 * std::sin(val / 2);
-        b = 0.5 * std::cos(val / 2);
-    }
-    std::vector<std::vector<py_qs_data_t>> m{{{a, 0}, {-b, 0}}, {{b, 0}, {a, 0}}};
-    ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
-    if (diff && mask.ctrl_mask) {
-        SetToZeroExcept(qs, mask.ctrl_mask, dim);
-    }
-}
 }  // namespace mindquantum::sim::vector::detail

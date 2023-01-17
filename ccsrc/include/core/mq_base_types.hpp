@@ -42,11 +42,6 @@ namespace mindquantum {
     p++
 
 using Index = int64_t;
-#ifdef FLOAT
-using MT = float;
-#else
-using MT = double;
-#endif
 
 template <typename T>
 using VT = std::vector<T>;

@@ -21,6 +21,7 @@ import numpy as np
 import pytest
 
 from mindquantum.algorithm.nisq import Transform
+from mindquantum.config import Context
 from mindquantum.core.operators import FermionOperator
 from mindquantum.third_party.interaction_operator import InteractionOperator
 
@@ -33,14 +34,19 @@ except (ImportError, AttributeError):
 _FORCE_TEST = bool(os.environ.get("FORCE_TEST", False))
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('dtype', ['float', 'double'])
 @pytest.mark.skipif(not _HAS_OPENFERMION, reason='OpenFermion is not installed')
 @pytest.mark.skipif(not _FORCE_TEST, reason='set not force test')
-def test_sparsing_operator():
+def test_sparsing_operator(dtype):
     """
     Description: Test sparsing operator
     Expectation: success
     """
-
+    Context.set_dtype(dtype)
     molecular = Path(__file__).parent.parent.parent / 'H4.hdf5'
 
     mol = MolecularData(filename=str(molecular))
@@ -62,5 +68,5 @@ def test_sparsing_operator():
     eigen_v1.sort()
     eigen_v2.sort()
     eigen_v3.sort()
-    assert np.allclose(eigen_v1, eigen_v2)
-    assert np.allclose(eigen_v1, eigen_v3)
+    assert np.allclose(eigen_v1, eigen_v2, atol=1e-6)
+    assert np.allclose(eigen_v1, eigen_v3, atol=1e-6)

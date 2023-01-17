@@ -102,7 +102,7 @@ auto QubitOperator<coeff_t>::sparse_matrix(std::optional<uint32_t> n_qubits) con
     static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::Y) - offset == 2);
     static_assert(static_cast<std::underlying_type_t<TermValue>>(TermValue::Z) - offset == 3);
 
-    static const std::array<sparse_matrix_t, 4> pauli_matrices = {
+    std::array<sparse_matrix_t, 4> pauli_matrices = {
         sparse_matrix_t{::generate_eigen_diagonal<scalar_t, 2>()},
         get_op_matrix(Op::X).sparseView(),
         get_op_matrix(Op::Y).sparseView(),
@@ -128,7 +128,8 @@ auto QubitOperator<coeff_t>::sparse_matrix(std::optional<uint32_t> n_qubits) con
 
     const auto n_qubits_value = n_qubits.value_or(n_qubits_local);
 
-    const auto process_term = [n_qubits_value](const auto& local_ops, const auto& coeff) -> sparse_matrix_t {
+    const auto process_term = [n_qubits_value, &pauli_matrices](const auto& local_ops,
+                                                                const auto& coeff) -> sparse_matrix_t {
         if (std::empty(local_ops)) {
             return details::n_identity<scalar_t>(n_qubits_value) * coeff;
         }
@@ -142,7 +143,8 @@ auto QubitOperator<coeff_t>::sparse_matrix(std::optional<uint32_t> n_qubits) con
         sparse_matrix_t init(1, 1);
         init.insert(0, 0) = coeff;
         return std::accumulate(
-            begin(order), end(order), init, [&local_ops](const sparse_matrix_t& init, const auto& idx) {
+            begin(order), end(order), init,
+            [&local_ops, &pauli_matrices](const sparse_matrix_t& init, const auto& idx) {
 #ifdef _MSC_VER
                 constexpr auto offset = static_cast<std::underlying_type_t<TermValue>>(TermValue::I);
 #endif  // _MSC_VER

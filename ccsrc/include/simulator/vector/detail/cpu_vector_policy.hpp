@@ -25,56 +25,19 @@
 #include "core/sparse/csrhdmatrix.hpp"
 #include "simulator/types.hpp"
 
-#ifdef INTRIN
-#    include "simulator/alignedallocator.hpp"
-#    include "simulator/cintrin.hpp"
-namespace mindquantum::sim::vector::intrin {
-#    define INTRIN_M2_dot_V2(ket, i, j, mm, mmt, res)                                                                  \
-        do {                                                                                                           \
-            __m256d v[2];                                                                                              \
-            v[0] = load2(ket + (i));                                                                                   \
-            v[1] = load2(ket + (j));                                                                                   \
-            res = add(mul(v[0], mm[0], mmt[0]), mul(v[1], mm[1], mmt[1]));                                             \
-        } while (0)
-
-#    define INTRIN_Conj_V2_dot_V2(v2_bra, m256_v2, i, j, neg, res)                                                     \
-        do {                                                                                                           \
-            __m256d y;                                                                                                 \
-            y = load(v2_bra + (i), v2_bra + (j));                                                                      \
-            res = _mm256_mul_pd(mul(_mm256_mul_pd(m256_v2, neg), y, _mm256_mul_pd(_mm256_permute_pd(y, 5), neg)),      \
-                                neg);                                                                                  \
-        } while (0)
-
-#    define INTRIN_m256_to_host(device_res, host_res)                                                                  \
-        _mm256_storeu2_m128d(reinterpret_cast<calc_type*>(host_res), (reinterpret_cast<calc_type*>(host_res)) + 2,     \
-                             device_res);
-
-#    define INTRIN_m256_to_host2(device_res, host_res_first, host_res_second)                                          \
-        _mm256_storeu2_m128d(reinterpret_cast<calc_type*>(host_res_second),                                            \
-                             (reinterpret_cast<calc_type*>(host_res_first)), device_res);  // NOLINT
-
-#    define INTRIN_gene_2d_mm_and_mmt(matrix, mm, mmt, neg)                                                            \
-        do {                                                                                                           \
-            mm[0] = load(&matrix[0][0], &matrix[1][0]);                                                                \
-            mm[1] = load(&matrix[0][1], &matrix[1][1]);                                                                \
-            for (unsigned i = 0; i < 2; ++i) {                                                                         \
-                auto badc = _mm256_permute_pd(mm[i], 5);                                                               \
-                mmt[i] = _mm256_mul_pd(badc, neg);                                                                     \
-            }                                                                                                          \
-        } while (0)
-}  // namespace mindquantum::sim::vector::intrin
-#endif
 namespace mindquantum::sim::vector::detail {
+struct CPUVectorPolicyAvxFloat;
+struct CPUVectorPolicyAvxDouble;
+
+template <typename derived_, typename calc_type_>
 struct CPUVectorPolicyBase {
+    using derived = derived_;
+    using calc_type = calc_type_;
     using qs_data_t = std::complex<calc_type>;
     using qs_data_p_t = qs_data_t*;
     using py_qs_data_t = std::complex<calc_type>;
-    using py_qs_datas_t = std::vector<py_qs_data_t>;
     static constexpr index_t DimTh = 1UL << 13;
 
-#ifdef INTRIN
-    using gate_matrix_t = std::vector<std::vector<qs_data_t, aligned_allocator<qs_data_t, 64>>>;
-#endif
     static constexpr qs_data_t IMAGE_MI = {0, -1};
     static constexpr qs_data_t IMAGE_I = {0, 1};
 
@@ -102,8 +65,8 @@ struct CPUVectorPolicyBase {
                                qs_data_t fail_coeff, index_t dim);
     static void QSMulValue(qs_data_p_t src, qs_data_p_t des, qs_data_t value, index_t dim);
     static qs_data_t ConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi, bool abs, index_t dim);
-    static py_qs_datas_t GetQS(qs_data_p_t qs, index_t dim);
-    static void SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, index_t dim);
+    static VT<py_qs_data_t> GetQS(qs_data_p_t qs, index_t dim);
+    static void SetQS(qs_data_p_t qs, const VT<qs_data_t>& qs_out, index_t dim);
     static qs_data_p_t ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
     static qs_data_p_t Copy(qs_data_p_t qs, index_t dim);
     template <index_t mask, index_t condi>
@@ -165,15 +128,14 @@ struct CPUVectorPolicyBase {
     static void ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
 
-    // gate_expec
+    // gate_expectation
     // ========================================================================================================
     static qs_data_t ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                 const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m,
-                                                 index_t dim);
+                                                 const qbits_t& ctrls, const VVT<py_qs_data_t>& m, index_t dim);
     static qs_data_t ExpectDiffTwoQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                               const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m, index_t dim);
+                                               const qbits_t& ctrls, const VVT<py_qs_data_t>& m, index_t dim);
     static qs_data_t ExpectDiffMatrixGate(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                          const std::vector<py_qs_datas_t>& m, index_t dim);
+                                          const VVT<py_qs_data_t>& m, index_t dim);
     static qs_data_t ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                   calc_type val, index_t dim);
     static qs_data_t ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
@@ -192,5 +154,4 @@ struct CPUVectorPolicyBase {
                                   calc_type val, index_t dim);
 };
 }  // namespace mindquantum::sim::vector::detail
-
 #endif

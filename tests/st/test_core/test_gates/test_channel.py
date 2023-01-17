@@ -17,6 +17,7 @@ import numpy as np
 import pytest
 
 import mindquantum.core.gates.channel as C
+from mindquantum.config import Context
 from mindquantum.core.gates import X
 from mindquantum.simulator import Simulator, get_supported_simulator
 
@@ -26,11 +27,13 @@ from mindquantum.simulator import Simulator, get_supported_simulator
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
-def test_pauli_channel(backend):
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_pauli_channel(backend, dtype):
     """
     Description: Test pauli channel
     Expectation: success.
     """
+    Context.set_dtype(dtype)
     sim = Simulator(backend, 1)
     sim.apply_gate(C.PauliChannel(1, 0, 0).on(0))
     sim.apply_gate(C.PauliChannel(0, 0, 1).on(0))
@@ -43,11 +46,13 @@ def test_pauli_channel(backend):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
-def test_flip_channel(backend):
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_flip_channel(backend, dtype):
     """
     Description: Test flip channel
     Expectation: success.
     """
+    Context.set_dtype(dtype)
     sim1 = Simulator(backend, 1)
     sim1.apply_gate(C.BitFlipChannel(1).on(0))
     assert np.allclose(sim1.get_qs(), np.array([0.0 + 0.0j, 1.0 + 0.0j]))
@@ -62,11 +67,13 @@ def test_flip_channel(backend):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
-def test_depolarizing_channel(backend):
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_depolarizing_channel(backend, dtype):
     """
     Description: Test depolarizing channel
     Expectation: success.
     """
+    Context.set_dtype(dtype)
     sim2 = Simulator(backend, 1)
     sim2.apply_gate(C.DepolarizingChannel(0).on(0))
     assert np.allclose(sim2.get_qs(), np.array([1.0 + 0.0j, 0.0 + 0.0j]))
@@ -77,11 +84,13 @@ def test_depolarizing_channel(backend):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
-def test_damping_channel(backend):
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_damping_channel(backend, dtype):
     """
     Description: Test damping channel
     Expectation: success.
     """
+    Context.set_dtype(dtype)
     sim = Simulator(backend, 2)
     sim.apply_gate(X.on(0))
     sim.apply_gate(X.on(1))
@@ -99,11 +108,13 @@ def test_damping_channel(backend):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('backend', get_supported_simulator())
-def test_kraus_channel(backend):
+@pytest.mark.parametrize('dtype', ['float', 'double'])
+def test_kraus_channel(backend, dtype):
     """
     Description: Test kraus channel
     Expectation: success.
     """
+    Context.set_dtype(dtype)
     kmat0 = [[1, 0], [0, 0]]
     kmat1 = [[0, 1], [0, 0]]
     kraus = C.KrausChannel("amplitude_damping", [kmat0, kmat1])

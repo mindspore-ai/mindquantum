@@ -28,9 +28,9 @@ namespace x3 = boost::spirit::x3;
 
 namespace mindquantum::ops::details {
 auto std_complex_from_string(const boost::iterator_range<std::string_view::const_iterator> &range)
-    -> std::optional<std::complex<double>> {
+    -> std::optional<std::complex<MT>> {
     MQ_INFO("Attempting to parse: '{}'", std::string(range.begin(), range.end()));
-    if (std::complex<double> coeff;
+    if (std::complex<MT> coeff;
         mindquantum::parser::parse_object_skipper(range.begin(), range.end(), coeff, parser::complex, x3::space)) {
         return coeff;
     }

@@ -43,8 +43,8 @@ struct BasicGate {
     Dim2Matrix<T> base_matrix_;
     std::function<Dim2Matrix<T>(T)> param_matrix_;
     std::function<Dim2Matrix<T>(T)> param_diff_matrix_;
-    NumbaMatFunWrapper numba_param_matrix_;
-    NumbaMatFunWrapper numba_param_diff_matrix_;
+    NumbaMatFunWrapper<T> numba_param_matrix_;
+    NumbaMatFunWrapper<T> numba_param_diff_matrix_;
     // Dim2Matrix<T> (*param_matrix_)(T para);
     // Dim2Matrix<T> (*param_diff_matrix_)(T para);
     bool is_channel_ = false;
