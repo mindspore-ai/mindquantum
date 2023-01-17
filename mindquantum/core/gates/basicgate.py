@@ -13,11 +13,12 @@
 # limitations under the License.
 # ============================================================================
 
-# pylint: disable=abstract-method,import-outside-toplevel,too-many-lines
+# pylint: disable=abstract-method,import-outside-toplevel,too-many-lines,useless-parent-delegation
 """Basic module for quantum gate."""
 
 import copy
 import numbers
+import warnings
 from functools import reduce
 from inspect import signature
 from typing import List, Tuple
@@ -513,9 +514,14 @@ class ZZ(RotSelfHermMat):
 
     def __init__(self, pr):
         """Initialize a ZZ object."""
+        warnings.warn(
+            "ZZ gate is deprecated, please use Rzz",
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__(
             pr=ParameterResolver(pr),
-            name='ZZ',
+            name='Rzz',
             n_qubits=2,
             core=PauliStringGate([Z, Z]),
         )
@@ -578,9 +584,14 @@ class XX(RotSelfHermMat):
 
     def __init__(self, pr):
         """Initialize an XX object."""
+        warnings.warn(
+            "XX gate is deprecated, please use Rxx",
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__(
             pr=ParameterResolver(pr),
-            name='XX',
+            name='Rxx',
             n_qubits=2,
             core=PauliStringGate([X, X]),
         )
@@ -651,9 +662,14 @@ class YY(RotSelfHermMat):
 
     def __init__(self, pr):
         """Initialize an YY object."""
+        warnings.warn(
+            "YY gate is deprecated, please use Ryy",
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__(
             pr=ParameterResolver(pr),
-            name='YY',
+            name='Ryy',
             n_qubits=2,
             core=PauliStringGate([Y, Y]),
         )
@@ -707,6 +723,235 @@ class YY(RotSelfHermMat):
             numpy.ndarray, the differential form matrix.
         """
         return super().diff_matrix(pr, about_what, 1)
+
+
+class Rzz(RotSelfHermMat):
+    r"""
+    Rzz gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    .. math::
+
+        Rzz(\theta) = \exp{-i\frac{\theta}{2} Z\otimes Z} =
+        \begin{pmatrix}
+            e^{-i\frac{\theta}{2}} & 0 & 0 & 0\\
+            0 & e^{i\frac{\theta}{2}} & 0 & 0\\
+            0 & 0 & e^{i\frac{\theta}{2}} & 0\\
+            0 & 0 & 0 & e^{-i\frac{\theta}{2}}\\
+        \end{pmatrix}
+
+    Args:
+        pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation.
+    """
+
+    def __init__(self, pr):
+        """Initialize a Rzz object."""
+        super().__init__(
+            pr=ParameterResolver(pr),
+            name='Rzz',
+            n_qubits=2,
+            core=PauliStringGate([Z, Z]),
+        )
+
+    def __decompose__(self):
+        """Gate decomposition method."""
+        from ..circuit import Circuit  # pylint: disable=cyclic-import
+
+        out = []
+        out.append(Circuit())
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out[-1] += RZ(self.coeff).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out.append(Circuit())
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += RZ(self.coeff).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        return out
+
+    def matrix(self, pr=None, frac=0.5):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
+        return super().matrix(pr, frac)
+
+    def diff_matrix(self, pr=None, about_what=None, frac=0.5):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
+        return super().diff_matrix(pr, about_what, frac)
+
+
+class Rxx(RotSelfHermMat):
+    r"""
+    Rxx gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    .. math::
+
+        Rxx(\theta) = \exp{-i\frac{\theta}{2} X\otimes X} =
+        \begin{pmatrix}
+            \cos{\frac{\theta}{2}} & 0 & 0 & -i\sin{\frac{\theta}{2}}\\
+            0 & \cos{\frac{\theta}{2}} & -i\sin{\frac{\theta}{2}} & 0\\
+            0 & -i\sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}} & 0\\
+            -i\sin{\frac{\theta}{2}} & 0 & 0 & \cos{\frac{\theta}{2}}\\
+        \end{pmatrix}
+
+    Args:
+        pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation.
+    """
+
+    def __init__(self, pr):
+        """Initialize an Rxx object."""
+        super().__init__(
+            pr=ParameterResolver(pr),
+            name='Rxx',
+            n_qubits=2,
+            core=PauliStringGate([X, X]),
+        )
+
+    def __decompose__(self):
+        """Gate decomposition method."""
+        from ..circuit import Circuit  # pylint: disable=cyclic-import
+
+        out = []
+        out.append(Circuit())
+        out[-1] += H.on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out[-1] += RZ(self.coeff).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out.append(Circuit())
+        out[-1] += H.on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += RZ(self.coeff).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[1], [*self.ctrl_qubits])
+        return out
+
+    def matrix(self, pr=None, frac=0.5):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
+        return super().matrix(pr, frac)
+
+    def diff_matrix(self, pr=None, about_what=None, frac=0.5):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
+        return super().diff_matrix(pr, about_what, frac)
+
+
+class Ryy(RotSelfHermMat):
+    r"""
+    Ryy  gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    .. math::
+
+        Ryy(\theta) = \exp{-i\frac{\theta}{2} Y\otimes Y} =
+        \begin{pmatrix}
+            \cos{\frac{\theta}{2}} & 0 & 0 & i\sin{\frac{\theta}{2}}\\
+            0 & \cos{\frac{\theta}{2}} & -i\sin{\frac{\theta}{2}} & 0\\
+            0 & -i\sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}} & 0\\
+            i\sin{\frac{\theta}{2}} & 0 & 0 & \cos{\frac{\theta}{2}}\\
+        \end{pmatrix}
+
+    Args:
+        pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation.
+    """
+
+    def __init__(self, pr):
+        """Initialize an Ryy object."""
+        super().__init__(
+            pr=ParameterResolver(pr),
+            name='Ryy',
+            n_qubits=2,
+            core=PauliStringGate([Y, Y]),
+        )
+
+    def __decompose__(self):
+        """Gate decomposition method."""
+        from ..circuit import Circuit  # pylint: disable=cyclic-import
+
+        out = []
+        out.append(Circuit())
+        out[-1] += RX(np.pi / 2).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += RX(np.pi / 2).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out[-1] += RZ(self.coeff).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out[-1] += RX(7 * np.pi / 2).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += RX(7 * np.pi / 2).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out.append(Circuit())
+        out[-1] += RX(np.pi / 2).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += RX(np.pi / 2).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += RZ(self.coeff).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += RX(7 * np.pi / 2).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += RX(7 * np.pi / 2).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        return out
+
+    def matrix(self, pr=None, frac=0.5):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
+        return super().matrix(pr, frac)
+
+    def diff_matrix(self, pr=None, about_what=None, frac=0.5):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
+        return super().diff_matrix(pr, about_what, frac)
 
 
 class BarrierGate(FunctionalGate):

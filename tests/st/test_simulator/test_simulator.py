@@ -98,7 +98,7 @@ def test_apply_circuit_and_hermitian(virtual_qc, dtype):
     circ.h(0).h(1)
     circ.x(1, 0)
     circ.rx('a', 0).ry('b', 1)
-    circ.zz('c', (0, 1)).z(1, 0)
+    circ.rzz({'c': 2}, (0, 1)).z(1, 0)
     s1 = Simulator(virtual_qc, circ.n_qubits)
     pr = PR({'a': 1, 'b': 3, 'c': 5})
     s1.apply_circuit(circ, pr)
@@ -107,7 +107,7 @@ def test_apply_circuit_and_hermitian(virtual_qc, dtype):
     matrix = np.kron(G.H.matrix(), G.H.matrix()) @ matrix
     matrix = (np.kron(G.I.matrix(), sv0) + np.kron(G.X.matrix(), sv1)) @ matrix
     matrix = np.kron(G.RY(3).matrix(), G.RX(1).matrix()) @ matrix
-    matrix = G.ZZ(5).matrix() @ matrix
+    matrix = G.Rzz(10).matrix() @ matrix
     matrix = (np.kron(G.I.matrix(), sv0) + np.kron(G.Z.matrix(), sv1)) @ matrix
     v = matrix[:, 0]
     assert np.allclose(v, v1)
@@ -198,9 +198,9 @@ def generate_test_circuit():
     circuit += G.RX('c').on(2, 0)
     circuit += UN(G.H, 3)
     circuit += UN(G.T, 3)
-    circuit += G.UnivMathGate('fake_XX', G.XX(1.2).matrix()).on([0, 1])
-    circuit += G.YY(2.3).on([1, 2])
-    circuit += G.ZZ(3.4).on([0, 2])
+    circuit += G.UnivMathGate('fake_Rxx', G.Rxx(2.4).matrix()).on([0, 1])
+    circuit += G.Ryy(4.6).on([1, 2])
+    circuit += G.Rzz(6.8).on([0, 2])
     circuit += G.UnivMathGate('myX', G.X.matrix()).on(0)
     circuit += G.Power(G.X, 1.2).on(1)
     return circuit

@@ -218,12 +218,12 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRZ(qs_data_p_t bra, qs
 }
 
 template <typename derived_, typename calc_type_>
-auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffXX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                             const qbits_t& ctrls, calc_type val, index_t dim)
+auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxx(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                                              const qbits_t& ctrls, calc_type val, index_t dim)
     -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
-    auto c = static_cast<calc_type>(-std::sin(val));
-    auto s = static_cast<calc_type>(std::cos(val)) * qs_data_t(0, -1);
+    auto c = static_cast<calc_type>(-std::sin(val / 2) / 2);
+    auto s = static_cast<calc_type>(std::cos(val / 2) / 2) * qs_data_t(0, -1);
     thrust::counting_iterator<size_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
     auto obj_rev_high_mask = mask.obj_rev_high_mask;
@@ -279,12 +279,12 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffXX(qs_data_p_t bra, qs
 }
 
 template <typename derived_, typename calc_type_>
-auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffYY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                             const qbits_t& ctrls, calc_type val, index_t dim)
+auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRyy(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                                              const qbits_t& ctrls, calc_type val, index_t dim)
     -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
-    auto c = static_cast<calc_type>(-std::sin(val));
-    auto s = static_cast<calc_type>(std::cos(val)) * qs_data_t(0, 1);
+    auto c = static_cast<calc_type>(-std::sin(val / 2) / 2);
+    auto s = static_cast<calc_type>(std::cos(val / 2) / 2) * qs_data_t(0, 1);
     thrust::counting_iterator<size_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
     auto obj_rev_high_mask = mask.obj_rev_high_mask;
@@ -340,12 +340,12 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffYY(qs_data_p_t bra, qs
 }
 
 template <typename derived_, typename calc_type_>
-auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffZZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                             const qbits_t& ctrls, calc_type val, index_t dim)
+auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRzz(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                                              const qbits_t& ctrls, calc_type val, index_t dim)
     -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
-    auto c = static_cast<calc_type>(-std::sin(val));
-    auto s = static_cast<calc_type>(std::cos(val));
+    auto c = static_cast<calc_type>(-std::sin(val / 2) / 2);
+    auto s = static_cast<calc_type>(std::cos(val / 2) / 2);
     auto e = c + qs_data_t(0, 1) * s;
     auto me = c + qs_data_t(0, -1) * s;
     thrust::counting_iterator<size_t> l(0);

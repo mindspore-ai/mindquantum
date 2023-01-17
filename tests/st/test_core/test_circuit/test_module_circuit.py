@@ -13,10 +13,8 @@
 # limitations under the License.
 # ============================================================================
 """Test module_circuit."""
-import numpy as np
-
 from mindquantum.core import gates as G
-from mindquantum.core.circuit import U3, UN, Circuit, SwapParts
+from mindquantum.core.circuit import UN, SwapParts
 
 
 def test_un():
@@ -35,13 +33,3 @@ def test_swappart():
     """
     circ = SwapParts([1, 2, 3], [4, 5, 6], 0)
     assert circ[-1] == G.SWAP([3, 6], 0)
-
-
-def test_u3():
-    """
-    Description: Test U3
-    Expectation:
-    """
-    circ = U3('theta', 'phi', 'lambda', 0)
-    circ_exp = Circuit().rz('lambda', 0).rx(np.pi / 2, 0).rz('theta', 0).rx(-np.pi / 2, 0).rz('phi', 0)
-    assert circ == circ_exp

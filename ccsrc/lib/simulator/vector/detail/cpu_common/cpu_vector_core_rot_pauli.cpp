@@ -25,14 +25,14 @@
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::ApplyXX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
-                                                        calc_type val, index_t dim, bool diff) {
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRxx(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                         calc_type val, index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
-    auto c = std::cos(val);
-    auto s = std::sin(val) * IMAGE_MI;
+    auto c = static_cast<calc_type_>(std::cos(val / 2));
+    auto s = static_cast<calc_type_>(std::sin(val / 2)) * IMAGE_MI;
     if (diff) {
-        c = -std::sin(val);
-        s = std::cos(val) * IMAGE_MI;
+        c = static_cast<calc_type_>(-std::sin(val / 2) / 2);
+        s = static_cast<calc_type_>(std::cos(val / 2) / 2) * IMAGE_MI;
     }
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
@@ -79,14 +79,14 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyXX(qs_data_p_t qs, const qb
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::ApplyYY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
-                                                        calc_type val, index_t dim, bool diff) {
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRyy(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                         calc_type val, index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
-    auto c = std::cos(val);
-    auto s = std::sin(val) * IMAGE_I;
+    auto c = static_cast<calc_type_>(std::cos(val / 2));
+    auto s = static_cast<calc_type_>(std::sin(val / 2)) * IMAGE_I;
     if (diff) {
-        c = -std::sin(val);
-        s = std::cos(val) * IMAGE_I;
+        c = static_cast<calc_type_>(-std::sin(val / 2) / 2);
+        s = static_cast<calc_type_>(std::cos(val / 2) / 2) * IMAGE_I;
     }
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
@@ -133,14 +133,14 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyYY(qs_data_p_t qs, const qb
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
-                                                        calc_type val, index_t dim, bool diff) {
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRzz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                         calc_type val, index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
-    auto c = std::cos(val);
-    auto s = std::sin(val);
+    auto c = static_cast<calc_type_>(std::cos(val / 2));
+    auto s = static_cast<calc_type_>(std::sin(val / 2));
     if (diff) {
-        c = -std::sin(val);
-        s = std::cos(val);
+        c = static_cast<calc_type_>(-std::sin(val / 2) / 2);
+        s = static_cast<calc_type_>(std::cos(val / 2) / 2);
     }
     auto e = c + IMAGE_I * s;
     auto me = c + IMAGE_MI * s;

@@ -67,10 +67,10 @@ def test_trap_ion_gate():
     Expectation:
     """
     angle = 0.5
-    xx = [
-        G.XX("angle").on((0, 1)),
+    rxx = [
+        G.Rxx("angle").on((0, 1)),
         lambda angle: expm(
-            -1j
+            -0.5j
             * angle
             * np.array(
                 [
@@ -82,10 +82,10 @@ def test_trap_ion_gate():
             )
         ),
     ]
-    yy = [
-        G.YY("angle").on((0, 1)),
+    ryy = [
+        G.Ryy("angle").on((0, 1)),
         lambda angle: expm(
-            -1j
+            -0.5j
             * angle
             * np.array(
                 [
@@ -97,17 +97,17 @@ def test_trap_ion_gate():
             )
         ),
     ]
-    zz = [
-        G.ZZ("angle").on((0, 1)),
+    rzz = [
+        G.Rzz("angle").on((0, 1)),
         lambda angle: expm(
-            -1j
+            -0.5j
             * angle
             * np.array([[1.0, 0.0, 0.0, 0.0], [0.0, -1.0, 0.0, 0.0], [0.0, 0.0, -1.0, 0.0], [0.0, 0.0, 0.0, 1.0]])
         ),
     ]
-    for g in [xx, yy, zz]:
+    for g in [rxx, ryy, rzz]:
         assert np.allclose(g[0].matrix({'angle': angle}), g[1](angle))
-        assert np.allclose(g[0].diff_matrix({'angle': angle}), g[1](angle + np.pi / 2))
+        assert np.allclose(g[0].diff_matrix({'angle': angle}), g[1](angle + np.pi) / 2)
 
 
 def test_pauli_gate():
@@ -205,7 +205,7 @@ def test_gate_obj_mismatch():
     with pytest.raises(Exception, match=r"requires \d+ qubit"):
         G.RX(1).on((1, 2), 0)
     with pytest.raises(Exception, match=r"requires \d+ qubit"):
-        G.ZZ('a').on(1, 0)
+        G.Rzz('a').on(1, 0)
 
 
 def test_gate_obj_ctrl_overlap():
@@ -216,7 +216,7 @@ def test_gate_obj_ctrl_overlap():
     with pytest.raises(Exception, match=r"cannot have same qubits"):
         G.X(1, 1)
     with pytest.raises(Exception, match=r"cannot have same qubits"):
-        G.ZZ('a').on((0, 1), (1, 2))
+        G.Rzz('a').on((0, 1), (1, 2))
     with pytest.raises(Exception, match=r"cannot have same qubits"):
         G.RX('a').on(1, (1, 2))
 

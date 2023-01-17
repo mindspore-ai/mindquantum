@@ -26,7 +26,7 @@ import tqdm
 from _parse_args import parser
 from mindspore import context
 
-from mindquantum.core import XX, ZZ, Circuit, H, Hamiltonian, QubitOperator, X
+from mindquantum.core import Circuit, H, Hamiltonian, QubitOperator, Rxx, Rzz, X
 from mindquantum.simulator import Simulator
 
 args = parser.parse_args()
@@ -80,8 +80,8 @@ def create_quantum_model(n_qubits):
 
     c = c + X.on(readout) + H.on(readout)
     builder = CircuitLayerBuilder(data_qubits=data_qubits, readout=readout)
-    builder.add_layer(c, XX, 'xx1')
-    builder.add_layer(c, ZZ, 'zz1')
+    builder.add_layer(c, Rxx, 'xx1')
+    builder.add_layer(c, Rzz, 'zz1')
     c += H.on(readout)
     return c, Hamiltonian(QubitOperator(f'Z{readout}'))
 

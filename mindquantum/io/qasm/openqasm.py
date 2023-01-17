@@ -151,7 +151,7 @@ class OpenQASM:
         single_np = [gates.XGate, gates.YGate, gates.ZGate, gates.HGate, gates.SGate, gates.TGate]
         single_p = [gates.RX, gates.RY, gates.RZ, gates.PhaseShift]
         double_np = [gates.SWAPGate, gates.CNOTGate]
-        double_p = [gates.XX, gates.YY, gates.ZZ]
+        double_p = [gates.Rxx, gates.Ryy, gates.Rzz]
         if version == "2.0":
             self.circuit = circuit
             self.cmds = [f"OPENQASM {version};", "include \"qelib1.inc\";"]
@@ -234,7 +234,7 @@ class OpenQASM:
                     else:
                         obj = gate.obj_qubits
                         param = ",".join([str(i.const) for i in gate.get_parameters()])
-                        self.cmds.append(f"r{gate.name.lower()}({param}) q[{obj[0]}],q[{obj[1]}];")
+                        self.cmds.append(f"r{gate.name[1:].lower()}({param}) q[{obj[0]}],q[{obj[1]}];")
         else:
             raise NotImplementedError(f"openqasm version {version} not implement")
         return '\n'.join(self.cmds)

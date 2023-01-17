@@ -71,6 +71,7 @@ unusedStructMember:ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp
 
 unusedStructMember:ccsrc/include/experimental/ops/parametric/param_names.hpp
 unusedStructMember:ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp
+unusedStructMember:ccsrc/include/core/mq_base_types.hpp
 
 useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.hpp
 useStlAlgorithm:ccsrc/include/experimental/core/control.hpp:79

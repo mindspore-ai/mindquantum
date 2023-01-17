@@ -149,50 +149,50 @@ BasicGate<T> PSGate = {
     }};
 
 template <typename T>
-BasicGate<T> XXGate = {true, gXX, PARAMSOPPOSITE,
-                       [](T theta) {
-                           return Dim2Matrix<T>{{{{COS1_2(2 * theta), 0}, {0, 0}, {0, 0}, {0, -SIN1_2(2 * theta)}},
-                                                 {{0, 0}, {COS1_2(2 * theta), 0}, {0, -SIN1_2(2 * theta)}, {0, 0}},
-                                                 {{0, 0}, {0, -SIN1_2(2 * theta)}, {COS1_2(2 * theta), 0}, {0, 0}},
-                                                 {{0, -SIN1_2(2 * theta)}, {0, 0}, {0, 0}, {COS1_2(2 * theta), 0}}}};
-                       },
-                       [](T theta) {
-                           return Dim2Matrix<T>{{{{-SIN1_2(2 * theta), 0}, {0, 0}, {0, 0}, {0, -COS1_2(2 * theta)}},
-                                                 {{0, 0}, {-SIN1_2(2 * theta), 0}, {0, -COS1_2(2 * theta)}, {0, 0}},
-                                                 {{0, 0}, {0, -COS1_2(2 * theta)}, {-SIN1_2(2 * theta), 0}, {0, 0}},
-                                                 {{0, -COS1_2(2 * theta)}, {0, 0}, {0, 0}, {-SIN1_2(2 * theta), 0}}}};
-                       }};
+BasicGate<T> RxxGate = {true, gRXX, PARAMSOPPOSITE,
+                        [](T theta) {
+                            return Dim2Matrix<T>{{{{COS1_2(theta), 0}, {0, 0}, {0, 0}, {0, -SIN1_2(theta)}},
+                                                  {{0, 0}, {COS1_2(theta), 0}, {0, -SIN1_2(theta)}, {0, 0}},
+                                                  {{0, 0}, {0, -SIN1_2(theta)}, {COS1_2(theta), 0}, {0, 0}},
+                                                  {{0, -SIN1_2(theta)}, {0, 0}, {0, 0}, {COS1_2(theta), 0}}}};
+                        },
+                        [](T theta) {
+                            return Dim2Matrix<T>{{{{-SIN1_2(theta) / 2, 0}, {0, 0}, {0, 0}, {0, -COS1_2(theta) / 2}},
+                                                  {{0, 0}, {-SIN1_2(theta) / 2, 0}, {0, -COS1_2(theta) / 2}, {0, 0}},
+                                                  {{0, 0}, {0, -COS1_2(theta) / 2}, {-SIN1_2(theta) / 2, 0}, {0, 0}},
+                                                  {{0, -COS1_2(theta) / 2}, {0, 0}, {0, 0}, {-SIN1_2(theta) / 2, 0}}}};
+                        }};
 
 template <typename T>
-BasicGate<T> YYGate = {
-    true, gYY, PARAMSOPPOSITE,
+BasicGate<T> RyyGate = {
+    true, gRYY, PARAMSOPPOSITE,
     [](T theta) {
-        return Dim2Matrix<T>{VVT<CT<T>>{{{COS1_2(2 * theta), 0}, {0, 0}, {0, 0}, {0, SIN1_2(2 * theta)}},
-                                        {{0, 0}, {COS1_2(2 * theta), 0}, {0, -SIN1_2(2 * theta)}, {0, 0}},
-                                        {{0, 0}, {0, -SIN1_2(2 * theta)}, {COS1_2(2 * theta), 0}, {0, 0}},
-                                        {{0, SIN1_2(2 * theta)}, {0, 0}, {0, 0}, {COS1_2(2 * theta), 0}}}};
+        return Dim2Matrix<T>{VVT<CT<T>>{{{COS1_2(theta), 0}, {0, 0}, {0, 0}, {0, SIN1_2(theta)}},
+                                        {{0, 0}, {COS1_2(theta), 0}, {0, -SIN1_2(theta)}, {0, 0}},
+                                        {{0, 0}, {0, -SIN1_2(theta)}, {COS1_2(theta), 0}, {0, 0}},
+                                        {{0, SIN1_2(theta)}, {0, 0}, {0, 0}, {COS1_2(theta), 0}}}};
     },
     [](T theta) {
-        return Dim2Matrix<T>{VVT<CT<T>>{{{-SIN1_2(2 * theta), 0}, {0, 0}, {0, 0}, {0, COS1_2(2 * theta)}},
-                                        {{0, 0}, {-SIN1_2(2 * theta), 0}, {0, -COS1_2(2 * theta)}, {0, 0}},
-                                        {{0, 0}, {0, -COS1_2(2 * theta)}, {-SIN1_2(2 * theta), 0}, {0, 0}},
-                                        {{0, COS1_2(2 * theta)}, {0, 0}, {0, 0}, {-SIN1_2(2 * theta), 0}}}};
+        return Dim2Matrix<T>{VVT<CT<T>>{{{-SIN1_2(theta) / 2, 0}, {0, 0}, {0, 0}, {0, COS1_2(theta) / 2}},
+                                        {{0, 0}, {-SIN1_2(theta) / 2, 0}, {0, -COS1_2(theta) / 2}, {0, 0}},
+                                        {{0, 0}, {0, -COS1_2(theta) / 2}, {-SIN1_2(theta) / 2, 0}, {0, 0}},
+                                        {{0, COS1_2(theta) / 2}, {0, 0}, {0, 0}, {-SIN1_2(theta) / 2, 0}}}};
     }};
 
 template <typename T>
-BasicGate<T> ZZGate = {true, gZZ, PARAMSOPPOSITE,
-                       [](T theta) {
-                           return Dim2Matrix<T>{{{{COS1_2(2 * theta), -SIN1_2(2 * theta)}, {0, 0}, {0, 0}, {0, 0}},
-                                                 {{0, 0}, {COS1_2(2 * theta), SIN1_2(2 * theta)}, {0, 0}, {0, 0}},
-                                                 {{0, 0}, {0, 0}, {COS1_2(2 * theta), SIN1_2(2 * theta)}, {0, 0}},
-                                                 {{0, 0}, {0, 0}, {0, 0}, {COS1_2(2 * theta), -SIN1_2(2 * theta)}}}};
-                       },
-                       [](T theta) {
-                           return Dim2Matrix<T>{{{{-SIN1_2(2 * theta), -COS1_2(2 * theta)}, {0, 0}, {0, 0}, {0, 0}},
-                                                 {{0, 0}, {-SIN1_2(2 * theta), COS1_2(2 * theta)}, {0, 0}, {0, 0}},
-                                                 {{0, 0}, {0, 0}, {-SIN1_2(2 * theta), COS1_2(2 * theta)}, {0, 0}},
-                                                 {{0, 0}, {0, 0}, {0, 0}, {-SIN1_2(2 * theta), -COS1_2(2 * theta)}}}};
-                       }};
+BasicGate<T> RzzGate = {true, gRZZ, PARAMSOPPOSITE,
+                        [](T theta) {
+                            return Dim2Matrix<T>{{{{COS1_2(theta), -SIN1_2(theta)}, {0, 0}, {0, 0}, {0, 0}},
+                                                  {{0, 0}, {COS1_2(theta), SIN1_2(theta)}, {0, 0}, {0, 0}},
+                                                  {{0, 0}, {0, 0}, {COS1_2(theta), SIN1_2(theta)}, {0, 0}},
+                                                  {{0, 0}, {0, 0}, {0, 0}, {COS1_2(theta), -SIN1_2(theta)}}}};
+                        },
+                        [](T theta) {
+                            return Dim2Matrix<T>{{{{-SIN1_2(theta) / 2, -COS1_2(theta) / 2}, {0, 0}, {0, 0}, {0, 0}},
+                                                  {{0, 0}, {-SIN1_2(theta) / 2, COS1_2(theta) / 2}, {0, 0}, {0, 0}},
+                                                  {{0, 0}, {0, 0}, {-SIN1_2(theta) / 2, COS1_2(theta) / 2}, {0, 0}},
+                                                  {{0, 0}, {0, 0}, {0, 0}, {-SIN1_2(theta) / 2, -COS1_2(theta) / 2}}}};
+                        }};
 
 template <typename T>
 BasicGate<T> GetMeasureGate(const std::string& name) {
@@ -337,12 +337,12 @@ BasicGate<T> GetGateByName(const std::string& name) {
         out = RZGate<T>;
     } else if (name == gPS) {
         out = PSGate<T>;
-    } else if (name == gXX) {
-        out = XXGate<T>;
-    } else if (name == gYY) {
-        out = YYGate<T>;
-    } else if (name == gZZ) {
-        out = ZZGate<T>;
+    } else if (name == gRXX) {
+        out = RxxGate<T>;
+    } else if (name == gRYY) {
+        out = RyyGate<T>;
+    } else if (name == gRZZ) {
+        out = RzzGate<T>;
         //    } else if (name == cPL) {
         //        out = PauliChannel<T>;
     } else if (name == gGP) {

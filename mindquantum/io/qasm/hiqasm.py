@@ -299,9 +299,10 @@ class HiQASM:
                 )
             else:
                 _not_implement(version, gate)
-        elif isinstance(gate, (gates.XX, gates.YY, gates.ZZ)):
+        elif isinstance(gate, (gates.Rxx, gates.Ryy, gates.Rzz)):
+            gate_name = gate.name[1:].upper()
             if n_ctrl_qubits == 0:
-                self.cmds.append(f'{gate.name} q[{obj_qubits[0]}],q[{obj_qubits[1]}] {gate.coeff.const}')
+                self.cmds.append(f'{gate_name} q[{obj_qubits[0]}],q[{obj_qubits[1]}] {gate.coeff.const}')
             else:
                 _not_implement(version, gate)
         else:
@@ -394,11 +395,11 @@ class HiQASM:
             elif cmd.startswith('CRZ '):
                 self.circuit.rz(*_extr_parameter(cmd), qubit[1], qubit[0])
             elif cmd.startswith('XX '):
-                self.circuit.xx(*_extr_parameter(cmd), qubit[:2])
+                self.circuit.rxx(*_extr_parameter(cmd), qubit[:2])
             elif cmd.startswith('YY '):
-                self.circuit.yy(*_extr_parameter(cmd), qubit[:2])
+                self.circuit.ryy(*_extr_parameter(cmd), qubit[:2])
             elif cmd.startswith('ZZ '):
-                self.circuit.zz(*_extr_parameter(cmd), qubit[:2])
+                self.circuit.rzz(*_extr_parameter(cmd), qubit[:2])
             elif cmd.startswith('CCRX '):
                 self.circuit.rx(*_extr_parameter(cmd), qubit[-1], qubit[:2])
             elif cmd.startswith('CCRY '):

@@ -219,30 +219,30 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate<cal
             val = gate->params_.Combination(pr).const_value;
         }
         qs_policy_t::ApplyRZ(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
-    } else if (name == gXX) {
+    } else if (name == gRXX) {
         auto val = gate->applied_value_;
         if (!gate->parameterized_) {
             diff = false;
         } else {
             val = gate->params_.Combination(pr).const_value;
         }
-        qs_policy_t::ApplyXX(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
-    } else if (name == gZZ) {
+        qs_policy_t::ApplyRxx(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+    } else if (name == gRZZ) {
         auto val = gate->applied_value_;
         if (!gate->parameterized_) {
             diff = false;
         } else {
             val = gate->params_.Combination(pr).const_value;
         }
-        qs_policy_t::ApplyZZ(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
-    } else if (name == gYY) {
+        qs_policy_t::ApplyRzz(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+    } else if (name == gRYY) {
         auto val = gate->applied_value_;
         if (!gate->parameterized_) {
             diff = false;
         } else {
             val = gate->params_.Combination(pr).const_value;
         }
-        qs_policy_t::ApplyYY(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        qs_policy_t::ApplyRyy(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
     } else if (name == gPS) {
         auto val = gate->applied_value_;
         if (!gate->parameterized_) {
@@ -409,14 +409,14 @@ auto VectorState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t bra, qs_data_p_t ket,
     if (name == gRZ) {
         return qs_policy_t::ExpectDiffRZ(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
     }
-    if (name == gXX) {
-        return qs_policy_t::ExpectDiffXX(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+    if (name == gRXX) {
+        return qs_policy_t::ExpectDiffRxx(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
     }
-    if (name == gZZ) {
-        return qs_policy_t::ExpectDiffZZ(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+    if (name == gRZZ) {
+        return qs_policy_t::ExpectDiffRzz(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
     }
-    if (name == gYY) {
-        return qs_policy_t::ExpectDiffYY(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+    if (name == gRYY) {
+        return qs_policy_t::ExpectDiffRyy(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
     }
     if (name == gPS) {
         return qs_policy_t::ExpectDiffPS(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);

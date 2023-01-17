@@ -15,10 +15,7 @@
 
 """Module circuit."""
 
-import warnings
 from collections.abc import Iterable
-
-import numpy as np
 
 from mindquantum.core.gates import SWAP, BasicGate
 from mindquantum.core.gates.basic import _check_gate_type
@@ -115,50 +112,3 @@ class SwapParts(Circuit):
             raise Exception("Swap part should be iterable!")
         maps = [[a[i], b[i]] for i in range(len(a))]
         Circuit.__init__(self, UN(SWAP, maps, maps_ctrl))
-
-
-class U3(Circuit):
-    r"""
-    This circuit represent arbitrary single qubit gate.
-
-    U3 gate with matrix as:
-
-    .. math::
-
-        U3(\theta, \phi, \lambda) =\begin{pmatrix}\cos(\theta/2)&-e^{i\lambda}\sin(\theta/2)\\
-            e^{i\phi}\sin(\theta/2)&e^{i(\phi+\lambda)}\cos(\theta/2)\end{pmatrix}
-
-    It can be decomposed as:
-
-    .. math::
-
-        U3(\theta, \phi, \lambda) = RZ(\phi) RX(-\pi/2) RZ(\theta) RX(\pi/2) RZ(\lambda)
-
-    Args:
-        theta (Union[numbers.Number, dict, ParameterResolver]): First parameter for U3 circuit.
-        phi (Union[numbers.Number, dict, ParameterResolver]): Second parameter for U3 circuit.
-        lam (Union[numbers.Number, dict, ParameterResolver]): Third parameter for U3 circuit.
-        obj_qubit (int): Which qubit the U3 circuit will act on. Default: None.
-
-    Examples:
-        >>> from mindquantum.core.circuit import U3
-        >>> U3('theta','phi','lambda')
-        q0: ──RZ(lambda)────RX(π/2)────RZ(theta)────RX(-π/2)────RZ(phi)──
-    """
-
-    def __init__(self, theta, phi, lam, obj_qubit=None):
-        """Initialize a U3 object."""
-        warnings.warn(
-            "U3 from circuit is deprecated, please use U3 as a gate from mindquantum.core.gates.",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
-        if obj_qubit is None:
-            obj_qubit = 0
-        circ = Circuit()
-        circ.rz(lam, obj_qubit)
-        circ.rx(np.pi / 2, obj_qubit)
-        circ.rz(theta, obj_qubit)
-        circ.rx(-np.pi / 2, obj_qubit)
-        circ.rz(phi, obj_qubit)
-        Circuit.__init__(self, circ)

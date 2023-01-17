@@ -19,7 +19,7 @@ Quantum circuit module.
 """
 
 from .circuit import A, Circuit, apply
-from .module_circuit import U3, UN, SwapParts
+from .module_circuit import UN, SwapParts
 from .qfi import partial_psi_partial_psi, partial_psi_psi, qfi
 from .utils import (
     AP,
@@ -40,7 +40,6 @@ from .utils import (
 
 __all__ = [
     'Circuit',
-    'U3',
     'UN',
     'SwapParts',
     'C',
