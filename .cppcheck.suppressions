@@ -7,9 +7,6 @@ unreadVariable:tests/*
 
 assignBoolToPointer:ccsrc/python/simulator/include/python/vector/bind_vec_state.h
 
-constStatement:ccsrc/lib/mq_base/gates/details/fermion_operator_term_policy.cpp
-constStatement:ccsrc/lib/mq_base/gates/details/qubit_operator_term_policy.cpp
-
 containerOutOfBounds:ccsrc/include/ops/gates/fermion_operator.tpp
 containerOutOfBounds:ccsrc/lib/ops/gates/fermion_operator.cpp
 containerOutOfBounds:ccsrc/lib/ops/gates/fermion_operator_parameter_resolver.cpp
@@ -43,7 +40,7 @@ stlIfFind:ccsrc/lib/experimental/decompositions/atom_storage.cpp
 stlIfFind:ccsrc/lib/experimental/decompositions/gate_decomposer.cpp
 
 syntaxError:ccsrc/include/core/parameter_resolver_external_ops.hpp:90
-syntaxError:ccsrc/include/core/sparse/algo.hpp:73
+syntaxError:ccsrc/include/core/sparse/algo.hpp
 syntaxError:ccsrc/include/ops/gates/terms_operator_base_external_ops.hpp:92
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_vector_policy.cpp
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_gate_expec.cpp
@@ -66,6 +63,7 @@ unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_policy
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_swap_like.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_matrix_gate.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_x_like.cpp
+unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_matrix_gate.cpp
 
 unreadVariable:ccsrc/lib/experimental/decompositions/time_evolution.cpp
 

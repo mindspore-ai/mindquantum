@@ -504,8 +504,8 @@ auto BindPR(py::module &module, const std::string &name) {  // NOLINT(runtime/re
               // Properties
               .def_property_readonly("const", [](const pr_t &pr) { return pr.const_value; })
               .def_readonly("data", &pr_t::data_)
-              .def_property_readonly("is_complex",
-                                     [](const pr_t &) constexpr { return mindquantum::traits::is_complex_v<T>; })
+              .def_property_readonly(
+                  "is_complex", [](const pr_t &) constexpr { return mindquantum::traits::is_complex_v<T>; })
               .def_property_readonly("encoder_parameters", [](const pr_t &pr) { return pr.encoder_parameters_; })
               .def_property_readonly("no_grad_parameters", [](const pr_t &pr) { return pr.no_grad_parameters_; })
               // ------------------------------

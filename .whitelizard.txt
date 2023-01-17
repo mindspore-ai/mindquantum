@@ -30,6 +30,7 @@ ccsrc/mindquantum/src/binding.cc:mindquantum::PYBIND11_MODULE
 ccsrc/python/experimental/lib/core/symengine.cpp:mindquantum::python::init_symengine_basic_types
 ccsrc/python/experimental/lib/ops/ops.cpp:init_mindquantum_ops
 ccsrc/python/mqbackend/lib/binding.cc:init_qubit_operators
+ccsrc/python/mqbackend/lib/binding.cc:init_fermion_operators
 ccsrc/python/mqbackend/lib/binding.cc:BindOther
 ccsrc/python/mqbackend/lib/fermion_operators.cpp:init_fermion_operators
 ccsrc/python/mqbackend/lib/qubit_operators.cpp:init_qubit_operators
