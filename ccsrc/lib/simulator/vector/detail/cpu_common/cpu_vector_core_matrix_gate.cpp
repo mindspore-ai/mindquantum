@@ -30,6 +30,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t
                                                                      const std::vector<std::vector<py_qs_data_t>>& gate,
                                                                      index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
+    size_t mask1 = (1UL << objs[0]);
+    size_t mask2 = (1UL << objs[1]);
     if (!mask.ctrl_mask) {
         // clang-format off
         THRESHOLD_OMP_FOR(dim, DimTh,
@@ -37,8 +39,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
-                auto j = i + mask.obj_min_mask;
-                auto k = i + mask.obj_max_mask;
+                auto j = i + mask1;
+                auto k = i + mask2;
                 auto m = i + mask.obj_mask;
                 auto v00 = gate[0][0] * src[i] + gate[0][1] * src[j] + gate[0][2] * src[k] + gate[0][3] * src[m];
                 auto v01 = gate[1][0] * src[i] + gate[1][1] * src[j] + gate[1][2] * src[k] + gate[1][3] * src[m];
@@ -57,8 +59,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
                 if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                    auto j = i + mask.obj_min_mask;
-                    auto k = i + mask.obj_max_mask;
+                    auto j = i + mask1;
+                    auto k = i + mask2;
                     auto m = i + mask.obj_mask;
                     auto v00 = gate[0][0] * src[i] + gate[0][1] * src[j] + gate[0][2] * src[k] + gate[0][3] * src[m];
                     auto v01 = gate[1][0] * src[i] + gate[1][1] * src[j] + gate[1][2] * src[k] + gate[1][3] * src[m];

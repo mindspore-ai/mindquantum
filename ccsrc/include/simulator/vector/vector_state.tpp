@@ -513,7 +513,7 @@ void VectorState<qs_policy_t_>::ApplyHamiltonian(const Hamiltonian<calc_type>& h
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::GetCircuitMatrix(const circuit_t& circ, const ParameterResolver<calc_type>& pr)
     -> VVT<py_qs_data_t> {
-    VVT<CT<calc_type>> out((1 << n_qubits));
+    VVT<CT<calc_type>> out((1UL << n_qubits), VT<CT<calc_type>>((1UL << n_qubits), 0));
     for (size_t i = 0; i < (1UL << n_qubits); i++) {
         auto sim = VectorState<qs_policy_t>(n_qubits, seed);
         for (qbit_t j = 0; j < n_qubits; ++j) {
@@ -522,7 +522,10 @@ auto VectorState<qs_policy_t_>::GetCircuitMatrix(const circuit_t& circ, const Pa
             }
         }
         sim.ApplyCircuit(circ, pr);
-        out[i] = sim.GetQS();
+        auto v = sim.GetQS();
+        for (size_t j = 0; j < v.size(); ++j) {
+            out[j][i] = v[j];
+        }
     }
     return out;
 }
