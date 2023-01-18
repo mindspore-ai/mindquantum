@@ -1,6 +1,9 @@
 mindquantum.algorithm
 =====================
 
+.. py:module:: mindquantum.algorithm
+
+
 量子算法。
 
 .. toctree::

@@ -1,6 +1,9 @@
 mindquantum.simulator
 =====================
 
+.. py:module:: mindquantum.simulator
+
+
 模拟量子系统演化的量子模拟器。
 
 .. include:: mindquantum.simulator.GradOpsWrapper.rst

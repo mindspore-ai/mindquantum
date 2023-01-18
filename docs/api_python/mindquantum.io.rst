@@ -1,6 +1,9 @@
 mindquantum.io
 ==============
 
+.. py:module:: mindquantum.io
+
+
 MindQuantum的输入/输出模块。
 
 .. include:: mindquantum.io.BlochScene.rst

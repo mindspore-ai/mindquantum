@@ -1,6 +1,9 @@
 mindquantum.utils
 =================
 
+.. py:module:: mindquantum.utils
+
+
 实用工具。
 
 .. include:: mindquantum.utils.fdopen.rst

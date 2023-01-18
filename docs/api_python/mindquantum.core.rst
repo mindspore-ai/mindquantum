@@ -1,6 +1,9 @@
 mindquantum.core
 ================
 
+.. py:module:: mindquantum.core
+
+
 MindQuantum的核心特性(eDSL)
 
 .. mscnautosummary::
