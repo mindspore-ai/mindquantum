@@ -1,3 +1,6 @@
+mindquantum.core.circuit.Circuit
+=================================
+
 .. py:class:: mindquantum.core.circuit.Circuit(gates=None)
 
     量子线路模块。

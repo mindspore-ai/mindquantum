@@ -1,3 +1,6 @@
+mindquantum.core.operators.up_index
+====================================
+
 .. py:function:: mindquantum.core.operators.up_index(index)
 
     索引顺序，默认情况下，我们将无自旋轨道设置为偶数-奇数-偶数-奇数（0,1,2,3,...）。

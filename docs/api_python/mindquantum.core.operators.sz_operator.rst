@@ -1,3 +1,6 @@
+mindquantum.core.operators.sz_operator
+=======================================
+
 .. py:function:: mindquantum.core.operators.sz_operator(n_spatial_orbitals)
 
     返回sz运算符。

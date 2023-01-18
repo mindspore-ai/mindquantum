@@ -1,3 +1,6 @@
+mindquantum.core.circuit.as_ansatz
+===================================
+
 .. py:function:: mindquantum.core.circuit.as_ansatz(circuit_fn)
 
     将线路转化为ansatz线路的装饰器。

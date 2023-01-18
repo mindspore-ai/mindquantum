@@ -1,3 +1,6 @@
+mindquantum.core.circuit.as_encoder
+====================================
+
 .. py:function:: mindquantum.core.circuit.as_encoder(circuit_fn)
 
     将线路转化为编码线路的装饰器。

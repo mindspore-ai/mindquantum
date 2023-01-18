@@ -1,3 +1,6 @@
+mindquantum.core.circuit.dagger
+================================
+
 .. py:function:: mindquantum.core.circuit.dagger(circuit_fn)
 
     获取量子线路或量子算子（可以生成量子线路的函数）的共轭转置。

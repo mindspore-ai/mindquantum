@@ -1,3 +1,6 @@
+mindquantum.core.circuit.SwapParts
+===================================
+
 .. py:class:: mindquantum.core.circuit.SwapParts(a: Iterable, b: Iterable, maps_ctrl=None)
 
     交换量子线路中两个不同的部分，可以增加控制比特，也可以不加。
