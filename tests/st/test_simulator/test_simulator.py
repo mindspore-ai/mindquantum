@@ -28,6 +28,7 @@ from mindquantum.core.circuit import UN, Circuit
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 from mindquantum.simulator import Simulator, get_supported_simulator, inner_product
+from mindquantum.utils import random_circuit
 
 _HAS_MINDSPORE = True
 try:
@@ -388,6 +389,28 @@ def test_copy(virtual_qc, dtype):
     qs1 = sim.get_qs()
     qs2 = sim2.get_qs()
     assert np.allclose(qs1, qs2)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+@pytest.mark.parametrize("dtype", ['float', 'double'])
+def test_univ_order(virtual_qc, dtype):
+    """
+    Description: test order of univ math gate.
+    Expectation: success.
+    """
+    Context.set_dtype(dtype)
+    r_c = random_circuit(2, 100)
+    u = r_c.matrix(backend=virtual_qc)
+    assert np.allclose(r_c.get_qs(backend=virtual_qc), u[:, 0])
+    g = G.UnivMathGate('u', u)
+    c0 = Circuit([g.on([0, 1])])
+    c1 = Circuit([g.on([1, 0])])
+    assert np.allclose(c0.get_qs(backend=virtual_qc), u[:, 0])
+    assert np.allclose(c1.get_qs(backend=virtual_qc), np.array([u[0, 0], u[2, 0], u[1, 0], u[3, 0]]))
 
 
 @pytest.mark.level0
