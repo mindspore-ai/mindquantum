@@ -41,6 +41,7 @@
 #include "core/two_dim_matrix.hpp"
 #include "details/define_terms_ops.hpp"
 #include "ops/basic_gate.hpp"
+#include "ops/gate_id.hpp"
 #include "ops/gates.hpp"
 #include "ops/gates/details/coeff_policy.hpp"
 #include "ops/gates/details/parameter_resolver_coeff_policy.hpp"
@@ -504,8 +505,8 @@ auto BindPR(py::module &module, const std::string &name) {  // NOLINT(runtime/re
               // Properties
               .def_property_readonly("const", [](const pr_t &pr) { return pr.const_value; })
               .def_readonly("data", &pr_t::data_)
-              .def_property_readonly(
-                  "is_complex", [](const pr_t &) constexpr { return mindquantum::traits::is_complex_v<T>; })
+              .def_property_readonly("is_complex",
+                                     [](const pr_t &) constexpr { return mindquantum::traits::is_complex_v<T>; })
               .def_property_readonly("encoder_parameters", [](const pr_t &pr) { return pr.encoder_parameters_; })
               .def_property_readonly("no_grad_parameters", [](const pr_t &pr) { return pr.no_grad_parameters_; })
               // ------------------------------
@@ -740,6 +741,38 @@ PYBIND11_MODULE(mqbackend, m) {
     py::module logging = m.def_submodule("logging", "MindQuantum-C++ logging module");
     mindquantum::python::init_logging(logging);
 
+    auto gate_id = py::enum_<mindquantum::GateID>(m, "GateID")
+                       .value("I", mindquantum::GateID::I)
+                       .value("X", mindquantum::GateID::X)
+                       .value("Y", mindquantum::GateID::Y)
+                       .value("Z", mindquantum::GateID::Z)
+                       .value("RX", mindquantum::GateID::RX)
+                       .value("RY", mindquantum::GateID::RY)
+                       .value("RZ", mindquantum::GateID::RZ)
+                       .value("Rxx", mindquantum::GateID::Rxx)
+                       .value("Ryy", mindquantum::GateID::Ryy)
+                       .value("Rzz", mindquantum::GateID::Rzz)
+                       .value("H", mindquantum::GateID::H)
+                       .value("SWAP", mindquantum::GateID::SWAP)
+                       .value("ISWAP", mindquantum::GateID::ISWAP)
+                       .value("T", mindquantum::GateID::T)
+                       .value("S", mindquantum::GateID::S)
+                       .value("CNOT", mindquantum::GateID::CNOT)
+                       .value("CZ", mindquantum::GateID::CZ)
+                       .value("GP", mindquantum::GateID::GP)
+                       .value("PS", mindquantum::GateID::PS)
+                       .value("U3", mindquantum::GateID::U3)
+                       .value("FSim", mindquantum::GateID::FSim)
+                       .value("M", mindquantum::GateID::M)
+                       .value("PL", mindquantum::GateID::PL)
+                       .value("AD", mindquantum::GateID::AD)
+                       .value("PD", mindquantum::GateID::PD);
+    gate_id.attr("__repr__") = pybind11::cpp_function(
+        [](const mindquantum::GateID &id) -> pybind11::str { return fmt::format("GateID.{}", id); },
+        pybind11::name("name"), pybind11::is_method(gate_id));
+    gate_id.attr("__str__") = pybind11::cpp_function(
+        [](const mindquantum::GateID &id) -> pybind11::str { return fmt::format("{}", id); },
+        pybind11::name("name"), pybind11::is_method(gate_id));
     auto term_value = py::enum_<mindquantum::ops::TermValue>(m, "TermValue")
                           .value("I", mindquantum::ops::TermValue::I)
                           .value("X", mindquantum::ops::TermValue::X)
