@@ -1,3 +1,6 @@
+mindquantum.core.gates.SGate
+===============================
+
 .. py:class:: mindquantum.core.gates.SGate
 
     S门，矩阵为：

@@ -1,50 +1,60 @@
 mindquantum.core.circuit
 ========================
 
+.. py:module:: mindquantum.core.circuit
+
+
 量子线路模块，通过有序地组织各种量子门，我们可以轻松地搭建出符合要求的量子线路，包括参数化量子线路。本模块还包含各种预设的量子线路以及对量子线路进行高效操作的模块。
 
-Quantum Circuit
+Class
 ---------------
 
-.. include:: mindquantum.core.circuit.Circuit.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
 
-.. include:: mindquantum.core.circuit.SwapParts.rst
+    mindquantum.core.circuit.Circuit
 
-.. include:: mindquantum.core.circuit.U3.rst
+    mindquantum.core.circuit.SwapParts
 
-.. include:: mindquantum.core.circuit.UN.rst
+    mindquantum.core.circuit.U3
 
-.. include:: mindquantum.core.circuit.add_prefix.rst
+    mindquantum.core.circuit.UN
 
-.. include:: mindquantum.core.circuit.add_suffix.rst
+Method
+---------------
 
-.. include:: mindquantum.core.circuit.apply.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
 
-.. include:: mindquantum.core.circuit.as_ansatz.rst
+    mindquantum.core.circuit.add_prefix
 
-.. include:: mindquantum.core.circuit.as_encoder.rst
+    mindquantum.core.circuit.add_suffix
 
-.. include:: mindquantum.core.circuit.change_param_name.rst
+    mindquantum.core.circuit.apply
 
-.. include:: mindquantum.core.circuit.controlled.rst
+    mindquantum.core.circuit.as_ansatz
 
-.. include:: mindquantum.core.circuit.dagger.rst
+    mindquantum.core.circuit.as_encoder
 
-.. include:: mindquantum.core.circuit.decompose_single_term_time_evolution.rst
+    mindquantum.core.circuit.change_param_name
 
-.. include:: mindquantum.core.circuit.pauli_word_to_circuits.rst
+    mindquantum.core.circuit.controlled
 
-.. include:: mindquantum.core.circuit.shift.rst
+    mindquantum.core.circuit.dagger
 
-.. include:: mindquantum.core.circuit.qfi.rst
+    mindquantum.core.circuit.decompose_single_term_time_evolution
 
-.. include:: mindquantum.core.circuit.partial_psi_partial_psi.rst
+    mindquantum.core.circuit.pauli_word_to_circuits
 
-.. include:: mindquantum.core.circuit.partial_psi_psi.rst
+    mindquantum.core.circuit.shift
 
-.. automodule:: mindquantum.core.circuit
-    :exclude-members: C, D, A, AP, CPN
-    :members:
+    mindquantum.core.circuit.qfi
+
+    mindquantum.core.circuit.partial_psi_partial_psi
+
+    mindquantum.core.circuit.partial_psi_psi
 
 functional
 ----------

@@ -1,7 +1,55 @@
 mindquantum.core.gates
 ======================
 
+.. py:module:: mindquantum.core.gates
+
+
 量子门模块，提供不同的量子门。
+
+基类
+-------------
+
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
+    :template: classtemplate.rst
+
+    mindquantum.core.gates.BasicGate
+    mindquantum.core.gates.NoneParameterGate
+    mindquantum.core.gates.ParameterGate
+
+量子门
+-------------
+
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
+    :template: classtemplate.rst
+
+    mindquantum.core.gates.CNOTGate
+    mindquantum.core.gates.FSim
+    mindquantum.core.gates.GlobalPhase
+    mindquantum.core.gates.HGate
+    mindquantum.core.gates.IGate
+    mindquantum.core.gates.ISWAPGate
+    mindquantum.core.gates.Measure
+    mindquantum.core.gates.PhaseShift
+    mindquantum.core.gates.RX
+    mindquantum.core.gates.RY
+    mindquantum.core.gates.RZ
+    mindquantum.core.gates.SGate
+    mindquantum.core.gates.SWAPGate
+    mindquantum.core.gates.TGate
+    mindquantum.core.gates.U3
+    mindquantum.core.gates.UnivMathGate
+    mindquantum.core.gates.XGate
+    mindquantum.core.gates.XX
+    mindquantum.core.gates.YGate
+    mindquantum.core.gates.YY
+    mindquantum.core.gates.ZGate
+    mindquantum.core.gates.ZZ
+    mindquantum.core.gates.gene_univ_parameterized_gate
+    mindquantum.core.gates.BarrierGate
 
 functional
 ----------
@@ -35,82 +83,30 @@ functional
    * - mindquantum.core.gates.Z
      - :class:`mindquantum.core.gates.ZGate`
 
-Quantum Gates
+量子信道
 -------------
 
-.. include:: mindquantum.core.gates.AmplitudeDampingChannel.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
+    :template: classtemplate.rst
 
-.. include:: mindquantum.core.gates.BasicGate.rst
+    mindquantum.core.gates.AmplitudeDampingChannel
+    mindquantum.core.gates.BitFlipChannel
+    mindquantum.core.gates.BitPhaseFlipChannel
+    mindquantum.core.gates.DepolarizingChannel
+    mindquantum.core.gates.KrausChannel
+    mindquantum.core.gates.PauliChannel
+    mindquantum.core.gates.PhaseDampingChannel
+    mindquantum.core.gates.PhaseFlipChannel
 
-.. include:: mindquantum.core.gates.BitFlipChannel.rst
+功能类
+-------------
 
-.. include:: mindquantum.core.gates.BitPhaseFlipChannel.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
+    :template: classtemplate.rst
 
-.. include:: mindquantum.core.gates.CNOTGate.rst
-
-.. include:: mindquantum.core.gates.DepolarizingChannel.rst
-
-.. include:: mindquantum.core.gates.FSim.rst
-
-.. include:: mindquantum.core.gates.GlobalPhase.rst
-
-.. include:: mindquantum.core.gates.HGate.rst
-
-.. include:: mindquantum.core.gates.IGate.rst
-
-.. include:: mindquantum.core.gates.ISWAPGate.rst
-
-.. include:: mindquantum.core.gates.KrausChannel.rst
-
-.. include:: mindquantum.core.gates.Measure.rst
-
-.. include:: mindquantum.core.gates.MeasureResult.rst
-
-.. include:: mindquantum.core.gates.ParameterGate.rst
-
-.. include:: mindquantum.core.gates.PauliChannel.rst
-
-.. include:: mindquantum.core.gates.PhaseDampingChannel.rst
-
-.. include:: mindquantum.core.gates.PhaseFlipChannel.rst
-
-.. include:: mindquantum.core.gates.PhaseShift.rst
-
-.. include:: mindquantum.core.gates.Power.rst
-
-.. include:: mindquantum.core.gates.RX.rst
-
-.. include:: mindquantum.core.gates.RY.rst
-
-.. include:: mindquantum.core.gates.RZ.rst
-
-.. include:: mindquantum.core.gates.SGate.rst
-
-.. include:: mindquantum.core.gates.SWAPGate.rst
-
-.. include:: mindquantum.core.gates.TGate.rst
-
-.. include:: mindquantum.core.gates.U3.rst
-
-.. include:: mindquantum.core.gates.UnivMathGate.rst
-
-.. include:: mindquantum.core.gates.XGate.rst
-
-.. include:: mindquantum.core.gates.XX.rst
-
-.. include:: mindquantum.core.gates.YGate.rst
-
-.. include:: mindquantum.core.gates.YY.rst
-
-.. include:: mindquantum.core.gates.ZGate.rst
-
-.. include:: mindquantum.core.gates.ZZ.rst
-
-.. include:: mindquantum.core.gates.gene_univ_parameterized_gate.rst
-
-.. include:: mindquantum.core.gates.BarrierGate.rst
-
-.. include:: mindquantum.core.gates.NoneParameterGate.rst
-
-.. automodule:: mindquantum.core.gates
-    :members:
+    mindquantum.core.gates.MeasureResult
+    mindquantum.core.gates.Power

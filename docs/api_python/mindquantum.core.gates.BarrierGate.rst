@@ -1,3 +1,6 @@
+mindquantum.core.gates.BarrierGate
+===================================
+
 .. py:class:: mindquantum.core.gates.BarrierGate(show=True)
 
     栅栏门会将两个量子门分开在不同的层级上。

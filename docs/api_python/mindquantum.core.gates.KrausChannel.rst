@@ -1,3 +1,6 @@
+mindquantum.core.gates.KrausChannel
+====================================
+
 .. py:class:: mindquantum.core.gates.KrausChannel(name: str, kraus_op, **kwargs)
 
     用于表征量子计算中非相干噪声的量子信道。

@@ -1,3 +1,6 @@
+mindquantum.core.gates.AmplitudeDampingChannel
+===============================================
+
 .. py:class:: mindquantum.core.gates.AmplitudeDampingChannel(gamma: float, **kwargs)
 
     用于表征量子计算中非相干噪声的信道。

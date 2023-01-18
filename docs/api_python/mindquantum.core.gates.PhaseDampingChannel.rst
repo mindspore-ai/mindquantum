@@ -1,3 +1,6 @@
+mindquantum.core.gates.PhaseDampingChannel
+===========================================
+
 .. py:class:: mindquantum.core.gates.PhaseDampingChannel(gamma: float, **kwargs)
 
     用于表征量子计算中非相干噪声的信道。
