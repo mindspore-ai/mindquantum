@@ -9,12 +9,14 @@ mindquantum.core.gates.AmplitudeDampingChannel
 
     .. math::
 
+        \begin{gather*}
         \epsilon(\rho) = E_0 \rho E_0^\dagger + E_1 \rho E_1^\dagger
-
-        where\ {E_0}=\begin{bmatrix}1&0\\
+        \\
+        \text{其中}\ {E_0}=\begin{bmatrix}1&0\\
                 0&\sqrt{1-\gamma}\end{bmatrix},
             \ {E_1}=\begin{bmatrix}0&\sqrt{\gamma}\\
                 0&0\end{bmatrix}
+        \end{gather*}
 
     这里 :math:`\rho` 是密度矩阵形式的量子态； :math:`\gamma` 是能量损耗系数。
 
