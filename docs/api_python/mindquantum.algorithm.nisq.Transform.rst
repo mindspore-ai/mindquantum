@@ -1,3 +1,6 @@
+mindquantum.algorithm.nisq.Transform
+=====================================
+
 .. py:class:: mindquantum.algorithm.nisq.Transform(operator, n_qubits=None)
 
     将费米子或者玻色子进行转化的模块。

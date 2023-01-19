@@ -6,17 +6,18 @@ mindquantum.utils
 
 实用工具。
 
-.. include:: mindquantum.utils.fdopen.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
 
-.. include:: mindquantum.utils.ket_string.rst
+    mindquantum.utils.fdopen
 
-.. include:: mindquantum.utils.mod.rst
+    mindquantum.utils.ket_string
 
-.. include:: mindquantum.utils.normalize.rst
+    mindquantum.utils.mod
 
-.. include:: mindquantum.utils.random_circuit.rst
+    mindquantum.utils.normalize
 
-.. include:: mindquantum.utils.random_state.rst
+    mindquantum.utils.random_circuit
 
-.. automodule:: mindquantum.utils
-    :members:
+    mindquantum.utils.random_state

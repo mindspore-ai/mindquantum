@@ -3,9 +3,9 @@ mindquantum.core.gates.PhaseDampingChannel
 
 .. py:class:: mindquantum.core.gates.PhaseDampingChannel(gamma: float, **kwargs)
 
-    用于表征量子计算中非相干噪声的信道。
-    相位衰减信道表示的是量子比特在不跟外界产生能量交换时量子信息的损失。
-    相位衰减信道通常可表示为：
+    相位阻尼信道，表示的是量子比特在不跟外界产生能量交换时量子信息的损失。
+    
+    相位阻尼信道通常可表示为：
 
     .. math::
 

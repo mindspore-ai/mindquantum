@@ -3,7 +3,7 @@ mindquantum.core.gates.SGate
 
 .. py:class:: mindquantum.core.gates.SGate
 
-    S门，矩阵为：
+    S门。矩阵为：
 
     .. math::
         {\rm S}=\begin{pmatrix}1&0\\0&i\end{pmatrix}

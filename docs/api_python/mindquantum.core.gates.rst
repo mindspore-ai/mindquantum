@@ -21,7 +21,7 @@ mindquantum.core.gates
 量子门
 -------------
 
-.. mscnautosummary::
+.. mscnmathautosummary::
     :toctree:
     :nosignatures:
     :template: classtemplate.rst
@@ -86,7 +86,7 @@ functional
 量子信道
 -------------
 
-.. mscnautosummary::
+.. mscnmathautosummary::
     :toctree:
     :nosignatures:
     :template: classtemplate.rst

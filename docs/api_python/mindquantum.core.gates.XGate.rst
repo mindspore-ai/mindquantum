@@ -3,7 +3,7 @@ mindquantum.core.gates.XGate
 
 .. py:class:: mindquantum.core.gates.XGate
 
-    泡利X门，矩阵为：
+    泡利X门。矩阵为：
 
     .. math::
 

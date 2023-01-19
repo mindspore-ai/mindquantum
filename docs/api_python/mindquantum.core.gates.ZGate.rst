@@ -3,7 +3,7 @@ mindquantum.core.gates.ZGate
 
 .. py:class:: mindquantum.core.gates.ZGate
 
-    泡利Z门，矩阵为：
+    泡利Z门。矩阵为：
 
     .. math::
 

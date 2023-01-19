@@ -1,3 +1,6 @@
+mindquantum.algorithm.nisq.quccsd_generator
+============================================
+
 .. py:function:: mindquantum.algorithm.nisq.quccsd_generator(n_qubits=None, n_electrons=None, anti_hermitian=True, occ_orb=None, vir_orb=None, generalized=False)
 
     使用比特激发算符生成 `qubit-UCCSD` (qUCCSD) ansatz。

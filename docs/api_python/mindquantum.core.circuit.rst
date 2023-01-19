@@ -21,7 +21,7 @@ Class
 
     mindquantum.core.circuit.UN
 
-Method
+Function
 ---------------
 
 .. mscnautosummary::

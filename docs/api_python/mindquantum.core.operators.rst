@@ -7,41 +7,55 @@ mindquantum.core.operators
 MindQuantum算子库。算子由一个或多个基本门的组合而成。
 
 包含以下类的表示：
+
 - Qubit算子
+
 - Fermion算子
+
 - 时间演化算子
 
-.. include:: mindquantum.core.operators.FermionOperator.rst
+Class
+---------------
 
-.. include:: mindquantum.core.operators.Hamiltonian.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
 
-.. include:: mindquantum.core.operators.InteractionOperator.rst
+    mindquantum.core.operators.FermionOperator
 
-.. include:: mindquantum.core.operators.PolynomialTensor.rst
+    mindquantum.core.operators.Hamiltonian
 
-.. include:: mindquantum.core.operators.Projector.rst
+    mindquantum.core.operators.InteractionOperator
 
-.. include:: mindquantum.core.operators.QubitExcitationOperator.rst
+    mindquantum.core.operators.PolynomialTensor
 
-.. include:: mindquantum.core.operators.QubitOperator.rst
+    mindquantum.core.operators.Projector
 
-.. include:: mindquantum.core.operators.TimeEvolution.rst
+    mindquantum.core.operators.QubitExcitationOperator
 
-.. include:: mindquantum.core.operators.commutator.rst
+    mindquantum.core.operators.QubitOperator
 
-.. include:: mindquantum.core.operators.count_qubits.rst
+    mindquantum.core.operators.TimeEvolution
 
-.. include:: mindquantum.core.operators.down_index.rst
+Function
+---------------
 
-.. include:: mindquantum.core.operators.hermitian_conjugated.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
 
-.. include:: mindquantum.core.operators.normal_ordered.rst
+    mindquantum.core.operators.commutator
 
-.. include:: mindquantum.core.operators.number_operator.rst
+    mindquantum.core.operators.count_qubits
 
-.. include:: mindquantum.core.operators.sz_operator.rst
+    mindquantum.core.operators.down_index
 
-.. include:: mindquantum.core.operators.up_index.rst
+    mindquantum.core.operators.hermitian_conjugated
 
-.. automodule:: mindquantum.core.operators
-    :members:
+    mindquantum.core.operators.normal_ordered
+
+    mindquantum.core.operators.number_operator
+
+    mindquantum.core.operators.sz_operator
+
+    mindquantum.core.operators.up_index

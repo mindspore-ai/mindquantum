@@ -1,3 +1,6 @@
+mindquantum.simulator.GradOpsWrapper
+=====================================
+
 .. py:class:: mindquantum.simulator.GradOpsWrapper(grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name, parallel_worker)
 
     用生成梯度算子的信息包装梯度算子。

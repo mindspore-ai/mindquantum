@@ -1,3 +1,6 @@
+mindquantum.algorithm.nisq.MaxCutAnsatz
+========================================
+
 .. py:class:: mindquantum.algorithm.nisq.MaxCutAnsatz(graph, depth=1)
 
     MaxCut ansatz。了解更多详细信息，请访问 `A Quantum Approximate Optimization Algorithm <https://arxiv.org/abs/1411.4028>`_。
