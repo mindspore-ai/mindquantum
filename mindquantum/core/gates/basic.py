@@ -420,7 +420,7 @@ class ParameterGate(QuantumGate):
         self.coeff.requires_grad()
         return self
 
-    def requires_grad_part(self, names):
+    def requires_grad_part(self, *names):
         """
         Set certain parameters that need grad. Inplace operation.
 
@@ -430,10 +430,10 @@ class ParameterGate(QuantumGate):
         Returns:
             BasicGate, with some part of parameters need to update gradient.
         """
-        self.coeff.requires_grad_part(names)
+        self.coeff.requires_grad_part(*names)
         return self
 
-    def no_grad_part(self, names):
+    def no_grad_part(self, *names):
         """
         Set certain parameters that do not need grad. Inplace operation.
 
@@ -443,7 +443,7 @@ class ParameterGate(QuantumGate):
         Returns:
             BasicGate, with some part of parameters not need to update gradient.
         """
-        self.coeff.no_grad_part(names)
+        self.coeff.no_grad_part(*names)
         return self
 
     def __eq__(self, other):
