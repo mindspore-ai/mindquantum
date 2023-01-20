@@ -51,7 +51,7 @@ mindquantum.core.gates
     mindquantum.core.gates.gene_univ_parameterized_gate
     mindquantum.core.gates.BarrierGate
 
-functional
+预实例化门
 ----------
 
 如下量子门是预实例化的量子门，可直接作为对应量子门的实例来使用。

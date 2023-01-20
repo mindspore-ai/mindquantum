@@ -1,8 +1,57 @@
 mindquantum.core.gates
 ======================
 
-functional
-----------
+.. automodule:: mindquantum.core.gates
+
+.. currentmodule:: mindquantum.core.gates
+
+Basic
+-------------
+
+.. autosummary::
+    :toctree:
+    :nosignatures:
+    :template: classtemplate.rst
+
+    BasicGate
+    NoneParameterGate
+    ParameterGate
+
+Quantum Gate
+-------------
+
+.. msmathautosummary::
+    :toctree:
+    :nosignatures:
+    :template: classtemplate.rst
+
+    CNOTGate
+    FSim
+    GlobalPhase
+    HGate
+    IGate
+    ISWAPGate
+    Measure
+    PhaseShift
+    RX
+    RY
+    RZ
+    SGate
+    SWAPGate
+    TGate
+    U3
+    UnivMathGate
+    XGate
+    XX
+    YGate
+    YY
+    ZGate
+    ZZ
+    gene_univ_parameterized_gate
+    BarrierGate
+
+pre-instantiated gate
+----------------------
 
 The gates blow are the pre-instantiated quantum gates, which can be used directly as an instance of quantum gate.
 
@@ -10,8 +59,8 @@ The gates blow are the pre-instantiated quantum gates, which can be used directl
    :widths: 50 50
    :header-rows: 1
 
-   * - functional
-     - gates
+   * - pre-instantiated gate
+     - gate
    * - mindquantum.core.gates.CNOT
      - :class:`mindquantum.core.gates.CNOTGate`
    * - mindquantum.core.gates.I
@@ -33,8 +82,30 @@ The gates blow are the pre-instantiated quantum gates, which can be used directl
    * - mindquantum.core.gates.Z
      - :class:`mindquantum.core.gates.ZGate`
 
-Quantum Gates
--------------
+Quantum Channel
+----------------
 
-.. automodule:: mindquantum.core.gates
-    :members:
+.. msmathautosummary::
+    :toctree:
+    :nosignatures:
+    :template: classtemplate.rst
+
+    AmplitudeDampingChannel
+    BitFlipChannel
+    BitPhaseFlipChannel
+    DepolarizingChannel
+    KrausChannel
+    PauliChannel
+    PhaseDampingChannel
+    PhaseFlipChannel
+
+Functional Class
+-----------------
+
+.. autosummary::
+    :toctree:
+    :nosignatures:
+    :template: classtemplate.rst
+
+    MeasureResult
+    Power

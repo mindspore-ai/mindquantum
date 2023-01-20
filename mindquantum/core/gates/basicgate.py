@@ -1193,7 +1193,7 @@ class U3(MultiParamsGate):
 
     .. math::
 
-        U3(\theta, \phi, \lambda) =\begin{pmatrix}\cos(\theta/2)&-e^{i\lambda}\sin(\theta/2)\\
+        {\rm U3}(\theta, \phi, \lambda) =\begin{pmatrix}\cos(\theta/2)&-e^{i\lambda}\sin(\theta/2)\\
             e^{i\phi}\sin(\theta/2)&e^{i(\phi+\lambda)}\cos(\theta/2)\end{pmatrix}
 
     It can be decomposed as:
@@ -1327,7 +1327,7 @@ class FSim(MultiParamsGate):
 
     .. math::
 
-        FSim(\theta, \phi) =
+        {\rm FSim}(\theta, \phi) =
         \begin{pmatrix}
             1 & 0 & 0 & 0\\
             0 & \cos(\theta) & -i\sin(\theta) & 0\\

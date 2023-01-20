@@ -16,8 +16,11 @@
 MindQuantum operators library. An operator is composed of a combination of one or more basic gates.
 
 Contains classes representing:
+
 - Qubit operators
+
 - Fermion operators
+
 - TimeEvolution operator
 
 """

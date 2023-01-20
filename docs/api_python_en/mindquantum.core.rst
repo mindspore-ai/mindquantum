@@ -3,8 +3,8 @@ mindquantum.core
 
 .. automodule:: mindquantum.core
 
-.. toctree::
-   :maxdepth: 1
+.. autosummary::
+   :toctree:
 
    mindquantum.core.gates
    mindquantum.core.circuit
