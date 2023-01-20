@@ -7,6 +7,8 @@ mindquantum.framework
 
 量子神经网络算子和cell。
 
+.. currentmodule:: mindquantum.framework
+
 Operators
 ---------
 
@@ -15,12 +17,12 @@ Operators
     :nosignatures:
     :template: classtemplate.rst
 
-    mindquantum.framework.MQOps
-    mindquantum.framework.MQN2Ops
-    mindquantum.framework.MQAnsatzOnlyOps
-    mindquantum.framework.MQN2AnsatzOnlyOps
-    mindquantum.framework.MQEncoderOnlyOps
-    mindquantum.framework.MQN2EncoderOnlyOps
+    MQOps
+    MQN2Ops
+    MQAnsatzOnlyOps
+    MQN2AnsatzOnlyOps
+    MQEncoderOnlyOps
+    MQN2EncoderOnlyOps
 
 Layer
 -----
@@ -30,7 +32,7 @@ Layer
     :nosignatures:
     :template: classtemplate.rst
 
-    mindquantum.framework.MQAnsatzOnlyLayer
-    mindquantum.framework.MQN2AnsatzOnlyLayer
-    mindquantum.framework.MQLayer
-    mindquantum.framework.MQN2Layer
+    MQAnsatzOnlyLayer
+    MQN2AnsatzOnlyLayer
+    MQLayer
+    MQN2Layer

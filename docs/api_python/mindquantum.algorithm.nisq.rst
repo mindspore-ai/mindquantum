@@ -6,6 +6,8 @@ mindquantum.algorithm.nisq
 
 NISQ算法。
 
+.. currentmodule:: mindquantum.algorithm.nisq
+
 基类
 ^^^^^^^^^^^^^
 
@@ -13,7 +15,7 @@ NISQ算法。
     :toctree:
     :nosignatures:
 
-    mindquantum.algorithm.nisq.Ansatz
+    Ansatz
 
 Encoder
 ^^^^^^^^^^^^^
@@ -22,7 +24,7 @@ Encoder
     :toctree:
     :nosignatures:
 
-    mindquantum.algorithm.nisq.IQPEncoding
+    IQPEncoding
 
 Ansatz
 ^^^^^^^^^^^^^
@@ -31,17 +33,12 @@ Ansatz
     :toctree:
     :nosignatures:
 
-    mindquantum.algorithm.nisq.HardwareEfficientAnsatz
-
-    mindquantum.algorithm.nisq.Max2SATAnsatz
-
-    mindquantum.algorithm.nisq.MaxCutAnsatz
-
-    mindquantum.algorithm.nisq.QubitUCCAnsatz
-
-    mindquantum.algorithm.nisq.StronglyEntangling
-
-    mindquantum.algorithm.nisq.UCCAnsatz
+    HardwareEfficientAnsatz
+    Max2SATAnsatz
+    MaxCutAnsatz
+    QubitUCCAnsatz
+    StronglyEntangling
+    UCCAnsatz
 
 Generator
 ^^^^^^^^^^^^^
@@ -50,13 +47,10 @@ Generator
     :toctree:
     :nosignatures:
 
-    mindquantum.algorithm.nisq.generate_uccsd
-
-    mindquantum.algorithm.nisq.quccsd_generator
-
-    mindquantum.algorithm.nisq.uccsd0_singlet_generator
-
-    mindquantum.algorithm.nisq.uccsd_singlet_generator
+    generate_uccsd
+    quccsd_generator
+    uccsd0_singlet_generator
+    uccsd_singlet_generator
 
 Functional
 ^^^^^^^^^^^^^
@@ -65,8 +59,6 @@ Functional
     :toctree:
     :nosignatures:
 
-    mindquantum.algorithm.nisq.Transform
-
-    mindquantum.algorithm.nisq.get_qubit_hamiltonian
-
-    mindquantum.algorithm.nisq.uccsd_singlet_get_packed_amplitudes
+    Transform
+    get_qubit_hamiltonian
+    uccsd_singlet_get_packed_amplitudes

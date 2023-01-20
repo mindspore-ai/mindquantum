@@ -6,6 +6,8 @@ mindquantum.core.circuit
 
 量子线路模块，通过有序地组织各种量子门，我们可以轻松地搭建出符合要求的量子线路，包括参数化量子线路。本模块还包含各种预设的量子线路以及对量子线路进行高效操作的模块。
 
+.. currentmodule:: mindquantum.core.circuit
+
 Class
 ---------------
 
@@ -13,13 +15,10 @@ Class
     :toctree:
     :nosignatures:
 
-    mindquantum.core.circuit.Circuit
-
-    mindquantum.core.circuit.SwapParts
-
-    mindquantum.core.circuit.U3
-
-    mindquantum.core.circuit.UN
+    Circuit
+    SwapParts
+    U3
+    UN
 
 Function
 ---------------
@@ -28,33 +27,20 @@ Function
     :toctree:
     :nosignatures:
 
-    mindquantum.core.circuit.add_prefix
-
-    mindquantum.core.circuit.add_suffix
-
-    mindquantum.core.circuit.apply
-
-    mindquantum.core.circuit.as_ansatz
-
-    mindquantum.core.circuit.as_encoder
-
-    mindquantum.core.circuit.change_param_name
-
-    mindquantum.core.circuit.controlled
-
-    mindquantum.core.circuit.dagger
-
-    mindquantum.core.circuit.decompose_single_term_time_evolution
-
-    mindquantum.core.circuit.pauli_word_to_circuits
-
-    mindquantum.core.circuit.shift
-
-    mindquantum.core.circuit.qfi
-
-    mindquantum.core.circuit.partial_psi_partial_psi
-
-    mindquantum.core.circuit.partial_psi_psi
+    add_prefix
+    add_suffix
+    apply
+    as_ansatz
+    as_encoder
+    change_param_name
+    controlled
+    dagger
+    decompose_single_term_time_evolution
+    pauli_word_to_circuits
+    shift
+    qfi
+    partial_psi_partial_psi
+    partial_psi_psi
 
 functional
 ----------

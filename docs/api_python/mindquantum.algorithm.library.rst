@@ -6,16 +6,14 @@ mindquantum.algorithm.library
 
 MindQuantum常用算法模块。
 
+.. currentmodule:: mindquantum.algorithm.library
+
 .. mscnautosummary::
     :toctree:
     :nosignatures:
 
-    mindquantum.algorithm.library.amplitude_encoder
-
-    mindquantum.algorithm.library.bitphaseflip_operator
-
-    mindquantum.algorithm.library.general_ghz_state
-
-    mindquantum.algorithm.library.general_w_state
-
-    mindquantum.algorithm.library.qft
+    amplitude_encoder
+    bitphaseflip_operator
+    general_ghz_state
+    general_w_state
+    qft
