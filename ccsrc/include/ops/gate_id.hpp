@@ -68,98 +68,95 @@ struct fmt::formatter<mindquantum::GateID, char_t> {
     FMT_CONSTEXPR auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {  // NOLINT(runtime/references)
         return ctx.begin();
     }
-
+    template <typename format_context_t>
+    auto format_one(const mindquantum::GateID& value, format_context_t& ctx) const  // NOLINT(runtime/references)
+        -> decltype(ctx.out()) {
+        switch (value) {
+            case mindquantum::GateID::GP:
+                return fmt::format_to(ctx.out(), "GP");
+            case mindquantum::GateID::PS:
+                return fmt::format_to(ctx.out(), "PS");
+            case mindquantum::GateID::U3:
+                return fmt::format_to(ctx.out(), "U3");
+            case mindquantum::GateID::FSim:
+                return fmt::format_to(ctx.out(), "FSim");
+            case mindquantum::GateID::M:
+                return fmt::format_to(ctx.out(), "M");
+            case mindquantum::GateID::CUSTOM:
+                return fmt::format_to(ctx.out(), "CUSTOM");
+            default:
+                return fmt::format_to(ctx.out(), "Invalid <mindquantum::GateID>");
+        }
+    }
+    template <typename format_context_t>
+    auto format_two(const mindquantum::GateID& value, format_context_t& ctx) const  // NOLINT(runtime/references)
+        -> decltype(ctx.out()) {
+        switch (value) {
+            case mindquantum::GateID::PL:
+                return fmt::format_to(ctx.out(), "PL");
+            case mindquantum::GateID::AD:
+                return fmt::format_to(ctx.out(), "AD");
+            case mindquantum::GateID::PD:
+                return fmt::format_to(ctx.out(), "PD");
+            case mindquantum::GateID::KRAUS:
+                return fmt::format_to(ctx.out(), "KRAUS");
+            default:
+                return format_one(value, ctx);
+        }
+    }
+    template <typename format_context_t>
+    auto format_three(const mindquantum::GateID& value, format_context_t& ctx) const  // NOLINT(runtime/references)
+        -> decltype(ctx.out()) {
+        switch (value) {
+            case mindquantum::GateID::RX:
+                return fmt::format_to(ctx.out(), "RX");
+            case mindquantum::GateID::RY:
+                return fmt::format_to(ctx.out(), "RY");
+            case mindquantum::GateID::RZ:
+                return fmt::format_to(ctx.out(), "RZ");
+            case mindquantum::GateID::Rxx:
+                return fmt::format_to(ctx.out(), "Rxx");
+            case mindquantum::GateID::Ryy:
+                return fmt::format_to(ctx.out(), "Ryy");
+            case mindquantum::GateID::Rzz:
+                return fmt::format_to(ctx.out(), "Rzz");
+            default:
+                return format_two(value, ctx);
+        }
+    }
     template <typename format_context_t>
     auto format(const mindquantum::GateID& value, format_context_t& ctx) const  // NOLINT(runtime/references)
         -> decltype(ctx.out()) {
-        if (value == mindquantum::GateID::I) {
-            return fmt::format_to(ctx.out(), "I");
+        switch (value) {
+            case mindquantum::GateID::I:
+                return fmt::format_to(ctx.out(), "I");
+            case mindquantum::GateID::X:
+                return fmt::format_to(ctx.out(), "X");
+            case mindquantum::GateID::Y:
+                return fmt::format_to(ctx.out(), "Y");
+            case mindquantum::GateID::Z:
+                return fmt::format_to(ctx.out(), "Z");
+            case mindquantum::GateID::H:
+                return fmt::format_to(ctx.out(), "H");
+            case mindquantum::GateID::SWAP:
+                return fmt::format_to(ctx.out(), "SWAP");
+            case mindquantum::GateID::ISWAP:
+                return fmt::format_to(ctx.out(), "ISWAP");
+            case mindquantum::GateID::T:
+                return fmt::format_to(ctx.out(), "T");
+            case mindquantum::GateID::S:
+                return fmt::format_to(ctx.out(), "S");
+            case mindquantum::GateID::Tdag:
+                return fmt::format_to(ctx.out(), "Tdag");
+            case mindquantum::GateID::Sdag:
+                return fmt::format_to(ctx.out(), "Sdag");
+            case mindquantum::GateID::CNOT:
+                return fmt::format_to(ctx.out(), "CNOT");
+            case mindquantum::GateID::CZ:
+                return fmt::format_to(ctx.out(), "CZ");
+            default:
+                return format_three(value, ctx);
         }
-        if (value == mindquantum::GateID::X) {
-            return fmt::format_to(ctx.out(), "X");
-        }
-        if (value == mindquantum::GateID::Y) {
-            return fmt::format_to(ctx.out(), "Y");
-        }
-        if (value == mindquantum::GateID::Z) {
-            return fmt::format_to(ctx.out(), "Z");
-        }
-        if (value == mindquantum::GateID::RX) {
-            return fmt::format_to(ctx.out(), "RX");
-        }
-        if (value == mindquantum::GateID::RY) {
-            return fmt::format_to(ctx.out(), "RY");
-        }
-        if (value == mindquantum::GateID::RZ) {
-            return fmt::format_to(ctx.out(), "RZ");
-        }
-        if (value == mindquantum::GateID::Rxx) {
-            return fmt::format_to(ctx.out(), "Rxx");
-        }
-        if (value == mindquantum::GateID::Ryy) {
-            return fmt::format_to(ctx.out(), "Ryy");
-        }
-        if (value == mindquantum::GateID::Rzz) {
-            return fmt::format_to(ctx.out(), "Rzz");
-        }
-        if (value == mindquantum::GateID::H) {
-            return fmt::format_to(ctx.out(), "H");
-        }
-        if (value == mindquantum::GateID::SWAP) {
-            return fmt::format_to(ctx.out(), "SWAP");
-        }
-        if (value == mindquantum::GateID::ISWAP) {
-            return fmt::format_to(ctx.out(), "ISWAP");
-        }
-        if (value == mindquantum::GateID::T) {
-            return fmt::format_to(ctx.out(), "T");
-        }
-        if (value == mindquantum::GateID::S) {
-            return fmt::format_to(ctx.out(), "S");
-        }
-        if (value == mindquantum::GateID::Tdag) {
-            return fmt::format_to(ctx.out(), "Tdag");
-        }
-        if (value == mindquantum::GateID::Sdag) {
-            return fmt::format_to(ctx.out(), "Sdag");
-        }
-        if (value == mindquantum::GateID::CNOT) {
-            return fmt::format_to(ctx.out(), "CNOT");
-        }
-        if (value == mindquantum::GateID::CZ) {
-            return fmt::format_to(ctx.out(), "CZ");
-        }
-        if (value == mindquantum::GateID::GP) {
-            return fmt::format_to(ctx.out(), "GP");
-        }
-        if (value == mindquantum::GateID::PS) {
-            return fmt::format_to(ctx.out(), "PS");
-        }
-        if (value == mindquantum::GateID::U3) {
-            return fmt::format_to(ctx.out(), "U3");
-        }
-        if (value == mindquantum::GateID::FSim) {
-            return fmt::format_to(ctx.out(), "FSim");
-        }
-        if (value == mindquantum::GateID::M) {
-            return fmt::format_to(ctx.out(), "M");
-        }
-        if (value == mindquantum::GateID::PL) {
-            return fmt::format_to(ctx.out(), "PL");
-        }
-        if (value == mindquantum::GateID::AD) {
-            return fmt::format_to(ctx.out(), "AD");
-        }
-        if (value == mindquantum::GateID::PD) {
-            return fmt::format_to(ctx.out(), "PD");
-        }
-        if (value == mindquantum::GateID::KRAUS) {
-            return fmt::format_to(ctx.out(), "KRAUS");
-        }
-        if (value == mindquantum::GateID::CUSTOM) {
-            return fmt::format_to(ctx.out(), "CUSTOM");
-        }
-        return fmt::format_to(ctx.out(), "Invalid <mindquantum::GateID>");
     }
 };
 #endif
