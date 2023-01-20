@@ -406,6 +406,14 @@ class ParameterGate(QuantumGate):
         new.coeff = pr
         return new
 
+    def __eq__(self, other):
+        """Equality comparison operator."""
+        return super().__eq__(other) and self.coeff == other.coeff
+
+    def __params_prop__(self):
+        """Get properties of all parameters."""
+        return list(self.coeff.keys()), list(self.coeff.ansatz_parameters), list(self.coeff.encoder_parameters)
+
     def get_parameters(self) -> List[ParameterResolver]:
         """Return a list of parameters of parameterized gate."""
         return [self.coeff]
@@ -445,14 +453,6 @@ class ParameterGate(QuantumGate):
         """
         self.coeff.no_grad_part(*names)
         return self
-
-    def __eq__(self, other):
-        """Equality comparison operator."""
-        return super().__eq__(other) and self.coeff == other.coeff
-
-    def __params_prop__(self):
-        """Get properties of all parameters."""
-        return list(self.coeff.keys()), list(self.coeff.ansatz_parameters), list(self.coeff.encoder_parameters)
 
 
 class ParameterOppsGate(ParameterGate):
