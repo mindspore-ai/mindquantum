@@ -179,7 +179,8 @@ class PhaseFlipChannel(PauliChannel):
 
         \epsilon(\rho) = (1 - P)\rho + P Z \rho Z
 
-    where :math:`\rho` is quantum state as density matrix type; :math:`P` is the probability of applying an additional Z gate.
+    where :math:`\rho` is quantum state as density matrix type; :math:`P` is the
+    probability of applying an additional Z gate.
 
     Args:
         p (int, float): probability of occurred error.
@@ -231,7 +232,8 @@ class BitPhaseFlipChannel(PauliChannel):
 
         \epsilon(\rho) = (1 - P)\rho + P Y \rho Y
 
-    where :math:`\rho` is quantum state as density matrix type; :math:`P` is the probability of applying an additional Y gate.
+    where :math:`\rho` is quantum state as density matrix type; :math:`P` is the
+    probability of applying an additional Y gate.
 
     Args:
         p (int, float): probability of occurred error.
@@ -283,7 +285,8 @@ class DepolarizingChannel(PauliChannel):
 
         \epsilon(\rho) = (1 - P)\rho + P/3( X \rho X + Y \rho Y + Z \rho Z)
 
-    where :math:`\rho` is quantum state as density matrix type; :math:`P` is the probability of occurred the depolarizing error.
+    where :math:`\rho` is quantum state as density matrix type; :math:`P` is the
+    probability of occurred the depolarizing error.
 
     Args:
         p (int, float): probability of occurred error.
