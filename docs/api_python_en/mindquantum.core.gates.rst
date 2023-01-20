@@ -5,7 +5,7 @@ mindquantum.core.gates
 
 .. currentmodule:: mindquantum.core.gates
 
-Basic
+Base Class
 -------------
 
 .. autosummary::

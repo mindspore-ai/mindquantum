@@ -8,7 +8,7 @@ NISQ算法。
 
 .. currentmodule:: mindquantum.algorithm.nisq
 
-基类
+Base Class
 ^^^^^^^^^^^^^
 
 .. mscnautosummary::

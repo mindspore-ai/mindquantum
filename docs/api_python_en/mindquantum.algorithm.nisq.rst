@@ -5,7 +5,7 @@ mindquantum.algorithm.nisq
 
 .. currentmodule:: mindquantum.algorithm.nisq
 
-Basic
+Base Class
 ^^^^^^^^^^^^^
 
 .. autosummary::

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Basic class of ansatz."""
+"""Base class of ansatz."""
 
 from abc import abstractmethod
 
@@ -21,7 +21,7 @@ from mindquantum.core.circuit import Circuit
 
 class Ansatz:  # pylint: disable=too-few-public-methods
     """
-    Basic class for Ansatz.
+    Base class for Ansatz.
 
     Args:
         name (str): The name of this ansatz.
