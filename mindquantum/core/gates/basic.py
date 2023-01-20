@@ -243,10 +243,7 @@ class BasicGate:
 
     def get_cpp_obj(self):
         """Get the underlying C++ object."""
-        cpp_gate = getattr(mb, Context.get_dtype()).get_gate_by_name(self.name)
-        cpp_gate.obj_qubits = self.obj_qubits
-        cpp_gate.ctrl_qubits = self.ctrl_qubits
-        return cpp_gate
+        raise NotImplementedError
 
 
 class FunctionalGate(BasicGate):
@@ -409,15 +406,6 @@ class ParameterGate(QuantumGate):
         new = copy.deepcopy(self)
         new.coeff = pr
         return new
-
-    def get_cpp_obj(self):
-        """Get the underlying C++ object."""
-        cpp_gate = super().get_cpp_obj()
-        if not self.parameterized:
-            cpp_gate.apply_value(self.coeff.const.real)
-        else:
-            cpp_gate.params = self.coeff.real.to_real_obj()
-        return cpp_gate
 
     def get_parameters(self) -> List[ParameterResolver]:
         """Return a list of parameters of parameterized gate."""

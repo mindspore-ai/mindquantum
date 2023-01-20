@@ -38,6 +38,7 @@
 #include "core/mq_base_types.hpp"
 #include "core/parameter_resolver.hpp"
 #include "ops/basic_gate.hpp"
+#include "ops/gate_id.hpp"
 #include "ops/gates.hpp"
 #include "ops/hamiltonian.hpp"
 #include "simulator/types.hpp"
@@ -149,158 +150,174 @@ void VectorState<qs_policy_t_>::SetQS(const VT<py_qs_data_t>& qs_out) {
 }
 
 template <typename qs_policy_t_>
-index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate<calc_type>>& gate,
+index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& gate,
                                              const ParameterResolver<calc_type>& pr, bool diff) {
-    auto name = gate->name_;
-    if (gate->is_custom_) {
-        typename std::remove_reference_t<decltype(*gate)>::matrix_t mat;
-        if (!gate->parameterized_) {
-            mat = gate->base_matrix_;
-        } else {
-            calc_type val = gate->params_.Combination(pr).const_value;
-            if (!diff) {
-                mat = gate->numba_param_matrix_(val);
-            } else {
-                mat = gate->numba_param_diff_matrix_(val);
-            }
-        }
-        qs_policy_t::ApplyMatrixGate(qs, qs, gate->obj_qubits_, gate->ctrl_qubits_, mat.matrix_, dim);
-    } else if (name == gI) {
-    } else if (name == gX) {
-        qs_policy_t::ApplyX(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-    } else if (name == gCNOT) {
-        qbits_t obj_qubits = {gate->obj_qubits_[0]};
-        qbits_t ctrl_qubits = gate->ctrl_qubits_;
-        std::copy(std::begin(gate->obj_qubits_) + 1, std::end(gate->obj_qubits_), std::back_inserter(ctrl_qubits));
-        qs_policy_t::ApplyX(qs, obj_qubits, ctrl_qubits, dim);
-    } else if (name == gY) {
-        qs_policy_t::ApplyY(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-    } else if (name == gZ) {
-        qs_policy_t::ApplyZ(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-    } else if (name == gH) {
-        qs_policy_t::ApplyH(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-    } else if (name == gS) {
-        if (gate->daggered_) {
-            qs_policy_t::ApplySdag(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-        } else {
+    auto id = gate->id_;
+    switch (id) {
+        case GateID::I:
+            break;
+        case GateID::X:
+            qs_policy_t::ApplyX(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+            break;
+        case GateID::Y:
+            qs_policy_t::ApplyY(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+            break;
+        case GateID::Z:
+            qs_policy_t::ApplyZ(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+            break;
+        case GateID::H:
+            qs_policy_t::ApplyH(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+            break;
+        case GateID::S:
             qs_policy_t::ApplySGate(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-        }
-    } else if (name == gT) {
-        if (gate->daggered_) {
-            qs_policy_t::ApplyTdag(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-        } else {
+            break;
+        case GateID::Sdag:
+            qs_policy_t::ApplySdag(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+            break;
+        case GateID::T:
             qs_policy_t::ApplyT(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+            break;
+        case GateID::Tdag:
+            qs_policy_t::ApplyTdag(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+            break;
+        case GateID::SWAP:
+            qs_policy_t::ApplySWAP(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+            break;
+        case GateID::ISWAP: {
+            bool daggered = static_cast<ISWAPGate*>(gate.get())->daggered_;
+            qs_policy_t::ApplyISWAP(qs, gate->obj_qubits_, gate->ctrl_qubits_, daggered, dim);
+        } break;
+        case GateID::RX: {
+            auto g = static_cast<RXGate<calc_type>*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = g->prs_[0].Combination(pr).const_value;
+            qs_policy_t::ApplyRX(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
+        case GateID::RY: {
+            auto g = static_cast<RYGate<calc_type>*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = g->prs_[0].Combination(pr).const_value;
+            qs_policy_t::ApplyRY(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
+        case GateID::RZ: {
+            auto g = static_cast<RZGate<calc_type>*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = g->prs_[0].Combination(pr).const_value;
+            qs_policy_t::ApplyRZ(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
+        case GateID::Rxx: {
+            auto g = static_cast<RxxGate<calc_type>*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = g->prs_[0].Combination(pr).const_value;
+            qs_policy_t::ApplyRxx(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
+        case GateID::Ryy: {
+            auto g = static_cast<RyyGate<calc_type>*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = g->prs_[0].Combination(pr).const_value;
+            qs_policy_t::ApplyRyy(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
+        case GateID::Rzz: {
+            auto g = static_cast<RzzGate<calc_type>*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = g->prs_[0].Combination(pr).const_value;
+            qs_policy_t::ApplyRzz(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
+        case GateID::PS: {
+            auto g = static_cast<PSGate<calc_type>*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = g->prs_[0].Combination(pr).const_value;
+            qs_policy_t::ApplyPS(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
+        case GateID::GP: {
+            auto g = static_cast<GPGate<calc_type>*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = g->prs_[0].Combination(pr).const_value;
+            qs_policy_t::ApplyGP(qs, gate->obj_qubits_[0], gate->ctrl_qubits_, val, dim, diff);
+        } break;
+        case GateID::U3: {
+            if (diff) {
+                std::runtime_error("Can not apply differential format of U3 gate on quantum states currently.");
+            }
+            auto u3 = static_cast<U3<calc_type>*>(gate.get());
+            Dim2Matrix<calc_type> m;
+            if (!u3->Parameterized()) {
+                m = u3->base_matrix_;
+            } else {
+                auto theta = u3->theta.Combination(pr).const_value;
+                auto phi = u3->phi.Combination(pr).const_value;
+                auto lambda = u3->lambda.Combination(pr).const_value;
+                m = U3Matrix<calc_type>(theta, phi, lambda);
+            }
+            qs_policy_t::ApplySingleQubitMatrix(qs, qs, gate->obj_qubits_[0], gate->ctrl_qubits_, m.matrix_, dim);
+        } break;
+        case GateID::FSim: {
+            if (diff) {
+                std::runtime_error("Can not apply differential format of FSim gate on quantum states currently.");
+            }
+            auto fsim = static_cast<FSim<calc_type>*>(gate.get());
+            Dim2Matrix<calc_type> m;
+            if (!fsim->Parameterized()) {
+                m = fsim->base_matrix_;
+            } else {
+                auto theta = fsim->theta.Combination(pr).const_value;
+                auto phi = fsim->phi.Combination(pr).const_value;
+                m = FSimMatrix<calc_type>(theta, phi);
+            }
+            qs_policy_t::ApplyTwoQubitsMatrix(qs, qs, gate->obj_qubits_, gate->ctrl_qubits_, m.matrix_, dim);
+        } break;
+        case GateID::M:
+            return this->ApplyMeasure(gate);
+        case GateID::PL:
+            this->ApplyPauliChannel(gate);
+            break;
+        case GateID::AD:
+        case GateID::PD:
+            this->ApplyDampingChannel(gate);
+            break;
+        case GateID::KRAUS:
+            this->ApplyKrausChannel(gate);
+            break;
+        case GateID::CUSTOM: {
+            auto g = static_cast<CustomGate<calc_type>*>(gate.get());
+            typename std::remove_reference_t<decltype(*g)>::matrix_t mat;
+            if (!g->Parameterized()) {
+                mat = g->base_matrix_;
+            } else {
+                calc_type val = g->prs_[0].Combination(pr).const_value;
+                if (!diff) {
+                    mat = g->numba_param_matrix_(val);
+                } else {
+                    mat = g->numba_param_diff_matrix_(val);
+                }
+            }
+            qs_policy_t::ApplyMatrixGate(qs, qs, gate->obj_qubits_, gate->ctrl_qubits_, mat.matrix_, dim);
+            break;
         }
-    } else if (name == gSWAP) {
-        qs_policy_t::ApplySWAP(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-    } else if (name == gISWAP) {
-        qs_policy_t::ApplyISWAP(qs, gate->obj_qubits_, gate->ctrl_qubits_, gate->daggered_, dim);
-    } else if (name == gRX) {
-        auto val = gate->applied_value_;
-        if (!gate->parameterized_) {
-            diff = false;
-        } else {
-            val = gate->params_.Combination(pr).const_value;
-        }
-        qs_policy_t::ApplyRX(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
-    } else if (name == gRY) {
-        auto val = gate->applied_value_;
-        if (!gate->parameterized_) {
-            diff = false;
-        } else {
-            val = gate->params_.Combination(pr).const_value;
-        }
-        qs_policy_t::ApplyRY(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
-    } else if (name == gRZ) {
-        auto val = gate->applied_value_;
-        if (!gate->parameterized_) {
-            diff = false;
-        } else {
-            val = gate->params_.Combination(pr).const_value;
-        }
-        qs_policy_t::ApplyRZ(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
-    } else if (name == gRXX) {
-        auto val = gate->applied_value_;
-        if (!gate->parameterized_) {
-            diff = false;
-        } else {
-            val = gate->params_.Combination(pr).const_value;
-        }
-        qs_policy_t::ApplyRxx(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
-    } else if (name == gRZZ) {
-        auto val = gate->applied_value_;
-        if (!gate->parameterized_) {
-            diff = false;
-        } else {
-            val = gate->params_.Combination(pr).const_value;
-        }
-        qs_policy_t::ApplyRzz(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
-    } else if (name == gRYY) {
-        auto val = gate->applied_value_;
-        if (!gate->parameterized_) {
-            diff = false;
-        } else {
-            val = gate->params_.Combination(pr).const_value;
-        }
-        qs_policy_t::ApplyRyy(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
-    } else if (name == gPS) {
-        auto val = gate->applied_value_;
-        if (!gate->parameterized_) {
-            diff = false;
-        } else {
-            val = gate->params_.Combination(pr).const_value;
-        }
-        qs_policy_t::ApplyPS(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
-    } else if (name == gGP) {
-        auto val = gate->applied_value_;
-        if (!gate->parameterized_) {
-            diff = false;
-        } else {
-            val = gate->params_.Combination(pr).const_value;
-        }
-        qs_policy_t::ApplyGP(qs, gate->obj_qubits_[0], gate->ctrl_qubits_, val, dim, diff);
-    } else if (name == gU3) {
-        if (diff) {
-            std::runtime_error("Can not apply differential format of U3 gate on quantum states currently.");
-        }
-        auto u3 = static_cast<U3<calc_type>*>(gate.get());
-        Dim2Matrix<calc_type> m;
-        if (!gate->parameterized_) {
-            m = gate->base_matrix_;
-        } else {
-            auto theta = u3->theta.Combination(pr).const_value;
-            auto phi = u3->phi.Combination(pr).const_value;
-            auto lambda = u3->lambda.Combination(pr).const_value;
-            m = U3Matrix<calc_type>(theta, phi, lambda);
-        }
-        qs_policy_t::ApplySingleQubitMatrix(qs, qs, gate->obj_qubits_[0], gate->ctrl_qubits_, m.matrix_, dim);
-    } else if (name == gFSim) {
-        if (diff) {
-            std::runtime_error("Can not apply differential format of FSim gate on quantum states currently.");
-        }
-        auto fsim = static_cast<FSim<calc_type>*>(gate.get());
-        Dim2Matrix<calc_type> m;
-        if (!gate->parameterized_) {
-            m = gate->base_matrix_;
-        } else {
-            auto theta = fsim->theta.Combination(pr).const_value;
-            auto phi = fsim->phi.Combination(pr).const_value;
-            m = FSimMatrix<calc_type>(theta, phi);
-        }
-        qs_policy_t::ApplyTwoQubitsMatrix(qs, qs, gate->obj_qubits_, gate->ctrl_qubits_, m.matrix_, dim);
-    } else if (gate->is_measure_) {
-        return ApplyMeasure(gate);
-    } else if (gate->is_channel_) {
-        ApplyChannel(gate);
-    } else {
-        throw std::invalid_argument("Apply of gate " + name + " not implement.");
+        default:
+            throw std::invalid_argument(fmt::format("Apply of gate {} not implement.", id));
     }
-    return 2;  // qubit should be 1 or 0, 2 means nothing.
+    return 2;
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate<calc_type>>& gate) {
-    assert(gate->is_measure_);
+auto VectorState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate>& gate) {
     index_t one_mask = (1UL << gate->obj_qubits_[0]);
     auto one_amp = qs_policy_t::ConditionalCollect(qs, one_mask, one_mask, true, dim).real();
     index_t collapse_mask = (static_cast<index_t>(rng_() < one_amp) << gate->obj_qubits_[0]);
@@ -310,27 +327,32 @@ auto VectorState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate<cal
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicGate<calc_type>>& gate) {
-    assert(gate->is_channel_);
-    if (gate->name_ == "PL") {
-        ApplyPauliChannel(gate);
-    } else if (gate->kraus_operator_set_.size() != 0) {
-        ApplyKrausChannel(gate);
-    } else if (gate->name_ == "ADC" || gate->name_ == "PDC") {
-        ApplyDampingChannel(gate);
-    } else {
-        throw std::runtime_error("This noise channel not implemented.");
+auto VectorState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicGate>& gate) {
+    auto id = gate->id_;
+    switch (id) {
+        case GateID::PL:
+            this->ApplyPauliChannel(gate);
+            break;
+        case GateID::KRAUS:
+            this->ApplyKrausChannel(gate);
+            break;
+        case GateID::AD:
+        case GateID::PD:
+            this->ApplyDampingChannel(gate);
+            break;
+        default:
+            throw std::invalid_argument(fmt::format("{} is not a noise channel.", id));
     }
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::ApplyPauliChannel(const std::shared_ptr<BasicGate<calc_type>>& gate) {
-    assert(gate->name_ == "PL");
+auto VectorState<qs_policy_t_>::ApplyPauliChannel(const std::shared_ptr<BasicGate>& gate) {
     double r = static_cast<double>(rng_());
-    auto it = std::lower_bound(gate->cumulative_probs_.begin(), gate->cumulative_probs_.end(), r);
+    auto g = static_cast<PauliChannel*>(gate.get());
+    auto it = std::lower_bound(g->cumulative_probs_.begin(), g->cumulative_probs_.end(), r);
     size_t gate_index;
-    if (it != gate->cumulative_probs_.begin()) {
-        gate_index = std::distance(gate->cumulative_probs_.begin(), it) - 1;
+    if (it != g->cumulative_probs_.begin()) {
+        gate_index = std::distance(g->cumulative_probs_.begin(), it) - 1;
     } else {
         gate_index = 0;
     }
@@ -344,13 +366,13 @@ auto VectorState<qs_policy_t_>::ApplyPauliChannel(const std::shared_ptr<BasicGat
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::ApplyKrausChannel(const std::shared_ptr<BasicGate<calc_type>>& gate) {
-    assert(gate->kraus_operator_set_.size() != 0);
+auto VectorState<qs_policy_t_>::ApplyKrausChannel(const std::shared_ptr<BasicGate>& gate) {
     auto tmp_qs = qs_policy_t::InitState(dim);
     calc_type prob = 0;
-    for (size_t n_kraus = 0; n_kraus < gate->kraus_operator_set_.size(); n_kraus++) {
+    auto g = static_cast<KrausChannel<calc_type>*>(gate.get());
+    for (size_t n_kraus = 0; n_kraus < g->kraus_operator_set_.size(); n_kraus++) {
         qs_policy_t::ApplySingleQubitMatrix(qs, tmp_qs, gate->obj_qubits_[0], gate->ctrl_qubits_,
-                                            gate->kraus_operator_set_[n_kraus], dim);
+                                            g->kraus_operator_set_[n_kraus], dim);
         calc_type renormal_factor_square = qs_policy_t::Vdot(tmp_qs, tmp_qs, dim).real();
         prob = renormal_factor_square / (1 - prob);
         calc_type renormal_factor = 1 / std::sqrt(renormal_factor_square);
@@ -365,16 +387,23 @@ auto VectorState<qs_policy_t_>::ApplyKrausChannel(const std::shared_ptr<BasicGat
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::ApplyDampingChannel(const std::shared_ptr<BasicGate<calc_type>>& gate) {
+auto VectorState<qs_policy_t_>::ApplyDampingChannel(const std::shared_ptr<BasicGate>& gate) {
     calc_type reduced_factor_b_square = qs_policy_t::OneStateVdot(qs, qs, gate->obj_qubits_[0], dim).real();
     calc_type reduced_factor_b = std::sqrt(reduced_factor_b_square);
     if (reduced_factor_b < 1e-8) {
         return;
     }
-    calc_type prob = gate->damping_coeff_ * reduced_factor_b_square;
+    auto id = gate->id_;
+    double damping_coeff = 0;
+    if (id == GateID::PD) {
+        damping_coeff = static_cast<PhaseDampingChannel*>(gate.get())->damping_coeff_;
+    } else {
+        damping_coeff = static_cast<AmplitudeDampingChannel*>(gate.get())->damping_coeff_;
+    }
+    calc_type prob = damping_coeff * reduced_factor_b_square;
     if (static_cast<calc_type>(rng_()) <= prob) {
         auto tmp_qs = qs_policy_t::InitState(dim);
-        if (gate->name_ == "ADC") {
+        if (id == GateID::AD) {
             std::vector<std::vector<py_qs_data_t>> m({{0, 1 / reduced_factor_b}, {0, 0}});
             qs_policy_t::ApplySingleQubitMatrix(qs, tmp_qs, gate->obj_qubits_[0], gate->ctrl_qubits_, m, dim);
         } else {
@@ -385,51 +414,50 @@ auto VectorState<qs_policy_t_>::ApplyDampingChannel(const std::shared_ptr<BasicG
         qs_policy_t::FreeState(tmp_qs);
     } else {
         calc_type coeff_a = 1 / sqrt(1 - prob);
-        calc_type coeff_b = std::sqrt(1 - gate->damping_coeff_) / std::sqrt(1 - prob);
+        calc_type coeff_b = std::sqrt(1 - damping_coeff) / std::sqrt(1 - prob);
         qs_policy_t::ConditionalMul(qs, qs, (1UL << gate->obj_qubits_[0]), 0, coeff_a, coeff_b, dim);
     }
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t bra, qs_data_p_t ket,
-                                               const std::shared_ptr<BasicGate<calc_type>>& gate,
+auto VectorState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t bra, qs_data_p_t ket, const std::shared_ptr<BasicGate>& gate,
                                                const ParameterResolver<calc_type>& pr, index_t dim) -> py_qs_data_t {
-    auto name = gate->name_;
-    auto val = gate->params_.Combination(pr).const_value;
-    if (gate->is_custom_) {
-        typename std::remove_reference_t<decltype(*gate)>::matrix_t mat = gate->numba_param_diff_matrix_(val);
-        return qs_policy_t::ExpectDiffMatrixGate(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, mat.matrix_, dim);
+    auto id = gate->id_;
+    auto g = static_cast<Parameterizable<calc_type>*>(gate.get());
+    auto val = g->prs_[0].Combination(pr).const_value;
+    // if (gate->is_custom_) {
+    //     typename std::remove_reference_t<decltype(*gate)>::matrix_t mat = gate->numba_param_diff_matrix_(val);
+    //     return qs_policy_t::ExpectDiffMatrixGate(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, mat.matrix_, dim);
+    // }
+    switch (id) {
+        case GateID::RX:
+            return qs_policy_t::ExpectDiffRX(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        case GateID::RY:
+            return qs_policy_t::ExpectDiffRY(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        case GateID::RZ:
+            return qs_policy_t::ExpectDiffRZ(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        case GateID::Rxx:
+            return qs_policy_t::ExpectDiffRxx(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        case GateID::Rzz:
+            return qs_policy_t::ExpectDiffRzz(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        case GateID::Ryy:
+            return qs_policy_t::ExpectDiffRyy(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        case GateID::PS:
+            return qs_policy_t::ExpectDiffPS(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        case GateID::GP:
+            return qs_policy_t::ExpectDiffGP(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+        case GateID::CUSTOM: {
+            auto g = static_cast<CustomGate<calc_type>*>(gate.get());
+            typename std::remove_reference_t<decltype(*g)>::matrix_t mat = g->numba_param_diff_matrix_(val);
+            return qs_policy_t::ExpectDiffMatrixGate(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, mat.matrix_, dim);
+        }
+        default:
+            throw std::invalid_argument(fmt::format("Expectation of gate {} not implement.", id));
     }
-    if (name == gRX) {
-        return qs_policy_t::ExpectDiffRX(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
-    }
-    if (name == gRY) {
-        return qs_policy_t::ExpectDiffRY(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
-    }
-    if (name == gRZ) {
-        return qs_policy_t::ExpectDiffRZ(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
-    }
-    if (name == gRXX) {
-        return qs_policy_t::ExpectDiffRxx(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
-    }
-    if (name == gRZZ) {
-        return qs_policy_t::ExpectDiffRzz(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
-    }
-    if (name == gRYY) {
-        return qs_policy_t::ExpectDiffRyy(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
-    }
-    if (name == gPS) {
-        return qs_policy_t::ExpectDiffPS(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
-    }
-    if (name == gGP) {
-        return qs_policy_t::ExpectDiffGP(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
-    }
-    throw std::invalid_argument("Expectation of gate " + name + " not implement.");
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::ExpectDiffU3(qs_data_p_t bra, qs_data_p_t ket,
-                                             const std::shared_ptr<BasicGate<calc_type>>& gate,
+auto VectorState<qs_policy_t_>::ExpectDiffU3(qs_data_p_t bra, qs_data_p_t ket, const std::shared_ptr<BasicGate>& gate,
                                              const ParameterResolver<calc_type>& pr, index_t dim)
     -> Dim2Matrix<calc_type> {
     VT<py_qs_data_t> grad = {0, 0, 0};
@@ -459,8 +487,7 @@ auto VectorState<qs_policy_t_>::ExpectDiffU3(qs_data_p_t bra, qs_data_p_t ket,
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::ExpectDiffFSim(qs_data_p_t bra, qs_data_p_t ket,
-                                               const std::shared_ptr<BasicGate<calc_type>>& gate,
+auto VectorState<qs_policy_t_>::ExpectDiffFSim(qs_data_p_t bra, qs_data_p_t ket, const std::shared_ptr<BasicGate>& gate,
                                                const ParameterResolver<calc_type>& pr, index_t dim)
     -> Dim2Matrix<calc_type> {
     VT<py_qs_data_t> grad = {0, 0};
@@ -487,8 +514,8 @@ template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::ApplyCircuit(const circuit_t& circ, const ParameterResolver<calc_type>& pr) {
     std::map<std::string, int> result;
     for (auto& g : circ) {
-        if (g->is_measure_) {
-            result[g->name_] = ApplyMeasure(g);
+        if (g->id_ == GateID::M) {
+            result[static_cast<MeasureGate*>(g.get())->name_] = ApplyMeasure(g);
         } else {
             ApplyGate(g, pr, false);
         }
@@ -546,30 +573,31 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradOneOne(const Hamiltonian<c
     // timer.EndAndStartOther("First part", "Second part");
     for (const auto& g : herm_circ) {
         sim_l.ApplyGate(g, pr);
-        if (g->name_ == gU3) {
-            auto u3 = static_cast<U3<calc_type>*>(g.get());
-            if (const auto& [title, jac] = u3->jacobi; title.size() != 0) {
-                auto intrin_grad = ExpectDiffU3(sim_l.qs, sim_r.qs, g, pr, dim);
-                auto u3_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
-                for (const auto& [name, idx] : title) {
-                    f_and_g[1 + p_map.at(name)] += 2 * std::real(u3_grad.matrix_[0][idx]);
+        if (g->GradRequired()) {
+            if (g->id_ == GateID::U3) {
+                auto u3 = static_cast<U3<calc_type>*>(g.get());
+                if (const auto& [title, jac] = u3->jacobi; title.size() != 0) {
+                    auto intrin_grad = ExpectDiffU3(sim_l.qs, sim_r.qs, g, pr, dim);
+                    auto u3_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                    for (const auto& [name, idx] : title) {
+                        f_and_g[1 + p_map.at(name)] += 2 * std::real(u3_grad.matrix_[0][idx]);
+                    }
                 }
-            }
-        } else if (g->name_ == gFSim) {
-            auto fsim = static_cast<FSim<calc_type>*>(g.get());
-            if (const auto& [title, jac] = fsim->jacobi; title.size() != 0) {
-                auto intrin_grad = ExpectDiffFSim(sim_l.qs, sim_r.qs, g, pr, dim);
-                auto fsim_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
-                for (const auto& [name, idx] : title) {
-                    f_and_g[1 + p_map.at(name)] += 2 * std::real(fsim_grad.matrix_[0][idx]);
+            } else if (g->id_ == GateID::FSim) {
+                auto fsim = static_cast<FSim<calc_type>*>(g.get());
+                if (const auto& [title, jac] = fsim->jacobi; title.size() != 0) {
+                    auto intrin_grad = ExpectDiffFSim(sim_l.qs, sim_r.qs, g, pr, dim);
+                    auto fsim_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                    for (const auto& [name, idx] : title) {
+                        f_and_g[1 + p_map.at(name)] += 2 * std::real(fsim_grad.matrix_[0][idx]);
+                    }
                 }
-            }
-        } else if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
-            // timer.Start("ExpectDiffGate");
-            auto gi = ExpectDiffGate(sim_l.qs, sim_r.qs, g, pr, dim);
-            // timer.End("ExpectDiffGate");
-            for (auto& it : g->params_.GetRequiresGradParameters()) {
-                f_and_g[1 + p_map.at(it)] += 2 * std::real(gi) * g->params_.data_.at(it);
+            } else {
+                auto g_pr = static_cast<Parameterizable<calc_type>*>(g.get())->prs_[0];
+                auto gi = ExpectDiffGate(sim_l.qs, sim_r.qs, g, pr, dim);
+                for (auto& it : g_pr.GetRequiresGradParameters()) {
+                    f_and_g[1 + p_map.at(it)] += 2 * std::real(gi) * g_pr.data_.at(it);
+                }
             }
         }
         sim_r.ApplyGate(g, pr);
@@ -640,38 +668,41 @@ auto VectorState<qs_policy_t_>::LeftSizeGradOneMulti(const std::vector<std::shar
         }
         for (const auto& g : herm_left_circ) {
             sim_l.ApplyGate(g, pr);
-            if (g->name_ == gU3) {
-                auto u3 = static_cast<U3<calc_type>*>(g.get());
-                for (int j = start; j < end; j++) {
-                    if (const auto& [title, jac] = u3->jacobi; title.size() != 0) {
-                        auto intrin_grad = ExpectDiffU3(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
-                        auto u3_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
-                        for (const auto& [name, idx] : title) {
-                            f_and_g[j][1 + p_map.at(name)] += u3_grad.matrix_[0][idx];
+            if (g->GradRequired()) {
+                if (g->id_ == GateID::U3) {
+                    auto u3 = static_cast<U3<calc_type>*>(g.get());
+                    for (int j = start; j < end; j++) {
+                        if (const auto& [title, jac] = u3->jacobi; title.size() != 0) {
+                            auto intrin_grad = ExpectDiffU3(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
+                            auto u3_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                            for (const auto& [name, idx] : title) {
+                                f_and_g[j][1 + p_map.at(name)] += u3_grad.matrix_[0][idx];
+                            }
+                        }
+                    }
+                } else if (g->id_ == GateID::FSim) {
+                    auto fsim = static_cast<FSim<calc_type>*>(g.get());
+                    for (int j = start; j < end; j++) {
+                        if (const auto& [title, jac] = fsim->jacobi; title.size() != 0) {
+                            auto intrin_grad = ExpectDiffFSim(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
+                            auto fsim_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                            for (const auto& [name, idx] : title) {
+                                f_and_g[j][1 + p_map.at(name)] += fsim_grad.matrix_[0][idx];
+                            }
+                        }
+                    }
+                } else {
+                    auto g_pr = static_cast<Parameterizable<calc_type>*>(g.get())->prs_[0];
+                    for (int j = start; j < end; j++) {
+                        auto gi = ExpectDiffGate(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
+                        for (auto& it : g_pr.GetRequiresGradParameters()) {
+                            f_and_g[j][1 + p_map.at(it)] += gi * g_pr.data_.at(it);
                         }
                     }
                 }
-            } else if (g->name_ == gFSim) {
-                auto fsim = static_cast<FSim<calc_type>*>(g.get());
                 for (int j = start; j < end; j++) {
-                    if (const auto& [title, jac] = fsim->jacobi; title.size() != 0) {
-                        auto intrin_grad = ExpectDiffFSim(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
-                        auto fsim_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
-                        for (const auto& [name, idx] : title) {
-                            f_and_g[j][1 + p_map.at(name)] += fsim_grad.matrix_[0][idx];
-                        }
-                    }
+                    sim_rs[j - start].ApplyGate(g, pr);
                 }
-            } else if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
-                for (int j = start; j < end; j++) {
-                    auto gi = ExpectDiffGate(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
-                    for (auto& it : g->params_.GetRequiresGradParameters()) {
-                        f_and_g[j][1 + p_map.at(it)] += gi * g->params_.data_.at(it);
-                    }
-                }
-            }
-            for (int j = start; j < end; j++) {
-                sim_rs[j - start].ApplyGate(g, pr);
             }
         }
     }
@@ -712,33 +743,37 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradOneMulti(
         }
         for (const auto& g : herm_circ) {
             sim_l.ApplyGate(g, pr);
-            if (g->name_ == gU3) {
-                auto u3 = static_cast<U3<calc_type>*>(g.get());
-                for (int j = start; j < end; j++) {
-                    if (const auto& [title, jac] = u3->jacobi; title.size() != 0) {
-                        auto intrin_grad = ExpectDiffU3(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
-                        auto u3_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
-                        for (const auto& [name, idx] : title) {
-                            f_and_g[j][1 + p_map.at(name)] += 2 * std::real(u3_grad.matrix_[0][idx]);
+            if (g->GradRequired()) {
+                if (g->id_ == GateID::U3) {
+                    auto u3 = static_cast<U3<calc_type>*>(g.get());
+                    for (int j = start; j < end; j++) {
+                        if (const auto& [title, jac] = u3->jacobi; title.size() != 0) {
+                            auto intrin_grad = ExpectDiffU3(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
+                            auto u3_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                            for (const auto& [name, idx] : title) {
+                                f_and_g[j][1 + p_map.at(name)] += 2 * std::real(u3_grad.matrix_[0][idx]);
+                            }
                         }
                     }
-                }
-            } else if (g->name_ == gFSim) {
-                auto fsim = static_cast<FSim<calc_type>*>(g.get());
-                for (int j = start; j < end; j++) {
-                    if (const auto& [title, jac] = fsim->jacobi; title.size() != 0) {
-                        auto intrin_grad = ExpectDiffFSim(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
-                        auto fsim_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
-                        for (const auto& [name, idx] : title) {
-                            f_and_g[j][1 + p_map.at(name)] += 2 * std::real(fsim_grad.matrix_[0][idx]);
+                } else if (g->id_ == GateID::FSim) {
+                    auto fsim = static_cast<FSim<calc_type>*>(g.get());
+                    for (int j = start; j < end; j++) {
+                        if (const auto& [title, jac] = fsim->jacobi; title.size() != 0) {
+                            auto intrin_grad = ExpectDiffFSim(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
+                            auto fsim_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                            for (const auto& [name, idx] : title) {
+                                f_and_g[j][1 + p_map.at(name)] += 2 * std::real(fsim_grad.matrix_[0][idx]);
+                            }
                         }
                     }
-                }
-            } else if (g->params_.data_.size() != g->params_.no_grad_parameters_.size()) {
-                for (int j = start; j < end; j++) {
-                    auto gi = ExpectDiffGate(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
-                    for (auto& it : g->params_.GetRequiresGradParameters()) {
-                        f_and_g[j][1 + p_map.at(it)] += 2 * std::real(gi) * g->params_.data_.at(it);
+                } else {
+                    auto this_g = static_cast<Parameterizable<calc_type>*>(g.get());
+                    auto g_pr = static_cast<Parameterizable<calc_type>*>(g.get())->prs_[0];
+                    for (int j = start; j < end; j++) {
+                        auto gi = ExpectDiffGate(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
+                        for (auto& it : g_pr.GetRequiresGradParameters()) {
+                            f_and_g[j][1 + p_map.at(it)] += 2 * std::real(gi) * g_pr.data_.at(it);
+                        }
                     }
                 }
             }

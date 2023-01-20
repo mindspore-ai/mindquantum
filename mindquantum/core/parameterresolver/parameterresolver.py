@@ -893,6 +893,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
         backend = getattr(mqbackend, self.arithmetic_type)
         if isinstance(self._cpp_obj, backend.real_pr):
             dic['const'] = self._cpp_obj.const
+            # TODO(xuxs): cannot be only float
             dic['dtype'] = 'float'
         else:
             dic['const'] = (self._cpp_obj.const.real, self._cpp_obj.const.imag)

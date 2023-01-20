@@ -17,7 +17,6 @@ duplicateExpression:ccsrc/include/core/parameter_resolver.h:707
 
 noExplicitConstructor:ccsrc/include/experimental/decompositions/decomposition_atom.hpp:41
 noExplicitConstructor:ccsrc/include/experimental/ops/parametric/gate_base.hpp
-noExplicitConstructor:ccsrc/python/mqbackend/include/python/ops/basic_gate.hpp
 
 noValidConfiguration:ccsrc/include/config/config.hpp
 noValidConfiguration:ccsrc/include/config/details/cxx20_compatibility.hpp

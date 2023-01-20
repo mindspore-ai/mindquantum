@@ -45,196 +45,6 @@
 
 namespace mindquantum {
 template <typename T>
-BasicGate<T> XGate = {false, gX, GateID::X, SELFHERMITIAN,
-                      Dim2Matrix<T>{VVT<CT<T>>{{{0, 0}, {1, 0}}, {{1, 0}, {0, 0}}}}};
-
-template <typename T>
-BasicGate<T> YGate = {false, gY, GateID::Y, SELFHERMITIAN,
-                      Dim2Matrix<T>{VVT<CT<T>>{{{0, 0}, {0, -1}}, {{0, 1}, {0, 0}}}}};
-
-template <typename T>
-BasicGate<T> ZGate = {false, gZ, GateID::Z, SELFHERMITIAN,
-                      Dim2Matrix<T>{VVT<CT<T>>{{{1, 0}, {0, 0}}, {{0, 0}, {-1, 0}}}}};
-
-template <typename T>
-BasicGate<T> IGate = {false, gI, GateID::I, SELFHERMITIAN,
-                      Dim2Matrix<T>{VVT<CT<T>>{{{1, 0}, {0, 0}}, {{0, 0}, {1, 0}}}}};
-
-template <typename T>
-BasicGate<T> HGate = {false, gH, GateID::H, SELFHERMITIAN,
-                      Dim2Matrix<T>{VVT<CT<T>>{{{static_cast<T>(M_SQRT1_2), 0}, {static_cast<T>(M_SQRT1_2), 0}},
-                                               {{static_cast<T>(M_SQRT1_2), 0}, {-static_cast<T>(M_SQRT1_2), 0}}}}};
-
-template <typename T>
-BasicGate<T> TGate = {
-    false, gT, GateID::T, DOHERMITIAN,
-    Dim2Matrix<T>{{{{1, 0}, {0, 0}}, {{0, 0}, {static_cast<T>(M_SQRT1_2), static_cast<T>(M_SQRT1_2)}}}}};
-
-template <typename T>
-BasicGate<T> SGate = {false, gS, GateID::S, DOHERMITIAN, Dim2Matrix<T>{{{{1, 0}, {0, 0}}, {{0, 0}, {0, 1}}}}};
-
-template <typename T>
-BasicGate<T> CNOTGate = {false, gCNOT, GateID::CNOT, DOHERMITIAN,
-                         Dim2Matrix<T>{VVT<CT<T>>{{{1, 0}, {0, 0}, {0, 0}, {0, 0}},
-                                                  {{0, 0}, {1, 0}, {0, 0}, {0, 0}},
-                                                  {{0, 0}, {0, 0}, {0, 0}, {1, 0}},
-                                                  {{0, 0}, {0, 0}, {1, 0}, {0, 0}}}}};
-
-template <typename T>
-BasicGate<T> CZGate = {false, gCZ, GateID::CZ, SELFHERMITIAN,
-                       Dim2Matrix<T>{VVT<CT<T>>{{{1, 0}, {0, 0}, {0, 0}, {0, 0}},
-                                                {{0, 0}, {1, 0}, {0, 0}, {0, 0}},
-                                                {{0, 0}, {0, 0}, {1, 0}, {0, 0}},
-                                                {{0, 0}, {0, 0}, {0, 0}, {-1, 0}}}}};
-
-template <typename T>
-BasicGate<T> SWAPGate = {false, gSWAP, GateID::SWAP, SELFHERMITIAN,
-                         Dim2Matrix<T>{VVT<CT<T>>{{{1, 0}, {0, 0}, {0, 0}, {0, 0}},
-                                                  {{0, 0}, {0, 0}, {1, 0}, {0, 0}},
-                                                  {{0, 0}, {1, 0}, {0, 0}, {0, 0}},
-                                                  {{0, 0}, {0, 0}, {0, 0}, {1, 0}}}}};
-
-template <typename T>
-BasicGate<T> ISWAPGate = {false, gISWAP, GateID::ISWAP, DOHERMITIAN,
-                          Dim2Matrix<T>{VVT<CT<T>>{{{1, 0}, {0, 0}, {0, 0}, {0, 0}},
-                                                   {{0, 0}, {0, 0}, {0, 1}, {0, 0}},
-                                                   {{0, 0}, {0, 1}, {0, 0}, {0, 0}},
-                                                   {{0, 0}, {0, 0}, {0, 0}, {1, 0}}}}};
-
-template <typename T>
-BasicGate<T> RXGate = {
-    true,
-    gRX,
-    GateID::RX,
-    PARAMSOPPOSITE,
-    [](T theta) {
-        return Dim2Matrix<T>{{{{COS1_2(theta), 0}, {0, -SIN1_2(theta)}}, {{0, -SIN1_2(theta)}, {COS1_2(theta), 0}}}};
-    },
-    [](T theta) {
-        return Dim2Matrix<T>{VVT<CT<T>>{{{-SIN1_2(theta) / 2, 0}, {0, -COS1_2(theta) / 2}},
-                                        {{0, -COS1_2(theta) / 2}, {-SIN1_2(theta) / 2, 0}}}};
-    }};
-
-template <typename T>
-BasicGate<T> RYGate = {
-    true,
-    gRY,
-    GateID::RY,
-    PARAMSOPPOSITE,
-    [](T theta) {
-        return Dim2Matrix<T>{{{{COS1_2(theta), 0}, {-SIN1_2(theta), 0}}, {{SIN1_2(theta), 0}, {COS1_2(theta), 0}}}};
-    },
-    [](T theta) {
-        return Dim2Matrix<T>{VVT<CT<T>>{{{-SIN1_2(theta) / 2, 0}, {-COS1_2(theta) / 2, 0}},
-                                        {{COS1_2(theta) / 2, 0}, {-SIN1_2(theta) / 2, 0}}}};
-    }};
-
-template <typename T>
-BasicGate<T> RZGate = {
-    true,
-    gRZ,
-    GateID::RZ,
-    PARAMSOPPOSITE,
-    [](T theta) {
-        return Dim2Matrix<T>{{{{COS1_2(theta), -SIN1_2(theta)}, {0, 0}}, {{0, 0}, {COS1_2(theta), SIN1_2(theta)}}}};
-    },
-    [](T theta) {
-        return Dim2Matrix<T>{VVT<CT<T>>{{{-SIN1_2(theta) / 2, -COS1_2(theta) / 2}, {0, 0}},
-                                        {{0, 0}, {-SIN1_2(theta) / 2, COS1_2(theta) / 2}}}};
-    }};
-
-template <typename T>
-BasicGate<T> GPGate = {true,
-                       gGP,
-                       GateID::GP,
-                       PARAMSOPPOSITE,
-                       [](T theta) {
-                           return Dim2Matrix<T>{{{{COS1_2(2 * theta), -SIN1_2(2 * theta)}, {0, 0}},
-                                                 {{0, 0}, {COS1_2(2 * theta), -SIN1_2(2 * theta)}}}};
-                       },
-                       [](T theta) {
-                           return Dim2Matrix<T>{{{{-SIN1_2(2 * theta), -COS1_2(2 * theta)}, {0, 0}},
-                                                 {{0, 0}, {-SIN1_2(2 * theta), -COS1_2(2 * theta)}}}};
-                       }};
-
-template <typename T>
-BasicGate<T> PSGate = {
-    true,
-    gPS,
-    GateID::PS,
-    PARAMSOPPOSITE,
-    [](T theta) {
-        return Dim2Matrix<T>{VVT<CT<T>>{{{1, 0}, {0, 0}}, {{0, 0}, {COS1_2(2 * theta), SIN1_2(2 * theta)}}}};
-    },
-    [](T theta) {
-        return Dim2Matrix<T>{VVT<CT<T>>{{{0, 0}, {0, 0}}, {{0, 0}, {-SIN1_2(2 * theta), COS1_2(2 * theta)}}}};
-    }};
-
-template <typename T>
-BasicGate<T> RxxGate = {true,
-                        gRXX,
-                        GateID::Rxx,
-                        PARAMSOPPOSITE,
-                        [](T theta) {
-                            return Dim2Matrix<T>{{{{COS1_2(theta), 0}, {0, 0}, {0, 0}, {0, -SIN1_2(theta)}},
-                                                  {{0, 0}, {COS1_2(theta), 0}, {0, -SIN1_2(theta)}, {0, 0}},
-                                                  {{0, 0}, {0, -SIN1_2(theta)}, {COS1_2(theta), 0}, {0, 0}},
-                                                  {{0, -SIN1_2(theta)}, {0, 0}, {0, 0}, {COS1_2(theta), 0}}}};
-                        },
-                        [](T theta) {
-                            return Dim2Matrix<T>{{{{-SIN1_2(theta) / 2, 0}, {0, 0}, {0, 0}, {0, -COS1_2(theta) / 2}},
-                                                  {{0, 0}, {-SIN1_2(theta) / 2, 0}, {0, -COS1_2(theta) / 2}, {0, 0}},
-                                                  {{0, 0}, {0, -COS1_2(theta) / 2}, {-SIN1_2(theta) / 2, 0}, {0, 0}},
-                                                  {{0, -COS1_2(theta) / 2}, {0, 0}, {0, 0}, {-SIN1_2(theta) / 2, 0}}}};
-                        }};
-
-template <typename T>
-BasicGate<T> RyyGate = {
-    true,
-    gRYY,
-    GateID::Ryy,
-    PARAMSOPPOSITE,
-    [](T theta) {
-        return Dim2Matrix<T>{VVT<CT<T>>{{{COS1_2(theta), 0}, {0, 0}, {0, 0}, {0, SIN1_2(theta)}},
-                                        {{0, 0}, {COS1_2(theta), 0}, {0, -SIN1_2(theta)}, {0, 0}},
-                                        {{0, 0}, {0, -SIN1_2(theta)}, {COS1_2(theta), 0}, {0, 0}},
-                                        {{0, SIN1_2(theta)}, {0, 0}, {0, 0}, {COS1_2(theta), 0}}}};
-    },
-    [](T theta) {
-        return Dim2Matrix<T>{VVT<CT<T>>{{{-SIN1_2(theta) / 2, 0}, {0, 0}, {0, 0}, {0, COS1_2(theta) / 2}},
-                                        {{0, 0}, {-SIN1_2(theta) / 2, 0}, {0, -COS1_2(theta) / 2}, {0, 0}},
-                                        {{0, 0}, {0, -COS1_2(theta) / 2}, {-SIN1_2(theta) / 2, 0}, {0, 0}},
-                                        {{0, COS1_2(theta) / 2}, {0, 0}, {0, 0}, {-SIN1_2(theta) / 2, 0}}}};
-    }};
-
-template <typename T>
-BasicGate<T> RzzGate = {true,
-                        gRZZ,
-                        GateID::Rzz,
-                        PARAMSOPPOSITE,
-                        [](T theta) {
-                            return Dim2Matrix<T>{{{{COS1_2(theta), -SIN1_2(theta)}, {0, 0}, {0, 0}, {0, 0}},
-                                                  {{0, 0}, {COS1_2(theta), SIN1_2(theta)}, {0, 0}, {0, 0}},
-                                                  {{0, 0}, {0, 0}, {COS1_2(theta), SIN1_2(theta)}, {0, 0}},
-                                                  {{0, 0}, {0, 0}, {0, 0}, {COS1_2(theta), -SIN1_2(theta)}}}};
-                        },
-                        [](T theta) {
-                            return Dim2Matrix<T>{{{{-SIN1_2(theta) / 2, -COS1_2(theta) / 2}, {0, 0}, {0, 0}, {0, 0}},
-                                                  {{0, 0}, {-SIN1_2(theta) / 2, COS1_2(theta) / 2}, {0, 0}, {0, 0}},
-                                                  {{0, 0}, {0, 0}, {-SIN1_2(theta) / 2, COS1_2(theta) / 2}, {0, 0}},
-                                                  {{0, 0}, {0, 0}, {0, 0}, {-SIN1_2(theta) / 2, -COS1_2(theta) / 2}}}};
-                        }};
-
-template <typename T>
-BasicGate<T> GetMeasureGate(const std::string& name) {
-    BasicGate<T> out;
-    out.name_ = name;
-    out.id_ = GateID::M;
-    out.is_measure_ = true;
-    return out;
-}
-
-template <typename T>
 Dim2Matrix<T> U3Matrix(T theta, T phi, T lambda) {
     auto ct_2 = std::cos(theta / 2);
     auto st_2 = std::sin(theta / 2);
@@ -288,149 +98,39 @@ Dim2Matrix<T> U3DiffLambdaMatrix(T theta, T phi, T lambda) {
 }
 
 template <typename T>
-struct U3 : BasicGate<T> {
+struct U3 : public Parameterizable<T> {
     ParameterResolver<T> theta;
     ParameterResolver<T> phi;
     ParameterResolver<T> lambda;
     std::pair<MST<size_t>, Dim2Matrix<T>> jacobi;
-    VT<ParameterResolver<T>> prs;
+    Dim2Matrix<T> base_matrix_;
     U3(const ParameterResolver<T>& theta, const ParameterResolver<T>& phi, const ParameterResolver<T>& lambda,
        const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits)
-        : theta(theta), phi(phi), lambda(lambda) {
-        this->name_ = "U3";
-        this->id_ = GateID::U3;
-        this->parameterized_ = false;
-        if (!this->theta.IsConst() || !this->phi.IsConst() || !this->lambda.IsConst()) {
-            this->parameterized_ = true;
-        }
-        this->obj_qubits_ = obj_qubits;
-        this->ctrl_qubits_ = ctrl_qubits;
+        : theta(theta)
+        , phi(phi)
+        , lambda(lambda)
+        , Parameterizable<T>(GateID::U3, {theta, phi, lambda}, obj_qubits, ctrl_qubits) {
         if (!this->parameterized_) {
             this->base_matrix_ = U3Matrix(theta.const_value, phi.const_value, lambda.const_value);
         }
-        prs = {this->theta, this->phi, this->lambda};
-        jacobi = Jacobi(prs);
+        jacobi = Jacobi(this->prs_);
     }
 };
 
 template <typename T>
-struct FSim : BasicGate<T> {
+struct FSim : public Parameterizable<T> {
     ParameterResolver<T> theta;
     ParameterResolver<T> phi;
     std::pair<MST<size_t>, Dim2Matrix<T>> jacobi;
-    VT<ParameterResolver<T>> prs;
+    Dim2Matrix<T> base_matrix_;
     FSim(const ParameterResolver<T>& theta, const ParameterResolver<T>& phi, const VT<Index>& obj_qubits,
          const VT<Index>& ctrl_qubits)
-        : theta(theta), phi(phi) {
-        this->name_ = "FSim";
-        this->id_ = GateID::FSim;
-        this->parameterized_ = false;
-        if (!this->theta.IsConst() || !this->phi.IsConst()) {
-            this->parameterized_ = true;
-        }
-        this->obj_qubits_ = obj_qubits;
-        this->ctrl_qubits_ = ctrl_qubits;
+        : theta(theta), phi(phi), Parameterizable<T>(GateID::FSim, {theta, phi}, obj_qubits, ctrl_qubits) {
         if (!this->parameterized_) {
             this->base_matrix_ = FSimMatrix(theta.const_value, phi.const_value);
         }
-        prs = {this->theta, this->phi};
-        jacobi = Jacobi(prs);
+        jacobi = Jacobi(this->prs_);
     }
 };
-template <typename T>
-BasicGate<T> GetGateByName(GateID id) {
-    switch (id) {
-        case GateID::I:
-            return IGate<T>;
-        case GateID::X:
-            return XGate<T>;
-        case GateID::Y:
-            return YGate<T>;
-        case GateID::Z:
-            return ZGate<T>;
-        case GateID::H:
-            return HGate<T>;
-        case GateID::T:
-            return TGate<T>;
-        case GateID::S:
-            return SGate<T>;
-        case GateID::CNOT:
-            return CNOTGate<T>;
-        case GateID::SWAP:
-            return SWAPGate<T>;
-        case GateID::ISWAP:
-            return ISWAPGate<T>;
-        case GateID::CZ:
-            return CZGate<T>;
-        case GateID::RX:
-            return RXGate<T>;
-        case GateID::RY:
-            return RYGate<T>;
-        case GateID::RZ:
-            return RZGate<T>;
-        case GateID::PS:
-            return PSGate<T>;
-        case GateID::Rxx:
-            return RxxGate<T>;
-        case GateID::Ryy:
-            return RyyGate<T>;
-        case GateID::Rzz:
-            return RzzGate<T>;
-        case GateID::GP:
-            return GPGate<T>;
-        default:
-            throw std::invalid_argument(fmt::format("{} not implement in backend!", id));
-    }
-}
-
-template <typename T>
-BasicGate<T> GetGateByName(const std::string& name) {
-    BasicGate<T> out;
-    if (name == gX) {
-        out = XGate<T>;
-    } else if (name == gY) {
-        out = YGate<T>;
-    } else if (name == gZ) {
-        out = ZGate<T>;
-    } else if (name == gI) {
-        out = IGate<T>;
-    } else if (name == gH) {
-        out = HGate<T>;
-    } else if (name == gT) {
-        out = TGate<T>;
-    } else if (name == gS) {
-        out = SGate<T>;
-    } else if (name == gCNOT) {
-        out = CNOTGate<T>;
-    } else if (name == gSWAP) {
-        out = SWAPGate<T>;
-    } else if (name == gISWAP) {
-        out = ISWAPGate<T>;
-    } else if (name == gCZ) {
-        out = CZGate<T>;
-    } else if (name == gRX) {
-        out = RXGate<T>;
-    } else if (name == gRY) {
-        out = RYGate<T>;
-    } else if (name == gRZ) {
-        out = RZGate<T>;
-    } else if (name == gPS) {
-        out = PSGate<T>;
-    } else if (name == gRXX) {
-        out = RxxGate<T>;
-    } else if (name == gRYY) {
-        out = RyyGate<T>;
-    } else if (name == gRZZ) {
-        out = RzzGate<T>;
-        //    } else if (name == cPL) {
-        //        out = PauliChannel<T>;
-    } else if (name == gGP) {
-        out = GPGate<T>;
-    } else {
-        auto msg = name + " not implement in backend!";
-        throw std::invalid_argument(msg);
-    }
-    return out;
-}
 }  // namespace mindquantum
 #endif  // MINDQUANTUM_GATE_GATES_HPP_

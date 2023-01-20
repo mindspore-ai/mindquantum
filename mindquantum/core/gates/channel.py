@@ -13,8 +13,7 @@
 # limitations under the License.
 # ============================================================================
 
-# pylint: disable=abstract-method
-
+# pylint: disable=abstract-method,no-member
 """Quantum channel."""
 
 import numpy as np
@@ -100,10 +99,7 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
-        cpp_gate = getattr(mb, Context.get_dtype()).basic_gate('PL', True, self.px, self.py, self.pz)
-        cpp_gate.obj_qubits = self.obj_qubits
-        cpp_gate.ctrl_qubits = self.ctrl_qubits
-        return cpp_gate
+        return mb.gate.PauliChannel(self.px, self.py, self.pz, self.obj_qubits, self.ctrl_qubits)
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
@@ -378,10 +374,7 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
-        cpp_gate = getattr(mb, Context.get_dtype()).basic_gate('ADC', True, self.gamma)
-        cpp_gate.obj_qubits = self.obj_qubits
-        cpp_gate.ctrl_qubits = self.ctrl_qubits
-        return cpp_gate
+        return mb.gate.AmplitudeDampingChannel(self.gamma, self.obj_qubits, self.ctrl_qubits)
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
@@ -447,10 +440,7 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
-        cpp_gate = getattr(mb, Context.get_dtype()).basic_gate('PDC', True, self.gamma)
-        cpp_gate.obj_qubits = self.obj_qubits
-        cpp_gate.ctrl_qubits = self.ctrl_qubits
-        return cpp_gate
+        return mb.gate.PhaseDampingChannel(self.gamma, self.obj_qubits, self.ctrl_qubits)
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
@@ -526,10 +516,7 @@ class KrausChannel(NoiseGate, NonHermitianGate):
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
-        cpp_gate = getattr(mb, Context.get_dtype()).basic_gate(self.name, True, self.kraus_op)
-        cpp_gate.obj_qubits = self.obj_qubits
-        cpp_gate.ctrl_qubits = self.ctrl_qubits
-        return cpp_gate
+        return getattr(mb, Context.get_dtype()).gate.KrausChannel(self.kraus_op, self.obj_qubits, self.ctrl_qubits)
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
