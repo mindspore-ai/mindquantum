@@ -18,12 +18,12 @@
 """Basic module for quantum gate."""
 
 import copy
+from abc import ABC, abstractmethod
 from typing import Iterable, List
 
 import numpy as np
 import scipy
 
-from mindquantum import mqbackend as mb
 from mindquantum.io.display._config import _DAGGER_MASK
 from mindquantum.utils.f import pauli_string_matrix
 from mindquantum.utils.quantifiers import s_quantifier
@@ -34,7 +34,6 @@ from mindquantum.utils.type_value_check import (
     _check_qubit_id,
 )
 
-from ...config import Context
 from ..parameterresolver import ParameterResolver
 
 HERMITIAN_PROPERTIES = {
@@ -44,7 +43,7 @@ HERMITIAN_PROPERTIES = {
 }
 
 
-class BasicGate:
+class BasicGate(ABC):
     """
     BasicGate is the base class of all gates.
 
@@ -241,9 +240,9 @@ class BasicGate:
             return False
         return True
 
+    @abstractmethod
     def get_cpp_obj(self):
         """Get the underlying C++ object."""
-        raise NotImplementedError
 
 
 class FunctionalGate(BasicGate):
@@ -482,14 +481,6 @@ class NoneParamNonHermMat(NoneParameterGate, MatrixGate, NonHermitianGate):
             return np.conj(self.matrix_value.T)
         return self.matrix_value
 
-    def get_cpp_obj(self):
-        """Get the underlying C++ object."""
-        cpp_obj = super().get_cpp_obj()
-        if self.hermitianed:
-            cpp_obj.base_matrix = getattr(mb, Context.get_dtype()).dim2matrix(self.matrix())
-        cpp_obj.daggered = self.hermitianed
-        return cpp_obj
-
     def __eq__(self, other):
         """Equality comparison operator."""
         return NonHermitianGate.__eq__(self, other)
@@ -540,6 +531,10 @@ class PauliStringGate(NoneParamSelfHermMat):
     def __eq__(self, other):
         """Equality comparison operator."""
         return QuantumGate.__eq__(self, other)
+
+    def get_cpp_obj(self):
+        """Get cpp obj."""
+        raise NotImplementedError
 
 
 class RotSelfHermMat(ParameterOppsGate):

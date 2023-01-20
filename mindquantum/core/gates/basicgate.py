@@ -14,6 +14,7 @@
 # ============================================================================
 
 # pylint: disable=abstract-method,import-outside-toplevel,too-many-lines,useless-parent-delegation,no-member
+# pylint: disable=too-many-ancestors
 """Basic module for quantum gate."""
 
 import copy
@@ -1092,6 +1093,10 @@ class BarrierGate(FunctionalGate):
             new.show = self.show
             return new
         return Circuit([BarrierGate(self.show).on(i) for i in qubits])
+
+    def get_cpp_obj(self):
+        """Get cpp obj."""
+        raise NotImplementedError
 
 
 class GlobalPhase(RotSelfHermMat):
