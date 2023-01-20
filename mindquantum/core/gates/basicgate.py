@@ -332,7 +332,7 @@ class SWAPGate(NoneParamSelfHermMat):
         super().__init__(
             name='SWAP',
             n_qubits=2,
-            matrix_value=_GLOBAL_MAT_VALUE['SWAP'],
+            matrix_value=_GLOBAL_MAT_VALUE.get('SWAP'),
         )
 
     def __eq__(self, other):

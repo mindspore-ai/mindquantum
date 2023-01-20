@@ -475,15 +475,15 @@ class NoneParamNonHermMat(NoneParameterGate, MatrixGate, NonHermitianGate):
             matrix_value, name, n_qubits, obj_qubits=obj_qubits, ctrl_qubits=ctrl_qubits, hermitianed=hermitianed
         )
 
+    def __eq__(self, other):
+        """Equality comparison operator."""
+        return NonHermitianGate.__eq__(self, other)
+
     def matrix(self):
         """Matrix of parameterized gate."""
         if self.hermitianed:
             return np.conj(self.matrix_value.T)
         return self.matrix_value
-
-    def __eq__(self, other):
-        """Equality comparison operator."""
-        return NonHermitianGate.__eq__(self, other)
 
 
 class NoneParamSelfHermMat(NoneParameterGate, SelfHermitianGate, MatrixGate):
