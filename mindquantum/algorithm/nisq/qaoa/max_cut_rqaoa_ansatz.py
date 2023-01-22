@@ -17,8 +17,6 @@
 
 """MaxCutRQAOA ansatz."""
 
-import numpy as np
-
 from mindquantum.core.operators import QubitOperator
 from mindquantum.utils.type_value_check import (
     _check_input_type,
@@ -27,6 +25,7 @@ from mindquantum.utils.type_value_check import (
 )
 
 from .rqaoa_ansatz import RQAOAAnsatz
+
 
 def _check_graph(graph):
     """Check graph."""
@@ -46,10 +45,12 @@ def _check_graph(graph):
                 raise ValueError("Edge should have different nodes.")
         _check_input_type('Weight of edges', (int, float), edge[1])
 
+
 def _check_enum_method(method):
     """Check method of enum."""
     if method not in [max, min]:
         raise ValueError("Enumeration method needs to be selected from max or min.")
+
 
 def _check_partition(partition):
     """Check partition."""
@@ -57,6 +58,7 @@ def _check_partition(partition):
     for node in partition:
         _check_int_type('node', node)
         _check_value_should_not_less('node', 0, node)
+
 
 class MaxCut:
     r"""
@@ -83,7 +85,7 @@ class MaxCut:
         _check_graph(graph)
         _check_enum_method(method)
         nodes = set()
-        for n, w in graph:
+        for n, _ in graph:
             nodes |= set(n)
         n = len(nodes)
         return self._enum(graph, list(nodes), method, (0, []), n, (n+1)//2, [])
@@ -117,7 +119,8 @@ class MaxCut:
                 cut = m(cut, self._enum(g, nodes, m, cut, v, c-1, s_), key=lambda x:x[0])
         return cut
 
-    def _cut_value(self, g, s):
+    @staticmethod
+    def _cut_value(g, s):
         """Get the cut value."""
         s = set(s)
         cut = 0
@@ -125,6 +128,7 @@ class MaxCut:
             if len(set(n) & s) == 1:
                 cut += w
         return cut
+
 
 class MaxCutRQAOAAnsatz(RQAOAAnsatz, MaxCut):
     r"""
@@ -226,7 +230,7 @@ class MaxCutRQAOAAnsatz(RQAOAAnsatz, MaxCut):
         _check_graph(graph)
         ham = 0
         for nodes, weight in graph:
-            if len(nodes):
+            if nodes:
                 ham += QubitOperator(f'Z{nodes[0]} Z{nodes[1]}', weight)
             else:
                 ham += QubitOperator('', weight)
@@ -257,7 +261,7 @@ class MaxCutRQAOAAnsatz(RQAOAAnsatz, MaxCut):
             float, cut value under the partition.
             list[list[int]], a partition of the graph.
         """
-        n, graph, mapping = self.get_subproblem()
+        _, graph, mapping = self.get_subproblem()
         cut_value, partition = self.enum(graph)
         var_set = dict()
         for i in mapping:
@@ -265,9 +269,10 @@ class MaxCutRQAOAAnsatz(RQAOAAnsatz, MaxCut):
         var_set = self.translate(var_set)
         left, right = [], []
         for v in var_set:
-            if var_set[v] == -1:
+            tag = var_set.get(v, 0)
+            if tag == -1:
                 left.append(v[0])
-            else:
+            elif tag == 1:
                 right.append(v[0])
         cut_value = self.get_cut_value(self.graph, left)
         return cut_value, [left, right]
