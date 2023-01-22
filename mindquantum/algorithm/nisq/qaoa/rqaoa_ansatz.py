@@ -23,11 +23,10 @@ from mindquantum.core.operators import QubitOperator, Hamiltonian
 from mindquantum.simulator import Simulator
 from mindquantum.utils.type_value_check import (
     _check_input_type,
-    _check_int_type,
-    _check_value_should_not_less,
 )
 
 from .qaoa_ansatz import QAOAAnsatz
+
 
 def _check_rqaoa_ham(ham):
     """Check hamiltonian of rqaoa."""
@@ -39,6 +38,7 @@ def _check_rqaoa_ham(ham):
         if h.count_gates() not in [2, 0]:
             raise ValueError("Only quadratic hamiltonian is supported in RQAOA.")
 
+
 def _check_rqaoa_eliminate_input(f, sigma, v):
     """Check input for EliminateVariable of rqaoa."""
     if sigma not in [-1, 1]:
@@ -49,6 +49,7 @@ def _check_rqaoa_eliminate_input(f, sigma, v):
         if v not in f:
             raise ValueError("v need be in f.")
 
+
 def _check_rqaoa_var_set(var_set):
     """Check the variable set of rqaoa."""
     _check_input_type('Variable set', dict, var_set)
@@ -56,6 +57,7 @@ def _check_rqaoa_var_set(var_set):
         QubitOperator((k,))
         if var_set[k] not in [-1, 1]:
             raise ValueError("The value of variable should be 1 or -1.")
+
 
 class RQAOAAnsatz(QAOAAnsatz):
     r"""
@@ -83,7 +85,7 @@ class RQAOAAnsatz(QAOAAnsatz):
         3
         >>> p     # 优化问题([变量索引], 权重)
         [((0, 1), 2), ((1, 2), 1), ((0, 2), 0.5)]
-        >>> m     # 变量映射关系{索引:泡利算符} 
+        >>> m     # 变量映射关系{索引:泡利算符}
         {0: (0, 'Z'), 1: (1, 'Z'), 2: (2, 'Z')}
         >>> f = ((1, 'Z'), (2, 'Z'))     # 约束变量
         >>> v = f[1]                     # 待消除变量
@@ -109,7 +111,7 @@ class RQAOAAnsatz(QAOAAnsatz):
         _check_rqaoa_ham(ham)
         super().__init__(ham, p)
         self.name = 'RQAOA'
-        self.Xi = [] # the restricted set
+        self._xi = []    # the restricted set
 
     @property
     def restricted_set(self):
@@ -119,7 +121,7 @@ class RQAOAAnsatz(QAOAAnsatz):
         Returns:
             list[tuple], the restricted set.
         """
-        return self.Xi
+        return self._xi
 
     @property
     def all_variables(self):
@@ -178,7 +180,7 @@ class RQAOAAnsatz(QAOAAnsatz):
         subproblem = list()
         hams = self.ham.terms
         for h in hams:
-            subproblem.append((tuple([mapping[k] for k in h]), hams[h]))
+            subproblem.append((tuple([mapping.get(k, -1) for k in h]), hams[h]))
         mapping = dict(zip(mapping.values(), mapping.keys()))
         return term_num, subproblem, mapping
 
@@ -206,7 +208,7 @@ class RQAOAAnsatz(QAOAAnsatz):
                 new_ham += QubitOperator(h, hams[h])
         self.ham = new_ham
         self._update()
-        self.Xi.append((v, tuple(set((v,))^set(f)), sigma))
+        self._xi.append((v, tuple(set((v,))^set(f)), sigma))
 
     def translate(self, var_set):
         """
@@ -220,14 +222,13 @@ class RQAOAAnsatz(QAOAAnsatz):
             dict[tuple:int], the solution of the complete problem .
         """
         _check_rqaoa_var_set(var_set)
-        for xi in self.Xi[::-1]:
+        for xi in self._xi[::-1]:
             val = xi[2]
             for u in xi[1]:
                 try:
                     val *= var_set[u]
                 except KeyError:
-                    # unconnected variable
-                    # Default: 1
+                    # unconnected variable, default: 1
                     var_set[u] = 1
             var_set[xi[0]] = val
         return var_set
@@ -245,13 +246,13 @@ class RQAOAAnsatz(QAOAAnsatz):
         hams = self.m_hamiltonians
         sim = Simulator('mqvector', self._circuit.n_qubits)
         sim.apply_circuit(self._circuit, pr=weight)
-        M = list(map(sim.get_expectation, hams))
-        i = np.abs(M).argmax()
-        sigma = int(np.sign(M[i].real))
+        m = list(map(sim.get_expectation, hams))
+        i = np.abs(m).argmax()
+        sigma = int(np.sign(m[i].real))
         f = hams[i].ham_termlist[0][0]
         self.eliminate_single_variable(f, sigma)
         if show_process:
-            xi = self.Xi[-1]
+            xi = self._xi[-1]
             print(f'-- eliminated variable: {xi[0][1]}{xi[0][0]}')
             pp = '*'.join([f'{x[1]}{x[0]}' for x in xi[1]])
             print('-- correlated variable: '+pp)
