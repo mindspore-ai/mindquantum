@@ -34,10 +34,10 @@ def _check_rqaoa_ham(ham):
     _check_input_type('hamiltonian', QubitOperator, ham)
     for h in ham:
         _check_input_type('hamiltonian', QubitOperator, h)
-        # 对高次项消元是否有益仍待研究
+        # 对高次项的消元是否有益仍待研究
         # 暂时限制为仅包含二次项的哈密顿量
         if h.count_gates() not in [2, 0]:
-            raise ValueError("Only quadratic Hamiltonian is supported in RQAOA.")
+            raise ValueError("Only quadratic hamiltonian is supported in RQAOA.")
 
 def _check_rqaoa_eliminate_input(f, sigma, v):
     """Check input for EliminateVariable of rqaoa."""
@@ -49,8 +49,8 @@ def _check_rqaoa_eliminate_input(f, sigma, v):
         if v not in f:
             raise ValueError("v need be in f.")
 
-def _check_rqaoa_translate_input(var_set):
-    """Check input for Translate of rqaoa."""
+def _check_rqaoa_var_set(var_set):
+    """Check the variable set of rqaoa."""
     _check_input_type('Variable set', dict, var_set)
     for k in var_set:
         QubitOperator((k,))
@@ -82,19 +82,19 @@ class RQAOAAnsatz(QAOAAnsatz):
         >>> n     # 变量数量
         3
         >>> p     # 优化问题([变量索引], 权重)
-        [([0, 1], 2), ([1, 2], 1), ([0, 2], 0.5)]
+        [((0, 1), 2), ((1, 2), 1), ((0, 2), 0.5)]
         >>> m     # 变量映射关系{索引:泡利算符} 
         {0: (0, 'Z'), 1: (1, 'Z'), 2: (2, 'Z')}
-        >>> f = ((1, 'Z'), (2, 'Z'))   # 约束变量
-        >>> v = f[1]                   # 待消除变量
-        >>> sigma = -1                 # 约束关系
+        >>> f = ((1, 'Z'), (2, 'Z'))     # 约束变量
+        >>> v = f[1]                     # 待消除变量
+        >>> sigma = -1                   # 约束关系
         >>> ra.eliminate_single_variable(f, sigma, v) # 消除变量
-        >>> ra.hamiltonian             # 哈密顿量
+        >>> ra.hamiltonian               # 哈密顿量
         -1 [] +
         1.5 [Z0 Z1]
-        >>> ra.restricted_set          # 查看已有约束集
+        >>> ra.restricted_set            # 查看已有约束集
         [((2, 'Z'), ((1, 'Z'),), -1)]
-        >>> ra.translate({(0, 'Z'):-1, (1, 'Z'):1})   # 根据子问题求解结果逆推问题的解
+        >>> ra.translate({(0, 'Z'):-1, (1, 'Z'):1})   # 根据子问题求解结果逆推原问题的解
         {(0, 'Z'): -1, (1, 'Z'): 1, (2, 'Z'): -1}
         >>> ra = RQAOAAnsatz(ham, 1)
         >>> pr = {'beta_0': -0.4617199, 'alpha_0': 0.6284928}
@@ -106,8 +106,6 @@ class RQAOAAnsatz(QAOAAnsatz):
 
     def __init__(self, ham, p=1):
         """Initialize a RQAOAAnsatz object."""
-        _check_int_type('depth', p)
-        _check_value_should_not_less('depth', 1, p)
         _check_rqaoa_ham(ham)
         super().__init__(ham, p)
         self.name = 'RQAOA'
@@ -131,11 +129,20 @@ class RQAOAAnsatz(QAOAAnsatz):
         Returns:
             list[tuple[int, str]], variables.
         """
-        terms = list()
+        terms = set()
         for k in self.ham.terms.keys():
-            terms += list(k)
-        terms = list(set(terms))
-        return sorted(terms)
+            terms |= set(k)
+        return sorted(list(terms))
+
+    @property
+    def variables_number(self):
+        """
+        Get the number of variables.
+
+        Returns:
+            int, number of variables.
+        """
+        return len(self.all_variables)
 
     @property
     def m_hamiltonians(self):
@@ -148,7 +155,7 @@ class RQAOAAnsatz(QAOAAnsatz):
         mhs = []
         for h in self.ham:
             h = list(h.terms.keys())[0]
-            # 舍去常数项和一次项(无相关性)
+            # abandon constant term and primary term(no correlation)
             if len(h) < 2:
                 continue
             mhs.append(Hamiltonian(QubitOperator(h)))
@@ -171,7 +178,7 @@ class RQAOAAnsatz(QAOAAnsatz):
         subproblem = list()
         hams = self.ham.terms
         for h in hams:
-            subproblem.append(([mapping[k] for k in h], hams[h]))
+            subproblem.append((tuple([mapping[k] for k in h]), hams[h]))
         mapping = dict(zip(mapping.values(), mapping.keys()))
         return term_num, subproblem, mapping
 
@@ -189,6 +196,9 @@ class RQAOAAnsatz(QAOAAnsatz):
         new_ham = 0
         if v is None:
             v = f[np.random.randint(0, 2)]
+        # Invalid elimination
+        if v not in self.all_variables:
+            return # 退出防止污染约束集
         for h in list(hams.keys()):
             if v in h:
                 new_ham += QubitOperator(tuple(set(h)^set(f)), sigma*hams[h])
@@ -209,14 +219,15 @@ class RQAOAAnsatz(QAOAAnsatz):
         Returns:
             dict[tuple:int], the solution of the complete problem .
         """
-        _check_rqaoa_translate_input(var_set)
+        _check_rqaoa_var_set(var_set)
         for xi in self.Xi[::-1]:
             val = xi[2]
             for u in xi[1]:
                 try:
                     val *= var_set[u]
                 except KeyError:
-                    # 无关联变量
+                    # unconnected variable
+                    # Default: 1
                     var_set[u] = 1
             var_set[xi[0]] = val
         return var_set
@@ -227,13 +238,14 @@ class RQAOAAnsatz(QAOAAnsatz):
 
         Args:
             weight (Union[ParameterResolver, dict, numpy.ndarray, list, numbers.Number]): parameter
-                    value for QAOA ansatz.
-            show_process (bool): Whether to show the process of eliminating variables. Default: True.
+                value for QAOA ansatz.
+            show_process (bool): Whether to show the process of eliminating variables. Default: False.
         """
+        _check_input_type('The flag of showing process', (bool, int), show_process)
         hams = self.m_hamiltonians
-        #sim = Simulator('mqvector', self._circuit.n_qubits)
         sim = Simulator('projectq', self._circuit.n_qubits)
-        sim.apply_circuit(self._circuit, pr=pr)
+        #sim = Simulator('mqvector', self._circuit.n_qubits)
+        sim.apply_circuit(self._circuit, pr=weight)
         M = list(map(sim.get_expectation, hams))
         i = np.abs(M).argmax()
         sigma = int(np.sign(M[i].real))
