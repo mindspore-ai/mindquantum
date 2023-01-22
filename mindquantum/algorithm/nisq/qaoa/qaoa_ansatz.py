@@ -29,6 +29,7 @@ from mindquantum.utils.type_value_check import (
 
 from .._ansatz import Ansatz
 
+
 class QAOAAnsatz(Ansatz):
     r"""
     The QAOA ansatz.
@@ -67,8 +68,8 @@ class QAOAAnsatz(Ansatz):
         _check_int_type('depth', depth)
         _check_value_should_not_less('depth', 1, depth)
         _check_input_type('hamiltonian', QubitOperator, ham)
-        self.ham = ham
-        self.depth = depth
+        self.ham = ham         # QubitOperator object
+        self.depth = depth     # depth of QAOA ansatz
         super().__init__('QAOA', self.hamiltonian.n_qubits, ham, depth)
 
     @property
@@ -77,17 +78,16 @@ class QAOAAnsatz(Ansatz):
         Get the hamiltonian.
 
         Returns:
-            QubitOperator, hamiltonian of the problem.
+            Hamiltonian, hamiltonian of the problem.
         """
-        return Hamiltonian(self.ham)
+        return Hamiltonian(self.ham) # Hamiltonian object
 
     def _build_hc(self, ham):
         """Build hc circuit."""
         circ = Circuit()
         for h in ham.terms:
-            if len(h) == 0:
-                continue
-            circ += decompose_single_term_time_evolution(h, {'beta':ham.terms[h]})
+            if h:
+                circ += decompose_single_term_time_evolution(h, {'beta':ham.terms[h]})
         return circ
 
     def _build_hb(self, circ):
