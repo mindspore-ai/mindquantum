@@ -268,8 +268,7 @@ class RQAOAAnsatz(QAOAAnsatz):
         """
         _check_input_type('The flag of showing process', (bool, int), show_process)
         hams = self.m_hamiltonians
-        sim = Simulator('projectq', self._circuit.n_qubits)
-        #sim = Simulator('mqvector', self._circuit.n_qubits)
+        sim = Simulator('mqvector', self._circuit.n_qubits)
         sim.apply_circuit(self._circuit, pr=weight)
         m = list(map(sim.get_expectation, hams))
         i = np.abs(m).argmax()
