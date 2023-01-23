@@ -104,6 +104,23 @@ class RQAOAAnsatz(QAOAAnsatz):
         -- eliminated variable: Z1
         -- correlated variable: Z0
         -- σ: -1
+        >>> ham = QubitOperator('Z0 Z1', 2) + QubitOperator('Z2 Z1', 1) + QubitOperator('Z0 Z3', 0.5)
+        >>> ra = RQAOAAnsatz(ham, 1)
+        >>> ra.ham
+        2 [Z0 Z1] +
+        0.5 [Z0 Z3] +
+        1 [Z1 Z2]
+        >>> f = ((0, 'Y'), (1, 'Z'), (3, 'Z'))
+        >>> v = (3, 'Z')
+        >>> sigma = 1
+        >>> ra.eliminate_single_variable(f, sigma, v, True) # 允许一换多
+        -- eliminated variable: Z3
+        -- correlated variable: Y0*Z1
+        -- σ: 1
+        >>> ra.ham                                          # 请修改_check_rqaoa_ham以支持高次项
+        0.5j [X0 Z1] +
+        2 [Z0 Z1] +
+        1 [Z1 Z2]
     """
 
     def __init__(self, ham, p=1):
@@ -184,7 +201,7 @@ class RQAOAAnsatz(QAOAAnsatz):
         mapping = dict(zip(mapping.values(), mapping.keys()))
         return term_num, subproblem, mapping
 
-    def eliminate_single_variable(self, f, sigma, v=None):
+    def eliminate_single_variable(self, f, sigma, v=None, show_process=False):
         """
         Eliminate single variable in hamiltonian.
 
@@ -192,6 +209,7 @@ class RQAOAAnsatz(QAOAAnsatz):
             f (tuple[tuple]): The corresponding variables.
             sigma (int): Correlation between variables f.
             v (tuple): Eliminated variable. Select randomly from f by default.
+            show_process (bool): Whether to show the process of eliminating variables. Default: False.
         """
         _check_rqaoa_eliminate_input(f, sigma, v)
         hams = self.ham.terms
@@ -209,6 +227,12 @@ class RQAOAAnsatz(QAOAAnsatz):
         self.ham = new_ham
         self._update()
         self._xi.append((v, tuple(set((v,))^set(f)), sigma))
+        if show_process:
+            xi = self._xi[-1]
+            print(f'-- eliminated variable: {xi[0][1]}{xi[0][0]}')
+            pp = '*'.join([f'{x[1]}{x[0]}' for x in xi[1]])
+            print('-- correlated variable: '+pp)
+            print(f'-- σ: {xi[2]}')
 
     def translate(self, var_set):
         """
@@ -244,19 +268,14 @@ class RQAOAAnsatz(QAOAAnsatz):
         """
         _check_input_type('The flag of showing process', (bool, int), show_process)
         hams = self.m_hamiltonians
-        sim = Simulator('mqvector', self._circuit.n_qubits)
+        sim = Simulator('projectq', self._circuit.n_qubits)
+        #sim = Simulator('mqvector', self._circuit.n_qubits)
         sim.apply_circuit(self._circuit, pr=weight)
         m = list(map(sim.get_expectation, hams))
         i = np.abs(m).argmax()
         sigma = int(np.sign(m[i].real))
         f = hams[i].ham_termlist[0][0]
-        self.eliminate_single_variable(f, sigma)
-        if show_process:
-            xi = self._xi[-1]
-            print(f'-- eliminated variable: {xi[0][1]}{xi[0][0]}')
-            pp = '*'.join([f'{x[1]}{x[0]}' for x in xi[1]])
-            print('-- correlated variable: '+pp)
-            print(f'-- σ: {xi[2]}')
+        self.eliminate_single_variable(f, sigma, None, show_process)
 
     def _update(self):
         """Update the circuit with new hamiltonian."""
