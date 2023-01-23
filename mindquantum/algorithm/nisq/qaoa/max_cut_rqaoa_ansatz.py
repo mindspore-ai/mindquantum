@@ -110,15 +110,6 @@ class MaxCut:
         _check_partition(partition)
         return self._cut_value(graph, partition)
 
-    def _enum(self, g, nodes, m, cut, u, c, s):
-        """Solving MaxCut problem with enum."""
-        if c > 0:
-            for v in range(u):
-                s_ = [*s, nodes[v]]
-                cut = m(cut, (self._cut_value(g, s_), s_), key=lambda x:x[0])
-                cut = m(cut, self._enum(g, nodes, m, cut, v, c-1, s_), key=lambda x:x[0])
-        return cut
-
     @staticmethod
     def _cut_value(g, s):
         """Get the cut value."""
@@ -127,6 +118,15 @@ class MaxCut:
         for n, w in g:
             if len(set(n) & s) == 1:
                 cut += w
+        return cut
+
+    def _enum(self, g, nodes, m, cut, u, c, s):
+        """Solving MaxCut problem with enum."""
+        if c > 0:
+            for v in range(u):
+                s_ = [*s, nodes[v]]
+                cut = m(cut, (self._cut_value(g, s_), s_), key=lambda x:x[0])
+                cut = m(cut, self._enum(g, nodes, m, cut, v, c-1, s_), key=lambda x:x[0])
         return cut
 
 
