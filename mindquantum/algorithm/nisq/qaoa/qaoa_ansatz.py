@@ -84,6 +84,7 @@ class QAOAAnsatz(Ansatz):
 
     def _build_hc(self, ham):
         """Build hc circuit."""
+        ham = ham.real
         circ = Circuit()
         for h in ham.terms:
             if h:
