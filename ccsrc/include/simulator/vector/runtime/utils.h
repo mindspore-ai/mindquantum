@@ -11,18 +11,25 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
-#include "simulator/vector/runtime/cmd.h"
+#ifndef MQ_SIM_VECTOR_RT
+#define MQ_SIM_VECTOR_RT
+#include <string>
+#include <tuple>
 
-int main(int argc, char *argv[]) {
-    std::vector<std::string> args;
-    for (int i = 0; i < argc; i++) {
-        args.push_back(std::string(argv[i]));
-    }
-    if (argc == 1) {
-        return 0;
-    }
-    if (args[1] == "cmd") {
-        return mindquantum::sim::rt::cmd(args);
-    }
-    throw std::runtime_error("First arg is runtime type, should be 'cmd'.");
-}
+#include "simulator/vector/runtime/rt_gate.h"
+#define MAX_QUBIT 64
+#define MAX_SEED  65536
+
+namespace mindquantum::sim::rt {
+enum class State {
+    W_GATE,
+    W_OBJ,
+    W_CTRL,
+    W_ANG,
+};
+
+std::tuple<bool, Index> convert_int(const std::string &s, int64_t limit, bool raise_error = true);
+
+std::tuple<bool, double> convert_double(const std::string &s, bool raise_error = true);
+}  // namespace mindquantum::sim::rt
+#endif

@@ -111,8 +111,9 @@ class VectorState {
 
     //! calculate the expectation of differential form of parameterized gate two quantum state. That is
     //! <bra| \partial_\theta{U} |ket>
-    static py_qs_data_t ExpectDiffGate(qs_data_p_t bra, qs_data_p_t ket, const std::shared_ptr<BasicGate>& gate,
-                                       const ParameterResolver<calc_type>& pr, index_t dim);
+    static Dim2Matrix<calc_type> ExpectDiffGate(qs_data_p_t bra, qs_data_p_t ket,
+                                                const std::shared_ptr<BasicGate>& gate,
+                                                const ParameterResolver<calc_type>& pr, index_t dim);
 
     static Dim2Matrix<calc_type> ExpectDiffU3(qs_data_p_t bra, qs_data_p_t ket, const std::shared_ptr<BasicGate>& gate,
                                               const ParameterResolver<calc_type>& pr, index_t dim);

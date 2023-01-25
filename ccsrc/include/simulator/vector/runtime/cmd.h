@@ -11,18 +11,23 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
-#include "simulator/vector/runtime/cmd.h"
+#ifndef MQ_SIM_VECTOR_CMD
+#define MQ_SIM_VECTOR_CMD
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
-int main(int argc, char *argv[]) {
-    std::vector<std::string> args;
-    for (int i = 0; i < argc; i++) {
-        args.push_back(std::string(argv[i]));
-    }
-    if (argc == 1) {
-        return 0;
-    }
-    if (args[1] == "cmd") {
-        return mindquantum::sim::rt::cmd(args);
-    }
-    throw std::runtime_error("First arg is runtime type, should be 'cmd'.");
-}
+#include <nlohmann/json.hpp>
+
+#include "ops/basic_gate.hpp"
+#include "ops/gate_id.hpp"
+#include "ops/gates.hpp"
+#include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
+#include "simulator/vector/runtime/rt_gate.h"
+#include "simulator/vector/runtime/utils.h"
+
+namespace mindquantum::sim::rt {
+int cmd(const std::vector<std::string> &args);
+}  // namespace mindquantum::sim::rt
+#endif

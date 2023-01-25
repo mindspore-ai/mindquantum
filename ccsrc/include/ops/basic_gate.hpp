@@ -17,6 +17,7 @@
 #ifndef MINDQUANTUM_GATE_basic_gate_H_
 #define MINDQUANTUM_GATE_basic_gate_H_
 
+#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <initializer_list>
@@ -117,16 +118,19 @@ struct TdagGate : public BasicGate {
 
 template <typename T>
 struct Parameterizable : public BasicGate {
+    int n_pr;
     VT<ParameterResolver<T>> prs_;
     bool parameterized_;
     bool grad_required_;
+    std::pair<MST<size_t>, Dim2Matrix<T>> jacobi;
     Parameterizable(GateID id, const VT<ParameterResolver<T>>& prs, const VT<Index>& obj_qubits,
                     const VT<Index>& ctrl_qubits)
-        : prs_(prs), BasicGate(id, obj_qubits, ctrl_qubits) {
+        : n_pr(prs.size()), prs_(prs), BasicGate(id, obj_qubits, ctrl_qubits) {
         parameterized_ = !std::all_of(this->prs_.begin(), this->prs_.end(),
                                       [](const auto& pr) { return pr.IsConst(); });
         grad_required_ = std::any_of(this->prs_.begin(), this->prs_.end(),
                                      [](const auto& pr) { return pr.data_.size() != pr.no_grad_parameters_.size(); });
+        jacobi = Jacobi(this->prs_);
     }
     bool Parameterized() override {
         return this->parameterized_;

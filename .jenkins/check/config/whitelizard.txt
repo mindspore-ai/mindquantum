@@ -36,6 +36,7 @@ mindquantum/ccsrc/python/mqbackend/lib/terms_operators.cpp:init_terms_operators
 mindquantum/ccsrc/python/mqbackend/lib/binding.cc:BindOther
 mindquantum/ccsrc/python/mqbackend/lib/binding.cc:init_fermion_operators
 mindquantum/ccsrc/python/mqbackend/lib/binding.cc:init_qubit_operators
+mindquantum/ccsrc/lib/simulator/vector/detail/runtime/cmd.cpp:mindquantum::sim::rt::cmd
 
 TEST_CASE
 mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::ApplyGate

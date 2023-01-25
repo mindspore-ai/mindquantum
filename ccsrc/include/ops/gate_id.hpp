@@ -20,6 +20,7 @@
 
 namespace mindquantum {
 enum class GateID : uint8_t {
+    null,
     I,      //
     X,      //
     Y,      //

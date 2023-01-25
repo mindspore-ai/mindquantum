@@ -37,6 +37,7 @@
 
 #include "core/mq_base_types.hpp"
 #include "core/parameter_resolver.hpp"
+#include "core/two_dim_matrix.hpp"
 #include "ops/basic_gate.hpp"
 #include "ops/gate_id.hpp"
 #include "ops/gates.hpp"
@@ -421,36 +422,48 @@ auto VectorState<qs_policy_t_>::ApplyDampingChannel(const std::shared_ptr<BasicG
 
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t bra, qs_data_p_t ket, const std::shared_ptr<BasicGate>& gate,
-                                               const ParameterResolver<calc_type>& pr, index_t dim) -> py_qs_data_t {
+                                               const ParameterResolver<calc_type>& pr, index_t dim)
+    -> Dim2Matrix<calc_type> {
     auto id = gate->id_;
     auto g = static_cast<Parameterizable<calc_type>*>(gate.get());
     auto val = g->prs_[0].Combination(pr).const_value;
-    // if (gate->is_custom_) {
-    //     typename std::remove_reference_t<decltype(*gate)>::matrix_t mat = gate->numba_param_diff_matrix_(val);
-    //     return qs_policy_t::ExpectDiffMatrixGate(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, mat.matrix_, dim);
-    // }
+    VT<py_qs_data_t> grad = {0};
     switch (id) {
         case GateID::RX:
-            return qs_policy_t::ExpectDiffRX(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            grad[0] = qs_policy_t::ExpectDiffRX(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            return Dim2Matrix<calc_type>({grad});
         case GateID::RY:
-            return qs_policy_t::ExpectDiffRY(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            grad[0] = qs_policy_t::ExpectDiffRY(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            return Dim2Matrix<calc_type>({grad});
         case GateID::RZ:
-            return qs_policy_t::ExpectDiffRZ(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            grad[0] = qs_policy_t::ExpectDiffRZ(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            return Dim2Matrix<calc_type>({grad});
         case GateID::Rxx:
-            return qs_policy_t::ExpectDiffRxx(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            grad[0] = qs_policy_t::ExpectDiffRxx(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            return Dim2Matrix<calc_type>({grad});
         case GateID::Rzz:
-            return qs_policy_t::ExpectDiffRzz(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            grad[0] = qs_policy_t::ExpectDiffRzz(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            return Dim2Matrix<calc_type>({grad});
         case GateID::Ryy:
-            return qs_policy_t::ExpectDiffRyy(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            grad[0] = qs_policy_t::ExpectDiffRyy(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            return Dim2Matrix<calc_type>({grad});
         case GateID::PS:
-            return qs_policy_t::ExpectDiffPS(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            grad[0] = qs_policy_t::ExpectDiffPS(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            return Dim2Matrix<calc_type>({grad});
         case GateID::GP:
-            return qs_policy_t::ExpectDiffGP(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            grad[0] = qs_policy_t::ExpectDiffGP(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            return Dim2Matrix<calc_type>({grad});
         case GateID::CUSTOM: {
             auto g = static_cast<CustomGate<calc_type>*>(gate.get());
             typename std::remove_reference_t<decltype(*g)>::matrix_t mat = g->numba_param_diff_matrix_(val);
-            return qs_policy_t::ExpectDiffMatrixGate(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, mat.matrix_, dim);
+            grad[0] = qs_policy_t::ExpectDiffMatrixGate(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, mat.matrix_,
+                                                        dim);
+            return Dim2Matrix<calc_type>({grad});
         }
+        case GateID::U3:
+            return ExpectDiffU3(bra, ket, gate, pr, dim);
+        case GateID::FSim:
+            return ExpectDiffFSim(bra, ket, gate, pr, dim);
         default:
             throw std::invalid_argument(fmt::format("Expectation of gate {} not implement.", id));
     }
@@ -574,29 +587,12 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradOneOne(const Hamiltonian<c
     for (const auto& g : herm_circ) {
         sim_l.ApplyGate(g, pr);
         if (g->GradRequired()) {
-            if (g->id_ == GateID::U3) {
-                auto u3 = static_cast<U3<calc_type>*>(g.get());
-                if (const auto& [title, jac] = u3->jacobi; title.size() != 0) {
-                    auto intrin_grad = ExpectDiffU3(sim_l.qs, sim_r.qs, g, pr, dim);
-                    auto u3_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
-                    for (const auto& [name, idx] : title) {
-                        f_and_g[1 + p_map.at(name)] += 2 * std::real(u3_grad.matrix_[0][idx]);
-                    }
-                }
-            } else if (g->id_ == GateID::FSim) {
-                auto fsim = static_cast<FSim<calc_type>*>(g.get());
-                if (const auto& [title, jac] = fsim->jacobi; title.size() != 0) {
-                    auto intrin_grad = ExpectDiffFSim(sim_l.qs, sim_r.qs, g, pr, dim);
-                    auto fsim_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
-                    for (const auto& [name, idx] : title) {
-                        f_and_g[1 + p_map.at(name)] += 2 * std::real(fsim_grad.matrix_[0][idx]);
-                    }
-                }
-            } else {
-                auto g_pr = static_cast<Parameterizable<calc_type>*>(g.get())->prs_[0];
-                auto gi = ExpectDiffGate(sim_l.qs, sim_r.qs, g, pr, dim);
-                for (auto& it : g_pr.GetRequiresGradParameters()) {
-                    f_and_g[1 + p_map.at(it)] += 2 * std::real(gi) * g_pr.data_.at(it);
+            auto p_gate = static_cast<Parameterizable<calc_type>*>(g.get());
+            if (const auto& [title, jac] = p_gate->jacobi; title.size() != 0) {
+                auto intrin_grad = ExpectDiffGate(sim_l.qs, sim_r.qs, g, pr, dim);
+                auto p_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                for (const auto& [name, idx] : title) {
+                    f_and_g[1 + p_map.at(name)] += 2 * std::real(p_grad.matrix_[0][idx]);
                 }
             }
         }
@@ -669,34 +665,13 @@ auto VectorState<qs_policy_t_>::LeftSizeGradOneMulti(const std::vector<std::shar
         for (const auto& g : herm_left_circ) {
             sim_l.ApplyGate(g, pr);
             if (g->GradRequired()) {
-                if (g->id_ == GateID::U3) {
-                    auto u3 = static_cast<U3<calc_type>*>(g.get());
+                auto p_gate = static_cast<Parameterizable<calc_type>*>(g.get());
+                if (const auto& [title, jac] = p_gate->jacobi; title.size() != 0) {
                     for (int j = start; j < end; j++) {
-                        if (const auto& [title, jac] = u3->jacobi; title.size() != 0) {
-                            auto intrin_grad = ExpectDiffU3(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
-                            auto u3_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
-                            for (const auto& [name, idx] : title) {
-                                f_and_g[j][1 + p_map.at(name)] += u3_grad.matrix_[0][idx];
-                            }
-                        }
-                    }
-                } else if (g->id_ == GateID::FSim) {
-                    auto fsim = static_cast<FSim<calc_type>*>(g.get());
-                    for (int j = start; j < end; j++) {
-                        if (const auto& [title, jac] = fsim->jacobi; title.size() != 0) {
-                            auto intrin_grad = ExpectDiffFSim(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
-                            auto fsim_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
-                            for (const auto& [name, idx] : title) {
-                                f_and_g[j][1 + p_map.at(name)] += fsim_grad.matrix_[0][idx];
-                            }
-                        }
-                    }
-                } else {
-                    auto g_pr = static_cast<Parameterizable<calc_type>*>(g.get())->prs_[0];
-                    for (int j = start; j < end; j++) {
-                        auto gi = ExpectDiffGate(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
-                        for (auto& it : g_pr.GetRequiresGradParameters()) {
-                            f_and_g[j][1 + p_map.at(it)] += gi * g_pr.data_.at(it);
+                        auto intrin_grad = ExpectDiffGate(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
+                        auto p_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                        for (const auto& [name, idx] : title) {
+                            f_and_g[j][1 + p_map.at(name)] += p_grad.matrix_[0][idx];
                         }
                     }
                 }
@@ -744,35 +719,13 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradOneMulti(
         for (const auto& g : herm_circ) {
             sim_l.ApplyGate(g, pr);
             if (g->GradRequired()) {
-                if (g->id_ == GateID::U3) {
-                    auto u3 = static_cast<U3<calc_type>*>(g.get());
+                auto p_gate = static_cast<Parameterizable<calc_type>*>(g.get());
+                if (const auto& [title, jac] = p_gate->jacobi; title.size() != 0) {
                     for (int j = start; j < end; j++) {
-                        if (const auto& [title, jac] = u3->jacobi; title.size() != 0) {
-                            auto intrin_grad = ExpectDiffU3(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
-                            auto u3_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
-                            for (const auto& [name, idx] : title) {
-                                f_and_g[j][1 + p_map.at(name)] += 2 * std::real(u3_grad.matrix_[0][idx]);
-                            }
-                        }
-                    }
-                } else if (g->id_ == GateID::FSim) {
-                    auto fsim = static_cast<FSim<calc_type>*>(g.get());
-                    for (int j = start; j < end; j++) {
-                        if (const auto& [title, jac] = fsim->jacobi; title.size() != 0) {
-                            auto intrin_grad = ExpectDiffFSim(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
-                            auto fsim_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
-                            for (const auto& [name, idx] : title) {
-                                f_and_g[j][1 + p_map.at(name)] += 2 * std::real(fsim_grad.matrix_[0][idx]);
-                            }
-                        }
-                    }
-                } else {
-                    auto this_g = static_cast<Parameterizable<calc_type>*>(g.get());
-                    auto g_pr = static_cast<Parameterizable<calc_type>*>(g.get())->prs_[0];
-                    for (int j = start; j < end; j++) {
-                        auto gi = ExpectDiffGate(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
-                        for (auto& it : g_pr.GetRequiresGradParameters()) {
-                            f_and_g[j][1 + p_map.at(it)] += 2 * std::real(gi) * g_pr.data_.at(it);
+                        auto intrin_grad = ExpectDiffGate(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
+                        auto p_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                        for (const auto& [name, idx] : title) {
+                            f_and_g[j][1 + p_map.at(name)] += 2 * std::real(p_grad.matrix_[0][idx]);
                         }
                     }
                 }

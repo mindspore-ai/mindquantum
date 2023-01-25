@@ -102,7 +102,6 @@ struct U3 : public Parameterizable<T> {
     ParameterResolver<T> theta;
     ParameterResolver<T> phi;
     ParameterResolver<T> lambda;
-    std::pair<MST<size_t>, Dim2Matrix<T>> jacobi;
     Dim2Matrix<T> base_matrix_;
     U3(const ParameterResolver<T>& theta, const ParameterResolver<T>& phi, const ParameterResolver<T>& lambda,
        const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits)
@@ -113,7 +112,6 @@ struct U3 : public Parameterizable<T> {
         if (!this->parameterized_) {
             this->base_matrix_ = U3Matrix(theta.const_value, phi.const_value, lambda.const_value);
         }
-        jacobi = Jacobi(this->prs_);
     }
 };
 
@@ -121,7 +119,6 @@ template <typename T>
 struct FSim : public Parameterizable<T> {
     ParameterResolver<T> theta;
     ParameterResolver<T> phi;
-    std::pair<MST<size_t>, Dim2Matrix<T>> jacobi;
     Dim2Matrix<T> base_matrix_;
     FSim(const ParameterResolver<T>& theta, const ParameterResolver<T>& phi, const VT<Index>& obj_qubits,
          const VT<Index>& ctrl_qubits)
@@ -129,7 +126,6 @@ struct FSim : public Parameterizable<T> {
         if (!this->parameterized_) {
             this->base_matrix_ = FSimMatrix(theta.const_value, phi.const_value);
         }
-        jacobi = Jacobi(this->prs_);
     }
 };
 }  // namespace mindquantum
