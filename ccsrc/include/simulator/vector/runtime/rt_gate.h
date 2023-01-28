@@ -28,6 +28,7 @@ struct Gate {
     std::vector<Index> objs;
     std::vector<Index> ctrls;
     double ang = 0;
+    std::string m_key = "";
     Gate() = default;
     Gate(GateID gate, const std::vector<Index> &objs, const std::vector<Index> &ctrls)
         : gate(gate), objs(objs), ctrls(ctrls) {
@@ -92,6 +93,9 @@ struct Gate {
                 auto pr = ParameterResolver<double>();
                 pr.SetConst(ang);
                 return std::make_shared<RzzGate<double>>(pr, objs, ctrls);
+            }
+            case GateID::M: {
+                return std::make_shared<MeasureGate>(m_key, objs);
             }
             default:
                 throw std::runtime_error(fmt::format("Gate {} not implement.", gate));

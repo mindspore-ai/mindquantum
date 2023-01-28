@@ -22,10 +22,12 @@
 
 namespace mindquantum::sim::rt {
 enum class State {
+    null,
     W_GATE,
     W_OBJ,
     W_CTRL,
     W_ANG,
+    W_M_KEY,
 };
 
 std::tuple<bool, Index> convert_int(const std::string &s, int64_t limit, bool raise_error = true);

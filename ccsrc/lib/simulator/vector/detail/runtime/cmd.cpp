@@ -36,9 +36,12 @@ int cmd(const std::vector<std::string> &args) {
     int seed = std::get<1>(convert_int(args[3], MAX_SEED));
     int cmd_idx = 4;
     State state = State::W_GATE;
+    VT<State> states = {state};
     std::vector<std::shared_ptr<BasicGate>> circ;
     Gate gate = Gate();
     int n_obj = 0;
+    bool forbid_ctrl = false;
+    MST<size_t> key_map;
     std::vector<std::string> gate_set1 = {"X", "Y", "Z", "H", "S", "T", "Sdag", "Tdag"};
     std::vector<std::string> gate_set2 = {"SWAP", "ISWAP"};
     std::vector<std::string> gate_set3 = {"PS", "RX", "RY", "RZ"};
@@ -51,6 +54,9 @@ int cmd(const std::vector<std::string> &args) {
             }
             if (state == State::W_ANG) {
                 throw std::runtime_error(fmt::format("gate {} require rotate angle.", gate.gate));
+            }
+            if (state == State::W_M_KEY) {
+                throw std::runtime_error(fmt::format("gate {} require key", gate.gate));
             }
             if (gate.Valid()) {
                 circ.push_back(gate.GetGate());
@@ -68,6 +74,7 @@ int cmd(const std::vector<std::string> &args) {
                 nlohmann::json j = arg;
                 gate.gate = j.get<GateID>();
                 state = State::W_OBJ;
+                states.push_back(state);
                 n_obj = 1;
                 cmd_idx += 1;
                 continue;
@@ -76,6 +83,7 @@ int cmd(const std::vector<std::string> &args) {
                 nlohmann::json j = arg;
                 gate.gate = j.get<GateID>();
                 state = State::W_OBJ;
+                states.push_back(state);
                 n_obj = 2;
                 cmd_idx += 1;
                 continue;
@@ -84,6 +92,7 @@ int cmd(const std::vector<std::string> &args) {
                 nlohmann::json j = arg;
                 gate.gate = j.get<GateID>();
                 state = State::W_ANG;
+                states.push_back(state);
                 n_obj = 1;
                 cmd_idx += 1;
                 continue;
@@ -92,16 +101,39 @@ int cmd(const std::vector<std::string> &args) {
                 nlohmann::json j = arg;
                 gate.gate = j.get<GateID>();
                 state = State::W_ANG;
+                states.push_back(state);
                 n_obj = 2;
+                cmd_idx += 1;
+                continue;
+            }
+            if (arg == "M") {
+                nlohmann::json j = arg;
+                gate.gate = j.get<GateID>();
+                state = State::W_M_KEY;
+                states.push_back(state);
+                n_obj = 1;
+                forbid_ctrl = true;
                 cmd_idx += 1;
                 continue;
             }
             throw std::runtime_error("Cannot convert '" + arg + "' to quantum gate.");
         }
+        if (state == State::W_M_KEY) {
+            if (key_map.count(arg)) {
+                throw std::runtime_error(fmt::format("Measure gate key {} already defined.", arg));
+            }
+            key_map[arg] = key_map.size();
+            gate.m_key = arg;
+            state = State::W_OBJ;
+            states.push_back(state);
+            cmd_idx += 1;
+            continue;
+        }
         if (state == State::W_ANG) {
             double ang = std::get<1>(convert_double(arg));
             gate.ang = ang;
             state = State::W_OBJ;
+            states.push_back(state);
             cmd_idx += 1;
             continue;
         }
@@ -111,8 +143,14 @@ int cmd(const std::vector<std::string> &args) {
             n_obj -= 1;
             cmd_idx += 1;
             if (n_obj == 0) {
-                state = State::W_CTRL;
+                if (forbid_ctrl) {
+                    state = State::W_GATE;
+                    forbid_ctrl = false;
+                } else {
+                    state = State::W_CTRL;
+                }
             }
+            states.push_back(state);
             continue;
         }
 
@@ -123,16 +161,31 @@ int cmd(const std::vector<std::string> &args) {
                     throw std::runtime_error("Ctrl qubit larger than system qubits.");
                 }
                 state = State::W_GATE;
+                states.push_back(state);
                 continue;
             }
             cmd_idx += 1;
             gate.AddCtrl(ctrl);
+            states.push_back(state);
             continue;
         }
     }
     auto sim = vector::detail::VectorState<vector::detail::CPUVectorPolicyAvxDouble>(n_qubits, seed);
-    sim.ApplyCircuit(circ);
-    sim.Display();
+    if (key_map.size() == 0) {
+        throw std::runtime_error("No measure gate implement.");
+    }
+    int shots = 1000;
+    auto res = sim.Sampling(circ, {}, shots, key_map, seed);
+    assert(res.size() == key_map.size() * shots);
+    nlohmann::json result;
+    for (auto &[name, idx] : key_map) {
+        VT<int> samp;
+        for (size_t s = 0; s < shots; s++) {
+            samp.push_back(res[idx + s * key_map.size()]);
+        }
+        result[name] = samp;
+    }
+    std::cout << result.dump() << std::endl;
     return 0;
 }
 }  // namespace mindquantum::sim::rt
