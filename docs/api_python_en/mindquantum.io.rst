@@ -3,14 +3,12 @@ mindquantum.io
 
 .. automodule:: mindquantum.io
 
-.. currentmodule:: mindquantum.io
-
 .. autosummary::
     :toctree:
     :nosignatures:
 
-    BlochScene
-    HiQASM
-    OpenQASM
-    bprint
-    random_hiqasm
+    mindquantum.io.BlochScene
+    mindquantum.io.HiQASM
+    mindquantum.io.OpenQASM
+    mindquantum.io.bprint
+    mindquantum.io.random_hiqasm

@@ -6,15 +6,13 @@ mindquantum.utils
 
 实用工具。
 
-.. currentmodule:: mindquantum.utils
-
 .. mscnautosummary::
     :toctree:
     :nosignatures:
 
-    fdopen
-    ket_string
-    mod
-    normalize
-    random_circuit
-    random_state
+    mindquantum.utils.fdopen
+    mindquantum.utils.ket_string
+    mindquantum.utils.mod
+    mindquantum.utils.normalize
+    mindquantum.utils.random_circuit
+    mindquantum.utils.random_state

@@ -2,6 +2,7 @@ overview
 ================
 
 .. autosummary::
+    :nosignatures:
 
     mindquantum.core
     mindquantum.simulator

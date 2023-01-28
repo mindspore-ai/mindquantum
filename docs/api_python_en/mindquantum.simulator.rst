@@ -3,13 +3,11 @@ mindquantum.simulator
 
 .. automodule:: mindquantum.simulator
 
-.. currentmodule:: mindquantum.simulator
-
 .. autosummary::
     :toctree:
     :nosignatures:
 
-    GradOpsWrapper
-    Simulator
-    get_supported_simulator
-    inner_product
+    mindquantum.simulator.GradOpsWrapper
+    mindquantum.simulator.Simulator
+    mindquantum.simulator.get_supported_simulator
+    mindquantum.simulator.inner_product

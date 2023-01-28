@@ -6,8 +6,6 @@ mindquantum.core.gates
 
 量子门模块，提供不同的量子门。
 
-.. currentmodule:: mindquantum.core.gates
-
 基类
 -------------
 
@@ -16,9 +14,9 @@ mindquantum.core.gates
     :nosignatures:
     :template: classtemplate.rst
 
-    BasicGate
-    NoneParameterGate
-    ParameterGate
+    mindquantum.core.gates.BasicGate
+    mindquantum.core.gates.NoneParameterGate
+    mindquantum.core.gates.ParameterGate
 
 量子门
 -------------
@@ -28,30 +26,30 @@ mindquantum.core.gates
     :nosignatures:
     :template: classtemplate.rst
 
-    CNOTGate
-    FSim
-    GlobalPhase
-    HGate
-    IGate
-    ISWAPGate
-    Measure
-    PhaseShift
-    RX
-    RY
-    RZ
-    SGate
-    SWAPGate
-    TGate
-    U3
-    UnivMathGate
-    XGate
-    XX
-    YGate
-    YY
-    ZGate
-    ZZ
-    gene_univ_parameterized_gate
-    BarrierGate
+    mindquantum.core.gates.CNOTGate
+    mindquantum.core.gates.FSim
+    mindquantum.core.gates.GlobalPhase
+    mindquantum.core.gates.HGate
+    mindquantum.core.gates.IGate
+    mindquantum.core.gates.ISWAPGate
+    mindquantum.core.gates.Measure
+    mindquantum.core.gates.PhaseShift
+    mindquantum.core.gates.RX
+    mindquantum.core.gates.RY
+    mindquantum.core.gates.RZ
+    mindquantum.core.gates.SGate
+    mindquantum.core.gates.SWAPGate
+    mindquantum.core.gates.TGate
+    mindquantum.core.gates.U3
+    mindquantum.core.gates.UnivMathGate
+    mindquantum.core.gates.XGate
+    mindquantum.core.gates.XX
+    mindquantum.core.gates.YGate
+    mindquantum.core.gates.YY
+    mindquantum.core.gates.ZGate
+    mindquantum.core.gates.ZZ
+    mindquantum.core.gates.gene_univ_parameterized_gate
+    mindquantum.core.gates.BarrierGate
 
 预实例化门
 ----------
@@ -93,14 +91,14 @@ mindquantum.core.gates
     :nosignatures:
     :template: classtemplate.rst
 
-    AmplitudeDampingChannel
-    BitFlipChannel
-    BitPhaseFlipChannel
-    DepolarizingChannel
-    KrausChannel
-    PauliChannel
-    PhaseDampingChannel
-    PhaseFlipChannel
+    mindquantum.core.gates.AmplitudeDampingChannel
+    mindquantum.core.gates.BitFlipChannel
+    mindquantum.core.gates.BitPhaseFlipChannel
+    mindquantum.core.gates.DepolarizingChannel
+    mindquantum.core.gates.KrausChannel
+    mindquantum.core.gates.PauliChannel
+    mindquantum.core.gates.PhaseDampingChannel
+    mindquantum.core.gates.PhaseFlipChannel
 
 功能类
 -------------
@@ -110,5 +108,5 @@ mindquantum.core.gates
     :nosignatures:
     :template: classtemplate.rst
 
-    MeasureResult
-    Power
+    mindquantum.core.gates.MeasureResult
+    mindquantum.core.gates.Power
