@@ -16,6 +16,7 @@
 
 from .basic import (
     HERMITIAN_PROPERTIES,
+    QuantumGate,
     BasicGate,
     NoiseGate,
     NoneParameterGate,
@@ -72,6 +73,7 @@ from .measurement import Measure, MeasureResult
 
 __all__ = [
     "BasicGate",
+    "QuantumGate",
     "NoneParameterGate",
     "ParameterGate",
     "HERMITIAN_PROPERTIES",

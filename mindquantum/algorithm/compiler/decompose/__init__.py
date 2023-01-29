@@ -15,47 +15,21 @@
 
 """Decompose rule for gate."""
 
-from . import (
-    h_related,
-    rx_related,
-    ry_related,
-    rz_related,
-    s_related,
-    swap_related,
-    t_related,
-    x_related,
-    xx_related,
-    y_related,
-    yy_related,
-    z_related,
-    zz_related,
+from . import fixed_decompose
+from . import universal_decompose
+from . import utils
+
+from .fixed_decompose import (
+    ch_decompose, crx_decompose, cry_decompose, crz_decompose,
+    swap_decompose, cswap_decompose, cs_decompose, ct_decompose,
+    ccx_decompose, cxx_decompose, xx_decompose, cyy_decompose, yy_decompose,
+    cy_decompose, cz_decompose, zz_decompose
 )
-from .h_related import ch_decompose
-from .rx_related import crx_decompose
-from .ry_related import cry_decompose
-from .rz_related import crz_decompose
-from .s_related import cs_decompose
-from .swap_related import cswap_decompose, swap_decompose
-from .t_related import ct_decompose
-from .x_related import ccx_decompose
-from .xx_related import cxx_decompose, xx_decompose
-from .y_related import cy_decompose
-from .yy_related import cyy_decompose, yy_decompose
-from .z_related import cz_decompose
-from .zz_related import zz_decompose
+from .universal_decompose import euler_decompose
+from .universal_decompose import tensor_product_decompose, abc_decompose, kak_decompose
+from .universal_decompose import qs_decompose, cu_decompose, demultiplex_pair, demultiplex_pauli
 
 __all__ = []
-__all__.extend(x_related.__all__)
-__all__.extend(xx_related.__all__)
-__all__.extend(yy_related.__all__)
-__all__.extend(y_related.__all__)
-__all__.extend(h_related.__all__)
-__all__.extend(z_related.__all__)
-__all__.extend(ry_related.__all__)
-__all__.extend(rz_related.__all__)
-__all__.extend(rx_related.__all__)
-__all__.extend(swap_related.__all__)
-__all__.extend(zz_related.__all__)
-__all__.extend(s_related.__all__)
-__all__.extend(t_related.__all__)
+__all__.extend(fixed_decompose.__all__)
+__all__.extend(universal_decompose.__all__)
 __all__.sort()
