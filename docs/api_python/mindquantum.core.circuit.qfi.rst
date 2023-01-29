@@ -1,3 +1,6 @@
+mindquantum.core.circuit.qfi
+=============================
+
 .. py:function:: mindquantum.core.circuit.qfi(circuit: Circuit, backend='mqvector')
 
     根据给定参数计算参数化量子线路的量子fisher信息。

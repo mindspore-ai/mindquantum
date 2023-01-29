@@ -1,12 +1,13 @@
 mindquantum.core
 ================
 
+.. py:module:: mindquantum.core
+
+
 MindQuantum的核心特性(eDSL)
 
-.. automodule:: mindquantum.core
-
-.. toctree::
-   :maxdepth: 1
+.. mscnautosummary::
+   :toctree:
 
    mindquantum.core.gates
    mindquantum.core.circuit

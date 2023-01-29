@@ -1,3 +1,6 @@
+mindquantum.core.operators.QubitExcitationOperator
+===================================================
+
 .. py:class:: mindquantum.core.operators.QubitExcitationOperator(term=None, coefficient=1.0)
 
     量子比特激发算子定义为： :math:`Q^{\dagger}_{n} = \frac{1}{2} (X_{n} - iY_{n})` 和 :math:`Q_{n} = \frac{1}{2} (X_{n} + iY_{n})` 。

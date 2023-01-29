@@ -1,3 +1,6 @@
+mindquantum.algorithm.nisq.generate_uccsd
+==========================================
+
 .. py:function:: mindquantum.algorithm.nisq.generate_uccsd(molecular, threshold=0)
 
     使用OpenFermion生成的分子数据生成uccsd量子线路。

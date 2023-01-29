@@ -1,14 +1,43 @@
 mindquantum.core.circuit
 ========================
 
-Quantum Circuit
+.. automodule:: mindquantum.core.circuit
+
+Class
 ---------------
 
-.. automodule:: mindquantum.core.circuit
-    :exclude-members: C, D, A, AP, CPN
-    :members:
+.. autosummary::
+    :toctree:
+    :nosignatures:
 
-functional
+    mindquantum.core.circuit.Circuit
+    mindquantum.core.circuit.SwapParts
+    mindquantum.core.circuit.U3
+    mindquantum.core.circuit.UN
+
+Function
+---------------
+
+.. autosummary::
+    :toctree:
+    :nosignatures:
+
+    mindquantum.core.circuit.add_prefix
+    mindquantum.core.circuit.add_suffix
+    mindquantum.core.circuit.apply
+    mindquantum.core.circuit.as_ansatz
+    mindquantum.core.circuit.as_encoder
+    mindquantum.core.circuit.change_param_name
+    mindquantum.core.circuit.controlled
+    mindquantum.core.circuit.dagger
+    mindquantum.core.circuit.decompose_single_term_time_evolution
+    mindquantum.core.circuit.pauli_word_to_circuits
+    mindquantum.core.circuit.shift
+    mindquantum.core.circuit.qfi
+    mindquantum.core.circuit.partial_psi_partial_psi
+    mindquantum.core.circuit.partial_psi_psi
+
+shortcut
 ----------
 
 The operators blow are shortcut of correspand quantum circuit operators.
@@ -17,7 +46,7 @@ The operators blow are shortcut of correspand quantum circuit operators.
    :widths: 50 50
    :header-rows: 1
 
-   * - functional
+   * - shortcut
      - high level circuit operators
    * - mindquantum.core.circuit.C
      - :class:`mindquantum.core.circuit.controlled`

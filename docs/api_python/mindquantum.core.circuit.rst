@@ -1,50 +1,44 @@
 mindquantum.core.circuit
 ========================
 
+.. py:module:: mindquantum.core.circuit
+
+
 量子线路模块，通过有序地组织各种量子门，我们可以轻松地搭建出符合要求的量子线路，包括参数化量子线路。本模块还包含各种预设的量子线路以及对量子线路进行高效操作的模块。
 
-Quantum Circuit
+Class
 ---------------
 
-.. include:: mindquantum.core.circuit.Circuit.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
 
-.. include:: mindquantum.core.circuit.SwapParts.rst
+    mindquantum.core.circuit.Circuit
+    mindquantum.core.circuit.SwapParts
+    mindquantum.core.circuit.U3
+    mindquantum.core.circuit.UN
 
-.. include:: mindquantum.core.circuit.U3.rst
+Function
+---------------
 
-.. include:: mindquantum.core.circuit.UN.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
 
-.. include:: mindquantum.core.circuit.add_prefix.rst
-
-.. include:: mindquantum.core.circuit.add_suffix.rst
-
-.. include:: mindquantum.core.circuit.apply.rst
-
-.. include:: mindquantum.core.circuit.as_ansatz.rst
-
-.. include:: mindquantum.core.circuit.as_encoder.rst
-
-.. include:: mindquantum.core.circuit.change_param_name.rst
-
-.. include:: mindquantum.core.circuit.controlled.rst
-
-.. include:: mindquantum.core.circuit.dagger.rst
-
-.. include:: mindquantum.core.circuit.decompose_single_term_time_evolution.rst
-
-.. include:: mindquantum.core.circuit.pauli_word_to_circuits.rst
-
-.. include:: mindquantum.core.circuit.shift.rst
-
-.. include:: mindquantum.core.circuit.qfi.rst
-
-.. include:: mindquantum.core.circuit.partial_psi_partial_psi.rst
-
-.. include:: mindquantum.core.circuit.partial_psi_psi.rst
-
-.. automodule:: mindquantum.core.circuit
-    :exclude-members: C, D, A, AP, CPN
-    :members:
+    mindquantum.core.circuit.add_prefix
+    mindquantum.core.circuit.add_suffix
+    mindquantum.core.circuit.apply
+    mindquantum.core.circuit.as_ansatz
+    mindquantum.core.circuit.as_encoder
+    mindquantum.core.circuit.change_param_name
+    mindquantum.core.circuit.controlled
+    mindquantum.core.circuit.dagger
+    mindquantum.core.circuit.decompose_single_term_time_evolution
+    mindquantum.core.circuit.pauli_word_to_circuits
+    mindquantum.core.circuit.shift
+    mindquantum.core.circuit.qfi
+    mindquantum.core.circuit.partial_psi_partial_psi
+    mindquantum.core.circuit.partial_psi_psi
 
 functional
 ----------

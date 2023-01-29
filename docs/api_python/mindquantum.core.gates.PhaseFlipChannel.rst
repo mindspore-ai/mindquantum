@@ -1,8 +1,9 @@
+mindquantum.core.gates.PhaseFlipChannel
+========================================
+
 .. py:class:: mindquantum.core.gates.PhaseFlipChannel(p: float, **kwargs)
 
-    量子信道可以描述量子计算中的非相干噪声。
-
-    相位翻转信道描述的噪声体现为：以 :math:`P` 的概率翻转量子比特的相位（应用Z门），或以 :math:`1-P` 的概率保持不变（作用I门）。
+    相位翻转信道。描述的噪声体现为：以 :math:`P` 的概率翻转量子比特的相位（应用Z门），或以 :math:`1-P` 的概率保持不变（作用I门）。
 
     相位翻转信道的数学表示如下：
 

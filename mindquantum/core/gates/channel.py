@@ -28,8 +28,6 @@ from .basic import BasicGate, NoiseGate, NonHermitianGate, SelfHermitianGate
 
 class PauliChannel(NoiseGate, SelfHermitianGate):
     r"""
-    Quantum channel that express the incoherent noise in quantum computing.
-
     Pauli channel express error that randomly applies an additional X, Y or Z gate
     on qubits with different probabilities Px, Py and Pz, or do noting (applies I gate)
     with probability P = (1 - Px - Py - Pz).
@@ -40,8 +38,8 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
 
         \epsilon(\rho) = (1 - P_x - P_y - P_z)\rho + P_x X \rho X + P_y Y \rho Y + P_z Z \rho Z
 
-    where ρ is quantum state as density matrix type;
-    Px, Py and Pz is the probability of applying an additional X, Y and Z gate.
+    where :math:`\rho` is quantum state as density matrix type;
+    :math:`P_x`, :math:`P_y` and :math:`P_z` is the probability of applying an additional X, Y and Z gate.
 
     Args:
         px (int, float): probability of applying X gate.
@@ -121,8 +119,6 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
 
 class BitFlipChannel(PauliChannel):
     r"""
-    Quantum channel that express the incoherent noise in quantum computing.
-
     Bit flip channel express error that randomly flip the qubit (applies :math:`X` gate)
     with probability :math:`P`, or do noting (applies :math:`I` gate) with probability :math:`1-P`.
 
@@ -175,8 +171,6 @@ class BitFlipChannel(PauliChannel):
 
 class PhaseFlipChannel(PauliChannel):
     r"""
-    Quantum channel that express the incoherent noise in quantum computing.
-
     Phase flip channel express error that randomly flip the phase of qubit (applies Z gate)
     with probability P, or do noting (applies I gate) with probability 1 - P.
 
@@ -186,7 +180,8 @@ class PhaseFlipChannel(PauliChannel):
 
         \epsilon(\rho) = (1 - P)\rho + P Z \rho Z
 
-    where ρ is quantum state as density matrix type; P is the probability of applying an additional Z gate.
+    where :math:`\rho` is quantum state as density matrix type; :math:`P` is the
+    probability of applying an additional Z gate.
 
     Args:
         p (int, float): probability of occurred error.
@@ -228,8 +223,6 @@ class PhaseFlipChannel(PauliChannel):
 
 class BitPhaseFlipChannel(PauliChannel):
     r"""
-    Quantum channel that express the incoherent noise in quantum computing.
-
     Bit phase flip channel express error that randomly flip both the state and phase
     of qubit (applies Y gate) with probability P, or do noting (applies I gate)
     with probability 1 - P.
@@ -240,7 +233,8 @@ class BitPhaseFlipChannel(PauliChannel):
 
         \epsilon(\rho) = (1 - P)\rho + P Y \rho Y
 
-    where ρ is quantum state as density matrix type; P is the probability of applying an additional Y gate.
+    where :math:`\rho` is quantum state as density matrix type; :math:`P` is the
+    probability of applying an additional Y gate.
 
     Args:
         p (int, float): probability of occurred error.
@@ -282,8 +276,6 @@ class BitPhaseFlipChannel(PauliChannel):
 
 class DepolarizingChannel(PauliChannel):
     r"""
-    Quantum channel that express the incoherent noise in quantum computing.
-
     Depolarizing channel express errors that have probability P to turn qubit's quantum state into
     maximally mixed state, by randomly applying one of the pauli gate(X,Y,Z) with same probability P/3.
     And it has probability 1 - P to change nothing (applies I gate).
@@ -294,7 +286,8 @@ class DepolarizingChannel(PauliChannel):
 
         \epsilon(\rho) = (1 - P)\rho + P/3( X \rho X + Y \rho Y + Z \rho Z)
 
-    where ρ is quantum state as density matrix type; P is the probability of occurred the depolarizing error.
+    where :math:`\rho` is quantum state as density matrix type; :math:`P` is the
+    probability of occurred the depolarizing error.
 
     Args:
         p (int, float): probability of occurred error.
@@ -336,20 +329,20 @@ class DepolarizingChannel(PauliChannel):
 
 class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
     r"""
-    Quantum channel that express the incoherent noise in quantum computing.
-
     Amplitude damping channel express error that qubit is affected by the energy dissipation.
 
     Amplitude damping channel applies noise as:
 
     .. math::
 
+        \begin{gather*}
         \epsilon(\rho) = E_0 \rho E_0^\dagger + E_1 \rho E_1^\dagger
-
-        where\ {E_0}=\begin{bmatrix}1&0\\
+        \\
+        \text{where}\ {E_0}=\begin{bmatrix}1&0\\
                 0&\sqrt{1-\gamma}\end{bmatrix},
             \ {E_1}=\begin{bmatrix}0&\sqrt{\gamma}\\
                 0&0\end{bmatrix}
+        \end{gather*}
 
     where :math:`\rho` is quantum state as density matrix type;
     :math:`\gamma` is the coefficient of energy dissipation.
@@ -405,23 +398,23 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
 
 class PhaseDampingChannel(NoiseGate, NonHermitianGate):
     r"""
-    Quantum channel that express the incoherent noise in quantum computing.
-
     Phase damping channel express error that qubit loses quantum information without exchanging energy with environment.
 
     Phase damping channel applies noise as:
 
     .. math::
 
+        \begin{gather*}
         \epsilon(\rho) = E_0 \rho E_0^\dagger + E_1 \rho E_1^\dagger
-
-        where\ {E_0}=\begin{bmatrix}1&0\\
+        \\
+        \text{where}\ {E_0}=\begin{bmatrix}1&0\\
                 0&\sqrt{1-\gamma}\end{bmatrix},
             \ {E_1}=\begin{bmatrix}0&0\\
                 0&\sqrt{\gamma}\end{bmatrix}
+        \end{gather*}
 
-    where ρ is quantum state as density matrix type;
-    gamma is the coefficient of quantum information loss.
+    where :math:`\rho` is quantum state as density matrix type;
+    :math:`\gamma` is the coefficient of quantum information loss.
 
     Args:
         gamma (int, float): damping coefficient.
@@ -474,8 +467,6 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
 
 class KrausChannel(NoiseGate, NonHermitianGate):
     r"""
-    Quantum channel that express the incoherent noise in quantum computing.
-
     Kraus channel accepts two or more 2x2 matrices as Kraus operator to construct
     custom (single-qubit) noise in quantum circuit.
 

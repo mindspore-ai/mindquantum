@@ -1,3 +1,6 @@
+mindquantum.core.operators.Hamiltonian
+=======================================
+
 .. py:class:: mindquantum.core.operators.Hamiltonian(hamiltonian)
 
     QubitOperator哈密顿量的包装器。

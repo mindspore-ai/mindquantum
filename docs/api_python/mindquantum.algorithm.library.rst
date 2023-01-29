@@ -1,17 +1,17 @@
 mindquantum.algorithm.library
-=============================
+------------------------------
 
-MindQuantum常用算法模块
+.. py:module:: mindquantum.algorithm.library
 
-.. include:: mindquantum.algorithm.library.amplitude_encoder.rst
 
-.. include:: mindquantum.algorithm.library.bitphaseflip_operator.rst
+MindQuantum常用算法模块。
 
-.. include:: mindquantum.algorithm.library.general_ghz_state.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
 
-.. include:: mindquantum.algorithm.library.general_w_state.rst
-
-.. include:: mindquantum.algorithm.library.qft.rst
-
-.. automodule:: mindquantum.algorithm.library
-    :members:
+    mindquantum.algorithm.library.amplitude_encoder
+    mindquantum.algorithm.library.bitphaseflip_operator
+    mindquantum.algorithm.library.general_ghz_state
+    mindquantum.algorithm.library.general_w_state
+    mindquantum.algorithm.library.qft

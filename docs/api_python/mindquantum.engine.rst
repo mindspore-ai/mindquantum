@@ -1,6 +1,9 @@
 mindquantum.engine
 ==================
 
+.. py:module:: mindquantum.engine
+
+
 MindQuantum引擎模块。
 
 .. include:: mindquantum.engine.BasicQubit.rst

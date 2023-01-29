@@ -1,44 +1,47 @@
 mindquantum.core.operators
 ==========================
 
+.. py:module:: mindquantum.core.operators
+
+
 MindQuantum算子库。算子由一个或多个基本门的组合而成。
 
 包含以下类的表示：
+
 - Qubit算子
+
 - Fermion算子
+
 - 时间演化算子
 
-.. include:: mindquantum.core.operators.FermionOperator.rst
+Class
+---------------
 
-.. include:: mindquantum.core.operators.Hamiltonian.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
 
-.. include:: mindquantum.core.operators.InteractionOperator.rst
+    mindquantum.core.operators.FermionOperator
+    mindquantum.core.operators.Hamiltonian
+    mindquantum.core.operators.InteractionOperator
+    mindquantum.core.operators.PolynomialTensor
+    mindquantum.core.operators.Projector
+    mindquantum.core.operators.QubitExcitationOperator
+    mindquantum.core.operators.QubitOperator
+    mindquantum.core.operators.TimeEvolution
 
-.. include:: mindquantum.core.operators.PolynomialTensor.rst
+Function
+---------------
 
-.. include:: mindquantum.core.operators.Projector.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
 
-.. include:: mindquantum.core.operators.QubitExcitationOperator.rst
-
-.. include:: mindquantum.core.operators.QubitOperator.rst
-
-.. include:: mindquantum.core.operators.TimeEvolution.rst
-
-.. include:: mindquantum.core.operators.commutator.rst
-
-.. include:: mindquantum.core.operators.count_qubits.rst
-
-.. include:: mindquantum.core.operators.down_index.rst
-
-.. include:: mindquantum.core.operators.hermitian_conjugated.rst
-
-.. include:: mindquantum.core.operators.normal_ordered.rst
-
-.. include:: mindquantum.core.operators.number_operator.rst
-
-.. include:: mindquantum.core.operators.sz_operator.rst
-
-.. include:: mindquantum.core.operators.up_index.rst
-
-.. automodule:: mindquantum.core.operators
-    :members:
+    mindquantum.core.operators.commutator
+    mindquantum.core.operators.count_qubits
+    mindquantum.core.operators.down_index
+    mindquantum.core.operators.hermitian_conjugated
+    mindquantum.core.operators.normal_ordered
+    mindquantum.core.operators.number_operator
+    mindquantum.core.operators.sz_operator
+    mindquantum.core.operators.up_index

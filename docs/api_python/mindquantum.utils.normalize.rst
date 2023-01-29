@@ -1,3 +1,6 @@
+mindquantum.utils.normalize
+============================
+
 .. py:function:: mindquantum.utils.normalize(vec_in, axis=0)
 
     根据指定的轴归一化输入向量。

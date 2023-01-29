@@ -1,3 +1,6 @@
+mindquantum.core.circuit.add_suffix
+====================================
+
 .. py:function:: mindquantum.core.circuit.add_suffix(circuit_fn, suffix: str)
 
     在含参量子线路或含参量子算子（可以生成含参量子线路的函数）的参数上添加后缀。

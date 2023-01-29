@@ -1,6 +1,8 @@
 mindquantum.framework
 =====================
 
+.. automodule:: mindquantum.framework
+
 Operators
 ---------
 

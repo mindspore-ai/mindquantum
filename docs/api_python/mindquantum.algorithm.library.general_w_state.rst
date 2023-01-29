@@ -1,3 +1,6 @@
+mindquantum.algorithm.library.general_w_state
+==============================================
+
 .. py:function:: mindquantum.algorithm.library.general_w_state(qubits)
 
     通用W态。

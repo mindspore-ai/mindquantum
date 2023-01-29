@@ -1,19 +1,18 @@
 mindquantum.utils
 =================
 
+.. py:module:: mindquantum.utils
+
+
 实用工具。
 
-.. include:: mindquantum.utils.fdopen.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
 
-.. include:: mindquantum.utils.ket_string.rst
-
-.. include:: mindquantum.utils.mod.rst
-
-.. include:: mindquantum.utils.normalize.rst
-
-.. include:: mindquantum.utils.random_circuit.rst
-
-.. include:: mindquantum.utils.random_state.rst
-
-.. automodule:: mindquantum.utils
-    :members:
+    mindquantum.utils.fdopen
+    mindquantum.utils.ket_string
+    mindquantum.utils.mod
+    mindquantum.utils.normalize
+    mindquantum.utils.random_circuit
+    mindquantum.utils.random_state

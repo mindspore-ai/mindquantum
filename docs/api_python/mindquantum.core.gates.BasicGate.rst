@@ -1,3 +1,6 @@
+mindquantum.core.gates.BasicGate
+=================================
+
 .. py:class:: mindquantum.core.gates.BasicGate(name, n_qubits, obj_qubits=None, ctrl_qubits=None)
 
     BasicGate是所有门的基类。

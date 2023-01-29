@@ -1,37 +1,62 @@
 mindquantum.algorithm.nisq
-==========================
+---------------------------
+
+.. py:module:: mindquantum.algorithm.nisq
+
 
 NISQ算法。
 
-.. include:: mindquantum.algorithm.nisq.Ansatz.rst
+Base Class
+^^^^^^^^^^^^^
 
-.. include:: mindquantum.algorithm.nisq.HardwareEfficientAnsatz.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
 
-.. include:: mindquantum.algorithm.nisq.IQPEncoding.rst
+    mindquantum.algorithm.nisq.Ansatz
 
-.. include:: mindquantum.algorithm.nisq.Max2SATAnsatz.rst
+Encoder
+^^^^^^^^^^^^^
 
-.. include:: mindquantum.algorithm.nisq.MaxCutAnsatz.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
 
-.. include:: mindquantum.algorithm.nisq.QubitUCCAnsatz.rst
+    mindquantum.algorithm.nisq.IQPEncoding
 
-.. include:: mindquantum.algorithm.nisq.StronglyEntangling.rst
+Ansatz
+^^^^^^^^^^^^^
 
-.. include:: mindquantum.algorithm.nisq.Transform.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
 
-.. include:: mindquantum.algorithm.nisq.UCCAnsatz.rst
+    mindquantum.algorithm.nisq.HardwareEfficientAnsatz
+    mindquantum.algorithm.nisq.Max2SATAnsatz
+    mindquantum.algorithm.nisq.MaxCutAnsatz
+    mindquantum.algorithm.nisq.QubitUCCAnsatz
+    mindquantum.algorithm.nisq.StronglyEntangling
+    mindquantum.algorithm.nisq.UCCAnsatz
 
-.. include:: mindquantum.algorithm.nisq.generate_uccsd.rst
+Generator
+^^^^^^^^^^^^^
 
-.. include:: mindquantum.algorithm.nisq.get_qubit_hamiltonian.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
 
-.. include:: mindquantum.algorithm.nisq.quccsd_generator.rst
+    mindquantum.algorithm.nisq.generate_uccsd
+    mindquantum.algorithm.nisq.quccsd_generator
+    mindquantum.algorithm.nisq.uccsd0_singlet_generator
+    mindquantum.algorithm.nisq.uccsd_singlet_generator
 
-.. include:: mindquantum.algorithm.nisq.uccsd0_singlet_generator.rst
+Functional
+^^^^^^^^^^^^^
 
-.. include:: mindquantum.algorithm.nisq.uccsd_singlet_generator.rst
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
 
-.. include:: mindquantum.algorithm.nisq.uccsd_singlet_get_packed_amplitudes.rst
-
-.. automodule:: mindquantum.algorithm.nisq
-    :members:
+    mindquantum.algorithm.nisq.Transform
+    mindquantum.algorithm.nisq.get_qubit_hamiltonian
+    mindquantum.algorithm.nisq.uccsd_singlet_get_packed_amplitudes

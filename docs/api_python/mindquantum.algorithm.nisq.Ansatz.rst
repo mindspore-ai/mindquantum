@@ -1,3 +1,6 @@
+mindquantum.algorithm.nisq.Ansatz
+==================================
+
 .. py:class:: mindquantum.algorithm.nisq.Ansatz(name, n_qubits, *args, **kwargs)
 
     Ansatz的基类。

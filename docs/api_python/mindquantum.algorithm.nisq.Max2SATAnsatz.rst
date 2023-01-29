@@ -1,3 +1,6 @@
+mindquantum.algorithm.nisq.Max2SATAnsatz
+=========================================
+
 .. py:class:: mindquantum.algorithm.nisq.Max2SATAnsatz(clauses, depth=1)
 
     Max-2-SAT ansatz。了解更多详细信息，请参考 `Reachability Deficits in Quantum Approximate Optimization <https://arxiv.org/abs/1906.11259>`_。

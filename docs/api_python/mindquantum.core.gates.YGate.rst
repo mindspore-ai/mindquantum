@@ -1,6 +1,9 @@
+mindquantum.core.gates.YGate
+===============================
+
 .. py:class:: mindquantum.core.gates.YGate
 
-    泡利Y门，矩阵为：
+    泡利Y门。矩阵为：
 
     .. math::
 

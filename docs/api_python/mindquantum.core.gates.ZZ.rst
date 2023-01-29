@@ -1,3 +1,6 @@
+mindquantum.core.gates.ZZ
+===============================
+
 .. py:class:: mindquantum.core.gates.ZZ(pr)
 
     伊辛ZZ门。更多用法，请参见 :class:`mindquantum.core.gates.RX`。
