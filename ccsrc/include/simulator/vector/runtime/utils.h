@@ -28,6 +28,7 @@ enum class State {
     W_CTRL,
     W_ANG,
     W_M_KEY,
+    W_SHOTS,
 };
 
 std::tuple<bool, Index> convert_int(const std::string &s, int64_t limit, bool raise_error = true);

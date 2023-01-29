@@ -11,6 +11,9 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
+#include "simulator/vector/runtime/cmd.h"
+
+#include <fstream>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -25,6 +28,7 @@
 #include "simulator/vector/runtime/rt_gate.h"
 #include "simulator/vector/runtime/utils.h"
 #include "simulator/vector/vector_state.hpp"
+#define MAX_SHOTS 100000
 
 namespace mindquantum::sim::rt {
 int cmd(const std::vector<std::string> &args) {
@@ -42,6 +46,7 @@ int cmd(const std::vector<std::string> &args) {
     int n_obj = 0;
     bool forbid_ctrl = false;
     MST<size_t> key_map;
+    int shots = -1;
     std::vector<std::string> gate_set1 = {"X", "Y", "Z", "H", "S", "T", "Sdag", "Tdag"};
     std::vector<std::string> gate_set2 = {"SWAP", "ISWAP"};
     std::vector<std::string> gate_set3 = {"PS", "RX", "RY", "RZ"};
@@ -57,6 +62,9 @@ int cmd(const std::vector<std::string> &args) {
             }
             if (state == State::W_M_KEY) {
                 throw std::runtime_error(fmt::format("gate {} require key", gate.gate));
+            }
+            if (state == State::W_SHOTS) {
+                throw std::runtime_error("You forget to set shots number.");
             }
             if (gate.Valid()) {
                 circ.push_back(gate.GetGate());
@@ -116,11 +124,21 @@ int cmd(const std::vector<std::string> &args) {
                 cmd_idx += 1;
                 continue;
             }
+            if (arg == "shots") {
+                state = State::W_SHOTS;
+                states.push_back(state);
+                cmd_idx += 1;
+                continue;
+            }
             throw std::runtime_error("Cannot convert '" + arg + "' to quantum gate.");
+        }
+        if (state == State::W_SHOTS) {
+            shots = std::get<1>(convert_int(arg, MAX_SHOTS));
+            break;
         }
         if (state == State::W_M_KEY) {
             if (key_map.count(arg)) {
-                throw std::runtime_error(fmt::format("Measure gate key {} already defined.", arg));
+                throw std::runtime_error(fmt::format("Measure gate key '{}' already defined.", arg));
             }
             key_map[arg] = key_map.size();
             gate.m_key = arg;
@@ -174,7 +192,9 @@ int cmd(const std::vector<std::string> &args) {
     if (key_map.size() == 0) {
         throw std::runtime_error("No measure gate implement.");
     }
-    int shots = 1000;
+    if (shots < 0 || shots > MAX_SHOTS) {
+        throw std::runtime_error(fmt::format("You should set shots between 0 and {}", MAX_SHOTS));
+    }
     auto res = sim.Sampling(circ, {}, shots, key_map, seed);
     assert(res.size() == key_map.size() * shots);
     nlohmann::json result;
@@ -186,6 +206,33 @@ int cmd(const std::vector<std::string> &args) {
         result[name] = samp;
     }
     std::cout << result.dump() << std::endl;
+    return 0;
+}
+
+int cmd_file(const char *filename) {
+    std::ifstream file;
+    file.open(filename);
+    if (!file.is_open()) {
+        throw std::runtime_error(fmt::format("Cannot open file {}", filename));
+        return 0;
+    }
+    std::vector<std::string> cmds = {"", "cmd"};
+    std::string current_cmd = "";
+    while (true) {
+        char c = file.get();
+        if ((c == ' ' || c == '\n' || c == '\t' || c == EOF)) {
+            if (current_cmd.size() != 0) {
+                cmds.push_back(current_cmd);
+                current_cmd = "";
+            }
+            if (c == EOF) {
+                break;
+            }
+            continue;
+        }
+        current_cmd += std::string(1, c);
+    }
+    cmd(cmds);
     return 0;
 }
 }  // namespace mindquantum::sim::rt

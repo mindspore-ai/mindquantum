@@ -28,6 +28,7 @@
 #include "simulator/vector/runtime/utils.h"
 
 namespace mindquantum::sim::rt {
-int cmd(const std::vector<std::string> &args);
+int cmd(const std::vector<std::string>& args);
+int cmd_file(const char* filename);
 }  // namespace mindquantum::sim::rt
 #endif
