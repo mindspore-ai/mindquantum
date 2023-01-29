@@ -1,7 +1,7 @@
 # 2022昇腾AI创新大赛量子计算赛题
 
 | 序号 | 论文名称 | 选手ID及复现代码链接 |
-| --| -- | -- | -- |
+| -- | -- | -- | 
 | 11 | Variational Quantum Optimization with Multi-Basis Encodings | [Liangxiaohanng](https://gitee.com/mindspore/mindquantum/tree/research/paper_recurrence/2022/11_%20xhliang05) |
 | 11 | Variational Quantum Optimization with Multi-Basis Encodings | [NoE](https://gitee.com/mindspore/mindquantum/tree/research/paper_recurrence/2022/11_hw58695368) |
 | 11 | Variational Quantum Optimization with Multi-Basis Encodings | [richybai](https://gitee.com/mindspore/mindquantum/tree/research/paper_recurrence/2022/11_richybai) |
