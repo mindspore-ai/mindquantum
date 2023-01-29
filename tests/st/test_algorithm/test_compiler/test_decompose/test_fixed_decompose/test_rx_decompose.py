@@ -16,7 +16,7 @@
 import numpy as np
 import pytest
 
-from mindquantum.algorithm.compiler.decompose.rx_related import crx_decompose
+from mindquantum.algorithm.compiler.decompose import crx_decompose
 from mindquantum.config import Context
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import RX
