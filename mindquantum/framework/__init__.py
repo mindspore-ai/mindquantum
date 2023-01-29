@@ -43,13 +43,9 @@ try:
             "MQN2EncoderOnlyOps",
         ]
     )
-    try:
-        import importlib.metadata as importlib_metadata
-    except ImportError:
-        import importlib_metadata
     import packaging.version
 
-    ms_version = importlib_metadata.version('mindspore')
+    ms_version = mindspore.__version__
 
     ms_requires = packaging.version.parse('1.4.0')
     if packaging.version.parse(ms_version) < ms_requires:
