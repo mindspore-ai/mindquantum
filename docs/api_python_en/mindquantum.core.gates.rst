@@ -48,7 +48,7 @@ Quantum Gate
 Functional Gate
 ----------------
 
-.. msmathautosummary::
+.. msautosummary::
     :toctree:
     :nosignatures:
     :template: classtemplate.rst

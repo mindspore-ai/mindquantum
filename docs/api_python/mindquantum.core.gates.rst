@@ -51,7 +51,7 @@ mindquantum.core.gates
 功能量子门
 -------------
 
-.. mscnmathautosummary::
+.. mscnautosummary::
     :toctree:
     :nosignatures:
     :template: classtemplate.rst
