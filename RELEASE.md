@@ -8,15 +8,15 @@
 
 #### Gates
 
-- [STABLE] [`FSim`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.FSim): Fermionic simulation gate supported, and this gate also works in variational quantum algorithm.
-- [STABLE] [`U3`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.U3): The single qubit arbitrary gate U3 now will work as a single gate but not a piece of quantum circuit. U3 gate also works in variational quantum algorithm.
-- [STABLE] [`Customed parameterized gate`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantum.core.gates.gene_univ_parameterized_gate). Customed parameterized gate now will compiled to machine code by jit compiler [numba](https://numba.pydata.org), and the simulator backend can call customed parameterized gate in parallel thread.
-- [STABLE] [`BarrierGate`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.BarrierGate): BarrierGate now can be acted on certain qubits.
-- [STABLE] [`KrausChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.KrausChannel): Design a customed kraus channel for quantum simulator.
+- [STABLE] [`FSim`](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.FSim): Fermionic simulation gate supported, and this gate also works in variational quantum algorithm.
+- [STABLE] [`U3`](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.U3): The single qubit arbitrary gate U3 now will work as a single gate but not a piece of quantum circuit. U3 gate also works in variational quantum algorithm.
+- [STABLE] [`Customed parameterized gate`](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.core.gates.html#mindquantum.core.gates.gene_univ_parameterized_gate). Customed parameterized gate now will compiled to machine code by jit compiler [numba](https://numba.pydata.org), and the simulator backend can call customed parameterized gate in parallel thread.
+- [STABLE] [`BarrierGate`](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.BarrierGate): BarrierGate now can be acted on certain qubits.
+- [STABLE] [`KrausChannel`](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.core.gates.html?highlight=fsim#mindquantum.core.gates.KrausChannel): Design a customed kraus channel for quantum simulator.
 
 #### Circuit
 
-- [STABLE] [`svg`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.svg): Now you can set the `width` to split the svg circuit, so that you can copy it into your paper.
+- [STABLE] [`svg`](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.core.circuit.html#mindquantum.core.circuit.Circuit.svg): Now you can set the `width` to split the svg circuit, so that you can copy it into your paper.
 
 #### Simulator
 
@@ -94,10 +94,10 @@ Contributions of any kind are welcome!
 
 ### Add line module
 
-- [**general_w_state**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarygeneral-w-state): prepare w-state quantum circuits.
-- [**general_ghz_state**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarygeneral-ghz-state): prepare ghz-state quantum circuits
-- [**bitphaseflip_operator**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarybitphaseflip-operator): bit-flip quantum circuits
-- [**amplitude_encoder**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.library.html#mindquantumalgorithmlibraryamplitude-encoder): amplitude-encoded quantum circuits
+- [**general_w_state**](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarygeneral-w-state): prepare w-state quantum circuits.
+- [**general_ghz_state**](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarygeneral-ghz-state): prepare ghz-state quantum circuits
+- [**bitphaseflip_operator**](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarybitphaseflip-operator): bit-flip quantum circuits
+- [**amplitude_encoder**](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.algorithm.library.html#mindquantumalgorithmlibraryamplitude-encoder): amplitude-encoded quantum circuits
 
 ### Richer circuit operation supported
 
@@ -107,9 +107,9 @@ Contributions of any kind are welcome!
 
 ### Feature enhancement
 
-- `MaxCutAnsatz`: [**get_partition**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.html#mindquantumalgorithmnisqmaxcutansatzget-partition), get the max-cut cutting solution
-- `MaxCutAnsatz`: [**get_cut_value**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.html#mindquantumalgorithmnisqmaxcutansatzget-cut-value), get the number of cuts for a cutting solution
-- `Circuit`: [**is_measure_end**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.circuit.html#mindquantumcorecircuitcircuitis-measure-end), determine whether the quantum circuit is the end of the measurement gate
+- `MaxCutAnsatz`: [**get_partition**](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.algorithm.nisq.html#mindquantumalgorithmnisqmaxcutansatzget-partition), get the max-cut cutting solution
+- `MaxCutAnsatz`: [**get_cut_value**](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.algorithm.nisq.html#mindquantumalgorithmnisqmaxcutansatzget-cut-value), get the number of cuts for a cutting solution
+- `Circuit`: [**is_measure_end**](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.core.circuit.html#mindquantumcorecircuitcircuitis-measure-end), determine whether the quantum circuit is the end of the measurement gate
 
 ### SVG drawing mode that supports quantum circuits
 
@@ -119,11 +119,11 @@ Contributions of any kind are welcome!
 
 MindQuantum adds the following quantum channels for quantum noise simulation
 
-- [`PauliChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatespaulichannel): Pauli channel
-- [`BitFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatesbitflipchannel): bit-flip channel
-- [`PhaseFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatesphaseflipchannel): phase-flip channel
-- [`BitPhaseFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatesbitphaseflipchannel): bit-phase flip channel
-- [`DepolarizingChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatesdepolarizingchannel): depolarized channel
+- [`PauliChannel`](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.core.gates.html#mindquantumcoregatespaulichannel): Pauli channel
+- [`BitFlipChannel`](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.core.gates.html#mindquantumcoregatesbitflipchannel): bit-flip channel
+- [`PhaseFlipChannel`](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.core.gates.html#mindquantumcoregatesphaseflipchannel): phase-flip channel
+- [`BitPhaseFlipChannel`](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.core.gates.html#mindquantumcoregatesbitphaseflipchannel): bit-phase flip channel
+- [`DepolarizingChannel`](https://mindspore.cn/mindquantum/docs/en/r0.8/mindquantum.core.gates.html#mindquantumcoregatesdepolarizingchannel): depolarized channel
 
 ## MindQuantum 0.5.0 Release Notes
 
