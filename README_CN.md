@@ -1,6 +1,6 @@
 # MindQuantum
 
-[![API](https://badg.vercel.app/badge/MQ/API?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.html)
+[![API](https://badg.vercel.app/badge/MQ/API?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/zh-CN/master/overview.html)
 [![Tutorial](https://badg.vercel.app/badge/MQ/Tutorial?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/zh-CN/master/parameterized_quantum_circuit.html)
 [![Tutorial](https://badg.vercel.app/gitee/open-issues/mindspore/mindquantum?scale=1.3)](https://gitee.com/mindspore/mindquantum/issues)
 [![Tutorial](https://badg.vercel.app/gitee/stars/mindspore/mindquantum?scale=1.3&color=purple)](https://gitee.com/mindspore/mindquantum)
@@ -138,7 +138,7 @@ print(dict(zip(ansatz.params_name, net.trainable_params()[0].asnumpy())))
 
 ## API
 
-对于上述示例所涉及API和其他更多用法，请查看MindQuantum API文档[文档链接](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.html)
+对于上述示例所涉及API和其他更多用法，请查看MindQuantum API文档[文档链接](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/overview.html)
 
 ## 安装教程
 

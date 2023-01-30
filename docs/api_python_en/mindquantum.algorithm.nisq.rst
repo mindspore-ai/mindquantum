@@ -1,10 +1,10 @@
 mindquantum.algorithm.nisq
----------------------------
+===========================
 
 .. automodule:: mindquantum.algorithm.nisq
 
 Base Class
-^^^^^^^^^^^^^
+-----------
 
 .. autosummary::
     :toctree:
@@ -14,7 +14,7 @@ Base Class
     mindquantum.algorithm.nisq.Ansatz
 
 Encoder
-^^^^^^^^^^^^^
+-----------
 
 .. autosummary::
     :toctree:
@@ -24,7 +24,7 @@ Encoder
     mindquantum.algorithm.nisq.IQPEncoding
 
 Ansatz
-^^^^^^^^^^^^^
+-----------
 
 .. autosummary::
     :toctree:
@@ -39,7 +39,7 @@ Ansatz
     mindquantum.algorithm.nisq.UCCAnsatz
 
 Generator
-^^^^^^^^^^^^^
+-----------
 
 .. autosummary::
     :toctree:
@@ -52,7 +52,7 @@ Generator
     mindquantum.algorithm.nisq.uccsd_singlet_generator
 
 Functional
-^^^^^^^^^^^^^
+-----------
 
 .. autosummary::
     :toctree:

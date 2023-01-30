@@ -9,11 +9,8 @@ mindquantum.core.circuit.U3
 
     .. math::
 
-        U3(\theta, \phi, \lambda) =
-        \begin{pmatrix}
-           cos \left( \frac{\theta}{2} \right) & -e^{i \lambda} sin \left( \frac{\theta}{2} \\
-        e^{i \phi} sin \left( \frac{\theta}{2} & e^{i (\phi + \lambda)} cos \left( \frac{\theta}{2}
-        \end{pmatrix}
+        {\rm U3}(\theta, \phi, \lambda) =\begin{pmatrix}\cos(\theta/2)&-e^{i\lambda}\sin(\theta/2)\\
+            e^{i\phi}\sin(\theta/2)&e^{i(\phi+\lambda)}\cos(\theta/2)\end{pmatrix}
 
     它可以被分解为：
 

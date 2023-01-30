@@ -1,5 +1,5 @@
 mindquantum.algorithm.library
-------------------------------
+==============================
 
 .. py:module:: mindquantum.algorithm.library
 

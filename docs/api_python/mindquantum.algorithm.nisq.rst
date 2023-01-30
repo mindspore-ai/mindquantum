@@ -1,5 +1,5 @@
 mindquantum.algorithm.nisq
----------------------------
+===========================
 
 .. py:module:: mindquantum.algorithm.nisq
 
@@ -7,7 +7,7 @@ mindquantum.algorithm.nisq
 NISQ算法。
 
 Base Class
-^^^^^^^^^^^^^
+-------------
 
 .. mscnautosummary::
     :toctree:
@@ -17,7 +17,7 @@ Base Class
     mindquantum.algorithm.nisq.Ansatz
 
 Encoder
-^^^^^^^^^^^^^
+-------------
 
 .. mscnautosummary::
     :toctree:
@@ -27,7 +27,7 @@ Encoder
     mindquantum.algorithm.nisq.IQPEncoding
 
 Ansatz
-^^^^^^^^^^^^^
+-------------
 
 .. mscnautosummary::
     :toctree:
@@ -42,7 +42,7 @@ Ansatz
     mindquantum.algorithm.nisq.UCCAnsatz
 
 Generator
-^^^^^^^^^^^^^
+-------------
 
 .. mscnautosummary::
     :toctree:
@@ -55,7 +55,7 @@ Generator
     mindquantum.algorithm.nisq.uccsd_singlet_generator
 
 Functional
-^^^^^^^^^^^^^
+-------------
 
 .. mscnautosummary::
     :toctree:
