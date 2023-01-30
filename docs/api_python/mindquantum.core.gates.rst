@@ -18,7 +18,7 @@ mindquantum.core.gates
     mindquantum.core.gates.NoneParameterGate
     mindquantum.core.gates.ParameterGate
 
-量子门
+通用量子门
 -------------
 
 .. mscnmathautosummary::
@@ -41,13 +41,22 @@ mindquantum.core.gates
     mindquantum.core.gates.SWAPGate
     mindquantum.core.gates.TGate
     mindquantum.core.gates.U3
-    mindquantum.core.gates.UnivMathGate
     mindquantum.core.gates.XGate
     mindquantum.core.gates.XX
     mindquantum.core.gates.YGate
     mindquantum.core.gates.YY
     mindquantum.core.gates.ZGate
     mindquantum.core.gates.ZZ
+
+功能量子门
+-------------
+
+.. mscnmathautosummary::
+    :toctree:
+    :nosignatures:
+    :template: classtemplate.rst
+
+    mindquantum.core.gates.UnivMathGate
     mindquantum.core.gates.gene_univ_parameterized_gate
     mindquantum.core.gates.BarrierGate
 
@@ -86,7 +95,7 @@ mindquantum.core.gates
 量子信道
 -------------
 
-.. mscnmathautosummary::
+.. mscnautosummary::
     :toctree:
     :nosignatures:
     :template: classtemplate.rst

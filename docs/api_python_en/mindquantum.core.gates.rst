@@ -38,13 +38,22 @@ Quantum Gate
     mindquantum.core.gates.SWAPGate
     mindquantum.core.gates.TGate
     mindquantum.core.gates.U3
-    mindquantum.core.gates.UnivMathGate
     mindquantum.core.gates.XGate
     mindquantum.core.gates.XX
     mindquantum.core.gates.YGate
     mindquantum.core.gates.YY
     mindquantum.core.gates.ZGate
     mindquantum.core.gates.ZZ
+
+Functional Gate
+----------------
+
+.. msmathautosummary::
+    :toctree:
+    :nosignatures:
+    :template: classtemplate.rst
+
+    mindquantum.core.gates.UnivMathGate
     mindquantum.core.gates.gene_univ_parameterized_gate
     mindquantum.core.gates.BarrierGate
 
@@ -83,7 +92,7 @@ The gates blow are the pre-instantiated quantum gates, which can be used directl
 Quantum Channel
 ----------------
 
-.. msmathautosummary::
+.. msautosummary::
     :toctree:
     :nosignatures:
     :template: classtemplate.rst
