@@ -14,10 +14,10 @@
 
 ### 新增线路模块
 
-- [**general_w_state**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarygeneral-w-state): 制备w态量子线路
-- [**general_ghz_state**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarygeneral-ghz-state): 制备ghz态量子线路
-- [**bitphaseflip_operator**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarybitphaseflip-operator): 比特翻转量子线路
-- [**amplitude_encoder**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.library.html#mindquantumalgorithmlibraryamplitude-encoder): 振幅编码量子线路
+- [**general_w_state**](https://mindspore.cn/mindquantum/docs/zh-CN/r0.6/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarygeneral-w-state): 制备w态量子线路
+- [**general_ghz_state**](https://mindspore.cn/mindquantum/docs/zh-CN/r0.6/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarygeneral-ghz-state): 制备ghz态量子线路
+- [**bitphaseflip_operator**](https://mindspore.cn/mindquantum/docs/zh-CN/r0.6/mindquantum.algorithm.library.html#mindquantumalgorithmlibrarybitphaseflip-operator): 比特翻转量子线路
+- [**amplitude_encoder**](https://mindspore.cn/mindquantum/docs/zh-CN/r0.6/mindquantum.algorithm.library.html#mindquantumalgorithmlibraryamplitude-encoder): 振幅编码量子线路
 
 ### 高效线路操作
 
@@ -27,9 +27,9 @@
 
 ### 特性增强
 
-- `MaxCutAnsatz`: [**get_partition**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.html#mindquantumalgorithmnisqmaxcutansatzget-partition)，获取max-cut切割方案
-- `MaxCutAnsatz`: [**get_cut_value**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.html#mindquantumalgorithmnisqmaxcutansatzget-cut-value)，获取某个切割方案的切割数
-- `Circuit`: [**is_measure_end**](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.circuit.html#mindquantumcorecircuitcircuitis-measure-end)，判断量子线路是否是测量门结尾
+- `MaxCutAnsatz`: [**get_partition**](https://mindspore.cn/mindquantum/docs/zh-CN/r0.6/mindquantum.algorithm.nisq.html#mindquantumalgorithmnisqmaxcutansatzget-partition)，获取max-cut切割方案
+- `MaxCutAnsatz`: [**get_cut_value**](https://mindspore.cn/mindquantum/docs/zh-CN/r0.6/mindquantum.algorithm.nisq.html#mindquantumalgorithmnisqmaxcutansatzget-cut-value)，获取某个切割方案的切割数
+- `Circuit`: [**is_measure_end**](https://mindspore.cn/mindquantum/docs/zh-CN/r0.6/mindquantum.core.circuit.html#mindquantumcorecircuitcircuitis-measure-end)，判断量子线路是否是测量门结尾
 
 ### 支持量子线路的SVG绘图模式
 
@@ -39,8 +39,8 @@
 
 MindQuantum新增如下量子信道进行量子噪声模拟
 
-- [`PauliChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatespaulichannel)：泡利信道
-- [`BitFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatesbitflipchannel)：比特翻转信道
-- [`PhaseFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatesphaseflipchannel)：相位翻转信道
-- [`BitPhaseFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatesbitphaseflipchannel)：比特相位翻转信道
-- [`DepolarizingChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#mindquantumcoregatesdepolarizingchannel)：去极化信道
+- [`PauliChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/r0.6/mindquantum.core.gates.html#mindquantumcoregatespaulichannel)：泡利信道
+- [`BitFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/r0.6/mindquantum.core.gates.html#mindquantumcoregatesbitflipchannel)：比特翻转信道
+- [`PhaseFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/r0.6/mindquantum.core.gates.html#mindquantumcoregatesphaseflipchannel)：相位翻转信道
+- [`BitPhaseFlipChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/r0.6/mindquantum.core.gates.html#mindquantumcoregatesbitphaseflipchannel)：比特相位翻转信道
+- [`DepolarizingChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/r0.6/mindquantum.core.gates.html#mindquantumcoregatesdepolarizingchannel)：去极化信道
