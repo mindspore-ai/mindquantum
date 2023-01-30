@@ -92,7 +92,7 @@ The gates blow are the pre-instantiated quantum gates, which can be used directl
 Quantum Channel
 ----------------
 
-.. autosummary::
+.. msmathautosummary::
     :toctree:
     :nosignatures:
     :template: classtemplate.rst
