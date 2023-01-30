@@ -48,7 +48,7 @@ Quantum Gate
 Functional Gate
 ----------------
 
-.. msautosummary::
+.. autosummary::
     :toctree:
     :nosignatures:
     :template: classtemplate.rst
@@ -92,7 +92,7 @@ The gates blow are the pre-instantiated quantum gates, which can be used directl
 Quantum Channel
 ----------------
 
-.. msautosummary::
+.. autosummary::
     :toctree:
     :nosignatures:
     :template: classtemplate.rst
