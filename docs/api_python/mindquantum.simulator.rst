@@ -9,6 +9,7 @@ mindquantum.simulator
 .. mscnautosummary::
     :toctree:
     :nosignatures:
+    :template: classtemplate.rst
 
     mindquantum.simulator.GradOpsWrapper
     mindquantum.simulator.Simulator

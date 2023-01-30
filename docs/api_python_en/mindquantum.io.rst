@@ -6,6 +6,7 @@ mindquantum.io
 .. autosummary::
     :toctree:
     :nosignatures:
+    :template: classtemplate.rst
 
     mindquantum.io.BlochScene
     mindquantum.io.HiQASM

@@ -12,6 +12,7 @@ Class
 .. mscnautosummary::
     :toctree:
     :nosignatures:
+    :template: classtemplate.rst
 
     mindquantum.core.circuit.Circuit
     mindquantum.core.circuit.SwapParts
@@ -24,6 +25,7 @@ Function
 .. mscnautosummary::
     :toctree:
     :nosignatures:
+    :template: classtemplate.rst
 
     mindquantum.core.circuit.add_prefix
     mindquantum.core.circuit.add_suffix

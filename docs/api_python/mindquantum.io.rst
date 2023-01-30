@@ -9,6 +9,7 @@ MindQuantum的输入/输出模块。
 .. mscnautosummary::
     :toctree:
     :nosignatures:
+    :template: classtemplate.rst
 
     mindquantum.io.BlochScene
     mindquantum.io.HiQASM

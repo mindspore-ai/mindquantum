@@ -6,6 +6,7 @@ mindquantum.utils
 .. autosummary::
     :toctree:
     :nosignatures:
+    :template: classtemplate.rst
 
     mindquantum.utils.fdopen
     mindquantum.utils.ket_string

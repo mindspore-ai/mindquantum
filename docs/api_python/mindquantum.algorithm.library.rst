@@ -9,6 +9,7 @@ MindQuantum常用算法模块。
 .. mscnautosummary::
     :toctree:
     :nosignatures:
+    :template: classtemplate.rst
 
     mindquantum.algorithm.library.amplitude_encoder
     mindquantum.algorithm.library.bitphaseflip_operator
