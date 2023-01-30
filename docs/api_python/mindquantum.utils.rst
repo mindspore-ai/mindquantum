@@ -6,9 +6,13 @@ mindquantum.utils
 
 实用工具。
 
+Function
+---------
+
 .. mscnautosummary::
     :toctree:
     :nosignatures:
+    :template: classtemplate.rst
 
     mindquantum.utils.fdopen
     mindquantum.utils.ket_string

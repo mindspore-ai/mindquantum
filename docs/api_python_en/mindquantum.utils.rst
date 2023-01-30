@@ -3,9 +3,13 @@ mindquantum.utils
 
 .. automodule:: mindquantum.utils
 
+Function
+---------
+
 .. autosummary::
     :toctree:
     :nosignatures:
+    :template: classtemplate.rst
 
     mindquantum.utils.fdopen
     mindquantum.utils.ket_string

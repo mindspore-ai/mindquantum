@@ -9,6 +9,7 @@ Class
 .. autosummary::
     :toctree:
     :nosignatures:
+    :template: classtemplate.rst
 
     mindquantum.core.operators.FermionOperator
     mindquantum.core.operators.Hamiltonian
@@ -25,6 +26,7 @@ Function
 .. autosummary::
     :toctree:
     :nosignatures:
+    :template: classtemplate.rst
 
     mindquantum.core.operators.commutator
     mindquantum.core.operators.count_qubits

@@ -6,8 +6,8 @@ mindquantum.algorithm
 
 量子算法。
 
-.. include:: mindquantum.algorithm.library.rst
+.. mscnautosummary::
+   :toctree:
 
------------------------------------------------
-
-.. include:: mindquantum.algorithm.nisq.rst
+    mindquantum.algorithm.library
+    mindquantum.algorithm.nisq

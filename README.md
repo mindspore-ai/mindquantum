@@ -1,6 +1,6 @@
 # MindQuantum
 
-[![API](https://badg.vercel.app/badge/MQ/API?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.html)
+[![API](https://badg.vercel.app/badge/MQ/API?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/en/master/overview.html)
 [![Tutorial](https://badg.vercel.app/badge/MQ/Tutorial?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/en/master/parameterized_quantum_circuit.html)
 [![Tutorial](https://badg.vercel.app/gitee/open-issues/mindspore/mindquantum?scale=1.3)](https://gitee.com/mindspore/mindquantum/issues)
 [![Tutorial](https://badg.vercel.app/gitee/stars/mindspore/mindquantum?scale=1.3&color=purple)](https://gitee.com/mindspore/mindquantum)
@@ -133,7 +133,7 @@ The trained parameters are,
 
 ## API
 
-For more API, please refer to [MindQuantum API](https://www.mindspore.cn/mindquantum/docs/en/master/mindquantum.core.html).
+For more API, please refer to [MindQuantum API](https://www.mindspore.cn/mindquantum/docs/en/master/overview.html).
 
 ## Installation
 
