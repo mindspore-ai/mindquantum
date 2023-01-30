@@ -15,6 +15,7 @@
 
 # pylint: disable=abstract-method,import-outside-toplevel,too-many-lines,useless-parent-delegation,no-member
 # pylint: disable=too-many-ancestors
+# pylint: disable=arguments-differ
 """Basic module for quantum gate."""
 
 import copy
@@ -560,6 +561,9 @@ class ZZ(RotSelfHermMat):
     r"""
     Ising ZZ  gate. More usage, please see :class:`mindquantum.core.gates.RX`.
 
+    Note:
+        ZZ gate is deprecated, please use :class:`mindquantum.core.gates.Rzz`.
+
     .. math::
 
         {\rm ZZ_\theta}=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_Z\otimes\sigma_Z
@@ -635,6 +639,9 @@ class ZZ(RotSelfHermMat):
 class XX(RotSelfHermMat):
     r"""
     Ising XX gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    Note:
+        XX gate is deprecated, please use :class:`mindquantum.core.gates.Rxx`.
 
     .. math::
 
@@ -719,6 +726,9 @@ class XX(RotSelfHermMat):
 class YY(RotSelfHermMat):
     r"""
     Ising YY  gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    Note:
+        YY gate is deprecated, please use :class:`mindquantum.core.gates.Ryy`.
 
     .. math::
 

@@ -13,7 +13,6 @@ Class
 
     mindquantum.core.circuit.Circuit
     mindquantum.core.circuit.SwapParts
-    mindquantum.core.circuit.U3
     mindquantum.core.circuit.UN
 
 Function

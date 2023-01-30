@@ -35,8 +35,11 @@ mindquantum.core.gates
     mindquantum.core.gates.Measure
     mindquantum.core.gates.PhaseShift
     mindquantum.core.gates.RX
+    mindquantum.core.gates.Rxx
     mindquantum.core.gates.RY
+    mindquantum.core.gates.Ryy
     mindquantum.core.gates.RZ
+    mindquantum.core.gates.Rzz
     mindquantum.core.gates.SGate
     mindquantum.core.gates.SWAPGate
     mindquantum.core.gates.TGate
