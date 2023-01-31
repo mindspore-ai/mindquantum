@@ -5,6 +5,9 @@ mindquantum.core.gates.XX
 
     伊辛XX门。更多用法，请参见 :class:`mindquantum.core.gates.RX`。
 
+    .. note::
+        `XX` 门已弃用，请使用 :class:`mindquantum.core.gates.Rxx`。
+
     .. math::
 
         {\rm XX_\theta}=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_x\otimes\sigma_x

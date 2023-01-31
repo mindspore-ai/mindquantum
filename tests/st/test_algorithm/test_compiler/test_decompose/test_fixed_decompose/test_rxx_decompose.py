@@ -18,10 +18,10 @@
 import numpy as np
 import pytest
 
-from mindquantum.algorithm.compiler.decompose import cxx_decompose, xx_decompose
+from mindquantum.algorithm.compiler.decompose import crxx_decompose, rxx_decompose
 from mindquantum.config import Context
 from mindquantum.core.circuit import Circuit
-from mindquantum.core.gates import XX
+from mindquantum.core.gates import Rxx
 
 
 def circuit_equal_test(gate, decompose_circ):
@@ -37,15 +37,15 @@ def circuit_equal_test(gate, decompose_circ):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_xx(dtype):
+def test_rxx(dtype):
     """
-    Description: Test xx decompose
+    Description: Test rxx decompose
     Expectation: success
     """
     Context.set_dtype(dtype)
-    xx = XX(1).on([0, 1])
-    for solution in xx_decompose(xx):
-        circuit_equal_test(xx, solution)
+    rxx = Rxx(1).on([0, 1])
+    for solution in rxx_decompose(rxx):
+        circuit_equal_test(rxx, solution)
 
 
 @pytest.mark.level0
@@ -53,12 +53,12 @@ def test_xx(dtype):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_cxx(dtype):
+def test_crxx(dtype):
     """
-    Description: Test cxx decompose
+    Description: Test crxx decompose
     Expectation: success
     """
     Context.set_dtype(dtype)
-    cxx = XX(2).on([0, 1], [2, 3])
-    for solution in cxx_decompose(cxx):
+    cxx = Rxx(2).on([0, 1], [2, 3])
+    for solution in crxx_decompose(cxx):
         circuit_equal_test(cxx, solution)

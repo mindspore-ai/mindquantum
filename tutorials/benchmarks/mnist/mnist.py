@@ -25,7 +25,7 @@ import numpy as np
 from _parse_args import parser
 from mindspore import Tensor, nn, ops
 
-from mindquantum.core import RX, XX, ZZ, Circuit, H, Hamiltonian, QubitOperator, X, Z
+from mindquantum.core import RX, Circuit, H, Hamiltonian, QubitOperator, Rxx, Rzz, X, Z
 from mindquantum.framework import MQLayer
 from mindquantum.simulator import Simulator
 
@@ -93,8 +93,8 @@ def create_quantum_model(n_qubits):
 
     c = c + X.on(readout) + H.on(readout)
     builder = CircuitLayerBuilder(data_qubits=data_qubits, readout=readout)
-    builder.add_layer(c, XX, 'xx1')
-    builder.add_layer(c, ZZ, 'zz1')
+    builder.add_layer(c, Rxx, 'xx1')
+    builder.add_layer(c, Rzz, 'zz1')
     c += H.on(readout)
     return c, Z.on(readout)
 

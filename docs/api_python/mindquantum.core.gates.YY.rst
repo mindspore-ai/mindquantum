@@ -5,6 +5,9 @@ mindquantum.core.gates.YY
 
     伊辛YY门。更多用法，请参见 :class:`mindquantum.core.gates.RX`。
 
+    .. note::
+        `YY` 门已弃用，请使用 :class:`mindquantum.core.gates.Ryy`。
+
     .. math::
 
         {\rm YY_\theta}=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_y\otimes\sigma_y

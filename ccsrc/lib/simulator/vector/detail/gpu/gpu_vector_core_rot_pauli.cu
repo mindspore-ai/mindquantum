@@ -75,8 +75,8 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyRZ(qs_data_p_t qs, const qb
     }
 }
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
-                                                        calc_type val, index_t dim, bool diff) {
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyRzz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                         calc_type val, index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
     thrust::counting_iterator<index_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
@@ -87,11 +87,11 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyZZ(qs_data_p_t qs, const qb
     auto obj_max_mask = mask.obj_max_mask;
     auto ctrl_mask = mask.ctrl_mask;
     auto obj_mask = mask.obj_mask;
-    auto c = static_cast<calc_type>(std::cos(val));
-    auto s = static_cast<calc_type>(std::sin(val));
+    auto c = static_cast<calc_type>(std::cos(val / 2));
+    auto s = static_cast<calc_type>(std::sin(val / 2));
     if (diff) {
-        c = static_cast<calc_type>(-std::sin(val));
-        s = static_cast<calc_type>(std::cos(val));
+        c = static_cast<calc_type>(-std::sin(val / 2) / 2);
+        s = static_cast<calc_type>(std::cos(val / 2) / 2);
     }
     auto e = c + qs_data_t(0, 1) * s;
     auto me = c + qs_data_t(0, -1) * s;
@@ -128,8 +128,8 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyZZ(qs_data_p_t qs, const qb
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ApplyXX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
-                                                        calc_type val, index_t dim, bool diff) {
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyRxx(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                         calc_type val, index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
     thrust::counting_iterator<index_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
@@ -140,11 +140,11 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyXX(qs_data_p_t qs, const qb
     auto obj_max_mask = mask.obj_max_mask;
     auto ctrl_mask = mask.ctrl_mask;
     auto obj_mask = mask.obj_mask;
-    auto c = static_cast<qs_data_t>(std::cos(val));
-    auto s = static_cast<calc_type>(std::sin(val)) * qs_data_t(0, -1);
+    auto c = static_cast<qs_data_t>(std::cos(val / 2));
+    auto s = static_cast<calc_type>(std::sin(val / 2)) * qs_data_t(0, -1);
     if (diff) {
-        c = static_cast<qs_data_t>(-std::sin(val));
-        s = static_cast<calc_type>(std::cos(val)) * qs_data_t(0, -1);
+        c = static_cast<qs_data_t>(-std::sin(val / 2) / 2);
+        s = static_cast<calc_type>(std::cos(val / 2) / 2) * qs_data_t(0, -1);
     }
     if (!mask.ctrl_mask) {
         thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
@@ -187,8 +187,8 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyXX(qs_data_p_t qs, const qb
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ApplyYY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
-                                                        calc_type val, index_t dim, bool diff) {
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyRyy(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                         calc_type val, index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
     thrust::counting_iterator<index_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
@@ -199,11 +199,11 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyYY(qs_data_p_t qs, const qb
     auto obj_max_mask = mask.obj_max_mask;
     auto ctrl_mask = mask.ctrl_mask;
     auto obj_mask = mask.obj_mask;
-    auto c = static_cast<qs_data_t>(std::cos(val));
-    auto s = static_cast<calc_type>(std::sin(val)) * qs_data_t(0, 1);
+    auto c = static_cast<qs_data_t>(std::cos(val / 2));
+    auto s = static_cast<calc_type>(std::sin(val / 2)) * qs_data_t(0, 1);
     if (diff) {
-        c = static_cast<qs_data_t>(-std::sin(val));
-        s = static_cast<qs_data_t>(std::cos(val)) * qs_data_t(0, 1);
+        c = static_cast<qs_data_t>(-std::sin(val / 2) / 2);
+        s = static_cast<qs_data_t>(std::cos(val / 2) / 2) * qs_data_t(0, 1);
     }
     if (!mask.ctrl_mask) {
         thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {

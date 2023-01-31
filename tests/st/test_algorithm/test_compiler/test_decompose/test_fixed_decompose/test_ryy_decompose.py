@@ -19,10 +19,10 @@
 import numpy as np
 import pytest
 
-from mindquantum.algorithm.compiler.decompose import cyy_decompose, yy_decompose
+from mindquantum.algorithm.compiler.decompose import cryy_decompose, ryy_decompose
 from mindquantum.config import Context
 from mindquantum.core.circuit import Circuit
-from mindquantum.core.gates import YY
+from mindquantum.core.gates import Ryy
 
 
 def circuit_equal_test(gate, decompose_circ):
@@ -38,15 +38,15 @@ def circuit_equal_test(gate, decompose_circ):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_yy(dtype):
+def test_ryy(dtype):
     """
-    Description: Test yy decompose
+    Description: Test ryy decompose
     Expectation: success
     """
     Context.set_dtype(dtype)
-    yy = YY(1).on([0, 1])
-    for solution in yy_decompose(yy):
-        circuit_equal_test(yy, solution)
+    ryy = Ryy(1).on([0, 1])
+    for solution in ryy_decompose(ryy):
+        circuit_equal_test(ryy, solution)
 
 
 @pytest.mark.level0
@@ -54,12 +54,12 @@ def test_yy(dtype):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_cyy(dtype):
+def test_cryy(dtype):
     """
-    Description: Test cyy decompose
+    Description: Test cryy decompose
     Expectation: success
     """
     Context.set_dtype(dtype)
-    cyy = YY(2).on([0, 1], [2, 3])
-    for solution in cyy_decompose(cyy):
-        circuit_equal_test(cyy, solution)
+    cryy = Ryy(2).on([0, 1], [2, 3])
+    for solution in cryy_decompose(cryy):
+        circuit_equal_test(cryy, solution)

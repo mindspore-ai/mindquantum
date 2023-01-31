@@ -12,49 +12,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""ZZ gate related decompose rule."""
+"""Rzz gate related decompose rule."""
 
 from mindquantum.core import gates
 from mindquantum.core.circuit import Circuit
 from mindquantum.utils.type_value_check import _check_control_num, _check_input_type
 
 
-def zz_decompose(gate: gates.ZZ):
+def rzz_decompose(gate: gates.Rzz):
     """
-    Decompose zz gate.
+    Decompose Rzz gate.
 
     Args:
-        gate (ZZ): a ZZ gate with one control qubits.
+        gate (Rzz): a Rzz gate with one control qubits.
 
     Returns:
         List[Circuit], all possible decompose solution.
 
     Examples:
-        >>> from mindquantum.algorithm.compiler.decompose import zz_decompose
+        >>> from mindquantum.algorithm.compiler.decompose import rzz_decompose
         >>> from mindquantum.core.circuit import Circuit
-        >>> from mindquantum.core.gates import ZZ
-        >>> zz = ZZ(1).on([0, 1])
-        >>> origin_circ = Circuit() + zz
-        >>> decomposed_circ = zz_decompose(zz)[0]
+        >>> from mindquantum.core.gates import Rzz
+        >>> rzz = Rzz(1).on([0, 1])
+        >>> origin_circ = Circuit() + rzz
+        >>> decomposed_circ = rzz_decompose(rzz)[0]
         >>> origin_circ
-        q0: ──ZZ(1)──
+        q0: ──Rzz(1)──
                 │
-        q1: ──ZZ(1)──
+        q1: ──Rzz(1)──
         >>> decomposed_circ
         q0: ──●─────────────●──
               │             │
         q1: ──X────RZ(1)────X──
     """
-    _check_input_type('gate', gates.ZZ, gate)
+    _check_input_type('gate', gates.Rzz, gate)
     _check_control_num(gate.ctrl_qubits, 0)
     circuit = Circuit()
     q0 = gate.obj_qubits[0]
     q1 = gate.obj_qubits[1]
     circuit += gates.X.on(q1, q0)
-    circuit += gates.RZ(2 * gate.coeff).on(q1)
+    circuit += gates.RZ(gate.coeff).on(q1)
     circuit += gates.X.on(q1, q0)
     return [circuit]
 
 
-decompose_rules = ['zz_decompose']
+decompose_rules = ['rzz_decompose']
 __all__ = decompose_rules

@@ -25,6 +25,7 @@
 "mindquantum/mindquantum/core/operators/_terms_operators.py"                           "no-value-for-parameter"
 "mindquantum/mindquantum/core/operators/fermion_operator.py"                           "unused-import"
 "mindquantum/mindquantum/core/operators/qubit_operator.py"                             "unused-import"
+"mindquantum/mindquantum/core/gates/basicgate.py"                                      "useless-super-delegation"
 
 "mindquantum/setup.py"                                                                 "deprecated-module"
 "mindquantum/setup.py"                                                                 "attribute-defined-outside-init"

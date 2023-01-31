@@ -13,11 +13,14 @@
 # limitations under the License.
 # ============================================================================
 
-# pylint: disable=abstract-method,import-outside-toplevel,too-many-lines
+# pylint: disable=abstract-method,import-outside-toplevel,too-many-lines,useless-parent-delegation,no-member
+# pylint: disable=too-many-ancestors
+# pylint: disable=arguments-differ
 """Basic module for quantum gate."""
 
 import copy
 import numbers
+import warnings
 from functools import reduce
 from inspect import signature
 from typing import List, Tuple
@@ -79,12 +82,12 @@ class UnivMathGate(NoneParamNonHermMat):
     def get_cpp_obj(self):
         """Get the underlying C++ object."""
         mat = getattr(mb, Context.get_dtype()).dim2matrix(self.matrix())
-        cpp_gate = getattr(mb, Context.get_dtype()).basic_gate(False, self.name, 1, mat)
-        cpp_gate.daggered = self.hermitianed
-        cpp_gate.obj_qubits = self.obj_qubits
-        cpp_gate.ctrl_qubits = self.ctrl_qubits
-        cpp_gate.is_custom = True
-        return cpp_gate
+        return getattr(mb, Context.get_dtype()).gate.CustomGate(
+            self.name,
+            mat,
+            self.obj_qubits,
+            self.ctrl_qubits,
+        )
 
 
 class HGate(NoneParamSelfHermMat):
@@ -111,6 +114,10 @@ class HGate(NoneParamSelfHermMat):
     def __eq__(self, other):
         """Equality comparison operator."""
         return BasicGate.__eq__(self, other)
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return mb.gate.HGate(self.obj_qubits, self.ctrl_qubits)
 
 
 class XGate(PauliGate):
@@ -172,6 +179,10 @@ class XGate(PauliGate):
             return False
         return super().__eq__(other)
 
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return mb.gate.XGate(self.obj_qubits, self.ctrl_qubits)
+
 
 class YGate(PauliGate):
     r"""
@@ -194,6 +205,10 @@ class YGate(PauliGate):
             matrix_value=_GLOBAL_MAT_VALUE['Y'],
         )
 
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return mb.gate.YGate(self.obj_qubits, self.ctrl_qubits)
+
 
 class ZGate(PauliGate):
     r"""
@@ -215,6 +230,10 @@ class ZGate(PauliGate):
             n_qubits=1,
             matrix_value=_GLOBAL_MAT_VALUE['Z'],
         )
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return mb.gate.ZGate(self.obj_qubits, self.ctrl_qubits)
 
 
 class IGate(PauliGate):
@@ -242,6 +261,10 @@ class IGate(PauliGate):
         """Equality comparison operator."""
         _check_gate_type(other)
         return isinstance(other, IGate)
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return mb.gate.IGate(self.obj_qubits, self.ctrl_qubits)
 
 
 class CNOTGate(NoneParamSelfHermMat):
@@ -293,6 +316,10 @@ class CNOTGate(NoneParamSelfHermMat):
         """Gate decomposition method."""
         return X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits]).__decompose__()
 
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return mb.gate.XGate(self.obj_qubits[:1], self.obj_qubits[1:] + self.ctrl_qubits)
+
 
 class SWAPGate(NoneParamSelfHermMat):
     """
@@ -306,7 +333,7 @@ class SWAPGate(NoneParamSelfHermMat):
         super().__init__(
             name='SWAP',
             n_qubits=2,
-            matrix_value=_GLOBAL_MAT_VALUE['SWAP'],
+            matrix_value=_GLOBAL_MAT_VALUE.get('SWAP'),
         )
 
     def __eq__(self, other):
@@ -315,6 +342,10 @@ class SWAPGate(NoneParamSelfHermMat):
         if isinstance(other, SWAPGate):
             return set(self.obj_qubits) == set(other.obj_qubits) and set(self.ctrl_qubits) == set(other.ctrl_qubits)
         return False
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return mb.gate.SWAPGate(self.obj_qubits, self.ctrl_qubits)
 
 
 class ISWAPGate(NoneParamNonHermMat):
@@ -342,6 +373,10 @@ class ISWAPGate(NoneParamNonHermMat):
             return set(self.obj_qubits) == set(other.obj_qubits) and set(self.ctrl_qubits) == set(other.ctrl_qubits)
         return False
 
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return mb.gate.ISWAPGate(self.hermitianed, self.obj_qubits, self.ctrl_qubits)
+
 
 class TGate(NoneParamNonHermMat):
     r"""
@@ -363,6 +398,12 @@ class TGate(NoneParamNonHermMat):
             matrix_value=_GLOBAL_MAT_VALUE['T'],
         )
 
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        if self.hermitianed:
+            return mb.gate.TdagGate(self.obj_qubits, self.ctrl_qubits)
+        return mb.gate.TGate(self.obj_qubits, self.ctrl_qubits)
+
 
 class SGate(NoneParamNonHermMat):
     r"""
@@ -383,6 +424,12 @@ class SGate(NoneParamNonHermMat):
             n_qubits=1,
             matrix_value=_GLOBAL_MAT_VALUE['S'],
         )
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        if self.hermitianed:
+            return mb.gate.SdagGate(self.obj_qubits, self.ctrl_qubits)
+        return mb.gate.SGate(self.obj_qubits, self.ctrl_qubits)
 
 
 class RX(RotSelfHermMat):
@@ -449,6 +496,10 @@ class RX(RotSelfHermMat):
             core=XGate(),
         )
 
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return getattr(mb, Context.get_dtype()).gate.RXGate(self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits)
+
 
 class RY(RotSelfHermMat):
     r"""
@@ -472,6 +523,10 @@ class RY(RotSelfHermMat):
             n_qubits=1,
             core=YGate(),
         )
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return getattr(mb, Context.get_dtype()).gate.RYGate(self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits)
 
 
 class RZ(RotSelfHermMat):
@@ -497,10 +552,17 @@ class RZ(RotSelfHermMat):
             core=ZGate(),
         )
 
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return getattr(mb, Context.get_dtype()).gate.RZGate(self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits)
+
 
 class ZZ(RotSelfHermMat):
     r"""
     Ising ZZ  gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    Note:
+        ZZ gate is deprecated, please use :class:`mindquantum.core.gates.Rzz`.
 
     .. math::
 
@@ -513,9 +575,14 @@ class ZZ(RotSelfHermMat):
 
     def __init__(self, pr):
         """Initialize a ZZ object."""
+        warnings.warn(
+            "ZZ gate is deprecated, please use Rzz",
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__(
             pr=ParameterResolver(pr),
-            name='ZZ',
+            name='Rzz',
             n_qubits=2,
             core=PauliStringGate([Z, Z]),
         )
@@ -562,10 +629,19 @@ class ZZ(RotSelfHermMat):
         """
         return super().diff_matrix(pr, about_what, 1)
 
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return getattr(mb, Context.get_dtype()).gate.RzzGate(
+            (2 * self.coeff).get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
+        )
+
 
 class XX(RotSelfHermMat):
     r"""
     Ising XX gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    Note:
+        XX gate is deprecated, please use :class:`mindquantum.core.gates.Rxx`.
 
     .. math::
 
@@ -578,9 +654,14 @@ class XX(RotSelfHermMat):
 
     def __init__(self, pr):
         """Initialize an XX object."""
+        warnings.warn(
+            "XX gate is deprecated, please use Rxx",
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__(
             pr=ParameterResolver(pr),
-            name='XX',
+            name='Rxx',
             n_qubits=2,
             core=PauliStringGate([X, X]),
         )
@@ -635,10 +716,19 @@ class XX(RotSelfHermMat):
         """
         return super().diff_matrix(pr, about_what, 1)
 
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return getattr(mb, Context.get_dtype()).gate.RxxGate(
+            (2 * self.coeff).get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
+        )
+
 
 class YY(RotSelfHermMat):
     r"""
     Ising YY  gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    Note:
+        YY gate is deprecated, please use :class:`mindquantum.core.gates.Ryy`.
 
     .. math::
 
@@ -651,9 +741,14 @@ class YY(RotSelfHermMat):
 
     def __init__(self, pr):
         """Initialize an YY object."""
+        warnings.warn(
+            "YY gate is deprecated, please use Ryy",
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__(
             pr=ParameterResolver(pr),
-            name='YY',
+            name='Ryy',
             n_qubits=2,
             core=PauliStringGate([Y, Y]),
         )
@@ -708,6 +803,259 @@ class YY(RotSelfHermMat):
         """
         return super().diff_matrix(pr, about_what, 1)
 
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return getattr(mb, Context.get_dtype()).gate.RyyGate(
+            (2 * self.coeff).get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
+        )
+
+
+class Rzz(RotSelfHermMat):
+    r"""
+    Rzz gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    .. math::
+
+        Rzz(\theta) = \exp{-i\frac{\theta}{2} Z\otimes Z} =
+        \begin{pmatrix}
+            e^{-i\frac{\theta}{2}} & 0 & 0 & 0\\
+            0 & e^{i\frac{\theta}{2}} & 0 & 0\\
+            0 & 0 & e^{i\frac{\theta}{2}} & 0\\
+            0 & 0 & 0 & e^{-i\frac{\theta}{2}}\\
+        \end{pmatrix}
+
+    Args:
+        pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation.
+    """
+
+    def __init__(self, pr):
+        """Initialize a Rzz object."""
+        super().__init__(
+            pr=ParameterResolver(pr),
+            name='Rzz',
+            n_qubits=2,
+            core=PauliStringGate([Z, Z]),
+        )
+
+    def __decompose__(self):
+        """Gate decomposition method."""
+        from ..circuit import Circuit  # pylint: disable=cyclic-import
+
+        out = []
+        out.append(Circuit())
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out[-1] += RZ(self.coeff).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out.append(Circuit())
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += RZ(self.coeff).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        return out
+
+    def matrix(self, pr=None, frac=0.5):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
+        return super().matrix(pr, frac)
+
+    def diff_matrix(self, pr=None, about_what=None, frac=0.5):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
+        return super().diff_matrix(pr, about_what, frac)
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return getattr(mb, Context.get_dtype()).gate.RzzGate(
+            self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
+        )
+
+
+class Rxx(RotSelfHermMat):
+    r"""
+    Rxx gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    .. math::
+
+        Rxx(\theta) = \exp{-i\frac{\theta}{2} X\otimes X} =
+        \begin{pmatrix}
+            \cos{\frac{\theta}{2}} & 0 & 0 & -i\sin{\frac{\theta}{2}}\\
+            0 & \cos{\frac{\theta}{2}} & -i\sin{\frac{\theta}{2}} & 0\\
+            0 & -i\sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}} & 0\\
+            -i\sin{\frac{\theta}{2}} & 0 & 0 & \cos{\frac{\theta}{2}}\\
+        \end{pmatrix}
+
+    Args:
+        pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation.
+    """
+
+    def __init__(self, pr):
+        """Initialize an Rxx object."""
+        super().__init__(
+            pr=ParameterResolver(pr),
+            name='Rxx',
+            n_qubits=2,
+            core=PauliStringGate([X, X]),
+        )
+
+    def __decompose__(self):
+        """Gate decomposition method."""
+        from ..circuit import Circuit  # pylint: disable=cyclic-import
+
+        out = []
+        out.append(Circuit())
+        out[-1] += H.on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out[-1] += RZ(self.coeff).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out.append(Circuit())
+        out[-1] += H.on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += RZ(self.coeff).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[1], [*self.ctrl_qubits])
+        return out
+
+    def matrix(self, pr=None, frac=0.5):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
+        return super().matrix(pr, frac)
+
+    def diff_matrix(self, pr=None, about_what=None, frac=0.5):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
+        return super().diff_matrix(pr, about_what, frac)
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return getattr(mb, Context.get_dtype()).gate.RxxGate(
+            self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
+        )
+
+
+class Ryy(RotSelfHermMat):
+    r"""
+    Ryy  gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    .. math::
+
+        Ryy(\theta) = \exp{-i\frac{\theta}{2} Y\otimes Y} =
+        \begin{pmatrix}
+            \cos{\frac{\theta}{2}} & 0 & 0 & i\sin{\frac{\theta}{2}}\\
+            0 & \cos{\frac{\theta}{2}} & -i\sin{\frac{\theta}{2}} & 0\\
+            0 & -i\sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}} & 0\\
+            i\sin{\frac{\theta}{2}} & 0 & 0 & \cos{\frac{\theta}{2}}\\
+        \end{pmatrix}
+
+    Args:
+        pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation.
+    """
+
+    def __init__(self, pr):
+        """Initialize an Ryy object."""
+        super().__init__(
+            pr=ParameterResolver(pr),
+            name='Ryy',
+            n_qubits=2,
+            core=PauliStringGate([Y, Y]),
+        )
+
+    def __decompose__(self):
+        """Gate decomposition method."""
+        from ..circuit import Circuit  # pylint: disable=cyclic-import
+
+        out = []
+        out.append(Circuit())
+        out[-1] += RX(np.pi / 2).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += RX(np.pi / 2).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out[-1] += RZ(self.coeff).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits])
+        out[-1] += RX(7 * np.pi / 2).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += RX(7 * np.pi / 2).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out.append(Circuit())
+        out[-1] += RX(np.pi / 2).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += RX(np.pi / 2).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += RZ(self.coeff).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += RX(7 * np.pi / 2).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += RX(7 * np.pi / 2).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        return out
+
+    def matrix(self, pr=None, frac=0.5):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
+        return super().matrix(pr, frac)
+
+    def diff_matrix(self, pr=None, about_what=None, frac=0.5):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
+        return super().diff_matrix(pr, about_what, frac)
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return getattr(mb, Context.get_dtype()).gate.RyyGate(
+            self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
+        )
+
 
 class BarrierGate(FunctionalGate):
     """
@@ -755,6 +1103,10 @@ class BarrierGate(FunctionalGate):
             new.show = self.show
             return new
         return Circuit([BarrierGate(self.show).on(i) for i in qubits])
+
+    def get_cpp_obj(self):
+        """Get cpp obj."""
+        raise NotImplementedError
 
 
 class GlobalPhase(RotSelfHermMat):
@@ -806,6 +1158,10 @@ class GlobalPhase(RotSelfHermMat):
             numpy.ndarray, the differential form matrix.
         """
         return RotSelfHermMat.diff_matrix(self, pr, about_what, 1)
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return getattr(mb, Context.get_dtype()).gate.GPGate(self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits)
 
 
 BARRIER = BarrierGate(show=False)
@@ -878,6 +1234,10 @@ class PhaseShift(ParameterOppsGate):
                 about_what = i
         return np.array([[0, 0], [0, 1j * self.coeff[about_what] * np.exp(1j * val)]])
 
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return getattr(mb, Context.get_dtype()).gate.PSGate(self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits)
+
 
 class Power(NoneParamNonHermMat):
     r"""
@@ -912,12 +1272,12 @@ class Power(NoneParamNonHermMat):
     def get_cpp_obj(self):
         """Get the underlying C++ object."""
         mat = getattr(mb, Context.get_dtype()).dim2matrix(self.matrix())
-        cpp_gate = getattr(mb, Context.get_dtype()).basic_gate(False, self.name, 1, mat)
-        cpp_gate.daggered = self.hermitianed
-        cpp_gate.obj_qubits = self.obj_qubits
-        cpp_gate.ctrl_qubits = self.ctrl_qubits
-        cpp_gate.is_custom = True
-        return cpp_gate
+        return getattr(mb, Context.get_dtype()).gate.CustomGate(
+            self.name,
+            mat,
+            self.obj_qubits,
+            self.ctrl_qubits,
+        )
 
     def __eq__(self, other):
         """Equality comparison operator."""
@@ -1093,22 +1453,14 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
             return hermitian_gate
 
         def get_cpp_obj(self):
-            cpp_gate = getattr(mb, Context.get_dtype()).basic_gate(
-                self.name, 1, matrix_addr, diff_matrix_addr, 1 << n_qubits
-            )
+            m_addr = matrix_addr
+            dm_addr = diff_matrix_addr
             if self.hermitianed:
-                cpp_gate = getattr(mb, Context.get_dtype()).basic_gate(
-                    self.name, 1, herm_matrix_addr, herm_diff_matrix_addr, 1 << n_qubits
-                )
-            cpp_gate.daggered = self.hermitianed
-            cpp_gate.obj_qubits = self.obj_qubits
-            cpp_gate.ctrl_qubits = self.ctrl_qubits
-            cpp_gate.is_custom = True
-            if not self.parameterized:
-                cpp_gate.apply_value(self.coeff.const)
-            else:
-                cpp_gate.params = self.coeff.to_real_obj()
-            return cpp_gate
+                m_addr = herm_matrix_addr
+                dm_addr = herm_diff_matrix_addr
+            return getattr(mb, Context.get_dtype()).gate.CustomGate(
+                self.name, m_addr, dm_addr, 1 << n_qubits, self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
+            )
 
     return _ParamNonHerm
 
@@ -1314,8 +1666,8 @@ class U3(MultiParamsGate):
         )
 
     def get_cpp_obj(self):
-        """Get cpp obj."""
-        return getattr(mb, Context.get_dtype()).u3(
+        """Construct cpp obj."""
+        return getattr(mb, Context.get_dtype()).gate.u3(
             self.theta.get_cpp_obj(),
             self.phi.get_cpp_obj(),
             self.lamda.get_cpp_obj(),
@@ -1429,9 +1781,12 @@ class FSim(MultiParamsGate):
         return np.array([[1, 0, 0, 0], [0, ele_a, ele_b, 0], [0, ele_b, ele_a, 0], [0, 0, 0, ele_c]])
 
     def get_cpp_obj(self):
-        """Get cpp object."""
-        return getattr(mb, Context.get_dtype()).fsim(
-            self.theta.get_cpp_obj(), self.phi.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
+        """Construct cpp obj."""
+        return getattr(mb, Context.get_dtype()).gate.fsim(
+            self.theta.get_cpp_obj(),
+            self.phi.get_cpp_obj(),
+            self.obj_qubits,
+            self.ctrl_qubits,
         )
 
 

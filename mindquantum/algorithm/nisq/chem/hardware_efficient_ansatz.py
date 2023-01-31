@@ -48,7 +48,7 @@ class HardwareEfficientAnsatz(Ansatz):
     The hardware efficient is constructed by a layer of single qubit rotation gate and a layer
     of two qubits entanglement gate. The single qubit rotation gate layer is constructed by one
     or several rotation gate that act on every qubit. The two qubits entanglement gate layer is
-    constructed by CNOT, CZ, XX, YY, ZZ, etc. acting on entangle_mapping. For more detail, please
+    constructed by CNOT, CZ, Rxx, Ryy, Rzz, etc. acting on entangle_mapping. For more detail, please
     refers `Hardware-efficient variational quantum eigensolver for small molecules and quantum
     magnets <https://www.nature.com/articles/nature23879>`_.
 

@@ -73,7 +73,7 @@ def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=None):
         'param': [gates.RX, gates.RY, gates.RZ, gates.PhaseShift],
         'non_param': [gates.X, gates.Y, gates.Z, gates.H],
     }
-    double = {'param': [gates.XX, gates.YY, gates.ZZ], 'non_param': [gates.SWAP]}
+    double = {'param': [gates.Rxx, gates.Ryy, gates.Rzz], 'non_param': [gates.SWAP]}
     circuit = Circuit()
     np.random.seed(seed)
     qubits = range(n_qubits)

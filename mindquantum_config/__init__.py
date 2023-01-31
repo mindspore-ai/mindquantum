@@ -11,7 +11,6 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-
 """Console entry point to access MindQuantum installation variables."""
 
 import argparse
@@ -92,6 +91,18 @@ def get_cmake_dir(as_string=True):
 # ==============================================================================
 
 
+def print_bin_dir():
+    """Print the bin directory of MindQuantum."""
+    bin_path = Path(_ROOT, "mindquantum", "bin")
+    if bin_path.exists():
+        print(str(bin_path))
+        return
+    raise ImportError("MindQuantum not installed.")
+
+
+# ==============================================================================
+
+
 def print_temp_dir():
     """Print the default build directory used by setup.py."""
     # Based on setuptools/_distutils/command/build.py
@@ -140,6 +151,11 @@ def main():
         action="store_true",
         help="Print out MindQuantum's version",
     )
+    group.add_argument(
+        "--bin",
+        action="store_true",
+        help="Print bin directory of MindQuantum",
+    )
     args = parser.parse_args()
     if not sys.argv[1:]:
         parser.print_help()
@@ -149,6 +165,8 @@ def main():
         print_includes()
     if args.cmakedir:
         print(get_cmake_dir())
+    if args.bin:
+        print_bin_dir()
     if args.tempdir:
         print_temp_dir()
 

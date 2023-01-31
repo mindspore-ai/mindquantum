@@ -26,6 +26,13 @@ target_link_libraries(mqsim_vector_cpu PUBLIC mqsim_common intrin_flag_CXX)
 force_at_least_cxx17_workaround(mqsim_vector_cpu)
 append_to_property(mq_install_targets GLOBAL mqsim_vector_cpu)
 
+if(X86_64)
+  add_executable(mqrt)
+  target_link_libraries(mqrt PUBLIC mqsim_vector_cpu)
+  force_at_least_cxx17_workaround(mqrt)
+  append_to_property(mq_install_targets GLOBAL mqrt)
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/vector/detail/runtime)
+endif()
 # ==============================================================================
 
 # add_library( mqsim_vector_cpu STATIC ${CMAKE_CURRENT_LIST_DIR}/vector/detail/cpu_vector_policy.cpp

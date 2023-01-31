@@ -20,7 +20,7 @@
 import numpy as np
 
 from mindquantum.core.circuit import CPN, UN, Circuit
-from mindquantum.core.gates import RX, ZZ, H
+from mindquantum.core.gates import RX, H, Rzz
 from mindquantum.core.operators import QubitOperator
 from mindquantum.simulator import Simulator
 from mindquantum.utils.type_value_check import (
@@ -86,22 +86,22 @@ class MaxCutAnsatz(Ansatz):
         depth (int): The depth of max cut ansatz. Default: 1.
 
     Examples:
+        >>> import numpy as np
         >>> from mindquantum.algorithm.nisq import MaxCutAnsatz
         >>> graph = [(0, 1), (1, 2), (0, 2)]
         >>> maxcut = MaxCutAnsatz(graph, 1)
         >>> maxcut.circuit
-        q0: ──H────ZZ(beta_0)──────────────────ZZ(beta_0)────RX(alpha_0)──
-                       │                           │
-        q1: ──H────ZZ(beta_0)────ZZ(beta_0)────────┼─────────RX(alpha_0)──
-                                     │             │
-        q2: ──H──────────────────ZZ(beta_0)────ZZ(beta_0)────RX(alpha_0)──
+        q0: ──H────Rzz(beta_0)───────────────────Rzz(beta_0)────RX(alpha_0)──
+                        │                             │
+        q1: ──H────Rzz(beta_0)────Rzz(beta_0)─────────┼─────────RX(alpha_0)──
+                                       │              │
+        q2: ──H───────────────────Rzz(beta_0)────Rzz(beta_0)────RX(alpha_0)──
         >>>
-        >>> maxcut.hamiltonian
+        >>> print(maxcut.hamiltonian)
         3/2 [] +
         -1/2 [Z0 Z1] +
         -1/2 [Z0 Z2] +
         -1/2 [Z1 Z2]
-        >>> maxcut.hamiltonian
         >>> partitions = maxcut.get_partition(5, np.array([4, 1]))
         >>> for i in partitions:
         ...     print(f'partition: left: {i[0]}, right: {i[1]}, cut value: {maxcut.get_cut_value(i)}')
@@ -129,7 +129,7 @@ class MaxCutAnsatz(Ansatz):
         """Build hc circuit."""
         circ = Circuit()
         for node in graph:
-            circ += ZZ('beta').on(node)
+            circ += Rzz('beta').on(node)
         return circ
 
     def _build_hb(self, graph):

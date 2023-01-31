@@ -250,12 +250,12 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffPS(qs_data_p_t bra, qs
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffXX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                             const qbits_t& ctrls, calc_type val, index_t dim)
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxx(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                                              const qbits_t& ctrls, calc_type val, index_t dim)
     -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
-    auto c = -std::sin(val);
-    auto s = std::cos(val) * IMAGE_MI;
+    auto c = static_cast<calc_type_>(-std::sin(val / 2) / 2);
+    auto s = static_cast<calc_type_>(std::cos(val / 2) / 2) * IMAGE_MI;
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP(
@@ -306,12 +306,12 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffXX(qs_data_p_t bra, qs
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffYY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                             const qbits_t& ctrls, calc_type val, index_t dim)
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRyy(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                                              const qbits_t& ctrls, calc_type val, index_t dim)
     -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
-    auto c = -std::sin(val);
-    auto s = std::cos(val) * IMAGE_I;
+    auto c = static_cast<calc_type_>(-std::sin(val / 2) / 2);
+    auto s = static_cast<calc_type_>(std::cos(val / 2) / 2) * IMAGE_I;
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP(
@@ -362,13 +362,13 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffYY(qs_data_p_t bra, qs
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffZZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                             const qbits_t& ctrls, calc_type val, index_t dim)
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRzz(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+                                                              const qbits_t& ctrls, calc_type val, index_t dim)
     -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
 
-    auto c = -std::sin(val);
-    auto s = std::cos(val);
+    auto c = static_cast<calc_type_>(-std::sin(val / 2) / 2);
+    auto s = static_cast<calc_type_>(std::cos(val / 2) / 2);
     auto e = c + IMAGE_I * s;
     auto me = c + IMAGE_MI * s;
     calc_type res_real = 0, res_imag = 0;

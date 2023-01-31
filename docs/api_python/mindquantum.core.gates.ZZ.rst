@@ -5,6 +5,9 @@ mindquantum.core.gates.ZZ
 
     伊辛ZZ门。更多用法，请参见 :class:`mindquantum.core.gates.RX`。
 
+    .. note::
+        `ZZ` 门已弃用，请使用 :class:`mindquantum.core.gates.Rzz`。
+
     .. math::
 
         {\rm ZZ_\theta}=\cos(\theta)I\otimes I-i\sin(\theta)\sigma_Z\otimes\sigma_Z

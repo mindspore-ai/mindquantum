@@ -18,12 +18,12 @@
 """Basic module for quantum gate."""
 
 import copy
+from abc import ABC, abstractmethod
 from typing import Iterable, List
 
 import numpy as np
 import scipy
 
-from mindquantum import mqbackend as mb
 from mindquantum.io.display._config import _DAGGER_MASK
 from mindquantum.utils.f import pauli_string_matrix
 from mindquantum.utils.quantifiers import s_quantifier
@@ -34,7 +34,6 @@ from mindquantum.utils.type_value_check import (
     _check_qubit_id,
 )
 
-from ...config import Context
 from ..parameterresolver import ParameterResolver
 
 HERMITIAN_PROPERTIES = {
@@ -44,7 +43,7 @@ HERMITIAN_PROPERTIES = {
 }
 
 
-class BasicGate:
+class BasicGate(ABC):
     """
     BasicGate is the base class of all gates.
 
@@ -241,12 +240,9 @@ class BasicGate:
             return False
         return True
 
+    @abstractmethod
     def get_cpp_obj(self):
         """Get the underlying C++ object."""
-        cpp_gate = getattr(mb, Context.get_dtype()).get_gate_by_name(self.name)
-        cpp_gate.obj_qubits = self.obj_qubits
-        cpp_gate.ctrl_qubits = self.ctrl_qubits
-        return cpp_gate
 
 
 class FunctionalGate(BasicGate):
@@ -410,14 +406,13 @@ class ParameterGate(QuantumGate):
         new.coeff = pr
         return new
 
-    def get_cpp_obj(self):
-        """Get the underlying C++ object."""
-        cpp_gate = super().get_cpp_obj()
-        if not self.parameterized:
-            cpp_gate.apply_value(self.coeff.const.real)
-        else:
-            cpp_gate.params = self.coeff.real.to_real_obj()
-        return cpp_gate
+    def __eq__(self, other):
+        """Equality comparison operator."""
+        return super().__eq__(other) and self.coeff == other.coeff
+
+    def __params_prop__(self):
+        """Get properties of all parameters."""
+        return list(self.coeff.keys()), list(self.coeff.ansatz_parameters), list(self.coeff.encoder_parameters)
 
     def get_parameters(self) -> List[ParameterResolver]:
         """Return a list of parameters of parameterized gate."""
@@ -433,7 +428,7 @@ class ParameterGate(QuantumGate):
         self.coeff.requires_grad()
         return self
 
-    def requires_grad_part(self, names):
+    def requires_grad_part(self, *names):
         """
         Set certain parameters that need grad. Inplace operation.
 
@@ -443,10 +438,10 @@ class ParameterGate(QuantumGate):
         Returns:
             BasicGate, with some part of parameters need to update gradient.
         """
-        self.coeff.requires_grad_part(names)
+        self.coeff.requires_grad_part(*names)
         return self
 
-    def no_grad_part(self, names):
+    def no_grad_part(self, *names):
         """
         Set certain parameters that do not need grad. Inplace operation.
 
@@ -456,16 +451,8 @@ class ParameterGate(QuantumGate):
         Returns:
             BasicGate, with some part of parameters not need to update gradient.
         """
-        self.coeff.no_grad_part(names)
+        self.coeff.no_grad_part(*names)
         return self
-
-    def __eq__(self, other):
-        """Equality comparison operator."""
-        return super().__eq__(other) and self.coeff == other.coeff
-
-    def __params_prop__(self):
-        """Get properties of all parameters."""
-        return list(self.coeff.keys()), list(self.coeff.ansatz_parameters), list(self.coeff.encoder_parameters)
 
 
 class ParameterOppsGate(ParameterGate):
@@ -488,23 +475,15 @@ class NoneParamNonHermMat(NoneParameterGate, MatrixGate, NonHermitianGate):
             matrix_value, name, n_qubits, obj_qubits=obj_qubits, ctrl_qubits=ctrl_qubits, hermitianed=hermitianed
         )
 
+    def __eq__(self, other):
+        """Equality comparison operator."""
+        return NonHermitianGate.__eq__(self, other)
+
     def matrix(self):
         """Matrix of parameterized gate."""
         if self.hermitianed:
             return np.conj(self.matrix_value.T)
         return self.matrix_value
-
-    def get_cpp_obj(self):
-        """Get the underlying C++ object."""
-        cpp_obj = super().get_cpp_obj()
-        if self.hermitianed:
-            cpp_obj.base_matrix = getattr(mb, Context.get_dtype()).dim2matrix(self.matrix())
-        cpp_obj.daggered = self.hermitianed
-        return cpp_obj
-
-    def __eq__(self, other):
-        """Equality comparison operator."""
-        return NonHermitianGate.__eq__(self, other)
 
 
 class NoneParamSelfHermMat(NoneParameterGate, SelfHermitianGate, MatrixGate):
@@ -552,6 +531,10 @@ class PauliStringGate(NoneParamSelfHermMat):
     def __eq__(self, other):
         """Equality comparison operator."""
         return QuantumGate.__eq__(self, other)
+
+    def get_cpp_obj(self):
+        """Get cpp obj."""
+        raise NotImplementedError
 
 
 class RotSelfHermMat(ParameterOppsGate):

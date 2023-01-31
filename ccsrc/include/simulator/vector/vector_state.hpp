@@ -52,7 +52,7 @@ class VectorState {
     using qs_policy_t = qs_policy_t_;
     using calc_type = typename qs_policy_t::calc_type;
     using derived_t = VectorState<qs_policy_t>;
-    using circuit_t = std::vector<std::shared_ptr<BasicGate<calc_type>>>;
+    using circuit_t = std::vector<std::shared_ptr<BasicGate>>;
     using qs_data_t = typename qs_policy_t::qs_data_t;
     using qs_data_p_t = typename qs_policy_t::qs_data_p_t;
     using py_qs_data_t = typename qs_policy_t::py_qs_data_t;
@@ -90,36 +90,35 @@ class VectorState {
 
     //! Apply a quantum gate on this quantum state, quantum gate can be normal quantum gate, measurement gate and noise
     //! channel
-    index_t ApplyGate(const std::shared_ptr<BasicGate<calc_type>>& gate,
+    index_t ApplyGate(const std::shared_ptr<BasicGate>& gate,
 
                       const ParameterResolver<calc_type>& pr = ParameterResolver<calc_type>(), bool diff = false);
 
     //! Apply a measurement gate on this quantum state, return the collapsed qubit state
-    auto ApplyMeasure(const std::shared_ptr<BasicGate<calc_type>>& gate);
+    auto ApplyMeasure(const std::shared_ptr<BasicGate>& gate);
 
     //! Apply a noise channel on this quantum state
-    auto ApplyChannel(const std::shared_ptr<BasicGate<calc_type>>& gate);
+    auto ApplyChannel(const std::shared_ptr<BasicGate>& gate);
 
     //! Apply a pauli channel on this quantum state
-    auto ApplyPauliChannel(const std::shared_ptr<BasicGate<calc_type>>& gate);
+    auto ApplyPauliChannel(const std::shared_ptr<BasicGate>& gate);
 
     //! Apply a customized kraus channel
-    auto ApplyKrausChannel(const std::shared_ptr<BasicGate<calc_type>>& gate);
+    auto ApplyKrausChannel(const std::shared_ptr<BasicGate>& gate);
 
     //! Apply a damping channel
-    auto ApplyDampingChannel(const std::shared_ptr<BasicGate<calc_type>>& gate);
+    auto ApplyDampingChannel(const std::shared_ptr<BasicGate>& gate);
 
     //! calculate the expectation of differential form of parameterized gate two quantum state. That is
     //! <bra| \partial_\theta{U} |ket>
-    static py_qs_data_t ExpectDiffGate(qs_data_p_t bra, qs_data_p_t ket,
-                                       const std::shared_ptr<BasicGate<calc_type>>& gate,
-                                       const ParameterResolver<calc_type>& pr, index_t dim);
+    static Dim2Matrix<calc_type> ExpectDiffGate(qs_data_p_t bra, qs_data_p_t ket,
+                                                const std::shared_ptr<BasicGate>& gate,
+                                                const ParameterResolver<calc_type>& pr, index_t dim);
 
-    static Dim2Matrix<calc_type> ExpectDiffU3(qs_data_p_t bra, qs_data_p_t ket,
-                                              const std::shared_ptr<BasicGate<calc_type>>& gate,
+    static Dim2Matrix<calc_type> ExpectDiffU3(qs_data_p_t bra, qs_data_p_t ket, const std::shared_ptr<BasicGate>& gate,
                                               const ParameterResolver<calc_type>& pr, index_t dim);
     static Dim2Matrix<calc_type> ExpectDiffFSim(qs_data_p_t bra, qs_data_p_t ket,
-                                                const std::shared_ptr<BasicGate<calc_type>>& gate,
+                                                const std::shared_ptr<BasicGate>& gate,
                                                 const ParameterResolver<calc_type>& pr, index_t dim);
     //! Apply a quantum circuit on this quantum state
     auto ApplyCircuit(const circuit_t& circ, const ParameterResolver<calc_type>& pr = ParameterResolver<calc_type>());
