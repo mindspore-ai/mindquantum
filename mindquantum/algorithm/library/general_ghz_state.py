@@ -28,7 +28,7 @@ def general_ghz_state(qubits):
 
     .. math:
 
-        \left\text{GHZ}\right> = (\left|000\right> + \left|111\right>)/\sqrt{2}
+        \left|\text{GHZ}\right> = (\left|000\right> + \left|111\right>)/\sqrt{2}
 
     Here in this API, we can create a general GHZ state on arbitrary sub qubits of
     any total qubits.

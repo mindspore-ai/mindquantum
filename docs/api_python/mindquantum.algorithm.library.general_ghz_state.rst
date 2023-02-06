@@ -8,7 +8,7 @@ mindquantum.algorithm.library.general_ghz_state
 
     .. math::
 
-        \left\text{GHZ}\right> = (\left|000\right> + \left|111\right>)/\sqrt{2}
+        \left|\text{GHZ}\right> = (\left|000\right> + \left|111\right>)/\sqrt{2}
 
     在本接口中，我们可以创建出任意量子比特规模下任意部分量子比特之间的GHZ态。
 
