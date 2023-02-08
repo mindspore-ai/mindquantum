@@ -25,7 +25,8 @@
 
 namespace mindquantum::sim::densitymatrix::detail {
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::DiagonalConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi, index_t dim)
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::DiagonalConditionalCollect(qs_data_p_t qs, index_t mask,
+                                                                                  index_t condi, index_t dim)
     -> calc_type {
     // collect diagonal amplitude with index mask satisfied condition.
     calc_type res_real = 0;
@@ -41,9 +42,10 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::DiagonalConditionalCollec
 
 template <typename derived_, typename calc_type_>
 template <class binary_op>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalBinary(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
-                                                   qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim,
-                                                   const binary_op& op) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalBinary(qs_data_p_t src, qs_data_p_t des, index_t mask,
+                                                                         index_t condi, qs_data_t succ_coeff,
+                                                                         qs_data_t fail_coeff, index_t dim,
+                                                                         const binary_op& op) {
     // if index mask satisfied condition, multiply by succe_coeff, otherwise multiply fail_coeff
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
@@ -66,8 +68,9 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalBinary(qs_data
 
 template <typename derived_, typename calc_type_>
 template <index_t mask, index_t condi, class binary_op>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalBinary(qs_data_p_t src, qs_data_p_t des, qs_data_t succ_coeff,
-                                                   qs_data_t fail_coeff, index_t dim, const binary_op& op) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalBinary(qs_data_p_t src, qs_data_p_t des,
+                                                                         qs_data_t succ_coeff, qs_data_t fail_coeff,
+                                                                         index_t dim, const binary_op& op) {
     // if index mask satisfied condition, multiply by succe_coeff, otherwise multiply fail_coeff
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
@@ -89,27 +92,33 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalBinary(qs_data
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::QSMulValue(qs_data_p_t src, qs_data_p_t des, qs_data_t value, index_t dim) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::QSMulValue(qs_data_p_t src, qs_data_p_t des, qs_data_t value,
+                                                                  index_t dim) {
     derived::template ConditionalBinary<0, 0>(src, des, value, 0, dim, std::multiplies<qs_data_t>());
 }
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalAdd(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
-                                                qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalAdd(qs_data_p_t src, qs_data_p_t des, index_t mask,
+                                                                      index_t condi, qs_data_t succ_coeff,
+                                                                      qs_data_t fail_coeff, index_t dim) {
     derived::template ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::plus<qs_data_t>());
 }
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalMinus(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
-                                                  qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalMinus(qs_data_p_t src, qs_data_p_t des, index_t mask,
+                                                                        index_t condi, qs_data_t succ_coeff,
+                                                                        qs_data_t fail_coeff, index_t dim) {
     derived::template ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::minus<qs_data_t>());
 }
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalMul(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
-                                                qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim) {
-    derived::template ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::multiplies<qs_data_t>());
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalMul(qs_data_p_t src, qs_data_p_t des, index_t mask,
+                                                                      index_t condi, qs_data_t succ_coeff,
+                                                                      qs_data_t fail_coeff, index_t dim) {
+    derived::template ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim,
+                                        std::multiplies<qs_data_t>());
 }
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalDiv(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
-                                                qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalDiv(qs_data_p_t src, qs_data_p_t des, index_t mask,
+                                                                      index_t condi, qs_data_t succ_coeff,
+                                                                      qs_data_t fail_coeff, index_t dim) {
     derived::template ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::divides<qs_data_t>());
 }
 

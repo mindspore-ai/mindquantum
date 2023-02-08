@@ -26,8 +26,9 @@
 
 namespace mindquantum::sim::densitymatrix::detail {
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                         index_t dim, bool diff) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRX(qs_data_p_t qs, const qbits_t& objs,
+                                                               const qbits_t& ctrls, calc_type val, index_t dim,
+                                                               bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
     auto a = std::cos(val / 2);
     auto b = -std::sin(val / 2);
@@ -43,8 +44,9 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRX(qs_data_p_t qs, c
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                         index_t dim, bool diff) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRY(qs_data_p_t qs, const qbits_t& objs,
+                                                               const qbits_t& ctrls, calc_type val, index_t dim,
+                                                               bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
     auto a = std::cos(val / 2);
     auto b = std::sin(val / 2);
@@ -60,8 +62,9 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRY(qs_data_p_t qs, c
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                         index_t dim, bool diff) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRZ(qs_data_p_t qs, const qbits_t& objs,
+                                                               const qbits_t& ctrls, calc_type val, index_t dim,
+                                                               bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
     auto a = std::cos(val / 2);
     auto b = std::sin(val / 2);
@@ -77,8 +80,9 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRZ(qs_data_p_t qs, c
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxx(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                         index_t dim, bool diff) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxx(qs_data_p_t qs, const qbits_t& objs,
+                                                                const qbits_t& ctrls, calc_type val, index_t dim,
+                                                                bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
     auto c = static_cast<calc_type_>(std::cos(val / 2));
     auto s = static_cast<calc_type_>(std::sin(val / 2)) * IMAGE_MI;
@@ -172,8 +176,9 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxx(qs_data_p_t qs, 
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyy(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                         index_t dim, bool diff) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyy(qs_data_p_t qs, const qbits_t& objs,
+                                                                const qbits_t& ctrls, calc_type val, index_t dim,
+                                                                bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
     auto c = static_cast<calc_type_>(std::cos(val / 2));
     auto s = static_cast<calc_type_>(std::sin(val / 2)) * IMAGE_I;
@@ -278,8 +283,9 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyy(qs_data_p_t qs, 
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                         index_t dim, bool diff) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzz(qs_data_p_t qs, const qbits_t& objs,
+                                                                const qbits_t& ctrls, calc_type val, index_t dim,
+                                                                bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
     auto c = static_cast<calc_type_>(std::cos(val / 2));
     auto s = static_cast<calc_type_>(std::sin(val / 2));

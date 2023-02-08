@@ -111,7 +111,8 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetQS(qs_data_p_t qs, ind
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t qs, const py_qs_datas_t& vec_out, index_t dim) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t qs, const py_qs_datas_t& vec_out,
+                                                             index_t dim) {
     if (vec_out.size() != dim) {
         throw std::invalid_argument("state size not match");
     }
@@ -173,7 +174,9 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::PureStateVector(qs_data_p
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs,
+                                                                  const std::vector<PauliTerm<calc_type>>& ham,
+                                                                  index_t dim) {
     matrix_t tmp(dim, VT<qs_data_t>(dim));
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
@@ -185,7 +188,8 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs
                 if (i <= j) {
                     auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
                     auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
-                    auto c = ComplexCast<double, calc_type>::apply(POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
+                    auto c = ComplexCast<double, calc_type>::apply(
+                        POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
                     for (index_t col = 0; col < dim; col++) {
                         tmp[j][col] += GetValue(qs, i, col) * coeff * c;
                     }
@@ -208,7 +212,8 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs
                 if (i <= j) {
                     auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
                     auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
-                    auto c = ComplexCast<double, calc_type>::apply(POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
+                    auto c = ComplexCast<double, calc_type>::apply(
+                        POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
                     for (index_t row = 0; row <= i; row++) {
                         qs[IdxMap(i, row)] += std::conj(tmp[row][j] * coeff * c);
                     }

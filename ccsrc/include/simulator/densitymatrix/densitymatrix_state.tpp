@@ -146,7 +146,7 @@ auto DensityMatrixState<qs_policy_t_>::PureStateVector() -> py_qs_datas_t {
 
 template <typename qs_policy_t_>
 index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& gate,
-                                             const ParameterResolver<calc_type>& pr, bool diff) {
+                                                    const ParameterResolver<calc_type>& pr, bool diff) {
     auto id = gate->id_;
     switch (id) {
         case GateID::I:
@@ -283,13 +283,16 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
             qs_policy_t::ApplyPauli(qs, gate->obj_qubits_, static_cast<PauliChannel*>(gate.get())->probs_, dim);
             break;
         case GateID::AD:
-            qs_policy_t::ApplyAmplitudeDamping(qs, gate->obj_qubits_, static_cast<AmplitudeDampingChannel*>(gate.get())->damping_coeff_, dim);
+            qs_policy_t::ApplyAmplitudeDamping(qs, gate->obj_qubits_,
+                                               static_cast<AmplitudeDampingChannel*>(gate.get())->damping_coeff_, dim);
             break;
         case GateID::PD:
-            qs_policy_t::ApplyPhaseDamping(qs, gate->obj_qubits_, static_cast<PhaseDampingChannel*>(gate.get())->damping_coeff_, dim);
+            qs_policy_t::ApplyPhaseDamping(qs, gate->obj_qubits_,
+                                           static_cast<PhaseDampingChannel*>(gate.get())->damping_coeff_, dim);
             break;
         case GateID::KRAUS:
-            qs_policy_t::ApplyKraus(qs, gate->obj_qubits_, static_cast<KrausChannel<calc_type>*>(gate.get())->kraus_operator_set_, dim);
+            qs_policy_t::ApplyKraus(qs, gate->obj_qubits_,
+                                    static_cast<KrausChannel<calc_type>*>(gate.get())->kraus_operator_set_, dim);
             break;
         case GateID::CUSTOM: {
             auto g = static_cast<CustomGate<calc_type>*>(gate.get());
@@ -318,16 +321,19 @@ auto DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicG
     auto id = gate->id_;
     switch (id) {
         case GateID::AD:
-            qs_policy_t::ApplyAmplitudeDamping(qs, gate->obj_qubits_, static_cast<AmplitudeDampingChannel*>(gate.get())->damping_coeff_, dim);
+            qs_policy_t::ApplyAmplitudeDamping(qs, gate->obj_qubits_,
+                                               static_cast<AmplitudeDampingChannel*>(gate.get())->damping_coeff_, dim);
             break;
         case GateID::PD:
-            qs_policy_t::ApplyPhaseDamping(qs, gate->obj_qubits_, static_cast<PhaseDampingChannel*>(gate.get())->damping_coeff_, dim);
+            qs_policy_t::ApplyPhaseDamping(qs, gate->obj_qubits_,
+                                           static_cast<PhaseDampingChannel*>(gate.get())->damping_coeff_, dim);
             break;
         case GateID::PL:
             qs_policy_t::ApplyPauli(qs, gate->obj_qubits_, static_cast<PauliChannel*>(gate.get())->probs_, dim);
             break;
         case GateID::KRAUS:
-            qs_policy_t::ApplyKraus(qs, gate->obj_qubits_, static_cast<KrausChannel<calc_type>*>(gate.get())->kraus_operator_set_, dim);
+            qs_policy_t::ApplyKraus(qs, gate->obj_qubits_,
+                                    static_cast<KrausChannel<calc_type>*>(gate.get())->kraus_operator_set_, dim);
             break;
         default:
             throw std::invalid_argument(fmt::format("{} is not a noise channel.", id));
@@ -351,8 +357,9 @@ auto DensityMatrixState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicG
 }
 
 template <typename qs_policy_t_>
-auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix, const std::shared_ptr<BasicGate>& gate,
-                                               const ParameterResolver<calc_type>& pr, index_t dim)
+auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
+                                                      const std::shared_ptr<BasicGate>& gate,
+                                                      const ParameterResolver<calc_type>& pr, index_t dim)
     -> Dim2Matrix<calc_type> {
     auto id = gate->id_;
     auto g = static_cast<Parameterizable<calc_type>*>(gate.get());

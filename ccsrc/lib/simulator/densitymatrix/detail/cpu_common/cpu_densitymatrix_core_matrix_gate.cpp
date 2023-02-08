@@ -30,8 +30,9 @@ namespace mindquantum::sim::densitymatrix::detail {
 
 // method is based on 'mq_vector' simulator, extended to densitymatrix
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
-                                                        const qbits_t& ctrls, const matrix_t& m, index_t dim) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des,
+                                                                              qbit_t obj_qubit, const qbits_t& ctrls,
+                                                                              const matrix_t& m, index_t dim) {
     SingleQubitGateMask mask({obj_qubit}, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
@@ -113,8 +114,9 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(qs
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
-                                                      const qbits_t& ctrls, const matrix_t& m, index_t dim) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des,
+                                                                            const qbits_t& objs, const qbits_t& ctrls,
+                                                                            const matrix_t& m, index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
@@ -191,8 +193,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_d
                     if ((col[0] & mask.ctrl_mask) == mask.ctrl_mask) {  // column in control
                         for (int i = 0; i < 4; i++) {
                             for (int j = 0; j < 4; j++) {
-                                auto new_value = tmp_mat[i][0] * std::conj(m[j][0])
-                                                 + tmp_mat[i][1] * std::conj(m[j][1])
+                                auto new_value = tmp_mat[i][0] * std::conj(m[j][0]) + tmp_mat[i][1] * std::conj(m[j][1])
                                                  + tmp_mat[i][2] * std::conj(m[j][2])
                                                  + tmp_mat[i][3] * std::conj(m[j][3]);
                                 SetValue(des, row[i], col[j], new_value);
@@ -211,8 +212,9 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_d
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
-                                                 const qbits_t& ctrls, const matrix_t& m, index_t dim) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des,
+                                                                       const qbits_t& objs, const qbits_t& ctrls,
+                                                                       const matrix_t& m, index_t dim) {
     if (objs.size() == 1) {
         derived::ApplySingleQubitMatrix(src, des, objs[0], ctrls, m, dim);
     } else if (objs.size() == 2) {

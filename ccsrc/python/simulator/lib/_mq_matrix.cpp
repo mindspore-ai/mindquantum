@@ -48,7 +48,7 @@ PYBIND11_MODULE(_mq_matrix, module) {
     module.doc() = "MindQuantum c++ density matrix state simulator.";
     pybind11::module float_sim = module.def_submodule("float", "float simulator");
     pybind11::module double_sim = module.def_submodule("double", "double simulator");
-    
+
     BindSim<float_mat_sim>(float_sim, "mqmatrix");
     BindSim<double_mat_sim>(double_sim, "mqmatrix");
 }

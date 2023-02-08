@@ -115,12 +115,12 @@ class DensityMatrixState {
                                                 const ParameterResolver<calc_type>& pr, index_t dim);
 
     static Dim2Matrix<calc_type> ExpectDiffU3(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
-                                       const std::shared_ptr<BasicGate>& gate,
-                                       const ParameterResolver<calc_type>& pr, index_t dim);
+                                              const std::shared_ptr<BasicGate>& gate,
+                                              const ParameterResolver<calc_type>& pr, index_t dim);
 
     static Dim2Matrix<calc_type> ExpectDiffFSim(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
-                                         const std::shared_ptr<BasicGate>& gate,
-                                         const ParameterResolver<calc_type>& pr, index_t dim);
+                                                const std::shared_ptr<BasicGate>& gate,
+                                                const ParameterResolver<calc_type>& pr, index_t dim);
 
     py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham);
 

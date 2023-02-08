@@ -26,8 +26,8 @@
 
 namespace mindquantum::sim::densitymatrix::detail {
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::HamiltonianMatrix(const std::vector<PauliTerm<calc_type>>& ham, index_t dim)
-    -> qs_data_p_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::HamiltonianMatrix(const std::vector<PauliTerm<calc_type>>& ham,
+                                                                         index_t dim) -> qs_data_p_t {
     qs_data_p_t out = InitState(dim, false);
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
@@ -39,7 +39,8 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::HamiltonianMatrix(const s
                 if (i <= j) {
                     auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
                     auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
-                    auto c = ComplexCast<double, calc_type>::apply(POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
+                    auto c = ComplexCast<double, calc_type>::apply(
+                        POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
                     out[IdxMap(j, i)] += coeff * c;
                 }
             })
@@ -48,8 +49,9 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::HamiltonianMatrix(const s
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetExpectation(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham,
-                                                index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetExpectation(qs_data_p_t qs,
+                                                                      const std::vector<PauliTerm<calc_type>>& ham,
+                                                                      index_t dim) -> qs_data_t {
     qs_data_t expectation_value = 0;
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
@@ -61,7 +63,8 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetExpectation(qs_data_p_
                 if (i <= j) {
                     auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
                     auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
-                    auto c = ComplexCast<double, calc_type>::apply(POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
+                    auto c = ComplexCast<double, calc_type>::apply(
+                        POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
                     expectation_value += std::conj(qs[IdxMap(j, i)]) * coeff * c;
                     if (i != j) {
                         expectation_value += qs[IdxMap(j, i)] * coeff / c;
@@ -73,10 +76,9 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetExpectation(qs_data_p_
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_data_p_t ham_matrix,
-                                                             const qbits_t& objs, const qbits_t& ctrls,
-                                                             const matrix_t& diff_m, const matrix_t& herm_m,
-                                                             index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatrix(
+    qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls, const matrix_t& diff_m,
+    const matrix_t& herm_m, index_t dim) -> qs_data_t {
     qs_data_t m00 = diff_m[0][0] * herm_m[0][0] + diff_m[0][1] * herm_m[1][0];
     qs_data_t m01 = diff_m[0][0] * herm_m[0][1] + diff_m[0][1] * herm_m[1][1];
     qs_data_t m10 = diff_m[1][0] * herm_m[0][0] + diff_m[1][1] * herm_m[1][0];
@@ -84,6 +86,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatr
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t a = 0; a < (dim / 2); a++) {
@@ -99,6 +102,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatr
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 });
+        // clang-format on
     } else {
         if (mask.ctrl_qubits.size() == 1) {
             index_t ctrl_low = 0UL;
@@ -113,7 +117,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatr
             }
             auto first_high_mask = ~first_low_mask;
             auto second_high_mask = ~second_low_mask;
-
+            // clang-format off
             THRESHOLD_OMP(
                 MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                     for (omp::idx_t a = 0; a < (dim / 2); a++) {
@@ -130,7 +134,9 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatr
                         res_real += this_res.real();
                         res_imag += this_res.imag();
                     });
+            // clang-format on
         } else {
+            // clang-format off
             THRESHOLD_OMP(
                 MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                     for (omp::idx_t a = 0; a < (dim / 2); a++) {
@@ -148,15 +154,19 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatr
                             res_imag += this_res.imag();
                         }
                     });
+            // clang-format on
         }
     }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
-                                                           const qbits_t& ctrls, const matrix_t& diff_m,
-                                                           const matrix_t& herm_m, index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix(qs_data_p_t qs, qs_data_p_t ham_matrix,
+                                                                                 const qbits_t& objs,
+                                                                                 const qbits_t& ctrls,
+                                                                                 const matrix_t& diff_m,
+                                                                                 const matrix_t& herm_m, index_t dim)
+    -> qs_data_t {
     matrix_t m(4, std::vector<qs_data_t>(4));
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
@@ -168,12 +178,13 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t a = 0; a < (dim / 2); a++) {
                     index_t r0;  // row index of reduced matrix entry
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                        mask.obj_high_mask, mask.obj_rev_high_mask, a, r0);
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  a, r0);
                     auto r3 = r0 + mask.obj_mask;
                     auto r1 = r0 + mask.obj_min_mask;
                     auto r2 = r0 + mask.obj_max_mask;
@@ -195,13 +206,15 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 });
+        // clang-format on
     } else {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t a = 0; a < (dim / 2); a++) {
                     index_t r0;  // row index of reduced matrix entry
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                        mask.obj_high_mask, mask.obj_rev_high_mask, a, r0);
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  a, r0);
                     if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto r3 = r0 + mask.obj_mask;
                         auto r1 = r0 + mask.obj_min_mask;
@@ -225,14 +238,17 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix
                         res_imag += this_res.imag();
                     }
                 });
+        // clang-format on
     }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffMatrixGate(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
-                                                      const qbits_t& ctrls, const matrix_t& diff_m,
-                                                      const matrix_t& herm_m, index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffMatrixGate(qs_data_p_t qs, qs_data_p_t ham_matrix,
+                                                                            const qbits_t& objs, const qbits_t& ctrls,
+                                                                            const matrix_t& diff_m,
+                                                                            const matrix_t& herm_m, index_t dim)
+    -> qs_data_t {
     if (objs.size() == 1) {
         return derived::ExpectDiffSingleQubitMatrix(qs, ham_matrix, objs, ctrls, diff_m, herm_m, dim);
     }
@@ -243,11 +259,13 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffMatrixGate(qs_d
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRX(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
-                                              const qbits_t& ctrls, index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRX(qs_data_p_t qs, qs_data_p_t ham_matrix,
+                                                                    const qbits_t& objs, const qbits_t& ctrls,
+                                                                    index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t a = 0; a < (dim / 2); a++) {
@@ -262,7 +280,9 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRX(qs_data_p_t 
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
+        // clang-format on
     } else {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t a = 0; a < (dim / 2); a++) {
@@ -279,16 +299,19 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRX(qs_data_p_t 
                         res_imag += this_res.imag();
                     }
                 })
+        // clang-format on
     }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRY(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
-                                              const qbits_t& ctrls, index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRY(qs_data_p_t qs, qs_data_p_t ham_matrix,
+                                                                    const qbits_t& objs, const qbits_t& ctrls,
+                                                                    index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t a = 0; a < (dim / 2); a++) {
@@ -303,7 +326,9 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRY(qs_data_p_t 
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
+        // clang-format on
     } else {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t a = 0; a < (dim / 2); a++) {
@@ -320,16 +345,19 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRY(qs_data_p_t 
                         res_imag += this_res.imag();
                     }
                 })
+        // clang-format on
     }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRZ(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
-                                              const qbits_t& ctrls, index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRZ(qs_data_p_t qs, qs_data_p_t ham_matrix,
+                                                                    const qbits_t& objs, const qbits_t& ctrls,
+                                                                    index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t a = 0; a < (dim / 2); a++) {
@@ -344,7 +372,9 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRZ(qs_data_p_t 
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
+        // clang-format on
     } else {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t a = 0; a < (dim / 2); a++) {
@@ -361,16 +391,19 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRZ(qs_data_p_t 
                         res_imag += this_res.imag();
                     }
                 })
+        // clang-format on
     }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffPS(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
-                                              const qbits_t& ctrls, index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffPS(qs_data_p_t qs, qs_data_p_t ham_matrix,
+                                                                    const qbits_t& objs, const qbits_t& ctrls,
+                                                                    index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t a = 0; a < (dim / 2); a++) {
@@ -384,7 +417,9 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffPS(qs_data_p_t 
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
+        // clang-format on
     } else {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t a = 0; a < (dim / 2); a++) {
@@ -400,18 +435,21 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffPS(qs_data_p_t 
                         res_imag += this_res.imag();
                     }
                 })
+        // clang-format on
     }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Theta(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
-                                                   const qbits_t& ctrls, calc_type phi, index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Theta(qs_data_p_t qs, qs_data_p_t ham_matrix,
+                                                                         const qbits_t& objs, const qbits_t& ctrls,
+                                                                         calc_type phi, index_t dim) -> qs_data_t {
     qs_data_t e_phi = static_cast<calc_type>(0.5) * std::exp(std::complex<calc_type>(0, phi));
     qs_data_t e_m_phi = static_cast<calc_type>(-0.5) * std::exp(std::complex<calc_type>(0, -phi));
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t a = 0; a < (dim / 2); a++) {
@@ -425,7 +463,9 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Theta(qs_data
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
+        // clang-format on
     } else {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t a = 0; a < (dim / 2); a++) {
@@ -441,16 +481,19 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Theta(qs_data
                         res_imag += this_res.imag();
                     }
                 })
+        // clang-format on
     }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Phi(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
-                                                 const qbits_t& ctrls, index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Phi(qs_data_p_t qs, qs_data_p_t ham_matrix,
+                                                                       const qbits_t& objs, const qbits_t& ctrls,
+                                                                       index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t a = 0; a < (dim / 2); a++) {
@@ -464,7 +507,9 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Phi(qs_data_p
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
+        // clang-format on
     } else {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t a = 0; a < (dim / 2); a++) {
@@ -480,22 +525,25 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Phi(qs_data_p
                         res_imag += this_res.imag();
                     }
                 })
+        // clang-format on
     }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRxx(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
-                                              const qbits_t& ctrls, index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRxx(qs_data_p_t qs, qs_data_p_t ham_matrix,
+                                                                     const qbits_t& objs, const qbits_t& ctrls,
+                                                                     index_t dim) -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t l = 0; l < (dim / 4); l++) {
                     index_t r0;
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask,
-                        mask.obj_rev_high_mask, l, r0);
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  l, r0);
                     auto r3 = r0 + mask.obj_mask;
                     auto r1 = r0 + mask.obj_min_mask;
                     auto r2 = r0 + mask.obj_max_mask;
@@ -510,13 +558,15 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRxx(qs_data_p_t
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
+        // clang-format on
     } else {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t l = 0; l < (dim / 4); l++) {
                     index_t r0;
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                        mask.obj_high_mask, mask.obj_rev_high_mask, l, r0);
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  l, r0);
                     if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto r3 = r0 + mask.obj_mask;
                         auto r1 = r0 + mask.obj_min_mask;
@@ -533,22 +583,25 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRxx(qs_data_p_t
                         res_imag += this_res.imag();
                     }
                 })
+        // clang-format on
     }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRyy(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
-                                              const qbits_t& ctrls, index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRyy(qs_data_p_t qs, qs_data_p_t ham_matrix,
+                                                                     const qbits_t& objs, const qbits_t& ctrls,
+                                                                     index_t dim) -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t l = 0; l < (dim / 4); l++) {
                     index_t r0;
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                        mask.obj_high_mask, mask.obj_rev_high_mask, l, r0);
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  l, r0);
                     auto r3 = r0 + mask.obj_mask;
                     auto r1 = r0 + mask.obj_min_mask;
                     auto r2 = r0 + mask.obj_max_mask;
@@ -563,13 +616,15 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRyy(qs_data_p_t
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
+        // clang-format on
     } else {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t l = 0; l < (dim / 4); l++) {
                     index_t r0;
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                        mask.obj_high_mask, mask.obj_rev_high_mask, l, r0);
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  l, r0);
                     if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto r3 = r0 + mask.obj_mask;
                         auto r1 = r0 + mask.obj_min_mask;
@@ -586,22 +641,25 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRyy(qs_data_p_t
                         res_imag += this_res.imag();
                     }
                 })
+        // clang-format on
     }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRzz(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
-                                              const qbits_t& ctrls, index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRzz(qs_data_p_t qs, qs_data_p_t ham_matrix,
+                                                                     const qbits_t& objs, const qbits_t& ctrls,
+                                                                     index_t dim) -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t l = 0; l < (dim / 4); l++) {
                     index_t r0;
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                        mask.obj_high_mask, mask.obj_rev_high_mask, l, r0);
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  l, r0);
                     auto r3 = r0 + mask.obj_mask;
                     auto r1 = r0 + mask.obj_min_mask;
                     auto r2 = r0 + mask.obj_max_mask;
@@ -616,13 +674,15 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRzz(qs_data_p_t
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
+        // clang-format on
     } else {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t l = 0; l < (dim / 4); l++) {
                     index_t r0;
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                        mask.obj_high_mask, mask.obj_rev_high_mask, l, r0);
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  l, r0);
                     if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto r3 = r0 + mask.obj_mask;
                         auto r1 = r0 + mask.obj_min_mask;
@@ -639,22 +699,25 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRzz(qs_data_p_t
                         res_imag += this_res.imag();
                     }
                 })
+        // clang-format on
     }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimTheta(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
-                                                     const qbits_t& ctrls, index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimTheta(qs_data_p_t qs, qs_data_p_t ham_matrix,
+                                                                           const qbits_t& objs, const qbits_t& ctrls,
+                                                                           index_t dim) -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t l = 0; l < (dim / 4); l++) {
                     index_t r0;
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                        mask.obj_high_mask, mask.obj_rev_high_mask, l, r0);
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  l, r0);
                     auto r3 = r0 + mask.obj_mask;
                     auto r1 = r0 + mask.obj_min_mask;
                     auto r2 = r0 + mask.obj_max_mask;
@@ -667,13 +730,15 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimTheta(qs_da
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
+        // clang-format on
     } else {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t l = 0; l < (dim / 4); l++) {
                     index_t r0;
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                        mask.obj_high_mask, mask.obj_rev_high_mask, l, r0);
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  l, r0);
                     if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto r3 = r0 + mask.obj_mask;
                         auto r1 = r0 + mask.obj_min_mask;
@@ -688,22 +753,25 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimTheta(qs_da
                         res_imag += this_res.imag();
                     }
                 })
+        // clang-format on
     }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimPhi(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
-                                                   const qbits_t& ctrls, index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimPhi(qs_data_p_t qs, qs_data_p_t ham_matrix,
+                                                                         const qbits_t& objs, const qbits_t& ctrls,
+                                                                         index_t dim) -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t l = 0; l < (dim / 4); l++) {
                     index_t r0;
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                        mask.obj_high_mask, mask.obj_rev_high_mask, l, r0);
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  l, r0);
                     auto r3 = r0 + mask.obj_mask;
                     auto r1 = r0 + mask.obj_min_mask;
                     auto r2 = r0 + mask.obj_max_mask;
@@ -715,13 +783,15 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimPhi(qs_data
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
+        // clang-format on
     } else {
+        // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
                 for (omp::idx_t l = 0; l < (dim / 4); l++) {
                     index_t r0;
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                        mask.obj_high_mask, mask.obj_rev_high_mask, l, r0);
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  l, r0);
                     if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto r3 = r0 + mask.obj_mask;
                         auto r1 = r0 + mask.obj_min_mask;
@@ -735,6 +805,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimPhi(qs_data
                         res_imag += this_res.imag();
                     }
                 })
+        // clang-format on
     }
     return {res_real, res_imag};
 };

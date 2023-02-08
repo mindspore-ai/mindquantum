@@ -20,9 +20,10 @@
 #include <iostream>
 #include <vector>
 
+#include "config/type_promotion.hpp"
+
 #include "core/mq_base_types.hpp"
 #include "simulator/types.hpp"
-#include "config/type_promotion.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
 struct CPUDensityMatrixPolicyAvxFloat;
@@ -122,11 +123,11 @@ struct CPUDensityMatrixPolicyBase {
     static void ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyRxx(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
-                        bool diff = false);
+                         bool diff = false);
     static void ApplyRyy(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
-                        bool diff = false);
+                         bool diff = false);
     static void ApplyRzz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
-                        bool diff = false);
+                         bool diff = false);
     static void ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
                                 const matrix_t& m, index_t dim);
     // Channel operator
@@ -164,11 +165,11 @@ struct CPUDensityMatrixPolicyBase {
     static qs_data_t ExpectDiffU3Phi(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
                                      index_t dim);
     static qs_data_t ExpectDiffRxx(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
-                                  index_t dim);
+                                   index_t dim);
     static qs_data_t ExpectDiffRyy(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
-                                  index_t dim);
+                                   index_t dim);
     static qs_data_t ExpectDiffRzz(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
-                                  index_t dim);
+                                   index_t dim);
     static qs_data_t ExpectDiffFSimTheta(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
                                          const qbits_t& ctrls, index_t dim);
     static qs_data_t ExpectDiffFSimPhi(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
