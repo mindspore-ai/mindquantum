@@ -22,15 +22,29 @@
 #include <pybind11/stl.h>
 
 #include "core/parameter_resolver.hpp"
-#include "simulator/densitymatrix/densitymatrix_state.hpp"
-#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 #include "simulator/types.hpp"
+
+#ifdef __CUDACC__
+#    include "simulator/densitymatrix/detail/gpu_densitymatrix_double_policy.cuh"
+#    include "simulator/densitymatrix/detail/gpu_densitymatrix_float_policy.cuh"
+#    include "simulator/densitymatrix/detail/gpu_densitymatrix_policy.cuh"
+#elif defined(__x86_64__)
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_float_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
+#elif defined(__amd64)
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_float_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
+#endif  // __CUDACC__
+
+#include "simulator/densitymatrix/densitymatrix_state.hpp"
 
 template <typename sim_t>
 auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLINT
     using namespace pybind11::literals;                                 // NOLINT
     using qbit_t = mindquantum::sim::qbit_t;
-    using calc_type = mindquantum::sim::calc_type;
+    using calc_type = typename sim_t::calc_type;
 
     pybind11::class_<sim_t>(module, name.data())
         .def(pybind11::init<qbit_t, unsigned>(), "n_qubits"_a, "seed"_a = 42)

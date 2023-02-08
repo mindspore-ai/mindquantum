@@ -26,17 +26,23 @@
 #include "config/openmp.hpp"
 
 #include "core/utils.hpp"
-#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
-
-constexpr double m_sqrt1_2{0.707106781186547524400844362104849039};
+#ifdef __x86_64__
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_float_policy.hpp"
+#elif defined(__amd64)
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_float_policy.hpp"
+#endif
+#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
 // Z like operator
 // ========================================================================================================
 
-void CPUDensityMatrixPolicyBase::ApplyZLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, qs_data_t val,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyZLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, qs_data_t val,
                                             index_t dim) {
     SingleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
@@ -90,30 +96,36 @@ void CPUDensityMatrixPolicyBase::ApplyZLike(qs_data_p_t qs, const qbits_t& objs,
     }
 }
 
-void CPUDensityMatrixPolicyBase::ApplyZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    ApplyZLike(qs, objs, ctrls, -1, dim);
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
+    derived::ApplyZLike(qs, objs, ctrls, -1, dim);
 }
 
-void CPUDensityMatrixPolicyBase::ApplySGate(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    ApplyZLike(qs, objs, ctrls, qs_data_t(0, 1), dim);
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySGate(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
+    derived::ApplyZLike(qs, objs, ctrls, qs_data_t(0, 1), dim);
 }
 
-void CPUDensityMatrixPolicyBase::ApplySdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    ApplyZLike(qs, objs, ctrls, qs_data_t(0, -1), dim);
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
+    derived::ApplyZLike(qs, objs, ctrls, qs_data_t(0, -1), dim);
 }
 
-void CPUDensityMatrixPolicyBase::ApplyT(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    ApplyZLike(qs, objs, ctrls, qs_data_t(1, 1) * m_sqrt1_2, dim);
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyT(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
+    derived::ApplyZLike(qs, objs, ctrls, qs_data_t(1, 1) / static_cast<calc_type>(std::sqrt(2.0)), dim);
 }
 
-void CPUDensityMatrixPolicyBase::ApplyTdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    ApplyZLike(qs, objs, ctrls, qs_data_t(1, -1) * m_sqrt1_2, dim);
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
+    derived::ApplyZLike(qs, objs, ctrls, qs_data_t(1, -1) / static_cast<calc_type>(std::sqrt(2.0)), dim);
 }
 
-void CPUDensityMatrixPolicyBase::ApplyPS(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyPS(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
                                          index_t dim, bool diff) {
     if (!diff) {
-        ApplyZLike(qs, objs, ctrls, qs_data_t(std::cos(val), std::sin(val)), dim);
+        derived::ApplyZLike(qs, objs, ctrls, qs_data_t(std::cos(val), std::sin(val)), dim);
     } else {
         SingleQubitGateMask mask(objs, ctrls);
         auto e = -std::sin(val) + IMAGE_I * std::cos(val);
@@ -162,8 +174,16 @@ void CPUDensityMatrixPolicyBase::ApplyPS(qs_data_p_t qs, const qbits_t& objs, co
                         }
                     }
                 })
-            CPUDensityMatrixPolicyBase::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+            derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
         }
     }
 }
+
+#ifdef __x86_64__
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxFloat, float>;
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxDouble, double>;
+#elif defined(__amd64)
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyArmFloat, float>;
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyArmDouble, double>;
+#endif
 }  // namespace mindquantum::sim::densitymatrix::detail

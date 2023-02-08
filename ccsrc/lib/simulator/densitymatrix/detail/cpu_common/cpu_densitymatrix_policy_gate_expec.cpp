@@ -26,12 +26,20 @@
 #include "config/openmp.hpp"
 
 #include "core/utils.hpp"
-#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
+#ifdef __x86_64__
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_float_policy.hpp"
+#elif defined(__amd64)
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_float_policy.hpp"
+#endif
+#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
-auto CPUDensityMatrixPolicyBase::HamiltonianMatrix(const std::vector<PauliTerm<calc_type>>& ham, index_t dim)
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::HamiltonianMatrix(const std::vector<PauliTerm<calc_type>>& ham, index_t dim)
     -> qs_data_p_t {
     qs_data_p_t out = InitState(dim, false);
     for (const auto& [pauli_string, coeff_] : ham) {
@@ -44,7 +52,7 @@ auto CPUDensityMatrixPolicyBase::HamiltonianMatrix(const std::vector<PauliTerm<c
                 if (i <= j) {
                     auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
                     auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
-                    auto c = POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)];
+                    auto c = ComplexCast<double, calc_type>::apply(POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
                     out[IdxMap(j, i)] += coeff * c;
                 }
             })
@@ -52,7 +60,8 @@ auto CPUDensityMatrixPolicyBase::HamiltonianMatrix(const std::vector<PauliTerm<c
     return out;
 }
 
-auto CPUDensityMatrixPolicyBase::GetExpectation(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham,
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetExpectation(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham,
                                                 index_t dim) -> qs_data_t {
     qs_data_t expectation_value = 0;
     for (const auto& [pauli_string, coeff_] : ham) {
@@ -65,7 +74,7 @@ auto CPUDensityMatrixPolicyBase::GetExpectation(qs_data_p_t qs, const std::vecto
                 if (i <= j) {
                     auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
                     auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
-                    auto c = POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)];
+                    auto c = ComplexCast<double, calc_type>::apply(POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
                     expectation_value += std::conj(qs[IdxMap(j, i)]) * coeff * c;
                     if (i != j) {
                         expectation_value += qs[IdxMap(j, i)] * coeff / c;
@@ -76,7 +85,8 @@ auto CPUDensityMatrixPolicyBase::GetExpectation(qs_data_p_t qs, const std::vecto
     return expectation_value;
 }
 
-auto CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_data_p_t ham_matrix,
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_data_p_t ham_matrix,
                                                              const qbits_t& objs, const qbits_t& ctrls,
                                                              const matrix_t& diff_m, const matrix_t& herm_m,
                                                              index_t dim) -> qs_data_t {
@@ -156,7 +166,8 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_
     return {res_real, res_imag};
 };
 
-auto CPUDensityMatrixPolicyBase::ExpectDiffTwoQubitsMatrix(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
                                                            const qbits_t& ctrls, const matrix_t& diff_m,
                                                            const matrix_t& herm_m, index_t dim) -> qs_data_t {
     matrix_t m(4, std::vector<qs_data_t>(4));
@@ -231,22 +242,23 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffTwoQubitsMatrix(qs_data_p_t qs, qs_da
     return {res_real, res_imag};
 };
 
-auto CPUDensityMatrixPolicyBase::ExpectDiffMatrixGate(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffMatrixGate(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
                                                       const qbits_t& ctrls, const matrix_t& diff_m,
                                                       const matrix_t& herm_m, index_t dim) -> qs_data_t {
     if (objs.size() == 1) {
-        return ExpectDiffSingleQubitMatrix(qs, ham_matrix, objs, ctrls, diff_m, herm_m, dim);
+        return derived::ExpectDiffSingleQubitMatrix(qs, ham_matrix, objs, ctrls, diff_m, herm_m, dim);
     }
     if (objs.size() == 2) {
-        return ExpectDiffTwoQubitsMatrix(qs, ham_matrix, objs, ctrls, diff_m, herm_m, dim);
+        return derived::ExpectDiffTwoQubitsMatrix(qs, ham_matrix, objs, ctrls, diff_m, herm_m, dim);
     }
     throw std::runtime_error("Expectation of " + std::to_string(objs.size()) + " not implement for cpu backend.");
 }
 
-auto CPUDensityMatrixPolicyBase::ExpectDiffRX(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRX(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
                                               const qbits_t& ctrls, index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
-    constexpr qs_data_t HALF_MI{0, -0.5};
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP(
@@ -256,9 +268,10 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffRX(qs_data_p_t qs, qs_data_p_t ham_ma
                     auto j = i + mask.obj_mask;
                     qs_data_t this_res = 0;
                     for (index_t col = 0; col < dim; col++) {
-                        this_res += HALF_MI * GetValue(qs, j, col) * GetValue(ham_matrix, col, i);
-                        this_res += HALF_MI * GetValue(qs, i, col) * GetValue(ham_matrix, col, j);
+                        this_res += GetValue(qs, j, col) * GetValue(ham_matrix, col, i);
+                        this_res += GetValue(qs, i, col) * GetValue(ham_matrix, col, j);
                     }
+                    this_res *= HALF_MI;
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
@@ -271,9 +284,10 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffRX(qs_data_p_t qs, qs_data_p_t ham_ma
                         auto j = i + mask.obj_mask;
                         qs_data_t this_res = 0;
                         for (index_t col = 0; col < dim; col++) {
-                            this_res += HALF_MI * GetValue(qs, j, col) * GetValue(ham_matrix, col, i);
-                            this_res += HALF_MI * GetValue(qs, i, col) * GetValue(ham_matrix, col, j);
+                            this_res += GetValue(qs, j, col) * GetValue(ham_matrix, col, i);
+                            this_res += GetValue(qs, i, col) * GetValue(ham_matrix, col, j);
                         }
+                        this_res *= HALF_MI;
                         res_real += this_res.real();
                         res_imag += this_res.imag();
                     }
@@ -282,7 +296,8 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffRX(qs_data_p_t qs, qs_data_p_t ham_ma
     return {res_real, res_imag};
 };
 
-auto CPUDensityMatrixPolicyBase::ExpectDiffRY(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRY(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
                                               const qbits_t& ctrls, index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
@@ -294,9 +309,10 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffRY(qs_data_p_t qs, qs_data_p_t ham_ma
                     auto j = i + mask.obj_mask;
                     qs_data_t this_res = 0;
                     for (index_t col = 0; col < dim; col++) {
-                        this_res += -0.5 * GetValue(qs, j, col) * GetValue(ham_matrix, col, i);
-                        this_res += 0.5 * GetValue(qs, i, col) * GetValue(ham_matrix, col, j);
+                        this_res += -GetValue(qs, j, col) * GetValue(ham_matrix, col, i);
+                        this_res += GetValue(qs, i, col) * GetValue(ham_matrix, col, j);
                     }
+                    this_res *= static_cast<calc_type>(0.5);
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
@@ -309,9 +325,10 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffRY(qs_data_p_t qs, qs_data_p_t ham_ma
                         auto j = i + mask.obj_mask;
                         qs_data_t this_res = 0;
                         for (index_t col = 0; col < dim; col++) {
-                            this_res += -0.5 * GetValue(qs, j, col) * GetValue(ham_matrix, col, i);
-                            this_res += 0.5 * GetValue(qs, i, col) * GetValue(ham_matrix, col, j);
+                            this_res += -GetValue(qs, j, col) * GetValue(ham_matrix, col, i);
+                            this_res += GetValue(qs, i, col) * GetValue(ham_matrix, col, j);
                         }
+                        this_res *= static_cast<calc_type>(0.5);
                         res_real += this_res.real();
                         res_imag += this_res.imag();
                     }
@@ -320,9 +337,9 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffRY(qs_data_p_t qs, qs_data_p_t ham_ma
     return {res_real, res_imag};
 };
 
-auto CPUDensityMatrixPolicyBase::ExpectDiffRZ(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRZ(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
                                               const qbits_t& ctrls, index_t dim) -> qs_data_t {
-    constexpr qs_data_t HALF_I{0, 0.5};
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
@@ -333,9 +350,10 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffRZ(qs_data_p_t qs, qs_data_p_t ham_ma
                     auto j = i + mask.obj_mask;
                     qs_data_t this_res = 0;
                     for (index_t col = 0; col < dim; col++) {
-                        this_res += -HALF_I * GetValue(qs, i, col) * GetValue(ham_matrix, col, i);
-                        this_res += HALF_I * GetValue(qs, j, col) * GetValue(ham_matrix, col, j);
+                        this_res += -GetValue(qs, i, col) * GetValue(ham_matrix, col, i);
+                        this_res += GetValue(qs, j, col) * GetValue(ham_matrix, col, j);
                     }
+                    this_res *= HALF_I;
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
@@ -348,9 +366,10 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffRZ(qs_data_p_t qs, qs_data_p_t ham_ma
                         auto j = i + mask.obj_mask;
                         qs_data_t this_res = 0;
                         for (index_t col = 0; col < dim; col++) {
-                            this_res += -HALF_I * GetValue(qs, i, col) * GetValue(ham_matrix, col, i);
-                            this_res += HALF_I * GetValue(qs, j, col) * GetValue(ham_matrix, col, j);
+                            this_res += -GetValue(qs, i, col) * GetValue(ham_matrix, col, i);
+                            this_res += GetValue(qs, j, col) * GetValue(ham_matrix, col, j);
                         }
+                        this_res *= HALF_I;
                         res_real += this_res.real();
                         res_imag += this_res.imag();
                     }
@@ -359,7 +378,8 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffRZ(qs_data_p_t qs, qs_data_p_t ham_ma
     return {res_real, res_imag};
 };
 
-auto CPUDensityMatrixPolicyBase::ExpectDiffPS(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffPS(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
                                               const qbits_t& ctrls, index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
@@ -371,8 +391,9 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffPS(qs_data_p_t qs, qs_data_p_t ham_ma
                     auto j = i + mask.obj_mask;
                     qs_data_t this_res = 0;
                     for (index_t col = 0; col < dim; col++) {
-                        this_res += IMAGE_I * GetValue(qs, j, col) * GetValue(ham_matrix, col, j);
+                        this_res += GetValue(qs, j, col) * GetValue(ham_matrix, col, j);
                     }
+                    this_res *= IMAGE_I;
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
@@ -385,8 +406,9 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffPS(qs_data_p_t qs, qs_data_p_t ham_ma
                         auto j = i + mask.obj_mask;
                         qs_data_t this_res = 0;
                         for (index_t col = 0; col < dim; col++) {
-                            this_res += IMAGE_I * GetValue(qs, j, col) * GetValue(ham_matrix, col, j);
+                            this_res += GetValue(qs, j, col) * GetValue(ham_matrix, col, j);
                         }
+                        this_res *= IMAGE_I;
                         res_real += this_res.real();
                         res_imag += this_res.imag();
                     }
@@ -395,10 +417,11 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffPS(qs_data_p_t qs, qs_data_p_t ham_ma
     return {res_real, res_imag};
 };
 
-auto CPUDensityMatrixPolicyBase::ExpectDiffU3Theta(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Theta(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
                                                    const qbits_t& ctrls, calc_type phi, index_t dim) -> qs_data_t {
-    qs_data_t e_phi = 0.5 * std::exp(std::complex<calc_type>(0, phi));
-    qs_data_t e_m_phi = -0.5 * std::exp(std::complex<calc_type>(0, -phi));
+    qs_data_t e_phi = static_cast<calc_type>(0.5) * std::exp(std::complex<calc_type>(0, phi));
+    qs_data_t e_m_phi = static_cast<calc_type>(-0.5) * std::exp(std::complex<calc_type>(0, -phi));
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
@@ -435,7 +458,8 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffU3Theta(qs_data_p_t qs, qs_data_p_t h
     return {res_real, res_imag};
 };
 
-auto CPUDensityMatrixPolicyBase::ExpectDiffU3Phi(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Phi(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
                                                  const qbits_t& ctrls, index_t dim) -> qs_data_t {
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
@@ -447,8 +471,9 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffU3Phi(qs_data_p_t qs, qs_data_p_t ham
                     auto j = i + mask.obj_mask;
                     qs_data_t this_res = 0;
                     for (index_t col = 0; col < dim; col++) {
-                        this_res += IMAGE_I * GetValue(qs, j, col) * GetValue(ham_matrix, col, j);
+                        this_res += GetValue(qs, j, col) * GetValue(ham_matrix, col, j);
                     }
+                    this_res *= IMAGE_I;
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
@@ -461,8 +486,9 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffU3Phi(qs_data_p_t qs, qs_data_p_t ham
                         auto j = i + mask.obj_mask;
                         qs_data_t this_res = 0;
                         for (index_t col = 0; col < dim; col++) {
-                            this_res += IMAGE_I * GetValue(qs, j, col) * GetValue(ham_matrix, col, j);
+                            this_res += GetValue(qs, j, col) * GetValue(ham_matrix, col, j);
                         }
+                        this_res *= IMAGE_I;
                         res_real += this_res.real();
                         res_imag += this_res.imag();
                     }
@@ -471,7 +497,8 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffU3Phi(qs_data_p_t qs, qs_data_p_t ham
     return {res_real, res_imag};
 };
 
-auto CPUDensityMatrixPolicyBase::ExpectDiffXX(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRxx(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
                                               const qbits_t& ctrls, index_t dim) -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
@@ -487,12 +514,12 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffXX(qs_data_p_t qs, qs_data_p_t ham_ma
                     auto r2 = r0 + mask.obj_max_mask;
                     qs_data_t this_res = 0;
                     for (index_t col = 0; col < dim; col++) {
-                        this_res += IMAGE_MI
-                                    * (GetValue(qs, r3, col) * GetValue(ham_matrix, col, r0)
-                                       + GetValue(qs, r2, col) * GetValue(ham_matrix, col, r1)
-                                       + GetValue(qs, r1, col) * GetValue(ham_matrix, col, r2)
-                                       + GetValue(qs, r0, col) * GetValue(ham_matrix, col, r3));
+                        this_res += GetValue(qs, r3, col) * GetValue(ham_matrix, col, r0)
+                                    + GetValue(qs, r2, col) * GetValue(ham_matrix, col, r1)
+                                    + GetValue(qs, r1, col) * GetValue(ham_matrix, col, r2)
+                                    + GetValue(qs, r0, col) * GetValue(ham_matrix, col, r3);
                     }
+                    this_res *= HALF_MI;
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
@@ -509,12 +536,12 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffXX(qs_data_p_t qs, qs_data_p_t ham_ma
                         auto r2 = r0 + mask.obj_max_mask;
                         qs_data_t this_res = 0;
                         for (index_t col = 0; col < dim; col++) {
-                            this_res += IMAGE_MI
-                                        * (GetValue(qs, r3, col) * GetValue(ham_matrix, col, r0)
-                                           + GetValue(qs, r2, col) * GetValue(ham_matrix, col, r1)
-                                           + GetValue(qs, r1, col) * GetValue(ham_matrix, col, r2)
-                                           + GetValue(qs, r0, col) * GetValue(ham_matrix, col, r3));
+                            this_res += GetValue(qs, r3, col) * GetValue(ham_matrix, col, r0)
+                                        + GetValue(qs, r2, col) * GetValue(ham_matrix, col, r1)
+                                        + GetValue(qs, r1, col) * GetValue(ham_matrix, col, r2)
+                                        + GetValue(qs, r0, col) * GetValue(ham_matrix, col, r3);
                         }
+                        this_res *= HALF_MI;
                         res_real += this_res.real();
                         res_imag += this_res.imag();
                     }
@@ -523,7 +550,8 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffXX(qs_data_p_t qs, qs_data_p_t ham_ma
     return {res_real, res_imag};
 };
 
-auto CPUDensityMatrixPolicyBase::ExpectDiffYY(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRyy(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
                                               const qbits_t& ctrls, index_t dim) -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
@@ -539,12 +567,12 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffYY(qs_data_p_t qs, qs_data_p_t ham_ma
                     auto r2 = r0 + mask.obj_max_mask;
                     qs_data_t this_res = 0;
                     for (index_t col = 0; col < dim; col++) {
-                        this_res += IMAGE_I
-                                    * (GetValue(qs, r3, col) * GetValue(ham_matrix, col, r0)
-                                       - GetValue(qs, r2, col) * GetValue(ham_matrix, col, r1)
-                                       - GetValue(qs, r1, col) * GetValue(ham_matrix, col, r2)
-                                       + GetValue(qs, r0, col) * GetValue(ham_matrix, col, r3));
+                        this_res += GetValue(qs, r3, col) * GetValue(ham_matrix, col, r0)
+                                    - GetValue(qs, r2, col) * GetValue(ham_matrix, col, r1)
+                                    - GetValue(qs, r1, col) * GetValue(ham_matrix, col, r2)
+                                    + GetValue(qs, r0, col) * GetValue(ham_matrix, col, r3);
                     }
+                    this_res *= HALF_I;
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
@@ -561,12 +589,12 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffYY(qs_data_p_t qs, qs_data_p_t ham_ma
                         auto r2 = r0 + mask.obj_max_mask;
                         qs_data_t this_res = 0;
                         for (index_t col = 0; col < dim; col++) {
-                            this_res += IMAGE_I
-                                        * (GetValue(qs, r3, col) * GetValue(ham_matrix, col, r0)
-                                           - GetValue(qs, r2, col) * GetValue(ham_matrix, col, r1)
-                                           - GetValue(qs, r1, col) * GetValue(ham_matrix, col, r2)
-                                           + GetValue(qs, r0, col) * GetValue(ham_matrix, col, r3));
+                            this_res += GetValue(qs, r3, col) * GetValue(ham_matrix, col, r0)
+                                        - GetValue(qs, r2, col) * GetValue(ham_matrix, col, r1)
+                                        - GetValue(qs, r1, col) * GetValue(ham_matrix, col, r2)
+                                        + GetValue(qs, r0, col) * GetValue(ham_matrix, col, r3);
                         }
+                        this_res *= HALF_I;
                         res_real += this_res.real();
                         res_imag += this_res.imag();
                     }
@@ -575,7 +603,8 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffYY(qs_data_p_t qs, qs_data_p_t ham_ma
     return {res_real, res_imag};
 };
 
-auto CPUDensityMatrixPolicyBase::ExpectDiffZZ(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRzz(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
                                               const qbits_t& ctrls, index_t dim) -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
@@ -591,12 +620,12 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffZZ(qs_data_p_t qs, qs_data_p_t ham_ma
                     auto r2 = r0 + mask.obj_max_mask;
                     qs_data_t this_res = 0;
                     for (index_t col = 0; col < dim; col++) {
-                        this_res += IMAGE_MI
-                                    * (GetValue(qs, r0, col) * GetValue(ham_matrix, col, r0)
-                                       - GetValue(qs, r1, col) * GetValue(ham_matrix, col, r1)
-                                       - GetValue(qs, r2, col) * GetValue(ham_matrix, col, r2)
-                                       + GetValue(qs, r3, col) * GetValue(ham_matrix, col, r3));
+                        this_res += GetValue(qs, r0, col) * GetValue(ham_matrix, col, r0)
+                                    - GetValue(qs, r1, col) * GetValue(ham_matrix, col, r1)
+                                    - GetValue(qs, r2, col) * GetValue(ham_matrix, col, r2)
+                                    + GetValue(qs, r3, col) * GetValue(ham_matrix, col, r3);
                     }
+                    this_res *= HALF_MI;
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
@@ -613,12 +642,12 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffZZ(qs_data_p_t qs, qs_data_p_t ham_ma
                         auto r2 = r0 + mask.obj_max_mask;
                         qs_data_t this_res = 0;
                         for (index_t col = 0; col < dim; col++) {
-                            this_res += IMAGE_MI
-                                        * (GetValue(qs, r0, col) * GetValue(ham_matrix, col, r0)
-                                           - GetValue(qs, r1, col) * GetValue(ham_matrix, col, r1)
-                                           - GetValue(qs, r2, col) * GetValue(ham_matrix, col, r2)
-                                           + GetValue(qs, r3, col) * GetValue(ham_matrix, col, r3));
+                            this_res += GetValue(qs, r0, col) * GetValue(ham_matrix, col, r0)
+                                        - GetValue(qs, r1, col) * GetValue(ham_matrix, col, r1)
+                                        - GetValue(qs, r2, col) * GetValue(ham_matrix, col, r2)
+                                        + GetValue(qs, r3, col) * GetValue(ham_matrix, col, r3);
                         }
+                        this_res *= HALF_MI;
                         res_real += this_res.real();
                         res_imag += this_res.imag();
                     }
@@ -627,7 +656,8 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffZZ(qs_data_p_t qs, qs_data_p_t ham_ma
     return {res_real, res_imag};
 };
 
-auto CPUDensityMatrixPolicyBase::ExpectDiffFSimTheta(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimTheta(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
                                                      const qbits_t& ctrls, index_t dim) -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
@@ -643,9 +673,10 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffFSimTheta(qs_data_p_t qs, qs_data_p_t
                     auto r2 = r0 + mask.obj_max_mask;
                     qs_data_t this_res = 0;
                     for (index_t col = 0; col < dim; col++) {
-                        this_res += IMAGE_MI * GetValue(qs, r2, col) * GetValue(ham_matrix, col, r1);
-                        this_res += IMAGE_MI * GetValue(qs, r1, col) * GetValue(ham_matrix, col, r2);
+                        this_res += GetValue(qs, r2, col) * GetValue(ham_matrix, col, r1);
+                        this_res += GetValue(qs, r1, col) * GetValue(ham_matrix, col, r2);
                     }
+                    this_res *= IMAGE_MI;
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
@@ -662,9 +693,10 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffFSimTheta(qs_data_p_t qs, qs_data_p_t
                         auto r2 = r0 + mask.obj_max_mask;
                         qs_data_t this_res = 0;
                         for (index_t col = 0; col < dim; col++) {
-                            this_res += IMAGE_MI * GetValue(qs, r2, col) * GetValue(ham_matrix, col, r1);
-                            this_res += IMAGE_MI * GetValue(qs, r1, col) * GetValue(ham_matrix, col, r2);
+                            this_res += GetValue(qs, r2, col) * GetValue(ham_matrix, col, r1);
+                            this_res += GetValue(qs, r1, col) * GetValue(ham_matrix, col, r2);
                         }
+                        this_res *= IMAGE_MI;
                         res_real += this_res.real();
                         res_imag += this_res.imag();
                     }
@@ -673,7 +705,8 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffFSimTheta(qs_data_p_t qs, qs_data_p_t
     return {res_real, res_imag};
 };
 
-auto CPUDensityMatrixPolicyBase::ExpectDiffFSimPhi(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimPhi(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
                                                    const qbits_t& ctrls, index_t dim) -> qs_data_t {
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
@@ -689,8 +722,9 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffFSimPhi(qs_data_p_t qs, qs_data_p_t h
                     auto r2 = r0 + mask.obj_max_mask;
                     qs_data_t this_res = 0;
                     for (index_t col = 0; col < dim; col++) {
-                        this_res += IMAGE_I * GetValue(qs, r3, col) * GetValue(ham_matrix, col, r3);
+                        this_res += GetValue(qs, r3, col) * GetValue(ham_matrix, col, r3);
                     }
+                    this_res *= IMAGE_I;
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
@@ -707,8 +741,9 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffFSimPhi(qs_data_p_t qs, qs_data_p_t h
                         auto r2 = r0 + mask.obj_max_mask;
                         qs_data_t this_res = 0;
                         for (index_t col = 0; col < dim; col++) {
-                            this_res += IMAGE_I * GetValue(qs, r3, col) * GetValue(ham_matrix, col, r3);
+                            this_res += GetValue(qs, r3, col) * GetValue(ham_matrix, col, r3);
                         }
+                        this_res *= IMAGE_I;
                         res_real += this_res.real();
                         res_imag += this_res.imag();
                     }
@@ -716,4 +751,12 @@ auto CPUDensityMatrixPolicyBase::ExpectDiffFSimPhi(qs_data_p_t qs, qs_data_p_t h
     }
     return {res_real, res_imag};
 };
+
+#ifdef __x86_64__
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxFloat, float>;
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxDouble, double>;
+#elif defined(__amd64)
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyArmFloat, float>;
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyArmDouble, double>;
+#endif
 }  // namespace mindquantum::sim::densitymatrix::detail

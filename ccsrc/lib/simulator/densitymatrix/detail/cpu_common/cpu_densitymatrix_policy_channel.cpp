@@ -26,16 +26,24 @@
 #include "config/openmp.hpp"
 
 #include "core/utils.hpp"
-#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
+#ifdef __x86_64__
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_float_policy.hpp"
+#elif defined(__amd64)
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_float_policy.hpp"
+#endif
+#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
 // Single qubit operator
 // ========================================================================================================
 
 // method is based on 'mq_vector' simulator, extended to densitymatrix
-void CPUDensityMatrixPolicyBase::ApplySingleQubitChannel(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySingleQubitChannel(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
                                                          const VT<matrix_t>& kraus_set, index_t dim) {
     SingleQubitGateMask mask({obj_qubit}, {});
 
@@ -73,43 +81,60 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitChannel(qs_data_p_t src, qs_dat
         })
 }
 
-void CPUDensityMatrixPolicyBase::ApplyAmplitudeDamping(qs_data_p_t qs, const qbits_t& objs, calc_type gamma,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyAmplitudeDamping(qs_data_p_t qs, const qbits_t& objs, calc_type gamma,
                                                        index_t dim) {
     VT<matrix_t> kraus_set{{{1, 0}, {0, std::sqrt(1 - gamma)}}, {{0, std::sqrt(gamma)}, {0, 0}}};
-    ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
+    derived::ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
 }
 
-void CPUDensityMatrixPolicyBase::ApplyPhaseDamping(qs_data_p_t qs, const qbits_t& objs, calc_type gamma, index_t dim) {
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyPhaseDamping(qs_data_p_t qs, const qbits_t& objs, calc_type gamma, index_t dim) {
     VT<matrix_t> kraus_set{{{1, 0}, {0, std::sqrt(1 - gamma)}}, {{0, 0}, {0, std::sqrt(gamma)}}};
-    ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
+    derived::ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
 }
 
-void CPUDensityMatrixPolicyBase::ApplyPauli(qs_data_p_t qs, const qbits_t& objs, const VT<calc_type>& probs,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyPauli(qs_data_p_t qs, const qbits_t& objs, const VT<double>& probs,
                                             index_t dim) {
     VT<matrix_t> kraus_set;
+    auto sp_x = static_cast<calc_type>(std::sqrt(probs[0]));
+    auto sp_y = static_cast<calc_type>(std::sqrt(probs[1]));
+    auto sp_z = static_cast<calc_type>(std::sqrt(probs[2]));
+    auto sp_i = static_cast<calc_type>(std::sqrt(probs[3]));
     if (probs[0] > 1e-8) {
-        kraus_set.push_back({{0, std::sqrt(probs[0])}, {std::sqrt(probs[0]), 0}});
+        kraus_set.push_back({{0, sp_x}, {sp_x, 0}});
     }
     if (probs[1] > 1e-8) {
-        kraus_set.push_back({{0, std::sqrt(probs[1]) * IMAGE_MI}, {std::sqrt(probs[1]) * IMAGE_I, 0}});
+        kraus_set.push_back({{0, sp_y * IMAGE_MI}, {sp_y * IMAGE_I, 0}});
     }
     if (probs[2] > 1e-8) {
-        kraus_set.push_back({{std::sqrt(probs[2]), 0}, {0, -std::sqrt(probs[2])}});
+        kraus_set.push_back({{sp_z, 0}, {0, -sp_z}});
     }
     if (probs[3] > 1e-8) {
-        kraus_set.push_back({{std::sqrt(probs[3]), 0}, {0, std::sqrt(probs[3])}});
+        kraus_set.push_back({{sp_i, 0}, {0, sp_i}});
     }
-    ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
+    derived::ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
 }
 
-void CPUDensityMatrixPolicyBase::ApplyKraus(qs_data_p_t qs, const qbits_t& objs, const VT<matrix_t>& kraus_set,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyKraus(qs_data_p_t qs, const qbits_t& objs, const VT<matrix_t>& kraus_set,
                                             index_t dim) {
-    ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
+    derived::ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
 }
 
-void CPUDensityMatrixPolicyBase::ApplyHermitianAmplitudeDamping(qs_data_p_t qs, const qbits_t& objs, calc_type gamma,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyHermitianAmplitudeDamping(qs_data_p_t qs, const qbits_t& objs, calc_type gamma,
                                                                 index_t dim) {
     VT<matrix_t> kraus_set{{{1, 0}, {0, std::sqrt(1 - gamma)}}, {{0, 0}, {std::sqrt(gamma), 0}}};
-    ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
+    derived::ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
 }
+
+#ifdef __x86_64__
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxFloat, float>;
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxDouble, double>;
+#elif defined(__amd64)
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyArmFloat, float>;
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyArmDouble, double>;
+#endif
 }  // namespace mindquantum::sim::densitymatrix::detail

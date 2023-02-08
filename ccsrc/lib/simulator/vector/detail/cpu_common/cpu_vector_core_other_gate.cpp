@@ -26,7 +26,7 @@ template <typename derived_, typename calc_type_>
 void CPUVectorPolicyBase<derived_, calc_type_>::ApplyH(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
                                                        index_t dim) {
     std::vector<std::vector<py_qs_data_t>> m{{M_SQRT1_2, M_SQRT1_2}, {M_SQRT1_2, -M_SQRT1_2}};
-    ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
 }
 
 template <typename derived_, typename calc_type_>
@@ -34,7 +34,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyGP(qs_data_p_t qs, qbit_t o
                                                         calc_type val, index_t dim, bool diff) {
     auto c = std::exp(std::complex<calc_type>(0, -val));
     std::vector<std::vector<py_qs_data_t>> m = {{c, 0}, {0, c}};
-    ApplySingleQubitMatrix(qs, qs, obj_qubit, ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(qs, qs, obj_qubit, ctrls, m, dim);
 }
 
 #ifdef __x86_64__

@@ -22,9 +22,16 @@
 
 #include "core/mq_base_types.hpp"
 #include "simulator/types.hpp"
+#include "config/type_promotion.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
+struct CPUDensityMatrixPolicyAvxFloat;
+struct CPUDensityMatrixPolicyAvxDouble;
+
+template <typename derived_, typename calc_type_>
 struct CPUDensityMatrixPolicyBase {
+    using derived = derived_;
+    using calc_type = calc_type_;
     using qs_data_t = std::complex<calc_type>;
     using qs_data_p_t = qs_data_t*;
     using py_qs_data_t = std::complex<calc_type>;
@@ -33,6 +40,8 @@ struct CPUDensityMatrixPolicyBase {
     static constexpr index_t DimTh = 1UL << 8;
     static constexpr qs_data_t IMAGE_MI = {0, -1};
     static constexpr qs_data_t IMAGE_I = {0, 1};
+    static constexpr qs_data_t HALF_MI{0, -0.5};
+    static constexpr qs_data_t HALF_I{0, 0.5};
 
     // basic
     // ========================================================================================================
@@ -112,11 +121,11 @@ struct CPUDensityMatrixPolicyBase {
                                      const matrix_t& m, index_t dim);
     static void ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplyXX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyRxx(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
-    static void ApplyYY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyRyy(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
-    static void ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyRzz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
     static void ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
                                 const matrix_t& m, index_t dim);
@@ -127,7 +136,7 @@ struct CPUDensityMatrixPolicyBase {
 
     static void ApplyAmplitudeDamping(qs_data_p_t qs, const qbits_t& objs, calc_type gamma, index_t dim);
     static void ApplyPhaseDamping(qs_data_p_t qs, const qbits_t& objs, calc_type gamma, index_t dim);
-    static void ApplyPauli(qs_data_p_t qs, const qbits_t& objs, const VT<calc_type>& probs, index_t dim);
+    static void ApplyPauli(qs_data_p_t qs, const qbits_t& objs, const VT<double>& probs, index_t dim);
     static void ApplyKraus(qs_data_p_t qs, const qbits_t& objs, const VT<matrix_t>& kraus_set, index_t dim);
     static void ApplyHermitianAmplitudeDamping(qs_data_p_t qs, const qbits_t& objs, calc_type gamma, index_t dim);
 
@@ -154,11 +163,11 @@ struct CPUDensityMatrixPolicyBase {
                                        const qbits_t& ctrls, calc_type phi, index_t dim);
     static qs_data_t ExpectDiffU3Phi(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
                                      index_t dim);
-    static qs_data_t ExpectDiffXX(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
+    static qs_data_t ExpectDiffRxx(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
                                   index_t dim);
-    static qs_data_t ExpectDiffYY(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
+    static qs_data_t ExpectDiffRyy(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
                                   index_t dim);
-    static qs_data_t ExpectDiffZZ(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
+    static qs_data_t ExpectDiffRzz(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
                                   index_t dim);
     static qs_data_t ExpectDiffFSimTheta(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
                                          const qbits_t& ctrls, index_t dim);

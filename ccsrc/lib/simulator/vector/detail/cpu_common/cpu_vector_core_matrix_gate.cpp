@@ -111,9 +111,9 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyMatrixGate(qs_data_p_t src,
                                                                 const std::vector<std::vector<py_qs_data_t>>& m,
                                                                 index_t dim) {
     if (objs.size() == 1) {
-        ApplySingleQubitMatrix(src, des, objs[0], ctrls, m, dim);
+        derived::ApplySingleQubitMatrix(src, des, objs[0], ctrls, m, dim);
     } else if (objs.size() == 2) {
-        ApplyTwoQubitsMatrix(src, des, objs, ctrls, m, dim);
+        derived::ApplyTwoQubitsMatrix(src, des, objs, ctrls, m, dim);
     } else {
         throw std::runtime_error("Can not custom " + std::to_string(objs.size()) + " qubits gate for cpu backend.");
     }

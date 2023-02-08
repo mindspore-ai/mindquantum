@@ -1,6 +1,6 @@
 # ==============================================================================
 #
-# Copyright 2022 <Huawei Technologies Co., Ltd>
+# Copyright 2020 <Huawei Technologies Co., Ltd>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,16 @@
 #
 # ==============================================================================
 
-add_library(
-  mqsim_densitymatrix_cpu STATIC
-  ${CMAKE_CURRENT_LIST_DIR}/densitymatrix_state.hpp ${CMAKE_CURRENT_LIST_DIR}/densitymatrix_state.tpp
-  ${CMAKE_CURRENT_LIST_DIR}/detail/cpu_densitymatrix_policy.hpp)
+# lint_cmake: -whitespace/indent
+
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/cpu_common)
+
+if(X86_64)
+  target_compile_definitions(mqsim_densitymatrix_cpu PUBLIC __x86_64__)
+elseif(AARCH64)
+  target_compile_definitions(mqsim_densitymatrix_cpu PUBLIC __amd64)
+endif()
+
+if(ENABLE_CUDA)
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gpu)
+endif()

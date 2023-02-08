@@ -26,15 +26,23 @@
 #include "config/openmp.hpp"
 
 #include "core/utils.hpp"
-#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
+#ifdef __x86_64__
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_float_policy.hpp"
+#elif defined(__amd64)
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_float_policy.hpp"
+#endif
+#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
 // X like operator
 // ========================================================================================================
 
-void CPUDensityMatrixPolicyBase::ApplyXLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, qs_data_t v1,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyXLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, qs_data_t v1,
                                             qs_data_t v2, index_t dim) {
     SingleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
@@ -107,11 +115,21 @@ void CPUDensityMatrixPolicyBase::ApplyXLike(qs_data_p_t qs, const qbits_t& objs,
     }
 }
 
-void CPUDensityMatrixPolicyBase::ApplyX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    ApplyXLike(qs, objs, ctrls, 1, 1, dim);
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
+    derived::ApplyXLike(qs, objs, ctrls, 1, 1, dim);
 }
 
-void CPUDensityMatrixPolicyBase::ApplyY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    ApplyXLike(qs, objs, ctrls, IMAGE_MI, IMAGE_I, dim);
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
+    derived::ApplyXLike(qs, objs, ctrls, IMAGE_MI, IMAGE_I, dim);
 }
+
+#ifdef __x86_64__
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxFloat, float>;
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxDouble, double>;
+#elif defined(__amd64)
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyArmFloat, float>;
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyArmDouble, double>;
+#endif
 }  // namespace mindquantum::sim::densitymatrix::detail

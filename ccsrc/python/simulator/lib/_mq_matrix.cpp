@@ -14,12 +14,41 @@
 
 #include <pybind11/pybind11.h>
 
+#ifdef __CUDACC__
+#    include "simulator/densitymatrix/detail/gpu_densitymatrix_double_policy.cuh"
+#    include "simulator/densitymatrix/detail/gpu_densitymatrix_float_policy.cuh"
+#    include "simulator/densitymatrix/detail/gpu_densitymatrix_policy.cuh"
+#elif defined(__x86_64__)
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_float_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
+#elif defined(__amd64)
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_float_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
+#endif
+
 #include "python/densitymatrix/bind_mat_state.hpp"
 
 PYBIND11_MODULE(_mq_matrix, module) {
-    using mat_sim = mindquantum::sim::densitymatrix::detail::DensityMatrixState<
-        mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase>;
+#ifdef __CUDACC__
+    using float_policy_t = mindquantum::sim::densitymatrix::detail::GPUDensityMatrixPolicyFloat;
+    using double_policy_t = mindquantum::sim::densitymatrix::detail::GPUDensityMatrixPolicyDouble;
+#elif defined(__x86_64__)
+    using float_policy_t = mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyAvxFloat;
+    using double_policy_t = mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyAvxDouble;
+#elif defined(__amd64)
+    using float_policy_t = mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyArmFloat;
+    using double_policy_t = mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyArmDouble;
+#endif  // __CUDACC__
+
+    using float_mat_sim = mindquantum::sim::densitymatrix::detail::DensityMatrixState<float_policy_t>;
+    using double_mat_sim = mindquantum::sim::densitymatrix::detail::DensityMatrixState<double_policy_t>;
 
     module.doc() = "MindQuantum c++ density matrix state simulator.";
-    BindSim<mat_sim>(module, "mqmatrix");
+    pybind11::module float_sim = module.def_submodule("float", "float simulator");
+    pybind11::module double_sim = module.def_submodule("double", "double simulator");
+    
+    BindSim<float_mat_sim>(float_sim, "mqmatrix");
+    BindSim<double_mat_sim>(double_sim, "mqmatrix");
 }

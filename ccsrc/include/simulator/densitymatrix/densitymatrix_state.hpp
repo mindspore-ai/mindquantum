@@ -49,8 +49,9 @@ class DensityMatrixState {
 
  public:
     using qs_policy_t = qs_policy_t_;
+    using calc_type = typename qs_policy_t::calc_type;
     using derived_t = DensityMatrixState<qs_policy_t>;
-    using circuit_t = std::vector<std::shared_ptr<BasicGate<calc_type>>>;
+    using circuit_t = std::vector<std::shared_ptr<BasicGate>>;
     using qs_data_t = typename qs_policy_t::qs_data_t;
     using qs_data_p_t = typename qs_policy_t::qs_data_p_t;
     using py_qs_data_t = typename qs_policy_t::py_qs_data_t;
@@ -99,25 +100,26 @@ class DensityMatrixState {
      * \brief Apply a quantum gate on this quantum state, quantum gate can be
      * normal quantum gate, measurement gate and noise channel
      */
-    index_t ApplyGate(const std::shared_ptr<BasicGate<calc_type>>& gate,
+    index_t ApplyGate(const std::shared_ptr<BasicGate>& gate,
                       const ParameterResolver<calc_type>& pr = ParameterResolver<calc_type>(), bool diff = false);
 
-    auto ApplyChannel(const std::shared_ptr<BasicGate<calc_type>>& gate);
+    auto ApplyChannel(const std::shared_ptr<BasicGate>& gate);
 
     //! Apply a quantum circuit on this quantum state
     auto ApplyCircuit(const circuit_t& circ, const ParameterResolver<calc_type>& pr = ParameterResolver<calc_type>());
 
-    auto ApplyMeasure(const std::shared_ptr<BasicGate<calc_type>>& gate);
+    auto ApplyMeasure(const std::shared_ptr<BasicGate>& gate);
 
-    py_qs_data_t ExpectDiffGate(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
-                                const std::shared_ptr<BasicGate<calc_type>>& gate, index_t dim);
+    static Dim2Matrix<calc_type> ExpectDiffGate(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
+                                                const std::shared_ptr<BasicGate>& gate,
+                                                const ParameterResolver<calc_type>& pr, index_t dim);
 
-    Dim2Matrix<calc_type> ExpectDiffU3(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
-                                       const std::shared_ptr<BasicGate<calc_type>>& gate,
+    static Dim2Matrix<calc_type> ExpectDiffU3(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
+                                       const std::shared_ptr<BasicGate>& gate,
                                        const ParameterResolver<calc_type>& pr, index_t dim);
 
-    Dim2Matrix<calc_type> ExpectDiffFSim(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
-                                         const std::shared_ptr<BasicGate<calc_type>>& gate,
+    static Dim2Matrix<calc_type> ExpectDiffFSim(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
+                                         const std::shared_ptr<BasicGate>& gate,
                                          const ParameterResolver<calc_type>& pr, index_t dim);
 
     py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham);

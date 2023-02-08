@@ -12,8 +12,6 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
-
 #include <cmath>
 
 #include <cassert>
@@ -30,14 +28,23 @@
 #include "core/utils.hpp"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
-
+#ifdef __x86_64__
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_float_policy.hpp"
+#elif defined(__amd64)
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_float_policy.hpp"
+#endif
+#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 namespace mindquantum::sim::densitymatrix::detail {
 // Warning: only correct when x >= y
-index_t CPUDensityMatrixPolicyBase::IdxMap(index_t x, index_t y) {
+template <typename derived_, typename calc_type_>
+index_t CPUDensityMatrixPolicyBase<derived_, calc_type_>::IdxMap(index_t x, index_t y) {
     return (x * (x + 1)) / 2 + y;
 }
 
-auto CPUDensityMatrixPolicyBase::GetValue(qs_data_p_t qs, index_t x, index_t y) -> qs_data_t {
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetValue(qs_data_p_t qs, index_t x, index_t y) -> qs_data_t {
     if (x >= y) {
         return qs[IdxMap(x, y)];
     } else {
@@ -45,7 +52,8 @@ auto CPUDensityMatrixPolicyBase::GetValue(qs_data_p_t qs, index_t x, index_t y) 
     }
 }
 
-void CPUDensityMatrixPolicyBase::SetValue(qs_data_p_t qs, index_t x, index_t y, qs_data_t data) {
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetValue(qs_data_p_t qs, index_t x, index_t y, qs_data_t data) {
     if (x >= y) {
         qs[IdxMap(x, y)] = data;
     } else {
@@ -53,7 +61,8 @@ void CPUDensityMatrixPolicyBase::SetValue(qs_data_p_t qs, index_t x, index_t y, 
     }
 }
 
-void CPUDensityMatrixPolicyBase::SelfMultiply(qs_data_p_t qs, index_t x, index_t y, qs_data_t data) {
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SelfMultiply(qs_data_p_t qs, index_t x, index_t y, qs_data_t data) {
     if (x >= y) {
         qs[IdxMap(x, y)] *= data;
     } else {
@@ -61,7 +70,8 @@ void CPUDensityMatrixPolicyBase::SelfMultiply(qs_data_p_t qs, index_t x, index_t
     }
 }
 
-void CPUDensityMatrixPolicyBase::SwapValue(qs_data_p_t qs, index_t x0, index_t y0, index_t x1, index_t y1,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SwapValue(qs_data_p_t qs, index_t x0, index_t y0, index_t x1, index_t y1,
                                            qs_data_t coeff) {
     if (x0 >= y0) {
         qs_data_t tmp = qs[IdxMap(x0, y0)];
@@ -74,7 +84,8 @@ void CPUDensityMatrixPolicyBase::SwapValue(qs_data_p_t qs, index_t x0, index_t y
     }
 }
 
-auto CPUDensityMatrixPolicyBase::InitState(index_t dim, bool zero_state) -> qs_data_p_t {
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::InitState(index_t dim, bool zero_state) -> qs_data_p_t {
     index_t n_elements = (dim * dim + dim) / 2;
     auto qs = reinterpret_cast<qs_data_p_t>(calloc(n_elements, sizeof(qs_data_t)));
     if (zero_state) {
@@ -83,7 +94,8 @@ auto CPUDensityMatrixPolicyBase::InitState(index_t dim, bool zero_state) -> qs_d
     return qs;
 }
 
-void CPUDensityMatrixPolicyBase::Reset(qs_data_p_t qs, index_t dim, bool zero_state) {
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t qs, index_t dim, bool zero_state) {
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { qs[i] = 0; })
     if (!zero_state) {
@@ -91,13 +103,15 @@ void CPUDensityMatrixPolicyBase::Reset(qs_data_p_t qs, index_t dim, bool zero_st
     }
 }
 
-void CPUDensityMatrixPolicyBase::FreeState(qs_data_p_t qs) {
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::FreeState(qs_data_p_t qs) {
     if (qs != nullptr) {
         free(qs);
     }
 }
 
-void CPUDensityMatrixPolicyBase::Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit) {
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit) {
     if (n_qubits > q_limit) {
         n_qubits = q_limit;
     }
@@ -116,7 +130,8 @@ void CPUDensityMatrixPolicyBase::Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t
     }
 }
 
-void CPUDensityMatrixPolicyBase::SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim) {
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim) {
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
             if ((i & ctrl_mask) != ctrl_mask) {
@@ -129,14 +144,16 @@ void CPUDensityMatrixPolicyBase::SetToZeroExcept(qs_data_p_t qs, index_t ctrl_ma
         })
 }
 
-auto CPUDensityMatrixPolicyBase::Copy(qs_data_p_t qs, index_t dim) -> qs_data_p_t {
-    qs_data_p_t out = CPUDensityMatrixPolicyBase::InitState(dim, false);
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::Copy(qs_data_p_t qs, index_t dim) -> qs_data_p_t {
+    qs_data_p_t out = derived::InitState(dim, false);
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { out[i] = qs[i]; })
     return out;
 }
 
-auto CPUDensityMatrixPolicyBase::GetQS(qs_data_p_t qs, index_t dim) -> matrix_t {
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetQS(qs_data_p_t qs, index_t dim) -> matrix_t {
     matrix_t out(dim, py_qs_datas_t(dim));
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
@@ -150,7 +167,8 @@ auto CPUDensityMatrixPolicyBase::GetQS(qs_data_p_t qs, index_t dim) -> matrix_t 
     return out;
 }
 
-void CPUDensityMatrixPolicyBase::SetQS(qs_data_p_t qs, const py_qs_datas_t& vec_out, index_t dim) {
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t qs, const py_qs_datas_t& vec_out, index_t dim) {
     if (vec_out.size() != dim) {
         throw std::invalid_argument("state size not match");
     }
@@ -162,12 +180,14 @@ void CPUDensityMatrixPolicyBase::SetQS(qs_data_p_t qs, const py_qs_datas_t& vec_
         })
 }
 
-void CPUDensityMatrixPolicyBase::CopyQS(qs_data_p_t qs, const qs_data_p_t qs_out, index_t dim) {
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::CopyQS(qs_data_p_t qs, const qs_data_p_t qs_out, index_t dim) {
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { qs[i] = qs_out[i]; })
 }
 
-auto CPUDensityMatrixPolicyBase::Purity(qs_data_p_t qs, index_t dim) -> calc_type {
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::Purity(qs_data_p_t qs, index_t dim) -> calc_type {
     calc_type p = 0;
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+: p)), dim, DimTh,
@@ -178,7 +198,8 @@ auto CPUDensityMatrixPolicyBase::Purity(qs_data_p_t qs, index_t dim) -> calc_typ
     return p;
 }
 
-bool CPUDensityMatrixPolicyBase::IsPure(qs_data_p_t qs, index_t dim) {
+template <typename derived_, typename calc_type_>
+bool CPUDensityMatrixPolicyBase<derived_, calc_type_>::IsPure(qs_data_p_t qs, index_t dim) {
     auto p = Purity(qs, dim);
     if (std::abs(p - 1) < 1e-8) {
         return true;
@@ -187,7 +208,8 @@ bool CPUDensityMatrixPolicyBase::IsPure(qs_data_p_t qs, index_t dim) {
     }
 }
 
-auto CPUDensityMatrixPolicyBase::PureStateVector(qs_data_p_t qs, index_t dim) -> py_qs_datas_t {
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::PureStateVector(qs_data_p_t qs, index_t dim) -> py_qs_datas_t {
     if (!IsPure(qs, dim)) {
         throw(std::runtime_error("PureStateVector(): Cannot transform mixed density matrix to vector."));
     }
@@ -207,7 +229,8 @@ auto CPUDensityMatrixPolicyBase::PureStateVector(qs_data_p_t qs, index_t dim) ->
     return qs_vector;
 }
 
-auto CPUDensityMatrixPolicyBase::DiagonalConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi, index_t dim)
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::DiagonalConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi, index_t dim)
     -> calc_type {
     // collect diagonal amplitude with index mask satisfied condition.
     calc_type res_real = 0;
@@ -221,7 +244,8 @@ auto CPUDensityMatrixPolicyBase::DiagonalConditionalCollect(qs_data_p_t qs, inde
     return res_real;
 }
 
-void CPUDensityMatrixPolicyBase::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim) {
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim) {
     matrix_t tmp(dim, VT<qs_data_t>(dim));
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
@@ -233,7 +257,7 @@ void CPUDensityMatrixPolicyBase::ApplyTerms(qs_data_p_t qs, const std::vector<Pa
                 if (i <= j) {
                     auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
                     auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
-                    auto c = POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)];
+                    auto c = ComplexCast<double, calc_type>::apply(POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
                     for (index_t col = 0; col < dim; col++) {
                         tmp[j][col] += GetValue(qs, i, col) * coeff * c;
                     }
@@ -256,7 +280,7 @@ void CPUDensityMatrixPolicyBase::ApplyTerms(qs_data_p_t qs, const std::vector<Pa
                 if (i <= j) {
                     auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
                     auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
-                    auto c = POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)];
+                    auto c = ComplexCast<double, calc_type>::apply(POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
                     for (index_t row = 0; row <= i; row++) {
                         qs[IdxMap(i, row)] += std::conj(tmp[row][j] * coeff * c);
                     }
@@ -270,8 +294,9 @@ void CPUDensityMatrixPolicyBase::ApplyTerms(qs_data_p_t qs, const std::vector<Pa
     }
 }
 
+template <typename derived_, typename calc_type_>
 template <class binary_op>
-void CPUDensityMatrixPolicyBase::ConditionalBinary(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalBinary(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
                                                    qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim,
                                                    const binary_op& op) {
     // if index mask satisfied condition, multiply by succe_coeff, otherwise multiply fail_coeff
@@ -294,8 +319,9 @@ void CPUDensityMatrixPolicyBase::ConditionalBinary(qs_data_p_t src, qs_data_p_t 
         })
 }
 
+template <typename derived_, typename calc_type_>
 template <index_t mask, index_t condi, class binary_op>
-void CPUDensityMatrixPolicyBase::ConditionalBinary(qs_data_p_t src, qs_data_p_t des, qs_data_t succ_coeff,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalBinary(qs_data_p_t src, qs_data_p_t des, qs_data_t succ_coeff,
                                                    qs_data_t fail_coeff, index_t dim, const binary_op& op) {
     // if index mask satisfied condition, multiply by succe_coeff, otherwise multiply fail_coeff
     THRESHOLD_OMP_FOR(
@@ -317,34 +343,48 @@ void CPUDensityMatrixPolicyBase::ConditionalBinary(qs_data_p_t src, qs_data_p_t 
         })
 }
 
-void CPUDensityMatrixPolicyBase::QSMulValue(qs_data_p_t src, qs_data_p_t des, qs_data_t value, index_t dim) {
-    ConditionalBinary<0, 0>(src, des, value, 0, dim, std::multiplies<qs_data_t>());
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::QSMulValue(qs_data_p_t src, qs_data_p_t des, qs_data_t value, index_t dim) {
+    derived::template ConditionalBinary<0, 0>(src, des, value, 0, dim, std::multiplies<qs_data_t>());
 }
-void CPUDensityMatrixPolicyBase::ConditionalAdd(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalAdd(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
                                                 qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim) {
-    ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::plus<qs_data_t>());
+    derived::template ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::plus<qs_data_t>());
 }
-void CPUDensityMatrixPolicyBase::ConditionalMinus(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalMinus(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
                                                   qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim) {
-    ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::minus<qs_data_t>());
+    derived::template ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::minus<qs_data_t>());
 }
-void CPUDensityMatrixPolicyBase::ConditionalMul(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalMul(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
                                                 qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim) {
-    ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::multiplies<qs_data_t>());
+    derived::template ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::multiplies<qs_data_t>());
 }
-void CPUDensityMatrixPolicyBase::ConditionalDiv(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalDiv(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi,
                                                 qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim) {
-    ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::divides<qs_data_t>());
+    derived::template ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, std::divides<qs_data_t>());
 }
 
-void CPUDensityMatrixPolicyBase::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
                                                  const qbits_t& ctrls, const matrix_t& m, index_t dim) {
     if (objs.size() == 1) {
-        ApplySingleQubitMatrix(src, des, objs[0], ctrls, m, dim);
+        derived::ApplySingleQubitMatrix(src, des, objs[0], ctrls, m, dim);
     } else if (objs.size() == 2) {
-        ApplyTwoQubitsMatrix(src, des, objs, ctrls, m, dim);
+        derived::ApplyTwoQubitsMatrix(src, des, objs, ctrls, m, dim);
     } else {
         throw std::runtime_error("Can not custom " + std::to_string(objs.size()) + " qubits gate for cpu backend.");
     }
 }
+
+#ifdef __x86_64__
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxFloat, float>;
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxDouble, double>;
+#elif defined(__amd64)
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyArmFloat, float>;
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyArmDouble, double>;
+#endif
 }  // namespace mindquantum::sim::densitymatrix::detail

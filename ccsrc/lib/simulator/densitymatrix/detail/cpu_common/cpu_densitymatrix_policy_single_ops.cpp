@@ -26,9 +26,16 @@
 #include "config/openmp.hpp"
 
 #include "core/utils.hpp"
-#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
+#ifdef __x86_64__
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_float_policy.hpp"
+#elif defined(__amd64)
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_float_policy.hpp"
+#endif
+#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 
 constexpr double m_sqrt1_2{0.707106781186547524400844362104849039};
 
@@ -37,7 +44,8 @@ namespace mindquantum::sim::densitymatrix::detail {
 // ========================================================================================================
 
 // method is based on 'mq_vector' simulator, extended to densitymatrix
-void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
                                                         const qbits_t& ctrls, const matrix_t& m, index_t dim) {
     SingleQubitGateMask mask({obj_qubit}, ctrls);
     if (!mask.ctrl_mask) {
@@ -119,12 +127,14 @@ void CPUDensityMatrixPolicyBase::ApplySingleQubitMatrix(qs_data_p_t src, qs_data
     }
 }
 
-void CPUDensityMatrixPolicyBase::ApplyH(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyH(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
     matrix_t m{{m_sqrt1_2, m_sqrt1_2}, {m_sqrt1_2, -m_sqrt1_2}};
-    ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
 }
 
-void CPUDensityMatrixPolicyBase::ApplyRX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
                                          index_t dim, bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
     auto a = std::cos(val / 2);
@@ -134,13 +144,14 @@ void CPUDensityMatrixPolicyBase::ApplyRX(qs_data_p_t qs, const qbits_t& objs, co
         b = -0.5 * std::cos(val / 2);
     }
     matrix_t m{{{a, 0}, {0, b}}, {{0, b}, {a, 0}}};
-    ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
-        SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
     }
 }
 
-void CPUDensityMatrixPolicyBase::ApplyRY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
                                          index_t dim, bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
     auto a = std::cos(val / 2);
@@ -150,13 +161,14 @@ void CPUDensityMatrixPolicyBase::ApplyRY(qs_data_p_t qs, const qbits_t& objs, co
         b = 0.5 * std::cos(val / 2);
     }
     matrix_t m{{{a, 0}, {-b, 0}}, {{b, 0}, {a, 0}}};
-    ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
-        SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
     }
 }
 
-void CPUDensityMatrixPolicyBase::ApplyRZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
                                          index_t dim, bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
     auto a = std::cos(val / 2);
@@ -166,9 +178,17 @@ void CPUDensityMatrixPolicyBase::ApplyRZ(qs_data_p_t qs, const qbits_t& objs, co
         b = 0.5 * std::cos(val / 2);
     }
     matrix_t m{{{a, -b}, {0, 0}}, {{0, 0}, {a, b}}};
-    ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
-        SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
     }
 }
+
+#ifdef __x86_64__
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxFloat, float>;
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxDouble, double>;
+#elif defined(__amd64)
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyArmFloat, float>;
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyArmDouble, double>;
+#endif
 }  // namespace mindquantum::sim::densitymatrix::detail

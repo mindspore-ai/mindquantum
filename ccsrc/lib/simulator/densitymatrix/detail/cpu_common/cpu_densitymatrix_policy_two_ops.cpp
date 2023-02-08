@@ -26,12 +26,20 @@
 #include "config/openmp.hpp"
 
 #include "core/utils.hpp"
-#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
+#ifdef __x86_64__
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_float_policy.hpp"
+#elif defined(__amd64)
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_double_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_float_policy.hpp"
+#endif
+#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
-void CPUDensityMatrixPolicyBase::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
                                                       const qbits_t& ctrls, const matrix_t& m, index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
@@ -128,7 +136,8 @@ void CPUDensityMatrixPolicyBase::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p
     }
 }
 
-void CPUDensityMatrixPolicyBase::ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
@@ -231,7 +240,8 @@ void CPUDensityMatrixPolicyBase::ApplySWAP(qs_data_p_t qs, const qbits_t& objs, 
     }
 }
 
-void CPUDensityMatrixPolicyBase::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
@@ -334,14 +344,15 @@ void CPUDensityMatrixPolicyBase::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs,
     }
 }
 
-void CPUDensityMatrixPolicyBase::ApplyXX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxx(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
                                          index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
-    auto c = std::cos(val);
-    auto s = std::sin(val) * IMAGE_MI;
+    auto c = static_cast<calc_type_>(std::cos(val / 2));
+    auto s = static_cast<calc_type_>(std::sin(val / 2)) * IMAGE_MI;
     if (diff) {
-        c = -std::sin(val);
-        s = std::cos(val) * IMAGE_MI;
+        c = static_cast<calc_type_>(-std::sin(val / 2) / 2);
+        s = static_cast<calc_type_>(std::cos(val / 2) / 2) * IMAGE_MI;
     }
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
@@ -423,19 +434,20 @@ void CPUDensityMatrixPolicyBase::ApplyXX(qs_data_p_t qs, const qbits_t& objs, co
                 }
             })
         if (diff) {
-            CPUDensityMatrixPolicyBase::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+            derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
         }
     }
 }
 
-void CPUDensityMatrixPolicyBase::ApplyYY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyy(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
                                          index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
-    auto c = std::cos(val);
-    auto s = std::sin(val) * IMAGE_I;
+    auto c = static_cast<calc_type_>(std::cos(val / 2));
+    auto s = static_cast<calc_type_>(std::sin(val / 2)) * IMAGE_I;
     if (diff) {
-        c = -std::sin(val);
-        s = std::cos(val) * IMAGE_I;
+        c = static_cast<calc_type_>(-std::sin(val / 2) / 2);
+        s = static_cast<calc_type_>(std::cos(val / 2) / 2) * IMAGE_I;
     }
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
@@ -528,19 +540,20 @@ void CPUDensityMatrixPolicyBase::ApplyYY(qs_data_p_t qs, const qbits_t& objs, co
                 }
             })
         if (diff) {
-            CPUDensityMatrixPolicyBase::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+            derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
         }
     }
 }
 
-void CPUDensityMatrixPolicyBase::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
                                          index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
-    auto c = std::cos(val);
-    auto s = std::sin(val);
+    auto c = static_cast<calc_type_>(std::cos(val / 2));
+    auto s = static_cast<calc_type_>(std::sin(val / 2));
     if (diff) {
-        c = -std::sin(val);
-        s = std::cos(val);
+        c = static_cast<calc_type_>(-std::sin(val / 2) / 2);
+        s = static_cast<calc_type_>(std::cos(val / 2) / 2);
     }
     auto e = c + IMAGE_I * s;
     auto me = c + IMAGE_MI * s;
@@ -636,8 +649,16 @@ void CPUDensityMatrixPolicyBase::ApplyZZ(qs_data_p_t qs, const qbits_t& objs, co
                 }
             })
         if (diff) {
-            CPUDensityMatrixPolicyBase::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+            derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
         }
     }
 }
+
+#ifdef __x86_64__
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxFloat, float>;
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxDouble, double>;
+#elif defined(__amd64)
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyArmFloat, float>;
+template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyArmDouble, double>;
+#endif
 }  // namespace mindquantum::sim::densitymatrix::detail
