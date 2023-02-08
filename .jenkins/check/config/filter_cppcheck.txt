@@ -44,10 +44,10 @@
 "mindquantum/ccsrc/include/core/parameter_resolver_external_ops.hpp:90"                             "syntaxError"
 "mindquantum/ccsrc/include/core/sparse/algo.hpp:73"                                                 "syntaxError"
 "mindquantum/ccsrc/include/ops/gates/terms_operator_base_external_ops.hpp:92"                       "syntaxError"
-"mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy.cpp"                               "syntaxError"
-"mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_gate_expec.cpp"                    "syntaxError"
 "mindquantum/ccsrc/python/mqbackend/lib/binding.cc:184"                                             "syntaxError"
 "mindquantum/ccsrc/python/mqbackend/lib/details/define_terms_ops.hpp"                               "syntaxError"
+"mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_policy.cpp" "syntaxError"
+"mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_gate_expect.cpp"  "syntaxError"
 
 "mindquantum/ccsrc/include/core/numba_wrapper.hpp"                                                  "uninitMemberVar"
 
@@ -64,6 +64,11 @@
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_swap_like.cpp"            "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_x_like.cpp"               "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_z_like.cpp"               "unknownMacro"
+"mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_policy.cpp" "unknownMacro"
+"mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_z_like.cpp" "unknownMacro"
+"mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_x_like.cpp" "unknownMacro"
+"mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_gate_expect.cpp"   "unknownMacro"
+"mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_channel.cpp""unknownMacro"
 
 "mindquantum/ccsrc/lib/experimental/decompositions/time_evolution.cpp"                              "unreadVariable"
 

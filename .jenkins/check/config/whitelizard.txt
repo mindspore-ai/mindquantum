@@ -25,11 +25,10 @@ mindquantum/mindquantum/experimental/_symengine_utilities.py:symbols
 mindquantum/ccsrc/include/ops/gates.hpp:mindquantum::GetGateByName
 mindquantum/ccsrc/include/ops/gates/qubit_operator.tpp:mindquantum::ops::QubitOperator<coeff_t>::sparse_matrix
 mindquantum/ccsrc/include/ops/gates/qubit_operator.tpp:mindquantum::ops::mindquantum::ops::QubitOperator<coeff_t>::get_op_matrix.QubitOperator<coeff_t>::sparse_matrix
-mindquantum/ccsrc/lib/simulator/vector/detail/cpu_vector_policy_gate_expec.cpp:mindquantum::sim::vector::detail::CPUVectorPolicyBase::ExpectDiffSingleQubitMatrix
-mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_densitymatrix_policy_two_ops.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase::ApplyTwoQubitsMatrix
-mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_densitymatrix_policy_two_ops.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase::ApplyXX
-mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_densitymatrix_policy_two_ops.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase::ApplyYY
-mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_densitymatrix_policy_two_ops.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase::ApplyZZ
+mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_matrix_gate.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase::ApplyTwoQubitsMatrix
+mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_rot_pauli.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase::ApplyRxx
+mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_rot_pauli.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase::ApplyRyy
+mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_rot_pauli.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase::ApplyRzz
 mindquantum/ccsrc/mindquantum/src/binding.cc:mindquantum::PYBIND11_MODULE
 mindquantum/ccsrc/python/experimental/lib/core/symengine.cpp:mindquantum::python::init_symengine_basic_types
 mindquantum/ccsrc/python/experimental/lib/ops/ops.cpp:init_mindquantum_ops
