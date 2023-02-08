@@ -46,6 +46,7 @@
 "mindquantum/ccsrc/include/ops/gates/terms_operator_base_external_ops.hpp:92"                       "syntaxError"
 "mindquantum/ccsrc/python/mqbackend/lib/binding.cc:184"                                             "syntaxError"
 "mindquantum/ccsrc/python/mqbackend/lib/details/define_terms_ops.hpp"                               "syntaxError"
+"mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_policy.cpp" "syntaxError"
 "mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_condition.cpp"    "syntaxError"
 "mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_gate_expect.cpp"  "syntaxError"
 
@@ -68,10 +69,10 @@
 "mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_z_like.cpp" "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_x_like.cpp" "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_channel.cpp""unknownMacro"
-"mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_matrix_gate.cpp" "unknownMacro"
-"mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_rot_pauli.cpp"   "unknownMacro"
-"mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_swap_like.cpp"   "unknownMacro"
-"mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_gate_expect.cpp"   "unknownMacro"
+"mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_matrix_gate.cpp" "unknownMacro"
+"mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_rot_pauli.cpp"   "unknownMacro"
+"mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_swap_like.cpp"   "unknownMacro"
+"mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_gate_expect.cpp" "unknownMacro"
 
 "mindquantum/ccsrc/lib/experimental/decompositions/time_evolution.cpp"                              "unreadVariable"
 
