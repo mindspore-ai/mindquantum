@@ -180,7 +180,6 @@ template <typename derived_, typename calc_type_>
 auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
                                                              const qbits_t& ctrls, calc_type val, index_t dim)
     -> qs_data_t {
-    SingleQubitGateMask mask(objs, ctrls);
     calc_type c = -0.5 * std::sin(val / 2);
     calc_type s = 0.5 * std::cos(val / 2);
     VVT<py_qs_data_t> gate = {{c, -s}, {s, c}};
@@ -191,7 +190,6 @@ template <typename derived_, typename calc_type_>
 auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
                                                              const qbits_t& ctrls, calc_type val, index_t dim)
     -> qs_data_t {
-    SingleQubitGateMask mask(objs, ctrls);
     calc_type c = -0.5 * std::sin(val / 2);
     calc_type s = 0.5 * std::cos(val / 2);
     auto e0 = c + IMAGE_MI * s;
@@ -204,7 +202,6 @@ template <typename derived_, typename calc_type_>
 auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffGP(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
                                                              const qbits_t& ctrls, calc_type val, index_t dim)
     -> qs_data_t {
-    SingleQubitGateMask mask(objs, ctrls);
     auto e = std::complex<calc_type>(0, -1);
     e *= std::exp(std::complex<calc_type>(0, -val));
     VVT<py_qs_data_t> gate = {{e, 0}, {0, e}};

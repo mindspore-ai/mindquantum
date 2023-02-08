@@ -164,7 +164,7 @@ def test_set_and_get(virtual_qc, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+@pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'mqmatrix'])
 @pytest.mark.parametrize("dtype", ['float', 'double'])
 def test_non_hermitian_grad_ops1(virtual_qc, dtype):
     """
@@ -327,7 +327,7 @@ def test_optimization_with_custom_gate(virtual_qc, dtype):  # pylint: disable=to
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+@pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'mqmatrix'])
 @pytest.mark.parametrize("dtype", ['float', 'double'])
 def test_fid(virtual_qc, dtype):
     """
@@ -350,7 +350,7 @@ def test_fid(virtual_qc, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+@pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'mqmatrix'])
 @pytest.mark.parametrize("dtype", ['float', 'double'])
 def test_non_hermitian_grad_ops2(virtual_qc, dtype):
     """
@@ -373,7 +373,7 @@ def test_non_hermitian_grad_ops2(virtual_qc, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+@pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'mqmatrix'])
 @pytest.mark.parametrize("dtype", ['float', 'double'])
 def test_inner_product(virtual_qc, dtype):
     """

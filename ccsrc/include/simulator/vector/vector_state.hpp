@@ -88,10 +88,11 @@ class VectorState {
     //! Set the quantum state value
     void SetQS(const VT<py_qs_data_t>& qs_out);
 
-    //! Apply a quantum gate on this quantum state, quantum gate can be normal quantum gate, measurement gate and noise
-    //! channel
+    /*!
+     * \brief Apply a quantum gate on this quantum state, quantum gate can be
+     * normal quantum gate, measurement gate and noise channel
+     */
     index_t ApplyGate(const std::shared_ptr<BasicGate>& gate,
-
                       const ParameterResolver<calc_type>& pr = ParameterResolver<calc_type>(), bool diff = false);
 
     //! Apply a measurement gate on this quantum state, return the collapsed qubit state

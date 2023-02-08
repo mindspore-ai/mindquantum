@@ -438,7 +438,7 @@ auto VectorState<qs_policy_t_>::ApplyDampingChannel(const std::shared_ptr<BasicG
         tmp_qs = nullptr;
         qs_policy_t::FreeState(tmp_qs);
     } else {
-        calc_type coeff_a = 1 / sqrt(1 - prob);
+        calc_type coeff_a = 1 / std::sqrt(1 - prob);
         calc_type coeff_b = std::sqrt(1 - damping_coeff) / std::sqrt(1 - prob);
         qs_policy_t::ConditionalMul(qs, qs, (1UL << gate->obj_qubits_[0]), 0, coeff_a, coeff_b, dim);
     }
