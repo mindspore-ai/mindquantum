@@ -11,22 +11,9 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
-
-#include <cmath>
-
-#include <cassert>
-#include <complex>
-#include <cstddef>
-#include <cstdlib>
-#include <functional>
-#include <ratio>
-#include <stdexcept>
-#include <vector>
-
 #include "config/openmp.hpp"
 
-#include "core/utils.hpp"
-#include "simulator/types.hpp"
+#include "core/parameter_resolver.hpp"
 #include "simulator/utils.hpp"
 #ifdef __x86_64__
 #    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_double_policy.hpp"
@@ -36,8 +23,6 @@
 #    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_float_policy.hpp"
 #endif
 #include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
-
-constexpr double m_sqrt1_2{0.707106781186547524400844362104849039};
 
 namespace mindquantum::sim::densitymatrix::detail {
 // Single qubit operator
@@ -128,59 +113,112 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(qs
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyH(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim) {
-    matrix_t m{{m_sqrt1_2, m_sqrt1_2}, {m_sqrt1_2, -m_sqrt1_2}};
-    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
+                                                      const qbits_t& ctrls, const matrix_t& m, index_t dim) {
+    DoubleQubitGateMask mask(objs, ctrls);
+    if (!mask.ctrl_mask) {
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
+                VT<index_t> row(4);  // row index of reduced matrix entry
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
+                              row[0]);
+                row[3] = row[0] + mask.obj_mask;
+                row[1] = row[0] + mask.obj_min_mask;
+                row[2] = row[0] + mask.obj_max_mask;
+                for (index_t b = 0; b <= a; b++) {
+                    VT<index_t> col(4);  // column index of reduced matrix entry
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  b, col[0]);
+                    col[3] = col[0] + mask.obj_mask;
+                    col[1] = col[0] + mask.obj_min_mask;
+                    col[2] = col[0] + mask.obj_max_mask;
+                    VT<VT<qs_data_t>> tmp_mat(4, VT<qs_data_t>(4));
+                    for (int i = 0; i < 4; i++) {
+                        for (int j = 0; j < 4; j++) {
+                            tmp_mat[i][j] = m[i][0] * GetValue(src, row[0], col[j])
+                                            + m[i][1] * GetValue(src, row[1], col[j])
+                                            + m[i][2] * GetValue(src, row[2], col[j])
+                                            + m[i][3] * GetValue(src, row[3], col[j]);
+                        }
+                    }
+
+                    for (int i = 0; i < 4; i++) {
+                        for (int j = 0; j < 4; j++) {
+                            auto new_value = tmp_mat[i][0] * std::conj(m[j][0]) + tmp_mat[i][1] * std::conj(m[j][1])
+                                             + tmp_mat[i][2] * std::conj(m[j][2]) + tmp_mat[i][3] * std::conj(m[j][3]);
+                            SetValue(des, row[i], col[j], new_value);
+                        }
+                    }
+                }
+            })
+    } else {
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
+                VT<index_t> row(4);  // row index of reduced matrix entry
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
+                              row[0]);
+                row[3] = row[0] + mask.obj_mask;
+                row[1] = row[0] + mask.obj_min_mask;
+                row[2] = row[0] + mask.obj_max_mask;
+                for (index_t b = 0; b <= a; b++) {
+                    VT<index_t> col(4);  // column index of reduced matrix entry
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  b, col[0]);
+                    if (((row[0] & mask.ctrl_mask) != mask.ctrl_mask)
+                        && ((col[0] & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
+                        continue;
+                    }
+                    col[3] = col[0] + mask.obj_mask;
+                    col[1] = col[0] + mask.obj_min_mask;
+                    col[2] = col[0] + mask.obj_max_mask;
+                    VT<VT<qs_data_t>> tmp_mat(4, VT<qs_data_t>(4));
+                    if ((row[0] & mask.ctrl_mask) == mask.ctrl_mask) {  // row in control
+                        for (int i = 0; i < 4; i++) {
+                            for (int j = 0; j < 4; j++) {
+                                tmp_mat[i][j] = m[i][0] * GetValue(src, row[0], col[j])
+                                                + m[i][1] * GetValue(src, row[1], col[j])
+                                                + m[i][2] * GetValue(src, row[2], col[j])
+                                                + m[i][3] * GetValue(src, row[3], col[j]);
+                            }
+                        }
+                    } else {  // row not in control
+                        for (int i = 0; i < 4; i++) {
+                            for (int j = 0; j < 4; j++) {
+                                tmp_mat[i][j] = GetValue(src, row[i], col[j]);
+                            }
+                        }
+                    }
+                    if ((col[0] & mask.ctrl_mask) == mask.ctrl_mask) {  // column in control
+                        for (int i = 0; i < 4; i++) {
+                            for (int j = 0; j < 4; j++) {
+                                auto new_value = tmp_mat[i][0] * std::conj(m[j][0])
+                                                 + tmp_mat[i][1] * std::conj(m[j][1])
+                                                 + tmp_mat[i][2] * std::conj(m[j][2])
+                                                 + tmp_mat[i][3] * std::conj(m[j][3]);
+                                SetValue(des, row[i], col[j], new_value);
+                            }
+                        }
+                    } else {  // column not in control
+                        for (int i = 0; i < 4; i++) {
+                            for (int j = 0; j < 4; j++) {
+                                SetValue(des, row[i], col[j], tmp_mat[i][j]);
+                            }
+                        }
+                    }
+                }
+            })
+    }
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                         index_t dim, bool diff) {
-    SingleQubitGateMask mask(objs, ctrls);
-    auto a = std::cos(val / 2);
-    auto b = -std::sin(val / 2);
-    if (diff) {
-        a = -0.5 * std::sin(val / 2);
-        b = -0.5 * std::cos(val / 2);
-    }
-    matrix_t m{{{a, 0}, {0, b}}, {{0, b}, {a, 0}}};
-    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
-    if (diff && mask.ctrl_mask) {
-        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
-    }
-}
-
-template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                         index_t dim, bool diff) {
-    SingleQubitGateMask mask(objs, ctrls);
-    auto a = std::cos(val / 2);
-    auto b = std::sin(val / 2);
-    if (diff) {
-        a = -0.5 * std::sin(val / 2);
-        b = 0.5 * std::cos(val / 2);
-    }
-    matrix_t m{{{a, 0}, {-b, 0}}, {{b, 0}, {a, 0}}};
-    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
-    if (diff && mask.ctrl_mask) {
-        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
-    }
-}
-
-template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val,
-                                         index_t dim, bool diff) {
-    SingleQubitGateMask mask(objs, ctrls);
-    auto a = std::cos(val / 2);
-    auto b = std::sin(val / 2);
-    if (diff) {
-        a = -0.5 * std::sin(val / 2);
-        b = 0.5 * std::cos(val / 2);
-    }
-    matrix_t m{{{a, -b}, {0, 0}}, {{0, 0}, {a, b}}};
-    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
-    if (diff && mask.ctrl_mask) {
-        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
+                                                 const qbits_t& ctrls, const matrix_t& m, index_t dim) {
+    if (objs.size() == 1) {
+        derived::ApplySingleQubitMatrix(src, des, objs[0], ctrls, m, dim);
+    } else if (objs.size() == 2) {
+        derived::ApplyTwoQubitsMatrix(src, des, objs, ctrls, m, dim);
+    } else {
+        throw std::runtime_error("Can not custom " + std::to_string(objs.size()) + " qubits gate for cpu backend.");
     }
 }
 

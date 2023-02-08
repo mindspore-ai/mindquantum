@@ -20,10 +20,14 @@
 
 target_sources(
   mqsim_densitymatrix_cpu
-  PRIVATE ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_policy.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_policy_zlike.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_policy_xlike.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_policy_two_ops.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_policy_single_ops.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_policy_gate_expec.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_policy_channel.cpp)
+  PRIVATE ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_core_policy.cpp
+          ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_core_channel.cpp
+          ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_core_condition.cpp
+          ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_core_gate_expect.cpp
+          ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_core_matrix_gate.cpp
+          ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_core_other_gate.cpp
+          ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_core_rot_pauli.cpp
+          ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_core_swap_like.cpp
+          ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_core_utils.cpp
+          ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_core_x_like.cpp
+          ${CMAKE_CURRENT_LIST_DIR}/cpu_densitymatrix_core_z_like.cpp)
