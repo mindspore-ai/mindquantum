@@ -54,7 +54,7 @@ struct CPUDensityMatrixPolicyBase {
     static void SwapValue(qs_data_p_t qs, index_t x0, index_t y0, index_t x1, index_t y1, qs_data_t coeff);
 
     static qs_data_p_t InitState(index_t dim, bool zero_state = true);
-    static void Reset(qs_data_p_t qs, index_t dim, bool zero_state = false);
+    static void Reset(qs_data_p_t qs, index_t dim, bool zero_state = true);
     static void FreeState(qs_data_p_t qs);
     static void Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit = 10);
     static void SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim);

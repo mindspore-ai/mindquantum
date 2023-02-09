@@ -41,7 +41,7 @@ template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t qs, index_t dim, bool zero_state) {
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { qs[i] = 0; })
-    if (!zero_state) {
+    if (zero_state) {
         qs[0] = 1;
     }
 }
@@ -201,7 +201,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs
                 }
             })
     }
-    Reset(qs, dim, true);
+    Reset(qs, dim, false);
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
         auto mask_f = mask.mask_x | mask.mask_y;
