@@ -45,6 +45,8 @@ TEST_CASE
 mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::ApplyGate
 mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::GetExpectationWithGradOneMulti
 mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::LeftSizeGradOneMulti
+mindquantum::sim::densitymatrix::detail::DensityMatrixState<qs_policy_t_>::ApplyGate
+mindquantum::sim::densitymatrix::detail::DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneMulti
 DummyOperator::TermsOperator::operator == ; } ; } using coefficient_t = DummyOperator :: coefficient_t ; using coeff_term_dict_t = DummyOperator :: coeff_term_dict_t ; TEST_CASE
 mindquantum::ops::details::mindquantum::ops::details::pauli_products.QubitOperatorTermPolicy<coefficient_t>::simplify
 mindquantum/tests/st/test_io/test_svg.py:test_measure_svg
