@@ -187,6 +187,183 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyRxx(qs_data_p_t qs, const q
 }
 
 template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyRxy(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                         calc_type val, index_t dim, bool diff) {
+    DoubleQubitGateMask mask(objs, ctrls);
+    thrust::counting_iterator<index_t> l(0);
+    auto obj_high_mask = mask.obj_high_mask;
+    auto obj_rev_high_mask = mask.obj_rev_high_mask;
+    auto obj_low_mask = mask.obj_low_mask;
+    auto obj_rev_low_mask = mask.obj_rev_low_mask;
+    auto obj_min_mask = mask.obj_min_mask;
+    auto obj_max_mask = mask.obj_max_mask;
+    auto ctrl_mask = mask.ctrl_mask;
+    auto obj_mask = mask.obj_mask;
+    auto c = static_cast<qs_data_t>(std::cos(val / 2));
+    auto s = static_cast<calc_type>(std::sin(val / 2));
+    if (diff) {
+        c = static_cast<qs_data_t>(-std::sin(val / 2) / 2);
+        s = static_cast<calc_type>(std::cos(val / 2) / 2);
+    }
+    if (!mask.ctrl_mask) {
+        thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
+            index_t i;
+            SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
+            auto j = i + obj_min_mask;
+            auto k = i + obj_max_mask;
+            auto m = i + obj_mask;
+            auto v00 = c * qs[i] - s * qs[m];
+            auto v01 = c * qs[j] - s * qs[k];
+            auto v10 = c * qs[k] + s * qs[j];
+            auto v11 = c * qs[m] + s * qs[i];
+            qs[i] = v00;
+            qs[j] = v01;
+            qs[k] = v10;
+            qs[m] = v11;
+        });
+    } else {
+        thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
+            index_t i;
+            SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
+            if ((i & ctrl_mask) == ctrl_mask) {
+                auto j = i + obj_min_mask;
+                auto k = i + obj_max_mask;
+                auto m = i + obj_mask;
+                auto v00 = c * qs[i] - s * qs[m];
+                auto v01 = c * qs[j] - s * qs[k];
+                auto v10 = c * qs[k] + s * qs[j];
+                auto v11 = c * qs[m] + s * qs[i];
+                qs[i] = v00;
+                qs[j] = v01;
+                qs[k] = v10;
+                qs[m] = v11;
+            }
+        });
+        if (diff) {
+            derived::SetToZeroExcept(qs, ctrl_mask, dim);
+        }
+    }
+}
+
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyRxz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                         calc_type val, index_t dim, bool diff) {
+    DoubleQubitGateMask mask(objs, ctrls);
+    thrust::counting_iterator<index_t> l(0);
+    auto obj_high_mask = mask.obj_high_mask;
+    auto obj_rev_high_mask = mask.obj_rev_high_mask;
+    auto obj_low_mask = mask.obj_low_mask;
+    auto obj_rev_low_mask = mask.obj_rev_low_mask;
+    auto obj_min_mask = mask.obj_min_mask;
+    auto obj_max_mask = mask.obj_max_mask;
+    auto ctrl_mask = mask.ctrl_mask;
+    auto obj_mask = mask.obj_mask;
+    auto c = static_cast<qs_data_t>(std::cos(val / 2));
+    auto s = static_cast<calc_type>(std::sin(val / 2)) * qs_data_t(0, -1);
+    if (diff) {
+        c = static_cast<qs_data_t>(-std::sin(val / 2) / 2);
+        s = static_cast<calc_type>(std::cos(val / 2) / 2) * qs_data_t(0, -1);
+    }
+    if (!mask.ctrl_mask) {
+        thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
+            index_t i;
+            SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
+            auto j = i + obj_min_mask;
+            auto k = i + obj_max_mask;
+            auto m = i + obj_mask;
+            auto v00 = c * qs[i] + s * qs[j];
+            auto v01 = c * qs[j] + s * qs[i];
+            auto v10 = c * qs[k] - s * qs[m];
+            auto v11 = c * qs[m] - s * qs[k];
+            qs[i] = v00;
+            qs[j] = v01;
+            qs[k] = v10;
+            qs[m] = v11;
+        });
+    } else {
+        thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
+            index_t i;
+            SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
+            if ((i & ctrl_mask) == ctrl_mask) {
+                auto j = i + obj_min_mask;
+                auto k = i + obj_max_mask;
+                auto m = i + obj_mask;
+                auto v00 = c * qs[i] + s * qs[j];
+                auto v01 = c * qs[j] + s * qs[i];
+                auto v10 = c * qs[k] - s * qs[m];
+                auto v11 = c * qs[m] - s * qs[k];
+                qs[i] = v00;
+                qs[j] = v01;
+                qs[k] = v10;
+                qs[m] = v11;
+            }
+        });
+        if (diff) {
+            derived::SetToZeroExcept(qs, ctrl_mask, dim);
+        }
+    }
+}
+
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyRyz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+                                                         calc_type val, index_t dim, bool diff) {
+    DoubleQubitGateMask mask(objs, ctrls);
+    thrust::counting_iterator<index_t> l(0);
+    auto obj_high_mask = mask.obj_high_mask;
+    auto obj_rev_high_mask = mask.obj_rev_high_mask;
+    auto obj_low_mask = mask.obj_low_mask;
+    auto obj_rev_low_mask = mask.obj_rev_low_mask;
+    auto obj_min_mask = mask.obj_min_mask;
+    auto obj_max_mask = mask.obj_max_mask;
+    auto ctrl_mask = mask.ctrl_mask;
+    auto obj_mask = mask.obj_mask;
+    auto c = static_cast<qs_data_t>(std::cos(val / 2));
+    auto s = static_cast<calc_type>(std::sin(val / 2));
+    if (diff) {
+        c = static_cast<qs_data_t>(-std::sin(val / 2) / 2);
+        s = static_cast<calc_type>(std::cos(val / 2) / 2);
+    }
+    if (!mask.ctrl_mask) {
+        thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
+            index_t i;
+            SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
+            auto j = i + obj_min_mask;
+            auto k = i + obj_max_mask;
+            auto m = i + obj_mask;
+            auto v00 = c * qs[i] - s * qs[j];
+            auto v01 = c * qs[j] + s * qs[i];
+            auto v10 = c * qs[k] + s * qs[m];
+            auto v11 = c * qs[m] - s * qs[k];
+            qs[i] = v00;
+            qs[j] = v01;
+            qs[k] = v10;
+            qs[m] = v11;
+        });
+    } else {
+        thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
+            index_t i;
+            SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
+            if ((i & ctrl_mask) == ctrl_mask) {
+                auto j = i + obj_min_mask;
+                auto k = i + obj_max_mask;
+                auto m = i + obj_mask;
+                auto v00 = c * qs[i] - s * qs[j];
+                auto v01 = c * qs[j] + s * qs[i];
+                auto v10 = c * qs[k] + s * qs[m];
+                auto v11 = c * qs[m] - s * qs[k];
+                qs[i] = v00;
+                qs[j] = v01;
+                qs[k] = v10;
+                qs[m] = v11;
+            }
+        });
+        if (diff) {
+            derived::SetToZeroExcept(qs, ctrl_mask, dim);
+        }
+    }
+}
+
+template <typename derived_, typename calc_type_>
 void GPUVectorPolicyBase<derived_, calc_type_>::ApplyRyy(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
                                                          calc_type val, index_t dim, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);

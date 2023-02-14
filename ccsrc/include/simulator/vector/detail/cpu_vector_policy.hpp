@@ -127,6 +127,12 @@ struct CPUVectorPolicyBase {
                          bool diff = false);
     static void ApplyRzz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
+    static void ApplyRxy(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+                         bool diff = false);
+    static void ApplyRxz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+                         bool diff = false);
+    static void ApplyRyz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+                         bool diff = false);
 
     // gate_expectation
     // ========================================================================================================
@@ -147,6 +153,12 @@ struct CPUVectorPolicyBase {
     static qs_data_t ExpectDiffRyy(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                    calc_type val, index_t dim);
     static qs_data_t ExpectDiffRzz(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
+                                   calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRxy(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
+                                   calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRxz(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
+                                   calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRyz(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                    calc_type val, index_t dim);
     static qs_data_t ExpectDiffPS(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                   calc_type val, index_t dim);
