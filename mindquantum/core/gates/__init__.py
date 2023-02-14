@@ -16,11 +16,11 @@
 
 from .basic import (
     HERMITIAN_PROPERTIES,
-    QuantumGate,
     BasicGate,
     NoiseGate,
     NoneParameterGate,
     ParameterGate,
+    QuantumGate,
 )
 from .basicgate import (
     BARRIER,
@@ -46,7 +46,10 @@ from .basicgate import (
     PhaseShift,
     Power,
     Rxx,
+    Rxy,
+    Rxz,
     Ryy,
+    Ryz,
     Rzz,
     S,
     SGate,
@@ -103,6 +106,9 @@ __all__ = [
     "Rxx",
     "Ryy",
     "Rzz",
+    "Rxy",
+    "Rxz",
+    "Ryz",
     "Power",
     "I",
     "X",

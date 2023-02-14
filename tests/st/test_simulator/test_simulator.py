@@ -479,3 +479,26 @@ def test_custom_gate_in_parallel(virtual_qc, dtype):
     g_sum_exp = 0.06041889360878677
     assert np.allclose(np.sum(f), f_sum_exp)
     assert np.allclose(np.sum(g), g_sum_exp)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+@pytest.mark.parametrize("dtype", ['float', 'double'])
+def test_cd_term(virtual_qc, dtype):
+    """
+    Description:
+    Expectation:
+    """
+    Context.set_dtype(dtype)
+    cd_term = [G.Rxy, G.Rxz, G.Ryz]
+    for g in cd_term:
+        cd_gate = g(1.0).on([0, 1])
+        circ = Circuit() + cd_gate
+        decomps_circ = cd_gate.__decompose__()[0]
+        m1 = circ.matrix(backend=virtual_qc)
+        m2 = decomps_circ.matrix(backend=virtual_qc)
+        m = np.abs(m1 - m2)
+        assert np.allclose(m, np.zeros_like(m), atol=1e-6)

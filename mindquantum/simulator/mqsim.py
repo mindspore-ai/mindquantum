@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Mindquantum simulator."""
+import warnings
 from typing import Dict, List, Union
 
 import numpy as np
@@ -45,8 +46,14 @@ from mindquantum import _mq_vector  # pylint: disable=wrong-import-order
 try:
     from mindquantum import _mq_vector_gpu
 
+    # pylint: disable=no-member
+    _mq_vector_gpu.double.mqvector(1).apply_gate(mqbackend.gate.HGate([0]))
     MQ_SIM_GPU_SUPPORTED = True
 except ImportError:
+    MQ_SIM_GPU_SUPPORTED = False
+except RuntimeError as err:
+    warnings.warn(str(err), stacklevel=2)
+    warnings.warn("Disable gpu backend.", stacklevel=2)
     MQ_SIM_GPU_SUPPORTED = False
 
 

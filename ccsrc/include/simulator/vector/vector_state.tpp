@@ -236,6 +236,30 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
             auto val = g->prs_[0].Combination(pr).const_value;
             qs_policy_t::ApplyRzz(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
         } break;
+        case GateID::Rxy: {
+            auto g = static_cast<RxyGate<calc_type>*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = g->prs_[0].Combination(pr).const_value;
+            qs_policy_t::ApplyRxy(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
+        case GateID::Rxz: {
+            auto g = static_cast<RxzGate<calc_type>*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = g->prs_[0].Combination(pr).const_value;
+            qs_policy_t::ApplyRxz(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
+        case GateID::Ryz: {
+            auto g = static_cast<RyzGate<calc_type>*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = g->prs_[0].Combination(pr).const_value;
+            qs_policy_t::ApplyRyz(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
         case GateID::PS: {
             auto g = static_cast<PSGate<calc_type>*>(gate.get());
             if (!g->GradRequired()) {
@@ -446,6 +470,15 @@ auto VectorState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t bra, qs_data_p_t ket,
             return Dim2Matrix<calc_type>({grad});
         case GateID::Ryy:
             grad[0] = qs_policy_t::ExpectDiffRyy(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            return Dim2Matrix<calc_type>({grad});
+        case GateID::Rxy:
+            grad[0] = qs_policy_t::ExpectDiffRxy(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            return Dim2Matrix<calc_type>({grad});
+        case GateID::Rxz:
+            grad[0] = qs_policy_t::ExpectDiffRxz(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            return Dim2Matrix<calc_type>({grad});
+        case GateID::Ryz:
+            grad[0] = qs_policy_t::ExpectDiffRyz(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
             return Dim2Matrix<calc_type>({grad});
         case GateID::PS:
             grad[0] = qs_policy_t::ExpectDiffPS(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);

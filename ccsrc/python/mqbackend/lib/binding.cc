@@ -656,6 +656,18 @@ void BindTypeDependentGate(py::module &module) {  // NOLINT(runtime/references)
                                                                                                           "RzzGate")
         .def(py::init<const ParameterResolver<T> &, const VT<Index> &, const VT<Index> &>(), "pr"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
+    py::class_<mindquantum::RxyGate<T>, mindquantum::BasicGate, std::shared_ptr<mindquantum::RxyGate<T>>>(module,
+                                                                                                          "RxyGate")
+        .def(py::init<const ParameterResolver<T> &, const VT<Index> &, const VT<Index> &>(), "pr"_a, "obj_qubits"_a,
+             "ctrl_qubits"_a = VT<Index>());
+    py::class_<mindquantum::RxzGate<T>, mindquantum::BasicGate, std::shared_ptr<mindquantum::RxzGate<T>>>(module,
+                                                                                                          "RxzGate")
+        .def(py::init<const ParameterResolver<T> &, const VT<Index> &, const VT<Index> &>(), "pr"_a, "obj_qubits"_a,
+             "ctrl_qubits"_a = VT<Index>());
+    py::class_<mindquantum::RyzGate<T>, mindquantum::BasicGate, std::shared_ptr<mindquantum::RyzGate<T>>>(module,
+                                                                                                          "RyzGate")
+        .def(py::init<const ParameterResolver<T> &, const VT<Index> &, const VT<Index> &>(), "pr"_a, "obj_qubits"_a,
+             "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::GPGate<T>, mindquantum::BasicGate, std::shared_ptr<mindquantum::GPGate<T>>>(module,
                                                                                                         "GPGate")
         .def(py::init<const ParameterResolver<T> &, const VT<Index> &, const VT<Index> &>(), "pr"_a, "obj_qubits"_a,

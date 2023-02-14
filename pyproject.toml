@@ -129,7 +129,8 @@ skip-string-normalization = true
     [tool.pylint.basic]
     good-names = ['ax', 'fd', 'i', 'j', 'k', 'l', 'n', 'N', 'q0', 'q1', 'q2', 'u', 'u1', 'u2', 'u3', 'v',
                   'x', 'x1', 'x2', 'y', 'y1', 'y2', 'z', 'z1', 'z2',
-                  'n_layers', 'n_qubits', 'pr']
+                  'n_layers', 'n_qubits', 'pr', 'a', 'b', 'g', 'f1',
+                  'f2', 'c', 'r', 'd', 'm', 'tq', 'p', 'd1', 'd2']
 
     [tool.pylint.typecheck]
     ignored-modules = [

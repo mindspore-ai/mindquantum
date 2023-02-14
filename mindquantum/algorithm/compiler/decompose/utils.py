@@ -12,34 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Utils functions"""
+"""Utils functions."""
 
-from math import sqrt, atan2
-from typing import List
 from functools import reduce
+from math import atan2, sqrt
+from typing import List
+
 import numpy as np
 from scipy import linalg
+
 from mindquantum.core import gates
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import QuantumGate
 from mindquantum.utils.f import is_power_of_two
 
-M = np.array([[1, 0, 0, 1j],
-              [0, 1j, 1, 0],
-              [0, 1j, -1, 0],
-              [1, 0, 0, -1j]]) / sqrt(2)
+M = np.array([[1, 0, 0, 1j], [0, 1j, 1, 0], [0, 1j, -1, 0], [1, 0, 0, -1j]]) / sqrt(2)
 
 M_DAG = M.conj().T
 
-A = np.array([[1, 1, -1, 1],
-              [1, 1, 1, -1],
-              [1, -1, -1, -1],
-              [1, -1, 1, 1]])
+A = np.array([[1, 1, -1, 1], [1, 1, 1, -1], [1, -1, -1, -1], [1, -1, 1, 1]])
 
 
 def kron_factor_4x4_to_2x2s(mat: np.ndarray):
     """
-    Splits a 4x4 matrix U = kron(A, B) into A, B, and a global factor.
+    Split a 4x4 matrix U = kron(A, B) into A, B, and a global factor.
+
     Requires the matrix to be the kronecker product of two 2x2 unitaries.
     Requires the matrix to have a non-zero determinant.
     Giving an incorrect matrix will cause garbage output.
@@ -94,12 +91,12 @@ def kron_decomp(mat: np.ndarray):
     k = np.vstack([m00.ravel(), m01.ravel(), m10.ravel(), m11.ravel()])
     if np.linalg.matrix_rank(k) == 1:
         # it is in form of tensor product
-        l = [not np.allclose(np.zeros(4), k[i]) for i in range(4)]
-        idx = l.index(True)  # the first non-zero block
+        l_list = [not np.allclose(np.zeros(4), k[i]) for i in range(4)]
+        idx = l_list.index(True)  # the first non-zero block
         b = k[idx]
         a = np.array([])
         for i in range(4):
-            if l[i]:
+            if l_list[i]:
                 a_i = times_two_matrix(k[i], b)
             else:
                 a_i = 0
@@ -131,10 +128,11 @@ def params_zyz(mat: np.ndarray):
     Returns:
         `\alpha`, `\theta`, `\phi`, `\lambda`, four phase angles.
     """
+    mat = mat.astype(np.complex128)
     if mat.shape != (2, 2):
         raise ValueError('Input matrix should be a 2*2 matrix')
     coe = linalg.det(mat) ** (-0.5)
-    alpha = - np.angle(coe)
+    alpha = -np.angle(coe)
     v = coe * mat
     v = v.round(10)
     theta = 2 * atan2(abs(v[1, 0]), abs(v[0, 0]))
@@ -201,13 +199,11 @@ def limit_angle(a: float) -> float:
         r = a % (2 * np.pi)
         if r < 0 or r > np.pi:
             r -= 2 * np.pi
-    else:
-        r = (-a) % (2 * np.pi)
-        if 0 <= r <= np.pi:
-            r = -r
-        else:
-            r = 2 * np.pi - r
-    return r
+        return r
+    r = (-a) % (2 * np.pi)
+    if 0 <= r <= np.pi:
+        return -r
+    return 2 * np.pi - r
 
 
 def glob_phase(mat: np.ndarray) -> float:
@@ -227,8 +223,7 @@ def glob_phase(mat: np.ndarray) -> float:
     """
     d = mat.shape[0]
     exp_alpha = linalg.det(mat) ** (1 / d)
-    alpha = np.angle(exp_alpha)
-    return alpha
+    return np.angle(exp_alpha)
 
 
 def remove_glob_phase(mat: np.ndarray) -> np.ndarray:
@@ -258,7 +253,7 @@ def remove_glob_phase(mat: np.ndarray) -> np.ndarray:
         2x2 matrix without global phase.
     """
     alpha = glob_phase(mat)
-    return mat * np.exp(- 1j * alpha)
+    return mat * np.exp(-1j * alpha)
 
 
 def is_equiv_unitary(mat1: np.ndarray, mat2: np.ndarray) -> bool:
@@ -330,7 +325,7 @@ def tensor_slots(mat: np.ndarray, n: int, indices: List[int]) -> np.ndarray:
         idx[k] = i
     idx[idx < 0] = range(m, n)
     idx_latter = [i + n for i in idx]
-    return res.transpose(idx.tolist() + idx_latter).reshape(2 ** n, 2 ** n)
+    return res.transpose(idx.tolist() + idx_latter).reshape(2**n, 2**n)
 
 
 def times_two_matrix(mat1: np.ndarray, mat2: np.ndarray):
@@ -432,7 +427,7 @@ def circuit_to_unitary(circuit: Circuit, msb: bool = False) -> np.ndarray:
     for g in circuit:
         if isinstance(g, (gates.Measure, gates.BarrierGate)):
             continue
-        elif not g.ctrl_qubits:
+        if not g.ctrl_qubits:
             mat = tensor_slots(g.matrix(), n, g.obj_qubits)
         else:
             mat = controlled_unitary_matrix(g.matrix(), len(g.ctrl_qubits))
@@ -441,7 +436,7 @@ def circuit_to_unitary(circuit: Circuit, msb: bool = False) -> np.ndarray:
 
     unitary = reduce(np.dot, reversed(ops))
     if msb:
-        unitary = tensor_slots(unitary, n, list(range(n - 1, -1, -1)))
+        return tensor_slots(unitary, n, list(range(n - 1, -1, -1)))
     return unitary
 
 
@@ -470,10 +465,9 @@ def multiplexor_matrix(n: int, tq: int, *args) -> np.ndarray:
         raise ValueError(f'Number of input matrix components is not equal to {n}')
     qubits = list(range(n - 1))
     qubits.insert(tq, n - 1)
-    mat = linalg.block_diag(*[m for m in args])
+    mat = linalg.block_diag(*args)
     mat = mat.reshape([2] * 2 * n)
-    mat = mat.transpose(qubits + [q + n for q in qubits]).reshape(2 ** n, 2 ** n)
-    return mat
+    return mat.transpose(qubits + [q + n for q in qubits]).reshape(2**n, 2**n)
 
 
 def optimize_circuit(circuit: Circuit) -> Circuit:
@@ -490,6 +484,5 @@ def optimize_circuit(circuit: Circuit) -> Circuit:
     for g in circuit:
         if isinstance(g, QuantumGate) and is_equiv_unitary(g.matrix(), np.identity(2)):
             continue
-        else:
-            circuit_opt.append(g)
+        circuit_opt.append(g)
     return circuit_opt

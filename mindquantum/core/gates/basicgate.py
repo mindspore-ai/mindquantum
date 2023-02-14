@@ -1057,6 +1057,233 @@ class Ryy(RotSelfHermMat):
         )
 
 
+class Rxy(RotSelfHermMat):
+    r"""
+    Rxy gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    .. math::
+
+        Rxy(\theta) = \exp{-i\frac{\theta}{2} Y\otimes X} =
+        \begin{pmatrix}
+            \cos{\frac{\theta}{2}} & 0 & 0 & -\sin{\frac{\theta}{2}}\\
+            0 & \cos{\frac{\theta}{2}} & -\sin{\frac{\theta}{2}} & 0\\
+            0 & \sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}} & 0\\
+            \sin{\frac{\theta}{2}} & 0 & 0 & \cos{\frac{\theta}{2}}\\
+        \end{pmatrix}
+
+    Args:
+        pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation.
+    """
+
+    def __init__(self, pr):
+        """Initialize an Rxy object."""
+        super().__init__(
+            pr=ParameterResolver(pr),
+            name='Rxy',
+            n_qubits=2,
+            core=PauliStringGate([X, Y]),
+        )
+
+    def __decompose__(self):
+        """Gate decomposition method."""
+        from ..circuit import Circuit  # pylint: disable=cyclic-import
+
+        out = []
+        out.append(Circuit())
+        out[-1] += H.on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += RX(np.pi / 2).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += RZ(self.coeff).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += RX(7 * np.pi / 2).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[0], [*self.ctrl_qubits])
+        return out
+
+    def matrix(self, pr=None, frac=0.5):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
+        return super().matrix(pr, frac)
+
+    def diff_matrix(self, pr=None, about_what=None, frac=0.5):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
+        return super().diff_matrix(pr, about_what, frac)
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return getattr(mb, Context.get_dtype()).gate.RxyGate(
+            self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
+        )
+
+
+class Rxz(RotSelfHermMat):
+    r"""
+    Rxz gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    .. math::
+
+        Rxz(\theta) = \exp{-i\frac{\theta}{2} Z\otimes X} =
+        \begin{pmatrix}
+            \cos{\frac{\theta}{2}} & -i\sin{\frac{\theta}{2}} & 0 & 0\\
+            -i\sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}} & 0 & 0\\
+            0 & 0 & \cos{\frac{\theta}{2}} & i\sin{\frac{\theta}{2}}\\
+            0 & 0 & i\sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}}\\
+        \end{pmatrix}
+
+    Args:
+        pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation.
+    """
+
+    def __init__(self, pr):
+        """Initialize an Rxz object."""
+        super().__init__(
+            pr=ParameterResolver(pr),
+            name='Rxz',
+            n_qubits=2,
+            core=PauliStringGate([X, Z]),
+        )
+
+    def __decompose__(self):
+        """Gate decomposition method."""
+        from ..circuit import Circuit  # pylint: disable=cyclic-import
+
+        out = []
+        out.append(Circuit())
+        out[-1] += H.on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += RZ(self.coeff).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += H.on(self.obj_qubits[0], [*self.ctrl_qubits])
+        return out
+
+    def matrix(self, pr=None, frac=0.5):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
+        return super().matrix(pr, frac)
+
+    def diff_matrix(self, pr=None, about_what=None, frac=0.5):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
+        return super().diff_matrix(pr, about_what, frac)
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return getattr(mb, Context.get_dtype()).gate.RxzGate(
+            self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
+        )
+
+
+class Ryz(RotSelfHermMat):
+    r"""
+    Ryz gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+
+    .. math::
+
+        Ryz(\theta) = \exp{-i\frac{\theta}{2} Z\otimes Y} =
+        \begin{pmatrix}
+            \cos{\frac{\theta}{2}} & -\sin{\frac{\theta}{2}} & 0 & 0\\
+            \sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}} & 0 & 0\\
+            0 & 0 & \cos{\frac{\theta}{2}} & \sin{\frac{\theta}{2}}\\
+            0 & 0 & -\sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}}\\
+        \end{pmatrix}
+
+    Args:
+        pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation.
+    """
+
+    def __init__(self, pr):
+        """Initialize an Rxy object."""
+        super().__init__(
+            pr=ParameterResolver(pr),
+            name='Ryz',
+            n_qubits=2,
+            core=PauliStringGate([Y, Z]),
+        )
+
+    def __decompose__(self):
+        """Gate decomposition method."""
+        from ..circuit import Circuit  # pylint: disable=cyclic-import
+
+        out = []
+        out.append(Circuit())
+        out[-1] += RX(np.pi / 2).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += RZ(self.coeff).on(self.obj_qubits[1], [*self.ctrl_qubits])
+        out[-1] += X.on(self.obj_qubits[1], [self.obj_qubits[0], *self.ctrl_qubits])
+        out[-1] += RX(7 * np.pi / 2).on(self.obj_qubits[0], [*self.ctrl_qubits])
+        return out
+
+    def matrix(self, pr=None, frac=0.5):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
+        return super().matrix(pr, frac)
+
+    def diff_matrix(self, pr=None, about_what=None, frac=0.5):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
+        return super().diff_matrix(pr, about_what, frac)
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return getattr(mb, Context.get_dtype()).gate.RyzGate(
+            self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
+        )
+
+
 class BarrierGate(FunctionalGate):
     """
     Barrier gate will separate two gate in two different layer.

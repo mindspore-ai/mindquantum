@@ -177,6 +177,24 @@ struct RzzGate : public Parameterizable<T> {
     }
 };
 template <typename T>
+struct RxyGate : public Parameterizable<T> {
+    RxyGate(const ParameterResolver<T> pr, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+        : Parameterizable<T>(GateID::Rxy, {pr}, obj_qubits, ctrl_qubits) {
+    }
+};
+template <typename T>
+struct RxzGate : public Parameterizable<T> {
+    RxzGate(const ParameterResolver<T> pr, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+        : Parameterizable<T>(GateID::Rxz, {pr}, obj_qubits, ctrl_qubits) {
+    }
+};
+template <typename T>
+struct RyzGate : public Parameterizable<T> {
+    RyzGate(const ParameterResolver<T> pr, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+        : Parameterizable<T>(GateID::Ryz, {pr}, obj_qubits, ctrl_qubits) {
+    }
+};
+template <typename T>
 struct GPGate : public Parameterizable<T> {
     GPGate(const ParameterResolver<T> pr, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
         : Parameterizable<T>(GateID::GP, {pr}, obj_qubits, ctrl_qubits) {
