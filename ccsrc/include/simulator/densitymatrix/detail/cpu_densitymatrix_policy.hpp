@@ -120,18 +120,30 @@ struct CPUDensityMatrixPolicyBase {
 
     static void ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
                                      const matrix_t& m, index_t dim);
+    static void ApplyTwoQubitsMatrixNoCtrl(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
+                                           const matrix_t& m, index_t dim);
+    static void ApplyTwoQubitsMatrixCtrl(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
+                                           const matrix_t& m, index_t dim);
     static void ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyRxx(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
-    static void ApplyNoCtrlRxx(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim,
+    static void ApplyRxxNoCtrl(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim,
                                calc_type c, qs_data_t s);
-    static void ApplyCtrlRxx(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim,
+    static void ApplyRxxCtrl(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim,
                              calc_type c, qs_data_t s, bool diff);
     static void ApplyRyy(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
+    static void ApplyRyyNoCtrl(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+                               qs_data_t s);
+    static void ApplyRyyCtrl(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+                             qs_data_t s, bool diff);
     static void ApplyRzz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
+    static void ApplyRzzNoCtrl(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+                               calc_type s);
+    static void ApplyRzzCtrl(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+                             calc_type s, bool diff);
     static void ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
                                 const matrix_t& m, index_t dim);
     // Channel operator

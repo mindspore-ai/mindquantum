@@ -91,14 +91,14 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxx(qs_data_p_t qs, 
         s = static_cast<calc_type_>(std::cos(val / 2) / 2) * IMAGE_MI;
     }
     if (!mask.ctrl_mask) {
-        ApplyNoCtrlRxx(qs, objs, ctrls, dim, c, s);
+        ApplyRxxNoCtrl(qs, objs, ctrls, dim, c, s);
     } else {
-        ApplyCtrlRxx(qs, objs, ctrls, dim, c, s, diff);
+        ApplyRxxCtrl(qs, objs, ctrls, dim, c, s, diff);
     }
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyNoCtrlRxx(qs_data_p_t qs, const qbits_t& objs,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxxNoCtrl(qs_data_p_t qs, const qbits_t& objs,
                                                                       const qbits_t& ctrls, index_t dim, calc_type c,
                                                                       qs_data_t s) {
     DoubleQubitGateMask mask(objs, ctrls);
@@ -134,7 +134,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyNoCtrlRxx(qs_data_p_
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyCtrlRxx(qs_data_p_t qs, const qbits_t& objs,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxxCtrl(qs_data_p_t qs, const qbits_t& objs,
                                                                     const qbits_t& ctrls, index_t dim, calc_type c,
                                                                     qs_data_t s, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
@@ -203,28 +203,95 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyy(qs_data_p_t qs, 
         s = static_cast<calc_type_>(std::cos(val / 2) / 2) * IMAGE_I;
     }
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
-                VT<index_t> row(4);  // row index of reduced matrix entry
-                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
-                              row[0]);
-                row[3] = row[0] + mask.obj_mask;
-                row[1] = row[0] + mask.obj_min_mask;
-                row[2] = row[0] + mask.obj_max_mask;
-                for (index_t b = 0; b <= a; b++) {
-                    VT<index_t> col(4);  // column index of reduced matrix entry
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
-                                  b, col[0]);
-                    col[3] = col[0] + mask.obj_mask;
-                    col[1] = col[0] + mask.obj_min_mask;
-                    col[2] = col[0] + mask.obj_max_mask;
-                    VT<VT<qs_data_t>> tmp_mat(4, VT<qs_data_t>(4));
+        ApplyRyyNoCtrl(qs, objs, ctrls, dim, c, s);
+    } else {
+        ApplyRyyCtrl(qs, objs, ctrls, dim, c, s, diff);
+    }
+}
+
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyyNoCtrl(qs_data_p_t qs, const qbits_t& objs,
+                                                                      const qbits_t& ctrls, index_t dim, calc_type c,
+                                                                      qs_data_t s) {
+    DoubleQubitGateMask mask(objs, ctrls);
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
+            VT<index_t> row(4);  // row index of reduced matrix entry
+            SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
+                          row[0]);
+            row[3] = row[0] + mask.obj_mask;
+            row[1] = row[0] + mask.obj_min_mask;
+            row[2] = row[0] + mask.obj_max_mask;
+            for (index_t b = 0; b <= a; b++) {
+                VT<index_t> col(4);  // column index of reduced matrix entry
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, b,
+                              col[0]);
+                col[3] = col[0] + mask.obj_mask;
+                col[1] = col[0] + mask.obj_min_mask;
+                col[2] = col[0] + mask.obj_max_mask;
+                VT<VT<qs_data_t>> tmp_mat(4, VT<qs_data_t>(4));
+                for (int j = 0; j < 4; j++) {
+                    tmp_mat[0][j] = c * GetValue(qs, row[0], col[j]) + s * GetValue(qs, row[3], col[j]);
+                    tmp_mat[1][j] = c * GetValue(qs, row[1], col[j]) - s * GetValue(qs, row[2], col[j]);
+                    tmp_mat[2][j] = c * GetValue(qs, row[2], col[j]) - s * GetValue(qs, row[1], col[j]);
+                    tmp_mat[3][j] = c * GetValue(qs, row[3], col[j]) + s * GetValue(qs, row[0], col[j]);
+                }
+                VT<VT<qs_data_t>> res_mat(4, VT<qs_data_t>(4));
+                for (int i = 0; i < 4; i++) {
+                    res_mat[i][0] = c * tmp_mat[i][0] - s * tmp_mat[i][3];
+                    res_mat[i][1] = c * tmp_mat[i][1] + s * tmp_mat[i][2];
+                    res_mat[i][2] = c * tmp_mat[i][2] + s * tmp_mat[i][1];
+                    res_mat[i][3] = c * tmp_mat[i][3] - s * tmp_mat[i][0];
+                }
+                for (int i = 0; i < 4; i++) {
+                    for (int j = 0; j < 4; j++) {
+                        SetValue(qs, row[i], col[j], res_mat[i][j]);
+                    }
+                }
+            }
+        })
+}
+
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyyCtrl(qs_data_p_t qs, const qbits_t& objs,
+                                                                    const qbits_t& ctrls, index_t dim, calc_type c,
+                                                                    qs_data_t s, bool diff) {
+    DoubleQubitGateMask mask(objs, ctrls);
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
+            VT<index_t> row(4);  // row index of reduced matrix entry
+            SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
+                          row[0]);
+            row[3] = row[0] + mask.obj_mask;
+            row[1] = row[0] + mask.obj_min_mask;
+            row[2] = row[0] + mask.obj_max_mask;
+            for (index_t b = 0; b <= a; b++) {
+                VT<index_t> col(4);  // column index of reduced matrix entry
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, b,
+                              col[0]);
+                if (((row[0] & mask.ctrl_mask) != mask.ctrl_mask)
+                    && ((col[0] & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
+                    continue;
+                }
+                col[3] = col[0] + mask.obj_mask;
+                col[1] = col[0] + mask.obj_min_mask;
+                col[2] = col[0] + mask.obj_max_mask;
+                VT<VT<qs_data_t>> tmp_mat(4, VT<qs_data_t>(4));
+                if ((row[0] & mask.ctrl_mask) == mask.ctrl_mask) {  // row in control
                     for (int j = 0; j < 4; j++) {
                         tmp_mat[0][j] = c * GetValue(qs, row[0], col[j]) + s * GetValue(qs, row[3], col[j]);
                         tmp_mat[1][j] = c * GetValue(qs, row[1], col[j]) - s * GetValue(qs, row[2], col[j]);
                         tmp_mat[2][j] = c * GetValue(qs, row[2], col[j]) - s * GetValue(qs, row[1], col[j]);
                         tmp_mat[3][j] = c * GetValue(qs, row[3], col[j]) + s * GetValue(qs, row[0], col[j]);
                     }
+                } else {  // row not in control
+                    for (int i = 0; i < 4; i++) {
+                        for (int j = 0; j < 4; j++) {
+                            tmp_mat[i][j] = GetValue(qs, row[i], col[j]);
+                        }
+                    }
+                }
+                if ((col[0] & mask.ctrl_mask) == mask.ctrl_mask) {  // column in control
                     VT<VT<qs_data_t>> res_mat(4, VT<qs_data_t>(4));
                     for (int i = 0; i < 4; i++) {
                         res_mat[i][0] = c * tmp_mat[i][0] - s * tmp_mat[i][3];
@@ -232,69 +299,18 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyy(qs_data_p_t qs, 
                         res_mat[i][2] = c * tmp_mat[i][2] + s * tmp_mat[i][1];
                         res_mat[i][3] = c * tmp_mat[i][3] - s * tmp_mat[i][0];
                     }
-                    for (int i = 0; i < 4; i++) {
-                        for (int j = 0; j < 4; j++) {
-                            SetValue(qs, row[i], col[j], res_mat[i][j]);
-                        }
-                    }
-                }
-            })
-    } else {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
-                VT<index_t> row(4);  // row index of reduced matrix entry
-                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
-                              row[0]);
-                row[3] = row[0] + mask.obj_mask;
-                row[1] = row[0] + mask.obj_min_mask;
-                row[2] = row[0] + mask.obj_max_mask;
-                for (index_t b = 0; b <= a; b++) {
-                    VT<index_t> col(4);  // column index of reduced matrix entry
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
-                                  b, col[0]);
-                    if (((row[0] & mask.ctrl_mask) != mask.ctrl_mask)
-                        && ((col[0] & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
-                        continue;
-                    }
-                    col[3] = col[0] + mask.obj_mask;
-                    col[1] = col[0] + mask.obj_min_mask;
-                    col[2] = col[0] + mask.obj_max_mask;
-                    VT<VT<qs_data_t>> tmp_mat(4, VT<qs_data_t>(4));
-                    if ((row[0] & mask.ctrl_mask) == mask.ctrl_mask) {  // row in control
-                        for (int j = 0; j < 4; j++) {
-                            tmp_mat[0][j] = c * GetValue(qs, row[0], col[j]) + s * GetValue(qs, row[3], col[j]);
-                            tmp_mat[1][j] = c * GetValue(qs, row[1], col[j]) - s * GetValue(qs, row[2], col[j]);
-                            tmp_mat[2][j] = c * GetValue(qs, row[2], col[j]) - s * GetValue(qs, row[1], col[j]);
-                            tmp_mat[3][j] = c * GetValue(qs, row[3], col[j]) + s * GetValue(qs, row[0], col[j]);
-                        }
-                    } else {  // row not in control
-                        for (int i = 0; i < 4; i++) {
-                            for (int j = 0; j < 4; j++) {
-                                tmp_mat[i][j] = GetValue(qs, row[i], col[j]);
-                            }
-                        }
-                    }
-                    if ((col[0] & mask.ctrl_mask) == mask.ctrl_mask) {  // column in control
-                        VT<VT<qs_data_t>> res_mat(4, VT<qs_data_t>(4));
-                        for (int i = 0; i < 4; i++) {
-                            res_mat[i][0] = c * tmp_mat[i][0] - s * tmp_mat[i][3];
-                            res_mat[i][1] = c * tmp_mat[i][1] + s * tmp_mat[i][2];
-                            res_mat[i][2] = c * tmp_mat[i][2] + s * tmp_mat[i][1];
-                            res_mat[i][3] = c * tmp_mat[i][3] - s * tmp_mat[i][0];
-                        }
-                        tmp_mat.swap(res_mat);
-                    }  // do nothing if column not in control
+                    tmp_mat.swap(res_mat);
+                }  // do nothing if column not in control
 
-                    for (int i = 0; i < 4; i++) {
-                        for (int j = 0; j < 4; j++) {
-                            SetValue(qs, row[i], col[j], tmp_mat[i][j]);
-                        }
+                for (int i = 0; i < 4; i++) {
+                    for (int j = 0; j < 4; j++) {
+                        SetValue(qs, row[i], col[j], tmp_mat[i][j]);
                     }
                 }
-            })
-        if (diff) {
-            derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
-        }
+            }
+        })
+    if (diff) {
+        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
     }
 }
 
@@ -309,102 +325,122 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzz(qs_data_p_t qs, 
         c = static_cast<calc_type_>(-std::sin(val / 2) / 2);
         s = static_cast<calc_type_>(std::cos(val / 2) / 2);
     }
+    if (!mask.ctrl_mask) {
+        ApplyRzzNoCtrl(qs, objs, ctrls, dim, c, s);
+    } else {
+        ApplyRzzCtrl(qs, objs, ctrls, dim, c, s, diff);
+    }
+}
+
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzzNoCtrl(qs_data_p_t qs, const qbits_t& objs,
+                                                                      const qbits_t& ctrls, index_t dim, calc_type c,
+                                                                      calc_type s) {
+    DoubleQubitGateMask mask(objs, ctrls);
     auto e = c + IMAGE_I * s;
     auto me = c + IMAGE_MI * s;
     auto me2 = me * me;
     auto e2 = e * e;
-    if (!mask.ctrl_mask) {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
-                VT<index_t> row(4);  // row index of reduced matrix entry
-                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
-                              row[0]);
-                row[3] = row[0] + mask.obj_mask;
-                row[1] = row[0] + mask.obj_min_mask;
-                row[2] = row[0] + mask.obj_max_mask;
-                for (index_t b = 0; b < a; b++) {
-                    VT<index_t> col(4);  // column index of reduced matrix entry
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
-                                  b, col[0]);
-                    col[3] = col[0] + mask.obj_mask;
-                    col[1] = col[0] + mask.obj_min_mask;
-                    col[2] = col[0] + mask.obj_max_mask;
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
+            VT<index_t> row(4);  // row index of reduced matrix entry
+            SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
+                          row[0]);
+            row[3] = row[0] + mask.obj_mask;
+            row[1] = row[0] + mask.obj_min_mask;
+            row[2] = row[0] + mask.obj_max_mask;
+            for (index_t b = 0; b < a; b++) {
+                VT<index_t> col(4);  // column index of reduced matrix entry
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, b,
+                              col[0]);
+                col[3] = col[0] + mask.obj_mask;
+                col[1] = col[0] + mask.obj_min_mask;
+                col[2] = col[0] + mask.obj_max_mask;
 
-                    SelfMultiply(qs, row[0], col[1], me2);
-                    SelfMultiply(qs, row[0], col[2], me2);
-                    SelfMultiply(qs, row[3], col[1], me2);
-                    SelfMultiply(qs, row[3], col[2], me2);
+                SelfMultiply(qs, row[0], col[1], me2);
+                SelfMultiply(qs, row[0], col[2], me2);
+                SelfMultiply(qs, row[3], col[1], me2);
+                SelfMultiply(qs, row[3], col[2], me2);
 
-                    SelfMultiply(qs, row[1], col[0], e2);
-                    SelfMultiply(qs, row[2], col[0], e2);
-                    SelfMultiply(qs, row[1], col[3], e2);
-                    SelfMultiply(qs, row[2], col[3], e2);
+                SelfMultiply(qs, row[1], col[0], e2);
+                SelfMultiply(qs, row[2], col[0], e2);
+                SelfMultiply(qs, row[1], col[3], e2);
+                SelfMultiply(qs, row[2], col[3], e2);
+            }
+            // diagonal case
+            SelfMultiply(qs, row[1], row[0], e2);
+            SelfMultiply(qs, row[2], row[0], e2);
+            SelfMultiply(qs, row[3], row[1], me2);
+            SelfMultiply(qs, row[3], row[2], me2);
+        })
+}
+
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzzCtrl(qs_data_p_t qs, const qbits_t& objs,
+                                                                    const qbits_t& ctrls, index_t dim, calc_type c,
+                                                                    calc_type s, bool diff) {
+    DoubleQubitGateMask mask(objs, ctrls);
+    auto e = c + IMAGE_I * s;
+    auto me = c + IMAGE_MI * s;
+    auto me2 = me * me;
+    auto e2 = e * e;
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
+            VT<index_t> row(4);  // row index of reduced matrix entry
+            SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
+                          row[0]);
+            row[3] = row[0] + mask.obj_mask;
+            row[1] = row[0] + mask.obj_min_mask;
+            row[2] = row[0] + mask.obj_max_mask;
+            for (index_t b = 0; b < a; b++) {
+                VT<index_t> col(4);  // column index of reduced matrix entry
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, b,
+                              col[0]);
+                if (((row[0] & mask.ctrl_mask) != mask.ctrl_mask)
+                    && ((col[0] & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
+                    continue;
                 }
-                // diagonal case
+                col[3] = col[0] + mask.obj_mask;
+                col[1] = col[0] + mask.obj_min_mask;
+                col[2] = col[0] + mask.obj_max_mask;
+                if ((row[0] & mask.ctrl_mask) == mask.ctrl_mask) {
+                    if ((col[0] & mask.ctrl_mask) == mask.ctrl_mask) {  // both in control
+                        SelfMultiply(qs, row[0], col[1], me2);
+                        SelfMultiply(qs, row[0], col[2], me2);
+                        SelfMultiply(qs, row[3], col[1], me2);
+                        SelfMultiply(qs, row[3], col[2], me2);
+
+                        SelfMultiply(qs, row[1], col[0], e2);
+                        SelfMultiply(qs, row[2], col[0], e2);
+                        SelfMultiply(qs, row[1], col[3], e2);
+                        SelfMultiply(qs, row[2], col[3], e2);
+                    } else {  // only row in control
+                        for (int j = 0; j < 4; j++) {
+                            SelfMultiply(qs, row[0], col[j], me);
+                            SelfMultiply(qs, row[3], col[j], me);
+                            SelfMultiply(qs, row[1], col[j], e);
+                            SelfMultiply(qs, row[2], col[j], e);
+                        }
+                    }
+                } else {  // only column in control
+                    for (int i = 0; i < 4; i++) {
+                        SelfMultiply(qs, row[i], col[0], e);
+                        SelfMultiply(qs, row[i], col[3], e);
+                        SelfMultiply(qs, row[i], col[1], me);
+                        SelfMultiply(qs, row[i], col[2], me);
+                    }
+                }
+            }
+            // diagonal case
+            if ((row[0] & mask.ctrl_mask) == mask.ctrl_mask) {
                 SelfMultiply(qs, row[1], row[0], e2);
                 SelfMultiply(qs, row[2], row[0], e2);
                 SelfMultiply(qs, row[3], row[1], me2);
                 SelfMultiply(qs, row[3], row[2], me2);
-            })
-    } else {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
-                VT<index_t> row(4);  // row index of reduced matrix entry
-                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
-                              row[0]);
-                row[3] = row[0] + mask.obj_mask;
-                row[1] = row[0] + mask.obj_min_mask;
-                row[2] = row[0] + mask.obj_max_mask;
-                for (index_t b = 0; b < a; b++) {
-                    VT<index_t> col(4);  // column index of reduced matrix entry
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
-                                  b, col[0]);
-                    if (((row[0] & mask.ctrl_mask) != mask.ctrl_mask)
-                        && ((col[0] & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
-                        continue;
-                    }
-                    col[3] = col[0] + mask.obj_mask;
-                    col[1] = col[0] + mask.obj_min_mask;
-                    col[2] = col[0] + mask.obj_max_mask;
-                    if ((row[0] & mask.ctrl_mask) == mask.ctrl_mask) {
-                        if ((col[0] & mask.ctrl_mask) == mask.ctrl_mask) {  // both in control
-                            SelfMultiply(qs, row[0], col[1], me2);
-                            SelfMultiply(qs, row[0], col[2], me2);
-                            SelfMultiply(qs, row[3], col[1], me2);
-                            SelfMultiply(qs, row[3], col[2], me2);
-
-                            SelfMultiply(qs, row[1], col[0], e2);
-                            SelfMultiply(qs, row[2], col[0], e2);
-                            SelfMultiply(qs, row[1], col[3], e2);
-                            SelfMultiply(qs, row[2], col[3], e2);
-                        } else {  // only row in control
-                            for (int j = 0; j < 4; j++) {
-                                SelfMultiply(qs, row[0], col[j], me);
-                                SelfMultiply(qs, row[3], col[j], me);
-                                SelfMultiply(qs, row[1], col[j], e);
-                                SelfMultiply(qs, row[2], col[j], e);
-                            }
-                        }
-                    } else {  // only column in control
-                        for (int i = 0; i < 4; i++) {
-                            SelfMultiply(qs, row[i], col[0], e);
-                            SelfMultiply(qs, row[i], col[3], e);
-                            SelfMultiply(qs, row[i], col[1], me);
-                            SelfMultiply(qs, row[i], col[2], me);
-                        }
-                    }
-                }
-                // diagonal case
-                if ((row[0] & mask.ctrl_mask) == mask.ctrl_mask) {
-                    SelfMultiply(qs, row[1], row[0], e2);
-                    SelfMultiply(qs, row[2], row[0], e2);
-                    SelfMultiply(qs, row[3], row[1], me2);
-                    SelfMultiply(qs, row[3], row[2], me2);
-                }
-            })
-        if (diff) {
-            derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
-        }
+            }
+        })
+    if (diff) {
+        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
     }
 }
 
