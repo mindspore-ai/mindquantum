@@ -26,7 +26,6 @@ ccsrc/include/ops/gates.hpp:mindquantum::GetGateByName
 ccsrc/include/ops/gates/qubit_operator.tpp:mindquantum::ops::QubitOperator<coeff_t>::sparse_matrix
 ccsrc/include/ops/gates/qubit_operator.tpp:mindquantum::ops::mindquantum::ops::QubitOperator<coeff_t>::get_op_matrix.QubitOperator<coeff_t>::sparse_matrix
 ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_matrix_gate.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase<derived_,calc_type_>::ApplyTwoQubitsMatrix
-ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_rot_pauli.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase<derived_,calc_type_>::ApplyRxx
 ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_rot_pauli.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase<derived_,calc_type_>::ApplyRyy
 ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_rot_pauli.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase<derived_,calc_type_>::ApplyRzz
 ccsrc/mindquantum/src/binding.cc:mindquantum::PYBIND11_MODULE

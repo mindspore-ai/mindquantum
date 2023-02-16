@@ -124,6 +124,10 @@ struct CPUDensityMatrixPolicyBase {
     static void ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyRxx(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
+    static void ApplyNoCtrlRxx(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim,
+                               calc_type c, qs_data_t s);
+    static void ApplyCtrlRxx(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim,
+                             calc_type c, qs_data_t s, bool diff);
     static void ApplyRyy(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
     static void ApplyRzz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
