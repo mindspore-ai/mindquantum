@@ -21,15 +21,13 @@ mindquantum.core.operators.FermionOperator
         返回：
             JSON(str)，FermionOperator的JSON字符串。
 
-    .. py:method:: from_openfermion(of_ops, dtype=None)
+    .. py:method:: from_openfermion(of_ops)
         :staticmethod:
 
         将openfermion格式的费米子运算符转换为mindquantum格式。
 
         参数：
             - **of_ops** (openfermion.FermionOperator) - openfermion中的费米子算符。
-            - **dtype** (type) - 要生成的TermsOperator的类型（即实数“float”或复数“complex”）。
-              注意：此参数在 Python 版本的 QubitOperator 中被忽略。
 
         返回：
             FermionOperator，mindquantum中的费米子算符。
