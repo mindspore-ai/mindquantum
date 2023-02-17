@@ -1,10 +1,12 @@
+"""模块化设计量子线路"""
+
 import numpy as np
-from mindquantum.core.gates import X, H, Z, RX, RY, RZ, CNOT
+from mindquantum.core.gates import X, H, RX, RY, RZ, CNOT
 from mindquantum.core.gates import Measure
 from mindquantum.core.circuit import Circuit
 
-# 模块化设计量子线路
-def create_EPR_state(p:int, q:int) -> Circuit:
+
+def create_epr_state(p: int, q: int) -> Circuit:
     """制备EPR Pair
     Args:
         p: 贝尔态作用第1个位置
@@ -28,13 +30,13 @@ def create_random_state(p: int) -> Circuit:
     # 使用RX, RY, RZ随机旋转角度作用在 |0> 上实现随机状态制备
     t1, t2, t3 = 2 * np.pi * np.random.random(size=3)
     return Circuit([
-        RX(t1).on(p), # 不使用函数 on() 直接使用 RX(t1)(p) 也可
+        RX(t1).on(p),  # 不使用函数 on() 直接使用 RX(t1)(p) 也可
         RY(t2).on(p),
         RZ(t3).on(p)
     ])
 
 
-def create_basic_module(p:int, q:int) -> Circuit:
+def create_basic_module(p: int, q: int) -> Circuit:
     """CNOT,H,Measure 的组合在本位量子通信经常用到，综合为一个接口
     Args:
         p: 第1个量子位置
@@ -67,4 +69,3 @@ def get_measure_result(ket_str: str, idx: int or list) -> int or list:
     else:
         print("Error: idx should be int or list!")
         return -1
-    

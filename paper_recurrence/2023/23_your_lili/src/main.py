@@ -1,8 +1,10 @@
+"""The implementation of quantum witnessing."""
+
 import time
-import tqdm
 import random
 from typing import List
 import itertools as it
+import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import fmin_cobyla
@@ -115,7 +117,7 @@ def int2signs(i: int) -> List:
 
 
 def get_operation(signs: List) -> List:
-    """Generate the operations according to `signs`, these rules refers to 
+    """Generate the operations according to `signs`, these rules refers to
     paper: M. Rossi, M. Huber, D. Bruß, et al. Quantum hypergraph states.
 
     Args:
@@ -184,7 +186,7 @@ def get_encoder(i: int) -> Circuit:
 
 
 def get_ansatz():
-    """Prepare the ansatz proposed in paper: Francesco Scala et al. 
+    """Prepare the ansatz proposed in paper: Francesco Scala et al.
     Quantum variational learning for entanglement witnessing.
     """
     ansatz = Circuit([

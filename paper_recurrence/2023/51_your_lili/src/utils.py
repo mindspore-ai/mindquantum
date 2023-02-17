@@ -1,3 +1,5 @@
+"""Some utilities functions."""
+
 from mindquantum.core.gates import X
 from mindquantum.core.circuit import Circuit
 
@@ -12,7 +14,6 @@ def c2q(qlist: list, value: int) -> Circuit:
     """
     vbin = bin(value)[2:][::-1]   # 将十进制转换成二进制，并且低位在前
     qlist = qlist[::-1]           # 低位在前
-    n = min(len(qlist), len(vbin))
     cir = Circuit([X.on(q) for q, v in zip(qlist, vbin) if v == '1'])
     return cir
 

@@ -6,7 +6,8 @@ import copy
 import numpy as np
 import matplotlib.pyplot as plt
 
-from src.uitls import *
+from src.uitls import get_svd_norm, get_ansatz, matrix_distance
+from src.uitls import run, reconstruct_by_svd, run_light
 
 
 def plot_figure4():
@@ -31,8 +32,8 @@ def plot_figure4():
         for rank in ranks:
             print(f"Depth = {depth}, rank = {rank}:")
             dy_lr = min(0.05, lr / (rank / 2))
-            re_mat, expect = run(n_qubit, rank, ansatz_uv, in_mat,
-                                 epoch=max_epoch, lr=dy_lr)
+            re_mat, _ = run(n_qubit, rank, ansatz_uv, in_mat,
+                            epoch=max_epoch, lr=dy_lr)
             dist = matrix_distance(in_mat, re_mat)
             sub_dist_list.append(dist)
         dist_list.append(copy.deepcopy(sub_dist_list))
@@ -73,8 +74,8 @@ def plot_figure5(n_qubit=3):
     for depth in depths:
         ansatz_uv = get_ansatz(n_qubit, depth)
         print(f"Depth = {depth}, rank = {rank}:")
-        re_mat, expect = run(n_qubit, rank, ansatz_uv, in_mat,
-                             epoch=max_epoch, lr=lr)
+        re_mat, _ = run(n_qubit, rank, ansatz_uv, in_mat,
+                        epoch=max_epoch, lr=lr)
         re_mats.append(re_mat)
     # 绘图
     plt.figure(figsize=(10, 10))
@@ -162,8 +163,8 @@ def plot_figure7():
             print(f"Ansatz type = {ansatz_names[i]}, rank = {rank}:")
             re_mat = run_light(n_qubit, rank, ansatz_uv, in_mat)
             dy_lr = lr / rank
-            re_mat, expect = run(n_qubit, rank, ansatz_uv, in_mat,
-                                 epoch=max_epoch, lr=dy_lr)
+            re_mat, _ = run(n_qubit, rank, ansatz_uv, in_mat,
+                            epoch=max_epoch, lr=dy_lr)
             dist = matrix_distance(in_mat, re_mat)
             sub_dist_list.append(dist)
         dist_list.append(copy.deepcopy(sub_dist_list))
@@ -205,7 +206,7 @@ def plot_figure7_light():
         for rank in ranks:
             print(f"Ansatz type = {ansatz_names[i]}, rank = {rank}:")
             re_mat = run_light(n_qubit, rank, ansatz_uv, in_mat)
-            re_mat, expect = run_light(n_qubit, rank, ansatz_uv, in_mat)
+            re_mat = run_light(n_qubit, rank, ansatz_uv, in_mat)
             dist = matrix_distance(in_mat, re_mat)
             sub_dist_list.append(dist)
         dist_list.append(copy.deepcopy(sub_dist_list))
