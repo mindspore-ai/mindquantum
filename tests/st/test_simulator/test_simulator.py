@@ -429,9 +429,10 @@ def test_univ_order(virtual_qc, dtype):
     r_c = random_circuit(2, 100)
     if virtual_qc == 'mqmatrix':
         u = r_c.matrix(backend='mqvector')
+        assert np.allclose(r_c.get_qs(backend=virtual_qc), np.outer(u[:, 0]))
     else:
         u = r_c.matrix(backend=virtual_qc)
-    assert np.allclose(r_c.get_qs(backend=virtual_qc), u[:, 0])
+        assert np.allclose(r_c.get_qs(backend=virtual_qc), u[:, 0])
     g = G.UnivMathGate('u', u)
     c0 = Circuit([g.on([0, 1])])
     c1 = Circuit([g.on([1, 0])])
