@@ -362,8 +362,6 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t dens_matrix, q
                                                       const ParameterResolver<calc_type>& pr, index_t dim)
     -> Dim2Matrix<calc_type> {
     auto id = gate->id_;
-    auto g = static_cast<Parameterizable<calc_type>*>(gate.get());
-    auto val = g->prs_[0].Combination(pr).const_value;
     VT<py_qs_data_t> grad = {0};
     switch (id) {
         case GateID::RX:
@@ -391,11 +389,12 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t dens_matrix, q
         //     grad[0] = qs_policy_t::ExpectDiffGP(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
         //     return Dim2Matrix<calc_type>({grad});
         case GateID::CUSTOM: {
-            auto gc = static_cast<CustomGate<calc_type>*>(gate.get());
-            typename std::remove_reference_t<decltype(*gc)>::matrix_t diff_m = gc->numba_param_diff_matrix_(val);
-            typename std::remove_reference_t<decltype(*gc)>::matrix_t herm_m = gc->numba_param_diff_matrix_(val);
+            auto g = static_cast<CustomGate<calc_type>*>(gate.get());
+            auto val = g->prs_[0].Combination(pr).const_value;
+            typename std::remove_reference_t<decltype(*g)>::matrix_t gate_m = g->numba_param_matrix_(val);
+            typename std::remove_reference_t<decltype(*g)>::matrix_t diff_m = g->numba_param_diff_matrix_(val);
             grad[0] = qs_policy_t::ExpectDiffMatrixGate(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_,
-                                                        diff_m.matrix_, herm_m.matrix_, dim);
+                                                        gate_m.matrix_, diff_m.matrix_, dim);
             return Dim2Matrix<calc_type>({grad});
         }
         case GateID::U3:

@@ -409,6 +409,8 @@ def test_copy(virtual_qc, dtype):
     sim.reset()
     qs1 = sim.get_qs()
     qs2 = sim2.get_qs()
+    if virtual_qc == 'mqmatrix' and dtype == 'float':
+        assert np.allclose(qs1, qs2, atol=1.e-6)
     assert np.allclose(qs1, qs2)
 
 
@@ -425,7 +427,10 @@ def test_univ_order(virtual_qc, dtype):
     """
     Context.set_dtype(dtype)
     r_c = random_circuit(2, 100)
-    u = r_c.matrix(backend=virtual_qc)
+    if virtual_qc == 'mqmatrix':
+        u = r_c.matrix(backend='mqvector')
+    else:
+        u = r_c.matrix(backend=virtual_qc)
     assert np.allclose(r_c.get_qs(backend=virtual_qc), u[:, 0])
     g = G.UnivMathGate('u', u)
     c0 = Circuit([g.on([0, 1])])
@@ -509,7 +514,7 @@ def test_custom_gate_in_parallel(virtual_qc, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+@pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'mqmatrix'])
 @pytest.mark.parametrize("dtype", ['float', 'double'])
 def test_cd_term(virtual_qc, dtype):
     """

@@ -77,12 +77,13 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetExpectation(qs_data_p_
 
 template <typename derived_, typename calc_type_>
 auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatrix(
-    qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls, const matrix_t& diff_m,
-    const matrix_t& herm_m, index_t dim) -> qs_data_t {
-    qs_data_t m00 = diff_m[0][0] * herm_m[0][0] + diff_m[0][1] * herm_m[1][0];
-    qs_data_t m01 = diff_m[0][0] * herm_m[0][1] + diff_m[0][1] * herm_m[1][1];
-    qs_data_t m10 = diff_m[1][0] * herm_m[0][0] + diff_m[1][1] * herm_m[1][0];
-    qs_data_t m11 = diff_m[1][0] * herm_m[0][1] + diff_m[1][1] * herm_m[1][1];
+    qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls, const matrix_t& gate_m,
+    const matrix_t& diff_m, index_t dim) -> qs_data_t {
+    // G = Tr(m \rho H), where m = U' \dot \dagger{U}
+    qs_data_t m00 = diff_m[0][0] * std::conj(gate_m[0][0]) + diff_m[0][1] * std::conj(gate_m[0][1]);
+    qs_data_t m01 = diff_m[0][0] * std::conj(gate_m[1][0]) + diff_m[0][1] * std::conj(gate_m[1][1]);
+    qs_data_t m10 = diff_m[1][0] * std::conj(gate_m[0][0]) + diff_m[1][1] * std::conj(gate_m[0][1]);
+    qs_data_t m11 = diff_m[1][0] * std::conj(gate_m[1][0]) + diff_m[1][1] * std::conj(gate_m[1][1]);
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
@@ -164,14 +165,15 @@ template <typename derived_, typename calc_type_>
 auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix(qs_data_p_t qs, qs_data_p_t ham_matrix,
                                                                                  const qbits_t& objs,
                                                                                  const qbits_t& ctrls,
-                                                                                 const matrix_t& diff_m,
-                                                                                 const matrix_t& herm_m, index_t dim)
+                                                                                 const matrix_t& gate_m,
+                                                                                 const matrix_t& diff_m, index_t dim)
     -> qs_data_t {
+    // G = Tr(m \rho H), where m = U' \dot \dagger{U}
     matrix_t m(4, std::vector<qs_data_t>(4));
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
             for (int k = 0; k < 4; k++) {
-                m[i][j] += diff_m[i][k] * herm_m[k][j];
+                m[i][j] += diff_m[i][k] * std::conj(gate_m[j][k]);
             }
         }
     }
