@@ -131,7 +131,7 @@ def decompose_matrix(n_qubit: int, in_mat: np.ndarray) -> List[tuple]:
             res = np.kron(res, a)
         return res
 
-    sx = np.array([[0, 1],  [1, 0]], dtype=np.complex128)
+    sx = np.array([[0, 1], [1, 0]], dtype=np.complex128)
     sy = np.array([[0, -1j], [1j, 0]], dtype=np.complex128)
     sz = np.array([[1, 0], [0, -1]], dtype=np.complex128)
     ey = np.array([[1, 0], [0, 1]], dtype=np.complex128)
@@ -247,8 +247,8 @@ def run_light(n_qubit, rank, ansatz_uv, in_mat):
 
     def loss_func(params):
         loss = 0.0
-        for k, (circ_left, circ_right) in enumerate(
-                    zip(circuits_left, circuits_right)):
+        for k, (circ_left, circ_right) in enumerate(\
+                zip(circuits_left, circuits_right)):
             expect = circ_left.get_qs(pr=params[:n_param//2]).real \
                 .dot(in_mat) \
                 .dot(circ_right.get_qs(pr=params[n_param//2:]).real)

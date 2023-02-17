@@ -1,3 +1,5 @@
+"""The arithmetic circuits."""
+
 from mindquantum.core.gates import X, SWAP
 from mindquantum.core.circuit import Circuit, shift, UN
 
@@ -80,7 +82,7 @@ def AdderRev2() -> Circuit:
 
 
 def ModAdder() -> Circuit:
-    """模加法器，对应 Fig.8 
+    """模加法器，对应 Fig.8
     """
     cir = Circuit()
     cir += Adder()

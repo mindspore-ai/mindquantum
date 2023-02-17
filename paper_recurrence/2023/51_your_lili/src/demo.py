@@ -1,3 +1,5 @@
+"""Demo code for arithmetic circuits."""
+
 from src.circuit import Adder, AdderRev, ModAdder, ModAdderRev
 from src.circuit import ModMulti7xmod15, ModExp
 from src.utils import c2q, q2c

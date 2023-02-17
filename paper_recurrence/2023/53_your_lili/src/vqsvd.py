@@ -1,5 +1,5 @@
 """
-VQSVDTrainer is used to train/update the weight(ansatz parameters) with 
+VQSVDTrainer is used to train/update the weight(ansatz parameters) with
 'gradient-descent' or 'adam' method.
 
 requirement:
@@ -17,7 +17,8 @@ from mindquantum import Simulator
 
 
 class VQSVDTrainer:
-    """Train/Update the weight (ansatz parameters)."""
+    """Train/Update the weight (ansatz parameters) and reconstructed matrix
+    with trained weight."""
 
     def __init__(self, n_qubit, mat_item, rank, ansatz_u, ansatz_v, q, basis,
                  lr=0.5, method='adam'):
@@ -50,12 +51,12 @@ class VQSVDTrainer:
         # used when `method` is 'adam'
         self.ms_param = ms.Parameter(ms.Tensor(self.weight, dtype=ms.float64),
                                      name="weight")
-        self.optimizer = nn.Adam((self.ms_param, ), self.lr)
+        self.optimizer = nn.Adam((self.ms_param,), self.lr)
 
     def train_one_loop(self):
         """Iterating over the basis and update the weight."""
         expect = 0.0
-        for i, (cir_left, cir_right) in enumerate(
+        for i, (cir_left, cir_right) in enumerate(\
                 zip(self.circuits_left, self.circuits_right)):
             grad = np.zeros_like(self.weight, dtype=np.complex128)
             fval = 0.0
@@ -82,11 +83,18 @@ class VQSVDTrainer:
         else:
             self.weight += self.lr * grad
 
-    def train(self, epoch=50, debug=False):
+    def train(self, epoch=50, ftol=1e-4):
         """Train the VQSVD weight with `epoch` times."""
         self.expect_record = []
         for i in tqdm.tqdm(range(epoch)):
             fval = self.train_one_loop()
             self.expect_record.append(fval)
-            if debug:
-                print(fval)
+            if i > 1:
+                tol = np.abs(self.expect_record[-2] - fval)
+                if tol < ftol:
+                    print(f"Reach the ftol = {ftol} with epoch = {i}, "
+                          f"stop in advance.")
+                    break
+                if i == epoch - 1:
+                    print(f"Reach maximum epoch = {epoch}, "
+                          f"current tolerance = {tol}.")
