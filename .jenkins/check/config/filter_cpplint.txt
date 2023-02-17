@@ -32,6 +32,7 @@
 "mindquantum/ccsrc/python/experimental/lib/core/logging.cpp"                                          "runtime/references"
 "mindquantum/ccsrc/python/mqbackend/lib/logging.cpp"                                                  "runtime/references"
 "mindquantum/ccsrc/python/mqbackend/lib/binding.cc"                                                   "runtime/references"
+"mindquantum/ccsrc/python/mqbackend/lib/build_env.cpp"                                                "runtime/references"
 "mindquantum/ccsrc/cxx_experimental/include/ops/parametric"                                           "runtime/explicit"
 "mindquantum/ccsrc/cxx_experimental/include/ops/parametric"                                           "runtime/indentation_namespace"
 "mindquantum/ccsrc/cxx_experimental/include/ops/parametric"                                           "whitespace/parens"
