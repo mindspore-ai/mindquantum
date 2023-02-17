@@ -25,7 +25,3 @@ if(X86_64)
 elseif(AARCH64)
   target_compile_definitions(mqsim_densitymatrix_cpu PUBLIC __amd64)
 endif()
-
-if(ENABLE_CUDA)
-  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gpu)
-endif()
