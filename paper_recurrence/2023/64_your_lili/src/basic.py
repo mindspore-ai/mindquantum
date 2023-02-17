@@ -64,8 +64,7 @@ def get_measure_result(ket_str: str, idx: int or list) -> int or list:
     if isinstance(idx, int):
         new_idx = -idx-2
         return ket_str2[new_idx]
-    elif isinstance(idx, list):
+    if isinstance(idx, list):
         return [ket_str2[-i-2] for i in idx]
-    else:
-        print("Error: idx should be int or list!")
-        return -1
+    print("Error: idx should be int or list!")
+    return -1
