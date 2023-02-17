@@ -25,7 +25,7 @@ def get_ansatz(n_qubit: int, depth: int, kind='a') -> Circuit:
         kind: circuit type, optional value: {'a', 'b', 'c', 'd'}.
 
     Return:
-        Two ansatz circuits with differenct parameter names.
+        Two ansatz circuits with different parameter names.
     """
     ansatz = Circuit()
 
@@ -137,7 +137,7 @@ def decompose_matrix(n_qubit: int, in_mat: np.ndarray) -> List[tuple]:
     ey = np.array([[1, 0], [0, 1]], dtype=np.complex128)
     op_list = np.array([sx, sy, sz, ey])
 
-    # All combinaton of pauli gates on circuit.
+    # All combination of pauli gates on circuit.
     items = list(it.product([0, 1, 2, 3], repeat=n_qubit))
 
     result = []
