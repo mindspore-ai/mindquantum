@@ -411,7 +411,8 @@ def test_copy(virtual_qc, dtype):
     qs2 = sim2.get_qs()
     if virtual_qc == 'mqmatrix' and dtype == 'float':
         assert np.allclose(qs1, qs2, atol=1.e-6)
-    assert np.allclose(qs1, qs2)
+    else:
+        assert np.allclose(qs1, qs2)
 
 
 @pytest.mark.level0
