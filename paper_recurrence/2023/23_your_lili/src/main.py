@@ -220,6 +220,7 @@ def get_full_circuit(i: int) -> Circuit:
 
 
 def train_gd():
+    """Train with gradient descent method."""
     n_qubits = 4     # number of qubits
     batch_size = 16  # batch size
     lr = 0.02        # learning rate
