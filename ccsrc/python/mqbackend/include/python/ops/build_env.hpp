@@ -19,10 +19,11 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
+namespace mindquantum {
 std::string GetBuildABI();
 std::string GetCompilerType();
 std::string GetStdLib();
 namespace py = pybind11;
 void BindPybind11Env(py::module &module);  // NOLINT(runtime/references)
+}  // namespace mindquantum
 #endif

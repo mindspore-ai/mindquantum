@@ -891,5 +891,5 @@ PYBIND11_MODULE(mqbackend, m) {
     BindOther<float>(mqbackend_float);
 
     py::module c = m.def_submodule("c", "pybind11 c++ env");
-    BindPybind11Env(c);
+    mindquantum::BindPybind11Env(c);
 }
