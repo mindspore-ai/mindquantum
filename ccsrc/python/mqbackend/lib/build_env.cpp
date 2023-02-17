@@ -21,25 +21,25 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#define macro_to_string(x)     std::string(#x)
-#define macro_key_to_string(x) macro_to_string(x)
+#define macro_to_string(x)       std::string(#x)
+#define macro_value_to_string(x) macro_to_string(x)
 namespace py = pybind11;
 
 namespace mindquantum {
 std::string GetBuildABI() {
-    auto abi = macro_key_to_string(PYBIND11_BUILD_ABI);
+    auto abi = macro_value_to_string(PYBIND11_BUILD_ABI);
     abi.erase(std::remove(abi.begin(), abi.end(), '\"'), abi.end());
     abi.erase(std::remove(abi.begin(), abi.end(), ' '), abi.end());
     return abi;
 }
 
 std::string GetCompilerType() {
-    auto abi = macro_key_to_string(PYBIND11_COMPILER_TYPE);
+    auto abi = macro_value_to_string(PYBIND11_COMPILER_TYPE);
     return abi;
 }
 
 std::string GetStdLib() {
-    auto abi = macro_key_to_string(PYBIND11_STDLIB);
+    auto abi = macro_value_to_string(PYBIND11_STDLIB);
     return abi;
 }
 void BindPybind11Env(py::module &module) {
