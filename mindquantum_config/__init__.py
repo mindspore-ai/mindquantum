@@ -103,6 +103,19 @@ def print_bin_dir():
 # ==============================================================================
 
 
+def print_abi():
+    """Print the bin directory of MindQuantum."""
+    try:
+        from mindquantum import mqbackend  # pylint: disable=import-outside-toplevel
+
+        print(mqbackend.c.build_abi())  # pylint: disable=no-member
+    except ImportError as exc:
+        raise ImportError("MindQuantum not installed.") from exc
+
+
+# ==============================================================================
+
+
 def print_temp_dir():
     """Print the default build directory used by setup.py."""
     # Based on setuptools/_distutils/command/build.py
@@ -156,6 +169,11 @@ def main():
         action="store_true",
         help="Print bin directory of MindQuantum",
     )
+    group.add_argument(
+        "--abi",
+        action="store_true",
+        help="Print abi of MindQuantum backend",
+    )
     args = parser.parse_args()
     if not sys.argv[1:]:
         parser.print_help()
@@ -169,6 +187,8 @@ def main():
         print_bin_dir()
     if args.tempdir:
         print_temp_dir()
+    if args.abi:
+        print_abi()
 
 
 if __name__ == "__main__":
