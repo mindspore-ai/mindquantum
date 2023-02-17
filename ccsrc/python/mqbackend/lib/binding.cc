@@ -61,6 +61,7 @@
 #include "python/details/create_from_container_class.hpp"
 #include "python/details/define_binary_operator_helpers.hpp"
 #include "python/ops/basic_gate.hpp"
+#include "python/ops/build_env.hpp"
 
 namespace py = pybind11;
 
@@ -888,4 +889,7 @@ PYBIND11_MODULE(mqbackend, m) {
 
     BindOther<double>(mqbackend_double);
     BindOther<float>(mqbackend_float);
+
+    py::module c = m.def_submodule("c", "pybind11 c++ env");
+    BindPybind11Env(c);
 }
