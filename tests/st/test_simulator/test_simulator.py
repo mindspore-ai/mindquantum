@@ -435,8 +435,12 @@ def test_univ_order(virtual_qc, dtype):
     g = G.UnivMathGate('u', u)
     c0 = Circuit([g.on([0, 1])])
     c1 = Circuit([g.on([1, 0])])
-    assert np.allclose(c0.get_qs(backend=virtual_qc), u[:, 0])
-    assert np.allclose(c1.get_qs(backend=virtual_qc), np.array([u[0, 0], u[2, 0], u[1, 0], u[3, 0]]))
+    if virtual_qc == 'mqmatrix':
+        assert np.allclose(c0.get_qs(backend=virtual_qc), np.outer(u[:, 0]))
+        assert np.allclose(c1.get_qs(backend=virtual_qc), np.outer(np.array([u[0, 0], u[2, 0], u[1, 0], u[3, 0]])))
+    else:
+        assert np.allclose(c0.get_qs(backend=virtual_qc), u[:, 0])
+        assert np.allclose(c1.get_qs(backend=virtual_qc), np.array([u[0, 0], u[2, 0], u[1, 0], u[3, 0]]))
 
 
 @pytest.mark.level0
