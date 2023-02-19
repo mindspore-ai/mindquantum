@@ -52,27 +52,32 @@ template <typename derived_, typename calc_type_>
 auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetExpectation(qs_data_p_t qs,
                                                                       const std::vector<PauliTerm<calc_type>>& ham,
                                                                       index_t dim) -> qs_data_t {
-    qs_data_t expectation_value = 0;
+    calc_type e_r = 0, e_i = 0;
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
         auto mask_f = mask.mask_x | mask.mask_y;
         auto coeff = coeff_;
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
-                auto j = (i ^ mask_f);
-                if (i <= j) {
-                    auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
-                    auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
-                    auto c = ComplexCast<double, calc_type>::apply(
-                        POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
-                    expectation_value += std::conj(qs[IdxMap(j, i)]) * coeff * c;
-                    if (i != j) {
-                        expectation_value += qs[IdxMap(j, i)] * coeff / c;
+        // clang-format off
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for reduction(+:e_r, e_i) schedule(static)), dim, DimTh,
+                for (omp::idx_t i = 0; i < dim; i++) {
+                    auto j = (i ^ mask_f);
+                    if (i <= j) {
+                        auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
+                        auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
+                        auto c = ComplexCast<double, calc_type>::apply(
+                            POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
+                        auto e = std::conj(qs[IdxMap(j, i)]) * coeff * c;
+                        if (i != j) {
+                            e += qs[IdxMap(j, i)] * coeff / c;
+                        }
+                        e_r += std::real(e);
+                        e_i += std::imag(e);
                     }
-                }
-            })
+                })
+        // clang-format on
     }
-    return expectation_value;
+    return qs_data_t(e_r, e_i);
 }
 
 template <typename derived_, typename calc_type_>

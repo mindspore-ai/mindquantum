@@ -131,21 +131,23 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrixNoCtr
                                                                                   const qbits_t& ctrls,
                                                                                   const matrix_t& m, index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
+    size_t mask1 = (1UL << objs[0]);
+    size_t mask2 = (1UL << objs[1]);
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
             VT<index_t> row(4);  // row index of reduced matrix entry
             SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
                           row[0]);
             row[3] = row[0] + mask.obj_mask;
-            row[1] = row[0] + mask.obj_min_mask;
-            row[2] = row[0] + mask.obj_max_mask;
+            row[1] = row[0] + mask1;
+            row[2] = row[0] + mask2;
             for (index_t b = 0; b <= a; b++) {
                 VT<index_t> col(4);  // column index of reduced matrix entry
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, b,
                               col[0]);
                 col[3] = col[0] + mask.obj_mask;
-                col[1] = col[0] + mask.obj_min_mask;
-                col[2] = col[0] + mask.obj_max_mask;
+                col[1] = col[0] + mask1;
+                col[2] = col[0] + mask2;
                 VT<VT<qs_data_t>> tmp_mat(4, VT<qs_data_t>(4));
                 for (int i = 0; i < 4; i++) {
                     for (int j = 0; j < 4; j++) {
@@ -173,14 +175,16 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrixCtrl(
                                                                                 const qbits_t& ctrls, const matrix_t& m,
                                                                                 index_t dim) {
     DoubleQubitGateMask mask(objs, ctrls);
+    size_t mask1 = (1UL << objs[0]);
+    size_t mask2 = (1UL << objs[1]);
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
             VT<index_t> row(4);  // row index of reduced matrix entry
             SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
                           row[0]);
             row[3] = row[0] + mask.obj_mask;
-            row[1] = row[0] + mask.obj_min_mask;
-            row[2] = row[0] + mask.obj_max_mask;
+            row[1] = row[0] + mask1;
+            row[2] = row[0] + mask2;
             for (index_t b = 0; b <= a; b++) {
                 VT<index_t> col(4);  // column index of reduced matrix entry
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, b,
@@ -190,8 +194,8 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrixCtrl(
                     continue;
                 }
                 col[3] = col[0] + mask.obj_mask;
-                col[1] = col[0] + mask.obj_min_mask;
-                col[2] = col[0] + mask.obj_max_mask;
+                col[1] = col[0] + mask1;
+                col[2] = col[0] + mask2;
                 VT<VT<qs_data_t>> tmp_mat(4, VT<qs_data_t>(4));
                 if ((row[0] & mask.ctrl_mask) == mask.ctrl_mask) {  // row in control
                     for (int i = 0; i < 4; i++) {
