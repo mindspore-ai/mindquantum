@@ -55,3 +55,12 @@ if(ENABLE_CUDA)
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/vector/detail)
+
+# ==============================================================================
+
+add_library(mqsim_densitymatrix_cpu STATIC)
+target_link_libraries(mqsim_densitymatrix_cpu PUBLIC mqsim_common intrin_flag_CXX)
+force_at_least_cxx17_workaround(mqsim_densitymatrix_cpu)
+append_to_property(mq_install_targets GLOBAL mqsim_densitymatrix_cpu)
+
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/densitymatrix/detail)

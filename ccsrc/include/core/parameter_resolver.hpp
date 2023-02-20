@@ -51,7 +51,7 @@
 
 namespace mindquantum {
 template <typename float_t>
-class ParameterResolver;
+struct ParameterResolver;
 
 namespace details {
 template <RealCastType cast_type, typename float_t>

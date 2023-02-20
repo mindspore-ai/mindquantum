@@ -51,7 +51,7 @@ def test_circuit_qubits_grad():
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('backend', get_supported_simulator())
+@pytest.mark.parametrize('backend', [i for i in get_supported_simulator() if i != 'mqmatrix'])
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_get_matrix(backend, dtype):
     """
@@ -95,7 +95,10 @@ def test_evolution_state(backend):
     simulator.apply_circuit(circ, ParameterResolver({'a': a, 'b': b}))
     state = simulator.get_qs()
     state_exp = [0.9580325796404553, -0.14479246283091116j, -0.2446258794777393j, -0.036971585637570345]
-    assert np.allclose(state, state_exp)
+    if backend == "mqmatrix":
+        assert np.allclose(state, np.outer(state_exp, np.conj(state_exp)))
+    else:
+        assert np.allclose(state, state_exp)
 
 
 def test_is_measure_end():

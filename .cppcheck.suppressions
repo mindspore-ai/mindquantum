@@ -49,6 +49,7 @@ syntaxError:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_conditi
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_gate_expect.cpp
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_dot_like.cpp
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_gate_expect.cpp
+syntaxError:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_gate_expect.cpp
 
 uninitMemberVar:ccsrc/include/core/numba_wrapper.hpp
 
@@ -63,6 +64,7 @@ unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_swap_l
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_matrix_gate.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_x_like.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_matrix_gate.cpp
+unknownMacro:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_matrix_gate.cpp
 
 unreadVariable:ccsrc/lib/experimental/decompositions/time_evolution.cpp
 

@@ -75,7 +75,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::SetToZeroExcept(qs_data_p_t qs, 
 
 template <typename derived_, typename calc_type_>
 auto CPUVectorPolicyBase<derived_, calc_type_>::Copy(qs_data_p_t qs, index_t dim) -> qs_data_p_t {
-    qs_data_p_t out = CPUVectorPolicyBase::InitState(dim, false);
+    qs_data_p_t out = derived::InitState(dim, false);
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { out[i] = qs[i]; })
     return out;
@@ -101,7 +101,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t qs, const VT<p
 template <typename derived_, typename calc_type_>
 auto CPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham,
                                                            index_t dim) -> qs_data_p_t {
-    qs_data_p_t out = CPUVectorPolicyBase::InitState(dim, false);
+    qs_data_p_t out = derived::InitState(dim, false);
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
         auto mask_f = mask.mask_x | mask.mask_y;

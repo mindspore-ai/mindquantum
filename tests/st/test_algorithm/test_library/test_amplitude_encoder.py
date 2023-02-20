@@ -48,23 +48,41 @@ def test_amplitude_encoder(backend, dtype):
     circuit, params = amplitude_encoder([0.5, 0.5, 0.5, 0.5], 3)
     sim.apply_circuit(circuit, params)
     state = sim.get_qs(False)
-    assert abs(state[0].real - 0.5) < 1e-6
-    assert abs(state[1].real - 0.5) < 1e-6
-    assert abs(state[2].real - 0.5) < 1e-6
-    assert abs(state[3].real - 0.5) < 1e-6
+    if backend == "mqmatrix":
+        assert abs(state[0][0].real - 0.25) < 1e-6
+        assert abs(state[1][1].real - 0.25) < 1e-6
+        assert abs(state[2][2].real - 0.25) < 1e-6
+        assert abs(state[3][3].real - 0.25) < 1e-6
+    else:
+        assert abs(state[0].real - 0.5) < 1e-6
+        assert abs(state[1].real - 0.5) < 1e-6
+        assert abs(state[2].real - 0.5) < 1e-6
+        assert abs(state[3].real - 0.5) < 1e-6
     circuit, params = amplitude_encoder([0, 0, 0.5, 0.5, 0.5, 0.5], 3)
     sim.reset()
     sim.apply_circuit(circuit, params)
     state = sim.get_qs(False)
-    assert abs(state[2].real - 0.5) < 1e-6
-    assert abs(state[3].real - 0.5) < 1e-6
-    assert abs(state[4].real - 0.5) < 1e-6
-    assert abs(state[5].real - 0.5) < 1e-6
+    if backend == "mqmatrix":
+        assert abs(state[2][2].real - 0.25) < 1e-6
+        assert abs(state[3][3].real - 0.25) < 1e-6
+        assert abs(state[4][4].real - 0.25) < 1e-6
+        assert abs(state[5][5].real - 0.25) < 1e-6
+    else:
+        assert abs(state[2].real - 0.5) < 1e-6
+        assert abs(state[3].real - 0.5) < 1e-6
+        assert abs(state[4].real - 0.5) < 1e-6
+        assert abs(state[5].real - 0.5) < 1e-6
     circuit, params = amplitude_encoder([0.5, -0.5, 0.5, 0.5], 3)
     sim.reset()
     sim.apply_circuit(circuit, params)
     state = sim.get_qs(False)
-    assert abs(state[0].real - 0.5) < 1e-6
-    assert abs(state[1].real + 0.5) < 1e-6
-    assert abs(state[2].real - 0.5) < 1e-6
-    assert abs(state[3].real - 0.5) < 1e-6
+    if backend == "mqmatrix":
+        assert abs(state[0][0].real - 0.25) < 1e-6
+        assert abs(state[1][1].real - 0.25) < 1e-6
+        assert abs(state[2][2].real - 0.25) < 1e-6
+        assert abs(state[3][3].real - 0.25) < 1e-6
+    else:
+        assert abs(state[0].real - 0.5) < 1e-6
+        assert abs(state[1].real + 0.5) < 1e-6
+        assert abs(state[2].real - 0.5) < 1e-6
+        assert abs(state[3].real - 0.5) < 1e-6

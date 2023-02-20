@@ -18,15 +18,10 @@
 
 # lint_cmake: -whitespace/indent
 
-target_sources(
-  mqsim_vector_cpu
-  PRIVATE ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_policy.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_condition.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_dot_like.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_gate_expect.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_matrix_gate.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_other_gate.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_rot_pauli.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_swap_like.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_x_like.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_z_like.cpp)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/cpu_common)
+
+if(X86_64)
+  target_compile_definitions(mqsim_densitymatrix_cpu PUBLIC __x86_64__)
+elseif(AARCH64)
+  target_compile_definitions(mqsim_densitymatrix_cpu PUBLIC __amd64)
+endif()
