@@ -410,7 +410,7 @@ def test_copy(virtual_qc, dtype):
     qs1 = sim.get_qs()
     qs2 = sim2.get_qs()
     if virtual_qc == 'mqmatrix' and dtype == 'float':
-        assert np.allclose(qs1, qs2, atol=1.e-6)
+        assert np.allclose(qs1, qs2, atol=1.0e-6)
     else:
         assert np.allclose(qs1, qs2)
 
@@ -430,7 +430,7 @@ def test_univ_order(virtual_qc, dtype):
     r_c = random_circuit(2, 100)
     if virtual_qc == 'mqmatrix':
         u = r_c.matrix(backend='mqvector')
-        assert np.allclose(r_c.get_qs(backend=virtual_qc), np.outer(u[:, 0]))
+        assert np.allclose(r_c.get_qs(backend=virtual_qc), np.outer(u[:, 0], np.conj(u[:, 0])))
     else:
         u = r_c.matrix(backend=virtual_qc)
         assert np.allclose(r_c.get_qs(backend=virtual_qc), u[:, 0])
@@ -438,8 +438,9 @@ def test_univ_order(virtual_qc, dtype):
     c0 = Circuit([g.on([0, 1])])
     c1 = Circuit([g.on([1, 0])])
     if virtual_qc == 'mqmatrix':
-        assert np.allclose(c0.get_qs(backend=virtual_qc), np.outer(u[:, 0]))
-        assert np.allclose(c1.get_qs(backend=virtual_qc), np.outer(np.array([u[0, 0], u[2, 0], u[1, 0], u[3, 0]])))
+        assert np.allclose(c0.get_qs(backend=virtual_qc), np.outer(u[:, 0], np.conj(u[:, 0])))
+        v_tmp = np.array([u[0, 0], u[2, 0], u[1, 0], u[3, 0]])
+        assert np.allclose(c1.get_qs(backend=virtual_qc), np.outer(v_tmp, np.conj(v_tmp)))
     else:
         assert np.allclose(c0.get_qs(backend=virtual_qc), u[:, 0])
         assert np.allclose(c1.get_qs(backend=virtual_qc), np.array([u[0, 0], u[2, 0], u[1, 0], u[3, 0]]))
