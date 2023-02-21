@@ -22,10 +22,12 @@
 #include <cstddef>
 #include <functional>
 #include <iterator>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <random>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <thread>
 #include <type_traits>
@@ -74,64 +76,66 @@ class VectorState {
         qs_policy_t::FreeState(qs);
     }
 
-    std::optional<std::string_view> DType();
+    virtual std::optional<std::string_view> DType();
 
     //! Reset the quantum state to quantum zero state
-    void Reset();
+    virtual void Reset();
 
     //! Display basic information of this quantum state
-    void Display(qbit_t qubits_limit = 10) const;
+    virtual void Display(qbit_t qubits_limit = 10) const;
 
     //! Get the quantum state value
-    VT<py_qs_data_t> GetQS() const;
+    virtual VT<py_qs_data_t> GetQS() const;
 
     //! Set the quantum state value
-    void SetQS(const VT<py_qs_data_t>& qs_out);
+    virtual void SetQS(const VT<py_qs_data_t>& qs_out);
 
     /*!
      * \brief Apply a quantum gate on this quantum state, quantum gate can be
      * normal quantum gate, measurement gate and noise channel
      */
-    index_t ApplyGate(const std::shared_ptr<BasicGate>& gate,
-                      const ParameterResolver<calc_type>& pr = ParameterResolver<calc_type>(), bool diff = false);
+    virtual index_t ApplyGate(const std::shared_ptr<BasicGate>& gate,
+                              const ParameterResolver<calc_type>& pr = ParameterResolver<calc_type>(),
+                              bool diff = false);
 
     //! Apply a measurement gate on this quantum state, return the collapsed qubit state
-    auto ApplyMeasure(const std::shared_ptr<BasicGate>& gate);
+    virtual index_t ApplyMeasure(const std::shared_ptr<BasicGate>& gate);
 
     //! Apply a noise channel on this quantum state
-    auto ApplyChannel(const std::shared_ptr<BasicGate>& gate);
+    virtual void ApplyChannel(const std::shared_ptr<BasicGate>& gate);
 
     //! Apply a pauli channel on this quantum state
-    auto ApplyPauliChannel(const std::shared_ptr<BasicGate>& gate);
+    virtual void ApplyPauliChannel(const std::shared_ptr<BasicGate>& gate);
 
     //! Apply a customized kraus channel
-    auto ApplyKrausChannel(const std::shared_ptr<BasicGate>& gate);
+    virtual void ApplyKrausChannel(const std::shared_ptr<BasicGate>& gate);
 
     //! Apply a damping channel
-    auto ApplyDampingChannel(const std::shared_ptr<BasicGate>& gate);
+    virtual void ApplyDampingChannel(const std::shared_ptr<BasicGate>& gate);
 
     //! calculate the expectation of differential form of parameterized gate two quantum state. That is
     //! <bra| \partial_\theta{U} |ket>
-    static Dim2Matrix<calc_type> ExpectDiffGate(qs_data_p_t bra, qs_data_p_t ket,
-                                                const std::shared_ptr<BasicGate>& gate,
-                                                const ParameterResolver<calc_type>& pr, index_t dim);
+    virtual Dim2Matrix<calc_type> ExpectDiffGate(qs_data_p_t bra, qs_data_p_t ket,
+                                                 const std::shared_ptr<BasicGate>& gate,
+                                                 const ParameterResolver<calc_type>& pr, index_t dim);
 
-    static Dim2Matrix<calc_type> ExpectDiffU3(qs_data_p_t bra, qs_data_p_t ket, const std::shared_ptr<BasicGate>& gate,
-                                              const ParameterResolver<calc_type>& pr, index_t dim);
-    static Dim2Matrix<calc_type> ExpectDiffFSim(qs_data_p_t bra, qs_data_p_t ket,
-                                                const std::shared_ptr<BasicGate>& gate,
-                                                const ParameterResolver<calc_type>& pr, index_t dim);
+    virtual Dim2Matrix<calc_type> ExpectDiffU3(qs_data_p_t bra, qs_data_p_t ket, const std::shared_ptr<BasicGate>& gate,
+                                               const ParameterResolver<calc_type>& pr, index_t dim);
+    virtual Dim2Matrix<calc_type> ExpectDiffFSim(qs_data_p_t bra, qs_data_p_t ket,
+                                                 const std::shared_ptr<BasicGate>& gate,
+                                                 const ParameterResolver<calc_type>& pr, index_t dim);
     //! Apply a quantum circuit on this quantum state
-    auto ApplyCircuit(const circuit_t& circ, const ParameterResolver<calc_type>& pr = ParameterResolver<calc_type>());
+    virtual std::map<std::string, int> ApplyCircuit(const circuit_t& circ, const ParameterResolver<calc_type>& pr
+                                                                           = ParameterResolver<calc_type>());
 
     //! Apply a hamiltonian on this quantum state
-    void ApplyHamiltonian(const Hamiltonian<calc_type>& ham);
+    virtual void ApplyHamiltonian(const Hamiltonian<calc_type>& ham);
 
     //! Get the matrix of quantum circuit.
-    VVT<py_qs_data_t> GetCircuitMatrix(const circuit_t& circ, const ParameterResolver<calc_type>& pr);
+    virtual VVT<py_qs_data_t> GetCircuitMatrix(const circuit_t& circ, const ParameterResolver<calc_type>& pr);
 
     //! Get expectation of given hamiltonian
-    py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham) {
+    virtual py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham) {
         auto ket = *this;
         ket.ApplyHamiltonian(ham);
         return qs_policy_t::Vdot(this->qs, ket.qs, dim);
@@ -139,46 +143,47 @@ class VectorState {
 
     //! Get the expectation of hamiltonian
     //! Here a single hamiltonian and single parameter data are needed
-    VT<py_qs_data_t> GetExpectationWithGradOneOne(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
-                                                  const circuit_t& herm_circ, const ParameterResolver<calc_type>& pr,
-                                                  const MST<size_t>& p_map);
+    virtual VT<py_qs_data_t> GetExpectationWithGradOneOne(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
+                                                          const circuit_t& herm_circ,
+                                                          const ParameterResolver<calc_type>& pr,
+                                                          const MST<size_t>& p_map);
 
     //! Get the expectation of hamiltonian
     //! Here multiple hamiltonian and single parameter data are needed
-    VVT<py_qs_data_t> GetExpectationWithGradOneMulti(const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
-                                                     const circuit_t& circ, const circuit_t& herm_circ,
-                                                     const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map,
-                                                     int n_thread);
+    virtual VVT<py_qs_data_t> GetExpectationWithGradOneMulti(
+        const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
+        const circuit_t& herm_circ, const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map, int n_thread);
     //! Get the expectation of hamiltonian
     //! Here multiple hamiltonian and multiple parameters are needed
-    VT<VVT<py_qs_data_t>> GetExpectationWithGradMultiMulti(
+    virtual VT<VVT<py_qs_data_t>> GetExpectationWithGradMultiMulti(
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
         const circuit_t& herm_circ, const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name,
         const VS& ans_name, size_t batch_threads, size_t mea_threads);
 
-    VVT<py_qs_data_t> GetExpectationNonHermitianWithGradOneMulti(
+    virtual VVT<py_qs_data_t> GetExpectationNonHermitianWithGradOneMulti(
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& herm_hams, const circuit_t& left_circ,
         const circuit_t& herm_left_circ, const circuit_t& right_circ, const circuit_t& herm_right_circ,
         const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map, int n_thread,
         const derived_t& simulator_left);
 
-    VVT<py_qs_data_t> LeftSizeGradOneMulti(const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
-                                           const circuit_t& herm_left_circ, const ParameterResolver<calc_type>& pr,
-                                           const MST<size_t>& p_map, int n_thread, const derived_t& simulator_left,
-                                           const derived_t& simulator_right);
+    virtual VVT<py_qs_data_t> LeftSizeGradOneMulti(const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
+                                                   const circuit_t& herm_left_circ,
+                                                   const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map,
+                                                   int n_thread, const derived_t& simulator_left,
+                                                   const derived_t& simulator_right);
 
-    VT<VVT<py_qs_data_t>> GetExpectationNonHermitianWithGradMultiMulti(
+    virtual VT<VVT<py_qs_data_t>> GetExpectationNonHermitianWithGradMultiMulti(
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& herm_hams, const circuit_t& left_circ,
         const circuit_t& herm_left_circ, const circuit_t& right_circ, const circuit_t& herm_right_circ,
         const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name, const VS& ans_name,
         const derived_t& simulator_left, size_t batch_threads, size_t mea_threads);
 
-    VT<unsigned> Sampling(const circuit_t& circ, const ParameterResolver<calc_type>& pr, size_t shots,
-                          const MST<size_t>& key_map, unsigned seed);
+    virtual VT<unsigned> Sampling(const circuit_t& circ, const ParameterResolver<calc_type>& pr, size_t shots,
+                                  const MST<size_t>& key_map, unsigned seed);
 
- private:
+ protected:
     qs_data_p_t qs = nullptr;
     qbit_t n_qubits = 0;
     index_t dim = 0;

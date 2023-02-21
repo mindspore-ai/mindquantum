@@ -317,7 +317,7 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
 }
 
 template <typename qs_policy_t_>
-auto DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicGate>& gate) {
+void DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicGate>& gate) {
     auto id = gate->id_;
     switch (id) {
         case GateID::AD:
@@ -346,8 +346,7 @@ void DensityMatrixState<qs_policy_t_>::ApplyHamiltonian(const Hamiltonian<calc_t
 }
 
 template <typename qs_policy_t_>
-auto DensityMatrixState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate>& gate) {
-    assert(gate->is_measure_);
+auto DensityMatrixState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate>& gate) -> index_t {
     index_t one_mask = (1UL << gate->obj_qubits_[0]);
     auto one_amp = qs_policy_t::DiagonalConditionalCollect(qs, one_mask, one_mask, dim);
     index_t collapse_mask = (static_cast<index_t>(rng_() < one_amp) << gate->obj_qubits_[0]);
@@ -455,7 +454,8 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffFSim(qs_data_p_t dens_matrix, q
 }
 
 template <typename qs_policy_t_>
-auto DensityMatrixState<qs_policy_t_>::ApplyCircuit(const circuit_t& circ, const ParameterResolver<calc_type>& pr) {
+std::map<std::string, int> DensityMatrixState<qs_policy_t_>::ApplyCircuit(const circuit_t& circ,
+                                                                          const ParameterResolver<calc_type>& pr) {
     std::map<std::string, int> result;
     for (auto& g : circ) {
         if (g->id_ == GateID::M) {
