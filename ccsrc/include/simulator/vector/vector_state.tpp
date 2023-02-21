@@ -342,7 +342,7 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate>& gate) {
+auto VectorState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate>& gate) -> index_t {
     index_t one_mask = (1UL << gate->obj_qubits_[0]);
     auto one_amp = qs_policy_t::ConditionalCollect(qs, one_mask, one_mask, true, dim).real();
     index_t collapse_mask = (static_cast<index_t>(rng_() < one_amp) << gate->obj_qubits_[0]);
@@ -352,7 +352,7 @@ auto VectorState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate>& g
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicGate>& gate) {
+void VectorState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicGate>& gate) {
     auto id = gate->id_;
     switch (id) {
         case GateID::PL:
@@ -371,7 +371,7 @@ auto VectorState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicGate>& g
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::ApplyPauliChannel(const std::shared_ptr<BasicGate>& gate) {
+void VectorState<qs_policy_t_>::ApplyPauliChannel(const std::shared_ptr<BasicGate>& gate) {
     double r = static_cast<double>(rng_());
     auto g = static_cast<PauliChannel*>(gate.get());
     auto it = std::lower_bound(g->cumulative_probs_.begin(), g->cumulative_probs_.end(), r);
@@ -391,7 +391,7 @@ auto VectorState<qs_policy_t_>::ApplyPauliChannel(const std::shared_ptr<BasicGat
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::ApplyKrausChannel(const std::shared_ptr<BasicGate>& gate) {
+void VectorState<qs_policy_t_>::ApplyKrausChannel(const std::shared_ptr<BasicGate>& gate) {
     auto tmp_qs = qs_policy_t::InitState(dim);
     calc_type prob = 0;
     auto g = static_cast<KrausChannel<calc_type>*>(gate.get());
@@ -412,7 +412,7 @@ auto VectorState<qs_policy_t_>::ApplyKrausChannel(const std::shared_ptr<BasicGat
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::ApplyDampingChannel(const std::shared_ptr<BasicGate>& gate) {
+void VectorState<qs_policy_t_>::ApplyDampingChannel(const std::shared_ptr<BasicGate>& gate) {
     calc_type reduced_factor_b_square = qs_policy_t::OneStateVdot(qs, qs, gate->obj_qubits_[0], dim).real();
     calc_type reduced_factor_b = std::sqrt(reduced_factor_b_square);
     if (reduced_factor_b < 1e-8) {
@@ -557,7 +557,8 @@ auto VectorState<qs_policy_t_>::ExpectDiffFSim(qs_data_p_t bra, qs_data_p_t ket,
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::ApplyCircuit(const circuit_t& circ, const ParameterResolver<calc_type>& pr) {
+std::map<std::string, int> VectorState<qs_policy_t_>::ApplyCircuit(const circuit_t& circ,
+                                                                   const ParameterResolver<calc_type>& pr) {
     std::map<std::string, int> result;
     for (auto& g : circ) {
         if (g->id_ == GateID::M) {

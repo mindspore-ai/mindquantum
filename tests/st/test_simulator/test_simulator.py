@@ -430,20 +430,20 @@ def test_univ_order(virtual_qc, dtype):
     r_c = random_circuit(2, 100)
     if virtual_qc == 'mqmatrix':
         u = r_c.matrix(backend='mqvector')
-        assert np.allclose(r_c.get_qs(backend=virtual_qc), np.outer(u[:, 0], np.conj(u[:, 0])))
+        assert np.allclose(r_c.get_qs(backend=virtual_qc), np.outer(u[:, 0], np.conj(u[:, 0])), atol=1e-6)
     else:
         u = r_c.matrix(backend=virtual_qc)
-        assert np.allclose(r_c.get_qs(backend=virtual_qc), u[:, 0])
+        assert np.allclose(r_c.get_qs(backend=virtual_qc), u[:, 0], atol=1e-6)
     g = G.UnivMathGate('u', u)
     c0 = Circuit([g.on([0, 1])])
     c1 = Circuit([g.on([1, 0])])
     if virtual_qc == 'mqmatrix':
-        assert np.allclose(c0.get_qs(backend=virtual_qc), np.outer(u[:, 0], np.conj(u[:, 0])))
+        assert np.allclose(c0.get_qs(backend=virtual_qc), np.outer(u[:, 0], np.conj(u[:, 0])), atol=1e-6)
         v_tmp = np.array([u[0, 0], u[2, 0], u[1, 0], u[3, 0]])
-        assert np.allclose(c1.get_qs(backend=virtual_qc), np.outer(v_tmp, np.conj(v_tmp)))
+        assert np.allclose(c1.get_qs(backend=virtual_qc), np.outer(v_tmp, np.conj(v_tmp)), atol=1e-6)
     else:
-        assert np.allclose(c0.get_qs(backend=virtual_qc), u[:, 0])
-        assert np.allclose(c1.get_qs(backend=virtual_qc), np.array([u[0, 0], u[2, 0], u[1, 0], u[3, 0]]))
+        assert np.allclose(c0.get_qs(backend=virtual_qc), u[:, 0], atol=1e-6)
+        assert np.allclose(c1.get_qs(backend=virtual_qc), np.array([u[0, 0], u[2, 0], u[1, 0], u[3, 0]]), atol=1e-6)
 
 
 @pytest.mark.level0

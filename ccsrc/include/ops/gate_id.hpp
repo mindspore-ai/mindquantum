@@ -53,6 +53,7 @@ enum class GateID : uint8_t {
     PD,     // phase damping channel
     KRAUS,
     CUSTOM,
+    HOLDER,  // for extended gate id.
 };
 
 // NOLINTNEXTLINE(*avoid-c-arrays,readability-identifier-length)
