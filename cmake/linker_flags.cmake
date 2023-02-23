@@ -204,12 +204,19 @@ set(CMAKE_NVCXX_LDFLAGS_INIT \"${CMAKE_NVCXX_LDFLAGS_INIT} -v\")")
         endif()
 
         message(CHECK_START "Looking for absence of ${_name} (${_lang})")
-
-        find_library(
-          _shared_lib_${_lang}
-          NAMES shared_lib_${_lang} libshared_lib_${_lang}
-          PATHS ${_binary_dir} REQUIRED
-          NO_DEFAULT_PATH)
+        if(EXISTS ${_binary_dir}/Release)
+          find_library(
+            _shared_lib_${_lang}
+            NAMES shared_lib_${_lang} libshared_lib_${_lang}
+            PATHS ${_binary_dir}/Release REQUIRED
+            NO_DEFAULT_PATH)
+        else()
+          find_library(
+            _shared_lib_${_lang}
+            NAMES shared_lib_${_lang} libshared_lib_${_lang}
+            PATHS ${_binary_dir} REQUIRED
+            NO_DEFAULT_PATH)
+        endif()
         mark_as_advanced(_shared_lib_${_lang})
 
         execute_process(
