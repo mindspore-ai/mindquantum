@@ -18,7 +18,7 @@ import numpy as np
 import pytest
 
 from mindquantum.algorithm.nisq import IQPEncoding
-from mindquantum.config import Context
+from mindquantum.config import set_context
 
 
 @pytest.mark.level0
@@ -31,7 +31,7 @@ def test_general_iqp_encoding(dtype):
     Description: Test general_iqp_encoding
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     iqp = IQPEncoding(2)
     data = np.array([0, 0])
     state = iqp.circuit.get_qs(pr=iqp.data_preparation(data))

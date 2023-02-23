@@ -17,7 +17,7 @@ Test the polynomial_tensor in the ops module.
 import numpy as np
 import pytest
 
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core.operators import PolynomialTensor
 
 
@@ -31,7 +31,7 @@ def test_polynomial_tensor(dtype):
     Description: Test polynomial tensor
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     one_body_term = np.array([[1, 0], [0, 1]])
     two_body_term = np.array([[[[1, 0], [0, 1]], [[1, 0], [0, 1]]], [[[1, 0], [0, 1]], [[1, 0], [0, 1]]]])
     n_body_tensors = {(): 1, (1, 0): one_body_term, (1, 1, 0, 0): two_body_term}

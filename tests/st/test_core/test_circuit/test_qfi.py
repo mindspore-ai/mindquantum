@@ -14,12 +14,11 @@
 # ============================================================================
 
 # pylint: disable=invalid-name
-
 """Test quantum fisher information."""
 import numpy as np
 import pytest
 
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core.circuit import (
     Circuit,
     partial_psi_partial_psi,
@@ -42,7 +41,7 @@ def test_qfi(backend, dtype):
     Expectation: success
     """
     # pylint: disable=too-many-locals
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     a = PR('a')
     b = PR('b')
     val = PR({'a': 1, 'b': 2})

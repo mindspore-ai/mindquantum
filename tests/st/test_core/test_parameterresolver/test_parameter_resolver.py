@@ -15,7 +15,7 @@
 """Test ParameterResolve."""
 import pytest
 
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 
 
@@ -29,7 +29,7 @@ def test_params_name_order(dtype):
     Description: Test parameters name of ansatz and encoder parameters
     Expectation: success
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     pr = PR(dict(zip([str(i) for i in range(10)], range(10))))
     assert pr.params_name == pr.ansatz_parameters
 
@@ -44,7 +44,7 @@ def test_parameter_resolve(dtype):
     Description: Test parameter resolver
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     pr = PR({'a': 1.0})
     pr['b'] = 2.0
     pr[['c', 'd']] = [3.0, 4.0]
@@ -74,7 +74,7 @@ def test_parameter_resolve_dumps_and_loads(dtype):
     Description: Test pr dumps to json and json loads to pr
     Expectation:
     '''
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     pr = PR({'a': 1, 'b': 2, 'c': 3, 'd': 4})
     pr.no_grad_part('a', 'b')
 
@@ -93,7 +93,7 @@ def test_parameter_resolve_combination(dtype):
     Description: Test pr combination
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     pr1 = PR({'a': 1})
     pr2 = PR({'a': 2, 'b': 3})
     assert pr1.combination(pr2) == 2

@@ -13,10 +13,12 @@
 # limitations under the License.
 # ============================================================================
 """Simulator."""
+import warnings
 from functools import partial
 
 import numpy as np
 
+from ..config import get_context
 from ..core.operators import Hamiltonian
 from ..utils.type_value_check import (
     _check_input_type,
@@ -87,6 +89,16 @@ class Simulator:
                 seed = np.random.randint(1, 2**23)
             _check_seed(seed)
             try:
+                if backend == 'mqvector_gpu':
+                    warnings.warn(
+                        "'mqvector_gpu' is deprecated, please use "
+                        "'mindquantum.set_context(device_target=\"GPU\")' to let mqvector simulator "
+                        "enable GPU backend.",
+                        category=DeprecationWarning,
+                        stacklevel=2,
+                    )
+                if get_context('device_target') == "GPU" and backend == "mqvector":
+                    backend = "mqvector_gpu"
                 self.backend = SUPPORTED_SIMULATOR[backend](n_qubits, seed, *args, **kwargs)
             except KeyError as err:
                 raise ValueError(

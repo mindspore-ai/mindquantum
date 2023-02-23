@@ -35,6 +35,7 @@ from mindquantum.utils.type_value_check import (
 
 # This import is required to register some of the C++ types (e.g. ParameterResolver)
 from .. import mqbackend  # noqa: F401  # pylint: disable=unused-import
+from ..config import get_context
 from ..utils.string_utils import ket_string
 from .backend_base import BackendBase
 from .utils import GradOpsWrapper, _thread_balance
@@ -65,12 +66,18 @@ class MQSim(BackendBase):
         """Initialize a mindquantum backend."""
         super().__init__(name, n_qubits, seed)
         if name == 'mqvector':
-            self.sim = getattr(_mq_vector, self.arithmetic_type).mqvector(n_qubits, seed)
+            if get_context('device_target') == "GPU":
+                if MQ_SIM_GPU_SUPPORTED:
+                    self.sim = getattr(_mq_vector_gpu, self.arithmetic_type).mqvector(n_qubits, seed)
+                else:
+                    raise NotImplementedError("mqvector cannot use GPU in your machine.")
+            else:
+                self.sim = getattr(_mq_vector, self.arithmetic_type).mqvector(n_qubits, seed)
         elif name == 'mqmatrix':
+            if get_context('device_target') == "GPU":
+                raise NotImplementedError("mqmatrix with GPU backend not implemented yet.")
             self.sim = getattr(_mq_matrix, self.arithmetic_type).mqmatrix(n_qubits, seed)
-        elif name == 'mqvector_gpu':
-            if MQ_SIM_GPU_SUPPORTED:
-                self.sim = getattr(_mq_vector_gpu, self.arithmetic_type).mqvector(n_qubits, seed)
+
         else:
             raise NotImplementedError(f"{name} backend not implemented.")
 

@@ -12,22 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+# pylint: disable=import-outside-toplevel
+
 """Test basic universal gate decomposition rules"""
 
 import numpy as np
-from scipy.stats import unitary_group
 import pytest
+from scipy.stats import unitary_group
+
 import mindquantum as mq
-from mindquantum.config import Context
 from mindquantum import gates
 from mindquantum.algorithm.compiler import decompose
+from mindquantum.config import set_context
 
 rand_unitary = unitary_group.rvs
 
 
 def assert_equivalent_unitary(u, v):
+    """Assert two unitary equal."""
     try:
         import cirq
+
         cirq.testing.assert_allclose_up_to_global_phase(u, v, atol=1e-5)
     except ModuleNotFoundError:
         assert decompose.utils.is_equiv_unitary(u, v)
@@ -44,7 +49,7 @@ def test_euler_decomposition(dtype):
     Description: Test Euler decomposition for single-qubit unitary gate.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
 
     # ZYZ basis
     u = unitary_group.rvs(2, random_state=123)
@@ -69,7 +74,7 @@ def test_tensor_product_decomposition(dtype):
     Description: Test 2-qubit tensor-product decomposition.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
 
     g = gates.UnivMathGate('XY', np.kron(gates.X.matrix(), gates.Y.matrix())).on([0, 1])
     circ_original = (mq.Circuit() + g).reverse_qubits()
@@ -88,7 +93,7 @@ def test_abc_decomposition(dtype):
     Description: Test ABC decomposition for 2-qubit controlled gate.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
 
     # special case: CRz(pi)
     g = gates.RZ(np.pi).on(0, 1)
@@ -115,7 +120,7 @@ def test_kak_decomposition(dtype):
     Description: Test KAK decomposition for arbitrary 2-qubit gate.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
 
     g = gates.UnivMathGate('U', rand_unitary(4, random_state=123)).on([0, 1])
     circ_original = (mq.Circuit() + g).reverse_qubits()

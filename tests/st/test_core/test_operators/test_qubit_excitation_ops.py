@@ -17,7 +17,7 @@
 """Test qubit excitation operator."""
 import pytest
 
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core.operators import (
     FermionOperator,
     QubitExcitationOperator,
@@ -35,7 +35,7 @@ def test_qubit_excitation_ops_num_coeff(dtype):
     Description: check the creation operator
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     a_p_dagger = QubitExcitationOperator('1^')
     assert str(a_p_dagger) == '1 [Q1^] '
 
@@ -62,7 +62,7 @@ def test_power(dtype):
     Description: check power and multiply
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     w = (1 + 2j) * QubitExcitationOperator(' 4^ 3 9 3^ ') + 4 * QubitExcitationOperator(' 2 ')
     w_2 = w * w
     w_3 = w**2
@@ -79,7 +79,7 @@ def test_normal_order(dtype):
     Description: Test normal order
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     origin = QubitExcitationOperator('0 1^')
     # Coefficient will not be affected for qubit-excitation operators
     normal_order = QubitExcitationOperator('1^ 0', 1)
@@ -97,7 +97,7 @@ def test_multiplier(dtype):
     Description: Test multiplier
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     origin = QubitExcitationOperator('0 1^')
     after_mul = QubitExcitationOperator('0 1^', 2)
     assert after_mul == 2 * origin
@@ -125,7 +125,7 @@ def test_add_sub(dtype):
     Description: Test add ans sub
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     # Test in place add
     w1 = QubitExcitationOperator(' 4^ 3 9 3^ ') + 4 * QubitExcitationOperator(' 2 ')
     w2 = 4 * QubitExcitationOperator(' 2 ')
@@ -143,7 +143,7 @@ def test_compress(dtype):
     Description: Test compress
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     w1 = QubitExcitationOperator('4^ 3') + QubitExcitationOperator('2', 1e-9)
     w2 = QubitExcitationOperator('4^ 3')
     assert w1.compress() == w2
@@ -165,7 +165,7 @@ def test_constant(dtype):
     Description: Test constant
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     w1 = (
         QubitExcitationOperator('4^ 3 9 3^') + 6.0 * QubitExcitationOperator('2 3^') + 2.0 * QubitExcitationOperator('')
     )
@@ -182,7 +182,7 @@ def test_para_operators(dtype):
     Description: Test para operators
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     para_op = QubitExcitationOperator('0 1^', 'x')
     assert str(para_op) == 'x [Q0 Q1^] '
 
@@ -202,7 +202,7 @@ def test_eq(dtype):
     Description: Test equal
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     a = QubitExcitationOperator('0 1^', 'x')
     assert a.subs({'x': 1}) == QubitExcitationOperator('0 1^')
 
@@ -218,7 +218,7 @@ def test_convert_to_qubit_operator(dtype):
         the qubit operator correctly according to the definition.
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     op = QubitExcitationOperator(((4, 1), (1, 0)), 2.0j)
     qubit_op = (
         QubitOperator("X1 X4", 0.5j)
@@ -239,7 +239,7 @@ def test_fermion_op(dtype):
     Description: Test the "Fermion excitation version" of a qubit excitation operator
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     op = QubitExcitationOperator(((4, 1), (1, 0)), 2.0j)
     ferm_op = FermionOperator(((4, 1), (1, 0)), 2.0j)
 

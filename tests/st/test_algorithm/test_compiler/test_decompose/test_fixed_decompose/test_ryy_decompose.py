@@ -14,13 +14,12 @@
 # ============================================================================
 
 # pylint: disable=invalid-name
-
 '''test decompose rule'''
 import numpy as np
 import pytest
 
 from mindquantum.algorithm.compiler.decompose import cryy_decompose, ryy_decompose
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import Ryy
 
@@ -43,7 +42,7 @@ def test_ryy(dtype):
     Description: Test ryy decompose
     Expectation: success
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     ryy = Ryy(1).on([0, 1])
     for solution in ryy_decompose(ryy):
         circuit_equal_test(ryy, solution)
@@ -59,7 +58,7 @@ def test_cryy(dtype):
     Description: Test cryy decompose
     Expectation: success
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     cryy = Ryy(2).on([0, 1], [2, 3])
     for solution in cryy_decompose(cryy):
         circuit_equal_test(cryy, solution)

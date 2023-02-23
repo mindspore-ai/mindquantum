@@ -14,13 +14,12 @@
 # ============================================================================
 
 # pylint: disable=invalid-name
-
 '''test decompose rule'''
 import numpy as np
 import pytest
 
 from mindquantum.algorithm.compiler.decompose import cs_decompose
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import S
 
@@ -43,7 +42,7 @@ def test_cs(dtype):
     Description: Test cs decompose
     Expectation: success
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     cs = S.on(1, 0)
     for solution in cs_decompose(cs):
         circuit_equal_test(cs, solution)

@@ -15,7 +15,7 @@
 """Test operator_utils."""
 import pytest
 
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core.operators import (
     FermionOperator,
     QubitExcitationOperator,
@@ -42,7 +42,7 @@ def test_count_qubits(dtype):
     Description: Test count_qubits.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     qubit_op = QubitOperator("X1 Y2")
     assert count_qubits(qubit_op) == 3
 
@@ -64,7 +64,7 @@ def test_normal_ordered(dtype):
     Description: Test normal_ordered.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     fermion_operator = FermionOperator("3 4^")
     assert str(normal_ordered(fermion_operator)) == '-1 [4^ 3] '
 
@@ -80,7 +80,7 @@ def test_commutator(dtype):
     Description: Test commutator.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     qub_op1 = QubitOperator("X1 Y2")
     qub_op2 = QubitOperator("X1 Z2")
     qub_op3 = 2j * QubitOperator("X2")
@@ -107,7 +107,7 @@ def test_number_operator(dtype):
     Description: Test number_operator.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     nmode = 3
     # other parameters by default
     check_str = '1 [0^ 0] +\n1 [1^ 1] +\n1 [2^ 2] '
@@ -128,7 +128,7 @@ def test_up_index(dtype):
     Description: Test labelling the spin-orbital index with spin beta.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     alpha = 2
     assert up_index(alpha) == 4
 
@@ -144,7 +144,7 @@ def test_down_index(dtype):
     Description: Test labelling the spin-orbital index with spin beta.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     beta = 1
     assert down_index(beta) == 3
 
@@ -160,7 +160,7 @@ def test_hermitian_conjugated(dtype):
     Description: Test hermitian_conjugated for the QubitOperator and Fermion Operator.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     qub_op1 = -1j * QubitOperator("X1 Y2") + QubitOperator("X1")
     qub_op2 = 1j * QubitOperator("X1 Y2") + QubitOperator("X1")
 

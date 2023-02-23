@@ -28,7 +28,7 @@ from mindquantum.utils.f import is_two_number_close
 from mindquantum.utils.string_utils import join_without_empty, string_expression
 from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
 
-from ...config import Context
+from ...config import get_context
 from .._arithmetic_ops_adaptor import CppArithmeticAdaptor
 
 
@@ -83,7 +83,7 @@ class ParameterResolver(CppArithmeticAdaptor):  # pylint: disable=too-many-publi
 
     def __init__(self, data=None, const=None):
         """Initialize a ParameterResolver object."""
-        self.arithmetic_type = Context.get_dtype()
+        self.arithmetic_type = get_context('dtype')
         backend = getattr(mqbackend, self.arithmetic_type)
         if isinstance(data, ParameterResolver):
             self._cpp_obj = copy.copy(data._cpp_obj)

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """Test QNN operations."""
 
 import numpy as np
@@ -22,7 +21,7 @@ _HAS_MINDSPORE = True
 try:
     import mindspore as ms
 
-    from mindquantum.config import Context
+    from mindquantum.config import set_context
     from mindquantum.core import gates as G
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.operators import Hamiltonian, QubitOperator
@@ -50,7 +49,7 @@ def test_mindquantum_ansatz_only_ops(backend, dtype):
     Description: Test MQAnsatzOnlyOps
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     circ = Circuit(G.RX('a').on(0))
     data = ms.Tensor(np.array([0.5]).astype(np.float32))
     ham = Hamiltonian(QubitOperator('Z0'))

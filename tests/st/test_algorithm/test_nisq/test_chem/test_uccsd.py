@@ -21,7 +21,7 @@ import numpy as np
 import pytest
 
 from mindquantum.algorithm.nisq import generate_uccsd
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core import gates as G
 
 _HAS_OPENFERMION = True
@@ -41,7 +41,7 @@ def test_generate_uccsd(dtype):
     Description: Test generate_uccsd
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=DeprecationWarning)
         circ, init_amp, params_name, ham, n_q, n_e = generate_uccsd(

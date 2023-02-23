@@ -14,12 +14,11 @@
 # ============================================================================
 
 # pylint: disable=invalid-name
-
 """Test circuit."""
 import numpy as np
 import pytest
 
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core import gates as G
 from mindquantum.core.circuit import Circuit, add_prefix, shift
 from mindquantum.core.parameterresolver import ParameterResolver
@@ -59,7 +58,7 @@ def test_get_matrix(backend, dtype):
     Description:
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     circ = Circuit().ry('a', 0).rz('b', 0).ry('c', 0)
     matrix = circ.matrix(np.array([7.902762e-01, 2.139225e-04, 7.795934e-01]), backend=backend)
     assert np.allclose(matrix[0, 0], 0.70743435 - 1.06959724e-04j)

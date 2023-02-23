@@ -17,7 +17,7 @@ import numpy as np
 import pytest
 
 from mindquantum.algorithm.nisq import StronglyEntangling
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core.gates import X
 
 
@@ -31,7 +31,7 @@ def test_strongly_entangling_ansatz(dtype):
     Description: Test strongly_entangling_ansatz
     Expectation: success
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     strongly_entangling = StronglyEntangling(3, 2, X)
     circ = strongly_entangling.circuit
     assert len(circ) == 12

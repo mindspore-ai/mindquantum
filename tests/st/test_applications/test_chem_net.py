@@ -11,7 +11,6 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-
 """Test VQE."""
 import os
 from pathlib import Path
@@ -23,7 +22,7 @@ try:
     import mindspore as ms
 
     from mindquantum.algorithm.nisq import generate_uccsd
-    from mindquantum.config import Context
+    from mindquantum.config import set_context
     from mindquantum.core import gates as G
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.operators import Hamiltonian
@@ -62,7 +61,7 @@ def test_vqe_net(backend, dtype):  # pylint: disable=too-many-locals
     Description: Test vqe
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
     (
         ansatz_circuit,

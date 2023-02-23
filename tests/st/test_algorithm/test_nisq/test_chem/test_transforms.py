@@ -17,7 +17,7 @@ Test the transforms in the hiqfermion module.
 import pytest
 
 from mindquantum.algorithm.nisq import Transform
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core.operators import FermionOperator
 
 
@@ -35,7 +35,7 @@ def test_transform_jordan_wigner(dtype):
     Description: Test transform
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     op1 = FermionOperator('1^')
     op_transform = Transform(op1)
     op1_jordan_wigner = op_transform.jordan_wigner()
@@ -52,7 +52,7 @@ def test_transform_parity(dtype):
     Description: Test transform
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     op1 = FermionOperator('1^')
     op_transform = Transform(op1)
 
@@ -70,7 +70,7 @@ def test_transform_bravyi_kitaev(dtype):
     Description: Test transform
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     op1 = FermionOperator('1^')
     op_transform = Transform(op1)
     op1_bravyi_kitaev = op_transform.bravyi_kitaev()
@@ -87,7 +87,7 @@ def test_transform_ternary_tree(dtype):
     Description: Test transform
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     op1 = FermionOperator('1^')
     op_transform = Transform(op1)
     op1_ternary_tree = op_transform.ternary_tree()

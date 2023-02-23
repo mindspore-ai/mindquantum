@@ -16,7 +16,7 @@
 """Global config for MindQuantum."""
 
 from . import config
-from .config import Context
+from .config import get_context, set_context
 
 __all__ = []
 __all__.extend(config.__all__)

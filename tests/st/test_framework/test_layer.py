@@ -21,7 +21,7 @@ _HAS_MINDSPORE = True
 try:
     import mindspore as ms
 
-    from mindquantum.config import Context
+    from mindquantum.config import set_context
     from mindquantum.core import gates as G
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.operators import Hamiltonian, QubitOperator
@@ -49,7 +49,7 @@ def test_mindquantumlayer(backend, dtype):
     Description: Test MQLayer
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     encoder = Circuit()
     ansatz = Circuit()
     encoder += G.RX('e1').on(0)

@@ -19,7 +19,7 @@ import pytest
 
 from mindquantum import UN, H
 from mindquantum.algorithm.library import bitphaseflip_operator
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core.circuit import Circuit
 
 
@@ -33,7 +33,7 @@ def test_bitphaseflip_operator(dtype):
     Description: Test bitphaseflip_operator
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     circuit = Circuit()
     circuit += UN(H, 3)
     circuit += bitphaseflip_operator([2], 3)

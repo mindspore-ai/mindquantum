@@ -24,7 +24,7 @@ try:
     import mindspore as ms
 
     from mindquantum.algorithm.nisq import HardwareEfficientAnsatz
-    from mindquantum.config import Context
+    from mindquantum.config import set_context
     from mindquantum.core.gates import RX, RY, X
     from mindquantum.core.operators import Hamiltonian, QubitOperator
     from mindquantum.framework import MQAnsatzOnlyLayer
@@ -54,7 +54,7 @@ def test_hardware_efficient(backend, dtype):
     Description: Test hardware efficient ansatz
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     depth = 3
     n_qubits = 3
     hea = HardwareEfficientAnsatz(n_qubits, [RX, RY, RX], X, 'all', depth)

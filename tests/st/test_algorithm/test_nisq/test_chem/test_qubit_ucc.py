@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """Test unitary coupled-cluster ansatz"""
 
 import os
@@ -25,7 +24,7 @@ try:
     import mindspore as ms
 
     from mindquantum.algorithm.nisq import QubitUCCAnsatz
-    from mindquantum.config import Context
+    from mindquantum.config import set_context
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.gates import X
     from mindquantum.core.operators import Hamiltonian, QubitOperator
@@ -56,7 +55,7 @@ def test_quccsd(backend, dtype):  # pylint: disable=too-many-locals
     Description:
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     # Hydrogen molecule
     ham = (
         QubitOperator("", (-0.5339363487727398 + 0j))

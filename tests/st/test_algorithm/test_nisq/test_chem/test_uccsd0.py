@@ -20,7 +20,7 @@ import pytest
 
 from mindquantum.algorithm.nisq import Transform, uccsd0_singlet_generator
 from mindquantum.algorithm.nisq.chem.uccsd0 import spin_adapted_t1, spin_adapted_t2
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core.operators import TermValue, TimeEvolution, count_qubits
 
 
@@ -34,7 +34,7 @@ def test_spin_adapted_t1(dtype):
     Description: Test spin adapted t1
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     t1_20 = spin_adapted_t1(2, 0)[0]
     assert str(t1_20) == '1 [4^ 0] +\n1 [5^ 1] '
     t1_00 = spin_adapted_t1(0, 0)[0]
@@ -51,7 +51,7 @@ def test_spin_adapted_t2(dtype):
     Description: Test spin adapted t2
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     t2_3210_list = spin_adapted_t2([3, 2], [1, 0])
     assert len(t2_3210_list) == 2
     term1 = set(t2_3210_list[0].terms)
@@ -87,7 +87,7 @@ def test_uccsd0(dtype):
     Expectation:
     """
     # pylint: disable=too-many-locals
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     h2_uccsd0 = uccsd0_singlet_generator(4, 2)
     h2_uccsd0_terms = set(h2_uccsd0.terms)
     h2_uccsd0_terms_check = {
