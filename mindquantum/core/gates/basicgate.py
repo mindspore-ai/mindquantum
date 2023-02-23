@@ -1531,7 +1531,7 @@ def wrapper_numba(compiled_fun):
 
         nb_version = importlib_metadata.version('numba')
 
-        nb_requires = packaging.version.parse('0.53,1')
+        nb_requires = packaging.version.parse('0.53.1')
         if packaging.version.parse(nb_version) < nb_requires:
             raise ImportError(
                 "To use customized parameterized gate, please install numba with 'pip install \"numba>=0.53.1\"'."
@@ -1601,7 +1601,7 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
 
         nb_version = importlib_metadata.version('numba')
 
-        nb_requires = packaging.version.parse('0.53,1')
+        nb_requires = packaging.version.parse('0.53.1')
         if packaging.version.parse(nb_version) < nb_requires:
             raise ImportError(
                 "To use customized parameterized gate, please install numba with 'pip install \"numba>=0.53.1\"'."
