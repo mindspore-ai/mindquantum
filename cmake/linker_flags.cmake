@@ -208,7 +208,7 @@ set(CMAKE_NVCXX_LDFLAGS_INIT \"${CMAKE_NVCXX_LDFLAGS_INIT} -v\")")
         find_library(
           _shared_lib_${_lang}
           NAMES shared_lib_${_lang} libshared_lib_${_lang}
-          PATHS ${_binary_dir} REQUIRED
+          PATHS ${_binary_dir}/Release REQUIRED
           NO_DEFAULT_PATH)
         mark_as_advanced(_shared_lib_${_lang})
 
