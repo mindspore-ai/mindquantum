@@ -18,7 +18,7 @@ import warnings
 
 import pytest
 
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.simulator import get_supported_simulator
 
 with warnings.catch_warnings():
@@ -43,7 +43,7 @@ def test_amplitude_encoder(backend, dtype):
     Description: test amplitude encoder.
     Expectation: success.
     '''
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     sim = Simulator(backend, 3)
     circuit, params = amplitude_encoder([0.5, 0.5, 0.5, 0.5], 3)
     sim.apply_circuit(circuit, params)

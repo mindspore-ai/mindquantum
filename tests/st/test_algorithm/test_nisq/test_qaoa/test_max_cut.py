@@ -22,7 +22,7 @@ try:
     import mindspore as ms
 
     from mindquantum.algorithm.nisq import MaxCutAnsatz
-    from mindquantum.config import Context
+    from mindquantum.config import set_context
     from mindquantum.core.operators import Hamiltonian
     from mindquantum.framework import MQAnsatzOnlyLayer
     from mindquantum.simulator import Simulator, get_supported_simulator
@@ -48,7 +48,7 @@ def test_max_cut(backend, dtype):
     Description: test maxcut ansatz.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     graph = [(0, 1), (1, 2), (2, 3), (3, 4), (1, 4)]
     depth = 3
     maxcut = MaxCutAnsatz(graph, depth)

@@ -17,7 +17,7 @@
 """This module is generated the Fermion Operator."""
 
 from ... import mqbackend
-from ...config import Context
+from ...config import get_context
 from ...core.operators.polynomial_tensor import PolynomialTensor
 from ...core.parameterresolver import ParameterResolver
 from ._term_value import TermValue
@@ -84,7 +84,7 @@ class FermionOperator(TermsOperator):
 
     def __init__(self, terms=None, coefficient=1.0):
         """Initialize a FermionOperator instance."""
-        self.arithmetic_type = Context.get_dtype()
+        self.arithmetic_type = get_context('dtype')
         if isinstance(terms, PolynomialTensor):
             terms_ = {}
             for term in terms:

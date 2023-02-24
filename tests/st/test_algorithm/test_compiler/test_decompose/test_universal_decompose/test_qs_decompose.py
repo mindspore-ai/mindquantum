@@ -12,22 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+# pylint: disable=import-outside-toplevel
+
 """Test Quantum Shannon decomposition"""
 import numpy as np
 import pytest
 from scipy import linalg
 from scipy.stats import unitary_group
-from mindquantum.core import gates
-from mindquantum.config import Context
+
 from mindquantum.algorithm.compiler import decompose
 from mindquantum.algorithm.compiler.decompose import utils
+from mindquantum.config import set_context
+from mindquantum.core import gates
 
 rand_unitary = unitary_group.rvs
 
 
 def assert_equivalent_unitary(u, v):
+    """Assert two unitary equal."""
     try:
         import cirq
+
         cirq.testing.assert_allclose_up_to_global_phase(u, v, atol=1e-5)
     except ModuleNotFoundError:
         assert decompose.utils.is_equiv_unitary(u, v)
@@ -44,7 +49,7 @@ def test_demultiplex_pauli(dtype):
     Description: Test decomposition functionality for Pauli-rotation Multiplexor defined by 2^(n-1) rotation angles.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
 
     np.random.seed(123)
     n = 4
@@ -69,10 +74,10 @@ def test_qs_decomposition(dtype):
     Description: Test Quantum Shannon decomposition for arbitrary n-qubit gate.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
 
     n = 4
-    u = rand_unitary(2 ** n, random_state=123)
+    u = rand_unitary(2**n, random_state=123)
     g = gates.UnivMathGate('U', u).on(range(n))
     circ = decompose.qs_decompose(g)
     assert_equivalent_unitary(u, utils.circuit_to_unitary(circ))
@@ -89,7 +94,7 @@ def test_demultiplex_pair(dtype):
     Description: Test decomposition functionality for Multiplexor defined by a pair of unitary gates.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     n = 2
     u1 = rand_unitary(2 ** (n - 1), random_state=123)
     u2 = rand_unitary(2 ** (n - 1), random_state=1234)
@@ -108,15 +113,15 @@ def test_cu_decomposition(dtype):
     Description: Test arbitrary-dimension controlled-unitary gate decomposition.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
 
     cqs = [0, 2, 4, 5]  # arbitrary order is OK
     tqs = [1, 6]
     m = len(cqs)
     n = len(tqs)
-    u = rand_unitary(2 ** n, random_state=123)
+    u = rand_unitary(2**n, random_state=123)
     circ = decompose.cu_decompose(gates.UnivMathGate('U', u).on(tqs, cqs))
     assert_equivalent_unitary(
         utils.tensor_slots(utils.controlled_unitary_matrix(u, m), max(cqs + tqs) + 1, cqs + tqs),
-        utils.circuit_to_unitary(circ)
+        utils.circuit_to_unitary(circ),
     )

@@ -17,7 +17,7 @@ import numpy as np
 import pytest
 
 from mindquantum.algorithm.compiler.decompose import crx_decompose
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import RX
 
@@ -40,7 +40,7 @@ def test_crx(dtype):
     Description: Test crx decompose
     Expectation: success
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     crx = RX(1.23).on(1, 0)
     for solution in crx_decompose(crx):
         circuit_equal_test(crx, solution)

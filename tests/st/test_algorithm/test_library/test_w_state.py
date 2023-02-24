@@ -18,7 +18,7 @@ import numpy as np
 import pytest
 
 from mindquantum.algorithm.library import general_w_state
-from mindquantum.config import Context
+from mindquantum.config import set_context
 
 
 @pytest.mark.level0
@@ -31,7 +31,7 @@ def test_general_w_state(dtype):
     Description: Test general_w_state
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     state = general_w_state(range(3)).get_qs()
     qs_exp = 1 / np.sqrt(3) * np.array([0, 1, 1, 0, 1, 0, 0, 0])
     assert np.allclose(state, qs_exp)

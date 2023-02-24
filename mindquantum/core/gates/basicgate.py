@@ -33,7 +33,7 @@ from mindquantum.config.config import _GLOBAL_MAT_VALUE
 from mindquantum.utils.f import is_power_of_two
 from mindquantum.utils.type_value_check import _check_gate_type, _check_input_type
 
-from ...config import Context
+from ...config import get_context
 from ..parameterresolver import ParameterResolver
 from .basic import (
     BasicGate,
@@ -81,8 +81,8 @@ class UnivMathGate(NoneParamNonHermMat):
 
     def get_cpp_obj(self):
         """Get the underlying C++ object."""
-        mat = getattr(mb, Context.get_dtype()).dim2matrix(self.matrix())
-        return getattr(mb, Context.get_dtype()).gate.CustomGate(
+        mat = getattr(mb, get_context('dtype')).dim2matrix(self.matrix())
+        return getattr(mb, get_context('dtype')).gate.CustomGate(
             self.name,
             mat,
             self.obj_qubits,
@@ -498,7 +498,9 @@ class RX(RotSelfHermMat):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return getattr(mb, Context.get_dtype()).gate.RXGate(self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits)
+        return getattr(mb, get_context('dtype')).gate.RXGate(
+            self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
+        )
 
 
 class RY(RotSelfHermMat):
@@ -526,7 +528,9 @@ class RY(RotSelfHermMat):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return getattr(mb, Context.get_dtype()).gate.RYGate(self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits)
+        return getattr(mb, get_context('dtype')).gate.RYGate(
+            self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
+        )
 
 
 class RZ(RotSelfHermMat):
@@ -554,7 +558,9 @@ class RZ(RotSelfHermMat):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return getattr(mb, Context.get_dtype()).gate.RZGate(self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits)
+        return getattr(mb, get_context('dtype')).gate.RZGate(
+            self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
+        )
 
 
 class ZZ(RotSelfHermMat):
@@ -631,7 +637,7 @@ class ZZ(RotSelfHermMat):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return getattr(mb, Context.get_dtype()).gate.RzzGate(
+        return getattr(mb, get_context('dtype')).gate.RzzGate(
             (2 * self.coeff).get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
         )
 
@@ -718,7 +724,7 @@ class XX(RotSelfHermMat):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return getattr(mb, Context.get_dtype()).gate.RxxGate(
+        return getattr(mb, get_context('dtype')).gate.RxxGate(
             (2 * self.coeff).get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
         )
 
@@ -805,7 +811,7 @@ class YY(RotSelfHermMat):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return getattr(mb, Context.get_dtype()).gate.RyyGate(
+        return getattr(mb, get_context('dtype')).gate.RyyGate(
             (2 * self.coeff).get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
         )
 
@@ -882,7 +888,7 @@ class Rzz(RotSelfHermMat):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return getattr(mb, Context.get_dtype()).gate.RzzGate(
+        return getattr(mb, get_context('dtype')).gate.RzzGate(
             self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
         )
 
@@ -967,7 +973,7 @@ class Rxx(RotSelfHermMat):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return getattr(mb, Context.get_dtype()).gate.RxxGate(
+        return getattr(mb, get_context('dtype')).gate.RxxGate(
             self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
         )
 
@@ -1052,7 +1058,7 @@ class Ryy(RotSelfHermMat):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return getattr(mb, Context.get_dtype()).gate.RyyGate(
+        return getattr(mb, get_context('dtype')).gate.RyyGate(
             self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
         )
 
@@ -1129,7 +1135,7 @@ class Rxy(RotSelfHermMat):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return getattr(mb, Context.get_dtype()).gate.RxyGate(
+        return getattr(mb, get_context('dtype')).gate.RxyGate(
             self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
         )
 
@@ -1204,7 +1210,7 @@ class Rxz(RotSelfHermMat):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return getattr(mb, Context.get_dtype()).gate.RxzGate(
+        return getattr(mb, get_context('dtype')).gate.RxzGate(
             self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
         )
 
@@ -1279,7 +1285,7 @@ class Ryz(RotSelfHermMat):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return getattr(mb, Context.get_dtype()).gate.RyzGate(
+        return getattr(mb, get_context('dtype')).gate.RyzGate(
             self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
         )
 
@@ -1388,7 +1394,9 @@ class GlobalPhase(RotSelfHermMat):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return getattr(mb, Context.get_dtype()).gate.GPGate(self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits)
+        return getattr(mb, get_context('dtype')).gate.GPGate(
+            self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
+        )
 
 
 BARRIER = BarrierGate(show=False)
@@ -1463,7 +1471,9 @@ class PhaseShift(ParameterOppsGate):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return getattr(mb, Context.get_dtype()).gate.PSGate(self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits)
+        return getattr(mb, get_context('dtype')).gate.PSGate(
+            self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
+        )
 
 
 class Power(NoneParamNonHermMat):
@@ -1498,8 +1508,8 @@ class Power(NoneParamNonHermMat):
 
     def get_cpp_obj(self):
         """Get the underlying C++ object."""
-        mat = getattr(mb, Context.get_dtype()).dim2matrix(self.matrix())
-        return getattr(mb, Context.get_dtype()).gate.CustomGate(
+        mat = getattr(mb, get_context('dtype')).dim2matrix(self.matrix())
+        return getattr(mb, get_context('dtype')).gate.CustomGate(
             self.name,
             mat,
             self.obj_qubits,
@@ -1531,7 +1541,7 @@ def wrapper_numba(compiled_fun):
 
         nb_version = importlib_metadata.version('numba')
 
-        nb_requires = packaging.version.parse('0.53,1')
+        nb_requires = packaging.version.parse('0.53.1')
         if packaging.version.parse(nb_version) < nb_requires:
             raise ImportError(
                 "To use customized parameterized gate, please install numba with 'pip install \"numba>=0.53.1\"'."
@@ -1601,7 +1611,7 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
 
         nb_version = importlib_metadata.version('numba')
 
-        nb_requires = packaging.version.parse('0.53,1')
+        nb_requires = packaging.version.parse('0.53.1')
         if packaging.version.parse(nb_version) < nb_requires:
             raise ImportError(
                 "To use customized parameterized gate, please install numba with 'pip install \"numba>=0.53.1\"'."
@@ -1685,7 +1695,7 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
             if self.hermitianed:
                 m_addr = herm_matrix_addr
                 dm_addr = herm_diff_matrix_addr
-            return getattr(mb, Context.get_dtype()).gate.CustomGate(
+            return getattr(mb, get_context('dtype')).gate.CustomGate(
                 self.name, m_addr, dm_addr, 1 << n_qubits, self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
             )
 
@@ -1894,7 +1904,7 @@ class U3(MultiParamsGate):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return getattr(mb, Context.get_dtype()).gate.u3(
+        return getattr(mb, get_context('dtype')).gate.u3(
             self.theta.get_cpp_obj(),
             self.phi.get_cpp_obj(),
             self.lamda.get_cpp_obj(),
@@ -2009,7 +2019,7 @@ class FSim(MultiParamsGate):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return getattr(mb, Context.get_dtype()).gate.fsim(
+        return getattr(mb, get_context('dtype')).gate.fsim(
             self.theta.get_cpp_obj(),
             self.phi.get_cpp_obj(),
             self.obj_qubits,

@@ -14,7 +14,6 @@
 # ============================================================================
 
 # pylint: disable=invalid-name
-
 '''test decompose rule'''
 
 import warnings
@@ -22,7 +21,7 @@ import warnings
 import numpy as np
 import pytest
 
-from mindquantum.config import Context
+from mindquantum.config import set_context
 
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore', category=UserWarning, message='MindSpore not installed.*')
@@ -50,7 +49,7 @@ def test_ch(dtype):
     Description: Test ch decompose
     Expectation: success
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     ch = H.on(1, 0)
     for solution in ch_decompose(ch):
         circuit_equal_test(ch, solution)

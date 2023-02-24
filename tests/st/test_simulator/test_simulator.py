@@ -22,7 +22,7 @@ from scipy.sparse import csr_matrix
 
 import mindquantum.core.operators as ops
 from mindquantum.algorithm.library import qft
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core import gates as G
 from mindquantum.core.circuit import UN, Circuit
 from mindquantum.core.operators import Hamiltonian, QubitOperator
@@ -66,7 +66,7 @@ def test_init_reset(virtual_qc, dtype):
     Description:
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     s1 = Simulator(virtual_qc, 2)
     circ = Circuit().h(0).h(1)
     v1 = s1.get_qs()
@@ -94,7 +94,7 @@ def test_apply_circuit_and_hermitian(virtual_qc, dtype):
     Description:
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     sv0 = np.array([[1, 0], [0, 0]])
     sv1 = np.array([[0, 0], [0, 1]])
     circ = Circuit()
@@ -145,7 +145,7 @@ def test_set_and_get(virtual_qc, dtype):
     Description:
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     sim = Simulator(virtual_qc, 1)
     qs1 = sim.get_qs()
     if virtual_qc == "mqmatrix":
@@ -172,7 +172,7 @@ def test_non_hermitian_grad_ops1(virtual_qc, dtype):
     Description:
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     sim = Simulator(virtual_qc, 1)
     c_r = Circuit().ry('b', 0)
     c_l = Circuit().rz('a', 0)
@@ -236,7 +236,7 @@ def test_all_gate_with_simulator(virtual_qc, dtype):  # pylint: disable=too-many
     Description:
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     c = generate_test_circuit()
     qs = c.get_qs(backend=virtual_qc, pr={'a': 1, 'b': 2, 'c': 3})
     qs_exp = np.array(
@@ -287,7 +287,7 @@ def test_optimization_with_custom_gate(virtual_qc, dtype):  # pylint: disable=to
     Description:
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     if not _HAS_MINDSPORE:  # NB: take care to avoid errors with 'ms' module below
         return
 
@@ -334,7 +334,7 @@ def test_fid(virtual_qc, dtype):
     Description:
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     sim1 = Simulator(virtual_qc, 1)
     prep_circ = Circuit().h(0)
     ansatz = Circuit().ry('a', 0).rz('b', 0).ry('c', 0)
@@ -357,7 +357,7 @@ def test_non_hermitian_grad_ops2(virtual_qc, dtype):
     Description: test non hermitian grad ops
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     circuit1 = Circuit([G.RX('a').on(0)])
     circuit2 = Circuit([G.RY('b').on(0)])
     ham = Hamiltonian(csr_matrix([[1, 2], [3, 4]]))
@@ -380,7 +380,7 @@ def test_inner_product(virtual_qc, dtype):
     Description: test inner product of two simulator
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     sim1 = Simulator(virtual_qc, 1)
     sim1.apply_gate(G.RX(1.2).on(0))
     sim2 = Simulator(virtual_qc, 1)
@@ -401,7 +401,7 @@ def test_copy(virtual_qc, dtype):
     Description: test copy a simulator
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     sim = Simulator(virtual_qc, 1)
     sim.apply_gate(G.RX(1).on(0))
     sim2 = sim.copy()
@@ -426,7 +426,7 @@ def test_univ_order(virtual_qc, dtype):
     Description: test order of univ math gate.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     r_c = random_circuit(2, 100)
     if virtual_qc == 'mqmatrix':
         u = r_c.matrix(backend='mqvector')
@@ -457,7 +457,7 @@ def test_multi_params_gate(virtual_qc, dtype):
     Description: test multi params gate
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     sim = Simulator(virtual_qc, 2)
     circ = Circuit() + G.U3('a', 'b', 1.0).on(0) + G.U3('c', 'd', 2.0).on(1) + G.X.on(0, 1)
     circ += G.FSim('e', 3.0).on([0, 1])
@@ -503,7 +503,7 @@ def test_custom_gate_in_parallel(virtual_qc, dtype):
     Description: test custom gate in parallel mode.
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     circ = generate_test_circuit().as_encoder()
     sim = Simulator(virtual_qc, circ.n_qubits)
     ham = [Hamiltonian(QubitOperator('Y0')), Hamiltonian(QubitOperator('X2'))]
@@ -528,7 +528,7 @@ def test_cd_term(virtual_qc, dtype):
     Description:
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     cd_term = [G.Rxy, G.Rxz, G.Ryz]
     for g in cd_term:
         cd_gate = g(1.0).on([0, 1])

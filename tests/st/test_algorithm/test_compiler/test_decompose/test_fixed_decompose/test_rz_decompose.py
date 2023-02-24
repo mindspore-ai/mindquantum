@@ -17,7 +17,7 @@ import numpy as np
 import pytest
 
 from mindquantum.algorithm.compiler.decompose import crz_decompose
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import RZ
 
@@ -40,7 +40,7 @@ def test_crz(dtype):
     Description: Test crz decompose
     Expectation: success
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     crz = RZ(1.23).on(1, 0)
     for solution in crz_decompose(crz):
         circuit_equal_test(crz, solution)

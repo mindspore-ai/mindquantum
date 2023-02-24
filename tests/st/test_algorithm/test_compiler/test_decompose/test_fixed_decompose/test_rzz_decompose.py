@@ -14,13 +14,12 @@
 # ============================================================================
 
 # pylint: disable=invalid-name
-
 '''test decompose rule'''
 import numpy as np
 import pytest
 
 from mindquantum.algorithm.compiler.decompose import rzz_decompose
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import Rzz
 
@@ -43,7 +42,7 @@ def test_rzz(dtype):
     Description: Test zz decompose
     Expectation: success
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     rzz = Rzz(1).on([1, 0])
     for solution in rzz_decompose(rzz):
         circuit_equal_test(rzz, solution)

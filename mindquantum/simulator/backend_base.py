@@ -23,7 +23,7 @@ from mindquantum.core.gates import BasicGate
 from mindquantum.core.operators import Hamiltonian
 from mindquantum.core.parameterresolver import ParameterResolver
 
-from ..config import Context
+from ..config import get_context
 
 
 class BackendBase:
@@ -34,7 +34,7 @@ class BackendBase:
         self.name = name
         self.n_qubits = n_qubits
         self.seed = seed
-        self.arithmetic_type = Context.get_dtype()
+        self.arithmetic_type = get_context('dtype')
 
     def apply_circuit(
         self,

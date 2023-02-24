@@ -21,12 +21,14 @@ import numpy as np
 from mindquantum import mqbackend as mb
 from mindquantum.utils.f import _check_num_array
 
-from ...config import Context
+from ...config import get_context
 from .basic import BasicGate, NoiseGate, NonHermitianGate, SelfHermitianGate
 
 
 class PauliChannel(NoiseGate, SelfHermitianGate):
     r"""
+    A pauli channel.
+
     Pauli channel express error that randomly applies an additional X, Y or Z gate
     on qubits with different probabilities Px, Py and Pz, or do noting (applies I gate)
     with probability P = (1 - Px - Py - Pz).
@@ -115,6 +117,8 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
 
 class BitFlipChannel(PauliChannel):
     r"""
+    A bit flip channel.
+
     Bit flip channel express error that randomly flip the qubit (applies :math:`X` gate)
     with probability :math:`P`, or do noting (applies :math:`I` gate) with probability :math:`1-P`.
 
@@ -167,6 +171,8 @@ class BitFlipChannel(PauliChannel):
 
 class PhaseFlipChannel(PauliChannel):
     r"""
+    A phase flip channel.
+
     Phase flip channel express error that randomly flip the phase of qubit (applies Z gate)
     with probability P, or do noting (applies I gate) with probability 1 - P.
 
@@ -219,6 +225,8 @@ class PhaseFlipChannel(PauliChannel):
 
 class BitPhaseFlipChannel(PauliChannel):
     r"""
+    A bit&phase flip channel.
+
     Bit phase flip channel express error that randomly flip both the state and phase
     of qubit (applies Y gate) with probability P, or do noting (applies I gate)
     with probability 1 - P.
@@ -272,6 +280,8 @@ class BitPhaseFlipChannel(PauliChannel):
 
 class DepolarizingChannel(PauliChannel):
     r"""
+    A depolarizing channel.
+
     Depolarizing channel express errors that have probability P to turn qubit's quantum state into
     maximally mixed state, by randomly applying one of the pauli gate(X,Y,Z) with same probability P/3.
     And it has probability 1 - P to change nothing (applies I gate).
@@ -377,6 +387,7 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
         return mb.gate.AmplitudeDampingChannel(self.gamma, self.obj_qubits, self.ctrl_qubits)
 
     def hermitian(self):
+        """Get hermitian form of this channel."""
         hermitian_amplitude_damping = AmplitudeDampingChannel(self.gamma)
         hermitian_amplitude_damping.name = 'HADC'
         hermitian_amplitude_damping.obj_qubits = self.obj_qubits
@@ -398,6 +409,8 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
 
 class PhaseDampingChannel(NoiseGate, NonHermitianGate):
     r"""
+    A phase damping channel.
+
     Phase damping channel express error that qubit loses quantum information without exchanging energy with environment.
 
     Phase damping channel applies noise as:
@@ -464,6 +477,8 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
 
 class KrausChannel(NoiseGate, NonHermitianGate):
     r"""
+    A kraus channel.
+
     Kraus channel accepts two or more 2x2 matrices as Kraus operator to construct
     custom (single-qubit) noise in quantum circuit.
 
@@ -523,7 +538,7 @@ class KrausChannel(NoiseGate, NonHermitianGate):
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
-        return getattr(mb, Context.get_dtype()).gate.KrausChannel(self.kraus_op, self.obj_qubits, self.ctrl_qubits)
+        return getattr(mb, get_context('dtype')).gate.KrausChannel(self.kraus_op, self.obj_qubits, self.ctrl_qubits)
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""

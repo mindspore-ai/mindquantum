@@ -21,7 +21,7 @@ import numpy as np
 import pytest
 
 from mindquantum.algorithm.nisq import Transform
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core.operators import FermionOperator
 from mindquantum.third_party.interaction_operator import InteractionOperator
 
@@ -46,7 +46,7 @@ def test_sparsing_operator(dtype):
     Description: Test sparsing operator
     Expectation: success
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     molecular = Path(__file__).parent.parent.parent / 'H4.hdf5'
 
     mol = MolecularData(filename=str(molecular))

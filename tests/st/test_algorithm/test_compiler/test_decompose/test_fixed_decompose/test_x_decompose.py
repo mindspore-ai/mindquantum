@@ -24,7 +24,7 @@ with warnings.catch_warnings():
         'ignore', category=DeprecationWarning, message=r'Please use `OptimizeResult` from the `scipy\.optimize`'
     )
     from mindquantum.algorithm.compiler.decompose import ccx_decompose
-    from mindquantum.config import Context
+    from mindquantum.config import set_context
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.gates import X
 
@@ -47,7 +47,7 @@ def test_ccx(dtype):
     Description: Test ccx decompose
     Expectation: success
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     ccx = X.on(1, [0, 2])
     for solution in ccx_decompose(ccx):
         circuit_equal_test(ccx, solution)

@@ -24,6 +24,7 @@ from .. import mqbackend  # noqa: F401  # pylint: disable=unused-import
 # isort: split
 
 from .. import _mq_vector
+from ..config import get_context
 from .mqsim import MQ_SIM_GPU_SUPPORTED, MQSim
 
 if MQ_SIM_GPU_SUPPORTED:
@@ -49,6 +50,8 @@ class MQBlas:  # pylint: disable=too-few-public-methods
     def _get_blas(simulator: MQSim):
         """Get blas module w.r.t given backend."""
         if simulator.name == 'mqvector':
+            if get_context('device_target') == "GPU":
+                return getattr(_mq_vector_gpu, simulator.arithmetic_type).blas
             return getattr(_mq_vector, simulator.arithmetic_type).blas
         if simulator.name == 'mqvector_gpu':
             return getattr(_mq_vector_gpu, simulator.arithmetic_type).blas

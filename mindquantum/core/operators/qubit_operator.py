@@ -20,7 +20,7 @@
 # pylint: disable=no-member
 
 from ... import mqbackend
-from ...config import Context
+from ...config import get_context
 from ...core.parameterresolver import ParameterResolver
 from ._term_value import TermValue
 from ._terms_operators import TermsOperator
@@ -92,7 +92,7 @@ class QubitOperator(TermsOperator):
 
     def __init__(self, terms=None, coefficient=1.0):
         """Initialize a QubitOperator instance."""
-        self.arithmetic_type = Context.get_dtype()
+        self.arithmetic_type = get_context('dtype')
         if isinstance(terms, mqbackend.QubitOperatorBase):
             super().__init__(terms)
         else:

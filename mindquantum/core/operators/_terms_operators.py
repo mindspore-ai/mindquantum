@@ -23,7 +23,7 @@ from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.mqbackend import EQ_TOLERANCE
 from mindquantum.utils.type_value_check import _require_package
 
-from ...config import Context
+from ...config import get_context
 from ...core._arithmetic_ops_adaptor import CppArithmeticAdaptor
 from ._term_value import TermValue
 
@@ -106,7 +106,7 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
                 - Dict[List[Tuple[Int, TermValue]], Union[ParameterResolver, int, float]]
                 - List[Tuple[Int, TermValue]] (with default coefficient set to 1.0)
         """
-        self.arithmetic_type = Context.get_dtype()
+        self.arithmetic_type = get_context('dtype')
         backend = getattr(mqbackend, self.arithmetic_type)
         if not args:
             self._cpp_obj = self.__class__.create_cpp_obj(None, arithmetic_type=self.arithmetic_type)
@@ -479,16 +479,16 @@ class TermsOperator(CppArithmeticAdaptor):  # pylint: disable=too-many-public-me
                 "of_ops should be a FermionOperator or a QubitOperator"
                 f" from openfermion framework, but get type {type(of_ops)}"
             )
-        klass = cls._type_conversion_table[getattr(mqbackend, Context.get_dtype()).complex_pr]
+        klass = cls._type_conversion_table[getattr(mqbackend, get_context('dtype')).complex_pr]
         for v in of_ops.terms.values():
             if isinstance(v, numbers.Complex) and not isinstance(v, numbers.Real):
-                klass = cls._type_conversion_table[getattr(mqbackend, Context.get_dtype()).complex_pr]
+                klass = cls._type_conversion_table[getattr(mqbackend, get_context('dtype')).complex_pr]
                 break
 
         pr_klass = (
-            getattr(mqbackend, Context.get_dtype()).complex_pr
-            if klass is cls._type_conversion_table[getattr(mqbackend, Context.get_dtype()).complex_pr]
-            else getattr(mqbackend, Context.get_dtype()).real_pr
+            getattr(mqbackend, get_context('dtype')).complex_pr
+            if klass is cls._type_conversion_table[getattr(mqbackend, get_context('dtype')).complex_pr]
+            else getattr(mqbackend, get_context('dtype')).real_pr
         )
 
         list_terms = []

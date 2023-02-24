@@ -17,7 +17,7 @@ import numpy as np
 import pytest
 
 import mindquantum.core.gates.channel as C
-from mindquantum.config import Context
+from mindquantum.config import set_context
 from mindquantum.core.gates import X
 from mindquantum.simulator import Simulator, get_supported_simulator
 
@@ -33,7 +33,7 @@ def test_pauli_channel(backend, dtype):
     Description: Test pauli channel
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     sim = Simulator(backend, 1)
     if backend == "mqmatrix":
         sim.set_qs(np.array([1 + 0.5j, 1 + 0.5j]))
@@ -59,7 +59,7 @@ def test_flip_channel(backend, dtype):
     Description: Test flip channel
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     sim1 = Simulator(backend, 1)
     if backend == "mqmatrix":
         sim1.set_qs(np.array([1 + 0.5j, 1 + 0.5j]))
@@ -89,7 +89,7 @@ def test_depolarizing_channel(backend, dtype):
     Description: Test depolarizing channel
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     if backend == "mqmatrix":
         sim2 = Simulator(backend, 1)
         sim2.set_qs(np.array([1 + 0.5j, 1 + 0.5j]))
@@ -114,7 +114,7 @@ def test_damping_channel(backend, dtype):
     Description: Test damping channel
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     if backend == "mqmatrix":
         sim = Simulator(backend, 2)
         sim.set_qs(np.array([1 + 0.5j, 1 + 0.5j, 1 + 0.5j, 1 + 0.5j]))
@@ -168,7 +168,7 @@ def test_kraus_channel(backend, dtype):
     Description: Test kraus channel
     Expectation: success.
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     if backend == "mqmatrix":
         kmat0 = [[1, 0], [0, np.sqrt(0.99)]]
         kmat1 = [[0, 0.1], [0, 0]]

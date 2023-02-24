@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """Test max_2_sat"""
 
 import numpy as np
@@ -23,7 +22,7 @@ try:
     import mindspore as ms
 
     from mindquantum.algorithm.nisq import Max2SATAnsatz
-    from mindquantum.config import Context
+    from mindquantum.config import set_context
     from mindquantum.core.operators import Hamiltonian
     from mindquantum.framework import MQAnsatzOnlyLayer
     from mindquantum.simulator import Simulator, get_supported_simulator
@@ -49,7 +48,7 @@ def test_max_2_sat(backend, dtype):
     Description:
     Expectation:
     """
-    Context.set_dtype(dtype)
+    set_context(dtype=dtype)
     clauses = [(1, 2), (1, -2), (-1, 2), (-1, -2), (1, 3)]
     depth = 3
     max2sat = Max2SATAnsatz(clauses, depth)

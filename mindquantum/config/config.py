@@ -21,7 +21,7 @@ import numpy as np
 
 from mindquantum.utils.type_value_check import _check_input_type
 
-__all__ = ['Context']
+__all__ = ['set_context', 'get_context']
 
 _GLOBAL_MAT_VALUE = {
     'X': np.array([[0, 1], [1, 0]]),
@@ -39,26 +39,25 @@ _GLOBAL_MAT_VALUE = {
 _GLOBAL_CONFIG = {
     'DTYPE': 'double',
     'PRECISION': 1e-10,
+    'DEVICE_TARGET': 'CPU',
 }
 
 
-class Context:
-    """
-    Set context for running environment.
+class _Context:
+    """Set context for running environment."""
 
-    See the below table for detail:
+    @staticmethod
+    def set_device_target(device_target: str):
+        """Set the target device to run, support "GPU", and "CPU"."""
+        _check_input_type('device_target', str, device_target)
+        if device_target not in ['CPU', 'GPU']:
+            raise ValueError(f"device_target should be 'CPU' or 'GPU', but get {device_target}")
+        _GLOBAL_CONFIG['DEVICE_TARGET'] = device_target
 
-    +------------------------+-------------------------------+
-    |Configuration Parameters|Description                    |
-    +========================+===============================+
-    |dtype                   |Set simulator backend data type|
-    +------------------------+-------------------------------+
-    |precision               |Set the atol number precision  |
-    +------------------------+-------------------------------+
-
-    Note:
-        For every parameter, a setter or a getter method is implemented.
-    """
+    @staticmethod
+    def get_device_target() -> str:
+        """Get running device target."""
+        return _GLOBAL_CONFIG.get('DEVICE_TARGET')
 
     @staticmethod
     def set_dtype(dtype: str):
@@ -70,12 +69,6 @@ class Context:
         Args:
             dtype (str): data type precision of mindquantum framework, should be
                 'float' or 'double'.
-
-        Examples:
-            >>> from mindquantum import Context
-            >>> Context.set_dtype('float')
-            >>> Context.get_dtype()
-            float
         """
         _check_input_type('dtype', str, dtype)
         if dtype not in ['float', 'double']:
@@ -99,12 +92,6 @@ class Context:
 
         For example, `is_two_number_close` will use this precision to determine whether two number is close to each
         other.
-
-        Examples:
-            >>> from mindquantum import Context
-            >>> Context.set_precision(1e-3)
-            >>> Context.get_precision()
-            0.001
         """
         _check_input_type('atol', numbers.Real, atol)
         _GLOBAL_CONFIG['PRECISION'] = atol
@@ -118,3 +105,69 @@ class Context:
             float, the number precision.
         """
         return _GLOBAL_CONFIG['PRECISION']
+
+
+def set_context(**kwargs):
+    """
+    Set context for running environment.
+
+    Context should be configured before running your program. If there is no configuration,
+    it will be automatically set according to the device target by default.
+
+    See the below table for detail:
+
+    +------------------------+-------------------------------+
+    |Configuration Parameters|Description                    |
+    +========================+===============================+
+    |device_target           |Set the target device to run   |
+    +------------------------+-------------------------------+
+    |dtype                   |Set simulator backend data type|
+    +------------------------+-------------------------------+
+    |precision               |Set the atol number precision  |
+    +------------------------+-------------------------------+
+
+    Note:
+        For every parameter, a setter or a getter method is implemented.
+    """
+    for key, value in kwargs.items():
+        if key.lower() == "dtype":
+            _Context.set_dtype(value)
+            continue
+        if key.lower() == "precision":
+            _Context.set_precision(value)
+            continue
+        if key.lower() == "device_target":
+            _Context.set_device_target(value)
+            continue
+        raise ValueError(
+            f"For 'set_context', the keyword argument {key} is not recognized! For detailed "
+            "usage of 'set_context', please refer to the Mindquantum official website."
+        )
+
+
+def get_context(attr_key: str):
+    """
+    Get context attribute value according to the input key.
+
+    If some attributes are not set, they will be automatically obtained.
+
+    Args:
+        attr_key (str): The key of the attribute.
+
+    Returns:
+        Object, The value of given attribute key.
+
+    Raises:
+        ValueError: If input key is not an attribute in context.
+
+    Examples:
+        >>> import mindquantum as mq
+        >>> mq.get_context("device_target")
+        >>> mq.get_context("dtype")
+    """
+    if attr_key.upper() in _GLOBAL_CONFIG:
+        return _GLOBAL_CONFIG[attr_key.upper()]
+    raise ValueError(
+        f"For 'get_context', the argument {attr_key} is not recognized! For detailed "
+        f"usage of 'get_context', please refer to the Mindquantum official website."
+    )
