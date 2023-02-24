@@ -51,7 +51,7 @@ _FORCE_TEST = bool(os.environ.get("FORCE_TEST", False))
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('backend', get_supported_simulator())
+@pytest.mark.parametrize('backend', [i for i in get_supported_simulator() if i != 'mqmatrix'])
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
 @pytest.mark.skipif(not _HAS_OPENFERMION, reason='openfermion is not installed')

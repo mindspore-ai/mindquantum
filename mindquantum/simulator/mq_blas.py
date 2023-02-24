@@ -53,4 +53,6 @@ class MQBlas:  # pylint: disable=too-few-public-methods
             if get_context('device_target') == "GPU":
                 return getattr(_mq_vector_gpu, simulator.arithmetic_type).blas
             return getattr(_mq_vector, simulator.arithmetic_type).blas
+        if simulator.name == 'mqvector_gpu':
+            return getattr(_mq_vector_gpu, simulator.arithmetic_type).blas
         raise ValueError(f"Backend {simulator.device_name()} unknown.")

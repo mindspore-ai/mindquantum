@@ -73,6 +73,8 @@ class MQSim(BackendBase):
                     raise NotImplementedError("mqvector cannot use GPU in your machine.")
             else:
                 self.sim = getattr(_mq_vector, self.arithmetic_type).mqvector(n_qubits, seed)
+        elif name == 'mqvector_gpu':
+            self.sim = getattr(_mq_vector_gpu, self.arithmetic_type).mqvector(n_qubits, seed)
         elif name == 'mqmatrix':
             if get_context('device_target') == "GPU":
                 raise NotImplementedError("mqmatrix with GPU backend not implemented yet.")
