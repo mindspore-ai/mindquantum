@@ -806,7 +806,7 @@ jobs:
       #     key: boost-${{ env.BOOST_VERSION }}
 
       - name: Download and install Boost
-        uses: MarkusJx/install-boost@v2.4.3
+        uses: MarkusJx/install-boost@v2.4.4
         if: steps.cache-boost.outputs.cache-hit != 'true'
         id: install-boost
         with:
