@@ -501,7 +501,7 @@ Install Homebrew with the following command:
 
 .. code-block:: bash
 
-   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 Then proceed to install Python as well as a C++ compiler (note: gcc installed via Homebrew may lead to some issues
 therefore we choose clang):
