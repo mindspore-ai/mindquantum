@@ -17,3 +17,7 @@ mindquantum.core.gates.XGate
         .. math::
 
             X^\theta = RX(\theta\pi)
+
+    .. py:method:: get_cpp_obj()
+
+        返回该门的c++对象。

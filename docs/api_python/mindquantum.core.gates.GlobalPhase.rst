@@ -35,3 +35,7 @@ mindquantum.core.gates.GlobalPhase
 
         返回：
             numpy.ndarray，量子门的矩阵形式。
+
+    .. py:method:: get_cpp_obj()
+
+        返回该门的c++对象。
