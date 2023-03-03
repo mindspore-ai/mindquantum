@@ -88,7 +88,7 @@ int QubitsTopology::NEdges() {
     return n_edges / 2;
 }
 
-std::set<qbit_t> QubitsTopology::AllQbitID() {
+std::set<qbit_t> QubitsTopology::AllQubitID() {
     std::set<qbit_t> all_qubit_id;
     for (auto& [id, qubit] : this->qubits) {
         all_qubit_id.insert(id);
@@ -148,6 +148,18 @@ void QubitsTopology::RemoveQubitNode(qbit_t id) {
     this->qubits.erase(will_remove->id);
 }
 
+void QubitsTopology::RemoveIsolateNode() {
+    VT<qbit_t> isolate_qid;
+    for (auto& [id, qubit] : this->qubits) {
+        if (qubit->neighbour.size() == 0) {
+            isolate_qid.push_back(id);
+        }
+    }
+    for (auto qid : isolate_qid) {
+        this->RemoveQubitNode(qid);
+    }
+}
+
 void QubitsTopology::AddQubitNode(const QNodePtr& qubit) {
     if (this->HasQubitNode(qubit->id)) {
         throw std::runtime_error("qubit with id " + std::to_string(qubit->id) + " already exists.");
@@ -175,7 +187,7 @@ LinearQubits::LinearQubits(qbit_t n_qubits) {
     }
 }
 
-GridQubits::GridQubits(qbit_t n_row, qbit_t n_col) {
+GridQubits::GridQubits(qbit_t n_row, qbit_t n_col) : n_row(n_row), n_col(n_col) {
     if (n_row <= 0) {
         throw std::runtime_error("n_row should be greater than 0, but get " + std::to_string(n_row) + ".");
     }
@@ -201,5 +213,13 @@ GridQubits::GridQubits(qbit_t n_row, qbit_t n_col) {
             next_node = *next_node >> (*this)[next_node->id + n_col];
         }
     }
+}
+
+int GridQubits::NRow() {
+    return this->n_row;
+}
+
+int GridQubits::NCol() {
+    return this->n_col;
 }
 }  // namespace mindquantum::mapping

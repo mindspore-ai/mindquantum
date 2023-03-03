@@ -50,6 +50,7 @@ syntaxError:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_gate_ex
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_dot_like.cpp
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_gate_expect.cpp
 syntaxError:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_gate_expect.cpp
+syntaxError:ccsrc/python/device/include/python/device/binding.hpp
 
 uninitMemberVar:ccsrc/include/core/numba_wrapper.hpp
 

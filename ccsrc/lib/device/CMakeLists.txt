@@ -16,18 +16,8 @@
 #
 # ==============================================================================
 
-add_subdirectory(core)
+# lint_cmake: -whitespace/indent
 
-# ==============================================================================
-
-add_subdirectory(mqbackend)
-add_subdirectory(simulator)
-add_subdirectory(device)
-
-# ==============================================================================
-
-if(ENABLE_CXX_EXPERIMENTAL)
-  add_subdirectory(experimental)
-endif()
+target_sources(mq_base PRIVATE ${CMAKE_CURRENT_LIST_DIR}/mapping.cpp)
 
 # ==============================================================================

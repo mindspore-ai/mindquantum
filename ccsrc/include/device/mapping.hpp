@@ -76,7 +76,7 @@ class QubitsTopology {
     QNodePtr operator[](qbit_t id);
     int size();
     int NEdges();
-    std::set<qbit_t> AllQbitID();
+    std::set<qbit_t> AllQubitID();
 
     void SetPosition(qbit_t id, double poi_x, double poi_y);
     void SetPosition(std::map<qbit_t, std::pair<double, double>> positions);
@@ -89,6 +89,7 @@ class QubitsTopology {
     void RemoveQubitNode(qbit_t id);
     void AddQubitNode(const QNodePtr& qubit);
     bool HasQubitNode(qbit_t id);
+    void RemoveIsolateNode();
 
     template <typename F>
     void ForEachQubitNode(F&& func) {
@@ -109,6 +110,10 @@ class GridQubits : public QubitsTopology {
     GridQubits(qbit_t n_row, qbit_t n_col);
     int NRow();
     int NCol();
+
+ private:
+    int n_row = 0;
+    int n_col = 0;
 };
 
 }  // namespace mindquantum::mapping
