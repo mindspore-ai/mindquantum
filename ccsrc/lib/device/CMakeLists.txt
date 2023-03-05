@@ -18,6 +18,6 @@
 
 # lint_cmake: -whitespace/indent
 
-target_sources(mq_base PRIVATE ${CMAKE_CURRENT_LIST_DIR}/mapping.cpp)
+target_sources(mq_base PRIVATE ${CMAKE_CURRENT_LIST_DIR}/topology.cpp ${CMAKE_CURRENT_LIST_DIR}/mapping.cpp)
 
 # ==============================================================================

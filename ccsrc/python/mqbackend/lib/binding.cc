@@ -897,4 +897,5 @@ PYBIND11_MODULE(mqbackend, m) {
 
     py::module device = m.def_submodule("device", "Quantum device module");
     BindTopology(device);
+    BindQubitMapping(device);
 }

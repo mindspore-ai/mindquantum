@@ -35,7 +35,7 @@ from mindquantum.utils.type_value_check import (
 )
 
 from .. import gates as mq_gates
-from ..gates.basic import ParameterGate
+from ..gates.basic import BasicGate, ParameterGate
 from ..parameterresolver import ParameterResolver
 
 
@@ -439,6 +439,10 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         if isinstance(sliced, int):
             return super().__getitem__(sliced)
         return Circuit(super().__getitem__(sliced))
+
+    def __iter__(self) -> BasicGate:
+        """Iterate quantum circuit."""
+        yield from super().__iter__()
 
     @property
     def has_measure_gate(self):

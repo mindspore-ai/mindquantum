@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+# pylint: disable=cyclic-import
 
 """Configuration."""
 
@@ -340,4 +341,14 @@ _bloch_default_style_dark_ = {
     'fig_h': 8,
     'axis_delta': 0.1,
     'axis_label_c': 'w',
+}
+
+_topology_default_style = {
+    'f': 60,
+    'r': 12,
+    'id_color': "#ffffff",
+    'id_fs': 18,
+    'couple_color': '#ababab',
+    'couple_w': 8,
+    'selected_edge_c': '#ff0000',
 }
