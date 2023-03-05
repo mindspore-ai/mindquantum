@@ -48,7 +48,7 @@ class SABRE:
         new_circ = Circuit()
         for idx, p1, p2 in gate_info:
             if idx == -1:
-                self.circuit += SWAP.on([p1, p2])
+                new_circ += SWAP.on([p1, p2])
             else:
                 ori_gate = self.circuit[idx]
                 if p1 == p2:
