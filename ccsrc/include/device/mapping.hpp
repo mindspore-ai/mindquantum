@@ -26,7 +26,6 @@
 #include "ops/basic_gate.hpp"
 #include "ops/gate_id.hpp"
 namespace mindquantum::mapping {
-
 struct Gate {
     std::string type;  // gate's type, such as CNOT or X
     int q1, q2;        // logical qubit number, if

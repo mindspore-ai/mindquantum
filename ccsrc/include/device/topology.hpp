@@ -117,7 +117,6 @@ class GridQubits : public QubitsTopology {
     int n_row = 0;
     int n_col = 0;
 };
-
 }  // namespace mindquantum::mapping
 
 #endif

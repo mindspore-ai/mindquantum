@@ -22,7 +22,6 @@
 #include <utility>
 
 namespace mindquantum::mapping {
-
 // =============================================================================
 
 QubitNode::QubitNode(qbit_t id, std::string color, double poi_x, double poi_y)

@@ -26,7 +26,6 @@
 #include "ops/gate_id.hpp"
 
 namespace mindquantum::mapping {
-
 // -----------------------------------------------------------------------------
 VT<VT<int>> GetCircuitDAG(int n, const VT<Gate>& gates) {
     int m = gates.size();
