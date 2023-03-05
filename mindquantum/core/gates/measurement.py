@@ -23,7 +23,6 @@ import numpy as np
 from rich.console import Console
 
 from mindquantum import mqbackend as mb
-from mindquantum.io.display import measure_text_drawer
 from mindquantum.utils.string_utils import join_without_empty
 
 from .basic import FunctionalGate
@@ -292,6 +291,7 @@ class MeasureResult:
     def __repr__(self):
         """Return a string representation of the object."""
         # pylint: disable=import-outside-toplevel,cyclic-import
+        from mindquantum.io.display import measure_text_drawer
         from mindquantum.io.display._config import _MEA_RES_STYLE
 
         res = measure_text_drawer(self)
@@ -307,6 +307,7 @@ class MeasureResult:
     def _repr_html_(self):
         """Repr for jupyter notebook."""
         # pylint: disable=import-outside-toplevel,cyclic-import
+        from mindquantum.io.display import measure_text_drawer
         from mindquantum.io.display._config import _MEA_RES_STYLE, MEA_HTML_FORMAT
 
         res = measure_text_drawer(self)

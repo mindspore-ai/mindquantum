@@ -24,7 +24,6 @@ from typing import Iterable, List
 import numpy as np
 import scipy
 
-from mindquantum.io.display._config import _DAGGER_MASK
 from mindquantum.utils.f import pauli_string_matrix
 from mindquantum.utils.quantifiers import s_quantifier
 from mindquantum.utils.string_utils import join_without_empty
@@ -307,6 +306,9 @@ class NonHermitianGate(QuantumGate):
 
     def __type_specific_str__(self):
         """Return a string representation of the object."""
+        # pylint: disable=import-outside-toplevel,cyclic-import
+        from mindquantum.io.display._config import _DAGGER_MASK
+
         return _DAGGER_MASK if self.hermitianed else ''
 
     def __str_in_terminal__(self):
@@ -321,6 +323,9 @@ class NonHermitianGate(QuantumGate):
 
     def __str_in_svg__(self):
         """Return a string representation of the object."""
+        # pylint: disable=import-outside-toplevel,cyclic-import
+        from mindquantum.io.display._config import _DAGGER_MASK
+
         string = super().__str_in_svg__()
         if self.hermitianed:
             string += _DAGGER_MASK
