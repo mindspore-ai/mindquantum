@@ -81,7 +81,7 @@ QubitsTopology::QubitsTopology(const VT<QNodePtr>& qubits) {
 }
 
 QNodePtr QubitsTopology::operator[](qbit_t id) {
-    if (!this->qubits.contains(id)) {
+    if (!this->qubits.count(id) > 0) {
         throw std::runtime_error("qubit with id " + std::to_string(id) + " not in this topology.");
     }
     return this->qubits.at(id);
@@ -181,7 +181,7 @@ void QubitsTopology::IsolateWithNear(qbit_t id) {
 bool QubitsTopology::IsCoupledWith(qbit_t id1, qbit_t id2) {
     auto q1 = (*this)[id1];
     auto q2 = (*this)[id2];
-    return q1->neighbour.contains(q2->id);
+    return q1->neighbour.count(q2->id) > 0;
 }
 
 std::unordered_map<qbit_t, QNodePtr> QubitsTopology::Dict() {
@@ -196,7 +196,7 @@ void QubitsTopology::AddQubitNode(const QNodePtr& qubit) {
 }
 
 bool QubitsTopology::HasQubitNode(qbit_t id) {
-    return this->qubits.contains(id);
+    return this->qubits.count(id) > 0;
 }
 
 // =============================================================================
