@@ -51,8 +51,8 @@ void BindTopology(py::module &module) {  // NOLINT(runtime/references)
               .def("__lt__", &mm::QubitNode::operator<, "other"_a, "Disconnect with other qubit node and return lhs.")
               .def("__gt__", &mm::QubitNode::operator>, "other"_a, "Disconnect with other qubit node and return rhs.")
               .def("__lshift__", &mm::QubitNode::operator<<, "other"_a, "Connect with other qubit node and return lhs.")
-              .def("__rshift__", &mm::QubitNode::operator>>, "other"_a,
-                   "Connect with other qubit node and return rhs.");
+              .def("__rshift__", &mm::QubitNode::operator>>, "other"_a, "Connect with other qubit node and return rhs.")
+              .def("__int__", [](const mm::QubitNode &node) { return node.id; });
     qnode_module.doc() = R"(
         Qubit node.
     )";
@@ -88,7 +88,7 @@ void BindTopology(py::module &module) {  // NOLINT(runtime/references)
               .def("__getitem__", &mm::QubitsTopology::operator[], "Get qubit node base on qubit id.")
               .def("dict", &mm::QubitsTopology::Dict,
                    "Get the map of qubits with key as qubit id and value as qubit itself.")
-              .def("remove_isoloate_node", &mm::QubitsTopology::RemoveIsolateNode,
+              .def("remove_isolate_node", &mm::QubitsTopology::RemoveIsolateNode,
                    "Remove qubit node that do not connect with any other qubits.");
     qubits_topo_m.doc() = "Topology of qubit in physical device.";
 

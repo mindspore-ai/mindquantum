@@ -64,6 +64,10 @@ struct QubitNode : std::enable_shared_from_this<QubitNode> {
     // left_node > right_node
     // disconnect this two nodes, and return right_node
     QNodePtr operator>(const QNodePtr& other);
+
+    // int id = QubitNode(0)
+    // automatic convert a QubitNode to int.
+    operator qbit_t();
 };
 
 // =============================================================================

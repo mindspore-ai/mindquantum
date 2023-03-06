@@ -69,6 +69,10 @@ QNodePtr QubitNode::operator>(const QNodePtr& other) {
     return other;
 }
 
+QubitNode::operator qbit_t() {
+    return this->id;
+}
+
 // =============================================================================
 
 QubitsTopology::QubitsTopology(const VT<QNodePtr>& qubits) {
