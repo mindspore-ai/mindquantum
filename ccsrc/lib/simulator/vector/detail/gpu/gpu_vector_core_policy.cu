@@ -11,6 +11,8 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
+#include <limits>
+
 #include <thrust/transform_reduce.h>
 
 #include "config/openmp.hpp"
@@ -130,6 +132,44 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs, const
     }
     return out;
 };
+
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::GroundStateOfZZs(const std::map<index_t, calc_type>& masks_value,
+                                                                 qbit_t n_qubits) -> calc_type {
+    auto n_mask = masks_value.size();
+    VT<index_t> mask_host(n_mask);
+    VT<calc_type> value_host(masks_value.size());
+    for (auto& [mask, value] : masks_value) {
+        mask_host.push_back(mask);
+        value_host.push_back(value);
+    }
+    index_t* mask_device;
+    calc_type* value_device;
+    cudaMalloc((void**) &mask_device, sizeof(index_t) * n_mask);
+    cudaMalloc((void**) &value_device, sizeof(calc_type) * n_mask);
+    cudaMemcpy(mask_device, mask_host.data(), sizeof(index_t) * n_mask, cudaMemcpyHostToDevice);
+    cudaMemcpy(value_device, value_host.data(), sizeof(calc_type) * n_mask, cudaMemcpyHostToDevice);
+    thrust::counting_iterator<size_t> l(0);
+
+    auto res = thrust::transform_reduce(
+        l, l + (1UL << n_qubits),
+        [=] __device__(size_t l) {
+            calc_type ith_energy = 0;
+            for (int i = 0; i < n_mask; i++) {
+                if (__popcll(l & mask_device[i]) & 1) {
+                    ith_energy -= value_device[i];
+                } else {
+                    ith_energy += value_device[i];
+                }
+            }
+            return ith_energy;
+        },
+        std::numeric_limits<calc_type>::max(), thrust::minimum<calc_type>());
+    cudaFree(mask_device);
+    cudaFree(value_device);
+    return res;
+}
+
 template <typename derived_, typename calc_type_>
 auto GPUVectorPolicyBase<derived_, calc_type_>::Copy(qs_data_p_t qs, index_t dim) -> qs_data_p_t {
     qs_data_p_t out;

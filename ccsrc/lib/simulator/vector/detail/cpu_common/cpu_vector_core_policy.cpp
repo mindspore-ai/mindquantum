@@ -11,11 +11,15 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
+#include <limits>
 #include <stdexcept>
 
+#include "config/details/macros.hpp"
 #include "config/openmp.hpp"
 
 #include "core/parameter_resolver.hpp"
+#include "core/utils.hpp"
+#include "simulator/types.hpp"
 #include "simulator/utils.hpp"
 #ifdef __x86_64__
 #    include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
@@ -123,6 +127,27 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs, const
     }
     return out;
 };
+
+template <typename derived_, typename calc_type>
+auto CPUVectorPolicyBase<derived_, calc_type>::GroundStateOfZZs(const std::map<index_t, calc_type>& masks_value,
+                                                                qbit_t n_qubits) -> calc_type {
+    calc_type result = std::numeric_limits<calc_type>::max();
+    auto dim = 1UL << n_qubits;
+    THRESHOLD_OMP(
+        MQ_DO_PRAGMA(omp parallel for reduction(min:result) schedule(static)), dim, DimTh,
+                     for (omp::idx_t i = 0; i < (1UL << n_qubits); i++) {
+                         calc_type ith_energy = 0;
+                         for (auto& [mask, coeff] : masks_value) {
+                             if (CountOne(static_cast<int64_t>(i & mask)) & 1) {
+                                 ith_energy -= coeff;
+                             } else {
+                                 ith_energy += coeff;
+                             }
+                         }
+                         result = std::min(result, ith_energy);
+                     });
+    return result;
+}
 
 #ifdef __x86_64__
 template struct CPUVectorPolicyBase<CPUVectorPolicyAvxFloat, float>;

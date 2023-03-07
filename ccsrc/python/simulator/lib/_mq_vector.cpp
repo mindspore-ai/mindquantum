@@ -31,6 +31,7 @@
 #include "python/vector/bind_vec_state.h"
 
 PYBIND11_MODULE(_mq_vector, module) {
+    using namespace pybind11::literals;  // NOLINT
 #ifdef __CUDACC__
     using float_policy_t = mindquantum::sim::vector::detail::GPUVectorPolicyFloat;
     using double_policy_t = mindquantum::sim::vector::detail::GPUVectorPolicyDouble;
@@ -56,4 +57,6 @@ PYBIND11_MODULE(_mq_vector, module) {
     pybind11::module double_blas = double_sim.def_submodule("blas", "MindQuantum simulator algebra module.");
     BindBlas<float_vec_sim>(float_blas);
     BindBlas<double_vec_sim>(double_blas);
+
+    module.def("GroundStateOfZZs", &double_policy_t::GroundStateOfZZs, "masks_value"_a, "n_qubits"_a);
 }

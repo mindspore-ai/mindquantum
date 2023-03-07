@@ -12,9 +12,9 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-
 """This module provide some useful function related to operators."""
 
+from ...config import get_context
 from ..operators.fermion_operator import FermionOperator
 from ..operators.polynomial_tensor import PolynomialTensor
 from ..operators.qubit_excitation_operator import QubitExcitationOperator
@@ -269,3 +269,40 @@ def sz_operator(n_spatial_orbitals):
         sz_down += number_operator(None, down_index(orbit), 0.5)
 
     return sz_up - sz_down
+
+
+def ground_state_of_sum_zz(ops: QubitOperator) -> float:
+    """
+    Find the ground state energy of given zz term qubit operator.
+
+    Args:
+        ops (QubitOperator): qubit operator that only has pauli z term.
+
+    Returns:
+        float, the ground state energy of given qubit operator.
+
+    Examples:
+        >>> from mindquantum.core.operators import ground_state_of_sum_zz, QubitOperator
+        >>> h = QubitOperator('Z0 Z1', 1.0) + QubitOperator('Z0 Z2', -1.5)
+        >>> ground_state_of_sum_zz(h)
+        -2.5
+        >>> import numpy as np
+        >>> np.min(np.diag(h.matrix().toarray()))
+        (-2.5+0j)
+    """
+    # pylint: disable=import-outside-toplevel
+    backend = get_context('device_target')
+    if backend == "CPU":
+        from ..._mq_vector import GroundStateOfZZs
+    else:
+        from ..._mq_vector_gpu import GroundStateOfZZs
+    masks_value = {}
+    terms = ops.terms
+    for k, v in terms.items():
+        mask = 0
+        for idx, z in k:
+            if str(z) != 'Z':
+                raise ValueError("ops should contains only pauli z operator.")
+            mask += 1 << idx
+        masks_value[mask] = v.const.real
+    return GroundStateOfZZs(masks_value, ops.count_qubits())

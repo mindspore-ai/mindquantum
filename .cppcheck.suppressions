@@ -51,6 +51,7 @@ syntaxError:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_dot_lik
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_gate_expect.cpp
 syntaxError:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_gate_expect.cpp
 syntaxError:ccsrc/python/device/include/python/device/binding.hpp
+syntaxError:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_policy.cpp
 
 uninitMemberVar:ccsrc/include/core/numba_wrapper.hpp
 
@@ -60,7 +61,6 @@ unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_single_ops.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_xlike.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_z_like.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_rot_pauli.cpp
-unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_policy.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_swap_like.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_matrix_gate.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_x_like.cpp
