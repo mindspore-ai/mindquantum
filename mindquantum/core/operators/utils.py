@@ -15,6 +15,7 @@
 """This module provide some useful function related to operators."""
 
 from ...config import get_context
+from ...utils.error import DeviceNotSupportedError
 from ..operators.fermion_operator import FermionOperator
 from ..operators.polynomial_tensor import PolynomialTensor
 from ..operators.qubit_excitation_operator import QubitExcitationOperator
@@ -295,7 +296,11 @@ def ground_state_of_sum_zz(ops: QubitOperator) -> float:
     if backend == "CPU":
         from ..._mq_vector import GroundStateOfZZs
     else:
-        from ..._mq_vector_gpu import GroundStateOfZZs
+        try:
+            from ..._mq_vector_gpu import GroundStateOfZZs
+        except ImportError as exc:
+            raise DeviceNotSupportedError(backend) from exc
+
     masks_value = {}
     terms = ops.terms
     for k, v in terms.items():

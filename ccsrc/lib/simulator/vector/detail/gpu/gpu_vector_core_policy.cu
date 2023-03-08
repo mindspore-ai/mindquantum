@@ -24,6 +24,7 @@
 #include "thrust/device_ptr.h"
 #include "thrust/functional.h"
 #include "thrust/inner_product.h"
+#include "thrust/device_vector.h"
 
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
@@ -137,18 +138,14 @@ template <typename derived_, typename calc_type_>
 auto GPUVectorPolicyBase<derived_, calc_type_>::GroundStateOfZZs(const std::map<index_t, calc_type>& masks_value,
                                                                  qbit_t n_qubits) -> calc_type {
     auto n_mask = masks_value.size();
-    VT<index_t> mask_host(n_mask);
-    VT<calc_type> value_host(masks_value.size());
+    thrust::device_vector<index_t> mask_device;
+    thrust::device_vector<calc_type> value_device;
     for (auto& [mask, value] : masks_value) {
-        mask_host.push_back(mask);
-        value_host.push_back(value);
+        mask_device.push_back(mask);
+        value_device.push_back(value);
     }
-    index_t* mask_device;
-    calc_type* value_device;
-    cudaMalloc((void**) &mask_device, sizeof(index_t) * n_mask);
-    cudaMalloc((void**) &value_device, sizeof(calc_type) * n_mask);
-    cudaMemcpy(mask_device, mask_host.data(), sizeof(index_t) * n_mask, cudaMemcpyHostToDevice);
-    cudaMemcpy(value_device, value_host.data(), sizeof(calc_type) * n_mask, cudaMemcpyHostToDevice);
+    auto mask_ptr = thrust::raw_pointer_cast(mask_device.data());
+    auto value_ptr = thrust::raw_pointer_cast(value_device.data());
     thrust::counting_iterator<size_t> l(0);
 
     auto res = thrust::transform_reduce(
@@ -156,17 +153,15 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::GroundStateOfZZs(const std::map<
         [=] __device__(size_t l) {
             calc_type ith_energy = 0;
             for (int i = 0; i < n_mask; i++) {
-                if (__popcll(l & mask_device[i]) & 1) {
-                    ith_energy -= value_device[i];
+                if (__popcll(l & mask_ptr[i]) & 1) {
+                    ith_energy -= value_ptr[i];
                 } else {
-                    ith_energy += value_device[i];
+                    ith_energy += value_ptr[i];
                 }
             }
             return ith_energy;
         },
         std::numeric_limits<calc_type>::max(), thrust::minimum<calc_type>());
-    cudaFree(mask_device);
-    cudaFree(value_device);
     return res;
 }
 

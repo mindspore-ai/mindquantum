@@ -13,15 +13,17 @@
 #   limitations under the License.
 
 # pylint: disable=invalid-name
-
 """The test function for QubitOperator."""
 
 import os
 
+import numpy as np
 import pytest
 
+from mindquantum.config import set_context
 from mindquantum.core import ParameterResolver
-from mindquantum.core.operators import QubitOperator
+from mindquantum.core.operators import QubitOperator, ground_state_of_sum_zz
+from mindquantum.utils.error import DeviceNotSupportedError
 
 _HAS_OPENFERMION = True
 try:
@@ -204,3 +206,23 @@ def test_qubit_ops_trans():
 
     assert mq_ops.to_openfermion() == ofo_ops
     assert mq_ops == QubitOperator.from_openfermion(ofo_ops)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("device", ['GPU', 'CPU'])
+def test_ground_state_of_sum_zz(device):
+    """
+    Description: Test test_ground_state_of_sum_zz.
+    Expectation: success.
+    """
+    set_context(device_target=device)
+    ops = QubitOperator('Z0 Z1 Z2', 1.2) + QubitOperator('Z0 Z2', 2.3) + QubitOperator('Z1 Z3', 3.4)
+    try:
+        e1 = ground_state_of_sum_zz(ops)
+        e2 = np.min(ops.matrix().data)
+        assert np.allclose(e1, e2)
+    except DeviceNotSupportedError:
+        pass
