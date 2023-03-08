@@ -7,6 +7,10 @@ mindquantum.core.gates.CNOTGate
 
     更多用法，请参见 :class:`mindquantum.core.gates.XGate` 。
 
+    .. py:method:: get_cpp_obj()
+
+        返回该门的c++对象。
+
     .. py:method:: on(obj_qubits, ctrl_qubits=None)
 
         定义量子门作用在哪些量子别上，并受哪些量子比特控制。
@@ -20,7 +24,3 @@ mindquantum.core.gates.CNOTGate
 
         返回：
             量子门，返回一个新的量子门。
-
-    .. py:method:: get_cpp_obj()
-
-        返回该门的c++对象。

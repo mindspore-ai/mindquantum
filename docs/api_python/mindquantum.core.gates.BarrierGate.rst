@@ -8,6 +8,10 @@ mindquantum.core.gates.BarrierGate
     参数：
         - **show** (bool) - 是否展示栅栏门。默认值：True.
 
+    .. py:method:: get_cpp_obj()
+
+        返回该门的c++对象。
+
     .. py:method:: on(obj_qubits, ctrl_qubits=None)
 
         定义该门作用在哪些量子比特上。受控位必须为 `None`，应为栅栏门不能被其他比特控制。
@@ -18,7 +22,3 @@ mindquantum.core.gates.BarrierGate
 
         返回：
             量子门，返回一个新的量子门。
-
-    .. py:method:: get_cpp_obj()
-
-        返回该门的c++对象。
