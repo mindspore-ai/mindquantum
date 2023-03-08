@@ -1,12 +1,15 @@
 mindquantum.config
 ==================
 
-.. automodule:: mindquantum.config
+.. py:module:: mindquantum.config
+
+
+MindQuantum 的全局配置。
 
 Function
 ---------
 
-.. autosummary::
+.. mscnautosummary::
     :toctree:
     :nosignatures:
     :template: classtemplate.rst
