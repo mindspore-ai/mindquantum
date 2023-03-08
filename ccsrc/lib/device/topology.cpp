@@ -85,7 +85,7 @@ QubitsTopology::QubitsTopology(const VT<QNodePtr>& qubits) {
 }
 
 QNodePtr QubitsTopology::operator[](qbit_t id) {
-    if (!this->qubits.count(id) > 0) {
+    if (!(this->qubits.count(id) > 0)) {
         throw std::runtime_error("qubit with id " + std::to_string(id) + " not in this topology.");
     }
     return this->qubits.at(id);
