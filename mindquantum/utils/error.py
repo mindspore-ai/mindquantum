@@ -20,6 +20,7 @@ class DeviceNotSupportedError(Exception):
 
     def __init__(self, device):
         """Initialize a device not supported error."""
+        super().__init__()
         self.msg = f"Device {device} not supported."
 
     def __str__(self):
