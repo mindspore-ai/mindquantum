@@ -32,10 +32,8 @@ def circuit_equal_test(gate, decompose_circ):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
-def test_rxx(dtype):
+def test_rxx():
     """
     Description: Test rxx decompose
     Expectation: success
@@ -46,10 +44,8 @@ def test_rxx(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
-def test_crxx(dtype):
+def test_crxx():
     """
     Description: Test crxx decompose
     Expectation: success

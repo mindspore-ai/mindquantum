@@ -29,9 +29,7 @@ def circuit_equal_test(gate, decompose_circ):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 def test_swap():
     """
     Description: Test swap decompose
@@ -43,9 +41,7 @@ def test_swap():
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 def test_cswap():
     """
     Description: Test cswap decompose

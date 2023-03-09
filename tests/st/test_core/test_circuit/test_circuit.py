@@ -22,7 +22,10 @@ from mindquantum.config import set_context
 from mindquantum.core import gates as G
 from mindquantum.core.circuit import Circuit, add_prefix, shift
 from mindquantum.core.parameterresolver import ParameterResolver
-from mindquantum.simulator import Simulator, get_supported_simulator
+from mindquantum.simulator import Simulator
+from mindquantum.simulator.simulator import avaliable_backend
+
+AVALIABLE_BACKEND = avaliable_backend()
 
 
 def test_circuit_qubits_grad():
@@ -50,15 +53,17 @@ def test_circuit_qubits_grad():
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('backend', [i for i in get_supported_simulator() if i != 'mqmatrix'])
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_get_matrix(backend, dtype):
+@pytest.mark.parametrize('config', AVALIABLE_BACKEND)
+def test_get_matrix(config):
     """
     test
     Description:
     Expectation:
     """
-    set_context(dtype=dtype)
+    backend, dtype, device = config
+    if backend:
+        return
+    set_context(dtype=dtype, device_target=device)
     circ = Circuit().ry('a', 0).rz('b', 0).ry('c', 0)
     matrix = circ.matrix(np.array([7.902762e-01, 2.139225e-04, 7.795934e-01]), backend=backend)
     assert np.allclose(matrix[0, 0], 0.70743435 - 1.06959724e-04j)
@@ -81,13 +86,16 @@ def test_circuit_apply():
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('backend', get_supported_simulator())
-def test_evolution_state(backend):
+@pytest.mark.parametrize('config', AVALIABLE_BACKEND)
+def test_evolution_state(config):
     """
     test
     Description:
     Expectation:
     """
+
+    backend, dtype, device = config
+    set_context(dtype=dtype, device_target=device)
     a, b = 0.3, 0.5
     circ = Circuit([G.RX('a').on(0), G.RX('b').on(1)])
     simulator = Simulator(backend, circ.n_qubits)

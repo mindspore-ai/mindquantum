@@ -18,6 +18,7 @@ import numpy as np
 import pytest
 
 _HAS_MINDSPORE = True
+AVALIABLE_BACKEND = []
 try:
     import mindspore as ms
 
@@ -25,7 +26,10 @@ try:
     from mindquantum.config import set_context
     from mindquantum.core.operators import Hamiltonian
     from mindquantum.framework import MQAnsatzOnlyLayer
-    from mindquantum.simulator import Simulator, get_supported_simulator
+    from mindquantum.simulator import Simulator
+    from mindquantum.simulator.simulator import avaliable_backend
+
+    AVALIABLE_BACKEND = avaliable_backend()
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
@@ -40,15 +44,15 @@ except ImportError:
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('backend', get_supported_simulator())
-@pytest.mark.parametrize('dtype', ['float', 'double'])
+@pytest.mark.parametrize('config', AVALIABLE_BACKEND)
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_max_2_sat(backend, dtype):
+def test_max_2_sat(config):
     """
     Description:
     Expectation:
     """
-    set_context(dtype=dtype)
+    backend, dtype, device = config
+    set_context(dtype=dtype, device_target=device)
     clauses = [(1, 2), (1, -2), (-1, 2), (-1, -2), (1, 3)]
     depth = 3
     max2sat = Max2SATAnsatz(clauses, depth)

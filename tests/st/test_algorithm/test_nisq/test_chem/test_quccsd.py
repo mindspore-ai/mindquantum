@@ -37,7 +37,7 @@ def test_quccsd(config):
     Description: Test quccsd
     Expectation:
     """
-    backend, dtype, device = config
+    _, dtype, device = config
     set_context(dtype=dtype, device_target=device)
     h2_quccsd = quccsd_generator(4, 2)
     h2_quccsd_terms = set(h2_quccsd.terms)

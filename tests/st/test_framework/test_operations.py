@@ -18,6 +18,7 @@ import numpy as np
 import pytest
 
 _HAS_MINDSPORE = True
+AVALIABLE_BACKEND = True
 try:
     import mindspore as ms
 
@@ -26,7 +27,10 @@ try:
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.operators import Hamiltonian, QubitOperator
     from mindquantum.framework import MQAnsatzOnlyOps
-    from mindquantum.simulator import Simulator, get_supported_simulator
+    from mindquantum.simulator import Simulator
+    from mindquantum.simulator.simulator import avaliable_backend
+
+    AVALIABLE_BACKEND = avaliable_backend()
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
@@ -41,15 +45,15 @@ except ImportError:
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('backend', get_supported_simulator())
-@pytest.mark.parametrize('dtype', ['float', 'double'])
+@pytest.mark.parametrize('config', AVALIABLE_BACKEND)
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_mindquantum_ansatz_only_ops(backend, dtype):
+def test_mindquantum_ansatz_only_ops(config):
     """
     Description: Test MQAnsatzOnlyOps
     Expectation:
     """
-    set_context(dtype=dtype)
+    backend, dtype, device = config
+    set_context(dtype=dtype, device_target=device)
     circ = Circuit(G.RX('a').on(0))
     data = ms.Tensor(np.array([0.5]).astype(np.float32))
     ham = Hamiltonian(QubitOperator('Z0'))

@@ -38,9 +38,7 @@ def assert_equivalent_unitary(u, v):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 def test_euler_decomposition():
     """
     Feature: single-qubit Euler decomposition
@@ -61,9 +59,7 @@ def test_euler_decomposition():
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 def test_tensor_product_decomposition():
     """
     Feature: two-qubit tensor-product decomposition
@@ -78,9 +74,7 @@ def test_tensor_product_decomposition():
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 def test_abc_decomposition():
     """
     Feature: two-qubit controlled-unitary gate decomposition
@@ -103,9 +97,7 @@ def test_abc_decomposition():
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 def test_kak_decomposition():
     """
     Feature: arbitrary two-qubit gate decomposition

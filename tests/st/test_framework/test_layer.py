@@ -18,6 +18,7 @@ import numpy as np
 import pytest
 
 _HAS_MINDSPORE = True
+AVALIABLE_BACKEND = []
 try:
     import mindspore as ms
 
@@ -26,7 +27,10 @@ try:
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.operators import Hamiltonian, QubitOperator
     from mindquantum.framework import MQLayer
-    from mindquantum.simulator import Simulator, get_supported_simulator
+    from mindquantum.simulator import Simulator
+    from mindquantum.simulator.simulator import avaliable_backend
+
+    AVALIABLE_BACKEND = avaliable_backend()
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
@@ -41,15 +45,15 @@ except ImportError:
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('backend', get_supported_simulator())
-@pytest.mark.parametrize('dtype', ['float', 'double'])
+@pytest.mark.parametrize('config', AVALIABLE_BACKEND)
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
-def test_mindquantumlayer(backend, dtype):
+def test_mindquantumlayer(config):
     """
     Description: Test MQLayer
     Expectation:
     """
-    set_context(dtype=dtype)
+    backend, dtype, device = config
+    set_context(dtype=dtype, device_target=device)
     encoder = Circuit()
     ansatz = Circuit()
     encoder += G.RX('e1').on(0)

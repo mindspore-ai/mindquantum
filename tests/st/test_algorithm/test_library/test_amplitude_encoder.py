@@ -45,7 +45,7 @@ def test_amplitude_encoder(config):
     Expectation: success.
     '''
     backend, dtype, device = config
-    set_context(dtype=dtype)
+    set_context(dtype=dtype, device_target=device)
     sim = Simulator(backend, 3)
     circuit, params = amplitude_encoder([0.5, 0.5, 0.5, 0.5], 3)
     sim.apply_circuit(circuit, params)

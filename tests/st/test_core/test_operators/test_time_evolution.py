@@ -22,9 +22,7 @@ from mindquantum.core.operators import QubitOperator, TimeEvolution
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_time_evolution(dtype):
     """
