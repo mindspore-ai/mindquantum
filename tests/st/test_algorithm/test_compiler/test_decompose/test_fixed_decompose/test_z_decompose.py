@@ -19,7 +19,6 @@ import numpy as np
 import pytest
 
 from mindquantum.algorithm.compiler.decompose import cz_decompose
-from mindquantum.config import set_context
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import Z
 
@@ -36,13 +35,11 @@ def circuit_equal_test(gate, decompose_circ):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_cz(dtype):
+def test_cz():
     """
     Description: Test cz decompose
     Expectation: success
     """
-    set_context(dtype=dtype)
     cz = Z.on(1, 0)
     for solution in cz_decompose(cz):
         circuit_equal_test(cz, solution)

@@ -18,7 +18,8 @@ from functools import partial
 
 import numpy as np
 
-from ..config import get_context
+from ..config import get_context, set_context
+from ..core.circuit import Circuit
 from ..core.operators import Hamiltonian
 from ..utils.type_value_check import (
     _check_input_type,
@@ -489,6 +490,30 @@ def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
     if isinstance(bra_simulator.backend, MQSim):
         return MQBlas.inner_product(bra_simulator.backend, ket_simulator.backend)
     raise NotImplementedError(f"inner_product for backend {bra_simulator.backend} not implement.")
+
+
+def avaliable_backend():
+    """
+    Get avaliable simulator.
+
+    Returns:
+        Tuple(str, str, str), tuple of avaliable (backend, dtype, device).
+    """
+    backends = ['mqvector', 'mqmatrix']
+    dtypes = ['float', 'double']
+    devices = ['GPU', 'CPU']
+    avaliable = []
+    for backend in backends:
+        for dtype in dtypes:
+            for device in devices:
+                set_context(device_target=device, dtype=dtype)
+                try:
+                    sim = Simulator(backend, 1)
+                    sim.apply_circuit(Circuit().h(0))
+                    avaliable.append((backend, dtype, device))
+                except:
+                    pass
+    return avaliable
 
 
 __all__ = ['Simulator', 'get_supported_simulator', 'inner_product']

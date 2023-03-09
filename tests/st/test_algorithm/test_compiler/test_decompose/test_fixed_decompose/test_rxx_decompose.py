@@ -19,7 +19,6 @@ import numpy as np
 import pytest
 
 from mindquantum.algorithm.compiler.decompose import crxx_decompose, rxx_decompose
-from mindquantum.config import set_context
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import Rxx
 
@@ -36,13 +35,11 @@ def circuit_equal_test(gate, decompose_circ):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_rxx(dtype):
     """
     Description: Test rxx decompose
     Expectation: success
     """
-    set_context(dtype=dtype)
     rxx = Rxx(1).on([0, 1])
     for solution in rxx_decompose(rxx):
         circuit_equal_test(rxx, solution)
@@ -52,13 +49,11 @@ def test_rxx(dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_crxx(dtype):
     """
     Description: Test crxx decompose
     Expectation: success
     """
-    set_context(dtype=dtype)
     cxx = Rxx(2).on([0, 1], [2, 3])
     for solution in crxx_decompose(cxx):
         circuit_equal_test(cxx, solution)

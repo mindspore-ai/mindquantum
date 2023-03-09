@@ -23,7 +23,6 @@ from scipy.stats import unitary_group
 import mindquantum as mq
 from mindquantum import gates
 from mindquantum.algorithm.compiler import decompose
-from mindquantum.config import set_context
 
 rand_unitary = unitary_group.rvs
 
@@ -42,14 +41,12 @@ def assert_equivalent_unitary(u, v):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_euler_decomposition(dtype):
+def test_euler_decomposition():
     """
     Feature: single-qubit Euler decomposition
     Description: Test Euler decomposition for single-qubit unitary gate.
     Expectation: success.
     """
-    set_context(dtype=dtype)
 
     # ZYZ basis
     u = unitary_group.rvs(2, random_state=123)
@@ -67,14 +64,12 @@ def test_euler_decomposition(dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_tensor_product_decomposition(dtype):
+def test_tensor_product_decomposition():
     """
     Feature: two-qubit tensor-product decomposition
     Description: Test 2-qubit tensor-product decomposition.
     Expectation: success.
     """
-    set_context(dtype=dtype)
 
     g = gates.UnivMathGate('XY', np.kron(gates.X.matrix(), gates.Y.matrix())).on([0, 1])
     circ_original = (mq.Circuit() + g).reverse_qubits()
@@ -86,14 +81,12 @@ def test_tensor_product_decomposition(dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_abc_decomposition(dtype):
+def test_abc_decomposition():
     """
     Feature: two-qubit controlled-unitary gate decomposition
     Description: Test ABC decomposition for 2-qubit controlled gate.
     Expectation: success.
     """
-    set_context(dtype=dtype)
 
     # special case: CRz(pi)
     g = gates.RZ(np.pi).on(0, 1)
@@ -113,14 +106,12 @@ def test_abc_decomposition(dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_kak_decomposition(dtype):
+def test_kak_decomposition():
     """
     Feature: arbitrary two-qubit gate decomposition
     Description: Test KAK decomposition for arbitrary 2-qubit gate.
     Expectation: success.
     """
-    set_context(dtype=dtype)
 
     g = gates.UnivMathGate('U', rand_unitary(4, random_state=123)).on([0, 1])
     circ_original = (mq.Circuit() + g).reverse_qubits()

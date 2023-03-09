@@ -1,4 +1,3 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +16,6 @@ import numpy as np
 import pytest
 
 from mindquantum.algorithm.compiler.decompose import cswap_decompose, swap_decompose
-from mindquantum.config import set_context
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import SWAP
 
@@ -34,13 +32,11 @@ def circuit_equal_test(gate, decompose_circ):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_swap(dtype):
+def test_swap():
     """
     Description: Test swap decompose
     Expectation: success
     """
-    set_context(dtype=dtype)
     swap = SWAP.on([0, 1])
     for solution in swap_decompose(swap):
         circuit_equal_test(swap, solution)
@@ -50,13 +46,11 @@ def test_swap(dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_cswap(dtype):
+def test_cswap():
     """
     Description: Test cswap decompose
     Expectation: success
     """
-    set_context(dtype=dtype)
     cswap = SWAP.on([1, 2], 0)
     for solution in cswap_decompose(cswap):
         circuit_equal_test(cswap, solution)

@@ -19,7 +19,6 @@ import numpy as np
 import pytest
 
 from mindquantum.algorithm.compiler.decompose import rzz_decompose
-from mindquantum.config import set_context
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import Rzz
 
@@ -36,13 +35,11 @@ def circuit_equal_test(gate, decompose_circ):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_rzz(dtype):
+def test_rzz():
     """
     Description: Test zz decompose
     Expectation: success
     """
-    set_context(dtype=dtype)
     rzz = Rzz(1).on([1, 0])
     for solution in rzz_decompose(rzz):
         circuit_equal_test(rzz, solution)

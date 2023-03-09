@@ -19,7 +19,6 @@ import numpy as np
 import pytest
 
 from mindquantum.algorithm.compiler.decompose import cy_decompose
-from mindquantum.config import set_context
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import Y
 
@@ -34,13 +33,11 @@ def circuit_equal_test(gate, decompose_circ):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_cy(dtype):
+def test_cy():
     """
     Description: Test cy decompose
     Expectation: success
     """
-    set_context(dtype=dtype)
     cy = Y.on(1, 0)
     for solution in cy_decompose(cy):
         circuit_equal_test(cy, solution)

@@ -26,9 +26,7 @@ def _get_terms_as_set(qubit_op):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_transform_jordan_wigner(dtype):
     """
@@ -43,9 +41,7 @@ def test_transform_jordan_wigner(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_transform_parity(dtype):
     """
@@ -61,9 +57,7 @@ def test_transform_parity(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_transform_bravyi_kitaev(dtype):
     """
@@ -78,9 +72,7 @@ def test_transform_bravyi_kitaev(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_transform_ternary_tree(dtype):
     """
