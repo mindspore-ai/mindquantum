@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "python/device/binding.hpp"
+
 #include <complex>
 #include <memory>
 
@@ -892,4 +894,8 @@ PYBIND11_MODULE(mqbackend, m) {
 
     py::module c = m.def_submodule("c", "pybind11 c++ env");
     mindquantum::BindPybind11Env(c);
+
+    py::module device = m.def_submodule("device", "Quantum device module");
+    BindTopology(device);
+    BindQubitMapping(device);
 }

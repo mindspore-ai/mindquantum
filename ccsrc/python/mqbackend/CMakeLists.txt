@@ -58,7 +58,8 @@ endif()
 target_include_directories(mqbackend PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
 
 force_at_least_cxx17_workaround(mqbackend)
-target_link_libraries(mqbackend PUBLIC ${MQ_OPENMP_TARGET} mq_base mq_python_core mqbackend_python_interface)
+target_link_libraries(mqbackend PUBLIC ${MQ_OPENMP_TARGET} mq_base mq_python_core mqbackend_python_interface
+                                       mq_python_device)
 
 # ------------------------------------------------------------------------------
 

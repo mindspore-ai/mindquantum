@@ -25,8 +25,6 @@ from typing import List
 import numpy as np
 from rich.console import Console
 
-from mindquantum.io import bprint
-from mindquantum.io.display import brick_model
 from mindquantum.utils.type_value_check import (
     _check_and_generate_pr_type,
     _check_gate_has_obj,
@@ -35,7 +33,7 @@ from mindquantum.utils.type_value_check import (
 )
 
 from .. import gates as mq_gates
-from ..gates.basic import ParameterGate
+from ..gates.basic import BasicGate, ParameterGate
 from ..parameterresolver import ParameterResolver
 
 
@@ -440,6 +438,10 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             return super().__getitem__(sliced)
         return Circuit(super().__getitem__(sliced))
 
+    def __iter__(self) -> BasicGate:
+        """Iterate quantum circuit."""
+        yield from super().__iter__()
+
     @property
     def has_measure_gate(self):
         """
@@ -543,6 +545,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
     def __repr__(self):
         """Return a string representation of the object."""
         # pylint: disable=import-outside-toplevel,cyclic-import
+        from mindquantum.io.display import brick_model
         from mindquantum.io.display._config import _CIRCUIT_STYLE
 
         console = Console(record=True)
@@ -558,6 +561,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
     def _repr_html_(self):
         """Repr for jupyter notebook."""
         # pylint: disable=import-outside-toplevel,cyclic-import
+        from mindquantum.io.display import brick_model
         from mindquantum.io.display._config import _CIRCUIT_STYLE, CIRCUIT_HTML_FORMAT
 
         console = Console(record=True)
@@ -599,6 +603,9 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             |Number qubit of circuit: 2     |
             =================================
         """
+        # pylint: disable=import-outside-toplevel,cyclic-import
+        from mindquantum.io import bprint
+
         num_non_para_gate = 0
         num_para_gate = 0
         for gate in self:

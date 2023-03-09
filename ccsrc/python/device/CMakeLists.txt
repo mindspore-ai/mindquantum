@@ -16,18 +16,11 @@
 #
 # ==============================================================================
 
-add_subdirectory(core)
+add_library(mq_python_device INTERFACE)
+target_include_directories(mq_python_device INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+                                                      $<INSTALL_INTERFACE:${MQ_INSTALL_INCLUDEDIR}>)
 
-# ==============================================================================
-
-add_subdirectory(mqbackend)
-add_subdirectory(simulator)
-add_subdirectory(device)
-
-# ==============================================================================
-
-if(ENABLE_CXX_EXPERIMENTAL)
-  add_subdirectory(experimental)
-endif()
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/python DESTINATION ${MQ_INSTALL_INCLUDEDIR})
+append_to_property(mq_install_targets GLOBAL mq_python_device)
 
 # ==============================================================================
