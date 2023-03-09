@@ -27,6 +27,10 @@ mindquantum.core.gates.YY
         返回：
             numpy.ndarray，该量子门的导数矩阵形式。
 
+    .. py:method:: get_cpp_obj()
+
+        返回该门的c++对象。
+
     .. py:method:: matrix(pr=None, frac=1)
 
         返回该参数化量子门的矩阵。
@@ -37,7 +41,3 @@ mindquantum.core.gates.YY
 
         返回：
             numpy.ndarray，该量子门的矩阵形式。
-
-    .. py:method:: get_cpp_obj()
-
-        返回该门的c++对象。
