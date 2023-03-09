@@ -209,16 +209,30 @@ def test_qubit_ops_trans():
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
-@pytest.mark.parametrize("device", ['GPU', 'CPU'])
-def test_ground_state_of_sum_zz(device):
+def test_ground_state_of_sum_zz_cpu():
     """
     Description: Test test_ground_state_of_sum_zz.
     Expectation: success.
     """
-    set_context(device_target=device)
+    ops = QubitOperator('Z0 Z1 Z2', 1.2) + QubitOperator('Z0 Z2', 2.3) + QubitOperator('Z1 Z3', 3.4)
+    try:
+        e1 = ground_state_of_sum_zz(ops)
+        e2 = np.min(ops.matrix().data)
+        assert np.allclose(e1, e2)
+    except DeviceNotSupportedError:
+        pass
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.env_onecard
+def test_ground_state_of_sum_zz_gpu():
+    """
+    Description: Test test_ground_state_of_sum_zz.
+    Expectation: success.
+    """
+    set_context(device_target="GPU")
     ops = QubitOperator('Z0 Z1 Z2', 1.2) + QubitOperator('Z0 Z2', 2.3) + QubitOperator('Z1 Z3', 3.4)
     try:
         e1 = ground_state_of_sum_zz(ops)
