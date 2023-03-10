@@ -374,12 +374,27 @@ class MQSim(BackendBase):
         """Set quantum state of mqvector simulator."""
         if not isinstance(quantum_state, np.ndarray):
             raise TypeError(f"quantum state must be a ndarray, but get {type(quantum_state)}")
-        if len(quantum_state.shape) != 1:
-            raise ValueError(f"vec requires a 1-dimensional array, but get {quantum_state.shape}")
         n_qubits = np.log2(quantum_state.shape[0])
         if n_qubits % 1 != 0:
             raise ValueError(f"vec size {quantum_state.shape[0]} is not power of 2")
         n_qubits = int(n_qubits)
         if self.n_qubits != n_qubits:
             raise ValueError(f"{n_qubits} qubits vec does not match with simulation qubits ({self.n_qubits})")
-        self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state) ** 2)))
+        if self.name == "mqmatrix":
+            if len(quantum_state.shape) == 1:
+                self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state) ** 2)))
+            elif len(quantum_state.shape) == 2:
+                if not np.allclose(quantum_state, quantum_state.T.conj()):
+                    raise ValueError("density matrix must be hermitian.")
+                if (quantum_state.diagonal() < 0).any():
+                    raise ValueError("the diagonal terms in density matrix cannot be negative.")
+                self.sim.set_dm(quantum_state / np.real(np.trace(quantum_state)))
+            else:
+                raise ValueError(
+                    f"vec requires a 1-dimensional array, density matrix requires \
+                        a 2-dimensional array, but get {quantum_state.shape}"
+                )
+        else:
+            if len(quantum_state.shape) != 1:
+                raise ValueError(f"vec requires a 1-dimensional array, but get {quantum_state.shape}")
+            self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state) ** 2)))

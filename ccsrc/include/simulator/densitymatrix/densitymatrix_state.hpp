@@ -87,6 +87,7 @@ class DensityMatrixState {
 
     //! Set the quantum state value
     virtual void SetQS(const py_qs_datas_t& qs_out);
+    virtual void SetDM(const matrix_t& qs_out);
     virtual void CopyQS(const qs_data_p_t& qs_out);
 
     //! Judge whether the density matrix is pure

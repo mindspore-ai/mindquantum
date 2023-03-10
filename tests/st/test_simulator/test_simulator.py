@@ -156,6 +156,9 @@ def test_set_and_get(virtual_qc, dtype):
     qs2 = sim.get_qs()
     if virtual_qc == "mqmatrix":
         assert np.allclose(qs2, np.array([[0.5, 0.5], [0.5, 0.5]]))
+        sim.set_qs(np.array([1, 1], [1, 1]))
+        qs2 = sim.get_qs()
+        assert np.allclose(qs2, np.array([[0.5, 0.5], [0.5, 0.5]]))
     else:
         assert np.allclose(qs2, np.array([1, 1]) / np.sqrt(2))
 

@@ -125,6 +125,19 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t qs, con
 }
 
 template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetDM(qs_data_p_t qs, const matrix_t& mat_out, index_t dim) {
+    if (mat_out[0].size() != dim) {
+        throw std::invalid_argument("state size not match");
+    }
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+            for (index_t j = 0; j <= i; j++) {
+                qs[IdxMap(i, j)] = mat_out[i][j];
+            }
+        })
+}
+
+template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::CopyQS(qs_data_p_t qs, const qs_data_p_t qs_out, index_t dim) {
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { qs[i] = qs_out[i]; })
