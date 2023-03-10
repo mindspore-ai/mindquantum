@@ -94,13 +94,3 @@ def test_cu_decomposition():
     """
     # TODO(wenchao2): need to fix this.
     return True
-    # cqs = [0, 2, 4, 5]  # arbitrary order is OK
-    # tqs = [1, 6]
-    # m = len(cqs)
-    # n = len(tqs)
-    # u = rand_unitary(2**n, random_state=123)
-    # circ = decompose.cu_decompose(gates.UnivMathGate('U', u).on(tqs, cqs))
-    # assert_equivalent_unitary(
-    #     utils.tensor_slots(utils.controlled_unitary_matrix(u, m), max(cqs + tqs) + 1, cqs + tqs),
-    #     utils.circuit_to_unitary(circ),
-    # )

@@ -18,7 +18,7 @@ import numpy as np
 import pytest
 
 _HAS_MINDSPORE = True
-AVALIABLE_BACKEND = True
+AVAILABLE_BACKEND = True
 try:
     import mindspore as ms
 
@@ -28,9 +28,9 @@ try:
     from mindquantum.core.operators import Hamiltonian, QubitOperator
     from mindquantum.framework import MQAnsatzOnlyOps
     from mindquantum.simulator import Simulator
-    from mindquantum.simulator.simulator import avaliable_backend
+    from mindquantum.simulator.simulator import available_backend
 
-    AVALIABLE_BACKEND = avaliable_backend()
+    AVAILABLE_BACKEND = available_backend()
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
@@ -45,7 +45,7 @@ except ImportError:
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('config', AVALIABLE_BACKEND)
+@pytest.mark.parametrize('config', AVAILABLE_BACKEND)
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
 def test_mindquantum_ansatz_only_ops(config):
     """

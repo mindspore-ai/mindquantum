@@ -19,7 +19,7 @@ import warnings
 import pytest
 
 from mindquantum.config import set_context
-from mindquantum.simulator.simulator import avaliable_backend
+from mindquantum.simulator.simulator import available_backend
 
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore', category=UserWarning, message='MindSpore not installed.*')
@@ -30,14 +30,14 @@ with warnings.catch_warnings():
     from mindquantum.algorithm.library import amplitude_encoder
     from mindquantum.simulator import Simulator
 
-AVALIABLE_BACKEND = avaliable_backend()
+AVAILABLE_BACKEND = available_backend()
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('config', AVALIABLE_BACKEND)
+@pytest.mark.parametrize('config', AVAILABLE_BACKEND)
 def test_amplitude_encoder(config):
     '''
     Feature: amplitude_encoder

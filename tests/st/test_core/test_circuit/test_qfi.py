@@ -27,16 +27,16 @@ from mindquantum.core.circuit import (
 )
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 from mindquantum.simulator import Simulator
-from mindquantum.simulator.simulator import avaliable_backend
+from mindquantum.simulator.simulator import available_backend
 
-AVALIABLE_BACKEND = avaliable_backend()
+AVAILABLE_BACKEND = available_backend()
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('config', AVALIABLE_BACKEND)
+@pytest.mark.parametrize('config', AVAILABLE_BACKEND)
 def test_qfi(config):
     """
     Description: Test qfi

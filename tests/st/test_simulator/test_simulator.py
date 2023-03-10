@@ -27,8 +27,8 @@ from mindquantum.core import gates as G
 from mindquantum.core.circuit import UN, Circuit
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.core.parameterresolver import ParameterResolver as PR
-from mindquantum.simulator import Simulator, get_supported_simulator, inner_product
-from mindquantum.simulator.simulator import avaliable_backend
+from mindquantum.simulator import Simulator, inner_product
+from mindquantum.simulator.simulator import available_backend
 from mindquantum.utils import random_circuit
 
 _HAS_MINDSPORE = True
@@ -54,7 +54,7 @@ try:
 except ImportError:
     _HAS_NUMBA = False
 
-AVALIABLE_BACKEND = avaliable_backend()
+AVAILABLE_BACKEND = available_backend()
 
 
 @pytest.mark.level0
@@ -62,6 +62,11 @@ AVALIABLE_BACKEND = avaliable_backend()
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("dtype", ['float', 'double'])
 def test_gpu(dtype):
+    """
+    test gpu
+    Description: to make sure gpu platform was tested.
+    Expectation: gpu backend not available.
+    """
     set_context(dtype=dtype, device_target='GPU')
     sim = Simulator('mqvector', 1)
     sim.apply_circuit(Circuit().h(0))
@@ -73,7 +78,7 @@ def test_gpu(dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", AVALIABLE_BACKEND)
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
 def test_init_reset(config):
     """
     test
@@ -101,7 +106,7 @@ def test_init_reset(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", AVALIABLE_BACKEND)
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
 def test_apply_circuit_and_hermitian(config):
     """
     test
@@ -152,7 +157,7 @@ def test_apply_circuit_and_hermitian(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", AVALIABLE_BACKEND)
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
 def test_set_and_get(config):
     """
     test
@@ -182,7 +187,7 @@ def test_set_and_get(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", AVALIABLE_BACKEND)
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
 def test_non_hermitian_grad_ops1(config):
     """
     test
@@ -248,7 +253,7 @@ def generate_test_circuit():
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", AVALIABLE_BACKEND)
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_all_gate_with_simulator(config):  # pylint: disable=too-many-locals
     """
@@ -298,7 +303,7 @@ def test_all_gate_with_simulator(config):  # pylint: disable=too-many-locals
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", AVALIABLE_BACKEND)
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_optimization_with_custom_gate(config):  # pylint: disable=too-many-locals
@@ -307,6 +312,7 @@ def test_optimization_with_custom_gate(config):  # pylint: disable=too-many-loca
     Expectation:
     """
     virtual_qc, dtype, device = config
+    set_context(device_target=device, dtype=dtype)
     if not _HAS_MINDSPORE:  # NB: take care to avoid errors with 'ms' module below
         return
 
@@ -346,7 +352,7 @@ def test_optimization_with_custom_gate(config):  # pylint: disable=too-many-loca
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", AVALIABLE_BACKEND)
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
 def test_fid(config):
     """
     Description:
@@ -371,7 +377,7 @@ def test_fid(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", AVALIABLE_BACKEND)
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
 def test_non_hermitian_grad_ops2(config):
     """
     Description: test non hermitian grad ops
@@ -396,7 +402,7 @@ def test_non_hermitian_grad_ops2(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", AVALIABLE_BACKEND)
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
 def test_inner_product(config):
     """
     Description: test inner product of two simulator
@@ -419,7 +425,7 @@ def test_inner_product(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", AVALIABLE_BACKEND)
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
 def test_copy(config):
     """
     Description: test copy a simulator
@@ -444,7 +450,7 @@ def test_copy(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", AVALIABLE_BACKEND)
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
 def test_univ_order(config):
     """
     Description: test order of univ math gate.
@@ -475,7 +481,7 @@ def test_univ_order(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", AVALIABLE_BACKEND)
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
 def test_multi_params_gate(config):
     """
     Description: test multi params gate
@@ -519,7 +525,7 @@ def test_multi_params_gate(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", AVALIABLE_BACKEND)
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_custom_gate_in_parallel(config):
     """
@@ -546,7 +552,7 @@ def test_custom_gate_in_parallel(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", AVALIABLE_BACKEND)
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
 def test_cd_term(config):
     """
     Description:

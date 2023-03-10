@@ -20,16 +20,16 @@ import mindquantum.core.gates.channel as C
 from mindquantum.config import set_context
 from mindquantum.core.gates import X
 from mindquantum.simulator import Simulator
-from mindquantum.simulator.simulator import avaliable_backend
+from mindquantum.simulator.simulator import available_backend
 
-AVALIABLE_BACKEND = avaliable_backend()
+AVAILABLE_BACKEND = available_backend()
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('config', AVALIABLE_BACKEND)
+@pytest.mark.parametrize('config', AVAILABLE_BACKEND)
 def test_pauli_channel(config):
     """
     Description: Test pauli channel
@@ -56,7 +56,7 @@ def test_pauli_channel(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('config', AVALIABLE_BACKEND)
+@pytest.mark.parametrize('config', AVAILABLE_BACKEND)
 def test_flip_channel(config):
     """
     Description: Test flip channel
@@ -87,7 +87,7 @@ def test_flip_channel(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('config', AVALIABLE_BACKEND)
+@pytest.mark.parametrize('config', AVAILABLE_BACKEND)
 def test_depolarizing_channel(config):
     """
     Description: Test depolarizing channel
@@ -112,7 +112,7 @@ def test_depolarizing_channel(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('config', AVALIABLE_BACKEND)
+@pytest.mark.parametrize('config', AVAILABLE_BACKEND)
 def test_damping_channel(config):
     """
     Description: Test damping channel
@@ -166,7 +166,7 @@ def test_damping_channel(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('config', AVALIABLE_BACKEND)
+@pytest.mark.parametrize('config', AVAILABLE_BACKEND)
 def test_kraus_channel(config):
     """
     Description: Test kraus channel

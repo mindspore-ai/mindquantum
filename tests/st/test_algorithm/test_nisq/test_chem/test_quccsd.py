@@ -22,16 +22,16 @@ from mindquantum.algorithm.nisq import quccsd_generator
 from mindquantum.config import set_context
 from mindquantum.core.operators import TimeEvolution, count_qubits
 from mindquantum.core.operators._term_value import TermValue
-from mindquantum.simulator.simulator import avaliable_backend
+from mindquantum.simulator.simulator import available_backend
 
-AVALIABLE_BACKEND = avaliable_backend()
+AVAILABLE_BACKEND = available_backend()
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('config', AVALIABLE_BACKEND)
+@pytest.mark.parametrize('config', AVAILABLE_BACKEND)
 def test_quccsd(config):
     """
     Description: Test quccsd

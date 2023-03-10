@@ -492,17 +492,17 @@ def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
     raise NotImplementedError(f"inner_product for backend {bra_simulator.backend} not implement.")
 
 
-def avaliable_backend():
+def available_backend():
     """
-    Get avaliable simulator.
+    Get available simulator.
 
     Returns:
-        Tuple(str, str, str), tuple of avaliable (backend, dtype, device).
+        Tuple(str, str, str), tuple of available (backend, dtype, device).
     """
     backends = ['mqvector', 'mqmatrix']
     dtypes = ['float', 'double']
     devices = ['GPU', 'CPU']
-    avaliable = []
+    available = []
     for backend in backends:
         for dtype in dtypes:
             for device in devices:
@@ -510,10 +510,10 @@ def avaliable_backend():
                 try:
                     sim = Simulator(backend, 1)
                     sim.apply_circuit(Circuit().h(0))
-                    avaliable.append((backend, dtype, device))
-                except:
+                    available.append((backend, dtype, device))
+                except Exception:  # pylint: disable=broad-except
                     pass
-    return avaliable
+    return available
 
 
 __all__ = ['Simulator', 'get_supported_simulator', 'inner_product']
