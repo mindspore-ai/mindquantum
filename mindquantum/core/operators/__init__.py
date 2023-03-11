@@ -39,6 +39,7 @@ from .utils import (
     commutator,
     count_qubits,
     down_index,
+    ground_state_of_sum_zz,
     hermitian_conjugated,
     normal_ordered,
     number_operator,
@@ -63,6 +64,7 @@ __all__ = [
     "up_index",
     "down_index",
     "sz_operator",
+    "ground_state_of_sum_zz",
 ]
 __all__.append('InteractionOperator')
 __all__.sort()

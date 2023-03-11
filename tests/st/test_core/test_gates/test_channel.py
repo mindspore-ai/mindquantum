@@ -19,21 +19,25 @@ import pytest
 import mindquantum.core.gates.channel as C
 from mindquantum.config import set_context
 from mindquantum.core.gates import X
-from mindquantum.simulator import Simulator, get_supported_simulator
+from mindquantum.simulator import Simulator
+from mindquantum.simulator.simulator import available_backend
+
+AVAILABLE_BACKEND = available_backend()
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('backend', get_supported_simulator())
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_pauli_channel(backend, dtype):
+@pytest.mark.parametrize('config', AVAILABLE_BACKEND)
+def test_pauli_channel(config):
     """
     Description: Test pauli channel
     Expectation: success.
     """
-    set_context(dtype=dtype)
+
+    backend, dtype, device = config
+    set_context(dtype=dtype, device_target=device)
     sim = Simulator(backend, 1)
     if backend == "mqmatrix":
         sim.set_qs(np.array([1 + 0.5j, 1 + 0.5j]))
@@ -52,14 +56,15 @@ def test_pauli_channel(backend, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('backend', get_supported_simulator())
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_flip_channel(backend, dtype):
+@pytest.mark.parametrize('config', AVAILABLE_BACKEND)
+def test_flip_channel(config):
     """
     Description: Test flip channel
     Expectation: success.
     """
-    set_context(dtype=dtype)
+
+    backend, dtype, device = config
+    set_context(dtype=dtype, device_target=device)
     sim1 = Simulator(backend, 1)
     if backend == "mqmatrix":
         sim1.set_qs(np.array([1 + 0.5j, 1 + 0.5j]))
@@ -82,14 +87,14 @@ def test_flip_channel(backend, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('backend', get_supported_simulator())
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_depolarizing_channel(backend, dtype):
+@pytest.mark.parametrize('config', AVAILABLE_BACKEND)
+def test_depolarizing_channel(config):
     """
     Description: Test depolarizing channel
     Expectation: success.
     """
-    set_context(dtype=dtype)
+    backend, dtype, device = config
+    set_context(dtype=dtype, device_target=device)
     if backend == "mqmatrix":
         sim2 = Simulator(backend, 1)
         sim2.set_qs(np.array([1 + 0.5j, 1 + 0.5j]))
@@ -107,14 +112,14 @@ def test_depolarizing_channel(backend, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('backend', get_supported_simulator())
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_damping_channel(backend, dtype):
+@pytest.mark.parametrize('config', AVAILABLE_BACKEND)
+def test_damping_channel(config):
     """
     Description: Test damping channel
     Expectation: success.
     """
-    set_context(dtype=dtype)
+    backend, dtype, device = config
+    set_context(dtype=dtype, device_target=device)
     if backend == "mqmatrix":
         sim = Simulator(backend, 2)
         sim.set_qs(np.array([1 + 0.5j, 1 + 0.5j, 1 + 0.5j, 1 + 0.5j]))
@@ -161,14 +166,14 @@ def test_damping_channel(backend, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('backend', get_supported_simulator())
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_kraus_channel(backend, dtype):
+@pytest.mark.parametrize('config', AVAILABLE_BACKEND)
+def test_kraus_channel(config):
     """
     Description: Test kraus channel
     Expectation: success.
     """
-    set_context(dtype=dtype)
+    backend, dtype, device = config
+    set_context(dtype=dtype, device_target=device)
     if backend == "mqmatrix":
         kmat0 = [[1, 0], [0, np.sqrt(0.99)]]
         kmat1 = [[0, 0.1], [0, 0]]

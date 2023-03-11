@@ -27,7 +27,8 @@ from mindquantum.core import gates as G
 from mindquantum.core.circuit import UN, Circuit
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.core.parameterresolver import ParameterResolver as PR
-from mindquantum.simulator import Simulator, get_supported_simulator, inner_product
+from mindquantum.simulator import Simulator, inner_product
+from mindquantum.simulator.simulator import available_backend
 from mindquantum.utils import random_circuit
 
 _HAS_MINDSPORE = True
@@ -53,20 +54,41 @@ try:
 except ImportError:
     _HAS_NUMBA = False
 
+AVAILABLE_BACKEND = available_backend()
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("dtype", ['float', 'double'])
+def test_gpu(dtype):
+    """
+    test gpu
+    Description: to make sure gpu platform was tested.
+    Expectation: gpu backend not available.
+    """
+    if ('mqvector', 'float', 'GPU') not in AVAILABLE_BACKEND:
+        return
+    set_context(dtype=dtype, device_target='GPU')
+    sim = Simulator('mqvector', 1)
+    sim.apply_circuit(Circuit().h(0))
+    v = sim.get_qs()
+    assert np.allclose(v, np.ones_like(v) / np.sqrt(2))
+
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
-@pytest.mark.parametrize("dtype", ['float', 'double'])
-def test_init_reset(virtual_qc, dtype):
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
+def test_init_reset(config):
     """
     test
     Description:
     Expectation:
     """
-    set_context(dtype=dtype)
+    virtual_qc, dtype, device = config
+    set_context(dtype=dtype, device_target=device)
     s1 = Simulator(virtual_qc, 2)
     circ = Circuit().h(0).h(1)
     v1 = s1.get_qs()
@@ -86,15 +108,15 @@ def test_init_reset(virtual_qc, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
-@pytest.mark.parametrize("dtype", ['float', 'double'])
-def test_apply_circuit_and_hermitian(virtual_qc, dtype):
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
+def test_apply_circuit_and_hermitian(config):
     """
     test
     Description:
     Expectation:
     """
-    set_context(dtype=dtype)
+    virtual_qc, dtype, device = config
+    set_context(dtype=dtype, device_target=device)
     sv0 = np.array([[1, 0], [0, 0]])
     sv1 = np.array([[0, 0], [0, 1]])
     circ = Circuit()
@@ -137,15 +159,15 @@ def test_apply_circuit_and_hermitian(virtual_qc, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
-@pytest.mark.parametrize("dtype", ['float', 'double'])
-def test_set_and_get(virtual_qc, dtype):
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
+def test_set_and_get(config):
     """
     test
     Description:
     Expectation:
     """
-    set_context(dtype=dtype)
+    virtual_qc, dtype, device = config
+    set_context(dtype=dtype, device_target=device)
     sim = Simulator(virtual_qc, 1)
     qs1 = sim.get_qs()
     if virtual_qc == "mqmatrix":
@@ -156,6 +178,9 @@ def test_set_and_get(virtual_qc, dtype):
     qs2 = sim.get_qs()
     if virtual_qc == "mqmatrix":
         assert np.allclose(qs2, np.array([[0.5, 0.5], [0.5, 0.5]]))
+        sim.set_qs(np.array([[1, 1], [1, 1]]))
+        qs2 = sim.get_qs()
+        assert np.allclose(qs2, np.array([[0.5, 0.5], [0.5, 0.5]]))
     else:
         assert np.allclose(qs2, np.array([1, 1]) / np.sqrt(2))
 
@@ -164,15 +189,17 @@ def test_set_and_get(virtual_qc, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'mqmatrix'])
-@pytest.mark.parametrize("dtype", ['float', 'double'])
-def test_non_hermitian_grad_ops1(virtual_qc, dtype):
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
+def test_non_hermitian_grad_ops1(config):
     """
     test
     Description:
     Expectation:
     """
-    set_context(dtype=dtype)
+    virtual_qc, dtype, device = config
+    if virtual_qc == 'mqmatrix':
+        return
+    set_context(dtype=dtype, device_target=device)
     sim = Simulator(virtual_qc, 1)
     c_r = Circuit().ry('b', 0)
     c_l = Circuit().rz('a', 0)
@@ -228,15 +255,15 @@ def generate_test_circuit():
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
-@pytest.mark.parametrize("dtype", ['float', 'double'])
-def test_all_gate_with_simulator(virtual_qc, dtype):  # pylint: disable=too-many-locals
+def test_all_gate_with_simulator(config):  # pylint: disable=too-many-locals
     """
     Description:
     Expectation:
     """
-    set_context(dtype=dtype)
+    virtual_qc, dtype, device = config
+    set_context(dtype=dtype, device_target=device)
     c = generate_test_circuit()
     qs = c.get_qs(backend=virtual_qc, pr={'a': 1, 'b': 2, 'c': 3})
     qs_exp = np.array(
@@ -278,16 +305,16 @@ def test_all_gate_with_simulator(virtual_qc, dtype):  # pylint: disable=too-many
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
-@pytest.mark.parametrize("dtype", ['float', 'double'])
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
-def test_optimization_with_custom_gate(virtual_qc, dtype):  # pylint: disable=too-many-locals
+def test_optimization_with_custom_gate(config):  # pylint: disable=too-many-locals
     """
     Description:
     Expectation:
     """
-    set_context(dtype=dtype)
+    virtual_qc, dtype, device = config
+    set_context(device_target=device, dtype=dtype)
     if not _HAS_MINDSPORE:  # NB: take care to avoid errors with 'ms' module below
         return
 
@@ -327,14 +354,16 @@ def test_optimization_with_custom_gate(virtual_qc, dtype):  # pylint: disable=to
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'mqmatrix'])
-@pytest.mark.parametrize("dtype", ['float', 'double'])
-def test_fid(virtual_qc, dtype):
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
+def test_fid(config):
     """
     Description:
     Expectation:
     """
-    set_context(dtype=dtype)
+    virtual_qc, dtype, device = config
+    if virtual_qc == 'mqmatrix':
+        return
+    set_context(dtype=dtype, device_target=device)
     sim1 = Simulator(virtual_qc, 1)
     prep_circ = Circuit().h(0)
     ansatz = Circuit().ry('a', 0).rz('b', 0).ry('c', 0)
@@ -350,14 +379,16 @@ def test_fid(virtual_qc, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'mqmatrix'])
-@pytest.mark.parametrize("dtype", ['float', 'double'])
-def test_non_hermitian_grad_ops2(virtual_qc, dtype):
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
+def test_non_hermitian_grad_ops2(config):
     """
     Description: test non hermitian grad ops
     Expectation: success.
     """
-    set_context(dtype=dtype)
+    virtual_qc, dtype, device = config
+    if virtual_qc == 'mqmatrix':
+        return
+    set_context(dtype=dtype, device_target=device)
     circuit1 = Circuit([G.RX('a').on(0)])
     circuit2 = Circuit([G.RY('b').on(0)])
     ham = Hamiltonian(csr_matrix([[1, 2], [3, 4]]))
@@ -373,14 +404,16 @@ def test_non_hermitian_grad_ops2(virtual_qc, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'mqmatrix'])
-@pytest.mark.parametrize("dtype", ['float', 'double'])
-def test_inner_product(virtual_qc, dtype):
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
+def test_inner_product(config):
     """
     Description: test inner product of two simulator
     Expectation: success.
     """
-    set_context(dtype=dtype)
+    virtual_qc, dtype, device = config
+    if virtual_qc == 'mqmatrix':
+        return
+    set_context(dtype=dtype, device_target=device)
     sim1 = Simulator(virtual_qc, 1)
     sim1.apply_gate(G.RX(1.2).on(0))
     sim2 = Simulator(virtual_qc, 1)
@@ -394,14 +427,14 @@ def test_inner_product(virtual_qc, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
-@pytest.mark.parametrize("dtype", ['float', 'double'])
-def test_copy(virtual_qc, dtype):
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
+def test_copy(config):
     """
     Description: test copy a simulator
     Expectation: success.
     """
-    set_context(dtype=dtype)
+    virtual_qc, dtype, device = config
+    set_context(device_target=device, dtype=dtype)
     sim = Simulator(virtual_qc, 1)
     sim.apply_gate(G.RX(1).on(0))
     sim2 = sim.copy()
@@ -419,14 +452,14 @@ def test_copy(virtual_qc, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
-@pytest.mark.parametrize("dtype", ['float', 'double'])
-def test_univ_order(virtual_qc, dtype):
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
+def test_univ_order(config):
     """
     Description: test order of univ math gate.
     Expectation: success.
     """
-    set_context(dtype=dtype)
+    virtual_qc, dtype, device = config
+    set_context(device_target=device, dtype=dtype)
     r_c = random_circuit(2, 100)
     if virtual_qc == 'mqmatrix':
         u = r_c.matrix(backend='mqvector')
@@ -450,14 +483,14 @@ def test_univ_order(virtual_qc, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
-@pytest.mark.parametrize("dtype", ['float', 'double'])
-def test_multi_params_gate(virtual_qc, dtype):
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
+def test_multi_params_gate(config):
     """
     Description: test multi params gate
     Expectation: success.
     """
-    set_context(dtype=dtype)
+    virtual_qc, dtype, device = config
+    set_context(device_target=device, dtype=dtype)
     sim = Simulator(virtual_qc, 2)
     circ = Circuit() + G.U3('a', 'b', 1.0).on(0) + G.U3('c', 'd', 2.0).on(1) + G.X.on(0, 1)
     circ += G.FSim('e', 3.0).on([0, 1])
@@ -494,16 +527,16 @@ def test_multi_params_gate(virtual_qc, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", get_supported_simulator())
-@pytest.mark.parametrize("dtype", ['float', 'double'])
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
-def test_custom_gate_in_parallel(virtual_qc, dtype):
+def test_custom_gate_in_parallel(config):
     """
     Features: parallel custom gate.
     Description: test custom gate in parallel mode.
     Expectation: success.
     """
-    set_context(dtype=dtype)
+    virtual_qc, dtype, device = config
+    set_context(device_target=device, dtype=dtype)
     circ = generate_test_circuit().as_encoder()
     sim = Simulator(virtual_qc, circ.n_qubits)
     ham = [Hamiltonian(QubitOperator('Y0')), Hamiltonian(QubitOperator('X2'))]
@@ -521,14 +554,16 @@ def test_custom_gate_in_parallel(virtual_qc, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", [i for i in get_supported_simulator() if i != 'mqmatrix'])
-@pytest.mark.parametrize("dtype", ['float', 'double'])
-def test_cd_term(virtual_qc, dtype):
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
+def test_cd_term(config):
     """
     Description:
     Expectation:
     """
-    set_context(dtype=dtype)
+    virtual_qc, dtype, device = config
+    if virtual_qc == 'mqmatrix':
+        return
+    set_context(dtype=dtype, device_target=device)
     cd_term = [G.Rxy, G.Rxz, G.Ryz]
     for g in cd_term:
         cd_gate = g(1.0).on([0, 1])

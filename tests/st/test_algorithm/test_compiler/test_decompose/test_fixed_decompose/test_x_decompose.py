@@ -24,7 +24,6 @@ with warnings.catch_warnings():
         'ignore', category=DeprecationWarning, message=r'Please use `OptimizeResult` from the `scipy\.optimize`'
     )
     from mindquantum.algorithm.compiler.decompose import ccx_decompose
-    from mindquantum.config import set_context
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.gates import X
 
@@ -38,16 +37,12 @@ def circuit_equal_test(gate, decompose_circ):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_ccx(dtype):
+def test_ccx():
     """
     Description: Test ccx decompose
     Expectation: success
     """
-    set_context(dtype=dtype)
     ccx = X.on(1, [0, 2])
     for solution in ccx_decompose(ccx):
         circuit_equal_test(ccx, solution)

@@ -26,9 +26,7 @@ from mindquantum.core.operators import (
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_qubit_excitation_ops_num_coeff(dtype):
     """
@@ -53,9 +51,7 @@ def test_qubit_excitation_ops_num_coeff(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_power(dtype):
     """
@@ -70,9 +66,7 @@ def test_power(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_normal_order(dtype):
     """
@@ -88,9 +82,7 @@ def test_normal_order(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_multiplier(dtype):
     """
@@ -116,9 +108,7 @@ def test_multiplier(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_add_sub(dtype):
     """
@@ -134,9 +124,7 @@ def test_add_sub(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_compress(dtype):
     """
@@ -156,9 +144,7 @@ def test_compress(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_constant(dtype):
     """
@@ -173,9 +159,7 @@ def test_constant(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_para_operators(dtype):
     """
@@ -193,9 +177,7 @@ def test_para_operators(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_eq(dtype):
     """
@@ -208,9 +190,7 @@ def test_eq(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_convert_to_qubit_operator(dtype):
     """
@@ -230,9 +210,7 @@ def test_convert_to_qubit_operator(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_fermion_op(dtype):
     """

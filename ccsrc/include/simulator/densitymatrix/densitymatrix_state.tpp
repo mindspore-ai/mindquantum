@@ -130,6 +130,11 @@ void DensityMatrixState<qs_policy_t_>::SetQS(const py_qs_datas_t& qs_out) {
 }
 
 template <typename qs_policy_t_>
+void DensityMatrixState<qs_policy_t_>::SetDM(const matrix_t& qs_out) {
+    qs_policy_t::SetDM(qs, qs_out, dim);
+}
+
+template <typename qs_policy_t_>
 void DensityMatrixState<qs_policy_t_>::CopyQS(const qs_data_p_t& qs_out) {
     qs_policy_t::CopyQS(qs, qs_out, dim);
 }

@@ -59,7 +59,8 @@ struct CPUDensityMatrixPolicyBase {
     static void Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit = 10);
     static void SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim);
     static matrix_t GetQS(qs_data_p_t qs, index_t dim);
-    static void SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, index_t dim);
+    static void SetQS(qs_data_p_t qs, const py_qs_datas_t& vec_out, index_t dim);
+    static void SetDM(qs_data_p_t qs, const matrix_t& mat_out, index_t dim);
     static void CopyQS(qs_data_p_t qs, const qs_data_p_t qs_out, index_t dim);
     static qs_data_p_t Copy(qs_data_p_t qs, index_t dim);
     static calc_type Purity(qs_data_p_t qs, index_t dim);

@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+# http: //www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,24 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""General W State"""
-
-import numpy as np
-import pytest
-
-from mindquantum.algorithm.library import general_w_state
-from mindquantum.config import set_context
+"""MindQuantum custom error exception."""
 
 
-@pytest.mark.level0
-@pytest.mark.platform_x86_cpu
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_general_w_state(dtype):
-    """
-    Description: Test general_w_state
-    Expectation:
-    """
-    set_context(dtype=dtype)
-    state = general_w_state(range(3)).get_qs()
-    qs_exp = 1 / np.sqrt(3) * np.array([0, 1, 1, 0, 1, 0, 0, 0])
-    assert np.allclose(state, qs_exp)
+class DeviceNotSupportedError(Exception):
+    """Error for not supported device."""
+
+    def __init__(self, device):
+        """Initialize a device not supported error."""
+        super().__init__()
+        self.msg = f"Device {device} not supported."
+
+    def __str__(self):
+        """Get error message."""
+        return self.msg

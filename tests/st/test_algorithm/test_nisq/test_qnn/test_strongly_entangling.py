@@ -31,7 +31,7 @@ def test_strongly_entangling_ansatz(dtype):
     Description: Test strongly_entangling_ansatz
     Expectation: success
     """
-    set_context(dtype=dtype)
+    set_context(dtype=dtype, device_target="CPU")
     strongly_entangling = StronglyEntangling(3, 2, X)
     circ = strongly_entangling.circuit
     assert len(circ) == 12

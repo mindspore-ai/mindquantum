@@ -25,9 +25,7 @@ from mindquantum.core.operators import TermValue, TimeEvolution, count_qubits
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_spin_adapted_t1(dtype):
     """
@@ -42,9 +40,7 @@ def test_spin_adapted_t1(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_spin_adapted_t2(dtype):
     """
@@ -77,9 +73,7 @@ def test_spin_adapted_t2(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_uccsd0(dtype):
     """

@@ -22,19 +22,23 @@ from mindquantum.algorithm.nisq import quccsd_generator
 from mindquantum.config import set_context
 from mindquantum.core.operators import TimeEvolution, count_qubits
 from mindquantum.core.operators._term_value import TermValue
+from mindquantum.simulator.simulator import available_backend
+
+AVAILABLE_BACKEND = available_backend()
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_quccsd(dtype):
+@pytest.mark.parametrize('config', AVAILABLE_BACKEND)
+def test_quccsd(config):
     """
     Description: Test quccsd
     Expectation:
     """
-    set_context(dtype=dtype)
+    _, dtype, device = config
+    set_context(dtype=dtype, device_target=device)
     h2_quccsd = quccsd_generator(4, 2)
     h2_quccsd_terms = set(h2_quccsd.terms)
     h2_quccsd_terms_check = {

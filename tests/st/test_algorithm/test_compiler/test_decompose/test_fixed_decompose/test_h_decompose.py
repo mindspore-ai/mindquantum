@@ -21,8 +21,6 @@ import warnings
 import numpy as np
 import pytest
 
-from mindquantum.config import set_context
-
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore', category=UserWarning, message='MindSpore not installed.*')
     warnings.simplefilter('ignore', category=DeprecationWarning)
@@ -40,16 +38,12 @@ def circuit_equal_test(gate, decompose_circ):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_ch(dtype):
+def test_ch():
     """
     Description: Test ch decompose
     Expectation: success
     """
-    set_context(dtype=dtype)
     ch = H.on(1, 0)
     for solution in ch_decompose(ch):
         circuit_equal_test(ch, solution)

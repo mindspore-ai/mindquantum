@@ -35,9 +35,7 @@ _FORCE_TEST = bool(os.environ.get("FORCE_TEST", False))
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 @pytest.mark.skipif(not _HAS_OPENFERMION, reason='OpenFermion is not installed')
 @pytest.mark.skipif(not _FORCE_TEST, reason='set not force test')

@@ -32,9 +32,7 @@ from mindquantum.core.operators import (
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_count_qubits(dtype):
     """
@@ -54,9 +52,7 @@ def test_count_qubits(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_normal_ordered(dtype):
     """
@@ -70,9 +66,7 @@ def test_normal_ordered(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_commutator(dtype):
     """
@@ -97,9 +91,7 @@ def test_commutator(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_number_operator(dtype):
     """
@@ -118,9 +110,7 @@ def test_number_operator(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_up_index(dtype):
     """
@@ -134,9 +124,7 @@ def test_up_index(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_down_index(dtype):
     """
@@ -150,9 +138,7 @@ def test_down_index(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_hermitian_conjugated(dtype):
     """

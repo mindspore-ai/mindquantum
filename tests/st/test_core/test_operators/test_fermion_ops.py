@@ -32,9 +32,7 @@ _FORCE_TEST = bool(os.environ.get("FORCE_TEST", False))
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_fermion_ops_num_coeff(dtype):
     """
@@ -60,9 +58,7 @@ def test_fermion_ops_num_coeff(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_power(dtype):
     """
@@ -78,9 +74,7 @@ def test_power(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_normal_order(dtype):
     """
@@ -96,9 +90,7 @@ def test_normal_order(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_multiplier(dtype):
     """
@@ -124,9 +116,7 @@ def test_multiplier(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_add_sub(dtype):
     """
@@ -142,9 +132,7 @@ def test_add_sub(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_compress(dtype):
     """
@@ -165,9 +153,7 @@ def test_compress(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_constant(dtype):
     """
@@ -181,9 +167,7 @@ def test_constant(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_para_operators(dtype):
     """
@@ -201,9 +185,7 @@ def test_para_operators(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_eq(dtype):
     """
@@ -216,9 +198,7 @@ def test_eq(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_fermion_operator_iter(dtype):
     """
@@ -237,9 +217,7 @@ def test_fermion_operator_iter(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_dumps_and_loads(dtype):
     """
@@ -254,9 +232,7 @@ def test_dumps_and_loads(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 @pytest.mark.skipif(not _HAS_OPENFERMION or not _FORCE_TEST, reason='OpenFermion is not installed')
 @pytest.mark.skipif(not _FORCE_TEST, reason='Set not force test')

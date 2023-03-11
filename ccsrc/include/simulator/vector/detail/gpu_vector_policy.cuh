@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <vector>
 
@@ -159,6 +160,7 @@ struct GPUVectorPolicyBase {
                                   calc_type val, index_t dim);
     static qs_data_t ExpectDiffGP(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                   calc_type val, index_t dim);
+    static calc_type GroundStateOfZZs(const std::map<index_t, calc_type>& masks_value, qbit_t n_qubits);
 };
 
 template <typename qs_data_t>

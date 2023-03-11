@@ -1,4 +1,3 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +16,6 @@ import numpy as np
 import pytest
 
 from mindquantum.algorithm.compiler.decompose import crz_decompose
-from mindquantum.config import set_context
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import RZ
 
@@ -31,16 +29,12 @@ def circuit_equal_test(gate, decompose_circ):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_crz(dtype):
+def test_crz():
     """
     Description: Test crz decompose
     Expectation: success
     """
-    set_context(dtype=dtype)
     crz = RZ(1.23).on(1, 0)
     for solution in crz_decompose(crz):
         circuit_equal_test(crz, solution)

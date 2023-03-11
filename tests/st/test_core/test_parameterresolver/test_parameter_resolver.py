@@ -20,9 +20,7 @@ from mindquantum.core.parameterresolver import ParameterResolver as PR
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_params_name_order(dtype):
     """
@@ -35,9 +33,7 @@ def test_params_name_order(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_parameter_resolve(dtype):
     """
@@ -65,9 +61,7 @@ def test_parameter_resolve(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_parameter_resolve_dumps_and_loads(dtype):
     '''
@@ -84,9 +78,7 @@ def test_parameter_resolve_dumps_and_loads(dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize('dtype', ['float', 'double'])
 def test_parameter_resolve_combination(dtype):
     """

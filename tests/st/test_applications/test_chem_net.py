@@ -18,6 +18,8 @@ from pathlib import Path
 import pytest
 
 _HAS_MINDSPORE = True
+AVAILABLE_BACKEND = []
+
 try:
     import mindspore as ms
 
@@ -27,7 +29,10 @@ try:
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.operators import Hamiltonian
     from mindquantum.framework import MQAnsatzOnlyLayer
-    from mindquantum.simulator import Simulator, get_supported_simulator
+    from mindquantum.simulator import Simulator
+    from mindquantum.simulator.simulator import available_backend
+
+    AVAILABLE_BACKEND = available_backend()
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
@@ -51,17 +56,19 @@ _FORCE_TEST = bool(os.environ.get("FORCE_TEST", False))
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('backend', [i for i in get_supported_simulator() if i != 'mqmatrix'])
-@pytest.mark.parametrize('dtype', ['float', 'double'])
+@pytest.mark.parametrize('config', AVAILABLE_BACKEND)
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
 @pytest.mark.skipif(not _HAS_OPENFERMION, reason='openfermion is not installed')
 @pytest.mark.skipif(not _FORCE_TEST, reason='Set not force test')
-def test_vqe_net(backend, dtype):  # pylint: disable=too-many-locals
+def test_vqe_net(config):  # pylint: disable=too-many-locals
     """
     Description: Test vqe
     Expectation:
     """
-    set_context(dtype=dtype)
+    backend, dtype, device = config
+    if backend == 'mqmatrix':
+        return
+    set_context(dtype=dtype, device_target=device)
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
     (
         ansatz_circuit,
