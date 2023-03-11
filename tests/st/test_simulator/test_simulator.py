@@ -67,6 +67,8 @@ def test_gpu(dtype):
     Description: to make sure gpu platform was tested.
     Expectation: gpu backend not available.
     """
+    if ('mqvector', 'float', 'GPU') not in AVAILABLE_BACKEND:
+        return
     set_context(dtype=dtype, device_target='GPU')
     sim = Simulator('mqvector', 1)
     sim.apply_circuit(Circuit().h(0))

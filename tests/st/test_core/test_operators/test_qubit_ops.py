@@ -23,9 +23,11 @@ import pytest
 from mindquantum.config import set_context
 from mindquantum.core import ParameterResolver
 from mindquantum.core.operators import QubitOperator, ground_state_of_sum_zz
+from mindquantum.simulator.simulator import available_backend
 from mindquantum.utils.error import DeviceNotSupportedError
 
 _HAS_OPENFERMION = True
+AVAILABLE_BACKEND = available_backend()
 try:
     from openfermion import QubitOperator as OFQubitOperator
 except (ImportError, AttributeError):
@@ -232,6 +234,8 @@ def test_ground_state_of_sum_zz_gpu():
     Description: Test test_ground_state_of_sum_zz.
     Expectation: success.
     """
+    if ('mqvector', 'float', 'GPU') not in AVAILABLE_BACKEND:
+        return
     set_context(device_target="GPU")
     ops = QubitOperator('Z0 Z1 Z2', 1.2) + QubitOperator('Z0 Z2', 2.3) + QubitOperator('Z1 Z3', 3.4)
     try:
