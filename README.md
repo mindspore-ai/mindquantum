@@ -1,14 +1,14 @@
 # MindQuantum
 
-[![API](https://badg.vercel.app/badge/MQ/API?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/en/master/overview.html)
-[![Tutorial](https://badg.vercel.app/badge/MQ/Tutorial?scale=1.3&color=red)](https://mindspore.cn/mindquantum/docs/en/master/parameterized_quantum_circuit.html)
-[![Tutorial](https://badg.vercel.app/gitee/open-issues/mindspore/mindquantum?scale=1.3)](https://gitee.com/mindspore/mindquantum/issues)
-[![Tutorial](https://badg.vercel.app/gitee/stars/mindspore/mindquantum?scale=1.3&color=purple)](https://gitee.com/mindspore/mindquantum)
-[![Tutorial](https://badg.vercel.app/gitee/forks/mindspore/mindquantum?scale=1.3&color=purple)](https://gitee.com/mindspore/mindquantum)
-[![Release](https://badg.vercel.app/gitee/release/mindspore/mindquantum?scale=1.3)](https://gitee.com/mindspore/mindquantum/releases)
-[![LICENSE](https://badg.vercel.app/gitee/license/mindspore/mindquantum?scale=1.3)](https://github.com/mindspore-ai/mindquantum/blob/master/LICENSE)
-[![PRs Welcome](https://badg.vercel.app/badge/PRs/Welcome?scale=1.3)](https://gitee.com/mindspore/mindquantum/pulls)
-[![Documentation Status](https://readthedocs.org/projects/mindquantum/badge/?version=latest&style=flat)](https://mindquantum.readthedocs.io/en/latest/?badge=latest)
+[![PyPI - Python Version](https://img.shields.io/badge/python-37|38|39-blue.svg)](https://pypi.org/project/mindquantum/)
+[![PyPI](https://img.shields.io/badge/pypi_package-0.8.0-{}.svg)](https://gitee.com/mindspore/mindquantum/tree/r0.8/)
+[![Downloads](https://static.pepy.tech/badge/mindquantum)](https://pepy.tech/project/mindquantum)
+[![API](https://img.shields.io/badge/API-MindQuantum-red.svg)](https://mindspore.cn/mindquantum/docs/zh-CN/master/overview.html)
+[![Tutorial](https://img.shields.io/badge/Tutorial-MindQuantum-{}.svg)](https://mindspore.cn/mindquantum/docs/zh-CN/master/parameterized_quantum_circuit.html)
+[![Issues](https://img.shields.io/badge/Issues-MindQuantum-{}.svg)](https://gitee.com/mindspore/mindquantum/issues)
+[![Release](https://img.shields.io/badge/Release-MindQuantum-{}.svg)](https://gitee.com/mindspore/mindquantum/releases)
+[![LICENSE](https://img.shields.io/badge/license-Apache_2.0-green.svg)](https://gitee.com/mindspore/mindquantum/blob/master/LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-yellow.svg)](https://gitee.com/mindspore/mindquantum/pulls)
 
 [查看中文](./README_CN.md)
 
