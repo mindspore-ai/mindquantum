@@ -1,4 +1,4 @@
-.mindquantum.core.gates.U3
+mindquantum.core.gates.U3
 ===============================
 
 .. py:class:: mindquantum.core.gates.U3(theta: ParameterResolver, phi: ParameterResolver, lamda: ParameterResolver)
