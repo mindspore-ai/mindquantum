@@ -69,8 +69,8 @@ void set(Tensor* t, float a, size_t idx);
 void set(Tensor* t, double a, size_t idx);
 void set(Tensor* t, const std::complex<float>& a, size_t idx);
 void set(Tensor* t, const std::complex<double>& a, size_t idx);
-void set(Tensor* t, const Tensor& source, size_t idx);  // 🌶️
-Tensor get(const Tensor& t, size_t idx);                // 🌶️
+void set(Tensor* t, const Tensor& source, size_t idx);
+Tensor get(const Tensor& t, size_t idx);
 
 std::string to_string(const Tensor& t, bool simplify = false);
 }  // namespace tensor::ops

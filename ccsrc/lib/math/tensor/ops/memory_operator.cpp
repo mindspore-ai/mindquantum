@@ -61,14 +61,14 @@ Tensor init_with_value(double a, TDevice device) {
     }
 }
 
-Tensor init_with_value(std::complex<float> a, TDevice device) {
+Tensor init_with_value(const std::complex<float>& a, TDevice device) {
     if (device == TDevice::CPU) {
         return cpu::init_with_value(a);
     } else {
     }
 }
 
-Tensor init_with_value(std::complex<double> a, TDevice device) {
+Tensor init_with_value(const std::complex<double>& a, TDevice device) {
     if (device == TDevice::CPU) {
         return cpu::init_with_value(a);
     } else {
@@ -135,6 +135,22 @@ void set(Tensor* t, const std::complex<double>& a, size_t idx) {
     } else {
     }
 }
+
+void set(Tensor* t, const Tensor& source, size_t idx) {
+    if (t->device == TDevice::CPU) {
+        cpu::set(t, source, idx);
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+Tensor get(const Tensor& t, size_t idx) {
+    if (t.device == TDevice::GPU) {
+        return cpu::get(t, idx);
+    } else {
+    }
+}
+
 }  // namespace tensor::ops
 
 namespace tensor {

@@ -46,4 +46,25 @@ std::string to_string(TDevice device) {
     }
     return "";
 }
+
+// -----------------------------------------------------------------------------
+
+int bit_size(TDtype dtype) {
+    switch (dtype) {
+        case (TDtype::Float32): {
+            return sizeof(to_device_t<TDtype::Float32>);
+        }
+        case (TDtype::Float64): {
+            return sizeof(to_device_t<TDtype::Float64>);
+        }
+        case (TDtype::Complex64): {
+            return sizeof(to_device_t<TDtype::Complex64>);
+        }
+        case (TDtype::Complex128): {
+            return sizeof(to_device_t<TDtype::Complex128>);
+        }
+    }
+    return 0;
+}
+
 }  // namespace tensor

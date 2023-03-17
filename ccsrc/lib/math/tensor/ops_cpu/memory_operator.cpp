@@ -116,4 +116,47 @@ void* copy_mem(void* data, TDtype dtype, size_t len) {
             return copy_mem<TDtype::Complex128>(data, len);
     }
 }
+
+// -----------------------------------------------------------------------------
+#define SET_TENSOR_BY_TENSOR(src_dtype)                                                                                \
+    case (src_dtype): {                                                                                                \
+        switch (source.dtype) {                                                                                        \
+            case (TDtype::Float32):                                                                                    \
+                set<to_device_t<src_dtype>, to_device_t<TDtype::Float32>>(t->data, source.data, t->dim, idx);          \
+                break;                                                                                                 \
+            case (TDtype::Float64):                                                                                    \
+                set<to_device_t<src_dtype>, to_device_t<TDtype::Float64>>(t->data, source.data, t->dim, idx);          \
+                break;                                                                                                 \
+            case (TDtype::Complex64):                                                                                  \
+                set<to_device_t<src_dtype>, to_device_t<TDtype::Complex64>>(t->data, source.data, t->dim, idx);        \
+                break;                                                                                                 \
+            case (TDtype::Complex128):                                                                                 \
+                set<to_device_t<src_dtype>, to_device_t<TDtype::Complex128>>(t->data, source.data, t->dim, idx);       \
+                break;                                                                                                 \
+        }                                                                                                              \
+        break;                                                                                                         \
+    }
+void set(Tensor* t, const Tensor& source, size_t idx) {
+    if (source.dim != 1) {
+        throw std::runtime_error("For set method, source tensor should have only one element.");
+    }
+    switch (t->dtype) {
+        SET_TENSOR_BY_TENSOR(TDtype::Float32)
+        SET_TENSOR_BY_TENSOR(TDtype::Float64)
+        SET_TENSOR_BY_TENSOR(TDtype::Complex64)
+        SET_TENSOR_BY_TENSOR(TDtype::Complex128)
+    }
+}
+#undef SET_TENSOR_BY_TENSOR
+
+// -----------------------------------------------------------------------------
+
+Tensor get(const Tensor& t, size_t idx) {
+    if (idx >= t.dim) {
+        throw std::runtime_error("index out of range for get.");
+    }
+    auto out = cpu::init(1, t.dtype);
+    std::memcpy(out.data, t.data + idx * bit_size(t.dtype), bit_size(t.dtype));
+    return out;
+}
 }  // namespace tensor::ops::cpu

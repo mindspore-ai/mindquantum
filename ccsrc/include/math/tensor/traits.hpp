@@ -152,5 +152,9 @@ template <typename T>
 std::string to_string(const std::complex<T>& a) {
     return "(" + std::to_string(a.real()) + ", " + std::to_string(a.imag()) + ")";
 }
+
+// -----------------------------------------------------------------------------
+
+int bit_size(TDtype dtype);
 }  // namespace tensor
 #endif

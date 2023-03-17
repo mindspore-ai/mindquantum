@@ -72,7 +72,7 @@ std::string to_string(void* data, size_t dim, bool simplify = false) {
     calc_t* data_ = reinterpret_cast<calc_t*>(data);
     for (size_t i = 0; i < dim; i++) {
         if constexpr (is_complex_v<calc_t>) {
-            out += "(" + std::to_string(data_[i].real()) + "," + std::to_string(data_[i].imag()) + ")";
+            out += "(" + std::to_string(data_[i].real()) + ", " + std::to_string(data_[i].imag()) + ")";
         } else {
             out += std::to_string(data_[i]);
         }
@@ -162,5 +162,16 @@ void set(void* data, TDtype dtype, T a, size_t dim, size_t idx) {
             break;
     }
 }
+
+template <typename des_t, typename src_t>
+void set(void* des, void* src, size_t len, size_t idx) {
+    auto c_src = reinterpret_cast<src_t*>(src);
+    cpu::set<des_t, src_t>(des, len, c_src[0], idx);
+}
+
+void set(Tensor* t, const Tensor& source, size_t idx);
+
+// -----------------------------------------------------------------------------
+Tensor get(const Tensor& t, size_t idx);
 }  // namespace tensor::ops::cpu
 #endif /* MATH_TENSOR_OPS_CPU_HPP_ */
