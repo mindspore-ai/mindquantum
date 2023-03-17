@@ -18,12 +18,19 @@
 #include <cstddef>
 
 #include "math/tensor/traits.hpp"
+
 namespace tensor {
 struct Tensor {
     TDtype dtype = TDtype::Float64;
     TDevice device = TDevice::CPU;
     void* data = nullptr;
     size_t dim = 0;
+    ~Tensor();
+    Tensor(TDtype dtype, TDevice device, void* data, size_t dim);
+    Tensor(Tensor&& t);
+    Tensor& operator=(Tensor&& t);
+    Tensor(const Tensor& t);
+    Tensor& operator=(const Tensor& t);
 };
 }  // namespace tensor
 #endif

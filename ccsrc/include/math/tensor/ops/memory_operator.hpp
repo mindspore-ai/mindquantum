@@ -14,7 +14,10 @@
 
 #ifndef MATH_TENSOR_OPS_MEMORY_OPERATOR_HPP_
 #define MATH_TENSOR_OPS_MEMORY_OPERATOR_HPP_
+#include <algorithm>
 #include <complex>
+#include <ostream>
+#include <string>
 #include <vector>
 
 #include "math/tensor/tensor.hpp"
@@ -40,14 +43,14 @@ Tensor init(size_t len, TDtype dtype = TDtype::Float64, TDevice device = TDevice
  */
 Tensor cast_to(const Tensor& t, TDtype target_dtype);
 
-Tensor init(float a);
-Tensor init(double a);
-Tensor init(const std::complex<float>& a);
-Tensor init(const std::complex<double>& a);
-Tensor init(const std::vector<float>& a);
-Tensor init(const std::vector<double>& a);
-Tensor init(const std::vector<std::complex<float>>& a);
-Tensor init(const std::vector<std::complex<double>>& a);
+Tensor init_with_value(float a, TDevice device = TDevice::CPU);
+Tensor init_with_value(double a, TDevice device = TDevice::CPU);
+Tensor init_with_value(const std::complex<float>& a, TDevice device = TDevice::CPU);
+Tensor init_with_value(const std::complex<double>& a, TDevice device = TDevice::CPU);
+Tensor init_with_vector(const std::vector<float>& a, TDevice device = TDevice::CPU);
+Tensor init_with_vector(const std::vector<double>& a, TDevice device = TDevice::CPU);
+Tensor init_with_vector(const std::vector<std::complex<float>>& a, TDevice device = TDevice::CPU);
+Tensor init_with_vector(const std::vector<std::complex<double>>& a, TDevice device = TDevice::CPU);
 
 /**
  * Destroy a tensor object.
@@ -66,7 +69,11 @@ void set(Tensor* t, float a, size_t idx);
 void set(Tensor* t, double a, size_t idx);
 void set(Tensor* t, const std::complex<float>& a, size_t idx);
 void set(Tensor* t, const std::complex<double>& a, size_t idx);
-void set(Tensor* t, const Tensor& source, size_t idx);
-Tensor get(const Tensor& t, size_t idx);
+void set(Tensor* t, const Tensor& source, size_t idx);  // 🌶️
+Tensor get(const Tensor& t, size_t idx);                // 🌶️
+
+std::string to_string(const Tensor& t, bool simplify = false);
 }  // namespace tensor::ops
+
+std::ostream& operator<<(std::ostream& os, const tensor::Tensor& t);
 #endif

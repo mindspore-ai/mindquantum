@@ -1,6 +1,6 @@
 # ==============================================================================
 #
-# Copyright 2022 <Huawei Technologies Co., Ltd>
+# Copyright 2023 <Huawei Technologies Co., Ltd>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,15 +16,8 @@
 #
 # ==============================================================================
 
-add_subdirectory(mq_base)
-add_subdirectory(simulator)
-add_subdirectory(device)
-add_subdirectory(math)
-
-# ==============================================================================
-
-if(ENABLE_CXX_EXPERIMENTAL)
-  add_subdirectory(experimental)
-endif()
-
-# ==============================================================================
+add_executable(tensor_test)
+target_link_libraries(tensor_test PUBLIC mq_math)
+force_at_least_cxx17_workaround(tensor_test)
+append_to_property(mq_install_targets GLOBAL tensor_test)
+target_sources(tensor_test PRIVATE ${CMAKE_CURRENT_LIST_DIR}/tensor_test.cpp)

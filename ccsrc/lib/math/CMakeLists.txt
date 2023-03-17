@@ -16,15 +16,12 @@
 #
 # ==============================================================================
 
-add_subdirectory(mq_base)
-add_subdirectory(simulator)
-add_subdirectory(device)
-add_subdirectory(math)
+add_library(mq_math)
+force_at_least_cxx17_workaround(mq_math)
+append_to_property(mq_install_targets GLOBAL mq_math)
+target_link_libraries(mq_math PUBLIC include_lib)
 
 # ==============================================================================
 
-if(ENABLE_CXX_EXPERIMENTAL)
-  add_subdirectory(experimental)
-endif()
-
-# ==============================================================================
+add_subdirectory(tensor)
+add_subdirectory(tensor_test)

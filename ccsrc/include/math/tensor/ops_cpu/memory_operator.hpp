@@ -14,9 +14,18 @@
 
 #ifndef MATH_TENSOR_OPS_CPU_HPP_
 #define MATH_TENSOR_OPS_CPU_HPP_
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
+#include <set>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <vector>
 
+#include "math/tensor/ops/memory_operator.hpp"
+#include "math/tensor/ops_cpu/utils.hpp"
 #include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
 
@@ -25,11 +34,15 @@ template <TDtype dtype>
 Tensor init(size_t len) {
     using calc_t = to_device_t<dtype>;
     auto data = reinterpret_cast<void*>(malloc(sizeof(calc_t) * len));
+    if (data == nullptr) {
+        throw std::runtime_error("malloc memory error.");
+    }
     return Tensor{dtype, TDevice::CPU, data, len};
 }
 
 Tensor init(size_t len, TDtype dtype);
 
+void destroy(Tensor* t);
 // -----------------------------------------------------------------------------
 
 template <TDtype src, TDtype des>
@@ -37,14 +50,117 @@ Tensor cast_to(void* data, size_t len) {
     using d_src = to_device_t<src>;
     using d_des = to_device_t<des>;
     auto c_data = reinterpret_cast<d_src*>(data);
-    auto out = init<des>(len);
+    auto out = cpu::init<des>(len);
     auto c_out = reinterpret_cast<d_des*>(out.data);
     for (size_t i = 0; i < len; i++) {
-        c_out[i] = c_data[i];
+        c_out[i] = number_convert<to_device_t<src>, to_device_t<des>>::apply(c_data[i]);
     }
     return out;
 }
 
-Tensor cast_to(void* data, TDtype src, TDtype des, size_t len);
+Tensor cast_to(const Tensor& t, TDtype des);
+
+// -----------------------------------------------------------------------------
+
+template <TDtype dtype>
+std::string to_string(void* data, size_t dim, bool simplify = false) {
+    std::string out = "";
+    if (!simplify) {
+        out = "array(dtype: " + to_string(dtype) + ", device: " + to_string(TDevice::CPU) + ", data: [";
+    }
+    using calc_t = to_device_t<dtype>;
+    calc_t* data_ = reinterpret_cast<calc_t*>(data);
+    for (size_t i = 0; i < dim; i++) {
+        if constexpr (is_complex_v<calc_t>) {
+            out += "(" + std::to_string(data_[i].real()) + "," + std::to_string(data_[i].imag()) + ")";
+        } else {
+            out += std::to_string(data_[i]);
+        }
+        if (i != dim - 1) {
+            out += ", ";
+        }
+    }
+    if (!simplify) {
+        out += "])";
+    }
+    return out;
+}
+
+std::string to_string(const Tensor& t, bool simplify = false);
+
+// -----------------------------------------------------------------------------
+
+template <typename T, typename = std::enable_if_t<is_arithmetic_v<T>>>
+Tensor init_with_value(T a) {
+    constexpr auto dtype = to_dtype_v<T>;
+    auto out = cpu::init<dtype>(1);
+    auto c_data = reinterpret_cast<T*>(out.data);
+    c_data[0] = a;
+    return out;
+}
+
+template <typename T>
+Tensor init_with_vector(const std::vector<T>& a) {
+    constexpr auto dtype = to_dtype_v<T>;
+    auto out = cpu::init<dtype>(a.size());
+    std::memcpy(out.data, a.data(), sizeof(T) * a.size());
+    return out;
+}
+
+// -----------------------------------------------------------------------------
+
+template <TDtype dtype>
+Tensor copy(void* data, size_t len) {
+    using calc_t = to_device_t<dtype>;
+    auto out = init<dtype>(len);
+    std::memcpy(out.data, data, sizeof(calc_t) * len);
+    return out;
+}
+
+Tensor copy(const Tensor& t);
+
+template <TDtype dtype>
+void* copy_mem(void* data, size_t len) {
+    using calc_t = to_device_t<dtype>;
+    auto res = reinterpret_cast<void*>(malloc(sizeof(calc_t) * len));
+    if (res == nullptr) {
+        throw std::runtime_error("malloc memory error.");
+    }
+    std::memcpy(res, data, sizeof(calc_t) * len);
+    return res;
+}
+void* copy_mem(void* data, TDtype dtype, size_t len);
+
+// -----------------------------------------------------------------------------
+template <typename src, typename T>
+void set(void* data, size_t len, T a, size_t idx) {
+    if (idx >= len) {
+        throw std::runtime_error("index " + std::to_string(idx) + " out of range: " + std::to_string(len));
+    }
+    auto c_data = reinterpret_cast<src*>(data);
+    if constexpr (is_complex_v<T>) {
+        c_data[idx] = std::real(a);
+    } else {
+        c_data[idx] = a;
+    }
+}
+
+template <typename T>
+void set(void* data, TDtype dtype, T a, size_t dim, size_t idx) {
+    switch (dtype) {
+        case TDtype::Float32:
+            set<to_device_t<TDtype::Float32>, T>(data, dim, a, idx);
+            break;
+        case TDtype::Float64:
+            set<to_device_t<TDtype::Float64>, T>(data, dim, a, idx);
+            break;
+        case TDtype::Complex128:
+            set<to_device_t<TDtype::Complex128>, T>(data, dim, a, idx);
+            break;
+        case TDtype::Complex64:
+            set<to_device_t<TDtype::Complex64>, T>(data, dim, a, idx);
+            break;
+    }
+}
 }  // namespace tensor::ops::cpu
 #endif /* MATH_TENSOR_OPS_CPU_HPP_ */
