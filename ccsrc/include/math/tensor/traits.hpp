@@ -156,5 +156,35 @@ std::string to_string(const std::complex<T>& a) {
 // -----------------------------------------------------------------------------
 
 int bit_size(TDtype dtype);
+
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+
+template <TDtype t1, TDtype t2>
+struct upper_type {
+    static constexpr TDtype get() {
+        if constexpr (t1 == t2) {
+            return t1;
+        }
+        if constexpr (t1 == TDtype::Complex128 || t2 == TDtype::Complex128) {
+            return TDtype::Complex128;
+        }
+        if constexpr (t1 == TDtype::Float32) {
+            return t2;
+        }
+        if constexpr (t2 == TDtype::Float32) {
+            return t1;
+        }
+        if constexpr (t1 == TDtype::Float64 && t2 == TDtype::Complex64) {
+            return TDtype::Complex128;
+        }
+        if constexpr (t1 == TDtype::Complex64 && t2 == TDtype::Float64) {
+            return TDtype::Complex128;
+        }
+        throw std::runtime_error(to_string(t1) + "," + to_string(t2));
+    }
+};
+TDtype upper_type_v(TDtype t1, TDtype t2);
 }  // namespace tensor
 #endif

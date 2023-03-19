@@ -28,11 +28,12 @@ void inplace_add(Tensor* t, float a);
 void inplace_add(Tensor* t, double a);
 void inplace_add(Tensor* t, const std::complex<float>& a);
 void inplace_add(Tensor* t, const std::complex<double>& a);
-void inplace_add(Tensor* t, const Tensor& other);
-Tensor add(Tensor* t, float a);
-Tensor add(Tensor* t, double a);
-Tensor add(Tensor* t, const std::complex<float>& a);
-Tensor add(Tensor* t, const std::complex<double>& a);
+void inplace_add(Tensor* t, const Tensor& other);  // 🌶️
+Tensor add(const Tensor& t, float a);
+Tensor add(const Tensor& t, double a);
+Tensor add(const Tensor& t, const std::complex<float>& a);
+Tensor add(const Tensor& t, const std::complex<double>& a);
+Tensor add(const Tensor& t, const Tensor& other);  // 🌶️
 
 // -----------------------------------------------------------------------------
 
@@ -40,22 +41,22 @@ void inplace_sub(Tensor* t, float a);
 void inplace_sub(Tensor* t, double a);
 void inplace_sub(Tensor* t, const std::complex<float>& a);
 void inplace_sub(Tensor* t, const std::complex<double>& a);
-void inplace_sub(Tensor* t, const Tensor& other);
+void inplace_sub(Tensor* t, const Tensor& other);  // 🌶️
 void inplace_sub(float a, Tensor* t);
 void inplace_sub(double a, Tensor* t);
 void inplace_sub(const std::complex<float>& a, Tensor* t);
 void inplace_sub(const std::complex<double>& a, Tensor* t);
-void inplace_sub(const Tensor& other, Tensor* t);
-Tensor sub(Tensor* t, float a);
-Tensor sub(Tensor* t, double a);
-Tensor sub(Tensor* t, const std::complex<float>& a);
-Tensor sub(Tensor* t, const std::complex<double>& a);
-Tensor sub(Tensor* t, const Tensor& other);
-Tensor sub(float a, Tensor* t);
-Tensor sub(double a, Tensor* t);
-Tensor sub(const std::complex<float>& a, Tensor* t);
-Tensor sub(const std::complex<double>& a, Tensor* t);
-Tensor sub(const Tensor& other, Tensor* t);
+void inplace_sub(const Tensor& other, Tensor* t);  // 🌶️
+Tensor sub(const Tensor& t, float a);
+Tensor sub(const Tensor& t, double a);
+Tensor sub(const Tensor& t, const std::complex<float>& a);
+Tensor sub(const Tensor& t, const std::complex<double>& a);
+Tensor sub(Tensor* t, const Tensor& other);  // 🌶️
+Tensor sub(float a, const Tensor& t);
+Tensor sub(double a, const Tensor& t);
+Tensor sub(const std::complex<float>& a, const Tensor& t);
+Tensor sub(const std::complex<double>& a, const Tensor& t);
+Tensor sub(const Tensor& other, Tensor* t);  // 🌶️
 
 // -----------------------------------------------------------------------------
 
@@ -64,11 +65,11 @@ void inplace_mul(Tensor* t, double a);
 void inplace_mul(Tensor* t, const std::complex<float>& a);
 void inplace_mul(Tensor* t, const std::complex<double>& a);
 void inplace_mul(Tensor* t, const Tensor& other);
-Tensor mul(Tensor* t, float a);
-Tensor mul(Tensor* t, double a);
-Tensor mul(Tensor* t, const std::complex<float>& a);
-Tensor mul(Tensor* t, const std::complex<double>& a);
-Tensor mul(Tensor* t, const Tensor& other);
+Tensor mul(const Tensor& t, float a);
+Tensor mul(const Tensor& t, double a);
+Tensor mul(const Tensor& t, const std::complex<float>& a);
+Tensor mul(const Tensor& t, const std::complex<double>& a);
+Tensor mul(Tensor* t, const Tensor& other);  // 🌶️
 
 // -----------------------------------------------------------------------------
 
@@ -76,21 +77,21 @@ void inplace_div(Tensor* t, float a);
 void inplace_div(Tensor* t, double a);
 void inplace_div(Tensor* t, const std::complex<float>& a);
 void inplace_div(Tensor* t, const std::complex<double>& a);
-void inplace_div(Tensor* t, const Tensor& other);
+void inplace_div(Tensor* t, const Tensor& other);  // 🌶️
 void inplace_div(float a, Tensor* t);
 void inplace_div(double a, Tensor* t);
 void inplace_div(const std::complex<float>& a, Tensor* t);
 void inplace_div(const std::complex<double>& a, Tensor* t);
-void inplace_div(const Tensor& other, Tensor* t);
-Tensor div(Tensor* t, float a);
-Tensor div(Tensor* t, double a);
-Tensor div(Tensor* t, const std::complex<float>& a);
-Tensor div(Tensor* t, const std::complex<double>& a);
-Tensor div(Tensor* t, const Tensor& other);
-Tensor div(float a, Tensor* t);
-Tensor div(double a, Tensor* t);
-Tensor div(const std::complex<float>& a, Tensor* t);
-Tensor div(const std::complex<double>& a, Tensor* t);
-Tensor div(const Tensor& other, Tensor* t);
+void inplace_div(const Tensor& other, Tensor* t);  // 🌶️
+Tensor div(const Tensor& t, float a);
+Tensor div(const Tensor& t, double a);
+Tensor div(const Tensor& t, const std::complex<float>& a);
+Tensor div(const Tensor& t, const std::complex<double>& a);
+Tensor div(Tensor* t, const Tensor& other);  // 🌶️
+Tensor div(float a, const Tensor& t);
+Tensor div(double a, const Tensor& t);
+Tensor div(const std::complex<float>& a, const Tensor& t);
+Tensor div(const std::complex<double>& a, const Tensor& t);
+Tensor div(const Tensor& other, Tensor* t);  // 🌶️
 }  // namespace tensor::ops
 #endif

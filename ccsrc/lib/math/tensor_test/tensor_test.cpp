@@ -18,12 +18,19 @@
 #include <vector>
 
 #include "math/tensor/ops.hpp"
+#include "math/tensor/ops/basic_math.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/ops_cpu/utils.hpp"
 #include "math/tensor/traits.hpp"
 
-template <typename T>
+static const std::vector<tensor::TDtype> all_type = {
+    tensor::TDtype::Float32,
+    tensor::TDtype::Float64,
+    tensor::TDtype::Complex64,
+    tensor::TDtype::Complex128,
+};
 
+template <typename T>
 void TestSet(T a) {
     std::vector<tensor::Tensor> ts;
     ts.push_back(tensor::ops::init(1, tensor::TDtype::Float32));
@@ -71,33 +78,196 @@ void TensorGet() {
     auto l = tensor::ops::get(t, 1);
     std::cout << l << std::endl;
 }
+
+void TensorConcrete() {
+    auto t1 = tensor::ops::zeros(2, tensor::TDtype::Complex128);
+    auto t2 = tensor::ops::ones(2, tensor::TDtype::Complex128);
+    std::cout << t1 << "\n" << t2 << std::endl;
+}
+
+void TensorInplace() {
+    auto t1 = tensor::ops::ones(2, tensor::TDtype::Complex128);
+}
+
+template <typename T>
+void TensorInplaceAdd_all(T a) {
+    for (const auto& type : all_type) {
+        auto t = tensor::ops::ones(2, type);
+        tensor::ops::inplace_add(&t, a);
+        std::cout << t << std::endl;
+    }
+    std::cout << "==========" << std::endl;
+}
+
+void TensorInplaceAdd() {
+    float a = 100;
+    double c = 101;
+    std::complex<float> d = 103;
+    std::complex<double> e = 104;
+    TensorInplaceAdd_all(a);
+    TensorInplaceAdd_all(c);
+    TensorInplaceAdd_all(d);
+    TensorInplaceAdd_all(e);
+}
+
+template <typename T>
+void TensorInplaceSub_all(T a) {
+    for (const auto& type : all_type) {
+        auto t = tensor::ops::ones(2, type);
+        tensor::ops::inplace_sub(&t, a);
+        std::cout << t << std::endl;
+    }
+    std::cout << "==========" << std::endl;
+}
+
+void TensorInplaceSub() {
+    float a = 100;
+    double c = 101;
+    std::complex<float> d = 103;
+    std::complex<double> e = 104;
+    TensorInplaceSub_all(a);
+    TensorInplaceSub_all(c);
+    TensorInplaceSub_all(d);
+    TensorInplaceSub_all(e);
+}
+
+template <typename T>
+void TensorInplaceMul_all(T a) {
+    for (const auto& type : all_type) {
+        auto t = tensor::ops::ones(2, type);
+        tensor::ops::inplace_mul(&t, a);
+        std::cout << t << std::endl;
+    }
+    std::cout << "==========" << std::endl;
+}
+
+void TensorInplaceMul() {
+    float a = 100;
+    double c = 101;
+    std::complex<float> d = 103;
+    std::complex<double> e = 104;
+    TensorInplaceMul_all(a);
+    TensorInplaceMul_all(c);
+    TensorInplaceMul_all(d);
+    TensorInplaceMul_all(e);
+}
+
+template <typename T>
+void TensorInplaceDiv_all(T a) {
+    for (const auto& type : all_type) {
+        auto t = tensor::ops::ones(2, type);
+        tensor::ops::inplace_div(&t, a);
+        std::cout << t << std::endl;
+    }
+    std::cout << "==========" << std::endl;
+}
+
+void TensorInplaceDiv() {
+    float a = 100;
+    double c = 101;
+    std::complex<float> d = 103;
+    std::complex<double> e = 104;
+    TensorInplaceDiv_all(a);
+    TensorInplaceDiv_all(c);
+    TensorInplaceDiv_all(d);
+    TensorInplaceDiv_all(e);
+}
+
+template <typename T>
+void TensorAdd_all(T a) {
+    for (const auto& type : all_type) {
+        auto t = tensor::ops::ones(2, type);
+        auto res = tensor::ops::add(t, a);
+        std::cout << res << std::endl;
+    }
+    std::cout << "==========" << std::endl;
+}
+
+void TensorAdd() {
+    float a = 100;
+    double c = 101;
+    std::complex<float> d = 103;
+    std::complex<double> e = 104;
+    TensorAdd_all(a);
+    TensorAdd_all(c);
+    TensorAdd_all(d);
+    TensorAdd_all(e);
+}
+
+template <typename T>
+void TensorSub_all(T a) {
+    for (const auto& type : all_type) {
+        auto t = tensor::ops::ones(2, type);
+        auto res = tensor::ops::sub(t, a);
+        std::cout << res << std::endl;
+    }
+    std::cout << "==========" << std::endl;
+}
+
+void TensorSub() {
+    float a = 100;
+    double c = 101;
+    std::complex<float> d = 103;
+    std::complex<double> e = 104;
+    TensorSub_all(a);
+    TensorSub_all(c);
+    TensorSub_all(d);
+    TensorSub_all(e);
+}
 int main() {
-    {
-        auto t = tensor::ops::init(3);
-        auto a = reinterpret_cast<double*>(t.data);
-        a[0] = 1.2;
-        a[1] = 2.3;
-        a[2] = 3.4;
-        std::cout << t << std::endl;
-    }
-    {
-        auto t = tensor::ops::init_with_value(1.2);
-        std::cout << t << std::endl;
-    }
-    {
-        std::vector<std::complex<float>> a{{1.0, 2.0}, {2.0, 3.0}};
-        auto t = tensor::ops::init_with_vector(a);
-        std::cout << t << std::endl;
-    }
+    // {
+    //     auto t = tensor::ops::init(3);
+    //     auto a = reinterpret_cast<double*>(t.data);
+    //     a[0] = 1.2;
+    //     a[1] = 2.3;
+    //     a[2] = 3.4;
+    //     std::cout << t << std::endl;
+    // }
+    // {
+    //     auto t = tensor::ops::init_with_value(1.2);
+    //     std::cout << t << std::endl;
+    // }
+    // {
+    //     std::vector<std::complex<float>> a{{1.0, 2.0}, {2.0, 3.0}};
+    //     auto t = tensor::ops::init_with_vector(a);
+    //     std::cout << t << std::endl;
+    // }
 
     // -----------------------------------------------------------------------------
 
-    TestSetAll();
+    // TestSetAll();
 
     // -----------------------------------------------------------------------------
-    TensorSetTensor();
+    // TensorSetTensor();
 
     // -----------------------------------------------------------------------------
 
-    TensorGet();
+    // TensorGet();
+
+    // -----------------------------------------------------------------------------
+
+    // TensorConcrete();
+
+    // -----------------------------------------------------------------------------
+
+    // TensorInplaceAdd();
+
+    // -----------------------------------------------------------------------------
+
+    // TensorInplaceSub();
+
+    // -----------------------------------------------------------------------------
+
+    // TensorInplaceMul();
+
+    // -----------------------------------------------------------------------------
+    // TensorInplaceDiv();
+
+    // -----------------------------------------------------------------------------
+
+    // TensorAdd();
+
+    // -----------------------------------------------------------------------------
+
+    TensorSub();
 }
