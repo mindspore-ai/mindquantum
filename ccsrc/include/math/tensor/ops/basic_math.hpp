@@ -64,7 +64,7 @@ void inplace_mul(Tensor* t, float a);
 void inplace_mul(Tensor* t, double a);
 void inplace_mul(Tensor* t, const std::complex<float>& a);
 void inplace_mul(Tensor* t, const std::complex<double>& a);
-void inplace_mul(Tensor* t, const Tensor& other);
+void inplace_mul(Tensor* t, const Tensor& other);  // 🌶️
 Tensor mul(const Tensor& t, float a);
 Tensor mul(const Tensor& t, double a);
 Tensor mul(const Tensor& t, const std::complex<float>& a);
