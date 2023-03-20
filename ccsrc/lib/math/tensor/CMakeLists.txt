@@ -16,7 +16,8 @@
 #
 # ==============================================================================
 
-target_sources(mq_math PRIVATE ${CMAKE_CURRENT_LIST_DIR}/traits.cpp)
+target_sources(mq_math PRIVATE ${CMAKE_CURRENT_LIST_DIR}/traits.cpp ${CMAKE_CURRENT_LIST_DIR}/tensor.cpp)
+
 target_compile_options(mq_math PUBLIC "-Wno-return-type")
 target_compile_options(mq_math PUBLIC "-Wno-narrowing")
 target_compile_options(mq_math PUBLIC "-Wno-pointer-arith")

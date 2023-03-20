@@ -271,6 +271,24 @@ void TensorTensorDiv(int size) {
     }
 }
 
+void Benchmark1(size_t step) {
+    for (size_t i = 0; i < step; i++) {
+        auto t1 = tensor::ops::ones(2, tensor::TDtype::Complex64);
+        double a = 2.0;
+        auto t2 = t1 + a;
+    }
+}
+
+void TensorOps() {
+    auto t1 = tensor::ops::ones(2, tensor::TDtype::Complex64);
+    double a = 2.0;
+    // t1 += a;
+    auto t2 = t1 + a;
+    // std::cout << t1 << std::endl;
+    std::cout << t2 << std::endl;
+    auto t3 = tensor::ops::add(t1, a);
+    std::cout << t3 << std::endl;
+}
 int main() {
     // {
     //     auto t = tensor::ops::init(3);
@@ -354,9 +372,17 @@ int main() {
 
     // -----------------------------------------------------------------------------
 
-    TensorTensorDiv(1);
+    // TensorTensorDiv(1);
 
     // -----------------------------------------------------------------------------
 
-    TensorTensorDiv(2);
+    // TensorTensorDiv(2);
+
+    // -----------------------------------------------------------------------------
+
+    // TensorOps();
+
+    // -----------------------------------------------------------------------------
+
+    Benchmark1(10000000);
 }

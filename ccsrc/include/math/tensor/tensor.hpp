@@ -25,12 +25,93 @@ struct Tensor {
     TDevice device = TDevice::CPU;
     void* data = nullptr;
     size_t dim = 0;
+
+    // -----------------------------------------------------------------------------
+
     ~Tensor();
     Tensor(TDtype dtype, TDevice device, void* data, size_t dim);
     Tensor(Tensor&& t);
     Tensor& operator=(Tensor&& t);
     Tensor(const Tensor& t);
     Tensor& operator=(const Tensor& t);
+
+    // -----------------------------------------------------------------------------
+
+    Tensor operator[](size_t idx) const;
+
+    // -----------------------------------------------------------------------------
+
+    Tensor& operator+=(float other);
+    Tensor& operator+=(double other);
+    Tensor& operator+=(const std::complex<double>& other);
+    Tensor& operator+=(const std::complex<float>& other);
+    Tensor& operator+=(const Tensor& other);
+
+    // -----------------------------------------------------------------------------
+
+    Tensor& operator-=(float other);
+    Tensor& operator-=(double other);
+    Tensor& operator-=(const std::complex<double>& other);
+    Tensor& operator-=(const std::complex<float>& other);
+    Tensor& operator-=(const Tensor& other);
+
+    // -----------------------------------------------------------------------------
+
+    Tensor& operator*=(float other);
+    Tensor& operator*=(double other);
+    Tensor& operator*=(const std::complex<double>& other);
+    Tensor& operator*=(const std::complex<float>& other);
+    Tensor& operator*=(const Tensor& other);
+
+    // -----------------------------------------------------------------------------
+
+    Tensor& operator/=(float other);
+    Tensor& operator/=(double other);
+    Tensor& operator/=(const std::complex<double>& other);
+    Tensor& operator/=(const std::complex<float>& other);
+    Tensor& operator/=(const Tensor& other);
+
+    // -----------------------------------------------------------------------------
 };
+
+// -----------------------------------------------------------------------------
+
+Tensor operator+(const Tensor& lhs, float rhs);
+Tensor operator+(const Tensor& lhs, double rhs);
+Tensor operator+(const Tensor& lhs, const std::complex<double>& rhs);
+Tensor operator+(const Tensor& lhs, const std::complex<float>& rhs);
+Tensor operator+(const Tensor& lhs, const Tensor& rhs);
+
+// -----------------------------------------------------------------------------
+
+Tensor operator-(const Tensor& lhs, float rhs);
+Tensor operator-(const Tensor& lhs, double rhs);
+Tensor operator-(const Tensor& lhs, const std::complex<double>& rhs);
+Tensor operator-(const Tensor& lhs, const std::complex<float>& rhs);
+Tensor operator-(float rhs, const Tensor& lhs);
+Tensor operator-(double rhs, const Tensor& lhs);
+Tensor operator-(const std::complex<double>& rhs, const Tensor& lhs);
+Tensor operator-(const std::complex<float>& rhs, const Tensor& lhs);
+Tensor operator-(const Tensor& lhs, const Tensor& rhs);
+
+// -----------------------------------------------------------------------------
+
+Tensor operator*(const Tensor& lhs, float rhs);
+Tensor operator*(const Tensor& lhs, double rhs);
+Tensor operator*(const Tensor& lhs, const std::complex<double>& rhs);
+Tensor operator*(const Tensor& lhs, const std::complex<float>& rhs);
+Tensor operator*(const Tensor& lhs, const Tensor& rhs);
+
+// -----------------------------------------------------------------------------
+
+Tensor operator/(const Tensor& lhs, float rhs);
+Tensor operator/(const Tensor& lhs, double rhs);
+Tensor operator/(const Tensor& lhs, const std::complex<double>& rhs);
+Tensor operator/(const Tensor& lhs, const std::complex<float>& rhs);
+Tensor operator/(float rhs, const Tensor& lhs);
+Tensor operator/(double rhs, const Tensor& lhs);
+Tensor operator/(const std::complex<double>& rhs, const Tensor& lhs);
+Tensor operator/(const std::complex<float>& rhs, const Tensor& lhs);
+Tensor operator/(const Tensor& lhs, const Tensor& rhs);
 }  // namespace tensor
 #endif
