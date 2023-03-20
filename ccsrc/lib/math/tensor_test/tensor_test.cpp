@@ -214,6 +214,63 @@ void TensorSub() {
     TensorSub_all(d);
     TensorSub_all(e);
 }
+
+void TensorTensorAdd(int size) {
+    for (auto dtype1 : all_type) {
+        for (auto dtype2 : all_type) {
+            auto t1 = tensor::ops::ones(size, dtype1);
+            auto t2 = tensor::ops::ones(size, dtype2);
+            auto t3 = tensor::ops::add(t1, t2);
+            std::cout << t1 << std::endl;
+            std::cout << t2 << std::endl;
+            std::cout << t3 << std::endl;
+            std::cout << "==============" << std::endl;
+        }
+    }
+}
+
+void TensorTensorSub(int size) {
+    for (auto dtype1 : all_type) {
+        for (auto dtype2 : all_type) {
+            auto t1 = tensor::ops::ones(size, dtype1);
+            auto t2 = tensor::ops::ones(size, dtype2);
+            auto t3 = tensor::ops::sub(t1, t2);
+            std::cout << t1 << std::endl;
+            std::cout << t2 << std::endl;
+            std::cout << t3 << std::endl;
+            std::cout << "==============" << std::endl;
+        }
+    }
+}
+
+void TensorTensorMul(int size) {
+    for (auto dtype1 : all_type) {
+        for (auto dtype2 : all_type) {
+            auto t1 = tensor::ops::ones(size, dtype1);
+            auto t2 = tensor::ops::ones(size, dtype2);
+            auto t3 = tensor::ops::mul(t1, t2);
+            std::cout << t1 << std::endl;
+            std::cout << t2 << std::endl;
+            std::cout << t3 << std::endl;
+            std::cout << "==============" << std::endl;
+        }
+    }
+}
+
+void TensorTensorDiv(int size) {
+    for (auto dtype1 : all_type) {
+        for (auto dtype2 : all_type) {
+            auto t1 = tensor::ops::ones(size, dtype1);
+            auto t2 = tensor::ops::ones(size, dtype2);
+            auto t3 = tensor::ops::div(t1, t2);
+            std::cout << t1 << std::endl;
+            std::cout << t2 << std::endl;
+            std::cout << t3 << std::endl;
+            std::cout << "==============" << std::endl;
+        }
+    }
+}
+
 int main() {
     // {
     //     auto t = tensor::ops::init(3);
@@ -269,5 +326,37 @@ int main() {
 
     // -----------------------------------------------------------------------------
 
-    TensorSub();
+    // TensorSub();
+
+    // -----------------------------------------------------------------------------
+
+    // TensorTensorAdd(1);
+
+    // -----------------------------------------------------------------------------
+
+    // TensorTensorAdd(2);
+
+    // -----------------------------------------------------------------------------
+
+    // TensorTensorSub(1);
+
+    // -----------------------------------------------------------------------------
+
+    // TensorTensorSub(2);
+
+    // -----------------------------------------------------------------------------
+
+    // TensorTensorMul(1);
+
+    // -----------------------------------------------------------------------------
+
+    // TensorTensorMul(2);
+
+    // -----------------------------------------------------------------------------
+
+    TensorTensorDiv(1);
+
+    // -----------------------------------------------------------------------------
+
+    TensorTensorDiv(2);
 }

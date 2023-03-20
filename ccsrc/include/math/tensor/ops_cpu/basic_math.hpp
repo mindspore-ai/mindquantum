@@ -15,6 +15,7 @@
 #ifndef MATH_TENSOR_OPS_CPU_BASIC_MATH_HPP_
 #define MATH_TENSOR_OPS_CPU_BASIC_MATH_HPP_
 #include <iostream>
+#include <stdexcept>
 #include <type_traits>
 
 #include "math/tensor/ops_cpu/memory_operator.hpp"
@@ -38,67 +39,109 @@ struct cast_value {
     }
 };
 
-template <TDtype src, typename T, template <typename ops_t = void> class binary_ops>
-void inplace_binary(void* data, size_t len, T a) {
-    using calc_t = to_device_t<src>;
+template <TDtype lhs_dtype, TDtype other_dtype, bool is_array = false, bool reverse = false,
+          template <typename ops_t = void> class binary_ops>
+void InplaceBinary(void* data, size_t len, void* other) {
+    using calc_t = to_device_t<lhs_dtype>;
+    using other_t = to_device_t<other_dtype>;
     auto c_data = reinterpret_cast<calc_t*>(data);
+    auto c_other = reinterpret_cast<other_t*>(other);
     auto ops = binary_ops<>();
-    auto caster = cast_value<T, calc_t>();
+    auto caster = cast_value<other_t, calc_t>();
+    auto first = c_other[0];
     for (size_t i = 0; i < len; i++) {
-        c_data[i] = ops(c_data[i], caster(a));
+        if constexpr (is_array) {
+            if constexpr (reverse) {
+                c_data[i] = ops(caster(c_other[i]), c_data[i]);
+            } else {
+                c_data[i] = ops(c_data[i], caster(c_other[i]));
+            }
+        } else {
+            if constexpr (reverse) {
+                c_data[i] = ops(caster(first), c_data[i]);
+            } else {
+                c_data[i] = ops(c_data[i], caster(first));
+            }
+        }
     }
 }
 
+template <TDtype lhs_dtype, TDtype other_dtype, bool is_array = false, bool reverse = false,
+          template <typename ops_t = void> class binary_ops>
+Tensor GenerateBinary(void* data, size_t len, void* other) {
+    constexpr TDtype upper_t = upper_type<lhs_dtype, other_dtype>::get();
+    Tensor out = init<upper_t>(len);
+    auto c_des = reinterpret_cast<to_device_t<upper_t>*>(out.data);
+    auto c_data = reinterpret_cast<to_device_t<lhs_dtype>*>(data);
+    auto c_other = reinterpret_cast<to_device_t<other_dtype>*>(other);
+    auto ops = binary_ops<>();
+    auto caster0 = cast_value<to_device_t<lhs_dtype>, to_device_t<upper_t>>();
+    auto caster1 = cast_value<to_device_t<other_dtype>, to_device_t<upper_t>>();
+    auto first = c_other[0];
+    for (size_t i = 0; i < len; i++) {
+        if constexpr (is_array) {
+            if constexpr (reverse) {
+                c_des[i] = ops(caster1(c_other[i]), caster0(c_data[i]));
+            } else {
+                c_des[i] = ops(caster0(c_data[i]), caster1(c_other[i]));
+            }
+        } else {
+            if constexpr (reverse) {
+                c_des[i] = ops(caster1(first), caster0(c_data[i]));
+            } else {
+                c_des[i] = ops(caster0(c_data[i]), caster1(first));
+            }
+        }
+    }
+    return out;
+}
+
+// -----------------------------------------------------------------------------
+// vector -> vector + number
 template <typename T, template <typename ops_t> class binary_ops>
 void inplace_binary(void* data, TDtype src, size_t len, T a) {
+    auto other = reinterpret_cast<void*>(&a);
+    constexpr TDtype other_dtype = to_dtype_v<T>;
     switch (src) {
         case TDtype::Float32: {
-            cpu::inplace_binary<TDtype::Float32, T, binary_ops>(data, len, a);
+            cpu::InplaceBinary<TDtype::Float32, other_dtype, false, false, binary_ops>(data, len, other);
             break;
         }
         case TDtype::Float64: {
-            cpu::inplace_binary<TDtype::Float64, T, binary_ops>(data, len, a);
+            cpu::InplaceBinary<TDtype::Float64, other_dtype, false, false, binary_ops>(data, len, other);
             break;
         }
         case TDtype::Complex64: {
-            cpu::inplace_binary<TDtype::Complex64, T, binary_ops>(data, len, a);
+            cpu::InplaceBinary<TDtype::Complex64, other_dtype, false, false, binary_ops>(data, len, other);
             break;
         }
         case TDtype::Complex128: {
-            cpu::inplace_binary<TDtype::Complex128, T, binary_ops>(data, len, a);
+            cpu::InplaceBinary<TDtype::Complex128, other_dtype, false, false, binary_ops>(data, len, other);
             break;
         }
     }
 }
 
-template <TDtype src, typename T, template <typename ops_t = void> class binary_ops>
-void inplace_binary_rev(void* data, size_t len, T a) {
-    using calc_t = to_device_t<src>;
-    auto c_data = reinterpret_cast<calc_t*>(data);
-    auto ops = binary_ops<>();
-    auto caster = cast_value<T, calc_t>();
-    for (size_t i = 0; i < len; i++) {
-        c_data[i] = ops(caster(a), c_data[i]);
-    }
-}
-
+// vector -> number + vector
 template <typename T, template <typename ops_t> class binary_ops>
 void inplace_binary_rev(void* data, TDtype src, size_t len, T a) {
+    auto other = reinterpret_cast<void*>(&a);
+    constexpr TDtype other_dtype = to_dtype_v<T>;
     switch (src) {
         case TDtype::Float32: {
-            cpu::inplace_binary_rev<TDtype::Float32, T, binary_ops>(data, len, a);
+            cpu::InplaceBinary<TDtype::Float32, other_dtype, false, true, binary_ops>(data, len, other);
             break;
         }
         case TDtype::Float64: {
-            cpu::inplace_binary_rev<TDtype::Float64, T, binary_ops>(data, len, a);
+            cpu::InplaceBinary<TDtype::Float64, other_dtype, false, true, binary_ops>(data, len, other);
             break;
         }
         case TDtype::Complex64: {
-            cpu::inplace_binary_rev<TDtype::Complex64, T, binary_ops>(data, len, a);
+            cpu::InplaceBinary<TDtype::Complex64, other_dtype, false, true, binary_ops>(data, len, other);
             break;
         }
         case TDtype::Complex128: {
-            cpu::inplace_binary_rev<TDtype::Complex128, T, binary_ops>(data, len, a);
+            cpu::InplaceBinary<TDtype::Complex128, other_dtype, false, true, binary_ops>(data, len, other);
             break;
         }
     }
@@ -106,69 +149,364 @@ void inplace_binary_rev(void* data, TDtype src, size_t len, T a) {
 
 // -----------------------------------------------------------------------------
 
-template <TDtype des_t, typename T, template <typename ops_t = void> class binary_ops>
-Tensor tensor_binary(void* data, size_t len, T a) {
-    constexpr TDtype src_t = to_dtype_v<T>;
-    constexpr TDtype upper_t = upper_type<des_t, src_t>::get();
-    Tensor out = init<upper_t>(len);
-    auto c_des = reinterpret_cast<to_device_t<upper_t>*>(out.data);
-    auto c_src = reinterpret_cast<to_device_t<des_t>*>(data);
-    auto ops = binary_ops<>();
-    auto caster = cast_value<T, to_device_t<des_t>>();
-    for (size_t i = 0; i < len; i++) {
-        c_des[i] = ops(c_src[i], caster(a));
-    }
-    return out;
-}
-
-template <TDtype des_t, typename T, template <typename ops_t = void> class binary_ops>
-Tensor tensor_binary_rev(void* data, size_t len, T a) {
-    constexpr TDtype src_t = to_dtype_v<T>;
-    constexpr TDtype upper_t = upper_type<des_t, src_t>::get();
-    Tensor out = init<upper_t>(len);
-    auto c_des = reinterpret_cast<to_device_t<upper_t>*>(out.data);
-    auto c_src = reinterpret_cast<to_device_t<des_t>*>(data);
-    auto ops = binary_ops<>();
-    auto caster = cast_value<T, to_device_t<des_t>>();
-    for (size_t i = 0; i < len; i++) {
-        c_des[i] = ops(caster(a), c_src[i]);
-    }
-    return out;
-}
-
+// vector = vector + number
 template <typename T, template <typename ops_t = void> class binary_ops>
-Tensor tensor_binary_rev(void* data, TDtype dtype, size_t len, T a) {
+Tensor generate_binary(void* data, TDtype dtype, size_t len, T a) {
+    auto other = reinterpret_cast<void*>(&a);
+    constexpr TDtype other_dtype = to_dtype_v<T>;
     switch (dtype) {
         case (TDtype::Float32): {
-            return tensor_binary_rev<TDtype::Float32, T, binary_ops>(data, len, a);
+            return GenerateBinary<TDtype::Float32, other_dtype, false, true, binary_ops>(data, len, other);
         }
         case (TDtype::Float64): {
-            return tensor_binary_rev<TDtype::Float64, T, binary_ops>(data, len, a);
+            return GenerateBinary<TDtype::Float64, other_dtype, false, true, binary_ops>(data, len, other);
         }
         case (TDtype::Complex128): {
-            return tensor_binary_rev<TDtype::Complex128, T, binary_ops>(data, len, a);
+            return GenerateBinary<TDtype::Complex128, other_dtype, false, true, binary_ops>(data, len, other);
         }
         case (TDtype::Complex64): {
-            return tensor_binary_rev<TDtype::Complex64, T, binary_ops>(data, len, a);
+            return GenerateBinary<TDtype::Complex64, other_dtype, false, true, binary_ops>(data, len, other);
         }
     }
 }
 
+// vector = number + vector
 template <typename T, template <typename ops_t = void> class binary_ops>
-Tensor tensor_binary(void* data, TDtype dtype, size_t len, T a) {
+Tensor generate_binary_rev(void* data, TDtype dtype, size_t len, T a) {
+    auto other = reinterpret_cast<void*>(&a);
+    constexpr TDtype other_dtype = to_dtype_v<T>;
     switch (dtype) {
         case (TDtype::Float32): {
-            return tensor_binary<TDtype::Float32, T, binary_ops>(data, len, a);
+            return GenerateBinary<TDtype::Float32, other_dtype, false, false, binary_ops>(data, len, other);
         }
         case (TDtype::Float64): {
-            return tensor_binary<TDtype::Float64, T, binary_ops>(data, len, a);
+            return GenerateBinary<TDtype::Float64, other_dtype, false, false, binary_ops>(data, len, other);
         }
         case (TDtype::Complex128): {
-            return tensor_binary<TDtype::Complex128, T, binary_ops>(data, len, a);
+            return GenerateBinary<TDtype::Complex128, other_dtype, false, false, binary_ops>(data, len, other);
         }
         case (TDtype::Complex64): {
-            return tensor_binary<TDtype::Complex64, T, binary_ops>(data, len, a);
+            return GenerateBinary<TDtype::Complex64, other_dtype, false, false, binary_ops>(data, len, other);
         }
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+// vector -> vector1 + vector2
+template <typename T, template <typename ops_t> class binary_ops>
+void inplace_binary_array(void* data, TDtype src, size_t len, void* other) {
+    constexpr TDtype other_dtype = to_dtype_v<T>;
+    switch (src) {
+        case TDtype::Float32: {
+            cpu::InplaceBinary<TDtype::Float32, other_dtype, true, false, binary_ops>(data, len, other);
+            break;
+        }
+        case TDtype::Float64: {
+            cpu::InplaceBinary<TDtype::Float64, other_dtype, true, false, binary_ops>(data, len, other);
+            break;
+        }
+        case TDtype::Complex64: {
+            cpu::InplaceBinary<TDtype::Complex64, other_dtype, true, false, binary_ops>(data, len, other);
+            break;
+        }
+        case TDtype::Complex128: {
+            cpu::InplaceBinary<TDtype::Complex128, other_dtype, true, false, binary_ops>(data, len, other);
+            break;
+        }
+    }
+}
+
+// vector -> vector2 + vector1
+template <typename T, template <typename ops_t> class binary_ops>
+void inplace_binary_array_rev(void* data, TDtype src, size_t len, void* other) {
+    constexpr TDtype other_dtype = to_dtype_v<T>;
+    switch (src) {
+        case TDtype::Float32: {
+            cpu::InplaceBinary<TDtype::Float32, other_dtype, true, true, binary_ops>(data, len, other);
+            break;
+        }
+        case TDtype::Float64: {
+            cpu::InplaceBinary<TDtype::Float64, other_dtype, true, true, binary_ops>(data, len, other);
+            break;
+        }
+        case TDtype::Complex64: {
+            cpu::InplaceBinary<TDtype::Complex64, other_dtype, true, true, binary_ops>(data, len, other);
+            break;
+        }
+        case TDtype::Complex128: {
+            cpu::InplaceBinary<TDtype::Complex128, other_dtype, true, true, binary_ops>(data, len, other);
+            break;
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+// vector = vector1 + vector2
+template <typename T, template <typename ops_t = void> class binary_ops>
+Tensor generate_binary_array(void* data, TDtype dtype, size_t len, void* other) {
+    constexpr TDtype other_dtype = to_dtype_v<T>;
+    switch (dtype) {
+        case (TDtype::Float32): {
+            return GenerateBinary<TDtype::Float32, other_dtype, true, true, binary_ops>(data, len, other);
+        }
+        case (TDtype::Float64): {
+            return GenerateBinary<TDtype::Float64, other_dtype, true, true, binary_ops>(data, len, other);
+        }
+        case (TDtype::Complex128): {
+            return GenerateBinary<TDtype::Complex128, other_dtype, true, true, binary_ops>(data, len, other);
+        }
+        case (TDtype::Complex64): {
+            return GenerateBinary<TDtype::Complex64, other_dtype, true, true, binary_ops>(data, len, other);
+        }
+    }
+}
+
+// vector = vector2 + vector1
+template <typename T, template <typename ops_t = void> class binary_ops>
+Tensor generate_binary_array_rev(void* data, TDtype dtype, size_t len, void* other) {
+    constexpr TDtype other_dtype = to_dtype_v<T>;
+    switch (dtype) {
+        case (TDtype::Float32): {
+            return GenerateBinary<TDtype::Float32, other_dtype, true, false, binary_ops>(data, len, other);
+        }
+        case (TDtype::Float64): {
+            return GenerateBinary<TDtype::Float64, other_dtype, true, false, binary_ops>(data, len, other);
+        }
+        case (TDtype::Complex128): {
+            return GenerateBinary<TDtype::Complex128, other_dtype, true, false, binary_ops>(data, len, other);
+        }
+        case (TDtype::Complex64): {
+            return GenerateBinary<TDtype::Complex64, other_dtype, true, false, binary_ops>(data, len, other);
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+//
+template <template <typename ops_t = void> class binary_ops>
+void inplace_binary_array(void* data, TDtype src, size_t len, const Tensor& a) {
+    if (a.device != TDevice::CPU) {
+        throw std::runtime_error("Need a tensor in cpu.");
+    }
+    if (a.dim == 1) {
+        switch (a.dtype) {
+            case TDtype::Float32: {
+                using calc_t = to_device_t<TDtype::Float32>;
+                auto c_a = reinterpret_cast<calc_t*>(a.data);
+                inplace_binary<calc_t, binary_ops>(data, src, len, c_a[0]);
+                break;
+            }
+            case TDtype::Float64: {
+                using calc_t = to_device_t<TDtype::Float64>;
+                auto c_a = reinterpret_cast<calc_t*>(a.data);
+                inplace_binary<calc_t, binary_ops>(data, src, len, c_a[0]);
+                break;
+            }
+            case TDtype::Complex64: {
+                using calc_t = to_device_t<TDtype::Complex64>;
+                auto c_a = reinterpret_cast<calc_t*>(a.data);
+                inplace_binary<calc_t, binary_ops>(data, src, len, c_a[0]);
+                break;
+            }
+            case TDtype::Complex128: {
+                using calc_t = to_device_t<TDtype::Complex128>;
+                auto c_a = reinterpret_cast<calc_t*>(a.data);
+                inplace_binary<calc_t, binary_ops>(data, src, len, c_a[0]);
+                break;
+            }
+        }
+    } else if (a.dim == len) {
+        switch (a.dtype) {
+            case TDtype::Float32: {
+                using calc_t = to_device_t<TDtype::Float32>;
+                inplace_binary_array<calc_t, binary_ops>(data, src, len, a.data);
+                break;
+            }
+            case TDtype::Float64: {
+                using calc_t = to_device_t<TDtype::Float64>;
+                inplace_binary_array<calc_t, binary_ops>(data, src, len, a.data);
+                break;
+            }
+            case TDtype::Complex64: {
+                using calc_t = to_device_t<TDtype::Complex64>;
+                inplace_binary_array<calc_t, binary_ops>(data, src, len, a.data);
+                break;
+            }
+            case TDtype::Complex128: {
+                using calc_t = to_device_t<TDtype::Complex128>;
+                inplace_binary_array<calc_t, binary_ops>(data, src, len, a.data);
+                break;
+            }
+        }
+    } else {
+        throw std::runtime_error("Dimension miss match.");
+    }
+}
+
+template <template <typename ops_t = void> class binary_ops>
+void inplace_binary_array_rev(void* data, TDtype src, size_t len, const Tensor& a) {
+    if (a.device != TDevice::CPU) {
+        throw std::runtime_error("Need a tensor in cpu.");
+    }
+    if (a.dim == 1) {
+        switch (a.dtype) {
+            case TDtype::Float32: {
+                using calc_t = to_device_t<TDtype::Float32>;
+                auto c_a = reinterpret_cast<calc_t*>(a.data);
+                inplace_binary_rev<calc_t, binary_ops>(data, src, len, c_a[0]);
+                break;
+            }
+            case TDtype::Float64: {
+                using calc_t = to_device_t<TDtype::Float64>;
+                auto c_a = reinterpret_cast<calc_t*>(a.data);
+                inplace_binary_rev<calc_t, binary_ops>(data, src, len, c_a[0]);
+                break;
+            }
+            case TDtype::Complex64: {
+                using calc_t = to_device_t<TDtype::Complex64>;
+                auto c_a = reinterpret_cast<calc_t*>(a.data);
+                inplace_binary_rev<calc_t, binary_ops>(data, src, len, c_a[0]);
+                break;
+            }
+            case TDtype::Complex128: {
+                using calc_t = to_device_t<TDtype::Complex128>;
+                auto c_a = reinterpret_cast<calc_t*>(a.data);
+                inplace_binary_rev<calc_t, binary_ops>(data, src, len, c_a[0]);
+                break;
+            }
+        }
+    } else if (a.dim == len) {
+        switch (a.dtype) {
+            case TDtype::Float32: {
+                using calc_t = to_device_t<TDtype::Float32>;
+                inplace_binary_array_rev<calc_t, binary_ops>(data, src, len, a.data);
+                break;
+            }
+            case TDtype::Float64: {
+                using calc_t = to_device_t<TDtype::Float64>;
+                inplace_binary_array_rev<calc_t, binary_ops>(data, src, len, a.data);
+                break;
+            }
+            case TDtype::Complex64: {
+                using calc_t = to_device_t<TDtype::Complex64>;
+                inplace_binary_array_rev<calc_t, binary_ops>(data, src, len, a.data);
+                break;
+            }
+            case TDtype::Complex128: {
+                using calc_t = to_device_t<TDtype::Complex128>;
+                inplace_binary_array_rev<calc_t, binary_ops>(data, src, len, a.data);
+                break;
+            }
+        }
+    } else {
+        throw std::runtime_error("Dimension miss match.");
+    }
+}
+
+template <template <typename ops_t = void> class binary_ops>
+Tensor generate_binary_array(void* data, TDtype src, size_t len, const Tensor& a) {
+    if (a.device != TDevice::CPU) {
+        throw std::runtime_error("Need a tensor in cpu.");
+    }
+    if (a.dim == 1) {
+        switch (a.dtype) {
+            case TDtype::Float32: {
+                using calc_t = to_device_t<TDtype::Float32>;
+                auto c_a = reinterpret_cast<calc_t*>(a.data);
+                return generate_binary<calc_t, binary_ops>(data, src, len, c_a[0]);
+            }
+            case TDtype::Float64: {
+                using calc_t = to_device_t<TDtype::Float64>;
+                auto c_a = reinterpret_cast<calc_t*>(a.data);
+                return generate_binary<calc_t, binary_ops>(data, src, len, c_a[0]);
+            }
+            case TDtype::Complex64: {
+                using calc_t = to_device_t<TDtype::Complex64>;
+                auto c_a = reinterpret_cast<calc_t*>(a.data);
+                return generate_binary<calc_t, binary_ops>(data, src, len, c_a[0]);
+            }
+            case TDtype::Complex128: {
+                using calc_t = to_device_t<TDtype::Complex128>;
+                auto c_a = reinterpret_cast<calc_t*>(a.data);
+                return generate_binary<calc_t, binary_ops>(data, src, len, c_a[0]);
+            }
+        }
+    } else if (a.dim == len) {
+        switch (a.dtype) {
+            case TDtype::Float32: {
+                using calc_t = to_device_t<TDtype::Float32>;
+                return generate_binary_array<calc_t, binary_ops>(data, src, len, a.data);
+            }
+            case TDtype::Float64: {
+                using calc_t = to_device_t<TDtype::Float64>;
+                return generate_binary_array<calc_t, binary_ops>(data, src, len, a.data);
+            }
+            case TDtype::Complex64: {
+                using calc_t = to_device_t<TDtype::Complex64>;
+                return generate_binary_array<calc_t, binary_ops>(data, src, len, a.data);
+            }
+            case TDtype::Complex128: {
+                using calc_t = to_device_t<TDtype::Complex128>;
+                return generate_binary_array<calc_t, binary_ops>(data, src, len, a.data);
+            }
+        }
+    } else {
+        throw std::runtime_error("Dimension miss match.");
+    }
+}
+
+template <template <typename ops_t = void> class binary_ops>
+Tensor generate_binary_array_rev(void* data, TDtype src, size_t len, const Tensor& a) {
+    if (a.device != TDevice::CPU) {
+        throw std::runtime_error("Need a tensor in cpu.");
+    }
+    if (a.dim == 1) {
+        switch (a.dtype) {
+            case TDtype::Float32: {
+                using calc_t = to_device_t<TDtype::Float32>;
+                auto c_a = reinterpret_cast<calc_t*>(a.data);
+                return generate_binary_rev<calc_t, binary_ops>(data, src, len, c_a[0]);
+            }
+            case TDtype::Float64: {
+                using calc_t = to_device_t<TDtype::Float64>;
+                auto c_a = reinterpret_cast<calc_t*>(a.data);
+                return generate_binary_rev<calc_t, binary_ops>(data, src, len, c_a[0]);
+            }
+            case TDtype::Complex64: {
+                using calc_t = to_device_t<TDtype::Complex64>;
+                auto c_a = reinterpret_cast<calc_t*>(a.data);
+                return generate_binary_rev<calc_t, binary_ops>(data, src, len, c_a[0]);
+            }
+            case TDtype::Complex128: {
+                using calc_t = to_device_t<TDtype::Complex128>;
+                auto c_a = reinterpret_cast<calc_t*>(a.data);
+                return generate_binary_rev<calc_t, binary_ops>(data, src, len, c_a[0]);
+            }
+        }
+    } else if (a.dim == len) {
+        switch (a.dtype) {
+            case TDtype::Float32: {
+                using calc_t = to_device_t<TDtype::Float32>;
+                return generate_binary_array_rev<calc_t, binary_ops>(data, src, len, a.data);
+            }
+            case TDtype::Float64: {
+                using calc_t = to_device_t<TDtype::Float64>;
+                return generate_binary_array_rev<calc_t, binary_ops>(data, src, len, a.data);
+            }
+            case TDtype::Complex64: {
+                using calc_t = to_device_t<TDtype::Complex64>;
+                return generate_binary_array_rev<calc_t, binary_ops>(data, src, len, a.data);
+            }
+            case TDtype::Complex128: {
+                using calc_t = to_device_t<TDtype::Complex128>;
+                return generate_binary_array_rev<calc_t, binary_ops>(data, src, len, a.data);
+            }
+        }
+    } else {
+        throw std::runtime_error("Dimension miss match.");
     }
 }
 }  // namespace tensor::ops::cpu
