@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "math/tensor/ops.hpp"
+#include "math/tensor/ops/advance_math.hpp"
 #include "math/tensor/ops/basic_math.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/ops_cpu/utils.hpp"
@@ -289,6 +290,17 @@ void TensorOps() {
     auto t3 = tensor::ops::add(t1, a);
     std::cout << t3 << std::endl;
 }
+
+void vdot() {
+    auto t1 = tensor::ops::ones(2, tensor::TDtype::Complex64);
+    t1 += std::complex<float>(0.0, 3.0);
+    auto t2 = tensor::ops::ones(2, tensor::TDtype::Float64);
+    auto res = tensor::ops::vdot(t1, t2);
+    std::cout << res << std::endl;
+    std::cout << res.real() << std::endl;
+    std::cout << res.imag() << std::endl;
+    std::cout << res.conj() << std::endl;
+}
 int main() {
     // {
     //     auto t = tensor::ops::init(3);
@@ -384,5 +396,8 @@ int main() {
 
     // -----------------------------------------------------------------------------
 
-    Benchmark1(10000000);
+    // Benchmark1(10000000);
+
+    // -----------------------------------------------------------------------------
+    vdot();
 }

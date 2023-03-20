@@ -16,5 +16,6 @@
 #
 # ==============================================================================
 
-target_sources(mq_math PRIVATE ${CMAKE_CURRENT_LIST_DIR}/memory_operator.cpp
-                               ${CMAKE_CURRENT_LIST_DIR}/concrete_tensor.cpp ${CMAKE_CURRENT_LIST_DIR}/basic_math.cpp)
+target_sources(
+  mq_math PRIVATE ${CMAKE_CURRENT_LIST_DIR}/memory_operator.cpp ${CMAKE_CURRENT_LIST_DIR}/concrete_tensor.cpp
+                  ${CMAKE_CURRENT_LIST_DIR}/basic_math.cpp ${CMAKE_CURRENT_LIST_DIR}/advance_math.cpp)

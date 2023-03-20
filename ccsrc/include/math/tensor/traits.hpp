@@ -106,6 +106,23 @@ struct is_arithmetic<std::complex<double>> {
 
 // -----------------------------------------------------------------------------
 
+template <TDtype dtype>
+struct to_real_dtype {
+    static constexpr TDtype t = dtype;
+};
+
+template <>
+struct to_real_dtype<TDtype::Complex128> {
+    static constexpr TDtype t = TDtype::Float64;
+};
+
+template <>
+struct to_real_dtype<TDtype::Complex64> {
+    static constexpr TDtype t = TDtype::Float32;
+};
+
+// -----------------------------------------------------------------------------
+
 template <typename T>
 static constexpr bool is_arithmetic_v = is_arithmetic<T>::v;
 
@@ -114,6 +131,9 @@ using to_device_t = typename to_device<dtype>::type;
 
 template <typename T>
 static constexpr TDtype to_dtype_v = to_dtype<T>::dtype;
+
+template <TDtype dtype>
+static constexpr TDtype to_real_dtype_t = to_real_dtype<dtype>::t;
 // -----------------------------------------------------------------------------
 
 template <TDtype dtype>

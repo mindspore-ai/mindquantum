@@ -163,7 +163,6 @@ Tensor::Tensor(TDtype dtype, TDevice device, void* data, size_t dim)
 }
 
 Tensor::Tensor(Tensor&& t) {
-    std::cout << "q" << std::endl;
     this->data = t.data;
     t.data = nullptr;
     this->dim = t.dim;
@@ -171,7 +170,6 @@ Tensor::Tensor(Tensor&& t) {
     this->dtype = t.dtype;
 }
 Tensor& Tensor::operator=(Tensor&& t) {
-    std::cout << "w" << std::endl;
     ops::destroy(this);
     this->data = t.data;
     t.data = nullptr;
@@ -181,7 +179,6 @@ Tensor& Tensor::operator=(Tensor&& t) {
     return *this;
 }
 Tensor& Tensor::operator=(const Tensor& t) {
-    std::cout << "e" << std::endl;
     ops::destroy(this);
     if (t.device == TDevice::CPU) {
         this->data = ops::cpu::copy_mem(t.data, t.dtype, t.dim);
@@ -194,7 +191,6 @@ Tensor& Tensor::operator=(const Tensor& t) {
 }
 
 Tensor::Tensor(const Tensor& t) {
-    std::cout << "r" << std::endl;
     if (t.device == TDevice::CPU) {
         this->data = ops::cpu::copy_mem(t.data, t.dtype, t.dim);
     } else {

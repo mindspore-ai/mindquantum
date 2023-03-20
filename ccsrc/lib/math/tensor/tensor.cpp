@@ -145,4 +145,16 @@ TENSOR_DIV(const Tensor&)
 Tensor Tensor::operator[](size_t idx) const {
     return tensor::ops::get(*this, idx);
 }
+
+Tensor Tensor::real() const {
+    return tensor::ops::real(*this);
+}
+
+Tensor Tensor::imag() const {
+    return tensor::ops::imag(*this);
+}
+
+Tensor Tensor::conj() const {
+    return tensor::ops::conj(*this);
+}
 }  // namespace tensor

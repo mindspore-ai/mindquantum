@@ -38,6 +38,9 @@ struct Tensor {
     // -----------------------------------------------------------------------------
 
     Tensor operator[](size_t idx) const;
+    Tensor real() const;
+    Tensor imag() const;
+    Tensor conj() const;
 
     // -----------------------------------------------------------------------------
 
