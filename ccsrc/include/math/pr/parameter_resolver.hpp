@@ -27,6 +27,20 @@
 
 namespace parameter {
 namespace tn = tensor;
+template <typename T>
+std::set<T> operator-(const std::set<T>& s1, const std::set<T>& s2) {
+    std::set<T> out;
+    std::set_difference(s1.begin(), s1.end(), s2.begin(), s2.end(), std::inserter(out, out.begin()));
+    return out;
+}
+
+template <typename T>
+std::set<T> operator&(const std::set<T>& s1, const std::set<T>& s2) {
+    std::set<T> out;
+    std::set_intersection(s1.begin(), s1.end(), s2.begin(), s2.end(), std::inserter(out, out.begin()));
+    return out;
+}
+
 struct ParameterResolver {
     using data_t = std::map<std::string, tn::Tensor>;
     data_t data_{};
@@ -57,7 +71,97 @@ struct ParameterResolver {
         tn::ops::set(&(this->const_value), a, 0);
     }
     std::string ToString() const;
+    bool Contains(const std::string& key) const;
+    bool NoGradContains(const std::string& key) const;
+    bool EncoderContains(const std::string& key) const;
+    std::set<std::string> GetAllParameters() const;
+    std::set<std::string> GetRequiresGradParameters() const;
+    std::set<std::string> GetAnsatzParameters() const;
+    bool IsConst() const;
+    bool IsNotZero() const;
+
+    template <typename T>
+    ParameterResolver& operator+=(const T& value) {
+        this->const_value += value;
+        return *this;
+    }
+
+    template <>
+    ParameterResolver& operator+=(const ParameterResolver& value) {
+        // TODO(xuxs): update parameter property
+        this->const_value += value.const_value;
+        for (auto& [k, v] : value.data_) {
+            if (this->Contains(k)) {
+                this->data_[k] += v;
+            } else {
+                this->data_[k] = v;
+            }
+        }
+    }
+
+    template <typename T>
+    ParameterResolver& operator-=(const T& value) {
+        this->const_value -= value;
+        return *this;
+    }
+
+    template <>
+    ParameterResolver& operator-=(const ParameterResolver& value) {
+        this->const_value -= value.const_value;
+        for (auto& [k, v] : value.data_) {
+            if (this->Contains(k)) {
+                this->data_[k] -= v;
+            } else {
+                this->data_[k] = 0.0 - v;
+            }
+        }
+    }
+    template <typename T>
+    ParameterResolver& operator*=(const T& value) {
+        this->const_value *= value;
+        return *this;
+    }
+
+    template <>
+    ParameterResolver& operator*=(const ParameterResolver& value) {
+    }
+
+    template <typename T>
+    ParameterResolver& operator/=(const T& value) {
+        this->const_value /= value;
+        return *this;
+    }
+
+    template <>
+    ParameterResolver& operator/=(const ParameterResolver& value) {
+    }
 };
+
+template <typename T>
+ParameterResolver operator+(const ParameterResolver& lhs, T rhs) {
+    auto out = lhs;
+    out += rhs;
+    return out;
+}
+
+template <typename T>
+ParameterResolver operator-(const ParameterResolver& lhs, T rhs) {
+    auto out = lhs;
+    out -= rhs;
+    return out;
+}
+template <typename T>
+ParameterResolver operator*(const ParameterResolver& lhs, T rhs) {
+    auto out = lhs;
+    out *= rhs;
+    return out;
+}
+template <typename T>
+ParameterResolver operator/(const ParameterResolver& lhs, T rhs) {
+    auto out = lhs;
+    out /= rhs;
+    return out;
+}
 }  // namespace parameter
 std::ostream& operator<<(std::ostream& os, const parameter::ParameterResolver& pr);
 #endif /* MATH_PR_PARAMETER_RESOLVER_HPP_ */

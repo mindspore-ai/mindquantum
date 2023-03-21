@@ -16,6 +16,8 @@
 
 #include <stdexcept>
 
+#include "math/tensor/traits.hpp"
+
 namespace tensor::ops::cpu {
 Tensor real(const Tensor& t) {
     switch (t.dtype) {
@@ -91,4 +93,21 @@ Tensor vdot(const Tensor& bra, const Tensor& ket) {
     }
 }
 #undef VDOT_TENSOR
+
+// -----------------------------------------------------------------------------
+
+bool is_all_zero(const Tensor& t) {
+    switch (t.dtype) {
+        case (TDtype::Float32):
+            return is_all_zero<TDtype::Float32>(t.data, t.dim);
+        case (TDtype::Float64):
+            return is_all_zero<TDtype::Float64>(t.data, t.dim);
+        case (TDtype::Complex64):
+            return is_all_zero<TDtype::Complex64>(t.data, t.dim);
+        case (TDtype::Complex128):
+            return is_all_zero<TDtype::Complex128>(t.data, t.dim);
+    }
+    return false;
+}
+
 }  // namespace tensor::ops::cpu

@@ -103,5 +103,25 @@ Tensor vdot(void* bra, size_t len, void* ket) {
 }
 
 Tensor vdot(const Tensor& bra, const Tensor& ket);
+
+// -----------------------------------------------------------------------------
+
+template <TDtype dtype>
+bool is_all_zero(void* data, size_t len) {
+    auto c_data = reinterpret_cast<to_device_t<dtype>*>(data);
+    for (size_t i = 0; i < len; i++) {
+        if constexpr (is_complex_v<to_device_t<dtype>>) {
+            if (std::real(c_data[i]) != 0 || std::imag(c_data[i]) != 0) {
+                return false;
+            }
+        } else {
+            if (c_data[i] != 0) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+bool is_all_zero(const Tensor& t);
 }  // namespace tensor::ops::cpu
 #endif /* MATH_TENSOR_OPS_CPU_ADVANCE_MATH_HPP_ */

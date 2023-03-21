@@ -39,5 +39,7 @@ Tensor vdot(const Tensor& t1, const Tensor& t2);
 bool all_less_than(const Tensor& t);
 
 bool all_equal_to(const Tensor& t);
+
+bool is_all_zero(const Tensor& t);
 }  // namespace tensor::ops
 #endif /* MATH_TENSOR_OPS_ADVANCE_MATH_HPP */

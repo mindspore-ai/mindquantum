@@ -14,6 +14,7 @@
 
 #include "math/pr/parameter_resolver.hpp"
 
+#include "math/tensor/ops/advance_math.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/traits.hpp"
 
@@ -53,6 +54,56 @@ std::string ParameterResolver::ToString() const {
     out += ")";
     return out;
 }
+
+bool ParameterResolver::Contains(const std::string& key) const {
+    return this->data_.find(key) != this->data_.end();
+}
+
+bool ParameterResolver::NoGradContains(const std::string& key) const {
+    return this->no_grad_parameters_.find(key) != this->no_grad_parameters_.end();
+}
+
+bool ParameterResolver::EncoderContains(const std::string& key) const {
+    return this->encoder_parameters_.find(key) != this->encoder_parameters_.end();
+}
+
+std::set<std::string> ParameterResolver::GetAllParameters() const {
+    std::set<std::string> out{};
+    for (auto& [k, v] : this->data_) {
+        out.insert(k);
+    }
+    return out;
+}
+
+std::set<std::string> ParameterResolver::GetRequiresGradParameters() const {
+    return this->GetAllParameters() - this->no_grad_parameters_;
+}
+
+std::set<std::string> ParameterResolver::GetAnsatzParameters() const {
+    return this->GetAllParameters() - this->encoder_parameters_;
+}
+
+bool ParameterResolver::IsConst() const {
+    for (auto& [k, v] : this->data_) {
+        if (!tn::ops::is_all_zero(v)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ParameterResolver::IsNotZero() const {
+    if (!tn::ops::is_all_zero(this->const_value)) {
+        return true;
+    }
+    for (auto& [k, v] : this->data_) {
+        if (!tn::ops::is_all_zero(v)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 }  // namespace parameter
 std::ostream& operator<<(std::ostream& os, const parameter::ParameterResolver& pr) {
     os << pr.ToString();

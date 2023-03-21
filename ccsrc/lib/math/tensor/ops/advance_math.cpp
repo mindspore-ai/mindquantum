@@ -49,4 +49,10 @@ Tensor vdot(const Tensor& bra, const Tensor& ket) {
     } else {
     }
 }
+bool is_all_zero(const Tensor& t) {
+    if (t.device == TDevice::CPU) {
+        return ops::cpu::is_all_zero(t);
+    } else {
+    }
+}
 }  // namespace tensor::ops
