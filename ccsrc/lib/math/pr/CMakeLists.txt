@@ -1,6 +1,6 @@
 # ==============================================================================
 #
-# Copyright 2022 <Huawei Technologies Co., Ltd>
+# Copyright 2023 <Huawei Technologies Co., Ltd>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,14 +16,4 @@
 #
 # ==============================================================================
 
-add_library(mq_math)
-force_at_least_cxx17_workaround(mq_math)
-append_to_property(mq_install_targets GLOBAL mq_math)
-target_link_libraries(mq_math PUBLIC include_lib)
-
-# ==============================================================================
-
-add_subdirectory(tensor)
-add_subdirectory(tensor_test)
-add_subdirectory(pr)
-add_subdirectory(pr_test)
+target_sources(mq_math PRIVATE ${CMAKE_CURRENT_LIST_DIR}/parameter_resolver.cpp)

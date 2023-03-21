@@ -29,6 +29,7 @@ struct Tensor {
     // -----------------------------------------------------------------------------
 
     ~Tensor();
+    Tensor() = default;
     Tensor(TDtype dtype, TDevice device, void* data, size_t dim);
     Tensor(Tensor&& t);
     Tensor& operator=(Tensor&& t);
