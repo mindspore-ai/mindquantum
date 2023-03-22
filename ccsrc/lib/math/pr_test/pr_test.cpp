@@ -20,5 +20,8 @@ int main() {
     std::map<std::string, double> a;
     a["a"] = 1.2;
     auto pr = parameter::ParameterResolver(static_cast<double>(2.3), a);
+    pr.SetItem("a", 1.0);
+    std::cout << pr << std::endl;
+    pr -= std::complex<double>(4.5, 4.0);
     std::cout << pr << std::endl;
 }

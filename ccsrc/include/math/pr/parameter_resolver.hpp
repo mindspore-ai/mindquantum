@@ -79,6 +79,12 @@ struct ParameterResolver {
     std::set<std::string> GetAnsatzParameters() const;
     bool IsConst() const;
     bool IsNotZero() const;
+    void SetItem(const std::string& key, const tn::Tensor& t);
+
+    template <typename T>
+    void SetItem(const std::string& key, const T& a) {
+        this->SetItem(key, tn::ops::init_with_value(a, this->const_value.device));
+    }
 
     template <typename T>
     ParameterResolver& operator+=(const T& value) {
@@ -86,18 +92,7 @@ struct ParameterResolver {
         return *this;
     }
 
-    template <>
-    ParameterResolver& operator+=(const ParameterResolver& value) {
-        // TODO(xuxs): update parameter property
-        this->const_value += value.const_value;
-        for (auto& [k, v] : value.data_) {
-            if (this->Contains(k)) {
-                this->data_[k] += v;
-            } else {
-                this->data_[k] = v;
-            }
-        }
-    }
+    ParameterResolver& operator+=(const ParameterResolver& rhs);
 
     template <typename T>
     ParameterResolver& operator-=(const T& value) {
@@ -105,26 +100,18 @@ struct ParameterResolver {
         return *this;
     }
 
-    template <>
-    ParameterResolver& operator-=(const ParameterResolver& value) {
-        this->const_value -= value.const_value;
-        for (auto& [k, v] : value.data_) {
-            if (this->Contains(k)) {
-                this->data_[k] -= v;
-            } else {
-                this->data_[k] = 0.0 - v;
-            }
-        }
-    }
+    ParameterResolver& operator-=(const ParameterResolver& value);
+
     template <typename T>
     ParameterResolver& operator*=(const T& value) {
         this->const_value *= value;
+        for (auto& [k, v] : this->data_) {
+            v *= value;
+        }
         return *this;
     }
 
-    template <>
-    ParameterResolver& operator*=(const ParameterResolver& value) {
-    }
+    ParameterResolver& operator*=(const ParameterResolver& value);
 
     template <typename T>
     ParameterResolver& operator/=(const T& value) {
@@ -132,11 +119,11 @@ struct ParameterResolver {
         return *this;
     }
 
-    template <>
-    ParameterResolver& operator/=(const ParameterResolver& value) {
-    }
+    ParameterResolver& operator/=(const ParameterResolver& value);
 };
 
+// -----------------------------------------------------------------------------
+// TODO(xuxs):need cast
 template <typename T>
 ParameterResolver operator+(const ParameterResolver& lhs, T rhs) {
     auto out = lhs;

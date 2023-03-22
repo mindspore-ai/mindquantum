@@ -14,8 +14,11 @@
 
 #include "math/pr/parameter_resolver.hpp"
 
+#include <stdexcept>
+
 #include "math/tensor/ops/advance_math.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
+#include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
 
 namespace parameter {
@@ -102,6 +105,109 @@ bool ParameterResolver::IsNotZero() const {
         }
     }
     return false;
+}
+
+void ParameterResolver::SetItem(const std::string& key, const tn::Tensor& t) {
+    if (t.dim != 1) {
+        throw std::runtime_error("For SetItem of tensor, the given tensor should only has one value.");
+    }
+    this->data_[key] = tn::ops::cast_to(t, this->const_value.dtype);
+}
+
+// -----------------------------------------------------------------------------
+
+ParameterResolver& ParameterResolver::operator+=(const ParameterResolver& rhs) {
+    if ((this->encoder_parameters_.size() == 0) && (this->no_grad_parameters_.size() == 0)
+        && (rhs.encoder_parameters_.size() == 0) && (rhs.no_grad_parameters_.size())) {
+    } else {
+        if (((this->encoder_parameters_ & rhs.GetAnsatzParameters()).size() != 0)
+            || ((this->GetAnsatzParameters() & rhs.encoder_parameters_).size() != 0)) {
+            throw std::runtime_error("encoder or ansatz property of parameter conflict.");
+        }
+        if (((this->no_grad_parameters_ & rhs.GetRequiresGradParameters()).size() != 0)
+            || ((this->GetRequiresGradParameters() & rhs.no_grad_parameters_).size() != 0)) {
+            throw std::runtime_error("gradient property of parameter conflict.");
+        }
+        for (auto& [key, value] : rhs.data_) {
+            if (this->Contains(key)) {
+                this->data_[key] += value;
+            } else {
+                this->SetItem(key, value);
+                if (rhs.EncoderContains(key)) {
+                    this->encoder_parameters_.insert(key);
+                }
+                if (rhs.NoGradContains(key)) {
+                    this->no_grad_parameters_.insert(key);
+                }
+            }
+        }
+    }
+    this->const_value += rhs.const_value;
+}
+
+ParameterResolver& ParameterResolver::operator-=(const ParameterResolver& rhs) {
+    if ((this->encoder_parameters_.size() == 0) && (this->no_grad_parameters_.size() == 0)
+        && (rhs.encoder_parameters_.size() == 0) && (rhs.no_grad_parameters_.size())) {
+    } else {
+        if (((this->encoder_parameters_ & rhs.GetAnsatzParameters()).size() != 0)
+            || ((this->GetAnsatzParameters() & rhs.encoder_parameters_).size() != 0)) {
+            throw std::runtime_error("encoder or ansatz property of parameter conflict.");
+        }
+        if (((this->no_grad_parameters_ & rhs.GetRequiresGradParameters()).size() != 0)
+            || ((this->GetRequiresGradParameters() & rhs.no_grad_parameters_).size() != 0)) {
+            throw std::runtime_error("gradient property of parameter conflict.");
+        }
+        for (auto& [key, value] : rhs.data_) {
+            if (this->Contains(key)) {
+                this->data_[key] -= value;
+            } else {
+                this->SetItem(key, 0.0 - value);
+                if (rhs.EncoderContains(key)) {
+                    this->encoder_parameters_.insert(key);
+                }
+                if (rhs.NoGradContains(key)) {
+                    this->no_grad_parameters_.insert(key);
+                }
+            }
+        }
+    }
+    this->const_value -= rhs.const_value;
+}
+
+ParameterResolver& ParameterResolver::operator*=(const ParameterResolver& rhs) {
+    if (this->IsConst()) {
+        for (auto& [k, v] : rhs.data_) {
+            this->data_[k] = this->const_value * v;
+            if (!this->Contains(k)) {
+                if (rhs.EncoderContains(k)) {
+                    this->encoder_parameters_.insert(k);
+                }
+                if (rhs.NoGradContains(k)) {
+                    this->no_grad_parameters_.insert(k);
+                }
+            }
+        }
+    } else if (rhs.IsConst()) {
+        for (auto& [k, v] : this->data_) {
+            this->data_[k] *= rhs.const_value;
+        }
+    } else {
+        throw std::runtime_error("Parameter resolver only support first order variable.");
+    }
+
+    this->const_value *= rhs.const_value;
+    return *this;
+}
+
+ParameterResolver& ParameterResolver::operator/=(const ParameterResolver& rhs) {
+    if (!rhs.IsConst()) {
+        throw std::runtime_error("Cannot div a non constant ParameterResolver.");
+    }
+    for (auto& [k, v] : this->data_) {
+        this->data_[k] /= rhs.const_value;
+    }
+    this->const_value /= rhs.const_value;
+    return *this;
 }
 
 }  // namespace parameter

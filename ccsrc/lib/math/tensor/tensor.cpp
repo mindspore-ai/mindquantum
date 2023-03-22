@@ -23,19 +23,19 @@
 
 #define TENSOR_SUB_EQUAL(dtype)                                                                                        \
     Tensor& Tensor::operator-=(dtype other) {                                                                          \
-        ops::inplace_add(this, other);                                                                                 \
+        ops::inplace_sub(this, other);                                                                                 \
         return *this;                                                                                                  \
     }
 
 #define TENSOR_MUL_EQUAL(dtype)                                                                                        \
     Tensor& Tensor::operator*=(dtype other) {                                                                          \
-        ops::inplace_add(this, other);                                                                                 \
+        ops::inplace_mul(this, other);                                                                                 \
         return *this;                                                                                                  \
     }
 
 #define TENSOR_DIV_EQUAL(dtype)                                                                                        \
     Tensor& Tensor::operator/=(dtype other) {                                                                          \
-        ops::inplace_add(this, other);                                                                                 \
+        ops::inplace_div(this, other);                                                                                 \
         return *this;                                                                                                  \
     }
 
