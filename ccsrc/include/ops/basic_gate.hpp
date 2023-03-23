@@ -233,8 +233,10 @@ struct KrausChannel : public BasicGate {
 
 struct AmplitudeDampingChannel : public BasicGate {
     double damping_coeff_;
-    AmplitudeDampingChannel(double damping_coeff, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
-        : damping_coeff_(damping_coeff), BasicGate(GateID::AD, obj_qubits, ctrl_qubits) {
+    bool daggered_;
+    AmplitudeDampingChannel(bool daggered, double damping_coeff, const VT<Index>& obj_qubits,
+                            const VT<Index>& ctrl_qubits = {})
+        : daggered_(daggered), damping_coeff_(damping_coeff), BasicGate(GateID::AD, obj_qubits, ctrl_qubits) {
     }
 };
 struct PhaseDampingChannel : public BasicGate {

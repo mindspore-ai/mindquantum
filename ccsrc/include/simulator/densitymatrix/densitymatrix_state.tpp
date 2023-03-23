@@ -289,7 +289,8 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
             break;
         case GateID::AD:
             qs_policy_t::ApplyAmplitudeDamping(qs, gate->obj_qubits_,
-                                               static_cast<AmplitudeDampingChannel*>(gate.get())->damping_coeff_, dim);
+                                               static_cast<AmplitudeDampingChannel*>(gate.get())->damping_coeff_,
+                                               static_cast<AmplitudeDampingChannel*>(gate.get())->daggered_, dim);
             break;
         case GateID::PD:
             qs_policy_t::ApplyPhaseDamping(qs, gate->obj_qubits_,
@@ -327,7 +328,8 @@ void DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicG
     switch (id) {
         case GateID::AD:
             qs_policy_t::ApplyAmplitudeDamping(qs, gate->obj_qubits_,
-                                               static_cast<AmplitudeDampingChannel*>(gate.get())->damping_coeff_, dim);
+                                               static_cast<AmplitudeDampingChannel*>(gate.get())->damping_coeff_,
+                                               static_cast<AmplitudeDampingChannel*>(gate.get())->daggered_, dim);
             break;
         case GateID::PD:
             qs_policy_t::ApplyPhaseDamping(qs, gate->obj_qubits_,
