@@ -3,9 +3,9 @@ mindquantum.config.set_context
 
 .. py:function:: mindquantum.config.set_context(**kwargs)
 
-    设置运行环境的上下文。
+    设置运行环境的context。
 
-    上下文应在运行程序之前配置。如果没有配置，默认会根据设备目标自动设置。
+    在运行程序之前，应配置context。如果没有配置，默认情况下将根据设备目标进行自动设置。
 
     详情见下表：
 

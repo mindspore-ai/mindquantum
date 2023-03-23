@@ -23,7 +23,7 @@ mindquantum.core.gates.Ryz
 
         参数：
             - **pr** (Union[ParameterResolver, dict]) - 该参数化量子门的参数值。默认值：None。
-            - **about_what** (str) - 关于哪个参数求导数。
+            - **about_what** (str) - 关于哪个参数求导数。输入值为str类型的对应参数名。默认值：None。
             - **frac** (numbers.Number) - 系数的倍数。默认值：0.5。
 
         返回：

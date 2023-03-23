@@ -16,7 +16,7 @@ mindquantum.core.gates.KrausChannel
 
     参数：
         - **name** (str) - 该自定义噪声信道的名称。
-        - **kraus_op** (list, np.ndarray) - Kraus 算符，由两个或多个 2x2 矩阵打包成的列表构成。
+        - **kraus_op** (list, np.ndarray) - Kraus 算符，两个或多个 2x2 矩阵打包成的list。
 
     .. py:method:: define_projectq_gate()
 
