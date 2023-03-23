@@ -50,6 +50,8 @@ void BindTensor(py::module &module) {  // NOLINT(runtime/references)
         .def(py::init<>())
         .def("__str__", &tensor::ops::to_string, "simplify"_a = false)
         .def("__repr__", &tensor::ops::to_string, "simplify"_a = false)
+        .def_readonly("dtype", &tensor::Tensor::dtype)
+        .def_readonly("size", &tensor::Tensor::dim)
         .BIND_TENSOR_OPS(+, +=)
         .BIND_TENSOR_OPS(-, -=)
         .BIND_TENSOR_OPS_REV(-)
@@ -99,7 +101,7 @@ void BindPR(py::module &module) {  // NOLINT(runtime/references)
         .def(py::init<const std::string &, tensor::TDtype>(), "key"_a, "dtype"_a = tensor::TDtype::Float64)
         .def("__str__", &pr_t::ToString)
         .def("__len__", &pr_t::Size)
-        .def("dtype", &pr_t::GetDtype)
+        .def_property_readonly("dtype", &pr_t::GetDtype)
         .def("astype",
              [](const pr_t &pr, tensor::TDtype dtype) {
                  auto out = pr;
