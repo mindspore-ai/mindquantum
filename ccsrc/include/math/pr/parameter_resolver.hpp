@@ -19,6 +19,7 @@
 #include <set>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 #include "math/tensor/ops.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
@@ -61,6 +62,7 @@ struct ParameterResolver {
         this->encoder_parameters_ = encoder_parameter;
     }
 
+    explicit ParameterResolver(const std::string& key, tn::TDtype dtype = tn::TDtype::Float64);
     // -----------------------------------------------------------------------------
     tn::TDtype GetDtype() const;
     size_t Size() const;
@@ -85,6 +87,48 @@ struct ParameterResolver {
     void SetItem(const std::string& key, const T& a) {
         this->SetItem(key, tn::ops::init_with_value(a, this->const_value.device));
     }
+
+    tn::Tensor GetItem(const std::string& key) const;
+
+    std::vector<std::string> ParamsName() const;
+
+    std::vector<tn::Tensor> ParaValue() const;
+
+    void RequiresGrad();
+
+    void NoGrad();
+
+    void RequiresGradPart(const std::vector<std::string>& names);
+
+    void NoGradPart(const std::vector<std::string>& names);
+
+    void AnsatzPart(const std::vector<std::string>& names);
+
+    void EncoderPart(const std::vector<std::string>& names);
+
+    void AsEncoder();
+    void AsAnsatz();
+
+    void Update(const ParameterResolver& other);
+
+    ParameterResolver Conjugate() const;
+
+    ParameterResolver Combination(const ParameterResolver& pr) const;
+
+    ParameterResolver Real() const;
+    void KeepReal();
+    void KeepImag();
+    ParameterResolver Imag() const;
+
+    tn::Tensor Pop(const std::string& key);
+
+    bool IsHermitian() const;
+
+    bool IsAntiHermitian() const;
+
+    bool HasRequireGradParams();
+
+    // -----------------------------------------------------------------------------
 
     template <typename T>
     ParameterResolver& operator+=(const T& value) {
@@ -123,10 +167,16 @@ struct ParameterResolver {
 };
 
 // -----------------------------------------------------------------------------
-// TODO(xuxs):need cast
+
 template <typename T>
 ParameterResolver operator+(const ParameterResolver& lhs, T rhs) {
     auto out = lhs;
+    auto ori_dtype = out.const_value.dtype;
+    auto new_const = out.const_value + rhs;
+    auto new_dtype = new_const.dtype;
+    if (ori_dtype != new_dtype) {
+        out.CastTo(new_dtype);
+    }
     out += rhs;
     return out;
 }
@@ -134,21 +184,46 @@ ParameterResolver operator+(const ParameterResolver& lhs, T rhs) {
 template <typename T>
 ParameterResolver operator-(const ParameterResolver& lhs, T rhs) {
     auto out = lhs;
+    auto ori_dtype = out.const_value.dtype;
+    auto new_const = out.const_value + rhs;
+    auto new_dtype = new_const.dtype;
+    if (ori_dtype != new_dtype) {
+        out.CastTo(new_dtype);
+    }
     out -= rhs;
     return out;
 }
+
 template <typename T>
 ParameterResolver operator*(const ParameterResolver& lhs, T rhs) {
     auto out = lhs;
+    auto ori_dtype = out.const_value.dtype;
+    auto new_const = out.const_value + rhs;
+    auto new_dtype = new_const.dtype;
+    if (ori_dtype != new_dtype) {
+        out.CastTo(new_dtype);
+    }
     out *= rhs;
     return out;
 }
+
 template <typename T>
 ParameterResolver operator/(const ParameterResolver& lhs, T rhs) {
     auto out = lhs;
+    auto ori_dtype = out.const_value.dtype;
+    auto new_const = out.const_value + rhs;
+    auto new_dtype = new_const.dtype;
+    if (ori_dtype != new_dtype) {
+        out.CastTo(new_dtype);
+    }
     out /= rhs;
     return out;
 }
+
+ParameterResolver operator+(const ParameterResolver& lhs, const ParameterResolver& rhs);
+ParameterResolver operator-(const ParameterResolver& lhs, const ParameterResolver& rhs);
+ParameterResolver operator*(const ParameterResolver& lhs, const ParameterResolver& rhs);
+ParameterResolver operator/(const ParameterResolver& lhs, const ParameterResolver& rhs);
 }  // namespace parameter
 std::ostream& operator<<(std::ostream& os, const parameter::ParameterResolver& pr);
 #endif /* MATH_PR_PARAMETER_RESOLVER_HPP_ */

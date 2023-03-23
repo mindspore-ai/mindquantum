@@ -1,6 +1,6 @@
 # ==============================================================================
 #
-# Copyright 2023 <Huawei Technologies Co., Ltd>
+# Copyright 2022 <Huawei Technologies Co., Ltd>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,12 +16,10 @@
 #
 # ==============================================================================
 
-target_sources(mq_math PRIVATE ${CMAKE_CURRENT_LIST_DIR}/traits.cpp ${CMAKE_CURRENT_LIST_DIR}/tensor.cpp)
+# lint_cmake: -whitespace/indent
 
-target_compile_options(mq_math PUBLIC "-Wno-return-type")
-target_compile_options(mq_math PUBLIC "-Wno-narrowing")
-target_compile_options(mq_math PUBLIC "-Wno-pointer-arith")
-target_compile_options(mq_math PUBLIC "-g")
+pybind11_add_module(_math MODULE ${CMAKE_CURRENT_SOURCE_DIR}/lib/bind_math.cpp OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}")
 
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ops)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ops_cpu)
+# target_include_directories(_mq_vector PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
+force_at_least_cxx17_workaround(_mq_vector)
+target_link_libraries(_math PUBLIC mq_math)

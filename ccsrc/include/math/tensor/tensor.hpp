@@ -42,6 +42,7 @@ struct Tensor {
     Tensor real() const;
     Tensor imag() const;
     Tensor conj() const;
+    Tensor astype(TDtype type) const;
 
     // -----------------------------------------------------------------------------
 

@@ -21,7 +21,18 @@ int main() {
     a["a"] = 1.2;
     auto pr = parameter::ParameterResolver(static_cast<double>(2.3), a);
     pr.SetItem("a", 1.0);
-    std::cout << pr << std::endl;
+    // std::cout << pr << std::endl;
     pr -= std::complex<double>(4.5, 4.0);
+    // std::cout << pr << std::endl;
+
+    auto lhs = parameter::ParameterResolver(std::complex<float>(1.1, 3.4));
+    // std::cout << lhs << std::endl;
+    auto rhs = pr + lhs;
+    std::cout << pr << std::endl;
+    std::cout << lhs << std::endl;
+    std::cout << rhs << std::endl;
+    pr += lhs;
+    pr.AsEncoder();
+    pr.NoGrad();
     std::cout << pr << std::endl;
 }

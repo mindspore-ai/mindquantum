@@ -15,6 +15,8 @@
 #include <iostream>
 
 #include "math/tensor/ops.hpp"
+#include "math/tensor/ops/memory_operator.hpp"
+#include "math/tensor/traits.hpp"
 #define TENSOR_PLUS_EQUAL(dtype)                                                                                       \
     Tensor& Tensor::operator+=(dtype other) {                                                                          \
         ops::inplace_add(this, other);                                                                                 \
@@ -156,5 +158,9 @@ Tensor Tensor::imag() const {
 
 Tensor Tensor::conj() const {
     return tensor::ops::conj(*this);
+}
+
+Tensor Tensor::astype(TDtype dtype) const {
+    return tensor::ops::cast_to(*this, dtype);
 }
 }  // namespace tensor
