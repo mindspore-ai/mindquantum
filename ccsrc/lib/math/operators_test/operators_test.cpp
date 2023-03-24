@@ -34,9 +34,13 @@ std::tuple<operators::qubit::TermValue, size_t> parse_token(const std::string& t
     std::string idx_str = token.substr(1);
     int idx;
     try {
-        idx = std::stoi(idx_str);
+        size_t pos;
+        idx = std::stoi(idx_str, &pos);
         std::cout << idx << std::endl;
         std::cout << idx_str << std::endl;
+        if (pos != idx_str.length()) {
+            throw std::runtime_error("");
+        }
     } catch (const std::exception& e) {
         throw std::runtime_error("Wrong token: '" + token + "'; Can not convert '" + idx_str + "' to int.");
     }
