@@ -621,8 +621,8 @@ void BindTypeIndependentGate(py::module &module) {  // NOLINT(runtime/references
              "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::AmplitudeDampingChannel, mindquantum::BasicGate,
                std::shared_ptr<mindquantum::AmplitudeDampingChannel>>(module, "AmplitudeDampingChannel")
-        .def(py::init<double, const VT<Index> &, const VT<Index> &>(), "damping_coeff"_a, "obj_qubits"_a,
-             "ctrl_qubits"_a = VT<Index>());
+        .def(py::init<bool, double, const VT<Index> &, const VT<Index> &>(), "daggered"_a, "damping_coeff"_a,
+             "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::PhaseDampingChannel, mindquantum::BasicGate,
                std::shared_ptr<mindquantum::PhaseDampingChannel>>(module, "PhaseDampingChannel")
         .def(py::init<double, const VT<Index> &, const VT<Index> &>(), "damping_coeff"_a, "obj_qubits"_a,

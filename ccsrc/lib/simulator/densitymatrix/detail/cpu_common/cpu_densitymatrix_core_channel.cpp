@@ -71,9 +71,15 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySingleQubitChannel(q
 
 template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyAmplitudeDamping(qs_data_p_t qs, const qbits_t& objs,
-                                                                             calc_type gamma, index_t dim) {
-    VT<matrix_t> kraus_set{{{1, 0}, {0, std::sqrt(1 - gamma)}}, {{0, std::sqrt(gamma)}, {0, 0}}};
-    derived::ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
+                                                                             calc_type gamma, bool daggered,
+                                                                             index_t dim) {
+    if (daggered) {
+        VT<matrix_t> kraus_set{{{1, 0}, {0, std::sqrt(1 - gamma)}}, {{0, 0}, {std::sqrt(gamma), 0}}};
+        derived::ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
+    } else {
+        VT<matrix_t> kraus_set{{{1, 0}, {0, std::sqrt(1 - gamma)}}, {{0, std::sqrt(gamma)}, {0, 0}}};
+        derived::ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
+    }
 }
 
 template <typename derived_, typename calc_type_>
@@ -109,14 +115,6 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyPauli(qs_data_p_t qs
 template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyKraus(qs_data_p_t qs, const qbits_t& objs,
                                                                   const VT<matrix_t>& kraus_set, index_t dim) {
-    derived::ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
-}
-
-template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyHermitianAmplitudeDamping(qs_data_p_t qs,
-                                                                                      const qbits_t& objs,
-                                                                                      calc_type gamma, index_t dim) {
-    VT<matrix_t> kraus_set{{{1, 0}, {0, std::sqrt(1 - gamma)}}, {{0, 0}, {std::sqrt(gamma), 0}}};
     derived::ApplySingleQubitChannel(qs, qs, objs[0], kraus_set, dim);
 }
 

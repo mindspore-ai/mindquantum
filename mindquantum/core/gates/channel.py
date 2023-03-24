@@ -384,7 +384,7 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
-        return mb.gate.AmplitudeDampingChannel(self.gamma, self.obj_qubits, self.ctrl_qubits)
+        return mb.gate.AmplitudeDampingChannel(self.hermitianed, self.gamma, self.obj_qubits, self.ctrl_qubits)
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
