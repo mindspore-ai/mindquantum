@@ -16,12 +16,4 @@
 #
 # ==============================================================================
 
-target_sources(mq_math PRIVATE ${CMAKE_CURRENT_LIST_DIR}/traits.cpp ${CMAKE_CURRENT_LIST_DIR}/tensor.cpp)
-
-target_compile_options(mq_math PUBLIC "-Wno-return-type")
-target_compile_options(mq_math PUBLIC "-Wno-narrowing")
-target_compile_options(mq_math PUBLIC "-Wno-pointer-arith")
-target_compile_options(mq_math PUBLIC "-g")
-
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ops)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ops_cpu)
+target_sources(mq_math PRIVATE ${CMAKE_CURRENT_LIST_DIR}/qubit_operator_view.cpp)

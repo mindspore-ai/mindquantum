@@ -16,12 +16,8 @@
 #
 # ==============================================================================
 
-target_sources(mq_math PRIVATE ${CMAKE_CURRENT_LIST_DIR}/traits.cpp ${CMAKE_CURRENT_LIST_DIR}/tensor.cpp)
-
-target_compile_options(mq_math PUBLIC "-Wno-return-type")
-target_compile_options(mq_math PUBLIC "-Wno-narrowing")
-target_compile_options(mq_math PUBLIC "-Wno-pointer-arith")
-target_compile_options(mq_math PUBLIC "-g")
-
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ops)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ops_cpu)
+add_executable(operators_test)
+target_link_libraries(operators_test PUBLIC mq_math)
+force_at_least_cxx17_workaround(operators_test)
+append_to_property(mq_install_targets GLOBAL operators_test)
+target_sources(operators_test PRIVATE ${CMAKE_CURRENT_LIST_DIR}/operators_test.cpp)

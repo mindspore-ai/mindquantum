@@ -68,28 +68,18 @@ const pauli_product_map_t pauli_product_map = {
         },
 };
 // clang-format on
-
-struct QubitView {
+struct SinglePauliStr {
     tn::Tensor coeff = tn::ops::ones(1);
-    std::vector<uint64_t> pauli_string{};
+    std::vector<uint64_t> pauli_string = {};
 
     // -----------------------------------------------------------------------------
 
-    QubitView() = default;
-    void InplaceMulPauli(TermValue term, size_t idx) {
-        if (term == TermValue::I) {
-            return;
-        }
-        size_t group_id = idx >> 5;
-        size_t local_id = ((idx & 31) << 1) + 1;
-        if (this->pauli_string.size() < group_id + 1) {
-            for (size_t i = pauli_string.size(); i < group_id; i++) {
-                this->pauli_string.push_back(0);
-            }
-            pauli_string[group_id] = pauli_string[group_id]&
-        }
-    }
-};
+    SinglePauliStr() = default;
+    SinglePauliStr(const std::vector<std::tuple<TermValue, size_t>>& terms, const tn::Tensor& t);
 
+    // -----------------------------------------------------------------------------
+
+    void InplaceMulPauli(TermValue term, size_t idx);
+};
 }  // namespace operators::qubit
 #endif /* MATH_OPERATORS_QUBIT_OPERATOR_VIEW_HPP_ */
