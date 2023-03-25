@@ -16,10 +16,12 @@
 #define MATH_OPERATORS_QUBIT_OPERATOR_VIEW_HPP_
 #include <cstdint>
 #include <map>
+#include <vector>
 
 #include "math/tensor/ops.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/tensor.hpp"
+#include "math/tensor/traits.hpp"
 namespace operators::qubit {
 namespace tn = tensor;
 enum class TermValue : uint8_t {
@@ -67,19 +69,26 @@ const pauli_product_map_t pauli_product_map = {
                           }
         },
 };
+
+std::tuple<TermValue, size_t> parse_token(const std::string& token);
+
 // clang-format on
 struct SinglePauliStr {
     tn::Tensor coeff = tn::ops::ones(1);
-    std::vector<uint64_t> pauli_string = {};
+    std::vector<uint64_t> pauli_string = {0};
 
     // -----------------------------------------------------------------------------
 
     SinglePauliStr() = default;
-    SinglePauliStr(const std::vector<std::tuple<TermValue, size_t>>& terms, const tn::Tensor& t);
+    SinglePauliStr(const std::string& pauli_string, const tn::Tensor& coeff);
+    SinglePauliStr(const std::vector<std::tuple<TermValue, size_t>>& terms, const tn::Tensor& coeff);
 
     // -----------------------------------------------------------------------------
 
     void InplaceMulPauli(TermValue term, size_t idx);
+    SinglePauliStr astype(tn::TDtype dtype);
+    bool IsSameString(const SinglePauliStr& other);
+    std::string GetString() const;
 };
 }  // namespace operators::qubit
 #endif /* MATH_OPERATORS_QUBIT_OPERATOR_VIEW_HPP_ */

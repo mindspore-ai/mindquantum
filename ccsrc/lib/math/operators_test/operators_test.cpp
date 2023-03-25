@@ -15,59 +15,29 @@
 #include <iostream>
 
 #include "math/operators/qubit_operator_view.hpp"
-std::tuple<operators::qubit::TermValue, size_t> parse_token(const std::string& token) {
-    if (token.size() <= 1) {
-        throw std::runtime_error("Wrong token: '" + token + "'. Need a pauli word following a int, for example 'X0'.");
-    }
-    std::string pauli_word = token.substr(0, 1);
-    operators::qubit::TermValue pauli;
-    if (pauli_word == "X") {
-        pauli = operators::qubit::TermValue::X;
-    } else if (pauli_word == "Y") {
-        pauli = operators::qubit::TermValue::Y;
-    } else if (pauli_word == "Z") {
-        pauli = operators::qubit::TermValue::Z;
-    } else {
-        throw std::runtime_error("Wrong token: '" + token + "'; Can not convert '" + pauli_word
-                                 + "' to pauli operator.");
-    }
-    std::string idx_str = token.substr(1);
-    int idx;
-    try {
-        size_t pos;
-        idx = std::stoi(idx_str, &pos);
-        std::cout << idx << std::endl;
-        std::cout << idx_str << std::endl;
-        if (pos != idx_str.length()) {
-            throw std::runtime_error("");
-        }
-    } catch (const std::exception& e) {
-        throw std::runtime_error("Wrong token: '" + token + "'; Can not convert '" + idx_str + "' to int.");
-    }
-    if (idx < 0) {
-        throw std::runtime_error("Wrong token: '" + token + "'; Qubit index should not less than zero, but get "
-                                 + idx_str + ".");
-    }
-    return {pauli, idx};
-}
+#include "math/tensor/ops/memory_operator.hpp"
+#include "math/tensor/traits.hpp"
 
 int main() {
-    operators::qubit::SinglePauliStr qv(
-        {
-            {operators::qubit::TermValue::X, 0},
-            {operators::qubit::TermValue::Y, 1},
-            {operators::qubit::TermValue::Z, 1},
-        },
-        tensor::ops::ones(1));
-    std::cout << qv.pauli_string.size() << std::endl;
-    std::cout << qv.pauli_string[0] << std::endl;
-    std::cout << qv.coeff << std::endl;
+    // operators::qubit::SinglePauliStr qv(
+    //     {
+    //         {operators::qubit::TermValue::X, 0},
+    //         {operators::qubit::TermValue::Y, 1},
+    //         {operators::qubit::TermValue::Z, 1},
+    //     },
+    //     tensor::ops::ones(1));
+    // std::cout << qv.pauli_string.size() << std::endl;
+    // std::cout << qv.pauli_string[0] << std::endl;
+    // std::cout << qv.coeff << std::endl;
 
-    std::string str = "X0 Y1 Y1-9";
-    std::istringstream iss(str);
+    // std::string str = "X0 Y1 Y1-9";
+    // std::istringstream iss(str);
 
-    for (std::string s; iss >> s;) {
-        parse_token(s);
-    }
+    // for (std::string s; iss >> s;) {
+    //     parse_token(s);
+    // }
+    auto qv = operators::qubit::SinglePauliStr("X0 Y1 Z1", tensor::ops::init_with_value(2.0));
+    auto other = operators::qubit::SinglePauliStr("X0 X1 Z40 X40", tensor::ops::init_with_value(2.0));
+    std::cout << qv.IsSameString(other) << std::endl;
     return 0;
 }
