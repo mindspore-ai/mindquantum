@@ -36,8 +36,33 @@ int main() {
     // for (std::string s; iss >> s;) {
     //     parse_token(s);
     // }
-    auto qv = operators::qubit::SinglePauliStr("X0 Y1 Z1", tensor::ops::init_with_value(2.0));
-    auto other = operators::qubit::SinglePauliStr("X0 X1 Z40 X40", tensor::ops::init_with_value(2.0));
-    std::cout << qv.IsSameString(other) << std::endl;
+    // auto qv = operators::qubit::SinglePauliStr("X0 Y1 Z5 Z2 X8 Z2 Y4 Y9 Y4 Z1 X4",
+    // tensor::ops::init_with_value(2.0)); auto other = operators::qubit::SinglePauliStr("Z3 X6 Y1 Z6 Y3 X7 Z8 X1 X3 Y1
+    // Z7 X6",
+    //                                               tensor::ops::init_with_value(2.0));
+    // // std::cout << qv.IsSameString(other) << std::endl;
+    // std::cout << qv.GetString() << std::endl;
+    // std::cout << other.GetString() << std::endl;
+    // auto res = qv.Mul(other);
+    // std::cout << res.GetString() << std::endl;
+
+    // auto q = operators::qubit::QubitOperator("X0 Y1");
+
+    // auto p = operators::qubit::SinglePauliStr::init("X0 Y1", tensor::ops::init_with_value(2.3));
+    // q.Update(operators::qubit::SinglePauliStr::init("X0", tensor::ops::init_with_value(2.45)));
+    // q.Update(operators::qubit::SinglePauliStr::init("Z5", tensor::ops::init_with_value(2.15)));
+    // std::cout << q.ToString() << std::endl;
+    // q.Update(p);
+    // std::cout << q.ToString() << std::endl;
+    // q += tensor::ops::init_with_value(std::complex<double>(3.4, 5.6));
+    // std::cout << q.ToString() << std::endl;
+    // auto x = q + tensor::ops::init_with_value(std::complex<double>(3.4, 5.6));
+    // std::cout << x.ToString() << std::endl;
+    auto p = operators::qubit::QubitOperator("X1 Z3") + operators::qubit::QubitOperator("X1 Z3");
+    // q += p;
+    // std::cout << q.ToString() << std::endl;
+    std::cout << p.ToString() << std::endl;
+    // auto x = p * q;
+    // std::cout << x.ToString() << std::endl;
     return 0;
 }
