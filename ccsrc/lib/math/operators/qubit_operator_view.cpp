@@ -19,6 +19,9 @@
 #include <stdexcept>
 #include <string>
 
+#include <sys/types.h>
+
+#include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
@@ -58,8 +61,8 @@ std::tuple<operators::qubit::TermValue, size_t> parse_token(const std::string& t
     return {pauli, idx};
 }
 
-auto SinglePauliStr::init(const std::string& pauli_string, const tn::Tensor& coeff) -> pauli_t {
-    pauli_t out = {key_t{0}, coeff};
+auto SinglePauliStr::init(const std::string& pauli_string, const parameter::ParameterResolver& var) -> pauli_t {
+    pauli_t out = {key_t{0}, var};
     std::istringstream iss(pauli_string);
     for (std::string s; iss >> s;) {
         auto [term, idx] = parse_token(s);
@@ -68,8 +71,9 @@ auto SinglePauliStr::init(const std::string& pauli_string, const tn::Tensor& coe
     return out;
 }
 
-auto SinglePauliStr::init(const std::vector<std::tuple<TermValue, size_t>>& terms, const tn::Tensor& coeff) -> pauli_t {
-    pauli_t out = {key_t{0}, coeff};
+auto SinglePauliStr::init(const std::vector<std::tuple<TermValue, size_t>>& terms,
+                          const parameter::ParameterResolver& var) -> pauli_t {
+    pauli_t out = {key_t{0}, var};
     for (auto& [term, idx] : terms) {
         InplaceMulPauli(term, idx, out);
     }
@@ -153,7 +157,11 @@ std::string SinglePauliStr::GetString(const pauli_t& pauli) {
         }
         group_id += 1;
     }
-    return tn::ops::to_string(coeff, true) + " [" + out + "]";
+    out.resize(out.find_last_not_of(" ") + 1);
+    if (coeff.IsConst()) {
+        return tn::ops::to_string(coeff.const_value, true) + " [" + out + "]";
+    }
+    return coeff.ToString() + " [" + out + "]";
 }
 
 auto SinglePauliStr::Mul(const pauli_t& lhs, const pauli_t& rhs) -> pauli_t {
@@ -235,8 +243,9 @@ std::tuple<tn::Tensor, uint64_t> mul_pauli_str(uint64_t a, uint64_t b) {
 
 // -----------------------------------------------------------------------------
 
-QubitOperator::QubitOperator(const std::string& pauli_string, const tn::Tensor& coeff) {
-    auto term = SinglePauliStr::init(pauli_string, coeff);
+QubitOperator::QubitOperator(const std::string& pauli_string, const parameter::ParameterResolver& var) {
+    std::cout << var << std::endl;
+    auto term = SinglePauliStr::init(pauli_string, var);
     this->terms.insert(term.first, term.second);
 }
 
@@ -270,7 +279,7 @@ QubitOperator& QubitOperator::operator+=(const tn::Tensor& c) {
     if (this->Contains(key_t{0})) {
         this->terms[key_t{0}] = this->terms[key_t{0}] + c;
     } else {
-        this->terms.insert({key_t{0}, c});
+        this->terms.insert({key_t{0}, parameter::ParameterResolver(c)});
     }
     return *this;
 }
@@ -280,7 +289,7 @@ QubitOperator QubitOperator::operator+(const tn::Tensor& c) {
     if (out.Contains(key_t{0})) {
         out.terms[key_t{0}] = out.terms[key_t{0}] + c;
     } else {
-        out.terms.insert({key_t{0}, c});
+        out.terms.insert({key_t{0}, parameter::ParameterResolver(c)});
     }
     return out;
 }
@@ -295,16 +304,11 @@ QubitOperator& QubitOperator::operator+=(const QubitOperator& other) {
             this->terms.insert(term);
         }
     }
-    std::cout << "--- " << this->ToString() << std::endl;
     return *this;
 }
 QubitOperator QubitOperator::operator+(const QubitOperator& other) {
     auto out = *this;
-    std::cout << out.ToString() << std::endl;
     out += other;
-    std::cout << out.ToString() << std::endl;
-    std::cout << other.ToString() << std::endl;
-
     return out;
 }
 

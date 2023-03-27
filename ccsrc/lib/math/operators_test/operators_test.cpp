@@ -15,6 +15,7 @@
 #include <iostream>
 
 #include "math/operators/qubit_operator_view.hpp"
+#include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/traits.hpp"
 
@@ -58,11 +59,22 @@ int main() {
     // std::cout << q.ToString() << std::endl;
     // auto x = q + tensor::ops::init_with_value(std::complex<double>(3.4, 5.6));
     // std::cout << x.ToString() << std::endl;
-    auto p = operators::qubit::QubitOperator("X1 Z3") + operators::qubit::QubitOperator("X1 Z3");
+    auto a = tensor::ops::ones(1);
+    std::cout << a << std::endl;
+    auto [b, c]
+        = operators::qubit::pauli_product_map.at(operators::qubit::TermValue::I).at(operators::qubit::TermValue::I);
+    std::cout << b << std::endl;
+    // auto p = operators::qubit::QubitOperator("X1", a);  // + operators::qubit::QubitOperator("Y1");
+    // auto q = operators::qubit::QubitOperator("Z0 Y1") + operators::qubit::QubitOperator("Z0 X1");
     // q += p;
     // std::cout << q.ToString() << std::endl;
-    std::cout << p.ToString() << std::endl;
+    // std::cout << p.ToString() << std::endl;
+    // std::cout << q.ToString() << std::endl;
+
     // auto x = p * q;
     // std::cout << x.ToString() << std::endl;
+
+    // parameter::ParameterResolver var = tensor::ops::ones(1);
+    // std::cout << var << std::endl;
     return 0;
 }

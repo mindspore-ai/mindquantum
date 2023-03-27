@@ -50,7 +50,10 @@ struct ParameterResolver {
     std::set<std::string> encoder_parameters_{};
     ParameterResolver() = default;
 
-    template <typename T, typename = std::enable_if_t<!std::is_same_v<std::remove_cvref_t<T>, tn::Tensor>>>
+    template <typename T,
+              typename
+              = std::enable_if_t<!std::is_same_v<std::remove_cvref_t<T>,
+                                                 tn::Tensor> && !std::is_same_v<std::remove_cvref_t<T>, std::string>>>
     explicit ParameterResolver(T const_value, const std::map<std::string, T>& data = {},
                                const std::set<std::string>& no_grad_parameters = {},
                                const std::set<std::string>& encoder_parameter = {}) {
@@ -62,7 +65,9 @@ struct ParameterResolver {
         this->encoder_parameters_ = encoder_parameter;
     }
 
-    explicit ParameterResolver(const std::string& key, tn::TDtype dtype = tn::TDtype::Float64);
+    ParameterResolver(const std::string& key, tn::TDtype dtype = tn::TDtype::Float64);
+
+    ParameterResolver(const tn::Tensor& const_value);
     // -----------------------------------------------------------------------------
     tn::TDtype GetDtype() const;
     size_t Size() const;

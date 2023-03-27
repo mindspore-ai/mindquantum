@@ -18,8 +18,10 @@
 #include <list>
 #include <map>
 #include <set>
+#include <utility>
 #include <vector>
 
+#include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/ops.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/tensor.hpp"
@@ -125,12 +127,13 @@ struct SinglePauliStr {
     // tn::Tensor coeff = tn::ops::ones(1);
     // std::vector<uint64_t> pauli_string = {0};
     using key_t = std::vector<uint64_t>;
-    using value_t = tn::Tensor;
+    using value_t = parameter::ParameterResolver;
     using pauli_t = std::pair<key_t, value_t>;
     // -----------------------------------------------------------------------------
 
-    static pauli_t init(const std::string& pauli_string, const tn::Tensor& coeff = tn::ops::ones(1));
-    static pauli_t init(const std::vector<std::tuple<TermValue, size_t>>& terms, const tn::Tensor& coeff);
+    static pauli_t init(const std::string& pauli_string, const parameter::ParameterResolver& var = tn::ops::ones(1));
+    static pauli_t init(const std::vector<std::tuple<TermValue, size_t>>& terms,
+                        const parameter::ParameterResolver& var = tn::ops::ones(1));
 
     // -----------------------------------------------------------------------------
 
@@ -161,7 +164,7 @@ class QTerm_t {
 
  public:
     void insert(const K& key, const V& value) {
-        if (m_map.count(key)) {
+        if (m_map.find(key) != m_map.end()) {
             m_list.erase(m_map[key]);
             m_map.erase(key);
         }
@@ -172,7 +175,7 @@ class QTerm_t {
         this->insert(t.first, t.second);
     }
     V& operator[](const K& key) {
-        return m_map[key]->second;
+        return (*m_map[key]).second;
     }
 
     typename std::list<std::pair<K, V>>::iterator begin() {
@@ -194,6 +197,37 @@ class QTerm_t {
         return this->m_map.size();
     }
 
+    // -----------------------------------------------------------------------------
+
+    QTerm_t() = default;
+    QTerm_t(const QTerm_t& other) {
+        for (auto& p : other.m_list) {
+            insert(p);
+        }
+    }
+
+    QTerm_t(QTerm_t&& other) {
+        m_list = std::move(other.m_list);
+        m_map = std::move(other.m_map);
+    }
+    QTerm_t& operator=(const QTerm_t& other) {
+        if (this != &other) {
+            m_list.clear();
+            m_map.clear();
+            for (auto& p : other.m_list) {
+                insert(p);
+            }
+        }
+        return *this;
+    }
+    QTerm_t& operator=(QTerm_t&& other) {
+        if (this != &other) {
+            m_list = std::move(other.m_list);
+            m_map = std::move(other.m_map);
+        }
+        return *this;
+    }
+
  public:
     std::list<std::pair<K, V>> m_list;
     std::map<K, std::list<std::pair<K, V>>::iterator, KeyCompare> m_map;
@@ -212,7 +246,11 @@ struct QubitOperator {
     // -----------------------------------------------------------------------------
 
     QubitOperator() = default;
-    QubitOperator(const std::string& pauli_string, const tn::Tensor& coeff = tn::ops::ones(1));
+    QubitOperator(const std::string& pauli_string, const parameter::ParameterResolver& var);
+    // QubitOperator(const std::string& pauli_string,
+    //               const parameter::ParameterResolver& var = parameter::ParameterResolver(tn::ops::ones(1)));
+
+    // -----------------------------------------------------------------------------
 
     bool Contains(const key_t& term) const;
     void Update(const pauli_t& pauli);

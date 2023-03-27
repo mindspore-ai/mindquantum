@@ -22,10 +22,12 @@
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 
+// #include "math/operators/qubit_operator_view.hpp"
 #include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
+
 namespace py = pybind11;
 using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
 #define BIND_TENSOR_OPS(op, ope)                                                                                       \
@@ -99,6 +101,7 @@ void BindPR(py::module &module) {  // NOLINT(runtime/references)
     using pr_t = pr::ParameterResolver;
     py::class_<pr_t, std::shared_ptr<pr_t>>(module, "ParameterResolver")
         .def(py::init<const std::string &, tensor::TDtype>(), "key"_a, "dtype"_a = tensor::TDtype::Float64)
+        .def(py::init<const tensor::Tensor &>(), "const_value"_a)
         .def("__str__", &pr_t::ToString)
         .def("__len__", &pr_t::Size)
         .def_property_readonly("dtype", &pr_t::GetDtype)
@@ -135,6 +138,21 @@ void BindPR(py::module &module) {  // NOLINT(runtime/references)
         .def("requires_grad_part", &pr_t::RequiresGradPart);
 }
 
+// -----------------------------------------------------------------------------
+
+// void BindQubitOperator(py::module &module) {
+//     namespace pr = parameter;
+//     using pr_t = pr::ParameterResolver;
+//     using op_t = operators::qubit::QubitOperator;
+//     py::class_<op_t, std::shared_ptr<op_t>>(module, "QubitOperator")
+//         .def(py::init<const std::string &, const pr_t &>(), "pauli_string"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
+//         // .def(py::self + py::self)
+//         .def(py::self += py::self)
+//         // .def(py::self * py::self)
+//         .def(py::self *= py::self)
+//         .def("__repr__", [](const op_t &op) { return op.ToString(); });
+// }
+
 PYBIND11_MODULE(_math, m) {
     m.doc() = "MindQuantum Math module.";
     auto dtype_id = py::enum_<tensor::TDtype>(m, "dtype")
@@ -162,4 +180,7 @@ PYBIND11_MODULE(_math, m) {
 
     py::module pr_module = m.def_submodule("pr", "MindQuantum ParameterResolver module.");
     BindPR(pr_module);
+
+    // py::module pr_ops = m.def_submodule("ops", "MindQuantum Operators module.");
+    // BindQubitOperator(pr_ops);
 }

@@ -23,6 +23,10 @@
 #include "math/tensor/traits.hpp"
 
 namespace parameter {
+ParameterResolver::ParameterResolver(const tn::Tensor& const_value) : const_value(const_value) {
+    std::cout << "--- " << const_value << std::endl;
+}
+
 ParameterResolver::ParameterResolver(const std::string& key, tn::TDtype dtype) {
     this->const_value = tn::ops::zeros(1, dtype);
     this->data_[key] = tn::ops::ones(1, dtype);

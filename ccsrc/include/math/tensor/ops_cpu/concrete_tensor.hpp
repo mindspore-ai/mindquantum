@@ -29,6 +29,7 @@ Tensor ones(size_t len) {
     for (size_t i; i < len; i++) {
         c_data[i] = 1.0;
     }
+    std::cout << c_data[0] << " <-" << std::endl;
     return out;
 }
 
