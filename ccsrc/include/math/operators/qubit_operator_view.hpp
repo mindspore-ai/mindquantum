@@ -246,9 +246,7 @@ struct QubitOperator {
     // -----------------------------------------------------------------------------
 
     QubitOperator() = default;
-    QubitOperator(const std::string& pauli_string, const parameter::ParameterResolver& var);
-    // QubitOperator(const std::string& pauli_string,
-    //               const parameter::ParameterResolver& var = parameter::ParameterResolver(tn::ops::ones(1)));
+    QubitOperator(const std::string& pauli_string, const parameter::ParameterResolver& var = tn::ops::ones(1));
 
     // -----------------------------------------------------------------------------
 

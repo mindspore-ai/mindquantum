@@ -26,10 +26,9 @@ Tensor ones(size_t len) {
     using calc_t = to_device_t<dtype>;
     Tensor out = cpu::init<dtype>(len);
     auto c_data = reinterpret_cast<calc_t*>(out.data);
-    for (size_t i; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         c_data[i] = 1.0;
     }
-    std::cout << c_data[0] << " <-" << std::endl;
     return out;
 }
 

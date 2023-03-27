@@ -92,12 +92,12 @@ void SinglePauliStr::InplaceMulPauli(TermValue term, size_t idx, pauli_t& pauli)
         for (size_t i = pauli_string.size(); i < group_id + 1; i++) {
             pauli_string.push_back(0);
         }
-        pauli_string[group_id] = pauli_string[group_id] & (~local_mask) | (static_cast<uint8_t>(term)) << local_id;
+        pauli_string[group_id] = pauli_string[group_id] & (~local_mask) | (static_cast<uint64_t>(term)) << local_id;
     } else {
         TermValue lhs = static_cast<TermValue>((pauli_string[group_id] & local_mask) >> local_id);
         auto [t, res] = pauli_product_map.at(lhs).at(term);
         coeff = coeff * t;
-        pauli_string[group_id] = pauli_string[group_id] & (~local_mask) | (static_cast<uint8_t>(res)) << local_id;
+        pauli_string[group_id] = pauli_string[group_id] & (~local_mask) | (static_cast<uint64_t>(res)) << local_id;
     }
 }
 
@@ -191,32 +191,6 @@ auto SinglePauliStr::Mul(const pauli_t& lhs, const pauli_t& rhs) -> pauli_t {
     return {pauli_string, coeff};
 }
 
-// bool SinglePauliStr::operator<(const SinglePauliStr& other) const {
-//     if (this->pauli_string.size() == 1 && other.pauli_string.size() == 1) {
-//         return this->pauli_string[0] < other.pauli_string[0];
-//     }
-//     for (int i = std::max(this->pauli_string.size(), other.pauli_string.size()) - 1; i >= 0; i--) {
-//         uint64_t lhs, rhs;
-//         if (i >= this->pauli_string.size()) {
-//             lhs = 0;
-//         } else {
-//             lhs = this->pauli_string[i];
-//         }
-//         if (i >= other.pauli_string.size()) {
-//             rhs = 0;
-//         } else {
-//             rhs = other.pauli_string[i];
-//         }
-//         if (lhs < rhs) {
-//             return true;
-//         }
-//         if (lhs > rhs) {
-//             return false;
-//         }
-//     }
-//     return false;
-// }
-
 std::tuple<tn::Tensor, uint64_t> mul_pauli_str(uint64_t a, uint64_t b) {
     auto res = (~a & b) | (a & ~b);
     auto idx_0 = (~(a >> 1) & a & (b >> 1)) | (a & (b >> 1) & ~b) | ((a >> 1) & ~a & b) | ((a >> 1) & ~(b >> 1) & b);
@@ -244,7 +218,6 @@ std::tuple<tn::Tensor, uint64_t> mul_pauli_str(uint64_t a, uint64_t b) {
 // -----------------------------------------------------------------------------
 
 QubitOperator::QubitOperator(const std::string& pauli_string, const parameter::ParameterResolver& var) {
-    std::cout << var << std::endl;
     auto term = SinglePauliStr::init(pauli_string, var);
     this->terms.insert(term.first, term.second);
 }
@@ -297,9 +270,7 @@ QubitOperator QubitOperator::operator+(const tn::Tensor& c) {
 QubitOperator& QubitOperator::operator+=(const QubitOperator& other) {
     for (const auto& term : other.terms) {
         if (this->Contains(term.first)) {
-            // std::cout << "Before:" << this->terms[term.first] << " " << term.second << std::endl;
             this->terms[term.first] = this->terms[term.first] + term.second;
-            // std::cout << "After: " << this->terms[term.first] << std::endl;
         } else {
             this->terms.insert(term);
         }
@@ -318,7 +289,7 @@ QubitOperator QubitOperator::operator*=(const QubitOperator& other) {
         for (const auto& other_term : other.terms) {
             auto new_term = SinglePauliStr::Mul(this_term, other_term);
             if (out.Contains(new_term.first)) {
-                out.terms[new_term.first] = this->terms[new_term.first] + new_term.second;
+                out.terms[new_term.first] = out.terms[new_term.first] + new_term.second;
             } else {
                 out.terms.insert(new_term);
             }
@@ -333,7 +304,7 @@ QubitOperator QubitOperator::operator*(const QubitOperator& other) {
         for (const auto& other_term : other.terms) {
             auto new_term = SinglePauliStr::Mul(this_term, other_term);
             if (out.Contains(new_term.first)) {
-                out.terms[new_term.first] = this->terms[new_term.first] + new_term.second;
+                out.terms[new_term.first] = out.terms[new_term.first] + new_term.second;
             } else {
                 out.terms.insert(new_term);
             }

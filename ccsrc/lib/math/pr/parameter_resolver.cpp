@@ -24,7 +24,6 @@
 
 namespace parameter {
 ParameterResolver::ParameterResolver(const tn::Tensor& const_value) : const_value(const_value) {
-    std::cout << "--- " << const_value << std::endl;
 }
 
 ParameterResolver::ParameterResolver(const std::string& key, tn::TDtype dtype) {
