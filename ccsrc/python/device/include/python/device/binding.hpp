@@ -79,6 +79,7 @@ void BindTopology(py::module &module) {  // NOLINT(runtime/references)
                    "Get edges with position of two connected qubits.")
               .def("remove_qubit_node", &mm::QubitsTopology::RemoveQubitNode,
                    "Remove a qubit node out of this topology.")
+              .def("choose", &mm::QubitsTopology::Choose, "Choose qubit nodes based on given id.")
               .def("add_qubit_node", &mm::QubitsTopology::AddQubitNode, "Add a qubit node into this topology.")
               .def("has_qubit_node", &mm::QubitsTopology::HasQubitNode, "Check whether a qubit is in this topology.")
               .def("isolate_with_near", &mm::QubitsTopology::IsolateWithNear, "id"_a,

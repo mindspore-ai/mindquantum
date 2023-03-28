@@ -155,6 +155,14 @@ std::set<std::pair<std::pair<double, double>, std::pair<double, double>>> Qubits
     return out;
 }
 
+std::vector<QNodePtr> QubitsTopology::Choose(std::vector<qbit_t> ids) {
+    std::vector<QNodePtr> out{};
+    for (auto& id : ids) {
+        out.push_back((*this)[id]);
+    }
+    return out;
+}
+
 void QubitsTopology::RemoveQubitNode(qbit_t id) {
     auto will_remove = (*this)[id];
     auto neighbour = will_remove->neighbour;
