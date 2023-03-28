@@ -25,6 +25,26 @@
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(qs_data_p_t src, qs_data_p_t des,
+                                                                   const qbits_t& objs, const qbits_t& ctrls,
+                                                                   const std::vector<std::vector<py_qs_data_t>>& gate,
+                                                                   index_t dim) {
+    size_t ctrl_mask = 0;
+    std::vector<size_t> obj_masks;
+    for (auto& i : ctrls) {
+        ctrl_mask |= 1UL << i;
+    }
+    for (size_t i = 0; i < objs.size(); i++) {
+    }
+    for (omp::idx_t l = 0; l < dim; l++) {
+        if (((l & ctrl_mask) == ctrl_mask) && ((l & obj_mask) == 0)) {
+            std::vector<qs_data_t> res_tmp;
+            for (size_t i = 0; i < 8)
+        }
+    }
+}
+
+template <typename derived_, typename calc_type_>
 void CPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des,
                                                                      const qbits_t& objs, const qbits_t& ctrls,
                                                                      const std::vector<std::vector<py_qs_data_t>>& gate,

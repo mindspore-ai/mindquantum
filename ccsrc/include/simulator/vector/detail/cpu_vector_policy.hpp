@@ -108,6 +108,8 @@ struct CPUVectorPolicyBase {
                                        const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
     static void ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
                                      const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
+    static void ApplyNQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
+                                   const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
     static void ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
                                 const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
     static void ApplyH(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
