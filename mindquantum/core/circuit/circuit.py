@@ -1223,12 +1223,13 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
                 circ += gate
         return circ
 
-    def with_noise(self, noise_gate=mq_gates.AmplitudeDampingChannel(0.001)):
+    def with_noise(self, noise_gate=mq_gates.AmplitudeDampingChannel(0.001), also_ctrl=False):
         """
         Apply noises on each gate.
 
         Args:
             noise_gate (NoiseGate): The NoiseGate you want to apply. Default: AmplitudeDampingChannel(0.001).
+            also_ctrl (bool): Whether add NoiseGate on control qubits. Default: False.
         """
         circ = Circuit()
         for gate in self:
@@ -1236,6 +1237,9 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             if not isinstance(gate, (mq_gates.Measure, mq_gates.NoiseGate)):
                 for i in gate.obj_qubits:
                     circ += noise_gate.on(i)
+                if also_ctrl:
+                    for i in gate.ctrl_qubits:
+                        circ += noise_gate.on(i)
         return circ
 
     def as_encoder(self, inplace=True):

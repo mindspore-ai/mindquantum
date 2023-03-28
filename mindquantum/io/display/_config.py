@@ -102,6 +102,8 @@ _svg_config_official = {
     'gate_size': 40,
     'gate_v_distance': 20,
     'gate_stroke_width': 0,
+    # for quantum noise
+    'noise_fill': '#c77532',
     # for non parameterized gate
     'npg_stroke': '#ffffff',
     'npg_fill': '#5e7ce0',
@@ -164,6 +166,8 @@ _svg_config_dark = {
     'gate_size': 40,
     'gate_v_distance': 40,
     'gate_stroke_width': 4,
+    # for quantum noise
+    'noise_fill': '#c77532',
     # for non parameterized gate
     'npg_stroke': '#e9b645',
     'npg_fill': '#180835',
@@ -226,6 +230,8 @@ _svg_config_light = {
     'gate_size': 40,
     'gate_v_distance': 40,
     'gate_stroke_width': 4,
+    # for quantum noise
+    'noise_fill': '#c77532',
     # for non parameterized gate
     'npg_stroke': '#e9b645',
     'npg_fill': '#ffffff',

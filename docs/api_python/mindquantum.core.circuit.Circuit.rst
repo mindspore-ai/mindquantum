@@ -334,6 +334,7 @@ mindquantum.core.circuit.Circuit
 
         参数：
             - **noise_gate** (NoiseGate) - 想要添加的噪声信道。默认值：`AmplitudeDampingChannel(0.001)`。
+            - **also_ctrl** (bool) - 是否在控制比特上也加噪声信道。默认值：`False`。
 
     .. py:method:: x(obj_qubits, ctrl_qubits=None)
 
