@@ -20,7 +20,7 @@ import pytest
 
 from mindquantum.config import set_context
 from mindquantum.core import gates as G
-from mindquantum.core.circuit import Circuit, add_prefix, shift
+from mindquantum.core.circuit import UN, Circuit, add_prefix, shift
 from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.simulator import Simulator
 from mindquantum.simulator.simulator import available_backend
@@ -137,3 +137,29 @@ def test_circuit_operator():
         circ_exp += G.RX(f'l{i}_a').on(i + 1)
         circ_exp += G.X.on(i + 1, i)
     assert circ == circ_exp
+
+
+def test_circ_subs():
+    """
+    test circ substitute.
+    Description: test substitute value to parameterized quantum circuit.
+    Expectation: success.
+    """
+
+    def rx_matrix_generator(x):
+        return np.array([[np.cos(x / 2), -1j * np.sin(x / 2)], [-1j * np.sin(x / 2), np.cos(x / 2)]])
+
+    def rx_diff_matrix_generator(x):
+        return np.array([[np.sin(x / 2), 1j * np.cos(x / 2)], [1j * np.cos(x / 2), np.sin(x / 2)]]) / -2
+
+    circuit = Circuit()
+    circuit += UN(G.H, 3)
+    circuit.x(0).y(1).z(2)
+    circuit += G.SWAP([0, 2], 1)
+    circuit.rx('x', 1).ry('y', 0).rzz('zz', [1, 2])
+    circuit += G.gene_univ_parameterized_gate('fake_x', rx_matrix_generator, rx_diff_matrix_generator)('a').on(0)
+    circuit += G.FSim('theta', 'phi').on([0, 2])
+    pr = {'x': 1.2, 'y': 3.4, 'zz': 5.6, 'a': 1.4, 'theta': 3.5, 'phi': 5.7}
+    qs_1 = circuit.get_qs(pr=pr)
+    qs_2 = circuit.subs(pr).get_qs()
+    assert np.allclose(qs_1, qs_2)
