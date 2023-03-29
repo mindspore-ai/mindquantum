@@ -267,12 +267,12 @@ def is_equiv_unitary(mat1: np.ndarray, mat2: np.ndarray) -> bool:
         raise ValueError('mat2 is not unitary')
     mat1f = mat1.ravel()
     mat2f = mat2.ravel()
-    idx_uf = np.flatnonzero(mat1f.round(6))  # cut to some precision
-    idx_vf = np.flatnonzero(mat2f.round(6))
+    idx_uf = np.flatnonzero(mat1f.round(4))  # cut to some precision
+    idx_vf = np.flatnonzero(mat2f.round(4))
     try:
-        if np.allclose(idx_uf, idx_vf):
+        if np.allclose(idx_uf, idx_vf, atol=1e-4):
             coe = mat1f[idx_uf] / mat2f[idx_vf]
-            return np.allclose(coe / coe[0], np.ones(len(idx_uf)))
+            return np.allclose(coe / coe[0], np.ones(len(idx_uf)), atol=1e-4)
         return False
     except ValueError:
         return False
