@@ -40,7 +40,7 @@ class SABRE:
         def check_connected(topology: QubitsTopology) -> bool:
             """Check whether topology graph is connected."""
             qids = topology.all_qubit_id()
-            if len(qids) == 0:
+            if not qids:
                 return False
             edges = topology.edges_with_id()
             graph = {qid: [] for qid in qids}
