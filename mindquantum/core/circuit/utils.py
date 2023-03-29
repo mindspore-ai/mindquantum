@@ -31,10 +31,10 @@ def decompose_single_term_time_evolution(term, para):  # pylint: disable=too-man
     Decompose a time evolution gate into basic quantum gates.
 
     This function only works for the hamiltonian with only single pauli word.
-    For example, exp(-i * t * ham), ham can only be a single pauli word, such
-    as ham = X0 x Y1 x Z2, and at this time, term will be
+    For example, :math:`exp^{-it\text{ham}}`, :math:`\text{ham}` can only be a single pauli word, such
+    as :math:`\text{ham}=X_0 Y_1 Z_2`, and at this time, term will be
     ((0, 'X'), (1, 'Y'), (2, 'Z')). When the evolution time is expressed as
-    t = a*x + b*y, para would be {'x':a, 'y':b}.
+    :math:`t=ax+by`, para would be {'x':a, 'y':b}.
 
     Args:
         term (tuple, QubitOperator): the hamiltonian term of just the

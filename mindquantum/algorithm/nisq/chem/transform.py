@@ -112,7 +112,7 @@ class Transform:
 
         .. math::
 
-            \left|f_{M-1}, f_{M-2},\cdots, f_0\right> \rightarrow \left|q_{M−1}, q_{M−2},\cdots, q_0\right>,
+            \left|f_{M-1}, f_{M-2},\cdots, f_0\right> \rightarrow \left|q_{M-1}, q_{M-2},\cdots, q_0\right>,
 
         where
 
@@ -153,7 +153,7 @@ class Transform:
         The Bravyi-Kitaev basis is a middle between Jordan-Wigner
         and parity transform. That is, it balances the locality of occupation and parity information
         for improved simulation efficiency. In this scheme, qubits store the parity
-        of a set of :math:`2^x` orbitals, where :math:`x \ge 0`. A qubit of index j always
+        of a set of :math:`2^x` orbitals, where :math:`x \ge 0`. A qubit of index :math:`j` always
         stores orbital :math:`j`.
         For even values of :math:`j`, this is the only orbital
         that it stores, but for odd values of :math:`j`, it also stores a certain

@@ -17,7 +17,7 @@ mindquantum.algorithm.nisq.IQPEncoding
 
         IQP编码的ansatz能够将经典数据编码为量子态。
         这种方法将经典数据准备成适合IQP编码的维数。
-        假设源数据具有 :math:`n` 特征，那么输出数据将具有 :math:`2n-1` 特征，前 :math:`n` 个特征是原始数据。对于 :math:`m>n` 。
+        假设源数据具有 :math:`n` 特征，那么输出数据将具有 :math:`2n-1` 特征，前 :math:`n` 个特征是原始数据。对于 :math:`m > n` 。
 
         .. math::
 
