@@ -20,9 +20,63 @@
 #include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_policy.cuh"
 #include "thrust/device_ptr.h"
+#include "thrust/device_vector.h"
 #include "thrust/functional.h"
 #include "thrust/inner_product.h"
 namespace mindquantum::sim::vector::detail {
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(qs_data_p_t src, qs_data_p_t des,
+                                                                   const qbits_t& objs, const qbits_t& ctrls,
+                                                                   const std::vector<std::vector<py_qs_data_t>>& gate,
+                                                                   index_t dim) {
+    size_t n_qubit = objs.size();
+    size_t m_dim = (1UL << n_qubit);
+    size_t ctrl_mask = 0;
+    for (auto& i : ctrls) {
+        ctrl_mask |= 1UL << i;
+    }
+    std::vector<size_t> obj_masks{};
+    for (size_t i = 0; i < m_dim; i++) {
+        size_t n = 0;
+        size_t mask_j = 0;
+        for (size_t j = i; j != 0; j >>= 1) {
+            if (j & 1) {
+                mask_j += 1UL << objs[n];
+            }
+            n += 1;
+        }
+        obj_masks.push_back(mask_j);
+    }
+    auto obj_mask = obj_masks.back();
+    thrust::device_vector<size_t> device_obj_masks = obj_masks;
+    auto device_obj_masks_ptr = thrust::raw_pointer_cast(device_obj_masks.data());
+    thrust::device_vector<qs_data_t> device_gate;
+    for (auto& m : gate) {
+        for (auto v : m) {
+            device_gate.push_back(v);
+        }
+    }
+    auto device_gate_ptr = thrust::raw_pointer_cast(device_gate.data());
+
+    thrust::counting_iterator<size_t> l(0);
+    cudaDeviceSetLimit(cudaLimitMallocHeapSize, sizeof(qs_data_t) * m_dim);
+    thrust::for_each(l, l + dim, [=] __device__(size_t l) {
+        if (((l & ctrl_mask) == ctrl_mask) && ((l & obj_mask) == 0)) {
+            qs_data_p_t tmp_des = (qs_data_p_t) malloc(sizeof(qs_data_t) * m_dim);
+            for (size_t i = 0; i < m_dim; i++) {
+                qs_data_t tmp = 0;
+                for (size_t j = 0; j < m_dim; j++) {
+                    tmp += device_gate_ptr[i * m_dim + j] * src[device_obj_masks_ptr[j] | l];
+                }
+                tmp_des[i] = tmp;
+            }
+            for (size_t i = 0; i < m_dim; i++) {
+                des[device_obj_masks_ptr[i] | l] = tmp_des[i];
+            }
+            free(tmp_des);
+        }
+    });
+}
 
 template <typename derived_, typename calc_type_>
 void GPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des,
@@ -139,7 +193,7 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyMatrixGate(qs_data_p_t src,
     } else if (objs.size() == 2) {
         derived::ApplyTwoQubitsMatrix(src, des, objs, ctrls, m, dim);
     } else {
-        throw std::runtime_error("Can not custom " + std::to_string(objs.size()) + " qubits gate for gpu backend.");
+        derived::ApplyNQubitsMatrix(src, des, objs, ctrls, m, dim);
     }
 }
 
