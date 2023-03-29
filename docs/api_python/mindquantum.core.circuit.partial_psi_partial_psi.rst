@@ -3,7 +3,12 @@ mindquantum.core.circuit.partial_psi_partial_psi
 
 .. py:function:: mindquantum.core.circuit.partial_psi_partial_psi(circuit: Circuit, backend='mqvector')
 
-    根据给定参数化量子线路，计算矩阵： :math:`A_{i,j} = \frac{\partial \left<\psi\right| }{\partial x_{i}}\frac{\partial \left|\psi\right> }{\partial x_{j}}`。
+    根据给定参数化量子线路，计算矩阵：
+
+    .. math::
+
+        A_{i,j} = \frac{\partial \left<\psi\right| }{\partial x_{i}}
+        \frac{\partial \left|\psi\right> }{\partial x_{j}}
 
     参数：
         - **circuit** (Circuit) - 一个给定的参数化量子线路。

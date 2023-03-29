@@ -4,7 +4,7 @@ mindquantum.algorithm.library.general_w_state
 .. py:function:: mindquantum.algorithm.library.general_w_state(qubits)
 
     通用W态。
-    W态通常定义成只有单个比特是 :math:`\left|1\right>` 态的基矢的均匀叠加。举个例子，对于三量子比特系统，W态定义为：
+    W态通常定义成只有单个比特是 :math:`\left|1\right>` 态的基矢的均匀叠加，而其他态都为 :math:`\left|0\right>` 。举个例子，对于三量子比特系统，W态定义为：
 
     .. math::
 
