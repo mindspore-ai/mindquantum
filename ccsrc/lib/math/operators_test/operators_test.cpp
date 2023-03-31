@@ -12,8 +12,11 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+#include <omp.h>
+
 #include <iostream>
 
+#include "math/operators/fermion_operator_view.hpp"
 #include "math/operators/qubit_operator_view.hpp"
 #include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
@@ -74,6 +77,13 @@ int main() {
     // parameter::ParameterResolver var = tensor::ops::ones(1);
     // std::cout << var << std::endl;
     auto p = operators::qubit::QubitOperator("X24");
-    std::cout << p.ToString() << std::endl;
+    std::cout << p << std::endl;
+    auto f = operators::fermion::FermionOperator("0^ 2^ 23^ 45^ 22^");
+    auto f2 = operators::fermion::FermionOperator("1 22");
+    auto f3 = operators::fermion::FermionOperator("45^ 23^ 22^ 2^ 0^ 22 1");
+    std::cout << f << std::endl;
+    std::cout << f2 << std::endl;
+    std::cout << f * f2 << std::endl;
+    std::cout << f * f2 + f3 << std::endl;
     return 0;
 }

@@ -124,8 +124,6 @@ const cvalue_product_map_t cvalue_product_map = {
 
 std::tuple<TermValue, size_t> parse_token(const std::string& token);
 struct SinglePauliStr {
-    // tn::Tensor coeff = tn::ops::ones(1);
-    // std::vector<uint64_t> pauli_string = {0};
     using key_t = std::vector<uint64_t>;
     using value_t = parameter::ParameterResolver;
     using pauli_t = std::pair<key_t, value_t>;
@@ -241,19 +239,25 @@ struct QubitOperator {
     using key_t = SinglePauliStr::key_t;
     using value_t = SinglePauliStr::value_t;
     using pauli_t = SinglePauliStr::pauli_t;
+    using term_t = std::pair<uint64_t, TermValue>;
+    using terms_t = std::vector<term_t>;
+    using dict_t = std::vector<std::pair<terms_t, parameter::ParameterResolver>>;
     QTerm_t terms{};
 
     // -----------------------------------------------------------------------------
 
     QubitOperator() = default;
     QubitOperator(const std::string& pauli_string, const parameter::ParameterResolver& var = tn::ops::ones(1));
-
+    QubitOperator(const terms_t& t, const parameter::ParameterResolver& var = tn::ops::ones(1));
+    QubitOperator(const term_t& t);
     // -----------------------------------------------------------------------------
 
     bool Contains(const key_t& term) const;
     void Update(const pauli_t& pauli);
     size_t size() const;
     std::string ToString() const;
+    size_t count_qubits() const;
+    dict_t get_terms() const;
     QubitOperator& operator+=(const tn::Tensor& c);
     QubitOperator operator+(const tn::Tensor& c);
     QubitOperator& operator+=(const QubitOperator& other);
@@ -262,4 +266,5 @@ struct QubitOperator {
     QubitOperator operator*(const QubitOperator& other);
 };
 }  // namespace operators::qubit
+std::ostream& operator<<(std::ostream& os, const operators::qubit::QubitOperator& t);
 #endif /* MATH_OPERATORS_QUBIT_OPERATOR_VIEW_HPP_ */

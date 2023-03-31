@@ -313,3 +313,8 @@ QubitOperator QubitOperator::operator*(const QubitOperator& other) {
     return out;
 }
 }  // namespace operators::qubit
+
+std::ostream& operator<<(std::ostream& os, const operators::qubit::QubitOperator& t) {
+    os << t.ToString();
+    return os;
+}
