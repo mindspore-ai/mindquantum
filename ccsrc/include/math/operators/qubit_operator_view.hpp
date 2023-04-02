@@ -18,9 +18,12 @@
 #include <list>
 #include <map>
 #include <set>
+#include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
+#include "math/operators/utils.hpp"
 #include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/ops.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
@@ -40,16 +43,7 @@ enum class TermValue : uint8_t {
     Z = 3,
 };
 
-enum class CValue : uint8_t {
-    //! DO NOT CHANGE VALUE.
-    ONE = 0,    // 00 -> (1, 0)
-    I = 1,      // 01 -> (0, 1)
-    M_ONE = 2,  // 10 -> (-1, 0)
-    M_I = 3,    // 11 -> (0, -1)
-};
-
 using pauli_product_map_t = std::map<TermValue, std::map<TermValue, std::tuple<tn::Tensor, TermValue>>>;
-
 // clang-format off
 const pauli_product_map_t pauli_product_map = {
     {
@@ -87,183 +81,68 @@ const pauli_product_map_t pauli_product_map = {
 };
 // clang-format on
 
-using cvalue_product_map_t = std::map<CValue, std::map<CValue, CValue>>;
-
-const cvalue_product_map_t cvalue_product_map = {
-    {CValue::ONE,
-     {
-         {CValue::ONE, CValue::ONE},
-         {CValue::I, CValue::I},
-         {CValue::M_ONE, CValue::M_ONE},
-         {CValue::M_I, CValue::M_I},
-     }},
-    {CValue::I,
-     {
-         {CValue::ONE, CValue::I},
-         {CValue::I, CValue::M_ONE},
-         {CValue::M_ONE, CValue::M_I},
-         {CValue::M_I, CValue::ONE},
-     }},
-    {CValue::M_ONE,
-     {
-         {CValue::ONE, CValue::M_ONE},
-         {CValue::I, CValue::M_I},
-         {CValue::M_ONE, CValue::ONE},
-         {CValue::M_I, CValue::I},
-     }},
-    {CValue::M_I,
-     {
-         {CValue::ONE, CValue::M_I},
-         {CValue::I, CValue::ONE},
-         {CValue::M_ONE, CValue::I},
-         {CValue::M_I, CValue::M_ONE},
-     }},
-};
-
 // -----------------------------------------------------------------------------
 
-std::tuple<TermValue, size_t> parse_token(const std::string& token);
 struct SinglePauliStr {
-    using key_t = std::vector<uint64_t>;
-    using value_t = parameter::ParameterResolver;
-    using pauli_t = std::pair<key_t, value_t>;
-    // -----------------------------------------------------------------------------
-
-    static pauli_t init(const std::string& pauli_string, const parameter::ParameterResolver& var = tn::ops::ones(1));
-    static pauli_t init(const std::vector<std::tuple<TermValue, size_t>>& terms,
-                        const parameter::ParameterResolver& var = tn::ops::ones(1));
+    using term_t = std::pair<size_t, TermValue>;
+    using terms_t = std::vector<term_t>;
 
     // -----------------------------------------------------------------------------
 
-    static void InplaceMulPauli(TermValue term, size_t idx, pauli_t& pauli);
+    static compress_term_t init(const std::string& pauli_string,
+                                const parameter::ParameterResolver& var = tn::ops::ones(1));
+    static compress_term_t init(const terms_t& terms, const parameter::ParameterResolver& var = tn::ops::ones(1));
+
+    // -----------------------------------------------------------------------------
+
+    static std::tuple<tn::Tensor, uint64_t> MulSingleCompressTerm(uint64_t a, uint64_t b);
+    static void InplaceMulCompressTerm(const term_t& term, compress_term_t& pauli);
+    static compress_term_t Mul(const compress_term_t& lhs, const compress_term_t& rhs);
     static bool IsSameString(const key_t& k1, const key_t& k2);
-    static std::string GetString(const pauli_t& pauli);
-    static pauli_t Mul(const pauli_t& lhs, const pauli_t& rhs);
+    static std::string GetString(const compress_term_t& pauli);
+    static term_t ParseToken(const std::string& token);
 };
-
-struct KeyCompare {
-    bool operator()(const SinglePauliStr::key_t& a, const SinglePauliStr::key_t& b) const {
-        if (a.size() == b.size() && a.size() == 1) {
-            return a[0] < b[0];
-        }
-        if (a.size() < b.size()) {
-            return true;
-        } else if (a.size() == b.size()) {
-            return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end());
-        } else {
-            return false;
-        }
-    }
-};
-
-class QTerm_t {
-    using K = SinglePauliStr::key_t;
-    using V = SinglePauliStr::value_t;
-
- public:
-    void insert(const K& key, const V& value) {
-        if (m_map.find(key) != m_map.end()) {
-            m_list.erase(m_map[key]);
-            m_map.erase(key);
-        }
-        m_list.push_back({key, value});
-        m_map[key] = --m_list.end();
-    }
-    void insert(const SinglePauliStr::pauli_t& t) {
-        this->insert(t.first, t.second);
-    }
-    V& operator[](const K& key) {
-        return (*m_map[key]).second;
-    }
-
-    typename std::list<std::pair<K, V>>::iterator begin() {
-        return m_list.begin();
-    }
-
-    typename std::list<std::pair<K, V>>::iterator end() {
-        return m_list.end();
-    }
-
-    typename std::list<std::pair<K, V>>::const_iterator begin() const {
-        return m_list.begin();
-    }
-
-    typename std::list<std::pair<K, V>>::const_iterator end() const {
-        return m_list.end();
-    }
-    size_t size() const {
-        return this->m_map.size();
-    }
-
-    // -----------------------------------------------------------------------------
-
-    QTerm_t() = default;
-    QTerm_t(const QTerm_t& other) {
-        for (auto& p : other.m_list) {
-            insert(p);
-        }
-    }
-
-    QTerm_t(QTerm_t&& other) {
-        m_list = std::move(other.m_list);
-        m_map = std::move(other.m_map);
-    }
-    QTerm_t& operator=(const QTerm_t& other) {
-        if (this != &other) {
-            m_list.clear();
-            m_map.clear();
-            for (auto& p : other.m_list) {
-                insert(p);
-            }
-        }
-        return *this;
-    }
-    QTerm_t& operator=(QTerm_t&& other) {
-        if (this != &other) {
-            m_list = std::move(other.m_list);
-            m_map = std::move(other.m_map);
-        }
-        return *this;
-    }
-
- public:
-    std::list<std::pair<K, V>> m_list;
-    std::map<K, std::list<std::pair<K, V>>::iterator, KeyCompare> m_map;
-};
-
-std::tuple<tn::Tensor, uint64_t> mul_pauli_str(uint64_t a, uint64_t b);
 
 // -----------------------------------------------------------------------------
 
-struct QubitOperator {
-    using key_t = SinglePauliStr::key_t;
-    using value_t = SinglePauliStr::value_t;
-    using pauli_t = SinglePauliStr::pauli_t;
-    using term_t = std::pair<uint64_t, TermValue>;
-    using terms_t = std::vector<term_t>;
+class QubitOperator {
+ public:
+    using term_t = SinglePauliStr::term_t;
+    using terms_t = SinglePauliStr::terms_t;
     using dict_t = std::vector<std::pair<terms_t, parameter::ParameterResolver>>;
-    QTerm_t terms{};
 
-    // -----------------------------------------------------------------------------
-
-    QubitOperator() = default;
-    QubitOperator(const std::string& pauli_string, const parameter::ParameterResolver& var = tn::ops::ones(1));
-    QubitOperator(const terms_t& t, const parameter::ParameterResolver& var = tn::ops::ones(1));
-    QubitOperator(const term_t& t);
-    // -----------------------------------------------------------------------------
-
+ private:
     bool Contains(const key_t& term) const;
-    void Update(const pauli_t& pauli);
+    void Update(const compress_term_t& pauli);
+
+    // -----------------------------------------------------------------------------
+
+ public:
+    QubitOperator() = default;
+    explicit QubitOperator(const std::string& pauli_string, const parameter::ParameterResolver& var = tn::ops::ones(1));
+    explicit QubitOperator(const terms_t& t, const parameter::ParameterResolver& var = tn::ops::ones(1));
+
+    // -----------------------------------------------------------------------------
+
     size_t size() const;
     std::string ToString() const;
     size_t count_qubits() const;
     dict_t get_terms() const;
+    bool is_singlet() const;
+    parameter::ParameterResolver singlet_coeff() const;
+
+    // -----------------------------------------------------------------------------
+
     QubitOperator& operator+=(const tn::Tensor& c);
     QubitOperator operator+(const tn::Tensor& c);
     QubitOperator& operator+=(const QubitOperator& other);
     QubitOperator operator+(const QubitOperator& other);
     QubitOperator operator*=(const QubitOperator& other);
     QubitOperator operator*(const QubitOperator& other);
+    QubitOperator operator*=(const parameter::ParameterResolver& other);
+
+ public:
+    QTerm_t terms{};
 };
 }  // namespace operators::qubit
 std::ostream& operator<<(std::ostream& os, const operators::qubit::QubitOperator& t);

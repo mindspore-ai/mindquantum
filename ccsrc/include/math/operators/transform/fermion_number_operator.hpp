@@ -15,15 +15,12 @@
 #ifndef FERMION_NUMBER_OPERATOR_HPP
 #define FERMION_NUMBER_OPERATOR_HPP
 #include "math/operators/fermion_operator_view.hpp"
-#include "math/operators/qubit_operator_view.hpp"
 #include "math/tensor/ops.hpp"
-namespace operators::transform {
+namespace operators::fermion {
 namespace tn = tensor;
 using fermion_op_t = fermion::FermionOperator;
-using qubit_op_t = qubit::QubitOperator;
 
-//! Jordan Wigner transform that transform a Fermion operator to qubit operator.
 fermion_op_t fermion_number_operator(int n_modes, int mode = -1,
                                      const parameter::ParameterResolver& coeff = tn::ops::ones(1));
-}  // namespace operators::transform
+}  // namespace operators::fermion
 #endif

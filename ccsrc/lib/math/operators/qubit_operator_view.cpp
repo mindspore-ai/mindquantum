@@ -21,13 +21,14 @@
 
 #include <sys/types.h>
 
+#include "math/operators/utils.hpp"
 #include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
 
 namespace operators::qubit {
-std::tuple<operators::qubit::TermValue, size_t> parse_token(const std::string& token) {
+auto SinglePauliStr::ParseToken(const std::string& token) -> term_t {
     if (token.size() <= 1) {
         throw std::runtime_error("Wrong token: '" + token + "'. Need a pauli word following a int, for example 'X0'.");
     }
@@ -58,30 +59,29 @@ std::tuple<operators::qubit::TermValue, size_t> parse_token(const std::string& t
         throw std::runtime_error("Wrong token: '" + token + "'; Qubit index should not less than zero, but get "
                                  + idx_str + ".");
     }
-    return {pauli, idx};
+    return {idx, pauli};
 }
 
-auto SinglePauliStr::init(const std::string& pauli_string, const parameter::ParameterResolver& var) -> pauli_t {
-    pauli_t out = {key_t{0}, var};
+auto SinglePauliStr::init(const std::string& pauli_string, const parameter::ParameterResolver& var) -> compress_term_t {
+    compress_term_t out = {key_t{0}, var};
     std::istringstream iss(pauli_string);
     for (std::string s; iss >> s;) {
-        auto [term, idx] = parse_token(s);
-        InplaceMulPauli(term, idx, out);
+        InplaceMulCompressTerm(ParseToken(s), out);
     }
     return out;
 }
 
-auto SinglePauliStr::init(const std::vector<std::tuple<TermValue, size_t>>& terms,
-                          const parameter::ParameterResolver& var) -> pauli_t {
-    pauli_t out = {key_t{0}, var};
-    for (auto& [term, idx] : terms) {
-        InplaceMulPauli(term, idx, out);
+auto SinglePauliStr::init(const terms_t& terms, const parameter::ParameterResolver& var) -> compress_term_t {
+    compress_term_t out = {key_t{0}, var};
+    for (auto& term : terms) {
+        InplaceMulCompressTerm(term, out);
     }
     return out;
 }
 
-void SinglePauliStr::InplaceMulPauli(TermValue term, size_t idx, pauli_t& pauli) {
-    if (term == TermValue::I) {
+void SinglePauliStr::InplaceMulCompressTerm(const term_t& term, compress_term_t& pauli) {
+    auto [idx, word] = term;
+    if (word == TermValue::I) {
         return;
     }
     size_t group_id = idx >> 5;
@@ -92,10 +92,10 @@ void SinglePauliStr::InplaceMulPauli(TermValue term, size_t idx, pauli_t& pauli)
         for (size_t i = pauli_string.size(); i < group_id + 1; i++) {
             pauli_string.push_back(0);
         }
-        pauli_string[group_id] = pauli_string[group_id] & (~local_mask) | (static_cast<uint64_t>(term)) << local_id;
+        pauli_string[group_id] = pauli_string[group_id] & (~local_mask) | (static_cast<uint64_t>(word)) << local_id;
     } else {
         TermValue lhs = static_cast<TermValue>((pauli_string[group_id] & local_mask) >> local_id);
-        auto [t, res] = pauli_product_map.at(lhs).at(term);
+        auto [t, res] = pauli_product_map.at(lhs).at(word);
         coeff = coeff * t;
         pauli_string[group_id] = pauli_string[group_id] & (~local_mask) | (static_cast<uint64_t>(res)) << local_id;
     }
@@ -124,7 +124,7 @@ bool SinglePauliStr::IsSameString(const key_t& k1, const key_t& k2) {
     return true;
 }
 
-std::string SinglePauliStr::GetString(const pauli_t& pauli) {
+std::string SinglePauliStr::GetString(const compress_term_t& pauli) {
     std::string out = "";
     int group_id = 0;
     auto& [pauli_string, coeff] = pauli;
@@ -164,13 +164,13 @@ std::string SinglePauliStr::GetString(const pauli_t& pauli) {
     return coeff.ToString() + " [" + out + "]";
 }
 
-auto SinglePauliStr::Mul(const pauli_t& lhs, const pauli_t& rhs) -> pauli_t {
+auto SinglePauliStr::Mul(const compress_term_t& lhs, const compress_term_t& rhs) -> compress_term_t {
     auto& [l_k, l_v] = lhs;
     auto& [r_k, r_v] = rhs;
     key_t pauli_string = {};
     value_t coeff = l_v * r_v;
     if (l_k.size() == 1 && r_k.size() == 1) {
-        auto [t, s] = mul_pauli_str(l_k[0], r_k[0]);
+        auto [t, s] = MulSingleCompressTerm(l_k[0], r_k[0]);
         coeff = coeff * t;
         pauli_string.push_back(s);
         return {pauli_string, coeff};
@@ -179,7 +179,7 @@ auto SinglePauliStr::Mul(const pauli_t& lhs, const pauli_t& rhs) -> pauli_t {
     int max_size = std::max(l_k.size(), r_k.size());
     for (int i = 0; i < max_size; i++) {
         if (i < min_size) {
-            auto [t, s] = mul_pauli_str(l_k[i], r_k[i]);
+            auto [t, s] = MulSingleCompressTerm(l_k[i], r_k[i]);
             coeff = coeff * t;
             pauli_string.push_back(s);
         } else if (i >= l_k.size()) {
@@ -191,7 +191,7 @@ auto SinglePauliStr::Mul(const pauli_t& lhs, const pauli_t& rhs) -> pauli_t {
     return {pauli_string, coeff};
 }
 
-std::tuple<tn::Tensor, uint64_t> mul_pauli_str(uint64_t a, uint64_t b) {
+std::tuple<tn::Tensor, uint64_t> SinglePauliStr::MulSingleCompressTerm(uint64_t a, uint64_t b) {
     auto res = (~a & b) | (a & ~b);
     auto idx_0 = (~(a >> 1) & a & (b >> 1)) | (a & (b >> 1) & ~b) | ((a >> 1) & ~a & b) | ((a >> 1) & ~(b >> 1) & b);
     auto idx_1 = (~(a >> 1) & a & (b >> 1) & b) | ((a >> 1) & ~a & ~(b >> 1) & b) | ((a >> 1) & a & (b >> 1) & ~b);
@@ -222,17 +222,23 @@ QubitOperator::QubitOperator(const std::string& pauli_string, const parameter::P
     this->terms.insert(term.first, term.second);
 }
 
+QubitOperator::QubitOperator(const terms_t& t, const parameter::ParameterResolver& var) {
+    auto term = SinglePauliStr::init(t, var);
+    this->terms.insert(term.first, term.second);
+}
+
 bool QubitOperator::Contains(const key_t& term) const {
     return this->terms.m_map.find(term) != this->terms.m_map.end();
 }
 
-void QubitOperator::Update(const pauli_t& pauli) {
+void QubitOperator::Update(const compress_term_t& pauli) {
     if (this->Contains(pauli.first)) {
         this->terms[pauli.first] = pauli.second;
     } else {
         this->terms.insert(pauli);
     }
 }
+
 size_t QubitOperator::size() const {
     return this->terms.size();
 }
@@ -247,6 +253,55 @@ std::string QubitOperator::ToString() const {
     }
     return out;
 }
+
+size_t QubitOperator::count_qubits() const {
+    int n_qubits = 0;
+    for (auto& [k, v] : this->terms.m_list) {
+        int group_id = k.size() - 1, local_id = 0;
+        for (auto word = k.rbegin(); word != k.rend(); ++word) {
+            if ((*word) != 0) {
+                n_qubits = std::max(n_qubits, (63 - __builtin_clzll(*word)) / 2 + group_id * 32);
+                break;
+            }
+            group_id -= 1;
+        }
+    }
+    return n_qubits;
+}
+
+auto QubitOperator::get_terms() const -> dict_t {
+    dict_t out{};
+    for (auto& [k, v] : this->terms.m_list) {
+        terms_t terms{};
+        int group_id = 0;
+        for (auto qubit_word : k) {
+            int local_id = 0;
+            while (qubit_word != 0) {
+                auto word = static_cast<TermValue>(qubit_word & 3);
+                if (word != TermValue::I) {
+                    terms.push_back({group_id * 32 + local_id, word});
+                }
+                local_id += 1;
+                qubit_word >>= 2;
+            }
+        }
+        out.push_back({terms, v});
+    }
+    return out;
+}
+
+bool QubitOperator::is_singlet() const {
+    return this->size() == 1;
+}
+
+parameter::ParameterResolver QubitOperator::singlet_coeff() const {
+    if (!this->is_singlet()) {
+        throw std::runtime_error("Operator is not singlet.");
+    }
+    return this->terms.m_list.begin()->second;
+}
+
+// -----------------------------------------------------------------------------
 
 QubitOperator& QubitOperator::operator+=(const tn::Tensor& c) {
     if (this->Contains(key_t{0})) {
@@ -277,6 +332,7 @@ QubitOperator& QubitOperator::operator+=(const QubitOperator& other) {
     }
     return *this;
 }
+
 QubitOperator QubitOperator::operator+(const QubitOperator& other) {
     auto out = *this;
     out += other;
@@ -295,7 +351,8 @@ QubitOperator QubitOperator::operator*=(const QubitOperator& other) {
             }
         }
     }
-    return out;
+    std::swap(out.terms, this->terms);
+    return *this;
 }
 
 QubitOperator QubitOperator::operator*(const QubitOperator& other) {
@@ -311,6 +368,13 @@ QubitOperator QubitOperator::operator*(const QubitOperator& other) {
         }
     }
     return out;
+}
+
+QubitOperator QubitOperator::operator*=(const parameter::ParameterResolver& other) {
+    for (auto& [k, v] : this->terms.m_list) {
+        v *= other;
+    }
+    return *this;
 }
 }  // namespace operators::qubit
 

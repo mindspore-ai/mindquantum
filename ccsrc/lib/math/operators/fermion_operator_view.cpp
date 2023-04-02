@@ -20,11 +20,13 @@
 
 #include <sys/types.h>
 
+#include "math/operators/utils.hpp"
 #include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/ops/concrete_tensor.hpp"
+#include "math/tensor/tensor.hpp"
 
 namespace operators::fermion {
-std::tuple<operators::fermion::TermValue, size_t> parse_token(const std::string& token) {
+auto SingleFermionStr::ParseToken(const std::string& token) -> term_t {
     if (token.size() == 0) {
         throw std::runtime_error(
             "Wrong token: '" + token
@@ -50,36 +52,36 @@ std::tuple<operators::fermion::TermValue, size_t> parse_token(const std::string&
                                  + idx_str + ".");
     }
     if (is_dag) {
-        return {TermValue::Ad, idx};
+        return {idx, TermValue::Ad};
     }
-    return {TermValue::A, idx};
+    return {idx, TermValue::A};
 }
 
-auto SingleFermionStr::init(const std::string& fermion_string, const parameter::ParameterResolver& var) -> fermion_t {
-    fermion_t out = {key_t{0}, var};
+auto SingleFermionStr::init(const std::string& fermion_string, const parameter::ParameterResolver& var)
+    -> compress_term_t {
+    compress_term_t out = {key_t{0}, var};
     std::istringstream iss(fermion_string);
     for (std::string s; iss >> s;) {
-        auto [term, idx] = parse_token(s);
-        InplaceMulPauli(term, idx, out);
+        InplaceMulCompressTerm(ParseToken(s), out);
     }
     return out;
 }
 
-auto SingleFermionStr::init(const std::vector<std::tuple<TermValue, size_t>>& terms,
-                            const parameter::ParameterResolver& var) -> fermion_t {
-    fermion_t out = {key_t{0}, var};
-    for (auto& [term, idx] : terms) {
-        InplaceMulPauli(term, idx, out);
+auto SingleFermionStr::init(const terms_t& terms, const parameter::ParameterResolver& var) -> compress_term_t {
+    compress_term_t out = {key_t{0}, var};
+    for (auto& term : terms) {
+        InplaceMulCompressTerm(term, out);
     }
     return out;
 }
 
-void SingleFermionStr::InplaceMulPauli(TermValue term, size_t idx, fermion_t& fermion) {
-    if (term == TermValue::I) {
+void SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_t& fermion) {
+    auto [idx, word] = term;
+    if (word == TermValue::I) {
         return;
     }
     auto& [ori_term, coeff] = fermion;
-    if ((term == TermValue::nll) || std::any_of(ori_term.begin(), ori_term.end(), [](auto j) {
+    if ((word == TermValue::nll) || std::any_of(ori_term.begin(), ori_term.end(), [](auto j) {
             return j == static_cast<uint64_t>(TermValue::nll);
         })) {
         for (size_t i = 0; i < ori_term.size(); i++) {
@@ -87,18 +89,18 @@ void SingleFermionStr::InplaceMulPauli(TermValue term, size_t idx, fermion_t& fe
         }
         return;
     }
-    size_t group_id = idx >> 4;
-    size_t local_id = ((idx & 15) * 3);
+    size_t group_id = idx / 21;
+    size_t local_id = ((idx % 21) * 3);
     size_t low_mask = (1UL << local_id) - 1;
     size_t local_mask = (1UL << local_id) | (1UL << (local_id + 1)) | (1UL << (local_id + 2));
     if (ori_term.size() < group_id + 1) {
         for (size_t i = ori_term.size(); i < group_id + 1; i++) {
             ori_term.push_back(0);
         }
-        ori_term[group_id] = ori_term[group_id] & (~local_mask) | (static_cast<uint64_t>(term)) << local_id;
+        ori_term[group_id] = ori_term[group_id] & (~local_mask) | (static_cast<uint64_t>(word)) << local_id;
     } else {
         TermValue lhs = static_cast<TermValue>((ori_term[group_id] & local_mask) >> local_id);
-        auto res = fermion_product_map.at(lhs).at(term);
+        auto res = fermion_product_map.at(lhs).at(word);
         if (res == TermValue::nll) {
             for (size_t i = 0; i < ori_term.size(); i++) {
                 ori_term[i] = static_cast<uint64_t>(TermValue::nll);
@@ -144,7 +146,7 @@ bool SingleFermionStr::IsSameString(const key_t& k1, const key_t& k2) {
     return true;
 }
 
-std::string SingleFermionStr::GetString(const fermion_t& fermion) {
+std::string SingleFermionStr::GetString(const compress_term_t& fermion) {
     std::string out = "";
     int group_id = 0;
     auto& [fermion_string, coeff] = fermion;
@@ -160,23 +162,23 @@ std::string SingleFermionStr::GetString(const fermion_t& fermion) {
             switch (j) {
                 case TermValue::A:
                     out = " " + out;
-                    out = std::to_string(local_id + group_id * 16) + out;
+                    out = std::to_string(local_id + group_id * 21) + out;
                     break;
                 case TermValue::Ad:
                     out = "^ " + out;
-                    out = std::to_string(local_id + group_id * 16) + out;
+                    out = std::to_string(local_id + group_id * 21) + out;
                     break;
                 case TermValue::AAd:
                     out = "^ " + out;
-                    out = std::to_string(local_id + group_id * 16) + out;
+                    out = std::to_string(local_id + group_id * 21) + out;
                     out = " " + out;
-                    out = std::to_string(local_id + group_id * 16) + out;
+                    out = std::to_string(local_id + group_id * 21) + out;
                     break;
                 case TermValue::AdA:
                     out = " " + out;
-                    out = std::to_string(local_id + group_id * 16) + out;
+                    out = std::to_string(local_id + group_id * 21) + out;
                     out = "^ " + out;
-                    out = std::to_string(local_id + group_id * 16) + out;
+                    out = std::to_string(local_id + group_id * 21) + out;
                     break;
                 default:
                     break;
@@ -193,13 +195,13 @@ std::string SingleFermionStr::GetString(const fermion_t& fermion) {
     return coeff.ToString() + " [" + out + "]";
 }
 
-auto SingleFermionStr::Mul(const fermion_t& lhs, const fermion_t& rhs) -> fermion_t {
+auto SingleFermionStr::Mul(const compress_term_t& lhs, const compress_term_t& rhs) -> compress_term_t {
     auto& [l_k, l_v] = lhs;
     auto& [r_k, r_v] = rhs;
     key_t fermion_string = {};
     value_t coeff = l_v * r_v;
     if (l_k.size() == 1 && r_k.size() == 1) {
-        auto [t, s] = mul_fermion_str(l_k[0], r_k[0]);
+        auto [t, s] = MulSingleCompressTerm(l_k[0], r_k[0]);
         coeff = coeff * t;
         fermion_string.push_back(s);
         return {fermion_string, coeff};
@@ -212,7 +214,7 @@ auto SingleFermionStr::Mul(const fermion_t& lhs, const fermion_t& rhs) -> fermio
         if (i < min_size) {
             total_one += one_in_low;
             one_in_low += __builtin_popcount(l_k[i]);
-            auto [t, s] = mul_fermion_str(l_k[i], r_k[i]);
+            auto [t, s] = MulSingleCompressTerm(l_k[i], r_k[i]);
             coeff = coeff * t;
             fermion_string.push_back(s);
         } else if (i >= l_k.size()) {
@@ -228,7 +230,7 @@ auto SingleFermionStr::Mul(const fermion_t& lhs, const fermion_t& rhs) -> fermio
     return {fermion_string, coeff};
 }
 
-std::tuple<tn::Tensor, uint64_t> mul_fermion_str(uint64_t a, uint64_t b) {
+std::tuple<tn::Tensor, uint64_t> SingleFermionStr::MulSingleCompressTerm(uint64_t a, uint64_t b) {
     if (a == static_cast<uint64_t>(TermValue::nll) || b == static_cast<uint64_t>(TermValue::nll)
         || a == static_cast<uint64_t>(TermValue::I) || b == static_cast<uint64_t>(TermValue::I)) {
         return {tn::ops::ones(1), a | b};
@@ -268,11 +270,16 @@ FermionOperator::FermionOperator(const std::string& fermion_string, const parame
     this->terms.insert(term.first, term.second);
 }
 
+FermionOperator::FermionOperator(const terms_t& t, const parameter::ParameterResolver& var) {
+    auto term = SingleFermionStr::init(t, var);
+    this->terms.insert(term.first, term.second);
+}
+
 bool FermionOperator::Contains(const key_t& term) const {
     return this->terms.m_map.find(term) != this->terms.m_map.end();
 }
 
-void FermionOperator::Update(const pauli_t& fermion) {
+void FermionOperator::Update(const compress_term_t& fermion) {
     if (this->Contains(fermion.first)) {
         this->terms[fermion.first] = fermion.second;
     } else {
@@ -295,8 +302,46 @@ std::string FermionOperator::ToString() const {
 }
 
 auto FermionOperator::get_terms() const -> dict_t {
+    dict_t out{};
+    for (auto& [k, v] : this->terms.m_list) {
+        if (std::any_of(k.begin(), k.end(), [](auto i) { return i == static_cast<uint64_t>(TermValue::nll); })) {
+            continue;
+        }
+        terms_t terms;
+        int group_id = 0;
+        for (auto fermion_word : k) {
+            int local_id = 0;
+            while (fermion_word != 0) {
+                auto word = static_cast<TermValue>(fermion_word & 7);
+                if (word == TermValue::AAd) {
+                    terms.push_back({group_id * 21 + local_id, TermValue::A});
+                    terms.push_back({group_id * 21 + local_id, TermValue::Ad});
+                } else if (word == TermValue::AdA) {
+                    terms.push_back({group_id * 21 + local_id, TermValue::Ad});
+                    terms.push_back({group_id * 21 + local_id, TermValue::A});
+                } else if (word != TermValue::I) {
+                    terms.push_back({group_id * 21 + local_id, word});
+                }
+                fermion_word >>= 3;
+                local_id += 1;
+            }
+            group_id += 1;
+        }
+        out.push_back({terms, v});
+    }
+    return out;
 }
 
+bool FermionOperator::is_singlet() const {
+    return this->size() == 1;
+}
+
+parameter::ParameterResolver FermionOperator::singlet_coeff() const {
+    if (!this->is_singlet()) {
+        throw std::runtime_error("Operator is not singlet.");
+    }
+    return this->terms.m_list.begin()->second;
+}
 // -----------------------------------------------------------------------------
 
 FermionOperator& FermionOperator::operator+=(const tn::Tensor& c) {
@@ -328,6 +373,7 @@ FermionOperator& FermionOperator::operator+=(const FermionOperator& other) {
     }
     return *this;
 }
+
 FermionOperator FermionOperator::operator+(const FermionOperator& other) {
     auto out = *this;
     out += other;
@@ -346,7 +392,8 @@ FermionOperator FermionOperator::operator*=(const FermionOperator& other) {
             }
         }
     }
-    return out;
+    std::swap(out.terms, this->terms);
+    return *this;
 }
 
 FermionOperator FermionOperator::operator*(const FermionOperator& other) {
@@ -362,6 +409,13 @@ FermionOperator FermionOperator::operator*(const FermionOperator& other) {
         }
     }
     return out;
+}
+
+FermionOperator FermionOperator::operator*=(const parameter::ParameterResolver& other) {
+    for (auto& [k, v] : this->terms.m_list) {
+        v *= other;
+    }
+    return *this;
 }
 }  // namespace operators::fermion
 

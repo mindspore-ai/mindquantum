@@ -17,4 +17,6 @@
 # ==============================================================================
 
 target_sources(mq_math PRIVATE ${CMAKE_CURRENT_LIST_DIR}/qubit_operator_view.cpp
-                               ${CMAKE_CURRENT_LIST_DIR}/fermion_operator_view.cpp)
+                               ${CMAKE_CURRENT_LIST_DIR}/fermion_operator_view.cpp ${CMAKE_CURRENT_LIST_DIR}/utils.cpp)
+
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/transform)

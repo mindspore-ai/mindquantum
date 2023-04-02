@@ -16,12 +16,16 @@
 #define JORDAN_WIGNER_TRANSFORM_TPP
 #include "math/operators/transform/jordan_wigner.hpp"
 
+#include <iostream>
 #include <numeric>
 
+#include "math/operators/qubit_operator_view.hpp"
 #include "math/operators/transform/fermion_number_operator.hpp"
 #include "math/operators/transform/transform_ladder_operator.hpp"
-#include "math/tensor/ops/memory_operator.hpp"
+#include "math/tensor/ops.hpp"
 namespace operators::transform {
+namespace tn = tensor;
+
 qubit_op_t jordan_wigner(const fermion_op_t& ops) {
     // static constexpr auto cache_size_ = 1000UL;
 
@@ -36,7 +40,8 @@ qubit_op_t jordan_wigner(const fermion_op_t& ops) {
             const auto& [idx, value] = term;
             std::vector<size_t> z(idx);
             std::iota(begin(z), end(z), 0UL);
-            transformed_term *= transform_ladder_operator(value, {idx}, {}, z, {}, {idx}, z);
+            auto tmp = transform_ladder_operator(value, {idx}, {}, z, {}, {idx}, z);
+            transformed_term *= tmp;
             // }
         }
         transf_op += transformed_term;
@@ -56,7 +61,7 @@ fermion_op_t reverse_jordan_wigner(const qubit_op_t& ops, int n_qubits) {
     for (const auto& [term, coeff] : ops.get_terms()) {
         auto transformed_term = fermion_op_t("");
         if (term.size() != 0) {
-            auto working_term = term;
+            auto working_term = qubit_op_t({term});
             auto pauli_operator = term[term.size() - 1];
             bool finished = false;
             while (!finished) {
@@ -64,10 +69,10 @@ fermion_op_t reverse_jordan_wigner(const qubit_op_t& ops, int n_qubits) {
                 fermion_op_t trans_pauli;
                 if (value == qubit::TermValue::Z) {
                     trans_pauli = fermion_op_t("");
-                    trans_pauli += fermion_number_operator(n_qubits, idx, tn::ops::init_with_value(-2.0));
+                    trans_pauli += fermion::fermion_number_operator(n_qubits, idx, tn::ops::init_with_value(-2.0));
                 } else {
-                    auto raising_term = fermion_op_t({idx, fermion::TermValue::Ad});
-                    auto lowering_term = fermion_op_t({idx, fermion::TermValue::A});
+                    auto raising_term = fermion_op_t({{idx, fermion::TermValue::Ad}});
+                    auto lowering_term = fermion_op_t({{idx, fermion::TermValue::A}});
                     if (value == qubit::TermValue::Y) {
                         raising_term *= tn::ops::init_with_value(std::complex<double>(0, 1.0));
                         lowering_term *= tn::ops::init_with_value(std::complex<double>(0, -1.0));
@@ -75,18 +80,18 @@ fermion_op_t reverse_jordan_wigner(const qubit_op_t& ops, int n_qubits) {
                     trans_pauli += raising_term;
                     trans_pauli += lowering_term;
                     for (auto j = 0; j < idx; j++) {
-                        working_term = qubit_op_t({idx - 1 - j, qubit::TermValue::Z}) * working_term;
+                        working_term = qubit_op_t({{idx - 1 - j, qubit::TermValue::Z}}) * working_term;
                     }
                     auto s_coeff = working_term.singlet_coeff();
                     trans_pauli *= s_coeff;
-                    working_term *= (fermion_op_t::coeff_policy_t::one / s_coeff);
+                    working_term *= (tn::ops::ones(1) / s_coeff);
                 }
                 int working_qubit = static_cast<int>(idx) - 1;
                 for (auto [local_term, local_coeff] : working_term.get_terms()) {
                     for (auto it = local_term.rbegin(); it != local_term.rend(); it++) {
                         const auto& [local_idx, local_value] = *it;
                         if (static_cast<int>(local_idx) <= working_qubit) {
-                            pauli_operator = term_t({local_idx, local_value});
+                            pauli_operator = operators::qubit::QubitOperator::term_t({local_idx, local_value});
                             finished = false;
                             break;
                         } else {

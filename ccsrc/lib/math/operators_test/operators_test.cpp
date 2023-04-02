@@ -18,6 +18,8 @@
 
 #include "math/operators/fermion_operator_view.hpp"
 #include "math/operators/qubit_operator_view.hpp"
+#include "math/operators/transform/fermion_number_operator.hpp"
+#include "math/operators/transform/jordan_wigner.hpp"
 #include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/traits.hpp"
@@ -76,14 +78,30 @@ int main() {
 
     // parameter::ParameterResolver var = tensor::ops::ones(1);
     // std::cout << var << std::endl;
-    auto p = operators::qubit::QubitOperator("X24");
-    std::cout << p << std::endl;
+    // auto p = operators::qubit::QubitOperator("X24");
+    // std::cout << p << std::endl;
     auto f = operators::fermion::FermionOperator("0^ 2^ 23^ 45^ 22^");
-    auto f2 = operators::fermion::FermionOperator("1 22");
-    auto f3 = operators::fermion::FermionOperator("45^ 23^ 22^ 2^ 0^ 22 1");
-    std::cout << f << std::endl;
-    std::cout << f2 << std::endl;
-    std::cout << f * f2 << std::endl;
-    std::cout << f * f2 + f3 << std::endl;
+    // auto f = operators::fermion::FermionOperator("23^");
+    // auto f2 = operators::fermion::FermionOperator("1 22");
+    // auto f3 = operators::fermion::FermionOperator("45^ 23^ 22^ 2^ 0^ 22 1");
+    // std::cout << f << std::endl;
+    // std::cout << f2 << std::endl;
+    // std::cout << f * f2 << std::endl;
+    // std::cout << f * f2 + f3 << std::endl;
+    // std::cout << p.count_qubits() << std::endl;
+    // std::cout << operators::fermion::fermion_number_operator(3) << std::endl;
+    auto a = operators::transform::jordan_wigner(f);
+    std::cout << a << std::endl;
+    // auto t = f.get_terms();
+    // auto t = operators::fermion::SingleFermionStr::init("16^");
+    // std::cout << t.first.size() << std::endl;
+    // std::cout << t[0].first[0].first << std::endl;
+    // auto a = operators::qubit::QubitOperator("");
+    // std::cout << a << std::endl;
+    // auto b = operators::qubit::QubitOperator("X0");
+    // std::cout << b << std::endl;
+    // a *= b;
+    // std::cout << a << std::endl;
+
     return 0;
 }
