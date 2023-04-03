@@ -14,6 +14,8 @@
 
 #include "device/topology.hpp"
 
+#include <algorithm>
+#include <iterator>
 #include <memory>
 #include <numeric>
 #include <stdexcept>
@@ -152,6 +154,13 @@ std::set<std::pair<std::pair<double, double>, std::pair<double, double>>> Qubits
         auto qubit_2 = (*this)[id_2];
         out.insert({{qubit_1->poi_x, qubit_1->poi_y}, {qubit_2->poi_x, qubit_2->poi_y}});
     }
+    return out;
+}
+
+std::vector<QNodePtr> QubitsTopology::Choose(std::vector<qbit_t> ids) {
+    std::vector<QNodePtr> out{};
+
+    std::transform(std::begin(ids), std::end(ids), std::back_inserter(out), [&](size_t id) { return (*this)[id]; });
     return out;
 }
 

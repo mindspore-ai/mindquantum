@@ -192,6 +192,24 @@ class QubitsTopology:
             >>> topology.n_edges()
             2
         """
+    def choose(self, ids: typing.List[int]) -> typing.List[QubitNode]:
+        """
+        Choose qubit nodes based on given qubit id.
+
+        Args:
+            ids (List[int]): A list of qubit node id.
+
+        Returns:
+            List[QubitNode], a list of qubit node based on given qubit node id.
+
+        Examples:
+            >>> from mindquantum.device import QubitsTopology, QubitNode
+            >>> topology = QubitsTopology([QubitNode(i) for i in range(3)])
+            >>> topology[0] >> topology[1] >> topology[2]
+            >>> nodes = topology.choose([0, 1])
+            >>> print(nodes[0].id, nodes[1].id)
+            0 1
+        """
     def remove_isolate_node(self) -> None:
         """
         Remove qubit node that do not connect with any other qubits.

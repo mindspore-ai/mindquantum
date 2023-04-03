@@ -1528,7 +1528,7 @@ class Power(NoneParamNonHermMat):
         return False
 
 
-def wrapper_numba(compiled_fun):
+def wrapper_numba(compiled_fun, dim):
     """Wrap a compiled function with numba."""
     try:
         import numba as nb
@@ -1556,11 +1556,11 @@ def wrapper_numba(compiled_fun):
         """Map data to array."""
         out = nb.carray(
             out_,
-            (2, 2),
+            (dim, dim),
         )
         matrix = compiled_fun(theta)
-        for i in range(2):
-            for j in range(2):
+        for i in range(dim):
+            for j in range(dim):
                 out[i][j] = matrix[i][j]
 
     return fun.address
@@ -1639,8 +1639,6 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
         )
 
     n_qubits = int(np.log2(matrix.shape[0]))
-    if n_qubits not in [1, 2]:
-        raise ValueError(f"Can only custom one or two qubits gate, but get {n_qubits} qubits")
     c_sig = nb.types.Array(nb.types.complex128, 2, 'C')(nb.types.double)
     c_matrix_generator = nb.cfunc(c_sig)(matrix_generator)
     c_diff_matrix_generator = nb.cfunc(c_sig)(diff_matrix_generator)
@@ -1653,10 +1651,10 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
         """Generate hermitian conjugate diff matrix."""
         return np.conj(c_diff_matrix_generator(x)).T.copy()
 
-    matrix_addr = wrapper_numba(c_matrix_generator)
-    diff_matrix_addr = wrapper_numba(c_diff_matrix_generator)
-    herm_matrix_addr = wrapper_numba(nb.cfunc(c_sig)(herm_matrix_generator))
-    herm_diff_matrix_addr = wrapper_numba(nb.cfunc(c_sig)(herm_diff_matrix_generator))
+    matrix_addr = wrapper_numba(c_matrix_generator, 1 << n_qubits)
+    diff_matrix_addr = wrapper_numba(c_diff_matrix_generator, 1 << n_qubits)
+    herm_matrix_addr = wrapper_numba(nb.cfunc(c_sig)(herm_matrix_generator), 1 << n_qubits)
+    herm_diff_matrix_addr = wrapper_numba(nb.cfunc(c_sig)(herm_diff_matrix_generator), 1 << n_qubits)
 
     class _ParamNonHerm(ParamNonHerm):
         """The customer parameterized gate."""

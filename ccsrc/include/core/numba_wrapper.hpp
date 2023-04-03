@@ -27,9 +27,6 @@ struct NumbaMatFunWrapper {
     using mat_t = void (*)(double, std::complex<double>*);
     NumbaMatFunWrapper() = default;
     NumbaMatFunWrapper(uint64_t addr, int dim) : dim(dim) {
-        if (dim != 2 && dim != 4) {
-            throw std::runtime_error("Can only custom one or two qubits matrix.");
-        }
         fun = reinterpret_cast<mat_t>(addr);
     }
 
@@ -45,6 +42,7 @@ struct NumbaMatFunWrapper {
         }
 
         out = mindquantum::Dim2Matrix<T>(m);
+        out.PrintInfo();
         return out;
     }
     mat_t fun;

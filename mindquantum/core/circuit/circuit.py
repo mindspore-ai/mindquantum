@@ -20,7 +20,7 @@ import copy
 import warnings
 from collections.abc import Iterable
 from types import FunctionType, MethodType
-from typing import List
+from typing import Dict, List, Union
 
 import numpy as np
 from rich.console import Console
@@ -34,6 +34,7 @@ from mindquantum.utils.type_value_check import (
 
 from .. import gates as mq_gates
 from ..gates.basic import BasicGate, ParameterGate
+from ..gates.basicgate import MultiParamsGate
 from ..parameterresolver import ParameterResolver
 
 
@@ -1222,12 +1223,13 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
                 circ += gate
         return circ
 
-    def with_noise(self, noise_gate=mq_gates.AmplitudeDampingChannel(0.001)):
+    def with_noise(self, noise_gate=mq_gates.AmplitudeDampingChannel(0.001), also_ctrl=False):
         """
         Apply noises on each gate.
 
         Args:
             noise_gate (NoiseGate): The NoiseGate you want to apply. Default: AmplitudeDampingChannel(0.001).
+            also_ctrl (bool): Whether add NoiseGate on control qubits. Default: False.
         """
         circ = Circuit()
         for gate in self:
@@ -1235,6 +1237,9 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             if not isinstance(gate, (mq_gates.Measure, mq_gates.NoiseGate)):
                 for i in gate.obj_qubits:
                     circ += noise_gate.on(i)
+                if also_ctrl:
+                    for i in gate.ctrl_qubits:
+                        circ += noise_gate.on(i)
         return circ
 
     def as_encoder(self, inplace=True):
@@ -1279,6 +1284,38 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         circ.all_encoder.map = {}
         circ.has_cpp_obj = False
         return circ
+
+    def subs(self, params_value: Union[Dict, ParameterResolver]) -> "Circuit":
+        """
+        Substitute value to variables in parameterized quantum circuit.
+
+        Args:
+            params_value (Union[Dict, ParameterResolver]): parameters value.
+
+        Returns:
+            Circuit, a non parameterized quantum circuit.
+
+        Examples:
+            >>> from mindquantum.core.circuit import Circuit
+            >>> circ = Circuit().rx('a', 0)
+            >>> circ
+            q0: ──RX(a)──
+            >>> circ.subs({'a': 1.2})
+            q0: ──RX(6/5)──
+        """
+        new_circ = Circuit()
+        for g in self:
+            if isinstance(g, MultiParamsGate):
+                new_g = copy.deepcopy(g)
+                new_g.prs = [i.combination(params_value) for i in g.prs]
+                new_circ += new_g
+            elif isinstance(g, ParameterGate):
+                new_g = copy.deepcopy(g)
+                new_g.coeff = g.coeff.combination(params_value)
+                new_circ += new_g
+            else:
+                new_circ += g
+        return new_circ
 
 
 A = apply

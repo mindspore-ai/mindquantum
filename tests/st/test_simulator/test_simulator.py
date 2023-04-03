@@ -573,3 +573,71 @@ def test_cd_term(config):
         m2 = decomps_circ.matrix(backend=virtual_qc)
         m = np.abs(m1 - m2)
         assert np.allclose(m, np.zeros_like(m), atol=1e-6)
+
+
+def custom_matrix(x):
+    """Define matrix."""
+    return np.array(
+        [
+            [np.exp(1j * 2 * x), 0, 0, 0, 0, 0, 0, 0],
+            [0, np.exp(1j * 4 * x), 0, 0, 0, 0, 0, 0],
+            [0, 0, np.exp(1j * 6 * x), 0, 0, 0, 0, 0],
+            [0, 0, 0, np.exp(1j * 8 * x), 0, 0, 0, 0],
+            [0, 0, 0, 0, np.exp(1j * 10 * x), 0, 0, 0],
+            [0, 0, 0, 0, 0, np.exp(1j * 12 * x), 0, 0],
+            [0, 0, 0, 0, 0, 0, np.exp(1j * 14 * x), 0],
+            [0, 0, 0, 0, 0, 0, 0, np.exp(1j * 16 * x)],
+        ],
+        dtype=np.complex128,
+    )
+
+
+def custom_diff_matrix(x):
+    """Define diff matrix."""
+    return (
+        np.array(
+            [
+                [2 * np.exp(1j * 2 * x), 0, 0, 0, 0, 0, 0, 0],
+                [0, 4 * np.exp(1j * 4 * x), 0, 0, 0, 0, 0, 0],
+                [0, 0, 6 * np.exp(1j * 6 * x), 0, 0, 0, 0, 0],
+                [0, 0, 0, 8 * np.exp(1j * 8 * x), 0, 0, 0, 0],
+                [0, 0, 0, 0, 10 * np.exp(1j * 10 * x), 0, 0, 0],
+                [0, 0, 0, 0, 0, 12 * np.exp(1j * 12 * x), 0, 0],
+                [0, 0, 0, 0, 0, 0, 14 * np.exp(1j * 14 * x), 0],
+                [0, 0, 0, 0, 0, 0, 0, 16 * np.exp(1j * 16 * x)],
+            ],
+            dtype=np.complex128,
+        )
+        * 1j
+    )
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("config", AVAILABLE_BACKEND)
+@pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
+def test_mul_qubit_gate(config):
+    """
+    Description: Test simulation on multiple qubit gate.
+    Expectation: succeed.
+    """
+    virtual_qc, dtype, device = config
+    if virtual_qc == 'mqmatrix':
+        return
+    rand_c = random_circuit(3, 20, seed=42)
+    m = rand_c.matrix()
+    g = G.UnivMathGate('m', m)
+    set_context(dtype=dtype, device_target=device)
+    q = G.gene_univ_parameterized_gate('q', custom_matrix, custom_diff_matrix)
+    circ = UN(G.H, 3) + q('a').on([0, 1, 2])
+    sim = Simulator(virtual_qc, 3)
+    ham = Hamiltonian(QubitOperator("X0"))
+    grad_ops = sim.get_expectation_with_grad(ham, circ)
+    f1, g1 = grad_ops(np.array([2.3]))
+    f2, _ = grad_ops(np.array([2.3001]))
+    g = (f2 - f1) / 0.0001
+    assert np.allclose(f1, -0.11215253 + 0.0j)
+    assert np.allclose(g1, 1.98738201 + 0.0j)
+    assert np.allclose(g1, g, atol=1e-2)

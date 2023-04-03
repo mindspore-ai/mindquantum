@@ -26,6 +26,49 @@
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffNQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket,
+                                                                        const qbits_t& objs, const qbits_t& ctrls,
+                                                                        const VVT<py_qs_data_t>& gate, index_t dim)
+    -> qs_data_t {
+    size_t n_qubit = objs.size();
+    size_t m_dim = (1UL << n_qubit);
+    size_t ctrl_mask = 0;
+    for (auto& i : ctrls) {
+        ctrl_mask |= 1UL << i;
+    }
+    std::vector<size_t> obj_masks{};
+    for (size_t i = 0; i < m_dim; i++) {
+        size_t n = 0;
+        size_t mask_j = 0;
+        for (size_t j = i; j != 0; j >>= 1) {
+            if (j & 1) {
+                mask_j += 1UL << objs[n];
+            }
+            n += 1;
+        }
+        obj_masks.push_back(mask_j);
+    }
+    auto obj_mask = obj_masks.back();
+    calc_type res_real = 0, res_imag = 0;
+    THRESHOLD_OMP(
+        MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                                                for (omp::idx_t l = 0; l < dim; l++) {
+                                                    if (((l & ctrl_mask) == ctrl_mask) && ((l & obj_mask) == 0)) {
+                                                        for (size_t i = 0; i < m_dim; i++) {
+                                                            qs_data_t tmp = 0;
+                                                            for (size_t j = 0; j < m_dim; j++) {
+                                                                tmp += gate[i][j] * ket[obj_masks[j] | l];
+                                                            }
+                                                            tmp = std::conj(bra[obj_masks[i] | l]) * tmp;
+                                                            res_real += tmp.real();
+                                                            res_imag += tmp.imag();
+                                                        }
+                                                    }
+                                                })
+    return {res_real, res_imag};
+}
+
+template <typename derived_, typename calc_type_>
 auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket,
                                                                           const qbits_t& objs, const qbits_t& ctrls,
                                                                           const VVT<py_qs_data_t>& gate, index_t dim)
@@ -163,7 +206,7 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffMatrixGate(qs_data_p_t
     if (objs.size() == 2) {
         return derived::ExpectDiffTwoQubitsMatrix(bra, ket, objs, ctrls, m, dim);
     }
-    throw std::runtime_error("Expectation of " + std::to_string(objs.size()) + " not implement for cpu backend.");
+    return derived::ExpectDiffNQubitsMatrix(bra, ket, objs, ctrls, m, dim);
 }
 
 template <typename derived_, typename calc_type_>

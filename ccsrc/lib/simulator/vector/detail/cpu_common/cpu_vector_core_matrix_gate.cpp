@@ -25,6 +25,51 @@
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(qs_data_p_t src, qs_data_p_t des,
+                                                                   const qbits_t& objs, const qbits_t& ctrls,
+                                                                   const std::vector<std::vector<py_qs_data_t>>& gate,
+                                                                   index_t dim) {
+    size_t n_qubit = objs.size();
+    size_t m_dim = (1UL << n_qubit);
+    size_t ctrl_mask = 0;
+    for (auto& i : ctrls) {
+        ctrl_mask |= 1UL << i;
+    }
+    std::vector<size_t> obj_masks{};
+    for (size_t i = 0; i < m_dim; i++) {
+        size_t n = 0;
+        size_t mask_j = 0;
+        for (size_t j = i; j != 0; j >>= 1) {
+            if (j & 1) {
+                mask_j += 1UL << objs[n];
+            }
+            n += 1;
+        }
+        obj_masks.push_back(mask_j);
+    }
+    auto obj_mask = obj_masks.back();
+    for (auto& o : obj_masks) {
+        std::cout << o << std::endl;
+    }
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t l = 0; l < dim; l++) {
+            if (((l & ctrl_mask) == ctrl_mask) && ((l & obj_mask) == 0)) {
+                std::vector<qs_data_t> res_tmp;
+                for (size_t i = 0; i < m_dim; i++) {
+                    qs_data_t tmp = 0;
+                    for (size_t j = 0; j < m_dim; j++) {
+                        tmp += gate[i][j] * src[obj_masks[j] | l];
+                    }
+                    res_tmp.push_back(tmp);
+                }
+                for (size_t i = 0; i < m_dim; i++) {
+                    des[obj_masks[i] | l] = res_tmp[i];
+                }
+            }
+        })
+}
+
+template <typename derived_, typename calc_type_>
 void CPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des,
                                                                      const qbits_t& objs, const qbits_t& ctrls,
                                                                      const std::vector<std::vector<py_qs_data_t>>& gate,
@@ -115,7 +160,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyMatrixGate(qs_data_p_t src,
     } else if (objs.size() == 2) {
         derived::ApplyTwoQubitsMatrix(src, des, objs, ctrls, m, dim);
     } else {
-        throw std::runtime_error("Can not custom " + std::to_string(objs.size()) + " qubits gate for cpu backend.");
+        derived::ApplyNQubitsMatrix(src, des, objs, ctrls, m, dim);
     }
 }
 

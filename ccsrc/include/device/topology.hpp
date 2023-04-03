@@ -90,6 +90,7 @@ class QubitsTopology {
     std::set<std::pair<qbit_t, qbit_t>> EdgesWithID();
     std::set<std::pair<std::pair<double, double>, std::pair<double, double>>> EdgesWithPoi();
 
+    std::vector<QNodePtr> Choose(std::vector<qbit_t> ids);
     void RemoveQubitNode(qbit_t id);
     void AddQubitNode(const QNodePtr& qubit);
     bool HasQubitNode(qbit_t id);

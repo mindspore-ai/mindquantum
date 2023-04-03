@@ -27,6 +27,7 @@ from mindquantum.core.gates import (
     BarrierGate,
     CNOTGate,
     Measure,
+    NoiseGate,
     ParameterGate,
     SGate,
     SWAPGate,
@@ -836,7 +837,10 @@ class SVGGate(SVGBasicGate):
         """Initialize an SVGGate object."""
         super().__init__(g, svg_config)
         self.rect = self.create_n_qubits_rect(g.n_qubits)
-        self.rect.fill(self.svg_config['npg_fill'])
+        if isinstance(g, NoiseGate):
+            self.rect.fill(self.svg_config['noise_fill'])
+        else:
+            self.rect.fill(self.svg_config['npg_fill'])
         self.rect.fill_opacity(self.svg_config['npg_fill_opacity'])
         self.rect.stroke(self.svg_config['npg_stroke'])
         self.rect.stroke_width(self.svg_config['gate_stroke_width'])
