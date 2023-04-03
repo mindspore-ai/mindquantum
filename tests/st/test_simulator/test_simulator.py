@@ -617,6 +617,7 @@ def custom_diff_matrix(x):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("config", AVAILABLE_BACKEND)
+@pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_mul_qubit_gate(config):
     """
     Description: Test simulation on multiple qubit gate.

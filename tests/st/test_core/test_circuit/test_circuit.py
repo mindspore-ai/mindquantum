@@ -25,6 +25,17 @@ from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.simulator import Simulator
 from mindquantum.simulator.simulator import available_backend
 
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
+
+try:
+    importlib_metadata.import_module("numba")
+    _HAS_NUMBA = True
+except ImportError:
+    _HAS_NUMBA = False
+
 AVAILABLE_BACKEND = available_backend()
 
 
@@ -139,6 +150,7 @@ def test_circuit_operator():
     assert circ == circ_exp
 
 
+@pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_circ_subs():
     """
     test circ substitute.
