@@ -18,4 +18,4 @@
 
 target_sources(
   mq_math PRIVATE ${CMAKE_CURRENT_LIST_DIR}/fermion_number_operator.cpp ${CMAKE_CURRENT_LIST_DIR}/jordan_wigner.cpp
-                  ${CMAKE_CURRENT_LIST_DIR}/transform_ladder_operator.cpp)
+                  ${CMAKE_CURRENT_LIST_DIR}/transform_ladder_operator.cpp ${CMAKE_CURRENT_LIST_DIR}/parity.cpp)

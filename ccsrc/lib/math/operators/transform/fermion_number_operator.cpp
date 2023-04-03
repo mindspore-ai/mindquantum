@@ -12,9 +12,6 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef FERMION_NUMBER_OPERATOR_TPP
-#define FERMION_NUMBER_OPERATOR_TPP
-
 #include "math/operators/transform/fermion_number_operator.hpp"
 namespace operators::fermion {
 fermion_op_t fermion_number_operator(int n_modes, int mode, const parameter::ParameterResolver& coeff) {
@@ -29,5 +26,3 @@ fermion_op_t fermion_number_operator(int n_modes, int mode, const parameter::Par
     return out;
 }
 }  // namespace operators::fermion
-
-#endif /* FERMION_NUMBER_OPERATOR_TPP */

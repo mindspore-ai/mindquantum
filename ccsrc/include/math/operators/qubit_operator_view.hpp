@@ -138,8 +138,12 @@ class QubitOperator {
     friend QubitOperator operator+(QubitOperator lhs, const tensor::Tensor& rhs);
     friend QubitOperator operator+(QubitOperator lhs, const QubitOperator& rhs);
 
+    QubitOperator& operator-=(const QubitOperator& other);
+    friend QubitOperator operator-(QubitOperator lhs, const QubitOperator& rhs);
+
     QubitOperator operator*=(const QubitOperator& other);
     QubitOperator operator*=(const parameter::ParameterResolver& other);
+    QubitOperator operator*(const tensor::Tensor& other);
     QubitOperator operator*(const QubitOperator& other);
 
  public:

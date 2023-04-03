@@ -12,8 +12,6 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#ifndef JORDAN_WIGNER_TRANSFORM_TPP
-#define JORDAN_WIGNER_TRANSFORM_TPP
 #include "math/operators/transform/jordan_wigner.hpp"
 
 #include <iostream>
@@ -151,5 +149,3 @@ fermion_op_t reverse_jordan_wigner(const qubit_op_t& ops, int n_qubits) {
     return transf_op;
 }
 }  // namespace operators::transform
-
-#endif /* JORDAN_WIGNER_TRANSFORM_TPP */

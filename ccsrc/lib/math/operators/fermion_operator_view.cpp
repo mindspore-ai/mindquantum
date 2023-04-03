@@ -342,6 +342,21 @@ parameter::ParameterResolver FermionOperator::singlet_coeff() const {
     }
     return this->terms.m_list.begin()->second;
 }
+
+size_t FermionOperator::count_qubits() const {
+    int n_qubits = 0;
+    for (auto& [k, v] : this->terms.m_list) {
+        int group_id = k.size() - 1, local_id = 0;
+        for (auto word = k.rbegin(); word != k.rend(); ++word) {
+            if ((*word) != 0) {
+                n_qubits = std::max(n_qubits, (63 - __builtin_clzll(*word)) / 3 + group_id * 21);
+                break;
+            }
+            group_id -= 1;
+        }
+    }
+    return n_qubits;
+}
 // -----------------------------------------------------------------------------
 
 FermionOperator& FermionOperator::operator+=(const tn::Tensor& c) {
