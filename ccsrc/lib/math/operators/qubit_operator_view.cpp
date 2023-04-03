@@ -312,16 +312,6 @@ QubitOperator& QubitOperator::operator+=(const tn::Tensor& c) {
     return *this;
 }
 
-QubitOperator QubitOperator::operator+(const tn::Tensor& c) {
-    auto out = *this;
-    if (out.Contains(key_t{0})) {
-        out.terms[key_t{0}] = out.terms[key_t{0}] + c;
-    } else {
-        out.terms.insert({key_t{0}, parameter::ParameterResolver(c)});
-    }
-    return out;
-}
-
 QubitOperator& QubitOperator::operator+=(const QubitOperator& other) {
     for (const auto& term : other.terms) {
         if (this->Contains(term.first)) {
@@ -333,10 +323,19 @@ QubitOperator& QubitOperator::operator+=(const QubitOperator& other) {
     return *this;
 }
 
-QubitOperator QubitOperator::operator+(const QubitOperator& other) {
-    auto out = *this;
-    out += other;
+QubitOperator operator+(QubitOperator lhs, const tensor::Tensor& rhs) {
+    auto out = lhs;
+    if (out.Contains(key_t{0})) {
+        out.terms[key_t{0}] = out.terms[key_t{0}] + rhs;
+    } else {
+        out.terms.insert({key_t{0}, parameter::ParameterResolver(rhs)});
+    }
     return out;
+}
+
+QubitOperator operator+(QubitOperator lhs, const QubitOperator& rhs) {
+    lhs += rhs;
+    return lhs;
 }
 
 QubitOperator QubitOperator::operator*=(const QubitOperator& other) {

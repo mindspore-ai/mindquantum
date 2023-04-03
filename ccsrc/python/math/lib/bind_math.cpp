@@ -22,7 +22,10 @@
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 
+#include "math/operators/fermion_operator_view.hpp"
 #include "math/operators/qubit_operator_view.hpp"
+#include "math/operators/transform/jordan_wigner.hpp"
+#include "math/operators/transform/transform.hpp"
 #include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/tensor.hpp"
@@ -143,15 +146,30 @@ void BindPR(py::module &module) {  // NOLINT(runtime/references)
 void BindQubitOperator(py::module &module) {
     namespace pr = parameter;
     using pr_t = pr::ParameterResolver;
-    using op_t = operators::qubit::QubitOperator;
-    py::class_<op_t, std::shared_ptr<op_t>>(module, "QubitOperator")
+    using qop_t = operators::qubit::QubitOperator;
+    using fop_t = operators::fermion::FermionOperator;
+    py::class_<qop_t, std::shared_ptr<qop_t>>(module, "QubitOperator")
         .def(py::init<const std::string &, const pr_t &>(), "pauli_string"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
-        // .def(py::self + py::self)
+        .def(py::self += tensor::Tensor())
         .def(py::self += py::self)
-        // .def(py::self * py::self)
+        .def(py::self + tensor::Tensor())
+        .def(py::self + py::self)
         .def(py::self *= py::self)
-        .def("size", &op_t::size)
-        .def("__repr__", [](const op_t &op) { return op.ToString(); });
+        .def("size", &qop_t::size)
+        .def("__repr__", [](const qop_t &op) { return op.ToString(); });
+    py::class_<fop_t, std::shared_ptr<fop_t>>(module, "FermionOperator")
+        .def(py::init<const std::string &, const pr_t &>(), "fermion_string"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
+        .def(py::self += tensor::Tensor())
+        .def(py::self += py::self)
+        .def(py::self + tensor::Tensor())
+        .def(py::self + py::self)
+        .def(py::self *= py::self)
+        .def("size", &fop_t::size)
+        .def("__repr__", [](const fop_t &op) { return op.ToString(); });
+}
+
+void BindTransform(py::module &module) {
+    module.def("jordan_wigner", &operators::transform::jordan_wigner, "ops"_a);
 }
 
 PYBIND11_MODULE(_math, m) {
@@ -182,6 +200,7 @@ PYBIND11_MODULE(_math, m) {
     py::module pr_module = m.def_submodule("pr", "MindQuantum ParameterResolver module.");
     BindPR(pr_module);
 
-    py::module pr_ops = m.def_submodule("ops", "MindQuantum Operators module.");
-    BindQubitOperator(pr_ops);
+    py::module ops_module = m.def_submodule("ops", "MindQuantum Operators module.");
+    BindQubitOperator(ops_module);
+    BindTransform(ops_module);
 }

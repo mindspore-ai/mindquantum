@@ -161,9 +161,12 @@ class FermionOperator {
     // -----------------------------------------------------------------------------
 
     FermionOperator& operator+=(const tn::Tensor& c);
-    FermionOperator operator+(const tn::Tensor& c);
     FermionOperator& operator+=(const FermionOperator& other);
-    FermionOperator operator+(const FermionOperator& other);
+    friend FermionOperator operator+(FermionOperator lhs, const tensor::Tensor& rhs);
+    friend FermionOperator operator+(FermionOperator lhs, const FermionOperator& rhs);
+
+    // -----------------------------------------------------------------------------
+
     FermionOperator operator*=(const FermionOperator& other);
     FermionOperator operator*(const FermionOperator& other);
     FermionOperator operator*=(const parameter::ParameterResolver& other);

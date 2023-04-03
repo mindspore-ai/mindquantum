@@ -353,14 +353,13 @@ FermionOperator& FermionOperator::operator+=(const tn::Tensor& c) {
     return *this;
 }
 
-FermionOperator FermionOperator::operator+(const tn::Tensor& c) {
-    auto out = *this;
-    if (out.Contains(key_t{0})) {
-        out.terms[key_t{0}] = out.terms[key_t{0}] + c;
+FermionOperator operator+(FermionOperator lhs, const tensor::Tensor& rhs) {
+    if (lhs.Contains(key_t{0})) {
+        lhs.terms[key_t{0}] = lhs.terms[key_t{0}] + rhs;
     } else {
-        out.terms.insert({key_t{0}, parameter::ParameterResolver(c)});
+        lhs.terms.insert({key_t{0}, parameter::ParameterResolver(rhs)});
     }
-    return out;
+    return lhs;
 }
 
 FermionOperator& FermionOperator::operator+=(const FermionOperator& other) {
@@ -374,10 +373,9 @@ FermionOperator& FermionOperator::operator+=(const FermionOperator& other) {
     return *this;
 }
 
-FermionOperator FermionOperator::operator+(const FermionOperator& other) {
-    auto out = *this;
-    out += other;
-    return out;
+FermionOperator operator+(FermionOperator lhs, const FermionOperator& rhs) {
+    lhs += rhs;
+    return lhs;
 }
 
 FermionOperator FermionOperator::operator*=(const FermionOperator& other) {

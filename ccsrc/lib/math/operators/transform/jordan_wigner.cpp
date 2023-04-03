@@ -17,7 +17,9 @@
 #include "math/operators/transform/jordan_wigner.hpp"
 
 #include <iostream>
+#include <limits>
 #include <numeric>
+#include <stdexcept>
 
 #include "math/operators/qubit_operator_view.hpp"
 #include "math/operators/transform/fermion_number_operator.hpp"
@@ -26,23 +28,63 @@
 namespace operators::transform {
 namespace tn = tensor;
 
-qubit_op_t jordan_wigner(const fermion_op_t& ops) {
-    // static constexpr auto cache_size_ = 1000UL;
+struct JWCache {
+    std::map<fermion_op_t::term_t, std::pair<qubit_op_t, size_t>> cache_;
+    size_t cache_size;
+    fermion_op_t::term_t prev_min;
 
+    // -----------------------------------------------------------------------------
+
+    JWCache(size_t cache_size) : cache_size(cache_size) {
+        if (cache_size <= 1) {
+            throw std::runtime_error("Cache size must be greater than one.");
+        }
+    }
+
+    qubit_op_t* get_or_null(const fermion_op_t::term_t& term) {
+        if (this->cache_.find(term) != this->cache_.end()) {
+            std::cout << "Get cache!" << std::endl;
+            auto& [val, count] = this->cache_[term];
+            count += 1;
+            return &(val);
+        }
+        return nullptr;
+    }
+
+    qubit_op_t* cache_and_return(const fermion_op_t::term_t& term, const qubit_op_t& pauli) {
+        if (this->cache_.size() >= cache_size) {
+            fermion_op_t::term_t min_hit;
+            size_t min_time = std::numeric_limits<size_t>::max();
+            for (auto& [k, v] : this->cache_) {
+                if (v.second < min_time) {
+                    min_hit = k;
+                }
+            }
+            this->cache_.erase(min_hit);
+            std::cout << "Kik out min!" << std::endl;
+        }
+        std::cout << "Cache!" << std::endl;
+        this->cache_[term] = {pauli, 1};
+        return &(this->cache_[term].first);
+    }
+};
+
+qubit_op_t jordan_wigner(const fermion_op_t& ops) {
+    static constexpr auto cache_size_ = 1000UL;
+    auto cache_ = JWCache(cache_size_);
     auto transf_op = qubit_op_t();
     for (const auto& [terms, coeff] : ops.get_terms()) {
         auto transformed_term = qubit_op_t("", coeff);
-        // auto transformed_term = qubit_op_t::identity() * coeff;
         for (const auto& term : terms) {
-            // if (auto cached_mult = cache_.get_or_null(term); cached_mult != nullptr) {
-            //     transformed_term *= *cached_mult;
-            // } else {
-            const auto& [idx, value] = term;
-            std::vector<size_t> z(idx);
-            std::iota(begin(z), end(z), 0UL);
-            auto tmp = transform_ladder_operator(value, {idx}, {}, z, {}, {idx}, z);
-            transformed_term *= tmp;
-            // }
+            if (auto cached_mult = cache_.get_or_null(term); cached_mult != nullptr) {
+                transformed_term *= *cached_mult;
+            } else {
+                const auto& [idx, value] = term;
+                std::vector<size_t> z(idx);
+                std::iota(begin(z), end(z), 0UL);
+                transformed_term *= *cache_.cache_and_return(
+                    term, transform_ladder_operator(value, {idx}, {}, z, {}, {idx}, z));
+            }
         }
         transf_op += transformed_term;
     }

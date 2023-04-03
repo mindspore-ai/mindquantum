@@ -80,7 +80,7 @@ int main() {
     // std::cout << var << std::endl;
     // auto p = operators::qubit::QubitOperator("X24");
     // std::cout << p << std::endl;
-    auto f = operators::fermion::FermionOperator("0^ 2^ 23^ 45^ 22^");
+    auto f = operators::fermion::FermionOperator("0^ 2^ 23^ 45^ 22^") + operators::fermion::FermionOperator("0^ 2");
     // auto f = operators::fermion::FermionOperator("23^");
     // auto f2 = operators::fermion::FermionOperator("1 22");
     // auto f3 = operators::fermion::FermionOperator("45^ 23^ 22^ 2^ 0^ 22 1");
