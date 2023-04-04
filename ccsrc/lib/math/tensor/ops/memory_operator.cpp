@@ -157,7 +157,70 @@ namespace tensor {
 Tensor::~Tensor() {
     ops::destroy(this);
 }
-
+Tensor::Tensor(float a, TDtype dtype) {
+    auto tmp = tensor::ops::init_with_value(a).astype(dtype);
+    this->data = tmp.data;
+    this->dtype = tmp.dtype;
+    this->device = tmp.device;
+    this->dim = tmp.dim;
+    tmp.data = nullptr;
+}
+Tensor::Tensor(double a, TDtype dtype) {
+    auto tmp = tensor::ops::init_with_value(a).astype(dtype);
+    this->data = tmp.data;
+    this->dtype = tmp.dtype;
+    this->device = tmp.device;
+    this->dim = tmp.dim;
+    tmp.data = nullptr;
+}
+Tensor::Tensor(const std::complex<float>& a, TDtype dtype) {
+    auto tmp = tensor::ops::init_with_value(a).astype(dtype);
+    this->data = tmp.data;
+    this->dtype = tmp.dtype;
+    this->device = tmp.device;
+    this->dim = tmp.dim;
+    tmp.data = nullptr;
+}
+Tensor::Tensor(const std::complex<double>& a, TDtype dtype) {
+    auto tmp = tensor::ops::init_with_value(a).astype(dtype);
+    this->data = tmp.data;
+    this->dtype = tmp.dtype;
+    this->device = tmp.device;
+    this->dim = tmp.dim;
+    tmp.data = nullptr;
+}
+Tensor::Tensor(const std::vector<float>& a, TDtype dtype) {
+    auto tmp = tensor::ops::init_with_vector(a).astype(dtype);
+    this->data = tmp.data;
+    this->dtype = tmp.dtype;
+    this->device = tmp.device;
+    this->dim = tmp.dim;
+    tmp.data = nullptr;
+}
+Tensor::Tensor(const std::vector<double>& a, TDtype dtype) {
+    auto tmp = tensor::ops::init_with_vector(a).astype(dtype);
+    this->data = tmp.data;
+    this->dtype = tmp.dtype;
+    this->device = tmp.device;
+    this->dim = tmp.dim;
+    tmp.data = nullptr;
+}
+Tensor::Tensor(const std::vector<std::complex<float>>& a, TDtype dtype) {
+    auto tmp = tensor::ops::init_with_vector(a).astype(dtype);
+    this->data = tmp.data;
+    this->dtype = tmp.dtype;
+    this->device = tmp.device;
+    this->dim = tmp.dim;
+    tmp.data = nullptr;
+}
+Tensor::Tensor(const std::vector<std::complex<double>>& a, TDtype dtype) {
+    auto tmp = tensor::ops::init_with_vector(a).astype(dtype);
+    this->data = tmp.data;
+    this->dtype = tmp.dtype;
+    this->device = tmp.device;
+    this->dim = tmp.dim;
+    tmp.data = nullptr;
+}
 Tensor::Tensor(TDtype dtype, TDevice device, void* data, size_t dim)
     : dtype(dtype), device(device), data(data), dim(dim) {
 }

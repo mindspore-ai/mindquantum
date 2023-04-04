@@ -13,14 +13,17 @@
 //   limitations under the License.
 
 #include <memory>
+#include <vector>
 
 #include <pybind11/attr.h>
 #include <pybind11/buffer_info.h>
 #include <pybind11/cast.h>
 #include <pybind11/complex.h>
 #include <pybind11/detail/common.h>
+#include <pybind11/functional.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include "math/operators/fermion_operator_view.hpp"
 #include "math/operators/qubit_operator_view.hpp"
@@ -52,8 +55,17 @@ using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
 void BindTensor(py::module &module) {  // NOLINT(runtime/references)
     py::class_<tensor::Tensor, std::shared_ptr<tensor::Tensor>>(module, "Tensor", py::buffer_protocol())
         .def(py::init<>())
-        .def("__str__", &tensor::ops::to_string, "simplify"_a = false)
-        .def("__repr__", &tensor::ops::to_string, "simplify"_a = false)
+        .def(py::init<float, tensor::TDtype>(), "data"_a, "dtype"_a = tensor::TDtype::Float32)
+        .def(py::init<double, tensor::TDtype>(), "data"_a, "dtype"_a = tensor::TDtype::Float64)
+        .def(py::init<const std::complex<float> &, tensor::TDtype>(), "data"_a, "dtype"_a = tensor::TDtype::Complex64)
+        .def(py::init<const std::complex<double> &, tensor::TDtype>(), "data"_a, "dtype"_a = tensor::TDtype::Complex128)
+        .def(py::init<const std::vector<float> &, tensor::TDtype>(), "data"_a, "dtype"_a = tensor::TDtype::Float64)
+        .def(py::init<const std::vector<double> &, tensor::TDtype>(), "data"_a, "dtype"_a = tensor::TDtype::Float32)
+        .def(py::init<const std::vector<std::complex<float>> &, tensor::TDtype>(), "data"_a,
+             "dtype"_a = tensor::TDtype::Complex64)
+        .def(py::init<const std::vector<std::complex<double>> &, tensor::TDtype>(), "data"_a,
+             "dtype"_a = tensor::TDtype::Complex128)
+        .def("astype", &tensor::Tensor::astype, "dtype"_a)
         .def_readonly("dtype", &tensor::Tensor::dtype)
         .def_readonly("size", &tensor::Tensor::dim)
         .BIND_TENSOR_OPS(+, +=)

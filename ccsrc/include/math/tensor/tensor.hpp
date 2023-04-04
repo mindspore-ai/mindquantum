@@ -31,6 +31,14 @@ struct Tensor {
 
     ~Tensor();
     Tensor() = default;
+    Tensor(float a, TDtype dtype = TDtype::Float32);
+    Tensor(double a, TDtype dtype = TDtype::Float64);
+    Tensor(const std::complex<float>& a, TDtype dtype = TDtype::Complex64);
+    Tensor(const std::complex<double>& a, TDtype dtype = TDtype::Complex128);
+    Tensor(const std::vector<float>& a, TDtype dtype = TDtype::Float32);
+    Tensor(const std::vector<double>& a, TDtype dtype = TDtype::Float64);
+    Tensor(const std::vector<std::complex<float>>& a, TDtype dtype = TDtype::Complex64);
+    Tensor(const std::vector<std::complex<double>>& a, TDtype dtype = TDtype::Complex128);
     Tensor(TDtype dtype, TDevice device, void* data, size_t dim);
     Tensor(Tensor&& t);
     Tensor& operator=(Tensor&& t);
