@@ -169,6 +169,9 @@ struct ParameterResolver {
     }
 
     ParameterResolver& operator/=(const ParameterResolver& value);
+
+    bool operator==(const ParameterResolver& value);
+    ParameterResolver operator-() const;
 };
 
 // -----------------------------------------------------------------------------

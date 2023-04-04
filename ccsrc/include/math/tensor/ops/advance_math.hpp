@@ -14,6 +14,10 @@
 
 #ifndef MATH_TENSOR_OPS_ADVANCE_MATH_HPP
 #define MATH_TENSOR_OPS_ADVANCE_MATH_HPP
+#include <type_traits>
+#include <vector>
+
+#include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
 
@@ -38,8 +42,18 @@ Tensor vdot(const Tensor& t1, const Tensor& t2);
 
 bool all_less_than(const Tensor& t);
 
-bool all_equal_to(const Tensor& t);
-
 bool is_all_zero(const Tensor& t);
+
+std::vector<bool> is_equal_to(const Tensor& lhs, const Tensor& rhs);
+
+template <typename T, typename = std::enable_if_t<!std::is_same_v<T, Tensor>>>
+std::vector<bool> is_equal_to(const Tensor& lhs, const T& rhs) {
+    return is_equal_to(lhs, ops::init_with_value(rhs, lhs.device));
+}
+template <typename T>
+bool all_equal_to(const Tensor& lhs, const T& rhs) {
+    auto equal_vec = is_equal_to(lhs, rhs);
+    return std::all_of(equal_vec.begin(), equal_vec.end(), [](auto i) { return i; });
+}
 }  // namespace tensor::ops
 #endif /* MATH_TENSOR_OPS_ADVANCE_MATH_HPP */

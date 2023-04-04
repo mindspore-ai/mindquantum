@@ -15,7 +15,12 @@
 #ifndef MATH_TENSOR_OPS_CPU_ADVANCE_MATH_HPP_
 #define MATH_TENSOR_OPS_CPU_ADVANCE_MATH_HPP_
 #include <algorithm>
+#include <stdexcept>
+#include <type_traits>
+#include <vector>
 
+#include "math/tensor/ops/advance_math.hpp"
+#include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/ops_cpu/basic_math.hpp"
 #include "math/tensor/ops_cpu/memory_operator.hpp"
 #include "math/tensor/ops_cpu/utils.hpp"
@@ -123,5 +128,49 @@ bool is_all_zero(void* data, size_t len) {
     return true;
 }
 bool is_all_zero(const Tensor& t);
+
+// -----------------------------------------------------------------------------
+template <typename T1, typename T2>
+bool operator==(T1 a, const std::complex<T2>& b) {
+    return a == b.real();
+}
+
+template <typename T1, typename T2>
+bool operator==(const std::complex<T1>& a, T2 b) {
+    return a.real() == b;
+}
+
+template <typename T1, typename T2>
+bool operator==(const std::complex<T1>& a, const std::complex<T2> b) {
+    return (a.real() == b.real()) && (a.imag() == b.imag());
+}
+
+template <TDtype lhs_dtype, TDtype rhs_dtype>
+std::vector<bool> is_equal_to(void* lhs, size_t lhs_len, void* rhs, size_t rhs_len) {
+    using lhs_t = to_device_t<lhs_dtype>;
+    using rhs_t = to_device_t<rhs_dtype>;
+    if (lhs_len != rhs_len) {
+        throw std::runtime_error("Dimension mismatch for compare tow tensors.");
+    }
+    auto c_lhs = reinterpret_cast<lhs_t*>(lhs);
+    auto c_rhs = reinterpret_cast<rhs_t*>(rhs);
+    std::vector<bool> out;
+    if (lhs_len == 1) {
+        for (size_t i = 0; i < rhs_len; i++) {
+            out.push_back(c_lhs[0] == c_rhs[i]);
+        }
+    } else if (rhs_len == 1) {
+        for (size_t i = 0; i < lhs_len; i++) {
+            out.push_back(c_lhs[i] == c_rhs[0]);
+        }
+    } else {
+        for (size_t i = 0; i < lhs_len; i++) {
+            out.push_back(c_lhs[i] == c_rhs[i]);
+        }
+    }
+    return out;
+}
+
+std::vector<bool> is_equal_to(const Tensor& lhs, const Tensor& rhs);
 }  // namespace tensor::ops::cpu
 #endif /* MATH_TENSOR_OPS_CPU_ADVANCE_MATH_HPP_ */

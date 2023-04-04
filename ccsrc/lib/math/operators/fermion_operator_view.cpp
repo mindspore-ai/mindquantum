@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <iostream>
+#include <stdexcept>
 
 #include <sys/types.h>
 
@@ -332,6 +333,14 @@ auto FermionOperator::get_terms() const -> dict_t {
     return out;
 }
 
+value_t FermionOperator::get_coeff(const terms_t& term) {
+    auto fermion_words = SingleFermionStr::init(term, tn::ops::ones(1)).first;
+    if (this->Contains(fermion_words)) {
+        return this->terms[fermion_words];
+    }
+    throw std::out_of_range("term not in fermion operator");
+}
+
 bool FermionOperator::is_singlet() const {
     return this->size() == 1;
 }
@@ -346,7 +355,7 @@ parameter::ParameterResolver FermionOperator::singlet_coeff() const {
 size_t FermionOperator::count_qubits() const {
     int n_qubits = 0;
     for (auto& [k, v] : this->terms.m_list) {
-        int group_id = k.size() - 1, local_id = 0;
+        int group_id = k.size() - 1;
         for (auto word = k.rbegin(); word != k.rend(); ++word) {
             if ((*word) != 0) {
                 n_qubits = std::max(n_qubits, (63 - __builtin_clzll(*word)) / 3 + group_id * 21);

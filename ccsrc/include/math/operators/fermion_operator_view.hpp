@@ -155,6 +155,7 @@ class FermionOperator {
     size_t size() const;
     std::string ToString() const;
     dict_t get_terms() const;
+    value_t get_coeff(const terms_t& term);
     bool is_singlet() const;
     parameter::ParameterResolver singlet_coeff() const;
     size_t count_qubits() const;
@@ -165,7 +166,7 @@ class FermionOperator {
     FermionOperator& operator+=(const FermionOperator& other);
     friend FermionOperator operator+(FermionOperator lhs, const tensor::Tensor& rhs);
     friend FermionOperator operator+(FermionOperator lhs, const FermionOperator& rhs);
-    value_t get_coeff(const terms_t& term);
+
     // -----------------------------------------------------------------------------
 
     FermionOperator operator*=(const FermionOperator& other);

@@ -12,9 +12,7 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#include "math/operators/transform/parity.hpp"
-
-#include "math/operators/transform/transform_ladder_operator.hpp"
+#include "math/operators/transform.hpp"
 
 namespace operators::transform {
 

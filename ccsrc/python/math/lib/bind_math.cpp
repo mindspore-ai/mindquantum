@@ -24,8 +24,7 @@
 
 #include "math/operators/fermion_operator_view.hpp"
 #include "math/operators/qubit_operator_view.hpp"
-#include "math/operators/transform/jordan_wigner.hpp"
-#include "math/operators/transform/transform.hpp"
+#include "math/operators/transform.hpp"
 #include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/tensor.hpp"
@@ -86,8 +85,7 @@ void BindTensor(py::module &module) {  // NOLINT(runtime/references)
                 format,
                 1,
                 {t.dim,},
-                {tensor::bit_size(t.dtype)}
-            );
+                {tensor::bit_size(t.dtype)});
             // clang-format on
         });
 

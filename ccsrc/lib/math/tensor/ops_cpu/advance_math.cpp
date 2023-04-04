@@ -110,4 +110,29 @@ bool is_all_zero(const Tensor& t) {
     return false;
 }
 
+// -----------------------------------------------------------------------------
+#define IS_EQUAL_TO_TENSOR(lhs_dtype)                                                                                  \
+    case (lhs_dtype): {                                                                                                \
+        switch (rhs.dtype) {                                                                                           \
+            case (TDtype::Float32):                                                                                    \
+                return is_equal_to<lhs_dtype, TDtype::Float32>(lhs.data, lhs.dim, rhs.data, rhs.dim);                  \
+            case (TDtype::Float64):                                                                                    \
+                return is_equal_to<lhs_dtype, TDtype::Float64>(lhs.data, lhs.dim, rhs.data, rhs.dim);                  \
+            case (TDtype::Complex64):                                                                                  \
+                return is_equal_to<lhs_dtype, TDtype::Complex64>(lhs.data, lhs.dim, rhs.data, rhs.dim);                \
+            case (TDtype::Complex128):                                                                                 \
+                return is_equal_to<lhs_dtype, TDtype::Complex128>(lhs.data, lhs.dim, rhs.data, rhs.dim);               \
+        }                                                                                                              \
+        break;                                                                                                         \
+    }
+
+std::vector<bool> is_equal_to(const Tensor& lhs, const Tensor& rhs) {
+    switch (lhs.dtype) {
+        IS_EQUAL_TO_TENSOR(TDtype::Float32)
+        IS_EQUAL_TO_TENSOR(TDtype::Float64)
+        IS_EQUAL_TO_TENSOR(TDtype::Complex64)
+        IS_EQUAL_TO_TENSOR(TDtype::Complex128)
+    }
+}
+#undef IS_EQUAL_TO_TENSOR
 }  // namespace tensor::ops::cpu

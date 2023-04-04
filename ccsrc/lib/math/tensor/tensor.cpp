@@ -12,6 +12,8 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
+#include "math/tensor/tensor.hpp"
+
 #include <iostream>
 
 #include "math/tensor/ops.hpp"
@@ -162,5 +164,21 @@ Tensor Tensor::conj() const {
 
 Tensor Tensor::astype(TDtype dtype) const {
     return tensor::ops::cast_to(*this, dtype);
+}
+
+std::vector<bool> Tensor::operator==(const Tensor& other) const {
+    return tensor::ops::is_equal_to(*this, other);
+}
+std::vector<bool> Tensor::operator==(float other) const {
+    return tensor::ops::is_equal_to(*this, other);
+}
+std::vector<bool> Tensor::operator==(double other) const {
+    return tensor::ops::is_equal_to(*this, other);
+}
+std::vector<bool> Tensor::operator==(const std::complex<float>& other) const {
+    return tensor::ops::is_equal_to(*this, other);
+}
+std::vector<bool> Tensor::operator==(const std::complex<double>& other) const {
+    return tensor::ops::is_equal_to(*this, other);
 }
 }  // namespace tensor

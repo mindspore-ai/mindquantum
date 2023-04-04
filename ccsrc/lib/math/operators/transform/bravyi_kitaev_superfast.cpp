@@ -12,16 +12,16 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#include "math/operators/transform/bravyi_kitaev_superfast.hpp"
-
 #include <algorithm>
 #include <iterator>
 #include <map>
 #include <set>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 #include "math/operators/fermion_operator_view.hpp"
+#include "math/operators/transform.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 
 namespace operators::transform {

@@ -18,8 +18,7 @@
 
 #include "math/operators/fermion_operator_view.hpp"
 #include "math/operators/qubit_operator_view.hpp"
-#include "math/operators/transform/fermion_number_operator.hpp"
-#include "math/operators/transform/jordan_wigner.hpp"
+#include "math/operators/transform.hpp"
 #include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/traits.hpp"

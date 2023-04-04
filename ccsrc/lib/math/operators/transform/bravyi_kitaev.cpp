@@ -12,9 +12,7 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#include "math/operators/transform/bravyi_kitaev.hpp"
-
-#include "math/operators/transform/transform_ladder_operator.hpp"
+#include "math/operators/transform.hpp"
 
 namespace operators::transform {
 qubit_op_t bravyi_kitaev(const fermion_op_t& ops, int n_qubits) {

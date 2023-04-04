@@ -12,16 +12,13 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#include "math/operators/transform/jordan_wigner.hpp"
-
 #include <iostream>
 #include <limits>
 #include <numeric>
 #include <stdexcept>
 
 #include "math/operators/qubit_operator_view.hpp"
-#include "math/operators/transform/fermion_number_operator.hpp"
-#include "math/operators/transform/transform_ladder_operator.hpp"
+#include "math/operators/transform.hpp"
 #include "math/tensor/ops.hpp"
 namespace operators::transform {
 namespace tn = tensor;
@@ -33,7 +30,7 @@ struct JWCache {
 
     // -----------------------------------------------------------------------------
 
-    JWCache(size_t cache_size) : cache_size(cache_size) {
+    explicit JWCache(size_t cache_size) : cache_size(cache_size) {
         if (cache_size <= 1) {
             throw std::runtime_error("Cache size must be greater than one.");
         }
@@ -74,7 +71,7 @@ qubit_op_t jordan_wigner(const fermion_op_t& ops) {
     for (const auto& [terms, coeff] : ops.get_terms()) {
         auto transformed_term = qubit_op_t("", coeff);
         for (const auto& term : terms) {
-            if (auto cached_mult = cache_.get_or_null(term); cached_mult != nullptr) {
+            if (const auto cached_mult = cache_.get_or_null(term); cached_mult != nullptr) {
                 transformed_term *= *cached_mult;
             } else {
                 const auto& [idx, value] = term;
@@ -109,7 +106,7 @@ fermion_op_t reverse_jordan_wigner(const qubit_op_t& ops, int n_qubits) {
                 fermion_op_t trans_pauli;
                 if (value == qubit::TermValue::Z) {
                     trans_pauli = fermion_op_t("");
-                    trans_pauli += fermion::fermion_number_operator(n_qubits, idx, tn::ops::init_with_value(-2.0));
+                    trans_pauli += fermion_number_operator(n_qubits, idx, tn::ops::init_with_value(-2.0));
                 } else {
                     auto raising_term = fermion_op_t({{idx, fermion::TermValue::Ad}});
                     auto lowering_term = fermion_op_t({{idx, fermion::TermValue::A}});

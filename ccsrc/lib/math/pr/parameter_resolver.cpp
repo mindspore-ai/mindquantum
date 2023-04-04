@@ -248,6 +248,33 @@ ParameterResolver& ParameterResolver::operator/=(const ParameterResolver& rhs) {
     return *this;
 }
 
+bool ParameterResolver::operator==(const ParameterResolver& value) {
+    if (this->data_.size() != value.data_.size()) {
+        return false;
+    }
+    if (!tn::ops::all_equal_to(this->const_value, value.const_value)) {
+        return false;
+    }
+    for (auto& [k, v] : this->data_) {
+        if (!value.Contains(k)) {
+            return false;
+        }
+        if (!tn::ops::all_equal_to(v, this->data_[k])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+ParameterResolver ParameterResolver::operator-() const {
+    auto out = *this;
+    out.const_value = 0.0 - out.const_value;
+    for (auto& [k, v] : out.data_) {
+        v = 0.0 - v;
+    }
+    return out;
+}
+
 ParameterResolver operator+(const ParameterResolver& lhs, const ParameterResolver& rhs) {
     auto origin_type = lhs.const_value.dtype;
     auto out = lhs;

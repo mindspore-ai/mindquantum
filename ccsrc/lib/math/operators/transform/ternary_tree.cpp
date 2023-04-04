@@ -11,9 +11,7 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
-#include "math/operators/transform/ternary_tree.hpp"
-
-#include "math/operators/transform/transform_ladder_operator.hpp"
+#include "math/operators/transform.hpp"
 namespace operators::transform {
 qubit_op_t ternary_tree(const fermion_op_t& ops, int n_qubits) {
     int h = static_cast<int>(std::floor(std::log1p(2 * n_qubits) / std::log(3)));

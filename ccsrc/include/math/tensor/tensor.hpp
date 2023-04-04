@@ -16,6 +16,7 @@
 #define MATH_TENSOR_TENSOR_HPP_
 
 #include <cstddef>
+#include <vector>
 
 #include "math/tensor/traits.hpp"
 
@@ -75,6 +76,14 @@ struct Tensor {
     Tensor& operator/=(const std::complex<double>& other);
     Tensor& operator/=(const std::complex<float>& other);
     Tensor& operator/=(const Tensor& other);
+
+    // -----------------------------------------------------------------------------
+
+    std::vector<bool> operator==(const Tensor& other) const;
+    std::vector<bool> operator==(float other) const;
+    std::vector<bool> operator==(double other) const;
+    std::vector<bool> operator==(const std::complex<float>& other) const;
+    std::vector<bool> operator==(const std::complex<double>& other) const;
 
     // -----------------------------------------------------------------------------
 };

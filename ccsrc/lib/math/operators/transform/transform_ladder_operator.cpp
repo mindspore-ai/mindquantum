@@ -11,8 +11,7 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
-#include "math/operators/transform/transform_ladder_operator.hpp"
-
+#include "math/operators/transform.hpp"
 #include "math/tensor/ops.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 

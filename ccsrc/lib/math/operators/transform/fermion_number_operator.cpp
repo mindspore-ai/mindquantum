@@ -12,8 +12,9 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-#include "math/operators/transform/fermion_number_operator.hpp"
-namespace operators::fermion {
+#include "math/operators/transform.hpp"
+
+namespace operators::transform {
 fermion_op_t fermion_number_operator(int n_modes, int mode, const parameter::ParameterResolver& coeff) {
     fermion_op_t out{};
     if (mode < 0) {
@@ -25,4 +26,4 @@ fermion_op_t fermion_number_operator(int n_modes, int mode, const parameter::Par
     }
     return out;
 }
-}  // namespace operators::fermion
+}  // namespace operators::transform

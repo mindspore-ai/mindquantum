@@ -55,4 +55,13 @@ bool is_all_zero(const Tensor& t) {
     } else {
     }
 }
+std::vector<bool> is_equal_to(const Tensor& lhs, const Tensor& rhs) {
+    if (lhs.device != rhs.device) {
+        throw std::runtime_error("Cannot compare tow tensor in different device.");
+    }
+    if (lhs.device == TDevice::CPU) {
+        return ops::cpu::is_equal_to(lhs, rhs);
+    } else {
+    }
+}
 }  // namespace tensor::ops
