@@ -46,7 +46,8 @@ try:
     import packaging.version
 
     ms_version = mindspore.__version__
-
+    if "rc" in ms_version:
+        ms_version = ms_version[: ms_version.find('rc')]
     ms_requires = packaging.version.parse('1.4.0')
     if packaging.version.parse(ms_version) < ms_requires:
         warnings.warn(
