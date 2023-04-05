@@ -113,11 +113,17 @@ void BindPR(py::module &module) {  // NOLINT(runtime/references)
     namespace pr = parameter;
     using pr_t = pr::ParameterResolver;
     py::class_<pr_t, std::shared_ptr<pr_t>>(module, "ParameterResolver")
-        .def(py::init<const std::string &, tensor::TDtype>(), "key"_a, "dtype"_a = tensor::TDtype::Float64)
-        .def(py::init<const tensor::Tensor &>(), "const_value"_a)
+        .def(py::init<const std::string &, const tensor::Tensor &, tensor::TDtype>(), "key"_a,
+             "const_value"_a = tensor::ops::zeros(1), "dtype"_a = tensor::TDtype::Float64)
+        .def(py::init<const std::map<std::string, tensor::Tensor> &, const tensor::Tensor &, tensor::TDtype>(),
+             "data"_a, "const_value"_a = tensor::ops::zeros(1), "dtype"_a = tensor::TDtype::Float64)
+        .def(py::init<const tensor::Tensor &, tensor::TDtype>(), "const_value"_a, "dtype"_a = tensor::TDtype::Float64)
+        .def(py::init<const pr_t &>(), "other"_a)
+        .def("get_const", &pr_t::GetConstValue)
+        .def("set_const", &pr_t::SetConstValue)
         .def("__str__", &pr_t::ToString)
         .def("__len__", &pr_t::Size)
-        .def_property_readonly("dtype", &pr_t::GetDtype)
+        .def("dtype", &pr_t::GetDtype)
         .def("astype",
              [](const pr_t &pr, tensor::TDtype dtype) {
                  auto out = pr;
@@ -140,8 +146,13 @@ void BindPR(py::module &module) {  // NOLINT(runtime/references)
         .def("as_ansatz", &pr_t::AsAnsatz)
         .def("conjugate", &pr_t::Conjugate)
         .def("as_encoder", &pr_t::AsEncoder)
+        .def("set_item", &pr_t::SetItem<tensor::Tensor>)
+        .def("get_item", &pr_t::GetItem)
+        .def("is_not_zero", &pr_t::IsNotZero)
         .def("ansatz_part", &pr_t::AnsatzPart)
         .def("params_name", &pr_t::ParamsName)
+        .def("params_value", &pr_t::ParaValue)
+        .def("params_data", &pr_t::ParaData)
         .def("combination", &pr_t::Combination)
         .def("no_grad_part", &pr_t::NoGradPart)
         .def("encoder_part", &pr_t::EncoderPart)

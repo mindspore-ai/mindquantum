@@ -50,10 +50,8 @@ struct ParameterResolver {
     std::set<std::string> encoder_parameters_{};
     ParameterResolver() = default;
 
-    template <typename T,
-              typename
-              = std::enable_if_t<!std::is_same_v<std::remove_cvref_t<T>,
-                                                 tn::Tensor> && !std::is_same_v<std::remove_cvref_t<T>, std::string>>>
+    template <typename T, typename = std::enable_if_t<!std::is_same_v<std::remove_cvref_t<T>, tn::Tensor>
+                                                      && !std::is_same_v<std::remove_cvref_t<T>, std::string>>>
     explicit ParameterResolver(T const_value, const std::map<std::string, T>& data = {},
                                const std::set<std::string>& no_grad_parameters = {},
                                const std::set<std::string>& encoder_parameter = {}) {
@@ -65,9 +63,12 @@ struct ParameterResolver {
         this->encoder_parameters_ = encoder_parameter;
     }
 
-    ParameterResolver(const std::string& key, tn::TDtype dtype = tn::TDtype::Float64);
-
-    ParameterResolver(const tn::Tensor& const_value);
+    ParameterResolver(const std::string& key, const tn::Tensor& const_value = tn::ops::zeros(1),
+                      tn::TDtype dtype = tn::TDtype::Float64);
+    ParameterResolver(const std::map<std::string, tn::Tensor>& data, const tn::Tensor& const_value = tn::ops::zeros(1),
+                      tn::TDtype dtype = tn::TDtype::Float64);
+    ParameterResolver(const tn::Tensor& const_value, tn::TDtype dtype = tn::TDtype::Float64);
+    ParameterResolver(const ParameterResolver& other) = default;
     // -----------------------------------------------------------------------------
     tn::TDtype GetDtype() const;
     size_t Size() const;
@@ -77,6 +78,8 @@ struct ParameterResolver {
     void SetConst(const T& a) {
         tn::ops::set(&(this->const_value), a, 0);
     }
+    void SetConstValue(const tn::Tensor& a);
+    tn::Tensor GetConstValue() const;
     std::string ToString() const;
     bool Contains(const std::string& key) const;
     bool NoGradContains(const std::string& key) const;
@@ -86,11 +89,17 @@ struct ParameterResolver {
     std::set<std::string> GetAnsatzParameters() const;
     bool IsConst() const;
     bool IsNotZero() const;
-    void SetItem(const std::string& key, const tn::Tensor& t);
 
     template <typename T>
     void SetItem(const std::string& key, const T& a) {
-        this->SetItem(key, tn::ops::init_with_value(a, this->const_value.device));
+        if constexpr (std::is_same_v<T, tn::Tensor>) {
+            if (a.dim != 1) {
+                throw std::runtime_error("For SetItem of tensor, the given tensor should only has one value.");
+            }
+            this->data_[key] = a.astype(this->const_value.dtype);
+        } else {
+            this->SetItem(key, tn::ops::init_with_value(a, this->const_value.device));
+        }
     }
 
     tn::Tensor GetItem(const std::string& key) const;
@@ -98,6 +107,7 @@ struct ParameterResolver {
     std::vector<std::string> ParamsName() const;
 
     std::vector<tn::Tensor> ParaValue() const;
+    data_t ParaData() const;
 
     void RequiresGrad();
 

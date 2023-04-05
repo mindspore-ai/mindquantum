@@ -23,12 +23,21 @@
 #include "math/tensor/traits.hpp"
 
 namespace parameter {
-ParameterResolver::ParameterResolver(const tn::Tensor& const_value) : const_value(const_value) {
+ParameterResolver::ParameterResolver(const tn::Tensor& const_value, tn::TDtype dtype)
+    : const_value(const_value.astype(dtype)) {
 }
 
-ParameterResolver::ParameterResolver(const std::string& key, tn::TDtype dtype) {
-    this->const_value = tn::ops::zeros(1, dtype);
+ParameterResolver::ParameterResolver(const std::string& key, const tn::Tensor& const_value, tn::TDtype dtype) {
+    this->const_value = const_value.astype(dtype);
     this->data_[key] = tn::ops::ones(1, dtype);
+}
+
+ParameterResolver::ParameterResolver(const std::map<std::string, tn::Tensor>& data, const tn::Tensor& const_value,
+                                     tn::TDtype dtype) {
+    this->const_value = const_value.astype(dtype);
+    for (auto& [k, v] : data) {
+        this->data_[k] = v.astype(dtype);
+    }
 }
 
 tn::TDtype ParameterResolver::GetDtype() const {
@@ -45,6 +54,13 @@ void ParameterResolver::CastTo(tn::TDtype dtype) {
         v = tn::ops::cast_to(v, dtype);
     }
 }
+void ParameterResolver::SetConstValue(const tn::Tensor& a) {
+    this->const_value = a.astype(this->const_value.dtype);
+}
+
+tn::Tensor ParameterResolver::GetConstValue() const {
+    return this->const_value;
+}
 
 std::string ParameterResolver::ToString() const {
     std::string out = "ParameterResolver (dtype: " + tensor::to_string(this->const_value.dtype) + ",\n";
@@ -59,8 +75,9 @@ std::string ParameterResolver::ToString() const {
             if (i != this->data_.size()) {
                 out += ",";
             }
-            out += "\n  ],\n";
+            out += "\n";
         }
+        out += "  ],\n";
     }
     out += "  const value: " + tn::ops::to_string(this->const_value, true);
     if (this->no_grad_parameters_.size() != 0) {
@@ -92,10 +109,7 @@ std::string ParameterResolver::ToString() const {
 }
 
 bool ParameterResolver::Contains(const std::string& key) const {
-    std::cout << "<---" << std::endl;
-    std::cout << this->data_.size() << std::endl;
     auto res = this->data_.find(key) != this->data_.end();
-    std::cout << res << std::endl;
     return res;
 }
 
@@ -142,13 +156,6 @@ bool ParameterResolver::IsNotZero() const {
         }
     }
     return false;
-}
-
-void ParameterResolver::SetItem(const std::string& key, const tn::Tensor& t) {
-    if (t.dim != 1) {
-        throw std::runtime_error("For SetItem of tensor, the given tensor should only has one value.");
-    }
-    this->data_[key] = t.astype(this->const_value.dtype);
 }
 
 tn::Tensor ParameterResolver::GetItem(const std::string& key) const {
@@ -339,6 +346,9 @@ std::vector<tn::Tensor> ParameterResolver::ParaValue() const {
         out.push_back(v);
     }
     return out;
+}
+auto ParameterResolver::ParaData() const -> data_t {
+    return this->data_;
 }
 
 void ParameterResolver::RequiresGrad() {
