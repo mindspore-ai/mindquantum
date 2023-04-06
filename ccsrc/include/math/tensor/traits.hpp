@@ -134,18 +134,21 @@ static constexpr TDtype to_dtype_v = to_dtype<T>::dtype;
 
 template <TDtype dtype>
 static constexpr TDtype to_real_dtype_t = to_real_dtype<dtype>::t;
+
+TDtype ToRealType(TDtype dtype);
+TDtype ToComplexType(TDtype dtype);
 // -----------------------------------------------------------------------------
 
 template <TDtype dtype>
 std::string to_string() {
     if constexpr (dtype == TDtype::Float32) {
-        return "Float32";
+        return "float32";
     } else if constexpr (dtype == TDtype::Float64) {
-        return "Float64";
+        return "float64";
     } else if constexpr (dtype == TDtype::Complex64) {
-        return "Complex64";
+        return "complex64";
     } else if constexpr (dtype == TDtype::Complex128) {
-        return "Complex128";
+        return "complex128";
     } else {
         throw std::runtime_error("Unknown dtype.");
     }

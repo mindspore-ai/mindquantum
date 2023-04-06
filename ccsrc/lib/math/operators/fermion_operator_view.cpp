@@ -25,6 +25,7 @@
 #include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/ops/concrete_tensor.hpp"
 #include "math/tensor/tensor.hpp"
+#include "math/tensor/traits.hpp"
 
 namespace operators::fermion {
 auto SingleFermionStr::ParseToken(const std::string& token) -> term_t {
@@ -269,15 +270,48 @@ std::tuple<tn::Tensor, uint64_t> SingleFermionStr::MulSingleCompressTerm(uint64_
 FermionOperator::FermionOperator(const std::string& fermion_string, const parameter::ParameterResolver& var) {
     auto term = SingleFermionStr::init(fermion_string, var);
     this->terms.insert(term.first, term.second);
+    this->dtype = term.second.GetDtype();
 }
 
 FermionOperator::FermionOperator(const terms_t& t, const parameter::ParameterResolver& var) {
     auto term = SingleFermionStr::init(t, var);
     this->terms.insert(term.first, term.second);
+    this->dtype = term.second.GetDtype();
+}
+
+FermionOperator FermionOperator::imag() const {
+    auto out = *this;
+    for (auto& [k, v] : out.terms.m_list) {
+        v = v.Imag();
+    }
+    out.dtype = tn::ToRealType(this->dtype);
+    return out;
+}
+
+FermionOperator FermionOperator::real() const {
+    auto out = *this;
+    for (auto& [k, v] : out.terms.m_list) {
+        v = v.Real();
+    }
+    out.dtype = tn::ToRealType(this->dtype);
+    return out;
+}
+
+void FermionOperator::CastTo(tn::TDtype dtype) {
+    if (dtype != this->dtype) {
+        for (auto& [k, v] : this->terms) {
+            v.CastTo(dtype);
+        }
+        this->dtype = dtype;
+    }
 }
 
 bool FermionOperator::Contains(const key_t& term) const {
     return this->terms.m_map.find(term) != this->terms.m_map.end();
+}
+
+tn::TDtype FermionOperator::GetDtype() const {
+    return this->dtype;
 }
 
 void FermionOperator::Update(const compress_term_t& fermion) {
@@ -286,7 +320,16 @@ void FermionOperator::Update(const compress_term_t& fermion) {
     } else {
         this->terms.insert(fermion);
     }
+    auto upper_t = tn::upper_type_v(fermion.second.GetDtype(), this->dtype);
+    if (upper_t != this->GetDtype()) {
+        this->CastTo(upper_t);
+        return;
+    }
+    if (fermion.second.GetDtype() != upper_t) {
+        this->terms[fermion.first].CastTo(upper_t);
+    }
 }
+
 size_t FermionOperator::size() const {
     return this->terms.size();
 }
@@ -374,6 +417,14 @@ FermionOperator& FermionOperator::operator+=(const tn::Tensor& c) {
     } else {
         this->terms.insert({key_t{0}, parameter::ParameterResolver(c)});
     }
+    auto upper_t = tn::upper_type_v(c.dtype, this->dtype);
+    if (upper_t != this->GetDtype()) {
+        this->CastTo(upper_t);
+        return *this;
+    }
+    if (c.dtype != upper_t) {
+        this->terms[key_t{0}].CastTo(upper_t);
+    }
     return *this;
 }
 
@@ -383,6 +434,14 @@ FermionOperator operator+(FermionOperator lhs, const tensor::Tensor& rhs) {
     } else {
         lhs.terms.insert({key_t{0}, parameter::ParameterResolver(rhs)});
     }
+    auto upper_t = tn::upper_type_v(lhs.GetDtype(), rhs.dtype);
+    if (upper_t != lhs.GetDtype()) {
+        lhs.CastTo(upper_t);
+        return lhs;
+    }
+    if (upper_t != rhs.dtype) {
+        lhs.terms[key_t{0}].CastTo(upper_t);
+    }
     return lhs;
 }
 
@@ -390,8 +449,18 @@ FermionOperator& FermionOperator::operator+=(const FermionOperator& other) {
     for (const auto& term : other.terms) {
         if (this->Contains(term.first)) {
             this->terms[term.first] = this->terms[term.first] + term.second;
+            if (this->dtype != this->terms[term.first].GetDtype()) {
+                this->CastTo(this->terms[term.first].GetDtype());
+            }
         } else {
             this->terms.insert(term);
+            auto upper_t = tn::upper_type_v(this->dtype, term.second.GetDtype());
+            if (this->GetDtype() != upper_t) {
+                this->CastTo(upper_t);
+            }
+            if (term.second.GetDtype() != upper_t) {
+                this->terms[term.first].CastTo(upper_t);
+            }
         }
     }
     return *this;
@@ -409,13 +478,28 @@ FermionOperator FermionOperator::operator*=(const FermionOperator& other) {
             auto new_term = SingleFermionStr::Mul(this_term, other_term);
             if (out.Contains(new_term.first)) {
                 out.terms[new_term.first] = out.terms[new_term.first] + new_term.second;
+                if (this->dtype != out.terms[new_term.first].GetDtype()) {
+                    this->CastTo(out.terms[new_term.first].GetDtype());
+                }
             } else {
                 out.terms.insert(new_term);
+                auto upper_t = tn::upper_type_v(this->dtype, out.terms[new_term.first].GetDtype());
+                if (this->GetDtype() != upper_t) {
+                    this->CastTo(upper_t);
+                }
+                if (new_term.second.GetDtype() != upper_t) {
+                    out.terms[new_term.first].CastTo(upper_t);
+                }
             }
         }
     }
     std::swap(out.terms, this->terms);
     return *this;
+}
+
+FermionOperator operator*(FermionOperator lhs, const FermionOperator& rhs) {
+    lhs *= rhs;
+    return lhs;
 }
 
 FermionOperator FermionOperator::operator*(const FermionOperator& other) {
@@ -425,8 +509,18 @@ FermionOperator FermionOperator::operator*(const FermionOperator& other) {
             auto new_term = SingleFermionStr::Mul(this_term, other_term);
             if (out.Contains(new_term.first)) {
                 out.terms[new_term.first] = out.terms[new_term.first] + new_term.second;
+                if (this->dtype != out.terms[new_term.first].GetDtype()) {
+                    this->CastTo(out.terms[new_term.first].GetDtype());
+                }
             } else {
                 out.terms.insert(new_term);
+                auto upper_t = tn::upper_type_v(this->dtype, out.terms[new_term.first].GetDtype());
+                if (this->GetDtype() != upper_t) {
+                    this->CastTo(upper_t);
+                }
+                if (new_term.second.GetDtype() != upper_t) {
+                    out.terms[new_term.first].CastTo(upper_t);
+                }
             }
         }
     }
@@ -436,6 +530,7 @@ FermionOperator FermionOperator::operator*(const FermionOperator& other) {
 FermionOperator FermionOperator::operator*=(const parameter::ParameterResolver& other) {
     for (auto& [k, v] : this->terms.m_list) {
         v *= other;
+        this->dtype = v.GetDtype();
     }
     return *this;
 }

@@ -119,47 +119,59 @@ void BindPR(py::module &module) {  // NOLINT(runtime/references)
              "data"_a, "const_value"_a = tensor::ops::zeros(1), "dtype"_a = tensor::TDtype::Float64)
         .def(py::init<const tensor::Tensor &, tensor::TDtype>(), "const_value"_a, "dtype"_a = tensor::TDtype::Float64)
         .def(py::init<const pr_t &>(), "other"_a)
-        .def("get_const", &pr_t::GetConstValue)
-        .def("set_const", &pr_t::SetConstValue)
-        .def("__str__", &pr_t::ToString)
+        .def(py::self + py::self)
+        .def(py::self + py::self)
+        .def(py::self += py::self)
+        .def(py::self - py::self)
+        .def(py::self -= py::self)
+        .def(py::self * py::self)
+        .def(py::self *= py::self)
+        .def(py::self / py::self)
+        .def(py::self /= py::self)
+        .def("__copy__",
+             [](const pr_t &pr) {
+                 auto out = pr;
+                 return out;
+             })
+        .def("__contains__", &pr_t::Contains)
         .def("__len__", &pr_t::Size)
-        .def("dtype", &pr_t::GetDtype)
+        .def("__str__", &pr_t::ToString)
+        .def("ansatz_part", &pr_t::AnsatzPart)
         .def("astype",
              [](const pr_t &pr, tensor::TDtype dtype) {
                  auto out = pr;
                  out.CastTo(dtype);
                  return out;
              })
-        .def("__contains__", &pr_t::Contains)
-        .def("__copy__",
-             [](const pr_t &pr) {
-                 auto out = pr;
-                 return out;
-             })
-        .def("pop", &pr_t::Pop)
-        .def("real", &pr_t::Real)
+        .def("as_ansatz", &pr_t::AsAnsatz)
+        .def("as_encoder", &pr_t::AsEncoder)
+        .def("combination", &pr_t::Combination)
+        .def("conjugate", &pr_t::Conjugate)
+        .def("dtype", &pr_t::GetDtype)
+        .def("encoder_part", &pr_t::EncoderPart)
+        .def("get_const", &pr_t::GetConstValue)
+        .def("get_encoder_parameters", [](const pr_t &a) { return a.encoder_parameters_; })
+        .def("get_grad_parameters", [](const pr_t &a) { return a.no_grad_parameters_; })
+        .def("get_item", &pr_t::GetItem)
+        .def("is_hermitian", &pr_t::IsHermitian)
+        .def("is_not_zero", &pr_t::IsNotZero)
         .def("imag", &pr_t::Imag)
-        .def("no_grad", &pr_t::NoGrad)
         .def("is_const", &pr_t::IsConst)
+        .def("is_anti_hermitian", &pr_t::IsAntiHermitian)
         .def("keep_imag", &pr_t::KeepImag)
         .def("keep_real", &pr_t::KeepReal)
-        .def("as_ansatz", &pr_t::AsAnsatz)
-        .def("conjugate", &pr_t::Conjugate)
-        .def("as_encoder", &pr_t::AsEncoder)
-        .def("set_item", &pr_t::SetItem<tensor::Tensor>)
-        .def("get_item", &pr_t::GetItem)
-        .def("is_not_zero", &pr_t::IsNotZero)
-        .def("ansatz_part", &pr_t::AnsatzPart)
+        .def("no_grad", &pr_t::NoGrad)
+        .def("no_grad_part", &pr_t::NoGradPart)
+        .def("params_data", &pr_t::ParaData)
         .def("params_name", &pr_t::ParamsName)
         .def("params_value", &pr_t::ParaValue)
-        .def("params_data", &pr_t::ParaData)
-        .def("combination", &pr_t::Combination)
-        .def("no_grad_part", &pr_t::NoGradPart)
-        .def("encoder_part", &pr_t::EncoderPart)
-        .def("is_hermitian", &pr_t::IsHermitian)
+        .def("pop", &pr_t::Pop)
         .def("requires_grad", &pr_t::RequiresGrad)
-        .def("is_anti_hermitian", &pr_t::IsAntiHermitian)
-        .def("requires_grad_part", &pr_t::RequiresGradPart);
+        .def("requires_grad_part", &pr_t::RequiresGradPart)
+        .def("real", &pr_t::Real)
+        .def("set_const", &pr_t::SetConstValue)
+        .def("set_item", &pr_t::SetItem<tensor::Tensor>)
+        .def("update", &pr_t::Update);
 }
 
 // -----------------------------------------------------------------------------
@@ -171,20 +183,25 @@ void BindQubitOperator(py::module &module) {
     using fop_t = operators::fermion::FermionOperator;
     py::class_<qop_t, std::shared_ptr<qop_t>>(module, "QubitOperator")
         .def(py::init<const std::string &, const pr_t &>(), "pauli_string"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
+        .def(py::init<const qop_t &>(), "other"_a)
         .def(py::self += tensor::Tensor())
         .def(py::self += py::self)
         .def(py::self + tensor::Tensor())
         .def(py::self + py::self)
         .def(py::self *= py::self)
+        .def("real", &qop_t::real)
+        .def("imag", &qop_t::imag)
         .def("size", &qop_t::size)
         .def("__repr__", [](const qop_t &op) { return op.ToString(); });
     py::class_<fop_t, std::shared_ptr<fop_t>>(module, "FermionOperator")
         .def(py::init<const std::string &, const pr_t &>(), "fermion_string"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
-        .def(py::self += tensor::Tensor())
+        .def(py::init<const fop_t &>(), "other"_a)
         .def(py::self += py::self)
-        .def(py::self + tensor::Tensor())
         .def(py::self + py::self)
         .def(py::self *= py::self)
+        .def(py::self * py::self)
+        .def("imag", &fop_t::imag)
+        .def("real", &fop_t::real)
         .def("size", &fop_t::size)
         .def("__repr__", [](const fop_t &op) { return op.ToString(); });
 }
@@ -196,10 +213,10 @@ void BindTransform(py::module &module) {
 PYBIND11_MODULE(_math, m) {
     m.doc() = "MindQuantum Math module.";
     auto dtype_id = py::enum_<tensor::TDtype>(m, "dtype")
-                        .value("Complex64", tensor::TDtype::Complex64)
-                        .value("Complex128", tensor::TDtype::Complex128)
-                        .value("Float32", tensor::TDtype::Float32)
-                        .value("Float64", tensor::TDtype::Float64);
+                        .value("complex64", tensor::TDtype::Complex64)
+                        .value("complex128", tensor::TDtype::Complex128)
+                        .value("float32", tensor::TDtype::Float32)
+                        .value("float64", tensor::TDtype::Float64);
     dtype_id.attr("__repr__") = pybind11::cpp_function(
         [](const tensor::TDtype &dtype) -> pybind11::str { return "mindquantum." + tensor::to_string(dtype); },
         pybind11::name("name"), pybind11::is_method(dtype_id));

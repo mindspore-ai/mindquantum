@@ -301,6 +301,22 @@ parameter::ParameterResolver QubitOperator::singlet_coeff() const {
     return this->terms.m_list.begin()->second;
 }
 
+QubitOperator QubitOperator::imag() const {
+    auto out = *this;
+    for (auto& [k, v] : out.terms.m_list) {
+        v = v.Imag();
+    }
+    return out;
+}
+
+QubitOperator QubitOperator::real() const {
+    auto out = *this;
+    for (auto& [k, v] : out.terms.m_list) {
+        v = v.Real();
+    }
+    return out;
+}
+
 // -----------------------------------------------------------------------------
 
 QubitOperator& QubitOperator::operator+=(const tn::Tensor& c) {

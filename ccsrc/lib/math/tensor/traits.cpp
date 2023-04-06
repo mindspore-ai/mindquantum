@@ -33,6 +33,29 @@ std::string to_string(TDtype dtype) {
     return "";
 }
 
+TDtype ToRealType(TDtype dtype) {
+    switch (dtype) {
+        case TDtype::Float32:
+        case TDtype::Float64:
+            return dtype;
+        case TDtype::Complex64:
+            return to_real_dtype_t<TDtype::Complex64>;
+        case TDtype::Complex128:
+            return to_real_dtype_t<TDtype::Complex128>;
+    }
+}
+
+TDtype ToComplexType(TDtype dtype) {
+    switch (dtype) {
+        case TDtype::Complex128:
+        case TDtype::Complex64:
+            return dtype;
+        case TDtype::Float32:
+            return TDtype::Complex64;
+        case TDtype::Float64:
+            return TDtype::Complex128;
+    }
+}
 // -----------------------------------------------------------------------------
 
 std::string to_string(TDevice device) {

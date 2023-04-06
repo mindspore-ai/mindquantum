@@ -49,6 +49,9 @@ size_t ParameterResolver::Size() const {
 }
 
 void ParameterResolver::CastTo(tn::TDtype dtype) {
+    if (dtype == this->GetDtype()) {
+        return;
+    }
     this->const_value = tn::ops::cast_to(this->const_value, dtype);
     for (auto& [k, v] : this->data_) {
         v = tn::ops::cast_to(v, dtype);
@@ -89,8 +92,8 @@ std::string ParameterResolver::ToString() const {
             if (i != this->data_.size()) {
                 out += ", ";
             }
-            out += "}";
         }
+        out += "}";
     }
     if (this->encoder_parameters_.size() != 0) {
         out += ",\n  encoder parameters: {";
@@ -101,8 +104,8 @@ std::string ParameterResolver::ToString() const {
             if (i != this->data_.size()) {
                 out += ", ";
             }
-            out += "}";
         }
+        out += "}";
     }
     out += "\n)";
     return out;

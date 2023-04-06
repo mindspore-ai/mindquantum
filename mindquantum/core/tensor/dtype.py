@@ -22,10 +22,18 @@ __dtype__ = [
     'complex128',
 ]
 
-float32 = dtype.Float32
-float64 = dtype.Float64
-complex64 = dtype.Complex64
-complex128 = dtype.Complex128
+float32 = dtype.float32
+float64 = dtype.float64
+complex64 = dtype.complex64
+complex128 = dtype.complex128
+
+str_dtype_map = {
+    str(float32): float32,
+    str(float64): float64,
+    str(complex64): complex64,
+    str(complex128): complex128,
+}
 
 __all__ = []
 __all__.extend(__dtype__)
+__all__.extend(['str_dtype_map'])

@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+import json
 import numbers
+
 import numpy as np
+
 from mindquantum._math.pr import ParameterResolver as ParameterResolver_
 from mindquantum._math.tensor import Tensor as Tensor_
 from mindquantum.core.tensor import dtype as mqtype
@@ -27,7 +30,10 @@ class ParameterResolver(ParameterResolver_):
     ParameterResolver(1.0[, dtype=mq.float32])
     ParameterResolver({'a': 2}[, const=1.2, dtype=mq.float32])
     """
+
     def __init__(self, data=None, const=None, dtype=None, internal=False):
+        if isinstance(data, ParameterResolver):
+            internal = True
         if internal:
             if dtype != None:
                 ParameterResolver_.__init__(self, data.astype(dtype))
@@ -77,6 +83,7 @@ class ParameterResolver(ParameterResolver_):
     def astype(self, dtype) -> "ParameterResolver":
         return ParameterResolver(ParameterResolver_.astype(self, dtype), internal=True)
 
+    @property
     def dtype(self):
         return ParameterResolver_.dtype(self)
 
@@ -92,8 +99,7 @@ class ParameterResolver(ParameterResolver_):
         return ParameterResolver_.__len__(self)
 
     def keys(self):
-        for k in ParameterResolver_.params_name(self):
-            yield k
+        yield from ParameterResolver_.params_name(self)
 
     def values(self):
         for v in ParameterResolver_.params_value(self):
@@ -104,13 +110,123 @@ class ParameterResolver(ParameterResolver_):
             yield (k, np.array(v)[0])
 
     def __contains__(self, key: str) -> bool:
-        return ParameterResolver_.__contains__(key)
+        return ParameterResolver_.__contains__(self, key)
 
     def __copy__(self) -> "ParameterResolver":
         return ParameterResolver(self, internal=True)
 
     def __deepcopy__(self) -> "ParameterResolver":
         return ParameterResolver(self, internal=True)
+
+    def __eq__(self, other) -> bool:
+        """
+        To check whether two parameter resolvers are equal.
+
+        Args:
+            other (Union[numbers.Number, str, ParameterResolver]): The parameter resolver
+                or number you want to compare. If a number or string is given, this number will
+                convert to a parameter resolver.
+
+        Returns:
+            bool, whether two parameter resolvers are equal.
+
+        Examples:
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
+            >>> PR(3) == 3
+            True
+            >>> PR({'a': 2}, 3) == PR({'a': 2}) + 3
+            True
+        """
+        return not bool(self - other)
+
+    def dumps(self, indent=4):
+        """
+        Dump ParameterResolver into JSON(JavaScript Object Notation).
+
+        Args:
+            indent (int): Then JSON array elements and object members will be
+                pretty-printed with that indent level. Default: 4.
+
+        Returns:
+            string(JSON), the JSON of ParameterResolver
+
+        Examples:
+            >>> from mindquantum.core.parameterresolver import ParameterResolver
+            >>> pr = ParameterResolver({'a': 1, 'b': 2}, const=3 + 4j, dtype=complex)
+            >>> pr.no_grad_part('a', 'b')
+            >>> print(pr.dumps())
+            {
+                "pr_data": {
+                    "a": [
+                        1.0,
+                        0.0
+                    ],
+                    "b": [
+                        2.0,
+                        0.0
+                    ]
+                },
+                "const": [
+                    3.0,
+                    4.0
+                ],
+                "dtype": "complex",
+                "no_grad_parameters": [
+                    "b",
+                    "a"
+                ],
+                "encoder_parameters": []
+            }
+        """
+        if indent is not None:
+            _check_int_type('indent', indent)
+        dic = {}
+        dic['pr_data'] = {i: (j.real, j.imag) for i, j in self.items()}
+        dic['const'] = (self.const.real, self.const.imag)
+        dic['dtype'] = str(self.dtype)
+        dic['no_grad_parameters'] = list(self.no_grad_parameters)
+        dic['encoder_parameters'] = list(self.encoder_parameters)
+        return json.dumps(dic, indent=indent)
+
+    @staticmethod
+    def loads(strs):
+        r"""
+        Load JSON(JavaScript Object Notation) into FermionOperator.
+
+        Args:
+            strs (str): The dumped parameter resolver string.
+
+        Returns:
+            FermionOperator, the FermionOperator load from strings
+
+        Examples:
+            >>> from mindquantum.core.parameterresolver import ParameterResolver
+            >>> ori = ParameterResolver({'a': 1, 'b': 2, 'c': 3, 'd': 4})
+            >>> ori.no_grad_part('a', 'b')
+            >>> string = ori.dumps()
+            >>> obj = ParameterResolver.loads(string)
+            >>> print(obj)
+            {'a': 1, 'b': 2, 'c': 3, 'd': 4}, const: 0
+            >>> print('requires_grad_parameters is:', obj.requires_grad_parameters)
+            requires_grad_parameters is: {'c', 'd'}
+            >>> print('no_grad_parameters is :', obj.no_grad_parameters)
+            no_grad_parameters is : {'b', 'a'}
+        """
+        _check_input_type('strs', str, strs)
+        dic = json.loads(strs)
+        if 'dtype' not in dic:
+            raise ValueError("Invalid string. Cannot convert it to ParameterResolver, no key dtype")
+        dtype = mqtype.str_dtype_map[dic['dtype']]
+        if dtype in (mqtype.complex128, mqtype.complex64):
+            const = dic['const'][0] + 1j * dic['const'][1]
+            data = {i: j[0] + j[1] * 1j for i, j in dic['pr_data'].items()}
+        else:
+            const = dic['const'][0]
+            data = {i: j[0] for i, j in dic['pr_data'].items()}
+        out = ParameterResolver(data, const, dtype)
+        out.no_grad_part(*dic['no_grad_parameters'])
+        out.encoder_part(*dic['encoder_parameters'])
+        return out
 
     def is_const(self) -> bool:
         return ParameterResolver_.is_const(self)
@@ -196,7 +312,7 @@ class ParameterResolver(ParameterResolver_):
         return list(self.keys())
 
     @property
-    def para_value(self):
+    def params_value(self):
         """
         Get the parameters value.
 
@@ -206,10 +322,36 @@ class ParameterResolver(ParameterResolver_):
         Examples:
             >>> from mindquantum import ParameterResolver
             >>> pr = ParameterResolver({'a': 1, 'b': 2})
-            >>> pr.para_value
+            >>> pr.params_value
             [1, 2]
         """
         return list(self.values())
+
+    def update(self, other):
+        """
+        Update this parameter resolver with other parameter resolver.
+
+        Args:
+            other (ParameterResolver): other parameter resolver.
+
+        Raises:
+            ValueError: If some parameters require grad and not require grad in other parameter resolver and vice versa
+                and some parameters are encoder parameters and not encoder in other parameter resolver and vice versa.
+
+        Examples:
+            >>> from mindquantum import ParameterResolver
+            >>> pr1 = ParameterResolver({'a': 1})
+            >>> pr2 = ParameterResolver({'b': 2})
+            >>> pr2.no_grad()
+            {'b': 2.0}, const: 0.0
+            >>> pr1.update(pr2)
+            >>> pr1
+            {'a': 1.0, 'b': 2.0}, const: 0.0
+            >>> pr1.no_grad_parameters
+            {'b'}
+        """
+        _check_input_type('other', ParameterResolver, other)
+        ParameterResolver_.update(self, other)
 
     def requires_grad(self):
         """
@@ -411,7 +553,7 @@ class ParameterResolver(ParameterResolver_):
             >>> a.no_grad_parameters
             {'a', 'b'}
         """
-        return [i for i in self.params_name if i in self._cpp_obj.no_grad_parameters]
+        return list(ParameterResolver_.get_grad_parameters(self))
 
     @property
     def encoder_parameters(self):
@@ -428,7 +570,7 @@ class ParameterResolver(ParameterResolver_):
             >>> a.encoder_parameters
             {'a', 'b'}
         """
-        return [i for i in self.params_name if i in self._cpp_obj.encoder_parameters]
+        return list(ParameterResolver_.get_encoder_parameters(self))
 
     @property
     def ansatz_parameters(self):
@@ -548,17 +690,150 @@ class ParameterResolver(ParameterResolver_):
         """
         return ParameterResolver(ParameterResolver_.imag(self), internal=True)
 
+    def __iadd__(self, other) -> "ParameterResolver":
+        """
+        Inplace add a number or parameter resolver.
 
+        Args (Union[numbers.Number, ParameterResolver]): the number or parameter
+            resolver you want add.
 
-if __name__ == "__main__":
-    print(ParameterResolver({"a": 3.0}))
-    print(ParameterResolver({"a": 3.0}, dtype=mqtype.complex128))
-    print(ParameterResolver({"a": 3.0}, 3.4j))
-    print(ParameterResolver("a"))
-    print(ParameterResolver("a", dtype=mqtype.complex128))
-    print(ParameterResolver(1.0))
-    print(ParameterResolver(1.0j))
-    a = ParameterResolver('a', 1.0, dtype=mqtype.complex128)
-    print(a)
-    print(a.astype(mqtype.float32))
-    print(a.dtype())
+        Examples:
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
+            >>> pr = PR({'a': 3})
+            >>> pr += 4
+            >>> pr.expression()
+            '3*a + 4'
+            >>> pr += PR({'b': 1.5})
+            >>> pr
+            '3*a + 3/2*b + 4'
+        """
+        if isinstance(other, ParameterResolver_):
+            ParameterResolver_.__iadd__(self, other)
+        else:
+            ParameterResolver_.__iadd__(self, ParameterResolver(other))
+        return self
+
+    def __add__(self, other) -> "ParameterResolver":
+        """
+        Add a number or parameter resolver.
+
+        Args:
+            other (Union[numbers.Number, ParameterResolver])
+
+        Returns:
+            ParameterResolver, the result of add.
+
+        Examples:
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
+            >>> pr = PR({'a': 3})
+            >>> pr + 1
+            {'a': 3.0}, const: 1.0
+            >>> pr + pr
+            {'a': 6.0}, const: 0.0
+        """
+        if isinstance(other, ParameterResolver_):
+            return ParameterResolver(ParameterResolver_.__add__(self, other), internal=True)
+        return ParameterResolver(ParameterResolver_.__add__(self, ParameterResolver(other)), internal=True)
+
+    def __radd__(self, other) -> "ParameterResolver":
+        """Add a number or ParameterResolver."""
+        if isinstance(other, ParameterResolver_):
+            return ParameterResolver(other + self, internal=True)
+        else:
+            return ParameterResolver(ParameterResolver(other) + self, internal=True)
+
+    def __isub__(self, other):
+        """Self subtract a number or ParameterResolver."""
+        if isinstance(other, ParameterResolver_):
+            ParameterResolver_.__isub__(self, other)
+        else:
+            ParameterResolver_.__isub__(self, ParameterResolver(other))
+        return self
+
+    def __sub__(self, other):
+        """Subtract a number or ParameterResolver."""
+        if isinstance(other, ParameterResolver_):
+            return ParameterResolver(ParameterResolver_.__sub__(self, other), internal=True)
+        return ParameterResolver(ParameterResolver_.__sub__(self, ParameterResolver(other)), internal=True)
+
+    def __rsub__(self, other):
+        """Self subtract a number or ParameterResolver."""
+        if isinstance(other, ParameterResolver_):
+            return other - self
+        return ParameterResolver(other) - self
+
+    def __imul__(self, other):
+        """Self multiply a number or ParameterResolver."""
+        if isinstance(other, ParameterResolver_):
+            ParameterResolver_.__imul__(self, other)
+        else:
+            ParameterResolver_.__imul__(self, ParameterResolver(other))
+        return self
+
+    def __mul__(self, other):
+        """Multiply a number or ParameterResolver."""
+        if isinstance(other, ParameterResolver_):
+            return ParameterResolver(ParameterResolver_.__mul__(self, other), internal=True)
+        return ParameterResolver(ParameterResolver_.__mul__(self, ParameterResolver(other)), internal=True)
+
+    def __rmul__(self, other):
+        """Multiply a number or ParameterResolver."""
+        if isinstance(other, ParameterResolver_):
+            return other * self
+        return ParameterResolver(other) * self
+
+    def __neg__(self):
+        """Return the negative of this parameter resolver."""
+        return 0 - self
+
+    def __itruediv__(self, other):
+        """Divide a number inplace."""
+        if isinstance(other, ParameterResolver_):
+            ParameterResolver_.__itruediv__(self, other)
+        else:
+            ParameterResolver_.__itruediv__(self, ParameterResolver(other))
+        return self
+
+    def __truediv__(self, other):
+        """Divide a number."""
+        if isinstance(other, ParameterResolver_):
+            return ParameterResolver(ParameterResolver_.__truediv__(self, other), internal=True)
+        return ParameterResolver(ParameterResolver_.__truediv__(self, ParameterResolver(other)), internal=True)
+
+    def is_anti_hermitian(self):
+        """
+        To check whether the parameter value of this parameter resolver is anti hermitian or not.
+
+        Returns:
+            bool, whether the parameter resolver is anti hermitian or not.
+
+        Examples:
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
+            >>> pr = PR({'a': 1})
+            >>> pr.is_anti_hermitian()
+            False
+            >>> (pr + 3).is_anti_hermitian()
+            False
+            >>> (pr*1j).is_anti_hermitian()
+            True
+        """
+        return ParameterResolver_.is_anti_hermitian(self)
+
+    def is_hermitian(self):
+        """
+        To check whether the parameter value of this parameter resolver is hermitian or not.
+
+        Returns:
+            bool, whether the parameter resolver is hermitian or not.
+
+        Examples:
+            >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
+            >>> pr = PR({'a': 1})
+            >>> pr.is_hermitian()
+            True
+            >>> (pr + 3).is_hermitian()
+            True
+            >>> (pr * 1j).is_hermitian()
+            False
+        """
+        return ParameterResolver_.anti_hermitian(self)

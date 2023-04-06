@@ -130,6 +130,8 @@ class QubitOperator {
     dict_t get_terms() const;
     bool is_singlet() const;
     parameter::ParameterResolver singlet_coeff() const;
+    QubitOperator imag() const;
+    QubitOperator real() const;
 
     // -----------------------------------------------------------------------------
 

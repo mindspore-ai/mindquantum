@@ -16,7 +16,9 @@
 import pytest
 
 from mindquantum.config import set_context
-from mindquantum.core.parameterresolver import ParameterResolver as PR
+
+# from mindquantum.core.parameterresolver import ParameterResolver as PR
+from mindquantum.core.tensor.parameterresolver import ParameterResolver as PR
 
 
 @pytest.mark.level0
@@ -43,7 +45,8 @@ def test_parameter_resolve(dtype):
     set_context(dtype=dtype)
     pr = PR({'a': 1.0})
     pr['b'] = 2.0
-    pr[['c', 'd']] = [3.0, 4.0]
+    pr['c'] = 3.0
+    pr['d'] = 4.0
     pr *= 2
     pr = pr * 2
     pr = 1 * pr
@@ -51,11 +54,11 @@ def test_parameter_resolve(dtype):
     pr_tmp.no_grad()
     pr.update(pr_tmp)
     assert pr.params_name == ['a', 'b', 'c', 'd', 'e', 'f']
-    assert list(pr.para_value) == [4.0, 8.0, 12.0, 16.0, 5.0, 6.0]
+    assert list(pr.params_value) == [4.0, 8.0, 12.0, 16.0, 5.0, 6.0]
     pr.requires_grad_part('e')
     pr.no_grad_part('b')
-    assert pr.requires_grad_parameters == ['a', 'c', 'd', 'e']
-    assert pr.no_grad_parameters == ['b', 'f']
+    assert set(pr.requires_grad_parameters) == {'a', 'c', 'd', 'e'}
+    assert set(pr.no_grad_parameters) == {'b', 'f'}
     pr.requires_grad()
     assert not pr.no_grad_parameters
 

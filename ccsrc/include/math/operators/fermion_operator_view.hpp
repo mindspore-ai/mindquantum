@@ -28,6 +28,7 @@
 #include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/ops/concrete_tensor.hpp"
 #include "math/tensor/tensor.hpp"
+#include "math/tensor/traits.hpp"
 namespace operators::fermion {
 namespace tn = tensor;
 enum class TermValue : uint64_t {
@@ -159,6 +160,10 @@ class FermionOperator {
     bool is_singlet() const;
     parameter::ParameterResolver singlet_coeff() const;
     size_t count_qubits() const;
+    FermionOperator imag() const;
+    FermionOperator real() const;
+    tn::TDtype GetDtype() const;
+    void CastTo(tn::TDtype dtype);
 
     // -----------------------------------------------------------------------------
 
@@ -172,9 +177,11 @@ class FermionOperator {
     FermionOperator operator*=(const FermionOperator& other);
     FermionOperator operator*(const FermionOperator& other);
     FermionOperator operator*=(const parameter::ParameterResolver& other);
+    friend FermionOperator operator*(FermionOperator lhs, const FermionOperator& rhs);
 
  public:
     QTerm_t terms{};
+    tn::TDtype dtype = tn::TDtype::Float64;
 };
 }  // namespace operators::fermion
 std::ostream& operator<<(std::ostream& os, const operators::fermion::FermionOperator& t);
