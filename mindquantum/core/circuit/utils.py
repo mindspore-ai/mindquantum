@@ -27,7 +27,7 @@ from .circuit import Circuit, apply
 
 
 def decompose_single_term_time_evolution(term, para):  # pylint: disable=too-many-branches
-    """
+    r"""
     Decompose a time evolution gate into basic quantum gates.
 
     This function only works for the hamiltonian with only single pauli word.

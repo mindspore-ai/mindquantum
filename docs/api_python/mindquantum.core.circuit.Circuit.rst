@@ -328,7 +328,7 @@ mindquantum.core.circuit.Circuit
             - **maps_obj** (Union[int, list[int]]) - 执行该量子门的目标量子比特。
             - **maps_ctrl** (Union[int, list[int]]) - 执行该量子门的控制量子比特。默认值：None。
 
-    .. py:method:: with_noise(noise_gate=mq_gates.AmplitudeDampingChannel(0.001))
+    .. py:method:: with_noise(noise_gate=mq_gates.AmplitudeDampingChannel(0.001), also_ctrl=False)
 
         在每个量子门后面添加一个噪声信道。
 
