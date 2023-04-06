@@ -66,7 +66,13 @@ tn::Tensor ParameterResolver::GetConstValue() const {
 }
 
 std::string ParameterResolver::ToString() const {
-    std::string out = "ParameterResolver (dtype: " + tensor::to_string(this->const_value.dtype) + ",\n";
+    std::string out = "ParameterResolver(dtype: " + tensor::to_string(this->const_value.dtype) + ",";
+    if (this->data_.size() == 0) {
+        out += " const: " + tn::ops::to_string(this->const_value, true);
+        out += ")";
+        return out;
+    }
+    out += "\n";
     if (this->data_.size() == 0) {
         out += "  data: [],\n";
     } else {
@@ -82,7 +88,7 @@ std::string ParameterResolver::ToString() const {
         }
         out += "  ],\n";
     }
-    out += "  const value: " + tn::ops::to_string(this->const_value, true);
+    out += "  const: " + tn::ops::to_string(this->const_value, true);
     if (this->no_grad_parameters_.size() != 0) {
         out += ",\n  no grad parameters: {";
         int i = 0;

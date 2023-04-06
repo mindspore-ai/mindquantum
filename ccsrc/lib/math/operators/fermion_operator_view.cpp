@@ -28,6 +28,23 @@
 #include "math/tensor/traits.hpp"
 
 namespace operators::fermion {
+std::string to_string(const TermValue& term) {
+    switch (term) {
+        case TermValue::I:
+            return "I";
+        case TermValue::A:
+            return "a";
+        case TermValue::Ad:
+            return "adg";
+        case TermValue::AAd:
+            return "a adg";
+        case TermValue::AdA:
+            return "adg a";
+        case TermValue::nll:
+            return "nll";
+    }
+}
+
 auto SingleFermionStr::ParseToken(const std::string& token) -> term_t {
     if (token.size() == 0) {
         throw std::runtime_error(
@@ -377,11 +394,28 @@ auto FermionOperator::get_terms() const -> dict_t {
 }
 
 value_t FermionOperator::get_coeff(const terms_t& term) {
-    auto fermion_words = SingleFermionStr::init(term, tn::ops::ones(1)).first;
-    if (this->Contains(fermion_words)) {
-        return this->terms[fermion_words];
+    auto terms = SingleFermionStr::init(term, tn::ops::ones(1));
+    if (this->Contains(terms.first)) {
+        return this->terms[terms.first] * terms.second;
     }
     throw std::out_of_range("term not in fermion operator");
+}
+void FermionOperator::set_coeff(const terms_t& term, const parameter::ParameterResolver& value) {
+    auto terms = SingleFermionStr::init(term, tn::ops::ones(1));
+    if (this->Contains(terms.first)) {
+        this->terms[terms.first] = terms.second * value;
+
+    } else {
+        terms.second = terms.second * value;
+        this->terms.insert(terms);
+    }
+    auto upper_t = tensor::upper_type_v(this->dtype, this->terms[terms.first].GetDtype());
+    if (this->dtype != upper_t) {
+        this->CastTo(upper_t);
+    }
+    if (this->terms[terms.first].GetDtype() != upper_t) {
+        this->terms[terms.first].CastTo(upper_t);
+    }
 }
 
 bool FermionOperator::is_singlet() const {
@@ -407,7 +441,7 @@ size_t FermionOperator::count_qubits() const {
             group_id -= 1;
         }
     }
-    return n_qubits;
+    return n_qubits + 1;
 }
 // -----------------------------------------------------------------------------
 

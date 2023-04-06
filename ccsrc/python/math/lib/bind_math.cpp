@@ -181,6 +181,35 @@ void BindQubitOperator(py::module &module) {
     using pr_t = pr::ParameterResolver;
     using qop_t = operators::qubit::QubitOperator;
     using fop_t = operators::fermion::FermionOperator;
+    auto p_term_value = py::enum_<operators::qubit::TermValue>(module, "p_term_value")
+                            .value("I", operators::qubit::TermValue::I)
+                            .value("X", operators::qubit::TermValue::X)
+                            .value("Y", operators::qubit::TermValue::Y)
+                            .value("Z", operators::qubit::TermValue::Z);
+    p_term_value.attr("__repr__") = pybind11::cpp_function(
+        [](const operators::qubit::TermValue &dtype) -> pybind11::str { return operators::qubit::to_string(dtype); },
+        pybind11::name("name"), pybind11::is_method(p_term_value));
+    p_term_value.attr("__str__") = pybind11::cpp_function(
+        [](const operators::qubit::TermValue &dtype) -> pybind11::str { return operators::qubit::to_string(dtype); },
+        pybind11::name("name"), pybind11::is_method(p_term_value));
+
+    auto f_term_value = py::enum_<operators::fermion::TermValue>(module, "f_term_value")
+                            .value("I", operators::fermion::TermValue::I)
+                            .value("a", operators::fermion::TermValue::A)
+                            .value("adg", operators::fermion::TermValue::Ad);
+    f_term_value.attr("__repr__") = pybind11::cpp_function(
+        [](const operators::fermion::TermValue &dtype) -> pybind11::str {
+            return operators::fermion::to_string(dtype);
+        },
+        pybind11::name("name"), pybind11::is_method(f_term_value));
+    f_term_value.attr("__str__") = pybind11::cpp_function(
+        [](const operators::fermion::TermValue &dtype) -> pybind11::str {
+            return operators::fermion::to_string(dtype);
+        },
+        pybind11::name("name"), pybind11::is_method(f_term_value));
+
+    // -----------------------------------------------------------------------------
+
     py::class_<qop_t, std::shared_ptr<qop_t>>(module, "QubitOperator")
         .def(py::init<const std::string &, const pr_t &>(), "pauli_string"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
         .def(py::init<const qop_t &>(), "other"_a)
@@ -195,14 +224,26 @@ void BindQubitOperator(py::module &module) {
         .def("__repr__", [](const qop_t &op) { return op.ToString(); });
     py::class_<fop_t, std::shared_ptr<fop_t>>(module, "FermionOperator")
         .def(py::init<const std::string &, const pr_t &>(), "fermion_string"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
+        .def(py::init<>())
         .def(py::init<const fop_t &>(), "other"_a)
         .def(py::self += py::self)
         .def(py::self + py::self)
         .def(py::self *= py::self)
         .def(py::self * py::self)
+        .def("__copy__", [](const fop_t &a) { return a; })
+        .def("astype",
+             [](const fop_t &a, tensor::TDtype dtype) {
+                 auto out = a;
+                 out.CastTo(dtype);
+                 return out;
+             })
+        .def("get_terms", &fop_t::get_terms)
+        .def("count_qubits", &fop_t::count_qubits)
+        .def("get_coeff", &fop_t::get_coeff)
         .def("imag", &fop_t::imag)
         .def("real", &fop_t::real)
         .def("size", &fop_t::size)
+        .def("set_coeff", &fop_t::set_coeff)
         .def("__repr__", [](const fop_t &op) { return op.ToString(); });
 }
 

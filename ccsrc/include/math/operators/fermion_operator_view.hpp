@@ -40,6 +40,7 @@ enum class TermValue : uint64_t {
     AAd = 6,                                     // 110
     nll = std::numeric_limits<uint64_t>::max(),  // 11111...
 };
+std::string to_string(const TermValue& term);
 
 using fermion_product_t = std::map<TermValue, std::map<TermValue, TermValue>>;
 const fermion_product_t fermion_product_map = {
@@ -157,6 +158,7 @@ class FermionOperator {
     std::string ToString() const;
     dict_t get_terms() const;
     value_t get_coeff(const terms_t& term);
+    void set_coeff(const terms_t& term, const parameter::ParameterResolver& value);
     bool is_singlet() const;
     parameter::ParameterResolver singlet_coeff() const;
     size_t count_qubits() const;

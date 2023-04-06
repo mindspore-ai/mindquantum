@@ -43,6 +43,8 @@ enum class TermValue : uint8_t {
     Z = 3,
 };
 
+std::string to_string(const TermValue& term);
+
 using pauli_product_map_t = std::map<TermValue, std::map<TermValue, std::tuple<tn::Tensor, TermValue>>>;
 // clang-format off
 const pauli_product_map_t pauli_product_map = {

@@ -28,6 +28,19 @@
 #include "math/tensor/traits.hpp"
 
 namespace operators::qubit {
+std::string to_string(const TermValue& term) {
+    switch (term) {
+        case TermValue::I:
+            return "I";
+        case TermValue::X:
+            return "X";
+        case TermValue::Y:
+            return "Y";
+        case TermValue::Z:
+            return "Z";
+    }
+}
+
 auto SinglePauliStr::ParseToken(const std::string& token) -> term_t {
     if (token.size() <= 1) {
         throw std::runtime_error("Wrong token: '" + token + "'. Need a pauli word following a int, for example 'X0'.");
@@ -135,17 +148,9 @@ std::string SinglePauliStr::GetString(const compress_term_t& pauli) {
             auto j = static_cast<TermValue>(k & 3);
             switch (j) {
                 case TermValue::X:
-                    out += "X";
-                    out += std::to_string(local_id + group_id * 32);
-                    out += " ";
-                    break;
                 case TermValue::Y:
-                    out += "Y";
-                    out += std::to_string(local_id + group_id * 32);
-                    out += " ";
-                    break;
                 case TermValue::Z:
-                    out += "Z";
+                    out += to_string(j);
                     out += std::to_string(local_id + group_id * 32);
                     out += " ";
                     break;
@@ -266,7 +271,7 @@ size_t QubitOperator::count_qubits() const {
             group_id -= 1;
         }
     }
-    return n_qubits;
+    return n_qubits + 1;
 }
 
 auto QubitOperator::get_terms() const -> dict_t {
