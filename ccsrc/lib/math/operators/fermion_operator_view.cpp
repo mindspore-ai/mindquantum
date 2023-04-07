@@ -18,11 +18,13 @@
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 
 #include <sys/types.h>
 
 #include "math/operators/utils.hpp"
 #include "math/pr/parameter_resolver.hpp"
+#include "math/tensor/ops/advance_math.hpp"
 #include "math/tensor/ops/concrete_tensor.hpp"
 #include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
@@ -94,6 +96,14 @@ auto SingleFermionStr::init(const terms_t& terms, const parameter::ParameterReso
     return out;
 }
 
+std::vector<uint64_t> SingleFermionStr::NumOneMask(const compress_term_t& fermion) {
+    std::vector<uint64_t> out = {};
+    for (auto& i : fermion.first) {
+        out.push_back(__builtin_popcount(i) & 1);
+    }
+    return out;
+}
+
 void SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_t& fermion) {
     auto [idx, word] = term;
     if (word == TermValue::I) {
@@ -131,11 +141,18 @@ void SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_
     int count_one = 0;
     for (size_t i = 0; i < ori_term.size(); i++) {
         if (i == group_id) {
-            count_one += __builtin_popcount(ori_term[i] & low_mask);
+            if (word != TermValue::AAd && word != TermValue::AdA) {
+                count_one += __builtin_popcount(ori_term[i] & low_mask);
+            }
             break;
         } else {
-            count_one += __builtin_popcount(ori_term[i]);
+            if (word != TermValue::AAd && word != TermValue::AdA) {
+                count_one += __builtin_popcount(ori_term[i]);
+            }
         }
+    }
+    if (word == TermValue::AAd || word == TermValue::AdA) {
+        count_one += 1;
     }
     if (count_one & 1) {
         coeff *= -1.0;
@@ -296,21 +313,36 @@ FermionOperator::FermionOperator(const terms_t& t, const parameter::ParameterRes
     this->dtype = term.second.GetDtype();
 }
 
+FermionOperator::FermionOperator(const key_t& k, const value_t& v) {
+    this->terms.insert(k, v);
+    this->dtype = v.GetDtype();
+}
+
 FermionOperator FermionOperator::imag() const {
     auto out = *this;
+    std::vector<key_t> will_pop;
     for (auto& [k, v] : out.terms.m_list) {
         v = v.Imag();
+        if (!v.IsNotZero()) {
+            will_pop.push_back(k);
+        }
     }
     out.dtype = tn::ToRealType(this->dtype);
+    std::for_each(will_pop.begin(), will_pop.end(), [&](auto i) { out.terms.erase(i); });
     return out;
 }
 
 FermionOperator FermionOperator::real() const {
     auto out = *this;
+    std::vector<key_t> will_pop;
     for (auto& [k, v] : out.terms.m_list) {
         v = v.Real();
+        if (!v.IsNotZero()) {
+            will_pop.push_back(k);
+        }
     }
     out.dtype = tn::ToRealType(this->dtype);
+    std::for_each(will_pop.begin(), will_pop.end(), [&](auto i) { out.terms.erase(i); });
     return out;
 }
 
@@ -322,7 +354,52 @@ void FermionOperator::CastTo(tn::TDtype dtype) {
         this->dtype = dtype;
     }
 }
+std::vector<std::pair<parameter::ParameterResolver, FermionOperator>> FermionOperator::split() const {
+    auto out = std::vector<std::pair<parameter::ParameterResolver, FermionOperator>>();
+    for (auto& [k, v] : this->terms.m_list) {
+        out.push_back({v, FermionOperator(k, parameter::ParameterResolver(tn::ops::ones(1), v.GetDtype()))});
+    }
+    return out;
+}
+bool FermionOperator::parameterized() const {
+    for (auto& [k, v] : this->terms.m_list) {
+        if (!v.IsConst()) {
+            return true;
+        }
+    }
+    return false;
+}
 
+void FermionOperator::subs(const parameter::ParameterResolver& other) {
+    auto new_type = this->dtype;
+    std::vector<key_t> will_pop;
+    for (auto& [k, v] : this->terms.m_list) {
+        if (v.subs(other).size() != 0) {
+            new_type = tensor::upper_type_v(this->dtype, v.GetDtype());
+            std::cout << "new type:" << tn::to_string(new_type) << std::endl;
+        }
+        if (!v.IsNotZero()) {
+            will_pop.push_back(k);
+        }
+    }
+    for (auto& k : will_pop) {
+        this->terms.erase(k);
+    }
+    if (new_type != this->dtype) {
+        this->CastTo(new_type);
+    }
+}
+
+FermionOperator FermionOperator::hermitian_conjugated() const {
+    if (this->dtype == tn::TDtype::Complex128 || this->dtype == tn::TDtype::Complex64) {
+        auto out = *this;
+        for (auto& [k, v] : out.terms.m_list) {
+            v = v.Conjugate();
+        }
+        return out;
+    }
+    return *this;
+}
 bool FermionOperator::Contains(const key_t& term) const {
     return this->terms.m_map.find(term) != this->terms.m_map.end();
 }
@@ -375,11 +452,11 @@ auto FermionOperator::get_terms() const -> dict_t {
             while (fermion_word != 0) {
                 auto word = static_cast<TermValue>(fermion_word & 7);
                 if (word == TermValue::AAd) {
-                    terms.push_back({group_id * 21 + local_id, TermValue::A});
                     terms.push_back({group_id * 21 + local_id, TermValue::Ad});
+                    terms.push_back({group_id * 21 + local_id, TermValue::A});
                 } else if (word == TermValue::AdA) {
-                    terms.push_back({group_id * 21 + local_id, TermValue::Ad});
                     terms.push_back({group_id * 21 + local_id, TermValue::A});
+                    terms.push_back({group_id * 21 + local_id, TermValue::Ad});
                 } else if (word != TermValue::I) {
                     terms.push_back({group_id * 21 + local_id, word});
                 }
@@ -388,6 +465,7 @@ auto FermionOperator::get_terms() const -> dict_t {
             }
             group_id += 1;
         }
+        std::reverse(terms.begin(), terms.end());
         out.push_back({terms, v});
     }
     return out;
@@ -429,6 +507,20 @@ parameter::ParameterResolver FermionOperator::singlet_coeff() const {
     return this->terms.m_list.begin()->second;
 }
 
+std::vector<FermionOperator> FermionOperator::singlet() const {
+    if (!this->is_singlet()) {
+        throw std::runtime_error("Given FermionOperator is not singlet.");
+    }
+    std::vector<FermionOperator> out;
+    for (auto& [term, value] : this->get_terms()) {
+        for (auto& word : term) {
+            out.emplace_back(FermionOperator({word}, tn::ops::ones(1)));
+        }
+        break;
+    }
+    return out;
+}
+
 size_t FermionOperator::count_qubits() const {
     int n_qubits = 0;
     for (auto& [k, v] : this->terms.m_list) {
@@ -459,6 +551,9 @@ FermionOperator& FermionOperator::operator+=(const tn::Tensor& c) {
     if (c.dtype != upper_t) {
         this->terms[key_t{0}].CastTo(upper_t);
     }
+    if (!this->terms[key_t{0}].IsNotZero()) {
+        this->terms.erase(key_t{0});
+    }
     return *this;
 }
 
@@ -476,6 +571,9 @@ FermionOperator operator+(FermionOperator lhs, const tensor::Tensor& rhs) {
     if (upper_t != rhs.dtype) {
         lhs.terms[key_t{0}].CastTo(upper_t);
     }
+    if (!lhs.terms[key_t{0}].IsNotZero()) {
+        lhs.terms.erase(key_t{0});
+    }
     return lhs;
 }
 
@@ -486,6 +584,9 @@ FermionOperator& FermionOperator::operator+=(const FermionOperator& other) {
             if (this->dtype != this->terms[term.first].GetDtype()) {
                 this->CastTo(this->terms[term.first].GetDtype());
             }
+            if (!this->terms[term.first].IsNotZero()) {
+                this->terms.erase(term.first);
+            }
         } else {
             this->terms.insert(term);
             auto upper_t = tn::upper_type_v(this->dtype, term.second.GetDtype());
@@ -494,6 +595,9 @@ FermionOperator& FermionOperator::operator+=(const FermionOperator& other) {
             }
             if (term.second.GetDtype() != upper_t) {
                 this->terms[term.first].CastTo(upper_t);
+            }
+            if (!this->terms[term.first].IsNotZero()) {
+                this->terms.erase(term.first);
             }
         }
     }
@@ -524,6 +628,9 @@ FermionOperator FermionOperator::operator*=(const FermionOperator& other) {
                 if (new_term.second.GetDtype() != upper_t) {
                     out.terms[new_term.first].CastTo(upper_t);
                 }
+            }
+            if (!out.terms[new_term.first].IsNotZero()) {
+                out.terms.erase(new_term.first);
             }
         }
     }
@@ -556,12 +663,19 @@ FermionOperator FermionOperator::operator*(const FermionOperator& other) {
                     out.terms[new_term.first].CastTo(upper_t);
                 }
             }
+            if (!out.terms[new_term.first].IsNotZero()) {
+                out.terms.erase(new_term.first);
+            }
         }
     }
     return out;
 }
 
 FermionOperator FermionOperator::operator*=(const parameter::ParameterResolver& other) {
+    if (!other.IsNotZero()) {
+        this->terms = {};
+        return *this;
+    }
     for (auto& [k, v] : this->terms.m_list) {
         v *= other;
         this->dtype = v.GetDtype();

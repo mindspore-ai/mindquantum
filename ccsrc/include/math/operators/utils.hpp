@@ -42,6 +42,12 @@ class QTerm_t {
         m_list.push_back({key, value});
         m_map[key] = --m_list.end();
     }
+    void erase(const key_t& key) {
+        if (m_map.find(key) != m_map.end()) {
+            m_list.erase(m_map[key]);
+            m_map.erase(key);
+        }
+    }
     void insert(const compress_term_t& t) {
         this->insert(t.first, t.second);
     }

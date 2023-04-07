@@ -21,7 +21,9 @@ import os
 import pytest
 
 from mindquantum.config import set_context
-from mindquantum.core.operators import FermionOperator
+from mindquantum.core.tensor.fermion_operator import FermionOperator
+
+# from mindquantum.core.operators import FermionOperator
 
 _HAS_OPENFERMION = True
 try:
@@ -42,11 +44,11 @@ def test_fermion_ops_num_coeff(dtype):
     set_context(dtype=dtype)
     # check the creation operator
     a_p_dagger = FermionOperator('1^')
-    assert str(a_p_dagger) == '1 [1^] '
+    assert str(a_p_dagger) == '1 [1^]'
 
     # check the annihilation operator
     a_q = FermionOperator('0')
-    assert str(a_q) == '1 [0] '
+    assert str(a_q) == '1 [0]'
 
     # check zero operator
     zero = FermionOperator()
@@ -54,7 +56,7 @@ def test_fermion_ops_num_coeff(dtype):
 
     # check identity operator
     identity = FermionOperator('')
-    assert str(identity) == '1 [] '
+    assert str(identity) == '1 []'
 
 
 @pytest.mark.level0
@@ -108,11 +110,11 @@ def test_multiplier(dtype):
 
     # Test right divide
     new = origin / 2.0
-    assert str(new) == '1 [0 1^] '
+    assert str(new) == '-1 [1^ 0]'
 
     # Test in-place divide
     origin /= 2
-    assert str(origin) == '1 [0 1^] '
+    assert str(origin) == '-1 [1^ 0]'
 
 
 @pytest.mark.level0
@@ -128,7 +130,7 @@ def test_add_sub(dtype):
     w1 = FermionOperator(' 4^ 3 9 3^ ') + 4 * FermionOperator(' 2 ')
     w2 = 4 * FermionOperator(' 2 ')
     w1 -= w2
-    assert str(w1) == '1 [4^ 3 9 3^] '
+    assert str(w1) == '1 [9 4^ 3 3^]'
 
 
 @pytest.mark.level0
@@ -176,12 +178,12 @@ def test_para_operators(dtype):
     """
     set_context(dtype=dtype)
     para_op = FermionOperator('0 1^', 'x')
-    assert str(para_op) == 'x [0 1^] '
+    assert str(para_op) == '-x [1^ 0]'
 
     # test the para with the value
     para_dt = {'x': 2}
     op = para_op.subs(para_dt)
-    assert str(op) == '2 [0 1^] '
+    assert str(op) == '-2 [1^ 0]'
 
 
 @pytest.mark.level0
@@ -209,10 +211,10 @@ def test_fermion_operator_iter(dtype):
     a = FermionOperator('0 1^') + FermionOperator('2^ 3', {"a": -3})
     assert a == sum(list(a))
     b = FermionOperator('0 1^')
-    b_exp = [FermionOperator('0'), FermionOperator('1^')]
+    b_exp = [FermionOperator('1^'), FermionOperator('0')]
     for idx, o in enumerate(b.singlet()):
         assert o == b_exp[idx]
-    assert b.singlet_coeff() == 1
+    assert b.singlet_coeff() == -1
     assert b.is_singlet
 
 
@@ -227,7 +229,7 @@ def test_dumps_and_loads(dtype):
     set_context(dtype=dtype)
     f = FermionOperator('0', 1 + 2j) + FermionOperator('0^', 'a')
     strings = f.dumps()
-    obj = FermionOperator.loads(strings, dtype=complex)
+    obj = FermionOperator.loads(strings)
     assert obj == f
 
 

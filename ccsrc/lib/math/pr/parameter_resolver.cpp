@@ -166,6 +166,28 @@ bool ParameterResolver::IsNotZero() const {
     }
     return false;
 }
+std::vector<std::string> ParameterResolver::subs(const ParameterResolver& other) {
+    std::vector<std::string> will_pop;
+    auto origin_dtype = this->GetDtype();
+    for (auto& [k, v] : this->data_) {
+        if (other.Contains(k)) {
+            this->const_value = this->const_value + v * other.data_.at(k);
+            will_pop.push_back(k);
+        }
+    }
+    if (will_pop.size() != 0) {
+        for (auto& k : will_pop) {
+            this->Pop(k);
+        }
+        auto new_dtype = this->GetDtype();
+        if (origin_dtype != new_dtype) {
+            for (auto& [k, v] : this->data_) {
+                v = v.astype(new_dtype);
+            }
+        }
+    }
+    return will_pop;
+}
 
 tn::Tensor ParameterResolver::GetItem(const std::string& key) const {
     if (!this->Contains(key)) {

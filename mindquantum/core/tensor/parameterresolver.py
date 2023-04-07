@@ -14,6 +14,7 @@
 # ============================================================================
 import json
 import numbers
+import typing
 
 import numpy as np
 
@@ -22,6 +23,8 @@ from mindquantum._math.tensor import Tensor as Tensor_
 from mindquantum.core.tensor import dtype as mqtype
 from mindquantum.utils.string_utils import join_without_empty, string_expression
 from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
+
+PRConvertible = typing.Union[numbers.Number, str, typing.Dict[str, numbers.Number], "ParameterResolver"]
 
 
 class ParameterResolver(ParameterResolver_):
@@ -138,6 +141,11 @@ class ParameterResolver(ParameterResolver_):
             True
         """
         return not bool(self - other)
+
+    def subs(self, other: typing.Union[typing.Dict[str, numbers.Number], "ParameterResolver"]):
+        if not isinstance(other, ParameterResolver):
+            other = ParameterResolver(other)
+        ParameterResolver_.subs(other)
 
     def dumps(self, indent=4):
         """

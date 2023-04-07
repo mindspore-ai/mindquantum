@@ -237,13 +237,21 @@ void BindQubitOperator(py::module &module) {
                  out.CastTo(dtype);
                  return out;
              })
-        .def("get_terms", &fop_t::get_terms)
         .def("count_qubits", &fop_t::count_qubits)
+        .def("dtype", &fop_t::GetDtype)
+        .def("get_terms", &fop_t::get_terms)
         .def("get_coeff", &fop_t::get_coeff)
+        .def("hermitian_conjugated", &fop_t::hermitian_conjugated)
         .def("imag", &fop_t::imag)
+        .def("is_singlet", &fop_t::is_singlet)
+        .def("parameterized", &fop_t::parameterized)
         .def("real", &fop_t::real)
-        .def("size", &fop_t::size)
         .def("set_coeff", &fop_t::set_coeff)
+        .def("split", &fop_t::split)
+        .def("singlet_coeff", &fop_t::singlet_coeff)
+        .def("singlet", &fop_t::singlet)
+        .def("size", &fop_t::size)
+        .def("subs", &fop_t::subs)
         .def("__repr__", [](const fop_t &op) { return op.ToString(); });
 }
 

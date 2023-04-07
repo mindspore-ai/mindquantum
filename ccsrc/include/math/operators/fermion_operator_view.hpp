@@ -132,6 +132,8 @@ struct SingleFermionStr {
     static bool IsSameString(const key_t& k1, const key_t& k2);
     static std::string GetString(const compress_term_t& fermion);
     static term_t ParseToken(const std::string& token);
+    static std::vector<uint64_t> NumOneMask(const compress_term_t& fermion);
+    static uint64_t
 };
 
 // -----------------------------------------------------------------------------
@@ -152,6 +154,7 @@ class FermionOperator {
     explicit FermionOperator(const std::string& fermion_string,
                              const parameter::ParameterResolver& var = tn::ops::ones(1));
     explicit FermionOperator(const terms_t& t, const parameter::ParameterResolver& var = tn::ops::ones(1));
+    FermionOperator(const key_t& k, const value_t& v);
     // -----------------------------------------------------------------------------
 
     size_t size() const;
@@ -161,11 +164,16 @@ class FermionOperator {
     void set_coeff(const terms_t& term, const parameter::ParameterResolver& value);
     bool is_singlet() const;
     parameter::ParameterResolver singlet_coeff() const;
+    std::vector<FermionOperator> singlet() const;
     size_t count_qubits() const;
     FermionOperator imag() const;
     FermionOperator real() const;
     tn::TDtype GetDtype() const;
     void CastTo(tn::TDtype dtype);
+    std::vector<std::pair<parameter::ParameterResolver, FermionOperator>> split() const;
+    bool parameterized() const;
+    void subs(const parameter::ParameterResolver& other);
+    FermionOperator hermitian_conjugated() const;
 
     // -----------------------------------------------------------------------------
 
