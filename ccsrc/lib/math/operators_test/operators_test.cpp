@@ -79,7 +79,7 @@ int main() {
     // std::cout << var << std::endl;
     // auto p = operators::qubit::QubitOperator("X24");
     // std::cout << p << std::endl;
-    auto f = operators::fermion::FermionOperator("0^ 2^ 23^ 45^ 22^") + operators::fermion::FermionOperator("0^ 2");
+    // auto f = operators::fermion::FermionOperator("0^ 2^ 23^ 45^ 22^") + operators::fermion::FermionOperator("0^ 2");
     // auto f = operators::fermion::FermionOperator("23^");
     // auto f2 = operators::fermion::FermionOperator("1 22");
     // auto f3 = operators::fermion::FermionOperator("45^ 23^ 22^ 2^ 0^ 22 1");
@@ -89,8 +89,8 @@ int main() {
     // std::cout << f * f2 + f3 << std::endl;
     // std::cout << p.count_qubits() << std::endl;
     // std::cout << operators::fermion::fermion_number_operator(3) << std::endl;
-    auto a = operators::transform::jordan_wigner(f);
-    std::cout << a << std::endl;
+    // auto a = operators::transform::jordan_wigner(f);
+    // std::cout << a << std::endl;
     // auto t = f.get_terms();
     // auto t = operators::fermion::SingleFermionStr::init("16^");
     // std::cout << t.first.size() << std::endl;
@@ -101,6 +101,9 @@ int main() {
     // std::cout << b << std::endl;
     // a *= b;
     // std::cout << a << std::endl;
-
+    auto a = operators::fermion::FermionOperator("0 0^");
+    auto b = a.normal_ordered();
+    std::cout << (a + b * operators::fermion::FermionOperator("", parameter::ParameterResolver(-1.0))).normal_ordered()
+              << std::endl;
     return 0;
 }

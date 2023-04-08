@@ -106,8 +106,8 @@ class QTerm_t {
     }
 
  public:
-    std::list<std::pair<key_t, value_t>> m_list;
-    std::map<key_t, std::list<std::pair<key_t, value_t>>::iterator, KeyCompare> m_map;
+    std::list<compress_term_t> m_list;
+    std::map<key_t, std::list<compress_term_t>::iterator, KeyCompare> m_map;
 };
 }  // namespace operators
 #endif /* MATH_OPERATORS_UTILS */

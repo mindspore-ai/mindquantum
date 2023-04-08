@@ -16,11 +16,14 @@ import json
 import numbers
 import typing
 
+import numpy as np
+
 from mindquantum._math.ops import FermionOperator as FermionOperator_
 from mindquantum._math.ops import f_term_value
 from mindquantum.core.tensor import dtype as mqtype
 from mindquantum.core.tensor.parameterresolver import ParameterResolver, PRConvertible
 from mindquantum.core.tensor.term_value import TermValue
+from mindquantum.mqbackend import EQ_TOLERANCE
 from mindquantum.utils.type_value_check import _require_package
 
 
@@ -472,14 +475,58 @@ class FermionOperator(FermionOperator_):
 
     def __pow__(self, frac) -> "FermionOperator":
         """Power of FermionOperator."""
-        out = frac
+        out = self
         for i in range(frac - 1):
             out *= self
         return self
 
+    def compress(self, abs_tol=EQ_TOLERANCE) -> "FermionOperator":
+        """
+        Eliminate the very small terms that close to zero.
 
-if __name__ == "__main__":
-    a = FermionOperator('9 4^ 3 3^')
-    b = FermionOperator('2')
-    c = a * b
-    d = b * a
+        Removes small imaginary and real parts.
+
+        Args:
+            abs_tol(float): Absolute tolerance, must be at least 0.0
+
+        Returns:
+            the compressed operator
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> ham_compress = FermionOperator('0^ 1', 0.5) + FermionOperator('2^ 3', 1e-7)
+            >>> ham_compress
+            1/2 [0^ 1] +
+            1/10000000 [2^ 3]
+            >>> ham_compress.compress(1e-6)
+            1/2 [0^ 1]
+            >>> ham_para_compress =  FermionOperator('0^ 1', 0.5) + FermionOperator('2^ 3', 'X')
+            >>> ham_para_compress
+            1/2 [0^ 1] +
+            X [2^ 3]
+            >>> ham_para_compress.compress(1e-7)
+            1/2 [0^ 1] +
+            X [2^ 3]
+        """
+        out = FermionOperator()
+        for k, v in self.terms.items():
+            if not (v.is_const() and np.abs(v.const) < EQ_TOLERANCE):
+                out += FermionOperator(" ".join(f"{i}{'^' if j else ''}" for i, j in k), v)
+        return out
+
+    def normal_ordered(self) -> "FermionOperator":
+        """
+        Return the normal ordered form of the Fermion Operator.
+
+        Returns:
+            FermionOperator, the normal ordered FermionOperator.
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> origin = FermionOperator('0 1^')
+            >>> origin
+            1.0 [0 1^]
+            >>> origin.normal_ordered()
+            -1.0 [1^ 0]
+        """
+        return FermionOperator(FermionOperator_.normal_ordered(self), internal=True)

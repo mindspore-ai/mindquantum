@@ -171,6 +171,7 @@ void BindPR(py::module &module) {  // NOLINT(runtime/references)
         .def("real", &pr_t::Real)
         .def("set_const", &pr_t::SetConstValue)
         .def("set_item", &pr_t::SetItem<tensor::Tensor>)
+        .def("subs", &pr_t::subs)
         .def("update", &pr_t::Update);
 }
 
@@ -244,6 +245,7 @@ void BindQubitOperator(py::module &module) {
         .def("hermitian_conjugated", &fop_t::hermitian_conjugated)
         .def("imag", &fop_t::imag)
         .def("is_singlet", &fop_t::is_singlet)
+        .def("normal_ordered", &fop_t::normal_ordered)
         .def("parameterized", &fop_t::parameterized)
         .def("real", &fop_t::real)
         .def("set_coeff", &fop_t::set_coeff)

@@ -104,6 +104,25 @@ std::vector<uint64_t> SingleFermionStr::NumOneMask(const compress_term_t& fermio
     return out;
 }
 
+uint64_t SingleFermionStr::PrevOneMask(const std::vector<uint64_t>& one_mask, size_t idx) {
+    uint64_t out = 0;
+    for (int i = 0; i < idx; i++) {
+        if (i < one_mask.size()) {
+            out += __builtin_popcount(one_mask[i]);
+        }
+    }
+    return out & 1;
+}
+
+bool SingleFermionStr::has_a_ad(uint64_t t) {
+    for (auto i = t; i != 0; i >>= 3) {
+        if ((i & 7) == static_cast<uint64_t>(TermValue::AAd)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_t& fermion) {
     auto [idx, word] = term;
     if (word == TermValue::I) {
@@ -122,6 +141,9 @@ void SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_
     size_t local_id = ((idx % 21) * 3);
     size_t low_mask = (1UL << local_id) - 1;
     size_t local_mask = (1UL << local_id) | (1UL << (local_id + 1)) | (1UL << (local_id + 2));
+    auto one_mask_vec = NumOneMask(fermion);
+    auto one_mask_of_word = __builtin_popcount(static_cast<uint64_t>(word));
+    auto one_mask = PrevOneMask(one_mask_vec, group_id) & one_mask_of_word;
     if (ori_term.size() < group_id + 1) {
         for (size_t i = ori_term.size(); i < group_id + 1; i++) {
             ori_term.push_back(0);
@@ -137,24 +159,11 @@ void SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_
             return;
         }
         ori_term[group_id] = ori_term[group_id] & (~local_mask) | (static_cast<uint64_t>(res)) << local_id;
+        one_mask = (one_mask + __builtin_popcount(static_cast<uint64_t>(res))
+                    & __builtin_popcount(ori_term[group_id] & low_mask))
+                   & 1;
     }
-    int count_one = 0;
-    for (size_t i = 0; i < ori_term.size(); i++) {
-        if (i == group_id) {
-            if (word != TermValue::AAd && word != TermValue::AdA) {
-                count_one += __builtin_popcount(ori_term[i] & low_mask);
-            }
-            break;
-        } else {
-            if (word != TermValue::AAd && word != TermValue::AdA) {
-                count_one += __builtin_popcount(ori_term[i]);
-            }
-        }
-    }
-    if (word == TermValue::AAd || word == TermValue::AdA) {
-        count_one += 1;
-    }
-    if (count_one & 1) {
+    if (one_mask & 1) {
         coeff *= -1.0;
     }
 }
@@ -248,13 +257,13 @@ auto SingleFermionStr::Mul(const compress_term_t& lhs, const compress_term_t& rh
     int total_one = 0;
     for (int i = 0; i < max_size; i++) {
         if (i < min_size) {
-            total_one += one_in_low;
+            total_one += one_in_low & __builtin_popcount(r_k[i]);
             one_in_low += __builtin_popcount(l_k[i]);
             auto [t, s] = MulSingleCompressTerm(l_k[i], r_k[i]);
             coeff = coeff * t;
             fermion_string.push_back(s);
         } else if (i >= l_k.size()) {
-            total_one += one_in_low;
+            total_one += one_in_low & __builtin_popcount(r_k[i]);
             fermion_string.push_back(r_k[i]);
         } else {
             fermion_string.push_back(l_k[i]);
@@ -279,7 +288,7 @@ std::tuple<tn::Tensor, uint64_t> SingleFermionStr::MulSingleCompressTerm(uint64_
         auto lhs = static_cast<TermValue>(a & 7);
         auto rhs = static_cast<TermValue>(b & 7);
         if (rhs != TermValue::I) {
-            total_one += one_in_low;
+            total_one += one_in_low & __builtin_popcount(b & 7);
         }
         one_in_low += __builtin_popcount(a & 7);
         auto res = fermion_product_map.at(lhs).at(rhs);
@@ -400,6 +409,38 @@ FermionOperator FermionOperator::hermitian_conjugated() const {
     }
     return *this;
 }
+
+FermionOperator FermionOperator::normal_ordered() const {
+    auto out = FermionOperator();
+    out.dtype = this->dtype;
+    for (auto& term : this->terms.m_list) {
+        if (std::any_of(term.first.begin(), term.first.end(), SingleFermionStr::has_a_ad)) {
+            auto tmp = FermionOperator("", term.second);
+            size_t group_id = 0;
+            for (auto local : term.first) {
+                size_t local_id = 0;
+                for (auto t = local; t != 0; t >>= 3) {
+                    auto current = t & 7;
+                    if (current == static_cast<uint64_t>(TermValue::AAd)) {
+                        tmp = (FermionOperator(terms_t{{group_id * 23 + local_id, TermValue::AdA}},
+                                               parameter::ParameterResolver(-1.0))
+                               + FermionOperator(""))
+                              * tmp;
+                    } else {
+                        tmp = FermionOperator(terms_t{{group_id * 23 + local, static_cast<TermValue>(current)}}) * tmp;
+                    }
+                    local_id += 1;
+                }
+                group_id += 1;
+            }
+            out += tmp;
+        } else {
+            out += FermionOperator(term.first, term.second);
+        }
+    }
+    return out;
+}
+
 bool FermionOperator::Contains(const key_t& term) const {
     return this->terms.m_map.find(term) != this->terms.m_map.end();
 }
@@ -641,34 +682,6 @@ FermionOperator FermionOperator::operator*=(const FermionOperator& other) {
 FermionOperator operator*(FermionOperator lhs, const FermionOperator& rhs) {
     lhs *= rhs;
     return lhs;
-}
-
-FermionOperator FermionOperator::operator*(const FermionOperator& other) {
-    auto out = FermionOperator();
-    for (auto& this_term : this->terms) {
-        for (const auto& other_term : other.terms) {
-            auto new_term = SingleFermionStr::Mul(this_term, other_term);
-            if (out.Contains(new_term.first)) {
-                out.terms[new_term.first] = out.terms[new_term.first] + new_term.second;
-                if (this->dtype != out.terms[new_term.first].GetDtype()) {
-                    this->CastTo(out.terms[new_term.first].GetDtype());
-                }
-            } else {
-                out.terms.insert(new_term);
-                auto upper_t = tn::upper_type_v(this->dtype, out.terms[new_term.first].GetDtype());
-                if (this->GetDtype() != upper_t) {
-                    this->CastTo(upper_t);
-                }
-                if (new_term.second.GetDtype() != upper_t) {
-                    out.terms[new_term.first].CastTo(upper_t);
-                }
-            }
-            if (!out.terms[new_term.first].IsNotZero()) {
-                out.terms.erase(new_term.first);
-            }
-        }
-    }
-    return out;
 }
 
 FermionOperator FermionOperator::operator*=(const parameter::ParameterResolver& other) {

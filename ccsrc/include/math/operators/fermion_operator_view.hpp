@@ -133,7 +133,8 @@ struct SingleFermionStr {
     static std::string GetString(const compress_term_t& fermion);
     static term_t ParseToken(const std::string& token);
     static std::vector<uint64_t> NumOneMask(const compress_term_t& fermion);
-    static uint64_t
+    static uint64_t PrevOneMask(const std::vector<uint64_t>& one_mask, size_t idx);
+    static bool has_a_ad(uint64_t t);
 };
 
 // -----------------------------------------------------------------------------
@@ -174,7 +175,7 @@ class FermionOperator {
     bool parameterized() const;
     void subs(const parameter::ParameterResolver& other);
     FermionOperator hermitian_conjugated() const;
-
+    FermionOperator normal_ordered() const;
     // -----------------------------------------------------------------------------
 
     FermionOperator& operator+=(const tn::Tensor& c);
@@ -185,7 +186,6 @@ class FermionOperator {
     // -----------------------------------------------------------------------------
 
     FermionOperator operator*=(const FermionOperator& other);
-    FermionOperator operator*(const FermionOperator& other);
     FermionOperator operator*=(const parameter::ParameterResolver& other);
     friend FermionOperator operator*(FermionOperator lhs, const FermionOperator& rhs);
 
