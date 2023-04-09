@@ -304,8 +304,8 @@ class FermionOperator(FermionOperator_):
             >>> a = FermionOperator('0', 'a') + FermionOperator('1^', 1.2)
             >>> for i, j in a.split():
             ...     print(i, j)
-            a 1 [0]
-            1.2 1 [1^]
+            a, 1 [0]
+            1.2, 1 [1^]
         """
         for i, j in FermionOperator_.split(self):
             yield ParameterResolver(i, internal=True), FermionOperator(j, internal=True)
@@ -476,7 +476,7 @@ class FermionOperator(FermionOperator_):
     def __pow__(self, frac) -> "FermionOperator":
         """Power of FermionOperator."""
         out = self
-        for i in range(frac - 1):
+        for _ in range(frac - 1):
             out *= self
         return self
 
@@ -510,7 +510,7 @@ class FermionOperator(FermionOperator_):
         """
         out = FermionOperator()
         for k, v in self.terms.items():
-            if not (v.is_const() and np.abs(v.const) < EQ_TOLERANCE):
+            if not (v.is_const() and np.abs(v.const) < abs_tol):
                 out += FermionOperator(" ".join(f"{i}{'^' if j else ''}" for i, j in k), v)
         return out
 
@@ -526,7 +526,7 @@ class FermionOperator(FermionOperator_):
             >>> origin = FermionOperator('0 1^')
             >>> origin
             1.0 [0 1^]
-            >>> origin.normal_ordered()
+                >>> origin.normal_ordered()
             -1.0 [1^ 0]
         """
         return FermionOperator(FermionOperator_.normal_ordered(self), internal=True)

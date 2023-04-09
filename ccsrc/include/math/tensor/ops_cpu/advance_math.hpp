@@ -22,6 +22,7 @@
 #include "math/tensor/ops/advance_math.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/ops_cpu/basic_math.hpp"
+#include "math/tensor/ops_cpu/concrete_tensor.hpp"
 #include "math/tensor/ops_cpu/memory_operator.hpp"
 #include "math/tensor/ops_cpu/utils.hpp"
 #include "math/tensor/tensor.hpp"
@@ -48,7 +49,7 @@ template <TDtype dtype>
 Tensor imag(void* data, size_t len) {
     constexpr TDtype real_t = to_real_dtype_t<dtype>;
     if constexpr (dtype == real_t) {
-        return cpu::copy<dtype>(data, len);
+        return cpu::zeros(len, dtype);
     } else {
         auto out = ops::cpu::init<real_t>(len);
         auto c_data = reinterpret_cast<to_device_t<dtype>*>(data);

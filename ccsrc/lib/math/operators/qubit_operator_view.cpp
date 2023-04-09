@@ -225,11 +225,13 @@ std::tuple<tn::Tensor, uint64_t> SinglePauliStr::MulSingleCompressTerm(uint64_t 
 QubitOperator::QubitOperator(const std::string& pauli_string, const parameter::ParameterResolver& var) {
     auto term = SinglePauliStr::init(pauli_string, var);
     this->terms.insert(term.first, term.second);
+    this->dtype = term.second.GetDtype();
 }
 
 QubitOperator::QubitOperator(const terms_t& t, const parameter::ParameterResolver& var) {
     auto term = SinglePauliStr::init(t, var);
     this->terms.insert(term.first, term.second);
+    this->dtype = term.second.GetDtype();
 }
 
 bool QubitOperator::Contains(const key_t& term) const {
@@ -246,6 +248,15 @@ void QubitOperator::Update(const compress_term_t& pauli) {
 
 size_t QubitOperator::size() const {
     return this->terms.size();
+}
+
+void QubitOperator::CastTo(tn::TDtype dtype) {
+    if (dtype != this->dtype) {
+        for (auto& [k, v] : this->terms) {
+            v.CastTo(dtype);
+        }
+        this->dtype = dtype;
+    }
 }
 
 std::string QubitOperator::ToString() const {
@@ -290,13 +301,70 @@ auto QubitOperator::get_terms() const -> dict_t {
                 qubit_word >>= 2;
             }
         }
+        std::reverse(terms.begin(), terms.end());
         out.push_back({terms, v});
     }
     return out;
 }
 
+value_t QubitOperator::get_coeff(const terms_t& term) {
+    auto terms = SinglePauliStr::init(term, tn::ops::ones(1));
+    if (this->Contains(terms.first)) {
+        return this->terms[terms.first] * terms.second;
+    }
+    throw std::out_of_range("term not in fermion operator");
+}
+
+QubitOperator QubitOperator::hermitian_conjugated() const {
+    if (this->dtype == tn::TDtype::Complex128 || this->dtype == tn::TDtype::Complex64) {
+        auto out = *this;
+        for (auto& [k, v] : out.terms.m_list) {
+            v = v.Conjugate();
+        }
+        return out;
+    }
+    return *this;
+}
+
 bool QubitOperator::is_singlet() const {
     return this->size() == 1;
+}
+bool QubitOperator::parameterized() const {
+    for (auto& [k, v] : this->terms.m_list) {
+        if (!v.IsConst()) {
+            return true;
+        }
+    }
+    return false;
+}
+void QubitOperator::set_coeff(const terms_t& term, const parameter::ParameterResolver& value) {
+    auto terms = SinglePauliStr::init(term, tn::ops::ones(1));
+    if (this->Contains(terms.first)) {
+        this->terms[terms.first] = terms.second * value;
+
+    } else {
+        terms.second = terms.second * value;
+        this->terms.insert(terms);
+    }
+    auto upper_t = tensor::upper_type_v(this->dtype, this->terms[terms.first].GetDtype());
+    if (this->dtype != upper_t) {
+        this->CastTo(upper_t);
+    }
+    if (this->terms[terms.first].GetDtype() != upper_t) {
+        this->terms[terms.first].CastTo(upper_t);
+    }
+}
+
+QubitOperator::QubitOperator(const key_t& k, const value_t& v) {
+    this->terms.insert(k, v);
+    this->dtype = v.GetDtype();
+}
+std::vector<std::pair<parameter::ParameterResolver, QubitOperator>> QubitOperator::split() const {
+    auto out = std::vector<std::pair<parameter::ParameterResolver, QubitOperator>>();
+    for (auto& [k, v] : this->terms.m_list) {
+        out.push_back({v, QubitOperator(k, parameter::ParameterResolver(tn::ops::ones(1), v.GetDtype()))});
+    }
+    return out;
 }
 
 parameter::ParameterResolver QubitOperator::singlet_coeff() const {
@@ -306,22 +374,70 @@ parameter::ParameterResolver QubitOperator::singlet_coeff() const {
     return this->terms.m_list.begin()->second;
 }
 
+std::vector<QubitOperator> QubitOperator::singlet() const {
+    if (!this->is_singlet()) {
+        throw std::runtime_error("Given QubitOperator is not singlet.");
+    }
+    std::vector<QubitOperator> out;
+    for (auto& [term, value] : this->get_terms()) {
+        for (auto& word : term) {
+            out.emplace_back(QubitOperator({word}, tn::ops::ones(1)));
+        }
+        break;
+    }
+    return out;
+}
+
+void QubitOperator::subs(const parameter::ParameterResolver& other) {
+    auto new_type = this->dtype;
+    std::vector<key_t> will_pop;
+    for (auto& [k, v] : this->terms.m_list) {
+        if (v.subs(other).size() != 0) {
+            new_type = tensor::upper_type_v(this->dtype, v.GetDtype());
+        }
+        if (!v.IsNotZero()) {
+            will_pop.push_back(k);
+        }
+    }
+    for (auto& k : will_pop) {
+        this->terms.erase(k);
+    }
+    if (new_type != this->dtype) {
+        this->CastTo(new_type);
+    }
+}
+
 QubitOperator QubitOperator::imag() const {
     auto out = *this;
+    std::vector<key_t> will_pop;
     for (auto& [k, v] : out.terms.m_list) {
         v = v.Imag();
+        if (!v.IsNotZero()) {
+            will_pop.push_back(k);
+        }
     }
+    out.dtype = tn::ToRealType(this->dtype);
+    std::for_each(will_pop.begin(), will_pop.end(), [&](auto i) { out.terms.erase(i); });
     return out;
 }
 
 QubitOperator QubitOperator::real() const {
     auto out = *this;
+    std::vector<key_t> will_pop;
     for (auto& [k, v] : out.terms.m_list) {
         v = v.Real();
+        if (!v.IsNotZero()) {
+            will_pop.push_back(k);
+        }
     }
+    out.dtype = tn::ToRealType(this->dtype);
+    std::for_each(will_pop.begin(), will_pop.end(), [&](auto i) { out.terms.erase(i); });
     return out;
 }
 
+tn::TDtype QubitOperator::GetDtype() const {
+    return this->dtype;
+}
 // -----------------------------------------------------------------------------
 
 QubitOperator& QubitOperator::operator+=(const tn::Tensor& c) {
@@ -366,8 +482,21 @@ QubitOperator QubitOperator::operator*=(const QubitOperator& other) {
             auto new_term = SinglePauliStr::Mul(this_term, other_term);
             if (out.Contains(new_term.first)) {
                 out.terms[new_term.first] = out.terms[new_term.first] + new_term.second;
+                if (this->dtype != out.terms[new_term.first].GetDtype()) {
+                    this->CastTo(out.terms[new_term.first].GetDtype());
+                }
             } else {
                 out.terms.insert(new_term);
+                auto upper_t = tn::upper_type_v(this->dtype, out.terms[new_term.first].GetDtype());
+                if (this->GetDtype() != upper_t) {
+                    this->CastTo(upper_t);
+                }
+                if (new_term.second.GetDtype() != upper_t) {
+                    out.terms[new_term.first].CastTo(upper_t);
+                }
+            }
+            if (!out.terms[new_term.first].IsNotZero()) {
+                out.terms.erase(new_term.first);
             }
         }
     }
@@ -375,24 +504,19 @@ QubitOperator QubitOperator::operator*=(const QubitOperator& other) {
     return *this;
 }
 
-QubitOperator QubitOperator::operator*(const QubitOperator& other) {
-    auto out = QubitOperator();
-    for (auto& this_term : this->terms) {
-        for (const auto& other_term : other.terms) {
-            auto new_term = SinglePauliStr::Mul(this_term, other_term);
-            if (out.Contains(new_term.first)) {
-                out.terms[new_term.first] = out.terms[new_term.first] + new_term.second;
-            } else {
-                out.terms.insert(new_term);
-            }
-        }
-    }
-    return out;
+QubitOperator operator*(QubitOperator lhs, const QubitOperator& rhs) {
+    lhs *= rhs;
+    return lhs;
 }
 
 QubitOperator QubitOperator::operator*=(const parameter::ParameterResolver& other) {
+    if (!other.IsNotZero()) {
+        this->terms = {};
+        return *this;
+    }
     for (auto& [k, v] : this->terms.m_list) {
         v *= other;
+        this->dtype = v.GetDtype();
     }
     return *this;
 }

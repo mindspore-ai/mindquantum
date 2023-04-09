@@ -385,7 +385,6 @@ void FermionOperator::subs(const parameter::ParameterResolver& other) {
     for (auto& [k, v] : this->terms.m_list) {
         if (v.subs(other).size() != 0) {
             new_type = tensor::upper_type_v(this->dtype, v.GetDtype());
-            std::cout << "new type:" << tn::to_string(new_type) << std::endl;
         }
         if (!v.IsNotZero()) {
             will_pop.push_back(k);
@@ -400,6 +399,7 @@ void FermionOperator::subs(const parameter::ParameterResolver& other) {
 }
 
 FermionOperator FermionOperator::hermitian_conjugated() const {
+    throw std::runtime_error("Bug in fermion operator hermitian_conjugate. a_j a_k^ != a_k^ a_j");
     if (this->dtype == tn::TDtype::Complex128 || this->dtype == tn::TDtype::Complex64) {
         auto out = *this;
         for (auto& [k, v] : out.terms.m_list) {

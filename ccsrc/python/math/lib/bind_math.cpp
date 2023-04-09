@@ -213,16 +213,38 @@ void BindQubitOperator(py::module &module) {
 
     py::class_<qop_t, std::shared_ptr<qop_t>>(module, "QubitOperator")
         .def(py::init<const std::string &, const pr_t &>(), "pauli_string"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
+        .def(py::init<>())
         .def(py::init<const qop_t &>(), "other"_a)
-        .def(py::self += tensor::Tensor())
         .def(py::self += py::self)
-        .def(py::self + tensor::Tensor())
         .def(py::self + py::self)
         .def(py::self *= py::self)
-        .def("real", &qop_t::real)
+        .def(py::self * py::self)
+        .def("__copy__", [](const qop_t &a) { return a; })
+        .def("astype",
+             [](const fop_t &a, tensor::TDtype dtype) {
+                 auto out = a;
+                 out.CastTo(dtype);
+                 return out;
+             })
+        .def("count_qubits", &qop_t::count_qubits)
+        .def("dtype", &qop_t::GetDtype)
+        .def("get_terms", &qop_t::get_terms)
+        .def("get_coeff", &qop_t::get_coeff)
+        .def("hermitian_conjugated", &qop_t::hermitian_conjugated)
         .def("imag", &qop_t::imag)
+        .def("is_singlet", &qop_t::is_singlet)
+        .def("parameterized", &qop_t::parameterized)
+        .def("real", &qop_t::real)
+        .def("set_coeff", &qop_t::set_coeff)
+        .def("split", &qop_t::split)
+        .def("singlet_coeff", &qop_t::singlet_coeff)
+        .def("singlet", &qop_t::singlet)
         .def("size", &qop_t::size)
+        .def("subs", &qop_t::subs)
         .def("__repr__", [](const qop_t &op) { return op.ToString(); });
+
+    // -----------------------------------------------------------------------------
+
     py::class_<fop_t, std::shared_ptr<fop_t>>(module, "FermionOperator")
         .def(py::init<const std::string &, const pr_t &>(), "fermion_string"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
         .def(py::init<>())

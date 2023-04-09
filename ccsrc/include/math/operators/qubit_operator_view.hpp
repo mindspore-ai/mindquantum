@@ -123,6 +123,7 @@ class QubitOperator {
     QubitOperator() = default;
     explicit QubitOperator(const std::string& pauli_string, const parameter::ParameterResolver& var = tn::ops::ones(1));
     explicit QubitOperator(const terms_t& t, const parameter::ParameterResolver& var = tn::ops::ones(1));
+    QubitOperator(const key_t& k, const value_t& v);
 
     // -----------------------------------------------------------------------------
 
@@ -130,10 +131,19 @@ class QubitOperator {
     std::string ToString() const;
     size_t count_qubits() const;
     dict_t get_terms() const;
+    value_t get_coeff(const terms_t& term);
     bool is_singlet() const;
     parameter::ParameterResolver singlet_coeff() const;
     QubitOperator imag() const;
     QubitOperator real() const;
+    tn::TDtype GetDtype() const;
+    void CastTo(tn::TDtype dtype);
+    QubitOperator hermitian_conjugated() const;
+    bool parameterized() const;
+    void set_coeff(const terms_t& term, const parameter::ParameterResolver& value);
+    std::vector<std::pair<parameter::ParameterResolver, QubitOperator>> split() const;
+    std::vector<QubitOperator> singlet() const;
+    void subs(const parameter::ParameterResolver& other);
 
     // -----------------------------------------------------------------------------
 
@@ -148,10 +158,11 @@ class QubitOperator {
     QubitOperator operator*=(const QubitOperator& other);
     QubitOperator operator*=(const parameter::ParameterResolver& other);
     QubitOperator operator*(const tensor::Tensor& other);
-    QubitOperator operator*(const QubitOperator& other);
+    friend QubitOperator operator*(QubitOperator lhs, const QubitOperator& rhs);
 
  public:
     QTerm_t terms{};
+    tn::TDtype dtype = tn::TDtype::Float64;
 };
 }  // namespace operators::qubit
 std::ostream& operator<<(std::ostream& os, const operators::qubit::QubitOperator& t);
