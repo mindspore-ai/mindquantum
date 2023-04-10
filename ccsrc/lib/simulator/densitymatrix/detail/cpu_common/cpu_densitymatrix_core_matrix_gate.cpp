@@ -13,6 +13,7 @@
 //   limitations under the License.
 #include "config/openmp.hpp"
 
+#include "core/utils.hpp"
 #include "math/pr/parameter_resolver.hpp"
 #include "simulator/utils.hpp"
 #ifdef __x86_64__

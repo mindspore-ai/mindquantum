@@ -19,7 +19,6 @@
 
 from mindquantum.core.parameterresolver import ParameterResolver
 
-from ._base_operator import _Operator
 from ._term_value import TermValue
 from .fermion_operator import FermionOperator
 from .qubit_operator import QubitOperator
@@ -47,7 +46,7 @@ def _check_valid_qubit_excitation_operator_term(qeo_term):
                     raise ValueError(f'Invalid qubit excitation operator term {term}')
 
 
-class QubitExcitationOperator(_Operator):
+class QubitExcitationOperator:
     r"""
     QubitExcitationOperator class.
 

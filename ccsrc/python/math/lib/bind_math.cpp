@@ -113,6 +113,7 @@ void BindPR(py::module &module) {  // NOLINT(runtime/references)
     namespace pr = parameter;
     using pr_t = pr::ParameterResolver;
     py::class_<pr_t, std::shared_ptr<pr_t>>(module, "ParameterResolver")
+        .def(py::init<>())
         .def(py::init<const std::string &, const tensor::Tensor &, tensor::TDtype>(), "key"_a,
              "const_value"_a = tensor::ops::zeros(1), "dtype"_a = tensor::TDtype::Float64)
         .def(py::init<const std::map<std::string, tensor::Tensor> &, const tensor::Tensor &, tensor::TDtype>(),

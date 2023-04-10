@@ -14,6 +14,6 @@
 # ============================================================================
 """Parameter resolver. Help to generate parameter in mindspore quantum."""
 
-from .parameterresolver import ParameterResolver
+from .parameterresolver import ParameterResolver, PRConvertible
 
 __all__ = ["ParameterResolver"]

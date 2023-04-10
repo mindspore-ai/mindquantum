@@ -498,9 +498,7 @@ class RX(RotSelfHermMat):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return getattr(mb, get_context('dtype')).gate.RXGate(
-            self.coeff.get_cpp_obj(), self.obj_qubits, self.ctrl_qubits
-        )
+        return getattr(mb, get_context('dtype')).gate.RXGate(self.coeff, self.obj_qubits, self.ctrl_qubits)
 
 
 class RY(RotSelfHermMat):

@@ -113,7 +113,7 @@ class MQSim(BackendBase):
             pr = _check_and_generate_pr_type(pr, circuit.params_name)
         else:
             pr = ParameterResolver()
-        res = self.sim.apply_circuit(circuit.get_cpp_obj(), pr.get_cpp_obj())
+        res = self.sim.apply_circuit(circuit.get_cpp_obj(), pr)
         if res:
             out = MeasureResult()
             out.add_measure(circuit.all_measures.keys())
