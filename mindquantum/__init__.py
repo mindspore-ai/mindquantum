@@ -22,6 +22,8 @@ from .mqbackend import logging
 
 # isort: split
 
+from mindquantum._math import dtype
+
 from . import algorithm, config, core, engine, framework, io, simulator, utils
 from .algorithm import *
 from .config import *
@@ -31,6 +33,26 @@ from .framework import *
 from .io import *
 from .simulator import *
 from .utils import *
+
+__dtype__ = [
+    'float32',
+    'float64',
+    'complex64',
+    'complex128',
+]
+
+float32 = dtype.float32
+float64 = dtype.float64
+complex64 = dtype.complex64
+complex128 = dtype.complex128
+mq_number_type = [float32, float64, complex64, complex128]
+
+str_dtype_map = {
+    str(float32): float32,
+    str(float64): float64,
+    str(complex64): complex64,
+    str(complex128): complex128,
+}
 
 if sys.version_info < (3, 8):  # pragma: no cover
     from importlib_metadata import PackageNotFoundError, version
@@ -52,25 +74,3 @@ __all__.extend(framework.__all__)
 __all__.extend(io.__all__)
 __all__.extend(config.__all__)
 __all__.sort()
-
-
-try:
-    import mindquantum.experimental
-
-    _orig_enable_logging = logging.enable
-    _orig_disable_logging = logging.disable
-
-    def _enable_logging(level):
-        _orig_enable_logging(level)
-        if hasattr(mindquantum.experimental, 'logging'):
-            mindquantum.experimental.logging.enable(level)
-
-    def _disable_logging():
-        _orig_disable_logging()
-        if hasattr(mindquantum.experimental, 'logging'):
-            mindquantum.experimental.logging.disable()
-
-    logging.enable = _enable_logging
-    logging.disable = _disable_logging
-except ImportError:
-    pass

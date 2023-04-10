@@ -20,33 +20,49 @@
 
 #include "config/type_promotion.hpp"
 
-#include "core/two_dim_matrix.hpp"
+#include "math/tensor/matrix.hpp"
+#include "math/tensor/ops.hpp"
+#include "math/tensor/ops_cpu/memory_operator.hpp"
+#include "math/tensor/tensor.hpp"
+#include "math/tensor/traits.hpp"
 namespace mindquantum {
-template <typename T>
 struct NumbaMatFunWrapper {
     using mat_t = void (*)(double, std::complex<double>*);
     NumbaMatFunWrapper() = default;
-    NumbaMatFunWrapper(uint64_t addr, int dim) : dim(dim) {
+    NumbaMatFunWrapper(uint64_t addr, int dim, tensor::TDtype dtype = tensor::TDtype::Complex128)
+        : dim(dim), dtype(dtype) {
         fun = reinterpret_cast<mat_t>(addr);
     }
 
-    auto operator()(double coeff) const {
-        mindquantum::Dim2Matrix<T> out;
-        auto tmp = std::make_unique<std::complex<double>[]>(dim * dim);
-        fun(coeff, tmp.get());
-        mindquantum::VVT<std::complex<T>> m(dim, mindquantum::VT<std::complex<T>>(dim, 0.0));
-        for (int i = 0; i < dim; i++) {
-            for (int j = 0; j < dim; j++) {
-                m[i][j] = ComplexCast<double, T>::apply(tmp[i * dim + j]);
+    auto operator()(const tensor::Tensor& coeff) const {
+        auto tmp = tensor::ops::init(dim * dim, tensor::TDtype::Complex128, tensor::TDevice::CPU);
+        switch (coeff.dtype) {
+            case tensor::TDtype::Float32: {
+                auto f = static_cast<tensor::to_device_t<tensor::TDtype::Float32>*>(coeff.data)[0];
+                fun(f, reinterpret_cast<std::complex<double>*>(tmp.data));
+            }
+            case tensor::TDtype::Float64: {
+                auto f = static_cast<tensor::to_device_t<tensor::TDtype::Float64>*>(coeff.data)[0];
+                fun(f, reinterpret_cast<std::complex<double>*>(tmp.data));
+            }
+            case tensor::TDtype::Complex64: {
+                auto f = static_cast<tensor::to_device_t<tensor::TDtype::Complex64>*>(coeff.data)[0];
+                fun(f.real(), reinterpret_cast<std::complex<double>*>(tmp.data));
+            }
+            case tensor::TDtype::Complex128: {
+                auto f = static_cast<tensor::to_device_t<tensor::TDtype::Complex128>*>(coeff.data)[0];
+                fun(f.real(), reinterpret_cast<std::complex<double>*>(tmp.data));
             }
         }
-
-        out = mindquantum::Dim2Matrix<T>(m);
-        out.PrintInfo();
+        auto out = tensor::Matrix(std::move(tmp), dim, dim);
+        if (this->dtype != tensor::TDtype::Complex128) {
+            out = tensor::Matrix(out.astype(this->dtype), dim, dim);
+        }
         return out;
     }
     mat_t fun;
     int dim;
+    tensor::TDtype dtype = tensor::TDtype::Complex128;
 };
 }  // namespace mindquantum
 #endif

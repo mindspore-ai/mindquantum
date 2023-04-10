@@ -39,6 +39,10 @@ Tensor imag(const Tensor& t);
 Tensor conj(const Tensor& t);
 
 Tensor vdot(const Tensor& t1, const Tensor& t2);
+Tensor sin(const Tensor& t);
+Tensor cos(const Tensor& t);
+Tensor exp(const Tensor& t);
+Tensor gather(const std::vector<Tensor>& tensors);
 
 bool all_less_than(const Tensor& t);
 

@@ -15,7 +15,9 @@
 #include "math/tensor/ops_cpu/basic_math.hpp"
 
 #include <functional>
+#include <stdexcept>
 
+#include "math/tensor/matrix.hpp"
 #include "math/tensor/ops_cpu/memory_operator.hpp"
 #include "math/tensor/traits.hpp"
 namespace tensor::ops {
@@ -282,6 +284,17 @@ Tensor mul(const Tensor& t, const Tensor& other) {
     }
 }
 
+// -----------------------------------------------------------------------------
+
+Matrix MatMul(const Matrix& m1, const Matrix& m2) {
+    if (m1.device != m2.device) {
+        throw std::runtime_error("Cannot multiply two matrix in different device.");
+    }
+    if (m1.device == TDevice::CPU) {
+        return ops::cpu::MatMul(m1, m2);
+    } else {
+    }
+}
 // -----------------------------------------------------------------------------
 
 void inplace_div(Tensor* t, float a) {

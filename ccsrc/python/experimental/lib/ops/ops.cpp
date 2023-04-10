@@ -31,7 +31,7 @@
 
 #include "config/constexpr_type_name.hpp"
 
-#include "core/parameter_resolver.hpp"
+#include "math/pr/parameter_resolver.hpp"
 
 #include "experimental/ops/gates.hpp"
 #include "experimental/ops/parametric/angle_gates.hpp"

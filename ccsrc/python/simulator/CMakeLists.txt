@@ -41,13 +41,14 @@ endif()
 
 # lint_cmake: -whitespace/indent
 
-pybind11_add_module(_mq_matrix MODULE ${CMAKE_CURRENT_SOURCE_DIR}/lib/_mq_matrix.cpp
-                    OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}")
+if(ENABLE_DM)
+  pybind11_add_module(_mq_matrix MODULE ${CMAKE_CURRENT_SOURCE_DIR}/lib/_mq_matrix.cpp
+                      OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}")
 
-target_include_directories(_mq_matrix PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
-force_at_least_cxx17_workaround(_mq_matrix)
-target_link_libraries(_mq_matrix PUBLIC mq_python_core mqsim_densitymatrix_cpu)
-
+  target_include_directories(_mq_matrix PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
+  force_at_least_cxx17_workaround(_mq_matrix)
+  target_link_libraries(_mq_matrix PUBLIC mq_python_core mqsim_densitymatrix_cpu)
+endif()
 # ------------------------------------------------------------------------------
 
 add_subdirectory(include)

@@ -21,7 +21,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "core/parameter_resolver.hpp"
+#include "math/pr/parameter_resolver.hpp"
 #include "simulator/types.hpp"
 
 #ifdef __CUDACC__

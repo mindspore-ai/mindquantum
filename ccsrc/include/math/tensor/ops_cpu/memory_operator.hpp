@@ -24,6 +24,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "math/tensor/matrix.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/ops_cpu/utils.hpp"
 #include "math/tensor/tensor.hpp"
@@ -173,5 +174,49 @@ void set(Tensor* t, const Tensor& source, size_t idx);
 
 // -----------------------------------------------------------------------------
 Tensor get(const Tensor& t, size_t idx);
+
+// -----------------------------------------------------------------------------
+
+template <TDtype src_dtype>
+std::vector<to_device_t<src_dtype>> to_vector(void* data, size_t len) {
+    auto c_data = reinterpret_cast<to_device_t<src_dtype>*>(data);
+    std::vector<to_device_t<src_dtype>> out;
+    for (size_t i = 0; i < len; i++) {
+        out.push_back(c_data[i]);
+    }
+    return out;
+}
+
+template <typename T>
+std::vector<T> to_vector(const Tensor& ori) {
+    auto t = ori;
+    if (t.dtype != to_dtype_v<T>) {
+        t = t.astype(to_dtype_v<T>);
+    }
+    return to_vector<to_dtype_v<T>>(t.data, t.dim);
+}
+
+template <TDtype src_dtype>
+std::vector<std::vector<to_device_t<src_dtype>>> to_vector(void* data, size_t n_col, size_t n_row) {
+    auto c_data = reinterpret_cast<to_device_t<src_dtype>*>(data);
+    std::vector<std::vector<to_device_t<src_dtype>>> out;
+    for (size_t i = 0; i < n_row; i++) {
+        std::vector<to_device_t<src_dtype>> tmp;
+        for (size_t j = 0; j < n_col; j++) {
+            tmp.push_back(c_data[i * n_col + j]);
+        }
+        out.push_back(tmp);
+    }
+    return out;
+}
+
+template <typename T>
+std::vector<std::vector<T>> to_vector(const Matrix& t) {
+    Matrix m = t;
+    if (t.dtype != to_dtype_v<T>) {
+        m = Matrix(t.astype(to_dtype_v<T>), t.n_col, t.n_row);
+    }
+    return to_vector<to_dtype_v<T>>(m.data, m.n_col, m.n_row);
+}
 }  // namespace tensor::ops::cpu
 #endif /* MATH_TENSOR_OPS_CPU_HPP_ */

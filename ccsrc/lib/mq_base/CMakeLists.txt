@@ -18,15 +18,8 @@
 
 # lint_cmake: -whitespace/indent
 
-target_sources(
-  mq_base
-  PRIVATE ${CMAKE_CURRENT_LIST_DIR}/utils.cc
-          $<$<BOOL:${ENABLE_LOGGING}>:${CMAKE_CURRENT_LIST_DIR}/logging.cpp>
-          ${CMAKE_CURRENT_LIST_DIR}/gates/details/fermion_operator_term_policy.cpp
-          ${CMAKE_CURRENT_LIST_DIR}/gates/details/qubit_operator_term_policy.cpp
-          # ${CMAKE_CURRENT_LIST_DIR}/gates/details/std_complex_coeff_policy.cpp
-          # ${CMAKE_CURRENT_LIST_DIR}/gates/details/symengine_coeff_policy.cpp
-)
+target_sources(mq_base PRIVATE ${CMAKE_CURRENT_LIST_DIR}/utils.cc
+                               $<$<BOOL:${ENABLE_LOGGING}>:${CMAKE_CURRENT_LIST_DIR}/logging.cpp>)
 
 if(ENABLE_CUDA)
   target_compile_definitions(mq_base PUBLIC GPUACCELERATED)

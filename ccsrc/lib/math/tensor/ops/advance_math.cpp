@@ -21,6 +21,43 @@
 #include "math/tensor/traits.hpp"
 
 namespace tensor::ops {
+Tensor sin(const Tensor& t) {
+    if (t.device == TDevice::CPU) {
+        return ops::cpu::ElementFunc(t, t.dtype, [](auto i) { return std::sin(i); });
+    } else {
+    }
+}
+
+Tensor cos(const Tensor& t) {
+    if (t.device == TDevice::CPU) {
+        return ops::cpu::ElementFunc(t, t.dtype, [](auto i) { return std::cos(i); });
+    } else {
+    }
+}
+
+Tensor exp(const Tensor& t) {
+    if (t.device == TDevice::CPU) {
+        return ops::cpu::ElementFunc(t, t.dtype, [](auto i) { return std::exp(i); });
+    } else {
+    }
+}
+
+Tensor gather(const std::vector<Tensor>& tensors) {
+    if (tensors.size() == 0) {
+        return Tensor();
+    }
+    auto device = tensors[0].device;
+    for (auto& t : tensors) {
+        if (t.device != device) {
+            throw std::runtime_error("Gather only work for tensor in save device.");
+        }
+    }
+    if (device == TDevice::CPU) {
+        return ops::cpu::Gather(tensors);
+    } else {
+    }
+}
+
 Tensor real(const Tensor& t) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::real(t);

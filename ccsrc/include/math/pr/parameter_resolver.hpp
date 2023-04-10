@@ -21,8 +21,10 @@
 #include <type_traits>
 #include <vector>
 
+#include "math/tensor/matrix.hpp"
 #include "math/tensor/ops.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
+#include "math/tensor/ops_cpu/memory_operator.hpp"
 #include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
 
@@ -100,7 +102,7 @@ struct ParameterResolver {
             }
             this->data_[key] = a.astype(this->const_value.dtype);
         } else {
-            this->SetItem(key, tn::ops::init_with_value(a, this->const_value.device));
+            this->SetItem(key, tn::ops::init_with_value(a, this->const_value.device).astype(this->GetDtype()));
         }
     }
 
@@ -244,6 +246,9 @@ ParameterResolver operator+(const ParameterResolver& lhs, const ParameterResolve
 ParameterResolver operator-(const ParameterResolver& lhs, const ParameterResolver& rhs);
 ParameterResolver operator*(const ParameterResolver& lhs, const ParameterResolver& rhs);
 ParameterResolver operator/(const ParameterResolver& lhs, const ParameterResolver& rhs);
+
+std::map<std::string, size_t> GetRequiresGradParameters(const std::vector<ParameterResolver>& prs);
+std::pair<std::map<std::string, size_t>, tensor::Matrix> Jacobi(const std::vector<ParameterResolver>& prs);
 }  // namespace parameter
 std::ostream& operator<<(std::ostream& os, const parameter::ParameterResolver& pr);
 #endif /* MATH_PR_PARAMETER_RESOLVER_HPP_ */

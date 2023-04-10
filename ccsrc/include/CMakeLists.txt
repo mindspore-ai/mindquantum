@@ -22,12 +22,10 @@ set(MQ_BASE_HEADERS
     config/popcnt.hpp
     config/config.hpp
     config/type_traits.hpp
-    core/parameter_resolver.hpp
     core/sparse/algo.hpp
     core/sparse/csrhdmatrix.hpp
     core/sparse/paulimat.hpp
     core/sparse/sparse_utils.hpp
-    core/two_dim_matrix.hpp
     core/mq_base_types.hpp
     core/utils.hpp
     ops/basic_gate.hpp

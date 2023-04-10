@@ -17,7 +17,7 @@
 
 #include "config/common_type.hpp"
 
-#include "core/parameter_resolver.hpp"
+#include "math/pr/parameter_resolver.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 

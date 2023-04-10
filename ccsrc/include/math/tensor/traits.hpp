@@ -158,6 +158,26 @@ std::string to_string(TDtype dtype);
 
 // -----------------------------------------------------------------------------
 
+template <TDtype dtype>
+struct is_complex_dtype {
+    static constexpr bool v = true;
+};
+
+template <>
+struct is_complex_dtype<TDtype::Float32> {
+    static constexpr bool v = false;
+};
+
+template <>
+struct is_complex_dtype<TDtype::Float64> {
+    static constexpr bool v = false;
+};
+
+template <TDtype dtype>
+static constexpr bool is_complex_dtype_v = is_complex_dtype<dtype>::v;
+
+// -----------------------------------------------------------------------------
+
 template <TDevice device>
 std::string to_string() {
     if constexpr (device == TDevice::CPU) {

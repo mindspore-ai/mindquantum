@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-#include "core/parameter_resolver.hpp"
+#include "math/pr/parameter_resolver.hpp"
 #include "ops/basic_gate.hpp"
 #include "ops/gate_id.hpp"
 
@@ -60,39 +60,39 @@ struct Gate {
     std::shared_ptr<BasicGate> GetGate_1() {
         switch (gate) {
             case GateID::RX: {
-                auto pr = ParameterResolver<double>();
+                auto pr = ParameterResolver();
                 pr.SetConst(ang);
-                return std::make_shared<RXGate<double>>(pr, objs, ctrls);
+                return std::make_shared<RXGate>(pr, objs, ctrls);
             }
             case GateID::RY: {
-                auto pr = ParameterResolver<double>();
+                auto pr = ParameterResolver();
                 pr.SetConst(ang);
-                return std::make_shared<RYGate<double>>(pr, objs, ctrls);
+                return std::make_shared<RYGate>(pr, objs, ctrls);
             }
             case GateID::RZ: {
-                auto pr = ParameterResolver<double>();
+                auto pr = ParameterResolver();
                 pr.SetConst(ang);
-                return std::make_shared<RZGate<double>>(pr, objs, ctrls);
+                return std::make_shared<RZGate>(pr, objs, ctrls);
             }
             case GateID::PS: {
-                auto pr = ParameterResolver<double>();
+                auto pr = ParameterResolver();
                 pr.SetConst(ang);
-                return std::make_shared<PSGate<double>>(pr, objs, ctrls);
+                return std::make_shared<PSGate>(pr, objs, ctrls);
             }
             case GateID::Rxx: {
-                auto pr = ParameterResolver<double>();
+                auto pr = ParameterResolver();
                 pr.SetConst(ang);
-                return std::make_shared<RxxGate<double>>(pr, objs, ctrls);
+                return std::make_shared<RxxGate>(pr, objs, ctrls);
             }
             case GateID::Ryy: {
-                auto pr = ParameterResolver<double>();
+                auto pr = ParameterResolver();
                 pr.SetConst(ang);
-                return std::make_shared<RyyGate<double>>(pr, objs, ctrls);
+                return std::make_shared<RyyGate>(pr, objs, ctrls);
             }
             case GateID::Rzz: {
-                auto pr = ParameterResolver<double>();
+                auto pr = ParameterResolver();
                 pr.SetConst(ang);
-                return std::make_shared<RzzGate<double>>(pr, objs, ctrls);
+                return std::make_shared<RzzGate>(pr, objs, ctrls);
             }
             case GateID::M: {
                 return std::make_shared<MeasureGate>(m_key, objs);

@@ -173,5 +173,82 @@ std::vector<bool> is_equal_to(void* lhs, size_t lhs_len, void* rhs, size_t rhs_l
 }
 
 std::vector<bool> is_equal_to(const Tensor& lhs, const Tensor& rhs);
+
+template <TDtype out_dtype, TDtype src_dtype, typename F>
+Tensor ElementFunc(void* data, size_t len, F&& func) {
+    auto c_data = reinterpret_cast<to_device_t<src_dtype>*>(data);
+    auto out = init(len, out_dtype);
+    auto out_data = reinterpret_cast<to_device_t<out_dtype>*>(out.data);
+    for (size_t i = 0; i < len; i++) {
+        if constexpr (is_complex_dtype_v<src_dtype> && !is_complex_dtype_v<out_dtype>) {
+            out_data[i] = std::real(func(c_data[i]));
+        } else {
+            out_data[i] = func(c_data[i]);
+        }
+    }
+    return out;
+}
+
+template <typename F>
+Tensor ElementFunc(const Tensor& t, TDtype out_dtype, F&& func) {
+    auto& data = t.data;
+    auto len = t.dim;
+    auto src_dtype = t.dtype;
+
+    switch (out_dtype) {
+        case TDtype::Float32: {
+            switch (src_dtype) {
+                case TDtype::Float32:
+                    return ElementFunc<TDtype::Float32, TDtype::Float32>(data, len, func);
+                case TDtype::Float64:
+                    return ElementFunc<TDtype::Float32, TDtype::Float64>(data, len, func);
+                case TDtype::Complex64:
+                    return ElementFunc<TDtype::Float32, TDtype::Complex64>(data, len, func);
+                case TDtype::Complex128:
+                    return ElementFunc<TDtype::Float32, TDtype::Complex128>(data, len, func);
+            }
+        } break;
+        case TDtype::Float64: {
+            switch (src_dtype) {
+                case TDtype::Float32:
+                    return ElementFunc<TDtype::Float64, TDtype::Float32>(data, len, func);
+                case TDtype::Float64:
+                    return ElementFunc<TDtype::Float64, TDtype::Float64>(data, len, func);
+                case TDtype::Complex64:
+                    return ElementFunc<TDtype::Float64, TDtype::Complex64>(data, len, func);
+                case TDtype::Complex128:
+                    return ElementFunc<TDtype::Float64, TDtype::Complex128>(data, len, func);
+            }
+        } break;
+        case TDtype::Complex64: {
+            switch (src_dtype) {
+                case TDtype::Float32:
+                    return ElementFunc<TDtype::Complex64, TDtype::Float32>(data, len, func);
+                case TDtype::Float64:
+                    return ElementFunc<TDtype::Complex64, TDtype::Float64>(data, len, func);
+                case TDtype::Complex64:
+                    return ElementFunc<TDtype::Complex64, TDtype::Complex64>(data, len, func);
+                case TDtype::Complex128:
+                    return ElementFunc<TDtype::Complex64, TDtype::Complex128>(data, len, func);
+            }
+        } break;
+        case TDtype::Complex128: {
+            switch (src_dtype) {
+                case TDtype::Float32:
+                    return ElementFunc<TDtype::Complex128, TDtype::Float32>(data, len, func);
+                case TDtype::Float64:
+                    return ElementFunc<TDtype::Complex128, TDtype::Float64>(data, len, func);
+                case TDtype::Complex64:
+                    return ElementFunc<TDtype::Complex128, TDtype::Complex64>(data, len, func);
+                case TDtype::Complex128:
+                    return ElementFunc<TDtype::Complex128, TDtype::Complex128>(data, len, func);
+            }
+        } break;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+Tensor Gather(const std::vector<Tensor>& tensors);
 }  // namespace tensor::ops::cpu
 #endif /* MATH_TENSOR_OPS_CPU_ADVANCE_MATH_HPP_ */

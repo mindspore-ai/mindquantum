@@ -35,7 +35,7 @@
 #include <vector>
 
 #include "core/mq_base_types.hpp"
-#include "core/parameter_resolver.hpp"
+#include "math/pr/parameter_resolver.hpp"
 #include "ops/basic_gate.hpp"
 #include "ops/gates.hpp"
 #include "ops/hamiltonian.hpp"

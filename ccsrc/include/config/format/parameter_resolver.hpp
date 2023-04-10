@@ -18,7 +18,7 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
-#include "core/parameter_resolver.hpp"
+#include "math/pr/parameter_resolver.hpp"
 
 //! Custom formatter for a ParameterResolver
 template <typename float_t, typename char_type>

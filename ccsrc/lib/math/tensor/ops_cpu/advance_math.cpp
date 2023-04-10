@@ -16,6 +16,8 @@
 
 #include <stdexcept>
 
+#include "math/tensor/ops_cpu/memory_operator.hpp"
+#include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
 
 namespace tensor::ops::cpu {
@@ -135,4 +137,28 @@ std::vector<bool> is_equal_to(const Tensor& lhs, const Tensor& rhs) {
     }
 }
 #undef IS_EQUAL_TO_TENSOR
+
+// -----------------------------------------------------------------------------
+
+Tensor Gather(const std::vector<Tensor>& tensors) {
+    if (tensors.size() == 0) {
+        return Tensor();
+    }
+    auto dtype = tensors[0].dtype;
+    size_t tot_len = 0;
+    for (auto& t : tensors) {
+        if (t.dtype != dtype) {
+            throw std::runtime_error("element tensor of gather should have same dtype.");
+        }
+        tot_len += t.dim;
+    }
+    auto out = init(tot_len, dtype);
+    size_t idx = 0;
+    for (auto& t : tensors) {
+        std::memcpy(out.data + idx, t.data, bit_size(t.dtype) * t.dim);
+        idx += bit_size(t.dtype) * t.dim;
+    }
+    return out;
+}
+
 }  // namespace tensor::ops::cpu

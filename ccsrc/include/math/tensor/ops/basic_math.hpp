@@ -17,6 +17,7 @@
 
 #include <complex>
 
+#include "math/tensor/matrix.hpp"
 #include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
 
@@ -91,5 +92,9 @@ Tensor div(float a, const Tensor& t);
 Tensor div(double a, const Tensor& t);
 Tensor div(const std::complex<float>& a, const Tensor& t);
 Tensor div(const std::complex<double>& a, const Tensor& t);
+
+// -----------------------------------------------------------------------------
+
+Matrix MatMul(const Matrix& m1, const Matrix& m2);
 }  // namespace tensor::ops
 #endif

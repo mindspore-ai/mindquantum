@@ -535,6 +535,35 @@ bool ParameterResolver::IsAntiHermitian() const {
 bool ParameterResolver::HasRequireGradParams() {
     return this->data_.size() > this->no_grad_parameters_.size();
 }
+std::map<std::string, size_t> GetRequiresGradParameters(const std::vector<ParameterResolver>& prs) {
+    std::map<std::string, size_t> title = {};
+    size_t idx = 0;
+    for (auto& pr : prs) {
+        for (auto& name : pr.GetRequiresGradParameters()) {
+            if (!title.count(name)) {
+                title[name] = idx;
+                ++idx;
+            }
+        }
+    }
+    return title;
+}
+
+std::pair<std::map<std::string, size_t>, tensor::Matrix> Jacobi(const std::vector<ParameterResolver>& prs) {
+    auto title = GetRequiresGradParameters(prs);
+    auto upper_t = tensor::TDtype::Float32;
+    for (auto& pr : prs) {
+        upper_t = tensor::upper_type_v(upper_t, pr.GetDtype());
+    }
+    auto jacobi = tensor::ops::zeros(prs.size() * title.size());
+    for (size_t i = 0; i < prs.size(); i++) {
+        for (auto& name : prs[i].GetRequiresGradParameters()) {
+            jacobi[i][title.at(name)] = prs[i].data_.at(name);
+            tensor::ops::cpu::set(&jacobi, prs[i].data_.at(name), i * title.size() + title.at(name));
+        }
+    }
+    return {title, tensor::Matrix(std::move(jacobi), prs.size(), title.size())};
+}
 }  // namespace parameter
 std::ostream& operator<<(std::ostream& os, const parameter::ParameterResolver& pr) {
     os << pr.ToString();
