@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <iostream>
+#include <iterator>
 #include <stdexcept>
 #include <vector>
 
@@ -30,6 +31,20 @@
 #include "math/tensor/traits.hpp"
 
 namespace operators::fermion {
+TermValue hermitian_conjugated(const TermValue& t) {
+    switch (t) {
+        case TermValue::A:
+            return TermValue::Ad;
+        case TermValue::Ad:
+            return TermValue::A;
+        case TermValue::AAd:
+            return TermValue::AdA;
+        case TermValue::AdA:
+            return TermValue::AAd;
+        default:
+            return t;
+    }
+}
 std::string to_string(const TermValue& term) {
     switch (term) {
         case TermValue::I:
@@ -399,15 +414,18 @@ void FermionOperator::subs(const parameter::ParameterResolver& other) {
 }
 
 FermionOperator FermionOperator::hermitian_conjugated() const {
-    throw std::runtime_error("Bug in fermion operator hermitian_conjugate. a_j a_k^ != a_k^ a_j");
-    if (this->dtype == tn::TDtype::Complex128 || this->dtype == tn::TDtype::Complex64) {
-        auto out = *this;
-        for (auto& [k, v] : out.terms.m_list) {
-            v = v.Conjugate();
+    auto terms = this->get_terms();
+    auto out = FermionOperator();
+    for (auto& term : terms) {
+        auto conj = term;
+        conj.second = conj.second.Conjugate();
+        std::reverse(conj.first.begin(), conj.first.end());
+        for (auto& [idx, w] : conj.first) {
+            w = ::operators::fermion::hermitian_conjugated(w);
         }
-        return out;
+        out += FermionOperator(conj.first, conj.second);
     }
-    return *this;
+    return out;
 }
 
 FermionOperator FermionOperator::normal_ordered() const {

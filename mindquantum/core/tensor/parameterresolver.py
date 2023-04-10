@@ -1053,6 +1053,8 @@ class ParameterResolver(ParameterResolver_):
         """
         if isinstance(other, ParameterResolver_):
             return ParameterResolver(ParameterResolver_.__add__(self, other), internal=True)
+        if not isinstance(other, (numbers.Number, str, dict)):
+            return other.__radd__(self)
         return ParameterResolver(ParameterResolver_.__add__(self, ParameterResolver(other)), internal=True)
 
     def __radd__(self, other: PRConvertible) -> "ParameterResolver":
@@ -1073,6 +1075,8 @@ class ParameterResolver(ParameterResolver_):
         """Subtract a number or ParameterResolver."""
         if isinstance(other, ParameterResolver_):
             return ParameterResolver(ParameterResolver_.__sub__(self, other), internal=True)
+        if not isinstance(other, (numbers.Number, str, dict)):
+            return other.__rsub__(self)
         return ParameterResolver(ParameterResolver_.__sub__(self, ParameterResolver(other)), internal=True)
 
     def __rsub__(self, other: PRConvertible):
@@ -1093,6 +1097,8 @@ class ParameterResolver(ParameterResolver_):
         """Multiply a number or ParameterResolver."""
         if isinstance(other, ParameterResolver_):
             return ParameterResolver(ParameterResolver_.__mul__(self, other), internal=True)
+        if not isinstance(other, (numbers.Number, str, dict)):
+            return other.__rmul__(self)
         return ParameterResolver(ParameterResolver_.__mul__(self, ParameterResolver(other)), internal=True)
 
     def __rmul__(self, other: PRConvertible):

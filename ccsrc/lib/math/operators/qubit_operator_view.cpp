@@ -47,11 +47,11 @@ auto SinglePauliStr::ParseToken(const std::string& token) -> term_t {
     }
     std::string pauli_word = token.substr(0, 1);
     operators::qubit::TermValue pauli;
-    if (pauli_word == "X") {
+    if (pauli_word == "X" || pauli_word == "x") {
         pauli = operators::qubit::TermValue::X;
-    } else if (pauli_word == "Y") {
+    } else if (pauli_word == "Y" || pauli_word == "y") {
         pauli = operators::qubit::TermValue::Y;
-    } else if (pauli_word == "Z") {
+    } else if (pauli_word == "Z" || pauli_word == "z") {
         pauli = operators::qubit::TermValue::Z;
     } else {
         throw std::runtime_error("Wrong token: '" + token + "'; Can not convert '" + pauli_word
@@ -301,7 +301,7 @@ auto QubitOperator::get_terms() const -> dict_t {
                 qubit_word >>= 2;
             }
         }
-        std::reverse(terms.begin(), terms.end());
+        // std::reverse(terms.begin(), terms.end());
         out.push_back({terms, v});
     }
     return out;
@@ -446,6 +446,17 @@ QubitOperator& QubitOperator::operator+=(const tn::Tensor& c) {
     } else {
         this->terms.insert({key_t{0}, parameter::ParameterResolver(c)});
     }
+    auto upper_t = tn::upper_type_v(c.dtype, this->dtype);
+    if (upper_t != this->GetDtype()) {
+        this->CastTo(upper_t);
+        return *this;
+    }
+    if (c.dtype != upper_t) {
+        this->terms[key_t{0}].CastTo(upper_t);
+    }
+    if (!this->terms[key_t{0}].IsNotZero()) {
+        this->terms.erase(key_t{0});
+    }
     return *this;
 }
 
@@ -453,21 +464,47 @@ QubitOperator& QubitOperator::operator+=(const QubitOperator& other) {
     for (const auto& term : other.terms) {
         if (this->Contains(term.first)) {
             this->terms[term.first] = this->terms[term.first] + term.second;
+            if (this->dtype != this->terms[term.first].GetDtype()) {
+                this->CastTo(this->terms[term.first].GetDtype());
+            }
+            if (!this->terms[term.first].IsNotZero()) {
+                this->terms.erase(term.first);
+            }
         } else {
             this->terms.insert(term);
+            auto upper_t = tn::upper_type_v(this->dtype, term.second.GetDtype());
+            if (this->GetDtype() != upper_t) {
+                this->CastTo(upper_t);
+            }
+            if (term.second.GetDtype() != upper_t) {
+                this->terms[term.first].CastTo(upper_t);
+            }
+            if (!this->terms[term.first].IsNotZero()) {
+                this->terms.erase(term.first);
+            }
         }
     }
     return *this;
 }
 
 QubitOperator operator+(QubitOperator lhs, const tensor::Tensor& rhs) {
-    auto out = lhs;
-    if (out.Contains(key_t{0})) {
-        out.terms[key_t{0}] = out.terms[key_t{0}] + rhs;
+    if (lhs.Contains(key_t{0})) {
+        lhs.terms[key_t{0}] = lhs.terms[key_t{0}] + rhs;
     } else {
-        out.terms.insert({key_t{0}, parameter::ParameterResolver(rhs)});
+        lhs.terms.insert({key_t{0}, parameter::ParameterResolver(rhs)});
     }
-    return out;
+    auto upper_t = tn::upper_type_v(lhs.GetDtype(), rhs.dtype);
+    if (upper_t != lhs.GetDtype()) {
+        lhs.CastTo(upper_t);
+        return lhs;
+    }
+    if (upper_t != rhs.dtype) {
+        lhs.terms[key_t{0}].CastTo(upper_t);
+    }
+    if (!lhs.terms[key_t{0}].IsNotZero()) {
+        lhs.terms.erase(key_t{0});
+    }
+    return lhs;
 }
 
 QubitOperator operator+(QubitOperator lhs, const QubitOperator& rhs) {

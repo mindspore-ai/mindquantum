@@ -40,6 +40,8 @@ enum class TermValue : uint64_t {
     AAd = 6,                                     // 110
     nll = std::numeric_limits<uint64_t>::max(),  // 11111...
 };
+
+TermValue hermitian_conjugated(const TermValue& t);
 std::string to_string(const TermValue& term);
 
 using fermion_product_t = std::map<TermValue, std::map<TermValue, TermValue>>;

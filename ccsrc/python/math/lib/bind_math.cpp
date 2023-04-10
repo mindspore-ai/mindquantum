@@ -221,7 +221,7 @@ void BindQubitOperator(py::module &module) {
         .def(py::self * py::self)
         .def("__copy__", [](const qop_t &a) { return a; })
         .def("astype",
-             [](const fop_t &a, tensor::TDtype dtype) {
+             [](const qop_t &a, tensor::TDtype dtype) {
                  auto out = a;
                  out.CastTo(dtype);
                  return out;

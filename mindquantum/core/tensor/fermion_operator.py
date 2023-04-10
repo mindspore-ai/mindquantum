@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+"""This module is generated the Fermion Operator."""
+# pylint: disable=import-error, too-many-public-methods
+
+import copy
 import json
 import numbers
 import typing
@@ -90,7 +94,7 @@ class FermionOperator(FermionOperator_):
         """Deep copy this FermionOperator."""
         return FermionOperator(FermionOperator_.__copy__(self))
 
-    def __deepcopy__(self) -> "FermionOperator":
+    def __deepcopy__(self, memodict) -> "FermionOperator":
         """Deep copy this FermionOperator."""
         return FermionOperator(FermionOperator_.__copy__(self))
 
@@ -152,6 +156,10 @@ class FermionOperator(FermionOperator_):
     def __rsub__(self, other: typing.Union["FermionOperator", PRConvertible]) -> "FermionOperator":
         """Sub a number or a FermionOperator."""
         return other + (-1 * self)
+
+    def __neg__(self):
+        """Return negative FermionOperator."""
+        return 0 - self
 
     def __mul__(self, other: typing.Union["FermionOperator", PRConvertible]) -> "FermionOperator":
         """Multiply a number or a FermionOperator."""
@@ -234,8 +242,8 @@ class FermionOperator(FermionOperator_):
         out = {}
         for key, value in origin_dict:
             out_key = []
-            for idx, t in key:
-                out_key.append((idx, 0 if t == f_term_value.a else 1))
+            for idx, word in key:
+                out_key.append((idx, 0 if word == f_term_value.a else 1))
             out[tuple(out_key)] = ParameterResolver(value, internal=True)
         return out
 
@@ -319,7 +327,7 @@ class FermionOperator(FermionOperator_):
         # pylint: disable=import-outside-toplevel
 
         try:
-            from openfermion import FermionOperator as o_fo
+            from openfermion import FermionOperator as OFFermionOperator
         except (ImportError, AttributeError):
             _require_package("openfermion", "1.5.0")
         if self.parameterized():
@@ -328,7 +336,7 @@ class FermionOperator(FermionOperator_):
         terms = {}
         for i, j in self.terms.items():
             terms[i] = j.const
-        out = o_fo()
+        out = OFFermionOperator()
         out.terms = terms
         return out
 
@@ -345,10 +353,10 @@ class FermionOperator(FermionOperator_):
         """
         # pylint: disable=import-outside-toplevel
         try:
-            from openfermion import FermionOperator as f_of
+            from openfermion import FermionOperator as OFFermionOperator
         except (ImportError, AttributeError):
             _require_package("openfermion", "1.5.0")
-        if not isinstance(of_ops, f_of):
+        if not isinstance(of_ops, OFFermionOperator):
             raise TypeError(
                 "of_ops should be a FermionOperator" f" from openfermion framework, but get type {type(of_ops)}"
             )
@@ -419,7 +427,7 @@ class FermionOperator(FermionOperator_):
         """Replace the symbolical representation with the corresponding value."""
         if not isinstance(params_value, ParameterResolver):
             params_value = ParameterResolver(params_value)
-        out = self.__copy__()
+        out = copy.copy(self)
         FermionOperator_.subs(out, params_value)
         return out
 

@@ -21,8 +21,9 @@ import numpy as np
 import pytest
 
 from mindquantum.config import set_context
-from mindquantum.core import ParameterResolver
-from mindquantum.core.operators import QubitOperator, ground_state_of_sum_zz
+from mindquantum.core.operators import ground_state_of_sum_zz
+from mindquantum.core.tensor.parameterresolver import ParameterResolver
+from mindquantum.core.tensor.qubit_operator import QubitOperator
 from mindquantum.simulator.simulator import available_backend
 from mindquantum.utils.error import DeviceNotSupportedError
 
@@ -157,7 +158,7 @@ def test_qubit_ops_subs():
     """
     q = QubitOperator('X0', 'b') + QubitOperator('X0', 'a')
     q = q.subs({'a': 1, 'b': 2})
-    assert str(q) == '3 [X0] '
+    assert str(q) == '3 [X0]'
 
 
 def test_qubit_ops_sub():
@@ -167,7 +168,7 @@ def test_qubit_ops_sub():
     """
     q1 = QubitOperator('X0')
     q2 = QubitOperator('Y0')
-    assert str(q1 - q2) == '1 [X0] +\n-1 [Y0] '
+    assert str(q1 - q2) == ' 1 [X0] +\n-1 [Y0]'
 
 
 def test_fermion_operator_iter():
@@ -192,7 +193,7 @@ def test_qubit_ops_dumps_and_loads():
     """
     ops = QubitOperator('X0 Y1', 1.2) + QubitOperator('Z0 X1', {'a': 2.1})
     strings = ops.dumps()
-    obj = QubitOperator.loads(strings, dtype=float)
+    obj = QubitOperator.loads(strings)
     assert obj == ops
 
 

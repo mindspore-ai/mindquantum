@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+"""This is the module for the Qubit Operator."""
+# pylint: disable=import-error
+
+import copy
 import json
 import numbers
 import typing
@@ -26,6 +30,7 @@ from mindquantum.mqbackend import EQ_TOLERANCE
 from mindquantum.utils.type_value_check import _require_package
 
 
+# pylint: disable=too-many-public-methods
 class QubitOperator(QubitOperator_):
     """
     A sum of terms acting on qubits, e.g., 0.5 * 'X1 X5' + 0.3 * 'Z1 Z2'.
@@ -91,7 +96,7 @@ class QubitOperator(QubitOperator_):
         """Deep copy this QubitOperator."""
         return QubitOperator(QubitOperator_.__copy__(self))
 
-    def __deepcopy__(self) -> "QubitOperator":
+    def __deepcopy__(self, memodict) -> "QubitOperator":
         """Deep copy this QubitOperator."""
         return QubitOperator(QubitOperator_.__copy__(self))
 
@@ -126,6 +131,10 @@ class QubitOperator(QubitOperator_):
         """Sub a number or a QubitOperator."""
         return other + (-1 * self)
 
+    def __neg__(self):
+        """Return negative QubitOperator."""
+        return 0 - self
+
     def __mul__(self, other: typing.Union["QubitOperator", PRConvertible]) -> "QubitOperator":
         """Multiply a number or a QubitOperator."""
         if not isinstance(other, QubitOperator_):
@@ -152,6 +161,13 @@ class QubitOperator(QubitOperator_):
         """Divide a number."""
         self.__imul__(1.0 / other)
         return self
+
+    def __eq__(self, other: typing.Union["QubitOperator", PRConvertible]) -> bool:
+        """Check whether two QubitOperator equal or not."""
+        if not isinstance(other, QubitOperator_):
+            other = ParameterResolver(other, dtype=self.dtype)
+            other = QubitOperator("", other)
+        return not (self - other).size
 
     def __iter__(self) -> typing.Generator["QubitOperator", None, None]:
         """Iterate every single term."""
@@ -221,11 +237,12 @@ class QubitOperator(QubitOperator_):
         Returns:
             QubitOperator, qubit operator from mindquantum.
         """
+        # pylint: disable=import-outside-toplevel
         try:
-            from openfermion import QubitOperator as q_of
+            from openfermion import QubitOperator as OFQubitOperator
         except (ImportError, AttributeError):
             _require_package("openfermion", "1.5.0")
-        if not isinstance(of_ops, q_of):
+        if not isinstance(of_ops, OFQubitOperator):
             raise TypeError(
                 "of_ops should be a QubitOperator" f" from openfermion framework, but get type {type(of_ops)}"
             )
@@ -236,8 +253,10 @@ class QubitOperator(QubitOperator_):
 
     def to_openfermion(self):
         """Convert qubit operator to openfermion format."""
+        # pylint: disable=import-outside-toplevel
+
         try:
-            from openfermion import QubitOperator as q_fo
+            from openfermion import QubitOperator as OFQubitOperator
         except (ImportError, AttributeError):
             _require_package("openfermion", "1.5.0")
         if self.parameterized():
@@ -246,7 +265,7 @@ class QubitOperator(QubitOperator_):
         terms = {}
         for i, j in self.terms.items():
             terms[i] = j.const
-        out = q_fo()
+        out = OFQubitOperator()
         out.terms = terms
         return out
 
@@ -435,7 +454,7 @@ class QubitOperator(QubitOperator_):
         """Replace the symbolical representation with the corresponding value."""
         if not isinstance(params_value, ParameterResolver):
             params_value = ParameterResolver(params_value)
-        out = self.__copy__()
+        out = copy.copy(self)
         QubitOperator_.subs(out, params_value)
         return out
 
@@ -494,11 +513,3 @@ class QubitOperator(QubitOperator_):
             if not (v.is_const() and np.abs(v.const) < abs_tol):
                 out += QubitOperator(" ".join(f"{j}{i}" for i, j in k), v)
         return out
-
-
-if __name__ == "__main__":
-    a = QubitOperator("X0", 1.3 + 34j)
-    a + QubitOperator("Z1")
-    a + 1
-    a + 1 + QubitOperator("Z2")
-    print(a * QubitOperator("Z0"))
