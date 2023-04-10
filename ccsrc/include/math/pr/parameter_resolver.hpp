@@ -17,6 +17,7 @@
 
 #include <map>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -103,6 +104,16 @@ struct ParameterResolver {
             this->data_[key] = a.astype(this->const_value.dtype);
         } else {
             this->SetItem(key, tn::ops::init_with_value(a, this->const_value.device).astype(this->GetDtype()));
+        }
+    }
+
+    template <typename T>
+    void SetItems(const std::vector<std::string>& keys, const std::vector<T>& values) {
+        if (keys.size() != values.size()) {
+            throw std::runtime_error("SetItems args dimension mismatch.");
+        }
+        for (size_t i = 0; i < keys.size(); i++) {
+            this->SetItem(keys[i], values[i]);
         }
     }
 

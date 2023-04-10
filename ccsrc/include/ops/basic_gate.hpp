@@ -24,8 +24,6 @@
 #include <string>
 #include <utility>
 
-#include <fmt/format.h>
-
 #include "core/mq_base_types.hpp"
 #include "core/numba_wrapper.hpp"
 #include "core/utils.hpp"
@@ -217,7 +215,10 @@ struct KrausChannel : public BasicGate {
     template <typename T>
     KrausChannel(const VT<VVT<CT<T>>>& kraus_operator_set, const VT<Index>& obj_qubits,
                  const VT<Index>& ctrl_qubits = {})
-        : kraus_operator_set_(kraus_operator_set), BasicGate(GateID::KRAUS, obj_qubits, ctrl_qubits) {
+        : BasicGate(GateID::KRAUS, obj_qubits, ctrl_qubits) {
+        for (auto& k : kraus_operator_set) {
+            kraus_operator_set_.push_back(tensor::Matrix(k));
+        }
     }
 };
 

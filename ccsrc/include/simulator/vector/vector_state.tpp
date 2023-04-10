@@ -38,6 +38,7 @@
 #include "core/mq_base_types.hpp"
 #include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/matrix.hpp"
+#include "math/tensor/ops/basic_math.hpp"
 #include "math/tensor/traits.hpp"
 #include "ops/basic_gate.hpp"
 #include "ops/gate_id.hpp"
@@ -532,7 +533,7 @@ auto VectorState<qs_policy_t_>::ExpectDiffU3(qs_data_p_t bra, qs_data_p_t ket, c
                                                                tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
         }
     }
-    return tensor::Matrix({grad});
+    return tensor::Matrix(VVT<py_qs_data_t>{grad});
 }
 
 template <typename qs_policy_t_>
@@ -555,7 +556,7 @@ auto VectorState<qs_policy_t_>::ExpectDiffFSim(qs_data_p_t bra, qs_data_p_t ket,
                                                              tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
         }
     }
-    return tensor::Matrix({grad});
+    return tensor::Matrix(VVT<py_qs_data_t>{grad});
 }
 
 template <typename qs_policy_t_>
@@ -624,9 +625,9 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradOneOne(const Hamiltonian<c
             auto p_gate = static_cast<Parameterizable*>(g.get());
             if (const auto& [title, jac] = p_gate->jacobi; title.size() != 0) {
                 auto intrin_grad = ExpectDiffGate(sim_l.qs, sim_r.qs, g, pr, dim);
-                auto p_grad = tensor::ops::MatMul(intrin_grad, jac);
+                auto p_grad = tensor::ops::cpu::to_vector<py_qs_data_t>(tensor::ops::MatMul(intrin_grad, jac));
                 for (const auto& [name, idx] : title) {
-                    f_and_g[1 + p_map.at(name)] += 2 * std::real(p_grad.matrix_[0][idx]);
+                    f_and_g[1 + p_map.at(name)] += 2 * std::real(p_grad[0][idx]);
                 }
             }
         }
@@ -707,9 +708,9 @@ auto VectorState<qs_policy_t_>::LeftSizeGradOneMulti(const std::vector<std::shar
                 if (const auto& [title, jac] = p_gate->jacobi; title.size() != 0) {
                     for (int j = start; j < end; j++) {
                         auto intrin_grad = ExpectDiffGate(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
-                        auto p_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                        auto p_grad = tensor::ops::cpu::to_vector<py_qs_data_t>(tensor::ops::MatMul(intrin_grad, jac));
                         for (const auto& [name, idx] : title) {
-                            f_and_g[j][1 + p_map.at(name)] += p_grad.matrix_[0][idx];
+                            f_and_g[j][1 + p_map.at(name)] += p_grad[0][idx];
                         }
                     }
                 }
@@ -764,9 +765,9 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradOneMulti(
                 if (const auto& [title, jac] = p_gate->jacobi; title.size() != 0) {
                     for (int j = start; j < end; j++) {
                         auto intrin_grad = ExpectDiffGate(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
-                        auto p_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                        auto p_grad = tensor::ops::cpu::to_vector<py_qs_data_t>(tensor::ops::MatMul(intrin_grad, jac));
                         for (const auto& [name, idx] : title) {
-                            f_and_g[j][1 + p_map.at(name)] += 2 * std::real(p_grad.matrix_[0][idx]);
+                            f_and_g[j][1 + p_map.at(name)] += 2 * std::real(p_grad[0][idx]);
                         }
                     }
                 }
@@ -808,8 +809,8 @@ auto VectorState<qs_policy_t_>::GetExpectationNonHermitianWithGradMultiMulti(
     }
     if (n_prs == 1) {
         ParameterResolver pr = ParameterResolver();
-        pr.SetItem(enc_name, enc_data[0]);
-        pr.SetItem(ans_name, ans_data);
+        pr.SetItems(enc_name, enc_data[0]);
+        pr.SetItems(ans_name, ans_data);
         output[0] = GetExpectationNonHermitianWithGradOneMulti(hams, herm_hams, left_circ, herm_left_circ, right_circ,
                                                                herm_right_circ, pr, p_map, mea_threads, simulator_left);
     } else {
@@ -830,8 +831,8 @@ auto VectorState<qs_policy_t_>::GetExpectationNonHermitianWithGradMultiMulti(
             auto task = [&, start, end]() {
                 for (size_t n = start; n < end; n++) {
                     ParameterResolver pr = ParameterResolver();
-                    pr.SetItem(enc_name, enc_data[n]);
-                    pr.SetItem(ans_name, ans_data);
+                    pr.SetItems(enc_name, enc_data[n]);
+                    pr.SetItems(ans_name, ans_data);
                     auto f_g = GetExpectationNonHermitianWithGradOneMulti(hams, herm_hams, left_circ, herm_left_circ,
                                                                           right_circ, herm_right_circ, pr, p_map,
                                                                           mea_threads, simulator_left);
@@ -874,8 +875,8 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradMultiMulti(
     }
     if (n_prs == 1) {
         ParameterResolver pr = ParameterResolver();
-        pr.SetItem(enc_name, enc_data[0]);
-        pr.SetItem(ans_name, ans_data);
+        pr.SetItems(enc_name, enc_data[0]);
+        pr.SetItems(ans_name, ans_data);
         output[0] = GetExpectationWithGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
     } else {
         if (batch_threads == 0) {
@@ -895,8 +896,8 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradMultiMulti(
             auto task = [&, start, end]() {
                 for (size_t n = start; n < end; n++) {
                     ParameterResolver pr = ParameterResolver();
-                    pr.SetItem(enc_name, enc_data[n]);
-                    pr.SetItem(ans_name, ans_data);
+                    pr.SetItems(enc_name, enc_data[n]);
+                    pr.SetItems(ans_name, ans_data);
                     auto f_g = GetExpectationWithGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
                     output[n] = f_g;
                 }

@@ -44,7 +44,7 @@ struct Matrix : public Tensor {
                 tmp.push_back(data);
             }
         }
-        auto t = Tensor(tmp, device);
+        auto t = Tensor(tmp);
         this->dtype = t.dtype;
         this->device = t.device;
         this->data = t.data;
