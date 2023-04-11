@@ -98,7 +98,6 @@ class QubitExcitationOperator:
 
     def __init__(self, term=None, coefficient=1.0):
         """Initialize a QubitExcitationOperator object."""
-        super().__init__(term, coefficient)
         _check_valid_qubit_excitation_operator_term(term)
         self.operators = {
             1: TermValue['adg'],
