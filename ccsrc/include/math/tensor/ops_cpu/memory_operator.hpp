@@ -197,7 +197,7 @@ std::vector<T> to_vector(const Tensor& ori) {
 }
 
 template <TDtype src_dtype>
-std::vector<std::vector<to_device_t<src_dtype>>> to_vector(void* data, size_t n_col, size_t n_row) {
+std::vector<std::vector<to_device_t<src_dtype>>> to_vector(void* data, size_t n_row, size_t n_col) {
     auto c_data = reinterpret_cast<to_device_t<src_dtype>*>(data);
     std::vector<std::vector<to_device_t<src_dtype>>> out;
     for (size_t i = 0; i < n_row; i++) {
@@ -214,9 +214,9 @@ template <typename T>
 std::vector<std::vector<T>> to_vector(const Matrix& t) {
     Matrix m = t;
     if (t.dtype != to_dtype_v<T>) {
-        m = Matrix(t.astype(to_dtype_v<T>), t.n_col, t.n_row);
+        m = Matrix(t.astype(to_dtype_v<T>), t.n_row, t.n_col);
     }
-    return to_vector<to_dtype_v<T>>(m.data, m.n_col, m.n_row);
+    return to_vector<to_dtype_v<T>>(m.data, m.n_row, m.n_col);
 }
 }  // namespace tensor::ops::cpu
 #endif /* MATH_TENSOR_OPS_CPU_HPP_ */

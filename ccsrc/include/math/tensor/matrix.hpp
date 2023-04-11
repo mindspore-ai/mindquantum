@@ -55,7 +55,7 @@ struct Matrix : public Tensor {
     Matrix(TDtype dtype, TDevice device, void* data, size_t n_col, size_t n_row)
         : n_col(n_col), n_row(n_row), Tensor(dtype, device, data, n_col * n_row) {
     }
-    Matrix(Tensor&& other, size_t n_col, size_t n_row) : n_col(n_col), n_row(n_row) {
+    Matrix(Tensor&& other, size_t n_row, size_t n_col) : n_row(n_row), n_col(n_col) {
         if (n_col * n_row != other.dim) {
             throw std::runtime_error("Tensor cannot reshape to Matrix with given n_col and n_row.");
         }

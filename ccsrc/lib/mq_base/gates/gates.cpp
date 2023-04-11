@@ -37,7 +37,7 @@ tensor::Matrix FSimMatrix(tensor::Tensor theta, tensor::Tensor phi) {
 
 tensor::Matrix U3DiffThetaMatrix(tensor::Tensor theta, tensor::Tensor phi, tensor::Tensor lambda) {
     auto m = U3Matrix(theta + M_PI, phi, lambda);
-    m = tensor::Matrix(tensor::ops::mul(m, 0.5), m.n_col, m.n_row);
+    m = tensor::Matrix(tensor::ops::mul(m, 0.5), m.n_row, m.n_col);
     return m;
 }
 
@@ -68,7 +68,7 @@ tensor::Matrix FSimDiffPhiMatrix(tensor::Tensor phi) {
 tensor::Matrix U3DiffLambdaMatrix(tensor::Tensor theta, tensor::Tensor phi, tensor::Tensor lambda) {
     auto m = U3Matrix(theta, phi, lambda + M_PI_2);
     tensor::ops::set(&m, tensor::ops::zeros(1, m.dtype), 0);
-    tensor::ops::set(&m, tensor::ops::zeros(1, m.dtype), 4);
+    tensor::ops::set(&m, tensor::ops::zeros(1, m.dtype), 2);
     return m;
 }
 
