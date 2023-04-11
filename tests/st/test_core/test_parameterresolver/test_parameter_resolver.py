@@ -16,9 +16,7 @@
 import pytest
 
 from mindquantum.config import set_context
-
-# from mindquantum.core.parameterresolver import ParameterResolver as PR
-from mindquantum.core.tensor.parameterresolver import ParameterResolver as PR
+from mindquantum.core.parameterresolver import ParameterResolver as PR
 
 
 @pytest.mark.level0

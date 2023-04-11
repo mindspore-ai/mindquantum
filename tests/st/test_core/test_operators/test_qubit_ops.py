@@ -21,9 +21,8 @@ import numpy as np
 import pytest
 
 from mindquantum.config import set_context
-from mindquantum.core.operators import ground_state_of_sum_zz
-from mindquantum.core.tensor.parameterresolver import ParameterResolver
-from mindquantum.core.tensor.qubit_operator import QubitOperator
+from mindquantum.core.operators import QubitOperator, ground_state_of_sum_zz
+from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.simulator.simulator import available_backend
 from mindquantum.utils.error import DeviceNotSupportedError
 

@@ -21,7 +21,7 @@ import os
 import pytest
 
 from mindquantum.config import set_context
-from mindquantum.core.tensor.fermion_operator import FermionOperator
+from mindquantum.core.operators import FermionOperator
 
 # from mindquantum.core.operators import FermionOperator
 
