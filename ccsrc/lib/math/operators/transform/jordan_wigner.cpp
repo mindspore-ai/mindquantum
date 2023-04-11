@@ -38,7 +38,6 @@ struct JWCache {
 
     qubit_op_t* get_or_null(const fermion_op_t::term_t& term) {
         if (this->cache_.find(term) != this->cache_.end()) {
-            std::cout << "Get cache!" << std::endl;
             auto& [val, count] = this->cache_[term];
             count += 1;
             return &(val);
@@ -56,9 +55,7 @@ struct JWCache {
                 }
             }
             this->cache_.erase(min_hit);
-            std::cout << "Kik out min!" << std::endl;
         }
-        std::cout << "Cache!" << std::endl;
         this->cache_[term] = {pauli, 1};
         return &(this->cache_[term].first);
     }

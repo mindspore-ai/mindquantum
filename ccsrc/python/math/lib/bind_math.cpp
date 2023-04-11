@@ -123,7 +123,7 @@ void BindPR(py::module &module) {  // NOLINT(runtime/references)
              "const_value"_a = tensor::ops::zeros(1), "dtype"_a = tensor::TDtype::Float64)
         .def(py::init<const std::map<std::string, tensor::Tensor> &, const tensor::Tensor &, tensor::TDtype>(),
              "data"_a, "const_value"_a = tensor::ops::zeros(1), "dtype"_a = tensor::TDtype::Float64)
-        .def(py::init<const tensor::Tensor &, tensor::TDtype>(), "const_value"_a, "dtype"_a = tensor::TDtype::Float64)
+        .def(py::init<const tensor::Tensor &>(), "const_value"_a)
         .def(py::init<const pr_t &>(), "other"_a)
         .def(py::self + py::self)
         .def(py::self + py::self)

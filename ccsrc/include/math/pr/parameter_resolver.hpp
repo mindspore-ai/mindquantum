@@ -73,7 +73,7 @@ struct ParameterResolver {
     explicit ParameterResolver(const std::map<std::string, tn::Tensor>& data,
                                const tn::Tensor& const_value = tn::ops::zeros(1),
                                tn::TDtype dtype = tn::TDtype::Float64);
-    explicit ParameterResolver(const tn::Tensor& const_value, tn::TDtype dtype = tn::TDtype::Float64);
+    explicit ParameterResolver(const tn::Tensor& const_value);
     ParameterResolver(const ParameterResolver& other) = default;
     // -----------------------------------------------------------------------------
     tn::TDtype GetDtype() const;

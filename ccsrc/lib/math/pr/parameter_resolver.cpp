@@ -23,8 +23,7 @@
 #include "math/tensor/traits.hpp"
 
 namespace parameter {
-ParameterResolver::ParameterResolver(const tn::Tensor& const_value, tn::TDtype dtype)
-    : const_value(const_value.astype(dtype)) {
+ParameterResolver::ParameterResolver(const tn::Tensor& const_value) : const_value(const_value) {
 }
 
 ParameterResolver::ParameterResolver(const std::string& key, const tn::Tensor& const_value, tn::TDtype dtype) {

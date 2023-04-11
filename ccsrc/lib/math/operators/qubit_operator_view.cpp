@@ -362,7 +362,7 @@ QubitOperator::QubitOperator(const key_t& k, const value_t& v) {
 std::vector<std::pair<parameter::ParameterResolver, QubitOperator>> QubitOperator::split() const {
     auto out = std::vector<std::pair<parameter::ParameterResolver, QubitOperator>>();
     for (auto& [k, v] : this->terms.m_list) {
-        out.push_back({v, QubitOperator(k, parameter::ParameterResolver(tn::ops::ones(1), v.GetDtype()))});
+        out.push_back({v, QubitOperator(k, parameter::ParameterResolver(tn::ops::ones(1, v.GetDtype())))});
     }
     return out;
 }

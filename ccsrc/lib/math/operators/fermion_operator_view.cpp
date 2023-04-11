@@ -381,7 +381,7 @@ void FermionOperator::CastTo(tn::TDtype dtype) {
 std::vector<std::pair<parameter::ParameterResolver, FermionOperator>> FermionOperator::split() const {
     auto out = std::vector<std::pair<parameter::ParameterResolver, FermionOperator>>();
     for (auto& [k, v] : this->terms.m_list) {
-        out.push_back({v, FermionOperator(k, parameter::ParameterResolver(tn::ops::ones(1), v.GetDtype()))});
+        out.push_back({v, FermionOperator(k, parameter::ParameterResolver(tn::ops::ones(1, v.GetDtype())))});
     }
     return out;
 }

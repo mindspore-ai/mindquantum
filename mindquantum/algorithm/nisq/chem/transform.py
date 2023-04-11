@@ -17,7 +17,7 @@ Module implementing a conversion from fermion type operators to qubit type opera
 Thus can be simulated in quantum computer.
 """
 
-from mindquantum import mqbackend
+from mindquantum import _math
 
 # pylint: disable=no-member,protected-access
 from mindquantum.core.operators.utils import (
@@ -71,7 +71,6 @@ class Transform:
         """Initialize a Transform object."""
         if not isinstance(operator, (FermionOperator, QubitOperator)):
             raise TypeError("Operator must be a FermionOperator or QubitOperator")
-        self.arithmetic_type = operator.arithmetic_type
         if n_qubits is None:
             n_qubits = count_qubits(operator)
         if n_qubits < count_qubits(operator):
@@ -101,7 +100,7 @@ class Transform:
         """
         if not isinstance(self.operator, FermionOperator):
             raise TypeError('This method can be only applied for FermionOperator.')
-        return QubitOperator(getattr(mqbackend, self.arithmetic_type).transform.jordan_wigner(self.operator._cpp_obj))
+        return QubitOperator(_math.ops.jordan_wigner(self.operator), internal=True)
 
     def parity(self):
         r"""

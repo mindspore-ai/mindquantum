@@ -127,7 +127,7 @@ class ParameterResolver(ParameterResolver_):
                     dtype = mq.float64
                     if isinstance(data, numbers.Number) and not isinstance(data, numbers.Real):
                         dtype = mq.complex128
-                ParameterResolver_.__init__(self, Tensor_(data, dtype), dtype)  # PR(1.0[, mq.float64])
+                ParameterResolver_.__init__(self, Tensor_(data, dtype))  # PR(1.0[, mq.float64])
             elif data is None:
                 ParameterResolver_.__init__(self)
             else:
