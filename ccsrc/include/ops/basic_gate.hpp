@@ -41,6 +41,7 @@ struct BasicGate {
     BasicGate() = default;
     BasicGate(GateID id, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits)
         : id_(id), obj_qubits_(obj_qubits), ctrl_qubits_(ctrl_qubits) {
+        std::cout << "init basicgate" << std::endl;
     }
     virtual bool Parameterized() {
         return false;
@@ -125,6 +126,7 @@ struct Parameterizable : public BasicGate {
     Parameterizable(GateID id, const VT<ParameterResolver>& prs, const VT<Index>& obj_qubits,
                     const VT<Index>& ctrl_qubits)
         : n_pr(prs.size()), prs_(prs), BasicGate(id, obj_qubits, ctrl_qubits) {
+        std::cout << "int Parameterizable" << std::endl;
         parameterized_ = !std::all_of(this->prs_.begin(), this->prs_.end(),
                                       [](const auto& pr) { return pr.IsConst(); });
         grad_required_ = std::any_of(this->prs_.begin(), this->prs_.end(),
@@ -249,7 +251,7 @@ struct CustomGate : public Parameterizable {
         , numba_param_diff_matrix_(dm_addr, dim)
         , Parameterizable(GateID::CUSTOM, {pr}, obj_qubits, ctrl_qubits) {
         if (!this->Parameterized()) {
-            base_matrix_ = this->numba_param_matrix_(this->prs_[0].const_value);
+            base_matrix_ = this->numba_param_matrix_(tensor::ops::cpu::to_vector<double>(this->prs_[0].const_value)[0]);
         }
     }
     CustomGate(const std::string& name, const tensor::Matrix& mat, const VT<Index>& obj_qubits,

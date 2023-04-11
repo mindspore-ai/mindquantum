@@ -78,6 +78,7 @@ U3::U3(const ParameterResolver& theta, const ParameterResolver& phi, const Param
     , phi(phi)
     , lambda(lambda)
     , Parameterizable(GateID::U3, {theta, phi, lambda}, obj_qubits, ctrl_qubits) {
+    std::cout << "init u3" << std::endl;
     if (!this->parameterized_) {
         this->base_matrix_ = U3Matrix(theta.const_value, phi.const_value, lambda.const_value);
     }

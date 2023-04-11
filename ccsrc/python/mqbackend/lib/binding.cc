@@ -170,6 +170,7 @@ void BindTypeDependentGate(py::module &module) {  // NOLINT(runtime/references)
         .def(py::init<std::string, const tensor::Matrix &, const VT<Index> &, const VT<Index> &>(), "name"_a, "mat"_a,
              "obj_qubits"_a, "ctrl_qubits"_a);
 }
+template <typename T>
 auto BindOther(py::module &module) {
     using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
     using mindquantum::CT;
@@ -183,42 +184,40 @@ auto BindOther(py::module &module) {
     using mindquantum::python::CsrHdMatrix;
     // matrix
 
-    py::module float_gate = module.def_submodule("gate", "MindQuantum-C++ gate");
-    BindTypeDependentGate(float_gate);
     // parameter resolver
-
+    using namespace mindquantum::sparse;
     // pauli mat
-    // py::class_<PauliMat<T>, std::shared_ptr<PauliMat<T>>>(module, "pauli_mat")
-    //     .def(py::init<>())
-    //     .def(py::init<const PauliTerm<T> &, Index>())
-    //     .def_readonly("n_qubits", &PauliMat<T>::n_qubits_)
-    //     .def_readonly("dim", &PauliMat<T>::dim_)
-    //     .def_readwrite("coeff", &PauliMat<T>::p_)
-    //     .def("PrintInfo", &PauliMat<T>::PrintInfo);
+    py::class_<PauliMat<T>, std::shared_ptr<PauliMat<T>>>(module, "pauli_mat")
+        .def(py::init<>())
+        .def(py::init<const PauliTerm<T> &, Index>())
+        .def_readonly("n_qubits", &PauliMat<T>::n_qubits_)
+        .def_readonly("dim", &PauliMat<T>::dim_)
+        .def_readwrite("coeff", &PauliMat<T>::p_)
+        .def("PrintInfo", &PauliMat<T>::PrintInfo);
 
-    // module.def("get_pauli_mat", &GetPauliMat<T>);
+    module.def("get_pauli_mat", &GetPauliMat<T>);
 
     // // csr_hd_matrix
-    // py::class_<CsrHdMatrix<T>, std::shared_ptr<CsrHdMatrix<T>>>(module, "csr_hd_matrix")
-    //     .def(py::init<>())
-    //     .def(py::init<Index, Index, py::array_t<Index>, py::array_t<Index>, py::array_t<CT<T>>>())
-    //     .def("PrintInfo", &CsrHdMatrix<T>::PrintInfo);
-    // module.def("csr_plus_csr", &Csr_Plus_Csr<T>);
-    // module.def("transpose_csr_hd_matrix", &TransposeCsrHdMatrix<T>);
-    // module.def("pauli_mat_to_csr_hd_matrix", &PauliMatToCsrHdMatrix<T>);
+    py::class_<CsrHdMatrix<T>, std::shared_ptr<CsrHdMatrix<T>>>(module, "csr_hd_matrix")
+        .def(py::init<>())
+        .def(py::init<Index, Index, py::array_t<Index>, py::array_t<Index>, py::array_t<CT<T>>>())
+        .def("PrintInfo", &CsrHdMatrix<T>::PrintInfo);
+    module.def("csr_plus_csr", &Csr_Plus_Csr<T>);
+    module.def("transpose_csr_hd_matrix", &TransposeCsrHdMatrix<T>);
+    module.def("pauli_mat_to_csr_hd_matrix", &PauliMatToCsrHdMatrix<T>);
 
     // hamiltonian
-    // py::class_<Hamiltonian<T>, std::shared_ptr<Hamiltonian<T>>>(module, "hamiltonian")
-    //     .def(py::init<>())
-    //     .def(py::init<const VT<PauliTerm<T>> &>())
-    //     .def(py::init<const VT<PauliTerm<T>> &, Index>())
-    //     .def(py::init<std::shared_ptr<CsrHdMatrix<T>>, Index>())
-    //     .def_readwrite("how_to", &Hamiltonian<T>::how_to_)
-    //     .def_readwrite("n_qubits", &Hamiltonian<T>::n_qubits_)
-    //     .def_readwrite("ham", &Hamiltonian<T>::ham_)
-    //     .def_readwrite("ham_sparse_main", &Hamiltonian<T>::ham_sparse_main_)
-    //     .def_readwrite("ham_sparse_second", &Hamiltonian<T>::ham_sparse_second_);
-    // module.def("sparse_hamiltonian", &SparseHamiltonian<T>);
+    py::class_<Hamiltonian<T>, std::shared_ptr<Hamiltonian<T>>>(module, "hamiltonian")
+        .def(py::init<>())
+        .def(py::init<const VT<PauliTerm<T>> &>())
+        .def(py::init<const VT<PauliTerm<T>> &, Index>())
+        .def(py::init<std::shared_ptr<CsrHdMatrix<T>>, Index>())
+        .def_readwrite("how_to", &Hamiltonian<T>::how_to_)
+        .def_readwrite("n_qubits", &Hamiltonian<T>::n_qubits_)
+        .def_readwrite("ham", &Hamiltonian<T>::ham_)
+        .def_readwrite("ham_sparse_main", &Hamiltonian<T>::ham_sparse_main_)
+        .def_readwrite("ham_sparse_second", &Hamiltonian<T>::ham_sparse_second_);
+    module.def("sparse_hamiltonian", &SparseHamiltonian<T>);
 }
 
 // Interface with python
@@ -267,16 +266,15 @@ PYBIND11_MODULE(mqbackend, m) {
 
     m.attr("EQ_TOLERANCE") = py::float_(1.e-8);
 
-    py::module mqbackend_double = m.def_submodule("double", "MindQuantum-C++ double backend");
     py::module gate = m.def_submodule("gate", "MindQuantum-C++ gate");
     py::class_<mindquantum::BasicGate, std::shared_ptr<mindquantum::BasicGate>>(gate, "BasicGate").def(py::init<>());
     BindTypeIndependentGate(gate);
-    // py::module double_gate = mqbackend_double.def_submodule("gate", "MindQuantum-C++ gate");
-    // py::module float_gate = mqbackend_float.def_submodule("gate", "MindQuantum-C++ gate");
-    // BindTypeDependentGate<double>(double_gate);
-    // BindTypeDependentGate<float>(float_gate);
+    BindTypeDependentGate(gate);
 
-    BindOther(mqbackend_double);
+    py::module mqbackend_double = m.def_submodule("double", "MindQuantum-C++ double backend");
+    BindOther<double>(mqbackend_double);
+    py::module mqbackend_float = m.def_submodule("float", "MindQuantum-C++ double backend");
+    BindOther<float>(mqbackend_float);
 
     py::module c = m.def_submodule("c", "pybind11 c++ env");
     mindquantum::BindPybind11Env(c);

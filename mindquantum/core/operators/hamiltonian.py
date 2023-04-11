@@ -76,7 +76,7 @@ class Hamiltonian:
         for i, j in self.hamiltonian.terms.items():
             if not j.is_const():
                 raise ValueError("Hamiltonian cannot be parameterized.")
-            self.ham_termlist.append((tuple((k, TermValue[l]) for k, l in i), j.const.real))
+            self.ham_termlist.append((i, j.const.real))
 
         self.ham_cpp = None
         self.herm_ham_cpp = None

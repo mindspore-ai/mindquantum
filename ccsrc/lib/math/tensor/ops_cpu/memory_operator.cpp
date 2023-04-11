@@ -153,6 +153,8 @@ void set(Tensor* t, const Tensor& source, size_t idx) {
 
 Tensor get(const Tensor& t, size_t idx) {
     if (idx >= t.dim) {
+        std::cout << t << std::endl;
+        std::cout << idx << std::endl;
         throw std::runtime_error("index out of range for get.");
     }
     auto out = cpu::init(1, t.dtype);

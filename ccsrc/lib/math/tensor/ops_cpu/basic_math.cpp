@@ -38,7 +38,8 @@ Matrix MatMul(const Matrix& m1, const Matrix& m2) {
                                                                        m2.n_col);
                 }
             }
-        } break;
+            break;
+        }
         case TDtype::Float64: {
             switch (m2.dtype) {
                 case TDtype::Float32: {
@@ -58,7 +59,8 @@ Matrix MatMul(const Matrix& m1, const Matrix& m2) {
                                                                        m2.n_col);
                 }
             }
-        } break;
+            break;
+        }
         case TDtype::Complex64: {
             switch (m2.dtype) {
                 case TDtype::Float32: {
@@ -78,7 +80,8 @@ Matrix MatMul(const Matrix& m1, const Matrix& m2) {
                                                                          m2.n_col);
                 }
             }
-        } break;
+            break;
+        }
         case TDtype::Complex128: {
             switch (m2.dtype) {
                 case TDtype::Float32: {
@@ -98,7 +101,8 @@ Matrix MatMul(const Matrix& m1, const Matrix& m2) {
                                                                           m2.n_row, m2.n_col);
                 }
             }
-        } break;
+            break;
+        }
     }
 }
 }  // namespace tensor::ops::cpu

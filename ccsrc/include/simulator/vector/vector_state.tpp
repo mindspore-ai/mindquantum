@@ -329,7 +329,7 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
             if (!g->Parameterized()) {
                 mat = g->base_matrix_;
             } else {
-                calc_type val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
+                double val = tensor::ops::cpu::to_vector<double>(g->prs_[0].Combination(pr).const_value)[0];
                 if (!diff) {
                     mat = g->numba_param_matrix_(val);
                 } else {

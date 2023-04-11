@@ -34,26 +34,9 @@ struct NumbaMatFunWrapper {
         fun = reinterpret_cast<mat_t>(addr);
     }
 
-    auto operator()(const tensor::Tensor& coeff) const {
+    auto operator()(double coeff) const {
         auto tmp = tensor::ops::init(dim * dim, tensor::TDtype::Complex128, tensor::TDevice::CPU);
-        switch (coeff.dtype) {
-            case tensor::TDtype::Float32: {
-                auto f = static_cast<tensor::to_device_t<tensor::TDtype::Float32>*>(coeff.data)[0];
-                fun(f, reinterpret_cast<std::complex<double>*>(tmp.data));
-            }
-            case tensor::TDtype::Float64: {
-                auto f = static_cast<tensor::to_device_t<tensor::TDtype::Float64>*>(coeff.data)[0];
-                fun(f, reinterpret_cast<std::complex<double>*>(tmp.data));
-            }
-            case tensor::TDtype::Complex64: {
-                auto f = static_cast<tensor::to_device_t<tensor::TDtype::Complex64>*>(coeff.data)[0];
-                fun(f.real(), reinterpret_cast<std::complex<double>*>(tmp.data));
-            }
-            case tensor::TDtype::Complex128: {
-                auto f = static_cast<tensor::to_device_t<tensor::TDtype::Complex128>*>(coeff.data)[0];
-                fun(f.real(), reinterpret_cast<std::complex<double>*>(tmp.data));
-            }
-        }
+        fun(coeff, reinterpret_cast<std::complex<double>*>(tmp.data));
         auto out = tensor::Matrix(std::move(tmp), dim, dim);
         if (this->dtype != tensor::TDtype::Complex128) {
             out = tensor::Matrix(out.astype(this->dtype), dim, dim);

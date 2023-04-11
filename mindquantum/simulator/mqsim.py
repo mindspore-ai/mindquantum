@@ -162,7 +162,7 @@ class MQSim(BackendBase):
 
     def get_circuit_matrix(self, circuit: Circuit, pr: ParameterResolver) -> np.ndarray:
         """Get the matrix of given circuit."""
-        return np.array(self.sim.get_circuit_matrix(circuit.get_cpp_obj(), pr.get_cpp_obj())).T
+        return np.array(self.sim.get_circuit_matrix(circuit.get_cpp_obj(), pr)).T
 
     def get_expectation(self, hamiltonian: Hamiltonian) -> np.ndarray:
         """Get expectation of a hamiltonian."""

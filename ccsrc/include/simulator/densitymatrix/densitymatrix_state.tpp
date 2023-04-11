@@ -409,7 +409,7 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t dens_matrix, q
         //     return tensor::Matrix({grad});
         case GateID::CUSTOM: {
             auto g = static_cast<CustomGate*>(gate.get());
-            auto val = g->prs_[0].Combination(pr).const_value;
+            auto val = tensor::ops::cpu::to_vector<double>(g->prs_[0].Combination(pr).const_value)[0];
             tensor::Matrix gate_m = g->numba_param_matrix_(val);
             tensor::Matrix diff_m = g->numba_param_diff_matrix_(val);
             grad[0] = qs_policy_t::ExpectDiffMatrixGate(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_,
@@ -433,12 +433,12 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffU3(qs_data_p_t dens_matrix, qs_
     py_qs_datas_t grad = {0, 0, 0};
     auto u3 = static_cast<U3*>(gate.get());
     if (u3->parameterized_) {
-        auto theta = tensor::ops::cpu::to_vector<calc_type>(u3->theta.Combination(pr).const_value)[0];
-        auto phi = tensor::ops::cpu::to_vector<calc_type>(u3->phi.Combination(pr).const_value)[0];
-        auto lambda = tensor::ops::cpu::to_vector<calc_type>(u3->lambda.Combination(pr).const_value)[0];
+        auto theta = u3->theta.Combination(pr).const_value;
+        auto phi = u3->phi.Combination(pr).const_value;
+        auto lambda = u3->lambda.Combination(pr).const_value;
         if (u3->theta.data_.size() != u3->theta.no_grad_parameters_.size()) {
-            grad[0] = qs_policy_t::ExpectDiffU3Theta(dens_matrix, ham_matrix, u3->obj_qubits_, u3->ctrl_qubits_, phi,
-                                                     dim);
+            grad[0] = qs_policy_t::ExpectDiffU3Theta(dens_matrix, ham_matrix, u3->obj_qubits_, u3->ctrl_qubits_,
+                                                     tensor::ops::cpu::to_vector<calc_type>(phi)[0], dim);
         }
         if (u3->phi.data_.size() != u3->phi.no_grad_parameters_.size()) {
             grad[1] = qs_policy_t::ExpectDiffU3Phi(dens_matrix, ham_matrix, u3->obj_qubits_, u3->ctrl_qubits_, dim);

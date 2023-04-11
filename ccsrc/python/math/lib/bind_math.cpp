@@ -29,6 +29,7 @@
 #include "math/operators/qubit_operator_view.hpp"
 #include "math/operators/transform.hpp"
 #include "math/pr/parameter_resolver.hpp"
+#include "math/tensor/matrix.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
@@ -105,6 +106,10 @@ void BindTensor(py::module &module) {  // NOLINT(runtime/references)
                "device"_a = tensor::TDevice::CPU);
     module.def("zeros", &tensor::ops::zeros, "len"_a, "dtype"_a = tensor::TDtype::Float64,
                "device"_a = tensor::TDevice::CPU);
+    py::class_<tensor::Matrix, tensor::Tensor, std::shared_ptr<tensor::Matrix>>(module, "Matrix", py::buffer_protocol())
+        .def(py::init<>())
+        .def(py::init<const std::vector<std::vector<std::complex<double>>> &, tensor::TDevice>(), "m"_a,
+             "device"_a = tensor::TDevice::CPU);
 }
 #undef BIND_TENSOR_OPS
 #undef BIND_TENSOR_OPS_REV
