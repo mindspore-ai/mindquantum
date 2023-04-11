@@ -122,9 +122,10 @@ struct SingleFermionStr {
 
     // -----------------------------------------------------------------------------
 
-    static compress_term_t init(const std::string& fermion_string,
-                                const parameter::ParameterResolver& var = tn::ops::ones(1));
-    static compress_term_t init(const terms_t& terms, const parameter::ParameterResolver& var = tn::ops::ones(1));
+    static compress_term_t init(const std::string& fermion_string, const parameter::ParameterResolver& var
+                                                                   = parameter::ParameterResolver(tn::ops::ones(1)));
+    static compress_term_t init(const terms_t& terms, const parameter::ParameterResolver& var
+                                                      = parameter::ParameterResolver(tn::ops::ones(1)));
 
     // -----------------------------------------------------------------------------
 
@@ -155,8 +156,9 @@ class FermionOperator {
  public:
     FermionOperator() = default;
     explicit FermionOperator(const std::string& fermion_string,
-                             const parameter::ParameterResolver& var = tn::ops::ones(1));
-    explicit FermionOperator(const terms_t& t, const parameter::ParameterResolver& var = tn::ops::ones(1));
+                             const parameter::ParameterResolver& var = parameter::ParameterResolver(tn::ops::ones(1)));
+    explicit FermionOperator(const terms_t& t,
+                             const parameter::ParameterResolver& var = parameter::ParameterResolver(tn::ops::ones(1)));
     FermionOperator(const key_t& k, const value_t& v);
     // -----------------------------------------------------------------------------
 

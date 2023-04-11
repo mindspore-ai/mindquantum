@@ -36,7 +36,8 @@ qubit_op_t ternary_tree(const fermion_op_t& ops, int n_qubits);
 int get_qubit_index(const qlist_t& p, int i);
 qubit_op_t parity(const fermion_op_t& ops, int n_qubits = -1);
 fermion_op_t fermion_number_operator(int n_modes, int mode = -1,
-                                     const parameter::ParameterResolver& coeff = tn::ops::ones(1));
+                                     const parameter::ParameterResolver& coeff
+                                     = parameter::ParameterResolver(tn::ops::ones(1)));
 
 // -----------------------------------------------------------------------------
 

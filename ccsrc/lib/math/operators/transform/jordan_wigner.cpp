@@ -106,13 +106,16 @@ fermion_op_t reverse_jordan_wigner(const qubit_op_t& ops, int n_qubits) {
                 fermion_op_t trans_pauli;
                 if (value == qubit::TermValue::Z) {
                     trans_pauli = fermion_op_t("");
-                    trans_pauli += fermion_number_operator(n_qubits, idx, tn::ops::init_with_value(-2.0));
+                    trans_pauli += fermion_number_operator(
+                        n_qubits, idx, parameter::ParameterResolver(tn::ops::init_with_value(-2.0)));
                 } else {
                     auto raising_term = fermion_op_t({{idx, fermion::TermValue::Ad}});
                     auto lowering_term = fermion_op_t({{idx, fermion::TermValue::A}});
                     if (value == qubit::TermValue::Y) {
-                        raising_term *= tn::ops::init_with_value(std::complex<double>(0, 1.0));
-                        lowering_term *= tn::ops::init_with_value(std::complex<double>(0, -1.0));
+                        raising_term *= parameter::ParameterResolver(
+                            tn::ops::init_with_value(std::complex<double>(0, 1.0)));
+                        lowering_term *= parameter::ParameterResolver(
+                            tn::ops::init_with_value(std::complex<double>(0, -1.0)));
                     }
                     trans_pauli += raising_term;
                     trans_pauli += lowering_term;
@@ -121,7 +124,7 @@ fermion_op_t reverse_jordan_wigner(const qubit_op_t& ops, int n_qubits) {
                     }
                     auto s_coeff = working_term.singlet_coeff();
                     trans_pauli *= s_coeff;
-                    working_term *= (tn::ops::ones(1) / s_coeff);
+                    working_term *= (parameter::ParameterResolver(tn::ops::ones(1)) / s_coeff);
                 }
                 int working_qubit = static_cast<int>(idx) - 1;
                 for (auto [local_term, local_coeff] : working_term.get_terms()) {

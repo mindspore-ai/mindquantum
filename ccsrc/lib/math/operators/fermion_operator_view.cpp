@@ -531,14 +531,14 @@ auto FermionOperator::get_terms() const -> dict_t {
 }
 
 value_t FermionOperator::get_coeff(const terms_t& term) {
-    auto terms = SingleFermionStr::init(term, tn::ops::ones(1));
+    auto terms = SingleFermionStr::init(term, parameter::ParameterResolver(tn::ops::ones(1)));
     if (this->Contains(terms.first)) {
         return this->terms[terms.first] * terms.second;
     }
     throw std::out_of_range("term not in fermion operator");
 }
 void FermionOperator::set_coeff(const terms_t& term, const parameter::ParameterResolver& value) {
-    auto terms = SingleFermionStr::init(term, tn::ops::ones(1));
+    auto terms = SingleFermionStr::init(term, parameter::ParameterResolver(tn::ops::ones(1)));
     if (this->Contains(terms.first)) {
         this->terms[terms.first] = terms.second * value;
 
@@ -573,7 +573,7 @@ std::vector<FermionOperator> FermionOperator::singlet() const {
     std::vector<FermionOperator> out;
     for (auto& [term, value] : this->get_terms()) {
         for (auto& word : term) {
-            out.emplace_back(FermionOperator({word}, tn::ops::ones(1)));
+            out.emplace_back(FermionOperator({word}, parameter::ParameterResolver(tn::ops::ones(1))));
         }
         break;
     }

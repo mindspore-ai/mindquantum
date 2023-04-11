@@ -34,8 +34,8 @@ qubit_op_t transform_ladder_operator(const fermion::TermValue& value, const qlis
     std::for_each(begin(x2), end(x2), [&t2](const auto& qubit_id) { t2.emplace_back(qubit_id, qubit::TermValue::X); });
     std::for_each(begin(y2), end(y2), [&t2](const auto& qubit_id) { t2.emplace_back(qubit_id, qubit::TermValue::Y); });
     std::for_each(begin(z2), end(z2), [&t2](const auto& qubit_id) { t2.emplace_back(qubit_id, qubit::TermValue::Z); });
-    qubit_op_t out = qubit_op_t(t1, coefficient_1);
-    out += qubit_op_t(t2, coefficient_2);
+    qubit_op_t out = qubit_op_t(t1, parameter::ParameterResolver(coefficient_1));
+    out += qubit_op_t(t2, parameter::ParameterResolver(coefficient_2));
     return out;
 }
 }  // namespace operators::transform

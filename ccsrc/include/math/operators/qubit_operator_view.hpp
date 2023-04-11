@@ -91,9 +91,10 @@ struct SinglePauliStr {
 
     // -----------------------------------------------------------------------------
 
-    static compress_term_t init(const std::string& pauli_string,
-                                const parameter::ParameterResolver& var = tn::ops::ones(1));
-    static compress_term_t init(const terms_t& terms, const parameter::ParameterResolver& var = tn::ops::ones(1));
+    static compress_term_t init(const std::string& pauli_string, const parameter::ParameterResolver& var
+                                                                 = parameter::ParameterResolver(tn::ops::ones(1)));
+    static compress_term_t init(const terms_t& terms, const parameter::ParameterResolver& var
+                                                      = parameter::ParameterResolver(tn::ops::ones(1)));
 
     // -----------------------------------------------------------------------------
 
@@ -121,8 +122,10 @@ class QubitOperator {
 
  public:
     QubitOperator() = default;
-    explicit QubitOperator(const std::string& pauli_string, const parameter::ParameterResolver& var = tn::ops::ones(1));
-    explicit QubitOperator(const terms_t& t, const parameter::ParameterResolver& var = tn::ops::ones(1));
+    explicit QubitOperator(const std::string& pauli_string,
+                           const parameter::ParameterResolver& var = parameter::ParameterResolver(tn::ops::ones(1)));
+    explicit QubitOperator(const terms_t& t,
+                           const parameter::ParameterResolver& var = parameter::ParameterResolver(tn::ops::ones(1)));
     QubitOperator(const key_t& k, const value_t& v);
 
     // -----------------------------------------------------------------------------

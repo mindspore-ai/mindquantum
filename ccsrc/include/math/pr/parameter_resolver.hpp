@@ -68,11 +68,12 @@ struct ParameterResolver {
         this->encoder_parameters_ = encoder_parameter;
     }
 
-    ParameterResolver(const std::string& key, const tn::Tensor& const_value = tn::ops::zeros(1),
-                      tn::TDtype dtype = tn::TDtype::Float64);
-    ParameterResolver(const std::map<std::string, tn::Tensor>& data, const tn::Tensor& const_value = tn::ops::zeros(1),
-                      tn::TDtype dtype = tn::TDtype::Float64);
-    ParameterResolver(const tn::Tensor& const_value, tn::TDtype dtype = tn::TDtype::Float64);
+    explicit ParameterResolver(const std::string& key, const tn::Tensor& const_value = tn::ops::zeros(1),
+                               tn::TDtype dtype = tn::TDtype::Float64);
+    explicit ParameterResolver(const std::map<std::string, tn::Tensor>& data,
+                               const tn::Tensor& const_value = tn::ops::zeros(1),
+                               tn::TDtype dtype = tn::TDtype::Float64);
+    explicit ParameterResolver(const tn::Tensor& const_value, tn::TDtype dtype = tn::TDtype::Float64);
     ParameterResolver(const ParameterResolver& other) = default;
     // -----------------------------------------------------------------------------
     tn::TDtype GetDtype() const;

@@ -308,7 +308,7 @@ auto QubitOperator::get_terms() const -> dict_t {
 }
 
 value_t QubitOperator::get_coeff(const terms_t& term) {
-    auto terms = SinglePauliStr::init(term, tn::ops::ones(1));
+    auto terms = SinglePauliStr::init(term, parameter::ParameterResolver(tn::ops::ones(1)));
     if (this->Contains(terms.first)) {
         return this->terms[terms.first] * terms.second;
     }
@@ -338,7 +338,7 @@ bool QubitOperator::parameterized() const {
     return false;
 }
 void QubitOperator::set_coeff(const terms_t& term, const parameter::ParameterResolver& value) {
-    auto terms = SinglePauliStr::init(term, tn::ops::ones(1));
+    auto terms = SinglePauliStr::init(term, parameter::ParameterResolver(tn::ops::ones(1)));
     if (this->Contains(terms.first)) {
         this->terms[terms.first] = terms.second * value;
 
@@ -381,7 +381,7 @@ std::vector<QubitOperator> QubitOperator::singlet() const {
     std::vector<QubitOperator> out;
     for (auto& [term, value] : this->get_terms()) {
         for (auto& word : term) {
-            out.emplace_back(QubitOperator({word}, tn::ops::ones(1)));
+            out.emplace_back(QubitOperator({word}, parameter::ParameterResolver(tn::ops::ones(1))));
         }
         break;
     }
