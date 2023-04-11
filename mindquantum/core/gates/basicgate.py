@@ -1991,8 +1991,8 @@ class FSim(MultiParamsGate):
     def get_cpp_obj(self):
         """Construct cpp obj."""
         return mb.gate.fsim(
-            self.theta.get_cpp_obj(),
-            self.phi.get_cpp_obj(),
+            self.theta,
+            self.phi,
             self.obj_qubits,
             self.ctrl_qubits,
         )

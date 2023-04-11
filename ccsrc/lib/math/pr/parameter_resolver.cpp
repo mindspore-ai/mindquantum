@@ -558,7 +558,6 @@ std::pair<std::map<std::string, size_t>, tensor::Matrix> Jacobi(const std::vecto
     auto jacobi = tensor::ops::zeros(prs.size() * title.size());
     for (size_t i = 0; i < prs.size(); i++) {
         for (auto& name : prs[i].GetRequiresGradParameters()) {
-            jacobi[i][title.at(name)] = prs[i].data_.at(name);
             tensor::ops::cpu::set(&jacobi, prs[i].data_.at(name), i * title.size() + title.at(name));
         }
     }

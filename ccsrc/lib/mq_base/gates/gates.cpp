@@ -26,7 +26,7 @@ tensor::Matrix U3Matrix(tensor::Tensor theta, tensor::Tensor phi, tensor::Tensor
 }
 
 tensor::Matrix FSimMatrix(tensor::Tensor theta, tensor::Tensor phi) {
-    auto b = tensor::ops::sin(phi) * std::complex<float>(0, -1);
+    auto b = tensor::ops::sin(theta) * std::complex<float>(0, -1);
     auto a = tensor::ops::cos(theta).astype(b.dtype);
     auto c = tensor::ops::exp(phi * std::complex<float>(0, 1));
     auto one = tensor::ops::ones(1, c.dtype);
@@ -78,7 +78,6 @@ U3::U3(const ParameterResolver& theta, const ParameterResolver& phi, const Param
     , phi(phi)
     , lambda(lambda)
     , Parameterizable(GateID::U3, {theta, phi, lambda}, obj_qubits, ctrl_qubits) {
-    std::cout << "init u3" << std::endl;
     if (!this->parameterized_) {
         this->base_matrix_ = U3Matrix(theta.const_value, phi.const_value, lambda.const_value);
     }

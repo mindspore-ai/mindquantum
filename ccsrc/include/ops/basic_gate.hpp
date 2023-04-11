@@ -41,7 +41,6 @@ struct BasicGate {
     BasicGate() = default;
     BasicGate(GateID id, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits)
         : id_(id), obj_qubits_(obj_qubits), ctrl_qubits_(ctrl_qubits) {
-        std::cout << "init basicgate" << std::endl;
     }
     virtual bool Parameterized() {
         return false;
@@ -126,7 +125,6 @@ struct Parameterizable : public BasicGate {
     Parameterizable(GateID id, const VT<ParameterResolver>& prs, const VT<Index>& obj_qubits,
                     const VT<Index>& ctrl_qubits)
         : n_pr(prs.size()), prs_(prs), BasicGate(id, obj_qubits, ctrl_qubits) {
-        std::cout << "int Parameterizable" << std::endl;
         parameterized_ = !std::all_of(this->prs_.begin(), this->prs_.end(),
                                       [](const auto& pr) { return pr.IsConst(); });
         grad_required_ = std::any_of(this->prs_.begin(), this->prs_.end(),

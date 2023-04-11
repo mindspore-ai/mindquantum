@@ -158,16 +158,16 @@ Tensor generate_binary(void* data, TDtype dtype, size_t len, T a) {
     constexpr TDtype other_dtype = to_dtype_v<T>;
     switch (dtype) {
         case (TDtype::Float32): {
-            return GenerateBinary<TDtype::Float32, other_dtype, false, true, binary_ops>(data, len, other);
+            return GenerateBinary<TDtype::Float32, other_dtype, false, false, binary_ops>(data, len, other);
         }
         case (TDtype::Float64): {
-            return GenerateBinary<TDtype::Float64, other_dtype, false, true, binary_ops>(data, len, other);
+            return GenerateBinary<TDtype::Float64, other_dtype, false, false, binary_ops>(data, len, other);
         }
         case (TDtype::Complex128): {
-            return GenerateBinary<TDtype::Complex128, other_dtype, false, true, binary_ops>(data, len, other);
+            return GenerateBinary<TDtype::Complex128, other_dtype, false, false, binary_ops>(data, len, other);
         }
         case (TDtype::Complex64): {
-            return GenerateBinary<TDtype::Complex64, other_dtype, false, true, binary_ops>(data, len, other);
+            return GenerateBinary<TDtype::Complex64, other_dtype, false, false, binary_ops>(data, len, other);
         }
     }
 }
