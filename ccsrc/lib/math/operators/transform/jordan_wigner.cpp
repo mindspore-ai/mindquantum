@@ -128,7 +128,7 @@ fermion_op_t reverse_jordan_wigner(const qubit_op_t& ops, int n_qubits) {
                     for (auto it = local_term.rbegin(); it != local_term.rend(); it++) {
                         const auto& [local_idx, local_value] = *it;
                         if (static_cast<int>(local_idx) <= working_qubit) {
-                            pauli_operator = operators::qubit::QubitOperator::term_t({local_idx, local_value});
+                            pauli_operator = qubit_op_t::term_t({local_idx, local_value});
                             finished = false;
                             break;
                         } else {

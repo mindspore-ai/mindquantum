@@ -31,6 +31,8 @@ using qlist_t = std::vector<size_t>;
 qubit_op_t transform_ladder_operator(const fermion::TermValue& value, const qlist_t& x1, const qlist_t& y1,
                                      const qlist_t& z1, const qlist_t& x2, const qlist_t& y2, const qlist_t& z2);
 qubit_op_t jordan_wigner(const fermion_op_t& ops);
+
+// TODO(xusheng): Reverse jordan wigner transform has bug.
 fermion_op_t reverse_jordan_wigner(const qubit_op_t& ops, int n_qubits = -1);
 qubit_op_t ternary_tree(const fermion_op_t& ops, int n_qubits);
 int get_qubit_index(const qlist_t& p, int i);

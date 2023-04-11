@@ -22,6 +22,7 @@
 
 #include "math/operators/fermion_operator_view.hpp"
 #include "math/operators/transform.hpp"
+#include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 
 namespace operators::transform {
@@ -49,10 +50,10 @@ qubit_op_t bravyi_kitaev_superfast(const fermion_op_t& ops) {
             // Second term in pair to transform
             fermion_op_t::terms_t term_2;
             std::transform(a.begin(), a.end(), std::back_inserter(term_2), [](int val) {
-                return fermion_op_t::term_t{val, operators::fermion::TermValue::Ad};
+                return fermion_op_t::term_t{val, fermion::TermValue::Ad};
             });
             std::transform(at.begin(), at.end(), std::back_inserter(term_2), [](int val) {
-                return fermion_op_t::term_t{val, operators::fermion::TermValue::A};
+                return fermion_op_t::term_t{val, fermion::TermValue::A};
             });
             // Check equality between numbers of creation and annihilation operators in term
             if (a.size() != at.size()) {
@@ -127,7 +128,7 @@ edge_matrix_t get_edge_matrix(const fermion_op_t& ops) {
         a[1] = std::vector<int>{};
         for (const auto& [idx, value] : term) {
             int i;
-            if (value == operators::fermion::TermValue::Ad) {
+            if (value == fermion::TermValue::Ad) {
                 i = 0;
             } else {
                 i = 1;
@@ -180,7 +181,7 @@ qubit_op_t get_b(int i, const edge_matrix_t& edge_matrix, edge_enum_t& edge_enum
     for (int j = 0; j < edge_matrix[i].size(); j++) {
         if (edge_matrix[i][j] != 0) {
             terms.emplace_back(edge_enum[std::pair<int, int>{i, j}],
-                               operators::qubit::TermValue::Z);  // not sure if it is correct
+                               qubit::TermValue::Z);  // not sure if it is correct
         }
     }
     auto out = qubit_op_t(terms);
@@ -189,17 +190,17 @@ qubit_op_t get_b(int i, const edge_matrix_t& edge_matrix, edge_enum_t& edge_enum
 
 qubit_op_t get_a(int i, int j, const edge_matrix_t& edge_matrix, edge_enum_t& edge_enum) {
     qubit_op_t::terms_t terms;
-    terms.emplace_back(edge_enum[std::pair<int, int>{i, j}], operators::qubit::TermValue::X);
+    terms.emplace_back(edge_enum[std::pair<int, int>{i, j}], qubit::TermValue::X);
     for (int k = 0; k < j; k++) {
         if (edge_matrix[k][i] != 0) {
             terms.emplace_back(edge_enum[std::pair<int, int>{k, i}],
-                               operators::qubit::TermValue::Z);  // not sure if it is correct
+                               qubit::TermValue::Z);  // not sure if it is correct
         }
     }
     for (int s = 0; s < i; s++) {
         if (edge_matrix[s][j] != 0) {
             terms.emplace_back(edge_enum[std::pair<int, int>{s, j}],
-                               operators::qubit::TermValue::Z);  // not sure if it is correct
+                               qubit::TermValue::Z);  // not sure if it is correct
         }
     }
     auto out = qubit_op_t(terms) * (tensor::ops::init_with_value(1.0 * edge_matrix[i][j]));
@@ -235,8 +236,8 @@ qubit_op_t transformed_double_excitation_operator(int i, int j, int k, int l, co
     auto b_k = get_b(k, edge_matrix, edge_enum);
     auto b_l = get_b(l, edge_matrix, edge_enum);
     return (get_a(i, j, edge_matrix, edge_enum) * get_a(k, l, edge_matrix, edge_enum)
-            * (qubit_op_t("", tensor::ops::init_with_value(-1.0)) - (b_i * b_j + b_k * b_l) + b_i * b_k + b_i * b_l
-               + b_j * b_k + b_j * b_l + b_i * b_j * b_k * b_l)
+            * (qubit_op_t("", parameter::ParameterResolver(tensor::ops::init_with_value(-1.0)))
+               - (b_i * b_j + b_k * b_l) + b_i * b_k + b_i * b_l + b_j * b_k + b_j * b_l + b_i * b_j * b_k * b_l)
             * tensor::ops::init_with_value(0.125));
 }
 }  // namespace operators::transform

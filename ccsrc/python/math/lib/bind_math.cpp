@@ -287,6 +287,11 @@ void BindQubitOperator(py::module &module) {
 
 void BindTransform(py::module &module) {
     module.def("jordan_wigner", &operators::transform::jordan_wigner, "ops"_a);
+    module.def("reverse_jordan_wigner", &operators::transform::reverse_jordan_wigner, "ops"_a, "n_qubits"_a = -1);
+    module.def("parity", &operators::transform::parity, "ops"_a, "n_qubits"_a = -1);
+    module.def("bravyi_kitaev", &operators::transform::bravyi_kitaev, "ops"_a, "n_qubits"_a = -1);
+    module.def("ternary_tree", &operators::transform::ternary_tree, "ops"_a, "n_qubits"_a);
+    module.def("bravyi_kitaev_superfast", &operators::transform::bravyi_kitaev_superfast, "ops"_a);
 }
 
 PYBIND11_MODULE(_math, m) {

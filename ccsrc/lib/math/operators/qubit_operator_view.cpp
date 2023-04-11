@@ -459,6 +459,10 @@ QubitOperator& QubitOperator::operator+=(const tn::Tensor& c) {
     }
     return *this;
 }
+QubitOperator& QubitOperator::operator-=(const tn::Tensor& c) {
+    *this += (0.0 - c);
+    return *this;
+}
 
 QubitOperator& QubitOperator::operator+=(const QubitOperator& other) {
     for (const auto& term : other.terms) {
@@ -472,6 +476,34 @@ QubitOperator& QubitOperator::operator+=(const QubitOperator& other) {
             }
         } else {
             this->terms.insert(term);
+            auto upper_t = tn::upper_type_v(this->dtype, term.second.GetDtype());
+            if (this->GetDtype() != upper_t) {
+                this->CastTo(upper_t);
+            }
+            if (term.second.GetDtype() != upper_t) {
+                this->terms[term.first].CastTo(upper_t);
+            }
+            if (!this->terms[term.first].IsNotZero()) {
+                this->terms.erase(term.first);
+            }
+        }
+    }
+    return *this;
+}
+
+QubitOperator& QubitOperator::operator-=(const QubitOperator& other) {
+    for (const auto& term : other.terms) {
+        if (this->Contains(term.first)) {
+            this->terms[term.first] = this->terms[term.first] - term.second;
+            if (this->dtype != this->terms[term.first].GetDtype()) {
+                this->CastTo(this->terms[term.first].GetDtype());
+            }
+            if (!this->terms[term.first].IsNotZero()) {
+                this->terms.erase(term.first);
+            }
+        } else {
+            this->terms.insert({term.first, parameter::ParameterResolver(tensor::ops::zeros(1, term.second.GetDtype()))
+                                                - term.second});
             auto upper_t = tn::upper_type_v(this->dtype, term.second.GetDtype());
             if (this->GetDtype() != upper_t) {
                 this->CastTo(upper_t);
@@ -512,6 +544,16 @@ QubitOperator operator+(QubitOperator lhs, const QubitOperator& rhs) {
     return lhs;
 }
 
+QubitOperator operator-(QubitOperator lhs, const tensor::Tensor& rhs) {
+    lhs -= rhs;
+    return lhs;
+}
+
+QubitOperator operator-(QubitOperator lhs, const QubitOperator& rhs) {
+    lhs -= rhs;
+    return lhs;
+}
+
 QubitOperator QubitOperator::operator*=(const QubitOperator& other) {
     auto out = QubitOperator();
     for (auto& this_term : this->terms) {
@@ -543,6 +585,11 @@ QubitOperator QubitOperator::operator*=(const QubitOperator& other) {
 
 QubitOperator operator*(QubitOperator lhs, const QubitOperator& rhs) {
     lhs *= rhs;
+    return lhs;
+}
+
+QubitOperator operator*(QubitOperator lhs, const tensor::Tensor& other) {
+    lhs *= QubitOperator("", parameter::ParameterResolver(other));
     return lhs;
 }
 
