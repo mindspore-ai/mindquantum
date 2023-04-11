@@ -141,7 +141,7 @@ class MQSim(BackendBase):
                 pr = ParameterResolver()
             if isinstance(gate, Measure):
                 return self.sim.apply_gate(gate.get_cpp_obj(), pr.get_cpp_obj(), diff)
-            self.sim.apply_gate(gate.get_cpp_obj(), pr.get_cpp_obj(), diff)
+            self.sim.apply_gate(gate.get_cpp_obj(), pr, diff)
         return None
 
     def apply_hamiltonian(self, hamiltonian: Hamiltonian):

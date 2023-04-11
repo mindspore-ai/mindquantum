@@ -304,6 +304,10 @@ bool ParameterResolver::operator==(const ParameterResolver& value) {
     return true;
 }
 
+bool ParameterResolver::operator!=(const ParameterResolver& value) {
+    return !(*this == value);
+}
+
 ParameterResolver ParameterResolver::operator-() const {
     auto out = *this;
     out.const_value = 0.0 - out.const_value;

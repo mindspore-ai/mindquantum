@@ -765,11 +765,6 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradOneMulti(
                 if (const auto& [title, jac] = p_gate->jacobi; title.size() != 0) {
                     for (int j = start; j < end; j++) {
                         auto intrin_grad = ExpectDiffGate(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
-                        std::cout << intrin_grad << std::endl;
-                        std::cout << jac << std::endl;
-                        for (auto& tit : title) {
-                            std::cout << tit.first << "," << tit.second << std::endl;
-                        }
                         auto p_grad = tensor::ops::cpu::to_vector<py_qs_data_t>(tensor::ops::MatMul(intrin_grad, jac));
                         for (const auto& [name, idx] : title) {
                             f_and_g[j][1 + p_map.at(name)] += 2 * std::real(p_grad[0][idx]);

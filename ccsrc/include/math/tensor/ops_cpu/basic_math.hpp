@@ -533,13 +533,13 @@ Matrix MatMul(void* m1, size_t m1_row, size_t m1_col, void* m2, size_t m2_row, s
                 if constexpr (m1_dtype == m2_dtype) {
                     out_data[i * m2_col + j] += c_m1[i * m1_col + k] * c_m2[k * m2_col + j];
                 } else if constexpr (!is_complex_dtype_v<m1_dtype> && is_complex_dtype_v<m2_dtype>) {
-                    out_data[i * m2_col + j] = upper_t{c_m1[i * m1_col + k] * std::real(c_m2[k * m2_col + j]),
-                                                       c_m1[i * m1_col + k] * std::imag(c_m2[k * m2_col + j])};
+                    out_data[i * m2_col + j] += upper_t{c_m1[i * m1_col + k] * std::real(c_m2[k * m2_col + j]),
+                                                        c_m1[i * m1_col + k] * std::imag(c_m2[k * m2_col + j])};
                 } else if constexpr (!is_complex_dtype_v<m2_dtype> && is_complex_dtype_v<m1_dtype>) {
-                    out_data[i * m2_col + j] = upper_t{c_m2[k * m2_col + j] * std::real(c_m1[i * m1_col + k]),
-                                                       c_m2[k * m2_col + j] * std::imag(c_m1[i * m1_col + k])};
+                    out_data[i * m2_col + j] += upper_t{c_m2[k * m2_col + j] * std::real(c_m1[i * m1_col + k]),
+                                                        c_m2[k * m2_col + j] * std::imag(c_m1[i * m1_col + k])};
                 } else if constexpr (is_complex_dtype_v<m1_dtype> && is_complex_dtype_v<m2_dtype>) {
-                    out_data[i * m2_col + j] = upper_t{
+                    out_data[i * m2_col + j] += upper_t{
                         std::real(c_m1[i * m1_col + k]) * std::real(c_m2[k * m2_col + j])
                             - std::imag(c_m1[i * m1_col + k]) * std::imag(c_m2[k * m2_col + j]),
                         std::real(c_m1[i * m1_col + k]) * std::imag(c_m2[k * m2_col + j])
