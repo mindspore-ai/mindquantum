@@ -14,95 +14,70 @@
 
 #include "math/tensor/ops_cpu/basic_math.hpp"
 
+#include "math/tensor/csr_matrix.hpp"
+#include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
 
 namespace tensor::ops::cpu {
+#define MM_MatMul(m1_dtype)                                                                                            \
+    case m1_dtype: {                                                                                                   \
+        switch (m2.dtype) {                                                                                            \
+            case TDtype::Float32: {                                                                                    \
+                return MatMul<m1_dtype, TDtype::Float32>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row, m2.n_col);    \
+            }                                                                                                          \
+            case TDtype::Float64: {                                                                                    \
+                return MatMul<m1_dtype, TDtype::Float64>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row, m2.n_col);    \
+            }                                                                                                          \
+            case TDtype::Complex64: {                                                                                  \
+                return MatMul<m1_dtype, TDtype::Complex64>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row, m2.n_col);  \
+            }                                                                                                          \
+            case TDtype::Complex128: {                                                                                 \
+                return MatMul<m1_dtype, TDtype::Complex128>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row, m2.n_col); \
+            }                                                                                                          \
+        }                                                                                                              \
+        break;                                                                                                         \
+    }
 Matrix MatMul(const Matrix& m1, const Matrix& m2) {
     switch (m1.dtype) {
-        case TDtype::Float32: {
-            switch (m2.dtype) {
-                case TDtype::Float32: {
-                    return MatMul<TDtype::Float32, TDtype::Float32>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row,
-                                                                    m2.n_col);
-                }
-                case TDtype::Float64: {
-                    return MatMul<TDtype::Float32, TDtype::Float64>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row,
-                                                                    m2.n_col);
-                }
-                case TDtype::Complex64: {
-                    return MatMul<TDtype::Float32, TDtype::Complex64>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row,
-                                                                      m2.n_col);
-                }
-                case TDtype::Complex128: {
-                    return MatMul<TDtype::Float32, TDtype::Complex128>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row,
-                                                                       m2.n_col);
-                }
-            }
-            break;
-        }
-        case TDtype::Float64: {
-            switch (m2.dtype) {
-                case TDtype::Float32: {
-                    return MatMul<TDtype::Float64, TDtype::Float32>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row,
-                                                                    m2.n_col);
-                }
-                case TDtype::Float64: {
-                    return MatMul<TDtype::Float64, TDtype::Float64>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row,
-                                                                    m2.n_col);
-                }
-                case TDtype::Complex64: {
-                    return MatMul<TDtype::Float64, TDtype::Complex64>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row,
-                                                                      m2.n_col);
-                }
-                case TDtype::Complex128: {
-                    return MatMul<TDtype::Float64, TDtype::Complex128>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row,
-                                                                       m2.n_col);
-                }
-            }
-            break;
-        }
-        case TDtype::Complex64: {
-            switch (m2.dtype) {
-                case TDtype::Float32: {
-                    return MatMul<TDtype::Complex64, TDtype::Float32>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row,
-                                                                      m2.n_col);
-                }
-                case TDtype::Float64: {
-                    return MatMul<TDtype::Complex64, TDtype::Float64>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row,
-                                                                      m2.n_col);
-                }
-                case TDtype::Complex64: {
-                    return MatMul<TDtype::Complex64, TDtype::Complex64>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row,
-                                                                        m2.n_col);
-                }
-                case TDtype::Complex128: {
-                    return MatMul<TDtype::Complex64, TDtype::Complex128>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row,
-                                                                         m2.n_col);
-                }
-            }
-            break;
-        }
-        case TDtype::Complex128: {
-            switch (m2.dtype) {
-                case TDtype::Float32: {
-                    return MatMul<TDtype::Complex128, TDtype::Float32>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row,
-                                                                       m2.n_col);
-                }
-                case TDtype::Float64: {
-                    return MatMul<TDtype::Complex128, TDtype::Float64>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row,
-                                                                       m2.n_col);
-                }
-                case TDtype::Complex64: {
-                    return MatMul<TDtype::Complex128, TDtype::Complex64>(m1.data, m1.n_row, m1.n_col, m2.data, m2.n_row,
-                                                                         m2.n_col);
-                }
-                case TDtype::Complex128: {
-                    return MatMul<TDtype::Complex128, TDtype::Complex128>(m1.data, m1.n_row, m1.n_col, m2.data,
-                                                                          m2.n_row, m2.n_col);
-                }
-            }
-            break;
-        }
+        MM_MatMul(TDtype::Float32);
+        MM_MatMul(TDtype::Float64);
+        MM_MatMul(TDtype::Complex64);
+        MM_MatMul(TDtype::Complex128);
     }
 }
+#undef MM_MatMul
+
+// -----------------------------------------------------------------------------
+#define CSR_MatMul(m1_dtype)                                                                                           \
+    case m1_dtype: {                                                                                                   \
+        switch (m2.dtype) {                                                                                            \
+            case TDtype::Float32: {                                                                                    \
+                return MatMul<m1_dtype, TDtype::Float32>(m1.data_.data, m1.indptr_, m1.indices_, m1.n_row, m1.n_col,   \
+                                                         m1.nnz, m2.data, m2.dim);                                     \
+            }                                                                                                          \
+            case TDtype::Float64: {                                                                                    \
+                return MatMul<m1_dtype, TDtype::Float64>(m1.data_.data, m1.indptr_, m1.indices_, m1.n_row, m1.n_col,   \
+                                                         m1.nnz, m2.data, m2.dim);                                     \
+            }                                                                                                          \
+            case TDtype::Complex64: {                                                                                  \
+                return MatMul<m1_dtype, TDtype::Complex64>(m1.data_.data, m1.indptr_, m1.indices_, m1.n_row, m1.n_col, \
+                                                           m1.nnz, m2.data, m2.dim);                                   \
+            }                                                                                                          \
+            case TDtype::Complex128: {                                                                                 \
+                return MatMul<m1_dtype, TDtype::Complex128>(m1.data_.data, m1.indptr_, m1.indices_, m1.n_row,          \
+                                                            m1.n_col, m1.nnz, m2.data, m2.dim);                        \
+            }                                                                                                          \
+        }                                                                                                              \
+        break;                                                                                                         \
+    }
+
+Tensor MatMul(const CsrMatrix& m1, const Tensor& m2) {
+    switch (m1.GetDtype()) {
+        CSR_MatMul(TDtype::Float32);
+        CSR_MatMul(TDtype::Float64);
+        CSR_MatMul(TDtype::Complex64);
+        CSR_MatMul(TDtype::Complex128);
+    }
+}
+#undef CSR_MatMul
 }  // namespace tensor::ops::cpu

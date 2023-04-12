@@ -17,6 +17,7 @@
 #include <functional>
 #include <stdexcept>
 
+#include "math/tensor/csr_matrix.hpp"
 #include "math/tensor/matrix.hpp"
 #include "math/tensor/ops_cpu/memory_operator.hpp"
 #include "math/tensor/traits.hpp"
@@ -291,6 +292,16 @@ Matrix MatMul(const Matrix& m1, const Matrix& m2) {
         throw std::runtime_error("Cannot multiply two matrix in different device.");
     }
     if (m1.device == TDevice::CPU) {
+        return ops::cpu::MatMul(m1, m2);
+    } else {
+    }
+}
+
+Tensor MatMul(const CsrMatrix& m1, const Tensor& m2) {
+    if (m1.GetDevice() != m2.device) {
+        throw std::runtime_error("Cannot multiply two matrix in different device.");
+    }
+    if (m1.GetDevice() == TDevice::CPU) {
         return ops::cpu::MatMul(m1, m2);
     } else {
     }

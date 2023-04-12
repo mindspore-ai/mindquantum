@@ -18,6 +18,9 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include "core/mq_base_types.hpp"
+#include "core/utils.hpp"
+#include "math/tensor/csr_matrix.hpp"
 #include "math/tensor/matrix.hpp"
 #include "math/tensor/ops_cpu/concrete_tensor.hpp"
 #include "math/tensor/ops_cpu/memory_operator.hpp"
@@ -555,5 +558,47 @@ Matrix MatMul(void* m1, size_t m1_row, size_t m1_col, void* m2, size_t m2_row, s
 }
 
 Matrix MatMul(const Matrix& m1, const Matrix& m2);
+
+// -----------------------------------------------------------------------------
+
+template <TDtype m1_dtype, TDtype m2_dtype>
+Tensor MatMul(void* m1, size_t* indptr, size_t* indices, size_t n_row, size_t n_col, size_t nnz, void* m2, size_t len) {
+    if (n_col != len) {
+        throw std::runtime_error("Dimension mismatch: cannot multiply matrix and vector.");
+    }
+    using m1_t = to_device_t<m1_dtype>;
+    using m2_t = to_device_t<m2_dtype>;
+    constexpr TDtype upper_dtype = upper_type<m1_dtype, m2_dtype>::get();
+    using upper_t = to_device_t<upper_dtype>;
+    auto c_m1 = reinterpret_cast<m1_t*>(m1);
+    auto c_m2 = reinterpret_cast<m2_t*>(m2);
+    auto out = init(n_row, upper_dtype);
+    auto c_out = reinterpret_cast<upper_t*>(out.data);
+
+    THRESHOLD_OMP_FOR(
+        len, 1UL << mindquantum::nQubitTh, for (size_t i = 0; i < n_row; i++) {
+            upper_t sum = 0.0;
+            for (size_t j = indptr[i]; j < indptr[i + 1]; j++) {
+                if constexpr (m1_dtype == m2_dtype) {
+                    sum += c_m1[j] * c_m2[indices[j]];
+                } else if constexpr (is_complex_dtype_v<m1_dtype> && !is_complex_dtype_v<m2_dtype>) {
+                    sum += upper_t{std::real(c_m1[j]) * c_m2[indices[j]], std::imag(c_m1[j]) * c_m2[indices[j]]};
+                } else if constexpr (!is_complex_dtype_v<m1_dtype> && is_complex_dtype_v<m2_dtype>) {
+                    sum += upper_t{c_m1[j] * std::real(c_m2[indices[j]]), c_m1[j] * std::imag(c_m2[indices[j]])};
+                } else if constexpr (is_complex_dtype_v<m1_dtype> && is_complex_dtype_v<m2_dtype>) {
+                    sum += upper_t{std::real(c_m1[j]) * std::real(c_m2[indices[j]])
+                                       - std::imag(c_m1[j]) * std::imag(c_m2[indices[j]]),
+                                   std::real(c_m1[j]) * std::imag(c_m2[indices[j]])
+                                       + std::imag(c_m1[j]) * std::real(c_m2[indices[j]])};
+                } else {
+                    sum += c_m1[j] * c_m2[indices[j]];
+                }
+            }
+            c_out[i] = sum;
+        })
+    return out;
+}
+
+Tensor MatMul(const CsrMatrix& m1, const Tensor& m2);
 }  // namespace tensor::ops::cpu
 #endif /* MATH_TENSOR_OPS_CPU_BASIC_MATH_HPP_ */

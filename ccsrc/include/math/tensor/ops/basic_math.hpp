@@ -17,6 +17,7 @@
 
 #include <complex>
 
+#include "math/tensor/csr_matrix.hpp"
 #include "math/tensor/matrix.hpp"
 #include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
@@ -96,5 +97,6 @@ Tensor div(const std::complex<double>& a, const Tensor& t);
 // -----------------------------------------------------------------------------
 
 Matrix MatMul(const Matrix& m1, const Matrix& m2);
+Tensor MatMul(const CsrMatrix& m1, const Tensor& m2);
 }  // namespace tensor::ops
 #endif

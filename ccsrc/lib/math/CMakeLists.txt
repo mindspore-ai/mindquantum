@@ -19,7 +19,7 @@
 add_library(mq_math)
 force_at_least_cxx17_workaround(mq_math)
 append_to_property(mq_install_targets GLOBAL mq_math)
-target_link_libraries(mq_math PUBLIC include_lib)
+target_link_libraries(mq_math PUBLIC include_lib cmake_config)
 
 # ==============================================================================
 

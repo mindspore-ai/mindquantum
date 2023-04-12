@@ -14,9 +14,11 @@
 
 #include "math/tensor/tensor.hpp"
 
+#include <cstdlib>
 #include <iostream>
 #include <vector>
 
+#include "math/tensor/csr_matrix.hpp"
 #include "math/tensor/ops.hpp"
 #include "math/tensor/ops/advance_math.hpp"
 #include "math/tensor/ops/basic_math.hpp"
@@ -399,5 +401,19 @@ int main() {
     // Benchmark1(10000000);
 
     // -----------------------------------------------------------------------------
-    vdot();
+    // vdot();
+
+    // -----------------------------------------------------------------------------
+    auto data = tensor::ops::init_with_vector(std::vector<double>({5.0, 1.0, 3.0, 8.0, 0.0}));
+    auto indptr = reinterpret_cast<size_t*>(malloc(6 * sizeof(size_t)));
+    auto indices = reinterpret_cast<size_t*>(malloc(5 * sizeof(size_t)));
+    for (size_t i = 0; i < 5; i++) {
+        indices[i] = i;
+        indptr[i] = i;
+    }
+    indptr[5] = 5;
+    auto csr_matrix = tensor::CsrMatrix(5, 5, 5, indptr, indices, std::move(data));
+    auto vec = tensor::ops::init_with_vector(std::vector<double>({2.0, 3.0, 5.0, 6.0, 7.0}));
+    auto out = tensor::ops::MatMul(csr_matrix, vec);
+    std::cout << out << std::endl;
 }

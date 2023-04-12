@@ -14,6 +14,11 @@
 
 #ifndef MATH_TENSOR_CSR_MATRIX_HPP_
 #define MATH_TENSOR_CSR_MATRIX_HPP_
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+#include <type_traits>
+
 #include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
 namespace tensor {
@@ -21,8 +26,8 @@ struct CsrMatrix {
     size_t n_row = 0;
     size_t n_col = 0;
     size_t nnz = 0;
-    size_t* indptr_ = nullptr;
-    size_t* indices_ = nullptr;
+    size_t* indptr_ = nullptr;   // size is n_row + 1
+    size_t* indices_ = nullptr;  // size is nnz
     Tensor data_{};
 
     // -----------------------------------------------------------------------------
@@ -31,27 +36,14 @@ struct CsrMatrix {
     CsrMatrix& operator=(CsrMatrix&& t);
     CsrMatrix(const CsrMatrix& t);
     CsrMatrix& operator=(const CsrMatrix& t);
-    CsrMatrix(size_t n_row, size_t n_col, size_t nnz, size_t* indptr, size_t* indices, const Tensor& data)
-        : n_row(n_row), n_col(n_col), nnz(nnz), indptr_(indptr), indices_(indices), data_(data) {
-    }
-    CsrMatrix(size_t n_row, size_t n_col, size_t nnz, TDtype dtype);
-    ~CsrMatrix() {
-        if (indices_ != nullptr) {
-            free(indices_);
-            indices_ = nullptr;
-        }
-        if (indptr_ != nullptr) {
-            free(indptr_);
-            indptr_ = nullptr;
-        }
-    }
+    CsrMatrix(size_t n_row, size_t n_col, size_t nnz, size_t* indptr, size_t* indices, Tensor&& data);
+    ~CsrMatrix();
 
     // -----------------------------------------------------------------------------
 
     TDtype GetDtype() const;
+    TDevice GetDevice() const;
     void CastTo(TDtype dtype);
-    CsrMatrix hermitian_conjugated();
-    
 };
 }  // namespace tensor
 #endif /* MATH_TENSOR_CSR_MATRIX_HPP_ */
