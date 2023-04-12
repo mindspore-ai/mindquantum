@@ -632,7 +632,7 @@ class ZZ(RotSelfHermMat):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return mb.gate.RzzGate((2 * self.coeff).get_cpp_obj(), self.obj_qubits, self.ctrl_qubits)
+        return mb.gate.RzzGate((2 * self.coeff), self.obj_qubits, self.ctrl_qubits)
 
 
 class XX(RotSelfHermMat):
@@ -717,7 +717,7 @@ class XX(RotSelfHermMat):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return mb.gate.RxxGate((2 * self.coeff).get_cpp_obj(), self.obj_qubits, self.ctrl_qubits)
+        return mb.gate.RxxGate((2 * self.coeff), self.obj_qubits, self.ctrl_qubits)
 
 
 class YY(RotSelfHermMat):
@@ -802,7 +802,7 @@ class YY(RotSelfHermMat):
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
-        return mb.gate.RyyGate((2 * self.coeff).get_cpp_obj(), self.obj_qubits, self.ctrl_qubits)
+        return mb.gate.RyyGate((2 * self.coeff), self.obj_qubits, self.ctrl_qubits)
 
 
 class Rzz(RotSelfHermMat):
