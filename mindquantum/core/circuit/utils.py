@@ -62,8 +62,6 @@ def decompose_single_term_time_evolution(term, para):  # pylint: disable=too-man
     from mindquantum.core import gates
     from mindquantum.utils.type_value_check import _num_type
 
-    from ..operators import TermValue
-
     if not isinstance(term, tuple):
         try:
             if len(term.terms) != 1:
@@ -82,17 +80,17 @@ def decompose_single_term_time_evolution(term, para):  # pylint: disable=too-man
     if not term:
         raise ValueError("Get constant hamiltonian, please use GlobalPhase gate and give the obj_qubit by yourself.")
     if len(term) == 1:  # single pauli operator
-        if term[0][1] == TermValue['X']:
+        if term[0][1] == 'X':
             out.append(gates.RX(para * 2).on(term[0][0]))
-        elif term[0][1] == TermValue['Y']:
+        elif term[0][1] == 'Y':
             out.append(gates.RY(para * 2).on(term[0][0]))
         else:
             out.append(gates.RZ(para * 2).on(term[0][0]))
     else:
         for index, action in term:
-            if action == TermValue['X']:
+            if action == 'X':
                 out.append(gates.H.on(index))
-            elif action == TermValue['Y']:
+            elif action == 'Y':
                 rxs.append(len(out))
                 out.append(gates.RX(np.pi / 2).on(index))
 
@@ -149,7 +147,7 @@ def pauli_word_to_circuits(qubitops):
         qubitops = qubitops.hamiltonian
     if len(qubitops.terms) > 1:
         raise ValueError("Only work for QubitOperator with single pauli word!")
-    gate_map = {TermValue['X']: gates.X, TermValue['Y']: gates.Y, TermValue['Z']: gates.Z}
+    gate_map = {'X': gates.X, 'Y': gates.Y, 'Z': gates.Z}
     for operator in qubitops.terms.keys():
         circ = Circuit()
         if operator:

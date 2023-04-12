@@ -218,9 +218,13 @@ void BindQubitOperator(py::module &module) {
     // -----------------------------------------------------------------------------
 
     py::class_<qop_t, std::shared_ptr<qop_t>>(module, "QubitOperator")
-        .def(py::init<const std::string &, const pr_t &>(), "pauli_string"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
         .def(py::init<>())
         .def(py::init<const qop_t &>(), "other"_a)
+        .def(py::init<const qop_t::term_t &, const pr_t &>(), "term"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
+        .def(py::init<const qop_t::terms_t &, const pr_t &>(), "terms"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
+        .def(py::init<const qop_t::py_term_t &, const pr_t &>(), "term"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
+        .def(py::init<const qop_t::py_terms_t &, const pr_t &>(), "terms"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
+        .def(py::init<const std::string &, const pr_t &>(), "pauli_string"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
         .def(py::self += py::self)
         .def(py::self + py::self)
         .def(py::self *= py::self)
@@ -252,9 +256,14 @@ void BindQubitOperator(py::module &module) {
     // -----------------------------------------------------------------------------
 
     py::class_<fop_t, std::shared_ptr<fop_t>>(module, "FermionOperator")
-        .def(py::init<const std::string &, const pr_t &>(), "fermion_string"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
         .def(py::init<>())
         .def(py::init<const fop_t &>(), "other"_a)
+        .def(py::init<const fop_t::py_dict_t &>(), "py_terms"_a)
+        .def(py::init<const fop_t::term_t &, const pr_t &>(), "term"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
+        .def(py::init<const fop_t::terms_t &, const pr_t &>(), "terms"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
+        .def(py::init<const fop_t::py_term_t &, const pr_t &>(), "term"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
+        .def(py::init<const fop_t::py_terms_t &, const pr_t &>(), "terms"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
+        .def(py::init<const std::string &, const pr_t &>(), "fermion_string"_a, "coeff"_a = pr_t(tensor::ops::ones(1)))
         .def(py::self += py::self)
         .def(py::self + py::self)
         .def(py::self *= py::self)

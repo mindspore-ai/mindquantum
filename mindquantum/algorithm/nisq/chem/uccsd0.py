@@ -14,7 +14,6 @@
 # ============================================================================
 
 # pylint: disable=duplicate-code
-
 """Implement UCCSD0/UCCGSD0 ansatz using CCD0 excitation operators."""
 
 import itertools
@@ -403,5 +402,4 @@ def uccsd0_singlet_generator(
                 if list(tpqrs.terms):
                     generator_uccsd0_doubles += tpqrs * coeff_d
                     doubles_counter += 1
-
     return generator_uccsd0_singles + generator_uccsd0_doubles

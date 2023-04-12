@@ -62,7 +62,7 @@ def test_normal_ordered(dtype):
     """
     set_context(dtype=dtype)
     fermion_operator = FermionOperator("3 4^")
-    assert str(normal_ordered(fermion_operator)) == '-1 [4^ 3] '
+    assert str(normal_ordered(fermion_operator)) == '-1 [4^ 3]'
 
 
 @pytest.mark.level0
@@ -102,10 +102,10 @@ def test_number_operator(dtype):
     set_context(dtype=dtype)
     nmode = 3
     # other parameters by default
-    check_str = '1 [0^ 0] +\n1 [1^ 1] +\n1 [2^ 2] '
+    check_str = '1 [0^ 0] +\n1 [1^ 1] +\n1 [2^ 2]'
     assert str(number_operator(nmode)) == check_str
 
-    check_str2 = '1 [3^ 3] '
+    check_str2 = '1 [3^ 3]'
     assert str(number_operator(None, nmode)) == check_str2
 
 

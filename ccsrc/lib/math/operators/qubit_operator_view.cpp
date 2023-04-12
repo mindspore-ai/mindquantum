@@ -220,6 +220,28 @@ std::tuple<tn::Tensor, uint64_t> SinglePauliStr::MulSingleCompressTerm(uint64_t 
     }
 }
 
+auto SinglePauliStr::py_term_to_term(const py_term_t& term) -> term_t {
+    auto& [idx, word] = term;
+    if (word == "X" || word == "x") {
+        return {idx, TermValue::X};
+    }
+    if (word == "Y" || word == "y") {
+        return {idx, TermValue::Y};
+    }
+    if (word == "Z" || word == "z") {
+        return {idx, TermValue::Z};
+    }
+    throw std::runtime_error("Unknown term: (" + std::to_string(idx) + ", " + word + ").");
+}
+
+auto SinglePauliStr::py_terms_to_terms(const py_terms_t& terms) -> terms_t {
+    terms_t out;
+    for (auto& term : terms) {
+        out.push_back(py_term_to_term(term));
+    }
+    return out;
+}
+
 // -----------------------------------------------------------------------------
 
 QubitOperator::QubitOperator(const std::string& pauli_string, const parameter::ParameterResolver& var) {
@@ -230,6 +252,24 @@ QubitOperator::QubitOperator(const std::string& pauli_string, const parameter::P
 
 QubitOperator::QubitOperator(const terms_t& t, const parameter::ParameterResolver& var) {
     auto term = SinglePauliStr::init(t, var);
+    this->terms.insert(term.first, term.second);
+    this->dtype = term.second.GetDtype();
+}
+
+QubitOperator::QubitOperator(const term_t& t, const parameter::ParameterResolver& var) {
+    auto term = SinglePauliStr::init(terms_t{t}, var);
+    this->terms.insert(term.first, term.second);
+    this->dtype = term.second.GetDtype();
+}
+
+QubitOperator::QubitOperator(const py_term_t& t, const parameter::ParameterResolver& var) {
+    auto term = SinglePauliStr::init(terms_t{SinglePauliStr::py_term_to_term(t)}, var);
+    this->terms.insert(term.first, term.second);
+    this->dtype = term.second.GetDtype();
+}
+
+QubitOperator::QubitOperator(const py_terms_t& t, const parameter::ParameterResolver& var) {
+    auto term = SinglePauliStr::init(SinglePauliStr::py_terms_to_terms(t), var);
     this->terms.insert(term.first, term.second);
     this->dtype = term.second.GetDtype();
 }

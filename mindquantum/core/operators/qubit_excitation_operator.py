@@ -14,11 +14,11 @@
 # ============================================================================
 
 # pylint: disable=duplicate-code
-
 """This module implements qubit-excitation operators."""
 
 from mindquantum.core.parameterresolver import ParameterResolver
 
+from ._base_operator import _Operator
 from ._term_value import TermValue
 from .fermion_operator import FermionOperator
 from .qubit_operator import QubitOperator
@@ -46,7 +46,7 @@ def _check_valid_qubit_excitation_operator_term(qeo_term):
                     raise ValueError(f'Invalid qubit excitation operator term {term}')
 
 
-class QubitExcitationOperator:
+class QubitExcitationOperator(_Operator):
     r"""
     QubitExcitationOperator class.
 
@@ -98,6 +98,7 @@ class QubitExcitationOperator:
 
     def __init__(self, term=None, coefficient=1.0):
         """Initialize a QubitExcitationOperator object."""
+        super().__init__(term, coefficient)
         _check_valid_qubit_excitation_operator_term(term)
         self.operators = {
             1: TermValue['adg'],
@@ -233,14 +234,14 @@ class QubitExcitationOperator:
             elif isinstance(term[0], int):
                 index, operator = term
                 if operator in self.operators:
-                    tmp_string += f'Q{index}{self.operators[operator]} '
+                    tmp_string += f"Q{index}{'^' if operator == self.operators['^'] else ''} "
             else:
                 for sub_term in term:
                     index, operator = sub_term
                     # check validity, if checked before,
                     # then we can take away this step
                     if operator in self.operators:
-                        tmp_string += f'Q{index}{self.operators[operator]} '
+                        tmp_string += f"Q{index}{'^' if operator == self.operators['^'] else ''} "
 
             if term_cnt < len(self.terms):
                 string_rep += f'{tmp_string.strip()}] +\n'  # end of the ']'

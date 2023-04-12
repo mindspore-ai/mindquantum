@@ -88,7 +88,8 @@ const pauli_product_map_t pauli_product_map = {
 struct SinglePauliStr {
     using term_t = std::pair<size_t, TermValue>;
     using terms_t = std::vector<term_t>;
-
+    using py_term_t = std::pair<size_t, std::string>;
+    using py_terms_t = std::vector<py_term_t>;
     // -----------------------------------------------------------------------------
 
     static compress_term_t init(const std::string& pauli_string, const parameter::ParameterResolver& var
@@ -104,6 +105,8 @@ struct SinglePauliStr {
     static bool IsSameString(const key_t& k1, const key_t& k2);
     static std::string GetString(const compress_term_t& pauli);
     static term_t ParseToken(const std::string& token);
+    static term_t py_term_to_term(const py_term_t& term);
+    static terms_t py_terms_to_terms(const py_terms_t& terms);
 };
 
 // -----------------------------------------------------------------------------
@@ -112,6 +115,8 @@ class QubitOperator {
  public:
     using term_t = SinglePauliStr::term_t;
     using terms_t = SinglePauliStr::terms_t;
+    using py_term_t = SinglePauliStr::py_term_t;
+    using py_terms_t = SinglePauliStr::py_terms_t;
     using dict_t = std::vector<std::pair<terms_t, parameter::ParameterResolver>>;
 
  private:
@@ -125,6 +130,12 @@ class QubitOperator {
     explicit QubitOperator(const std::string& pauli_string,
                            const parameter::ParameterResolver& var = parameter::ParameterResolver(tn::ops::ones(1)));
     explicit QubitOperator(const terms_t& t,
+                           const parameter::ParameterResolver& var = parameter::ParameterResolver(tn::ops::ones(1)));
+    explicit QubitOperator(const term_t& t,
+                           const parameter::ParameterResolver& var = parameter::ParameterResolver(tn::ops::ones(1)));
+    explicit QubitOperator(const py_terms_t& t,
+                           const parameter::ParameterResolver& var = parameter::ParameterResolver(tn::ops::ones(1)));
+    explicit QubitOperator(const py_term_t& t,
                            const parameter::ParameterResolver& var = parameter::ParameterResolver(tn::ops::ones(1)));
     QubitOperator(const key_t& k, const value_t& v);
 

@@ -364,9 +364,7 @@ class MQSim(BackendBase):
             sim = self.copy()
             sim.apply_circuit(circuit.remove_measure(), pr)
             circuit = Circuit(circuit.all_measures.keys())
-        samples = np.array(
-            sim.sim.sampling(circuit.get_cpp_obj(), pr.get_cpp_obj(), shots, res.keys_map, seed)
-        ).reshape((shots, -1))
+        samples = np.array(sim.sim.sampling(circuit.get_cpp_obj(), pr, shots, res.keys_map, seed)).reshape((shots, -1))
         res.collect_data(samples)
         return res
 

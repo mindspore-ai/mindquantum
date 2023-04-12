@@ -101,9 +101,11 @@ int main() {
     // std::cout << b << std::endl;
     // a *= b;
     // std::cout << a << std::endl;
-    auto a = operators::fermion::FermionOperator("0 0^");
-    auto b = a.normal_ordered();
-    std::cout << (a + b * operators::fermion::FermionOperator("", parameter::ParameterResolver(-1.0))).normal_ordered()
-              << std::endl;
+    auto a = operators::fermion::FermionOperator("3 4^ 4");
+    std::cout << a << std::endl;
+    // auto b = a.hermitian_conjugated();
+    // std::cout << b << std::endl;
+    // std::cout << a.normal_ordered() << std::endl;
+    // std::cout << b.normal_ordered() << std::endl;
     return 0;
 }

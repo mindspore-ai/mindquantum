@@ -19,6 +19,7 @@
 #include <iostream>
 #include <iterator>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 #include <sys/types.h>
@@ -94,21 +95,26 @@ auto SingleFermionStr::ParseToken(const std::string& token) -> term_t {
 }
 
 auto SingleFermionStr::init(const std::string& fermion_string, const parameter::ParameterResolver& var)
-    -> compress_term_t {
+    -> std::pair<compress_term_t, bool> {
     compress_term_t out = {key_t{0}, var};
     std::istringstream iss(fermion_string);
     for (std::string s; iss >> s;) {
-        InplaceMulCompressTerm(ParseToken(s), out);
+        if (!InplaceMulCompressTerm(ParseToken(s), out)) {
+            return {out, false};
+        }
     }
-    return out;
+    return {out, true};
 }
 
-auto SingleFermionStr::init(const terms_t& terms, const parameter::ParameterResolver& var) -> compress_term_t {
+auto SingleFermionStr::init(const terms_t& terms, const parameter::ParameterResolver& var)
+    -> std::pair<compress_term_t, bool> {
     compress_term_t out = {key_t{0}, var};
     for (auto& term : terms) {
-        InplaceMulCompressTerm(term, out);
+        if (!InplaceMulCompressTerm(term, out)) {
+            return {out, false};
+        }
     }
-    return out;
+    return {out, true};
 }
 
 std::vector<uint64_t> SingleFermionStr::NumOneMask(const compress_term_t& fermion) {
@@ -138,10 +144,32 @@ bool SingleFermionStr::has_a_ad(uint64_t t) {
     return false;
 }
 
-void SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_t& fermion) {
+auto SingleFermionStr::py_term_to_term(const py_term_t& term) -> term_t {
+    auto& [idx, word] = term;
+    if (word == 0) {
+        return {idx, TermValue::A};
+    }
+    if (word == 1) {
+        return {idx, TermValue::Ad};
+    }
+    throw std::runtime_error("Unknown term: (" + std::to_string(idx) + ", " + std::to_string(word) + ").");
+}
+
+auto SingleFermionStr::py_terms_to_terms(const py_terms_t& terms) -> terms_t {
+    terms_t out;
+    for (auto& term : terms) {
+        out.push_back(py_term_to_term(term));
+    }
+    return out;
+}
+
+bool SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_t& fermion) {
     auto [idx, word] = term;
     if (word == TermValue::I) {
-        return;
+        return true;
+    }
+    if (word == TermValue::nll) {
+        return false;
     }
     auto& [ori_term, coeff] = fermion;
     if ((word == TermValue::nll) || std::any_of(ori_term.begin(), ori_term.end(), [](auto j) {
@@ -150,7 +178,7 @@ void SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_
         for (size_t i = 0; i < ori_term.size(); i++) {
             ori_term[i] = static_cast<uint64_t>(TermValue::nll);
         }
-        return;
+        return true;
     }
     size_t group_id = idx / 21;
     size_t local_id = ((idx % 21) * 3);
@@ -171,16 +199,17 @@ void SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_
             for (size_t i = 0; i < ori_term.size(); i++) {
                 ori_term[i] = static_cast<uint64_t>(TermValue::nll);
             }
-            return;
+            return false;
         }
         ori_term[group_id] = ori_term[group_id] & (~local_mask) | (static_cast<uint64_t>(res)) << local_id;
-        one_mask = (one_mask + __builtin_popcount(static_cast<uint64_t>(res))
+        one_mask = (one_mask + __builtin_popcount(static_cast<uint64_t>(word))
                     & __builtin_popcount(ori_term[group_id] & low_mask))
                    & 1;
     }
     if (one_mask & 1) {
         coeff *= -1.0;
     }
+    return true;
 }
 
 bool SingleFermionStr::IsSameString(const key_t& k1, const key_t& k2) {
@@ -326,15 +355,69 @@ std::tuple<tn::Tensor, uint64_t> SingleFermionStr::MulSingleCompressTerm(uint64_
 // -----------------------------------------------------------------------------
 
 FermionOperator::FermionOperator(const std::string& fermion_string, const parameter::ParameterResolver& var) {
-    auto term = SingleFermionStr::init(fermion_string, var);
-    this->terms.insert(term.first, term.second);
+    auto [term, succeed] = SingleFermionStr::init(fermion_string, var);
+    if (succeed) {
+        this->terms.insert(term.first, term.second);
+    }
     this->dtype = term.second.GetDtype();
 }
 
 FermionOperator::FermionOperator(const terms_t& t, const parameter::ParameterResolver& var) {
-    auto term = SingleFermionStr::init(t, var);
-    this->terms.insert(term.first, term.second);
+    auto [term, succeed] = SingleFermionStr::init(t, var);
+    if (succeed) {
+        this->terms.insert(term.first, term.second);
+    }
     this->dtype = term.second.GetDtype();
+}
+
+FermionOperator::FermionOperator(const term_t& t, const parameter::ParameterResolver& var) {
+    auto [term, succeed] = SingleFermionStr::init(terms_t{t}, var);
+    if (succeed) {
+        this->terms.insert(term.first, term.second);
+    }
+    this->dtype = term.second.GetDtype();
+}
+
+FermionOperator::FermionOperator(const py_term_t& t, const parameter::ParameterResolver& var) {
+    auto [term, succeed] = SingleFermionStr::init(terms_t{SingleFermionStr::py_term_to_term(t)}, var);
+    if (succeed) {
+        this->terms.insert(term.first, term.second);
+    }
+    this->dtype = term.second.GetDtype();
+}
+
+FermionOperator::FermionOperator(const py_terms_t& t, const parameter::ParameterResolver& var) {
+    auto [term, succeed] = SingleFermionStr::init(SingleFermionStr::py_terms_to_terms(t), var);
+    if (succeed) {
+        this->terms.insert(term.first, term.second);
+    }
+    this->dtype = term.second.GetDtype();
+}
+
+FermionOperator::FermionOperator(const py_dict_t& t) {
+    this->dtype = tn::TDtype::Float32;
+    tn::TDtype upper_type = tn::TDtype::Float32;
+    std::vector<key_t> will_pop;
+    for (auto& [k, v] : t) {
+        auto [term, succeed] = SingleFermionStr::init(SingleFermionStr::py_terms_to_terms(k), v);
+        if (succeed) {
+            if (this->terms.m_map.find(term.first) != this->terms.m_map.end()) {
+                this->terms[term.first] = this->terms[term.first] + term.second;
+            } else {
+                this->terms.insert(term.first, term.second);
+            }
+            upper_type = tn::upper_type_v(this->terms[term.first].GetDtype(), this->dtype);
+            if (!this->terms[term.first].IsNotZero()) {
+                will_pop.push_back(term.first);
+            }
+        }
+    }
+    for (auto& t : will_pop) {
+        this->terms.erase(t);
+    }
+    if (this->dtype != upper_type) {
+        this->CastTo(upper_type);
+    }
 }
 
 FermionOperator::FermionOperator(const key_t& k, const value_t& v) {
@@ -444,8 +527,9 @@ FermionOperator FermionOperator::normal_ordered() const {
                                                parameter::ParameterResolver(-1.0))
                                + FermionOperator(""))
                               * tmp;
-                    } else {
-                        tmp = FermionOperator(terms_t{{group_id * 23 + local, static_cast<TermValue>(current)}}) * tmp;
+                    } else if (current != static_cast<uint64_t>(TermValue::I)) {
+                        tmp = FermionOperator(terms_t{{group_id * 23 + local_id, static_cast<TermValue>(current)}})
+                              * tmp;
                     }
                     local_id += 1;
                 }
@@ -531,14 +615,20 @@ auto FermionOperator::get_terms() const -> dict_t {
 }
 
 value_t FermionOperator::get_coeff(const terms_t& term) {
-    auto terms = SingleFermionStr::init(term, parameter::ParameterResolver(tn::ops::ones(1)));
+    auto [terms, succeed] = SingleFermionStr::init(term, parameter::ParameterResolver(tn::ops::ones(1)));
+    if (!succeed) {
+        throw std::runtime_error("Invalid fermion term to get.");
+    }
     if (this->Contains(terms.first)) {
         return this->terms[terms.first] * terms.second;
     }
     throw std::out_of_range("term not in fermion operator");
 }
 void FermionOperator::set_coeff(const terms_t& term, const parameter::ParameterResolver& value) {
-    auto terms = SingleFermionStr::init(term, parameter::ParameterResolver(tn::ops::ones(1)));
+    auto [terms, succeed] = SingleFermionStr::init(term, parameter::ParameterResolver(tn::ops::ones(1)));
+    if (!succeed) {
+        throw std::runtime_error("Invalid fermion term to set.");
+    }
     if (this->Contains(terms.first)) {
         this->terms[terms.first] = terms.second * value;
 

@@ -530,7 +530,7 @@ class KrausChannel(NoiseGate, NonHermitianGate):
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
-        return getattr(mb, get_context('dtype')).gate.KrausChannel(self.kraus_op, self.obj_qubits, self.ctrl_qubits)
+        return mb.gate.KrausChannel(self.kraus_op, self.obj_qubits, self.ctrl_qubits)
 
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""

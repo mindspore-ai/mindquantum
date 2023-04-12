@@ -28,6 +28,7 @@ from mindquantum._math.ops import f_term_value
 from mindquantum.core.operators._term_value import TermValue
 from mindquantum.core.parameterresolver import ParameterResolver, PRConvertible
 from mindquantum.mqbackend import EQ_TOLERANCE
+from mindquantum.third_party.interaction_operator import InteractionOperator
 from mindquantum.utils.type_value_check import _require_package
 
 
@@ -84,7 +85,10 @@ class FermionOperator(FermionOperator_):
         if internal:
             FermionOperator_.__init__(self, terms)
         else:
-            FermionOperator_.__init__(self, terms, ParameterResolver(coefficient))
+            if isinstance(terms, InteractionOperator):
+                FermionOperator_.__init__(self, [(i, ParameterResolver(terms[i])) for i in terms])
+            else:
+                FermionOperator_.__init__(self, terms, ParameterResolver(coefficient))
 
     def __len__(self) -> int:
         """Return the size of term."""
