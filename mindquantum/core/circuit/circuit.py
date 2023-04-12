@@ -1285,38 +1285,6 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         circ.has_cpp_obj = False
         return circ
 
-    def subs(self, params_value: Union[Dict, ParameterResolver]) -> "Circuit":
-        """
-        Substitute value to variables in parameterized quantum circuit.
-
-        Args:
-            params_value (Union[Dict, ParameterResolver]): parameters value.
-
-        Returns:
-            Circuit, a non parameterized quantum circuit.
-
-        Examples:
-            >>> from mindquantum.core.circuit import Circuit
-            >>> circ = Circuit().rx('a', 0)
-            >>> circ
-            q0: ──RX(a)──
-            >>> circ.subs({'a': 1.2})
-            q0: ──RX(6/5)──
-        """
-        new_circ = Circuit()
-        for g in self:
-            if isinstance(g, MultiParamsGate):
-                new_g = copy.deepcopy(g)
-                new_g.prs = [i.combination(params_value) for i in g.prs]
-                new_circ += new_g
-            elif isinstance(g, ParameterGate):
-                new_g = copy.deepcopy(g)
-                new_g.coeff = g.coeff.combination(params_value)
-                new_circ += new_g
-            else:
-                new_circ += g
-        return new_circ
-
 
 A = apply
 
