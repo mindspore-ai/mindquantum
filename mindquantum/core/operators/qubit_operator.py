@@ -21,13 +21,14 @@ import numbers
 import typing
 
 import numpy as np
+from scipy.sparse import csr_matrix, kron
 
 import mindquantum as mq
 from mindquantum._math.ops import QubitOperator as QubitOperator_
 from mindquantum.core.operators._term_value import TermValue
 from mindquantum.core.parameterresolver import ParameterResolver, PRConvertible
 from mindquantum.mqbackend import EQ_TOLERANCE
-from mindquantum.utils.type_value_check import _require_package
+from mindquantum.utils.type_value_check import _check_int_type, _require_package
 
 
 # pylint: disable=too-many-public-methods
@@ -512,4 +513,57 @@ class QubitOperator(QubitOperator_):
         for k, v in self.terms.items():
             if not (v.is_const() and np.abs(v.const) < abs_tol):
                 out += QubitOperator(" ".join(f"{j}{i}" for i, j in k), v)
+        return out
+
+    def matrix(self, n_qubits=None):  # pylint: disable=too-many-locals
+        """
+        Convert this qubit operator to csr_matrix.
+
+        Args:
+            n_qubits (int): The total qubits of final matrix. If None, the value will be
+                the maximum local qubit number. Default: None.
+        """
+        from mindquantum import (  # pylint: disable=import-outside-toplevel,cyclic-import
+            I,
+            X,
+            Y,
+            Z,
+        )
+
+        pauli_map = {
+            'X': csr_matrix(X.matrix().astype(np.complex128)),
+            'Y': csr_matrix(Y.matrix().astype(np.complex128)),
+            'Z': csr_matrix(Z.matrix().astype(np.complex128)),
+            'I': csr_matrix(I.matrix().astype(np.complex128)),
+        }
+        if self.parameterized():
+            raise RuntimeError("Cannot convert a parameterized qubit operator to matrix.")
+        np_type = getattr(np, str(self.dtype).split('.')[1])
+        if not self.terms:
+            raise ValueError("Cannot convert empty qubit operator to matrix")
+        n_qubits_local = self.count_qubits()
+        if n_qubits_local == 0 and n_qubits is None:
+            raise ValueError("You should specific n_qubits for converting a identity qubit operator.")
+        if n_qubits is None:
+            n_qubits = n_qubits_local
+        _check_int_type("n_qubits", n_qubits)
+        if n_qubits < n_qubits_local:
+            raise ValueError(
+                f"Given n_qubits {n_qubits} is small than qubit of qubit operator, which is {n_qubits_local}."
+            )
+        out = 0
+        for term, coeff in self.terms.items():
+            if not coeff.is_const():
+                raise RuntimeError("Cannot convert a parameterized qubit operator to matrix.")
+            coeff = coeff.const
+            if not term:
+                out += csr_matrix(np.identity(2**n_qubits, dtype=np_type)) * coeff
+            else:
+                tmp = np.array([1], dtype=np_type) * coeff
+                total = [pauli_map['I'] for _ in range(n_qubits)]
+                for idx, local_op in term:
+                    total[idx] = pauli_map[local_op]
+                for i in total:
+                    tmp = kron(i, tmp)
+                out += tmp
         return out

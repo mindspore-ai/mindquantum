@@ -18,11 +18,14 @@ import os
 import sys
 import warnings
 
+import numpy as np
+
+from mindquantum._math import dtype
+
 from .mqbackend import logging
 
 # isort: split
 
-from mindquantum._math import dtype
 
 from . import algorithm, config, core, engine, framework, io, simulator, utils
 from .algorithm import *

@@ -19,8 +19,10 @@ import copy
 import json
 import numbers
 import typing
+from functools import lru_cache
 
 import numpy as np
+from scipy.sparse import csr_matrix, kron
 
 import mindquantum as mq
 from mindquantum._math.ops import FermionOperator as FermionOperator_
@@ -29,7 +31,43 @@ from mindquantum.core.operators._term_value import TermValue
 from mindquantum.core.parameterresolver import ParameterResolver, PRConvertible
 from mindquantum.mqbackend import EQ_TOLERANCE
 from mindquantum.third_party.interaction_operator import InteractionOperator
-from mindquantum.utils.type_value_check import _require_package
+from mindquantum.utils.type_value_check import _check_int_type, _require_package
+
+
+@lru_cache()
+def _n_sz(n, dtype):
+    if n == 0:
+        return csr_matrix(np.array([1]), dtype=dtype)
+    tmp = [csr_matrix(np.array([[1, 0], [0, -1]], dtype=dtype)) for _ in range(n)]
+    for i in tmp[1:]:
+        tmp[0] = kron(tmp[0], i)
+    return tmp[0]
+
+
+@lru_cache()
+def _n_identity(n, dtype):
+    """N_identity."""
+    if n == 0:
+        return csr_matrix(np.array([1]), dtype=dtype)
+    tmp = [csr_matrix(np.array([[1, 0], [0, 1]], dtype=dtype)) for _ in range(n)]
+    for i in tmp[1:]:
+        tmp[0] = kron(tmp[0], i)
+    return tmp[0]
+
+
+@lru_cache()
+def _single_fermion_word(idx, dag, n_qubits, dtype):
+    """Single_fermion_word."""
+    matrix = csr_matrix(np.array([[0, 1], [0, 0]], dtype=dtype))
+    if dag:
+        matrix = csr_matrix(np.array([[0, 0], [1, 0]], dtype=dtype))
+    return kron(_n_identity(n_qubits - 1 - idx, dtype), kron(matrix, _n_sz(idx, dtype)))
+
+
+@lru_cache()
+def _two_fermion_word(idx1, dag1, idx2, dag2, n_qubits, dtype):
+    """Two_fermion_word."""
+    return _single_fermion_word(idx1, dag1, n_qubits, dtype) * _single_fermion_word(idx2, dag2, n_qubits, dtype)
 
 
 class FermionOperator(FermionOperator_):
@@ -542,3 +580,49 @@ class FermionOperator(FermionOperator_):
             -1.0 [1^ 0]
         """
         return FermionOperator(FermionOperator_.normal_ordered(self), internal=True)
+
+    def matrix(self, n_qubits=None):  # pylint: disable=too-many-branches
+        """
+        Convert this fermion operator to csr_matrix under jordan_wigner mapping.
+
+        Args:
+            n_qubits (int): The total qubit of final matrix. If None, the value will be
+                the maximum local qubit number. Default: None.
+        """
+        if self.parameterized():
+            raise RuntimeError("Cannot convert a parameterized fermion operator to matrix.")
+        np_type = getattr(np, str(self.dtype).split('.')[1])
+        if not self.terms:
+            raise ValueError("Cannot convert empty fermion operator to matrix")
+        n_qubits_local = self.count_qubits()
+        if n_qubits_local == 0 and n_qubits is None:
+            raise ValueError("You should specific n_qubits for converting a identity fermion operator.")
+        if n_qubits is None:
+            n_qubits = n_qubits_local
+        _check_int_type("n_qubits", n_qubits)
+        if n_qubits < n_qubits_local:
+            raise ValueError(
+                f"Given n_qubits {n_qubits} is small than qubit of fermion operator, which is {n_qubits_local}."
+            )
+        out = 0
+        for term, coeff in self.terms.items():
+            coeff = coeff.const
+            if not term:
+                out += csr_matrix(np.identity(2**n_qubits, dtype=np_type)) * coeff
+            else:
+                tmp = 1
+                group = [[]]
+                for idx, dag in term:
+                    if len(group[-1]) < 4:
+                        group[-1].append(idx)
+                        group[-1].append(dag)
+                    if len(group[-1]) == 4:
+                        group.append([])
+                for gate in group:
+                    if gate:
+                        if len(gate) == 4:
+                            tmp *= _two_fermion_word(gate[0], gate[1], gate[2], gate[3], n_qubits, np_type)
+                        else:
+                            tmp *= _single_fermion_word(gate[0], gate[1], n_qubits, np_type)
+                out += tmp * coeff
+        return out
