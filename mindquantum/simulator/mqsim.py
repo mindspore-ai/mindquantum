@@ -49,7 +49,7 @@ try:
     from mindquantum import _mq_vector_gpu
 
     # pylint: disable=no-member
-    _mq_vector_gpu.double.mqvector(1).apply_gate(mqbackend.gate.HGate([0]))
+    _mq_vector_gpu.double.mqvector_gpu(1).apply_gate(mqbackend.gate.HGate([0]))
     MQ_SIM_GPU_SUPPORTED = True
 except ImportError:
     MQ_SIM_GPU_SUPPORTED = False

@@ -202,14 +202,13 @@ struct CastTo {
     static typename policy_des::qs_data_p_t cast(typename policy_src::qs_data_p_t qs, size_t dim) {
         if constexpr (std::is_same_v<policy_src, policy_des>) {
             return policy_des::Copy(qs, dim);
-        } else {
-            auto des = policy_des::InitState(dim, false);
-            THRESHOLD_OMP_FOR(
-                dim, policy_des::DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) {
-                    des[i] = typename policy_des::qs_data_t{std::real(qs[i]), std::imag(qs[i])};
-                })
-            return des;
         }
+        auto des = policy_des::InitState(dim, false);
+        THRESHOLD_OMP_FOR(
+            dim, policy_des::DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) {
+                des[i] = typename policy_des::qs_data_t{std::real(qs[i]), std::imag(qs[i])};
+            })
+        return des;
     }
 };
 }  // namespace mindquantum::sim::densitymatrix::detail

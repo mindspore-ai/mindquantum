@@ -32,9 +32,11 @@
 
 PYBIND11_MODULE(_mq_vector, module) {
     using namespace pybind11::literals;  // NOLINT
+    std::string sim_name = "mqvector";
 #ifdef __CUDACC__
     using float_policy_t = mindquantum::sim::vector::detail::GPUVectorPolicyFloat;
     using double_policy_t = mindquantum::sim::vector::detail::GPUVectorPolicyDouble;
+    sim_name = "mqvector_gpu";
 #elif defined(__x86_64__)
     using float_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyAvxFloat;
     using double_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyAvxDouble;
@@ -50,14 +52,27 @@ PYBIND11_MODULE(_mq_vector, module) {
     pybind11::module float_sim = module.def_submodule("float", "float simulator");
     pybind11::module double_sim = module.def_submodule("double", "double simulator");
 
-    BindSim<float_vec_sim>(float_sim, "mqvector")
+    BindSim<float_vec_sim>(float_sim, sim_name)
         .def("complex128", &float_vec_sim::astype<double_policy_t, mindquantum::sim::vector::detail::CastTo>)
         .def("complex64", &float_vec_sim::astype<float_policy_t, mindquantum::sim::vector::detail::CastTo>)
-        .def("sim_name", [](const float_vec_sim& sim) { return "mqvector"; });
-    BindSim<double_vec_sim>(double_sim, "mqvector")
+        .def("sim_name", [](const float_vec_sim& sim) {
+#ifdef __CUDACC__
+            return "mqvector_gpu";
+#else
+            return "mqvector";
+#endif
+        });
+
+    BindSim<double_vec_sim>(double_sim, sim_name)
         .def("complex128", &double_vec_sim::astype<double_policy_t, mindquantum::sim::vector::detail::CastTo>)
         .def("complex64", &double_vec_sim::astype<float_policy_t, mindquantum::sim::vector::detail::CastTo>)
-        .def("sim_name", [](const double_vec_sim& sim) { return "mqvector"; });
+        .def("sim_name", [](const double_vec_sim& sim) {
+#ifdef __CUDACC__
+            return "mqvector_gpu";
+#else
+            return "mqvector";
+#endif
+        });
 
     pybind11::module float_blas = float_sim.def_submodule("blas", "MindQuantum simulator algebra module.");
     pybind11::module double_blas = double_sim.def_submodule("blas", "MindQuantum simulator algebra module.");
