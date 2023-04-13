@@ -57,6 +57,15 @@ class BackendBase:
         """Apply a hamiltonian."""
         raise NotImplementedError(f"apply_hamiltonian not implemented for {self.device_name()}")
 
+    def astype(self, dtype, seed):
+        """Convert simulator to other data type."""
+        raise NotImplementedError(f"astype not implement for {self.device_name()}")
+
+    @property
+    def dtype(self):
+        """Get data type of simulator."""
+        raise NotImplementedError(f"get dtype not implement for {self.device_name()}")
+
     def copy(self) -> "BackendBase":
         """Copy this backend."""
         raise NotImplementedError(f"copy not implemented for {self.device_name()}")

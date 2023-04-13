@@ -30,6 +30,7 @@ from ..utils.type_value_check import (
 from .backend_base import BackendBase
 from .mq_blas import MQBlas
 from .mqsim import MQ_SIM_GPU_SUPPORTED, MQSim
+from mindquantum.dtype import to_mq_type
 
 SUPPORTED_SIMULATOR = {
     'mqvector': partial(MQSim, 'mqvector'),
@@ -103,8 +104,19 @@ class Simulator:
                 self.backend = SUPPORTED_SIMULATOR[backend](n_qubits, seed, *args, **kwargs)
             except KeyError as err:
                 raise ValueError(
-                    f"backend {backend} not supported, now we support: {', '.join(SUPPORTED_SIMULATOR)}!"
-                ) from err
+                    f"backend {backend} not supported, now we support: {', '.join(SUPPORTED_SIMULATOR)}!") from err
+
+    def astype(self, dtype, seed=None):
+        """Convert simulator to other data type."""
+        if seed is None:
+            seed = np.random.randint(1, 2**23)
+        _check_seed(seed)
+        return Simulator(self.backend.astype(to_mq_type(dtype), seed=seed), self.n_qubits)
+
+    @property
+    def dtype(self):
+        """Get data type of simulator."""
+        return self.backend.dtype
 
     @property
     def n_qubits(self):
@@ -481,10 +493,8 @@ def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
     _check_input_type('bra_simulator', Simulator, bra_simulator)
     _check_input_type('ket_simulator', Simulator, ket_simulator)
     if bra_simulator.n_qubits != ket_simulator.n_qubits:
-        raise ValueError(
-            "Two simulator should have same quantum state, "
-            f"but get {bra_simulator.n_qubits} and {ket_simulator.n_qubits}."
-        )
+        raise ValueError("Two simulator should have same quantum state, "
+                         f"but get {bra_simulator.n_qubits} and {ket_simulator.n_qubits}.")
     if bra_simulator.backend.name != ket_simulator.backend.name:
         raise ValueError("The backend of two simulator should be same.")
     if isinstance(bra_simulator.backend, MQSim):

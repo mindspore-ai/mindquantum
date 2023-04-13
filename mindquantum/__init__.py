@@ -20,8 +20,6 @@ import warnings
 
 import numpy as np
 
-from mindquantum._math import dtype
-
 from .mqbackend import logging
 
 # isort: split
@@ -36,26 +34,7 @@ from .framework import *
 from .io import *
 from .simulator import *
 from .utils import *
-
-__dtype__ = [
-    'float32',
-    'float64',
-    'complex64',
-    'complex128',
-]
-
-float32 = dtype.float32
-float64 = dtype.float64
-complex64 = dtype.complex64
-complex128 = dtype.complex128
-mq_number_type = [float32, float64, complex64, complex128]
-
-str_dtype_map = {
-    str(float32): float32,
-    str(float64): float64,
-    str(complex64): complex64,
-    str(complex128): complex128,
-}
+from .dtype import *
 
 if sys.version_info < (3, 8):  # pragma: no cover
     from importlib_metadata import PackageNotFoundError, version

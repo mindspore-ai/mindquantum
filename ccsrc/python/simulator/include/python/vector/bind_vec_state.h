@@ -47,7 +47,7 @@ auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLIN
     using qbit_t = mindquantum::sim::qbit_t;
     using calc_type = typename sim_t::calc_type;
 
-    pybind11::class_<sim_t>(module, name.data())
+    return pybind11::class_<sim_t>(module, name.data())
         .def(pybind11::init<qbit_t, unsigned>(), "n_qubits"_a, "seed"_a = 42)
         .def("dtype", &sim_t::DType)
         .def("display", &sim_t::Display, "qubits_limit"_a = 10)

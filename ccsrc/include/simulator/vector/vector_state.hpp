@@ -35,6 +35,7 @@
 
 #include "core/mq_base_types.hpp"
 #include "math/pr/parameter_resolver.hpp"
+#include "math/tensor/traits.hpp"
 #include "ops/basic_gate.hpp"
 #include "ops/gates.hpp"
 #include "ops/hamiltonian.hpp"
@@ -76,7 +77,7 @@ class VectorState {
         qs_policy_t::FreeState(qs);
     }
 
-    virtual std::optional<std::string_view> DType();
+    virtual tensor::TDtype DType();
 
     //! Reset the quantum state to quantum zero state
     virtual void Reset();
@@ -176,6 +177,12 @@ class VectorState {
 
     virtual VT<unsigned> Sampling(const circuit_t& circ, const ParameterResolver& pr, size_t shots,
                                   const MST<size_t>& key_map, unsigned seed);
+
+    template <typename policy_des, template <typename p_src, typename p_des> class cast_policy>
+    VectorState<policy_des> astype(unsigned seed) {
+        return VectorState<policy_des>(cast_policy<qs_policy_t, policy_des>::cast(this->qs, this->dim),
+                                                             this->n_qubits, seed);
+    }
 
  protected:
     qs_data_p_t qs = nullptr;

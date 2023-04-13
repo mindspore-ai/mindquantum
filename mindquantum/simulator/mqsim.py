@@ -39,10 +39,10 @@ from ..config import get_context
 from ..utils.string_utils import ket_string
 from .backend_base import BackendBase
 from .utils import GradOpsWrapper, _thread_balance
-
 # isort: split
 
 from mindquantum import _mq_matrix, _mq_vector  # pylint: disable=wrong-import-order
+from mindquantum.dtype import complex128, to_mq_type, mq_complex_number_type, complex64
 
 try:
     from mindquantum import _mq_vector_gpu
@@ -62,26 +62,28 @@ except RuntimeError as err:
 class MQSim(BackendBase):
     """Mindquantum Backend."""
 
-    def __init__(self, name: str, n_qubits: int, seed=42):
+    def __init__(self, name: str, n_qubits: int, seed=42, dtype=complex128, internal=False):
         """Initialize a mindquantum backend."""
         super().__init__(name, n_qubits, seed)
-        if name == 'mqvector':
-            if get_context('device_target') == "GPU":
-                if MQ_SIM_GPU_SUPPORTED:
-                    self.sim = getattr(_mq_vector_gpu, self.arithmetic_type).mqvector(n_qubits, seed)
-                else:
-                    raise NotImplementedError("mqvector cannot use GPU in your machine.")
-            else:
-                self.sim = getattr(_mq_vector, self.arithmetic_type).mqvector(n_qubits, seed)
-        elif name == 'mqvector_gpu':
-            self.sim = getattr(_mq_vector_gpu, self.arithmetic_type).mqvector(n_qubits, seed)
-        elif name == 'mqmatrix':
-            if get_context('device_target') == "GPU":
-                raise NotImplementedError("mqmatrix with GPU backend not implemented yet.")
-            self.sim = getattr(_mq_matrix, self.arithmetic_type).mqmatrix(n_qubits, seed)
-
+        if internal:
+            self.sim = name
         else:
-            raise NotImplementedError(f"{name} backend not implemented.")
+            dtype = to_mq_type(dtype)
+            sim_map = {
+                'mqvector': _mq_vector,
+                'mqmatrix': _mq_matrix,
+            }
+            if MQ_SIM_GPU_SUPPORTED:
+                sim_map['mqvector_gpu'] = _mq_vector_gpu
+            if name in sim_map:
+                if dtype not in mq_complex_number_type:
+                    raise TypeError(f"{name} does not support type {dtype}, not we support {mq_complex_number_type}")
+                if dtype == complex64:
+                    self.sim = sim_map[name].float.mqvector(n_qubits, seed)
+                else:
+                    self.sim = sim_map[name].double.mqvector(n_qubits, seed)
+            else:
+                raise NotImplementedError(f"{name} backend not implemented.")
 
     def __str__(self):
         """Return a string representation of the object."""
@@ -149,6 +151,17 @@ class MQSim(BackendBase):
         _check_input_type('hamiltonian', Hamiltonian, hamiltonian)
         _check_hamiltonian_qubits_number(hamiltonian, self.n_qubits)
         self.sim.apply_hamiltonian(hamiltonian.get_cpp_obj())
+
+    def astype(self, dtype, seed):
+        """Convert simulator to other type."""
+        sim = MQSim(self.sim.astype(seed), self.n_qubits, internal=True)
+        sim.name = self.sim.name()
+        return sim
+
+    @property
+    def dtype(self):
+        """Get data type of simulator."""
+        return self.sim.dtype()
 
     def copy(self) -> "BackendBase":
         """Copy a simulator."""
@@ -304,14 +317,13 @@ class MQSim(BackendBase):
             if version == 'both':
                 return (
                     res[:, :, 0],
-                    res[:, :, 1 : 1 + len(encoder_params_name)],  # noqa:E203
-                    res[:, :, 1 + len(encoder_params_name) :],  # noqa:E203
+                    res[:, :, 1:1 + len(encoder_params_name)],  # noqa:E203
+                    res[:, :, 1 + len(encoder_params_name):],  # noqa:E203
                 )  # f, g1, g2
             return res[:, :, 0], res[:, :, 1:]  # f, g
 
-        grad_wrapper = GradOpsWrapper(
-            grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name, parallel_worker
-        )
+        grad_wrapper = GradOpsWrapper(grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name,
+                                      parallel_worker)
         grad_str = f'{self.n_qubits} qubit' + ('' if self.n_qubits == 1 else 's')
         grad_str += f' {self.name} VQA Operator'
         grad_wrapper.set_str(grad_str)
@@ -380,7 +392,7 @@ class MQSim(BackendBase):
             raise ValueError(f"{n_qubits} qubits vec does not match with simulation qubits ({self.n_qubits})")
         if self.name == "mqmatrix":
             if len(quantum_state.shape) == 1:
-                self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state) ** 2)))
+                self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state)**2)))
             elif len(quantum_state.shape) == 2:
                 if not np.allclose(quantum_state, quantum_state.T.conj()):
                     raise ValueError("density matrix must be hermitian.")
@@ -388,11 +400,9 @@ class MQSim(BackendBase):
                     raise ValueError("the diagonal terms in density matrix cannot be negative.")
                 self.sim.set_dm(quantum_state / np.real(np.trace(quantum_state)))
             else:
-                raise ValueError(
-                    f"vec requires a 1-dimensional array, density matrix requires \
-                        a 2-dimensional array, but get {quantum_state.shape}"
-                )
+                raise ValueError(f"vec requires a 1-dimensional array, density matrix requires \
+                        a 2-dimensional array, but get {quantum_state.shape}")
         else:
             if len(quantum_state.shape) != 1:
                 raise ValueError(f"vec requires a 1-dimensional array, but get {quantum_state.shape}")
-            self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state) ** 2)))
+            self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state)**2)))

@@ -123,13 +123,8 @@ auto VectorState<qs_policy_t_>::operator=(VectorState<qs_policy_t>&& sim) -> der
 }
 
 template <typename qs_policy_t_>
-std::optional<std::string_view> VectorState<qs_policy_t_>::DType() {
-    if (std::is_same_v<calc_type, float>) {
-        return "float";
-    } else if (std::is_same_v<calc_type, double>) {
-        return "double";
-    }
-    throw std::runtime_error("Unknown simulator type.");
+tensor::TDtype VectorState<qs_policy_t_>::DType() {
+    return tensor::to_dtype_v<py_qs_data_t>;
 }
 
 template <typename qs_policy_t_>

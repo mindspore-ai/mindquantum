@@ -20,10 +20,13 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <type_traits>
 #include <vector>
 
 #include "core/mq_base_types.hpp"
 #include "core/sparse/csrhdmatrix.hpp"
+#include "core/utils.hpp"
+#include "math/tensor/traits.hpp"
 #include "simulator/types.hpp"
 
 namespace mindquantum::sim::vector::detail {
@@ -37,6 +40,7 @@ struct CPUVectorPolicyBase {
     using qs_data_t = std::complex<calc_type>;
     using qs_data_p_t = qs_data_t*;
     using py_qs_data_t = std::complex<calc_type>;
+    static constexpr tensor::TDtype dtype = tensor::to_dtype_v<py_qs_data_t>;
     static constexpr index_t DimTh = 1UL << 13;
 
     static constexpr qs_data_t IMAGE_MI = {0, -1};
@@ -170,6 +174,24 @@ struct CPUVectorPolicyBase {
     static qs_data_t ExpectDiffGP(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                   calc_type val, index_t dim);
     static calc_type GroundStateOfZZs(const std::map<index_t, calc_type>& masks_value, qbit_t n_qubits);
+};
+
+template <typename policy_src, typename policy_des>
+struct CPUCastTo {
+    static constexpr tensor::TDtype src_dtype = policy_src::dtype;
+    static constexpr tensor::TDtype des_dtype = policy_des::dtype;
+    static typename policy_des::qs_data_p_t cast(typename policy_src::qs_data_p_t qs, size_t dim) {
+        if constexpr (std::is_same_v<policy_src, policy_des>) {
+            return policy_des::Copy(qs, dim);
+        } else {
+            auto des = policy_des::InitState(dim, false);
+            THRESHOLD_OMP_FOR(
+                dim, policy_des::DimTh, for (size_t i = 0; i < dim; i++) {
+                    des[i] = typename policy_des::qs_data_t{std::real(qs[i]), std::imag(qs[i])};
+                })
+            return des;
+        }
+    }
 };
 }  // namespace mindquantum::sim::vector::detail
 #endif

@@ -26,7 +26,6 @@ from mindquantum._math.pr import ParameterResolver as ParameterResolver_
 from mindquantum._math.tensor import Tensor as Tensor_
 from mindquantum.utils.string_utils import join_without_empty, string_expression
 from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
-
 PRConvertible = typing.Union[numbers.Number, str, typing.Dict[str, numbers.Number], "ParameterResolver"]
 
 
@@ -87,6 +86,8 @@ class ParameterResolver(ParameterResolver_):
 
     def __init__(self, data=None, const=None, dtype=None, internal=False):
         """Initialize a ParameterResolver object."""
+        if dtype is not None:
+            dtype = mq.to_mq_type(dtype)
         if isinstance(data, ParameterResolver):
             internal = True
         if internal:
@@ -164,7 +165,7 @@ class ParameterResolver(ParameterResolver_):
             const: (0.000000, 0.000000)
             )
         """
-        return ParameterResolver(ParameterResolver_.astype(self, dtype), internal=True)
+        return ParameterResolver(ParameterResolver_.astype(self, mq.to_mq_type(dtype)), internal=True)
 
     @property
     def dtype(self):
@@ -404,7 +405,7 @@ class ParameterResolver(ParameterResolver_):
         if 'dtype' not in dic:
             raise ValueError("Invalid string. Cannot convert it to ParameterResolver, no key dtype")
         dtype = mq.str_dtype_map[dic['dtype']]
-        if dtype in (mq.complex128, mq.complex64):
+        if dtype in mq.mq_complex_number_type:
             const = dic['const'][0] + 1j * dic['const'][1]
             data = {i: j[0] + j[1] * 1j for i, j in dic['pr_data'].items()}
         else:
@@ -950,7 +951,7 @@ class ParameterResolver(ParameterResolver_):
     @property
     def is_complex(self) -> bool:
         """Return whether the ParameterResolver instance is currently using complex coefficients."""
-        return self.dtype in (mq.complex128, mq.complex64)
+        return self.dtype in mq.mq_complex_number_type
 
     @property
     def real(self) -> "ParameterResolver":
@@ -1169,9 +1170,4 @@ class ParameterResolver(ParameterResolver_):
 
     def to_real_obj(self) -> "ParameterResolver":
         """Convert to real type."""
-        new_type = self.dtype
-        if new_type == mq.complex128:
-            new_type = mq.float64
-        elif new_type == mq.complex64:
-            new_type = mq.float32
-        return self.astype(new_type)
+        return self.astype(mq.to_real_type(self.dtype))
