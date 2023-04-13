@@ -113,6 +113,11 @@ auto DensityMatrixState<qs_policy_t_>::operator=(DensityMatrixState<qs_policy_t>
 }
 
 template <typename qs_policy_t_>
+tensor::TDtype DensityMatrixState<qs_policy_t_>::DType() {
+    return tensor::to_dtype_v<py_qs_data_t>;
+}
+
+template <typename qs_policy_t_>
 void DensityMatrixState<qs_policy_t_>::Reset() {
     qs_policy_t::Reset(qs, dim);
 }

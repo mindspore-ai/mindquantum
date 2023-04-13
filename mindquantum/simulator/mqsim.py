@@ -39,10 +39,11 @@ from ..config import get_context
 from ..utils.string_utils import ket_string
 from .backend_base import BackendBase
 from .utils import GradOpsWrapper, _thread_balance
+
 # isort: split
 
 from mindquantum import _mq_matrix, _mq_vector  # pylint: disable=wrong-import-order
-from mindquantum.dtype import complex128, to_mq_type, mq_complex_number_type, complex64
+from mindquantum.dtype import complex64, complex128, mq_complex_number_type, to_mq_type
 
 try:
     from mindquantum import _mq_vector_gpu
@@ -79,21 +80,22 @@ class MQSim(BackendBase):
                 if dtype not in mq_complex_number_type:
                     raise TypeError(f"{name} does not support type {dtype}, not we support {mq_complex_number_type}")
                 if dtype == complex64:
-                    self.sim = sim_map[name].float.mqvector(n_qubits, seed)
+                    self.sim = getattr(sim_map[name].float, name)(n_qubits, seed)
                 else:
-                    self.sim = sim_map[name].double.mqvector(n_qubits, seed)
+                    self.sim = getattr(sim_map[name].double, name)(n_qubits, seed)
             else:
                 raise NotImplementedError(f"{name} backend not implemented.")
 
     def __str__(self):
         """Return a string representation of the object."""
         state = self.get_qs()
-        ret = f"{self.name} simulator with {self.n_qubits} qubit{'s' if self.n_qubits > 1 else ''} (little endian)."
-        ret += "\nCurrent quantum state:\n"
-        if self.n_qubits < 4:
-            ret += '\n'.join(ket_string(state))
-        else:
-            ret += state.__str__()
+        ret = f"{self.name} simulator with {self.n_qubits} qubit{'s' if self.n_qubits > 1 else ''} (little endian), dtype: {self.dtype}."
+        if self.name.startswith('mqvector'):
+            ret += "\nCurrent quantum state:\n"
+            if self.n_qubits < 4:
+                ret += '\n'.join(ket_string(state))
+            else:
+                ret += state.__str__()
         return ret
 
     def __repr__(self):
@@ -154,8 +156,11 @@ class MQSim(BackendBase):
 
     def astype(self, dtype, seed):
         """Convert simulator to other type."""
-        sim = MQSim(self.sim.astype(seed), self.n_qubits, internal=True)
-        sim.name = self.sim.name()
+        dtype = to_mq_type(dtype)
+        if dtype not in mq_complex_number_type:
+            raise TypeError(f"dtype should be complex type, available types are {mq_complex_number_type}")
+        sim = MQSim(getattr(self.sim, str(dtype).split(".")[-1])(seed), self.n_qubits, internal=True)
+        sim.name = self.sim.sim_name()
         return sim
 
     @property
@@ -317,13 +322,14 @@ class MQSim(BackendBase):
             if version == 'both':
                 return (
                     res[:, :, 0],
-                    res[:, :, 1:1 + len(encoder_params_name)],  # noqa:E203
-                    res[:, :, 1 + len(encoder_params_name):],  # noqa:E203
+                    res[:, :, 1 : 1 + len(encoder_params_name)],  # noqa:E203
+                    res[:, :, 1 + len(encoder_params_name) :],  # noqa:E203
                 )  # f, g1, g2
             return res[:, :, 0], res[:, :, 1:]  # f, g
 
-        grad_wrapper = GradOpsWrapper(grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name,
-                                      parallel_worker)
+        grad_wrapper = GradOpsWrapper(
+            grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name, parallel_worker
+        )
         grad_str = f'{self.n_qubits} qubit' + ('' if self.n_qubits == 1 else 's')
         grad_str += f' {self.name} VQA Operator'
         grad_wrapper.set_str(grad_str)
@@ -392,7 +398,7 @@ class MQSim(BackendBase):
             raise ValueError(f"{n_qubits} qubits vec does not match with simulation qubits ({self.n_qubits})")
         if self.name == "mqmatrix":
             if len(quantum_state.shape) == 1:
-                self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state)**2)))
+                self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state) ** 2)))
             elif len(quantum_state.shape) == 2:
                 if not np.allclose(quantum_state, quantum_state.T.conj()):
                     raise ValueError("density matrix must be hermitian.")
@@ -400,9 +406,11 @@ class MQSim(BackendBase):
                     raise ValueError("the diagonal terms in density matrix cannot be negative.")
                 self.sim.set_dm(quantum_state / np.real(np.trace(quantum_state)))
             else:
-                raise ValueError(f"vec requires a 1-dimensional array, density matrix requires \
-                        a 2-dimensional array, but get {quantum_state.shape}")
+                raise ValueError(
+                    f"vec requires a 1-dimensional array, density matrix requires \
+                        a 2-dimensional array, but get {quantum_state.shape}"
+                )
         else:
             if len(quantum_state.shape) != 1:
                 raise ValueError(f"vec requires a 1-dimensional array, but get {quantum_state.shape}")
-            self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state)**2)))
+            self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state) ** 2)))

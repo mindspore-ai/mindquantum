@@ -23,6 +23,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "config/openmp.hpp"
+
 #include "core/mq_base_types.hpp"
 #include "core/sparse/csrhdmatrix.hpp"
 #include "core/utils.hpp"
@@ -177,7 +179,7 @@ struct CPUVectorPolicyBase {
 };
 
 template <typename policy_src, typename policy_des>
-struct CPUCastTo {
+struct CastTo {
     static constexpr tensor::TDtype src_dtype = policy_src::dtype;
     static constexpr tensor::TDtype des_dtype = policy_des::dtype;
     static typename policy_des::qs_data_p_t cast(typename policy_src::qs_data_p_t qs, size_t dim) {
@@ -186,7 +188,7 @@ struct CPUCastTo {
         } else {
             auto des = policy_des::InitState(dim, false);
             THRESHOLD_OMP_FOR(
-                dim, policy_des::DimTh, for (size_t i = 0; i < dim; i++) {
+                dim, policy_des::DimTh, for (omp::idx_t i = 0; i < dim; i++) {
                     des[i] = typename policy_des::qs_data_t{std::real(qs[i]), std::imag(qs[i])};
                 })
             return des;

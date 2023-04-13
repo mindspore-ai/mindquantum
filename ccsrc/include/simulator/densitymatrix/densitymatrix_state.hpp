@@ -76,6 +76,8 @@ class DensityMatrixState {
         qs_policy_t::FreeState(qs);
     }
 
+    virtual tensor::TDtype DType();
+
     //! Reset the quantum state to quantum zero state
     virtual void Reset();
 
@@ -157,6 +159,12 @@ class DensityMatrixState {
 
     virtual VT<unsigned> Sampling(const circuit_t& circ, const ParameterResolver& pr, size_t shots,
                                   const MST<size_t>& key_map, unsigned int seed);
+
+    template <typename policy_des, template <typename p_src, typename p_des> class cast_policy>
+    DensityMatrixState<policy_des> astype(unsigned seed) {
+        return DensityMatrixState<policy_des>(cast_policy<qs_policy_t, policy_des>::cast(this->qs, this->dim),
+                                              this->n_qubits, seed);
+    }
 
  protected:
     qs_data_p_t qs = nullptr;

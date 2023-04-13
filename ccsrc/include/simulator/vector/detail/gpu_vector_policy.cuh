@@ -21,8 +21,11 @@
 #include <memory>
 #include <vector>
 
+#include <thrust/transform_reduce.h>
+
 #include "core/mq_base_types.hpp"
 #include "core/sparse/csrhdmatrix.hpp"
+#include "math/tensor/traits.hpp"
 #include "simulator/types.hpp"
 #include "thrust/complex.h"
 #include "thrust/functional.h"
@@ -200,6 +203,24 @@ __global__ void ApplyTerm(qs_data_p_t des, qs_data_p_t src, calc_type coeff, ind
         }
     }
 }
+
+template <typename policy_src, typename policy_des>
+struct CastTo {
+    static constexpr tensor::TDtype src_dtype = policy_src::dtype;
+    static constexpr tensor::TDtype des_dtype = policy_des::dtype;
+    static typename policy_des::qs_data_p_t cast(typename policy_src::qs_data_p_t qs, size_t dim) {
+        if constexpr (std::is_same_v<policy_src, policy_des>) {
+            return policy_des::Copy(qs, dim);
+        } else {
+            auto des = policy_des::InitState(dim, false);
+            thrust::counting_iterator<index_t> i(0);
+            thrust::for_each(i, i + dim, [=] __device__(index_t i) {
+                des[i] = typename policy_des::qs_data_t{qs[i].real(), qs[i].imag()};
+            });
+            return des;
+        }
+    }
+};
 }  // namespace mindquantum::sim::vector::detail
 
 #endif

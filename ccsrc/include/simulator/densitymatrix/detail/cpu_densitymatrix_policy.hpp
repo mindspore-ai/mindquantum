@@ -20,9 +20,12 @@
 #include <iostream>
 #include <vector>
 
+#include "config/openmp.hpp"
 #include "config/type_promotion.hpp"
 
 #include "core/mq_base_types.hpp"
+#include "core/utils.hpp"
+#include "math/tensor/traits.hpp"
 #include "simulator/types.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
@@ -124,15 +127,15 @@ struct CPUDensityMatrixPolicyBase {
     static void ApplyTwoQubitsMatrixNoCtrl(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
                                            const matrix_t& m, index_t dim);
     static void ApplyTwoQubitsMatrixCtrl(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
-                                           const matrix_t& m, index_t dim);
+                                         const matrix_t& m, index_t dim);
     static void ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyRxx(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
-    static void ApplyRxxNoCtrl(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim,
-                               calc_type c, qs_data_t s);
-    static void ApplyRxxCtrl(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim,
-                             calc_type c, qs_data_t s, bool diff);
+    static void ApplyRxxNoCtrl(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+                               qs_data_t s);
+    static void ApplyRxxCtrl(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+                             qs_data_t s, bool diff);
     static void ApplyRyy(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
     static void ApplyRyyNoCtrl(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
@@ -190,6 +193,24 @@ struct CPUDensityMatrixPolicyBase {
                                          const qbits_t& ctrls, index_t dim);
     static qs_data_t ExpectDiffFSimPhi(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
                                        const qbits_t& ctrls, index_t dim);
+};
+
+template <typename policy_src, typename policy_des>
+struct CastTo {
+    static constexpr tensor::TDtype src_dtype = policy_src::dtype;
+    static constexpr tensor::TDtype des_dtype = policy_des::dtype;
+    static typename policy_des::qs_data_p_t cast(typename policy_src::qs_data_p_t qs, size_t dim) {
+        if constexpr (std::is_same_v<policy_src, policy_des>) {
+            return policy_des::Copy(qs, dim);
+        } else {
+            auto des = policy_des::InitState(dim, false);
+            THRESHOLD_OMP_FOR(
+                dim, policy_des::DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) {
+                    des[i] = typename policy_des::qs_data_t{std::real(qs[i]), std::imag(qs[i])};
+                })
+            return des;
+        }
+    }
 };
 }  // namespace mindquantum::sim::densitymatrix::detail
 
