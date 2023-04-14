@@ -44,19 +44,7 @@ from .utils import GradOpsWrapper, _thread_balance
 
 from mindquantum import _mq_matrix, _mq_vector  # pylint: disable=wrong-import-order
 from mindquantum.dtype import complex64, complex128, mq_complex_number_type, to_mq_type
-
-try:
-    from mindquantum import _mq_vector_gpu
-
-    # pylint: disable=no-member
-    _mq_vector_gpu.double.mqvector_gpu(1).apply_gate(mqbackend.gate.HGate([0]))
-    MQ_SIM_GPU_SUPPORTED = True
-except ImportError:
-    MQ_SIM_GPU_SUPPORTED = False
-except RuntimeError as err:
-    warnings.warn(str(err), stacklevel=2)
-    warnings.warn("Disable gpu backend.", stacklevel=2)
-    MQ_SIM_GPU_SUPPORTED = False
+from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
 
 # pylint: disable=abstract-method
@@ -65,26 +53,14 @@ class MQSim(BackendBase):
 
     def __init__(self, name: str, n_qubits: int, seed=42, dtype=complex128, internal=False):
         """Initialize a mindquantum backend."""
-        super().__init__(name, n_qubits, seed)
+        super().__init__(name, n_qubits, seed, dtype)
         if internal:
             self.sim = name
         else:
+            if dtype is None:
+                dtype = complex128
             dtype = to_mq_type(dtype)
-            sim_map = {
-                'mqvector': _mq_vector,
-                'mqmatrix': _mq_matrix,
-            }
-            if MQ_SIM_GPU_SUPPORTED:
-                sim_map['mqvector_gpu'] = _mq_vector_gpu
-            if name in sim_map:
-                if dtype not in mq_complex_number_type:
-                    raise TypeError(f"{name} does not support type {dtype}, not we support {mq_complex_number_type}")
-                if dtype == complex64:
-                    self.sim = getattr(sim_map[name].float, name)(n_qubits, seed)
-                else:
-                    self.sim = getattr(sim_map[name].double, name)(n_qubits, seed)
-            else:
-                raise NotImplementedError(f"{name} backend not implemented.")
+            self.sim=getattr(SUPPORTED_SIMULATOR.c_module(name, dtype), name)(n_qubits,seed)
 
     def __str__(self):
         """Return a string representation of the object."""

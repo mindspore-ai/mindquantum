@@ -52,6 +52,10 @@ def to_mq_type(dtype):
         np.float64: float64,
         np.complex64: complex64,
         np.complex128: complex128,
+        np.dtype(np.float32):float32,
+        np.dtype(np.float64):float64,
+        np.dtype(np.complex64):complex64,
+        np.dtype(np.complex128):complex128,
     }
     try:
         import mindspore as ms
@@ -76,6 +80,7 @@ def to_real_type(dtype):
         complex64: float32,
     }[dtype]
 
+
 def to_complex_type(dtype):
     """Convert type to complex type."""
     dtype = to_mq_type(dtype)
@@ -85,3 +90,17 @@ def to_complex_type(dtype):
         float64: complex128,
         float32: complex64,
     }[dtype]
+
+
+def to_np_type(dtype):
+    """Convert type to numpy data type."""
+    return {
+        complex128: np.complex128,
+        complex64: np.complex64,
+        float32: np.float32,
+        float64: np.float64,
+    }[dtype]
+
+def is_double_precision(dtype):
+    """Check whether a type is double precision or not."""
+    return to_mq_type(dtype) in [complex128, float64]

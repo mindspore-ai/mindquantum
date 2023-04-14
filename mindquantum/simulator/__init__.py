@@ -16,6 +16,7 @@
 
 from .simulator import Simulator, get_supported_simulator, inner_product
 from .utils import GradOpsWrapper
+from .available_simulator import SUPPORTED_SIMULATOR
 
-__all__ = ['Simulator', 'GradOpsWrapper', 'get_supported_simulator', 'inner_product']
+__all__ = ['Simulator', 'GradOpsWrapper', 'get_supported_simulator', 'inner_product', 'SUPPORTED_SIMULATOR']
 __all__.sort()

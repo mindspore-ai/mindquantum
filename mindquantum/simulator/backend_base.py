@@ -29,12 +29,12 @@ from ..config import get_context
 class BackendBase:
     """Backend interface."""
 
-    def __init__(self, name: str, n_qubits: int, seed=42):
+    def __init__(self, name: str, n_qubits: int, seed=42, dtype=None):
         """Initialize backend obj."""
         self.name = name
         self.n_qubits = n_qubits
         self.seed = seed
-        self.arithmetic_type = get_context('dtype')
+        self.arithmetic_type = dtype
 
     def apply_circuit(
         self,

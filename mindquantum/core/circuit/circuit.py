@@ -737,7 +737,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
                     return False
         return True
 
-    def matrix(self, pr=None, big_end=False, backend='mqvector', seed=None):
+    def matrix(self, pr=None, big_end=False, backend='mqvector', seed=None, dtype=None):
         """
         Get the matrix of this circuit.
 
@@ -747,6 +747,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             big_end (bool): The low index qubit is place in the end or not. Default: False.
             backend (str): The backend to do simulation. Default: 'mqvector'.
             seed (int): The random to generate circuit matrix, if the circuit has noise channel.
+            dtype (mindquantum.dtype): data type of simulator. Default: 'None'.
 
         Returns:
             numpy.ndarray, two dimensional complex matrix of this circuit.
@@ -771,7 +772,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum.simulator import Simulator
 
-        sim = Simulator(backend, self.n_qubits, seed=seed)
+        sim = Simulator(backend, self.n_qubits, seed=seed, dtype=dtype)
         return np.array(sim.backend.get_circuit_matrix(circ, pr)).T
 
     def apply_value(self, pr):
@@ -1137,7 +1138,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         self += UN(gate, maps_obj, maps_ctrl)
         return self
 
-    def get_qs(self, backend='mqvector', pr=None, ket=False, seed=None):
+    def get_qs(self, backend='mqvector', pr=None, ket=False, seed=None, dtype=None):
         """
         Get the final quantum state of this circuit.
 
@@ -1147,12 +1148,13 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
                 if this circuit is parameterized. Default: None.
             ket (str): Whether to return the quantum state in ket format. Default: False.
             seed (int): The random seed of simulator. Default: None
+            dtype (mindquantum.dtype): The data type of simulator.
         """
         from mindquantum import (  # pylint: disable=import-outside-toplevel,cyclic-import
             Simulator,
         )
 
-        sim = Simulator(backend, self.n_qubits, seed=seed)
+        sim = Simulator(backend, self.n_qubits, seed=seed, dtype=dtype)
         sim.apply_circuit(self, pr)
         return sim.get_qs(ket)
 
