@@ -17,6 +17,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 
 #include "core/mq_base_types.hpp"
 #include "core/utils.hpp"

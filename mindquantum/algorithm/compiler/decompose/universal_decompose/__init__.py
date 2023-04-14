@@ -12,11 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Universal unitary gate decomposition"""
+"""Universal unitary gate decomposition."""
 
 from .one_qubit_decompose import euler_decompose
-from .two_qubit_decompose import tensor_product_decompose, abc_decompose, kak_decompose
-from .qs_decompose import qs_decompose, cu_decompose, demultiplex_pair, demultiplex_pauli
+from .qs_decompose import (
+    cu_decompose,
+    demultiplex_pair,
+    demultiplex_pauli,
+    qs_decompose,
+)
+from .two_qubit_decompose import abc_decompose, kak_decompose, tensor_product_decompose
 
 __all__ = [
     'euler_decompose',

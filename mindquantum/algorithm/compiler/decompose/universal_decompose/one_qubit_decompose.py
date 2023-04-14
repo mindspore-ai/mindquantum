@@ -15,9 +15,10 @@
 """One-qubit gate decomposition"""
 
 from mindquantum.core import gates
-from mindquantum.core.gates import QuantumGate
 from mindquantum.core.circuit import Circuit
-from ..utils import params_zyz, params_u3
+from mindquantum.core.gates import QuantumGate
+
+from ..utils import params_u3, params_zyz
 
 optional_basis = ['zyz', 'u3']
 

@@ -15,7 +15,6 @@
 """Test TimeEvolution."""
 import pytest
 
-from mindquantum.config import set_context
 from mindquantum.core import gates as G
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.operators import QubitOperator, TimeEvolution
@@ -23,13 +22,11 @@ from mindquantum.core.operators import QubitOperator, TimeEvolution
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_time_evolution(dtype):
+def test_time_evolution():
     """
     Description: Test TimeEvolution
     Expectation: AssertionError
     """
-    set_context(dtype=dtype)
     hamiltonian = QubitOperator('Z0 Z1', 'p') + QubitOperator('X0', 'q')
     circ = TimeEvolution(hamiltonian).circuit
     circ_exp = Circuit([G.X.on(1, 0), G.RZ({'p': 2}).on(1), G.X.on(1, 0), G.RX({'q': 4}).on(0)])

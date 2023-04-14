@@ -21,7 +21,6 @@ import numpy as np
 import pytest
 
 from mindquantum.algorithm.nisq import generate_uccsd
-from mindquantum.config import set_context
 from mindquantum.core import gates as G
 
 _HAS_OPENFERMION = True
@@ -35,13 +34,11 @@ _FORCE_TEST = bool(os.environ.get("FORCE_TEST", False))
 
 @pytest.mark.skipif(not _HAS_OPENFERMION, reason='OpenFermion is not installed')
 @pytest.mark.skipif(not _FORCE_TEST, reason='Set not force test')
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_generate_uccsd(dtype):
+def test_generate_uccsd():
     """
     Description: Test generate_uccsd
     Expectation:
     """
-    set_context(dtype=dtype)
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=DeprecationWarning)
         circ, init_amp, params_name, ham, n_q, n_e = generate_uccsd(

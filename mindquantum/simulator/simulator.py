@@ -13,13 +13,10 @@
 # limitations under the License.
 # ============================================================================
 """Simulator."""
-import warnings
-from functools import partial
-
 import numpy as np
 
-from ..config import get_context, set_context
-from ..core.circuit import Circuit
+from mindquantum.dtype import to_mq_type
+
 from ..core.operators import Hamiltonian
 from ..utils.type_value_check import (
     _check_input_type,
@@ -27,11 +24,10 @@ from ..utils.type_value_check import (
     _check_seed,
     _check_value_should_not_less,
 )
+from .available_simulator import SUPPORTED_SIMULATOR
 from .backend_base import BackendBase
 from .mq_blas import MQBlas
 from .mqsim import MQSim
-from .available_simulator import SUPPORTED_SIMULATOR
-from mindquantum.dtype import to_mq_type
 
 
 def get_supported_simulator():
@@ -472,8 +468,10 @@ def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
     _check_input_type('bra_simulator', Simulator, bra_simulator)
     _check_input_type('ket_simulator', Simulator, ket_simulator)
     if bra_simulator.n_qubits != ket_simulator.n_qubits:
-        raise ValueError("Two simulator should have same quantum state, "
-                         f"but get {bra_simulator.n_qubits} and {ket_simulator.n_qubits}.")
+        raise ValueError(
+            "Two simulator should have same quantum state, "
+            f"but get {bra_simulator.n_qubits} and {ket_simulator.n_qubits}."
+        )
     if bra_simulator.backend.name != ket_simulator.backend.name:
         raise ValueError("The backend of two simulator should be same.")
     if isinstance(bra_simulator.backend, MQSim):

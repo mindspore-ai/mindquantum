@@ -79,5 +79,5 @@ PYBIND11_MODULE(_mq_vector, module) {
     BindBlas<float_vec_sim>(float_blas);
     BindBlas<double_vec_sim>(double_blas);
 
-    module.def("GroundStateOfZZs", &double_policy_t::GroundStateOfZZs, "masks_value"_a, "n_qubits"_a);
+    module.def("ground_state_of_zs", &double_policy_t::GroundStateOfZZs, "masks_value"_a, "n_qubits"_a);
 }

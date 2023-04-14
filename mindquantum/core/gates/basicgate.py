@@ -34,7 +34,6 @@ from mindquantum.config.config import _GLOBAL_MAT_VALUE
 from mindquantum.utils.f import is_power_of_two
 from mindquantum.utils.type_value_check import _check_gate_type, _check_input_type
 
-from ...config import get_context
 from ..parameterresolver import ParameterResolver
 from .basic import (
     BasicGate,

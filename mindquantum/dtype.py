@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+"""MindSpore Quantum dtype module."""
 import numpy as np
-from mindquantum._math import dtype
+
+from mindquantum._math import dtype as dtype_
 
 __dtype__ = [
     'float32',
@@ -22,10 +24,10 @@ __dtype__ = [
     'complex128',
 ]
 
-float32 = dtype.float32
-float64 = dtype.float64
-complex64 = dtype.complex64
-complex128 = dtype.complex128
+float32 = dtype_.float32
+float64 = dtype_.float64
+complex64 = dtype_.complex64
+complex128 = dtype_.complex128
 mq_number_type = [float32, float64, complex64, complex128]
 mq_real_number_type = [float32, float64]
 mq_complex_number_type = [complex64, complex128]
@@ -52,18 +54,19 @@ def to_mq_type(dtype):
         np.float64: float64,
         np.complex64: complex64,
         np.complex128: complex128,
-        np.dtype(np.float32):float32,
-        np.dtype(np.float64):float64,
-        np.dtype(np.complex64):complex64,
-        np.dtype(np.complex128):complex128,
+        np.dtype(np.float32): float32,
+        np.dtype(np.float64): float64,
+        np.dtype(np.complex64): complex64,
+        np.dtype(np.complex128): complex128,
     }
     try:
         import mindspore as ms
+
         type_mapper[ms.float32] = float32
         type_mapper[ms.float64] = float64
         type_mapper[ms.complex64] = complex64
         type_mapper[ms.complex128] = complex128
-    except:
+    except ImportError:
         pass
     if dtype not in type_mapper:
         raise TypeError(f"type error: {dtype}, now we support {list(type_mapper.keys())}")
@@ -71,7 +74,7 @@ def to_mq_type(dtype):
 
 
 def to_real_type(dtype):
-    """Covert type to real type."""
+    """Convert type to real type."""
     dtype = to_mq_type(dtype)
     return {
         float32: float32,
@@ -85,10 +88,10 @@ def to_complex_type(dtype):
     """Convert type to complex type."""
     dtype = to_mq_type(dtype)
     return {
-        float32: float32,
-        float64: float64,
-        float64: complex128,
         float32: complex64,
+        float64: complex128,
+        complex64: complex64,
+        complex128: complex128,
     }[dtype]
 
 
@@ -100,6 +103,7 @@ def to_np_type(dtype):
         float32: np.float32,
         float64: np.float64,
     }[dtype]
+
 
 def is_double_precision(dtype):
     """Check whether a type is double precision or not."""

@@ -14,8 +14,7 @@
 #   limitations under the License.
 """This module provide some useful function related to operators."""
 
-from ...config import get_context
-from ...utils.error import DeviceNotSupportedError
+from ...simulator.available_simulator import SUPPORTED_SIMULATOR
 from ..operators.fermion_operator import FermionOperator
 from ..operators.polynomial_tensor import PolynomialTensor
 from ..operators.qubit_excitation_operator import QubitExcitationOperator
@@ -272,12 +271,13 @@ def sz_operator(n_spatial_orbitals):
     return sz_up - sz_down
 
 
-def ground_state_of_sum_zz(ops: QubitOperator) -> float:
+def ground_state_of_sum_zz(ops: QubitOperator, sim='mqvector') -> float:
     """
     Find the ground state energy of given zz term qubit operator.
 
     Args:
         ops (QubitOperator): qubit operator that only has pauli z term.
+        sim (str): use which simulator to do calculation.
 
     Returns:
         float, the ground state energy of given qubit operator.
@@ -292,15 +292,8 @@ def ground_state_of_sum_zz(ops: QubitOperator) -> float:
         (-2.5+0j)
     """
     # pylint: disable=import-outside-toplevel
-    backend = get_context('device_target')
-    if backend == "CPU":
-        from ..._mq_vector import GroundStateOfZZs
-    else:
-        try:
-            from ..._mq_vector_gpu import GroundStateOfZZs
-        except ImportError as exc:
-            raise DeviceNotSupportedError(backend) from exc
-
+    c_module = SUPPORTED_SIMULATOR.c_module(sim)
+    ground_state_of_zs = getattr(c_module, "ground_state_of_zs")
     masks_value = {}
     terms = ops.terms
     for k, v in terms.items():
@@ -310,4 +303,4 @@ def ground_state_of_sum_zz(ops: QubitOperator) -> float:
                 raise ValueError("ops should contains only pauli z operator.")
             mask += 1 << idx
         masks_value[mask] = v.const.real
-    return GroundStateOfZZs(masks_value, ops.count_qubits())
+    return ground_state_of_zs(masks_value, ops.count_qubits())

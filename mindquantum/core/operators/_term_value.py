@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+"""MindSpore Quantum dtype module."""
+# pylint: disable=import-error,invalid-name
 from mindquantum._math.ops import f_term_value, p_term_value
 
 term_map = {

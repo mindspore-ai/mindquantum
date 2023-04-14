@@ -17,20 +17,19 @@
 import numpy as np
 import pytest
 
+import mindquantum as mq
 from mindquantum.algorithm.library import general_ghz_state
-from mindquantum.config import set_context
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
-@pytest.mark.parametrize('dtype', ['float', 'double'])
+@pytest.mark.parametrize('dtype', [mq.complex128, mq.complex64])
 def test_general_ghz_state(dtype):
     """
     Description: Test if three qubit general_ghz_state correct or not.
     Expectation: success.
     """
-    set_context(dtype=dtype)
-    state = general_ghz_state(range(3)).get_qs()
+    state = general_ghz_state(range(3)).get_qs(dtype=dtype)
 
     state_exp = 1 / np.sqrt(2) * np.array([1, 0, 0, 0, 0, 0, 0, 1])
     assert np.allclose(state, state_exp)

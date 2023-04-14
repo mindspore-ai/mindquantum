@@ -26,14 +26,13 @@ try:
     import mindspore as ms
 
     from mindquantum.algorithm.nisq import HardwareEfficientAnsatz
-    from mindquantum.config import set_context
     from mindquantum.core.gates import RX, RY, X
     from mindquantum.core.operators import Hamiltonian, QubitOperator
     from mindquantum.framework import MQAnsatzOnlyLayer
     from mindquantum.simulator import Simulator
-    from mindquantum.simulator.simulator import available_backend
+    from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
-    AVAILABLE_BACKEND = available_backend()
+    AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
     _HAS_MINDSPORE = False
@@ -57,13 +56,12 @@ def test_hardware_efficient(config):
     Description: Test hardware efficient ansatz
     Expectation:
     """
-    backend, dtype, device = config
-    set_context(dtype=dtype, device_target=device)
+    backend, dtype = config
     depth = 3
     n_qubits = 3
     hea = HardwareEfficientAnsatz(n_qubits, [RX, RY, RX], X, 'all', depth)
-    ham = QubitOperator('Z0 Z1 Z2')
-    sim = Simulator(backend, hea.circuit.n_qubits)
+    ham = QubitOperator('Z0 Z1 Z2').astype(dtype)
+    sim = Simulator(backend, hea.circuit.n_qubits, dtype=dtype)
     f_g_ops = sim.get_expectation_with_grad(Hamiltonian(ham), hea.circuit)
     ms.set_seed(42)
     net = MQAnsatzOnlyLayer(f_g_ops)

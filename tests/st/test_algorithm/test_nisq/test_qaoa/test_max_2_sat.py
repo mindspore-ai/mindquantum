@@ -23,13 +23,12 @@ try:
     import mindspore as ms
 
     from mindquantum.algorithm.nisq import Max2SATAnsatz
-    from mindquantum.config import set_context
     from mindquantum.core.operators import Hamiltonian
     from mindquantum.framework import MQAnsatzOnlyLayer
     from mindquantum.simulator import Simulator
-    from mindquantum.simulator.simulator import available_backend
+    from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
-    AVAILABLE_BACKEND = available_backend()
+    AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
@@ -51,13 +50,12 @@ def test_max_2_sat(config):
     Description:
     Expectation:
     """
-    backend, dtype, device = config
-    set_context(dtype=dtype, device_target=device)
+    backend, dtype = config
     clauses = [(1, 2), (1, -2), (-1, 2), (-1, -2), (1, 3)]
     depth = 3
     max2sat = Max2SATAnsatz(clauses, depth)
-    sim = Simulator(backend, max2sat.circuit.n_qubits)
-    ham = max2sat.hamiltonian
+    sim = Simulator(backend, max2sat.circuit.n_qubits, dtype=dtype)
+    ham = max2sat.hamiltonian.astype(dtype)
     f_g_ops = sim.get_expectation_with_grad(Hamiltonian(ham), max2sat.circuit)
     ms.set_seed(42)
     net = MQAnsatzOnlyLayer(f_g_ops)

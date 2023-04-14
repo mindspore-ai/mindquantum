@@ -30,11 +30,11 @@ from .algorithm import *
 from .config import *
 from .core import *
 from .core import gates, operators
+from .dtype import *
 from .framework import *
 from .io import *
 from .simulator import *
 from .utils import *
-from .dtype import *
 
 if sys.version_info < (3, 8):  # pragma: no cover
     from importlib_metadata import PackageNotFoundError, version

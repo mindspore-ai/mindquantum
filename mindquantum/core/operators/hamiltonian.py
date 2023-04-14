@@ -13,17 +13,14 @@
 # limitations under the License.
 # ============================================================================
 """Hamiltonian module."""
-
+# pylint: disable=too-many-instance-attributes,no-member
 from enum import Enum
 
 import numpy as np
 import scipy.sparse as sp
 
-from mindquantum import mqbackend as mb
-
-from ...config import get_context
-from ._term_value import TermValue
 import mindquantum as mq
+from mindquantum import mqbackend as mb
 
 
 class HowTo(Enum):
@@ -66,7 +63,8 @@ class Hamiltonian:
             self.ham_dtype = dtype
             if len(hamiltonian.shape) != 2 or hamiltonian.shape[0] != hamiltonian.shape[1]:
                 raise ValueError(
-                    f"Hamiltonian requires a two dimension square csr_matrix, but get shape {hamiltonian.shape}")
+                    f"Hamiltonian requires a two dimension square csr_matrix, but get shape {hamiltonian.shape}"
+                )
             if np.log2(hamiltonian.shape[0]) % 1 != 0:
                 raise ValueError(f"size of hamiltonian sparse matrix should be power of 2, but get {hamiltonian.shape}")
             self.hamiltonian = HiQOperator('')
@@ -153,8 +151,9 @@ class Hamiltonian:
                 else:
                     dim = self.sparse_mat.shape[0]
                     nnz = self.sparse_mat.nnz
-                    csr_mat = backend_module.csr_hd_matrix(dim, nnz, self.sparse_mat.indptr, self.sparse_mat.indices,
-                                                           self.sparse_mat.data)
+                    csr_mat = backend_module.csr_hd_matrix(
+                        dim, nnz, self.sparse_mat.indptr, self.sparse_mat.indices, self.sparse_mat.data
+                    )
                     ham = backend_module.hamiltonian(csr_mat, self.n_qubits)
                 self.ham_cpp = ham
             return self.ham_cpp
@@ -164,8 +163,9 @@ class Hamiltonian:
             herm_sparse_mat = self.sparse_mat.conjugate().T.tocsr()
             dim = herm_sparse_mat.shape[0]
             nnz = herm_sparse_mat.nnz
-            csr_mat = backend_module.csr_hd_matrix(dim, nnz, herm_sparse_mat.indptr, herm_sparse_mat.indices,
-                                                   herm_sparse_mat.data)
+            csr_mat = backend_module.csr_hd_matrix(
+                dim, nnz, herm_sparse_mat.indptr, herm_sparse_mat.indices, herm_sparse_mat.data
+            )
             self.herm_ham_cpp = backend_module.hamiltonian(csr_mat, self.n_qubits)
         return self.herm_ham_cpp
 

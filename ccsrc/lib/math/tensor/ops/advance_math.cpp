@@ -14,6 +14,7 @@
 
 #include "math/tensor/ops/advance_math.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 
 #include "math/tensor/ops_cpu/advance_math.hpp"
@@ -47,10 +48,8 @@ Tensor gather(const std::vector<Tensor>& tensors) {
         return Tensor();
     }
     auto device = tensors[0].device;
-    for (auto& t : tensors) {
-        if (t.device != device) {
-            throw std::runtime_error("Gather only work for tensor in save device.");
-        }
+    if (std::any_of(tensors.begin(), tensors.end(), [&](const auto& t) { return t.device != device; })) {
+        throw std::runtime_error("Gather only work for tensor in save device.");
     }
     if (device == TDevice::CPU) {
         return ops::cpu::Gather(tensors);

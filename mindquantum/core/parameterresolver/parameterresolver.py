@@ -26,6 +26,7 @@ from mindquantum._math.pr import ParameterResolver as ParameterResolver_
 from mindquantum._math.tensor import Tensor as Tensor_
 from mindquantum.utils.string_utils import join_without_empty, string_expression
 from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
+
 PRConvertible = typing.Union[numbers.Number, str, typing.Dict[str, numbers.Number], "ParameterResolver"]
 
 
@@ -330,6 +331,10 @@ class ParameterResolver(ParameterResolver_):
     def dumps(self, indent=4) -> str:
         """
         Dump ParameterResolver into JSON(JavaScript Object Notation).
+
+        Note:
+            Since float32 type value is not serializable, so ParameterResolver with
+            mindquantum.float32 and mindquantum.complex64 type is not serializable.
 
         Args:
             indent (int): Then JSON array elements and object members will be

@@ -18,8 +18,7 @@ import warnings
 
 import pytest
 
-from mindquantum.config import set_context
-from mindquantum.simulator.simulator import available_backend
+from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore', category=UserWarning, message='MindSpore not installed.*')
@@ -30,7 +29,7 @@ with warnings.catch_warnings():
     from mindquantum.algorithm.library import amplitude_encoder
     from mindquantum.simulator import Simulator
 
-AVAILABLE_BACKEND = available_backend()
+AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
 
 
 @pytest.mark.level0
@@ -44,9 +43,8 @@ def test_amplitude_encoder(config):
     Description: test amplitude encoder.
     Expectation: success.
     '''
-    backend, dtype, device = config
-    set_context(dtype=dtype, device_target=device)
-    sim = Simulator(backend, 3)
+    backend, dtype = config
+    sim = Simulator(backend, 3, dtype=dtype)
     circuit, params = amplitude_encoder([0.5, 0.5, 0.5, 0.5], 3)
     sim.apply_circuit(circuit, params)
     state = sim.get_qs(False)

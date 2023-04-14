@@ -23,10 +23,9 @@ from .. import mqbackend  # noqa: F401  # pylint: disable=unused-import
 
 # isort: split
 
-from .. import _mq_vector
-from ..config import get_context
-from .mqsim import MQSim
 from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
+
+from .mqsim import MQSim
 
 
 class MQBlas:  # pylint: disable=too-few-public-methods

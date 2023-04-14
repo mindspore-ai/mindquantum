@@ -23,7 +23,6 @@ from scipy.sparse import csr_matrix
 import mindquantum as mq
 import mindquantum.core.operators as ops
 from mindquantum.algorithm.library import qft
-from mindquantum.config import set_context
 from mindquantum.core import gates as G
 from mindquantum.core.circuit import UN, Circuit
 from mindquantum.core.operators import Hamiltonian, QubitOperator
@@ -37,7 +36,8 @@ try:
     import mindspore as ms
 
     from mindquantum.framework.layer import (  # pylint: disable=ungrouped-imports
-        MQAnsatzOnlyLayer, )
+        MQAnsatzOnlyLayer,
+    )
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
@@ -53,7 +53,6 @@ try:
     _HAS_NUMBA = True
 except ImportError:
     _HAS_NUMBA = False
-
 
 
 @pytest.mark.level0
@@ -195,7 +194,7 @@ def test_non_hermitian_grad_ops1(config):
     sim = Simulator(virtual_qc, 1, dtype=dtype)
     c_r = Circuit().ry('b', 0)
     c_l = Circuit().rz('a', 0)
-    grad_ops = sim.get_expectation_with_grad(ops.Hamiltonian(ops.QubitOperator('')), c_r, c_l)
+    grad_ops = sim.get_expectation_with_grad(ops.Hamiltonian(ops.QubitOperator('').astype(dtype)), c_r, c_l)
     f, g = grad_ops(np.array([1.2, 2.3]))
     f = f[0, 0]
     g = g[0, 0]
@@ -257,22 +256,24 @@ def test_all_gate_with_simulator(config):  # pylint: disable=too-many-locals
     virtual_qc, dtype = config
     c = generate_test_circuit()
     qs = c.get_qs(backend=virtual_qc, pr={'a': 1, 'b': 2, 'c': 3})
-    qs_exp = np.array([
-        0.09742526 + 0.00536111j,
-        -0.17279339 - 0.32080812j,
-        0.03473879 - 0.22046017j,
-        -0.0990812 + 0.05735119j,
-        -0.11858329 - 0.05715877j,
-        0.37406968 + 0.19326249j,
-        0.46926914 + 0.52135788j,
-        -0.17429908 + 0.27887826j,
-    ])
+    qs_exp = np.array(
+        [
+            0.09742526 + 0.00536111j,
+            -0.17279339 - 0.32080812j,
+            0.03473879 - 0.22046017j,
+            -0.0990812 + 0.05735119j,
+            -0.11858329 - 0.05715877j,
+            0.37406968 + 0.19326249j,
+            0.46926914 + 0.52135788j,
+            -0.17429908 + 0.27887826j,
+        ]
+    )
     if virtual_qc == "mqmatrix":
         assert np.allclose(qs, np.outer(qs_exp, qs_exp.conj()))
     else:
         assert np.allclose(qs, qs_exp)
     sim = Simulator(virtual_qc, c.n_qubits, dtype=dtype)
-    ham = ops.Hamiltonian(ops.QubitOperator('Z0'))
+    ham = ops.Hamiltonian(ops.QubitOperator('Z0'), dtype=dtype)
     grad_ops = sim.get_expectation_with_grad(ham, c)
     p0 = np.array([1, 2, 3])
     f1, g1 = grad_ops(p0)
@@ -310,8 +311,9 @@ def test_optimization_with_custom_gate(config):  # pylint: disable=too-many-loca
         return np.array([[np.cos(theta / 2), -1j * np.sin(theta / 2)], [-1j * np.sin(theta / 2), np.cos(theta / 2)]])
 
     def _diff_matrix(theta):
-        return 0.5 * np.array([[-np.sin(theta / 2), -1j * np.cos(theta / 2)],
-                               [-1j * np.cos(theta / 2), -np.sin(theta / 2)]])
+        return 0.5 * np.array(
+            [[-np.sin(theta / 2), -1j * np.cos(theta / 2)], [-1j * np.cos(theta / 2), -np.sin(theta / 2)]]
+        )
 
     h = G.UnivMathGate('H', G.H.matrix())
     rx = G.gene_univ_parameterized_gate('RX', _matrix, _diff_matrix)
@@ -350,7 +352,7 @@ def test_fid(config):
     virtual_qc, dtype = config
     if virtual_qc == 'mqmatrix':
         return
-    sim1 = Simulator(virtual_qc, 1)
+    sim1 = Simulator(virtual_qc, 1, dtype=dtype)
     prep_circ = Circuit().h(0)
     ansatz = Circuit().ry('a', 0).rz('b', 0).ry('c', 0)
     sim1.apply_circuit(prep_circ)
@@ -458,7 +460,9 @@ def test_univ_order(config):
         assert np.allclose(c1.get_qs(backend=virtual_qc, dtype=dtype), np.outer(v_tmp, np.conj(v_tmp)), atol=1e-6)
     else:
         assert np.allclose(c0.get_qs(backend=virtual_qc, dtype=dtype), u[:, 0], atol=1e-6)
-        assert np.allclose(c1.get_qs(backend=virtual_qc, dtype=dtype), np.array([u[0, 0], u[2, 0], u[1, 0], u[3, 0]]), atol=1e-6)
+        assert np.allclose(
+            c1.get_qs(backend=virtual_qc, dtype=dtype), np.array([u[0, 0], u[2, 0], u[1, 0], u[3, 0]]), atol=1e-6
+        )
 
 
 @pytest.mark.level0
@@ -487,13 +491,19 @@ def test_multi_params_gate(config):
     grad_ops = sim.get_expectation_with_grad(ham, circ)
     f, g = grad_ops(p0)
     f_exp = np.array([[-0.0317901 + 0.0j]])
-    g_exp = np.array([[[
-        -2.27903141e-01 + 0.0j,
-        4.32795462e-18 + 0.0j,
-        -6.63057399e-01 + 0.0j,
-        9.97267089e-02 + 0.0j,
-        -4.08568259e-01 + 0.0j,
-    ]]])
+    g_exp = np.array(
+        [
+            [
+                [
+                    -2.27903141e-01 + 0.0j,
+                    4.32795462e-18 + 0.0j,
+                    -6.63057399e-01 + 0.0j,
+                    9.97267089e-02 + 0.0j,
+                    -4.08568259e-01 + 0.0j,
+                ]
+            ]
+        ]
+    )
     assert np.allclose(f, f_exp, atol=1e-6)
     assert np.allclose(g, g_exp, atol=1e-6)
 
@@ -567,19 +577,22 @@ def custom_matrix(x):
 
 def custom_diff_matrix(x):
     """Define diff matrix."""
-    return (np.array(
-        [
-            [2 * np.exp(1j * 2 * x), 0, 0, 0, 0, 0, 0, 0],
-            [0, 4 * np.exp(1j * 4 * x), 0, 0, 0, 0, 0, 0],
-            [0, 0, 6 * np.exp(1j * 6 * x), 0, 0, 0, 0, 0],
-            [0, 0, 0, 8 * np.exp(1j * 8 * x), 0, 0, 0, 0],
-            [0, 0, 0, 0, 10 * np.exp(1j * 10 * x), 0, 0, 0],
-            [0, 0, 0, 0, 0, 12 * np.exp(1j * 12 * x), 0, 0],
-            [0, 0, 0, 0, 0, 0, 14 * np.exp(1j * 14 * x), 0],
-            [0, 0, 0, 0, 0, 0, 0, 16 * np.exp(1j * 16 * x)],
-        ],
-        dtype=np.complex128,
-    ) * 1j)
+    return (
+        np.array(
+            [
+                [2 * np.exp(1j * 2 * x), 0, 0, 0, 0, 0, 0, 0],
+                [0, 4 * np.exp(1j * 4 * x), 0, 0, 0, 0, 0, 0],
+                [0, 0, 6 * np.exp(1j * 6 * x), 0, 0, 0, 0, 0],
+                [0, 0, 0, 8 * np.exp(1j * 8 * x), 0, 0, 0, 0],
+                [0, 0, 0, 0, 10 * np.exp(1j * 10 * x), 0, 0, 0],
+                [0, 0, 0, 0, 0, 12 * np.exp(1j * 12 * x), 0, 0],
+                [0, 0, 0, 0, 0, 0, 14 * np.exp(1j * 14 * x), 0],
+                [0, 0, 0, 0, 0, 0, 0, 16 * np.exp(1j * 16 * x)],
+            ],
+            dtype=np.complex128,
+        )
+        * 1j
+    )
 
 
 @pytest.mark.level0

@@ -18,7 +18,6 @@
 import numpy as np
 import pytest
 
-from mindquantum.config import set_context
 from mindquantum.core.circuit import (
     Circuit,
     partial_psi_partial_psi,
@@ -27,9 +26,9 @@ from mindquantum.core.circuit import (
 )
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 from mindquantum.simulator import Simulator
-from mindquantum.simulator.simulator import available_backend
+from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
-AVAILABLE_BACKEND = available_backend()
+AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
 
 
 @pytest.mark.level0
@@ -43,15 +42,14 @@ def test_qfi(config):
     Expectation: success
     """
     # pylint: disable=too-many-locals
-    backend, dtype, device = config
+    backend, dtype = config
     if backend == 'mqmatrix':
         return
-    set_context(dtype=dtype, device_target=device)
     a = PR('a')
     b = PR('b')
     val = PR({'a': 1, 'b': 2})
     circ = Circuit().rx(a, 0).ry(b, 0)
-    sim = Simulator(backend, 1)
+    sim = Simulator(backend, 1, dtype=dtype)
     sim.apply_gate(circ[0], val, True)
     sim.apply_gate(circ[1], val, False)
     partial_psi_a = sim.get_qs()
@@ -82,4 +80,4 @@ def test_qfi(config):
 
     qfi_exp = np.real(m_pppp_exp - np.outer(m_ppp_exp, np.conj(m_ppp_exp))) * 4
     qfi_m = qfi(circ)(val)
-    assert np.allclose(qfi_exp, qfi_m)
+    assert np.allclose(qfi_exp, qfi_m, atol=1e-5)

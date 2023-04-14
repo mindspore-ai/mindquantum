@@ -12,11 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
-"""Global config for MindQuantum."""
-
-from . import config
-from .config import get_context, set_context
+"""Global config for mindquantum."""
+from .config import context
 
 __all__ = []
-__all__.extend(config.__all__)

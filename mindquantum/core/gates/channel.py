@@ -21,7 +21,6 @@ import numpy as np
 from mindquantum import mqbackend as mb
 from mindquantum.utils.f import _check_num_array
 
-from ...config import get_context
 from .basic import BasicGate, NoiseGate, NonHermitianGate, SelfHermitianGate
 
 

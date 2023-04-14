@@ -16,7 +16,8 @@
 #
 # ==============================================================================
 
-target_sources(mq_math PRIVATE ${CMAKE_CURRENT_LIST_DIR}/traits.cpp ${CMAKE_CURRENT_LIST_DIR}/tensor.cpp ${CMAKE_CURRENT_LIST_DIR}/csr_matrix.cpp)
+target_sources(mq_math PRIVATE ${CMAKE_CURRENT_LIST_DIR}/traits.cpp ${CMAKE_CURRENT_LIST_DIR}/tensor.cpp
+                               ${CMAKE_CURRENT_LIST_DIR}/csr_matrix.cpp)
 
 target_compile_options(mq_math PUBLIC "-Wno-return-type")
 target_compile_options(mq_math PUBLIC "-Wno-narrowing")

@@ -15,7 +15,6 @@
 """Test svg."""
 
 from mindquantum.algorithm.library import qft
-from mindquantum.config import set_context
 from mindquantum.core.gates import RX, BarrierGate
 from mindquantum.simulator import Simulator
 
@@ -39,7 +38,6 @@ def test_circuit_svg():
     Description: Test svg default style.
     Expectation: success.
     """
-    set_context(dtype='double')
     # pylint: disable=protected-access
     text = (qft(range(3)) + RX({'a': 1.2}).on(1) + BarrierGate()).measure_all().svg()._repr_svg_().strip()
     assert len(text) in (7079, 7078, 7130)

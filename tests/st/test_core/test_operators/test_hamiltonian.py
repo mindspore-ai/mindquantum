@@ -16,19 +16,16 @@
 import numpy as np
 import pytest
 
-from mindquantum.config import set_context
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_hamiltonian(dtype):
+def test_hamiltonian():
     """
     Description: Test Hamiltonian
     Expectation:
     """
-    set_context(dtype=dtype)
     ham = Hamiltonian(QubitOperator('Z0 Y1', 0.3))
     terms = ham.ham_termlist
     paulis = terms[0][0]

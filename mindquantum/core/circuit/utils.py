@@ -136,8 +136,6 @@ def pauli_word_to_circuits(qubitops):
     from mindquantum import operators as ops
     from mindquantum.core import gates
 
-    from ..operators import TermValue
-
     allow_ops = (ops.QubitOperator, ops.Hamiltonian)
     if not isinstance(qubitops, allow_ops):
         raise TypeError(f"qubitops require a QubitOperator or a Hamiltonian, but get {type(qubitops)}!")

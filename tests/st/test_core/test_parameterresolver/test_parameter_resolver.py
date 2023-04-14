@@ -15,32 +15,28 @@
 """Test ParameterResolve."""
 import pytest
 
-from mindquantum.config import set_context
+import mindquantum as mq
 from mindquantum.core.parameterresolver import ParameterResolver as PR
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_params_name_order(dtype):
+def test_params_name_order():
     """
     Description: Test parameters name of ansatz and encoder parameters
     Expectation: success
     """
-    set_context(dtype=dtype)
     pr = PR(dict(zip([str(i) for i in range(10)], range(10))))
     assert pr.params_name == pr.ansatz_parameters
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_parameter_resolve(dtype):
+def test_parameter_resolve():
     """
     Description: Test parameter resolver
     Expectation:
     """
-    set_context(dtype=dtype)
     pr = PR({'a': 1.0})
     pr['b'] = 2.0
     pr['c'] = 3.0
@@ -63,14 +59,13 @@ def test_parameter_resolve(dtype):
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
-@pytest.mark.parametrize('dtype', ['float', 'double'])
+@pytest.mark.parametrize('dtype', [mq.complex128, mq.float64])
 def test_parameter_resolve_dumps_and_loads(dtype):
     '''
     Description: Test pr dumps to json and json loads to pr
     Expectation:
     '''
-    set_context(dtype=dtype)
-    pr = PR({'a': 1, 'b': 2, 'c': 3, 'd': 4})
+    pr = PR({'a': 1, 'b': 2, 'c': 3, 'd': 4}, dtype=dtype)
     pr.no_grad_part('a', 'b')
 
     string = pr.dumps()
@@ -80,13 +75,12 @@ def test_parameter_resolve_dumps_and_loads(dtype):
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
-@pytest.mark.parametrize('dtype', ['float', 'double'])
+@pytest.mark.parametrize('dtype', [mq.complex128, mq.complex64, mq.float32, mq.float64])
 def test_parameter_resolve_combination(dtype):
     """
     Description: Test pr combination
     Expectation:
     """
-    set_context(dtype=dtype)
-    pr1 = PR({'a': 1})
-    pr2 = PR({'a': 2, 'b': 3})
+    pr1 = PR({'a': 1}, dtype=dtype)
+    pr2 = PR({'a': 2, 'b': 3}, dtype=dtype)
     assert pr1.combination(pr2) == 2

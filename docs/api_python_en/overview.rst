@@ -11,4 +11,3 @@ overview
     mindquantum.io
     mindquantum.engine
     mindquantum.utils
-    mindquantum.config

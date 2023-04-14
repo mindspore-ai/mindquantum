@@ -23,8 +23,6 @@ from mindquantum.core.gates import BasicGate
 from mindquantum.core.operators import Hamiltonian
 from mindquantum.core.parameterresolver import ParameterResolver
 
-from ..config import get_context
-
 
 class BackendBase:
     """Backend interface."""

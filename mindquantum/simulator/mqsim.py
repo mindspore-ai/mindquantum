@@ -13,7 +13,6 @@
 # limitations under the License.
 # ============================================================================
 """Mindquantum simulator."""
-import warnings
 from typing import Dict, List, Union
 
 import numpy as np
@@ -22,6 +21,8 @@ from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import BarrierGate, BasicGate, Measure, MeasureResult
 from mindquantum.core.operators import Hamiltonian
 from mindquantum.core.parameterresolver import ParameterResolver
+from mindquantum.dtype import complex128, mq_complex_number_type, to_mq_type
+from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 from mindquantum.utils.type_value_check import (
     _check_and_generate_pr_type,
     _check_ansatz,
@@ -34,20 +35,12 @@ from mindquantum.utils.type_value_check import (
 )
 
 # This import is required to register some of the C++ types (e.g. ParameterResolver)
-from .. import mqbackend  # noqa: F401  # pylint: disable=unused-import
-from ..config import get_context
 from ..utils.string_utils import ket_string
 from .backend_base import BackendBase
 from .utils import GradOpsWrapper, _thread_balance
 
-# isort: split
 
-from mindquantum import _mq_matrix, _mq_vector  # pylint: disable=wrong-import-order
-from mindquantum.dtype import complex64, complex128, mq_complex_number_type, to_mq_type
-from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
-
-
-# pylint: disable=abstract-method
+# pylint: disable=abstract-method,too-many-arguments
 class MQSim(BackendBase):
     """Mindquantum Backend."""
 
@@ -60,12 +53,13 @@ class MQSim(BackendBase):
             if dtype is None:
                 dtype = complex128
             dtype = to_mq_type(dtype)
-            self.sim=getattr(SUPPORTED_SIMULATOR.c_module(name, dtype), name)(n_qubits,seed)
+            self.sim = getattr(SUPPORTED_SIMULATOR.c_module(name, dtype), name)(n_qubits, seed)
 
     def __str__(self):
         """Return a string representation of the object."""
         state = self.get_qs()
-        ret = f"{self.name} simulator with {self.n_qubits} qubit{'s' if self.n_qubits > 1 else ''} (little endian), dtype: {self.dtype}."
+        ret = f"{self.name} simulator with {self.n_qubits} qubit{'s' if self.n_qubits > 1 else ''} "
+        ret += f"(little endian), dtype: {self.dtype}."
         if self.name.startswith('mqvector'):
             ret += "\nCurrent quantum state:\n"
             if self.n_qubits < 4:
@@ -135,7 +129,7 @@ class MQSim(BackendBase):
         dtype = to_mq_type(dtype)
         if dtype not in mq_complex_number_type:
             raise TypeError(f"dtype should be complex type, available types are {mq_complex_number_type}")
-        sim = MQSim(getattr(self.sim, str(dtype).split(".")[-1])(seed), self.n_qubits, internal=True)
+        sim = MQSim(getattr(self.sim, str(dtype).rsplit('.', maxsplit=1)[-1])(seed), self.n_qubits, internal=True)
         sim.name = self.sim.sim_name()
         return sim
 
@@ -194,13 +188,18 @@ class MQSim(BackendBase):
             _check_input_type("simulator_left", MQSim, simulator_left)
             if self.name != simulator_left.name:
                 raise ValueError(
-                    "simulator_left should have the same backend as this simulator, ",
+                    "simulator_left should have the same backend as this simulator, "
                     f"which is {self.name}, but get {simulator_left.name}",
                 )
             if self.n_qubits != simulator_left.n_qubits:
                 raise ValueError(
-                    "simulator_left should have the same n_qubits as this simulator, ",
+                    "simulator_left should have the same n_qubits as this simulator, "
                     f"which is {self.n_qubits}, but get {simulator_left.n_qubits}",
+                )
+            if self.dtype != simulator_left.dtype:
+                raise ValueError(
+                    "simulator_left should have the same data type as this simulator "
+                    f"(aka {self.dtype}), but get {simulator_left.dtype}.",
                 )
             non_hermitian = True
         if non_hermitian and simulator_left is None:

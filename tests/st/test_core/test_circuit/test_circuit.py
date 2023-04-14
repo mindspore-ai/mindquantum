@@ -18,12 +18,11 @@
 import numpy as np
 import pytest
 
-from mindquantum.config import set_context
 from mindquantum.core import gates as G
-from mindquantum.core.circuit import UN, Circuit, add_prefix, shift
+from mindquantum.core.circuit import Circuit, add_prefix, shift
 from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.simulator import Simulator
-from mindquantum.simulator.simulator import available_backend
+from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
 try:
     import importlib.metadata as importlib_metadata
@@ -36,7 +35,7 @@ try:
 except ImportError:
     _HAS_NUMBA = False
 
-AVAILABLE_BACKEND = available_backend()
+AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
 
 
 def test_circuit_qubits_grad():
@@ -71,12 +70,11 @@ def test_get_matrix(config):
     Description:
     Expectation:
     """
-    backend, dtype, device = config
+    backend, dtype = config
     if backend:
         return
-    set_context(dtype=dtype, device_target=device)
     circ = Circuit().ry('a', 0).rz('b', 0).ry('c', 0)
-    matrix = circ.matrix(np.array([7.902762e-01, 2.139225e-04, 7.795934e-01]), backend=backend)
+    matrix = circ.matrix(np.array([7.902762e-01, 2.139225e-04, 7.795934e-01]), backend=backend, dtype=dtype)
     assert np.allclose(matrix[0, 0], 0.70743435 - 1.06959724e-04j)
 
 
@@ -105,11 +103,10 @@ def test_evolution_state(config):
     Expectation:
     """
 
-    backend, dtype, device = config
-    set_context(dtype=dtype, device_target=device)
+    backend, dtype = config
     a, b = 0.3, 0.5
     circ = Circuit([G.RX('a').on(0), G.RX('b').on(1)])
-    simulator = Simulator(backend, circ.n_qubits)
+    simulator = Simulator(backend, circ.n_qubits, dtype=dtype)
     simulator.apply_circuit(circ, ParameterResolver({'a': a, 'b': b}))
     state = simulator.get_qs()
     state_exp = [0.9580325796404553, -0.14479246283091116j, -0.2446258794777393j, -0.036971585637570345]

@@ -13,14 +13,14 @@
 # limitations under the License.
 # ============================================================================
 
-# pylint: disable=too-many-lines
+# pylint: disable=too-many-lines,too-many-arguments
 """Circuit module."""
 
 import copy
 import warnings
 from collections.abc import Iterable
 from types import FunctionType, MethodType
-from typing import Dict, List, Union
+from typing import List
 
 import numpy as np
 from rich.console import Console
@@ -34,7 +34,6 @@ from mindquantum.utils.type_value_check import (
 
 from .. import gates as mq_gates
 from ..gates.basic import BasicGate, ParameterGate
-from ..gates.basicgate import MultiParamsGate
 from ..parameterresolver import ParameterResolver
 
 

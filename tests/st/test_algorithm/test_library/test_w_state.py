@@ -17,19 +17,18 @@
 import numpy as np
 import pytest
 
+import mindquantum as mq
 from mindquantum.algorithm.library import general_w_state
-from mindquantum.config import set_context
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
-@pytest.mark.parametrize('dtype', ['float', 'double'])
+@pytest.mark.parametrize('dtype', [mq.complex128, mq.complex64])
 def test_general_w_state(dtype):
     """
     Description: Test general_w_state
     Expectation:
     """
-    set_context(dtype=dtype)
-    state = general_w_state(range(3)).get_qs()
+    state = general_w_state(range(3)).get_qs(dtype=dtype)
     qs_exp = 1 / np.sqrt(3) * np.array([0, 1, 1, 0, 1, 0, 0, 0])
     assert np.allclose(state, qs_exp)

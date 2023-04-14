@@ -88,7 +88,7 @@ class MaxCut:
         for n, _ in graph:
             nodes |= set(n)
         n = len(nodes)
-        return self._enum(graph, list(nodes), method, (0, []), n, (n+1)//2, [])
+        return self._enum(graph, list(nodes), method, (0, []), n, (n + 1) // 2, [])
 
     def get_cut_value(self, graph, partition):
         """
@@ -125,8 +125,8 @@ class MaxCut:
         if c > 0:
             for v in range(u):
                 s_ = [*s, nodes[v]]
-                cut = m(cut, (self._cut_value(g, s_), s_), key=lambda x:x[0])
-                cut = m(cut, self._enum(g, nodes, m, cut, v, c-1, s_), key=lambda x:x[0])
+                cut = m(cut, (self._cut_value(g, s_), s_), key=lambda x: x[0])
+                cut = m(cut, self._enum(g, nodes, m, cut, v, c - 1, s_), key=lambda x: x[0])
         return cut
 
 
@@ -209,8 +209,8 @@ class MaxCutRQAOAAnsatz(RQAOAAnsatz, MaxCut):
         _check_value_should_not_less('nc', 3, nc)
         ham = self.get_ham_from_graph(graph)
         super().__init__(ham, p)
-        self.graph = graph # graph of maxcut problem
-        self.nc = nc       # number of variables threshold
+        self.graph = graph  # graph of maxcut problem
+        self.nc = nc  # number of variables threshold
 
     def get_ham_from_graph(self, graph):
         """

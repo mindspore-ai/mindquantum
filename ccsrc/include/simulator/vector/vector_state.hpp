@@ -180,8 +180,8 @@ class VectorState {
 
     template <typename policy_des, template <typename p_src, typename p_des> class cast_policy>
     VectorState<policy_des> astype(unsigned seed) {
-        return VectorState<policy_des>(cast_policy<qs_policy_t, policy_des>::cast(this->qs, this->dim),
-                                                             this->n_qubits, seed);
+        return VectorState<policy_des>(cast_policy<qs_policy_t, policy_des>::cast(this->qs, this->dim), this->n_qubits,
+                                       seed);
     }
 
  protected:

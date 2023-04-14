@@ -538,7 +538,7 @@ class QubitOperator(QubitOperator_):
         }
         if self.parameterized():
             raise RuntimeError("Cannot convert a parameterized qubit operator to matrix.")
-        np_type = getattr(np, str(self.dtype).split('.')[1])
+        np_type = mq.to_np_type(self.dtype)
         if not self.terms:
             raise ValueError("Cannot convert empty qubit operator to matrix")
         n_qubits_local = self.count_qubits()

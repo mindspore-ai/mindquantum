@@ -17,25 +17,24 @@
 import numpy as np
 import pytest
 
+import mindquantum as mq
 from mindquantum import UN, H
 from mindquantum.algorithm.library import bitphaseflip_operator
-from mindquantum.config import set_context
 from mindquantum.core.circuit import Circuit
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
+@pytest.mark.parametrize('dtype', [mq.complex128, mq.complex64])
 def test_bitphaseflip_operator(dtype):
     """
     Description: Test bitphaseflip_operator
     Expectation:
     """
-    set_context(dtype=dtype)
     circuit = Circuit()
     circuit += UN(H, 3)
     circuit += bitphaseflip_operator([2], 3)
-    circuit = circuit.get_qs()
+    circuit = circuit.get_qs(dtype=dtype)
     qs_exp = 1 / np.sqrt(8) * np.array([1, 1, -1, 1, 1, 1, 1, 1])
     assert np.allclose(circuit, qs_exp)

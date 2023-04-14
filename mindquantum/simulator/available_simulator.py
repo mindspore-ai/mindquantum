@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""List available simulators"""
-import warnings
+"""List available simulators."""
 import typing
+import warnings
 
-from  mindquantum.dtype import complex128, complex64
-from mindquantum import _mq_vector, _mq_matrix
-from mindquantum import mqbackend
+from mindquantum import _mq_matrix, _mq_vector, mqbackend
+from mindquantum.dtype import complex64, complex128
 from mindquantum.simulator.backend_base import BackendBase
 from mindquantum.utils.error import SimNotAvailableError
 
@@ -40,6 +39,10 @@ class _AvailableSimulator:
 
     def __init__(self):
         """Init available simulator obj."""
+        self.base_module = {
+            'mqvector': _mq_vector,
+            'mqmatrix': _mq_matrix,
+        }
         self.sims = {
             'mqvector': {
                 complex64: _mq_vector.float,
@@ -48,9 +51,10 @@ class _AvailableSimulator:
             'mqmatrix': {
                 complex64: _mq_matrix.float,
                 complex128: _mq_matrix.double,
-            }
+            },
         }
         if MQVECTOR_GPU_SUPPORTED:
+            self.base_module['mqvector_gpu'] = _mq_vector_gpu
             self.sims['mqvector_gpu'] = {
                 complex64: _mq_vector_gpu.float,
                 complex128: _mq_vector_gpu.double,
@@ -64,17 +68,23 @@ class _AvailableSimulator:
             return True
         return False
 
-    def c_module(self, sim: str, dtype):
+    def c_module(self, sim: str, dtype=None):
         """Get available simulator c module."""
+        if dtype is None:
+            if sim not in self.base_module:
+                raise SimNotAvailableError(sim)
+            return self.base_module[sim]
         if not self.is_available(sim, dtype):
             raise SimNotAvailableError(sim, dtype)
         return self.sims[sim][dtype]
 
     def py_class(self, sim: str):
-        """Get python base class of simulator"""
+        """Get python base class of simulator."""
         if sim in self.sims:
             if sim in ['mqvector', 'mqvector_gpu', 'mqmatrix']:
+                # pylint: disable=import-outside-toplevel
                 from mindquantum.simulator.mqsim import MQSim
+
                 return MQSim
             raise SimNotAvailableError(sim)
         raise SimNotAvailableError(sim)
