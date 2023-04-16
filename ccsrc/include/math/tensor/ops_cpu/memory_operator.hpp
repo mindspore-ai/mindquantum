@@ -34,7 +34,10 @@ namespace tensor::ops::cpu {
 template <TDtype dtype>
 Tensor init(size_t len) {
     using calc_t = to_device_t<dtype>;
-    auto data = reinterpret_cast<void*>(malloc(sizeof(calc_t) * len));
+    void* data = nullptr;
+    if (len != 0) {
+        data = reinterpret_cast<void*>(malloc(sizeof(calc_t) * len));
+    }
     if (data == nullptr) {
         throw std::runtime_error("malloc memory error.");
     }

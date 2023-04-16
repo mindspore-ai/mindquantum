@@ -28,7 +28,6 @@
 #include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
 namespace tensor::ops::cpu {
-
 template <TDtype dtype>
 Tensor real(void* data, size_t len) {
     constexpr TDtype real_t = to_real_dtype_t<dtype>;

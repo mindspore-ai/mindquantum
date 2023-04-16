@@ -23,9 +23,6 @@
 #include "math/tensor/traits.hpp"
 
 namespace tensor::ops {
-
-// -----------------------------------------------------------------------------
-
 void inplace_add(Tensor* t, float a);
 void inplace_add(Tensor* t, double a);
 void inplace_add(Tensor* t, const std::complex<float>& a);

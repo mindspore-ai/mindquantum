@@ -24,7 +24,6 @@
 #include "math/tensor/traits.hpp"
 
 namespace tensor::ops {
-
 // Memory operator
 /**
  * Initialize a empty tensor, the element is undefined.

@@ -354,8 +354,9 @@ void DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicG
             break;
         case GateID::KRAUS: {
             auto& k_set = static_cast<KrausChannel*>(gate.get())->kraus_operator_set_;
-            VT<matrix_t> k_mat(k_set.size());
-            std::transform(k_set.begin(), k_set.end(), k_mat.begin(), tensor::ops::cpu::to_vector<py_qs_data_t>);
+            VT<matrix_t> k_mat;
+            std::transform(k_set.begin(), k_set.end(), std::back_inserter(k_mat),
+                           [](auto& m) { return tensor::ops::cpu::to_vector<py_qs_data_t>(m); });
             qs_policy_t::ApplyKraus(qs, gate->obj_qubits_, k_mat, dim);
         } break;
         default:

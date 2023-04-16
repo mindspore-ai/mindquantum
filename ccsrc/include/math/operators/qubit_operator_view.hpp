@@ -30,9 +30,6 @@
 #include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
 namespace operators::qubit {
-// ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB
-constexpr static uint64_t M_B = 6148914691236517205;
-constexpr static uint64_t M_A = M_B << 1;
 
 namespace tn = tensor;
 enum class TermValue : uint8_t {
@@ -98,7 +95,9 @@ struct SinglePauliStr {
                                                       = parameter::ParameterResolver(tn::ops::ones(1)));
 
     // -----------------------------------------------------------------------------
-
+    // ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB
+    static constexpr uint64_t M_B = 6148914691236517205;
+    static constexpr uint64_t M_A = M_B << 1;
     static std::tuple<tn::Tensor, uint64_t> MulSingleCompressTerm(uint64_t a, uint64_t b);
     static void InplaceMulCompressTerm(const term_t& term, compress_term_t& pauli);
     static compress_term_t Mul(const compress_term_t& lhs, const compress_term_t& rhs);

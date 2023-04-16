@@ -380,7 +380,6 @@ void QubitOperator::set_coeff(const terms_t& term, const parameter::ParameterRes
     auto terms = SinglePauliStr::init(term, parameter::ParameterResolver(tn::ops::ones(1)));
     if (this->Contains(terms.first)) {
         this->terms[terms.first] = terms.second * value;
-
     } else {
         terms.second = terms.second * value;
         this->terms.insert(terms);

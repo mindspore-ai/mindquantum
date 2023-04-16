@@ -76,6 +76,7 @@ struct ParameterResolver {
                                tn::TDtype dtype = tn::TDtype::Float64);
     explicit ParameterResolver(const tn::Tensor& const_value);
     ParameterResolver(const ParameterResolver& other) = default;
+    ParameterResolver& operator=(const ParameterResolver& t) = default;
     // -----------------------------------------------------------------------------
     tn::TDtype GetDtype() const;
     size_t Size() const;

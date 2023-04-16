@@ -217,7 +217,7 @@ struct KrausChannel : public BasicGate {
     KrausChannel(const VT<VVT<CT<T>>>& kraus_operator_set, const VT<Index>& obj_qubits,
                  const VT<Index>& ctrl_qubits = {})
         : BasicGate(GateID::KRAUS, obj_qubits, ctrl_qubits) {
-        std::transform(kraus_operator_set.begin(), kraus_operator_set.eng(), std::back_inserter(kraus_operator_set_),
+        std::transform(kraus_operator_set.begin(), kraus_operator_set.end(), std::back_inserter(kraus_operator_set_),
                        [](auto& k) { return tensor::Matrix(k); });
     }
 };

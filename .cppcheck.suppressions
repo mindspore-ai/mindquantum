@@ -36,7 +36,7 @@ preprocessorErrorDirective:ccsrc/python/core/include/python/details/define_binar
 preprocessorErrorDirective:ccsrc/python/experimental/lib/ops/ops.cpp
 preprocessorErrorDirective:tests/decompositions/test_apply_atoms.cpp
 preprocessorErrorDirective:tests/ops/test_angle_parametric_gates.cpp
-
+unusedStructMember:ccsrc/include/math/tensor/ops_cpu/utils.hpp
 stlIfFind:ccsrc/lib/experimental/decompositions/atom_storage.cpp
 stlIfFind:ccsrc/lib/experimental/decompositions/gate_decomposer.cpp
 

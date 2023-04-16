@@ -15,7 +15,6 @@
 #include "math/operators/utils.hpp"
 
 namespace operators {
-
 bool KeyCompare::operator()(const key_t& a, const key_t& b) const {
     if (a.size() == b.size() && a.size() == 1) {
         return a[0] < b[0];

@@ -44,5 +44,4 @@ qubit_op_t parity(const fermion_op_t& ops, int n_qubits) {
     }
     return transf_op;
 }
-
 }  // namespace operators::transform

@@ -161,5 +161,4 @@ Tensor Gather(const std::vector<Tensor>& tensors) {
     }
     return out;
 }
-
 }  // namespace tensor::ops::cpu

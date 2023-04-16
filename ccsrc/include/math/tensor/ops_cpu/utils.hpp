@@ -21,7 +21,6 @@
 #include "math/tensor/traits.hpp"
 
 namespace tensor {
-
 template <typename T>
 struct is_complex {
     static constexpr bool v = false;
