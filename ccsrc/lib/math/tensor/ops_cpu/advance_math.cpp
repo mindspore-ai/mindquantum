@@ -14,6 +14,7 @@
 
 #include "math/tensor/ops_cpu/advance_math.hpp"
 
+#include <cstdint>
 #include <stdexcept>
 
 #include "math/tensor/ops_cpu/memory_operator.hpp"
@@ -155,7 +156,7 @@ Tensor Gather(const std::vector<Tensor>& tensors) {
     auto out = init(tot_len, dtype);
     size_t idx = 0;
     for (auto& t : tensors) {
-        std::memcpy(out.data + idx, t.data, bit_size(t.dtype) * t.dim);
+        std::memcpy(reinterpret_cast<uint8_t*>(out.data) + idx, t.data, bit_size(t.dtype) * t.dim);
         idx += bit_size(t.dtype) * t.dim;
     }
     return out;
