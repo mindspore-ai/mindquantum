@@ -158,7 +158,7 @@ Tensor get(const Tensor& t, size_t idx) {
         throw std::runtime_error("index out of range for get.");
     }
     auto out = cpu::init(1, t.dtype);
-    std::memcpy(out.data, t.data + idx * bit_size(t.dtype), bit_size(t.dtype));
+    std::memcpy(out.data, reinterpret_cast<uint8_t*>(t.data) + idx * bit_size(t.dtype), bit_size(t.dtype));
     return out;
 }
 }  // namespace tensor::ops::cpu
