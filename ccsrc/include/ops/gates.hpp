@@ -63,20 +63,20 @@ tensor::Matrix FSimDiffPhiMatrix(tensor::Tensor phi);
 tensor::Matrix U3DiffLambdaMatrix(tensor::Tensor theta, tensor::Tensor phi, tensor::Tensor lambda);
 
 struct U3 : public Parameterizable {
-    ParameterResolver theta;
-    ParameterResolver phi;
-    ParameterResolver lambda;
+    parameter::ParameterResolver theta;
+    parameter::ParameterResolver phi;
+    parameter::ParameterResolver lambda;
     tensor::Matrix base_matrix_;
-    U3(const ParameterResolver& theta, const ParameterResolver& phi, const ParameterResolver& lambda,
-       const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits);
+    U3(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi,
+       const parameter::ParameterResolver& lambda, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits);
 };
 
 struct FSim : public Parameterizable {
-    ParameterResolver theta;
-    ParameterResolver phi;
+    parameter::ParameterResolver theta;
+    parameter::ParameterResolver phi;
     tensor::Matrix base_matrix_;
-    FSim(const ParameterResolver& theta, const ParameterResolver& phi, const VT<Index>& obj_qubits,
-         const VT<Index>& ctrl_qubits);
+    FSim(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi,
+         const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits);
 };
 }  // namespace mindquantum
 #endif  // MINDQUANTUM_GATE_GATES_HPP_

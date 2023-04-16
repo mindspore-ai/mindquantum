@@ -35,6 +35,7 @@ ccsrc/python/mqbackend/lib/fermion_operators.cpp:init_fermion_operators
 ccsrc/python/mqbackend/lib/qubit_operators.cpp:init_qubit_operators
 ccsrc/python/mqbackend/lib/terms_operators.cpp:init_terms_operators
 ccsrc/lib/simulator/vector/detail/runtime/cmd.cpp:mindquantum::sim::rt::cmd
+ccsrc/python/math/lib/bind_math.cpp:BindQubitOperator
 
 TEST_CASE
 mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::ApplyGate

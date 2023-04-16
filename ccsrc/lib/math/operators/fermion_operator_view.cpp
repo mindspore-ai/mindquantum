@@ -118,10 +118,9 @@ auto SingleFermionStr::init(const terms_t& terms, const parameter::ParameterReso
 }
 
 std::vector<uint64_t> SingleFermionStr::NumOneMask(const compress_term_t& fermion) {
-    std::vector<uint64_t> out = {};
-    for (auto& i : fermion.first) {
-        out.push_back(__builtin_popcount(i) & 1);
-    }
+    std::vector<uint64_t> out(fermion.first.size());
+    std::transform(fermion.first.begin(), fermion.first.end(), out.begin(),
+                   [&](auto& i) { return __builtin_popcount(i) & 1; });
     return out;
 }
 
@@ -156,10 +155,8 @@ auto SingleFermionStr::py_term_to_term(const py_term_t& term) -> term_t {
 }
 
 auto SingleFermionStr::py_terms_to_terms(const py_terms_t& terms) -> terms_t {
-    terms_t out;
-    for (auto& term : terms) {
-        out.push_back(py_term_to_term(term));
-    }
+    terms_t out(terms.size());
+    std::transform(terms.begin(), terms.end(), out.begin(), py_term_to_term);
     return out;
 }
 
@@ -168,9 +165,6 @@ bool SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_
     if (word == TermValue::I) {
         return true;
     }
-    if (word == TermValue::nll) {
-        return false;
-    }
     auto& [ori_term, coeff] = fermion;
     if ((word == TermValue::nll) || std::any_of(ori_term.begin(), ori_term.end(), [](auto j) {
             return j == static_cast<uint64_t>(TermValue::nll);
@@ -178,7 +172,7 @@ bool SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_
         for (size_t i = 0; i < ori_term.size(); i++) {
             ori_term[i] = static_cast<uint64_t>(TermValue::nll);
         }
-        return true;
+        return false;
     }
     size_t group_id = idx / 21;
     size_t local_id = ((idx % 21) * 3);
@@ -662,9 +656,9 @@ std::vector<FermionOperator> FermionOperator::singlet() const {
     }
     std::vector<FermionOperator> out;
     for (auto& [term, value] : this->get_terms()) {
-        for (auto& word : term) {
-            out.emplace_back(FermionOperator({word}, parameter::ParameterResolver(tn::ops::ones(1))));
-        }
+        std::transform(term.begin(), term.end(), std::back_inserter(out), [](auto& word) {
+            return FermionOperator({word}, parameter::ParameterResolver(tn::ops::ones(1)));
+        });
         break;
     }
     return out;

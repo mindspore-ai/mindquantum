@@ -158,8 +158,8 @@ auto DensityMatrixState<qs_policy_t_>::PureStateVector() -> py_qs_datas_t {
 }
 
 template <typename qs_policy_t_>
-index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& gate, const ParameterResolver& pr,
-                                                    bool diff) {
+index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& gate,
+                                                    const parameter::ParameterResolver& pr, bool diff) {
     auto id = gate->id_;
     switch (id) {
         case GateID::I:
@@ -309,9 +309,8 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
         case GateID::KRAUS: {
             auto& k_set = static_cast<KrausChannel*>(gate.get())->kraus_operator_set_;
             VT<matrix_t> k_mat;
-            for (auto& k : k_set) {
-                k_mat.push_back(tensor::ops::cpu::to_vector<py_qs_data_t>(k));
-            }
+            std::transform(k_set.begin(), k_set.end(), std::back_inserter(k_mat),
+                           [&](auto& k) { return tensor::ops::cpu::to_vector<py_qs_data_t>(k); });
             qs_policy_t::ApplyKraus(qs, gate->obj_qubits_, k_mat, dim);
         } break;
         case GateID::CUSTOM: {
@@ -359,6 +358,8 @@ void DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicG
             for (auto& k : k_set) {
                 k_mat.push_back(tensor::ops::cpu::to_vector<py_qs_data_t>(k));
             }
+            std::transform(k_set.begin(), k_set.end(), std::back_inserter(k_mat),
+                           [&](auto& k) { return tensor::ops::cpu::to_vector<py_qs_data_t>(k); });
             qs_policy_t::ApplyKraus(qs, gate->obj_qubits_, k_mat, dim);
         } break;
         default:
@@ -384,7 +385,8 @@ auto DensityMatrixState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicG
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
                                                       const std::shared_ptr<BasicGate>& gate,
-                                                      const ParameterResolver& pr, index_t dim) -> tensor::Matrix {
+                                                      const parameter::ParameterResolver& pr, index_t dim)
+    -> tensor::Matrix {
     auto id = gate->id_;
     VT<py_qs_data_t> grad = {0};
     switch (id) {
@@ -433,8 +435,9 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t dens_matrix, q
 
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ExpectDiffU3(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
-                                                    const std::shared_ptr<BasicGate>& gate, const ParameterResolver& pr,
-                                                    index_t dim) -> tensor::Matrix {
+                                                    const std::shared_ptr<BasicGate>& gate,
+                                                    const parameter::ParameterResolver& pr, index_t dim)
+    -> tensor::Matrix {
     py_qs_datas_t grad = {0, 0, 0};
     auto u3 = static_cast<U3*>(gate.get());
     if (u3->parameterized_) {
@@ -463,7 +466,8 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffU3(qs_data_p_t dens_matrix, qs_
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ExpectDiffFSim(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
                                                       const std::shared_ptr<BasicGate>& gate,
-                                                      const ParameterResolver& pr, index_t dim) -> tensor::Matrix {
+                                                      const parameter::ParameterResolver& pr, index_t dim)
+    -> tensor::Matrix {
     py_qs_datas_t grad = {0, 0};
     auto fsim = static_cast<FSim*>(gate.get());
     if (fsim->parameterized_) {
@@ -481,7 +485,7 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffFSim(qs_data_p_t dens_matrix, q
 
 template <typename qs_policy_t_>
 std::map<std::string, int> DensityMatrixState<qs_policy_t_>::ApplyCircuit(const circuit_t& circ,
-                                                                          const ParameterResolver& pr) {
+                                                                          const parameter::ParameterResolver& pr) {
     std::map<std::string, int> result;
     for (auto& g : circ) {
         if (g->id_ == GateID::M) {
@@ -502,7 +506,7 @@ template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneOne(const Hamiltonian<calc_type>& ham,
                                                                               const circuit_t& circ,
                                                                               const circuit_t& herm_circ,
-                                                                              const ParameterResolver& pr,
+                                                                              const parameter::ParameterResolver& pr,
                                                                               const MST<size_t>& p_map, int n_thread)
     -> py_qs_datas_t {
     if (circ.size() != herm_circ.size()) {
@@ -537,7 +541,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneOne(co
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneMulti(
     const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ, const circuit_t& herm_circ,
-    const ParameterResolver& pr, const MST<size_t>& p_map, int n_thread) -> VT<py_qs_datas_t> {
+    const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread) -> VT<py_qs_datas_t> {
     auto n_hams = hams.size();
     int max_thread = 15;
     if (circ.size() != herm_circ.size()) {
@@ -622,7 +626,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradMultiMult
         p_map[ans_name[i]] = i + enc_name.size();
     }
     if (n_prs == 1) {
-        ParameterResolver pr = ParameterResolver();
+        parameter::ParameterResolver pr = parameter::ParameterResolver();
         pr.SetItems(enc_name, enc_data[0]);
         pr.SetItems(ans_name, ans_data);
         output[0] = GetExpectationWithReversibleGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
@@ -643,7 +647,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradMultiMult
             }
             auto task = [&, start, end]() {
                 for (size_t n = start; n < end; n++) {
-                    ParameterResolver pr = ParameterResolver();
+                    parameter::ParameterResolver pr = parameter::ParameterResolver();
                     pr.SetItems(enc_name, enc_data[n]);
                     pr.SetItems(ans_name, ans_data);
                     auto f_g = GetExpectationWithReversibleGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
@@ -663,7 +667,7 @@ template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneOne(const Hamiltonian<calc_type>& ham,
                                                                          const circuit_t& circ,
                                                                          const circuit_t& herm_circ,
-                                                                         const ParameterResolver& pr,
+                                                                         const parameter::ParameterResolver& pr,
                                                                          const MST<size_t>& p_map) -> py_qs_datas_t {
     if (circ.size() != herm_circ.size()) {
         std::runtime_error("In density matrix mode, circ and herm_circ must be the same size.");
@@ -701,7 +705,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneOne(const H
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneMulti(
     const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ, const circuit_t& herm_circ,
-    const ParameterResolver& pr, const MST<size_t>& p_map, int n_thread) -> VT<py_qs_datas_t> {
+    const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread) -> VT<py_qs_datas_t> {
     if (circ.size() != herm_circ.size()) {
         std::runtime_error("In density matrix mode, circ and herm_circ must be the same size.");
     }
@@ -790,7 +794,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradMultiMulti(
         p_map[ans_name[i]] = i + enc_name.size();
     }
     if (n_prs == 1) {
-        ParameterResolver pr = ParameterResolver();
+        parameter::ParameterResolver pr = parameter::ParameterResolver();
         pr.SetItems(enc_name, enc_data[0]);
         pr.SetItems(ans_name, ans_data);
         output[0] = GetExpectationWithNoiseGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
@@ -811,7 +815,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradMultiMulti(
             }
             auto task = [&, start, end]() {
                 for (size_t n = start; n < end; n++) {
-                    ParameterResolver pr = ParameterResolver();
+                    parameter::ParameterResolver pr = parameter::ParameterResolver();
                     pr.SetItems(enc_name, enc_data[n]);
                     pr.SetItems(ans_name, ans_data);
                     auto f_g = GetExpectationWithNoiseGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
@@ -828,7 +832,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradMultiMulti(
 }
 
 template <typename qs_policy_t_>
-VT<unsigned> DensityMatrixState<qs_policy_t_>::Sampling(const circuit_t& circ, const ParameterResolver& pr,
+VT<unsigned> DensityMatrixState<qs_policy_t_>::Sampling(const circuit_t& circ, const parameter::ParameterResolver& pr,
                                                         size_t shots, const MST<size_t>& key_map, unsigned int seed) {
     auto key_size = key_map.size();
     VT<unsigned> res(shots * key_size);

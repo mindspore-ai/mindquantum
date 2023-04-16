@@ -60,4 +60,5 @@
 "mindquantum/ccsrc/include/core/parameter_resolver.hpp"                                               "build/include"
 
 "mindquantum/ccsrc/include/simulator/alignedallocator.hpp"                                            "whitespace/parens"
-"mindquantum/ccsrc/include/ops/transform/bravyi_kitaev_superfast.tpp"                                 "runtime/references"
+"mindquantum/ccsrc/lib/math/operators/transform/bravyi_kitaev_superfast.cpp"                          "runtime/references"
+"mindquantum/ccsrc/python/math/lib/bind_math.cpp"                                                     "runtime/references"

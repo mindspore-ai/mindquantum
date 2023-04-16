@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 
@@ -235,10 +236,8 @@ auto SinglePauliStr::py_term_to_term(const py_term_t& term) -> term_t {
 }
 
 auto SinglePauliStr::py_terms_to_terms(const py_terms_t& terms) -> terms_t {
-    terms_t out;
-    for (auto& term : terms) {
-        out.push_back(py_term_to_term(term));
-    }
+    terms_t out(terms.size());
+    std::transform(terms.begin(), terms.end(), out.begin(), py_term_to_term);
     return out;
 }
 
@@ -420,9 +419,9 @@ std::vector<QubitOperator> QubitOperator::singlet() const {
     }
     std::vector<QubitOperator> out;
     for (auto& [term, value] : this->get_terms()) {
-        for (auto& word : term) {
-            out.emplace_back(QubitOperator({word}, parameter::ParameterResolver(tn::ops::ones(1))));
-        }
+        std::transform(term.begin(), term.end(), std::back_inserter(out), [](auto& word) {
+            return QubitOperator({word}, parameter::ParameterResolver(tn::ops::ones(1)));
+        });
         break;
     }
     return out;

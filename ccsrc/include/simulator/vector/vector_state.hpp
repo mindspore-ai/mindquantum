@@ -95,7 +95,8 @@ class VectorState {
      * \brief Apply a quantum gate on this quantum state, quantum gate can be
      * normal quantum gate, measurement gate and noise channel
      */
-    virtual index_t ApplyGate(const std::shared_ptr<BasicGate>& gate, const ParameterResolver& pr = ParameterResolver(),
+    virtual index_t ApplyGate(const std::shared_ptr<BasicGate>& gate,
+                              const parameter::ParameterResolver& pr = parameter::ParameterResolver(),
                               bool diff = false);
 
     //! Apply a measurement gate on this quantum state, return the collapsed qubit state
@@ -116,21 +117,21 @@ class VectorState {
     //! calculate the expectation of differential form of parameterized gate two quantum state. That is
     //! <bra| \partial_\theta{U} |ket>
     virtual tensor::Matrix ExpectDiffGate(qs_data_p_t bra, qs_data_p_t ket, const std::shared_ptr<BasicGate>& gate,
-                                          const ParameterResolver& pr, index_t dim);
+                                          const parameter::ParameterResolver& pr, index_t dim);
 
     virtual tensor::Matrix ExpectDiffU3(qs_data_p_t bra, qs_data_p_t ket, const std::shared_ptr<BasicGate>& gate,
-                                        const ParameterResolver& pr, index_t dim);
+                                        const parameter::ParameterResolver& pr, index_t dim);
     virtual tensor::Matrix ExpectDiffFSim(qs_data_p_t bra, qs_data_p_t ket, const std::shared_ptr<BasicGate>& gate,
-                                          const ParameterResolver& pr, index_t dim);
+                                          const parameter::ParameterResolver& pr, index_t dim);
     //! Apply a quantum circuit on this quantum state
-    virtual std::map<std::string, int> ApplyCircuit(const circuit_t& circ,
-                                                    const ParameterResolver& pr = ParameterResolver());
+    virtual std::map<std::string, int> ApplyCircuit(const circuit_t& circ, const parameter::ParameterResolver& pr
+                                                                           = parameter::ParameterResolver());
 
     //! Apply a hamiltonian on this quantum state
     virtual void ApplyHamiltonian(const Hamiltonian<calc_type>& ham);
 
     //! Get the matrix of quantum circuit.
-    virtual VVT<py_qs_data_t> GetCircuitMatrix(const circuit_t& circ, const ParameterResolver& pr);
+    virtual VVT<py_qs_data_t> GetCircuitMatrix(const circuit_t& circ, const parameter::ParameterResolver& pr);
 
     //! Get expectation of given hamiltonian
     virtual py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham) {
@@ -142,14 +143,15 @@ class VectorState {
     //! Get the expectation of hamiltonian
     //! Here a single hamiltonian and single parameter data are needed
     virtual VT<py_qs_data_t> GetExpectationWithGradOneOne(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
-                                                          const circuit_t& herm_circ, const ParameterResolver& pr,
+                                                          const circuit_t& herm_circ,
+                                                          const parameter::ParameterResolver& pr,
                                                           const MST<size_t>& p_map);
 
     //! Get the expectation of hamiltonian
     //! Here multiple hamiltonian and single parameter data are needed
     virtual VVT<py_qs_data_t> GetExpectationWithGradOneMulti(
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
-        const circuit_t& herm_circ, const ParameterResolver& pr, const MST<size_t>& p_map, int n_thread);
+        const circuit_t& herm_circ, const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread);
     //! Get the expectation of hamiltonian
     //! Here multiple hamiltonian and multiple parameters are needed
     virtual VT<VVT<py_qs_data_t>> GetExpectationWithGradMultiMulti(
@@ -161,12 +163,14 @@ class VectorState {
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& herm_hams, const circuit_t& left_circ,
         const circuit_t& herm_left_circ, const circuit_t& right_circ, const circuit_t& herm_right_circ,
-        const ParameterResolver& pr, const MST<size_t>& p_map, int n_thread, const derived_t& simulator_left);
+        const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread,
+        const derived_t& simulator_left);
 
     virtual VVT<py_qs_data_t> LeftSizeGradOneMulti(const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
-                                                   const circuit_t& herm_left_circ, const ParameterResolver& pr,
-                                                   const MST<size_t>& p_map, int n_thread,
-                                                   const derived_t& simulator_left, const derived_t& simulator_right);
+                                                   const circuit_t& herm_left_circ,
+                                                   const parameter::ParameterResolver& pr, const MST<size_t>& p_map,
+                                                   int n_thread, const derived_t& simulator_left,
+                                                   const derived_t& simulator_right);
 
     virtual VT<VVT<py_qs_data_t>> GetExpectationNonHermitianWithGradMultiMulti(
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
@@ -175,7 +179,7 @@ class VectorState {
         const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name, const VS& ans_name,
         const derived_t& simulator_left, size_t batch_threads, size_t mea_threads);
 
-    virtual VT<unsigned> Sampling(const circuit_t& circ, const ParameterResolver& pr, size_t shots,
+    virtual VT<unsigned> Sampling(const circuit_t& circ, const parameter::ParameterResolver& pr, size_t shots,
                                   const MST<size_t>& key_map, unsigned seed);
 
     template <typename policy_des, template <typename p_src, typename p_des> class cast_policy>

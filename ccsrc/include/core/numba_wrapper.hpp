@@ -17,6 +17,7 @@
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 
 #include "config/type_promotion.hpp"
 

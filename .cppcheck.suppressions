@@ -6,6 +6,7 @@ constParameter:tests/*
 unreadVariable:tests/*
 
 assignBoolToPointer:ccsrc/python/simulator/include/python/vector/bind_vec_state.h
+assignBoolToPointer:ccsrc/python/simulator/include/python/densitymatrix/bind_mat_state.hpp
 
 containerOutOfBounds:ccsrc/include/ops/gates/fermion_operator.tpp
 containerOutOfBounds:ccsrc/lib/ops/gates/fermion_operator.cpp
@@ -14,6 +15,7 @@ containerOutOfBounds:ccsrc/lib/ops/gates/fermion_operator_parameter_resolver.cpp
 cstyleCast:ccsrc/include/simulator/cintrin.hpp
 
 duplicateExpression:ccsrc/include/core/parameter_resolver.h:707
+duplicateExpression:ccsrc/python/math/lib/bind_math.cpp
 
 noExplicitConstructor:ccsrc/include/experimental/decompositions/decomposition_atom.hpp:41
 noExplicitConstructor:ccsrc/include/experimental/ops/parametric/gate_base.hpp
@@ -43,7 +45,6 @@ syntaxError:ccsrc/include/core/sparse/algo.hpp
 syntaxError:ccsrc/include/ops/gates/terms_operator_base_external_ops.hpp:92
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_vector_policy.cpp
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_gate_expec.cpp
-syntaxError:ccsrc/python/mqbackend/lib/binding.cc:121
 syntaxError:ccsrc/python/mqbackend/lib/details/define_terms_ops.hpp
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_condition.cpp
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_gate_expect.cpp
@@ -52,8 +53,6 @@ syntaxError:ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_gat
 syntaxError:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_gate_expect.cpp
 syntaxError:ccsrc/python/device/include/python/device/binding.hpp
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_policy.cpp
-
-uninitMemberVar:ccsrc/include/core/numba_wrapper.hpp
 
 unknownMacro:ccsrc/include/core/sparse/paulimat.hpp
 unknownMacro:ccsrc/include/core/sparse/paulimat.hpp:58

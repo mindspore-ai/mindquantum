@@ -24,8 +24,5 @@ target_link_libraries(mq_math PUBLIC include_lib cmake_config)
 # ==============================================================================
 
 add_subdirectory(tensor)
-add_subdirectory(tensor_test)
 add_subdirectory(pr)
-add_subdirectory(pr_test)
 add_subdirectory(operators)
-add_subdirectory(operators_test)

@@ -44,7 +44,6 @@ tensor::Matrix U3DiffThetaMatrix(tensor::Tensor theta, tensor::Tensor phi, tenso
 tensor::Matrix FSimDiffThetaMatrix(tensor::Tensor theta) {
     auto b = tensor::ops::cos(theta) * std::complex<float>(0, -1.0);
     auto a = (0.0 - tensor::ops::sin(theta)).astype(b.dtype);
-    auto one = tensor::ops::ones(1, a.dtype);
     auto zero = tensor::ops::zeros(1, a.dtype);
     return tensor::Matrix(
         tensor::ops::gather({zero, zero, zero, zero, zero, a, b, zero, zero, b, a, zero, zero, zero, zero, zero}), 4,
@@ -72,8 +71,8 @@ tensor::Matrix U3DiffLambdaMatrix(tensor::Tensor theta, tensor::Tensor phi, tens
     return m;
 }
 
-U3::U3(const ParameterResolver& theta, const ParameterResolver& phi, const ParameterResolver& lambda,
-       const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits)
+U3::U3(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi,
+       const parameter::ParameterResolver& lambda, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits)
     : theta(theta)
     , phi(phi)
     , lambda(lambda)
@@ -83,8 +82,8 @@ U3::U3(const ParameterResolver& theta, const ParameterResolver& phi, const Param
     }
 }
 
-FSim::FSim(const ParameterResolver& theta, const ParameterResolver& phi, const VT<Index>& obj_qubits,
-           const VT<Index>& ctrl_qubits)
+FSim::FSim(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi,
+           const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits)
     : theta(theta), phi(phi), Parameterizable(GateID::FSim, {theta, phi}, obj_qubits, ctrl_qubits) {
     if (!this->parameterized_) {
         this->base_matrix_ = FSimMatrix(theta.const_value, phi.const_value);

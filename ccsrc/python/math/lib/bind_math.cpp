@@ -97,7 +97,7 @@ void BindTensor(py::module &module) {  // NOLINT(runtime/references)
                 tensor::bit_size(t.dtype),
                 format,
                 1,
-                {t.dim,},
+                {t.dim, },
                 {tensor::bit_size(t.dtype)});
             // clang-format on
         });
@@ -183,7 +183,7 @@ void BindPR(py::module &module) {  // NOLINT(runtime/references)
 
 // -----------------------------------------------------------------------------
 
-void BindQubitOperator(py::module &module) {
+void BindQubitOperator(py::module &module) {  // NOLINT(runtime/references)
     namespace pr = parameter;
     using pr_t = pr::ParameterResolver;
     using qop_t = operators::qubit::QubitOperator;
@@ -294,7 +294,7 @@ void BindQubitOperator(py::module &module) {
         .def("__repr__", [](const fop_t &op) { return op.ToString(); });
 }
 
-void BindTransform(py::module &module) {
+void BindTransform(py::module &module) {  // NOLINT(runtime/references)
     module.def("jordan_wigner", &operators::transform::jordan_wigner, "ops"_a);
     module.def("reverse_jordan_wigner", &operators::transform::reverse_jordan_wigner, "ops"_a, "n_qubits"_a = -1);
     module.def("parity", &operators::transform::parity, "ops"_a, "n_qubits"_a = -1);

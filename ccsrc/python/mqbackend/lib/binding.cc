@@ -115,9 +115,9 @@ void BindTypeIndependentGate(py::module &module) {  // NOLINT(runtime/references
 void BindTypeDependentGate(py::module &module) {  // NOLINT(runtime/references)
     using mindquantum::CT;
     using mindquantum::Index;
-    using mindquantum::ParameterResolver;
     using mindquantum::VT;
     using mindquantum::VVT;
+    using parameter::ParameterResolver;
     py::class_<mindquantum::RXGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::RXGate>>(module, "RXGate")
         .def(py::init<const ParameterResolver &, const VT<Index> &, const VT<Index> &>(), "pr"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
@@ -176,16 +176,21 @@ auto BindOther(py::module &module) {
     using mindquantum::CT;
     using mindquantum::Hamiltonian;
     using mindquantum::Index;
-    using mindquantum::ParameterResolver;
     using mindquantum::PauliTerm;
     using mindquantum::VS;
     using mindquantum::VT;
     using mindquantum::VVT;
     using mindquantum::python::CsrHdMatrix;
+    using parameter::ParameterResolver;
     // matrix
 
     // parameter resolver
-    using namespace mindquantum::sparse;
+    using mindquantum::sparse::Csr_Plus_Csr;
+    using mindquantum::sparse::GetPauliMat;
+    using mindquantum::sparse::PauliMat;
+    using mindquantum::sparse::PauliMatToCsrHdMatrix;
+    using mindquantum::sparse::SparseHamiltonian;
+    using mindquantum::sparse::TransposeCsrHdMatrix;
     // pauli mat
     py::class_<PauliMat<T>, std::shared_ptr<PauliMat<T>>>(module, "pauli_mat")
         .def(py::init<>())
