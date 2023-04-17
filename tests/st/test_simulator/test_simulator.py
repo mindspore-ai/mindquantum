@@ -15,6 +15,7 @@
 
 # pylint: disable=invalid-name
 """Test simulator."""
+import platform
 
 import numpy as np
 import pytest
@@ -58,6 +59,7 @@ except ImportError:
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.env_onecard
+@pytest.mark.skipif(platform.system() != 'Linux')
 @pytest.mark.parametrize("dtype", [mq.complex128, mq.complex64])
 def test_gpu(dtype):
     """
