@@ -49,6 +49,12 @@ PYBIND11_MODULE(_mq_matrix, module) {
     pybind11::module float_sim = module.def_submodule("float", "float simulator");
     pybind11::module double_sim = module.def_submodule("double", "double simulator");
 
-    BindSim<float_mat_sim>(float_sim, "mqmatrix");
-    BindSim<double_mat_sim>(double_sim, "mqmatrix");
+    BindSim<float_mat_sim>(float_sim, "mqmatrix")
+        .def("complex128", &float_mat_sim::astype<double_policy_t, mindquantum::sim::densitymatrix::detail::CastTo>)
+        .def("complex64", &float_mat_sim::astype<float_policy_t, mindquantum::sim::densitymatrix::detail::CastTo>)
+        .def("sim_name", [](const float_mat_sim& sim) { return "mqmatrix"; });
+    BindSim<double_mat_sim>(double_sim, "mqmatrix")
+        .def("complex128", &double_mat_sim::astype<double_policy_t, mindquantum::sim::densitymatrix::detail::CastTo>)
+        .def("complex64", &double_mat_sim::astype<float_policy_t, mindquantum::sim::densitymatrix::detail::CastTo>)
+        .def("sim_name", [](const double_mat_sim& sim) { return "mqmatrix"; });
 }

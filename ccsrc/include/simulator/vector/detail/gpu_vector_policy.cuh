@@ -21,8 +21,11 @@
 #include <memory>
 #include <vector>
 
+#include <thrust/transform_reduce.h>
+
 #include "core/mq_base_types.hpp"
 #include "core/sparse/csrhdmatrix.hpp"
+#include "math/tensor/traits.hpp"
 #include "simulator/types.hpp"
 #include "thrust/complex.h"
 #include "thrust/functional.h"
@@ -103,7 +106,7 @@ struct GPUVectorPolicyBase {
     static void ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
                                      const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
     static void ApplyNQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
-                                     const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
+                                   const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
     static void ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
                                 const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
     static void ApplyH(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
@@ -119,9 +122,9 @@ struct GPUVectorPolicyBase {
     static void ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, bool daggered, index_t dim);
     static void ApplyRxx(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
-                        bool diff = false);
+                         bool diff = false);
     static void ApplyRyy(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
-                        bool diff = false);
+                         bool diff = false);
     static void ApplyRzz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
     static void ApplyRxy(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
@@ -139,7 +142,7 @@ struct GPUVectorPolicyBase {
     static qs_data_t ExpectDiffTwoQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
                                                const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m, index_t dim);
     static qs_data_t ExpectDiffNQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                               const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m, index_t dim);
+                                             const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m, index_t dim);
     static qs_data_t ExpectDiffMatrixGate(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                           const std::vector<py_qs_datas_t>& m, index_t dim);
     static qs_data_t ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
@@ -149,9 +152,9 @@ struct GPUVectorPolicyBase {
     static qs_data_t ExpectDiffRZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                   calc_type val, index_t dim);
     static qs_data_t ExpectDiffRxx(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
+                                   calc_type val, index_t dim);
     static qs_data_t ExpectDiffRyy(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
+                                   calc_type val, index_t dim);
     static qs_data_t ExpectDiffRzz(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
                                    calc_type val, index_t dim);
     static qs_data_t ExpectDiffRxy(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
@@ -200,6 +203,23 @@ __global__ void ApplyTerm(qs_data_p_t des, qs_data_p_t src, calc_type coeff, ind
         }
     }
 }
+
+template <typename policy_src, typename policy_des>
+struct CastTo {
+    static constexpr tensor::TDtype src_dtype = policy_src::dtype;
+    static constexpr tensor::TDtype des_dtype = policy_des::dtype;
+    static typename policy_des::qs_data_p_t cast(typename policy_src::qs_data_p_t qs, size_t dim) {
+        if constexpr (std::is_same_v<policy_src, policy_des>) {
+            return policy_des::Copy(qs, dim);
+        }
+        auto des = policy_des::InitState(dim, false);
+        thrust::counting_iterator<index_t> i(0);
+        thrust::for_each(i, i + dim, [=] __device__(index_t i) {
+            des[i] = typename policy_des::qs_data_t{qs[i].real(), qs[i].imag()};
+        });
+        return des;
+    }
+};
 }  // namespace mindquantum::sim::vector::detail
 
 #endif

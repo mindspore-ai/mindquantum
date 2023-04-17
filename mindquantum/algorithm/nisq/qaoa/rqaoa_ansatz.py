@@ -19,11 +19,9 @@
 
 import numpy as np
 
-from mindquantum.core.operators import QubitOperator, Hamiltonian
+from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.simulator import Simulator
-from mindquantum.utils.type_value_check import (
-    _check_input_type,
-)
+from mindquantum.utils.type_value_check import _check_input_type
 
 from .qaoa_ansatz import QAOAAnsatz
 
@@ -128,7 +126,7 @@ class RQAOAAnsatz(QAOAAnsatz):
         _check_rqaoa_ham(ham)
         super().__init__(ham, p)
         self.name = 'RQAOA'
-        self._xi = []    # the restricted set
+        self._xi = []  # the restricted set
 
     @property
     def restricted_set(self):
@@ -218,20 +216,20 @@ class RQAOAAnsatz(QAOAAnsatz):
             v = f[np.random.randint(0, 2)]
         # Invalid elimination
         if v not in self.all_variables:
-            return # 退出防止污染约束集
+            return  # 退出防止污染约束集
         for h in list(hams.keys()):
             if v in h:
-                new_ham += QubitOperator(tuple(set(h)^set(f)), sigma*hams[h])
+                new_ham += QubitOperator(tuple(set(h) ^ set(f)), sigma * hams[h])
             else:
                 new_ham += QubitOperator(h, hams[h])
         self.ham = new_ham
         self._update()
-        self._xi.append((v, tuple(set((v,))^set(f)), sigma))
+        self._xi.append((v, tuple({v} ^ set(f)), sigma))
         if show_process:
             xi = self._xi[-1]
             print(f'-- eliminated variable: {xi[0][1]}{xi[0][0]}')
             pp = '*'.join([f'{x[1]}{x[0]}' for x in xi[1]])
-            print('-- correlated variable: '+pp)
+            print('-- correlated variable: ' + pp)
             print(f'-- σ: {xi[2]}')
 
     def translate(self, var_set):

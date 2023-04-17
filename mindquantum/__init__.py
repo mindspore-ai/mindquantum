@@ -18,15 +18,19 @@ import os
 import sys
 import warnings
 
+import numpy as np
+
 from .mqbackend import logging
 
 # isort: split
+
 
 from . import algorithm, config, core, engine, framework, io, simulator, utils
 from .algorithm import *
 from .config import *
 from .core import *
 from .core import gates, operators
+from .dtype import *
 from .framework import *
 from .io import *
 from .simulator import *
@@ -52,25 +56,3 @@ __all__.extend(framework.__all__)
 __all__.extend(io.__all__)
 __all__.extend(config.__all__)
 __all__.sort()
-
-
-try:
-    import mindquantum.experimental
-
-    _orig_enable_logging = logging.enable
-    _orig_disable_logging = logging.disable
-
-    def _enable_logging(level):
-        _orig_enable_logging(level)
-        if hasattr(mindquantum.experimental, 'logging'):
-            mindquantum.experimental.logging.enable(level)
-
-    def _disable_logging():
-        _orig_disable_logging()
-        if hasattr(mindquantum.experimental, 'logging'):
-            mindquantum.experimental.logging.disable()
-
-    logging.enable = _enable_logging
-    logging.disable = _disable_logging
-except ImportError:
-    pass

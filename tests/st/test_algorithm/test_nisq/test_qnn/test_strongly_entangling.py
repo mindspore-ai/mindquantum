@@ -16,8 +16,8 @@
 import numpy as np
 import pytest
 
+import mindquantum as mq
 from mindquantum.algorithm.nisq import StronglyEntangling
-from mindquantum.config import set_context
 from mindquantum.core.gates import X
 
 
@@ -25,13 +25,12 @@ from mindquantum.core.gates import X
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
+@pytest.mark.parametrize('dtype', [mq.complex128, mq.complex64])
 def test_strongly_entangling_ansatz(dtype):
     """
     Description: Test strongly_entangling_ansatz
     Expectation: success
     """
-    set_context(dtype=dtype, device_target="CPU")
     strongly_entangling = StronglyEntangling(3, 2, X)
     circ = strongly_entangling.circuit
     assert len(circ) == 12
@@ -49,4 +48,4 @@ def test_strongly_entangling_ansatz(dtype):
             0.22900849 + 0.08570448j,
         ]
     )
-    assert np.allclose(qs_exp, circ.get_qs(pr=np.linspace(0, 1, 18)))
+    assert np.allclose(qs_exp, circ.get_qs(pr=np.linspace(0, 1, 18), dtype=dtype))

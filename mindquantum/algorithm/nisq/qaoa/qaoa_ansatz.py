@@ -17,10 +17,14 @@
 
 """QAOA ansatz."""
 
-from mindquantum.core.circuit import Circuit, CPN, UN
+from mindquantum.core.circuit import (
+    CPN,
+    UN,
+    Circuit,
+    decompose_single_term_time_evolution,
+)
 from mindquantum.core.gates import RX, H
-from mindquantum.core.circuit import decompose_single_term_time_evolution
-from mindquantum.core.operators import QubitOperator, Hamiltonian
+from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.utils.type_value_check import (
     _check_input_type,
     _check_int_type,
@@ -68,8 +72,8 @@ class QAOAAnsatz(Ansatz):
         _check_int_type('depth', depth)
         _check_value_should_not_less('depth', 1, depth)
         _check_input_type('hamiltonian', QubitOperator, ham)
-        self.ham = ham         # QubitOperator object
-        self.depth = depth     # depth of QAOA ansatz
+        self.ham = ham  # QubitOperator object
+        self.depth = depth  # depth of QAOA ansatz
         super().__init__('QAOA', self.hamiltonian.n_qubits, ham, depth)
 
     @property
@@ -80,7 +84,7 @@ class QAOAAnsatz(Ansatz):
         Returns:
             Hamiltonian, hamiltonian of the problem.
         """
-        return Hamiltonian(self.ham) # Hamiltonian object
+        return Hamiltonian(self.ham)  # Hamiltonian object
 
     def _build_hc(self, ham):
         """Build hc circuit."""
@@ -88,7 +92,7 @@ class QAOAAnsatz(Ansatz):
         circ = Circuit()
         for h in ham.terms:
             if h:
-                circ += decompose_single_term_time_evolution(h, {'beta':ham.terms[h]})
+                circ += decompose_single_term_time_evolution(h, {'beta': ham.terms[h]})
         return circ
 
     def _build_hb(self, circ):

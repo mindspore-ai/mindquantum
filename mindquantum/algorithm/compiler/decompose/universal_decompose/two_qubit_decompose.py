@@ -13,18 +13,30 @@
 # limitations under the License.
 # ============================================================================
 """Two-qubit gate decomposition."""
+# pylint: disable=invalid-name
+from math import pi, sqrt
 
-from math import sqrt, pi
 import numpy as np
 from scipy import linalg
+
 from mindquantum.core import gates
-from mindquantum.core.gates import QuantumGate
 from mindquantum.core.circuit import Circuit
-from ..fixed_decompose import crx_decompose, cry_decompose, crz_decompose
-from ..utils import M, M_DAG, A
-from ..utils import params_abc, params_zyz, params_u3, optimize_circuit
-from ..utils import kron_decomp, is_tensor_prod, kron_factor_4x4_to_2x2s
+from mindquantum.core.gates import QuantumGate
+
 from .. import utils
+from ..fixed_decompose import crx_decompose, cry_decompose, crz_decompose
+from ..utils import (
+    M_DAG,
+    A,
+    M,
+    is_tensor_prod,
+    kron_decomp,
+    kron_factor_4x4_to_2x2s,
+    optimize_circuit,
+    params_abc,
+    params_u3,
+    params_zyz,
+)
 
 
 def tensor_product_decompose(gate: QuantumGate, return_u3: bool = True) -> Circuit:

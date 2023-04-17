@@ -17,12 +17,11 @@ import numpy as np
 import pytest
 
 import mindquantum.core.gates.channel as C
-from mindquantum.config import set_context
 from mindquantum.core.gates import X
 from mindquantum.simulator import Simulator
-from mindquantum.simulator.simulator import available_backend
+from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
-AVAILABLE_BACKEND = available_backend()
+AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
 
 
 @pytest.mark.level0
@@ -36,9 +35,8 @@ def test_pauli_channel(config):
     Expectation: success.
     """
 
-    backend, dtype, device = config
-    set_context(dtype=dtype, device_target=device)
-    sim = Simulator(backend, 1)
+    backend, dtype = config
+    sim = Simulator(backend, 1, dtype=dtype)
     if backend == "mqmatrix":
         sim.set_qs(np.array([1 + 0.5j, 1 + 0.5j]))
         sim.apply_gate(C.PauliChannel(0.1, 0, 0).on(0))
@@ -63,9 +61,8 @@ def test_flip_channel(config):
     Expectation: success.
     """
 
-    backend, dtype, device = config
-    set_context(dtype=dtype, device_target=device)
-    sim1 = Simulator(backend, 1)
+    backend, dtype = config
+    sim1 = Simulator(backend, 1, dtype=dtype)
     if backend == "mqmatrix":
         sim1.set_qs(np.array([1 + 0.5j, 1 + 0.5j]))
         sim1.apply_gate(C.BitFlipChannel(0.1).on(0))
@@ -93,10 +90,9 @@ def test_depolarizing_channel(config):
     Description: Test depolarizing channel
     Expectation: success.
     """
-    backend, dtype, device = config
-    set_context(dtype=dtype, device_target=device)
+    backend, dtype = config
     if backend == "mqmatrix":
-        sim2 = Simulator(backend, 1)
+        sim2 = Simulator(backend, 1, dtype=dtype)
         sim2.set_qs(np.array([1 + 0.5j, 1 + 0.5j]))
         sim2.apply_gate(C.DepolarizingChannel(0.1).on(0))
         assert np.allclose(
@@ -118,10 +114,9 @@ def test_damping_channel(config):
     Description: Test damping channel
     Expectation: success.
     """
-    backend, dtype, device = config
-    set_context(dtype=dtype, device_target=device)
+    backend, dtype = config
     if backend == "mqmatrix":
-        sim = Simulator(backend, 2)
+        sim = Simulator(backend, 2, dtype=dtype)
         sim.set_qs(np.array([1 + 0.5j, 1 + 0.5j, 1 + 0.5j, 1 + 0.5j]))
         sim.apply_gate(C.AmplitudeDampingChannel(0.1).on(0))
         assert np.allclose(
@@ -135,7 +130,7 @@ def test_damping_channel(config):
                 ]
             ),
         )
-        sim2 = Simulator(backend, 2)
+        sim2 = Simulator(backend, 2, dtype=dtype)
         sim2.set_qs(np.array([1 + 0.5j, 1 + 0.5j, 1 + 0.5j, 1 + 0.5j]))
         sim2.apply_gate(C.PhaseDampingChannel(0.1).on(0))
         assert np.allclose(
@@ -150,12 +145,12 @@ def test_damping_channel(config):
             ),
         )
     else:
-        sim = Simulator(backend, 2)
+        sim = Simulator(backend, 2, dtype=dtype)
         sim.apply_gate(X.on(0))
         sim.apply_gate(X.on(1))
         sim.apply_gate(C.AmplitudeDampingChannel(1).on(0))
         assert np.allclose(sim.get_qs(), np.array([0, 0, 1, 0]))
-        sim2 = Simulator(backend, 2)
+        sim2 = Simulator(backend, 2, dtype=dtype)
         sim2.apply_gate(X.on(0))
         sim2.apply_gate(X.on(1))
         sim2.apply_gate(C.PhaseDampingChannel(0.5).on(0))
@@ -172,13 +167,12 @@ def test_kraus_channel(config):
     Description: Test kraus channel
     Expectation: success.
     """
-    backend, dtype, device = config
-    set_context(dtype=dtype, device_target=device)
+    backend, dtype = config
     if backend == "mqmatrix":
         kmat0 = [[1, 0], [0, np.sqrt(0.99)]]
         kmat1 = [[0, 0.1], [0, 0]]
         kraus = C.KrausChannel("amplitude_damping", [kmat0, kmat1])
-        sim = Simulator(backend, 2)
+        sim = Simulator(backend, 2, dtype=dtype)
         sim.set_qs(np.array([1 + 0.5j, 1 + 0.5j, 1 + 0.5j, 1 + 0.5j]))
         sim.apply_gate(kraus.on(0))
         assert np.allclose(
@@ -196,7 +190,7 @@ def test_kraus_channel(config):
         kmat0 = [[1, 0], [0, 0]]
         kmat1 = [[0, 1], [0, 0]]
         kraus = C.KrausChannel("amplitude_damping", [kmat0, kmat1])
-        sim = Simulator(backend, 2)
+        sim = Simulator(backend, 2, dtype=dtype)
         sim.apply_gate(X.on(0))
         sim.apply_gate(X.on(1))
         sim.apply_gate(kraus.on(0))

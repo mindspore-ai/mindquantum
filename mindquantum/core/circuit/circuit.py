@@ -13,14 +13,14 @@
 # limitations under the License.
 # ============================================================================
 
-# pylint: disable=too-many-lines
+# pylint: disable=too-many-lines,too-many-arguments
 """Circuit module."""
 
 import copy
 import warnings
 from collections.abc import Iterable
 from types import FunctionType, MethodType
-from typing import Dict, List, Union
+from typing import List
 
 import numpy as np
 from rich.console import Console
@@ -34,7 +34,6 @@ from mindquantum.utils.type_value_check import (
 
 from .. import gates as mq_gates
 from ..gates.basic import BasicGate, ParameterGate
-from ..gates.basicgate import MultiParamsGate
 from ..parameterresolver import ParameterResolver
 
 
@@ -737,7 +736,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
                     return False
         return True
 
-    def matrix(self, pr=None, big_end=False, backend='mqvector', seed=None):
+    def matrix(self, pr=None, big_end=False, backend='mqvector', seed=None, dtype=None):
         """
         Get the matrix of this circuit.
 
@@ -747,6 +746,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             big_end (bool): The low index qubit is place in the end or not. Default: False.
             backend (str): The backend to do simulation. Default: 'mqvector'.
             seed (int): The random to generate circuit matrix, if the circuit has noise channel.
+            dtype (mindquantum.dtype): data type of simulator. Default: 'None'.
 
         Returns:
             numpy.ndarray, two dimensional complex matrix of this circuit.
@@ -771,7 +771,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum.simulator import Simulator
 
-        sim = Simulator(backend, self.n_qubits, seed=seed)
+        sim = Simulator(backend, self.n_qubits, seed=seed, dtype=dtype)
         return np.array(sim.backend.get_circuit_matrix(circ, pr)).T
 
     def apply_value(self, pr):
@@ -1137,7 +1137,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         self += UN(gate, maps_obj, maps_ctrl)
         return self
 
-    def get_qs(self, backend='mqvector', pr=None, ket=False, seed=None):
+    def get_qs(self, backend='mqvector', pr=None, ket=False, seed=None, dtype=None):
         """
         Get the final quantum state of this circuit.
 
@@ -1147,12 +1147,13 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
                 if this circuit is parameterized. Default: None.
             ket (str): Whether to return the quantum state in ket format. Default: False.
             seed (int): The random seed of simulator. Default: None
+            dtype (mindquantum.dtype): The data type of simulator.
         """
         from mindquantum import (  # pylint: disable=import-outside-toplevel,cyclic-import
             Simulator,
         )
 
-        sim = Simulator(backend, self.n_qubits, seed=seed)
+        sim = Simulator(backend, self.n_qubits, seed=seed, dtype=dtype)
         sim.apply_circuit(self, pr)
         return sim.get_qs(ket)
 
@@ -1284,38 +1285,6 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         circ.all_encoder.map = {}
         circ.has_cpp_obj = False
         return circ
-
-    def subs(self, params_value: Union[Dict, ParameterResolver]) -> "Circuit":
-        """
-        Substitute value to variables in parameterized quantum circuit.
-
-        Args:
-            params_value (Union[Dict, ParameterResolver]): parameters value.
-
-        Returns:
-            Circuit, a non parameterized quantum circuit.
-
-        Examples:
-            >>> from mindquantum.core.circuit import Circuit
-            >>> circ = Circuit().rx('a', 0)
-            >>> circ
-            q0: ──RX(a)──
-            >>> circ.subs({'a': 1.2})
-            q0: ──RX(6/5)──
-        """
-        new_circ = Circuit()
-        for g in self:
-            if isinstance(g, MultiParamsGate):
-                new_g = copy.deepcopy(g)
-                new_g.prs = [i.combination(params_value) for i in g.prs]
-                new_circ += new_g
-            elif isinstance(g, ParameterGate):
-                new_g = copy.deepcopy(g)
-                new_g.coeff = g.coeff.combination(params_value)
-                new_circ += new_g
-            else:
-                new_circ += g
-        return new_circ
 
 
 A = apply

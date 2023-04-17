@@ -13,13 +13,10 @@
 # limitations under the License.
 # ============================================================================
 """Simulator."""
-import warnings
-from functools import partial
-
 import numpy as np
 
-from ..config import get_context, set_context
-from ..core.circuit import Circuit
+from mindquantum.dtype import to_mq_type
+
 from ..core.operators import Hamiltonian
 from ..utils.type_value_check import (
     _check_input_type,
@@ -27,17 +24,10 @@ from ..utils.type_value_check import (
     _check_seed,
     _check_value_should_not_less,
 )
+from .available_simulator import SUPPORTED_SIMULATOR
 from .backend_base import BackendBase
 from .mq_blas import MQBlas
-from .mqsim import MQ_SIM_GPU_SUPPORTED, MQSim
-
-SUPPORTED_SIMULATOR = {
-    'mqvector': partial(MQSim, 'mqvector'),
-    'mqmatrix': partial(MQSim, 'mqmatrix'),
-}
-
-if MQ_SIM_GPU_SUPPORTED:
-    SUPPORTED_SIMULATOR['mqvector_gpu'] = partial(MQSim, 'mqvector_gpu')
+from .mqsim import MQSim
 
 
 def get_supported_simulator():
@@ -78,7 +68,7 @@ class Simulator:
         array([0.5+0.j, 0.5+0.j, 0.5+0.j, 0.5+0.j])
     """
 
-    def __init__(self, backend, n_qubits, *args, seed=None, **kwargs):
+    def __init__(self, backend, n_qubits, *args, seed=None, dtype=None, **kwargs):
         """Initialize a Simulator object."""
         if isinstance(backend, BackendBase):
             self.backend = backend
@@ -89,22 +79,19 @@ class Simulator:
             if seed is None:
                 seed = np.random.randint(1, 2**23)
             _check_seed(seed)
-            try:
-                if backend == 'mqvector_gpu':
-                    warnings.warn(
-                        "'mqvector_gpu' is deprecated, please use "
-                        "'mindquantum.set_context(device_target=\"GPU\")' to let mqvector simulator "
-                        "enable GPU backend.",
-                        category=DeprecationWarning,
-                        stacklevel=2,
-                    )
-                if get_context('device_target') == "GPU" and backend == "mqvector":
-                    backend = "mqvector_gpu"
-                self.backend = SUPPORTED_SIMULATOR[backend](n_qubits, seed, *args, **kwargs)
-            except KeyError as err:
-                raise ValueError(
-                    f"backend {backend} not supported, now we support: {', '.join(SUPPORTED_SIMULATOR)}!"
-                ) from err
+            self.backend = SUPPORTED_SIMULATOR.py_class(backend)(backend, n_qubits, seed, dtype, *args, **kwargs)
+
+    def astype(self, dtype, seed=None):
+        """Convert simulator to other data type."""
+        if seed is None:
+            seed = np.random.randint(1, 2**23)
+        _check_seed(seed)
+        return Simulator(self.backend.astype(to_mq_type(dtype), seed=seed), self.n_qubits)
+
+    @property
+    def dtype(self):
+        """Get data type of simulator."""
+        return self.backend.dtype
 
     @property
     def n_qubits(self):
@@ -490,30 +477,6 @@ def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
     if isinstance(bra_simulator.backend, MQSim):
         return MQBlas.inner_product(bra_simulator.backend, ket_simulator.backend)
     raise NotImplementedError(f"inner_product for backend {bra_simulator.backend} not implement.")
-
-
-def available_backend():
-    """
-    Get available simulator.
-
-    Returns:
-        Tuple(str, str, str), tuple of available (backend, dtype, device).
-    """
-    backends = ['mqvector', 'mqmatrix']
-    dtypes = ['float', 'double']
-    devices = ['GPU', 'CPU']
-    available = []
-    for backend in backends:
-        for dtype in dtypes:
-            for device in devices:
-                set_context(device_target=device, dtype=dtype)
-                try:
-                    sim = Simulator(backend, 1)
-                    sim.apply_circuit(Circuit().h(0))
-                    available.append((backend, dtype, device))
-                except Exception:  # pylint: disable=broad-except
-                    pass
-    return available
 
 
 __all__ = ['Simulator', 'get_supported_simulator', 'inner_product']

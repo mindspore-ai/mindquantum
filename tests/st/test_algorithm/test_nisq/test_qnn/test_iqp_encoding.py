@@ -17,23 +17,22 @@
 import numpy as np
 import pytest
 
+import mindquantum as mq
 from mindquantum.algorithm.nisq import IQPEncoding
-from mindquantum.config import set_context
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize('dtype', ['float', 'double'])
+@pytest.mark.parametrize('dtype', [mq.complex128, mq.complex64])
 def test_general_iqp_encoding(dtype):
     """
     Description: Test general_iqp_encoding
     Expectation:
     """
-    set_context(dtype=dtype, device_target="CPU")
     iqp = IQPEncoding(2)
     data = np.array([0, 0])
-    state = iqp.circuit.get_qs(pr=iqp.data_preparation(data))
+    state = iqp.circuit.get_qs(pr=iqp.data_preparation(data), dtype=dtype)
     state_exp = 1 / 2 * np.array([1, 1, 1, 1])
     assert np.allclose(state, state_exp)

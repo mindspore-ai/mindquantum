@@ -24,13 +24,12 @@ try:
     import mindspore as ms
 
     from mindquantum.algorithm.nisq import MaxCutAnsatz
-    from mindquantum.config import set_context
     from mindquantum.core.operators import Hamiltonian
     from mindquantum.framework import MQAnsatzOnlyLayer
     from mindquantum.simulator import Simulator
-    from mindquantum.simulator.simulator import available_backend
+    from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
-    AVAILABLE_BACKEND = available_backend()
+    AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
     _HAS_MINDSPORE = False
@@ -51,14 +50,13 @@ def test_max_cut(config):
     Description: test maxcut ansatz.
     Expectation: success.
     """
-    backend, dtype, device = config
-    set_context(dtype=dtype, device_target=device)
+    backend, dtype = config
     graph = [(0, 1), (1, 2), (2, 3), (3, 4), (1, 4)]
     depth = 3
     maxcut = MaxCutAnsatz(graph, depth)
-    sim = Simulator(backend, maxcut.circuit.n_qubits)
+    sim = Simulator(backend, maxcut.circuit.n_qubits, dtype=dtype)
     ham = maxcut.hamiltonian
-    f_g_ops = sim.get_expectation_with_grad(Hamiltonian(-ham), maxcut.circuit)
+    f_g_ops = sim.get_expectation_with_grad(Hamiltonian(-ham, dtype=dtype), maxcut.circuit)
     ms.set_seed(42)
     net = MQAnsatzOnlyLayer(f_g_ops)
     opti = ms.nn.Adagrad(net.trainable_params(), learning_rate=4e-1)

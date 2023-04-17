@@ -19,12 +19,11 @@ import warnings
 import pytest
 
 from mindquantum.algorithm.nisq import quccsd_generator
-from mindquantum.config import set_context
 from mindquantum.core.operators import TimeEvolution, count_qubits
 from mindquantum.core.operators._term_value import TermValue
-from mindquantum.simulator.simulator import available_backend
+from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
-AVAILABLE_BACKEND = available_backend()
+AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
 
 
 @pytest.mark.level0
@@ -37,8 +36,7 @@ def test_quccsd(config):
     Description: Test quccsd
     Expectation:
     """
-    _, dtype, device = config
-    set_context(dtype=dtype, device_target=device)
+    _, dtype = config
     h2_quccsd = quccsd_generator(4, 2)
     h2_quccsd_terms = set(h2_quccsd.terms)
     h2_quccsd_terms_check = {

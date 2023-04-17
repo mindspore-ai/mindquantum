@@ -26,15 +26,14 @@ try:
     import mindspore as ms
 
     from mindquantum.algorithm.nisq import QubitUCCAnsatz
-    from mindquantum.config import set_context
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.gates import X
     from mindquantum.core.operators import Hamiltonian, QubitOperator
     from mindquantum.framework import MQAnsatzOnlyLayer
     from mindquantum.simulator import Simulator
-    from mindquantum.simulator.simulator import available_backend
+    from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
-    AVAILABLE_BACKEND = available_backend()
+    AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
     _HAS_MINDSPORE = False
@@ -58,8 +57,7 @@ def test_quccsd(config):  # pylint: disable=too-many-locals
     Description:
     Expectation:
     """
-    backend, dtype, device = config
-    set_context(dtype=dtype, device_target=device)
+    backend, dtype = config
     # Hydrogen molecule
     ham = (
         QubitOperator("", (-0.5339363487727398 + 0j))
@@ -90,8 +88,8 @@ def test_quccsd(config):  # pylint: disable=too-many-locals
         total_circuit += X.on(i)
     total_circuit += ucc.circuit
 
-    sim = Simulator(backend, total_circuit.n_qubits)
-    f_g_ops = sim.get_expectation_with_grad(Hamiltonian(ham.real), total_circuit)
+    sim = Simulator(backend, total_circuit.n_qubits, dtype=dtype)
+    f_g_ops = sim.get_expectation_with_grad(Hamiltonian(ham.real.astype(dtype)), total_circuit)
     net = MQAnsatzOnlyLayer(f_g_ops)
     opti = ms.nn.Adagrad(net.trainable_params(), learning_rate=4e-2)
     train_net = ms.nn.TrainOneStepCell(net, opti)

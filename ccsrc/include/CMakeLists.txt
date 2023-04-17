@@ -22,12 +22,10 @@ set(MQ_BASE_HEADERS
     config/popcnt.hpp
     config/config.hpp
     config/type_traits.hpp
-    core/parameter_resolver.hpp
     core/sparse/algo.hpp
     core/sparse/csrhdmatrix.hpp
     core/sparse/paulimat.hpp
     core/sparse/sparse_utils.hpp
-    core/two_dim_matrix.hpp
     core/mq_base_types.hpp
     core/utils.hpp
     ops/basic_gate.hpp
@@ -49,7 +47,7 @@ append_to_property(mq_install_targets GLOBAL include_lib)
 
 install(
   DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/config ${CMAKE_CURRENT_LIST_DIR}/core ${CMAKE_CURRENT_LIST_DIR}/ops
-            ${CMAKE_CURRENT_LIST_DIR}/simulator
+            ${CMAKE_CURRENT_LIST_DIR}/simulator ${CMAKE_CURRENT_LIST_DIR}/device ${CMAKE_CURRENT_LIST_DIR}/math
   DESTINATION ${MQ_INSTALL_INCLUDEDIR}/
   PATTERN "CPPLINT.cfg" EXCLUDE)
 

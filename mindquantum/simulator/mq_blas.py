@@ -23,12 +23,9 @@ from .. import mqbackend  # noqa: F401  # pylint: disable=unused-import
 
 # isort: split
 
-from .. import _mq_vector
-from ..config import get_context
-from .mqsim import MQ_SIM_GPU_SUPPORTED, MQSim
+from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
-if MQ_SIM_GPU_SUPPORTED:
-    from .. import _mq_vector_gpu
+from .mqsim import MQSim
 
 
 class MQBlas:  # pylint: disable=too-few-public-methods
@@ -49,10 +46,4 @@ class MQBlas:  # pylint: disable=too-few-public-methods
     @staticmethod
     def _get_blas(simulator: MQSim):
         """Get blas module w.r.t given backend."""
-        if simulator.name == 'mqvector':
-            if get_context('device_target') == "GPU":
-                return getattr(_mq_vector_gpu, simulator.arithmetic_type).blas
-            return getattr(_mq_vector, simulator.arithmetic_type).blas
-        if simulator.name == 'mqvector_gpu':
-            return getattr(_mq_vector_gpu, simulator.arithmetic_type).blas
-        raise ValueError(f"Backend {simulator.device_name()} unknown.")
+        return SUPPORTED_SIMULATOR.c_module(simulator.name, simulator.dtype).blas

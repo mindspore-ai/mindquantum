@@ -29,7 +29,7 @@
 #include "config/logging.hpp"
 #include "config/type_traits.hpp"
 
-#include "core/parameter_resolver.hpp"
+#include "math/pr/parameter_resolver.hpp"
 #include "mindquantum/catch2/mindquantum.hpp"
 #include "ops/gates/details/floating_point_coeff_policy.hpp"
 #include "ops/gates/details/parameter_resolver_coeff_policy.hpp"

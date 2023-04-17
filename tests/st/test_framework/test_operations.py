@@ -22,15 +22,14 @@ AVAILABLE_BACKEND = True
 try:
     import mindspore as ms
 
-    from mindquantum.config import set_context
     from mindquantum.core import gates as G
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.operators import Hamiltonian, QubitOperator
     from mindquantum.framework import MQAnsatzOnlyOps
     from mindquantum.simulator import Simulator
-    from mindquantum.simulator.simulator import available_backend
+    from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
-    AVAILABLE_BACKEND = available_backend()
+    AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
@@ -52,12 +51,11 @@ def test_mindquantum_ansatz_only_ops(config):
     Description: Test MQAnsatzOnlyOps
     Expectation:
     """
-    backend, dtype, device = config
-    set_context(dtype=dtype, device_target=device)
+    backend, dtype = config
     circ = Circuit(G.RX('a').on(0))
     data = ms.Tensor(np.array([0.5]).astype(np.float32))
-    ham = Hamiltonian(QubitOperator('Z0'))
-    sim = Simulator(backend, circ.n_qubits)
+    ham = Hamiltonian(QubitOperator('Z0').astype(dtype))
+    sim = Simulator(backend, circ.n_qubits, dtype=dtype)
 
     evol = MQAnsatzOnlyOps(sim.get_expectation_with_grad(ham, circ))
     output = evol(data)

@@ -20,14 +20,13 @@ import os
 import numpy as np
 import pytest
 
-from mindquantum.config import set_context
-from mindquantum.core import ParameterResolver
 from mindquantum.core.operators import QubitOperator, ground_state_of_sum_zz
-from mindquantum.simulator.simulator import available_backend
+from mindquantum.core.parameterresolver import ParameterResolver
+from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 from mindquantum.utils.error import DeviceNotSupportedError
 
 _HAS_OPENFERMION = True
-AVAILABLE_BACKEND = available_backend()
+AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
 try:
     from openfermion import QubitOperator as OFQubitOperator
 except (ImportError, AttributeError):
@@ -157,7 +156,7 @@ def test_qubit_ops_subs():
     """
     q = QubitOperator('X0', 'b') + QubitOperator('X0', 'a')
     q = q.subs({'a': 1, 'b': 2})
-    assert str(q) == '3 [X0] '
+    assert str(q) == '3 [X0]'
 
 
 def test_qubit_ops_sub():
@@ -167,7 +166,7 @@ def test_qubit_ops_sub():
     """
     q1 = QubitOperator('X0')
     q2 = QubitOperator('Y0')
-    assert str(q1 - q2) == '1 [X0] +\n-1 [Y0] '
+    assert str(q1 - q2) == ' 1 [X0] +\n-1 [Y0]'
 
 
 def test_fermion_operator_iter():
@@ -192,7 +191,7 @@ def test_qubit_ops_dumps_and_loads():
     """
     ops = QubitOperator('X0 Y1', 1.2) + QubitOperator('Z0 X1', {'a': 2.1})
     strings = ops.dumps()
-    obj = QubitOperator.loads(strings, dtype=float)
+    obj = QubitOperator.loads(strings)
     assert obj == ops
 
 
@@ -226,21 +225,21 @@ def test_ground_state_of_sum_zz_cpu():
         pass
 
 
+tmp_sim = ['mqvector']
+if 'mqvector_gpu' in SUPPORTED_SIMULATOR.sims:
+    tmp_sim.append('mqvector_gpu')
+
+
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.env_onecard
-def test_ground_state_of_sum_zz_gpu():
+@pytest.mark.parametrize('sim', tmp_sim)
+def test_ground_state_of_sum_zz_gpu(sim):
     """
     Description: Test test_ground_state_of_sum_zz.
     Expectation: success.
     """
-    if ('mqvector', 'float', 'GPU') not in AVAILABLE_BACKEND:
-        return
-    set_context(device_target="GPU")
     ops = QubitOperator('Z0 Z1 Z2', 1.2) + QubitOperator('Z0 Z2', 2.3) + QubitOperator('Z1 Z3', 3.4)
-    try:
-        e1 = ground_state_of_sum_zz(ops)
-        e2 = np.min(ops.matrix().data)
-        assert np.allclose(e1, e2)
-    except DeviceNotSupportedError:
-        pass
+    e1 = ground_state_of_sum_zz(ops, sim=sim)
+    e2 = np.min(ops.matrix().data)
+    assert np.allclose(e1, e2)

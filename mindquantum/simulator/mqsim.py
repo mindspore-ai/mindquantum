@@ -13,15 +13,17 @@
 # limitations under the License.
 # ============================================================================
 """Mindquantum simulator."""
-import warnings
 from typing import Dict, List, Union
 
 import numpy as np
 
+import mindquantum as mq
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import BarrierGate, BasicGate, Measure, MeasureResult
 from mindquantum.core.operators import Hamiltonian
 from mindquantum.core.parameterresolver import ParameterResolver
+from mindquantum.dtype import complex128, mq_complex_number_type, to_mq_type
+from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 from mindquantum.utils.type_value_check import (
     _check_and_generate_pr_type,
     _check_ansatz,
@@ -34,64 +36,37 @@ from mindquantum.utils.type_value_check import (
 )
 
 # This import is required to register some of the C++ types (e.g. ParameterResolver)
-from .. import mqbackend  # noqa: F401  # pylint: disable=unused-import
-from ..config import get_context
 from ..utils.string_utils import ket_string
 from .backend_base import BackendBase
 from .utils import GradOpsWrapper, _thread_balance
 
-# isort: split
 
-from mindquantum import _mq_matrix, _mq_vector  # pylint: disable=wrong-import-order
-
-try:
-    from mindquantum import _mq_vector_gpu
-
-    # pylint: disable=no-member
-    _mq_vector_gpu.double.mqvector(1).apply_gate(mqbackend.gate.HGate([0]))
-    MQ_SIM_GPU_SUPPORTED = True
-except ImportError:
-    MQ_SIM_GPU_SUPPORTED = False
-except RuntimeError as err:
-    warnings.warn(str(err), stacklevel=2)
-    warnings.warn("Disable gpu backend.", stacklevel=2)
-    MQ_SIM_GPU_SUPPORTED = False
-
-
-# pylint: disable=abstract-method
+# pylint: disable=abstract-method,too-many-arguments
 class MQSim(BackendBase):
     """Mindquantum Backend."""
 
-    def __init__(self, name: str, n_qubits: int, seed=42):
+    def __init__(self, name: str, n_qubits: int, seed=42, dtype=complex128, internal=False):
         """Initialize a mindquantum backend."""
-        super().__init__(name, n_qubits, seed)
-        if name == 'mqvector':
-            if get_context('device_target') == "GPU":
-                if MQ_SIM_GPU_SUPPORTED:
-                    self.sim = getattr(_mq_vector_gpu, self.arithmetic_type).mqvector(n_qubits, seed)
-                else:
-                    raise NotImplementedError("mqvector cannot use GPU in your machine.")
-            else:
-                self.sim = getattr(_mq_vector, self.arithmetic_type).mqvector(n_qubits, seed)
-        elif name == 'mqvector_gpu':
-            self.sim = getattr(_mq_vector_gpu, self.arithmetic_type).mqvector(n_qubits, seed)
-        elif name == 'mqmatrix':
-            if get_context('device_target') == "GPU":
-                raise NotImplementedError("mqmatrix with GPU backend not implemented yet.")
-            self.sim = getattr(_mq_matrix, self.arithmetic_type).mqmatrix(n_qubits, seed)
-
+        super().__init__(name, n_qubits, seed, dtype)
+        if internal:
+            self.sim = name
         else:
-            raise NotImplementedError(f"{name} backend not implemented.")
+            if dtype is None:
+                dtype = complex128
+            dtype = to_mq_type(dtype)
+            self.sim = getattr(SUPPORTED_SIMULATOR.c_module(name, dtype), name)(n_qubits, seed)
 
     def __str__(self):
         """Return a string representation of the object."""
         state = self.get_qs()
-        ret = f"{self.name} simulator with {self.n_qubits} qubit{'s' if self.n_qubits > 1 else ''} (little endian)."
-        ret += "\nCurrent quantum state:\n"
-        if self.n_qubits < 4:
-            ret += '\n'.join(ket_string(state))
-        else:
-            ret += state.__str__()
+        ret = f"{self.name} simulator with {self.n_qubits} qubit{'s' if self.n_qubits > 1 else ''} "
+        ret += f"(little endian), dtype: {self.dtype}."
+        if self.name.startswith('mqvector'):
+            ret += "\nCurrent quantum state:\n"
+            if self.n_qubits < 4:
+                ret += '\n'.join(ket_string(state))
+            else:
+                ret += state.__str__()
         return ret
 
     def __repr__(self):
@@ -113,7 +88,7 @@ class MQSim(BackendBase):
             pr = _check_and_generate_pr_type(pr, circuit.params_name)
         else:
             pr = ParameterResolver()
-        res = self.sim.apply_circuit(circuit.get_cpp_obj(), pr.get_cpp_obj())
+        res = self.sim.apply_circuit(circuit.get_cpp_obj(), pr)
         if res:
             out = MeasureResult()
             out.add_measure(circuit.all_measures.keys())
@@ -141,14 +116,35 @@ class MQSim(BackendBase):
                 pr = ParameterResolver()
             if isinstance(gate, Measure):
                 return self.sim.apply_gate(gate.get_cpp_obj(), pr.get_cpp_obj(), diff)
-            self.sim.apply_gate(gate.get_cpp_obj(), pr.get_cpp_obj(), diff)
+            self.sim.apply_gate(gate.get_cpp_obj(), pr, diff)
         return None
 
     def apply_hamiltonian(self, hamiltonian: Hamiltonian):
         """Apply a hamiltonian."""
+        if not mq.is_same_precision(self.dtype, hamiltonian.dtype):
+            raise TypeError(
+                f"Data type of {self.name} simulator is {mq.precision_str(self.dtype)} ({self.dtype}), "
+                f"but given hamiltonian is {mq.precision_str(hamiltonian.dtype)} ({hamiltonian.dtype}). "
+                f"Please convert given hamiltonian to {mq.precision_str(self.dtype)} "
+                f"({mq.precision_like(hamiltonian.dtype, self.dtype)})."
+            )
         _check_input_type('hamiltonian', Hamiltonian, hamiltonian)
         _check_hamiltonian_qubits_number(hamiltonian, self.n_qubits)
         self.sim.apply_hamiltonian(hamiltonian.get_cpp_obj())
+
+    def astype(self, dtype, seed):
+        """Convert simulator to other type."""
+        dtype = to_mq_type(dtype)
+        if dtype not in mq_complex_number_type:
+            raise TypeError(f"dtype should be complex type, available types are {mq_complex_number_type}")
+        sim = MQSim(getattr(self.sim, str(dtype).rsplit('.', maxsplit=1)[-1])(seed), self.n_qubits, internal=True)
+        sim.name = self.sim.sim_name()
+        return sim
+
+    @property
+    def dtype(self):
+        """Get data type of simulator."""
+        return self.sim.dtype()
 
     def copy(self) -> "BackendBase":
         """Copy a simulator."""
@@ -162,13 +158,20 @@ class MQSim(BackendBase):
 
     def get_circuit_matrix(self, circuit: Circuit, pr: ParameterResolver) -> np.ndarray:
         """Get the matrix of given circuit."""
-        return np.array(self.sim.get_circuit_matrix(circuit.get_cpp_obj(), pr.get_cpp_obj())).T
+        return np.array(self.sim.get_circuit_matrix(circuit.get_cpp_obj(), pr)).T
 
     def get_expectation(self, hamiltonian: Hamiltonian) -> np.ndarray:
         """Get expectation of a hamiltonian."""
         if not isinstance(hamiltonian, Hamiltonian):
             raise TypeError(f"hamiltonian requires a Hamiltonian, but got {type(hamiltonian)}")
         _check_hamiltonian_qubits_number(hamiltonian, self.n_qubits)
+        if not mq.is_same_precision(self.dtype, hamiltonian.dtype):
+            raise TypeError(
+                f"Data type of {self.name} simulator is {mq.precision_str(self.dtype)} ({self.dtype}), "
+                f"but given hamiltonian is {mq.precision_str(hamiltonian.dtype)} ({hamiltonian.dtype}). "
+                f"Please convert given hamiltonian to {mq.precision_str(self.dtype)} "
+                f"({mq.precision_like(hamiltonian.dtype, self.dtype)})."
+            )
         return self.sim.get_expectation(hamiltonian.get_cpp_obj())
 
     def get_expectation_with_grad(  # pylint: disable=R0912,R0913,R0914,R0915
@@ -184,6 +187,14 @@ class MQSim(BackendBase):
             hams = [hams]
         elif not isinstance(hams, list):
             raise TypeError(f"hams requires a Hamiltonian or a list of Hamiltonian, but get {type(hams)}")
+        for i, ham in enumerate(hams):
+            if not mq.is_same_precision(self.dtype, ham.dtype):
+                raise TypeError(
+                    f"Data type of {self.name} simulator is {mq.precision_str(self.dtype)} ({self.dtype}),"
+                    f" but {i}th hamiltonian is {mq.precision_str(ham.dtype)} ({ham.dtype}). "
+                    f"Please convert {i}th hamiltonian to {mq.precision_str(self.dtype)} "
+                    f"({mq.precision_like(ham.dtype, self.dtype)})."
+                )
         for h_tmp in hams:
             _check_input_type("hams's element", Hamiltonian, h_tmp)
             _check_hamiltonian_qubits_number(h_tmp, self.n_qubits)
@@ -200,13 +211,18 @@ class MQSim(BackendBase):
             _check_input_type("simulator_left", MQSim, simulator_left)
             if self.name != simulator_left.name:
                 raise ValueError(
-                    "simulator_left should have the same backend as this simulator, ",
+                    "simulator_left should have the same backend as this simulator, "
                     f"which is {self.name}, but get {simulator_left.name}",
                 )
             if self.n_qubits != simulator_left.n_qubits:
                 raise ValueError(
-                    "simulator_left should have the same n_qubits as this simulator, ",
+                    "simulator_left should have the same n_qubits as this simulator, "
                     f"which is {self.n_qubits}, but get {simulator_left.n_qubits}",
+                )
+            if self.dtype != simulator_left.dtype:
+                raise ValueError(
+                    "simulator_left should have the same data type as this simulator "
+                    f"(aka {self.dtype}), but get {simulator_left.dtype}.",
                 )
             non_hermitian = True
         if non_hermitian and simulator_left is None:
@@ -364,9 +380,7 @@ class MQSim(BackendBase):
             sim = self.copy()
             sim.apply_circuit(circuit.remove_measure(), pr)
             circuit = Circuit(circuit.all_measures.keys())
-        samples = np.array(
-            sim.sim.sampling(circuit.get_cpp_obj(), pr.get_cpp_obj(), shots, res.keys_map, seed)
-        ).reshape((shots, -1))
+        samples = np.array(sim.sim.sampling(circuit.get_cpp_obj(), pr, shots, res.keys_map, seed)).reshape((shots, -1))
         res.collect_data(samples)
         return res
 

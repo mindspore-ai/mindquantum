@@ -17,8 +17,8 @@
 
 from .max_2_sat_ansatz import Max2SATAnsatz
 from .max_cut_ansatz import MaxCutAnsatz
+from .max_cut_rqaoa_ansatz import MaxCutRQAOAAnsatz
 from .qaoa_ansatz import QAOAAnsatz
 from .rqaoa_ansatz import RQAOAAnsatz
-from .max_cut_rqaoa_ansatz import MaxCutRQAOAAnsatz
 
 __all__ = ['Max2SATAnsatz', 'MaxCutAnsatz', 'QAOAAnsatz', 'RQAOAAnsatz', 'MaxCutRQAOAAnsatz']

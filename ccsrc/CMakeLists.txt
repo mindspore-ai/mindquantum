@@ -26,11 +26,10 @@ target_link_libraries(
   PUBLIC ${MQ_OPENMP_TARGET}
          cxx20_compat
          cmake_config
-         mindquantum::boost_headers
+         mq_math
          mindquantum::eigen
          mindquantum::fmt
          mindquantum::json
-         mindquantum::lru_cache
          mindquantum_setup
          $<$<BOOL:${ENABLE_LOGGING}>:mindquantum::spdlog>)
 

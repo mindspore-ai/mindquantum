@@ -114,6 +114,7 @@ skip-string-normalization = true
       'mindquantum._mq_vector',
       'mindquantum._mq_vector_gpu',
       'mindquantum._mq_matrix',
+      'mindquantum._math',
       'mindquantum.experimental._mindquantum_cxx',
     ]
     extension-pkg-allow-list = [
@@ -121,6 +122,7 @@ skip-string-normalization = true
       'mindquantum._mq_vector',
       'mindquantum._mq_vector_gpu',
       'mindquantum._mq_matrix',
+      'mindquantum._math',
       'mindquantum.experimental._mindquantum_cxx',
     ]
 
@@ -132,7 +134,7 @@ skip-string-normalization = true
     good-names = ['ax', 'fd', 'i', 'j', 'k', 'l', 'n', 'N', 'q0', 'q1', 'q2', 'u', 'u1', 'u2', 'u3', 'v',
                   'x', 'x1', 'x2', 'y', 'y1', 'y2', 'z', 'z1', 'z2',
                   'n_layers', 'n_qubits', 'pr', 'a', 'b', 'g', 'f1',
-                  'f2', 'c', 'r', 'd', 'm', 'tq', 'p', 'd1', 'd2', 'w', 'p1', 'p2', 'f']
+                  'f2', 'c', 'r', 'd', 'm', 'tq', 'p', 'd1', 'd2', 'w', 'p1', 'p2', 'f', 't']
 
     [tool.pylint.typecheck]
     ignored-modules = [

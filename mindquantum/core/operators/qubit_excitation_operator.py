@@ -14,7 +14,6 @@
 # ============================================================================
 
 # pylint: disable=duplicate-code
-
 """This module implements qubit-excitation operators."""
 
 from mindquantum.core.parameterresolver import ParameterResolver
@@ -235,14 +234,14 @@ class QubitExcitationOperator(_Operator):
             elif isinstance(term[0], int):
                 index, operator = term
                 if operator in self.operators:
-                    tmp_string += f'Q{index}{self.operators[operator]} '
+                    tmp_string += f"Q{index}{'^' if operator == self.operators['^'] else ''} "
             else:
                 for sub_term in term:
                     index, operator = sub_term
                     # check validity, if checked before,
                     # then we can take away this step
                     if operator in self.operators:
-                        tmp_string += f'Q{index}{self.operators[operator]} '
+                        tmp_string += f"Q{index}{'^' if operator == self.operators['^'] else ''} "
 
             if term_cnt < len(self.terms):
                 string_rep += f'{tmp_string.strip()}] +\n'  # end of the ']'

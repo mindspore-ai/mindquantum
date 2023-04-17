@@ -23,18 +23,16 @@ from mindquantum.core.gates import BasicGate
 from mindquantum.core.operators import Hamiltonian
 from mindquantum.core.parameterresolver import ParameterResolver
 
-from ..config import get_context
-
 
 class BackendBase:
     """Backend interface."""
 
-    def __init__(self, name: str, n_qubits: int, seed=42):
+    def __init__(self, name: str, n_qubits: int, seed=42, dtype=None):
         """Initialize backend obj."""
         self.name = name
         self.n_qubits = n_qubits
         self.seed = seed
-        self.arithmetic_type = get_context('dtype')
+        self.arithmetic_type = dtype
 
     def apply_circuit(
         self,
@@ -56,6 +54,15 @@ class BackendBase:
     def apply_hamiltonian(self, hamiltonian: Hamiltonian):
         """Apply a hamiltonian."""
         raise NotImplementedError(f"apply_hamiltonian not implemented for {self.device_name()}")
+
+    def astype(self, dtype, seed):
+        """Convert simulator to other data type."""
+        raise NotImplementedError(f"astype not implement for {self.device_name()}")
+
+    @property
+    def dtype(self):
+        """Get data type of simulator."""
+        raise NotImplementedError(f"get dtype not implement for {self.device_name()}")
 
     def copy(self) -> "BackendBase":
         """Copy this backend."""

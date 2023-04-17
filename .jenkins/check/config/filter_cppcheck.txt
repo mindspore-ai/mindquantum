@@ -16,6 +16,7 @@
 
 "mindquantum/ccsrc/include/core/parameter_resolver.h:707"                                           "duplicateExpression"
 "mindquantum/ccsrc/python/mqbackend/lib/binding.cc"                                                 "duplicateExpression"
+"mindquantum/ccsrc/python/math/lib/bind_math.cpp"                                                   "duplicateExpression"
 
 "mindquantum/ccsrc/include/experimental/decompositions/decomposition_atom.hpp:41"                   "noExplicitConstructor"
 "mindquantum/ccsrc/include/experimental/ops/parametric/gate_base.hpp"                               "noExplicitConstructor"

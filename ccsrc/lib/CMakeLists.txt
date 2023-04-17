@@ -19,6 +19,7 @@
 add_subdirectory(mq_base)
 add_subdirectory(simulator)
 add_subdirectory(device)
+add_subdirectory(math)
 
 # ==============================================================================
 

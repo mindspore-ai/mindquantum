@@ -12,25 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Quantum Shannon Decomposition"""
-
+"""Quantum Shannon Decomposition."""
+# pylint: disable=invalid-name
 from typing import List
+
 import numpy as np
 from scipy import linalg
+
 from mindquantum.core import gates
-from mindquantum.core.gates import QuantumGate, BarrierGate
 from mindquantum.core.circuit import Circuit
+from mindquantum.core.gates import BarrierGate, QuantumGate
 from mindquantum.utils.f import is_power_of_two
-from ..fixed_decompose import ccx_decompose
-from .two_qubit_decompose import abc_decompose
-from .one_qubit_decompose import euler_decompose
-from ..utils import optimize_circuit
+
 from .. import utils
+from ..fixed_decompose import ccx_decompose
+from ..utils import optimize_circuit
+from .one_qubit_decompose import euler_decompose
+from .two_qubit_decompose import abc_decompose
 
 
 def cu_decompose(gate: QuantumGate, with_barrier: bool = False) -> Circuit:
     """
-    Decomposition for arbitrary-dimension controlled-U gate decomposition, with m control qubits and n target qubits
+    Decomposition for arbitrary-dimension controlled-U gate decomposition, with m control qubits and n target qubits.
 
     When recursively calling the function itself, `m` decreases, while `n` holds constant.
 
@@ -269,13 +272,13 @@ def demultiplex_pauli(sigma: str, tq: int, cqs: List[int], *args, permute_cnot: 
         cq_1st = cqs.pop(0)
         cq_2nd = cqs.pop(0)
         circ += demultiplex_pauli(sigma, tq, cqs, *s0)
-        circ += (Circuit() + gates.X.on(tq, cq_2nd))
+        circ += Circuit() + gates.X.on(tq, cq_2nd)
         circ += demultiplex_pauli(sigma, tq, cqs, *s1)
-        circ += (Circuit() + gates.X.on(tq, cq_1st))
+        circ += Circuit() + gates.X.on(tq, cq_1st)
         circ += demultiplex_pauli(sigma, tq, cqs, *t1)
-        circ += (Circuit() + gates.X.on(tq, cq_2nd))
+        circ += Circuit() + gates.X.on(tq, cq_2nd)
         circ += demultiplex_pauli(sigma, tq, cqs, *t0)
-        circ += (Circuit() + gates.X.on(tq, cq_1st))
+        circ += Circuit() + gates.X.on(tq, cq_1st)
     return circ
 
 

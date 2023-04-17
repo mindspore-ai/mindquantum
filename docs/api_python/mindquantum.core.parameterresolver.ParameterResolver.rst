@@ -179,7 +179,7 @@
         返回：
             ParameterResolver，参数解析器本身。
 
-    .. py:method:: para_value
+    .. py:method:: params_value
         :property:
 
         获取参数值。

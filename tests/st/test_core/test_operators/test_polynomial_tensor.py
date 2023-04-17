@@ -17,19 +17,16 @@ Test the polynomial_tensor in the ops module.
 import numpy as np
 import pytest
 
-from mindquantum.config import set_context
 from mindquantum.core.operators import PolynomialTensor
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
-@pytest.mark.parametrize('dtype', ['float', 'double'])
-def test_polynomial_tensor(dtype):
+def test_polynomial_tensor():
     """
     Description: Test polynomial tensor
     Expectation:
     """
-    set_context(dtype=dtype)
     one_body_term = np.array([[1, 0], [0, 1]])
     two_body_term = np.array([[[[1, 0], [0, 1]], [[1, 0], [0, 1]]], [[[1, 0], [0, 1]], [[1, 0], [0, 1]]]])
     n_body_tensors = {(): 1, (1, 0): one_body_term, (1, 1, 0, 0): two_body_term}

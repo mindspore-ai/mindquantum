@@ -22,15 +22,14 @@ AVAILABLE_BACKEND = []
 try:
     import mindspore as ms
 
-    from mindquantum.config import set_context
     from mindquantum.core import gates as G
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.operators import Hamiltonian, QubitOperator
     from mindquantum.framework import MQLayer
     from mindquantum.simulator import Simulator
-    from mindquantum.simulator.simulator import available_backend
+    from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
-    AVAILABLE_BACKEND = available_backend()
+    AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
@@ -52,18 +51,17 @@ def test_mindquantumlayer(config):
     Description: Test MQLayer
     Expectation:
     """
-    backend, dtype, device = config
-    set_context(dtype=dtype, device_target=device)
+    backend, dtype = config
     encoder = Circuit()
     ansatz = Circuit()
     encoder += G.RX('e1').on(0)
     encoder += G.RY('e2').on(1)
     ansatz += G.X.on(1, 0)
     ansatz += G.RY('p1').on(0)
-    ham = Hamiltonian(QubitOperator('Z0'))
+    ham = Hamiltonian(QubitOperator('Z0').astype(dtype))
     ms.set_seed(55)
     circ = encoder.as_encoder() + ansatz.as_ansatz()
-    sim = Simulator(backend, circ.n_qubits)
+    sim = Simulator(backend, circ.n_qubits, dtype=dtype)
     f_g_ops = sim.get_expectation_with_grad(ham, circ)
     net = MQLayer(f_g_ops)
     encoder_data = ms.Tensor(np.array([[0.1, 0.2]]).astype(np.float32))

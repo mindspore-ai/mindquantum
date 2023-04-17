@@ -216,13 +216,13 @@ def is_two_number_close(a, b, atol=None):  # pylint: disable=invalid-name
         True
     """
     from mindquantum.config.config import (  # pylint: disable=import-outside-toplevel
-        get_context,
+        context,
     )
 
     _check_input_type("a", numbers.Number, a)
     _check_input_type("b", numbers.Number, b)
     if atol is None:
-        atol = get_context('precision')
+        atol = context.get_precision()
     _check_input_type("atol", float, atol)
     return np.allclose(np.abs(a - b), 0, atol=atol)
 

@@ -16,9 +16,10 @@
 
 #include "config/details/macros.hpp"
 #include "config/openmp.hpp"
+#include "config/type_promotion.hpp"
 
-#include "core/parameter_resolver.hpp"
 #include "core/utils.hpp"
+#include "math/pr/parameter_resolver.hpp"
 #include "simulator/types.hpp"
 #include "simulator/utils.hpp"
 #ifdef __x86_64__

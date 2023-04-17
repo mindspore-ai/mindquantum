@@ -26,3 +26,19 @@ class DeviceNotSupportedError(Exception):
     def __str__(self):
         """Get error message."""
         return self.msg
+
+
+class SimNotAvailableError(Exception):
+    """Error for not available simulator."""
+
+    def __init__(self, sim, dtype=None):
+        """Initialize a simulator not available error."""
+        super().__init__()
+        if dtype is None:
+            self.msg = f"{sim} not available."
+        else:
+            self.msg = f"{sim} with data type {dtype} not available."
+
+    def __str__(self):
+        """Get error message."""
+        return self.msg

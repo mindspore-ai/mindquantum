@@ -14,7 +14,7 @@
 
 #include "config/openmp.hpp"
 
-#include "core/parameter_resolver.hpp"
+#include "math/pr/parameter_resolver.hpp"
 #include "simulator/utils.hpp"
 #ifdef __x86_64__
 #    include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"

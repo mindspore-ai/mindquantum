@@ -35,7 +35,10 @@
 #include <vector>
 
 #include "core/mq_base_types.hpp"
-#include "core/parameter_resolver.hpp"
+#include "math/pr/parameter_resolver.hpp"
+#include "math/tensor/matrix.hpp"
+#include "math/tensor/ops/basic_math.hpp"
+#include "math/tensor/ops_cpu/memory_operator.hpp"
 #include "ops/basic_gate.hpp"
 #include "ops/gates.hpp"
 #include "ops/hamiltonian.hpp"
@@ -110,6 +113,11 @@ auto DensityMatrixState<qs_policy_t_>::operator=(DensityMatrixState<qs_policy_t>
 }
 
 template <typename qs_policy_t_>
+tensor::TDtype DensityMatrixState<qs_policy_t_>::DType() {
+    return tensor::to_dtype_v<py_qs_data_t>;
+}
+
+template <typename qs_policy_t_>
 void DensityMatrixState<qs_policy_t_>::Reset() {
     qs_policy_t::Reset(qs, dim);
 }
@@ -151,7 +159,7 @@ auto DensityMatrixState<qs_policy_t_>::PureStateVector() -> py_qs_datas_t {
 
 template <typename qs_policy_t_>
 index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& gate,
-                                                    const ParameterResolver<calc_type>& pr, bool diff) {
+                                                    const parameter::ParameterResolver& pr, bool diff) {
     auto id = gate->id_;
     switch (id) {
         case GateID::I:
@@ -188,63 +196,63 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
             qs_policy_t::ApplyISWAP(qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
         } break;
         case GateID::RX: {
-            auto g = static_cast<RXGate<calc_type>*>(gate.get());
+            auto g = static_cast<RXGate*>(gate.get());
             if (!g->GradRequired()) {
                 diff = false;
             }
-            auto val = g->prs_[0].Combination(pr).const_value;
+            auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
             qs_policy_t::ApplyRX(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
         } break;
         case GateID::RY: {
-            auto g = static_cast<RYGate<calc_type>*>(gate.get());
+            auto g = static_cast<RYGate*>(gate.get());
             if (!g->GradRequired()) {
                 diff = false;
             }
-            auto val = g->prs_[0].Combination(pr).const_value;
+            auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
             qs_policy_t::ApplyRY(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
         } break;
         case GateID::RZ: {
-            auto g = static_cast<RZGate<calc_type>*>(gate.get());
+            auto g = static_cast<RZGate*>(gate.get());
             if (!g->GradRequired()) {
                 diff = false;
             }
-            auto val = g->prs_[0].Combination(pr).const_value;
+            auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
             qs_policy_t::ApplyRZ(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
         } break;
         case GateID::Rxx: {
-            auto g = static_cast<RxxGate<calc_type>*>(gate.get());
+            auto g = static_cast<RxxGate*>(gate.get());
             if (!g->GradRequired()) {
                 diff = false;
             }
-            auto val = g->prs_[0].Combination(pr).const_value;
+            auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
             qs_policy_t::ApplyRxx(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
         } break;
         case GateID::Ryy: {
-            auto g = static_cast<RyyGate<calc_type>*>(gate.get());
+            auto g = static_cast<RyyGate*>(gate.get());
             if (!g->GradRequired()) {
                 diff = false;
             }
-            auto val = g->prs_[0].Combination(pr).const_value;
+            auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
             qs_policy_t::ApplyRyy(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
         } break;
         case GateID::Rzz: {
-            auto g = static_cast<RzzGate<calc_type>*>(gate.get());
+            auto g = static_cast<RzzGate*>(gate.get());
             if (!g->GradRequired()) {
                 diff = false;
             }
-            auto val = g->prs_[0].Combination(pr).const_value;
+            auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
             qs_policy_t::ApplyRzz(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
         } break;
         case GateID::PS: {
-            auto g = static_cast<PSGate<calc_type>*>(gate.get());
+            auto g = static_cast<PSGate*>(gate.get());
             if (!g->GradRequired()) {
                 diff = false;
             }
-            auto val = g->prs_[0].Combination(pr).const_value;
+            auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
             qs_policy_t::ApplyPS(qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
         } break;
         // case GateID::GP: {
-        //     auto g = static_cast<GPGate<calc_type>*>(gate.get());
+        //     auto g = static_cast<GPGate*>(gate.get());
         //     if (!g->GradRequired()) {
         //         diff = false;
         //     }
@@ -255,32 +263,34 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
             if (diff) {
                 std::runtime_error("Can not apply differential format of U3 gate on quantum states currently.");
             }
-            auto u3 = static_cast<U3<calc_type>*>(gate.get());
-            Dim2Matrix<calc_type> m;
+            auto u3 = static_cast<U3*>(gate.get());
+            tensor::Matrix m;
             if (!u3->Parameterized()) {
                 m = u3->base_matrix_;
             } else {
                 auto theta = u3->theta.Combination(pr).const_value;
                 auto phi = u3->phi.Combination(pr).const_value;
                 auto lambda = u3->lambda.Combination(pr).const_value;
-                m = U3Matrix<calc_type>(theta, phi, lambda);
+                m = U3Matrix(theta, phi, lambda);
             }
-            qs_policy_t::ApplySingleQubitMatrix(qs, qs, gate->obj_qubits_[0], gate->ctrl_qubits_, m.matrix_, dim);
+            qs_policy_t::ApplySingleQubitMatrix(qs, qs, gate->obj_qubits_[0], gate->ctrl_qubits_,
+                                                tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
         } break;
         case GateID::FSim: {
             if (diff) {
                 std::runtime_error("Can not apply differential format of FSim gate on quantum states currently.");
             }
-            auto fsim = static_cast<FSim<calc_type>*>(gate.get());
-            Dim2Matrix<calc_type> m;
+            auto fsim = static_cast<FSim*>(gate.get());
+            tensor::Matrix m;
             if (!fsim->Parameterized()) {
                 m = fsim->base_matrix_;
             } else {
                 auto theta = fsim->theta.Combination(pr).const_value;
                 auto phi = fsim->phi.Combination(pr).const_value;
-                m = FSimMatrix<calc_type>(theta, phi);
+                m = FSimMatrix(theta, phi);
             }
-            qs_policy_t::ApplyTwoQubitsMatrix(qs, qs, gate->obj_qubits_, gate->ctrl_qubits_, m.matrix_, dim);
+            qs_policy_t::ApplyTwoQubitsMatrix(qs, qs, gate->obj_qubits_, gate->ctrl_qubits_,
+                                              tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
         } break;
         case GateID::M:
             return this->ApplyMeasure(gate);
@@ -296,24 +306,28 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
             qs_policy_t::ApplyPhaseDamping(qs, gate->obj_qubits_,
                                            static_cast<PhaseDampingChannel*>(gate.get())->damping_coeff_, dim);
             break;
-        case GateID::KRAUS:
-            qs_policy_t::ApplyKraus(qs, gate->obj_qubits_,
-                                    static_cast<KrausChannel<calc_type>*>(gate.get())->kraus_operator_set_, dim);
-            break;
+        case GateID::KRAUS: {
+            auto& k_set = static_cast<KrausChannel*>(gate.get())->kraus_operator_set_;
+            VT<matrix_t> k_mat;
+            std::transform(k_set.begin(), k_set.end(), std::back_inserter(k_mat),
+                           [&](auto& k) { return tensor::ops::cpu::to_vector<py_qs_data_t>(k); });
+            qs_policy_t::ApplyKraus(qs, gate->obj_qubits_, k_mat, dim);
+        } break;
         case GateID::CUSTOM: {
-            auto g = static_cast<CustomGate<calc_type>*>(gate.get());
-            typename std::remove_reference_t<decltype(*g)>::matrix_t mat;
+            auto g = static_cast<CustomGate*>(gate.get());
+            tensor::Matrix mat;
             if (!g->Parameterized()) {
                 mat = g->base_matrix_;
             } else {
-                calc_type val = g->prs_[0].Combination(pr).const_value;
+                calc_type val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
                 if (!diff) {
                     mat = g->numba_param_matrix_(val);
                 } else {
                     mat = g->numba_param_diff_matrix_(val);
                 }
             }
-            qs_policy_t::ApplyMatrixGate(qs, qs, gate->obj_qubits_, gate->ctrl_qubits_, mat.matrix_, dim);
+            qs_policy_t::ApplyMatrixGate(qs, qs, gate->obj_qubits_, gate->ctrl_qubits_,
+                                         tensor::ops::cpu::to_vector<py_qs_data_t>(mat), dim);
             break;
         }
         default:
@@ -338,10 +352,13 @@ void DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicG
         case GateID::PL:
             qs_policy_t::ApplyPauli(qs, gate->obj_qubits_, static_cast<PauliChannel*>(gate.get())->probs_, dim);
             break;
-        case GateID::KRAUS:
-            qs_policy_t::ApplyKraus(qs, gate->obj_qubits_,
-                                    static_cast<KrausChannel<calc_type>*>(gate.get())->kraus_operator_set_, dim);
-            break;
+        case GateID::KRAUS: {
+            auto& k_set = static_cast<KrausChannel*>(gate.get())->kraus_operator_set_;
+            VT<matrix_t> k_mat;
+            std::transform(k_set.begin(), k_set.end(), std::back_inserter(k_mat),
+                           [](auto& m) { return tensor::ops::cpu::to_vector<py_qs_data_t>(m); });
+            qs_policy_t::ApplyKraus(qs, gate->obj_qubits_, k_mat, dim);
+        } break;
         default:
             throw std::invalid_argument(fmt::format("{} is not a noise channel.", id));
     }
@@ -365,43 +382,44 @@ auto DensityMatrixState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicG
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
                                                       const std::shared_ptr<BasicGate>& gate,
-                                                      const ParameterResolver<calc_type>& pr, index_t dim)
-    -> Dim2Matrix<calc_type> {
+                                                      const parameter::ParameterResolver& pr, index_t dim)
+    -> tensor::Matrix {
     auto id = gate->id_;
     VT<py_qs_data_t> grad = {0};
     switch (id) {
         case GateID::RX:
             grad[0] = qs_policy_t::ExpectDiffRX(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-            return Dim2Matrix<calc_type>({grad});
+            return tensor::Matrix(VVT<py_qs_data_t>{grad});
         case GateID::RY:
             grad[0] = qs_policy_t::ExpectDiffRY(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-            return Dim2Matrix<calc_type>({grad});
+            return tensor::Matrix(VVT<py_qs_data_t>{grad});
         case GateID::RZ:
             grad[0] = qs_policy_t::ExpectDiffRZ(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-            return Dim2Matrix<calc_type>({grad});
+            return tensor::Matrix(VVT<py_qs_data_t>{grad});
         case GateID::Rxx:
             grad[0] = qs_policy_t::ExpectDiffRxx(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-            return Dim2Matrix<calc_type>({grad});
+            return tensor::Matrix(VVT<py_qs_data_t>{grad});
         case GateID::Rzz:
             grad[0] = qs_policy_t::ExpectDiffRzz(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-            return Dim2Matrix<calc_type>({grad});
+            return tensor::Matrix(VVT<py_qs_data_t>{grad});
         case GateID::Ryy:
             grad[0] = qs_policy_t::ExpectDiffRyy(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-            return Dim2Matrix<calc_type>({grad});
+            return tensor::Matrix(VVT<py_qs_data_t>{grad});
         case GateID::PS:
             grad[0] = qs_policy_t::ExpectDiffPS(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-            return Dim2Matrix<calc_type>({grad});
+            return tensor::Matrix(VVT<py_qs_data_t>{grad});
         // case GateID::GP:
         //     grad[0] = qs_policy_t::ExpectDiffGP(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-        //     return Dim2Matrix<calc_type>({grad});
+        //     return tensor::Matrix({grad});
         case GateID::CUSTOM: {
-            auto g = static_cast<CustomGate<calc_type>*>(gate.get());
-            auto val = g->prs_[0].Combination(pr).const_value;
-            typename std::remove_reference_t<decltype(*g)>::matrix_t gate_m = g->numba_param_matrix_(val);
-            typename std::remove_reference_t<decltype(*g)>::matrix_t diff_m = g->numba_param_diff_matrix_(val);
+            auto g = static_cast<CustomGate*>(gate.get());
+            auto val = tensor::ops::cpu::to_vector<double>(g->prs_[0].Combination(pr).const_value)[0];
+            tensor::Matrix gate_m = g->numba_param_matrix_(val);
+            tensor::Matrix diff_m = g->numba_param_diff_matrix_(val);
             grad[0] = qs_policy_t::ExpectDiffMatrixGate(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_,
-                                                        gate_m.matrix_, diff_m.matrix_, dim);
-            return Dim2Matrix<calc_type>({grad});
+                                                        tensor::ops::cpu::to_vector<py_qs_data_t>(gate_m),
+                                                        tensor::ops::cpu::to_vector<py_qs_data_t>(diff_m), dim);
+            return tensor::Matrix(VVT<py_qs_data_t>{grad});
         }
         case GateID::U3:
             return ExpectDiffU3(dens_matrix, ham_matrix, gate, pr, dim);
@@ -415,38 +433,40 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t dens_matrix, q
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ExpectDiffU3(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
                                                     const std::shared_ptr<BasicGate>& gate,
-                                                    const ParameterResolver<calc_type>& pr, index_t dim)
-    -> Dim2Matrix<calc_type> {
+                                                    const parameter::ParameterResolver& pr, index_t dim)
+    -> tensor::Matrix {
     py_qs_datas_t grad = {0, 0, 0};
-    auto u3 = static_cast<U3<calc_type>*>(gate.get());
+    auto u3 = static_cast<U3*>(gate.get());
     if (u3->parameterized_) {
         auto theta = u3->theta.Combination(pr).const_value;
         auto phi = u3->phi.Combination(pr).const_value;
         auto lambda = u3->lambda.Combination(pr).const_value;
         if (u3->theta.data_.size() != u3->theta.no_grad_parameters_.size()) {
-            grad[0] = qs_policy_t::ExpectDiffU3Theta(dens_matrix, ham_matrix, u3->obj_qubits_, u3->ctrl_qubits_, phi,
-                                                     dim);
+            grad[0] = qs_policy_t::ExpectDiffU3Theta(dens_matrix, ham_matrix, u3->obj_qubits_, u3->ctrl_qubits_,
+                                                     tensor::ops::cpu::to_vector<calc_type>(phi)[0], dim);
         }
         if (u3->phi.data_.size() != u3->phi.no_grad_parameters_.size()) {
             grad[1] = qs_policy_t::ExpectDiffU3Phi(dens_matrix, ham_matrix, u3->obj_qubits_, u3->ctrl_qubits_, dim);
         }
         if (u3->lambda.data_.size() != u3->lambda.no_grad_parameters_.size()) {
-            Dim2Matrix<calc_type> diff_m{U3DiffLambdaMatrix(theta, phi, lambda)};
-            Dim2Matrix<calc_type> herm_m{U3Matrix(-theta, -lambda, -phi)};
+            tensor::Matrix diff_m{U3DiffLambdaMatrix(theta, phi, lambda)};
+            tensor::Matrix herm_m{U3Matrix(0.0 - theta, 0.0 - lambda, 0.0 - phi)};
             grad[2] = qs_policy_t::ExpectDiffSingleQubitMatrix(dens_matrix, ham_matrix, u3->obj_qubits_,
-                                                               u3->ctrl_qubits_, diff_m.matrix_, herm_m.matrix_, dim);
+                                                               u3->ctrl_qubits_,
+                                                               tensor::ops::cpu::to_vector<py_qs_data_t>(diff_m),
+                                                               tensor::ops::cpu::to_vector<py_qs_data_t>(herm_m), dim);
         }
     }
-    return Dim2Matrix<calc_type>({grad});
+    return tensor::Matrix(VVT<py_qs_data_t>{grad});
 }
 
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ExpectDiffFSim(qs_data_p_t dens_matrix, qs_data_p_t ham_matrix,
                                                       const std::shared_ptr<BasicGate>& gate,
-                                                      const ParameterResolver<calc_type>& pr, index_t dim)
-    -> Dim2Matrix<calc_type> {
+                                                      const parameter::ParameterResolver& pr, index_t dim)
+    -> tensor::Matrix {
     py_qs_datas_t grad = {0, 0};
-    auto fsim = static_cast<FSim<calc_type>*>(gate.get());
+    auto fsim = static_cast<FSim*>(gate.get());
     if (fsim->parameterized_) {
         if (fsim->theta.data_.size() != fsim->theta.no_grad_parameters_.size()) {
             grad[0] = qs_policy_t::ExpectDiffFSimTheta(dens_matrix, ham_matrix, fsim->obj_qubits_, fsim->ctrl_qubits_,
@@ -457,12 +477,12 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffFSim(qs_data_p_t dens_matrix, q
                                                      dim);
         }
     }
-    return Dim2Matrix<calc_type>({grad});
+    return tensor::Matrix(VVT<py_qs_data_t>{grad});
 }
 
 template <typename qs_policy_t_>
 std::map<std::string, int> DensityMatrixState<qs_policy_t_>::ApplyCircuit(const circuit_t& circ,
-                                                                          const ParameterResolver<calc_type>& pr) {
+                                                                          const parameter::ParameterResolver& pr) {
     std::map<std::string, int> result;
     for (auto& g : circ) {
         if (g->id_ == GateID::M) {
@@ -483,7 +503,7 @@ template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneOne(const Hamiltonian<calc_type>& ham,
                                                                               const circuit_t& circ,
                                                                               const circuit_t& herm_circ,
-                                                                              const ParameterResolver<calc_type>& pr,
+                                                                              const parameter::ParameterResolver& pr,
                                                                               const MST<size_t>& p_map, int n_thread)
     -> py_qs_datas_t {
     if (circ.size() != herm_circ.size()) {
@@ -499,13 +519,13 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneOne(co
     for (const auto& g : herm_circ) {
         --n;
         if (g->GradRequired()) {
-            auto p_gate = static_cast<Parameterizable<calc_type>*>(circ[n].get());
+            auto p_gate = static_cast<Parameterizable*>(circ[n].get());
             const auto& [title, jac] = p_gate->jacobi;
             if (title.size() != 0) {
                 auto intrin_grad = ExpectDiffGate(sim_qs.qs, sim_ham.qs, circ[n], pr, dim);
-                auto p_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                auto p_grad = tensor::ops::cpu::to_vector<py_qs_data_t>(tensor::ops::MatMul(intrin_grad, jac));
                 for (const auto& [name, idx] : title) {
-                    f_and_g[1 + p_map.at(name)] += 2 * std::real(p_grad.matrix_[0][idx]);
+                    f_and_g[1 + p_map.at(name)] += 2 * std::real(p_grad[0][idx]);
                 }
             }
         }
@@ -518,7 +538,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneOne(co
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneMulti(
     const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ, const circuit_t& herm_circ,
-    const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map, int n_thread) -> VT<py_qs_datas_t> {
+    const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread) -> VT<py_qs_datas_t> {
     auto n_hams = hams.size();
     int max_thread = 15;
     if (circ.size() != herm_circ.size()) {
@@ -556,14 +576,14 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneMulti(
         for (const auto& g : herm_circ) {
             --n;
             if (g->GradRequired()) {
-                auto p_gate = static_cast<Parameterizable<calc_type>*>(circ[n].get());
+                auto p_gate = static_cast<Parameterizable*>(circ[n].get());
                 const auto& [title, jac] = p_gate->jacobi;
                 if (title.size() != 0) {
                     for (int j = start; j < end; j++) {
                         auto intrin_grad = ExpectDiffGate(sim_qs.qs, sim_hams[j - start].qs, circ[n], pr, dim);
-                        auto p_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                        auto p_grad = tensor::ops::cpu::to_vector<py_qs_data_t>(tensor::ops::MatMul(intrin_grad, jac));
                         for (const auto& [name, idx] : title) {
-                            f_and_g[j][1 + p_map.at(name)] += 2 * std::real(p_grad.matrix_[0][idx]);
+                            f_and_g[j][1 + p_map.at(name)] += 2 * std::real(p_grad[0][idx]);
                         }
                     }
                 }
@@ -603,7 +623,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradMultiMult
         p_map[ans_name[i]] = i + enc_name.size();
     }
     if (n_prs == 1) {
-        ParameterResolver<calc_type> pr = ParameterResolver<calc_type>();
+        parameter::ParameterResolver pr = parameter::ParameterResolver();
         pr.SetItems(enc_name, enc_data[0]);
         pr.SetItems(ans_name, ans_data);
         output[0] = GetExpectationWithReversibleGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
@@ -624,7 +644,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradMultiMult
             }
             auto task = [&, start, end]() {
                 for (size_t n = start; n < end; n++) {
-                    ParameterResolver<calc_type> pr = ParameterResolver<calc_type>();
+                    parameter::ParameterResolver pr = parameter::ParameterResolver();
                     pr.SetItems(enc_name, enc_data[n]);
                     pr.SetItems(ans_name, ans_data);
                     auto f_g = GetExpectationWithReversibleGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
@@ -644,7 +664,7 @@ template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneOne(const Hamiltonian<calc_type>& ham,
                                                                          const circuit_t& circ,
                                                                          const circuit_t& herm_circ,
-                                                                         const ParameterResolver<calc_type>& pr,
+                                                                         const parameter::ParameterResolver& pr,
                                                                          const MST<size_t>& p_map) -> py_qs_datas_t {
     if (circ.size() != herm_circ.size()) {
         std::runtime_error("In density matrix mode, circ and herm_circ must be the same size.");
@@ -660,16 +680,16 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneOne(const H
     for (const auto& g : herm_circ) {
         --n;
         if (g->GradRequired()) {
-            auto p_gate = static_cast<Parameterizable<calc_type>*>(circ[n].get());
+            auto p_gate = static_cast<Parameterizable*>(circ[n].get());
             const auto& [title, jac] = p_gate->jacobi;
             if (title.size() != 0) {
                 for (index_t a = 0; a <= n; a++) {
                     sim_qs.ApplyGate(circ[a], pr);
                 }
                 auto intrin_grad = ExpectDiffGate(sim_qs.qs, sim_ham.qs, circ[n], pr, dim);
-                auto p_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                auto p_grad = tensor::ops::cpu::to_vector<py_qs_data_t>(tensor::ops::MatMul(intrin_grad, jac));
                 for (const auto& [name, idx] : title) {
-                    f_and_g[1 + p_map.at(name)] += 2 * std::real(p_grad.matrix_[0][idx]);
+                    f_and_g[1 + p_map.at(name)] += 2 * std::real(p_grad[0][idx]);
                 }
                 sim_qs.CopyQS(this->qs);
             }
@@ -682,7 +702,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneOne(const H
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneMulti(
     const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ, const circuit_t& herm_circ,
-    const ParameterResolver<calc_type>& pr, const MST<size_t>& p_map, int n_thread) -> VT<py_qs_datas_t> {
+    const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread) -> VT<py_qs_datas_t> {
     if (circ.size() != herm_circ.size()) {
         std::runtime_error("In density matrix mode, circ and herm_circ must be the same size.");
     }
@@ -721,7 +741,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneMulti(
         for (const auto& g : herm_circ) {
             --n;
             if (g->GradRequired()) {
-                auto p_gate = static_cast<Parameterizable<calc_type>*>(circ[n].get());
+                auto p_gate = static_cast<Parameterizable*>(circ[n].get());
                 const auto& [title, jac] = p_gate->jacobi;
                 if (title.size() != 0) {
                     for (index_t a = 0; a <= n; a++) {
@@ -729,9 +749,9 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneMulti(
                     }
                     for (int j = start; j < end; j++) {
                         auto intrin_grad = ExpectDiffGate(sim_qs.qs, sim_hams[j - start].qs, circ[n], pr, dim);
-                        auto p_grad = Dim2MatrixMatMul<calc_type>(intrin_grad, jac);
+                        auto p_grad = tensor::ops::cpu::to_vector<py_qs_data_t>(tensor::ops::MatMul(intrin_grad, jac));
                         for (const auto& [name, idx] : title) {
-                            f_and_g[j][1 + p_map.at(name)] += 2 * std::real(p_grad.matrix_[0][idx]);
+                            f_and_g[j][1 + p_map.at(name)] += 2 * std::real(p_grad[0][idx]);
                         }
                     }
                     sim_qs.CopyQS(this->qs);
@@ -771,7 +791,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradMultiMulti(
         p_map[ans_name[i]] = i + enc_name.size();
     }
     if (n_prs == 1) {
-        ParameterResolver<calc_type> pr = ParameterResolver<calc_type>();
+        parameter::ParameterResolver pr = parameter::ParameterResolver();
         pr.SetItems(enc_name, enc_data[0]);
         pr.SetItems(ans_name, ans_data);
         output[0] = GetExpectationWithNoiseGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
@@ -792,7 +812,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradMultiMulti(
             }
             auto task = [&, start, end]() {
                 for (size_t n = start; n < end; n++) {
-                    ParameterResolver<calc_type> pr = ParameterResolver<calc_type>();
+                    parameter::ParameterResolver pr = parameter::ParameterResolver();
                     pr.SetItems(enc_name, enc_data[n]);
                     pr.SetItems(ans_name, ans_data);
                     auto f_g = GetExpectationWithNoiseGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
@@ -809,7 +829,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradMultiMulti(
 }
 
 template <typename qs_policy_t_>
-VT<unsigned> DensityMatrixState<qs_policy_t_>::Sampling(const circuit_t& circ, const ParameterResolver<calc_type>& pr,
+VT<unsigned> DensityMatrixState<qs_policy_t_>::Sampling(const circuit_t& circ, const parameter::ParameterResolver& pr,
                                                         size_t shots, const MST<size_t>& key_map, unsigned int seed) {
     auto key_size = key_map.size();
     VT<unsigned> res(shots * key_size);

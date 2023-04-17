@@ -24,15 +24,14 @@ try:
     import mindspore as ms
 
     from mindquantum.algorithm.nisq import generate_uccsd
-    from mindquantum.config import set_context
     from mindquantum.core import gates as G
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.operators import Hamiltonian
     from mindquantum.framework import MQAnsatzOnlyLayer
     from mindquantum.simulator import Simulator
-    from mindquantum.simulator.simulator import available_backend
+    from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
-    AVAILABLE_BACKEND = available_backend()
+    AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:
@@ -65,10 +64,9 @@ def test_vqe_net(config):  # pylint: disable=too-many-locals
     Description: Test vqe
     Expectation:
     """
-    backend, dtype, device = config
+    backend, dtype = config
     if backend == 'mqmatrix':
         return
-    set_context(dtype=dtype, device_target=device)
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
     (
         ansatz_circuit,
@@ -80,8 +78,8 @@ def test_vqe_net(config):  # pylint: disable=too-many-locals
     ) = generate_uccsd(str(Path(__file__).parent.parent / 'H4.hdf5'), threshold=-1)
     hf_circuit = Circuit([G.X.on(i) for i in range(n_electrons)])
     vqe_circuit = hf_circuit + ansatz_circuit
-    sim = Simulator(backend, vqe_circuit.n_qubits)
-    f_g_ops = sim.get_expectation_with_grad(Hamiltonian(hamiltonian_qubitop.real), vqe_circuit)
+    sim = Simulator(backend, vqe_circuit.n_qubits, dtype=dtype)
+    f_g_ops = sim.get_expectation_with_grad(Hamiltonian(hamiltonian_qubitop.real.astype(dtype)), vqe_circuit)
     molecule_pqcnet = MQAnsatzOnlyLayer(f_g_ops)
     optimizer = ms.nn.Adagrad(molecule_pqcnet.trainable_params(), learning_rate=4e-2)
     train_pqcnet = ms.nn.TrainOneStepCell(molecule_pqcnet, optimizer)

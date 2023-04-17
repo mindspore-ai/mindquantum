@@ -23,11 +23,15 @@
 #include <string>
 #include <utility>
 
-#include <fmt/format.h>
-
-#include "core/parameter_resolver.hpp"
-#include "core/two_dim_matrix.hpp"
+#include "core/mq_base_types.hpp"
 #include "core/utils.hpp"
+#include "math/pr/parameter_resolver.hpp"
+#include "math/tensor/matrix.hpp"
+#include "math/tensor/ops/advance_math.hpp"
+#include "math/tensor/ops/memory_operator.hpp"
+#include "math/tensor/ops_cpu/advance_math.hpp"
+#include "math/tensor/tensor.hpp"
+#include "math/tensor/traits.hpp"
 #include "ops/basic_gate.hpp"
 #include "ops/gate_id.hpp"
 
@@ -44,89 +48,35 @@
 #endif  // !M_PI_2
 
 namespace mindquantum {
-template <typename T>
-Dim2Matrix<T> U3Matrix(T theta, T phi, T lambda) {
-    auto ct_2 = std::cos(theta / 2);
-    auto st_2 = std::sin(theta / 2);
-    auto el = std::exp(std::complex<T>(0, lambda));
-    auto ep = std::exp(std::complex<T>(0, phi));
-    auto elp = el * ep;
-    return Dim2Matrix<T>({{ct_2, -el * st_2}, {ep * st_2, elp * ct_2}});
-}
+tensor::Matrix U3Matrix(tensor::Tensor theta, tensor::Tensor phi, tensor::Tensor lambda);
 
-template <typename T>
-Dim2Matrix<T> FSimMatrix(T theta, T phi) {
-    auto a = std::cos(theta);
-    auto b = CT<T>(0, -std::sin(theta));
-    auto c = std::exp(std::complex<T>(0, phi));
-    return Dim2Matrix<T>({{1, 0, 0, 0}, {0, a, b, 0}, {0, b, a, 0}, {0, 0, 0, c}});
-}
+tensor::Matrix FSimMatrix(tensor::Tensor theta, tensor::Tensor phi);
 
-template <typename T>
-Dim2Matrix<T> U3DiffThetaMatrix(T theta, T phi, T lambda) {
-    auto m = U3Matrix(theta + static_cast<T>(M_PI), phi, lambda);
-    Dim2MatrixBinary<T>(&m, 0.5, std::multiplies<CT<T>>());
-    return m;
-}
-template <typename T>
-Dim2Matrix<T> FSimDiffThetaMatrix(T theta) {
-    auto a = -std::sin(theta);
-    auto b = CT<T>(0, -std::cos(theta));
-    return Dim2Matrix<T>({{0, 0, 0, 0}, {0, a, b, 0}, {0, b, a, 0}, {0, 0, 0, 0}});
-}
+tensor::Matrix U3DiffThetaMatrix(tensor::Tensor theta, tensor::Tensor phi, tensor::Tensor lambda);
 
-template <typename T>
-Dim2Matrix<T> U3DiffPhiMatrix(T theta, T phi, T lambda) {
-    auto m = U3Matrix(theta, phi + static_cast<T>(M_PI_2), lambda);
-    m.matrix_[0][0] = 0;
-    m.matrix_[0][1] = 0;
-    return m;
-}
+tensor::Matrix FSimDiffThetaMatrix(tensor::Tensor theta);
 
-template <typename T>
-Dim2Matrix<T> FSimDiffPhiMatrix(T phi) {
-    auto c = std::exp(std::complex<T>(0, phi + static_cast<T>(M_PI_2)));
-    return Dim2Matrix<T>({{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, c}});
-}
+tensor::Matrix U3DiffPhiMatrix(tensor::Tensor theta, tensor::Tensor phi, tensor::Tensor lambda);
 
-template <typename T>
-Dim2Matrix<T> U3DiffLambdaMatrix(T theta, T phi, T lambda) {
-    auto m = U3Matrix(theta, phi, lambda + static_cast<T>(M_PI_2));
-    m.matrix_[0][0] = 0;
-    m.matrix_[1][0] = 0;
-    return m;
-}
+tensor::Matrix FSimDiffPhiMatrix(tensor::Tensor phi);
 
-template <typename T>
-struct U3 : public Parameterizable<T> {
-    ParameterResolver<T> theta;
-    ParameterResolver<T> phi;
-    ParameterResolver<T> lambda;
-    Dim2Matrix<T> base_matrix_;
-    U3(const ParameterResolver<T>& theta, const ParameterResolver<T>& phi, const ParameterResolver<T>& lambda,
-       const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits)
-        : theta(theta)
-        , phi(phi)
-        , lambda(lambda)
-        , Parameterizable<T>(GateID::U3, {theta, phi, lambda}, obj_qubits, ctrl_qubits) {
-        if (!this->parameterized_) {
-            this->base_matrix_ = U3Matrix(theta.const_value, phi.const_value, lambda.const_value);
-        }
-    }
+tensor::Matrix U3DiffLambdaMatrix(tensor::Tensor theta, tensor::Tensor phi, tensor::Tensor lambda);
+
+struct U3 : public Parameterizable {
+    parameter::ParameterResolver theta;
+    parameter::ParameterResolver phi;
+    parameter::ParameterResolver lambda;
+    tensor::Matrix base_matrix_;
+    U3(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi,
+       const parameter::ParameterResolver& lambda, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits);
 };
 
-template <typename T>
-struct FSim : public Parameterizable<T> {
-    ParameterResolver<T> theta;
-    ParameterResolver<T> phi;
-    Dim2Matrix<T> base_matrix_;
-    FSim(const ParameterResolver<T>& theta, const ParameterResolver<T>& phi, const VT<Index>& obj_qubits,
-         const VT<Index>& ctrl_qubits)
-        : theta(theta), phi(phi), Parameterizable<T>(GateID::FSim, {theta, phi}, obj_qubits, ctrl_qubits) {
-        if (!this->parameterized_) {
-            this->base_matrix_ = FSimMatrix(theta.const_value, phi.const_value);
-        }
-    }
+struct FSim : public Parameterizable {
+    parameter::ParameterResolver theta;
+    parameter::ParameterResolver phi;
+    tensor::Matrix base_matrix_;
+    FSim(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi,
+         const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits);
 };
 }  // namespace mindquantum
 #endif  // MINDQUANTUM_GATE_GATES_HPP_
