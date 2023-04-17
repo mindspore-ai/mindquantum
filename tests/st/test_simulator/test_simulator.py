@@ -16,6 +16,7 @@
 # pylint: disable=invalid-name
 """Test simulator."""
 import platform
+import subprocess
 
 import numpy as np
 import pytest
@@ -55,11 +56,20 @@ try:
 except ImportError:
     _HAS_NUMBA = False
 
+_HAS_GPU = False
+
+try:
+    subprocess.check_output('nvidia-smi')
+    _HAS_GPU = True
+except FileNotFoundError:
+    _HAS_GPU = False
+
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.env_onecard
 @pytest.mark.skipif(platform.system() != 'Linux', reason='GPU backend only available for linux.')
+@pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
 @pytest.mark.parametrize("dtype", [mq.complex128, mq.complex64])
 def test_gpu(dtype):
     """
@@ -604,6 +614,7 @@ def custom_diff_matrix(x):
 @pytest.mark.parametrize("virtual_qc", ['mqvector', 'mqvector_gpu'])
 @pytest.mark.parametrize("dtype", [mq.complex64, mq.complex128])
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
+@pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
 def test_mul_qubit_gate(virtual_qc, dtype):
     """
     Description: Test simulation on multiple qubit gate.
