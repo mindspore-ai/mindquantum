@@ -58,7 +58,7 @@ jobs:
           fi
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.5
+        uses: hendrikmuhs/ccache-action@v1.2.9
         with:
           key: ${{ matrix.runs-on }}-python-${{ matrix.python }}-ccache
           max-size: 75M
@@ -221,7 +221,7 @@ jobs:
           brew install libomp ccache
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.5
+        uses: hendrikmuhs/ccache-action@v1.2.9
         with:
           key: macos-${{ matrix.xcode }}-ccache
           max-size: 75M
@@ -287,7 +287,7 @@ jobs:
           libboost-filesystem-dev gdb --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.5
+        uses: hendrikmuhs/ccache-action@v1.2.9
         with:
           key: gcc-${{ matrix.gcc }}-ccache
           max-size: 75M
@@ -430,7 +430,7 @@ jobs:
           gdb --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.5
+        uses: hendrikmuhs/ccache-action@v1.2.9
         with:
           key: clang-${{ matrix.clang }}-ccache
           max-size: 75M
@@ -745,7 +745,7 @@ jobs:
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
       # - name: Setup CCache
-      #   uses: hendrikmuhs/ccache-action@v1.2.5
+      #   uses: hendrikmuhs/ccache-action@v1.2.9
       #   with:
       #     key: mingw64-ccache
       #     max-size: 75M
@@ -1169,7 +1169,7 @@ jobs:
           --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.5
+        uses: hendrikmuhs/ccache-action@v1.2.9
         with:
           key: cuda-${{ matrix.cuda }}-ccache
           max-size: 75M
@@ -1235,7 +1235,7 @@ jobs:
           libboost-filesystem-dev --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.5
+        uses: hendrikmuhs/ccache-action@v1.2.9
         with:
           key: nvhpc-${{ matrix.nvhpc }}-ccache
           max-size: 75M
@@ -1332,7 +1332,7 @@ jobs:
   #         --no-install-recommends
 
   #     - name: Setup CCache
-  #       uses: hendrikmuhs/ccache-action@v1.2.5
+  #       uses: hendrikmuhs/ccache-action@v1.2.9
   #       with:
   #         key: nvhpc-${{ matrix.nvhpc }}-ccache
   #         max-size: 75M
