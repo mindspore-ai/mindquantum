@@ -22,7 +22,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-
+#include "config/config.hpp"
 #include "math/tensor/matrix.hpp"
 #include "math/tensor/ops.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
