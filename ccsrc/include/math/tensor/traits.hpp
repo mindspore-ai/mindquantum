@@ -225,7 +225,6 @@ struct upper_type {
         if constexpr (t1 == TDtype::Complex64 && t2 == TDtype::Float64) {
             return TDtype::Complex128;
         }
-        throw std::runtime_error(to_string(t1) + "," + to_string(t2));
     }
 };
 TDtype upper_type_v(TDtype t1, TDtype t2);
