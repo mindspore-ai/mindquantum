@@ -59,7 +59,7 @@ except ImportError:
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.env_onecard
-@pytest.mark.skipif(platform.system() != 'Linux')
+@pytest.mark.skipif(platform.system() != 'Linux', reason='GPU backend only available for linux.')
 @pytest.mark.parametrize("dtype", [mq.complex128, mq.complex64])
 def test_gpu(dtype):
     """

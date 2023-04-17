@@ -17,6 +17,7 @@ from typing import Dict, List, Union
 
 import numpy as np
 
+import mindquantum as mq
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import BarrierGate, BasicGate, Measure, MeasureResult
 from mindquantum.core.operators import Hamiltonian
@@ -120,6 +121,13 @@ class MQSim(BackendBase):
 
     def apply_hamiltonian(self, hamiltonian: Hamiltonian):
         """Apply a hamiltonian."""
+        if not mq.is_same_precision(self.dtype, hamiltonian.dtype):
+            raise TypeError(
+                f"Data type of {self.name} simulator is {mq.precision_str(self.dtype)} ({self.dtype}), "
+                f"but given hamiltonian is {mq.precision_str(hamiltonian.dtype)} ({hamiltonian.dtype}). "
+                f"Please convert given hamiltonian to {mq.precision_str(self.dtype)} "
+                f"({mq.precision_like(hamiltonian.dtype, self.dtype)})."
+            )
         _check_input_type('hamiltonian', Hamiltonian, hamiltonian)
         _check_hamiltonian_qubits_number(hamiltonian, self.n_qubits)
         self.sim.apply_hamiltonian(hamiltonian.get_cpp_obj())
@@ -157,6 +165,13 @@ class MQSim(BackendBase):
         if not isinstance(hamiltonian, Hamiltonian):
             raise TypeError(f"hamiltonian requires a Hamiltonian, but got {type(hamiltonian)}")
         _check_hamiltonian_qubits_number(hamiltonian, self.n_qubits)
+        if not mq.is_same_precision(self.dtype, hamiltonian.dtype):
+            raise TypeError(
+                f"Data type of {self.name} simulator is {mq.precision_str(self.dtype)} ({self.dtype}), "
+                f"but given hamiltonian is {mq.precision_str(hamiltonian.dtype)} ({hamiltonian.dtype}). "
+                f"Please convert given hamiltonian to {mq.precision_str(self.dtype)} "
+                f"({mq.precision_like(hamiltonian.dtype, self.dtype)})."
+            )
         return self.sim.get_expectation(hamiltonian.get_cpp_obj())
 
     def get_expectation_with_grad(  # pylint: disable=R0912,R0913,R0914,R0915
@@ -172,6 +187,14 @@ class MQSim(BackendBase):
             hams = [hams]
         elif not isinstance(hams, list):
             raise TypeError(f"hams requires a Hamiltonian or a list of Hamiltonian, but get {type(hams)}")
+        for i, ham in enumerate(hams):
+            if not mq.is_same_precision(self.dtype, ham.dtype):
+                raise TypeError(
+                    f"Data type of {self.name} simulator is {mq.precision_str(self.dtype)} ({self.dtype}),"
+                    f" but {i}th hamiltonian is {mq.precision_str(ham.dtype)} ({ham.dtype}). "
+                    f"Please convert {i}th hamiltonian to {mq.precision_str(self.dtype)} "
+                    f"({mq.precision_like(ham.dtype, self.dtype)})."
+                )
         for h_tmp in hams:
             _check_input_type("hams's element", Hamiltonian, h_tmp)
             _check_hamiltonian_qubits_number(h_tmp, self.n_qubits)
