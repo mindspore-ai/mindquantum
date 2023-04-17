@@ -19,6 +19,7 @@ import mindquantum as mq
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.circuit.channel_adder import ChannelAdderBase
 from mindquantum.core.gates import BasicGate
+from mindquantum.core.operators import Hamiltonian
 from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.device.chip import NaiveChip
 from mindquantum.simulator.backend_base import BackendBase
@@ -30,7 +31,7 @@ class NoiseBackend(BackendBase):
     def __init__(self, base_sim: str, n_qubits: int, adder: ChannelAdderBase, seed: int = 42, dtype=mq.complex128):
         from mindquantum.simulator import Simulator
 
-        self.base_sim = Simulator(base_sim, n_qubits, seed)
+        self.base_sim = Simulator(base_sim, n_qubits, seed=seed)
         self.adder: ChannelAdderBase = adder
 
     def apply_circuit(self, circuit: Circuit, pr: Union[Dict, ParameterResolver] = None):
@@ -43,6 +44,15 @@ class NoiseBackend(BackendBase):
 
     def sampling(self, circuit: Circuit, pr: Union[Dict, ParameterResolver] = None, shots: int = 1, seed: int = None):
         return self.base_sim.sampling(self.adder(circuit), pr, shots, seed)
+
+    def reset(self):
+        self.base_sim.reset()
+
+    def apply_hamiltonian(self, hamiltonian: Hamiltonian):
+        return self.base_sim.apply_hamiltonian(hamiltonian)
+
+    def transform_circ(self, circuit: Circuit) -> Circuit:
+        return self.adder(circuit)
 
 
 class ChipBaseBackend(NoiseBackend):

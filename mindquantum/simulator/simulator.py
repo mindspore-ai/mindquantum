@@ -69,7 +69,7 @@ class Simulator:
         array([0.5+0.j, 0.5+0.j, 0.5+0.j, 0.5+0.j])
     """
 
-    def __init__(self, backend, *args, n_qubits=None, seed=None, dtype=None, **kwargs):
+    def __init__(self, backend, n_qubits=None, *args, seed=None, dtype=None, **kwargs):
         """Initialize a Simulator object."""
         if isinstance(backend, BackendBase):
             self.backend = backend
