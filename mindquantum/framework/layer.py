@@ -33,11 +33,11 @@ class MQLayer(nn.Cell):  # pylint: disable=too-few-public-methods
             respect to expectation.
         weight (Union[Tensor, str, Initializer, numbers.Number]): Initializer for the
             convolution kernel. It can be a Tensor, a string, an Initializer or a number.
-            When a string is specified, values from 'TruncatedNormal', 'Normal', 'Uniform',
-            'HeUniform' and 'XavierUniform' distributions as well as constant 'One' and 'Zero'
-            distributions are possible. Alias 'xavier_uniform', 'he_uniform', 'ones' and
-            'zeros' are acceptable. Uppercase and lowercase are both acceptable. Refer to
-            the values of Initializer for more details. Default: 'normal'.
+            When a string is specified, values from ``'TruncatedNormal'``, ``'Normal'``, ``'Uniform'``,
+            ``'HeUniform'`` and ``'XavierUniform'`` distributions as well as constant 'One' and 'Zero'
+            distributions are possible. Alias ``'xavier_uniform'``, ``'he_uniform'``, ``'ones'`` and
+            ``'zeros'`` are acceptable. Uppercase and lowercase are both acceptable. Refer to
+            the values of Initializer for more details. Default: ``'normal'``.
 
     Inputs:
         - **enc_data** (Tensor) - Tensor of encoder data that you want to encode into quantum state.
@@ -108,11 +108,11 @@ class MQN2Layer(nn.Cell):  # pylint: disable=too-few-public-methods
             gradient value of parameters respect to expectation.
         weight (Union[Tensor, str, Initializer, numbers.Number]): Initializer for the
             convolution kernel. It can be a Tensor, a string, an Initializer or a number.
-            When a string is specified, values from 'TruncatedNormal', 'Normal', 'Uniform',
-            'HeUniform' and 'XavierUniform' distributions as well as constant 'One' and 'Zero'
-            distributions are possible. Alias 'xavier_uniform', 'he_uniform', 'ones' and
-            'zeros' are acceptable. Uppercase and lowercase are both acceptable. Refer to
-            the values of Initializer for more details. Default: 'normal'.
+            When a string is specified, values from 'TruncatedNormal', ``'Normal'``, ``'Uniform'``,
+            ``'HeUniform'`` and ``'XavierUniform'`` distributions as well as constant 'One' and 'Zero'
+            distributions are possible. Alias ``'xavier_uniform'``, ``'he_uniform'``, ``'ones'`` and
+            ``'zeros'`` are acceptable. Uppercase and lowercase are both acceptable. Refer to
+            the values of Initializer for more details. Default: ``'normal'``.
 
     Inputs:
         - **enc_data** (Tensor) - Tensor of encoder data that you want to encode into quantum state.
@@ -181,11 +181,11 @@ class MQAnsatzOnlyLayer(nn.Cell):  # pylint: disable=too-few-public-methods
             respect to expectation.
         weight (Union[Tensor, str, Initializer, numbers.Number]): Initializer for the
             convolution kernel. It can be a Tensor, a string, an Initializer or a number.
-            When a string is specified, values from 'TruncatedNormal', 'Normal', 'Uniform',
-            'HeUniform' and 'XavierUniform' distributions as well as constant 'One' and 'Zero'
-            distributions are possible. Alias 'xavier_uniform', 'he_uniform', 'ones' and
-            'zeros' are acceptable. Uppercase and lowercase are both acceptable. Refer to
-            the values of Initializer for more details. Default: 'normal'.
+            When a string is specified, values from 'TruncatedNormal', ``'Normal'``, ``'Uniform'``,
+            ``'HeUniform'`` and ``'XavierUniform'`` distributions as well as constant 'One' and 'Zero'
+            distributions are possible. Alias ``'xavier_uniform'``, ``'he_uniform'``, ``'ones'`` and
+            ``'zeros'`` are acceptable. Uppercase and lowercase are both acceptable. Refer to
+            the values of Initializer for more details. Default: ``'normal'``.
 
     Outputs:
         Tensor, The expectation value of the hamiltonian.
@@ -249,11 +249,11 @@ class MQN2AnsatzOnlyLayer(nn.Cell):  # pylint: disable=too-few-public-methods
             respect to expectation.
         weight (Union[Tensor, str, Initializer, numbers.Number]): Initializer for the
             convolution kernel. It can be a Tensor, a string, an Initializer or a number.
-            When a string is specified, values from 'TruncatedNormal', 'Normal', 'Uniform',
-            'HeUniform' and 'XavierUniform' distributions as well as constant 'One' and 'Zero'
-            distributions are possible. Alias 'xavier_uniform', 'he_uniform', 'ones' and
-            'zeros' are acceptable. Uppercase and lowercase are both acceptable. Refer to
-            the values of Initializer for more details. Default: 'normal'.
+            When a string is specified, values from 'TruncatedNormal', ``'Normal'``, ``'Uniform'``,
+            ``'HeUniform'`` and ``'XavierUniform'`` distributions as well as constant 'One' and 'Zero'
+            distributions are possible. Alias ``'xavier_uniform'``, ``'he_uniform'``, ``'ones'`` and
+            ``'zeros'`` are acceptable. Uppercase and lowercase are both acceptable. Refer to
+            the values of Initializer for more details. Default: ``'normal'``.
 
     Inputs:
         - **enc_data** (Tensor) - Tensor of encoder data that you want to encode into quantum state.

@@ -32,7 +32,7 @@ mindquantum.io.HiQASM
         参数：
             - **file_name** (str) - 需要保存成HiQASM文件的文件名。
             - **circuit** (Circuit) - 需要转换的线路。
-            - **version** (str) - HiQASM的版本。默认值："0.1"。
+            - **version** (str) - HiQASM的版本。默认值： ``"0.1"``。
 
         异常：
             - **TypeError** - 如果 `file_name` 类型不是str。
@@ -45,7 +45,7 @@ mindquantum.io.HiQASM
 
         参数：
             - **circuit** (Circuit) - 需要转换为HiQASM的量子线路。
-            - **version** (str) - 需要使用的HiQASM版本。默认值："0.1"。
+            - **version** (str) - 需要使用的HiQASM版本。默认值： ``"0.1"``。
 
         返回：
             str，输入线路对应的HiQASM格式。

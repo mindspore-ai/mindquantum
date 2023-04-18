@@ -7,7 +7,7 @@ mindquantum.algorithm.nisq.generate_uccsd
 
     参数：
         - **molecular** (Union[str, MolecularData]) - 分子数据文件的名称，或openfermion中的 `MolecularData` 。
-        - **threshold** (float) - 过滤uccsd中组态幅度的阈值。我们将保留那些组态振幅绝对值比 `threshold` 大的组态，因此，当 `threshold=0` 时，只会保留非零振幅的组态。默认值：0。
+        - **threshold** (float) - 过滤uccsd中组态幅度的阈值。我们将保留那些组态振幅绝对值比 `threshold` 大的组态，因此，当 `threshold=0` 时，只会保留非零振幅的组态。默认值： ``0``。
 
     返回：
         - **uccsd_circuit** (Circuit) - 由uccsd方法生成的ansatz电路。

@@ -35,4 +35,4 @@ mindquantum.core.operators.InteractionOperator
         2. pqrs = rqps = psrq = srqp = qpsr = rspq = spqr = qrsp。
 
         参数：
-            - **complex_valued** (bool) - 算子是否有复数系数。默认值：False。
+            - **complex_valued** (bool) - 算子是否有复数系数。默认值： ``False``。

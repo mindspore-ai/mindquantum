@@ -23,7 +23,7 @@ class BasicQubit:
 
     Args:
         qubit_id (int): The id of this quantum qubit.
-        circuit (Circuit): The quantum circuit that this qubit belongs to. Default: None.
+        circuit (Circuit): The quantum circuit that this qubit belongs to. Default: ``None``.
     """
 
     def __init__(self, qubit_id, circuit=None):

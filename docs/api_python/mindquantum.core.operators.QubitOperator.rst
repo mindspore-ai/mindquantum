@@ -13,8 +13,8 @@ mindquantum.core.operators.QubitOperator
     QubitOperator的属性设置如下：operators = ('X', 'Y', 'Z')，different_indices_commute = True。
 
     参数：
-        - **term** (str) - 量子比特运算符的输入项。默认值：None。
-        - **coefficient** (Union[numbers.Number, str, ParameterResolver]) - 此量子比特运算符的系数，可以是由字符串、符号或参数解析器表示的数字或变量。默认值：1.0。
+        - **term** (str) - 量子比特运算符的输入项。默认值： ``None``。
+        - **coefficient** (Union[numbers.Number, str, ParameterResolver]) - 此量子比特运算符的系数，可以是由字符串、符号或参数解析器表示的数字或变量。默认值： ``1.0``。
 
     .. py:method:: count_gates()
 
@@ -28,7 +28,7 @@ mindquantum.core.operators.QubitOperator
         将QubitOperator转储到JSON（JavaScript对象表示法）。
 
         参数：
-            - **indent** (int) - JSON数组元素和对象成员打印时的缩进。默认值：4。
+            - **indent** (int) - JSON数组元素和对象成员打印时的缩进。默认值： ``4``。
 
         返回：
             JSON(strings)，QubitOperator的JSON字符串。
@@ -73,7 +73,7 @@ mindquantum.core.operators.QubitOperator
         将此量子比特算符转换为csr_matrix。
 
         参数：
-            - **n_qubits** (int) - 结果矩阵的量子比特数目。如果是None，则该值将是最大局域量子比特数。默认值：None。
+            - **n_qubits** (int) - 结果矩阵的量子比特数目。如果是None，则该值将是最大局域量子比特数。默认值： ``None``。
 
     .. py:method:: real
         :property:

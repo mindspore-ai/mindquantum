@@ -48,8 +48,8 @@ class Simulator:
         backend (str): which backend you want. The supported backend can be found
             in SUPPORTED_SIMULATOR
         n_qubits (int): number of quantum simulator.
-        seed (int): the random seed for this simulator, if None, seed will generate
-            by `numpy.random.randint`. Default: None.
+        seed (int): the random seed for this simulator, if ``None``, seed will generate
+            by `numpy.random.randint`. Default: ``None``.
 
     Raises:
         TypeError: if `backend` is not str.
@@ -154,8 +154,8 @@ class Simulator:
         Args:
             gate (BasicGate): The gate you want to apply.
             pr (Union[numbers.Number, numpy.ndarray, ParameterResolver, list]): The
-                parameter for parameterized gate. Default: None.
-            diff (bool): Whether to apply the derivative gate on this simulator. Default: False.
+                parameter for parameterized gate. Default: ``None``.
+            diff (bool): Whether to apply the derivative gate on this simulator. Default: ``False``.
 
         Returns:
             int or None, if the gate if a measure gate, then return a collapsed state, Otherwise
@@ -190,7 +190,7 @@ class Simulator:
             circuit (Circuit): The quantum circuit you want to apply on this simulator.
             pr (Union[ParameterResolver, dict, numpy.ndarray, list, numbers.Number]): The
                 parameter resolver for this circuit. If the circuit is not parameterized,
-                this arg should be None. Default: None.
+                this arg should be ``None``. Default: ``None``.
 
         Returns:
             MeasureResult or None, if the circuit has measure gate, then return a MeasureResult,
@@ -231,10 +231,10 @@ class Simulator:
             circuit (Circuit): The circuit that you want to evolution and do sampling.
             pr (Union[None, dict, ParameterResolver]): The parameter
                 resolver for this circuit, if this circuit is a parameterized circuit.
-                Default: None.
-            shots (int): How many shots you want to sampling this circuit. Default: 1
-            seed (int): Random seed for random sampling. If None, seed will be a random
-                int number. Default: None.
+                Default: ``None``.
+            shots (int): How many shots you want to sampling this circuit. Default: ``1``.
+            seed (int): Random seed for random sampling. If ``None``, seed will be a random
+                int number. Default: ``None``.
 
         Returns:
             MeasureResult, the measure result of sampling.
@@ -337,7 +337,7 @@ class Simulator:
 
         Args:
             ket (bool): Whether to return the quantum state in ket format or not.
-                Default: False.
+                Default: ``False``.
 
         Returns:
             numpy.ndarray, the current quantum state.
@@ -397,13 +397,13 @@ class Simulator:
             hams (Hamiltonian): The hamiltonian that need to get expectation.
             circ_right (Circuit): The :math:`U_r` circuit described above.
             circ_left (Circuit): The :math:`U_l` circuit described above. By default, this circuit
-                will be none, and in this situation, :math:`U_l` will be equals to
-                :math:`U_r`. Default: None.
+                will be ``none``, and in this situation, :math:`U_l` will be equals to
+                :math:`U_r`. Default: ``None``.
             simulator_left (Simulator): The simulator that contains :math:`\left|\varphi\right>`. If
-                None, then :math:`\left|\varphi\right>` is assumed to be equals to :math:`\left|\psi\right>`.
-                Default: None.
+                ``None``, then :math:`\left|\varphi\right>` is assumed to be equals to :math:`\left|\psi\right>`.
+                Default: ``None``.
             parallel_worker (int): The parallel worker numbers. The parallel workers can handle
-                batch in parallel threads. Default: None.
+                batch in parallel threads. Default: No``ne.
 
         Returns:
             GradOpsWrapper, a grad ops wrapper than contains information to generate this grad ops.

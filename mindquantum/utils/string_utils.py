@@ -98,7 +98,7 @@ def ket_string(state, tol=1e-7):
 
     Args:
         state (numpy.ndarray): The input quantum state.
-        tol (float): The ignore tolerance for small amplitude. Default: 1e-7.
+        tol (float): The ignore tolerance for small amplitude. Default: ``1e-7``.
 
     Returns:
         str, the ket format of the quantum state.

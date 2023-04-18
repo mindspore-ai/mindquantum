@@ -70,9 +70,9 @@ def apply(circuit_fn, qubits):
         Circuit or a function that can generate a Circuit.
 
     Raises:
-        TypeError: If qubits is not a list.
-        ValueError: If any element of qubits is negative.
-        TypeError: If circuit_fn is not Circuit or can not return a Circuit.
+        TypeError: If `qubits` is not a list.
+        ValueError: If any element of `qubits` is negative.
+        TypeError: If `circuit_fn` is not Circuit or can not return a Circuit.
 
     Examples:
         >>> from mindquantum.algorithm.library import qft
@@ -240,7 +240,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
     Args:
         gates (BasicGate, list[BasicGate]): You can
             initialize the quantum circuit by a single quantum gate or a
-            list of gates. gates: None.
+            list of gates. Default: ``None``.
 
 
     Examples:
@@ -589,7 +589,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         and the total parameters.
 
         Args:
-            show (bool): whether to show the information. Default: True.
+            show (bool): whether to show the information. Default: ``True``.
 
         Examples:
             >>> from mindquantum.core.circuit import Circuit
@@ -860,7 +860,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Get cpp obj of circuit.
 
         Args:
-            hermitian (bool): Whether to get cpp object of this circuit in hermitian version. Default: False.
+            hermitian (bool): Whether to get cpp object of this circuit in hermitian version. Default: ``False``.
         """
         if not self.has_cpp_obj:
             self.has_cpp_obj = True
@@ -879,7 +879,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
 
         Args:
             obj_qubits (Union[int, list[int]]): The object qubits of `H` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `H` gate. Default: None.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `H` gate. Default: ``None``.
         """
         self.append(mq_gates.H.on(obj_qubits, ctrl_qubits))
         return self
@@ -890,7 +890,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
 
         Args:
             obj_qubits (Union[int, list[int]]): The object qubits of `X` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `X` gate. Default: None.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `X` gate. Default: ``None``.
         """
         self.append(mq_gates.X.on(obj_qubits, ctrl_qubits))
         return self
@@ -901,7 +901,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
 
         Args:
             obj_qubits (Union[int, list[int]]): The object qubits of `Y` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `Y` gate. Default: None.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `Y` gate. Default: ``None``.
         """
         self.append(mq_gates.Y.on(obj_qubits, ctrl_qubits))
         return self
@@ -912,7 +912,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
 
         Args:
             obj_qubits (Union[int, list[int]]): The object qubits of `Z` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `Z` gate. Default: None.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `Z` gate. Default: ``None``.
         """
         self.append(mq_gates.Z.on(obj_qubits, ctrl_qubits))
         return self
@@ -923,7 +923,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
 
         Args:
             obj_qubits (Union[int, list[int]]): The object qubits of `S` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `S` gate. Default: None.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `S` gate. Default: ``None``.
         """
         self.append(mq_gates.S.on(obj_qubits, ctrl_qubits))
         return self
@@ -934,7 +934,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
 
         Args:
             obj_qubits (Union[int, list[int]]): The object qubits of `SWAP` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `SWAP` gate. Default: None.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `SWAP` gate. Default: ``None``.
         """
         self.append(mq_gates.SWAP.on(obj_qubits, ctrl_qubits))
         return self
@@ -946,7 +946,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Args:
             para (Union[dict, ParameterResolver]): The parameter for `RX` gate.
             obj_qubits (Union[int, list[int]]): The object qubits of `RX` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `RX` gate. Default: None.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `RX` gate. Default: ``None``.
         """
         self.append(mq_gates.RX(para).on(obj_qubits, ctrl_qubits))
         return self
@@ -958,7 +958,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Args:
             para (Union[dict, ParameterResolver]): The parameter for `RY` gate.
             obj_qubits (Union[int, list[int]]): The object qubits of `RY` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `RY` gate. Default: None.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `RY` gate. Default: ``None``.
         """
         self.append(mq_gates.RY(para).on(obj_qubits, ctrl_qubits))
         return self
@@ -970,7 +970,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Args:
             para (Union[dict, ParameterResolver]): The parameter for `RZ` gate.
             obj_qubits (Union[int, list[int]]): The object qubits of `RZ` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `RZ` gate. Default: None.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `RZ` gate. Default: ``None``.
         """
         self.append(mq_gates.RZ(para).on(obj_qubits, ctrl_qubits))
         return self
@@ -982,7 +982,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Args:
             para (Union[dict, ParameterResolver]): The parameter for `PhaseShift` gate.
             obj_qubits (Union[int, list[int]]): The object qubits of `PhaseShift` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `PhaseShift` gate. Default: None.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `PhaseShift` gate. Default: ``None``.
         """
         self.append(mq_gates.PhaseShift(para).on(obj_qubits, ctrl_qubits))
         return self
@@ -997,7 +997,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Args:
             para (Union[dict, ParameterResolver]): The parameter for `XX` gate.
             obj_qubits (Union[int, list[int]]): The object qubits of `XX` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `XX` gate. Default: None.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `XX` gate. Default: ``None``.
         """
         warnings.warn(
             "xx method is deprecated, please use rxx",
@@ -1017,7 +1017,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Args:
             para (Union[dict, ParameterResolver]): The parameter for `YY` gate.
             obj_qubits (Union[int, list[int]]): The object qubits of `YY` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `YY` gate. Default: None.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `YY` gate. Default: ``None``.
         """
         warnings.warn(
             "yy method is deprecated, please use ryy",
@@ -1037,7 +1037,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Args:
             para (Union[dict, ParameterResolver]): The parameter for `ZZ` gate.
             obj_qubits (Union[int, list[int]]): The object qubits of `ZZ` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `ZZ` gate. Default: None.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `ZZ` gate. Default: ``None``.
         """
         warnings.warn(
             "zz method is deprecated, please use rzz",
@@ -1054,7 +1054,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Args:
             para (Union[dict, ParameterResolver]): The parameter for `Rxx` gate.
             obj_qubits (Union[int, list[int]]): The object qubits of `Rxx` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `Rxx` gate. Default: None.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `Rxx` gate. Default: ``None``.
         """
         self.append(mq_gates.Rxx(para).on(obj_qubits, ctrl_qubits))
         return self
@@ -1066,7 +1066,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Args:
             para (Union[dict, ParameterResolver]): The parameter for `Ryy` gate.
             obj_qubits (Union[int, list[int]]): The object qubits of `Ryy` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `Ryy` gate. Default: None.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `Ryy` gate. Default: ``None``.
         """
         self.append(mq_gates.Ryy(para).on(obj_qubits, ctrl_qubits))
         return self
@@ -1078,7 +1078,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Args:
             para (Union[dict, ParameterResolver]): The parameter for `Rzz` gate.
             obj_qubits (Union[int, list[int]]): The object qubits of `Rzz` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `Rzz` gate. Default: None.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `Rzz` gate. Default: ``None``.
         """
         self.append(mq_gates.Rzz(para).on(obj_qubits, ctrl_qubits))
         return self
@@ -1088,9 +1088,9 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Add a measure gate.
 
         Args:
-            key (Union[int, str]): If `obj_qubit` is None, then `key` should be a int and means which qubit to measure,
-                otherwise, `key` should be a str and means the name of this measure gate.
-            obj_qubit (int): Which qubit to measure. Default: None.
+            key (Union[int, str]): If `obj_qubit` is ``None``, then `key` should be a int and means which
+                qubit to measure, otherwise, `key` should be a str and means the name of this measure gate.
+            obj_qubit (int): Which qubit to measure. Default: ``None``.
         """
         if obj_qubit is None:
             self.append(mq_gates.Measure().on(key))
@@ -1130,7 +1130,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Args:
             gate (BasicGate): The BasicGate you want to map.
             maps_obj (Union[int, list[int]]): object qubits.
-            maps_ctrl (Union[int, list[int]]): control qubits. Default: None.
+            maps_ctrl (Union[int, list[int]]): control qubits. Default: ``None``.
         """
         from mindquantum import UN  # pylint: disable=import-outside-toplevel
 
@@ -1142,11 +1142,11 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Get the final quantum state of this circuit.
 
         Args:
-            backend (str): Which backend you want to use. Default: 'mqvector'.
+            backend (str): Which backend you want to use. Default: ``'mqvector'``.
             pr (Union[numbers.Number, ParameterResolver, dict, numpy.ndarray]): The parameter of this circuit,
-                if this circuit is parameterized. Default: None.
-            ket (str): Whether to return the quantum state in ket format. Default: False.
-            seed (int): The random seed of simulator. Default: None
+                if this circuit is parameterized. Default: ``None``.
+            ket (str): Whether to return the quantum state in ket format. Default: ``False``.
+            seed (int): The random seed of simulator. Default: ``None``
             dtype (mindquantum.dtype): The data type of simulator.
         """
         from mindquantum import (  # pylint: disable=import-outside-toplevel,cyclic-import
@@ -1185,8 +1185,8 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
 
         Args:
             style (dict, str): the style to set svg circuit. Currently, we support
-                'official', 'light' and 'dark'. Default: None.
-            width (int, float): the max width of circuit. Default: None.
+                ``'official'``, ``'light'`` and ``'dark'``. Default: ``None``.
+            width (int, float): the max width of circuit. Default: ``None``.
         """
         # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum.io.display._config import (
@@ -1229,8 +1229,8 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Apply noises on each gate.
 
         Args:
-            noise_gate (NoiseGate): The NoiseGate you want to apply. Default: AmplitudeDampingChannel(0.001).
-            also_ctrl (bool): Whether add NoiseGate on control qubits. Default: False.
+            noise_gate (NoiseGate): The NoiseGate you want to apply. Default: ``AmplitudeDampingChannel``(0.001).
+            also_ctrl (bool): Whether add NoiseGate on control qubits. Default: ``False``.
         """
         circ = Circuit()
         for gate in self:
@@ -1248,7 +1248,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         To set this circuit to encoder.
 
         Args:
-            inplace (bool): Whether to set inplace. Defaults: True.
+            inplace (bool): Whether to set inplace. Defaults: ``True``.
         """
         _check_input_type("inplace", bool, inplace)
         if inplace:
@@ -1269,7 +1269,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         To set this circuit to ansatz or not.
 
         Args:
-            inplace (bool): Whether to set inplace. Defaults: True.
+            inplace (bool): Whether to set inplace. Defaults: ``True``.
         """
         _check_input_type("inplace", bool, inplace)
         if inplace:

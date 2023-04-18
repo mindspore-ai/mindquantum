@@ -62,9 +62,9 @@ class QubitExcitationOperator(_Operator):
     corresponding Fermion excitation operators.
 
     Args:
-        terms (Union[str, tuple]): The input term of qubit excitation operator. Default: None.
+        terms (Union[str, tuple]): The input term of qubit excitation operator. Default: ``None``.
         coefficient (Union[numbers.Number, str, ParameterResolver]): The
-            coefficient for the corresponding single operators Default: 1.0.
+            coefficient for the corresponding single operators Default: ``1.0``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Transform

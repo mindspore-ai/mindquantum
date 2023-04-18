@@ -22,7 +22,7 @@ mindquantum.io.OpenQASM
         参数：
             - **file_name** (str) - 要保存openqasm文件的文件名。
             - **circuit** (Circuit) - 要转换的电路。
-            - **version** (str) - openqasm的版本。默认值："2.0"。
+            - **version** (str) - openqasm的版本。默认值： ``"2.0"``。
 
         异常：
             - **TypeError** - 如果 `file_name` 不是 `str` 。
@@ -35,7 +35,7 @@ mindquantum.io.OpenQASM
 
         参数：
             - **circuit** (Circuit) - 要转换为openqasm的量子线路。
-            - **version** (str) - 要使用的openqasm版本。默认值："2.0"。
+            - **version** (str) - 要使用的openqasm版本。默认值： ``"2.0"``。
 
         返回：
             str，输入电路的openqasm格式。

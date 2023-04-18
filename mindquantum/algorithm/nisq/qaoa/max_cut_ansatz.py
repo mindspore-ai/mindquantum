@@ -83,7 +83,7 @@ class MaxCutAnsatz(Ansatz):
             is a edge that constructed by two nodes. For example, `[(0, 1), (1, 2)]` means
             the graph has three nodes which are `0` , `1` and `2` with one edge connect between
             node `0` and node `1` and another connect between node `1` and node `2`.
-        depth (int): The depth of max cut ansatz. Default: 1.
+        depth (int): The depth of max cut ansatz. Default: ``1``.
 
     Examples:
         >>> import numpy as np

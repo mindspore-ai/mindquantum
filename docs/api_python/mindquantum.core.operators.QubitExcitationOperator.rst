@@ -9,8 +9,8 @@ mindquantum.core.operators.QubitExcitationOperator
     此外，用量子比特激发算子描述双激发所使用的CNOT门比相应的费米子激发算子少得多。
 
     参数：
-        - **terms** (Union[str, tuple]) - 量子比特激发算子的输入项。默认值：None。
-        - **coefficient** (Union[numbers.Number, str, ParameterResolver]) - 相应单个运算符的系数。默认值：1.0。
+        - **terms** (Union[str, tuple]) - 量子比特激发算子的输入项。默认值： ``None``。
+        - **coefficient** (Union[numbers.Number, str, ParameterResolver]) - 相应单个运算符的系数。默认值： ``1.0``。
 
     .. py:method:: hermitian()
 

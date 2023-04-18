@@ -7,7 +7,7 @@ mindquantum.core.circuit.Circuit
     量子线路包含一个或多个量子门，可以在量子模拟器中进行计算。可以通过添加量子门或另一电路的方式容易地构建量子线路。
 
     参数：
-        - **gates** (BasicGate, list[BasicGate]) - 可以通过单个量子门或门列表初始化量子线路。默认值：None。
+        - **gates** (BasicGate, list[BasicGate]) - 可以通过单个量子门或门列表初始化量子线路。默认值： ``None``。
 
     .. py:method:: ansatz_params_name
         :property:
@@ -39,21 +39,21 @@ mindquantum.core.circuit.Circuit
         将该量子线路变为ansatz量子线路。
 
         参数：
-            - **inplace** (bool) - 是否原位设置。默认值： `True`。
+            - **inplace** (bool) - 是否原位设置。默认值： ``True``。
 
     .. py:method:: as_encoder(inplace=True)
 
         将该量子线路变为编码量子线路。
 
         参数：
-            - **inplace** (bool) - 是否原位设置。默认值： `True`。
+            - **inplace** (bool) - 是否原位设置。默认值： ``True``。
 
     .. py:method:: barrier(show=True)
 
         添加barrier。
 
         参数：
-            - **show** (bool) - 是否显示barrier。默认值：True。
+            - **show** (bool) - 是否显示barrier。默认值： ``True``。
 
     .. py:method:: compress()
 
@@ -79,17 +79,17 @@ mindquantum.core.circuit.Circuit
         获取线路的cpp object。
 
         参数：
-            - **hermitian** (bool) - 是否获取线路cpp object的hermitian版本。默认值： `False` 。
+            - **hermitian** (bool) - 是否获取线路cpp object的hermitian版本。默认值： ``False`` 。
 
     .. py:method:: get_qs(backend='mqvector', pr=None, ket=False, seed=None)
 
         获取线路的最终量子态。
 
         参数：
-            - **backend** (str) - 使用的后端。默认值：'mqvector'。
-            - **pr** (Union[numbers.Number, ParameterResolver, dict, numpy.ndarray]) - 线路的参数，线路含参数时提供。默认值：None。
-            - **ket** (str) - 是否以ket格式返回量子态。默认值：False。
-            - **seed** (int) - 模拟器的随机种子。默认值：None。
+            - **backend** (str) - 使用的后端。默认值： ``'mqvector'``。
+            - **pr** (Union[numbers.Number, ParameterResolver, dict, numpy.ndarray]) - 线路的参数，线路含参数时提供。默认值： ``None``。
+            - **ket** (str) - 是否以ket格式返回量子态。默认值： `False`。
+            - **seed** (int) - 模拟器的随机种子。默认值： `None`。
 
     .. py:method:: h(obj_qubits, ctrl_qubits=None)
 
@@ -97,7 +97,7 @@ mindquantum.core.circuit.Circuit
 
         参数：
             - **obj_qubits** (Union[int, list[int]]) - `H` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `H` 门的控制量子比特。默认值： `None` 。
+            - **ctrl_qubits** (Union[int, list[int]]) - `H` 门的控制量子比特。默认值： ``None`` 。
 
     .. py:method:: has_measure_gate
         :property:
@@ -140,9 +140,9 @@ mindquantum.core.circuit.Circuit
         获取线路的矩阵表示。
 
         参数：
-            - **pr** (ParameterResolver, dict, numpy.ndarray, list, numbers.Number) - 含参量子线路的参数。默认值： `None`。
-            - **big_end** (bool) - 低索引量子比特是否放置在末尾。默认值： `False`。
-            - **backend** (str) - 进行模拟的后端。默认值： `'mqvector'`。
+            - **pr** (ParameterResolver, dict, numpy.ndarray, list, numbers.Number) - 含参量子线路的参数。默认值： ``None``。
+            - **big_end** (bool) - 低索引量子比特是否放置在末尾。默认值： ``False``。
+            - **backend** (str) - 进行模拟的后端。默认值： ``'mqvector'``。
             - **seed** (int) - 生成线路矩阵的随机数，如果线路包含噪声信道。
 
         返回：
@@ -153,8 +153,8 @@ mindquantum.core.circuit.Circuit
         添加一个测量门。
 
         参数：
-            - **key** (Union[int, str]) - 如果 `obj_qubit` 为 `None` ，则 `key` 应为int，表示要测量哪个量子比特，否则， `key` 应为str，表示测量门的名称。
-            - **obj_qubit** (int) - 要测量的量子比特。默认值：None。
+            - **key** (Union[int, str]) - 如果 `obj_qubit` 为 ``None`` ，则 `key` 应为int，表示要测量哪个量子比特，否则， `key` 应为str，表示测量门的名称。
+            - **obj_qubit** (int) - 要测量的量子比特。默认值： ``None``。
 
     .. py:method:: measure_all(suffix=None)
 
@@ -205,7 +205,7 @@ mindquantum.core.circuit.Circuit
         参数：
             - **para** (Union[dict, ParameterResolver]) - `PhaseShift` 门的参数。
             - **obj_qubits** (Union[int, list[int]]) - `PhaseShift` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `PhaseShift` 门的控制量子比特。默认值：None。
+            - **ctrl_qubits** (Union[int, list[int]]) - `PhaseShift` 门的控制量子比特。默认值： ``None``。
 
     .. py:method:: remove_barrier()
 
@@ -241,7 +241,7 @@ mindquantum.core.circuit.Circuit
         参数：
             - **para** (Union[dict, ParameterResolver]) - `RX` 门的参数。
             - **obj_qubits** (Union[int, list[int]]) - `RX` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `RX` 门的控制量子比特。默认值： `None` 。
+            - **ctrl_qubits** (Union[int, list[int]]) - `RX` 门的控制量子比特。默认值： ``None`` 。
 
     .. py:method:: rxx(para, obj_qubits, ctrl_qubits=None)
 
@@ -250,7 +250,7 @@ mindquantum.core.circuit.Circuit
         参数：
             - **para** (Union[dict, ParameterResolver]) - `Rxx` 门的参数。
             - **obj_qubits** (Union[int, list[int]]) - `Rxx` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `Rxx` 门的控制量子比特。默认值：None。
+            - **ctrl_qubits** (Union[int, list[int]]) - `Rxx` 门的控制量子比特。默认值： ``None``。
 
     .. py:method:: ry(para, obj_qubits, ctrl_qubits=None)
 
@@ -259,7 +259,7 @@ mindquantum.core.circuit.Circuit
         参数：
             - **para** (Union[dict, ParameterResolver]) - `RY` 门的参数。
             - **obj_qubits** (Union[int, list[int]]) - `RY` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `RY` 门的控制量子比特。默认值： `None` 。
+            - **ctrl_qubits** (Union[int, list[int]]) - `RY` 门的控制量子比特。默认值： ``None`` 。
 
     .. py:method:: ryy(para, obj_qubits, ctrl_qubits=None)
 
@@ -268,7 +268,7 @@ mindquantum.core.circuit.Circuit
         参数：
             - **para** (Union[dict, ParameterResolver]) - `Ryy` 门的参数。
             - **obj_qubits** (Union[int, list[int]]) - `Ryy` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `Ryy` 门的控制量子比特。默认值：None。
+            - **ctrl_qubits** (Union[int, list[int]]) - `Ryy` 门的控制量子比特。默认值： ``None``。
 
     .. py:method:: rz(para, obj_qubits, ctrl_qubits=None)
 
@@ -277,7 +277,7 @@ mindquantum.core.circuit.Circuit
         参数：
             - **para** (Union[dict, ParameterResolver]) - `RZ` 门的参数。
             - **obj_qubits** (Union[int, list[int]]) - `RZ` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `RZ` 门的控制量子比特。默认值：None。
+            - **ctrl_qubits** (Union[int, list[int]]) - `RZ` 门的控制量子比特。默认值： ``None``。
 
     .. py:method:: rzz(para, obj_qubits, ctrl_qubits=None)
 
@@ -286,7 +286,7 @@ mindquantum.core.circuit.Circuit
         参数：
             - **para** (Union[dict, ParameterResolver]) - `Rzz` 门的参数。
             - **obj_qubits** (Union[int, list[int]]) - `Rzz` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `Rzz` 门的控制量子比特。默认值：None。
+            - **ctrl_qubits** (Union[int, list[int]]) - `Rzz` 门的控制量子比特。默认值： ``None``。
 
     .. py:method:: s(obj_qubits, ctrl_qubits=None)
 
@@ -294,22 +294,22 @@ mindquantum.core.circuit.Circuit
 
         参数：
             - **obj_qubits** (Union[int, list[int]]) - `S` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `S` 门的控制量子比特。默认值：None。
+            - **ctrl_qubits** (Union[int, list[int]]) - `S` 门的控制量子比特。默认值： ``None``。
 
     .. py:method:: summary(show=True)
 
         打印当前线路的信息，包括块的数量、门的数量、不含参门的数量、含参门的数量和参数的个数。
 
         参数：
-            - **show** (bool) - 是否显示信息。默认值：True。
+            - **show** (bool) - 是否显示信息。默认值： ``True``。
 
     .. py:method:: svg(style=None, width=None)
 
         在Jupyter Notebook中将当前量子线路用SVG图展示。
 
         参数：
-            - **style** (dict, str) - 设置svg线路的样式。目前，我们支持'official'，'light'和'dark'。默认值：None。
-            - **width** (int, float) - 设置量子线路的最大宽度。默认值：None。
+            - **style** (dict, str) - 设置svg线路的样式。目前，我们支持'official'，'light'和'dark'。默认值： ``None``。
+            - **width** (int, float) - 设置量子线路的最大宽度。默认值： ``None``。
 
     .. py:method:: swap(obj_qubits, ctrl_qubits=None)
 
@@ -317,7 +317,7 @@ mindquantum.core.circuit.Circuit
 
         参数：
             - **obj_qubits** (Union[int, list[int]]) - `SWAP` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `SWAP` 门的控制量子比特。默认值： `None` 。
+            - **ctrl_qubits** (Union[int, list[int]]) - `SWAP` 门的控制量子比特。默认值： ``None``。
 
     .. py:method:: un(gate, maps_obj, maps_ctrl=None)
 
@@ -326,7 +326,7 @@ mindquantum.core.circuit.Circuit
         参数：
             - **gate** (BasicGate) - 要执行的量子门。
             - **maps_obj** (Union[int, list[int]]) - 执行该量子门的目标量子比特。
-            - **maps_ctrl** (Union[int, list[int]]) - 执行该量子门的控制量子比特。默认值：None。
+            - **maps_ctrl** (Union[int, list[int]]) - 执行该量子门的控制量子比特。默认值： ``None``。
 
     .. py:method:: with_noise(noise_gate=mq_gates.AmplitudeDampingChannel(0.001), also_ctrl=False)
 
@@ -342,7 +342,7 @@ mindquantum.core.circuit.Circuit
 
         参数：
             - **obj_qubits** (Union[int, list[int]]) - `X` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `X` 门的控制量子比特。默认值：None。
+            - **ctrl_qubits** (Union[int, list[int]]) - `X` 门的控制量子比特。默认值： ``None``。
 
     .. py:method:: xx(para, obj_qubits, ctrl_qubits=None)
 
@@ -354,7 +354,7 @@ mindquantum.core.circuit.Circuit
         参数：
             - **para** (Union[dict, ParameterResolver]) - `XX` 门的参数。
             - **obj_qubits** (Union[int, list[int]]) - `XX` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `XX` 门的控制量子比特。默认值：None。
+            - **ctrl_qubits** (Union[int, list[int]]) - `XX` 门的控制量子比特。默认值： ``None``。
 
     .. py:method:: y(obj_qubits, ctrl_qubits=None)
 
@@ -362,7 +362,7 @@ mindquantum.core.circuit.Circuit
 
         参数：
             - **obj_qubits** (Union[int, list[int]]) - `Y` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `Y` 门的控制量子比特。默认值：None。
+            - **ctrl_qubits** (Union[int, list[int]]) - `Y` 门的控制量子比特。默认值： ``None``。
 
     .. py:method:: yy(para, obj_qubits, ctrl_qubits=None)
 
@@ -374,7 +374,7 @@ mindquantum.core.circuit.Circuit
         参数：
             - **para** (Union[dict, ParameterResolver]) - `YY` 门的参数。
             - **obj_qubits** (Union[int, list[int]]) - `YY` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `YY` 门的控制量子比特。默认值：None。
+            - **ctrl_qubits** (Union[int, list[int]]) - `YY` 门的控制量子比特。默认值： ``None``。
 
     .. py:method:: z(obj_qubits, ctrl_qubits=None)
 
@@ -382,7 +382,7 @@ mindquantum.core.circuit.Circuit
 
         参数：
             - **obj_qubits** (Union[int, list[int]]) - `Z` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `Z` 门的控制量子比特。默认值：None。
+            - **ctrl_qubits** (Union[int, list[int]]) - `Z` 门的控制量子比特。默认值： ``None``。
 
     .. py:method:: zz(para, obj_qubits, ctrl_qubits=None)
 
@@ -394,4 +394,4 @@ mindquantum.core.circuit.Circuit
         参数：
             - **para** (Union[dict, ParameterResolver]) - `ZZ` 门的参数。
             - **obj_qubits** (Union[int, list[int]]) - `ZZ` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `ZZ` 门的控制量子比特。默认值：None。
+            - **ctrl_qubits** (Union[int, list[int]]) - `ZZ` 门的控制量子比特。默认值： ``None``。

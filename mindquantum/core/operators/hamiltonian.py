@@ -110,7 +110,7 @@ class Hamiltonian:
 
         Args:
             n_qubits (int): The total qubit of this hamiltonian, only need when mode is
-                'frontend'. Default: 1.
+                'frontend'. Default: ``1``.
         """
         if self.how_to != HowTo.ORIGIN:
             raise ValueError('Already a sparse hamiltonian.')

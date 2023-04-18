@@ -50,7 +50,7 @@ class BasicGate(ABC):
         name (str): the name of this gate.
         n_qubits (int): how many qubits is this gate.
         obj_qubits (int, list[int]): Specific which qubits the gate act on.
-        ctrl_qubits (int, list[int]): Specific the control qubits. Default, None.
+        ctrl_qubits (int, list[int]): Specific the control qubits. Default, ``None``.
     """
 
     def __init__(self, name, n_qubits, obj_qubits=None, ctrl_qubits=None):
@@ -156,7 +156,7 @@ class BasicGate(ABC):
 
         Args:
             obj_qubits (int, list[int]): Specific which qubits the gate act on.
-            ctrl_qubits (int, list[int]): Specific the control qubits. Default, None.
+            ctrl_qubits (int, list[int]): Specific the control qubits. Default, ``None``.
 
         Returns:
             Gate, Return a new gate.
@@ -290,7 +290,7 @@ class NonHermitianGate(QuantumGate):
         name (str): the name of this gate.
         n_qubits (int): how many qubits is this gate.
         obj_qubits (int, list[int]): Specific which qubits the gate act on.
-        ctrl_qubits (int, list[int]): Specific the control qubits. Default, None.
+        ctrl_qubits (int, list[int]): Specific the control qubits. Default, ``None``.
     """
 
     def __init__(self, name, n_qubits, *args, obj_qubits=None, ctrl_qubits=None, hermitianed=False, **kwargs):
@@ -361,7 +361,7 @@ class NoneParameterGate(QuantumGate):
         name (str): the name of this gate.
         n_qubits (int): how many qubits is this gate.
         obj_qubits (int, list[int]): Specific which qubits the gate act on.
-        ctrl_qubits (int, list[int]): Specific the control qubits. Default, None.
+        ctrl_qubits (int, list[int]): Specific the control qubits. Default, ``None``.
     """
 
     def __call__(self, obj_qubits, ctrl_qubits=None):
@@ -378,8 +378,8 @@ class ParameterGate(QuantumGate):
         name (str): the name of this parameterized gate.
         n_qubits (int): the qubit number of this parameterized gate.
         args (list): other arguments for quantum gate.
-        obj_qubits (Union[int, List[int]]): the qubit that this gate act on. Default: None.
-        ctrl_qubits (Union[int, List[int]]): the control qubit of this gate. Default: None.
+        obj_qubits (Union[int, List[int]]): the qubit that this gate act on. Default: ``None``.
+        ctrl_qubits (Union[int, List[int]]): the control qubit of this gate. Default: ``None``.
         kwargs (dict): other arguments for quantum gate.
     """
 
@@ -646,7 +646,7 @@ class ParamNonHerm(ParameterGate, NonHermitianGate):
         Args:
             paras_out (Union[dict, ParameterResolver]): Parameters of this gate.
             about_what (str): Specific the differential is about
-                which parameter. Default: None.
+                which parameter. Default: ``None``.
 
         Returns:
             numpy.ndarray, Return the numpy array of the differential matrix.

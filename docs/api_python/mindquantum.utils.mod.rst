@@ -7,7 +7,7 @@ mindquantum.utils.mod
 
     参数：
         - **vec_in** (Union[list[numbers.Number], numpy.ndarray]) - 计算模的向量。
-        - **axis** (int) - 沿着哪个轴计算模。默认值：0。
+        - **axis** (int) - 沿着哪个轴计算模。默认值： ``0``。
 
     返回：
         numpy.ndarray，输入向量的模。

@@ -39,8 +39,8 @@ class Transform:
     Args:
         operator (Union[FermionOperator, QubitOperator]): The input
             FermionOperator or QubitOperator that need to do transform.
-        n_qubits (int): The total qubits of given operator. If None, then we will count it automatically.
-            Default: None.
+        n_qubits (int): The total qubits of given operator. If ``None``, then we will count it automatically.
+            Default: ``None``.
 
     Examples:
         >>> from mindquantum.core.operators import FermionOperator

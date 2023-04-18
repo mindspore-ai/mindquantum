@@ -40,9 +40,9 @@ class ParameterResolver(ParameterResolver_):
             and the value will be the parameter value. If data is a number, this
             number will be the constant value of this parameter resolver. If data
             is a string, then this string will be the only parameter with coefficient
-            be 1. Default: None.
+            be 1. Default: No``ne.
         const (number.Number): the constant part of this parameter resolver.
-            Default: None.
+            Default: ``None``.
 
     Examples:
         >>> from mindquantum.core.parameterresolver import ParameterResolver

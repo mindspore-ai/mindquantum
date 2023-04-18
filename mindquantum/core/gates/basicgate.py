@@ -293,7 +293,7 @@ class CNOTGate(NoneParamSelfHermMat):
 
         Args:
             obj_qubits (int, list[int]): Specific which qubits the gate act on.
-            ctrl_qubits (int, list[int]): Specific the control qubits. Default, None.
+            ctrl_qubits (int, list[int]): Specific the control qubits. Default: ``None``.
 
         Returns:
             Gate, Return a new gate.
@@ -607,8 +607,8 @@ class ZZ(RotSelfHermMat):
         Get the matrix of this parameterized gate.
 
         Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            frac (numbers.Number): The multiple of the coefficient. Default: 1.
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            frac (numbers.Number): The multiple of the coefficient. Default: ``1``.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
@@ -620,9 +620,9 @@ class ZZ(RotSelfHermMat):
         Differential form of this parameterized gate.
 
         Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
-            frac (numbers.Number): The multiple of the coefficient. Default: 1.
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: ``None``.
+            frac (numbers.Number): The multiple of the coefficient. Default: ``1``.
 
         Returns:
             numpy.ndarray, the differential form matrix.
@@ -692,8 +692,8 @@ class XX(RotSelfHermMat):
         Get the matrix of this parameterized gate.
 
         Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            frac (numbers.Number): The multiple of the coefficient. Default: 1.
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            frac (numbers.Number): The multiple of the coefficient. Default: ``1``.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
@@ -705,9 +705,9 @@ class XX(RotSelfHermMat):
         Differential form of this parameterized gate.
 
         Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
-            frac (numbers.Number): The multiple of the coefficient. Default: 1.
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: ``None``.
+            frac (numbers.Number): The multiple of the coefficient. Default: ``1``.
 
         Returns:
             numpy.ndarray, the differential form matrix.
@@ -777,8 +777,8 @@ class YY(RotSelfHermMat):
         Get the matrix of this parameterized gate.
 
         Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            frac (numbers.Number): The multiple of the coefficient. Default: 1.
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            frac (numbers.Number): The multiple of the coefficient. Default: ``1``.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
@@ -790,9 +790,9 @@ class YY(RotSelfHermMat):
         Differential form of this parameterized gate.
 
         Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
-            frac (numbers.Number): The multiple of the coefficient. Default: 1.
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: ``None``.
+            frac (numbers.Number): The multiple of the coefficient. Default: ``1``.
 
         Returns:
             numpy.ndarray, the differential form matrix.
@@ -852,8 +852,8 @@ class Rzz(RotSelfHermMat):
         Get the matrix of this parameterized gate.
 
         Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            frac (numbers.Number): The multiple of the coefficient. Default: ``0.5``.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
@@ -865,9 +865,9 @@ class Rzz(RotSelfHermMat):
         Differential form of this parameterized gate.
 
         Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
-            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: ``None``.
+            frac (numbers.Number): The multiple of the coefficient. Default: ``0.5``.
 
         Returns:
             numpy.ndarray, the differential form matrix.
@@ -935,8 +935,8 @@ class Rxx(RotSelfHermMat):
         Get the matrix of this parameterized gate.
 
         Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            frac (numbers.Number): The multiple of the coefficient. Default: ``0.5``.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
@@ -948,9 +948,9 @@ class Rxx(RotSelfHermMat):
         Differential form of this parameterized gate.
 
         Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
-            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: ``None``.
+            frac (numbers.Number): The multiple of the coefficient. Default: ``0.5``.
 
         Returns:
             numpy.ndarray, the differential form matrix.
@@ -1018,8 +1018,8 @@ class Ryy(RotSelfHermMat):
         Get the matrix of this parameterized gate.
 
         Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            frac (numbers.Number): The multiple of the coefficient. Default: ``0.5``.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
@@ -1031,9 +1031,9 @@ class Ryy(RotSelfHermMat):
         Differential form of this parameterized gate.
 
         Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
-            frac (numbers.Number): The multiple of the coefficient. Default: 0.5.
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: ``None``.
+            frac (numbers.Number): The multiple of the coefficient. Default: ``0.5``.
 
         Returns:
             numpy.ndarray, the differential form matrix.
@@ -1271,7 +1271,7 @@ class BarrierGate(FunctionalGate):
     Barrier gate will separate two gate in two different layer.
 
     Args:
-        show (bool): whether show the barrier gate. Default: True.
+        show (bool): whether show the barrier gate. Default: ``True``.
     """
 
     def __init__(self, show=True):
@@ -1288,7 +1288,7 @@ class BarrierGate(FunctionalGate):
         Args:
             obj_qubits (int, list[int]): Specific which qubits the gate act on, can be
                 a single qubit or a set of consecutive qubits.
-            ctrl_qubits (int, list[int]): Specific the control qubits. Default, None.
+            ctrl_qubits (int, list[int]): Specific the control qubits. Default, ``None``.
 
         Returns:
             Gate, Return a new gate.
@@ -1346,7 +1346,7 @@ class GlobalPhase(RotSelfHermMat):
         Matrix of parameterized gate.
 
         Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
             kwargs (dict): other key arguments.
 
         Returns:
@@ -1359,8 +1359,8 @@ class GlobalPhase(RotSelfHermMat):
         Differential form of this parameterized gate.
 
         Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            about_what (str): calculate the gradient w.r.t which parameter. Default: None.
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            about_what (str): calculate the gradient w.r.t which parameter. Default: ``None``.
             kwargs (dict): other key arguments.
 
         Returns:
@@ -1404,7 +1404,7 @@ class PhaseShift(ParameterOppsGate):
         Get the matrix of this parameterized gate.
 
         Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
@@ -1424,7 +1424,7 @@ class PhaseShift(ParameterOppsGate):
         Differential form of this parameterized gate.
 
         Args:
-            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
             about_what (str): calculate the gradient w.r.t which parameter.
 
         Returns:
@@ -1454,7 +1454,7 @@ class Power(NoneParamNonHermMat):
 
     Args:
         gates (:class:`mindquantum.core.gates.NoneParameterGate`): The basic gate you need to apply power operator.
-        exponent (int, float): The exponent. Default: 0.5.
+        exponent (int, float): The exponent. Default: ``0.5``.
 
     Examples:
         >>> from mindquantum.core.gates import Power

@@ -13,5 +13,5 @@ mindquantum.core.circuit.pauli_word_to_circuits
 
     异常：
         - **TypeError** - 如果 `qubitops` 不是 `Hamiltonian` 或 `QubitOperator` 。
-        - **ValueError** - 如果 `qubitops` 是 `QubitOperator`，但不是在 'origin' 模式下。
+        - **ValueError** - 如果 `qubitops` 是 `QubitOperator`，但不是在 ``'origin'`` 模式下。
         - **ValueError** - 如果 `qubitops` 有多个泡利词。

@@ -8,7 +8,7 @@ mindquantum.simulator.Simulator
     参数：
         - **backend** (str) - 想要的后端。通过调用 `get_supported_simulator()` 可以返回支持的后端。
         - **n_qubits** (int) - 量子模拟器的量子比特数量。
-        - **seed** (int) - 模拟器的随机种子，如果为None，种子将由 `numpy.random.randint` 生成。默认值：None。
+        - **seed** (int) - 模拟器的随机种子，如果为 ``None``，种子将由 `numpy.random.randint` 生成。默认值： ``None``。
 
     异常：
         - **TypeError** - 如果 `backend` 不是str。
@@ -24,7 +24,7 @@ mindquantum.simulator.Simulator
 
         参数：
             - **circuit** (Circuit) - 要应用在模拟器上的量子线路。
-            - **pr** (Union[ParameterResolver, dict, numpy.ndarray, list, numbers.Number]) - 线路的ParameterResolver。如果线路不含参数，则此参数应为None。默认值：None。
+            - **pr** (Union[ParameterResolver, dict, numpy.ndarray, list, numbers.Number]) - 线路的ParameterResolver。如果线路不含参数，则此参数应为None。默认值： ``None``。
 
         返回：
             MeasureResult或None，如果线路具有测量门，则返回MeasureResult，否则返回None。
@@ -35,8 +35,8 @@ mindquantum.simulator.Simulator
 
         参数：
             - **gate** (BasicGate) - 要应用的门。
-            - **pr** (Union[numbers.Number, numpy.ndarray, ParameterResolver, list]) - 含参门的参数。默认值：None。
-            - **diff** (bool) - 是否在模拟器上应用导数门。默认值：False。
+            - **pr** (Union[numbers.Number, numpy.ndarray, ParameterResolver, list]) - 含参门的参数。默认值： ``None``。
+            - **diff** (bool) - 是否在模拟器上应用导数门。默认值： ``False``。
 
         返回：
             int或None，如果是该门是测量门，则返回坍缩态，否则返回None。
@@ -91,9 +91,9 @@ mindquantum.simulator.Simulator
         参数：
             - **hams** (Hamiltonian) - 需要计算期望的Hamiltonian。
             - **circ_right** (Circuit) - 上述 :math:`U_r` 电路。
-            - **circ_left** (Circuit) - 上述 :math:`U_l` 电路，默认情况下，这个线路将为None，在这种情况下， :math:`U_l` 将等于 :math:`U_r` 。默认值：None。
-            - **simulator_left** (Simulator) - 包含 :math:`\left|\varphi\right>` 的模拟器。如果无，则 :math:`\left|\varphi\right>` 被假定等于 :math:`\left|\psi\right>`。默认值：None。
-            - **parallel_worker** (int) - 并行器数目。并行器可以在并行线程中处理batch。默认值：None。
+            - **circ_left** (Circuit) - 上述 :math:`U_l` 电路，默认情况下，这个线路将为 ``None``，在这种情况下， :math:`U_l` 将等于 :math:`U_r` 。默认值： ``None``。
+            - **simulator_left** (Simulator) - 包含 :math:`\left|\varphi\right>` 的模拟器。如果无，则 :math:`\left|\varphi\right>` 被假定等于 :math:`\left|\psi\right>`。默认值： ``None``。
+            - **parallel_worker** (int) - 并行器数目。并行器可以在并行线程中处理batch。默认值： ``None``。
 
         返回：
             GradOpsWrapper，一个包含生成梯度算子信息的梯度算子包装器。
@@ -103,7 +103,7 @@ mindquantum.simulator.Simulator
         获取模拟器的当前量子态。
 
         参数：
-            - **ket** (bool) - 是否以ket格式返回量子态。默认值：False。
+            - **ket** (bool) - 是否以ket格式返回量子态。默认值： ``False``。
 
         返回：
             numpy.ndarray，当前量子态。
@@ -125,9 +125,9 @@ mindquantum.simulator.Simulator
 
         参数：
             - **circuit** (Circuit) - 要进行演化和采样的电路。
-            - **pr** (Union[None, dict, ParameterResolver]) - 线路的parameter resolver，如果线路是含参线路则需要提供pr。默认值：None。
-            - **shots** (int) - 采样线路的次数。默认值：1。
-            - **seed** (int) - 采样的随机种子。如果为None，则种子将是随机的整数。默认值：None。
+            - **pr** (Union[None, dict, ParameterResolver]) - 线路的parameter resolver，如果线路是含参线路则需要提供pr。默认值： ``None``。
+            - **shots** (int) - 采样线路的次数。默认值： ``1``。
+            - **seed** (int) - 采样的随机种子。如果为None，则种子将是随机的整数。默认值： ``None``。
 
         返回：
             MeasureResult，采样的统计结果。

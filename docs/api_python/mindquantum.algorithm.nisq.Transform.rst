@@ -8,7 +8,7 @@ mindquantum.algorithm.nisq.Transform
 
     参数：
         - **operator** (Union[FermionOperator, QubitOperator]) - 需要进行转换的 `FermionOperator` 或 `QubitOperator` 。
-        - **n_qubits** (int) - 输入算符的比特数。如果为 `None` ， 系统将会自动数出比特数。默认值：None。
+        - **n_qubits** (int) - 输入算符的比特数。如果为 ``None`` ， 系统将会自动数出比特数。默认值： ``None``。
 
     .. py:method:: bravyi_kitaev()
 

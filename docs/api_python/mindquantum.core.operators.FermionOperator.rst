@@ -8,15 +8,15 @@ mindquantum.core.operators.FermionOperator
     FermionOperator遵循反交换关系。
 
     参数：
-        - **terms** (str) - 费米子算符的输入项。默认值：None。
-        - **coefficient** (Union[numbers.Number, str, ParameterResolver]) - 单费米子算符的系数。默认值：1.0。
+        - **terms** (str) - 费米子算符的输入项。默认值： ``None``。
+        - **coefficient** (Union[numbers.Number, str, ParameterResolver]) - 单费米子算符的系数。默认值： ``1.0``。
 
     .. py:method:: dumps(indent: int = 4)
 
         将FermionOperator转储到JSON（JavaScript对象表示法）。
 
         参数：
-            - **indent** (int) - JSON数组元素和对象成员打印时的缩进大小。默认值：4。
+            - **indent** (int) - JSON数组元素和对象成员打印时的缩进大小。默认值： ``4``。
 
         返回：
             JSON(str)，FermionOperator的JSON字符串。
@@ -61,7 +61,7 @@ mindquantum.core.operators.FermionOperator
         将此费米子运算符转换为jordan_wigner映射下的csr_matrix。
 
         参数：
-            - **n_qubits** (int) - 结果矩阵的总量子比特数。如果是None，则该值将是最大局域量子比特数。默认值：None。
+            - **n_qubits** (int) - 结果矩阵的总量子比特数。如果是None，则该值将是最大局域量子比特数。默认值： ``None``。
 
     .. py:method:: normal_ordered()
 

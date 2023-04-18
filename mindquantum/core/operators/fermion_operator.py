@@ -82,9 +82,9 @@ class FermionOperator(FermionOperator_):
     The FermionOperator are follows the anti-commutation relationship.
 
     Args:
-        terms (str): The input term of fermion operator. Default: None.
+        terms (str): The input term of fermion operator. Default: ``None``.
         coefficient (Union[numbers.Number, str, Dict[str, numbers.Number], ParameterResolver]): The coefficient
-            for the corresponding single operators Default: 1.0.
+            for the corresponding single operators Default: ``1.0``.
 
     Examples:
         >>> from mindquantum.core.operators import FermionOperator
@@ -479,7 +479,7 @@ class FermionOperator(FermionOperator_):
 
         Args:
             indent (int): Then JSON array elements and object members will be
-                pretty-printed with that indent level. Default: 4.
+                pretty-printed with that indent level. Default: ``4``.
 
         Returns:
             JSON (str), the JSON strings of this FermionOperator
@@ -537,7 +537,7 @@ class FermionOperator(FermionOperator_):
         Removes small imaginary and real parts.
 
         Args:
-            abs_tol(float): Absolute tolerance, must be at least 0.0
+            abs_tol(float): Absolute tolerance, must be at least 0.0.
 
         Returns:
             the compressed operator

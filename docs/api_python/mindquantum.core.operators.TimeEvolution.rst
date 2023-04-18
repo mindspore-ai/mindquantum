@@ -17,7 +17,7 @@ mindquantum.core.operators.TimeEvolution
 
     参数：
         - **ops** (QubitOperator) - 量子算子哈密顿量，可以参数化，也可以非参数化。
-        - **time** (Union[numbers.Number, dict, ParameterResolver]) - 演化时间，可以是数字或参数解析器。如果是None，时间将设置为1。默认值：None。
+        - **time** (Union[numbers.Number, dict, ParameterResolver]) - 演化时间，可以是数字或参数解析器。如果是 ``None``，时间将设置为1。默认值： ``None``。
 
     .. py:method:: circuit
         :property:

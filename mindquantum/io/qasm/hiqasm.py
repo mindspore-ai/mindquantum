@@ -42,8 +42,8 @@ def random_hiqasm(n_qubits, gate_num, version='0.1', seed=42):  # pylint: disabl
     Args:
         n_qubits (int): Total number of qubit in this quantum circuit.
         gate_num (int): Total number of gate in this quantum circuit.
-        version (str): version of HIQASM. Default: '0.1'.
-        seed (int): The random seed to generate this random quantum circuit. Default: 42.
+        version (str): version of HIQASM. Default: ``'0.1'``.
+        seed (int): The random seed to generate this random quantum circuit. Default: ``42``.
 
     Returns:
         str, quantum circuit in HIQASM format.
@@ -172,7 +172,7 @@ class HiQASM:
 
         Args:
             circuit (Circuit): The quantum circuit you want to translated to HiQASM.
-            version (str): The HiQASM version you want to use. Default: '0.1'.
+            version (str): The HiQASM version you want to use. Default: ``'0.1'``.
 
         Returns:
             str, The HiQASM format of input circuit.
@@ -351,7 +351,7 @@ class HiQASM:
         Args:
             file_name (str): The file name you want to save the HiQASM file.
             circuit (Circuit): The Circuit you want to convert.
-            version (str): The version of HiQASM. Default: '0.1'.
+            version (str): The version of HiQASM. Default: ``'0.1'``.
 
         Raises:
             TypeError: if `file_name` is not a str.
