@@ -84,7 +84,7 @@ def commutator(left_operator, right_operator):
             FermionOperator or QubitOperator.
 
     Raises:
-        TypeError: left_operator and right_operator are not of the same type.
+        TypeError: `left_operator` and `right_operator` are not of the same type.
 
     Examples:
         >>> from mindquantum.core.operators import QubitOperator, FermionOperator, commutator
@@ -136,10 +136,10 @@ def number_operator(n_modes=None, mode=None, coefficient=1.0):
     Return a fermionic number operator for the reverse_jordan_wigner transform.
 
     Args:
-        n_modes (int): The number of modes in the system. Default: None.
+        n_modes (int): The number of modes in the system. Default: ``None``.
         mode (int, optional): The mode on which to return the number
-            operator. If None, return total number operator on all sites. Default: None.
-        coefficient (float): The coefficient of the term. Default: 1.0.
+            operator. If ``None``, return total number operator on all sites. Default: ``None``.
+        coefficient (float): The coefficient of the term. Default: ``1.0``.
 
     Returns:
         FermionOperator, a fermionic number operator for the reverse_jordan_wigner transform.
@@ -247,7 +247,7 @@ def sz_operator(n_spatial_orbitals):
 
     Returns:
         FermionOperator, corresponding to the sz operator over
-        n_spatial_orbitals.
+        `n_spatial_orbitals`.
 
     Examples:
         >>> from mindquantum.core.operators import sz_operator

@@ -18,8 +18,8 @@ mindquantum.core.gates.GlobalPhase
         参数门的倒数矩阵形式。
 
         参数：
-            - **pr** (Union[ParameterResolver, dict]) - 参数门的参数。默认值：None。
-            - **about_what** (str) - 相对于哪个参数来求导数。默认值：None。
+            - **pr** (Union[ParameterResolver, dict]) - 参数门的参数。默认值： ``None``。
+            - **about_what** (str) - 相对于哪个参数来求导数。默认值： ``None``。
             - **kwargs** (dict) - 其他参数。
 
         返回：
@@ -34,7 +34,7 @@ mindquantum.core.gates.GlobalPhase
         参数门的矩阵形式。
 
         参数：
-            - **pr** (Union[ParameterResolver, dict]) - 参数门的参数。默认值：None。
+            - **pr** (Union[ParameterResolver, dict]) - 参数门的参数。默认值： ``None``。
             - **kwargs** (dict) - 其他的参数。
 
         返回：

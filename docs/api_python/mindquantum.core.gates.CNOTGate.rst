@@ -20,7 +20,7 @@ mindquantum.core.gates.CNOTGate
 
         参数：
             - **obj_qubits** (int, list[int]) - 指明量子门作用在哪些量子比特上。
-            - **ctrl_qubits** (int, list[int]) - 指明量子门受哪些量子比特控制。默认值：None。
+            - **ctrl_qubits** (int, list[int]) - 指明量子门受哪些量子比特控制。默认值： ``None``。
 
         返回：
             量子门，返回一个新的量子门。

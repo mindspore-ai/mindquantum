@@ -115,7 +115,7 @@ def mod(vec_in, axis=0):
 
     Args:
         vec_in (Union[list[numbers.Number], numpy.ndarray]): The vector you want to calculate mod.
-        axis (int): Along which axis you want to calculate mod. Default: 0.
+        axis (int): Along which axis you want to calculate mod. Default: ``0``.
 
     Returns:
         numpy.ndarray, The mod of input vector.
@@ -141,7 +141,7 @@ def normalize(vec_in, axis=0):
     Args:
         vec_in (Union[list[number], numpy.ndarray]): Vector you want to
             normalize.
-        axis (int): Along which axis you want to normalize your vector. Default: 0.
+        axis (int): Along which axis you want to normalize your vector. Default: ``0``.
 
     Returns:
         numpy.ndarray, Vector after normalization.
@@ -168,10 +168,10 @@ def random_state(shapes, norm_axis=0, comp=True, seed=None):
     Args:
         shapes (tuple): shapes = (m, n) means m quantum states with each state
             formed by :math:`\log_2(n)` qubits.
-        norm_axis (int): which axis you want to apply normalization. Default: 0.
-        comp (bool): if `True`, each amplitude of the quantum state will be a
-            complex number. Default: True.
-        seed (int): the random seed. Default: None.
+        norm_axis (int): which axis you want to apply normalization. Default: ``0``.
+        comp (bool): if ``True``, each amplitude of the quantum state will be a
+            complex number. Default: ``True``.
+        seed (int): the random seed. Default: ``None``.
 
     Returns:
         numpy.ndarray, A normalized random quantum state.
@@ -204,8 +204,8 @@ def is_two_number_close(a, b, atol=None):  # pylint: disable=invalid-name
     Args:
         a (numbers.Number): The first number.
         b (numbers.Number): The second number.
-        atol (float): The atol. If None, the precision defined in global config
-            will be used. Default: None.
+        atol (float): The atol. If ``None``, the precision defined in global config
+            will be used. Default: ``None``.
 
     Returns:
         bool, whether this two number close to each other.

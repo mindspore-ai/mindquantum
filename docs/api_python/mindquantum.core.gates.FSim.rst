@@ -27,7 +27,7 @@ mindquantum.core.gates.FSim
         获取 FSim 门的矩阵形式。
 
         参数：
-            - **pr** (Union[ParameterResolver, dict]) - FSim 门的参数。默认值：None。
+            - **pr** (Union[ParameterResolver, dict]) - FSim 门的参数。默认值： ``None``。
 
     .. py:method:: phi()
 

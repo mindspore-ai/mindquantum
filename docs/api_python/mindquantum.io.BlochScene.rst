@@ -6,7 +6,7 @@ mindquantum.io.BlochScene
     在布洛赫球中展示单量子比特的量子态。
 
     参数：
-        - **config** (Union[dict, str]) - 布洛赫球风格配置文件。如果为 `None` ，系统将会使用内置的风格配置文件。除了内置格式，当前还支持 `dark` 风格。默认值： `None` 。
+        - **config** (Union[dict, str]) - 布洛赫球风格配置文件。如果为 ``None`` ，系统将会使用内置的风格配置文件。除了内置格式，当前还支持 `dark` 风格。默认值： ``None`` 。
 
     .. py:method:: add_3d_arrow(ax, data, *args, **kwargs)
 
@@ -26,7 +26,7 @@ mindquantum.io.BlochScene
             - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 想要添加右矢标签的三维Axes。
             - **args** (tuple) - 右矢标签中 `matplotlib` 的 `text` 对象的其他位置参数。
             - **kwargs** (dict) - 右矢标签中 `matplotlib` 的 `text` 对象的其他关键字参数。
-            - **fontsize** (int) - 标签字体大小。如果为 `None` ，字体大小将取 `BlochScene` 的配置文件中键 `ket_label_fs` 对应的值。默认值： `None` 。
+            - **fontsize** (int) - 标签字体大小。如果为 ``None`` ，字体大小将取 `BlochScene` 的配置文件中键 `ket_label_fs` 对应的值。默认值： ``None`` 。
 
     .. py:method:: add_state(ax, amp, linecolor=None, linewidth=None, pointcolor=None, pointsize=None, marker=None, projcolor=None, mode=None, with_proj=None, stick_args=None, stick_kwargs=None, point_args=None, point_kwargs=None, proj_args=None, proj_kwargs=None)
 
@@ -35,20 +35,20 @@ mindquantum.io.BlochScene
         参数：
             - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 想要添加量子态的三维Axes。
             - **amp** (numpy.ndarray) - 量子态。
-            - **linecolor** (str) - 线的颜色。如果为 `None` ，系统将会从 `BlochScene` 的 `config` 中取键 `stick_c` 对应的值。默认值： `None` 。
-            - **linewidth** (numbers.Number) - 线宽度。如果为 `None` ，系统将会从 `BlochScene` 的 `config` 中取键 `stick_w` 对应的值。默认值： `None` 。
-            - **pointcolor** (str) - 顶点的颜色。如果为 `None` ，系统将会从 `BlochScene` 的 `config` 中取键 `point_c` 对应的值。默认值： `None` 。
-            - **pointsize** (numbers.Number) - 顶点的大小。如果为 `None` ，系统将会从 `BlochScene` 的 `config` 中取键 `point_s` 对应的值。默认值： `None` 。
-            - **marker** (str) - 顶点的标记。如果为 `None` ，系统将会从 `BlochScene` 的 `config` 中取键 `point_m` 对应的值。默认值： `None` 。
-            - **projcolor** (str) - 投影线的颜色。如果为 `None` ， 系统将会从 `BlochScene` 的 `config` 中取键 `proj_c` 对应的值。默认值： `None` 。
-            - **mode** (str) - 怎样展示量子态。可以是 'stick'、 'point' 或 'both'。如果为 `None` ，系统将会从 `BlochScene` 的 `config` 中取键 `state_mode` 对应的值。默认值： `None` 。
-            - **with_proj** (bool) - 是否展示量子态在x、y和z轴上的投影。如果为 `None` ，系统将会从 `BlochScene` 的 `config` 中取键 `with_proj` 对应的值。默认值： `None` 。
-            - **stick_args** (tuple) - 绘制量子态的轴线的位置参数。这些参数会被传入到 `Axes3D.plot` 中。默认值： `None` 。
-            - **stick_kwargs** (dict) - 绘制量子态的轴线的关键字参数。这些参数会被传入到 `Axes3D.plot` 中。默认值： `None` 。
-            - **point_args** (tuple) - 量子态端点的其他位置参数。这些参数会被传入到 `Axes3D.scatter` 中。默认值： `None` 。
-            - **point_kwargs** (dict) - 量子态端点的其他关键字参数。这些参数会被传入到 `Axes3D.scatter` 中。默认值： `None` 。
-            - **proj_args** (tuple) - 投影线的其他位置参数。这些参数会被传入到 `Axes3D.plot` 中。默认值： `None` 。
-            - **proj_kwargs** (dict) - 投影线的其他关键字参数。这些参数会被传入到 `Axes3D.plot` 中。默认值： `None` 。
+            - **linecolor** (str) - 线的颜色。如果为 ``None`` ，系统将会从 `BlochScene` 的 `config` 中取键 `stick_c` 对应的值。默认值： ``None`` 。
+            - **linewidth** (numbers.Number) - 线宽度。如果为 ``None`` ，系统将会从 `BlochScene` 的 `config` 中取键 `stick_w` 对应的值。默认值： ``None`` 。
+            - **pointcolor** (str) - 顶点的颜色。如果为 ``None`` ，系统将会从 `BlochScene` 的 `config` 中取键 `point_c` 对应的值。默认值： ``None`` 。
+            - **pointsize** (numbers.Number) - 顶点的大小。如果为 ``None`` ，系统将会从 `BlochScene` 的 `config` 中取键 `point_s` 对应的值。默认值： ``None`` 。
+            - **marker** (str) - 顶点的标记。如果为 ``None`` ，系统将会从 `BlochScene` 的 `config` 中取键 `point_m` 对应的值。默认值： ``None`` 。
+            - **projcolor** (str) - 投影线的颜色。如果为 ``None`` ， 系统将会从 `BlochScene` 的 `config` 中取键 `proj_c` 对应的值。默认值： ``None`` 。
+            - **mode** (str) - 怎样展示量子态。可以是 ``'stick'``、 ``'point'`` 或 ``'both'``。如果为 ``None`` ，系统将会从 `BlochScene` 的 `config` 中取键 `state_mode` 对应的值。默认值： ``None`` 。
+            - **with_proj** (bool) - 是否展示量子态在x、y和z轴上的投影。如果为 ``None`` ，系统将会从 `BlochScene` 的 `config` 中取键 `with_proj` 对应的值。默认值： ``None`` 。
+            - **stick_args** (tuple) - 绘制量子态的轴线的位置参数。这些参数会被传入到 `Axes3D.plot` 中。默认值： ``None`` 。
+            - **stick_kwargs** (dict) - 绘制量子态的轴线的关键字参数。这些参数会被传入到 `Axes3D.plot` 中。默认值： ``None`` 。
+            - **point_args** (tuple) - 量子态端点的其他位置参数。这些参数会被传入到 `Axes3D.scatter` 中。默认值： ``None`` 。
+            - **point_kwargs** (dict) - 量子态端点的其他关键字参数。这些参数会被传入到 `Axes3D.scatter` 中。默认值： ``None`` 。
+            - **proj_args** (tuple) - 投影线的其他位置参数。这些参数会被传入到 `Axes3D.plot` 中。默认值： ``None`` 。
+            - **proj_kwargs** (dict) - 投影线的其他关键字参数。这些参数会被传入到 `Axes3D.plot` 中。默认值： ``None`` 。
 
         返回：
             dict，由折线、端点和投影线构成的字典。
@@ -62,9 +62,9 @@ mindquantum.io.BlochScene
             - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 布洛赫球场景所在的Axes。
             - **objs** (dict) - 通过 :class:`mindquantum.io.BlochScene.add_state` 产生的对象。
             - **new_amps** (numpy.ndarray) - 所有需要动画展示的量子态。
-            - **interval** (int) - 帧之间的时间间隔，单位为毫秒。默认值：15。
-            - **with_trace** (bool) - 是否展示量子态动画的轨迹。默认值：True。
-            - **history_len** (int) - 量子态动画的轨迹长度。如果为 `None` ，长度为所有需要动画展示的量子态的个数。默认自： `None` 。
+            - **interval** (int) - 帧之间的时间间隔，单位为毫秒。默认值： ``15``。
+            - **with_trace** (bool) - 是否展示量子态动画的轨迹。默认值： ``True``。
+            - **history_len** (int) - 量子态动画的轨迹长度。如果为 ``None`` ，长度为所有需要动画展示的量子态的个数。默认自： ``None`` 。
             - **kwargs** (dict) - 传入 `animation.FuncAnimation` 的其他关键字参数。
 
         返回：
@@ -87,7 +87,7 @@ mindquantum.io.BlochScene
         参数：
             - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 想要绘制平行于yz平面的圆的Axes。
             - **args** (tuple) - 传入给 `Axes3D.plot` 的位置参数。
-            - **angle** (numbers.Number) - 相对与z轴的旋转角度。默认值：0。
+            - **angle** (numbers.Number) - 相对与z轴的旋转角度。默认值： ``0``。
             - **kwargs** (dict) - 传入给 `Axes3D.plot` 的关键字参数。
 
     .. py:method:: create_scene()
@@ -99,7 +99,7 @@ mindquantum.io.BlochScene
         创建一个三维的画布。
 
         参数：
-            - **boxes** (list) - 四维的浮点数数组，分别为左边界，底边，宽度和高度。如果为 `None` ，左边界和底边将为0，宽度和高度将为1。默认值： `None` 。
+            - **boxes** (list) - 四维的浮点数数组，分别为左边界，底边，宽度和高度。如果为 ``None`` ，左边界和底边将为0，宽度和高度将为1。默认值： ``None`` 。
 
     .. py:method:: plot_slice(ax, x, y, z, frame_color, frame_alpha, surface_color, surface_alpha, frame_args=None, frame_kwargs=None, surface_args=None, surface_kwargs=None)
 
@@ -126,7 +126,7 @@ mindquantum.io.BlochScene
         参数：
             - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 需要设置视图的三维Axes。
             - **elev** (numbers.Number) - 以度为单位时，当前方位绕z轴转动的角度。
-            - **azim** (numbers.Number) - 以度为单位时，当前方位相对与 (x, y) 平面的仰角。默认值：0。
+            - **azim** (numbers.Number) - 以度为单位时，当前方位相对与 (x, y) 平面的仰角。默认值： ``0``。
 
     .. py:method:: state_to_cor(amp: np.ndarray)
         :staticmethod:

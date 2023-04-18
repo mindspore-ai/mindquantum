@@ -59,7 +59,7 @@ class PolynomialTensor:
             numpy array
             and those constant and array represent the coefficients of terms of
             the form identity, :math:`a^\dagger_p a_q`,
-            :math:`a^\dagger_p a^\dagger_q a_r a_s`, respectively. Default: None.
+            :math:`a^\dagger_p a^\dagger_q a_r a_s`, respectively. Default: ``None``.
 
     Note:
         Here '1' represents :math:`a^\dagger`, while '0' represent :math:`a`.

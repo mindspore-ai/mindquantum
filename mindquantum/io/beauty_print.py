@@ -34,11 +34,11 @@ def bprint(strings: list, align=":", title='', v_around='=', h_around='|', fill_
 
     Args:
         strings (list[str]): Information you want to output.
-        align (str): The align char alone vertal direction. Default: ":".
-        title (str): The title of this information block. Default: "".
-        v_around (str): Vertical boundary char. Default: "=".
-        h_around (str): horizontal boundary char. Default: "|".
-        fill_char (str): Empty space fill with this char. Default: " ".
+        align (str): The align char alone vertal direction. Default: ``":"``.
+        title (str): The title of this information block. Default: ``""``.
+        v_around (str): Vertical boundary char. Default: ``"="``.
+        h_around (str): horizontal boundary char. Default: ``"|"``.
+        fill_char (str): Empty space fill with this char. Default: ``" "``.
 
     Returns:
         list, a list of formatted string.

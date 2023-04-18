@@ -130,14 +130,14 @@ class OpenQASM:
 
         Args:
             circuit (Circuit): The quantum circuit you want to translated to openqasm.
-            version (str): The openqasm version you want to use. Default: '2.0'.
+            version (str): The openqasm version you want to use. Default: ``'2.0'``.
 
         Returns:
             str, The openqasm format of input circuit.
 
         Raises:
-            TypeError: if circuit is not a Circuit.
-            TypeError: if version is not a str.
+            TypeError: if `circuit` is not a Circuit.
+            TypeError: if `version` is not a str.
             NotImplementedError: if openqasm version not implement.
             ValueError: if gate not implement in this version.
         """
@@ -246,7 +246,7 @@ class OpenQASM:
         Args:
             file_name (str): The file name you want to save the openqasm file.
             circuit (Circuit): The Circuit you want to convert.
-            version (str): The version of openqasm. Default: '2.0'.
+            version (str): The version of openqasm. Default: ``'2.0'``.
 
         Raises:
             TypeError: if `file_name` is not a str.

@@ -246,16 +246,16 @@ def uccsd0_singlet_generator(
         qubit, but also the 1st, 2nd, ... 6th qubit.
 
     Args:
-        n_qubits (int): Number of qubits (spin-orbitals). Default: None.
-        n_electrons (int): Number of electrons (occupied spin-orbitals). Default: None.
+        n_qubits (int): Number of qubits (spin-orbitals). Default: ``None``.
+        n_electrons (int): Number of electrons (occupied spin-orbitals). Default: ``None``.
         anti_hermitian (bool): Whether to subtract the hermitian conjugate
-            to form anti-Hermitian operators. Default: True.
+            to form anti-Hermitian operators. Default: ``True``.
         occ_orb (list): Indices of manually assigned occupied spatial
-            orbitals. Default: None.
+            orbitals. Default: ``None``.
         vir_orb (list): Indices of manually assigned virtual spatial
-            orbitals. Default: None.
+            orbitals. Default: ``None``.
         generalized (bool): Whether to use generalized excitations which
-            do not distinguish occupied or virtual orbitals (UCCGSD). Default: False.
+            do not distinguish occupied or virtual orbitals (UCCGSD). Default: ``False``.
 
     Returns:
         FermionOperator, Generator of the UCCSD operators that uses CCD0 ansatz.

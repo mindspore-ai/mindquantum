@@ -50,10 +50,10 @@ class QubitOperator(QubitOperator_):
     operators = ('X', 'Y', 'Z'), different_indices_commute = True.
 
     Args:
-        term (str): The input term of qubit operator. Default: None.
+        term (str): The input term of qubit operator. Default: ``None``.
         coefficient (Union[numbers.Number, str, ParameterResolver]): The
             coefficient of this qubit operator, could be a number or a variable
-            represent by a string or a symbol or a parameter resolver. Default: 1.0.
+            represent by a string or a symbol or a parameter resolver. Default: ``1.0``.
 
     Examples:
         >>> from mindquantum.core.operators import QubitOperator
@@ -305,7 +305,7 @@ class QubitOperator(QubitOperator_):
             strs (str): The dumped fermion operator string.
 
         Returns:
-            QubitOperator, the QubitOperator loaded from JSON-formatted strings
+            QubitOperator, the QubitOperator loaded from JSON-formatted strings.
 
         Examples:
             >>> from mindquantum.core.operators import QubitOperator
@@ -488,7 +488,7 @@ class QubitOperator(QubitOperator_):
         Removes small imaginary and real parts.
 
         Args:
-            abs_tol(float): Absolute tolerance, must be at least 0.0
+            abs_tol(float): Absolute tolerance, must be at least 0.0.
 
         Returns:
             the compressed operator
@@ -520,8 +520,8 @@ class QubitOperator(QubitOperator_):
         Convert this qubit operator to csr_matrix.
 
         Args:
-            n_qubits (int): The total qubits of final matrix. If None, the value will be
-                the maximum local qubit number. Default: None.
+            n_qubits (int): The total qubits of final matrix. If ``None``, the value will be
+                the maximum local qubit number. Default: ``None``.
         """
         from mindquantum import (  # pylint: disable=import-outside-toplevel,cyclic-import
             I,

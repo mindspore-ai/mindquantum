@@ -45,8 +45,8 @@ def decompose_single_term_time_evolution(term, para):  # pylint: disable=too-man
         Circuit, a quantum circuit.
 
     Raises:
-        ValueError: If term has more than one pauli string.
-        TypeError: If term is not map.
+        ValueError: If `term` has more than one pauli string.
+        TypeError: If `term` is not map.
 
     Examples:
         >>> from mindquantum.core.operators import QubitOperator
@@ -200,7 +200,7 @@ def controlled(circuit_fn):
         function that can generate a Circuit.
 
     Raises:
-        TypeError: circuit_fn is not a Circuit or can not return a Circuit.
+        TypeError: `circuit_fn` is not a Circuit or can not return a Circuit.
 
     Examples:
         >>> from mindquantum.algorithm.library import qft
@@ -250,7 +250,7 @@ def dagger(circuit_fn):
         Circuit or a function that can generate Circuit.
 
     Raises:
-        TypeError: If circuit_fn is not a Circuit or can not return a Circuit.
+        TypeError: If `circuit_fn` is not a Circuit or can not return a Circuit.
 
     Examples:
         >>> from mindquantum.algorithm.library import qft
@@ -344,8 +344,8 @@ def add_prefix(circuit_fn, prefix: str):
         Circuit or a function that can generate a Circuit.
 
     Raises:
-        TypeError: If prefix is not a string.
-        TypeError: circuit_fn is not a Circuit or can not return a Circuit.
+        TypeError: If `prefix` is not a string.
+        TypeError: `circuit_fn` is not a Circuit or can not return a Circuit.
 
     Examples:
         >>> from mindquantum.algorithm.library import qft
@@ -468,10 +468,10 @@ def change_param_name(circuit_fn, name_map):
         Circuit or a function that can generate a Circuit.
 
     Raises:
-        TypeError: If name_map is not a map.
-        TypeError: If key of name_map is not string.
-        TypeError: If value of name_map is not string.
-        TypeError: If circuit_fn is not a Circuit or can not return a Circuit.
+        TypeError: If `name_map` is not a map.
+        TypeError: If key of `name_map` is not string.
+        TypeError: If value of `name_map` is not string.
+        TypeError: If `circuit_fn` is not a Circuit or can not return a Circuit.
 
     Examples:
         >>> from mindquantum.algorithm.library import qft

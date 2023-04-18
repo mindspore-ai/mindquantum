@@ -87,7 +87,7 @@ class Max2SATAnsatz(Ansatz):
             is a clause represented by a tuple with length two. The element of
             tuple must be non-zero integer. For example, (2, -3) stands for clause
             :math:`x_2\lor\lnot x_3`.
-        depth (int): The depth of Max-2-SAT ansatz. Default: 1.
+        depth (int): The depth of Max-2-SAT ansatz. Default: ``1``.
 
     Examples:
         >>> import numpy as np

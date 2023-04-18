@@ -48,7 +48,7 @@ class QAOAAnsatz(Ansatz):
 
     Args:
         ham (QubitOperator): The hamiltonian structure.
-        depth (int): The depth of QAOA ansatz. Default: 1.
+        depth (int): The depth of QAOA ansatz. Default: ``1``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import QAOAAnsatz

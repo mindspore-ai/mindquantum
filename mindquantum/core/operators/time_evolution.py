@@ -38,8 +38,8 @@ class TimeEvolution:  # pylint: disable=too-few-public-methods
         ops (QubitOperator): The qubit operator hamiltonian, could be parameterized or
             non parameterized.
         time (Union[numbers.Number, dict, ParameterResolver]): The evolution time,
-            could be a number or a parameter resolver. If None, the time will be set to 1.
-            Default: None.
+            could be a number or a parameter resolver. If ``None``, the time will be set to 1.
+            Default: ``None``.
 
     Examples:
         >>> from mindquantum.core.operators import TimeEvolution, QubitOperator

@@ -30,7 +30,7 @@ class UN(Circuit):
     Args:
         gate (BasicGate): A quantum gate.
         maps_obj (Union[int, list[int]]): Objective qubits.
-        maps_ctrl (Union[int, list[int]]): Control qubits. Default: None.
+        maps_ctrl (Union[int, list[int]]): Control qubits. Default: ``None``.
 
     Returns:
         Circuit, Return a quantum circuit.
@@ -90,7 +90,7 @@ class SwapParts(Circuit):
         a (Iterable): The first part you need to swap.
         b (Iterable): The second part you need to swap.
         maps_ctrl (int, Iterable): Control the swap by a single qubit or by
-            different qubits or just no control qubit. Default: None.
+            different qubits or just no control qubit. Default: ``None``.
 
     Examples:
         >>> from mindquantum.core.circuit import SwapParts

@@ -51,15 +51,15 @@ class UCCAnsatz(Ansatz):
         included.
 
     Args:
-        n_qubits(int): Number of qubits (spin-orbitals). Default: None.
-        n_electrons(int): Number of electrons (occupied spin-orbitals). Default: None.
+        n_qubits(int): Number of qubits (spin-orbitals). Default: ``None``.
+        n_electrons(int): Number of electrons (occupied spin-orbitals). Default: ``None``.
         occ_orb(list): Indices of manually assigned occupied spatial
-            orbitals, for ansatz construction only. Default: None.
+            orbitals, for ansatz construction only. Default: ``None``.
         vir_orb(list): Indices of manually assigned virtual spatial
-            orbitals, for ansatz construction only. Default: None.
+            orbitals, for ansatz construction only. Default: ``None``.
         generalized(bool): Whether to use generalized excitations which
-            do not distinguish occupied or virtual orbitals (UCCGSD). Default: False.
-        trotter_step(int): The order of Trotterization step. Default: 1.
+            do not distinguish occupied or virtual orbitals (UCCGSD). Default: ``False``.
+        trotter_step(int): The order of Trotterization step. Default: ``1``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import UCCAnsatz

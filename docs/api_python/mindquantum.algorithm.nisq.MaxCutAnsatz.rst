@@ -18,7 +18,7 @@ mindquantum.algorithm.nisq.MaxCutAnsatz
 
     参数：
         - **graph** (list[tuple[int]]) - 图结构。图的每个元素都是由两个节点构造的边。例如，[(0, 1), (1,2)]表示一个三节点的图，且其中一条边连接节点0和节点1，另一条边连接节点1和节点2。
-        - **depth** (int) - MaxCut ansatz的深度。默认值：1。
+        - **depth** (int) - MaxCut ansatz的深度。默认值： ``1``。
 
     .. py:method:: get_cut_value(partition)
 

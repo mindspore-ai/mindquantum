@@ -34,7 +34,7 @@ class Measure(FunctionalGate):
 
     Args:
         name (str): The key of this measurement gate. In a quantum circuit, the
-            key of different measurement gate should be unique. Default: ''
+            key of different measurement gate should be unique. Default: ``''``.
 
     Examples:
         >>> import numpy as np
@@ -129,7 +129,7 @@ class Measure(FunctionalGate):
 
         Args:
             obj_qubits (Union[int, list[int]]): measure on which qubit.
-            ctrl_qubits (Union[int, list[int]]): for measurement, we can not set control qubits. Default: None.
+            ctrl_qubits (Union[int, list[int]]): for measurement, we can not set control qubits. Default: ``None``.
 
         Returns:
             Measure, a measurement gate with will defined `obj_qubits` .
@@ -325,7 +325,7 @@ class MeasureResult:
 
         Args:
             style (dict, str): the style to set svg style. Currently, we support
-                'official'. Default: None.
+                ``'official'``. Default: ``None``.
         """
         # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum.io.display._config import _svg_measure_config_official

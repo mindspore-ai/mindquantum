@@ -76,7 +76,7 @@ class MaxCut:
                 three nodes which are `0` , `1` and `2` with one edge connect
                 between node `0` and node `1` with weight `1` and another
                 connect between node `1` and node `2` with weight `-1`.
-            method (function): max or min. Default: max.
+            method (function): ``max`` or ``min``. Default: ``max``.
 
         Returns:
             float, cut size.
@@ -145,8 +145,8 @@ class MaxCutRQAOAAnsatz(RQAOAAnsatz, MaxCut):
                 between node `0` and node `1` with weight `1` and another
                 connect between node `1` and node `2` with weight `-1`.
             nc (int): Lower threshold of the number of hamiltonian variables.
-                Default: 8.
-            p (int): The depth of QAOA ansatz. Default: 1.
+                Default: ``8``.
+            p (int): The depth of QAOA ansatz. Default: ``1``.
 
     Examples:
         >>> from import MaxCutRQAOAAnsatz

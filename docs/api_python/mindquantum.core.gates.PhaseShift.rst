@@ -18,8 +18,8 @@ mindquantum.core.gates.PhaseShift
         参数门的倒数矩阵形式。
 
         参数：
-            - **pr** (Union[ParameterResolver, dict]) - 量子门的参数。默认值：None。
-            - **about_what** (str) - 相对于哪个参数来求导数。默认值：None。
+            - **pr** (Union[ParameterResolver, dict]) - 量子门的参数。默认值： ``None``。
+            - **about_what** (str) - 相对于哪个参数来求导数。默认值： ``None``。
 
         返回：
             numpy.ndarray, 量子门的导数形式的矩阵。
@@ -33,7 +33,7 @@ mindquantum.core.gates.PhaseShift
         参数门的矩阵形式。
 
         参数：
-            - **pr** (Union[ParameterResolver, dict]) - 参数门的矩阵形式。默认值：None。
+            - **pr** (Union[ParameterResolver, dict]) - 参数门的矩阵形式。默认值： ``None``。
 
         返回：
             numpy.ndarray，量子门的矩阵形式。

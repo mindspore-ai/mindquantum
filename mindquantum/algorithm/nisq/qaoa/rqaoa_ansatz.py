@@ -66,7 +66,7 @@ class RQAOAAnsatz(QAOAAnsatz):
 
     Args:
         ham (QubitOperator): The hamiltonian structure.
-        p (int): The depth of QAOA ansatz. Default: 1.
+        p (int): The depth of QAOA ansatz. Default: ``1``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import RQAOAAnsatz
@@ -207,7 +207,7 @@ class RQAOAAnsatz(QAOAAnsatz):
             f (tuple[tuple]): The corresponding variables.
             sigma (int): Correlation between variables f.
             v (tuple): Eliminated variable. Select randomly from f by default.
-            show_process (bool): Whether to show the process of eliminating variables. Default: False.
+            show_process (bool): Whether to show the process of eliminating variables. Default: ``False``.
         """
         _check_rqaoa_eliminate_input(f, sigma, v)
         hams = self.ham.terms
@@ -262,7 +262,7 @@ class RQAOAAnsatz(QAOAAnsatz):
         Args:
             weight (Union[ParameterResolver, dict, numpy.ndarray, list, numbers.Number]): parameter
                 value for QAOA ansatz.
-            show_process (bool): Whether to show the process of eliminating variables. Default: False.
+            show_process (bool): Whether to show the process of eliminating variables. Default: ``False``.
         """
         _check_input_type('The flag of showing process', (bool, int), show_process)
         hams = self.m_hamiltonians

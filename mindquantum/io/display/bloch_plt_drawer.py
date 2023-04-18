@@ -72,8 +72,8 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
     Display a one qubit quantum state in bloch sphere.
 
     Args:
-        config (Union[dict, str]): The bloch sphere style configuration. If None, a built-in style configuration
-            will be used. Beside built-in style, we also support a `dark` style. Default: None.
+        config (Union[dict, str]): The bloch sphere style configuration. If ``None``, a built-in style configuration
+            will be used. Beside built-in style, we also support a ``'dark'`` style. Default: ``None``.
 
     Examples:
         >>> import matplotlib.pyplot as plt
@@ -127,8 +127,8 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
                 want add ket label.
             args (tuple): The args for ket label of text object in matplotlib.
             kwargs (dict): The key word args for ket label of text object in matplotlib.
-            fontsize (int): The fontsize of label. If None, the fontsize will be
-                found in config of `BlochScene` with key `ket_label_fs`. Default: None.
+            fontsize (int): The fontsize of label. If ``None``, the fontsize will be
+                found in config of `BlochScene` with key `ket_label_fs`. Default: ``None``.
         """
         if fontsize is None:
             fontsize = self.config['ket_label_fs']
@@ -146,7 +146,7 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
             ax (mpl_toolkits.mplot3d.axes3d.Axes3D): The three dimension axes you
                 want add ket label.
             args (tuple): The args of `Axes3D.plot`.
-            angle (numbers.Number): Rotate angle of circle around z axis. Default: 0.
+            angle (numbers.Number): Rotate angle of circle around z axis. Default: ``0``.
             kwargs (dict): The key word args for `Axes3D.plot`.
         """
         _check_input_type("ax", Axes3D, ax)
@@ -161,7 +161,7 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
             ax (mpl_toolkits.mplot3d.axes3d.Axes3D): The three dimension axes you
                 want add circle parallel with xy plane.
             args (tuple): The args of `Axes3D.plot`.
-            angle (numbers.Number): Elevation angle of circle along z axis. Default: π / 2.
+            angle (numbers.Number): Elevation angle of circle along z axis. Default: ``π / 2``.
             kwargs (dict): The key word args for `Axes3D.plot`.
         """
         _check_input_type("ax", Axes3D, ax)
@@ -226,9 +226,9 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
             ax (mpl_toolkits.mplot3d.axes3d.Axes3D): The three dimension axes you
                 want to set view.
             elev (numbers.Number): stores the elevation angle in the z plane (in degrees).
-                Default: 0.
+                Default: ``0``.
             azim (numbers.Number): stores the azimuth angle in the (x, y) plane (in degrees).
-                Default: 0.
+                Default: ``0``.
         """
         ax.set_xlim3d(-1, 1)
         ax.set_ylim3d(-1, 1)
@@ -245,8 +245,8 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
 
         Args:
             boxes (list): A float list with 4 elements that are left, bottom, width, height
-                of this scene. If None, then left and bottom will be 0 and width and height
-                will be 1. Default: None.
+                of this scene. If ``None``, then left and bottom will be 0 and width and height
+                will be 1. Default: ``None``.
         """
         if boxes is None:
             boxes = [0, 0, 1, 1]
@@ -380,35 +380,35 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
             ax (mpl_toolkits.mplot3d.axes3d.Axes3D): The three dimension axes you
                 want add quantum state.
             amp (numpy.ndarray): The quantum state.
-            linecolor (str): The color for stick. If None, it will be found in `config`
-                in `BlochScene` with key `stick_c`. Default: None.
-            linewidth (numbers.Number): The line width for stick. If None, it will be found
-                in `config` in `BlochScene` with `stick_w`. Default: None.
-            pointcolor (str): The color for point. If None, it will be found in `config`
-                in `BlochScene` with key `point_c`. Default: None.
-            pointsize (numbers.Number): The size of point. If None it will be found in `config`
-                in `BlochScene` with key `point_s`. Default: None.
-            marker (str): Point marker. If None, it will be found in `config` in `BlochScene` with
-                key `point_m`. Default: None.
-            projcolor (str): Project line color. If None it will be found in `config` in `BlochScene`
-                with key `proj_c`. Default: None.
+            linecolor (str): The color for stick. If ``None``, it will be found in `config`
+                in `BlochScene` with key `stick_c`. Default: ``None``.
+            linewidth (numbers.Number): The line width for stick. If ``None``, it will be found
+                in `config` in `BlochScene` with `stick_w`. Default: ``None``.
+            pointcolor (str): The color for point. If ``None``, it will be found in `config`
+                in `BlochScene` with key `point_c`. Default: ``None``.
+            pointsize (numbers.Number): The size of point. If ``None`` it will be found in `config`
+                in `BlochScene` with key `point_s`. Default: ``None``.
+            marker (str): Point marker. If ``None``, it will be found in `config` in `BlochScene` with
+                key `point_m`. Default: ``None``.
+            projcolor (str): Project line color. If ``None`` it will be found in `config` in `BlochScene`
+                with key `proj_c`. Default: ``None``.
             mode (str): How to display the quantum state. Can be one of 'stick', 'point', 'both'.
-                If None, if will be found in `config` of `BlochScene` with key `state_mode`.
-                Default: None.
-            with_proj (bool): Whether to display the projection line alone x, y and z axis. If None,
-                it will be found in `config` in `BlochScene` with key `with_proj`. Default: None.
+                If ``None``, if will be found in `config` of `BlochScene` with key `state_mode`.
+                Default: ``None``.
+            with_proj (bool): Whether to display the projection line alone x, y and z axis. If ``None``,
+                it will be found in `config` in `BlochScene` with key `with_proj`. Default: ``None``.
             stick_args (tuple): The other args for stick. These args will be send to `Axes3D.plot`.
-                Default: None.
+                Default: ``None``.
             stick_kwargs (dict): The other key word args for stick. These args will be send to `Axes3D.plot`.
-                Default: None.
+                Default: ``None``.
             point_args (tuple): The other args for point. These args will be send to `Axes3D.scatter`.
-                Default: None.
+                Default: ``None``.
             point_kwargs (dict): The other key word args for point. These args will be send to
-                `Axes3D.scatter`. Default: None.
+                `Axes3D.scatter`. Default: ``None``.
             proj_args (tuple): The other args for projection line. These args will be send
-                to `Axes3D.plot`. Default: None.
+                to `Axes3D.plot`. Default: ``None``.
             proj_kwargs (dict): The other key word args for projection line. These args will be send to
-                `Axes3D.plot`. Default: None.
+                `Axes3D.plot`. Default: ``None``.
 
         Returns:
             dict, a dict of object of stick, point, and projection line.
@@ -516,10 +516,10 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
             ax (mpl_toolkits.mplot3d.axes3d.Axes3D): The axes of bloch sphere scene.
             objs (dict): The objects generated by `BlochScene.add_state`.
             new_amps (numpy.ndarray): All quantum state you want to animate.
-            interval (int): Delay between frames in milliseconds. Default: 15.
-            with_trace (bool): Whether to display the trace of quantum state. Default: True.
-            history_len (int): The trace length. If None, it will be the length of given
-                quantum states. Defaults: None.
+            interval (int): Delay between frames in milliseconds. Default: ``15``.
+            with_trace (bool): Whether to display the trace of quantum state. Default: ``True``.
+            history_len (int): The trace length. If ``None``, it will be the length of given
+                quantum states. Defaults: ``None``.
             kwargs (dict): The other key word args for `animation.FuncAnimation`.
 
         Returns:

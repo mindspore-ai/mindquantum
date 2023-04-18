@@ -63,16 +63,16 @@ class QubitUCCAnsatz(Ansatz):
         chemistry <https://doi.org/10.1103/PhysRevA.102.062612>`_.
 
     Args:
-        n_qubits (int): The number of qubits (spin-orbitals) in the simulation. Default: None.
-        n_electrons (int): The number of electrons of the given molecule. Default: None.
-        occ_orb(list): Indices of manually assigned occupied spatial orbitals. Default: None.
-        vir_orb(list): Indices of manually assigned virtual spatial orbitals. Default: None.
+        n_qubits (int): The number of qubits (spin-orbitals) in the simulation. Default: ``None``.
+        n_electrons (int): The number of electrons of the given molecule. Default: ``None``.
+        occ_orb(list): Indices of manually assigned occupied spatial orbitals. Default: ``None``.
+        vir_orb(list): Indices of manually assigned virtual spatial orbitals. Default: ``None``.
         generalized(bool): Whether to use generalized excitations which
             do not distinguish occupied or virtual orbitals (qUCCGSD). Currently,
-            generalized=True is not allowed since the theory needs verification. Default: False.
-        trotter_step (int): The number of Trotter steps. Default is one. It is
+            generalized=True is not allowed since the theory needs verification. Default: ``False``.
+        trotter_step (int): The number of Trotter steps. It is
             recommended to set a value larger than or equal to 2 to achieve a
-            good accuracy. Default: 1.
+            good accuracy. Default: ``1``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import QubitUCCAnsatz
