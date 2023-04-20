@@ -173,7 +173,7 @@ class PhaseFlipChannel(PauliChannel):
     A phase flip channel.
 
     Phase flip channel express error that randomly flip the phase of qubit (applies Z gate)
-    with probability P, or do noting (applies I gate) with probability 1 - P.
+    with probability :math:`P`, or do noting (applies I gate) with probability :math:`1-P`.
 
     Phase flip channel applies noise as:
 
@@ -227,8 +227,8 @@ class BitPhaseFlipChannel(PauliChannel):
     A bit&phase flip channel.
 
     Bit phase flip channel express error that randomly flip both the state and phase
-    of qubit (applies Y gate) with probability P, or do noting (applies I gate)
-    with probability 1 - P.
+    of qubit (applies :math:`Y` gate) with probability :math:`P`, or do noting (applies :math:`I` gate)
+    with probability :math:`1-P`.
 
     Bit phase flip channel applies noise as:
 
@@ -237,7 +237,7 @@ class BitPhaseFlipChannel(PauliChannel):
         \epsilon(\rho) = (1 - P)\rho + P Y \rho Y
 
     where :math:`\rho` is quantum state as density matrix type; :math:`P` is the
-    probability of applying an additional Y gate.
+    probability of applying an additional :math:`Y` gate.
 
     Args:
         p (int, float): probability of occurred error.
@@ -281,9 +281,9 @@ class DepolarizingChannel(PauliChannel):
     r"""
     A depolarizing channel.
 
-    Depolarizing channel express errors that have probability P to turn qubit's quantum state into
-    maximally mixed state, by randomly applying one of the pauli gate(X,Y,Z) with same probability P/3.
-    And it has probability 1 - P to change nothing (applies I gate).
+    Depolarizing channel express errors that have probability :math:`P` to turn qubit's quantum state into
+    maximally mixed state, by randomly applying one of the pauli gate(X,Y,Z) with same probability :math:`P/3`.
+    And it has probability :math:`1-P` to change nothing (applies I gate).
 
     Depolarizing channel applies noise as:
 

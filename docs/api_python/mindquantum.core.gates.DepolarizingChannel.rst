@@ -3,7 +3,7 @@ mindquantum.core.gates.DepolarizingChannel
 
 .. py:class:: mindquantum.core.gates.DepolarizingChannel(p: float, **kwargs)
 
-    去极化信道。描述的噪声体现为：以 :math:`P` 的概率将量子态转变为最大混态（随机作用泡利门（X,Y,Z）的其中一个，每个泡利门的概率都是 :math:`P/3` ），或以 :math:`1-P` 的概率保持不变（作用I门）。
+    去极化信道。描述的噪声体现为：以 :math:`P` 的概率将量子态转变为最大混态（随机作用泡利门（X、Y、Z）的其中一个，每个泡利门的概率都是 :math:`P/3` ），或以 :math:`1-P` 的概率保持不变（作用I门）。
 
     去极化信道的数学表示如下：
 
