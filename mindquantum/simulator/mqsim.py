@@ -160,7 +160,10 @@ class MQSim(BackendBase):
         """Get the matrix of given circuit."""
         return np.array(self.sim.get_circuit_matrix(circuit.get_cpp_obj(), pr)).T
 
-    def get_expectation(self, hamiltonian: Hamiltonian) -> np.ndarray:
+    # pylint: disable=too-many-branches
+    def get_expectation(
+        self, hamiltonian: Hamiltonian, circ_right=None, circ_left=None, simulator_left=None, pr=None
+    ) -> np.ndarray:
         """Get expectation of a hamiltonian."""
         if not isinstance(hamiltonian, Hamiltonian):
             raise TypeError(f"hamiltonian requires a Hamiltonian, but got {type(hamiltonian)}")
@@ -172,7 +175,42 @@ class MQSim(BackendBase):
                 f"Please convert given hamiltonian to {mq.precision_str(self.dtype)} "
                 f"({mq.precision_like(hamiltonian.dtype, self.dtype)})."
             )
-        return self.sim.get_expectation(hamiltonian.get_cpp_obj())
+        hermitian = True
+        if circ_right is None:
+            circ_right = Circuit()
+        if circ_left is None:
+            circ_left = circ_right
+        else:
+            hermitian = False
+        if simulator_left is not None:
+            hermitian = False
+            if self.dtype != simulator_left.dtype:
+                raise TypeError(
+                    f"The dtype of this simulator ({self.dtype}) is different"
+                    f" with simulator_left ({simulator_left.dtype})"
+                )
+            if self.name != simulator_left.name:
+                raise ValueError(
+                    f"simulator_left should be the same type of this simulator ({self.name})"
+                    f" but get {simulator_left.name}."
+                )
+            if self.n_qubits != simulator_left.n_qubits:
+                raise ValueError(f"Require a {self.n_qubits} simulator, but get {simulator_left.n_qubits}.")
+        if pr is None:
+            pr = ParameterResolver()
+        else:
+            pr = ParameterResolver(pr)
+        if hermitian:
+            return self.sim.get_expectation(hamiltonian.get_cpp_obj(), circ_right.get_cpp_obj(), pr)
+        if self.name == 'mqmatrix':
+            raise NotImplementedError("Non hermitian case for get_expectation not implement for mqmatrix yet.")
+        if simulator_left is None:
+            return self.sim.get_expectation(
+                hamiltonian.get_cpp_obj(), circ_right.get_cpp_obj(), circ_left.get_cpp_obj(), pr
+            )
+        return self.sim.get_expectation(
+            hamiltonian.get_cpp_obj(), circ_right.get_cpp_obj(), circ_left.get_cpp_obj(), simulator_left.backend.sim, pr
+        )
 
     def get_expectation_with_grad(  # pylint: disable=R0912,R0913,R0914,R0915
         self,

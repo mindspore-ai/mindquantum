@@ -78,16 +78,20 @@ mindquantum.simulator.Simulator
 
         返回模拟器的数据类型。
 
-    .. py:method:: get_expectation(hamiltonian)
+    .. py:method:: get_expectation(hamiltonian, circ_right=None, circ_left=None, simulator_left=None, pr=None)
 
-        得到给定hamiltonian的期望。hamiltonian可能是非厄米共轭的。
+        得到给定hamiltonian的期望。hamiltonian可能是非厄米共轭的。该方法旨在计算期望值，如下所示：
 
         .. math::
 
-            E = \left<\psi\right|H\left|\psi\right>
+            E = \left<\varphi\right|U_l^\dagger H U_r \left|\psi\right>
 
         参数：
             - **hamiltonian** (Hamiltonian) - 想得到期望的hamiltonian。
+            - **circ_right** (Circuit) - 表示 :math:`U_r` 的线路。如果为 ``None``，则选择空线路。默认值： ``None``。
+            - **circ_left** (Circuit) - 表示 :math:`U_l` 的线路。如果为 ``None``，则将设置成 ``circ_right`` 一样的线路。默认值： ``None``。
+            - **simulator_left** (Simulator) - 包含 :math:`\left|\varphi\right>` 的模拟器。如果无，则 :math:`\left|\varphi\right>` 被假定等于 :math:`\left|\psi\right>`。默认值： ``None``。
+            - **pr** (Union[Dict[str, numbers.Number], ParameterResolver]) - 线路中的参数。默认值： ``None``.
 
         返回：
             numbers.Number，期望值。

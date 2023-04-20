@@ -306,16 +306,32 @@ class Simulator:
         """
         self.backend.apply_hamiltonian(hamiltonian)
 
-    def get_expectation(self, hamiltonian):
+    # pylint: disable=too-many-arguments
+    def get_expectation(self, hamiltonian, circ_right=None, circ_left=None, simulator_left=None, pr=None):
         r"""
         Get expectation of the given hamiltonian. The hamiltonian could be non hermitian.
 
+        This method is designed to calculate the expectation shown as below.
+
         .. math::
 
-            E = \left<\psi\right|H\left|\psi\right>
+            E = \left<\varphi\right|U_l^\dagger H U_r \left|\psi\right>
+
+        where :math:`U_l` is circ_left, :math:`U_r` is circ_right, :math:`H` is hams
+        and :math:`\left|\psi\right>` is the current quantum state of this simulator,
+        and :math:`\left|\varphi\right>` is the quantum state of `simulator_left`.
 
         Args:
             hamiltonian (Hamiltonian): The hamiltonian you want to get expectation.
+            circ_right (Circuit): The :math:`U_r` circuit described above. If it is ``None``,
+                we will use empty circuit. Default: ``None``.
+            circ_left (Circuit): The :math:`U_l` circuit described above. If it is ``None``,
+                then it will be the same as ``circ_right``. Default: ``None``.
+            simulator_left (Simulator): The simulator that contains :math:`\left|\varphi\right>`. If
+                ``None``, then :math:`\left|\varphi\right>` is assumed to be equals to :math:`\left|\psi\right>`.
+                Default: ``None``.
+            pr (Union[Dict[str, numbers.Number], ParameterResolver]): the
+                variable value of circuit. Default: ``None``.
 
         Returns:
             numbers.Number, the expectation value.
@@ -329,8 +345,17 @@ class Simulator:
             >>> ham = Hamiltonian(QubitOperator('Z0'))
             >>> sim.get_expectation(ham)
             (0.36235775447667357+0j)
+            >>> sim.get_expectation(ham, Circuit().rx('a', 0), Circuit().ry(2.3, 0), pr={'a': 2.4})
+            (-0.25463350745693886+0.8507316752782879j)
+            >>> sim1, sim2 = Simulator('mqvector', 1), Simulator('mqvector', 1)
+            >>> sim1.apply_circuit(Circuit().ry(1.2, 0).rx(2.4, 0))
+            >>> sim2.apply_circuit(Circuit().ry(1.2, 0).ry(2.3, 0))
+            >>> sim1.apply_hamiltonian(ham)
+            >>> from mindquantum.simulator import inner_product
+            >>> inner_product(sim2, sim1)
+            (-0.25463350745693886+0.8507316752782879j)
         """
-        return self.backend.get_expectation(hamiltonian)
+        return self.backend.get_expectation(hamiltonian, circ_right, circ_left, simulator_left, pr)
 
     def set_threads_number(self, number):
         """
@@ -484,6 +509,11 @@ def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
         )
     if bra_simulator.backend.name != ket_simulator.backend.name:
         raise ValueError("The backend of two simulator should be same.")
+    if bra_simulator.dtype != ket_simulator.dtype:
+        raise TypeError(
+            f"Data type of two simulator are different: bra_simulator is {bra_simulator.dtype}, "
+            f"while ket_simulator is {ket_simulator.dtype}."
+        )
     if isinstance(bra_simulator.backend, MQSim):
         return MQBlas.inner_product(bra_simulator.backend, ket_simulator.backend)
     raise NotImplementedError(f"inner_product for backend {bra_simulator.backend} not implement.")

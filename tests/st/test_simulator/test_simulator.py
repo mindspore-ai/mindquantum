@@ -634,3 +634,28 @@ def test_mul_qubit_gate(virtual_qc, dtype):
     assert np.allclose(f1, -0.11215253 + 0.0j)
     assert np.allclose(g1, 1.98738201 + 0.0j)
     assert np.allclose(g1, g, atol=1e-2)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("virtual_qc", ['mqvector', 'mqvector_gpu'])
+@pytest.mark.parametrize("dtype", [mq.complex64, mq.complex128])
+@pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
+@pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
+def test_non_hermitian_expectation(virtual_qc, dtype):
+    """
+    Description: Test get expectation with non hermitian situation.
+    Expectation: succeed.
+    """
+    sim = Simulator(virtual_qc, 1, dtype=dtype)
+    sim.apply_circuit(Circuit().ry(1.2, 0))
+    ham = Hamiltonian(QubitOperator('Z0'), dtype=dtype)
+    e1 = sim.get_expectation(ham, Circuit().rx('a', 0), Circuit().ry(2.3, 0), pr={'a': 2.4})
+    sim1, sim2 = Simulator(virtual_qc, 1, dtype=dtype), Simulator(virtual_qc, 1, dtype=dtype)
+    sim1.apply_circuit(Circuit().ry(1.2, 0).rx(2.4, 0))
+    sim2.apply_circuit(Circuit().ry(1.2, 0).ry(2.3, 0))
+    sim1.apply_hamiltonian(ham)
+    e2 = inner_product(sim2, sim1)
+    assert np.allclose(e1, e2)
