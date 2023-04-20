@@ -50,10 +50,12 @@ class QubitOperator(QubitOperator_):
     operators = ('X', 'Y', 'Z'), different_indices_commute = True.
 
     Args:
-        term (str): The input term of qubit operator. Default: ``None``.
+        term (Union[str, QubitOperator]): The input term of qubit operator. Default: ``None``.
         coefficient (Union[numbers.Number, str, ParameterResolver]): The
             coefficient of this qubit operator, could be a number or a variable
             represent by a string or a symbol or a parameter resolver. Default: ``1.0``.
+        internal (bool): Whether the first argument is internal c++ object of
+            QubitOperator or not. Default: ``False``.
 
     Examples:
         >>> from mindquantum.core.operators import QubitOperator
@@ -176,7 +178,18 @@ class QubitOperator(QubitOperator_):
             yield term * coeff
 
     def get_coeff(self, term) -> ParameterResolver:
-        """Get coefficient of given term."""
+        """
+        Get coefficient of given term.
+
+        Args:
+            term (List[Tuple[int, Union[int, str]]]): the term you want get coefficient.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> q = QubitOperator('X0 Y1', 1.2)
+            >>> q.get_coeff([(1, 'Y'), (0, 'X')])
+            ParameterResolver(dtype: float64, const: 1.200000)
+        """
         return ParameterResolver(QubitOperator_.get_coeff(self, [(i, TermValue[j]) for i, j in term]), internal=True)
 
     def hermitian(self) -> "QubitOperator":
@@ -184,7 +197,7 @@ class QubitOperator(QubitOperator_):
         Get the hermitian of a QubitOperator.
 
         Returns:
-            The hermitian of this QubitOperator.
+            QubitOperator, the hermitian of this QubitOperator.
 
         Examples:
             >>> from mindquantum.core.operators import QubitOperator
@@ -260,7 +273,7 @@ class QubitOperator(QubitOperator_):
             from openfermion import QubitOperator as OFQubitOperator
         except (ImportError, AttributeError):
             _require_package("openfermion", "1.5.0")
-        if self.parameterized():
+        if self.parameterized:
             raise ValueError("Cannot not QubitOperator to OpenFermion format.")
 
         terms = {}
@@ -371,6 +384,7 @@ class QubitOperator(QubitOperator_):
         for i, j in QubitOperator_.split(self):
             yield ParameterResolver(i, internal=True), QubitOperator(j, internal=True)
 
+    @property
     def parameterized(self) -> bool:
         """Check whether this QubitOperator is parameterized."""
         return QubitOperator_.parameterized(self)
@@ -400,7 +414,27 @@ class QubitOperator(QubitOperator_):
         return self.astype(new_type)
 
     def astype(self, dtype) -> "QubitOperator":
-        """Convert to different type."""
+        """
+        Convert to different data type.
+
+        Note:
+            Converting a complex type QubitOperator to real type will ignore the image part of coefficient.
+
+        Args:
+            dtype (mindquantum.dtype): new data type of fermion operator.
+
+        Returns:
+            QubitOperator, new fermion operator with given data type.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> import mindquantum as mq
+            >>> f = QubitOperator('X0', 2 + 3j)
+            >>> f.dtype
+            mindquantum.complex128
+            >>> f.astype(mq.float64)
+            2 [X0]
+        """
         return QubitOperator(QubitOperator_.astype(self, dtype))
 
     @property
@@ -409,7 +443,7 @@ class QubitOperator(QubitOperator_):
         return QubitOperator_.dtype(self)
 
     @property
-    def is_complexs(self) -> bool:
+    def is_complex(self) -> bool:
         """Return whether the QubitOperator instance is currently using complex coefficients."""
         return self.dtype in (mq.complex128, mq.complex64)
 
@@ -452,7 +486,21 @@ class QubitOperator(QubitOperator_):
         return [QubitOperator(i, internal=True) for i in QubitOperator_.singlet(self)]
 
     def subs(self, params_value: typing.Union[typing.Dict[str, numbers.Number], ParameterResolver]):
-        """Replace the symbolical representation with the corresponding value."""
+        """
+        Replace the symbolical representation with the corresponding value.
+
+        Args:
+            params_value (Union[Dict[str, numbers.Number], ParameterResolver]): the value of variable in coefficient.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> from mindquantum.core.parameterresolver import ParameterResolver
+            >>> q = QubitOperator('X0', ParameterResolver({'a': 2.0}, 3.0))
+            >>> q
+            2*a + 3 [X0]
+            >>> q.subs({'a': 1.5})
+            6 [X0]
+        """
         if not isinstance(params_value, ParameterResolver):
             params_value = ParameterResolver(params_value)
         out = copy.copy(self)
@@ -483,15 +531,13 @@ class QubitOperator(QubitOperator_):
 
     def compress(self, abs_tol=EQ_TOLERANCE) -> "QubitOperator":
         """
-        Eliminate the very small terms that close to zero.
-
-        Removes small imaginary and real parts.
+        Eliminate the very small pauli string that close to zero.
 
         Args:
-            abs_tol(float): Absolute tolerance, must be at least 0.0.
+            abs_tol(float): Absolute tolerance, must be at least 0.0. Default: EQ_TOLERANCE.
 
         Returns:
-            the compressed operator
+            QubitOperator, the compressed operator.
 
         Examples:
             >>> from mindquantum.core.operators import QubitOperator
@@ -515,7 +561,22 @@ class QubitOperator(QubitOperator_):
                 out += QubitOperator(" ".join(f"{j}{i}" for i, j in k), v)
         return out
 
-    def matrix(self, n_qubits=None):  # pylint: disable=too-many-locals
+    def count_gates(self):
+        """
+        Return the gate number when treated in single Hamiltonian.
+
+        Returns:
+            int, number of the single qubit quantum gates.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> a = QubitOperator("X0 Y1") + QubitOperator("X2 Z3")
+            >>> a.count_gates()
+            4
+        """
+        return sum(len(t) for t in self.terms)
+
+    def matrix(self, n_qubits: int = None):  # pylint: disable=too-many-locals
         """
         Convert this qubit operator to csr_matrix.
 
@@ -536,7 +597,7 @@ class QubitOperator(QubitOperator_):
             'Z': csr_matrix(Z.matrix().astype(np.complex128)),
             'I': csr_matrix(I.matrix().astype(np.complex128)),
         }
-        if self.parameterized():
+        if self.parameterized:
             raise RuntimeError("Cannot convert a parameterized qubit operator to matrix.")
         np_type = mq.to_np_type(self.dtype)
         if not self.terms:

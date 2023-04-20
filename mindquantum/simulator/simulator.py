@@ -50,6 +50,7 @@ class Simulator:
         n_qubits (int): number of quantum simulator.
         seed (int): the random seed for this simulator, if ``None``, seed will generate
             by `numpy.random.randint`. Default: ``None``.
+        dtype (mindquantum.dtype): the data type of simulator. Default: ``None``.
 
     Raises:
         TypeError: if `backend` is not str.
@@ -82,7 +83,16 @@ class Simulator:
             self.backend = SUPPORTED_SIMULATOR.py_class(backend)(backend, n_qubits, seed, dtype, *args, **kwargs)
 
     def astype(self, dtype, seed=None):
-        """Convert simulator to other data type."""
+        """
+        Convert simulator to other data type.
+
+        Note:
+            The quantum state will copied from origin simulator.
+
+        Args:
+            dtype (mindquantum.dtype): the data type of new simulator.
+            seed (int): the seed of new simulator. Default: ``None``.
+        """
         if seed is None:
             seed = np.random.randint(1, 2**23)
         _check_seed(seed)

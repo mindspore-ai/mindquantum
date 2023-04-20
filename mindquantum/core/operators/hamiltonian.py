@@ -36,7 +36,8 @@ class Hamiltonian:
     A QubitOperator hamiltonian wrapper.
 
     Args:
-        hamiltonian (QubitOperator): The pauli qubit operator.
+        hamiltonian (Union[QubitOperator, scipy.sparse]): The pauli qubit operator or a sparse matrix.
+        dtype (mindquantum.dtype): data type of hamiltonian. Default: ``None``.
 
     Examples:
         >>> from mindquantum.core.operators import QubitOperator, Hamiltonian
@@ -126,7 +127,12 @@ class Hamiltonian:
         return self.ham_dtype
 
     def astype(self, dtype):
-        """Convert hamiltonian to other type."""
+        """
+        Convert hamiltonian to other type.
+
+        Args:
+            dtype (mindquantum.dtype): the new type of hamiltonian.
+        """
         if self.how_to == HowTo.FRONTEND:
             return Hamiltonian(self.sparse_mat, dtype)
         return Hamiltonian(self.hamiltonian, dtype)

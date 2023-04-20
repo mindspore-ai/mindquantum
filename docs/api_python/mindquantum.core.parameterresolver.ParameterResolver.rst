@@ -1,10 +1,19 @@
-.. py:class:: mindquantum.core.parameterresolver.ParameterResolver(data=None, const=None)
+.. py:class:: mindquantum.core.parameterresolver.ParameterResolver(data=None, const=None, dtype=None, internal=False)
 
     ParameterResolver可以设置参数化量子门或参数化量子线路的参数。
 
     参数：
         - **data** (Union[dict, numbers.Number, str, ParameterResolver]) - 初始参数名称及其值。如果数据是dict，则键将是参数名称，值将是参数值。如果数据是数字，则此数字将是此参数解析器的常量值。如果数据是字符串，则此字符串将是系数为1的唯一参数。默认值： ``None``。
         - **const** (number.Number) - 此参数解析器的常量部分。默认值： ``None``。
+        - **dtype** (mindquantum.dtype) - 改参数解析器的数据类型。默认： ``None``。
+        - **internal** (bool) - 第一个参数是否时参数解析器的c++对象。默认： ``False``。
+
+    .. py:method:: astype
+
+        将参数解析器转变为其他数据类型。
+
+        参数：
+            - **dtype** (mindquantum.dtype) - 参数解析器的新的数据类型。
 
     .. py:method:: ansatz_parameters
         :property:
@@ -38,12 +47,12 @@
         返回：
             ParameterResolver，参数解析器。
 
-    .. py:method:: combination(other)
+    .. py:method:: combination(other: typing.Union[typing.Dict[str, numbers.Number], ParameterResolver])
 
         将该参数解析器与输入的参数解析器进行线性组合。
 
         参数：
-            - **other** (Union[dict, ParameterResolver]) - 需要做线性组合的参数解析器。
+            - **other** (Union[Dict[str, numbers.Number], ParameterResolver]) - 需要做线性组合的参数解析器。
 
         返回：
             numbers.Number，组合结果。
@@ -63,9 +72,17 @@
         返回：
             numbers.Number，此参数解析器的常量部分。
 
+    .. py:method:: dtype
+        :property:
+
+        获取参数解析器的数据类型。
+
     .. py:method:: dumps(indent=4)
 
         将参数解析器转储到JSON（JavaScript对象表示法）。
+
+        .. note:
+            由于float32类型的数据不能够序列化，因此 ``mindquantum.float32`` 和 ``mindquantum.complex64`` 类型的参数解析器也不能够被序列化。
 
         参数：
             - **indent** (int) - 打印JSON数据时的缩进级别，利用缩进会使打印效果更加美观。默认值： ``4``。
@@ -97,10 +114,6 @@
 
         返回：
             str，此参数解析器的字符串表达式。
-
-    .. py:method:: get_cpp_obj()
-
-        返回此参数解析器的c++对象。
 
     .. py:method:: imag
         :property:
@@ -143,7 +156,7 @@
 
         生成所有参数名称的迭代器。
 
-    .. py:method:: loads(strs)
+    .. py:method:: loads(strs: str)
         :staticmethod:
 
         将JSON（JavaScript对象表示法）加载到FermionOperator中。
@@ -195,7 +208,7 @@
         返回：
             list，参数名称的列表。
 
-    .. py:method:: pop(v)
+    .. py:method:: pop(v: str)
 
         弹出参数。
 
@@ -204,6 +217,13 @@
 
         返回：
             numbers.Number，弹出的参数值。
+
+    .. py:method:: subs(other: typing.Union["ParameterResolver", typing.Dict[str, numbers.Number]])
+
+        将变量的参数值带入参数解析器。
+
+        参数：
+          - **subs** (Union[ParameterResolver, Dict[str, numbers.Number]]) - 参数解析器中的变量的值。
 
     .. py:method:: real
         :property:
@@ -242,7 +262,7 @@
 
         转化为实数类型。
 
-    .. py:method:: update(other)
+    .. py:method:: update(other: ParameterResolver)
 
         使用其它参数解析器更新此参数解析器。
 

@@ -1,7 +1,7 @@
 mindquantum.simulator.Simulator
 ================================
 
-.. py:class:: mindquantum.simulator.Simulator(backend, n_qubits, seed=None, *args, **kwargs)
+.. py:class:: mindquantum.simulator.Simulator(backend, n_qubits, seed=None, dtype=None, *args, **kwargs)
 
     模拟量子线路的量子模拟器。
 
@@ -9,6 +9,7 @@ mindquantum.simulator.Simulator
         - **backend** (str) - 想要的后端。通过调用 `get_supported_simulator()` 可以返回支持的后端。
         - **n_qubits** (int) - 量子模拟器的量子比特数量。
         - **seed** (int) - 模拟器的随机种子，如果为 ``None``，种子将由 `numpy.random.randint` 生成。默认值： ``None``。
+        - **dtype** (mindquantum.dtype) - 模拟器的数据类型。
 
     异常：
         - **TypeError** - 如果 `backend` 不是str。
@@ -17,6 +18,14 @@ mindquantum.simulator.Simulator
         - **ValueError** - 如果不支持 `backend` 。
         - **ValueError** - 如果 `n_qubits` 为负数。
         - **ValueError** - 如果 `seed` 小于0或大于 :math:`2^23 - 1` 。
+
+    .. py:method:: astype(dtype, seed=None)
+
+        将模拟器转化给定的数据类型。
+
+        参数：
+            - **dtype** (mindquantum.dtype) - 新模拟器的数据类型。
+            - **seed** (int) - 新模拟器的随机数种子。默认值： ``None``。
 
     .. py:method:: apply_circuit(circuit, pr=None)
 
@@ -63,6 +72,11 @@ mindquantum.simulator.Simulator
 
         返回：
             模拟器，当前模拟器的副本。
+
+    .. py:method:: dtype
+        :property:
+
+        返回模拟器的数据类型。
 
     .. py:method:: get_expectation(hamiltonian)
 

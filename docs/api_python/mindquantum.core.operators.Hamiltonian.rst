@@ -1,12 +1,25 @@
 mindquantum.core.operators.Hamiltonian
 =======================================
 
-.. py:class:: mindquantum.core.operators.Hamiltonian(hamiltonian)
+.. py:class:: mindquantum.core.operators.Hamiltonian(hamiltonian, dtype=None)
 
     QubitOperator哈密顿量的包装器。
 
     参数：
-        - **hamiltonian** (QubitOperator) - 泡利量子比特算子。
+        - **hamiltonian** (QubitOperator) - 泡利量子比特算子或者一个系数矩阵。
+        - **dtype** (mindquantum.dtype) - 哈密顿量的数据类型。默认值： ``None``。
+
+    .. py:method:: astype(dtype)
+
+        将哈密顿量转化为其他的数据类型。
+
+        参数：
+            - **dtype** (mindquantum.dtype) - 想要转化的数据类型。
+
+    .. py:method:: dtype
+        :property:
+
+        获取哈密顿量的数据类型。
 
     .. py:method:: get_cpp_obj(hermitian=False)
 
