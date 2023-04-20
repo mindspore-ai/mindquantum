@@ -40,9 +40,11 @@ class ParameterResolver(ParameterResolver_):
             and the value will be the parameter value. If data is a number, this
             number will be the constant value of this parameter resolver. If data
             is a string, then this string will be the only parameter with coefficient
-            be 1. Default: No``ne.
+            be 1. Default: ``None``.
         const (number.Number): the constant part of this parameter resolver.
             Default: ``None``.
+        dtype (mindquantum.dtype): the data type of this parameter resolver. Default: ``None``.
+        internal (bool): whether the first argument is the c++ object of parameter resolver. Default: ``False``.
 
     Examples:
         >>> from mindquantum.core.parameterresolver import ParameterResolver
@@ -146,6 +148,9 @@ class ParameterResolver(ParameterResolver_):
     def astype(self, dtype) -> "ParameterResolver":
         """
         Convert ParameterResolver to different dtype.
+
+        Args:
+            dtype (mindquantum.dtype): new data type of parameter resolver you want.
 
         Examples:
             >>> from mindquantum.core.parameterresolver import ParameterResolver
@@ -314,6 +319,9 @@ class ParameterResolver(ParameterResolver_):
     def subs(self, other: typing.Union["ParameterResolver", typing.Dict[str, numbers.Number]]):
         """
         Substitute the variable value to ParameterResolver.
+
+        Args:
+            other (Union[ParameterResolver, Dict[str, numbers.Number]]): the value of variables in parameter resolver.
 
         Examples:
             >>> from mindquantum.core.parameterresolver import ParameterResolver as PR
@@ -913,7 +921,7 @@ class ParameterResolver(ParameterResolver_):
         Apply linear combination between this parameter resolver with input parameter resolver.
 
         Args:
-            other (Union[dict, ParameterResolver]): The parameter resolver you
+            other (Union[Dict[str, numbers.Number], ParameterResolver]): The parameter resolver you
                 want to do linear combination.
 
         Returns:
