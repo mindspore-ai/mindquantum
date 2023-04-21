@@ -495,8 +495,11 @@ std::map<std::string, int> DensityMatrixState<qs_policy_t_>::ApplyCircuit(const 
 }
 
 template <typename qs_policy_t_>
-auto DensityMatrixState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham) -> py_qs_data_t {
-    return qs_policy_t::GetExpectation(qs, ham.ham_, dim);
+auto DensityMatrixState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
+                                                      const parameter::ParameterResolver& pr) -> py_qs_data_t {
+    auto rho = *this;
+    rho.ApplyCircuit(circ, pr);
+    return qs_policy_t::GetExpectation(rho.qs, ham.ham_, dim);
 }
 
 template <typename qs_policy_t_>

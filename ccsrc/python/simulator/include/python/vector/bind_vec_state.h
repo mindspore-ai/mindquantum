@@ -38,6 +38,7 @@
 #    include "simulator/vector/detail/cpu_vector_policy.hpp"
 #endif  // __CUDACC__
 
+#include "ops/hamiltonian.hpp"
 #include "simulator/vector/blas.hpp"
 #include "simulator/vector/vector_state.hpp"
 
@@ -46,6 +47,7 @@ auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLIN
     using namespace pybind11::literals;                                 // NOLINT
     using qbit_t = mindquantum::sim::qbit_t;
     using calc_type = typename sim_t::calc_type;
+    using circuit_t = typename sim_t::circuit_t;
 
     return pybind11::class_<sim_t>(module, name.data())
         .def(pybind11::init<qbit_t, unsigned>(), "n_qubits"_a, "seed"_a = 42)
@@ -60,7 +62,15 @@ auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLIN
         .def("copy", [](const sim_t& sim) { return sim; })
         .def("sampling", &sim_t::Sampling)
         .def("get_circuit_matrix", &sim_t::GetCircuitMatrix)
-        .def("get_expectation", &sim_t::GetExpectation)
+        .def("get_expectation",
+             pybind11::overload_cast<const mindquantum::Hamiltonian<calc_type>&, const circuit_t&, const circuit_t&,
+                                     const typename sim_t::derived_t&, const parameter::ParameterResolver&>(
+                 &sim_t::GetExpectation))
+        .def("get_expectation",
+             pybind11::overload_cast<const mindquantum::Hamiltonian<calc_type>&, const circuit_t&, const circuit_t&,
+                                     const parameter::ParameterResolver&>(&sim_t::GetExpectation))
+        .def("get_expectation", pybind11::overload_cast<const mindquantum::Hamiltonian<calc_type>&, const circuit_t&,
+                                                        const parameter::ParameterResolver&>(&sim_t::GetExpectation))
         .def("get_expectation_with_grad_one_one", &sim_t::GetExpectationWithGradOneOne)
         .def("get_expectation_with_grad_one_multi", &sim_t::GetExpectationWithGradOneMulti)
         .def("get_expectation_with_grad_multi_multi", &sim_t::GetExpectationWithGradMultiMulti)

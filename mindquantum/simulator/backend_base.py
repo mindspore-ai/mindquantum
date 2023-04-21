@@ -76,7 +76,8 @@ class BackendBase:
         """Get the matrix of given circuit."""
         raise NotImplementedError(f"get_circuit_matrix not implemented for {self.device_name()}")
 
-    def get_expectation(self, hamiltonian: Hamiltonian) -> np.ndarray:
+    # pylint: disable=too-many-arguments
+    def get_expectation(self, hamiltonian, circ_right=None, circ_left=None, simulator_left=None, pr=None) -> np.ndarray:
         """Get expectation of given hamiltonian."""
         raise NotImplementedError(f"get_expectation not implemented for {self.device_name()}")
 

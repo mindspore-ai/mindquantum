@@ -134,10 +134,34 @@ class VectorState {
     virtual VVT<py_qs_data_t> GetCircuitMatrix(const circuit_t& circ, const parameter::ParameterResolver& pr);
 
     //! Get expectation of given hamiltonian
-    virtual py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham) {
+    virtual py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
+                                        const parameter::ParameterResolver& pr) {
         auto ket = *this;
+        ket.ApplyCircuit(circ, pr);
+        auto bra = ket;
         ket.ApplyHamiltonian(ham);
-        return qs_policy_t::Vdot(this->qs, ket.qs, dim);
+        return qs_policy_t::Vdot(bra.qs, ket.qs, dim);
+    }
+
+    virtual py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ_right,
+                                        const circuit_t& circ_left, const parameter::ParameterResolver& pr) {
+        auto ket = *this;
+        auto bra = *this;
+        ket.ApplyCircuit(circ_right, pr);
+        ket.ApplyHamiltonian(ham);
+        bra.ApplyCircuit(circ_left, pr);
+        return qs_policy_t::Vdot(bra.qs, ket.qs, dim);
+    }
+
+    virtual py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ_right,
+                                        const circuit_t& circ_left, const derived_t& simulator_left,
+                                        const parameter::ParameterResolver& pr) {
+        auto ket = *this;
+        auto bra = simulator_left;
+        ket.ApplyCircuit(circ_right, pr);
+        ket.ApplyHamiltonian(ham);
+        bra.ApplyCircuit(circ_left, pr);
+        return qs_policy_t::Vdot(bra.qs, ket.qs, dim);
     }
 
     //! Get the expectation of hamiltonian
