@@ -39,7 +39,8 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
         \epsilon(\rho) = (1 - P_x - P_y - P_z)\rho + P_x X \rho X + P_y Y \rho Y + P_z Z \rho Z
 
     where :math:`\rho` is quantum state as density matrix type;
-    :math:`P_x`, :math:`P_y` and :math:`P_z` is the probability of applying an additional X, Y and Z gate.
+    :math:`P_x`, :math:`P_y` and :math:`P_z` is the probability of applying
+    an additional :math:`X`, :math:`Y` and :math:`Z` gate.
 
     Args:
         px (int, float): probability of applying X gate.

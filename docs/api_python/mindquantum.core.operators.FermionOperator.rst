@@ -12,85 +12,6 @@ mindquantum.core.operators.FermionOperator
         - **coefficient** (Union[numbers.Number, str, Dict[str, numbers.Number], ParameterResolver]) - 单费米子算符的系数。默认值： ``1.0``。
         - **internal** (bool) - 第一个参数是否为费米子对象的内部c++类。默认值： ``False``。
 
-    .. py:method:: constant
-        :property:
-
-        返回单位费米子串的系数。
-
-        返回：
-            ParameterResolver，单位费米子串的系数。
-
-    .. py:method:: dtype
-        :property:
-
-        费米子算符系数的数据类型。
-
-    .. py:method:: imag
-        :property:
-
-        获得系数的虚部。
-
-        返回：
-            FermionOperator，这个FermionOperator的虚部。
-
-    .. py:method:: is_complex
-        :property:
-
-        返回当前费米子是否使用复数类型的系数。
-
-    .. py:method:: is_singlet
-        :property:
-
-        检查当前费米子是否只有一项。
-
-        返回：
-            bool，当前费米子是否只有一项。
-
-    .. py:method:: parameterized
-        :property:
-
-        检查当前费米子是否是参数化的。
-
-    .. py:method:: real
-        :property:
-
-        获得系数的实部。
-
-        返回：
-            FermionOperator，这个FermionOperator的实部。
-
-    .. py:method:: size
-        :property:
-
-        返回费米子算符中费米子串的数量。
-
-    .. py:method:: terms
-        :property:
-
-        返回费米子算符中的费米子串。
-
-    .. py:method:: from_openfermion(of_ops)
-        :staticmethod:
-
-        将openfermion格式的费米子运算符转换为mindquantum格式。
-
-        参数：
-            - **of_ops** (openfermion.FermionOperator) - openfermion中的费米子算符。
-
-        返回：
-            FermionOperator，mindquantum中的费米子算符。
-
-    .. py:method:: loads(strs: str)
-        :staticmethod:
-
-        将JSON（JavaScript对象表示法）加载到FermionOperator中。
-
-        参数：
-            - **strs** (str) - 转储的费米子运算符字符串。
-
-        返回：
-            FermionOperator，从字符串加载的FermionOperator。
-
     .. py:method:: astype(dtype)
 
         将FermionOperator转化为不同的数据类型。
@@ -118,12 +39,25 @@ mindquantum.core.operators.FermionOperator
         返回：
             FermionOperator，经过压缩后的费米子算符。
 
+    .. py:method:: constant
+        :property:
+
+        返回单位费米子串的系数。
+
+        返回：
+            ParameterResolver，单位费米子串的系数。
+
     .. py:method:: count_qubits()
 
         统计移除没用比特前所占用的比特数。
 
         返回：
             int，移除没用比特前所占用的比特数。
+
+    .. py:method:: dtype
+        :property:
+
+        费米子算符系数的数据类型。
 
     .. py:method:: dumps(indent: int = 4)
 
@@ -134,6 +68,17 @@ mindquantum.core.operators.FermionOperator
 
         返回：
             JSON(str)，FermionOperator的JSON字符串。
+
+    .. py:method:: from_openfermion(of_ops)
+        :staticmethod:
+
+        将openfermion格式的费米子运算符转换为mindquantum格式。
+
+        参数：
+            - **of_ops** (openfermion.FermionOperator) - openfermion中的费米子算符。
+
+        返回：
+            FermionOperator，mindquantum中的费米子算符。
 
     .. py:method:: get_coeff(term)
 
@@ -149,6 +94,38 @@ mindquantum.core.operators.FermionOperator
         返回：
             FermionOperator，原费米子的厄米共轭。
 
+    .. py:method:: imag
+        :property:
+
+        获得系数的虚部。
+
+        返回：
+            FermionOperator，这个FermionOperator的虚部。
+
+    .. py:method:: is_complex
+        :property:
+
+        返回当前费米子是否使用复数类型的系数。
+
+    .. py:method:: is_singlet
+        :property:
+
+        检查当前费米子是否只有一项。
+
+        返回：
+            bool，当前费米子是否只有一项。
+
+    .. py:method:: loads(strs: str)
+        :staticmethod:
+
+        将JSON（JavaScript对象表示法）加载到FermionOperator中。
+
+        参数：
+            - **strs** (str) - 转储的费米子运算符字符串。
+
+        返回：
+            FermionOperator，从字符串加载的FermionOperator。
+
     .. py:method:: matrix(n_qubits: int = None)
 
         将此费米子运算符转换为jordan_wigner映射下的csr_matrix。
@@ -163,15 +140,18 @@ mindquantum.core.operators.FermionOperator
         返回：
             FermionOperator，规范有序的FermionOperator。
 
-    .. py:method:: singlet_coeff()
+    .. py:method:: parameterized
+        :property:
 
-        当费米子算符只有一个费米子串时，返回该费米子串的系数。
+        检查当前费米子是否是参数化的。
+
+    .. py:method:: real
+        :property:
+
+        获得系数的实部。
 
         返回：
-            ParameterResolver，唯一费米子串的系数。
-
-        异常：
-            - **RuntimeError** - 如果该费米子算符拥有不止一个费米子串。
+            FermionOperator，这个FermionOperator的实部。
 
     .. py:method:: singlet()
 
@@ -182,6 +162,21 @@ mindquantum.core.operators.FermionOperator
 
         异常：
             - **RuntimeError** - 如果该费米子算符拥有不止一个费米子串。
+
+    .. py:method:: singlet_coeff()
+
+        当费米子算符只有一个费米子串时，返回该费米子串的系数。
+
+        返回：
+            ParameterResolver，唯一费米子串的系数。
+
+        异常：
+            - **RuntimeError** - 如果该费米子算符拥有不止一个费米子串。
+
+    .. py:method:: size
+        :property:
+
+        返回费米子算符中费米子串的数量。
 
     .. py:method:: split()
 
@@ -196,6 +191,11 @@ mindquantum.core.operators.FermionOperator
 
         参数：
             - **params_value** (Union[Dict[str, numbers.Number], ParameterResolver]) - 系数变量的参数。
+
+    .. py:method:: terms
+        :property:
+
+        返回费米子算符中的费米子串。
 
     .. py:method:: to_openfermion()
 
