@@ -142,7 +142,9 @@ class ParameterResolver(ParameterResolver_):
             elif data is None:
                 ParameterResolver_.__init__(self)
             else:
-                raise ValueError("Unknown data type.")
+                raise ValueError(
+                    "data requires a number or a ParameterResolver or a dict " f"or a string, but get {type(data)}"
+                )
 
     def __str__(self) -> str:
         """Return the string expression of this parameter resolver."""
