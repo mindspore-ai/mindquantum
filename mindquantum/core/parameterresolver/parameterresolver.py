@@ -23,7 +23,7 @@ import numpy as np
 
 import mindquantum as mq
 from mindquantum._math.pr import ParameterResolver as ParameterResolver_
-from mindquantum._math.tensor import Tensor as Tensor_
+from mindquantum._math.tensor import from_numpy
 from mindquantum.utils.string_utils import join_without_empty, string_expression
 from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
 
@@ -106,9 +106,9 @@ class ParameterResolver(ParameterResolver_):
                         if isinstance(const, numbers.Number) and not isinstance(const, numbers.Real):
                             dtype = mq.complex128
                 if const is None:
-                    const = Tensor_(0.0, dtype)
+                    const = from_numpy(np.array([0.0], dtype=mq.to_np_type(dtype)))
                 else:
-                    const = Tensor_(const, dtype)
+                    const = from_numpy(np.array([const], dtype=mq.to_np_type(dtype)))
                 ParameterResolver_.__init__(self, data, const, dtype)  # PR('a'[, 1.0, mq.float64])
             elif isinstance(data, dict):
                 if dtype is None:
@@ -121,17 +121,24 @@ class ParameterResolver(ParameterResolver_):
                         if isinstance(const, numbers.Number) and not isinstance(const, numbers.Real):
                             dtype = mq.complex128
                 if const is None:
-                    const = Tensor_(0.0, dtype)
+                    const = from_numpy(np.array([0.0], dtype=mq.to_np_type(dtype)))
                 else:
-                    const = Tensor_(const, dtype)
+                    const = from_numpy(np.array([const], dtype=mq.to_np_type(dtype)))
                 # PR({'a': 1.0}[, 2.0, mq.float64])
-                ParameterResolver_.__init__(self, {i: Tensor_(j, dtype) for i, j in data.items()}, const, dtype)
+                ParameterResolver_.__init__(
+                    self,
+                    {i: from_numpy(np.array([j], dtype=mq.to_np_type(dtype))) for i, j in data.items()},
+                    const,
+                    dtype,
+                )
             elif isinstance(data, numbers.Number):
                 if dtype is None:
                     dtype = mq.float64
                     if isinstance(data, numbers.Number) and not isinstance(data, numbers.Real):
                         dtype = mq.complex128
-                ParameterResolver_.__init__(self, Tensor_(data, dtype))  # PR(1.0[, mq.float64])
+                ParameterResolver_.__init__(
+                    self, from_numpy(np.array([data], dtype=mq.to_np_type(dtype)))
+                )  # PR(1.0[, mq.float64])
             elif data is None:
                 ParameterResolver_.__init__(self)
             else:
@@ -252,7 +259,7 @@ class ParameterResolver(ParameterResolver_):
             >>> pr.expression()
             '5/2*a'
         """
-        ParameterResolver_.set_item(self, key, Tensor_(value))
+        ParameterResolver_.set_item(self, key, from_numpy(np.array([value])))
 
     def __getitem__(self, key: str) -> numbers.Number:
         """
@@ -744,7 +751,7 @@ class ParameterResolver(ParameterResolver_):
     @const.setter
     def const(self, value: numbers.Number):
         """Setter method for const."""
-        ParameterResolver_.set_const(self, Tensor_(value))
+        ParameterResolver_.set_const(self, from_numpy(np.array([value])))
 
     def conjugate(self) -> "ParameterResolver":
         """
