@@ -140,21 +140,21 @@ mindquantum.core.operators.QubitOperator
 
         将只有一个费米子串的玻色子算符分裂成只有一个玻色子的玻色子算符。
 
-        异常：
-            - **RuntimeError** - 如果该玻色子算符拥有不止一个玻色子串。
-
         返回：
             List[QubitOperator]，只有一个玻色子的玻色子算符。
+
+        异常：
+            - **RuntimeError** - 如果该玻色子算符拥有不止一个玻色子串。
 
     .. py:method:: singlet_coeff()
 
         当玻色子算符只有一个玻色子串时，返回该玻色子串的系数。
 
-        异常：
-            - **RuntimeError** - 如果该玻色子算符拥有不止一个玻色子串。
-
         返回：
             ParameterResolver，唯一玻色子串的系数。
+
+        异常：
+            - **RuntimeError** - 如果该玻色子算符拥有不止一个玻色子串。
 
     .. py:method:: size
         :property:

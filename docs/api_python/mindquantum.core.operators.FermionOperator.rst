@@ -111,21 +111,21 @@ mindquantum.core.operators.FermionOperator
 
         将只有一个费米子串的费米子算符分裂成只有一个费米子的费米子算符。
 
-        异常：
-            - **RuntimeError** - 如果该费米子算符拥有不止一个费米子串。
-
         返回：
             List[FermionOperator]，只有一个费米子的费米子算符。
+
+        异常：
+            - **RuntimeError** - 如果该费米子算符拥有不止一个费米子串。
 
     .. py:method:: singlet_coeff()
 
         当费米子算符只有一个费米子串时，返回该费米子串的系数。
 
-        异常：
-            - **RuntimeError** - 如果该费米子算符拥有不止一个费米子串。
-
         返回：
             ParameterResolver，唯一费米子串的系数。
+
+        异常：
+            - **RuntimeError** - 如果该费米子算符拥有不止一个费米子串。
 
     .. py:method:: size
         :property:
