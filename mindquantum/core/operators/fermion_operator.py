@@ -473,11 +473,11 @@ class FermionOperator(FermionOperator_):
         """
         Get the coefficient of this operator, if the operator has only one term.
 
-        Raises:
-            RuntimeError: if the size of terms is not equal to 1.
-
         Returns:
             ParameterResolver, the coefficient of this single string operator.
+
+        Raises:
+            RuntimeError: if the size of terms is not equal to 1.
 
         Examples:
             >>> from mindquantum.core.operators import FermionOperator
@@ -493,11 +493,11 @@ class FermionOperator(FermionOperator_):
         """
         Split the single string operator into every word.
 
-        Raises:
-            RuntimeError: if the size of terms is not equal to 1.
-
         Returns:
             List[FermionOperator], The split word of the string.
+
+        Raises:
+            RuntimeError: if the size of terms is not equal to 1.
 
         Examples:
             >>> from mindquantum.core.operators import FermionOperator
