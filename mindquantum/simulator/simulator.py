@@ -58,7 +58,7 @@ class Simulator:
         TypeError: if `seed` is not int.
         ValueError: if `backend` is not supported.
         ValueError: if `n_qubits` is negative.
-        ValueError: if `seed` is less than 0 or great than 2**23 - 1.
+        ValueError: if `seed` is less than 0 or great than :math:`2^23 - 1`.
 
     Examples:
         >>> from mindquantum.algorithm.library import qft
@@ -82,21 +82,13 @@ class Simulator:
             _check_seed(seed)
             self.backend = SUPPORTED_SIMULATOR.py_class(backend)(backend, n_qubits, seed, dtype, *args, **kwargs)
 
-    def astype(self, dtype, seed=None):
-        """
-        Convert simulator to other data type.
+    def __str__(self):
+        """Return a string representation of the object."""
+        return self.backend.__str__()
 
-        Note:
-            The quantum state will copied from origin simulator.
-
-        Args:
-            dtype (mindquantum.dtype): the data type of new simulator.
-            seed (int): the seed of new simulator. Default: ``None``.
-        """
-        if seed is None:
-            seed = np.random.randint(1, 2**23)
-        _check_seed(seed)
-        return Simulator(self.backend.astype(to_mq_type(dtype), seed=seed), self.n_qubits)
+    def __repr__(self):
+        """Return a string representation of the object."""
+        return self.backend.__repr__()
 
     @property
     def dtype(self):
@@ -112,85 +104,6 @@ class Simulator:
             int, the qubit number of simulator.
         """
         return self.backend.n_qubits
-
-    def copy(self):
-        """
-        Copy this simulator.
-
-        Returns:
-            Simulator, a copy version of this simulator.
-
-        Examples:
-            >>> from mindquantum.core.gates import RX
-            >>> from mindquantum.simulator import Simulator
-            >>> sim = Simulator('mqvector', 1)
-            >>> sim.apply_gate(RX(1).on(0))
-            >>> sim2 = sim.copy()
-            >>> sim2.apply_gate(RX(-1).on(0))
-            >>> sim2
-            mqvector simulator with 1 qubit (little endian).
-            Current quantum state:
-            1¦0⟩
-        """
-        return self.__class__(self.backend.copy(), None)
-
-    def __str__(self):
-        """Return a string representation of the object."""
-        return self.backend.__str__()
-
-    def __repr__(self):
-        """Return a string representation of the object."""
-        return self.backend.__repr__()
-
-    def reset(self):
-        """
-        Reset simulator to zero state.
-
-        Examples:
-            >>> from mindquantum.algorithm.library import qft
-            >>> from mindquantum.simulator import Simulator
-            >>> sim = Simulator('mqvector', 2)
-            >>> sim.apply_circuit(qft(range(2)))
-            >>> sim.reset()
-            >>> sim.get_qs()
-            array([1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j])
-        """
-        self.backend.reset()
-
-    def apply_gate(self, gate, pr=None, diff=False):
-        """
-        Apply a gate on this simulator, can be a quantum gate or a measurement operator.
-
-        Args:
-            gate (BasicGate): The gate you want to apply.
-            pr (Union[numbers.Number, numpy.ndarray, ParameterResolver, list]): The
-                parameter for parameterized gate. Default: ``None``.
-            diff (bool): Whether to apply the derivative gate on this simulator. Default: ``False``.
-
-        Returns:
-            int or None, if the gate if a measure gate, then return a collapsed state, Otherwise
-            return None.
-
-        Raises:
-            TypeError: if `gate` is not a BasicGate.
-            ValueError: if any qubit of `gate` is higher than simulator qubits.
-            ValueError: if `gate` is parameterized, but no parameter supplied.
-            TypeError: the `pr` is not a ParameterResolver if `gate` is parameterized.
-
-        Examples:
-            >>> import numpy as np
-            >>> from mindquantum.core.gates import RY, Measure
-            >>> from mindquantum.simulator import Simulator
-            >>> sim = Simulator('mqvector', 1)
-            >>> sim.apply_gate(RY('a').on(0), np.pi/2)
-            >>> sim.get_qs()
-            array([0.70710678+0.j, 0.70710678+0.j])
-            >>> sim.apply_gate(Measure().on(0))
-            1
-            >>> sim.get_qs()
-            array([0.+0.j, 1.+0.j])
-        """
-        return self.backend.apply_gate(gate, pr, diff)
 
     def apply_circuit(self, circuit, pr=None):
         """
@@ -231,49 +144,40 @@ class Simulator:
         """
         return self.backend.apply_circuit(circuit, pr)
 
-    def sampling(self, circuit, pr=None, shots=1, seed=None):
+    def apply_gate(self, gate, pr=None, diff=False):
         """
-        Sample the measure qubit in circuit.
-
-        Sampling does not change the origin quantum state of this simulator.
+        Apply a gate on this simulator, can be a quantum gate or a measurement operator.
 
         Args:
-            circuit (Circuit): The circuit that you want to evolution and do sampling.
-            pr (Union[None, dict, ParameterResolver]): The parameter
-                resolver for this circuit, if this circuit is a parameterized circuit.
-                Default: ``None``.
-            shots (int): How many shots you want to sampling this circuit. Default: ``1``.
-            seed (int): Random seed for random sampling. If ``None``, seed will be a random
-                int number. Default: ``None``.
+            gate (BasicGate): The gate you want to apply.
+            pr (Union[numbers.Number, numpy.ndarray, ParameterResolver, list]): The
+                parameter for parameterized gate. Default: ``None``.
+            diff (bool): Whether to apply the derivative gate on this simulator. Default: ``False``.
 
         Returns:
-            MeasureResult, the measure result of sampling.
+            int or None, if the gate if a measure gate, then return a collapsed state, Otherwise
+            return None.
+
+        Raises:
+            TypeError: if `gate` is not a BasicGate.
+            ValueError: if any qubit of `gate` is higher than simulator qubits.
+            ValueError: if `gate` is parameterized, but no parameter supplied.
+            TypeError: the `pr` is not a ParameterResolver if `gate` is parameterized.
 
         Examples:
-            >>> from mindquantum.core.circuit import Circuit
-            >>> from mindquantum.core.gates import Measure
+            >>> import numpy as np
+            >>> from mindquantum.core.gates import RY, Measure
             >>> from mindquantum.simulator import Simulator
-            >>> circ = Circuit().ry('a', 0).ry('b', 1)
-            >>> circ += Measure('q0_0').on(0)
-            >>> circ += Measure('q0_1').on(0)
-            >>> circ += Measure('q1').on(1)
-            >>> sim = Simulator('mqvector', circ.n_qubits)
-            >>> res = sim.sampling(circ, {'a': 1.1, 'b': 2.2}, shots=100, seed=42)
-            >>> res
-            shots: 100
-            Keys: q1 q0_1 q0_0│0.00   0.122       0.245       0.367        0.49       0.612
-            ──────────────────┼───────────┴───────────┴───────────┴───────────┴───────────┴
-                           000│▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-                              │
-                           011│▒▒▒▒▒▒▒▒▒
-                              │
-                           100│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-                              │
-                           111│▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-                              │
-            {'000': 18, '011': 9, '100': 49, '111': 24}
+            >>> sim = Simulator('mqvector', 1)
+            >>> sim.apply_gate(RY('a').on(0), np.pi/2)
+            >>> sim.get_qs()
+            array([0.70710678+0.j, 0.70710678+0.j])
+            >>> sim.apply_gate(Measure().on(0))
+            1
+            >>> sim.get_qs()
+            array([0.+0.j, 1.+0.j])
         """
-        return self.backend.sampling(circuit, pr, shots, seed)
+        return self.backend.apply_gate(gate, pr, diff)
 
     def apply_hamiltonian(self, hamiltonian: Hamiltonian):
         """
@@ -305,6 +209,43 @@ class Simulator:
             array([1.+0.j, 3.+0.j])
         """
         self.backend.apply_hamiltonian(hamiltonian)
+
+    def astype(self, dtype, seed=None):
+        """
+        Convert simulator to other data type.
+
+        Note:
+            The quantum state will copied from origin simulator.
+
+        Args:
+            dtype (mindquantum.dtype): the data type of new simulator.
+            seed (int): the seed of new simulator. Default: ``None``.
+        """
+        if seed is None:
+            seed = np.random.randint(1, 2**23)
+        _check_seed(seed)
+        return Simulator(self.backend.astype(to_mq_type(dtype), seed=seed), self.n_qubits)
+
+    def copy(self):
+        """
+        Copy this simulator.
+
+        Returns:
+            Simulator, a copy version of this simulator.
+
+        Examples:
+            >>> from mindquantum.core.gates import RX
+            >>> from mindquantum.simulator import Simulator
+            >>> sim = Simulator('mqvector', 1)
+            >>> sim.apply_gate(RX(1).on(0))
+            >>> sim2 = sim.copy()
+            >>> sim2.apply_gate(RX(-1).on(0))
+            >>> sim2
+            mqvector simulator with 1 qubit (little endian).
+            Current quantum state:
+            1¦0⟩
+        """
+        return self.__class__(self.backend.copy(), None)
 
     # pylint: disable=too-many-arguments
     def get_expectation(self, hamiltonian, circ_right=None, circ_left=None, simulator_left=None, pr=None):
@@ -356,55 +297,6 @@ class Simulator:
             (-0.25463350745693886+0.8507316752782879j)
         """
         return self.backend.get_expectation(hamiltonian, circ_right, circ_left, simulator_left, pr)
-
-    def set_threads_number(self, number):
-        """
-        Set maximum number of threads.
-
-        Args:
-            number (int): The thread number the simulator will use for thread pool.
-        """
-        return self.backend.set_threads_number(number)
-
-    def get_qs(self, ket=False):
-        """
-        Get current quantum state of this simulator.
-
-        Args:
-            ket (bool): Whether to return the quantum state in ket format or not.
-                Default: ``False``.
-
-        Returns:
-            numpy.ndarray, the current quantum state.
-
-        Examples:
-            >>> from mindquantum.algorithm.library import qft
-            >>> from mindquantum.simulator import Simulator
-            >>> sim = Simulator('mqvector', 2)
-            >>> sim.apply_circuit(qft(range(2)))
-            >>> sim.get_qs()
-            array([0.5+0.j, 0.5+0.j, 0.5+0.j, 0.5+0.j])
-        """
-        return self.backend.get_qs(ket)
-
-    def set_qs(self, quantum_state):
-        """
-        Set quantum state for this simulation.
-
-        Args:
-            quantum_state (numpy.ndarray): the quantum state that you want.
-
-        Examples:
-            >>> import numpy as np
-            >>> from mindquantum.simulator import Simulator
-            >>> sim = Simulator('mqvector', 1)
-            >>> sim.get_qs()
-            array([1.+0.j, 0.+0.j])
-            >>> sim.set_qs(np.array([1, 1]))
-            >>> sim.get_qs()
-            array([0.70710678+0.j, 0.70710678+0.j])
-        """
-        self.backend.set_qs(quantum_state)
 
     # pylint: disable=too-many-arguments
     def get_expectation_with_grad(
@@ -477,6 +369,114 @@ class Simulator:
             (simulator_left.backend if simulator_left is not None else None),
             parallel_worker,
         )
+
+    def get_qs(self, ket=False):
+        """
+        Get current quantum state of this simulator.
+
+        Args:
+            ket (bool): Whether to return the quantum state in ket format or not.
+                Default: ``False``.
+
+        Returns:
+            numpy.ndarray, the current quantum state.
+
+        Examples:
+            >>> from mindquantum.algorithm.library import qft
+            >>> from mindquantum.simulator import Simulator
+            >>> sim = Simulator('mqvector', 2)
+            >>> sim.apply_circuit(qft(range(2)))
+            >>> sim.get_qs()
+            array([0.5+0.j, 0.5+0.j, 0.5+0.j, 0.5+0.j])
+        """
+        return self.backend.get_qs(ket)
+
+    def reset(self):
+        """
+        Reset simulator to zero state.
+
+        Examples:
+            >>> from mindquantum.algorithm.library import qft
+            >>> from mindquantum.simulator import Simulator
+            >>> sim = Simulator('mqvector', 2)
+            >>> sim.apply_circuit(qft(range(2)))
+            >>> sim.reset()
+            >>> sim.get_qs()
+            array([1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j])
+        """
+        self.backend.reset()
+
+    def sampling(self, circuit, pr=None, shots=1, seed=None):
+        """
+        Sample the measure qubit in circuit.
+
+        Sampling does not change the origin quantum state of this simulator.
+
+        Args:
+            circuit (Circuit): The circuit that you want to evolution and do sampling.
+            pr (Union[None, dict, ParameterResolver]): The parameter
+                resolver for this circuit, if this circuit is a parameterized circuit.
+                Default: ``None``.
+            shots (int): How many shots you want to sampling this circuit. Default: ``1``.
+            seed (int): Random seed for random sampling. If ``None``, seed will be a random
+                int number. Default: ``None``.
+
+        Returns:
+            MeasureResult, the measure result of sampling.
+
+        Examples:
+            >>> from mindquantum.core.circuit import Circuit
+            >>> from mindquantum.core.gates import Measure
+            >>> from mindquantum.simulator import Simulator
+            >>> circ = Circuit().ry('a', 0).ry('b', 1)
+            >>> circ += Measure('q0_0').on(0)
+            >>> circ += Measure('q0_1').on(0)
+            >>> circ += Measure('q1').on(1)
+            >>> sim = Simulator('mqvector', circ.n_qubits)
+            >>> res = sim.sampling(circ, {'a': 1.1, 'b': 2.2}, shots=100, seed=42)
+            >>> res
+            shots: 100
+            Keys: q1 q0_1 q0_0│0.00   0.122       0.245       0.367        0.49       0.612
+            ──────────────────┼───────────┴───────────┴───────────┴───────────┴───────────┴
+                           000│▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+                              │
+                           011│▒▒▒▒▒▒▒▒▒
+                              │
+                           100│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+                              │
+                           111│▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+                              │
+            {'000': 18, '011': 9, '100': 49, '111': 24}
+        """
+        return self.backend.sampling(circuit, pr, shots, seed)
+
+    def set_qs(self, quantum_state):
+        """
+        Set quantum state for this simulation.
+
+        Args:
+            quantum_state (numpy.ndarray): the quantum state that you want.
+
+        Examples:
+            >>> import numpy as np
+            >>> from mindquantum.simulator import Simulator
+            >>> sim = Simulator('mqvector', 1)
+            >>> sim.get_qs()
+            array([1.+0.j, 0.+0.j])
+            >>> sim.set_qs(np.array([1, 1]))
+            >>> sim.get_qs()
+            array([0.70710678+0.j, 0.70710678+0.j])
+        """
+        self.backend.set_qs(quantum_state)
+
+    def set_threads_number(self, number):
+        """
+        Set maximum number of threads.
+
+        Args:
+            number (int): The thread number the simulator will use for thread pool.
+        """
+        return self.backend.set_threads_number(number)
 
 
 def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):

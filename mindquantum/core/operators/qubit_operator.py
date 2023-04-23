@@ -51,7 +51,7 @@ class QubitOperator(QubitOperator_):
 
     Args:
         term (Union[str, QubitOperator]): The input term of qubit operator. Default: ``None``.
-        coefficient (Union[numbers.Number, str, ParameterResolver]): The
+        coefficient (Union[numbers.Number, str, Dict[str, numbers.Number], ParameterResolver]): The
             coefficient of this qubit operator, could be a number or a variable
             represent by a string or a symbol or a parameter resolver. Default: ``1.0``.
         internal (bool): Whether the first argument is internal c++ object of
@@ -177,35 +177,38 @@ class QubitOperator(QubitOperator_):
         for coeff, term in self.split():
             yield term * coeff
 
-    def get_coeff(self, term) -> ParameterResolver:
-        """
-        Get coefficient of given term.
+    def __pow__(self, frac) -> "QubitOperator":
+        """Power of QubitOperator."""
+        out = self
+        for _ in range(frac - 1):
+            out *= self
+        return self
 
-        Args:
-            term (List[Tuple[int, Union[int, str]]]): the term you want get coefficient.
+    def __repr__(self) -> str:
+        """Return string expression of a QubitOperator."""
+        values = []
+        terms = []
+        max_value_len = 0
+        for term, value in self.terms.items():
+            values.append(value.expression())
+            max_value_len = max(max_value_len, len(values[-1]))
+            terms.append("[" + ' '.join(f"{j}{i}" for i, j in term) + "]")
+        for i, j in enumerate(values):
+            values[i] = j.rjust(max_value_len)
+            if i != len(values) - 1:
+                terms[i] += " +"
+        if values:
+            return "\n".join(f'{v} {t}' for v, t in zip(values, terms))
+        return "0"
 
-        Examples:
-            >>> from mindquantum.core.operators import QubitOperator
-            >>> q = QubitOperator('X0 Y1', 1.2)
-            >>> q.get_coeff([(1, 'Y'), (0, 'X')])
-            ParameterResolver(dtype: float64, const: 1.200000)
-        """
-        return ParameterResolver(QubitOperator_.get_coeff(self, [(i, TermValue[j]) for i, j in term]), internal=True)
+    def __str__(self) -> str:
+        """Return string expression of a QubitOperator."""
+        return self.__repr__()
 
-    def hermitian(self) -> "QubitOperator":
-        """
-        Get the hermitian of a QubitOperator.
-
-        Returns:
-            QubitOperator, the hermitian of this QubitOperator.
-
-        Examples:
-            >>> from mindquantum.core.operators import QubitOperator
-            >>> a = QubitOperator("X0 Y1", {"a": 1 + 2j})
-            >>> a.hermitian()
-            (-1 + 2j)*a [1 0^]
-        """
-        return QubitOperator(QubitOperator_.hermitian_conjugated(self), internal=True)
+    @property
+    def dtype(self):
+        """Get the data type of QubitOperator."""
+        return QubitOperator_.dtype(self)
 
     @property
     def imag(self):
@@ -224,6 +227,26 @@ class QubitOperator(QubitOperator_):
         return QubitOperator(QubitOperator_.imag(self), internal=True)
 
     @property
+    def is_complex(self) -> bool:
+        """Return whether the QubitOperator instance is currently using complex coefficients."""
+        return self.dtype in (mq.complex128, mq.complex64)
+
+    @property
+    def is_singlet(self) -> bool:
+        """
+        To verify whether this operator has only one term.
+
+        Returns:
+            bool, whether this operator has only one term.
+        """
+        return QubitOperator_.is_singlet(self)
+
+    @property
+    def parameterized(self) -> bool:
+        """Check whether this QubitOperator is parameterized."""
+        return QubitOperator_.parameterized(self)
+
+    @property
     def real(self):
         """
         Convert the coefficient to its real part.
@@ -239,6 +262,23 @@ class QubitOperator(QubitOperator_):
             a [Y0]
         """
         return QubitOperator(QubitOperator_.real(self), internal=True)
+
+    @property
+    def size(self) -> int:
+        """Return the number of terms of this QubitOperator."""
+        return len(self)
+
+    @property
+    def terms(self) -> typing.Dict[typing.Tuple[int, str], ParameterResolver]:
+        """Get the terms of a QubitOperator."""
+        origin_dict = QubitOperator_.get_terms(self)
+        out = {}
+        for key, value in origin_dict:
+            out_key = []
+            for idx, t in key:
+                out_key.append((idx, str(t)))
+            out[tuple(out_key)] = ParameterResolver(value, internal=True)
+        return out
 
     @staticmethod
     def from_openfermion(of_ops) -> "QubitOperator":
@@ -265,50 +305,6 @@ class QubitOperator(QubitOperator_):
             out += QubitOperator(' '.join([f"{j}{i}" for i, j in term]), ParameterResolver(v))
         return out
 
-    def to_openfermion(self):
-        """Convert qubit operator to openfermion format."""
-        # pylint: disable=import-outside-toplevel
-
-        try:
-            from openfermion import QubitOperator as OFQubitOperator
-        except (ImportError, AttributeError):
-            _require_package("openfermion", "1.5.0")
-        if self.parameterized:
-            raise ValueError("Cannot not QubitOperator to OpenFermion format.")
-
-        terms = {}
-        for i, j in self.terms.items():
-            terms[i] = j.const
-        out = OFQubitOperator()
-        out.terms = terms
-        return out
-
-    def dumps(self, indent: int = 4) -> str:
-        r"""
-        Dump a QubitOperator into JSON(JavaScript Object Notation).
-
-        Args:
-            indent (int): Then JSON array elements and object members will be
-                pretty-printed with that indent level. Default: 4.
-
-        Returns:
-            JSON (str), the JSON strings of this QubitOperator
-
-        Examples:
-            >>> from mindquantum.core.operators import QubitOperator
-            >>> f = QubitOperator('0', 1 + 2j) + QubitOperator('0^', 'a')
-            >>> len(f.dumps())
-            581
-        """
-        out = {}
-        out['dtype'] = str(self.dtype)
-        out['terms'] = []
-        out['values'] = []
-        for k, v in self.terms.items():
-            out["values"].append(v.dumps(indent))
-            out["terms"].append(" ".join(f"{str(j)}{i}" for i, j in k))
-        return json.dumps(out, indent=indent)
-
     @staticmethod
     def loads(strs: str) -> "QubitOperator":
         """
@@ -332,86 +328,6 @@ class QubitOperator(QubitOperator_):
         for c, t in zip(dic['values'], dic['terms']):
             out += QubitOperator(t, ParameterResolver.loads(c))
         return out
-
-    def __repr__(self) -> str:
-        """Return string expression of a QubitOperator."""
-        values = []
-        terms = []
-        max_value_len = 0
-        for term, value in self.terms.items():
-            values.append(value.expression())
-            max_value_len = max(max_value_len, len(values[-1]))
-            terms.append("[" + ' '.join(f"{j}{i}" for i, j in term) + "]")
-        for i, j in enumerate(values):
-            values[i] = j.rjust(max_value_len)
-            if i != len(values) - 1:
-                terms[i] += " +"
-        if values:
-            return "\n".join(f'{v} {t}' for v, t in zip(values, terms))
-        return "0"
-
-    def __str__(self) -> str:
-        """Return string expression of a QubitOperator."""
-        return self.__repr__()
-
-    @property
-    def terms(self) -> typing.Dict[typing.Tuple[int, str], ParameterResolver]:
-        """Get the terms of a QubitOperator."""
-        origin_dict = QubitOperator_.get_terms(self)
-        out = {}
-        for key, value in origin_dict:
-            out_key = []
-            for idx, t in key:
-                out_key.append((idx, str(t)))
-            out[tuple(out_key)] = ParameterResolver(value, internal=True)
-        return out
-
-    def split(self):
-        """
-        Split the coefficient and the operator.
-
-        Returns:
-            List[List[ParameterResolver, QubitOperator]], the split result.
-
-        Examples:
-            >>> from mindquantum.core.operators import QubitOperator
-            >>> a = QubitOperator('X0', 'a') + QubitOperator('Z1', 1.2)
-            >>> for i, j in a.split():
-            ...     print(f"{i}, {j}")
-            a, 1 [X0]
-            1.2, 1 [Z1]
-        """
-        for i, j in QubitOperator_.split(self):
-            yield ParameterResolver(i, internal=True), QubitOperator(j, internal=True)
-
-    @property
-    def parameterized(self) -> bool:
-        """Check whether this QubitOperator is parameterized."""
-        return QubitOperator_.parameterized(self)
-
-    @property
-    def size(self) -> int:
-        """Return the number of terms of this QubitOperator."""
-        return len(self)
-
-    @property
-    def is_singlet(self) -> bool:
-        """
-        To verify whether this operator has only one term.
-
-        Returns:
-            bool, whether this operator has only one term.
-        """
-        return QubitOperator_.is_singlet(self)
-
-    def cast_complex(self) -> "QubitOperator":
-        """Cast a QubitOperator into its complex equivalent."""
-        new_type = self.dtype
-        if new_type == mq.float32:
-            new_type = mq.complex64
-        elif new_type == mq.float64:
-            new_type = mq.complex128
-        return self.astype(new_type)
 
     def astype(self, dtype) -> "QubitOperator":
         """
@@ -437,97 +353,14 @@ class QubitOperator(QubitOperator_):
         """
         return QubitOperator(QubitOperator_.astype(self, dtype))
 
-    @property
-    def dtype(self):
-        """Get the data type of QubitOperator."""
-        return QubitOperator_.dtype(self)
-
-    @property
-    def is_complex(self) -> bool:
-        """Return whether the QubitOperator instance is currently using complex coefficients."""
-        return self.dtype in (mq.complex128, mq.complex64)
-
-    def singlet_coeff(self) -> ParameterResolver:
-        """
-        Get the coefficient of this operator, if the operator has only one term.
-
-        Returns:
-            ParameterResolver: the coefficient of this single string operator.
-
-        Raises:
-            RuntimeError: if the size of terms is not equal to 1.
-
-        Examples:
-            >>> from mindquantum.core.operators import QubitOperator
-            >>> ops = QubitOperator("X0 Y1", "a")
-            >>> print(ops)
-            -a [2 1^]
-            >>> print(ops.singlet_coeff())
-            -a
-        """
-        return ParameterResolver(QubitOperator_.singlet_coeff(self), internal=True)
-
-    def singlet(self) -> typing.List["QubitOperator"]:
-        """
-        Split the single string operator into every word.
-
-        Returns:
-            List[QubitOperator]: The split word of the string.
-
-        Raises:
-            RuntimeError: if the size of terms is not equal to 1.
-
-        Examples:
-            >>> from mindquantum.core.operators import QubitOperator
-            >>> ops = QubitOperator("1^ 2", 1)
-            >>> print(ops.singlet())
-            [1 [2], 1 [1^]]
-        """
-        return [QubitOperator(i, internal=True) for i in QubitOperator_.singlet(self)]
-
-    def subs(self, params_value: typing.Union[typing.Dict[str, numbers.Number], ParameterResolver]):
-        """
-        Replace the symbolical representation with the corresponding value.
-
-        Args:
-            params_value (Union[Dict[str, numbers.Number], ParameterResolver]): the value of variable in coefficient.
-
-        Examples:
-            >>> from mindquantum.core.operators import QubitOperator
-            >>> from mindquantum.core.parameterresolver import ParameterResolver
-            >>> q = QubitOperator('X0', ParameterResolver({'a': 2.0}, 3.0))
-            >>> q
-            2*a + 3 [X0]
-            >>> q.subs({'a': 1.5})
-            6 [X0]
-        """
-        if not isinstance(params_value, ParameterResolver):
-            params_value = ParameterResolver(params_value)
-        out = copy.copy(self)
-        QubitOperator_.subs(out, params_value)
-        return out
-
-    def __pow__(self, frac) -> "QubitOperator":
-        """Power of QubitOperator."""
-        out = self
-        for _ in range(frac - 1):
-            out *= self
-        return self
-
-    def count_qubits(self) -> int:
-        """
-        Calculate the number of qubits on which operator acts before removing the unused qubit.
-
-        Returns:
-            int, the qubits number before remove unused qubit.
-
-        Examples:
-            >>> from mindquantum.core.operators import QubitOperator
-            >>> a = QubitOperator("Z0 Y3")
-            >>> a.count_qubits()
-            4
-        """
-        return QubitOperator_.count_qubits(self)
+    def cast_complex(self) -> "QubitOperator":
+        """Cast a QubitOperator into its complex equivalent."""
+        new_type = self.dtype
+        if new_type == mq.float32:
+            new_type = mq.complex64
+        elif new_type == mq.float64:
+            new_type = mq.complex128
+        return self.astype(new_type)
 
     def compress(self, abs_tol=EQ_TOLERANCE) -> "QubitOperator":
         """
@@ -575,6 +408,77 @@ class QubitOperator(QubitOperator_):
             4
         """
         return sum(len(t) for t in self.terms)
+
+    def count_qubits(self) -> int:
+        """
+        Calculate the number of qubits on which operator acts before removing the unused qubit.
+
+        Returns:
+            int, the qubits number before remove unused qubit.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> a = QubitOperator("Z0 Y3")
+            >>> a.count_qubits()
+            4
+        """
+        return QubitOperator_.count_qubits(self)
+
+    def dumps(self, indent: int = 4) -> str:
+        r"""
+        Dump a QubitOperator into JSON(JavaScript Object Notation).
+
+        Args:
+            indent (int): Then JSON array elements and object members will be
+                pretty-printed with that indent level. Default: 4.
+
+        Returns:
+            JSON (str), the JSON strings of this QubitOperator
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> f = QubitOperator('0', 1 + 2j) + QubitOperator('0^', 'a')
+            >>> len(f.dumps())
+            581
+        """
+        out = {}
+        out['dtype'] = str(self.dtype)
+        out['terms'] = []
+        out['values'] = []
+        for k, v in self.terms.items():
+            out["values"].append(v.dumps(indent))
+            out["terms"].append(" ".join(f"{str(j)}{i}" for i, j in k))
+        return json.dumps(out, indent=indent)
+
+    def get_coeff(self, term) -> ParameterResolver:
+        """
+        Get coefficient of given term.
+
+        Args:
+            term (List[Tuple[int, Union[int, str]]]): the term you want get coefficient.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> q = QubitOperator('X0 Y1', 1.2)
+            >>> q.get_coeff([(1, 'Y'), (0, 'X')])
+            ParameterResolver(dtype: float64, const: 1.200000)
+        """
+        return ParameterResolver(QubitOperator_.get_coeff(self, [(i, TermValue[j]) for i, j in term]), internal=True)
+
+    def hermitian(self) -> "QubitOperator":
+        """
+        Get the hermitian of a QubitOperator.
+
+        Returns:
+            QubitOperator, the hermitian of this QubitOperator.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> a = QubitOperator("X0 Y1", {"a": 1 + 2j})
+            >>> a.hermitian()
+            (-1 + 2j)*a [1 0^]
+        """
+        return QubitOperator(QubitOperator_.hermitian_conjugated(self), internal=True)
 
     def matrix(self, n_qubits: int = None):  # pylint: disable=too-many-locals
         """
@@ -627,4 +531,100 @@ class QubitOperator(QubitOperator_):
                 for i in total:
                     tmp = kron(i, tmp)
                 out += tmp
+        return out
+
+    def singlet(self) -> typing.List["QubitOperator"]:
+        """
+        Split the single string operator into every word.
+
+        Returns:
+            List[QubitOperator], The split word of the string.
+
+        Raises:
+            RuntimeError: if the size of terms is not equal to 1.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> ops = QubitOperator("1^ 2", 1)
+            >>> print(ops.singlet())
+            [1 [2], 1 [1^]]
+        """
+        return [QubitOperator(i, internal=True) for i in QubitOperator_.singlet(self)]
+
+    def singlet_coeff(self) -> ParameterResolver:
+        """
+        Get the coefficient of this operator, if the operator has only one term.
+
+        Returns:
+            ParameterResolver, the coefficient of this single string operator.
+
+        Raises:
+            RuntimeError: if the size of terms is not equal to 1.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> ops = QubitOperator("X0 Y1", "a")
+            >>> print(ops)
+            -a [2 1^]
+            >>> print(ops.singlet_coeff())
+            -a
+        """
+        return ParameterResolver(QubitOperator_.singlet_coeff(self), internal=True)
+
+    def split(self):
+        """
+        Split the coefficient and the operator.
+
+        Returns:
+            List[List[ParameterResolver, QubitOperator]], the split result.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> a = QubitOperator('X0', 'a') + QubitOperator('Z1', 1.2)
+            >>> for i, j in a.split():
+            ...     print(f"{i}, {j}")
+            a, 1 [X0]
+            1.2, 1 [Z1]
+        """
+        for i, j in QubitOperator_.split(self):
+            yield ParameterResolver(i, internal=True), QubitOperator(j, internal=True)
+
+    def subs(self, params_value: typing.Union[typing.Dict[str, numbers.Number], ParameterResolver]):
+        """
+        Replace the symbolical representation with the corresponding value.
+
+        Args:
+            params_value (Union[Dict[str, numbers.Number], ParameterResolver]): the value of variable in coefficient.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> from mindquantum.core.parameterresolver import ParameterResolver
+            >>> q = QubitOperator('X0', ParameterResolver({'a': 2.0}, 3.0))
+            >>> q
+            2*a + 3 [X0]
+            >>> q.subs({'a': 1.5})
+            6 [X0]
+        """
+        if not isinstance(params_value, ParameterResolver):
+            params_value = ParameterResolver(params_value)
+        out = copy.copy(self)
+        QubitOperator_.subs(out, params_value)
+        return out
+
+    def to_openfermion(self):
+        """Convert qubit operator to openfermion format."""
+        # pylint: disable=import-outside-toplevel
+
+        try:
+            from openfermion import QubitOperator as OFQubitOperator
+        except (ImportError, AttributeError):
+            _require_package("openfermion", "1.5.0")
+        if self.parameterized:
+            raise ValueError("Cannot not QubitOperator to OpenFermion format.")
+
+        terms = {}
+        for i, j in self.terms.items():
+            terms[i] = j.const
+        out = OFQubitOperator()
+        out.terms = terms
         return out

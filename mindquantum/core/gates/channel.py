@@ -28,9 +28,9 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
     r"""
     A pauli channel.
 
-    Pauli channel express error that randomly applies an additional X, Y or Z gate
-    on qubits with different probabilities Px, Py and Pz, or do noting (applies I gate)
-    with probability P = (1 - Px - Py - Pz).
+    Pauli channel express error that randomly applies an additional :math:`X`, :math:`Y` or :math:`Z` gate
+    on qubits with different probabilities :math:`P_x`, :math:`P_y` and :math:`P_z`,
+    or do noting (applies :math:`I` gate) with probability :math:`1-P_x-P_y-P_z`.
 
     Pauli channel applies noise as:
 

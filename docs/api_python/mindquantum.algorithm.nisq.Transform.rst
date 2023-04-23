@@ -60,7 +60,7 @@ mindquantum.algorithm.nisq.Transform
 
             a_{j}\rightarrow \sigma^{+}_{j} X \prod_{i=0}^{j-1}\sigma^{Z}_{i},
 
-        其中 :math:`\sigma_{+}=\sigma^{X} + i \sigma^{Y}` 和 :math:`\sigma^{-} = \sigma^{X} - i\sigma^{Y}` 分别是自旋升算符和降算符。
+        其中 :math:`\sigma_{+}=\sigma^{X} + i \sigma^{Y}` 和 :math:`\sigma_{-} = \sigma^{X} - i\sigma^{Y}` 分别是自旋升算符和降算符。
 
         返回：
             QubitOperator，Jordan-Wigner变换后的量子比特算符。
