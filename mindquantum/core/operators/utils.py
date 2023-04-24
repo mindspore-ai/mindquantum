@@ -273,11 +273,11 @@ def sz_operator(n_spatial_orbitals):
 
 def ground_state_of_sum_zz(ops: QubitOperator, sim='mqvector') -> float:
     """
-    Find the ground state energy of given zz term qubit operator.
+    Find the ground state energy of qubit operator that only has pauli :math:`Z` term.
 
     Args:
-        ops (QubitOperator): qubit operator that only has pauli z term.
-        sim (str): use which simulator to do calculation.
+        ops (QubitOperator): qubit operator that only has pauli :math:`Z` term.
+        sim (str): use which simulator to do calculation. Default: ``'mqvector'``.
 
     Returns:
         float, the ground state energy of given qubit operator.

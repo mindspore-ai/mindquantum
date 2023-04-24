@@ -1,7 +1,7 @@
 mindquantum.core.operators.QubitOperator
 =========================================
 
-.. py:class:: mindquantum.core.operators.QubitOperator(terms=None, coefficient=1.0, internal=False)
+.. py:class:: mindquantum.core.operators.QubitOperator(terms: typing.Union[str, "QubitOperator"] = None, coefficient: PRConvertible = 1.0, internal: bool = False)
 
     作用于量子比特的项的总和，例如 0.5 * 'X1 X5' + 0.3 * 'Z1 Z2'。
     项是一个作用于n个量子比特的运算符，可以表示为：coefficient * local_operator[0] x ... x local_operator[n-1]，其中x是张量乘积。
@@ -14,7 +14,7 @@ mindquantum.core.operators.QubitOperator
 
     参数：
         - **term** (Union[str, QubitOperator]) - 量子比特运算符的输入项。默认值： ``None``。
-        - **coefficient** (Union[numbers.Number, str, ParameterResolver]) - 此量子比特运算符的系数，可以是由字符串、符号或参数解析器表示的数字或变量。默认值： ``1.0``。
+        - **coefficient** (Union[numbers.Number, str, Dict[str, numbers.Number], ParameterResolver]) - 此量子比特运算符的系数，可以是由字符串、符号或参数解析器表示的数字或变量。默认值： ``1.0``。
         - **internal** (bool) - 第一个参数是否为泡利算符对象的内部c++类。默认值： ``False``。
 
     .. py:method:: astype(dtype)
@@ -63,13 +63,6 @@ mindquantum.core.operators.QubitOperator
 
         玻色子算符系数的数据类型。
 
-    .. py:method:: get_coeff(term)
-
-        获取给定项的系数。
-
-        参数：
-            - **term** (List[Tuple[int, Union[int, str]]]) - 想要获取系数的项。
-
     .. py:method:: dumps(indent: int = 4)
 
         将QubitOperator转储到JSON（JavaScript对象表示法）。
@@ -91,6 +84,13 @@ mindquantum.core.operators.QubitOperator
         返回：
             QubitOperator，mindquantum框架中的玻色子算符。
 
+    .. py:method:: get_coeff(term)
+
+        获取给定项的系数。
+
+        参数：
+            - **term** (List[Tuple[int, Union[int, str]]]) - 想要获取系数的项。
+
     .. py:method:: hermitian()
 
         返回QubitOperator的厄米共轭。
@@ -98,6 +98,13 @@ mindquantum.core.operators.QubitOperator
         返回：
             QubitOperator，玻色子算符的厄米共轭。
 
+    .. py:method:: imag
+        :property:
+
+        获得系数的虚部。
+
+        返回：
+            QubitOperator，此玻色子算符的虚部。
 
     .. py:method:: is_complex
         :property:
@@ -112,14 +119,6 @@ mindquantum.core.operators.QubitOperator
         返回：
             bool，当前玻色子是否只有一项。
 
-    .. py:method:: imag
-        :property:
-
-        获得系数的虚部。
-
-        返回：
-            QubitOperator，此玻色子算符的虚部。
-
     .. py:method:: loads(strs: str)
         :staticmethod:
 
@@ -131,10 +130,25 @@ mindquantum.core.operators.QubitOperator
         返回：
             QubitOperator，从字符串加载的QubitOperator。
 
+    .. py:method:: matrix(n_qubits: int = None)
+
+        将此玻色子算符转换为csr_matrix。
+
+        参数：
+            - **n_qubits** (int) - 结果矩阵的量子比特数目。如果是None，则该值将是最大局域量子比特数。默认值： ``None``。
+
     .. py:method:: parameterized
         :property:
 
         检查当前玻色子是否是参数化的。
+
+    .. py:method:: real
+        :property:
+
+        获得系数的实部。
+
+        返回：
+            QubitOperator，这个玻色子算符的实部。
 
     .. py:method:: singlet()
 
@@ -161,6 +175,13 @@ mindquantum.core.operators.QubitOperator
 
         返回玻色子算符中玻色子串的数量。
 
+    .. py:method:: split()
+
+        将算符的系数跟算符本身分开。
+
+        返回：
+            List[List[ParameterResolver, QubitOperator]]，分裂后的结果。
+
     .. py:method:: subs(params_value: typing.Union[typing.Dict[str, numbers.Number], ParameterResolver])
 
         将玻色子中的变量换成具体的参数值。
@@ -172,28 +193,6 @@ mindquantum.core.operators.QubitOperator
         :property:
 
         返回玻色子算符中的玻色子串。
-
-    .. py:method:: matrix(n_qubits: int = None)
-
-        将此玻色子算符转换为csr_matrix。
-
-        参数：
-            - **n_qubits** (int) - 结果矩阵的量子比特数目。如果是None，则该值将是最大局域量子比特数。默认值： ``None``。
-
-    .. py:method:: real
-        :property:
-
-        获得系数的实部。
-
-        返回：
-            QubitOperator，这个玻色子算符的实部。
-
-    .. py:method:: split()
-
-        将算符的系数跟算符本身分开。
-
-        返回：
-            List[List[ParameterResolver, QubitOperator]]，分裂后的结果。
 
     .. py:method:: to_openfermion()
 

@@ -148,7 +148,7 @@ def _transform2pauli(fermion_ansatz):
     out = OrderedDict()
     for i in fermion_ansatz:
         qubit_generator = Transform(i[0]).jordan_wigner()
-        if qubit_generator.terms != {}:
+        if qubit_generator.terms:
             for key, term in qubit_generator.terms.items():
                 if key not in out:
                     out[key] = OrderedDict({i[1]: float(term.imag)})
@@ -206,7 +206,7 @@ def generate_uccsd(molecular, threshold=0):
     inter_ops = InteractionOperator(*ham_of.n_body_tensors.values())
     ham_hiq = FermionOperator(inter_ops)
     qubit_hamiltonian = Transform(ham_hiq).jordan_wigner()
-    qubit_hamiltonian.compress()
+    qubit_hamiltonian = qubit_hamiltonian.compress()
 
     parameters_name = list(parameters.keys())
     initial_amplitudes = [parameters[i] for i in parameters_name]

@@ -1,15 +1,15 @@
 mindquantum.core.operators.FermionOperator
 ===========================================
 
-.. py:class:: mindquantum.core.operators.FermionOperator(terms=None, coefficient=1.0, internal=False)
+.. py:class:: mindquantum.core.operators.FermionOperator(terms: typing.Union[str, "FermionOperator"] = None, coefficient: PRConvertible = 1.0, internal: bool = False)
 
-    费米子算子，如FermionOperator('4^ 3 9 3^')表示 :math:`a_4^\dagger a_3 a_9 a_3^\dagger`。
+    费米子算子，如FermionOperator('9 4^ 3 3^')表示 :math:`a_9 a_4^\dagger a_3 a_3^\dagger`。
     这些是描述费米子系统的基本运算符，如分子系统。
     FermionOperator遵循反交换关系。
 
     参数：
-        - **terms** (str) - 费米子算符的输入项。默认值： ``None``。
-        - **coefficient** (Union[numbers.Number, str, ParameterResolver]) - 单费米子算符的系数。默认值： ``1.0``。
+        - **terms** (Union[str, ParameterResolver]) - 费米子算符的输入项。默认值： ``None``。
+        - **coefficient** (Union[numbers.Number, str, Dict[str, numbers.Number], ParameterResolver]) - 单费米子算符的系数。默认值： ``1.0``。
         - **internal** (bool) - 第一个参数是否为费米子对象的内部c++类。默认值： ``False``。
 
     .. py:method:: astype(dtype)
@@ -69,13 +69,6 @@ mindquantum.core.operators.FermionOperator
         返回：
             JSON(str)，FermionOperator的JSON字符串。
 
-    .. py:method:: get_coeff(term)
-
-        获取给定项的系数。
-
-        参数：
-            - **term** (List[Tuple[int, Union[int, str]]]) - 想要获取系数的项。
-
     .. py:method:: from_openfermion(of_ops)
         :staticmethod:
 
@@ -87,12 +80,27 @@ mindquantum.core.operators.FermionOperator
         返回：
             FermionOperator，mindquantum中的费米子算符。
 
+    .. py:method:: get_coeff(term)
+
+        获取给定项的系数。
+
+        参数：
+            - **term** (List[Tuple[int, Union[int, str]]]) - 想要获取系数的项。
+
     .. py:method:: hermitian()
 
         返回费米子运算符的厄米共轭。
 
         返回：
             FermionOperator，原费米子的厄米共轭。
+
+    .. py:method:: imag
+        :property:
+
+        获得系数的虚部。
+
+        返回：
+            FermionOperator，这个FermionOperator的虚部。
 
     .. py:method:: is_complex
         :property:
@@ -106,51 +114,6 @@ mindquantum.core.operators.FermionOperator
 
         返回：
             bool，当前费米子是否只有一项。
-
-    .. py:method:: singlet()
-
-        将只有一个费米子串的费米子算符分裂成只有一个费米子的费米子算符。
-
-        返回：
-            List[FermionOperator]，只有一个费米子的费米子算符。
-
-        异常：
-            - **RuntimeError** - 如果该费米子算符拥有不止一个费米子串。
-
-    .. py:method:: singlet_coeff()
-
-        当费米子算符只有一个费米子串时，返回该费米子串的系数。
-
-        返回：
-            ParameterResolver，唯一费米子串的系数。
-
-        异常：
-            - **RuntimeError** - 如果该费米子算符拥有不止一个费米子串。
-
-    .. py:method:: size
-        :property:
-
-        返回费米子算符中费米子串的数量。
-
-    .. py:method:: subs(params_value: typing.Union[typing.Dict[str, numbers.Number], ParameterResolver])
-
-        将费米子中的变量换成具体的参数值。
-
-        参数：
-            - **params_value** (Union[Dict[str, numbers.Number], ParameterResolver]) - 系数变量的参数。
-
-    .. py:method:: terms
-        :property:
-
-        返回费米子算符中的费米子串。
-
-    .. py:method:: imag
-        :property:
-
-        获得系数的虚部。
-
-        返回：
-            FermionOperator，这个FermionOperator的虚部。
 
     .. py:method:: loads(strs: str)
         :staticmethod:
@@ -190,12 +153,49 @@ mindquantum.core.operators.FermionOperator
         返回：
             FermionOperator，这个FermionOperator的实部。
 
+    .. py:method:: singlet()
+
+        将只有一个费米子串的费米子算符分裂成只有一个费米子的费米子算符。
+
+        返回：
+            List[FermionOperator]，只有一个费米子的费米子算符。
+
+        异常：
+            - **RuntimeError** - 如果该费米子算符拥有不止一个费米子串。
+
+    .. py:method:: singlet_coeff()
+
+        当费米子算符只有一个费米子串时，返回该费米子串的系数。
+
+        返回：
+            ParameterResolver，唯一费米子串的系数。
+
+        异常：
+            - **RuntimeError** - 如果该费米子算符拥有不止一个费米子串。
+
+    .. py:method:: size
+        :property:
+
+        返回费米子算符中费米子串的数量。
+
     .. py:method:: split()
 
         将算符的系数跟算符本身分开。
 
         返回：
             List[List[ParameterResolver, FermionOperator]]，分裂后的结果。
+
+    .. py:method:: subs(params_value: typing.Union[typing.Dict[str, numbers.Number], ParameterResolver])
+
+        将费米子中的变量换成具体的参数值。
+
+        参数：
+            - **params_value** (Union[Dict[str, numbers.Number], ParameterResolver]) - 系数变量的参数。
+
+    .. py:method:: terms
+        :property:
+
+        返回费米子算符中的费米子串。
 
     .. py:method:: to_openfermion()
 

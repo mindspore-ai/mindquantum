@@ -27,8 +27,7 @@ def circuit_equal_test(gate, decompose_circ):
     require two circuits are equal.
     """
     orig_circ = Circuit() + gate
-    # TODO(xusheng):Need to check why the accuracy decreased.
-    assert np.allclose(orig_circ.matrix(), decompose_circ.matrix(), atol=1e-5)
+    assert np.allclose(orig_circ.matrix(), decompose_circ.matrix())
 
 
 @pytest.mark.level0

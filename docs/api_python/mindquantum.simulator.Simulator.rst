@@ -19,14 +19,6 @@ mindquantum.simulator.Simulator
         - **ValueError** - 如果 `n_qubits` 为负数。
         - **ValueError** - 如果 `seed` 小于0或大于 :math:`2^23 - 1` 。
 
-    .. py:method:: astype(dtype, seed=None)
-
-        将模拟器转化给定的数据类型。
-
-        参数：
-            - **dtype** (mindquantum.dtype) - 新模拟器的数据类型。
-            - **seed** (int) - 新模拟器的随机数种子。默认值： ``None``。
-
     .. py:method:: apply_circuit(circuit, pr=None)
 
         在模拟器上应用量子线路。
@@ -65,6 +57,17 @@ mindquantum.simulator.Simulator
 
         参数：
             - **hamiltonian** (Hamiltonian) - 想应用的hamiltonian。
+
+    .. py:method:: astype(dtype, seed=None)
+
+        将模拟器转化给定的数据类型。
+
+        .. note::
+            量子模拟器中的状态将从原始模拟器中复制。
+
+        参数：
+            - **dtype** (mindquantum.dtype) - 新模拟器的数据类型。
+            - **seed** (int) - 新模拟器的随机数种子。默认值： ``None``。
 
     .. py:method:: copy()
 
@@ -127,7 +130,7 @@ mindquantum.simulator.Simulator
             numpy.ndarray，当前量子态。
 
     .. py:method:: n_qubits()
-
+        :property:
         获取模拟器的量子比特数。
 
         返回：

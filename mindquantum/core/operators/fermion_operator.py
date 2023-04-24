@@ -238,29 +238,22 @@ class FermionOperator(FermionOperator_):
         for coeff, term in self.split():
             yield term * coeff
 
-    def astype(self, dtype) -> "FermionOperator":
+    def __pow__(self, frac) -> "FermionOperator":
+        """Power of FermionOperator."""
+        out = self
+        for _ in range(frac - 1):
+            out *= self
+        return self
+
+    @property
+    def constant(self) -> ParameterResolver:
         """
-        Convert to different data type.
-
-        Note:
-            Converting a complex type FermionOperator to real type will ignore the image part of coefficient.
-
-        Args:
-            dtype (mindquantum.dtype): new data type of fermion operator.
+        Return the coefficient of the identity fermion string.
 
         Returns:
-            FermionOperator, new fermion operator with given data type.
-
-        Examples:
-            >>> from mindquantum.core.operators import FermionOperator
-            >>> import mindquantum as mq
-            >>> f = FermionOperator('0^', 2 + 3j)
-            >>> f.dtype
-            mindquantum.complex128
-            >>> f.astype(mq.float64)
-            2 [0^]
+            ParameterResolver, the coefficient of the identity fermion string.
         """
-        return FermionOperator(FermionOperator_.astype(self, dtype))
+        return ParameterResolver(FermionOperator_.get_coeff(self, []), internal=True)
 
     @property
     def dtype(self):
@@ -284,6 +277,26 @@ class FermionOperator(FermionOperator_):
         return FermionOperator(FermionOperator_.imag(self))
 
     @property
+    def is_complex(self) -> bool:
+        """Return whether the FermionOperator instance is currently using complex coefficients."""
+        return self.dtype in (mq.complex128, mq.complex64)
+
+    @property
+    def is_singlet(self) -> bool:
+        """
+        To verify whether this operator has only one term.
+
+        Returns:
+            bool, whether this operator has only one term.
+        """
+        return FermionOperator_.is_singlet(self)
+
+    @property
+    def parameterized(self) -> bool:
+        """Check whether this FermionOperator is parameterized."""
+        return FermionOperator_.parameterized(self)
+
+    @property
     def real(self) -> "FermionOperator":
         """
         Convert the coefficient to its real part.
@@ -301,6 +314,11 @@ class FermionOperator(FermionOperator_):
         return FermionOperator(FermionOperator_.real(self))
 
     @property
+    def size(self) -> int:
+        """Return the number of terms of this FermionOperator."""
+        return len(self)
+
+    @property
     def terms(self) -> typing.Dict[typing.Tuple[int, int], ParameterResolver]:
         """Get the terms of a FermionOperator."""
         origin_dict = FermionOperator_.get_terms(self)
@@ -310,118 +328,6 @@ class FermionOperator(FermionOperator_):
             for idx, word in key:
                 out_key.append((idx, 0 if word == f_term_value.a else 1))
             out[tuple(out_key)] = ParameterResolver(value, internal=True)
-        return out
-
-    @property
-    def constant(self) -> ParameterResolver:
-        """
-        Return the coefficient of the identity fermion string.
-
-        Returns:
-            ParameterResolver, the coefficient of the identity fermion string.
-        """
-        return ParameterResolver(FermionOperator_.get_coeff(self, []), internal=True)
-
-    @constant.setter
-    def constant(self, value):
-        """Set the coefficient of the Identity term."""
-        FermionOperator_.set_coeff(self, [], ParameterResolver(value))
-
-    def cast_complex(self) -> "FermionOperator":
-        """Cast a FermionOperator into its complex equivalent."""
-        new_type = self.dtype
-        if new_type == mq.float32:
-            new_type = mq.complex64
-        elif new_type == mq.float64:
-            new_type = mq.complex128
-        return self.astype(new_type)
-
-    def count_qubits(self) -> int:
-        """
-        Calculate the number of qubits on which operator acts before removing the unused qubit.
-
-        Returns:
-            int, the qubits number before remove unused qubit.
-
-        Examples:
-            >>> from mindquantum.core.operators import FermionOperator
-            >>> a = FermionOperator("0^ 3")
-            >>> a.count_qubits()
-            4
-        """
-        return FermionOperator_.count_qubits(self)
-
-    def get_coeff(self, term) -> ParameterResolver:
-        """
-        Get coefficient of given term.
-
-        Args:
-            term (List[Tuple[int, Union[int, str]]]): the term you want get coefficient.
-
-        Examples:
-            >>> from mindquantum.core.operators import FermionOperator
-            >>> f = FermionOperator('0^ 1', 1.2)
-            >>> f.get_coeff([(1, ''), (0, '^')])
-            ParameterResolver(dtype: float64, const: -1.200000)
-            >>> f.get_coeff([(1, 0), (0, 1)])
-            ParameterResolver(dtype: float64, const: -1.200000)
-        """
-        return ParameterResolver(FermionOperator_.get_coeff(self, [(i, TermValue[j]) for i, j in term]), internal=True)
-
-    def hermitian(self) -> "FermionOperator":
-        """
-        Get the hermitian of a FermionOperator.
-
-        Returns:
-            FermionOperator, The hermitian of this FermionOperator.
-
-        Examples:
-            >>> from mindquantum.core.operators import FermionOperator
-            >>> a = FermionOperator("0^ 1", {"a": 1 + 2j})
-            >>> a.hermitian()
-            (-1 + 2j)*a [1 0^]
-        """
-        return FermionOperator(FermionOperator_.hermitian_conjugated(self), internal=True)
-
-    def split(self) -> typing.Generator[ParameterResolver, "FermionOperator", None]:
-        """
-        Split the coefficient and the operator.
-
-        Returns:
-            List[List[ParameterResolver, FermionOperator]], the split result.
-
-        Examples:
-            >>> from mindquantum.core.operators import FermionOperator
-            >>> a = FermionOperator('0', 'a') + FermionOperator('1^', 1.2)
-            >>> for i, j in a.split():
-            ...     print(i, j)
-            a, 1 [0]
-            1.2, 1 [1^]
-        """
-        for i, j in FermionOperator_.split(self):
-            yield ParameterResolver(i, internal=True), FermionOperator(j, internal=True)
-
-    @property
-    def parameterized(self) -> bool:
-        """Check whether this FermionOperator is parameterized."""
-        return FermionOperator_.parameterized(self)
-
-    def to_openfermion(self):
-        """Convert a FermionOperator openfermion format."""
-        # pylint: disable=import-outside-toplevel
-
-        try:
-            from openfermion import FermionOperator as OFFermionOperator
-        except (ImportError, AttributeError):
-            _require_package("openfermion", "1.5.0")
-        if self.parameterized:
-            raise ValueError("Cannot not FermionOperator to OpenFermion format.")
-
-        terms = {}
-        for i, j in self.terms.items():
-            terms[i] = j.const
-        out = OFFermionOperator()
-        out.terms = terms
         return out
 
     @staticmethod
@@ -449,114 +355,6 @@ class FermionOperator(FermionOperator_):
             out += FermionOperator(' '.join([f"{i}{'' if j ==0 else '^'}" for i, j in term]), ParameterResolver(v))
         return out
 
-    @property
-    def size(self) -> int:
-        """Return the number of terms of this FermionOperator."""
-        return len(self)
-
-    @property
-    def is_singlet(self) -> bool:
-        """
-        To verify whether this operator has only one term.
-
-        Returns:
-            bool, whether this operator has only one term.
-        """
-        return FermionOperator_.is_singlet(self)
-
-    @property
-    def is_complex(self) -> bool:
-        """Return whether the FermionOperator instance is currently using complex coefficients."""
-        return self.dtype in (mq.complex128, mq.complex64)
-
-    def singlet_coeff(self) -> ParameterResolver:
-        """
-        Get the coefficient of this operator, if the operator has only one term.
-
-        Returns:
-            ParameterResolver, the coefficient of this single string operator.
-
-        Raises:
-            RuntimeError: if the size of terms is not equal to 1.
-
-        Examples:
-            >>> from mindquantum.core.operators import FermionOperator
-            >>> ops = FermionOperator("1^ 2", "a")
-            >>> print(ops)
-            -a [2 1^]
-            >>> print(ops.singlet_coeff())
-            -a
-        """
-        return ParameterResolver(FermionOperator_.singlet_coeff(self), internal=True)
-
-    def singlet(self) -> typing.List["FermionOperator"]:
-        """
-        Split the single string operator into every word.
-
-        Returns:
-            List[FermionOperator], The split word of the string.
-
-        Raises:
-            RuntimeError: if the size of terms is not equal to 1.
-
-        Examples:
-            >>> from mindquantum.core.operators import FermionOperator
-            >>> ops = FermionOperator("1^ 2", 1)
-            >>> print(ops.singlet())
-            [1 [2], 1 [1^]]
-        """
-        return [FermionOperator(i, internal=True) for i in FermionOperator_.singlet(self)]
-
-    def subs(
-        self, params_value: typing.Union[typing.Dict[str, numbers.Number], ParameterResolver]
-    ) -> "FermionOperator":
-        """
-        Replace the symbolical representation with the corresponding value.
-
-        Args:
-            params_value (Union[Dict[str, numbers.Number], ParameterResolver]): the value of variable in coefficient.
-
-        Examples:
-            >>> from mindquantum.core.operators import FermionOperator
-            >>> from mindquantum.core.parameterresolver import ParameterResolver
-            >>> f = FermionOperator('0^', ParameterResolver({'a': 2.0}, 3.0))
-            >>> f
-            2*a + 3 [0^]
-            >>> f.subs({'a': 1.5})
-            6 [0^]
-        """
-        if not isinstance(params_value, ParameterResolver):
-            params_value = ParameterResolver(params_value)
-        out = copy.copy(self)
-        FermionOperator_.subs(out, params_value)
-        return out
-
-    def dumps(self, indent: int = 4) -> str:
-        r"""
-        Dump a FermionOperator into JSON(JavaScript Object Notation).
-
-        Args:
-            indent (int): Then JSON array elements and object members will be
-                pretty-printed with that indent level. Default: ``4``.
-
-        Returns:
-            JSON (str), the JSON strings of this FermionOperator
-
-        Examples:
-            >>> from mindquantum.core.operators import FermionOperator
-            >>> f = FermionOperator('0', 1 + 2j) + FermionOperator('0^', 'a')
-            >>> len(f.dumps())
-            581
-        """
-        out = {}
-        out['dtype'] = str(self.dtype)
-        out['terms'] = []
-        out['values'] = []
-        for k, v in self.terms.items():
-            out["values"].append(v.dumps(indent))
-            out["terms"].append(" ".join(f"{i}{'^' if j else ''}" for i, j in k))
-        return json.dumps(out, indent=indent)
-
     @staticmethod
     def loads(strs: str) -> "FermionOperator":
         """
@@ -581,12 +379,38 @@ class FermionOperator(FermionOperator_):
             out += FermionOperator(t, ParameterResolver.loads(c))
         return out
 
-    def __pow__(self, frac) -> "FermionOperator":
-        """Power of FermionOperator."""
-        out = self
-        for _ in range(frac - 1):
-            out *= self
-        return self
+    def astype(self, dtype) -> "FermionOperator":
+        """
+        Convert to different data type.
+
+        Note:
+            Converting a complex type FermionOperator to real type will ignore the image part of coefficient.
+
+        Args:
+            dtype (mindquantum.dtype): new data type of fermion operator.
+
+        Returns:
+            FermionOperator, new fermion operator with given data type.
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> import mindquantum as mq
+            >>> f = FermionOperator('0^', 2 + 3j)
+            >>> f.dtype
+            mindquantum.complex128
+            >>> f.astype(mq.float64)
+            2 [0^]
+        """
+        return FermionOperator(FermionOperator_.astype(self, dtype))
+
+    def cast_complex(self) -> "FermionOperator":
+        """Cast a FermionOperator into its complex equivalent."""
+        new_type = self.dtype
+        if new_type == mq.float32:
+            new_type = mq.complex64
+        elif new_type == mq.float64:
+            new_type = mq.complex128
+        return self.astype(new_type)
 
     def compress(self, abs_tol=EQ_TOLERANCE) -> "FermionOperator":
         """
@@ -620,22 +444,83 @@ class FermionOperator(FermionOperator_):
                 out += FermionOperator(" ".join(f"{i}{'^' if j else ''}" for i, j in k), v)
         return out
 
-    def normal_ordered(self) -> "FermionOperator":
+    @constant.setter
+    def constant(self, value):
+        """Set the coefficient of the Identity term."""
+        FermionOperator_.set_coeff(self, [], ParameterResolver(value))
+
+    def count_qubits(self) -> int:
         """
-        Return the normal ordered form of the Fermion Operator.
+        Calculate the number of qubits on which operator acts before removing the unused qubit.
 
         Returns:
-            FermionOperator, the normal ordered FermionOperator.
+            int, the qubits number before remove unused qubit.
 
         Examples:
             >>> from mindquantum.core.operators import FermionOperator
-            >>> origin = FermionOperator('0 1^')
-            >>> origin
-            1.0 [0 1^]
-                >>> origin.normal_ordered()
-            -1.0 [1^ 0]
+            >>> a = FermionOperator("0^ 3")
+            >>> a.count_qubits()
+            4
         """
-        return FermionOperator(FermionOperator_.normal_ordered(self), internal=True)
+        return FermionOperator_.count_qubits(self)
+
+    def dumps(self, indent: int = 4) -> str:
+        r"""
+        Dump a FermionOperator into JSON(JavaScript Object Notation).
+
+        Args:
+            indent (int): Then JSON array elements and object members will be
+                pretty-printed with that indent level. Default: ``4``.
+
+        Returns:
+            JSON (str), the JSON strings of this FermionOperator
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> f = FermionOperator('0', 1 + 2j) + FermionOperator('0^', 'a')
+            >>> len(f.dumps())
+            581
+        """
+        out = {}
+        out['dtype'] = str(self.dtype)
+        out['terms'] = []
+        out['values'] = []
+        for k, v in self.terms.items():
+            out["values"].append(v.dumps(indent))
+            out["terms"].append(" ".join(f"{i}{'^' if j else ''}" for i, j in k))
+        return json.dumps(out, indent=indent)
+
+    def get_coeff(self, term) -> ParameterResolver:
+        """
+        Get coefficient of given term.
+
+        Args:
+            term (List[Tuple[int, Union[int, str]]]): the term you want get coefficient.
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> f = FermionOperator('0^ 1', 1.2)
+            >>> f.get_coeff([(1, ''), (0, '^')])
+            ParameterResolver(dtype: float64, const: -1.200000)
+            >>> f.get_coeff([(1, 0), (0, 1)])
+            ParameterResolver(dtype: float64, const: -1.200000)
+        """
+        return ParameterResolver(FermionOperator_.get_coeff(self, [(i, TermValue[j]) for i, j in term]), internal=True)
+
+    def hermitian(self) -> "FermionOperator":
+        """
+        Get the hermitian of a FermionOperator.
+
+        Returns:
+            FermionOperator, The hermitian of this FermionOperator.
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> a = FermionOperator("0^ 1", {"a": 1 + 2j})
+            >>> a.hermitian()
+            (-1 + 2j)*a [1 0^]
+        """
+        return FermionOperator(FermionOperator_.hermitian_conjugated(self), internal=True)
 
     def matrix(self, n_qubits: int = None):  # pylint: disable=too-many-branches
         """
@@ -681,4 +566,119 @@ class FermionOperator(FermionOperator_):
                         else:
                             tmp *= _single_fermion_word(gate[0], gate[1], n_qubits, np_type)
                 out += tmp * coeff
+        return out
+
+    def normal_ordered(self) -> "FermionOperator":
+        """
+        Return the normal ordered form of the Fermion Operator.
+
+        Returns:
+            FermionOperator, the normal ordered FermionOperator.
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> origin = FermionOperator('0 1^')
+            >>> origin
+            1.0 [0 1^]
+                >>> origin.normal_ordered()
+            -1.0 [1^ 0]
+        """
+        return FermionOperator(FermionOperator_.normal_ordered(self), internal=True)
+
+    def singlet_coeff(self) -> ParameterResolver:
+        """
+        Get the coefficient of this operator, if the operator has only one term.
+
+        Returns:
+            ParameterResolver, the coefficient of this single string operator.
+
+        Raises:
+            RuntimeError: if the size of terms is not equal to 1.
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> ops = FermionOperator("1^ 2", "a")
+            >>> print(ops)
+            -a [2 1^]
+            >>> print(ops.singlet_coeff())
+            -a
+        """
+        return ParameterResolver(FermionOperator_.singlet_coeff(self), internal=True)
+
+    def singlet(self) -> typing.List["FermionOperator"]:
+        """
+        Split the single string operator into every word.
+
+        Returns:
+            List[FermionOperator], The split word of the string.
+
+        Raises:
+            RuntimeError: if the size of terms is not equal to 1.
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> ops = FermionOperator("1^ 2", 1)
+            >>> print(ops.singlet())
+            [1 [2], 1 [1^]]
+        """
+        return [FermionOperator(i, internal=True) for i in FermionOperator_.singlet(self)]
+
+    def split(self) -> typing.Generator[ParameterResolver, "FermionOperator", None]:
+        """
+        Split the coefficient and the operator.
+
+        Returns:
+            List[List[ParameterResolver, FermionOperator]], the split result.
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> a = FermionOperator('0', 'a') + FermionOperator('1^', 1.2)
+            >>> for i, j in a.split():
+            ...     print(i, j)
+            a, 1 [0]
+            1.2, 1 [1^]
+        """
+        for i, j in FermionOperator_.split(self):
+            yield ParameterResolver(i, internal=True), FermionOperator(j, internal=True)
+
+    def subs(
+        self, params_value: typing.Union[typing.Dict[str, numbers.Number], ParameterResolver]
+    ) -> "FermionOperator":
+        """
+        Replace the symbolical representation with the corresponding value.
+
+        Args:
+            params_value (Union[Dict[str, numbers.Number], ParameterResolver]): the value of variable in coefficient.
+
+        Examples:
+            >>> from mindquantum.core.operators import FermionOperator
+            >>> from mindquantum.core.parameterresolver import ParameterResolver
+            >>> f = FermionOperator('0^', ParameterResolver({'a': 2.0}, 3.0))
+            >>> f
+            2*a + 3 [0^]
+            >>> f.subs({'a': 1.5})
+            6 [0^]
+        """
+        if not isinstance(params_value, ParameterResolver):
+            params_value = ParameterResolver(params_value)
+        out = copy.copy(self)
+        FermionOperator_.subs(out, params_value)
+        return out
+
+    def to_openfermion(self):
+        """Convert a FermionOperator openfermion format."""
+        # pylint: disable=import-outside-toplevel
+
+        try:
+            from openfermion import FermionOperator as OFFermionOperator
+        except (ImportError, AttributeError):
+            _require_package("openfermion", "1.5.0")
+        if self.parameterized:
+            raise ValueError("Cannot not FermionOperator to OpenFermion format.")
+
+        terms = {}
+        for i, j in self.terms.items():
+            terms[i] = j.const
+        out = OFFermionOperator()
+        out.terms = terms
         return out

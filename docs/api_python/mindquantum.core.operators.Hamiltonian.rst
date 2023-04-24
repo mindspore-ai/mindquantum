@@ -6,7 +6,7 @@ mindquantum.core.operators.Hamiltonian
     QubitOperator哈密顿量的包装器。
 
     参数：
-        - **hamiltonian** (QubitOperator) - 泡利量子比特算子或者一个系数矩阵。
+        - **hamiltonian** (Union[QubitOperator, scipy.sparse]) - 泡利量子比特算子或者一个系数矩阵。
         - **dtype** (mindquantum.dtype) - 哈密顿量的数据类型。默认值： ``None``。
 
     .. py:method:: astype(dtype)

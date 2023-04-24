@@ -1229,7 +1229,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Apply noises on each gate.
 
         Args:
-            noise_gate (NoiseGate): The NoiseGate you want to apply. Default: ``AmplitudeDampingChannel``(0.001).
+            noise_gate (NoiseGate): The NoiseGate you want to apply. Default: ``AmplitudeDampingChannel(0.001)``.
             also_ctrl (bool): Whether add NoiseGate on control qubits. Default: ``False``.
         """
         circ = Circuit()

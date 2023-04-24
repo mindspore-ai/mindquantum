@@ -13,6 +13,7 @@
 //   limitations under the License.
 
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 #include <pybind11/attr.h>
@@ -21,6 +22,7 @@
 #include <pybind11/complex.h>
 #include <pybind11/detail/common.h>
 #include <pybind11/functional.h>
+#include <pybind11/numpy.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -31,6 +33,7 @@
 #include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/matrix.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
+#include "math/tensor/ops_cpu/memory_operator.hpp"
 #include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
 
@@ -52,20 +55,17 @@ using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
         .def(double() op py::self)                                                                                     \
         .def(std::complex<float>() op py::self)                                                                        \
         .def(std::complex<double>() op py::self)
-
+template <typename T>
+tensor::Tensor from_numpy(const py::array_t<T> &arr) {
+    py::buffer_info buf = arr.request();
+    if (buf.ndim != 1) {
+        throw std::runtime_error("Number of dimensions must be one.");
+    }
+    return tensor::ops::cpu::copy<tensor::to_dtype_v<T>>(buf.ptr, buf.size);
+}
 void BindTensor(py::module &module) {  // NOLINT(runtime/references)
     py::class_<tensor::Tensor, std::shared_ptr<tensor::Tensor>>(module, "Tensor", py::buffer_protocol())
         .def(py::init<>())
-        .def(py::init<float, tensor::TDtype>(), "data"_a, "dtype"_a = tensor::TDtype::Float32)
-        .def(py::init<double, tensor::TDtype>(), "data"_a, "dtype"_a = tensor::TDtype::Float64)
-        .def(py::init<const std::complex<float> &, tensor::TDtype>(), "data"_a, "dtype"_a = tensor::TDtype::Complex64)
-        .def(py::init<const std::complex<double> &, tensor::TDtype>(), "data"_a, "dtype"_a = tensor::TDtype::Complex128)
-        .def(py::init<const std::vector<float> &, tensor::TDtype>(), "data"_a, "dtype"_a = tensor::TDtype::Float64)
-        .def(py::init<const std::vector<double> &, tensor::TDtype>(), "data"_a, "dtype"_a = tensor::TDtype::Float32)
-        .def(py::init<const std::vector<std::complex<float>> &, tensor::TDtype>(), "data"_a,
-             "dtype"_a = tensor::TDtype::Complex64)
-        .def(py::init<const std::vector<std::complex<double>> &, tensor::TDtype>(), "data"_a,
-             "dtype"_a = tensor::TDtype::Complex128)
         .def("astype", &tensor::Tensor::astype, "dtype"_a)
         .def_readonly("dtype", &tensor::Tensor::dtype)
         .def_readonly("size", &tensor::Tensor::dim)
@@ -101,7 +101,10 @@ void BindTensor(py::module &module) {  // NOLINT(runtime/references)
                 {tensor::bit_size(t.dtype)});
             // clang-format on
         });
-
+    module.def("from_numpy", &from_numpy<float>, "data"_a);
+    module.def("from_numpy", &from_numpy<double>, "data"_a);
+    module.def("from_numpy", &from_numpy<std::complex<float>>, "data"_a);
+    module.def("from_numpy", &from_numpy<std::complex<double>>, "data"_a);
     module.def("ones", &tensor::ops::ones, "len"_a, "dtype"_a = tensor::TDtype::Float64,
                "device"_a = tensor::TDevice::CPU);
     module.def("zeros", &tensor::ops::zeros, "len"_a, "dtype"_a = tensor::TDtype::Float64,
