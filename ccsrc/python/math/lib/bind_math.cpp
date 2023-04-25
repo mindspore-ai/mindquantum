@@ -37,6 +37,8 @@
 #include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
 
+#include "python/python_tensor.hpp"
+
 namespace py = pybind11;
 using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
 #define BIND_TENSOR_OPS(op, ope)                                                                                       \
@@ -55,14 +57,7 @@ using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
         .def(double() op py::self)                                                                                     \
         .def(std::complex<float>() op py::self)                                                                        \
         .def(std::complex<double>() op py::self)
-template <typename T>
-tensor::Tensor from_numpy(const py::array_t<T> &arr) {
-    py::buffer_info buf = arr.request();
-    if (buf.ndim != 1) {
-        throw std::runtime_error("Number of dimensions must be one.");
-    }
-    return tensor::ops::cpu::copy<tensor::to_dtype_v<T>>(buf.ptr, buf.size);
-}
+
 void BindTensor(py::module &module) {  // NOLINT(runtime/references)
     py::class_<tensor::Tensor, std::shared_ptr<tensor::Tensor>>(module, "Tensor", py::buffer_protocol())
         .def(py::init<>())
