@@ -18,3 +18,7 @@ output
 .ipynb_checkpoints
 somas_meta
 analyze_fail.dat
+.cache
+venv
+build.conf
+cmake-build-debug
