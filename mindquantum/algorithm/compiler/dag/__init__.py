@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""MindQuantum compiler related modules."""
+"""Dag circuit."""
 
-from . import dag, decompose, rules
+from .dag import DAGCircuit, connect_two_node

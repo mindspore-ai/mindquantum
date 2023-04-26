@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""MindQuantum compiler related modules."""
-
-from . import dag, decompose, rules
+"""Compiler rules."""
+from .basic_decompose import BasicDecompose
+from .basic_rule import BasicCompilerRule, SequentialCompiler
+from .gate_replacer import CXToCZ, CZToCX, GateReplacer
+from .neighbor_canceler import NeighborCancler
