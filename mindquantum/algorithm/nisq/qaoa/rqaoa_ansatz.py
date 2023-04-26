@@ -31,8 +31,8 @@ def _check_rqaoa_ham(ham):
     _check_input_type('hamiltonian', QubitOperator, ham)
     for h in ham:
         _check_input_type('hamiltonian', QubitOperator, h)
-        # 对高次项的消元是否有益仍待研究
-        # 暂时限制为仅包含二次项的哈密顿量
+        # furhter investigation is needed to answer whether reducing variable on higher order terms is benefitial
+        # therefore we focus on quadratic Hamiltonians currently
         if h.count_gates() not in [2, 0]:
             raise ValueError("Only quadratic hamiltonian is supported in RQAOA.")
 
@@ -73,32 +73,32 @@ class RQAOAAnsatz(QAOAAnsatz):
         >>> from mindquantum.core.operators import QubitOperator
         >>> ham = QubitOperator('Z0 Z1', 2) + QubitOperator('Z2 Z1', 1) + QubitOperator('Z0 Z2', 0.5)
         >>> ra = RQAOAAnsatz(ham, 1)
-        >>> ra.all_variables                # 所有变量(泡利算符形式)
+        >>> ra.all_variables                # All parameters(as Pauli Operators)
         [(0, 'Z'), (1, 'Z'), (2, 'Z')]
-        >>> hams = ra.m_hamiltonians        # 测量M所需的哈密顿量
+        >>> hams = ra.m_hamiltonians        # Hamiltonian for Measuring M
         >>> hams
         [1.0 [Z0 Z1] , 1.0 [Z1 Z2] , 1.0 [Z0 Z2] ]
-        >>> n, p, m = ra.get_subproblem()   # 将哈密顿量转换为优化问题
-        >>> n     # 变量数量
+        >>> n, p, m = ra.get_subproblem()   # convert the Hamiltonian to optimization problem
+        >>> n     # number of variables
         3
-        >>> p     # 优化问题([变量索引], 权重)
+        >>> p     # optimzation problem([variable index], weight)
         [((0, 1), 2), ((1, 2), 1), ((0, 2), 0.5)]
-        >>> m     # 变量映射关系{索引:泡利算符}
+        >>> m     # variable mapping relation {index: Pauli operator}
         {0: (0, 'Z'), 1: (1, 'Z'), 2: (2, 'Z')}
-        >>> f = ((1, 'Z'), (2, 'Z'))     # 约束变量
-        >>> v = f[1]                     # 待消除变量
-        >>> sigma = -1                   # 约束关系
-        >>> ra.eliminate_single_variable(f, sigma, v) # 消除变量
-        >>> ra.hamiltonian               # 哈密顿量
+        >>> f = ((1, 'Z'), (2, 'Z'))     # reduce variable
+        >>> v = f[1]                     # variable to reduce
+        >>> sigma = -1                   # reduce relation
+        >>> ra.eliminate_single_variable(f, sigma, v) # reduce variable
+        >>> ra.hamiltonian               # Hamiltonian
         -1 [] +
         1.5 [Z0 Z1]
-        >>> ra.restricted_set            # 查看已有约束集
+        >>> ra.restricted_set            # view the restriced set
         [((2, 'Z'), ((1, 'Z'),), -1)]
-        >>> ra.translate({(0, 'Z'):-1, (1, 'Z'):1})   # 根据子问题求解结果逆推原问题的解
+        >>> ra.translate({(0, 'Z'):-1, (1, 'Z'):1})   # recover original problem's soluton by the subproblem's solution
         {(0, 'Z'): -1, (1, 'Z'): 1, (2, 'Z'): -1}
         >>> ra = RQAOAAnsatz(ham, 1)
         >>> pr = {'beta_0': -0.4617199, 'alpha_0': 0.6284928}
-        >>> ra.eliminate_variable(pr, 1) # 消除变量
+        >>> ra.eliminate_variable(pr, 1) # reduce variable
         -- eliminated variable: Z1
         -- correlated variable: Z0
         -- σ: -1
@@ -111,11 +111,11 @@ class RQAOAAnsatz(QAOAAnsatz):
         >>> f = ((0, 'Y'), (1, 'Z'), (3, 'Z'))
         >>> v = (3, 'Z')
         >>> sigma = 1
-        >>> ra.eliminate_single_variable(f, sigma, v, True) # 允许一换多
+        >>> ra.eliminate_single_variable(f, sigma, v, True)
         -- eliminated variable: Z3
         -- correlated variable: Y0*Z1
         -- σ: 1
-        >>> ra.ham                                          # 请修改_check_rqaoa_ham以支持高次项
+        >>> ra.ham                                          # please modify _check_rqaoa_ham to support higher order terms
         0.5j [X0 Z1] +
         2 [Z0 Z1] +
         1 [Z1 Z2]
@@ -216,7 +216,7 @@ class RQAOAAnsatz(QAOAAnsatz):
             v = f[np.random.randint(0, 2)]
         # Invalid elimination
         if v not in self.all_variables:
-            return  # 退出防止污染约束集
+            return  # quit to avoid contaminating the restricted set
         for h in list(hams.keys()):
             if v in h:
                 new_ham += QubitOperator(tuple(set(h) ^ set(f)), sigma * hams[h])

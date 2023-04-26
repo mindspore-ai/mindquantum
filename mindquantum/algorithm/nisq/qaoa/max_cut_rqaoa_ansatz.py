@@ -152,16 +152,16 @@ class MaxCutRQAOAAnsatz(RQAOAAnsatz, MaxCut):
         >>> from import MaxCutRQAOAAnsatz
         >>> graph = [((0, 1), 1), ((1, 2), 1), ((0, 2), 0.5), ((2, 3), 2)]
         >>> mcra = MaxCutRQAOAAnsatz(graph, nc=3)
-        >>> mcra.ham                             # 哈密顿量
+        >>> mcra.ham                             # Hamiltonian
         1 [Z0 Z1] +
         0.5 [Z0 Z2] +
         1 [Z1 Z2] +
         2 [Z2 Z3]
-        >>> mcra.get_result()                    # 获取暴力枚举结果
+        >>> mcra.get_result()                    # get brute-force enumeration results
         (4, [[0, 2], [1, 3]])
-        >>> mcra.enum(graph, method=max)         # 直接调用暴力枚举对图进行求解
+        >>> mcra.enum(graph, method=max)         # apply brute-force enumeration method on the graph
         (4, [2, 0])
-        >>> mcra.get_cut_value(graph, [2, 0])    # 计算最大切割值
+        >>> mcra.get_cut_value(graph, [2, 0])    # calculate max-cut value of the graph
         4
         >>> from mindquantum.framework import MQAnsatzOnlyLayer
         >>> from mindquantum.simulator import Simulator
@@ -169,35 +169,35 @@ class MaxCutRQAOAAnsatz(RQAOAAnsatz, MaxCut):
         >>> import mindspore as ms
         >>> import numpy as np
         >>> ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
-        >>> circ = mcra.circuit                  # 当前哈密顿量对应QAOA线路
-        >>> ham = mcra.hamiltonian               # 当前哈密顿量
-        >>> sim = Simulator('mqvector', circ.n_qubits)                 # 创建模拟器，backend使用‘mqvector’
-        >>> grad_ops = sim.get_expectation_with_grad(ham, circ)        # 获取计算变分量子线路的期望值和梯度的算子
-        >>> net = MQAnsatzOnlyLayer(grad_ops)                          # 生成待训练的神经网络
-        >>> opti = nn.Adam(net.trainable_params(), learning_rate=0.05) # 设置针对网络中所有可训练参数、学习率为0.05的Adam优化器
-        >>> train_net = nn.TrainOneStepCell(net, opti)                 # 对神经网络进行一步训练
-        >>> e = [train_net() for i in range(30)]                       # 训练30次
-        >>> pr = dict(zip(circ.params_name, net.weight.asnumpy()))     # 获取线路参数
-        >>> mcra.one_step_rqaoa(pr, 1)           # 根据QAOA优化结果消除变量
+        >>> circ = mcra.circuit                  # QAOA circuit for the Hamiltonian
+        >>> ham = mcra.hamiltonian               # the Hamiltonian
+        >>> sim = Simulator('mqvector', circ.n_qubits)                 # create simulator with 'mqvector' backend
+        >>> grad_ops = sim.get_expectation_with_grad(ham, circ)        # get expectation and gradient operators for the variational quantum circuit
+        >>> net = MQAnsatzOnlyLayer(grad_ops)                          # generate ansatz to train
+        >>> opti = nn.Adam(net.trainable_params(), learning_rate=0.05) # decide all trainable parameters in the model, and use Adam optimizer with learning rate 0.05
+        >>> train_net = nn.TrainOneStepCell(net, opti)                 # train the model one step
+        >>> e = [train_net() for i in range(30)]                       # train 30 steps
+        >>> pr = dict(zip(circ.params_name, net.weight.asnumpy()))     # get model parameters
+        >>> mcra.one_step_rqaoa(pr, 1)           # reduce variables according to QAOA optimization results
         -- eliminated variable: Z3
         -- correlated variable: Z2
         -- σ: -1
         True
-        >>> mcra.all_variables                   # 显示当前哈密顿量中所有变量，可以看到Z3被消除了
+        >>> mcra.all_variables                   # display all variables in the current Hamiltonian. Z3 is reduced.
         [(0, 'Z'), (1, 'Z'), (2, 'Z')]
-        >>> mcra.restricted_set                  # 约束集中保存了Z3换成Z2的相关信息
+        >>> mcra.restricted_set                  # the restriced set contains necessary information to recover Z3 from Z2
         [((3, 'Z'), ((2, 'Z'),), -1)]
-        >>> mcra.get_result()                    # 暴力枚举法求解当前哈密顿量对应图MaxCut问题，并根据约束集推演出完整解
+        >>> mcra.get_result()                    # apply brute-force enumeration method on the reduced Hamiltonian of MaxCut problem, and recover the complete solution using restriced set.
         (4, [[1, 3], [0, 2]])
-        >>> mcra.ham                             # 当前哈密顿量
+        >>> mcra.ham                             # current Hamiltonian
         -2 [] +
         1 [Z0 Z1] +
         0.5 [Z0 Z2] +
         1 [Z1 Z2]
-        >>> mcra.one_step_rqaoa(pr, 1)           # 当前哈密顿量变量数小于nc，无法继续消除变量，可作为退出循环的判据
+        >>> mcra.one_step_rqaoa(pr, 1)           # number of variables in current Hamiltonian is less than nc, so reducing variables becomes impossible. This can be a criteria for quiting the loop.
         False
         >>> f, v, sigma = ((1, 'Z'), (2, 'Z')), (1, 'Z'), 1
-        >>> mcra.eliminate_single_variable(f, sigma, v)  # 但仍可调用RQAOAAnsatz内置方法直接消去变量
+        >>> mcra.eliminate_single_variable(f, sigma, v)  # However, we can still call internal method of RQAOAAnsatz to reduce variables directly
         >>> mcra.ham
         -1 [] +
         1.5 [Z0 Z2]
