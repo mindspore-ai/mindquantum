@@ -641,9 +641,7 @@ class FermionOperator(FermionOperator_):
         for i, j in FermionOperator_.split(self):
             yield ParameterResolver(i, internal=True), FermionOperator(j, internal=True)
 
-    def subs(
-        self, params_value: typing.Union[typing.Dict[str, numbers.Number], ParameterResolver]
-    ) -> "FermionOperator":
+    def subs(self, params_value: PRConvertible) -> "FermionOperator":
         """
         Replace the symbolical representation with the corresponding value.
 

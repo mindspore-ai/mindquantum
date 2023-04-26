@@ -131,6 +131,7 @@ mindquantum.simulator.Simulator
 
     .. py:method:: n_qubits()
         :property:
+
         获取模拟器的量子比特数。
 
         返回：
