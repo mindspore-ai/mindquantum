@@ -185,7 +185,7 @@ mindquantum.core.operators.FermionOperator
         返回：
             List[List[ParameterResolver, FermionOperator]]，分裂后的结果。
 
-    .. py:method:: subs(params_value: typing.Union[typing.Dict[str, numbers.Number], ParameterResolver])
+    .. py:method:: subs(params_value: PRConvertible)
 
         将费米子中的变量换成具体的参数值。
 
