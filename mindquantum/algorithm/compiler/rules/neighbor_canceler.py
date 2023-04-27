@@ -58,43 +58,6 @@ class SimpleNeighborCancler(BasicCompilerRule):
         global step
         step = 0
 
-        def _cancler1(current_node: DAGNode, fc_pair_consided: typing.List[typing.Tuple[GateNode, GateNode]]):
-            compiled = False
-            global step
-            step += 1
-            print(step)
-            for local in current_node.local:
-                if local not in current_node.child:
-                    continue
-                child_node = current_node.child[local]
-                fc_pair = (current_node, child_node)
-                if fc_pair in fc_pair_consided:
-                    continue
-                fc_pair_consided.add(fc_pair)
-                if not isinstance(current_node, GateNode) or not isinstance(child_node, GateNode):
-                    continue
-                succeed, father_node = try_delete_node(current_node, child_node)
-                if not succeed:
-                    if not self.merge_parameterized_gate:
-                        continue
-                    succeed, father_node = try_merge_node(current_node, child_node)
-                    if not succeed:
-                        continue
-                    compiled = True
-                    for node in father_node:
-                        # compiled = compiled or
-                        _cancler(node, fc_pair_consided)
-                    continue
-                compiled = True
-                for node in father_node:
-                    # compiled = compiled or
-                    _cancler(node, fc_pair_consided)
-            for local in current_node.local:
-                if local in current_node.child:
-                    # compiled = compiled or
-                    _cancler(current_node.child[local], fc_pair_consided)
-            return compiled
-
         def _cancler(current_node, fc_pair_consided):
             """Merge two gate."""
             compiled = False
@@ -152,7 +115,7 @@ class SimpleNeighborCancler(BasicCompilerRule):
         if compiled:
             CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfule compiled')}.", 1, self.log_level)
         else:
-            CLog.log(f"{CLog.R1(self.rule_name)}: nothing happend.", 1, self.log_level)
+            CLog.log(f"{CLog.R1(self.rule_name)}: nothing happened.", 1, self.log_level)
         return compiled
 
 

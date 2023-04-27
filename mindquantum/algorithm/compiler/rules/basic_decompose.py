@@ -36,6 +36,7 @@ from mindquantum.algorithm.compiler.decompose import (
     swap_decompose,
 )
 from mindquantum.algorithm.compiler.rules.basic_rule import BasicCompilerRule
+from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog
 from mindquantum.core.circuit import controlled
 from mindquantum.core.gates import (
     RX,
@@ -44,6 +45,7 @@ from mindquantum.core.gates import (
     BasicGate,
     CNOTGate,
     HGate,
+    PhaseShift,
     Rxx,
     Ryy,
     Rzz,
@@ -54,10 +56,8 @@ from mindquantum.core.gates import (
     XGate,
     YGate,
     ZGate,
-    PhaseShift,
 )
 from mindquantum.utils.type_value_check import _check_input_type
-from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog
 
 # pylint: disable=invalid-name,too-many-branches,too-few-public-methods
 
@@ -234,11 +234,13 @@ def decom_t(gate: SGate, prefer_u3=False, *args, **kwargs):
         return DAGCircuit(cctrl_t)
     return False
 
-def decomp_ps(gate:PhaseShift, *args, **kwargs):
+
+def decomp_ps(gate: PhaseShift, *args, **kwargs):
     """Decompose phase shift gate."""
     if gate.ctrl_qubits:
         return DAGCircuit(cu_decompose(gate))
     return False
+
 
 def decom_univ_math_gate(gate: UnivMathGate, *args, **kwargs):
     return DAGCircuit(cu_decompose(gate))
@@ -317,5 +319,5 @@ class BasicDecompose(BasicCompilerRule):
         if compiled:
             CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfule compiled')}.", 1, self.log_level)
         else:
-            CLog.log(f"{CLog.R1(self.rule_name)}: nothing happend.", 1, self.log_level)
+            CLog.log(f"{CLog.R1(self.rule_name)}: nothing happened.", 1, self.log_level)
         return compiled

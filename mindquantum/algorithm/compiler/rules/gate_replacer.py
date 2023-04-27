@@ -15,9 +15,9 @@
 """Convert cnot to cz."""
 from mindquantum.algorithm.compiler.dag import DAGCircuit
 from mindquantum.algorithm.compiler.rules import BasicCompilerRule, SequentialCompiler
+from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog
 from mindquantum.core import gates as G
 from mindquantum.core.circuit import Circuit, apply
-from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog
 
 
 class GateReplacer(BasicCompilerRule):
@@ -53,7 +53,7 @@ class GateReplacer(BasicCompilerRule):
         if compiled:
             CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfule compiled')}.", 1, self.log_level)
         else:
-            CLog.log(f"{CLog.R1(self.rule_name)}: nothing happend.", 1, self.log_level)
+            CLog.log(f"{CLog.R1(self.rule_name)}: nothing happened.", 1, self.log_level)
         return compiled
 
     def __repr__(self):
@@ -74,7 +74,8 @@ class CXToCZ(SequentialCompiler):
             GateReplacer(G.CNOT(0, 1), Circuit().h(0).z(0, 1).h(0)),
         ]
         super().__init__(rule_set)
-        self.rule_name ="CXToCZ"
+        self.rule_name = "CXToCZ"
+
 
 class CZToCX(GateReplacer):
     def __init__(self):

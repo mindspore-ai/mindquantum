@@ -15,7 +15,9 @@
 """Basic compiler rule."""
 import typing
 from abc import ABC, abstractmethod
+
 from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog
+
 
 # pylint: disable=too-few-public-methods,invalid-name
 class BasicCompilerRule(ABC):
@@ -56,7 +58,7 @@ class SequentialCompiler(BasicCompilerRule):
         return '\n'.join(strs)
 
     def set_all_log_level(self, log_level):
-        self.log_level=log_level
+        self.log_level = log_level
         for compiler in self.compilers:
             if hasattr(compiler, "set_all_log_level"):
                 compiler.set_all_log_level(log_level)
@@ -77,7 +79,7 @@ class SequentialCompiler(BasicCompilerRule):
         if compiled:
             CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfule compiled')}.", 1, self.log_level)
         else:
-            CLog.log(f"{CLog.R1(self.rule_name)}: nothing happend.", 1, self.log_level)
+            CLog.log(f"{CLog.R1(self.rule_name)}: nothing happened.", 1, self.log_level)
         return compiled
 
 
@@ -90,7 +92,7 @@ class KroneckerSeqCompiler(SequentialCompiler):
 
     def do(self, dagcircuit):
         compiled = False
-        child_name =', '.join(CLog.R2(compiler.rule_name) for compiler in self.compilers)
+        child_name = ', '.join(CLog.R2(compiler.rule_name) for compiler in self.compilers)
         CLog.log(f"Running {CLog.R1(self.rule_name)}: {len(self.compilers)} child ({child_name}, ).", 1, self.log_level)
         CLog.IncreaceHeadBlock()
         while True:
@@ -104,5 +106,5 @@ class KroneckerSeqCompiler(SequentialCompiler):
         if compiled:
             CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfule compiled')}.", 1, self.log_level)
         else:
-            CLog.log(f"{CLog.R1(self.rule_name)}: nothing happend.", 1, self.log_level)
+            CLog.log(f"{CLog.R1(self.rule_name)}: nothing happened.", 1, self.log_level)
         return compiled
