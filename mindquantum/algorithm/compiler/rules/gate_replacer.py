@@ -17,6 +17,7 @@ from mindquantum.algorithm.compiler.dag import DAGCircuit
 from mindquantum.algorithm.compiler.rules import BasicCompilerRule, SequentialCompiler
 from mindquantum.core import gates as G
 from mindquantum.core.circuit import Circuit, apply
+from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog
 
 
 class GateReplacer(BasicCompilerRule):
@@ -34,15 +35,26 @@ class GateReplacer(BasicCompilerRule):
         super().__init__("GateReplacer")
 
     def do(self, dag_circuit: DAGCircuit):
+        compiled = False
         all_node = dag_circuit.find_all_gate_node()
+        CLog.log(f"Running {CLog.R1(self.rule_name)}.", 1, self.log_level)
+        CLog.IncreaceHeadBlock()
         for node in all_node:
             is_same = node.gate.__class__ == self.ori_example_gate.__class__
             is_same = is_same and (node.gate.name == self.ori_example_gate.name)
             is_same = is_same and (len(node.gate.obj_qubits) == len(self.ori_example_gate.obj_qubits))
             is_same = is_same and (len(node.gate.ctrl_qubits) == len(self.ori_example_gate.ctrl_qubits))
             if is_same:
+                CLog.log(f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be replaced.", 2, self.log_level)
+                compiled = True
                 new_circ = apply(self.wanted_example_circ, node.gate.obj_qubits + node.gate.ctrl_qubits)
                 dag_circuit.replace_node_with_dagcircuit(node, DAGCircuit(new_circ))
+        CLog.DecreaseHeadBlock()
+        if compiled:
+            CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfule compiled')}.", 1, self.log_level)
+        else:
+            CLog.log(f"{CLog.R1(self.rule_name)}: nothing happend.", 1, self.log_level)
+        return compiled
 
     def __repr__(self):
         """String expression of gate replacer."""
@@ -62,8 +74,9 @@ class CXToCZ(SequentialCompiler):
             GateReplacer(G.CNOT(0, 1), Circuit().h(0).z(0, 1).h(0)),
         ]
         super().__init__(rule_set)
-
+        self.rule_name ="CXToCZ"
 
 class CZToCX(GateReplacer):
     def __init__(self):
         super().__init__(G.Z.on(0, 1), Circuit().h(0).x(0, 1).h(0))
+        self.rule_name = "CZToCX"

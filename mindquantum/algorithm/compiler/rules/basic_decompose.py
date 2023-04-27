@@ -54,8 +54,10 @@ from mindquantum.core.gates import (
     XGate,
     YGate,
     ZGate,
+    PhaseShift,
 )
 from mindquantum.utils.type_value_check import _check_input_type
+from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog
 
 # pylint: disable=invalid-name,too-many-branches,too-few-public-methods
 
@@ -173,9 +175,9 @@ def decom_x(gate: XGate, prefer_u3=False, *args, **kwargs):
 
 def decom_z(gate: ZGate, prefer_u3=False, *args, **kwargs):
     """Decompose z gate."""
-    if len(gate.ctrl_qubits) == 1:
+    if len(gate.ctrl_qubits) == 2:
         return DAGCircuit(cz_decompose(gate)[0])
-    if len(gate.ctrl_qubits) > 1:
+    if len(gate.ctrl_qubits) > 2:
         if prefer_u3 and not gate.parameterized:
             return DAGCircuit(cu_decompose(gate))
         ctrl_z = cz_decompose(gate.on(gate.obj_qubits, gate.ctrl_qubits[0]))[0]
@@ -232,6 +234,11 @@ def decom_t(gate: SGate, prefer_u3=False, *args, **kwargs):
         return DAGCircuit(cctrl_t)
     return False
 
+def decomp_ps(gate:PhaseShift, *args, **kwargs):
+    """Decompose phase shift gate."""
+    if gate.ctrl_qubits:
+        return DAGCircuit(cu_decompose(gate))
+    return False
 
 def decom_univ_math_gate(gate: UnivMathGate, *args, **kwargs):
     return DAGCircuit(cu_decompose(gate))
@@ -246,35 +253,37 @@ def decom_basic_gate(gate: BasicGate, prefer_u3=False):
     """Decompose all possible quantum gate."""
     res = False
     if isinstance(gate, XGate):
-        res = decom_x(gate)
+        res = decom_x(gate, prefer_u3=prefer_u3)
     if isinstance(gate, YGate):
-        res = decom_y(gate)
+        res = decom_y(gate, prefer_u3=prefer_u3)
     if isinstance(gate, ZGate):
-        res = decom_z(gate)
+        res = decom_z(gate, prefer_u3=prefer_u3)
     if isinstance(gate, RX):
-        res = decom_rx(gate)
+        res = decom_rx(gate, prefer_u3=prefer_u3)
     if isinstance(gate, RY):
-        res = decom_ry(gate)
+        res = decom_ry(gate, prefer_u3=prefer_u3)
     if isinstance(gate, RZ):
-        res = decom_rz(gate)
+        res = decom_rz(gate, prefer_u3=prefer_u3)
     if isinstance(gate, Rxx):
-        res = decom_rxx(gate)
+        res = decom_rxx(gate, prefer_u3=prefer_u3)
     if isinstance(gate, Ryy):
-        res = decom_ryy(gate)
+        res = decom_ryy(gate, prefer_u3=prefer_u3)
     if isinstance(gate, Rzz):
-        res = decom_rzz(gate)
+        res = decom_rzz(gate, prefer_u3=prefer_u3)
     if isinstance(gate, SGate):
-        res = decom_s(gate)
+        res = decom_s(gate, prefer_u3=prefer_u3)
     if isinstance(gate, TGate):
-        res = decom_t(gate)
+        res = decom_t(gate, prefer_u3=prefer_u3)
     if isinstance(gate, SWAPGate):
-        res = decom_swap(gate)
+        res = decom_swap(gate, prefer_u3=prefer_u3)
     if isinstance(gate, HGate):
-        res = decom_h(gate)
+        res = decom_h(gate, prefer_u3=prefer_u3)
     if isinstance(gate, CNOTGate):
-        res = decom_cnot(gate)
+        res = decom_cnot(gate, prefer_u3=prefer_u3)
     if isinstance(gate, UnivMathGate):
-        res = decom_univ_math_gate(gate)
+        res = decom_univ_math_gate(gate, prefer_u3=prefer_u3)
+    if isinstance(gate, PhaseShift):
+        res = decomp_ps(gate, prefer_u3=prefer_u3)
     if res:
         return res
     return False
@@ -291,9 +300,22 @@ class BasicDecompose(BasicCompilerRule):
     def do(self, dagcircuit: DAGCircuit):
         """Do control decompose rule."""
         _check_input_type("dagcircuit", DAGCircuit, dagcircuit)
+        compiled = False
         all_node = dagcircuit.find_all_gate_node()
+        CLog.log(f"Running {CLog.R1(self.rule_name)}.", 1, self.log_level)
+        CLog.IncreaceHeadBlock()
         for node in all_node:
             decompose_dag_circ = decom_basic_gate(node.gate, prefer_u3=self.prefer_u3)
             if decompose_dag_circ:
+                compiled = True
+                CLog.log(f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be compiled.", 2, self.log_level)
+                CLog.IncreaceHeadBlock()
                 self.do(decompose_dag_circ)
+                CLog.DecreaseHeadBlock()
                 dagcircuit.replace_node_with_dagcircuit(node, decompose_dag_circ)
+        CLog.DecreaseHeadBlock()
+        if compiled:
+            CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfule compiled')}.", 1, self.log_level)
+        else:
+            CLog.log(f"{CLog.R1(self.rule_name)}: nothing happend.", 1, self.log_level)
+        return compiled

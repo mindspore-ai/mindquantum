@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """DAG Circuit."""
+import typing
 import numpy as np
 
 from mindquantum.core import Circuit, gates
@@ -26,11 +27,11 @@ class DAGNode:
 
     def __init__(self):
         """Initialize a DAGNode object."""
-        self.child = {}  # key: local index, value: child DAGNode
-        self.father = {}  # key: local index, value: father DAGNode
-        self.local = []
+        self.child: typing.Dict[int, "DAGNode"] = {}  # key: local index, value: child DAGNode
+        self.father: typing.Dict[int, "DAGNode"] = {}  # key: local index, value: father DAGNode
+        self.local: typing.List[int] = []
 
-    def insert_after(self, other_node):
+    def insert_after(self, other_node: "DAGNode"):
         """Insert other node after this dag node."""
         _check_input_type("other_node", DAGNode, other_node)
         for local in self.local:
@@ -41,7 +42,7 @@ class DAGNode:
                     self.child.get(local).fathre[local] = other_node
                 self.child[local] = other_node
 
-    def insert_before(self, other_node):
+    def insert_before(self, other_node: "DAGNode"):
         """Insert other node before this dag node."""
         _check_input_type("other_node", DAGNode, other_node)
         for local in self.local:
@@ -52,8 +53,13 @@ class DAGNode:
                     self.father.get(local).child[local] = other_node
                 self.father[local] = other_node
 
+    def clean(self):
+        self.child = {}
+        self.father = {}
+        self.local = []
 
-def connect_two_node(father_node: DAGNode, child_node: DAGNode, local_index):
+
+def connect_two_node(father_node: DAGNode, child_node: DAGNode, local_index: int):
     """Connect two dag node."""
     father_node.child[local_index] = child_node
     child_node.father[local_index] = father_node
@@ -62,7 +68,7 @@ def connect_two_node(father_node: DAGNode, child_node: DAGNode, local_index):
 class QubitNode(DAGNode):
     """DAG node that work as qubit."""
 
-    def __init__(self, qubit):
+    def __init__(self, qubit: int):
         """Initialize a QubitNode object."""
         super().__init__()
         _check_input_type("qubit", int, qubit)
@@ -81,7 +87,7 @@ class QubitNode(DAGNode):
 class GateNode(DAGNode):
     """DAG node that work as quantum gate."""
 
-    def __init__(self, gate):
+    def __init__(self, gate: gates.BasicGate):
         """Initialize a GateNode object."""
         super().__init__()
         _check_input_type("gate", gates.BasicGate, gate)
@@ -123,7 +129,7 @@ class DAGCircuit:
                 self.append_node(GateNode(gate))
 
     @staticmethod
-    def replace_node_with_dagcircuit(node: DAGNode, coming):
+    def replace_node_with_dagcircuit(node: DAGNode, coming: "DAGCircuit"):
         """Replace a node with a DAGCircuit."""
         for local in node.local:
             connect_two_node(node.father[local], coming.head_node[local].child[local], local)
@@ -187,7 +193,7 @@ class DAGCircuit:
             adding_current_node(current_node, circuit, consided)
         return circuit
 
-    def find_all_gate_node(self):
+    def find_all_gate_node(self) -> typing.List[GateNode]:
         """Find all gate node in this DAG."""
         found = set(self.head_node.values())
 
@@ -242,3 +248,26 @@ class DAGCircuit:
         tensor = [[i, [lag_map[k] for k in j]] for i, j in tensor]
         open_lags = [lag_map[i] for i in open_lags]
         return tensor, open_lags
+
+
+def is_deletable(father_node: GateNode, child_node: GateNode) -> bool:
+    if set(father_node.child.values()) != 1 or len(child_node.father.values()) != 1:
+        return False
+    for node in father_node.child.values():
+        if node != child_node:
+            return False
+    if father_node.gate != child_node.gate.hermitian():
+        return False
+    return True
+
+
+def try_delete_node(father_node: GateNode, child_node: GateNode) -> typing.Union[bool, typing.List[GateNode]]:
+    if is_deletable(father_node, child_node):
+        father_of_father = []
+        for i in father_node.local:
+            father_of_father.append(father_node.father[i])
+            connect_two_node(father_node.father[i], child_node.child[i])
+        father_node.clean()
+        child_node.clean()
+        return True, list(set(father_of_father))
+    return False, [father_node]

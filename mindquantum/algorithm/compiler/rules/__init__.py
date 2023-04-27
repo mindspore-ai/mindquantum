@@ -14,6 +14,6 @@
 # ============================================================================
 """Compiler rules."""
 from .basic_decompose import BasicDecompose
-from .basic_rule import BasicCompilerRule, SequentialCompiler
+from .basic_rule import BasicCompilerRule, SequentialCompiler, KroneckerSeqCompiler
 from .gate_replacer import CXToCZ, CZToCX, GateReplacer
 from .neighbor_canceler import NeighborCancler

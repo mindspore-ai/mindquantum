@@ -15,22 +15,27 @@
 """Basic compiler rule."""
 import typing
 from abc import ABC, abstractmethod
-
+from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog
 
 # pylint: disable=too-few-public-methods,invalid-name
 class BasicCompilerRule(ABC):
     """The basic compiler rule class."""
 
-    def __init__(self, rule_name):
+    def __init__(self, rule_name, log_level=0):
         """Initialize a basic compiler rule."""
         self.rule_name = rule_name
+        self.log_level = log_level
+
+    def set_log_level(self, log_level: int):
+        self.log_level = log_level
+        return self
 
     def __repr__(self):
         """String expression of rule."""
-        return "BasicCompilerRule<>"
+        return f"{self.rule_name}<>"
 
     @abstractmethod
-    def do(self, dagcircuit):
+    def do(self, dagcircuit) -> bool:
         """Apply this compiler rule."""
 
 
@@ -43,14 +48,61 @@ class SequentialCompiler(BasicCompilerRule):
 
     def __repr__(self):
         """String expression of rule."""
-        strs = ['SequentialCompiler<']
+        strs = [f'{self.rule_name}<']
         for compiler in self.compilers:
             for i in compiler.__repr__().split('\n'):
                 strs.append("  " + i)
         strs.append('>')
         return '\n'.join(strs)
 
+    def set_all_log_level(self, log_level):
+        self.log_level=log_level
+        for compiler in self.compilers:
+            if hasattr(compiler, "set_all_log_level"):
+                compiler.set_all_log_level(log_level)
+            else:
+                compiler.set_log_level(log_level)
+        return self
+
     def do(self, dagcircuit):
         """Apply sequential compiler to dag circuit."""
-        for compiler in self.compilers:
-            compiler.do(dagcircuit)
+        compiled = False
+        child_name = ', '.join(CLog.R2(compiler.rule_name) for compiler in self.compilers)
+        CLog.log(f"Running {CLog.R1(self.rule_name)}: {len(self.compilers)} child ({child_name}, ).", 1, self.log_level)
+        CLog.IncreaceHeadBlock()
+        states = [compiler.do(dagcircuit) for compiler in self.compilers]
+        CLog.log(f"{CLog.R1(self.rule_name)}: state for each rule -> {CLog.ShowState(states)}", 2, self.log_level)
+        CLog.DecreaseHeadBlock()
+        compiled = any(states)
+        if compiled:
+            CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfule compiled')}.", 1, self.log_level)
+        else:
+            CLog.log(f"{CLog.R1(self.rule_name)}: nothing happend.", 1, self.log_level)
+        return compiled
+
+
+class KroneckerSeqCompiler(SequentialCompiler):
+    """Kronecher sequential compiler."""
+
+    def __init__(self, compilers: typing.List[BasicCompilerRule]):
+        super().__init__(compilers)
+        self.rule_name = "KroneckerSeqCompiler"
+
+    def do(self, dagcircuit):
+        compiled = False
+        child_name =', '.join(CLog.R2(compiler.rule_name) for compiler in self.compilers)
+        CLog.log(f"Running {CLog.R1(self.rule_name)}: {len(self.compilers)} child ({child_name}, ).", 1, self.log_level)
+        CLog.IncreaceHeadBlock()
+        while True:
+            states = [compiler.do(dagcircuit) for compiler in self.compilers]
+            CLog.log(f"{CLog.R1(self.rule_name)}: state for each rule -> {CLog.ShowState(states)}", 2, self.log_level)
+            if any(states):
+                compiled = True
+            else:
+                break
+        CLog.DecreaseHeadBlock()
+        if compiled:
+            CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfule compiled')}.", 1, self.log_level)
+        else:
+            CLog.log(f"{CLog.R1(self.rule_name)}: nothing happend.", 1, self.log_level)
+        return compiled
