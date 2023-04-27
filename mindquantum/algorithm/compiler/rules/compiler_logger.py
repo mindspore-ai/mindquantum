@@ -96,3 +96,11 @@ class CompileLog:
         if log_level > filter_level:
             return
         log_dict[log_level](msg)
+
+class LogIndentation:
+    def __enter__(self):
+        CompileLog.IncreaceHeadBlock()
+        return self
+    def __exit__(self, exc_type, exc_value, traceback):
+        CompileLog.DecreaseHeadBlock()
+        return True

@@ -15,7 +15,7 @@
 """Convert cnot to cz."""
 from mindquantum.algorithm.compiler.dag import DAGCircuit
 from mindquantum.algorithm.compiler.rules import BasicCompilerRule, SequentialCompiler
-from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog
+from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog, LogIndentation
 from mindquantum.core import gates as G
 from mindquantum.core.circuit import Circuit, apply
 
@@ -38,18 +38,17 @@ class GateReplacer(BasicCompilerRule):
         compiled = False
         all_node = dag_circuit.find_all_gate_node()
         CLog.log(f"Running {CLog.R1(self.rule_name)}.", 1, self.log_level)
-        CLog.IncreaceHeadBlock()
-        for node in all_node:
-            is_same = node.gate.__class__ == self.ori_example_gate.__class__
-            is_same = is_same and (node.gate.name == self.ori_example_gate.name)
-            is_same = is_same and (len(node.gate.obj_qubits) == len(self.ori_example_gate.obj_qubits))
-            is_same = is_same and (len(node.gate.ctrl_qubits) == len(self.ori_example_gate.ctrl_qubits))
-            if is_same:
-                CLog.log(f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be replaced.", 2, self.log_level)
-                compiled = True
-                new_circ = apply(self.wanted_example_circ, node.gate.obj_qubits + node.gate.ctrl_qubits)
-                dag_circuit.replace_node_with_dagcircuit(node, DAGCircuit(new_circ))
-        CLog.DecreaseHeadBlock()
+        with LogIndentation() as _:
+            for node in all_node:
+                is_same = node.gate.__class__ == self.ori_example_gate.__class__
+                is_same = is_same and (node.gate.name == self.ori_example_gate.name)
+                is_same = is_same and (len(node.gate.obj_qubits) == len(self.ori_example_gate.obj_qubits))
+                is_same = is_same and (len(node.gate.ctrl_qubits) == len(self.ori_example_gate.ctrl_qubits))
+                if is_same:
+                    CLog.log(f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be replaced.", 2, self.log_level)
+                    compiled = True
+                    new_circ = apply(self.wanted_example_circ, node.gate.obj_qubits + node.gate.ctrl_qubits)
+                    dag_circuit.replace_node_with_dagcircuit(node, DAGCircuit(new_circ))
         if compiled:
             CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfule compiled')}.", 1, self.log_level)
         else:

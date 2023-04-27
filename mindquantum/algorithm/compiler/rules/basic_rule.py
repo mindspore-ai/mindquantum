@@ -16,7 +16,7 @@
 import typing
 from abc import ABC, abstractmethod
 
-from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog
+from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog, LogIndentation
 
 
 # pylint: disable=too-few-public-methods,invalid-name
@@ -71,10 +71,9 @@ class SequentialCompiler(BasicCompilerRule):
         compiled = False
         child_name = ', '.join(CLog.R2(compiler.rule_name) for compiler in self.compilers)
         CLog.log(f"Running {CLog.R1(self.rule_name)}: {len(self.compilers)} child ({child_name}, ).", 1, self.log_level)
-        CLog.IncreaceHeadBlock()
-        states = [compiler.do(dagcircuit) for compiler in self.compilers]
-        CLog.log(f"{CLog.R1(self.rule_name)}: state for each rule -> {CLog.ShowState(states)}", 2, self.log_level)
-        CLog.DecreaseHeadBlock()
+        with LogIndentation() as _:
+            states = [compiler.do(dagcircuit) for compiler in self.compilers]
+            CLog.log(f"{CLog.R1(self.rule_name)}: state for each rule -> {CLog.ShowState(states)}", 2, self.log_level)
         compiled = any(states)
         if compiled:
             CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfule compiled')}.", 1, self.log_level)
@@ -94,15 +93,14 @@ class KroneckerSeqCompiler(SequentialCompiler):
         compiled = False
         child_name = ', '.join(CLog.R2(compiler.rule_name) for compiler in self.compilers)
         CLog.log(f"Running {CLog.R1(self.rule_name)}: {len(self.compilers)} child ({child_name}, ).", 1, self.log_level)
-        CLog.IncreaceHeadBlock()
-        while True:
-            states = [compiler.do(dagcircuit) for compiler in self.compilers]
-            CLog.log(f"{CLog.R1(self.rule_name)}: state for each rule -> {CLog.ShowState(states)}", 2, self.log_level)
-            if any(states):
-                compiled = True
-            else:
-                break
-        CLog.DecreaseHeadBlock()
+        with LogIndentation() as _:
+            while True:
+                states = [compiler.do(dagcircuit) for compiler in self.compilers]
+                CLog.log(f"{CLog.R1(self.rule_name)}: state for each rule -> {CLog.ShowState(states)}", 2, self.log_level)
+                if any(states):
+                    compiled = True
+                else:
+                    break
         if compiled:
             CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfule compiled')}.", 1, self.log_level)
         else:

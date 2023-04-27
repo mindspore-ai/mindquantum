@@ -36,7 +36,7 @@ from mindquantum.algorithm.compiler.decompose import (
     swap_decompose,
 )
 from mindquantum.algorithm.compiler.rules.basic_rule import BasicCompilerRule
-from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog
+from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog, LogIndentation
 from mindquantum.core.circuit import controlled
 from mindquantum.core.gates import (
     RX,
@@ -305,17 +305,16 @@ class BasicDecompose(BasicCompilerRule):
         compiled = False
         all_node = dagcircuit.find_all_gate_node()
         CLog.log(f"Running {CLog.R1(self.rule_name)}.", 1, self.log_level)
-        CLog.IncreaceHeadBlock()
-        for node in all_node:
-            decompose_dag_circ = decom_basic_gate(node.gate, prefer_u3=self.prefer_u3)
-            if decompose_dag_circ:
-                compiled = True
-                CLog.log(f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be compiled.", 2, self.log_level)
-                CLog.IncreaceHeadBlock()
-                self.do(decompose_dag_circ)
-                CLog.DecreaseHeadBlock()
-                dagcircuit.replace_node_with_dagcircuit(node, decompose_dag_circ)
-        CLog.DecreaseHeadBlock()
+        with LogIndentation() as _:
+            for node in all_node:
+                decompose_dag_circ = decom_basic_gate(node.gate, prefer_u3=self.prefer_u3)
+                if decompose_dag_circ:
+                    compiled = True
+                    CLog.log(f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be compiled.", 2, self.log_level)
+                    with LogIndentation() as _:
+                        self.do(decompose_dag_circ)
+                    dagcircuit.replace_node_with_dagcircuit(node, decompose_dag_circ)
+
         if compiled:
             CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfule compiled')}.", 1, self.log_level)
         else:

@@ -26,7 +26,7 @@ from mindquantum.algorithm.compiler.dag import (
 from mindquantum.algorithm.compiler.dag.dag import DAGNode, GateNode, QubitNode
 from mindquantum.algorithm.compiler.rules import KroneckerSeqCompiler
 from mindquantum.algorithm.compiler.rules.basic_rule import BasicCompilerRule
-from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog
+from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog, LogIndentation
 from mindquantum.utils.type_value_check import _check_input_type
 
 # pylint: disable=invalid-name
@@ -70,13 +70,12 @@ class SimpleNeighborCancler(BasicCompilerRule):
                         if not isinstance(child_node, QubitNode):
                             if not isinstance(current_node, QubitNode):
                                 if is_deletable(current_node, child_node):
-                                    CLog.IncreaceHeadBlock()
-                                    CLog.log(
-                                        f"{CLog.R1(self.rule_name)}: del {CLog.B(current_node.gate)} and {CLog.B(child_node.gate)}.",
-                                        2,
-                                        self.log_level,
-                                    )
-                                    CLog.DecreaseHeadBlock()
+                                    with LogIndentation() as _:
+                                        CLog.log(
+                                            f"{CLog.R1(self.rule_name)}: del {CLog.B(current_node.gate)} and {CLog.B(child_node.gate)}.",
+                                            2,
+                                            self.log_level,
+                                        )
                                     compiled = True
                                     for lo in current_node.local:
                                         connect_two_node(current_node.father[lo], child_node.child[lo], lo)
@@ -90,13 +89,12 @@ class SimpleNeighborCancler(BasicCompilerRule):
                                     merged_node = mergeable_params_gate(current_node, child_node)
                                     if merged_node:
                                         compiled = True
-                                        CLog.IncreaceHeadBlock()
-                                        CLog.log(
-                                            f"{CLog.R1(self.rule_name)}: merge {CLog.B(current_node.gate)} and {CLog.B(child_node.gate)}.",
-                                            2,
-                                            self.log_level,
-                                        )
-                                        CLog.DecreaseHeadBlock()
+                                        with LogIndentation() as _:
+                                            CLog.log(
+                                                f"{CLog.R1(self.rule_name)}: merge {CLog.B(current_node.gate)} and {CLog.B(child_node.gate)}.",
+                                                2,
+                                                self.log_level,
+                                            )
                                         for lo in current_node.local:
                                             connect_two_node(current_node.father[lo], merged_node, lo)
                                             connect_two_node(merged_node, child_node.child[lo], lo)
@@ -107,11 +105,9 @@ class SimpleNeighborCancler(BasicCompilerRule):
         fc_pair_consided = set()
         compiled = False
         CLog.log(f"Running {CLog.R1(self.rule_name)}.", 1, self.log_level)
-        CLog.IncreaceHeadBlock()
-        for current_node in dagcircuit.head_node.values():
-            compiled = compiled or _cancler(current_node, fc_pair_consided)
-
-        CLog.DecreaseHeadBlock()
+        with LogIndentation() as _:
+            for current_node in dagcircuit.head_node.values():
+                compiled = compiled or _cancler(current_node, fc_pair_consided)
         if compiled:
             CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfule compiled')}.", 1, self.log_level)
         else:
