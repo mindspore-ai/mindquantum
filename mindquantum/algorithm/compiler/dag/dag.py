@@ -14,9 +14,11 @@
 # ============================================================================
 """DAG Circuit."""
 import typing
+
 import numpy as np
 
 from mindquantum.core import Circuit, gates
+from mindquantum.core.gates.basicgate import MultiParamsGate
 from mindquantum.utils.type_value_check import _check_input_type
 
 # pylint: disable=invalid-name
@@ -251,7 +253,7 @@ class DAGCircuit:
 
 
 def is_deletable(father_node: GateNode, child_node: GateNode) -> bool:
-    if set(father_node.child.values()) != 1 or len(child_node.father.values()) != 1:
+    if len(set(father_node.child.values())) != 1 or len(set(child_node.father.values())) != 1:
         return False
     for node in father_node.child.values():
         if node != child_node:
@@ -261,12 +263,41 @@ def is_deletable(father_node: GateNode, child_node: GateNode) -> bool:
     return True
 
 
+def is_mergable(father_node: GateNode, child_node: GateNode) -> typing.Union[bool, GateNode]:
+    if len(set(father_node.child.values())) != 1 or len(set(child_node.father.values())) != 1:
+        return (False, father_node)
+    for node in father_node.child.values():
+        if node != child_node:
+            return (False, father_node)
+    if father_node.gate.__class__ is not child_node.gate.__class__:
+        return (False, father_node)
+    if not isinstance(father_node.gate, gates.ParameterGate):
+        return (False, father_node)
+    if isinstance(father_node.gate, MultiParamsGate):
+        return (True, GateNode(father_node.gate([i + j for i, j in zip(father_node.gate.prs, child_node.gate.prs)])))
+    return (True, GateNode(father_node.gate(father_node.gate.coeff + child_node.gate.coeff)))
+
+
 def try_delete_node(father_node: GateNode, child_node: GateNode) -> typing.Union[bool, typing.List[GateNode]]:
     if is_deletable(father_node, child_node):
         father_of_father = []
         for i in father_node.local:
             father_of_father.append(father_node.father[i])
-            connect_two_node(father_node.father[i], child_node.child[i])
+            connect_two_node(father_node.father[i], child_node.child[i], i)
+        father_node.clean()
+        child_node.clean()
+        return True, list(set(father_of_father))
+    return False, [father_node]
+
+
+def try_merge_node(father_node: GateNode, child_node: GateNode) -> typing.Union[bool, typing.List[GateNode]]:
+    succeed, res = is_mergable(father_node, child_node)
+    if succeed:
+        father_of_father = []
+        for i in father_node.local:
+            father_of_father.append(father_node.father[i])
+            connect_two_node(father_node.father[i], res, i)
+            connect_two_node(res, child_node.child[i], i)
         father_node.clean()
         child_node.clean()
         return True, list(set(father_of_father))

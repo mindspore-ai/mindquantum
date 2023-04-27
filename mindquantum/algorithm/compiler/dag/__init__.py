@@ -14,4 +14,11 @@
 # ============================================================================
 """Dag circuit."""
 
-from .dag import DAGCircuit, connect_two_node
+from .dag import (
+    DAGCircuit,
+    connect_two_node,
+    is_deletable,
+    is_mergable,
+    try_delete_node,
+    try_merge_node,
+)

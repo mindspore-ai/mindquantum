@@ -1687,7 +1687,7 @@ class MultiParamsGate(ParameterGate):
     def __call__(self, prs: List[ParameterResolver]) -> "MultiParamsGate":
         """Generate new one with given parameters."""
         new = copy.deepcopy(self)
-        new.prs = prs
+        new.prs = [ParameterResolver(i) for i in prs]
         return new
 
     def __params_prop__(self) -> Tuple[List[str], List[str], List[str]]:

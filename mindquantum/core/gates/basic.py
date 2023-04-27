@@ -408,7 +408,7 @@ class ParameterGate(QuantumGate):
     def __call__(self, pr):
         """Definition of a function call operator."""
         new = copy.deepcopy(self)
-        new.coeff = pr
+        new.coeff = ParameterResolver(pr)
         return new
 
     def __eq__(self, other):
