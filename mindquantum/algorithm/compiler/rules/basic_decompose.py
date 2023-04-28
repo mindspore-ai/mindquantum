@@ -14,27 +14,6 @@
 # ============================================================================
 """Decompose gate with control qubits."""
 
-from ..dag import DAGCircuit
-from ..decompose import (
-    ccx_decompose,
-    ch_decompose,
-    crx_decompose,
-    crxx_decompose,
-    cry_decompose,
-    cryy_decompose,
-    crz_decompose,
-    cs_decompose,
-    cswap_decompose,
-    ct_decompose,
-    cu_decompose,
-    cy_decompose,
-    cz_decompose,
-    rxx_decompose,
-    ryy_decompose,
-    rzz_decompose,
-)
-from .basic_rule import BasicCompilerRule
-from .compiler_logger import CompileLog as CLog, LogIndentation
 from mindquantum.core.circuit import controlled
 from mindquantum.core.gates import (
     RX,
@@ -56,6 +35,29 @@ from mindquantum.core.gates import (
     ZGate,
 )
 from mindquantum.utils.type_value_check import _check_input_type
+
+from ..dag import DAGCircuit
+from ..decompose import (
+    ccx_decompose,
+    ch_decompose,
+    crx_decompose,
+    crxx_decompose,
+    cry_decompose,
+    cryy_decompose,
+    crz_decompose,
+    cs_decompose,
+    cswap_decompose,
+    ct_decompose,
+    cu_decompose,
+    cy_decompose,
+    cz_decompose,
+    rxx_decompose,
+    ryy_decompose,
+    rzz_decompose,
+)
+from .basic_rule import BasicCompilerRule
+from .compiler_logger import CompileLog as CLog
+from .compiler_logger import LogIndentation
 
 # pylint: disable=invalid-name,too-many-branches,too-few-public-methods
 
@@ -308,10 +310,12 @@ class BasicDecompose(BasicCompilerRule):
                 decompose_dag_circ = decom_basic_gate(node.gate, prefer_u3=self.prefer_u3)
                 if decompose_dag_circ:
                     compiled = True
-                    CLog.log(f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be compiled.", 2, self.log_level)
+                    CLog.log(
+                        f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be compiled.", 2, self.log_level
+                    )
                     with LogIndentation() as _:
                         self.do(decompose_dag_circ)
-                    dagcircuit.replace_node_with_dagcircuit(node, decompose_dag_circ)
+                    dagcircuit.replace_node_with_dag_circuit(node, decompose_dag_circ)
 
         if compiled:
             CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfule compiled')}.", 1, self.log_level)

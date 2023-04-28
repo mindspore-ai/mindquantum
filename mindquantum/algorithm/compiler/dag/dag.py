@@ -25,7 +25,7 @@ from mindquantum.utils.type_value_check import _check_input_type
 
 
 class DAGNode:
-    """Node object in Directed Acyclic Graph."""
+    """Basic node in Directed Acyclic Graph."""
 
     def __init__(self):
         """Initialize a DAGNode object."""
@@ -56,6 +56,7 @@ class DAGNode:
                 self.father[local] = other_node
 
     def clean(self):
+        """Clean node and set it to empty."""
         self.child = {}
         self.father = {}
         self.local = []
@@ -68,7 +69,12 @@ def connect_two_node(father_node: DAGNode, child_node: DAGNode, local_index: int
 
 
 class QubitNode(DAGNode):
-    """DAG node that work as qubit."""
+    """
+    DAG node that work as quantum qubit.
+
+    Args:
+        qubit (int): id of qubit.
+    """
 
     def __init__(self, qubit: int):
         """Initialize a QubitNode object."""
@@ -87,7 +93,12 @@ class QubitNode(DAGNode):
 
 
 class GateNode(DAGNode):
-    """DAG node that work as quantum gate."""
+    """
+    DAG node that work as quantum gate.
+
+    Args:
+        gate (BasicGate): Quantum gate.
+    """
 
     def __init__(self, gate: gates.BasicGate):
         """Initialize a GateNode object."""
@@ -108,14 +119,29 @@ class GateNode(DAGNode):
 class BarrierNode(GateNode):
     """DAG node that work as barrier."""
 
-    def __init__(self, gate, all_qubits):
+    def __init__(self, gate: gates.BasicGate, all_qubits: typing.List[int]):
         """Initialize a BarrierNode object."""
         super().__init__(gate)
         self.local = all_qubits
 
 
 class DAGCircuit:
-    """A Directed Acyclic Graph of a quantum circuit."""
+    """
+    A Directed Acyclic Graph of a quantum circuit.
+
+    Args:
+        circuit (Circuit): the input quantum circuit.
+
+    Examples:
+        >>> from mindquantum.algorithm.compiler import DAGCircuit
+        >>> from mindquantum.core.circuit import Circuit
+        >>> circ = Circuit().h(0).x(1, 0)
+        >>> dag_circ = DAGCircuit(circ)
+        >>> dag_circ.head_node[0]
+        q0
+        >>> dag_circ.head_node[0].child
+        {0: H(0)}
+    """
 
     def __init__(self, circuit: Circuit):
         """Initialize a DAGCircuit object."""
@@ -126,43 +152,107 @@ class DAGCircuit:
             self.head_node[i].insert_after(self.final_node[i])
         for gate in circuit:
             if isinstance(gate, gates.BarrierGate):
-                self.append_node(BarrierNode(gate, sorted(circuit.all_qubits.keys())))
+                if gate.obj_qubits:
+                    self.append_node(BarrierNode(gate, sorted(gate.obj_qubits)))
+                else:
+                    self.append_node(BarrierNode(gate, sorted(circuit.all_qubits.keys())))
             else:
                 self.append_node(GateNode(gate))
 
     @staticmethod
-    def replace_node_with_dagcircuit(node: DAGNode, coming: "DAGCircuit"):
+    def replace_node_with_dag_circuit(node: DAGNode, coming: "DAGCircuit"):
         """Replace a node with a DAGCircuit."""
+        if set(node.local) != {head.qubit for head in coming.head_node.values()}:
+            raise ValueError(f"Circuit in coming DAG is not aligned with gate in node: {node}")
         for local in node.local:
             connect_two_node(node.father[local], coming.head_node[local].child[local], local)
             connect_two_node(coming.final_node[local].father[local], node.child[local], local)
 
     def append_node(self, node: DAGNode):
-        """Append a quantum gate node."""
+        """
+        Append a quantum gate node.
+
+        >>> from mindquantum.algorithm.compiler import DAGCircuit, GateNode
+        >>> from mindquantum.core.circuit import Circuit
+        >>> import mindquantum.core.gates as G
+        >>> circ = Circuit().h(0).x(1, 0)
+        >>> circ
+        q0: ──H────●──
+                   │
+        q1: ───────X──
+        >>> dag_circ = DAGCircuit(circ)
+        >>> node = GateNode(G.RX('a').on(0, 2))
+        >>> dag_circ.append_node(node)
+        >>> dag_circ.to_circuit()
+        q0: ──H────●────RX(a)──
+                   │      │
+        q1: ───────X──────┼────
+                          │
+        q2: ──────────────●────
+        """
         _check_input_type('node', DAGNode, node)
         for local in node.local:
+            if local not in self.head_node:
+                self.head_node[local] = QubitNode(local)
+                self.final_node[local] = QubitNode(local)
+                self.head_node[local].insert_after(self.final_node[local])
             self.final_node[local].insert_before(node)
 
-    def layerize(self):
-        """Layerize the quantum circuit."""
+    def layering(self) -> Circuit:
+        """
+        Layering the quantum circuit.
 
-        def _layerize(current_node: GateNode, depth_map):
-            """Layerize the quantum circuit."""
+        Examples:
+            >>> from mindquantum.algorithm.compiler import DAGCircuit
+            >>> from mindquantum.utils import random_circuit
+            >>> circ = random_circuit(3, 5)
+            >>> circ
+            q0: ──Ryy(-0.8987)────RY(3.3894)───────────────────RZ(-1.5916)──
+                       │                                            │
+            q1: ──Ryy(-0.8987)────────@─────────────────────────────┼───────
+                                      │                             │
+            q2: ──────────────────────@─────────RX(-5.1924)─────────●───────
+            >>> dag_circ = DAGCircuit(circ)
+            >>> for idx, c in enumerate(dag_circ.layering()):
+            ...     print(f"layer {idx}:\n", c)
+            layer 0:
+             q0: ──Ryy(-0.8987)──
+                       │
+            q1: ──Ryy(-0.8987)──
+
+            layer 1:
+             q0: ──RY(3.3894)──
+
+            q1: ──────@───────
+                      │
+            q2: ──────@───────
+
+            layer 2:
+             q2: ──RX(-5.1924)──
+
+            layer 3:
+             q0: ──RZ(-1.5916)──
+                       │
+            q2: ───────●───────
+        """
+
+        def _layering(current_node: GateNode, depth_map):
+            """Layering the quantum circuit."""
             if current_node.father:
                 prev_depth = []
                 for father_node in current_node.father.values():
                     if father_node not in depth_map:
-                        _layerize(father_node, depth_map)
+                        _layering(father_node, depth_map)
                     prev_depth.append(depth_map[father_node])
                 depth_map[current_node] = max(prev_depth) + 1
             for child in current_node.child.values():
                 if not isinstance(child, QubitNode):
                     if child not in depth_map:
-                        _layerize(child, depth_map)
+                        _layering(child, depth_map)
 
         depth_map = {i: 0 for i in self.head_node.values()}
         for current_node in self.head_node.values():
-            _layerize(current_node, depth_map)
+            _layering(current_node, depth_map)
         layer = [Circuit() for _ in range(len(set(depth_map.values())) - 1)]
         for k, v in depth_map.items():
             if v != 0:
@@ -171,28 +261,57 @@ class DAGCircuit:
         return [c for c in layer if len(c) != 0]
 
     def depth(self):
-        """Return the depth of quantum circuit."""
-        return len(self.layerize())
+        """
+        Return the depth of quantum circuit.
+
+        Examples:
+            >>> from mindquantum.core.circuit import Circuit
+            >>> from mindquantum.algorithm.compiler import DAGCircuit
+            >>> circ = Circuit().h(0).h(1).x(1, 0)
+            >>> circ
+            q0: ──H────●──
+                       │
+            q1: ──H────X──
+            >>> DAGCircuit(circ).depth()
+            2
+        """
+        return len(self.layering())
 
     def to_circuit(self):
-        """Convert DAGCircuit to quantum circuit."""
-        circuit = Circuit()
-        consided = set(self.head_node.values())
+        """
+        Convert DAGCircuit to quantum circuit.
 
-        def adding_current_node(current_node, circuit, consided):
-            if all(i in consided for i in current_node.father.values()) and not isinstance(current_node, QubitNode):
+        Examples:
+            >>> from mindquantum.core.circuit import Circuit
+            >>> from mindquantum.algorithm.compiler import DAGCircuit
+            >>> circ = Circuit().h(0).h(1).x(1, 0)
+            >>> circ
+            q0: ──H────●──
+                       │
+            q1: ──H────X──
+            >>> dag_circ = DAGCircuit(circ)
+            >>> dag_circ.to_circuit()
+            q0: ──H────●──
+                       │
+            q1: ──H────X──
+        """
+        circuit = Circuit()
+        considered_node = set(self.head_node.values())
+
+        def adding_current_node(current_node, circuit, considered):
+            if all(i in considered for i in current_node.father.values()) and not isinstance(current_node, QubitNode):
                 circuit += current_node.gate
-                consided.add(current_node)
+                considered.add(current_node)
             else:
                 for node in current_node.father.values():
-                    if node not in consided:
-                        adding_current_node(node, circuit, consided)
+                    if node not in considered:
+                        adding_current_node(node, circuit, considered)
                 for node in current_node.child.values():
-                    if node not in consided:
-                        adding_current_node(node, circuit, consided)
+                    if node not in considered:
+                        adding_current_node(node, circuit, considered)
 
         for current_node in self.final_node.values():
-            adding_current_node(current_node, circuit, consided)
+            adding_current_node(current_node, circuit, considered_node)
         return circuit
 
     def find_all_gate_node(self) -> typing.List[GateNode]:
@@ -219,7 +338,7 @@ class DAGCircuit:
         open_lags = [i for i, _ in enumerate(self.head_node)]
         max_lags = len(open_lags)
         all_lags = set(open_lags)
-        for layer in self.layerize():
+        for layer in self.layering():
             for gate in layer:
                 if isinstance(gate, (gates.Measure, gates.PauliChannel)):
                     raise ValueError("Pauli Channel or Measure gate are not supported.")
