@@ -17,7 +17,8 @@ import typing
 from abc import ABC, abstractmethod
 
 from .compiler_logger import CompileLog as CLog, LogIndentation
-
+from ..dag import DAGCircuit
+from mindquantum.core.circuit import Circuit
 
 # pylint: disable=too-few-public-methods,invalid-name
 class BasicCompilerRule(ABC):
@@ -105,3 +106,8 @@ class KroneckerSeqCompiler(SequentialCompiler):
         else:
             CLog.log(f"{CLog.R1(self.rule_name)}: nothing happened.", 1, self.log_level)
         return compiled
+
+def compile_circuit(compiler:BasicCompilerRule, circ:Circuit)->Circuit:
+    dag_circ = DAGCircuit(circ)
+    compiler.do(dag_circ)
+    return dag_circ.to_circuit()
