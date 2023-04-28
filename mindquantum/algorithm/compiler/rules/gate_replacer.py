@@ -13,22 +13,28 @@
 # limitations under the License.
 # ============================================================================
 """Convert cnot to cz."""
-from mindquantum.algorithm.compiler.dag import DAGCircuit
-from mindquantum.algorithm.compiler.rules import BasicCompilerRule, SequentialCompiler
-from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog, LogIndentation
+from ..dag import DAGCircuit
+from .basic_rule import (
+    BasicCompilerRule,
+    SequentialCompiler,
+)
+from .compiler_logger import (
+    CompileLog as CLog,
+    LogIndentation,
+)
 from mindquantum.core import gates as G
 from mindquantum.core.circuit import Circuit, apply
 
 
 class GateReplacer(BasicCompilerRule):
+
     def __init__(
         self,
         ori_example_gate: G.BasicGate,
         wanted_example_circ: Circuit,
     ):
         if set(ori_example_gate.obj_qubits + ori_example_gate.ctrl_qubits) != set(
-            wanted_example_circ.all_qubits.keys()
-        ):
+                wanted_example_circ.all_qubits.keys()):
             raise ValueError("Qubit set not equal for given gate and circuit.")
         self.ori_example_gate = ori_example_gate
         self.wanted_example_circ = wanted_example_circ
@@ -45,7 +51,8 @@ class GateReplacer(BasicCompilerRule):
                 is_same = is_same and (len(node.gate.obj_qubits) == len(self.ori_example_gate.obj_qubits))
                 is_same = is_same and (len(node.gate.ctrl_qubits) == len(self.ori_example_gate.ctrl_qubits))
                 if is_same:
-                    CLog.log(f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be replaced.", 2, self.log_level)
+                    CLog.log(f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be replaced.", 2,
+                             self.log_level)
                     compiled = True
                     new_circ = apply(self.wanted_example_circ, node.gate.obj_qubits + node.gate.ctrl_qubits)
                     dag_circuit.replace_node_with_dagcircuit(node, DAGCircuit(new_circ))
@@ -67,16 +74,20 @@ class GateReplacer(BasicCompilerRule):
 
 
 class CXToCZ(SequentialCompiler):
+
     def __init__(self):
         rule_set = [
-            GateReplacer(G.X.on(0, 1), Circuit().h(0).z(0, 1).h(0)),
-            GateReplacer(G.CNOT(0, 1), Circuit().h(0).z(0, 1).h(0)),
+            GateReplacer(G.X.on(0, 1),
+                         Circuit().h(0).z(0, 1).h(0)),
+            GateReplacer(G.CNOT(0, 1),
+                         Circuit().h(0).z(0, 1).h(0)),
         ]
         super().__init__(rule_set)
         self.rule_name = "CXToCZ"
 
 
 class CZToCX(GateReplacer):
+
     def __init__(self):
         super().__init__(G.Z.on(0, 1), Circuit().h(0).x(0, 1).h(0))
         self.rule_name = "CZToCX"

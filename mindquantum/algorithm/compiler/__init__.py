@@ -14,7 +14,6 @@
 # ============================================================================
 """MindQuantum compiler related modules."""
 
-from . import dag, decompose, rules
 from .dag import *
 from .decompose import *
 from .rules import *

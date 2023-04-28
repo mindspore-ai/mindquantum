@@ -14,8 +14,8 @@
 # ============================================================================
 """Decompose gate with control qubits."""
 
-from mindquantum.algorithm.compiler.dag import DAGCircuit
-from mindquantum.algorithm.compiler.decompose import (
+from ..dag import DAGCircuit
+from ..decompose import (
     ccx_decompose,
     ch_decompose,
     crx_decompose,
@@ -29,14 +29,12 @@ from mindquantum.algorithm.compiler.decompose import (
     cu_decompose,
     cy_decompose,
     cz_decompose,
-    qs_decompose,
     rxx_decompose,
     ryy_decompose,
     rzz_decompose,
-    swap_decompose,
 )
-from mindquantum.algorithm.compiler.rules.basic_rule import BasicCompilerRule
-from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog, LogIndentation
+from .basic_rule import BasicCompilerRule
+from .compiler_logger import CompileLog as CLog, LogIndentation
 from mindquantum.core.circuit import controlled
 from mindquantum.core.gates import (
     RX,

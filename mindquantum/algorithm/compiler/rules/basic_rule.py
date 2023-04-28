@@ -16,14 +16,14 @@
 import typing
 from abc import ABC, abstractmethod
 
-from mindquantum.algorithm.compiler.rules.compiler_logger import CompileLog as CLog, LogIndentation
+from .compiler_logger import CompileLog as CLog, LogIndentation
 
 
 # pylint: disable=too-few-public-methods,invalid-name
 class BasicCompilerRule(ABC):
     """The basic compiler rule class."""
 
-    def __init__(self, rule_name, log_level=0):
+    def __init__(self, rule_name="BasicCompilerRule", log_level=0):
         """Initialize a basic compiler rule."""
         self.rule_name = rule_name
         self.log_level = log_level
@@ -44,9 +44,9 @@ class BasicCompilerRule(ABC):
 class SequentialCompiler(BasicCompilerRule):
     """A sequential of compiler."""
 
-    def __init__(self, compilers: typing.List[BasicCompilerRule]):
+    def __init__(self, compilers: typing.List[BasicCompilerRule], rule_name="SequentialCompiler", log_level=0):
         self.compilers = compilers
-        super().__init__("SequentialCompiler")
+        super().__init__(rule_name, log_level)
 
     def __repr__(self):
         """String expression of rule."""
@@ -85,9 +85,8 @@ class SequentialCompiler(BasicCompilerRule):
 class KroneckerSeqCompiler(SequentialCompiler):
     """Kronecher sequential compiler."""
 
-    def __init__(self, compilers: typing.List[BasicCompilerRule]):
-        super().__init__(compilers)
-        self.rule_name = "KroneckerSeqCompiler"
+    def __init__(self, compilers: typing.List[BasicCompilerRule], rule_name="KroneckerSeqCompiler", log_level=0):
+        super().__init__(compilers, rule_name, log_level)
 
     def do(self, dagcircuit):
         compiled = False
