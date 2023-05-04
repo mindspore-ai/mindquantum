@@ -45,7 +45,7 @@ try:
     __version__ = version("mindquantum")
     __version_info__ = tuple(__version__.split('.'))
     __all__ = ['__version__', '__version_info__']
-except PackageNotFoundError:
+except (PackageNotFoundError, AttributeError):
     __all__ = []
 
 __all__.extend(core.__all__)

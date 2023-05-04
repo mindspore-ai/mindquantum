@@ -66,9 +66,7 @@ parse_with_libraries() {
         die "Unknown library for --with-$1 or --without-$1"
     fi
 
-    if [ "$1" == "projectq" ]; then
-        set_var enable_projectq "$2"
-    elif [ "$2" -eq 1 ]; then
+    if [ "$2" -eq 1 ]; then
         local_pkgs+=("$1")
         declare_bool_true _local_pkgs_was_set
     else
@@ -123,9 +121,9 @@ help_message() {
     echo '  --venv=[dir]           Path to Python virtual environment'
     echo "                         Defaults to: $python_venv_path"
     echo '  --with-<library>       Build the third-party <library> from source'
-    echo '                         (ignored if --local-pkgs is passed, except for projectq)'
+    echo '                         (ignored if --local-pkgs is passed)'
     echo '  --without-<library>    Do not build the third-party library from source'
-    echo '                         (ignored if --local-pkgs is passed, except for projectq)'
+    echo '                         (ignored if --local-pkgs is passed)'
     echo ''
     echo 'You may negate any flag argument (ie. arguments that do not require a value) by prefixing them with "--no-"'
     echo 'e.g. --no-logging to disable logging'

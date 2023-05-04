@@ -97,9 +97,9 @@ function Help-Message() {
     Write-Output '  -Venv <path>        Path to Python virtual environment'
     Write-Output ("                      Defaults to: {0}" -f $python_venv_path)
     Write-Output '  -With<library>      Build the third-party <library> from source (<library> is case-insensitive)'
-    Write-Output '                      (ignored if --local-pkgs is passed, except for projectq)'
+    Write-Output '                      (ignored if --local-pkgs is passed)'
     Write-Output '  -Without<library>   Do not build the third-party library from source (<library> is case-insensitive)'
-    Write-Output '                      (ignored if --local-pkgs is passed, except for projectq)'
+    Write-Output '                      (ignored if --local-pkgs is passed)'
     Write-Output ''
     Write-Output 'You may negate any flag argument (ie. arguments that do not require a value) by prefixing them with "-No-"'
     Write-Output 'e.g. -NoLogging or -No-Logging to disable logging.'
@@ -298,10 +298,7 @@ foreach($arg in $local_args) {
         exit 1
     }
 
-    if ($library -eq "projectq") {
-        Set-Value 'enable_projectq' $enable_lib
-    }
-    elseif ($enable_lib) {
+    if ($enable_lib) {
         $local_pkgs += $library
         Assign-Value -Script '_local_pkgs_was_set' $true
     }

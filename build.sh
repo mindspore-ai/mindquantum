@@ -102,7 +102,6 @@ if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
     set_var cmake_debug_mode true
     set_var enable_gitee true
     set_var enable_gpu true
-    set_var enable_projectq false
 fi
 
 # ==============================================================================
@@ -227,7 +226,6 @@ set_AA cmake_option_names enable_cxx ENABLE_CXX_EXPERIMENTAL
 set_AA cmake_option_names enable_gitee ENABLE_GITEE
 set_AA cmake_option_names enable_gpu ENABLE_CUDA
 set_AA cmake_option_names enable_logging ENABLE_LOGGING
-set_AA cmake_option_names enable_projectq ENABLE_PROJECTQ
 set_AA cmake_option_names enable_tests BUILD_TESTING
 set_AA cmake_option_names logging_enable_debug ENABLE_LOGGING_DEBUG_LEVEL
 set_AA cmake_option_names logging_enable_trace ENABLE_LOGGING_TRACE_LEVEL

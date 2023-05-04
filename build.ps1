@@ -96,7 +96,6 @@ if ($_IS_MINDSPORE_CI ) {
     Set-Value 'cmake_debug_mode' $true
     Set-Value 'enable_gitee' $true
     Set-Value 'enable_gpu' $true
-    Set-Value 'enable_projectq' $false
 }
 
 # ------------------------------------------------------------------------------
@@ -257,7 +256,6 @@ $cmake_option_names = @{
     enable_gitee = 'ENABLE_GITEE'
     enable_gpu = 'ENABLE_CUDA'
     enable_logging = 'ENABLE_LOGGING'
-    enable_projectq = 'ENABLE_PROJECTQ'
     enable_tests = 'BUILD_TESTING'
     logging_enable_debug = 'ENABLE_LOGGING_DEBUG_LEVEL'
     logging_enable_trace = 'ENABLE_LOGGING_TRACE_LEVEL'
