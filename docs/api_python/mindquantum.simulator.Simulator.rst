@@ -89,6 +89,8 @@ mindquantum.simulator.Simulator
 
             E = \left<\varphi\right|U_l^\dagger H U_r \left|\psi\right>
 
+        其中 :math:`U_l` 是circ_left，:math:`U_r` 是circ_right，:math:`H` 是hams，:math:`\left|\psi\right>` 是模拟器当前的量子态，:math:`\left|\varphi\right>` 是 `simulator_left` 的量子态。
+
         参数：
             - **hamiltonian** (Hamiltonian) - 想得到期望的hamiltonian。
             - **circ_right** (Circuit) - 表示 :math:`U_r` 的线路。如果为 ``None``，则选择空线路。默认值： ``None``。
