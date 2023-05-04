@@ -40,7 +40,7 @@ class PolynomialTensor:
     double excitation terms :math:`a^\dagger_p a^\dagger_q a_r a_s`,
     and their corresponding coefficients can be stored in an scalar,
     :math:`n_\text{qubits}\times n_\text{qubits}` matrix and
-    :math:`n_\text{qubits}\times n_\text{qubits} n_\text{qubits}\times n_\text{qubits}` matrix.
+    :math:`n_\text{qubits}\times n_\text{qubits}\times n_\text{qubits}\times n_\text{qubits}` matrix.
     Note that each tensor must have an even number of dimensions due to
     the parity conservation.
     Much of the functionality of this class is similar to that of
