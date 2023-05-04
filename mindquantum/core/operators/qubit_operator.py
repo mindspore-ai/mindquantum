@@ -538,7 +538,7 @@ class QubitOperator(QubitOperator_):
                     total[idx] = pauli_map[local_op]
                 for i in total:
                     tmp = kron(i, tmp)
-                out += tmp
+                out += csr_matrix(tmp)
         return out
 
     def singlet(self) -> typing.List["QubitOperator"]:
