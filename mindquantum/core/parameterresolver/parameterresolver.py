@@ -417,6 +417,15 @@ class ParameterResolver(ParameterResolver_):
             return ParameterResolver(ParameterResolver_.__truediv__(self, other), internal=True)
         return ParameterResolver(ParameterResolver_.__truediv__(self, ParameterResolver(other)), internal=True)
 
+    def __getstate__(self):
+        """Get state of parameter resolver."""
+        return {'json_str': self.dumps()}
+
+    def __setstate__(self, state):
+        """Set state of parameter resolver."""
+        a = ParameterResolver.loads(state['json_str'])
+        self.__init__(a)
+
     @property
     def ansatz_parameters(self) -> typing.List[str]:
         """
