@@ -92,7 +92,8 @@ class Transform:
 
             a_{j}\rightarrow \sigma^{+}_{j} X \prod_{i=0}^{j-1}\sigma^{Z}_{i},
 
-        where the :math:`\sigma_{+}= \sigma^{X} + i \sigma^{Y}` and :math:`\sigma_{-} = \sigma^{X} - i\sigma^{Y}` is the
+        where the :math:`\sigma_{+} = \sigma^{X} + i \sigma^{Y}` and
+        :math:`\sigma_{-} = \sigma^{X} - i\sigma^{Y}` is the
         Pauli spin raising and lowring operator.
 
         Returns:
