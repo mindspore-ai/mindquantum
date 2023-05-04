@@ -13,6 +13,8 @@
 # limitations under the License.
 # ============================================================================
 """Test ParameterResolve."""
+import pickle
+
 import pytest
 
 import mindquantum as mq
@@ -84,3 +86,15 @@ def test_parameter_resolve_combination(dtype):
     pr1 = PR({'a': 1}, dtype=dtype)
     pr2 = PR({'a': 2, 'b': 3}, dtype=dtype)
     assert pr1.combination(pr2) == 2
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+@pytest.mark.parametrize('dtype', [mq.complex128, mq.complex64, mq.float32, mq.float64])
+def test_parameter_resolver_pickle(dtype):
+    """
+    Description: Test pickle
+    Expectation: success
+    """
+    pr = PR({'a': 1.2}, dtype=dtype)
+    assert pr == pickle.loads(pickle.dumps(pr))
