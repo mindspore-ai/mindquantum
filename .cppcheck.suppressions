@@ -78,7 +78,6 @@ useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.hpp
 useStlAlgorithm:ccsrc/include/experimental/core/control.hpp:79
 useStlAlgorithm:ccsrc/include/ops/gates/terms_coeff_dict.hpp
 useStlAlgorithm:ccsrc/include/ops/gates/terms_operator_base.tpp
-useStlAlgorithm:ccsrc/lib/experimental/simulator/projectq_simulator.cpp
 
 useInitializationList:ccsrc/include/simulator/cintrin.hpp
 

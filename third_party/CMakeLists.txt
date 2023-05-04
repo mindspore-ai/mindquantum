@@ -25,12 +25,6 @@ list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake ${CMAKE_CURRENT_L
 include(utils)
 include(external_targets)
 
-# ==============================================================================
-
-if(ENABLE_PROJECTQ)
-  add_subdirectory(projectq)
-endif()
-
 # =============================================================================
 
 set(POSIX_C_SOURCE 0)

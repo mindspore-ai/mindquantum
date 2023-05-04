@@ -30,7 +30,6 @@ if NOT DEFINED enable_ccache set enable_ccache=0
 if NOT DEFINED enable_cxx set enable_cxx=0
 if NOT DEFINED enable_gitee set enable_gitee=0
 if NOT DEFINED enable_gpu set enable_gpu=0
-if NOT DEFINED enable_projectq set enable_projectq=0
 if NOT DEFINED enable_tests set enable_tests=0
 if NOT DEFINED enable_logging set enable_logging=0
 if NOT DEFINED logging_enable_debug set logging_enable_debug=0
@@ -52,7 +51,7 @@ if NOT DEFINED build_dir set build_dir=!source_dir!\build
 if NOT DEFINED python_venv_path set python_venv_path=!source_dir!\venv
 
 if NOT DEFINED third_party_libraries (
-   set third_party_libraries=boost catch2 eigen3 fmt gmp nlohmann_json projectq pybind11 symengine tweedledum
+   set third_party_libraries=boost catch2 eigen3 fmt gmp nlohmann_json pybind11 symengine tweedledum
    set third_party_libraries_N=10
 )
 

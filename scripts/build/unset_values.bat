@@ -27,7 +27,6 @@ if DEFINED dry_run set dry_run=
 if DEFINED enable_ccache set enable_ccache=
 if DEFINED enable_cxx set enable_cxx=
 if DEFINED enable_gpu set enable_gpu=
-if DEFINED enable_projectq set enable_projectq=
 if DEFINED enable_tests set enable_tests=
 if DEFINED force_local_pkgs set force_local_pkgs=
 if DEFINED local_pkgs set local_pkg=

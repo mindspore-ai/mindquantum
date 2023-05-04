@@ -349,7 +349,6 @@ call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_GITEE !enable_gitee!
 call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_LOGGING !enable_logging!
 call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_LOGGING_DEBUG_LEVEL !logging_enable_debug!
 call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_LOGGING_TRACE_LEVEL !logging_enable_trace!
-call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_PROJECTQ !enable_projectq!
 
 set cmake_args=!cmake_args! %RETVAL%
 set cmake_args=!cmake_args! -DENABLE_BUILD_TYPE:STRING=!build_type!
@@ -563,9 +562,9 @@ exit /B 0
   echo   /Venv *path*        Path to Python virtual environment
   echo                       Defaults to: %python_venv_path%
   echo   /With*library*      Build the third-party *library* from source (*library* is case-insensitive)
-  echo                       (ignored if /LocalPkgs is passed, except for projectq)
+  echo                       (ignored if /LocalPkgs is passed)
   rem echo   /Without*library*   Do not build the third-party library from source (*library* is case-insensitive)
-  rem echo                       (ignored if /LocalPkgs is passed, except for projectq)
+  rem echo                       (ignored if /LocalPkgs is passed)
   echo:
   echo Test related options:
   echo   /Test               Build C++ tests and install dependencies for Python testing as well

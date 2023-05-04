@@ -40,9 +40,9 @@ variables:
 
 .default_script_unix: &default_script_unix
   - >-
-    ./build_locally.sh --cxx --with-projectq --with-quest --debug-cmake --test --ccache
+    ./build_locally.sh --cxx --debug-cmake --test --ccache
     --configure-only -c --clean-3rdparty --prefix=$PWD/install
-  - ./build_locally.sh --cxx --with-projectq --with-quest --debug-cmake --test --ccache
+  - ./build_locally.sh --cxx --debug-cmake --test --ccache
   - ./build_locally.sh --install  # NB: no need to pass the other parameters
 
 .cache_paths:
