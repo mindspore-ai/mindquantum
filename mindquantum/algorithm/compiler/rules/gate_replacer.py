@@ -80,6 +80,7 @@ class GateReplacer(BasicCompilerRule):
         self.wanted_example_circ = wanted_example_circ
         super().__init__("GateReplacer")
         self.permute_map = dict(enumerate(all_qubits))
+<<<<<<< HEAD
 
     def __repr__(self):
         """Get string expression of gate replacer."""
@@ -90,6 +91,8 @@ class GateReplacer(BasicCompilerRule):
                 strs.append("  " + string)
         strs.append(">")
         return '\n'.join(strs)
+=======
+>>>>>>> f2a37c6e... docing compiler
 
     def do(self, dag_circuit: DAGCircuit):
         """Do gate replacer rule."""
@@ -119,6 +122,19 @@ class GateReplacer(BasicCompilerRule):
             CLog.log(f"{CLog.R1(self.rule_name)}: nothing happened.", 1, self.log_level)
         return compiled
 
+<<<<<<< HEAD
+=======
+    def __repr__(self):
+        """Get string expression of gate replacer."""
+        strs = ['GateReplacer<']
+        body = f"{Circuit(self.ori_example_gate)} ->\n{self.wanted_example_circ}"
+        for string in body.split('\n'):
+            if string:
+                strs.append("  " + string)
+        strs.append(">")
+        return '\n'.join(strs)
+
+>>>>>>> f2a37c6e... docing compiler
 
 class CXToCZ(SequentialCompiler):
     """Convert cx to cz gate."""

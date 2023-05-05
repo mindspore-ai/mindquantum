@@ -45,6 +45,28 @@ class SimpleNeighborCanceler(BasicCompilerRule):
             if isinstance(current_node, GateNode):
                 compiled = self._merge_two_gates(current_node, child_node, fc_pair_consided, dag_circuit) or compiled
             compiled = self._canceler(child_node, fc_pair_consided, dag_circuit) or compiled
+<<<<<<< HEAD
+=======
+        return compiled
+
+    def _merge_two_gates(self, current_node: GateNode, child_node: GateNode, fc_pair_consided, dag_circuit):
+        """Merge two gates."""
+        compiled = False
+        state, res, global_phase = try_merge(current_node, child_node)
+        if not state:
+            return False
+        compiled = True
+        with LogIndentation() as _:
+            CLog.log(
+                f"{CLog.R1(self.rule_name)}: merge {CLog.B(current_node.gate)} and {CLog.B(child_node.gate)}.",
+                2,
+                self.log_level,
+            )
+        if global_phase:
+            dag_circuit.global_phase.coeff += global_phase.coeff
+        for node in res:
+            compiled = self._canceler(node, fc_pair_consided, dag_circuit) or compiled
+>>>>>>> f2a37c6e... docing compiler
         return compiled
 
     def do(self, dag_circuit: DAGCircuit):

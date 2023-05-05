@@ -52,6 +52,13 @@ class BasicCompilerRule(ABC):
         self.log_level = log_level
         return self
 
+<<<<<<< HEAD
+=======
+    def __repr__(self):
+        """Get string expression of rule."""
+        return f"{self.rule_name}<>"
+
+>>>>>>> f2a37c6e... docing compiler
     @abstractmethod
     def do(self, dag_circuit) -> bool:
         """Apply this compiler rule."""
