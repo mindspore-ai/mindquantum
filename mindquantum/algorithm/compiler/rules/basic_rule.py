@@ -38,6 +38,10 @@ class BasicCompilerRule(ABC):
         self.rule_name = rule_name
         self.log_level = log_level
 
+    def __repr__(self):
+        """Get string expression of rule."""
+        return f"{self.rule_name}<>"
+
     def set_log_level(self, log_level: int):
         """
         Set display log level.
@@ -47,10 +51,6 @@ class BasicCompilerRule(ABC):
         """
         self.log_level = log_level
         return self
-
-    def __repr__(self):
-        """Get string expression of rule."""
-        return f"{self.rule_name}<>"
 
     @abstractmethod
     def do(self, dag_circuit) -> bool:

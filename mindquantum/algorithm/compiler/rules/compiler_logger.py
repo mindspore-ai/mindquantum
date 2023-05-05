@@ -24,49 +24,9 @@ class CompileLog:
     HEAD_BLOCK = 0
 
     @staticmethod
-    def IncreaseHeadBlock():
-        """Increase the tag block when display message."""
-        CompileLog.HEAD_BLOCK += 2
-
-    @staticmethod
-    def DecreaseHeadBlock():
-        """Decrease the tag block when display message."""
-        CompileLog.HEAD_BLOCK -= 2
-
-    @staticmethod
-    def W(msg: str):
-        """Display in white."""
-        return f"\033[1;37m{msg}\033[00m"
-
-    @staticmethod
-    def K(msg: str):
-        """Display in black."""
-        return f"\033[1;30m{msg}\033[00m"
-
-    @staticmethod
-    def R(msg: str):
-        """Display in red."""
-        return f"\033[1;31m{msg}\033[00m"
-
-    @staticmethod
-    def G(msg: str):
-        """Display in green."""
-        return f"\033[1;32m{msg}\033[00m"
-
-    @staticmethod
-    def Y(msg: str):
-        """Display in yellow."""
-        return f"\033[1;33m{msg}\033[00m"
-
-    @staticmethod
     def B(msg: str):
         """Display in blue."""
         return f"\033[1;34m{msg}\033[00m"
-
-    @staticmethod
-    def P(msg: str):
-        """Display in purple."""
-        return f"\033[1;35m{msg}\033[00m"
 
     @staticmethod
     def C(msg: str):
@@ -74,19 +34,24 @@ class CompileLog:
         return f"\033[1;36m{msg}\033[00m"
 
     @staticmethod
-    def R1(msg: str):
-        """Display in red."""
-        return CompileLog.R(msg)
+    def DecreaseHeadBlock():
+        """Decrease the tag block when display message."""
+        CompileLog.HEAD_BLOCK -= 2
 
     @staticmethod
-    def R2(msg: str):
-        """Display in yellow."""
-        return CompileLog.Y(msg)
+    def G(msg: str):
+        """Display in green."""
+        return f"\033[1;32m{msg}\033[00m"
 
     @staticmethod
-    def ShowState(state: typing.List[bool]):
-        """Show compile result state."""
-        return '[' + ', '.join(str(i) if not i else CompileLog.P(i) for i in state) + ']'
+    def IncreaseHeadBlock():
+        """Increase the tag block when display message."""
+        CompileLog.HEAD_BLOCK += 2
+
+    @staticmethod
+    def K(msg: str):
+        """Display in black."""
+        return f"\033[1;30m{msg}\033[00m"
 
     @staticmethod
     def _level1(msg: str):
@@ -125,6 +90,41 @@ class CompileLog:
         if log_level > filter_level:
             return
         log_dict[log_level](msg)
+
+    @staticmethod
+    def P(msg: str):
+        """Display in purple."""
+        return f"\033[1;35m{msg}\033[00m"
+
+    @staticmethod
+    def R(msg: str):
+        """Display in red."""
+        return f"\033[1;31m{msg}\033[00m"
+
+    @staticmethod
+    def R1(msg: str):
+        """Display in red."""
+        return CompileLog.R(msg)
+
+    @staticmethod
+    def R2(msg: str):
+        """Display in yellow."""
+        return CompileLog.Y(msg)
+
+    @staticmethod
+    def ShowState(state: typing.List[bool]):
+        """Show compile result state."""
+        return '[' + ', '.join(str(i) if not i else CompileLog.P(i) for i in state) + ']'
+
+    @staticmethod
+    def W(msg: str):
+        """Display in white."""
+        return f"\033[1;37m{msg}\033[00m"
+
+    @staticmethod
+    def Y(msg: str):
+        """Display in yellow."""
+        return f"\033[1;33m{msg}\033[00m"
 
 
 class LogIndentation:

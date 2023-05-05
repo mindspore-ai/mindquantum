@@ -81,6 +81,16 @@ class GateReplacer(BasicCompilerRule):
         super().__init__("GateReplacer")
         self.permute_map = dict(enumerate(all_qubits))
 
+    def __repr__(self):
+        """Get string expression of gate replacer."""
+        strs = ['GateReplacer<']
+        body = f"{Circuit(self.ori_example_gate)} ->\n{self.wanted_example_circ}"
+        for string in body.split('\n'):
+            if string:
+                strs.append("  " + string)
+        strs.append(">")
+        return '\n'.join(strs)
+
     def do(self, dag_circuit: DAGCircuit):
         """Do gate replacer rule."""
         compiled = False
@@ -108,16 +118,6 @@ class GateReplacer(BasicCompilerRule):
         else:
             CLog.log(f"{CLog.R1(self.rule_name)}: nothing happened.", 1, self.log_level)
         return compiled
-
-    def __repr__(self):
-        """Get string expression of gate replacer."""
-        strs = ['GateReplacer<']
-        body = f"{Circuit(self.ori_example_gate)} ->\n{self.wanted_example_circ}"
-        for string in body.split('\n'):
-            if string:
-                strs.append("  " + string)
-        strs.append(">")
-        return '\n'.join(strs)
 
 
 class CXToCZ(SequentialCompiler):

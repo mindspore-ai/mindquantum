@@ -47,6 +47,22 @@ class SimpleNeighborCanceler(BasicCompilerRule):
             compiled = self._canceler(child_node, fc_pair_consided, dag_circuit) or compiled
         return compiled
 
+    def do(self, dag_circuit: DAGCircuit):
+        """Apply neighbor canceler compiler rule."""
+        _check_input_type("dag_circuit", DAGCircuit, dag_circuit)
+
+        fc_pair_consided = set()
+        compiled = False
+        CLog.log(f"Running {CLog.R1(self.rule_name)}.", 1, self.log_level)
+        with LogIndentation() as _:
+            for current_node in dag_circuit.head_node.values():
+                compiled = self._canceler(current_node, fc_pair_consided, dag_circuit) or compiled
+        if compiled:
+            CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfully compiled')}.", 1, self.log_level)
+        else:
+            CLog.log(f"{CLog.R1(self.rule_name)}: nothing happened.", 1, self.log_level)
+        return compiled
+
     def _merge_two_gates(self, current_node: GateNode, child_node: GateNode, fc_pair_consided, dag_circuit):
         """Merge two gates."""
         compiled = False
@@ -64,22 +80,6 @@ class SimpleNeighborCanceler(BasicCompilerRule):
             dag_circuit.global_phase.coeff += global_phase.coeff
         for node in res:
             compiled = self._canceler(node, fc_pair_consided, dag_circuit) or compiled
-        return compiled
-
-    def do(self, dag_circuit: DAGCircuit):
-        """Apply neighbor canceler compiler rule."""
-        _check_input_type("dag_circuit", DAGCircuit, dag_circuit)
-
-        fc_pair_consided = set()
-        compiled = False
-        CLog.log(f"Running {CLog.R1(self.rule_name)}.", 1, self.log_level)
-        with LogIndentation() as _:
-            for current_node in dag_circuit.head_node.values():
-                compiled = self._canceler(current_node, fc_pair_consided, dag_circuit) or compiled
-        if compiled:
-            CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfully compiled')}.", 1, self.log_level)
-        else:
-            CLog.log(f"{CLog.R1(self.rule_name)}: nothing happened.", 1, self.log_level)
         return compiled
 
 
