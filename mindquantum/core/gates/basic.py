@@ -14,12 +14,11 @@
 # ============================================================================
 
 # pylint: disable=abstract-method,duplicate-code
-
 """Basic module for quantum gate."""
 
 import copy
 from abc import ABC, abstractmethod
-from typing import Iterable, List
+from typing import Iterable, List, Tuple
 
 import numpy as np
 import scipy
@@ -115,6 +114,10 @@ class BasicGate(ABC):
     def __type_specific_str__(self):
         """Return a string representation of the object."""
         return ''
+
+    def __merge__(self, other: "BasicGate") -> Tuple[bool, List["BasicGate"], "GlobalPhase"]:
+        """Merge with other gate."""
+        return (False, [self, other], None)
 
     def matrix(self, *args):
         """Matrix of the gate."""
@@ -408,7 +411,7 @@ class ParameterGate(QuantumGate):
     def __call__(self, pr):
         """Definition of a function call operator."""
         new = copy.deepcopy(self)
-        new.coeff = pr
+        new.coeff = ParameterResolver(pr)
         return new
 
     def __eq__(self, other):
@@ -463,6 +466,17 @@ class ParameterGate(QuantumGate):
 class ParameterOppsGate(ParameterGate):
     """ParameterOppsGate class."""
 
+    def __merge__(self, other: BasicGate) -> Tuple[bool, List[BasicGate], "GlobalPhase"]:
+        """Merge two gate."""
+        if not isinstance(other, self.__class__):
+            return (False, [], None)
+        if self.obj_qubits != other.obj_qubits or set(self.ctrl_qubits) != set(other.ctrl_qubits):
+            return (False, [], None)
+        new_coeff = self.coeff + other.coeff
+        if new_coeff == 0.0:
+            return (True, [], None)
+        return (True, [self(new_coeff)], None)
+
     def hermitian(self):
         """Return the hermitian of this parameter gate."""
         new = copy.deepcopy(self)
@@ -484,6 +498,16 @@ class NoneParamNonHermMat(NoneParameterGate, MatrixGate, NonHermitianGate):
         """Equality comparison operator."""
         return NonHermitianGate.__eq__(self, other)
 
+    def __merge__(self, other: BasicGate) -> Tuple[bool, List[BasicGate], "GlobalPhase"]:
+        """Merge two gate."""
+        if not isinstance(other, self.__class__):
+            return (False, [self, other], None)
+        if self.obj_qubits != other.obj_qubits or set(self.ctrl_qubits) != set(other.ctrl_qubits):
+            return (False, [self, other], None)
+        if self.hermitianed ^ other.hermitianed:
+            return (True, [], None)
+        return (False, [self, other], None)
+
     def matrix(self):
         """Matrix of parameterized gate."""
         if self.hermitianed:
@@ -497,6 +521,13 @@ class NoneParamSelfHermMat(NoneParameterGate, SelfHermitianGate, MatrixGate):
     def __eq__(self, other):
         """Equality comparison operator."""
         return MatrixGate.__eq__(self, other)
+
+    def __merge__(self, other: BasicGate) -> Tuple[bool, List[BasicGate], "GlobalPhase"]:
+        """Merge with other gate."""
+        if isinstance(other, self.__class__):
+            if self.obj_qubits == other.obj_qubits and set(self.ctrl_qubits) == set(other.ctrl_qubits):
+                return (True, [], None)
+        return (False, [self, other], None)
 
 
 class PauliGate(NoneParamSelfHermMat):
@@ -543,7 +574,7 @@ class PauliStringGate(NoneParamSelfHermMat):
 
 
 class RotSelfHermMat(ParameterOppsGate):
-    """Exponential of a self hermitian gate."""
+    """Exponential of a self hermitian operator gate."""
 
     def __init__(
         self, core, name, n_qubits, obj_qubits=None, ctrl_qubits=None, pr=ParameterResolver()
@@ -551,6 +582,17 @@ class RotSelfHermMat(ParameterOppsGate):
         """Initialize a RotSelfHermMat object."""
         super().__init__(pr, name, n_qubits, obj_qubits=obj_qubits, ctrl_qubits=ctrl_qubits)
         self.core = core
+
+    def __merge__(self, other: BasicGate) -> Tuple[bool, List[BasicGate], "GlobalPhase"]:
+        """Merge with other gate."""
+        if not isinstance(other, self.__class__):
+            return (False, [self, other], None)
+        if self.obj_qubits != other.obj_qubits or set(self.ctrl_qubits) != set(other.ctrl_qubits):
+            return (False, [self, other], None)
+        new_coeff = self.coeff + other.coeff
+        if new_coeff.is_const() and np.allclose(new_coeff.const % (4 * np.pi), 0.0):
+            return (True, [], None)
+        return (True, [self(new_coeff)], None)
 
     def matrix(self, pr=None, frac=0.5):  # pylint: disable=arguments-differ
         """Matrix of parameterized gate."""

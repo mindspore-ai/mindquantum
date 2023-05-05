@@ -442,6 +442,10 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         """Iterate quantum circuit."""
         yield from super().__iter__()
 
+    def __reduce__(self):
+        """Reduce fun for pickle."""
+        return (Circuit, (list(self),))
+
     @property
     def has_measure_gate(self):
         """

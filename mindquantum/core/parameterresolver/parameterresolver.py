@@ -417,6 +417,15 @@ class ParameterResolver(ParameterResolver_):
             return ParameterResolver(ParameterResolver_.__truediv__(self, other), internal=True)
         return ParameterResolver(ParameterResolver_.__truediv__(self, ParameterResolver(other)), internal=True)
 
+    def __getstate__(self):
+        """Get state of parameter resolver."""
+        return {'json_str': self.dumps()}
+
+    def __setstate__(self, state):
+        """Set state of parameter resolver."""
+        a = ParameterResolver.loads(state['json_str'])
+        self.__init__(a)
+
     @property
     def ansatz_parameters(self) -> typing.List[str]:
         """
@@ -817,11 +826,15 @@ class ParameterResolver(ParameterResolver_):
         if indent is not None:
             _check_int_type('indent', indent)
         dic = {}
-        dic['pr_data'] = {i: (j.real, j.imag) for i, j in self.items()}
-        dic['const'] = (self.const.real, self.const.imag)
         dic['dtype'] = str(self.dtype)
-        dic['no_grad_parameters'] = list(self.no_grad_parameters)
-        dic['encoder_parameters'] = list(self.encoder_parameters)
+        if mq.is_single_precision(self.dtype):
+            double_version = self.astype(mq.to_double_precision(self.dtype))
+        else:
+            double_version = self
+        dic['pr_data'] = {i: (j.real, j.imag) for i, j in double_version.items()}
+        dic['const'] = (double_version.const.real, double_version.const.imag)
+        dic['no_grad_parameters'] = list(double_version.no_grad_parameters)
+        dic['encoder_parameters'] = list(double_version.encoder_parameters)
         return json.dumps(dic, indent=indent)
 
     def encoder_part(self, *names):

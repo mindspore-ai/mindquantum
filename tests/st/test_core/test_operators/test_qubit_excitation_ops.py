@@ -15,6 +15,8 @@
 
 # pylint: disable=invalid-name
 """Test qubit excitation operator."""
+import pickle
+
 import pytest
 
 from mindquantum.core.operators import (
@@ -199,3 +201,14 @@ def test_fermion_op():
     ferm_op = FermionOperator(((4, 1), (1, 0)), 2.0j)
 
     assert op.fermion_operator == ferm_op
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_pickle_qubit_excitation():
+    """
+    Description: Test pickle for qubit excitation operator
+    Expectation: success.
+    """
+    ops = QubitExcitationOperator(((4, 1), (1, 0)), 2.0j)
+    assert ops == pickle.loads(pickle.dumps(ops))

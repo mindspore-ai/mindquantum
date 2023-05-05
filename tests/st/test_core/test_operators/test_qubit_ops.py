@@ -14,8 +14,8 @@
 
 # pylint: disable=invalid-name
 """The test function for QubitOperator."""
-
 import os
+import pickle
 
 import numpy as np
 import pytest
@@ -243,3 +243,14 @@ def test_ground_state_of_sum_zz_gpu(sim):
     e1 = ground_state_of_sum_zz(ops, sim=sim)
     e2 = np.min(ops.matrix().data)
     assert np.allclose(e1, e2)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_pickle_qubit():
+    """
+    Description: Test pickle for qubit operator
+    Expectation: success.
+    """
+    ops = QubitOperator('X0 Y1')
+    assert ops == pickle.loads(pickle.dumps(ops))

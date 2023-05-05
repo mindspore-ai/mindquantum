@@ -179,6 +179,23 @@ class XGate(PauliGate):
             return False
         return super().__eq__(other)
 
+    def __merge__(self, other: BasicGate) -> Tuple[bool, List[BasicGate], "GlobalPhase"]:
+        """Merge two gate."""
+        if self == other:
+            return (True, [], None)
+
+        if isinstance(other, CNOTGate):
+            return self.__merge__(X.on(other.obj_qubits[0], [other.obj_qubits[1], *other.ctrl_qubits]))
+
+        if not isinstance(other, RX):
+            return (False, [self, other], None)
+        if self.obj_qubits != other.obj_qubits or set(self.ctrl_qubits) != set(other.ctrl_qubits):
+            return (False, [self, other], None)
+        super_state = RX(np.pi).on(self.obj_qubits, self.ctrl_qubits).__merge__(other)
+        if not super_state[0]:
+            return (False, [self, other], None)
+        return (True, super_state[1], GlobalPhase(-np.pi / 2).on(self.obj_qubits, self.ctrl_qubits))
+
     def get_cpp_obj(self):
         """Construct cpp obj."""
         return mb.gate.XGate(self.obj_qubits, self.ctrl_qubits)
@@ -205,6 +222,20 @@ class YGate(PauliGate):
             matrix_value=_GLOBAL_MAT_VALUE['Y'],
         )
 
+    def __merge__(self, other: BasicGate) -> Tuple[bool, List[BasicGate], "GlobalPhase"]:
+        """Merge Y gate."""
+        origin_state = super().__merge__(other)
+        if origin_state[0]:
+            return origin_state
+        if not isinstance(other, RY):
+            return (False, [self, other], None)
+        if self.obj_qubits != other.obj_qubits or set(self.ctrl_qubits) != set(other.ctrl_qubits):
+            return (False, [self, other], None)
+        super_state = RY(np.pi).on(self.obj_qubits, self.ctrl_qubits).__merge__(other)
+        if not super_state[0]:
+            return (False, [self, other], None)
+        return (True, super_state[1], GlobalPhase(-np.pi / 2).on(self.obj_qubits, self.ctrl_qubits))
+
     def get_cpp_obj(self):
         """Construct cpp obj."""
         return mb.gate.YGate(self.obj_qubits, self.ctrl_qubits)
@@ -230,6 +261,20 @@ class ZGate(PauliGate):
             n_qubits=1,
             matrix_value=_GLOBAL_MAT_VALUE['Z'],
         )
+
+    def __merge__(self, other: BasicGate) -> Tuple[bool, List[BasicGate], "GlobalPhase"]:
+        """Merge Z gate."""
+        origin_state = super().__merge__(other)
+        if origin_state[0]:
+            return origin_state
+        if not isinstance(other, RZ):
+            return (False, [self, other], None)
+        if self.obj_qubits != other.obj_qubits or set(self.ctrl_qubits) != set(other.ctrl_qubits):
+            return (False, [self, other], None)
+        super_state = RZ(np.pi).on(self.obj_qubits, self.ctrl_qubits).__merge__(other)
+        if not super_state[0]:
+            return (False, [self, other], None)
+        return (True, super_state[1], GlobalPhase(-np.pi / 2).on(self.obj_qubits, self.ctrl_qubits))
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
@@ -261,6 +306,10 @@ class IGate(PauliGate):
         """Equality comparison operator."""
         _check_gate_type(other)
         return isinstance(other, IGate)
+
+    def __merge__(self, other: BasicGate) -> Tuple[bool, List[BasicGate], "GlobalPhase"]:
+        """Merge I with other gate."""
+        return (True, [other], None)
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
@@ -316,6 +365,10 @@ class CNOTGate(NoneParamSelfHermMat):
         """Gate decomposition method."""
         return X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits]).__decompose__()
 
+    def __merge__(self, other: BasicGate) -> Tuple[bool, List[BasicGate], "GlobalPhase"]:
+        """Merge with other gate."""
+        return X.on(self.obj_qubits[0], [self.obj_qubits[1], *self.ctrl_qubits]).__merge__(other)
+
     def get_cpp_obj(self):
         """Construct cpp obj."""
         return mb.gate.XGate(self.obj_qubits[:1], self.obj_qubits[1:] + self.ctrl_qubits)
@@ -342,6 +395,16 @@ class SWAPGate(NoneParamSelfHermMat):
         if isinstance(other, SWAPGate):
             return set(self.obj_qubits) == set(other.obj_qubits) and set(self.ctrl_qubits) == set(other.ctrl_qubits)
         return False
+
+    def __merge__(self, other: BasicGate) -> Tuple[bool, List[BasicGate], "GlobalPhase"]:
+        """Merge two swap gate."""
+        if not isinstance(other, self.__class__):
+            return (False, [self, other], None)
+        if set(self.obj_qubits) != set(other.obj_qubits):
+            return (False, [self, other], None)
+        if set(self.ctrl_qubits) != set(other.ctrl_qubits):
+            return (False, [self, other], None)
+        return (True, [], None)
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
@@ -372,6 +435,16 @@ class ISWAPGate(NoneParamNonHermMat):
         if isinstance(other, ISWAPGate):
             return set(self.obj_qubits) == set(other.obj_qubits) and set(self.ctrl_qubits) == set(other.ctrl_qubits)
         return False
+
+    def __merge__(self, other: BasicGate) -> Tuple[bool, List[BasicGate], "GlobalPhase"]:
+        """Merge two iswap gate."""
+        if not isinstance(other, self.__class__):
+            return (False, [self, other], None)
+        if set(self.obj_qubits) != set(other.obj_qubits) or set(self.ctrl_qubits) != set(other.ctrl_qubits):
+            return (False, [self, other], None)
+        if self.hermitianed ^ other.hermitianed:
+            return (True, [], None)
+        return (False, [self, other], None)
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
@@ -496,6 +569,12 @@ class RX(RotSelfHermMat):
             core=XGate(),
         )
 
+    def __merge__(self, other: BasicGate) -> Tuple[bool, List[BasicGate], "GlobalPhase"]:
+        """Merge with other gate."""
+        if isinstance(other, (XGate, CNOTGate)):
+            return other.__merge__(self)
+        return super().__merge__(other)
+
     def get_cpp_obj(self):
         """Construct cpp obj."""
         return mb.gate.RXGate(self.coeff, self.obj_qubits, self.ctrl_qubits)
@@ -524,6 +603,12 @@ class RY(RotSelfHermMat):
             core=YGate(),
         )
 
+    def __merge__(self, other: BasicGate) -> Tuple[bool, List[BasicGate], "GlobalPhase"]:
+        """Merge with other gate."""
+        if isinstance(other, YGate):
+            return other.__merge__(self)
+        return super().__merge__(other)
+
     def get_cpp_obj(self):
         """Construct cpp obj."""
         return mb.gate.RYGate(self.coeff, self.obj_qubits, self.ctrl_qubits)
@@ -551,6 +636,12 @@ class RZ(RotSelfHermMat):
             n_qubits=1,
             core=ZGate(),
         )
+
+    def __merge__(self, other: BasicGate) -> Tuple[bool, List[BasicGate], "GlobalPhase"]:
+        """Merge with other gate."""
+        if isinstance(other, ZGate):
+            return other.__merge__(self)
+        return super().__merge__(other)
 
     def get_cpp_obj(self):
         """Construct cpp obj."""
@@ -1341,6 +1432,12 @@ class GlobalPhase(RotSelfHermMat):
             core=IGate(),
         )
 
+    def __merge__(self, other: BasicGate) -> Tuple[bool, List[BasicGate], "GlobalPhase"]:
+        """Merge with other gate."""
+        if not isinstance(other, GlobalPhase):
+            return (True, [other], self)
+        return super().__merge__(other)
+
     def matrix(self, pr=None, **kwargs):  # pylint: disable=arguments-differ,unused-argument
         """
         Matrix of parameterized gate.
@@ -1687,7 +1784,7 @@ class MultiParamsGate(ParameterGate):
     def __call__(self, prs: List[ParameterResolver]) -> "MultiParamsGate":
         """Generate new one with given parameters."""
         new = copy.deepcopy(self)
-        new.prs = prs
+        new.prs = [ParameterResolver(i) for i in prs]
         return new
 
     def __params_prop__(self) -> Tuple[List[str], List[str], List[str]]:
@@ -1925,6 +2022,18 @@ class FSim(MultiParamsGate):
         phi = ParameterResolver(phi)
         prs = [theta, phi]
         return super().__call__(prs)
+
+    def __merge__(self, other: BasicGate) -> Tuple[bool, List[BasicGate], "GlobalPhase"]:
+        """Merge two fsim gate."""
+        if not isinstance(other, FSim):
+            return (False, (self, other), None)
+        if self.obj_qubits != other.obj_qubits or set(self.ctrl_qubits) != set(other.ctrl_qubits):
+            return (False, (self, other), None)
+        new_theta = self.theta + other.theta
+        new_phi = self.phi + other.phi
+        if new_phi == 0 and new_theta == 0:
+            return (True, [], None)
+        return (True, [self(new_phi, new_theta)], None)
 
     @property
     def theta(self) -> ParameterResolver:

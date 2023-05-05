@@ -17,7 +17,6 @@
 
 import copy
 import json
-import numbers
 import typing
 from functools import lru_cache
 
@@ -244,6 +243,15 @@ class FermionOperator(FermionOperator_):
         for _ in range(frac - 1):
             out *= self
         return self
+
+    def __getstate__(self):
+        """Get state of parameter resolver."""
+        return {'json_str': self.dumps()}
+
+    def __setstate__(self, state):
+        """Set state of parameter resolver."""
+        a = FermionOperator.loads(state['json_str'])
+        self.__init__(a)
 
     @property
     def constant(self) -> ParameterResolver:

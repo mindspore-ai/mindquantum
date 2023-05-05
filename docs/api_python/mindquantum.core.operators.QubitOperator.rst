@@ -182,7 +182,7 @@ mindquantum.core.operators.QubitOperator
         返回：
             List[List[ParameterResolver, QubitOperator]]，分裂后的结果。
 
-    .. py:method:: subs(params_value: typing.Union[typing.Dict[str, numbers.Number], ParameterResolver])
+    .. py:method:: subs(params_value: PRConvertible)
 
         将玻色子中的变量换成具体的参数值。
 

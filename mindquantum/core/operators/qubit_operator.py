@@ -17,7 +17,6 @@
 
 import copy
 import json
-import numbers
 import typing
 
 import numpy as np
@@ -204,6 +203,15 @@ class QubitOperator(QubitOperator_):
     def __str__(self) -> str:
         """Return string expression of a QubitOperator."""
         return self.__repr__()
+
+    def __getstate__(self):
+        """Get state of parameter resolver."""
+        return {'json_str': self.dumps()}
+
+    def __setstate__(self, state):
+        """Set state of parameter resolver."""
+        a = QubitOperator.loads(state['json_str'])
+        self.__init__(a)
 
     @property
     def dtype(self):
@@ -530,7 +538,7 @@ class QubitOperator(QubitOperator_):
                     total[idx] = pauli_map[local_op]
                 for i in total:
                     tmp = kron(i, tmp)
-                out += tmp
+                out += csr_matrix(tmp)
         return out
 
     def singlet(self) -> typing.List["QubitOperator"]:
@@ -589,7 +597,7 @@ class QubitOperator(QubitOperator_):
         for i, j in QubitOperator_.split(self):
             yield ParameterResolver(i, internal=True), QubitOperator(j, internal=True)
 
-    def subs(self, params_value: typing.Union[typing.Dict[str, numbers.Number], ParameterResolver]):
+    def subs(self, params_value: PRConvertible) -> "QubitOperator":
         """
         Replace the symbolical representation with the corresponding value.
 

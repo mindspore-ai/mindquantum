@@ -15,8 +15,8 @@
 
 # pylint: disable=invalid-name
 """Test fermion operator."""
-
 import os
+import pickle
 
 import pytest
 
@@ -221,3 +221,14 @@ def test_of_fermion_trans():
     mq_ops = FermionOperator('1^ 0', 1)
     assert mq_ops.to_openfermion() == ofo_ops
     assert mq_ops == FermionOperator.from_openfermion(ofo_ops)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_pickle_fermion():
+    """
+    Description: Test pickle for fermion operator
+    Expectation: success.
+    """
+    ops = FermionOperator('1^ 0')
+    assert ops == pickle.loads(pickle.dumps(ops))
