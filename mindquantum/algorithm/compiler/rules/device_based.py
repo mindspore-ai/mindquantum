@@ -14,15 +14,20 @@
 # ============================================================================
 """Device based compiler rules."""
 
-from .basic_rule import (
-    SequentialCompiler,
-)
 from .basic_decompose import BasicDecompose
+from .basic_rule import SequentialCompiler
 from .gate_replacer import CXToCZ
-from .neighbor_canceler import FullyNeighborCancler
+from .neighbor_canceler import FullyNeighborCanceler
 
 
 class CZBasedChipCompiler(SequentialCompiler):
+    """
+    A compiler that suitable for chip that use cz gate.
+
+    Args:
+        log_level (int): log level to display message. Default: ``0``.
+    """
 
     def __init__(self, log_level=0):
-        super().__init__([BasicDecompose(), CXToCZ(), FullyNeighborCancler()], "CZBasedChipCompiler", log_level)
+        """Initialize a CZBasedChipCompiler."""
+        super().__init__([BasicDecompose(), CXToCZ(), FullyNeighborCanceler()], "CZBasedChipCompiler", log_level)

@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Decompose gate with control qubits."""
-
+# pylint: disable=unused-argument
 from mindquantum.core.circuit import controlled
 from mindquantum.core.gates import (
     RX,
@@ -73,7 +73,7 @@ def decom_swap(gate: SWAPGate, *args, **kwargs):
     return False
 
 
-def decom_rz(gate: RZ, prefer_u3=False, *args, **kwargs):
+def decom_rz(gate: RZ, *args, prefer_u3=False, **kwargs):
     """Decompose rz gate."""
     if len(gate.ctrl_qubits) == 1:
         return DAGCircuit(crz_decompose(gate)[0])
@@ -86,7 +86,7 @@ def decom_rz(gate: RZ, prefer_u3=False, *args, **kwargs):
     return False
 
 
-def decom_ry(gate: RY, prefer_u3=False, *args, **kwargs):
+def decom_ry(gate: RY, *args, prefer_u3=False, **kwargs):
     """Decompose ry gate."""
     if len(gate.ctrl_qubits) == 1:
         return DAGCircuit(cry_decompose(gate)[0])
@@ -99,7 +99,7 @@ def decom_ry(gate: RY, prefer_u3=False, *args, **kwargs):
     return False
 
 
-def decom_rx(gate: RX, prefer_u3=False, *args, **kwargs):
+def decom_rx(gate: RX, *args, prefer_u3=False, **kwargs):
     """Decompose rx gate."""
     if len(gate.ctrl_qubits) == 1:
         return DAGCircuit(crx_decompose(gate)[0])
@@ -112,7 +112,7 @@ def decom_rx(gate: RX, prefer_u3=False, *args, **kwargs):
     return False
 
 
-def decom_rzz(gate: Rzz, prefer_u3=False, *args, **kwargs):
+def decom_rzz(gate: Rzz, *args, prefer_u3=False, **kwargs):
     """Decompose zz gate."""
     if not gate.ctrl_qubits:
         return DAGCircuit(rzz_decompose(gate)[0])
@@ -125,7 +125,7 @@ def decom_rzz(gate: Rzz, prefer_u3=False, *args, **kwargs):
     return False
 
 
-def decom_ryy(gate: Ryy, prefer_u3=False, *args, **kwargs):
+def decom_ryy(gate: Ryy, *args, prefer_u3=False, **kwargs):
     """Decompose yy gate."""
     if not gate.ctrl_qubits:
         return DAGCircuit(ryy_decompose(gate)[0])
@@ -136,7 +136,7 @@ def decom_ryy(gate: Ryy, prefer_u3=False, *args, **kwargs):
     return False
 
 
-def decom_rxx(gate: Rxx, prefer_u3=False, *args, **kwargs):
+def decom_rxx(gate: Rxx, *args, prefer_u3=False, **kwargs):
     """Decompose xx gate."""
     if not gate.ctrl_qubits:
         return DAGCircuit(rxx_decompose(gate)[0])
@@ -147,7 +147,7 @@ def decom_rxx(gate: Rxx, prefer_u3=False, *args, **kwargs):
     return False
 
 
-def decom_h(gate: HGate, prefer_u3=False, *args, **kwargs):
+def decom_h(gate: HGate, *args, prefer_u3=False, **kwargs):
     """Decompose h gate."""
     if len(gate.ctrl_qubits) == 1:
         return DAGCircuit(ch_decompose(gate)[0])
@@ -160,7 +160,7 @@ def decom_h(gate: HGate, prefer_u3=False, *args, **kwargs):
     return False
 
 
-def decom_x(gate: XGate, prefer_u3=False, *args, **kwargs):
+def decom_x(gate: XGate, *args, prefer_u3=False, **kwargs):
     """Decompose x gate."""
     if len(gate.ctrl_qubits) == 2:
         return DAGCircuit(ccx_decompose(gate)[0])
@@ -173,7 +173,7 @@ def decom_x(gate: XGate, prefer_u3=False, *args, **kwargs):
     return False
 
 
-def decom_z(gate: ZGate, prefer_u3=False, *args, **kwargs):
+def decom_z(gate: ZGate, *args, prefer_u3=False, **kwargs):
     """Decompose z gate."""
     if len(gate.ctrl_qubits) == 2:
         return DAGCircuit(cz_decompose(gate)[0])
@@ -186,7 +186,7 @@ def decom_z(gate: ZGate, prefer_u3=False, *args, **kwargs):
     return False
 
 
-def decom_y(gate: YGate, prefer_u3=False, *args, **kwargs):
+def decom_y(gate: YGate, *args, prefer_u3=False, **kwargs):
     """Decompose y gate."""
     if len(gate.ctrl_qubits) == 1:
         return DAGCircuit(cy_decompose(gate)[0])
@@ -199,7 +199,7 @@ def decom_y(gate: YGate, prefer_u3=False, *args, **kwargs):
     return False
 
 
-def decom_s(gate: SGate, prefer_u3=False, *args, **kwargs):
+def decom_s(gate: SGate, *args, prefer_u3=False, **kwargs):
     """Decompose s gate."""
     if len(gate.ctrl_qubits) == 1:
         if gate.hermitianed:
@@ -217,7 +217,7 @@ def decom_s(gate: SGate, prefer_u3=False, *args, **kwargs):
     return False
 
 
-def decom_t(gate: SGate, prefer_u3=False, *args, **kwargs):
+def decom_t(gate: SGate, *args, prefer_u3=False, **kwargs):
     """Decompose t gate."""
     if len(gate.ctrl_qubits) == 1:
         if gate.hermitianed:
@@ -235,7 +235,7 @@ def decom_t(gate: SGate, prefer_u3=False, *args, **kwargs):
     return False
 
 
-def decomp_ps(gate: PhaseShift, *args, **kwargs):
+def decom_ps(gate: PhaseShift, *args, **kwargs):
     """Decompose phase shift gate."""
     if gate.ctrl_qubits:
         return DAGCircuit(cu_decompose(gate))
@@ -243,6 +243,7 @@ def decomp_ps(gate: PhaseShift, *args, **kwargs):
 
 
 def decom_univ_math_gate(gate: UnivMathGate, *args, **kwargs):
+    """Decompose universal matrix gate."""
     return DAGCircuit(cu_decompose(gate))
 
 
@@ -285,25 +286,54 @@ def decom_basic_gate(gate: BasicGate, prefer_u3=False):
     if isinstance(gate, UnivMathGate):
         res = decom_univ_math_gate(gate, prefer_u3=prefer_u3)
     if isinstance(gate, PhaseShift):
-        res = decomp_ps(gate, prefer_u3=prefer_u3)
+        res = decom_ps(gate, prefer_u3=prefer_u3)
     if res:
         return res
     return False
 
 
 class BasicDecompose(BasicCompilerRule):
-    """Decompose gate with a simple gate set."""
+    """
+    Decompose gate with a simple gate set.
+
+    This decompose rule decompose multiple control gate customized matrix gate
+    and rotation gate with multi pauli word.
+
+    Args:
+        prefer_u3 (bool): whether prefer to use :class:`U3` gate to decompose gate. Default: ``False``.
+
+    Examples:
+        >>> from mindquantum.algorithm.compiler import BasicDecompose, DAGCircuit
+        >>> from mindquantum.core import gates as G
+        >>> from mindquantum.core.circuit import Circuit
+        >>> circ = Circuit([G.Rxx('a').on([0, 1]), G.X(0, [1, 2])])
+        >>> circ
+        q0: ──Rxx(a)────X──
+                │       │
+        q1: ──Rxx(a)────●──
+                        │
+        q2: ────────────●──
+        >>> dag_circ = DAGCircuit(circ)
+        >>> compiler = BasicDecompose()
+        >>> compiler.do(dag_circ)
+        >>> dag_circ.to_circuit()
+        q0: ──H────●─────────────●────H────H────X────T†────X────T────X────T†────X────T────H─────────────
+                   │             │              │          │         │          │
+        q1: ──H────X────RZ(a)────X────H─────────●──────────┼─────────●──────────┼────T────X────T†────X──
+                                                           │                    │         │          │
+        q2: ───────────────────────────────────────────────●────────────────────●─────────●────T─────●──
+    """
 
     def __init__(self, prefer_u3=False):
         """Initialize a control decompose rule."""
         super().__init__("BasicDecompose")
         self.prefer_u3 = prefer_u3
 
-    def do(self, dagcircuit: DAGCircuit):
+    def do(self, dag_circuit: DAGCircuit):
         """Do control decompose rule."""
-        _check_input_type("dagcircuit", DAGCircuit, dagcircuit)
+        _check_input_type("dag_circuit", DAGCircuit, dag_circuit)
         compiled = False
-        all_node = dagcircuit.find_all_gate_node()
+        all_node = dag_circuit.find_all_gate_node()
         CLog.log(f"Running {CLog.R1(self.rule_name)}.", 1, self.log_level)
         with LogIndentation() as _:
             for node in all_node:
@@ -315,10 +345,10 @@ class BasicDecompose(BasicCompilerRule):
                     )
                     with LogIndentation() as _:
                         self.do(decompose_dag_circ)
-                    dagcircuit.replace_node_with_dag_circuit(node, decompose_dag_circ)
+                    dag_circuit.replace_node_with_dag_circuit(node, decompose_dag_circ)
 
         if compiled:
-            CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfule compiled')}.", 1, self.log_level)
+            CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfully compiled')}.", 1, self.log_level)
         else:
             CLog.log(f"{CLog.R1(self.rule_name)}: nothing happened.", 1, self.log_level)
         return compiled

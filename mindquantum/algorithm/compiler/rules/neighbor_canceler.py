@@ -12,48 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Neighbor cancler compiler rule."""
-from ..dag import (
-    GateNode,
-    QubitNode,
-    DAGCircuit,
-    connect_two_node,
-    is_deletable,
-)
-from .compiler_logger import (
-    CompileLog as CLog,
-    LogIndentation,
-)
-from .basic_rule import (
-    KroneckerSeqCompiler,
-    BasicCompilerRule,
-)
+"""Neighbor canceler compiler rule."""
 from mindquantum.utils.type_value_check import _check_input_type
 
-# pylint: disable=invalid-name
-
-
-def mergeable_params_gate(gn1, gn2):
-    """Merge two parameterized gate."""
-    g1, g2 = gn1.gate, gn2.gate
-    if isinstance(g1, g2.__class__):
-        if g1.parameterized and g2.parameterized:
-            if g1.obj_qubits == g2.obj_qubits and set(g1.ctrl_qubits) == set(g2.ctrl_qubits):
-                g = g1(g1.coeff + g2.coeff)
-                return GateNode(g)
-    return False
+from ..dag import DAGCircuit, GateNode, try_merge
+from .basic_rule import BasicCompilerRule, KroneckerSeqCompiler
+from .compiler_logger import CompileLog as CLog
+from .compiler_logger import LogIndentation
 
 
 # pylint: disable=too-many-nested-blocks,too-many-branches,too-few-public-methods
-class SimpleNeighborCancler(BasicCompilerRule):
+class SimpleNeighborCanceler(BasicCompilerRule):
     """Merge two nearby gate if possible."""
 
-    def __init__(self, merge_parameterized_gate=True):
-        """Initialize a neighbor cancler compiler rule."""
-        super().__init__("SimpleNeighborCancler")
-        self.merge_parameterized_gate = merge_parameterized_gate
+    def __init__(self):
+        """Initialize a neighbor canceler compiler rule."""
+        super().__init__("SimpleNeighborCanceler")
 
-    def _cancler(self, current_node, fc_pair_consided):
+    def _canceler(self, current_node, fc_pair_consided, dag_circuit):
         """Merge two gate."""
         compiled = False
         for local in current_node.local:
@@ -67,74 +43,51 @@ class SimpleNeighborCancler(BasicCompilerRule):
             if not isinstance(child_node, GateNode):
                 continue
             if isinstance(current_node, GateNode):
-                compiled = self._cancler_two_gates(current_node, child_node, fc_pair_consided) or compiled
-            compiled = self._cancler(child_node, fc_pair_consided) or compiled
+                compiled = self._merge_two_gates(current_node, child_node, fc_pair_consided, dag_circuit) or compiled
+            compiled = self._canceler(child_node, fc_pair_consided, dag_circuit) or compiled
         return compiled
 
-    def _cancler_two_gates(self, current_node: GateNode, child_node: GateNode, fc_pair_consided):
-        compiled = self._cancle_two_hermitian(current_node, child_node, fc_pair_consided)
-        compiled = self._cancle_mergable(current_node, child_node, fc_pair_consided) or compiled
-        return compiled
-
-    def _cancle_mergable(self, current_node, child_node, fc_pair_consided):
+    def _merge_two_gates(self, current_node: GateNode, child_node: GateNode, fc_pair_consided, dag_circuit):
+        """Merge two gates."""
         compiled = False
-        if self.merge_parameterized_gate:
-            merged_node = mergeable_params_gate(current_node, child_node)
-            if merged_node:
-                compiled = True
-                with LogIndentation() as _:
-                    CLog.log(
-                        f"{CLog.R1(self.rule_name)}: merge {CLog.B(current_node.gate)} and {CLog.B(child_node.gate)}.",
-                        2,
-                        self.log_level,
-                    )
-                for lo in current_node.local:
-                    connect_two_node(current_node.father[lo], merged_node, lo)
-                    connect_two_node(merged_node, child_node.child[lo], lo)
-                compiled = self._cancler(merged_node, fc_pair_consided) or compiled
+        state, res, global_phase = try_merge(current_node, child_node)
+        if not state:
+            return False
+        compiled = True
+        with LogIndentation() as _:
+            CLog.log(
+                f"{CLog.R1(self.rule_name)}: merge {CLog.B(current_node.gate)} and {CLog.B(child_node.gate)}.",
+                2,
+                self.log_level,
+            )
+        if global_phase:
+            dag_circuit.global_phase.coeff += global_phase.coeff
+        for node in res:
+            compiled = self._canceler(node, fc_pair_consided, dag_circuit) or compiled
         return compiled
 
-    def _cancle_two_hermitian(self, current_node: GateNode, child_node: GateNode, fc_pair_consided):
-        compiled = False
-        if is_deletable(current_node, child_node):
-            with LogIndentation() as _:
-                CLog.log(
-                    f"{CLog.R1(self.rule_name)}: del {CLog.B(current_node.gate)} and {CLog.B(child_node.gate)}.",
-                    2,
-                    self.log_level,
-                )
-            compiled = True
-            for lo in current_node.local:
-                connect_two_node(current_node.father[lo], child_node.child[lo], lo)
-                next_consider = child_node.child[lo]
-                if lo in current_node.father:
-                    current_node.father.pop(lo)
-                if lo in child_node.child:
-                    child_node.child.pop(lo)
-                compiled = self._cancler(next_consider, fc_pair_consided) or compiled
-
-    def do(self, dagcircuit: DAGCircuit):
-        """Apply neighbor cancler compiler rule."""
-        _check_input_type("dagcircuit", DAGCircuit, dagcircuit)
-        global step
-        step = 0
+    def do(self, dag_circuit: DAGCircuit):
+        """Apply neighbor canceler compiler rule."""
+        _check_input_type("dag_circuit", DAGCircuit, dag_circuit)
 
         fc_pair_consided = set()
         compiled = False
         CLog.log(f"Running {CLog.R1(self.rule_name)}.", 1, self.log_level)
         with LogIndentation() as _:
-            for current_node in dagcircuit.head_node.values():
-                compiled = compiled or self._cancler(current_node, fc_pair_consided)
+            for current_node in dag_circuit.head_node.values():
+                compiled = self._canceler(current_node, fc_pair_consided, dag_circuit) or compiled
         if compiled:
-            CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfule compiled')}.", 1, self.log_level)
+            CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfully compiled')}.", 1, self.log_level)
         else:
             CLog.log(f"{CLog.R1(self.rule_name)}: nothing happened.", 1, self.log_level)
         return compiled
 
 
-class FullyNeighborCancler(KroneckerSeqCompiler):
+class FullyNeighborCanceler(KroneckerSeqCompiler):
+    """Merge neighbor gate until we cannot merge anymore gates."""
 
     def __init__(self):
-        rule_set = [SimpleNeighborCancler()]
+        """Initialize fully neighbor canceler compile rule."""
+        rule_set = [SimpleNeighborCanceler()]
         super().__init__(rule_set)
-        self.rule_name = "FullyNeighborCancler"
+        self.rule_name = "FullyNeighborCanceler"

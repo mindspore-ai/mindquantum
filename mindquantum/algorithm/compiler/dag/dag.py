@@ -15,17 +15,18 @@
 """DAG Circuit."""
 import typing
 
-import numpy as np
-
 from mindquantum.core import Circuit, gates
-from mindquantum.core.gates.basicgate import MultiParamsGate
 from mindquantum.utils.type_value_check import _check_input_type
 
 # pylint: disable=invalid-name
 
 
 class DAGNode:
-    """Basic node in Directed Acyclic Graph."""
+    """
+    Basic node in Directed Acyclic Graph.
+
+    A DAG node has local index, which label the index of leg of node, and child nodes and father nodes.
+    """
 
     def __init__(self):
         """Initialize a DAGNode object."""
@@ -34,7 +35,12 @@ class DAGNode:
         self.local: typing.List[int] = []
 
     def insert_after(self, other_node: "DAGNode"):
-        """Insert other node after this dag node."""
+        """
+        Insert other node after this dag node.
+
+        Args:
+            other_node (DAGNode): other DAG node.
+        """
         _check_input_type("other_node", DAGNode, other_node)
         for local in self.local:
             if local in other_node.local:
@@ -45,7 +51,12 @@ class DAGNode:
                 self.child[local] = other_node
 
     def insert_before(self, other_node: "DAGNode"):
-        """Insert other node before this dag node."""
+        """
+        Insert other node before this dag node.
+
+        Args:
+            other_node (DAGNode): other DAG node.
+        """
         _check_input_type("other_node", DAGNode, other_node)
         for local in self.local:
             if local in other_node.local:
@@ -63,7 +74,18 @@ class DAGNode:
 
 
 def connect_two_node(father_node: DAGNode, child_node: DAGNode, local_index: int):
-    """Connect two dag node."""
+    """
+    Connect two DAG node through given local_index.
+
+    Args:
+        father_node (DAGNode): The father DAG node.
+        child_node (DAGNode): The child DAG node.
+        local_index (int): which leg you want to connect.
+    """
+    if local_index not in father_node.local or local_index not in child_node.local:
+        raise ValueError(
+            f"local_index {local_index} not in father_node" f" {father_node} or not in child_node {child_node}."
+        )
     father_node.child[local_index] = child_node
     child_node.father[local_index] = father_node
 
@@ -158,10 +180,36 @@ class DAGCircuit:
                     self.append_node(BarrierNode(gate, sorted(circuit.all_qubits.keys())))
             else:
                 self.append_node(GateNode(gate))
+        self.global_phase = gates.GlobalPhase(0)
 
     @staticmethod
     def replace_node_with_dag_circuit(node: DAGNode, coming: "DAGCircuit"):
-        """Replace a node with a DAGCircuit."""
+        """
+        Replace a node with a DAGCircuit.
+
+        Args:
+            node (DAGNode): the original DAG node.
+            coming (DAGCircuit): the coming DAG circuit.
+
+        Examples:
+            >>> from mindquantum.algorithm.compiler import DAGCircuit
+            >>> from mindquantum.core.circuit import Circuit
+            >>> circ = Circuit().x(1, 0)
+            >>> circ
+            q0: ──●──
+                  │
+            q1: ──X──
+            >>> dag_circ = DAGCircuit(circ)
+            >>> node = dag_circ.head_node[0].child[0]
+            >>> node
+            X(1 <-: 0)
+            >>> sub_dag = DAGCircuit(Circuit().h(1).z(1, 0).h(1))
+            >>> DAGCircuit.replace_node_with_dag_circuit(node, sub_dag)
+            >>> dag_circ.to_circuit()
+            q0: ───────●───────
+                       │
+            q1: ──H────Z────H──
+        """
         if set(node.local) != {head.qubit for head in coming.head_node.values()}:
             raise ValueError(f"Circuit in coming DAG is not aligned with gate in node: {node}")
         for local in node.local:
@@ -172,23 +220,27 @@ class DAGCircuit:
         """
         Append a quantum gate node.
 
-        >>> from mindquantum.algorithm.compiler import DAGCircuit, GateNode
-        >>> from mindquantum.core.circuit import Circuit
-        >>> import mindquantum.core.gates as G
-        >>> circ = Circuit().h(0).x(1, 0)
-        >>> circ
-        q0: ──H────●──
-                   │
-        q1: ───────X──
-        >>> dag_circ = DAGCircuit(circ)
-        >>> node = GateNode(G.RX('a').on(0, 2))
-        >>> dag_circ.append_node(node)
-        >>> dag_circ.to_circuit()
-        q0: ──H────●────RX(a)──
-                   │      │
-        q1: ───────X──────┼────
-                          │
-        q2: ──────────────●────
+        Args:
+            node (DAGNode): the DAG node you want to append.
+
+        Examples:
+            >>> from mindquantum.algorithm.compiler import DAGCircuit, GateNode
+            >>> from mindquantum.core.circuit import Circuit
+            >>> import mindquantum.core.gates as G
+            >>> circ = Circuit().h(0).x(1, 0)
+            >>> circ
+            q0: ──H────●──
+                       │
+            q1: ───────X──
+            >>> dag_circ = DAGCircuit(circ)
+            >>> node = GateNode(G.RX('a').on(0, 2))
+            >>> dag_circ.append_node(node)
+            >>> dag_circ.to_circuit()
+            q0: ──H────●────RX(a)──
+                       │      │
+            q1: ───────X──────┼────
+                              │
+            q2: ──────────────●────
         """
         _check_input_type('node', DAGNode, node)
         for local in node.local:
@@ -199,7 +251,7 @@ class DAGCircuit:
             self.final_node[local].insert_before(node)
 
     def layering(self) -> Circuit:
-        """
+        r"""
         Layering the quantum circuit.
 
         Examples:
@@ -315,7 +367,17 @@ class DAGCircuit:
         return circuit
 
     def find_all_gate_node(self) -> typing.List[GateNode]:
-        """Find all gate node in this DAG."""
+        """
+        Find all gate node in this DAG.
+
+        Examples:
+            >>> from mindquantum.algorithm.compiler import DAGCircuit
+            >>> from mindquantum.core.circuit import Circuit
+            >>> circ = Circuit().h(0).x(1, 0)
+            >>> dag_circ = DAGCircuit(circ)
+            >>> dag_circ.find_all_gate_node()
+            [H(0), X(1 <-: 0)]
+        """
         found = set(self.head_node.values())
 
         def _find(current_node: DAGNode, found):
@@ -331,93 +393,75 @@ class DAGCircuit:
                 _find(current_node, found)
         return [i for i in found if not isinstance(i, QubitNode)]
 
-    def to_tensor_network(self):
-        """Convert DAG to hiq tensor style."""
-        # pylint: disable=too-many-locals
-        tensor = []
-        open_lags = [i for i, _ in enumerate(self.head_node)]
-        max_lags = len(open_lags)
-        all_lags = set(open_lags)
-        for layer in self.layering():
-            for gate in layer:
-                if isinstance(gate, (gates.Measure, gates.PauliChannel)):
-                    raise ValueError("Pauli Channel or Measure gate are not supported.")
-                if gate.parameterized:
-                    raise ValueError("Parameterized gate are not supported.")
-                nc = len(gate.ctrl_qubits)
-                no = len(gate.obj_qubits)
-                n_total = nc + no
-                m = gate.matrix()
-                if nc:
-                    c0 = np.zeros((2**nc, 2**nc))
-                    c0[0, 0] = 1
-                    c1 = np.zeros((2**nc, 2**nc))
-                    c1[-1, -1] = 1
-                    m = np.kron(np.identity(2**nc), c0) + np.kron(m, c1)
-                m = np.reshape(m, [2 for _ in range(2 * n_total)])
-                gate_lags = [None for _ in range(2 * n_total)]
-                for idx, obj in enumerate(gate.obj_qubits + gate.ctrl_qubits):
-                    gate_lags[idx] = open_lags[obj]
-                    gate_lags[idx + n_total] = open_lags[obj] + n_total + max_lags
-                    open_lags[obj] += n_total + max_lags
-                    all_lags.add(open_lags[obj])
-                    all_lags.add(open_lags[obj] + n_total + max_lags)
-                max_lags = max(gate_lags)
-                tensor.append([m, gate_lags])
-        lag_map = {lag: idx for idx, lag in enumerate(list(all_lags))}
-        tensor = [[np.array([1, 0]), [i]] for i, _ in enumerate(self.head_node)] + tensor
-        tensor = [[i, [lag_map[k] for k in j]] for i, j in tensor]
-        open_lags = [lag_map[i] for i in open_lags]
-        return tensor, open_lags
 
+# pylint: disable=too-many-return-statements,too-many-branches
+def try_merge(
+    father_node: GateNode, child_node: GateNode
+) -> typing.Tuple[bool, typing.List[GateNode], gates.GlobalPhase]:
+    """
+    Try to merge two gate nodes.
 
-def is_deletable(father_node: GateNode, child_node: GateNode) -> bool:
+    Following this method, we merge two hermitian conjugated into identity, and also merge two same kind
+    parameterized gate into single parameterized gate.
+
+    Args:
+        father_node (GateNode): the father node want to merge.
+        child_node (GateNode): the child node want to merge.
+
+    Returns:
+        bool, whether successfully merged.
+        List[GateNode], the father node after merged.
+        GlobalPhase, the global phase gate after merge two given gate node.
+    """
     if len(set(father_node.child.values())) != 1 or len(set(child_node.father.values())) != 1:
-        return False
+        return False, [], None
+
     for node in father_node.child.values():
         if node != child_node:
-            return False
-    if father_node.gate != child_node.gate.hermitian():
-        return False
-    return True
+            return False, [], None
 
-
-def is_mergable(father_node: GateNode, child_node: GateNode) -> typing.Union[bool, GateNode]:
-    if len(set(father_node.child.values())) != 1 or len(set(child_node.father.values())) != 1:
-        return (False, father_node)
-    for node in father_node.child.values():
-        if node != child_node:
-            return (False, father_node)
-    if father_node.gate.__class__ is not child_node.gate.__class__:
-        return (False, father_node)
-    if not isinstance(father_node.gate, gates.ParameterGate):
-        return (False, father_node)
-    if isinstance(father_node.gate, MultiParamsGate):
-        return (True, GateNode(father_node.gate([i + j for i, j in zip(father_node.gate.prs, child_node.gate.prs)])))
-    return (True, GateNode(father_node.gate(father_node.gate.coeff + child_node.gate.coeff)))
-
-
-def try_delete_node(father_node: GateNode, child_node: GateNode) -> typing.Union[bool, typing.List[GateNode]]:
-    if is_deletable(father_node, child_node):
+    state, res, global_phase = father_node.gate.__merge__(child_node.gate)
+    if not state or len(res) > 1:
+        return False, father_node, None
+    if res:
+        merged_node = GateNode(res[0])
         father_of_father = []
         for i in father_node.local:
             father_of_father.append(father_node.father[i])
-            connect_two_node(father_node.father[i], child_node.child[i], i)
+            connect_two_node(father_node.father[i], merged_node, i)
+            connect_two_node(merged_node, child_node.child[i], i)
         father_node.clean()
         child_node.clean()
-        return True, list(set(father_of_father))
-    return False, [father_node]
+        if global_phase:
+            if global_phase.ctrl_qubits:
+                ctrl_gp = GateNode(global_phase).local
+                for i in ctrl_gp:
+                    connect_two_node(merged_node, ctrl_gp, i)
+                    connect_two_node(ctrl_gp, merged_node.child[i], i)
+                return True, list(set(father_of_father)), None
+            return True, list(set(father_of_father)), global_phase
+        return True, list(set(father_of_father)), None
 
+    father_of_father = []
+    if global_phase:
+        if global_phase.ctrl_qubits:
+            ctrl_gp = GateNode(global_phase)
+            for i in father_node.local:
+                father_of_father.append(father_node.father[i])
+                connect_two_node(father_node.father[i], ctrl_gp, i)
+                connect_two_node(ctrl_gp, child_node.child[i], i)
+        else:
+            for i in father_node.local:
+                father_of_father.append(father_node.father[i])
+                connect_two_node(father_node.father[i], child_node.child[i], i)
 
-def try_merge_node(father_node: GateNode, child_node: GateNode) -> typing.Union[bool, typing.List[GateNode]]:
-    succeed, res = is_mergable(father_node, child_node)
-    if succeed:
-        father_of_father = []
-        for i in father_node.local:
-            father_of_father.append(father_node.father[i])
-            connect_two_node(father_node.father[i], res, i)
-            connect_two_node(res, child_node.child[i], i)
         father_node.clean()
         child_node.clean()
-        return True, list(set(father_of_father))
-    return False, [father_node]
+        return True, list(set(father_of_father)), (None if global_phase.ctrl_qubits else global_phase)
+
+    for i in father_node.local:
+        father_of_father.append(father_node.father[i])
+        connect_two_node(father_node.father[i], child_node.child[i], i)
+    father_node.clean()
+    child_node.clean()
+    return True, list(set(father_of_father)), None
