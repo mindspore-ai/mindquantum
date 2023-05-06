@@ -52,7 +52,6 @@ namespace mindquantum::sim::vector::detail {
 template <typename qs_policy_t_>
 VectorState<qs_policy_t_>::VectorState(qbit_t n_qubits, unsigned seed)
     : n_qubits(n_qubits), dim(1UL << n_qubits), seed(seed), rnd_eng_(seed) {
-    qs = qs_policy_t::InitState(dim);
     std::uniform_real_distribution<double> dist(0., 1.);
     rng_ = std::bind(dist, std::ref(rnd_eng_));
 }
@@ -144,12 +143,18 @@ auto VectorState<qs_policy_t_>::GetQS() const -> VT<py_qs_data_t> {
 
 template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::SetQS(const VT<py_qs_data_t>& qs_out) {
+    if (this->qs == nullptr) {
+        this->qs = qs_policy_t::InitState(dim);
+    }
     qs_policy_t::SetQS(qs, qs_out, dim);
 }
 
 template <typename qs_policy_t_>
 index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& gate,
                                              const parameter::ParameterResolver& pr, bool diff) {
+    if (this->qs == nullptr) {
+        this->qs = qs_policy_t::InitState(dim);
+    }
     auto id = gate->id_;
     switch (id) {
         case GateID::I:
@@ -343,6 +348,9 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
 
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate>& gate) -> index_t {
+    if (this->qs == nullptr) {
+        this->qs = qs_policy_t::InitState(dim);
+    }
     index_t one_mask = (1UL << gate->obj_qubits_[0]);
     auto one_amp = qs_policy_t::ConditionalCollect(qs, one_mask, one_mask, true, dim).real();
     index_t collapse_mask = (static_cast<index_t>(rng_() < one_amp) << gate->obj_qubits_[0]);
@@ -353,6 +361,9 @@ auto VectorState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate>& g
 
 template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicGate>& gate) {
+    if (this->qs == nullptr) {
+        this->qs = qs_policy_t::InitState(dim);
+    }
     auto id = gate->id_;
     switch (id) {
         case GateID::PL:
@@ -372,6 +383,9 @@ void VectorState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicGate>& g
 
 template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::ApplyPauliChannel(const std::shared_ptr<BasicGate>& gate) {
+    if (this->qs == nullptr) {
+        this->qs = qs_policy_t::InitState(dim);
+    }
     double r = static_cast<double>(rng_());
     auto g = static_cast<PauliChannel*>(gate.get());
     auto it = std::lower_bound(g->cumulative_probs_.begin(), g->cumulative_probs_.end(), r);
@@ -392,6 +406,9 @@ void VectorState<qs_policy_t_>::ApplyPauliChannel(const std::shared_ptr<BasicGat
 
 template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::ApplyKrausChannel(const std::shared_ptr<BasicGate>& gate) {
+    if (this->qs == nullptr) {
+        this->qs = qs_policy_t::InitState(dim);
+    }
     auto tmp_qs = qs_policy_t::InitState(dim);
     calc_type prob = 0;
     auto g = static_cast<KrausChannel*>(gate.get());
@@ -414,6 +431,9 @@ void VectorState<qs_policy_t_>::ApplyKrausChannel(const std::shared_ptr<BasicGat
 
 template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::ApplyDampingChannel(const std::shared_ptr<BasicGate>& gate) {
+    if (this->qs == nullptr) {
+        this->qs = qs_policy_t::InitState(dim);
+    }
     calc_type reduced_factor_b_square = qs_policy_t::OneStateVdot(qs, qs, gate->obj_qubits_[0], dim).real();
     calc_type reduced_factor_b = std::sqrt(reduced_factor_b_square);
     if (reduced_factor_b < 1e-8) {
@@ -443,6 +463,68 @@ void VectorState<qs_policy_t_>::ApplyDampingChannel(const std::shared_ptr<BasicG
         calc_type coeff_b = std::sqrt(1 - damping_coeff) / std::sqrt(1 - prob);
         qs_policy_t::ConditionalMul(qs, qs, (1UL << gate->obj_qubits_[0]), 0, coeff_a, coeff_b, dim);
     }
+}
+
+template <typename qs_policy_t_>
+auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
+                                               const parameter::ParameterResolver& pr) -> py_qs_data_t {
+    py_qs_data_t out;
+    auto ket = *this;
+    ket.ApplyCircuit(circ, pr);
+    if (ham.how_to_ == ORIGIN) {
+        out = qs_policy_t::ExpectationOfTerms(ket.qs, ket.qs, ham.ham_, dim);
+    } else if (ham.how_to_ == BACKEND) {
+        out = qs_policy_t::ExpectationOfCsr(ham.ham_sparse_main_, ham.ham_sparse_second_, ket.qs, ket.qs, dim);
+    } else {
+        out = qs_policy_t::ExpectationOfCsr(ham.ham_sparse_main_, ket.qs, ket.qs, dim);
+    }
+    return out;
+}
+
+template <typename qs_policy_t_>
+auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ_right,
+                                               const circuit_t& circ_left, const parameter::ParameterResolver& pr)
+    -> py_qs_data_t {
+    py_qs_data_t out;
+
+    auto ket = *this;
+    auto bra = *this;
+    ket.ApplyCircuit(circ_right, pr);
+    bra.ApplyCircuit(circ_left, pr);
+    if (ham.how_to_ == ORIGIN) {
+        out = qs_policy_t::ExpectationOfTerms(bra.qs, ket.qs, ham.ham_, dim);
+    } else if (ham.how_to_ == BACKEND) {
+        out = qs_policy_t::ExpectationOfCsr(ham.ham_sparse_main_, ham.ham_sparse_second_, bra.qs, ket.qs, dim);
+    } else {
+        out = qs_policy_t::ExpectationOfCsr(ham.ham_sparse_main_, bra.qs, ket.qs, dim);
+    }
+    return out;
+}
+
+template <typename qs_policy_t_>
+auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ_right,
+                                               const circuit_t& circ_left, const derived_t& simulator_left,
+                                               const parameter::ParameterResolver& pr) -> py_qs_data_t {
+    auto ket = *this;
+    auto bra = simulator_left;
+    ket.ApplyCircuit(circ_right, pr);
+    bra.ApplyCircuit(circ_left, pr);
+    py_qs_data_t out;
+    if (ham.how_to_ == ORIGIN) {
+        out = qs_policy_t::ExpectationOfTerms(bra.qs, ket.qs, ham.ham_, dim);
+    } else if (ham.how_to_ == BACKEND) {
+        out = qs_policy_t::ExpectationOfCsr(ham.ham_sparse_main_, ham.ham_sparse_second_, bra.qs, ket.qs, dim);
+    } else {
+        out = qs_policy_t::ExpectationOfCsr(ham.ham_sparse_main_, bra.qs, ket.qs, dim);
+    }
+    return out;
+}
+
+template <typename qs_policy_t_>
+template <typename policy_des, template <typename p_src, typename p_des> class cast_policy>
+auto VectorState<qs_policy_t_>::astype(unsigned seed) -> VectorState<policy_des> {
+    return VectorState<policy_des>(cast_policy<qs_policy_t, policy_des>::cast(this->qs, this->dim), this->n_qubits,
+                                   seed);
 }
 
 template <typename qs_policy_t_>
@@ -557,6 +639,9 @@ auto VectorState<qs_policy_t_>::ExpectDiffFSim(qs_data_p_t bra, qs_data_p_t ket,
 template <typename qs_policy_t_>
 std::map<std::string, int> VectorState<qs_policy_t_>::ApplyCircuit(const circuit_t& circ,
                                                                    const parameter::ParameterResolver& pr) {
+    if (this->qs == nullptr) {
+        this->qs = qs_policy_t::InitState(dim);
+    }
     std::map<std::string, int> result;
     for (auto& g : circ) {
         if (g->id_ == GateID::M) {
@@ -570,6 +655,9 @@ std::map<std::string, int> VectorState<qs_policy_t_>::ApplyCircuit(const circuit
 
 template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::ApplyHamiltonian(const Hamiltonian<calc_type>& ham) {
+    if (this->qs == nullptr) {
+        this->qs = qs_policy_t::InitState(dim);
+    }
     qs_data_p_t new_qs;
     if (ham.how_to_ == ORIGIN) {
         new_qs = qs_policy_t::ApplyTerms(qs, ham.ham_, dim);
@@ -588,6 +676,9 @@ auto VectorState<qs_policy_t_>::GetCircuitMatrix(const circuit_t& circ, const pa
     VVT<CT<calc_type>> out((1UL << n_qubits), VT<CT<calc_type>>((1UL << n_qubits), 0));
     for (size_t i = 0; i < (1UL << n_qubits); i++) {
         auto sim = VectorState<qs_policy_t>(n_qubits, seed);
+        if (sim.qs == nullptr) {
+            sim.qs = qs_policy_t::InitState(dim);
+        }
         for (qbit_t j = 0; j < n_qubits; ++j) {
             if ((i >> j) & 1) {
                 qs_policy_t_::ApplyX(sim.qs, qbits_t({j}), qbits_t({}), sim.dim);

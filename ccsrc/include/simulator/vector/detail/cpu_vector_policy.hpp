@@ -52,8 +52,8 @@ struct CPUVectorPolicyBase {
     // ========================================================================================================
 
     static qs_data_p_t InitState(index_t dim, bool zero_state = true);
-    static void Reset(qs_data_p_t qs, index_t dim);
-    static void FreeState(qs_data_p_t qs);
+    static void Reset(qs_data_p_t& qs, index_t dim);
+    static void FreeState(qs_data_p_t& qs);
     static void Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit = 10);
     static void SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim);
     template <index_t mask, index_t condi, class binary_op>
@@ -75,6 +75,8 @@ struct CPUVectorPolicyBase {
     static VT<py_qs_data_t> GetQS(qs_data_p_t qs, index_t dim);
     static void SetQS(qs_data_p_t qs, const VT<qs_data_t>& qs_out, index_t dim);
     static qs_data_p_t ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
+    static py_qs_data_t ExpectationOfTerms(qs_data_p_t bra, qs_data_p_t ket,
+                                           const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
     static qs_data_p_t Copy(qs_data_p_t qs, index_t dim);
     template <index_t mask, index_t condi>
     static py_qs_data_t ConditionVdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim);
@@ -86,6 +88,11 @@ struct CPUVectorPolicyBase {
     static qs_data_p_t CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
                                  const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& b, qs_data_p_t vec,
                                  index_t dim);
+    static py_qs_data_t ExpectationOfCsr(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, qs_data_p_t bra,
+                                         qs_data_p_t ket, index_t dim);
+    static py_qs_data_t ExpectationOfCsr(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
+                                         const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& b, qs_data_p_t bra,
+                                         qs_data_p_t ket, index_t dim);
     // X like operator
     // ========================================================================================================
 
@@ -183,6 +190,9 @@ struct CastTo {
     static constexpr tensor::TDtype src_dtype = policy_src::dtype;
     static constexpr tensor::TDtype des_dtype = policy_des::dtype;
     static typename policy_des::qs_data_p_t cast(typename policy_src::qs_data_p_t qs, size_t dim) {
+        if (qs == nullptr) {
+            return nullptr;
+        }
         if constexpr (std::is_same_v<policy_src, policy_des>) {
             return policy_des::Copy(qs, dim);
         } else {

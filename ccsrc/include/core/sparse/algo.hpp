@@ -167,6 +167,29 @@ T2 *Csr_Dot_Vec(std::shared_ptr<CsrHdMatrix<T>> a, T2 *vec) {
 }
 
 template <typename T, typename T2>
+CT<T2> ExpectationOfCsr(std::shared_ptr<CsrHdMatrix<T>> a, T2 *bra, T2 *ket) {
+    auto dim = a->dim_;
+    auto c_bra = reinterpret_cast<CTP<T2>>(bra);
+    auto c_ket = reinterpret_cast<CTP<T2>>(ket);
+    auto data = a->data_;
+    auto indptr = a->indptr_;
+    auto indices = a->indices_;
+    T2 res_real = 0, res_imag = 0;
+    THRESHOLD_OMP(
+        MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, 1UL << nQubitTh,
+                                                for (Index i = 0; i < dim; i++) {
+                                                    CT<T2> sum = {0.0, 0.0};
+                                                    for (Index j = indptr[i]; j < indptr[i + 1]; j++) {
+                                                        sum += data[j] * c_ket[indices[j]];
+                                                    }
+                                                    auto tmp = std::conj(c_bra[i]) * sum;
+                                                    res_real += std::real(tmp);
+                                                    res_imag += std::imag(tmp);
+                                                })
+    return {res_real, res_imag};
+}
+
+template <typename T, typename T2>
 T2 *Csr_Dot_Vec(std::shared_ptr<CsrHdMatrix<T>> a, std::shared_ptr<CsrHdMatrix<T>> b, T2 *vec) {
     auto dim = a->dim_;
     auto c_vec = reinterpret_cast<CTP<T2>>(vec);
@@ -191,6 +214,36 @@ T2 *Csr_Dot_Vec(std::shared_ptr<CsrHdMatrix<T>> a, std::shared_ptr<CsrHdMatrix<T
             new_vec[i] = sum;
         })
     return reinterpret_cast<T2 *>(new_vec);
+}
+
+template <typename T, typename T2>
+CT<T2> ExpectationOfCsr(std::shared_ptr<CsrHdMatrix<T>> a, std::shared_ptr<CsrHdMatrix<T>> b, T2 *bra, T2 *ket) {
+    auto dim = a->dim_;
+    auto c_bra = reinterpret_cast<CTP<T2>>(bra);
+    auto c_ket = reinterpret_cast<CTP<T2>>(ket);
+    auto data = a->data_;
+    auto indptr = a->indptr_;
+    auto indices = a->indices_;
+    auto data_b = b->data_;
+    auto indptr_b = b->indptr_;
+    auto indices_b = b->indices_;
+    T2 res_real = 0, res_imag = 0;
+
+    THRESHOLD_OMP(
+        MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, 1UL << nQubitTh,
+                                                for (Index i = 0; i < dim; i++) {
+                                                    CT<T2> sum = {0.0, 0.0};
+                                                    for (Index j = indptr[i]; j < indptr[i + 1]; j++) {
+                                                        sum += data[j] * c_ket[indices[j]];
+                                                    }
+                                                    for (Index j = indptr_b[i]; j < indptr_b[i + 1]; j++) {
+                                                        sum += data_b[j] * c_ket[indices_b[j]];
+                                                    }
+                                                    auto tmp = std::conj(c_bra[i]) * sum;
+                                                    res_real += std::real(tmp);
+                                                    res_imag += std::imag(tmp);
+                                                })
+    return {res_real, res_imag};
 }
 }  // namespace mindquantum::sparse
 #endif  // MINDQUANTUM_SPARSE_ALGO_H_

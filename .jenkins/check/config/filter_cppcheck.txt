@@ -76,6 +76,7 @@
 "mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_swap_like.cpp"   "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_gate_expect.cpp" "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_matrix_gate.cpp" "unknownMacro"
+"mindquantum/ccsrc/include/simulator/vector/detail/cpu_vector_policy.hpp"                           "unknownMacro"
 
 "mindquantum/ccsrc/lib/experimental/decompositions/time_evolution.cpp"                              "unreadVariable"
 

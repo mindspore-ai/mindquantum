@@ -113,6 +113,27 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::CsrDotVec(const std::shared_ptr<
     return reinterpret_cast<qs_data_p_t>(out);
 }
 
+template <typename derived_, typename calc_type_>
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfCsr(
+    const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, qs_data_p_t bra, qs_data_p_t ket, index_t dim)
+    -> py_qs_data_t {
+    if (dim != a->dim_) {
+        throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
+    }
+    return sparse::ExpectationOfCsr<calc_type, calc_type>(a, reinterpret_cast<calc_type*>(bra),
+                                                          reinterpret_cast<calc_type*>(ket));
+}
+template <typename derived_, typename calc_type_>
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfCsr(
+    const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& b,
+    qs_data_p_t bra, qs_data_p_t ket, index_t dim) -> py_qs_data_t {
+    if ((dim != a->dim_) || (dim != b->dim_)) {
+        throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
+    }
+    return sparse::ExpectationOfCsr<calc_type, calc_type>(a, b, reinterpret_cast<calc_type*>(bra),
+                                                          reinterpret_cast<calc_type*>(ket));
+}
+
 #ifdef __x86_64__
 template struct CPUVectorPolicyBase<CPUVectorPolicyAvxFloat, float>;
 template struct CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double>;

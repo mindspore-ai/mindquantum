@@ -135,34 +135,14 @@ class VectorState {
 
     //! Get expectation of given hamiltonian
     virtual py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
-                                        const parameter::ParameterResolver& pr) {
-        auto ket = *this;
-        ket.ApplyCircuit(circ, pr);
-        auto bra = ket;
-        ket.ApplyHamiltonian(ham);
-        return qs_policy_t::Vdot(bra.qs, ket.qs, dim);
-    }
+                                        const parameter::ParameterResolver& pr);
 
     virtual py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ_right,
-                                        const circuit_t& circ_left, const parameter::ParameterResolver& pr) {
-        auto ket = *this;
-        auto bra = *this;
-        ket.ApplyCircuit(circ_right, pr);
-        ket.ApplyHamiltonian(ham);
-        bra.ApplyCircuit(circ_left, pr);
-        return qs_policy_t::Vdot(bra.qs, ket.qs, dim);
-    }
+                                        const circuit_t& circ_left, const parameter::ParameterResolver& pr);
 
     virtual py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ_right,
                                         const circuit_t& circ_left, const derived_t& simulator_left,
-                                        const parameter::ParameterResolver& pr) {
-        auto ket = *this;
-        auto bra = simulator_left;
-        ket.ApplyCircuit(circ_right, pr);
-        ket.ApplyHamiltonian(ham);
-        bra.ApplyCircuit(circ_left, pr);
-        return qs_policy_t::Vdot(bra.qs, ket.qs, dim);
-    }
+                                        const parameter::ParameterResolver& pr);
 
     //! Get the expectation of hamiltonian
     //! Here a single hamiltonian and single parameter data are needed
@@ -176,6 +156,7 @@ class VectorState {
     virtual VVT<py_qs_data_t> GetExpectationWithGradOneMulti(
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
         const circuit_t& herm_circ, const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread);
+
     //! Get the expectation of hamiltonian
     //! Here multiple hamiltonian and multiple parameters are needed
     virtual VT<VVT<py_qs_data_t>> GetExpectationWithGradMultiMulti(
@@ -207,10 +188,7 @@ class VectorState {
                                   const MST<size_t>& key_map, unsigned seed);
 
     template <typename policy_des, template <typename p_src, typename p_des> class cast_policy>
-    VectorState<policy_des> astype(unsigned seed) {
-        return VectorState<policy_des>(cast_policy<qs_policy_t, policy_des>::cast(this->qs, this->dim), this->n_qubits,
-                                       seed);
-    }
+    VectorState<policy_des> astype(unsigned seed);
 
  protected:
     qs_data_p_t qs = nullptr;
