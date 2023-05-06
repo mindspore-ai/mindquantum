@@ -28,6 +28,13 @@
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
 auto CPUVectorPolicyBase<derived_, calc_type_>::Vdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim) -> py_qs_data_t {
+    if (bra == nullptr && ket == nullptr) {
+        return 1.0;
+    } else if (bra == nullptr) {
+        return ket[0];
+    } else if (ket == nullptr) {
+        return std::conj(bra[0]);
+    }
     calc_type res_real = 0, res_imag = 0;
     // clang-format off
     THRESHOLD_OMP(
