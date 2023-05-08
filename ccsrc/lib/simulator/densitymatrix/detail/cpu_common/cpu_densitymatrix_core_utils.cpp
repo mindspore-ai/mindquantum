@@ -26,40 +26,6 @@
 #include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
-// Warning: only correct when x >= y
-template <typename derived_, typename calc_type_>
-index_t CPUDensityMatrixPolicyBase<derived_, calc_type_>::IdxMap(index_t x, index_t y) {
-    return (x * (x + 1)) / 2 + y;
-}
-
-template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetValue(qs_data_p_t qs, index_t x, index_t y) -> qs_data_t {
-    if (x >= y) {
-        return qs[IdxMap(x, y)];
-    } else {
-        return std::conj(qs[IdxMap(y, x)]);
-    }
-}
-
-template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetValue(qs_data_p_t qs, index_t x, index_t y, qs_data_t data) {
-    if (x >= y) {
-        qs[IdxMap(x, y)] = data;
-    } else {
-        qs[IdxMap(y, x)] = std::conj(data);
-    }
-}
-
-template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SelfMultiply(qs_data_p_t qs, index_t x, index_t y,
-                                                                    qs_data_t data) {
-    if (x >= y) {
-        qs[IdxMap(x, y)] *= data;
-    } else {
-        qs[IdxMap(y, x)] *= std::conj(data);
-    }
-}
-
 template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SwapValue(qs_data_p_t qs, index_t x0, index_t y0, index_t x1,
                                                                  index_t y1, qs_data_t coeff) {

@@ -27,7 +27,7 @@
 
 namespace mindquantum::sim::densitymatrix::detail {
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRX(qs_data_p_t qs, const qbits_t& objs,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRX(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                const qbits_t& ctrls, calc_type val, index_t dim,
                                                                bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
@@ -38,14 +38,14 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRX(qs_data_p_t qs, c
         b = -0.5 * std::cos(val / 2);
     }
     matrix_t m{{{a, 0}, {0, b}}, {{0, b}, {a, 0}}};
-    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(qs_p, qs_p, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
-        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(qs_p, mask.ctrl_mask, dim);
     }
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRY(qs_data_p_t qs, const qbits_t& objs,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRY(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                const qbits_t& ctrls, calc_type val, index_t dim,
                                                                bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
@@ -56,14 +56,14 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRY(qs_data_p_t qs, c
         b = 0.5 * std::cos(val / 2);
     }
     matrix_t m{{{a, 0}, {-b, 0}}, {{b, 0}, {a, 0}}};
-    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(*qs_p, qs_p, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
-        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(qs_p, mask.ctrl_mask, dim);
     }
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRZ(qs_data_p_t qs, const qbits_t& objs,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRZ(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                const qbits_t& ctrls, calc_type val, index_t dim,
                                                                bool diff) {
     SingleQubitGateMask mask(objs, ctrls);
@@ -74,14 +74,14 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRZ(qs_data_p_t qs, c
         b = 0.5 * std::cos(val / 2);
     }
     matrix_t m{{{a, -b}, {0, 0}}, {{0, 0}, {a, b}}};
-    derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(*qs_p, qs_p, objs[0], objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
-        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(qs_p, mask.ctrl_mask, dim);
     }
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxx(qs_data_p_t qs, const qbits_t& objs,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxx(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                 const qbits_t& ctrls, calc_type val, index_t dim,
                                                                 bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
@@ -92,14 +92,14 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxx(qs_data_p_t qs, 
         s = static_cast<calc_type_>(std::cos(val / 2) / 2) * IMAGE_MI;
     }
     if (!mask.ctrl_mask) {
-        ApplyRxxNoCtrl(qs, objs, ctrls, dim, c, s);
+        ApplyRxxNoCtrl(qs_p, objs, ctrls, dim, c, s);
     } else {
-        ApplyRxxCtrl(qs, objs, ctrls, dim, c, s, diff);
+        ApplyRxxCtrl(qs_p, objs, ctrls, dim, c, s, diff);
     }
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxxNoCtrl(qs_data_p_t qs, const qbits_t& objs,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxxNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                       const qbits_t& ctrls, index_t dim, calc_type c,
                                                                       qs_data_t s) {
     DoubleQubitGateMask mask(objs, ctrls);
@@ -135,7 +135,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxxNoCtrl(qs_data_p_
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxxCtrl(qs_data_p_t qs, const qbits_t& objs,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxxCtrl(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                     const qbits_t& ctrls, index_t dim, calc_type c,
                                                                     qs_data_t s, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
@@ -193,7 +193,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxxCtrl(qs_data_p_t 
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyy(qs_data_p_t qs, const qbits_t& objs,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyy(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                 const qbits_t& ctrls, calc_type val, index_t dim,
                                                                 bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
@@ -211,7 +211,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyy(qs_data_p_t qs, 
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyyNoCtrl(qs_data_p_t qs, const qbits_t& objs,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyyNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                       const qbits_t& ctrls, index_t dim, calc_type c,
                                                                       qs_data_t s) {
     DoubleQubitGateMask mask(objs, ctrls);
@@ -254,7 +254,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyyNoCtrl(qs_data_p_
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyyCtrl(qs_data_p_t qs, const qbits_t& objs,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyyCtrl(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                     const qbits_t& ctrls, index_t dim, calc_type c,
                                                                     qs_data_t s, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
@@ -316,7 +316,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyyCtrl(qs_data_p_t 
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzz(qs_data_p_t qs, const qbits_t& objs,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzz(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                 const qbits_t& ctrls, calc_type val, index_t dim,
                                                                 bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);
@@ -334,7 +334,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzz(qs_data_p_t qs, 
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzzNoCtrl(qs_data_p_t qs, const qbits_t& objs,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzzNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                       const qbits_t& ctrls, index_t dim, calc_type c,
                                                                       calc_type s) {
     DoubleQubitGateMask mask(objs, ctrls);
@@ -377,7 +377,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzzNoCtrl(qs_data_p_
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzzCtrl(qs_data_p_t qs, const qbits_t& objs,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzzCtrl(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                     const qbits_t& ctrls, index_t dim, calc_type c,
                                                                     calc_type s, bool diff) {
     DoubleQubitGateMask mask(objs, ctrls);

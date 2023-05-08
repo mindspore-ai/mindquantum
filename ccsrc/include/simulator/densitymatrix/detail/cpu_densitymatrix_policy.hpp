@@ -28,6 +28,14 @@
 #include "math/tensor/traits.hpp"
 #include "simulator/types.hpp"
 
+// Warning: only correct when x >= y
+#define IdxMap(x, y)       (((x) * ((x) + 1)) / 2 + (y))
+#define GetValue(qs, x, y) (((x) >= (y)) ? ((qs)[IdxMap((x), (y))]) : (std::conj((qs)[IdxMap((y), (x))])))
+#define SetValue(qs, x, y, data)                                                                                       \
+    (((x) >= (y)) ? ((qs)[IdxMap((x), (y))] = (data)) : ((qs)[IdxMap((y), (x))] = std::conj((data))))
+#define SelfMultiply(qs, x, y, data)                                                                                   \
+    (((x) >= (y)) ? ((qs)[IdxMap((x), (y))] *= (data)) : ((qs)[IdxMap((y), (x))] *= std::conj((data))))
+
 namespace mindquantum::sim::densitymatrix::detail {
 struct CPUDensityMatrixPolicyAvxFloat;
 struct CPUDensityMatrixPolicyAvxDouble;
@@ -50,22 +58,18 @@ struct CPUDensityMatrixPolicyBase {
     // basic
     // ========================================================================================================
 
-    static index_t IdxMap(index_t x, index_t y);
-    static qs_data_t GetValue(qs_data_p_t qs, index_t x, index_t y);
-    static void SetValue(qs_data_p_t qs, index_t x, index_t y, qs_data_t data);
-    static void SelfMultiply(qs_data_p_t qs, index_t x, index_t y, qs_data_t data);
     static void SwapValue(qs_data_p_t qs, index_t x0, index_t y0, index_t x1, index_t y1, qs_data_t coeff);
 
     static qs_data_p_t InitState(index_t dim, bool zero_state = true);
-    static void Reset(qs_data_p_t qs, index_t dim, bool zero_state = true);
-    static void FreeState(qs_data_p_t qs);
-    static void Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit = 10);
-    static void SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim);
+    static void Reset(qs_data_p_t* qs_p, index_t dim, bool zero_state = true);
+    static void FreeState(qs_data_p_t* qs_p);
+    static void Display(const qs_data_p_t& qs, qbit_t n_qubits, qbit_t q_limit = 10);
+    static void SetToZeroExcept(qs_data_p_t* qs_p, index_t ctrl_mask, index_t dim);
     static matrix_t GetQS(qs_data_p_t qs, index_t dim);
     static void SetQS(qs_data_p_t qs, const py_qs_datas_t& vec_out, index_t dim);
     static void SetDM(qs_data_p_t qs, const matrix_t& mat_out, index_t dim);
     static void CopyQS(qs_data_p_t qs, const qs_data_p_t qs_out, index_t dim);
-    static qs_data_p_t Copy(qs_data_p_t qs, index_t dim);
+    static qs_data_p_t Copy(const qs_data_p_t& qs, index_t dim);
     static calc_type Purity(qs_data_p_t qs, index_t dim);
     static bool IsPure(qs_data_p_t qs, index_t dim);
     static py_qs_datas_t PureStateVector(qs_data_p_t qs, index_t dim);
@@ -91,74 +95,75 @@ struct CPUDensityMatrixPolicyBase {
     // X like operator
     // ========================================================================================================
 
-    static void ApplyXLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, qs_data_t v1, qs_data_t v2,
+    static void ApplyXLike(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, qs_data_t v1, qs_data_t v2,
                            index_t dim);
-    static void ApplyX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplyY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyX(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyY(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
 
     // Z like operator
     // ========================================================================================================
 
-    static void ApplyZLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, qs_data_t val, index_t dim);
-    static void ApplyZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyZLike(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, qs_data_t val, index_t dim);
+    static void ApplyZ(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     // The crazy code spell check in CI do not allow apply s to name following API, even I set the filter file.
-    static void ApplySGate(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplyT(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplySdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplyTdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplyPS(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplySGate(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyT(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplySdag(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyTdag(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyPS(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
 
     // Qubit operator
     // ========================================================================================================
 
-    static void ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit, const qbits_t& ctrls,
-                                       const matrix_t& m, index_t dim);
-    static void ApplyH(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplyRX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplySingleQubitMatrix(const qs_data_p_t& src, qs_data_p_t* des_p, qbit_t obj_qubit,
+                                       const qbits_t& ctrls, const matrix_t& m, index_t dim);
+    static void ApplyH(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyRX(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
-    static void ApplyRY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyRY(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
-    static void ApplyRZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyRZ(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
 
-    static void ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
-                                     const matrix_t& m, index_t dim);
-    static void ApplyTwoQubitsMatrixNoCtrl(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
-                                           const matrix_t& m, index_t dim);
-    static void ApplyTwoQubitsMatrixCtrl(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
-                                         const matrix_t& m, index_t dim);
-    static void ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplyRxx(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyTwoQubitsMatrix(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs,
+                                     const qbits_t& ctrls, const matrix_t& m, index_t dim);
+    static void ApplyTwoQubitsMatrixNoCtrl(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs,
+                                           const qbits_t& ctrls, const matrix_t& m, index_t dim);
+    static void ApplyTwoQubitsMatrixCtrl(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs,
+                                         const qbits_t& ctrls, const matrix_t& m, index_t dim);
+    static void ApplySWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyISWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyRxx(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
-    static void ApplyRxxNoCtrl(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+    static void ApplyRxxNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
                                qs_data_t s);
-    static void ApplyRxxCtrl(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+    static void ApplyRxxCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
                              qs_data_t s, bool diff);
-    static void ApplyRyy(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyRyy(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
-    static void ApplyRyyNoCtrl(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+    static void ApplyRyyNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
                                qs_data_t s);
-    static void ApplyRyyCtrl(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+    static void ApplyRyyCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
                              qs_data_t s, bool diff);
-    static void ApplyRzz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyRzz(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
-    static void ApplyRzzNoCtrl(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+    static void ApplyRzzNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
                                calc_type s);
-    static void ApplyRzzCtrl(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+    static void ApplyRzzCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
                              calc_type s, bool diff);
-    static void ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
+    static void ApplyMatrixGate(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs, const qbits_t& ctrls,
                                 const matrix_t& m, index_t dim);
     // Channel operator
     // ========================================================================================================
-    static void ApplySingleQubitChannel(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
+    static void ApplySingleQubitChannel(const qs_data_p_t& src, qs_data_p_t* des_p, qbit_t obj_qubit,
                                         const VT<matrix_t>& kraus_set, index_t dim);
 
-    static void ApplyAmplitudeDamping(qs_data_p_t qs, const qbits_t& objs, calc_type gamma, bool daggered, index_t dim);
-    static void ApplyPhaseDamping(qs_data_p_t qs, const qbits_t& objs, calc_type gamma, index_t dim);
-    static void ApplyPauli(qs_data_p_t qs, const qbits_t& objs, const VT<double>& probs, index_t dim);
-    static void ApplyKraus(qs_data_p_t qs, const qbits_t& objs, const VT<matrix_t>& kraus_set, index_t dim);
+    static void ApplyAmplitudeDamping(qs_data_p_t* qs_p, const qbits_t& objs, calc_type gamma, bool daggered,
+                                      index_t dim);
+    static void ApplyPhaseDamping(qs_data_p_t* qs_p, const qbits_t& objs, calc_type gamma, index_t dim);
+    static void ApplyPauli(qs_data_p_t* qs_p, const qbits_t& objs, const VT<double>& probs, index_t dim);
+    static void ApplyKraus(qs_data_p_t* qs_p, const qbits_t& objs, const VT<matrix_t>& kraus_set, index_t dim);
 
     // gate_expec
     // ========================================================================================================

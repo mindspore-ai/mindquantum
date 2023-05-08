@@ -73,7 +73,7 @@ class DensityMatrixState {
 
     //! dtor
     ~DensityMatrixState() {
-        qs_policy_t::FreeState(qs);
+        qs_policy_t::FreeState(&qs);
     }
 
     virtual tensor::TDtype DType();

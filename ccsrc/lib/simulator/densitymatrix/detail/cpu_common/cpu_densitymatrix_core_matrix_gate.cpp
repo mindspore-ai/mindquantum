@@ -31,9 +31,22 @@ namespace mindquantum::sim::densitymatrix::detail {
 
 // method is based on 'mq_vector' simulator, extended to densitymatrix
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des,
-                                                                              qbit_t obj_qubit, const qbits_t& ctrls,
-                                                                              const matrix_t& m, index_t dim) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(const qs_data_p_t& src_out,
+                                                                              qs_data_p_t* des_p, qbit_t obj_qubit,
+                                                                              const qbits_t& ctrls, const matrix_t& m,
+                                                                              index_t dim) {
+    auto& des = (*des_p);
+    if (des == nullptr) {
+        des = derived::InitState(dim);
+    }
+    qs_data_p_t src;
+    bool will_free = false;
+    if (src_out == nullptr) {
+        src = derived::InitState(dim);
+        will_free = true;
+    } else {
+        src = src_out;
+    }
     SingleQubitGateMask mask({obj_qubit}, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
@@ -112,25 +125,41 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(qs
                 }
             })
     }
-}
-
-template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des,
-                                                                            const qbits_t& objs, const qbits_t& ctrls,
-                                                                            const matrix_t& m, index_t dim) {
-    DoubleQubitGateMask mask(objs, ctrls);
-    if (!mask.ctrl_mask) {
-        ApplyTwoQubitsMatrixNoCtrl(src, des, objs, ctrls, m, dim);
-    } else {
-        ApplyTwoQubitsMatrixCtrl(src, des, objs, ctrls, m, dim);
+    if (will_free) {
+        derived::FreeState(&src);
     }
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrixNoCtrl(qs_data_p_t src, qs_data_p_t des,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(const qs_data_p_t& src, qs_data_p_t* des_p,
+                                                                            const qbits_t& objs, const qbits_t& ctrls,
+                                                                            const matrix_t& m, index_t dim) {
+    DoubleQubitGateMask mask(objs, ctrls);
+    if (!mask.ctrl_mask) {
+        ApplyTwoQubitsMatrixNoCtrl(src, des_p, objs, ctrls, m, dim);
+    } else {
+        ApplyTwoQubitsMatrixCtrl(src, des_p, objs, ctrls, m, dim);
+    }
+}
+
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrixNoCtrl(const qs_data_p_t& src_out,
+                                                                                  qs_data_p_t* des_p,
                                                                                   const qbits_t& objs,
                                                                                   const qbits_t& ctrls,
                                                                                   const matrix_t& m, index_t dim) {
+    auto& des = (*des_p);
+    if (des == nullptr) {
+        des = derived::InitState(dim);
+    }
+    qs_data_p_t src;
+    bool will_free = false;
+    if (src_out == nullptr) {
+        src = derived::InitState(dim);
+        will_free = true;
+    } else {
+        src = src_out;
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     size_t mask1 = (1UL << objs[0]);
     size_t mask2 = (1UL << objs[1]);
@@ -168,13 +197,28 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrixNoCtr
                 }
             }
         })
+    if (will_free) {
+        derived::FreeState(&src);
+    }
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrixCtrl(qs_data_p_t src, qs_data_p_t des,
-                                                                                const qbits_t& objs,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrixCtrl(const qs_data_p_t& src_out,
+                                                                                qs_data_p_t* des_p, const qbits_t& objs,
                                                                                 const qbits_t& ctrls, const matrix_t& m,
                                                                                 index_t dim) {
+    auto& des = (*des_p);
+    if (des == nullptr) {
+        des = derived::InitState(dim);
+    }
+    qs_data_p_t src;
+    bool will_free = false;
+    if (src_out == nullptr) {
+        src = derived::InitState(dim);
+        will_free = true;
+    } else {
+        src = src_out;
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     size_t mask1 = (1UL << objs[0]);
     size_t mask2 = (1UL << objs[1]);
@@ -231,16 +275,19 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrixCtrl(
                 }
             }
         })
+    if (will_free) {
+        derived::FreeState(&src);
+    }
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyMatrixGate(const qs_data_p_t& src, qs_data_p_t* des_p,
                                                                        const qbits_t& objs, const qbits_t& ctrls,
                                                                        const matrix_t& m, index_t dim) {
     if (objs.size() == 1) {
-        derived::ApplySingleQubitMatrix(src, des, objs[0], ctrls, m, dim);
+        derived::ApplySingleQubitMatrix(src, des_p, objs[0], ctrls, m, dim);
     } else if (objs.size() == 2) {
-        derived::ApplyTwoQubitsMatrix(src, des, objs, ctrls, m, dim);
+        derived::ApplyTwoQubitsMatrix(src, des_p, objs, ctrls, m, dim);
     } else {
         throw std::runtime_error("Can not custom " + std::to_string(objs.size()) + " qubits gate for cpu backend.");
     }
