@@ -84,7 +84,7 @@ VectorState<qs_policy_t_>::VectorState(const VectorState<qs_policy_t>& sim) {
 
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::operator=(const VectorState<qs_policy_t>& sim) -> derived_t& {
-    qs_policy_t::FreeState(this->qs);
+    qs_policy_t::FreeState(&(this->qs));
     this->qs = qs_policy_t::Copy(sim.qs, sim.dim);
     this->dim = sim.dim;
     this->n_qubits = sim.n_qubits;
@@ -109,7 +109,7 @@ VectorState<qs_policy_t_>::VectorState(VectorState<qs_policy_t>&& sim) {
 
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::operator=(VectorState<qs_policy_t>&& sim) -> derived_t& {
-    qs_policy_t::FreeState(this->qs);
+    qs_policy_t::FreeState(&(this->qs));
     this->qs = sim.qs;
     this->dim = sim.dim;
     this->n_qubits = sim.n_qubits;
@@ -128,7 +128,7 @@ tensor::TDtype VectorState<qs_policy_t_>::DType() {
 
 template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::Reset() {
-    qs_policy_t::Reset(qs, dim);
+    qs_policy_t::Reset(&qs, dim);
 }
 
 template <typename qs_policy_t_>
@@ -143,10 +143,7 @@ auto VectorState<qs_policy_t_>::GetQS() const -> VT<py_qs_data_t> {
 
 template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::SetQS(const VT<py_qs_data_t>& qs_out) {
-    if (this->qs == nullptr) {
-        this->qs = qs_policy_t::InitState(dim);
-    }
-    qs_policy_t::SetQS(qs, qs_out, dim);
+    qs_policy_t::SetQS(&qs, qs_out, dim);
 }
 
 template <typename qs_policy_t_>
@@ -355,7 +352,7 @@ auto VectorState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate>& g
     auto one_amp = qs_policy_t::ConditionalCollect(qs, one_mask, one_mask, true, dim).real();
     index_t collapse_mask = (static_cast<index_t>(rng_() < one_amp) << gate->obj_qubits_[0]);
     qs_data_t norm_fact = (collapse_mask == 0) ? 1 / std::sqrt(1 - one_amp) : 1 / std::sqrt(one_amp);
-    qs_policy_t::ConditionalMul(qs, qs, one_mask, collapse_mask, norm_fact, 0.0, dim);
+    qs_policy_t::ConditionalMul(qs, &qs, one_mask, collapse_mask, norm_fact, 0.0, dim);
     return static_cast<index_t>(collapse_mask != 0);
 }
 
@@ -420,13 +417,13 @@ void VectorState<qs_policy_t_>::ApplyKrausChannel(const std::shared_ptr<BasicGat
         prob = renormal_factor_square / (1 - prob);
         calc_type renormal_factor = 1 / std::sqrt(renormal_factor_square);
         if (static_cast<calc_type>(rng_()) <= prob) {
-            qs_policy_t::QSMulValue(tmp_qs, tmp_qs, renormal_factor, dim);
-            qs_policy_t::FreeState(qs);
+            qs_policy_t::QSMulValue(tmp_qs, &tmp_qs, renormal_factor, dim);
+            qs_policy_t::FreeState(&qs);
             qs = tmp_qs;
             tmp_qs = nullptr;
         }
     }
-    qs_policy_t::FreeState(tmp_qs);
+    qs_policy_t::FreeState(&tmp_qs);
 }
 
 template <typename qs_policy_t_>
@@ -434,7 +431,7 @@ void VectorState<qs_policy_t_>::ApplyDampingChannel(const std::shared_ptr<BasicG
     if (this->qs == nullptr) {
         this->qs = qs_policy_t::InitState(dim);
     }
-    calc_type reduced_factor_b_square = qs_policy_t::OneStateVdot(qs, qs, gate->obj_qubits_[0], dim).real();
+    calc_type reduced_factor_b_square = qs_policy_t::OneStateVdot(&qs, &qs, gate->obj_qubits_[0], dim).real();
     calc_type reduced_factor_b = std::sqrt(reduced_factor_b_square);
     if (reduced_factor_b < 1e-8) {
         return;
@@ -453,15 +450,15 @@ void VectorState<qs_policy_t_>::ApplyDampingChannel(const std::shared_ptr<BasicG
             VVT<py_qs_data_t> m({{0, 1 / reduced_factor_b}, {0, 0}});
             qs_policy_t::ApplySingleQubitMatrix(qs, tmp_qs, gate->obj_qubits_[0], gate->ctrl_qubits_, m, dim);
         } else {
-            qs_policy_t::ConditionalMul(qs, tmp_qs, (1UL << gate->obj_qubits_[0]), 1, 1 / reduced_factor_b, 0, dim);
+            qs_policy_t::ConditionalMul(qs, &tmp_qs, (1UL << gate->obj_qubits_[0]), 1, 1 / reduced_factor_b, 0, dim);
         }
         qs = tmp_qs;
         tmp_qs = nullptr;
-        qs_policy_t::FreeState(tmp_qs);
+        qs_policy_t::FreeState(&tmp_qs);
     } else {
         calc_type coeff_a = 1 / std::sqrt(1 - prob);
         calc_type coeff_b = std::sqrt(1 - damping_coeff) / std::sqrt(1 - prob);
-        qs_policy_t::ConditionalMul(qs, qs, (1UL << gate->obj_qubits_[0]), 0, coeff_a, coeff_b, dim);
+        qs_policy_t::ConditionalMul(qs, &qs, (1UL << gate->obj_qubits_[0]), 0, coeff_a, coeff_b, dim);
     }
 }
 
@@ -472,7 +469,7 @@ auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham
     auto ket = *this;
     ket.ApplyCircuit(circ, pr);
     if (ham.how_to_ == ORIGIN) {
-        out = qs_policy_t::ExpectationOfTerms(ket.qs, ket.qs, ham.ham_, dim);
+        out = qs_policy_t::ExpectationOfTerms(&(ket.qs), &(ket.qs), ham.ham_, dim);
     } else if (ham.how_to_ == BACKEND) {
         out = qs_policy_t::ExpectationOfCsr(ham.ham_sparse_main_, ham.ham_sparse_second_, ket.qs, ket.qs, dim);
     } else {
@@ -492,7 +489,7 @@ auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham
     ket.ApplyCircuit(circ_right, pr);
     bra.ApplyCircuit(circ_left, pr);
     if (ham.how_to_ == ORIGIN) {
-        out = qs_policy_t::ExpectationOfTerms(bra.qs, ket.qs, ham.ham_, dim);
+        out = qs_policy_t::ExpectationOfTerms(&(bra.qs), &(ket.qs), ham.ham_, dim);
     } else if (ham.how_to_ == BACKEND) {
         out = qs_policy_t::ExpectationOfCsr(ham.ham_sparse_main_, ham.ham_sparse_second_, bra.qs, ket.qs, dim);
     } else {
@@ -511,7 +508,7 @@ auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham
     bra.ApplyCircuit(circ_left, pr);
     py_qs_data_t out;
     if (ham.how_to_ == ORIGIN) {
-        out = qs_policy_t::ExpectationOfTerms(bra.qs, ket.qs, ham.ham_, dim);
+        out = qs_policy_t::ExpectationOfTerms(&(bra.qs), &(ket.qs), ham.ham_, dim);
     } else if (ham.how_to_ == BACKEND) {
         out = qs_policy_t::ExpectationOfCsr(ham.ham_sparse_main_, ham.ham_sparse_second_, bra.qs, ket.qs, dim);
     } else {
@@ -660,13 +657,13 @@ void VectorState<qs_policy_t_>::ApplyHamiltonian(const Hamiltonian<calc_type>& h
     }
     qs_data_p_t new_qs;
     if (ham.how_to_ == ORIGIN) {
-        new_qs = qs_policy_t::ApplyTerms(qs, ham.ham_, dim);
+        new_qs = qs_policy_t::ApplyTerms(&qs, ham.ham_, dim);
     } else if (ham.how_to_ == BACKEND) {
         new_qs = qs_policy_t::CsrDotVec(ham.ham_sparse_main_, ham.ham_sparse_second_, qs, dim);
     } else {
         new_qs = qs_policy_t::CsrDotVec(ham.ham_sparse_main_, qs, dim);
     }
-    qs_policy_t::FreeState(qs);
+    qs_policy_t::FreeState(&qs);
     qs = new_qs;
 }
 

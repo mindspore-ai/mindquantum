@@ -27,6 +27,17 @@
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
 auto GPUVectorPolicyBase<derived_, calc_type_>::Vdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim) -> py_qs_data_t {
+    if (bra == nullptr && ket == nullptr) {
+        return 1.0;
+    } else if (bra == nullptr) {
+        py_qs_data_t out;
+        cudaMemcpy(&out, ket, sizeof(qs_data_t), cudaMemcpyDeviceToHost);
+        return out;
+    } else if (ket == nullptr) {
+        py_qs_data_t out;
+        cudaMemcpy(&out, bra, sizeof(qs_data_t), cudaMemcpyDeviceToHost);
+        return std::conj(out);
+    }
     thrust::device_ptr<qs_data_t> dev_bra(bra);
     thrust::device_ptr<qs_data_t> dev_ket(ket);
     qs_data_t res = thrust::inner_product(dev_bra, dev_bra + dim, dev_ket, qs_data_t(0, 0), thrust::plus<qs_data_t>(),
@@ -36,8 +47,16 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::Vdot(qs_data_p_t bra, qs_data_p_
 
 template <typename derived_, typename calc_type_>
 template <index_t mask, index_t condi>
-auto GPUVectorPolicyBase<derived_, calc_type_>::ConditionVdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim)
+auto GPUVectorPolicyBase<derived_, calc_type_>::ConditionVdot(qs_data_p_t* bra_p, qs_data_p_t* ket_p, index_t dim)
     -> py_qs_data_t {
+    auto& bra = (*bra_p);
+    auto& ket = (*ket_p);
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     thrust::counting_iterator<size_t> i(0);
     return thrust::transform_reduce(
         i, i + dim,
@@ -52,8 +71,16 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ConditionVdot(qs_data_p_t bra, q
 }
 
 template <typename derived_, typename calc_type_>
-auto GPUVectorPolicyBase<derived_, calc_type_>::OneStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit,
+auto GPUVectorPolicyBase<derived_, calc_type_>::OneStateVdot(qs_data_p_t* bra_p, qs_data_p_t* ket_p, qbit_t obj_qubit,
                                                              index_t dim) -> py_qs_data_t {
+    auto& bra = (*bra_p);
+    auto& ket = (*ket_p);
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     SingleQubitGateMask mask({obj_qubit}, {});
     auto obj_high_mask = mask.obj_high_mask;
     auto obj_low_mask = mask.obj_low_mask;
@@ -69,8 +96,16 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::OneStateVdot(qs_data_p_t bra, qs
 }
 
 template <typename derived_, typename calc_type_>
-auto GPUVectorPolicyBase<derived_, calc_type_>::ZeroStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit,
+auto GPUVectorPolicyBase<derived_, calc_type_>::ZeroStateVdot(qs_data_p_t* bra_p, qs_data_p_t* ket_p, qbit_t obj_qubit,
                                                               index_t dim) -> py_qs_data_t {
+    auto& bra = (*bra_p);
+    auto& ket = (*ket_p);
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     SingleQubitGateMask mask({obj_qubit}, {});
     auto obj_high_mask = mask.obj_high_mask;
     auto obj_low_mask = mask.obj_low_mask;

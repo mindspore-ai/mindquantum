@@ -27,9 +27,13 @@ namespace mindquantum::sim::vector::detail {
 
 template <typename derived_, typename calc_type_>
 template <index_t mask, index_t condi, class binary_op>
-void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalBinary(qs_data_p_t src, qs_data_p_t des,
+void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalBinary(const qs_data_p_t& src, qs_data_p_t* des_p,
                                                                   qs_data_t succ_coeff, qs_data_t fail_coeff,
                                                                   index_t dim, const binary_op& op) {
+    auto& des = *des_p;
+    if (des == nullptr) {
+        des = derived::InitState(dim);
+    }
     thrust::counting_iterator<size_t> i(0);
     thrust::for_each(i, i + dim, [=] __device__(size_t i) {
         if ((i & mask) == condi) {
@@ -42,10 +46,14 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalBinary(qs_data_p_t sr
 
 template <typename derived_, typename calc_type_>
 template <class binary_op>
-void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalBinary(qs_data_p_t src, qs_data_p_t des, index_t mask,
-                                                                  index_t condi, qs_data_t succ_coeff,
+void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalBinary(const qs_data_p_t& src, qs_data_p_t* des_p,
+                                                                  index_t mask, index_t condi, qs_data_t succ_coeff,
                                                                   qs_data_t fail_coeff, index_t dim,
                                                                   const binary_op& op) {
+    auto& des = *des_p;
+    if (des == nullptr) {
+        des = derived::InitState(dim);
+    }
     thrust::counting_iterator<size_t> i(0);
     thrust::for_each(i, i + dim, [=] __device__(size_t i) {
         if ((i & mask) == condi) {
@@ -57,43 +65,45 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalBinary(qs_data_p_t sr
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalAdd(qs_data_p_t src, qs_data_p_t des, index_t mask,
+void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalAdd(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask,
                                                                index_t condi, qs_data_t succ_coeff,
                                                                qs_data_t fail_coeff, index_t dim) {
-    derived::template ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, thrust::plus<qs_data_t>());
+    derived::template ConditionalBinary(src, des_p, mask, condi, succ_coeff, fail_coeff, dim,
+                                        thrust::plus<qs_data_t>());
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalMinus(qs_data_p_t src, qs_data_p_t des, index_t mask,
-                                                                 index_t condi, qs_data_t succ_coeff,
+void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalMinus(const qs_data_p_t& src, qs_data_p_t* des_p,
+                                                                 index_t mask, index_t condi, qs_data_t succ_coeff,
                                                                  qs_data_t fail_coeff, index_t dim) {
-    derived::template ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim, thrust::minus<qs_data_t>());
+    derived::template ConditionalBinary(src, des_p, mask, condi, succ_coeff, fail_coeff, dim,
+                                        thrust::minus<qs_data_t>());
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalMul(qs_data_p_t src, qs_data_p_t des, index_t mask,
+void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalMul(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask,
                                                                index_t condi, qs_data_t succ_coeff,
                                                                qs_data_t fail_coeff, index_t dim) {
-    derived::template ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim,
+    derived::template ConditionalBinary(src, des_p, mask, condi, succ_coeff, fail_coeff, dim,
                                         thrust::multiplies<qs_data_t>());
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalDiv(qs_data_p_t src, qs_data_p_t des, index_t mask,
+void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalDiv(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask,
                                                                index_t condi, qs_data_t succ_coeff,
                                                                qs_data_t fail_coeff, index_t dim) {
-    derived::template ConditionalBinary(src, des, mask, condi, succ_coeff, fail_coeff, dim,
+    derived::template ConditionalBinary(src, des_p, mask, condi, succ_coeff, fail_coeff, dim,
                                         thrust::divides<qs_data_t>());
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::QSMulValue(qs_data_p_t src, qs_data_p_t des, qs_data_t value,
+void GPUVectorPolicyBase<derived_, calc_type_>::QSMulValue(const qs_data_p_t& src, qs_data_p_t* des_p, qs_data_t value,
                                                            index_t dim) {
-    derived::template ConditionalBinary<0, 0>(src, des, value, 0, dim, thrust::multiplies<qs_data_t>());
+    derived::template ConditionalBinary<0, 0>(src, des_p, value, 0, dim, thrust::multiplies<qs_data_t>());
 }
 
 template <typename derived_, typename calc_type_>
-auto GPUVectorPolicyBase<derived_, calc_type_>::ConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi,
+auto GPUVectorPolicyBase<derived_, calc_type_>::ConditionalCollect(const qs_data_p_t& qs, index_t mask, index_t condi,
                                                                    bool abs, index_t dim) -> qs_data_t {
     qs_data_t res = 0;
     thrust::counting_iterator<size_t> l(0);

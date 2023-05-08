@@ -44,12 +44,13 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::InitState(index_t dim, bool zero
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t& qs, index_t dim) {
-    derived::FreeState(qs);
+void CPUVectorPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t* qs_p, index_t dim) {
+    derived::FreeState(qs_p);
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::FreeState(qs_data_p_t& qs) {
+void CPUVectorPolicyBase<derived_, calc_type_>::FreeState(qs_data_p_t* qs_p) {
+    auto& qs = (*qs_p);
     if (qs != nullptr) {
         free(qs);
         qs = nullptr;
@@ -57,7 +58,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::FreeState(qs_data_p_t& qs) {
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit) {
+void CPUVectorPolicyBase<derived_, calc_type_>::Display(const qs_data_p_t& qs, qbit_t n_qubits, qbit_t q_limit) {
     if (n_qubits > q_limit) {
         n_qubits = q_limit;
     }
@@ -75,7 +76,11 @@ void CPUVectorPolicyBase<derived_, calc_type_>::Display(qs_data_p_t qs, qbit_t n
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim) {
+void CPUVectorPolicyBase<derived_, calc_type_>::SetToZeroExcept(qs_data_p_t* qs_p, index_t ctrl_mask, index_t dim) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
             if ((i & ctrl_mask) != ctrl_mask) {
@@ -96,7 +101,7 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::Copy(qs_data_p_t qs, index_t dim
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::GetQS(qs_data_p_t qs, index_t dim) -> VT<py_qs_data_t> {
+auto CPUVectorPolicyBase<derived_, calc_type_>::GetQS(const qs_data_p_t& qs, index_t dim) -> VT<py_qs_data_t> {
     VT<py_qs_data_t> out(dim);
     if (qs != nullptr) {
         THRESHOLD_OMP_FOR(
@@ -108,17 +113,26 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::GetQS(qs_data_p_t qs, index_t di
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t qs, const VT<py_qs_data_t>& qs_out, index_t dim) {
+void CPUVectorPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t* qs_p, const VT<py_qs_data_t>& qs_out, index_t dim) {
+    auto& qs = (*qs_p);
     if (qs_out.size() != dim) {
         throw std::invalid_argument("state size not match");
+    }
+    if (qs == nullptr) {
+        qs = derived::InitState(dim, false);
     }
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { qs[i] = qs_out[i]; })
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham,
-                                                           index_t dim) -> qs_data_p_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* qs_p,
+                                                           const std::vector<PauliTerm<calc_type>>& ham, index_t dim)
+    -> qs_data_p_t {
+    auto& qs = (*qs_p);
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     qs_data_p_t out = derived::InitState(dim, false);
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
@@ -143,9 +157,17 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs, const
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfTerms(qs_data_p_t bra, qs_data_p_t ket,
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfTerms(qs_data_p_t* bra_p, qs_data_p_t* ket_p,
                                                                    const std::vector<PauliTerm<calc_type>>& ham,
                                                                    index_t dim) -> py_qs_data_t {
+    auto& bra = (*bra_p);
+    auto& ket = (*ket_p);
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     py_qs_data_t out = 0.0;
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);

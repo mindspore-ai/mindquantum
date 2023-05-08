@@ -49,8 +49,16 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::Vdot(qs_data_p_t bra, qs_data_p_
 
 template <typename derived_, typename calc_type_>
 template <index_t mask, index_t condi>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ConditionVdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim)
+auto CPUVectorPolicyBase<derived_, calc_type_>::ConditionVdot(qs_data_p_t* bra_p, qs_data_p_t* ket_p, index_t dim)
     -> py_qs_data_t {
+    auto& bra = (*bra_p);
+    auto& ket = (*ket_p);
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     calc_type res_real = 0, res_imag = 0;
     // clang-format off
     THRESHOLD_OMP(
@@ -66,8 +74,16 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ConditionVdot(qs_data_p_t bra, q
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::OneStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit,
+auto CPUVectorPolicyBase<derived_, calc_type_>::OneStateVdot(qs_data_p_t* bra_p, qs_data_p_t* ket_p, qbit_t obj_qubit,
                                                              index_t dim) -> py_qs_data_t {
+    auto& bra = (*bra_p);
+    auto& ket = (*ket_p);
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     SingleQubitGateMask mask({obj_qubit}, {});
     calc_type res_real = 0, res_imag = 0;
     // clang-format off
@@ -83,8 +99,16 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::OneStateVdot(qs_data_p_t bra, qs
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ZeroStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit,
+auto CPUVectorPolicyBase<derived_, calc_type_>::ZeroStateVdot(qs_data_p_t* bra_p, qs_data_p_t* ket_p, qbit_t obj_qubit,
                                                               index_t dim) -> py_qs_data_t {
+    auto& bra = (*bra_p);
+    auto& ket = (*ket_p);
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     SingleQubitGateMask mask({obj_qubit}, {});
     calc_type res_real = 0, res_imag = 0;
     // clang-format off

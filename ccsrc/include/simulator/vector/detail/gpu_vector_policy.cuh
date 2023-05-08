@@ -43,36 +43,36 @@ struct GPUVectorPolicyBase {
     using py_qs_data_t = std::complex<calc_type>;
     using py_qs_datas_t = std::vector<py_qs_data_t>;
     static qs_data_p_t InitState(index_t dim, bool zero_state = true);
-    static void Reset(qs_data_p_t& qs, index_t dim);
-    static void FreeState(qs_data_p_t& qs);
-    static void Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit = 10);
-    static void SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim);
+    static void Reset(qs_data_p_t* qs_p, index_t dim);
+    static void FreeState(qs_data_p_t* qs_p);
+    static void Display(const qs_data_p_t& qs, qbit_t n_qubits, qbit_t q_limit = 10);
+    static void SetToZeroExcept(qs_data_p_t* qs_p, index_t ctrl_mask, index_t dim);
     template <index_t mask, index_t condi, class binary_op>
-    static void ConditionalBinary(qs_data_p_t src, qs_data_p_t des, qs_data_t succ_coeff, qs_data_t fail_coeff,
+    static void ConditionalBinary(const qs_data_p_t& src, qs_data_p_t* des_p, qs_data_t succ_coeff, qs_data_t fail_coeff,
                                   index_t dim, const binary_op& op);
     template <class binary_op>
-    static void ConditionalBinary(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
+    static void ConditionalBinary(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi, qs_data_t succ_coeff,
                                   qs_data_t fail_coeff, index_t dim, const binary_op& op);
-    static void ConditionalAdd(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
+    static void ConditionalAdd(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi, qs_data_t succ_coeff,
                                qs_data_t fail_coeff, index_t dim);
-    static void ConditionalMinus(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
+    static void ConditionalMinus(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi, qs_data_t succ_coeff,
                                  qs_data_t fail_coeff, index_t dim);
-    static void ConditionalMul(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
+    static void ConditionalMul(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi, qs_data_t succ_coeff,
                                qs_data_t fail_coeff, index_t dim);
-    static void ConditionalDiv(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
+    static void ConditionalDiv(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi, qs_data_t succ_coeff,
                                qs_data_t fail_coeff, index_t dim);
-    static void QSMulValue(qs_data_p_t src, qs_data_p_t des, qs_data_t value, index_t dim);
-    static qs_data_t ConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi, bool abs, index_t dim);
-    static py_qs_datas_t GetQS(qs_data_p_t qs, index_t dim);
-    static void SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, index_t dim);
-    static qs_data_p_t ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
-    static py_qs_data_t ExpectationOfTerms(qs_data_p_t bra, qs_data_p_t ket,
+    static void QSMulValue(const qs_data_p_t& src, qs_data_p_t* des_p, qs_data_t value, index_t dim);
+    static qs_data_t ConditionalCollect(const qs_data_p_t& qs, index_t mask, index_t condi, bool abs, index_t dim);
+    static py_qs_datas_t GetQS(const qs_data_p_t& qs, index_t dim);
+    static void SetQS(qs_data_p_t* qs_p, const py_qs_datas_t& qs_out, index_t dim);
+    static qs_data_p_t ApplyTerms(qs_data_p_t* qs_p, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
+    static py_qs_data_t ExpectationOfTerms(qs_data_p_t* bra_p, qs_data_p_t* ket_p,
                                            const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
     static qs_data_p_t Copy(qs_data_p_t qs, index_t dim);
     template <index_t mask, index_t condi>
-    static py_qs_data_t ConditionVdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim);
-    static py_qs_data_t OneStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit, index_t dim);
-    static py_qs_data_t ZeroStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit, index_t dim);
+    static py_qs_data_t ConditionVdot(qs_data_p_t* bra_p, qs_data_p_t* ket_p, index_t dim);
+    static py_qs_data_t OneStateVdot(qs_data_p_t* bra_p, qs_data_p_t* ket_p, qbit_t obj_qubit, index_t dim);
+    static py_qs_data_t ZeroStateVdot(qs_data_p_t* bra_p, qs_data_p_t* ket_p, qbit_t obj_qubit, index_t dim);
     static py_qs_data_t Vdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim);
     static qs_data_p_t CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, qs_data_p_t vec,
                                  index_t dim);

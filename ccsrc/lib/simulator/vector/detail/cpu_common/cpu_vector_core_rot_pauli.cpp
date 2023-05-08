@@ -74,7 +74,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRxx(qs_data_p_t qs, const q
                 }
             })
         if (diff) {
-            derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+            derived::SetToZeroExcept(&qs, mask.ctrl_mask, dim);
         }
     }
 }
@@ -128,7 +128,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRxy(qs_data_p_t qs, const q
                 }
             })
         if (diff) {
-            derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+            derived::SetToZeroExcept(&qs, mask.ctrl_mask, dim);
         }
     }
 }
@@ -182,7 +182,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRxz(qs_data_p_t qs, const q
                 }
             })
         if (diff) {
-            derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+            derived::SetToZeroExcept(&qs, mask.ctrl_mask, dim);
         }
     }
 }
@@ -236,7 +236,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRyz(qs_data_p_t qs, const q
                 }
             })
         if (diff) {
-            derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+            derived::SetToZeroExcept(&qs, mask.ctrl_mask, dim);
         }
     }
 }
@@ -290,7 +290,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRyy(qs_data_p_t qs, const q
                 }
             })
         if (diff) {
-            derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+            derived::SetToZeroExcept(&qs, mask.ctrl_mask, dim);
         }
     }
 }
@@ -338,7 +338,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRzz(qs_data_p_t qs, const q
                 }
             })
         if (diff) {
-            derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+            derived::SetToZeroExcept(&qs, mask.ctrl_mask, dim);
         }
     }
 }
@@ -356,7 +356,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRX(qs_data_p_t qs, const qb
     std::vector<std::vector<py_qs_data_t>> m{{{a, 0}, {0, b}}, {{0, b}, {a, 0}}};
     derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
-        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(&qs, mask.ctrl_mask, dim);
     }
 }
 
@@ -373,7 +373,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRY(qs_data_p_t qs, const qb
     std::vector<std::vector<py_qs_data_t>> m{{{a, 0}, {-b, 0}}, {{b, 0}, {a, 0}}};
     derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
-        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(&qs, mask.ctrl_mask, dim);
     }
 }
 
@@ -390,7 +390,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRZ(qs_data_p_t qs, const qb
     std::vector<std::vector<py_qs_data_t>> m{{{a, -b}, {0, 0}}, {{0, 0}, {a, b}}};
     derived::ApplySingleQubitMatrix(qs, qs, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
-        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(&qs, mask.ctrl_mask, dim);
     }
 }
 

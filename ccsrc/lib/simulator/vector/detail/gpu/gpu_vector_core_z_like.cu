@@ -105,7 +105,7 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyPS(qs_data_p_t qs, const qb
                     }
                 });
             }
-            derived::SetToZeroExcept(qs, ctrl_mask, dim);
+            derived::SetToZeroExcept(&qs, ctrl_mask, dim);
         }
     }
 }
