@@ -464,12 +464,12 @@ void VectorState<qs_policy_t_>::ApplyDampingChannel(const std::shared_ptr<BasicG
 
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
-                                               const parameter::ParameterResolver& pr) -> py_qs_data_t {
+                                               const parameter::ParameterResolver& pr) const -> py_qs_data_t {
     py_qs_data_t out;
     auto ket = *this;
     ket.ApplyCircuit(circ, pr);
     if (ham.how_to_ == ORIGIN) {
-        out = qs_policy_t::ExpectationOfTerms(&(ket.qs), &(ket.qs), ham.ham_, dim);
+        out = qs_policy_t::ExpectationOfTerms(ket.qs, ket.qs, ham.ham_, dim);
     } else if (ham.how_to_ == BACKEND) {
         out = qs_policy_t::ExpectationOfCsr(ham.ham_sparse_main_, ham.ham_sparse_second_, ket.qs, ket.qs, dim);
     } else {
@@ -480,7 +480,7 @@ auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham
 
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ_right,
-                                               const circuit_t& circ_left, const parameter::ParameterResolver& pr)
+                                               const circuit_t& circ_left, const parameter::ParameterResolver& pr) const
     -> py_qs_data_t {
     py_qs_data_t out;
 
@@ -489,7 +489,7 @@ auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham
     ket.ApplyCircuit(circ_right, pr);
     bra.ApplyCircuit(circ_left, pr);
     if (ham.how_to_ == ORIGIN) {
-        out = qs_policy_t::ExpectationOfTerms(&(bra.qs), &(ket.qs), ham.ham_, dim);
+        out = qs_policy_t::ExpectationOfTerms(bra.qs, ket.qs, ham.ham_, dim);
     } else if (ham.how_to_ == BACKEND) {
         out = qs_policy_t::ExpectationOfCsr(ham.ham_sparse_main_, ham.ham_sparse_second_, bra.qs, ket.qs, dim);
     } else {
@@ -501,14 +501,14 @@ auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ_right,
                                                const circuit_t& circ_left, const derived_t& simulator_left,
-                                               const parameter::ParameterResolver& pr) -> py_qs_data_t {
+                                               const parameter::ParameterResolver& pr) const -> py_qs_data_t {
     auto ket = *this;
     auto bra = simulator_left;
     ket.ApplyCircuit(circ_right, pr);
     bra.ApplyCircuit(circ_left, pr);
     py_qs_data_t out;
     if (ham.how_to_ == ORIGIN) {
-        out = qs_policy_t::ExpectationOfTerms(&(bra.qs), &(ket.qs), ham.ham_, dim);
+        out = qs_policy_t::ExpectationOfTerms(bra.qs, ket.qs, ham.ham_, dim);
     } else if (ham.how_to_ == BACKEND) {
         out = qs_policy_t::ExpectationOfCsr(ham.ham_sparse_main_, ham.ham_sparse_second_, bra.qs, ket.qs, dim);
     } else {
@@ -519,14 +519,16 @@ auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham
 
 template <typename qs_policy_t_>
 template <typename policy_des, template <typename p_src, typename p_des> class cast_policy>
-auto VectorState<qs_policy_t_>::astype(unsigned seed) -> VectorState<policy_des> {
+auto VectorState<qs_policy_t_>::astype(unsigned seed) const -> VectorState<policy_des> {
     return VectorState<policy_des>(cast_policy<qs_policy_t, policy_des>::cast(this->qs, this->dim), this->n_qubits,
                                    seed);
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t bra, qs_data_p_t ket, const std::shared_ptr<BasicGate>& gate,
-                                               const parameter::ParameterResolver& pr, index_t dim) -> tensor::Matrix {
+auto VectorState<qs_policy_t_>::ExpectDiffGate(const qs_data_p_t& bra, const qs_data_p_t& ket,
+                                               const std::shared_ptr<BasicGate>& gate,
+                                               const parameter::ParameterResolver& pr, index_t dim) const
+    -> tensor::Matrix {
     auto id = gate->id_;
     auto g = static_cast<Parameterizable*>(gate.get());
     auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
@@ -582,8 +584,18 @@ auto VectorState<qs_policy_t_>::ExpectDiffGate(qs_data_p_t bra, qs_data_p_t ket,
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::ExpectDiffU3(qs_data_p_t bra, qs_data_p_t ket, const std::shared_ptr<BasicGate>& gate,
-                                             const parameter::ParameterResolver& pr, index_t dim) -> tensor::Matrix {
+auto VectorState<qs_policy_t_>::ExpectDiffU3(const qs_data_p_t& bra_out, const qs_data_p_t& ket_out,
+                                             const std::shared_ptr<BasicGate>& gate,
+                                             const parameter::ParameterResolver& pr, index_t dim) const
+    -> tensor::Matrix {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    if (bra == nullptr) {
+        bra = qs_policy_t::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = qs_policy_t::InitState(dim);
+    }
     VT<py_qs_data_t> grad = {0, 0, 0};
     auto u3 = static_cast<U3*>(gate.get());
     if (u3->parameterized_) {
@@ -611,8 +623,18 @@ auto VectorState<qs_policy_t_>::ExpectDiffU3(qs_data_p_t bra, qs_data_p_t ket, c
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::ExpectDiffFSim(qs_data_p_t bra, qs_data_p_t ket, const std::shared_ptr<BasicGate>& gate,
-                                               const parameter::ParameterResolver& pr, index_t dim) -> tensor::Matrix {
+auto VectorState<qs_policy_t_>::ExpectDiffFSim(const qs_data_p_t& bra_out, const qs_data_p_t& ket_out,
+                                               const std::shared_ptr<BasicGate>& gate,
+                                               const parameter::ParameterResolver& pr, index_t dim) const
+    -> tensor::Matrix {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    if (bra == nullptr) {
+        bra = qs_policy_t::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = qs_policy_t::InitState(dim);
+    }
     VT<py_qs_data_t> grad = {0, 0};
     auto fsim = static_cast<FSim*>(gate.get());
     if (fsim->parameterized_) {
@@ -668,7 +690,7 @@ void VectorState<qs_policy_t_>::ApplyHamiltonian(const Hamiltonian<calc_type>& h
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::GetCircuitMatrix(const circuit_t& circ, const parameter::ParameterResolver& pr)
+auto VectorState<qs_policy_t_>::GetCircuitMatrix(const circuit_t& circ, const parameter::ParameterResolver& pr) const
     -> VVT<py_qs_data_t> {
     VVT<CT<calc_type>> out((1UL << n_qubits), VT<CT<calc_type>>((1UL << n_qubits), 0));
     for (size_t i = 0; i < (1UL << n_qubits); i++) {
@@ -694,7 +716,7 @@ template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::GetExpectationWithGradOneOne(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
                                                              const circuit_t& herm_circ,
                                                              const parameter::ParameterResolver& pr,
-                                                             const MST<size_t>& p_map) -> VT<py_qs_data_t> {
+                                                             const MST<size_t>& p_map) const -> VT<py_qs_data_t> {
     // auto timer = Timer();
     // timer.Start("First part");
     VT<py_qs_data_t> f_and_g(1 + p_map.size(), 0);
@@ -728,8 +750,8 @@ auto VectorState<qs_policy_t_>::GetExpectationNonHermitianWithGradOneMulti(
     const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
     const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& herm_hams, const circuit_t& left_circ,
     const circuit_t& herm_left_circ, const circuit_t& right_circ, const circuit_t& herm_right_circ,
-    const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread, const derived_t& simulator_left)
-    -> VVT<py_qs_data_t> {
+    const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread,
+    const derived_t& simulator_left) const -> VVT<py_qs_data_t> {
     auto n_hams = hams.size();
 
     VVT<py_qs_data_t> f_and_g(n_hams, VT<py_qs_data_t>((1 + p_map.size()), 0));
@@ -752,7 +774,7 @@ auto VectorState<qs_policy_t_>::LeftSizeGradOneMulti(const std::vector<std::shar
                                                      const circuit_t& herm_left_circ,
                                                      const parameter::ParameterResolver& pr, const MST<size_t>& p_map,
                                                      int n_thread, const derived_t& simulator_left,
-                                                     const derived_t& simulator_right) -> VVT<py_qs_data_t> {
+                                                     const derived_t& simulator_right) const -> VVT<py_qs_data_t> {
     auto n_hams = hams.size();
     int max_thread = 15;
     if (n_thread == 0) {
@@ -811,7 +833,7 @@ auto VectorState<qs_policy_t_>::LeftSizeGradOneMulti(const std::vector<std::shar
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::GetExpectationWithGradOneMulti(
     const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ, const circuit_t& herm_circ,
-    const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread) -> VVT<py_qs_data_t> {
+    const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread) const -> VVT<py_qs_data_t> {
     auto n_hams = hams.size();
     int max_thread = 15;
     if (n_thread == 0) {
@@ -871,7 +893,7 @@ auto VectorState<qs_policy_t_>::GetExpectationNonHermitianWithGradMultiMulti(
     const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& herm_hams, const circuit_t& left_circ,
     const circuit_t& herm_left_circ, const circuit_t& right_circ, const circuit_t& herm_right_circ,
     const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name, const VS& ans_name,
-    const derived_t& simulator_left, size_t batch_threads, size_t mea_threads) -> VT<VVT<py_qs_data_t>> {
+    const derived_t& simulator_left, size_t batch_threads, size_t mea_threads) const -> VT<VVT<py_qs_data_t>> {
     auto n_hams = hams.size();
     auto n_prs = enc_data.size();
     auto n_params = enc_name.size() + ans_name.size();
@@ -937,7 +959,7 @@ template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::GetExpectationWithGradMultiMulti(
     const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ, const circuit_t& herm_circ,
     const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name, const VS& ans_name,
-    size_t batch_threads, size_t mea_threads) -> VT<VVT<py_qs_data_t>> {
+    size_t batch_threads, size_t mea_threads) const -> VT<VVT<py_qs_data_t>> {
     auto n_hams = hams.size();
     auto n_prs = enc_data.size();
     auto n_params = enc_name.size() + ans_name.size();
@@ -998,7 +1020,7 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradMultiMulti(
 
 template <typename qs_policy_t_>
 VT<unsigned> VectorState<qs_policy_t_>::Sampling(const circuit_t& circ, const parameter::ParameterResolver& pr,
-                                                 size_t shots, const MST<size_t>& key_map, unsigned int seed) {
+                                                 size_t shots, const MST<size_t>& key_map, unsigned int seed) const {
     auto key_size = key_map.size();
     VT<unsigned> res(shots * key_size);
     RndEngine rnd_eng = RndEngine(seed);

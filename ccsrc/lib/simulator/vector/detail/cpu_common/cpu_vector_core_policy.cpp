@@ -11,6 +11,7 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
+#include <cstddef>
 #include <limits>
 #include <stdexcept>
 
@@ -157,11 +158,12 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* qs_p,
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfTerms(qs_data_p_t* bra_p, qs_data_p_t* ket_p,
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfTerms(const qs_data_p_t& bra_out,
+                                                                   const qs_data_p_t& ket_out,
                                                                    const std::vector<PauliTerm<calc_type>>& ham,
                                                                    index_t dim) -> py_qs_data_t {
-    auto& bra = (*bra_p);
-    auto& ket = (*ket_p);
+    auto bra = bra_out;
+    auto ket = ket_out;
     if (bra == nullptr) {
         bra = derived::InitState(dim);
     }

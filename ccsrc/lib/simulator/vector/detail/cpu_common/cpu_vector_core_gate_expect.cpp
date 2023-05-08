@@ -26,10 +26,19 @@
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffNQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket,
-                                                                        const qbits_t& objs, const qbits_t& ctrls,
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffNQubitsMatrix(const qs_data_p_t& bra_out,
+                                                                        const qs_data_p_t& ket_out, const qbits_t& objs,
+                                                                        const qbits_t& ctrls,
                                                                         const VVT<py_qs_data_t>& gate, index_t dim)
     -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     size_t n_qubit = objs.size();
     size_t m_dim = (1UL << n_qubit);
     size_t ctrl_mask = 0;
@@ -69,10 +78,19 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffNQubitsMatrix(qs_data_
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket,
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix(const qs_data_p_t& bra_out,
+                                                                          const qs_data_p_t& ket_out,
                                                                           const qbits_t& objs, const qbits_t& ctrls,
                                                                           const VVT<py_qs_data_t>& gate, index_t dim)
     -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     // clang-format off
@@ -126,10 +144,19 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix(qs_dat
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p_t ket,
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatrix(const qs_data_p_t& bra_out,
+                                                                            const qs_data_p_t& ket_out,
                                                                             const qbits_t& objs, const qbits_t& ctrls,
                                                                             const VVT<py_qs_data_t>& m, index_t dim)
     -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
@@ -196,10 +223,18 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatrix(qs_d
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffMatrixGate(qs_data_p_t bra, qs_data_p_t ket,
-                                                                     const qbits_t& objs, const qbits_t& ctrls,
-                                                                     const VVT<py_qs_data_t>& m, index_t dim)
-    -> qs_data_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffMatrixGate(const qs_data_p_t& bra_out,
+                                                                     const qs_data_p_t& ket_out, const qbits_t& objs,
+                                                                     const qbits_t& ctrls, const VVT<py_qs_data_t>& m,
+                                                                     index_t dim) -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     if (objs.size() == 1) {
         return derived::ExpectDiffSingleQubitMatrix(bra, ket, objs, ctrls, m, dim);
     }
@@ -210,9 +245,17 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffMatrixGate(qs_data_p_t
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                             const qbits_t& ctrls, calc_type val, index_t dim)
-    -> qs_data_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRX(const qs_data_p_t& bra_out, const qs_data_p_t& ket_out,
+                                                             const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+                                                             index_t dim) -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     auto c = static_cast<calc_type>(-0.5 * std::sin(val / 2));
     auto is = static_cast<calc_type>(0.5 * std::cos(val / 2)) * IMAGE_MI;
     VVT<py_qs_data_t> gate = {{c, is}, {is, c}};
@@ -220,9 +263,17 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRX(qs_data_p_t bra, qs
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                             const qbits_t& ctrls, calc_type val, index_t dim)
-    -> qs_data_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRY(const qs_data_p_t& bra_out, const qs_data_p_t& ket_out,
+                                                             const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+                                                             index_t dim) -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     calc_type c = -0.5 * std::sin(val / 2);
     calc_type s = 0.5 * std::cos(val / 2);
     VVT<py_qs_data_t> gate = {{c, -s}, {s, c}};
@@ -230,9 +281,17 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRY(qs_data_p_t bra, qs
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                             const qbits_t& ctrls, calc_type val, index_t dim)
-    -> qs_data_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRZ(const qs_data_p_t& bra_out, const qs_data_p_t& ket_out,
+                                                             const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+                                                             index_t dim) -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     calc_type c = -0.5 * std::sin(val / 2);
     calc_type s = 0.5 * std::cos(val / 2);
     auto e0 = c + IMAGE_MI * s;
@@ -242,9 +301,9 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRZ(qs_data_p_t bra, qs
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffGP(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                             const qbits_t& ctrls, calc_type val, index_t dim)
-    -> qs_data_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffGP(const qs_data_p_t& bra, const qs_data_p_t& ket,
+                                                             const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+                                                             index_t dim) -> qs_data_t {
     auto e = std::complex<calc_type>(0, -1);
     e *= std::exp(std::complex<calc_type>(0, -val));
     VVT<py_qs_data_t> gate = {{e, 0}, {0, e}};
@@ -252,9 +311,17 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffGP(qs_data_p_t bra, qs
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffPS(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                             const qbits_t& ctrls, calc_type val, index_t dim)
-    -> qs_data_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffPS(const qs_data_p_t& bra_out, const qs_data_p_t& ket_out,
+                                                             const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+                                                             index_t dim) -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     auto e = -std::sin(val) + IMAGE_I * std::cos(val);
@@ -290,9 +357,17 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffPS(qs_data_p_t bra, qs
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxx(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                              const qbits_t& ctrls, calc_type val, index_t dim)
-    -> qs_data_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxx(const qs_data_p_t& bra_out, const qs_data_p_t& ket_out,
+                                                              const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+                                                              index_t dim) -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     auto c = static_cast<calc_type_>(-std::sin(val / 2) / 2);
     auto s = static_cast<calc_type_>(std::cos(val / 2) / 2) * IMAGE_MI;
@@ -346,9 +421,17 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxx(qs_data_p_t bra, q
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxy(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                              const qbits_t& ctrls, calc_type val, index_t dim)
-    -> qs_data_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxy(const qs_data_p_t& bra_out, const qs_data_p_t& ket_out,
+                                                              const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+                                                              index_t dim) -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     auto c = static_cast<calc_type_>(-std::sin(val / 2) / 2);
     auto s = static_cast<calc_type_>(std::cos(val / 2) / 2);
@@ -402,9 +485,17 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxy(qs_data_p_t bra, q
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxz(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                              const qbits_t& ctrls, calc_type val, index_t dim)
-    -> qs_data_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxz(const qs_data_p_t& bra_out, const qs_data_p_t& ket_out,
+                                                              const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+                                                              index_t dim) -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     auto c = static_cast<calc_type_>(-std::sin(val / 2) / 2);
     auto s = static_cast<calc_type_>(std::cos(val / 2) / 2) * IMAGE_MI;
@@ -458,9 +549,17 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxz(qs_data_p_t bra, q
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRyz(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                              const qbits_t& ctrls, calc_type val, index_t dim)
-    -> qs_data_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRyz(const qs_data_p_t& bra_out, const qs_data_p_t& ket_out,
+                                                              const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+                                                              index_t dim) -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     auto c = static_cast<calc_type_>(-std::sin(val / 2) / 2);
     auto s = static_cast<calc_type_>(std::cos(val / 2) / 2);
@@ -514,9 +613,17 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRyz(qs_data_p_t bra, q
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRyy(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                              const qbits_t& ctrls, calc_type val, index_t dim)
-    -> qs_data_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRyy(const qs_data_p_t& bra_out, const qs_data_p_t& ket_out,
+                                                              const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+                                                              index_t dim) -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     auto c = static_cast<calc_type_>(-std::sin(val / 2) / 2);
     auto s = static_cast<calc_type_>(std::cos(val / 2) / 2) * IMAGE_I;
@@ -570,9 +677,17 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRyy(qs_data_p_t bra, q
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRzz(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                              const qbits_t& ctrls, calc_type val, index_t dim)
-    -> qs_data_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRzz(const qs_data_p_t& bra_out, const qs_data_p_t& ket_out,
+                                                              const qbits_t& objs, const qbits_t& ctrls, calc_type val,
+                                                              index_t dim) -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+    }
     DoubleQubitGateMask mask(objs, ctrls);
 
     auto c = static_cast<calc_type_>(-std::sin(val / 2) / 2);

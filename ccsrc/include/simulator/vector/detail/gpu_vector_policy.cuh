@@ -48,25 +48,25 @@ struct GPUVectorPolicyBase {
     static void Display(const qs_data_p_t& qs, qbit_t n_qubits, qbit_t q_limit = 10);
     static void SetToZeroExcept(qs_data_p_t* qs_p, index_t ctrl_mask, index_t dim);
     template <index_t mask, index_t condi, class binary_op>
-    static void ConditionalBinary(const qs_data_p_t& src, qs_data_p_t* des_p, qs_data_t succ_coeff, qs_data_t fail_coeff,
-                                  index_t dim, const binary_op& op);
-    template <class binary_op>
-    static void ConditionalBinary(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi, qs_data_t succ_coeff,
+    static void ConditionalBinary(const qs_data_p_t& src, qs_data_p_t* des_p, qs_data_t succ_coeff,
                                   qs_data_t fail_coeff, index_t dim, const binary_op& op);
-    static void ConditionalAdd(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi, qs_data_t succ_coeff,
-                               qs_data_t fail_coeff, index_t dim);
-    static void ConditionalMinus(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi, qs_data_t succ_coeff,
-                                 qs_data_t fail_coeff, index_t dim);
-    static void ConditionalMul(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi, qs_data_t succ_coeff,
-                               qs_data_t fail_coeff, index_t dim);
-    static void ConditionalDiv(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi, qs_data_t succ_coeff,
-                               qs_data_t fail_coeff, index_t dim);
+    template <class binary_op>
+    static void ConditionalBinary(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi,
+                                  qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim, const binary_op& op);
+    static void ConditionalAdd(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi,
+                               qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim);
+    static void ConditionalMinus(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi,
+                                 qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim);
+    static void ConditionalMul(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi,
+                               qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim);
+    static void ConditionalDiv(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi,
+                               qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim);
     static void QSMulValue(const qs_data_p_t& src, qs_data_p_t* des_p, qs_data_t value, index_t dim);
     static qs_data_t ConditionalCollect(const qs_data_p_t& qs, index_t mask, index_t condi, bool abs, index_t dim);
     static py_qs_datas_t GetQS(const qs_data_p_t& qs, index_t dim);
     static void SetQS(qs_data_p_t* qs_p, const py_qs_datas_t& qs_out, index_t dim);
     static qs_data_p_t ApplyTerms(qs_data_p_t* qs_p, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
-    static py_qs_data_t ExpectationOfTerms(qs_data_p_t* bra_p, qs_data_p_t* ket_p,
+    static py_qs_data_t ExpectationOfTerms(const qs_data_p_t& bra, const qs_data_p_t& ket,
                                            const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
     static qs_data_p_t Copy(qs_data_p_t qs, index_t dim);
     template <index_t mask, index_t condi>
@@ -142,37 +142,37 @@ struct GPUVectorPolicyBase {
 
     // gate_expec
     // ========================================================================================================
-    static qs_data_t ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+    static qs_data_t ExpectDiffSingleQubitMatrix(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
                                                  const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m,
                                                  index_t dim);
-    static qs_data_t ExpectDiffTwoQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+    static qs_data_t ExpectDiffTwoQubitsMatrix(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
                                                const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m, index_t dim);
-    static qs_data_t ExpectDiffNQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+    static qs_data_t ExpectDiffNQubitsMatrix(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
                                              const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m, index_t dim);
-    static qs_data_t ExpectDiffMatrixGate(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                          const std::vector<py_qs_datas_t>& m, index_t dim);
-    static qs_data_t ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
-    static qs_data_t ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
-    static qs_data_t ExpectDiffRZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
-    static qs_data_t ExpectDiffRxx(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                   calc_type val, index_t dim);
-    static qs_data_t ExpectDiffRyy(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                   calc_type val, index_t dim);
-    static qs_data_t ExpectDiffRzz(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                   calc_type val, index_t dim);
-    static qs_data_t ExpectDiffRxy(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                   calc_type val, index_t dim);
-    static qs_data_t ExpectDiffRxz(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                   calc_type val, index_t dim);
-    static qs_data_t ExpectDiffRyz(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                   calc_type val, index_t dim);
-    static qs_data_t ExpectDiffPS(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
-    static qs_data_t ExpectDiffGP(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
+    static qs_data_t ExpectDiffMatrixGate(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                          const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m, index_t dim);
+    static qs_data_t ExpectDiffRX(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                  const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRY(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                  const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRZ(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                  const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRxx(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                   const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRyy(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                   const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRzz(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                   const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRxy(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                   const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRxz(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                   const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRyz(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                   const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffPS(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                  const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffGP(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                  const qbits_t& ctrls, calc_type val, index_t dim);
     static calc_type GroundStateOfZZs(const std::map<index_t, calc_type>& masks_value, qbit_t n_qubits);
 };
 
