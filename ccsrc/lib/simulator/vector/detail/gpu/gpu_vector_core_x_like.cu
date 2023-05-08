@@ -25,8 +25,12 @@
 
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ApplyXLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyXLike(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls,
                                                            qs_data_t v1, qs_data_t v2, index_t dim) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     SingleQubitGateMask mask(objs, ctrls);
     thrust::counting_iterator<index_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
@@ -55,15 +59,15 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyXLike(qs_data_p_t qs, const
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ApplyX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyX(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls,
                                                        index_t dim) {
-    derived::ApplyXLike(qs, objs, ctrls, 1, 1, dim);
+    derived::ApplyXLike(qs_p, objs, ctrls, 1, 1, dim);
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ApplyY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyY(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls,
                                                        index_t dim) {
-    derived::ApplyXLike(qs, objs, ctrls, qs_data_t(0, -1), qs_data_t(0, 1), dim);
+    derived::ApplyXLike(qs_p, objs, ctrls, qs_data_t(0, -1), qs_data_t(0, 1), dim);
 }
 
 template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;

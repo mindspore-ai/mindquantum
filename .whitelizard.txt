@@ -38,7 +38,7 @@ ccsrc/python/mqbackend/lib/terms_operators.cpp:init_terms_operators
 ccsrc/lib/simulator/vector/detail/runtime/cmd.cpp:mindquantum::sim::rt::cmd
 ccsrc/python/math/lib/bind_math.cpp:BindQubitOperator
 ccsrc/include/math/tensor/ops_cpu/advance_math.hpp:tensor::ops::cpu::ElementFunc
-
+ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_gate_expect.cpp:mindquantum::sim::vector::detail::CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix
 TEST_CASE
 mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::ApplyGate
 mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::GetExpectationWithGradOneMulti

@@ -25,8 +25,12 @@
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplySWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls,
                                                           index_t dim) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
@@ -58,8 +62,12 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplySWAP(qs_data_p_t qs, const 
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyISWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls,
                                                            bool daggered, index_t dim) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type frac = 1.0;
     if (daggered) {

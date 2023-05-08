@@ -35,13 +35,23 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalBinary(const qs_data_
         des = derived::InitState(dim);
     }
     thrust::counting_iterator<size_t> i(0);
-    thrust::for_each(i, i + dim, [=] __device__(size_t i) {
-        if ((i & mask) == condi) {
-            des[i] = op(src[i], succ_coeff);
-        } else {
-            des[i] = op(src[i], fail_coeff);
-        }
-    });
+    if (src == nullptr) {
+        thrust::for_each(i, i + 1, [=] __device__(size_t i) {
+            if ((i & mask) == condi) {
+                des[i] = op(1.0, succ_coeff);
+            } else {
+                des[i] = op(1.0, fail_coeff);
+            }
+        });
+    } else {
+        thrust::for_each(i, i + dim, [=] __device__(size_t i) {
+            if ((i & mask) == condi) {
+                des[i] = op(src[i], succ_coeff);
+            } else {
+                des[i] = op(src[i], fail_coeff);
+            }
+        });
+    }
 }
 
 template <typename derived_, typename calc_type_>
@@ -55,13 +65,23 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ConditionalBinary(const qs_data_
         des = derived::InitState(dim);
     }
     thrust::counting_iterator<size_t> i(0);
-    thrust::for_each(i, i + dim, [=] __device__(size_t i) {
-        if ((i & mask) == condi) {
-            des[i] = op(src[i], succ_coeff);
-        } else {
-            des[i] = op(src[i], fail_coeff);
-        }
-    });
+    if (src == nullptr) {
+        thrust::for_each(i, i + 1, [=] __device__(size_t i) {
+            if ((i & mask) == condi) {
+                des[i] = op(1.0, succ_coeff);
+            } else {
+                des[i] = op(1.0, fail_coeff);
+            }
+        });
+    } else {
+        thrust::for_each(i, i + dim, [=] __device__(size_t i) {
+            if ((i & mask) == condi) {
+                des[i] = op(src[i], succ_coeff);
+            } else {
+                des[i] = op(src[i], fail_coeff);
+            }
+        });
+    }
 }
 
 template <typename derived_, typename calc_type_>

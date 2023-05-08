@@ -26,7 +26,8 @@
 
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
-auto GPUVectorPolicyBase<derived_, calc_type_>::Vdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim) -> py_qs_data_t {
+auto GPUVectorPolicyBase<derived_, calc_type_>::Vdot(const qs_data_p_t& bra, const qs_data_p_t& ket, index_t dim)
+    -> py_qs_data_t {
     if (bra == nullptr && ket == nullptr) {
         return 1.0;
     } else if (bra == nullptr) {
@@ -47,15 +48,27 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::Vdot(qs_data_p_t bra, qs_data_p_
 
 template <typename derived_, typename calc_type_>
 template <index_t mask, index_t condi>
-auto GPUVectorPolicyBase<derived_, calc_type_>::ConditionVdot(qs_data_p_t* bra_p, qs_data_p_t* ket_p, index_t dim)
-    -> py_qs_data_t {
-    auto& bra = (*bra_p);
-    auto& ket = (*ket_p);
-    if (bra == nullptr) {
-        bra = derived::InitState(dim);
-    }
-    if (ket == nullptr) {
-        ket = derived::InitState(dim);
+auto GPUVectorPolicyBase<derived_, calc_type_>::ConditionVdot(const qs_data_p_t& bra, const qs_data_p_t& ket,
+                                                              index_t dim) -> py_qs_data_t {
+    if (bra == nullptr && ket == nullptr) {
+        if ((0 & mask) == condi) {
+            return 1.0;
+        }
+        return 0.0;
+    } else if (bra == nullptr) {
+        if ((0 & mask) == condi) {
+            py_qs_data_t out;
+            cudaMemcpy(&out, ket, sizeof(qs_data_t), cudaMemcpyDeviceToHost);
+            return out;
+        }
+        return 0.0;
+    } else if (ket == nullptr) {
+        if ((0 & mask) == condi) {
+            py_qs_data_t out;
+            cudaMemcpy(&out, bra, sizeof(qs_data_t), cudaMemcpyDeviceToHost);
+            return std::conj(out);
+        }
+        return 0.0;
     }
     thrust::counting_iterator<size_t> i(0);
     return thrust::transform_reduce(
@@ -71,15 +84,10 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ConditionVdot(qs_data_p_t* bra_p
 }
 
 template <typename derived_, typename calc_type_>
-auto GPUVectorPolicyBase<derived_, calc_type_>::OneStateVdot(qs_data_p_t* bra_p, qs_data_p_t* ket_p, qbit_t obj_qubit,
-                                                             index_t dim) -> py_qs_data_t {
-    auto& bra = (*bra_p);
-    auto& ket = (*ket_p);
-    if (bra == nullptr) {
-        bra = derived::InitState(dim);
-    }
-    if (ket == nullptr) {
-        ket = derived::InitState(dim);
+auto GPUVectorPolicyBase<derived_, calc_type_>::OneStateVdot(const qs_data_p_t& bra, const qs_data_p_t& ket,
+                                                             qbit_t obj_qubit, index_t dim) -> py_qs_data_t {
+    if (bra == nullptr || ket == nullptr) {
+        return 0.0;
     }
     SingleQubitGateMask mask({obj_qubit}, {});
     auto obj_high_mask = mask.obj_high_mask;
@@ -96,15 +104,18 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::OneStateVdot(qs_data_p_t* bra_p,
 }
 
 template <typename derived_, typename calc_type_>
-auto GPUVectorPolicyBase<derived_, calc_type_>::ZeroStateVdot(qs_data_p_t* bra_p, qs_data_p_t* ket_p, qbit_t obj_qubit,
-                                                              index_t dim) -> py_qs_data_t {
-    auto& bra = (*bra_p);
-    auto& ket = (*ket_p);
-    if (bra == nullptr) {
-        bra = derived::InitState(dim);
-    }
-    if (ket == nullptr) {
-        ket = derived::InitState(dim);
+auto GPUVectorPolicyBase<derived_, calc_type_>::ZeroStateVdot(const qs_data_p_t& bra, const qs_data_p_t& ket,
+                                                              qbit_t obj_qubit, index_t dim) -> py_qs_data_t {
+    if (bra == nullptr && ket == nullptr) {
+        return 1.0;
+    } else if (bra == nullptr) {
+        py_qs_data_t out;
+        cudaMemcpy(&out, ket, sizeof(qs_data_t), cudaMemcpyDeviceToHost);
+        return out;
+    } else if (ket == nullptr) {
+        py_qs_data_t out;
+        cudaMemcpy(&out, bra, sizeof(qs_data_t), cudaMemcpyDeviceToHost);
+        return std::conj(out);
     }
     SingleQubitGateMask mask({obj_qubit}, {});
     auto obj_high_mask = mask.obj_high_mask;
@@ -121,9 +132,15 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ZeroStateVdot(qs_data_p_t* bra_p
 
 template <typename derived_, typename calc_type_>
 auto GPUVectorPolicyBase<derived_, calc_type_>::CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
-                                                          qs_data_p_t vec, index_t dim) -> qs_data_p_t {
+                                                          const qs_data_p_t& vec_out, index_t dim) -> qs_data_p_t {
     if (dim != a->dim_) {
         throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
+    }
+    auto vec = vec_out;
+    bool will_free = false;
+    if (vec == nullptr) {
+        vec = derived::InitState(dim);
+        will_free = true;
     }
     auto host = reinterpret_cast<std::complex<calc_type>*>(malloc(dim * sizeof(std::complex<calc_type>)));
     cudaMemcpy(host, vec, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
@@ -137,14 +154,24 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::CsrDotVec(const std::shared_ptr<
     if (host_res != nullptr) {
         free(host_res);
     }
+    if (will_free) {
+        derived::FreeState(&vec);
+    }
     return out;
 }
+
 template <typename derived_, typename calc_type_>
 auto GPUVectorPolicyBase<derived_, calc_type_>::CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
                                                           const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& b,
-                                                          qs_data_p_t vec, index_t dim) -> qs_data_p_t {
+                                                          const qs_data_p_t& vec_out, index_t dim) -> qs_data_p_t {
     if ((dim != a->dim_) || (dim != b->dim_)) {
         throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
+    }
+    auto vec = vec_out;
+    bool will_free = false;
+    if (vec == nullptr) {
+        vec = derived::InitState(dim);
+        will_free = true;
     }
     auto host = reinterpret_cast<std::complex<calc_type>*>(malloc(dim * sizeof(std::complex<calc_type>)));
     cudaMemcpy(host, vec, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
@@ -158,14 +185,28 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::CsrDotVec(const std::shared_ptr<
     if (host_res != nullptr) {
         free(host_res);
     }
+    if (will_free) {
+        derived::FreeState(&vec);
+    }
     return out;
 }
 template <typename derived_, typename calc_type_>
 auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfCsr(
-    const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, qs_data_p_t bra, qs_data_p_t ket, index_t dim)
-    -> py_qs_data_t {
+    const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, const qs_data_p_t& bra_out, const qs_data_p_t& ket_out,
+    index_t dim) -> py_qs_data_t {
     if (dim != a->dim_) {
         throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
+    }
+    auto bra = bra_out;
+    auto ket = ket_out;
+    bool will_free_bra = false, will_free_ket = false;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+        will_free_bra = true;
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+        will_free_ket = true;
     }
     auto host_bra = reinterpret_cast<std::complex<calc_type>*>(malloc(dim * sizeof(std::complex<calc_type>)));
     cudaMemcpy(host_bra, bra, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
@@ -179,15 +220,32 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfCsr(
     if (host_ket != nullptr) {
         free(host_ket);
     }
+    if (will_free_bra) {
+        derived::FreeState(&bra);
+    }
+    if (will_free_ket) {
+        derived::FreeState(&ket);
+    }
     return out;
 }
 
 template <typename derived_, typename calc_type_>
 auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfCsr(
     const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& b,
-    qs_data_p_t bra, qs_data_p_t ket, index_t dim) -> py_qs_data_t {
+    const qs_data_p_t& bra_out, const qs_data_p_t& ket_out, index_t dim) -> py_qs_data_t {
     if ((dim != a->dim_) || (dim != b->dim_)) {
         throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
+    }
+    auto bra = bra_out;
+    auto ket = ket_out;
+    bool will_free_bra = false, will_free_ket = false;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+        will_free_bra = true;
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+        will_free_ket = true;
     }
     auto host_bra = reinterpret_cast<std::complex<calc_type>*>(malloc(dim * sizeof(std::complex<calc_type>)));
     cudaMemcpy(host_bra, bra, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
@@ -200,6 +258,12 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfCsr(
     }
     if (host_ket != nullptr) {
         free(host_ket);
+    }
+    if (will_free_bra) {
+        derived::FreeState(&bra);
+    }
+    if (will_free_ket) {
+        derived::FreeState(&ket);
     }
     return out;
 }

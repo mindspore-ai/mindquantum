@@ -195,7 +195,7 @@ class VectorState {
     VectorState<policy_des> astype(unsigned seed) const;
 
  protected:
-    qs_data_p_t qs = nullptr;
+    qs_data_p_t qs = nullptr;  // nullptr represent zero state.
     qbit_t n_qubits = 0;
     index_t dim = 0;
     unsigned seed = 0;

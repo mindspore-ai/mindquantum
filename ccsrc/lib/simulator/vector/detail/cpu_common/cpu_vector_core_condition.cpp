@@ -37,9 +37,9 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ConditionalBinary(const qs_data_
     }
     if (src == nullptr) {
         if ((0 & mask) == condi) {
-            des[0] = op(src[0], succ_coeff);
+            des[0] = op(1.0, succ_coeff);
         } else {
-            des[0] = op(src[0], fail_coeff);
+            des[0] = op(1.0, fail_coeff);
         }
     } else {
         THRESHOLD_OMP_FOR(
@@ -65,9 +65,9 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ConditionalBinary(const qs_data_
     }
     if (src == nullptr) {
         if ((0 & mask) == condi) {
-            des[0] = op(src[0], succ_coeff);
+            des[0] = op(1.0, succ_coeff);
         } else {
-            des[0] = op(src[0], fail_coeff);
+            des[0] = op(1.0, fail_coeff);
         }
     } else {
         THRESHOLD_OMP_FOR(

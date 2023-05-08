@@ -12,6 +12,7 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 #include <limits>
+#include <stdexcept>
 
 #include <thrust/transform_reduce.h>
 
@@ -30,7 +31,10 @@ namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
 auto GPUVectorPolicyBase<derived_, calc_type_>::InitState(index_t dim, bool zero_state) -> qs_data_p_t {
     qs_data_p_t qs;
-    cudaMalloc((void**) &qs, sizeof(qs_data_t) * dim);  // NOLINT
+    auto state = cudaMalloc((void**) &qs, sizeof(qs_data_t) * dim);  // NOLINT
+    if (state != cudaSuccess) {
+        throw std::runtime_error("GPU out of memory for allocate quantum state.");
+    }
     cudaMemset(qs, 0, sizeof(qs_data_t) * dim);
     if (zero_state) {
         qs_data_t one = qs_data_t(1.0, 0.0);
@@ -119,11 +123,14 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfTerms(const qs_data
                                                                    index_t dim) -> py_qs_data_t {
     auto bra = bra_out;
     auto ket = ket_out;
+    bool will_free_bra = false, will_free_ket = false;
     if (bra == nullptr) {
         bra = derived::InitState(dim);
+        will_free_bra = true;
     }
     if (ket == nullptr) {
         ket = derived::InitState(dim);
+        will_free_ket = true;
     }
     qs_data_t out = 0.0;
     for (const auto& [pauli_string, coeff] : ham) {
@@ -159,6 +166,12 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfTerms(const qs_data
                 return tmp;
             },
             qs_data_t(0, 0), thrust::plus<qs_data_t>());
+    }
+    if (will_free_bra) {
+        derived::FreeState(&bra);
+    }
+    if (will_free_ket) {
+        derived::FreeState(&ket);
     }
     return out;
 }
@@ -241,10 +254,13 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::GroundStateOfZZs(const std::map<
 }
 
 template <typename derived_, typename calc_type_>
-auto GPUVectorPolicyBase<derived_, calc_type_>::Copy(qs_data_p_t qs, index_t dim) -> qs_data_p_t {
+auto GPUVectorPolicyBase<derived_, calc_type_>::Copy(const qs_data_p_t& qs, index_t dim) -> qs_data_p_t {
     qs_data_p_t out = nullptr;
     if (qs != nullptr) {
-        cudaMalloc((void**) &out, sizeof(qs_data_t) * dim);  // NOLINT
+        auto state = cudaMalloc((void**) &out, sizeof(qs_data_t) * dim);  // NOLINT
+        if (state != cudaSuccess) {
+            throw std::runtime_error("GPU out of memory for allocate quantum state.");
+        }
         cudaMemcpy(out, qs, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToDevice);
     }
     return out;

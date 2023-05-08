@@ -91,7 +91,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::SetToZeroExcept(qs_data_p_t* qs_
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::Copy(qs_data_p_t qs, index_t dim) -> qs_data_p_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::Copy(const qs_data_p_t& qs, index_t dim) -> qs_data_p_t {
     qs_data_p_t out = nullptr;
     if (qs != nullptr) {
         out = derived::InitState(dim, false);
@@ -164,11 +164,14 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfTerms(const qs_data
                                                                    index_t dim) -> py_qs_data_t {
     auto bra = bra_out;
     auto ket = ket_out;
+    bool will_free_bra = false, will_free_ket = false;
     if (bra == nullptr) {
         bra = derived::InitState(dim);
+        will_free_bra = true;
     }
     if (ket == nullptr) {
         ket = derived::InitState(dim);
+        will_free_ket = true;
     }
     py_qs_data_t out = 0.0;
     for (const auto& [pauli_string, coeff_] : ham) {
@@ -196,6 +199,12 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfTerms(const qs_data
                 })
         // clang-format on
         out += py_qs_data_t(res_real, res_imag);
+    }
+    if (will_free_bra) {
+        derived::FreeState(&bra);
+    }
+    if (will_free_ket) {
+        derived::FreeState(&ket);
     }
     return out;
 }
