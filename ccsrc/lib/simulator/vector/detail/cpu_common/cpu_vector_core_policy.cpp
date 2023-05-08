@@ -11,6 +11,7 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
+#include <cstddef>
 #include <limits>
 #include <stdexcept>
 
@@ -44,32 +45,43 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::InitState(index_t dim, bool zero
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t qs, index_t dim) {
-    THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { qs[i] = 0; })
-    qs[0] = 1;
+void CPUVectorPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t* qs_p, index_t dim) {
+    derived::FreeState(qs_p);
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::FreeState(qs_data_p_t qs) {
+void CPUVectorPolicyBase<derived_, calc_type_>::FreeState(qs_data_p_t* qs_p) {
+    auto& qs = (*qs_p);
     if (qs != nullptr) {
         free(qs);
+        qs = nullptr;
     }
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit) {
+void CPUVectorPolicyBase<derived_, calc_type_>::Display(const qs_data_p_t& qs, qbit_t n_qubits, qbit_t q_limit) {
     if (n_qubits > q_limit) {
         n_qubits = q_limit;
     }
     std::cout << n_qubits << " qubits cpu simulator (little endian)." << std::endl;
-    for (index_t i = 0; i < (1UL << n_qubits); i++) {
-        std::cout << "(" << qs[i].real() << ", " << qs[i].imag() << ")" << std::endl;
+    if (qs == nullptr) {
+        std::cout << "(" << 1 << ", " << 0 << ")" << std::endl;
+        for (index_t i = 0; i < (1UL << n_qubits) - 1; i++) {
+            std::cout << "(" << 0 << ", " << 0 << ")" << std::endl;
+        }
+    } else {
+        for (index_t i = 0; i < (1UL << n_qubits); i++) {
+            std::cout << "(" << qs[i].real() << ", " << qs[i].imag() << ")" << std::endl;
+        }
     }
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim) {
+void CPUVectorPolicyBase<derived_, calc_type_>::SetToZeroExcept(qs_data_p_t* qs_p, index_t ctrl_mask, index_t dim) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
             if ((i & ctrl_mask) != ctrl_mask) {
@@ -79,33 +91,49 @@ void CPUVectorPolicyBase<derived_, calc_type_>::SetToZeroExcept(qs_data_p_t qs, 
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::Copy(qs_data_p_t qs, index_t dim) -> qs_data_p_t {
-    qs_data_p_t out = derived::InitState(dim, false);
-    THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { out[i] = qs[i]; })
+auto CPUVectorPolicyBase<derived_, calc_type_>::Copy(const qs_data_p_t& qs, index_t dim) -> qs_data_p_t {
+    qs_data_p_t out = nullptr;
+    if (qs != nullptr) {
+        out = derived::InitState(dim, false);
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { out[i] = qs[i]; })
+    }
     return out;
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::GetQS(qs_data_p_t qs, index_t dim) -> VT<py_qs_data_t> {
+auto CPUVectorPolicyBase<derived_, calc_type_>::GetQS(const qs_data_p_t& qs, index_t dim) -> VT<py_qs_data_t> {
     VT<py_qs_data_t> out(dim);
-    THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { out[i] = qs[i]; })
+    if (qs != nullptr) {
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { out[i] = qs[i]; })
+    } else {
+        out[0] = 1.0;
+    }
     return out;
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t qs, const VT<py_qs_data_t>& qs_out, index_t dim) {
+void CPUVectorPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t* qs_p, const VT<py_qs_data_t>& qs_out, index_t dim) {
+    auto& qs = (*qs_p);
     if (qs_out.size() != dim) {
         throw std::invalid_argument("state size not match");
+    }
+    if (qs == nullptr) {
+        qs = derived::InitState(dim, false);
     }
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { qs[i] = qs_out[i]; })
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham,
-                                                           index_t dim) -> qs_data_p_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* qs_p,
+                                                           const std::vector<PauliTerm<calc_type>>& ham, index_t dim)
+    -> qs_data_p_t {
+    auto& qs = (*qs_p);
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     qs_data_p_t out = derived::InitState(dim, false);
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
@@ -128,6 +156,58 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs, const
     }
     return out;
 };
+
+template <typename derived_, typename calc_type_>
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfTerms(const qs_data_p_t& bra_out,
+                                                                   const qs_data_p_t& ket_out,
+                                                                   const std::vector<PauliTerm<calc_type>>& ham,
+                                                                   index_t dim) -> py_qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    bool will_free_bra = false, will_free_ket = false;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+        will_free_bra = true;
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+        will_free_ket = true;
+    }
+    py_qs_data_t out = 0.0;
+    for (const auto& [pauli_string, coeff_] : ham) {
+        auto mask = GenPauliMask(pauli_string);
+        auto mask_f = mask.mask_x | mask.mask_y;
+        auto coeff = coeff_;
+        calc_type res_real = 0, res_imag = 0;
+        // clang-format off
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                for (omp::idx_t i = 0; i < dim; i++) {
+                    auto j = (i ^ mask_f);
+                    if (i <= j) {
+                        auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
+                        auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
+                        auto c = ComplexCast<double, calc_type>::apply(
+                            POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
+                        auto tmp = std::conj(bra[j]) * ket[i] * coeff * c;
+                        if (i != j) {
+                            tmp += std::conj(bra[i]) * ket[j] * coeff / c;
+                        }
+                        res_real += std::real(tmp);
+                        res_imag += std::imag(tmp);
+                    }
+                })
+        // clang-format on
+        out += py_qs_data_t(res_real, res_imag);
+    }
+    if (will_free_bra) {
+        derived::FreeState(&bra);
+    }
+    if (will_free_ket) {
+        derived::FreeState(&ket);
+    }
+    return out;
+}
 
 template <typename derived_, typename calc_type>
 auto CPUVectorPolicyBase<derived_, calc_type>::GroundStateOfZZs(const std::map<index_t, calc_type>& masks_value,

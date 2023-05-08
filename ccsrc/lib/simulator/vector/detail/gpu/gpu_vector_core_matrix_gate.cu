@@ -25,10 +25,22 @@
 #include "thrust/inner_product.h"
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(qs_data_p_t src, qs_data_p_t des,
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(const qs_data_p_t& src_out, qs_data_p_t* des_p,
                                                                    const qbits_t& objs, const qbits_t& ctrls,
                                                                    const std::vector<std::vector<py_qs_data_t>>& gate,
                                                                    index_t dim) {
+    auto& des = *des_p;
+    if (des == nullptr) {
+        des = derived::InitState(dim);
+    }
+    qs_data_p_t src;
+    bool will_free = false;
+    if (src_out == nullptr) {
+        src = derived::InitState(dim);
+        will_free = true;
+    } else {
+        src = src_out;
+    }
     size_t n_qubit = objs.size();
     size_t m_dim = (1UL << n_qubit);
     size_t ctrl_mask = 0;
@@ -76,13 +88,28 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(qs_data_p_t s
             free(tmp_des);
         }
     });
+    if (will_free) {
+        derived::FreeState(&src);
+    }
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des,
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(const qs_data_p_t& src_out, qs_data_p_t* des_p,
                                                                      const qbits_t& objs, const qbits_t& ctrls,
                                                                      const std::vector<std::vector<py_qs_data_t>>& m,
                                                                      index_t dim) {
+    auto& des = *des_p;
+    if (des == nullptr) {
+        des = derived::InitState(dim);
+    }
+    qs_data_p_t src;
+    bool will_free = false;
+    if (src_out == nullptr) {
+        src = derived::InitState(dim);
+        will_free = true;
+    } else {
+        src = src_out;
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     qs_data_t m00 = m[0][0];
     qs_data_t m01 = m[0][1];
@@ -144,12 +171,27 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(qs_data_p_t
             }
         });
     }
+    if (will_free) {
+        derived::FreeState(&src);
+    }
 }
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des,
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(const qs_data_p_t& src_out, qs_data_p_t* des_p,
                                                                        qbit_t obj_qubit, const qbits_t& ctrls,
                                                                        const std::vector<std::vector<py_qs_data_t>>& m,
                                                                        index_t dim) {
+    auto& des = (*des_p);
+    if (des == nullptr) {
+        des = derived::InitState(dim);
+    }
+    qs_data_p_t src;
+    bool will_free = false;
+    if (src_out == nullptr) {
+        src = derived::InitState(dim);
+        will_free = true;
+    } else {
+        src = src_out;
+    }
     SingleQubitGateMask mask({obj_qubit}, ctrls);
     qs_data_t m00 = m[0][0];
     qs_data_t m01 = m[0][1];
@@ -181,19 +223,22 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(qs_data_p
             }
         });
     }
+    if (will_free) {
+        derived_::FreeState(&src);
+    }
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs,
-                                                                const qbits_t& ctrls,
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyMatrixGate(const qs_data_p_t& src, qs_data_p_t* des_p,
+                                                                const qbits_t& objs, const qbits_t& ctrls,
                                                                 const std::vector<std::vector<py_qs_data_t>>& m,
                                                                 index_t dim) {
     if (objs.size() == 1) {
-        derived::ApplySingleQubitMatrix(src, des, objs[0], ctrls, m, dim);
+        derived::ApplySingleQubitMatrix(src, des_p, objs[0], ctrls, m, dim);
     } else if (objs.size() == 2) {
-        derived::ApplyTwoQubitsMatrix(src, des, objs, ctrls, m, dim);
+        derived::ApplyTwoQubitsMatrix(src, des_p, objs, ctrls, m, dim);
     } else {
-        derived::ApplyNQubitsMatrix(src, des, objs, ctrls, m, dim);
+        derived::ApplyNQubitsMatrix(src, des_p, objs, ctrls, m, dim);
     }
 }
 

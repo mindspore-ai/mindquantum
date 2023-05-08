@@ -43,130 +43,138 @@ struct GPUVectorPolicyBase {
     using py_qs_data_t = std::complex<calc_type>;
     using py_qs_datas_t = std::vector<py_qs_data_t>;
     static qs_data_p_t InitState(index_t dim, bool zero_state = true);
-    static void Reset(qs_data_p_t qs, index_t dim);
-    static void FreeState(qs_data_p_t qs);
-    static void Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit = 10);
-    static void SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim);
+    static void Reset(qs_data_p_t* qs_p, index_t dim);
+    static void FreeState(qs_data_p_t* qs_p);
+    static void Display(const qs_data_p_t& qs, qbit_t n_qubits, qbit_t q_limit = 10);
+    static void SetToZeroExcept(qs_data_p_t* qs_p, index_t ctrl_mask, index_t dim);
     template <index_t mask, index_t condi, class binary_op>
-    static void ConditionalBinary(qs_data_p_t src, qs_data_p_t des, qs_data_t succ_coeff, qs_data_t fail_coeff,
-                                  index_t dim, const binary_op& op);
-    template <class binary_op>
-    static void ConditionalBinary(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
+    static void ConditionalBinary(const qs_data_p_t& src, qs_data_p_t* des_p, qs_data_t succ_coeff,
                                   qs_data_t fail_coeff, index_t dim, const binary_op& op);
-    static void ConditionalAdd(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
-                               qs_data_t fail_coeff, index_t dim);
-    static void ConditionalMinus(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
-                                 qs_data_t fail_coeff, index_t dim);
-    static void ConditionalMul(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
-                               qs_data_t fail_coeff, index_t dim);
-    static void ConditionalDiv(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
-                               qs_data_t fail_coeff, index_t dim);
-    static void QSMulValue(qs_data_p_t src, qs_data_p_t des, qs_data_t value, index_t dim);
-    static qs_data_t ConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi, bool abs, index_t dim);
-    static py_qs_datas_t GetQS(qs_data_p_t qs, index_t dim);
-    static void SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, index_t dim);
-    static qs_data_p_t ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
-    static qs_data_p_t Copy(qs_data_p_t qs, index_t dim);
+    template <class binary_op>
+    static void ConditionalBinary(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi,
+                                  qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim, const binary_op& op);
+    static void ConditionalAdd(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi,
+                               qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim);
+    static void ConditionalMinus(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi,
+                                 qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim);
+    static void ConditionalMul(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi,
+                               qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim);
+    static void ConditionalDiv(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi,
+                               qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim);
+    static void QSMulValue(const qs_data_p_t& src, qs_data_p_t* des_p, qs_data_t value, index_t dim);
+    static qs_data_t ConditionalCollect(const qs_data_p_t& qs, index_t mask, index_t condi, bool abs, index_t dim);
+    static py_qs_datas_t GetQS(const qs_data_p_t& qs, index_t dim);
+    static void SetQS(qs_data_p_t* qs_p, const py_qs_datas_t& qs_out, index_t dim);
+    static qs_data_p_t ApplyTerms(qs_data_p_t* qs_p, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
+    static py_qs_data_t ExpectationOfTerms(const qs_data_p_t& bra, const qs_data_p_t& ket,
+                                           const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
+    static qs_data_p_t Copy(const qs_data_p_t& qs, index_t dim);
     template <index_t mask, index_t condi>
-    static py_qs_data_t ConditionVdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim);
-    static py_qs_data_t OneStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit, index_t dim);
-    static py_qs_data_t ZeroStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit, index_t dim);
-    static py_qs_data_t Vdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim);
-    static qs_data_p_t CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, qs_data_p_t vec,
+    static py_qs_data_t ConditionVdot(const qs_data_p_t& bra, const qs_data_p_t& ket, index_t dim);
+    static py_qs_data_t OneStateVdot(const qs_data_p_t& bra, const qs_data_p_t& ket, qbit_t obj_qubit, index_t dim);
+    static py_qs_data_t ZeroStateVdot(const qs_data_p_t& bra, const qs_data_p_t& ket, qbit_t obj_qubit, index_t dim);
+    static py_qs_data_t Vdot(const qs_data_p_t& bra, const qs_data_p_t& ket, index_t dim);
+    static qs_data_p_t CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, const qs_data_p_t& vec,
                                  index_t dim);
     static qs_data_p_t CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
-                                 const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& b, qs_data_p_t vec,
+                                 const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& b, const qs_data_p_t& vec,
                                  index_t dim);
-
+    static py_qs_data_t ExpectationOfCsr(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
+                                         const qs_data_p_t& bra, const qs_data_p_t& ket, index_t dim);
+    static py_qs_data_t ExpectationOfCsr(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
+                                         const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& b,
+                                         const qs_data_p_t& bra, const qs_data_p_t& ket, index_t dim);
     // X like operator
     // ========================================================================================================
 
-    static void ApplyXLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, qs_data_t v1, qs_data_t v2,
+    static void ApplyXLike(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, qs_data_t v1, qs_data_t v2,
                            index_t dim);
-    static void ApplyX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplyY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyX(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyY(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
 
     // Z like operator
     // ========================================================================================================
 
-    static void ApplyZLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, qs_data_t val, index_t dim);
-    static void ApplyZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplySGate(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplyT(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplySdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplyTdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplyPS(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyZLike(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, qs_data_t val, index_t dim);
+    static void ApplyZ(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplySGate(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyT(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplySdag(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyTdag(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyPS(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
 
     // Single qubit operator
     // ========================================================================================================
 
-    static void ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit, const qbits_t& ctrls,
-                                       const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
-    static void ApplyTwoQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
-                                     const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
-    static void ApplyNQubitsMatrix(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
-                                   const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
-    static void ApplyMatrixGate(qs_data_p_t src, qs_data_p_t des, const qbits_t& objs, const qbits_t& ctrls,
+    static void ApplySingleQubitMatrix(const qs_data_p_t& src, qs_data_p_t* des_p, qbit_t obj_qubit,
+                                       const qbits_t& ctrls, const std::vector<std::vector<py_qs_data_t>>& m,
+                                       index_t dim);
+    static void ApplyTwoQubitsMatrix(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs,
+                                     const qbits_t& ctrls, const std::vector<std::vector<py_qs_data_t>>& m,
+                                     index_t dim);
+    static void ApplyNQubitsMatrix(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs,
+                                   const qbits_t& ctrls, const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
+    static void ApplyMatrixGate(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs, const qbits_t& ctrls,
                                 const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
-    static void ApplyH(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplyGP(qs_data_p_t qs, qbit_t obj_qubit, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyH(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyGP(qs_data_p_t* qs_p, qbit_t obj_qubit, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
-    static void ApplyRX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyRX(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
-    static void ApplyRY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyRY(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
-    static void ApplyRZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyRZ(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
 
-    static void ApplySWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplyISWAP(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, bool daggered, index_t dim);
-    static void ApplyRxx(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplySWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyISWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, bool daggered, index_t dim);
+    static void ApplyRxx(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
-    static void ApplyRyy(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyRyy(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
-    static void ApplyRzz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyRzz(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
-    static void ApplyRxy(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyRxy(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
-    static void ApplyRxz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyRxz(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
-    static void ApplyRyz(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+    static void ApplyRyz(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
 
     // gate_expec
     // ========================================================================================================
-    static qs_data_t ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+    static qs_data_t ExpectDiffSingleQubitMatrix(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
                                                  const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m,
                                                  index_t dim);
-    static qs_data_t ExpectDiffTwoQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+    static qs_data_t ExpectDiffTwoQubitsMatrix(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
                                                const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m, index_t dim);
-    static qs_data_t ExpectDiffNQubitsMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
+    static qs_data_t ExpectDiffNQubitsMatrix(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
                                              const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m, index_t dim);
-    static qs_data_t ExpectDiffMatrixGate(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                          const std::vector<py_qs_datas_t>& m, index_t dim);
-    static qs_data_t ExpectDiffRX(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
-    static qs_data_t ExpectDiffRY(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
-    static qs_data_t ExpectDiffRZ(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
-    static qs_data_t ExpectDiffRxx(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                   calc_type val, index_t dim);
-    static qs_data_t ExpectDiffRyy(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                   calc_type val, index_t dim);
-    static qs_data_t ExpectDiffRzz(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                   calc_type val, index_t dim);
-    static qs_data_t ExpectDiffRxy(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                   calc_type val, index_t dim);
-    static qs_data_t ExpectDiffRxz(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                   calc_type val, index_t dim);
-    static qs_data_t ExpectDiffRyz(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                   calc_type val, index_t dim);
-    static qs_data_t ExpectDiffPS(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
-    static qs_data_t ExpectDiffGP(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs, const qbits_t& ctrls,
-                                  calc_type val, index_t dim);
+    static qs_data_t ExpectDiffMatrixGate(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                          const qbits_t& ctrls, const std::vector<py_qs_datas_t>& m, index_t dim);
+    static qs_data_t ExpectDiffRX(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                  const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRY(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                  const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRZ(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                  const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRxx(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                   const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRyy(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                   const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRzz(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                   const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRxy(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                   const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRxz(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                   const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffRyz(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                   const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffPS(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                  const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffGP(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                  const qbits_t& ctrls, calc_type val, index_t dim);
     static calc_type GroundStateOfZZs(const std::map<index_t, calc_type>& masks_value, qbit_t n_qubits);
 };
 
@@ -209,6 +217,9 @@ struct CastTo {
     static constexpr tensor::TDtype src_dtype = policy_src::dtype;
     static constexpr tensor::TDtype des_dtype = policy_des::dtype;
     static typename policy_des::qs_data_p_t cast(typename policy_src::qs_data_p_t qs, size_t dim) {
+        if (qs == nullptr) {
+            return nullptr;
+        }
         if constexpr (std::is_same_v<policy_src, policy_des>) {
             return policy_des::Copy(qs, dim);
         }

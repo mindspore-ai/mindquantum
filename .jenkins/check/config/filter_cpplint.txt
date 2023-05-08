@@ -62,3 +62,6 @@
 "mindquantum/ccsrc/include/simulator/alignedallocator.hpp"                                            "whitespace/parens"
 "mindquantum/ccsrc/lib/math/operators/transform/bravyi_kitaev_superfast.cpp"                          "runtime/references"
 "mindquantum/ccsrc/python/math/lib/bind_math.cpp"                                                     "runtime/references"
+"mindquantum/ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_policy.cpp"                 "runtime/references"
+"mindquantum/ccsrc/lib/simulator/vector/detail/gpu/gpu_vector_core_policy.cu"                         "runtime/references"
+"mindquantum/ccsrc/include/simulator/vector/detail/cpu_vector_policy.hpp"                             "runtime/references"

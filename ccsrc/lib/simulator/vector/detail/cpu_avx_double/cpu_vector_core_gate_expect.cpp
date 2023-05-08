@@ -18,9 +18,20 @@
 #include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
 
 namespace mindquantum::sim::vector::detail {
-auto CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_data_p_t ket, const qbits_t& objs,
-                                                           const qbits_t& ctrls, const VVT<py_qs_data_t>& m,
-                                                           index_t dim) -> qs_data_t {
+auto CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix(const qs_data_p_t& bra_out, const qs_data_p_t& ket_out,
+                                                           const qbits_t& objs, const qbits_t& ctrls,
+                                                           const VVT<py_qs_data_t>& m, index_t dim) -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    bool will_free_bra = false, will_free_ket = false;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+        will_free_bra = true;
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+        will_free_ket = true;
+    }
     SingleQubitGateMask mask(objs, ctrls);
     gate_matrix_t gate = {{m[0][0], m[0][1]}, {m[1][0], m[1][1]}};
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
@@ -99,6 +110,12 @@ auto CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix(qs_data_p_t bra, qs_d
 
             // clang-format on
         }
+    }
+    if (will_free_bra) {
+        derived::FreeState(&bra);
+    }
+    if (will_free_ket) {
+        derived::FreeState(&ket);
     }
     return {res_real, res_imag};
 };

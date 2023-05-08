@@ -13,14 +13,27 @@
 //   limitations under the License.
 #include "config/openmp.hpp"
 
+#include "core/utils.hpp"
 #include "math/pr/parameter_resolver.hpp"
 #include "simulator/utils.hpp"
 #include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
 
 namespace mindquantum::sim::vector::detail {
-void CPUVectorPolicyAvxDouble::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p_t des, qbit_t obj_qubit,
+void CPUVectorPolicyAvxDouble::ApplySingleQubitMatrix(const qs_data_p_t& src_out, qs_data_p_t* des_p, qbit_t obj_qubit,
                                                       const qbits_t& ctrls,
                                                       const std::vector<std::vector<py_qs_data_t>>& m, index_t dim) {
+    auto& des = (*des_p);
+    if (des == nullptr) {
+        des = CPUVectorPolicyAvxDouble::InitState(dim);
+    }
+    qs_data_p_t src;
+    bool will_free = false;
+    if (src_out == nullptr) {
+        src = CPUVectorPolicyAvxDouble::InitState(dim);
+        will_free = true;
+    } else {
+        src = src_out;
+    }
     SingleQubitGateMask mask({obj_qubit}, ctrls);
     gate_matrix_t gate = {{m[0][0], m[0][1]}, {m[1][0], m[1][1]}};
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
@@ -47,6 +60,9 @@ void CPUVectorPolicyAvxDouble::ApplySingleQubitMatrix(qs_data_p_t src, qs_data_p
                     INTRIN_m256_to_host2(mul_res, des + i, des + j);
                 }
             });
+    }
+    if (will_free) {
+        CPUVectorPolicyAvxDouble::FreeState(&src);
     }
 }
 }  // namespace mindquantum::sim::vector::detail

@@ -39,6 +39,7 @@ mindquantum/ccsrc/lib/simulator/vector/detail/runtime/cmd.cpp:mindquantum::sim::
 mindquantum/ccsrc/include/math/tensor/ops_cpu/advance_math.hpp:tensor::ops::cpu::ElementFunc
 mindquantum/mindquantum/core/parameterresolver/parameterresolver.py:__init__
 mindquantum/ccsrc/python/math/lib/bind_math.cpp:BindQubitOperator
+ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_gate_expect.cpp:mindquantum::sim::vector::detail::CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix
 
 TEST_CASE
 mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::ApplyGate

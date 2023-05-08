@@ -25,8 +25,12 @@
 
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ApplyZLike(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyZLike(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls,
                                                            qs_data_t val, index_t dim) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     SingleQubitGateMask mask(objs, ctrls);
     thrust::counting_iterator<index_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
@@ -49,37 +53,41 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyZLike(qs_data_p_t qs, const
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ApplyZ(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyZ(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls,
                                                        index_t dim) {
-    derived::ApplyZLike(qs, objs, ctrls, -1, dim);
+    derived::ApplyZLike(qs_p, objs, ctrls, -1, dim);
 }
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ApplySGate(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplySGate(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls,
                                                            index_t dim) {
-    derived::ApplyZLike(qs, objs, ctrls, qs_data_t(0, 1), dim);
+    derived::ApplyZLike(qs_p, objs, ctrls, qs_data_t(0, 1), dim);
 }
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ApplySdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplySdag(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls,
                                                           index_t dim) {
-    derived::ApplyZLike(qs, objs, ctrls, qs_data_t(0, -1), dim);
+    derived::ApplyZLike(qs_p, objs, ctrls, qs_data_t(0, -1), dim);
 }
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ApplyT(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyT(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls,
                                                        index_t dim) {
-    derived::ApplyZLike(qs, objs, ctrls, qs_data_t(1, 1) / std::sqrt(2.0), dim);
+    derived::ApplyZLike(qs_p, objs, ctrls, qs_data_t(1, 1) / std::sqrt(2.0), dim);
 }
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ApplyTdag(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyTdag(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls,
                                                           index_t dim) {
-    derived::ApplyZLike(qs, objs, ctrls, qs_data_t(1, -1) / std::sqrt(2.0), dim);
+    derived::ApplyZLike(qs_p, objs, ctrls, qs_data_t(1, -1) / std::sqrt(2.0), dim);
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::ApplyPS(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyPS(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls,
                                                         calc_type val, index_t dim, bool diff) {
     if (!diff) {
-        derived::ApplyZLike(qs, objs, ctrls, qs_data_t(std::cos(val), std::sin(val)), dim);
+        derived::ApplyZLike(qs_p, objs, ctrls, qs_data_t(std::cos(val), std::sin(val)), dim);
     } else {
+        auto& qs = *qs_p;
+        if (qs == nullptr) {
+            qs = derived::InitState(dim);
+        }
         SingleQubitGateMask mask(objs, ctrls);
         thrust::counting_iterator<index_t> l(0);
         auto obj_high_mask = mask.obj_high_mask;
@@ -105,7 +113,7 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyPS(qs_data_p_t qs, const qb
                     }
                 });
             }
-            derived::SetToZeroExcept(qs, ctrl_mask, dim);
+            derived::SetToZeroExcept(qs_p, ctrl_mask, dim);
         }
     }
 }

@@ -12,6 +12,7 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 #include <limits>
+#include <stdexcept>
 
 #include <thrust/transform_reduce.h>
 
@@ -22,15 +23,18 @@
 #include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_policy.cuh"
 #include "thrust/device_ptr.h"
+#include "thrust/device_vector.h"
 #include "thrust/functional.h"
 #include "thrust/inner_product.h"
-#include "thrust/device_vector.h"
 
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
 auto GPUVectorPolicyBase<derived_, calc_type_>::InitState(index_t dim, bool zero_state) -> qs_data_p_t {
     qs_data_p_t qs;
-    cudaMalloc((void**) &qs, sizeof(qs_data_t) * dim);  // NOLINT
+    auto state = cudaMalloc((void**) &qs, sizeof(qs_data_t) * dim);  // NOLINT
+    if (state != cudaSuccess) {
+        throw std::runtime_error("GPU out of memory for allocate quantum state.");
+    }
     cudaMemset(qs, 0, sizeof(qs_data_t) * dim);
     if (zero_state) {
         qs_data_t one = qs_data_t(1.0, 0.0);
@@ -40,36 +44,47 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::InitState(index_t dim, bool zero
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::FreeState(qs_data_p_t qs) {
+void GPUVectorPolicyBase<derived_, calc_type_>::FreeState(qs_data_p_t* qs_p) {
+    auto& qs = (*qs_p);
     if (qs != nullptr) {
         cudaFree(qs);
+        qs = nullptr;
     }
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t qs, index_t dim) {
-    cudaMemset(qs, 0, sizeof(qs_data_t) * dim);
-    qs_data_t one(1, 0);
-    cudaMemcpy(qs, &one, sizeof(qs_data_t), cudaMemcpyHostToDevice);
+void GPUVectorPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t* qs_p, index_t dim) {
+    derived::FreeState(qs_p);
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::Display(qs_data_p_t qs, qbit_t n_qubits, qbit_t q_limit) {
+void GPUVectorPolicyBase<derived_, calc_type_>::Display(const qs_data_p_t& qs, qbit_t n_qubits, qbit_t q_limit) {
     if (n_qubits > q_limit) {
         n_qubits = q_limit;
     }
-    std::complex<calc_type>* h_qs = reinterpret_cast<std::complex<calc_type>*>(
-        malloc((1UL << n_qubits) * sizeof(std::complex<calc_type>)));
-    cudaMemcpy(h_qs, qs, sizeof(qs_data_t) * (1UL << n_qubits), cudaMemcpyDeviceToHost);
-    std::cout << n_qubits << " qubits cpu simulator (little endian)." << std::endl;
-    for (index_t i = 0; i < (1UL << n_qubits); i++) {
-        std::cout << "(" << h_qs[i].real() << ", " << h_qs[i].imag() << ")" << std::endl;
+    std::cout << n_qubits << " qubits gpu simulator (little endian)." << std::endl;
+    if (qs == nullptr) {
+        std::cout << "(" << 1 << ", " << 0 << ")" << std::endl;
+        for (index_t i = 0; i < (1UL << n_qubits) - 1; i++) {
+            std::cout << "(" << 0 << ", " << 0 << ")" << std::endl;
+        }
+    } else {
+        std::complex<calc_type>* h_qs = reinterpret_cast<std::complex<calc_type>*>(
+            malloc((1UL << n_qubits) * sizeof(std::complex<calc_type>)));
+        cudaMemcpy(h_qs, qs, sizeof(qs_data_t) * (1UL << n_qubits), cudaMemcpyDeviceToHost);
+        for (index_t i = 0; i < (1UL << n_qubits); i++) {
+            std::cout << "(" << h_qs[i].real() << ", " << h_qs[i].imag() << ")" << std::endl;
+        }
+        free(h_qs);
     }
-    free(h_qs);
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::SetToZeroExcept(qs_data_p_t qs, index_t ctrl_mask, index_t dim) {
+void GPUVectorPolicyBase<derived_, calc_type_>::SetToZeroExcept(qs_data_p_t* qs_p, index_t ctrl_mask, index_t dim) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     thrust::counting_iterator<index_t> i(0);
     thrust::for_each(i, i + dim, [=] __device__(index_t i) {
         if ((i & ctrl_mask) != ctrl_mask) {
@@ -79,23 +94,96 @@ void GPUVectorPolicyBase<derived_, calc_type_>::SetToZeroExcept(qs_data_p_t qs, 
 }
 
 template <typename derived_, typename calc_type_>
-auto GPUVectorPolicyBase<derived_, calc_type_>::GetQS(qs_data_p_t qs, index_t dim) -> py_qs_datas_t {
+auto GPUVectorPolicyBase<derived_, calc_type_>::GetQS(const qs_data_p_t& qs, index_t dim) -> py_qs_datas_t {
     py_qs_datas_t out(dim);
-    cudaMemcpy(out.data(), qs, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
+    if (qs == nullptr) {
+        out[0] = 1.0;
+    } else {
+        cudaMemcpy(out.data(), qs, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
+    }
     return out;
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t qs, const py_qs_datas_t& qs_out, index_t dim) {
+void GPUVectorPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t* qs_p, const py_qs_datas_t& qs_out, index_t dim) {
+    auto& qs = (*qs_p);
     if (qs_out.size() != dim) {
         throw std::invalid_argument("state size not match");
+    }
+    if (qs == nullptr) {
+        qs = derived::InitState(dim, false);
     }
     cudaMemcpy(qs, qs_out.data(), sizeof(qs_data_t) * dim, cudaMemcpyHostToDevice);
 }
 
 template <typename derived_, typename calc_type_>
-auto GPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham,
-                                                           index_t dim) -> qs_data_p_t {
+auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfTerms(const qs_data_p_t& bra_out,
+                                                                   const qs_data_p_t& ket_out,
+                                                                   const std::vector<PauliTerm<calc_type>>& ham,
+                                                                   index_t dim) -> py_qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    bool will_free_bra = false, will_free_ket = false;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+        will_free_bra = true;
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+        will_free_ket = true;
+    }
+    qs_data_t out = 0.0;
+    for (const auto& [pauli_string, coeff] : ham) {
+        auto mask = GenPauliMask(pauli_string);
+        auto mask_f = mask.mask_x | mask.mask_y;
+        auto mask_z = mask.mask_z;
+        auto mask_y = mask.mask_y;
+        auto num_y = mask.num_y;
+        auto this_coeff = qs_data_t(coeff);
+        thrust::counting_iterator<index_t> i(0);
+        out += thrust::transform_reduce(
+            i, i + dim,
+            [=] __device__(index_t i) {
+                auto j = (i ^ mask_f);
+                qs_data_t tmp = 0.0;
+                if (i <= j) {
+                    auto axis2power = __popcll(i & mask_z);
+                    auto axis3power = __popcll(i & mask_y);
+                    auto idx = (num_y + 2 * axis3power + 2 * axis2power) & 3;
+                    auto c = qs_data_t(1, 0);
+                    if (idx == 1) {
+                        c = qs_data_t(0, 1);
+                    } else if (idx == 2) {
+                        c = qs_data_t(-1, 0);
+                    } else if (idx == 3) {
+                        c = qs_data_t(0, -1);
+                    }
+                    tmp += thrust::conj(bra[j]) * ket[i] * this_coeff * c;
+                    if (i != j) {
+                        tmp += thrust::conj(bra[i]) * ket[j] * this_coeff / c;
+                    }
+                }
+                return tmp;
+            },
+            qs_data_t(0, 0), thrust::plus<qs_data_t>());
+    }
+    if (will_free_bra) {
+        derived::FreeState(&bra);
+    }
+    if (will_free_ket) {
+        derived::FreeState(&ket);
+    }
+    return out;
+}
+
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* qs_p,
+                                                           const std::vector<PauliTerm<calc_type>>& ham, index_t dim)
+    -> qs_data_p_t {
+    auto& qs = (*qs_p);
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     qs_data_p_t out = derived::InitState(dim, false);
     for (const auto& [pauli_string, coeff] : ham) {
         auto mask = GenPauliMask(pauli_string);
@@ -166,10 +254,15 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::GroundStateOfZZs(const std::map<
 }
 
 template <typename derived_, typename calc_type_>
-auto GPUVectorPolicyBase<derived_, calc_type_>::Copy(qs_data_p_t qs, index_t dim) -> qs_data_p_t {
-    qs_data_p_t out;
-    cudaMalloc((void**) &out, sizeof(qs_data_t) * dim);  // NOLINT
-    cudaMemcpy(out, qs, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToDevice);
+auto GPUVectorPolicyBase<derived_, calc_type_>::Copy(const qs_data_p_t& qs, index_t dim) -> qs_data_p_t {
+    qs_data_p_t out = nullptr;
+    if (qs != nullptr) {
+        auto state = cudaMalloc((void**) &out, sizeof(qs_data_t) * dim);  // NOLINT
+        if (state != cudaSuccess) {
+            throw std::runtime_error("GPU out of memory for allocate quantum state.");
+        }
+        cudaMemcpy(out, qs, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToDevice);
+    }
     return out;
 };
 

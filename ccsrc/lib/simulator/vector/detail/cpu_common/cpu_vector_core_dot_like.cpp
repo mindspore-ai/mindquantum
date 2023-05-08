@@ -11,6 +11,8 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
+#include <cstddef>
+
 #include "config/openmp.hpp"
 
 #include "core/sparse/algo.hpp"
@@ -27,7 +29,15 @@
 
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::Vdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim) -> py_qs_data_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::Vdot(const qs_data_p_t& bra, const qs_data_p_t& ket, index_t dim)
+    -> py_qs_data_t {
+    if (bra == nullptr && ket == nullptr) {
+        return 1.0;
+    } else if (bra == nullptr) {
+        return ket[0];
+    } else if (ket == nullptr) {
+        return std::conj(bra[0]);
+    }
     calc_type res_real = 0, res_imag = 0;
     // clang-format off
     THRESHOLD_OMP(
@@ -42,8 +52,24 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::Vdot(qs_data_p_t bra, qs_data_p_
 
 template <typename derived_, typename calc_type_>
 template <index_t mask, index_t condi>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ConditionVdot(qs_data_p_t bra, qs_data_p_t ket, index_t dim)
-    -> py_qs_data_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::ConditionVdot(const qs_data_p_t& bra, const qs_data_p_t& ket,
+                                                              index_t dim) -> py_qs_data_t {
+    if (bra == nullptr && ket == nullptr) {
+        if ((0 & mask) == condi) {
+            return 1.0;
+        }
+        return 0.0;
+    } else if (bra == nullptr) {
+        if ((0 & mask) == condi) {
+            return ket[0];
+        }
+        return 0.0;
+    } else if (ket == nullptr) {
+        if ((0 & mask) == condi) {
+            return std::conj(bra[0]);
+        }
+        return 0.0;
+    }
     calc_type res_real = 0, res_imag = 0;
     // clang-format off
     THRESHOLD_OMP(
@@ -59,8 +85,11 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ConditionVdot(qs_data_p_t bra, q
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::OneStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit,
-                                                             index_t dim) -> py_qs_data_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::OneStateVdot(const qs_data_p_t& bra, const qs_data_p_t& ket,
+                                                             qbit_t obj_qubit, index_t dim) -> py_qs_data_t {
+    if (bra == nullptr || ket == nullptr) {
+        return 0.0;
+    }
     SingleQubitGateMask mask({obj_qubit}, {});
     calc_type res_real = 0, res_imag = 0;
     // clang-format off
@@ -76,8 +105,15 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::OneStateVdot(qs_data_p_t bra, qs
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUVectorPolicyBase<derived_, calc_type_>::ZeroStateVdot(qs_data_p_t bra, qs_data_p_t ket, qbit_t obj_qubit,
-                                                              index_t dim) -> py_qs_data_t {
+auto CPUVectorPolicyBase<derived_, calc_type_>::ZeroStateVdot(const qs_data_p_t& bra, const qs_data_p_t& ket,
+                                                              qbit_t obj_qubit, index_t dim) -> py_qs_data_t {
+    if (bra == nullptr && ket == nullptr) {
+        return 1.0;
+    } else if (bra == nullptr) {
+        return ket[0];
+    } else if (ket == nullptr) {
+        return std::conj(bra[0]);
+    }
     SingleQubitGateMask mask({obj_qubit}, {});
     calc_type res_real = 0, res_imag = 0;
     // clang-format off
@@ -94,23 +130,97 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ZeroStateVdot(qs_data_p_t bra, q
 
 template <typename derived_, typename calc_type_>
 auto CPUVectorPolicyBase<derived_, calc_type_>::CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
-                                                          qs_data_p_t vec, index_t dim) -> qs_data_p_t {
+                                                          const qs_data_p_t& vec_out, index_t dim) -> qs_data_p_t {
     if (dim != a->dim_) {
         throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
     }
+    auto vec = vec_out;
+    bool will_free = false;
+    if (vec == nullptr) {
+        vec = derived::InitState(dim);
+        will_free = true;
+    }
     auto out = sparse::Csr_Dot_Vec<calc_type, calc_type>(a, reinterpret_cast<calc_type*>(vec));
+    if (will_free) {
+        derived::FreeState(&vec);
+    }
     return reinterpret_cast<qs_data_p_t>(out);
 }
 
 template <typename derived_, typename calc_type_>
 auto CPUVectorPolicyBase<derived_, calc_type_>::CsrDotVec(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
                                                           const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& b,
-                                                          qs_data_p_t vec, index_t dim) -> qs_data_p_t {
+                                                          const qs_data_p_t& vec_out, index_t dim) -> qs_data_p_t {
     if ((dim != a->dim_) || (dim != b->dim_)) {
         throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
     }
+    auto vec = vec_out;
+    bool will_free = false;
+    if (vec == nullptr) {
+        vec = derived::InitState(dim);
+    }
     auto out = sparse::Csr_Dot_Vec<calc_type, calc_type>(a, b, reinterpret_cast<calc_type*>(vec));
+    if (will_free) {
+        derived::FreeState(&vec);
+    }
     return reinterpret_cast<qs_data_p_t>(out);
+}
+
+template <typename derived_, typename calc_type_>
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfCsr(
+    const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, const qs_data_p_t& bra_out, const qs_data_p_t& ket_out,
+    index_t dim) -> py_qs_data_t {
+    if (dim != a->dim_) {
+        throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
+    }
+    auto bra = bra_out;
+    auto ket = ket_out;
+    bool will_free_bra = false, will_free_ket = false;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+        will_free_bra = true;
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+        will_free_ket = true;
+    }
+    auto res = sparse::ExpectationOfCsr<calc_type, calc_type>(a, reinterpret_cast<calc_type*>(bra),
+                                                              reinterpret_cast<calc_type*>(ket));
+    if (will_free_bra) {
+        derived::FreeState(&bra);
+    }
+    if (will_free_ket) {
+        derived::FreeState(&ket);
+    }
+    return res;
+}
+template <typename derived_, typename calc_type_>
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfCsr(
+    const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& b,
+    const qs_data_p_t& bra_out, const qs_data_p_t& ket_out, index_t dim) -> py_qs_data_t {
+    if ((dim != a->dim_) || (dim != b->dim_)) {
+        throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
+    }
+    auto bra = bra_out;
+    auto ket = ket_out;
+    bool will_free_bra = false, will_free_ket = false;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+        will_free_bra = true;
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+        will_free_ket = true;
+    }
+    auto res = sparse::ExpectationOfCsr<calc_type, calc_type>(a, b, reinterpret_cast<calc_type*>(bra),
+                                                              reinterpret_cast<calc_type*>(ket));
+    if (will_free_bra) {
+        derived::FreeState(&bra);
+    }
+    if (will_free_ket) {
+        derived::FreeState(&ket);
+    }
+    return res;
 }
 
 #ifdef __x86_64__
