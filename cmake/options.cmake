@@ -196,7 +196,7 @@ if(ENABLE_CUDA)
   if(NOT CMAKE_CUDA_ARCHITECTURES AND "$ENV{CUDAARCHS}" STREQUAL "")
     set(_default_cudaarchs TRUE)
     # Default architectures list supported by NVHPC when using -stdpar -cuda -gpu=ccXX (taken from NVHPC 22.3)
-    set(CMAKE_CUDA_ARCHITECTURES 60 61 62 70 72 75)
+    set(CMAKE_CUDA_ARCHITECTURES 60 61 70 75)
 
     # NB: CUDAARCHS requires CMake 3.20+
     message(STATUS "Neither of CMAKE_CUDA_ARCHITECTURES (CMake variable) or CUDAARCHS (env. variable; CMake 3.20+) "
