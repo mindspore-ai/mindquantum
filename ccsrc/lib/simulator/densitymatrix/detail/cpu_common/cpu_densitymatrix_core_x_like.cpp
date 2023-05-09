@@ -30,9 +30,13 @@ namespace mindquantum::sim::densitymatrix::detail {
 // ========================================================================================================
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyXLike(qs_data_p_t qs, const qbits_t& objs,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyXLike(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                   const qbits_t& ctrls, qs_data_t v1, qs_data_t v2,
                                                                   index_t dim) {
+    auto& qs = (*qs_p);
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     SingleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
@@ -105,15 +109,15 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyXLike(qs_data_p_t qs
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyX(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
-                                                              index_t dim) {
-    derived::ApplyXLike(qs, objs, ctrls, 1, 1, dim);
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyX(qs_data_p_t* qs_p, const qbits_t& objs,
+                                                              const qbits_t& ctrls, index_t dim) {
+    derived::ApplyXLike(qs_p, objs, ctrls, 1, 1, dim);
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyY(qs_data_p_t qs, const qbits_t& objs, const qbits_t& ctrls,
-                                                              index_t dim) {
-    derived::ApplyXLike(qs, objs, ctrls, IMAGE_MI, IMAGE_I, dim);
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyY(qs_data_p_t* qs_p, const qbits_t& objs,
+                                                              const qbits_t& ctrls, index_t dim) {
+    derived::ApplyXLike(qs_p, objs, ctrls, IMAGE_MI, IMAGE_I, dim);
 }
 
 #ifdef __x86_64__
