@@ -38,7 +38,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRX(qs_data_p_t* qs_p
         b = -0.5 * std::cos(val / 2);
     }
     matrix_t m{{{a, 0}, {0, b}}, {{0, b}, {a, 0}}};
-    derived::ApplySingleQubitMatrix(qs_p, qs_p, objs[0], ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(*qs_p, qs_p, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
         derived::SetToZeroExcept(qs_p, mask.ctrl_mask, dim);
     }
@@ -74,7 +74,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRZ(qs_data_p_t* qs_p
         b = 0.5 * std::cos(val / 2);
     }
     matrix_t m{{{a, -b}, {0, 0}}, {{0, 0}, {a, b}}};
-    derived::ApplySingleQubitMatrix(*qs_p, qs_p, objs[0], objs[0], ctrls, m, dim);
+    derived::ApplySingleQubitMatrix(*qs_p, qs_p, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
         derived::SetToZeroExcept(qs_p, mask.ctrl_mask, dim);
     }
@@ -102,6 +102,10 @@ template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxxNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                       const qbits_t& ctrls, index_t dim, calc_type c,
                                                                       qs_data_t s) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
@@ -138,6 +142,10 @@ template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxxCtrl(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                     const qbits_t& ctrls, index_t dim, calc_type c,
                                                                     qs_data_t s, bool diff) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
@@ -188,7 +196,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxxCtrl(qs_data_p_t*
             }
         })
     if (diff) {
-        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(qs_p, mask.ctrl_mask, dim);
     }
 }
 
@@ -204,9 +212,9 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyy(qs_data_p_t* qs_
         s = static_cast<calc_type_>(std::cos(val / 2) / 2) * IMAGE_I;
     }
     if (!mask.ctrl_mask) {
-        ApplyRyyNoCtrl(qs, objs, ctrls, dim, c, s);
+        ApplyRyyNoCtrl(qs_p, objs, ctrls, dim, c, s);
     } else {
-        ApplyRyyCtrl(qs, objs, ctrls, dim, c, s, diff);
+        ApplyRyyCtrl(qs_p, objs, ctrls, dim, c, s, diff);
     }
 }
 
@@ -214,6 +222,10 @@ template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyyNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                       const qbits_t& ctrls, index_t dim, calc_type c,
                                                                       qs_data_t s) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
@@ -257,6 +269,10 @@ template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyyCtrl(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                     const qbits_t& ctrls, index_t dim, calc_type c,
                                                                     qs_data_t s, bool diff) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
@@ -311,7 +327,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyyCtrl(qs_data_p_t*
             }
         })
     if (diff) {
-        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(qs_p, mask.ctrl_mask, dim);
     }
 }
 
@@ -327,9 +343,9 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzz(qs_data_p_t* qs_
         s = static_cast<calc_type_>(std::cos(val / 2) / 2);
     }
     if (!mask.ctrl_mask) {
-        ApplyRzzNoCtrl(qs, objs, ctrls, dim, c, s);
+        ApplyRzzNoCtrl(qs_p, objs, ctrls, dim, c, s);
     } else {
-        ApplyRzzCtrl(qs, objs, ctrls, dim, c, s, diff);
+        ApplyRzzCtrl(qs_p, objs, ctrls, dim, c, s, diff);
     }
 }
 
@@ -337,6 +353,10 @@ template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzzNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                       const qbits_t& ctrls, index_t dim, calc_type c,
                                                                       calc_type s) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     auto e = c + IMAGE_I * s;
     auto me = c + IMAGE_MI * s;
@@ -380,6 +400,10 @@ template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzzCtrl(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                     const qbits_t& ctrls, index_t dim, calc_type c,
                                                                     calc_type s, bool diff) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     auto e = c + IMAGE_I * s;
     auto me = c + IMAGE_MI * s;
@@ -441,7 +465,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzzCtrl(qs_data_p_t*
             }
         })
     if (diff) {
-        derived::SetToZeroExcept(qs, mask.ctrl_mask, dim);
+        derived::SetToZeroExcept(qs_p, mask.ctrl_mask, dim);
     }
 }
 

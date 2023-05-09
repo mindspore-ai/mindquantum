@@ -50,9 +50,17 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::HamiltonianMatrix(const s
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetExpectation(qs_data_p_t qs,
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetExpectation(const qs_data_p_t& qs_out,
                                                                       const std::vector<PauliTerm<calc_type>>& ham,
                                                                       index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free = true;
+    } else {
+        qs = qs_out;
+    }
     calc_type e_r = 0, e_i = 0;
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
@@ -78,13 +86,24 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetExpectation(qs_data_p_
                 })
         // clang-format on
     }
+    if (will_free) {
+        derived::FreeState(&qs);
+    }
     return qs_data_t(e_r, e_i);
 }
 
 template <typename derived_, typename calc_type_>
 auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatrix(
-    qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls, const matrix_t& gate_m,
-    const matrix_t& diff_m, index_t dim) -> qs_data_t {
+    const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
+    const matrix_t& gate_m, const matrix_t& diff_m, index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free = true;
+    } else {
+        qs = qs_out;
+    }
     // G = Tr(m \rho H), where m = U' \dot \dagger{U}
     qs_data_t m00 = diff_m[0][0] * std::conj(gate_m[0][0]) + diff_m[0][1] * std::conj(gate_m[0][1]);
     qs_data_t m01 = diff_m[0][0] * std::conj(gate_m[1][0]) + diff_m[0][1] * std::conj(gate_m[1][1]);
@@ -164,16 +183,24 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatr
             // clang-format on
         }
     }
+    if (will_free) {
+        derived::FreeState(&qs);
+    }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix(qs_data_p_t qs, qs_data_p_t ham_matrix,
-                                                                                 const qbits_t& objs,
-                                                                                 const qbits_t& ctrls,
-                                                                                 const matrix_t& gate_m,
-                                                                                 const matrix_t& diff_m, index_t dim)
-    -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix(
+    const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
+    const matrix_t& gate_m, const matrix_t& diff_m, index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free = true;
+    } else {
+        qs = qs_out;
+    }
     // G = Tr(m \rho H), where m = U' \dot \dagger{U}
     matrix_t m(4, std::vector<qs_data_t>(4));
     for (int i = 0; i < 4; i++) {
@@ -248,11 +275,15 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix
                 });
         // clang-format on
     }
+    if (will_free) {
+        derived::FreeState(&qs);
+    }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffMatrixGate(qs_data_p_t qs, qs_data_p_t ham_matrix,
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffMatrixGate(const qs_data_p_t& qs,
+                                                                            const qs_data_p_t& ham_matrix,
                                                                             const qbits_t& objs, const qbits_t& ctrls,
                                                                             const matrix_t& diff_m,
                                                                             const matrix_t& herm_m, index_t dim)
@@ -267,9 +298,17 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffMatrixGate(qs_d
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRX(qs_data_p_t qs, qs_data_p_t ham_matrix,
-                                                                    const qbits_t& objs, const qbits_t& ctrls,
-                                                                    index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRX(const qs_data_p_t& qs_out,
+                                                                    const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                                                    const qbits_t& ctrls, index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free = true;
+    } else {
+        qs = qs_out;
+    }
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
@@ -309,13 +348,24 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRX(qs_data_p_t 
                 })
         // clang-format on
     }
+    if (will_free) {
+        derived::FreeState(&qs);
+    }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRY(qs_data_p_t qs, qs_data_p_t ham_matrix,
-                                                                    const qbits_t& objs, const qbits_t& ctrls,
-                                                                    index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRY(const qs_data_p_t& qs_out,
+                                                                    const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                                                    const qbits_t& ctrls, index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free = true;
+    } else {
+        qs = qs_out;
+    }
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
@@ -355,13 +405,24 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRY(qs_data_p_t 
                 })
         // clang-format on
     }
+    if (will_free) {
+        derived::FreeState(&qs);
+    }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRZ(qs_data_p_t qs, qs_data_p_t ham_matrix,
-                                                                    const qbits_t& objs, const qbits_t& ctrls,
-                                                                    index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRZ(const qs_data_p_t& qs_out,
+                                                                    const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                                                    const qbits_t& ctrls, index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free = true;
+    } else {
+        qs = qs_out;
+    }
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
@@ -401,13 +462,24 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRZ(qs_data_p_t 
                 })
         // clang-format on
     }
+    if (will_free) {
+        derived::FreeState(&qs);
+    }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffPS(qs_data_p_t qs, qs_data_p_t ham_matrix,
-                                                                    const qbits_t& objs, const qbits_t& ctrls,
-                                                                    index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffPS(const qs_data_p_t& qs_out,
+                                                                    const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                                                    const qbits_t& ctrls, index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free = true;
+    } else {
+        qs = qs_out;
+    }
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
@@ -445,13 +517,25 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffPS(qs_data_p_t 
                 })
         // clang-format on
     }
+    if (will_free) {
+        derived::FreeState(&qs);
+    }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Theta(qs_data_p_t qs, qs_data_p_t ham_matrix,
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Theta(const qs_data_p_t& qs_out,
+                                                                         const qs_data_p_t& ham_matrix,
                                                                          const qbits_t& objs, const qbits_t& ctrls,
                                                                          calc_type phi, index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free = true;
+    } else {
+        qs = qs_out;
+    }
     qs_data_t e_phi = static_cast<calc_type>(0.5) * std::exp(std::complex<calc_type>(0, phi));
     qs_data_t e_m_phi = static_cast<calc_type>(-0.5) * std::exp(std::complex<calc_type>(0, -phi));
     SingleQubitGateMask mask(objs, ctrls);
@@ -491,13 +575,25 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Theta(qs_data
                 })
         // clang-format on
     }
+    if (will_free) {
+        derived::FreeState(&qs);
+    }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Phi(qs_data_p_t qs, qs_data_p_t ham_matrix,
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Phi(const qs_data_p_t& qs_out,
+                                                                       const qs_data_p_t& ham_matrix,
                                                                        const qbits_t& objs, const qbits_t& ctrls,
                                                                        index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free = true;
+    } else {
+        qs = qs_out;
+    }
     SingleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
@@ -535,13 +631,24 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Phi(qs_data_p
                 })
         // clang-format on
     }
+    if (will_free) {
+        derived::FreeState(&qs);
+    }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRxx(qs_data_p_t qs, qs_data_p_t ham_matrix,
-                                                                     const qbits_t& objs, const qbits_t& ctrls,
-                                                                     index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRxx(const qs_data_p_t& qs_out,
+                                                                     const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                                                     const qbits_t& ctrls, index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free = true;
+    } else {
+        qs = qs_out;
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
@@ -593,13 +700,24 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRxx(qs_data_p_t
                 })
         // clang-format on
     }
+    if (will_free) {
+        derived::FreeState(&qs);
+    }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRyy(qs_data_p_t qs, qs_data_p_t ham_matrix,
-                                                                     const qbits_t& objs, const qbits_t& ctrls,
-                                                                     index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRyy(const qs_data_p_t& qs_out,
+                                                                     const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                                                     const qbits_t& ctrls, index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free = true;
+    } else {
+        qs = qs_out;
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
@@ -651,13 +769,24 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRyy(qs_data_p_t
                 })
         // clang-format on
     }
+    if (will_free) {
+        derived::FreeState(&qs);
+    }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRzz(qs_data_p_t qs, qs_data_p_t ham_matrix,
-                                                                     const qbits_t& objs, const qbits_t& ctrls,
-                                                                     index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRzz(const qs_data_p_t& qs_out,
+                                                                     const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                                                     const qbits_t& ctrls, index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free = true;
+    } else {
+        qs = qs_out;
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
@@ -709,13 +838,25 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRzz(qs_data_p_t
                 })
         // clang-format on
     }
+    if (will_free) {
+        derived::FreeState(&qs);
+    }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimTheta(qs_data_p_t qs, qs_data_p_t ham_matrix,
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimTheta(const qs_data_p_t& qs_out,
+                                                                           const qs_data_p_t& ham_matrix,
                                                                            const qbits_t& objs, const qbits_t& ctrls,
                                                                            index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free = true;
+    } else {
+        qs = qs_out;
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
@@ -763,13 +904,25 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimTheta(qs_da
                 })
         // clang-format on
     }
+    if (will_free) {
+        derived::FreeState(&qs);
+    }
     return {res_real, res_imag};
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimPhi(qs_data_p_t qs, qs_data_p_t ham_matrix,
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimPhi(const qs_data_p_t& qs_out,
+                                                                         const qs_data_p_t& ham_matrix,
                                                                          const qbits_t& objs, const qbits_t& ctrls,
                                                                          index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free = true;
+    } else {
+        qs = qs_out;
+    }
     DoubleQubitGateMask mask(objs, ctrls);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
@@ -814,6 +967,9 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimPhi(qs_data
                     }
                 })
         // clang-format on
+    }
+    if (will_free) {
+        derived::FreeState(&qs);
     }
     return {res_real, res_imag};
 };

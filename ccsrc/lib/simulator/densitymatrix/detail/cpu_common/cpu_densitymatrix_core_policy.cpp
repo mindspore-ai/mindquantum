@@ -110,7 +110,7 @@ template <typename derived_, typename calc_type_>
 auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::Copy(const qs_data_p_t& qs, index_t dim) -> qs_data_p_t {
     qs_data_p_t out = nullptr;
     if (qs != nullptr) {
-        derived::InitState(dim, false);
+        out = derived::InitState(dim, false);
         THRESHOLD_OMP_FOR(
             dim, DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { out[i] = qs[i]; })
     }
@@ -118,8 +118,12 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::Copy(const qs_data_p_t& q
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetQS(qs_data_p_t qs, index_t dim) -> matrix_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetQS(const qs_data_p_t& qs, index_t dim) -> matrix_t {
     matrix_t out(dim, py_qs_datas_t(dim));
+    if (qs == nullptr) {
+        out[0][0] = 1.0;
+        return out;
+    }
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
             for (index_t j = 0; j < i; j++) {
@@ -133,10 +137,14 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetQS(qs_data_p_t qs, ind
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t qs, const py_qs_datas_t& vec_out,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t* qs_p, const py_qs_datas_t& vec_out,
                                                              index_t dim) {
     if (vec_out.size() != dim) {
         throw std::invalid_argument("state size not match");
+    }
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
     }
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
@@ -147,9 +155,13 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t qs, con
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetDM(qs_data_p_t qs, const matrix_t& mat_out, index_t dim) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetDM(qs_data_p_t* qs_p, const matrix_t& mat_out, index_t dim) {
     if (mat_out[0].size() != dim) {
         throw std::invalid_argument("state size not match");
+    }
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
     }
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
@@ -160,13 +172,25 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetDM(qs_data_p_t qs, con
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::CopyQS(qs_data_p_t qs, const qs_data_p_t qs_out, index_t dim) {
-    THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { qs[i] = qs_out[i]; })
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::CopyQS(qs_data_p_t* qs_des, const qs_data_p_t& qs_src,
+                                                              index_t dim) {
+    auto& qs = *qs_des;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    if (qs_src == nullptr) {
+        qs[0] = 1.0;
+    } else {
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { qs[i] = qs_src[i]; })
+    }
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::Purity(qs_data_p_t qs, index_t dim) -> calc_type {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::Purity(const qs_data_p_t& qs, index_t dim) -> calc_type {
+    if (qs == nullptr) {
+        return 1.0;
+    }
     calc_type p = 0;
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+: p)), dim, DimTh,
@@ -178,7 +202,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::Purity(qs_data_p_t qs, in
 }
 
 template <typename derived_, typename calc_type_>
-bool CPUDensityMatrixPolicyBase<derived_, calc_type_>::IsPure(qs_data_p_t qs, index_t dim) {
+bool CPUDensityMatrixPolicyBase<derived_, calc_type_>::IsPure(const qs_data_p_t& qs, index_t dim) {
     auto p = Purity(qs, dim);
     if (std::abs(p - 1) < 1e-8) {
         return true;
@@ -188,9 +212,15 @@ bool CPUDensityMatrixPolicyBase<derived_, calc_type_>::IsPure(qs_data_p_t qs, in
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::PureStateVector(qs_data_p_t qs, index_t dim) -> py_qs_datas_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::PureStateVector(const qs_data_p_t& qs, index_t dim)
+    -> py_qs_datas_t {
     if (!IsPure(qs, dim)) {
         throw(std::runtime_error("PureStateVector(): Cannot transform mixed density matrix to vector."));
+    }
+    if (qs == nullptr) {
+        py_qs_datas_t qs_vector(dim, 0.0);
+        qs_vector[0] = 1.0;
+        return qs_vector;
     }
     py_qs_datas_t qs_vector(dim);
     index_t base;
@@ -209,9 +239,13 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::PureStateVector(qs_data_p
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* qs_p,
                                                                   const std::vector<PauliTerm<calc_type>>& ham,
                                                                   index_t dim) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
     matrix_t tmp(dim, VT<qs_data_t>(dim));
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
@@ -236,7 +270,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t qs
                 }
             })
     }
-    Reset(&qs, dim, false);
+    Reset(qs_p, dim, false);
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
         auto mask_f = mask.mask_x | mask.mask_y;

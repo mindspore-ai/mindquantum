@@ -65,33 +65,34 @@ struct CPUDensityMatrixPolicyBase {
     static void FreeState(qs_data_p_t* qs_p);
     static void Display(const qs_data_p_t& qs, qbit_t n_qubits, qbit_t q_limit = 10);
     static void SetToZeroExcept(qs_data_p_t* qs_p, index_t ctrl_mask, index_t dim);
-    static matrix_t GetQS(qs_data_p_t qs, index_t dim);
-    static void SetQS(qs_data_p_t qs, const py_qs_datas_t& vec_out, index_t dim);
-    static void SetDM(qs_data_p_t qs, const matrix_t& mat_out, index_t dim);
-    static void CopyQS(qs_data_p_t qs, const qs_data_p_t qs_out, index_t dim);
+    static matrix_t GetQS(const qs_data_p_t& qs, index_t dim);
+    static void SetQS(qs_data_p_t* qs_p, const py_qs_datas_t& vec_out, index_t dim);
+    static void SetDM(qs_data_p_t* qs_p, const matrix_t& mat_out, index_t dim);
+    static void CopyQS(qs_data_p_t* qs_des, const qs_data_p_t& qs_src, index_t dim);
     static qs_data_p_t Copy(const qs_data_p_t& qs, index_t dim);
-    static calc_type Purity(qs_data_p_t qs, index_t dim);
-    static bool IsPure(qs_data_p_t qs, index_t dim);
-    static py_qs_datas_t PureStateVector(qs_data_p_t qs, index_t dim);
-    static void ApplyTerms(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
-    static calc_type DiagonalConditionalCollect(qs_data_p_t qs, index_t mask, index_t condi, index_t dim);
+    static calc_type Purity(const qs_data_p_t& qs, index_t dim);
+    static bool IsPure(const qs_data_p_t& qs, index_t dim);
+    static py_qs_datas_t PureStateVector(const qs_data_p_t& qs, index_t dim);
+    static void ApplyTerms(qs_data_p_t* qs_p, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
+    static calc_type DiagonalConditionalCollect(const qs_data_p_t& qs, index_t mask, index_t condi, index_t dim);
+
     template <index_t mask, index_t condi, class binary_op>
-    static void ConditionalBinary(qs_data_p_t src, qs_data_p_t des, qs_data_t succ_coeff, qs_data_t fail_coeff,
-                                  index_t dim, const binary_op& op);
-    template <class binary_op>
-    static void ConditionalBinary(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
+    static void ConditionalBinary(const qs_data_p_t& src, qs_data_p_t* des_p, qs_data_t succ_coeff,
                                   qs_data_t fail_coeff, index_t dim, const binary_op& op);
-    static void ConditionalAdd(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
-                               qs_data_t fail_coeff, index_t dim);
-    static void ConditionalMinus(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
-                                 qs_data_t fail_coeff, index_t dim);
-    static void ConditionalMul(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
-                               qs_data_t fail_coeff, index_t dim);
-    static void ConditionalDiv(qs_data_p_t src, qs_data_p_t des, index_t mask, index_t condi, qs_data_t succ_coeff,
-                               qs_data_t fail_coeff, index_t dim);
-    static void QSMulValue(qs_data_p_t src, qs_data_p_t des, qs_data_t value, index_t dim);
+    template <class binary_op>
+    static void ConditionalBinary(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi,
+                                  qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim, const binary_op& op);
+    static void ConditionalAdd(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi,
+                               qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim);
+    static void ConditionalMinus(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi,
+                                 qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim);
+    static void ConditionalMul(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi,
+                               qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim);
+    static void ConditionalDiv(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi,
+                               qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim);
+    static void QSMulValue(const qs_data_p_t& src, qs_data_p_t* des_p, qs_data_t value, index_t dim);
     static qs_data_p_t HamiltonianMatrix(const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
-    static qs_data_t GetExpectation(qs_data_p_t qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
+    static qs_data_t GetExpectation(const qs_data_p_t& qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
     // X like operator
     // ========================================================================================================
 
@@ -167,36 +168,36 @@ struct CPUDensityMatrixPolicyBase {
 
     // gate_expec
     // ========================================================================================================
-    static qs_data_t ExpectDiffSingleQubitMatrix(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
-                                                 const qbits_t& ctrls, const matrix_t& gate_m, const matrix_t& diff_m,
-                                                 index_t dim);
-    static qs_data_t ExpectDiffTwoQubitsMatrix(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
-                                               const qbits_t& ctrls, const matrix_t& gate_m, const matrix_t& diff_m,
-                                               index_t dim);
-    static qs_data_t ExpectDiffMatrixGate(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+    static qs_data_t ExpectDiffSingleQubitMatrix(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix,
+                                                 const qbits_t& objs, const qbits_t& ctrls, const matrix_t& gate_m,
+                                                 const matrix_t& diff_m, index_t dim);
+    static qs_data_t ExpectDiffTwoQubitsMatrix(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix,
+                                               const qbits_t& objs, const qbits_t& ctrls, const matrix_t& gate_m,
+                                               const matrix_t& diff_m, index_t dim);
+    static qs_data_t ExpectDiffMatrixGate(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
                                           const qbits_t& ctrls, const matrix_t& diff_m, const matrix_t& herm_m,
                                           index_t dim);
-    static qs_data_t ExpectDiffRX(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
-                                  index_t dim);
-    static qs_data_t ExpectDiffRY(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
-                                  index_t dim);
-    static qs_data_t ExpectDiffRZ(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
-                                  index_t dim);
-    static qs_data_t ExpectDiffPS(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
-                                  index_t dim);
-    static qs_data_t ExpectDiffU3Theta(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+    static qs_data_t ExpectDiffRX(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                  const qbits_t& ctrls, index_t dim);
+    static qs_data_t ExpectDiffRY(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                  const qbits_t& ctrls, index_t dim);
+    static qs_data_t ExpectDiffRZ(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                  const qbits_t& ctrls, index_t dim);
+    static qs_data_t ExpectDiffPS(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                  const qbits_t& ctrls, index_t dim);
+    static qs_data_t ExpectDiffU3Theta(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
                                        const qbits_t& ctrls, calc_type phi, index_t dim);
-    static qs_data_t ExpectDiffU3Phi(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
-                                     index_t dim);
-    static qs_data_t ExpectDiffRxx(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
-                                   index_t dim);
-    static qs_data_t ExpectDiffRyy(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
-                                   index_t dim);
-    static qs_data_t ExpectDiffRzz(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
-                                   index_t dim);
-    static qs_data_t ExpectDiffFSimTheta(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+    static qs_data_t ExpectDiffU3Phi(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                     const qbits_t& ctrls, index_t dim);
+    static qs_data_t ExpectDiffRxx(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                   const qbits_t& ctrls, index_t dim);
+    static qs_data_t ExpectDiffRyy(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                   const qbits_t& ctrls, index_t dim);
+    static qs_data_t ExpectDiffRzz(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                   const qbits_t& ctrls, index_t dim);
+    static qs_data_t ExpectDiffFSimTheta(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
                                          const qbits_t& ctrls, index_t dim);
-    static qs_data_t ExpectDiffFSimPhi(qs_data_p_t qs, qs_data_p_t ham_matrix, const qbits_t& objs,
+    static qs_data_t ExpectDiffFSimPhi(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
                                        const qbits_t& ctrls, index_t dim);
 };
 
@@ -205,6 +206,9 @@ struct CastTo {
     static constexpr tensor::TDtype src_dtype = policy_src::dtype;
     static constexpr tensor::TDtype des_dtype = policy_des::dtype;
     static typename policy_des::qs_data_p_t cast(typename policy_src::qs_data_p_t qs, size_t dim) {
+        if (qs == nullptr) {
+            return nullptr;
+        }
         if constexpr (std::is_same_v<policy_src, policy_des>) {
             return policy_des::Copy(qs, dim);
         }
