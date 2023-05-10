@@ -19,8 +19,12 @@ from mindquantum.core.circuit import Circuit
 
 
 class NaiveChip:
+    """A naive quantum chip."""
+
     def __init__(self, topology: QubitsTopology):
+        """Initialize a naive quantum chip."""
         self.topology = topology
+<<<<<<< HEAD
 
     def gene_channel(self, g, noise_type, with_ctrl, alternative):
         pass

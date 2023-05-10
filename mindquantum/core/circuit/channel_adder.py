@@ -23,7 +23,10 @@ from mindquantum.device.chip import NaiveChip
 
 
 class ChannelAdderBase:
+    """Add noise channel after quantum gate."""
+
     def __init__(self, add_after=True, *args, **kwargs):
+        """Initialize a ChannelAdderBase."""
         self.add_after = add_after
         self.accepter = []  # a list of function, which act as rules to accept considering gate to add noise channel.
         self.excluder = []  # a list of function, which act as rules to deny considering gate to add noise channel.
@@ -39,10 +42,11 @@ class ChannelAdderBase:
         return []
 
     def _handler(self, g: BasicGate, *args, **kwargs):
-        """What you will do if a gate is acceptable."""
+        """Action you will do if a gate is acceptable."""
         return Circuit()
 
     def __call__(self, circ: Circuit) -> Circuit:
+        """Add noise channel after acceptable quantum gate."""
         out = Circuit()
         for g in circ:
             if self.add_after:
@@ -55,29 +59,39 @@ class ChannelAdderBase:
         return out
 
     def __repr__(self):
+        """Return string expression of adder."""
         return f"{self.__class__.__name__}<>"
 
 
 class MeasureAccepter(ChannelAdderBase):
+    """Select measurement gate."""
+
     def __init__(self):
+        """Initialize a MeasureAccepter."""
         super().__init__()
 
     def _accepter(self):
+        """Construct accepter rules."""
         return [lambda x: isinstance(x, G.Measure)]
 
 
 class MeasureExcluder(ChannelAdderBase):
     def _excluder(self):
+        """Construct excluder rules."""
         return [lambda x: isinstance(x, G.Measure)]
 
 
 class NoiseExcluder(ChannelAdderBase):
     def _excluder(self):
+        """Construct excluder rules."""
         return [lambda x: isinstance(x, G.NoiseGate)]
 
 
 class BitFlipAdder(ChannelAdderBase):
+    """Add BitFlip channel after quantum gate."""
+
     def __init__(self, flip_rate: float = None, with_ctrl=True, device: NaiveChip = None, add_after: bool = True):
+        """Initialize a BitFlipAdder."""
         super().__init__(add_after=add_after)
         self.with_ctrl = True
         self.flip_rate = flip_rate
@@ -85,11 +99,13 @@ class BitFlipAdder(ChannelAdderBase):
         self.with_ctrl = with_ctrl
 
     def __repr__(self):
+        """Return string expression of adder."""
         if self.device is None:
             return f"BitFlipAdder<flip_rate={self.flip_rate}, with_ctrl={self.with_ctrl}>"
         return f"BitFlipAdder<device={self.device}, with_ctrl={self.with_ctrl}>"
 
     def _handler(self, g: BasicGate):
+        """Action you will do if a gate is acceptable."""
         circ = Circuit()
         for q in g.obj_qubits + (g.ctrl_qubits if self.with_ctrl else []):
             if self.device is not None:
@@ -102,23 +118,30 @@ class BitFlipAdder(ChannelAdderBase):
 
 
 class MixerAdder(ChannelAdderBase):
+    """Execute each adder if all accepter and excluder are met."""
+
     def __init__(self, adders: typing.List[ChannelAdderBase], add_after=True):
+        """Initialize a MixerAdder."""
         self.adders = adders
         super().__init__(add_after=add_after)
 
     def _accepter(self, *args, **kwargs):
+        """Construct accepter rules."""
         return [item for adder in self.adders for item in adder._accepter()]
 
     def _excluder(self, *args, **kwargs):
+        """Construct excluder rules."""
         return [item for adder in self.adders for item in adder._excluder()]
 
     def _handler(self, g: BasicGate, *args, **kwargs):
+        """Action you will do if a gate is acceptable."""
         out = Circuit()
         for adder in self.adders:
             out += adder._handler(g)
         return out
 
     def __repr__(self):
+        """Return string expression of adder."""
         strs = ["MixerAdder<"]
         for adder in self.adders:
             for i in adder.__repr__().split('\n'):
@@ -128,16 +151,21 @@ class MixerAdder(ChannelAdderBase):
 
 
 class SequentialAdder(ChannelAdderBase):
+    """Execute each adder in this sequential."""
+
     def __init__(self, adders: typing.List[ChannelAdderBase]):
+        """Initialize a SequentialAdder."""
         super().__init__()
         self.adders = adders
 
     def __call__(self, circ: Circuit):
+        """Add noise channel after acceptable quantum gate."""
         for adder in self.adders:
             circ = adder(circ)
         return circ
 
     def __repr__(self):
+        """Return string expression of adder."""
         strs = ["SequentialAdder<"]
         for adder in self.adders:
             for i in adder.__repr__().split('\n'):

@@ -15,6 +15,8 @@
 """Noise simulator."""
 from typing import Dict, Union
 
+import numpy as np
+
 import mindquantum as mq
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.circuit.channel_adder import ChannelAdderBase
@@ -28,30 +30,45 @@ from mindquantum.simulator.backend_base import BackendBase
 class NoiseBackend(BackendBase):
     """Add noise based on channel adder."""
 
-    def __init__(self, base_sim: str, n_qubits: int, adder: ChannelAdderBase, seed: int = 42, dtype=mq.complex128):
+    def __init__(self, base_sim: str, n_qubits: int, adder: ChannelAdderBase, seed: int = None, dtype=mq.complex128):
+        """Initialize a noise backend."""
         from mindquantum.simulator import Simulator
 
         self.base_sim = Simulator(base_sim, n_qubits, seed=seed)
         self.adder: ChannelAdderBase = adder
 
     def apply_circuit(self, circuit: Circuit, pr: Union[Dict, ParameterResolver] = None):
+        """Apply a quantum circuit."""
         return self.base_sim.apply_circuit(self.adder(circuit), pr)
 
     def apply_gate(self, gate: BasicGate, pr: Union[Dict, ParameterResolver] = None, diff: bool = False):
+        """Apply a quantum gate."""
         if diff:
             raise ValueError("For noise simulator, you cannot set diff to True.")
         return self.base_sim.apply_circuit(self.adder(Circuit[gate]), pr, diff)
 
-    def sampling(self, circuit: Circuit, pr: Union[Dict, ParameterResolver] = None, shots: int = 1, seed: int = None):
-        return self.base_sim.sampling(self.adder(circuit), pr, shots, seed)
-
-    def reset(self):
-        self.base_sim.reset()
-
     def apply_hamiltonian(self, hamiltonian: Hamiltonian):
+        """Apply a hamiltonian."""
         return self.base_sim.apply_hamiltonian(hamiltonian)
 
+    def get_expectation(self, hamiltonian, circ_right=None, circ_left=None, simulator_left=None, pr=None) -> np.ndarray:
+        """Get expectation of a hamiltonian."""
+        if circ_right is not None:
+            circ_right = self.adder(circ_right)
+        if circ_left is not None:
+            circ_left = self.adder(circ_left)
+        return self.base_sim.get_expectation(hamiltonian, circ_right, circ_left, simulator_left, pr)
+
+    def reset(self):
+        """Reset mindquantum simulator to quantum zero state."""
+        self.base_sim.reset()
+
+    def sampling(self, circuit: Circuit, pr: Union[Dict, ParameterResolver] = None, shots: int = 1, seed: int = None):
+        """Sample the quantum state."""
+        return self.base_sim.sampling(self.adder(circuit), pr, shots, seed)
+
     def transform_circ(self, circuit: Circuit) -> Circuit:
+        """Transform a noiseless circuit to a noise circuit based on this noise backend."""
         return self.adder(circuit)
 
 

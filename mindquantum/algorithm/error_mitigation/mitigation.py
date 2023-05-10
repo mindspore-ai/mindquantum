@@ -26,7 +26,14 @@ from .folding_circuit import fold_at_random
 
 # pylint: disable=too-many-arguments,too-many-locals
 def zne(
-    circuit: Circuit, observable: Hamiltonian, sim: Simulator, scaling: typing.List[float], order, method="R", a=0
+    circuit: Circuit,
+    observable: Hamiltonian,
+    sim: Simulator,
+    scaling: typing.List[float],
+    order,
+    method="R",
+    a=0,
+    shots=1,
 ) -> float:
     """
     Zero noise extrapolation.
@@ -40,13 +47,14 @@ def zne(
         method (str): Extrapolation method, could be ``'R'`` (Richardson), ``'P'`` (polynomial) and
             ``'PE``' (poly exponential). Default: ``'R'``.
         a (float): Poly exponential extrapolation factor. Default: ``0``.
+        shots (int): The shots value to get expectation.
     """
     y = []
     mitigated = 0
     for factor in scaling:
-        expectation = sim.get_expectation(observable, fold_at_random(circuit, factor))
+        expectation = np.mean([sim.get_expectation(observable, fold_at_random(circuit, factor)) for _ in range(shots)])
         y.append(expectation)
-
+    print(y)
     if method == "R":
         for k, y_k in enumerate(y):
             product = 1

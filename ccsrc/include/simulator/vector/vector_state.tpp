@@ -487,7 +487,8 @@ template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
                                                const parameter::ParameterResolver& pr) const -> py_qs_data_t {
     py_qs_data_t out;
-    auto ket = *this;
+    auto sub_seed = static_cast<unsigned int>(static_cast<calc_type>(rng_()) * (1 << 20));
+    auto ket = derived_t(n_qubits, sub_seed, qs);
     ket.ApplyCircuit(circ, pr);
     if (ham.how_to_ == ORIGIN) {
         out = qs_policy_t::ExpectationOfTerms(ket.qs, ket.qs, ham.ham_, dim);
@@ -504,9 +505,10 @@ auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham
                                                const circuit_t& circ_left, const parameter::ParameterResolver& pr) const
     -> py_qs_data_t {
     py_qs_data_t out;
-
-    auto ket = *this;
-    auto bra = *this;
+    auto sub_seed_bra = static_cast<unsigned int>(static_cast<calc_type>(rng_()) * (1 << 20));
+    auto sub_seed_ket = static_cast<unsigned int>(static_cast<calc_type>(rng_()) * (1 << 20));
+    auto ket = derived_t(n_qubits, sub_seed_ket, qs);
+    auto bra = derived_t(n_qubits, sub_seed_bra, qs);
     ket.ApplyCircuit(circ_right, pr);
     bra.ApplyCircuit(circ_left, pr);
     if (ham.how_to_ == ORIGIN) {
@@ -523,8 +525,10 @@ template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ_right,
                                                const circuit_t& circ_left, const derived_t& simulator_left,
                                                const parameter::ParameterResolver& pr) const -> py_qs_data_t {
-    auto ket = *this;
-    auto bra = simulator_left;
+    auto sub_seed_bra = static_cast<unsigned int>(static_cast<calc_type>(simulator_left.rng_()) * (1 << 20));
+    auto sub_seed_ket = static_cast<unsigned int>(static_cast<calc_type>(rng_()) * (1 << 20));
+    auto ket = derived_t(n_qubits, sub_seed_ket, qs);
+    auto bra = derived_t(n_qubits, sub_seed_bra, simulator_left.qs);
     ket.ApplyCircuit(circ_right, pr);
     bra.ApplyCircuit(circ_left, pr);
     py_qs_data_t out;
