@@ -177,7 +177,7 @@ def get_fermion_operator(operator):
         FermionOperator, An instance of the FermionOperator class.
     """
     if isinstance(operator, PolynomialTensor):
-        FermionOperator(operator)
+        return FermionOperator(operator)
 
     raise TypeError(f"Unsupported type of oeprator {operator}")
 
