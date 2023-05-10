@@ -166,6 +166,22 @@ def number_operator(n_modes=None, mode=None, coefficient=1.0):
     return FermionOperator(((mode, 1), (mode, 0)), coefficient)
 
 
+def get_fermion_operator(operator):
+    """
+    Convert the tensor (PolynomialTensor) to FermionOperator.
+
+    Args:
+        operator (PolynomialTensor): The `PolynomialTensor` you want to convert to `FermionOperator`.
+
+    Returns:
+        FermionOperator, An instance of the FermionOperator class.
+    """
+    if isinstance(operator, PolynomialTensor):
+        FermionOperator(operator)
+
+    raise TypeError(f"Unsupported type of oeprator {operator}")
+
+
 def hermitian_conjugated(operator):
     """
     Return Hermitian conjugate of FermionOperator or QubitOperator.

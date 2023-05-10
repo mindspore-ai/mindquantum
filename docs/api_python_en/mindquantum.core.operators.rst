@@ -31,6 +31,7 @@ Function
     mindquantum.core.operators.commutator
     mindquantum.core.operators.count_qubits
     mindquantum.core.operators.down_index
+    mindquantum.core.operators.get_fermion_operator
     mindquantum.core.operators.ground_state_of_sum_zz
     mindquantum.core.operators.hermitian_conjugated
     mindquantum.core.operators.normal_ordered
