@@ -27,21 +27,20 @@ from .folding_circuit import fold_at_random
 # pylint: disable=too-many-arguments,too-many-locals
 def zne(
     circuit: Circuit,
-    observable: Hamiltonian,
-    sim: Simulator,
-    scaling: typing.List[float],
-    order,
+    executor: typing.Callable[[Circuit], float],
+    scaling: typing.List[float]=None,
+    order=None,
     method="R",
     a=0,
     shots=1,
+    args=None,
 ) -> float:
     """
     Zero noise extrapolation.
 
     Args:
         circuit (Circuit): The noise quantum circuit.
-        observable (Hamiltonian): The observable.
-        sim (Simulator): The simulator you want to evaluate the circuit.
+        
         scaling (List[float]): The scaling factor to folding circuit.
         order (float): Order of extrapolation for polynomial.
         method (str): Extrapolation method, could be ``'R'`` (Richardson), ``'P'`` (polynomial) and
