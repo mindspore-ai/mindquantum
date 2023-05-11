@@ -18,8 +18,6 @@ import typing
 import numpy as np
 
 from mindquantum.core.circuit import Circuit
-from mindquantum.core.operators import Hamiltonian
-from mindquantum.simulator import Simulator
 
 from .folding_circuit import fold_at_random
 
@@ -28,11 +26,10 @@ from .folding_circuit import fold_at_random
 def zne(
     circuit: Circuit,
     executor: typing.Callable[[Circuit], float],
-    scaling: typing.List[float]=None,
+    scaling: typing.List[float] = None,
     order=None,
     method="R",
     a=0,
-    shots=1,
     args=None,
 ) -> float:
     """
@@ -40,20 +37,23 @@ def zne(
 
     Args:
         circuit (Circuit): The noise quantum circuit.
-        
-        scaling (List[float]): The scaling factor to folding circuit.
-        order (float): Order of extrapolation for polynomial.
+        executor (Callable[[Circuit], float]): A callable method that can evaluate a
+            quantum circuit and return some value.
+        scaling (List[float]): The scaling factor to folding circuit. If ``None``, it will be ``[1.0, 2.0, 3.0]``.
+            Default: ``None``.
+        order (float): Order of extrapolation for polynomial. Default: ``None``.
         method (str): Extrapolation method, could be ``'R'`` (Richardson), ``'P'`` (polynomial) and
             ``'PE``' (poly exponential). Default: ``'R'``.
         a (float): Poly exponential extrapolation factor. Default: ``0``.
-        shots (int): The shots value to get expectation.
+        args (Tuple): The other arguments for executor except first one.
     """
     y = []
     mitigated = 0
+    if scaling is None:
+        scaling = [1.0, 2.0, 3.0]
     for factor in scaling:
-        expectation = np.mean([sim.get_expectation(observable, fold_at_random(circuit, factor)) for _ in range(shots)])
+        expectation = executor(fold_at_random(circuit, factor), *args)
         y.append(expectation)
-    print(y)
     if method == "R":
         for k, y_k in enumerate(y):
             product = 1
@@ -61,12 +61,16 @@ def zne(
                 if k != i:
                     product = product * (scaling[i] / (scaling[i] - scaling[k]))
             mitigated = mitigated + y_k * product
-    elif method == "P":
+        return mitigated
+    if order is None:
+        raise ValueError("For polynomial and poly exponential, order cannot be None.")
+    if method == "P":
         z = np.polyfit(scaling, y, (order - 1))
         f = np.poly1d(z)
         mitigated = f(0)
         mitigated = a + np.exp(mitigated)
-    elif method == "PE":
+        return mitigated
+    if method == "PE":
         y = y - a
         y = np.log(y)
         z = np.polyfit(scaling, y, (order - 1))

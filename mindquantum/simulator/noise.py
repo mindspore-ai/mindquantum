@@ -36,6 +36,7 @@ class NoiseBackend(BackendBase):
 
         self.base_sim = Simulator(base_sim, n_qubits, seed=seed)
         self.adder: ChannelAdderBase = adder
+        self.name = "NoiseBackend"
 
     def apply_circuit(self, circuit: Circuit, pr: Union[Dict, ParameterResolver] = None):
         """Apply a quantum circuit."""
@@ -58,6 +59,10 @@ class NoiseBackend(BackendBase):
         if circ_left is not None:
             circ_left = self.adder(circ_left)
         return self.base_sim.get_expectation(hamiltonian, circ_right, circ_left, simulator_left, pr)
+
+    def get_qs(self, ket=False):
+        """Get quantum state."""
+        return self.base_sim.get_qs(ket)
 
     def reset(self):
         """Reset mindquantum simulator to quantum zero state."""
