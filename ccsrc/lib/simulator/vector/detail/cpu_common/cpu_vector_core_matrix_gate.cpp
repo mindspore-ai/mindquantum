@@ -60,9 +60,6 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(const qs_data
         obj_masks.push_back(mask_j);
     }
     auto obj_mask = obj_masks.back();
-    for (auto& o : obj_masks) {
-        std::cout << o << std::endl;
-    }
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t l = 0; l < dim; l++) {
             if (((l & ctrl_mask) == ctrl_mask) && ((l & obj_mask) == 0)) {
