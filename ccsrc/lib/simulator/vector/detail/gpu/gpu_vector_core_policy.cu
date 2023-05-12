@@ -33,7 +33,8 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::InitState(index_t dim, bool zero
     qs_data_p_t qs;
     auto state = cudaMalloc((void**) &qs, sizeof(qs_data_t) * dim);  // NOLINT
     if (state != cudaSuccess) {
-        throw std::runtime_error("GPU out of memory for allocate quantum state.");
+        throw std::runtime_error("Malloc GPU memory failed: " + std::string(cudaGetErrorName(state)) + ", "
+                                 + cudaGetErrorString(state));
     }
     cudaMemset(qs, 0, sizeof(qs_data_t) * dim);
     if (zero_state) {
