@@ -71,23 +71,35 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(const qs_data
     auto device_gate_ptr = thrust::raw_pointer_cast(device_gate.data());
 
     thrust::counting_iterator<size_t> l(0);
-    cudaDeviceSetLimit(cudaLimitMallocHeapSize, sizeof(qs_data_t) * m_dim);
-    thrust::for_each(l, l + dim, [=] __device__(size_t l) {
-        if (((l & ctrl_mask) == ctrl_mask) && ((l & obj_mask) == 0)) {
-            qs_data_p_t tmp_des = (qs_data_p_t) malloc(sizeof(qs_data_t) * m_dim);
-            for (size_t i = 0; i < m_dim; i++) {
-                qs_data_t tmp = 0;
-                for (size_t j = 0; j < m_dim; j++) {
-                    tmp += device_gate_ptr[i * m_dim + j] * src[device_obj_masks_ptr[j] | l];
+    if (des == src_out) {
+        auto new_des = derived::InitState(dim);
+        thrust::for_each(l, l + dim, [=] __device__(size_t l) {
+            if (((l & ctrl_mask) == ctrl_mask) && ((l & obj_mask) == 0)) {
+                qs_data_p_t tmp_des = (qs_data_p_t) malloc(sizeof(qs_data_t) * m_dim);
+                for (size_t i = 0; i < m_dim; i++) {
+                    qs_data_t tmp = 0;
+                    for (size_t j = 0; j < m_dim; j++) {
+                        tmp += device_gate_ptr[i * m_dim + j] * src[device_obj_masks_ptr[j] | l];
+                    }
+                    new_des[device_obj_masks_ptr[i] | l] = tmp;
                 }
-                tmp_des[i] = tmp;
             }
-            for (size_t i = 0; i < m_dim; i++) {
-                des[device_obj_masks_ptr[i] | l] = tmp_des[i];
+        });
+        derived::FreeState(des_p);
+        des = new_des;
+    } else {
+        thrust::for_each(l, l + dim, [=] __device__(size_t l) {
+            if (((l & ctrl_mask) == ctrl_mask) && ((l & obj_mask) == 0)) {
+                for (size_t i = 0; i < m_dim; i++) {
+                    qs_data_t tmp = 0;
+                    for (size_t j = 0; j < m_dim; j++) {
+                        tmp += device_gate_ptr[i * m_dim + j] * src[device_obj_masks_ptr[j] | l];
+                    }
+                    des[device_obj_masks_ptr[i] | l] = tmp;
+                }
             }
-            free(tmp_des);
-        }
-    });
+        });
+    }
     if (will_free) {
         derived::FreeState(&src);
     }
