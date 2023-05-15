@@ -81,11 +81,11 @@ def decompose_single_term_time_evolution(term, para):  # pylint: disable=too-man
         raise ValueError("Get constant hamiltonian, please use GlobalPhase gate and give the obj_qubit by yourself.")
     if len(term) == 1:  # single pauli operator
         if term[0][1] == 'X':
-            out.append(gates.RX(para * 2).on(term[0][0]))
+            out.append(gates.RX(para).on(term[0][0]))
         elif term[0][1] == 'Y':
-            out.append(gates.RY(para * 2).on(term[0][0]))
+            out.append(gates.RY(para).on(term[0][0]))
         else:
-            out.append(gates.RZ(para * 2).on(term[0][0]))
+            out.append(gates.RZ(para).on(term[0][0]))
     else:
         for index, action in term:
             if action == 'X':
