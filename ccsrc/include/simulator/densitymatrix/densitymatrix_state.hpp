@@ -72,7 +72,7 @@ class DensityMatrixState {
     derived_t& operator=(DensityMatrixState<qs_policy_t>&& sim);
 
     //! dtor
-    ~DensityMatrixState() {
+    virtual ~DensityMatrixState() {
         qs_policy_t::FreeState(&qs);
     }
 
