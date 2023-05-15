@@ -29,5 +29,5 @@ def test_time_evolution():
     """
     hamiltonian = QubitOperator('Z0 Z1', 'p') + QubitOperator('X0', 'q')
     circ = TimeEvolution(hamiltonian).circuit
-    circ_exp = Circuit([G.X.on(1, 0), G.RZ({'p': 2}).on(1), G.X.on(1, 0), G.RX({'q': 4}).on(0)])
+    circ_exp = Circuit([G.X.on(1, 0), G.RZ({'p': 2}).on(1), G.X.on(1, 0), G.RX({'q': 2}).on(0)])
     assert repr(circ) == repr(circ_exp)

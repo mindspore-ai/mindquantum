@@ -73,7 +73,7 @@ class VectorState {
     derived_t& operator=(VectorState<qs_policy_t>&& sim);
 
     //! dtor
-    ~VectorState() {
+    virtual ~VectorState() {
         qs_policy_t::FreeState(&qs);
     }
 
