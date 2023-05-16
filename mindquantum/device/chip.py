@@ -31,8 +31,8 @@ class Vigo(NaiveChip):
 
     def __init__(self):
         topology = QubitsTopology([QubitNode(i) for i in range(5)])
-        topology[0] >> topology[1] >> topology[3] >> topology[4]
-        topology[1] >> topology[2]
+        _ = topology[0] >> topology[1] >> topology[3] >> topology[4]
+        _ = topology[1] >> topology[2]
         super().__init__(topology)
         self.noise_model = vigo_noise_model
 
