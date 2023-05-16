@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Real device chip."""
-from mindquantum.device import QubitsTopology
+from mindquantum.device import QubitsTopology, QubitNode
 from mindquantum.device.vigo_property import vigo_noise_model
 from mindquantum.core.circuit import Circuit
 
@@ -27,21 +27,30 @@ class NaiveChip:
 
 
 class Vigo(NaiveChip):
-    def __init__(self, topology: QubitsTopology):
+    """5 qubit chip named Vigo."""
+
+    def __init__(self):
+        topology = QubitsTopology([QubitNode(i) for i in range(5)])
+        topology[0] >> topology[1] >> topology[3] >> topology[4]
+        topology[1] >> topology[2]
         super().__init__(topology)
         self.noise_model = vigo_noise_model
 
-    def gene_channel(self, g):
-        return self.noise_model[(g.name, tuple(g.obj_qubits))]
-
     def gene_noise_circuit(self, circ):
+        """
+        generate noise circuit.
+
+        Args:
+            circ (Circuit): quantum circuit.
+
+        Returns:
+            Circuit: circuit with noise.
+        """
         noise_circuit = Circuit()
         for i in range(circ.n_qubits):
-            if ('prepare', i) in self.noise_model:
-                noise_circuit += self.noise_model[('prepare', i)]
+            noise_circuit += self.noise_model.get(('prepare', i), Circuit())
         for g in circ:
-            noise_circuit += self.noise_model[(g.name, tuple(g.obj_qubits))]
+            noise_circuit += self.noise_model.get((g.name, tuple(g.obj_qubits)), Circuit())
         for i in range(circ.n_qubits):
-            if ('readout', i) in self.noise_model:
-                noise_circuit += self.noise_model[('readout', i)]
+            noise_circuit += self.noise_model.get(('readout', i), Circuit())
         return noise_circuit
