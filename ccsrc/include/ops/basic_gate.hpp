@@ -210,6 +210,12 @@ struct PauliChannel : public BasicGate {
         }
     }
 };
+struct DepolarizingChannel : public BasicGate {
+    double prob_;
+    DepolarizingChannel(double p, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+        : prob_(p), BasicGate(GateID::DEP, obj_qubits, ctrl_qubits) {
+    }
+};
 
 struct KrausChannel : public BasicGate {
     VT<tensor::Matrix> kraus_operator_set_;
