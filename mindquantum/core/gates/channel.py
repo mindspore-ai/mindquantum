@@ -379,6 +379,14 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
         else:
             raise ValueError("Required damping coefficient gamma ∈ [0,1].")
 
+    def __eq__(self, other):
+        """Equality comparison operator."""
+        return BasicGate.__eq__(self, other) and self.gamma == other.gamma
+
+    def __str_in_circ__(self):
+        """Return a string representation of the object in a quantum circuit."""
+        return f"AD({self.gamma})"
+
     def get_cpp_obj(self):
         """Get underlying C++ object."""
         return mb.gate.AmplitudeDampingChannel(self.hermitianed, self.gamma, self.obj_qubits, self.ctrl_qubits)
@@ -399,14 +407,6 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
         if out.ctrl_qubits:
             raise ValueError("AmplitudeDampingChannel cannot have control qubits.")
         return out
-
-    def __eq__(self, other):
-        """Equality comparison operator."""
-        return BasicGate.__eq__(self, other) and self.gamma == other.gamma
-
-    def __str_in_circ__(self):
-        """Return a string representation of the object in a quantum circuit."""
-        return f"AD({self.gamma})"
 
 
 class PhaseDampingChannel(NoiseGate, NonHermitianGate):
@@ -457,6 +457,14 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
         else:
             raise ValueError("Required damping coefficient gamma ∈ [0,1].")
 
+    def __eq__(self, other):
+        """Equality comparison operator."""
+        return super().__eq__(other) and self.gamma == other.gamma
+
+    def __str_in_circ__(self):
+        """Return a string representation of the object in a quantum circuit."""
+        return f"PD({self.gamma})"
+
     def get_cpp_obj(self):
         """Get underlying C++ object."""
         return mb.gate.PhaseDampingChannel(self.gamma, self.obj_qubits, self.ctrl_qubits)
@@ -477,14 +485,6 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
         if out.ctrl_qubits:
             raise ValueError("PhaseDampingChannel cannot have control qubits.")
         return out
-
-    def __eq__(self, other):
-        """Equality comparison operator."""
-        return super().__eq__(other) and self.gamma == other.gamma
-
-    def __str_in_circ__(self):
-        """Return a string representation of the object in a quantum circuit."""
-        return f"PD({self.gamma})"
 
 
 class KrausChannel(NoiseGate, NonHermitianGate):
