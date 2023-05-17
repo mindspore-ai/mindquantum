@@ -361,11 +361,8 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
         >>> from mindquantum.core.circuit import Circuit
         >>> circ = Circuit()
         >>> circ += AmplitudeDampingChannel(0.02).on(0)
-        >>> circ += AmplitudeDampingChannel(0.01).on(1, 0)
         >>> print(circ)
-        q0: ──AD(0.02)───────●──────
-                             │
-        q1: ──────────────AD(0.01)──
+        q0: ──AD(0.02)──
     """
 
     def __init__(self, gamma: float, **kwargs):
@@ -389,6 +386,19 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
         self.projectq_gate = None
+
+    def on(self, obj_qubits, ctrl_qubits=None):
+        """
+        Define which qubit the gate act on.
+
+        Args:
+            obj_qubits (int, list[int]): Specific which qubits the gate act on.
+            ctrl_qubits (int, list[int]): Control qubit for AmplitudeDampingChannel should always be ``None``.
+        """
+        out = super().on(obj_qubits, ctrl_qubits)
+        if out.ctrl_qubits:
+            raise ValueError("AmplitudeDampingChannel cannot have control qubits.")
+        return out
 
     def __eq__(self, other):
         """Equality comparison operator."""
@@ -429,11 +439,8 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
         >>> from mindquantum.core.circuit import Circuit
         >>> circ = Circuit()
         >>> circ += PhaseDampingChannel(0.02).on(0)
-        >>> circ += PhaseDampingChannel(0.01).on(1, 0)
         >>> print(circ)
-        q0: ──PD(0.02)───────●──────
-                             │
-        q1: ──────────────PD(0.01)──
+        q0: ──PD(0.02)──
     """
 
     def __init__(self, gamma: float, **kwargs):
@@ -457,6 +464,19 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
     def define_projectq_gate(self):
         """Define the corresponded projectq gate."""
         self.projectq_gate = None
+
+    def on(self, obj_qubits, ctrl_qubits=None):
+        """
+        Define which qubit the gate act on.
+
+        Args:
+            obj_qubits (int, list[int]): Specific which qubits the gate act on.
+            ctrl_qubits (int, list[int]): Control qubit for PhaseDampingChannel should always be ``None``.
+        """
+        out = super().on(obj_qubits, ctrl_qubits)
+        if out.ctrl_qubits:
+            raise ValueError("PhaseDampingChannel cannot have control qubits.")
+        return out
 
     def __eq__(self, other):
         """Equality comparison operator."""
