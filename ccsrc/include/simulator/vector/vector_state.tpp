@@ -432,7 +432,8 @@ void VectorState<qs_policy_t_>::ApplyDampingChannel(const std::shared_ptr<BasicG
             VVT<py_qs_data_t> m({{0, 1 / reduced_factor_b}, {0, 0}});
             qs_policy_t::ApplySingleQubitMatrix(qs, &tmp_qs, gate->obj_qubits_[0], gate->ctrl_qubits_, m, dim);
         } else {
-            qs_policy_t::ConditionalMul(qs, &tmp_qs, (1UL << gate->obj_qubits_[0]), 1, 1 / reduced_factor_b, 0, dim);
+            qs_policy_t::ConditionalMul(qs, &tmp_qs, (1UL << gate->obj_qubits_[0]), (1UL << gate->obj_qubits_[0]),
+                                        1 / reduced_factor_b, 0, dim);
         }
         qs = tmp_qs;
         tmp_qs = nullptr;
