@@ -361,11 +361,8 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
         >>> from mindquantum.core.circuit import Circuit
         >>> circ = Circuit()
         >>> circ += AmplitudeDampingChannel(0.02).on(0)
-        >>> circ += AmplitudeDampingChannel(0.01).on(1, 0)
         >>> print(circ)
-        q0: ──AD(0.02)───────●──────
-                             │
-        q1: ──────────────AD(0.01)──
+        q0: ──AD(0.02)──
     """
 
     def __init__(self, gamma: float, **kwargs):
@@ -382,6 +379,14 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
         else:
             raise ValueError("Required damping coefficient gamma ∈ [0,1].")
 
+    def __eq__(self, other):
+        """Equality comparison operator."""
+        return BasicGate.__eq__(self, other) and self.gamma == other.gamma
+
+    def __str_in_circ__(self):
+        """Return a string representation of the object in a quantum circuit."""
+        return f"AD({self.gamma})"
+
     def get_cpp_obj(self):
         """Get underlying C++ object."""
         return mb.gate.AmplitudeDampingChannel(self.hermitianed, self.gamma, self.obj_qubits, self.ctrl_qubits)
@@ -390,13 +395,18 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
         """Define the corresponded projectq gate."""
         self.projectq_gate = None
 
-    def __eq__(self, other):
-        """Equality comparison operator."""
-        return BasicGate.__eq__(self, other) and self.gamma == other.gamma
+    def on(self, obj_qubits, ctrl_qubits=None):
+        """
+        Define which qubit the gate act on.
 
-    def __str_in_circ__(self):
-        """Return a string representation of the object in a quantum circuit."""
-        return f"AD({self.gamma})"
+        Args:
+            obj_qubits (int, list[int]): Specific which qubits the gate act on.
+            ctrl_qubits (int, list[int]): Control qubit for AmplitudeDampingChannel should always be ``None``.
+        """
+        out = super().on(obj_qubits, ctrl_qubits)
+        if out.ctrl_qubits:
+            raise ValueError("AmplitudeDampingChannel cannot have control qubits.")
+        return out
 
 
 class PhaseDampingChannel(NoiseGate, NonHermitianGate):
@@ -429,11 +439,8 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
         >>> from mindquantum.core.circuit import Circuit
         >>> circ = Circuit()
         >>> circ += PhaseDampingChannel(0.02).on(0)
-        >>> circ += PhaseDampingChannel(0.01).on(1, 0)
         >>> print(circ)
-        q0: ──PD(0.02)───────●──────
-                             │
-        q1: ──────────────PD(0.01)──
+        q0: ──PD(0.02)──
     """
 
     def __init__(self, gamma: float, **kwargs):
@@ -450,6 +457,14 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
         else:
             raise ValueError("Required damping coefficient gamma ∈ [0,1].")
 
+    def __eq__(self, other):
+        """Equality comparison operator."""
+        return super().__eq__(other) and self.gamma == other.gamma
+
+    def __str_in_circ__(self):
+        """Return a string representation of the object in a quantum circuit."""
+        return f"PD({self.gamma})"
+
     def get_cpp_obj(self):
         """Get underlying C++ object."""
         return mb.gate.PhaseDampingChannel(self.gamma, self.obj_qubits, self.ctrl_qubits)
@@ -458,13 +473,18 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
         """Define the corresponded projectq gate."""
         self.projectq_gate = None
 
-    def __eq__(self, other):
-        """Equality comparison operator."""
-        return super().__eq__(other) and self.gamma == other.gamma
+    def on(self, obj_qubits, ctrl_qubits=None):
+        """
+        Define which qubit the gate act on.
 
-    def __str_in_circ__(self):
-        """Return a string representation of the object in a quantum circuit."""
-        return f"PD({self.gamma})"
+        Args:
+            obj_qubits (int, list[int]): Specific which qubits the gate act on.
+            ctrl_qubits (int, list[int]): Control qubit for PhaseDampingChannel should always be ``None``.
+        """
+        out = super().on(obj_qubits, ctrl_qubits)
+        if out.ctrl_qubits:
+            raise ValueError("PhaseDampingChannel cannot have control qubits.")
+        return out
 
 
 class KrausChannel(NoiseGate, NonHermitianGate):
