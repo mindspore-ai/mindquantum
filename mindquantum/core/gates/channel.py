@@ -287,14 +287,23 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
     maximally mixed state, by randomly applying one of the pauli gate(X,Y,Z) with same probability :math:`P/3`.
     And it has probability :math:`1-P` to change nothing (applies I gate).
 
-    Depolarizing channel applies noise as:
+    In one qubit case, depolarizing channel applies noise as:
 
     .. math::
 
         \epsilon(\rho) = (1 - P)\rho + P/3( X \rho X + Y \rho Y + Z \rho Z)
 
-    where :math:`\rho` is quantum state as density matrix type; :math:`P` is the
-    probability of occurred the depolarizing error.
+    where :math:`\rho` is quantum state as density matrix type; :math:`P` is the probability of occurred the
+    depolarizing error.
+    
+    This channel supports many object qubits. In :math:`N` qubit case, depolarizing channel applies noise as:
+    
+    .. math::
+
+        \epsilon(\rho) = (1 - P)\rho + \frac{P}{(4^N - 1)} \sum_j U_j \rho U_j
+        
+    where :math:`N` is the number of object qubits;
+    :math:`U_j \in \left\{ X, Y, Z, I \right\} ^{\otimes N} \setminus I^{\otimes N}` is many qubit pauli operator.
 
     Args:
         p (int, float): probability of occurred error.
@@ -304,9 +313,9 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
         >>> from mindquantum.core.circuit import Circuit
         >>> circ = Circuit()
         >>> circ += DepolarizingChannel(0.02).on(0)
-        >>> circ += DepolarizingChannel(0.01).on(1, 0)
+        >>> circ += DepolarizingChannel(0.01).on([1, 2])
         >>> print(circ)
-        q0: ──Dep(0.02)────────●──────
+        q0: ──Dep(0.02)────Dep(0.01)──
                                │
         q1: ───────────────Dep(0.01)──
     """
