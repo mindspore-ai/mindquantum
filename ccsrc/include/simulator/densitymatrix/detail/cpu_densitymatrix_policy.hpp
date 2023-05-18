@@ -164,6 +164,7 @@ struct CPUDensityMatrixPolicyBase {
                                       index_t dim);
     static void ApplyPhaseDamping(qs_data_p_t* qs_p, const qbits_t& objs, calc_type gamma, index_t dim);
     static void ApplyPauli(qs_data_p_t* qs_p, const qbits_t& objs, const VT<double>& probs, index_t dim);
+    static void ApplyDepolarizing(qs_data_p_t* qs_p, const qbits_t& objs, calc_type prob, index_t dim);
     static void ApplyKraus(qs_data_p_t* qs_p, const qbits_t& objs, const VT<matrix_t>& kraus_set, index_t dim);
 
     // gate_expec

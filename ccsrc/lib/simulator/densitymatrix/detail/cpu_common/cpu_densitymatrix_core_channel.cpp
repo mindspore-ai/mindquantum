@@ -129,6 +129,38 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyPauli(qs_data_p_t* q
 }
 
 template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyDepolarizing(qs_data_p_t* qs_p, const qbits_t& objs,
+                                                                         calc_type prob, index_t dim) {
+    auto& qs = (*qs_p);
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    auto tmp_qs = derived::Copy(qs, dim);
+    for (auto obj_qubit : objs) {
+        SingleQubitGateMask mask({obj_qubit}, {});
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {  // loop on the row
+                auto r0 = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
+                auto r1 = r0 + mask.obj_mask;
+                for (index_t b = 0; b <= a; b++) {  // loop on the column
+                    auto c0 = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
+                    auto c1 = c0 + mask.obj_mask;
+                    qs_data_t src_00 = tmp_qs[IdxMap(r0, c0)];
+                    qs_data_t src_11 = tmp_qs[IdxMap(r1, c1)];
+                    tmp_qs[IdxMap(r0, c0)] = static_cast<calc_type>(2) * (src_00 + src_11);
+                    tmp_qs[IdxMap(r1, c1)] = static_cast<calc_type>(2) * (src_00 + src_11);
+                }
+            })
+    }
+    calc_type n = pow(4, objs.size());
+    calc_type p = prob * n / (n - 1);
+    THRESHOLD_OMP_FOR(
+        dim, DimTh,
+        for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { qs[i] = (1 - p) * qs[i] + p / n * tmp_qs[i]; })
+    derived::FreeState(&tmp_qs);
+}
+
+template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyKraus(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                   const VT<matrix_t>& kraus_set, index_t dim) {
     derived::ApplySingleQubitChannel(*qs_p, qs_p, objs[0], kraus_set, dim);
