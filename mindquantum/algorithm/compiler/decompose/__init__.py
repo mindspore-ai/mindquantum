@@ -47,5 +47,4 @@ from .universal_decompose import (
 
 __all__ = []
 __all__.extend(fixed_decompose.__all__)
-__all__.extend(universal_decompose.__all__)
 __all__.sort()

@@ -21,7 +21,7 @@ from mindquantum.utils.type_value_check import _check_control_num, _check_input_
 
 def ch_decompose(gate: gates.HGate):
     """
-    Decompose ch gate.
+    Decompose controlled :class:`mindquantum.core.gates.H` gate.
 
     Args:
         gate (HGate): a HGate with one control qubits.
@@ -62,6 +62,3 @@ def ch_decompose(gate: gates.HGate):
 
 decompose_rules = ['ch_decompose']
 __all__ = decompose_rules
-
-if __name__ == '__main__':
-    print('===')

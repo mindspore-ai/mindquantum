@@ -45,17 +45,5 @@ from .y_related import cy_decompose
 from .z_related import cz_decompose
 
 __all__ = []
-__all__.extend(x_related.__all__)
-__all__.extend(rxx_related.__all__)
-__all__.extend(ryy_related.__all__)
-__all__.extend(y_related.__all__)
 __all__.extend(h_related.__all__)
-__all__.extend(z_related.__all__)
-__all__.extend(ry_related.__all__)
-__all__.extend(rz_related.__all__)
-__all__.extend(rx_related.__all__)
-__all__.extend(swap_related.__all__)
-__all__.extend(rzz_related.__all__)
-__all__.extend(s_related.__all__)
-__all__.extend(t_related.__all__)
 __all__.sort()

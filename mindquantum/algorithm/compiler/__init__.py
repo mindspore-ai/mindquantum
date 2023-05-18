@@ -14,6 +14,11 @@
 # ============================================================================
 """MindQuantum compiler related modules."""
 
+from . import decompose
 from .dag import *
 from .decompose import *
 from .rules import *
+
+__all__ = []
+__all__.extend(decompose.__all__)
+__all__.sort()
