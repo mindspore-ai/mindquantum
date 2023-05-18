@@ -16,6 +16,7 @@
 # pylint: disable=abstract-method,no-member
 """Quantum channel."""
 
+from typing import Iterable
 import numpy as np
 
 from mindquantum import mqbackend as mb
@@ -278,7 +279,7 @@ class BitPhaseFlipChannel(PauliChannel):
         return f"BPF({self.p})"
 
 
-class DepolarizingChannel(PauliChannel):
+class DepolarizingChannel(NoiseGate, SelfHermitianGate):
     r"""
     A depolarizing channel.
 
@@ -316,17 +317,36 @@ class DepolarizingChannel(PauliChannel):
         """Initialize a DepolarizingChannel object."""
         kwargs['name'] = 'DC'
         kwargs['n_qubits'] = 1
-        kwargs['px'] = p / 3
-        kwargs['py'] = p / 3
-        kwargs['pz'] = p / 3
-        PauliChannel.__init__(self, **kwargs)
-        self.p = p
+        NoiseGate.__init__(self, **kwargs)
+        SelfHermitianGate.__init__(self, **kwargs)
+        self.projectq_gate = None
+        if not isinstance(p, (int, float)):
+            raise TypeError(f"Unsupported type for probability p, get {type(p)}.")
+        if 0 <= p <= 1:
+            self.p = p
+        else:
+            raise ValueError(f"Required probability p ∈ [0,1], but get p = {p}.")
+
+    def on(self, obj_qubits, ctrl_qubits=None):
+        if isinstance(obj_qubits, Iterable):
+            self.n_qubits = len(obj_qubits)
+        return super().on(obj_qubits, ctrl_qubits)
+
+    def get_cpp_obj(self):
+        """Get underlying C++ object."""
+        return mb.gate.DepolarizingChannel(self.p, self.obj_qubits, self.ctrl_qubits)
+
+    def define_projectq_gate(self):
+        """Define the corresponded projectq gate."""
+        self.projectq_gate = None
+
+    def __eq__(self, other):
+        """Equality comparison operator."""
+        return super().__eq__(other) and self.p == other.p
 
     def __extra_prop__(self):
         """Extra prop magic method."""
-        prop = super().__extra_prop__()
-        prop['p'] = self.p
-        return prop
+        return {'p': self.p}
 
     def __str_in_circ__(self):
         """Return a string representation of the object in a quantum circuit."""
