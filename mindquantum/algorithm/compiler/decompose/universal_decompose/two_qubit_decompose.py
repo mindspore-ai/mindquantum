@@ -144,23 +144,6 @@ def kak_decompose(gate: QuantumGate, return_u3: bool = True) -> Circuit:
     r"""
     KAK decomposition (CNOT basis) of an arbitrary two-qubit gate.
 
-    Step 1: decompose it into
-
-             ┌──────────┐
-        ──B0─┤          ├─A0──
-             │ exp(-iH) │
-        ──B1─┤          ├─A1──
-             └──────────┘
-    .. math::
-
-        \left( A_0 \otimes A_1 \right) e^{-iH}\left( B_0 \otimes B_1 \right)
-
-    Step 2: synthesize parameterized gates exp(-iH) using three CNOT gates
-
-        ──B0────●────U0────●────V0────●────W─────A0──
-                │          │          │
-        ──B1────X────U1────X────V1────X────W†────A1──
-
     For more detail, please refer to `An Introduction to Cartan's KAK Decomposition for QC
     Programmers <https://arxiv.org/abs/quant-ph/0406176>`_.
 

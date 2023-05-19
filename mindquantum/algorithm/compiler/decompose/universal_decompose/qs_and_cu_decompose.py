@@ -38,20 +38,6 @@ def cu_decompose(gate: QuantumGate, with_barrier: bool = False) -> Circuit:
     This gate has :math:`m` control qubits and :math:`n` target qubits.
     When recursively calling the function itself, :math:`m` decreases, while :math:`n` holds constant.
 
-    Decomposition rules:
-
-    - when :math:`m = 0`, use :func:`qs_decompose`
-    - when :math:`m = 1`, use :func:`abc_decompose` when :math:`n = 1`, use :func:`qs_decompose` when :math:`n > 1`
-    - when :math:`m > 1`, use :func:`cxx_decompose` when the gate is Toffoli gate. Otherwise, following rule below.
-
-                 ─/──●───        ─/───────●──────────●────●──/─
-                     │                    │          │    │
-                 ────●───   ==   ────●────X────●─────X────┼────
-                     │               │         │          │
-                 ────U───        ────V─────────V†─────────V────
-
-    where V is matrix-square-root of U.
-
     Args:
         gate (:class:`QuantumGate`): instance of quantum gate.
         with_barrier (bool): whether add :class:`BarrierGate` into decomposed circuit. Default: False.
