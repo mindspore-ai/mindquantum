@@ -102,6 +102,10 @@ void BindTypeIndependentGate(py::module &module) {  // NOLINT(runtime/references
         module, "PauliChannel")
         .def(py::init<double, double, double, const VT<Index> &, const VT<Index> &>(), "px"_a, "py"_a, "pz"_a,
              "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
+    py::class_<mindquantum::DepolarizingChannel, mindquantum::BasicGate,
+               std::shared_ptr<mindquantum::DepolarizingChannel>>(module, "DepolarizingChannel")
+        .def(py::init<double, const VT<Index> &, const VT<Index> &>(), "p"_a, "obj_qubits"_a,
+             "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::AmplitudeDampingChannel, mindquantum::BasicGate,
                std::shared_ptr<mindquantum::AmplitudeDampingChannel>>(module, "AmplitudeDampingChannel")
         .def(py::init<bool, double, const VT<Index> &, const VT<Index> &>(), "daggered"_a, "damping_coeff"_a,
@@ -258,6 +262,7 @@ PYBIND11_MODULE(mqbackend, m) {
                        .value("FSim", mindquantum::GateID::FSim)
                        .value("M", mindquantum::GateID::M)
                        .value("PL", mindquantum::GateID::PL)
+                       .value("DEP", mindquantum::GateID::DEP)
                        .value("AD", mindquantum::GateID::AD)
                        .value("PD", mindquantum::GateID::PD)
                        .value("KRAUS", mindquantum::GateID::KRAUS)

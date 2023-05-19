@@ -16,6 +16,7 @@
 # pylint: disable=abstract-method,no-member
 """Quantum channel."""
 
+from typing import Iterable
 import numpy as np
 
 from mindquantum import mqbackend as mb
@@ -278,22 +279,31 @@ class BitPhaseFlipChannel(PauliChannel):
         return f"BPF({self.p})"
 
 
-class DepolarizingChannel(PauliChannel):
+class DepolarizingChannel(NoiseGate, SelfHermitianGate):
     r"""
     A depolarizing channel.
 
     Depolarizing channel express errors that have probability :math:`P` to turn qubit's quantum state into
-    maximally mixed state, by randomly applying one of the pauli gate(X,Y,Z) with same probability :math:`P/3`.
-    And it has probability :math:`1-P` to change nothing (applies I gate).
+    maximally mixed state, by randomly applying one of the pauli gate(I,X,Y,Z) with same probability :math:`P/4`.
+    And it has probability :math:`1-P` to change nothing.
 
-    Depolarizing channel applies noise as:
+    In one qubit case, depolarizing channel applies noise as:
 
     .. math::
 
-        \epsilon(\rho) = (1 - P)\rho + P/3( X \rho X + Y \rho Y + Z \rho Z)
+        \epsilon(\rho) = (1 - P)\rho + P/4( I \rho I + X \rho X + Y \rho Y + Z \rho Z)
 
-    where :math:`\rho` is quantum state as density matrix type; :math:`P` is the
-    probability of occurred the depolarizing error.
+    where :math:`\rho` is quantum state as density matrix type; :math:`P` is the probability of occurred the
+    depolarizing error.
+
+    This channel supports many object qubits. In :math:`N` qubit case, depolarizing channel applies noise as:
+
+    .. math::
+
+        \epsilon(\rho) = (1 - P)\rho + \frac{P}{4^N} \sum_j U_j \rho U_j
+
+    where :math:`N` is the number of object qubits;
+    :math:`U_j \in \left\{ I, X, Y, Z \right\} ^{\otimes N}` is many qubit pauli operator.
 
     Args:
         p (int, float): probability of occurred error.
@@ -303,9 +313,9 @@ class DepolarizingChannel(PauliChannel):
         >>> from mindquantum.core.circuit import Circuit
         >>> circ = Circuit()
         >>> circ += DepolarizingChannel(0.02).on(0)
-        >>> circ += DepolarizingChannel(0.01).on(1, 0)
+        >>> circ += DepolarizingChannel(0.01).on([1, 2])
         >>> print(circ)
-        q0: ──Dep(0.02)────────●──────
+        q0: ──Dep(0.02)────Dep(0.01)──
                                │
         q1: ───────────────Dep(0.01)──
     """
@@ -316,17 +326,36 @@ class DepolarizingChannel(PauliChannel):
         """Initialize a DepolarizingChannel object."""
         kwargs['name'] = 'DC'
         kwargs['n_qubits'] = 1
-        kwargs['px'] = p / 3
-        kwargs['py'] = p / 3
-        kwargs['pz'] = p / 3
-        PauliChannel.__init__(self, **kwargs)
-        self.p = p
+        NoiseGate.__init__(self, **kwargs)
+        SelfHermitianGate.__init__(self, **kwargs)
+        self.projectq_gate = None
+        if not isinstance(p, (int, float)):
+            raise TypeError(f"Unsupported type for probability p, get {type(p)}.")
+        if 0 <= p <= 1:
+            self.p = p
+        else:
+            raise ValueError(f"Required probability p ∈ [0,1], but get p = {p}.")
+
+    def on(self, obj_qubits, ctrl_qubits=None):
+        if isinstance(obj_qubits, Iterable):
+            self.n_qubits = len(obj_qubits)
+        return super().on(obj_qubits, ctrl_qubits)
+
+    def get_cpp_obj(self):
+        """Get underlying C++ object."""
+        return mb.gate.DepolarizingChannel(self.p, self.obj_qubits, self.ctrl_qubits)
+
+    def define_projectq_gate(self):
+        """Define the corresponded projectq gate."""
+        self.projectq_gate = None
+
+    def __eq__(self, other):
+        """Equality comparison operator."""
+        return super().__eq__(other) and self.p == other.p
 
     def __extra_prop__(self):
         """Extra prop magic method."""
-        prop = super().__extra_prop__()
-        prop['p'] = self.p
-        return prop
+        return {'p': self.p}
 
     def __str_in_circ__(self):
         """Return a string representation of the object in a quantum circuit."""

@@ -296,6 +296,10 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
         case GateID::PL:
             qs_policy_t::ApplyPauli(&qs, gate->obj_qubits_, static_cast<PauliChannel*>(gate.get())->probs_, dim);
             break;
+        case GateID::DEP:
+            qs_policy_t::ApplyDepolarizing(&qs, gate->obj_qubits_, static_cast<DepolarizingChannel*>(gate.get())->prob_,
+                                           dim);
+            break;
         case GateID::AD:
             qs_policy_t::ApplyAmplitudeDamping(&qs, gate->obj_qubits_,
                                                static_cast<AmplitudeDampingChannel*>(gate.get())->damping_coeff_,
@@ -339,6 +343,10 @@ template <typename qs_policy_t_>
 void DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicGate>& gate) {
     auto id = gate->id_;
     switch (id) {
+        case GateID::DEP:
+            qs_policy_t::ApplyDepolarizing(&qs, gate->obj_qubits_, static_cast<DepolarizingChannel*>(gate.get())->prob_,
+                                           dim);
+            break;
         case GateID::AD:
             qs_policy_t::ApplyAmplitudeDamping(&qs, gate->obj_qubits_,
                                                static_cast<AmplitudeDampingChannel*>(gate.get())->damping_coeff_,

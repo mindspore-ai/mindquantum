@@ -310,6 +310,9 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
         case GateID::PL:
             this->ApplyPauliChannel(gate);
             break;
+        case GateID::DEP:
+            this->ApplyDepolarizingChannel(gate);
+            break;
         case GateID::AD:
         case GateID::PD:
             this->ApplyDampingChannel(gate);
@@ -357,6 +360,9 @@ void VectorState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicGate>& g
         case GateID::PL:
             this->ApplyPauliChannel(gate);
             break;
+        case GateID::DEP:
+            this->ApplyDepolarizingChannel(gate);
+            break;
         case GateID::KRAUS:
             this->ApplyKrausChannel(gate);
             break;
@@ -386,6 +392,38 @@ void VectorState<qs_policy_t_>::ApplyPauliChannel(const std::shared_ptr<BasicGat
         qs_policy_t::ApplyY(&qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
     } else if (gate_index == 2) {
         qs_policy_t::ApplyZ(&qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+    }
+}
+
+template <typename qs_policy_t_>
+void VectorState<qs_policy_t_>::ApplyDepolarizingChannel(const std::shared_ptr<BasicGate>& gate) {
+    double r = static_cast<double>(rng_());
+    auto g = static_cast<DepolarizingChannel*>(gate.get());
+    double p = g->prob_;
+    if (r <= 1 - p) {
+        return;
+    } else {
+        double gap = p;
+        double s = r - 1 + p;
+        for (Index obj_qubit : gate->obj_qubits_) {
+            int gate_index = 0;
+            for (int i = 0; i < 4; i++) {
+                if (s <= gap * (i + 1) / 4) {
+                    gate_index = i;
+                    s += -gap * i / 4;
+                    gap = gap / 4;
+                    break;
+                }
+            }
+            VT<Index> obj{obj_qubit};
+            if (gate_index == 0) {
+                qs_policy_t::ApplyX(&qs, obj, gate->ctrl_qubits_, dim);
+            } else if (gate_index == 1) {
+                qs_policy_t::ApplyY(&qs, obj, gate->ctrl_qubits_, dim);
+            } else if (gate_index == 2) {
+                qs_policy_t::ApplyZ(&qs, obj, gate->ctrl_qubits_, dim);
+            }
+        }
     }
 }
 
