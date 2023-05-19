@@ -19,27 +19,21 @@ import numpy as np
 
 from mindquantum.core import gates
 from mindquantum.core.circuit import Circuit
-from mindquantum.utils.type_value_check import _check_input_type  # , _check_control_num
-
-
-#  TODO(dnguyen): Why the redefinition here?
-def _check_control_num(ctrl_qubits, require_n):
-    if len(ctrl_qubits) != require_n:
-        raise RuntimeError(f"requires {(require_n,'control qubit')}, but get {len(ctrl_qubits)}")
+from mindquantum.utils.type_value_check import _check_control_num, _check_input_type
 
 
 def ryy_decompose(gate: gates.Ryy):
     """
-    Decompose Ryy gate.
+    Decompose :class:`Ryy` gate.
 
     Args:
-        gate (Ryy): a Ryy gate.
+        gate (:class:`Ryy`): a :class:`Ryy` gate.
 
     Returns:
-        List[Circuit], all possible decompose solution.
+        List[:class:`Circuit`], all possible decompose solution.
 
     Examples:
-        >>> from mindquantum.algorithm.compiler.decompose import ryy_decompose
+        >>> from mindquantum.algorithm.compiler import ryy_decompose
         >>> from mindquantum.core.circuit import Circuit
         >>> from mindquantum.core.gates import Ryy
         >>> ryy = Ryy(1).on([0, 1])
@@ -61,16 +55,16 @@ def ryy_decompose(gate: gates.Ryy):
 
 def cryy_decompose(gate: gates.Ryy):
     """
-    Decompose ryy gate with control qubits.
+    Decompose :class:`Ryy` gate with control qubits.
 
     Args:
-        gate (Ryy): a Ryy gate.
+        gate (:class:`Ryy`): a :class:`Ryy` gate.
 
     Returns:
-        List[Circuit], all possible decompose solution.
+        List[:class:`Circuit`], all possible decompose solution.
 
     Examples:
-        >>> from mindquantum.algorithm.compiler.decompose import cryy_decompose
+        >>> from mindquantum.algorithm.compiler import cryy_decompose
         >>> from mindquantum.core.circuit import Circuit
         >>> from mindquantum.core.gates import Ryy
         >>> cryy = Ryy(2).on([0, 1], [2, 3])

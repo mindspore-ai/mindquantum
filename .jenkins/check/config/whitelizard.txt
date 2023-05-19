@@ -21,6 +21,7 @@ mindquantum/mindquantum/simulator/simulator.py:get_expectation_with_grad
 mindquantum/mindquantum/third_party/unitary_cc.py:uccsd_singlet_generator
 mindquantum/mindquantum/io/display/circuit_text_drawer.py:brick_model
 mindquantum/mindquantum/experimental/_symengine_utilities.py:symbols
+mindquantum/algorithm/compiler/decompose/universal_decompose/two_qubit_decompose.py:kak_decompose
 
 mindquantum/ccsrc/include/ops/gates.hpp:mindquantum::GetGateByName
 mindquantum/ccsrc/include/ops/gates/qubit_operator.tpp:mindquantum::ops::QubitOperator<coeff_t>::sparse_matrix

@@ -21,16 +21,16 @@ from mindquantum.utils.type_value_check import _check_control_num, _check_input_
 
 def ch_decompose(gate: gates.HGate):
     """
-    Decompose controlled :class:`mindquantum.core.gates.H` gate.
+    Decompose controlled :class:`HGate` gate.
 
     Args:
-        gate (HGate): a HGate with one control qubits.
+        gate (:class:`HGate`): a :class:`HGate` with one control qubits.
 
     Returns:
-        List[Circuit], all possible decompose solution.
+        List[:class:`Circuit`], all possible decompose solution.
 
     Examples:
-        >>> from mindquantum.algorithm.compiler.decompose import ch_decompose
+        >>> from mindquantum.algorithm.compiler import ch_decompose
         >>> from mindquantum.core.circuit import Circuit
         >>> from mindquantum.core.gates import T, X, H, S
         >>> ch = H.on(1, 0)

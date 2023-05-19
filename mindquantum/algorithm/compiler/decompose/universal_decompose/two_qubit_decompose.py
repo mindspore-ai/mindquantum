@@ -44,11 +44,12 @@ def tensor_product_decompose(gate: QuantumGate, return_u3: bool = True) -> Circu
     Tensor product decomposition of a 2-qubit gate.
 
     Args:
-        gate (QuantumGate): 2-qubit gate composed by tensor product
-        return_u3 (bool): return gates in form of `U3` or `UnivMathGate`
+        gate (:class:`QuantumGate`): 2-qubit gate composed by tensor product.
+        return_u3 (bool): return gates in form of :class:`U3` if ``True``, otherwise
+            return :class:`UnivMathGate`. Default: ``True``.
 
     Returns:
-        Circuit, including two single-qubit gates.
+        :class:`Circuit`, including two single-qubit gates.
 
     Examples:
         >>> import mindquantum as mq
@@ -84,11 +85,12 @@ def abc_decompose(gate: QuantumGate, return_u3: bool = True) -> Circuit:
     Decompose two-qubit controlled gate via ABC decomposition.
 
     Args:
-        gate (QuantumGate): quantum gate with 1 control bit and 1 target bit.
-        return_u3 (bool): return gates in form of `U3` or `UnivMathGate`
+        gate (:class:`QuantumGate`): quantum gate with 1 control bit and 1 target bit.
+        return_u3 (bool): return gates in form of :class:`U3` if ``True``, otherwise
+            return :class:`UnivMathGate`. Default: ``True``.
 
     Returns:
-        Circuit, including at most 2 CNOT gates and 4 single-qubit gates.
+        :class:`Circuit`, including at most 2 CNOT gates and 4 single-qubit gates.
 
     Examples:
         >>> import mindquantum as mq
@@ -105,7 +107,6 @@ def abc_decompose(gate: QuantumGate, return_u3: bool = True) -> Circuit:
                          │                               │
         q1: ──RZ(2.6)────X────U3(𝜃=1.1, 𝜑=π, 𝜆=-0.66)────X────U3(𝜃=1.1, 𝜑=-5.09, 𝜆=0)──
     """
-
     if len(gate.ctrl_qubits) != 1 or len(gate.obj_qubits) != 1:
         raise ValueError(f'{gate} is not a two-qubit controlled gate with designated qubits')
     if isinstance(gate, gates.RX):
@@ -138,6 +139,7 @@ def abc_decompose(gate: QuantumGate, return_u3: bool = True) -> Circuit:
     return optimize_circuit(circ)
 
 
+# pylint: disable=too-many-locals
 def kak_decompose(gate: QuantumGate, return_u3: bool = True) -> Circuit:
     r"""
     KAK decomposition (CNOT basis) of an arbitrary two-qubit gate.
@@ -159,12 +161,16 @@ def kak_decompose(gate: QuantumGate, return_u3: bool = True) -> Circuit:
                 │          │          │
         ──B1────X────U1────X────V1────X────W†────A1──
 
+    For more detail, please refer to `An Introduction to Cartan's KAK Decomposition for QC
+    Programmers <https://arxiv.org/abs/quant-ph/0406176>`_.
+
     Args:
-        gate (QuantumGate): 2-qubit quantum gate
-        return_u3 (bool): return gates in form of `U3` or `UnivMathGate`
+        gate (:class:`QuantumGate`): 2-qubit quantum gate.
+        return_u3 (bool): return gates in form of :class:`U3` if ``True``, otherwise
+            return :class:`UnivMathGate`. Default: ``True``.
 
     Returns:
-        Circuit, including at most 3 CNOT gates and 6 single-qubit gates.
+        :class:`Circuit`, including at most 3 CNOT gates and 6 single-qubit gates.
 
     Examples:
         >>> import mindquantum as mq
@@ -184,10 +190,6 @@ def kak_decompose(gate: QuantumGate, return_u3: bool = True) -> Circuit:
         q0: <<────U3(𝜃=π/2, 𝜑=0, 𝜆=π)──────●────U3(𝜃=2.27, 𝜑=-1.87, 𝜆=3.88)──
             <<                             │
         q1: <<──U3(𝜃=0, 𝜑=0.36, 𝜆=0.36)────X────U3(𝜃=2.73, 𝜑=1.86, 𝜆=-2.47)──
-
-    References:
-        'An Introduction to Cartan's KAK Decomposition for QC Programmers'
-        https://arxiv.org/abs/quant-ph/0507171
     """
     if len(gate.obj_qubits) != 2 or gate.ctrl_qubits:
         raise ValueError(f'{gate} is not an arbitrary 2-qubit gate with designated qubits')

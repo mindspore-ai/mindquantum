@@ -15,21 +15,15 @@
 """Universal unitary gate decomposition."""
 
 from .one_qubit_decompose import euler_decompose
-from .qs_decompose import (
-    cu_decompose,
-    demultiplex_pair,
-    demultiplex_pauli,
-    qs_decompose,
-)
+from .qs_and_cu_decompose import cu_decompose, qs_decompose
 from .two_qubit_decompose import abc_decompose, kak_decompose, tensor_product_decompose
 
 __all__ = [
     'euler_decompose',
+    'qs_decompose',
     'tensor_product_decompose',
     'abc_decompose',
     'kak_decompose',
-    'qs_decompose',
+    'qs_and_cu_decompose',
     'cu_decompose',
-    'demultiplex_pair',
-    'demultiplex_pauli',
 ]

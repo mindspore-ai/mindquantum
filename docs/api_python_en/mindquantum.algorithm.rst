@@ -6,6 +6,6 @@ mindquantum.algorithm
 .. autosummary::
    :toctree:
 
-   mindquantum.algorithm.decompose
+   mindquantum.algorithm.compiler
    mindquantum.algorithm.library
    mindquantum.algorithm.nisq

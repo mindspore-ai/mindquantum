@@ -17,26 +17,21 @@
 
 from mindquantum.core import gates
 from mindquantum.core.circuit import Circuit
-from mindquantum.utils.type_value_check import _check_input_type  # , _check_control_num
-
-
-def _check_control_num(ctrl_qubits, require_n):
-    if len(ctrl_qubits) != require_n:
-        raise RuntimeError(f"requires {(require_n,'control qubit')}, but get {len(ctrl_qubits)}")
+from mindquantum.utils.type_value_check import _check_control_num, _check_input_type
 
 
 def rxx_decompose(gate: gates.Rxx):
     """
-    Decompose Rxx gate.
+    Decompose :class:`Rxx` gate.
 
     Args:
-        gate (Rxx): a Rxx gate.
+        gate (:class:`Rxx`): a :class:`Rxx` gate.
 
     Returns:
-        List[Circuit], all possible decompose solution.
+        List[:class:`Circuit`], all possible decompose solution.
 
     Examples:
-        >>> from mindquantum.algorithm.compiler.decompose import rxx_decompose
+        >>> from mindquantum.algorithm.compiler import rxx_decompose
         >>> from mindquantum.core.circuit import Circuit
         >>> from mindquantum.core.gates import Rxx
         >>> rxx = Rxx(1).on([0, 1])
@@ -58,13 +53,13 @@ def rxx_decompose(gate: gates.Rxx):
 
 def crxx_decompose(gate: gates.Rxx):
     """
-    Decompose Rxx gate with control qubits.
+    Decompose :class:`Rxx` gate with control qubits.
 
     Args:
-        gate (Rxx): a Rxx gate.
+        gate (:class:`Rxx`): a :class:`Rxx` gate.
 
     Returns:
-        List[Circuit], all possible decompose solution.
+        List[:class:`Circuit`], all possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import crxx_decompose

@@ -33,36 +33,37 @@ from .two_qubit_decompose import abc_decompose
 
 def cu_decompose(gate: QuantumGate, with_barrier: bool = False) -> Circuit:
     """
-    Decomposition for arbitrary-dimension controlled-U gate decomposition, with m control qubits and n target qubits.
+    Decompose arbitrary-dimension controlled-U gate.
 
-    When recursively calling the function itself, `m` decreases, while `n` holds constant.
+    This gate has :math:`m` control qubits and :math:`n` target qubits.
+    When recursively calling the function itself, :math:`m` decreases, while :math:`n` holds constant.
 
     Decomposition rules:
-        1. when m == 0: use `qs_decompose()`
-        2. when m == 1
-            - when n == 1: use `abc_decompose()`
-            - when n > 1: use `qs_decompose()`
-        3. when m > 1:
-            - when it is Toffoli gate: use `ccx_decompose()`
-            - otherwise: V is matrix-square-root of U
+
+    - when :math:`m = 0`, use :func:`qs_decompose`
+    - when :math:`m = 1`, use :func:`abc_decompose` when :math:`n = 1`, use :func:`qs_decompose` when :math:`n > 1`
+    - when :math:`m > 1`, use :func:`cxx_decompose` when the gate is Toffoli gate. Otherwise, following rule below.
+
                  ─/──●───        ─/───────●──────────●────●──/─
                      │                    │          │    │
                  ────●───   ==   ────●────X────●─────X────┼────
                      │               │         │          │
                  ────U───        ────V─────────V†─────────V────
 
+    where V is matrix-square-root of U.
+
     Args:
-        gate (QuantumGate): instance of quantum gate
-        with_barrier (bool): whether add barriers into decomposed circuit
+        gate (:class:`QuantumGate`): instance of quantum gate.
+        with_barrier (bool): whether add :class:`BarrierGate` into decomposed circuit. Default: False.
 
     Returns:
-        Circuit, composed of 1-qubit gates and CNOT gates.
+        :class:`Circuit`, composed of 1-qubit gates and CNOT gates.
 
     Examples:
         >>> import mindquantum as mq
-        >>> from mindquantum.algorithm.compiler.decompose import cu_decompose
+        >>> from mindquantum.algorithm.compiler import cu_decompose
         >>> from scipy.stats import unitary_group
-        >>> cqs = [0, 2, 4, 5]  # arbitrary order is OK
+        >>> cqs = [0, 2, 4, 5]
         >>> tqs = [1, 6]
         >>> m = len(cqs)
         >>> n = len(tqs)
@@ -110,28 +111,21 @@ def qs_decompose(gate: QuantumGate, with_barrier: bool = False) -> Circuit:
     r"""
     Quantum Shannon decomposition for arbitrary-dimension unitary gate.
 
-       ┌───┐               ┌───┐     ┌───┐     ┌───┐
-      ─┤   ├─       ───────┤ Rz├─────┤ Ry├─────┤ Rz├─────
-       │   │    ≃     ┌───┐└─┬─┘┌───┐└─┬─┘┌───┐└─┬─┘┌───┐
-     /─┤   ├─       /─┤   ├──□──┤   ├──□──┤   ├──□──┤   ├
-       └───┘          └───┘     └───┘     └───┘     └───┘
-
-    The number of CNOT gates in the decomposed circuit is
+    The number of CNOT gates in the decomposed circuit is:
 
     .. math::
 
         O(4^n)
 
+    For more detail, please refer to `Synthesis of Quantum
+    Logic Circuits <https://arxiv.org/abs/quant-ph/0406176>`_.
+
     Args:
-        gate (QuantumGate): instance of quantum gate
-        with_barrier (bool): whether add barriers into decomposed circuit
+        gate (:class:`QuantumGate`): instance of quantum gate.
+        with_barrier (bool): whether add barriers into decomposed circuit.
 
     Returns:
-        Circuit, composed of 1-qubit gates and CNOT gates.
-
-    References:
-        'Synthesis of Quantum Logic Circuits'
-        https://arxiv.org/abs/quant-ph/0406176
+        :class:`Circuit`, composed of 1-qubit gates and CNOT gates.
 
     Examples:
         >>> import mindquantum as mq
@@ -167,35 +161,12 @@ def demultiplex_pair(u1: np.ndarray, u2: np.ndarray, tqs: List[int], cq: int, wi
     """
     Decompose a multiplexor defined by a pair of unitary matrices operating on the same subspace.
 
-    That is, decompose
-
-        cq   ────□────
-              ┌──┴──┐
-        tqs /─┤     ├─
-              └─────┘
-
-    represented by the block diagonal matrix
-
-            ┏         ┓
-            ┃ U1      ┃
-            ┃      U2 ┃
-            ┗         ┛
-
-    to
-                  ┌───┐
-       cq  ───────┤ Rz├──────
-             ┌───┐└─┬─┘┌───┐
-       tqs /─┤ W ├──□──┤ V ├─
-             └───┘     └───┘
-
-    by means of simultaneous unitary diagonalization.
-
     Args:
-        u1 (ndarray): applied if the control qubit is |0>
-        u2 (ndarray): applied if the control qubit is |1>
+        u1 (numpy.ndarray): applied if the control qubit is |0>
+        u2 (numpy.ndarray): applied if the control qubit is |1>
         tqs (List[int]): target qubit indices
         cq (int): control qubit index
-        with_barrier (bool): whether add barriers into decomposed circuit
+        with_barrier (bool): whether add barriers into decomposed circuit.
 
     Returns:
         Circuit, composed of 1-qubit gates and CNOT gates.
@@ -223,12 +194,6 @@ def demultiplex_pair(u1: np.ndarray, u2: np.ndarray, tqs: List[int], cq: int, wi
 def demultiplex_pauli(sigma: str, tq: int, cqs: List[int], *args, permute_cnot: bool = False) -> Circuit:
     """
     Decompose a Pauli-rotation (RY or RZ) multiplexor defined by 2^(n-1) rotation angles.
-
-         ────□───        ─────────●─────────●────
-             │                    │         │
-         ─/──□───   ==   ─/──□────┼────□────┼──/─
-             │               │    │    │    │
-         ────R───        ────R────X────R────X────
 
     Args:
         sigma (str): Axis of rotation Pauli matrix, 'Y' or 'Z'.
@@ -284,37 +249,7 @@ def demultiplex_pauli(sigma: str, tq: int, cqs: List[int], *args, permute_cnot: 
 
 def _cal_demultiplex_rads(rads):
     r"""
-    Calculation rotation angles for two-level decomposing of a Pauli-rotation multiplexor.
-
-    Reshape the `rads` into a blocked matrix in presentation of
-
-        ┏                           ┓
-        ┃ 𝜃_{00}                    ┃
-        ┃                           ┃
-        ┃       𝜃_{01}              ┃
-        ┃                           ┃
-        ┃             𝜃_{10}        ┃
-        ┃                           ┃
-        ┃                   𝜃_{11}  ┃
-        ┗                           ┛
-
-    Then calculate `\phi`
-
-        ┏           ┓         ┏              ┓         ┏              ┓
-        ┃ 𝜑_0       ┃         ┃ 𝜃_{00}       ┃         ┃ 𝜃_{00}       ┃
-        ┃           ┃ = 1/2 * ┃              ┃ + 1/2 * ┃              ┃
-        ┃       𝜑_1 ┃         ┃       𝜃_{10} ┃         ┃       𝜃_{10} ┃
-        ┗           ┛         ┗              ┛         ┗              ┛
-
-    and `\lambda`
-
-        ┏           ┓         ┏              ┓         ┏              ┓
-        ┃ 𝜆_0       ┃         ┃ 𝜃_{00}       ┃         ┃ 𝜃_{00}       ┃
-        ┃           ┃ = 1/2 * ┃              ┃ - 1/2 * ┃              ┃
-        ┃       𝜆_1 ┃         ┃       𝜃_{10} ┃         ┃       𝜃_{10} ┃
-        ┗           ┛         ┗              ┛         ┗              ┛
-
-    Finally, decompose multiplexors in presentation of `\phi` and `\lambda`, respectively.
+    Calculate rotation angles for two-level decomposing of a Pauli-rotation multiplexor.
 
     Args:
         rads: rotation angles representing the original Pauli-rotation multiplexor

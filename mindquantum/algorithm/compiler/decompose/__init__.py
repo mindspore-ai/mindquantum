@@ -16,35 +16,10 @@
 """Decompose rule for gate."""
 
 from . import fixed_decompose, universal_decompose, utils
-from .fixed_decompose import (
-    ccx_decompose,
-    ch_decompose,
-    crx_decompose,
-    crxx_decompose,
-    cry_decompose,
-    cryy_decompose,
-    crz_decompose,
-    cs_decompose,
-    cswap_decompose,
-    ct_decompose,
-    cy_decompose,
-    cz_decompose,
-    rxx_decompose,
-    ryy_decompose,
-    rzz_decompose,
-    swap_decompose,
-)
-from .universal_decompose import (
-    abc_decompose,
-    cu_decompose,
-    demultiplex_pair,
-    demultiplex_pauli,
-    euler_decompose,
-    kak_decompose,
-    qs_decompose,
-    tensor_product_decompose,
-)
+from .fixed_decompose import *
+from .universal_decompose import *
 
 __all__ = []
 __all__.extend(fixed_decompose.__all__)
+__all__.extend(universal_decompose.__all__)
 __all__.sort()

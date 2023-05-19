@@ -21,16 +21,16 @@ from mindquantum.utils.type_value_check import _check_control_num, _check_input_
 
 def crz_decompose(gate: gates.RZ):
     """
-    Decompose crz gate.
+    Decompose controlled :class:`RZ` gate.
 
     Args:
-        gate (RZ): a RZ gate with one control qubits.
+        gate (:class:`RZ`): a :class:`RZ` gate with one control qubits.
 
     Returns:
-        List[Circuit], all possible decompose solution.
+        List[:class:`Circuit`], all possible decompose solution.
 
     Examples:
-        >>> from mindquantum.algorithm.compiler.decompose import crz_decompose
+        >>> from mindquantum.algorithm.compiler import crz_decompose
         >>> from mindquantum.core.circuit import Circuit
         >>> from mindquantum.core.gates import X, RZ
         >>> crz = RZ(1).on(1, 0)

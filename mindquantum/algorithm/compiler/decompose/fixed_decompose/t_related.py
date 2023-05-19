@@ -24,16 +24,16 @@ from mindquantum.utils.type_value_check import _check_control_num, _check_input_
 
 def ct_decompose(gate: gates.TGate):
     """
-    Decompose ct gate.
+    Decompose controlled :class:`TGate` gate.
 
     Args:
-        gate (TGate): a TGate with one control qubits.
+        gate (:class:`TGate`): a :class:`TGate` with one control qubits.
 
     Returns:
-        List[Circuit], all possible decompose solution.
+        List[:class:`Circuit`], all possible decompose solution.
 
     Examples:
-        >>> from mindquantum.algorithm.compiler.decompose import ct_decompose
+        >>> from mindquantum.algorithm.compiler import ct_decompose
         >>> from mindquantum.core.circuit import Circuit
         >>> from mindquantum.core.gates import T
         >>> ct = T.on(1, 0)
