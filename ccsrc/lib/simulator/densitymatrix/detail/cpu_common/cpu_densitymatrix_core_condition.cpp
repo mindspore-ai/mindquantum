@@ -52,7 +52,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::DiagonalConditionalCollec
 
 template <typename derived_, typename calc_type_>
 template <class binary_op>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalBinary(const qs_data_p_t& src_out, qs_data_p_t* des_p,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalBinary(const qs_data_p_t& src, qs_data_p_t* des_p,
                                                                          index_t mask, index_t condi,
                                                                          qs_data_t succ_coeff, qs_data_t fail_coeff,
                                                                          index_t dim, const binary_op& op) {
@@ -60,70 +60,68 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalBinary(const q
     if (des == nullptr) {
         des = derived::InitState(dim);
     }
-    qs_data_p_t src;
-    bool will_free = false;
-    if (src_out == nullptr) {
-        src = derived::InitState(dim);
-        will_free = true;
-    }
-    // if index mask satisfied condition, multiply by succe_coeff, otherwise multiply fail_coeff
-    THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
-            auto _i_0 = IdxMap(i, 0);
-            if ((i & mask) == condi) {
-                for (index_t j = 0; j <= i; j++) {
-                    if ((j & mask) == condi) {
-                        des[_i_0 + j] = op(src[_i_0 + j], succ_coeff);
-                    } else {
+    if (src == nullptr) {
+        if ((0 & mask) == condi) {
+            des[0] = op(1.0, succ_coeff);
+        } else {
+            des[0] = op(1.0, fail_coeff);
+        }
+    } else {
+        // if index mask satisfied condition, multiply by succe_coeff, otherwise multiply fail_coeff
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+                auto _i_0 = IdxMap(i, 0);
+                if ((i & mask) == condi) {
+                    for (index_t j = 0; j <= i; j++) {
+                        if ((j & mask) == condi) {
+                            des[_i_0 + j] = op(src[_i_0 + j], succ_coeff);
+                        } else {
+                            des[_i_0 + j] = op(src[_i_0 + j], fail_coeff);
+                        }
+                    }
+                } else {
+                    for (index_t j = 0; j <= i; j++) {
                         des[_i_0 + j] = op(src[_i_0 + j], fail_coeff);
                     }
                 }
-            } else {
-                for (index_t j = 0; j <= i; j++) {
-                    des[_i_0 + j] = op(src[_i_0 + j], fail_coeff);
-                }
-            }
-        })
-    if (will_free) {
-        derived::FreeState(&src);
+            })
     }
 }
 
 template <typename derived_, typename calc_type_>
 template <index_t mask, index_t condi, class binary_op>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalBinary(const qs_data_p_t& src_out, qs_data_p_t* des_p,
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalBinary(const qs_data_p_t& src, qs_data_p_t* des_p,
                                                                          qs_data_t succ_coeff, qs_data_t fail_coeff,
                                                                          index_t dim, const binary_op& op) {
     auto& des = *des_p;
     if (des == nullptr) {
         des = derived::InitState(dim);
     }
-    qs_data_p_t src;
-    bool will_free = false;
-    if (src_out == nullptr) {
-        src = derived::InitState(dim);
-        will_free = true;
-    }
-    // if index mask satisfied condition, multiply by succe_coeff, otherwise multiply fail_coeff
-    THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
-            auto _i_0 = IdxMap(i, 0);
-            if ((i & mask) == condi) {
-                for (index_t j = 0; j <= i; j++) {
-                    if ((j & mask) == condi) {
-                        des[_i_0 + j] = op(src[_i_0 + j], succ_coeff);
-                    } else {
+    if (src == nullptr) {
+        if ((0 & mask) == condi) {
+            des[0] = op(1.0, succ_coeff);
+        } else {
+            des[0] = op(1.0, fail_coeff);
+        }
+    } else {
+        // if index mask satisfied condition, multiply by succe_coeff, otherwise multiply fail_coeff
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+                auto _i_0 = IdxMap(i, 0);
+                if ((i & mask) == condi) {
+                    for (index_t j = 0; j <= i; j++) {
+                        if ((j & mask) == condi) {
+                            des[_i_0 + j] = op(src[_i_0 + j], succ_coeff);
+                        } else {
+                            des[_i_0 + j] = op(src[_i_0 + j], fail_coeff);
+                        }
+                    }
+                } else {
+                    for (index_t j = 0; j <= i; j++) {
                         des[_i_0 + j] = op(src[_i_0 + j], fail_coeff);
                     }
                 }
-            } else {
-                for (index_t j = 0; j <= i; j++) {
-                    des[_i_0 + j] = op(src[_i_0 + j], fail_coeff);
-                }
-            }
-        })
-    if (will_free) {
-        derived::FreeState(&src);
+            })
     }
 }
 
