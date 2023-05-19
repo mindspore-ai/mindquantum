@@ -303,7 +303,7 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
         \epsilon(\rho) = (1 - P)\rho + \frac{P}{4^N} \sum_j U_j \rho U_j
 
     where :math:`N` is the number of object qubits;
-    :math:`U_j \in \left\{ X, Y, Z, I \right\} ^{\otimes N}` is many qubit pauli operator.
+    :math:`U_j \in \left\{ I, X, Y, Z \right\} ^{\otimes N}` is many qubit pauli operator.
 
     Args:
         p (int, float): probability of occurred error.
