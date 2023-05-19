@@ -295,13 +295,13 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
 
     where :math:`\rho` is quantum state as density matrix type; :math:`P` is the probability of occurred the
     depolarizing error.
-    
+
     This channel supports many object qubits. In :math:`N` qubit case, depolarizing channel applies noise as:
-    
+
     .. math::
 
         \epsilon(\rho) = (1 - P)\rho + \frac{P}{4^N} \sum_j U_j \rho U_j
-        
+
     where :math:`N` is the number of object qubits;
     :math:`U_j \in \left\{ X, Y, Z, I \right\} ^{\otimes N}` is many qubit pauli operator.
 
