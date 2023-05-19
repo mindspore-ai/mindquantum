@@ -22,13 +22,13 @@ from mindquantum.utils.type_value_check import _check_control_num, _check_input_
 
 def ccx_decompose(gate: gates.XGate):
     """
-    Decompose ccx gate.
+    Decompose a `toffoli` gate.
 
     Args:
-        gate (XGate): a XGate with two control qubits.
+        gate (:class:`XGate`): a :class:`XGate` with two control qubits.
 
     Returns:
-        List[Circuit], all possible decompose solution.
+        List[:class:`Circuit`], all possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import ccx_decompose

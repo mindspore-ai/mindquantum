@@ -23,16 +23,16 @@ from mindquantum.utils.type_value_check import _check_control_num, _check_input_
 
 def cs_decompose(gate: gates.SGate):
     """
-    Decompose cs gate.
+    Decompose controlled :class:`SGate` gate.
 
     Args:
-        gate (SGate): a SGate with one control qubits.
+        gate (:class:`SGate`): a :class:`SGate` with one control qubits.
 
     Returns:
-        List[Circuit], all possible decompose solution.
+        List[:class:`Circuit`], all possible decompose solution.
 
     Examples:
-        >>> from mindquantum.algorithm.compiler.decompose import cs_decompose
+        >>> from mindquantum.algorithm.compiler import cs_decompose
         >>> from mindquantum.core.circuit import Circuit
         >>> from mindquantum.core.gates import S
         >>> cs = S.on(1, 0)

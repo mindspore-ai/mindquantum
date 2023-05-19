@@ -21,16 +21,16 @@ from mindquantum.utils.type_value_check import _check_control_num, _check_input_
 
 def cy_decompose(gate: gates.YGate):
     """
-    Decompose cy gate.
+    Decompose controlled :class:`YGate` gate.
 
     Args:
-        gate (YGate): a YGate with one control qubits.
+        gate (:class:`YGate`): a :class:`YGate` with one control qubits.
 
     Returns:
-        List[Circuit], all possible decompose solution.
+        List[:class:`Circuit`], all possible decompose solution.
 
     Examples:
-        >>> from mindquantum.algorithm.compiler.decompose import cy_decompose
+        >>> from mindquantum.algorithm.compiler import cy_decompose
         >>> from mindquantum.core.circuit import Circuit
         >>> from mindquantum.core.gates import Y
         >>> cy = Y.on(1, 0)

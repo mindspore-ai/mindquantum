@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""One-qubit gate decomposition"""
+"""One-qubit gate decomposition."""
 
 from mindquantum.core import gates
 from mindquantum.core.circuit import Circuit
@@ -27,15 +27,15 @@ def euler_decompose(gate: QuantumGate, basis: str = 'zyz', with_phase: bool = Tr
     """
     One-qubit Euler decomposition.
 
-    Currently only support 'ZYZ' and 'U3' decomposition.
+    Currently only support 'zyz' and 'u3' decomposition.
 
     Args:
-        gate (QuantumGate): single-qubit quantum gate
-        basis (str): decomposition basis
-        with_phase (bool): whether return global phase in form of a `GlobalPhase` gate
+        gate (QuantumGate): single-qubit quantum gate.
+        basis (str): decomposition basis, can be one of ``'zyz'`` or ``'u3'``. Default: ``'zyz'``.
+        with_phase (bool): whether return global phase in form of a :class:`GlobalPhase` gate.
 
     Returns:
-        Circuit, quantum circuit after Euler decomposition.
+        :class:`Circuit`, quantum circuit after Euler decomposition.
     """
     if len(gate.obj_qubits) != 1 or gate.ctrl_qubits:
         raise ValueError(f'{gate} is not a single-qubit gate with designated qubit for Euler decomposition')
