@@ -149,6 +149,8 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyDepolarizing(qs_data
                     qs_data_t src_11 = tmp_qs[IdxMap(r1, c1)];
                     tmp_qs[IdxMap(r0, c0)] = static_cast<calc_type>(2) * (src_00 + src_11);
                     tmp_qs[IdxMap(r1, c1)] = static_cast<calc_type>(2) * (src_00 + src_11);
+                    tmp_qs[IdxMap(r1, c0)] = 0;
+                    SetValue(tmp_qs, r0, c1, 0);
                 }
             })
     }

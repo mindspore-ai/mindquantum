@@ -92,16 +92,38 @@ def test_depolarizing_channel(config):
     """
     backend, dtype = config
     if backend == "mqmatrix":
-        sim2 = Simulator(backend, 1, dtype=dtype)
-        sim2.set_qs(np.array([1 + 0.5j, 1 + 0.5j]))
-        sim2.apply_gate(C.DepolarizingChannel(0.1).on(0))
+        sim = Simulator(backend, 1, dtype=dtype)
+        sim.set_qs(np.array([1 + 0.5j, 1 + 0.5j]))
+        sim.apply_gate(C.DepolarizingChannel(0.1).on(0))
+        assert np.allclose(sim.get_qs(), np.array([[0.3 - 0.4j, 0.27 - 0.36j], [0.27 + 0.36j, 0.3 - 0.4j]]))
+        sim2 = Simulator(backend, 2, dtype=dtype)
+        sim2.set_qs(np.array([1 + 0.5j, 2 + 0.5j, 3 + 0.5j, 4 + 0.5j]))
+        sim2.apply_gate(C.DepolarizingChannel(0.1).on([0, 1]))
         assert np.allclose(
-            sim2.get_qs(), np.array([[0.3 - 0.4j, 0.26 - 0.34666667j], [0.26 + 0.34666667j, 0.3 - 0.4j]])
+            sim2.get_qs(),
+            np.array(
+                [
+                    [0.06129032 - 0.0j, 0.06532258 + 0.01451613j, 0.09435484 + 0.02903226j, 0.1233871 + 0.04354839j],
+                    [0.06532258 - 0.01451613j, 0.1483871 - 0.0j, 0.18145161 + 0.01451613j, 0.23951613 + 0.02903226j],
+                    [0.09435484 - 0.02903226j, 0.18145161 - 0.01451613j, 0.29354839 - 0.0j, 0.35564516 + 0.01451613j],
+                    [0.1233871 - 0.04354839j, 0.23951613 - 0.02903226j, 0.35564516 - 0.01451613j, 0.49677419 - 0.0j],
+                ]
+            ),
         )
     else:
-        sim2 = Simulator(backend, 1)
-        sim2.apply_gate(C.DepolarizingChannel(0).on(0))
-        assert np.allclose(sim2.get_qs(), np.array([1.0 + 0.0j, 0.0 + 0.0j]))
+        sim = Simulator(backend, 1, seed=42)
+        sim.set_qs(np.array([1 + 0.5j, 1 + 0.5j]))
+        sim.apply_gate(C.DepolarizingChannel(0.5).on(0))
+        assert np.allclose(sim.get_qs(), np.array([0.63245553 + 0.31622777j, -0.63245553 - 0.31622777j]))
+        sim2 = Simulator(backend, 2, seed=42)
+        sim2.set_qs(np.array([1 + 0.5j, 2 + 0.5j, 3 + 0.5j, 4 + 0.5j]))
+        sim2.apply_gate(C.DepolarizingChannel(0.5).on([0, 1]))
+        assert np.allclose(
+            sim2.get_qs(),
+            np.array(
+                [0.08980265 - 0.53881591j, -0.08980265 + 0.71842121j, -0.08980265 + 0.1796053j, 0.08980265 - 0.3592106j]
+            ),
+        )
 
 
 @pytest.mark.level0

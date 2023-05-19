@@ -399,7 +399,6 @@ template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::ApplyDepolarizingChannel(const std::shared_ptr<BasicGate>& gate) {
     double r = static_cast<double>(rng_());
     auto g = static_cast<DepolarizingChannel*>(gate.get());
-    int n = std::pow(4, gate->obj_qubits_.size());
     double p = g->prob_;
     if (r <= 1 - p) {
         return;

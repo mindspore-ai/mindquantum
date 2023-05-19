@@ -149,7 +149,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t* qs_p, 
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
             for (index_t j = 0; j <= i; j++) {
-                qs[IdxMap(i, j)] = vec_out[i] * vec_out[j];
+                qs[IdxMap(i, j)] = vec_out[i] * std::conj(vec_out[j]);
             }
         })
 }
