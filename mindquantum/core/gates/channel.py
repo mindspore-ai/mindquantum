@@ -284,14 +284,14 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
     A depolarizing channel.
 
     Depolarizing channel express errors that have probability :math:`P` to turn qubit's quantum state into
-    maximally mixed state, by randomly applying one of the pauli gate(X,Y,Z) with same probability :math:`P/3`.
-    And it has probability :math:`1-P` to change nothing (applies I gate).
+    maximally mixed state, by randomly applying one of the pauli gate(I,X,Y,Z) with same probability :math:`P/4`.
+    And it has probability :math:`1-P` to change nothing.
 
     In one qubit case, depolarizing channel applies noise as:
 
     .. math::
 
-        \epsilon(\rho) = (1 - P)\rho + P/3( X \rho X + Y \rho Y + Z \rho Z)
+        \epsilon(\rho) = (1 - P)\rho + P/4( I \rho I + X \rho X + Y \rho Y + Z \rho Z)
 
     where :math:`\rho` is quantum state as density matrix type; :math:`P` is the probability of occurred the
     depolarizing error.
@@ -300,10 +300,10 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
     
     .. math::
 
-        \epsilon(\rho) = (1 - P)\rho + \frac{P}{(4^N - 1)} \sum_j U_j \rho U_j
+        \epsilon(\rho) = (1 - P)\rho + \frac{P}{4^N} \sum_j U_j \rho U_j
         
     where :math:`N` is the number of object qubits;
-    :math:`U_j \in \left\{ X, Y, Z, I \right\} ^{\otimes N} \setminus I^{\otimes N}` is many qubit pauli operator.
+    :math:`U_j \in \left\{ X, Y, Z, I \right\} ^{\otimes N}` is many qubit pauli operator.
 
     Args:
         p (int, float): probability of occurred error.

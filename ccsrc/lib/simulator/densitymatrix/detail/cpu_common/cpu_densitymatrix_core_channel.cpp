@@ -153,10 +153,9 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyDepolarizing(qs_data
             })
     }
     calc_type n = pow(4, objs.size());
-    calc_type p = prob * n / (n - 1);
     THRESHOLD_OMP_FOR(
         dim, DimTh,
-        for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { qs[i] = (1 - p) * qs[i] + p / n * tmp_qs[i]; })
+        for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { qs[i] = (1 - prob) * qs[i] + prob / n * tmp_qs[i]; })
     derived::FreeState(&tmp_qs);
 }
 

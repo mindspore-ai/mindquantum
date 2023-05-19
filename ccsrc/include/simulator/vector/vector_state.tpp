@@ -400,7 +400,7 @@ void VectorState<qs_policy_t_>::ApplyDepolarizingChannel(const std::shared_ptr<B
     double r = static_cast<double>(rng_());
     auto g = static_cast<DepolarizingChannel*>(gate.get());
     int n = std::pow(4, gate->obj_qubits_.size());
-    double p = g->prob_ * n / (n - 1);
+    double p = g->prob_;
     if (r <= 1 - p) {
         return;
     } else {
