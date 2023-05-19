@@ -49,8 +49,11 @@ class Vigo(NaiveChip):
         noise_circuit = Circuit()
         for i in range(circ.n_qubits):
             noise_circuit += self.noise_model.get(('prepare', i), Circuit())
+        noise_circuit.barrier(False)
         for g in circ:
-            noise_circuit += self.noise_model.get((g.name, tuple(g.obj_qubits)), Circuit())
+            noise_circuit += g
+            noise_circuit += self.noise_model.get((g.name, tuple(g.obj_qubits + g.ctrl_qubits)), Circuit())
+        noise_circuit.barrier(False)
         for i in range(circ.n_qubits):
             noise_circuit += self.noise_model.get(('readout', i), Circuit())
         return noise_circuit
