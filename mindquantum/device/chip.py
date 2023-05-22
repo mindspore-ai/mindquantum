@@ -13,9 +13,9 @@
 # limitations under the License.
 # ============================================================================
 """Real device chip."""
-from mindquantum.device import QubitsTopology, QubitNode
-from mindquantum.device.vigo_property import vigo_noise_model
 from mindquantum.core.circuit import Circuit
+from mindquantum.device import QubitNode, QubitsTopology
+from mindquantum.device.vigo_property import vigo_noise_model
 
 
 class NaiveChip:
@@ -24,7 +24,6 @@ class NaiveChip:
     def __init__(self, topology: QubitsTopology):
         """Initialize a naive quantum chip."""
         self.topology = topology
-<<<<<<< HEAD
 
     def gene_channel(self, g, noise_type, with_ctrl, alternative):
         pass
