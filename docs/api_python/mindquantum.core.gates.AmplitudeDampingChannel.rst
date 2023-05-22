@@ -30,11 +30,3 @@ mindquantum.core.gates.AmplitudeDampingChannel
     .. py:method:: get_cpp_obj()
 
         返回底层c++对象。
-
-    .. py:method:: on(obj_qubits, ctrl_qubits=None)
-
-        定义门作用在哪个比特上。
-
-        参数：
-            - **obj_qubits** (int, list[int]) - 指明量子门作用在哪个比特上。
-            - **ctrl_qubits** (int, list[int]) - AmplitudeDampingChannel 的控制位比特只能是 ``None``。

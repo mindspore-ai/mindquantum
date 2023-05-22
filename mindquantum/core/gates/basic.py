@@ -716,3 +716,16 @@ class ParamNonHerm(ParameterGate, NonHermitianGate):
 
 class NoiseGate(NoneParameterGate):
     """Noise gate class."""
+
+    def on(self, obj_qubits, ctrl_qubits=None):
+        """
+        Define which qubit the gate act on.
+
+        Args:
+            obj_qubits (int, list[int]): Specific which qubits the gate act on.
+            ctrl_qubits (int, list[int]): Control qubit for noise gate should always be ``None``.
+        """
+        out = super().on(obj_qubits, ctrl_qubits)
+        if out.ctrl_qubits:
+            raise ValueError("Noise gate cannot have control qubits.")
+        return out
