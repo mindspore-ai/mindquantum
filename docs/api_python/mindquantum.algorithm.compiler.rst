@@ -13,21 +13,21 @@ Fixed decompose rules
     :nosignatures:
     :template: classtemplate.rst
 
-    mindquantum.algorithm.decompose.ch_decompose
-    mindquantum.algorithm.decompose.crx_decompose
-    mindquantum.algorithm.decompose.crxx_decompose
-    mindquantum.algorithm.decompose.cry_decompose
-    mindquantum.algorithm.decompose.cryy_decompose
-    mindquantum.algorithm.decompose.cswap_decompose
-    mindquantum.algorithm.decompose.ct_decompose
-    mindquantum.algorithm.decompose.cy_decompose
-    mindquantum.algorithm.decompose.cz_decompose
-    mindquantum.algorithm.decompose.rxx_decompose
-    mindquantum.algorithm.decompose.ryy_decompose
-    mindquantum.algorithm.decompose.rzz_decompose
-    mindquantum.algorithm.decompose.cs_decompose
-    mindquantum.algorithm.decompose.swap_decompose
-    mindquantum.algorithm.decompose.ccx_decompose
+    mindquantum.algorithm.compiler.ch_decompose
+    mindquantum.algorithm.compiler.crx_decompose
+    mindquantum.algorithm.compiler.crxx_decompose
+    mindquantum.algorithm.compiler.cry_decompose
+    mindquantum.algorithm.compiler.cryy_decompose
+    mindquantum.algorithm.compiler.cswap_decompose
+    mindquantum.algorithm.compiler.ct_decompose
+    mindquantum.algorithm.compiler.cy_decompose
+    mindquantum.algorithm.compiler.cz_decompose
+    mindquantum.algorithm.compiler.rxx_decompose
+    mindquantum.algorithm.compiler.ryy_decompose
+    mindquantum.algorithm.compiler.rzz_decompose
+    mindquantum.algorithm.compiler.cs_decompose
+    mindquantum.algorithm.compiler.swap_decompose
+    mindquantum.algorithm.compiler.ccx_decompose
 
 Universal decompose rules
 -------------------------
@@ -37,9 +37,9 @@ Universal decompose rules
     :nosignatures:
     :template: classtemplate.rst
 
-    mindquantum.algorithm.decompose.euler_decompose
-    mindquantum.algorithm.decompose.cu_decompose
-    mindquantum.algorithm.decompose.qs_decompose
-    mindquantum.algorithm.decompose.abc_decompose
-    mindquantum.algorithm.decompose.kak_decompose
-    mindquantum.algorithm.decompose.tensor_product_decompose
+    mindquantum.algorithm.compiler.euler_decompose
+    mindquantum.algorithm.compiler.cu_decompose
+    mindquantum.algorithm.compiler.qs_decompose
+    mindquantum.algorithm.compiler.abc_decompose
+    mindquantum.algorithm.compiler.kak_decompose
+    mindquantum.algorithm.compiler.tensor_product_decompose
