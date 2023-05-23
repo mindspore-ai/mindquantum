@@ -53,25 +53,20 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
         >>> from mindquantum.core.circuit import Circuit
         >>> circ = Circuit()
         >>> circ += PauliChannel(0.8, 0.1, 0.1).on(0)
-        >>> circ += PauliChannel(0, 0.05, 0.9).on(1, 0)
         >>> circ.measure_all()
         >>> print(circ)
-        q0: ──PC────●─────M(q0)──
-                    │
-        q1: ────────PC────M(q1)──
+        q0: ──PC────M(q0)──
         >>> from mindquantum.simulator import Simulator
-        >>> sim = Simulator('mqvector', 2)
+        >>> sim = Simulator('mqvector', 1)
         >>> sim.sampling(circ, shots=1000, seed=42)
         shots: 1000
-        Keys: q1 q0│0.00     0.2         0.4         0.6         0.8         1.0
-        ───────────┼───────────┴───────────┴───────────┴───────────┴───────────┴
-                 00│▒▒▒▒▒▒▒
-                   │
-                 01│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-                   │
-                 11│▒▒▒
-                   │
-        {'00': 101, '01': 862, '11': 37}
+        Keys: q0│0.00     0.2         0.4         0.6         0.8         1.0
+        ────────┼───────────┴───────────┴───────────┴───────────┴───────────┴
+               0│▒▒▒▒▒▒▒
+                │
+               1│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+                │
+        {'0': 101, '1': 899}
     """
 
     def __init__(self, px: float, py: float, pz: float, **kwargs):
@@ -140,11 +135,8 @@ class BitFlipChannel(PauliChannel):
         >>> from mindquantum.core.circuit import Circuit
         >>> circ = Circuit()
         >>> circ += BitFlipChannel(0.02).on(0)
-        >>> circ += BitFlipChannel(0.01).on(1, 0)
         >>> print(circ)
-        q0: ──BF(0.02)───────●──────
-                             │
-        q1: ──────────────BF(0.01)──
+        q0: ──BF(0.02)──
     """
 
     # pylint: disable=invalid-name
@@ -194,11 +186,8 @@ class PhaseFlipChannel(PauliChannel):
         >>> from mindquantum.core.circuit import Circuit
         >>> circ = Circuit()
         >>> circ += PhaseFlipChannel(0.02).on(0)
-        >>> circ += PhaseFlipChannel(0.01).on(1, 0)
         >>> print(circ)
-        q0: ──PF(0.02)───────●──────
-                             │
-        q1: ──────────────PF(0.01)──
+        q0: ──PF(0.02)──
     """
 
     # pylint: disable=invalid-name
@@ -249,11 +238,8 @@ class BitPhaseFlipChannel(PauliChannel):
         >>> from mindquantum.core.circuit import Circuit
         >>> circ = Circuit()
         >>> circ += BitPhaseFlipChannel(0.02).on(0)
-        >>> circ += BitPhaseFlipChannel(0.01).on(1, 0)
         >>> print(circ)
-        q0: ──BPF(0.02)────────●──────
-                               │
-        q1: ───────────────BPF(0.01)──
+        q0: ──BPF(0.02)──
     """
 
     # pylint: disable=invalid-name
@@ -337,6 +323,13 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
             raise ValueError(f"Required probability p ∈ [0,1], but get p = {p}.")
 
     def on(self, obj_qubits, ctrl_qubits=None):
+        """
+        Define which qubit the gate act on.
+
+        Args:
+            obj_qubits (int, list[int]): Specific which qubits the gate act on.
+            ctrl_qubits (int, list[int]): Control qubit for quantum channel should always be ``None``.
+        """
         if isinstance(obj_qubits, Iterable):
             self.n_qubits = len(obj_qubits)
         return super().on(obj_qubits, ctrl_qubits)
@@ -424,19 +417,6 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
         """Define the corresponded projectq gate."""
         self.projectq_gate = None
 
-    def on(self, obj_qubits, ctrl_qubits=None):
-        """
-        Define which qubit the gate act on.
-
-        Args:
-            obj_qubits (int, list[int]): Specific which qubits the gate act on.
-            ctrl_qubits (int, list[int]): Control qubit for AmplitudeDampingChannel should always be ``None``.
-        """
-        out = super().on(obj_qubits, ctrl_qubits)
-        if out.ctrl_qubits:
-            raise ValueError("AmplitudeDampingChannel cannot have control qubits.")
-        return out
-
 
 class PhaseDampingChannel(NoiseGate, NonHermitianGate):
     r"""
@@ -502,19 +482,6 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
         """Define the corresponded projectq gate."""
         self.projectq_gate = None
 
-    def on(self, obj_qubits, ctrl_qubits=None):
-        """
-        Define which qubit the gate act on.
-
-        Args:
-            obj_qubits (int, list[int]): Specific which qubits the gate act on.
-            ctrl_qubits (int, list[int]): Control qubit for PhaseDampingChannel should always be ``None``.
-        """
-        out = super().on(obj_qubits, ctrl_qubits)
-        if out.ctrl_qubits:
-            raise ValueError("PhaseDampingChannel cannot have control qubits.")
-        return out
-
 
 class KrausChannel(NoiseGate, NonHermitianGate):
     r"""
@@ -546,11 +513,8 @@ class KrausChannel(NoiseGate, NonHermitianGate):
         >>> amplitude_damping = KrausChannel('damping', [kmat0, kmat1])
         >>> circ = Circuit()
         >>> circ += amplitude_damping.on(0)
-        >>> circ += amplitude_damping.on(1, 0)
         >>> print(circ)
-        q0: ──damping───────●─────
-                            │
-        q1: ─────────────damping──
+        q0: ──damping──
     """
 
     def __init__(self, name: str, kraus_op, **kwargs):
