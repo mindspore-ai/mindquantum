@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """Rxx gate related decompose rule."""
 
 from mindquantum.core import gates
@@ -22,13 +21,13 @@ from mindquantum.utils.type_value_check import _check_control_num, _check_input_
 
 def rxx_decompose(gate: gates.Rxx):
     """
-    Decompose :class:`Rxx` gate.
+    Decompose :class:`mindquantum.core.gates.Rxx` gate.
 
     Args:
-        gate (:class:`Rxx`): a :class:`Rxx` gate.
+        gate (:class:`mindquantum.core.gates.Rxx`): a :class:`mindquantum.core.gates.Rxx` gate.
 
     Returns:
-        List[:class:`Circuit`], all possible decompose solution.
+        List[:class:`mindquantum.core.circuit.Circuit`], all possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler import rxx_decompose
@@ -53,13 +52,13 @@ def rxx_decompose(gate: gates.Rxx):
 
 def crxx_decompose(gate: gates.Rxx):
     """
-    Decompose :class:`Rxx` gate with control qubits.
+    Decompose :class:`mindquantum.core.gates.Rxx` gate with control qubits.
 
     Args:
-        gate (:class:`Rxx`): a :class:`Rxx` gate.
+        gate (:class:`mindquantum.core.gates.Rxx`): a :class:`mindquantum.core.gates.Rxx` gate.
 
     Returns:
-        List[:class:`Circuit`], all possible decompose solution.
+        List[:class:`mindquantum.core.circuit.Circuit`], all possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import crxx_decompose

@@ -12,4 +12,4 @@ mindquantum.algorithm.compiler.euler_decompose
         - **basis** (str) - 分解的基，可以是 ``'zyz'`` 或者 ``'u3'`` 中的一个。默认值： ``'zyz'``。
 
     返回：
-        List[:class:`Circuit`]，可能的分解方式。
+        List[:class:`mindquantum.core.circuit.Circuit`]，可能的分解方式。

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """Ryy gate related decompose rule."""
 
 import numpy as np
@@ -24,13 +23,13 @@ from mindquantum.utils.type_value_check import _check_control_num, _check_input_
 
 def ryy_decompose(gate: gates.Ryy):
     """
-    Decompose :class:`Ryy` gate.
+    Decompose :class:`mindquantum.core.gates.Ryy` gate.
 
     Args:
-        gate (:class:`Ryy`): a :class:`Ryy` gate.
+        gate (:class:`mindquantum.core.gates.Ryy`): a :class:`mindquantum.core.gates.Ryy` gate.
 
     Returns:
-        List[:class:`Circuit`], all possible decompose solution.
+        List[:class:`mindquantum.core.circuit.Circuit`], all possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler import ryy_decompose
@@ -55,13 +54,13 @@ def ryy_decompose(gate: gates.Ryy):
 
 def cryy_decompose(gate: gates.Ryy):
     """
-    Decompose :class:`Ryy` gate with control qubits.
+    Decompose :class:`mindquantum.core.gates.Ryy` gate with control qubits.
 
     Args:
-        gate (:class:`Ryy`): a :class:`Ryy` gate.
+        gate (:class:`mindquantum.core.gates.Ryy`): a :class:`mindquantum.core.gates.Ryy` gate.
 
     Returns:
-        List[:class:`Circuit`], all possible decompose solution.
+        List[:class:`mindquantum.core.circuit.Circuit`], all possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler import cryy_decompose

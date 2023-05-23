@@ -10,7 +10,7 @@ mindquantum.algorithm.compiler.kak_decompose
 
     参数：
         - **gate** (:class:`QuantumGate`) - 只有一个控制为的单比特量子门。
-        - **return_u3** (bool) - 如果为 ``True``，则返回 :class:`U3` 形式的分解，否则返回 :class:`UnivMathGate` 形式的分解。默认值： ``True``。
+        - **return_u3** (bool) - 如果为 ``True``，则返回 :class:`mindquantum.core.gates.U3` 形式的分解，否则返回 :class:`mindquantum.core.gates.UnivMathGate` 形式的分解。默认值： ``True``。
 
     返回：
-        :class:`Circuit`，由6个单比特门和最多三个CNOT门构成的量子线路。
+        :class:`mindquantum.core.circuit.Circuit`，由6个单比特门和最多三个CNOT门构成的量子线路。

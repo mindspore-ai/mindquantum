@@ -35,7 +35,7 @@ def euler_decompose(gate: QuantumGate, basis: str = 'zyz', with_phase: bool = Tr
         with_phase (bool): whether return global phase in form of a :class:`GlobalPhase` gate.
 
     Returns:
-        :class:`Circuit`, quantum circuit after Euler decomposition.
+        :class:`mindquantum.core.circuit.Circuit`, quantum circuit after Euler decomposition.
     """
     if len(gate.obj_qubits) != 1 or gate.ctrl_qubits:
         raise ValueError(f'{gate} is not a single-qubit gate with designated qubit for Euler decomposition')

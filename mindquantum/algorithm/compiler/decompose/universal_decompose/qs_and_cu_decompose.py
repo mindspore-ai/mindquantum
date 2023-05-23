@@ -40,10 +40,11 @@ def cu_decompose(gate: QuantumGate, with_barrier: bool = False) -> Circuit:
 
     Args:
         gate (:class:`QuantumGate`): instance of quantum gate.
-        with_barrier (bool): whether add :class:`BarrierGate` into decomposed circuit. Default: False.
+        with_barrier (bool): whether add :class:`mindquantum.core.gates.BarrierGate` into
+            decomposed circuit. Default: False.
 
     Returns:
-        :class:`Circuit`, composed of 1-qubit gates and CNOT gates.
+        :class:`mindquantum.core.circuit.Circuit`, composed of 1-qubit gates and CNOT gates.
 
     Examples:
         >>> import mindquantum as mq
@@ -111,7 +112,7 @@ def qs_decompose(gate: QuantumGate, with_barrier: bool = False) -> Circuit:
         with_barrier (bool): whether add barriers into decomposed circuit.
 
     Returns:
-        :class:`Circuit`, composed of 1-qubit gates and CNOT gates.
+        :class:`mindquantum.core.circuit.Circuit`, composed of 1-qubit gates and CNOT gates.
 
     Examples:
         >>> import mindquantum as mq
