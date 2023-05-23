@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """X gate related decompose rule."""
 
 from mindquantum.core import gates
@@ -25,10 +24,10 @@ def ccx_decompose(gate: gates.XGate):
     Decompose a `toffoli` gate.
 
     Args:
-        gate (:class:`XGate`): a :class:`XGate` with two control qubits.
+        gate (:class:`mindquantum.core.gates.XGate`): a :class:`mindquantum.core.gates.XGate` with two control qubits.
 
     Returns:
-        List[:class:`Circuit`], all possible decompose solution.
+        List[:class:`mindquantum.core.circuit.Circuit`], all possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import ccx_decompose

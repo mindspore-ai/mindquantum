@@ -14,7 +14,6 @@
 # ============================================================================
 """CT gate related decompose rule."""
 
-
 import numpy as np
 
 from mindquantum.core import gates
@@ -24,13 +23,13 @@ from mindquantum.utils.type_value_check import _check_control_num, _check_input_
 
 def ct_decompose(gate: gates.TGate):
     """
-    Decompose controlled :class:`TGate` gate.
+    Decompose controlled :class:`mindquantum.core.gates.TGate` gate.
 
     Args:
-        gate (:class:`TGate`): a :class:`TGate` with one control qubits.
+        gate (:class:`mindquantum.core.gates.TGate`): a :class:`mindquantum.core.gates.TGate` with one control qubits.
 
     Returns:
-        List[:class:`Circuit`], all possible decompose solution.
+        List[:class:`mindquantum.core.circuit.Circuit`], all possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler import ct_decompose

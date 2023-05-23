@@ -15,7 +15,7 @@ mindquantum.algorithm.compiler.qs_decompose
 
     参数：
         - **gate** (:class:`QuantumGate`) - 量子门实例。
-        - **with_barrier** (bool) - 是否在分解时加入 :class:`BarrierGate`。默认值： ``False``。
+        - **with_barrier** (bool) - 是否在分解时加入 :class:`mindquantum.core.gates.BarrierGate`。默认值： ``False``。
 
     返回：
-        :class:`Circuit`，由单比特门和CNOT门构成的量子线路。
+        :class:`mindquantum.core.circuit.Circuit`，由单比特门和CNOT门构成的量子线路。

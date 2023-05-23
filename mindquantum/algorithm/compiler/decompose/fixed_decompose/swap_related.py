@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """SWAP gate related decompose rule."""
 
 from mindquantum.core import gates
@@ -22,13 +21,13 @@ from mindquantum.utils.type_value_check import _check_control_num, _check_input_
 
 def swap_decompose(gate: gates.SWAPGate):
     """
-    Decompose :class:`SWAPGate` gate.
+    Decompose :class:`mindquantum.core.gates.SWAPGate` gate.
 
     Args:
-        gate (:class:`SWAPGate`): A :class:`SWAPGate` gate.
+        gate (:class:`mindquantum.core.gates.SWAPGate`): A :class:`mindquantum.core.gates.SWAPGate` gate.
 
     Returns:
-        List[:class:`Circuit`], All possible decompose solution.
+        List[:class:`mindquantum.core.circuit.Circuit`], All possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import swap_decompose
@@ -59,13 +58,14 @@ def swap_decompose(gate: gates.SWAPGate):
 
 def cswap_decompose(gate: gates.SWAPGate):
     """
-    Decompose controlled :class:`SWAPGate` gate.
+    Decompose controlled :class:`mindquantum.core.gates.SWAPGate` gate.
 
     Args:
-        gate (:class:`SWAPGate`): a :class:`SWAPGate` with one control qubit.
+        gate (:class:`mindquantum.core.gates.SWAPGate`): a :class:`mindquantum.core.gates.SWAPGate` with
+            one control qubit.
 
     Returns:
-        List[:class:`Circuit`], all possible decompose solution.
+        List[:class:`mindquantum.core.circuit.Circuit`], all possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import cswap_decompose
