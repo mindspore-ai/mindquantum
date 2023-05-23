@@ -32,7 +32,7 @@ def euler_decompose(gate: QuantumGate, basis: str = 'zyz', with_phase: bool = Tr
     Args:
         gate (QuantumGate): single-qubit quantum gate.
         basis (str): decomposition basis, can be one of ``'zyz'`` or ``'u3'``. Default: ``'zyz'``.
-        with_phase (bool): whether return global phase in form of a :class:`GlobalPhase` gate.
+        with_phase (bool): whether return global phase in form of a :class:`mindquantum.core.gates.GlobalPhase` gate.
 
     Returns:
         :class:`mindquantum.core.circuit.Circuit`, quantum circuit after Euler decomposition.
