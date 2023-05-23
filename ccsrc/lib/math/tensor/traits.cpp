@@ -56,6 +56,32 @@ TDtype ToComplexType(TDtype dtype) {
             return TDtype::Complex128;
     }
 }
+
+bool IsRealType(TDtype dtype) {
+    switch (dtype) {
+        case TDtype::Complex128:
+        case TDtype::Complex64:
+            return false;
+        case TDtype::Float32:
+        case TDtype::Float64:
+            return true;
+        default:
+            throw std::runtime_error("Unknown data type.");
+    }
+}
+bool IsComplexType(TDtype dtype) {
+    switch (dtype) {
+        case TDtype::Complex128:
+        case TDtype::Complex64:
+            return true;
+        case TDtype::Float32:
+        case TDtype::Float64:
+            return false;
+        default:
+            throw std::runtime_error("Unknown data type.");
+    }
+}
+
 // -----------------------------------------------------------------------------
 
 std::string to_string(TDevice device) {

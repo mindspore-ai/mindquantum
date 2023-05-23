@@ -51,12 +51,18 @@ struct to_real_dtype {
     static constexpr TDtype t = dtype;
 };
 
+template <TDtype dtype>
+static constexpr TDtype to_real_dtype_t = to_real_dtype<dtype>::t;
+
 TDtype ToRealType(TDtype dtype);
 
 template <TDtype dtype>
 struct to_complex_dtype {
     static constexpr TDtype t = dtype;
 };
+
+template <TDtype dtype>
+static constexpr TDtype to_complex_dtype_t = to_complex_dtype<dtype>::t;
 
 TDtype ToComplexType(TDtype dtype);
 
@@ -69,18 +75,14 @@ template <typename T>
 static constexpr bool is_arithmetic_v = is_arithmetic<T>::v;
 
 template <TDtype dtype>
-static constexpr TDtype to_real_dtype_t = to_real_dtype<dtype>::t;
-
-template <TDtype dtype>
-static constexpr TDtype to_complex_dtype_t = to_complex_dtype<dtype>::t;
-
-template <TDtype dtype>
 struct is_complex_dtype {
     static constexpr bool v = true;
 };
 
 template <TDtype dtype>
 static constexpr bool is_complex_dtype_v = is_complex_dtype<dtype>::v;
+
+bool IsRealType(TDtype dtype);
 
 template <TDtype dtype>
 struct is_real_dtype {
@@ -90,6 +92,7 @@ struct is_real_dtype {
 template <TDtype dtype>
 static constexpr bool is_real_dtype_v = is_real_dtype<dtype>::v;
 
+bool IsComplexType(TDtype dtype);
 // -----------------------------------------------------------------------------
 
 template <>
