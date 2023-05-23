@@ -37,6 +37,64 @@ enum class TDtype : int {
 template <TDtype dtype>
 struct to_device;
 
+template <TDtype dtype>
+using to_device_t = typename to_device<dtype>::type;
+
+template <typename T>
+struct to_dtype;
+
+template <typename T>
+static constexpr TDtype to_dtype_v = to_dtype<T>::dtype;
+
+template <TDtype dtype>
+struct to_real_dtype {
+    static constexpr TDtype t = dtype;
+};
+
+template <TDtype dtype>
+static constexpr TDtype to_real_dtype_t = to_real_dtype<dtype>::t;
+
+TDtype ToRealType(TDtype dtype);
+
+template <TDtype dtype>
+struct to_complex_dtype {
+    static constexpr TDtype t = dtype;
+};
+
+template <TDtype dtype>
+static constexpr TDtype to_complex_dtype_t = to_complex_dtype<dtype>::t;
+
+TDtype ToComplexType(TDtype dtype);
+
+template <typename T>
+struct is_arithmetic {
+    static constexpr bool v = false;
+};
+
+template <typename T>
+static constexpr bool is_arithmetic_v = is_arithmetic<T>::v;
+
+template <TDtype dtype>
+struct is_complex_dtype {
+    static constexpr bool v = true;
+};
+
+template <TDtype dtype>
+static constexpr bool is_complex_dtype_v = is_complex_dtype<dtype>::v;
+
+bool IsRealType(TDtype dtype);
+
+template <TDtype dtype>
+struct is_real_dtype {
+    static constexpr bool v = false;
+};
+
+template <TDtype dtype>
+static constexpr bool is_real_dtype_v = is_real_dtype<dtype>::v;
+
+bool IsComplexType(TDtype dtype);
+// -----------------------------------------------------------------------------
+
 template <>
 struct to_device<TDtype::Float32> {
     using type = float;
@@ -57,9 +115,6 @@ struct to_device<TDtype::Complex128> {
     using type = std::complex<double>;
 };
 
-template <typename T>
-struct to_dtype;
-
 template <>
 struct to_dtype<float> {
     static constexpr auto dtype = TDtype::Float32;
@@ -78,11 +133,6 @@ struct to_dtype<std::complex<float>> {
 template <>
 struct to_dtype<std::complex<double>> {
     static constexpr auto dtype = TDtype::Complex128;
-};
-
-template <typename T>
-struct is_arithmetic {
-    static constexpr bool v = false;
 };
 
 template <>
@@ -106,11 +156,6 @@ struct is_arithmetic<std::complex<double>> {
 
 // -----------------------------------------------------------------------------
 
-template <TDtype dtype>
-struct to_real_dtype {
-    static constexpr TDtype t = dtype;
-};
-
 template <>
 struct to_real_dtype<TDtype::Complex128> {
     static constexpr TDtype t = TDtype::Float64;
@@ -121,22 +166,18 @@ struct to_real_dtype<TDtype::Complex64> {
     static constexpr TDtype t = TDtype::Float32;
 };
 
+template <>
+struct to_complex_dtype<TDtype::Float64> {
+    static constexpr TDtype t = TDtype::Complex128;
+};
+
+template <>
+struct to_complex_dtype<TDtype::Float32> {
+    static constexpr TDtype t = TDtype::Complex64;
+};
+
 // -----------------------------------------------------------------------------
 
-template <typename T>
-static constexpr bool is_arithmetic_v = is_arithmetic<T>::v;
-
-template <TDtype dtype>
-using to_device_t = typename to_device<dtype>::type;
-
-template <typename T>
-static constexpr TDtype to_dtype_v = to_dtype<T>::dtype;
-
-template <TDtype dtype>
-static constexpr TDtype to_real_dtype_t = to_real_dtype<dtype>::t;
-
-TDtype ToRealType(TDtype dtype);
-TDtype ToComplexType(TDtype dtype);
 // -----------------------------------------------------------------------------
 
 template <TDtype dtype>
@@ -158,11 +199,6 @@ std::string to_string(TDtype dtype);
 
 // -----------------------------------------------------------------------------
 
-template <TDtype dtype>
-struct is_complex_dtype {
-    static constexpr bool v = true;
-};
-
 template <>
 struct is_complex_dtype<TDtype::Float32> {
     static constexpr bool v = false;
@@ -173,8 +209,15 @@ struct is_complex_dtype<TDtype::Float64> {
     static constexpr bool v = false;
 };
 
-template <TDtype dtype>
-static constexpr bool is_complex_dtype_v = is_complex_dtype<dtype>::v;
+template <>
+struct is_real_dtype<TDtype::Float32> {
+    static constexpr bool v = true;
+};
+
+template <>
+struct is_real_dtype<TDtype::Float64> {
+    static constexpr bool v = true;
+};
 
 // -----------------------------------------------------------------------------
 
