@@ -8,7 +8,7 @@ MindQuantum 量子线路编译模块。
 Fixed decompose rules
 ---------------------
 
-.. autosummary::
+.. mscnautosummary::
     :toctree:
     :nosignatures:
     :template: classtemplate.rst
@@ -32,7 +32,7 @@ Fixed decompose rules
 Universal decompose rules
 -------------------------
 
-.. autosummary::
+.. mscnautosummary::
     :toctree:
     :nosignatures:
     :template: classtemplate.rst
