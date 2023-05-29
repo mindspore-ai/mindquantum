@@ -23,13 +23,13 @@ from mindquantum.utils.type_value_check import _check_control_num, _check_input_
 
 def ryy_decompose(gate: gates.Ryy):
     """
-    Decompose :class:`mindquantum.core.gates.Ryy` gate.
+    Decompose :class:`~.core.gates.Ryy` gate.
 
     Args:
-        gate (:class:`mindquantum.core.gates.Ryy`): a :class:`mindquantum.core.gates.Ryy` gate.
+        gate (:class:`~.core.gates.Ryy`): a :class:`~.core.gates.Ryy` gate.
 
     Returns:
-        List[:class:`mindquantum.core.circuit.Circuit`], all possible decompose solution.
+        List[:class:`~.core.circuit.Circuit`], all possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler import ryy_decompose
@@ -54,13 +54,13 @@ def ryy_decompose(gate: gates.Ryy):
 
 def cryy_decompose(gate: gates.Ryy):
     """
-    Decompose :class:`mindquantum.core.gates.Ryy` gate with control qubits.
+    Decompose :class:`~.core.gates.Ryy` gate with control qubits.
 
     Args:
-        gate (:class:`mindquantum.core.gates.Ryy`): a :class:`mindquantum.core.gates.Ryy` gate.
+        gate (:class:`~.core.gates.Ryy`): a :class:`~.core.gates.Ryy` gate.
 
     Returns:
-        List[:class:`mindquantum.core.circuit.Circuit`], all possible decompose solution.
+        List[:class:`~.core.circuit.Circuit`], all possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler import cryy_decompose

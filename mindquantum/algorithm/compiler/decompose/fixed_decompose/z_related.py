@@ -21,13 +21,13 @@ from mindquantum.utils.type_value_check import _check_control_num, _check_input_
 
 def cz_decompose(gate: gates.ZGate):
     """
-    Decompose controlled :class:`mindquantum.core.gates.ZGate` gate.
+    Decompose controlled :class:`~.core.gates.ZGate` gate.
 
     Args:
-        gate (:class:`mindquantum.core.gates.ZGate`): a :class:`mindquantum.core.gates.ZGate` with one control qubits.
+        gate (:class:`~.core.gates.ZGate`): a :class:`~.core.gates.ZGate` with one control qubits.
 
     Returns:
-        List[:class:`mindquantum.core.circuit.Circuit`], all possible decompose solution.
+        List[:class:`~.core.circuit.Circuit`], all possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler import cz_decompose

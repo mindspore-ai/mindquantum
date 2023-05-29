@@ -8,7 +8,7 @@ mindquantum.core.gates.TGate
     .. math::
         {\rm T}=\begin{pmatrix}1&0\\0&(1+i)/\sqrt(2)\end{pmatrix}
 
-    更多用法，请参见 :class:`mindquantum.core.gates.XGate`。
+    更多用法，请参见 :class:`~.core.gates.XGate`。
 
     .. py:method:: get_cpp_obj()
 

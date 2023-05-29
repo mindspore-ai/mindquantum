@@ -3,10 +3,10 @@ mindquantum.core.gates.YY
 
 .. py:class:: mindquantum.core.gates.YY(pr)
 
-    伊辛YY门。更多用法，请参见 :class:`mindquantum.core.gates.RX`。
+    伊辛YY门。更多用法，请参见 :class:`~.core.gates.RX`。
 
     .. note::
-        `YY` 门已弃用，请使用 :class:`mindquantum.core.gates.Ryy`。
+        `YY` 门已弃用，请使用 :class:`~.core.gates.Ryy`。
 
     .. math::
 

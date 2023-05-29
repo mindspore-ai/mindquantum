@@ -53,12 +53,12 @@ functional
    * - functional
      - high level circuit operators
    * - mindquantum.core.circuit.C
-     - :class:`mindquantum.core.circuit.controlled`
+     - :class:`~.core.circuit.controlled`
    * - mindquantum.core.circuit.D
-     - :class:`mindquantum.core.circuit.dagger`
+     - :class:`~.core.circuit.dagger`
    * - mindquantum.core.circuit.A
-     - :class:`mindquantum.core.circuit.apply`
+     - :class:`~.core.circuit.apply`
    * - mindquantum.core.circuit.AP
-     - :class:`mindquantum.core.circuit.add_prefix`
+     - :class:`~.core.circuit.add_prefix`
    * - mindquantum.core.circuit.CPN
-     - :class:`mindquantum.core.circuit.change_param_name`
+     - :class:`~.core.circuit.change_param_name`

@@ -323,7 +323,7 @@ mindquantum.core.circuit.Circuit
 
     .. py:method:: un(gate, maps_obj, maps_ctrl=None)
 
-        将量子门作用于多个目标量子比特和控制量子比特，详见类 :class:`mindquantum.core.circuit.UN` 。
+        将量子门作用于多个目标量子比特和控制量子比特，详见类 :class:`~.core.circuit.UN` 。
 
         参数：
             - **gate** (BasicGate) - 要执行的量子门。
@@ -351,7 +351,7 @@ mindquantum.core.circuit.Circuit
         在电路中添加 `XX` 门。
 
         .. note::
-            `xx` 方法已弃用，请使用 :class:`mindquantum.core.circuit.Circuit.rxx`。
+            `xx` 方法已弃用，请使用 :class:`~.core.circuit.Circuit.rxx`。
 
         参数：
             - **para** (Union[dict, ParameterResolver]) - `XX` 门的参数。
@@ -371,7 +371,7 @@ mindquantum.core.circuit.Circuit
         在电路中添加 `YY` 门。
 
         .. note::
-            `yy` 方法已弃用，请使用 :class:`mindquantum.core.circuit.Circuit.ryy`。
+            `yy` 方法已弃用，请使用 :class:`~.core.circuit.Circuit.ryy`。
 
         参数：
             - **para** (Union[dict, ParameterResolver]) - `YY` 门的参数。
@@ -391,7 +391,7 @@ mindquantum.core.circuit.Circuit
         在电路中添加 `ZZ` 门。
 
         .. note::
-            `zz` 方法已弃用，请使用 :class:`mindquantum.core.circuit.Circuit.rzz`。
+            `zz` 方法已弃用，请使用 :class:`~.core.circuit.Circuit.rzz`。
 
         参数：
             - **para** (Union[dict, ParameterResolver]) - `ZZ` 门的参数。

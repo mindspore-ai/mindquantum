@@ -5,7 +5,7 @@ mindquantum.core.gates.UnivMathGate
 
     通用数学门。
 
-    更多用法，请参见 :class:`mindquantum.core.gates.XGate`.
+    更多用法，请参见 :class:`~.core.gates.XGate`.
 
     参数：
         - **name** (str) - 此门的名称。

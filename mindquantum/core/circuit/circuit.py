@@ -996,7 +996,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Add a XX gate.
 
         Note:
-            xx method is deprecated, please use :class:`mindquantum.core.circuit.Circuit.rxx`.
+            xx method is deprecated, please use :class:`~.core.circuit.Circuit.rxx`.
 
         Args:
             para (Union[dict, ParameterResolver]): The parameter for `XX` gate.
@@ -1016,7 +1016,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Add a YY gate.
 
         Note:
-            yy method is deprecated, please use :class:`mindquantum.core.circuit.Circuit.ryy`.
+            yy method is deprecated, please use :class:`~.core.circuit.Circuit.ryy`.
 
         Args:
             para (Union[dict, ParameterResolver]): The parameter for `YY` gate.
@@ -1036,7 +1036,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Add a ZZ gate.
 
         Note:
-            zz method is deprecated, please use :class:`mindquantum.core.circuit.Circuit.rzz`.
+            zz method is deprecated, please use :class:`~.core.circuit.Circuit.rzz`.
 
         Args:
             para (Union[dict, ParameterResolver]): The parameter for `ZZ` gate.

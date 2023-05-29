@@ -45,11 +45,11 @@ def tensor_product_decompose(gate: QuantumGate, return_u3: bool = True) -> Circu
 
     Args:
         gate (:class:`QuantumGate`): 2-qubit gate composed by tensor product.
-        return_u3 (bool): return gates in form of :class:`mindquantum.core.gates.U3` if ``True``, otherwise
-            return :class:`mindquantum.core.gates.UnivMathGate`. Default: ``True``.
+        return_u3 (bool): return gates in form of :class:`~.core.gates.U3` if ``True``, otherwise
+            return :class:`~.core.gates.UnivMathGate`. Default: ``True``.
 
     Returns:
-        :class:`mindquantum.core.circuit.Circuit`, including two single-qubit gates.
+        :class:`~.core.circuit.Circuit`, including two single-qubit gates.
 
     Examples:
         >>> import mindquantum as mq
@@ -86,11 +86,11 @@ def abc_decompose(gate: QuantumGate, return_u3: bool = True) -> Circuit:
 
     Args:
         gate (:class:`QuantumGate`): quantum gate with 1 control bit and 1 target bit.
-        return_u3 (bool): return gates in form of :class:`mindquantum.core.gates.U3` if ``True``, otherwise
-            return :class:`mindquantum.core.gates.UnivMathGate`. Default: ``True``.
+        return_u3 (bool): return gates in form of :class:`~.core.gates.U3` if ``True``, otherwise
+            return :class:`~.core.gates.UnivMathGate`. Default: ``True``.
 
     Returns:
-        :class:`mindquantum.core.circuit.Circuit`, including at most 2 CNOT gates and 4 single-qubit gates.
+        :class:`~.core.circuit.Circuit`, including at most 2 CNOT gates and 4 single-qubit gates.
 
     Examples:
         >>> import mindquantum as mq
@@ -149,11 +149,11 @@ def kak_decompose(gate: QuantumGate, return_u3: bool = True) -> Circuit:
 
     Args:
         gate (:class:`QuantumGate`): 2-qubit quantum gate.
-        return_u3 (bool): return gates in form of :class:`mindquantum.core.gates.U3` if ``True``, otherwise
-            return :class:`mindquantum.core.gates.UnivMathGate`. Default: ``True``.
+        return_u3 (bool): return gates in form of :class:`~.core.gates.U3` if ``True``, otherwise
+            return :class:`~.core.gates.UnivMathGate`. Default: ``True``.
 
     Returns:
-        :class:`mindquantum.core.circuit.Circuit`, including at most 3 CNOT gates and 6 single-qubit gates.
+        :class:`~.core.circuit.Circuit`, including at most 3 CNOT gates and 6 single-qubit gates.
 
     Examples:
         >>> import mindquantum as mq

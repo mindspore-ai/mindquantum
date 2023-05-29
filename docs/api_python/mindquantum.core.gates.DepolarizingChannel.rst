@@ -24,14 +24,6 @@ mindquantum.core.gates.DepolarizingChannel
     参数：
         - **p** (int, float) - 发生错误的概率。
 
-    .. py:method:: on(obj_qubits, ctrl_qubits=None)
-
-        定义门作用在哪个比特上。
-
-        参数：
-            - **obj_qubits** (int, list[int]) - 指明量子门作用在哪个比特上。
-            - **ctrl_qubits** (int, list[int]) - 噪声信道的控制位比特只能是 ``None``。
-
     .. py:method:: define_projectq_gate()
 
         定义对应的projectq门。
@@ -39,3 +31,11 @@ mindquantum.core.gates.DepolarizingChannel
     .. py:method:: get_cpp_obj()
 
         返回量子门的c++对象。
+
+    .. py:method:: on(obj_qubits, ctrl_qubits=None)
+
+        定义门作用在哪个比特上。
+
+        参数：
+            - **obj_qubits** (int, list[int]) - 指明量子门作用在哪个比特上。
+            - **ctrl_qubits** (int, list[int]) - 噪声信道的控制位比特只能是 ``None``。

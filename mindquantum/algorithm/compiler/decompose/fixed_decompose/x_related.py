@@ -24,10 +24,10 @@ def ccx_decompose(gate: gates.XGate):
     Decompose a `toffoli` gate.
 
     Args:
-        gate (:class:`mindquantum.core.gates.XGate`): a :class:`mindquantum.core.gates.XGate` with two control qubits.
+        gate (:class:`~.core.gates.XGate`): a :class:`~.core.gates.XGate` with two control qubits.
 
     Returns:
-        List[:class:`mindquantum.core.circuit.Circuit`], all possible decompose solution.
+        List[:class:`~.core.circuit.Circuit`], all possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import ccx_decompose
