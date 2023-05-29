@@ -3,7 +3,7 @@ mindquantum.core.gates.RY
 
 .. py:class:: mindquantum.core.gates.RY(pr)
 
-    围绕y轴的旋转门。更多用法，请参见 :class:`mindquantum.core.gates.RX`。
+    围绕y轴的旋转门。更多用法，请参见 :class:`~.core.gates.RX`。
 
     .. math::
 

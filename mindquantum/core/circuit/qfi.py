@@ -168,7 +168,7 @@ def qfi(circuit: Circuit, backend='mqvector'):
     Args:
         circuit (Circuit): A parameterized quantum circuit.
         backend (str): A supported simulator backend. Please refer description
-            of :class:`mindquantum.simulator.Simulator`. Default: ``'mqvector'``.
+            of :class:`~.simulator.Simulator`. Default: ``'mqvector'``.
 
     Returns:
         Function, a function that can calculate quantum fisher information.
@@ -206,7 +206,7 @@ def partial_psi_partial_psi(circuit: Circuit, backend='mqvector'):
     Args:
         circuit (Circuit): A parameterized quantum circuit.
         backend (str): A supported simulator backend. Please refer description
-            of :class:`mindquantum.simulator.Simulator`. Default: ``'mqvector'``.
+            of :class:`~.simulator.Simulator`. Default: ``'mqvector'``.
 
     Returns:
         Function, a function that can calculate inner product of partial psi and partial psi.
@@ -238,7 +238,7 @@ def partial_psi_psi(circuit: Circuit, backend='mqvector'):
     Args:
         circuit (Circuit): A parameterized quantum circuit.
         backend (str): A supported simulator backend. Please refer description
-            of :class:`mindquantum.simulator.Simulator`. Default: ``'mqvector'``.
+            of :class:`~.simulator.Simulator`. Default: ``'mqvector'``.
 
     Returns:
         Function, a function that can calculate inner product of partial psi and psi.

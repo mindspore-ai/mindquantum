@@ -9,7 +9,7 @@ mindquantum.core.gates.IGate
 
         {\rm I}=\begin{pmatrix}1&0\\0&1\end{pmatrix}
 
-    更多用法，请参见 :class:`mindquantum.core.gates.XGate`。
+    更多用法，请参见 :class:`~.core.gates.XGate`。
 
     .. py:method:: get_cpp_obj()
 

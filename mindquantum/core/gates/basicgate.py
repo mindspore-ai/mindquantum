@@ -53,7 +53,7 @@ class UnivMathGate(NoneParamNonHermMat):
     r"""
     Universal math gate.
 
-    More usage, please see :class:`mindquantum.core.gates.XGate`.
+    More usage, please see :class:`~.core.gates.XGate`.
 
     Args:
         name (str): the name of this gate.
@@ -100,7 +100,7 @@ class HGate(NoneParamSelfHermMat):
 
         {\rm H}=\frac{1}{\sqrt{2}}\begin{pmatrix}1&1\\1&-1\end{pmatrix}
 
-    More usage, please see :class:`mindquantum.core.gates.XGate`.
+    More usage, please see :class:`~.core.gates.XGate`.
     """
 
     def __init__(self):
@@ -211,7 +211,7 @@ class YGate(PauliGate):
 
         {\rm Y}=\begin{pmatrix}0&-i\\i&0\end{pmatrix}
 
-    More usage, please see :class:`mindquantum.core.gates.XGate`.
+    More usage, please see :class:`~.core.gates.XGate`.
     """
 
     def __init__(self):
@@ -251,7 +251,7 @@ class ZGate(PauliGate):
 
         {\rm Z}=\begin{pmatrix}1&0\\0&-1\end{pmatrix}
 
-    More usage, please see :class:`mindquantum.core.gates.XGate`.
+    More usage, please see :class:`~.core.gates.XGate`.
     """
 
     def __init__(self):
@@ -291,7 +291,7 @@ class IGate(PauliGate):
 
         {\rm I}=\begin{pmatrix}1&0\\0&1\end{pmatrix}
 
-    More usage, please see :class:`mindquantum.core.gates.XGate`.
+    More usage, please see :class:`~.core.gates.XGate`.
     """
 
     def __init__(self):
@@ -320,7 +320,7 @@ class CNOTGate(NoneParamSelfHermMat):
     r"""
     Control-X gate.
 
-    More usage, please see :class:`mindquantum.core.gates.XGate`.
+    More usage, please see :class:`~.core.gates.XGate`.
     """
 
     def __init__(self):
@@ -378,7 +378,7 @@ class SWAPGate(NoneParamSelfHermMat):
     """
     SWAP gate that swap two different qubits.
 
-    More usage, please see :class:`mindquantum.core.gates.XGate`.
+    More usage, please see :class:`~.core.gates.XGate`.
     """
 
     def __init__(self):
@@ -418,7 +418,7 @@ class ISWAPGate(NoneParamNonHermMat):
     ISWAP gate that swaps two different qubits and phase the :math:`\left|01\right>` and :math:`\left|10\right>`
     amplitudes by :math:`i`.
 
-    More usage, please see :class:`mindquantum.core.gates.XGate`.
+    More usage, please see :class:`~.core.gates.XGate`.
     """
 
     def __init__(self):
@@ -460,7 +460,7 @@ class TGate(NoneParamNonHermMat):
     .. math::
         {\rm T}=\begin{pmatrix}1&0\\0&(1+i)/\sqrt(2)\end{pmatrix}
 
-    More usage, please see :class:`mindquantum.core.gates.XGate`.
+    More usage, please see :class:`~.core.gates.XGate`.
     """
 
     def __init__(self):
@@ -487,7 +487,7 @@ class SGate(NoneParamNonHermMat):
     .. math::
         {\rm S}=\begin{pmatrix}1&0\\0&i\end{pmatrix}
 
-    More usage, please see :class:`mindquantum.core.gates.XGate`.
+    More usage, please see :class:`~.core.gates.XGate`.
     """
 
     def __init__(self):
@@ -582,7 +582,7 @@ class RX(RotSelfHermMat):
 
 class RY(RotSelfHermMat):
     r"""
-    Rotation gate around y-axis. More usage, please see :class:`mindquantum.core.gates.RX`.
+    Rotation gate around y-axis. More usage, please see :class:`~.core.gates.RX`.
 
     .. math::
 
@@ -616,7 +616,7 @@ class RY(RotSelfHermMat):
 
 class RZ(RotSelfHermMat):
     r"""
-    Rotation gate around z-axis. More usage, please see :class:`mindquantum.core.gates.RX`.
+    Rotation gate around z-axis. More usage, please see :class:`~.core.gates.RX`.
 
     .. math::
 
@@ -650,10 +650,10 @@ class RZ(RotSelfHermMat):
 
 class ZZ(RotSelfHermMat):
     r"""
-    Ising ZZ  gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+    Ising ZZ  gate. More usage, please see :class:`~.core.gates.RX`.
 
     Note:
-        ZZ gate is deprecated, please use :class:`mindquantum.core.gates.Rzz`.
+        ZZ gate is deprecated, please use :class:`~.core.gates.Rzz`.
 
     .. math::
 
@@ -727,10 +727,10 @@ class ZZ(RotSelfHermMat):
 
 class XX(RotSelfHermMat):
     r"""
-    Ising XX gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+    Ising XX gate. More usage, please see :class:`~.core.gates.RX`.
 
     Note:
-        XX gate is deprecated, please use :class:`mindquantum.core.gates.Rxx`.
+        XX gate is deprecated, please use :class:`~.core.gates.Rxx`.
 
     .. math::
 
@@ -812,10 +812,10 @@ class XX(RotSelfHermMat):
 
 class YY(RotSelfHermMat):
     r"""
-    Ising YY  gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+    Ising YY  gate. More usage, please see :class:`~.core.gates.RX`.
 
     Note:
-        YY gate is deprecated, please use :class:`mindquantum.core.gates.Ryy`.
+        YY gate is deprecated, please use :class:`~.core.gates.Ryy`.
 
     .. math::
 
@@ -897,7 +897,7 @@ class YY(RotSelfHermMat):
 
 class Rzz(RotSelfHermMat):
     r"""
-    Rzz gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+    Rzz gate. More usage, please see :class:`~.core.gates.RX`.
 
     .. math::
 
@@ -972,7 +972,7 @@ class Rzz(RotSelfHermMat):
 
 class Rxx(RotSelfHermMat):
     r"""
-    Rxx gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+    Rxx gate. More usage, please see :class:`~.core.gates.RX`.
 
     .. math::
 
@@ -1055,7 +1055,7 @@ class Rxx(RotSelfHermMat):
 
 class Ryy(RotSelfHermMat):
     r"""
-    Ryy  gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+    Ryy  gate. More usage, please see :class:`~.core.gates.RX`.
 
     .. math::
 
@@ -1138,7 +1138,7 @@ class Ryy(RotSelfHermMat):
 
 class Rxy(RotSelfHermMat):
     r"""
-    Rxy gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+    Rxy gate. More usage, please see :class:`~.core.gates.RX`.
 
     .. math::
 
@@ -1213,7 +1213,7 @@ class Rxy(RotSelfHermMat):
 
 class Rxz(RotSelfHermMat):
     r"""
-    Rxz gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+    Rxz gate. More usage, please see :class:`~.core.gates.RX`.
 
     .. math::
 
@@ -1286,7 +1286,7 @@ class Rxz(RotSelfHermMat):
 
 class Ryz(RotSelfHermMat):
     r"""
-    Ryz gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+    Ryz gate. More usage, please see :class:`~.core.gates.RX`.
 
     .. math::
 
@@ -1411,7 +1411,7 @@ class BarrierGate(FunctionalGate):
 
 class GlobalPhase(RotSelfHermMat):
     r"""
-    Global phase gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+    Global phase gate. More usage, please see :class:`~.core.gates.RX`.
 
     .. math::
 
@@ -1475,7 +1475,7 @@ BARRIER = BarrierGate(show=False)
 
 class PhaseShift(ParameterOppsGate):
     r"""
-    Phase shift gate. More usage, please see :class:`mindquantum.core.gates.RX`.
+    Phase shift gate. More usage, please see :class:`~.core.gates.RX`.
 
     .. math::
 
@@ -1550,7 +1550,7 @@ class Power(NoneParamNonHermMat):
     Power operator on a non parameterized gate.
 
     Args:
-        gates (:class:`mindquantum.core.gates.NoneParameterGate`): The basic gate you need to apply power operator.
+        gates (:class:`~.core.gates.NoneParameterGate`): The basic gate you need to apply power operator.
         exponent (int, float): The exponent. Default: ``0.5``.
 
     Examples:

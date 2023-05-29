@@ -78,25 +78,25 @@ mindquantum.core.gates
    * - functional
      - gates
    * - mindquantum.core.gates.CNOT
-     - :class:`mindquantum.core.gates.CNOTGate`
+     - :class:`~.core.gates.CNOTGate`
    * - mindquantum.core.gates.I
-     - :class:`mindquantum.core.gates.IGate`
+     - :class:`~.core.gates.IGate`
    * - mindquantum.core.gates.ISWAP
-     - :class:`mindquantum.core.gates.ISWAPGate`
+     - :class:`~.core.gates.ISWAPGate`
    * - mindquantum.core.gates.H
-     - :class:`mindquantum.core.gates.HGate`
+     - :class:`~.core.gates.HGate`
    * - mindquantum.core.gates.S
-     - :class:`mindquantum.core.gates.PhaseShift` (numpy.pi/2)
+     - :class:`~.core.gates.PhaseShift` (numpy.pi/2)
    * - mindquantum.core.gates.SWAP
-     - :class:`mindquantum.core.gates.SWAPGate`
+     - :class:`~.core.gates.SWAPGate`
    * - mindquantum.core.gates.T
-     - :class:`mindquantum.core.gates.PhaseShift` (numpy.pi/4)
+     - :class:`~.core.gates.PhaseShift` (numpy.pi/4)
    * - mindquantum.core.gates.X
-     - :class:`mindquantum.core.gates.XGate`
+     - :class:`~.core.gates.XGate`
    * - mindquantum.core.gates.Y
-     - :class:`mindquantum.core.gates.YGate`
+     - :class:`~.core.gates.YGate`
    * - mindquantum.core.gates.Z
-     - :class:`mindquantum.core.gates.ZGate`
+     - :class:`~.core.gates.ZGate`
 
 量子信道
 -------------

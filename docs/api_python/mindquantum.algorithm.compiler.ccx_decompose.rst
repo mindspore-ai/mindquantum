@@ -6,7 +6,7 @@ mindquantum.algorithm.compiler.ccx_decompose
     分解一个 `toffoli` 门。
 
     参数：
-        - **gate** (:class:`mindquantum.core.gates.XGate`) - 一个有两个控制位的 :class:`mindquantum.core.gates.XGate` 门。
+        - **gate** (:class:`~.core.gates.XGate`) - 一个有两个控制位的 :class:`~.core.gates.XGate` 门。
 
     返回：
-        List[:class:`mindquantum.core.circuit.Circuit`]，可能的分解方式。
+        List[:class:`~.core.circuit.Circuit`]，可能的分解方式。

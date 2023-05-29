@@ -21,13 +21,13 @@ from mindquantum.utils.type_value_check import _check_control_num, _check_input_
 
 def rxx_decompose(gate: gates.Rxx):
     """
-    Decompose :class:`mindquantum.core.gates.Rxx` gate.
+    Decompose :class:`~.core.gates.Rxx` gate.
 
     Args:
-        gate (:class:`mindquantum.core.gates.Rxx`): a :class:`mindquantum.core.gates.Rxx` gate.
+        gate (:class:`~.core.gates.Rxx`): a :class:`~.core.gates.Rxx` gate.
 
     Returns:
-        List[:class:`mindquantum.core.circuit.Circuit`], all possible decompose solution.
+        List[:class:`~.core.circuit.Circuit`], all possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler import rxx_decompose
@@ -52,13 +52,13 @@ def rxx_decompose(gate: gates.Rxx):
 
 def crxx_decompose(gate: gates.Rxx):
     """
-    Decompose :class:`mindquantum.core.gates.Rxx` gate with control qubits.
+    Decompose :class:`~.core.gates.Rxx` gate with control qubits.
 
     Args:
-        gate (:class:`mindquantum.core.gates.Rxx`): a :class:`mindquantum.core.gates.Rxx` gate.
+        gate (:class:`~.core.gates.Rxx`): a :class:`~.core.gates.Rxx` gate.
 
     Returns:
-        List[:class:`mindquantum.core.circuit.Circuit`], all possible decompose solution.
+        List[:class:`~.core.circuit.Circuit`], all possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import crxx_decompose

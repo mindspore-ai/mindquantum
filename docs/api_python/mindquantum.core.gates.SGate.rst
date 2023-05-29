@@ -8,7 +8,7 @@ mindquantum.core.gates.SGate
     .. math::
         {\rm S}=\begin{pmatrix}1&0\\0&i\end{pmatrix}
 
-    更多用法，请参见 :class:`mindquantum.core.gates.XGate`。
+    更多用法，请参见 :class:`~.core.gates.XGate`。
 
     .. py:method:: get_cpp_obj()
 

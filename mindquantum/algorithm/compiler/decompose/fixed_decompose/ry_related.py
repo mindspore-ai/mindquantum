@@ -21,13 +21,13 @@ from mindquantum.utils.type_value_check import _check_control_num, _check_input_
 
 def cry_decompose(gate: gates.RY):
     """
-    Decompose controlled :class:`mindquantum.core.gates.RY` gate.
+    Decompose controlled :class:`~.core.gates.RY` gate.
 
     Args:
-        gate (:class:`mindquantum.core.gates.RY`): A :class:`mindquantum.core.gates.RY` gate with one control qubits.
+        gate (:class:`~.core.gates.RY`): A :class:`~.core.gates.RY` gate with one control qubits.
 
     Returns:
-        List[:class:`mindquantum.core.circuit.Circuit`], all possible decompose solution.
+        List[:class:`~.core.circuit.Circuit`], all possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler import cry_decompose

@@ -7,7 +7,7 @@ mindquantum.algorithm.compiler.tensor_product_decompose
 
     参数：
         - **gate** (:class:`QuantumGate`) - 一个两比特量子门。
-        - **return_u3** (bool) - 如果为 ``True``，则返回 :class:`mindquantum.core.gates.U3` 形式的分解，否则返回 :class:`mindquantum.core.gates.UnivMathGate` 形式的分解。默认值： ``True``。
+        - **return_u3** (bool) - 如果为 ``True``，则返回 :class:`~.core.gates.U3` 形式的分解，否则返回 :class:`~.core.gates.UnivMathGate` 形式的分解。默认值： ``True``。
 
     返回：
-        :class:`mindquantum.core.circuit.Circuit`，包含两个单比特门。
+        :class:`~.core.circuit.Circuit`，包含两个单比特门。

@@ -3,7 +3,7 @@ mindquantum.core.gates.Rzz
 
 .. py:class:: mindquantum.core.gates.Rzz(pr)
 
-    Rzz 门。更多用法，请参见 :class:`mindquantum.core.gates.RX`。
+    Rzz 门。更多用法，请参见 :class:`~.core.gates.RX`。
 
     .. math::
 

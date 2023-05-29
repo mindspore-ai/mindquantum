@@ -3,10 +3,10 @@ mindquantum.core.gates.ZZ
 
 .. py:class:: mindquantum.core.gates.ZZ(pr)
 
-    伊辛ZZ门。更多用法，请参见 :class:`mindquantum.core.gates.RX`。
+    伊辛ZZ门。更多用法，请参见 :class:`~.core.gates.RX`。
 
     .. note::
-        `ZZ` 门已弃用，请使用 :class:`mindquantum.core.gates.Rzz`。
+        `ZZ` 门已弃用，请使用 :class:`~.core.gates.Rzz`。
 
     .. math::
 

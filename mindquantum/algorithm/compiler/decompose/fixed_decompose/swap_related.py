@@ -21,13 +21,13 @@ from mindquantum.utils.type_value_check import _check_control_num, _check_input_
 
 def swap_decompose(gate: gates.SWAPGate):
     """
-    Decompose :class:`mindquantum.core.gates.SWAPGate` gate.
+    Decompose :class:`~.core.gates.SWAPGate` gate.
 
     Args:
-        gate (:class:`mindquantum.core.gates.SWAPGate`): A :class:`mindquantum.core.gates.SWAPGate` gate.
+        gate (:class:`~.core.gates.SWAPGate`): A :class:`~.core.gates.SWAPGate` gate.
 
     Returns:
-        List[:class:`mindquantum.core.circuit.Circuit`], All possible decompose solution.
+        List[:class:`~.core.circuit.Circuit`], All possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import swap_decompose
@@ -58,14 +58,14 @@ def swap_decompose(gate: gates.SWAPGate):
 
 def cswap_decompose(gate: gates.SWAPGate):
     """
-    Decompose controlled :class:`mindquantum.core.gates.SWAPGate` gate.
+    Decompose controlled :class:`~.core.gates.SWAPGate` gate.
 
     Args:
-        gate (:class:`mindquantum.core.gates.SWAPGate`): a :class:`mindquantum.core.gates.SWAPGate` with
+        gate (:class:`~.core.gates.SWAPGate`): a :class:`~.core.gates.SWAPGate` with
             one control qubit.
 
     Returns:
-        List[:class:`mindquantum.core.circuit.Circuit`], all possible decompose solution.
+        List[:class:`~.core.circuit.Circuit`], all possible decompose solution.
 
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import cswap_decompose
