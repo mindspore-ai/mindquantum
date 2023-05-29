@@ -29,10 +29,10 @@ def get_mp2_energy_blow_threshold(mol_mp2, mask=None, threshold=1e-4):
     return e_corr2 - mol_mp2.e_corr
 
 def check_frozen(mo_energy):
-    if (mo_energy[1]-mo_energy[0])>2.0:
-        return 1
-    else:
-        return 0
+    return int(np.sum(mo_energy<=-2.0))
+
+def check_frozen_virial(mo_energy):
+    return int(np.sum(mo_energy>1.0))
 
 def mp2_frozen_core_energy(mol_mp2,frozen=[0]):
     # E(UCCSD)-E(UCCSD-frozen)=E(MP2)-E(MP2-frozen)

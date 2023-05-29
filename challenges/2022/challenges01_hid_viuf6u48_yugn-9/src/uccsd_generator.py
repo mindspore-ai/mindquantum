@@ -37,7 +37,7 @@ from mindquantum.algorithm.nisq.chem.transform import Transform
 from mindquantum.third_party.interaction_operator import InteractionOperator
 
 from tarper_qubits import get_taper_stabilizers, taper_qubits
-from binary_coding import fermi_to_qubit_coding, get_code
+from binary_coding import fermi_to_qubit_coding, get_code, gen_code_with_symmetry
 from mp2_correction import gen_mp2_energy_mask, get_mp2_energy_blow_threshold, \
         mp2_frozen_core_energy, check_frozen
 
@@ -100,7 +100,7 @@ class Circuit_Generator:
 
         out = []
         term = sorted(term)
-        if len(term) == 1:  # single pauli operator
+        if len(term) == 1 and not isinstance(para, ordict):  # single pauli operator
             out += self._HE_eliminating(())
             if term[0][1] == 'X':
                 out.append(G.RX(para * 2).on(term[0][0]))
@@ -159,7 +159,7 @@ class Uccsd_Generator:
             that are positive. Default: 0.
         mode (str): the mode to transform a fermion ansatz. JW | Parity | BK . Default: JW.
     """
-    def __init__(self, molecular, th=0, mode='JW'):
+    def __init__(self, molecular, th=0, mode='JW',code=None):
         if isinstance(molecular, str):
             self.mol = MolecularData(filename=molecular)
             self.mol.load()
@@ -169,6 +169,8 @@ class Uccsd_Generator:
         print("fci:{}.".format(self.mol.fci_energy))
         self.th = th
         self.mode = mode if mode in ['JW', 'Parity', 'BK'] else 'JW'
+        if not(code is None):
+            self.code = code
 
     @property
     def generate_uccsd(self):
@@ -182,16 +184,12 @@ class Uccsd_Generator:
             - **n_electrons**, the number of electrons of the molecule.
         """
         self.n_frozen = check_frozen(self.mol._pyscf_data['scf'].mo_energy)
-        self.code = get_code(self.mol.n_qubits-self.n_frozen*2, self.mol.n_electrons//2-self.n_frozen)
-        self.mask = (self.mol.ccsd_double_amps > self.th)
-        #self.mask = gen_mp2_energy_mask(self.mol._pyscf_data['mp2'], threshold=self.th)
 
         fermion_ansatz, parameters = self._para_uccsd_singlet_generator(self.mol, self.th)
         pauli_ansatz = self._transform2pauli(fermion_ansatz)
-        #stabilizers_list = get_taper_stabilizers(self.mol)
-        #pauli_ansatz, _ = taper_qubits(pauli_ansatz, stabilizers_list)
 
-        uccsd_circuit = Circuit_Generator(pauli_ansatz, self.mol.n_qubits-2-self.n_frozen*2).circuit
+        tapered_qubits = self.mol.n_qubits - self.n_frozen*2 - len(self.code.encoder.tocoo().col)
+        uccsd_circuit = Circuit_Generator(pauli_ansatz, self.mol.n_qubits-tapered_qubits-self.n_frozen*2).circuit
 
         ham_of = self.mol.get_molecular_hamiltonian()
         (as_start, as_end) = (self.n_frozen, self.mol.n_qubits//2)
@@ -200,13 +198,20 @@ class Uccsd_Generator:
                     active_indices = range(as_start, as_end))
         inter_ops = InteractionOperator(*ham_of.n_body_tensors.values())
         ham_hiq = get_fermion_operator(inter_ops)
-        #qubit_hamiltonian = Transform(ham_hiq).jordan_wigner()
+        # only few hamiltonian terms
+        d = {}
+        ham_th = 0.001 if self.mol.name=="H4-C1_sto-3g_singlet" else 0.002
+        for k,v in ham_hiq.terms.items():
+            if abs(v) >= ham_th:
+                d[k]=v
+        ham_hiq.terms = d
+
+        print("hamiltonian terms:",len(ham_hiq))
         qubit_hamiltonian = fermi_to_qubit_coding(ham_hiq, self.mol.n_qubits, \
                 self.mol.n_electrons//2, self.code)
-        #qubit_hamiltonian, _ = taper_qubits(qubit_hamiltonian, stabilizers_list)
-        #print("finish tapering:",len(stabilizers_list))
         qubit_hamiltonian.compress()
         qubit_hamiltonian = qubit_hamiltonian.real
+        print("qubit hamiltonian terms:",len(qubit_hamiltonian))
 
         parameters_name = list(parameters.keys())
         initial_amplitudes = [parameters[i] for i in parameters_name]
@@ -215,7 +220,7 @@ class Uccsd_Generator:
             initial_amplitudes, \
             parameters_name, \
             qubit_hamiltonian, \
-            self.mol.n_qubits-2-self.n_frozen*2, \
+            self.mol.n_qubits-tapered_qubits-self.n_frozen*2, \
             self.mol.n_electrons
 
     def _para_uccsd_singlet_generator(self, mol, th=0):
@@ -279,7 +284,7 @@ class Uccsd_Generator:
                     virtual_other -= self.n_frozen*2
                     occupied_this -= self.n_frozen*2
                     occupied_other -= self.n_frozen*2
-
+                
                 # Generate single excitations
                 if abs(single_amps) > th:
                     params[single_amps_name] = single_amps
@@ -369,7 +374,6 @@ class Uccsd_Generator:
                 qubit_generator = Transform(i[0]).bravyi_kitaev()
             else:
                 qubit_generator = Transform(i[0]).parity()
-            #qubit_generator,_ = taper_qubits(qubit_generator, stabilizers_list)
             if qubit_generator.terms != {}:
                 for key, term in qubit_generator.terms.items():
                     if key not in out:
