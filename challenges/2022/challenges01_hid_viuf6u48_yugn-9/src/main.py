@@ -13,9 +13,9 @@ import matplotlib.pyplot as plt
 from uccsd_generator import Uccsd_Generator
 
 from tarper_qubits import get_taper_stabilizers, taper_qubits
-from binary_coding import fermi_to_qubit_coding, get_code
+from binary_coding import fermi_to_qubit_coding, get_code, gen_code_with_symmetry
 from mp2_correction import gen_mp2_energy_mask, get_mp2_energy_blow_threshold, \
-        mp2_frozen_core_energy, check_frozen
+        mp2_frozen_core_energy, check_frozen, check_frozen_virial
 
 class Timer:
     def __init__(self, t0=0.0):
@@ -74,20 +74,20 @@ class VQEoptimizer:
         if molecule == None:
             molecule = self.molecule
         nfrozen = check_frozen(molecule._pyscf_data['scf'].mo_energy)
-        code = get_code(molecule.n_qubits-2*nfrozen, molecule.n_electrons//2-nfrozen)
+        code = gen_code_with_symmetry(molecule._pyscf_data['mol'],
+                                    molecule._pyscf_data['scf'])
         code_col = code.encoder.tocoo().col
         self.circuit = Circuit([X.on(i) for i in np.where(code_col<molecule.n_electrons-2*nfrozen)[0]])
-        #self.circuit = Circuit([X.on(i) for i in range(molecule.n_electrons)])
 
         ansatz_circuit, \
         self.init_amp, \
         self.params_name, \
         self.hamiltonian, \
         self.n_qubits, \
-        self.n_electrons = Uccsd_Generator(molecule, self.amp_th, 'JW').generate_uccsd
+        self.n_electrons = Uccsd_Generator(molecule, self.amp_th, 'JW', code).generate_uccsd
 
         self.circuit += ansatz_circuit
-        #print(self.circuit.summary())
+        print(self.circuit.summary())
         self.simulator = Simulator(self.backend, self.n_qubits, seed)
 
     def optimize(self, operator=None, circuit=None, init_amp=[],
@@ -128,25 +128,26 @@ class Main:
             ath = 0.001
 
         molecule = load_molecular_file(molecular_file)
-        #molecule.load()
 
         vqe = VQEoptimizer(amp_th=ath)
 
-        mol = run_pyscf(molecule, run_scf=1, run_mp2=1, run_ccsd=1, run_fci=0)
-        #mol = run_pyscf(molecule, run_scf=1, run_ccsd=1, run_fci=0)
-        vqe.generate_circuit(mol)
+        mol = run_pyscf(molecule, run_scf=1, run_mp2=1, run_ccsd=1, run_fci=1)
+        mol._pyscf_data['mol'].symmetry = True
+        mol._pyscf_data['mol'].symmetry_subgroup = 'C1' if 'ch4' in prefix.lower() else None
+        mol._pyscf_data['mol'].build()
 
+        vqe.generate_circuit(mol)
         vqe.optimize(tol=1e-2)
         en = vqe.res.fun
-        print("uccsd:{}.".format(en))
-        print("fci:{}.".format(mol.fci_energy))
 
-        #mask = (mol._pyscf_data['mp2'].t2 > 2.0*ath)
-        #en_mp2_corr = get_mp2_energy_blow_threshold(mol._pyscf_data['mp2'], mask=mask, threshold=ath)
+        # E(model) = E(model-frozen) + E(MP2) - E(MP2-frozen)
         if check_frozen(mol._pyscf_data['scf'].mo_energy):
-            en_mp2_frozen = mp2_frozen_core_energy(mol._pyscf_data['mp2'],frozen=[0])
+            frozen = [i for i in range(check_frozen(mol._pyscf_data['scf'].mo_energy))]
+            en_mp2_frozen = mp2_frozen_core_energy(mol._pyscf_data['mp2'],frozen=frozen)
         else:
             en_mp2_frozen = 0.0
+        print("MP2-corr:",en_mp2_frozen)
 
         return en + en_mp2_frozen
-        #return en + mol._pyscf_data['ccsd'].ccsd_t()
+
+
