@@ -21,11 +21,12 @@ and the quantum gate fidelity is also limited.
 
 from . import chem, qaoa, qnn
 from ._ansatz import Ansatz
+from .barren_plateau import ansatz_variance
 from .chem import *
 from .qaoa import *
 from .qnn import *
 
-__all__ = ['Ansatz']
+__all__ = ['Ansatz', 'ansatz_variance']
 __all__.extend(chem.__all__)
 __all__.extend(qaoa.__all__)
 __all__.extend(qnn.__all__)
