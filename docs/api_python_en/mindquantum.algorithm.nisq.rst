@@ -62,3 +62,4 @@ Functional
     mindquantum.algorithm.nisq.Transform
     mindquantum.algorithm.nisq.get_qubit_hamiltonian
     mindquantum.algorithm.nisq.uccsd_singlet_get_packed_amplitudes
+    mindquantum.algorithm.nisq.ansatz_variance
