@@ -3,6 +3,7 @@ mindquantum.algorithm.compiler
 
 .. py:module:: mindquantum.algorithm.compiler
 
+
 MindQuantum 量子线路编译模块。
 
 Fixed decompose rules
