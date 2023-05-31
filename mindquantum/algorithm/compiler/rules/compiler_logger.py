@@ -24,7 +24,6 @@ class CompileLog:
     HEAD_BLOCK = 0
 
     @staticmethod
-<<<<<<< HEAD
     def B(msg: str):
         """Display in blue."""
         return f"\033[1;34m{msg}\033[00m"
@@ -33,11 +32,6 @@ class CompileLog:
     def C(msg: str):
         """Display in cyan."""
         return f"\033[1;36m{msg}\033[00m"
-=======
-    def IncreaseHeadBlock():
-        """Increase the tag block when display message."""
-        CompileLog.HEAD_BLOCK += 2
->>>>>>> f2a37c6e... docing compiler
 
     @staticmethod
     def DecreaseHeadBlock():
@@ -45,7 +39,6 @@ class CompileLog:
         CompileLog.HEAD_BLOCK -= 2
 
     @staticmethod
-<<<<<<< HEAD
     def G(msg: str):
         """Display in green."""
         return f"\033[1;32m{msg}\033[00m"
@@ -54,11 +47,6 @@ class CompileLog:
     def IncreaseHeadBlock():
         """Increase the tag block when display message."""
         CompileLog.HEAD_BLOCK += 2
-=======
-    def W(msg: str):
-        """Display in white."""
-        return f"\033[1;37m{msg}\033[00m"
->>>>>>> f2a37c6e... docing compiler
 
     @staticmethod
     def K(msg: str):
@@ -66,7 +54,6 @@ class CompileLog:
         return f"\033[1;30m{msg}\033[00m"
 
     @staticmethod
-<<<<<<< HEAD
     def _level1(msg: str):
         """Display level 1 message."""
         print(' ' * CompileLog.HEAD_BLOCK + f"- {msg}")
@@ -103,26 +90,6 @@ class CompileLog:
         if log_level > filter_level:
             return
         log_dict[log_level](msg)
-=======
-    def R(msg: str):
-        """Display in red."""
-        return f"\033[1;31m{msg}\033[00m"
-
-    @staticmethod
-    def G(msg: str):
-        """Display in green."""
-        return f"\033[1;32m{msg}\033[00m"
-
-    @staticmethod
-    def Y(msg: str):
-        """Display in yellow."""
-        return f"\033[1;33m{msg}\033[00m"
-
-    @staticmethod
-    def B(msg: str):
-        """Display in blue."""
-        return f"\033[1;34m{msg}\033[00m"
->>>>>>> f2a37c6e... docing compiler
 
     @staticmethod
     def P(msg: str):
@@ -130,15 +97,9 @@ class CompileLog:
         return f"\033[1;35m{msg}\033[00m"
 
     @staticmethod
-<<<<<<< HEAD
     def R(msg: str):
         """Display in red."""
         return f"\033[1;31m{msg}\033[00m"
-=======
-    def C(msg: str):
-        """Display in cyan."""
-        return f"\033[1;36m{msg}\033[00m"
->>>>>>> f2a37c6e... docing compiler
 
     @staticmethod
     def R1(msg: str):
@@ -156,7 +117,6 @@ class CompileLog:
         return '[' + ', '.join(str(i) if not i else CompileLog.P(i) for i in state) + ']'
 
     @staticmethod
-<<<<<<< HEAD
     def W(msg: str):
         """Display in white."""
         return f"\033[1;37m{msg}\033[00m"
@@ -165,45 +125,6 @@ class CompileLog:
     def Y(msg: str):
         """Display in yellow."""
         return f"\033[1;33m{msg}\033[00m"
-
-=======
-    def _level1(msg: str):
-        """Display level 1 message."""
-        print(' ' * CompileLog.HEAD_BLOCK + f"- {msg}")
-
-    @staticmethod
-    def _level2(msg: str):
-        """Display level 2 message."""
-        print(' ' * CompileLog.HEAD_BLOCK + f"{msg}")
-
-    @staticmethod
-    def _level_null(msg: str):
-        """Display message without level."""
-        print(' ' * CompileLog.HEAD_BLOCK + f"{msg}")
-
-    @staticmethod
-    def log(msg: str, log_level: int, filter_level: int):
-        """
-        Display compiler log message.
-
-        Args:
-            msg (str): the log message.
-            log_level (int): log level. Could be 0, 1, or 2.
-            filter_level (int): disable log message by which filter level.
-        """
-        if log_level == 0:
-            return
-        log_dict = {
-            1: CompileLog._level1,
-            2: CompileLog._level2,
-            -1: CompileLog._level_null,
-        }
-        if log_level not in log_dict:
-            log_level = -1
-        if log_level > filter_level:
-            return
-        log_dict[log_level](msg)
->>>>>>> f2a37c6e... docing compiler
 
 
 class LogIndentation:

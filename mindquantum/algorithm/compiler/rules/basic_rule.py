@@ -28,9 +28,17 @@ class BasicCompilerRule(ABC):
     """
     The basic compiler rule class.
 
+    Compiler rule will handle a :class:`~.algorithm.compiler.DAGCircuit` and
+    compile it following the rule in the ``do`` method. You must implement
+    the ``do`` method when inheritance a child compiler rule. Please make sure
+    that the ``do`` method will return a bool, which will tell whether the compiler
+    successful compiled the circuit.
+
     Args:
-        rule_name (str): the name of this compiler rule.
-        log_level (int): the display log level. Default: ``0``.
+        rule_name (str): The name of this compiler rule.
+        log_level (int): The display log level. If ``0``, log will be disabled.
+            If ``1``, a brief log will be displayed. If ``2``, a detail log
+            will be displayed. Default: ``0``.
     """
 
     def __init__(self, rule_name="BasicCompilerRule", log_level=0):
@@ -47,21 +55,15 @@ class BasicCompilerRule(ABC):
         Set display log level.
 
         Args:
-            log_level (int): the display log level. Could be 0, 1 or 2.
+            log_level (int): the display log level. Could be 0, 1 or 2. For more explanation of log level,
+                please refers to :class:`~.algorithm.compiler.BasicCompilerRule`.
         """
         self.log_level = log_level
         return self
 
-<<<<<<< HEAD
-=======
-    def __repr__(self):
-        """Get string expression of rule."""
-        return f"{self.rule_name}<>"
-
->>>>>>> f2a37c6e... docing compiler
     @abstractmethod
-    def do(self, dag_circuit) -> bool:
-        """Apply this compiler rule."""
+    def do(self, dag_circuit: DAGCircuit) -> bool:
+        """Inplace applying this compiler rule to the :class:`~.algorithm.compiler.DAGCircuit`."""
 
 
 class SequentialCompiler(BasicCompilerRule):
@@ -71,8 +73,10 @@ class SequentialCompiler(BasicCompilerRule):
     Every compiler rule in this sequence will be execute one by one.
 
     Args:
-        compilers (List[BasicCompilerRule]): all compiler rules you want.
+        compilers (List[:class:`~.algorithm.compiler.BasicCompilerRule`]): all compiler rules you want.
         rule_name (str): name of this compiler. Default: ``"SequentialCompiler"``.
+        log_level (int): the display log level. For more explanation of log level,
+            please refers to :class:`~.algorithm.compiler.BasicCompilerRule`. Default: ``0``.
     """
 
     def __init__(self, compilers: typing.List[BasicCompilerRule], rule_name="SequentialCompiler", log_level=0):
@@ -94,7 +98,8 @@ class SequentialCompiler(BasicCompilerRule):
         Set log level for all compiler rule in this sequence.
 
         Args:
-            log_level (int): the display log level. Could be 0, 1 or 2.
+            log_level (int): the display log level. Could be 0, 1 or 2. For more explanation of log level,
+                please refers to :class:`~.algorithm.compiler.BasicCompilerRule`.
         """
         self.log_level = log_level
         for compiler in self.compilers:
@@ -104,7 +109,7 @@ class SequentialCompiler(BasicCompilerRule):
                 compiler.set_log_level(log_level)
         return self
 
-    def do(self, dag_circuit):
+    def do(self, dag_circuit: DAGCircuit) -> bool:
         """Apply sequential compiler to dag circuit."""
         compiled = False
         child_name = ', '.join(CLog.R2(compiler.rule_name) for compiler in self.compilers)
@@ -127,7 +132,7 @@ class KroneckerSeqCompiler(SequentialCompiler):
     Every compiler rule in this KroneckerSeqCompiler will be execute until they do not compile any gate.
 
     Args:
-        compilers (List[BasicCompilerRule]): compiler rules.
+        compilers (List[:class:`~.algorithm.compiler.BasicCompilerRule`]): compiler rules.
         log_level (int): the display log level. Default: ``0``.
     """
 
@@ -135,7 +140,7 @@ class KroneckerSeqCompiler(SequentialCompiler):
         """Initialize a KroneckerSeqCompiler."""
         super().__init__(compilers, rule_name, log_level)
 
-    def do(self, dag_circuit):
+    def do(self, dag_circuit: DAGCircuit) -> bool:
         """Apply kronecker compiler to dag circuit."""
         compiled = False
         child_name = ', '.join(CLog.R2(compiler.rule_name) for compiler in self.compilers)
@@ -143,9 +148,8 @@ class KroneckerSeqCompiler(SequentialCompiler):
         with LogIndentation() as _:
             while True:
                 states = [compiler.do(dag_circuit) for compiler in self.compilers]
-                CLog.log(
-                    f"{CLog.R1(self.rule_name)}: state for each rule -> {CLog.ShowState(states)}", 2, self.log_level
-                )
+                CLog.log(f"{CLog.R1(self.rule_name)}: state for each rule -> {CLog.ShowState(states)}", 2,
+                         self.log_level)
                 if any(states):
                     compiled = True
                 else:
@@ -162,11 +166,11 @@ def compile_circuit(compiler: BasicCompilerRule, circ: Circuit) -> Circuit:
     Directly compile a given circuit and return the result.
 
     Args:
-        compiler (BasicCompilerRule): compile rules.
-        circ (Circuit): the input quantum circuit.
+        compiler (:class:`~.algorithm.compiler.BasicCompilerRule`): compile rules.
+        circ (:class:`~.core.circuit.Circuit`): the input quantum circuit.
 
     Returns:
-        Circuit, the final circuit compiled by given compiler.
+        :class:`~.core.circuit.Circuit`, the final circuit compiled by given compiler.
 
     Examples:
         >>> from mindquantum.algorithm.compiler import compile_circuit, BasicDecompose

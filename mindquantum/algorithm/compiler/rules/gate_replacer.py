@@ -27,10 +27,10 @@ class GateReplacer(BasicCompilerRule):
     Replace given gate with given circuit.
 
     Args:
-        ori_example_gate (BasicGate): The gate you want to replace. Please note that every
-            gate that belong to given gate together with same length of `obj_qubits` and
-            `ctrl_qubits` will be matched.
-        wanted_example_circ (Circuit): The quantum circuit you want.
+        ori_example_gate (:class:`~.core.gates.BasicGate`): The gate you want to replace.
+            Please note that every gate that belong to given gate together with same
+            length of `obj_qubits` and `ctrl_qubits` will be matched.
+        wanted_example_circ (:class:`~.core.circuit.Circuit`): The quantum circuit you want.
 
     Examples:
         >>> from mindquantum.algorithm.compiler import GateReplacer, compile_circuit
@@ -80,7 +80,6 @@ class GateReplacer(BasicCompilerRule):
         self.wanted_example_circ = wanted_example_circ
         super().__init__("GateReplacer")
         self.permute_map = dict(enumerate(all_qubits))
-<<<<<<< HEAD
 
     def __repr__(self):
         """Get string expression of gate replacer."""
@@ -91,10 +90,8 @@ class GateReplacer(BasicCompilerRule):
                 strs.append("  " + string)
         strs.append(">")
         return '\n'.join(strs)
-=======
->>>>>>> f2a37c6e... docing compiler
 
-    def do(self, dag_circuit: DAGCircuit):
+    def do(self, dag_circuit: DAGCircuit) -> bool:
         """Do gate replacer rule."""
         compiled = False
         all_node = dag_circuit.find_all_gate_node()
@@ -106,9 +103,8 @@ class GateReplacer(BasicCompilerRule):
                 is_same = is_same and (len(node.gate.obj_qubits) == len(self.ori_example_gate.obj_qubits))
                 is_same = is_same and (len(node.gate.ctrl_qubits) == len(self.ori_example_gate.ctrl_qubits))
                 if is_same:
-                    CLog.log(
-                        f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be replaced.", 2, self.log_level
-                    )
+                    CLog.log(f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be replaced.", 2,
+                             self.log_level)
                     compiled = True
                     new_map = []
                     for idx, qid in enumerate(node.gate.obj_qubits + node.gate.ctrl_qubits):
@@ -122,19 +118,6 @@ class GateReplacer(BasicCompilerRule):
             CLog.log(f"{CLog.R1(self.rule_name)}: nothing happened.", 1, self.log_level)
         return compiled
 
-<<<<<<< HEAD
-=======
-    def __repr__(self):
-        """Get string expression of gate replacer."""
-        strs = ['GateReplacer<']
-        body = f"{Circuit(self.ori_example_gate)} ->\n{self.wanted_example_circ}"
-        for string in body.split('\n'):
-            if string:
-                strs.append("  " + string)
-        strs.append(">")
-        return '\n'.join(strs)
-
->>>>>>> f2a37c6e... docing compiler
 
 class CXToCZ(SequentialCompiler):
     """Convert cx to cz gate."""
@@ -142,8 +125,10 @@ class CXToCZ(SequentialCompiler):
     def __init__(self):
         """Initialize a CXToCZ compiler."""
         rule_set = [
-            GateReplacer(X.on(0, 1), Circuit().h(0).z(0, 1).h(0)),
-            GateReplacer(CNOT(0, 1), Circuit().h(0).z(0, 1).h(0)),
+            GateReplacer(X.on(0, 1),
+                         Circuit().h(0).z(0, 1).h(0)),
+            GateReplacer(CNOT(0, 1),
+                         Circuit().h(0).z(0, 1).h(0)),
         ]
         super().__init__(rule_set)
         self.rule_name = "CXToCZ"
