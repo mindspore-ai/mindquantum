@@ -33,18 +33,6 @@ class ChannelAdderBase:
         self.accepter.extend(self._accepter())
         self.excluder.extend(self._excluder())
 
-    def _accepter(self, *args, **kwargs) -> typing.List[typing.Union[FunctionType, MethodType]]:
-        """Construct accepter rules."""
-        return []
-
-    def _excluder(self, *args, **kwargs):
-        """Construct excluder rules."""
-        return []
-
-    def _handler(self, g: BasicGate, *args, **kwargs):
-        """Create action you will do if a gate is acceptable."""
-        return Circuit()
-
     def __call__(self, circ: Circuit) -> Circuit:
         """Add noise channel after acceptable quantum gate."""
         out = Circuit()
@@ -61,6 +49,19 @@ class ChannelAdderBase:
     def __repr__(self):
         """Return string expression of adder."""
         return f"{self.__class__.__name__}<>"
+
+
+    def _accepter(self, *args, **kwargs) -> typing.List[typing.Union[FunctionType, MethodType]]:
+        """Construct accepter rules."""
+        return []
+
+    def _excluder(self, *args, **kwargs):
+        """Construct excluder rules."""
+        return []
+
+    def _handler(self, g: BasicGate, *args, **kwargs):
+        """Create action you will do if a gate is acceptable."""
+        return Circuit()
 
 
 class MeasureAccepter(ChannelAdderBase):
