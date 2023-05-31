@@ -83,7 +83,7 @@ def _fold_locally(circ: Circuit, factor: float) -> Circuit:
 
 
 def fold_at_random(circ: Circuit, factor: float, method='locally') -> Circuit:
-    """
+    r"""
     Folding circuit randomly.
 
     Folding a quantum circuit is going to increase the size of quantum circuit,

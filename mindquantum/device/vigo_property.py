@@ -13,8 +13,8 @@
 # limitations under the License.
 # ============================================================================
 """Vigo."""
-from mindquantum.core.gates import DepolarizingChannel, KrausChannel, BitFlipChannel
 from mindquantum.core.circuit import Circuit
+from mindquantum.core.gates import BitFlipChannel, DepolarizingChannel, KrausChannel
 
 vigo_noise_model = {
     ('readout', 0): BitFlipChannel(0.07509999999999994).on(0),

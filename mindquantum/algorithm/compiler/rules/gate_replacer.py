@@ -103,8 +103,9 @@ class GateReplacer(BasicCompilerRule):
                 is_same = is_same and (len(node.gate.obj_qubits) == len(self.ori_example_gate.obj_qubits))
                 is_same = is_same and (len(node.gate.ctrl_qubits) == len(self.ori_example_gate.ctrl_qubits))
                 if is_same:
-                    CLog.log(f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be replaced.", 2,
-                             self.log_level)
+                    CLog.log(
+                        f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be replaced.", 2, self.log_level
+                    )
                     compiled = True
                     new_map = []
                     for idx, qid in enumerate(node.gate.obj_qubits + node.gate.ctrl_qubits):
@@ -125,10 +126,8 @@ class CXToCZ(SequentialCompiler):
     def __init__(self):
         """Initialize a CXToCZ compiler."""
         rule_set = [
-            GateReplacer(X.on(0, 1),
-                         Circuit().h(0).z(0, 1).h(0)),
-            GateReplacer(CNOT(0, 1),
-                         Circuit().h(0).z(0, 1).h(0)),
+            GateReplacer(X.on(0, 1), Circuit().h(0).z(0, 1).h(0)),
+            GateReplacer(CNOT(0, 1), Circuit().h(0).z(0, 1).h(0)),
         ]
         super().__init__(rule_set)
         self.rule_name = "CXToCZ"

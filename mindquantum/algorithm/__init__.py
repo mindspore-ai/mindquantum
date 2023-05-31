@@ -14,15 +14,10 @@
 # ============================================================================
 """Quantum algorithms."""
 
-from . import (
-    compiler,
-    library,
-    nisq,
-    error_mitigation,
-)
+from . import compiler, error_mitigation, library, nisq
+from .error_mitigation import *
 from .library import *
 from .nisq import *
-from .error_mitigation import *
 
 __all__ = []
 __all__.extend(library.__all__)

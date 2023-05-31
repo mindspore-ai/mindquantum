@@ -148,8 +148,9 @@ class KroneckerSeqCompiler(SequentialCompiler):
         with LogIndentation() as _:
             while True:
                 states = [compiler.do(dag_circuit) for compiler in self.compilers]
-                CLog.log(f"{CLog.R1(self.rule_name)}: state for each rule -> {CLog.ShowState(states)}", 2,
-                         self.log_level)
+                CLog.log(
+                    f"{CLog.R1(self.rule_name)}: state for each rule -> {CLog.ShowState(states)}", 2, self.log_level
+                )
                 if any(states):
                     compiled = True
                 else:

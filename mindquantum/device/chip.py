@@ -25,14 +25,12 @@ class NaiveChip:
         """Initialize a naive quantum chip."""
         self.topology = topology
 
-    def gene_channel(self, g, noise_type, with_ctrl, alternative):
-        pass
-
 
 class Vigo(NaiveChip):
     """5 qubit chip named Vigo."""
 
     def __init__(self):
+        """Construct vigo chip."""
         topology = QubitsTopology([QubitNode(i) for i in range(5)])
         _ = topology[0] >> topology[1] >> topology[3] >> topology[4]
         _ = topology[1] >> topology[2]
@@ -41,7 +39,7 @@ class Vigo(NaiveChip):
 
     def gene_noise_circuit(self, circ):
         """
-        generate noise circuit.
+        Generate noise circuit.
 
         Args:
             circ (Circuit): quantum circuit.

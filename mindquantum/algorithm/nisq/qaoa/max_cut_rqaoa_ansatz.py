@@ -185,16 +185,16 @@ class MaxCutRQAOAAnsatz(RQAOAAnsatz, MaxCut):
         True
         >>> mcra.all_variables                   # display all variables in the current Hamiltonian. Z3 is reduced.
         [(0, 'Z'), (1, 'Z'), (2, 'Z')]
-        >>> mcra.restricted_set                  # the restriced set contains necessary information to recover Z3 from Z2
+        >>> mcra.restricted_set                  # the restricted set contains necessary information to recover Z3 from Z2
         [((3, 'Z'), ((2, 'Z'),), -1)]
-        >>> mcra.get_result()                    # apply brute-force enumeration method on the reduced Hamiltonian of MaxCut problem, and recover the complete solution using restriced set.
+        >>> mcra.get_result()                    # apply brute-force enumeration method on the reduced Hamiltonian of MaxCut problem, and recover the complete solution using restricted set.
         (4, [[1, 3], [0, 2]])
         >>> mcra.ham                             # current Hamiltonian
         -2 [] +
         1 [Z0 Z1] +
         0.5 [Z0 Z2] +
         1 [Z1 Z2]
-        >>> mcra.one_step_rqaoa(pr, 1)           # number of variables in current Hamiltonian is less than nc, so reducing variables becomes impossible. This can be a criteria for quiting the loop.
+        >>> mcra.one_step_rqaoa(pr, 1)           # number of variables in current Hamiltonian is less than nc, so reducing variables becomes impossible. This can be a criteria for quitting the loop.
         False
         >>> f, v, sigma = ((1, 'Z'), (2, 'Z')), (1, 'Z'), 1
         >>> mcra.eliminate_single_variable(f, sigma, v)  # However, we can still call internal method of RQAOAAnsatz to reduce variables directly

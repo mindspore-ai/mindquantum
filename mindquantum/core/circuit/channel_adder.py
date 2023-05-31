@@ -16,7 +16,7 @@
 import typing
 from types import FunctionType, MethodType
 
-from mindquantum.core import gates as G
+from mindquantum.core import gates
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import BasicGate
 from mindquantum.device.chip import NaiveChip
@@ -42,7 +42,7 @@ class ChannelAdderBase:
         return []
 
     def _handler(self, g: BasicGate, *args, **kwargs):
-        """Action you will do if a gate is acceptable."""
+        """Create action you will do if a gate is acceptable."""
         return Circuit()
 
     def __call__(self, circ: Circuit) -> Circuit:
@@ -72,19 +72,19 @@ class MeasureAccepter(ChannelAdderBase):
 
     def _accepter(self):
         """Construct accepter rules."""
-        return [lambda x: isinstance(x, G.Measure)]
+        return [lambda x: isinstance(x, gates.Measure)]
 
 
 class MeasureExcluder(ChannelAdderBase):
     def _excluder(self):
         """Construct excluder rules."""
-        return [lambda x: isinstance(x, G.Measure)]
+        return [lambda x: isinstance(x, gates.Measure)]
 
 
 class NoiseExcluder(ChannelAdderBase):
     def _excluder(self):
         """Construct excluder rules."""
-        return [lambda x: isinstance(x, G.NoiseGate)]
+        return [lambda x: isinstance(x, gates.NoiseGate)]
 
 
 class BitFlipAdder(ChannelAdderBase):
@@ -110,10 +110,10 @@ class BitFlipAdder(ChannelAdderBase):
         for q in g.obj_qubits + (g.ctrl_qubits if self.with_ctrl else []):
             if self.device is not None:
                 circ += self.device.gene_channel(
-                    self.device, g, G.BitFlipChannel, self.with_ctrl, G.BitFlipChannel(self.flip_rate)
+                    self.device, g, gates.BitFlipChannel, self.with_ctrl, gates.BitFlipChannel(self.flip_rate)
                 ).on(q)
             else:
-                circ += G.BitFlipChannel(self.flip_rate).on(q)
+                circ += gates.BitFlipChannel(self.flip_rate).on(q)
         return circ
 
 
