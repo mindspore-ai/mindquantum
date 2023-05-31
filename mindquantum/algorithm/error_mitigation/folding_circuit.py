@@ -82,8 +82,40 @@ def _fold_locally(circ: Circuit, factor: float) -> Circuit:
     return folded_circ
 
 
-def fold_at_random(circ: Circuit, factor: float, method='globally'):
-    """Folding circuit randomly."""
+def fold_at_random(circ: Circuit, factor: float, method='locally') -> Circuit:
+    """
+    Folding circuit randomly.
+
+    Folding a quantum circuit is going to increase the size of quantum circuit,
+    while keeping the unitary matrix of circuit the same. We can implement it by
+    inserting identity circuit as certain gate. For a very simple example, :math:`RX(1.2 \pi)`
+    has the same unitary matrix as :math:`RX(1.2 \pi)RX(-1.2 \pi)RX(1.2 \pi)`, but the size of circuit
+    increase to 3.
+
+    Args:
+        circ (:class:`~.core.circuit.Circuit`): The quantum circuit that will folding.
+        factor (float): Folding factor, should greater than 1.
+        method (str): The method for folding. ``method`` should be one of ``'globally'`` or ``'locally'``.
+            ``'globally'`` means we extended circuit is append to the end of circuit while ``'locally'``
+            means the identity part is randomly added after certain gate.
+
+    Examples:
+        >>> from mindquantum.algorithm.error_mitigation import fold_at_random
+        >>> from mindquantum.core.circuit import Circuit
+        >>> circ = Circuit().h(0).x(1, 0)
+        >>> circ
+        q0: ──H────●──
+                   │
+        q1: ───────X──
+        >>> fold_at_random(circ, 3)
+        q0: ──H────H────H────●────●────●──
+                             │    │    │
+        q1: ─────────────────X────X────X──
+        >>> fold_at_random(circ, 3, 'globally')
+        q0: ──H────●────H────●────●────H──
+                   │         │    │
+        q1: ───────X─────────X────X───────
+    """
     _check_value_should_not_less("Fold factor", 1, factor)
     _check_input_type("method", str, method)
     supported_method = ['globally', 'locally']

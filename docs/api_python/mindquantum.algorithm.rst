@@ -12,3 +12,4 @@ mindquantum.algorithm
     mindquantum.algorithm.compiler
     mindquantum.algorithm.library
     mindquantum.algorithm.nisq
+   mindquantum.algorithm.error_mitigation

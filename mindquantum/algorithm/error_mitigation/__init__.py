@@ -15,3 +15,8 @@
 """Error mitigation module."""
 from .folding_circuit import fold_at_random
 from .mitigation import zne
+
+__all__ = [
+    'fold_at_random',
+    'zne',
+]

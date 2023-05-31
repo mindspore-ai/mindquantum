@@ -12,14 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """Quantum algorithms."""
 
-from . import compiler, library, nisq
+from . import (
+    compiler,
+    library,
+    nisq,
+    error_mitigation,
+)
 from .library import *
 from .nisq import *
+from .error_mitigation import *
 
 __all__ = []
 __all__.extend(library.__all__)
 __all__.extend(nisq.__all__)
+__all__.extend(error_mitigation.__all__)
 __all__.sort()
