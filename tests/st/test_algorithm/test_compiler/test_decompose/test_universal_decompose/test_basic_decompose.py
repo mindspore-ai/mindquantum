@@ -35,6 +35,8 @@ def assert_equivalent_unitary(u, v):
         cirq.testing.assert_allclose_up_to_global_phase(u, v, atol=1e-5)
     except ModuleNotFoundError:
         assert decompose.utils.is_equiv_unitary(u, v)
+    except AttributeError:
+        assert decompose.utils.is_equiv_unitary(u, v)
 
 
 @pytest.mark.level0
