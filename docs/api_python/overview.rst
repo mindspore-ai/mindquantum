@@ -11,3 +11,4 @@
     mindquantum.io
     mindquantum.engine
     mindquantum.utils
+    mindquantum.device

@@ -22,10 +22,16 @@ from mindquantum.core.gates import BasicGate
 from mindquantum.device.chip import NaiveChip
 
 
+# pylint: disable=unused-argument,protected-access,too-few-public-methods
 class ChannelAdderBase:
-    """Add noise channel after quantum gate."""
+    """
+    Add noise channel after quantum gate.
 
-    def __init__(self, add_after=True, *args, **kwargs):
+    Args:
+        add_after (bool): Whether add channel after gate or before gate. Default: ``True``.
+    """
+
+    def __init__(self, add_after=True):
         """Initialize a ChannelAdderBase."""
         self.add_after = add_after
         self.accepter = []  # a list of function, which act as rules to accept considering gate to add noise channel.
@@ -50,7 +56,6 @@ class ChannelAdderBase:
         """Return string expression of adder."""
         return f"{self.__class__.__name__}<>"
 
-
     def _accepter(self, *args, **kwargs) -> typing.List[typing.Union[FunctionType, MethodType]]:
         """Construct accepter rules."""
         return []
@@ -64,6 +69,28 @@ class ChannelAdderBase:
         return Circuit()
 
 
+class ReverseAdd(ChannelAdderBase):
+    """
+    Reverse the accepter and excluder rules.
+
+    Args:
+        adder (:class:`~.core.circuit.ChannelAdderBase`): A channel adder.
+    """
+
+    def __init__(self, adder: ChannelAdderBase):
+        """Initialize a channel adder."""
+        super().__init__(adder.add_after)
+        self.adder = adder
+
+    def _accepter(self, *args, **kwargs) -> typing.List[typing.Union[FunctionType, MethodType]]:
+        """Construct accepter rules."""
+        return self.adder._excluder()
+
+    def _excluder(self, *args, **kwargs):
+        """Construct excluder rules."""
+        return self.adder._accepter()
+
+
 class MeasureAccepter(ChannelAdderBase):
     """Select measurement gate."""
 
@@ -71,19 +98,15 @@ class MeasureAccepter(ChannelAdderBase):
         """Initialize a MeasureAccepter."""
         super().__init__()
 
-    def _accepter(self):
+    def _accepter(self, *args, **kwargs):
         """Construct accepter rules."""
         return [lambda x: isinstance(x, gates.Measure)]
 
 
-class MeasureExcluder(ChannelAdderBase):
-    def _excluder(self):
-        """Construct excluder rules."""
-        return [lambda x: isinstance(x, gates.Measure)]
-
-
 class NoiseExcluder(ChannelAdderBase):
-    def _excluder(self):
+    """Exclude a noise channel."""
+
+    def _excluder(self, *args, **kwargs):
         """Construct excluder rules."""
         return [lambda x: isinstance(x, gates.NoiseGate)]
 
@@ -105,16 +128,16 @@ class BitFlipAdder(ChannelAdderBase):
             return f"BitFlipAdder<flip_rate={self.flip_rate}, with_ctrl={self.with_ctrl}>"
         return f"BitFlipAdder<device={self.device}, with_ctrl={self.with_ctrl}>"
 
-    def _handler(self, g: BasicGate):
-        """Action you will do if a gate is acceptable."""
+    def _handler(self, g: BasicGate, *args, **kwargs):
+        """Create action you will do if a gate is acceptable."""
         circ = Circuit()
-        for q in g.obj_qubits + (g.ctrl_qubits if self.with_ctrl else []):
+        for qubit in g.obj_qubits + (g.ctrl_qubits if self.with_ctrl else []):
             if self.device is not None:
                 circ += self.device.gene_channel(
                     self.device, g, gates.BitFlipChannel, self.with_ctrl, gates.BitFlipChannel(self.flip_rate)
-                ).on(q)
+                ).on(qubit)
             else:
-                circ += gates.BitFlipChannel(self.flip_rate).on(q)
+                circ += gates.BitFlipChannel(self.flip_rate).on(qubit)
         return circ
 
 
@@ -135,7 +158,7 @@ class MixerAdder(ChannelAdderBase):
         return [item for adder in self.adders for item in adder._excluder()]
 
     def _handler(self, g: BasicGate, *args, **kwargs):
-        """Action you will do if a gate is acceptable."""
+        """Create action you will do if a gate is acceptable."""
         out = Circuit()
         for adder in self.adders:
             out += adder._handler(g)
@@ -175,34 +198,12 @@ class SequentialAdder(ChannelAdderBase):
         return '\n'.join(strs)
 
 
-if __name__ == '__main__':
-    from mindquantum import H, Measure
-
-    bit_flip_adder = BitFlipAdder(0.1)
-    mea_checker = MeasureAccepter()
-    mix_adder = MixerAdder(
-        [
-            bit_flip_adder,
-            mea_checker,
-        ]
-    )
-
-    seq_adder = SequentialAdder(
-        [
-            mix_adder,
-            MixerAdder(
-                [
-                    BitFlipAdder(0.3),
-                    NoiseExcluder(),
-                ]
-            ),
-        ]
-    )
-
-    circ = Circuit() + H.on(0) + Measure().on(0)  # q0: ──H────M(q0)──
-    circ1 = bit_flip_adder(circ)  # q0: ──H────BF(0.1)────M(q0)────BF(0.1)──
-    circ2 = mea_checker(circ)  # q0: ──H────M(q0)──
-    circ3 = mix_adder(circ)  # q0: ──H────M(q0)────BF(0.1)──
-    circ4 = seq_adder(circ)  # q0: ──H────BF(0.3)────M(q0)────BF(0.3)────BF(0.1)──
-    print(circ)
-    print(circ4)
+__all__ = [
+    "ChannelAdderBase",
+    "MeasureAccepter",
+    "ReverseAdd",
+    "NoiseExcluder",
+    "BitFlipAdder",
+    "MixerAdder",
+    "SequentialAdder",
+]

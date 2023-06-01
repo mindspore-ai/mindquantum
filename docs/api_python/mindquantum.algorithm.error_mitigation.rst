@@ -11,5 +11,5 @@ MindQuantum 的误差缓解模块。
     :nosignatures:
     :template: classtemplate.rst
 
-    mindquantum.algorithm.fold_at_random
-    mindquantum.algorithm.zne
+    mindquantum.algorithm.error_mitigation.fold_at_random
+    mindquantum.algorithm.error_mitigation.zne

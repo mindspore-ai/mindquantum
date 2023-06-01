@@ -13,10 +13,12 @@
 # limitations under the License.
 # ============================================================================
 """SABRE algorithm to implement qubit mapping."""
-from ..core.circuit import Circuit
-from ..core.gates import SWAP
-from ..mqbackend.device import SABRE as SABRE_  # pylint: disable=import-error
-from . import QubitsTopology
+import typing
+
+from ...core.circuit import Circuit
+from ...core.gates import SWAP
+from ...device import QubitsTopology
+from ...mqbackend import SABRE as SABRE_  # pylint: disable=import-error
 
 
 # pylint: disable=too-few-public-methods
@@ -24,10 +26,13 @@ class SABRE:
     """
     SABRE algorithm to implement qubit mapping.
 
+    For more detail of SABRE algorithm, please refer to
+    `Tackling the Qubit Mapping Problem for NISQ-Era Quantum Devices <https://arxiv.org/abs/1809.02573>`_.
+
     Args:
-        circuit (Circuit): The quantum circuit you need to do qubit mapping. Currently we only
+        circuit (:class:`~.core.circuit.Circuit`): The quantum circuit you need to do qubit mapping. Currently we only
             support circuit constructed by one or two qubits gate, control qubit included.
-        topology (QubitsTopology): The hardware qubit topology. Currently we only support
+        topology (:class:`.device.QubitsTopology`): The hardware qubit topology. Currently we only support
             connected coupling graph. Please manually assign some lines to connected subgraphs.
     """
 
@@ -65,13 +70,16 @@ class SABRE:
                 'please manually assign some lines to connected subgraphs.'
             )
 
-    def solve(self, iter_num: int, w: float, delta1: float, delta2: float):
+    def solve(
+        self, iter_num: int, w: float, delta1: float, delta2: float
+    ) -> typing.Union[Circuit, typing.List[int], typing.List[int]]:
         """
         Solve qubit mapping problem with SABRE algorithm.
 
         Returns:
-            Tuple[Circuit, List[int], List[int]], a quantum circuit that can execute on given device,
-                the initial mapping order, and the final mapping order.
+            Tuple[:class:`~.core.circuit.Circuit`, List[int], List[int]], a quantum
+                circuit that can execute on given device, the initial mapping order,
+                and the final mapping order.
         """
         gate_info, (init_map, final_map) = self.cpp_solver.solve(iter_num, w, delta1, delta2)
         new_circ = Circuit()
