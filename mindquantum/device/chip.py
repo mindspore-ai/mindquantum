@@ -13,11 +13,12 @@
 # limitations under the License.
 # ============================================================================
 """Real device chip."""
-from mindquantum.core.circuit import Circuit
-from mindquantum.device import QubitNode, QubitsTopology
-from mindquantum.device.vigo_property import vigo_noise_model
+from ..core.circuit import Circuit
+from . import QubitNode, QubitsTopology
+from .vigo_property import vigo_noise_model
 
 
+# pylint: disable=too-few-public-methods
 class NaiveChip:
     """A naive quantum chip."""
 

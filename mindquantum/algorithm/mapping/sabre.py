@@ -18,7 +18,7 @@ import typing
 from ...core.circuit import Circuit
 from ...core.gates import SWAP
 from ...device import QubitsTopology
-from ...mqbackend import SABRE as SABRE_  # pylint: disable=import-error
+from ...mqbackend.device import SABRE as SABRE_  # pylint: disable=import-error
 
 
 # pylint: disable=too-few-public-methods

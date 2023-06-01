@@ -16,10 +16,9 @@
 import typing
 from types import FunctionType, MethodType
 
-from mindquantum.core import gates
-from mindquantum.core.circuit import Circuit
-from mindquantum.core.gates import BasicGate
-from mindquantum.device.chip import NaiveChip
+from .. import gates
+from ..gates import BasicGate
+from .circuit import Circuit
 
 
 # pylint: disable=unused-argument,protected-access,too-few-public-methods
@@ -114,7 +113,7 @@ class NoiseExcluder(ChannelAdderBase):
 class BitFlipAdder(ChannelAdderBase):
     """Add BitFlip channel after quantum gate."""
 
-    def __init__(self, flip_rate: float = None, with_ctrl=True, device: NaiveChip = None, add_after: bool = True):
+    def __init__(self, flip_rate: float = None, with_ctrl=True, device: "NaiveChip" = None, add_after: bool = True):
         """Initialize a BitFlipAdder."""
         super().__init__(add_after=add_after)
         self.with_ctrl = True
@@ -149,6 +148,15 @@ class MixerAdder(ChannelAdderBase):
         self.adders = adders
         super().__init__(add_after=add_after)
 
+    def __repr__(self):
+        """Return string expression of adder."""
+        strs = ["MixerAdder<"]
+        for adder in self.adders:
+            for i in adder.__repr__().split('\n'):
+                strs.append("  " + i)
+        strs.append(">")
+        return '\n'.join(strs)
+
     def _accepter(self, *args, **kwargs):
         """Construct accepter rules."""
         return [item for adder in self.adders for item in adder._accepter()]
@@ -163,15 +171,6 @@ class MixerAdder(ChannelAdderBase):
         for adder in self.adders:
             out += adder._handler(g)
         return out
-
-    def __repr__(self):
-        """Return string expression of adder."""
-        strs = ["MixerAdder<"]
-        for adder in self.adders:
-            for i in adder.__repr__().split('\n'):
-                strs.append("  " + i)
-        strs.append(">")
-        return '\n'.join(strs)
 
 
 class SequentialAdder(ChannelAdderBase):
