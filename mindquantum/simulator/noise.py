@@ -27,11 +27,13 @@ from mindquantum.device.chip import NaiveChip
 from mindquantum.simulator.backend_base import BackendBase
 
 
+# pylint: disable=abstract-method,super-init-not-called,too-many-arguments
 class NoiseBackend(BackendBase):
     """Add noise based on channel adder."""
 
     def __init__(self, base_sim: str, n_qubits: int, adder: ChannelAdderBase, seed: int = None, dtype=mq.complex128):
         """Initialize a noise backend."""
+        # pylint: disable=import-outside-toplevel
         from mindquantum.simulator import Simulator
 
         self.base_sim = Simulator(base_sim, n_qubits, seed=seed)
@@ -46,6 +48,7 @@ class NoiseBackend(BackendBase):
         """Apply a quantum gate."""
         if diff:
             raise ValueError("For noise simulator, you cannot set diff to True.")
+        # pylint: disable=too-many-function-args
         return self.base_sim.apply_circuit(self.adder(Circuit[gate]), pr, diff)
 
     def apply_hamiltonian(self, hamiltonian: Hamiltonian):
@@ -85,4 +88,5 @@ class ChipBaseBackend(NoiseBackend):
     """
 
     def __init__(self, chip: NaiveChip):
+        """Initialize base chip."""
         self.chip = chip
