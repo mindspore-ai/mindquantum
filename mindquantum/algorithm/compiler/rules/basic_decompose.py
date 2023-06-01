@@ -300,7 +300,7 @@ class BasicDecompose(BasicCompilerRule):
     and rotation gate with multi pauli word.
 
     Args:
-        prefer_u3 (bool): whether prefer to use :class:`U3` gate to decompose gate. Default: ``False``.
+        prefer_u3 (bool): whether prefer to use :class:`~.core.gates.U3` gate to decompose gate. Default: ``False``.
 
     Examples:
         >>> from mindquantum.algorithm.compiler import BasicDecompose, DAGCircuit
@@ -329,8 +329,8 @@ class BasicDecompose(BasicCompilerRule):
         super().__init__("BasicDecompose")
         self.prefer_u3 = prefer_u3
 
-    def do(self, dag_circuit: DAGCircuit):
-        """Do control decompose rule."""
+    def do(self, dag_circuit: DAGCircuit) -> bool:
+        """Do control decompose rule and multi qubit gate decomposition."""
         _check_input_type("dag_circuit", DAGCircuit, dag_circuit)
         compiled = False
         all_node = dag_circuit.find_all_gate_node()

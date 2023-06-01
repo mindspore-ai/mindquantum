@@ -47,7 +47,7 @@ class SimpleNeighborCanceler(BasicCompilerRule):
             compiled = self._canceler(child_node, fc_pair_consided, dag_circuit) or compiled
         return compiled
 
-    def do(self, dag_circuit: DAGCircuit):
+    def do(self, dag_circuit: DAGCircuit) -> bool:
         """Apply neighbor canceler compiler rule."""
         _check_input_type("dag_circuit", DAGCircuit, dag_circuit)
 

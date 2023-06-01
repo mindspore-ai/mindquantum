@@ -45,7 +45,7 @@ from .utils import GradOpsWrapper, _thread_balance
 class MQSim(BackendBase):
     """Mindquantum Backend."""
 
-    def __init__(self, name: str, n_qubits: int, seed=42, dtype=complex128, internal=False):
+    def __init__(self, name: str, n_qubits: int, seed=None, dtype=complex128, internal=False):
         """Initialize a mindquantum backend."""
         super().__init__(name, n_qubits, seed, dtype)
         if internal:

@@ -27,10 +27,10 @@ class GateReplacer(BasicCompilerRule):
     Replace given gate with given circuit.
 
     Args:
-        ori_example_gate (BasicGate): The gate you want to replace. Please note that every
-            gate that belong to given gate together with same length of `obj_qubits` and
-            `ctrl_qubits` will be matched.
-        wanted_example_circ (Circuit): The quantum circuit you want.
+        ori_example_gate (:class:`~.core.gates.BasicGate`): The gate you want to replace.
+            Please note that every gate that belong to given gate together with same
+            length of `obj_qubits` and `ctrl_qubits` will be matched.
+        wanted_example_circ (:class:`~.core.circuit.Circuit`): The quantum circuit you want.
 
     Examples:
         >>> from mindquantum.algorithm.compiler import GateReplacer, compile_circuit
@@ -91,7 +91,7 @@ class GateReplacer(BasicCompilerRule):
         strs.append(">")
         return '\n'.join(strs)
 
-    def do(self, dag_circuit: DAGCircuit):
+    def do(self, dag_circuit: DAGCircuit) -> bool:
         """Do gate replacer rule."""
         compiled = False
         all_node = dag_circuit.find_all_gate_node()

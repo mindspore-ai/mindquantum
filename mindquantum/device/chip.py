@@ -13,23 +13,25 @@
 # limitations under the License.
 # ============================================================================
 """Real device chip."""
-from mindquantum.device import QubitsTopology, QubitNode
-from mindquantum.device.vigo_property import vigo_noise_model
-from mindquantum.core.circuit import Circuit
+from ..core.circuit import Circuit
+from . import QubitNode, QubitsTopology
+from .vigo_property import vigo_noise_model
 
 
+# pylint: disable=too-few-public-methods
 class NaiveChip:
-    def __init__(self, topology: QubitsTopology):
-        self.topology = topology
+    """A naive quantum chip."""
 
-    def gene_channel(self, g, noise_type, with_ctrl, alternative):
-        pass
+    def __init__(self, topology: QubitsTopology):
+        """Initialize a naive quantum chip."""
+        self.topology = topology
 
 
 class Vigo(NaiveChip):
     """5 qubit chip named Vigo."""
 
     def __init__(self):
+        """Construct vigo chip."""
         topology = QubitsTopology([QubitNode(i) for i in range(5)])
         _ = topology[0] >> topology[1] >> topology[3] >> topology[4]
         _ = topology[1] >> topology[2]
@@ -38,7 +40,7 @@ class Vigo(NaiveChip):
 
     def gene_noise_circuit(self, circ):
         """
-        generate noise circuit.
+        Generate noise circuit.
 
         Args:
             circ (Circuit): quantum circuit.

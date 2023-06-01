@@ -17,6 +17,7 @@
 """Quantum channel."""
 
 from typing import Iterable
+
 import numpy as np
 
 from mindquantum import mqbackend as mb

@@ -31,7 +31,7 @@ def _check_rqaoa_ham(ham):
     _check_input_type('hamiltonian', QubitOperator, ham)
     for h in ham:
         _check_input_type('hamiltonian', QubitOperator, h)
-        # furhter investigation is needed to answer whether reducing variable on higher order terms is benefitial
+        # further investigation is needed to answer whether reducing variable on higher order terms is beneficial
         # therefore we focus on quadratic Hamiltonians currently
         if h.count_gates() not in [2, 0]:
             raise ValueError("Only quadratic hamiltonian is supported in RQAOA.")
@@ -92,9 +92,9 @@ class RQAOAAnsatz(QAOAAnsatz):
         >>> ra.hamiltonian               # Hamiltonian
         -1 [] +
         1.5 [Z0 Z1]
-        >>> ra.restricted_set            # view the restriced set
+        >>> ra.restricted_set            # view the restricted set
         [((2, 'Z'), ((1, 'Z'),), -1)]
-        >>> ra.translate({(0, 'Z'):-1, (1, 'Z'):1})   # recover original problem's soluton by the subproblem's solution
+        >>> ra.translate({(0, 'Z'):-1, (1, 'Z'):1})   # recover original problem's solution by the subproblem's solution
         {(0, 'Z'): -1, (1, 'Z'): 1, (2, 'Z'): -1}
         >>> ra = RQAOAAnsatz(ham, 1)
         >>> pr = {'beta_0': -0.4617199, 'alpha_0': 0.6284928}

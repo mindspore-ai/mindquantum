@@ -3,7 +3,7 @@ from __future__ import annotations
 import mindquantum.mqbackend.device
 import typing
 import mindquantum.mqbackend.gate
-from .sabre import SABRE
+from ..algorithm.mapping.sabre import SABRE
 
 __all__ = [
     "GridQubits",

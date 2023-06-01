@@ -41,3 +41,38 @@ Universal decompose rules
     mindquantum.algorithm.compiler.abc_decompose
     mindquantum.algorithm.compiler.kak_decompose
     mindquantum.algorithm.compiler.tensor_product_decompose
+
+Compiler rules
+--------------
+
+.. autosummary::
+    :toctree:
+    :nosignatures:
+    :template: classtemplate.rst
+
+    mindquantum.algorithm.compiler.BasicCompilerRule
+    mindquantum.algorithm.compiler.KroneckerSeqCompiler
+    mindquantum.algorithm.compiler.SequentialCompiler
+    mindquantum.algorithm.compiler.BasicDecompose
+    mindquantum.algorithm.compiler.CZBasedChipCompiler
+    mindquantum.algorithm.compiler.CXToCZ
+    mindquantum.algorithm.compiler.CZToCX
+    mindquantum.algorithm.compiler.GateReplacer
+    mindquantum.algorithm.compiler.FullyNeighborCanceler
+    mindquantum.algorithm.compiler.SimpleNeighborCanceler
+    mindquantum.algorithm.compiler.compile_circuit
+
+DAG circuit
+-----------
+
+.. autosummary::
+    :toctree:
+    :nosignatures:
+    :template: classtemplate.rst
+
+    mindquantum.algorithm.compiler.DAGCircuit
+    mindquantum.algorithm.compiler.DAGNode
+    mindquantum.algorithm.compiler.GateNode
+    mindquantum.algorithm.compiler.QubitNode
+    mindquantum.algorithm.compiler.connect_two_node
+    mindquantum.algorithm.compiler.try_merge

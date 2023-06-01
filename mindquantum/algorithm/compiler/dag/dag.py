@@ -39,7 +39,7 @@ class DAGNode:
         Insert other node after this dag node.
 
         Args:
-            other_node (DAGNode): other DAG node.
+            other_node (:class:`~.algorithm.compiler.DAGNode`): other DAG node.
         """
         _check_input_type("other_node", DAGNode, other_node)
         for local in self.local:
@@ -55,7 +55,7 @@ class DAGNode:
         Insert other node before this dag node.
 
         Args:
-            other_node (DAGNode): other DAG node.
+            other_node (:class:`~.algorithm.compiler.DAGNode`): other DAG node.
         """
         _check_input_type("other_node", DAGNode, other_node)
         for local in self.local:
@@ -119,7 +119,7 @@ class GateNode(DAGNode):
     DAG node that work as quantum gate.
 
     Args:
-        gate (BasicGate): Quantum gate.
+        gate (:class:`~.core.gates.BasicGate`): Quantum gate.
     """
 
     def __init__(self, gate: gates.BasicGate):
@@ -152,7 +152,7 @@ class DAGCircuit:
     A Directed Acyclic Graph of a quantum circuit.
 
     Args:
-        circuit (Circuit): the input quantum circuit.
+        circuit (:class:`~.core.circuit.Circuit`): the input quantum circuit.
 
     Examples:
         >>> from mindquantum.algorithm.compiler import DAGCircuit
@@ -188,8 +188,8 @@ class DAGCircuit:
         Replace a node with a DAGCircuit.
 
         Args:
-            node (DAGNode): the original DAG node.
-            coming (DAGCircuit): the coming DAG circuit.
+            node (:class:`~.algorithm.compiler.DAGNode`): the original DAG node.
+            coming (:class:`~.algorithm.compiler.DAGCircuit`): the coming DAG circuit.
 
         Examples:
             >>> from mindquantum.algorithm.compiler import DAGCircuit
@@ -221,7 +221,7 @@ class DAGCircuit:
         Append a quantum gate node.
 
         Args:
-            node (DAGNode): the DAG node you want to append.
+            node (:class:`~.algorithm.compiler.DAGNode`): the DAG node you want to append.
 
         Examples:
             >>> from mindquantum.algorithm.compiler import DAGCircuit, GateNode
@@ -312,7 +312,7 @@ class DAGCircuit:
                     layer[v - 1] += k.gate
         return [c for c in layer if len(c) != 0]
 
-    def depth(self):
+    def depth(self) -> int:
         """
         Return the depth of quantum circuit.
 
@@ -329,9 +329,9 @@ class DAGCircuit:
         """
         return len(self.layering())
 
-    def to_circuit(self):
+    def to_circuit(self) -> Circuit:
         """
-        Convert DAGCircuit to quantum circuit.
+        Convert :class:`~.algorithm.compiler.DAGCircuit` to quantum circuit.
 
         Examples:
             >>> from mindquantum.core.circuit import Circuit
@@ -368,7 +368,7 @@ class DAGCircuit:
 
     def find_all_gate_node(self) -> typing.List[GateNode]:
         """
-        Find all gate node in this DAG.
+        Find all gate node in this :class:`~.algorithm.compiler.DAGCircuit`.
 
         Examples:
             >>> from mindquantum.algorithm.compiler import DAGCircuit
@@ -405,13 +405,13 @@ def try_merge(
     parameterized gate into single parameterized gate.
 
     Args:
-        father_node (GateNode): the father node want to merge.
-        child_node (GateNode): the child node want to merge.
+        father_node (:class:`~.algorithm.compiler.GateNode`): the father node want to merge.
+        child_node (:class:`~.algorithm.compiler.GateNode`): the child node want to merge.
 
     Returns:
         bool, whether successfully merged.
-        List[GateNode], the father node after merged.
-        GlobalPhase, the global phase gate after merge two given gate node.
+        List[:class:`~.algorithm.compiler.GateNode`], the father node after merged.
+        :class:`~.core.gates.GlobalPhase`, the global phase gate after merge two given gate node.
     """
     if len(set(father_node.child.values())) != 1 or len(set(child_node.father.values())) != 1:
         return False, [], None

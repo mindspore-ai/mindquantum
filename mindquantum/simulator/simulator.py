@@ -69,7 +69,8 @@ class Simulator:
         array([0.5+0.j, 0.5+0.j, 0.5+0.j, 0.5+0.j])
     """
 
-    def __init__(self, backend, n_qubits, *args, seed=None, dtype=None, **kwargs):
+    # pylint: disable=keyword-arg-before-vararg
+    def __init__(self, backend, n_qubits=None, *args, seed=None, dtype=None, **kwargs):
         """Initialize a Simulator object."""
         if isinstance(backend, BackendBase):
             self.backend = backend

@@ -25,11 +25,12 @@ from .mqbackend import logging
 # isort: split
 
 
-from . import algorithm, config, core, engine, framework, io, simulator, utils
+from . import algorithm, config, core, device, engine, framework, io, simulator, utils
 from .algorithm import *
 from .config import *
 from .core import *
 from .core import gates, operators
+from .device import *
 from .dtype import *
 from .framework import *
 from .io import *
@@ -55,4 +56,5 @@ __all__.extend(simulator.__all__)
 __all__.extend(framework.__all__)
 __all__.extend(io.__all__)
 __all__.extend(config.__all__)
+__all__.extend(device.__all__)
 __all__.sort()

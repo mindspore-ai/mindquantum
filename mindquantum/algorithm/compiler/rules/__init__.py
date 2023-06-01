@@ -24,3 +24,17 @@ from .compiler_logger import CompileLog, LogIndentation
 from .device_based import CZBasedChipCompiler
 from .gate_replacer import CXToCZ, CZToCX, GateReplacer
 from .neighbor_canceler import FullyNeighborCanceler, SimpleNeighborCanceler
+
+__all__ = [
+    'BasicCompilerRule',
+    'KroneckerSeqCompiler',
+    'SequentialCompiler',
+    'BasicDecompose',
+    'CZBasedChipCompiler',
+    'CXToCZ',
+    'CZToCX',
+    'GateReplacer',
+    'FullyNeighborCanceler',
+    'SimpleNeighborCanceler',
+    'compile_circuit',
+]

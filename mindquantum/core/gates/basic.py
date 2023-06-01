@@ -258,19 +258,25 @@ class FunctionalGate(BasicGate):
 class QuantumGate(BasicGate):
     """Base class for quantum gates."""
 
-    def __commutate__(self, other):
+    def __commutate__(self, other: BasicGate):
         """Indicate whether a gate commutes."""
-        from .basicgate import (  # pylint: disable=import-outside-toplevel,cyclic-import
-            GlobalPhase,
-            IGate,
-        )
+        # pylint: disable=import-outside-toplevel,cyclic-import
+        from mindquantum.core.circuit import UN, Circuit
 
-        if isinstance(self, (IGate, GlobalPhase)) or isinstance(other, (IGate, GlobalPhase)) or self == other:
-            return True
-        if isinstance(self, other.__class__):
-            if self.obj_qubits == other.obj_qubits:
-                return True
-        return False
+        from .basicgate import I
+
+        if not isinstance(other, BasicGate):
+            return False
+        total_circ = Circuit([self, other]).compress()
+        circ_1 = total_circ[:1]
+        circ_2 = total_circ[1:]
+        qubit_set_2 = set(circ_2.all_qubits.keys())
+        qubit_set_1 = set(circ_1.all_qubits.keys())
+        circ_1 += UN(I, qubit_set_2 - qubit_set_1)
+        circ_2 += UN(I, qubit_set_1 - qubit_set_2)
+        matrix_1 = circ_1.matrix()
+        matrix_2 = circ_2.matrix()
+        return np.allclose(matrix_1 @ matrix_2, matrix_2 @ matrix_1)
 
 
 class SelfHermitianGate(QuantumGate):

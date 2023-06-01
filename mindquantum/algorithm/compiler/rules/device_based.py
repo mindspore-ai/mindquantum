@@ -25,7 +25,8 @@ class CZBasedChipCompiler(SequentialCompiler):
     A compiler that suitable for chip that use cz gate.
 
     Args:
-        log_level (int): log level to display message. Default: ``0``.
+        log_level (int): log level to display message. For more explanation of log level,
+            please refers to :class:`~.algorithm.compiler.BasicCompilerRule`. Default: ``0``.
     """
 
     def __init__(self, log_level=0):

@@ -15,6 +15,12 @@
 """Hardware device module."""
 # pylint: disable=import-error
 
-__all__ = ["GridQubits", "LinearQubits", "QubitNode", "QubitsTopology", "SABRE"]
 from ..mqbackend.device import GridQubits, LinearQubits, QubitNode, QubitsTopology
-from .sabre import SABRE
+
+__all__ = [
+    "GridQubits",
+    "LinearQubits",
+    "QubitNode",
+    "QubitsTopology",
+]
+__all__.sort()

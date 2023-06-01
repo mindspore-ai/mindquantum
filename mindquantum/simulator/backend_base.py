@@ -22,13 +22,17 @@ from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import BasicGate
 from mindquantum.core.operators import Hamiltonian
 from mindquantum.core.parameterresolver import ParameterResolver
+from mindquantum.utils.type_value_check import _check_seed
 
 
 class BackendBase:
     """Backend interface."""
 
-    def __init__(self, name: str, n_qubits: int, seed=42, dtype=None):
+    def __init__(self, name: str, n_qubits: int, seed=None, dtype=None):
         """Initialize backend obj."""
+        if seed is None:
+            seed = np.random.randint(1, 2**23)
+        _check_seed(seed)
         self.name = name
         self.n_qubits = n_qubits
         self.seed = seed

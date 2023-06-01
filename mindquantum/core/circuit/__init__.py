@@ -18,6 +18,16 @@ Circuit.
 Quantum circuit module.
 """
 
+from . import channel_adder
+from .channel_adder import (
+    BitFlipAdder,
+    ChannelAdderBase,
+    MeasureAccepter,
+    MixerAdder,
+    NoiseExcluder,
+    ReverseAdd,
+    SequentialAdder,
+)
 from .circuit import A, Circuit, apply
 from .module_circuit import UN, SwapParts
 from .qfi import partial_psi_partial_psi, partial_psi_psi, qfi
@@ -62,4 +72,5 @@ __all__ = [
     'partial_psi_partial_psi',
     'as_encoder',
 ]
+__all__.extend(channel_adder.__all__)
 __all__.sort()
