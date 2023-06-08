@@ -14,7 +14,8 @@
 # ============================================================================
 """Qubit mapping module."""
 
-from .sabre import SABRE
+# from .sabre import SABRE
 
-__all__ = ["SABRE"]
-__all__.sort()
+# __all__ = ["SABRE"]
+# __all__.sort()
+__all__ = []

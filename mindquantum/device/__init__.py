@@ -15,7 +15,7 @@
 """Hardware device module."""
 # pylint: disable=import-error
 
-from ..mqbackend.device import GridQubits, LinearQubits, QubitNode, QubitsTopology
+from .topology import GridQubits, LinearQubits, QubitNode, QubitsTopology
 
 __all__ = [
     "GridQubits",
