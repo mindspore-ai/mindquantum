@@ -68,7 +68,7 @@ class ChannelAdderBase:
         return Circuit()
 
 
-class ReverseAdd(ChannelAdderBase):
+class ReverseAdder(ChannelAdderBase):
     """
     Reverse the accepter and excluder rules.
 
@@ -200,7 +200,7 @@ class SequentialAdder(ChannelAdderBase):
 __all__ = [
     "ChannelAdderBase",
     "MeasureAccepter",
-    "ReverseAdd",
+    "ReverseAdder",
     "NoiseExcluder",
     "BitFlipAdder",
     "MixerAdder",

@@ -11,5 +11,4 @@ MindQuantum 比特映射模块。
     :nosignatures:
     :template: classtemplate.rst
 
-    mindquantum.algorithm.fold_at_random
-    mindquantum.algorithm.zne
+    mindquantum.algorithm.mapping.SABRE

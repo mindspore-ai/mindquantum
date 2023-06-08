@@ -41,6 +41,21 @@ Function
     mindquantum.core.circuit.partial_psi_partial_psi
     mindquantum.core.circuit.partial_psi_psi
 
+Channel adder
+-------------
+
+.. mscnautosummary::
+    :toctree:
+    :nosignatures:
+    :template: classtemplate.rst
+
+    mindquantum.core.circuit.MeasureAccepter
+    mindquantum.core.circuit.ReverseAdder
+    mindquantum.core.circuit.NoiseExcluder
+    mindquantum.core.circuit.BitFlipAdder
+    mindquantum.core.circuit.MixerAdder
+    mindquantum.core.circuit.SequentialAdder
+
 functional
 ----------
 

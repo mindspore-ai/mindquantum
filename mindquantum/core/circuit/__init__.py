@@ -25,7 +25,7 @@ from .channel_adder import (
     MeasureAccepter,
     MixerAdder,
     NoiseExcluder,
-    ReverseAdd,
+    ReverseAdder,
     SequentialAdder,
 )
 from .circuit import A, Circuit, apply
