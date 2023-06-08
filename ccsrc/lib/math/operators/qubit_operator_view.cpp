@@ -273,6 +273,30 @@ QubitOperator::QubitOperator(const py_terms_t& t, const parameter::ParameterReso
     this->dtype = term.second.GetDtype();
 }
 
+QubitOperator::QubitOperator(const py_dict_t& t) {
+    this->dtype = tn::TDtype::Float32;
+    tn::TDtype upper_type = tn::TDtype::Float32;
+    std::vector<key_t> will_pop;
+    for (auto& [k, v] : t) {
+        auto term = SinglePauliStr::init(SinglePauliStr::py_terms_to_terms(k), v);
+        if (this->terms.m_map.find(term.first) != this->terms.m_map.end()) {
+            this->terms[term.first] = this->terms[term.first] + term.second;
+        } else {
+            this->terms.insert(term.first, term.second);
+        }
+        upper_type = tn::upper_type_v(this->terms[term.first].GetDtype(), this->dtype);
+        if (!this->terms[term.first].IsNotZero()) {
+            will_pop.push_back(term.first);
+        }
+    }
+    for (auto& t : will_pop) {
+        this->terms.erase(t);
+    }
+    if (this->dtype != upper_type) {
+        this->CastTo(upper_type);
+    }
+}
+
 bool QubitOperator::Contains(const key_t& term) const {
     return this->terms.m_map.find(term) != this->terms.m_map.end();
 }

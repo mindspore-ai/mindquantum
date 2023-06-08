@@ -153,6 +153,13 @@ mindquantum.core.operators.FermionOperator
         返回：
             FermionOperator，这个FermionOperator的实部。
 
+    .. py:method:: relabel(logic_qubits: typing.List[int])
+
+        根据逻辑比特顺序从新编码量子比特。
+
+        参数：
+            - **logic_qubits** (List[int]) - 逻辑比特编号。
+
     .. py:method:: singlet()
 
         将只有一个费米子串的费米子算符分裂成只有一个费米子的费米子算符。

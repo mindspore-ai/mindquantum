@@ -541,6 +541,24 @@ class QubitOperator(QubitOperator_):
                 out += csr_matrix(tmp)
         return out
 
+    def relabel(self, logic_qubits: typing.List[int]) -> "QubitOperator":
+        """
+        Relabel the qubit according to the given logic qubits order.
+
+        Args:
+            logic_qubits (List[int]): The label of logic qubits.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator
+            >>> o = QubitOperator('Z0 Y1 X2 Z3')
+            >>> o
+            1 [Z0 Y1 X2 Z3]
+            >>> o.relabel([1, 3, 0, 2])
+        """
+        qbit_map = {j: i for i, j in enumerate(logic_qubits)}
+        terms = [(tuple((qbit_map[idx], dag) for idx, dag in key), value) for key, value in self.terms.items()]
+        return QubitOperator(terms, internal=True)
+
     def singlet(self) -> typing.List["QubitOperator"]:
         """
         Split the single string operator into every word.
