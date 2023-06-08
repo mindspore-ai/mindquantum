@@ -232,3 +232,15 @@ def test_pickle_fermion():
     """
     ops = FermionOperator('1^ 0')
     assert ops == pickle.loads(pickle.dumps(ops))
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_relabel():
+    """
+    Description: Test relabel of fermion operator
+    Expectation:
+    """
+    f_op = FermionOperator('3^ 2 1 0')
+    f_op = f_op.relabel([1, 3, 0, 2])
+    assert f_op == -FermionOperator('3 2^ 1 0')

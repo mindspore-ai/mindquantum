@@ -254,3 +254,15 @@ def test_pickle_qubit():
     """
     ops = QubitOperator('X0 Y1')
     assert ops == pickle.loads(pickle.dumps(ops))
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_relabel():
+    """
+    Description: Test relabel of fermion operator
+    Expectation:
+    """
+    q_op = QubitOperator('Z0 Y1 X2 Z3')
+    q_op = q_op.relabel([1, 3, 0, 2])
+    assert q_op == QubitOperator('X0 Z1 Z2 Y3')

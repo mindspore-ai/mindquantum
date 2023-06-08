@@ -598,7 +598,8 @@ class FermionOperator(FermionOperator_):
         Relabel the qubit according to the given logic qubits order.
 
         Args:
-            logic_qubits (List[int]): The label of logic qubits.
+            logic_qubits (List[int]): The label of logic qubits. For example, if
+                logic_qubits is `[2, 0, 1]`, original qubit `0` will label as `2`.
 
         Examples:
             >>> from mindquantum.core.operators import FermionOperator
@@ -606,10 +607,9 @@ class FermionOperator(FermionOperator_):
             >>> o
             1 [3^ 2 1 0]
             >>> o.relabel([1, 3, 0, 2])
-            -1 [3 2 1^ 0]
+            -1 [3 2^ 1 0]
         """
-        qbit_map = {j: i for i, j in enumerate(logic_qubits)}
-        terms = [(tuple((qbit_map[idx], dag) for idx, dag in key), value) for key, value in self.terms.items()]
+        terms = [(tuple((logic_qubits[idx], dag) for idx, dag in key), value) for key, value in self.terms.items()]
         return FermionOperator(terms, internal=True)
 
     def singlet_coeff(self) -> ParameterResolver:
