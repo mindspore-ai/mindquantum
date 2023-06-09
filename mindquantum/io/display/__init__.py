@@ -18,11 +18,9 @@
 from .bloch_plt_drawer import BlochScene
 from .circuit_text_drawer import brick_model
 from .measure_res_drawer import measure_text_drawer
+from .topology_drawer import draw_topology
 
-# from .topology_drawer import draw_topology
-
-__all__ = ['BlochScene']
-# __all__ = ['BlochScene', 'draw_topology']
+__all__ = ['BlochScene', 'draw_topology']
 # __all__ = ['brick_model', 'measure_text_drawer']
 
 __all__.sort()

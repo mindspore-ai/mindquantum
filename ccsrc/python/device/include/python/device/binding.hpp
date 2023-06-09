@@ -16,6 +16,7 @@
 #define PYTHON_DEVICE_BINDING_HPP_
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <utility>
 
@@ -41,8 +42,9 @@ namespace mm = mindquantum::mapping;
 void BindTopology(py::module &module) {  // NOLINT(runtime/references)
     auto qnode_module
         = py::class_<mm::QubitNode, std::shared_ptr<mm::QubitNode>>(module, "QubitNode")
-              .def(py::init<mm::qbit_t, std::string, double, double>(), "id"_a, "color"_a = "#000000", "poi_x"_a = 0.0,
-                   "poi_y"_a = 0.0, "Initialize a qubit node.")
+              .def(py::init<mm::qbit_t, std::string, double, double, const std::set<mm::qbit_t> &>(), "id"_a,
+                   "color"_a = "#000000", "poi_x"_a = 0.0, "poi_y"_a = 0.0, "neighbour"_a = std::set<mm::qbit_t>(),
+                   "Initialize a qubit node.")
               .def(
                   "get_id", [](const mm::QubitNode &node) { return node.id; }, "Index of this qubit.")
               .def(

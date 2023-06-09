@@ -26,8 +26,8 @@
 namespace mindquantum::mapping {
 // =============================================================================
 
-QubitNode::QubitNode(qbit_t id, std::string color, double poi_x, double poi_y)
-    : id(id), color(color), poi_x(poi_x), poi_y(poi_y) {
+QubitNode::QubitNode(qbit_t id, std::string color, double poi_x, double poi_y, const std::set<qbit_t>& neighbour)
+    : id(id), color(color), poi_x(poi_x), poi_y(poi_y), neighbour(neighbour) {
 }
 
 void QubitNode::SetPoi(double poi_x, double poi_y) {

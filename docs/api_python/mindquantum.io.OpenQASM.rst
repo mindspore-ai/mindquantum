@@ -15,6 +15,16 @@ mindquantum.io.OpenQASM
         返回：
             Circuit，从openqasm文件翻译过来的量子线路。
 
+    .. py:method:: from_string(string)
+
+        读取 OpenQASM 字符串。
+
+        参数：
+            - **string** (str) - 量子线路的 OpenQASM 字符串表示。
+
+        返回：
+            :class:`~.core.circuit.Circuit`，OpenQASM 字符串表示的量子线路。
+
     .. py:method:: to_file(file_name, circuit, version='2.0')
 
         将量子线路转换为openqasm格式并保存在文件中。

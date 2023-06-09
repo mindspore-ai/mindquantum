@@ -43,7 +43,8 @@ struct QubitNode : std::enable_shared_from_this<QubitNode> {
     // -----------------------------------------------------------------------------
 
     QubitNode() = default;
-    explicit QubitNode(qbit_t id, std::string color = "#000000", double poi_x = 0.0, double poi_y = 0.0);
+    explicit QubitNode(qbit_t id, std::string color = "#000000", double poi_x = 0.0, double poi_y = 0.0,
+                       const std::set<qbit_t>& neighbour = {});
 
     // -----------------------------------------------------------------------------
 

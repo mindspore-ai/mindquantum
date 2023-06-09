@@ -16,14 +16,18 @@
 
 import typing
 
+from ..mqbackend.device import QubitNode as QubitNode_
+from ..mqbackend.device import QubitsTopology as QubitsTopology_
+
 
 class QubitNode:
     """
     Qubit node.
 
     A qubit node has a id, a position and a color (if you want to draw it). You can connect two qubits with
-    '>>' or '<<' and disconnect two qubits with '<' or '>'. For more detail, please see :class:`QubitNode.__rshift__`,
-    :class:`QubitNode.__lshift__`, :class:`QubitNode.__lt__` and :class:`QubitNode.__gt__`.
+    '>>' or '<<' and disconnect two qubits with '<' or '>'. For more detail,
+    please see :func:`~.device.QubitNode.__rshift__`, :func:`~.device.QubitNode.__lshift__`,
+    :func:`~.device.QubitNode.__lt__` and :func:`~.device.QubitNode.__gt__`.
 
     Args:
         qubit_id (int): the identity number of this qubit.
@@ -36,7 +40,7 @@ class QubitNode:
         >>> q0 = QubitNode(0)
         >>> q1 = QubitNode(1)
         >>> q = q0 << q1
-        >>> q0.id == q.id
+        >>> q0.qubit_id == q.qubit_id
         True
     """
 
@@ -48,15 +52,19 @@ class QubitNode:
         self.poi_y_ = poi_y
         self.neighbor: typing.Set[int] = set()
 
+    def __get_cpp_obj__(self):
+        """Get cpp obj."""
+        return QubitNode_(self.id_, self.color_, self.poi_x_, self.poi_y_, self.neighbor)
+
     def __gt__(self, other: "QubitNode") -> "QubitNode":
         """
         Disconnect with other qubit node and return rhs.
 
         Args:
-            other (QubitNode): qubit node you want to disconnect with.
+            other (:class:`~.device.QubitNode`): qubit node you want to disconnect with.
 
         Returns:
-            QubitNode, the right hand size qubit.
+            :class:`~.device.QubitNode`, the right hand size qubit.
 
         Examples:
             >>> from mindquantum.device import QubitNode
@@ -71,12 +79,12 @@ class QubitNode:
             >>> topology.is_coupled_with(0, 1)
             False
         """
-        if self.id == other.id:
+        if self.qubit_id == other.qubit_id:
             raise RuntimeError("Cannot disconnect itself.")
-        if other.id in self.neighbor:
-            self.neighbor.remove(other.id)
-        if self.id in other.neighbor:
-            other.neighbor.remove(self.id)
+        if other.qubit_id in self.neighbor:
+            self.neighbor.remove(other.qubit_id)
+        if self.qubit_id in other.neighbor:
+            other.neighbor.remove(self.qubit_id)
 
         return other
 
@@ -93,17 +101,17 @@ class QubitNode:
             >>> int(q0)
             0
         """
-        return self.id
+        return self.qubit_id
 
     def __lshift__(self, other: "QubitNode") -> "QubitNode":
         """
         Connect with other qubit node and return lhs.
 
         Args:
-            other (QubitNode): qubit node you want to connect with.
+            other (:class:`~.device.QubitNode`): qubit node you want to connect with.
 
         Returns:
-            QubitNode, the left hand size qubit.
+            :class:`~.device.QubitNode`, the left hand size qubit.
 
         Examples:
             >>> from mindquantum.device import QubitNode
@@ -112,15 +120,15 @@ class QubitNode:
             >>> q1 = QubitNode(1)
             >>> topology = QubitsTopology([q0, q1])
             >>> q = q0 << q1
-            >>> q.id == q0.id
+            >>> q.qubit_id == q0.qubit_id
             True
             >>> topology.is_coupled_with(0, 1)
             True
         """
-        if self.id == other.id:
+        if self.qubit_id == other.qubit_id:
             raise RuntimeError("Cannot disconnect itself.")
-        self.neighbor.add(other.id)
-        other.neighbor.add(self.id)
+        self.neighbor.add(other.qubit_id)
+        other.neighbor.add(self.qubit_id)
 
         return self
 
@@ -129,10 +137,10 @@ class QubitNode:
         Disconnect with other qubit node and return lhs.
 
         Args:
-            other (QubitNode): qubit node you want to connect with.
+            other (:class:`~.device.QubitNode`): qubit node you want to connect with.
 
         Returns:
-            QubitNode, the left hand size qubit.
+            :class:`~.device.QubitNode`, the left hand size qubit.
 
         Examples:
             >>> from mindquantum.device import QubitNode
@@ -146,15 +154,15 @@ class QubitNode:
             >>> q = q0 < q1
             >>> topology.is_coupled_with(0, 1)
             False
-            >>> q.id == q0.id
+            >>> q.qubit_id == q0.qubit_id
             True
         """
-        if self.id == other.id:
+        if self.qubit_id == other.qubit_id:
             raise RuntimeError("Cannot disconnect itself.")
-        if other.id in self.neighbor:
-            self.neighbor.remove(other.id)
-        if self.id in other.neighbor:
-            other.neighbor.remove(self.id)
+        if other.qubit_id in self.neighbor:
+            self.neighbor.remove(other.qubit_id)
+        if self.qubit_id in other.neighbor:
+            other.neighbor.remove(self.qubit_id)
 
         return self
 
@@ -163,10 +171,10 @@ class QubitNode:
         Connect with other qubit node and return rhs.
 
         Args:
-            other (QubitNode): qubit node you want to connect with.
+            other (:class:`~.device.QubitNode`): qubit node you want to connect with.
 
         Returns:
-            QubitNode, the right hand side qubit.
+            :class:`~.device.QubitNode`, the right hand side qubit.
 
         Examples:
             >>> from mindquantum.device import QubitNode
@@ -175,15 +183,15 @@ class QubitNode:
             >>> q1 = QubitNode(1)
             >>> topology = QubitsTopology([q0, q1])
             >>> q = q0 >> q1
-            >>> q.id == q1.id
+            >>> q.qubit_id == q1.qubit_id
             True
             >>> topology.is_coupled_with(0, 1)
             True
         """
-        if self.id == other.id:
+        if self.qubit_id == other.qubit_id:
             raise RuntimeError("Cannot disconnect itself.")
-        self.neighbor.add(other.id)
-        other.neighbor.add(self.id)
+        self.neighbor.add(other.qubit_id)
+        other.neighbor.add(self.qubit_id)
 
         return other
 
@@ -200,7 +208,7 @@ class QubitNode:
             >>> q0 = QubitNode(1, poi_x=0, poi_y=1)
             >>> q0.set_poi(1, 0)
             >>> print(q0.poi_x, q0.poi_y)
-            1.0 0.0
+            1 0
         """
         self.poi_x_, self.poi_y_ = poi_x, poi_y
 
@@ -215,7 +223,7 @@ class QubitNode:
         return self.color_
 
     @property
-    def id(self) -> int:
+    def qubit_id(self) -> int:
         """
         Get the id of this qubit.
 
@@ -249,10 +257,11 @@ class QubitsTopology:
     """
     Topology of qubit in physical device.
 
-    Topology is construct by different QubitNode, and you can set the property of each qubit node directly.
+    Topology is construct by different :class:`~.device.QubitNode`, and you
+    can set the property of each qubit node directly.
 
     Args:
-        List[QubitNode], all qubit nodes in this topology.
+        List[:class:`~.device.QubitNode`], all qubit nodes in this topology.
 
     Examples:
         >>> from mindquantum.device import QubitsTopology
@@ -270,9 +279,9 @@ class QubitsTopology:
         """Initialize a physical qubit topology."""
         self.qubits: typing.Dict[int, QubitNode] = {}
         for node in qubits:
-            if node.id in self.qubits:
-                raise ValueError(f"Qubit with id {node.id} already exists.")
-            self.qubits[node.id] = node
+            if node.qubit_id in self.qubits:
+                raise ValueError(f"Qubit with id {node.qubit_id} already exists.")
+            self.qubits[node.qubit_id] = node
 
     def __getitem__(self, qubit_id: int) -> QubitNode:
         """
@@ -282,23 +291,27 @@ class QubitsTopology:
             qubit_id (int), the identity number of qubit you want.
 
         Returns:
-            QubitNode, the qubit node with given id.
+            :class:`~.device.QubitNode`, the qubit node with given id.
 
         Examples:
             >>> from mindquantum.device import QubitsTopology
             >>> from mindquantum.device import QubitNode
             >>> topology = QubitsTopology([QubitNode(i) for i in range(3)])
-            >>> topology[2].id
+            >>> topology[2].qubit_id
             2
         """
         return self.qubits[qubit_id]
+
+    def __get_cpp_obj__(self):
+        """Get cpp object."""
+        return QubitsTopology_([node.__get_cpp_obj__() for node in self.qubits.values()])
 
     def add_qubit_node(self, qubit: QubitNode) -> None:
         """
         Add a qubit node into this topology.
 
         Args:
-            qubit (QubitNode): the qubit you want to add into this topology.
+            qubit (:class:`~.device.QubitNode`): the qubit you want to add into this topology.
 
         Examples:
             >>> from mindquantum.device import QubitsTopology, QubitNode
@@ -307,9 +320,9 @@ class QubitsTopology:
             >>> topology.all_qubit_id()
             {0, 1, 2}
         """
-        if qubit.id in self.qubits:
-            raise ValueError(f"Qubit with id {qubit.id} already exists.")
-        self.qubits[qubit.id] = qubit
+        if qubit.qubit_id in self.qubits:
+            raise ValueError(f"Qubit with id {qubit.qubit_id} already exists.")
+        self.qubits[qubit.qubit_id] = qubit
 
     def all_qubit_id(self) -> typing.Set[int]:
         """
@@ -327,22 +340,6 @@ class QubitsTopology:
         """
         return set(self.qubits.keys())
 
-    def dict(self) -> typing.Dict[int, QubitNode]:
-        """
-        Get the map of qubits with key as qubit id and value as qubit itself.
-
-        Returns:
-            Dict[int, QubitNode], a dict with qubit id as key and qubit as value.
-
-        Examples:
-            >>> from mindquantum.device import QubitsTopology, QubitNode
-            >>> topology = QubitsTopology([QubitNode(i) for i in range(2)])
-            >>> topology.dict()
-            {1: <mindquantum.mqbackend.device.QubitNode at 0x7fee5e124a70>,
-            0: <mindquantum.mqbackend.device.QubitNode at 0x7feef3998270>}
-        """
-        return self.qubits
-
     def edges_with_id(self) -> typing.Set[typing.Tuple[int, int]]:
         """
         Get edges with id of two connected qubits.
@@ -359,11 +356,11 @@ class QubitsTopology:
         """
         out: typing.Set[typing.Tuple[int, int]] = set()
         for qubit1 in self.qubits.values():
-            for qubit2 in qubit1.neighbour():
-                if qubit1.id > qubit2.id:
-                    out.add((qubit2.id, qubit1.id))
+            for qid_2 in qubit1.neighbor:
+                if qubit1.qubit_id > qid_2:
+                    out.add((qid_2, qubit1.qubit_id))
                 else:
-                    out.add((qubit1.id, qubit2.id))
+                    out.add((qubit1.qubit_id, qid_2))
         return out
 
     def edges_with_poi(self) -> typing.Set[typing.Tuple[typing.Tuple[float, float], typing.Tuple[float, float]]]:
@@ -380,7 +377,7 @@ class QubitsTopology:
             >>> q0 >> q1
             >>> topology = QubitsTopology([q0, q1])
             >>> topology.edges_with_poi()
-            {((0.0, 0.0), (1.0, 0.0))}
+            {((0, 0), (1, 0))}
         """
         out: typing.Set[typing.Tuple[typing.Tuple[float, float], typing.Tuple[float, float]]] = set()
         for q_id_1, q_id_2 in self.edges_with_id():
@@ -465,7 +462,7 @@ class QubitsTopology:
             >>> topology.n_edges()
             2
         """
-        return sum(len(i.neighbor) for i in self.qubits.values()) / 2
+        return sum(len(i.neighbor) for i in self.qubits.values()) >> 1
 
     def choose(self, ids: typing.List[int]) -> typing.List[QubitNode]:
         """
@@ -475,14 +472,14 @@ class QubitsTopology:
             ids (List[int]): A list of qubit node id.
 
         Returns:
-            List[QubitNode], a list of qubit node based on given qubit node id.
+            List[:class:`~.device.QubitNode`], a list of qubit node based on given qubit node id.
 
         Examples:
             >>> from mindquantum.device import QubitsTopology, QubitNode
             >>> topology = QubitsTopology([QubitNode(i) for i in range(3)])
             >>> topology[0] >> topology[1] >> topology[2]
             >>> nodes = topology.choose([0, 1])
-            >>> print(nodes[0].id, nodes[1].id)
+            >>> print(nodes[0].qubit_id, nodes[1].qubit_id)
             0 1
         """
         return [self[i] for i in ids]
@@ -507,7 +504,7 @@ class QubitsTopology:
         will_remove = []
         for node in self.qubits.values():
             if not node.neighbor:
-                will_remove.append(node.id)
+                will_remove.append(node.qubit_id)
 
         for qubit_id in will_remove:
             _ = self.qubits.pop(qubit_id)
@@ -563,7 +560,7 @@ class QubitsTopology:
             >>> topology = QubitsTopology([QubitNode(i) for i in range(3)])
             >>> topology.set_position(0, 1, 1)
             >>> topology[0].poi_x, topology[0].poi_y
-            (1.0, 1.0)
+            (1, 1)
         """
         self[qubit_id].set_poi(poi_x, poi_y)
 
@@ -632,13 +629,13 @@ class GridQubits(QubitsTopology):
             for c in range(n_col):
                 qubits.append(QubitNode(r * n_col + c, poi_x=c, poi_y=r))
         for r in range(n_row):
-            next_node = self[r * n_col]
-            for r in range(n_col):
-                next_node = next_node >> self[next_node.id + 1]
+            next_node = qubits[r * n_col]
+            for c in range(n_col - 1):
+                next_node = next_node >> qubits[next_node.qubit_id + 1]
         for c in range(n_col):
-            next_node = self[c]
-            for r in range(n_row):
-                next_node = next_node >> self[next_node.id + n_col]
+            next_node = qubits[c]
+            for r in range(n_row - 1):
+                next_node = next_node >> qubits[next_node.qubit_id + n_col]
         super().__init__(qubits)
 
     def n_col(self) -> int:

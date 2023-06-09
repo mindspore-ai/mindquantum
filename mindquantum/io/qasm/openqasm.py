@@ -18,6 +18,7 @@
 import numpy as np
 
 from mindquantum.utils import fdopen
+from mindquantum.utils.type_value_check import _check_input_type
 
 
 def _find_qubit_id(cmd):
@@ -279,6 +280,35 @@ class OpenQASM:
         """
         with fdopen(file_name, 'r') as fd:
             cmds = fd.readlines()
+        self.cmds, version = self._filter(cmds)
+        if version == '2.0':
+            self._trans_v2(self.cmds)
+        else:
+            raise ValueError(f"OPENQASM {version} not implement yet")
+        return self.circuit
+
+    def from_string(self, string):
+        """
+        Read a OpenQASM string.
+
+        Args:
+            string (str): The OpenQASM string of Circuit.
+
+        Returns:
+            :class:`~.core.circuit.Circuit`, the quantum circuit translated from OpenQASM string.
+
+        Examples:
+            >>> from mindquantum.io import OpenQASM
+            >>> from mindquantum.core.circuit import Circuit
+            >>> circ = Circuit().x(0, 1).h(1)
+            >>> string = OpenQASM().to_string(circ)
+            >>> OpenQASM().from_string(string)
+            q0: ──X───────
+                  │
+            q1: ──●────H──
+        """
+        _check_input_type('string', str, string)
+        cmds = string.split('\n')
         self.cmds, version = self._filter(cmds)
         if version == '2.0':
             self._trans_v2(self.cmds)
