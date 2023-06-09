@@ -150,6 +150,13 @@ mindquantum.core.operators.QubitOperator
         返回：
             QubitOperator，这个玻色子算符的实部。
 
+    .. py:method:: relabel(logic_qubits: typing.List[int])
+
+        根据逻辑比特顺序从新编码量子比特。
+
+        参数：
+            - **logic_qubits** (List[int]) - 逻辑比特编号。
+
     .. py:method:: singlet()
 
         将只有一个费米子串的玻色子算符分裂成只有一个玻色子的玻色子算符。

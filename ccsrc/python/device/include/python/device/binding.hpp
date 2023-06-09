@@ -16,6 +16,7 @@
 #define PYTHON_DEVICE_BINDING_HPP_
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <utility>
 
@@ -41,12 +42,17 @@ namespace mm = mindquantum::mapping;
 void BindTopology(py::module &module) {  // NOLINT(runtime/references)
     auto qnode_module
         = py::class_<mm::QubitNode, std::shared_ptr<mm::QubitNode>>(module, "QubitNode")
-              .def(py::init<mm::qbit_t, std::string, double, double>(), "id"_a, "color"_a = "#000000", "poi_x"_a = 0.0,
-                   "poi_y"_a = 0.0, "Initialize a qubit node.")
-              .def_readonly("id", &mm::QubitNode::id, "Index of this qubit.")
-              .def_readonly("color", &mm::QubitNode::color, "Color of this qubit.")
-              .def_readonly("poi_x", &mm::QubitNode::poi_x, "X position of this qubit.")
-              .def_readonly("poi_y", &mm::QubitNode::poi_y, "Y position of this qubit.")
+              .def(py::init<mm::qbit_t, std::string, double, double, const std::set<mm::qbit_t> &>(), "id"_a,
+                   "color"_a = "#000000", "poi_x"_a = 0.0, "poi_y"_a = 0.0, "neighbour"_a = std::set<mm::qbit_t>(),
+                   "Initialize a qubit node.")
+              .def(
+                  "get_id", [](const mm::QubitNode &node) { return node.id; }, "Index of this qubit.")
+              .def(
+                  "get_color", [](const mm::QubitNode &node) { return node.color; }, "Color of this qubit.")
+              .def(
+                  "get_poi_x", [](const mm::QubitNode &node) { return node.poi_x; }, "X position of this qubit.")
+              .def(
+                  "get_poi_y", [](const mm::QubitNode &node) { return node.poi_y; }, "Y position of this qubit.")
               .def("set_poi", &mm::QubitNode::SetPoi, "poi_x"_a, "poi_y"_a, "Set the position of this qubit.")
               .def("__lt__", &mm::QubitNode::operator<, "other"_a, "Disconnect with other qubit node and return lhs.")
               .def("__gt__", &mm::QubitNode::operator>, "other"_a, "Disconnect with other qubit node and return rhs.")

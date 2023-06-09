@@ -32,7 +32,7 @@ class SABRE:
     Args:
         circuit (:class:`~.core.circuit.Circuit`): The quantum circuit you need to do qubit mapping. Currently we only
             support circuit constructed by one or two qubits gate, control qubit included.
-        topology (:class:`.device.QubitsTopology`): The hardware qubit topology. Currently we only support
+        topology (:class:`~.device.QubitsTopology`): The hardware qubit topology. Currently we only support
             connected coupling graph. Please manually assign some lines to connected subgraphs.
     """
 
@@ -40,7 +40,7 @@ class SABRE:
         """Initialize a sabre qubit mapping solver."""
         self.circuit = circuit
         self.topology = topology
-        self.cpp_solver = SABRE_(self.circuit.get_cpp_obj(), self.topology)
+        self.cpp_solver = SABRE_(self.circuit.get_cpp_obj(), self.topology.__get_cpp_obj__())
 
         def check_connected(topology: QubitsTopology) -> bool:
             """Check whether topology graph is connected."""

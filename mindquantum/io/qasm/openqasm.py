@@ -18,6 +18,7 @@
 import numpy as np
 
 from mindquantum.utils import fdopen
+from mindquantum.utils.type_value_check import _check_input_type
 
 
 def _find_qubit_id(cmd):
@@ -61,6 +62,14 @@ def _extr_parameter(cmd):
             expre = str(float(tmp[0]) / float(tmp[1]))
         out.append(float(expre))
     return out[0] if len(all_expre) == 1 else out
+
+
+def _extr_measure(cmd):
+    """Extra info in measure gate."""
+    cmd = cmd.split('[')
+    q_id = int(cmd[1].split(']')[0])
+    c_id = int(cmd[2].split(']')[0])
+    return q_id, c_id
 
 
 def u3(theta, psi, lambd, qubit):
@@ -156,6 +165,9 @@ class OpenQASM:
             self.circuit = circuit
             self.cmds = [f"OPENQASM {version};", "include \"qelib1.inc\";"]
             self.cmds.append(f"qreg q[{circuit.n_qubits}];")
+            m_idx = 0
+            if circuit.has_measure_gate:
+                self.cmds.append(f"creg c[{circuit.all_measures.size}];")
             for gate in self.circuit:
                 if isgateinstance(gate, (single_np, single_p)):
                     if isinstance(gate, gates.XGate):
@@ -235,6 +247,9 @@ class OpenQASM:
                         obj = gate.obj_qubits
                         param = ",".join([str(i.const) for i in gate.get_parameters()])
                         self.cmds.append(f"r{gate.name[1:].lower()}({param}) q[{obj[0]}],q[{obj[1]}];")
+                if isinstance(gate, gates.Measure):
+                    self.cmds.append(f"measure q[{gate.obj_qubits[0]}] -> c[{m_idx}];")
+                    m_idx += 1
         else:
             raise NotImplementedError(f"openqasm version {version} not implement")
         return '\n'.join(self.cmds)
@@ -286,6 +301,35 @@ class OpenQASM:
             raise ValueError(f"OPENQASM {version} not implement yet")
         return self.circuit
 
+    def from_string(self, string):
+        """
+        Read a OpenQASM string.
+
+        Args:
+            string (str): The OpenQASM string of Circuit.
+
+        Returns:
+            :class:`~.core.circuit.Circuit`, the quantum circuit translated from OpenQASM string.
+
+        Examples:
+            >>> from mindquantum.io import OpenQASM
+            >>> from mindquantum.core.circuit import Circuit
+            >>> circ = Circuit().x(0, 1).h(1)
+            >>> string = OpenQASM().to_string(circ)
+            >>> OpenQASM().from_string(string)
+            q0: ──X───────
+                  │
+            q1: ──●────H──
+        """
+        _check_input_type('string', str, string)
+        cmds = string.split('\n')
+        self.cmds, version = self._filter(cmds)
+        if version == '2.0':
+            self._trans_v2(self.cmds)
+        else:
+            raise ValueError(f"OPENQASM {version} not implement yet")
+        return self.circuit
+
     def _filter(self, cmds):
         """Filter empty cmds and head."""
         out = []
@@ -293,6 +337,8 @@ class OpenQASM:
         for cmd in cmds:
             cmd = cmd.strip()
             if not cmd or cmd.startswith('//') or cmd.startswith('include') or cmd.startswith("qreg"):
+                pass
+            elif cmd.startswith("creg"):
                 pass
             elif cmd.startswith('OPENQASM'):
                 version = cmd.split(' ')[-1][:-1]
@@ -309,7 +355,10 @@ class OpenQASM:
         self.circuit = Circuit()
         for cmd in cmds:
             qubit = _find_qubit_id(cmd)
-            if cmd.startswith("h "):
+            if cmd.startswith("measure"):
+                q_id, c_id = _extr_measure(cmd)
+                self.circuit.measure(f"k{c_id}", q_id)
+            elif cmd.startswith("h "):
                 self.circuit.h(qubit[0])
             elif cmd.startswith("x "):
                 self.circuit.x(qubit[0])

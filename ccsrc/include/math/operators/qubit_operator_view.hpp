@@ -117,6 +117,7 @@ class QubitOperator {
     using py_term_t = SinglePauliStr::py_term_t;
     using py_terms_t = SinglePauliStr::py_terms_t;
     using dict_t = std::vector<std::pair<terms_t, parameter::ParameterResolver>>;
+    using py_dict_t = std::vector<std::pair<py_terms_t, parameter::ParameterResolver>>;
 
  private:
     bool Contains(const key_t& term) const;
@@ -136,6 +137,7 @@ class QubitOperator {
                            const parameter::ParameterResolver& var = parameter::ParameterResolver(tn::ops::ones(1)));
     explicit QubitOperator(const py_term_t& t,
                            const parameter::ParameterResolver& var = parameter::ParameterResolver(tn::ops::ones(1)));
+    explicit QubitOperator(const py_dict_t& t);
     QubitOperator(const key_t& k, const value_t& v);
 
     // -----------------------------------------------------------------------------

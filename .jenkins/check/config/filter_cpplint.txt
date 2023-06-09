@@ -65,3 +65,4 @@
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_policy.cpp"                 "runtime/references"
 "mindquantum/ccsrc/lib/simulator/vector/detail/gpu/gpu_vector_core_policy.cu"                         "runtime/references"
 "mindquantum/ccsrc/include/simulator/vector/detail/cpu_vector_policy.hpp"                             "runtime/references"
+"mindquantum/ccsrc/include/math/operators/qubit_operator_view.hpp"                                    "runtime/references"
