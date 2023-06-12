@@ -18,7 +18,7 @@ from mindspore import nn
 from mindspore.common.initializer import initializer
 from mindspore.common.parameter import Parameter
 
-from .operations import MQAnsatzOnlyOps, MQN2AnsatzOnlyOps, MQN2Ops, MQOps
+from .operations import MQAnsatzOnlyOps, MQN2AnsatzOnlyOps, MQN2Ops, MQOps, QRamVecOps
 
 
 class MQLayer(nn.Cell):  # pylint: disable=too-few-public-methods
@@ -305,3 +305,87 @@ class MQN2AnsatzOnlyLayer(nn.Cell):  # pylint: disable=too-few-public-methods
     def construct(self):
         """Construct a MQN2AnsatzOnlyLayer node."""
         return self.evolution(self.weight)
+
+
+class QRamVecLayer(nn.Cell):  # pylint: disable=too-few-public-methods
+    """
+    Quantum neural network include a qram as quantum state encoder and ansatz circuit.
+
+    Note:
+        - For MindSpore with version less than 2.0.0, complex tensor as neural
+            network cell input is not supported, so we should split quantum
+            state to real and image part, and use them as input tensor. This may change when MindSpore upgrade.
+        - Currently, we can not compute the gradient of the measurement result with respect to each quantum amplitude.
+
+    Args:
+        expectation_with_grad (:class:`~.simulator.GradOpsWrapper`): a grad ops that receive real part and image part
+            of quantum state and ansatz data and return the expectation value and gradient value of parameters
+            respect to expectation.
+        weight (Union[Tensor, str, Initializer, numbers.Number]): Initializer for the
+            convolution kernel. It can be a Tensor, a string, an Initializer or a number.
+            When a string is specified, values from ``'TruncatedNormal'``, ``'Normal'``, ``'Uniform'``,
+            ``'HeUniform'`` and ``'XavierUniform'`` distributions as well as constant 'One' and 'Zero'
+            distributions are possible. Alias ``'xavier_uniform'``, ``'he_uniform'``, ``'ones'`` and
+            ``'zeros'`` are acceptable. Uppercase and lowercase are both acceptable. Refer to
+            the values of Initializer for more details. Default: ``'normal'``.
+
+    Inputs:
+        - **qs_r** (Tensor) - The real part of quantum state with shape :math:`(N, M)`, where :math:`N` is batch size
+          and :math:`M` is the length of quantum state vector.
+        - **qs_i** (Tensor) - The image part of quantum state with shape :math:`(N, M)`, where :math:`N` is batch size
+          and :math:`M` is the length of quantum state vector.
+
+    Outputs:
+        Tensor, The expectation value of the hamiltonian.
+
+    Raises:
+        ValueError: If length of shape of `weight` is not equal to 1 or shape[0] of `weight`
+                    is not equal to `weight_size`.
+
+    Supported Platforms:
+        ``GPU``, ``CPU``
+
+    Examples:
+        >>> import numpy as np
+        >>> import mindspore as ms
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
+        >>> from mindquantum.framework import QRamVecLayer
+        >>> from mindquantum.simulator import Simulator
+        >>> ms.set_seed(42)
+        >>> ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
+        >>> ans = Circuit().ry('a', 0).rx('b', 0).as_ansatz()
+        >>> ham = Hamiltonian(QubitOperator('Z0'))
+        >>> sim = Simulator('mqvector', 1)
+        >>> grad_ops = sim.get_expectation_with_grad(ham, ans)
+        >>> qs = np.array([[1.0, 2.0]])/np.sqrt(5)
+        >>> qs_r, qs_i = ms.Tensor(qs.real), ms.Tensor(qs.imag)
+        >>> net =  QRamVecLayer(grad_ops)
+        >>> opti = ms.nn.Adam(net.trainable_params(), learning_rate=0.1)
+        >>> train_net = ms.nn.TrainOneStepCell(net, opti)
+        >>> for i in range(100):
+        ...     train_net(qs_r, qs_i)
+        >>> net.weight.asnumpy()
+        array([ 9.247291e-01, -2.175906e-04], dtype=float32)
+        >>> net(qs_r, qs_i)
+        Tensor(shape=[1, 1], dtype=Float32, value=
+        [[-9.99996662e-01]])
+        >>> sim.set_qs(qs[0])
+        >>> sim.apply_circuit(ans, pr=net.weight.asnumpy())
+        >>> print(sim.get_qs())
+        [0.00128305+1.08795209e-04j 0.99999917+1.39590269e-07j]
+    """
+
+    def __init__(self, expectation_with_grad, weight='normal'):
+        """Initialize a MQLayer object."""
+        super().__init__()
+        self.evolution = QRamVecOps(expectation_with_grad)
+        weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
+        if isinstance(weight, ms.Tensor):
+            if weight.ndim != 1 or weight.shape[0] != weight_size:
+                raise ValueError(f"Weight init shape error, required ({weight_size}, ), but get {weight.shape}.")
+        self.weight = Parameter(initializer(weight, weight_size, dtype=ms.float32), name='ansatz_weight')
+
+    def construct(self, qs_r, qs_i):
+        """Construct a MQLayer node."""
+        return self.evolution(qs_r, qs_i, self.weight)

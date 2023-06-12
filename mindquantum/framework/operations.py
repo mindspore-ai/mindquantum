@@ -47,6 +47,18 @@ def check_ans_input_shape(data, ansatz_tensor, ans_len):
         )
 
 
+@constexpr
+def check_state_vector_shape(data, data_shape, qubit_dim):
+    """Check state vector shape."""
+    if not isinstance(data, ms.Tensor):
+        raise TypeError(f"Quantum state vector requires a Tensor but get {type(data)}.")
+    if len(data_shape) != 2 or data_shape[1] != qubit_dim:
+        raise ValueError(
+            'Quantum state vector requires a two dimension Tensor with'
+            f' second dimension should be {qubit_dim}, but get shape {data_shape}.'
+        )
+
+
 class MQOps(nn.Cell):
     """
     MindQuantum operator.
@@ -516,6 +528,110 @@ class MQN2EncoderOnlyOps(nn.Cell):
         dout = dout.asnumpy()
         grad = 2 * np.real(np.einsum('smp,sm,sm->sp', self.g, dout, np.conj(self.f)))
         return ms.Tensor(grad, dtype=ms.float32)
+
+
+class QRamVecOps(nn.Cell):
+    r"""
+    MindQuantum vector state qram operator.
+
+    A QRam operator with can directly encode classical data into quantum state vector.
+    This ops is `PYNATIVE_MODE` supported only.
+
+    Note:
+        - For MindSpore with version less than 2.0.0, complex tensor as neural
+            network cell input is not supported, so we should split quantum
+            state to real and image part, and use them as input tensor. This may change when MindSpore upgrade.
+        - Currently, we can not compute the gradient of the measurement result with respect to each quantum amplitude.
+
+    Args:
+        expectation_with_grad (:class:`~.simulator.GradOpsWrapper`): a grad ops that receive real part and image
+            part of quantum state and ansatz data and return the expectation value and gradient value of parameters
+            respect to expectation.
+
+    Inputs:
+        - **qs_r** (Tensor) - The real part of quantum state with shape :math:`(N, M)`, where :math:`N` is batch size
+          and :math:`M` is the length of quantum state vector.
+        - **qs_i** (Tensor) - The image part of quantum state with shape :math:`(N, M)`, where :math:`N` is batch size
+          and :math:`M` is the length of quantum state vector.
+        - **ans_data** (Tensor) - Tensor with shape :math:`N` for ansatz circuit,
+          where :math:`N` means the number of ansatz parameters.
+
+    Outputs:
+        Tensor, The expectation value of the hamiltonian.
+
+    Supported Platforms:
+        ``GPU``, ``CPU``
+
+    Examples:
+        >>> import numpy as np
+        >>> import mindspore as ms
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
+        >>> from mindquantum.framework import QRamVecOps
+        >>> from mindquantum.simulator import Simulator
+        >>> from mindquantum.utils import random_state
+        >>> ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
+        >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0).as_ansatz()
+        >>> ham = Hamiltonian(QubitOperator('Z0'))
+        >>> sim = Simulator('mqvector', 1)
+        >>> grad_ops = sim.get_expectation_with_grad(ham, circ)
+        >>> qs = random_state((3, 2), norm_axis=1, seed=42)
+        >>> qs_r, qs_i = ms.Tensor(qs.real), ms.Tensor(qs.imag)
+        >>> ansatz_data = np.array([1.0, 2.0])
+        >>> net = QRamVecOps(grad_ops)
+        >>> f_ms = net(qs_r, qs_i, ms.Tensor(ansatz_data))
+        >>> f_ms
+        Tensor(shape=[3, 1], dtype=Float32, value=
+        [[-7.97555372e-02],
+         [-3.92564088e-01],
+         [ 4.03987877e-02]])
+        >>> for i in qs:
+        ...     sim.set_qs(i)
+        ...     f, g = grad_ops(ansatz_data)
+        ...     print(f.real[0, 0])
+        -0.07975553553458492
+        -0.39256407750502403
+        0.04039878594782581
+    """
+
+    def __init__(self, expectation_with_grad: GradOpsWrapper):
+        """Initialize a qram operator."""
+        super().__init__()
+        _mode_check(self)
+        _check_grad_ops(expectation_with_grad)
+        self.expectation_with_grad = expectation_with_grad
+        self.shape_ops = operations.Shape()
+        self.g_ans = None
+        self.g_enc = None
+        self.dim = 1 << self.expectation_with_grad.sim.n_qubits
+
+    def extend_repr(self):
+        """Extend string representation."""
+        return self.expectation_with_grad.str
+
+    def construct(self, qs_r, qs_i, ans_data):
+        """Construct an MQOps node."""
+        check_state_vector_shape(qs_r, self.shape_ops(qs_r), self.dim)
+        check_state_vector_shape(qs_i, self.shape_ops(qs_i), self.dim)
+        check_ans_input_shape(ans_data, self.shape_ops(ans_data), len(self.expectation_with_grad.ansatz_params_name))
+
+        enc_data = qs_r.asnumpy() + qs_i.asnumpy() * 1j
+        self.expectation_with_grad.sim.set_qs(enc_data[0])
+        fval, g_ans = self.expectation_with_grad(ans_data.asnumpy())
+        for quantum_state in enc_data[1:]:
+            self.expectation_with_grad.sim.set_qs(quantum_state)
+            fval_, g_ans_ = self.expectation_with_grad(ans_data.asnumpy())
+            fval = np.append(fval, fval_, axis=0)
+            g_ans = np.append(g_ans, g_ans_, axis=0)
+        self.g_ans = np.real(g_ans)
+        self.g_enc = ms.Tensor(np.zeros(shape=enc_data.shape), dtype=ms.float32)
+        return ms.Tensor(np.real(fval), dtype=ms.float32)
+
+    def bprop(self, enc_data_r, enc_data_i, ans_data, out, dout):  # pylint: disable=unused-argument,too-many-arguments
+        """Implement the bprop function."""
+        dout = dout.asnumpy()
+        ans_grad = np.einsum('smp,sm->p', self.g_ans, dout)
+        return self.g_enc, self.g_enc, ms.Tensor(ans_grad, dtype=ms.float32)
 
 
 def _mode_check(self):

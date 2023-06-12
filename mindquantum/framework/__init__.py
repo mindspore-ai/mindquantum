@@ -19,7 +19,13 @@ __all__ = []
 try:
     import mindspore
 
-    from .layer import MQAnsatzOnlyLayer, MQLayer, MQN2AnsatzOnlyLayer, MQN2Layer
+    from .layer import (
+        MQAnsatzOnlyLayer,
+        MQLayer,
+        MQN2AnsatzOnlyLayer,
+        MQN2Layer,
+        QRamVecLayer,
+    )
     from .operations import (
         MQAnsatzOnlyOps,
         MQEncoderOnlyOps,
@@ -27,6 +33,7 @@ try:
         MQN2EncoderOnlyOps,
         MQN2Ops,
         MQOps,
+        QRamVecOps,
     )
 
     __all__.extend(
@@ -41,6 +48,8 @@ try:
             "MQN2AnsatzOnlyOps",
             "MQEncoderOnlyOps",
             "MQN2EncoderOnlyOps",
+            "QRamVecOps",
+            "QRamVecLayer",
         ]
     )
     import packaging.version
