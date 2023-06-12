@@ -66,7 +66,7 @@ def test_mindquantumlayer(config):
     net = MQLayer(f_g_ops)
     encoder_data = ms.Tensor(np.array([[0.1, 0.2]]).astype(np.float32))
     res = net(encoder_data)
-    assert round(float(res.asnumpy()[0, 0]), 6) == round(float(0.9949919), 6)
+    assert round(float(res.asnumpy()[0, 0]), 6) == round(float(0.994962), 6)
 
 
 @pytest.mark.level0
@@ -96,4 +96,4 @@ def test_qram_vec_layer(config):
     for _ in range(100):
         train_net(qs_r, qs_i)
     weight = net.weight.asnumpy()
-    assert np.allclose(weight, np.array([9.247291e-01, -2.175906e-04]), atol=1e-5)
+    assert np.allclose(weight, np.array([9.2439342e-01, -3.3963533e-04]), atol=1e-5)

@@ -613,6 +613,7 @@ class QRamVecOps(nn.Cell):
         """Construct an MQOps node."""
         check_state_vector_shape(qs_r, self.shape_ops(qs_r), self.dim)
         check_state_vector_shape(qs_i, self.shape_ops(qs_i), self.dim)
+        check_ans_input_shape(ans_data, self.shape_ops(ans_data), len(self.expectation_with_grad.ansatz_params_name))
 
         enc_data = qs_r.asnumpy() + qs_i.asnumpy() * 1j
         self.expectation_with_grad.sim.set_qs(enc_data[0])

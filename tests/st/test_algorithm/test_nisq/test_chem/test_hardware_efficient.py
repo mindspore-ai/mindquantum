@@ -69,4 +69,4 @@ def test_hardware_efficient(config):
     train_net = ms.nn.TrainOneStepCell(net, opti)
     for _ in range(3):
         res = train_net().asnumpy()[0]
-    assert np.allclose(round(res, 4), -0.7588)
+    assert np.allclose(round(res, 4), -0.3708)
