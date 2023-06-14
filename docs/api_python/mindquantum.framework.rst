@@ -21,6 +21,7 @@ Operators
     mindquantum.framework.MQN2AnsatzOnlyOps
     mindquantum.framework.MQEncoderOnlyOps
     mindquantum.framework.MQN2EncoderOnlyOps
+    mindquantum.framework.QRamVecOps
 
 Layer
 -----
@@ -34,3 +35,4 @@ Layer
     mindquantum.framework.MQN2AnsatzOnlyLayer
     mindquantum.framework.MQLayer
     mindquantum.framework.MQN2Layer
+    mindquantum.framework.QRamVecLayer

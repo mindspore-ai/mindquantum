@@ -336,7 +336,7 @@ std::string QubitOperator::ToString() const {
 size_t QubitOperator::count_qubits() const {
     int n_qubits = 0;
     for (auto& [k, v] : this->terms.m_list) {
-        int group_id = k.size() - 1, local_id = 0;
+        int group_id = k.size() - 1;
         for (auto word = k.rbegin(); word != k.rend(); ++word) {
             if ((*word) != 0) {
                 n_qubits = std::max(n_qubits, (63 - __builtin_clzll(*word)) / 2 + group_id * 32);
@@ -363,6 +363,7 @@ auto QubitOperator::get_terms() const -> dict_t {
                 local_id += 1;
                 qubit_word >>= 2;
             }
+            group_id += 1;
         }
         // std::reverse(terms.begin(), terms.end());
         out.push_back({terms, v});

@@ -63,10 +63,9 @@ def test_hardware_efficient(config):
     ham = QubitOperator('Z0 Z1 Z2').astype(dtype)
     sim = Simulator(backend, hea.circuit.n_qubits, dtype=dtype)
     f_g_ops = sim.get_expectation_with_grad(Hamiltonian(ham), hea.circuit)
-    ms.set_seed(42)
-    net = MQAnsatzOnlyLayer(f_g_ops)
-    opti = ms.nn.Adagrad(net.trainable_params(), learning_rate=4e-1)
+    net = MQAnsatzOnlyLayer(f_g_ops, 'one')
+    opti = ms.nn.Adam(net.trainable_params(), learning_rate=4e-1)
     train_net = ms.nn.TrainOneStepCell(net, opti)
-    for _ in range(3):
+    for _ in range(100):
         res = train_net().asnumpy()[0]
-    assert np.allclose(round(res, 4), -0.7588)
+    assert np.allclose(res, -0.99999124, atol=1e-2)

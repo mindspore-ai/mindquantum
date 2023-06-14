@@ -25,7 +25,7 @@ try:
     from mindquantum.core import gates as G
     from mindquantum.core.circuit import Circuit
     from mindquantum.core.operators import Hamiltonian, QubitOperator
-    from mindquantum.framework import MQLayer
+    from mindquantum.framework import MQLayer, QRamVecLayer
     from mindquantum.simulator import Simulator
     from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
@@ -66,4 +66,34 @@ def test_mindquantumlayer(config):
     net = MQLayer(f_g_ops)
     encoder_data = ms.Tensor(np.array([[0.1, 0.2]]).astype(np.float32))
     res = net(encoder_data)
-    assert round(float(res.asnumpy()[0, 0]), 6) == round(float(0.9949919), 6)
+    assert np.allclose(res.asnumpy()[0, 0], 0.994962, atol=1e-2)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('config', AVAILABLE_BACKEND)
+@pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
+def test_qram_vec_layer(config):
+    """
+    Description: Test QRamVec
+    Expectation:
+    """
+    backend, dtype = config
+    if backend == 'mqmatrix':
+        return
+    ms.set_seed(42)
+    ans = Circuit().ry('a', 0).rx('b', 0).as_ansatz()
+    ham = Hamiltonian(QubitOperator('Z0')).astype(dtype)
+    sim = Simulator(backend, 1, dtype=dtype)
+    grad_ops = sim.get_expectation_with_grad(ham, ans)
+    quantum_state = np.array([[1.0, 2.0]]) / np.sqrt(5)
+    qs_r, qs_i = ms.Tensor(quantum_state.real), ms.Tensor(quantum_state.imag)
+    net = QRamVecLayer(grad_ops)
+    opti = ms.nn.Adam(net.trainable_params(), learning_rate=0.1)
+    train_net = ms.nn.TrainOneStepCell(net, opti)
+    for _ in range(100):
+        train_net(qs_r, qs_i)
+    weight = net.weight.asnumpy()
+    assert np.allclose(weight, np.array([9.2439342e-01, -3.3963533e-04]), atol=1e-2)

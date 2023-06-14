@@ -45,10 +45,11 @@ class GradOpsWrapper:  # pylint: disable=too-many-instance-attributes
         encoder_params_name (list[str]): The encoder parameters name.
         ansatz_params_name (list[str]): The ansatz parameters name.
         parallel_worker (int): The number of parallel worker to run the batch.
+        sim (Simulator): The simulator that this grad ops used.
     """
 
     def __init__(
-        self, grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name, parallel_worker
+        self, grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name, parallel_worker, sim=None
     ):  # pylint: disable=too-many-arguments
         """Initialize a GradOpsWrapper object."""
         self.grad_ops = grad_ops
@@ -59,6 +60,7 @@ class GradOpsWrapper:  # pylint: disable=too-many-instance-attributes
         self.ansatz_params_name = ansatz_params_name
         self.parallel_worker = parallel_worker
         self.str = ''
+        self.sim = sim
 
     def __call__(self, *args):
         """Definition of a function call operator."""

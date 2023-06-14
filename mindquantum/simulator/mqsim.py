@@ -364,7 +364,7 @@ class MQSim(BackendBase):
             return res[:, :, 0], res[:, :, 1:]  # f, g
 
         grad_wrapper = GradOpsWrapper(
-            grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name, parallel_worker
+            grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name, parallel_worker, self
         )
         grad_str = f'{self.n_qubits} qubit' + ('' if self.n_qubits == 1 else 's')
         grad_str += f' {self.name} VQA Operator'
