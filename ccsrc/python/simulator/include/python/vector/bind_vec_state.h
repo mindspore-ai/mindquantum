@@ -72,6 +72,7 @@ auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLIN
         .def("get_expectation",
              pybind11::overload_cast<const mindquantum::Hamiltonian<calc_type>&, const circuit_t&,
                                      const parameter::ParameterResolver&>(&sim_t::GetExpectation, pybind11::const_))
+        .def("qram_expectation_with_grad", &sim_t::QramExpectationWithGrad)
         .def("get_expectation_with_grad_one_one", &sim_t::GetExpectationWithGradOneOne)
         .def("get_expectation_with_grad_one_multi", &sim_t::GetExpectationWithGradOneMulti)
         .def("get_expectation_with_grad_multi_multi", &sim_t::GetExpectationWithGradMultiMulti)
