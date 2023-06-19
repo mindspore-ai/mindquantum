@@ -9,6 +9,9 @@ sim = Simulator('mqvector', 2)
 # Current quantum state:
 # 1¦00⟩
 
+# Quantum state in ket format uses "little endian", which means qubits sorted
+# from the largest to the smallest, i.e. |q1 q0⟩.
+
 # Initialize a density matrix simulator object with two qubit
 dm_sim = Simulator('mqmatrix', 2)
 # mqmatrix simulator with 2 qubits (little endian), dtype: mindquantum.complex128.
@@ -32,13 +35,18 @@ sim.apply_circuit(circ)
 # Current quantum state:
 # 1¦11⟩
 
-# Apply hamiltonian to this simulator
+# Apply hamiltonian to this simulator, i.e. calculating H¦ψ⟩.
 ops = QubitOperator('Z0')
 ham = Hamiltonian(ops)
 sim.apply_hamiltonian(ham)
 # mqvector simulator with 2 qubits (little endian), dtype: mindquantum.complex128.
 # Current quantum state:
 # -1¦11⟩
+
+# Get expectation of the given hamiltonian. The hamiltonian could be non hermitian.
+sim.reset()
+expectation = sim.get_expectation(ham, circ)
+print(expectation)
 
 # Get current quantum state of this simulator
 qs = sim.get_qs()
