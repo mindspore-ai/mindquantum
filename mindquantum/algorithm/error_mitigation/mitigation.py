@@ -36,7 +36,7 @@ def zne(
     Zero noise extrapolation.
 
     Args:
-        circuit (:class:`~.core.circuit.Circuit`): The noise quantum circuit.
+        circuit (:class:`~.core.circuit.Circuit`): A quantum circuit.
         executor (Callable[[:class:`~.core.circuit.Circuit`], float]): A callable method that can evaluate a
             quantum circuit and return some value.
         scaling (List[float]): The scaling factor to folding circuit. If ``None``, it will be ``[1.0, 2.0, 3.0]``.
