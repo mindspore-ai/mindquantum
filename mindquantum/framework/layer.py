@@ -376,11 +376,12 @@ class QRamVecLayer(nn.Cell):  # pylint: disable=too-few-public-methods
         [0.00128305+1.08795209e-04j 0.99999917+1.39590269e-07j]
     """
 
-    def __init__(self, expectation_with_grad, weight='normal'):
+    # pylint: disable=too-many-arguments
+    def __init__(self, ham, circ, sim, n_thread=None, weight='normal'):
         """Initialize a MQLayer object."""
         super().__init__()
-        self.evolution = QRamVecOps(expectation_with_grad)
-        weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
+        self.evolution = QRamVecOps(ham, circ, sim, n_thread)
+        weight_size = len(self.evolution.circ.params_name)
         if isinstance(weight, ms.Tensor):
             if weight.ndim != 1 or weight.shape[0] != weight_size:
                 raise ValueError(f"Weight init shape error, required ({weight_size}, ), but get {weight.shape}.")

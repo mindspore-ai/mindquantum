@@ -87,10 +87,9 @@ def test_qram_vec_layer(config):
     ans = Circuit().ry('a', 0).rx('b', 0).as_ansatz()
     ham = Hamiltonian(QubitOperator('Z0')).astype(dtype)
     sim = Simulator(backend, 1, dtype=dtype)
-    grad_ops = sim.get_expectation_with_grad(ham, ans)
     quantum_state = np.array([[1.0, 2.0]]) / np.sqrt(5)
     qs_r, qs_i = ms.Tensor(quantum_state.real), ms.Tensor(quantum_state.imag)
-    net = QRamVecLayer(grad_ops)
+    net = QRamVecLayer(ham, ans, sim, len(quantum_state))
     opti = ms.nn.Adam(net.trainable_params(), learning_rate=0.1)
     train_net = ms.nn.TrainOneStepCell(net, opti)
     for _ in range(100):
