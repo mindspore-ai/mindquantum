@@ -322,14 +322,16 @@ class Simulator:
         and :math:`\left|\varphi\right>` is the quantum state of `simulator_left`.
 
         Args:
-            hams (Hamiltonian): The hamiltonian that need to get expectation.
-            circ_right (Circuit): The :math:`U_r` circuit described above.
-            circ_left (Circuit): The :math:`U_l` circuit described above. By default, this circuit
-                will be ``none``, and in this situation, :math:`U_l` will be equals to
+            hams (Union[:class:`~.core.operators.Hamiltonian`, List[:class:`~.core.operators.Hamiltonian`]]):
+                A :class:`~.core.operators.Hamiltonian` or a list of :class:`~.core.operators.Hamiltonian` that
+                need to get expectation.
+            circ_right (:class:`~.core.circuit.Circuit`): The :math:`U_r` circuit described above.
+            circ_left (:class:`~.core.circuit.Circuit`): The :math:`U_l` circuit described above.
+                By default, this circuit will be ``none``, and in this situation, :math:`U_l` will be equals to
                 :math:`U_r`. Default: ``None``.
-            simulator_left (Simulator): The simulator that contains :math:`\left|\varphi\right>`. If
-                ``None``, then :math:`\left|\varphi\right>` is assumed to be equals to :math:`\left|\psi\right>`.
-                Default: ``None``.
+            simulator_left (:class:`~.simulator.Simulator`): The simulator that
+                contains :math:`\left|\varphi\right>`. If ``None``, then :math:`\left|\varphi\right>` is
+                assumed to be equals to :math:`\left|\psi\right>`. Default: ``None``.
             parallel_worker (int): The parallel worker numbers. The parallel workers can handle
                 batch in parallel threads. Default: No``ne.
 

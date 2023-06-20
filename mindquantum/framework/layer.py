@@ -318,9 +318,13 @@ class QRamVecLayer(nn.Cell):  # pylint: disable=too-few-public-methods
         - Currently, we can not compute the gradient of the measurement result with respect to each quantum amplitude.
 
     Args:
-        expectation_with_grad (:class:`~.simulator.GradOpsWrapper`): a grad ops that receive real part and image part
-            of quantum state and ansatz data and return the expectation value and gradient value of parameters
-            respect to expectation.
+        hams (Union[:class:`~.core.operators.Hamiltonian`, List[:class:`~.core.operators.Hamiltonian`]]):
+            A :class:`~.core.operators.Hamiltonian` or a list of :class:`~.core.operators.Hamiltonian` that
+            need to get expectation.
+        circ (:class:`~.core.circuit.Circuit`): The parameterized quantum circuit.
+        sim (:class:`~.simulator.Simulator`): The simulator to do simulation.
+        n_thread (int): The parallel thread for evaluate a batch of initial state. If ``None``, evolution will run in
+            single thread. Default: ``None``.
         weight (Union[Tensor, str, Initializer, numbers.Number]): Initializer for the
             convolution kernel. It can be a Tensor, a string, an Initializer or a number.
             When a string is specified, values from ``'TruncatedNormal'``, ``'Normal'``, ``'Uniform'``,
@@ -360,27 +364,28 @@ class QRamVecLayer(nn.Cell):  # pylint: disable=too-few-public-methods
         >>> grad_ops = sim.get_expectation_with_grad(ham, ans)
         >>> qs = np.array([[1.0, 2.0]])/np.sqrt(5)
         >>> qs_r, qs_i = ms.Tensor(qs.real), ms.Tensor(qs.imag)
-        >>> net =  QRamVecLayer(grad_ops)
+        >>> net =  QRamVecLayer(ham, ans, sim)
         >>> opti = ms.nn.Adam(net.trainable_params(), learning_rate=0.1)
         >>> train_net = ms.nn.TrainOneStepCell(net, opti)
         >>> for i in range(100):
         ...     train_net(qs_r, qs_i)
         >>> net.weight.asnumpy()
-        array([ 9.247291e-01, -2.175906e-04], dtype=float32)
+        array([ 9.2439342e-01, -3.3963533e-04], dtype=float32)
         >>> net(qs_r, qs_i)
         Tensor(shape=[1, 1], dtype=Float32, value=
-        [[-9.99996662e-01]])
+        [[-9.99995708e-01]])
         >>> sim.set_qs(qs[0])
         >>> sim.apply_circuit(ans, pr=net.weight.asnumpy())
         >>> print(sim.get_qs())
-        [0.00128305+1.08795209e-04j 0.99999917+1.39590269e-07j]
+        [0.0014509 +1.69817484e-04j 0.99999893+2.46388577e-07j]
     """
 
-    def __init__(self, expectation_with_grad, weight='normal'):
+    # pylint: disable=too-many-arguments
+    def __init__(self, ham, circ, sim, n_thread=None, weight='normal'):
         """Initialize a MQLayer object."""
         super().__init__()
-        self.evolution = QRamVecOps(expectation_with_grad)
-        weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
+        self.evolution = QRamVecOps(ham, circ, sim, n_thread)
+        weight_size = len(self.evolution.circ.params_name)
         if isinstance(weight, ms.Tensor):
             if weight.ndim != 1 or weight.shape[0] != weight_size:
                 raise ValueError(f"Weight init shape error, required ({weight_size}, ), but get {weight.shape}.")

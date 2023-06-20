@@ -171,6 +171,11 @@ class VectorState {
         const circuit_t& herm_circ, const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name,
         const VS& ans_name, size_t batch_threads, size_t mea_threads) const;
 
+    virtual VT<VVT<py_qs_data_t>> QramExpectationWithGrad(
+        const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
+        const circuit_t& herm_circ, const VVT<py_qs_data_t>& init_states, const VT<calc_type>& ans_data,
+        const VS& ans_name, size_t batch_threads, size_t mea_threads) const;
+
     virtual VVT<py_qs_data_t> GetExpectationNonHermitianWithGradOneMulti(
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& herm_hams, const circuit_t& left_circ,

@@ -954,6 +954,67 @@ auto VectorState<qs_policy_t_>::GetExpectationNonHermitianWithGradMultiMulti(
     }
     return output;
 }
+template <typename qs_policy_t_>
+auto VectorState<qs_policy_t_>::QramExpectationWithGrad(
+    const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ, const circuit_t& herm_circ,
+    const VVT<py_qs_data_t>& init_states, const VT<calc_type>& ans_data, const VS& ans_name, size_t batch_threads,
+    size_t mea_threads) const -> VT<VVT<py_qs_data_t>> {
+    auto n_hams = hams.size();
+    auto n_prs = init_states.size();
+    auto n_params = ans_name.size();
+    VT<VVT<py_qs_data_t>> output;
+    for (size_t i = 0; i < n_prs; i++) {
+        output.push_back({});
+        for (size_t j = 0; j < n_hams; j++) {
+            output[i].push_back({});
+            for (size_t k = 0; k < n_params + 1; k++) {
+                output[i][j].push_back({0, 0});
+            }
+        }
+    }
+    MST<size_t> p_map;
+    for (size_t i = 0; i < ans_name.size(); i++) {
+        p_map[ans_name[i]] = i;
+    }
+    if (n_prs == 1) {
+        parameter::ParameterResolver pr = parameter::ParameterResolver();
+        pr.SetItems(ans_name, ans_data);
+        auto sim = VectorState<qs_policy_t_>(this->n_qubits, this->seed);
+        sim.SetQS(init_states[0]);
+        output[0] = sim.GetExpectationWithGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
+    } else {
+        if (batch_threads == 0) {
+            throw std::runtime_error("batch_threads cannot be zero.");
+        }
+        std::vector<std::thread> tasks;
+        tasks.reserve(batch_threads);
+        size_t end = 0;
+        size_t offset = n_prs / batch_threads;
+        size_t left = n_prs % batch_threads;
+        for (size_t i = 0; i < batch_threads; ++i) {
+            size_t start = end;
+            end = start + offset;
+            if (i < left) {
+                end += 1;
+            }
+            auto task = [&, start, end]() {
+                auto sim = VectorState<qs_policy_t_>(this->n_qubits, this->seed);
+                for (size_t n = start; n < end; n++) {
+                    parameter::ParameterResolver pr = parameter::ParameterResolver();
+                    pr.SetItems(ans_name, ans_data);
+                    sim.SetQS(init_states[n]);
+                    auto f_g = sim.GetExpectationWithGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
+                    output[n] = f_g;
+                }
+            };
+            tasks.emplace_back(task);
+        }
+        for (auto& t : tasks) {
+            t.join();
+        }
+    }
+    return output;
+}
 
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::GetExpectationWithGradMultiMulti(

@@ -12,16 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """Mindspore quantum simulator operator."""
-
 import mindspore as ms
 import numpy as np
 from mindspore import context, nn
 from mindspore.ops import operations
 from mindspore.ops.primitive import constexpr
 
-from mindquantum.simulator import GradOpsWrapper
+from mindquantum.core.circuit import Circuit
+from mindquantum.core.operators import Hamiltonian
+from mindquantum.simulator import GradOpsWrapper, Simulator
+from mindquantum.utils.type_value_check import (
+    _check_input_type,
+    _check_int_type,
+    _check_value_should_not_less,
+)
 
 
 @constexpr
@@ -530,6 +535,7 @@ class MQN2EncoderOnlyOps(nn.Cell):
         return ms.Tensor(grad, dtype=ms.float32)
 
 
+# pylint: disable=too-many-instance-attributes
 class QRamVecOps(nn.Cell):
     r"""
     MindQuantum vector state qram operator.
@@ -544,9 +550,13 @@ class QRamVecOps(nn.Cell):
         - Currently, we can not compute the gradient of the measurement result with respect to each quantum amplitude.
 
     Args:
-        expectation_with_grad (:class:`~.simulator.GradOpsWrapper`): a grad ops that receive real part and image
-            part of quantum state and ansatz data and return the expectation value and gradient value of parameters
-            respect to expectation.
+        hams (Union[:class:`~.core.operators.Hamiltonian`, List[:class:`~.core.operators.Hamiltonian`]]):
+            A :class:`~.core.operators.Hamiltonian` or a list of :class:`~.core.operators.Hamiltonian` that
+            need to get expectation.
+        circ (:class:`~.core.circuit.Circuit`): The parameterized quantum circuit.
+        sim (:class:`~.simulator.Simulator`): The simulator to do simulation.
+        n_thread (int): The parallel thread for evaluate a batch of initial state. If ``None``, evolution will run in
+            single thread. Default: ``None``.
 
     Inputs:
         - **qs_r** (Tensor) - The real part of quantum state with shape :math:`(N, M)`, where :math:`N` is batch size
@@ -578,7 +588,7 @@ class QRamVecOps(nn.Cell):
         >>> qs = random_state((3, 2), norm_axis=1, seed=42)
         >>> qs_r, qs_i = ms.Tensor(qs.real), ms.Tensor(qs.imag)
         >>> ansatz_data = np.array([1.0, 2.0])
-        >>> net = QRamVecOps(grad_ops)
+        >>> net = QRamVecOps(ham, circ, sim)
         >>> f_ms = net(qs_r, qs_i, ms.Tensor(ansatz_data))
         >>> f_ms
         Tensor(shape=[3, 1], dtype=Float32, value=
@@ -594,38 +604,58 @@ class QRamVecOps(nn.Cell):
         0.04039878594782581
     """
 
-    def __init__(self, expectation_with_grad: GradOpsWrapper):
+    def __init__(self, hams, circ, sim, n_thread=None):
         """Initialize a qram operator."""
         super().__init__()
         _mode_check(self)
-        _check_grad_ops(expectation_with_grad)
-        self.expectation_with_grad = expectation_with_grad
+        if isinstance(hams, Hamiltonian):
+            hams = [hams]
+        for i in hams:
+            _check_input_type('hams', Hamiltonian, i)
+        if n_thread is None:
+            n_thread = 1
+        _check_input_type('circ', Circuit, circ)
+        _check_input_type('sim', Simulator, sim)
+        _check_int_type('n_thread', n_thread)
+        _check_value_should_not_less('n_thread', 1, n_thread)
+        if circ.encoder_params_name:
+            raise ValueError("circ can not have encoder parameters.")
+        self.hams = hams
+        self.circ = circ
+        self.sim = sim.copy()
+        self.n_thread = n_thread
         self.shape_ops = operations.Shape()
         self.g_ans = None
         self.g_enc = None
-        self.dim = 1 << self.expectation_with_grad.sim.n_qubits
+        self.dim = 1 << self.sim.n_qubits
 
     def extend_repr(self):
         """Extend string representation."""
-        return self.expectation_with_grad.str
+        grad_str = f'{self.sim.n_qubits} qubit' + ('' if self.sim.n_qubits == 1 else 's')
+        grad_str += f' {self.sim.backend.name} VQA Operator'
+        return grad_str
 
     def construct(self, qs_r, qs_i, ans_data):
         """Construct an MQOps node."""
         check_state_vector_shape(qs_r, self.shape_ops(qs_r), self.dim)
         check_state_vector_shape(qs_i, self.shape_ops(qs_i), self.dim)
-        check_ans_input_shape(ans_data, self.shape_ops(ans_data), len(self.expectation_with_grad.ansatz_params_name))
-
+        check_ans_input_shape(ans_data, self.shape_ops(ans_data), len(self.circ.params_name))
         enc_data = qs_r.asnumpy() + qs_i.asnumpy() * 1j
-        self.expectation_with_grad.sim.set_qs(enc_data[0])
-        fval, g_ans = self.expectation_with_grad(ans_data.asnumpy())
-        for quantum_state in enc_data[1:]:
-            self.expectation_with_grad.sim.set_qs(quantum_state)
-            fval_, g_ans_ = self.expectation_with_grad(ans_data.asnumpy())
-            fval = np.append(fval, fval_, axis=0)
-            g_ans = np.append(g_ans, g_ans_, axis=0)
-        self.g_ans = np.real(g_ans)
+        f = self.sim.backend.sim.qram_expectation_with_grad(
+            [i.get_cpp_obj() for i in self.hams],
+            self.circ.get_cpp_obj(),
+            self.circ.get_cpp_obj(True),
+            enc_data,
+            ans_data.asnumpy(),
+            self.circ.params_name,
+            self.n_thread,
+            len(self.hams),
+        )
+        f = np.array(f)
+        f, g = f[:, :, 0], f[:, :, 1:]
+        self.g_ans = np.real(g)
         self.g_enc = ms.Tensor(np.zeros(shape=enc_data.shape), dtype=ms.float32)
-        return ms.Tensor(np.real(fval), dtype=ms.float32)
+        return ms.Tensor(np.real(f), dtype=ms.float32)
 
     def bprop(self, enc_data_r, enc_data_i, ans_data, out, dout):  # pylint: disable=unused-argument,too-many-arguments
         """Implement the bprop function."""

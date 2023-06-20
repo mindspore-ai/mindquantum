@@ -1,7 +1,7 @@
 mindquantum.framework.QRamVecOps
 ================================
 
-.. py:class:: mindquantum.framework.QRamVecOps(expectation_with_grad)
+.. py:class:: mindquantum.framework.QRamVecOps(hams, circ, sim, n_thread=None)
 
     QRam 算子，该算子可以直接将经典数据编码为全振幅量子态。此算子只能在 `PYNATIVE_MODE` 下执行。
 
@@ -10,7 +10,10 @@ mindquantum.framework.QRamVecOps
         - 当前，我们不能计算测量结果关于量子态概率幅的导数。
 
     参数：
-        - **expectation_with_grad** (:class:`~.simulator.GradOpsWrapper`) - 接收量子态的实部与虚部和ansatz数据，并返回期望值和参数相对于期望的梯度值。
+        - **hams** (Union[:class:`~.core.operators.Hamiltonian`, List[:class:`~.core.operators.Hamiltonian`]]) - 要想求期望值的哈密顿量或者一组哈密顿量。
+        - **circ** (:class:`~.core.circuit.Circuit`) - 变分量子线路。
+        - **sim** (:class:`~.simulator.Simulator`) - 做模拟所使用到的模拟器。
+        - **n_thread** (int) - 运行一个batch的初始态时的并行数。如果是 ``None``，用单线程来运行。默认值： ``None``。
 
     输入：
         - **qs_r** (Tensor) - 量子态实部的Tensor，其shape为 :math:`(N, M)` ，其中 :math:`N` 表示batch大小， :math:`M` 表示全振幅量子态的长度。

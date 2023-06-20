@@ -1,12 +1,15 @@
 mindquantum.framework.QRamVecLayer
 ==================================
 
-.. py:class:: mindquantum.framework.QRamVecLayer(expectation_with_grad, weight='normal')
+.. py:class:: mindquantum.framework.QRamVecLayer(hams, circ, sim, n_thread=None, weight='normal')
 
     包含qram和ansatz线路的量子神经网络，qram将经典数据直接编码成量子态，ansatz线路的参数是可训练的参数。
 
     参数：
-        - **expectation_with_grad** (:class:`~.simulator.GradOpsWrapper`) - 梯度算子，接收全振幅量子态的实部和虚部和ansatz数据，并返回期望值和参数相对于期望的梯度值。
+        - **hams** (Union[:class:`~.core.operators.Hamiltonian`, List[:class:`~.core.operators.Hamiltonian`]]) - 要想求期望值的哈密顿量或者一组哈密顿量。
+        - **circ** (:class:`~.core.circuit.Circuit`) - 变分量子线路。
+        - **sim** (:class:`~.simulator.Simulator`) - 做模拟所使用到的模拟器。
+        - **n_thread** (int) - 运行一个batch的初始态时的并行数。如果是 ``None``，用单线程来运行。默认值： ``None``。
         - **weight** (Union[Tensor, str, Initializer, numbers.Number]) - 卷积核的初始化器。它可以是Tensor、字符串、Initializer或数字。指定字符串时，可以使用 ``'TruncatedNormal'``、 ``'Normal'``、 ``'Uniform'``、 ``'HeUniform'`` 和 ``'XavierUniform'`` 分布以及常量'One'和'Zero'分布中的值。别名 ``'xavier_uniform'``、 ``'he_uniform'``、 ``'ones'`` 和 ``'zeros'`` 是可以接受的。大写和小写都可以接受。有关更多详细信息，请参阅Initializer的值。默认值： ``'normal'``。
 
     输入：
