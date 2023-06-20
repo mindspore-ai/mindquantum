@@ -550,9 +550,13 @@ class QRamVecOps(nn.Cell):
         - Currently, we can not compute the gradient of the measurement result with respect to each quantum amplitude.
 
     Args:
-        expectation_with_grad (:class:`~.simulator.GradOpsWrapper`): a grad ops that receive real part and image
-            part of quantum state and ansatz data and return the expectation value and gradient value of parameters
-            respect to expectation.
+        hams (Union[:class:`~.core.operators.Hamiltonian`, List[:class:`~.core.operators.Hamiltonian`]]):
+            A :class:`~.core.operators.Hamiltonian` or a list of :class:`~.core.operators.Hamiltonian` that
+            need to get expectation.
+        circ (:class:`~.core.circuit.Circuit`): The parameterized quantum circuit.
+        sim (:class:`~.simulator.Simulator`): The simulator to do simulation.
+        n_thread (int): The parallel thread for evaluate a batch of initial state. If ``None``, evolution will run in
+            single thread. Default: ``None``.
 
     Inputs:
         - **qs_r** (Tensor) - The real part of quantum state with shape :math:`(N, M)`, where :math:`N` is batch size
@@ -584,7 +588,7 @@ class QRamVecOps(nn.Cell):
         >>> qs = random_state((3, 2), norm_axis=1, seed=42)
         >>> qs_r, qs_i = ms.Tensor(qs.real), ms.Tensor(qs.imag)
         >>> ansatz_data = np.array([1.0, 2.0])
-        >>> net = QRamVecOps(grad_ops)
+        >>> net = QRamVecOps(ham, circ, sim)
         >>> f_ms = net(qs_r, qs_i, ms.Tensor(ansatz_data))
         >>> f_ms
         Tensor(shape=[3, 1], dtype=Float32, value=
@@ -600,21 +604,23 @@ class QRamVecOps(nn.Cell):
         0.04039878594782581
     """
 
-    def __init__(self, ham, circ, sim, n_thread=None):
+    def __init__(self, hams, circ, sim, n_thread=None):
         """Initialize a qram operator."""
         super().__init__()
         _mode_check(self)
-        if isinstance(ham, Hamiltonian):
-            ham = [ham]
-        for i in ham:
-            _check_input_type('ham', Hamiltonian, i)
+        if isinstance(hams, Hamiltonian):
+            hams = [hams]
+        for i in hams:
+            _check_input_type('hams', Hamiltonian, i)
         if n_thread is None:
             n_thread = 1
         _check_input_type('circ', Circuit, circ)
         _check_input_type('sim', Simulator, sim)
         _check_int_type('n_thread', n_thread)
         _check_value_should_not_less('n_thread', 1, n_thread)
-        self.ham = ham
+        if circ.encoder_params_name:
+            raise ValueError("circ can not have encoder parameters.")
+        self.hams = hams
         self.circ = circ
         self.sim = sim.copy()
         self.n_thread = n_thread
@@ -636,14 +642,14 @@ class QRamVecOps(nn.Cell):
         check_ans_input_shape(ans_data, self.shape_ops(ans_data), len(self.circ.params_name))
         enc_data = qs_r.asnumpy() + qs_i.asnumpy() * 1j
         f = self.sim.backend.sim.qram_expectation_with_grad(
-            [i.get_cpp_obj() for i in self.ham],
+            [i.get_cpp_obj() for i in self.hams],
             self.circ.get_cpp_obj(),
             self.circ.get_cpp_obj(True),
             enc_data,
             ans_data.asnumpy(),
             self.circ.params_name,
             self.n_thread,
-            len(self.ham),
+            len(self.hams),
         )
         f = np.array(f)
         f, g = f[:, :, 0], f[:, :, 1:]
