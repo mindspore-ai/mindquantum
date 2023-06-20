@@ -1,0 +1,175 @@
+\documentclass[pra,twocolumn,superscriptaddress,floatfix,nofootinbib,amsmath,amssymb]{revtex4-1}
+
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{bm}
+\usepackage{braket}
+\usepackage{xcolor}
+\usepackage{amsfonts}
+\usepackage{comment}
+\usepackage{dirtytalk}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{url}
+\usepackage{bbold}
+\usepackage{realboxes}
+\def\code#1{\texttt{#1}}
+\usepackage{enumitem}
+
+\usepackage{algpseudocode}
+
+\newcommand{\fancylink}[2]{\[\footnotesize\Colorbox{bkgd}{\color{orange-red}\href{#1}{\code{#2}}}\]}
+
+\newcommand{\spliteq}[1]{\begin{equation}
+\begin{split}
+#1
+\end{split}
+\end{equation}
+}
+
+\newcommand{\tr}{\text{tr}}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{bkgd}{RGB}{240,242,246}
+\definecolor{ceruleanblue}{rgb}{0.16, 0.32, 0.75}
+\definecolor{orange-red}{rgb}{1.0, 0.27, 0.0}
+\definecolor{anotherblue}{RGB}{37,92,243}
+\definecolor{blackblue}{RGB}{46,60,85}
+\definecolor{goldyellow}{RGB}{199,146,12}
+\lstdefinestyle{altstyle2}{
+    backgroundcolor=\color{bkgd},
+    basicstyle=\ttfamily\footnotesize\color{blackblue},
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    commentstyle=\color{goldyellow},
+    keepspaces=true,
+    keywordstyle=\color{orange-red},
+    language=Python,
+    numbersep=5pt,
+    numberstyle=\tiny\color{ceruleanblue},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    stringstyle=\color{anotherblue},
+    tabsize=2
+}
+\lstset{style=altstyle2}
+
+\bibliographystyle{apsrev4-1}
+
+\begin{document}
+
+\title{MindSpore Quantum: XXXXXXXXX
+}
+
+
+\affiliation{HuaWei
+}
+
+\author{author}
+\email{email}
+
+\affiliation{organization
+}
+
+\date{\today}
+
+\keywords{quantum machine learning, neural networks, quantum neural networks, variational quantum algorithms, machine learning, quantum algorithms}
+
+
+\begin{abstract}
+Abstract
+\end{abstract}
+\maketitle
+\tableofcontents
+
+\section{Introduction}
+Introduction of MindSpore Quantum.
+
+\section{Elements of MindSpore Quantum}
+XXXX
+\subsection{Data Type}
+\input{2.1}
+
+\subsection{Parameter Resolver}
+XXXXXXX
+\subsection{Quantum Gate}
+XXXXXXX
+\subsection{Quantum Circuit}
+XXXXXXX
+\subsection{Quantum Operator}
+XXXXXXX
+\subsection{Basic Usage of Simulator}
+XXXXXXX
+
+
+\section{Features of MindSpore Quantum}
+XXXXXXX
+\subsection{Gradient of Variational Quantum Algorithm}
+XXXXXXX
+\subsection{Circuit Ansatz Library}
+XXXXXXX
+\subsection{Quantum Algorithm Subroutine}
+XXXXXXX
+
+
+\section{Circuit Simulation Backend}
+XXXXXXX
+\subsection{State Vector and Density Matrix Simulator}
+XXXXXXX
+\subsection{Tensor Network Simulator}
+XXXXXXX
+\subsection{Channel Based Noise Simulator}
+XXXXXXX
+
+
+\section{Applications}
+XXXXXXX
+\subsection{Quantum Neural Network}
+XXXXXXX
+\subsection{Quantum Approximate Optimization Algorithm}
+XXXXXXX
+\subsection{Variational Quantum Eigensolver}
+XXXXXXX
+\subsection{Advanced Quantum Aplications}
+XXXXXXX
+
+
+\section{QuPack: Acceleration Engine}
+XXXXXXX
+\subsection{Variational Quantum Eigensolver}
+XXXXXXX
+\subsection{Quantum Approximate Optimization Algorithm}
+XXXXXXX
+\subsection{Tensor Network Simulator}
+XXXXXXX
+\subsection{Pulse Engineering}
+XXXXXXX
+
+
+\section{Benchmarking}
+XXXXXXX
+
+
+\section{Execution on Quantum Chip}
+XXXXXXX
+
+\subsection{Circuit Compilation and Optimization}
+XXXXXXX
+
+\subsection{Qubit Mapping}
+XXXXXXX
+\subsection{Quantum Virtual Machine}
+XXXXXXX
+\subsection{Third-party Quantum Chip}
+XXXXXXX
+
+
+\bibliography{lib.bib}
+
+\end{document}
