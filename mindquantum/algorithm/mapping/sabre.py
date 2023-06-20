@@ -33,7 +33,7 @@ class SABRE:
         circuit (:class:`~.core.circuit.Circuit`): The quantum circuit you need to do qubit mapping. Currently we only
             support circuit constructed by one or two qubits gate, control qubit included.
         topology (:class:`~.device.QubitsTopology`): The hardware qubit topology. Currently we only support
-            connected coupling graph. Please manually assign some lines to connected subgraphs.
+            connected coupling graph.
     """
 
     def __init__(self, circuit: Circuit, topology: QubitsTopology):
@@ -75,6 +75,12 @@ class SABRE:
     ) -> typing.Union[Circuit, typing.List[int], typing.List[int]]:
         """
         Solve qubit mapping problem with SABRE algorithm.
+
+        Args:
+            iter_num (int): The iteration number for when solving mapping problem.
+            w (float): The w parameter. For more detail, please refers to the paper.
+            delta1 (float): The delta1 parameter. For more detail, please refers to the paper.
+            delta2 (float): The delta2 parameter. For more detail, please refers to the paper.
 
         Returns:
             Tuple[:class:`~.core.circuit.Circuit`, List[int], List[int]], a quantum
