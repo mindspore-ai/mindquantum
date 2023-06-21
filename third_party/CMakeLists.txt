@@ -69,6 +69,7 @@ set(_external_pkgs_str)
 foreach(_pkg ${_pkgs})
   load_from_cache(_${_pkg}_find_pkg_str _tmp)
   set(_external_pkgs_str "${_external_pkgs_str}\n\n${_tmp}")
+  MESSAGE(STATUS ${_tmp})
 endforeach()
 
 # get_property(_tmp GLOBAL PROPERTY mq_external_find_packages) string(REPLACE ";" "\n" _tmp "${_tmp}")
