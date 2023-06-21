@@ -1,4 +1,0 @@
-scipy>=1.5.3
-matplotlib>=3.4.3
-rich==10.9.0
-importlib-metadata>=0.9;python_version<"3.8"
