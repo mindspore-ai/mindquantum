@@ -88,7 +88,7 @@ def fold_at_random(circ: Circuit, factor: float, method='locally') -> Circuit:
 
     Folding a quantum circuit is going to increase the size of quantum circuit,
     while keeping the unitary matrix of circuit the same. We can implement it by
-    inserting identity circuit as certain gate. For a very simple example, :math:`RX(1.2 \pi)`
+    inserting identity circuit after certain gate. For a very simple example, :math:`RX(1.2 \pi)`
     has the same unitary matrix as :math:`RX(1.2 \pi)RX(-1.2 \pi)RX(1.2 \pi)`, but the size of circuit
     increase to 3.
 

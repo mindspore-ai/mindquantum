@@ -25,9 +25,7 @@ class QubitNode:
     Qubit node.
 
     A qubit node has a id, a position and a color (if you want to draw it). You can connect two qubits with
-    '>>' or '<<' and disconnect two qubits with '<' or '>'. For more detail,
-    please see :func:`~.device.QubitNode.__rshift__`, :func:`~.device.QubitNode.__lshift__`,
-    :func:`~.device.QubitNode.__lt__` and :func:`~.device.QubitNode.__gt__`.
+    '>>' or '<<' and disconnect two qubits with '<' or '>'.
 
     Args:
         qubit_id (int): the identity number of this qubit.
@@ -261,7 +259,7 @@ class QubitsTopology:
     can set the property of each qubit node directly.
 
     Args:
-        List[:class:`~.device.QubitNode`], all qubit nodes in this topology.
+        qubits (List[:class:`~.device.QubitNode`]): All qubit nodes in this topology.
 
     Examples:
         >>> from mindquantum.device import QubitsTopology
