@@ -1,7 +1,7 @@
-# mq_tutorial
+# UESTC Course Materials
 
 #### 介绍
-Mindquantum tutorial based on YMH's lecture note.
+Quantum computing class notes for UESTC course.
 
 #### 软件架构
 软件架构说明

@@ -1,7 +1,7 @@
-# mq_tutorial
+# UESTC Course Materials
 
 #### Description
-Mindquantum tutorial based on YMH's lecture note.
+Quantum computing class notes for UESTC course.
 
 #### Software Architecture
 Software architecture description
