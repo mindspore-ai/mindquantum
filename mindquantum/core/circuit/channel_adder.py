@@ -24,7 +24,13 @@ from .circuit import Circuit
 # pylint: disable=unused-argument,protected-access,too-few-public-methods
 class ChannelAdderBase:
     """
-    Add noise channel after quantum gate.
+    Add noise channel after or before quantum gate.
+
+    This class is the base class for channel adder. In the derived class, you need to define the `_accepter`,
+    `_excluder` and `_handler` method. The `_accepter` method is a set of accept rules that every gate
+    you want to add channel should be accepted by those rules. The `_excluder` method is a set of deny
+    rules that every gate you want to add channel should not be accepted by those rules. The `_handel`
+    is the action you want to do when `_accepter` is accepted and `_excluder` is denied.
 
     Args:
         add_after (bool): Whether add channel after gate or before gate. Default: ``True``.
@@ -111,37 +117,45 @@ class NoiseExcluder(ChannelAdderBase):
 
 
 class BitFlipAdder(ChannelAdderBase):
-    """Add BitFlip channel after quantum gate."""
+    """
+    Add BitFlip channel after or before quantum gate.
 
-    def __init__(self, flip_rate: float = None, with_ctrl=True, device: "NaiveChip" = None, add_after: bool = True):
+    Args:
+        flip_rate (float): The flip rate for bit flip channel. For more detail please refers to
+            :class:`~.core.circuit.BitFlipChannel`.
+        with_ctrl (bool): Whether add bit flip channel for control qubits. Default: ``True``.
+        add_after (bool): Whether add this channel after quantum gate or not. If ``False``, the
+            channel will add before quantum gate. Default: ``True``.
+    """
+
+    def __init__(self, flip_rate: float, with_ctrl=True, add_after: bool = True):
         """Initialize a BitFlipAdder."""
         super().__init__(add_after=add_after)
         self.with_ctrl = True
         self.flip_rate = flip_rate
-        self.device = device
         self.with_ctrl = with_ctrl
 
     def __repr__(self):
         """Return string expression of adder."""
-        if self.device is None:
-            return f"BitFlipAdder<flip_rate={self.flip_rate}, with_ctrl={self.with_ctrl}>"
-        return f"BitFlipAdder<device={self.device}, with_ctrl={self.with_ctrl}>"
+        return f"BitFlipAdder<flip_rate={self.flip_rate}, with_ctrl={self.with_ctrl}>"
 
     def _handler(self, g: BasicGate, *args, **kwargs):
         """Create action you will do if a gate is acceptable."""
         circ = Circuit()
         for qubit in g.obj_qubits + (g.ctrl_qubits if self.with_ctrl else []):
-            if self.device is not None:
-                circ += self.device.gene_channel(
-                    self.device, g, gates.BitFlipChannel, self.with_ctrl, gates.BitFlipChannel(self.flip_rate)
-                ).on(qubit)
-            else:
-                circ += gates.BitFlipChannel(self.flip_rate).on(qubit)
+            circ += gates.BitFlipChannel(self.flip_rate).on(qubit)
         return circ
 
 
 class MixerAdder(ChannelAdderBase):
-    """Execute each adder if all accepter and excluder are met."""
+    """
+    Execute each adder if all accepter and excluder are met.
+
+    Args:
+        adders (List[:class:`~.core.circuit.BitFlipChannel`]): The adders you want to mix.
+        add_after (bool): Whether add channel after quantum gate or not. If ``False``, the
+            channel will add before quantum gate. Default: ``True``.
+    """
 
     def __init__(self, adders: typing.List[ChannelAdderBase], add_after=True):
         """Initialize a MixerAdder."""
