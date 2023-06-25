@@ -56,3 +56,6 @@ stat/
 /settings.json
 /test*.*
 /tmp*
+
+# macOS temp files
+**/.DS_Store
