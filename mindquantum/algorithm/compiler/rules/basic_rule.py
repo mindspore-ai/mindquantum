@@ -110,7 +110,12 @@ class SequentialCompiler(BasicCompilerRule):
         return self
 
     def do(self, dag_circuit: DAGCircuit) -> bool:
-        """Apply sequential compiler to dag circuit."""
+        """
+        Apply sequential compiler to dag circuit.
+
+        Args:
+            dag_circuit (:class:`~.algorithm.compiler.DAGCircuit`): The DAG graph of quantum circuit.
+        """
         compiled = False
         child_name = ', '.join(CLog.R2(compiler.rule_name) for compiler in self.compilers)
         CLog.log(f"Running {CLog.R1(self.rule_name)}: {len(self.compilers)} child ({child_name}, ).", 1, self.log_level)
@@ -141,7 +146,12 @@ class KroneckerSeqCompiler(SequentialCompiler):
         super().__init__(compilers, rule_name, log_level)
 
     def do(self, dag_circuit: DAGCircuit) -> bool:
-        """Apply kronecker compiler to dag circuit."""
+        """
+        Apply kronecker compiler to dag circuit.
+
+        Args:
+            dag_circuit (:class:`~.algorithm.compiler.DAGCircuit`): The DAG graph of quantum circuit.
+        """
         compiled = False
         child_name = ', '.join(CLog.R2(compiler.rule_name) for compiler in self.compilers)
         CLog.log(f"Running {CLog.R1(self.rule_name)}: {len(self.compilers)} child ({child_name}, ).", 1, self.log_level)

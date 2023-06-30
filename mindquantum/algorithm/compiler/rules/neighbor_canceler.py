@@ -48,7 +48,12 @@ class SimpleNeighborCanceler(BasicCompilerRule):
         return compiled
 
     def do(self, dag_circuit: DAGCircuit) -> bool:
-        """Apply neighbor canceler compiler rule."""
+        """
+        Apply neighbor canceler compiler rule.
+
+        Args:
+            dag_circuit (:class:`~.algorithm.compiler.DAGCircuit`): The DAG graph of quantum circuit.
+        """
         _check_input_type("dag_circuit", DAGCircuit, dag_circuit)
 
         fc_pair_consided = set()

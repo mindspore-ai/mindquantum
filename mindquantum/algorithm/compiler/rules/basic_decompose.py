@@ -294,9 +294,9 @@ def decom_basic_gate(gate: BasicGate, prefer_u3=False):
 
 class BasicDecompose(BasicCompilerRule):
     """
-    Decompose gate with a simple gate set.
+    Decompose gate into a simple gate set.
 
-    This decompose rule decompose multiple control gate customized matrix gate
+    This decompose rule decompose multiple control gate, customized matrix gate
     and rotation gate with multi pauli word.
 
     Args:
@@ -330,7 +330,12 @@ class BasicDecompose(BasicCompilerRule):
         self.prefer_u3 = prefer_u3
 
     def do(self, dag_circuit: DAGCircuit) -> bool:
-        """Do control decompose rule and multi qubit gate decomposition."""
+        """
+        Do control decompose rule and multi qubit gate decomposition.
+
+        Args:
+            dag_circuit (:class:`~.algorithm.compiler.DAGCircuit`): The DAG graph of quantum circuit.
+        """
         _check_input_type("dag_circuit", DAGCircuit, dag_circuit)
         compiled = False
         all_node = dag_circuit.find_all_gate_node()
