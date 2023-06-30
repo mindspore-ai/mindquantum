@@ -1,0 +1,10 @@
+mindquantum.algorithm.compiler.GateReplacer
+===========================================
+
+.. py:class:: mindquantum.algorithm.compiler.GateReplacer(ori_example_gate: BasicGate, wanted_example_circ: Circuit)
+
+    将给定的量子门替换成给定的量子线路。
+
+    参数：
+        - **ori_example_gate** (:class:`~.core.gates.BasicGate`) - 想要替换的量子门。请注意，相同类型且拥有相同个数的作用为和控制为的量子门会被替换。
+        - **wanted_example_circ** (:class:`~.core.circuit.Circuit`) - 想要的量子线路。
