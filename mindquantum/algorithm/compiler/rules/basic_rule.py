@@ -75,8 +75,8 @@ class SequentialCompiler(BasicCompilerRule):
     Args:
         compilers (List[:class:`~.algorithm.compiler.BasicCompilerRule`]): all compiler rules you want.
         rule_name (str): name of this compiler. Default: ``"SequentialCompiler"``.
-        log_level (int): the display log level. For more explanation of log level,
-            please refers to :class:`~.algorithm.compiler.BasicCompilerRule`. Default: ``0``.
+        log_level (int): the display log level. Could be 0, 1 or 2. For more explanation of log level,
+                please refers to :class:`~.algorithm.compiler.BasicCompilerRule`. Default: ``0``.
     """
 
     def __init__(self, compilers: typing.List[BasicCompilerRule], rule_name="SequentialCompiler", log_level=0):
@@ -138,7 +138,8 @@ class KroneckerSeqCompiler(SequentialCompiler):
 
     Args:
         compilers (List[:class:`~.algorithm.compiler.BasicCompilerRule`]): compiler rules.
-        log_level (int): the display log level. Default: ``0``.
+        log_level (int): the display log level. Could be 0, 1 or 2. For more explanation of log level,
+                please refers to :class:`~.algorithm.compiler.BasicCompilerRule`.
     """
 
     def __init__(self, compilers: typing.List[BasicCompilerRule], rule_name="KroneckerSeqCompiler", log_level=0):

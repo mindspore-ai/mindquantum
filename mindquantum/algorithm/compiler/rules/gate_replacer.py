@@ -92,7 +92,12 @@ class GateReplacer(BasicCompilerRule):
         return '\n'.join(strs)
 
     def do(self, dag_circuit: DAGCircuit) -> bool:
-        """Do gate replacer rule."""
+        """
+        Do gate replacer rule.
+
+        Args:
+            dag_circuit (:class:`~.algorithm.compiler.DAGCircuit`): The DAG of quantum circuit you want to compile.
+        """
         compiled = False
         all_node = dag_circuit.find_all_gate_node()
         CLog.log(f"Running {CLog.R1(self.rule_name)}.", 1, self.log_level)

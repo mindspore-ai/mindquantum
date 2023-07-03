@@ -1,11 +1,11 @@
 mindquantum.algorithm.compiler.BasicCompilerRule
 ================================================
 
-.. py:class:: mindquantum.algorithm.compiler.BasicCompilerRule(name, n_qubits, *args, **kwargs)
+.. py:class:: mindquantum.algorithm.compiler.BasicCompilerRule(name, n_qubits)
 
     编译规则的基类。
 
-    编译规则会处理量子线路的DAG图:class:`~.algorithm.compiler.DAGCircuit`，并且根据编译规则中的 ``do`` 方法来进行编译。当继承子类编译规则时，你必须实现 ``do`` 方法。请确保 ``do`` 方法会返回一个 ``bool`` 值，该值表示编译规则是否成功执行。
+    编译规则会处理量子线路的DAG图 :class:`~.algorithm.compiler.DAGCircuit` ，并且根据编译规则中的 `do` 方法来进行编译。当继承子类编译规则时，你必须实现 `do` 方法。请确保 `do` 方法会返回一个 `bool` 值，该值表示编译规则是否成功执行。
 
     参数：
         - **rule_name** (str) - 该编译规则的名称。
@@ -13,11 +13,11 @@ mindquantum.algorithm.compiler.BasicCompilerRule
 
     .. py:method:: do(dag_circuit: DAGCircuit)
 
-        原位的将该编译规则运用到:class:`~.algorithm.compiler.DAGCircuit`上。
+        原位的将该编译规则运用到 :class:`~.algorithm.compiler.DAGCircuit` 上。
 
     .. py:method:: set_log_level(log_level: int)
 
         设置log信息的展示级别。
 
         参数：
-            - **log_level** (int) - log信息展示级别。可以为0、1或者2。关于log级别的更多信息，请参考:class:`~.algorithm.compiler.BasicCompilerRule`。
+            - **log_level** (int) - log信息展示级别。可以为 ``0`` 、 ``1`` 或者 ``2`` 。关于log级别的更多信息，请参考 :class:`~.algorithm.compiler.BasicCompilerRule` 。

@@ -1,7 +1,7 @@
 mindquantum.core.circuit.ReverseAdder
 =====================================
 
-.. py:function:: mindquantum.core.circuit.ReverseAdder(adder: ChannelAdderBase)
+.. py:class:: mindquantum.core.circuit.ReverseAdder(adder: ChannelAdderBase)
 
     翻转给定信道添加器的接受和拒绝规则。
 

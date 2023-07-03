@@ -188,7 +188,12 @@ class MixerAdder(ChannelAdderBase):
 
 
 class SequentialAdder(ChannelAdderBase):
-    """Execute each adder in this sequential."""
+    """
+    Execute each adder in this sequential.
+
+    Args:
+        adders (List[:class:`~.core.circuit.ChannelAdderBase`]): The adder you want to apply.
+    """
 
     def __init__(self, adders: typing.List[ChannelAdderBase]):
         """Initialize a SequentialAdder."""

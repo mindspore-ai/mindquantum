@@ -1,7 +1,7 @@
 mindquantum.algorithm.compiler.BasicDecompose
 =============================================
 
-.. py:class:: mindquantum.algorithm.compiler.BasicDecompose(name, n_qubits, *args, **kwargs)
+.. py:class:: mindquantum.algorithm.compiler.BasicDecompose(prefer_u3)
 
     将量子线路编译成简单的量子门。
 
@@ -12,4 +12,4 @@ mindquantum.algorithm.compiler.BasicDecompose
 
     .. py:method:: do(dag_circuit: DAGCircuit)
 
-        原位的将该多控制和自定义量子门编译规则运用到:class:`~.algorithm.compiler.DAGCircuit`上。
+        原位的将该多控制和自定义量子门编译规则运用到 :class:`~.algorithm.compiler.DAGCircuit` 上。

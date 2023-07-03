@@ -1,7 +1,7 @@
 mindquantum.algorithm.compiler.KroneckerSeqCompiler
 ===================================================
 
-.. py:class:: mindquantum.algorithm.compiler.KroneckerSeqCompiler(name, n_qubits, *args, **kwargs)
+.. py:class:: mindquantum.algorithm.compiler.KroneckerSeqCompiler(compilers: typing.List[BasicCompilerRule], rule_name="KroneckerSeqCompiler", log_level=0)
 
     正交化编译规则。
 
@@ -9,7 +9,8 @@ mindquantum.algorithm.compiler.KroneckerSeqCompiler
 
     参数：
         - **compilers** (List[:class:`~.algorithm.compiler.BasicCompilerRule`]) - 所有想要编译的规则。
-        - **log_level** (int) - log信息展示级别。可以为0、1或者2。关于log级别的更多信息，请参考:class:`~.algorithm.compiler.BasicCompilerRule`。
+        - **rule_name** (str) - 编译规则的名称。默认值： ``"KroneckerSeqCompiler"`` 。
+        - **log_level** (int) - log信息展示级别。可以为 ``0`` 、 ``1`` 或者 ``2`` 。关于log级别的更多信息，请参考 :class:`~.algorithm.compiler.BasicCompilerRule` 。
 
     .. py:method:: do(dag_circuit: DAGCircuit)
 
