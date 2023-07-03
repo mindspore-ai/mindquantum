@@ -13,3 +13,6 @@ mindquantum.algorithm.compiler.BasicDecompose
     .. py:method:: do(dag_circuit: DAGCircuit)
 
         原位的将该多控制和自定义量子门编译规则运用到 :class:`~.algorithm.compiler.DAGCircuit` 上。
+
+        参数：
+            - **dag_circuit** (:class:`~.algorithm.compiler.DAGCircuit`) - 量子线路的 DAG 图。

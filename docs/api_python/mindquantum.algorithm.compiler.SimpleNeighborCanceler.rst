@@ -7,7 +7,7 @@ mindquantum.algorithm.compiler.SimpleNeighborCanceler
 
     .. py:method:: do(dag_circuit: DAGCircuit)
 
-        原位的将该编译规则运用到:class:`~.algorithm.compiler.DAGCircuit`上。
+        原位的将该编译规则运用到 :class:`~.algorithm.compiler.DAGCircuit` 上。
 
         参数：
             - **dag_circuit** (:class:`~.algorithm.compiler.DAGCircuit`) - 想要编译的量子线路。

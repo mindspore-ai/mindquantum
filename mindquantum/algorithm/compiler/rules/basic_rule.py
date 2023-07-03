@@ -55,7 +55,7 @@ class BasicCompilerRule(ABC):
         Set display log level.
 
         Args:
-            log_level (int): the display log level. Could be 0, 1 or 2. For more explanation of log level,
+            log_level (int): the display log level. Could be ``0``, ``1`` or ``2``. For more explanation of log level,
                 please refers to :class:`~.algorithm.compiler.BasicCompilerRule`.
         """
         self.log_level = log_level
@@ -75,7 +75,7 @@ class SequentialCompiler(BasicCompilerRule):
     Args:
         compilers (List[:class:`~.algorithm.compiler.BasicCompilerRule`]): all compiler rules you want.
         rule_name (str): name of this compiler. Default: ``"SequentialCompiler"``.
-        log_level (int): the display log level. Could be 0, 1 or 2. For more explanation of log level,
+        log_level (int): the display log level. Could be ``0``, ``1`` or ``2``. For more explanation of log level,
                 please refers to :class:`~.algorithm.compiler.BasicCompilerRule`. Default: ``0``.
     """
 
@@ -98,7 +98,7 @@ class SequentialCompiler(BasicCompilerRule):
         Set log level for all compiler rule in this sequence.
 
         Args:
-            log_level (int): the display log level. Could be 0, 1 or 2. For more explanation of log level,
+            log_level (int): the display log level. Could be ``0``, ``1`` or ``2``. For more explanation of log level,
                 please refers to :class:`~.algorithm.compiler.BasicCompilerRule`.
         """
         self.log_level = log_level
@@ -138,7 +138,7 @@ class KroneckerSeqCompiler(SequentialCompiler):
 
     Args:
         compilers (List[:class:`~.algorithm.compiler.BasicCompilerRule`]): compiler rules.
-        log_level (int): the display log level. Could be 0, 1 or 2. For more explanation of log level,
+        log_level (int): the display log level. Could be ``0``, ``1`` or ``2``. For more explanation of log level,
                 please refers to :class:`~.algorithm.compiler.BasicCompilerRule`.
     """
 

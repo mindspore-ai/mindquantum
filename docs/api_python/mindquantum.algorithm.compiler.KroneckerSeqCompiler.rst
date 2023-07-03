@@ -14,7 +14,7 @@ mindquantum.algorithm.compiler.KroneckerSeqCompiler
 
     .. py:method:: do(dag_circuit: DAGCircuit)
 
-        原位的将该编译规则运用到:class:`~.algorithm.compiler.DAGCircuit`上。
+        原位的将该编译规则运用到 :class:`~.algorithm.compiler.DAGCircuit` 上。
 
         参数：
             - **dag_circuit** (:class:`~.algorithm.compiler.DAGCircuit`) - 量子线路的 DAG 图表示。

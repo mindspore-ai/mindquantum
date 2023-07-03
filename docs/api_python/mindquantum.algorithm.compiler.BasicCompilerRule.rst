@@ -1,7 +1,7 @@
 mindquantum.algorithm.compiler.BasicCompilerRule
 ================================================
 
-.. py:class:: mindquantum.algorithm.compiler.BasicCompilerRule(name, n_qubits)
+.. py:class:: mindquantum.algorithm.compiler.BasicCompilerRule(rule_name="BasicCompilerRule", log_level=0)
 
     编译规则的基类。
 
