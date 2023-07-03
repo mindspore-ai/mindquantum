@@ -49,6 +49,7 @@ Channel adder
     :nosignatures:
     :template: classtemplate.rst
 
+    mindquantum.core.circuit.ChannelAdderBase
     mindquantum.core.circuit.MeasureAccepter
     mindquantum.core.circuit.ReverseAdder
     mindquantum.core.circuit.NoiseExcluder

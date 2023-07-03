@@ -48,7 +48,7 @@ Universal decompose rules
 Compiler rules
 --------------
 
-.. autosummary::
+.. mscnautosummary::
     :toctree:
     :nosignatures:
     :template: classtemplate.rst
@@ -68,7 +68,7 @@ Compiler rules
 DAG circuit
 -----------
 
-.. autosummary::
+.. mscnautosummary::
     :toctree:
     :nosignatures:
     :template: classtemplate.rst

@@ -34,6 +34,12 @@ class DAGNode:
         self.father: typing.Dict[int, "DAGNode"] = {}  # key: local index, value: father DAGNode
         self.local: typing.List[int] = []
 
+    def clean(self):
+        """Clean node and set it to empty."""
+        self.child = {}
+        self.father = {}
+        self.local = []
+
     def insert_after(self, other_node: "DAGNode"):
         """
         Insert other node after this dag node.
@@ -65,12 +71,6 @@ class DAGNode:
                     other_node.father[local] = self.father.get(local)
                     self.father.get(local).child[local] = other_node
                 self.father[local] = other_node
-
-    def clean(self):
-        """Clean node and set it to empty."""
-        self.child = {}
-        self.father = {}
-        self.local = []
 
 
 def connect_two_node(father_node: DAGNode, child_node: DAGNode, local_index: int):
@@ -250,9 +250,60 @@ class DAGCircuit:
                 self.head_node[local].insert_after(self.final_node[local])
             self.final_node[local].insert_before(node)
 
-    def layering(self) -> Circuit:
+    def depth(self) -> int:
+        """
+        Return the depth of quantum circuit.
+
+        Examples:
+            >>> from mindquantum.core.circuit import Circuit
+            >>> from mindquantum.algorithm.compiler import DAGCircuit
+            >>> circ = Circuit().h(0).h(1).x(1, 0)
+            >>> circ
+            q0: ──H────●──
+                       │
+            q1: ──H────X──
+            >>> DAGCircuit(circ).depth()
+            2
+        """
+        return len(self.layering())
+
+    def find_all_gate_node(self) -> typing.List[GateNode]:
+        """
+        Find all gate node in this :class:`~.algorithm.compiler.DAGCircuit`.
+
+        Returns:
+            List[:class:`~.algorithm.compiler.GateNode`], a list of all :class:`~.algorithm.compiler.GateNode`
+            of this :class:`~.algorithm.compiler.DAGCircuit`.
+
+        Examples:
+            >>> from mindquantum.algorithm.compiler import DAGCircuit
+            >>> from mindquantum.core.circuit import Circuit
+            >>> circ = Circuit().h(0).x(1, 0)
+            >>> dag_circ = DAGCircuit(circ)
+            >>> dag_circ.find_all_gate_node()
+            [H(0), X(1 <-: 0)]
+        """
+        found = set(self.head_node.values())
+
+        def _find(current_node: DAGNode, found):
+            if current_node not in found:
+                found.add(current_node)
+                for node in current_node.father.values():
+                    _find(node, found)
+                for node in current_node.child.values():
+                    _find(node, found)
+
+        for head_node in self.head_node.values():
+            for current_node in head_node.child.values():
+                _find(current_node, found)
+        return [i for i in found if not isinstance(i, QubitNode)]
+
+    def layering(self) -> typing.List[Circuit]:
         r"""
         Layering the quantum circuit.
+
+        Returns:
+            List[:class:`~.core.circuit.Circuit`], a list of layered quantum circuit.
 
         Examples:
             >>> from mindquantum.algorithm.compiler import DAGCircuit
@@ -308,26 +359,12 @@ class DAGCircuit:
                     layer[v - 1] += k.gate
         return [c for c in layer if len(c) != 0]
 
-    def depth(self) -> int:
-        """
-        Return the depth of quantum circuit.
-
-        Examples:
-            >>> from mindquantum.core.circuit import Circuit
-            >>> from mindquantum.algorithm.compiler import DAGCircuit
-            >>> circ = Circuit().h(0).h(1).x(1, 0)
-            >>> circ
-            q0: ──H────●──
-                       │
-            q1: ──H────X──
-            >>> DAGCircuit(circ).depth()
-            2
-        """
-        return len(self.layering())
-
     def to_circuit(self) -> Circuit:
         """
         Convert :class:`~.algorithm.compiler.DAGCircuit` to quantum circuit.
+
+        Returns:
+            :class:`~.core.circuit.Circuit`, the quantum circuit of this DAG.
 
         Examples:
             >>> from mindquantum.core.circuit import Circuit
@@ -361,33 +398,6 @@ class DAGCircuit:
         for current_node in self.final_node.values():
             adding_current_node(current_node, circuit, considered_node)
         return circuit
-
-    def find_all_gate_node(self) -> typing.List[GateNode]:
-        """
-        Find all gate node in this :class:`~.algorithm.compiler.DAGCircuit`.
-
-        Examples:
-            >>> from mindquantum.algorithm.compiler import DAGCircuit
-            >>> from mindquantum.core.circuit import Circuit
-            >>> circ = Circuit().h(0).x(1, 0)
-            >>> dag_circ = DAGCircuit(circ)
-            >>> dag_circ.find_all_gate_node()
-            [H(0), X(1 <-: 0)]
-        """
-        found = set(self.head_node.values())
-
-        def _find(current_node: DAGNode, found):
-            if current_node not in found:
-                found.add(current_node)
-                for node in current_node.father.values():
-                    _find(node, found)
-                for node in current_node.child.values():
-                    _find(node, found)
-
-        for head_node in self.head_node.values():
-            for current_node in head_node.child.values():
-                _find(current_node, found)
-        return [i for i in found if not isinstance(i, QubitNode)]
 
 
 # pylint: disable=too-many-return-statements,too-many-branches
