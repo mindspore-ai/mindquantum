@@ -182,6 +182,40 @@ class DAGCircuit:
                 self.append_node(GateNode(gate))
         self.global_phase = gates.GlobalPhase(0)
 
+    @staticmethod
+    def replace_node_with_dag_circuit(node: DAGNode, coming: "DAGCircuit"):
+        """
+        Replace a node with a DAGCircuit.
+
+        Args:
+            node (:class:`~.algorithm.compiler.DAGNode`): the original DAG node.
+            coming (:class:`~.algorithm.compiler.DAGCircuit`): the coming DAG circuit.
+
+        Examples:
+            >>> from mindquantum.algorithm.compiler import DAGCircuit
+            >>> from mindquantum.core.circuit import Circuit
+            >>> circ = Circuit().x(1, 0)
+            >>> circ
+            q0: ──●──
+                  │
+            q1: ──X──
+            >>> dag_circ = DAGCircuit(circ)
+            >>> node = dag_circ.head_node[0].child[0]
+            >>> node
+            X(1 <-: 0)
+            >>> sub_dag = DAGCircuit(Circuit().h(1).z(1, 0).h(1))
+            >>> DAGCircuit.replace_node_with_dag_circuit(node, sub_dag)
+            >>> dag_circ.to_circuit()
+            q0: ───────●───────
+                       │
+            q1: ──H────Z────H──
+        """
+        if set(node.local) != {head.qubit for head in coming.head_node.values()}:
+            raise ValueError(f"Circuit in coming DAG is not aligned with gate in node: {node}")
+        for local in node.local:
+            connect_two_node(node.father[local], coming.head_node[local].child[local], local)
+            connect_two_node(coming.final_node[local].father[local], node.child[local], local)
+
     def append_node(self, node: DAGNode):
         """
         Append a quantum gate node.
@@ -328,40 +362,6 @@ class DAGCircuit:
                 if not isinstance(k, BarrierNode):
                     layer[v - 1] += k.gate
         return [c for c in layer if len(c) != 0]
-
-    @staticmethod
-    def replace_node_with_dag_circuit(node: DAGNode, coming: "DAGCircuit"):
-        """
-        Replace a node with a DAGCircuit.
-
-        Args:
-            node (:class:`~.algorithm.compiler.DAGNode`): the original DAG node.
-            coming (:class:`~.algorithm.compiler.DAGCircuit`): the coming DAG circuit.
-
-        Examples:
-            >>> from mindquantum.algorithm.compiler import DAGCircuit
-            >>> from mindquantum.core.circuit import Circuit
-            >>> circ = Circuit().x(1, 0)
-            >>> circ
-            q0: ──●──
-                  │
-            q1: ──X──
-            >>> dag_circ = DAGCircuit(circ)
-            >>> node = dag_circ.head_node[0].child[0]
-            >>> node
-            X(1 <-: 0)
-            >>> sub_dag = DAGCircuit(Circuit().h(1).z(1, 0).h(1))
-            >>> DAGCircuit.replace_node_with_dag_circuit(node, sub_dag)
-            >>> dag_circ.to_circuit()
-            q0: ───────●───────
-                       │
-            q1: ──H────Z────H──
-        """
-        if set(node.local) != {head.qubit for head in coming.head_node.values()}:
-            raise ValueError(f"Circuit in coming DAG is not aligned with gate in node: {node}")
-        for local in node.local:
-            connect_two_node(node.father[local], coming.head_node[local].child[local], local)
-            connect_two_node(coming.final_node[local].father[local], node.child[local], local)
 
     def to_circuit(self) -> Circuit:
         """
