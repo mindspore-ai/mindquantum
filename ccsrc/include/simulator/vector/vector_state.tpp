@@ -444,6 +444,7 @@ void VectorState<qs_policy_t_>::ApplyKrausChannel(const std::shared_ptr<BasicGat
             qs_policy_t::FreeState(&qs);
             qs = tmp_qs;
             tmp_qs = nullptr;
+            break;
         }
     }
     qs_policy_t::FreeState(&tmp_qs);
