@@ -29,14 +29,6 @@ mindquantum.device.QubitNode
         返回：
             str，量子比特的颜色。
 
-    .. py:method:: qubit_id
-        :property:
-
-        获取比特的 id 信息。
-
-        返回：
-            int，量子比特的 id。
-
     .. py:method:: poi_x
         :property:
 
@@ -52,3 +44,11 @@ mindquantum.device.QubitNode
 
         返回：
             float，量子比特的 y 坐标。
+
+    .. py:method:: qubit_id
+        :property:
+
+        获取比特的 id 信息。
+
+        返回：
+            int，量子比特的 id。

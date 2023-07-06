@@ -415,9 +415,9 @@ def try_merge(
         child_node (:class:`~.algorithm.compiler.GateNode`): the child node want to merge.
 
     Returns:
-        bool, whether successfully merged.
-        List[:class:`~.algorithm.compiler.GateNode`], the father node after merged.
-        :class:`~.core.gates.GlobalPhase`, the global phase gate after merge two given gate node.
+        - bool, whether successfully merged.
+        - List[:class:`~.algorithm.compiler.GateNode`], the father node after merged.
+        - :class:`~.core.gates.GlobalPhase`, the global phase gate after merge two given gate node.
     """
     if len(set(father_node.child.values())) != 1 or len(set(child_node.father.values())) != 1:
         return False, [], None

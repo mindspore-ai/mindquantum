@@ -63,7 +63,12 @@ class BasicCompilerRule(ABC):
 
     @abstractmethod
     def do(self, dag_circuit: DAGCircuit) -> bool:
-        """Inplace applying this compiler rule to the :class:`~.algorithm.compiler.DAGCircuit`."""
+        """
+        Inplace applying this compiler rule to the :class:`~.algorithm.compiler.DAGCircuit`.
+
+        Args:
+            dag_circuit (:class:`~.algorithm.compiler.DAGCircuit`): The DAG graph of quantum circuit.
+        """
 
 
 class SequentialCompiler(BasicCompilerRule):
@@ -138,8 +143,9 @@ class KroneckerSeqCompiler(SequentialCompiler):
 
     Args:
         compilers (List[:class:`~.algorithm.compiler.BasicCompilerRule`]): compiler rules.
-        log_level (int): the display log level. Could be ``0``, ``1`` or ``2``. For more explanation of log level,
-                please refers to :class:`~.algorithm.compiler.BasicCompilerRule`.
+        rule_name(str): the name of compiler rule. Default: ``"KroneckerSeqCompiler"``.
+        log_level (int): the display log level. Could be ``0``, ``1`` or ``2``. Default: ``0``.
+            For more explanation of log level, please refers to :class:`~.algorithm.compiler.BasicCompilerRule`.
     """
 
     def __init__(self, compilers: typing.List[BasicCompilerRule], rule_name="KroneckerSeqCompiler", log_level=0):

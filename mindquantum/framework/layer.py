@@ -313,12 +313,12 @@ class QRamVecLayer(nn.Cell):  # pylint: disable=too-few-public-methods
 
     Note:
         - For MindSpore with version less than 2.0.0, complex tensor as neural
-            network cell input is not supported, so we should split quantum
-            state to real and image part, and use them as input tensor. This may change when MindSpore upgrade.
+          network cell input is not supported, so we should split quantum
+          state to real and image part, and use them as input tensor. This may change when MindSpore upgrade.
         - Currently, we can not compute the gradient of the measurement result with respect to each quantum amplitude.
 
     Args:
-        hams (Union[:class:`~.core.operators.Hamiltonian`, List[:class:`~.core.operators.Hamiltonian`]]):
+        ham (Union[:class:`~.core.operators.Hamiltonian`, List[:class:`~.core.operators.Hamiltonian`]]):
             A :class:`~.core.operators.Hamiltonian` or a list of :class:`~.core.operators.Hamiltonian` that
             need to get expectation.
         circ (:class:`~.core.circuit.Circuit`): The parameterized quantum circuit.

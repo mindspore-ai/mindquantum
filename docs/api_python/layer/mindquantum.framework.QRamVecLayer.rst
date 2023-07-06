@@ -1,12 +1,16 @@
 mindquantum.framework.QRamVecLayer
 ==================================
 
-.. py:class:: mindquantum.framework.QRamVecLayer(hams, circ, sim, n_thread=None, weight='normal')
+.. py:class:: mindquantum.framework.QRamVecLayer(ham, circ, sim, n_thread=None, weight='normal')
 
     包含qram和ansatz线路的量子神经网络，qram将经典数据直接编码成量子态，ansatz线路的参数是可训练的参数。
 
+    .. note::
+        - 对于低于2.0.0版本的MindSpore，不支持将复数张量作为神经网络cell输入，因此我们应该将量子态拆分为实部和虚部，并将其用作输入张量。当MindSpore升级时，这种情况可能会改变。
+        - 目前，我们无法计算测量结果相对于每个量子振幅的梯度。
+
     参数：
-        - **hams** (Union[:class:`~.core.operators.Hamiltonian`, List[:class:`~.core.operators.Hamiltonian`]]) - 要想求期望值的哈密顿量或者一组哈密顿量。
+        - **ham** (Union[:class:`~.core.operators.Hamiltonian`, List[:class:`~.core.operators.Hamiltonian`]]) - 要想求期望值的哈密顿量或者一组哈密顿量。
         - **circ** (:class:`~.core.circuit.Circuit`) - 变分量子线路。
         - **sim** (:class:`~.simulator.Simulator`) - 做模拟所使用到的模拟器。
         - **n_thread** (int) - 运行一个batch的初始态时的并行数。如果是 ``None``，用单线程来运行。默认值： ``None``。

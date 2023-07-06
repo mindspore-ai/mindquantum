@@ -122,7 +122,7 @@ class BitFlipAdder(ChannelAdderBase):
 
     Args:
         flip_rate (float): The flip rate for bit flip channel. For more detail please refers to
-            :class:`~.core.circuit.BitFlipChannel`.
+            :class:`~.core.gates.BitFlipChannel`.
         with_ctrl (bool): Whether add bit flip channel for control qubits. Default: ``True``.
         add_after (bool): Whether add this channel after quantum gate or not. If ``False``, the
             channel will add before quantum gate. Default: ``True``.
@@ -152,7 +152,7 @@ class MixerAdder(ChannelAdderBase):
     Execute each adder if all accepter and excluder are met.
 
     Args:
-        adders (List[:class:`~.core.circuit.BitFlipChannel`]): The adders you want to mix.
+        adders (List[:class:`~.core.gates.BitFlipChannel`]): The adders you want to mix.
         add_after (bool): Whether add channel after quantum gate or not. If ``False``, the
             channel will add before quantum gate. Default: ``True``.
     """

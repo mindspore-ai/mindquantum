@@ -15,6 +15,9 @@ mindquantum.algorithm.compiler.BasicCompilerRule
 
         原位的将该编译规则运用到 :class:`~.algorithm.compiler.DAGCircuit` 上。
 
+        参数：
+            - **dag_circuit** (:class:`~.algorithm.compiler.DAGCircuit`) - 量子线路的 DAG 图。
+
     .. py:method:: set_log_level(log_level: int)
 
         设置log信息的展示级别。
