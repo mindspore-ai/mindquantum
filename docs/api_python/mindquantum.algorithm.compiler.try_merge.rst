@@ -10,3 +10,8 @@ mindquantum.algorithm.compiler.try_merge
     参数：
         - **father_node** (:class:`~.algorithm.compiler.GateNode`) - 想要融合的父 DAG 节点。
         - **child_node** (:class:`~.algorithm.compiler.GateNode`) - 想要融合的子 DAG 节点。
+
+    返回：
+        - bool，是否融合成功。
+        - List[:class:`~.algorithm.compiler.GateNode`]，融合之后的父节点.
+        - :class:`~.core.gates.GlobalPhase`，合并两个给定节点后的global phase gate。

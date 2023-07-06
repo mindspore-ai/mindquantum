@@ -47,7 +47,7 @@ class Simulator:
     Args:
         backend (str): which backend you want. The supported backend can be found
             in SUPPORTED_SIMULATOR
-        n_qubits (int): number of quantum simulator.
+        n_qubits (int): number of quantum simulator. Default: ``None``.
         seed (int): the random seed for this simulator, if ``None``, seed will generate
             by `numpy.random.randint`. Default: ``None``.
         dtype (mindquantum.dtype): the data type of simulator. Default: ``None``.

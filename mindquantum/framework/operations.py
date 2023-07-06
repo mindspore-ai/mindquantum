@@ -545,8 +545,8 @@ class QRamVecOps(nn.Cell):
 
     Note:
         - For MindSpore with version less than 2.0.0, complex tensor as neural
-            network cell input is not supported, so we should split quantum
-            state to real and image part, and use them as input tensor. This may change when MindSpore upgrade.
+          network cell input is not supported, so we should split quantum
+          state to real and image part, and use them as input tensor. This may change when MindSpore upgrade.
         - Currently, we can not compute the gradient of the measurement result with respect to each quantum amplitude.
 
     Args:

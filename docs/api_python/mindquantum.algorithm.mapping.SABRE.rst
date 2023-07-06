@@ -1,7 +1,7 @@
 mindquantum.algorithm.mapping.SABRE
 ===================================
 
-.. py:class:: mindquantum.algorithm.mapping.SABRE(qubits)
+.. py:class:: mindquantum.algorithm.mapping.SABRE(circuit: Circuit, topology: QubitsTopology)
 
     用于比特映射的 SABRE 算法。
 

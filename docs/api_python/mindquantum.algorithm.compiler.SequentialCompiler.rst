@@ -1,7 +1,7 @@
 mindquantum.algorithm.compiler.SequentialCompiler
 =================================================
 
-.. py:class:: mindquantum.algorithm.compiler.SequentialCompiler(name, n_qubits, *args, **kwargs)
+.. py:class:: mindquantum.algorithm.compiler.SequentialCompiler(compilers: typing.List[BasicCompilerRule], rule_name="SequentialCompiler", log_level=0)
 
     序列化编译规则。
 

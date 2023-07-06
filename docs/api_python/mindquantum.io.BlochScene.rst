@@ -60,7 +60,7 @@ mindquantum.io.BlochScene
         参数：
             - **fig** (matplotlib.figure.Figure) - 布洛赫球场景所在的figure。
             - **ax** (mpl_toolkits.mplot3d.axes3d.Axes3D) - 布洛赫球场景所在的Axes。
-            - **objs** (dict) - 通过 :class:`~.io.BlochScene.add_state` 产生的对象。
+            - **objs** (dict) - 通过 :func:`~.io.BlochScene.add_state` 产生的对象。
             - **new_amps** (numpy.ndarray) - 所有需要动画展示的量子态。
             - **interval** (int) - 帧之间的时间间隔，单位为毫秒。默认值： ``15``。
             - **with_trace** (bool) - 是否展示量子态动画的轨迹。默认值： ``True``。
@@ -141,8 +141,8 @@ mindquantum.io.BlochScene
 
     .. py:method:: update(objs: dict, new_amp: np.ndarray)
 
-        利用给定的量子态来更新通过 :class:`~.io.BlochScene.add_state` 接口输出的对象。
+        利用给定的量子态来更新通过 :func:`~.io.BlochScene.add_state` 接口输出的对象。
 
         参数：
-            - **objs** (dict) - 通过 :class:`~.io.BlochScene.add_state` 接口输出的对象。
+            - **objs** (dict) - 通过 :func:`~.io.BlochScene.add_state` 接口输出的对象。
             - **new_amp** (numpy.ndarray) - 新的量子态。

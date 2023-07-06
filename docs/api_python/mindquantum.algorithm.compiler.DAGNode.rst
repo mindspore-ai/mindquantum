@@ -1,7 +1,7 @@
 mindquantum.algorithm.compiler.DAGNode
 ======================================
 
-.. py:class:: mindquantum.algorithm.compiler.DAGNode(circuit: Circuit)
+.. py:class:: mindquantum.algorithm.compiler.DAGNode()
 
     DAG 图中的节点。
 

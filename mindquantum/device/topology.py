@@ -389,7 +389,7 @@ class QubitsTopology:
         Check whether a qubit is in this topology.
 
         Args:
-            qubit_id (int), the id of qubit you want to check.
+            qubit_id (int): the id of qubit you want to check.
 
         Returns:
             bool, whether this topology has qubit node with given id.
@@ -532,8 +532,8 @@ class QubitsTopology:
         Set color of certain qubit.
 
         Args:
-            qubit_id (int), the id of qubit you want to change color.
-            color (str), the new color.
+            qubit_id (int): the id of qubit you want to change color.
+            color (str): the new color.
 
         Examples:
             >>> from mindquantum.device import QubitsTopology, QubitNode
@@ -583,7 +583,7 @@ class LinearQubits(QubitsTopology):
     Linear qubit topology.
 
     Args:
-        n_qubits (int), total qubit size.
+        n_qubits (int): total qubit size.
 
     Examples:
         >>> from mindquantum.device import LinearQubits
@@ -654,6 +654,9 @@ class GridQubits(QubitsTopology):
     def n_row(self) -> int:
         """
         Get row number.
+
+        Returns:
+            int, the row number.
 
         Examples:
             >>> from mindquantum.device import GridQubits

@@ -24,6 +24,16 @@ mindquantum.device.QubitsTopology
         返回：
             Set[int]，所有比特的 id。
 
+    .. py:method:: choose(ids: typing.List[int]) -> typing.List[QubitNode]:
+
+        根据给定的 id 选择量子比特。
+
+        参数：
+            - **ids** (List[int]): 一个量子比特 id 的列表。
+
+        返回：
+            List[:class:`~.device.QubitNode`], 根据给定 id 选择出的量子比特列表。
+
     .. py:method:: edges_with_id() -> typing.Set[typing.Tuple[int, int]]
 
         返回用 id 表示的图中的边。
@@ -72,16 +82,6 @@ mindquantum.device.QubitsTopology
 
         返回：
             int，拓扑结构中有耦合的边的个数。
-
-    .. py:method:: choose(ids: typing.List[int]) -> typing.List[QubitNode]:
-
-        根据给定的 id 选择量子比特。
-
-        参数：
-            - **ids** (List[int]): 一个量子比特 id 的列表。
-
-        返回：
-            List[:class:`~.device.QubitNode`], 根据给定 id 选择出的量子比特列表。
 
     .. py:method:: remove_isolate_node() -> None:
 
