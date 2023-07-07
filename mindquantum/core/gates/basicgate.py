@@ -1640,6 +1640,10 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
     """
     Generate a customer parameterized gate based on the single parameter defined unitary matrix.
 
+    Note:
+        The elements in the matrix need to be explicitly written in complex number form,
+        especially for multi qubits gate.
+
     Args:
         name (str): The name of this gate.
         matrix_generator (Union[FunctionType, MethodType]): A function or a method that
@@ -1655,19 +1659,34 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
         >>> from mindquantum.core.circuit import Circuit
         >>> from mindquantum.core.gates import gene_univ_parameterized_gate
         >>> from mindquantum.simulator import Simulator
-        >>> def matrix(theta):
-        ...     return np.array([[np.exp(1j * theta), 0],
-        ...                      [0, np.exp(-1j * theta)]])
-        >>> def diff_matrix(theta):
-        ...     return 1j*np.array([[np.exp(1j * theta), 0],
-        ...                         [0, -np.exp(-1j * theta)]])
+        >>> def matrix(alpha):
+        ...     ep = 0.5 * (1 + np.exp(1j * np.pi * alpha))
+        ...     em = 0.5 * (1 - np.exp(1j * np.pi * alpha))
+        ...     return np.array([
+        ...         [1.0 + 0.0j, 0.0j, 0.0j, 0.0j],
+        ...         [0.0j, ep, em, 0.0j],
+        ...         [0.0j, em, ep, 0.0j],
+        ...         [0.0j, 0.0j, 0.0j, 1.0 + 0.0j],
+        ...     ])
+        >>> def diff_matrix(alpha):
+        ...     ep = 0.5 * 1j * np.pi * np.exp(1j * np.pi * alpha)
+        ...     em = -0.5 * 1j * np.pi * np.exp(1j * np.pi * alpha)
+        ...     return np.array([
+        ...         [0.0j, 0.0j, 0.0j, 0.0j],
+        ...         [0.0j, ep, em, 0.0j],
+        ...         [0.0j, em, ep, 0.0j],
+        ...         [0.0j, 0.0j, 0.0j, 0.0j],
+        ...     ])
         >>> TestGate = gene_univ_parameterized_gate('Test', matrix, diff_matrix)
         >>> circ = Circuit().h(0)
-        >>> circ += TestGate('a').on(0)
+        >>> circ += TestGate('a').on([0, 1])
         >>> circ
         q0: ──H────Test(a)──
+                      │
+        q1: ───────Test(a)──
         >>> circ.get_qs(pr={'a': 1.2})
-        array([0.25622563+0.65905116j, 0.25622563-0.65905116j])
+        array([0.70710678+0.j        , 0.06752269-0.20781347j,
+               0.63958409+0.20781347j, 0.        +0.j        ])
     """
     try:
         import numba as nb
