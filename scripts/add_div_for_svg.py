@@ -15,8 +15,38 @@
 """Add div for svg to enable horizontal scroll bar."""
 
 import argparse
+import contextlib
 import json
 import os
+
+
+@contextlib.contextmanager
+def fdopen(fname, mode, perms=0o644, encoding=None):  # pragma: no cover
+    """
+    Context manager for opening files with correct permissions.
+
+    Args:
+        fname (str): Path to file to open for reading/writing
+        mode (str): Mode in which the file is opened (see help for builtin `open()`)
+        perms (int): Permission mask (see help for `os.open()`)
+        encoding (str): The name of encoding used to decode or encode the file.
+    """
+    if 'r' in mode:
+        flags = os.O_RDONLY
+    elif 'w' in mode:
+        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+    elif 'a' in mode:
+        flags = os.O_WRONLY | os.O_CREAT
+    else:
+        raise RuntimeError(f'Unsupported mode: {mode}')
+
+    file_object = open(os.open(fname, flags, perms), mode=mode, encoding=encoding)  # noqa: SCS109
+
+    try:
+        yield file_object
+    finally:
+        file_object.close()
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('dir', help='dir', type=str, default='.')
@@ -40,7 +70,7 @@ all_ipynb = find_all_ipynb(base_path)
 
 def add_div(ipynb_file_name):
     """Add div."""
-    with open(ipynb_file_name) as f_open:
+    with fdopen(ipynb_file_name, 'r') as f_open:
         ipynb_data = json.load(f_open)
 
     a = "<div class=\"nb-html-output output_area\">"
@@ -67,7 +97,7 @@ def add_div(ipynb_file_name):
                 data['image/svg+xml'] = value
                 modified = True
     if modified:
-        with open(ipynb_file_name, 'w') as f_write:
+        with fdopen(ipynb_file_name, 'w') as f_write:
             f_write.writelines(json.dumps(ipynb_data, indent=2))
 
 
