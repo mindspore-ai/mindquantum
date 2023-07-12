@@ -139,7 +139,7 @@ endfunction()
 check_code_compiles(
   compiler_has_cxx20_operator_not_equal_synthesis
   HAS_OPERATOR_NOT_EQUAL_SYNTHESIS
-  std_20
+  std_17
   [[
 struct A {
     bool operator==(const A& other) const {
@@ -158,7 +158,7 @@ int main() {
 check_code_compiles(
   compiler_has_implicit_template_deduction_guides
   HAS_IMPLICIT_TEMPLATE_DEDUCTION_GUIDES
-  std_20
+  std_17
   [[
 #ifdef __has_include
 # if __has_include(<version>)
@@ -183,7 +183,7 @@ int main() {
 check_code_compiles(
   compiler_has_remove_cvref_t
   HAS_REMOVE_CVREF_T
-  std_20
+  std_17
   [[
 #ifdef __has_include
 # if __has_include(<version>)
@@ -207,7 +207,7 @@ int main() {
 check_code_compiles(
   compiler_has_map_contains
   HAS_MAP_CONTAINS
-  std_20
+  std_17
   [[
 #include <map>
 int main() { std::map<int, double> m{{0, 1.}, {1, 2.}}; return m.contains(1); }
@@ -218,7 +218,7 @@ int main() { std::map<int, double> m{{0, 1.}, {1, 2.}}; return m.contains(1); }
 check_code_compiles(
   compiler_has_map_erase_if
   HAS_MAP_ERASE_IF
-  std_20
+  std_17
   [[
 #include <map>
 int main() {
@@ -272,7 +272,7 @@ int main() {
 check_code_compiles(
   compiler_has_class_non_type_template_args
   HAS_CLASS_NON_TYPE_TEMPLATE_ARGS
-  std_20
+  std_17
   [[
 #ifdef __has_include
 # if __has_include(<version>)
@@ -293,7 +293,7 @@ int main() {
 check_code_compiles(
   compiler_has_concepts
   HAS_CONCEPTS
-  std_20
+  std_17
   [[
 #ifdef __has_include
 # if __has_include(<version>)
@@ -319,7 +319,7 @@ endif()
 check_code_compiles(
   compiler_has_concepts_library
   HAS_CONCEPT_LIBRARY
-  std_20
+  std_17
   [[
 #ifdef __has_include
 # if __has_include(<version>)
@@ -341,7 +341,7 @@ if(cxx_compiler_has_concepts AND NOT cxx_compiler_has_concepts_library)
   check_code_compiles(
     cxx_compiler_has_concept_destructible
     HAS_CONCEPT_DESTRUCTIBLE
-    std_20
+    std_17
     [[
 #include <concepts>
 
@@ -366,7 +366,7 @@ if(cxx_compiler_has_concepts)
   check_code_compiles(
     compiler_supports_external_dependent_concepts
     SUPPORTS_EXT_DEPENDENT_CONCEPTS
-    std_20
+    std_17
     [[
 #include <type_traits>
 
@@ -429,7 +429,7 @@ int main() {
 check_code_compiles(
   compiler_has_constexpr_std_vector
   HAS_CONSTEXPR_STD_VECTOR
-  std_20
+  std_17
   [[
 #ifdef __has_include
 #    if __has_include(<version>)
@@ -457,7 +457,7 @@ int main() {
 check_code_compiles(
   compiler_has_cxx20_format
   HAS_CXX20_FORMAT
-  std_20
+  std_17
   [[
 #ifdef __has_include
 #    if __has_include(<version>)
@@ -483,7 +483,7 @@ int main() {
 check_code_compiles(
   compiler_has_cxx20_span
   HAS_CXX20_SPAN
-  std_20
+  std_17
   [[
 #ifdef __has_include
 #    if __has_include(<version>)
@@ -509,7 +509,7 @@ int main() {
 check_code_compiles(
   compiler_has_cxx20_ranges
   HAS_CXX20_RANGES
-  std_20
+  std_17
   [[
 #ifdef __has_include
 #    if __has_include(<version>)
@@ -544,7 +544,7 @@ int main() {
 check_code_compiles(
   compiler_std_accumulate_use_move
   STD_ACCUMULATE_USE_MOVE
-  std_20
+  std_17
   [[
 #include <numeric>
 #include <vector>
