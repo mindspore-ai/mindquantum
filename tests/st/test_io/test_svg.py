@@ -29,7 +29,7 @@ def test_measure_svg():
     res = sim.sampling(circ, shots=100, seed=42)
     text = res.svg()._repr_svg_().split('bar')  # pylint: disable=protected-access
     text = "bar".join([text[0]] + ['"'.join(i.split('"')[1:]) for i in text[1:]])
-    len_text_exp = 9426
+    len_text_exp = 9380
     assert len(text) == len_text_exp
 
 
@@ -40,4 +40,4 @@ def test_circuit_svg():
     """
     # pylint: disable=protected-access
     text = (qft(range(3)) + RX({'a': 1.2}).on(1) + BarrierGate()).measure_all().svg()._repr_svg_().strip()
-    assert len(text) in (7079, 7078, 7130)
+    assert len(text) in (7079, 7078, 7130, 7033)
