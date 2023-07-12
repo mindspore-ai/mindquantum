@@ -1081,6 +1081,143 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradMultiMulti(
 }
 
 template <typename qs_policy_t_>
+auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
+    const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
+    const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread) -> VVT<py_qs_data_t> {
+    auto n_hams = hams.size();
+    int max_thread = 15;
+    if (n_thread == 0) {
+        throw std::runtime_error("n_thread cannot be zero.");
+    }
+    if (n_thread > max_thread) {
+        n_thread = max_thread;
+    }
+    if (n_thread > static_cast<int>(n_hams)) {
+        n_thread = n_hams;
+    }
+    VVT<py_qs_data_t> f_and_g(n_hams, VT<py_qs_data_t>((1 + p_map.size()), 0));
+    VectorState<qs_policy_t> sim = *this;
+    sim.ApplyCircuit(circ, pr);
+    int n_group = n_hams / n_thread;
+    if (n_hams % n_thread) {
+        n_group += 1;
+    }
+    for (int i = 0; i < n_group; i++) {
+        int start = i * n_thread;
+        int end = (i + 1) * n_thread;
+        if (end > static_cast<int>(n_hams)) {
+            end = n_hams;
+        }
+        std::vector<VectorState<qs_policy_t>> sim_rs(end - start);
+        auto sim_l = sim;
+        for (int j = start; j < end; j++) {
+            sim_rs[j - start] = sim_l;
+            sim_rs[j - start].ApplyHamiltonian(*hams[j]);
+            f_and_g[j][0] = qs_policy_t::Vdot(sim_l.qs, sim_rs[j - start].qs, dim);
+        }
+        for (auto& gate : circ) {
+            if (gate->GradRequired()) {
+                auto p_gate = static_cast<Parameterizable*>(gate.get());
+                auto pr_shift = M_PI_2;
+                auto coeff = 0.5;
+                if (gate->id_ == GateID::CUSTOM) {
+                    auto p_gate = static_cast<CustomGate*>(gate.get());
+                    pr_shift = 0.001;
+                    coeff = 0.5 / pr_shift;
+                }
+                if (const auto& [title, jac] = p_gate->jacobi; title.size() != 0) {
+                    for (int j = start; j < end; j++) {
+                        p_gate->prs_[0] += -pr_shift;
+                        sim_l = *this;
+                        sim_l.ApplyCircuit(circ, pr);
+                        sim_rs[j - start] = sim_l;
+                        sim_rs[j - start].ApplyHamiltonian(*hams[j]);
+                        auto expect0 = qs_policy_t::Vdot(sim_l.qs, sim_rs[j - start].qs, dim);
+                        p_gate->prs_[0] += 2 * pr_shift;
+                        sim_l = *this;
+                        sim_l.ApplyCircuit(circ, pr);
+                        sim_rs[j - start] = sim_l;
+                        sim_rs[j - start].ApplyHamiltonian(*hams[j]);
+                        auto expect1 = qs_policy_t::Vdot(sim_l.qs, sim_rs[j - start].qs, dim);
+                        p_gate->prs_[0] += -pr_shift;
+                        auto intrin_grad = tensor::Matrix(
+                            VVT<py_qs_data_t>({{{coeff * std::real(expect1 - expect0), 0}}}));
+                        auto p_grad = tensor::ops::cpu::to_vector<py_qs_data_t>(tensor::ops::MatMul(intrin_grad, jac));
+                        for (const auto& [name, idx] : title) {
+                            f_and_g[j][1 + p_map.at(name)] += p_grad[0][idx];
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return f_and_g;
+}
+
+template <typename qs_policy_t_>
+auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftMultiMulti(
+    const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
+    const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name, const VS& ans_name,
+    size_t batch_threads, size_t mea_threads) -> VT<VVT<py_qs_data_t>> {
+    auto n_hams = hams.size();
+    auto n_prs = enc_data.size();
+    auto n_params = enc_name.size() + ans_name.size();
+    VT<VVT<py_qs_data_t>> output;
+    for (size_t i = 0; i < n_prs; i++) {
+        output.push_back({});
+        for (size_t j = 0; j < n_hams; j++) {
+            output[i].push_back({});
+            for (size_t k = 0; k < n_params + 1; k++) {
+                output[i][j].push_back({0, 0});
+            }
+        }
+    }
+    MST<size_t> p_map;
+    for (size_t i = 0; i < enc_name.size(); i++) {
+        p_map[enc_name[i]] = i;
+    }
+    for (size_t i = 0; i < ans_name.size(); i++) {
+        p_map[ans_name[i]] = i + enc_name.size();
+    }
+    if (n_prs == 1) {
+        parameter::ParameterResolver pr = parameter::ParameterResolver();
+        pr.SetItems(enc_name, enc_data[0]);
+        pr.SetItems(ans_name, ans_data);
+        output[0] = GetExpectationWithGradParameterShiftOneMulti(hams, circ, pr, p_map, mea_threads);
+    } else {
+        if (batch_threads == 0) {
+            throw std::runtime_error("batch_threads cannot be zero.");
+        }
+        std::vector<std::thread> tasks;
+        tasks.reserve(batch_threads);
+        size_t end = 0;
+        size_t offset = n_prs / batch_threads;
+        size_t left = n_prs % batch_threads;
+        for (size_t i = 0; i < batch_threads; ++i) {
+            size_t start = end;
+            end = start + offset;
+            if (i < left) {
+                end += 1;
+            }
+            auto task = [&, start, end]() {
+                for (size_t n = start; n < end; n++) {
+                    parameter::ParameterResolver pr = parameter::ParameterResolver();
+                    pr.SetItems(enc_name, enc_data[n]);
+                    pr.SetItems(ans_name, ans_data);
+                    auto f_g = GetExpectationWithGradParameterShiftOneMulti(hams, circ, pr, p_map, mea_threads);
+                    output[n] = f_g;
+                }
+            };
+            tasks.emplace_back(task);
+        }
+        for (auto& t : tasks) {
+            t.join();
+        }
+    }
+    return output;
+}
+
+template <typename qs_policy_t_>
 VT<unsigned> VectorState<qs_policy_t_>::Sampling(const circuit_t& circ, const parameter::ParameterResolver& pr,
                                                  size_t shots, const MST<size_t>& key_map, unsigned int seed) const {
     auto key_size = key_map.size();

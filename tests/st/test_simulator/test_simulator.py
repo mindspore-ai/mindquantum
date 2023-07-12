@@ -307,6 +307,39 @@ def test_all_gate_with_simulator(config):  # pylint: disable=too-many-locals
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
+@pytest.mark.parametrize("virtual_qc", ['mqvector', 'mqvector_gpu'])
+@pytest.mark.parametrize("dtype", [mq.complex64, mq.complex128])
+@pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
+@pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
+def test_parameter_shift_rule(virtual_qc, dtype):  # pylint: disable=too-many-locals
+    """
+    Description:
+    Expectation:
+    """
+    c = generate_test_circuit()
+    sim = Simulator(virtual_qc, c.n_qubits, dtype=dtype)
+    ham = ops.Hamiltonian(ops.QubitOperator('Z0'), dtype=dtype)
+    grad_ops = sim.get_expectation_with_grad(ham, c, pr_shift=True)
+    p0 = np.array([1, 2, 3])
+    f1, g1 = grad_ops(p0)
+    delta = 0.00001
+    p1 = np.array([1 + delta, 2, 3])
+    f2, g2 = grad_ops(p1)
+    g_a = ((f2 - f1) / delta)[0, 0]
+    g_a_1 = g1[0, 0, 0]
+    g_a_2 = g2[0, 0, 0]
+    atol = 1e-3
+    if dtype == mq.complex64:
+        atol = 1e-1
+    assert np.allclose(g_a, g_a_1, atol=atol)
+    assert np.allclose(g_a, g_a_2, atol=atol)
+    assert np.allclose(g_a_1, g_a_2, atol=atol)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
 @pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')

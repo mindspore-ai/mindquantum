@@ -196,6 +196,16 @@ class VectorState {
         const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name, const VS& ans_name,
         const derived_t& simulator_left, size_t batch_threads, size_t mea_threads) const;
 
+    //! Get the expectation and gradient of hamiltonian by parameter-shift rule
+    virtual VVT<py_qs_data_t> GetExpectationWithGradParameterShiftOneMulti(
+        const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
+        const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread);
+
+    virtual VT<VVT<py_qs_data_t>> GetExpectationWithGradParameterShiftMultiMulti(
+        const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
+        const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name, const VS& ans_name,
+        size_t batch_threads, size_t mea_threads);
+
     virtual VT<unsigned> Sampling(const circuit_t& circ, const parameter::ParameterResolver& pr, size_t shots,
                                   const MST<size_t>& key_map, unsigned seed) const;
 

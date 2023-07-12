@@ -17,6 +17,7 @@ mindquantum/io/qasm/hiqasm.py:to_string
 mindquantum/io/qasm/hiqasm.py:trans_v01
 mindquantum/io/qasm/openqasm.py:to_string
 mindquantum/simulator/mqsim.py:get_expectation_with_grad
+mindquantum/simulator/mqsim.py:grad_ops
 mindquantum/simulator/simulator.py:get_expectation_with_grad
 mindquantum/third_party/unitary_cc.py:uccsd_singlet_generator
 mindquantum/io/display/circuit_text_drawer.py:brick_model

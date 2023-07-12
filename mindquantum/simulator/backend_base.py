@@ -92,9 +92,10 @@ class BackendBase:
         circ_left: Circuit = None,
         simulator_left: "BackendBase" = None,
         parallel_worker: int = None,
+        pr_shift: bool = False,
     ):
         """Get expectation and the gradient w.r.t parameters."""
-        raise NotImplementedError(f"get_qs not implemented for {self.device_name()}")
+        raise NotImplementedError(f"get_expectation_with_grad not implemented for {self.device_name()}")
 
     def get_qs(self, ket=False) -> Union[str, np.ndarray]:
         """Get quantum state."""

@@ -42,6 +42,7 @@
 "mindquantum/tests/ut"                                                                 "missing-docstring"
 "mindquantum/tests/st"                                                                 "wrong-import-position"
 "mindquantum/tests/st"                                                                 "protected-access"
+"mindquantum/tests/st"                                                                 "c-extension-no-member"
 
 # Benchmarks
 "mindquantum/tutorials/benchmarks"                                                      "wrong-import-position"

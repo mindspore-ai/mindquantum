@@ -307,6 +307,7 @@ class Simulator:
         circ_left=None,
         simulator_left=None,
         parallel_worker=None,
+        pr_shift=False,
     ):
         r"""
         Get a function that return the forward value and gradient w.r.t circuit parameters.
@@ -333,7 +334,11 @@ class Simulator:
                 contains :math:`\left|\varphi\right>`. If ``None``, then :math:`\left|\varphi\right>` is
                 assumed to be equals to :math:`\left|\psi\right>`. Default: ``None``.
             parallel_worker (int): The parallel worker numbers. The parallel workers can handle
-                batch in parallel threads. Default: No``ne.
+                batch in parallel threads. Default: ``None``.
+            pr_shift (bool): Whether or not to use parameter-shift rule. Only available in "mqvector" simulator.
+                It will be enabled automatically when circuit contains noise channel. Noted that not every gate
+                uses the same shift value π/2, so the gradient of parameterized custom gate will be calculated
+                by finite difference method with gap 0.001. Default: ``False``.
 
         Returns:
             GradOpsWrapper, a grad ops wrapper than contains information to generate this grad ops.
@@ -371,6 +376,7 @@ class Simulator:
             circ_left,
             (simulator_left.backend if simulator_left is not None else None),
             parallel_worker,
+            pr_shift,
         )
 
     def get_qs(self, ket=False):

@@ -219,6 +219,7 @@ class MQSim(BackendBase):
         circ_left: Circuit = None,
         simulator_left: "BackendBase" = None,
         parallel_worker: int = None,
+        pr_shift: bool = False,
     ):
         """Get expectation with grad."""
         if isinstance(hams, Hamiltonian):
@@ -237,13 +238,18 @@ class MQSim(BackendBase):
             _check_input_type("hams's element", Hamiltonian, h_tmp)
             _check_hamiltonian_qubits_number(h_tmp, self.n_qubits)
         _check_input_type("circ_right", Circuit, circ_right)
-        if circ_right.is_noise_circuit and self.name != "mqmatrix":
-            raise ValueError("noise circuit not support yet.")
+        if circ_right.is_noise_circuit and "mqvector" in self.name:
+            if circ_left is not None or simulator_left is not None:
+                raise ValueError("noise circuit use parameter shift rule to get grad, \
+                    which not support circ_left and simulator_left.")
+            pr_shift = True
+        if pr_shift and "mqvector" not in self.name:
+            raise ValueError(f"{self.name} simulator not support parameter-shift rule.")
         non_hermitian = False
         if circ_left is not None:
             _check_input_type("circ_left", Circuit, circ_left)
             if circ_left.is_noise_circuit:
-                raise ValueError("noise circuit not support yet.")
+                raise ValueError("noise left circuit not support yet.")
             non_hermitian = True
         if simulator_left is not None:
             _check_input_type("simulator_left", MQSim, simulator_left)
@@ -293,18 +299,26 @@ class MQSim(BackendBase):
         if self.n_qubits < circ_n_qubits:
             raise ValueError(f"Simulator has {self.n_qubits} qubits, but circuit has {circ_n_qubits} qubits.")
 
-        def grad_ops(*inputs):
+        def grad_ops(*inputs_):
+            inputs = list(inputs_)
+            for i, item in enumerate(inputs):
+                if isinstance(item, list):
+                    inputs[i] = np.array(item)
             if version == "both" and len(inputs) != 2:
                 raise ValueError("Need two inputs!")
             if version in ("encoder", "ansatz") and len(inputs) != 1:
                 raise ValueError("Need one input!")
             if version == "both":
+                if len(inputs[0].shape) == 1:
+                    inputs[0] = np.array([inputs[0]])
                 _check_encoder(inputs[0], len(encoder_params_name))
                 _check_ansatz(inputs[1], len(ansatz_params_name))
                 batch_threads, mea_threads = _thread_balance(inputs[0].shape[0], len(hams), parallel_worker)
                 inputs0 = inputs[0]
                 inputs1 = inputs[1]
             if version == "encoder":
+                if len(inputs[0].shape) == 1:
+                    inputs[0] = np.array([inputs[0]])
                 _check_encoder(inputs[0], len(encoder_params_name))
                 batch_threads, mea_threads = _thread_balance(inputs[0].shape[0], len(hams), parallel_worker)
                 inputs0 = inputs[0]
@@ -330,11 +344,22 @@ class MQSim(BackendBase):
                     batch_threads,
                     mea_threads,
                 )
-            elif circ_right.is_noise_circuit:
+            elif circ_right.is_noise_circuit and "mqmatrix" in self.name:
                 f_g1_g2 = self.sim.get_expectation_with_noise_grad_multi_multi(
                     [i.get_cpp_obj() for i in hams],
                     circ_right.get_cpp_obj(),
                     circ_right.get_cpp_obj(hermitian=True),
+                    inputs0,
+                    inputs1,
+                    encoder_params_name,
+                    ansatz_params_name,
+                    batch_threads,
+                    mea_threads,
+                )
+            elif pr_shift:
+                f_g1_g2 = self.sim.get_expectation_with_grad_parameter_shift_multi_multi(
+                    [i.get_cpp_obj() for i in hams],
+                    circ_right.get_cpp_obj(),
                     inputs0,
                     inputs1,
                     encoder_params_name,
