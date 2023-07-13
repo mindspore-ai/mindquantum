@@ -660,8 +660,7 @@ class SVGContainer:
             f"xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
         )
         tail = "</svg>"
-        string = f"{head}\n{self.to_string()}\n{tail}"
-        return "<div class=\"nb-html-output output_area\">" + string + "</div>"
+        return f"{head}\n{self.to_string()}\n{tail}"
 
     def to_file(self, filename='circuit.svg'):
         """Save svg file."""
