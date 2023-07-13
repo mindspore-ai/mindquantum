@@ -77,7 +77,9 @@ auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLIN
         .def("get_expectation_with_grad_one_multi", &sim_t::GetExpectationWithGradOneMulti)
         .def("get_expectation_with_grad_multi_multi", &sim_t::GetExpectationWithGradMultiMulti)
         .def("get_expectation_with_grad_non_hermitian_multi_multi",
-             &sim_t::GetExpectationNonHermitianWithGradMultiMulti);
+             &sim_t::GetExpectationNonHermitianWithGradMultiMulti)
+        .def("get_expectation_with_grad_parameter_shift_multi_multi",
+             &sim_t::GetExpectationWithGradParameterShiftMultiMulti);
 }
 
 template <typename sim_t>
