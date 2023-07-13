@@ -13,14 +13,6 @@ mindquantum.device.QubitNode
         - **poi_x** (float) - 量子比特在绘制平面上的 x 坐标。
         - **poi_y** (float) - 量子比特在绘制平面上的 y 坐标。
 
-    .. py:method:: set_poi(poi_x: float, poi_y: float)
-
-        设置量子比特的位置坐标。
-
-        参数：
-            - **poi_x** (float) - 量子比特在绘制平面上的 x 坐标。
-            - **poi_y** (float) - 量子比特在绘制平面上的 y 坐标。
-
     .. py:method:: color
         :property:
 
@@ -52,3 +44,11 @@ mindquantum.device.QubitNode
 
         返回：
             int，量子比特的 id。
+
+    .. py:method:: set_poi(poi_x: float, poi_y: float)
+
+        设置量子比特的位置坐标。
+
+        参数：
+            - **poi_x** (float) - 量子比特在绘制平面上的 x 坐标。
+            - **poi_y** (float) - 量子比特在绘制平面上的 y 坐标。
