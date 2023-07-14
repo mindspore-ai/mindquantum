@@ -39,7 +39,7 @@ class SVGQNode(SVGContainer):
         """Initialize a svg qubit node."""
         super().__init__()
         q_circle = Circle(0, 0, svg_config['r']).fill(qnode.color)
-        q_id = Text(0, 0, str(qnode.id)).fill(svg_config['id_color']).font_size(svg_config['id_fs'])
+        q_id = Text(0, 0, str(qnode.qubit_id)).fill(svg_config['id_color']).font_size(svg_config['id_fs'])
         self.add(q_circle)
         self.add(q_id)
         self.shift(qnode.poi_x * svg_config['f'], qnode.poi_y * svg_config['f'])
