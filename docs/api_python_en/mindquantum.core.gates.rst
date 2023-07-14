@@ -14,6 +14,7 @@ Base Class
     mindquantum.core.gates.BasicGate
     mindquantum.core.gates.NoneParameterGate
     mindquantum.core.gates.ParameterGate
+    mindquantum.core.gates.QuantumGate
 
 Quantum Gate
 -------------

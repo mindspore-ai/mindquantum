@@ -109,7 +109,12 @@ class MeasureAccepter(ChannelAdderBase):
 
 
 class NoiseExcluder(ChannelAdderBase):
-    """Exclude a noise channel."""
+    """
+    Exclude a noise channel.
+
+    Args:
+        add_after (bool): Whether add channel after gate or before gate. Default: ``True``.
+    """
 
     def _excluder(self, *args, **kwargs):
         """Construct excluder rules."""
