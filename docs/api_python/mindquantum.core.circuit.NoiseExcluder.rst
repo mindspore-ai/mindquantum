@@ -1,7 +1,7 @@
 mindquantum.core.circuit.NoiseExcluder
 ========================================
 
-.. py:class:: mindquantum.core.circuit.NoiseExcluder()
+.. py:class:: mindquantum.core.circuit.NoiseExcluder(add_after=True)
 
     排除噪声门。
 
