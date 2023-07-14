@@ -17,6 +17,7 @@ mindquantum.core.gates
     mindquantum.core.gates.BasicGate
     mindquantum.core.gates.NoneParameterGate
     mindquantum.core.gates.ParameterGate
+    mindquantum.core.gates.QuantumGate
 
 通用量子门
 -------------
