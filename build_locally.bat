@@ -453,8 +453,8 @@ goto :END
 rem ============================================================================
 
 :LoCase
-:: Subroutine to convert a variable VALUE to all lower case.
-:: The argument for this subroutine is the variable NAME.
+rem Subroutine to convert a variable VALUE to all lower case.
+rem The argument for this subroutine is the variable NAME.
 set %~1=!%~1:A=a!
 set %~1=!%~1:B=b!
 set %~1=!%~1:C=c!

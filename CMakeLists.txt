@@ -20,6 +20,10 @@
 
 cmake_minimum_required(VERSION 3.20) # mainly because of NVHPC support
 
+# ==============================================================================
+# Create the MindQuantum project
+project(MindQuantum LANGUAGES C CXX)
+
 message(STATUS "Running using CMake ${CMAKE_VERSION}")
 
 cmake_policy(VERSION 3.0...3.23)
@@ -33,10 +37,6 @@ list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake/commands)
 
 include(macros)
 
-# ==============================================================================
-# Create the MindQuantum project
-
-project(MindQuantum LANGUAGES C CXX)
 # NB: we enable C since some of the third-party libraries require C to be compiled properly
 setup_language(C)
 setup_language(CXX)
@@ -56,6 +56,8 @@ set(MQ_INSTALL_LIBDIR "${CMAKE_INSTALL_LIBDIR}/mindquantum")
 set(MQ_INSTALL_DOCDIR "${CMAKE_INSTALL_DATADIR}/doc/mindquantum")
 set(MQ_INSTALL_CMAKEDIR "${MQ_INSTALL_DATADIR}/cmake")
 set(MQ_INSTALL_3RDPARTYDIR "${MQ_INSTALL_LIBDIR}/third_party")
+
+add_compile_options(-Wall -Wextra -Wfloat-equal)
 
 foreach(
   _type

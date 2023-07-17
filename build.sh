@@ -295,7 +295,7 @@ if [[ "$enable_gpu" -eq 1 && -n "$cuda_arch" ]]; then
 fi
 
 if [ "$enable_ccache" -eq 1 ]; then
-    ccache_exec=
+    ccache_exec=""
     if command -v ccache > /dev/null 2>&1; then
         ccache_exec=ccache
     elif command -v sccache > /dev/null 2>&1; then
