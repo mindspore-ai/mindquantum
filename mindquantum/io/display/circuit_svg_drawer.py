@@ -836,10 +836,7 @@ class SVGGate(SVGBasicGate):
         """Initialize an SVGGate object."""
         super().__init__(g, svg_config)
         self.rect = self.create_n_qubits_rect(g.n_qubits)
-        if isinstance(g, NoiseGate):
-            self.rect.fill(self.svg_config['noise_fill'])
-        else:
-            self.rect.fill(self.svg_config['npg_fill'])
+        self.rect.fill(self.svg_config['npg_fill'])
         self.rect.fill_opacity(self.svg_config['npg_fill_opacity'])
         self.rect.stroke(self.svg_config['npg_stroke'])
         self.rect.stroke_width(self.svg_config['gate_stroke_width'])
@@ -862,6 +859,39 @@ class SVGGate(SVGBasicGate):
         self.add(self.text_container)
         self.add(self.obj_dots)
         self.as_background(self.rect, self.ctrl_dots, self.obj_dots)
+        self.move_to_create_qubit()
+
+
+class SVGChannel(SVGBasicGate):
+    """SVG for noise channel."""
+
+    def __init__(self, gate, svg_config):
+        """Initialize an SVGParameterGate object."""
+        super().__init__(gate, svg_config)
+        self.rect1 = self.create_n_qubits_rect(max(self.obj_qubits) - min(self.obj_qubits) + 1)
+        self.rect1.fill(self.svg_config['noise_fill'])
+        self.rect1.fill_opacity(self.svg_config['npg_fill_opacity'])
+        self.rect1.stroke(self.svg_config['npg_stroke'])
+        self.rect1.stroke_width(self.svg_config['gate_stroke_width'])
+        self.name_text = self.create_name_text(self.name)
+        self.name_text.shift(0, self.rect1.get('height') / 2 - self.svg_config['gate_size'] / 10)
+        coeff_str = f"{gate.__type_specific_str__()}"
+
+        self.coeff_text = self.create_name_text(coeff_str)
+        self.coeff_text.shift(0, self.rect1.get('height') / 2 + self.svg_config['gate_size'] * 0.3)
+        self.coeff_text.font_size(self.svg_config['gate_name_font_size'] * 0.7)
+        self.rect1.fit_text(self.name_text)
+        self.rect1.fit_text(self.coeff_text)
+        self.rect1.fit_text(self.name_text)
+        color = get_bound_color(self.svg_config, self.svg_config['npg_fill'], self.svg_config['npg_stroke'])
+        self.obj_dots = self.create_obj_dots(self.rect1.right, color)
+        self.ctrl_dots = self.create_ctrl_dots(self.rect1.right / 2, color)
+        self.add(self.ctrl_dots)
+        self.add(self.rect1)
+        self.add(self.name_text)
+        self.add(self.coeff_text)
+        self.add(self.obj_dots)
+        self.as_background(self.ctrl_dots, self.rect1, self.obj_dots)
         self.move_to_create_qubit()
 
 
@@ -1023,6 +1053,8 @@ def add_to_gate_container(gate_container: GateContainer, gate, svg_config, n_qub
         gate_container.add(SVGSWAPGate(gate, svg_config))
     elif isinstance(gate, ParameterGate) and not isinstance(gate, (TGate, SGate)):
         gate_container.add(SVGParameterGate(gate, svg_config))
+    elif isinstance(gate, NoiseGate):
+        gate_container.add(SVGChannel(gate, svg_config))
     else:
         gate_container.add(SVGGate(gate, svg_config))
 

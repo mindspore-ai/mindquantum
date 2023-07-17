@@ -56,7 +56,7 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
         >>> circ += PauliChannel(0.8, 0.1, 0.1).on(0)
         >>> circ.measure_all()
         >>> print(circ)
-        q0: ──PC────M(q0)──
+        q0: ──PC(px=0.8, py=0.1, pz=0.1)────M(q0)──
         >>> from mindquantum.simulator import Simulator
         >>> sim = Simulator('mqvector', 1)
         >>> sim.sampling(circ, shots=1000, seed=42)
@@ -95,6 +95,10 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
     def __extra_prop__(self):
         """Extra prop magic method."""
         return {'px': self.px, 'py': self.py, 'pz': self.pz}
+
+    def __type_specific_str__(self):
+        """Return a string representation of the object."""
+        return f'px={self.px}, py={self.py}, pz={self.pz}'
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
@@ -137,7 +141,7 @@ class BitFlipChannel(PauliChannel):
         >>> circ = Circuit()
         >>> circ += BitFlipChannel(0.02).on(0)
         >>> print(circ)
-        q0: ──BF(0.02)──
+        q0: ──BFC(p=0.02)──
     """
 
     # pylint: disable=invalid-name
@@ -158,9 +162,9 @@ class BitFlipChannel(PauliChannel):
         prop['p'] = self.p
         return prop
 
-    def __str_in_circ__(self):
-        """Return a string representation of the object in a quantum circuit."""
-        return f"BF({self.p})"
+    def __type_specific_str__(self):
+        """Return a string representation of the object."""
+        return f'p={self.p}'
 
 
 class PhaseFlipChannel(PauliChannel):
@@ -188,7 +192,7 @@ class PhaseFlipChannel(PauliChannel):
         >>> circ = Circuit()
         >>> circ += PhaseFlipChannel(0.02).on(0)
         >>> print(circ)
-        q0: ──PF(0.02)──
+        q0: ──PFC(p=0.02)──
     """
 
     # pylint: disable=invalid-name
@@ -209,9 +213,9 @@ class PhaseFlipChannel(PauliChannel):
         prop['p'] = self.p
         return prop
 
-    def __str_in_circ__(self):
-        """Return a string representation of the object in a quantum circuit."""
-        return f"PF({self.p})"
+    def __type_specific_str__(self):
+        """Return a string representation of the object."""
+        return f'p={self.p}'
 
 
 class BitPhaseFlipChannel(PauliChannel):
@@ -240,7 +244,7 @@ class BitPhaseFlipChannel(PauliChannel):
         >>> circ = Circuit()
         >>> circ += BitPhaseFlipChannel(0.02).on(0)
         >>> print(circ)
-        q0: ──BPF(0.02)──
+        q0: ──BPFC(p=0.02)──
     """
 
     # pylint: disable=invalid-name
@@ -261,9 +265,9 @@ class BitPhaseFlipChannel(PauliChannel):
         prop['p'] = self.p
         return prop
 
-    def __str_in_circ__(self):
-        """Return a string representation of the object in a quantum circuit."""
-        return f"BPF({self.p})"
+    def __type_specific_str__(self):
+        """Return a string representation of the object."""
+        return f'p={self.p}'
 
 
 class DepolarizingChannel(NoiseGate, SelfHermitianGate):
@@ -300,11 +304,11 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
         >>> from mindquantum.core.circuit import Circuit
         >>> circ = Circuit()
         >>> circ += DepolarizingChannel(0.02).on(0)
-        >>> circ += DepolarizingChannel(0.01).on([1, 2])
+        >>> circ += DepolarizingChannel(0.01).on([0, 1])
         >>> print(circ)
-        q0: ──Dep(0.02)────Dep(0.01)──
-                               │
-        q1: ───────────────Dep(0.01)──
+        q0: ──DC(p=0.02)────DC(p=0.01)──
+                                │
+        q1: ────────────────DC(p=0.01)──
     """
 
     # pylint: disable=invalid-name
@@ -351,9 +355,9 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
         """Extra prop magic method."""
         return {'p': self.p}
 
-    def __str_in_circ__(self):
-        """Return a string representation of the object in a quantum circuit."""
-        return f"Dep({self.p})"
+    def __type_specific_str__(self):
+        """Return a string representation of the object."""
+        return f'p={self.p}'
 
 
 class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
@@ -385,7 +389,7 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
         >>> circ = Circuit()
         >>> circ += AmplitudeDampingChannel(0.02).on(0)
         >>> print(circ)
-        q0: ──AD(0.02)──
+        q0: ──ADC(γ=0.02)──
     """
 
     def __init__(self, gamma: float, **kwargs):
@@ -406,9 +410,9 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
         """Equality comparison operator."""
         return BasicGate.__eq__(self, other) and self.gamma == other.gamma
 
-    def __str_in_circ__(self):
-        """Return a string representation of the object in a quantum circuit."""
-        return f"AD({self.gamma})"
+    def __type_specific_str__(self):
+        """Return a string representation of the object."""
+        return f'γ={self.gamma}'
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
@@ -450,7 +454,7 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
         >>> circ = Circuit()
         >>> circ += PhaseDampingChannel(0.02).on(0)
         >>> print(circ)
-        q0: ──PD(0.02)──
+        q0: ──PDC(γ=0.02)──
     """
 
     def __init__(self, gamma: float, **kwargs):
@@ -471,9 +475,9 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
         """Equality comparison operator."""
         return super().__eq__(other) and self.gamma == other.gamma
 
-    def __str_in_circ__(self):
-        """Return a string representation of the object in a quantum circuit."""
-        return f"PD({self.gamma})"
+    def __type_specific_str__(self):
+        """Return a string representation of the object."""
+        return f'γ={self.gamma}'
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""

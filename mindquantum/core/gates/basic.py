@@ -731,6 +731,19 @@ class ParamNonHerm(ParameterGate, NonHermitianGate):
 class NoiseGate(NoneParameterGate):
     """Noise gate class."""
 
+    def __str_in_terminal__(self):
+        """Return a string representation of the object."""
+        qubit_s = QuantumGate.__qubits_expression__(self)
+        pr_s = self.__type_specific_str__()
+        string = join_without_empty('|', [pr_s, qubit_s])
+        return self.name + (f'({string})' if string else '')
+
+    def __str_in_circ__(self):
+        """Return a string representation of the object."""
+        pr_s = self.__type_specific_str__()
+        string = join_without_empty('|', [pr_s])
+        return self.name + (f'({string})' if string else '')
+
     def on(self, obj_qubits, ctrl_qubits=None):
         """
         Define which qubit the gate act on.
