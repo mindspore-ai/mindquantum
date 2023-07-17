@@ -44,7 +44,7 @@ def tensor_product_decompose(gate: QuantumGate, return_u3: bool = True) -> Circu
     Tensor product decomposition of a 2-qubit gate.
 
     Args:
-        gate (:class:`QuantumGate`): 2-qubit gate composed by tensor product.
+        gate (:class:`~.core.gates.QuantumGate`): 2-qubit gate composed by tensor product.
         return_u3 (bool): return gates in form of :class:`~.core.gates.U3` if ``True``, otherwise
             return :class:`~.core.gates.UnivMathGate`. Default: ``True``.
 
@@ -85,7 +85,7 @@ def abc_decompose(gate: QuantumGate, return_u3: bool = True) -> Circuit:
     Decompose two-qubit controlled gate via ABC decomposition.
 
     Args:
-        gate (:class:`QuantumGate`): quantum gate with 1 control bit and 1 target bit.
+        gate (:class:`~.core.gates.QuantumGate`): quantum gate with 1 control bit and 1 target bit.
         return_u3 (bool): return gates in form of :class:`~.core.gates.U3` if ``True``, otherwise
             return :class:`~.core.gates.UnivMathGate`. Default: ``True``.
 
@@ -148,7 +148,7 @@ def kak_decompose(gate: QuantumGate, return_u3: bool = True) -> Circuit:
     Programmers <https://arxiv.org/abs/quant-ph/0406176>`_.
 
     Args:
-        gate (:class:`QuantumGate`): 2-qubit quantum gate.
+        gate (:class:`~.core.gates.QuantumGate`): 2-qubit quantum gate.
         return_u3 (bool): return gates in form of :class:`~.core.gates.U3` if ``True``, otherwise
             return :class:`~.core.gates.UnivMathGate`. Default: ``True``.
 

@@ -39,7 +39,7 @@ def cu_decompose(gate: QuantumGate, with_barrier: bool = False) -> Circuit:
     When recursively calling the function itself, :math:`m` decreases, while :math:`n` holds constant.
 
     Args:
-        gate (:class:`QuantumGate`): instance of quantum gate.
+        gate (:class:`~.core.gates.QuantumGate`): instance of quantum gate.
         with_barrier (bool): whether add :class:`~.core.gates.BarrierGate` into
             decomposed circuit. Default: False.
 
@@ -108,7 +108,7 @@ def qs_decompose(gate: QuantumGate, with_barrier: bool = False) -> Circuit:
     Logic Circuits <https://arxiv.org/abs/quant-ph/0406176>`_.
 
     Args:
-        gate (:class:`QuantumGate`): instance of quantum gate.
+        gate (:class:`~.core.gates.QuantumGate`): instance of quantum gate.
         with_barrier (bool): whether add barriers into decomposed circuit.
 
     Returns:

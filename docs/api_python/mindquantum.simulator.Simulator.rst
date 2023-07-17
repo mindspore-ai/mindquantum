@@ -101,7 +101,7 @@ mindquantum.simulator.Simulator
         返回：
             numbers.Number，期望值。
 
-    .. py:method:: get_expectation_with_grad(hams, circ_right, circ_left=None, simulator_left=None, parallel_worker=None)
+    .. py:method:: get_expectation_with_grad(hams, circ_right, circ_left=None, simulator_left=None, parallel_worker=None, pr_shift=False)
 
         获取一个返回前向值和关于线路参数梯度的函数。该方法旨在计算期望值及其梯度，如下所示：
 
