@@ -14,7 +14,7 @@ mindquantum.algorithm.compiler.qs_decompose
     了解更多详细信息，请参考 `Synthesis of Quantum Logic Circuits <https://arxiv.org/abs/quant-ph/0406176>`_。
 
     参数：
-        - **gate** (:class:`QuantumGate`) - 量子门实例。
+        - **gate** (:class:`~.core.gates.QuantumGate`) - 量子门实例。
         - **with_barrier** (bool) - 是否在分解时加入 :class:`~.core.gates.BarrierGate`。默认值： ``False``。
 
     返回：

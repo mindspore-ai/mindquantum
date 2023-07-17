@@ -9,7 +9,7 @@ mindquantum.algorithm.compiler.cu_decompose
     当迭代的调用函数本身时，:math:`m` 将会逐步减小并保持 :math:`n` 恒定。
 
     参数：
-        - **gate** (:class:`QuantumGate`) - 量子门实例。
+        - **gate** (:class:`~.core.gates.QuantumGate`) - 量子门实例。
         - **with_barrier** (bool) - 是否在分解时加入 :class:`~.core.gates.BarrierGate`。默认值： ``False``。
 
     返回：
