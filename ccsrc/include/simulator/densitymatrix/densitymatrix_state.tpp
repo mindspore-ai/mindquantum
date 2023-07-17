@@ -43,7 +43,6 @@
 #include "ops/gates.hpp"
 #include "ops/hamiltonian.hpp"
 #include "simulator/densitymatrix/densitymatrix_state.hpp"
-#include "simulator/types.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
 

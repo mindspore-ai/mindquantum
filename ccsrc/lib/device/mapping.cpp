@@ -22,6 +22,7 @@
 #include <fmt/core.h>
 
 #include "core/mq_base_types.hpp"
+#include "device/topology.hpp"
 #include "ops/basic_gate.hpp"
 #include "ops/gate_id.hpp"
 
@@ -52,7 +53,7 @@ VT<VT<int>> GetCircuitDAG(int n, const VT<Gate>& gates) {
 
 std::pair<qbit_t, VT<Gate>> GateToAbstractGate(const VT<std::shared_ptr<BasicGate>>& gates) {
     VT<Gate> abs_circ;
-    Index max_qubit = 0;
+    qbit_t max_qubit = 0;
     for (size_t i = 0; i < gates.size(); i++) {
         auto gate = gates[i];
         if (gate->obj_qubits_.size() + gate->ctrl_qubits_.size() > 2) {

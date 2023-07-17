@@ -29,7 +29,6 @@
 #include "core/sparse/csrhdmatrix.hpp"
 #include "core/utils.hpp"
 #include "math/tensor/traits.hpp"
-#include "simulator/types.hpp"
 
 namespace mindquantum::sim::vector::detail {
 struct CPUVectorPolicyAvxFloat;

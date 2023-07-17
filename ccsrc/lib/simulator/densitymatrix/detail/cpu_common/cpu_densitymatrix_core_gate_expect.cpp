@@ -38,8 +38,8 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::HamiltonianMatrix(const s
             dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
                 auto j = (i ^ mask_f);
                 if (i <= j) {
-                    auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
-                    auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
+                    auto axis2power = CountOne(i & mask.mask_z);  // -1
+                    auto axis3power = CountOne(i & mask.mask_y);  // -1j
                     auto c = ComplexCast<double, calc_type>::apply(
                         POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
                     out[IdxMap(j, i)] += coeff * c;
@@ -72,8 +72,8 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetExpectation(const qs_d
                 for (omp::idx_t i = 0; i < dim; i++) {
                     auto j = (i ^ mask_f);
                     if (i <= j) {
-                        auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
-                        auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
+                        auto axis2power = CountOne(i & mask.mask_z);  // -1
+                        auto axis3power = CountOne(i & mask.mask_y);  // -1j
                         auto c = ComplexCast<double, calc_type>::apply(
                             POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
                         auto e = std::conj(qs[IdxMap(j, i)]) * coeff * c;
@@ -867,7 +867,6 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimTheta(const
                     index_t r0;
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   l, r0);
-                    auto r3 = r0 + mask.obj_mask;
                     auto r1 = r0 + mask.obj_min_mask;
                     auto r2 = r0 + mask.obj_max_mask;
                     qs_data_t this_res = 0;
@@ -889,7 +888,6 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimTheta(const
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   l, r0);
                     if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
-                        auto r3 = r0 + mask.obj_mask;
                         auto r1 = r0 + mask.obj_min_mask;
                         auto r2 = r0 + mask.obj_max_mask;
                         qs_data_t this_res = 0;
@@ -934,8 +932,6 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimPhi(const q
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   l, r0);
                     auto r3 = r0 + mask.obj_mask;
-                    auto r1 = r0 + mask.obj_min_mask;
-                    auto r2 = r0 + mask.obj_max_mask;
                     qs_data_t this_res = 0;
                     for (index_t col = 0; col < dim; col++) {
                         this_res += GetValue(qs, r3, col) * GetValue(ham_matrix, col, r3);
@@ -955,8 +951,6 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimPhi(const q
                                   l, r0);
                     if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto r3 = r0 + mask.obj_mask;
-                        auto r1 = r0 + mask.obj_min_mask;
-                        auto r2 = r0 + mask.obj_max_mask;
                         qs_data_t this_res = 0;
                         for (index_t col = 0; col < dim; col++) {
                             this_res += GetValue(qs, r3, col) * GetValue(ham_matrix, col, r3);

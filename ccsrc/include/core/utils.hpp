@@ -117,7 +117,7 @@ inline uint32_t CountOne(uint32_t n) {
     return __builtin_popcount(n);
 }
 
-inline uint64_t CountOne(int64_t n) {
+inline uint64_t CountOne(uint64_t n) {
     return __builtin_popcount(n);
 }
 #endif  // _MSC_VER

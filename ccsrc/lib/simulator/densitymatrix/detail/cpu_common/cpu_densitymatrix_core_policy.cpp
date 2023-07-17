@@ -17,7 +17,6 @@
 
 #include "core/utils.hpp"
 #include "math/pr/parameter_resolver.hpp"
-#include "simulator/types.hpp"
 #include "simulator/utils.hpp"
 #ifdef __x86_64__
 #    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_double_policy.hpp"
@@ -255,8 +254,8 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* q
             dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
                 auto j = (i ^ mask_f);
                 if (i <= j) {
-                    auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
-                    auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
+                    auto axis2power = CountOne(i & mask.mask_z);  // -1
+                    auto axis3power = CountOne(i & mask.mask_y);  // -1j
                     auto c = ComplexCast<double, calc_type>::apply(
                         POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
                     for (index_t col = 0; col < dim; col++) {
@@ -279,8 +278,8 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* q
             dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
                 auto j = (i ^ mask_f);
                 if (i <= j) {
-                    auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
-                    auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
+                    auto axis2power = CountOne(i & mask.mask_z);  // -1
+                    auto axis3power = CountOne(i & mask.mask_y);  // -1j
                     auto c = ComplexCast<double, calc_type>::apply(
                         POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
                     for (index_t row = 0; row <= i; row++) {

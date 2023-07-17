@@ -44,7 +44,6 @@
 #include "ops/gate_id.hpp"
 #include "ops/gates.hpp"
 #include "ops/hamiltonian.hpp"
-#include "simulator/types.hpp"
 #include "simulator/vector/vector_state.hpp"
 
 namespace mindquantum::sim::vector::detail {
@@ -415,7 +414,7 @@ void VectorState<qs_policy_t_>::ApplyDepolarizingChannel(const std::shared_ptr<B
                     break;
                 }
             }
-            VT<Index> obj{obj_qubit};
+            qbits_t obj{obj_qubit};
             if (gate_index == 0) {
                 qs_policy_t::ApplyX(&qs, obj, gate->ctrl_qubits_, dim);
             } else if (gate_index == 1) {

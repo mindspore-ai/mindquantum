@@ -26,7 +26,6 @@
 #include "core/mq_base_types.hpp"
 #include "core/utils.hpp"
 #include "math/tensor/traits.hpp"
-#include "simulator/types.hpp"
 
 // Warning: only correct when x >= y
 #define IdxMap(x, y)       (((x) * ((x) + 1)) / 2 + (y))

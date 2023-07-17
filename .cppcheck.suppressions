@@ -57,7 +57,6 @@ syntaxError:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatri
 syntaxError:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_policy.cpp
 
 unknownMacro:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_rot_pauli.cpp
-unknownMacro:ccsrc/include/simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp
 unknownMacro:ccsrc/include/core/sparse/paulimat.hpp
 unknownMacro:ccsrc/include/core/sparse/paulimat.hpp:58
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_single_ops.cpp
@@ -69,7 +68,6 @@ unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_matrix
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_x_like.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_matrix_gate.cpp
 unknownMacro:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_matrix_gate.cpp
-unknownMacro:ccsrc/include/simulator/vector/detail/cpu_vector_policy.hpp
 
 unreadVariable:ccsrc/lib/experimental/decompositions/time_evolution.cpp
 

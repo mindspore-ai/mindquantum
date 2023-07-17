@@ -37,10 +37,10 @@
 namespace mindquantum {
 struct BasicGate {
     GateID id_ = GateID::I;
-    VT<Index> obj_qubits_ = {};
-    VT<Index> ctrl_qubits_ = {};
+    qbits_t obj_qubits_ = {};
+    qbits_t ctrl_qubits_ = {};
     BasicGate() = default;
-    BasicGate(GateID id, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits)
+    BasicGate(GateID id, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits)
         : id_(id), obj_qubits_(obj_qubits), ctrl_qubits_(ctrl_qubits) {
     }
     virtual bool Parameterized() {
@@ -53,66 +53,66 @@ struct BasicGate {
 
 struct MeasureGate : public BasicGate {
     std::string name_;
-    MeasureGate(const std::string& name, const VT<Index>& obj_qubits)
-        : name_(name), BasicGate(GateID::M, obj_qubits, {}) {
+    MeasureGate(const std::string& name, const qbits_t& obj_qubits)
+        : BasicGate(GateID::M, obj_qubits, {}), name_(name) {
     }
 };
 
 struct IGate : public BasicGate {
-    explicit IGate(const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    explicit IGate(const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : BasicGate(GateID::I, obj_qubits, ctrl_qubits) {
     }
 };
 struct XGate : public BasicGate {
-    explicit XGate(const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    explicit XGate(const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : BasicGate(GateID::X, obj_qubits, ctrl_qubits) {
     }
 };
 struct YGate : public BasicGate {
-    explicit YGate(const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    explicit YGate(const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : BasicGate(GateID::Y, obj_qubits, ctrl_qubits) {
     }
 };
 
 struct ZGate : public BasicGate {
-    explicit ZGate(const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    explicit ZGate(const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : BasicGate(GateID::Z, obj_qubits, ctrl_qubits) {
     }
 };
 
 struct HGate : public BasicGate {
-    explicit HGate(const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    explicit HGate(const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : BasicGate(GateID::H, obj_qubits, ctrl_qubits) {
     }
 };
 struct SWAPGate : public BasicGate {
-    explicit SWAPGate(const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    explicit SWAPGate(const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : BasicGate(GateID::SWAP, obj_qubits, ctrl_qubits) {
     }
 };
 struct ISWAPGate : public BasicGate {
     bool daggered_;
-    ISWAPGate(bool daggered, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
-        : daggered_(daggered), BasicGate(GateID::ISWAP, obj_qubits, ctrl_qubits) {
+    ISWAPGate(bool daggered, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
+        : BasicGate(GateID::ISWAP, obj_qubits, ctrl_qubits), daggered_(daggered) {
     }
 };
 struct SGate : public BasicGate {
-    explicit SGate(const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    explicit SGate(const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : BasicGate(GateID::S, obj_qubits, ctrl_qubits) {
     }
 };
 struct SdagGate : public BasicGate {
-    explicit SdagGate(const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    explicit SdagGate(const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : BasicGate(GateID::Sdag, obj_qubits, ctrl_qubits) {
     }
 };
 struct TGate : public BasicGate {
-    explicit TGate(const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    explicit TGate(const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : BasicGate(GateID::T, obj_qubits, ctrl_qubits) {
     }
 };
 struct TdagGate : public BasicGate {
-    explicit TdagGate(const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    explicit TdagGate(const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : BasicGate(GateID::Tdag, obj_qubits, ctrl_qubits) {
     }
 };
@@ -123,9 +123,9 @@ struct Parameterizable : public BasicGate {
     bool parameterized_;
     bool grad_required_;
     std::pair<MST<size_t>, tensor::Matrix> jacobi;
-    Parameterizable(GateID id, const VT<parameter::ParameterResolver>& prs, const VT<Index>& obj_qubits,
-                    const VT<Index>& ctrl_qubits)
-        : n_pr(prs.size()), prs_(prs), BasicGate(id, obj_qubits, ctrl_qubits) {
+    Parameterizable(GateID id, const VT<parameter::ParameterResolver>& prs, const qbits_t& obj_qubits,
+                    const qbits_t& ctrl_qubits)
+        : BasicGate(id, obj_qubits, ctrl_qubits), n_pr(prs.size()), prs_(prs) {
         parameterized_ = !std::all_of(this->prs_.begin(), this->prs_.end(),
                                       [](const auto& pr) { return pr.IsConst(); });
         grad_required_ = std::any_of(this->prs_.begin(), this->prs_.end(),
@@ -141,67 +141,67 @@ struct Parameterizable : public BasicGate {
 };
 
 struct RXGate : public Parameterizable {
-    RXGate(const parameter::ParameterResolver pr, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    RXGate(const parameter::ParameterResolver pr, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : Parameterizable(GateID::RX, {pr}, obj_qubits, ctrl_qubits) {
     }
 };
 struct RYGate : public Parameterizable {
-    RYGate(const parameter::ParameterResolver pr, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    RYGate(const parameter::ParameterResolver pr, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : Parameterizable(GateID::RY, {pr}, obj_qubits, ctrl_qubits) {
     }
 };
 struct RZGate : public Parameterizable {
-    RZGate(const parameter::ParameterResolver pr, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    RZGate(const parameter::ParameterResolver pr, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : Parameterizable(GateID::RZ, {pr}, obj_qubits, ctrl_qubits) {
     }
 };
 struct RxxGate : public Parameterizable {
-    RxxGate(const parameter::ParameterResolver pr, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    RxxGate(const parameter::ParameterResolver pr, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : Parameterizable(GateID::Rxx, {pr}, obj_qubits, ctrl_qubits) {
     }
 };
 struct RyyGate : public Parameterizable {
-    RyyGate(const parameter::ParameterResolver pr, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    RyyGate(const parameter::ParameterResolver pr, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : Parameterizable(GateID::Ryy, {pr}, obj_qubits, ctrl_qubits) {
     }
 };
 struct RzzGate : public Parameterizable {
-    RzzGate(const parameter::ParameterResolver pr, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    RzzGate(const parameter::ParameterResolver pr, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : Parameterizable(GateID::Rzz, {pr}, obj_qubits, ctrl_qubits) {
     }
 };
 struct RxyGate : public Parameterizable {
-    RxyGate(const parameter::ParameterResolver pr, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    RxyGate(const parameter::ParameterResolver pr, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : Parameterizable(GateID::Rxy, {pr}, obj_qubits, ctrl_qubits) {
     }
 };
 struct RxzGate : public Parameterizable {
-    RxzGate(const parameter::ParameterResolver pr, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    RxzGate(const parameter::ParameterResolver pr, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : Parameterizable(GateID::Rxz, {pr}, obj_qubits, ctrl_qubits) {
     }
 };
 struct RyzGate : public Parameterizable {
-    RyzGate(const parameter::ParameterResolver pr, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    RyzGate(const parameter::ParameterResolver pr, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : Parameterizable(GateID::Ryz, {pr}, obj_qubits, ctrl_qubits) {
     }
 };
 struct GPGate : public Parameterizable {
-    GPGate(const parameter::ParameterResolver pr, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    GPGate(const parameter::ParameterResolver pr, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : Parameterizable(GateID::GP, {pr}, obj_qubits, ctrl_qubits) {
     }
 };
 
 struct PSGate : public Parameterizable {
-    PSGate(const parameter::ParameterResolver pr, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
+    PSGate(const parameter::ParameterResolver pr, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : Parameterizable(GateID::PS, {pr}, obj_qubits, ctrl_qubits) {
     }
 };
 struct PauliChannel : public BasicGate {
     VT<double> cumulative_probs_;
     VT<double> probs_;
-    PauliChannel(double px, double py, double pz, const VT<Index>& obj_qubits,
-                 const VT<Index>& ctrl_qubits = {})  // for pauli channel
-        : probs_{px, py, pz, 1 - px - py - pz}, BasicGate(GateID::PL, obj_qubits, ctrl_qubits) {
+    PauliChannel(double px, double py, double pz, const qbits_t& obj_qubits,
+                 const qbits_t& ctrl_qubits = {})  // for pauli channel
+        : BasicGate(GateID::PL, obj_qubits, ctrl_qubits), probs_{px, py, pz, 1 - px - py - pz} {
         double sum = 0.;
         cumulative_probs_.push_back(sum);
         for (auto it = probs_.begin(); it != probs_.end(); it++) {
@@ -212,16 +212,15 @@ struct PauliChannel : public BasicGate {
 };
 struct DepolarizingChannel : public BasicGate {
     double prob_;
-    DepolarizingChannel(double p, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
-        : prob_(p), BasicGate(GateID::DEP, obj_qubits, ctrl_qubits) {
+    DepolarizingChannel(double p, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
+        : BasicGate(GateID::DEP, obj_qubits, ctrl_qubits), prob_(p) {
     }
 };
 
 struct KrausChannel : public BasicGate {
     VT<tensor::Matrix> kraus_operator_set_;
     template <typename T>
-    KrausChannel(const VT<VVT<CT<T>>>& kraus_operator_set, const VT<Index>& obj_qubits,
-                 const VT<Index>& ctrl_qubits = {})
+    KrausChannel(const VT<VVT<CT<T>>>& kraus_operator_set, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : BasicGate(GateID::KRAUS, obj_qubits, ctrl_qubits) {
         std::transform(kraus_operator_set.begin(), kraus_operator_set.end(), std::back_inserter(kraus_operator_set_),
                        [](auto& k) { return tensor::Matrix(k); });
@@ -231,15 +230,15 @@ struct KrausChannel : public BasicGate {
 struct AmplitudeDampingChannel : public BasicGate {
     double damping_coeff_;
     bool daggered_;
-    AmplitudeDampingChannel(bool daggered, double damping_coeff, const VT<Index>& obj_qubits,
-                            const VT<Index>& ctrl_qubits = {})
-        : daggered_(daggered), damping_coeff_(damping_coeff), BasicGate(GateID::AD, obj_qubits, ctrl_qubits) {
+    AmplitudeDampingChannel(bool daggered, double damping_coeff, const qbits_t& obj_qubits,
+                            const qbits_t& ctrl_qubits = {})
+        : BasicGate(GateID::AD, obj_qubits, ctrl_qubits), damping_coeff_(damping_coeff), daggered_(daggered) {
     }
 };
 struct PhaseDampingChannel : public BasicGate {
     double damping_coeff_;
-    PhaseDampingChannel(double damping_coeff, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
-        : damping_coeff_(damping_coeff), BasicGate(GateID::PD, obj_qubits, ctrl_qubits) {
+    PhaseDampingChannel(double damping_coeff, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
+        : BasicGate(GateID::PD, obj_qubits, ctrl_qubits), damping_coeff_(damping_coeff) {
     }
 };
 
@@ -249,20 +248,20 @@ struct CustomGate : public Parameterizable {
     NumbaMatFunWrapper numba_param_diff_matrix_;
     tensor::Matrix base_matrix_;
     CustomGate(const std::string& name, uint64_t m_addr, uint64_t dm_addr, int dim,
-               const parameter::ParameterResolver pr, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits = {})
-        : name_(name)
+               const parameter::ParameterResolver pr, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
+        : Parameterizable(GateID::CUSTOM, {pr}, obj_qubits, ctrl_qubits)
+        , name_(name)
         , numba_param_matrix_(m_addr, dim)
-        , numba_param_diff_matrix_(dm_addr, dim)
-        , Parameterizable(GateID::CUSTOM, {pr}, obj_qubits, ctrl_qubits) {
+        , numba_param_diff_matrix_(dm_addr, dim) {
         if (!this->Parameterized()) {
             base_matrix_ = this->numba_param_matrix_(tensor::ops::cpu::to_vector<double>(this->prs_[0].const_value)[0]);
         }
     }
-    CustomGate(const std::string& name, const tensor::Matrix& mat, const VT<Index>& obj_qubits,
-               const VT<Index>& ctrl_qubits = {})
-        : name_(name)
-        , base_matrix_(mat)
-        , Parameterizable(GateID::CUSTOM, {parameter::ParameterResolver()}, obj_qubits, ctrl_qubits) {
+    CustomGate(const std::string& name, const tensor::Matrix& mat, const qbits_t& obj_qubits,
+               const qbits_t& ctrl_qubits = {})
+        : Parameterizable(GateID::CUSTOM, {parameter::ParameterResolver()}, obj_qubits, ctrl_qubits)
+        , name_(name)
+        , base_matrix_(mat) {
     }
 };
 }  // namespace mindquantum

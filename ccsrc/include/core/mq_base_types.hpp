@@ -41,7 +41,10 @@ namespace mindquantum {
     p != obj.end();                                                                                                    \
     p++
 
-using Index = int64_t;
+using Index = std::size_t;
+using qbit_t = int64_t;
+using qbits_t = std::vector<qbit_t>;
+using index_t = std::size_t;
 
 template <typename T>
 using VT = std::vector<T>;

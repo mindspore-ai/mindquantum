@@ -26,7 +26,6 @@
 #include "core/mq_base_types.hpp"
 #include "core/sparse/csrhdmatrix.hpp"
 #include "math/tensor/traits.hpp"
-#include "simulator/types.hpp"
 #include "thrust/complex.h"
 #include "thrust/functional.h"
 

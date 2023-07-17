@@ -67,111 +67,113 @@ void init_logging(pybind11::module &module);  // NOLINT(runtime/references)NOLIN
 
 void BindTypeIndependentGate(py::module &module) {  // NOLINT(runtime/references)
     using mindquantum::Index;
+    using mindquantum::qbits_t;
     using mindquantum::VT;
     py::class_<mindquantum::MeasureGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::MeasureGate>>(
         module, "MeasureGate")
-        .def(py::init<std::string, const VT<Index> &>(), "name"_a, "obj_qubits"_a);
+        .def(py::init<std::string, const qbits_t &>(), "name"_a, "obj_qubits"_a);
     py::class_<mindquantum::IGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::IGate>>(module, "IGate")
-        .def(py::init<const VT<Index> &, const VT<Index> &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
+        .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::XGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::XGate>>(module, "XGate")
-        .def(py::init<const VT<Index> &, const VT<Index> &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
+        .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::YGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::YGate>>(module, "YGate")
-        .def(py::init<const VT<Index> &, const VT<Index> &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
+        .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::ZGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::ZGate>>(module, "ZGate")
-        .def(py::init<const VT<Index> &, const VT<Index> &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
+        .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::HGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::HGate>>(module, "HGate")
-        .def(py::init<const VT<Index> &, const VT<Index> &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
+        .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::ISWAPGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::ISWAPGate>>(module,
                                                                                                         "ISWAPGate")
-        .def(py::init<bool, const VT<Index> &, const VT<Index> &>(), "daggered"_a, "obj_qubits"_a,
+        .def(py::init<bool, const qbits_t &, const qbits_t &>(), "daggered"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::SWAPGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::SWAPGate>>(module,
                                                                                                       "SWAPGate")
-        .def(py::init<const VT<Index> &, const VT<Index> &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
+        .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::SGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::SGate>>(module, "SGate")
-        .def(py::init<const VT<Index> &, const VT<Index> &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
+        .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::SdagGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::SdagGate>>(module,
                                                                                                       "SdagGate")
-        .def(py::init<const VT<Index> &, const VT<Index> &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
+        .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::TGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::TGate>>(module, "TGate")
-        .def(py::init<const VT<Index> &, const VT<Index> &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
+        .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::TdagGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::TdagGate>>(module,
                                                                                                       "TdagGate")
-        .def(py::init<const VT<Index> &, const VT<Index> &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
+        .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::PauliChannel, mindquantum::BasicGate, std::shared_ptr<mindquantum::PauliChannel>>(
         module, "PauliChannel")
-        .def(py::init<double, double, double, const VT<Index> &, const VT<Index> &>(), "px"_a, "py"_a, "pz"_a,
+        .def(py::init<double, double, double, const qbits_t &, const qbits_t &>(), "px"_a, "py"_a, "pz"_a,
              "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::DepolarizingChannel, mindquantum::BasicGate,
                std::shared_ptr<mindquantum::DepolarizingChannel>>(module, "DepolarizingChannel")
-        .def(py::init<double, const VT<Index> &, const VT<Index> &>(), "p"_a, "obj_qubits"_a,
+        .def(py::init<double, const qbits_t &, const qbits_t &>(), "p"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::AmplitudeDampingChannel, mindquantum::BasicGate,
                std::shared_ptr<mindquantum::AmplitudeDampingChannel>>(module, "AmplitudeDampingChannel")
-        .def(py::init<bool, double, const VT<Index> &, const VT<Index> &>(), "daggered"_a, "damping_coeff"_a,
+        .def(py::init<bool, double, const qbits_t &, const qbits_t &>(), "daggered"_a, "damping_coeff"_a,
              "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::PhaseDampingChannel, mindquantum::BasicGate,
                std::shared_ptr<mindquantum::PhaseDampingChannel>>(module, "PhaseDampingChannel")
-        .def(py::init<double, const VT<Index> &, const VT<Index> &>(), "damping_coeff"_a, "obj_qubits"_a,
+        .def(py::init<double, const qbits_t &, const qbits_t &>(), "damping_coeff"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
 }
 
 void BindTypeDependentGate(py::module &module) {  // NOLINT(runtime/references)
     using mindquantum::CT;
     using mindquantum::Index;
+    using mindquantum::qbits_t;
     using mindquantum::VT;
     using mindquantum::VVT;
     using parameter::ParameterResolver;
     py::class_<mindquantum::RXGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::RXGate>>(module, "RXGate")
-        .def(py::init<const ParameterResolver &, const VT<Index> &, const VT<Index> &>(), "pr"_a, "obj_qubits"_a,
+        .def(py::init<const ParameterResolver &, const qbits_t &, const qbits_t &>(), "pr"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::RYGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::RYGate>>(module, "RYGate")
-        .def(py::init<const ParameterResolver &, const VT<Index> &, const VT<Index> &>(), "pr"_a, "obj_qubits"_a,
+        .def(py::init<const ParameterResolver &, const qbits_t &, const qbits_t &>(), "pr"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::RZGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::RZGate>>(module, "RZGate")
-        .def(py::init<const ParameterResolver &, const VT<Index> &, const VT<Index> &>(), "pr"_a, "obj_qubits"_a,
+        .def(py::init<const ParameterResolver &, const qbits_t &, const qbits_t &>(), "pr"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::RxxGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::RxxGate>>(module, "RxxGate")
-        .def(py::init<const ParameterResolver &, const VT<Index> &, const VT<Index> &>(), "pr"_a, "obj_qubits"_a,
+        .def(py::init<const ParameterResolver &, const qbits_t &, const qbits_t &>(), "pr"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::RyyGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::RyyGate>>(module, "RyyGate")
-        .def(py::init<const ParameterResolver &, const VT<Index> &, const VT<Index> &>(), "pr"_a, "obj_qubits"_a,
+        .def(py::init<const ParameterResolver &, const qbits_t &, const qbits_t &>(), "pr"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::RzzGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::RzzGate>>(module, "RzzGate")
-        .def(py::init<const ParameterResolver &, const VT<Index> &, const VT<Index> &>(), "pr"_a, "obj_qubits"_a,
+        .def(py::init<const ParameterResolver &, const qbits_t &, const qbits_t &>(), "pr"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::RxyGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::RxyGate>>(module, "RxyGate")
-        .def(py::init<const ParameterResolver &, const VT<Index> &, const VT<Index> &>(), "pr"_a, "obj_qubits"_a,
+        .def(py::init<const ParameterResolver &, const qbits_t &, const qbits_t &>(), "pr"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::RxzGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::RxzGate>>(module, "RxzGate")
-        .def(py::init<const ParameterResolver &, const VT<Index> &, const VT<Index> &>(), "pr"_a, "obj_qubits"_a,
+        .def(py::init<const ParameterResolver &, const qbits_t &, const qbits_t &>(), "pr"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::RyzGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::RyzGate>>(module, "RyzGate")
-        .def(py::init<const ParameterResolver &, const VT<Index> &, const VT<Index> &>(), "pr"_a, "obj_qubits"_a,
+        .def(py::init<const ParameterResolver &, const qbits_t &, const qbits_t &>(), "pr"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::GPGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::GPGate>>(module, "GPGate")
-        .def(py::init<const ParameterResolver &, const VT<Index> &, const VT<Index> &>(), "pr"_a, "obj_qubits"_a,
+        .def(py::init<const ParameterResolver &, const qbits_t &, const qbits_t &>(), "pr"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::PSGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::PSGate>>(module, "PSGate")
-        .def(py::init<const ParameterResolver &, const VT<Index> &, const VT<Index> &>(), "pr"_a, "obj_qubits"_a,
+        .def(py::init<const ParameterResolver &, const qbits_t &, const qbits_t &>(), "pr"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::U3, mindquantum::BasicGate, std::shared_ptr<mindquantum::U3>>(module, "u3")
-        .def(py::init<const ParameterResolver &, const ParameterResolver &, const ParameterResolver &,
-                      const VT<Index> &, const VT<Index> &>(),
+        .def(py::init<const ParameterResolver &, const ParameterResolver &, const ParameterResolver &, const qbits_t &,
+                      const qbits_t &>(),
              "theta"_a, "phi"_a, "lambda"_a, "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::FSim, mindquantum::BasicGate, std::shared_ptr<mindquantum::FSim>>(module, "fsim")
-        .def(py::init<const ParameterResolver &, const ParameterResolver &, const VT<Index> &, const VT<Index> &>(),
+        .def(py::init<const ParameterResolver &, const ParameterResolver &, const qbits_t &, const qbits_t &>(),
              "theta"_a, "phi"_a, "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::KrausChannel, mindquantum::BasicGate, std::shared_ptr<mindquantum::KrausChannel>>(
         module, "KrausChannel")
-        .def(py::init<const VT<VVT<CT<double>>> &, const VT<Index> &, const VT<Index> &>(), "kraus_operator_set"_a,
+        .def(py::init<const VT<VVT<CT<double>>> &, const qbits_t &, const qbits_t &>(), "kraus_operator_set"_a,
              "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::CustomGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::CustomGate>>(module,
                                                                                                           "CustomGate")
-        .def(py::init<std::string, uint64_t, uint64_t, int, const ParameterResolver, const VT<Index> &,
-                      const VT<Index> &>(),
-             "name"_a, "m_addr"_a, "dm_addr"_a, "dim"_a, "pr"_a, "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>())
-        .def(py::init<std::string, const tensor::Matrix &, const VT<Index> &, const VT<Index> &>(), "name"_a, "mat"_a,
+        .def(
+            py::init<std::string, uint64_t, uint64_t, int, const ParameterResolver, const qbits_t &, const qbits_t &>(),
+            "name"_a, "m_addr"_a, "dm_addr"_a, "dim"_a, "pr"_a, "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>())
+        .def(py::init<std::string, const tensor::Matrix &, const qbits_t &, const qbits_t &>(), "name"_a, "mat"_a,
              "obj_qubits"_a, "ctrl_qubits"_a);
 }
 template <typename T>
