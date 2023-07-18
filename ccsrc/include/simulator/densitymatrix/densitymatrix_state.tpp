@@ -117,7 +117,7 @@ tensor::TDtype DensityMatrixState<qs_policy_t_>::DType() {
 
 template <typename qs_policy_t_>
 void DensityMatrixState<qs_policy_t_>::Reset() {
-    qs_policy_t::Reset(&qs, dim);
+    qs_policy_t::Reset(&qs);
 }
 
 template <typename qs_policy_t_>

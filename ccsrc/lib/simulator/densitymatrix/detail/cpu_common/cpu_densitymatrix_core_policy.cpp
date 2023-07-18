@@ -39,7 +39,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::InitState(index_t dim, bo
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t* qs_p, index_t dim, bool zero_state) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t* qs_p) {
     derived::FreeState(qs_p);
 }
 
@@ -222,7 +222,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::PureStateVector(const qs_
         return qs_vector;
     }
     py_qs_datas_t qs_vector(dim);
-    index_t base;
+    index_t base = 0;
     calc_type base_value;
     for (index_t i = 0; i < dim; i++) {
         if (qs[IdxMap(i, i)].real() > 1e-8) {
@@ -269,7 +269,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* q
                 }
             })
     }
-    Reset(qs_p, dim, false);
+    Reset(qs_p);
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
         auto mask_f = mask.mask_x | mask.mask_y;

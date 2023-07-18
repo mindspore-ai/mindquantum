@@ -46,7 +46,7 @@ struct Matrix : public Tensor {
         }
         auto t = Tensor(tmp);
         this->dtype = t.dtype;
-        this->device = t.device;
+        this->device = device;
         this->data = t.data;
         this->dim = t.dim;
         t.data = nullptr;

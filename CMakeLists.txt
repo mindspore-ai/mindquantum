@@ -57,7 +57,7 @@ set(MQ_INSTALL_DOCDIR "${CMAKE_INSTALL_DATADIR}/doc/mindquantum")
 set(MQ_INSTALL_CMAKEDIR "${MQ_INSTALL_DATADIR}/cmake")
 set(MQ_INSTALL_3RDPARTYDIR "${MQ_INSTALL_LIBDIR}/third_party")
 
-add_compile_options(-Wall -Wextra -Wfloat-equal)
+# add_compile_options(-Wall -Wextra -Wfloat-equal)
 
 foreach(
   _type

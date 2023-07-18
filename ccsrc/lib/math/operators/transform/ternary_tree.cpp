@@ -11,6 +11,8 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
+#include <cstddef>
+
 #include "math/operators/transform.hpp"
 namespace operators::transform {
 qubit_op_t ternary_tree(const fermion_op_t& ops, int n_qubits) {
@@ -21,7 +23,7 @@ qubit_op_t ternary_tree(const fermion_op_t& ops, int n_qubits) {
         auto transformed_term = qubit_op_t("", coeff);
         for (const auto& [idx, value] : term) {
             qlist_t p1 = {};
-            if (2 * idx < 3 * d) {
+            if (2 * idx < static_cast<size_t>(3 * d)) {
                 for (int k = h; k > -1; k--) {
                     p1.push_back((2 * idx / static_cast<int>(std::round(std::pow(3, k))) % 3));
                 }
@@ -33,7 +35,7 @@ qubit_op_t ternary_tree(const fermion_op_t& ops, int n_qubits) {
             qlist_t x1 = {};
             qlist_t y1 = {};
             qlist_t z1 = {};
-            for (int k = 0; k < p1.size(); k++) {
+            for (int k = 0; k < static_cast<int>(p1.size()); k++) {
                 auto tmp = p1[k];
                 if (tmp == 0) {
                     x1.push_back((get_qubit_index(p1, k)));
@@ -44,7 +46,7 @@ qubit_op_t ternary_tree(const fermion_op_t& ops, int n_qubits) {
                 }
             }
             qlist_t p2 = {};
-            if (2 * idx < 3 * d) {
+            if (2 * idx < static_cast<size_t>(3 * d)) {
                 for (int k = h; k > -1; k--) {
                     p2.push_back(((2 * idx + 1) / static_cast<int>(std::round(std::pow(3, k))) % 3));
                 }
@@ -56,7 +58,7 @@ qubit_op_t ternary_tree(const fermion_op_t& ops, int n_qubits) {
             qlist_t x2 = {};
             qlist_t y2 = {};
             qlist_t z2 = {};
-            for (int k = 0; k < p2.size(); k++) {
+            for (int k = 0; k < static_cast<int>(p2.size()); k++) {
                 auto tmp = p2[k];
                 if (tmp == 0) {
                     x2.push_back((get_qubit_index(p2, k)));

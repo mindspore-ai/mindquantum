@@ -33,7 +33,7 @@ VT<VT<int>> GetCircuitDAG(int n, const VT<Gate>& gates) {
     VT<int> last(n, -1);
     VT<VT<int>> DAG(m);
 
-    for (int i = 0; i < gates.size(); ++i) {
+    for (int i = 0; i < static_cast<int>(gates.size()); ++i) {
         int q1 = gates[i].q1;
         int q2 = gates[i].q2;
 
@@ -95,7 +95,7 @@ bool SABRE::IsExecutable(const VT<int>& pi, int g) const {
 
 VT<int> SABRE::GetReversePi(const VT<int>& pi) const {
     VT<int> rpi(pi.size());
-    for (int i = 0; i < pi.size(); ++i) {
+    for (int i = 0; i < static_cast<int>(pi.size()); ++i) {
         rpi[pi[i]] = i;
     }
     return rpi;
@@ -182,7 +182,7 @@ SABRE::SABRE(const VT<std::shared_ptr<BasicGate>>& circ, const std::shared_ptr<Q
     // get DAG and RDAG of logical circuit
     this->DAG = GetCircuitDAG(num_logical, gates);
     this->RDAG = VT<VT<int>>(this->DAG.size());
-    for (int x; x < DAG.size(); ++x) {
+    for (int x = 0; x < static_cast<int>(DAG.size()); ++x) {
         for (int y : DAG[x])
             RDAG[y].push_back(x);
     }
@@ -212,12 +212,12 @@ VT<Gate> SABRE::HeuristicSearch(VT<int>& pi, const VT<VT<int>>& DAG) {
     VT<double> decay(pi.size(), 1);  // decay of logical qubits
 
     VT<int> indeg(DAG.size(), 0);  // in-degree of DAG nodes
-    for (int i = 0; i < DAG.size(); ++i)
+    for (int i = 0; i < static_cast<int>(DAG.size()); ++i)
         for (int j : DAG[i])
             indeg[j]++;
 
     std::list<int> F;  // front layer
-    for (int i = 0; i < DAG.size(); ++i)
+    for (int i = 0; i < static_cast<int>(DAG.size()); ++i)
         if (indeg[i] == 0)
             F.push_back(i);
 
@@ -298,7 +298,7 @@ std::pair<VT<VT<int>>, std::pair<VT<int>, VT<int>>> SABRE::Solve(int iter_num, d
 
     // generate random initial mapping
     VT<int> pi(this->num_physical);
-    for (int i = 0; i < pi.size(); ++i)
+    for (int i = 0; i < static_cast<int>(pi.size()); ++i)
         pi[i] = i;
 
     auto seed = std::chrono::system_clock::now().time_since_epoch().count();

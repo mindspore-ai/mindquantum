@@ -44,7 +44,7 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::InitState(index_t dim, bool zero
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t* qs_p, index_t dim) {
+void CPUVectorPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t* qs_p) {
     derived::FreeState(qs_p);
 }
 

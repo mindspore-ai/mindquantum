@@ -48,6 +48,9 @@ template <TDtype dtype>
 Tensor imag(void* data, size_t len) {
     constexpr TDtype real_t = to_real_dtype_t<dtype>;
     if constexpr (dtype == real_t) {
+        if (data == nullptr) {
+            throw std::runtime_error("data cannot be nullptr.");
+        }
         return cpu::zeros(len, dtype);
     } else {
         auto out = ops::cpu::init<real_t>(len);
@@ -116,11 +119,12 @@ bool is_all_zero(void* data, size_t len) {
     auto c_data = reinterpret_cast<to_device_t<dtype>*>(data);
     for (size_t i = 0; i < len; i++) {
         if constexpr (is_complex_v<to_device_t<dtype>>) {
-            if (std::real(c_data[i]) != 0 || std::imag(c_data[i]) != 0) {
+            if ((std::real(c_data[i]) > 0) || (std::real(c_data[i]) < 0) || (std::imag(c_data[i]) > 0)
+                || (std::imag(c_data[i]) < 0)) {
                 return false;
             }
         } else {
-            if (c_data[i] != 0) {
+            if ((c_data[i] > 0) || (c_data[i] < 0)) {
                 return false;
             }
         }
@@ -132,17 +136,17 @@ bool is_all_zero(const Tensor& t);
 // -----------------------------------------------------------------------------
 template <typename T1, typename T2>
 bool operator==(T1 a, const std::complex<T2>& b) {
-    return a == b.real();
+    return (!(a > b.real())) && (!(a < b.real()));
 }
 
 template <typename T1, typename T2>
 bool operator==(const std::complex<T1>& a, T2 b) {
-    return a.real() == b;
+    return (!(a.real() > b)) && (!(a.real() < b));
 }
 
 template <typename T1, typename T2>
 bool operator==(const std::complex<T1>& a, const std::complex<T2> b) {
-    return (a.real() == b.real()) && (a.imag() == b.imag());
+    return !(a.real() > b.real()) && !(a.real() < b.real()) && !(a.imag() > b.imag()) && !(a.imag() < b.imag());
 }
 
 template <TDtype lhs_dtype, TDtype rhs_dtype>
@@ -155,19 +159,36 @@ std::vector<bool> is_equal_to(void* lhs, size_t lhs_len, void* rhs, size_t rhs_l
     auto c_lhs = reinterpret_cast<lhs_t*>(lhs);
     auto c_rhs = reinterpret_cast<rhs_t*>(rhs);
     std::vector<bool> out;
-    if (lhs_len == 1) {
-        for (size_t i = 0; i < rhs_len; i++) {
-            out.push_back(c_lhs[0] == c_rhs[i]);
-        }
-    } else if (rhs_len == 1) {
-        for (size_t i = 0; i < lhs_len; i++) {
-            out.push_back(c_lhs[i] == c_rhs[0]);
+    if constexpr (!is_complex_dtype_v<lhs_dtype> && !is_complex_dtype_v<rhs_dtype>) {
+        if (lhs_len == 1) {
+            for (size_t i = 0; i < rhs_len; i++) {
+                out.push_back(!(c_lhs[0] > c_rhs[i]) && !(c_lhs[0] < c_rhs[i]));
+            }
+        } else if (rhs_len == 1) {
+            for (size_t i = 0; i < lhs_len; i++) {
+                out.push_back(!(c_lhs[i] > c_rhs[0]) && !(c_lhs[i] < c_rhs[0]));
+            }
+        } else {
+            for (size_t i = 0; i < lhs_len; i++) {
+                out.push_back(!(c_lhs[i] > c_rhs[i]) && !(c_lhs[i] < c_rhs[i]));
+            }
         }
     } else {
-        for (size_t i = 0; i < lhs_len; i++) {
-            out.push_back(c_lhs[i] == c_rhs[i]);
+        if (lhs_len == 1) {
+            for (size_t i = 0; i < rhs_len; i++) {
+                out.push_back(c_lhs[0] == c_rhs[i]);
+            }
+        } else if (rhs_len == 1) {
+            for (size_t i = 0; i < lhs_len; i++) {
+                out.push_back(c_lhs[i] == c_rhs[0]);
+            }
+        } else {
+            for (size_t i = 0; i < lhs_len; i++) {
+                out.push_back(c_lhs[i] == c_rhs[i]);
+            }
         }
     }
+
     return out;
 }
 

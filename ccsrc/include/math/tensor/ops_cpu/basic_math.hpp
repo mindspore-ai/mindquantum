@@ -54,7 +54,6 @@ void InplaceBinary(void* data, size_t len, void* other) {
     auto c_other = reinterpret_cast<other_t*>(other);
     auto ops = binary_ops<>();
     auto caster = cast_value<other_t, calc_t>();
-    auto first = c_other[0];
     for (size_t i = 0; i < len; i++) {
         if constexpr (is_array) {
             if constexpr (reverse) {
@@ -64,9 +63,9 @@ void InplaceBinary(void* data, size_t len, void* other) {
             }
         } else {
             if constexpr (reverse) {
-                c_data[i] = ops(caster(first), c_data[i]);
+                c_data[i] = ops(caster(c_other[0]), c_data[i]);
             } else {
-                c_data[i] = ops(c_data[i], caster(first));
+                c_data[i] = ops(c_data[i], caster(c_other[0]));
             }
         }
     }
@@ -83,7 +82,6 @@ Tensor GenerateBinary(void* data, size_t len, void* other) {
     auto ops = binary_ops<>();
     auto caster0 = cast_value<to_device_t<lhs_dtype>, to_device_t<upper_t>>();
     auto caster1 = cast_value<to_device_t<other_dtype>, to_device_t<upper_t>>();
-    auto first = c_other[0];
     for (size_t i = 0; i < len; i++) {
         if constexpr (is_array) {
             if constexpr (reverse) {
@@ -93,9 +91,9 @@ Tensor GenerateBinary(void* data, size_t len, void* other) {
             }
         } else {
             if constexpr (reverse) {
-                c_des[i] = ops(caster1(first), caster0(c_data[i]));
+                c_des[i] = ops(caster1(c_other[0]), caster0(c_data[i]));
             } else {
-                c_des[i] = ops(caster0(c_data[i]), caster1(first));
+                c_des[i] = ops(caster0(c_data[i]), caster1(c_other[0]));
             }
         }
     }
@@ -563,7 +561,7 @@ Matrix MatMul(const Matrix& m1, const Matrix& m2);
 // -----------------------------------------------------------------------------
 
 template <TDtype m1_dtype, TDtype m2_dtype>
-Tensor MatMul(void* m1, size_t* indptr, size_t* indices, size_t n_row, size_t n_col, size_t nnz, void* m2, size_t len) {
+Tensor MatMul(void* m1, size_t* indptr, size_t* indices, size_t n_row, size_t n_col, void* m2, size_t len) {
     if (n_col != len) {
         throw std::runtime_error("Dimension mismatch: cannot multiply matrix and vector.");
     }

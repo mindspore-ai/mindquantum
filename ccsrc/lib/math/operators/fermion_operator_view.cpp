@@ -126,7 +126,7 @@ std::vector<uint64_t> SingleFermionStr::NumOneMask(const compress_term_t& fermio
 
 uint64_t SingleFermionStr::PrevOneMask(const std::vector<uint64_t>& one_mask, size_t idx) {
     uint64_t out = 0;
-    for (int i = 0; i < idx; i++) {
+    for (size_t i = 0; i < idx; i++) {
         if (i < one_mask.size()) {
             out += __builtin_popcount(one_mask[i]);
         }
@@ -185,7 +185,7 @@ bool SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_
         for (size_t i = ori_term.size(); i < group_id + 1; i++) {
             ori_term.push_back(0);
         }
-        ori_term[group_id] = ori_term[group_id] & (~local_mask) | (static_cast<uint64_t>(word)) << local_id;
+        ori_term[group_id] = (ori_term[group_id] & (~local_mask)) | (static_cast<uint64_t>(word)) << local_id;
     } else {
         TermValue lhs = static_cast<TermValue>((ori_term[group_id] & local_mask) >> local_id);
         auto res = fermion_product_map.at(lhs).at(word);
@@ -195,10 +195,11 @@ bool SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_
             }
             return false;
         }
-        ori_term[group_id] = ori_term[group_id] & (~local_mask) | (static_cast<uint64_t>(res)) << local_id;
-        one_mask = (one_mask + __builtin_popcount(static_cast<uint64_t>(word))
-                    & __builtin_popcount(ori_term[group_id] & low_mask))
-                   & 1;
+        ori_term[group_id] = (ori_term[group_id] & (~local_mask)) | (static_cast<uint64_t>(res)) << local_id;
+        one_mask
+            = (one_mask
+               + (__builtin_popcount(static_cast<uint64_t>(word)) & __builtin_popcount(ori_term[group_id] & low_mask)))
+              & 1;
     }
     if (one_mask & 1) {
         coeff *= -1.0;
@@ -210,7 +211,7 @@ bool SingleFermionStr::IsSameString(const key_t& k1, const key_t& k2) {
     if (k1[0] != k2[0]) {
         return false;
     }
-    for (int i = 1; i < std::max(k1.size(), k2.size()); i++) {
+    for (std::size_t i = 1; i < std::max(k1.size(), k2.size()); i++) {
         uint64_t this_fermion, other_fermion;
         if (i >= k1.size()) {
             this_fermion = 0;
@@ -289,11 +290,11 @@ auto SingleFermionStr::Mul(const compress_term_t& lhs, const compress_term_t& rh
         fermion_string.push_back(s);
         return {fermion_string, coeff};
     }
-    int min_size = std::min(l_k.size(), r_k.size());
-    int max_size = std::max(l_k.size(), r_k.size());
+    std::size_t min_size = std::min(l_k.size(), r_k.size());
+    std::size_t max_size = std::max(l_k.size(), r_k.size());
     int one_in_low = 0;
     int total_one = 0;
-    for (int i = 0; i < max_size; i++) {
+    for (std::size_t i = 0; i < max_size; i++) {
         if (i < min_size) {
             total_one += one_in_low & __builtin_popcount(r_k[i]);
             one_in_low += __builtin_popcount(l_k[i]);

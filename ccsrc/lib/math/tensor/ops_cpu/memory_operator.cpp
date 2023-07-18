@@ -51,6 +51,7 @@ Tensor init(size_t len, TDtype dtype) {
             case (TDtype::Complex128):                                                                                 \
                 return cast_to<src_t, TDtype::Complex128>(data, len);                                                  \
         }                                                                                                              \
+        break;                                                                                                         \
     }
 Tensor cast_to(const Tensor& t, TDtype des) {
     auto& data = t.data;

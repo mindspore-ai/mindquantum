@@ -41,11 +41,11 @@ struct CsrHdMatrix : sparse::CsrHdMatrix<T> {
         Index *indptr_py = static_cast<Index *>(indptr.request().ptr);
         Index *indices_py = static_cast<Index *>(indices.request().ptr);
         CTP<T> data_py = static_cast<CT<T> *>(data.request().ptr);
-        for (size_t i = 0; i < data.size(); i++) {
+        for (size_t i = 0; i < static_cast<size_t>(data.size()); i++) {
             indices_[i] = indices_py[i];
             data_[i] = data_py[i];
         }
-        for (size_t i = 0; i < indptr.size(); i++) {
+        for (size_t i = 0; i < static_cast<size_t>(indptr.size()); i++) {
             indptr_[i] = indptr_py[i];
         }
     }
