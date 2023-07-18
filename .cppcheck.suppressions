@@ -58,7 +58,6 @@ syntaxError:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatri
 
 unknownMacro:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_rot_pauli.cpp
 unknownMacro:ccsrc/include/core/sparse/paulimat.hpp
-unknownMacro:ccsrc/include/core/sparse/paulimat.hpp:58
 unknownMacro:ccsrc/include/math/tensor/ops_cpu/basic_math.hpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_single_ops.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_xlike.cpp
