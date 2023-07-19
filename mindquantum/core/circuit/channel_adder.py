@@ -84,8 +84,8 @@ class ReverseAdder(ChannelAdderBase):
 
     def __init__(self, adder: ChannelAdderBase):
         """Initialize a channel adder."""
-        super().__init__(adder.add_after)
         self.adder = adder
+        super().__init__(adder.add_after)
 
     def _accepter(self, *args, **kwargs) -> typing.List[typing.Union[FunctionType, MethodType]]:
         """Construct accepter rules."""
