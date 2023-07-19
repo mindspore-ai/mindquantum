@@ -43,7 +43,6 @@
 #include "ops/gates.hpp"
 #include "ops/hamiltonian.hpp"
 #include "simulator/densitymatrix/densitymatrix_state.hpp"
-#include "simulator/types.hpp"
 
 namespace mindquantum::sim::densitymatrix::detail {
 
@@ -118,7 +117,7 @@ tensor::TDtype DensityMatrixState<qs_policy_t_>::DType() {
 
 template <typename qs_policy_t_>
 void DensityMatrixState<qs_policy_t_>::Reset() {
-    qs_policy_t::Reset(&qs, dim);
+    qs_policy_t::Reset(&qs);
 }
 
 template <typename qs_policy_t_>

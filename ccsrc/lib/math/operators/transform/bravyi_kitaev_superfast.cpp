@@ -176,11 +176,11 @@ edge_enum_t enumerate_edges(const edge_matrix_t& edge_matrix) {
     return edge_enum;
 }
 
-qubit_op_t get_b(int i, const edge_matrix_t& edge_matrix, edge_enum_t& edge_enum) {
+qubit_op_t get_b(int i, const edge_matrix_t& edge_matrix, const edge_enum_t& edge_enum) {
     qubit_op_t::terms_t terms;
-    for (int j = 0; j < edge_matrix[i].size(); j++) {
+    for (int j = 0; j < static_cast<int>(edge_matrix[i].size()); j++) {
         if (edge_matrix[i][j] != 0) {
-            terms.emplace_back(edge_enum[std::pair<int, int>{i, j}],
+            terms.emplace_back(edge_enum.at(std::pair<int, int>{i, j}),
                                qubit::TermValue::Z);  // not sure if it is correct
         }
     }
@@ -188,18 +188,18 @@ qubit_op_t get_b(int i, const edge_matrix_t& edge_matrix, edge_enum_t& edge_enum
     return out;
 }
 
-qubit_op_t get_a(int i, int j, const edge_matrix_t& edge_matrix, edge_enum_t& edge_enum) {
+qubit_op_t get_a(int i, int j, const edge_matrix_t& edge_matrix, const edge_enum_t& edge_enum) {
     qubit_op_t::terms_t terms;
-    terms.emplace_back(edge_enum[std::pair<int, int>{i, j}], qubit::TermValue::X);
+    terms.emplace_back(edge_enum.at(std::pair<int, int>{i, j}), qubit::TermValue::X);
     for (int k = 0; k < j; k++) {
         if (edge_matrix[k][i] != 0) {
-            terms.emplace_back(edge_enum[std::pair<int, int>{k, i}],
+            terms.emplace_back(edge_enum.at(std::pair<int, int>{k, i}),
                                qubit::TermValue::Z);  // not sure if it is correct
         }
     }
     for (int s = 0; s < i; s++) {
         if (edge_matrix[s][j] != 0) {
-            terms.emplace_back(edge_enum[std::pair<int, int>{s, j}],
+            terms.emplace_back(edge_enum.at(std::pair<int, int>{s, j}),
                                qubit::TermValue::Z);  // not sure if it is correct
         }
     }
@@ -207,30 +207,31 @@ qubit_op_t get_a(int i, int j, const edge_matrix_t& edge_matrix, edge_enum_t& ed
     return out;
 }
 
-qubit_op_t transformed_number_operator(int i, const edge_matrix_t& edge_matrix, edge_enum_t& edge_enum) {
+qubit_op_t transformed_number_operator(int i, const edge_matrix_t& edge_matrix, const edge_enum_t& edge_enum) {
     return (qubit_op_t("") - get_b(i, edge_matrix, edge_enum)) * tensor::ops::init_with_value(0.5);
 }
 
-qubit_op_t transformed_excitation_operator(int i, int j, const edge_matrix_t& edge_matrix, edge_enum_t& edge_enum) {
+qubit_op_t transformed_excitation_operator(int i, int j, const edge_matrix_t& edge_matrix,
+                                           const edge_enum_t& edge_enum) {
     qubit_op_t a_ij = get_a(i, j, edge_matrix, edge_enum);
     return (a_ij * get_b(j, edge_matrix, edge_enum) + get_b(i, edge_matrix, edge_enum) * a_ij)
            * tensor::ops::init_with_value(std::complex<float>(0, -0.5));
 }
 
-qubit_op_t transformed_exchange_operator(int i, int j, const edge_matrix_t& edge_matrix, edge_enum_t& edge_enum) {
+qubit_op_t transformed_exchange_operator(int i, int j, const edge_matrix_t& edge_matrix, const edge_enum_t& edge_enum) {
     return ((qubit_op_t("") - get_b(i, edge_matrix, edge_enum)) * (qubit_op_t("") - get_b(j, edge_matrix, edge_enum))
             * tensor::ops::init_with_value(0.25));
 }
 
 qubit_op_t transformed_number_excitation_operator(int i, int j, int k, const edge_matrix_t& edge_matrix,
-                                                  edge_enum_t& edge_enum) {
+                                                  const edge_enum_t& edge_enum) {
     auto a_ik = get_a(i, k, edge_matrix, edge_enum);
     return ((a_ik * get_b(k, edge_matrix, edge_enum) + get_b(i, edge_matrix, edge_enum) * a_ik)
             * (qubit_op_t("") - get_b(j, edge_matrix, edge_enum)) * tensor::ops::init_with_value(-0.25));
 }
 
 qubit_op_t transformed_double_excitation_operator(int i, int j, int k, int l, const edge_matrix_t& edge_matrix,
-                                                  edge_enum_t& edge_enum) {
+                                                  const edge_enum_t& edge_enum) {
     auto b_i = get_b(i, edge_matrix, edge_enum);
     auto b_j = get_b(j, edge_matrix, edge_enum);
     auto b_k = get_b(k, edge_matrix, edge_enum);

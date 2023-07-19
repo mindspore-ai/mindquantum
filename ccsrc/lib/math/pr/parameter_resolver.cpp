@@ -76,7 +76,7 @@ std::string ParameterResolver::ToString() const {
         out += "  data: [],\n";
     } else {
         out += "  data: [\n";
-        int i = 0;
+        std::size_t i = 0;
         for (auto& [k, v] : this->data_) {
             out += "         " + k + ": " + tn::ops::to_string(v, true);
             i += 1;
@@ -90,7 +90,7 @@ std::string ParameterResolver::ToString() const {
     out += "  const: " + tn::ops::to_string(this->const_value, true);
     if (this->no_grad_parameters_.size() != 0) {
         out += ",\n  no grad parameters: {";
-        int i = 0;
+        std::size_t i = 0;
         for (auto& v : this->no_grad_parameters_) {
             out += v;
             i += 1;
@@ -102,7 +102,7 @@ std::string ParameterResolver::ToString() const {
     }
     if (this->encoder_parameters_.size() != 0) {
         out += ",\n  encoder parameters: {";
-        int i = 0;
+        std::size_t i = 0;
         for (auto& v : this->encoder_parameters_) {
             out += v;
             i += 1;

@@ -25,13 +25,12 @@
 namespace mindquantum::sim::rt {
 struct Gate {
     GateID gate = GateID::null;
-    std::vector<Index> objs;
-    std::vector<Index> ctrls;
+    qbits_t objs;
+    qbits_t ctrls;
     double ang = 0;
     std::string m_key = "";
     Gate() = default;
-    Gate(GateID gate, const std::vector<Index> &objs, const std::vector<Index> &ctrls)
-        : gate(gate), objs(objs), ctrls(ctrls) {
+    Gate(GateID gate, const qbits_t &objs, const qbits_t &ctrls) : gate(gate), objs(objs), ctrls(ctrls) {
     }
 
     void Reset() {

@@ -106,12 +106,12 @@ void SinglePauliStr::InplaceMulCompressTerm(const term_t& term, compress_term_t&
         for (size_t i = pauli_string.size(); i < group_id + 1; i++) {
             pauli_string.push_back(0);
         }
-        pauli_string[group_id] = pauli_string[group_id] & (~local_mask) | (static_cast<uint64_t>(word)) << local_id;
+        pauli_string[group_id] = (pauli_string[group_id] & (~local_mask)) | (static_cast<uint64_t>(word)) << local_id;
     } else {
         TermValue lhs = static_cast<TermValue>((pauli_string[group_id] & local_mask) >> local_id);
         auto [t, res] = pauli_product_map.at(lhs).at(word);
         coeff = coeff * t;
-        pauli_string[group_id] = pauli_string[group_id] & (~local_mask) | (static_cast<uint64_t>(res)) << local_id;
+        pauli_string[group_id] = (pauli_string[group_id] & (~local_mask)) | (static_cast<uint64_t>(res)) << local_id;
     }
 }
 
@@ -119,7 +119,7 @@ bool SinglePauliStr::IsSameString(const key_t& k1, const key_t& k2) {
     if (k1[0] != k2[0]) {
         return false;
     }
-    for (int i = 1; i < std::max(k1.size(), k2.size()); i++) {
+    for (std::size_t i = 1; i < std::max(k1.size(), k2.size()); i++) {
         uint64_t this_pauli, other_pauli;
         if (i >= k1.size()) {
             this_pauli = 0;
@@ -188,7 +188,7 @@ auto SinglePauliStr::Mul(const compress_term_t& lhs, const compress_term_t& rhs)
             auto [t, s] = MulSingleCompressTerm(l_k[i], r_k[i]);
             coeff = coeff * t;
             pauli_string.push_back(s);
-        } else if (i >= l_k.size()) {
+        } else if (i >= static_cast<int>(l_k.size())) {
             pauli_string.push_back(r_k[i]);
         } else {
             pauli_string.push_back(l_k[i]);

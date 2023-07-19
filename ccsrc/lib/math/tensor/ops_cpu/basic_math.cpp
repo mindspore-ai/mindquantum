@@ -53,19 +53,19 @@ Matrix MatMul(const Matrix& m1, const Matrix& m2) {
         switch (m2.dtype) {                                                                                            \
             case TDtype::Float32: {                                                                                    \
                 return MatMul<m1_dtype, TDtype::Float32>(m1.data_.data, m1.indptr_, m1.indices_, m1.n_row, m1.n_col,   \
-                                                         m1.nnz, m2.data, m2.dim);                                     \
+                                                         m2.data, m2.dim);                                             \
             }                                                                                                          \
             case TDtype::Float64: {                                                                                    \
                 return MatMul<m1_dtype, TDtype::Float64>(m1.data_.data, m1.indptr_, m1.indices_, m1.n_row, m1.n_col,   \
-                                                         m1.nnz, m2.data, m2.dim);                                     \
+                                                         m2.data, m2.dim);                                             \
             }                                                                                                          \
             case TDtype::Complex64: {                                                                                  \
                 return MatMul<m1_dtype, TDtype::Complex64>(m1.data_.data, m1.indptr_, m1.indices_, m1.n_row, m1.n_col, \
-                                                           m1.nnz, m2.data, m2.dim);                                   \
+                                                           m2.data, m2.dim);                                           \
             }                                                                                                          \
             case TDtype::Complex128: {                                                                                 \
                 return MatMul<m1_dtype, TDtype::Complex128>(m1.data_.data, m1.indptr_, m1.indices_, m1.n_row,          \
-                                                            m1.n_col, m1.nnz, m2.data, m2.dim);                        \
+                                                            m1.n_col, m2.data, m2.dim);                                \
             }                                                                                                          \
         }                                                                                                              \
         break;                                                                                                         \

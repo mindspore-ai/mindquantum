@@ -68,15 +68,15 @@ struct U3 : public Parameterizable {
     parameter::ParameterResolver lambda;
     tensor::Matrix base_matrix_;
     U3(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi,
-       const parameter::ParameterResolver& lambda, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits);
+       const parameter::ParameterResolver& lambda, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits);
 };
 
 struct FSim : public Parameterizable {
     parameter::ParameterResolver theta;
     parameter::ParameterResolver phi;
     tensor::Matrix base_matrix_;
-    FSim(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi,
-         const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits);
+    FSim(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi, const qbits_t& obj_qubits,
+         const qbits_t& ctrl_qubits);
 };
 }  // namespace mindquantum
 #endif  // MINDQUANTUM_GATE_GATES_HPP_

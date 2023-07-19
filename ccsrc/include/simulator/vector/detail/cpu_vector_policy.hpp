@@ -29,7 +29,6 @@
 #include "core/sparse/csrhdmatrix.hpp"
 #include "core/utils.hpp"
 #include "math/tensor/traits.hpp"
-#include "simulator/types.hpp"
 
 namespace mindquantum::sim::vector::detail {
 struct CPUVectorPolicyAvxFloat;
@@ -52,7 +51,7 @@ struct CPUVectorPolicyBase {
     // ========================================================================================================
 
     static qs_data_p_t InitState(index_t dim, bool zero_state = true);
-    static void Reset(qs_data_p_t* qs_p, index_t dim);
+    static void Reset(qs_data_p_t* qs_p);
     static void FreeState(qs_data_p_t* qs_p);
     static void Display(const qs_data_p_t& qs, qbit_t n_qubits, qbit_t q_limit = 10);
     static void SetToZeroExcept(qs_data_p_t* qs_p, index_t ctrl_mask, index_t dim);

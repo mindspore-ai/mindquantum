@@ -22,7 +22,6 @@
 #include <pybind11/stl.h>
 
 #include "math/pr/parameter_resolver.hpp"
-#include "simulator/types.hpp"
 
 #ifdef __CUDACC__
 #    include "simulator/vector/detail/gpu_vector_double_policy.cuh"
@@ -45,7 +44,7 @@
 template <typename sim_t>
 auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLINT
     using namespace pybind11::literals;                                 // NOLINT
-    using qbit_t = mindquantum::sim::qbit_t;
+    using qbit_t = mindquantum::qbit_t;
     using calc_type = typename sim_t::calc_type;
     using circuit_t = typename sim_t::circuit_t;
 

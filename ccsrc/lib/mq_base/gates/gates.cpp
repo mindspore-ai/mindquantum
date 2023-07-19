@@ -72,19 +72,19 @@ tensor::Matrix U3DiffLambdaMatrix(tensor::Tensor theta, tensor::Tensor phi, tens
 }
 
 U3::U3(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi,
-       const parameter::ParameterResolver& lambda, const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits)
-    : theta(theta)
+       const parameter::ParameterResolver& lambda, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits)
+    : Parameterizable(GateID::U3, {theta, phi, lambda}, obj_qubits, ctrl_qubits)
+    , theta(theta)
     , phi(phi)
-    , lambda(lambda)
-    , Parameterizable(GateID::U3, {theta, phi, lambda}, obj_qubits, ctrl_qubits) {
+    , lambda(lambda) {
     if (!this->parameterized_) {
         this->base_matrix_ = U3Matrix(theta.const_value, phi.const_value, lambda.const_value);
     }
 }
 
 FSim::FSim(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi,
-           const VT<Index>& obj_qubits, const VT<Index>& ctrl_qubits)
-    : theta(theta), phi(phi), Parameterizable(GateID::FSim, {theta, phi}, obj_qubits, ctrl_qubits) {
+           const qbits_t& obj_qubits, const qbits_t& ctrl_qubits)
+    : Parameterizable(GateID::FSim, {theta, phi}, obj_qubits, ctrl_qubits), theta(theta), phi(phi) {
     if (!this->parameterized_) {
         this->base_matrix_ = FSimMatrix(theta.const_value, phi.const_value);
     }
