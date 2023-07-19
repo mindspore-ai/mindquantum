@@ -22,6 +22,7 @@ import numpy as np
 
 from mindquantum import mqbackend as mb
 from mindquantum.utils.f import _check_num_array
+from mindquantum.utils.string_utils import string_expression
 
 from .basic import BasicGate, NoiseGate, NonHermitianGate, SelfHermitianGate
 
@@ -98,7 +99,7 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
 
     def __type_specific_str__(self):
         """Return a string representation of the object."""
-        return f'px={self.px}, py={self.py}, pz={self.pz}'
+        return f'px={string_expression(self.px)}, py={string_expression(self.py)}, pz={string_expression(self.pz)}'
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
@@ -164,7 +165,7 @@ class BitFlipChannel(PauliChannel):
 
     def __type_specific_str__(self):
         """Return a string representation of the object."""
-        return f'p={self.p}'
+        return f'p={string_expression(self.p)}'
 
 
 class PhaseFlipChannel(PauliChannel):
@@ -215,7 +216,7 @@ class PhaseFlipChannel(PauliChannel):
 
     def __type_specific_str__(self):
         """Return a string representation of the object."""
-        return f'p={self.p}'
+        return f'p={string_expression(self.p)}'
 
 
 class BitPhaseFlipChannel(PauliChannel):
@@ -267,7 +268,7 @@ class BitPhaseFlipChannel(PauliChannel):
 
     def __type_specific_str__(self):
         """Return a string representation of the object."""
-        return f'p={self.p}'
+        return f'p={string_expression(self.p)}'
 
 
 class DepolarizingChannel(NoiseGate, SelfHermitianGate):
@@ -357,7 +358,7 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
 
     def __type_specific_str__(self):
         """Return a string representation of the object."""
-        return f'p={self.p}'
+        return f'p={string_expression(self.p)}'
 
 
 class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
@@ -412,7 +413,7 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
 
     def __type_specific_str__(self):
         """Return a string representation of the object."""
-        return f'γ={self.gamma}'
+        return f'γ={string_expression(self.gamma)}'
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
@@ -477,7 +478,7 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
 
     def __type_specific_str__(self):
         """Return a string representation of the object."""
-        return f'γ={self.gamma}'
+        return f'γ={string_expression(self.gamma)}'
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
