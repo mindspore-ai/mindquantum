@@ -1,5 +1,5 @@
 mindquantum.core.circuit.BitFlipAdder
-========================================
+=====================================
 
 .. py:class:: mindquantum.core.circuit.BitFlipAdder(flip_rate: float, with_ctrl=True, add_after: bool = True)
 

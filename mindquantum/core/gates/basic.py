@@ -729,7 +729,15 @@ class ParamNonHerm(ParameterGate, NonHermitianGate):
 
 
 class NoiseGate(NoneParameterGate):
-    """Noise gate class."""
+    """
+    Noise gate class.
+
+    Args:
+        name (str): the name of this gate.
+        n_qubits (int): how many qubits is this gate.
+        obj_qubits (int, list[int]): Specific which qubits the gate act on.
+        ctrl_qubits (int, list[int]): Specific the control qubits. Default, ``None``.
+    """
 
     def __str_in_terminal__(self):
         """Return a string representation of the object."""

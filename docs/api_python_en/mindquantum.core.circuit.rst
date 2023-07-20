@@ -47,6 +47,7 @@ Channel adder
     :template: classtemplate.rst
 
     mindquantum.core.circuit.ChannelAdderBase
+    mindquantum.core.circuit.NoiseChannelAdder
     mindquantum.core.circuit.MeasureAccepter
     mindquantum.core.circuit.ReverseAdder
     mindquantum.core.circuit.NoiseExcluder
