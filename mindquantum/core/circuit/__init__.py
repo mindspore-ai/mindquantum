@@ -24,6 +24,7 @@ from .channel_adder import (
     ChannelAdderBase,
     MeasureAccepter,
     MixerAdder,
+    NoiseChannelAdder,
     NoiseExcluder,
     ReverseAdder,
     SequentialAdder,

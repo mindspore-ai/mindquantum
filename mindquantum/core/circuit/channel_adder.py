@@ -16,8 +16,10 @@
 import typing
 from types import FunctionType, MethodType
 
+from mindquantum.utils.type_value_check import _check_input_type
+
 from .. import gates
-from ..gates import BasicGate
+from ..gates import BasicGate, NoiseGate
 from .circuit import Circuit
 
 
@@ -136,7 +138,6 @@ class BitFlipAdder(ChannelAdderBase):
     def __init__(self, flip_rate: float, with_ctrl=True, add_after: bool = True):
         """Initialize a BitFlipAdder."""
         super().__init__(add_after=add_after)
-        self.with_ctrl = True
         self.flip_rate = flip_rate
         self.with_ctrl = with_ctrl
 
@@ -149,6 +150,38 @@ class BitFlipAdder(ChannelAdderBase):
         circ = Circuit()
         for qubit in g.obj_qubits + (g.ctrl_qubits if self.with_ctrl else []):
             circ += gates.BitFlipChannel(self.flip_rate).on(qubit)
+        return circ
+
+
+class NoiseChannelAdder(ChannelAdderBase):
+    """
+    Add single qubit quantum channel.
+
+    Args:
+        channel (:class:`~.core.gates.NoiseGate`): A single qubit quantum channel.
+        with_ctrl (bool): Whether add quantum channel for control qubits. Default: ``True``.
+        add_after (bool): Whether add this channel after quantum gate or not. If ``False``, the
+            channel will add before quantum gate. Default: ``True``.
+    """
+
+    def __init__(self, channel: NoiseGate, with_ctrl=True, add_after: bool = True):
+        """Initialize a BitFlipAdder."""
+        _check_input_type("channel", NoiseGate, channel)
+        if channel.n_qubits != 1:
+            raise ValueError(f"Requires a single qubit channel, but get {channel.n_qubits}, please customize a adder.")
+        super().__init__(add_after=add_after)
+        self.with_ctrl = with_ctrl
+        self.channel = channel
+
+    def __repr__(self):
+        """Return string expression of adder."""
+        return f"NoiseChannelAdder<channel={self.channel}, with_ctrl={self.with_ctrl}>"
+
+    def _handler(self, g: BasicGate, *args, **kwargs):
+        """Create action you will do if a gate is acceptable."""
+        circ = Circuit()
+        for qubit in g.obj_qubits + (g.ctrl_qubits if self.with_ctrl else []):
+            circ += self.channel.on(qubit)
         return circ
 
 
@@ -223,6 +256,7 @@ class SequentialAdder(ChannelAdderBase):
 
 __all__ = [
     "ChannelAdderBase",
+    "NoiseChannelAdder",
     "MeasureAccepter",
     "ReverseAdder",
     "NoiseExcluder",

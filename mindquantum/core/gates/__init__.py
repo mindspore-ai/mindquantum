@@ -80,6 +80,7 @@ from .measurement import Measure, MeasureResult
 __all__ = [
     "BasicGate",
     "QuantumGate",
+    "NoiseGate",
     "NoneParameterGate",
     "ParameterGate",
     "HERMITIAN_PROPERTIES",
