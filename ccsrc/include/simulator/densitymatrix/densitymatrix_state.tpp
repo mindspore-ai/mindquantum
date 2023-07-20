@@ -398,7 +398,13 @@ void DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicG
 
 template <typename qs_policy_t_>
 void DensityMatrixState<qs_policy_t_>::ApplyHamiltonian(const Hamiltonian<calc_type>& ham) {
-    qs_policy_t::ApplyTerms(&qs, ham.ham_, dim);
+    if (ham.how_to_ == ORIGIN) {
+        qs_policy_t::ApplyTerms(&qs, ham.ham_, dim);
+    } else if (ham.how_to_ == BACKEND) {
+        qs_policy_t::ApplyCsr(&qs, sparse::Csr_Plus_Csr<calc_type>(ham.ham_sparse_main_, ham.ham_sparse_second_), dim);
+    } else {
+        qs_policy_t::ApplyCsr(&qs, ham.ham_sparse_main_, dim);
+    }
 }
 
 template <typename qs_policy_t_>
@@ -536,11 +542,37 @@ std::map<std::string, int> DensityMatrixState<qs_policy_t_>::ApplyCircuit(const 
 }
 
 template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::GetStateExpectation(const qs_data_p_t& qs_out, const Hamiltonian<calc_type>& ham,
+                                                      index_t dim) const -> py_qs_data_t {
+    py_qs_data_t out;
+    if (ham.how_to_ == ORIGIN) {
+        out = qs_policy_t::ExpectationOfTerms(qs_out, ham.ham_, dim);
+    } else if (ham.how_to_ == BACKEND) {
+        out = qs_policy_t::ExpectationOfCsr(
+            qs_out, sparse::Csr_Plus_Csr<calc_type>(ham.ham_sparse_main_, ham.ham_sparse_second_), dim);
+    } else {
+        out = qs_policy_t::ExpectationOfCsr(qs_out, ham.ham_sparse_main_, dim);
+    }
+    return out;
+}
+
+template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
                                                       const parameter::ParameterResolver& pr) const -> py_qs_data_t {
-    auto rho = *this;
-    rho.ApplyCircuit(circ, pr);
-    return qs_policy_t::GetExpectation(rho.qs, ham.ham_, dim);
+    py_qs_data_t out;
+    auto sub_seed = static_cast<unsigned int>(static_cast<calc_type>(rng_()) * (1 << 20));
+    auto tmp_sim = derived_t(n_qubits, sub_seed);
+    tmp_sim.CopyQS(qs);
+    tmp_sim.ApplyCircuit(circ, pr);
+    if (ham.how_to_ == ORIGIN) {
+        out = qs_policy_t::ExpectationOfTerms(tmp_sim.qs, ham.ham_, dim);
+    } else if (ham.how_to_ == BACKEND) {
+        out = qs_policy_t::ExpectationOfCsr(
+            tmp_sim.qs, sparse::Csr_Plus_Csr<calc_type>(ham.ham_sparse_main_, ham.ham_sparse_second_), dim);
+    } else {
+        out = qs_policy_t::ExpectationOfCsr(tmp_sim.qs, ham.ham_sparse_main_, dim);
+    }
+    return out;
 }
 
 template <typename qs_policy_t_>
@@ -553,8 +585,8 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneOne(
     py_qs_datas_t f_and_g(1 + p_map.size(), 0);
     derived_t sim_qs = *this;
     sim_qs.ApplyCircuit(circ, pr);
-    f_and_g[0] = qs_policy_t::GetExpectation(sim_qs.qs, ham.ham_, dim);
-    auto ham_matrix = qs_policy_t::HamiltonianMatrix(ham.ham_, dim);
+    f_and_g[0] = GetStateExpectation(sim_qs.qs, ham, dim);
+    auto ham_matrix = qs_policy_t::HamiltonianMatrix(ham, dim);
     derived_t sim_ham{ham_matrix, n_qubits, seed};
     index_t n = circ.size();
     for (const auto& g : herm_circ) {
@@ -609,8 +641,8 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneMulti(
         }
         std::vector<derived_t> sim_hams(end - start);
         for (int j = start; j < end; j++) {
-            f_and_g[j][0] = qs_policy_t::GetExpectation(sim_qs.qs, hams[j]->ham_, dim);
-            auto ham_matrix = qs_policy_t::HamiltonianMatrix(hams[j]->ham_, dim);
+            f_and_g[j][0] = GetStateExpectation(sim_qs.qs, *hams[j], dim);
+            auto ham_matrix = qs_policy_t::HamiltonianMatrix(*hams[j], dim);
             sim_hams[j - start] = std::move(derived_t{ham_matrix, n_qubits, seed});
         }
         index_t n = circ.size();
@@ -714,9 +746,9 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneOne(const H
     py_qs_datas_t f_and_g(1 + p_map.size(), 0);
     derived_t sim_qs = *this;
     sim_qs.ApplyCircuit(circ, pr);
-    f_and_g[0] = qs_policy_t::GetExpectation(sim_qs.qs, ham.ham_, dim);
+    f_and_g[0] = GetStateExpectation(sim_qs.qs, ham, dim);
     sim_qs.CopyQS(this->qs);
-    auto ham_matrix = qs_policy_t::HamiltonianMatrix(ham.ham_, dim);
+    auto ham_matrix = qs_policy_t::HamiltonianMatrix(ham, dim);
     derived_t sim_ham{ham_matrix, n_qubits, seed};
     index_t n = circ.size();
     for (const auto& g : herm_circ) {
@@ -774,8 +806,8 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneMulti(
         }
         std::vector<derived_t> sim_hams(end - start);
         for (int j = start; j < end; j++) {
-            f_and_g[j][0] = qs_policy_t::GetExpectation(sim_qs.qs, hams[j]->ham_, dim);
-            auto ham_matrix = qs_policy_t::HamiltonianMatrix(hams[j]->ham_, dim);
+            f_and_g[j][0] = GetStateExpectation(sim_qs.qs, *hams[j], dim);
+            auto ham_matrix = qs_policy_t::HamiltonianMatrix(*hams[j], dim);
             sim_hams[j - start] = std::move(derived_t{ham_matrix, n_qubits, seed});
         }
         sim_qs.CopyQS(this->qs);

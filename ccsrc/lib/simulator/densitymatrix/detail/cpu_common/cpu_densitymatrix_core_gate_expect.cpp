@@ -28,8 +28,20 @@
 
 namespace mindquantum::sim::densitymatrix::detail {
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::HamiltonianMatrix(const std::vector<PauliTerm<calc_type>>& ham,
-                                                                         index_t dim) -> qs_data_p_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::HamiltonianMatrix(const Hamiltonian<calc_type>& ham, index_t dim)
+    -> qs_data_p_t {
+    if (ham.how_to_ == ORIGIN) {
+        return TermsToMatrix(ham.ham_, dim);
+    } else if (ham.how_to_ == BACKEND) {
+        return CsrToMatrix(sparse::Csr_Plus_Csr<calc_type>(ham.ham_sparse_main_, ham.ham_sparse_second_), dim);
+    } else {
+        return CsrToMatrix(ham.ham_sparse_main_, dim);
+    }
+}
+
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::TermsToMatrix(const std::vector<PauliTerm<calc_type>>& ham,
+                                                                     index_t dim) -> qs_data_p_t {
     qs_data_p_t out = InitState(dim, false);
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
@@ -51,9 +63,30 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::HamiltonianMatrix(const s
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetExpectation(const qs_data_p_t& qs_out,
-                                                                      const std::vector<PauliTerm<calc_type>>& ham,
-                                                                      index_t dim) -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::CsrToMatrix(
+    const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, index_t dim) -> qs_data_p_t {
+    if (dim != a->dim_) {
+        throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
+    }
+    qs_data_p_t out = InitState(dim, false);
+    auto data = a->data_;
+    auto indptr = a->indptr_;
+    auto indices = a->indices_;
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+            for (index_t j = indptr[i]; j < indptr[i + 1]; j++) {
+                if (i >= indices[j]) {
+                    out[IdxMap(i, indices[j])] = data[j];
+                }
+            }
+        })
+    return out;
+}
+
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectationOfTerms(const qs_data_p_t& qs_out,
+                                                                          const std::vector<PauliTerm<calc_type>>& ham,
+                                                                          index_t dim) -> qs_data_t {
     qs_data_p_t qs;
     bool will_free = false;
     if (qs_out == nullptr) {
@@ -87,6 +120,37 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetExpectation(const qs_d
                 })
         // clang-format on
     }
+    if (will_free) {
+        derived::FreeState(&qs);
+    }
+    return qs_data_t(e_r, e_i);
+}
+
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectationOfCsr(
+    const qs_data_p_t& qs_out, const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free = true;
+    } else {
+        qs = qs_out;
+    }
+    calc_type e_r = 0, e_i = 0;
+    auto data = a->data_;
+    auto indptr = a->indptr_;
+    auto indices = a->indices_;
+    THRESHOLD_OMP(
+        MQ_DO_PRAGMA(omp parallel for reduction(+:e_r, e_i) schedule(static)), dim, DimTh,
+            for (omp::idx_t i = 0; i < dim; i++) {
+                qs_data_t sum = {0.0, 0.0};
+                for (index_t j = indptr[i]; j < indptr[i + 1]; j++) {
+                    sum += data[j] * GetValue(qs, indices[j], i);
+                }
+                e_r += sum.real();
+                e_i += sum.imag();
+            })
     if (will_free) {
         derived::FreeState(&qs);
     }

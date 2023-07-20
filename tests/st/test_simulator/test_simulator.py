@@ -437,6 +437,41 @@ def test_non_hermitian_grad_ops2(config):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+def test_csr_ham(config):
+    """
+    Description: test csr matrix hamiltonian
+    Expectation: success.
+    """
+    virtual_qc, dtype = config
+    circ = Circuit([G.RX('a').on(0)])
+    circ += G.RY('b').on(0)
+    ham = Hamiltonian(csr_matrix([[1.0, 2.0], [2.0, 4.0]]), dtype=dtype)
+    sim = Simulator(virtual_qc, 1, dtype=dtype)
+    grad_ops = sim.get_expectation_with_grad(ham, circ)
+    f, g = grad_ops(np.array([1, 2]))
+    f_exp = np.conj(circ.matrix(np.array([1, 2])).T) @ ham.sparse_mat.toarray() @ circ.matrix(np.array([1, 2]))
+    f_exp = f_exp[0, 0]
+    assert np.allclose(f, f_exp)
+    if virtual_qc == 'mqmatrix':
+        sim2 = Simulator('mqvector', 1, dtype=dtype)
+        grad_ops2 = sim2.get_expectation_with_grad(ham, circ)
+        _, g2 = grad_ops2(np.array([1, 2]))
+        assert np.allclose(g, g2)
+    sim.apply_circuit(circ, np.array([1, 2]))
+    sim.apply_hamiltonian(ham)
+    qs = sim.get_qs()
+    qs_exp = ham.sparse_mat.toarray() @ circ.matrix(np.array([1, 2])) @ np.array([1, 0])
+    if virtual_qc == 'mqmatrix':
+        assert np.allclose(qs, np.outer(qs_exp, qs_exp.conj()))
+    else:
+        assert np.allclose(qs, qs_exp)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
 def test_inner_product(config):
     """
     Description: test inner product of two simulator
