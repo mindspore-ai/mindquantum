@@ -1,8 +1,0 @@
-#!/bin/bash
-
-echo "copy classification_of_iris_by_qnn.ipynb to classification_of_iris_by_qnn_$1.ipynb"
-cp classification_of_iris_by_qnn.ipynb classification_of_iris_by_qnn_$1.ipynb
-echo "copy Learning_MindQuantum.ipynb to Learning_MindQuantum_$1.ipynb"
-cp Learning_MindQuantum.ipynb Learning_MindQuantum_$1.ipynb
-echo "copy grover_search_algorithm_based_on_mindquantum.ipynb to grover_search_algorithm_based_on_mindquantum_$1.ipynb"
-cp grover_search_algorithm_based_on_mindquantum.ipynb grover_search_algorithm_based_on_mindquantum_$1.ipynb
