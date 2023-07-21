@@ -172,7 +172,6 @@ minversion = '6.0'
 testpaths = ['tests']
 addopts = "--ignore='tests/quick_test.py'"
 norecursedirs = ['third_party', 'mindquantum/ccsrc']
-mock_use_standalone_module = true
 markers = [
     'cxx_exp_projectq: tests involving the ProjectQ simulator',
     'env_onecard: test marker used on MindSpore CI for certain GPU runs',
@@ -188,12 +187,14 @@ filterwarnings = [
     'ignore:.*MindSpore not installed.*:UserWarning',
     'ignore:.*distutils Version classes are deprecated. Use packaging.version instead:DeprecationWarning',
     'ignore:.*ParameterResolver.__float__ returned non-float.*:DeprecationWarning',
+    'ignore:.*Override n_qubits and n_electrons with manually set*',
     'ignore:.*the matrix subclass is not the recommended way to represent.*:PendingDeprecationWarning',
     # From external packages
     'ignore:.*Call to deprecated create function Descriptor.*:DeprecationWarning',  # from cirq_google
     'ignore:.*Call to deprecated create function EnumDescriptor.*:DeprecationWarning',  # from cirq_google
     'ignore:.*Call to deprecated create function EnumValueDescriptor.*:DeprecationWarning',  # from cirq_google
-    'ignore:.*Call to deprecated create function FieldDescriptor.*:DeprecationWarning'  # from cirq_google
+    'ignore:.*Call to deprecated create function FieldDescriptor.*:DeprecationWarning',  # from cirq_google
+    'ignore:.*astroid.node_classes.*is deprecated*'
 ]
 
 
