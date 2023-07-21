@@ -1,0 +1,167 @@
+# [No.1] construct_wrapper.49
+# In file /tmp/ipykernel_342/2532391219.py(92)/
+funcgraph fg_49(
+        %para1 : Tensor(F64)[1, 4]    # x
+        , %para2 : Ref[Tensor(F32)][4]    # fc3.bias
+        , %para3 : Ref[Tensor(F32)][4, 32]    # fc3.weight
+        , %para4 : Ref[Tensor(F32)][32]    # fc2.bias
+        , %para5 : Ref[Tensor(F32)][32, 32]    # fc2.weight
+        , %para6 : Ref[Tensor(F32)][32]    # fc1.bias
+        , %para7 : Ref[Tensor(F32)][32, 4]    # fc1.weight
+    ) {
+
+#------------------------> 0
+    %1 = FuncGraph::fg_50(%para1)    #(Tensor(F64)[1, 4])    # fg_50=construct.50 #scope: Default
+      # In file /tmp/ipykernel_342/2532391219.py(96)/#[CNode]56
+    Primitive::Return{prim_type=1}(%1)    #(Undefined) #scope: Default
+      # In file /tmp/ipykernel_342/2532391219.py(96)/#[CNode]57
+}
+# order:
+#   1: construct_wrapper.49:[CNode]56{[0]: ValueNode<FuncGraph> construct.50, [1]: x}
+#   2: construct_wrapper.49:[CNode]57{[0]: ValueNode<Primitive> Return, [1]: [CNode]56}
+
+
+# [No.2] construct.50
+# In file /tmp/ipykernel_342/2532391219.py(92)/
+funcgraph fg_50[fg_49](
+        %para8 : Tensor(F64)[1, 4]    # x
+    ) {
+
+#------------------------> 1
+    %1 = FuncGraph::fg_51(%para8)    #(Tensor(F64)[1, 4])    # fg_51=construct.51 #scope: Default
+      # In file /tmp/ipykernel_342/2532391219.py(93)/#x
+    %2 = FuncGraph::fg_58(%1)    #(Undefined)    # fg_58=construct.58 #scope: Default
+      # In file /tmp/ipykernel_342/2532391219.py(94)/#x
+    %3 = FuncGraph::fg_59(%2)    #(Undefined)    # fg_59=construct.59 #scope: Default
+      # In file /tmp/ipykernel_342/2532391219.py(95)/#q_values
+    Primitive::Return{prim_type=1}(%3)    #(Undefined) #scope: Default
+      # In file /tmp/ipykernel_342/2532391219.py(96)/#[CNode]60
+}
+# order:
+#   1: construct.50:x{[0]: ValueNode<FuncGraph> construct.51, [1]: x}
+#   2: construct.50:x{[0]: ValueNode<FuncGraph> construct.58, [1]: x}
+#   3: construct.50:q_values{[0]: ValueNode<FuncGraph> construct.59, [1]: x}
+#   4: construct.50:[CNode]60{[0]: ValueNode<Primitive> Return, [1]: q_values}
+
+
+# [No.3] construct.51
+# In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(312)/    def construct(self, x):/
+funcgraph fg_51[fg_49](
+        %para9 : Tensor(F64)[1, 4]    # x
+    ) {
+
+#------------------------> 2
+    %1 = FuncGraph::fg_52(%para9, %para6, %para7)    #(Tensor(F64)[1, 4], Ref[Tensor(F32)][32], Ref[Tensor(F32)][32, 4])    # fg_52=L-construct.52 #scope: Default
+      # #[CNode]61
+    Primitive::Return{prim_type=1}(%1)    #(Undefined) #scope: Default/fc1-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(312)/    def construct(self, x):/#[CNode]62
+}
+# order:
+#   1: construct.51:[CNode]61{[0]: ValueNode<FuncGraph> L-construct.52, [1]: x, [2]: fc1.bias, [3]: fc1.weight}
+#   2: construct.51:[CNode]62{[0]: ValueNode<Primitive> Return, [1]: [CNode]61}
+
+
+# [No.4] L-construct.52
+# In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(312)/    def construct(self, x):/
+funcgraph fg_52(
+        %para10 : Tensor(F64)[1, 4]    # x
+        , %para11 : Ref[Tensor(F32)][32]    # L-fc3.bias
+        , %para12 : Ref[Tensor(F32)][32, 4]    # L-fc3.weight
+    ) {
+    %1 : Tuple[I64*2] = DoSignaturePrimitive::S-Prim-Shape{prim_type=1}(%para10)    #(Tensor(F64)[1, 4]) #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(322)/        if len(x_shape) != 2:/#Φx_shape
+    %2 : NoneType = DoSignaturePrimitive::S-Prim-check_dense_input_shape{prim_type=1}(%1)    #(Tuple[I64*2]) #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(314)/        check_dense_input_shape(x_shape)/#63
+    %3 : NoneType = Primitive::stop_gradient{prim_type=1}(%2)    #(NoneType) #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(312)/    def construct(self, x):/#64
+    %4 : I64 = FuncGraph::fg_65(%1)    #(Tuple[I64*2])    # fg_65=L-ms_len.65 #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(315)/        if len(x_shape) != 2:/#66
+    %5 : Bool = DoSignaturePrimitive::S-Prim-not_equal{prim_type=1}(%4, I64(2))    #(I64, I64) #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(315)/        if len(x_shape) != 2:/#67
+    %6 : Bool = FuncGraph::fg_68(%5)    #(Bool)    # fg_68=L-bool_.68 #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(315)/        if len(x_shape) != 2:/#67
+    %7 : Func = Primitive::Switch{prim_type=1}(%6, FuncGraph::fg_69, FuncGraph::fg_53)    #(Bool, Func, Func)    # fg_69=L-✓construct.69, fg_53=L-✗construct.53 #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(315)/        if len(x_shape) != 2:/#70
+
+#------------------------> 3
+    %8 = %7() #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(315)/        if len(x_shape) != 2:/#71
+    %9 = Primitive::Depend{prim_type=1}[side_effect_propagate=I64(1)](%8, %3)    #(Undefined, NoneType) #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(312)/    def construct(self, x):/#72
+    Primitive::Return{prim_type=1}(%9)    #(Undefined) #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(312)/    def construct(self, x):/#[CNode]73
+}
+# order:
+#   1: L-construct.52:Φx_shape{[0]: ValueNode<DoSignaturePrimitive> S-Prim-Shape, [1]: x}
+#   2: L-construct.52:63{[0]: ValueNode<DoSignaturePrimitive> S-Prim-check_dense_input_shape, [1]: Φx_shape}
+#   3: L-construct.52:66{[0]: ValueNode<FuncGraph> L-ms_len.65, [1]: Φx_shape}
+#   4: L-construct.52:67{[0]: ValueNode<DoSignaturePrimitive> S-Prim-not_equal, [1]: 66, [2]: ValueNode<Int64Imm> 2}
+#   5: L-construct.52:67{[0]: ValueNode<FuncGraph> L-bool_.68, [1]: 67}
+#   6: L-construct.52:70{[0]: ValueNode<Primitive> Switch, [1]: 67, [2]: ValueNode<FuncGraph> L-✓construct.69, [3]: ValueNode<FuncGraph> L-✗construct.53}
+#   7: L-construct.52:71{[0]: 70}
+#   8: L-construct.52:[CNode]73{[0]: ValueNode<Primitive> Return, [1]: 72}
+
+
+# [No.5] L-✗construct.53
+# In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(315)/        if len(x_shape) != 2:/
+funcgraph fg_53[fg_52](
+) {
+
+#------------------------> 4
+    %1 = FuncGraph::fg_54(%para10)    #(Tensor(F64)[1, 4])    # fg_54=L-↓construct.54 #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(315)/        if len(x_shape) != 2:/#74
+    Primitive::Return{prim_type=1}(%1)    #(Undefined) #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(315)/        if len(x_shape) != 2:/#75
+}
+# order:
+#   1: L-✗construct.53:74{[0]: ValueNode<FuncGraph> L-↓construct.54, [1]: x}
+#   2: L-✗construct.53:75{[0]: ValueNode<Primitive> Return, [1]: 74}
+
+
+# [No.6] L-↓construct.54
+# In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(315)/        if len(x_shape) != 2:/
+funcgraph fg_54[fg_52](
+        %para13 : Tensor(F64)[1, 4]    # Φx
+    ) {
+    %1 : Bool = FuncGraph::fg_68(Bool(1))    #(Bool)    # fg_68=L-bool_.68 #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(318)/        if self.has_bias:/#76
+    %2 : Func = Primitive::Switch{prim_type=1}(%1, FuncGraph::fg_55, FuncGraph::fg_77)    #(Bool, Func, Func)    # fg_55=L-✓↓construct.55, fg_77=L-✗↓construct.77 #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(318)/        if self.has_bias:/#78
+
+#------------------------> 5
+    %3 = %2() #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(318)/        if self.has_bias:/#79
+    Primitive::Return{prim_type=1}(%3)    #(Undefined) #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(318)/        if self.has_bias:/#80
+}
+# order:
+#   1: L-↓construct.54:x{[0]: ValueNode<DoSignaturePrimitive> S-Prim-MatMul, [1]: Φx, [2]: L-fc3.weight}
+#   2: L-↓construct.54:76{[0]: ValueNode<FuncGraph> L-bool_.68, [1]: ValueNode<BoolImm> true}
+#   3: L-↓construct.54:78{[0]: ValueNode<Primitive> Switch, [1]: 76, [2]: ValueNode<FuncGraph> L-✓↓construct.55, [3]: ValueNode<FuncGraph> L-✗↓construct.77}
+#   4: L-↓construct.54:79{[0]: 78}
+#   5: L-↓construct.54:80{[0]: ValueNode<Primitive> Return, [1]: 79}
+
+
+# [No.7] L-✓↓construct.55
+# In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(318)/        if self.has_bias:/
+funcgraph fg_55[fg_54](
+) {
+
+#------------------------> 6
+    %1 = $(L-✓↓construct.55):DoSignaturePrimitive::S-Prim-MatMul{prim_type=1}[transpose_x1=Bool(0), transpose_b=Bool(1), transpose_a=Bool(0), output_names=["output"], transpose_x2=Bool(1), input_names=["x1", "x2"]](%para13, %para12)    #(Tensor(F64)[1, 4], Ref[Tensor(F32)][32, 4]) #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(317)/        x = self.matmul(x, self.weight)/#x
+    %2 = DoSignaturePrimitive::S-Prim-BiasAdd{prim_type=1}[input_names=["x", "b"], output_names=["output"], format="NCHW"](%1, %para11)    #(Undefined, Ref[Tensor(F32)][32]) #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(319)/            x = self.bias_add(x, self.bias)/#x
+    %3 = FuncGraph::fg_81(%2)    #(Undefined)    # fg_81=L-↓↓construct.81 #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(318)/        if self.has_bias:/#82
+    Primitive::Return{prim_type=1}(%3)    #(Undefined) #scope: Default/fc3-Dense
+      # In file /usr/local/lib/python3.7/dist-packages/mindspore/nn/layer/basic.py(318)/        if self.has_bias:/#83
+}
+# order:
+#   1: L-✓↓construct.55:x{[0]: ValueNode<DoSignaturePrimitive> S-Prim-BiasAdd, [1]: x, [2]: L-fc3.bias}
+#   2: L-✓↓construct.55:82{[0]: ValueNode<FuncGraph> L-↓↓construct.81, [1]: x}
+#   3: L-✓↓construct.55:83{[0]: ValueNode<Primitive> Return, [1]: 82}
+
+
+#===============================================================================
+# num of function graphs in stack: 8
