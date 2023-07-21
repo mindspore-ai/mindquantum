@@ -40,6 +40,7 @@ class ChannelAdderBase:
 
     def __init__(self, add_after=True):
         """Initialize a ChannelAdderBase."""
+        _check_input_type("add_after", bool, add_after)
         self.add_after = add_after
         self.accepter = []  # a list of function, which act as rules to accept considering gate to add noise channel.
         self.excluder = []  # a list of function, which act as rules to deny considering gate to add noise channel.
@@ -59,7 +60,7 @@ class ChannelAdderBase:
                 out += g
         return out
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return string expression of adder."""
         return f"{self.__class__.__name__}<>"
 
@@ -67,11 +68,11 @@ class ChannelAdderBase:
         """Construct accepter rules."""
         return []
 
-    def _excluder(self, *args, **kwargs):
+    def _excluder(self, *args, **kwargs) -> typing.List[typing.Union[FunctionType, MethodType]]:
         """Construct excluder rules."""
         return []
 
-    def _handler(self, g: BasicGate, *args, **kwargs):
+    def _handler(self, g: BasicGate, *args, **kwargs) -> Circuit:
         """Create action you will do if a gate is acceptable."""
         return Circuit()
 
@@ -82,10 +83,22 @@ class ReverseAdder(ChannelAdderBase):
 
     Args:
         adder (:class:`~.core.circuit.ChannelAdderBase`): A channel adder.
+
+    Examples:
+        >>> from mindquantum.core.circuit import ReverseAdder, MeasureAccepter, BitFlipAdder, MixerAdder
+        >>> from mindquantum.core.circuit import Circuit
+        >>> circ = Circuit().rx('a', 0).measure_all()
+        >>> only_measure = MixerAdder([BitFlipAdder(0.1), MeasureAccepter()])
+        >>> only_measure(circ)
+        q0: ──RX(a)────M(q0)────BFC(p=1/10)──
+        >>> no_measure = ReverseAdder(only_measure)
+        >>> no_measure(circ)
+        q0: ──RX(a)────BFC(p=1/10)────M(q0)──
     """
 
     def __init__(self, adder: ChannelAdderBase):
         """Initialize a channel adder."""
+        _check_input_type("adder", ChannelAdderBase, adder)
         self.adder = adder
         super().__init__(adder.add_after)
 
@@ -93,13 +106,40 @@ class ReverseAdder(ChannelAdderBase):
         """Construct accepter rules."""
         return self.adder._excluder()
 
-    def _excluder(self, *args, **kwargs):
+    def _excluder(self, *args, **kwargs) -> typing.List[typing.Union[FunctionType, MethodType]]:
         """Construct excluder rules."""
         return self.adder._accepter()
 
+    def __repr__(self) -> str:
+        """Return string expression of adder."""
+        strs = ["ReverseAdder<"]
+        for i in self.adder.__repr__().split('\n'):
+            strs.append("  " + i)
+        strs.append(">")
+        return '\n'.join(strs)
+
+    def _handler(self, g: BasicGate, *args, **kwargs) -> Circuit:
+        """Create action you will do if a gate is acceptable."""
+        out = Circuit()
+        out += self.adder._handler(g)
+        return out
+
 
 class MeasureAccepter(ChannelAdderBase):
-    """Select measurement gate."""
+    """
+    Select measurement gate.
+
+    Args:
+        add_after (bool): Whether add channel after gate or before gate. Default: ``True``.
+
+    Examples:
+        >>> from mindquantum.core.circuit import MeasureAccepter, BitFlipAdder, MixerAdder
+        >>> from mindquantum.core.circuit import Circuit
+        >>> circ = Circuit().rx('a', 0).h(0).measure_all()
+        >>> only_measure = MixerAdder([BitFlipAdder(0.1), MeasureAccepter()], add_after=False)
+        >>> only_measure(circ)
+        q0: ──RX(a)────H────BFC(p=1/10)────M(q0)──
+    """
 
     def __init__(self):
         """Initialize a MeasureAccepter."""
@@ -116,9 +156,22 @@ class NoiseExcluder(ChannelAdderBase):
 
     Args:
         add_after (bool): Whether add channel after gate or before gate. Default: ``True``.
+
+    Examples:
+        >>> from mindquantum.core.circuit import Circuit, NoiseExcluder, BitFlipAdder, MixerAdder
+        >>> from mindquantum.core.gates import DepolarizingChannel
+        >>> circ = Circuit().x(0)
+        >>> circ += DepolarizingChannel(0.1).on(0)
+        >>> circ
+        q0: ──X────DC(p=1/10)──
+        >>> BitFlipAdder(0.1)(circ)
+        q0: ──X────BFC(p=1/10)────DC(p=1/10)────BFC(p=1/10)──
+        >>> adder = MixerAdder([NoiseExcluder(), BitFlipAdder(0.1)])
+        >>> adder(circ)
+        q0: ──X────BFC(p=1/10)────DC(p=1/10)──
     """
 
-    def _excluder(self, *args, **kwargs):
+    def _excluder(self, *args, **kwargs) -> typing.List[typing.Union[FunctionType, MethodType]]:
         """Construct excluder rules."""
         return [lambda x: isinstance(x, gates.NoiseGate)]
 
@@ -133,19 +186,30 @@ class BitFlipAdder(ChannelAdderBase):
         with_ctrl (bool): Whether add bit flip channel for control qubits. Default: ``True``.
         add_after (bool): Whether add this channel after quantum gate or not. If ``False``, the
             channel will add before quantum gate. Default: ``True``.
+
+    Examples:
+        >>> from mindquantum.core.circuit import BitFlipAdder
+        >>> from mindquantum.core.circuit import Circuit
+        >>> circ = Circuit().h(0).x(1, 0)
+        >>> adder = BitFlipAdder(0.1, with_ctrl=False)
+        >>> adder(circ)
+        q0: ──H────BFC(p=1/10)────●─────────────────
+                                  │
+        q1: ──────────────────────X────BFC(p=1/10)──
     """
 
     def __init__(self, flip_rate: float, with_ctrl=True, add_after: bool = True):
         """Initialize a BitFlipAdder."""
+        _check_input_type("with_ctrl", bool, with_ctrl)
         super().__init__(add_after=add_after)
         self.flip_rate = flip_rate
         self.with_ctrl = with_ctrl
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return string expression of adder."""
         return f"BitFlipAdder<flip_rate={self.flip_rate}, with_ctrl={self.with_ctrl}>"
 
-    def _handler(self, g: BasicGate, *args, **kwargs):
+    def _handler(self, g: BasicGate, *args, **kwargs) -> Circuit:
         """Create action you will do if a gate is acceptable."""
         circ = Circuit()
         for qubit in g.obj_qubits + (g.ctrl_qubits if self.with_ctrl else []):
@@ -162,22 +226,34 @@ class NoiseChannelAdder(ChannelAdderBase):
         with_ctrl (bool): Whether add quantum channel for control qubits. Default: ``True``.
         add_after (bool): Whether add this channel after quantum gate or not. If ``False``, the
             channel will add before quantum gate. Default: ``True``.
+
+    Examples:
+        >>> from mindquantum.core.circuit import NoiseChannelAdder, Circuit
+        >>> from mindquantum.core.gates import AmplitudeDampingChannel
+        >>> circ = Circuit().h(0).x(1, 0)
+        >>> channel = AmplitudeDampingChannel(0.3)
+        >>> adder = NoiseChannelAdder(channel, with_ctrl=True, add_after=True)
+        >>> adder(circ)
+        q0: ──H────ADC(γ=3/10)────●────ADC(γ=3/10)──
+                                  │
+        q1: ──────────────────────X────ADC(γ=3/10)──
     """
 
     def __init__(self, channel: NoiseGate, with_ctrl=True, add_after: bool = True):
         """Initialize a BitFlipAdder."""
         _check_input_type("channel", NoiseGate, channel)
+        _check_input_type("with_ctrl", bool, with_ctrl)
         if channel.n_qubits != 1:
             raise ValueError(f"Requires a single qubit channel, but get {channel.n_qubits}, please customize a adder.")
         super().__init__(add_after=add_after)
         self.with_ctrl = with_ctrl
         self.channel = channel
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return string expression of adder."""
         return f"NoiseChannelAdder<channel={self.channel}, with_ctrl={self.with_ctrl}>"
 
-    def _handler(self, g: BasicGate, *args, **kwargs):
+    def _handler(self, g: BasicGate, *args, **kwargs) -> Circuit:
         """Create action you will do if a gate is acceptable."""
         circ = Circuit()
         for qubit in g.obj_qubits + (g.ctrl_qubits if self.with_ctrl else []):
@@ -192,15 +268,27 @@ class MixerAdder(ChannelAdderBase):
     Args:
         adders (List[:class:`~.core.gates.BitFlipChannel`]): The adders you want to mix.
         add_after (bool): Whether add channel after quantum gate or not. If ``False``, the
-            channel will add before quantum gate. Default: ``True``.
+            channel will add before quantum gate. This `add_after` will override all`add_after`
+            of sub adder. Default: ``True``.
+
+    Examples:
+        >>> from mindquantum.core.circuit import MeasureAccepter, BitFlipAdder, MixerAdder
+        >>> from mindquantum.core.circuit import Circuit
+        >>> circ = Circuit().rx('a', 0).h(0).measure_all()
+        >>> only_measure = MixerAdder([BitFlipAdder(0.1), MeasureAccepter()], add_after=False)
+        >>> only_measure(circ)
+        q0: ──RX(a)────H────BFC(p=1/10)────M(q0)──
     """
 
     def __init__(self, adders: typing.List[ChannelAdderBase], add_after=True):
         """Initialize a MixerAdder."""
+        _check_input_type("adders", list, adders)
+        for adder in adders:
+            _check_input_type("Element of adders", ChannelAdderBase, adder)
         self.adders = adders
         super().__init__(add_after=add_after)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return string expression of adder."""
         strs = ["MixerAdder<"]
         for adder in self.adders:
@@ -209,15 +297,15 @@ class MixerAdder(ChannelAdderBase):
         strs.append(">")
         return '\n'.join(strs)
 
-    def _accepter(self, *args, **kwargs):
+    def _accepter(self, *args, **kwargs) -> typing.List[typing.Union[FunctionType, MethodType]]:
         """Construct accepter rules."""
         return [item for adder in self.adders for item in adder._accepter()]
 
-    def _excluder(self, *args, **kwargs):
+    def _excluder(self, *args, **kwargs) -> typing.List[typing.Union[FunctionType, MethodType]]:
         """Construct excluder rules."""
         return [item for adder in self.adders for item in adder._excluder()]
 
-    def _handler(self, g: BasicGate, *args, **kwargs):
+    def _handler(self, g: BasicGate, *args, **kwargs) -> Circuit:
         """Create action you will do if a gate is acceptable."""
         out = Circuit()
         for adder in self.adders:
@@ -231,20 +319,52 @@ class SequentialAdder(ChannelAdderBase):
 
     Args:
         adders (List[:class:`~.core.circuit.ChannelAdderBase`]): The adder you want to apply.
+
+    Examples:
+        >>> from mindquantum.core.circuit import SequentialAdder, MixerAdder, BitFlipAdder, NoiseChannelAdder
+        >>> from mindquantum.core.circuit import MeasureAccepter, ReverseAdder, NoiseChannelAdder, Circuit
+        >>> from mindquantum.core.circuit import NoiseExcluder
+        >>> from mindquantum.core.gates import DepolarizingChannel
+        >>> circ = Circuit().h(0).x(1, 0).measure_all()
+        >>> circ
+        q0: ──H────●────M(q0)──
+                   │
+        q1: ───────X────M(q1)──
+        >>> bitflip_error_for_measure = MixerAdder([
+        ...     BitFlipAdder(0.1),
+        ...     MeasureAccepter(),
+        ...     NoiseExcluder()
+        ... ], add_after=False)
+        >>> depolarizing_for_gate = MixerAdder([
+        ...     NoiseChannelAdder(DepolarizingChannel(0.1)),
+        ...     ReverseAdder(MeasureAccepter()),
+        ...     NoiseExcluder()
+        ... ])
+        >>> adder = SequentialAdder([
+        ...     bitflip_error_for_measure,
+        ...     depolarizing_for_gate,
+        ... ])
+        >>> adder(circ)
+        q0: ──H────DC(p=1/10)────●────DC(p=1/10)────BFC(p=1/10)────M(q0)──
+                                 │
+        q1: ─────────────────────X────DC(p=1/10)────BFC(p=1/10)────M(q1)──
     """
 
     def __init__(self, adders: typing.List[ChannelAdderBase]):
         """Initialize a SequentialAdder."""
+        _check_input_type("adders", list, adders)
+        for adder in adders:
+            _check_input_type("Element of adders", ChannelAdderBase, adder)
         super().__init__()
         self.adders = adders
 
-    def __call__(self, circ: Circuit):
+    def __call__(self, circ: Circuit) -> Circuit:
         """Add noise channel after acceptable quantum gate."""
         for adder in self.adders:
             circ = adder(circ)
         return circ
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return string expression of adder."""
         strs = ["SequentialAdder<"]
         for adder in self.adders:

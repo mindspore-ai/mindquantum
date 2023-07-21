@@ -45,6 +45,13 @@ mindquantum.device.QubitNode
         返回：
             int，量子比特的 id。
 
+    .. py:method:: set_color(self, color:str)
+
+        设置量子比特的颜色。
+
+        参数：
+            - **color** (str) - 新的颜色。
+
     .. py:method:: set_poi(poi_x: float, poi_y: float)
 
         设置量子比特的位置坐标。

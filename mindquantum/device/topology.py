@@ -14,7 +14,10 @@
 # ============================================================================
 """Qubit node an topology of quantum chip."""
 
+import numbers
 import typing
+
+from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
 
 from ..mqbackend.device import QubitNode as QubitNode_
 from ..mqbackend.device import QubitsTopology as QubitsTopology_
@@ -44,6 +47,10 @@ class QubitNode:
 
     def __init__(self, qubit_id: int, color: str = '#000000', poi_x: float = 0.0, poi_y: float = 0.0) -> None:
         """Initialize a qubit node."""
+        _check_int_type("qubit_id", qubit_id)
+        _check_input_type("color", str, color)
+        _check_input_type("poi_x", numbers.Real, poi_x)
+        _check_input_type("poi_y", numbers.Real, poi_y)
         self.id_ = qubit_id
         self.color_ = color
         self.poi_x_ = poi_x
@@ -123,6 +130,7 @@ class QubitNode:
             >>> topology.is_coupled_with(0, 1)
             True
         """
+        _check_input_type("other", QubitNode, other)
         if self.qubit_id == other.qubit_id:
             raise RuntimeError("Cannot disconnect itself.")
         self.neighbor.add(other.qubit_id)
@@ -155,6 +163,7 @@ class QubitNode:
             >>> q.qubit_id == q0.qubit_id
             True
         """
+        _check_input_type("other", QubitNode, other)
         if self.qubit_id == other.qubit_id:
             raise RuntimeError("Cannot disconnect itself.")
         if other.qubit_id in self.neighbor:
@@ -186,12 +195,30 @@ class QubitNode:
             >>> topology.is_coupled_with(0, 1)
             True
         """
+        _check_input_type("other", QubitNode, other)
         if self.qubit_id == other.qubit_id:
             raise RuntimeError("Cannot disconnect itself.")
         self.neighbor.add(other.qubit_id)
         other.neighbor.add(self.qubit_id)
 
         return other
+
+    def set_color(self, color: str) -> None:
+        """
+        Set the color of this qubit.
+
+        Args:
+            color (str): The new color.
+
+        Examples:
+            >>> from mindquantum.device import QubitNode
+            >>> q0 = QubitNode(1)
+            >>> q0.set_color('#ababab')
+            >>> q0.color
+            '#ababab'
+        """
+        _check_input_type("color", str, color)
+        self.color_ = color
 
     def set_poi(self, poi_x: float, poi_y: float) -> None:
         """
@@ -208,6 +235,8 @@ class QubitNode:
             >>> print(q0.poi_x, q0.poi_y)
             1 0
         """
+        _check_input_type("poi_x", numbers.Real, poi_x)
+        _check_input_type("poi_y", numbers.Real, poi_y)
         self.poi_x_, self.poi_y_ = poi_x, poi_y
 
     @property
@@ -275,6 +304,9 @@ class QubitsTopology:
 
     def __init__(self, qubits: typing.List[QubitNode]) -> None:
         """Initialize a physical qubit topology."""
+        _check_input_type("qubits", list, qubits)
+        for qubit in qubits:
+            _check_input_type("Element of qubits", QubitNode, qubit)
         self.qubits: typing.Dict[int, QubitNode] = {}
         for node in qubits:
             if node.qubit_id in self.qubits:
@@ -298,6 +330,7 @@ class QubitsTopology:
             >>> topology[2].qubit_id
             2
         """
+        _check_int_type("qubit_id", qubit_id)
         return self.qubits[qubit_id]
 
     def __get_cpp_obj__(self):
@@ -318,6 +351,7 @@ class QubitsTopology:
             >>> topology.all_qubit_id()
             {0, 1, 2}
         """
+        _check_input_type("qubit", QubitNode, qubit)
         if qubit.qubit_id in self.qubits:
             raise ValueError(f"Qubit with id {qubit.qubit_id} already exists.")
         self.qubits[qubit.qubit_id] = qubit
@@ -400,6 +434,7 @@ class QubitsTopology:
             >>> topology.has_qubit_node(0)
             True
         """
+        _check_int_type("qubit_id", qubit_id)
         return qubit_id in self.qubits
 
     def is_coupled_with(self, id1: int, id2: int) -> bool:
@@ -422,6 +457,8 @@ class QubitsTopology:
             >>> topology.is_coupled_with(0, 1)
             True
         """
+        _check_int_type("id1", id1)
+        _check_int_type("id2", id2)
         return id2 in self.qubits[id1].neighbor
 
     def isolate_with_near(self, qubit_id: int) -> None:
@@ -441,6 +478,7 @@ class QubitsTopology:
             >>> topology.edges_with_id()
             set()
         """
+        _check_int_type("qubit_id", qubit_id)
         current_node = self[qubit_id]
         other_nodes = [self[i] for i in current_node.neighbor]
         for node in other_nodes:
@@ -480,6 +518,9 @@ class QubitsTopology:
             >>> print(nodes[0].qubit_id, nodes[1].qubit_id)
             0 1
         """
+        _check_input_type("ids", list, ids)
+        for qubit_id in ids:
+            _check_int_type("Element of ids", qubit_id)
         return [self[i] for i in ids]
 
     def remove_isolate_node(self) -> None:
@@ -521,6 +562,7 @@ class QubitsTopology:
             >>> topology.all_qubit_id()
             {0, 2}
         """
+        _check_int_type("qubit_id", qubit_id)
         will_remove = self.qubits[qubit_id]
         near_qubits = [self[i] for i in will_remove.neighbor]
         for node in near_qubits:
@@ -542,6 +584,8 @@ class QubitsTopology:
             >>> topology[0].color
             '#ababab'
         """
+        _check_int_type("qubit_id", qubit_id)
+        _check_input_type("color", str, color)
         self[qubit_id].color_ = color
 
     def set_position(self, qubit_id: int, poi_x: float, poi_y: float) -> None:
@@ -560,6 +604,9 @@ class QubitsTopology:
             >>> topology[0].poi_x, topology[0].poi_y
             (1, 1)
         """
+        _check_int_type("qubit_id", qubit_id)
+        _check_input_type("poi_x", numbers.Real, poi_x)
+        _check_input_type("poi_y", numbers.Real, poi_y)
         self[qubit_id].set_poi(poi_x, poi_y)
 
     def size(self) -> int:
@@ -596,6 +643,7 @@ class LinearQubits(QubitsTopology):
 
     def __init__(self, n_qubits: int):
         """Initialize a linear topology."""
+        _check_int_type("n_qubits", n_qubits)
         nodes = [QubitNode(i, poi_x=i) for i in range(n_qubits)]
         left_node = nodes[0]
         for node in nodes[1:]:
@@ -620,6 +668,8 @@ class GridQubits(QubitsTopology):
 
     def __init__(self, n_row: int, n_col: int) -> None:
         """Initialize a grid topology with row and col number."""
+        _check_int_type("n_row", n_row)
+        _check_int_type("n_col", n_col)
         self.n_row_ = n_row
         self.n_col_ = n_col
         qubits = []
