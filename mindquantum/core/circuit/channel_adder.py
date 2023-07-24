@@ -16,7 +16,7 @@
 import typing
 from types import FunctionType, MethodType
 
-from mindquantum.utils.type_value_check import _check_input_type
+from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
 
 from .. import gates
 from ..gates import BarrierGate, BasicGate, NoiseGate
@@ -263,6 +263,49 @@ class NoiseChannelAdder(ChannelAdderBase):
         return circ
 
 
+class QubitNumberConstrain(ChannelAdderBase):
+    """
+    Only add noise channel for n_qubits quantum gate.
+
+    Args:
+        n_qubits (int): The number qubit of quantum gate.
+        with_ctrl (bool): Whether control qubits also contribute to `n_qubits` or not. Default: ``True``.
+        add_after (bool): Whether add channel after gate or before gate. Default: ``True``.
+
+    Examples:
+        >>> from mindquantum.core.circuit import QubitNumberConstrain, Circuit, BitFlipAdder, MixerAdder
+        >>> circ = Circuit().h(0).x(1, 0)
+        >>> circ
+        q0: ──H────●──
+                   │
+        q1: ───────X──
+        >>> adder = MixerAdder([
+        ...     QubitNumberConstrain(2),
+        ...     BitFlipAdder(0.1)
+        ... ])
+        >>> adder(circ)
+        q0: ──H────●────BFC(p=1/10)──
+                   │
+        q1: ───────X────BFC(p=1/10)──
+    """
+
+    def __init__(self, n_qubits: int, with_ctrl: bool = True, add_after: bool = True):
+        """Initialize a QubitNumberConstrain."""
+        _check_int_type("n_qubits", n_qubits)
+        _check_input_type("with_ctrl", bool, with_ctrl)
+        self.n_qubits = n_qubits
+        self.with_ctrl = with_ctrl
+        super().__init__(add_after)
+
+    def __repr__(self) -> str:
+        """Return string expression of adder."""
+        return f"QubitNumberConstrain<n_qubits={self.n_qubits}, with_ctrl={self.with_ctrl}>"
+
+    def _accepter(self, *args, **kwargs) -> typing.List[typing.Union[FunctionType, MethodType]]:
+        """Construct accepter rules."""
+        return [lambda x: self.n_qubits == (len(x.obj_qubits) + len(x.ctrl_qubits) * self.with_ctrl)]
+
+
 class MixerAdder(ChannelAdderBase):
     """
     Execute each adder if all accepter and excluder are met.
@@ -385,4 +428,6 @@ __all__ = [
     "BitFlipAdder",
     "MixerAdder",
     "SequentialAdder",
+    "QubitNumberConstrain",
 ]
+__all__.sort()

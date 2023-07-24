@@ -21,6 +21,7 @@ from mindquantum.core.circuit import (
     MixerAdder,
     NoiseChannelAdder,
     NoiseExcluder,
+    QubitNumberConstrain,
     ReverseAdder,
     SequentialAdder,
 )
@@ -133,3 +134,16 @@ def test_sequential_adder():
     exp_circ += Circuit([noise_1.on(0), bfc.on(0), Measure().on(0), bfc.on(1)])
     exp_circ += Measure().on(1)
     assert exp_circ == new_circ
+
+
+def test_qubit_number_constrain():
+    """
+    Description: test qubit number constrain.
+    Expectation: success.
+    """
+    circ = Circuit().h(0).x(1, 0)
+    adder = MixerAdder([QubitNumberConstrain(2), BitFlipAdder(0.1)])
+    new_circ = adder(circ)
+    bit_flip = BitFlipChannel(0.1)
+    exp_circ = circ + bit_flip.on(1) + bit_flip.on(0)
+    assert new_circ == exp_circ
