@@ -51,11 +51,9 @@ class ChannelAdderBase:
         """Add noise channel after acceptable quantum gate."""
         out = Circuit()
         for g in circ:
-            if isinstance(g, BarrierGate):
-                continue
             if self.add_after:
                 out += g
-            if all(rule(g) for rule in self.accepter):
+            if not isinstance(g, BarrierGate) and all(rule(g) for rule in self.accepter):
                 if not any(rule(g) for rule in self.excluder):
                     out += self._handler(g)
             if not self.add_after:
