@@ -373,7 +373,7 @@ class Text(HasXY, HasFill):
 
     def to_string(self):
         """Return the string format of text svg."""
-        return ' '.join([self.head] + self._prop_to_str() + [f'>\n{self.text}\n'] + [self.tail])
+        return ' '.join([self.head] + self._prop_to_str() + [f'>{self.text}'] + [self.tail])
 
     def dominant_baseline(self, dominant_baseline):
         """Set dominant baseline of text."""
@@ -648,7 +648,7 @@ class SVGContainer:
 
     def to_string(self):
         """Convert whole svg to a string."""
-        return '\n'.join([i.to_string() for i in self.element])
+        return ''.join([i.to_string() for i in self.element])
 
     def _repr_svg_(self):
         """Magic method for rendering svg in jupyter notebook."""
@@ -660,7 +660,7 @@ class SVGContainer:
             f"xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
         )
         tail = "</svg>"
-        return f"{head}\n{self.to_string()}\n{tail}"
+        return f"{head}{self.to_string()}{tail}"
 
     def to_file(self, filename='circuit.svg'):
         """Save svg file."""
