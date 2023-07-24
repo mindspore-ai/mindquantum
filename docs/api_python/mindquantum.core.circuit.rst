@@ -58,6 +58,7 @@ Channel adder
     mindquantum.core.circuit.MixerAdder
     mindquantum.core.circuit.SequentialAdder
     mindquantum.core.circuit.QubitNumberConstrain
+    mindquantum.core.circuit.QubitIDConstrain
 
 functional
 ----------

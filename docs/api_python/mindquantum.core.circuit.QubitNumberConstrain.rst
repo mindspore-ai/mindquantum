@@ -3,7 +3,7 @@ mindquantum.core.circuit.QubitNumberConstrain
 
 .. py:class:: mindquantum.core.circuit.QubitNumberConstrain(adder: ChannelAdderBase)
 
-    翻转给定信道添加器的接受和拒绝规则。
+    只将噪声信道作用在比特数为 ``n_qubits`` 的量子门上。
 
     参数：
         - **n_qubits** (int) - 量子门的比特数目。

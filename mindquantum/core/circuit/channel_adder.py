@@ -265,7 +265,7 @@ class NoiseChannelAdder(ChannelAdderBase):
 
 class QubitNumberConstrain(ChannelAdderBase):
     """
-    Only add noise channel for n_qubits quantum gate.
+    Only add noise channel for ``n_qubits`` quantum gate.
 
     Args:
         n_qubits (int): The number qubit of quantum gate.
@@ -304,6 +304,53 @@ class QubitNumberConstrain(ChannelAdderBase):
     def _accepter(self, *args, **kwargs) -> typing.List[typing.Union[FunctionType, MethodType]]:
         """Construct accepter rules."""
         return [lambda x: self.n_qubits == (len(x.obj_qubits) + len(x.ctrl_qubits) * self.with_ctrl)]
+
+
+class QubitIDConstrain(ChannelAdderBase):
+    """
+    Select gate with qubit id in given list.
+
+    Args:
+        qubit_ids (Union[int, List[int]]): The qubit id list you want to select.
+        add_after (bool): Whether add channel after gate or before gate. Default: ``True``.
+
+    Examples:
+        >>> from mindquantum.core.circuit import MixerAdder, BitFlipAdder, QubitIDConstrain, Circuit
+        >>> circ = Circuit().h(0).h(1).h(2).x(1, 0).x(2, 1)
+        >>> circ
+        q0: ──H────●───────
+                   │
+        q1: ──H────X────●──
+                        │
+        q2: ──H─────────X──
+        >>> adder = MixerAdder([
+        ...     QubitIDConstrain([0, 1]),
+        ...     BitFlipAdder(0.1),
+        ... ])
+        >>> adder(circ)
+        q0: ──H────BFC(p=1/10)────●────BFC(p=1/10)───────
+                                  │
+        q1: ──H────BFC(p=1/10)────X────BFC(p=1/10)────●──
+                                                      │
+        q2: ──H───────────────────────────────────────X──
+    """
+
+    def __init__(self, qubit_ids: typing.Union[int, typing.List[int]], add_after: bool = True):
+        """Initialize a QubitIDConstrain."""
+        self.qubit_ids = []
+        if isinstance(qubit_ids, int):
+            self.qubit_ids.append(qubit_ids)
+        elif isinstance(qubit_ids, list):
+            for qubit_id in qubit_ids:
+                _check_int_type("Element of qubit_ids", qubit_id)
+            self.qubit_ids.extend(qubit_ids)
+        else:
+            raise TypeError(f"qubit_ids requires a int or a list, but get {type(qubit_ids)}.")
+        super().__init__(add_after)
+
+    def _accepter(self, *args, **kwargs) -> typing.List[typing.Union[FunctionType, MethodType]]:
+        """Construct accepter rules."""
+        return [lambda x: all(i in self.qubit_ids for i in x.obj_qubits + x.ctrl_qubits)]
 
 
 class MixerAdder(ChannelAdderBase):
@@ -429,5 +476,6 @@ __all__ = [
     "MixerAdder",
     "SequentialAdder",
     "QubitNumberConstrain",
+    "QubitIDConstrain",
 ]
 __all__.sort()
