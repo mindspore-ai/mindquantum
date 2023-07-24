@@ -26,6 +26,8 @@ from .channel_adder import (
     MixerAdder,
     NoiseChannelAdder,
     NoiseExcluder,
+    QubitIDConstrain,
+    QubitNumberConstrain,
     ReverseAdder,
     SequentialAdder,
 )

@@ -21,6 +21,8 @@ from mindquantum.core.circuit import (
     MixerAdder,
     NoiseChannelAdder,
     NoiseExcluder,
+    QubitIDConstrain,
+    QubitNumberConstrain,
     ReverseAdder,
     SequentialAdder,
 )
@@ -28,6 +30,7 @@ from mindquantum.core.gates import (
     AmplitudeDampingChannel,
     BitFlipChannel,
     DepolarizingChannel,
+    H,
     Measure,
     X,
 )
@@ -77,11 +80,15 @@ def test_bit_flip_adder():
     Expectation: success.
     """
     circ = Circuit().h(0).x(1, 0)
-    adder = BitFlipAdder(0.1, with_ctrl=False)
+    adder1 = BitFlipAdder(0.1, with_ctrl=False)
     channel = BitFlipChannel(0.1)
-    new_circ = adder(circ)
+    new_circ = adder1(circ)
     exp_circ = Circuit().h(0) + channel.on(0) + X.on(1, 0) + channel.on(1)
     assert new_circ == exp_circ
+    adder2 = BitFlipAdder(0.1, with_ctrl=False, focus_on=1)
+    new_circ2 = adder2(circ)
+    exp_circ2 = circ + channel.on(1)
+    assert new_circ2 == exp_circ2
 
 
 def test_noise_channel_adder():
@@ -91,10 +98,14 @@ def test_noise_channel_adder():
     """
     circ = Circuit().h(0).x(1, 0)
     channel = AmplitudeDampingChannel(0.3)
-    adder = NoiseChannelAdder(channel, with_ctrl=True, add_after=True)
-    new_circ = adder(circ)
+    adder1 = NoiseChannelAdder(channel, with_ctrl=True, add_after=True)
+    new_circ = adder1(circ)
     exp_circ = Circuit().h(0) + channel.on(0) + X.on(1, 0) + channel.on(1) + channel.on(0)
     assert new_circ == exp_circ
+    adder2 = NoiseChannelAdder(channel, with_ctrl=True, focus_on=1, add_after=True)
+    new_circ2 = adder2(circ)
+    exp_circ2 = circ + channel.on(1)
+    assert new_circ2 == exp_circ2
 
 
 def test_mixer_adder():
@@ -133,3 +144,46 @@ def test_sequential_adder():
     exp_circ += Circuit([noise_1.on(0), bfc.on(0), Measure().on(0), bfc.on(1)])
     exp_circ += Measure().on(1)
     assert exp_circ == new_circ
+
+
+def test_qubit_number_constrain():
+    """
+    Description: test qubit number constrain.
+    Expectation: success.
+    """
+    circ = Circuit().h(0).x(1, 0)
+    adder = MixerAdder([QubitNumberConstrain(2), BitFlipAdder(0.1)])
+    new_circ = adder(circ)
+    bit_flip = BitFlipChannel(0.1)
+    exp_circ = circ + bit_flip.on(1) + bit_flip.on(0)
+    assert new_circ == exp_circ
+
+
+def test_qubit_id_constrain():
+    """
+    Description: test qubit id constrain.
+    Expectation: success.
+    """
+    circ = Circuit().h(0).h(1).h(2).x(1, 0).x(2, 1)
+    adder = MixerAdder(
+        [
+            QubitIDConstrain([0, 1]),
+            BitFlipAdder(0.1),
+        ]
+    )
+    new_circ = adder(circ)
+    bit_flip = BitFlipChannel(0.1)
+    exp_circ = Circuit(
+        [
+            H.on(0),
+            bit_flip.on(0),
+            H.on(1),
+            bit_flip.on(1),
+            H.on(2),
+            X.on(1, 0),
+            bit_flip.on(1),
+            bit_flip.on(0),
+            X.on(2, 1),
+        ]
+    )
+    assert new_circ == exp_circ
