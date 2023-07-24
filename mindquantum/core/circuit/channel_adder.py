@@ -186,6 +186,8 @@ class BitFlipAdder(ChannelAdderBase):
         flip_rate (float): The flip rate for bit flip channel. For more detail please refers to
             :class:`~.core.gates.BitFlipChannel`.
         with_ctrl (bool): Whether add bit flip channel for control qubits. Default: ``True``.
+        focus_on (int): Only add this noise channel on ``focus_on`` qubit. If ``None``, add to
+            all qubits of selected quantum gate. Default: ``None``.
         add_after (bool): Whether add this channel after quantum gate or not. If ``False``, the
             channel will add before quantum gate. Default: ``True``.
 
@@ -193,19 +195,27 @@ class BitFlipAdder(ChannelAdderBase):
         >>> from mindquantum.core.circuit import BitFlipAdder
         >>> from mindquantum.core.circuit import Circuit
         >>> circ = Circuit().h(0).x(1, 0)
-        >>> adder = BitFlipAdder(0.1, with_ctrl=False)
-        >>> adder(circ)
+        >>> adder1 = BitFlipAdder(0.1, with_ctrl=False)
+        >>> adder1(circ)
         q0: ──H────BFC(p=1/10)────●─────────────────
                                   │
         q1: ──────────────────────X────BFC(p=1/10)──
+        >>> adder2 = BitFlipAdder(0.1, with_ctrl=False, focus_on=1)
+        >>> adder2(circ)
+        q0: ──H────●─────────────────
+                   │
+        q1: ───────X────BFC(p=1/10)──
     """
 
-    def __init__(self, flip_rate: float, with_ctrl=True, add_after: bool = True):
+    def __init__(self, flip_rate: float, with_ctrl=True, focus_on: int = None, add_after: bool = True):
         """Initialize a BitFlipAdder."""
         _check_input_type("with_ctrl", bool, with_ctrl)
         super().__init__(add_after=add_after)
         self.flip_rate = flip_rate
         self.with_ctrl = with_ctrl
+        if focus_on is not None:
+            _check_int_type("focus_on", focus_on)
+        self.focus_on = focus_on
 
     def __repr__(self) -> str:
         """Return string expression of adder."""
@@ -214,8 +224,12 @@ class BitFlipAdder(ChannelAdderBase):
     def _handler(self, g: BasicGate, *args, **kwargs) -> Circuit:
         """Create action you will do if a gate is acceptable."""
         circ = Circuit()
-        for qubit in g.obj_qubits + (g.ctrl_qubits if self.with_ctrl else []):
-            circ += gates.BitFlipChannel(self.flip_rate).on(qubit)
+        if self.focus_on is None:
+            for qubit in g.obj_qubits + (g.ctrl_qubits if self.with_ctrl else []):
+                circ += gates.BitFlipChannel(self.flip_rate).on(qubit)
+        else:
+            if self.focus_on in g.obj_qubits or self.focus_on in g.ctrl_qubits:
+                circ += gates.BitFlipChannel(self.flip_rate).on(self.focus_on)
         return circ
 
 
@@ -226,6 +240,8 @@ class NoiseChannelAdder(ChannelAdderBase):
     Args:
         channel (:class:`~.core.gates.NoiseGate`): A single qubit quantum channel.
         with_ctrl (bool): Whether add quantum channel for control qubits. Default: ``True``.
+        focus_on (int): Only add this noise channel on ``focus_on`` qubit. If ``None``, add to
+            all qubits of selected quantum gate. Default: ``None``.
         add_after (bool): Whether add this channel after quantum gate or not. If ``False``, the
             channel will add before quantum gate. Default: ``True``.
 
@@ -234,14 +250,19 @@ class NoiseChannelAdder(ChannelAdderBase):
         >>> from mindquantum.core.gates import AmplitudeDampingChannel
         >>> circ = Circuit().h(0).x(1, 0)
         >>> channel = AmplitudeDampingChannel(0.3)
-        >>> adder = NoiseChannelAdder(channel, with_ctrl=True, add_after=True)
-        >>> adder(circ)
+        >>> adder1 = NoiseChannelAdder(channel, with_ctrl=True, add_after=True)
+        >>> adder1(circ)
         q0: ──H────ADC(γ=3/10)────●────ADC(γ=3/10)──
                                   │
         q1: ──────────────────────X────ADC(γ=3/10)──
+        >>> adder2 = NoiseChannelAdder(channel, with_ctrl=True, focus_on=1, add_after=True)
+        >>> adder2(circ)
+        q0: ──H────●─────────────────
+                   │
+        q1: ───────X────ADC(γ=3/10)──
     """
 
-    def __init__(self, channel: NoiseGate, with_ctrl=True, add_after: bool = True):
+    def __init__(self, channel: NoiseGate, with_ctrl=True, focus_on: int = None, add_after: bool = True):
         """Initialize a BitFlipAdder."""
         _check_input_type("channel", NoiseGate, channel)
         _check_input_type("with_ctrl", bool, with_ctrl)
@@ -250,6 +271,9 @@ class NoiseChannelAdder(ChannelAdderBase):
         super().__init__(add_after=add_after)
         self.with_ctrl = with_ctrl
         self.channel = channel
+        if focus_on is not None:
+            _check_int_type("focus_on", focus_on)
+        self.focus_on = focus_on
 
     def __repr__(self) -> str:
         """Return string expression of adder."""
@@ -258,8 +282,12 @@ class NoiseChannelAdder(ChannelAdderBase):
     def _handler(self, g: BasicGate, *args, **kwargs) -> Circuit:
         """Create action you will do if a gate is acceptable."""
         circ = Circuit()
-        for qubit in g.obj_qubits + (g.ctrl_qubits if self.with_ctrl else []):
-            circ += self.channel.on(qubit)
+        if self.focus_on is None:
+            for qubit in g.obj_qubits + (g.ctrl_qubits if self.with_ctrl else []):
+                circ += self.channel.on(qubit)
+        else:
+            if self.focus_on in g.obj_qubits or self.focus_on in g.ctrl_qubits:
+                circ += self.channel.on(self.focus_on)
         return circ
 
 

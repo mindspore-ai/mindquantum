@@ -80,11 +80,15 @@ def test_bit_flip_adder():
     Expectation: success.
     """
     circ = Circuit().h(0).x(1, 0)
-    adder = BitFlipAdder(0.1, with_ctrl=False)
+    adder1 = BitFlipAdder(0.1, with_ctrl=False)
     channel = BitFlipChannel(0.1)
-    new_circ = adder(circ)
+    new_circ = adder1(circ)
     exp_circ = Circuit().h(0) + channel.on(0) + X.on(1, 0) + channel.on(1)
     assert new_circ == exp_circ
+    adder2 = BitFlipAdder(0.1, with_ctrl=False, focus_on=1)
+    new_circ2 = adder2(circ)
+    exp_circ2 = circ + channel.on(1)
+    assert new_circ2 == exp_circ2
 
 
 def test_noise_channel_adder():
@@ -94,10 +98,14 @@ def test_noise_channel_adder():
     """
     circ = Circuit().h(0).x(1, 0)
     channel = AmplitudeDampingChannel(0.3)
-    adder = NoiseChannelAdder(channel, with_ctrl=True, add_after=True)
-    new_circ = adder(circ)
+    adder1 = NoiseChannelAdder(channel, with_ctrl=True, add_after=True)
+    new_circ = adder1(circ)
     exp_circ = Circuit().h(0) + channel.on(0) + X.on(1, 0) + channel.on(1) + channel.on(0)
     assert new_circ == exp_circ
+    adder2 = NoiseChannelAdder(channel, with_ctrl=True, focus_on=1, add_after=True)
+    new_circ2 = adder2(circ)
+    exp_circ2 = circ + channel.on(1)
+    assert new_circ2 == exp_circ2
 
 
 def test_mixer_adder():
