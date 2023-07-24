@@ -19,7 +19,7 @@ from types import FunctionType, MethodType
 from mindquantum.utils.type_value_check import _check_input_type
 
 from .. import gates
-from ..gates import BasicGate, NoiseGate
+from ..gates import BarrierGate, BasicGate, NoiseGate
 from .circuit import Circuit
 
 
@@ -51,6 +51,8 @@ class ChannelAdderBase:
         """Add noise channel after acceptable quantum gate."""
         out = Circuit()
         for g in circ:
+            if isinstance(g, BarrierGate):
+                continue
             if self.add_after:
                 out += g
             if all(rule(g) for rule in self.accepter):
