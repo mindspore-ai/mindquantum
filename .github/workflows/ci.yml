@@ -371,7 +371,6 @@ jobs:
 
       - name: Get history and tags for SCM versioning to work
         run: |
-          git config --global --add safe.directory /__w/mindquantum/mindquantum
           git fetch --prune --unshallow
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
