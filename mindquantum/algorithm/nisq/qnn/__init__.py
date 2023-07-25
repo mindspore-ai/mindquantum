@@ -12,10 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """Algorithm for IQP Encoding."""
 
+from . import arxiv_1905_10876
+from .arxiv_1905_10876 import (
+    Ansatz1,
+    Ansatz2,
+    Ansatz3,
+    Ansatz4,
+    Ansatz5,
+    Ansatz6,
+    Ansatz7,
+    Ansatz8,
+    Ansatz9,
+    Ansatz10,
+)
 from .iqp_encoding import IQPEncoding
 from .strongly_entangling import StronglyEntangling
 
 __all__ = ['IQPEncoding', 'StronglyEntangling']
+__all__.extend(arxiv_1905_10876.__all__)
+__all__.sort()
