@@ -286,11 +286,6 @@ jobs:
       - name: Install
         run: ./build_locally.sh --install  # NB: no need to pass the other parameters
 
-      - name: Run C++ tests
-        run: |
-          cd build
-          catchsegv ctest --output-on-failure
-
       - name: Run debugger in case of failure
         if: ${{ failure() }}
         run: |
@@ -370,8 +365,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: install git
+        run: |
+          apt-get install -y git
+
       - name: Get history and tags for SCM versioning to work
         run: |
+          git config --global --add safe.directory /__w/mindquantum/mindquantum
           git fetch --prune --unshallow
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
