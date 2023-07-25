@@ -367,7 +367,7 @@ jobs:
 
       - name: install git
         run: |
-          apt-get install -y git
+          apt-get update && apt-get install -y git
 
       - name: Get history and tags for SCM versioning to work
         run: |
