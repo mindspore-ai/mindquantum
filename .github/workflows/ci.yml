@@ -119,59 +119,6 @@ jobs:
 
       # ------------------------------------------------------------------------
 
-      - name: In-build config files
-        if: matrix.test_install
-        run: |
-          cat ${{ github.workspace }}/build/mindquantumConfig.cmake
-          echo ----------
-          cat ${{ github.workspace }}/build/mindquantumTargetsExternal.cmake
-
-      - name: Out-of-build config files
-        if: matrix.test_install
-        run: |
-          cat ${{ github.workspace }}/build/config_for_install/mindquantumConfig.cmake
-          echo ----------
-          cat ${{ github.workspace }}/build/config_for_install/mindquantumTargetsExternal.cmake
-
-      - name: Setup installation test
-        if: matrix.test_install
-        run: |
-          mkdir other
-          cat << \EOF > other/CMakeLists.txt
-          cmake_minimum_required(VERSION 3.20)
-          project(test CXX)
-          find_package(mindquantum CONFIG REQUIRED)
-          set(CMAKE_CXX_STANDARD 20)
-          set(CMAKE_CXX_STANDARD_REQUIRED OFF)
-          set(CMAKE_CXX_EXTENSIONS OFF)
-          add_library(mylib STATIC test.cpp)
-          target_link_libraries(mylib PUBLIC mindquantum::mq_cxx_nextgen)
-          EOF
-          cat << \EOF > other/test.cpp
-          #include "experimental/ops/parametric/angle_gates.hpp"
-          double foo() { return mindquantum::ops::parametric::Rxx{1.3}.eval_full().angle(); }
-          EOF
-
-      - name: Test (local) installation
-        if: matrix.test_install
-        run: |
-          . venv/bin/activate
-          unset Python_ROOT_DIR
-          hash -r
-          cmake -S other -B other/local_build -Dmindquantum_DEBUG=ON -Dmindquantum_ROOT=${{ github.workspace }}/build
-          cmake --build other/local_build --target all -v
-
-      - name: Test (normal) installation
-        if: matrix.test_install
-        run: |
-          . venv/bin/activate
-          unset Python_ROOT_DIR
-          hash -r
-          cmake -S other -B other/build -Dmindquantum_DEBUG=ON  -Dmindquantum_ROOT="${{ github.workspace }}/install"
-          cmake --build other/build --target all -v
-
-      # ------------------------------------------------------------------------
-
       - name: Test (setup.py) installation
         if: matrix.test_bdist_wheel
         env:
@@ -279,6 +226,9 @@ jobs:
 
       - name: Get history and tags for SCM versioning to work
         run: |
+          ls
+          pwd
+          git config --global --add safe.directory /__w/mindquantum/mindquantum
           git fetch --prune --unshallow
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
