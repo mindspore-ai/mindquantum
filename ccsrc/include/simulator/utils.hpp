@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "core/mq_base_types.hpp"
-#include "simulator/types.hpp"
+
 namespace mindquantum::sim {
 index_t QIndexToMask(qbits_t objs);
 PauliMask GenPauliMask(const std::vector<PauliWord>& pws);

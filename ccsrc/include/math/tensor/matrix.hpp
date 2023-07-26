@@ -14,6 +14,8 @@
 #ifndef MATH_TENSOR_MATRIX
 #define MATH_TENSOR_MATRIX
 
+#include <algorithm>
+#include <iterator>
 #include <stdexcept>
 #include <vector>
 
@@ -40,20 +42,18 @@ struct Matrix : public Tensor {
         }
         std::vector<T> tmp;
         for (auto& row : m) {
-            for (auto& data : row) {
-                tmp.push_back(data);
-            }
+            std::copy(row.begin(), row.end(), std::back_inserter(tmp));
         }
         auto t = Tensor(tmp);
         this->dtype = t.dtype;
-        this->device = t.device;
+        this->device = device;
         this->data = t.data;
         this->dim = t.dim;
         t.data = nullptr;
     }
     Matrix() = default;
-    Matrix(TDtype dtype, TDevice device, void* data, size_t n_col, size_t n_row)
-        : n_col(n_col), n_row(n_row), Tensor(dtype, device, data, n_col * n_row) {
+    Matrix(TDtype dtype, TDevice device, void* data, size_t n_row, size_t n_col)
+        : Tensor(dtype, device, data, n_col * n_row), n_row(n_row), n_col(n_col) {
     }
     Matrix(Tensor&& other, size_t n_row, size_t n_col) : n_row(n_row), n_col(n_col) {
         if (n_col * n_row != other.dim) {

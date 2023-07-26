@@ -17,7 +17,6 @@
 
 #include "core/utils.hpp"
 #include "math/pr/parameter_resolver.hpp"
-#include "simulator/types.hpp"
 #include "simulator/utils.hpp"
 #ifdef __x86_64__
 #    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_double_policy.hpp"
@@ -40,7 +39,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::InitState(index_t dim, bo
 }
 
 template <typename derived_, typename calc_type_>
-void CPUDensityMatrixPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t* qs_p, index_t dim, bool zero_state) {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t* qs_p) {
     derived::FreeState(qs_p);
 }
 
@@ -223,7 +222,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::PureStateVector(const qs_
         return qs_vector;
     }
     py_qs_datas_t qs_vector(dim);
-    index_t base;
+    index_t base = 0;
     calc_type base_value;
     for (index_t i = 0; i < dim; i++) {
         if (qs[IdxMap(i, i)].real() > 1e-8) {
@@ -255,8 +254,8 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* q
             dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
                 auto j = (i ^ mask_f);
                 if (i <= j) {
-                    auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
-                    auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
+                    auto axis2power = CountOne(i & mask.mask_z);  // -1
+                    auto axis3power = CountOne(i & mask.mask_y);  // -1j
                     auto c = ComplexCast<double, calc_type>::apply(
                         POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
                     for (index_t col = 0; col < dim; col++) {
@@ -270,7 +269,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* q
                 }
             })
     }
-    Reset(qs_p, dim, false);
+    Reset(qs_p);
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
         auto mask_f = mask.mask_x | mask.mask_y;
@@ -279,8 +278,8 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* q
             dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
                 auto j = (i ^ mask_f);
                 if (i <= j) {
-                    auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
-                    auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
+                    auto axis2power = CountOne(i & mask.mask_z);  // -1
+                    auto axis3power = CountOne(i & mask.mask_y);  // -1j
                     auto c = ComplexCast<double, calc_type>::apply(
                         POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
                     for (index_t row = 0; row <= i; row++) {

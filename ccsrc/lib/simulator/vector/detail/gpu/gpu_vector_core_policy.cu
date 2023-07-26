@@ -54,7 +54,7 @@ void GPUVectorPolicyBase<derived_, calc_type_>::FreeState(qs_data_p_t* qs_p) {
 }
 
 template <typename derived_, typename calc_type_>
-void GPUVectorPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t* qs_p, index_t dim) {
+void GPUVectorPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t* qs_p) {
     derived::FreeState(qs_p);
 }
 

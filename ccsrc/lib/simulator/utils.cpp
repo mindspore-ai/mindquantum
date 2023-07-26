@@ -17,8 +17,6 @@
 #include <cassert>
 #include <numeric>
 
-#include "simulator/types.hpp"
-
 namespace mindquantum::sim {
 index_t QIndexToMask(qbits_t objs) {
     return std::accumulate(objs.begin(), objs.end(), index_t(0), [](index_t a, qbit_t b) { return a + (1UL << b); });

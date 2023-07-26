@@ -88,7 +88,7 @@ fermion_op_t reverse_jordan_wigner(const qubit_op_t& ops, int n_qubits) {
     if (n_qubits <= 0) {
         n_qubits = local_n_qubits;
     }
-    if (n_qubits < local_n_qubits) {
+    if (n_qubits < static_cast<int>(local_n_qubits)) {
         throw std::runtime_error("Target qubits number is less than local qubits of operator.");
     }
     auto transf_op = fermion_op_t();
@@ -116,7 +116,7 @@ fermion_op_t reverse_jordan_wigner(const qubit_op_t& ops, int n_qubits) {
                     }
                     trans_pauli += raising_term;
                     trans_pauli += lowering_term;
-                    for (auto j = 0; j < idx; j++) {
+                    for (auto j = 0; j < static_cast<int>(idx); j++) {
                         working_term = qubit_op_t({idx - 1 - j, qubit::TermValue::Z}) * working_term;
                     }
                     auto s_coeff = working_term.singlet_coeff();

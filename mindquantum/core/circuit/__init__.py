@@ -24,7 +24,10 @@ from .channel_adder import (
     ChannelAdderBase,
     MeasureAccepter,
     MixerAdder,
+    NoiseChannelAdder,
     NoiseExcluder,
+    QubitIDConstrain,
+    QubitNumberConstrain,
     ReverseAdder,
     SequentialAdder,
 )

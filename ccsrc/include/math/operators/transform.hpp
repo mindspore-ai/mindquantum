@@ -62,21 +62,22 @@ edge_matrix_t get_edge_matrix(const fermion_op_t& ops);
 
 edge_enum_t enumerate_edges(const edge_matrix_t& edge_matrix);
 
-qubit_op_t get_b(int i, const edge_matrix_t& edge_matrix, edge_enum_t& edge_enum);
+qubit_op_t get_b(int i, const edge_matrix_t& edge_matrix, const edge_enum_t& edge_enum);
 
-qubit_op_t get_a(int i, int j, const edge_matrix_t& edge_matrix, edge_enum_t& edge_enum);
+qubit_op_t get_a(int i, int j, const edge_matrix_t& edge_matrix, const edge_enum_t& edge_enum);
 
-qubit_op_t transformed_number_operator(int i, const edge_matrix_t& edge_matrix, edge_enum_t& edge_enum);
+qubit_op_t transformed_number_operator(int i, const edge_matrix_t& edge_matrix, const edge_enum_t& edge_enum);
 
-qubit_op_t transformed_excitation_operator(int i, int j, const edge_matrix_t& edge_matrix, edge_enum_t& edge_enum);
+qubit_op_t transformed_excitation_operator(int i, int j, const edge_matrix_t& edge_matrix,
+                                           const edge_enum_t& edge_enum);
 
-qubit_op_t transformed_exchange_operator(int i, int j, const edge_matrix_t& edge_matrix, edge_enum_t& edge_enum);
+qubit_op_t transformed_exchange_operator(int i, int j, const edge_matrix_t& edge_matrix, const edge_enum_t& edge_enum);
 
 qubit_op_t transformed_number_excitation_operator(int i, int j, int k, const edge_matrix_t& edge_matrix,
-                                                  edge_enum_t& edge_enum);
+                                                  const edge_enum_t& edge_enum);
 
 qubit_op_t transformed_double_excitation_operator(int i, int j, int k, int l, const edge_matrix_t& edge_matrix,
-                                                  edge_enum_t& edge_enum);
+                                                  const edge_enum_t& edge_enum);
 
 qubit_op_t bravyi_kitaev_superfast(const fermion_op_t& ops);
 }  // namespace operators::transform

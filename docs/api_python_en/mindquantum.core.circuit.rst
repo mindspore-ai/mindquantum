@@ -47,12 +47,15 @@ Channel adder
     :template: classtemplate.rst
 
     mindquantum.core.circuit.ChannelAdderBase
+    mindquantum.core.circuit.NoiseChannelAdder
     mindquantum.core.circuit.MeasureAccepter
     mindquantum.core.circuit.ReverseAdder
     mindquantum.core.circuit.NoiseExcluder
     mindquantum.core.circuit.BitFlipAdder
     mindquantum.core.circuit.MixerAdder
     mindquantum.core.circuit.SequentialAdder
+    mindquantum.core.circuit.QubitNumberConstrain
+    mindquantum.core.circuit.QubitIDConstrain
 
 shortcut
 ----------

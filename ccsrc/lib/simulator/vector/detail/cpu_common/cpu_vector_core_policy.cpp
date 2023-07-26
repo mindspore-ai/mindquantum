@@ -21,7 +21,6 @@
 
 #include "core/utils.hpp"
 #include "math/pr/parameter_resolver.hpp"
-#include "simulator/types.hpp"
 #include "simulator/utils.hpp"
 #ifdef __x86_64__
 #    include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
@@ -45,7 +44,7 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::InitState(index_t dim, bool zero
 }
 
 template <typename derived_, typename calc_type_>
-void CPUVectorPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t* qs_p, index_t dim) {
+void CPUVectorPolicyBase<derived_, calc_type_>::Reset(qs_data_p_t* qs_p) {
     derived::FreeState(qs_p);
 }
 
@@ -143,8 +142,8 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* qs_p,
             dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
                 auto j = (i ^ mask_f);
                 if (i <= j) {
-                    auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
-                    auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
+                    auto axis2power = CountOne(i & mask.mask_z);  // -1
+                    auto axis3power = CountOne(i & mask.mask_y);  // -1j
                     auto c = ComplexCast<double, calc_type>::apply(
                         POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
                     out[j] += qs[i] * coeff * c;
@@ -185,8 +184,8 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfTerms(const qs_data
                 for (omp::idx_t i = 0; i < dim; i++) {
                     auto j = (i ^ mask_f);
                     if (i <= j) {
-                        auto axis2power = CountOne(static_cast<int64_t>(i & mask.mask_z));  // -1
-                        auto axis3power = CountOne(static_cast<int64_t>(i & mask.mask_y));  // -1j
+                        auto axis2power = CountOne(i & mask.mask_z);  // -1
+                        auto axis3power = CountOne(i & mask.mask_y);  // -1j
                         auto c = ComplexCast<double, calc_type>::apply(
                             POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
                         auto tmp = std::conj(bra[j]) * ket[i] * coeff * c;
@@ -219,7 +218,7 @@ auto CPUVectorPolicyBase<derived_, calc_type>::GroundStateOfZZs(const std::map<i
                      for (omp::idx_t i = 0; i < (1UL << n_qubits); i++) {
                          calc_type ith_energy = 0;
                          for (auto& [mask, coeff] : masks_value) {
-                             if (CountOne(static_cast<int64_t>(i & mask)) & 1) {
+                             if (CountOne(i & mask) & 1) {
                                  ith_energy -= coeff;
                              } else {
                                  ith_energy += coeff;

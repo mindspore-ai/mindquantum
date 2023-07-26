@@ -83,7 +83,7 @@ std::unordered_set<qubit_op_t::term_t::first_type> update_set(qubit_op_t::term_t
     */
     std::unordered_set<qubit_op_t::term_t::first_type> indices;
     qubit_op_t::term_t::first_type index = idx + 1;
-    while (index <= n_qubits) {
+    while (index <= static_cast<qubit_op_t::term_t::first_type>(n_qubits)) {
         indices.insert(index - 1);
         index += index & (-index);
     }

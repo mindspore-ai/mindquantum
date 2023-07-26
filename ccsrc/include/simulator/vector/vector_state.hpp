@@ -40,7 +40,6 @@
 #include "ops/gates.hpp"
 #include "ops/hamiltonian.hpp"
 #include "simulator/timer.h"
-#include "simulator/types.hpp"
 #include "simulator/utils.hpp"
 
 namespace mindquantum::sim::vector::detail {

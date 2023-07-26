@@ -17,7 +17,7 @@
 namespace operators::transform {
 
 qubit_op_t parity(const fermion_op_t& ops, int n_qubits) {
-    auto local_n_qubits = ops.count_qubits();
+    int local_n_qubits = ops.count_qubits();
     if (n_qubits <= 0) {
         n_qubits = local_n_qubits;
     }
@@ -29,10 +29,10 @@ qubit_op_t parity(const fermion_op_t& ops, int n_qubits) {
         auto transformed_term = qubit_op_t("", coeff);
         for (const auto& [idx, value] : term) {
             qlist_t x1 = {}, z1 = {}, x2 = {};
-            for (auto i = idx; i < n_qubits; i++) {
+            for (auto i = idx; i < static_cast<size_t>(n_qubits); i++) {
                 x1.push_back((i));
             }
-            for (auto i = idx + 1; i < n_qubits; i++) {
+            for (auto i = idx + 1; i < static_cast<size_t>(n_qubits); i++) {
                 x2.push_back((i));
             }
             if (idx > 0) {
