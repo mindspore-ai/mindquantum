@@ -24,18 +24,21 @@ Tensor init(size_t len, TDtype dtype, TDevice device) {
         return cpu::init(len, dtype);
     } else {
     }
+    return Tensor();
 }
 
 Tensor cast_to(const Tensor& t, TDtype target_dtype) {
     if (t.device == TDevice::CPU) {
         return cpu::cast_to(t, target_dtype);
     }
+    return Tensor();
 }
 
 std::string to_string(const Tensor& t, bool simplify) {
     if (t.device == TDevice::CPU) {
         return cpu::to_string(t, simplify);
     }
+    return "";
 }
 
 void destroy(Tensor* t) {
@@ -52,6 +55,7 @@ Tensor init_with_value(float a, TDevice device) {
         return cpu::init_with_value(a);
     } else {
     }
+    return Tensor();
 }
 
 Tensor init_with_value(double a, TDevice device) {
@@ -59,6 +63,7 @@ Tensor init_with_value(double a, TDevice device) {
         return cpu::init_with_value(a);
     } else {
     }
+    return Tensor();
 }
 
 Tensor init_with_value(const std::complex<float>& a, TDevice device) {
@@ -66,6 +71,7 @@ Tensor init_with_value(const std::complex<float>& a, TDevice device) {
         return cpu::init_with_value(a);
     } else {
     }
+    return Tensor();
 }
 
 Tensor init_with_value(const std::complex<double>& a, TDevice device) {
@@ -73,6 +79,7 @@ Tensor init_with_value(const std::complex<double>& a, TDevice device) {
         return cpu::init_with_value(a);
     } else {
     }
+    return Tensor();
 }
 
 Tensor init_with_vector(const std::vector<float>& a, TDevice device) {
@@ -80,24 +87,28 @@ Tensor init_with_vector(const std::vector<float>& a, TDevice device) {
         return cpu::init_with_vector(a);
     } else {
     }
+    return Tensor();
 }
 Tensor init_with_vector(const std::vector<double>& a, TDevice device) {
     if (device == TDevice::CPU) {
         return cpu::init_with_vector(a);
     } else {
     }
+    return Tensor();
 }
 Tensor init_with_vector(const std::vector<std::complex<float>>& a, TDevice device) {
     if (device == TDevice::CPU) {
         return cpu::init_with_vector(a);
     } else {
     }
+    return Tensor();
 }
 Tensor init_with_vector(const std::vector<std::complex<double>>& a, TDevice device) {
     if (device == TDevice::CPU) {
         return cpu::init_with_vector(a);
     } else {
     }
+    return Tensor();
 }
 
 // -----------------------------------------------------------------------------
@@ -107,6 +118,7 @@ Tensor copy(const Tensor& t) {
         return cpu::copy(t);
     } else {
     }
+    return Tensor();
 }
 
 // -----------------------------------------------------------------------------
@@ -145,10 +157,11 @@ void set(Tensor* t, const Tensor& source, size_t idx) {
 // -----------------------------------------------------------------------------
 
 Tensor get(const Tensor& t, size_t idx) {
-    if (t.device == TDevice::GPU) {
+    if (t.device == TDevice::CPU) {
         return cpu::get(t, idx);
     } else {
     }
+    return Tensor();
 }
 
 }  // namespace tensor::ops
