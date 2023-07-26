@@ -243,6 +243,14 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
             auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
             qs_policy_t::ApplyRzz(&qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
         } break;
+        case GateID::Rxy: {
+            auto g = static_cast<RxyGate*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
+            qs_policy_t::ApplyRxy(&qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
         case GateID::PS: {
             auto g = static_cast<PSGate*>(gate.get());
             if (!g->GradRequired()) {

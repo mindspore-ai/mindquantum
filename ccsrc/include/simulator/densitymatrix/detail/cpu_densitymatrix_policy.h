@@ -156,6 +156,12 @@ struct CPUDensityMatrixPolicyBase {
                                calc_type s);
     static void ApplyRzzCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
                              calc_type s, bool diff);
+    static void ApplyRxy(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+                         bool diff = false);
+    static void ApplyRxyNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+                               qs_data_t s);
+    static void ApplyRxyCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+                             qs_data_t s, bool diff);
     static void ApplyMatrixGate(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs, const qbits_t& ctrls,
                                 const matrix_t& m, index_t dim);
     // Channel operator
