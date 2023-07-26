@@ -19,6 +19,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "config/openmp.hpp"
+
 #include "core/mq_base_types.hpp"
 #include "core/utils.hpp"
 #include "math/tensor/csr_matrix.hpp"
@@ -566,9 +568,9 @@ Tensor MatMul(void* m1, size_t* indptr, size_t* indices, size_t n_row, size_t n_
     auto c_out = reinterpret_cast<upper_t*>(out.data);
 
     THRESHOLD_OMP_FOR(
-        len, 1UL << mindquantum::nQubitTh, for (size_t i = 0; i < n_row; i++) {
+        len, 1UL << mindquantum::nQubitTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(n_row); i++) {
             upper_t sum = 0.0;
-            for (size_t j = indptr[i]; j < indptr[i + 1]; j++) {
+            for (omp::idx_t j = indptr[i]; j < static_cast<omp::idx_t>(indptr[i + 1]); j++) {
                 if constexpr (m1_dtype == m2_dtype) {
                     sum += c_m1[j] * c_m2[indices[j]];
                 } else if constexpr (is_complex_dtype_v<m1_dtype> && !is_complex_dtype_v<m2_dtype>) {

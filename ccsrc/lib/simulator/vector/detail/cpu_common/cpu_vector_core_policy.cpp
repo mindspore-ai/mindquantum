@@ -82,7 +82,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::SetToZeroExcept(qs_data_p_t* qs_
         qs = derived::InitState(dim);
     }
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+        dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             if ((i & ctrl_mask) != ctrl_mask) {
                 qs[i] = 0;
             }
@@ -95,7 +95,7 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::Copy(const qs_data_p_t& qs, inde
     if (qs != nullptr) {
         out = derived::InitState(dim, false);
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { out[i] = qs[i]; })
+            dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) { out[i] = qs[i]; })
     }
     return out;
 };
@@ -105,7 +105,7 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::GetQS(const qs_data_p_t& qs, ind
     VT<py_qs_data_t> out(dim);
     if (qs != nullptr) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { out[i] = qs[i]; })
+            dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) { out[i] = qs[i]; })
     } else {
         out[0] = 1.0;
     }
@@ -122,7 +122,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t* qs_p, const V
         qs = derived::InitState(dim, false);
     }
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) { qs[i] = qs_out[i]; })
+        dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) { qs[i] = qs_out[i]; })
 }
 
 template <typename derived_, typename calc_type_>
@@ -139,7 +139,7 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* qs_p,
         auto mask_f = mask.mask_x | mask.mask_y;
         auto coeff = coeff_;
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+            dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                 auto j = (i ^ mask_f);
                 if (i <= j) {
                     auto axis2power = CountOne(i & mask.mask_z);  // -1
@@ -181,7 +181,7 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfTerms(const qs_data
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t i = 0; i < dim; i++) {
+                for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                     auto j = (i ^ mask_f);
                     if (i <= j) {
                         auto axis2power = CountOne(i & mask.mask_z);  // -1

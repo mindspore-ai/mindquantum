@@ -34,7 +34,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyXLike(qs_data_p_t* qs_p, co
     SingleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
+            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                 auto j = i | mask.obj_mask;
                 auto tmp = qs[i];
@@ -43,7 +43,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyXLike(qs_data_p_t* qs_p, co
             })
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
+            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                 if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                     auto j = i | mask.obj_mask;

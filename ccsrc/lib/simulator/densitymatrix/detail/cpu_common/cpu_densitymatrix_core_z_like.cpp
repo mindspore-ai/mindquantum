@@ -39,7 +39,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyZLike(qs_data_p_t* q
     SingleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t k = 0; k < (dim / 2); k++) {  // loop on the row
+            dim, DimTh, for (omp::idx_t k = 0; k < static_cast<omp::idx_t>(dim / 2); k++) {  // loop on the row
                 auto r0 = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
                 auto r1 = r0 | mask.obj_mask;
                 for (index_t l = 0; l < k; l++) {  // loop on the column
@@ -55,7 +55,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyZLike(qs_data_p_t* q
             })
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t k = 0; k < (dim / 2); k++) {  // loop on the row
+            dim, DimTh, for (omp::idx_t k = 0; k < static_cast<omp::idx_t>(dim / 2); k++) {  // loop on the row
                 auto r0 = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
                 auto r1 = r0 | mask.obj_mask;
                 for (index_t l = 0; l < k; l++) {  // loop on the column
@@ -133,7 +133,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyPS(qs_data_p_t* qs_p
         auto e = -std::sin(val) + IMAGE_I * std::cos(val);
         if (!mask.ctrl_mask) {
             THRESHOLD_OMP_FOR(
-                dim, DimTh, for (omp::idx_t k = 0; k < (dim / 2); k++) {  // loop on the row
+                dim, DimTh, for (omp::idx_t k = 0; k < static_cast<omp::idx_t>(dim / 2); k++) {  // loop on the row
                     auto r0 = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
                     auto r1 = r0 | mask.obj_mask;
                     for (index_t l = 0; l <= k; l++) {  // loop on the column
@@ -146,7 +146,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyPS(qs_data_p_t* qs_p
                 })
         } else {
             THRESHOLD_OMP_FOR(
-                dim, DimTh, for (omp::idx_t k = 0; k < (dim / 2); k++) {  // loop on the row
+                dim, DimTh, for (omp::idx_t k = 0; k < static_cast<omp::idx_t>(dim / 2); k++) {  // loop on the row
                     auto r0 = ((k & mask.obj_high_mask) << 1) + (k & mask.obj_low_mask);
                     auto r1 = r0 | mask.obj_mask;
                     for (index_t l = 0; l <= k; l++) {  // loop on the column

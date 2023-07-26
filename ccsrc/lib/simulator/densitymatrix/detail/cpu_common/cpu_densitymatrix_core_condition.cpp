@@ -41,7 +41,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::DiagonalConditionalCollec
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel
             for schedule(static) reduction(+: res_real)), dim, DimTh,
-                     for (omp::idx_t i = 0; i < dim; i++) {
+                     for (omp::idx_t i = 0; i <static_cast<omp::idx_t>(dim); i++) {
                          if ((i & mask) == condi) {
                              res_real += qs[IdxMap(i, i)].real();
                          }
@@ -69,7 +69,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalBinary(const q
     } else {
         // if index mask satisfied condition, multiply by succe_coeff, otherwise multiply fail_coeff
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+            dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                 auto _i_0 = IdxMap(i, 0);
                 if ((i & mask) == condi) {
                     for (index_t j = 0; j <= i; j++) {
@@ -106,7 +106,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ConditionalBinary(const q
     } else {
         // if index mask satisfied condition, multiply by succe_coeff, otherwise multiply fail_coeff
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+            dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                 auto _i_0 = IdxMap(i, 0);
                 if ((i & mask) == condi) {
                     for (index_t j = 0; j <= i; j++) {

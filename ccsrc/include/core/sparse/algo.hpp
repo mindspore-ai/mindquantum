@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "config/openmp.hpp"
 #include "config/type_promotion.hpp"
 
 #include "core/sparse/csrhdmatrix.hpp"
@@ -73,7 +74,7 @@ std::shared_ptr<CsrHdMatrix<T>> PauliMatToCsrHdMatrix(std::shared_ptr<PauliMat<T
     auto &p = a->p_;
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+ : nnz)), dim, 1UL << nQubitTh,
-                     for (Index i = 0; i < dim; i++) {
+                     for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                          if (i <= col[i]) {
                              nnz++;
                          }
@@ -127,7 +128,7 @@ std::shared_ptr<CsrHdMatrix<T>> SparseHamiltonian(const VT<PauliTerm<T>> &hams, 
     VT<std::shared_ptr<CsrHdMatrix<T>>> sp_hams(hams.size());
 
     THRESHOLD_OMP_FOR(
-        n_qubits, nQubitTh, for (Index i = 0; i < static_cast<Index>(hams.size()); i++) {
+        n_qubits, nQubitTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(hams.size()); i++) {
             auto pm = GetPauliMat(hams[i], n_qubits);
             sp_hams[i] = PauliMatToCsrHdMatrix(pm);
             pm->Reset();
@@ -137,7 +138,7 @@ std::shared_ptr<CsrHdMatrix<T>> SparseHamiltonian(const VT<PauliTerm<T>> &hams, 
         Index half = tot / 2 + tot % 2;
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for schedule(static) num_threads(half)), n_qubits, nQubitTh,
-                         for (Index i = half; i < tot; i++) {
+                         for (omp::idx_t i = static_cast<omp::idx_t>(half); i < tot; i++) {
                              sp_hams[i - half] = Csr_Plus_Csr(sp_hams[i - half], sp_hams[i]);
                              sp_hams[i]->Reset();
                          })
@@ -156,9 +157,9 @@ T2 *Csr_Dot_Vec(std::shared_ptr<CsrHdMatrix<T>> a, T2 *vec) {
     auto indptr = a->indptr_;
     auto indices = a->indices_;
     THRESHOLD_OMP_FOR(
-        dim, 1UL << nQubitTh, for (Index i = 0; i < dim; i++) {
+        dim, 1UL << nQubitTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             CT<T2> sum = {0.0, 0.0};
-            for (Index j = indptr[i]; j < indptr[i + 1]; j++) {
+            for (omp::idx_t j = indptr[i]; j < static_cast<omp::idx_t>(indptr[i + 1]); j++) {
                 sum += data[j] * c_vec[indices[j]];
             }
             new_vec[i] = sum;
@@ -177,7 +178,7 @@ CT<T2> ExpectationOfCsr(std::shared_ptr<CsrHdMatrix<T>> a, T2 *bra, T2 *ket) {
     T2 res_real = 0, res_imag = 0;
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, 1UL << nQubitTh,
-                                                for (Index i = 0; i < dim; i++) {
+                                                for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                                                     CT<T2> sum = {0.0, 0.0};
                                                     for (Index j = indptr[i]; j < indptr[i + 1]; j++) {
                                                         sum += data[j] * c_ket[indices[j]];
@@ -203,12 +204,12 @@ T2 *Csr_Dot_Vec(std::shared_ptr<CsrHdMatrix<T>> a, std::shared_ptr<CsrHdMatrix<T
     auto indices_b = b->indices_;
 
     THRESHOLD_OMP_FOR(
-        dim, 1UL << nQubitTh, for (Index i = 0; i < dim; i++) {
+        dim, 1UL << nQubitTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             CT<T2> sum = {0.0, 0.0};
-            for (Index j = indptr[i]; j < indptr[i + 1]; j++) {
+            for (omp::idx_t j = indptr[i]; j < static_cast<omp::idx_t>(indptr[i + 1]); j++) {
                 sum += data[j] * c_vec[indices[j]];
             }
-            for (Index j = indptr_b[i]; j < indptr_b[i + 1]; j++) {
+            for (omp::idx_t j = indptr_b[i]; j < static_cast<omp::idx_t>(indptr_b[i + 1]); j++) {
                 sum += data_b[j] * c_vec[indices_b[j]];
             }
             new_vec[i] = sum;
@@ -231,18 +232,18 @@ CT<T2> ExpectationOfCsr(std::shared_ptr<CsrHdMatrix<T>> a, std::shared_ptr<CsrHd
 
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, 1UL << nQubitTh,
-                                                for (Index i = 0; i < dim; i++) {
-                                                    CT<T2> sum = {0.0, 0.0};
-                                                    for (Index j = indptr[i]; j < indptr[i + 1]; j++) {
-                                                        sum += data[j] * c_ket[indices[j]];
-                                                    }
-                                                    for (Index j = indptr_b[i]; j < indptr_b[i + 1]; j++) {
-                                                        sum += data_b[j] * c_ket[indices_b[j]];
-                                                    }
-                                                    auto tmp = std::conj(c_bra[i]) * sum;
-                                                    res_real += std::real(tmp);
-                                                    res_imag += std::imag(tmp);
-                                                })
+            for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+                CT<T2> sum = {0.0, 0.0};
+                for (omp::idx_t j = indptr[i]; j < static_cast<omp::idx_t>(indptr[i + 1]); j++) {
+                    sum += data[j] * c_ket[indices[j]];
+                }
+                for (omp::idx_t j = indptr_b[i]; j < static_cast<omp::idx_t>(indptr_b[i + 1]); j++) {
+                    sum += data_b[j] * c_ket[indices_b[j]];
+                }
+                auto tmp = std::conj(c_bra[i]) * sum;
+                res_real += std::real(tmp);
+                res_imag += std::imag(tmp);
+            })
     return {res_real, res_imag};
 }
 }  // namespace mindquantum::sparse
