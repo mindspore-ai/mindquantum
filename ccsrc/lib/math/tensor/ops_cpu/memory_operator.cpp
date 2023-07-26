@@ -80,7 +80,7 @@ std::string to_string(const Tensor& t, bool simplify) {
         case (TDtype::Complex128):
             return to_string<TDtype::Complex128>(t.data, t.dim, simplify);
         default:
-            throw std::runtime_error("cannot convert " + to_string(t.dtype) + " to string.");
+            throw std::runtime_error("cannot convert " + dtype_to_string(t.dtype) + " to string.");
     }
     return "";
 }

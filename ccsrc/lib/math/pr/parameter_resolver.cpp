@@ -65,7 +65,7 @@ tn::Tensor ParameterResolver::GetConstValue() const {
 }
 
 std::string ParameterResolver::ToString() const {
-    std::string out = "ParameterResolver(dtype: " + tensor::to_string(this->const_value.dtype) + ",";
+    std::string out = "ParameterResolver(dtype: " + tensor::dtype_to_string(this->const_value.dtype) + ",";
     if (this->data_.size() == 0) {
         out += " const: " + tn::ops::to_string(this->const_value, true);
         out += ")";
