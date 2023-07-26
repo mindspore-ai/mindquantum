@@ -21,7 +21,7 @@ target_link_libraries(mqsim_common PUBLIC mq_base)
 force_at_least_cxx17_workaround(mqsim_common)
 append_to_property(mq_install_targets GLOBAL mqsim_common)
 if(MSVC)
-  target_compile_definitions(mqsim_common PUBLIC /wd4661)
+  target_compile_options(mqsim_common PUBLIC /wd4661)
 endif()
 
 add_library(mqsim_vector_cpu STATIC)
