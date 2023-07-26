@@ -157,6 +157,7 @@ Tensor generate_binary(void* data, TDtype dtype, size_t len, T a) {
             return GenerateBinary<TDtype::Complex64, other_dtype, false, false, binary_ops>(data, len, other);
         }
     }
+    return Tensor();
 }
 
 // vector = number + vector
@@ -178,6 +179,7 @@ Tensor generate_binary_rev(void* data, TDtype dtype, size_t len, T a) {
             return GenerateBinary<TDtype::Complex64, other_dtype, false, true, binary_ops>(data, len, other);
         }
     }
+    return Tensor();
 }
 
 // -----------------------------------------------------------------------------
@@ -250,6 +252,7 @@ Tensor generate_binary_array(void* data, TDtype dtype, size_t len, void* other) 
             return GenerateBinary<TDtype::Complex64, other_dtype, true, false, binary_ops>(data, len, other);
         }
     }
+    return Tensor();
 }
 
 // vector = vector2 + vector1
@@ -270,6 +273,7 @@ Tensor generate_binary_array_rev(void* data, TDtype dtype, size_t len, void* oth
             return GenerateBinary<TDtype::Complex64, other_dtype, true, true, binary_ops>(data, len, other);
         }
     }
+    return Tensor();
 }
 
 // -----------------------------------------------------------------------------
@@ -445,6 +449,7 @@ Tensor generate_binary_array(void* data, TDtype src, size_t len, const Tensor& a
     } else {
         throw std::runtime_error("Dimension miss match.");
     }
+    return Tensor();
 }
 
 template <template <typename ops_t = void> class binary_ops>
@@ -497,6 +502,7 @@ Tensor generate_binary_array_rev(void* data, TDtype src, size_t len, const Tenso
     } else {
         throw std::runtime_error("Dimension miss match.");
     }
+    return Tensor();
 }
 
 // -----------------------------------------------------------------------------

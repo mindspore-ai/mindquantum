@@ -28,6 +28,7 @@
 #include "core/mq_base_types.hpp"
 #include "core/sparse/csrhdmatrix.hpp"
 #include "core/utils.hpp"
+#include "math/tensor/ops_cpu/utils.hpp"
 #include "math/tensor/traits.hpp"
 
 namespace mindquantum::sim::vector::detail {
@@ -197,10 +198,11 @@ struct CastTo {
         if constexpr (std::is_same_v<policy_src, policy_des>) {
             return policy_des::Copy(qs, dim);
         } else {
+            auto caster = tensor::cast_value<typename policy_src::calc_type, typename policy_des::calc_type>();
             auto des = policy_des::InitState(dim, false);
             THRESHOLD_OMP_FOR(
                 dim, policy_des::DimTh, for (omp::idx_t i = 0; i < dim; i++) {
-                    des[i] = typename policy_des::qs_data_t{std::real(qs[i]), std::imag(qs[i])};
+                    des[i] = typename policy_des::qs_data_t{caster(std::real(qs[i])), caster(std::imag(qs[i]))};
                 })
             return des;
         }

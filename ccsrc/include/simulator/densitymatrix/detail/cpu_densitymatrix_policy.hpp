@@ -25,6 +25,7 @@
 
 #include "core/mq_base_types.hpp"
 #include "core/utils.hpp"
+#include "math/tensor/ops_cpu/utils.hpp"
 #include "math/tensor/traits.hpp"
 
 // Warning: only correct when x >= y
@@ -213,9 +214,10 @@ struct CastTo {
             return policy_des::Copy(qs, dim);
         }
         auto des = policy_des::InitState(dim, false);
+        auto caster = tensor::cast_value<typename policy_src::calc_type, typename policy_des::calc_type>();
         THRESHOLD_OMP_FOR(
             dim, policy_des::DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) {
-                des[i] = typename policy_des::qs_data_t{std::real(qs[i]), std::imag(qs[i])};
+                des[i] = typename policy_des::qs_data_t{caster(std::real(qs[i])), caster(std::imag(qs[i]))};
             })
         return des;
     }
