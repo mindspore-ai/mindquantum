@@ -597,7 +597,7 @@ jobs:
   # ============================================================================
 
   clang-cl:
-    if: ${{ false }}
+    if: ${{ true }}
     runs-on: windows-latest
     name: "Clang-Cl • x64"
     steps:
@@ -690,7 +690,7 @@ jobs:
   # ============================================================================
 
   mingw64:
-    if: ${{ false }}
+    if: ${{ true }}
     runs-on: windows-2022
     strategy:
       fail-fast: false
@@ -779,7 +779,7 @@ jobs:
   # ============================================================================
 
   msys2:
-    if: ${{ false }}
+    if: ${{ true }}
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -928,7 +928,7 @@ jobs:
   # ============================================================================
 
   cygwin:
-    if: ${{ false }}
+    if: ${{ true }}
     runs-on: windows-latest
     name: "Cygwin • x64"
     env:
