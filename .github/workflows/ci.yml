@@ -367,6 +367,10 @@ jobs:
         run: |
           apt-get update && apt-get install -y git
 
+      - name: install libomp-dev
+        run: |
+          apt-get update && apt-get install -y libomp-dev
+
       - name: Get history and tags for SCM versioning to work
         run: |
           ls -alth
