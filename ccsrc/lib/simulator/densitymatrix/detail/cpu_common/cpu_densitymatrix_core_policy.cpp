@@ -94,7 +94,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetToZeroExcept(qs_data_p
         qs = derived::InitState(dim);
     }
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+        dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             if ((i & ctrl_mask) != ctrl_mask) {
                 for (index_t j = 0; j < (dim / 2); j++) {
                     if ((j & ctrl_mask) != ctrl_mask) {
@@ -111,7 +111,8 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::Copy(const qs_data_p_t& q
     if (qs != nullptr) {
         out = derived::InitState(dim, false);
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { out[i] = qs[i]; })
+            dim, DimTh,
+            for (omp::idx_t i = 0; i < static_cast<omp::idx_t>((dim * dim + dim) / 2); i++) { out[i] = qs[i]; })
     }
     return out;
 }
@@ -124,7 +125,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetQS(const qs_data_p_t& 
         return out;
     }
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+        dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             for (index_t j = 0; j < i; j++) {
                 out[i][j] = qs[IdxMap(i, j)];
             }
@@ -146,7 +147,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t* qs_p, 
         qs = derived::InitState(dim);
     }
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+        dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             for (index_t j = 0; j <= i; j++) {
                 qs[IdxMap(i, j)] = vec_out[i] * std::conj(vec_out[j]);
             }
@@ -163,7 +164,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetDM(qs_data_p_t* qs_p, 
         qs = derived::InitState(dim);
     }
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+        dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             for (index_t j = 0; j <= i; j++) {
                 qs[IdxMap(i, j)] = mat_out[i][j];
             }
@@ -181,7 +182,8 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::CopyQS(qs_data_p_t* qs_de
         qs[0] = 1.0;
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { qs[i] = qs_src[i]; })
+            dim, DimTh,
+            for (omp::idx_t i = 0; i < static_cast<omp::idx_t>((dim * dim + dim) / 2); i++) { qs[i] = qs_src[i]; })
     }
 }
 
@@ -193,10 +195,12 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::Purity(const qs_data_p_t&
     calc_type p = 0;
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+: p)), dim, DimTh,
-                     for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { p += 2 * std::norm(qs[i]); })
+                     for (omp::idx_t i = 0; i < static_cast<omp::idx_t>((dim * dim + dim) / 2);
+                          i++) { p += 2 * std::norm(qs[i]); })
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+: p)), dim, DimTh,
-                     for (omp::idx_t i = 0; i < dim; i++) { p += -std::norm(qs[IdxMap(i, i)]); })
+                     for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim);
+                          i++) { p += -std::norm(qs[IdxMap(i, i)]); })
     return p;
 }
 
@@ -233,7 +237,9 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::PureStateVector(const qs_
         }
     }
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t i = base + 1; i < dim; i++) { qs_vector[i] = qs[IdxMap(i, base)] / base_value; })
+        dim, DimTh, for (omp::idx_t i = base + 1; i < static_cast<omp::idx_t>(dim); i++) {
+            qs_vector[i] = qs[IdxMap(i, base)] / base_value;
+        })
     return qs_vector;
 }
 
@@ -251,7 +257,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* q
         auto mask_f = mask.mask_x | mask.mask_y;
         auto coeff = coeff_;
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+            dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                 auto j = (i ^ mask_f);
                 if (i <= j) {
                     auto axis2power = CountOne(i & mask.mask_z);  // -1
@@ -275,7 +281,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* q
         auto mask_f = mask.mask_x | mask.mask_y;
         auto coeff = coeff_;
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+            dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                 auto j = (i ^ mask_f);
                 if (i <= j) {
                     auto axis2power = CountOne(i & mask.mask_z);  // -1

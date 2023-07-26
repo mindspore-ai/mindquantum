@@ -108,7 +108,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxxNoCtrl(qs_data_p_
     }
     DoubleQubitGateMask mask(objs, ctrls);
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
+        dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 4); a++) {
             VT<index_t> row(4);  // row index of reduced matrix entry
             SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
                           row[0]);
@@ -148,7 +148,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRxxCtrl(qs_data_p_t*
     }
     DoubleQubitGateMask mask(objs, ctrls);
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
+        dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 4); a++) {
             VT<index_t> row(4);  // row index of reduced matrix entry
             SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
                           row[0]);
@@ -228,7 +228,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyyNoCtrl(qs_data_p_
     }
     DoubleQubitGateMask mask(objs, ctrls);
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
+        dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 4); a++) {
             VT<index_t> row(4);  // row index of reduced matrix entry
             SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
                           row[0]);
@@ -275,7 +275,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRyyCtrl(qs_data_p_t*
     }
     DoubleQubitGateMask mask(objs, ctrls);
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
+        dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 4); a++) {
             VT<index_t> row(4);  // row index of reduced matrix entry
             SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
                           row[0]);
@@ -363,7 +363,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzzNoCtrl(qs_data_p_
     auto me2 = me * me;
     auto e2 = e * e;
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
+        dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 4); a++) {
             VT<index_t> row(4);  // row index of reduced matrix entry
             SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
                           row[0]);
@@ -410,7 +410,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRzzCtrl(qs_data_p_t*
     auto me2 = me * me;
     auto e2 = e * e;
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
+        dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 4); a++) {
             VT<index_t> row(4);  // row index of reduced matrix entry
             SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
                           row[0]);

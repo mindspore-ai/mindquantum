@@ -49,7 +49,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySingleQubitChannel(c
     }
     SingleQubitGateMask mask({obj_qubit}, {});
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {  // loop on the row
+        dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 2); a++) {  // loop on the row
             auto r0 = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
             auto r1 = r0 + mask.obj_mask;
             for (index_t b = 0; b <= a; b++) {  // loop on the column
@@ -139,7 +139,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyDepolarizing(qs_data
     for (auto obj_qubit : objs) {
         SingleQubitGateMask mask({obj_qubit}, {});
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {  // loop on the row
+            dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 2); a++) {  // loop on the row
                 auto r0 = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                 auto r1 = r0 + mask.obj_mask;
                 for (index_t b = 0; b <= a; b++) {  // loop on the column
@@ -156,8 +156,9 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyDepolarizing(qs_data
     }
     calc_type n = pow(4, objs.size());
     THRESHOLD_OMP_FOR(
-        dim, DimTh,
-        for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) { qs[i] = (1 - prob) * qs[i] + prob / n * tmp_qs[i]; })
+        dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>((dim * dim + dim) / 2); i++) {
+            qs[i] = (1 - prob) * qs[i] + prob / n * tmp_qs[i];
+        })
     derived::FreeState(&tmp_qs);
 }
 

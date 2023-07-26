@@ -35,7 +35,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::HamiltonianMatrix(const s
         auto mask_f = mask.mask_x | mask.mask_y;
         auto coeff = coeff_;
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+            dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                 auto j = (i ^ mask_f);
                 if (i <= j) {
                     auto axis2power = CountOne(i & mask.mask_z);  // -1
@@ -69,7 +69,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetExpectation(const qs_d
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:e_r, e_i) schedule(static)), dim, DimTh,
-                for (omp::idx_t i = 0; i < dim; i++) {
+                for (omp::idx_t i = 0; i <static_cast<omp::idx_t>(dim); i++) {
                     auto j = (i ^ mask_f);
                     if (i <= j) {
                         auto axis2power = CountOne(i & mask.mask_z);  // -1
@@ -115,7 +115,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatr
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 2); a++) {
                     auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                     auto j = i + mask.obj_mask;
                     qs_data_t this_res = 0;
@@ -146,7 +146,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatr
             // clang-format off
             THRESHOLD_OMP(
                 MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                    for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                    for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim/2); a++) {
                         auto i = ((a & first_high_mask) << 1) + (a & first_low_mask);
                         i = ((i & second_high_mask) << 1) + (i & second_low_mask) + mask.ctrl_mask;
                         auto j = i + mask.obj_mask;
@@ -165,7 +165,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatr
             // clang-format off
             THRESHOLD_OMP(
                 MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                    for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                    for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim/2); a++) {
                         auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                         if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                             auto j = i + mask.obj_mask;
@@ -216,7 +216,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim/2); a++) {
                     index_t r0;  // row index of reduced matrix entry
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   a, r0);
@@ -246,7 +246,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim/2); a++) {
                     index_t r0;  // row index of reduced matrix entry
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   a, r0);
@@ -315,7 +315,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRX(const qs_dat
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim/2); a++) {
                     auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                     auto j = i + mask.obj_mask;
                     qs_data_t this_res = 0;
@@ -332,7 +332,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRX(const qs_dat
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim/2); a++) {
                     auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                     if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto j = i + mask.obj_mask;
@@ -372,7 +372,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRY(const qs_dat
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim/2); a++) {
                     auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                     auto j = i + mask.obj_mask;
                     qs_data_t this_res = 0;
@@ -389,7 +389,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRY(const qs_dat
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim/2); a++) {
                     auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                     if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto j = i + mask.obj_mask;
@@ -429,7 +429,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRZ(const qs_dat
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim/2); a++) {
                     auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                     auto j = i + mask.obj_mask;
                     qs_data_t this_res = 0;
@@ -446,7 +446,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRZ(const qs_dat
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim/2); a++) {
                     auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                     if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto j = i + mask.obj_mask;
@@ -486,7 +486,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffPS(const qs_dat
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim/2); a++) {
                     auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                     auto j = i + mask.obj_mask;
                     qs_data_t this_res = 0;
@@ -502,7 +502,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffPS(const qs_dat
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim/2); a++) {
                     auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                     if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto j = i + mask.obj_mask;
@@ -544,7 +544,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Theta(const q
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim/2); a++) {
                     auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                     auto j = i + mask.obj_mask;
                     qs_data_t this_res = 0;
@@ -560,7 +560,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Theta(const q
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim/2); a++) {
                     auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                     if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto j = i + mask.obj_mask;
@@ -600,7 +600,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Phi(const qs_
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim/2); a++) {
                     auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                     auto j = i + mask.obj_mask;
                     qs_data_t this_res = 0;
@@ -616,7 +616,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffU3Phi(const qs_
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t a = 0; a < (dim / 2); a++) {
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim/2); a++) {
                     auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                     if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto j = i + mask.obj_mask;
@@ -655,7 +655,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRxx(const qs_da
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim/4); l++) {
                     index_t r0;
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   l, r0);
@@ -678,7 +678,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRxx(const qs_da
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim/4); l++) {
                     index_t r0;
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   l, r0);
@@ -724,7 +724,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRyy(const qs_da
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim/4); l++) {
                     index_t r0;
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   l, r0);
@@ -747,7 +747,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRyy(const qs_da
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim/4); l++) {
                     index_t r0;
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   l, r0);
@@ -793,7 +793,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRzz(const qs_da
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim/4); l++) {
                     index_t r0;
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   l, r0);
@@ -816,7 +816,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRzz(const qs_da
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim/4); l++) {
                     index_t r0;
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   l, r0);
@@ -863,7 +863,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimTheta(const
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim/4); l++) {
                     index_t r0;
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   l, r0);
@@ -883,7 +883,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimTheta(const
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim/4); l++) {
                     index_t r0;
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   l, r0);
@@ -927,7 +927,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimPhi(const q
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim/4); l++) {
                     index_t r0;
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   l, r0);
@@ -945,7 +945,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimPhi(const q
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim/4); l++) {
                     index_t r0;
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   l, r0);

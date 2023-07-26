@@ -42,7 +42,7 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::Vdot(const qs_data_p_t& bra, con
     // clang-format off
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-            for (omp::idx_t i = 0; i < dim; i++) {
+            for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                 res_real += bra[i].real() * ket[i].real() + bra[i].imag() * ket[i].imag();
                 res_imag += bra[i].real() * ket[i].imag() - bra[i].imag() * ket[i].real();
             })
@@ -74,7 +74,7 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ConditionVdot(const qs_data_p_t&
     // clang-format off
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-            for (omp::idx_t i = 0; i < dim; i++) {
+            for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                 if ((i & mask) == condi) {
                     res_real += bra[i].real() * ket[i].real() + bra[i].imag() * ket[i].imag();
                     res_imag += bra[i].real() * ket[i].imag() - bra[i].imag() * ket[i].real();
@@ -95,7 +95,7 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::OneStateVdot(const qs_data_p_t& 
     // clang-format off
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-            for (omp::idx_t l = 0; l < (dim / 2); l++) {
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask) + mask.obj_mask;
                 res_real += bra[i].real() * ket[i].real() + bra[i].imag() * ket[i].imag();
                 res_imag += bra[i].real() * ket[i].imag() - bra[i].imag() * ket[i].real();
@@ -119,7 +119,7 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ZeroStateVdot(const qs_data_p_t&
     // clang-format off
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-            for (omp::idx_t l = 0; l < (dim / 2); l++) {
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                 res_real += bra[i].real() * ket[i].real() + bra[i].imag() * ket[i].imag();
                 res_imag += bra[i].real() * ket[i].imag() - bra[i].imag() * ket[i].real();

@@ -53,7 +53,7 @@ struct PauliMat {
         auto mask = GetPauliMask(pt.first);
         auto mask_f = mask.mask_x | mask.mask_y;
         THRESHOLD_OMP_FOR(
-            dim_, 1UL << nQubitTh, for (Index i = 0; i < dim_; i++) {
+            dim_, 1UL << nQubitTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim_); i++) {
                 auto j = (i ^ mask_f);
                 col_[i] = j;
                 auto axis2power = CountOne(static_cast<uint64_t>(i & mask.mask_z));  // -1

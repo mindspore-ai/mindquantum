@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "config/config.hpp"
+#include "config/openmp.hpp"
 #include "config/popcnt.hpp"
 
 #include "core/mq_base_types.hpp"
@@ -57,7 +58,7 @@ CT<T> ComplexInnerProduct(const ST *v1, const ST *v2, Index len) {
     auto size = len / 2;
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for reduction(+ : real_part, imag_part)), len, 2UL << nQubitTh,
-                     for (Index i = 0; i < size; i++) {
+                     for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) {
                          real_part += v1[2 * i] * v2[2 * i] + v1[2 * i + 1] * v2[2 * i + 1];
                          imag_part += v1[2 * i] * v2[2 * i + 1] - v1[2 * i + 1] * v2[2 * i];
                      })
@@ -73,7 +74,7 @@ CT<T> ComplexInnerProductWithControl(const ST *v1, const ST *v2, Index len, Inde
     auto size = len / 2;
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for reduction(+ : real_part, imag_part)), len, 2UL << nQubitTh,
-                     for (Index i = 0; i < size; i++) {
+                     for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) {
                          if ((i & ctrl_mask) == ctrl_mask) {
                              real_part += v1[2 * i] * v2[2 * i] + v1[2 * i + 1] * v2[2 * i + 1];
                              imag_part += v1[2 * i] * v2[2 * i + 1] - v1[2 * i + 1] * v2[2 * i];

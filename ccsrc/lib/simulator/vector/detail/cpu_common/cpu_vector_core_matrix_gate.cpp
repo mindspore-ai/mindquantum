@@ -61,7 +61,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(const qs_data
     }
     auto obj_mask = obj_masks.back();
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t l = 0; l < dim; l++) {
+        dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim); l++) {
             if (((l & ctrl_mask) == ctrl_mask) && ((l & obj_mask) == 0)) {
                 std::vector<qs_data_t> res_tmp;
                 for (size_t i = 0; i < m_dim; i++) {
@@ -104,7 +104,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(const qs_da
     if (!mask.ctrl_mask) {
         // clang-format off
         THRESHOLD_OMP_FOR(dim, DimTh,
-            for (omp::idx_t l = 0; l < (dim / 4); l++) {
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -123,7 +123,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(const qs_da
         // clang-format on
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
+            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -166,7 +166,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(const qs_
     SingleQubitGateMask mask({obj_qubit}, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
+            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                 auto j = i + mask.obj_mask;
                 auto t1 = m[0][0] * src[i] + m[0][1] * src[j];
@@ -176,7 +176,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(const qs_
             })
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 2); l++) {
+            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                 if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                     auto j = i + mask.obj_mask;

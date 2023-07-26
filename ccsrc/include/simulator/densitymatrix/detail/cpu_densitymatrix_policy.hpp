@@ -216,7 +216,7 @@ struct CastTo {
         auto des = policy_des::InitState(dim, false);
         auto caster = tensor::cast_value<typename policy_src::calc_type, typename policy_des::calc_type>();
         THRESHOLD_OMP_FOR(
-            dim, policy_des::DimTh, for (omp::idx_t i = 0; i < (dim * dim + dim) / 2; i++) {
+            dim, policy_des::DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>((dim * dim + dim) / 2); i++) {
                 des[i] = typename policy_des::qs_data_t{caster(std::real(qs[i])), caster(std::imag(qs[i]))};
             })
         return des;
