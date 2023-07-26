@@ -43,6 +43,7 @@ TDtype ToRealType(TDtype dtype) {
         case TDtype::Complex128:
             return to_real_dtype_t<TDtype::Complex128>;
     }
+    return TDtype::Float64;
 }
 
 TDtype ToComplexType(TDtype dtype) {
@@ -55,6 +56,7 @@ TDtype ToComplexType(TDtype dtype) {
         case TDtype::Float64:
             return TDtype::Complex128;
     }
+    return TDtype::Complex128;
 }
 
 bool IsRealType(TDtype dtype) {
@@ -139,5 +141,6 @@ TDtype upper_type_v(TDtype t1, TDtype t2) {
         UPPER_TYPE(TDtype::Complex128);
         UPPER_TYPE(TDtype::Complex64);
     }
+    return TDtype::Complex128;
 }
 }  // namespace tensor

@@ -38,7 +38,8 @@ struct cast_value {
         } else if constexpr (!is_complex_v<des_t> && is_complex_v<src_t>) {
             return std::real(a);
         } else if constexpr (is_complex_v<des_t> && is_complex_v<src_t>) {
-            return {std::real(a), std::imag(a)};
+            using real_des_t = to_device_t<to_real_dtype_t<to_dtype_v<des_t>>>;
+            return {static_cast<real_des_t>(std::real(a)), static_cast<real_des_t>(std::imag(a))};
         } else {
             return a;
         }
