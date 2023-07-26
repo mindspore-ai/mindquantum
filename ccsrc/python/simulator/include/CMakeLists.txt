@@ -19,6 +19,6 @@
 add_library(bind_lib INTERFACE)
 target_include_directories(bind_lib INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>)
 target_link_libraries(_mq_vector PUBLIC bind_lib)
-# target_link_libraries(_mq_matrix PUBLIC bind_lib)
+target_link_libraries(_mq_matrix PUBLIC bind_lib)
 append_to_property(mq_install_targets GLOBAL bind_lib)
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/python DESTINATION ${MQ_INSTALL_INCLUDEDIR})
