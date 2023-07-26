@@ -56,8 +56,9 @@ Tensor cast_to(void* data, size_t len) {
     auto c_data = reinterpret_cast<d_src*>(data);
     auto out = cpu::init<des>(len);
     auto c_out = reinterpret_cast<d_des*>(out.data);
+    auto caster = cast_value<to_device_t<src>, to_device_t<des>>();
     for (size_t i = 0; i < len; i++) {
-        c_out[i] = number_convert<to_device_t<src>, to_device_t<des>>::apply(c_data[i]);
+        c_out[i] = caster(c_data[i]);
     }
     return out;
 }

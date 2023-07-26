@@ -30,22 +30,6 @@
 #include "math/tensor/traits.hpp"
 
 namespace tensor::ops::cpu {
-template <typename src_t, typename des_t>
-struct cast_value {
-    des_t operator()(const src_t& a) const {
-        if constexpr (std::is_same_v<src_t, des_t>) {
-            return a;
-        } else if constexpr (!is_complex_v<des_t> && is_complex_v<src_t>) {
-            return std::real(a);
-        } else if constexpr (is_complex_v<des_t> && is_complex_v<src_t>) {
-            using real_des_t = to_device_t<to_real_dtype_t<to_dtype_v<des_t>>>;
-            return {static_cast<real_des_t>(std::real(a)), static_cast<real_des_t>(std::imag(a))};
-        } else {
-            return a;
-        }
-    }
-};
-
 template <TDtype lhs_dtype, TDtype other_dtype, bool is_array = false, bool reverse = false,
           template <typename ops_t = void> class binary_ops>
 void InplaceBinary(void* data, size_t len, void* other) {
