@@ -192,8 +192,8 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
             qs_policy_t::ApplySWAP(&qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
             break;
         case GateID::ISWAP: {
-            // bool daggered = static_cast<ISWAPGate*>(gate.get())->daggered_;
-            qs_policy_t::ApplyISWAP(&qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+            bool daggered = static_cast<ISWAPGate*>(gate.get())->daggered_;
+            qs_policy_t::ApplyISWAP(&qs, gate->obj_qubits_, gate->ctrl_qubits_, daggered, dim);
         } break;
         case GateID::RX: {
             auto g = static_cast<RXGate*>(gate.get());
@@ -251,14 +251,14 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
             auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
             qs_policy_t::ApplyPS(&qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
         } break;
-        // case GateID::GP: {
-        //     auto g = static_cast<GPGate*>(gate.get());
-        //     if (!g->GradRequired()) {
-        //         diff = false;
-        //     }
-        //     auto val = g->prs_[0].Combination(pr).const_value;
-        //     qs_policy_t::ApplyGP(qs, gate->obj_qubits_[0], gate->ctrl_qubits_, val, dim, diff);
-        // } break;
+        case GateID::GP: {
+            auto g = static_cast<GPGate*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
+            qs_policy_t::ApplyGP(&qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
         case GateID::U3: {
             if (diff) {
                 std::runtime_error("Can not apply differential format of U3 gate on quantum states currently.");
