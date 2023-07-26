@@ -15,6 +15,7 @@
 
 #include "config/openmp.hpp"
 
+#include "ops/gates.hpp"
 #include "simulator/utils.hpp"
 #include "simulator/vector/detail/gpu_vector_double_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_float_policy.cuh"

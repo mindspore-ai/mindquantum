@@ -562,13 +562,13 @@ jobs:
           CC: cl
           CXX: cl
         run: >-
-           ./build_locally.ps1 -Cxx -DebugCmake -Ninja -Test -CCache -OnlyPytest -NoGitee
+           ./build_locally.ps1 -DebugCmake -Ninja -Test -CCache -OnlyPytest -NoGitee
            -ConfigureOnly -C -Clean3rdParty -Prefix "${{ github.workspace }}/install"
            -CMakeNoRegistry
            -DUSE_PARALLEL_STL=OFF
 
       - name: Build
-        run: ./build_locally.ps1 -Cxx -DebugCmake -Ninja -Test -CCache
+        run: ./build_locally.ps1 -DebugCmake -Ninja -Test -CCache
 
       - name: Install
         run: ./build_locally.ps1 -Install
@@ -654,13 +654,13 @@ jobs:
           CC: clang-cl
           CXX: clang-cl
         run: >-
-           ./build_locally.ps1 -Cxx -DebugCmake -Ninja -Test -CCache -OnlyPytest -NoGitee
+           ./build_locally.ps1 -DebugCmake -Ninja -Test -CCache -OnlyPytest -NoGitee
            -ConfigureOnly -C -Clean3rdParty -Prefix "${{ github.workspace }}/install"
            -CMakeNoRegistry -Verbose
            -DUSE_PARALLEL_STL=OFF
 
       - name: Build
-        run: ./build_locally.ps1 -Cxx -DebugCmake -Ninja -Test -CCache -Verbose
+        run: ./build_locally.ps1 -DebugCmake -Ninja -Test -CCache -Verbose
 
       - name: Install
         run: ./build_locally.ps1 -Install
@@ -753,13 +753,13 @@ jobs:
 
       - name: Configure
         run: >-
-           ./build_locally.ps1 -Cxx -DebugCmake -Ninja -Test -OnlyPytest -NoGitee
+           ./build_locally.ps1 -DebugCmake -Ninja -Test -OnlyPytest -NoGitee
            -ConfigureOnly -C -Clean3rdParty -Prefix "${{ github.workspace }}/install"
            -CMakeNoRegistry
            --% -G "MinGW Makefiles" -DUSE_PARALLEL_STL=OFF
 
       - name: Build
-        run: ./build_locally.ps1 -Cxx -DebugCmake -Ninja -Test
+        run: ./build_locally.ps1 -DebugCmake -Ninja -Test
 
       - name: Install
         run: ./build_locally.ps1 -Install

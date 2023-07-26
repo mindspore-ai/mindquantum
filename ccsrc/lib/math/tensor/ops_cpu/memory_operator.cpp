@@ -14,6 +14,7 @@
 
 #include "math/tensor/ops_cpu/memory_operator.hpp"
 
+#include <cstdint>
 #include <stdexcept>
 
 #include "math/tensor/traits.hpp"
