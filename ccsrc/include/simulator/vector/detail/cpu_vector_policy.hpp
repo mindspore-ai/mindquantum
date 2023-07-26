@@ -189,8 +189,6 @@ struct CPUVectorPolicyBase {
 
 template <typename policy_src, typename policy_des>
 struct CastTo {
-    static constexpr tensor::TDtype src_dtype = policy_src::dtype;
-    static constexpr tensor::TDtype des_dtype = policy_des::dtype;
     static typename policy_des::qs_data_p_t cast(typename policy_src::qs_data_p_t qs, size_t dim) {
         if (qs == nullptr) {
             return nullptr;

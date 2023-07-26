@@ -68,7 +68,6 @@ unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_matrix
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_x_like.cpp
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_matrix_gate.cpp
 unknownMacro:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_matrix_gate.cpp
-unknownMacro:ccsrc/include/simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp
 unknownMacro:ccsrc/include/simulator/vector/detail/cpu_vector_policy.hpp
 
 unreadVariable:ccsrc/lib/experimental/decompositions/time_evolution.cpp
