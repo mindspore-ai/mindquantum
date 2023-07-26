@@ -61,6 +61,7 @@ std::string to_string(const TermValue& term) {
         case TermValue::nll:
             return "nll";
     }
+    return "";
 }
 
 auto SingleFermionStr::ParseToken(const std::string& token) -> term_t {
@@ -165,7 +166,7 @@ bool SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_
     if (word == TermValue::I) {
         return true;
     }
-    auto& [ori_term, coeff] = fermion;
+    auto& ori_term = fermion.first;
     if ((word == TermValue::nll) || std::any_of(ori_term.begin(), ori_term.end(), [](auto j) {
             return j == static_cast<uint64_t>(TermValue::nll);
         })) {
@@ -202,7 +203,7 @@ bool SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_
               & 1;
     }
     if (one_mask & 1) {
-        coeff *= -1.0;
+        fermion.second *= -1.0;
     }
     return true;
 }

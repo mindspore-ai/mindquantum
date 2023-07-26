@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <vector>
 
 #include "math/tensor/ops_cpu/advance_math.hpp"
 #include "math/tensor/tensor.hpp"
@@ -27,6 +28,7 @@ Tensor sin(const Tensor& t) {
         return ops::cpu::ElementFunc(t, t.dtype, [](auto i) { return std::sin(i); });
     } else {
     }
+    return Tensor();
 }
 
 Tensor cos(const Tensor& t) {
@@ -34,6 +36,7 @@ Tensor cos(const Tensor& t) {
         return ops::cpu::ElementFunc(t, t.dtype, [](auto i) { return std::cos(i); });
     } else {
     }
+    return Tensor();
 }
 
 Tensor exp(const Tensor& t) {
@@ -41,6 +44,7 @@ Tensor exp(const Tensor& t) {
         return ops::cpu::ElementFunc(t, t.dtype, [](auto i) { return std::exp(i); });
     } else {
     }
+    return Tensor();
 }
 
 Tensor gather(const std::vector<Tensor>& tensors) {
@@ -55,6 +59,7 @@ Tensor gather(const std::vector<Tensor>& tensors) {
         return ops::cpu::Gather(tensors);
     } else {
     }
+    return Tensor();
 }
 
 Tensor real(const Tensor& t) {
@@ -62,6 +67,7 @@ Tensor real(const Tensor& t) {
         return ops::cpu::real(t);
     } else {
     }
+    return Tensor();
 }
 
 Tensor imag(const Tensor& t) {
@@ -69,12 +75,14 @@ Tensor imag(const Tensor& t) {
         return ops::cpu::imag(t);
     } else {
     }
+    return Tensor();
 }
 Tensor conj(const Tensor& t) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::conj(t);
     } else {
     }
+    return Tensor();
 }
 Tensor vdot(const Tensor& bra, const Tensor& ket) {
     if (bra.device != ket.device) {
@@ -84,12 +92,14 @@ Tensor vdot(const Tensor& bra, const Tensor& ket) {
         return ops::cpu::vdot(bra, ket);
     } else {
     }
+    return Tensor();
 }
 bool is_all_zero(const Tensor& t) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::is_all_zero(t);
     } else {
     }
+    return false;
 }
 std::vector<bool> is_equal_to(const Tensor& lhs, const Tensor& rhs) {
     if (lhs.device != rhs.device) {
@@ -99,5 +109,6 @@ std::vector<bool> is_equal_to(const Tensor& lhs, const Tensor& rhs) {
         return ops::cpu::is_equal_to(lhs, rhs);
     } else {
     }
+    return std::vector<bool>(lhs.dim, false);
 }
 }  // namespace tensor::ops

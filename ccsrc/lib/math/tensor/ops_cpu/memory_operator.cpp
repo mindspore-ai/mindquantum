@@ -64,6 +64,7 @@ Tensor cast_to(const Tensor& t, TDtype des) {
         TENSOR_CAST_TO_BRANCH(TDtype::Complex64)
         TENSOR_CAST_TO_BRANCH(TDtype::Complex128)
     }
+    return Tensor();
 }
 #undef TENSOR_CAST_TO_BRANCH
 // -----------------------------------------------------------------------------
@@ -104,6 +105,7 @@ Tensor copy(const Tensor& t) {
         case TDtype::Complex128:
             return cpu::copy<TDtype::Complex128>(t.data, t.dim);
     }
+    return Tensor();
 }
 
 void* copy_mem(void* data, TDtype dtype, size_t len) {
@@ -117,6 +119,7 @@ void* copy_mem(void* data, TDtype dtype, size_t len) {
         case (TDtype::Complex128):
             return copy_mem<TDtype::Complex128>(data, len);
     }
+    return nullptr;
 }
 
 // -----------------------------------------------------------------------------

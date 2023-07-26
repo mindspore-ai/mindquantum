@@ -40,6 +40,7 @@ std::string to_string(const TermValue& term) {
         case TermValue::Z:
             return "Z";
     }
+    return "";
 }
 
 auto SinglePauliStr::ParseToken(const std::string& token) -> term_t {
@@ -101,7 +102,7 @@ void SinglePauliStr::InplaceMulCompressTerm(const term_t& term, compress_term_t&
     size_t group_id = idx >> 5;
     size_t local_id = ((idx & 31) << 1);
     size_t local_mask = (1UL << local_id) | (1UL << (local_id + 1));
-    auto& [pauli_string, coeff] = pauli;
+    auto& pauli_string = pauli.first;
     if (pauli_string.size() < group_id + 1) {
         for (size_t i = pauli_string.size(); i < group_id + 1; i++) {
             pauli_string.push_back(0);
@@ -110,7 +111,7 @@ void SinglePauliStr::InplaceMulCompressTerm(const term_t& term, compress_term_t&
     } else {
         TermValue lhs = static_cast<TermValue>((pauli_string[group_id] & local_mask) >> local_id);
         auto [t, res] = pauli_product_map.at(lhs).at(word);
-        coeff = coeff * t;
+        pauli.second = pauli.second * t;
         pauli_string[group_id] = (pauli_string[group_id] & (~local_mask)) | (static_cast<uint64_t>(res)) << local_id;
     }
 }

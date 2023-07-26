@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <stdexcept>
+#include <vector>
 
 #include "math/tensor/ops_cpu/memory_operator.hpp"
 #include "math/tensor/tensor.hpp"
@@ -33,6 +34,7 @@ Tensor real(const Tensor& t) {
         case TDtype::Complex64:
             return cpu::real<TDtype::Complex64>(t.data, t.dim);
     }
+    return Tensor();
 }
 Tensor imag(const Tensor& t) {
     switch (t.dtype) {
@@ -45,6 +47,7 @@ Tensor imag(const Tensor& t) {
         case TDtype::Complex64:
             return cpu::imag<TDtype::Complex64>(t.data, t.dim);
     }
+    return Tensor();
 }
 
 // -----------------------------------------------------------------------------
@@ -60,6 +63,7 @@ Tensor conj(const Tensor& t) {
         case TDtype::Complex128:
             return ops::cpu::conj<TDtype::Complex128>(t.data, t.dim);
     }
+    return Tensor();
 }
 
 // -----------------------------------------------------------------------------
@@ -94,6 +98,7 @@ Tensor vdot(const Tensor& bra, const Tensor& ket) {
         VDOT_TENSOR(TDtype::Complex64)
         VDOT_TENSOR(TDtype::Complex128)
     }
+    return Tensor();
 }
 #undef VDOT_TENSOR
 
@@ -136,6 +141,7 @@ std::vector<bool> is_equal_to(const Tensor& lhs, const Tensor& rhs) {
         IS_EQUAL_TO_TENSOR(TDtype::Complex64)
         IS_EQUAL_TO_TENSOR(TDtype::Complex128)
     }
+    return std::vector<bool>(lhs.dim, false);
 }
 #undef IS_EQUAL_TO_TENSOR
 
