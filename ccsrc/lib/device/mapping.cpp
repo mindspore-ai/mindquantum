@@ -15,6 +15,7 @@
 #include "device/mapping.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -260,7 +261,7 @@ VT<Gate> SABRE::HeuristicSearch(VT<int>& pi, const VT<VT<int>>& DAG) {
             auto candidate_SWAPs = ObtainSWAPs(F, pi);
             auto E = GetExtendedSet(F, DAG, indeg);
             // find the SWAP with minimal H-score
-            double min_score = __DBL_MAX__;
+            double min_score = std::numeric_limits<double>::max();
             std::pair<int, int> min_SWAP;
             for (auto SWAP : candidate_SWAPs) {
                 int x = SWAP.first, y = SWAP.second;
