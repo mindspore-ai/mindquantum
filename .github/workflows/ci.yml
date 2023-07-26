@@ -26,7 +26,7 @@ env:
 
 jobs:
   standard:
-    if: ${{env.ENABLE_STANDARD}}
+    if: ${{ env.ENABLE_STANDARD }}
     strategy:
       fail-fast: false
       matrix:
@@ -142,7 +142,7 @@ jobs:
   # ============================================================================
 
   macos:
-    if: ${{env.ENABLE_MACOS}}
+    if: ${{ env.ENABLE_MACOS }}
     runs-on: macos-11
     name: "MacOS 11 • ${{ matrix.xcode }} • x64"
     env:
@@ -221,7 +221,7 @@ jobs:
   # ============================================================================
 
   gcc:
-    if: ${{env.ENABLE_GCC}}
+    if: ${{ env.ENABLE_GCC }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -355,7 +355,7 @@ jobs:
   # ============================================================================
 
   clang:
-    if: ${{env.ENABLE_CLANG}}
+    if: ${{ env.ENABLE_CLANG }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -516,7 +516,7 @@ jobs:
   # ============================================================================
 
   msvc:
-    if: ${{env.ENABLE_MSVC}}
+    if: ${{ env.ENABLE_MSVC }}
     runs-on: windows-latest
     name: "MSVC • x64"
     steps:
@@ -608,7 +608,7 @@ jobs:
   # ============================================================================
 
   clang-cl:
-    if: ${{env.ENABLE_CLANG_CL}}
+    if: ${{ env.ENABLE_CLANG_CL }}
     runs-on: windows-latest
     name: "Clang-Cl • x64"
     steps:
@@ -701,7 +701,7 @@ jobs:
   # ============================================================================
 
   mingw64:
-    if: ${{env.ENABLE_MINGW64}}
+    if: ${{ env.ENABLE_MINGW64 }}
     runs-on: windows-2022
     strategy:
       fail-fast: false
@@ -790,7 +790,7 @@ jobs:
   # ============================================================================
 
   msys2:
-    if: ${{env.ENABLE_MSYS2}}
+    if: ${{ env.ENABLE_MSYS2 }}
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -939,7 +939,7 @@ jobs:
   # ============================================================================
 
   cygwin:
-    if: ${{env.ENABLE_CYGWIN}}
+    if: ${{ env.ENABLE_CYGWIN }}
     runs-on: windows-latest
     name: "Cygwin • x64"
     env:
@@ -1085,7 +1085,7 @@ jobs:
   # ============================================================================
 
   cuda:
-    if: ${{env.ENABLE_CUDA}}
+    if: ${{ env.ENABLE_CUDA }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -1164,7 +1164,7 @@ jobs:
   # ============================================================================
 
   nvhpc:
-    if: ${{env.ENABLE_NVHPC}}
+    if: ${{ env.ENABLE_NVHPC }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
