@@ -245,7 +245,7 @@ class MQSim(BackendBase):
                     which not support circ_left and simulator_left."
                 )
             pr_shift = True
-        if pr_shift and "mqvector" not in self.name:
+        if pr_shift and not self.name.startswith('mqvector'):
             raise ValueError(f"{self.name} simulator not support parameter-shift rule.")
         non_hermitian = False
         if circ_left is not None:
@@ -346,7 +346,7 @@ class MQSim(BackendBase):
                     batch_threads,
                     mea_threads,
                 )
-            elif circ_right.is_noise_circuit and "mqmatrix" in self.name:
+            elif circ_right.is_noise_circuit and self.name.startswith('mqmatrix'):
                 f_g1_g2 = self.sim.get_expectation_with_noise_grad_multi_multi(
                     [i.get_cpp_obj() for i in hams],
                     circ_right.get_cpp_obj(),
