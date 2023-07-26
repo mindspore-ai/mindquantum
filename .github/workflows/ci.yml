@@ -367,9 +367,9 @@ jobs:
         run: |
           apt-get update && apt-get install -y git
 
-      - name: install libomp-dev
+      - name: install libomp-${{ matrix.clang }}-dev
         run: |
-          apt-get update && apt-get install -y libomp-dev
+          apt-get update && apt-get install -y libomp-${{ matrix.clang }}-dev
 
       - name: Get history and tags for SCM versioning to work
         run: |
