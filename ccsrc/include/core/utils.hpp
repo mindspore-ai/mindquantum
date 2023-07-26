@@ -101,6 +101,18 @@ inline uint32_t CountOne(int32_t n) {
 inline uint64_t CountOne(int64_t n) {
     return CountOne(uint64_t(n));
 }
+inline uint32_t CountLeadingZero(uint32_t n) {
+    return __lzcnt(n);
+}
+inline uint64_t CountLeadingZero(uint64_t n) {
+    return __lzcnt64(n);
+}
+inline uint32_t CountLeadingZero(int32_t n) {
+    return __lzcnt(uint32_t(n));
+}
+inline uint64_t CountLeadingZero(int64_t n) {
+    return __lzcnt64(uint64_t(n));
+}
 #else
 // inline int CountOne(uint64_t n) {
 //   uint8_t *p = reinterpret_cast<uint8_t *>(&n);
@@ -120,6 +132,18 @@ inline uint32_t CountOne(uint32_t n) {
 
 inline uint64_t CountOne(uint64_t n) {
     return __builtin_popcount(n);
+}
+inline uint32_t CountLeadingZero(uint32_t n) {
+    return __builtin_clzll(n);
+}
+inline uint64_t CountLeadingZero(uint64_t n) {
+    return __builtin_clzll(n);
+}
+inline uint32_t CountLeadingZero(int32_t n) {
+    return __builtin_clzll(uint32_t(n));
+}
+inline uint64_t CountLeadingZero(int64_t n) {
+    return __builtin_clzll(uint64_t(n));
 }
 #endif  // _MSC_VER
 
