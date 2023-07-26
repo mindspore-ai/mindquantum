@@ -15,5 +15,6 @@
 """Parameter resolver. Help to generate parameter in mindspore quantum."""
 
 from .parameterresolver import ParameterResolver, PRConvertible
+from .pr_generator import PRGenerator
 
-__all__ = ["ParameterResolver"]
+__all__ = ["ParameterResolver", "PRGenerator"]

@@ -14,9 +14,13 @@
 # ============================================================================
 """Base class of ansatz."""
 
+import inspect
+import typing
 from abc import abstractmethod
 
 from mindquantum.core.circuit import Circuit
+from mindquantum.core.gates import NoneParameterGate, ParameterGate
+from mindquantum.core.parameterresolver import PRGenerator
 
 
 class Ansatz:  # pylint: disable=too-few-public-methods
@@ -48,3 +52,32 @@ class Ansatz:  # pylint: disable=too-few-public-methods
             Circuit, the quantum circuit of this ansatz.
         """
         return self._circuit
+
+
+def single_qubit_gate_layer(
+    gate: typing.Union[ParameterGate, NoneParameterGate], n_qubits: int, stop: int = None, pr_gen: PRGenerator = None
+):
+    """
+    Generate a single qubit gate layer.
+
+    Args:
+        gate (Union[:class:`~.core.gates.ParameterGate`, :class:`~.core.gates.NoneParameterGate`]): A
+            quantum gate, can be a class or a instance.
+        n_qubits (int): Number qubits of ansatz. If `stop` is not ``None``, then `n_qubits` would be the start qubit.
+        stop (int): The stop qubit. If ``None``, `n_qubits` would be the stop qubit. Default: ``None``.
+        pr_gen (:class:`~.core.parameterresolver.PRGenerator`): Object that generate parameters. If given `gate` is
+            a sub class of ParameterGate, then `pr_gen` cannot be ``None``. Default: ``None``.
+    """
+    circ = Circuit()
+    q_range = range(n_qubits)
+    if stop is not None:
+        q_range = range(n_qubits, stop)
+    for i in q_range:
+        if inspect.isclass(gate):
+            if issubclass(gate, ParameterGate):
+                circ += gate(pr_gen.new()).on(i)
+            elif issubclass(gate, NoneParameterGate):
+                circ += gate().on(i)
+        else:
+            circ += gate.on(i)
+    return circ

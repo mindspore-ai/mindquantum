@@ -26,6 +26,15 @@ from .arxiv_1905_10876 import (
     Ansatz8,
     Ansatz9,
     Ansatz10,
+    Ansatz11,
+    Ansatz12,
+    Ansatz13,
+    Ansatz14,
+    Ansatz15,
+    Ansatz16,
+    Ansatz17,
+    Ansatz18,
+    Ansatz19,
 )
 from .iqp_encoding import IQPEncoding
 from .strongly_entangling import StronglyEntangling
