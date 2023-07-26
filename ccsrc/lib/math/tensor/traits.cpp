@@ -17,16 +17,16 @@
 #include <stdexcept>
 
 namespace tensor {
-std::string to_string(TDtype dtype) {
+std::string dtype_to_string(TDtype dtype) {
     switch (dtype) {
         case (TDtype::Float32):
-            return to_string<TDtype::Float32>();
+            return dtype_to_string<TDtype::Float32>();
         case (TDtype::Float64):
-            return to_string<TDtype::Float64>();
+            return dtype_to_string<TDtype::Float64>();
         case (TDtype::Complex64):
-            return to_string<TDtype::Complex64>();
+            return dtype_to_string<TDtype::Complex64>();
         case (TDtype::Complex128):
-            return to_string<TDtype::Complex128>();
+            return dtype_to_string<TDtype::Complex128>();
         default:
             throw std::runtime_error("Unknown dtype.");
     }
@@ -86,12 +86,12 @@ bool IsComplexType(TDtype dtype) {
 
 // -----------------------------------------------------------------------------
 
-std::string to_string(TDevice device) {
+std::string device_to_string(TDevice device) {
     switch (device) {
         case TDevice::CPU:
-            return to_string<TDevice::CPU>();
+            return device_to_string<TDevice::CPU>();
         case TDevice::GPU:
-            return to_string<TDevice::GPU>();
+            return device_to_string<TDevice::GPU>();
         default:
             throw std::runtime_error("Unknown device.");
     }

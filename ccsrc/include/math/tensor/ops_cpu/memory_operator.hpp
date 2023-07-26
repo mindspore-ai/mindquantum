@@ -71,7 +71,7 @@ template <TDtype dtype>
 std::string to_string(void* data, size_t dim, bool simplify = false) {
     std::string out = "";
     if (!simplify) {
-        out = "array(dtype: " + to_string(dtype) + ", device: " + to_string(TDevice::CPU) + ", data: [";
+        out = "array(dtype: " + dtype_to_string(dtype) + ", device: " + device_to_string(TDevice::CPU) + ", data: [";
     }
     using calc_t = to_device_t<dtype>;
     calc_t* data_ = reinterpret_cast<calc_t*>(data);
