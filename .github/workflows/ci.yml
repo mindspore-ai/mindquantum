@@ -15,7 +15,7 @@ env:
 
 jobs:
   standard:
-    if: ${{ false }}
+    if: ${{ true }}
     strategy:
       fail-fast: false
       matrix:
@@ -131,7 +131,7 @@ jobs:
   # ============================================================================
 
   macos:
-    if: ${{ false }}
+    if: ${{ true }}
     runs-on: macos-11
     name: "MacOS 11 • ${{ matrix.xcode }} • x64"
     env:
@@ -210,7 +210,7 @@ jobs:
   # ============================================================================
 
   gcc:
-    if: ${{ false }}
+    if: ${{ true }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -344,7 +344,7 @@ jobs:
   # ============================================================================
 
   clang:
-    if: ${{ false }}
+    if: ${{ true }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -1074,7 +1074,7 @@ jobs:
   # ============================================================================
 
   cuda:
-    if: ${{ false }}
+    if: ${{ true }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -1153,7 +1153,7 @@ jobs:
   # ============================================================================
 
   nvhpc:
-    if: ${{ false }}
+    if: ${{ true }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
