@@ -19,8 +19,8 @@
 #    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_double_policy.hpp"
 #    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_float_policy.hpp"
 #endif
+#include "ops/gates.hpp"
 #include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
-
 namespace mindquantum::sim::densitymatrix::detail {
 template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyH(qs_data_p_t* qs_p, const qbits_t& objs,
