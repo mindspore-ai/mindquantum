@@ -18,7 +18,7 @@ import numpy as np
 import pytest
 
 _HAS_MINDSPORE = True
-AVAILABLE_BACKEND = True
+AVAILABLE_BACKEND = []
 try:
     import mindspore as ms
 

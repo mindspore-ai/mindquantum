@@ -33,5 +33,6 @@ Tensor ones(size_t len, TDtype dtype) {
         case TDtype::Complex128:
             return ones<TDtype::Complex128>(len);
     }
+    return Tensor();
 }
 }  // namespace tensor::ops::cpu

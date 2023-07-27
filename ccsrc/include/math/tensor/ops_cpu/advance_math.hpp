@@ -265,6 +265,7 @@ Tensor ElementFunc(const Tensor& t, TDtype out_dtype, F&& func) {
             }
         } break;
     }
+    return Tensor();
 }
 
 // -----------------------------------------------------------------------------

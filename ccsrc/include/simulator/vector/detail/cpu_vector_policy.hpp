@@ -28,6 +28,7 @@
 #include "core/mq_base_types.hpp"
 #include "core/sparse/csrhdmatrix.hpp"
 #include "core/utils.hpp"
+#include "math/tensor/ops_cpu/utils.hpp"
 #include "math/tensor/traits.hpp"
 
 namespace mindquantum::sim::vector::detail {
@@ -188,8 +189,6 @@ struct CPUVectorPolicyBase {
 
 template <typename policy_src, typename policy_des>
 struct CastTo {
-    static constexpr tensor::TDtype src_dtype = policy_src::dtype;
-    static constexpr tensor::TDtype des_dtype = policy_des::dtype;
     static typename policy_des::qs_data_p_t cast(typename policy_src::qs_data_p_t qs, size_t dim) {
         if (qs == nullptr) {
             return nullptr;
@@ -197,10 +196,11 @@ struct CastTo {
         if constexpr (std::is_same_v<policy_src, policy_des>) {
             return policy_des::Copy(qs, dim);
         } else {
+            auto caster = tensor::cast_value<typename policy_src::calc_type, typename policy_des::calc_type>();
             auto des = policy_des::InitState(dim, false);
             THRESHOLD_OMP_FOR(
-                dim, policy_des::DimTh, for (omp::idx_t i = 0; i < dim; i++) {
-                    des[i] = typename policy_des::qs_data_t{std::real(qs[i]), std::imag(qs[i])};
+                dim, policy_des::DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+                    des[i] = typename policy_des::qs_data_t{caster(std::real(qs[i])), caster(std::imag(qs[i]))};
                 })
             return des;
         }

@@ -29,12 +29,14 @@ Tensor zeros(size_t len, TDtype dtype, TDevice device) {
         return cpu::zeros(len, dtype);
     } else {
     }
+    return Tensor();
 }
 Tensor ones(size_t len, TDtype dtype, TDevice device) {
     if (device == TDevice::CPU) {
         return cpu::ones(len, dtype);
     } else {
     }
+    return Tensor();
 }
 }  // namespace tensor::ops
 #endif

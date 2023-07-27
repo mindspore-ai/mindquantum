@@ -20,12 +20,14 @@ add_library(mqsim_common STATIC ${CMAKE_CURRENT_LIST_DIR}/utils.cpp ${CMAKE_CURR
 target_link_libraries(mqsim_common PUBLIC mq_base)
 force_at_least_cxx17_workaround(mqsim_common)
 append_to_property(mq_install_targets GLOBAL mqsim_common)
+if(MSVC)
+  target_compile_options(mqsim_common PUBLIC /wd4661 /openmp:llvm)
+endif()
 
 add_library(mqsim_vector_cpu STATIC)
 target_link_libraries(mqsim_vector_cpu PUBLIC mqsim_common mq_math intrin_flag_CXX)
 force_at_least_cxx17_workaround(mqsim_vector_cpu)
 append_to_property(mq_install_targets GLOBAL mqsim_vector_cpu)
-
 if(X86_64)
   add_executable(mqrt)
   target_link_libraries(mqrt PUBLIC mqsim_vector_cpu)
@@ -62,5 +64,4 @@ add_library(mqsim_densitymatrix_cpu STATIC)
 target_link_libraries(mqsim_densitymatrix_cpu PUBLIC mqsim_common mq_math intrin_flag_CXX)
 force_at_least_cxx17_workaround(mqsim_densitymatrix_cpu)
 append_to_property(mq_install_targets GLOBAL mqsim_densitymatrix_cpu)
-
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/densitymatrix/detail)

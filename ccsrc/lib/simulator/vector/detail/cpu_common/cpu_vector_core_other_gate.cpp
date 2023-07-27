@@ -20,6 +20,7 @@
 #    include "simulator/vector/detail/cpu_vector_arm_double_policy.hpp"
 #    include "simulator/vector/detail/cpu_vector_arm_float_policy.hpp"
 #endif
+#include "ops/gates.hpp"
 #include "simulator/vector/detail/cpu_vector_policy.hpp"
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>

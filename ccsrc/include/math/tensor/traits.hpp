@@ -181,7 +181,7 @@ struct to_complex_dtype<TDtype::Float32> {
 // -----------------------------------------------------------------------------
 
 template <TDtype dtype>
-std::string to_string() {
+std::string dtype_to_string() {
     if constexpr (dtype == TDtype::Float32) {
         return "float32";
     } else if constexpr (dtype == TDtype::Float64) {
@@ -195,7 +195,7 @@ std::string to_string() {
     }
 }
 
-std::string to_string(TDtype dtype);
+std::string dtype_to_string(TDtype dtype);
 
 // -----------------------------------------------------------------------------
 
@@ -222,7 +222,7 @@ struct is_real_dtype<TDtype::Float64> {
 // -----------------------------------------------------------------------------
 
 template <TDevice device>
-std::string to_string() {
+std::string device_to_string() {
     if constexpr (device == TDevice::CPU) {
         return "CPU";
     } else if constexpr (device == TDevice::GPU) {
@@ -232,7 +232,7 @@ std::string to_string() {
     }
 }
 
-std::string to_string(TDevice device);
+std::string device_to_string(TDevice device);
 
 template <typename T>
 std::string to_string(const std::complex<T>& a) {

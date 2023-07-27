@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "config/config.hpp"
+#include "config/openmp.hpp"
 #include "config/popcnt.hpp"
 
 #include "core/mq_base_types.hpp"
@@ -57,7 +58,7 @@ CT<T> ComplexInnerProduct(const ST *v1, const ST *v2, Index len) {
     auto size = len / 2;
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for reduction(+ : real_part, imag_part)), len, 2UL << nQubitTh,
-                     for (Index i = 0; i < size; i++) {
+                     for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) {
                          real_part += v1[2 * i] * v2[2 * i] + v1[2 * i + 1] * v2[2 * i + 1];
                          imag_part += v1[2 * i] * v2[2 * i + 1] - v1[2 * i + 1] * v2[2 * i];
                      })
@@ -73,7 +74,7 @@ CT<T> ComplexInnerProductWithControl(const ST *v1, const ST *v2, Index len, Inde
     auto size = len / 2;
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for reduction(+ : real_part, imag_part)), len, 2UL << nQubitTh,
-                     for (Index i = 0; i < size; i++) {
+                     for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) {
                          if ((i & ctrl_mask) == ctrl_mask) {
                              real_part += v1[2 * i] * v2[2 * i] + v1[2 * i + 1] * v2[2 * i + 1];
                              imag_part += v1[2 * i] * v2[2 * i + 1] - v1[2 * i + 1] * v2[2 * i];
@@ -100,6 +101,18 @@ inline uint32_t CountOne(int32_t n) {
 inline uint64_t CountOne(int64_t n) {
     return CountOne(uint64_t(n));
 }
+inline uint32_t CountLeadingZero(uint32_t n) {
+    return __lzcnt(n);
+}
+inline uint64_t CountLeadingZero(uint64_t n) {
+    return __lzcnt64(n);
+}
+inline uint32_t CountLeadingZero(int32_t n) {
+    return __lzcnt(uint32_t(n));
+}
+inline uint64_t CountLeadingZero(int64_t n) {
+    return __lzcnt64(uint64_t(n));
+}
 #else
 // inline int CountOne(uint64_t n) {
 //   uint8_t *p = reinterpret_cast<uint8_t *>(&n);
@@ -119,6 +132,18 @@ inline uint32_t CountOne(uint32_t n) {
 
 inline uint64_t CountOne(uint64_t n) {
     return __builtin_popcount(n);
+}
+inline uint32_t CountLeadingZero(uint32_t n) {
+    return __builtin_clzll(n);
+}
+inline uint64_t CountLeadingZero(uint64_t n) {
+    return __builtin_clzll(n);
+}
+inline uint32_t CountLeadingZero(int32_t n) {
+    return __builtin_clzll(uint32_t(n));
+}
+inline uint64_t CountLeadingZero(int64_t n) {
+    return __builtin_clzll(uint64_t(n));
 }
 #endif  // _MSC_VER
 

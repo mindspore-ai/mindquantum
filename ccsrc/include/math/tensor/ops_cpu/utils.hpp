@@ -36,15 +36,16 @@ static constexpr bool is_complex_v = is_complex<T>::v;
 
 // -----------------------------------------------------------------------------
 
-template <typename src, typename des>
-struct number_convert {
-    static des apply(const src& a) {
-        if constexpr (std::is_same_v<src, des>) {
+template <typename src_t, typename des_t>
+struct cast_value {
+    using real_des_t = to_device_t<to_real_dtype_t<to_dtype_v<des_t>>>;
+    des_t operator()(const src_t& a) const {
+        if constexpr (std::is_same_v<src_t, des_t>) {
             return a;
-        } else if constexpr (is_complex_v<src> && !is_complex_v<des>) {
+        } else if constexpr (!is_complex_v<des_t> && is_complex_v<src_t>) {
             return std::real(a);
-        } else if constexpr (is_complex_v<src> && is_complex_v<des>) {
-            return {std::real(a), std::imag(a)};
+        } else if constexpr (is_complex_v<des_t> && is_complex_v<src_t>) {
+            return {static_cast<real_des_t>(std::real(a)), static_cast<real_des_t>(std::imag(a))};
         } else {
             return a;
         }

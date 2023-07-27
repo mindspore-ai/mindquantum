@@ -43,7 +43,7 @@ auto CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix(const qs_data_p_t& br
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t l = 0; l < (dim / 2); l++) {
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
                     auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                     auto j = i + mask.obj_mask;
                     __m256d mul_res;
@@ -74,7 +74,7 @@ auto CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix(const qs_data_p_t& br
             // clang-format off
             THRESHOLD_OMP(
                 MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                    for (omp::idx_t l = 0; l < (dim / 4); l++) {
+                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                         auto i = ((l & first_high_mask) << 1) + (l & first_low_mask);
                         i = ((i & second_high_mask) << 1) + (i & second_low_mask) + mask.ctrl_mask;
                         auto j = i + mask.obj_mask;
@@ -93,7 +93,7 @@ auto CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix(const qs_data_p_t& br
             // clang-format off
             THRESHOLD_OMP(
                 MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                    for (omp::idx_t l = 0; l < (dim / 2); l++) {
+                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
                         auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                         if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                             auto j = i + mask.obj_mask;

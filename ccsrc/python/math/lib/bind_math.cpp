@@ -310,18 +310,22 @@ PYBIND11_MODULE(_math, m) {
                         .value("float32", tensor::TDtype::Float32)
                         .value("float64", tensor::TDtype::Float64);
     dtype_id.attr("__repr__") = pybind11::cpp_function(
-        [](const tensor::TDtype &dtype) -> pybind11::str { return "mindquantum." + tensor::to_string(dtype); },
+        [](const tensor::TDtype &dtype) -> pybind11::str { return "mindquantum." + tensor::dtype_to_string(dtype); },
         pybind11::name("name"), pybind11::is_method(dtype_id));
     dtype_id.attr("__str__") = pybind11::cpp_function(
-        [](const tensor::TDtype &dtype) -> pybind11::str { return "mindquantum." + tensor::to_string(dtype); },
+        [](const tensor::TDtype &dtype) -> pybind11::str { return "mindquantum." + tensor::dtype_to_string(dtype); },
         pybind11::name("name"), pybind11::is_method(dtype_id));
     auto device_id
         = py::enum_<tensor::TDevice>(m, "device").value("CPU", tensor::TDevice::CPU).value("GPU", tensor::TDevice::GPU);
     device_id.attr("__repr__") = pybind11::cpp_function(
-        [](const tensor::TDevice &device) -> pybind11::str { return "mindquantum." + tensor::to_string(device); },
+        [](const tensor::TDevice &device) -> pybind11::str {
+            return "mindquantum." + tensor::device_to_string(device);
+        },
         pybind11::name("name"), pybind11::is_method(device_id));
     device_id.attr("__str__") = pybind11::cpp_function(
-        [](const tensor::TDevice &device) -> pybind11::str { return "mindquantum." + tensor::to_string(device); },
+        [](const tensor::TDevice &device) -> pybind11::str {
+            return "mindquantum." + tensor::device_to_string(device);
+        },
         pybind11::name("name"), pybind11::is_method(device_id));
 
     py::module tensor_module = m.def_submodule("tensor", "MindQuantum Tensor module.");

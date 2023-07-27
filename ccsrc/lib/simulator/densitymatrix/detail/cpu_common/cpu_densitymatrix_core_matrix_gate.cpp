@@ -50,7 +50,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(co
     SingleQubitGateMask mask({obj_qubit}, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {  // loop on the row
+            dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 2); a++) {  // loop on the row
                 auto r0 = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                 auto r1 = r0 + mask.obj_mask;
                 for (index_t b = 0; b <= a; b++) {  // loop on the column
@@ -78,7 +78,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(co
             })
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t a = 0; a < (dim / 2); a++) {  // loop on the row
+            dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 2); a++) {  // loop on the row
                 auto r0 = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
                 auto r1 = r0 + mask.obj_mask;
                 for (index_t b = 0; b <= a; b++) {  // loop on the column
@@ -164,7 +164,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrixNoCtr
     size_t mask1 = (1UL << objs[0]);
     size_t mask2 = (1UL << objs[1]);
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
+        dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 4); a++) {
             VT<index_t> row(4);  // row index of reduced matrix entry
             SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
                           row[0]);
@@ -223,7 +223,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrixCtrl(
     size_t mask1 = (1UL << objs[0]);
     size_t mask2 = (1UL << objs[1]);
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t a = 0; a < (dim / 4); a++) {
+        dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 4); a++) {
             VT<index_t> row(4);  // row index of reduced matrix entry
             SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
                           row[0]);

@@ -34,7 +34,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplySWAP(qs_data_p_t* qs_p, con
     DoubleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
+            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -46,7 +46,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplySWAP(qs_data_p_t* qs_p, con
             })
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
+            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -75,7 +75,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyISWAP(qs_data_p_t* qs_p, co
     }
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
+            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -85,7 +85,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyISWAP(qs_data_p_t* qs_p, co
             })
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < (dim / 4); l++) {
+            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);

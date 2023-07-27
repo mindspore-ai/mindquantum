@@ -19,6 +19,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "config/openmp.hpp"
+
 #include "core/mq_base_types.hpp"
 #include "core/utils.hpp"
 #include "math/tensor/csr_matrix.hpp"
@@ -30,21 +32,6 @@
 #include "math/tensor/traits.hpp"
 
 namespace tensor::ops::cpu {
-template <typename src_t, typename des_t>
-struct cast_value {
-    des_t operator()(const src_t& a) const {
-        if constexpr (std::is_same_v<src_t, des_t>) {
-            return a;
-        } else if constexpr (!is_complex_v<des_t> && is_complex_v<src_t>) {
-            return std::real(a);
-        } else if constexpr (is_complex_v<des_t> && is_complex_v<src_t>) {
-            return {std::real(a), std::imag(a)};
-        } else {
-            return a;
-        }
-    }
-};
-
 template <TDtype lhs_dtype, TDtype other_dtype, bool is_array = false, bool reverse = false,
           template <typename ops_t = void> class binary_ops>
 void InplaceBinary(void* data, size_t len, void* other) {
@@ -172,6 +159,7 @@ Tensor generate_binary(void* data, TDtype dtype, size_t len, T a) {
             return GenerateBinary<TDtype::Complex64, other_dtype, false, false, binary_ops>(data, len, other);
         }
     }
+    return Tensor();
 }
 
 // vector = number + vector
@@ -193,6 +181,7 @@ Tensor generate_binary_rev(void* data, TDtype dtype, size_t len, T a) {
             return GenerateBinary<TDtype::Complex64, other_dtype, false, true, binary_ops>(data, len, other);
         }
     }
+    return Tensor();
 }
 
 // -----------------------------------------------------------------------------
@@ -265,6 +254,7 @@ Tensor generate_binary_array(void* data, TDtype dtype, size_t len, void* other) 
             return GenerateBinary<TDtype::Complex64, other_dtype, true, false, binary_ops>(data, len, other);
         }
     }
+    return Tensor();
 }
 
 // vector = vector2 + vector1
@@ -285,6 +275,7 @@ Tensor generate_binary_array_rev(void* data, TDtype dtype, size_t len, void* oth
             return GenerateBinary<TDtype::Complex64, other_dtype, true, true, binary_ops>(data, len, other);
         }
     }
+    return Tensor();
 }
 
 // -----------------------------------------------------------------------------
@@ -460,6 +451,7 @@ Tensor generate_binary_array(void* data, TDtype src, size_t len, const Tensor& a
     } else {
         throw std::runtime_error("Dimension miss match.");
     }
+    return Tensor();
 }
 
 template <template <typename ops_t = void> class binary_ops>
@@ -512,6 +504,7 @@ Tensor generate_binary_array_rev(void* data, TDtype src, size_t len, const Tenso
     } else {
         throw std::runtime_error("Dimension miss match.");
     }
+    return Tensor();
 }
 
 // -----------------------------------------------------------------------------
@@ -575,9 +568,9 @@ Tensor MatMul(void* m1, size_t* indptr, size_t* indices, size_t n_row, size_t n_
     auto c_out = reinterpret_cast<upper_t*>(out.data);
 
     THRESHOLD_OMP_FOR(
-        len, 1UL << mindquantum::nQubitTh, for (size_t i = 0; i < n_row; i++) {
+        len, 1UL << mindquantum::nQubitTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(n_row); i++) {
             upper_t sum = 0.0;
-            for (size_t j = indptr[i]; j < indptr[i + 1]; j++) {
+            for (omp::idx_t j = indptr[i]; j < static_cast<omp::idx_t>(indptr[i + 1]); j++) {
                 if constexpr (m1_dtype == m2_dtype) {
                     sum += c_m1[j] * c_m2[indices[j]];
                 } else if constexpr (is_complex_dtype_v<m1_dtype> && !is_complex_dtype_v<m2_dtype>) {

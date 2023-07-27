@@ -24,6 +24,7 @@
 
 #include <sys/types.h>
 
+#include "core/utils.hpp"
 #include "math/operators/utils.hpp"
 #include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/ops/advance_math.hpp"
@@ -61,6 +62,7 @@ std::string to_string(const TermValue& term) {
         case TermValue::nll:
             return "nll";
     }
+    return "";
 }
 
 auto SingleFermionStr::ParseToken(const std::string& token) -> term_t {
@@ -120,7 +122,7 @@ auto SingleFermionStr::init(const terms_t& terms, const parameter::ParameterReso
 std::vector<uint64_t> SingleFermionStr::NumOneMask(const compress_term_t& fermion) {
     std::vector<uint64_t> out(fermion.first.size());
     std::transform(fermion.first.begin(), fermion.first.end(), out.begin(),
-                   [&](auto& i) { return __builtin_popcount(i) & 1; });
+                   [&](auto& i) { return mindquantum::CountOne(i) & 1; });
     return out;
 }
 
@@ -128,7 +130,7 @@ uint64_t SingleFermionStr::PrevOneMask(const std::vector<uint64_t>& one_mask, si
     uint64_t out = 0;
     for (size_t i = 0; i < idx; i++) {
         if (i < one_mask.size()) {
-            out += __builtin_popcount(one_mask[i]);
+            out += mindquantum::CountOne(one_mask[i]);
         }
     }
     return out & 1;
@@ -165,7 +167,7 @@ bool SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_
     if (word == TermValue::I) {
         return true;
     }
-    auto& [ori_term, coeff] = fermion;
+    auto& ori_term = fermion.first;
     if ((word == TermValue::nll) || std::any_of(ori_term.begin(), ori_term.end(), [](auto j) {
             return j == static_cast<uint64_t>(TermValue::nll);
         })) {
@@ -179,7 +181,7 @@ bool SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_
     size_t low_mask = (1UL << local_id) - 1;
     size_t local_mask = (1UL << local_id) | (1UL << (local_id + 1)) | (1UL << (local_id + 2));
     auto one_mask_vec = NumOneMask(fermion);
-    auto one_mask_of_word = __builtin_popcount(static_cast<uint64_t>(word));
+    auto one_mask_of_word = mindquantum::CountOne(static_cast<uint64_t>(word));
     auto one_mask = PrevOneMask(one_mask_vec, group_id) & one_mask_of_word;
     if (ori_term.size() < group_id + 1) {
         for (size_t i = ori_term.size(); i < group_id + 1; i++) {
@@ -196,13 +198,13 @@ bool SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_
             return false;
         }
         ori_term[group_id] = (ori_term[group_id] & (~local_mask)) | (static_cast<uint64_t>(res)) << local_id;
-        one_mask
-            = (one_mask
-               + (__builtin_popcount(static_cast<uint64_t>(word)) & __builtin_popcount(ori_term[group_id] & low_mask)))
-              & 1;
+        one_mask = (one_mask
+                    + (mindquantum::CountOne(static_cast<uint64_t>(word))
+                       & mindquantum::CountOne(ori_term[group_id] & low_mask)))
+                   & 1;
     }
     if (one_mask & 1) {
-        coeff *= -1.0;
+        fermion.second *= -1.0;
     }
     return true;
 }
@@ -296,13 +298,13 @@ auto SingleFermionStr::Mul(const compress_term_t& lhs, const compress_term_t& rh
     int total_one = 0;
     for (std::size_t i = 0; i < max_size; i++) {
         if (i < min_size) {
-            total_one += one_in_low & __builtin_popcount(r_k[i]);
-            one_in_low += __builtin_popcount(l_k[i]);
+            total_one += one_in_low & mindquantum::CountOne(r_k[i]);
+            one_in_low += mindquantum::CountOne(l_k[i]);
             auto [t, s] = MulSingleCompressTerm(l_k[i], r_k[i]);
             coeff = coeff * t;
             fermion_string.push_back(s);
         } else if (i >= l_k.size()) {
-            total_one += one_in_low & __builtin_popcount(r_k[i]);
+            total_one += one_in_low & mindquantum::CountOne(r_k[i]);
             fermion_string.push_back(r_k[i]);
         } else {
             fermion_string.push_back(l_k[i]);
@@ -327,9 +329,9 @@ std::tuple<tn::Tensor, uint64_t> SingleFermionStr::MulSingleCompressTerm(uint64_
         auto lhs = static_cast<TermValue>(a & 7);
         auto rhs = static_cast<TermValue>(b & 7);
         if (rhs != TermValue::I) {
-            total_one += one_in_low & __builtin_popcount(b & 7);
+            total_one += one_in_low & mindquantum::CountOne(b & 7);
         }
-        one_in_low += __builtin_popcount(a & 7);
+        one_in_low += mindquantum::CountOne(a & 7);
         auto res = fermion_product_map.at(lhs).at(rhs);
         if (res == TermValue::nll) {
             return {tn::ops::ones(1), static_cast<uint64_t>(TermValue::nll)};
@@ -671,7 +673,8 @@ size_t FermionOperator::count_qubits() const {
         int group_id = k.size() - 1;
         for (auto word = k.rbegin(); word != k.rend(); ++word) {
             if ((*word) != 0) {
-                n_qubits = std::max(n_qubits, (63 - __builtin_clzll(*word)) / 3 + group_id * 21);
+                n_qubits = std::max(n_qubits,
+                                    static_cast<int>((63 - mindquantum::CountLeadingZero(*word)) / 3 + group_id * 21));
                 break;
             }
             group_id -= 1;

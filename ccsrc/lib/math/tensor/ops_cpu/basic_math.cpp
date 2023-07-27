@@ -15,6 +15,7 @@
 #include "math/tensor/ops_cpu/basic_math.hpp"
 
 #include "math/tensor/csr_matrix.hpp"
+#include "math/tensor/matrix.hpp"
 #include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
 
@@ -44,6 +45,7 @@ Matrix MatMul(const Matrix& m1, const Matrix& m2) {
         MM_MatMul(TDtype::Complex64);
         MM_MatMul(TDtype::Complex128);
     }
+    return Matrix();
 }
 #undef MM_MatMul
 
@@ -78,6 +80,7 @@ Tensor MatMul(const CsrMatrix& m1, const Tensor& m2) {
         CSR_MatMul(TDtype::Complex64);
         CSR_MatMul(TDtype::Complex128);
     }
+    return Tensor();
 }
 #undef CSR_MatMul
 }  // namespace tensor::ops::cpu

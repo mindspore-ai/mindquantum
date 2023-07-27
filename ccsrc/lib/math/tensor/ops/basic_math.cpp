@@ -20,6 +20,7 @@
 #include "math/tensor/csr_matrix.hpp"
 #include "math/tensor/matrix.hpp"
 #include "math/tensor/ops_cpu/memory_operator.hpp"
+#include "math/tensor/tensor.hpp"
 #include "math/tensor/traits.hpp"
 namespace tensor::ops {
 void inplace_add(Tensor* t, float a) {
@@ -59,30 +60,35 @@ Tensor add(const Tensor& t, float a) {
         return ops::cpu::generate_binary<float, std::plus>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 Tensor add(const Tensor& t, double a) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::generate_binary<double, std::plus>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 Tensor add(const Tensor& t, const std::complex<float>& a) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::generate_binary<std::complex<float>, std::plus>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 Tensor add(const Tensor& t, const std::complex<double>& a) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::generate_binary<std::complex<double>, std::plus>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 Tensor add(const Tensor& t, const Tensor& other) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::generate_binary_array<std::plus>(t.data, t.dtype, t.dim, other);
     } else {
     }
+    return Tensor();
 }
 
 // -----------------------------------------------------------------------------
@@ -162,24 +168,28 @@ Tensor sub(const Tensor& t, float a) {
         return ops::cpu::generate_binary<float, std::minus>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 Tensor sub(const Tensor& t, double a) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::generate_binary<double, std::minus>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 Tensor sub(const Tensor& t, const std::complex<float>& a) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::generate_binary<std::complex<float>, std::minus>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 Tensor sub(const Tensor& t, const std::complex<double>& a) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::generate_binary<std::complex<double>, std::minus>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 
 Tensor sub(float a, const Tensor& t) {
@@ -187,6 +197,7 @@ Tensor sub(float a, const Tensor& t) {
         return ops::cpu::generate_binary_rev<float, std::minus>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 
 Tensor sub(double a, const Tensor& t) {
@@ -194,6 +205,7 @@ Tensor sub(double a, const Tensor& t) {
         return ops::cpu::generate_binary_rev<double, std::minus>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 
 Tensor sub(const std::complex<float>& a, const Tensor& t) {
@@ -201,6 +213,7 @@ Tensor sub(const std::complex<float>& a, const Tensor& t) {
         return ops::cpu::generate_binary_rev<std::complex<float>, std::minus>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 
 Tensor sub(const std::complex<double>& a, const Tensor& t) {
@@ -208,6 +221,7 @@ Tensor sub(const std::complex<double>& a, const Tensor& t) {
         return ops::cpu::generate_binary_rev<std::complex<double>, std::minus>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 
 Tensor sub(const Tensor& t, const Tensor& other) {
@@ -215,6 +229,7 @@ Tensor sub(const Tensor& t, const Tensor& other) {
         return ops::cpu::generate_binary_array<std::minus>(t.data, t.dtype, t.dim, other);
     } else {
     }
+    return Tensor();
 }
 
 // -----------------------------------------------------------------------------
@@ -259,30 +274,35 @@ Tensor mul(const Tensor& t, float a) {
         return ops::cpu::generate_binary<float, std::multiplies>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 Tensor mul(const Tensor& t, double a) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::generate_binary<double, std::multiplies>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 Tensor mul(const Tensor& t, const std::complex<float>& a) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::generate_binary<std::complex<float>, std::multiplies>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 Tensor mul(const Tensor& t, const std::complex<double>& a) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::generate_binary<std::complex<double>, std::multiplies>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 Tensor mul(const Tensor& t, const Tensor& other) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::generate_binary_array<std::multiplies>(t.data, t.dtype, t.dim, other);
     } else {
     }
+    return Tensor();
 }
 
 // -----------------------------------------------------------------------------
@@ -295,6 +315,7 @@ Matrix MatMul(const Matrix& m1, const Matrix& m2) {
         return ops::cpu::MatMul(m1, m2);
     } else {
     }
+    return Matrix();
 }
 
 Tensor MatMul(const CsrMatrix& m1, const Tensor& m2) {
@@ -305,6 +326,7 @@ Tensor MatMul(const CsrMatrix& m1, const Tensor& m2) {
         return ops::cpu::MatMul(m1, m2);
     } else {
     }
+    return Tensor();
 }
 // -----------------------------------------------------------------------------
 
@@ -382,24 +404,28 @@ Tensor div(const Tensor& t, float a) {
         return ops::cpu::generate_binary<float, std::divides>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 Tensor div(const Tensor& t, double a) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::generate_binary<double, std::divides>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 Tensor div(const Tensor& t, const std::complex<float>& a) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::generate_binary<std::complex<float>, std::divides>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 Tensor div(const Tensor& t, const std::complex<double>& a) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::generate_binary<std::complex<double>, std::divides>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 
 Tensor div(float a, const Tensor& t) {
@@ -407,6 +433,7 @@ Tensor div(float a, const Tensor& t) {
         return ops::cpu::generate_binary_rev<float, std::divides>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 
 Tensor div(double a, const Tensor& t) {
@@ -414,6 +441,7 @@ Tensor div(double a, const Tensor& t) {
         return ops::cpu::generate_binary_rev<double, std::divides>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 
 Tensor div(const std::complex<float>& a, const Tensor& t) {
@@ -421,6 +449,7 @@ Tensor div(const std::complex<float>& a, const Tensor& t) {
         return ops::cpu::generate_binary_rev<std::complex<float>, std::divides>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 
 Tensor div(const std::complex<double>& a, const Tensor& t) {
@@ -428,6 +457,7 @@ Tensor div(const std::complex<double>& a, const Tensor& t) {
         return ops::cpu::generate_binary_rev<std::complex<double>, std::divides>(t.data, t.dtype, t.dim, a);
     } else {
     }
+    return Tensor();
 }
 
 Tensor div(const Tensor& t, const Tensor& other) {
@@ -435,5 +465,6 @@ Tensor div(const Tensor& t, const Tensor& other) {
         return ops::cpu::generate_binary_array<std::divides>(t.data, t.dtype, t.dim, other);
     } else {
     }
+    return Tensor();
 }
 }  // namespace tensor::ops

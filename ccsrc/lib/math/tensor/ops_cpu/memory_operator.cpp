@@ -14,6 +14,7 @@
 
 #include "math/tensor/ops_cpu/memory_operator.hpp"
 
+#include <cstdint>
 #include <stdexcept>
 
 #include "math/tensor/traits.hpp"
@@ -63,6 +64,7 @@ Tensor cast_to(const Tensor& t, TDtype des) {
         TENSOR_CAST_TO_BRANCH(TDtype::Complex64)
         TENSOR_CAST_TO_BRANCH(TDtype::Complex128)
     }
+    return Tensor();
 }
 #undef TENSOR_CAST_TO_BRANCH
 // -----------------------------------------------------------------------------
@@ -78,7 +80,7 @@ std::string to_string(const Tensor& t, bool simplify) {
         case (TDtype::Complex128):
             return to_string<TDtype::Complex128>(t.data, t.dim, simplify);
         default:
-            throw std::runtime_error("cannot convert " + to_string(t.dtype) + " to string.");
+            throw std::runtime_error("cannot convert " + dtype_to_string(t.dtype) + " to string.");
     }
     return "";
 }
@@ -103,6 +105,7 @@ Tensor copy(const Tensor& t) {
         case TDtype::Complex128:
             return cpu::copy<TDtype::Complex128>(t.data, t.dim);
     }
+    return Tensor();
 }
 
 void* copy_mem(void* data, TDtype dtype, size_t len) {
@@ -116,6 +119,7 @@ void* copy_mem(void* data, TDtype dtype, size_t len) {
         case (TDtype::Complex128):
             return copy_mem<TDtype::Complex128>(data, len);
     }
+    return nullptr;
 }
 
 // -----------------------------------------------------------------------------

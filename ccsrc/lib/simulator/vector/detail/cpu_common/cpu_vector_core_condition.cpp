@@ -11,6 +11,8 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
+#include <functional>
+
 #include "config/openmp.hpp"
 
 #include "math/pr/parameter_resolver.hpp"
@@ -43,7 +45,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ConditionalBinary(const qs_data_
         }
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+            dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                 if ((i & mask) == condi) {
                     des[i] = op(src[i], succ_coeff);
                 } else {
@@ -71,7 +73,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ConditionalBinary(const qs_data_
         }
     } else {
         THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+            dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                 if ((i & mask) == condi) {
                     des[i] = op(src[i], succ_coeff);
                 } else {
@@ -134,7 +136,7 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ConditionalCollect(const qs_data
     if (abs) {
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+: res_real)), dim, DimTh,
-                         for (omp::idx_t i = 0; i < dim; i++) {
+                         for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                              if ((i & mask) == condi) {
                                  res_real += qs[i].real() * qs[i].real() + qs[i].imag() * qs[i].imag();
                              }
@@ -142,7 +144,7 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ConditionalCollect(const qs_data
     } else {
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+: res_real, res_imag)), dim, DimTh,
-                         for (omp::idx_t i = 0; i < dim; i++) {
+                         for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                              if ((i & mask) == condi) {
                                  res_real += qs[i].real();
                                  res_imag += qs[i].imag();

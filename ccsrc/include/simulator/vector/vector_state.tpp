@@ -1117,8 +1117,8 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
         for (auto& gate : circ) {
             if (gate->GradRequired()) {
                 auto p_gate = static_cast<Parameterizable*>(gate.get());
-                auto pr_shift = M_PI_2;
-                auto coeff = 0.5;
+                calc_type pr_shift = M_PI_2;
+                calc_type coeff = 0.5;
                 if (gate->id_ == GateID::CUSTOM) {
                     auto p_gate = static_cast<CustomGate*>(gate.get());
                     pr_shift = 0.001;

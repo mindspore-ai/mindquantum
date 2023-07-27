@@ -22,6 +22,7 @@
 
 #include <sys/types.h>
 
+#include "core/utils.hpp"
 #include "math/operators/utils.hpp"
 #include "math/pr/parameter_resolver.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
@@ -40,6 +41,7 @@ std::string to_string(const TermValue& term) {
         case TermValue::Z:
             return "Z";
     }
+    return "";
 }
 
 auto SinglePauliStr::ParseToken(const std::string& token) -> term_t {
@@ -101,7 +103,7 @@ void SinglePauliStr::InplaceMulCompressTerm(const term_t& term, compress_term_t&
     size_t group_id = idx >> 5;
     size_t local_id = ((idx & 31) << 1);
     size_t local_mask = (1UL << local_id) | (1UL << (local_id + 1));
-    auto& [pauli_string, coeff] = pauli;
+    auto& pauli_string = pauli.first;
     if (pauli_string.size() < group_id + 1) {
         for (size_t i = pauli_string.size(); i < group_id + 1; i++) {
             pauli_string.push_back(0);
@@ -110,7 +112,7 @@ void SinglePauliStr::InplaceMulCompressTerm(const term_t& term, compress_term_t&
     } else {
         TermValue lhs = static_cast<TermValue>((pauli_string[group_id] & local_mask) >> local_id);
         auto [t, res] = pauli_product_map.at(lhs).at(word);
-        coeff = coeff * t;
+        pauli.second = pauli.second * t;
         pauli_string[group_id] = (pauli_string[group_id] & (~local_mask)) | (static_cast<uint64_t>(res)) << local_id;
     }
 }
@@ -203,9 +205,9 @@ std::tuple<tn::Tensor, uint64_t> SinglePauliStr::MulSingleCompressTerm(uint64_t 
     auto idx_1 = (~(a >> 1) & a & (b >> 1) & b) | ((a >> 1) & ~a & ~(b >> 1) & b) | ((a >> 1) & a & (b >> 1) & ~b);
     idx_0 = idx_0 & M_B;
     idx_1 = idx_1 & M_B;
-    auto num_I = __builtin_popcount(~idx_1 & idx_0);
-    auto num_M_ONE = __builtin_popcount(idx_1 & ~idx_0);
-    auto num_M_I = __builtin_popcount(idx_1 & idx_0);
+    auto num_I = mindquantum::CountOne(~idx_1 & idx_0);
+    auto num_M_ONE = mindquantum::CountOne(idx_1 & ~idx_0);
+    auto num_M_I = mindquantum::CountOne(idx_1 & idx_0);
     auto out = (num_I + 2 * num_M_ONE + 3 * num_M_I) & 3;
     switch (out) {
         case (0):
@@ -339,7 +341,8 @@ size_t QubitOperator::count_qubits() const {
         int group_id = k.size() - 1;
         for (auto word = k.rbegin(); word != k.rend(); ++word) {
             if ((*word) != 0) {
-                n_qubits = std::max(n_qubits, (63 - __builtin_clzll(*word)) / 2 + group_id * 32);
+                n_qubits = std::max(n_qubits,
+                                    static_cast<int>((63 - mindquantum::CountLeadingZero(*word)) / 2 + group_id * 32));
                 break;
             }
             group_id -= 1;
