@@ -18,7 +18,7 @@
 
 namespace mindquantum::sim::rt {
 std::tuple<bool, Index> convert_int(const std::string &s, int64_t limit, bool raise_error) {
-    char *p;
+    char *p = nullptr;
     Index converted = strtol(s.c_str(), &p, 10);
     if (*p) {
         if (raise_error) {

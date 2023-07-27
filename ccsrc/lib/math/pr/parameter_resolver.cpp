@@ -277,6 +277,9 @@ ParameterResolver& ParameterResolver::operator/=(const ParameterResolver& rhs) {
     if (!rhs.IsConst()) {
         throw std::runtime_error("Cannot div a non constant ParameterResolver.");
     }
+    if (!rhs.IsNotZero()) {
+        throw std::runtime_error("Cannot divided by zero.");
+    }
     for (auto& [k, v] : this->data_) {
         this->data_[k] /= rhs.const_value;
     }
@@ -358,6 +361,9 @@ ParameterResolver operator/(const ParameterResolver& lhs, const ParameterResolve
     auto new_type = new_const.dtype;
     if (new_type != origin_type) {
         out.CastTo(new_type);
+    }
+    if (!rhs.IsNotZero()) {
+        throw std::runtime_error("Cannot divided by zero.");
     }
     out /= rhs;
     return out;
