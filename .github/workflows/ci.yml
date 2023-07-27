@@ -1029,13 +1029,14 @@ jobs:
           path: build/.mqlibs
           key: cygwin-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
 
-      - name: walk
+      - name: activate python virtualenv
         shell: bash --login -eo pipefail -o igncr {0}
         run: |
           pwd
           ls
           ls -alth venv
           ls -alth venv/bin
+          source venv/bin/activate
 
       - name: Configure
         env:
