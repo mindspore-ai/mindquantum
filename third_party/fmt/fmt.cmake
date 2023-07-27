@@ -20,7 +20,10 @@
 
 set(VER 9.1.0)
 
-if(ENABLE_GITEE)
+if($ENV{CODEHUB_CI} EQUAL 1)
+  set(REQ_URL "$ENV{CODEHUB_PKG_URL}/fmt-${VER}.tar.gz")
+  set(MD5 "21fac48cae8f3b4a5783ae06b443973a")
+elseif(ENABLE_GITEE)
   set(REQ_URL "https://gitee.com/mirrors_trending/fmt/repository/archive/${VER}.tar.gz")
   set(MD5 "21fac48cae8f3b4a5783ae06b443973a")
 else()

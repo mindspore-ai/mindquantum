@@ -18,7 +18,10 @@
 
 set(VER 2.10.0)
 
-if(ENABLE_GITEE)
+if($ENV{CODEHUB_CI} EQUAL 1)
+  set(REQ_URL "$ENV{CODEHUB_PKG_URL}/pybind11-${VER}.tar.gz")
+  set(MD5 "da561ebf81594930d368a9f9aae0d035")
+elseif(ENABLE_GITEE)
   set(REQ_URL "https://gitee.com/mirrors/pybind11/repository/archive/v${VER}.tar.gz")
   set(MD5 "77c55946fb1faa1a3f038b02464b702d")
 else()

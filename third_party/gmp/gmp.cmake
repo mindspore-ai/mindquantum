@@ -20,8 +20,13 @@
 
 set(VER 6.2.0)
 
-set(REQ_URL "https://gmplib.org/download/gmp/gmp-${VER}.tar.xz")
-set(MD5 "a325e3f09e6d91e62101e59f9bda3ec1")
+if($ENV{CODEHUB_CI} EQUAL 1)
+  set(REQ_URL "$ENV{CODEHUB_PKG_URL}/gmp-${VER}.tar.xz")
+  set(MD5 "a325e3f09e6d91e62101e59f9bda3ec1")
+else()
+  set(REQ_URL "https://gmplib.org/download/gmp/gmp-${VER}.tar.xz")
+  set(MD5 "a325e3f09e6d91e62101e59f9bda3ec1")
+endif()
 
 set(gmp_CFLAGS "-fPIC -O3 -D_FORTIFY_SOURCE=2")
 set(gmp_CXXFLAGS "-fPIC -O3 -D_FORTIFY_SOURCE=2")
