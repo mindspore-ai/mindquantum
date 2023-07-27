@@ -37,7 +37,7 @@ std::tuple<bool, Index> convert_int(const std::string &s, int64_t limit, bool ra
 }
 
 std::tuple<bool, double> convert_double(const std::string &s, bool raise_error) {
-    char *p;
+    char *p = nullptr;
     double converted = strtod(s.c_str(), &p);
     if (*p) {
         if (raise_error) {
