@@ -31,7 +31,6 @@ if [[ "${DEVCLOUD_CI:-0}" == "1" ]]; then
     echo "Detected MindSpore/MindQuantum CI"
     _IS_MINDSPORE_CI=1
 fi
-export PIP_INDEX_URL="https://mirrors.aliyun.com/pypi/simple"
 # ==============================================================================
 
 # Load common bash helper functions
