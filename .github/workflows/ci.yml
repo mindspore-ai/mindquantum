@@ -99,13 +99,13 @@ jobs:
 
       - name: Configure
         run: |
-          ./build_locally.sh --debug-cmake --test --ccache --no-gitee --debug \
+          ./build_locally.sh --debug-cmake --ccache --no-gitee --debug \
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install" \
           --cmake-no-registry \
           -- -DPython_FIND_UNVERSIONED_NAMES:STRING='FIRST'
 
       - name: Build
-        run: ./build_locally.sh --debug-cmake --test --ccache
+        run: ./build_locally.sh --debug-cmake --ccache
 
       - name: Install
         run: ./build_locally.sh --install  # NB: no need to pass the other parameters
@@ -177,7 +177,7 @@ jobs:
         env:
           VENV_PYTHON_TEST_PKGS: ${{ matrix.VENV_PYTHON_TEST_PKGS }}
         run: |
-          ./build.sh --debug-cmake --test \
+          ./build.sh --debug-cmake \
             --fast-build --no-build-isolation --no-delocate --ccache --cmake-no-registry --no-gitee
 
   # ============================================================================
@@ -243,12 +243,12 @@ jobs:
 
       - name: Configure
         run: >-
-          ./build_locally.sh --debug-cmake --test --ccache --only-pytest --no-gitee --debug
+          ./build_locally.sh --debug-cmake --ccache --only-pytest --no-gitee --debug
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
           --cmake-no-registry
 
       - name: Build
-        run: ./build_locally.sh --debug-cmake --test --ccache
+        run: ./build_locally.sh --debug-cmake --ccache
 
       - name: Install
         run: ./build_locally.sh --install  # NB: no need to pass the other parameters
@@ -326,12 +326,12 @@ jobs:
 
       - name: Configure
         run: >-
-          ./build_locally.sh --debug-cmake --test --ccache --only-pytest --no-gitee --debug
+          ./build_locally.sh --debug-cmake --ccache --only-pytest --no-gitee --debug
           --configure-only -c --logging --clean-3rdparty --prefix="${{ github.workspace }}/install"
           --cmake-no-registry -- -DENABLE_STACK_PROTECTION=ON
 
       - name: Build
-        run: ./build_locally.sh --debug-cmake --test --ccache
+        run: ./build_locally.sh --debug-cmake --ccache
 
       - name: Install
         run: ./build_locally.sh --install  # NB: no need to pass the other parameters
@@ -470,7 +470,7 @@ jobs:
       - name: Configure (Clang)
         if: matrix.clang != '8'
         run: >-
-          ./build_locally.sh --debug-cmake --test --ccache --only-pytest --no-gitee --debug
+          ./build_locally.sh --debug-cmake --ccache --only-pytest --no-gitee --debug
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
           --cmake-no-registry -- -DENABLE_STACK_PROTECTION=ON
 
@@ -478,12 +478,12 @@ jobs:
       - name: Configure (Clang 8)
         if: matrix.clang == '8'
         run: >-
-          ./build_locally.sh --debug-cmake --test --ccache --only-pytest --no-gitee
+          ./build_locally.sh --debug-cmake --ccache --only-pytest --no-gitee
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
           --cmake-no-registry -- -DENABLE_STACK_PROTECTION=ON
 
       - name: Build
-        run: ./build_locally.sh --debug-cmake --test --ccache
+        run: ./build_locally.sh --debug-cmake --ccache
 
       - name: Install
         run: ./build_locally.sh --install  # NB: no need to pass the other parameters
@@ -953,7 +953,7 @@ jobs:
           CC: ${{ matrix.CC }}
           CXX: ${{ matrix.CXX }}
         run: >-
-          ./build_locally.sh --debug-cmake --test --ccache -v --only-pytest --no-gitee
+          ./build_locally.sh --debug-cmake --ccache -v --only-pytest --no-gitee
           --configure-only -c --clean-3rdparty --prefix="$PWD/install"
           --cmake-no-registry
           -- -G "MSYS Makefiles"
@@ -963,7 +963,7 @@ jobs:
         env:
           CC: ${{ matrix.CC }}
           CXX: ${{ matrix.CXX }}
-        run: ./build_locally.sh --debug-cmake --test --ccache
+        run: ./build_locally.sh --debug-cmake --ccache
 
       - name: Install
         shell: msys2 {0}
@@ -1093,7 +1093,7 @@ jobs:
         shell: bash --login -eo pipefail -o igncr {0}
         run: |
           export PATH="$PATH:$PWD/ccache/bin"
-          ./build_locally.sh --debug-cmake --test --ccache -v --only-pytest --no-gitee \
+          ./build_locally.sh --debug-cmake --ccache -v --only-pytest --no-gitee \
           --configure-only -c --clean-3rdparty --prefix=$PWD/install \
           --cmake-no-registry
           ${{ matrix.cmake_generator }}
@@ -1102,7 +1102,7 @@ jobs:
         shell: bash --login -eo pipefail -o igncr {0}
         run: |
           export PATH="$PATH:$PWD/ccache/bin"
-          ./build_locally.sh --debug-cmake --test --ccache
+          ./build_locally.sh --debug-cmake --ccache
 
       - name: Install
         shell: bash --login -eo pipefail -o igncr {0}
@@ -1193,12 +1193,12 @@ jobs:
 
       - name: Configure
         run: >-
-          ./build_locally.sh --debug-cmake --gpu --test --ccache --only-pytest --no-gitee
+          ./build_locally.sh --debug-cmake --gpu --ccache --only-pytest --no-gitee
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
           --cmake-no-registry
 
       - name: Build
-        run: ./build_locally.sh --debug-cmake --gpu --test --ccache
+        run: ./build_locally.sh --debug-cmake --gpu --ccache
 
       - name: Install
         run: ./build_locally.sh --install
@@ -1274,12 +1274,12 @@ jobs:
 
       - name: Configure
         run: >-
-          ./build_locally.sh --debug-cmake --gpu --test --ccache --only-pytest --no-gitee
+          ./build_locally.sh --debug-cmake --gpu --ccache --only-pytest --no-gitee
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
           --cmake-no-registry
 
       - name: Build
-        run: ./build_locally.sh --debug-cmake --gpu --test --ccache
+        run: ./build_locally.sh --debug-cmake --gpu --ccache
 
       - name: Install
         run: ./build_locally.sh --install
@@ -1360,7 +1360,7 @@ jobs:
   #         if [ -f /opt/intel/oneapi/tbb/latest/env/vars.sh ]; then
   #           source /opt/intel/oneapi/tbb/latest/env/vars.sh
   #         fi
-  #         ./build_locally.sh --debug-cmake --test --gpu --no-gitee \
+  #         ./build_locally.sh --debug-cmake --gpu --no-gitee \
   #         --configure-only -c --clean-3rdparty  --prefix="${{ github.workspace }}/install"
 
   #     - name: Build
@@ -1369,7 +1369,7 @@ jobs:
   #         if [ -f /opt/intel/oneapi/tbb/latest/env/vars.sh ]; then
   #           source /opt/intel/oneapi/tbb/latest/env/vars.sh
   #         fi
-  #         ./build_locally.sh --debug-cmake --test --gpu
+  #         ./build_locally.sh --debug-cmake --gpu
 
   #     - name: Install
   #       run: ./build_locally.sh --install
