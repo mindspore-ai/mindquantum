@@ -163,7 +163,6 @@ Tensor get(const Tensor& t, size_t idx) {
     }
     return Tensor();
 }
-
 }  // namespace tensor::ops
 
 namespace tensor {
