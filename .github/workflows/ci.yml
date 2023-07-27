@@ -358,6 +358,7 @@ jobs:
             !build/tests/**/*.*
 
       - name: Test tests/st
+        shell: bash
         run: |
           pwd
           source venv/bin/activate
@@ -528,6 +529,7 @@ jobs:
             !build/tests/**/*.*
 
       - name: Test tests/st
+        shell: bash
         run: |
           pwd
           source venv/bin/activate
@@ -1025,6 +1027,7 @@ jobs:
         run: ./build_locally.sh --install
 
       - name: Test tests/st
+        shell: bash
         run: |
           pwd
           source venv/bin/activate
