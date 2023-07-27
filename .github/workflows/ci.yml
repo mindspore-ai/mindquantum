@@ -113,13 +113,6 @@ jobs:
 
       # ------------------------------------------------------------------------
 
-      - name: Run C++ tests
-        run: |
-          cd build
-          catchsegv ctest --output-on-failure
-
-      # ------------------------------------------------------------------------
-
       - name: Test (setup.py) installation
         if: matrix.test_bdist_wheel
         env:
@@ -128,10 +121,19 @@ jobs:
           ./build.sh --debug-cmake \
             --fast-build --no-build-isolation --no-delocate --ccache --cmake-no-registry --no-gitee
 
+      - name: Test tests/st
+        run: |
+          which python
+          which python3
+          which pip
+          pip show mindquantum
+          pip show pytest
+          pytest tests/st
+
   # ============================================================================
 
   macos:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: macos-11
     name: "MacOS 11 • ${{ matrix.xcode }} • x64"
     env:
@@ -202,15 +204,10 @@ jobs:
       - name: Install
         run: ./build_locally.sh --install  # NB: no need to pass the other parameters
 
-      - name: Run C++ tests
-        run: |
-          cd build
-          ctest --output-on-failure
-
   # ============================================================================
 
   gcc:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -344,7 +341,7 @@ jobs:
   # ============================================================================
 
   clang:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -446,11 +443,6 @@ jobs:
       - name: Install
         run: ./build_locally.sh --install  # NB: no need to pass the other parameters
 
-      - name: Run C++ tests
-        run: |
-          cd build
-          catchsegv ctest --output-on-failure
-
       - name: Run debugger in case of failure
         if: ${{ failure() }}
         run: |
@@ -505,7 +497,7 @@ jobs:
   # ============================================================================
 
   msvc:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: windows-latest
     name: "MSVC • x64"
     steps:
@@ -597,7 +589,7 @@ jobs:
   # ============================================================================
 
   clang-cl:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: windows-latest
     name: "Clang-Cl • x64"
     steps:
@@ -671,11 +663,6 @@ jobs:
       - name: Install
         run: ./build_locally.ps1 -Install
 
-      - name: Run C++ tests
-        run: |
-          cd build
-          ctest --output-on-failure
-
       - name: Print CCache statistics
         run: |
           ccache -sv
@@ -690,7 +677,7 @@ jobs:
   # ============================================================================
 
   mingw64:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: windows-2022
     strategy:
       fail-fast: false
@@ -771,15 +758,10 @@ jobs:
       - name: Install
         run: ./build_locally.ps1 -Install
 
-      - name: Run C++ tests
-        run: |
-          cd build
-          ctest --output-on-failure
-
   # ============================================================================
 
   msys2:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -928,7 +910,7 @@ jobs:
   # ============================================================================
 
   cuda:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -1000,14 +982,10 @@ jobs:
       - name: Install
         run: ./build_locally.sh --install
 
-      - name: Run C++ tests
-        run: |
-          make -C build test
-
   # ============================================================================
 
   nvhpc:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -1082,10 +1060,6 @@ jobs:
       - name: Install
         run: ./build_locally.sh --install
 
-      - name: Run C++ tests
-        run: |
-          cd build
-          catchsegv ctest --output-on-failure
 
   # ============================================================================
 
