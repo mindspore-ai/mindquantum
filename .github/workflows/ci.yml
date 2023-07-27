@@ -124,6 +124,10 @@ jobs:
       - name: Test tests/st
         run: |
           pwd
+          ls
+          ls venv
+          ls venv/bin
+          ls venv/Scripts
           source venv/bin/activte
           which python
           which python3
