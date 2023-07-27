@@ -17,28 +17,18 @@ cstyleCast:ccsrc/include/simulator/cintrin.hpp
 duplicateExpression:ccsrc/include/core/parameter_resolver.h:707
 duplicateExpression:ccsrc/python/math/lib/bind_math.cpp
 
-noExplicitConstructor:ccsrc/include/experimental/decompositions/decomposition_atom.hpp:41
-noExplicitConstructor:ccsrc/include/experimental/ops/parametric/gate_base.hpp
 
 noValidConfiguration:ccsrc/include/config/config.hpp
 noValidConfiguration:ccsrc/include/config/details/cxx20_compatibility.hpp
 noValidConfiguration:ccsrc/include/config/type_traits.hpp
-noValidConfiguration:ccsrc/include/experimental/ops/parametric/angle_base.hpp
-noValidConfiguration:ccsrc/include/experimental/ops/parametric/angle_gates.hpp
 noValidConfiguration:tests/decompositions/test_apply_atoms.cpp
 
-operatorEqVarError:ccsrc/include/experimental/decompositions/decomposition_atom.hpp
 
 preprocessorErrorDirective:ccsrc/include/config/details/cxx20_compatibility.hpp
-preprocessorErrorDirective:ccsrc/include/experimental/decompositions/rules/config.hpp
-preprocessorErrorDirective:ccsrc/include/experimental/ops/parametric/angle_base.hpp
 preprocessorErrorDirective:ccsrc/python/core/include/python/details/define_binary_operator_helpers.hpp
-preprocessorErrorDirective:ccsrc/python/experimental/lib/ops/ops.cpp
 preprocessorErrorDirective:tests/decompositions/test_apply_atoms.cpp
 preprocessorErrorDirective:tests/ops/test_angle_parametric_gates.cpp
 unusedStructMember:ccsrc/include/math/tensor/ops_cpu/utils.hpp
-stlIfFind:ccsrc/lib/experimental/decompositions/atom_storage.cpp
-stlIfFind:ccsrc/lib/experimental/decompositions/gate_decomposer.cpp
 
 syntaxError:ccsrc/include/core/parameter_resolver_external_ops.hpp:90
 syntaxError:ccsrc/include/core/sparse/algo.hpp
@@ -70,16 +60,11 @@ unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_ma
 unknownMacro:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_matrix_gate.cpp
 unknownMacro:ccsrc/include/simulator/vector/detail/cpu_vector_policy.hpp
 
-unreadVariable:ccsrc/lib/experimental/decompositions/time_evolution.cpp
 
-unusedStructMember:ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp:29
 
-unusedStructMember:ccsrc/include/experimental/ops/parametric/param_names.hpp
-unusedStructMember:ccsrc/include/experimental/ops/gates/details/coeff_policy.hpp
 unusedStructMember:ccsrc/include/core/mq_base_types.hpp
 
 useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.hpp
-useStlAlgorithm:ccsrc/include/experimental/core/control.hpp:79
 useStlAlgorithm:ccsrc/include/ops/gates/terms_coeff_dict.hpp
 useStlAlgorithm:ccsrc/include/ops/gates/terms_operator_base.tpp
 

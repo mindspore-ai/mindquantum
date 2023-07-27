@@ -70,10 +70,6 @@ IncludeCategories:
     Priority: 20
   - Regex: '<[[:alnum:]_\.]+'
     Priority: 80
-  - Regex: '"experimental/config/[[:alnum:]\/\-_\.]+\.hpp"'
-    Priority: 105
-  - Regex: '"experimental/[[:alnum:]\/\-_\.]+\.hpp"'
-    Priority: 106
   - Regex: '"config/[[:alnum:]\/\-_\.]+\.hpp"'
     Priority: 90
   - Regex: '"python/[[:alnum:]\/\-_\.]+"'

@@ -52,10 +52,3 @@ install(
   PATTERN "CPPLINT.cfg" EXCLUDE)
 
 # =============================================================================
-
-if(ENABLE_CXX_EXPERIMENTAL)
-  add_subdirectory(experimental)
-  install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/experimental DESTINATION ${MQ_INSTALL_INCLUDEDIR}/)
-endif()
-
-# =============================================================================

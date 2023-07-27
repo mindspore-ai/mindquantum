@@ -97,7 +97,6 @@ Here is an exhaustive list of all CMake options available for customization
 | DISABLE_FORTRAN_COMPILER        | Forcefully disable the Fortran compiler for some 3rd party libraries  | ON                  |
 | ENABLE_CMAKE_DEBUG              | Enable verbose output to debug CMake issues                           | OFF                 |
 | ENABLE_CUDA                     | Enable the use of CUDA code                                           | OFF                 |
-| ENABLE_CXX_EXPERIMENTAL         | Enable the building of the (new) experimental C++ backend             | OFF                 |
 | ENABLE_GITEE                    | Use Gitee instead of GitHub for (some) third-party dependencies       | OFF                 |
 | ENABLE_MD                       | Use /MD, /MDd flags when compiling (MSVC only)                        | OFF                 |
 | ENABLE_MT                       | Use /MT, /MTd flags when compiling (MSVC only)                        | OFF                 |

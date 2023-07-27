@@ -222,7 +222,6 @@ declare_AA cmake_option_names
 set_AA cmake_option_names cmake_debug_mode ENABLE_CMAKE_DEBUG
 set_AA cmake_option_names do_clean_3rdparty CLEAN_3RDPARTY_INSTALL_DIR
 set_AA cmake_option_names enable_analyzer ENABLE_ANALYZER
-set_AA cmake_option_names enable_cxx ENABLE_CXX_EXPERIMENTAL
 set_AA cmake_option_names enable_gitee ENABLE_GITEE
 set_AA cmake_option_names enable_gpu ENABLE_CUDA
 set_AA cmake_option_names enable_logging ENABLE_LOGGING

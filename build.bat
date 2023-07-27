@@ -162,11 +162,6 @@ rem ============================================================================
     shift & shift & goto :initial
   )
 
-  if /I "%1" == "/Cxx" (
-    set enable_cxx=1
-    shift & goto :initial
-  )
-
   if /I "%1" == "/Debug" (
     set build_type=Debug
     shift & goto :initial
@@ -372,7 +367,6 @@ call %SCRIPTDIR%\dos\build_cmake_option.bat CLEAN_3RDPARTY_INSTALL_DIR !do_clean
 call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_ANALYZER !enable_analyzer!
 call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CMAKE_DEBUG !cmake_debug_mode!
 call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CUDA !enable_gpu!
-call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_CXX_EXPERIMENTAL !enable_cxx!
 call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_GITEE !enable_gitee!
 call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_LOGGING !enable_logging!
 call %SCRIPTDIR%\dos\build_cmake_option.bat ENABLE_LOGGING_DEBUG_LEVEL !logging_enable_debug!
@@ -527,7 +521,6 @@ rem ============================================================================
   echo   /CleanBuildDir      Delete build directory before building
   echo   /CleanCache         Re-run CMake with a clean CMake cache
   echo   /CleanVenv          Delete Python virtualenv before building
-  echo   /Cxx                (experimental) Enable MindQuantum C++ support
   echo   /Debug              Build in debug mode
   echo   /Delocate           Delocate the binary wheels after build is finished
   echo                       (enabled by default; pass /NoDelocate to disable)

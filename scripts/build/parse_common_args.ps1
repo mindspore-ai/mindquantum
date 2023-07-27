@@ -77,7 +77,6 @@ function Help-Message() {
     Write-Output '  -Config [dir]       Path to INI configuration file with default values for the parameters'
     Write-Output ("                      Defaults to: {0}" -f $config_file)
     Write-Output '                      NB: command line arguments always take precedence over configuration file values'
-    Write-Output '  -Cxx                (experimental) Enable MindQuantum C++ support'
     Write-Output '  -Debug              Build in debug mode'
     Write-Output '  -DebugCMake         Enable debugging mode for CMake configuration step'
     Write-Output '  -Gitee              Use Gitee (where possible) instead of Github/Gitlab'
@@ -187,10 +186,6 @@ if (([bool]$CleanCache)) {
 }
 if (([bool]$CleanVenv)) {
     Set-Value 'do_clean_venv'
-}
-
-if (([bool]$Cxx)) {
-    Set-Value 'enable_cxx'
 }
 
 if ($PSCmdlet.MyInvocation.BoundParameters["debug"].IsPresent) {

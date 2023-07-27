@@ -35,30 +35,6 @@ target_link_libraries(
 
 # ==============================================================================
 
-if(ENABLE_CXX_EXPERIMENTAL)
-  add_library(mq_cxx_nextgen STATIC)
-  set_target_properties(mq_cxx_nextgen PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-  append_to_property(mq_install_targets GLOBAL mq_cxx_nextgen)
-  target_compile_features(mq_cxx_nextgen PUBLIC $<IF:$<COMPILE_FEATURES:cxx_std_20>,cxx_std_20,cxx_std_17>)
-  force_at_least_cxx17_workaround(mq_cxx_nextgen)
-
-  target_link_libraries(
-    mq_cxx_nextgen
-    PUBLIC ${MQ_OPENMP_TARGET}
-           Threads::Threads
-           cxx20_compat
-           cmake_config
-           include_lib
-           mindquantum::json
-           mindquantum::symengine
-           mindquantum::tweedledum
-           mq_base
-           mq_projectq_exp
-           mindquantum_setup)
-endif()
-
-# ==============================================================================
-
 add_subdirectory(include)
 add_subdirectory(lib)
 add_subdirectory(python)

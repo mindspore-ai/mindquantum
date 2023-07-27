@@ -20,5 +20,3 @@ This is the documentation of the C++ engine classes and decomposition rule
 functions of MindQuantum, mainly intended for developers.
 
 .. toctree::
-
-   cxx_experimental
