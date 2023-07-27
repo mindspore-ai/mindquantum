@@ -115,7 +115,6 @@ skip-string-normalization = true
       'mindquantum._mq_vector_gpu',
       'mindquantum._mq_matrix',
       'mindquantum._math',
-      'mindquantum.experimental._mindquantum_cxx',
     ]
     extension-pkg-allow-list = [
       'mindquantum.mqbackend',
@@ -123,7 +122,6 @@ skip-string-normalization = true
       'mindquantum._mq_vector_gpu',
       'mindquantum._mq_matrix',
       'mindquantum._math',
-      'mindquantum.experimental._mindquantum_cxx',
     ]
 
     init-hook = '''from pylint.config import find_default_config_files;\
@@ -138,9 +136,6 @@ skip-string-normalization = true
 
     [tool.pylint.typecheck]
     ignored-modules = [
-        'mindquantum.experimental._mindquantum_cxx',
-        'mindquantum.experimental.circuit',
-        'mindquantum.experimental.simulator',
         'mindquantum.mqbackend',
         'mindspore',
         'openfermion',

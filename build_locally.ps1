@@ -240,7 +240,6 @@ $cmake_args = @('-DIN_PLACE_BUILD:BOOL=ON'
                 "-DENABLE_ANALYZER:BOOL={0}" -f $CMAKE_BOOL[$enable_analyzer]
                 "-DENABLE_CMAKE_DEBUG:BOOL={0}" -f $CMAKE_BOOL[$cmake_debug_mode]
                 "-DENABLE_CUDA:BOOL={0}" -f $CMAKE_BOOL[$enable_gpu]
-                "-DENABLE_CXX_EXPERIMENTAL:BOOL={0}" -f $CMAKE_BOOL[$enable_cxx]
                 "-DENABLE_DOCUMENTATION:BOOL={0}" -f $CMAKE_BOOL[$do_docs]
                 "-DENABLE_GITEE:BOOL={0}" -f $CMAKE_BOOL[$enable_gitee]
                 "-DENABLE_LOGGING:BOOL={0}" -f $CMAKE_BOOL[$enable_logging]
@@ -438,9 +437,6 @@ Path to INI configuration file with default values for the parameters
 
 .PARAMETER ConfigureOnly
 Stop after the CMake configure and generation steps (ie. before building MindQuantum)
-
-.PARAMETER Cxx
-(experimental) Enable MindQuantum C++ support
 
 .PARAMETER Debug
 Build in debug mode

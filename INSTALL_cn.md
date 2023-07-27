@@ -96,7 +96,6 @@ MQ_DELOCATE_WHEEL=1 python3 -m build .
 | DISABLE_FORTRAN_COMPILER        | 对于一些第三方库，强制禁止 Fortran 编译器                                    | ON                  |
 | ENABLE_CMAKE_DEBUG              | 启用详细输出来调试CMAKE                                                   | OFF                 |
 | ENABLE_CUDA                     | 启用使用CUDA代码                                                           | OFF                 |
-| ENABLE_CXX_EXPERIMENTAL         | 启用（新的）实验C++后端的构建                                              | OFF                 |
 | ENABLE_GITEE                    | 使用gitee代替github作为（某些）第三方依赖                                   | OFF                 |
 | ENABLE_MD                       | 编译时使用 /MD, /MDd 标志 (仅MSVC)                        | OFF                 |
 | ENABLE_MT                       | 编译时使用 /MT, /MTd 标志 (仅MSVC)                        | OFF                 |

@@ -22,9 +22,3 @@ add_subdirectory(device)
 add_subdirectory(math)
 
 # ==============================================================================
-
-if(ENABLE_CXX_EXPERIMENTAL)
-  add_subdirectory(experimental)
-endif()
-
-# ==============================================================================

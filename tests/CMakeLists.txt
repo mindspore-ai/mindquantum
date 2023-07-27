@@ -29,11 +29,3 @@ add_subdirectory(utils)
 add_subdirectory(ops)
 
 # ------------------------------------------------------------------------------
-
-if(ENABLE_CXX_EXPERIMENTAL)
-  add_subdirectory(config)
-  add_subdirectory(core)
-  add_subdirectory(decompositions)
-endif()
-
-# ==============================================================================

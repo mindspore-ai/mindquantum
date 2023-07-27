@@ -34,7 +34,6 @@ def print_includes():
         _ROOT / 'mindquantum' / 'include' / 'mindquantum',
         _ROOT / 'ccsrc' / 'include',
         _ROOT / 'ccsrc' / 'python' / 'core' / 'include',
-        _ROOT / 'ccsrc' / 'python' / 'experimental' / 'include',
         _ROOT / 'ccsrc' / 'python' / 'mqbackend' / 'include',
         _ROOT / 'ccsrc' / 'python' / 'simulator' / 'include',
     ]

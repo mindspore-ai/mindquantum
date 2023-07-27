@@ -252,7 +252,6 @@ $cmake_option_names = @{
     cmake_debug_mode = 'ENABLE_CMAKE_DEBUG'
     do_clean_3rdparty = 'CLEAN_3RDPARTY_INSTALL_DIR'
     enable_analyzer = 'ENABLE_ANALYZER'
-    enable_cxx = 'ENABLE_CXX_EXPERIMENTAL'
     enable_gitee = 'ENABLE_GITEE'
     enable_gpu = 'ENABLE_CUDA'
     enable_logging = 'ENABLE_LOGGING'
@@ -518,9 +517,6 @@ Do not use the CMake registry to find packages
 
 .PARAMETER Config
 Path to INI configuration file with default values for the parameters
-
-.PARAMETER Cxx
-(experimental) Enable MindQuantum C++ support
 
 .PARAMETER Debug
 Build in debug mode

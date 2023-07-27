@@ -48,19 +48,6 @@ if(BUILD_TESTING)
   include(${CMAKE_CURRENT_LIST_DIR}/catch2/catch2.cmake)
 endif()
 
-if(ENABLE_CXX_EXPERIMENTAL)
-  if(NOT MSVC AND NOT "${OS_NAME}" STREQUAL "MinGW")
-    include(${CMAKE_CURRENT_LIST_DIR}/gmp/gmp.cmake)
-  endif()
-
-  if(ENABLE_ABSEIL_CPP)
-    include(${CMAKE_CURRENT_LIST_DIR}/abseil_cpp/abseil_cpp.cmake)
-  endif()
-  include(${CMAKE_CURRENT_LIST_DIR}/cereal/cereal.cmake)
-  include(${CMAKE_CURRENT_LIST_DIR}/symengine/symengine.cmake)
-  include(${CMAKE_CURRENT_LIST_DIR}/tweedledum/tweedledum.cmake)
-endif()
-
 # ==============================================================================
 
 get_property(_pkgs GLOBAL PROPERTY mq_external_packages)
@@ -69,7 +56,7 @@ set(_external_pkgs_str)
 foreach(_pkg ${_pkgs})
   load_from_cache(_${_pkg}_find_pkg_str _tmp)
   set(_external_pkgs_str "${_external_pkgs_str}\n\n${_tmp}")
-  MESSAGE(STATUS ${_tmp})
+  message(STATUS ${_tmp})
 endforeach()
 
 # get_property(_tmp GLOBAL PROPERTY mq_external_find_packages) string(REPLACE ";" "\n" _tmp "${_tmp}")

@@ -110,7 +110,6 @@ message):
                          Defaults to: /home/user/mindquantum/build.conf
                          NB: command line arguments always take precedence over configuration
                          file values
-    --cxx                (experimental) Enable MindQuantum C++ support
     --debug              Build in debug mode
     --debug-cmake        Enable debugging mode for CMake configuration step
     --gpu                Enable GPU support
@@ -317,7 +316,6 @@ It has similar options as the scripts described in :ref:`build_locally_for_devs`
                          Defaults to: /home/user/mindquantum/build.conf
                          NB: command line arguments always take precedence over configuration
                          file values
-    --cxx                (experimental) Enable MindQuantum C++ support
     --debug              Build in debug mode
     --debug-cmake        Enable debugging mode for CMake configuration step
     --gpu                Enable GPU support

@@ -101,7 +101,6 @@ help_message() {
     echo '  --config=[dir]         Path to INI configuration file with default values for the parameters'
     echo "                         Defaults to: $config_file"
     echo '                         NB: command line arguments always take precedence over configuration file values'
-    echo '  --cxx                  (experimental) Enable MindQuantum C++ support'
     echo '  --debug                Build in debug mode'
     echo '  --debug-cmake          Enable debugging mode for CMake configuration step'
     echo '  --gitee                Use Gitee (where possible) instead of Github/Gitlab'
@@ -224,9 +223,6 @@ while getopts "${getopts_args}" OPT; do
                             ;;
         cuda-arch )         needs_arg;
                             set_var cuda_arch "$(echo "$OPTARG" | tr ',' ';')"
-                            ;;
-        cxx )               no_arg;
-                            set_var enable_cxx $flag_value
                             ;;
         debug )             no_arg;
                             set_var build_type 'Debug'
