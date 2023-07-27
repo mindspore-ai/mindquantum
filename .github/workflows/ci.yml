@@ -123,6 +123,8 @@ jobs:
 
       - name: Test tests/st
         run: |
+          pwd
+          source venv/bin/activte
           which python
           which python3
           which pip
