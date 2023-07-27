@@ -37,6 +37,25 @@ Ansatz
     mindquantum.algorithm.nisq.QubitUCCAnsatz
     mindquantum.algorithm.nisq.StronglyEntangling
     mindquantum.algorithm.nisq.UCCAnsatz
+    mindquantum.algorithm.nisq.Ansatz1
+    mindquantum.algorithm.nisq.Ansatz2
+    mindquantum.algorithm.nisq.Ansatz3
+    mindquantum.algorithm.nisq.Ansatz4
+    mindquantum.algorithm.nisq.Ansatz5
+    mindquantum.algorithm.nisq.Ansatz6
+    mindquantum.algorithm.nisq.Ansatz7
+    mindquantum.algorithm.nisq.Ansatz8
+    mindquantum.algorithm.nisq.Ansatz9
+    mindquantum.algorithm.nisq.Ansatz10
+    mindquantum.algorithm.nisq.Ansatz11
+    mindquantum.algorithm.nisq.Ansatz12
+    mindquantum.algorithm.nisq.Ansatz13
+    mindquantum.algorithm.nisq.Ansatz14
+    mindquantum.algorithm.nisq.Ansatz15
+    mindquantum.algorithm.nisq.Ansatz16
+    mindquantum.algorithm.nisq.Ansatz17
+    mindquantum.algorithm.nisq.Ansatz18
+    mindquantum.algorithm.nisq.Ansatz19
 
 Generator
 -----------

@@ -185,6 +185,10 @@ class BasicGate(ABC):
         _check_input_type("ctrl_qubits", (int, Iterable), ctrl_qubits)
         if set(obj_qubits) & set(ctrl_qubits):
             raise ValueError("Obj_qubit and ctrl_qubit cannot have same qubits.")
+        if len(set(obj_qubits)) != len(obj_qubits):
+            raise ValueError("obj_qubits cannot be repeated.")
+        if len(set(ctrl_qubits)) != len(ctrl_qubits):
+            raise ValueError("ctrl_qubits cannot be repeated.")
         if self.n_qubits:
             if len(obj_qubits) != self.n_qubits:
                 raise ValueError(
