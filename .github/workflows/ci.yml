@@ -928,7 +928,7 @@ jobs:
   # ============================================================================
 
   cygwin:
-    if: ${{ false }}
+    if: ${{ true }}
     runs-on: windows-latest
     name: "Cygwin • x64"
     env:
