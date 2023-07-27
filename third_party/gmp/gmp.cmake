@@ -20,7 +20,7 @@
 
 set(VER 6.2.0)
 
-if($ENV{CODEHUB_CI} EQUAL 1)
+if(DEFINED ENV{CODEHUB_CI} AND "$ENV{CODEHUB_CI}" STREQUAL "1")
   set(REQ_URL "$ENV{CODEHUB_PKG_URL}/gmp-${VER}.tar.xz")
   set(MD5 "a325e3f09e6d91e62101e59f9bda3ec1")
 else()
