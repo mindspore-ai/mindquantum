@@ -133,7 +133,7 @@ jobs:
           pip install -r requirements_test.txt
           pip install pytest
           python3 -c "import mindquantum as mq;print(mq.qft(range(3)))"
-          pytest tests/st
+          pytest tests/st -rs
 
   # ============================================================================
 
