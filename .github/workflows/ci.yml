@@ -15,7 +15,7 @@ env:
 
 jobs:
   standard:
-    if: ${{ true }}
+    if: ${{ false }}
     strategy:
       fail-fast: false
       matrix:
@@ -131,7 +131,7 @@ jobs:
   # ============================================================================
 
   macos:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: macos-11
     name: "MacOS 11 • ${{ matrix.xcode }} • x64"
     env:
@@ -210,7 +210,7 @@ jobs:
   # ============================================================================
 
   gcc:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -344,7 +344,7 @@ jobs:
   # ============================================================================
 
   clang:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -505,7 +505,7 @@ jobs:
   # ============================================================================
 
   msvc:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: windows-latest
     name: "MSVC • x64"
     steps:
@@ -597,7 +597,7 @@ jobs:
   # ============================================================================
 
   clang-cl:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: windows-latest
     name: "Clang-Cl • x64"
     steps:
@@ -690,7 +690,7 @@ jobs:
   # ============================================================================
 
   mingw64:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: windows-2022
     strategy:
       fail-fast: false
@@ -779,7 +779,7 @@ jobs:
   # ============================================================================
 
   msys2:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -928,7 +928,7 @@ jobs:
   # ============================================================================
 
   cygwin:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: windows-latest
     name: "Cygwin • x64"
     env:
@@ -1029,6 +1029,14 @@ jobs:
           path: build/.mqlibs
           key: cygwin-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
 
+      - name: walk
+        shell: bash --login -eo pipefail -o igncr {0}
+        run: |
+          pwd
+          ls
+          ls -alth venv
+          ls -alth venv/bin
+
       - name: Configure
         env:
           PATH: C:\cygwin\bin
@@ -1074,7 +1082,7 @@ jobs:
   # ============================================================================
 
   cuda:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -1153,7 +1161,7 @@ jobs:
   # ============================================================================
 
   nvhpc:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
