@@ -129,8 +129,8 @@ jobs:
           which python
           which python3
           which pip
-          pip show mindquantum
-          pip show pytest
+          echo $PYTHONPATH
+          python3 -c "import mindquantum as mq;print(mq.qft(range(3)))"
           pytest tests/st
 
   # ============================================================================
