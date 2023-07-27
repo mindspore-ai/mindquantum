@@ -174,7 +174,6 @@ markers = [
     'level1: test marker used on MindSpore CI',
     'platform_x86_cpu: test marker used on MindSpore CI for certain CPU runs',
     'platform_x86_gpu_training: test marker used on MindSpore CI for certain GPU runs',
-    'symengine: test using the mindquantum.symengine module'
 ]
 filterwarnings = [
     'ignore:.*Please use `OptimizeResult`.*is deprecated:DeprecationWarning',
