@@ -1,7 +1,7 @@
 mindquantum.core.circuit.QubitNumberConstrain
 =============================================
 
-.. py:class:: mindquantum.core.circuit.QubitNumberConstrain(adder: ChannelAdderBase)
+.. py:class:: mindquantum.core.circuit.QubitNumberConstrain(n_qubits, with_ctrl = True, add_after = True)
 
     只将噪声信道作用在比特数为 ``n_qubits`` 的量子门上。
 
