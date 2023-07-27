@@ -345,7 +345,8 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
         _check_input_type('amp', np.ndarray, amp)
         if amp.shape != (2,):
             raise ValueError(f"amp requires shape (2, ), but get {amp.shape}")
-        amp = amp / np.sqrt(np.vdot(amp, amp))
+        if np.sqrt(np.vdot(amp, amp)) != 0:
+            amp = amp / np.sqrt(np.vdot(amp, amp))
         global_phase = np.angle(amp[0])
         amp = amp / np.exp(1j * global_phase)
         theta = 2 * np.arccos(np.real(amp[0]))

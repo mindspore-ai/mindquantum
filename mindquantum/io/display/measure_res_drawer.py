@@ -37,7 +37,8 @@ def measure_text_drawer(res):  # pylint: disable=too-many-locals
     deci = _res_text_drawer_config['deci']
     keys = res.keys
     max_shot = max(res.data.values())
-    max_prop = max_shot / res.shots
+    if res.shots != 0:
+        max_prop = max_shot / res.shots
     if max_prop == 0:
         max_prop = 1
     if max_prop / 0.8 > 1:
