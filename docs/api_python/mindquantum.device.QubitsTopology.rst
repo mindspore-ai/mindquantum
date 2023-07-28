@@ -29,10 +29,10 @@ mindquantum.device.QubitsTopology
         根据给定的 id 选择量子比特。
 
         参数：
-            - **ids** (List[int]): 一个量子比特 id 的列表。
+            - **ids** (List[int]) - 一个量子比特 id 的列表。
 
         返回：
-            List[:class:`~.device.QubitNode`], 根据给定 id 选择出的量子比特列表。
+            List[:class:`~.device.QubitNode`]，根据给定 id 选择出的量子比特列表。
 
     .. py:method:: edges_with_id() -> typing.Set[typing.Tuple[int, int]]
 
