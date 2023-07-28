@@ -62,9 +62,9 @@
 
 #ifndef MQ_IS_CLANG_VERSION_LESS
 #    define MQ_IS_CLANG_VERSION_LESS(major, minor)                                                                     \
-        (defined __clang__) && (MQ_CLANG_MAJOR < major) && (MQ_CLANG_MINOR < minor)
+        (defined __clang__) && (MQ_CLANG_MAJOR < (major)) && (MQ_CLANG_MINOR < (minor))
 #    define MQ_IS_CLANG_VERSION_LESS_EQUAL(major, minor)                                                               \
-        (defined __clang__) && (MQ_CLANG_MAJOR <= major) && (MQ_CLANG_MINOR <= minor)
+        (defined __clang__) && (MQ_CLANG_MAJOR <= (major)) && (MQ_CLANG_MINOR <= (minor))
 #endif  // MQ_IS_CLANG_VERSION_LESS
 
 /*!

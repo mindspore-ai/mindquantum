@@ -167,9 +167,9 @@ class DensityMatrixState {
                                   const MST<size_t>& key_map, unsigned int seed) const;
 
     template <typename policy_des, template <typename p_src, typename p_des> class cast_policy>
-    DensityMatrixState<policy_des> astype(unsigned seed) const {
+    DensityMatrixState<policy_des> astype(unsigned new_seed) const {
         return DensityMatrixState<policy_des>(cast_policy<qs_policy_t, policy_des>::cast(this->qs, this->dim),
-                                              this->n_qubits, seed);
+                                              this->n_qubits, new_seed);
     }
 
  protected:

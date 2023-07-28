@@ -18,7 +18,6 @@ duplicateExpression:ccsrc/include/core/parameter_resolver.h:707
 duplicateExpression:ccsrc/python/math/lib/bind_math.cpp
 
 
-noValidConfiguration:ccsrc/include/config/config.h
 noValidConfiguration:ccsrc/include/config/details/cxx20_compatibility.h
 noValidConfiguration:ccsrc/include/config/type_traits.h
 noValidConfiguration:tests/decompositions/test_apply_atoms.cpp
@@ -59,10 +58,6 @@ unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_x_like
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_matrix_gate.cpp
 unknownMacro:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_matrix_gate.cpp
 unknownMacro:ccsrc/include/simulator/vector/detail/cpu_vector_policy.h
-
-
-
-unusedStructMember:ccsrc/include/core/mq_base_types.h
 
 useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.h
 useStlAlgorithm:ccsrc/include/ops/gates/terms_coeff_dict.h

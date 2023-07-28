@@ -23,15 +23,15 @@
 #define INTRIN_M2_dot_V2(ket, i, j, mm, mmt, res)                                                                      \
     do {                                                                                                               \
         __m256d v[2];                                                                                                  \
-        v[0] = load2(ket + (i));                                                                                       \
-        v[1] = load2(ket + (j));                                                                                       \
-        res = add(mul(v[0], mm[0], mmt[0]), mul(v[1], mm[1], mmt[1]));                                                 \
+        v[0] = load2((ket) + (i));                                                                                     \
+        v[1] = load2((ket) + (j));                                                                                     \
+        res = add(mul(v[0], (mm)[0], (mmt)[0]), mul(v[1], (mm)[1], (mmt)[1]));                                         \
     } while (0)
 
 #define INTRIN_Conj_V2_dot_V2(v2_bra, m256_v2, i, j, neg, res)                                                         \
     do {                                                                                                               \
         __m256d y;                                                                                                     \
-        y = load(v2_bra + (i), v2_bra + (j));                                                                          \
+        y = load((v2_bra) + (i), (v2_bra) + (j));                                                                      \
         res = _mm256_mul_pd(mul(_mm256_mul_pd(m256_v2, neg), y, _mm256_mul_pd(_mm256_permute_pd(y, 5), neg)), neg);    \
     } while (0)
 
@@ -45,17 +45,17 @@
 
 #define INTRIN_gene_2d_mm_and_mmt(matrix, mm, mmt, neg)                                                                \
     do {                                                                                                               \
-        mm[0] = load(&matrix[0][0], &matrix[1][0]);                                                                    \
-        mm[1] = load(&matrix[0][1], &matrix[1][1]);                                                                    \
+        (mm)[0] = load(&(matrix)[0][0], &(matrix)[1][0]);                                                              \
+        (mm)[1] = load(&(matrix)[0][1], &(matrix)[1][1]);                                                              \
         for (unsigned i = 0; i < 2; ++i) {                                                                             \
-            auto badc = _mm256_permute_pd(mm[i], 5);                                                                   \
-            mmt[i] = _mm256_mul_pd(badc, neg);                                                                         \
+            auto badc = _mm256_permute_pd((mm)[i], 5);                                                                 \
+            (mmt)[i] = _mm256_mul_pd(badc, neg);                                                                       \
         }                                                                                                              \
     } while (0)
 
 namespace mindquantum::sim::vector::detail {
 struct CPUVectorPolicyAvxDouble : public CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double> {
-    using gate_matrix_t = std::vector<std::vector<qs_data_t, aligned_allocator<qs_data_t, 64>>>;
+    using gate_matrix_t = std::vector<std::vector<qs_data_t>>;
     static void ApplySingleQubitMatrix(const qs_data_p_t& src, qs_data_p_t* des_p, qbit_t obj_qubit,
                                        const qbits_t& ctrls, const std::vector<std::vector<py_qs_data_t>>& m,
                                        index_t dim);
