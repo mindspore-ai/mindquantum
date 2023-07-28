@@ -15,9 +15,6 @@
 #ifndef MQ_CONFIG_COMMON_TYPE_HPP
 #define MQ_CONFIG_COMMON_TYPE_HPP
 
-#include <complex>
-#include <type_traits>
-
 // =============================================================================
 
 namespace mindquantum::traits {

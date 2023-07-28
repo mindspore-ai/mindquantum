@@ -62,7 +62,7 @@ concept default_initializable = constructible_from<T>&& requires {
 template <class From, class To>
 concept convertible_to = is_convertible_v<From, To>&& requires(add_rvalue_reference_t<From> (&f)()) {
     static_cast<To>(f());
-};
+}
 
 template <class T>
 concept move_constructible = constructible_from<T, T>&& convertible_to<T, T>;
@@ -72,45 +72,6 @@ concept copy_constructible = move_constructible<T>&& constructible_from<T, T&>&&
     constructible_from<T, const T&>&& convertible_to<const T&, T>&& constructible_from<T, const T>&&
         convertible_to<const T, T>;
 
-// template < class T, class U >
-// concept common_reference_with =
-//      same_as<common_reference_t<T, U>, common_reference_t<U, T>>
-//      && convertible_to<T, common_reference_t<T, U>>
-//      && convertible_to<U, common_reference_t<T, U>>;
-
-// template< class T >
-// concept swappable = requires(T& a, T& b) { ranges::swap(a, b); };
-
-// template< class T, class U >
-// concept swappable_with =
-//      common_reference_with<T, U>
-//      && requires(T&& t, U&& u) {
-//      ranges::swap(forward<T>(t), forward<T>(t));
-//      ranges::swap(forward<U>(u), forward<U>(u));
-//      ranges::swap(forward<T>(t), forward<U>(u));
-//      ranges::swap(forward<U>(u), forward<T>(t));
-// };
-
-// template< class LHS, class RHS >
-// concept assignable_from =
-//      is_lvalue_reference_v<LHS>
-//      && common_reference_with<const remove_reference_t<LHS>&,
-//                                    const remove_reference_t<RHS>&>
-//      && requires(LHS lhs, RHS&& rhs) { { lhs = forward<RHS>(rhs) } -> same_as<LHS>; };
-
-// template < class T >
-// concept movable =
-//      is_object_v<T>
-//      && move_constructible<T>
-//      && assignable_from<T&, T>
-//      && swappable<T>;
-
-// template <class T>
-// concept copyable = copy_constructible<T>
-//      && movable<T>
-//      && assignable_from<T&, T&>
-//      && assignable_from<T&, const T&>
-//      && assignable_from<T&, const T>;
 // clang-format on
 #endif  // MQ_HAS_CONCEPTS && !MQ_HAS_CONCEPT_LIBRARY
 

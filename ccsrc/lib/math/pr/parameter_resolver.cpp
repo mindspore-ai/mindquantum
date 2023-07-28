@@ -14,9 +14,6 @@
 
 #include "math/pr/parameter_resolver.hpp"
 
-#include <iostream>
-#include <stdexcept>
-
 #include "math/tensor/ops/advance_math.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/tensor.hpp"

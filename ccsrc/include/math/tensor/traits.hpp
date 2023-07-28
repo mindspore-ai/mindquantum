@@ -18,7 +18,6 @@
 #include <complex>
 #include <stdexcept>
 #include <string>
-#include <type_traits>
 namespace tensor {
 enum class TDevice : int {
     CPU,

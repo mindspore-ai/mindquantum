@@ -114,18 +114,7 @@ inline uint64_t CountLeadingZero(int64_t n) {
     return __lzcnt64(uint64_t(n));
 }
 #else
-// inline int CountOne(uint64_t n) {
-//   uint8_t *p = reinterpret_cast<uint8_t *>(&n);
-//   return POPCNTTABLE[p[0]] + POPCNTTABLE[p[1]] + POPCNTTABLE[p[2]] +
-//          POPCNTTABLE[p[3]] + POPCNTTABLE[p[4]] + POPCNTTABLE[p[5]] +
-//          POPCNTTABLE[p[6]] + POPCNTTABLE[p[7]];
-// }
 
-// inline int CountOne32(uint32_t n) {
-//   uint8_t *p = reinterpret_cast<uint8_t *>(&n);
-//   return POPCNTTABLE[p[0]] + POPCNTTABLE[p[1]] + POPCNTTABLE[p[2]] +
-//          POPCNTTABLE[p[3]];
-// }
 inline uint32_t CountOne(uint32_t n) {
     return __builtin_popcount(n);
 }
