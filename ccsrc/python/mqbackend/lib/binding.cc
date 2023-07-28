@@ -45,19 +45,11 @@
 #include "ops/hamiltonian.h"
 
 #include "python/core/sparse/csrhdmatrix.h"
-#include "python/details/create_from_container_class.h"
-#include "python/details/define_binary_operator_helpers.h"
 #include "python/ops/basic_gate.h"
 #include "python/ops/build_env.h"
 
 namespace py = pybind11;
 
-// using mindquantum::sparse::Csr_Plus_Csr;
-// using mindquantum::sparse::GetPauliMat;
-// using mindquantum::sparse::PauliMat;
-// using mindquantum::sparse::PauliMatToCsrHdMatrix;
-// using mindquantum::sparse::SparseHamiltonian;
-// using mindquantum::sparse::TransposeCsrHdMatrix;
 using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
 
 namespace mindquantum::python {

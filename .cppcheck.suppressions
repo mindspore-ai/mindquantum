@@ -24,7 +24,6 @@ noValidConfiguration:tests/decompositions/test_apply_atoms.cpp
 
 
 preprocessorErrorDirective:ccsrc/include/config/details/cxx20_compatibility.h
-preprocessorErrorDirective:ccsrc/python/core/include/python/details/define_binary_operator_helpers.h
 preprocessorErrorDirective:tests/decompositions/test_apply_atoms.cpp
 preprocessorErrorDirective:tests/ops/test_angle_parametric_gates.cpp
 unusedStructMember:ccsrc/include/math/tensor/ops_cpu/utils.h

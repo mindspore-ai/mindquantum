@@ -27,7 +27,6 @@
 
 
 "mindquantum/ccsrc/include/config/details/cxx20_compatibility.h"                                          "preprocessorErrorDirective"
-"mindquantum/ccsrc/python/core/include/python/details/define_binary_operator_helpers.h"                   "preprocessorErrorDirective"
 "mindquantum/tests/decompositions/test_apply_atoms.cpp"                                                     "preprocessorErrorDirective"
 "mindquantum/tests/ops/test_angle_parametric_gates.cpp"                                                     "preprocessorErrorDirective"
 

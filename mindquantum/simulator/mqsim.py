@@ -240,8 +240,10 @@ class MQSim(BackendBase):
         _check_input_type("circ_right", Circuit, circ_right)
         if circ_right.is_noise_circuit and "mqvector" in self.name:
             if circ_left is not None or simulator_left is not None:
-                raise ValueError("noise circuit use parameter shift rule to get grad, \
-                    which not support circ_left and simulator_left.")
+                raise ValueError(
+                    "noise circuit use parameter shift rule to get grad, \
+                    which not support circ_left and simulator_left."
+                )
             pr_shift = True
         if pr_shift and "mqvector" not in self.name:
             raise ValueError(f"{self.name} simulator not support parameter-shift rule.")
