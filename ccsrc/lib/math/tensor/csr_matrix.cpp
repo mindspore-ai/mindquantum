@@ -16,6 +16,8 @@
 
 #include "math/tensor/csr_matrix.hpp"
 
+#include "core/utils.hpp"
+
 namespace tensor {
 CsrMatrix::CsrMatrix(CsrMatrix&& t) {
     this->n_row = t.n_row;

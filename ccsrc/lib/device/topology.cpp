@@ -17,6 +17,7 @@
 #include "device/topology.hpp"
 
 #include <numeric>
+#include <stdexcept>
 
 namespace mindquantum::mapping {
 // =============================================================================
