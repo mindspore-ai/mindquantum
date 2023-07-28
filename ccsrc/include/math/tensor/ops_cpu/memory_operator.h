@@ -53,10 +53,10 @@ void destroy(Tensor* t);
 // -----------------------------------------------------------------------------
 
 template <TDtype src, TDtype des>
-Tensor cast_to(void* data, size_t len) {
+Tensor cast_to(const void* data, size_t len) {
     using d_src = to_device_t<src>;
     using d_des = to_device_t<des>;
-    auto c_data = reinterpret_cast<d_src*>(data);
+    auto c_data = reinterpret_cast<const d_src*>(data);
     auto out = cpu::init<des>(len);
     auto c_out = reinterpret_cast<d_des*>(out.data);
     auto caster = cast_value<to_device_t<src>, to_device_t<des>>();
@@ -71,13 +71,13 @@ Tensor cast_to(const Tensor& t, TDtype des);
 // -----------------------------------------------------------------------------
 
 template <TDtype dtype>
-std::string to_string(void* data, size_t dim, bool simplify = false) {
+std::string to_string(const void* data, size_t dim, bool simplify = false) {
     std::string out = "";
     if (!simplify) {
         out = "array(dtype: " + dtype_to_string(dtype) + ", device: " + device_to_string(TDevice::CPU) + ", data: [";
     }
     using calc_t = to_device_t<dtype>;
-    calc_t* data_ = reinterpret_cast<calc_t*>(data);
+    const calc_t* data_ = reinterpret_cast<const calc_t*>(data);
     for (size_t i = 0; i < dim; i++) {
         if constexpr (is_complex_v<calc_t>) {
             out += "(" + std::to_string(data_[i].real()) + ", " + std::to_string(data_[i].imag()) + ")";
@@ -118,7 +118,7 @@ Tensor init_with_vector(const std::vector<T>& a) {
 // -----------------------------------------------------------------------------
 
 template <TDtype dtype>
-Tensor copy(void* data, size_t len) {
+Tensor copy(const void* data, size_t len) {
     using calc_t = to_device_t<dtype>;
     auto out = init<dtype>(len);
     mindquantum::safe_copy(out.data, sizeof(calc_t) * len, data, sizeof(calc_t) * len);
@@ -128,7 +128,7 @@ Tensor copy(void* data, size_t len) {
 Tensor copy(const Tensor& t);
 
 template <TDtype dtype>
-void* copy_mem(void* data, size_t len) {
+void* copy_mem(const void* data, size_t len) {
     using calc_t = to_device_t<dtype>;
     auto res = reinterpret_cast<void*>(malloc(sizeof(calc_t) * len));
     if (res == nullptr) {
@@ -137,7 +137,7 @@ void* copy_mem(void* data, size_t len) {
     mindquantum::safe_copy(res, sizeof(calc_t) * len, data, sizeof(calc_t) * len);
     return res;
 }
-void* copy_mem(void* data, TDtype dtype, size_t len);
+void* copy_mem(const void* data, TDtype dtype, size_t len);
 
 // -----------------------------------------------------------------------------
 template <typename src, typename T>
@@ -185,8 +185,8 @@ Tensor get(const Tensor& t, size_t idx);
 // -----------------------------------------------------------------------------
 
 template <TDtype src_dtype>
-std::vector<to_device_t<src_dtype>> to_vector(void* data, size_t len) {
-    auto c_data = reinterpret_cast<to_device_t<src_dtype>*>(data);
+std::vector<to_device_t<src_dtype>> to_vector(const void* data, size_t len) {
+    auto c_data = reinterpret_cast<const to_device_t<src_dtype>*>(data);
     std::vector<to_device_t<src_dtype>> out;
     for (size_t i = 0; i < len; i++) {
         out.push_back(c_data[i]);
@@ -204,8 +204,8 @@ std::vector<T> to_vector(const Tensor& ori) {
 }
 
 template <TDtype src_dtype>
-std::vector<std::vector<to_device_t<src_dtype>>> to_vector(void* data, size_t n_row, size_t n_col) {
-    auto c_data = reinterpret_cast<to_device_t<src_dtype>*>(data);
+std::vector<std::vector<to_device_t<src_dtype>>> to_vector(const void* data, size_t n_row, size_t n_col) {
+    auto c_data = reinterpret_cast<const to_device_t<src_dtype>*>(data);
     std::vector<std::vector<to_device_t<src_dtype>>> out;
     for (size_t i = 0; i < n_row; i++) {
         std::vector<to_device_t<src_dtype>> tmp;

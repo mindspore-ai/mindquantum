@@ -30,7 +30,7 @@
 #include "simulator/vector/runtime/rt_gate.h"
 #include "simulator/vector/runtime/utils.h"
 #include "simulator/vector/vector_state.h"
-#define MAX_SHOTS 100000
+constexpr int MAX_SHOTS = 100000;
 
 namespace mindquantum::sim::rt {
 int cmd(const std::vector<std::string> &args) {
@@ -216,7 +216,6 @@ int cmd_file(const char *filename) {
     file.open(filename);
     if (!file.is_open()) {
         throw std::runtime_error(fmt::format("Cannot open file {}", filename));
-        return 0;
     }
     std::vector<std::string> cmds = {"", "cmd"};
     std::string current_cmd = "";

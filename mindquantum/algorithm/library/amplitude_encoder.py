@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """Amplitude encoder for quantum machine learning."""
 
 import math
@@ -41,6 +40,7 @@ def controlled_gate(circuit, gate, t_qubit, c_qubits, zero_qubit):
             circuit += X.on(abs(control))
 
 
+# pylint: disable=too-many-locals
 def amplitude_encoder(x, n_qubits):
     """
     Quantum circuit for amplitude encoding.
@@ -109,7 +109,10 @@ def amplitude_encoder(x, n_qubits):
             controls.append(tmp_j * j)
         theta = 0
         if tree[(i - 1) // 2] > 1e-10:
-            amp_0 = tree[i] / tree[(i - 1) // 2]
+            try:
+                amp_0 = tree[i] / tree[(i - 1) // 2]
+            except ZeroDivisionError as exc:
+                raise ZeroDivisionError("Failed to set amplitude encoding.") from exc
             theta = 2 * math.acos(amp_0)
             if tree[i + 1] < 0 < math.sin(theta / 2):
                 theta = -theta

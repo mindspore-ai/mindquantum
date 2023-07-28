@@ -59,7 +59,10 @@ def zne(
             product = 1
             for i in range(0, len(y)):
                 if k != i:
-                    product = product * (scaling[i] / (scaling[i] - scaling[k]))
+                    try:
+                        product = product * (scaling[i] / (scaling[i] - scaling[k]))
+                    except ZeroDivisionError as exc:
+                        raise ZeroDivisionError(f"Error scaling: {scaling}") from exc
             mitigated = mitigated + y_k * product
         return mitigated
     if order is None:

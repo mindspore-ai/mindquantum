@@ -111,7 +111,7 @@ Tensor copy(const Tensor& t) {
     return Tensor();
 }
 
-void* copy_mem(void* data, TDtype dtype, size_t len) {
+void* copy_mem(const void* data, TDtype dtype, size_t len) {
     switch (dtype) {
         case (TDtype::Float32):
             return copy_mem<TDtype::Float32>(data, len);

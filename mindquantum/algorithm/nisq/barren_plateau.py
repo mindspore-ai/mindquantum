@@ -99,7 +99,10 @@ def ansatz_variance(
         half_l = len(gradients) // 2
         ori_var = np.var(gradients[:half_l])
         this_var = np.var(gradients[half_l:])
-        var_i = np.abs(ori_var - this_var) / ori_var
+        try:
+            var_i = np.abs(ori_var - this_var) / ori_var
+        except ZeroDivisionError as exc:
+            raise ZeroDivisionError("ori_val cannot be zero.") from exc
         step += 1
 
     return np.var(gradients)

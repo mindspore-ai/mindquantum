@@ -461,13 +461,19 @@ class MQSim(BackendBase):
             raise ValueError(f"{n_qubits} qubits vec does not match with simulation qubits ({self.n_qubits})")
         if self.name == "mqmatrix":
             if len(quantum_state.shape) == 1:
-                self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state) ** 2)))
+                norm_factor = np.sqrt(np.sum(np.abs(quantum_state) ** 2))
+                if norm_factor == 0.0:
+                    raise ValueError("Wrong quantum state.")
+                self.sim.set_qs(quantum_state / norm_factor)
             elif len(quantum_state.shape) == 2:
                 if not np.allclose(quantum_state, quantum_state.T.conj()):
                     raise ValueError("density matrix must be hermitian.")
                 if (quantum_state.diagonal() < 0).any():
                     raise ValueError("the diagonal terms in density matrix cannot be negative.")
-                self.sim.set_dm(quantum_state / np.real(np.trace(quantum_state)))
+                norm_factor = np.real(np.trace(quantum_state))
+                if norm_factor == 0.0:
+                    raise ValueError("Wrong quantum state.")
+                self.sim.set_dm(quantum_state / norm_factor)
             else:
                 raise ValueError(
                     f"vec requires a 1-dimensional array, density matrix requires \
@@ -476,4 +482,7 @@ class MQSim(BackendBase):
         else:
             if len(quantum_state.shape) != 1:
                 raise ValueError(f"vec requires a 1-dimensional array, but get {quantum_state.shape}")
-            self.sim.set_qs(quantum_state / np.sqrt(np.sum(np.abs(quantum_state) ** 2)))
+            norm_factor = np.sqrt(np.sum(np.abs(quantum_state) ** 2))
+            if norm_factor == 0.0:
+                raise ValueError("Wrong quantum state.")
+            self.sim.set_qs(quantum_state / norm_factor)

@@ -225,10 +225,14 @@ class FermionOperator(FermionOperator_):
 
     def __truediv__(self, other: PRConvertible) -> "FermionOperator":
         """Divide a number."""
+        if other == 0.0:
+            raise ZeroDivisionError("other cannot be zero.")
         return self * (1.0 / other)
 
     def __itruediv__(self, other: PRConvertible) -> "FermionOperator":
         """Divide a number."""
+        if other == 0.0:
+            raise ZeroDivisionError("other cannot be zero.")
         self.__imul__(1.0 / other)
         return self
 
