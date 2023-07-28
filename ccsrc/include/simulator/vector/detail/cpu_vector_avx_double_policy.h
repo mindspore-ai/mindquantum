@@ -17,7 +17,6 @@
 #define INCLUDE_VECTOR_DETAIL_CPU_VECTOR_AVX_DOUBLE_POLICY_HPP
 #include <vector>
 
-#include "simulator/alignedallocator.h"
 #include "simulator/cintrin.h"
 #include "simulator/vector/detail/cpu_vector_policy.h"
 #define INTRIN_M2_dot_V2(ket, i, j, mm, mmt, res)                                                                      \

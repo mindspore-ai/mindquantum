@@ -41,6 +41,7 @@ namespace py = pybind11;
 using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
 
 namespace mm = mindquantum::mapping;
+namespace {
 void BindTopology(py::module &module) {  // NOLINT(runtime/references)
     auto qnode_module
         = py::class_<mm::QubitNode, std::shared_ptr<mm::QubitNode>>(module, "QubitNode")
@@ -128,4 +129,5 @@ void BindQubitMapping(py::module &module) {  // NOLINT(runtime/references)
                             "Solve qubit mapping problem with saber method.");
     saber_m.doc() = "SABER method to implement qubit mapping task.";
 }
+}  // namespace
 #endif

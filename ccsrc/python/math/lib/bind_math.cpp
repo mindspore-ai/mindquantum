@@ -60,6 +60,7 @@ using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
         .def(std::complex<float>() op py::self)                                                                        \
         .def(std::complex<double>() op py::self)
 
+namespace {
 void BindTensor(py::module &module) {  // NOLINT(runtime/references)
     py::class_<tensor::Tensor, std::shared_ptr<tensor::Tensor>>(module, "Tensor", py::buffer_protocol())
         .def(py::init<>())
@@ -111,8 +112,6 @@ void BindTensor(py::module &module) {  // NOLINT(runtime/references)
         .def(py::init<const std::vector<std::vector<std::complex<double>>> &, tensor::TDevice>(), "m"_a,
              "device"_a = tensor::TDevice::CPU);
 }
-#undef BIND_TENSOR_OPS
-#undef BIND_TENSOR_OPS_REV
 
 void BindPR(py::module &module) {  // NOLINT(runtime/references)
     namespace pr = parameter;
@@ -303,6 +302,9 @@ void BindTransform(py::module &module) {  // NOLINT(runtime/references)
     module.def("ternary_tree", &operators::transform::ternary_tree, "ops"_a, "n_qubits"_a);
     module.def("bravyi_kitaev_superfast", &operators::transform::bravyi_kitaev_superfast, "ops"_a);
 }
+}  // namespace
+#undef BIND_TENSOR_OPS
+#undef BIND_TENSOR_OPS_REV
 
 PYBIND11_MODULE(_math, m) {
     m.doc() = "MindQuantum Math module.";

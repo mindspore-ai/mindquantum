@@ -32,8 +32,7 @@ struct NumbaMatFunWrapper {
     using mat_t = void (*)(double, std::complex<double>*);
     NumbaMatFunWrapper() = default;
     NumbaMatFunWrapper(uint64_t addr, int dim, tensor::TDtype dtype = tensor::TDtype::Complex128)
-        : dim(dim), dtype(dtype) {
-        fun = reinterpret_cast<mat_t>(addr);
+        : fun(reinterpret_cast<mat_t>(addr)), dim(dim), dtype(dtype) {
     }
 
     auto operator()(double coeff) const {
