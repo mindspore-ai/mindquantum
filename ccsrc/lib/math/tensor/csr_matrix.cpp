@@ -52,8 +52,8 @@ CsrMatrix::CsrMatrix(const CsrMatrix& t) {
     this->nnz = t.nnz;
     this->indices_ = reinterpret_cast<size_t*>(malloc(sizeof(size_t) * nnz));
     this->indptr_ = reinterpret_cast<size_t*>(malloc(sizeof(size_t) * (n_row + 1)));
-    std::memcpy(this->indices_, t.indices_, sizeof(size_t) * nnz);
-    std::memcpy(this->indptr_, t.indptr_, sizeof(size_t) * (n_row + 1));
+    mindquantum::safe_copy(this->indices_, sizeof(size_t) * nnz, t.indices_, sizeof(size_t) * nnz);
+    mindquantum::safe_copy(this->indptr_, sizeof(size_t) * (n_row + 1), t.indptr_, sizeof(size_t) * (n_row + 1));
     this->data_ = t.data_;
 }
 CsrMatrix& CsrMatrix::operator=(const CsrMatrix& t) {
@@ -68,8 +68,8 @@ CsrMatrix& CsrMatrix::operator=(const CsrMatrix& t) {
     }
     this->indices_ = reinterpret_cast<size_t*>(malloc(sizeof(size_t) * nnz));
     this->indptr_ = reinterpret_cast<size_t*>(malloc(sizeof(size_t) * (n_row + 1)));
-    std::memcpy(this->indices_, t.indices_, sizeof(size_t) * nnz);
-    std::memcpy(this->indptr_, t.indptr_, sizeof(size_t) * (n_row + 1));
+    mindquantum::safe_copy(this->indices_, sizeof(size_t) * nnz, t.indices_, sizeof(size_t) * nnz);
+    mindquantum::safe_copy(this->indptr_, sizeof(size_t) * (n_row + 1), t.indptr_, sizeof(size_t) * (n_row + 1));
     this->data_ = t.data_;
     return *this;
 }

@@ -175,5 +175,7 @@ void PrintVec(T *vec, size_t len) {
         std::cout << c_vec[i] << std::endl;
     }
 }
+
+void safe_copy(void *dest, size_t dest_size, const void *src, size_t count);
 }  // namespace mindquantum
 #endif  // MINDQUANTUM_UTILS_HPP_

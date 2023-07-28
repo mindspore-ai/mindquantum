@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <stdexcept>
 
+#include "core/utils.hpp"
 #include "math/tensor/traits.hpp"
 
 namespace tensor::ops::cpu {
@@ -165,7 +166,8 @@ Tensor get(const Tensor& t, size_t idx) {
         throw std::runtime_error("index out of range for get.");
     }
     auto out = cpu::init(1, t.dtype);
-    std::memcpy(out.data, reinterpret_cast<uint8_t*>(t.data) + idx * bit_size(t.dtype), bit_size(t.dtype));
+    mindquantum::safe_copy(out.data, bit_size(t.dtype), reinterpret_cast<uint8_t*>(t.data) + idx * bit_size(t.dtype),
+                           bit_size(t.dtype));
     return out;
 }
 }  // namespace tensor::ops::cpu

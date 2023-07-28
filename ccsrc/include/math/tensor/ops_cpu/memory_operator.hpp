@@ -26,6 +26,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "core/utils.hpp"
 #include "math/tensor/matrix.hpp"
 #include "math/tensor/ops/memory_operator.hpp"
 #include "math/tensor/ops_cpu/utils.hpp"
@@ -110,7 +111,7 @@ template <typename T>
 Tensor init_with_vector(const std::vector<T>& a) {
     constexpr auto dtype = to_dtype_v<T>;
     auto out = cpu::init<dtype>(a.size());
-    std::memcpy(out.data, a.data(), sizeof(T) * a.size());
+    mindquantum::safe_copy(out.data, sizeof(T) * a.size(), a.data(), sizeof(T) * a.size());
     return out;
 }
 
@@ -120,7 +121,7 @@ template <TDtype dtype>
 Tensor copy(void* data, size_t len) {
     using calc_t = to_device_t<dtype>;
     auto out = init<dtype>(len);
-    std::memcpy(out.data, data, sizeof(calc_t) * len);
+    mindquantum::safe_copy(out.data, sizeof(calc_t) * len, data, sizeof(calc_t) * len);
     return out;
 }
 
@@ -133,7 +134,7 @@ void* copy_mem(void* data, size_t len) {
     if (res == nullptr) {
         throw std::runtime_error("malloc memory error.");
     }
-    std::memcpy(res, data, sizeof(calc_t) * len);
+    mindquantum::safe_copy(res, sizeof(calc_t) * len, data, sizeof(calc_t) * len);
     return res;
 }
 void* copy_mem(void* data, TDtype dtype, size_t len);

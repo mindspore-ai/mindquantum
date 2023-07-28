@@ -27,6 +27,23 @@ int TimeDuration(TimePoint start, TimePoint end) {
     return std::chrono::duration_cast<std::chrono::milliseconds>(d).count();
 }
 
+void safe_copy(void *dest, size_t dest_size, const void *src, size_t count) {
+    if (dest == NULL || dest_size == 0 || src == NULL || count == 0) {
+        throw std::runtime_error("Invalid parameters for safe_memcpy.");
+    }
+
+    if (count > dest_size) {
+        throw std::runtime_error("Buffer overflow in safe_memcpy.");
+    }
+
+    unsigned char *pDest = reinterpret_cast<unsigned char *>(dest);
+    const unsigned char *pSrc = reinterpret_cast<const unsigned char *>(src);
+
+    for (size_t i = 0; i < count; i++) {
+        pDest[i] = pSrc[i];
+    }
+}
+
 Index GetControlMask(const VT<Index> &ctrls) {
     Index ctrlmask = std::accumulate(ctrls.begin(), ctrls.end(), 0, [&](Index a, Index b) { return a | (1UL << b); });
     return ctrlmask;
