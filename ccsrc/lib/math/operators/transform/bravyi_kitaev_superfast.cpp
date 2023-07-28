@@ -27,11 +27,9 @@
 
 namespace operators::transform {
 qubit_op_t bravyi_kitaev_superfast(const fermion_op_t& ops) {
-    // ? ops.normal_ordered() does not seem to work
     fermion_op_t fermion_operator = ops;
     edge_matrix_t edge_matrix = get_edge_matrix(fermion_operator);
     edge_enum_t edge_enum = enumerate_edges(edge_matrix);
-    // ? auto transf_op = qubit_t(terms_t{}, fermion_operator.constant);
     auto transf_op = qubit_op_t();
     std::set<fermion_op_t::terms_t> transformed_terms;
     for (const auto& [term, coeff] : ops.get_terms()) {

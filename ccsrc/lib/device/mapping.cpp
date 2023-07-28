@@ -162,8 +162,6 @@ double SABRE::HLookAhead(const std::list<int>& F, const std::list<int>& E, const
 
 double SABRE::H(const std::list<int>& F, const std::list<int>& E, const VT<int>& pi, const std::pair<int, int>& SWAP,
                 const VT<double>& decay) const {
-    // return HBasic(F, pi);
-    // return HLookAhead(F, E, pi);
     return std::max(decay[SWAP.first], decay[SWAP.second]) * HLookAhead(F, E, pi);
 }
 

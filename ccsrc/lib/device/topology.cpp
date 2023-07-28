@@ -14,14 +14,7 @@
 
 #include "device/topology.hpp"
 
-#include <algorithm>
-#include <iterator>
-#include <memory>
 #include <numeric>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <utility>
 
 namespace mindquantum::mapping {
 // =============================================================================

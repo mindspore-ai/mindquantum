@@ -14,15 +14,8 @@
 
 #include "simulator/timer.h"
 
-#include <chrono>
-#include <iostream>
-#include <map>
 #include <numeric>
-#include <stdexcept>
-#include <string>
-#include <string_view>
-#include <utility>
-#include <vector>
+
 namespace mindquantum::timer {
 TimePoint NOW() {
     return std::chrono::steady_clock::now();

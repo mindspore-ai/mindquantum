@@ -15,11 +15,6 @@
  */
 #ifndef MINDQUANTUM_BASE_TYPES_HPP_
 #define MINDQUANTUM_BASE_TYPES_HPP_
-// #ifndef MQONLY
-// #include "backend/kernel_compiler/cpu/quantum/quantum_simulator/popcnt.h"
-// #else
-// #include "./popcnt.hpp"
-// #endif
 
 #include <cmath>
 

@@ -45,35 +45,6 @@ inline VVT<CT<T>> CastArray(const pybind11::object& fun, T theta) {
     }
     return matrix;
 }
-
-// template <typename T>
-// struct BasicGate : mindquantum::BasicGate<T> {
-//     using mindquantum::BasicGate<T>::BasicGate;
-
-//     using base_t = mindquantum::BasicGate<T>;
-
-//     BasicGate(const mindquantum::BasicGate<T>& gate) : base_t(gate) {  // NOLINT
-//     }
-
-//     BasicGate(mindquantum::BasicGate<T>&& gate) : base_t(std::move(gate)) {  // NOLINT
-//     }
-
-//     BasicGate(const std::string& name, int64_t hermitian_prop, pybind11::object matrix_fun,
-//               pybind11::object diff_matrix_fun)
-//         : base_t(
-//             true, name, hermitian_prop,
-//             [matrix_fun](T theta) {
-//                 auto matrix = CastArray<T>(matrix_fun, theta);
-//                 Dim2Matrix<T> res = Dim2Matrix<T>(matrix);
-//                 return res;
-//             },
-//             [diff_matrix_fun](T theta) {
-//                 auto matirx = CastArray<T>(diff_matrix_fun, theta);
-//                 Dim2Matrix<T> res = Dim2Matrix<T>(matirx);
-//                 return res;
-//             }) {
-//     }
-// };
 }  // namespace mindquantum::python
 
 #endif /* MQ_PYTHON_BASIC_GATE_HPP */

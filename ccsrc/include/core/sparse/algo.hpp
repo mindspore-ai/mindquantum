@@ -152,7 +152,6 @@ T2 *Csr_Dot_Vec(std::shared_ptr<CsrHdMatrix<T>> a, T2 *vec) {
     auto dim = a->dim_;
     auto c_vec = reinterpret_cast<CTP<T2>>(vec);
     auto new_vec = reinterpret_cast<CTP<T2>>(malloc(sizeof(CT<T2>) * dim));
-    // auto nnz = a->nnz_;
     auto data = a->data_;
     auto indptr = a->indptr_;
     auto indices = a->indices_;
@@ -195,7 +194,6 @@ T2 *Csr_Dot_Vec(std::shared_ptr<CsrHdMatrix<T>> a, std::shared_ptr<CsrHdMatrix<T
     auto dim = a->dim_;
     auto c_vec = reinterpret_cast<CTP<T2>>(vec);
     auto new_vec = reinterpret_cast<CTP<T2>>(malloc(sizeof(CT<T2>) * dim));
-    // auto nnz = a->nnz_;
     auto data = a->data_;
     auto indptr = a->indptr_;
     auto indices = a->indices_;
