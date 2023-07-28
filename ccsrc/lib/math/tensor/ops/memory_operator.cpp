@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include "math/tensor/ops/memory_operator.hpp"
+#include "math/tensor/ops/memory_operator.h"
 
-#include "math/tensor/ops_cpu/memory_operator.hpp"
-#include "math/tensor/tensor.hpp"
-#include "math/tensor/traits.hpp"
+#include "math/tensor/ops_cpu/memory_operator.h"
+#include "math/tensor/tensor.h"
+#include "math/tensor/traits.h"
 
 namespace tensor::ops {
 Tensor init(size_t len, TDtype dtype, TDevice device) {

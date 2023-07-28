@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "ops/gates.hpp"
+#include "ops/gates.h"
 
 namespace mindquantum {
 tensor::Matrix U3Matrix(tensor::Tensor theta, tensor::Tensor phi, tensor::Tensor lambda) {

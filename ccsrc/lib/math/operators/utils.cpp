@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "math/operators/utils.hpp"
+#include "math/operators/utils.h"
 
 namespace operators {
 bool KeyCompare::operator()(const key_t& a, const key_t& b) const {

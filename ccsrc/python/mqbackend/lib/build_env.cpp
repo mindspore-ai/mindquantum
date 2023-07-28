@@ -16,7 +16,7 @@
 
 #ifndef MQ_PYTHON_BUILD_ENV_HPP_
 #define MQ_PYTHON_BUILD_ENV_HPP_
-#include "python/ops/build_env.hpp"
+#include "python/ops/build_env.h"
 
 #include <algorithm>
 #include <string>

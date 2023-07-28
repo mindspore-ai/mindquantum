@@ -20,9 +20,9 @@
 #include <string>
 #include <vector>
 
-#include "math/pr/parameter_resolver.hpp"
-#include "ops/basic_gate.hpp"
-#include "ops/gate_id.hpp"
+#include "math/pr/parameter_resolver.h"
+#include "ops/basic_gate.h"
+#include "ops/gate_id.h"
 
 namespace mindquantum::sim::rt {
 struct Gate {

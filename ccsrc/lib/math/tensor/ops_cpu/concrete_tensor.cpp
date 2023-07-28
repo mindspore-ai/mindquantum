@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "math/tensor/ops_cpu/concrete_tensor.hpp"
+#include "math/tensor/ops_cpu/concrete_tensor.h"
 
-#include "math/tensor/traits.hpp"
+#include "math/tensor/traits.h"
 
 namespace tensor::ops::cpu {
 Tensor zeros(size_t len, TDtype dtype) {

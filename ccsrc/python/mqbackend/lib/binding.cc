@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "python/device/binding.hpp"
+#include "python/device/binding.h"
 
 #include <complex>
 #include <memory>
@@ -30,26 +30,25 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include "config/constexpr_type_name.hpp"
-#include "config/format/std_complex.hpp"
-#include "config/type_traits.hpp"
+#include "config/constexpr_type_name.h"
+#include "config/format/std_complex.h"
+#include "config/type_traits.h"
+#include "core/mq_base_types.h"
+#include "core/sparse/algo.h"
+#include "core/sparse/csrhdmatrix.h"
+#include "core/sparse/paulimat.h"
+#include "math/pr/parameter_resolver.h"
+#include "math/tensor/matrix.h"
+#include "ops/basic_gate.h"
+#include "ops/gate_id.h"
+#include "ops/gates.h"
+#include "ops/hamiltonian.h"
 
-#include "core/mq_base_types.hpp"
-#include "core/sparse/algo.hpp"
-#include "core/sparse/csrhdmatrix.hpp"
-#include "core/sparse/paulimat.hpp"
-#include "math/pr/parameter_resolver.hpp"
-#include "math/tensor/matrix.hpp"
-#include "ops/basic_gate.hpp"
-#include "ops/gate_id.hpp"
-#include "ops/gates.hpp"
-#include "ops/hamiltonian.hpp"
-
-#include "python/core/sparse/csrhdmatrix.hpp"
-#include "python/details/create_from_container_class.hpp"
-#include "python/details/define_binary_operator_helpers.hpp"
-#include "python/ops/basic_gate.hpp"
-#include "python/ops/build_env.hpp"
+#include "python/core/sparse/csrhdmatrix.h"
+#include "python/details/create_from_container_class.h"
+#include "python/details/define_binary_operator_helpers.h"
+#include "python/ops/basic_gate.h"
+#include "python/ops/build_env.h"
 
 namespace py = pybind11;
 

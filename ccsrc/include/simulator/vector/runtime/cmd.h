@@ -22,10 +22,10 @@
 
 #include <nlohmann/json.hpp>
 
-#include "ops/basic_gate.hpp"
-#include "ops/gate_id.hpp"
-#include "ops/gates.hpp"
-#include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
+#include "ops/basic_gate.h"
+#include "ops/gate_id.h"
+#include "ops/gates.h"
+#include "simulator/vector/detail/cpu_vector_avx_double_policy.h"
 #include "simulator/vector/runtime/rt_gate.h"
 #include "simulator/vector/runtime/utils.h"
 

@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#include "math/tensor/ops_cpu/advance_math.hpp"
+#include "math/tensor/ops_cpu/advance_math.h"
 
 #include <cstdint>
 #include <stdexcept>
 #include <vector>
 
-#include "core/utils.hpp"
-#include "math/tensor/ops_cpu/memory_operator.hpp"
-#include "math/tensor/tensor.hpp"
-#include "math/tensor/traits.hpp"
+#include "core/utils.h"
+#include "math/tensor/ops_cpu/memory_operator.h"
+#include "math/tensor/tensor.h"
+#include "math/tensor/traits.h"
 
 namespace tensor::ops::cpu {
 Tensor real(const Tensor& t) {

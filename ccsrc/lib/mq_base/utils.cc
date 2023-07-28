@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "core/utils.hpp"
+#include "core/utils.h"
 
 namespace mindquantum {
 const VT<CT<double>> POLAR = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};

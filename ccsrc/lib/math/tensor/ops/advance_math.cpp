@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-#include "math/tensor/ops/advance_math.hpp"
+#include "math/tensor/ops/advance_math.h"
 
 #include <algorithm>
 #include <stdexcept>
 #include <vector>
 
-#include "math/tensor/ops_cpu/advance_math.hpp"
-#include "math/tensor/tensor.hpp"
-#include "math/tensor/traits.hpp"
+#include "math/tensor/ops_cpu/advance_math.h"
+#include "math/tensor/tensor.h"
+#include "math/tensor/traits.h"
 
 namespace tensor::ops {
 Tensor sin(const Tensor& t) {

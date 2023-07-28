@@ -19,9 +19,9 @@
 #include <numeric>
 #include <stdexcept>
 
-#include "math/operators/qubit_operator_view.hpp"
-#include "math/operators/transform.hpp"
-#include "math/tensor/ops.hpp"
+#include "math/operators/qubit_operator_view.h"
+#include "math/operators/transform.h"
+#include "math/tensor/ops.h"
 namespace operators::transform {
 namespace tn = tensor;
 

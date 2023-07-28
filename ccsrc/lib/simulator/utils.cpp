@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "simulator/utils.hpp"
+#include "simulator/utils.h"
 
 #include <cassert>
 #include <numeric>

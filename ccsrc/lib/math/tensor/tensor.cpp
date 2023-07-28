@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-#include "math/tensor/tensor.hpp"
+#include "math/tensor/tensor.h"
 
 #include <iostream>
 
-#include "math/tensor/ops.hpp"
-#include "math/tensor/ops/memory_operator.hpp"
-#include "math/tensor/traits.hpp"
+#include "math/tensor/ops.h"
+#include "math/tensor/ops/memory_operator.h"
+#include "math/tensor/traits.h"
 #define TENSOR_PLUS_EQUAL(dtype)                                                                                       \
     Tensor& Tensor::operator+=(dtype other) {                                                                          \
         ops::inplace_add(this, other);                                                                                 \

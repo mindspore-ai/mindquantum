@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-#include "math/tensor/ops_cpu/memory_operator.hpp"
+#include "math/tensor/ops_cpu/memory_operator.h"
 
 #include <cstdint>
 #include <stdexcept>
 
-#include "core/utils.hpp"
-#include "math/tensor/traits.hpp"
+#include "core/utils.h"
+#include "math/tensor/traits.h"
 
 namespace tensor::ops::cpu {
 Tensor init(size_t len, TDtype dtype) {

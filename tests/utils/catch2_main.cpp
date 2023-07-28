@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "config/logging.hpp"
+#include "config/logging.h"
 
-#include <catch2/catch_session.hpp>
+#include <catch2/catch_session.h>
 
 int main(int argc, char* argv[]) {
     Catch::Session session;

@@ -23,7 +23,7 @@ mindquantum/mindquantum/third_party/unitary_cc.py:uccsd_singlet_generator
 mindquantum/mindquantum/io/display/circuit_text_drawer.py:brick_model
 mindquantum/algorithm/compiler/decompose/universal_decompose/two_qubit_decompose.py:kak_decompose
 
-mindquantum/ccsrc/include/ops/gates.hpp:mindquantum::GetGateByName
+mindquantum/ccsrc/include/ops/gates.h:mindquantum::GetGateByName
 mindquantum/ccsrc/include/ops/gates/qubit_operator.tpp:mindquantum::ops::QubitOperator<coeff_t>::sparse_matrix
 mindquantum/ccsrc/include/ops/gates/qubit_operator.tpp:mindquantum::ops::mindquantum::ops::QubitOperator<coeff_t>::get_op_matrix.QubitOperator<coeff_t>::sparse_matrix
 mindquantum/ccsrc/mindquantum/src/binding.cc:mindquantum::PYBIND11_MODULE
@@ -35,7 +35,7 @@ mindquantum/ccsrc/python/mqbackend/lib/binding.cc:BindOther
 mindquantum/ccsrc/python/mqbackend/lib/binding.cc:init_fermion_operators
 mindquantum/ccsrc/python/mqbackend/lib/binding.cc:init_qubit_operators
 mindquantum/ccsrc/lib/simulator/vector/detail/runtime/cmd.cpp:mindquantum::sim::rt::cmd
-mindquantum/ccsrc/include/math/tensor/ops_cpu/advance_math.hpp:tensor::ops::cpu::ElementFunc
+mindquantum/ccsrc/include/math/tensor/ops_cpu/advance_math.h:tensor::ops::cpu::ElementFunc
 mindquantum/mindquantum/core/parameterresolver/parameterresolver.py:__init__
 mindquantum/ccsrc/python/math/lib/bind_math.cpp:BindQubitOperator
 ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_gate_expect.cpp:mindquantum::sim::vector::detail::CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix

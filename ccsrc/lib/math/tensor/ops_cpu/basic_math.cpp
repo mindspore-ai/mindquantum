@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-#include "math/tensor/ops_cpu/basic_math.hpp"
+#include "math/tensor/ops_cpu/basic_math.h"
 
-#include "math/tensor/csr_matrix.hpp"
-#include "math/tensor/matrix.hpp"
-#include "math/tensor/tensor.hpp"
-#include "math/tensor/traits.hpp"
+#include "math/tensor/csr_matrix.h"
+#include "math/tensor/matrix.h"
+#include "math/tensor/tensor.h"
+#include "math/tensor/traits.h"
 
 namespace tensor::ops::cpu {
 #define MM_MatMul(m1_dtype)                                                                                            \

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "config/logging.hpp"
+#include "config/logging.h"
 
 #include <string>
 

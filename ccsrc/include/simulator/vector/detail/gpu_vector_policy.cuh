@@ -25,9 +25,9 @@
 
 #include <thrust/transform_reduce.h>
 
-#include "core/mq_base_types.hpp"
-#include "core/sparse/csrhdmatrix.hpp"
-#include "math/tensor/traits.hpp"
+#include "core/mq_base_types.h"
+#include "core/sparse/csrhdmatrix.h"
+#include "math/tensor/traits.h"
 #include "thrust/complex.h"
 #include "thrust/functional.h"
 

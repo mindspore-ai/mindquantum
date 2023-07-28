@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "config/openmp.hpp"
-
-#include "core/utils.hpp"
-#include "math/pr/parameter_resolver.hpp"
-#include "simulator/utils.hpp"
+#include "config/openmp.h"
+#include "core/utils.h"
+#include "math/pr/parameter_resolver.h"
+#include "simulator/utils.h"
 #ifdef __x86_64__
-#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_double_policy.hpp"
-#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_float_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_double_policy.h"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_float_policy.h"
 #elif defined(__amd64)
-#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_double_policy.hpp"
-#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_float_policy.hpp"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_double_policy.h"
+#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_float_policy.h"
 #endif
-#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"
+#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.h"
 
 namespace mindquantum::sim::densitymatrix::detail {
 // Z like operator

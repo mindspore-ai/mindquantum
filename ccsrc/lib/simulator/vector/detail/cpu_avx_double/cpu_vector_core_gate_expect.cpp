@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "config/openmp.hpp"
-
-#include "math/pr/parameter_resolver.hpp"
-#include "simulator/utils.hpp"
-#include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
+#include "config/openmp.h"
+#include "math/pr/parameter_resolver.h"
+#include "simulator/utils.h"
+#include "simulator/vector/detail/cpu_vector_avx_double_policy.h"
 
 namespace mindquantum::sim::vector::detail {
 auto CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix(const qs_data_p_t& bra_out, const qs_data_p_t& ket_out,

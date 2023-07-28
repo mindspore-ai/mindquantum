@@ -16,14 +16,14 @@
 
 #ifndef MATH_TENSOR_OPS_CONCRETE_TENSOR_HPP_
 #define MATH_TENSOR_OPS_CONCRETE_TENSOR_HPP_
-#include "math/tensor/ops_cpu/concrete_tensor.hpp"
+#include "math/tensor/ops_cpu/concrete_tensor.h"
 
 #include <complex>
 #include <vector>
 
-#include "math/tensor/ops.hpp"
-#include "math/tensor/tensor.hpp"
-#include "math/tensor/traits.hpp"
+#include "math/tensor/ops.h"
+#include "math/tensor/tensor.h"
+#include "math/tensor/traits.h"
 
 namespace tensor::ops {
 Tensor zeros(size_t len, TDtype dtype, TDevice device) {

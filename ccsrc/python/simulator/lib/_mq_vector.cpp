@@ -21,13 +21,13 @@
 #    include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #    include "simulator/vector/detail/gpu_vector_policy.cuh"
 #elif defined(__x86_64__)
-#    include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
-#    include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
-#    include "simulator/vector/detail/cpu_vector_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_avx_double_policy.h"
+#    include "simulator/vector/detail/cpu_vector_avx_float_policy.h"
+#    include "simulator/vector/detail/cpu_vector_policy.h"
 #elif defined(__amd64)
-#    include "simulator/vector/detail/cpu_vector_arm_double_policy.hpp"
-#    include "simulator/vector/detail/cpu_vector_arm_float_policy.hpp"
-#    include "simulator/vector/detail/cpu_vector_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_arm_double_policy.h"
+#    include "simulator/vector/detail/cpu_vector_arm_float_policy.h"
+#    include "simulator/vector/detail/cpu_vector_policy.h"
 #endif
 
 #include "python/vector/bind_vec_state.h"

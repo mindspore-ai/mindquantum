@@ -22,10 +22,10 @@
 #include <unordered_set>
 #include <vector>
 
-#include "math/operators/fermion_operator_view.hpp"
-#include "math/operators/transform.hpp"
-#include "math/pr/parameter_resolver.hpp"
-#include "math/tensor/ops/memory_operator.hpp"
+#include "math/operators/fermion_operator_view.h"
+#include "math/operators/transform.h"
+#include "math/pr/parameter_resolver.h"
+#include "math/tensor/ops/memory_operator.h"
 
 namespace operators::transform {
 qubit_op_t bravyi_kitaev_superfast(const fermion_op_t& ops) {

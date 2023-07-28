@@ -29,17 +29,17 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "math/operators/fermion_operator_view.hpp"
-#include "math/operators/qubit_operator_view.hpp"
-#include "math/operators/transform.hpp"
-#include "math/pr/parameter_resolver.hpp"
-#include "math/tensor/matrix.hpp"
-#include "math/tensor/ops/memory_operator.hpp"
-#include "math/tensor/ops_cpu/memory_operator.hpp"
-#include "math/tensor/tensor.hpp"
-#include "math/tensor/traits.hpp"
+#include "math/operators/fermion_operator_view.h"
+#include "math/operators/qubit_operator_view.h"
+#include "math/operators/transform.h"
+#include "math/pr/parameter_resolver.h"
+#include "math/tensor/matrix.h"
+#include "math/tensor/ops/memory_operator.h"
+#include "math/tensor/ops_cpu/memory_operator.h"
+#include "math/tensor/tensor.h"
+#include "math/tensor/traits.h"
 
-#include "python/python_tensor.hpp"
+#include "python/python_tensor.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)

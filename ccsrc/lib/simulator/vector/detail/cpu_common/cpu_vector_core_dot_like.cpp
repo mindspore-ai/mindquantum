@@ -15,19 +15,18 @@
  */
 #include <cstddef>
 
-#include "config/openmp.hpp"
-
-#include "core/sparse/algo.hpp"
-#include "math/pr/parameter_resolver.hpp"
-#include "simulator/utils.hpp"
+#include "config/openmp.h"
+#include "core/sparse/algo.h"
+#include "math/pr/parameter_resolver.h"
+#include "simulator/utils.h"
 #ifdef __x86_64__
-#    include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
-#    include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_avx_double_policy.h"
+#    include "simulator/vector/detail/cpu_vector_avx_float_policy.h"
 #elif defined(__amd64)
-#    include "simulator/vector/detail/cpu_vector_arm_double_policy.hpp"
-#    include "simulator/vector/detail/cpu_vector_arm_float_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_arm_double_policy.h"
+#    include "simulator/vector/detail/cpu_vector_arm_float_policy.h"
 #endif
-#include "simulator/vector/detail/cpu_vector_policy.hpp"
+#include "simulator/vector/detail/cpu_vector_policy.h"
 
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>

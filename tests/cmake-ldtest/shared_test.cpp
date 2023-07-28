@@ -16,7 +16,7 @@
 
 #include <iostream>
 
-#include "shared_lib.hpp"
+#include "shared_lib.h"
 
 int main() {
     std::cout << foo() << std::endl;

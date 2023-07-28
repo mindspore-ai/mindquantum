@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "config/openmp.hpp"
-
-#include "core/utils.hpp"
-#include "math/pr/parameter_resolver.hpp"
-#include "simulator/utils.hpp"
-#include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
+#include "config/openmp.h"
+#include "core/utils.h"
+#include "math/pr/parameter_resolver.h"
+#include "simulator/utils.h"
+#include "simulator/vector/detail/cpu_vector_avx_double_policy.h"
 
 namespace mindquantum::sim::vector::detail {
 void CPUVectorPolicyAvxDouble::ApplySingleQubitMatrix(const qs_data_p_t& src_out, qs_data_p_t* des_p, qbit_t obj_qubit,

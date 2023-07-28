@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#include "math/tensor/ops_cpu/basic_math.hpp"
+#include "math/tensor/ops_cpu/basic_math.h"
 
 #include <functional>
 #include <stdexcept>
 
-#include "math/tensor/csr_matrix.hpp"
-#include "math/tensor/matrix.hpp"
-#include "math/tensor/ops_cpu/memory_operator.hpp"
-#include "math/tensor/tensor.hpp"
-#include "math/tensor/traits.hpp"
+#include "math/tensor/csr_matrix.h"
+#include "math/tensor/matrix.h"
+#include "math/tensor/ops_cpu/memory_operator.h"
+#include "math/tensor/tensor.h"
+#include "math/tensor/traits.h"
 namespace tensor::ops {
 void inplace_add(Tensor* t, float a) {
     if (t->device == TDevice::CPU) {

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-#include "math/pr/parameter_resolver.hpp"
+#include "math/pr/parameter_resolver.h"
 
-#include "math/tensor/ops/advance_math.hpp"
-#include "math/tensor/ops/memory_operator.hpp"
-#include "math/tensor/tensor.hpp"
-#include "math/tensor/traits.hpp"
+#include "math/tensor/ops/advance_math.h"
+#include "math/tensor/ops/memory_operator.h"
+#include "math/tensor/tensor.h"
+#include "math/tensor/traits.h"
 
 namespace parameter {
 ParameterResolver::ParameterResolver(const tn::Tensor& const_value) : const_value(const_value) {

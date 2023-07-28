@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "device/topology.hpp"
+#include "device/topology.h"
 
 #include <numeric>
 #include <stdexcept>

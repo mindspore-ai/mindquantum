@@ -15,7 +15,7 @@
  */
 #include <cstddef>
 
-#include "math/operators/transform.hpp"
+#include "math/operators/transform.h"
 namespace operators::transform {
 qubit_op_t ternary_tree(const fermion_op_t& ops, int n_qubits) {
     int h = static_cast<int>(std::floor(std::log1p(2 * n_qubits) / std::log(3)));

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "math/operators/transform.hpp"
+#include "math/operators/transform.h"
 
 namespace operators::transform {
 fermion_op_t fermion_number_operator(int n_modes, int mode, const parameter::ParameterResolver& coeff) {

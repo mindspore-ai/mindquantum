@@ -17,11 +17,10 @@
 #include <map>
 #include <optional>
 
-#include "config/common_type.hpp"
+#include "config/common_type.h"
+#include "math/pr/parameter_resolver.h"
 
-#include "math/pr/parameter_resolver.hpp"
-
-#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_test_macros.h>
 
 // =============================================================================
 

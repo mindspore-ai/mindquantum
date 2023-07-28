@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "config/constexpr_type_name.hpp"
+#include "config/constexpr_type_name.h"
 
-#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_test_macros.h>
 
 // =============================================================================
 

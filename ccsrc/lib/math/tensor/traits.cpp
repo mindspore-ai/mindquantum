@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "math/tensor/traits.hpp"
+#include "math/tensor/traits.h"
 
 #include <stdexcept>
 

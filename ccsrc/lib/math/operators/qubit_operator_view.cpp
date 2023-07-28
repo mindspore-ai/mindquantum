@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-#include "math/operators/qubit_operator_view.hpp"
+#include "math/operators/qubit_operator_view.h"
 
-#include "core/utils.hpp"
-#include "math/operators/utils.hpp"
-#include "math/pr/parameter_resolver.hpp"
-#include "math/tensor/ops/memory_operator.hpp"
-#include "math/tensor/tensor.hpp"
-#include "math/tensor/traits.hpp"
+#include "core/utils.h"
+#include "math/operators/utils.h"
+#include "math/pr/parameter_resolver.h"
+#include "math/tensor/ops/memory_operator.h"
+#include "math/tensor/tensor.h"
+#include "math/tensor/traits.h"
 
 namespace operators::qubit {
 std::string to_string(const TermValue& term) {

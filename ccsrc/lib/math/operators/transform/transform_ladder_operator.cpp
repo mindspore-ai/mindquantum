@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "math/operators/transform.hpp"
-#include "math/tensor/ops.hpp"
-#include "math/tensor/ops/memory_operator.hpp"
+#include "math/operators/transform.h"
+#include "math/tensor/ops.h"
+#include "math/tensor/ops/memory_operator.h"
 
 namespace operators::transform {
 qubit_op_t transform_ladder_operator(const fermion::TermValue& value, const qlist_t& x1, const qlist_t& y1,

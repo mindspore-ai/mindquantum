@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "math/tensor/csr_matrix.hpp"
+#include "math/tensor/csr_matrix.h"
 
-#include "core/utils.hpp"
+#include "core/utils.h"
 
 namespace tensor {
 CsrMatrix::CsrMatrix(CsrMatrix&& t) {

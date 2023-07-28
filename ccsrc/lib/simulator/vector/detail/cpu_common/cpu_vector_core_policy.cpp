@@ -17,21 +17,20 @@
 #include <limits>
 #include <stdexcept>
 
-#include "config/details/macros.hpp"
-#include "config/openmp.hpp"
-#include "config/type_promotion.hpp"
-
-#include "core/utils.hpp"
-#include "math/pr/parameter_resolver.hpp"
-#include "simulator/utils.hpp"
+#include "config/details/macros.h"
+#include "config/openmp.h"
+#include "config/type_promotion.h"
+#include "core/utils.h"
+#include "math/pr/parameter_resolver.h"
+#include "simulator/utils.h"
 #ifdef __x86_64__
-#    include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
-#    include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_avx_double_policy.h"
+#    include "simulator/vector/detail/cpu_vector_avx_float_policy.h"
 #elif defined(__amd64)
-#    include "simulator/vector/detail/cpu_vector_arm_double_policy.hpp"
-#    include "simulator/vector/detail/cpu_vector_arm_float_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_arm_double_policy.h"
+#    include "simulator/vector/detail/cpu_vector_arm_float_policy.h"
 #endif
-#include "simulator/vector/detail/cpu_vector_policy.hpp"
+#include "simulator/vector/detail/cpu_vector_policy.h"
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
 auto CPUVectorPolicyBase<derived_, calc_type_>::InitState(index_t dim, bool zero_state) -> qs_data_p_t {

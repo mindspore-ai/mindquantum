@@ -23,25 +23,25 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "math/pr/parameter_resolver.hpp"
+#include "math/pr/parameter_resolver.h"
 
 #ifdef __CUDACC__
 #    include "simulator/vector/detail/gpu_vector_double_policy.cuh"
 #    include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #    include "simulator/vector/detail/gpu_vector_policy.cuh"
 #elif defined(__x86_64__)
-#    include "simulator/vector/detail/cpu_vector_avx_double_policy.hpp"
-#    include "simulator/vector/detail/cpu_vector_avx_float_policy.hpp"
-#    include "simulator/vector/detail/cpu_vector_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_avx_double_policy.h"
+#    include "simulator/vector/detail/cpu_vector_avx_float_policy.h"
+#    include "simulator/vector/detail/cpu_vector_policy.h"
 #elif defined(__amd64)
-#    include "simulator/vector/detail/cpu_vector_arm_double_policy.hpp"
-#    include "simulator/vector/detail/cpu_vector_arm_float_policy.hpp"
-#    include "simulator/vector/detail/cpu_vector_policy.hpp"
+#    include "simulator/vector/detail/cpu_vector_arm_double_policy.h"
+#    include "simulator/vector/detail/cpu_vector_arm_float_policy.h"
+#    include "simulator/vector/detail/cpu_vector_policy.h"
 #endif  // __CUDACC__
 
-#include "ops/hamiltonian.hpp"
-#include "simulator/vector/blas.hpp"
-#include "simulator/vector/vector_state.hpp"
+#include "ops/hamiltonian.h"
+#include "simulator/vector/blas.h"
+#include "simulator/vector/vector_state.h"
 
 template <typename sim_t>
 auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLINT

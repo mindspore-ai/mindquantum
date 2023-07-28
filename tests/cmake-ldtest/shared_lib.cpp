@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "shared_lib.hpp"
+#include "shared_lib.h"
 
 int foo() {
     return 42;  // NOLINT
