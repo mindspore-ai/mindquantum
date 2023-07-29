@@ -45,3 +45,4 @@
 "mindquantum/ccsrc/include/config/format/std_optional.h"                                            "runtime/references"
 "mindquantum/ccsrc/include/config/tsl_ordered_map.h"                                                "runtime/references"
 "mindquantum/ccsrc/include/math/operators/fermion_operator_view.h"                                  "runtime/references"
+"mindquantum/tests/cmake-ldtest/shared_lib.cpp"                                                     "build/include_subdir"

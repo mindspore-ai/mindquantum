@@ -37,7 +37,7 @@ mindquantum/ccsrc/python/mqbackend/lib/binding.cc:init_qubit_operators
 mindquantum/ccsrc/lib/simulator/vector/detail/runtime/cmd.cpp:mindquantum::sim::rt::cmd
 mindquantum/ccsrc/include/math/tensor/ops_cpu/advance_math.h:tensor::ops::cpu::ElementFunc
 mindquantum/mindquantum/core/parameterresolver/parameterresolver.py:__init__
-mindquantum/ccsrc/python/math/lib/bind_math.cpp:BindQubitOperator
+mindquantum/ccsrc/python/math/lib/bind_math.cpp:mindquantum::python::BindQubitOperator
 ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_gate_expect.cpp:mindquantum::sim::vector::detail::CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix
 
 TEST_CASE
