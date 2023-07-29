@@ -251,6 +251,22 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
             auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
             qs_policy_t::ApplyRxy(&qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
         } break;
+        case GateID::Rxz: {
+            auto g = static_cast<RxzGate*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
+            qs_policy_t::ApplyRxz(&qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
+        case GateID::Ryz: {
+            auto g = static_cast<RyzGate*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
+            qs_policy_t::ApplyRyz(&qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
         case GateID::PS: {
             auto g = static_cast<PSGate*>(gate.get());
             if (!g->GradRequired()) {
@@ -421,12 +437,21 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(const qs_data_p_t& dens_ma
         case GateID::Ryy:
             grad[0] = qs_policy_t::ExpectDiffRyy(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
             return tensor::Matrix(VVT<py_qs_data_t>{grad});
+        case GateID::Rxy:
+            grad[0] = qs_policy_t::ExpectDiffRxy(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+            return tensor::Matrix(VVT<py_qs_data_t>{grad});
+        case GateID::Rxz:
+            grad[0] = qs_policy_t::ExpectDiffRxz(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+            return tensor::Matrix(VVT<py_qs_data_t>{grad});
+        case GateID::Ryz:
+            grad[0] = qs_policy_t::ExpectDiffRyz(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+            return tensor::Matrix(VVT<py_qs_data_t>{grad});
         case GateID::PS:
             grad[0] = qs_policy_t::ExpectDiffPS(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
             return tensor::Matrix(VVT<py_qs_data_t>{grad});
-        // case GateID::GP:
-        //     grad[0] = qs_policy_t::ExpectDiffGP(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
-        //     return tensor::Matrix({grad});
+        case GateID::GP:
+            grad[0] = qs_policy_t::ExpectDiffGP(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+            return tensor::Matrix(VVT<py_qs_data_t>{grad});
         case GateID::CUSTOM: {
             auto g = static_cast<CustomGate*>(gate.get());
             auto val = tensor::ops::cpu::to_vector<double>(g->prs_[0].Combination(pr).const_value)[0];
