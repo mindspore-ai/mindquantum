@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http: //www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -157,10 +157,14 @@ class QubitOperator(QubitOperator_):
 
     def __truediv__(self, other: PRConvertible) -> "QubitOperator":
         """Divide a number."""
+        if other == 0.0:
+            raise ZeroDivisionError("other cannot be zero.")
         return self * (1.0 / other)
 
     def __itruediv__(self, other: PRConvertible) -> "QubitOperator":
         """Divide a number."""
+        if other == 0.0:
+            raise ZeroDivisionError("other cannot be zero.")
         self.__imul__(1.0 / other)
         return self
 

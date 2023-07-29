@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "core/utils.hpp"
+#include "core/utils.h"
 
 namespace mindquantum {
 const VT<CT<double>> POLAR = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
@@ -25,6 +25,23 @@ TimePoint NOW() {
 int TimeDuration(TimePoint start, TimePoint end) {
     auto d = end - start;
     return std::chrono::duration_cast<std::chrono::milliseconds>(d).count();
+}
+
+void safe_copy(void *dest, size_t dest_size, const void *src, size_t count) {
+    if (dest == NULL || dest_size == 0 || src == NULL || count == 0) {
+        throw std::runtime_error("Invalid parameters for safe_memcpy.");
+    }
+
+    if (count > dest_size) {
+        throw std::runtime_error("Buffer overflow in safe_memcpy.");
+    }
+
+    unsigned char *pDest = reinterpret_cast<unsigned char *>(dest);
+    const unsigned char *pSrc = reinterpret_cast<const unsigned char *>(src);
+
+    for (size_t i = 0; i < count; i++) {
+        pDest[i] = pSrc[i];
+    }
 }
 
 Index GetControlMask(const VT<Index> &ctrls) {

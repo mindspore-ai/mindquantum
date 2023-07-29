@@ -1,23 +1,26 @@
-//   Copyright 2023 <Huawei Technologies Co., Ltd>
-//
-//   Licensed under the Apache License, Version 2.0 (the "License");
-//   you may not use this file except in compliance with the License.
-//   You may obtain a copy of the License at
-//
-//       http://www.apache.org/licenses/LICENSE-2.0
-//
-//   Unless required by applicable law or agreed to in writing, software
-//   distributed under the License is distributed on an "AS IS" BASIS,
-//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//   See the License for the specific language governing permissions and
-//   limitations under the License.
+/**
+ * Copyright (c) Huawei Technologies Co., Ltd. 2023. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-#include "math/tensor/ops_cpu/memory_operator.hpp"
+#include "math/tensor/ops_cpu/memory_operator.h"
 
 #include <cstdint>
 #include <stdexcept>
 
-#include "math/tensor/traits.hpp"
+#include "core/utils.h"
+#include "math/tensor/traits.h"
 
 namespace tensor::ops::cpu {
 Tensor init(size_t len, TDtype dtype) {
@@ -108,7 +111,7 @@ Tensor copy(const Tensor& t) {
     return Tensor();
 }
 
-void* copy_mem(void* data, TDtype dtype, size_t len) {
+void* copy_mem(const void* data, TDtype dtype, size_t len) {
     switch (dtype) {
         case (TDtype::Float32):
             return copy_mem<TDtype::Float32>(data, len);
@@ -163,7 +166,8 @@ Tensor get(const Tensor& t, size_t idx) {
         throw std::runtime_error("index out of range for get.");
     }
     auto out = cpu::init(1, t.dtype);
-    std::memcpy(out.data, reinterpret_cast<uint8_t*>(t.data) + idx * bit_size(t.dtype), bit_size(t.dtype));
+    mindquantum::safe_copy(out.data, bit_size(t.dtype), reinterpret_cast<uint8_t*>(t.data) + idx * bit_size(t.dtype),
+                           bit_size(t.dtype));
     return out;
 }
 }  // namespace tensor::ops::cpu

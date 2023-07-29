@@ -99,8 +99,12 @@ class SVGMeasure(SVGContainer):
         self.style = style
         self.res = res
         self.table = SVGContainer()
+        if self.res.shots == 0:
+            raise ValueError("shots cannot be zero.")
         self.max_val = max(res.data.values()) / res.shots
         self.max_val = min(self.max_val / 0.9, self.max_val)
+        if self.max_val == 0:
+            raise ValueError("Error measure result.")
         self.f = (self.style['n_stick'] - 1) / self.max_val * self.style['v_dis']  # pylint: disable=invalid-name
         main_box = SVGContainer()
         text = self.build_title()

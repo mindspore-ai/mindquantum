@@ -68,7 +68,10 @@ def kron_factor_4x4_to_2x2s(mat: np.ndarray):
     f2 /= np.sqrt(np.linalg.det(f2)) or 1
 
     # Determine global phase.
-    g = mat[a, b] / (f1[a >> 1, b >> 1] * f2[a & 1, b & 1])
+    denominator = f1[a >> 1, b >> 1] * f2[a & 1, b & 1]
+    if denominator == 0:
+        raise ZeroDivisionError("denominator cannot be zero.")
+    g = mat[a, b] / denominator
     if np.real(g) < 0:
         f1 *= -1
         g = -g
@@ -222,6 +225,8 @@ def glob_phase(mat: np.ndarray) -> float:
         Global phase rad, in range of (-pi, pi].
     """
     d = mat.shape[0]
+    if d == 0:
+        raise ZeroDivisionError("Dimension of mat can not be zero.")
     exp_alpha = linalg.det(mat) ** (1 / d)
     return np.angle(exp_alpha)
 

@@ -21,6 +21,8 @@ from ._config import _res_text_drawer_config
 
 
 def _trans(v, k, m):  # pylint: disable=invalid-name
+    if m == 0:
+        raise ZeroDivisionError("m cannot be zero.")
     return math.ceil(v / m * k)
 
 
@@ -39,6 +41,8 @@ def measure_text_drawer(res):  # pylint: disable=too-many-locals
     max_shot = max(res.data.values())
     if res.shots != 0:
         max_prop = max_shot / res.shots
+    else:
+        raise ValueError("shots cannot be zero.")
     if max_prop == 0:
         max_prop = 1
     if max_prop / 0.8 > 1:

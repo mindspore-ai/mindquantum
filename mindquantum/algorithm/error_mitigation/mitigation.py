@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http: //www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -59,7 +59,10 @@ def zne(
             product = 1
             for i in range(0, len(y)):
                 if k != i:
-                    product = product * (scaling[i] / (scaling[i] - scaling[k]))
+                    try:
+                        product = product * (scaling[i] / (scaling[i] - scaling[k]))
+                    except ZeroDivisionError as exc:
+                        raise ZeroDivisionError(f"Error scaling: {scaling}") from exc
             mitigated = mitigated + y_k * product
         return mitigated
     if order is None:

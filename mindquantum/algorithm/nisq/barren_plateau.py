@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http: //www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -99,7 +99,10 @@ def ansatz_variance(
         half_l = len(gradients) // 2
         ori_var = np.var(gradients[:half_l])
         this_var = np.var(gradients[half_l:])
-        var_i = np.abs(ori_var - this_var) / ori_var
+        try:
+            var_i = np.abs(ori_var - this_var) / ori_var
+        except ZeroDivisionError as exc:
+            raise ZeroDivisionError("ori_val cannot be zero.") from exc
         step += 1
 
     return np.var(gradients)

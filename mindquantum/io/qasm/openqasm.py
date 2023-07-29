@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """OpenQASM support module."""
 
 import numpy as np
@@ -59,7 +58,10 @@ def _extr_parameter(cmd):
             tmp = expre.split('/')
             if len(tmp) != 2:
                 raise ValueError(f"cannot parse cmd {cmd}")
-            expre = str(float(tmp[0]) / float(tmp[1]))
+            try:
+                expre = str(float(tmp[0]) / float(tmp[1]))
+            except ZeroDivisionError as exc:
+                raise ZeroDivisionError(f"Wrong cmd: {cmd}") from exc
         out.append(float(expre))
     return out[0] if len(all_expre) == 1 else out
 

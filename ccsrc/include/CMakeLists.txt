@@ -19,19 +19,19 @@
 # lint_cmake: -whitespace/indent
 
 set(MQ_BASE_HEADERS
-    config/popcnt.hpp
-    config/config.hpp
-    config/type_traits.hpp
-    core/sparse/algo.hpp
-    core/sparse/csrhdmatrix.hpp
-    core/sparse/paulimat.hpp
-    core/sparse/sparse_utils.hpp
-    core/mq_base_types.hpp
-    core/utils.hpp
-    ops/basic_gate.hpp
-    ops/gates.hpp
-    ops/hamiltonian.hpp
-    ops/projector.hpp)
+    config/popcnt.h
+    config/config.h
+    config/type_traits.h
+    core/sparse/algo.h
+    core/sparse/csrhdmatrix.h
+    core/sparse/paulimat.h
+    core/sparse/sparse_utils.h
+    core/mq_base_types.h
+    core/utils.h
+    ops/basic_gate.h
+    ops/gates.h
+    ops/hamiltonian.h
+    ops/projector.h)
 target_sources(mq_base PRIVATE $<BUILD_INTERFACE:${MQ_BASE_HEADERS}>)
 target_include_directories(mq_base PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
                                           $<INSTALL_INTERFACE:${MQ_INSTALL_INCLUDEDIR}>)

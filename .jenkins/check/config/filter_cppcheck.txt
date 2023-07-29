@@ -18,34 +18,33 @@
 "mindquantum/ccsrc/python/mqbackend/lib/binding.cc"                                                         "duplicateExpression"
 "mindquantum/ccsrc/python/math/lib/bind_math.cpp"                                                           "duplicateExpression"
 
-"mindquantum/ccsrc/python/mqbackend/include/python/ops/basic_gate.hpp"                                      "noExplicitConstructor"
+"mindquantum/ccsrc/python/mqbackend/include/python/ops/basic_gate.h"                                      "noExplicitConstructor"
 
-"mindquantum/ccsrc/include/config/config.hpp"                                                               "noValidConfiguration"
-"mindquantum/ccsrc/include/config/details/cxx20_compatibility.hpp"                                          "noValidConfiguration"
-"mindquantum/ccsrc/include/config/type_traits.hpp"                                                          "noValidConfiguration"
+"mindquantum/ccsrc/include/config/config.h"                                                               "noValidConfiguration"
+"mindquantum/ccsrc/include/config/details/cxx20_compatibility.h"                                          "noValidConfiguration"
+"mindquantum/ccsrc/include/config/type_traits.h"                                                          "noValidConfiguration"
 "mindquantum/tests/decompositions/test_apply_atoms.cpp"                                                     "noValidConfiguration"
 
 
-"mindquantum/ccsrc/include/config/details/cxx20_compatibility.hpp"                                          "preprocessorErrorDirective"
-"mindquantum/ccsrc/python/core/include/python/details/define_binary_operator_helpers.hpp"                   "preprocessorErrorDirective"
+"mindquantum/ccsrc/include/config/details/cxx20_compatibility.h"                                          "preprocessorErrorDirective"
 "mindquantum/tests/decompositions/test_apply_atoms.cpp"                                                     "preprocessorErrorDirective"
 "mindquantum/tests/ops/test_angle_parametric_gates.cpp"                                                     "preprocessorErrorDirective"
 
 
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_policy.cpp"                       "syntaxError"
-"mindquantum/ccsrc/include/core/parameter_resolver_external_ops.hpp:90"                                     "syntaxError"
-"mindquantum/ccsrc/include/core/sparse/algo.hpp:73"                                                         "syntaxError"
-"mindquantum/ccsrc/include/ops/gates/terms_operator_base_external_ops.hpp:92"                               "syntaxError"
+"mindquantum/ccsrc/include/core/parameter_resolver_external_ops.h:90"                                     "syntaxError"
+"mindquantum/ccsrc/include/core/sparse/algo.h:73"                                                         "syntaxError"
+"mindquantum/ccsrc/include/ops/gates/terms_operator_base_external_ops.h:92"                               "syntaxError"
 "mindquantum/ccsrc/python/mqbackend/lib/binding.cc:184"                                                     "syntaxError"
-"mindquantum/ccsrc/python/mqbackend/lib/details/define_terms_ops.hpp"                                       "syntaxError"
+"mindquantum/ccsrc/python/mqbackend/lib/details/define_terms_ops.h"                                       "syntaxError"
 "mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_policy.cpp"         "syntaxError"
 "mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_condition.cpp"      "syntaxError"
 "mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_gate_expect.cpp"    "syntaxError"
 
-"mindquantum/ccsrc/include/core/numba_wrapper.hpp"                                                          "uninitMemberVar"
+"mindquantum/ccsrc/include/core/numba_wrapper.h"                                                          "uninitMemberVar"
 
-"mindquantum/ccsrc/include/core/sparse/paulimat.hpp"                                                        "unknownMacro"
-"mindquantum/ccsrc/include/core/sparse/paulimat.hpp:58"                                                     "unknownMacro"
+"mindquantum/ccsrc/include/core/sparse/paulimat.h"                                                        "unknownMacro"
+"mindquantum/ccsrc/include/core/sparse/paulimat.h:58"                                                     "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_gate_expect.cpp"              "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_matrix_gate.cpp"              "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_condition.cpp"                    "unknownMacro"
@@ -66,11 +65,11 @@
 "mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_swap_like.cpp"      "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_gate_expect.cpp"    "unknownMacro"
 "mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_matrix_gate.cpp"    "unknownMacro"
-"mindquantum/ccsrc/include/simulator/vector/detail/cpu_vector_policy.hpp"                                   "unknownMacro"
-"mindquantum/ccsrc/include/simulator/densitymatrix/detail/cpu_densitymatrix_policy.hpp"                     "unknownMacro"
+"mindquantum/ccsrc/include/simulator/vector/detail/cpu_vector_policy.h"                                   "unknownMacro"
+"mindquantum/ccsrc/include/simulator/densitymatrix/detail/cpu_densitymatrix_policy.h"                     "unknownMacro"
 
-"mindquantum/ccsrc/include/config/tsl_ordered_map.hpp"                                                      "useStlAlgorithm"
-"mindquantum/ccsrc/include/ops/gates/terms_coeff_dict.hpp"                                                  "useStlAlgorithm"
+"mindquantum/ccsrc/include/config/tsl_ordered_map.h"                                                      "useStlAlgorithm"
+"mindquantum/ccsrc/include/ops/gates/terms_coeff_dict.h"                                                  "useStlAlgorithm"
 "mindquantum/ccsrc/include/ops/gates/terms_operator_base.tpp"                                               "useStlAlgorithm"
 
 "mindquantum/tests/core/test_circuit_block.cpp"                                                             "ctuOneDefinitionRuleViolation"

@@ -1,16 +1,18 @@
-//   Copyright 2022 <Huawei Technologies Co., Ltd>
-//
-//   Licensed under the Apache License, Version 2.0 (the "License");
-//   you may not use this file except in compliance with the License.
-//   You may obtain a copy of the License at
-//
-//       http://www.apache.org/licenses/LICENSE-2.0
-//
-//   Unless required by applicable law or agreed to in writing, software
-//   distributed under the License is distributed on an "AS IS" BASIS,
-//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//   See the License for the specific language governing permissions and
-//   limitations under the License.
+/**
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #ifndef INCLUDE_VECTOR_VECTOR_STATE_TPP
 #define INCLUDE_VECTOR_VECTOR_STATE_TPP
@@ -35,16 +37,16 @@
 #include <type_traits>
 #include <vector>
 
-#include "core/mq_base_types.hpp"
-#include "math/pr/parameter_resolver.hpp"
-#include "math/tensor/matrix.hpp"
-#include "math/tensor/ops/basic_math.hpp"
-#include "math/tensor/traits.hpp"
-#include "ops/basic_gate.hpp"
-#include "ops/gate_id.hpp"
-#include "ops/gates.hpp"
-#include "ops/hamiltonian.hpp"
-#include "simulator/vector/vector_state.hpp"
+#include "core/mq_base_types.h"
+#include "math/pr/parameter_resolver.h"
+#include "math/tensor/matrix.h"
+#include "math/tensor/ops/basic_math.h"
+#include "math/tensor/traits.h"
+#include "ops/basic_gate.h"
+#include "ops/gate_id.h"
+#include "ops/gates.h"
+#include "ops/hamiltonian.h"
+#include "simulator/vector/vector_state.h"
 
 namespace mindquantum::sim::vector::detail {
 

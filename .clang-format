@@ -38,8 +38,6 @@ IncludeCategories:
   #    3. CUDA headers
   #    4. Boost headers
   #    5. Eigen headers
-  #    6. tweedledum headers
-  #    7. SymEngine headers
   #    8. Other system headers
   #    9. Any local config header
   #   10. Local headers
@@ -52,8 +50,6 @@ IncludeCategories:
     Priority: 40
   - Regex: '<(Eigen|Unsupported/Eigen)\/'
     Priority: 50
-  - Regex: '[<"]symengine\/'
-    Priority: 70
   - Regex: '[<"]cuda[A-Za-z0-9.\/\-_]+[>"]'
     Priority: 30
   - Regex: '[<"](driver_types.h)[>"]'

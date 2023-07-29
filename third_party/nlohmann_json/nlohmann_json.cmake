@@ -41,7 +41,10 @@ endif()
 
 set(VER 3.11.2)
 
-if(ENABLE_GITEE)
+if(DEFINED ENV{CODEHUB_CI} AND "$ENV{CODEHUB_CI}" STREQUAL "1")
+  set(REQ_URL "$ENV{CODEHUB_PKG_URL}/json-${VER}.tar.gz")
+  set(MD5 "e8d56bc54621037842ee9f0aeae27746")
+elseif(ENABLE_GITEE)
   set(REQ_URL "https://gitee.com/mirrors/JSON-for-Modern-CPP/repository/archive/v${VER}.tar.gz")
   set(MD5 "03c61931b62a1095034dc6a0b5118260")
 else()
