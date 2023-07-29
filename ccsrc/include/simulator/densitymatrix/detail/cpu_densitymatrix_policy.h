@@ -138,8 +138,10 @@ struct CPUDensityMatrixPolicyBase {
                                          const qbits_t& ctrls, const matrix_t& m, index_t dim);
     static void ApplySWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyISWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, bool daggered, index_t dim);
-    static void ApplyISWAPNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, bool daggered, index_t dim);
-    static void ApplyISWAPCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, bool daggered, index_t dim);
+    static void ApplyISWAPNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, bool daggered,
+                                 index_t dim);
+    static void ApplyISWAPCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, bool daggered,
+                               index_t dim);
     static void ApplyRxx(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
     static void ApplyRxxNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
