@@ -23,7 +23,7 @@
 #include "math/tensor/ops_cpu/memory_operator.h"
 #include "math/tensor/tensor.h"
 
-namespace {
+namespace mindquantum::python {
 template <typename T>
 tensor::Tensor from_numpy(const pybind11::array_t<T> &arr) {
     pybind11::buffer_info buf = arr.request();
@@ -32,5 +32,5 @@ tensor::Tensor from_numpy(const pybind11::array_t<T> &arr) {
     }
     return tensor::ops::cpu::copy<tensor::to_dtype_v<T>>(buf.ptr, buf.size);
 }
-}  // namespace
+}  // namespace mindquantum::python
 #endif /* PYTHON_TENSOR_HPP_ */

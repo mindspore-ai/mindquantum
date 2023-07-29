@@ -54,7 +54,6 @@ using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
 
 namespace mindquantum::python {
 void init_logging(pybind11::module &module);  // NOLINT(runtime/references)NOLINT
-}  // namespace mindquantum::python
 
 void BindTypeIndependentGate(py::module &module) {  // NOLINT(runtime/references)
     using mindquantum::Index;
@@ -221,6 +220,7 @@ auto BindOther(py::module &module) {
         .def_readwrite("ham_sparse_second", &Hamiltonian<T>::ham_sparse_second_);
     module.def("sparse_hamiltonian", &SparseHamiltonian<T>);
 }
+}  // namespace mindquantum::python
 
 // Interface with python
 PYBIND11_MODULE(mqbackend, m) {
@@ -271,18 +271,18 @@ PYBIND11_MODULE(mqbackend, m) {
 
     py::module gate = m.def_submodule("gate", "MindQuantum-C++ gate");
     py::class_<mindquantum::BasicGate, std::shared_ptr<mindquantum::BasicGate>>(gate, "BasicGate").def(py::init<>());
-    BindTypeIndependentGate(gate);
-    BindTypeDependentGate(gate);
+    mindquantum::python::BindTypeIndependentGate(gate);
+    mindquantum::python::BindTypeDependentGate(gate);
 
     py::module mqbackend_double = m.def_submodule("double", "MindQuantum-C++ double backend");
-    BindOther<double>(mqbackend_double);
+    mindquantum::python::BindOther<double>(mqbackend_double);
     py::module mqbackend_float = m.def_submodule("float", "MindQuantum-C++ double backend");
-    BindOther<float>(mqbackend_float);
+    mindquantum::python::BindOther<float>(mqbackend_float);
 
     py::module c = m.def_submodule("c", "pybind11 c++ env");
     mindquantum::BindPybind11Env(c);
 
     py::module device = m.def_submodule("device", "Quantum device module");
-    BindTopology(device);
-    BindQubitMapping(device);
+    mindquantum::python::BindTopology(device);
+    mindquantum::python::BindQubitMapping(device);
 }

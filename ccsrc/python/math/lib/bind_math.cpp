@@ -60,7 +60,7 @@ using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
         .def(std::complex<float>() op py::self)                                                                        \
         .def(std::complex<double>() op py::self)
 
-namespace {
+namespace mindquantum::python {
 void BindTensor(py::module &module) {  // NOLINT(runtime/references)
     py::class_<tensor::Tensor, std::shared_ptr<tensor::Tensor>>(module, "Tensor", py::buffer_protocol())
         .def(py::init<>())
@@ -302,7 +302,7 @@ void BindTransform(py::module &module) {  // NOLINT(runtime/references)
     module.def("ternary_tree", &operators::transform::ternary_tree, "ops"_a, "n_qubits"_a);
     module.def("bravyi_kitaev_superfast", &operators::transform::bravyi_kitaev_superfast, "ops"_a);
 }
-}  // namespace
+}  // namespace mindquantum::python
 #undef BIND_TENSOR_OPS
 #undef BIND_TENSOR_OPS_REV
 
@@ -333,12 +333,12 @@ PYBIND11_MODULE(_math, m) {
         pybind11::name("name"), pybind11::is_method(device_id));
 
     py::module tensor_module = m.def_submodule("tensor", "MindQuantum Tensor module.");
-    BindTensor(tensor_module);
+    mindquantum::python::BindTensor(tensor_module);
 
     py::module pr_module = m.def_submodule("pr", "MindQuantum ParameterResolver module.");
-    BindPR(pr_module);
+    mindquantum::python::BindPR(pr_module);
 
     py::module ops_module = m.def_submodule("ops", "MindQuantum Operators module.");
-    BindQubitOperator(ops_module);
-    BindTransform(ops_module);
+    mindquantum::python::BindQubitOperator(ops_module);
+    mindquantum::python::BindTransform(ops_module);
 }

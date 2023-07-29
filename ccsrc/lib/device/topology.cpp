@@ -16,6 +16,7 @@
 
 #include "device/topology.h"
 
+#include <iterator>
 #include <numeric>
 #include <stdexcept>
 
