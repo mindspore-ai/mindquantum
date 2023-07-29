@@ -547,7 +547,8 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffGP(const qs_dat
                     auto j = i + mask.obj_mask;
                     qs_data_t this_res = 0;
                     for (index_t col = 0; col < dim; col++) {
-                        this_res += GetValue(qs, i, col) * GetValue(ham_matrix, col, i) + GetValue(qs, j, col) * GetValue(ham_matrix, col, j);
+                        this_res += GetValue(qs, i, col) * GetValue(ham_matrix, col, i)
+                                    + GetValue(qs, j, col) * GetValue(ham_matrix, col, j);
                     }
                     this_res *= IMAGE_MI;
                     res_real += this_res.real();
@@ -564,7 +565,8 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffGP(const qs_dat
                         auto j = i + mask.obj_mask;
                         qs_data_t this_res = 0;
                         for (index_t col = 0; col < dim; col++) {
-                            this_res += GetValue(qs, i, col) * GetValue(ham_matrix, col, i) + GetValue(qs, j, col) * GetValue(ham_matrix, col, j);
+                            this_res += GetValue(qs, i, col) * GetValue(ham_matrix, col, i)
+                                        + GetValue(qs, j, col) * GetValue(ham_matrix, col, j);
                         }
                         this_res *= IMAGE_MI;
                         res_real += this_res.real();
