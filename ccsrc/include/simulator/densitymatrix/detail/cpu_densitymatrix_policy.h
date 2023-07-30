@@ -121,6 +121,8 @@ struct CPUDensityMatrixPolicyBase {
     static void ApplySingleQubitMatrix(const qs_data_p_t& src, qs_data_p_t* des_p, qbit_t obj_qubit,
                                        const qbits_t& ctrls, const matrix_t& m, index_t dim);
     static void ApplyH(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyGP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+                        bool diff = false);
     static void ApplyRX(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
     static void ApplyRY(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
@@ -135,7 +137,11 @@ struct CPUDensityMatrixPolicyBase {
     static void ApplyTwoQubitsMatrixCtrl(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs,
                                          const qbits_t& ctrls, const matrix_t& m, index_t dim);
     static void ApplySWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplyISWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyISWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, bool daggered, index_t dim);
+    static void ApplyISWAPNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, bool daggered,
+                                 index_t dim);
+    static void ApplyISWAPCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, bool daggered,
+                               index_t dim);
     static void ApplyRxx(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
     static void ApplyRxxNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
@@ -154,6 +160,24 @@ struct CPUDensityMatrixPolicyBase {
                                calc_type s);
     static void ApplyRzzCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
                              calc_type s, bool diff);
+    static void ApplyRxy(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+                         bool diff = false);
+    static void ApplyRxyNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+                               qs_data_t s);
+    static void ApplyRxyCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+                             qs_data_t s, bool diff);
+    static void ApplyRxz(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+                         bool diff = false);
+    static void ApplyRxzNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+                               qs_data_t s);
+    static void ApplyRxzCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+                             qs_data_t s, bool diff);
+    static void ApplyRyz(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+                         bool diff = false);
+    static void ApplyRyzNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+                               qs_data_t s);
+    static void ApplyRyzCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
+                             qs_data_t s, bool diff);
     static void ApplyMatrixGate(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs, const qbits_t& ctrls,
                                 const matrix_t& m, index_t dim);
     // Channel operator
@@ -187,6 +211,8 @@ struct CPUDensityMatrixPolicyBase {
                                   const qbits_t& ctrls, index_t dim);
     static qs_data_t ExpectDiffPS(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
                                   const qbits_t& ctrls, index_t dim);
+    static qs_data_t ExpectDiffGP(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                  const qbits_t& ctrls, index_t dim);
     static qs_data_t ExpectDiffU3Theta(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
                                        const qbits_t& ctrls, calc_type phi, index_t dim);
     static qs_data_t ExpectDiffU3Phi(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
@@ -196,6 +222,12 @@ struct CPUDensityMatrixPolicyBase {
     static qs_data_t ExpectDiffRyy(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
                                    const qbits_t& ctrls, index_t dim);
     static qs_data_t ExpectDiffRzz(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                   const qbits_t& ctrls, index_t dim);
+    static qs_data_t ExpectDiffRxy(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                   const qbits_t& ctrls, index_t dim);
+    static qs_data_t ExpectDiffRxz(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                   const qbits_t& ctrls, index_t dim);
+    static qs_data_t ExpectDiffRyz(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
                                    const qbits_t& ctrls, index_t dim);
     static qs_data_t ExpectDiffFSimTheta(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
                                          const qbits_t& ctrls, index_t dim);

@@ -138,111 +138,137 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySWAP(qs_data_p_t* qs
 
 template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyISWAP(qs_data_p_t* qs_p, const qbits_t& objs,
-                                                                  const qbits_t& ctrls, index_t dim) {
+                                                                  const qbits_t& ctrls, bool daggered, index_t dim) {
+    DoubleQubitGateMask mask(objs, ctrls);
+    if (!mask.ctrl_mask) {
+        ApplyISWAPNoCtrl(qs_p, objs, ctrls, daggered, dim);
+    } else {
+        ApplyISWAPCtrl(qs_p, objs, ctrls, daggered, dim);
+    }
+}
+
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyISWAPNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs,
+                                                                        const qbits_t& ctrls, bool daggered,
+                                                                        index_t dim) {
     auto& qs = (*qs_p);
     if (qs == nullptr) {
         qs = derived::InitState(dim);
     }
+    calc_type frac = 1.0;
+    if (daggered) {
+        frac = -1.0;
+    }
     DoubleQubitGateMask mask(objs, ctrls);
-    if (!mask.ctrl_mask) {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 4); a++) {
-                index_t r0;  // row index of reduced matrix entry
-                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
-                              r0);
-                auto r3 = r0 + mask.obj_mask;
-                auto r1 = r0 + mask.obj_min_mask;
-                auto r2 = r0 + mask.obj_max_mask;
-                for (index_t b = 0; b < a; b++) {
-                    index_t c0;  // column index of reduced matrix entry
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
-                                  b, c0);
-                    auto c3 = c0 + mask.obj_mask;
-                    auto c1 = c0 + mask.obj_min_mask;
-                    auto c2 = c0 + mask.obj_max_mask;
-                    SwapValue(qs, r0, c1, r0, c2, IMAGE_MI);
-                    SwapValue(qs, r3, c1, r3, c2, IMAGE_MI);
-                    SwapValue(qs, r1, c0, r2, c0, IMAGE_I);
-                    SwapValue(qs, r1, c3, r2, c3, IMAGE_I);
-                    SwapValue(qs, r1, c1, r2, c2, 1);
-                    SwapValue(qs, r1, c2, r2, c1, 1);
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 4); a++) {
+            index_t r0;  // row index of reduced matrix entry
+            SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a, r0);
+            auto r3 = r0 + mask.obj_mask;
+            auto r1 = r0 + mask.obj_min_mask;
+            auto r2 = r0 + mask.obj_max_mask;
+            for (index_t b = 0; b < a; b++) {
+                index_t c0;  // column index of reduced matrix entry
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, b,
+                              c0);
+                auto c3 = c0 + mask.obj_mask;
+                auto c1 = c0 + mask.obj_min_mask;
+                auto c2 = c0 + mask.obj_max_mask;
+                SwapValue(qs, r0, c1, r0, c2, frac * IMAGE_MI);
+                SwapValue(qs, r3, c1, r3, c2, frac * IMAGE_MI);
+                SwapValue(qs, r1, c0, r2, c0, frac * IMAGE_I);
+                SwapValue(qs, r1, c3, r2, c3, frac * IMAGE_I);
+                SwapValue(qs, r1, c1, r2, c2, 1);
+                SwapValue(qs, r1, c2, r2, c1, 1);
+            }
+            // diagonal case
+            qs_data_t tmp;
+            tmp = qs[IdxMap(r3, r1)];
+            qs[IdxMap(r3, r1)] = frac * IMAGE_MI * qs[IdxMap(r3, r2)];
+            qs[IdxMap(r3, r2)] = frac * IMAGE_MI * tmp;
+
+            tmp = qs[IdxMap(r1, r0)];
+            qs[IdxMap(r1, r0)] = frac * IMAGE_I * qs[IdxMap(r2, r0)];
+            qs[IdxMap(r2, r0)] = frac * IMAGE_I * tmp;
+
+            tmp = qs[IdxMap(r1, r1)];
+            qs[IdxMap(r1, r1)] = qs[IdxMap(r2, r2)];
+            qs[IdxMap(r2, r2)] = tmp;
+
+            qs[IdxMap(r2, r1)] = std::conj(qs[IdxMap(r2, r1)]);
+        })
+}
+
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyISWAPCtrl(qs_data_p_t* qs_p, const qbits_t& objs,
+                                                                      const qbits_t& ctrls, bool daggered,
+                                                                      index_t dim) {
+    auto& qs = (*qs_p);
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    calc_type frac = 1.0;
+    if (daggered) {
+        frac = -1.0;
+    }
+    DoubleQubitGateMask mask(objs, ctrls);
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 4); a++) {
+            index_t r0;  // row index of reduced matrix entry
+            SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a, r0);
+            auto r3 = r0 + mask.obj_mask;
+            auto r1 = r0 + mask.obj_min_mask;
+            auto r2 = r0 + mask.obj_max_mask;
+            for (index_t b = 0; b < a; b++) {
+                index_t c0;  // column index of reduced matrix entry
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, b,
+                              c0);
+                if (((r0 & mask.ctrl_mask) != mask.ctrl_mask)
+                    && ((c0 & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
+                    continue;
                 }
-                // diagonal case
+                auto c3 = c0 + mask.obj_mask;
+                auto c1 = c0 + mask.obj_min_mask;
+                auto c2 = c0 + mask.obj_max_mask;
+                if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
+                    if ((c0 & mask.ctrl_mask) == mask.ctrl_mask) {  // both in control
+                        SwapValue(qs, r0, c1, r0, c2, frac * IMAGE_MI);
+                        SwapValue(qs, r3, c1, r3, c2, frac * IMAGE_MI);
+                        SwapValue(qs, r1, c0, r2, c0, frac * IMAGE_I);
+                        SwapValue(qs, r1, c3, r2, c3, frac * IMAGE_I);
+                        SwapValue(qs, r1, c1, r2, c2, 1);
+                        SwapValue(qs, r1, c2, r2, c1, 1);
+                    } else {  // only row in control
+                        SwapValue(qs, r1, c0, r2, c0, frac * IMAGE_I);
+                        SwapValue(qs, r1, c1, r2, c1, frac * IMAGE_I);
+                        SwapValue(qs, r1, c2, r2, c2, frac * IMAGE_I);
+                        SwapValue(qs, r1, c3, r2, c3, frac * IMAGE_I);
+                    }
+                } else {  // only column in control
+                    SwapValue(qs, r0, c1, r0, c2, frac * IMAGE_MI);
+                    SwapValue(qs, r1, c1, r1, c2, frac * IMAGE_MI);
+                    SwapValue(qs, r2, c1, r2, c2, frac * IMAGE_MI);
+                    SwapValue(qs, r3, c1, r3, c2, frac * IMAGE_MI);
+                }
+            }
+            // diagonal case
+            if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
                 qs_data_t tmp;
                 tmp = qs[IdxMap(r3, r1)];
-                qs[IdxMap(r3, r1)] = IMAGE_MI * qs[IdxMap(r3, r2)];
-                qs[IdxMap(r3, r2)] = IMAGE_MI * tmp;
+                qs[IdxMap(r3, r1)] = frac * IMAGE_MI * qs[IdxMap(r3, r2)];
+                qs[IdxMap(r3, r2)] = frac * IMAGE_MI * tmp;
 
                 tmp = qs[IdxMap(r1, r0)];
-                qs[IdxMap(r1, r0)] = IMAGE_I * qs[IdxMap(r2, r0)];
-                qs[IdxMap(r2, r0)] = IMAGE_I * tmp;
+                qs[IdxMap(r1, r0)] = frac * IMAGE_I * qs[IdxMap(r2, r0)];
+                qs[IdxMap(r2, r0)] = frac * IMAGE_I * tmp;
 
                 tmp = qs[IdxMap(r1, r1)];
                 qs[IdxMap(r1, r1)] = qs[IdxMap(r2, r2)];
                 qs[IdxMap(r2, r2)] = tmp;
 
                 qs[IdxMap(r2, r1)] = std::conj(qs[IdxMap(r2, r1)]);
-            })
-    } else {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 4); a++) {
-                index_t r0;  // row index of reduced matrix entry
-                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, a,
-                              r0);
-                auto r3 = r0 + mask.obj_mask;
-                auto r1 = r0 + mask.obj_min_mask;
-                auto r2 = r0 + mask.obj_max_mask;
-                for (index_t b = 0; b < a; b++) {
-                    index_t c0;  // column index of reduced matrix entry
-                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
-                                  b, c0);
-                    if (((r0 & mask.ctrl_mask) != mask.ctrl_mask)
-                        && ((c0 & mask.ctrl_mask) != mask.ctrl_mask)) {  // both not in control
-                        continue;
-                    }
-                    auto c3 = c0 + mask.obj_mask;
-                    auto c1 = c0 + mask.obj_min_mask;
-                    auto c2 = c0 + mask.obj_max_mask;
-                    if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
-                        if ((c0 & mask.ctrl_mask) == mask.ctrl_mask) {  // both in control
-                            SwapValue(qs, r0, c1, r0, c2, IMAGE_MI);
-                            SwapValue(qs, r3, c1, r3, c2, IMAGE_MI);
-                            SwapValue(qs, r1, c0, r2, c0, IMAGE_I);
-                            SwapValue(qs, r1, c3, r2, c3, IMAGE_I);
-                            SwapValue(qs, r1, c1, r2, c2, 1);
-                            SwapValue(qs, r1, c2, r2, c1, 1);
-                        } else {  // only row in control
-                            SwapValue(qs, r1, c0, r2, c0, IMAGE_I);
-                            SwapValue(qs, r1, c1, r2, c1, IMAGE_I);
-                            SwapValue(qs, r1, c2, r2, c2, IMAGE_I);
-                            SwapValue(qs, r1, c3, r2, c3, IMAGE_I);
-                        }
-                    } else {  // only column in control
-                        SwapValue(qs, r0, c1, r0, c2, IMAGE_MI);
-                        SwapValue(qs, r1, c1, r1, c2, IMAGE_MI);
-                        SwapValue(qs, r2, c1, r2, c2, IMAGE_MI);
-                        SwapValue(qs, r3, c1, r3, c2, IMAGE_MI);
-                    }
-                }
-                // diagonal case
-                if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
-                    qs_data_t tmp;
-                    tmp = qs[IdxMap(r3, r1)];
-                    qs[IdxMap(r3, r1)] = IMAGE_MI * qs[IdxMap(r3, r2)];
-                    qs[IdxMap(r3, r2)] = IMAGE_MI * tmp;
-
-                    tmp = qs[IdxMap(r1, r0)];
-                    qs[IdxMap(r1, r0)] = IMAGE_I * qs[IdxMap(r2, r0)];
-                    qs[IdxMap(r2, r0)] = IMAGE_I * tmp;
-
-                    tmp = qs[IdxMap(r1, r1)];
-                    qs[IdxMap(r1, r1)] = qs[IdxMap(r2, r2)];
-                    qs[IdxMap(r2, r2)] = tmp;
-
-                    qs[IdxMap(r2, r1)] = std::conj(qs[IdxMap(r2, r1)]);
-                }
-            })
-    }
+            }
+        })
 }
 
 #ifdef __x86_64__

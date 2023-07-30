@@ -772,6 +772,10 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         pr = _check_and_generate_pr_type(pr, self.params_name)
         if self.has_measure_gate:
             raise ValueError("This circuit cannot have measurement gate.")
+        if self.is_noise_circuit:
+            raise ValueError("This circuit cannot have noise channel.")
+        if backend.startswith('mqmatrix'):
+            raise ValueError("mqmatrix backend not support to get circuit matrix.")
         # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum.simulator import Simulator
 
