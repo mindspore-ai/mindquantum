@@ -25,3 +25,10 @@ mindquantum.core.gates.PauliChannel
     .. py:method:: get_cpp_obj()
 
         返回量子门的c++对象。
+
+    .. py:method:: matrix()
+
+        返回该噪声信道的Kraus算符。
+
+        返回：
+            list，包含了该噪声信道的Kraus算符。

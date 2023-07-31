@@ -25,3 +25,10 @@ mindquantum.core.gates.KrausChannel
     .. py:method:: get_cpp_obj()
 
         获取底层c++对象。
+
+    .. py:method:: matrix()
+
+        返回该噪声信道的Kraus算符。
+
+        返回：
+            list，包含了该噪声信道的Kraus算符。
