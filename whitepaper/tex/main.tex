@@ -16,12 +16,13 @@
 \usepackage{url}
 \usepackage{bbold}
 \usepackage{realboxes}
-\def\code#1{\texttt{#1}}
+\def\linkcode#1{\texttt{#1}}
+\def\code#1{\Colorbox{bkgd}{\lstinline{#1}}}
 \usepackage{enumitem}
 
 \usepackage{algpseudocode}
 
-\newcommand{\fancylink}[2]{\[\footnotesize\Colorbox{bkgd}{\color{orange-red}\href{#1}{\code{#2}}}\]}
+\newcommand{\fancylink}[2]{\[\footnotesize\Colorbox{bkgd}{\color{orange-red}\href{#1}{\linkcode{#2}}}\]}
 
 \newcommand{\spliteq}[1]{\begin{equation}
 \begin{split}
