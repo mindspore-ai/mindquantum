@@ -277,6 +277,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* q
             })
     }
     Reset(qs_p);
+    qs = derived::InitState(dim, false);
     for (const auto& [pauli_string, coeff_] : ham) {
         auto mask = GenPauliMask(pauli_string);
         auto mask_f = mask.mask_x | mask.mask_y;
@@ -300,6 +301,44 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* q
                 }
             })
     }
+}
+
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyCsr(
+    qs_data_p_t* qs_p, const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, index_t dim) -> qs_data_p_t {
+    if (dim != a->dim_) {
+        throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
+    }
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    matrix_t tmp(dim, VT<qs_data_t>(dim));
+    auto data = a->data_;
+    auto indptr = a->indptr_;
+    auto indices = a->indices_;
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+            for (index_t j = 0; j < dim; j++) {
+                qs_data_t sum = {0.0, 0.0};
+                for (index_t k = indptr[j]; k < indptr[j + 1]; k++) {
+                    sum += data[k] * GetValue(qs, indices[k], i);
+                }
+                tmp[j][i] = sum;
+            }
+        })
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+            auto start = indptr[i];
+            auto end = indptr[i + 1];
+            for (index_t j = i; j < dim; j++) {
+                qs_data_t sum = {0.0, 0.0};
+                for (index_t k = start; k < end; k++) {
+                    sum += std::conj(data[k]) * tmp[j][indices[k]];
+                }
+                qs[IdxMap(j, i)] = sum;
+            }
+        })
 }
 
 #ifdef __x86_64__

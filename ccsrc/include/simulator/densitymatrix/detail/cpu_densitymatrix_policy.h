@@ -20,6 +20,7 @@
 #include <complex>
 #include <cstddef>
 #include <iostream>
+#include <memory>
 #include <vector>
 
 #include "config/openmp.h"
@@ -27,7 +28,7 @@
 #include "core/mq_base_types.h"
 #include "core/utils.h"
 #include "math/tensor/ops_cpu/utils.h"
-#include "math/tensor/traits.h"
+#include "ops/hamiltonian.h"
 
 // Warning: only correct when x >= y
 #define IdxMap(x, y)       (((x) * ((x) + 1)) / 2 + (y))
@@ -75,6 +76,8 @@ struct CPUDensityMatrixPolicyBase {
     static bool IsPure(const qs_data_p_t& qs, index_t dim);
     static py_qs_datas_t PureStateVector(const qs_data_p_t& qs, index_t dim);
     static void ApplyTerms(qs_data_p_t* qs_p, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
+    static qs_data_p_t ApplyCsr(qs_data_p_t* qs_p, const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
+                                index_t dim);
     static calc_type DiagonalConditionalCollect(const qs_data_p_t& qs, index_t mask, index_t condi, index_t dim);
 
     template <index_t mask, index_t condi, class binary_op>
@@ -92,8 +95,13 @@ struct CPUDensityMatrixPolicyBase {
     static void ConditionalDiv(const qs_data_p_t& src, qs_data_p_t* des_p, index_t mask, index_t condi,
                                qs_data_t succ_coeff, qs_data_t fail_coeff, index_t dim);
     static void QSMulValue(const qs_data_p_t& src, qs_data_p_t* des_p, qs_data_t value, index_t dim);
-    static qs_data_p_t HamiltonianMatrix(const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
-    static qs_data_t GetExpectation(const qs_data_p_t& qs, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
+    static qs_data_p_t HamiltonianMatrix(const Hamiltonian<calc_type>& ham, index_t dim);
+    static qs_data_p_t TermsToMatrix(const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
+    static qs_data_p_t CsrToMatrix(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, index_t dim);
+    static qs_data_t ExpectationOfTerms(const qs_data_p_t& qs, const std::vector<PauliTerm<calc_type>>& ham,
+                                        index_t dim);
+    static qs_data_t ExpectationOfCsr(const qs_data_p_t& qs_out,
+                                      const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, index_t dim);
     // X like operator
     // ========================================================================================================
 

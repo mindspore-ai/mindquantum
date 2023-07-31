@@ -130,6 +130,9 @@ class DensityMatrixState {
                                           const std::shared_ptr<BasicGate>& gate,
                                           const parameter::ParameterResolver& pr, index_t dim) const;
 
+    virtual py_qs_data_t GetStateExpectation(const qs_data_p_t& qs_out, const Hamiltonian<calc_type>& ham,
+                                             index_t dim) const;
+
     virtual py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
                                         const parameter::ParameterResolver& pr) const;
 
