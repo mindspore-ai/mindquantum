@@ -68,11 +68,14 @@ class StronglyEntangling(Ansatz):  # pylint: disable=too-few-public-methods
         """Implement of strongly entangling ansatz."""
         rot_part_ansatz = Circuit([U3(f'a{i}', f'b{i}', f'c{i}').on(i) for i in range(self.n_qubits)])
         circ = Circuit()
+        loop = 1
         for current_depth in range(depth):
             circ += add_prefix(rot_part_ansatz, f'l{current_depth}')
+            if (current_depth + loop) % self.n_qubits == 0:
+                loop += 1
             for idx in range(self.n_qubits):
                 if self.gate_qubits == 1:
-                    circ += entangle_gate.on((idx + current_depth + 1) % self.n_qubits, idx)
+                    circ += entangle_gate.on((idx + current_depth + loop) % self.n_qubits, idx)
                 else:
-                    circ += entangle_gate.on([(idx + current_depth + 1) % self.n_qubits, idx])
+                    circ += entangle_gate.on([(idx + current_depth + loop) % self.n_qubits, idx])
         self._circuit = circ
