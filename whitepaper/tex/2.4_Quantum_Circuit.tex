@@ -21,3 +21,150 @@
 2. 更改比特顺序
 3. 更改变量名
 \end{lstlisting}
+
+\documentclass{report}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsmath} % Required for math formula
+\usepackage{braket} % Required for quantum mechanics 
+\usepackage{pythonhighlight} % Required for python coding 
+\usepackage{caption}
+\captionsetup[figure]{name={Figure}}
+\usepackage{listings}
+\usepackage{ctex}
+\counterwithin{figure}{section}
+\usepackage{makecell}
+\graphicspath{{images/} }
+\title{quantum mechanics}
+\date{June 2023}
+\begin{document}
+\section{Quantum circuit}
+The quantum circuit can accomplish some useful tasks, it can change the states of the qubits. The quantum circuit is to be read from left-to-right. Each line in the circuit represents a \textit{wire} in the quantum circuit. This wire does not necessarily correspond to a physical wire; it may correspond instead to the passage of time, or perhaps to a physical particle. 
+
+There are a few features allowed in classical circuits that are not usually present in quantum circuits. First of all, we do not allow 'loops', that is, feedback from one part of the quantum circuit to another. second, classical circuits allow wires to be 'joined' together. Third, the inverse operation is also not allowed in quantum circuits.
+
+The quantum circuit has some important operations. First, it allows us to use control qubit to operator on the target qubit, if the control qubit is set 1 then the gate will be applied to the targer qubits. Another important operation is measurement, which we represent by a 'meter' symbol.  
+ 
+\subsection{Quantum gate set}
+Quantum gates (quantum logic gates) are the basic logical units of quantum circuit. Basic quantum gates commonly used are X gate, Y gate, Z gate, Hadamard gate (H gate), CNOT gate, and revolving gate RX gate, RY gate, and RZ gate. \\
+
+\textbf{1 X, Y, Z gate}
+
+X, Y, Z gate are Pauli matrices, they are single qubit gates and operator on single qubit, can rotate $\pi$ angles around the X, Y and Z axis of the Bloch sphere.   \\
+
+\textbf{2 Hadamard(H) gate}
+
+matrix representation: $H = \frac{1}{\sqrt{2}} \left( \begin{array}{cc}
+     1 & 1 \\
+     1 & -1 
+\end{array} \right)$  
+
+H gate is also single qubit gate, but it can change the ground state to a superposition state. \\
+
+\textbf{3 CNOT gate}
+
+matrix representation: $CNOT = \left( \begin{array}{cccc}
+     1 & 0 & 0 & 0 \\
+     0 & 1 & 0 & 0 \\
+     0 & 0 & 0 & 1 \\
+     0 & 0 & 1 & 0
+\end{array} \right)$  
+
+CNOT gate is a two-qubit gate, it can operator controll qubit and target qubit. \\
+
+\textbf{RX, RY, RZ gate}
+
+RX, RY, RZ can rotate the quantum state $\theta$ angles around the X, Y and Z axes on a Bloch sphere. RX, RY can bring about a change in probability amplitude, and RZ only a change in phase.
+\subsection{Add quantum gate}
+Mindquantum has libraries associated with quantum gates, which can be used to operate on quantum gates. 
+\begin{python}
+from mindquantum.core.gates import X, Y, Z, H, RX, RY, RZ
+from mindquantum.core.circuit import Circuit
+encoder = Circuit()
+\end{python}
+There are several basic operations for adding a quantum gate.
+\begin{itemize}
+    \item +=: use '+=' to add a quantum gate to the circuit.
+    \begin{python}
+encoder += H.on(0) 
+encoder += Y.on(1, 0) 
+    \end{python}
+    \item Circuit.x: add an X gate to the circuit.
+    \begin{python}
+encoder.x(1, 0)
+    \end{python}
+    \item list: Circuit allows multiple bits to be operated on simultaneously, passing data of the same type as a list.  
+    \begin{python}
+encoder.z(2, [0, 1])        
+    \end{python}
+\end{itemize}
+\subsection{SVG}
+SVG(Scalable Vector Graphics) is based on the XML markup language and is used to describe vector graphics in two dimensions. Mindquantum provides a function to save the picture in SVG format.
+    \begin{python}
+encode.svg().to\_file(filename='circuit.svg')
+    \end{python}
+    \begin{figure}[h]
+       \begin{center}
+            \includegraphics[width=0.5\linewidth]{images/circuit.png}
+        \end{center}
+        \caption{quantum circuit}
+    \end{figure}
+\subsection{API}
+Mindquantum provides several common API for quantum circuit.
+\begin{itemize}
+    \item n\_qubits: get the number of qubit of quantum circuit.
+    \begin{python}
+encoder.n_qubits    # 3
+    \end{python}
+    \item params\_name: get the params of circuit.
+    \begin{python}
+encoder.params_name  # []
+    \end{python}
+    \item has\_measure\_gate: get whether to be measured.
+    \begin{python}
+encoder.has_measure_gate    # False
+    \end{python}
+    \item matrix(): get the circuit matrix.
+    \begin{python}
+encoder.matrix() 
+# get all the matrix representations of the circuit.
+    \end{python}
+    \item get\_qs(): get the final quantum state.
+    \begin{python}
+encoder.get_qs()  
+# get the matrix representation of the final quantum state.
+    \end{python}
+    \item summary(): get information about the current circuit, including the number of blocks、 gates、 gates without parameters、 gates with parameters and parameters.
+    \begin{python}
+encoder.summary()   
+    \end{python}
+Output:
+\begin{python}
+=======Circuit Summary=======
+|Total number of gates  : 4.|
+|Parameter gates        : 0.|
+|with 0 parameters are  :   |
+|                        .  |
+|Number qubit of circuit: 3 |
+=============================  
+\end{python}
+\end{itemize}
+\subsection{Advanced operator}
+Mindquantum also provides several Advanced API for quantum circuit.
+\begin{itemize}
+    \item compress(): delete all unused qubits and map the qubits to range(n\_qubits).
+    \begin{python}
+encoder.compress()        
+    \end{python}
+    \item SwapParts(a: Iterable, b: Iterable, maps\_ctrl=None): swapping a and b of a quantum circuit and can add control bits maps\_ctrl.
+    \begin{python}
+from mindquantum.core.circuit import SwapParts
+SwapParts([0, [1, 2], 0)        
+    \end{python}
+    \item change\_param\_name(circuit\_fn, name\_map): change parameter names in parametric quantum circuits or parametric quantum operators.
+    \begin{python}
+from mindquantum.core.circuit import change_param_name
+encoder.rx('a')
+encoder1 = change_param_name(encoder, {'a': 'b'})        
+    \end{python}
+\end{itemize}
+\end{document}
