@@ -8,8 +8,10 @@ White paper for MindSpore Quantum.
 
 2. Tex compiler: **XeLaTeX**
 
-3. Please listing reference in **`tex/lib.bib`**.
+3. Reference file: ``tex/lib.bib``.
 
-4. About writing style, please refering to **`tex/Tensorflow_Quantum.pdf`**.
+4. Picture path: ``tex/images``.
 
-5. Code font in paper using tex: **``\Colorbox{bkgd}{\lstinline{mindquantum.core.gates}}``**
+5. About writing style, please refering to ``tex/Tensorflow_Quantum.pdf``.
+
+6. Code font in paper using tex: ``\Colorbox{bkgd}{\lstinline{mindquantum.core.gates}}``
