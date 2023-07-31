@@ -30,8 +30,8 @@ White paper for MindSpore Quantum.
 
 - Euqation reference
 
->  Eq.~\eqref{}
+>  ``Eq.~\eqref{}``
 
 - Figure reference
 
-> Fig.~\ref{}
+> ``Fig.~\ref{}``
