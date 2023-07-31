@@ -2,6 +2,33 @@
 
 [View English](./RELEASE.md)
 
+## MindQuantum 0.9.0 Release Notes
+
+### 主要特性和增强
+
+#### Gates
+
+- [STABLE] [`通用量子门`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#%E9%80%9A%E7%94%A8%E9%87%8F%E5%AD%90%E9%97%A8): 新增多个两比特泡利旋转门，包括：[`Rxx`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.Rxx.html#mindquantum.core.gates.Rxx)，[`Rxy`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.Rxy.html#mindquantum.core.gates.Rxy)，[`Rxz`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.Rxz.html#mindquantum.core.gates.Rxz)，[`Ryy`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.Ryy.html#mindquantum.core.gates.Ryy)，[`Ryz`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.Ryz.html#mindquantum.core.gates.Ryz)和[`Rzz`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.Rzz.html#mindquantum.core.gates.Rzz)。
+- [STABLE] [`密度矩阵模拟器`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator): 新增密度矩阵模拟器，模拟器名称为 `mqmatrix`。支持变分量子算法、噪声模拟等，与现有 `mqvector` 全振幅模拟器功能基本对齐。
+- [STABLE] [`噪声信道`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#%E9%87%8F%E5%AD%90%E4%BF%A1%E9%81%93): 噪声信道现在支持通过 `.matrix()` 接口返回噪声信道的 kraus 算符。
+
+#### Ansatz
+
+- [STABLE] [`Ansatz`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.html#ansatz): 新增 Arixv:[1905.10876](https://arxiv.org/abs/1905.10876) 中提到的19个 ansatz，先均已实现。
+
+#### Circuit
+
+- [STABLE] [`ChannelAdder`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.circuit.html#channel-adder): 新增 `ChannelAdder` 模块，支持定制化的将各种量子噪声信道添加量子线路中，以此构成一个噪声模型，更多教案请参考：[`ChannelAdder`](https://mindspore.cn/mindquantum/docs/zh-CN/master/noise_simulator.html)。
+
+#### Device
+
+- [STABLE] [`QubitNode`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.device.QubitNode.html#mindquantum.device.QubitNode): 新增量子比特拓扑接口中的比特节点对象，支持对比特的位置和颜色以及连通性进行配置。
+- [STABLE] [`QubitsTopology`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.device.QubitsTopology.html#mindquantum.device.QubitsTopology): 量子比特拓扑结构，支持自定义拓扑结构。同时可使用预定义结构：线性拓扑结构
+
+#### Bug fix
+
+- [PR1757](https://gitee.com/mindspore/mindquantum/pulls/1757): 修复[`StronglyEntangling`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.StronglyEntangling.html#mindquantum.algorithm.nisq.StronglyEntangling)在深度大于2时的bug。
+
 ## MindQuantum 0.8.0 Release Notes
 
 ### 主要特性和增强
