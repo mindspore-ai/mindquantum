@@ -14,8 +14,24 @@ White paper for MindSpore Quantum.
 
 5. About writing style, please refering to ``tex/Tensorflow_Quantum.pdf``.
 
-6. Code font in paper using tex: ``\code{mindquantum.core.gates}``
+## Writing Style
 
-7. Link in tex: ``\fancylink{link}{display name}``
+- Inline code
 
-8. Equation is too long to display in one line: ``\spliteq{}``
+> ``\code{}``
+
+- Link
+
+> ``\fancylink{link}{display name}``
+
+- Equation more than one line
+
+> ``\spliteq{}``
+
+- Euqation reference
+
+>  Eq.~\eqref{}
+
+- Figure reference
+
+> Fig.~\ref{}
