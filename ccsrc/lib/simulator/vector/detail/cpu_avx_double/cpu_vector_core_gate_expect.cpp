@@ -36,9 +36,10 @@ auto CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix(const qs_data_p_t& br
     SingleQubitGateMask mask(objs, ctrls);
     gate_matrix_t gate = {{m[0][0], m[0][1]}, {m[1][0], m[1][1]}};
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
-    __m256d mm[2];
-    __m256d mmt[2];
-    INTRIN_gene_2d_mm_and_mmt(gate, mm, mmt, neg);
+    const int LEN = 2;
+    __m256d mm[LEN];
+    __m256d mmt[LEN];
+    INTRIN_gene_2d_mm_and_mmt(gate, mm, LEN, mmt, LEN, neg);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
         // clang-format off

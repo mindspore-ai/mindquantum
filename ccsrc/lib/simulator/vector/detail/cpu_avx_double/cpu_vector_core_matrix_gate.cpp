@@ -38,9 +38,10 @@ void CPUVectorPolicyAvxDouble::ApplySingleQubitMatrix(const qs_data_p_t& src_out
     SingleQubitGateMask mask({obj_qubit}, ctrls);
     gate_matrix_t gate = {{m[0][0], m[0][1]}, {m[1][0], m[1][1]}};
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
-    __m256d mm[2];
-    __m256d mmt[2];
-    INTRIN_gene_2d_mm_and_mmt(gate, mm, mmt, neg);
+    const int LEN = 2;
+    __m256d mm[LEN];
+    __m256d mmt[LEN];
+    INTRIN_gene_2d_mm_and_mmt(gate, mm, LEN, mmt, LEN, neg);
     if (!mask.ctrl_mask) {
         THRESHOLD_OMP_FOR(
             dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {

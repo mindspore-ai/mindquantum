@@ -42,11 +42,12 @@
     _mm256_storeu2_m128d(reinterpret_cast<calc_type*>(host_res_second),                                                \
                          (reinterpret_cast<calc_type*>(host_res_first)), device_res);  // NOLINT
 
-#define INTRIN_gene_2d_mm_and_mmt(matrix, mm, mmt, neg)                                                                \
+#define INTRIN_gene_2d_mm_and_mmt(matrix, mm, mm_len, mmt, mmt_len, neg)                                               \
     do {                                                                                                               \
-        (mm)[0] = load(&(matrix)[0][0], &(matrix)[1][0]);                                                              \
-        (mm)[1] = load(&(matrix)[0][1], &(matrix)[1][1]);                                                              \
-        for (unsigned i = 0; i < 2; ++i) {                                                                             \
+        for (unsigned i = 0; i < mm_len; i++) {                                                                        \
+            (mm)[i] = load(&matrix[0][i], &matrix[1][i]);                                                              \
+        }                                                                                                              \
+        for (unsigned i = 0; i < mmt_len; ++i) {                                                                       \
             auto badc = _mm256_permute_pd((mm)[i], 5);                                                                 \
             (mmt)[i] = _mm256_mul_pd(badc, neg);                                                                       \
         }                                                                                                              \
