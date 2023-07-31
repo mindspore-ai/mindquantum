@@ -118,11 +118,12 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
         return False
 
     def matrix(self):  # pylint: disable=arguments-differ
+        """Kraus operator of the quantum channel."""
         mat_i = sqrt(1 - self.px - self.py - self.pz) * np.array([[1, 0], [0, 1]])
         mat_x = sqrt(self.px) * np.array([[0, 1], [1, 0]])
         mat_y = sqrt(self.py) * np.array([[0, -1j], [1j, 0]])
         mat_z = sqrt(self.pz) * np.array([[1, 0], [0, -1]])
-        return np.array([mat_i, mat_x, mat_y, mat_z])
+        return [mat_i, mat_x, mat_y, mat_z]
 
 
 class BitFlipChannel(PauliChannel):
@@ -175,10 +176,11 @@ class BitFlipChannel(PauliChannel):
         """Return a string representation of the object."""
         return f'p={string_expression(self.p)}'
 
-    def matrix(self):  # pylint: disable=arguments-differ
+    def matrix(self):
+        """Kraus operator of the quantum channel."""
         mat_i = sqrt(1 - self.p) * np.array([[1, 0], [0, 1]])
         mat_x = sqrt(self.p) * np.array([[0, 1], [1, 0]])
-        return np.array([mat_i, mat_x])
+        return [mat_i, mat_x]
 
 
 class PhaseFlipChannel(PauliChannel):
@@ -231,10 +233,11 @@ class PhaseFlipChannel(PauliChannel):
         """Return a string representation of the object."""
         return f'p={string_expression(self.p)}'
 
-    def matrix(self):  # pylint: disable=arguments-differ
+    def matrix(self):
+        """Kraus operator of the quantum channel."""
         mat_i = sqrt(1 - self.p) * np.array([[1, 0], [0, 1]])
         mat_z = sqrt(self.p) * np.array([[1, 0], [0, -1]])
-        return np.array([mat_i, mat_z])
+        return [mat_i, mat_z]
 
 
 class BitPhaseFlipChannel(PauliChannel):
@@ -288,10 +291,11 @@ class BitPhaseFlipChannel(PauliChannel):
         """Return a string representation of the object."""
         return f'p={string_expression(self.p)}'
 
-    def matrix(self):  # pylint: disable=arguments-differ
+    def matrix(self):
+        """Kraus operator of the quantum channel."""
         mat_i = sqrt(1 - self.p) * np.array([[1, 0], [0, 1]])
         mat_y = sqrt(self.p) * np.array([[0, -1j], [1j, 0]])
-        return np.array([mat_i, mat_y])
+        return [mat_i, mat_y]
 
 
 class DepolarizingChannel(NoiseGate, SelfHermitianGate):
@@ -384,11 +388,12 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
         return f'p={string_expression(self.p)}'
 
     def matrix(self):  # pylint: disable=arguments-differ
+        """Kraus operator of the quantum channel."""
         mat_i = sqrt(1 - self.p * 3 / 4) * np.array([[1, 0], [0, 1]])
         mat_x = sqrt(self.p) * np.array([[0, 1], [1, 0]]) / 2
         mat_y = sqrt(self.p) * np.array([[0, -1j], [1j, 0]]) / 2
         mat_z = sqrt(self.p) * np.array([[1, 0], [0, -1]]) / 2
-        return np.array([mat_i, mat_x, mat_y, mat_z])
+        return [mat_i, mat_x, mat_y, mat_z]
 
 
 class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
@@ -454,11 +459,12 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
         self.projectq_gate = None
 
     def matrix(self):  # pylint: disable=arguments-differ
+        """Kraus operator of the quantum channel."""
         mat_0 = np.array([[1, 0], [0, sqrt(1 - self.gamma)]])
         mat_1 = np.array([[0, sqrt(self.gamma)], [0, 0]])
         if self.hermitianed:
             return np.array([mat_0, mat_1.T])
-        return np.array([mat_0, mat_1])
+        return [mat_0, mat_1]
 
 
 class PhaseDampingChannel(NoiseGate, NonHermitianGate):
@@ -526,9 +532,10 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
         self.projectq_gate = None
 
     def matrix(self):  # pylint: disable=arguments-differ
+        """Kraus operator of the quantum channel."""
         mat_0 = np.array([[1, 0], [0, sqrt(1 - self.gamma)]])
         mat_1 = np.array([[0, 0], [0, sqrt(self.gamma)]])
-        return np.array([mat_0, mat_1])
+        return [mat_0, mat_1]
 
 
 class KrausChannel(NoiseGate, NonHermitianGate):
@@ -602,4 +609,5 @@ class KrausChannel(NoiseGate, NonHermitianGate):
         return self.name
 
     def matrix(self):  # pylint: disable=arguments-differ
-        return self.kraus_op
+        """Kraus operator of the quantum channel."""
+        return [i for i in self.kraus_op]

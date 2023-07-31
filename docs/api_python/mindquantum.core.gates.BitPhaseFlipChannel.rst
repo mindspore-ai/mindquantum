@@ -15,3 +15,10 @@ mindquantum.core.gates.BitPhaseFlipChannel
 
     参数：
         - **p** (int, float) - 发生错误的概率。
+
+    .. py:method:: matrix()
+
+        返回该噪声信道的Kraus算符。
+
+        返回：
+            list，包含了该噪声信道的Kraus算符。

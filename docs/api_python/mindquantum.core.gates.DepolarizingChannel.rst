@@ -39,3 +39,10 @@ mindquantum.core.gates.DepolarizingChannel
         参数：
             - **obj_qubits** (int, list[int]) - 指明量子门作用在哪个比特上。
             - **ctrl_qubits** (int, list[int]) - 噪声信道的控制位比特只能是 ``None``。
+
+    .. py:method:: matrix()
+
+        返回该噪声信道的Kraus算符。
+
+        返回：
+            list，包含了该噪声信道的Kraus算符。
