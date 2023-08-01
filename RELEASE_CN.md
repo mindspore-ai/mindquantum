@@ -51,7 +51,6 @@
 
 - [STABLE] [`QRamVecLayer`](https://mindspore.cn/mindquantum/docs/zh-CN/master/layer/mindquantum.framework.QRamVecLayer.html#mindquantum.framework.QRamVecLayer): 新增 QRam 量子编码层，支持将经典数据直接编码为全振幅量子态。对应的算子为 [`QRamVecOps`](https://mindspore.cn/mindquantum/docs/zh-CN/master/operations/mindquantum.framework.QRamVecOps.html#mindquantum.framework.QRamVecOps)。
 
-
 #### IO
 
 - [STABLE] [`OpenQASM`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.io.OpenQASM.html#mindquantum.io.OpenQASM): OpenQASM 新增 [`from_string`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.io.OpenQASM.html#mindquantum.io.OpenQASM.from_string) 接口，支持将字符串格式的 OpenQASM 转化为 MindQuantum 中的量子线路。
