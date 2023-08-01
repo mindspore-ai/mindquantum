@@ -6,28 +6,69 @@
 
 ### 主要特性和增强
 
+#### 数据精度
+
+- [STABLE] `数据精度`: MindQuantum 现支持 `float32`、`float64`、`complex64`和`complex128`四种精度类型，可为各种算符、参数解析器和模拟器设置不同的精度类型。
+
 #### Gates
 
 - [STABLE] [`通用量子门`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#%E9%80%9A%E7%94%A8%E9%87%8F%E5%AD%90%E9%97%A8): 新增多个两比特泡利旋转门，包括：[`Rxx`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.Rxx.html#mindquantum.core.gates.Rxx)，[`Rxy`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.Rxy.html#mindquantum.core.gates.Rxy)，[`Rxz`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.Rxz.html#mindquantum.core.gates.Rxz)，[`Ryy`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.Ryy.html#mindquantum.core.gates.Ryy)，[`Ryz`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.Ryz.html#mindquantum.core.gates.Ryz)和[`Rzz`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.Rzz.html#mindquantum.core.gates.Rzz)。
-- [STABLE] [`密度矩阵模拟器`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator): 新增密度矩阵模拟器，模拟器名称为 `mqmatrix`。支持变分量子算法、噪声模拟等，与现有 `mqvector` 全振幅模拟器功能基本对齐。
 - [STABLE] [`噪声信道`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.html#%E9%87%8F%E5%AD%90%E4%BF%A1%E9%81%93): 噪声信道现在支持通过 `.matrix()` 接口返回噪声信道的 kraus 算符。
+
+#### Operator
+
+- [STABLE] [`QubitOperator`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.operators.QubitOperator.html#mindquantum.core.operators.QubitOperator): 新增 [`relabel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.operators.QubitOperator.html#mindquantum.core.operators.QubitOperator.relabel) 接口，支持按照新的比特编号来重排算符。[`FermionOperator`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.operators.FermionOperator.html#mindquantum.core.operators.FermionOperator.relabel)同样支持该功能。
+- [STABLE] [`基态计算`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.operators.ground_state_of_sum_zz.html#mindquantum.core.operators.ground_state_of_sum_zz): 新增接口支持计算只包含 pauli z 算符和 pauli z 算符的直积的哈密顿量的基态能量。
 
 #### Ansatz
 
-- [STABLE] [`Ansatz`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.html#ansatz): 新增 Arixv:[1905.10876](https://arxiv.org/abs/1905.10876) 中提到的19个 ansatz，先均已实现。
+- [STABLE] [`Ansatz`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.html#ansatz): 新增 Arixv:[`1905.10876`](https://arxiv.org/abs/1905.10876) 中提到的19个 ansatz，先均已实现。
 
 #### Circuit
 
 - [STABLE] [`ChannelAdder`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.circuit.html#channel-adder): 新增 `ChannelAdder` 模块，支持定制化的将各种量子噪声信道添加量子线路中，以此构成一个噪声模型，更多教案请参考：[`ChannelAdder`](https://mindspore.cn/mindquantum/docs/zh-CN/master/noise_simulator.html)。
 
+#### Simulator
+
+- [STABLE] [`密度矩阵模拟器`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator): 新增密度矩阵模拟器，模拟器名称为 `mqmatrix`。支持变分量子算法、噪声模拟等，与现有 `mqvector` 全振幅模拟器功能基本对齐。
+- [BETA] [`parameter shift`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_expectation_with_grad): 量子模拟器梯度算子现支持 parameter shift 算法，更贴近于实验。
+- [STABLE] [`期望计算`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_expectation): 接口与 [`get_expectation_with_grad`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_expectation_with_grad)基本对齐，但是不会计算期望值，节省时间。
+
 #### Device
 
 - [STABLE] [`QubitNode`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.device.QubitNode.html#mindquantum.device.QubitNode): 新增量子比特拓扑接口中的比特节点对象，支持对比特的位置和颜色以及连通性进行配置。
-- [STABLE] [`QubitsTopology`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.device.QubitsTopology.html#mindquantum.device.QubitsTopology): 量子比特拓扑结构，支持自定义拓扑结构。同时可使用预定义结构：线性拓扑结构
+- [STABLE] [`QubitsTopology`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.device.QubitsTopology.html#mindquantum.device.QubitsTopology): 量子比特拓扑结构，支持自定义拓扑结构。同时可使用预定义结构：线性拓扑结构 [`LinearQubits`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.device.LinearQubits.html#mindquantum.device.LinearQubits) 和方格点拓扑结构 [`GridQubits`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.device.GridQubits.html#mindquantum.device.GridQubits)
+
+#### Algorithm
+
+- [STABLE] [`比特映射`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.mapping.SABRE.html#mindquantum.algorithm.mapping.SABRE): 新增比特映射算法 [`SABRE`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.mapping.SABRE.html#mindquantum.algorithm.mapping.SABRE)，论文请参考 Arxiv [`1809.02573`](https://arxiv.org/abs/1809.02573)。
+- [BETA] [`误差缓解`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.error_mitigation.zne.html#mindquantum.algorithm.error_mitigation.zne): 新增零噪声外推算法算法来进行量子误差缓解。
+- [STABLE] [`线路折叠`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.error_mitigation.fold_at_random.html#mindquantum.algorithm.error_mitigation.fold_at_random): 新增量子线路折叠功能，支持保证量子线路等价性的同时增长量子线路。
+- [BETA] [`量子线路编译`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.compiler.html#module-mindquantum.algorithm.compiler): 新增量子线路编译模块，利用 [`DAG`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.compiler.DAGCircuit.html#mindquantum.algorithm.compiler.DAGCircuit) 图对量子线路进行编译，支持门替换、门融合和门分解等量子编译算法。
+- [STABLE] [`ansatz_variance`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.ansatz_variance.html#mindquantum.algorithm.nisq.ansatz_variance): 新增接口计算变分量子线路中的某个参数的梯度的方差，可用于验证变分量子线路的[`贫瘠高原`](https://www.nature.com/articles/s41467-018-07090-4)现象。
+
+#### Framework
+
+- [STABLE] [`QRamVecLayer`](https://mindspore.cn/mindquantum/docs/zh-CN/master/layer/mindquantum.framework.QRamVecLayer.html#mindquantum.framework.QRamVecLayer): 新增 QRam 量子编码层，支持将经典数据直接编码为全振幅量子态。对应的算子为 [`QRamVecOps`](https://mindspore.cn/mindquantum/docs/zh-CN/master/operations/mindquantum.framework.QRamVecOps.html#mindquantum.framework.QRamVecOps)。
+
+
+#### IO
+
+- [STABLE] [`OpenQASM`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.io.OpenQASM.html#mindquantum.io.OpenQASM): OpenQASM 新增 [`from_string`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.io.OpenQASM.html#mindquantum.io.OpenQASM.from_string) 接口，支持将字符串格式的 OpenQASM 转化为 MindQuantum 中的量子线路。
 
 #### Bug fix
 
-- [PR1757](https://gitee.com/mindspore/mindquantum/pulls/1757): 修复[`StronglyEntangling`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.StronglyEntangling.html#mindquantum.algorithm.nisq.StronglyEntangling)在深度大于2时的bug。
+- [`PR1757`](https://gitee.com/mindspore/mindquantum/pulls/1757): 修复[`StronglyEntangling`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.StronglyEntangling.html#mindquantum.algorithm.nisq.StronglyEntangling)在深度大于2时的bug。
+- [`PR1700`](https://gitee.com/mindspore/mindquantum/pulls/1700): 修复[`CNOT`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.CNOTGate.html#mindquantum.core.gates.CNOTGate)门矩阵表达式和[`AmplitudeDampingChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.AmplitudeDampingChannel.html#mindquantum.core.gates.AmplitudeDampingChannel)的逻辑错误。
+- [`PR1523`](https://gitee.com/mindspore/mindquantum/pulls/1523): 修复[`PhaseDampingChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.PhaseDampingChannel.html#mindquantum.core.gates.PhaseDampingChannel)的逻辑错误。
+
+### 贡献者
+
+感谢以下开发者做出的贡献：
+
+yufan, wengwenkang, xuxusheng, Damien Ngyuen, zhouxu, wangzidong, yangkang, lujiale, zhangzhenghai, fanyi, zhangwengang, wangkaisheng, zhoufeng, wangsiyuan, gongxiaoqing, chengxianbin, sunxiyin, wenwenkang, lvdingshun, cuijiangyu, chendiqing, zhangkai, Zotov Yuriy, liqin, zengjinglin, cuixiaopeng, 朱祎康, dorothy20212021, dsdsdshe, buyulin, norl-corxilea, herunhong, Arapat Ablimit, NoE, panshijie, longhanlin.
+
+欢迎以任何形式对项目提供贡献！
 
 ## MindQuantum 0.8.0 Release Notes
 
