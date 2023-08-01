@@ -28,6 +28,7 @@ from mindquantum._math.ops import FermionOperator as FermionOperator_
 from mindquantum._math.ops import f_term_value
 from mindquantum.core.operators._term_value import TermValue
 from mindquantum.core.parameterresolver import ParameterResolver, PRConvertible
+from mindquantum.dtype.dtype import str_dtype_map
 from mindquantum.mqbackend import EQ_TOLERANCE
 from mindquantum.third_party.interaction_operator import InteractionOperator
 from mindquantum.utils.type_value_check import _check_int_type, _require_package
@@ -386,7 +387,7 @@ class FermionOperator(FermionOperator_):
             True
         """
         dic = json.loads(strs)
-        out = FermionOperator().astype(mq.str_dtype_map[dic['dtype']])
+        out = FermionOperator().astype(str_dtype_map[dic['dtype']])
         for c, t in zip(dic['values'], dic['terms']):
             out += FermionOperator(t, ParameterResolver.loads(c))
         return out
