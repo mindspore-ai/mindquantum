@@ -24,6 +24,7 @@ import numpy as np
 import mindquantum as mq
 from mindquantum._math.pr import ParameterResolver as ParameterResolver_
 from mindquantum._math.tensor import from_numpy
+from mindquantum.dtype.dtype import mq_complex_number_type, str_dtype_map
 from mindquantum.utils.string_utils import join_without_empty, string_expression
 from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
 
@@ -511,7 +512,7 @@ class ParameterResolver(ParameterResolver_):
     @property
     def is_complex(self) -> bool:
         """Return whether the ParameterResolver instance is currently using complex coefficients."""
-        return self.dtype in mq.mq_complex_number_type
+        return self.dtype in mq_complex_number_type
 
     @property
     def no_grad_parameters(self) -> typing.List[str]:
@@ -634,8 +635,8 @@ class ParameterResolver(ParameterResolver_):
         dic = json.loads(strs)
         if 'dtype' not in dic:
             raise ValueError("Invalid string. Cannot convert it to ParameterResolver, no key dtype")
-        dtype = mq.str_dtype_map[dic['dtype']]
-        if dtype in mq.mq_complex_number_type:
+        dtype = str_dtype_map[dic['dtype']]
+        if dtype in mq_complex_number_type:
             const = dic['const'][0] + 1j * dic['const'][1]
             data = {i: j[0] + j[1] * 1j for i, j in dic['pr_data'].items()}
         else:

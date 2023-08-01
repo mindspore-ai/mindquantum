@@ -22,7 +22,8 @@ from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import BarrierGate, BasicGate, Measure, MeasureResult
 from mindquantum.core.operators import Hamiltonian
 from mindquantum.core.parameterresolver import ParameterResolver
-from mindquantum.dtype import complex128, mq_complex_number_type, to_mq_type
+from mindquantum.dtype import complex128, to_mq_type
+from mindquantum.dtype.dtype import mq_complex_number_type
 from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 from mindquantum.utils.type_value_check import (
     _check_and_generate_pr_type,
@@ -126,7 +127,7 @@ class MQSim(BackendBase):
                 f"Data type of {self.name} simulator is {mq.precision_str(self.dtype)} ({self.dtype}), "
                 f"but given hamiltonian is {mq.precision_str(hamiltonian.dtype)} ({hamiltonian.dtype}). "
                 f"Please convert given hamiltonian to {mq.precision_str(self.dtype)} "
-                f"({mq.precision_like(hamiltonian.dtype, self.dtype)})."
+                f"({mq.to_precision_like(hamiltonian.dtype, self.dtype)})."
             )
         _check_input_type('hamiltonian', Hamiltonian, hamiltonian)
         _check_hamiltonian_qubits_number(hamiltonian, self.n_qubits)
@@ -173,7 +174,7 @@ class MQSim(BackendBase):
                 f"Data type of {self.name} simulator is {mq.precision_str(self.dtype)} ({self.dtype}), "
                 f"but given hamiltonian is {mq.precision_str(hamiltonian.dtype)} ({hamiltonian.dtype}). "
                 f"Please convert given hamiltonian to {mq.precision_str(self.dtype)} "
-                f"({mq.precision_like(hamiltonian.dtype, self.dtype)})."
+                f"({mq.to_precision_like(hamiltonian.dtype, self.dtype)})."
             )
         hermitian = True
         if circ_right is None:
@@ -232,7 +233,7 @@ class MQSim(BackendBase):
                     f"Data type of {self.name} simulator is {mq.precision_str(self.dtype)} ({self.dtype}),"
                     f" but {i}th hamiltonian is {mq.precision_str(ham.dtype)} ({ham.dtype}). "
                     f"Please convert {i}th hamiltonian to {mq.precision_str(self.dtype)} "
-                    f"({mq.precision_like(ham.dtype, self.dtype)})."
+                    f"({mq.to_precision_like(ham.dtype, self.dtype)})."
                 )
         for h_tmp in hams:
             _check_input_type("hams's element", Hamiltonian, h_tmp)

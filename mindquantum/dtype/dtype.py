@@ -41,7 +41,19 @@ str_dtype_map = {
 
 
 def to_mq_type(dtype):
-    """Convert type to mindquantum type."""
+    """
+    Convert type to mindquantum type.
+
+    Args:
+        dtype (Union[mindquantum.dtype, mindspore.dtype, numpy.dtype]): The data type supported by
+            mindquantum or mindspore or numpy.
+
+    Examples:
+        >>> from mindquantum import to_mq_type
+        >>> import numpy as np
+        >>> to_mq_type(np.complex128)
+        mindquantum.complex128
+    """
     type_mapper = {
         float32: float32,
         float64: float64,
@@ -74,7 +86,17 @@ def to_mq_type(dtype):
 
 
 def to_real_type(dtype):
-    """Convert type to real type."""
+    """
+    Convert type to real type while keeping precision.
+
+    Args:
+        dtype (mindquantum.dtype): The data type supported by mindquantum.
+
+    Examples:
+        >>> from mindquantum import to_real_type, complex128
+        >>> to_real_type(complex128)
+        mindquantum.float64
+    """
     dtype = to_mq_type(dtype)
     return {
         float32: float32,
@@ -85,7 +107,17 @@ def to_real_type(dtype):
 
 
 def to_complex_type(dtype):
-    """Convert type to complex type."""
+    """
+    Convert type to complex type while keeping precision.
+
+    Args:
+        dtype (mindquantum.dtype): The data type supported by mindquantum.
+
+    Examples:
+        >>> from mindquantum import to_complex_type, float32
+        >>> to_complex_type(float32)
+        mindquantum.complex64
+    """
     dtype = to_mq_type(dtype)
     return {
         float32: complex64,
@@ -96,7 +128,17 @@ def to_complex_type(dtype):
 
 
 def to_double_precision(dtype):
-    """Convert type to double precision."""
+    """
+    Convert type to double precision.
+
+    Args:
+        dtype (mindquantum.dtype): The data type supported by mindquantum.
+
+    Examples:
+        >>> from mindquantum import to_double_precision, float32
+        >>> to_double_precision(float32)
+        mindquantum.float64
+    """
     dtype = to_mq_type(dtype)
     return {
         float32: float64,
@@ -107,7 +149,17 @@ def to_double_precision(dtype):
 
 
 def to_single_precision(dtype):
-    """Convert type to single precision."""
+    """
+    Convert type to single precision.
+
+    Args:
+        dtype (mindquantum.dtype): The data type supported by mindquantum.
+
+    Examples:
+        >>> from mindquantum import to_single_precision, complex128
+        >>> to_single_precision(complex128)
+        mindquantum.complex64
+    """
     dtype = to_mq_type(dtype)
     return {
         float32: float32,
@@ -117,8 +169,19 @@ def to_single_precision(dtype):
     }[dtype]
 
 
-def precision_like(dtype_src, dtype_des):
-    """Convert dtype_src to same precision as dtype_des."""
+def to_precision_like(dtype_src, dtype_des):
+    """
+    Convert dtype_src to same precision as dtype_des.
+
+    Args:
+        dtype_src (mindquantum.dtype): The data type supported by mindquantum.
+        dtype_des (mindquantum.dtype): The data type supported by mindquantum.
+
+    Examples:
+        >>> from mindquantum import to_precision_like, float32, complex128
+        >>> to_precision_like(float32, complex128)
+        >>> mindquantum.float64
+    """
     if is_double_precision(dtype_des):
         return to_double_precision(dtype_src)
     if is_single_precision(dtype_des):
@@ -127,7 +190,17 @@ def precision_like(dtype_src, dtype_des):
 
 
 def to_np_type(dtype):
-    """Convert type to numpy data type."""
+    """
+    Convert type to numpy data type.
+
+    Args:
+        dtype (mindquantum.dtype): The data type supported by mindquantum.
+
+    Examples:
+        >>> from mindquantum import to_np_type, complex128
+        >>> to_np_type(complex128)
+        numpy.complex128
+    """
     return {
         complex128: np.complex128,
         complex64: np.complex64,
@@ -136,25 +209,66 @@ def to_np_type(dtype):
     }[dtype]
 
 
-def is_double_precision(dtype):
-    """Check whether a type is double precision or not."""
+def is_double_precision(dtype) -> bool:
+    """
+    Check whether a type is double precision or not.
+
+    Args:
+        dtype (mindquantum.dtype): The data type supported by mindquantum.
+
+    Examples:
+        >>> from mindquantum import is_double_precision, complex128
+        >>> is_double_precision(complex128)
+        True
+    """
     return to_mq_type(dtype) in [complex128, float64]
 
 
-def is_single_precision(dtype):
-    """Check whether a type is single precision or not."""
+def is_single_precision(dtype) -> bool:
+    """
+    Check whether a type is single precision or not.
+
+    Args:
+        dtype (mindquantum.dtype): The data type supported by mindquantum.
+
+    Examples:
+        >>> from mindquantum import is_single_precision, complex128
+        >>> is_single_precision(complex128)
+        False
+    """
     return to_mq_type(dtype) in [complex64, float32]
 
 
-def is_same_precision(dtype1, dtype2):
-    """Check whether two type is same precision or not."""
+def is_same_precision(dtype1, dtype2) -> bool:
+    """
+    Check whether two type is same precision or not.
+
+    Args:
+        dtype1 (mindquantum.dtype): The data type supported by mindquantum.
+        dtype2 (mindquantum.dtype): The data type supported by mindquantum.
+
+    Examples:
+        >>> from mindquantum import is_same_precision, complex128, float64
+        >>> is_same_precision(complex128, float64)
+        True
+    """
     return (is_double_precision(dtype1) and is_double_precision(dtype2)) or (
         is_single_precision(dtype1) and is_single_precision(dtype2)
     )
 
 
-def precision_str(dtype):
-    """Get precision string."""
+def precision_str(dtype) -> str:
+    """
+    Get precision string.
+
+    Args:
+        dtype (mindquantum.dtype): The data type supported by mindquantum.
+
+    Examples:
+        >>> from mindquantum import precision_str, complex128
+        >>> precision_str(complex128)
+        'double precision'
+    """
     if is_single_precision(dtype):
         return "single precision"
     return "double precision"

@@ -4,6 +4,7 @@
 .. mscnautosummary::
     :nosignatures:
 
+    mindquantum.dtype
     mindquantum.core
     mindquantum.simulator
     mindquantum.framework

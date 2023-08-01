@@ -26,6 +26,7 @@ import mindquantum as mq
 from mindquantum._math.ops import QubitOperator as QubitOperator_
 from mindquantum.core.operators._term_value import TermValue
 from mindquantum.core.parameterresolver import ParameterResolver, PRConvertible
+from mindquantum.dtype.dtype import str_dtype_map
 from mindquantum.mqbackend import EQ_TOLERANCE
 from mindquantum.utils.type_value_check import _check_int_type, _require_package
 
@@ -336,7 +337,7 @@ class QubitOperator(QubitOperator_):
             True
         """
         dic = json.loads(strs)
-        out = QubitOperator().astype(mq.str_dtype_map[dic['dtype']])
+        out = QubitOperator().astype(str_dtype_map[dic['dtype']])
         for c, t in zip(dic['values'], dic['terms']):
             out += QubitOperator(t, ParameterResolver.loads(c))
         return out
