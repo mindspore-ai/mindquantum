@@ -1,7 +1,7 @@
 mindquantum.dtype.is_same_precision
 ===================================
 
-.. py:function:: mindquantum.dtype.compiler.is_same_precision(dtype1, dtype2)
+.. py:function:: mindquantum.dtype.is_same_precision(dtype1, dtype2)
 
     判断两个类型的精度是否相同。
 

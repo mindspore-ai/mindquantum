@@ -1,7 +1,7 @@
 mindquantum.dtype.to_complex_type
 =================================
 
-.. py:function:: mindquantum.dtype.compiler.to_complex_type(dtype)
+.. py:function:: mindquantum.dtype.to_complex_type(dtype)
 
     将一个类型转化为复数类型，并保持精度不变。
 
