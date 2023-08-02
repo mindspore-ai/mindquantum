@@ -721,7 +721,7 @@ def test_noise_simulator(config):
     )
     sim = Simulator(NoiseBackend(virtual_qc, 2, adder=adder, dtype=dtype))
     res = sim.sampling(circ, seed=42, shots=5000)
-    if virtual_qc == 'mqvector':
+    if virtual_qc.startswith('mqvector'):
         assert res.data['00'] == 1701
-    else:
+    elif virtual_qc.startswith('mqmatrix'):
         assert res.data['00'] == 1684
