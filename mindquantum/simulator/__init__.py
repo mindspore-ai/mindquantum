@@ -15,8 +15,16 @@
 """Quantum simulator that simulate evolution of quantum system."""
 
 from .available_simulator import SUPPORTED_SIMULATOR
+from .noise import NoiseBackend
 from .simulator import Simulator, get_supported_simulator, inner_product
 from .utils import GradOpsWrapper
 
-__all__ = ['Simulator', 'GradOpsWrapper', 'get_supported_simulator', 'inner_product', 'SUPPORTED_SIMULATOR']
+__all__ = [
+    'Simulator',
+    'GradOpsWrapper',
+    'get_supported_simulator',
+    'inner_product',
+    'SUPPORTED_SIMULATOR',
+    'NoiseBackend',
+]
 __all__.sort()

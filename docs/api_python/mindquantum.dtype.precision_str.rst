@@ -1,7 +1,7 @@
 mindquantum.dtype.precision_str
 ===============================
 
-.. py:function:: mindquantum.dtype.compiler.precision_str(dtype)
+.. py:function:: mindquantum.dtype.precision_str(dtype)
 
     返回精度的字符串。
 

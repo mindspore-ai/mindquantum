@@ -1,7 +1,7 @@
 mindquantum.dtype.to_mq_type
 ============================
 
-.. py:function:: mindquantum.dtype.compiler.to_mq_type(dtype)
+.. py:function:: mindquantum.dtype.to_mq_type(dtype)
 
     将一个类型转化为mindquantum中支持的类型。
 

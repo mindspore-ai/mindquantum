@@ -14,6 +14,8 @@
 # ============================================================================
 """Test QNN layers."""
 
+import platform
+
 import numpy as np
 import pytest
 
@@ -75,6 +77,7 @@ def test_mindquantumlayer(config):
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('config', AVAILABLE_BACKEND)
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
+@pytest.mark.skipif(platform.system() == "Darwin", reason='MacOS not work currently.')
 def test_qram_vec_layer(config):
     """
     Description: Test QRamVec

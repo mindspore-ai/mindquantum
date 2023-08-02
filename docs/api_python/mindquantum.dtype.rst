@@ -1,7 +1,10 @@
 mindquantum.dtype
 =================
 
-.. automodule:: mindquantum.dtype
+.. py:module:: mindquantum.dtype
+
+
+MindQuantum 数据类型模拟。
 
 支持的数据类型
 -------------------
@@ -37,7 +40,7 @@ Memory consuming
      - 0.5kB
    * - 16
      - 1MB
-     - 0.5MH
+     - 0.5MB
    * - 26
      - 1GB
      - 0.5GB
@@ -57,8 +60,8 @@ Memory consuming
 Function
 ---------------
 
-.. autosummary::
-    :toctree: dtype
+.. mscnautosummary::
+    :toctree:
     :nosignatures:
     :template: classtemplate.rst
 

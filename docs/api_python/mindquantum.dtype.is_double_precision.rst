@@ -1,7 +1,7 @@
 mindquantum.dtype.is_double_precision
 =====================================
 
-.. py:function:: mindquantum.dtype.compiler.is_double_precision(dtype)
+.. py:function:: mindquantum.dtype.is_double_precision(dtype)
 
     判断一个类型是不是双精度类型。
 

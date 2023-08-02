@@ -37,7 +37,7 @@ The memory usage for full state vector increased with qubit number is shown as b
      - 0.5kB
    * - 16
      - 1MB
-     - 0.5MH
+     - 0.5MB
    * - 26
      - 1GB
      - 0.5GB

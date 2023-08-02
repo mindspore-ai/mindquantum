@@ -1,7 +1,7 @@
 mindquantum.dtype.to_np_type
 ============================
 
-.. py:function:: mindquantum.dtype.compiler.to_np_type(dtype)
+.. py:function:: mindquantum.dtype.to_np_type(dtype)
 
     将一个类型转化为numpy中的类型。
 

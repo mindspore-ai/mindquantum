@@ -1,7 +1,7 @@
 mindquantum.dtype.to_single_precision
 =====================================
 
-.. py:function:: mindquantum.dtype.compiler.to_single_precision(dtype)
+.. py:function:: mindquantum.dtype.to_single_precision(dtype)
 
     将一个类型转化为单精度类型。
 
