@@ -25,3 +25,4 @@ Function
 
     mindquantum.io.bprint
     mindquantum.io.random_hiqasm
+    mindquantum.io.draw_topology
