@@ -51,9 +51,10 @@ def draw_topology(topo: QubitsTopology, circuit: Circuit = None, style: dict = N
     Draw a qubit topology as a svg picture.
 
     Args:
-        topo (QubitsTopology): The qubit topology.
-        circuit (Circuit): The given quantum circuit you want to execute on given qubit topology.
-        style (Dict): The picture style configuration.
+        topo (:class:`.device.QubitsTopology`): The qubit topology.
+        circuit (:class:`~.core.circuit.Circuit`): The given quantum circuit you want to execute on
+            given qubit topology. Default: ``None``.
+        style (Dict): The picture style configuration. Default: ``None``.
     """
     if style is None:
         style = _topology_default_style
