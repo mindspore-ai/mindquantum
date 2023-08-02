@@ -26,10 +26,16 @@ import mindquantum as mq
 import mindquantum.core.operators as ops
 from mindquantum.algorithm.library import qft
 from mindquantum.core import gates as G
-from mindquantum.core.circuit import UN, Circuit
+from mindquantum.core.circuit import (
+    UN,
+    BitFlipAdder,
+    Circuit,
+    MeasureAccepter,
+    MixerAdder,
+)
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.core.parameterresolver import ParameterResolver as PR
-from mindquantum.simulator import Simulator, inner_product
+from mindquantum.simulator import NoiseBackend, Simulator, inner_product
 from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 from mindquantum.utils import random_circuit
 
@@ -692,3 +698,30 @@ def test_non_hermitian_expectation(virtual_qc, dtype):
     sim1.apply_hamiltonian(ham)
     e2 = inner_product(sim2, sim1)
     assert np.allclose(e1, e2)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+def test_noise_simulator(config):
+    """
+    Description: Test noise simulator.
+    Expectation: succeed.
+    """
+    virtual_qc, dtype = config
+    circ = Circuit().h(0).x(1, 0).measure_all()
+    adder = MixerAdder(
+        [
+            MeasureAccepter(),
+            BitFlipAdder(0.2),
+        ],
+        add_after=False,
+    )
+    sim = Simulator(NoiseBackend(virtual_qc, 2, adder=adder, dtype=dtype))
+    res = sim.sampling(circ, seed=42, shots=5000)
+    if virtual_qc == 'mqvector':
+        assert res.data['00'] == 1701
+    else:
+        assert res.data['00'] == 1684

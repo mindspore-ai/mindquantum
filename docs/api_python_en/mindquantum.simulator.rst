@@ -13,6 +13,7 @@ Class
 
     mindquantum.simulator.GradOpsWrapper
     mindquantum.simulator.Simulator
+    mindquantum.simulator.NoiseBackend
 
 Function
 ---------

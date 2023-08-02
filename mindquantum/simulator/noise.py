@@ -17,21 +17,19 @@ from typing import Dict, Union
 
 import numpy as np
 
-import mindquantum as mq
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.circuit.channel_adder import ChannelAdderBase
 from mindquantum.core.gates import BasicGate
 from mindquantum.core.operators import Hamiltonian
 from mindquantum.core.parameterresolver import ParameterResolver
-from mindquantum.device.chip import NaiveChip
 from mindquantum.simulator.backend_base import BackendBase
 
 
 # pylint: disable=abstract-method,super-init-not-called,too-many-arguments
-class NoiseBackend(BackendBase):
+class NoiseBackendImpl(BackendBase):
     """Add noise based on channel adder."""
 
-    def __init__(self, base_sim: str, n_qubits: int, adder: ChannelAdderBase, seed: int = None, dtype=mq.complex128):
+    def __init__(self, base_sim: str, n_qubits: int, adder: ChannelAdderBase, seed: int = None, dtype=None):
         """Initialize a noise backend."""
         # pylint: disable=import-outside-toplevel
         from mindquantum.simulator import Simulator
@@ -80,13 +78,47 @@ class NoiseBackend(BackendBase):
         return self.adder(circuit)
 
 
-class ChipBaseBackend(NoiseBackend):
+class NoiseBackend(NoiseBackendImpl):
     """
-    Add nose based on given chip.
+    Noise simulator backend based on channel adder.
 
-    Topology of device and device supported gate set should be considered.
+    Args:
+        base_sim (str): The simulator that supported by MindQuantum.
+        n_qubits (int): The qubit number of this noise simulator.
+        adder (:class:`~.core.circuit.ChannelAdderBase`): A channel adder that can transform a circuit
+            to noise circuit.
+        seed (int): A random seed. Default: ``None``.
+        dtype (mindquantum.dtype): The data type of simulator. If ``None``, it will be mindquantum.complex128.
+            Default: ``None``.
+
+    Examples:
+        >>> from mindquantum.simulator import NoiseBackend, Simulator
+        >>> from mindquantum.core.circuit import Circuit, MeasureAccepter, MixerAdder, BitFlipAdder
+        >>> circ = Circuit().h(0).x(1, 0).measure_all()
+        >>> circ
+        q0: ──H────●────M(q0)──
+                   │
+        q1: ───────X────M(q1)──
+        >>> adder = MixerAdder([
+        ...     MeasureAccepter(),
+        ...     BitFlipAdder(0.2),
+        ... ], add_after=False)
+        >>> adder(circ)
+        q0: ──H────●────BFC(p=1/5)────M(q0)──
+                   │
+        q1: ───────X────BFC(p=1/5)────M(q1)──
+        >>> noise_sim = Simulator(NoiseBackend('mqvector', 2, adder=adder))
+        >>> noise_sim.sampling(circ,seed=42, shots=5000)
+        shots: 5000
+        Keys: q1 q0│0.00   0.085        0.17       0.255        0.34       0.425
+        ───────────┼───────────┴───────────┴───────────┴───────────┴───────────┴
+                 00│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+                   │
+                 01│▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+                   │
+                 10│▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+                   │
+                 11│▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+                   │
+        {'00': 1701, '01': 796, '10': 804, '11': 1699}
     """
-
-    def __init__(self, chip: NaiveChip):
-        """Initialize base chip."""
-        self.chip = chip
