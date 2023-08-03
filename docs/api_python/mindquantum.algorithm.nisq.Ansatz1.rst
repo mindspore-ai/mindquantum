@@ -5,6 +5,9 @@ mindquantum.algorithm.nisq.Ansatz1
 
     Arxiv 论文中所提及的量子线路1。
 
+    .. image:: ./ansatz_images/ansatz1.png
+        :height: 180px
+
     请参考论文 `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
 
