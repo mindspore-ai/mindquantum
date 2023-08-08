@@ -16,7 +16,7 @@
 
 from .available_simulator import SUPPORTED_SIMULATOR
 from .noise import NoiseBackend
-from .simulator import Simulator, get_supported_simulator, inner_product
+from .simulator import Simulator, get_supported_simulator, inner_product, fidelity
 from .utils import GradOpsWrapper
 
 __all__ = [
@@ -26,5 +26,6 @@ __all__ = [
     'inner_product',
     'SUPPORTED_SIMULATOR',
     'NoiseBackend',
+    'fidelity',
 ]
 __all__.sort()

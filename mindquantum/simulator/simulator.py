@@ -14,6 +14,7 @@
 # ============================================================================
 """Simulator."""
 import numpy as np
+from scipy.linalg import det
 
 from mindquantum.dtype import to_mq_type
 
@@ -528,4 +529,9 @@ def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
     raise NotImplementedError(f"inner_product for backend {bra_simulator.backend} not implement.")
 
 
-__all__ = ['Simulator', 'get_supported_simulator', 'inner_product']
+def fidelity(rho: np.ndarray, sigma: np.ndarray):
+    """Get the fidelity of two quantum state."""
+    return np.trace(rho @ sigma) + 2 * np.sqrt(det(rho) * det(sigma))
+
+
+__all__ = ['Simulator', 'get_supported_simulator', 'inner_product', 'fidelity']
