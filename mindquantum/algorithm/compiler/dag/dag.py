@@ -90,7 +90,7 @@ def connect_two_node(father_node: DAGNode, child_node: DAGNode, local_index: int
     child_node.father[local_index] = father_node
 
 
-class QubitNode(DAGNode):
+class DAGQubitNode(DAGNode):
     """
     DAG node that work as quantum qubit.
 
@@ -99,7 +99,7 @@ class QubitNode(DAGNode):
     """
 
     def __init__(self, qubit: int):
-        """Initialize a QubitNode object."""
+        """Initialize a DAGQubitNode object."""
         super().__init__()
         _check_input_type("qubit", int, qubit)
         self.qubit = qubit
@@ -168,8 +168,8 @@ class DAGCircuit:
     def __init__(self, circuit: Circuit):
         """Initialize a DAGCircuit object."""
         _check_input_type("circuit", Circuit, circuit)
-        self.head_node = {i: QubitNode(i) for i in sorted(circuit.all_qubits.keys())}
-        self.final_node = {i: QubitNode(i) for i in sorted(circuit.all_qubits.keys())}
+        self.head_node = {i: DAGQubitNode(i) for i in sorted(circuit.all_qubits.keys())}
+        self.final_node = {i: DAGQubitNode(i) for i in sorted(circuit.all_qubits.keys())}
         for i in self.head_node:
             self.head_node[i].insert_after(self.final_node[i])
         for gate in circuit:
@@ -245,8 +245,8 @@ class DAGCircuit:
         _check_input_type('node', DAGNode, node)
         for local in node.local:
             if local not in self.head_node:
-                self.head_node[local] = QubitNode(local)
-                self.final_node[local] = QubitNode(local)
+                self.head_node[local] = DAGQubitNode(local)
+                self.final_node[local] = DAGQubitNode(local)
                 self.head_node[local].insert_after(self.final_node[local])
             self.final_node[local].insert_before(node)
 
@@ -296,7 +296,7 @@ class DAGCircuit:
         for head_node in self.head_node.values():
             for current_node in head_node.child.values():
                 _find(current_node, found)
-        return [i for i in found if not isinstance(i, QubitNode)]
+        return [i for i in found if not isinstance(i, DAGQubitNode)]
 
     def layering(self) -> typing.List[Circuit]:
         r"""
@@ -345,7 +345,7 @@ class DAGCircuit:
                     prev_depth.append(depth_map[father_node])
                 depth_map[current_node] = max(prev_depth) + 1
             for child in current_node.child.values():
-                if not isinstance(child, QubitNode):
+                if not isinstance(child, DAGQubitNode):
                     if child not in depth_map:
                         _layering(child, depth_map)
 
@@ -384,7 +384,9 @@ class DAGCircuit:
         considered_node = set(self.head_node.values())
 
         def adding_current_node(current_node, circuit, considered):
-            if all(i in considered for i in current_node.father.values()) and not isinstance(current_node, QubitNode):
+            if all(i in considered for i in current_node.father.values()) and not isinstance(
+                current_node, DAGQubitNode
+            ):
                 circuit += current_node.gate
                 considered.add(current_node)
             else:
