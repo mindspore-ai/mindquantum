@@ -10,3 +10,196 @@ mq中现有支持的量子门：
 1. on方法
 2. 强调所有门都可任意加控制比特
 \end{lstlisting}
+
+
+\begin{document}
+
+\maketitle
+
+\section{Quantum Gates}
+Similar to how a classical computer is made up of classical circuits and classical bits,a quantum computer is made up of quantum circuits and qubits.In quantum circuits,quantum gates(quantum logic gates) can perform state transitions with several qubits.They are basis of quantum circuits and have many important functions.\\
+Unlike classical circuit logic gates,all quantum gates are reversible,and all classical gate operations can be implemented with quantum gates.All quantum gates can be represented by a unitary matrix,whose dimension is determined by the number of qubits it operated on.According to the number of bits operated,it can be divided into single quibt gates and multi-qubit gates.According to whether the initialization method in mindquantum contains parameters,it can be divided into None Parameter Gates and Parameter Gates.
+
+\subsection{Basic None Parameter Gate}
+Similar to logic gates in classical circuits, the transition of a quantum circuit state can be achieved through quantum gates. Any quantum gate can be represented by a matrix, the only limitation being that its matrix representation U is a unitary matrix, i.e. ${UU^{\dagger}=I}$.
+At the same time, any unitary matrix can define a valid quantum gate, and the dimension of the matrix depends on the number of qubits it operates on.\\
+Here are some examples of single qubit gates,let $\ket{\phi}=a\ket{0}+b\ket{1}$.\\
+$I\ket{\phi}=\begin{bmatrix}
+    1 && 0\\
+    0 && 1
+\end{bmatrix}\begin{bmatrix}
+    a\\
+    b
+\end{bmatrix}=\begin{bmatrix}
+    a\\
+    b
+\end{bmatrix}$ % I
+\\
+$X\ket{\phi}=\begin{bmatrix}
+    0 && 1\\
+    1 && 0
+\end{bmatrix}\begin{bmatrix}
+    a\\
+    b
+\end{bmatrix}=\begin{bmatrix}
+    b\\
+    a
+\end{bmatrix}$ % X
+\\
+$Y\ket{\phi}=\begin{bmatrix}
+    0 && -i\\
+    i && 0
+\end{bmatrix}\begin{bmatrix}
+    a\\
+    b
+\end{bmatrix}=\begin{bmatrix}
+    -bi\\
+    ai
+\end{bmatrix}$ % Y
+\\
+$Z\ket{\phi}=\begin{bmatrix}
+    1 && 0\\
+    0 && -
+\end{bmatrix}\begin{bmatrix}
+    a\\
+    b
+\end{bmatrix}=\begin{bmatrix}
+    a\\
+    -b
+\end{bmatrix}$ % Z
+\\
+$H\ket{\phi}=\frac{1}{\sqrt{2}}\begin{bmatrix}
+    1 && 1\\
+    1 && -1
+\end{bmatrix}\begin{bmatrix}
+    a\\
+    b
+\end{bmatrix}=\frac{1}{\sqrt{2}}\begin{bmatrix}
+    a+b\\
+    a-b
+\end{bmatrix}$ % H
+\\
+\subsection{Basic Parameter Gate}
+Pauli matrices are the most important matrices, and they form a set of bases for spatial operators. When the Pauli matrix appears on the exponents, three classes of useful unitary operators are produced, namely rotation operators with respect to $\hat{x}, \hat{y}, \hat{z}$, defined by the following equation.\\
+    $Rx(\theta)=e^{-\frac{i\theta X}{2}}=\cos{\frac{\theta}{2}}I-i\sin{\frac{\theta}{2}}X=\begin{bmatrix}
+        \cos{\frac{\theta}{2}} && -i\sin{\frac{\theta}{2}}\\
+        -i\sin{\frac{\theta}{2}} && \cos{\frac{\theta}{2}}
+    \end{bmatrix}$ % RX
+\\
+    $Ry(\theta)=e^{-\frac{i\theta Y}{2}}=\cos{\frac{\theta}{2}}I-i\sin{\frac{\theta}{2}}Y=\begin{bmatrix}
+        \cos{\frac{\theta}{2}} && -\sin{\frac{\theta}{2}}\\
+        \sin{\frac{\theta}{2}} && \cos{\frac{\theta}{2}}
+    \end{bmatrix}$ % RY
+\\
+    $Rz(\theta)=e^{-\frac{i\theta Z}{2}}=\cos{\frac{\theta}{2}}I-i\sin{\frac{\theta}{2}}Z=\begin{bmatrix}
+        e^{\frac{-i\theta}{2}} && 0\\
+        0 &&  e^{\frac{i\theta}{2}}
+    \end{bmatrix}$ % RY
+
+Since there are an infinite number of 2*2 matrices, the number of quantum gates is also infinite. According to the Z-Y decomposition, a unitary matrix U over any single qubit can be represented as $U=e^{i\alpha}Rz(\beta)Ry(\gamma)Rz(\delta)$.\\
+Therefore, in order to construct arbitrary quantum gates, it is necessary to use parameters to construct rotating gates. There are three initialization methods provided in mindquantum, because Parameter Resolver has three initialization methods. \\
+Take the RX gate as an example:
+\begin{lstlisting}
+    from mindquantum.core.gates import RX
+    rx1 = RX(0.5)
+    rx2 = RX('a')
+    rx3 = RX({'a': 0.2, 'b': 0.5})  # 设置a,b的系数,print中设置a,b对应的值
+    print('rx1表示为:{}\nrx1的矩阵为{}'.format(rx1, np.round(rx1.matrix(),3)))
+    print('rx2表示为:{}\nrx2的矩阵为{}'.format(rx2, np.round(rx2.matrix({'a': 0.1}),3)))
+    print('rx3表示为:{}\nrx3的矩阵为{}'.format(rx3, np.round(rx3.matrix({'a': 1, 'b': 2}),3)))
+\end{lstlisting}
+Output:
+\begin{lstlisting}
+    rx1表示为:RX(1/2)
+    rx1的矩阵为[[0.969+0.j    0.   -0.247j]
+     [0.   -0.247j 0.969+0.j   ]]
+    rx2表示为:RX(a)
+    rx2的矩阵为[[0.999+0.j   0.   -0.05j]
+     [0.   -0.05j 0.999+0.j  ]]
+    rx3表示为:RX(1/5*a + 1/2*b)
+    rx3的矩阵为[[0.825+0.j    0.   -0.565j]
+     [0.   -0.565j 0.825+0.j   ]]
+\end{lstlisting}
+
+\subsection{Custom Quantum Gate}
+Since it is difficult to construct arbitrary quantum gates by using general gates in practical applications, two methods for constructing custom quantum gates are provided in mindquantum. They are quantum gates without parameters and quantum gates with parameters.
+\subsubsection{Universal Math Gate}
+If the matrix representation of a gate is known, it is convenient to construct the gate in mindquantum. Two parameters are required to initialize UnivMathGate, which are the gate name and the matrix value. If the matrix is not unitary, the result cannot be normalized.
+Example:
+\begin{lstlisting}
+    x_mat = np.array([[0, 1], [2, 0]]) # 注意这个矩阵不是酉矩阵
+    x_gate = UnivMathGate('a', x_mat)
+    c = Circuit()
+    c += x_gate(0)
+    print(x_gate.matrix())
+    print(c)
+    print(c.get_qs(ket=True)) # 输出的结果不是归一的
+\end{lstlisting}
+Output:
+\begin{lstlisting}
+    [[0 1]
+     [2 0]]
+    q0: ──a──
+    
+    2¦1⟩
+\end{lstlisting}
+
+\subsubsection{Universal Parameterized Gate}
+Sometimes we need to construct a parameterized gate in which the parameter is self-defined.In mindqantum, this initialization method is provided,and its usage is basically as same as that of RX gate.Two parameters are required to initialize such a gate.One is a function or method to use only one parameter(similar to theta in RX) to generate a unitary matrix，noting that no error is reported if the resulting matrix is not unitary..The other is the function or method that produces the derivative of this matrix,which is used to calculate the gradient. This method supports the generation of arbitrary qubit operators and can accelerate the performance by numba.JIT.
+Example:
+\begin{lstlisting}
+    from mindquantum.core.circuit import Circuit
+    from mindquantum.core.gates import gene_univ_parameterized_gate
+    
+    
+    def matrix(theta): # 如果生成的不是酉矩阵不会报错
+        return np.array([[np.exp(1j * theta), 0],
+                         [0, np.exp(-1j * theta)]])
+    
+    
+    def diff_matrix(theta):
+        return 1j * np.array([[np.exp(1j * theta), 0],
+                              [0, -np.exp(-1j * theta)]])
+    
+    
+    TestGate = gene_univ_parameterized_gate('Test', matrix, diff_matrix)
+    circ = Circuit().h(0)
+    circ += TestGate('a').on(0)
+    print(circ)
+    print(TestGate(0).matrix())
+    print(circ.get_qs(pr={'a': 1.2}))
+\end{lstlisting}
+Output:
+\begin{lstlisting}
+    q0: ──H────Test(a)──
+
+    [[1.+0.j 0.+0.j]
+     [0.+0.j 1.-0.j]]
+    [0.25622563+0.65905116j 0.25622563-0.65905116j]
+\end{lstlisting}
+
+\section{Basic Usage Method}
+\subsection{On Method}
+In quantum circuits, controlled operation is very common. Let U be any single qubit unitary operation, then the controlled U operation is a double qubit operation. One is the control bit and one is the target bit. In mindquantum, we can implement this function through the on method. This method takes two parameters. One is the target bit and the other is the control bit, both of which can be single qubit or multi-qubits.It is worth emphasizing that any gate can add arbitrary control operations.\\
+Example:
+\begin{lstlisting}
+    from mindquantum.core.gates import X
+
+    # 如果输出x的矩阵表示 会输出X的矩阵
+    x = X.on(0, [1,2])
+    print('目标比特为：{},控制比特为：{}'.format(x.obj_qubits,x.ctrl_qubits))
+\end{lstlisting}
+Output:
+\begin{lstlisting}
+    目标比特为：[0],控制比特为：[1, 2]
+\end{lstlisting}
+\begin{lstlisting}
+import numpy as np     
+
+X = iris_dataset.data[:100, :].astype(np.float32)
+X_feature_names = iris_dataset.feature_names
+y = iris_dataset.target[:100].astype(int)
+y_target_names = iris_dataset.target_names[:2] 
+\end{lstlisting}
+
+\end{document}
