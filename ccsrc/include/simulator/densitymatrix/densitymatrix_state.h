@@ -96,6 +96,9 @@ class DensityMatrixState {
     //! Judge whether the density matrix is pure
     virtual bool IsPure() const;
 
+    //! Get the partial trace of density matrix
+    virtual matrix_t GetPartialTrace(const qbits_t& objs) const;
+
     //! Transform to vector from a pure density matrix (with an unknown global phase)
     virtual py_qs_datas_t PureStateVector();
 

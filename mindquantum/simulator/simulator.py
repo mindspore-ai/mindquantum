@@ -488,6 +488,14 @@ class Simulator:
         """
         return self.backend.set_threads_number(number)
 
+    def get_partial_trace(self, obj_qubits):
+        """Get partial trace of density matrix.
+
+        Args:
+            obj_qubits (int, list[int]): Specific which qubits to trace over.
+        """
+        return self.backend.get_partial_trace(obj_qubits)
+
 
 def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
     """

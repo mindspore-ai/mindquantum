@@ -57,6 +57,7 @@ auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLIN
         .def("set_qs", &sim_t::SetQS)
         .def("set_dm", &sim_t::SetDM)
         .def("is_pure", &sim_t::IsPure)
+        .def("get_partial_trace", &sim_t::GetPartialTrace)
         .def("pure_state_vector", &sim_t::PureStateVector)
         .def("apply_hamiltonian", &sim_t::ApplyHamiltonian)
         .def("copy", [](const sim_t& sim) { return sim; })

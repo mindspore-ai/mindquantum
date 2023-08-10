@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 #include <stdexcept>
+#include <vector>
 
 #include "config/openmp.h"
+#include "core/mq_base_types.h"
 #include "core/utils.h"
 #include "math/pr/parameter_resolver.h"
 #include "simulator/utils.h"
@@ -203,6 +205,51 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::Purity(const qs_data_p_t&
                      for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim);
                           i++) { p += -std::norm(qs[IdxMap(i, i)]); })
     return p;
+}
+
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetPartialTrace(const qs_data_p_t& qs, const qbits_t& objs,
+                                                                       index_t dim) -> matrix_t {
+    qs_data_p_t tmp = qs;
+    bool will_free = false;
+    if (tmp == nullptr) {
+        tmp = derived::InitState(dim);
+        will_free = true;
+    }
+    qs_data_p_t out = nullptr;
+    index_t out_dim = dim;
+    qbit_t offset;
+    for (Index i = 0; i < objs.size(); i++) {
+        offset = 0;
+        for (Index j = 0; j < i; j++) {
+            if (objs[i] > objs[j]) {
+                offset += 1;
+            }
+        }
+        SingleQubitGateMask mask({objs[i] - offset}, {});
+        out_dim = out_dim >> 1;
+        out = derived::InitState(out_dim, false);
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(out_dim); a++) {  // loop on the row
+                auto r0 = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
+                auto r1 = r0 + mask.obj_mask;
+                for (index_t b = 0; b <= a; b++) {  // loop on the column
+                    auto c0 = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
+                    auto c1 = c0 + mask.obj_mask;
+                    auto value = tmp[IdxMap(r0, c0)] + tmp[IdxMap(r1, c1)];
+                    out[IdxMap(a, b)] = value;
+                }
+            })
+        if (i != 0) {
+            FreeState(&tmp);
+        } else if (will_free) {
+            FreeState(&tmp);
+        }
+        tmp = out;
+    }
+    auto res = GetQS(out, out_dim);
+    FreeState(&out);
+    return res;
 }
 
 template <typename derived_, typename calc_type_>
