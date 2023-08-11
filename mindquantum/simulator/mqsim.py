@@ -452,6 +452,8 @@ class MQSim(BackendBase):
 
     def set_qs(self, quantum_state: np.ndarray):
         """Set quantum state of mqvector simulator."""
+        if isinstance(quantum_state, list):
+            quantum_state = np.array(quantum_state)
         if not isinstance(quantum_state, np.ndarray):
             raise TypeError(f"quantum state must be a ndarray, but get {type(quantum_state)}")
         n_qubits = np.log2(quantum_state.shape[0])
@@ -497,4 +499,6 @@ class MQSim(BackendBase):
             raise ValueError("obj_qubits cannot be repeated.")
         if self.n_qubits <= max(obj_qubits):
             raise ValueError(f"object qubits {obj_qubits} is higher than simulator qubits.")
+        if not self.name.startswith('mqmatrix'):
+            raise ValueError(f"{self.name} simulator not support partial trace method.")
         return np.array(self.sim.get_partial_trace(obj_qubits))

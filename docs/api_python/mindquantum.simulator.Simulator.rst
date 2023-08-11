@@ -170,3 +170,13 @@ mindquantum.simulator.Simulator
 
         参数：
             - **number** (int) - 设置模拟器中线程池所使用的线程数。
+
+    .. py:method:: get_partial_trace(obj_qubits)
+
+        获取密度矩阵的偏迹。
+
+        参数：
+            - **obj_qubits** (Union[int, list[int]]) - 对哪些量子比特（子系统）求偏迹。
+
+        返回：
+            numpy.ndarray，密度矩阵的偏迹。
