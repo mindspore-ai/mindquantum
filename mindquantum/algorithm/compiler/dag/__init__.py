@@ -14,13 +14,20 @@
 # ============================================================================
 """Dag circuit."""
 
-from .dag import DAGCircuit, DAGNode, GateNode, QubitNode, connect_two_node, try_merge
+from .dag import (
+    DAGCircuit,
+    DAGNode,
+    DAGQubitNode,
+    GateNode,
+    connect_two_node,
+    try_merge,
+)
 
 __all__ = [
     'DAGCircuit',
     'DAGNode',
     'GateNode',
-    'QubitNode',
+    'DAGQubitNode',
     'connect_two_node',
     'try_merge',
 ]

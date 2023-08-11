@@ -129,9 +129,6 @@ class MeasureAccepter(ChannelAdderBase):
     """
     Select measurement gate.
 
-    Args:
-        add_after (bool): Whether add channel after gate or before gate. Default: ``True``.
-
     Examples:
         >>> from mindquantum.core.circuit import MeasureAccepter, BitFlipAdder, MixerAdder
         >>> from mindquantum.core.circuit import Circuit

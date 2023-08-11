@@ -73,6 +73,6 @@ DAG circuit
     mindquantum.algorithm.compiler.DAGCircuit
     mindquantum.algorithm.compiler.DAGNode
     mindquantum.algorithm.compiler.GateNode
-    mindquantum.algorithm.compiler.QubitNode
+    mindquantum.algorithm.compiler.DAGQubitNode
     mindquantum.algorithm.compiler.connect_two_node
     mindquantum.algorithm.compiler.try_merge
