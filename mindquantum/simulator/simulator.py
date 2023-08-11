@@ -581,13 +581,11 @@ def fidelity(rho: np.ndarray, sigma: np.ndarray):
         sigma = np.array(sigma)
     _check_input_type('rho', np.ndarray, rho)
     _check_input_type('sigma', np.ndarray, sigma)
-    if np.log2(rho.shape[0]) % 1 != 0:
-        raise ValueError(f"quantum state size {rho.shape[0]} is not power of 2")
-    if np.log2(sigma.shape[0]) % 1 != 0:
-        raise ValueError(f"quantum state size {sigma.shape[0]} is not power of 2")
     if rho.shape[0] != sigma.shape[0]:
         raise ValueError(f"the size of two quantum state not match with each other.")
     for qs in (rho, sigma):
+        if np.log2(qs.shape[0]) % 1 != 0:
+            raise ValueError(f"quantum state size {qs.shape[0]} is not power of 2")
         if qs.ndim == 1:
             if not np.allclose(np.sum(np.abs(qs) ** 2), 1):
                 raise ValueError("state vector must be normalized.")
@@ -604,12 +602,11 @@ def fidelity(rho: np.ndarray, sigma: np.ndarray):
             raise ValueError(f"input quantum state requires a vector or matrix, but get shape {rho.shape}.")
     if rho.ndim == 1 and sigma.ndim == 1:
         return np.abs(np.inner(rho, sigma)) ** 2
-    elif rho.ndim == 1 and sigma.ndim == 2:
+    if rho.ndim == 1 and sigma.ndim == 2:
         return np.real(rho.conj().T @ sigma @ rho)
-    elif rho.ndim == 2 and sigma.ndim == 1:
+    if rho.ndim == 2 and sigma.ndim == 1:
         return np.real(sigma.conj().T @ rho @ sigma)
-    else:
-        return np.real(np.trace(rho @ sigma) + 2 * np.sqrt(det(rho) * det(sigma)))
+    return np.real(np.trace(rho @ sigma) + 2 * np.sqrt(det(rho) * det(sigma)))
 
 
 
