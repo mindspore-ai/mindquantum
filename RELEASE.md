@@ -10,10 +10,9 @@
 
 - [STABLE] `Data Precision`: MindQuantum now supports `float32`, `float64`, `complex64` and `complex128` four types of precision, and can set different precision types for operators, parameter resolvers and simulators.
 
-
 #### Gates
 
-- [STABLE] [`Quantum Gates`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.html#quantum-gate): Added multiple two-qubit Pauli rotation gate, including: [`Rxx`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Rxx.html#mindquantum.core.gates.Rxx), [`Rxy`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Rxy.html#mindquantum.core.gates.Rxy), [`Rxz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Rxz.html#mindquantum.core.gates.Rxz), [`Ryy`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Ryy.html#mindquantum.core.gates.Ryy), [`Ryz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Ryz.html#mindquantum.core.gates.Ryz) and [` Rzz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Rzz.html#mindquantum.core.gates.Rzz).
+- [STABLE] [`Quantum Gates`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.html#quantum-gate): Added multiple two-qubit Pauli rotation gate, including: [`Rxx`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Rxx.html#mindquantum.core.gates.Rxx), [`Rxy`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Rxy.html#mindquantum.core.gates.Rxy), [`Rxz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Rxz.html#mindquantum.core.gates.Rxz), [`Ryy`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Ryy.html#mindquantum.core.gates.Ryy), [`Ryz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Ryz.html#mindquantum.core.gates.Ryz) and [`Rzz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Rzz.html#mindquantum.core.gates.Rzz).
 - [STABLE] [`Quantum Channel`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.html#quantum-channel): Noise channels now support returning kraus operators via the `.matrix()` method.
 
 #### Operator
