@@ -26,5 +26,6 @@ Function
     :nosignatures:
     :template: classtemplate.rst
 
+    mindquantum.simulator.fidelity
     mindquantum.simulator.get_supported_simulator
     mindquantum.simulator.inner_product

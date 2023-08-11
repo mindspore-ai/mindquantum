@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Mindquantum simulator."""
-from typing import Dict, List, Union
+from typing import Dict, Iterable, List, Union
 
 import numpy as np
 
@@ -107,7 +107,7 @@ class MQSim(BackendBase):
         _check_input_type("gate", BasicGate, gate)
         if not isinstance(gate, BarrierGate):
             gate_max = max(max(gate.obj_qubits, gate.ctrl_qubits))
-            if self.n_qubits < gate_max:
+            if self.n_qubits <= gate_max:
                 raise ValueError(f"qubits of gate {gate} is higher than simulator qubits.")
             if gate.parameterized:
                 if pr is None:
@@ -452,6 +452,8 @@ class MQSim(BackendBase):
 
     def set_qs(self, quantum_state: np.ndarray):
         """Set quantum state of mqvector simulator."""
+        if isinstance(quantum_state, list):
+            quantum_state = np.array(quantum_state)
         if not isinstance(quantum_state, np.ndarray):
             raise TypeError(f"quantum state must be a ndarray, but get {type(quantum_state)}")
         n_qubits = np.log2(quantum_state.shape[0])
@@ -487,3 +489,16 @@ class MQSim(BackendBase):
             if norm_factor == 0.0:
                 raise ValueError("Wrong quantum state.")
             self.sim.set_qs(quantum_state / norm_factor)
+
+    def get_partial_trace(self, obj_qubits):
+        """Get partial trace of density matrix."""
+        if isinstance(obj_qubits, int):
+            obj_qubits = [obj_qubits]
+        _check_input_type("obj_qubits", (int, Iterable), obj_qubits)
+        if len(set(obj_qubits)) != len(obj_qubits):
+            raise ValueError("obj_qubits cannot be repeated.")
+        if self.n_qubits <= max(obj_qubits):
+            raise ValueError(f"object qubits {obj_qubits} is higher than simulator qubits.")
+        if not self.name.startswith('mqmatrix'):
+            raise ValueError(f"{self.name} simulator not support partial trace method.")
+        return np.array(self.sim.get_partial_trace(obj_qubits))

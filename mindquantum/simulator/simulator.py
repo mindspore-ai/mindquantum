@@ -14,6 +14,7 @@
 # ============================================================================
 """Simulator."""
 import numpy as np
+from scipy.linalg import det
 
 from mindquantum.dtype import to_mq_type
 
@@ -487,6 +488,29 @@ class Simulator:
         """
         return self.backend.set_threads_number(number)
 
+    def get_partial_trace(self, obj_qubits):
+        """
+        Get partial trace of density matrix.
+
+        Args:
+            obj_qubits (Union[int, list[int]]): Specific which qubits (subsystems) to trace over.
+
+        Returns:
+        numpy.ndarray, the partial trace of density matrix.
+
+        Examples:
+            >>> from mindquantum.core.circuit import Circuit
+            >>> from mindquantum.simulator import Simulator
+            >>> circ = Circuit().h(0).x(1, 0)
+            >>> sim = Simulator('mqmatrix', 2)
+            >>> sim.apply_circuit(circ)
+            >>> mat = sim.get_partial_trace(0)
+            >>> mat
+            array([[0.5-0.j, 0. -0.j],
+                   [0. +0.j, 0.5-0.j]])
+        """
+        return self.backend.get_partial_trace(obj_qubits)
+
 
 def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
     """
@@ -528,4 +552,62 @@ def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
     raise NotImplementedError(f"inner_product for backend {bra_simulator.backend} not implement.")
 
 
-__all__ = ['Simulator', 'get_supported_simulator', 'inner_product']
+def fidelity(rho: np.ndarray, sigma: np.ndarray):
+    """
+    Get the fidelity of two quantum states.
+
+    Args:
+        rho (numpy.ndarray): One of the quantum state. Support both state vector and density matrix.
+        sigma (numpy.ndarray): Another quantum state. Support both state vector and density matrix.
+
+    Returns:
+        numbers.Number, the fidelity of two quantum states.
+
+    Examples:
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.simulator import Simulator, fidelity
+        >>> circ = Circuit().h(0).x(1, 0)
+        >>> sim = Simulator('mqmatrix', 2)
+        >>> sim.apply_circuit(circ)
+        >>> rho = sim.get_qs()
+        >>> sim.reset()
+        >>> sigma = sim.get_qs()
+        >>> fidelity(rho, sigma)
+        0.5000000000000001
+    """
+    if isinstance(rho, list):
+        rho = np.array(rho)
+    if isinstance(sigma, list):
+        sigma = np.array(sigma)
+    _check_input_type('rho', np.ndarray, rho)
+    _check_input_type('sigma', np.ndarray, sigma)
+    if rho.shape[0] != sigma.shape[0]:
+        raise ValueError(f"the size of two quantum state not match with each other.")
+    for qs in (rho, sigma):
+        if np.log2(qs.shape[0]) % 1 != 0:
+            raise ValueError(f"quantum state size {qs.shape[0]} is not power of 2")
+        if qs.ndim == 1:
+            if not np.allclose(np.sum(np.abs(qs) ** 2), 1):
+                raise ValueError("state vector must be normalized.")
+        elif qs.ndim == 2:
+            if qs.shape[0] != qs.shape[1]:
+                raise ValueError(f"the row of matrix is not equal to column.")
+            if not np.allclose(qs, qs.T.conj()):
+                raise ValueError("density matrix must be hermitian.")
+            if (qs.diagonal() < 0).any():
+                raise ValueError("the diagonal terms in density matrix cannot be negative.")
+            if not np.allclose(np.real(np.trace(qs)), 1):
+                raise ValueError("the trace of density matrix must equal to 1.")
+        else:
+            raise ValueError(f"input quantum state requires a vector or matrix, but get shape {rho.shape}.")
+    if rho.ndim == 1 and sigma.ndim == 1:
+        return np.abs(np.inner(rho, sigma)) ** 2
+    if rho.ndim == 1 and sigma.ndim == 2:
+        return np.real(rho.conj().T @ sigma @ rho)
+    if rho.ndim == 2 and sigma.ndim == 1:
+        return np.real(sigma.conj().T @ rho @ sigma)
+    return np.real(np.trace(rho @ sigma) + 2 * np.sqrt(det(rho) * det(sigma)))
+
+
+
+__all__ = ['Simulator', 'get_supported_simulator', 'inner_product', 'fidelity']
