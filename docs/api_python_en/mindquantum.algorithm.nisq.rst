@@ -37,6 +37,12 @@ Ansatz
     mindquantum.algorithm.nisq.QubitUCCAnsatz
     mindquantum.algorithm.nisq.StronglyEntangling
     mindquantum.algorithm.nisq.UCCAnsatz
+
+The following Ansatz come from paper `Expressibility and entangling capability of parameterized quantum circuits for hybrid quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
+
+.. toctree::
+    :hidden:
+
     mindquantum.algorithm.nisq.Ansatz1
     mindquantum.algorithm.nisq.Ansatz2
     mindquantum.algorithm.nisq.Ansatz3
@@ -56,6 +62,70 @@ Ansatz
     mindquantum.algorithm.nisq.Ansatz17
     mindquantum.algorithm.nisq.Ansatz18
     mindquantum.algorithm.nisq.Ansatz19
+
+.. list-table::
+    :widths: 20 80
+    :header-rows: 1
+
+    * - Class
+      - Images
+    * - :class:`mindquantum.algorithm.nisq.Ansatz1`
+      - .. image:: ./ansatz_images/ansatz1.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz2`
+      - .. image:: ./ansatz_images/ansatz2.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz3`
+      - .. image:: ./ansatz_images/ansatz3.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz4`
+      - .. image:: ./ansatz_images/ansatz4.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz5`
+      - .. image:: ./ansatz_images/ansatz5.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz6`
+      - .. image:: ./ansatz_images/ansatz6.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz7`
+      - .. image:: ./ansatz_images/ansatz7.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz8`
+      - .. image:: ./ansatz_images/ansatz8.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz9`
+      - .. image:: ./ansatz_images/ansatz9.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz10`
+      - .. image:: ./ansatz_images/ansatz10.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz11`
+      - .. image:: ./ansatz_images/ansatz11.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz12`
+      - .. image:: ./ansatz_images/ansatz12.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz13`
+      - .. image:: ./ansatz_images/ansatz13.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz14`
+      - .. image:: ./ansatz_images/ansatz14.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz15`
+      - .. image:: ./ansatz_images/ansatz15.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz16`
+      - .. image:: ./ansatz_images/ansatz16.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz17`
+      - .. image:: ./ansatz_images/ansatz17.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz18`
+      - .. image:: ./ansatz_images/ansatz18.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.Ansatz19`
+      - .. image:: ./ansatz_images/ansatz19.png
+            :height: 180px
 
 Generator
 -----------
