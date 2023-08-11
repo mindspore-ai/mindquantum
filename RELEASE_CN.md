@@ -22,7 +22,7 @@
 
 #### Ansatz
 
-- [STABLE] [`Ansatz`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.html#ansatz): 新增 Arixv:[`1905.10876`](https://arxiv.org/abs/1905.10876) 中提到的19个 ansatz，先均已实现。
+- [STABLE] [`Ansatz`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.html#ansatz): 新增 Arxiv:[`1905.10876`](https://arxiv.org/abs/1905.10876) 中提到的19个 ansatz，现均已实现。
 
 #### Circuit
 
@@ -32,7 +32,7 @@
 
 - [STABLE] [`密度矩阵模拟器`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator): 新增密度矩阵模拟器，模拟器名称为 `mqmatrix`。支持变分量子算法、噪声模拟等，与现有 `mqvector` 全振幅模拟器功能基本对齐。
 - [BETA] [`parameter shift`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_expectation_with_grad): 量子模拟器梯度算子现支持 parameter shift 算法，更贴近于实验。
-- [STABLE] [`期望计算`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_expectation): 接口与 [`get_expectation_with_grad`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_expectation_with_grad)基本对齐，但是不会计算期望值，节省时间。
+- [STABLE] [`期望计算`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_expectation): 接口与 [`get_expectation_with_grad`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_expectation_with_grad)基本对齐，但是不会计算梯度，节省时间。
 
 #### Device
 
@@ -42,7 +42,7 @@
 #### Algorithm
 
 - [STABLE] [`比特映射`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.mapping.SABRE.html#mindquantum.algorithm.mapping.SABRE): 新增比特映射算法 [`SABRE`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.mapping.SABRE.html#mindquantum.algorithm.mapping.SABRE)，论文请参考 Arxiv [`1809.02573`](https://arxiv.org/abs/1809.02573)。
-- [BETA] [`误差缓解`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.error_mitigation.zne.html#mindquantum.algorithm.error_mitigation.zne): 新增零噪声外推算法算法来进行量子误差缓解。
+- [BETA] [`误差缓解`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.error_mitigation.zne.html#mindquantum.algorithm.error_mitigation.zne): 新增零噪声外推算法来进行量子误差缓解。
 - [STABLE] [`线路折叠`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.error_mitigation.fold_at_random.html#mindquantum.algorithm.error_mitigation.fold_at_random): 新增量子线路折叠功能，支持保证量子线路等价性的同时增长量子线路。
 - [BETA] [`量子线路编译`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.compiler.html#module-mindquantum.algorithm.compiler): 新增量子线路编译模块，利用 [`DAG`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.compiler.DAGCircuit.html#mindquantum.algorithm.compiler.DAGCircuit) 图对量子线路进行编译，支持门替换、门融合和门分解等量子编译算法。
 - [STABLE] [`ansatz_variance`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.ansatz_variance.html#mindquantum.algorithm.nisq.ansatz_variance): 新增接口计算变分量子线路中的某个参数的梯度的方差，可用于验证变分量子线路的[`贫瘠高原`](https://www.nature.com/articles/s41467-018-07090-4)现象。
