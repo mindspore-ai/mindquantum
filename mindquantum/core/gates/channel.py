@@ -324,8 +324,14 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
     where :math:`N` is the number of object qubits;
     :math:`U_j \in \left\{ I, X, Y, Z \right\} ^{\otimes N}` is many qubit pauli operator.
 
+    * For :math:`0 \le P \le 1` case, this channel is a depolarizing channel, and it becomes a completely
+      depolarizing channel when :math:`P = 1`.
+    * However, :math:` 1 < P \le 4^N / (4^N - 1)` is also an available case, but not a depolarizing channel
+      any more. When :math:`P = 4^N / (4^N - 1)` it becomes a uniform Pauli error channel:
+      :math:`E(\rho) = \sum_j V_j \rho V_j / (4^n - 1)`, where :math:`V_j = U_j \setminus I^{\otimes N}`.
+
     Args:
-        p (int, float): probability of occurred error.
+        p (int, float): probability of occurred depolarizing error.
 
     Examples:
         >>> from mindquantum.core.gates import DepolarizingChannel
@@ -349,11 +355,11 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
         SelfHermitianGate.__init__(self, **kwargs)
         self.projectq_gate = None
         if not isinstance(p, (int, float)):
-            raise TypeError(f"Unsupported type for probability p, get {type(p)}.")
-        if 0 <= p <= 1:
+            raise TypeError(f"Unsupported type for argument p, get {type(p)}.")
+        if 0 <= p <= 4 / 3:
             self.p = p
         else:
-            raise ValueError(f"Required probability p ∈ [0,1], but get p = {p}.")
+            raise ValueError(f"Required argument p ∈ [0, 4/3], but get p = {p}.")
 
     def on(self, obj_qubits, ctrl_qubits=None):
         """

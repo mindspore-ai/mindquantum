@@ -21,8 +21,12 @@ mindquantum.core.gates.DepolarizingChannel
 
     其中，:math:`N` 是目标比特数； :math:`U_j \in \left\{ I, X, Y, Z \right\} ^{\otimes N}` 多比特泡利算符。
 
+    * 当 :math:`0 \le P \le 1` 时, 该信道是去极化信道, 并且当 :math:`P = 1` 时是完全去极化信道。
+    * 然而，:math:`1 < P \le 4^N / (4^N - 1)`同样是合法的情况, 但此时不再是去极化信道。当:math:`P = 4^N / (4^N - 1)`
+      时它变为均匀泡利信道：:math:`E(\rho) = \sum_j V_j \rho V_j / (4^n - 1)`，其中:math:`V_j = U_j \setminus I^{\otimes N}`。
+
     参数：
-        - **p** (int, float) - 发生错误的概率。
+        - **p** (int, float) - 发生去极化错误的概率。
 
     .. py:method:: define_projectq_gate()
 
