@@ -44,6 +44,8 @@ TDtype ToRealType(TDtype dtype) {
             return to_real_dtype_t<TDtype::Complex64>;
         case TDtype::Complex128:
             return to_real_dtype_t<TDtype::Complex128>;
+        default:
+            throw std::runtime_error("Unknown dtype.");
     }
     return TDtype::Float64;
 }
@@ -57,6 +59,8 @@ TDtype ToComplexType(TDtype dtype) {
             return TDtype::Complex64;
         case TDtype::Float64:
             return TDtype::Complex128;
+        default:
+            throw std::runtime_error("Unknown dtype.");
     }
     return TDtype::Complex128;
 }
@@ -116,6 +120,8 @@ int bit_size(TDtype dtype) {
         case (TDtype::Complex128): {
             return sizeof(to_device_t<TDtype::Complex128>);
         }
+        default:
+            throw std::runtime_error("Unknown dtype.");
     }
     return 0;
 }
@@ -132,6 +138,8 @@ int bit_size(TDtype dtype) {
                 return upper_type<TDtype::Complex128, dtype>::get();                                                   \
             case TDtype::Complex64:                                                                                    \
                 return upper_type<TDtype::Complex64, dtype>::get();                                                    \
+            default:                                                                                                   \
+                throw std::runtime_error("Unknown dtype.");                                                            \
         }                                                                                                              \
         break;                                                                                                         \
     }
@@ -142,6 +150,8 @@ TDtype upper_type_v(TDtype t1, TDtype t2) {
         UPPER_TYPE(TDtype::Float64);
         UPPER_TYPE(TDtype::Complex128);
         UPPER_TYPE(TDtype::Complex64);
+        default:
+            throw std::runtime_error("Unknown dtype.");
     }
     return TDtype::Complex128;
 }

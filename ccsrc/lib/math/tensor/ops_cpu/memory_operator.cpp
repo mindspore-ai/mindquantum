@@ -54,6 +54,8 @@ Tensor init(size_t len, TDtype dtype) {
                 return cast_to<src_t, TDtype::Complex64>(data, len);                                                   \
             case (TDtype::Complex128):                                                                                 \
                 return cast_to<src_t, TDtype::Complex128>(data, len);                                                  \
+            default:                                                                                                   \
+                throw std::runtime_error("Unknown dtype");                                                             \
         }                                                                                                              \
         break;                                                                                                         \
     }
@@ -66,6 +68,8 @@ Tensor cast_to(const Tensor& t, TDtype des) {
         TENSOR_CAST_TO_BRANCH(TDtype::Float64)
         TENSOR_CAST_TO_BRANCH(TDtype::Complex64)
         TENSOR_CAST_TO_BRANCH(TDtype::Complex128)
+        default:
+            throw std::runtime_error("Unknown dtype");
     }
     return Tensor();
 }
@@ -107,6 +111,8 @@ Tensor copy(const Tensor& t) {
             return cpu::copy<TDtype::Complex64>(t.data, t.dim);
         case TDtype::Complex128:
             return cpu::copy<TDtype::Complex128>(t.data, t.dim);
+        default:
+            throw std::runtime_error("Unknown dtype");
     }
     return Tensor();
 }
@@ -121,6 +127,8 @@ void* copy_mem(const void* data, TDtype dtype, size_t len) {
             return copy_mem<TDtype::Complex64>(data, len);
         case (TDtype::Complex128):
             return copy_mem<TDtype::Complex128>(data, len);
+        default:
+            throw std::runtime_error("Unknown dtype");
     }
     return nullptr;
 }
@@ -141,6 +149,8 @@ void* copy_mem(const void* data, TDtype dtype, size_t len) {
             case (TDtype::Complex128):                                                                                 \
                 set<to_device_t<src_dtype>, to_device_t<TDtype::Complex128>>(t->data, source.data, t->dim, idx);       \
                 break;                                                                                                 \
+            default:                                                                                                   \
+                throw std::runtime_error("Unknown dtype");                                                             \
         }                                                                                                              \
         break;                                                                                                         \
     }
@@ -153,6 +163,8 @@ void set(Tensor* t, const Tensor& source, size_t idx) {
         SET_TENSOR_BY_TENSOR(TDtype::Float64)
         SET_TENSOR_BY_TENSOR(TDtype::Complex64)
         SET_TENSOR_BY_TENSOR(TDtype::Complex128)
+        default:
+            throw std::runtime_error("Unknown dtype");
     }
 }
 #undef SET_TENSOR_BY_TENSOR

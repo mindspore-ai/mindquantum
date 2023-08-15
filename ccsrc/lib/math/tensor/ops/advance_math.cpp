@@ -29,6 +29,7 @@ Tensor sin(const Tensor& t) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::ElementFunc(t, t.dtype, [](auto i) { return std::sin(i); });
     } else {
+        throw std::runtime_error("No support GPU now.");
     }
     return Tensor();
 }
@@ -37,6 +38,7 @@ Tensor cos(const Tensor& t) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::ElementFunc(t, t.dtype, [](auto i) { return std::cos(i); });
     } else {
+        throw std::runtime_error("No support GPU now.");
     }
     return Tensor();
 }
@@ -45,6 +47,7 @@ Tensor exp(const Tensor& t) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::ElementFunc(t, t.dtype, [](auto i) { return std::exp(i); });
     } else {
+        throw std::runtime_error("No support GPU now.");
     }
     return Tensor();
 }
@@ -60,6 +63,7 @@ Tensor gather(const std::vector<Tensor>& tensors) {
     if (device == TDevice::CPU) {
         return ops::cpu::Gather(tensors);
     } else {
+        throw std::runtime_error("No support GPU now.");
     }
     return Tensor();
 }
@@ -68,6 +72,7 @@ Tensor real(const Tensor& t) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::real(t);
     } else {
+        throw std::runtime_error("No support GPU now.");
     }
     return Tensor();
 }
@@ -76,6 +81,7 @@ Tensor imag(const Tensor& t) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::imag(t);
     } else {
+        throw std::runtime_error("No support GPU now.");
     }
     return Tensor();
 }
@@ -83,6 +89,7 @@ Tensor conj(const Tensor& t) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::conj(t);
     } else {
+        throw std::runtime_error("No support GPU now.");
     }
     return Tensor();
 }
@@ -93,6 +100,7 @@ Tensor vdot(const Tensor& bra, const Tensor& ket) {
     if (bra.device == TDevice::CPU) {
         return ops::cpu::vdot(bra, ket);
     } else {
+        throw std::runtime_error("No support GPU now.");
     }
     return Tensor();
 }
@@ -100,6 +108,7 @@ bool is_all_zero(const Tensor& t) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::is_all_zero(t);
     } else {
+        throw std::runtime_error("No support GPU now.");
     }
     return false;
 }
@@ -110,6 +119,7 @@ std::vector<bool> is_equal_to(const Tensor& lhs, const Tensor& rhs) {
     if (lhs.device == TDevice::CPU) {
         return ops::cpu::is_equal_to(lhs, rhs);
     } else {
+        throw std::runtime_error("No support GPU now.");
     }
     return std::vector<bool>(lhs.dim, false);
 }
