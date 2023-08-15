@@ -490,13 +490,13 @@ class Simulator:
 
     def get_partial_trace(self, obj_qubits):
         """
-        Get partial trace of density matrix.
+        Calculate the partial trace of density matrix.
 
         Args:
             obj_qubits (Union[int, list[int]]): Specific which qubits (subsystems) to trace over.
 
         Returns:
-        numpy.ndarray, the partial trace of density matrix.
+            numpy.ndarray, the partial trace of density matrix.
 
         Examples:
             >>> from mindquantum.core.circuit import Circuit
@@ -510,6 +510,29 @@ class Simulator:
                    [0. +0.j, 0.5-0.j]])
         """
         return self.backend.get_partial_trace(obj_qubits)
+
+    def entropy(self):
+        """
+        Calculate the von Neumann entropy of quantum state.
+
+        Definition of von Neumann entropy :math:`S` shown as below.
+
+        .. math::
+            S(\rho) = -\text{tr}(\rho \ln \rho)
+
+        where :math:`\rho` is density matrix.
+
+        Returns:
+            numbers.Number, the von Neumann entropy of quantum state.
+
+        Examples:
+            >>> from mindquantum.simulator import Simulator
+            >>> sim = Simulator('mqmatrix', 1)
+            >>> sim.set_qs([[0.5, 0], [0, 0.5]])
+            >>> sim.entropy()
+            0.6931471805599453
+        """
+        return self.backend.entropy()
 
 
 def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
@@ -554,7 +577,22 @@ def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
 
 def fidelity(rho: np.ndarray, sigma: np.ndarray):
     """
-    Get the fidelity of two quantum states.
+    Calculate the fidelity of two quantum states.
+
+    Definition of quantum state fidelity shown as below.
+
+    .. math::
+        F(\rho, \sigma) = \left( \text{tr} \sqrt{\sqrt{\rho} \sigma \sqrt{\rho}} \right)^2
+
+    where :math:`\rho` and :math:`\sigma` are density matrices.
+
+    If both :math:`\rho` and :math:`\sigma` are pure, :math:`\rho=\left|\psi_\rho\right>\!\left<\psi_\rho\right|`
+    and :math:`\sigma=\left|\psi_\sigma\right>\!\left<\psi_\sigma\right|`, then
+
+    .. math::
+        F(\rho, \sigma) = \left| \left< \psi_\rho \middle| \psi_\sigma \right> \right|^2
+
+    Besides, mixing state vector with density matrix as input is also supported.
 
     Args:
         rho (numpy.ndarray): One of the quantum state. Support both state vector and density matrix.

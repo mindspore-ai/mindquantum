@@ -16,6 +16,7 @@
 from typing import Dict, Iterable, List, Union
 
 import numpy as np
+from scipy.linalg import eigvals
 
 import mindquantum as mq
 from mindquantum.core.circuit import Circuit
@@ -451,7 +452,7 @@ class MQSim(BackendBase):
         return res
 
     def set_qs(self, quantum_state: np.ndarray):
-        """Set quantum state of mqvector simulator."""
+        """Set quantum state of simulator."""
         if isinstance(quantum_state, list):
             quantum_state = np.array(quantum_state)
         if not isinstance(quantum_state, np.ndarray):
@@ -502,3 +503,16 @@ class MQSim(BackendBase):
         if not self.name.startswith('mqmatrix'):
             raise ValueError(f"{self.name} simulator not support partial trace method.")
         return np.array(self.sim.get_partial_trace(obj_qubits))
+
+    def entropy(self):
+        """Get the von-Neumann entropy of quantum state."""
+        if self.name.startswith('mqvector'):
+            return 0
+        if not self.name.startswith('mqmatrix'):
+            raise ValueError(f"{self.name} simulator not support entropy method.")
+        eigens = np.real(eigvals(self.get_qs()))
+        res = 0
+        for i in eigens:
+            if i > 0:
+                res += -i * np.log(i)
+        return res

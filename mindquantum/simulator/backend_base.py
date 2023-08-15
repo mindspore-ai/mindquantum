@@ -126,3 +126,7 @@ class BackendBase:
     def get_partial_trace(self, obj_qubits):
         """Get partial trace of density matrix."""
         raise NotImplementedError(f"get_partial_trace not implemented for {self.device_name()}")
+
+    def entropy(self):
+        """Get the von-Neumann entropy of quantum state."""
+        raise NotImplementedError(f"entropy not implemented for {self.device_name()}")

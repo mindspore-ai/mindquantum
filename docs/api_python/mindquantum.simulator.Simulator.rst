@@ -173,10 +173,24 @@ mindquantum.simulator.Simulator
 
     .. py:method:: get_partial_trace(obj_qubits)
 
-        获取密度矩阵的偏迹。
+        计算密度矩阵的偏迹。
 
         参数：
             - **obj_qubits** (Union[int, list[int]]) - 对哪些量子比特（子系统）求偏迹。
 
         返回：
             numpy.ndarray，密度矩阵的偏迹。
+
+    .. py:method:: entropy()
+
+        计算量子态的冯诺伊曼熵。
+
+        冯诺伊曼熵 :math:`S` 的定义如下。
+
+        .. math::
+            S(\rho) = -\text{tr}(\rho \ln \rho)
+
+        其中 :math:`\rho` 是密度矩阵。
+
+        返回：
+            numbers.Number，量子态的冯诺伊曼熵。
