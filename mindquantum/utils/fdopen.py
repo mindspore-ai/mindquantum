@@ -18,7 +18,7 @@ import os
 
 
 @contextlib.contextmanager
-def fdopen(fname, mode, perms=0o644, encoding=None):  # pragma: no cover
+def fdopen(fname, mode, perms=0o600, encoding=None):  # pragma: no cover
     """
     Context manager for opening files with correct permissions.
 

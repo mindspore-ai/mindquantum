@@ -14,6 +14,7 @@
 # ============================================================================
 """Qubit node an topology of quantum chip."""
 
+import copy
 import numbers
 import typing
 
@@ -568,6 +569,29 @@ class QubitsTopology:
         for node in near_qubits:
             _ = node > will_remove
         self.qubits.pop(qubit_id)
+
+    def select(self, ids: typing.List[int]) -> "QubitsTopology":
+        """
+        Select certain qubit nodes to generate a new topology.
+
+        Args:
+            ids (List[int]): A list of qubit node id.
+
+        Returns:
+            :class:`~.device.QubitsTopology`, a new topology while keeping the connection property.
+
+        Examples:
+            >>> from mindquantum.device import LinearQubits
+            >>> t1 = LinearQubits(4)
+            >>> t2 = t1.select([0, 1, 2])
+            >>> t2.edges_with_id()
+            {(0, 1), (1, 2)}
+        """
+        ids_set = set(ids)
+        nodes = copy.deepcopy(self.choose(ids))
+        for node in nodes:
+            node.neighbor &= ids_set
+        return QubitsTopology(nodes)
 
     def set_color(self, qubit_id: int, color: str) -> None:
         """
