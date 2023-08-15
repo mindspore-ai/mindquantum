@@ -36,6 +36,8 @@ Tensor real(const Tensor& t) {
             return cpu::real<TDtype::Complex128>(t.data, t.dim);
         case TDtype::Complex64:
             return cpu::real<TDtype::Complex64>(t.data, t.dim);
+        default:
+            throw std::runtime_error("Unknown dtype");
     }
     return Tensor();
 }
@@ -49,6 +51,8 @@ Tensor imag(const Tensor& t) {
             return cpu::imag<TDtype::Complex128>(t.data, t.dim);
         case TDtype::Complex64:
             return cpu::imag<TDtype::Complex64>(t.data, t.dim);
+        default:
+            throw std::runtime_error("Unknown dtype");
     }
     return Tensor();
 }
@@ -65,6 +69,8 @@ Tensor conj(const Tensor& t) {
             return ops::cpu::conj<TDtype::Complex64>(t.data, t.dim);
         case TDtype::Complex128:
             return ops::cpu::conj<TDtype::Complex128>(t.data, t.dim);
+        default:
+            throw std::runtime_error("Unknown dtype");
     }
     return Tensor();
 }
@@ -86,6 +92,8 @@ Tensor conj(const Tensor& t) {
             case TDtype::Complex128: {                                                                                 \
                 return ops::cpu::vdot<bra_t, TDtype::Complex128>(bra.data, bra.dim, ket.data);                         \
             }                                                                                                          \
+            default:                                                                                                   \
+                throw std::runtime_error("Unknown dtype");                                                             \
         }                                                                                                              \
         break;                                                                                                         \
     }
@@ -100,6 +108,8 @@ Tensor vdot(const Tensor& bra, const Tensor& ket) {
         VDOT_TENSOR(TDtype::Float64)
         VDOT_TENSOR(TDtype::Complex64)
         VDOT_TENSOR(TDtype::Complex128)
+        default:
+            throw std::runtime_error("Unknown dtype");
     }
     return Tensor();
 }
@@ -117,6 +127,8 @@ bool is_all_zero(const Tensor& t) {
             return is_all_zero<TDtype::Complex64>(t.data, t.dim);
         case (TDtype::Complex128):
             return is_all_zero<TDtype::Complex128>(t.data, t.dim);
+        default:
+            throw std::runtime_error("Unknown dtype");
     }
     return false;
 }
@@ -133,6 +145,8 @@ bool is_all_zero(const Tensor& t) {
                 return is_equal_to<lhs_dtype, TDtype::Complex64>(lhs.data, lhs.dim, rhs.data, rhs.dim);                \
             case (TDtype::Complex128):                                                                                 \
                 return is_equal_to<lhs_dtype, TDtype::Complex128>(lhs.data, lhs.dim, rhs.data, rhs.dim);               \
+            default:                                                                                                   \
+                throw std::runtime_error("Unknown dtype");                                                             \
         }                                                                                                              \
         break;                                                                                                         \
     }
@@ -143,6 +157,8 @@ std::vector<bool> is_equal_to(const Tensor& lhs, const Tensor& rhs) {
         IS_EQUAL_TO_TENSOR(TDtype::Float64)
         IS_EQUAL_TO_TENSOR(TDtype::Complex64)
         IS_EQUAL_TO_TENSOR(TDtype::Complex128)
+        default:
+            throw std::runtime_error("Unknown dtype");
     }
     return std::vector<bool>(lhs.dim, false);
 }

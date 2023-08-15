@@ -53,6 +53,8 @@ std::string to_string(const TermValue& term) {
             return "adg a";
         case TermValue::nll:
             return "nll";
+        default:
+            throw std::runtime_error("Unknown term");
     }
     return "";
 }
