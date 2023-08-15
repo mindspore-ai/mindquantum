@@ -1102,14 +1102,16 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             self.append(mq_gates.Measure(key).on(obj_qubit))
         return self
 
-    def measure_all(self, suffix=None):
+    def measure_all(self, suffix=None, up_to: int = -1):
         """
         Measure all qubits.
 
         Args:
             suffix (str): The suffix string you want to add to the name of measure gate.
+            up_to (int): The maximum qubit you want to measure. If this value is less than the qubit number of
+                this quantum circuit, the circuit qubit number will be used. Default: ``-1``.
         """
-        for i in range(self.n_qubits):
+        for i in range(max(self.n_qubits, up_to)):
             string = f"q{i}" if suffix is None else f"q{i}_{suffix}"
             self += mq_gates.Measure(string).on(i)
         return self

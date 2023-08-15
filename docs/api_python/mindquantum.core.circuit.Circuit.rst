@@ -158,12 +158,13 @@ mindquantum.core.circuit.Circuit
             - **key** (Union[int, str]) - 如果 `obj_qubit` 为 ``None`` ，则 `key` 应为int，表示要测量哪个量子比特，否则， `key` 应为str，表示测量门的名称。
             - **obj_qubit** (int) - 要测量的量子比特。默认值： ``None``。
 
-    .. py:method:: measure_all(suffix=None)
+    .. py:method:: measure_all(suffix=None, up_to: int = -1)
 
         测量所有量子比特。
 
         参数：
             - **suffix** (str) - 添加到测量门名称中的后缀字符串。
+            - **up_to** (int) - 想要测得的最大比特。如果该值小于量子线路的比特数，量子线路的比特数将会被使用。默认值：``-1``。
 
     .. py:method:: n_qubits
         :property:

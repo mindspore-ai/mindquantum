@@ -94,6 +94,16 @@ mindquantum.device.QubitsTopology
         参数：
             - **qubit_id** (int) - 想要移除的那个比特。
 
+    .. py:method:: select(ids: typing.List[int]) -> "QubitsTopology":
+
+        选择一些比特节点并生成新的拓扑图。
+
+        参数：
+            - **ids** (List[int]) - 比特节点id的列表。
+
+        返回：
+            :class:`~.device.QubitsTopology`，保持连接信息的新的拓扑图。
+
     .. py:method:: set_color(qubit_id: int, color: str) -> None:
 
         设置给定比特的颜色。
