@@ -141,7 +141,8 @@ void BindTypeDependentGate(py::module &module) {  // NOLINT(runtime/references)
     py::class_<mindquantum::RyzGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::RyzGate>>(module, "RyzGate")
         .def(py::init<const ParameterResolver &, const qbits_t &, const qbits_t &>(), "pr"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
-    py::class_<mindquantum::SWAPalphaGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::SWAPalphaGate>>(module, "SWAPalphaGate")
+    py::class_<mindquantum::SWAPalphaGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::SWAPalphaGate>>(
+        module, "SWAPalphaGate")
         .def(py::init<const ParameterResolver &, const qbits_t &, const qbits_t &>(), "pr"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::GPGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::GPGate>>(module, "GPGate")

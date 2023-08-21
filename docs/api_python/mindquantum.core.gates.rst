@@ -46,6 +46,7 @@ mindquantum.core.gates
     mindquantum.core.gates.RZ
     mindquantum.core.gates.Rzz
     mindquantum.core.gates.SGate
+    mindquantum.core.gates.SWAPalpha
     mindquantum.core.gates.SWAPGate
     mindquantum.core.gates.TGate
     mindquantum.core.gates.U3

@@ -512,12 +512,13 @@ class Simulator:
         return self.backend.get_partial_trace(obj_qubits)
 
     def entropy(self):
-        """
+        r"""
         Calculate the von Neumann entropy of quantum state.
 
         Definition of von Neumann entropy :math:`S` shown as below.
 
         .. math::
+
             S(\rho) = -\text{tr}(\rho \ln \rho)
 
         where :math:`\rho` is density matrix.
@@ -576,12 +577,13 @@ def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
 
 
 def fidelity(rho: np.ndarray, sigma: np.ndarray):
-    """
+    r"""
     Calculate the fidelity of two quantum states.
 
     Definition of quantum state fidelity shown as below.
 
     .. math::
+
         F(\rho, \sigma) = \left( \text{tr} \sqrt{\sqrt{\rho} \sigma \sqrt{\rho}} \right)^2
 
     where :math:`\rho` and :math:`\sigma` are density matrices.
@@ -590,6 +592,7 @@ def fidelity(rho: np.ndarray, sigma: np.ndarray):
     and :math:`\sigma=\left|\psi_\sigma\right>\!\left<\psi_\sigma\right|`, then
 
     .. math::
+
         F(\rho, \sigma) = \left| \left< \psi_\rho \middle| \psi_\sigma \right> \right|^2
 
     Besides, mixing state vector with density matrix as input is also supported.
@@ -645,7 +648,6 @@ def fidelity(rho: np.ndarray, sigma: np.ndarray):
     if rho.ndim == 2 and sigma.ndim == 1:
         return np.real(sigma.conj().T @ rho @ sigma)
     return np.real(np.trace(rho @ sigma) + 2 * np.sqrt(det(rho) * det(sigma)))
-
 
 
 __all__ = ['Simulator', 'get_supported_simulator', 'inner_product', 'fidelity']
