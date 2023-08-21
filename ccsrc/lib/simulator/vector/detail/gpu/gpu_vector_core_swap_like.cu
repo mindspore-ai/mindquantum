@@ -104,6 +104,93 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyISWAP(qs_data_p_t* qs_p, co
     }
 }
 
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplySWAPalpha(qs_data_p_t* qs_p, const qbits_t& objs,
+                                                               const qbits_t& ctrls, calc_type val, index_t dim,
+                                                               bool diff) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    DoubleQubitGateMask mask(objs, ctrls);
+    thrust::counting_iterator<index_t> l(0);
+    auto obj_high_mask = mask.obj_high_mask;
+    auto obj_rev_high_mask = mask.obj_rev_high_mask;
+    auto obj_low_mask = mask.obj_low_mask;
+    auto obj_rev_low_mask = mask.obj_rev_low_mask;
+    auto obj_min_mask = mask.obj_min_mask;
+    auto obj_max_mask = mask.obj_max_mask;
+    auto ctrl_mask = mask.ctrl_mask;
+    auto obj_mask = mask.obj_mask;
+    auto e = std::exp(IMAGE_I * static_cast<calc_type_>(M_PI) * val);
+    auto a = (static_cast<calc_type_>(1) + e) / static_cast<calc_type_>(2);
+    auto b = (static_cast<calc_type_>(1) - e) / static_cast<calc_type_>(2);
+    if (diff) {
+        if (!mask.ctrl_mask) {
+            thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
+                index_t i;
+                SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
+                auto j = i + obj_min_mask;
+                auto k = i + obj_max_mask;
+                auto m = i + obj_mask;
+                auto tmp_j = qs[j];
+                auto tmp_k = qs[k];
+                qs[j] = a * tmp_j + b * tmp_k;
+                qs[k] = b * tmp_j + a * tmp_k;
+            });
+        } else {
+            thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
+                index_t i;
+                SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
+                if ((i & ctrl_mask) == ctrl_mask) {
+                    auto j = i + obj_min_mask;
+                    auto k = i + obj_max_mask;
+                    auto m = i + obj_mask;
+                    auto tmp_j = qs[j];
+                    auto tmp_k = qs[k];
+                    qs[j] = a * tmp_j + b * tmp_k;
+                    qs[k] = b * tmp_j + a * tmp_k;
+                }
+            });
+        }
+    } else {
+        a = IMAGE_I * static_cast<calc_type_>(M_PI_2) * e;
+        b = IMAGE_MI * static_cast<calc_type_>(M_PI_2) * e;
+        if (!mask.ctrl_mask) {
+            thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
+                index_t i;
+                SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
+                auto j = i + obj_min_mask;
+                auto k = i + obj_max_mask;
+                auto m = i + obj_mask;
+                auto tmp_j = qs[j];
+                auto tmp_k = qs[k];
+                qs[i] = 0;
+                qs[m] = 0;
+                qs[j] = a * tmp_j + b * tmp_k;
+                qs[k] = b * tmp_j + a * tmp_k;
+            });
+        } else {
+            thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
+                index_t i;
+                SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
+                if ((i & ctrl_mask) == ctrl_mask) {
+                    auto j = i + obj_min_mask;
+                    auto k = i + obj_max_mask;
+                    auto m = i + obj_mask;
+                    auto tmp_j = qs[j];
+                    auto tmp_k = qs[k];
+                    qs[i] = 0;
+                    qs[m] = 0;
+                    qs[j] = a * tmp_j + b * tmp_k;
+                    qs[k] = b * tmp_j + a * tmp_k;
+                }
+            });
+            derived::SetToZeroExcept(&qs, ctrl_mask, dim);
+        }
+    }
+}
+
 template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
 template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;
 

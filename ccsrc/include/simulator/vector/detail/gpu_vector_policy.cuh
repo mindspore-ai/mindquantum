@@ -130,6 +130,8 @@ struct GPUVectorPolicyBase {
 
     static void ApplySWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyISWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, bool daggered, index_t dim);
+    static void ApplySWAPalpha(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+                               bool diff = false);
     static void ApplyRxx(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
     static void ApplyRyy(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
@@ -172,6 +174,8 @@ struct GPUVectorPolicyBase {
                                    const qbits_t& ctrls, calc_type val, index_t dim);
     static qs_data_t ExpectDiffRyz(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
                                    const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffSWAPalpha(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                         const qbits_t& ctrls, calc_type val, index_t dim);
     static qs_data_t ExpectDiffPS(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
                                   const qbits_t& ctrls, calc_type val, index_t dim);
     static qs_data_t ExpectDiffGP(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
