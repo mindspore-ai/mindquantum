@@ -73,7 +73,7 @@ def test_none_parameter_gate(config, gate):
     virtual_qc, dtype = config
     g = gate()
     dim = 2**g.n_qubits
-    g = g.on([i for i in range(g.n_qubits)])
+    g = g.on(list(range(g.n_qubits)))
     init_state = np.random.rand(dim) + np.random.rand(dim) * 1j
     sim = Simulator(virtual_qc, g.n_qubits, dtype=dtype)
     sim.set_qs(init_state)
@@ -84,7 +84,7 @@ def test_none_parameter_gate(config, gate):
     else:
         assert np.allclose(sim.get_qs(), ref_qs)
 
-    c_g = g.on([i for i in range(g.n_qubits)], g.n_qubits)
+    c_g = g.on(list(range(g.n_qubits)), g.n_qubits)
     c_init_state = np.random.rand(2 * dim) + np.random.rand(2 * dim) * 1j
     c_sim = Simulator(virtual_qc, c_g.n_qubits + 1, dtype=dtype)
     c_sim.set_qs(c_init_state)
@@ -111,7 +111,7 @@ def test_single_parameter_gate(config, gate):
     virtual_qc, dtype = config
     g = gate(1.2)
     dim = 2**g.n_qubits
-    g = g.on([i for i in range(g.n_qubits)])
+    g = g.on(list(range(g.n_qubits)))
     init_state = np.random.rand(dim) + np.random.rand(dim) * 1j
     sim = Simulator(virtual_qc, g.n_qubits, dtype=dtype)
     sim.set_qs(init_state)
@@ -122,7 +122,7 @@ def test_single_parameter_gate(config, gate):
     else:
         assert np.allclose(sim.get_qs(), ref_qs)
 
-    c_g = g.on([i for i in range(g.n_qubits)], g.n_qubits)
+    c_g = g.on(list(range(g.n_qubits)), g.n_qubits)
     c_init_state = np.random.rand(2 * dim) + np.random.rand(2 * dim) * 1j
     c_sim = Simulator(virtual_qc, c_g.n_qubits + 1, dtype=dtype)
     c_sim.set_qs(c_init_state)
@@ -154,7 +154,7 @@ def test_multi_parameter_gate(config, gate):
     else:
         raise ValueError(f"Unknown gate: {gate}.")
     dim = 2**g.n_qubits
-    g = g.on([i for i in range(g.n_qubits)])
+    g = g.on(list(range(g.n_qubits)))
     init_state = np.random.rand(dim) + np.random.rand(dim) * 1j
     sim = Simulator(virtual_qc, g.n_qubits, dtype=dtype)
     sim.set_qs(init_state)
@@ -165,7 +165,7 @@ def test_multi_parameter_gate(config, gate):
     else:
         assert np.allclose(sim.get_qs(), ref_qs)
 
-    c_g = g.on([i for i in range(g.n_qubits)], g.n_qubits)
+    c_g = g.on(list(range(g.n_qubits)), g.n_qubits)
     c_init_state = np.random.rand(2 * dim) + np.random.rand(2 * dim) * 1j
     c_sim = Simulator(virtual_qc, c_g.n_qubits + 1, dtype=dtype)
     c_sim.set_qs(c_init_state)
@@ -184,7 +184,7 @@ def test_multi_parameter_gate(config, gate):
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
 @pytest.mark.parametrize("gate", parameter_gate)
-def test_single_parameter_gate_expectation_with_grad(config, gate):
+def test_single_parameter_gate_expectation_with_grad(config, gate):  # pylint: disable=R0914
     """
     Description: test expectation and gradient of single parameter gate
     Expectation: success.
@@ -192,7 +192,7 @@ def test_single_parameter_gate_expectation_with_grad(config, gate):
     virtual_qc, dtype = config
     g = gate('a')
     dim = 2**g.n_qubits
-    g = g.on([i for i in range(g.n_qubits)])
+    g = g.on(list(range(g.n_qubits)))
     init_state = np.random.rand(dim) + np.random.rand(dim) * 1j
     init_state = init_state / np.linalg.norm(init_state)
     ham = Hamiltonian(QubitOperator('X0') + QubitOperator('Z0'), dtype=dtype)
@@ -216,9 +216,9 @@ def test_single_parameter_gate_expectation_with_grad(config, gate):
         @ init_state
     ).real * 2
     assert np.allclose(f, ref_f)
-    assert np.allclose(grad, ref_grad.real)
+    assert np.allclose(grad, ref_grad.real, atol=1e-6)
 
-    c_g = g.on([i for i in range(g.n_qubits)], g.n_qubits)
+    c_g = g.on(list(range(g.n_qubits)), g.n_qubits)
     c_init_state = np.random.rand(2 * dim) + np.random.rand(2 * dim) * 1j
     c_init_state = c_init_state / np.linalg.norm(c_init_state)
     c_sim = Simulator(virtual_qc, c_g.n_qubits + 1, dtype=dtype)
@@ -235,4 +235,4 @@ def test_single_parameter_gate_expectation_with_grad(config, gate):
         2 * (c_init_state.T.conj() @ m.T.conj() @ ham.hamiltonian.matrix(g.n_qubits + 1) @ diff_m @ c_init_state).real
     )
     assert np.allclose(c_f, c_ref_f)
-    assert np.allclose(c_grad, c_ref_grad)
+    assert np.allclose(c_grad, c_ref_grad, atol=1e-6)

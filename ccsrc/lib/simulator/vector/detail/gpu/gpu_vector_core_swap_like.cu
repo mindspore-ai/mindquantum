@@ -122,17 +122,18 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplySWAPalpha(qs_data_p_t* qs_p
     auto obj_max_mask = mask.obj_max_mask;
     auto ctrl_mask = mask.ctrl_mask;
     auto obj_mask = mask.obj_mask;
-    auto e = std::exp(IMAGE_I * static_cast<calc_type_>(M_PI) * val);
-    auto a = (static_cast<calc_type_>(1) + e) / static_cast<calc_type_>(2);
-    auto b = (static_cast<calc_type_>(1) - e) / static_cast<calc_type_>(2);
-    if (diff) {
+    auto image_i = py_qs_data_t(0, 1);
+    auto image_mi = py_qs_data_t(0, -1);
+    auto e = std::exp(image_i * static_cast<calc_type_>(M_PI) * val);
+    qs_data_t a = (static_cast<calc_type_>(1) + e) / static_cast<calc_type_>(2);
+    qs_data_t b = (static_cast<calc_type_>(1) - e) / static_cast<calc_type_>(2);
+    if (!diff) {
         if (!mask.ctrl_mask) {
             thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 auto j = i + obj_min_mask;
                 auto k = i + obj_max_mask;
-                auto m = i + obj_mask;
                 auto tmp_j = qs[j];
                 auto tmp_k = qs[k];
                 qs[j] = a * tmp_j + b * tmp_k;
@@ -145,7 +146,6 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplySWAPalpha(qs_data_p_t* qs_p
                 if ((i & ctrl_mask) == ctrl_mask) {
                     auto j = i + obj_min_mask;
                     auto k = i + obj_max_mask;
-                    auto m = i + obj_mask;
                     auto tmp_j = qs[j];
                     auto tmp_k = qs[k];
                     qs[j] = a * tmp_j + b * tmp_k;
@@ -154,8 +154,8 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplySWAPalpha(qs_data_p_t* qs_p
             });
         }
     } else {
-        a = IMAGE_I * static_cast<calc_type_>(M_PI_2) * e;
-        b = IMAGE_MI * static_cast<calc_type_>(M_PI_2) * e;
+        a = image_i * static_cast<calc_type_>(M_PI_2) * e;
+        b = image_mi * static_cast<calc_type_>(M_PI_2) * e;
         if (!mask.ctrl_mask) {
             thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
                 index_t i;
