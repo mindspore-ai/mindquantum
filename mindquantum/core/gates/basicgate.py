@@ -648,6 +648,87 @@ class RZ(RotSelfHermMat):
         return mb.gate.RZGate(self.coeff, self.obj_qubits, self.ctrl_qubits)
 
 
+class SWAPalpha(ParameterOppsGate):
+    r"""
+    SWAP alpha gate. More usage, please see :class:`~.core.gates.RX`.
+
+    .. math::
+
+        \text{SWAP}(\alpha) =
+        \begin{pmatrix}
+            1 & 0 & 0 & 0\\
+            0 & \frac{1}{2}\left(1+e^{i\pi\alpha}\right) & \frac{1}{2}\left(1-e^{i\pi\alpha}\right) & 0\\
+            0 & \frac{1}{2}\left(1-e^{i\pi\alpha}\right) & \frac{1}{2}\left(1+e^{i\pi\alpha}\right) & 0\\
+            0 & 0 & 0 & 1\\
+        \end{pmatrix}
+
+    Args:
+        pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation.
+    """
+
+    def __init__(self, pr):
+        """Initialize a SWAPalpha object."""
+        super().__init__(
+            pr=ParameterResolver(pr),
+            name='SWAPalpha',
+            n_qubits=2,
+        )
+
+    # pylint: disable=arguments-differ
+    def matrix(self, pr=None):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
+        val = 0
+        if self.coeff.is_const():
+            val = self.coeff.const
+        else:
+            new_pr = self.coeff.combination(pr)
+            if not new_pr.is_const():
+                raise ValueError("The parameter is not set completed.")
+            val = new_pr.const
+        e = np.exp(1j * np.pi * val)
+        return np.array(
+            [[1, 0, 0, 0], [0, (1 + e) / 2, (1 - e) / 2, 0], [0, (1 - e) / 2, (1 + e) / 2, 0], [0, 0, 0, 1]]
+        )
+
+    def diff_matrix(self, pr=None, about_what=None):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            about_what (str): calculate the gradient w.r.t which parameter.
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
+        if self.coeff.is_const():
+            return np.zeros((2, 2))
+        new_pr = self.coeff.combination(pr)
+        if not new_pr.is_const():
+            raise ValueError("The parameter is not set completed.")
+        val = new_pr.const
+        if about_what is None:
+            if len(self.coeff) != 1:
+                raise ValueError("Should specific which parameter are going to do derivation.")
+            for i in self.coeff:
+                about_what = i
+        e = 0.5j * np.pi * self.coeff[about_what] * np.exp(1j * np.pi * val)
+        return np.array([[0, 0, 0, 0], [0, e, -e, 0], [0, -e, e, 0], [0, 0, 0, 0]])
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return mb.gate.SWAPalphaGate(self.coeff, self.obj_qubits, self.ctrl_qubits)
+
+
 class ZZ(RotSelfHermMat):
     r"""
     Ising ZZ  gate. More usage, please see :class:`~.core.gates.RX`.

@@ -185,6 +185,14 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
             bool daggered = static_cast<ISWAPGate*>(gate.get())->daggered_;
             qs_policy_t::ApplyISWAP(&qs, gate->obj_qubits_, gate->ctrl_qubits_, daggered, dim);
         } break;
+        case GateID::SWAPalpha: {
+            auto g = static_cast<SWAPalphaGate*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
+            qs_policy_t::ApplySWAPalpha(&qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
         case GateID::RX: {
             auto g = static_cast<RXGate*>(gate.get());
             if (!g->GradRequired()) {
@@ -593,6 +601,9 @@ auto VectorState<qs_policy_t_>::ExpectDiffGate(const qs_data_p_t& bra, const qs_
             return tensor::Matrix(VVT<py_qs_data_t>({grad}));
         case GateID::GP:
             grad[0] = qs_policy_t::ExpectDiffGP(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            return tensor::Matrix(VVT<py_qs_data_t>({grad}));
+        case GateID::SWAPalpha:
+            grad[0] = qs_policy_t::ExpectDiffSWAPalpha(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
             return tensor::Matrix(VVT<py_qs_data_t>({grad}));
         case GateID::CUSTOM: {
             auto g = static_cast<CustomGate*>(gate.get());

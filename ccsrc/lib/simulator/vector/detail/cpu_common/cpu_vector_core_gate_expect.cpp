@@ -793,6 +793,71 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRzz(const qs_data_p_t&
     }
     return {res_real, res_imag};
 };
+
+template <typename derived_, typename calc_type_>
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffSWAPalpha(const qs_data_p_t& bra_out,
+                                                                    const qs_data_p_t& ket_out, const qbits_t& objs,
+                                                                    const qbits_t& ctrls, calc_type val, index_t dim)
+    -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    bool will_free_bra = false, will_free_ket = false;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+        will_free_bra = true;
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+        will_free_ket = true;
+    }
+    DoubleQubitGateMask mask(objs, ctrls);
+    auto e = std::exp(IMAGE_I * static_cast<calc_type_>(M_PI) * val);
+    auto a = IMAGE_I * static_cast<calc_type_>(M_PI_2) * e;
+    auto b = IMAGE_MI * static_cast<calc_type_>(M_PI_2) * e;
+    calc_type res_real = 0, res_imag = 0;
+    if (!mask.ctrl_mask) {
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                                                        index_t i;
+                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                                                        auto j = i + mask.obj_min_mask;
+                                                        auto k = i + mask.obj_max_mask;
+                                                        auto v01 = a * ket[j] + b * ket[k];
+                                                        auto v10 = a * ket[k] + b * ket[j];
+                                                        auto this_res = std::conj(bra[j]) * v01;
+                                                        this_res += std::conj(bra[k]) * v10;
+                                                        res_real += this_res.real();
+                                                        res_imag += this_res.imag();
+                                                    })
+    } else {
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                                                        index_t i;
+                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                                                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                                                            auto j = i + mask.obj_min_mask;
+                                                            auto k = i + mask.obj_max_mask;
+                                                            auto v01 = a * ket[j] + b * ket[k];
+                                                            auto v10 = a * ket[k] + b * ket[j];
+                                                            auto this_res = std::conj(bra[j]) * v01;
+                                                            this_res += std::conj(bra[k]) * v10;
+                                                            res_real += this_res.real();
+                                                            res_imag += this_res.imag();
+                                                        }
+                                                    })
+    }
+    if (will_free_bra) {
+        derived::FreeState(&bra);
+    }
+    if (will_free_ket) {
+        derived::FreeState(&ket);
+    }
+    return {res_real, res_imag};
+};
 #ifdef __x86_64__
 template struct CPUVectorPolicyBase<CPUVectorPolicyAvxFloat, float>;
 template struct CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double>;

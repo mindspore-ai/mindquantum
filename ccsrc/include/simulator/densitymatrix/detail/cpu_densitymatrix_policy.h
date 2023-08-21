@@ -77,8 +77,7 @@ struct CPUDensityMatrixPolicyBase {
     static bool IsPure(const qs_data_p_t& qs, index_t dim);
     static py_qs_datas_t PureStateVector(const qs_data_p_t& qs, index_t dim);
     static void ApplyTerms(qs_data_p_t* qs_p, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
-    static qs_data_p_t ApplyCsr(qs_data_p_t* qs_p, const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
-                                index_t dim);
+    static void ApplyCsr(qs_data_p_t* qs_p, const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, index_t dim);
     static calc_type DiagonalConditionalCollect(const qs_data_p_t& qs, index_t mask, index_t condi, index_t dim);
 
     template <index_t mask, index_t condi, class binary_op>
@@ -151,6 +150,8 @@ struct CPUDensityMatrixPolicyBase {
                                  index_t dim);
     static void ApplyISWAPCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, bool daggered,
                                index_t dim);
+    static void ApplySWAPalpha(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+                               bool diff = false);
     static void ApplyRxx(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
     static void ApplyRxxNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
@@ -238,6 +239,8 @@ struct CPUDensityMatrixPolicyBase {
                                    const qbits_t& ctrls, index_t dim);
     static qs_data_t ExpectDiffRyz(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
                                    const qbits_t& ctrls, index_t dim);
+    static qs_data_t ExpectDiffSWAPalpha(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                         const qbits_t& ctrls, index_t dim);
     static qs_data_t ExpectDiffFSimTheta(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
                                          const qbits_t& ctrls, index_t dim);
     static qs_data_t ExpectDiffFSimPhi(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
