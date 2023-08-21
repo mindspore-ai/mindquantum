@@ -22,7 +22,6 @@
 3. 更改变量名
 \end{lstlisting}
 
-\section{Quantum circuit}
 The quantum circuit can accomplish some useful tasks, it can change the states of the qubits. The quantum circuit is to be read from left-to-right. Each line in the circuit represents a \textit{wire} in the quantum circuit. This wire does not necessarily correspond to a physical wire; it may correspond instead to the passage of time, or perhaps to a physical particle. 
 
 There are a few features allowed in classical circuits that are not usually present in quantum circuits. First of all, we do not allow 'loops', that is, feedback from one part of the quantum circuit to another. second, classical circuits allow wires to be 'joined' together. Third, the inverse operation is also not allowed in quantum circuits.
@@ -66,30 +65,27 @@ from mindquantum.core.gates import X, Y, Z, H, RX, RY, RZ
 from mindquantum.core.circuit import Circuit
 encoder = Circuit()
 \end{lstlisting}
+
 There are several basic operations for adding a quantum gate.
 \begin{itemize}
     \item +=: use '+=' to add a quantum gate to the circuit.
-    \begin{lstlisting}
-encoder += H.on(0) 
-encoder += Y.on(1, 0) 
-    \end{lstlisting}
     \item Circuit.x: add an X gate to the circuit.
-    \begin{lstlisting}
-encoder.x(1, 0)
-    \end{lstlisting}
     \item list: Circuit allows multiple bits to be operated on simultaneously, passing data of the same type as a list.  
-    \begin{lstlisting}
-encoder.z(2, [0, 1])        
-    \end{lstlisting}
 \end{itemize}
+\begin{lstlisting}
+encoder += H.on(0) 
+encoder += Y.on(1, 0)
+encoder.x(1, 0)
+encoder.z(2, [0, 1])        
+\end{lstlisting}
 \subsection{SVG}
 SVG(Scalable Vector Graphics) is based on the XML markup language and is used to describe vector graphics in two dimensions. Mindquantum provides a function to save the picture in SVG format.
-    \begin{lstlisting}
-encode.svg().to\_file(filename='circuit.svg')
-    \end{lstlisting}
+\begin{lstlisting}
+encoder.svg().to\_file(filename='circuit.svg')
+\end{lstlisting}
     \begin{figure}[h]
        \begin{center}
-            \includegraphics[width=0.5\linewidth]{2.4_figures/circuit.png}
+            \includegraphics[width=0.5\linewidth]{images/circuit.png}
         \end{center}
         \caption{quantum circuit}
     \end{figure}
@@ -97,33 +93,37 @@ encode.svg().to\_file(filename='circuit.svg')
 Mindquantum provides several common API for quantum circuit.
 \begin{itemize}
     \item n\_qubits: get the number of qubit of quantum circuit.
-    \begin{lstlisting}
-encoder.n_qubits    # 3
-    \end{lstlisting}
     \item params\_name: get the params of circuit.
-    \begin{lstlisting}
-encoder.params_name  # []
-    \end{lstlisting}
     \item has\_measure\_gate: get whether to be measured.
-    \begin{lstlisting}
-encoder.has_measure_gate    # False
-    \end{lstlisting}
     \item matrix(): get the circuit matrix.
-    \begin{lstlisting}
-encoder.matrix() 
-# get all the matrix representations of the circuit.
-    \end{lstlisting}
     \item get\_qs(): get the final quantum state.
-    \begin{lstlisting}
-encoder.get_qs()  
-# get the matrix representation of the final quantum state.
-    \end{lstlisting}
     \item summary(): get information about the current circuit, including the number of blocks、 gates、 gates without parameters、 gates with parameters and parameters.
-    \begin{lstlisting}
-encoder.summary()   
-    \end{lstlisting}
+\end{itemize}
+\begin{lstlisting}
+encoder.n_qubits
+encoder.params_name
+encoder.has_measure_gate
+encoder.matrix() 
+encoder.get_qs()
+encoder.summary()
+\end{lstlisting}
 Output:
 \begin{lstlisting}
+3
+[]
+False
+[[ 0.70710678+0.j          0.        +0.70710678j  0.        +0.j
+   0.        +0.j          0.        +0.j          0.        +0.j
+   0.        +0.j         -0.        +0.j        ]
+ ......
+ [ 0.        +0.j          0.        +0.j          0.        +0.j
+   0.        +0.j          0.        +0.j          0.        +0.j
+   0.70710678+0.j         -0.        -0.70710678j]]
+   
+[ 0.70710678+0.j          0.        +0.70710678j  0.        +0.j
+  0.        +0.j          0.        +0.j          0.        +0.j
+  0.        +0.j         -0.        +0.j        ]
+  
 =======Circuit Summary=======
 |Total number of gates  : 4.|
 |Parameter gates        : 0.|
@@ -132,23 +132,20 @@ Output:
 |Number qubit of circuit: 3 |
 =============================  
 \end{lstlisting}
-\end{itemize}
 \subsection{Advanced operator}
 Mindquantum also provides several Advanced API for quantum circuit.
 \begin{itemize}
     \item compress(): delete all unused qubits and map the qubits to range(n\_qubits).
-    \begin{lstlisting}
-encoder.compress()        
-    \end{lstlisting}
     \item SwapParts(a: Iterable, b: Iterable, maps\_ctrl=None): swapping a and b of a quantum circuit and can add control bits maps\_ctrl.
-    \begin{lstlisting}
-from mindquantum.core.circuit import SwapParts
-SwapParts([0, [1, 2], 0)        
-    \end{lstlisting}
     \item change\_param\_name(circuit\_fn, name\_map): change parameter names in parametric quantum circuits or parametric quantum operators.
-    \begin{lstlisting}
+\end{itemize}
+\begin{lstlisting}
+encoder.compress()
+
+from mindquantum.core.circuit import SwapParts
+SwapParts([0, [1, 2], 0) 
+
 from mindquantum.core.circuit import change_param_name
 encoder.rx('a')
-encoder1 = change_param_name(encoder, {'a': 'b'})        
+encoder1 = change_param_name(encoder, {'a': 'b'})  
 \end{lstlisting}
-\end{itemize}
