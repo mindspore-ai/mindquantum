@@ -31,11 +31,11 @@ The quantum circuit has some important operations. First, it allows us to use co
 \subsection{Quantum gate set}
 Quantum gates (quantum logic gates) are the basic logical units of quantum circuit. Basic quantum gates commonly used are X gate, Y gate, Z gate, Hadamard gate (H gate), CNOT gate, and revolving gate RX gate, RY gate, and RZ gate. \\
 
-\textbf{1 X, Y, Z gate}
+\textbf{1. X, Y, Z gate}
 
 X, Y, Z gate are Pauli matrices, they are single qubit gates and operator on single qubit, can rotate $\pi$ angles around the X, Y and Z axis of the Bloch sphere.   \\
 
-\textbf{2 Hadamard(H) gate}
+\textbf{2. Hadamard(H) gate}
 
 matrix representation: $H = \frac{1}{\sqrt{2}} \left( \begin{array}{cc}
      1 & 1 \\
@@ -44,7 +44,7 @@ matrix representation: $H = \frac{1}{\sqrt{2}} \left( \begin{array}{cc}
 
 H gate is also single qubit gate, but it can change the ground state to a superposition state. \\
 
-\textbf{3 CNOT gate}
+\textbf{3. CNOT gate}
 
 matrix representation: $CNOT = \left( \begin{array}{cccc}
      1 & 0 & 0 & 0 \\
@@ -55,7 +55,7 @@ matrix representation: $CNOT = \left( \begin{array}{cccc}
 
 CNOT gate is a two-qubit gate, it can operator controll qubit and target qubit. \\
 
-\textbf{RX, RY, RZ gate}
+\textbf{4. RX, RY, RZ gate}
 
 RX, RY, RZ can rotate the quantum state $\theta$ angles around the X, Y and Z axes on a Bloch sphere. RX, RY can bring about a change in probability amplitude, and RZ only a change in phase.
 \subsection{Add quantum gate}
@@ -81,7 +81,7 @@ encoder.z(2, [0, 1])
 \subsection{SVG}
 SVG(Scalable Vector Graphics) is based on the XML markup language and is used to describe vector graphics in two dimensions. Mindquantum provides a function to save the picture in SVG format.
 \begin{lstlisting}
-encoder.svg().to\_file(filename='circuit.svg')
+encoder.svg().to_file(filename='circuit.svg')
 \end{lstlisting}
     \begin{figure}[h]
        \begin{center}
