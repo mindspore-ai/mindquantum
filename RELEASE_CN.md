@@ -8,7 +8,7 @@
 
 #### 数据精度
 
-- [STABLE] `数据精度`: MindQuantum 现支持 `float32`、`float64`、`complex64`和`complex128`四种精度类型，可为各种算符、参数解析器和模拟器设置不同的精度类型。
+- [STABLE] [`数据精度`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.dtype.html): MindQuantum 现支持 `float32`、`float64`、`complex64`和`complex128`四种精度类型，可为各种算符、参数解析器和模拟器设置不同的精度类型。
 
 #### Gates
 
