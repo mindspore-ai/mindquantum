@@ -33,10 +33,10 @@ class Initializer:
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Initialize parameters."""
         _check_int_type('n_qubits', n_qubits)
         _check_value_should_not_less('n_qubits', 0, n_qubits)
@@ -45,7 +45,7 @@ class Initializer:
         _check_input_type('prefix', str, prefix)
         self.n_qubits = n_qubits
         self.depth = depth
-        self.pr_gen = PRGenerator(prefix, subfix)
+        self.pr_gen = PRGenerator(prefix, suffix)
 
 
 class Ansatz1(Ansatz, Initializer):
@@ -59,7 +59,7 @@ class Ansatz1(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz1
@@ -69,9 +69,9 @@ class Ansatz1(Ansatz, Initializer):
         q2: ──RX(p4)────RZ(p5)────RX(p10)────RZ(p11)──
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz1', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -93,7 +93,7 @@ class Ansatz2(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz2
@@ -105,9 +105,9 @@ class Ansatz2(Ansatz, Initializer):
         q2: ──RX(p4)────RZ(p5)────●─────────RX(p10)────RZ(p11)────●───────
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz2', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -131,7 +131,7 @@ class Ansatz3(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz3
@@ -143,9 +143,9 @@ class Ansatz3(Ansatz, Initializer):
         q2: ──RX(p4)────RZ(p5)──────●───────────────
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz3', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -169,7 +169,7 @@ class Ansatz4(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz4
@@ -181,9 +181,9 @@ class Ansatz4(Ansatz, Initializer):
         q2: ──RX(p4)────RZ(p5)──────●───────────────
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz4', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -207,7 +207,7 @@ class Ansatz5(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz5
@@ -219,9 +219,9 @@ class Ansatz5(Ansatz, Initializer):
         q2: ──RX(p2)────RZ(p5)──────●─────────●───────RZ(p8)──────────────RZ(p10)───────────────RX(p14)────RZ(p17)──
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz5', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -250,7 +250,7 @@ class Ansatz6(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz6
@@ -262,9 +262,9 @@ class Ansatz6(Ansatz, Initializer):
         q2: ──RX(p2)────RZ(p5)──────●─────────●───────RX(p8)──────────────RX(p10)───────────────RX(p14)────RZ(p17)──
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz6', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -293,7 +293,7 @@ class Ansatz7(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz7
@@ -307,9 +307,9 @@ class Ansatz7(Ansatz, Initializer):
         q3: ──RX(p3)────RZ(p7)──────●───────RX(p13)────RZ(p17)─────────────
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz7', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -348,7 +348,7 @@ class Ansatz8(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz8
@@ -362,9 +362,9 @@ class Ansatz8(Ansatz, Initializer):
         q3: ──RX(p6)────RZ(p7)──────●───────RX(p16)────RZ(p17)─────────────
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz8', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -403,7 +403,7 @@ class Ansatz9(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz9
@@ -417,9 +417,9 @@ class Ansatz9(Ansatz, Initializer):
         q3: ──H────●──────────────RX(p3)────H────●──────────────RX(p7)──
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz9', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -444,7 +444,7 @@ class Ansatz10(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz10
@@ -458,9 +458,9 @@ class Ansatz10(Ansatz, Initializer):
         q3: ──RY(p3)────Z──────────────●────RY(p7)────Z──────────────●────RY(p11)──
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz10', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -486,7 +486,7 @@ class Ansatz11(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz11
@@ -500,9 +500,9 @@ class Ansatz11(Ansatz, Initializer):
         q3: ──RY(p6)────RZ(p7)────●─────────────────────────────
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz11', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -541,7 +541,7 @@ class Ansatz12(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz12
@@ -555,9 +555,9 @@ class Ansatz12(Ansatz, Initializer):
         q3: ──RY(p6)────RZ(p7)────●─────────────────────────────
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz12', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -596,7 +596,7 @@ class Ansatz13(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz13
@@ -610,9 +610,9 @@ class Ansatz13(Ansatz, Initializer):
         q3: ──RY(p3)──────●───────RZ(p5)────────────────────────RY(p11)───────●───────RZ(p13)────────────────────────
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz13', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -644,7 +644,7 @@ class Ansatz14(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz14
@@ -658,9 +658,9 @@ class Ansatz14(Ansatz, Initializer):
         q3: ──RY(p3)──────●───────RX(p5)────────────────────────RY(p11)───────●───────RX(p13)────────────────────────
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz14', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -692,7 +692,7 @@ class Ansatz15(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz15
@@ -706,9 +706,9 @@ class Ansatz15(Ansatz, Initializer):
         q3: ──RY(p3)────●────X──────────────RY(p7)────●────X────────────
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz15', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -740,7 +740,7 @@ class Ansatz16(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz16
@@ -754,9 +754,9 @@ class Ansatz16(Ansatz, Initializer):
         q3: ──RX(p6)────RZ(p7)──────●────────────────
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz16', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -793,7 +793,7 @@ class Ansatz17(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz17
@@ -807,9 +807,9 @@ class Ansatz17(Ansatz, Initializer):
         q3: ──RX(p6)────RZ(p7)──────●────────────────
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz17', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -846,7 +846,7 @@ class Ansatz18(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz18
@@ -860,9 +860,9 @@ class Ansatz18(Ansatz, Initializer):
         q3: ──RX(p6)────RZ(p7)──────●───────RZ(p9)────────────────────────
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz18', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ
@@ -888,7 +888,7 @@ class Ansatz19(Ansatz, Initializer):
         n_qubits (int): total qubits number of this ansatz.
         depth (int): depth of ansatz.
         prefix (str): prefix of parameters. Default: ``''``.
-        subfix (str): subfix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import Ansatz19
@@ -902,9 +902,9 @@ class Ansatz19(Ansatz, Initializer):
         q3: ──RX(p6)────RZ(p7)──────●───────RX(p9)────────────────────────
     """
 
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', subfix: str = ''):
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
         """Construct ansatz."""
-        Initializer.__init__(self, n_qubits, depth, prefix, subfix)
+        Initializer.__init__(self, n_qubits, depth, prefix, suffix)
         Ansatz.__init__(self, 'Ansatz19', n_qubits, depth)
 
     def _implement(self, depth):  # pylint: disable=arguments-differ

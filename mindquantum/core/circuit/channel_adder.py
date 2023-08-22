@@ -14,9 +14,14 @@
 # ============================================================================
 """Helper method to add noise channel."""
 import typing
+import warnings
 from types import FunctionType, MethodType
 
-from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
+from mindquantum.utils.type_value_check import (
+    _check_input_type,
+    _check_int_type,
+    _check_value_should_not_less,
+)
 
 from .. import gates
 from ..gates import BarrierGate, BasicGate, NoiseGate
@@ -278,11 +283,57 @@ class NoiseChannelAdder(ChannelAdderBase):
         """Create action you will do if a gate is acceptable."""
         circ = Circuit()
         if self.focus_on is None:
-            for qubit in g.obj_qubits + (g.ctrl_qubits if self.with_ctrl else []):
+            will_act = g.obj_qubits + (g.ctrl_qubits if self.with_ctrl else [])
+            if isinstance(self.channel, gates.DepolarizingChannel) and len(will_act) > 1:
+                warnings.warn(
+                    "DepolarizingChannel will act on each qubit, but if you want a multi qubit "
+                    "DepolarizingChannel, please use DepolarizingChannelAdder",
+                    stacklevel=2,
+                )
+            for qubit in will_act:
                 circ += self.channel.on(qubit)
         else:
             if self.focus_on in g.obj_qubits or self.focus_on in g.ctrl_qubits:
                 circ += self.channel.on(self.focus_on)
+        return circ
+
+
+class DepolarizingChannelAdder(ChannelAdderBase):
+    """
+    Add DepolarizingChannel.
+
+    Args:
+        p (float): probability of occurred depolarizing error.
+
+    Examples:
+        >>> from mindquantum.core.circuit import MixerAdder, DepolarizingChannelAdder, GateSelector
+        >>> from mindquantum.core.circuit import Circuit
+        >>> circ = Circuit().h(0).x(1, 0)
+        >>> adder = MixerAdder([GateSelector('cx'), DepolarizingChannelAdder(0.1, 2)])
+        >>> adder(circ)
+        q0: ──H────●────DC(p=1/10)──
+                   │        │
+        q1: ───────X────DC(p=1/10)──
+    """
+
+    def __init__(self, p: float, n_qubits: int, add_after: bool = True):
+        """Initialize a DepolarizingChannelAdder."""
+        _check_int_type("n_qubits", n_qubits)
+        _check_value_should_not_less("n_qubits", 1, n_qubits)
+        super().__init__(add_after=add_after)
+        self.channel = gates.DepolarizingChannel(p)
+        self.n_qubits = n_qubits
+
+    def __repr__(self) -> str:
+        """Return string expression of adder."""
+        return f"DepolarizationChannelAdder<p={self.channel.p}, n_qubits={self.n_qubits}>"
+
+    def _handler(self, g: BasicGate, *args, **kwargs) -> Circuit:
+        """Create action you will do if a gate is acceptable."""
+        circ = Circuit()
+        if len(g.obj_qubits + g.ctrl_qubits) != self.n_qubits:
+            raise ValueError(f"This DepolarizingChannel only work for {self.n_qubits} qubit gate, but" f" get {g}.")
+        circ += self.channel.on(g.obj_qubits + g.ctrl_qubits)
         return circ
 
 
@@ -489,6 +540,61 @@ class SequentialAdder(ChannelAdderBase):
         return '\n'.join(strs)
 
 
+class GateSelector(ChannelAdderBase):
+    """
+    Select gate to add noise channel.
+
+    Args:
+        gate (str): Gate you want to add channel. Could be one of 'H', 'X', 'Y', 'Z', 'RX', 'RY', 'RZ',
+            'CX', 'CZ', 'SWAP'.
+
+    Examples:
+        >>> from mindquantum.core.circuit import BitFlipAdder, GateSelector, Circuit, MixerAdder
+        >>> circ = Circuit().h(0).x(1, 0)
+        >>> circ
+        q0: ──H────●──
+                   │
+        q1: ───────X──
+        >>> adder = MixerAdder([BitFlipAdder(0.1), GateSelector('cx')])
+        >>> adder(circ)
+        q0: ──H────●────BFC(p=1/10)──
+                   │
+        q1: ───────X────BFC(p=1/10)──
+    """
+
+    _single_qubit_gate = ['H', 'X', 'Y', 'Z', 'RX', 'RY', 'RZ']
+    _double_qubits_gate = ['CX', 'CZ', 'SWAP']
+
+    def __init__(self, gate: str):
+        """Initialize a gate selector."""
+        if gate.upper() not in self.supported_gate:
+            raise ValueError(f"Now we support {self.supported_gate}, but get {gate}")
+        self.gate = gate.upper()
+        super().__init__()
+
+    @property
+    def supported_gate(self):
+        """Get supported gate for gate selector."""
+        return GateSelector._single_qubit_gate + GateSelector._double_qubits_gate
+
+    def _accepter(self, *args, **kwargs) -> typing.List[typing.Union[FunctionType, MethodType]]:
+        """Construct accepter rule."""
+        special = {
+            'CX': lambda x: isinstance(x, (gates.CNOTGate, gates.XGate)) and len(x.obj_qubits + x.ctrl_qubits) == 2,
+            'CZ': lambda x: isinstance(x, gates.ZGate) and len(x.obj_qubits + x.ctrl_qubits) == 2,
+        }
+        if self.gate in special:
+            return [special[self.gate]]
+        suffix = ''
+        if self.gate not in ['RX', 'RY', 'RZ']:
+            suffix = 'Gate'
+        return [lambda x: isinstance(x, getattr(gates, self.gate + suffix)) and not x.ctrl_qubits]
+
+    def __repr__(self) -> str:
+        """Return string expression of adder."""
+        return f"GateSelector<gate={self.gate}>"
+
+
 __all__ = [
     "ChannelAdderBase",
     "NoiseChannelAdder",
@@ -500,5 +606,7 @@ __all__ = [
     "SequentialAdder",
     "QubitNumberConstrain",
     "QubitIDConstrain",
+    "GateSelector",
+    "DepolarizingChannelAdder",
 ]
 __all__.sort()
