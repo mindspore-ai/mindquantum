@@ -16,8 +16,8 @@
 # pylint: disable=abstract-method,no-member
 """Quantum channel."""
 
-from typing import Iterable
 from math import sqrt
+from typing import Iterable
 
 import numpy as np
 
@@ -356,10 +356,7 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
         self.projectq_gate = None
         if not isinstance(p, (int, float)):
             raise TypeError(f"Unsupported type for argument p, get {type(p)}.")
-        if 0 <= p <= 4 / 3:
-            self.p = p
-        else:
-            raise ValueError(f"Required argument p ∈ [0, 4/3], but get p = {p}.")
+        self.p = p
 
     def on(self, obj_qubits, ctrl_qubits=None):
         """
@@ -371,6 +368,10 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
         """
         if isinstance(obj_qubits, Iterable):
             self.n_qubits = len(obj_qubits)
+        if not 0 <= self.p <= 4**self.n_qubits / (4**self.n_qubits - 1):
+            raise ValueError(
+                f"Required argument p ∈ [0, {4**self.n_qubits}/{4**self.n_qubits - 1}], but get p = {self.p}."
+            )
         return super().on(obj_qubits, ctrl_qubits)
 
     def get_cpp_obj(self):
@@ -616,4 +617,4 @@ class KrausChannel(NoiseGate, NonHermitianGate):
 
     def matrix(self):  # pylint: disable=arguments-differ
         """Kraus operator of the quantum channel."""
-        return [i for i in self.kraus_op]
+        return list(self.kraus_op)
