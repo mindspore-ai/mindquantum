@@ -16,6 +16,7 @@
 import numpy as np
 
 from mindquantum._math import dtype as dtype_
+from mindquantum.utils.type_value_check import _check_mq_type
 
 __dtype__ = [
     'float32',
@@ -97,7 +98,7 @@ def to_real_type(dtype):
         >>> to_real_type(complex128)
         mindquantum.float64
     """
-    dtype = to_mq_type(dtype)
+    _check_mq_type(dtype)
     return {
         float32: float32,
         float64: float64,
@@ -118,7 +119,7 @@ def to_complex_type(dtype):
         >>> to_complex_type(float32)
         mindquantum.complex64
     """
-    dtype = to_mq_type(dtype)
+    _check_mq_type(dtype)
     return {
         float32: complex64,
         float64: complex128,
@@ -139,7 +140,7 @@ def to_double_precision(dtype):
         >>> to_double_precision(float32)
         mindquantum.float64
     """
-    dtype = to_mq_type(dtype)
+    _check_mq_type(dtype)
     return {
         float32: float64,
         float64: float64,
@@ -160,7 +161,7 @@ def to_single_precision(dtype):
         >>> to_single_precision(complex128)
         mindquantum.complex64
     """
-    dtype = to_mq_type(dtype)
+    _check_mq_type(dtype)
     return {
         float32: float32,
         float64: float32,
@@ -221,7 +222,8 @@ def is_double_precision(dtype) -> bool:
         >>> is_double_precision(complex128)
         True
     """
-    return to_mq_type(dtype) in [complex128, float64]
+    _check_mq_type(dtype)
+    return dtype in [complex128, float64]
 
 
 def is_single_precision(dtype) -> bool:
@@ -236,7 +238,8 @@ def is_single_precision(dtype) -> bool:
         >>> is_single_precision(complex128)
         False
     """
-    return to_mq_type(dtype) in [complex64, float32]
+    _check_mq_type(dtype)
+    return dtype in [complex64, float32]
 
 
 def is_same_precision(dtype1, dtype2) -> bool:

@@ -26,7 +26,11 @@ from mindquantum._math.pr import ParameterResolver as ParameterResolver_
 from mindquantum._math.tensor import from_numpy
 from mindquantum.dtype.dtype import mq_complex_number_type, str_dtype_map
 from mindquantum.utils.string_utils import join_without_empty, string_expression
-from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
+from mindquantum.utils.type_value_check import (
+    _check_input_type,
+    _check_int_type,
+    _check_mq_type,
+)
 
 PRConvertible = typing.Union[numbers.Number, str, typing.Dict[str, numbers.Number], "ParameterResolver"]
 
@@ -91,7 +95,7 @@ class ParameterResolver(ParameterResolver_):
     def __init__(self, data=None, const=None, dtype=None, internal=False):
         """Initialize a ParameterResolver object."""
         if dtype is not None:
-            dtype = mq.to_mq_type(dtype)
+            _check_mq_type(dtype)
         if isinstance(data, ParameterResolver):
             internal = True
         if internal:
@@ -731,7 +735,8 @@ class ParameterResolver(ParameterResolver_):
             const: (0.000000, 0.000000)
             )
         """
-        return ParameterResolver(ParameterResolver_.astype(self, mq.to_mq_type(dtype)), internal=True)
+        _check_mq_type(dtype)
+        return ParameterResolver(ParameterResolver_.astype(self, dtype), internal=True)
 
     def combination(self, other: typing.Union[typing.Dict[str, numbers.Number], "ParameterResolver"]):
         """
