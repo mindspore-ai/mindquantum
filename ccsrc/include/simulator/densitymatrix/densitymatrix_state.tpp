@@ -200,6 +200,14 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
             bool daggered = static_cast<ISWAPGate*>(gate.get())->daggered_;
             qs_policy_t::ApplyISWAP(&qs, gate->obj_qubits_, gate->ctrl_qubits_, daggered, dim);
         } break;
+        case GateID::SWAPalpha: {
+            auto g = static_cast<SWAPalphaGate*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
+            qs_policy_t::ApplySWAPalpha(&qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
         case GateID::RX: {
             auto g = static_cast<RXGate*>(gate.get());
             if (!g->GradRequired()) {
@@ -463,6 +471,10 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(const qs_data_p_t& dens_ma
         case GateID::GP:
             grad[0] = qs_policy_t::ExpectDiffGP(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
             return tensor::Matrix(VVT<py_qs_data_t>{grad});
+        case GateID::SWAPalpha:
+            grad[0] = qs_policy_t::ExpectDiffSWAPalpha(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_,
+                                                       dim);
+            return tensor::Matrix(VVT<py_qs_data_t>({grad}));
         case GateID::CUSTOM: {
             auto g = static_cast<CustomGate*>(gate.get());
             auto val = tensor::ops::cpu::to_vector<double>(g->prs_[0].Combination(pr).const_value)[0];
@@ -548,7 +560,7 @@ std::map<std::string, int> DensityMatrixState<qs_policy_t_>::ApplyCircuit(const 
 
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::GetStateExpectation(const qs_data_p_t& qs_out, const Hamiltonian<calc_type>& ham,
-                                                      index_t dim) const -> py_qs_data_t {
+                                                           index_t dim) const -> py_qs_data_t {
     py_qs_data_t out;
     if (ham.how_to_ == ORIGIN) {
         out = qs_policy_t::ExpectationOfTerms(qs_out, ham.ham_, dim);

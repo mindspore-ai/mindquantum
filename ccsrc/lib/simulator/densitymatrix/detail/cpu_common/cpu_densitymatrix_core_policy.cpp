@@ -351,8 +351,8 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* q
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyCsr(
-    qs_data_p_t* qs_p, const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, index_t dim) -> qs_data_p_t {
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyCsr(
+    qs_data_p_t* qs_p, const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, index_t dim) {
     if (dim != a->dim_) {
         throw std::runtime_error("Sparse hamiltonian size not match with quantum state size.");
     }

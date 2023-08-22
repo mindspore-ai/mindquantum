@@ -8,7 +8,7 @@
 
 #### Data precision
 
-- [STABLE] `Data Precision`: MindQuantum now supports `float32`, `float64`, `complex64` and `complex128` four types of precision, and can set different precision types for operators, parameter resolvers and simulators.
+- [STABLE] [`Data Precision`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.dtype.html): MindQuantum now supports `float32`, `float64`, `complex64` and `complex128` four types of precision, and can set different precision types for operators, parameter resolvers and simulators.
 
 #### Gates
 

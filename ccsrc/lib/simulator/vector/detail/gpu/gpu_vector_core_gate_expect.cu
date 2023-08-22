@@ -694,8 +694,8 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRyy(const qs_data_p_t&
                 auto j = i + obj_min_mask;
                 auto k = i + obj_max_mask;
                 auto v00 = c * ket[i] + s * ket[m];
-                auto v01 = c * ket[j] + s * ket[k];
-                auto v10 = c * ket[k] + s * ket[j];
+                auto v01 = c * ket[j] - s * ket[k];
+                auto v10 = c * ket[k] - s * ket[j];
                 auto v11 = c * ket[m] + s * ket[i];
                 auto this_res = thrust::conj(bra[i]) * v00;
                 this_res += thrust::conj(bra[j]) * v01;
@@ -717,8 +717,8 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRyy(const qs_data_p_t&
                 auto j = i + obj_min_mask;
                 auto k = i + obj_max_mask;
                 auto v00 = c * ket[i] + s * ket[m];
-                auto v01 = c * ket[j] + s * ket[k];
-                auto v10 = c * ket[k] + s * ket[j];
+                auto v01 = c * ket[j] - s * ket[k];
+                auto v10 = c * ket[k] - s * ket[j];
                 auto v11 = c * ket[m] + s * ket[i];
                 auto this_res = thrust::conj(bra[i]) * v00;
                 this_res += thrust::conj(bra[j]) * v01;
@@ -839,7 +839,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffPS(const qs_data_p_t& 
         will_free_ket = true;
     }
     SingleQubitGateMask mask(objs, ctrls);
-    auto e = static_cast<calc_type>(std::cos(val)) + qs_data_t(0, 1) * static_cast<calc_type>(std::sin(val));
+    auto e = static_cast<calc_type>(-std::sin(val)) + qs_data_t(0, 1) * static_cast<calc_type>(std::cos(val));
     thrust::counting_iterator<size_t> l(0);
     auto obj_high_mask = mask.obj_high_mask;
     auto obj_low_mask = mask.obj_low_mask;
@@ -901,6 +901,80 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffPS(const qs_data_p_t& 
     }
     return res;
 }
+
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffSWAPalpha(const qs_data_p_t& bra_out,
+                                                                    const qs_data_p_t& ket_out, const qbits_t& objs,
+                                                                    const qbits_t& ctrls, calc_type val, index_t dim)
+    -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    bool will_free_bra = false, will_free_ket = false;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+        will_free_bra = true;
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+        will_free_ket = true;
+    }
+    DoubleQubitGateMask mask(objs, ctrls);
+    auto image_i = py_qs_data_t(0, 1);
+    auto image_mi = py_qs_data_t(0, -1);
+    auto e = std::exp(image_i * static_cast<calc_type_>(M_PI) * val);
+    qs_data_t a = image_i * static_cast<calc_type_>(M_PI_2) * e;
+    qs_data_t b = image_mi * static_cast<calc_type_>(M_PI_2) * e;
+    thrust::counting_iterator<size_t> l(0);
+    auto obj_high_mask = mask.obj_high_mask;
+    auto obj_rev_high_mask = mask.obj_rev_high_mask;
+    auto obj_low_mask = mask.obj_low_mask;
+    auto obj_rev_low_mask = mask.obj_rev_low_mask;
+    auto obj_min_mask = mask.obj_min_mask;
+    auto obj_max_mask = mask.obj_max_mask;
+    auto ctrl_mask = mask.ctrl_mask;
+    qs_data_t res = 0.0;
+    if (!mask.ctrl_mask) {
+        res = thrust::transform_reduce(
+            l, l + dim / 4,
+            [=] __device__(size_t l) {
+                index_t i;
+                SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
+                auto j = i + obj_min_mask;
+                auto k = i + obj_max_mask;
+                auto v01 = a * ket[j] + b * ket[k];
+                auto v10 = a * ket[k] + b * ket[j];
+                auto this_res = thrust::conj(bra[j]) * v01;
+                this_res += thrust::conj(bra[k]) * v10;
+                return this_res;
+            },
+            qs_data_t(0, 0), thrust::plus<qs_data_t>());
+    } else {
+        res = thrust::transform_reduce(
+            l, l + dim / 4,
+            [=] __device__(size_t l) {
+                index_t i;
+                SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
+                if ((i & ctrl_mask) != ctrl_mask) {
+                    return qs_data_t(0, 0);
+                }
+                auto j = i + obj_min_mask;
+                auto k = i + obj_max_mask;
+                auto v01 = a * ket[j] + b * ket[k];
+                auto v10 = a * ket[k] + b * ket[j];
+                auto this_res = thrust::conj(bra[j]) * v01;
+                this_res += thrust::conj(bra[k]) * v10;
+                return this_res;
+            },
+            qs_data_t(0, 0), thrust::plus<qs_data_t>());
+    }
+    if (will_free_bra) {
+        derived::FreeState(&bra);
+    }
+    if (will_free_ket) {
+        derived::FreeState(&ket);
+    }
+    return res;
+};
 
 template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
 template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;

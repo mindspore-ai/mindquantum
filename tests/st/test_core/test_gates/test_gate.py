@@ -184,6 +184,55 @@ def test_swap():
     )
 
 
+def test_SWAPlapha():
+    """
+    Description: Test SWAPalpha gate
+    Expectation:
+    """
+    alpha = 0.5
+    g = [
+        G.SWAPalpha("alpha").on((0, 1)),
+        lambda alpha: np.array(
+            [
+                [1.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j],
+                [
+                    0.0 + 0.0j,
+                    0.5 * (1 + np.exp(1j * np.pi * alpha)),
+                    0.5 * (1 - np.exp(1j * np.pi * alpha)),
+                    0.0 + 0.0j,
+                ],
+                [
+                    0.0 + 0.0j,
+                    0.5 * (1 - np.exp(1j * np.pi * alpha)),
+                    0.5 * (1 + np.exp(1j * np.pi * alpha)),
+                    0.0 + 0.0j,
+                ],
+                [0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j, 1.0 + 0.0j],
+            ]
+        ),
+        lambda alpha: np.array(
+            [
+                [0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j],
+                [
+                    0.0 + 0.0j,
+                    0.5 * 1j * np.pi * np.exp(1j * np.pi * alpha),
+                    -0.5 * 1j * np.pi * np.exp(1j * np.pi * alpha),
+                    0.0 + 0.0j,
+                ],
+                [
+                    0.0 + 0.0j,
+                    -0.5 * 1j * np.pi * np.exp(1j * np.pi * alpha),
+                    0.5 * 1j * np.pi * np.exp(1j * np.pi * alpha),
+                    0.0 + 0.0j,
+                ],
+                [0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j],
+            ]
+        ),
+    ]
+    assert np.allclose(g[0].matrix({'alpha': alpha}), g[1](alpha))
+    assert np.allclose(g[0].diff_matrix({'alpha': alpha}), g[2](alpha))
+
+
 def test_univ_mat_gate():
     """
     Description: Test UnivMathGate

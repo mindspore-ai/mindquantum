@@ -196,6 +196,13 @@ struct PSGate : public Parameterizable {
         : Parameterizable(GateID::PS, {pr}, obj_qubits, ctrl_qubits) {
     }
 };
+
+struct SWAPalphaGate : public Parameterizable {
+    SWAPalphaGate(const parameter::ParameterResolver pr, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
+        : Parameterizable(GateID::SWAPalpha, {pr}, obj_qubits, ctrl_qubits) {
+    }
+};
+
 struct PauliChannel : public BasicGate {
     VT<double> cumulative_probs_;
     VT<double> probs_;

@@ -16,13 +16,14 @@
 from typing import Dict, Iterable, List, Union
 
 import numpy as np
+from scipy.linalg import eigvals
 
 import mindquantum as mq
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import BarrierGate, BasicGate, Measure, MeasureResult
 from mindquantum.core.operators import Hamiltonian
 from mindquantum.core.parameterresolver import ParameterResolver
-from mindquantum.dtype import complex128, to_mq_type
+from mindquantum.dtype import complex128
 from mindquantum.dtype.dtype import mq_complex_number_type
 from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 from mindquantum.utils.type_value_check import (
@@ -32,6 +33,7 @@ from mindquantum.utils.type_value_check import (
     _check_hamiltonian_qubits_number,
     _check_input_type,
     _check_int_type,
+    _check_mq_type,
     _check_seed,
     _check_value_should_not_less,
 )
@@ -54,7 +56,7 @@ class MQSim(BackendBase):
         else:
             if dtype is None:
                 dtype = complex128
-            dtype = to_mq_type(dtype)
+            _check_mq_type(dtype)
             self.sim = getattr(SUPPORTED_SIMULATOR.c_module(name, dtype), name)(n_qubits, seed)
 
     def __str__(self):
@@ -135,7 +137,7 @@ class MQSim(BackendBase):
 
     def astype(self, dtype, seed):
         """Convert simulator to other type."""
-        dtype = to_mq_type(dtype)
+        _check_mq_type(dtype)
         if dtype not in mq_complex_number_type:
             raise TypeError(f"dtype should be complex type, available types are {mq_complex_number_type}")
         sim = MQSim(getattr(self.sim, str(dtype).rsplit('.', maxsplit=1)[-1])(seed), self.n_qubits, internal=True)
@@ -451,7 +453,7 @@ class MQSim(BackendBase):
         return res
 
     def set_qs(self, quantum_state: np.ndarray):
-        """Set quantum state of mqvector simulator."""
+        """Set quantum state of simulator."""
         if isinstance(quantum_state, list):
             quantum_state = np.array(quantum_state)
         if not isinstance(quantum_state, np.ndarray):
@@ -502,3 +504,16 @@ class MQSim(BackendBase):
         if not self.name.startswith('mqmatrix'):
             raise ValueError(f"{self.name} simulator not support partial trace method.")
         return np.array(self.sim.get_partial_trace(obj_qubits))
+
+    def entropy(self):
+        """Get the von-Neumann entropy of quantum state."""
+        if self.name.startswith('mqvector'):
+            return 0
+        if not self.name.startswith('mqmatrix'):
+            raise ValueError(f"{self.name} simulator not support entropy method.")
+        eigens = np.real(eigvals(self.get_qs()))
+        res = 0
+        for i in eigens:
+            if i > 0:
+                res += -i * np.log(i)
+        return res

@@ -141,6 +141,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectationOfCsr(
     auto data = a->data_;
     auto indptr = a->indptr_;
     auto indices = a->indices_;
+    // clang-format off
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for reduction(+:e_r, e_i) schedule(static)), dim, DimTh,
             for (omp::idx_t i = 0; i < dim; i++) {
@@ -151,6 +152,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectationOfCsr(
                 e_r += sum.real();
                 e_i += sum.imag();
             })
+    // clang-format on
     if (will_free) {
         derived::FreeState(&qs);
     }
@@ -1161,6 +1163,73 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRyz(const qs_da
                                         - GetValue(qs, r2, col) * GetValue(ham_matrix, col, r3);
                         }
                         this_res *= 0.5;
+                        res_real += this_res.real();
+                        res_imag += this_res.imag();
+                    }
+                })
+        // clang-format on
+    }
+    if (will_free) {
+        derived::FreeState(&qs);
+    }
+    return {res_real, res_imag};
+};
+
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSWAPalpha(const qs_data_p_t& qs_out,
+                                                                           const qs_data_p_t& ham_matrix,
+                                                                           const qbits_t& objs, const qbits_t& ctrls,
+                                                                           index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free = true;
+    } else {
+        qs = qs_out;
+    }
+    DoubleQubitGateMask mask(objs, ctrls);
+    auto coeff = IMAGE_I * static_cast<calc_type_>(M_PI_2);
+    calc_type res_real = 0, res_imag = 0;
+    if (!mask.ctrl_mask) {
+        // clang-format off
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim/4); l++) {
+                    index_t r0;
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  l, r0);
+                    auto r3 = r0 + mask.obj_mask;
+                    auto r1 = r0 + mask.obj_min_mask;
+                    auto r2 = r0 + mask.obj_max_mask;
+                    qs_data_t this_res = 0;
+                    for (index_t col = 0; col < dim; col++) {
+                        this_res += (GetValue(qs, r1, col) - GetValue(qs, r2, col))
+                                    * (GetValue(ham_matrix, col, r1) - GetValue(ham_matrix, col, r2));
+                    }
+                    this_res *= coeff;
+                    res_real += this_res.real();
+                    res_imag += this_res.imag();
+                })
+        // clang-format on
+    } else {
+        // clang-format off
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim/4); l++) {
+                    index_t r0;
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  l, r0);
+                    if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
+                        auto r3 = r0 + mask.obj_mask;
+                        auto r1 = r0 + mask.obj_min_mask;
+                        auto r2 = r0 + mask.obj_max_mask;
+                        qs_data_t this_res = 0;
+                        for (index_t col = 0; col < dim; col++) {
+                            this_res += (GetValue(qs, r1, col) - GetValue(qs, r2, col))
+                                        * (GetValue(ham_matrix, col, r1) - GetValue(ham_matrix, col, r2));
+                        }
+                        this_res *= coeff;
                         res_real += this_res.real();
                         res_imag += this_res.imag();
                     }

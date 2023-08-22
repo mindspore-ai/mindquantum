@@ -182,3 +182,11 @@ def _require_package(pkg_name: str, low_version: str = None, high_version: str =
     if high_version is not None:
         raise ImportError(f"Requires {pkg_name}, please install with 'pip install \"{pkg_name}<={high_version}\"'")
     raise ImportError(f"Requires {pkg_name}, please install with 'pip install {pkg_name}'")
+
+
+def _check_mq_type(dtype):
+    # pylint: disable=import-outside-toplevel,cyclic-import
+    from mindquantum.dtype.dtype import mq_number_type
+
+    if dtype not in mq_number_type:
+        raise ValueError(f"dtype only support {mq_number_type}, but get {dtype}")
