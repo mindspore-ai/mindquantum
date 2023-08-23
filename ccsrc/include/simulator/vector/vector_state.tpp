@@ -406,30 +406,18 @@ void VectorState<qs_policy_t_>::ApplyPauliChannel(const std::shared_ptr<BasicGat
 
 template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::ApplyDepolarizingChannel(const std::shared_ptr<BasicGate>& gate) {
-    double r = static_cast<double>(rng_());
     auto g = static_cast<DepolarizingChannel*>(gate.get());
     double p = g->prob_;
-    if (r <= 1 - p) {
-        return;
-    } else {
-        double gap = p;
-        double s = r - 1 + p;
-        for (qbit_t obj_qubit : gate->obj_qubits_) {
-            int gate_index = 0;
-            for (int i = 0; i < 4; i++) {
-                if (s <= gap * (i + 1) / 4) {
-                    gate_index = i;
-                    s += -gap * i / 4;
-                    gap = gap / 4;
-                    break;
-                }
-            }
+    for (qbit_t obj_qubit : gate->obj_qubits_) {
+        double r = static_cast<double>(rng_());
+        if (r < p * 3.0 / 4.0) {
             qbits_t obj{obj_qubit};
-            if (gate_index == 0) {
+            double p_i = static_cast<double>(rng_());
+            if (p_i < 1.0 / 3.0) {
                 qs_policy_t::ApplyX(&qs, obj, gate->ctrl_qubits_, dim);
-            } else if (gate_index == 1) {
+            } else if (p_i < 2.0 / 3.0) {
                 qs_policy_t::ApplyY(&qs, obj, gate->ctrl_qubits_, dim);
-            } else if (gate_index == 2) {
+            } else {
                 qs_policy_t::ApplyZ(&qs, obj, gate->ctrl_qubits_, dim);
             }
         }

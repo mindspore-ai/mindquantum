@@ -324,7 +324,7 @@ class DepolarizingChannelAdder(ChannelAdderBase):
         _check_int_type("n_qubits", n_qubits)
         _check_value_should_not_less("n_qubits", 1, n_qubits)
         super().__init__(add_after=add_after)
-        self.channel = gates.DepolarizingChannel(p)
+        self.channel = gates.DepolarizingChannel(p, n_qubits)
         self.n_qubits = n_qubits
 
     def __repr__(self) -> str:
