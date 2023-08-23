@@ -118,7 +118,12 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
         return False
 
     def matrix(self):  # pylint: disable=arguments-differ
-        """Kraus operator of the quantum channel."""
+        """
+        Kraus operator of the quantum channel.
+
+        Returns:
+            list, contains all Kraus operators of this quantum channel.
+        """
         mat_i = sqrt(1 - self.px - self.py - self.pz) * np.array([[1, 0], [0, 1]])
         mat_x = sqrt(self.px) * np.array([[0, 1], [1, 0]])
         mat_y = sqrt(self.py) * np.array([[0, -1j], [1j, 0]])
@@ -177,7 +182,12 @@ class BitFlipChannel(PauliChannel):
         return f'p={string_expression(self.p)}'
 
     def matrix(self):
-        """Kraus operator of the quantum channel."""
+        """
+        Kraus operator of the quantum channel.
+
+        Returns:
+            list, contains all Kraus operators of this quantum channel.
+        """
         mat_i = sqrt(1 - self.p) * np.array([[1, 0], [0, 1]])
         mat_x = sqrt(self.p) * np.array([[0, 1], [1, 0]])
         return [mat_i, mat_x]
@@ -234,7 +244,12 @@ class PhaseFlipChannel(PauliChannel):
         return f'p={string_expression(self.p)}'
 
     def matrix(self):
-        """Kraus operator of the quantum channel."""
+        """
+        Kraus operator of the quantum channel.
+
+        Returns:
+            list, contains all Kraus operators of this quantum channel.
+        """
         mat_i = sqrt(1 - self.p) * np.array([[1, 0], [0, 1]])
         mat_z = sqrt(self.p) * np.array([[1, 0], [0, -1]])
         return [mat_i, mat_z]
@@ -292,7 +307,12 @@ class BitPhaseFlipChannel(PauliChannel):
         return f'p={string_expression(self.p)}'
 
     def matrix(self):
-        """Kraus operator of the quantum channel."""
+        """
+        Kraus operator of the quantum channel.
+
+        Returns:
+            list, contains all Kraus operators of this quantum channel.
+        """
         mat_i = sqrt(1 - self.p) * np.array([[1, 0], [0, 1]])
         mat_y = sqrt(self.p) * np.array([[0, -1j], [1j, 0]])
         return [mat_i, mat_y]
@@ -463,7 +483,12 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
         self.projectq_gate = None
 
     def matrix(self):  # pylint: disable=arguments-differ
-        """Kraus operator of the quantum channel."""
+        """
+        Kraus operator of the quantum channel.
+
+        Returns:
+            list, contains all Kraus operators of this quantum channel.
+        """
         mat_0 = np.array([[1, 0], [0, sqrt(1 - self.gamma)]])
         mat_1 = np.array([[0, sqrt(self.gamma)], [0, 0]])
         if self.hermitianed:
@@ -536,7 +561,12 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
         self.projectq_gate = None
 
     def matrix(self):  # pylint: disable=arguments-differ
-        """Kraus operator of the quantum channel."""
+        """
+        Kraus operator of the quantum channel.
+
+        Returns:
+            list, contains all Kraus operators of this quantum channel.
+        """
         mat_0 = np.array([[1, 0], [0, sqrt(1 - self.gamma)]])
         mat_1 = np.array([[0, 0], [0, sqrt(self.gamma)]])
         return [mat_0, mat_1]
@@ -613,5 +643,10 @@ class KrausChannel(NoiseGate, NonHermitianGate):
         return self.name
 
     def matrix(self):  # pylint: disable=arguments-differ
-        """Kraus operator of the quantum channel."""
+        """
+        Kraus operator of the quantum channel.
+
+        Returns:
+            list, contains all Kraus operators of this quantum channel.
+        """
         return list(self.kraus_op)
