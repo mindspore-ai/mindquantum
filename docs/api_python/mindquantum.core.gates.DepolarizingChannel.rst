@@ -1,7 +1,7 @@
 mindquantum.core.gates.DepolarizingChannel
 ===========================================
 
-.. py:class:: mindquantum.core.gates.DepolarizingChannel(p: float, **kwargs)
+.. py:class:: mindquantum.core.gates.DepolarizingChannel(p: float, n_qubits: int = 1, **kwargs)
 
     去极化信道。描述的噪声体现为：以 :math:`P` 的概率将量子态转变为最大混态（随机作用泡利门（I、X、Y、Z）的其中一个，每个泡利门的概率都是 :math:`P/4` ），或以 :math:`1-P` 的概率保持不变。
 
@@ -27,26 +27,15 @@ mindquantum.core.gates.DepolarizingChannel
 
     参数：
         - **p** (int, float) - 发生去极化错误的概率。
-
-    .. py:method:: define_projectq_gate()
-
-        定义对应的projectq门。
+        - **n_qubits** (int) - 去极化信道的比特数。默认值：``1``。
 
     .. py:method:: get_cpp_obj()
 
         返回量子门的c++对象。
-
-    .. py:method:: on(obj_qubits, ctrl_qubits=None)
-
-        定义门作用在哪个比特上。
-
-        参数：
-            - **obj_qubits** (int, list[int]) - 指明量子门作用在哪个比特上。
-            - **ctrl_qubits** (int, list[int]) - 噪声信道的控制位比特只能是 ``None``。
 
     .. py:method:: matrix()
 
         返回该噪声信道的Kraus算符。
 
         返回：
-            list，包含了该噪声信道的Kraus算符。
+            list，包含了该噪声信道的Kraus算符，且顺序为 :math:`\left\{ I, X, Y, Z \right\} ^{\otimes N}` 的字典顺序。

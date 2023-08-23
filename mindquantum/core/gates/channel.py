@@ -16,8 +16,8 @@
 # pylint: disable=abstract-method,no-member
 """Quantum channel."""
 
+from itertools import product
 from math import sqrt
-from typing import Iterable
 
 import numpy as np
 
@@ -332,13 +332,14 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
 
     Args:
         p (int, float): probability of occurred depolarizing error.
+        n_qubits (int): qubit number of this depolarizing channel. Default: ``1``.
 
     Examples:
         >>> from mindquantum.core.gates import DepolarizingChannel
         >>> from mindquantum.core.circuit import Circuit
         >>> circ = Circuit()
         >>> circ += DepolarizingChannel(0.02).on(0)
-        >>> circ += DepolarizingChannel(0.01).on([0, 1])
+        >>> circ += DepolarizingChannel(0.01, 2).on([0, 1])
         >>> print(circ)
         q0: ──DC(p=0.02)────DC(p=0.01)──
                                 │
@@ -347,40 +348,24 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
 
     # pylint: disable=invalid-name
 
-    def __init__(self, p: float, **kwargs):
+    def __init__(self, p: float, n_qubits: int = 1, **kwargs):
         """Initialize a DepolarizingChannel object."""
         kwargs['name'] = 'DC'
-        kwargs['n_qubits'] = 1
+        kwargs['n_qubits'] = n_qubits
         NoiseGate.__init__(self, **kwargs)
         SelfHermitianGate.__init__(self, **kwargs)
         self.projectq_gate = None
         if not isinstance(p, (int, float)):
             raise TypeError(f"Unsupported type for argument p, get {type(p)}.")
         self.p = p
-
-    def on(self, obj_qubits, ctrl_qubits=None):
-        """
-        Define which qubit the gate act on.
-
-        Args:
-            obj_qubits (int, list[int]): Specific which qubits the gate act on.
-            ctrl_qubits (int, list[int]): Control qubit for quantum channel should always be ``None``.
-        """
-        if isinstance(obj_qubits, Iterable):
-            self.n_qubits = len(obj_qubits)
         if not 0 <= self.p <= 4**self.n_qubits / (4**self.n_qubits - 1):
             raise ValueError(
                 f"Required argument p ∈ [0, {4**self.n_qubits}/{4**self.n_qubits - 1}], but get p = {self.p}."
             )
-        return super().on(obj_qubits, ctrl_qubits)
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
         return mb.gate.DepolarizingChannel(self.p, self.obj_qubits, self.ctrl_qubits)
-
-    def define_projectq_gate(self):
-        """Define the corresponded projectq gate."""
-        self.projectq_gate = None
 
     def __eq__(self, other):
         """Equality comparison operator."""
@@ -395,12 +380,24 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
         return f'p={string_expression(self.p)}'
 
     def matrix(self):  # pylint: disable=arguments-differ
-        """Kraus operator of the quantum channel."""
-        mat_i = sqrt(1 - self.p * 3 / 4) * np.array([[1, 0], [0, 1]])
-        mat_x = sqrt(self.p) * np.array([[0, 1], [1, 0]]) / 2
-        mat_y = sqrt(self.p) * np.array([[0, -1j], [1j, 0]]) / 2
-        mat_z = sqrt(self.p) * np.array([[1, 0], [0, -1]]) / 2
-        return [mat_i, mat_x, mat_y, mat_z]
+        r"""
+        Kraus operator of the quantum channel.
+
+        Returns:
+            list, the kraus matrix of this operator, while order of output is in dictionary
+                order of :math:`\left\{ I, X, Y, Z \right\} ^{\otimes N}`.
+        """
+        # pylint: disable=import-outside-toplevel
+        from mindquantum.core.operators import QubitOperator
+
+        p = np.ones(4**self.n_qubits) * sqrt(self.p) / 2**self.n_qubits
+        p[0] = sqrt(1 - self.p + self.p / 4**self.n_qubits)
+        out = []
+        for i_pauli, pauli_tuple in enumerate(product(['I', 'X', 'Y', 'Z'], repeat=self.n_qubits)):
+            pauli_string = ' '.join(f"{pauli}{idx}" for idx, pauli in enumerate(pauli_tuple) if pauli != 'I')
+            m = QubitOperator(pauli_string).matrix(self.n_qubits) * p[i_pauli]
+            out.append(m.toarray())
+        return out
 
 
 class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):

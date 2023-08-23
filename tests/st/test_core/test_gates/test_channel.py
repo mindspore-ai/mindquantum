@@ -98,7 +98,7 @@ def test_depolarizing_channel(config):
         assert np.allclose(sim.get_qs(), np.array([[0.5 - 0.0j, 0.27 + 0.36j], [0.27 - 0.36j, 0.5 - 0.0j]]))
         sim2 = Simulator(backend, 2, dtype=dtype)
         sim2.set_qs(np.array([1 + 0.5j, 2 + 0.5j, 3 + 0.5j, 4 + 0.5j]))
-        sim2.apply_gate(C.DepolarizingChannel(0.1).on([0, 1]))
+        sim2.apply_gate(C.DepolarizingChannel(0.1, 2).on([0, 1]))
         assert np.allclose(
             sim2.get_qs(),
             np.array(
@@ -114,14 +114,14 @@ def test_depolarizing_channel(config):
         sim = Simulator(backend, 1, seed=42)
         sim.set_qs(np.array([1 + 0.5j, 1 - 0.5j]))
         sim.apply_gate(C.DepolarizingChannel(0.5).on(0))
-        assert np.allclose(sim.get_qs(), np.array([0.63245553 + 0.31622777j, -0.63245553 + 0.31622777j]))
+        assert np.allclose(sim.get_qs(), np.array([0.63245553 + 0.31622777j, 0.63245553 - 0.31622777j]))
         sim2 = Simulator(backend, 2, seed=42)
         sim2.set_qs(np.array([1 + 0.5j, 2 + 0.5j, 3 + 0.5j, 4 + 0.5j]))
-        sim2.apply_gate(C.DepolarizingChannel(0.5).on([0, 1]))
+        sim2.apply_gate(C.DepolarizingChannel(0.5, 2).on([0, 1]))
         assert np.allclose(
             sim2.get_qs(),
             np.array(
-                [0.08980265 - 0.53881591j, -0.08980265 + 0.71842121j, -0.08980265 + 0.1796053j, 0.08980265 - 0.3592106j]
+                [0.1796053 + 0.08980265j, 0.3592106 + 0.08980265j, -0.53881591 - 0.08980265j, -0.71842121 - 0.08980265j]
             ),
         )
 
