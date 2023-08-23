@@ -1,7 +1,7 @@
 mindquantum.algorithm.nisq.Ansatz3
 ==================================
 
-.. py:class:: mindquantum.algorithm.nisq.Ansatz3(n_qubits: int, depth: int, prefix: str = '', subfix: str = '')
+.. py:class:: mindquantum.algorithm.nisq.Ansatz3(n_qubits: int, depth: int, prefix: str = '', suffix: str = '')
 
     Arxiv 论文中所提及的量子线路3。
 
@@ -15,4 +15,4 @@ mindquantum.algorithm.nisq.Ansatz3
         - **n_qubits** (int) - 量子线路的总比特数。
         - **depth** (int) - ansatz 的循环层数。
         - **prefix** (str) - 参数的前缀。默认值： ``''``。
-        - **subfix** (str) - 参数的后缀。默认值： ``''``。
+        - **suffix** (str) - 参数的后缀。默认值： ``''``。

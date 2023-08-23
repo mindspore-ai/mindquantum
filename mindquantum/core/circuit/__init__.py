@@ -22,6 +22,8 @@ from . import channel_adder
 from .channel_adder import (
     BitFlipAdder,
     ChannelAdderBase,
+    DepolarizingChannelAdder,
+    GateSelector,
     MeasureAccepter,
     MixerAdder,
     NoiseChannelAdder,
