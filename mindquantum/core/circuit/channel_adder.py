@@ -304,6 +304,9 @@ class DepolarizingChannelAdder(ChannelAdderBase):
 
     Args:
         p (float): probability of occurred depolarizing error.
+        n_qubits (int): the qubit number of depolarizing channel.
+        add_after (bool): Whether add this channel after quantum gate or not. If ``False``, the
+            channel will add before quantum gate. Default: ``True``.
 
     Examples:
         >>> from mindquantum.core.circuit import MixerAdder, DepolarizingChannelAdder, GateSelector

@@ -56,6 +56,8 @@ Channel adder
     mindquantum.core.circuit.SequentialAdder
     mindquantum.core.circuit.QubitNumberConstrain
     mindquantum.core.circuit.QubitIDConstrain
+    mindquantum.core.circuit.GateSelector
+    mindquantum.core.circuit.DepolarizingChannelAdder
 
 shortcut
 ----------
