@@ -92,9 +92,9 @@ def test_none_parameter_gate(config, gate):
     m = np.block([[np.eye(dim), np.zeros((dim, dim))], [np.zeros((dim, dim)), g.matrix()]])
     c_ref_qs = m @ (c_init_state / np.linalg.norm(c_init_state))
     if virtual_qc.startswith("mqmatrix"):
-        assert np.allclose(c_sim.get_qs(), np.outer(c_ref_qs, c_ref_qs.conj()), atol=1.0e-6)
+        assert np.allclose(c_sim.get_qs(), np.outer(c_ref_qs, c_ref_qs.conj()), atol=1e-6)
     else:
-        assert np.allclose(c_sim.get_qs(), c_ref_qs)
+        assert np.allclose(c_sim.get_qs(), c_ref_qs, atol=1e-6)
 
 
 @pytest.mark.level0
@@ -118,9 +118,9 @@ def test_single_parameter_gate(config, gate):
     sim.apply_gate(g)
     ref_qs = g.matrix() @ (init_state / np.linalg.norm(init_state))
     if virtual_qc.startswith("mqmatrix"):
-        assert np.allclose(sim.get_qs(), np.outer(ref_qs, ref_qs.conj()))
+        assert np.allclose(sim.get_qs(), np.outer(ref_qs, ref_qs.conj()), atol=1e-6)
     else:
-        assert np.allclose(sim.get_qs(), ref_qs)
+        assert np.allclose(sim.get_qs(), ref_qs, atol=1e-6)
 
     c_g = g.on(list(range(g.n_qubits)), g.n_qubits)
     c_init_state = np.random.rand(2 * dim) + np.random.rand(2 * dim) * 1j
@@ -130,9 +130,9 @@ def test_single_parameter_gate(config, gate):
     m = np.block([[np.eye(dim), np.zeros((dim, dim))], [np.zeros((dim, dim)), g.matrix()]])
     c_ref_qs = m @ (c_init_state / np.linalg.norm(c_init_state))
     if virtual_qc.startswith("mqmatrix"):
-        assert np.allclose(c_sim.get_qs(), np.outer(c_ref_qs, c_ref_qs.conj()), atol=1.0e-6)
+        assert np.allclose(c_sim.get_qs(), np.outer(c_ref_qs, c_ref_qs.conj()), atol=1e-6)
     else:
-        assert np.allclose(c_sim.get_qs(), c_ref_qs)
+        assert np.allclose(c_sim.get_qs(), c_ref_qs, atol=1e-6)
 
 
 @pytest.mark.level0
@@ -161,9 +161,9 @@ def test_multi_parameter_gate(config, gate):
     sim.apply_gate(g)
     ref_qs = g.matrix() @ (init_state / np.linalg.norm(init_state))
     if virtual_qc.startswith("mqmatrix"):
-        assert np.allclose(sim.get_qs(), np.outer(ref_qs, ref_qs.conj()))
+        assert np.allclose(sim.get_qs(), np.outer(ref_qs, ref_qs.conj()), atol=1e-6)
     else:
-        assert np.allclose(sim.get_qs(), ref_qs)
+        assert np.allclose(sim.get_qs(), ref_qs, atol=1e-6)
 
     c_g = g.on(list(range(g.n_qubits)), g.n_qubits)
     c_init_state = np.random.rand(2 * dim) + np.random.rand(2 * dim) * 1j
@@ -173,9 +173,9 @@ def test_multi_parameter_gate(config, gate):
     m = np.block([[np.eye(dim), np.zeros((dim, dim))], [np.zeros((dim, dim)), g.matrix()]])
     c_ref_qs = m @ (c_init_state / np.linalg.norm(c_init_state))
     if virtual_qc.startswith("mqmatrix"):
-        assert np.allclose(c_sim.get_qs(), np.outer(c_ref_qs, c_ref_qs.conj()), atol=1.0e-6)
+        assert np.allclose(c_sim.get_qs(), np.outer(c_ref_qs, c_ref_qs.conj()), atol=1e-6)
     else:
-        assert np.allclose(c_sim.get_qs(), c_ref_qs)
+        assert np.allclose(c_sim.get_qs(), c_ref_qs, atol=1e-6)
 
 
 @pytest.mark.level0

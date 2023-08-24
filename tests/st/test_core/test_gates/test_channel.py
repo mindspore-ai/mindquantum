@@ -13,8 +13,8 @@
 # limitations under the License.
 # ============================================================================
 """Test channel."""
-import numpy as np
 from math import sqrt
+import numpy as np
 import pytest
 
 import mindquantum.core.gates.channel as C
@@ -32,7 +32,9 @@ def test_pauli_channel():
     Expectation: success.
     """
     px, py, pz = np.random.rand(3) / 3
-    assert np.allclose(C.PauliChannel(px, py, pz).matrix(), [sqrt(1 - px - py - pz) * I, sqrt(px) * X, sqrt(py) * Y, sqrt(pz) * Z])
+    assert np.allclose(
+        C.PauliChannel(px, py, pz).matrix(), [sqrt(1 - px - py - pz) * I, sqrt(px) * X, sqrt(py) * Y, sqrt(pz) * Z]
+    )
     assert np.allclose(C.BitFlipChannel(px).matrix(), [sqrt(1 - px) * I, sqrt(px) * X])
     assert np.allclose(C.PhaseFlipChannel(pz).matrix(), [sqrt(1 - pz) * I, sqrt(pz) * Z])
     assert np.allclose(C.BitPhaseFlipChannel(py).matrix(), [sqrt(1 - py) * I, sqrt(py) * Y])

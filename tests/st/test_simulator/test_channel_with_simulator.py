@@ -15,6 +15,7 @@
 
 """Test channel with simulator."""
 import numpy as np
+from scipy.stats import entropy
 import pytest
 
 import mindquantum as mq
@@ -30,6 +31,8 @@ flip_and_damping_channel = [
     G.AmplitudeDampingChannel,
     G.PhaseDampingChannel,
 ]
+
+shots = 100000
 
 
 @pytest.mark.level0
@@ -58,8 +61,9 @@ def test_flip_and_damping_channel(config, channel):
         sim.apply_gate(c)
         assert np.allclose(sim.get_qs(), ref_qs)
     else:
-        res = sim.sampling(Circuit([c, G.Measure().on(0)]), shots=100000)
-        assert np.allclose(res.data['0'] / 100000, ref_qs[0][0], atol=1e-2)
+        res = sim.sampling(Circuit([c, G.Measure().on(0)]), shots=shots)
+        difference = entropy(np.array(list(res.data.values())) / shots, ref_qs.diagonal().real)
+        assert difference < 1e-4
 
 
 @pytest.mark.level0
@@ -87,8 +91,9 @@ def test_pauli_channel(config):
         sim.apply_gate(c)
         assert np.allclose(sim.get_qs(), ref_qs)
     else:
-        res = sim.sampling(Circuit([c, G.Measure().on(0)]), shots=100000)
-        assert np.allclose(res.data['0'] / 100000, ref_qs[0][0], atol=1e-2)
+        res = sim.sampling(Circuit([c, G.Measure().on(0)]), shots=shots)
+        difference = entropy(np.array(list(res.data.values())) / shots, ref_qs.diagonal().real)
+        assert difference < 1e-4
 
 
 @pytest.mark.level0
@@ -118,8 +123,9 @@ def test_depolarizing_channel(config):
             sim.apply_gate(c)
             assert np.allclose(sim.get_qs(), ref_qs)
         else:
-            res = sim.sampling(Circuit(c).measure_all(), shots=100000)
-            assert np.allclose(res.data[n * '0'] / 100000, ref_qs[0][0], atol=1e-2)
+            res = sim.sampling(Circuit(c).measure_all(), shots=shots)
+            difference = entropy(np.array(list(res.data.values())) / shots, ref_qs.diagonal().real)
+            assert difference < 1e-4
 
 
 @pytest.mark.level0
@@ -148,5 +154,6 @@ def test_kraus_channel(config):
         sim.apply_gate(c)
         assert np.allclose(sim.get_qs(), ref_qs)
     else:
-        res = sim.sampling(Circuit([c, G.Measure().on(0)]), shots=100000)
-        assert np.allclose(res.data['0'] / 100000, ref_qs[0][0], atol=1e-2)
+        res = sim.sampling(Circuit([c, G.Measure().on(0)]), shots=shots)
+        difference = entropy(np.array(list(res.data.values())) / shots, ref_qs.diagonal().real)
+        assert difference < 1e-4
