@@ -52,7 +52,7 @@ def test_depolarizing_channel():
             tmp = []
             for j in (I, X, Y, Z):
                 for k in mat_list:
-                    tmp.append(np.kron(j, k))
+                    tmp.append(np.kron(k, j))
             mat_list = tmp
         mat_list[0] = sqrt(1 - p * (4**n - 1) / 4**n) * mat_list[0]
         for i in range(1, len(mat_list)):

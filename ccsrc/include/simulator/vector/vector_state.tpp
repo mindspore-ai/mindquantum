@@ -467,16 +467,18 @@ void VectorState<qs_policy_t_>::ApplyDepolarizingChannel(const std::shared_ptr<B
 template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::ApplyKrausChannel(const std::shared_ptr<BasicGate>& gate) {
     auto tmp_qs = qs_policy_t::InitState(dim);
-    calc_type prob = 0;
+    calc_type relative_prob = 0;
+    calc_type total_prob = 1;
     auto g = static_cast<KrausChannel*>(gate.get());
     for (size_t n_kraus = 0; n_kraus < g->kraus_operator_set_.size(); n_kraus++) {
         qs_policy_t::ApplySingleQubitMatrix(qs, &tmp_qs, gate->obj_qubits_[0], gate->ctrl_qubits_,
                                             tensor::ops::cpu::to_vector<py_qs_data_t>(g->kraus_operator_set_[n_kraus]),
                                             dim);
-        calc_type renormal_factor_square = qs_policy_t::Vdot(tmp_qs, tmp_qs, dim).real();
-        prob = renormal_factor_square / (1 - prob);
-        calc_type renormal_factor = 1 / std::sqrt(renormal_factor_square);
-        if (static_cast<calc_type>(rng_()) <= prob) {
+        calc_type prob = qs_policy_t::Vdot(tmp_qs, tmp_qs, dim).real();
+        relative_prob = prob / total_prob;
+        total_prob = total_prob - prob;
+        calc_type renormal_factor = 1 / std::sqrt(prob);
+        if (static_cast<calc_type>(rng_()) <= relative_prob) {
             qs_policy_t::QSMulValue(tmp_qs, &tmp_qs, renormal_factor, dim);
             qs_policy_t::FreeState(&qs);
             qs = tmp_qs;
