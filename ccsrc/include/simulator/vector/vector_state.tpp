@@ -410,8 +410,8 @@ void VectorState<qs_policy_t_>::ApplyDepolarizingChannel(const std::shared_ptr<B
     double p = g->prob_;
     size_t n_qubits = gate->obj_qubits_.size();
     double r = static_cast<double>(rng_());
-    if (r < p) {
-        if (p <= 1) {
+    if (r < p) {       // occur depolarizing error
+        if (p <= 1) {  // in this case, uniform probability for {I,X,Y,Z}
             for (qbit_t obj_qubit : gate->obj_qubits_) {
                 qbits_t obj{obj_qubit};
                 double p_i = static_cast<double>(rng_());
@@ -423,11 +423,12 @@ void VectorState<qs_policy_t_>::ApplyDepolarizingChannel(const std::shared_ptr<B
                     qs_policy_t::ApplyZ(&qs, obj, gate->ctrl_qubits_, dim);
                 }
             }
-        } else {
+        } else {  // in this case, probability of I^n is different
             double s = static_cast<double>(rng_());
-            if (s < p / pow(4, n_qubits) + (1 - p)) {
+            if (s < p / pow(4, n_qubits) + (1 - p)) {  // I^n case
                 return;
             }
+            // generate a list contained all pauli gate {I,X,Y,Z}^n
             std::string pauli_string;
             std::vector<std::string> pauli_string_list = {"I", "X", "Y", "Z"};
             std::vector<std::string> pauli_word = {"I", "X", "Y", "Z"};
@@ -441,6 +442,7 @@ void VectorState<qs_policy_t_>::ApplyDepolarizingChannel(const std::shared_ptr<B
                 }
                 pauli_string_list = tmp_list;
             }
+            // uniformly random pick of a pauli gate except I^n
             pauli_string = "";
             auto denominator = pow(4, n_qubits) - 1;
             double p_i = static_cast<double>(rng_());
@@ -450,6 +452,7 @@ void VectorState<qs_policy_t_>::ApplyDepolarizingChannel(const std::shared_ptr<B
                     break;
                 }
             }
+            // apply pauli gate
             for (size_t i = 0; i < n_qubits; i++) {
                 qbits_t obj{gate->obj_qubits_[i]};
                 if (pauli_string[i] == 'X') {
