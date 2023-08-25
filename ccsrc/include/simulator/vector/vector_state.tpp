@@ -410,8 +410,8 @@ void VectorState<qs_policy_t_>::ApplyDepolarizingChannel(const std::shared_ptr<B
         DepolarizingChannel gate;
         index_t dim;
         std::function<double()> rng_;
-        PauliSampling(const DepolarizingChannel& gate, index_t dim, std::function<double()> rng_)
-            : gate(gate), dim(dim), rng_(rng_) {
+        PauliSampling(const DepolarizingChannel& gate_in, index_t dim_in, std::function<double()> rng_in)
+            : gate(gate_in), dim(dim_in), rng_(rng_in) {
         }
         void uniform_sampling(qs_data_p_t* qs, int idx) {
             if (idx >= gate.obj_qubits_.size()) {
