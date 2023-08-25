@@ -406,65 +406,54 @@ void VectorState<qs_policy_t_>::ApplyPauliChannel(const std::shared_ptr<BasicGat
 
 template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::ApplyDepolarizingChannel(const std::shared_ptr<BasicGate>& gate) {
-    auto g = static_cast<DepolarizingChannel*>(gate.get());
-    double p = g->prob_;
-    size_t n_qubits = gate->obj_qubits_.size();
-    double r = static_cast<double>(rng_());
-    if (r < p) {       // occur depolarizing error
-        if (p <= 1) {  // in this case, uniform probability for {I,X,Y,Z}
-            for (qbit_t obj_qubit : gate->obj_qubits_) {
-                qbits_t obj{obj_qubit};
-                double p_i = static_cast<double>(rng_());
-                if (p_i > 3.0 / 4.0) {
-                    qs_policy_t::ApplyX(&qs, obj, gate->ctrl_qubits_, dim);
-                } else if (p_i > 1.0 / 2.0) {
-                    qs_policy_t::ApplyY(&qs, obj, gate->ctrl_qubits_, dim);
-                } else if (p_i > 1.0 / 4.0) {
-                    qs_policy_t::ApplyZ(&qs, obj, gate->ctrl_qubits_, dim);
-                }
-            }
-        } else {  // in this case, probability of I^n is different
-            double s = static_cast<double>(rng_());
-            if (s < p / pow(4, n_qubits) + (1 - p)) {  // I^n case
+    struct PauliSampling {
+        DepolarizingChannel gate;
+        index_t dim;
+        std::function<double()> rng_;
+        PauliSampling(const DepolarizingChannel& gate, index_t dim, std::function<double()> rng_)
+            : gate(gate), dim(dim), rng_(rng_) {
+        }
+        void uniform_sampling(qs_data_p_t* qs, int idx) {
+            if (idx >= gate.obj_qubits_.size()) {
                 return;
             }
-            // generate a list contained all pauli gate {I,X,Y,Z}^n
-            std::string pauli_string;
-            std::vector<std::string> pauli_string_list = {"I", "X", "Y", "Z"};
-            std::vector<std::string> pauli_word = {"I", "X", "Y", "Z"};
-            for (size_t i = 1; i < n_qubits; i++) {
-                std::vector<std::string> tmp_list;
-                for (size_t j = 0; j < pauli_string_list.size(); j++) {
-                    for (size_t k = 0; k < 4; k++) {
-                        pauli_string = pauli_string_list[j] + pauli_word[k];
-                        tmp_list.push_back(pauli_string);
-                    }
-                }
-                pauli_string_list = tmp_list;
-            }
-            // uniformly random pick of a pauli gate except I^n
-            pauli_string = "";
-            auto denominator = pow(4, n_qubits) - 1;
             double p_i = static_cast<double>(rng_());
-            for (size_t i = 1; i < denominator + 1; i++) {
-                if (p_i > 1 - i / denominator) {
-                    pauli_string = pauli_string_list[i];
-                    break;
-                }
+            qbits_t obj{gate.obj_qubits_[idx]};
+            if (p_i < 1.0 / 4.0) {
+                qs_policy_t::ApplyX(qs, obj, gate.ctrl_qubits_, dim);
+            } else if (p_i < 2.0 / 4.0) {
+                qs_policy_t::ApplyY(qs, obj, gate.ctrl_qubits_, dim);
+            } else if (p_i < 3.0 / 4.0) {
+                qs_policy_t::ApplyZ(qs, obj, gate.ctrl_qubits_, dim);
             }
-            // apply pauli gate
-            for (size_t i = 0; i < n_qubits; i++) {
-                qbits_t obj{gate->obj_qubits_[i]};
-                if (pauli_string[i] == 'X') {
-                    qs_policy_t::ApplyX(&qs, obj, gate->ctrl_qubits_, dim);
-                } else if (pauli_string[i] == 'Y') {
-                    qs_policy_t::ApplyY(&qs, obj, gate->ctrl_qubits_, dim);
-                } else if (pauli_string[i] == 'Z') {
-                    qs_policy_t::ApplyZ(&qs, obj, gate->ctrl_qubits_, dim);
+            PauliSampling::uniform_sampling(qs, idx + 1);
+        }
+        void non_uniform_sampling(qs_data_p_t* qs, int idx, double p) {
+            if (idx >= gate.obj_qubits_.size()) {
+                return;
+            }
+            if (static_cast<double>(rng_()) < p * 3.0 / 4.0) {
+                double p_i = static_cast<double>(rng_());
+                qbits_t obj{gate.obj_qubits_[idx]};
+                if (p_i < 1.0 / 3.0) {
+                    qs_policy_t::ApplyX(qs, obj, gate.ctrl_qubits_, dim);
+                } else if (p_i < 2.0 / 3.0) {
+                    qs_policy_t::ApplyY(qs, obj, gate.ctrl_qubits_, dim);
+                } else {
+                    qs_policy_t::ApplyZ(qs, obj, gate.ctrl_qubits_, dim);
+                }
+                PauliSampling::uniform_sampling(qs, idx + 1);
+            } else {
+                if (4 > 3 * p) {
+                    PauliSampling::non_uniform_sampling(qs, idx + 1, p / (4 - 3 * p));
                 }
             }
         }
-    }
+    };
+    auto g = static_cast<DepolarizingChannel*>(gate.get());
+    double p = g->prob_;
+    auto sampler = PauliSampling(*g, dim, rng_);
+    sampler.non_uniform_sampling(&qs, 0, p);
 }
 
 template <typename qs_policy_t_>
