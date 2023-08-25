@@ -144,6 +144,8 @@ struct CPUDensityMatrixPolicyBase {
                                            const qbits_t& ctrls, const matrix_t& m, index_t dim);
     static void ApplyTwoQubitsMatrixCtrl(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs,
                                          const qbits_t& ctrls, const matrix_t& m, index_t dim);
+    static void ApplyNQubitsMatrix(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs,
+                                   const qbits_t& ctrls, const matrix_t& m, index_t dim);
     static void ApplySWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyISWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, bool daggered, index_t dim);
     static void ApplyISWAPNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, bool daggered,
@@ -210,6 +212,9 @@ struct CPUDensityMatrixPolicyBase {
     static qs_data_t ExpectDiffTwoQubitsMatrix(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix,
                                                const qbits_t& objs, const qbits_t& ctrls, const matrix_t& gate_m,
                                                const matrix_t& diff_m, index_t dim);
+    static qs_data_t ExpectDiffNQubitsMatrix(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+                                             const qbits_t& ctrls, const matrix_t& gate_m, const matrix_t& diff_m,
+                                             index_t dim);
     static qs_data_t ExpectDiffMatrixGate(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
                                           const qbits_t& ctrls, const matrix_t& diff_m, const matrix_t& herm_m,
                                           index_t dim);

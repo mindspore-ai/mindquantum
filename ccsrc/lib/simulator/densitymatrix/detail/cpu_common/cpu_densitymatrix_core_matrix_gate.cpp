@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "config/openmp.h"
+#include "core/mq_base_types.h"
 #include "core/utils.h"
 #include "math/pr/parameter_resolver.h"
 #include "simulator/utils.h"
@@ -282,6 +283,90 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrixCtrl(
 }
 
 template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(const qs_data_p_t& src_out,
+                                                                          qs_data_p_t* des_p, const qbits_t& objs,
+                                                                          const qbits_t& ctrls, const matrix_t& gate,
+                                                                          index_t dim) {
+    auto& des = *des_p;
+    if (des == nullptr) {
+        des = derived::InitState(dim);
+    }
+    qs_data_p_t src;
+    bool will_free = false;
+    if (src_out == nullptr) {
+        src = derived::InitState(dim);
+        will_free = true;
+    } else {
+        src = src_out;
+    }
+    size_t n_qubit = objs.size();
+    size_t m_dim = (1UL << n_qubit);
+    size_t ctrl_mask = 0;
+    for (auto& i : ctrls) {
+        ctrl_mask |= 1UL << i;
+    }
+    std::vector<size_t> obj_masks{};
+    for (size_t i = 0; i < m_dim; i++) {
+        size_t n = 0;
+        size_t mask_j = 0;
+        for (size_t j = i; j != 0; j >>= 1) {
+            if (j & 1) {
+                mask_j += 1UL << objs[n];
+            }
+            n += 1;
+        }
+        obj_masks.push_back(mask_j);
+    }
+    auto obj_mask = obj_masks.back();
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim); a++) {
+            bool row_apply = (((a & ctrl_mask) == ctrl_mask) && ((a & obj_mask) == 0));
+            for (index_t b = 0; b <= a; b++) {
+                bool col_apply = (((b & ctrl_mask) == ctrl_mask) && ((b & obj_mask) == 0));
+                if (!row_apply && !col_apply) {
+                    continue;
+                }
+                VT<VT<qs_data_t>> tmp_mat(m_dim, VT<qs_data_t>(m_dim));
+                if (row_apply) {
+                    for (size_t i = 0; i < m_dim; i++) {
+                        for (size_t j = 0; j < m_dim; j++) {
+                            for (size_t k = 0; k < m_dim; k++) {
+                                tmp_mat[i][j] += gate[i][k] * GetValue(src, obj_masks[k] | a, obj_masks[j] | b);
+                            }
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < m_dim; i++) {
+                        for (int j = 0; j < m_dim; j++) {
+                            tmp_mat[i][j] = GetValue(src, obj_masks[i] | a, obj_masks[j] | b);
+                        }
+                    }
+                }
+                if (col_apply) {
+                    for (size_t i = 0; i < m_dim; i++) {
+                        for (size_t j = 0; j < m_dim; j++) {
+                            qs_data_t new_value = 0;
+                            for (size_t k = 0; k < m_dim; k++) {
+                                new_value += tmp_mat[i][k] * std::conj(gate[j][k]);
+                            }
+                            SetValue(des, obj_masks[i] | a, obj_masks[j] | b, new_value);
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < m_dim; i++) {
+                        for (int j = 0; j < m_dim; j++) {
+                            SetValue(des, obj_masks[i] | a, obj_masks[j] | b, tmp_mat[i][j]);
+                        }
+                    }
+                }
+            }
+        })
+    if (will_free) {
+        derived::FreeState(&src);
+    }
+}
+
+template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyMatrixGate(const qs_data_p_t& src, qs_data_p_t* des_p,
                                                                        const qbits_t& objs, const qbits_t& ctrls,
                                                                        const matrix_t& m, index_t dim) {
@@ -290,7 +375,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyMatrixGate(const qs_
     } else if (objs.size() == 2) {
         derived::ApplyTwoQubitsMatrix(src, des_p, objs, ctrls, m, dim);
     } else {
-        throw std::runtime_error("Can not custom " + std::to_string(objs.size()) + " qubits gate for cpu backend.");
+        derived::ApplyNQubitsMatrix(src, des_p, objs, ctrls, m, dim);
     }
 }
 
