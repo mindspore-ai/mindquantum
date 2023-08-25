@@ -155,7 +155,7 @@ mindquantum.core.operators.FermionOperator
 
     .. py:method:: relabel(logic_qubits: typing.List[int])
 
-        根据逻辑比特顺序从新编码量子比特。
+        根据逻辑比特顺序重新编码量子比特。
 
         参数：
             - **logic_qubits** (List[int]) - 逻辑比特编号。

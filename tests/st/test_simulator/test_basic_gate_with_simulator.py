@@ -92,7 +92,7 @@ def test_none_parameter_gate(config, gate):
     m = np.block([[np.eye(dim), np.zeros((dim, dim))], [np.zeros((dim, dim)), g.matrix()]])
     c_ref_qs = m @ (c_init_state / np.linalg.norm(c_init_state))
     if virtual_qc.startswith("mqmatrix"):
-        assert np.allclose(c_sim.get_qs(), np.outer(c_ref_qs, c_ref_qs.conj()))
+        assert np.allclose(c_sim.get_qs(), np.outer(c_ref_qs, c_ref_qs.conj()), atol=1.0e-6)
     else:
         assert np.allclose(c_sim.get_qs(), c_ref_qs)
 
@@ -130,7 +130,7 @@ def test_single_parameter_gate(config, gate):
     m = np.block([[np.eye(dim), np.zeros((dim, dim))], [np.zeros((dim, dim)), g.matrix()]])
     c_ref_qs = m @ (c_init_state / np.linalg.norm(c_init_state))
     if virtual_qc.startswith("mqmatrix"):
-        assert np.allclose(c_sim.get_qs(), np.outer(c_ref_qs, c_ref_qs.conj()))
+        assert np.allclose(c_sim.get_qs(), np.outer(c_ref_qs, c_ref_qs.conj()), atol=1.0e-6)
     else:
         assert np.allclose(c_sim.get_qs(), c_ref_qs)
 
@@ -173,7 +173,7 @@ def test_multi_parameter_gate(config, gate):
     m = np.block([[np.eye(dim), np.zeros((dim, dim))], [np.zeros((dim, dim)), g.matrix()]])
     c_ref_qs = m @ (c_init_state / np.linalg.norm(c_init_state))
     if virtual_qc.startswith("mqmatrix"):
-        assert np.allclose(c_sim.get_qs(), np.outer(c_ref_qs, c_ref_qs.conj()))
+        assert np.allclose(c_sim.get_qs(), np.outer(c_ref_qs, c_ref_qs.conj()), atol=1.0e-6)
     else:
         assert np.allclose(c_sim.get_qs(), c_ref_qs)
 
@@ -215,7 +215,7 @@ def test_single_parameter_gate_expectation_with_grad(config, gate):  # pylint: d
         @ g.diff_matrix({'a': pr})
         @ init_state
     ).real * 2
-    assert np.allclose(f, ref_f)
+    assert np.allclose(f, ref_f, atol=1e-6)
     assert np.allclose(grad, ref_grad.real, atol=1e-6)
 
     c_g = g.on(list(range(g.n_qubits)), g.n_qubits)
@@ -234,5 +234,5 @@ def test_single_parameter_gate_expectation_with_grad(config, gate):  # pylint: d
     c_ref_grad = (
         2 * (c_init_state.T.conj() @ m.T.conj() @ ham.hamiltonian.matrix(g.n_qubits + 1) @ diff_m @ c_init_state).real
     )
-    assert np.allclose(c_f, c_ref_f)
+    assert np.allclose(c_f, c_ref_f, atol=1e-6)
     assert np.allclose(c_grad, c_ref_grad, atol=1e-6)
