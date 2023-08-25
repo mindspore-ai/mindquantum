@@ -105,7 +105,52 @@ def test_trap_ion_gate():
             * np.array([[1.0, 0.0, 0.0, 0.0], [0.0, -1.0, 0.0, 0.0], [0.0, 0.0, -1.0, 0.0], [0.0, 0.0, 0.0, 1.0]])
         ),
     ]
-    for g in [rxx, ryy, rzz]:
+    rxy = [
+        G.Rxy("angle").on((0, 1)),
+        lambda angle: expm(
+            -0.5j
+            * angle
+            * np.array(
+                [
+                    [0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j, 0.0 - 1.0j],
+                    [0.0 + 0.0j, 0.0 + 0.0j, 0.0 - 1.0j, 0.0 + 0.0j],
+                    [0.0 + 0.0j, 0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 0.0j],
+                    [0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j],
+                ]
+            )
+        ),
+    ]
+    rxz = [
+        G.Rxz("angle").on((0, 1)),
+        lambda angle: expm(
+            -0.5j
+            * angle
+            * np.array(
+                [
+                    [0.0 + 0.0j, 1.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j],
+                    [1.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j],
+                    [0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j, -1.0 + 0.0j],
+                    [0.0 + 0.0j, 0.0 + 0.0j, -1.0 + 0.0j, 0.0 + 0.0j],
+                ]
+            )
+        ),
+    ]
+    ryz = [
+        G.Ryz("angle").on((0, 1)),
+        lambda angle: expm(
+            -0.5j
+            * angle
+            * np.array(
+                [
+                    [0.0 + 0.0j, 0.0 - 1.0j, 0.0 + 0.0j, 0.0 + 0.0j],
+                    [0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j],
+                    [0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 1.0j],
+                    [0.0 + 0.0j, 0.0 + 0.0j, 0.0 - 1.0j, 0.0 + 0.0j],
+                ]
+            )
+        ),
+    ]
+    for g in [rxx, ryy, rzz, rxy, rxz, ryz]:
         assert np.allclose(g[0].matrix({'angle': angle}), g[1](angle))
         assert np.allclose(g[0].diff_matrix({'angle': angle}), g[1](angle + np.pi) / 2)
 

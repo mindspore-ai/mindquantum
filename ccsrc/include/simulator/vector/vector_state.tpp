@@ -408,17 +408,60 @@ template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::ApplyDepolarizingChannel(const std::shared_ptr<BasicGate>& gate) {
     auto g = static_cast<DepolarizingChannel*>(gate.get());
     double p = g->prob_;
-    for (qbit_t obj_qubit : gate->obj_qubits_) {
-        double r = static_cast<double>(rng_());
-        if (r < p * 3.0 / 4.0) {
-            qbits_t obj{obj_qubit};
+    size_t n_qubits = gate->obj_qubits_.size();
+    double r = static_cast<double>(rng_());
+    if (r < p) {       // occur depolarizing error
+        if (p <= 1) {  // in this case, uniform probability for {I,X,Y,Z}
+            for (qbit_t obj_qubit : gate->obj_qubits_) {
+                qbits_t obj{obj_qubit};
+                double p_i = static_cast<double>(rng_());
+                if (p_i > 3.0 / 4.0) {
+                    qs_policy_t::ApplyX(&qs, obj, gate->ctrl_qubits_, dim);
+                } else if (p_i > 1.0 / 2.0) {
+                    qs_policy_t::ApplyY(&qs, obj, gate->ctrl_qubits_, dim);
+                } else if (p_i > 1.0 / 4.0) {
+                    qs_policy_t::ApplyZ(&qs, obj, gate->ctrl_qubits_, dim);
+                }
+            }
+        } else {  // in this case, probability of I^n is different
+            double s = static_cast<double>(rng_());
+            if (s < p / pow(4, n_qubits) + (1 - p)) {  // I^n case
+                return;
+            }
+            // generate a list contained all pauli gate {I,X,Y,Z}^n
+            std::string pauli_string;
+            std::vector<std::string> pauli_string_list = {"I", "X", "Y", "Z"};
+            std::vector<std::string> pauli_word = {"I", "X", "Y", "Z"};
+            for (size_t i = 1; i < n_qubits; i++) {
+                std::vector<std::string> tmp_list;
+                for (size_t j = 0; j < pauli_string_list.size(); j++) {
+                    for (size_t k = 0; k < 4; k++) {
+                        pauli_string = pauli_string_list[j] + pauli_word[k];
+                        tmp_list.push_back(pauli_string);
+                    }
+                }
+                pauli_string_list = tmp_list;
+            }
+            // uniformly random pick of a pauli gate except I^n
+            pauli_string = "";
+            auto denominator = pow(4, n_qubits) - 1;
             double p_i = static_cast<double>(rng_());
-            if (p_i < 1.0 / 3.0) {
-                qs_policy_t::ApplyX(&qs, obj, gate->ctrl_qubits_, dim);
-            } else if (p_i < 2.0 / 3.0) {
-                qs_policy_t::ApplyY(&qs, obj, gate->ctrl_qubits_, dim);
-            } else {
-                qs_policy_t::ApplyZ(&qs, obj, gate->ctrl_qubits_, dim);
+            for (size_t i = 1; i < denominator + 1; i++) {
+                if (p_i > 1 - i / denominator) {
+                    pauli_string = pauli_string_list[i];
+                    break;
+                }
+            }
+            // apply pauli gate
+            for (size_t i = 0; i < n_qubits; i++) {
+                qbits_t obj{gate->obj_qubits_[i]};
+                if (pauli_string[i] == 'X') {
+                    qs_policy_t::ApplyX(&qs, obj, gate->ctrl_qubits_, dim);
+                } else if (pauli_string[i] == 'Y') {
+                    qs_policy_t::ApplyY(&qs, obj, gate->ctrl_qubits_, dim);
+                } else if (pauli_string[i] == 'Z') {
+                    qs_policy_t::ApplyZ(&qs, obj, gate->ctrl_qubits_, dim);
+                }
             }
         }
     }
@@ -427,16 +470,18 @@ void VectorState<qs_policy_t_>::ApplyDepolarizingChannel(const std::shared_ptr<B
 template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::ApplyKrausChannel(const std::shared_ptr<BasicGate>& gate) {
     auto tmp_qs = qs_policy_t::InitState(dim);
-    calc_type prob = 0;
+    calc_type relative_prob = 0;
+    calc_type total_prob = 1;
     auto g = static_cast<KrausChannel*>(gate.get());
     for (size_t n_kraus = 0; n_kraus < g->kraus_operator_set_.size(); n_kraus++) {
         qs_policy_t::ApplySingleQubitMatrix(qs, &tmp_qs, gate->obj_qubits_[0], gate->ctrl_qubits_,
                                             tensor::ops::cpu::to_vector<py_qs_data_t>(g->kraus_operator_set_[n_kraus]),
                                             dim);
-        calc_type renormal_factor_square = qs_policy_t::Vdot(tmp_qs, tmp_qs, dim).real();
-        prob = renormal_factor_square / (1 - prob);
-        calc_type renormal_factor = 1 / std::sqrt(renormal_factor_square);
-        if (static_cast<calc_type>(rng_()) <= prob) {
+        calc_type prob = qs_policy_t::Vdot(tmp_qs, tmp_qs, dim).real();
+        relative_prob = prob / total_prob;
+        total_prob = total_prob - prob;
+        calc_type renormal_factor = 1 / std::sqrt(prob);
+        if (static_cast<calc_type>(rng_()) <= relative_prob) {
             qs_policy_t::QSMulValue(tmp_qs, &tmp_qs, renormal_factor, dim);
             qs_policy_t::FreeState(&qs);
             qs = tmp_qs;
