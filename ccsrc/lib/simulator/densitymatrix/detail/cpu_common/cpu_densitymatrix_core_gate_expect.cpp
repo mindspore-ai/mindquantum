@@ -197,25 +197,12 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatr
                 });
         // clang-format on
     } else {
-        if (mask.ctrl_qubits.size() == 1) {
-            index_t ctrl_low = 0UL;
-            for (qbit_t i = 0; i < mask.ctrl_qubits[0]; i++) {
-                ctrl_low = (ctrl_low << 1) + 1;
-            }
-            index_t first_low_mask = mask.obj_low_mask;
-            index_t second_low_mask = ctrl_low;
-            if (mask.obj_low_mask > ctrl_low) {
-                first_low_mask = ctrl_low;
-                second_low_mask = mask.obj_low_mask;
-            }
-            auto first_high_mask = ~first_low_mask;
-            auto second_high_mask = ~second_low_mask;
-            // clang-format off
-            THRESHOLD_OMP(
-                MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                    for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 2); a++) {
-                        auto i = ((a & first_high_mask) << 1) + (a & first_low_mask);
-                        i = ((i & second_high_mask) << 1) + (i & second_low_mask) + mask.ctrl_mask;
+        // clang-format off
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 2); a++) {
+                    auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
+                    if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto j = i + mask.obj_mask;
                         qs_data_t this_res = 0;
                         for (index_t col = 0; col < dim; col++) {
@@ -226,29 +213,9 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatr
                         }
                         res_real += this_res.real();
                         res_imag += this_res.imag();
-                    });
-            // clang-format on
-        } else {
-            // clang-format off
-            THRESHOLD_OMP(
-                MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                    for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 2); a++) {
-                        auto i = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
-                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                            auto j = i + mask.obj_mask;
-                            qs_data_t this_res = 0;
-                            for (index_t col = 0; col < dim; col++) {
-                                this_res += (m00 * GetValue(qs, i, col) + m01 * GetValue(qs, j, col))
-                                            * GetValue(ham_matrix, col, i);
-                                this_res += (m10 * GetValue(qs, i, col) + m11 * GetValue(qs, j, col))
-                                            * GetValue(ham_matrix, col, j);
-                            }
-                            res_real += this_res.real();
-                            res_imag += this_res.imag();
-                        }
-                    });
-            // clang-format on
-        }
+                    }
+                });
+        // clang-format on
     }
     if (will_free) {
         derived::FreeState(&qs);
@@ -283,7 +250,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 2); a++) {
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 4); a++) {
                     index_t r0;  // row index of reduced matrix entry
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   a, r0);
@@ -313,7 +280,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix
         // clang-format off
         THRESHOLD_OMP(
             MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 2); a++) {
+                for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 4); a++) {
                     index_t r0;  // row index of reduced matrix entry
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   a, r0);

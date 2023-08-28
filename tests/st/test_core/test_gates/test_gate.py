@@ -355,3 +355,46 @@ def test_fsim():
         ]
     )
     assert np.allclose(fsim.matrix({'a': 1.0}), m_exp)
+
+
+def test_hermitian():
+    for gate in (G.HGate, G.IGate, G.ISWAPGate, G.SGate, G.SWAPGate, G.TGate, G.XGate, G.YGate, G.ZGate):
+        g = gate()
+        assert np.allclose(g.matrix(), np.conj(np.transpose(g.hermitian().matrix())))
+
+    for gate in (
+        G.RX,
+        G.RY,
+        G.RZ,
+        G.SWAPalpha,
+        G.XX,
+        G.YY,
+        G.ZZ,
+        G.GlobalPhase,
+        G.PhaseShift,
+        G.Rxx,
+        G.Rxy,
+        G.Rxz,
+        G.Ryy,
+        G.Ryz,
+        G.Rzz,
+    ):
+        pr = np.random.rand() * 2 * np.pi
+        g = gate(pr)
+        assert np.allclose(g.matrix(), np.conj(np.transpose(g.hermitian().matrix())))
+
+    theta, phi, lamda = np.random.rand(3) * 2 * np.pi
+    g = G.U3(theta, phi, lamda)
+    assert np.allclose(g.matrix(), np.conj(np.transpose(g.hermitian().matrix())))
+
+    theta, phi = np.random.rand(2) * 2 * np.pi
+    g = G.FSim(theta, phi)
+    assert np.allclose(g.matrix(), np.conj(np.transpose(g.hermitian().matrix())))
+
+    g = G.CNOT
+    assert np.allclose(g.matrix(), np.conj(np.transpose(g.hermitian().matrix())))
+
+    g = G.Power(G.RX(1.2))
+    assert np.allclose(g.matrix(), np.conj(np.transpose(g.hermitian().matrix())))
+    g = G.UnivMathGate('custom', G.RX(1.2).matrix())
+    assert np.allclose(g.matrix(), np.conj(np.transpose(g.hermitian().matrix())))

@@ -320,42 +320,46 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(const 
     auto obj_mask = obj_masks.back();
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim); a++) {
-            bool row_apply = (((a & ctrl_mask) == ctrl_mask) && ((a & obj_mask) == 0));
-            for (index_t b = 0; b <= a; b++) {
-                bool col_apply = (((b & ctrl_mask) == ctrl_mask) && ((b & obj_mask) == 0));
-                if (!row_apply && !col_apply) {
-                    continue;
-                }
-                VT<VT<qs_data_t>> tmp_mat(m_dim, VT<qs_data_t>(m_dim));
-                if (row_apply) {
-                    for (size_t i = 0; i < m_dim; i++) {
-                        for (size_t j = 0; j < m_dim; j++) {
-                            for (size_t k = 0; k < m_dim; k++) {
-                                tmp_mat[i][j] += gate[i][k] * GetValue(src, obj_masks[k] | a, obj_masks[j] | b);
+            if ((a & obj_mask) == 0) {
+                for (index_t b = 0; b <= a; b++) {
+                    if ((b & obj_mask) == 0) {
+                        bool row_apply = ((a & ctrl_mask) == ctrl_mask);
+                        bool col_apply = ((b & ctrl_mask) == ctrl_mask);
+                        if (!row_apply && !col_apply) {
+                            continue;
+                        }
+                        VT<VT<qs_data_t>> tmp_mat(m_dim, VT<qs_data_t>(m_dim));
+                        if (row_apply) {
+                            for (size_t i = 0; i < m_dim; i++) {
+                                for (size_t j = 0; j < m_dim; j++) {
+                                    for (size_t k = 0; k < m_dim; k++) {
+                                        tmp_mat[i][j] += gate[i][k] * GetValue(src, obj_masks[k] | a, obj_masks[j] | b);
+                                    }
+                                }
+                            }
+                        } else {
+                            for (int i = 0; i < m_dim; i++) {
+                                for (int j = 0; j < m_dim; j++) {
+                                    tmp_mat[i][j] = GetValue(src, obj_masks[i] | a, obj_masks[j] | b);
+                                }
                             }
                         }
-                    }
-                } else {
-                    for (int i = 0; i < m_dim; i++) {
-                        for (int j = 0; j < m_dim; j++) {
-                            tmp_mat[i][j] = GetValue(src, obj_masks[i] | a, obj_masks[j] | b);
-                        }
-                    }
-                }
-                if (col_apply) {
-                    for (size_t i = 0; i < m_dim; i++) {
-                        for (size_t j = 0; j < m_dim; j++) {
-                            qs_data_t new_value = 0;
-                            for (size_t k = 0; k < m_dim; k++) {
-                                new_value += tmp_mat[i][k] * std::conj(gate[j][k]);
+                        if (col_apply) {
+                            for (size_t i = 0; i < m_dim; i++) {
+                                for (size_t j = 0; j < m_dim; j++) {
+                                    qs_data_t new_value = 0;
+                                    for (size_t k = 0; k < m_dim; k++) {
+                                        new_value += tmp_mat[i][k] * std::conj(gate[j][k]);
+                                    }
+                                    SetValue(des, obj_masks[i] | a, obj_masks[j] | b, new_value);
+                                }
                             }
-                            SetValue(des, obj_masks[i] | a, obj_masks[j] | b, new_value);
-                        }
-                    }
-                } else {
-                    for (int i = 0; i < m_dim; i++) {
-                        for (int j = 0; j < m_dim; j++) {
-                            SetValue(des, obj_masks[i] | a, obj_masks[j] | b, tmp_mat[i][j]);
+                        } else {
+                            for (int i = 0; i < m_dim; i++) {
+                                for (int j = 0; j < m_dim; j++) {
+                                    SetValue(des, obj_masks[i] | a, obj_masks[j] | b, tmp_mat[i][j]);
+                                }
+                            }
                         }
                     }
                 }
