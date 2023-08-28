@@ -317,6 +317,17 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(const 
         }
         obj_masks.push_back(mask_j);
     }
+    NQubitsMatrixMul(src, des, obj_masks, ctrl_mask, gate, dim, m_dim);
+    if (will_free) {
+        derived::FreeState(&src);
+    }
+}
+
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::NQubitsMatrixMul(const qs_data_p_t& src, const qs_data_p_t& des,
+                                                                        std::vector<size_t> obj_masks, size_t ctrl_mask,
+                                                                        const matrix_t& gate, index_t dim,
+                                                                        size_t m_dim) {
     auto obj_mask = obj_masks.back();
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim); a++) {
@@ -338,8 +349,8 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(const 
                                 }
                             }
                         } else {
-                            for (int i = 0; i < m_dim; i++) {
-                                for (int j = 0; j < m_dim; j++) {
+                            for (size_t i = 0; i < m_dim; i++) {
+                                for (size_t j = 0; j < m_dim; j++) {
                                     tmp_mat[i][j] = GetValue(src, obj_masks[i] | a, obj_masks[j] | b);
                                 }
                             }
@@ -355,8 +366,8 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(const 
                                 }
                             }
                         } else {
-                            for (int i = 0; i < m_dim; i++) {
-                                for (int j = 0; j < m_dim; j++) {
+                            for (size_t i = 0; i < m_dim; i++) {
+                                for (size_t j = 0; j < m_dim; j++) {
                                     SetValue(des, obj_masks[i] | a, obj_masks[j] | b, tmp_mat[i][j]);
                                 }
                             }
@@ -365,9 +376,6 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(const 
                 }
             }
         })
-    if (will_free) {
-        derived::FreeState(&src);
-    }
 }
 
 template <typename derived_, typename calc_type_>

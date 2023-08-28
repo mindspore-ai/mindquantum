@@ -358,6 +358,10 @@ def test_fsim():
 
 
 def test_hermitian():
+    """
+    Description: Test hermitian method of all gates
+    Expectation: success
+    """
     for gate in (G.HGate, G.IGate, G.ISWAPGate, G.SGate, G.SWAPGate, G.TGate, G.XGate, G.YGate, G.ZGate):
         g = gate()
         assert np.allclose(g.matrix(), np.conj(np.transpose(g.hermitian().matrix())))

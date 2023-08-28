@@ -237,9 +237,9 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix
     }
     // G = Tr(m \rho H), where m = U' \dot \dagger{U}
     matrix_t m(4, std::vector<qs_data_t>(4));
-    for (size_t i = 0; i < 4; i++) {
-        for (size_t j = 0; j < 4; j++) {
-            for (size_t k = 0; k < 4; k++) {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            for (int k = 0; k < 4; k++) {
                 m[i][j] += diff_m[i][k] * std::conj(gate_m[j][k]);
             }
         }

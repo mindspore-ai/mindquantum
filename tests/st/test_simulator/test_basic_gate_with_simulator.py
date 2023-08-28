@@ -14,9 +14,9 @@
 # ============================================================================
 
 """Test basic gate with simulator."""
+from inspect import signature
 import numpy as np
 import pytest
-from inspect import signature
 
 import mindquantum as mq
 from mindquantum.core import gates as G
@@ -239,11 +239,24 @@ def test_custom_gate(config):
             assert np.allclose(c_sim.get_qs(), c_ref_qs, atol=1e-6)
 
 
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
+
+try:
+    importlib_metadata.import_module("numba")
+    _HAS_NUMBA = True
+except ImportError:
+    _HAS_NUMBA = False
+
+
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_custom_gate_expectation_with_grad(config):
     """
     Description: test custom gate expectation with grad

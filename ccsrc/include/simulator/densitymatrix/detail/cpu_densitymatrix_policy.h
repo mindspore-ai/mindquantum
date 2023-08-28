@@ -146,6 +146,8 @@ struct CPUDensityMatrixPolicyBase {
                                          const qbits_t& ctrls, const matrix_t& m, index_t dim);
     static void ApplyNQubitsMatrix(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs,
                                    const qbits_t& ctrls, const matrix_t& m, index_t dim);
+    static void NQubitsMatrixMul(const qs_data_p_t& src, const qs_data_p_t& des, std::vector<size_t> obj_masks,
+                                 size_t ctrl_mask, const matrix_t& gate, index_t dim, size_t m_dim);
     static void ApplySWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyISWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, bool daggered, index_t dim);
     static void ApplyISWAPNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, bool daggered,
