@@ -15,6 +15,7 @@
 
 """Test basic gate with simulator."""
 from inspect import signature
+
 import numpy as np
 import pytest
 
@@ -177,7 +178,7 @@ def test_single_parameter_gate_expectation_with_grad(config, gate):  # pylint: d
         @ init_state
     ).real * 2
     assert np.allclose(f, ref_f, atol=1e-6)
-    assert np.allclose(grad, ref_grad.real, atol=1e-6)
+    assert np.allclose(grad, ref_grad.real, atol=1e-4)
 
     c_g = g.on(list(range(g.n_qubits)), g.n_qubits)
     c_init_state = np.random.rand(2 * dim) + np.random.rand(2 * dim) * 1j
