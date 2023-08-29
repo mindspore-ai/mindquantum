@@ -146,7 +146,7 @@ void set(void* data, size_t len, T a, size_t idx) {
         throw std::runtime_error("index " + std::to_string(idx) + " out of range: " + std::to_string(len));
     }
     auto c_data = reinterpret_cast<src*>(data);
-    if constexpr (is_complex_v<T>) {
+    if constexpr (is_complex_v<T> && !is_complex_v<src>) {
         c_data[idx] = std::real(a);
     } else {
         c_data[idx] = a;

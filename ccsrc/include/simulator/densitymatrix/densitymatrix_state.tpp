@@ -513,12 +513,11 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffU3(const qs_data_p_t& dens_matr
             grad[1] = qs_policy_t::ExpectDiffU3Phi(dens_matrix, ham_matrix, u3->obj_qubits_, u3->ctrl_qubits_, dim);
         }
         if (u3->lambda.data_.size() != u3->lambda.no_grad_parameters_.size()) {
+            tensor::Matrix m{U3Matrix(theta, phi, lambda)};
             tensor::Matrix diff_m{U3DiffLambdaMatrix(theta, phi, lambda)};
-            tensor::Matrix herm_m{U3Matrix(0.0 - theta, 0.0 - lambda, 0.0 - phi)};
-            grad[2] = qs_policy_t::ExpectDiffSingleQubitMatrix(dens_matrix, ham_matrix, u3->obj_qubits_,
-                                                               u3->ctrl_qubits_,
-                                                               tensor::ops::cpu::to_vector<py_qs_data_t>(diff_m),
-                                                               tensor::ops::cpu::to_vector<py_qs_data_t>(herm_m), dim);
+            grad[2] = qs_policy_t::ExpectDiffSingleQubitMatrix(
+                dens_matrix, ham_matrix, u3->obj_qubits_, u3->ctrl_qubits_,
+                tensor::ops::cpu::to_vector<py_qs_data_t>(m), tensor::ops::cpu::to_vector<py_qs_data_t>(diff_m), dim);
         }
     }
     return tensor::Matrix(VVT<py_qs_data_t>{grad});
