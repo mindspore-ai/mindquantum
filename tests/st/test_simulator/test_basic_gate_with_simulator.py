@@ -400,7 +400,7 @@ def test_custom_gate_expectation_with_grad(config):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
-def test_U3_expectation_with_grad(config):  # pylint: disable=R0914
+def test_u3_expectation_with_grad(config):  # pylint: disable=R0914
     """
     Description: test expectation and gradient of U3 gate
     Expectation: success.
@@ -453,7 +453,7 @@ def test_U3_expectation_with_grad(config):  # pylint: disable=R0914
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
-def test_FSim_expectation_with_grad(config):  # pylint: disable=R0914
+def test_fsim_expectation_with_grad(config):  # pylint: disable=R0914
     """
     Description: test expectation and gradient of FSim gate
     Expectation: success.
@@ -526,7 +526,9 @@ def test_FSim_expectation_with_grad(config):  # pylint: disable=R0914
     c_grad_ops = c_sim.get_expectation_with_grad(ham, Circuit(c_g))
     c_pr = np.random.rand(2) * 2 * np.pi
     c_f, c_grad = c_grad_ops(c_pr)
-    m = np.block([[np.eye(dim), np.zeros((dim, dim))], [np.zeros((dim, dim)), g.matrix({'theta': c_pr[0], 'phi': c_pr[1]})]])
+    m = np.block(
+        [[np.eye(dim), np.zeros((dim, dim))], [np.zeros((dim, dim)), g.matrix({'theta': c_pr[0], 'phi': c_pr[1]})]]
+    )
     diff_m_theta = np.block(
         [[np.zeros((dim, dim)), np.zeros((dim, dim))], [np.zeros((dim, dim)), theta_diff_matrix(c_pr[0])]]
     )
@@ -535,10 +537,14 @@ def test_FSim_expectation_with_grad(config):  # pylint: disable=R0914
     )
     c_ref_f = c_init_state.T.conj() @ m.T.conj() @ ham.hamiltonian.matrix(g.n_qubits + 1) @ m @ c_init_state
     c_ref_grad_theta = (
-        2 * (c_init_state.T.conj() @ m.T.conj() @ ham.hamiltonian.matrix(g.n_qubits + 1) @ diff_m_theta @ c_init_state).real
+        2
+        * (
+            c_init_state.T.conj() @ m.T.conj() @ ham.hamiltonian.matrix(g.n_qubits + 1) @ diff_m_theta @ c_init_state
+        ).real
     )
     c_ref_grad_phi = (
-        2 * (c_init_state.T.conj() @ m.T.conj() @ ham.hamiltonian.matrix(g.n_qubits + 1) @ diff_m_phi @ c_init_state).real
+        2
+        * (c_init_state.T.conj() @ m.T.conj() @ ham.hamiltonian.matrix(g.n_qubits + 1) @ diff_m_phi @ c_init_state).real
     )
     c_ref_grad = np.array([c_ref_grad_theta, c_ref_grad_phi])
     assert np.allclose(c_f, c_ref_f, atol=1e-6)
