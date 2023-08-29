@@ -725,15 +725,14 @@ def custom_diff_matrix(x):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("virtual_qc", ['mqvector', 'mqvector_gpu'])
-@pytest.mark.parametrize("dtype", [mq.complex64, mq.complex128])
+@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
-@pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
-def test_mul_qubit_gate(virtual_qc, dtype):
+def test_mul_qubit_gate(config):
     """
     Description: Test simulation on multiple qubit gate.
     Expectation: succeed.
     """
+    virtual_qc, dtype = config
     rand_c = random_circuit(3, 20, seed=42)
     m = rand_c.matrix()
     g = G.UnivMathGate('m', m)
