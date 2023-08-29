@@ -23,81 +23,81 @@ Similar to logic gates in classical circuits, the transition of a quantum circui
 At the same time, any unitary matrix can define a valid quantum gate, and the dimension of the matrix depends on the number of qubits it operates on.\\
 Here are some examples of single qubit gates,let $\ket{\phi}=a\ket{0}+b\ket{1}$.\\
 \begin{align*}
-I\ket{\phi}&=\begin{bmatrix}
-1 && 0\\
-0 && 1
-\end{bmatrix}\begin{bmatrix}
-    a\\
-    b
-\end{bmatrix}=\begin{bmatrix}
-    a\\
-    b
-\end{bmatrix} % I
-\\
-X\ket{\phi}&=\begin{bmatrix}
-0 && 1\\
-    1 && 0
-\end{bmatrix}\begin{bmatrix}
-    a\\
-    b
-\end{bmatrix}=\begin{bmatrix}
-    b\\
-    a
-\end{bmatrix} % X
-\\
-Y\ket{\phi}&=\begin{bmatrix}
-    0 && -i\\
-    i && 0
-\end{bmatrix}\begin{bmatrix}
-    a\\
-    b
-\end{bmatrix}=\begin{bmatrix}
-    -bi\\
-    ai
-\end{bmatrix} % Y
-\\
-Z\ket{\phi}&=\begin{bmatrix}
-    1 && 0\\
-    0 && -
-\end{bmatrix}\begin{bmatrix}
-    a\\
-    b
-\end{bmatrix}=\begin{bmatrix}
-    a\\
-    -b
-\end{bmatrix} % Z
-\\
-H\ket{\phi}&=\frac{1}{\sqrt{2}}\begin{bmatrix}
-    1 && 1\\
-    1 && -1
-\end{bmatrix}\begin{bmatrix}
-    a\\
-    b
-\end{bmatrix}=\frac{1}{\sqrt{2}}\begin{bmatrix}
-    a+b\\
-    a-b
-\end{bmatrix} % H
+    I\ket{\phi} & =\begin{bmatrix}
+        1 &  & 0 \\
+        0 &  & 1
+    \end{bmatrix}\begin{bmatrix}
+        a \\
+        b
+    \end{bmatrix}=\begin{bmatrix}
+        a \\
+        b
+    \end{bmatrix}                                        % I
+    \\
+    X\ket{\phi} & =\begin{bmatrix}
+        0 &  & 1 \\
+        1 &  & 0
+    \end{bmatrix}\begin{bmatrix}
+        a \\
+        b
+    \end{bmatrix}=\begin{bmatrix}
+        b \\
+        a
+    \end{bmatrix}                                        % X
+    \\
+    Y\ket{\phi} & =\begin{bmatrix}
+        0 &  & -i \\
+        i &  & 0
+    \end{bmatrix}\begin{bmatrix}
+        a \\
+        b
+    \end{bmatrix}=\begin{bmatrix}
+        -bi \\
+        ai
+    \end{bmatrix}                                        % Y
+    \\
+    Z\ket{\phi} & =\begin{bmatrix}
+        1 &  & 0 \\
+        0 &  & -
+    \end{bmatrix}\begin{bmatrix}
+        a \\
+        b
+    \end{bmatrix}=\begin{bmatrix}
+        a \\
+        -b
+    \end{bmatrix}                                     % Z
+    \\
+    H\ket{\phi} & =\frac{1}{\sqrt{2}}\begin{bmatrix}
+        1 &  & 1  \\
+        1 &  & -1
+    \end{bmatrix}\begin{bmatrix}
+        a \\
+        b
+    \end{bmatrix}=\frac{1}{\sqrt{2}}\begin{bmatrix}
+        a+b \\
+        a-b
+    \end{bmatrix} % H
 \end{align*}
 
 \subsubsection{Basic Parameter Gate}
 Pauli matrices are the most important matrices, and they form a set of bases for spatial operators. When the Pauli matrix appears on the exponents, three classes of useful unitary operators are produced, namely rotation operators with respect to $\hat{x}, \hat{y}, \hat{z}$, defined by the following equation.\\
 \begin{align*}
-Rx(\theta)&=e^{-\frac{i\theta X}{2}}=\cos{\frac{\theta}{2}}I-i\sin{\frac{\theta}{2}}X=\begin{bmatrix}
-        \cos{\frac{\theta}{2}} && -i\sin{\frac{\theta}{2}}\\
-        -i\sin{\frac{\theta}{2}} && \cos{\frac{\theta}{2}}
+    Rx(\theta) & =e^{-\frac{i\theta X}{2}}=\cos{\frac{\theta}{2}}I-i\sin{\frac{\theta}{2}}X=\begin{bmatrix}
+        \cos{\frac{\theta}{2}}   &  & -i\sin{\frac{\theta}{2}} \\
+        -i\sin{\frac{\theta}{2}} &  & \cos{\frac{\theta}{2}}
     \end{bmatrix} % RX
-\\
-Ry(\theta)&=e^{-\frac{i\theta Y}{2}}=\cos{\frac{\theta}{2}}I-i\sin{\frac{\theta}{2}}Y=\begin{bmatrix}
-    \cos{\frac{\theta}{2}} && -\sin{\frac{\theta}{2}}\\
-    \sin{\frac{\theta}{2}} && \cos{\frac{\theta}{2}}
+    \\
+    Ry(\theta) & =e^{-\frac{i\theta Y}{2}}=\cos{\frac{\theta}{2}}I-i\sin{\frac{\theta}{2}}Y=\begin{bmatrix}
+        \cos{\frac{\theta}{2}} &  & -\sin{\frac{\theta}{2}} \\
+        \sin{\frac{\theta}{2}} &  & \cos{\frac{\theta}{2}}
     \end{bmatrix} % RY
-\\
-Rz(\theta)&=e^{-\frac{i\theta Z}{2}}=\cos{\frac{\theta}{2}}I-i\sin{\frac{\theta}{2}}Z=\begin{bmatrix}
-    e^{\frac{-i\theta}{2}} && 0\\
-    0 &&  e^{\frac{i\theta}{2}}
+    \\
+    Rz(\theta) & =e^{-\frac{i\theta Z}{2}}=\cos{\frac{\theta}{2}}I-i\sin{\frac{\theta}{2}}Z=\begin{bmatrix}
+        e^{\frac{-i\theta}{2}} &  & 0                     \\
+        0                      &  & e^{\frac{i\theta}{2}}
     \end{bmatrix} % RY
 \end{align*}
-    
+
 
 Since there are an infinite number of 2*2 matrices, the number of quantum gates is also infinite. According to the Z-Y decomposition, a unitary matrix U over any single qubit can be represented as $U=e^{i\alpha}Rz(\beta)Ry(\gamma)Rz(\delta)$.\\
 Therefore, in order to construct arbitrary quantum gates, it is necessary to use parameters to construct rotating gates. There are three initialization methods provided in mindquantum, because Parameter Resolver has three initialization methods. \\
@@ -212,11 +212,11 @@ u = controlled(qft)
 u = u([2, 3], [0, 1])
 u.svg()
 \end{lstlisting}
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.5\linewidth]{1.png} % 插入svg出了点问题
-    \caption{1.svg}
-    \label{fig:enter-label}
-\end{figure}
+% \begin{figure}[h]
+%     \centering
+%     \includegraphics[width=0.5\linewidth]{1.png} % 插入svg出了点问题
+%     \caption{1.svg}
+%     \label{fig:enter-label}
+% \end{figure}
 
-\end{document}
+% \end{document}

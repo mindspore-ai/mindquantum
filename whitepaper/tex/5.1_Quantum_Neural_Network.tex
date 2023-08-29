@@ -8,7 +8,7 @@ We select the first 100 samples (setosa and versicolor), and 80 samples will be 
 First, we divide 100 samples into 80 training samples and 20 testing samples. Second, we calculate the parameters required to build an encoder based on the classical data of the training samples. Third, we create an encoder to encode the classical data of the training samples to the quantum state. Fourth, we design an ansatz and train its parameters with the proposed quantum neural network layer and MindSpore operators, which  will enable us to obtain the final classifier. Finally, we classify the remaining 20 testing samples and acquire the accuracy of the predictions.
 
 \subsubsection{Data initialization}
-In the first place, we should import the iris dataset. 
+In the first place, we should import the iris dataset.
 
 \begin{lstlisting}       
 from sklearn import datasets                             
@@ -59,7 +59,7 @@ plt.show()
 %As seen in the images above, the red dots indicate samples with the label ``0", while the green dots represent samples with the label ``1".
 
 \subsubsection{Preprocessing}
-Following that, we compute the parameters required to build the encoder.  Activate the upcoming command. 
+Following that, we compute the parameters required to build the encoder.  Activate the upcoming command.
 
 \begin{lstlisting}
 alpha = X[:, :3] * X[:, 1:]
@@ -69,9 +69,9 @@ X = np.append(X, alpha, axis=1)
 It can be found that each sample has 7 features at this time, the first four feature values are the original feature values, and the last three feature values are the ones calculated by the above preprocessing. The specific calculation formula is as follows:
 
 \begin{eqnarray}\label{5.1dataprocessing}
-X_{i+4}^{j} = X_{i}^{j} * X_{i+1}^{j},
+    X_{i+4}^{j} = X_{i}^{j} * X_{i+1}^{j},
 \end{eqnarray}
-where $i = 0, 1, 2$ and $j = 1, 2, \cdots, 100$. 
+where $i = 0, 1, 2$ and $j = 1, 2, \cdots, 100$.
 
 At last, we separate the current data set into a training set and a testing set by running the command below.
 
@@ -110,13 +110,13 @@ encoder.svg()
 \end{lstlisting}
 
 \begin{figure}[H]
-\centering
-\includegraphics[width=0.49\textwidth]{5.1_figures/encoder-circuit.eps}
-\caption{Encoder}
-\label{5.1encoder-circuit}
+    \centering
+    \includegraphics[width=0.49\textwidth]{5.1_figures/encoder-circuit.eps}
+    \caption{Encoder}
+    \label{5.1encoder-circuit}
 \end{figure}
 
-As can be seen from the encoder circuit, the quantum circuit consists of 17 quantum gates, of which 7 are 
+As can be seen from the encoder circuit, the quantum circuit consists of 17 quantum gates, of which 7 are
 parameterized quantum gates and the parameters are $\alpha_0$, $\alpha_1$, $\cdots$,$\alpha_6$, respectively. The number of qubits regulated by the encoder circuit is 4.
 
 \subsubsection{Ansatz}
@@ -132,10 +132,10 @@ ansatz.svg()
 \end{lstlisting}
 
 \begin{figure}[H]
-\centering
-\includegraphics[width=0.49\textwidth]{5.1_figures/ansatz-circuit.eps}
-\caption{Ansatz}
-\label{5.1ansatz-circuit}
+    \centering
+    \includegraphics[width=0.49\textwidth]{5.1_figures/ansatz-circuit.eps}
+    \caption{Ansatz}
+    \label{5.1ansatz-circuit}
 \end{figure}
 
 As can be seen from the ansatz circuit, the quantum circuit consists of 25 quantum gates, of which 16 are parameterized quantum gates and the parameters are $d0\_n0\_0$, $d0\_n1\_0$, $d0\_n2\_0$, $\cdots$,  respectively. The number of qubits regulated by the ansatz circuit is 4.
@@ -148,10 +148,10 @@ circuit.svg()
 \end{lstlisting}
 
 \begin{figure}[H]
-\centering
-\includegraphics[width=0.49\textwidth]{5.1_figures/total-circuit.eps}
-\caption{The whole quantum circuit}
-\label{5.1total-circuit}
+    \centering
+    \includegraphics[width=0.49\textwidth]{5.1_figures/total-circuit.eps}
+    \caption{The whole quantum circuit}
+    \label{5.1total-circuit}
 \end{figure}
 
 \subsubsection{Hamiltonian}
@@ -269,10 +269,10 @@ plt.show()
 \end{lstlisting}
 
 \begin{figure}[H]
-\centering
-\includegraphics[width=0.49\textwidth]{5.1_figures/Statistics_of_accuracy.pdf}
-\caption{Statistics of accuracy}
-\label{5.1Statistics_of_accuracy}
+    \centering
+    \includegraphics[width=0.49\textwidth]{5.1_figures/Statistics_of_accuracy.pdf}
+    \caption{Statistics of accuracy}
+    \label{5.1Statistics_of_accuracy}
 \end{figure}
 
 As can be seen from the Fig.~\ref{5.1Statistics_of_accuracy}, the prediction accuracy has converged to 1.00 after about 50 steps.
