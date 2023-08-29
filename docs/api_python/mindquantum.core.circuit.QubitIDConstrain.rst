@@ -1,7 +1,7 @@
 mindquantum.core.circuit.QubitIDConstrain
 =========================================
 
-.. py:class:: mindquantum.core.circuit.QubitIDConstrain(qubit_ids, add_after = True)
+.. py:class:: mindquantum.core.circuit.QubitIDConstrain(qubit_ids: typing.Union[int, typing.List[int]], add_after: bool = True)
 
     只将噪声信道作用在给定比特序号的量子门上。
 

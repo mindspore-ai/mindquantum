@@ -346,7 +346,7 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
 
     * For :math:`0 \le P \le 1` case, this channel is a depolarizing channel, and it becomes a completely
       depolarizing channel when :math:`P = 1`.
-    * However, :math:` 1 < P \le 4^N / (4^N - 1)` is also an available case, but not a depolarizing channel
+    * However, :math:`1 < P \le 4^N / (4^N - 1)` is also an available case, but not a depolarizing channel
       any more. When :math:`P = 4^N / (4^N - 1)` it becomes a uniform Pauli error channel:
       :math:`E(\rho) = \sum_j V_j \rho V_j / (4^n - 1)`, where :math:`V_j = U_j \setminus I^{\otimes N}`.
 
