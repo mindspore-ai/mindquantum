@@ -15,7 +15,7 @@ In mindquantum, we provide a Python Class `mindquantum.core.ParameterResolver' t
 When we initialize a parameterized quantum gate in mindquantum, we usually can not make sure of the parameter value at first, for example, we need some optimization to determine the value.
 ParameterResolver solves this problem by
 denoting each parameter as a unique symbol, such as $\theta=0.1$, where $\theta$ is the symbol of the parameter and $0.1$ is the corresponding value.
-Then we can use some symbols to denote the parameters instead of the real value when we write the code in mindquantum. 
+Then we can use some symbols to denote the parameters instead of the real value when we write the code in mindquantum.
 When we declare an instance of ParameterResolver, we only need to give the symbols and the values as a Python dict, where the symbol is the key of the dict and the values as the value of the dict,
 \begin{lstlisting}
     from mindquantum.core.parameterresolver import ParameterResolve
@@ -35,7 +35,7 @@ When we declare an instance of ParameterResolver, we only need to give the symbo
 \end{lstlisting}
 When parameterized circuits are simulated by mindquantum, the ParameterResolver is provided such that the simulator will replace the symbol in circuits as the corresponding real value declared in the ParameterResovler.
 
-In a hybrid quantum-classical algorithm, the parameters are usually optimized by some gradient descent methods such as SGD, ADAM, and BFGS. 
+In a hybrid quantum-classical algorithm, the parameters are usually optimized by some gradient descent methods such as SGD, ADAM, and BFGS.
 When we declare an instance of ParameterResolver, by default, all parameters need to be differentiated.
 However, we can explicitly state whether a parameter needs to be differentiated as follow,
 \begin{lstlisting}
@@ -44,7 +44,7 @@ However, we can explicitly state whether a parameter needs to be differentiated 
 
 In a hybrid algorithm, parameterized quantum gates or circuits usually are divided into two parts, encoder, and ansatz.
 The encoder encodes the classical data into the quantum state. And the ansatz is an assumption about the form of an unknown function, and we expect that we can get the solution to the problem by optimizing it.
-By default, all parameters in ParameterResolver are initialized as ansatz's parameters. 
+By default, all parameters in ParameterResolver are initialized as ansatz's parameters.
 We can convert these parameters between encoder's and ansatz's parameters in the following way
 \begin{lstlisting}
     #declare all parameters as encoder's parameters

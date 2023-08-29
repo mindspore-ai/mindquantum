@@ -14,21 +14,21 @@ QAOA is a powerful quantum algorithm designed to address combinatorial optimizat
 Inspired by the trotterized version of the quantum adiabatic algorithm, QAOA is categorized as a variational quantum algorithm. The conventional QAOA comprises two main components: the quantum part, which involves a parameterized circuit ansatz, and the classical part, responsible for optimizing these parameters. To employ the QAOA algorithm effectively, we define the problem as finding the ground state of a problem Hamiltonian. The ansatz is constructed from two fundamental building blocks, namely the mixer layer and the problem layer:
 
 \begin{equation}
-U(\gamma, \beta) = \prod_{l=1}^p e^{-i\beta_l \hat{H}_{m}}e^{-i\gamma_l\hat{H}{{p}}}
+    U(\gamma, \beta) = \prod_{l=1}^p e^{-i\beta_l \hat{H}_{m}}e^{-i\gamma_l\hat{H}{{p}}}
 \end{equation}
 where $\hat{H}_{{m}} = \sum_i \hat{\sigma}^x_i$ represents the mixer Hamiltonian, where $\hat{\sigma}^x$ corresponds to the Pauli $x$ operator. On the other hand, $\hat{H}_{{p}}$ denotes the problem Hamiltonian.
 
 The quantum state begins from the ground state of $\hat{H}_{\text{mixer}}$, which is $|\psi_0\rangle=|+\rangle^{\otimes n}$. Then, the quantum state for the QAOA ansatz is expressed as:
 \begin{equation}
-|\psi_p(\gamma, \beta)\rangle = e^{-i\beta_p\hat{H}_m}e^{-i\gamma_p\hat{H}_p}\cdots e^{-i\beta_1\hat{H}_{m}}e^{-i\gamma_1\hat{H}_{p}}|\psi_0\rangle
+    |\psi_p(\gamma, \beta)\rangle = e^{-i\beta_p\hat{H}_m}e^{-i\gamma_p\hat{H}_p}\cdots e^{-i\beta_1\hat{H}_{m}}e^{-i\gamma_1\hat{H}_{p}}|\psi_0\rangle
 \end{equation}
 To determine the cost or objective function, we calculate the expectation value of the problem Hamiltonian $\hat{H}_{\text{prob}}$ with respect to the ansatz state $|\psi_p(\gamma, \beta)\rangle$. This involves performing repeated measurements of the final state in the computational basis:
 \begin{equation}
-F_p(\gamma, \beta) =\langle\psi_p(\gamma, \beta)|\hat{H}_{p} |\psi_p(\gamma,\beta)\rangle
+    F_p(\gamma, \beta) =\langle\psi_p(\gamma, \beta)|\hat{H}_{p} |\psi_p(\gamma,\beta)\rangle
 \end{equation}
 The primary objective of the QAOA is to find the optimal parameters $(\gamma^*, \beta^*)$ that minimize the expectation value $F_p(\gamma, \beta)$. Achieving this goal involves employing a classical optimization algorithm to iteratively update the parameters $\gamma$ and $\beta$:
 \begin{equation}
-(\gamma^*, \beta^*) = \text{arg}\min_{\gamma, \beta} F_p(\gamma, \beta)
+    (\gamma^*, \beta^*) = \text{arg}\min_{\gamma, \beta} F_p(\gamma, \beta)
 \end{equation}
 
 By finding these optimal parameters, QAOA enables quantum computers to efficiently tackle complex optimization challenges, offering a promising avenue for various practical applications.
@@ -39,12 +39,12 @@ By finding these optimal parameters, QAOA enables quantum computers to efficient
 \subsubsection{Implement}
 
 For this tutorial, we use QAOA algorithm to handle the Max-Cut problem,  which is an NP-complete problem in graph theory. As shown in figure \ref{5.1_QAOA}, it needs to divide the vertices of a graph into two parts and make the most edges be cut. But when the number of vertices in the graph increases, it is difficult for us to find an effective classical algorithm to solve the Max-Cut problem, because it is very likely that there is no polynomial time algorithm for this type of NP-complete problem.
- 
+
 \begin{figure}[H]
-\centering
-\includegraphics[width=0.49\textwidth]{5.2_figures/5.2_QAOA}
-\caption{Max-cut graph}
-\label{5.1_QAOA}
+    \centering
+    \includegraphics[width=0.49\textwidth]{5.2_figures/5.2_QAOA}
+    \caption{Max-cut graph}
+    \label{5.1_QAOA}
 \end{figure}
 
 Let us first generate a graph structure consisting of five vertices and six edges using NetworkX[cite].
@@ -58,10 +58,10 @@ nx.add_path(g, [0,4])
 nx.add_path(g, [0,2])
 nx.draw(g,with_labels=True, font_weight='bold')
 \end{lstlisting}
- 
-For QAOA algorithm, first we need to convert the Max-Cut problem into a Hamiltonian, it's ground state energy is solution of the problem. The problem hamitonian of the Max-Cut problem can be built as 
+
+For QAOA algorithm, first we need to convert the Max-Cut problem into a Hamiltonian, it's ground state energy is solution of the problem. The problem hamitonian of the Max-Cut problem can be built as
 \begin{equation}
-\hat{H} = \sum_{i,j\in C}(\hat{Z}_i\hat{Z}_j-1)/2
+    \hat{H} = \sum_{i,j\in C}(\hat{Z}_i\hat{Z}_j-1)/2
 \end{equation}
 where $C$ is the set of all edges. In the following function, ${ build \_ ham}$, the corresponding Hamiltonian can be constructed by inputting the graph.
 \begin{lstlisting}
@@ -101,7 +101,7 @@ init_state_circ = UN(H, g.nodes)
 \end{lstlisting}
 
 The goal of QAOA is to find the optimal parameters that make the cost function or the expectation of hamitonian $\mathcal{E}=\langle \psi(\gamma^*, \beta^*)|\hat{H}|\psi(\gamma, \beta)\rangle$ minimize.
-This problem does not require a coding-layer quantum circuit, so we use MQAnsatzOnlyLayer as a quantum neural network to be trained and the adam as the optimizer. 
+This problem does not require a coding-layer quantum circuit, so we use MQAnsatzOnlyLayer as a quantum neural network to be trained and the adam as the optimizer.
 \begin{lstlisting}
 import mindspore as ms
 ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
@@ -152,10 +152,10 @@ maxcut = MaxCutAnsatz(graph, p)
 maxcut.circuit.svg()
 \end{lstlisting}
 \begin{figure}[H]
-\centering
-\includegraphics[width=0.49\textwidth]{5.2_figures/5.2_QAOA_ansatze}
-\caption{Max-cut problem Ansatze}
-\label{5.1_QAOA}
+    \centering
+    \includegraphics[width=0.49\textwidth]{5.2_figures/5.2_QAOA_ansatze}
+    \caption{Max-cut problem Ansatze}
+    \label{5.1_QAOA}
 \end{figure}
 At the same time, the Hamiltonian can also be obtained
 \begin{lstlisting}
