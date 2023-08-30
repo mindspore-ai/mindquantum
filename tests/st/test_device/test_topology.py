@@ -73,6 +73,11 @@ def test_topology():
     assert topology[1].color == '#ababab'
     topology.set_position(2, 3.0, 4.0)
     assert topology[2].poi_x + topology[2].poi_y == 7.0
+    nodes = topology.choose([1, 2])
+    assert nodes[1].qubit_id == 2
+    assert topology.edges_with_poi() == {((1, 1), (3.0, 4.0))}
+    topology_new = topology.select([1, 2])
+    assert topology_new.edges_with_id() == {(1, 2)}
 
 
 def test_linear_qubits():
