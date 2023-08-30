@@ -490,13 +490,13 @@ class Simulator:
 
     def get_partial_trace(self, obj_qubits):
         """
-        Calculate the partial trace of density matrix.
+        Calculate the partial trace of current density matrix.
 
         Args:
             obj_qubits (Union[int, list[int]]): Specific which qubits (subsystems) to trace over.
 
         Returns:
-            numpy.ndarray, the partial trace of density matrix.
+            numpy.ndarray, the partial trace of current density matrix.
 
         Examples:
             >>> from mindquantum.core.circuit import Circuit
@@ -513,7 +513,7 @@ class Simulator:
 
     def entropy(self):
         r"""
-        Calculate the von Neumann entropy of quantum state.
+        Calculate the von Neumann entropy of current quantum state.
 
         Definition of von Neumann entropy :math:`S` shown as below.
 
@@ -524,7 +524,7 @@ class Simulator:
         where :math:`\rho` is density matrix.
 
         Returns:
-            numbers.Number, the von Neumann entropy of quantum state.
+            numbers.Number, the von Neumann entropy of current quantum state.
 
         Examples:
             >>> from mindquantum.simulator import Simulator
@@ -534,6 +534,56 @@ class Simulator:
             0.6931471805599453
         """
         return self.backend.entropy()
+
+    def purity(self):
+        r"""
+        Calculate the purity of current quantum state.
+
+        Definition of purity :math:`\gamma` shown as below.
+
+        .. math::
+
+            \gamma \equiv \text{tr}(\rho^2)
+
+        where :math:`\rho` is density matrix.
+
+        Returns:
+            numbers.Number, the purity of current quantum state.
+
+        Examples:
+            >>> from mindquantum.simulator import Simulator
+            >>> sim = Simulator('mqmatrix', 1)
+            >>> sim.set_qs([[0.5, 0], [0, 0.5]])
+            >>> sim.purity()
+            0.5
+        """
+        return self.backend.purity()
+
+    def get_pure_state_vector(self):
+        r"""
+        Get state vector if current density matrix is pure.
+
+        The relation between density matrix :math:`\rho` and state vector
+        :math:`\left| \psi \right>` shown as below.
+
+        .. math::
+
+            \rho = \left| \psi \right>\!\left< \psi \right|
+
+        Note that the state vector :math:`\left| \psi \right>` may have an
+        arbitrary global phase :math:`e^{i\phi}`.
+
+        Returns:
+            numpy.ndarray, a state vector calculated from current density matrix.
+
+        Examples:
+            >>> from mindquantum.simulator import Simulator
+            >>> sim = Simulator('mqmatrix', 1)
+            >>> sim.set_qs([[0.5, 0.5], [0.5, 0.5]])
+            >>> sim.get_pure_state_vector()
+            array([0.70710678+0.j, 0.70710678+0.j])
+        """
+        return self.backend.get_pure_state_vector()
 
 
 def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):

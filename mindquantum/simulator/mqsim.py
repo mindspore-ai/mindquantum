@@ -492,7 +492,7 @@ class MQSim(BackendBase):
                 raise ValueError("Wrong quantum state.")
             self.sim.set_qs(quantum_state / norm_factor)
 
-    def get_partial_trace(self, obj_qubits):
+    def get_partial_trace(self, obj_qubits) -> np.ndarray:
         """Get partial trace of density matrix."""
         if isinstance(obj_qubits, int):
             obj_qubits = [obj_qubits]
@@ -505,7 +505,7 @@ class MQSim(BackendBase):
             raise ValueError(f"{self.name} simulator not support partial trace method.")
         return np.array(self.sim.get_partial_trace(obj_qubits))
 
-    def entropy(self):
+    def entropy(self) -> float:
         """Get the von-Neumann entropy of quantum state."""
         if self.name.startswith('mqvector'):
             return 0
@@ -517,3 +517,17 @@ class MQSim(BackendBase):
             if i > 0:
                 res += -i * np.log(i)
         return res
+
+    def purity(self) -> float:
+        """Calculate the purity of quantum state."""
+        if self.name.startswith('mqvector'):
+            return 1.0
+        return self.sim.purity()
+
+    def get_pure_state_vector(self) -> np.ndarray:
+        """Get the state vector from a pure density matrix."""
+        if self.name.startswith('mqvector'):
+            return self.get_qs()
+        if 1 - self.purity() > 1e-8:
+            raise ValueError("Cannot transform mixed density matrix to vector.")
+        return np.array(self.sim.pure_state_vector())

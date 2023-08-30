@@ -93,8 +93,8 @@ class DensityMatrixState {
     virtual void SetDM(const matrix_t& qs_out);
     virtual void CopyQS(const qs_data_p_t& qs_src);
 
-    //! Judge whether the density matrix is pure
-    virtual bool IsPure() const;
+    //! Get the purity of density matrix
+    virtual calc_type Purity() const;
 
     //! Get the partial trace of density matrix
     virtual matrix_t GetPartialTrace(const qbits_t& objs) const;

@@ -148,8 +148,8 @@ void DensityMatrixState<qs_policy_t_>::CopyQS(const qs_data_p_t& qs_src) {
 }
 
 template <typename qs_policy_t_>
-bool DensityMatrixState<qs_policy_t_>::IsPure() const {
-    return qs_policy_t::IsPure(qs, dim);
+auto DensityMatrixState<qs_policy_t_>::Purity() const -> calc_type {
+    return qs_policy_t::Purity(qs, dim);
 }
 
 template <typename qs_policy_t_>

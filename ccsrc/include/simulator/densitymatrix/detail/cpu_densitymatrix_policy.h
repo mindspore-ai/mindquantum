@@ -74,7 +74,6 @@ struct CPUDensityMatrixPolicyBase {
     static qs_data_p_t Copy(const qs_data_p_t& qs, index_t dim);
     static calc_type Purity(const qs_data_p_t& qs, index_t dim);
     static matrix_t GetPartialTrace(const qs_data_p_t& qs, const qbits_t& objs, index_t dim);
-    static bool IsPure(const qs_data_p_t& qs, index_t dim);
     static py_qs_datas_t PureStateVector(const qs_data_p_t& qs, index_t dim);
     static void ApplyTerms(qs_data_p_t* qs_p, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
     static void ApplyCsr(qs_data_p_t* qs_p, const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, index_t dim);
