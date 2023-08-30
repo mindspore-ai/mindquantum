@@ -1,14 +1,9 @@
-% \begin{lstlisting}
-% mq数据类型:	与numpy数据类型对应关系
-
-% 量子计算中数据类型的影响:
-% 1. 内存影响（列表：比如10比特double和float需要内存数据）
-% 2. 精度影响。
-% \end{lstlisting}
-In this section, we will introduce the basic data types supported by mindquantum. When we simulate quantum evolution in mindquantum, different data types require different sizes of computer memory and lead to different simulation accuracy.
-Before we discuss the supported data types in mindquantum, we first briefly review the definition of the floating-point number in modern computers which helps us to understand the difference among these data types.
+In this section, we will introduce the basic data types supported by \MindQuantum. When we simulate quantum evolution in \MindQuantum, different data types require different sizes of computer memory and lead to different simulation accuracy.
+Before we discuss the supported data types in \MindQuantum, we first briefly review the definition of the floating-point number in modern computers which helps us to understand the difference among these data types.
 The first unified technical standard of floating-point arithmetic (IEEE 754) was established in 1985 and is widely supported by much hardware today by the Institute of Electrical and Electronics Engineers (IEEE).
-In IEEE 754, a floating-point format is specified by three parts, sign, exponent, and fraction, all of which consist of a ${0,1}$ bit string as shown in Fig.\ref{}.
+
+% TODO(xusheng): Add figure
+In IEEE 754, a floating-point format is specified by three parts, sign, exponent, and fraction, all of which consist of a ${0,1}$ bit string as shown in Fig.
 
 The sign bit $s$ determines the sign of the number, $s=0$ is positive and $s=1$ is negative.
 The exponent part $e$ is an m-bit unsigned integer, which determines the Maximum and minimum values, and the fraction part $\vec{b}$ with $n$ bits is the true significance that appears in the memory format which determines the precision of the number.
@@ -49,9 +44,10 @@ In general, if $a$ and $b$ are Single, the type of $c$ is complex64 (used 64 bit
 In different programming languages, the symbol of the imaginary unit may be different.
 For example, In C, $i$ is denoted as $I$, in Python, it is denoted as $1j$.
 
-In mindquantum, single- and double-precision floating-point formats are supported, in addition, their complex version formats are also supported which are indispensable to simulating the quantum evolution.
+In \MindQuantum, single- and double-precision floating-point formats are supported, in addition, their complex version formats are also supported which are indispensable to simulating the quantum evolution.
 
-These data types can be easily converted with the same data type of the NumPy package. They have the same mathematics property but more easily implement in mindquantum than declaring the data as NumPy's data type.
+These data types can be easily converted with the same data type of the NumPy\cite{harris2020array} package. They have the same mathematics property but more easily implement in \MindQuantum than declaring the data as NumPy's data type.
+
 \begin{lstlisting}
 import numpy as np
 import mindquantum as mq
@@ -68,12 +64,29 @@ The exponential wall is the main obstacle to simulating a quantum system in a cl
 As the size of the quantum system linearly increases, the required classical resources exponentially increase.
 A quantum state with $N$ qubits can be described by $2^N$ amplitudes, all of which are complex numbers.
 
-If we want to store a $N=20$ quantum state with $2^20$ amplitudes and all amplitudes are represented as single precision (Complex64), the classical memory is
+If we want to store a $N=20$ quantum state with $2^{20}$ amplitudes and all amplitudes are represented as single precision (Complex64), the classical memory is
 \begin{equation}
     G=2^{20}\times 64 bits = 8 Mb
 \end{equation}
 
-If we use complex double to represent the amplitude, the memory requirement is $G=2^{20}\times 128 bits=16 Mb$.
+If we use complex double to represent the amplitude, the memory requirement is $G=2^{20}\times 128 bits=16 Mb$. Here we give a table that shows the memory consuming for storage full amplitudes quantum state with different data accuracy.
+
+\begin{table}[ht]
+    \begin{tabular}{ccc}
+        \toprule
+        Qubit Number & Complex128 & Complex64 \\
+        \midrule
+        6            & 1kB        & 0.5kB     \\
+        16           & 1MB        & 0.5MB     \\
+        26           & 1GB        & 0.5GB     \\
+        30           & 16GB       & 8GB       \\
+        36           & 1TB        & 0.5TB     \\
+        40           & 16TB       & 8TB       \\
+        \bottomrule
+    \end{tabular}
+    \caption{Memory consuming for storage full amplitudes quantum state.}
+    \label{tab:mem_consume}
+\end{table}
 
 It is not hard to see, double precision requires twice as much storage as single precision because every amplitude is $128$ bits in Double but $64$ bits in Single.
 Although double precision requires more space and usually more computing time (which depends on the specific processing unit), we can get higher precision which is very important for some takes in quantum machines, such as finding the eigenvalue of quantum Hamiltonian.

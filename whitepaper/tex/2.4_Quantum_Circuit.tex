@@ -73,10 +73,10 @@ There are several basic operations for adding a quantum gate.
     \item list: Circuit allows multiple bits to be operated on simultaneously, passing data of the same type as a list.
 \end{itemize}
 \begin{lstlisting}
-encoder += H.on(0) 
+encoder += H.on(0)
 encoder += Y.on(1, 0)
 encoder.x(1, 0)
-encoder.z(2, [0, 1])        
+encoder.z(2, [0, 1])
 \end{lstlisting}
 \subsection{SVG}
 SVG(Scalable Vector Graphics) is based on the XML markup language and is used to describe vector graphics in two dimensions. Mindquantum provides a function to save the picture in SVG format.
@@ -85,7 +85,7 @@ encoder.svg().to_file(filename='circuit.svg')
 \end{lstlisting}
 \begin{figure}[h]
     \begin{center}
-        \includegraphics[width=0.5\linewidth]{images/circuit.png}
+        \includegraphics[width=0.5\linewidth]{images/2_4_circuit.png}
     \end{center}
     \caption{quantum circuit}
 \end{figure}
