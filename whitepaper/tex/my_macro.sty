@@ -1,0 +1,22 @@
+\ProvidesPackage{my_macro}
+
+\def\linkcode#1{\texttt{#1}}
+\def\code#1{\Colorbox{bkgd}{\lstinline{#1}}}
+
+% Link
+\def\ParameterResolver {\href{https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.parameterresolver.html\#mindquantum.core.parameterresolver.ParameterResolver}{\code{ParameterResolver}}}
+\def\X {\href{https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.html\#pre-instantiated-gate}{\code{X}}}
+\def\Y {\href{https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.html\#pre-instantiated-gate}{\code{Y}}}
+\def\Z {\href{https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.html\#pre-instantiated-gate}{\code{Z}}}
+\def\H {\href{https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.html\#pre-instantiated-gate}{\code{H}}}
+\def\RX {\href{https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.RX.html\#mindquantum.core.gates.RX}{\code{RX}}}
+\def\RY {\href{https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.RY.html\#mindquantum.core.gates.RY}{\code{RY}}}
+\def\RZ {\href{https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.RZ.html\#mindquantum.core.gates.RZ}{\code{RZ}}}
+\def\UnivMathGate {\href{https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.UnivMathGate.html\#mindquantum.core.gates.UnivMathGate}{\code{UnivMathGate}}}
+\def\geneunivparameterizedgate {\href{https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.gene_univ_parameterized_gate.html\#mindquantum.core.gates.gene_univ_parameterized_gate}{\code{gene_univ_parameterized_gate}}}
+
+\def\MindQuantum {\href{https://mindspore.cn/mindquantum/docs/en/master/index.html}{\textbf{MindQuantum}}}
+
+% Demo link
+% TODO(xusheng): add github link
+\def\democode#1#2 {\href{https://gitee.com/mindspore/mindquantum/blob/research/whitepaper/code/chapt#1/#2.py}{\color{ceruleanblue}{Gitee}}}

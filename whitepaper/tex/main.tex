@@ -16,10 +16,9 @@
 \usepackage{url}
 \usepackage{bbold}
 \usepackage{realboxes}
-\def\linkcode#1{\texttt{#1}}
-\def\code#1{\Colorbox{bkgd}{\lstinline{#1}}}
+\usepackage{my_macro}
 \usepackage{enumitem}
-
+\usepackage{booktabs}
 \usepackage{algpseudocode}
 
 \newcommand{\fancylink}[2]{\[\footnotesize\Colorbox{bkgd}{\color{orange-red}\href{#1}{\linkcode{#2}}}\]}
@@ -110,100 +109,100 @@ Introduction of MindSpore Quantum.
 \subsection{Quantum Gate}
 \input{2.3_Quantum_Gate}
 
-\subsection{Quantum Circuit}
-\input{2.4_Quantum_Circuit}
+% \subsection{Quantum Circuit}
+% \input{2.4_Quantum_Circuit}
 
-\subsection{Quantum Operator}
-\input{2.5_Quantum_Operator}
+% \subsection{Quantum Operator}
+% \input{2.5_Quantum_Operator}
 
-\subsection{Basic Usage of Simulator}
-\input{2.6_Basic_Usage_of_Simulator}
-
-
-\section{Features of MindSpore Quantum}
-
-\subsection{Gradient of Variational Quantum Algorithm}
-\input{3.1_Gradient_of_Variational_Quantum_Algorithm}
-
-\subsection{Circuit Ansatz Library}
-\input{3.2_Circuit_Ansatz_Library}
-
-\subsection{Quantum Algorithm Subroutine}
-\input{3.3_Quantum_Algorithm_Subroutine}
+% \subsection{Basic Usage of Simulator}
+% \input{2.6_Basic_Usage_of_Simulator}
 
 
-\section{Circuit Simulation Backend}
+% \section{Features of MindSpore Quantum}
 
-\subsection{State Vector and Density Matrix Simulator}
-\input{4.1_State_Vector_and_Density_Matrix_Simulator}
+% \subsection{Gradient of Variational Quantum Algorithm}
+% \input{3.1_Gradient_of_Variational_Quantum_Algorithm}
 
-\subsection{Tensor Network Simulator}
-\input{4.2_Tensor_Network_Simulator}
+% \subsection{Circuit Ansatz Library}
+% \input{3.2_Circuit_Ansatz_Library}
 
-\subsection{Channel Based Noise Simulator}
-\input{4.3_Channel_Based_Noise_Simulator}
-
-
-\section{Applications}
-\subsection{Quantum Neural Network (Xu Zhou$^{1,2}$)}
-
-[1] School of Physics and Astronomy, Sun Yat-sen University, Zhuhai 519082, China\\
-
-[2] QUDOOR Co, Ltd., Beijing 100089, China\\
-
-Email: \url{zhouxu@qudoor.cn}
+% \subsection{Quantum Algorithm Subroutine}
+% \input{3.3_Quantum_Algorithm_Subroutine}
 
 
+% \section{Circuit Simulation Backend}
 
-\input{5.1_Quantum_Neural_Network}
+% \subsection{State Vector and Density Matrix Simulator}
+% \input{4.1_State_Vector_and_Density_Matrix_Simulator}
 
-\subsection{Quantum Approximate Optimization Algorithm}
-\input{5.2_Quantum_Approximate_Optimization_Algorithm}
+% \subsection{Tensor Network Simulator}
+% \input{4.2_Tensor_Network_Simulator}
 
-\subsection{Variational Quantum Eigensolver}
-\input{5.3_Variational_Quantum_Eigensolver}
+% \subsection{Channel Based Noise Simulator}
+% \input{4.3_Channel_Based_Noise_Simulator}
 
-% \subsection{Advanced Quantum Aplications}
+
+% \section{Applications}
+% \subsection{Quantum Neural Network (Xu Zhou$^{1,2}$)}
+
+% [1] School of Physics and Astronomy, Sun Yat-sen University, Zhuhai 519082, China\\
+
+% [2] QUDOOR Co, Ltd., Beijing 100089, China\\
+
+% Email: \url{zhouxu@qudoor.cn}
+
+
+
+% \input{5.1_Quantum_Neural_Network}
+
+% \subsection{Quantum Approximate Optimization Algorithm}
+% \input{5.2_Quantum_Approximate_Optimization_Algorithm}
+
+% \subsection{Variational Quantum Eigensolver}
+% \input{5.3_Variational_Quantum_Eigensolver}
+
+% % \subsection{Advanced Quantum Aplications}
+% % \input{5.4_Advanced_Quantum_Aplications}
+
+
+% \section{QuPack: Acceleration Engine}
+% \input{6_QuPack:_Acceleration_Engine}
+
+% \subsection{Variational Quantum Eigensolver}
+% \input{6.1_Variational_Quantum_Eigensolver}
+
+% \subsection{Quantum Approximate Optimization Algorithm}
+% \input{6.2_Quantum_Approximate_Optimization_Algorithm}
+
+% \subsection{Tensor Network Simulator}
+% \input{6.3_Tensor_Network_Simulator}
+
+% \subsection{Pulse Engineering}
+% \input{6.4_Pulse_Engineering}
+
+
+% \section{Benchmarking}
+% \input{7_Benchmarking}
+
+
+% \section{Execution on Quantum Chip}
+
+% \subsection{Circuit Compilation and Optimization}
+% \input{8.1_Circuit_Compilation_and_Optimization}
+
+% \subsection{Qubit Mapping}
+% \input{8.2_Qubit_Mapping}
+
+% \subsection{Quantum Virtual Machine}
+% \input{8.3_Quantum_Virtual_Machine}
+
+% \subsection{Third-party Quantum Chip}
+% \input{8.4_Third-party_Quantum_Chip}
+
+
+% \section{Advanced Quantum Aplications}
 % \input{5.4_Advanced_Quantum_Aplications}
-
-
-\section{QuPack: Acceleration Engine}
-\input{6_QuPack:_Acceleration_Engine}
-
-\subsection{Variational Quantum Eigensolver}
-\input{6.1_Variational_Quantum_Eigensolver}
-
-\subsection{Quantum Approximate Optimization Algorithm}
-\input{6.2_Quantum_Approximate_Optimization_Algorithm}
-
-\subsection{Tensor Network Simulator}
-\input{6.3_Tensor_Network_Simulator}
-
-\subsection{Pulse Engineering}
-\input{6.4_Pulse_Engineering}
-
-
-\section{Benchmarking}
-\input{7_Benchmarking}
-
-
-\section{Execution on Quantum Chip}
-
-\subsection{Circuit Compilation and Optimization}
-\input{8.1_Circuit_Compilation_and_Optimization}
-
-\subsection{Qubit Mapping}
-\input{8.2_Qubit_Mapping}
-
-\subsection{Quantum Virtual Machine}
-\input{8.3_Quantum_Virtual_Machine}
-
-\subsection{Third-party Quantum Chip}
-\input{8.4_Third-party_Quantum_Chip}
-
-
-\section{Advanced Quantum Aplications}
-\input{5.4_Advanced_Quantum_Aplications}
 
 \bibliography{lib.bib}
 
