@@ -24,7 +24,8 @@ import pytest
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("error_dtype", ['int', 'float', 'mq.int', 'mq.flaot', 'mq.double', 'mq.complex', 'mq.int32', 'mq.float31', 'mq.float63', 'mq.complex63', 'mq.complex127', 'np.float32'])
+@pytest.mark.parametrize("error_dtype", ['int', 'float', 'mq.int', 'mq.flaot', 'mq.double', 'mq.complex', 'mq.int32',
+                                         'mq.float31', 'mq.float63', 'mq.complex63', 'mq.complex127', 'np.float32'])
 def test_error_dtype(error_dtype):
     """
     Description: test error dtype.
@@ -39,6 +40,10 @@ def test_error_dtype(error_dtype):
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 def test_dtype():
+    """
+    Description: test mindquantum dtype.
+    Expectation: success
+    """
     assert mq.dtype.is_double_precision(mq.float64)
     assert mq.dtype.is_double_precision(mq.complex128)
     assert not mq.dtype.is_double_precision(mq.float32)
