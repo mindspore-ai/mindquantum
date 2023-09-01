@@ -471,7 +471,7 @@ class MQSim(BackendBase):
                     raise ValueError("Wrong quantum state.")
                 self.sim.set_qs(quantum_state / norm_factor)
             elif len(quantum_state.shape) == 2:
-                if not np.allclose(quantum_state, quantum_state.T.conj()):
+                if not np.allclose(quantum_state, quantum_state.T.conj(), atol=1e-6):
                     raise ValueError("density matrix must be hermitian.")
                 if (quantum_state.diagonal() < 0).any():
                     raise ValueError("the diagonal terms in density matrix cannot be negative.")
@@ -528,6 +528,6 @@ class MQSim(BackendBase):
         """Get the state vector from a pure density matrix."""
         if self.name.startswith('mqvector'):
             return self.get_qs()
-        if 1 - self.purity() > 1e-8:
+        if 1 - self.purity() > 1e-6:
             raise ValueError("Cannot transform mixed density matrix to vector.")
         return np.array(self.sim.pure_state_vector())

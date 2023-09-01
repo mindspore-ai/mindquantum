@@ -679,21 +679,21 @@ def fidelity(rho: np.ndarray, sigma: np.ndarray):
         if np.log2(qs.shape[0]) % 1 != 0:
             raise ValueError(f"quantum state size {qs.shape[0]} is not power of 2")
         if qs.ndim == 1:
-            if not np.allclose(np.sum(np.abs(qs) ** 2), 1):
+            if not np.allclose(np.sum(np.abs(qs) ** 2), 1, atol=1e-6):
                 raise ValueError("state vector must be normalized.")
         elif qs.ndim == 2:
             if qs.shape[0] != qs.shape[1]:
                 raise ValueError("the row of matrix is not equal to column.")
-            if not np.allclose(qs, qs.T.conj()):
+            if not np.allclose(qs, qs.T.conj(), atol=1e-6):
                 raise ValueError("density matrix must be hermitian.")
             if (qs.diagonal() < 0).any():
                 raise ValueError("the diagonal terms in density matrix cannot be negative.")
-            if not np.allclose(np.real(np.trace(qs)), 1):
+            if not np.allclose(np.real(np.trace(qs)), 1, atol=1e-6):
                 raise ValueError("the trace of density matrix must equal to 1.")
         else:
             raise ValueError(f"input quantum state requires a vector or matrix, but get shape {rho.shape}.")
     if rho.ndim == 1 and sigma.ndim == 1:
-        return np.abs(np.inner(rho, sigma)) ** 2
+        return np.abs(np.inner(rho.conj().T, sigma)) ** 2
     if rho.ndim == 1 and sigma.ndim == 2:
         return np.real(rho.conj().T @ sigma @ rho)
     if rho.ndim == 2 and sigma.ndim == 1:
