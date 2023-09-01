@@ -31,7 +31,7 @@ def test_error_dtype(error_dtype):
     Description: test error dtype.
     Expectation: raise error
     """
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         Simulator('mqvector', 2, dtype=error_dtype)
 
 
