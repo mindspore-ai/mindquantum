@@ -79,7 +79,7 @@ if ([bool]$Env:DEVCLOUD_CI -And $Env:DEVCLOUD_CI -eq 1) {
 # ------------------------------------------------------------------------------
 # Default values
 
-$python_extra_pkgs = @('wheel-filename>1.2', 'build==0.10.0')
+$python_extra_pkgs = @('wheel-filename>1.2', 'build==0.9.0')
 
 if ($_IS_MINDSPORE_CI ) {
     foreach ($var in @('CUDA_HOME', 'CUDA_PATH')) {

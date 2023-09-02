@@ -41,7 +41,7 @@ fi
 # ==============================================================================
 
 if [[ "${created_venv:-0}" -eq 1 || "${do_update_venv:-0}" -eq 1 ]]; then
-    critical_pkgs=(pip 'build==0.10.0')
+    critical_pkgs=(pip 'build==0.9.0')
 
     read_build_system_requires "$ROOTDIR/pyproject.toml"
     critical_pkgs+=("${build_requires[@]}")

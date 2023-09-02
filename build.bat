@@ -63,7 +63,7 @@ set delocate_wheel=1
 set build_isolation=1
 set output_path=%ROOTDIR%\output
 set platform_name=
-set python_extra_pkgs=wheel-filename>1.2 build==0.10.0
+set python_extra_pkgs=wheel-filename>1.2 build==0.9.0
 
 if !_IS_MINDSPORE_CI! == 1 (
    set cmake_debug_mode=1
