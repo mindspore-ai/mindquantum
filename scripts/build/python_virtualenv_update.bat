@@ -40,7 +40,7 @@ goto :EOF
 
 :update_venv
 
-set critical_pkgs=pip "setuptools>=61,<=65.5.1;python_version<'3.12'" "setuptools>=61;python_version>='3.12'" "wheel" "pybind11>=2.9.2" "wheel-filename>1.2" build
+set critical_pkgs=pip "setuptools>=61,<=65.5.1;python_version<'3.12'" "setuptools>=61;python_version>='3.12'" "wheel" "pybind11>=2.9.2" "wheel-filename>1.2" "build==0.9.0"
 echo Updating critical Python packages: !PYTHON! -m pip install -U !critical_pkgs!
 call %BASEPATH%\dos\call_cmd.bat !PYTHON! -m pip install -U !critical_pkgs!
 
