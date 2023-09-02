@@ -382,5 +382,7 @@ class OpenQASM:
                 self.circuit += u3(*_extr_parameter(cmd), qubit[0])
             elif cmd.startswith("cu1("):
                 self.circuit += controlled(u1(_extr_parameter(cmd), qubit[1]))(qubit[0])
+            elif cmd.startswith("crz("):
+                self.circuit.rz(_extr_parameter(cmd), qubit[1], qubit[0])
             else:
                 raise ValueError(f"transfer cmd {cmd} not implement yet!")
