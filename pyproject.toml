@@ -4,7 +4,6 @@ requires = [
     'setuptools>=61;python_version>="3.12"',
     'wheel',
     'pybind11>=2.9.2',
-    'build==0.10.0',
     'wheel-filename>1.2'
 ]
 build-backend = 'backend'
