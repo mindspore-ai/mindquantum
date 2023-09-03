@@ -309,6 +309,8 @@ def ground_state_of_sum_zz(ops: QubitOperator, sim='mqvector') -> float:
         (-2.5+0j)
     """
     # pylint: disable=import-outside-toplevel
+    if sim.startswith('mqmatrix'):
+        raise ValueError("mqmatrix simulator not support this method yet.")
     c_module = SUPPORTED_SIMULATOR.c_module(sim)
     ground_state_of_zs = getattr(c_module, "ground_state_of_zs")
     masks_value = {}

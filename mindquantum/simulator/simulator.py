@@ -490,13 +490,13 @@ class Simulator:
 
     def get_partial_trace(self, obj_qubits):
         """
-        Calculate the partial trace of density matrix.
+        Calculate the partial trace of current density matrix.
 
         Args:
             obj_qubits (Union[int, list[int]]): Specific which qubits (subsystems) to trace over.
 
         Returns:
-            numpy.ndarray, the partial trace of density matrix.
+            numpy.ndarray, the partial trace of current density matrix.
 
         Examples:
             >>> from mindquantum.core.circuit import Circuit
@@ -513,7 +513,7 @@ class Simulator:
 
     def entropy(self):
         r"""
-        Calculate the von Neumann entropy of quantum state.
+        Calculate the von Neumann entropy of current quantum state.
 
         Definition of von Neumann entropy :math:`S` shown as below.
 
@@ -524,7 +524,7 @@ class Simulator:
         where :math:`\rho` is density matrix.
 
         Returns:
-            numbers.Number, the von Neumann entropy of quantum state.
+            numbers.Number, the von Neumann entropy of current quantum state.
 
         Examples:
             >>> from mindquantum.simulator import Simulator
@@ -534,6 +534,56 @@ class Simulator:
             0.6931471805599453
         """
         return self.backend.entropy()
+
+    def purity(self):
+        r"""
+        Calculate the purity of current quantum state.
+
+        Definition of purity :math:`\gamma` shown as below.
+
+        .. math::
+
+            \gamma \equiv \text{tr}(\rho^2)
+
+        where :math:`\rho` is density matrix.
+
+        Returns:
+            numbers.Number, the purity of current quantum state.
+
+        Examples:
+            >>> from mindquantum.simulator import Simulator
+            >>> sim = Simulator('mqmatrix', 1)
+            >>> sim.set_qs([[0.5, 0], [0, 0.5]])
+            >>> sim.purity()
+            0.5
+        """
+        return self.backend.purity()
+
+    def get_pure_state_vector(self):
+        r"""
+        Get state vector if current density matrix is pure.
+
+        The relation between density matrix :math:`\rho` and state vector
+        :math:`\left| \psi \right>` shown as below.
+
+        .. math::
+
+            \rho = \left| \psi \right>\!\left< \psi \right|
+
+        Note that the state vector :math:`\left| \psi \right>` may have an
+        arbitrary global phase :math:`e^{i\phi}`.
+
+        Returns:
+            numpy.ndarray, a state vector calculated from current density matrix.
+
+        Examples:
+            >>> from mindquantum.simulator import Simulator
+            >>> sim = Simulator('mqmatrix', 1)
+            >>> sim.set_qs([[0.5, 0.5], [0.5, 0.5]])
+            >>> sim.get_pure_state_vector()
+            array([0.70710678+0.j, 0.70710678+0.j])
+        """
+        return self.backend.get_pure_state_vector()
 
 
 def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
@@ -629,21 +679,21 @@ def fidelity(rho: np.ndarray, sigma: np.ndarray):
         if np.log2(qs.shape[0]) % 1 != 0:
             raise ValueError(f"quantum state size {qs.shape[0]} is not power of 2")
         if qs.ndim == 1:
-            if not np.allclose(np.sum(np.abs(qs) ** 2), 1):
+            if not np.allclose(np.sum(np.abs(qs) ** 2), 1, atol=1e-6):
                 raise ValueError("state vector must be normalized.")
         elif qs.ndim == 2:
             if qs.shape[0] != qs.shape[1]:
                 raise ValueError("the row of matrix is not equal to column.")
-            if not np.allclose(qs, qs.T.conj()):
+            if not np.allclose(qs, qs.T.conj(), atol=1e-6):
                 raise ValueError("density matrix must be hermitian.")
             if (qs.diagonal() < 0).any():
                 raise ValueError("the diagonal terms in density matrix cannot be negative.")
-            if not np.allclose(np.real(np.trace(qs)), 1):
+            if not np.allclose(np.real(np.trace(qs)), 1, atol=1e-6):
                 raise ValueError("the trace of density matrix must equal to 1.")
         else:
             raise ValueError(f"input quantum state requires a vector or matrix, but get shape {rho.shape}.")
     if rho.ndim == 1 and sigma.ndim == 1:
-        return np.abs(np.inner(rho, sigma)) ** 2
+        return np.abs(np.inner(rho.conj().T, sigma)) ** 2
     if rho.ndim == 1 and sigma.ndim == 2:
         return np.real(rho.conj().T @ sigma @ rho)
     if rho.ndim == 2 and sigma.ndim == 1:

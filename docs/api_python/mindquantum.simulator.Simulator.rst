@@ -81,6 +81,20 @@ mindquantum.simulator.Simulator
 
         返回模拟器的数据类型。
 
+    .. py:method:: entropy()
+
+        计算当前量子态的冯诺伊曼熵。
+
+        冯诺伊曼熵 :math:`S` 的定义如下。
+
+        .. math::
+            S(\rho) = -\text{tr}(\rho \ln \rho)
+
+        其中 :math:`\rho` 是密度矩阵。
+
+        返回：
+            numbers.Number，当前量子态的冯诺伊曼熵。
+
     .. py:method:: get_expectation(hamiltonian, circ_right=None, circ_left=None, simulator_left=None, pr=None)
 
         得到给定hamiltonian的期望。hamiltonian可能是非厄米共轭的。该方法旨在计算期望值，如下所示：
@@ -122,6 +136,31 @@ mindquantum.simulator.Simulator
         返回：
             GradOpsWrapper，一个包含生成梯度算子信息的梯度算子包装器。
 
+    .. py:method:: get_partial_trace(obj_qubits)
+
+        计算当前密度矩阵的偏迹。
+
+        参数：
+            - **obj_qubits** (Union[int, list[int]]) - 对哪些量子比特（子系统）求偏迹。
+
+        返回：
+            numpy.ndarray，密度矩阵的偏迹。
+
+    .. py:method:: get_pure_state_vector()
+
+        若当前密度矩阵是纯态，则获得相应的态矢量。
+
+        密度矩阵 :math:`\rho` 和态矢量 :math:`\left| \psi \right>` 的关系如下。
+
+        .. math::
+
+            \rho = \left| \psi \right>\!\left< \psi \right|
+
+        注意：态矢量 :math:`\left| \psi \right>` 可能包含一个任意的全局相位 :math:`e^{i\phi}`。
+
+        返回：
+            numpy.ndarray，由当前纯态密度矩阵计算出的态矢量。
+
     .. py:method:: get_qs(ket=False)
 
         获取模拟器的当前量子态。
@@ -139,6 +178,21 @@ mindquantum.simulator.Simulator
 
         返回：
             int，当前模拟器的量子比特数。
+
+    .. py:method:: purity()
+
+        计算当前量子态的纯度。
+
+        纯度 :math:`\gamma` 的定义如下所示。
+
+        .. math::
+
+            \gamma \equiv \text{tr}(\rho^2)
+
+        其中 :math:`\rho` 是密度矩阵。
+
+        返回：
+            numbers.Number，当前量子态的纯度。
 
     .. py:method:: reset()
 
@@ -170,27 +224,3 @@ mindquantum.simulator.Simulator
 
         参数：
             - **number** (int) - 设置模拟器中线程池所使用的线程数。
-
-    .. py:method:: get_partial_trace(obj_qubits)
-
-        计算密度矩阵的偏迹。
-
-        参数：
-            - **obj_qubits** (Union[int, list[int]]) - 对哪些量子比特（子系统）求偏迹。
-
-        返回：
-            numpy.ndarray，密度矩阵的偏迹。
-
-    .. py:method:: entropy()
-
-        计算量子态的冯诺伊曼熵。
-
-        冯诺伊曼熵 :math:`S` 的定义如下。
-
-        .. math::
-            S(\rho) = -\text{tr}(\rho \ln \rho)
-
-        其中 :math:`\rho` 是密度矩阵。
-
-        返回：
-            numbers.Number，量子态的冯诺伊曼熵。

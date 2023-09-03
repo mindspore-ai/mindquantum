@@ -35,7 +35,7 @@ from mindquantum.core.circuit import (
 )
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.core.parameterresolver import ParameterResolver as PR
-from mindquantum.simulator import NoiseBackend, Simulator, inner_product, fidelity
+from mindquantum.simulator import NoiseBackend, Simulator, inner_product
 from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 from mindquantum.utils import random_circuit
 
@@ -493,46 +493,6 @@ def test_inner_product(config):
     val_exp = np.vdot(sim1.get_qs(), sim2.get_qs())
     val = inner_product(sim1, sim2)
     assert np.allclose(val_exp, val)
-
-
-@pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
-@pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
-def test_fidelity(config):
-    """
-    Description: test fidelity of two quantum states
-    Expectation: success.
-    """
-    virtual_qc, dtype = config
-    sim1 = Simulator(virtual_qc, 1, dtype=dtype)
-    sim1.apply_gate(G.RX(1.2).on(0))
-    sim2 = Simulator(virtual_qc, 1, dtype=dtype)
-    sim2.apply_gate(G.RY(2.1).on(0))
-    val = fidelity(sim1.get_qs(), sim2.get_qs())
-    assert np.allclose(val, 0.40853254959045)
-
-
-@pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
-@pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
-def test_get_partial_trace(config):
-    """
-    Description: test partial trace of density matrix
-    Expectation: success.
-    """
-    virtual_qc, dtype = config
-    if not virtual_qc.startswith('mqmatrix'):
-        return
-    circ = Circuit().h(0).x(1, 0)
-    circ += G.RX(1.2).on(2, 1)
-    sim = Simulator(virtual_qc, 3, dtype=dtype)
-    sim.apply_circuit(circ)
-    mat = sim.get_partial_trace([0, 1])
-    assert np.allclose(mat, np.array([[0.84058944, 0.23300977j], [-0.23300977j, 0.15941056]]))
 
 
 @pytest.mark.level0

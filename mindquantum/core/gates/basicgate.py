@@ -70,6 +70,7 @@ class UnivMathGate(NoneParamNonHermMat):
 
     def __init__(self, name, matrix_value):
         """Initialize a UnivMathGate object."""
+        _check_input_type('matrix_value', np.ndarray, matrix_value)
         if len(matrix_value.shape) != 2:
             raise ValueError(f"matrix_value require shape of 2, but get shape of {matrix_value.shape}")
         if matrix_value.shape[0] != matrix_value.shape[1]:

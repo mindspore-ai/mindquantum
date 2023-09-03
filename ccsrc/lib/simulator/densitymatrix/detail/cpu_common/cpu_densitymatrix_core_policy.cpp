@@ -253,19 +253,10 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetPartialTrace(const qs_
 }
 
 template <typename derived_, typename calc_type_>
-bool CPUDensityMatrixPolicyBase<derived_, calc_type_>::IsPure(const qs_data_p_t& qs, index_t dim) {
-    auto p = Purity(qs, dim);
-    if (std::abs(p - 1) < 1e-8) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-template <typename derived_, typename calc_type_>
 auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::PureStateVector(const qs_data_p_t& qs, index_t dim)
     -> py_qs_datas_t {
-    if (!IsPure(qs, dim)) {
+    auto p = Purity(qs, dim);
+    if (1 - p > 1e-6) {
         throw(std::runtime_error("PureStateVector(): Cannot transform mixed density matrix to vector."));
     }
     if (qs == nullptr) {

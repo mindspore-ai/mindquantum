@@ -130,3 +130,11 @@ class BackendBase:
     def entropy(self):
         """Get the von-Neumann entropy of quantum state."""
         raise NotImplementedError(f"entropy not implemented for {self.device_name()}")
+
+    def purity(self):
+        """Calculate the purity of quantum state."""
+        raise NotImplementedError(f"purity not implemented for {self.device_name()}")
+
+    def get_pure_state_vector(self) -> np.ndarray:
+        """Get the state vector from a pure density matrix."""
+        raise NotImplementedError(f"get_pure_state_vector not implemented for {self.device_name()}")

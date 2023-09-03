@@ -621,7 +621,7 @@ class KrausChannel(NoiseGate, NonHermitianGate):
         sum_of_mat = np.zeros((2, 2), 'complex128')
         for mat in kraus_op:
             sum_of_mat += np.dot(mat.T.conj(), mat)
-        if not np.allclose(sum_of_mat, [[1, 0], [0, 1]]):
+        if not np.allclose(sum_of_mat, [[1, 0], [0, 1]], atol=1e-6):
             raise ValueError(f"kraus_op need to satisfy the completeness condition, but get {sum_of_mat}")
         kwargs['name'] = name
         kwargs['n_qubits'] = 1
