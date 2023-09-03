@@ -212,7 +212,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfCsr(
     auto host_bra = reinterpret_cast<std::complex<calc_type>*>(malloc(dim * sizeof(std::complex<calc_type>)));
     cudaMemcpy(host_bra, bra, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
     auto host_ket = reinterpret_cast<std::complex<calc_type>*>(malloc(dim * sizeof(std::complex<calc_type>)));
-    cudaMemcpy(host_bra, ket, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
+    cudaMemcpy(host_ket, ket, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
     auto out = sparse::ExpectationOfCsr<calc_type, calc_type>(a, reinterpret_cast<calc_type*>(host_bra),
                                                               reinterpret_cast<calc_type*>(host_ket));
     if (host_bra != nullptr) {
@@ -251,7 +251,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfCsr(
     auto host_bra = reinterpret_cast<std::complex<calc_type>*>(malloc(dim * sizeof(std::complex<calc_type>)));
     cudaMemcpy(host_bra, bra, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
     auto host_ket = reinterpret_cast<std::complex<calc_type>*>(malloc(dim * sizeof(std::complex<calc_type>)));
-    cudaMemcpy(host_bra, ket, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
+    cudaMemcpy(host_ket, ket, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
     auto out = sparse::ExpectationOfCsr<calc_type, calc_type>(a, b, reinterpret_cast<calc_type*>(host_bra),
                                                               reinterpret_cast<calc_type*>(host_ket));
     if (host_bra != nullptr) {
