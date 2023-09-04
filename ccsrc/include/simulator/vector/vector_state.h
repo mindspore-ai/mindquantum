@@ -200,7 +200,7 @@ class VectorState {
     //! Get the expectation and gradient of hamiltonian by parameter-shift rule
     virtual VVT<py_qs_data_t> GetExpectationWithGradParameterShiftOneMulti(
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
-        const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread);
+        parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread);
 
     virtual VT<VVT<py_qs_data_t>> GetExpectationWithGradParameterShiftMultiMulti(
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,

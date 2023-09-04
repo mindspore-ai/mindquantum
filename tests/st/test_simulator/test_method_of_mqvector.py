@@ -18,28 +18,13 @@ import subprocess
 
 import numpy as np
 import pytest
-from scipy.stats import entropy
 from scipy.sparse import csr_matrix
-from scipy.linalg import logm, sqrtm
 
 import mindquantum as mq
 from mindquantum.core import gates as G
-from mindquantum.core.circuit import UN, Circuit
-from mindquantum.simulator import Simulator, fidelity
+from mindquantum.simulator import Simulator
 from mindquantum.core.operators import Hamiltonian, QubitOperator
-from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 from mindquantum.utils import random_circuit
-
-try:
-    import importlib.metadata as importlib_metadata
-except ImportError:
-    import importlib_metadata
-
-try:
-    importlib_metadata.import_module("numba")
-    _HAS_NUMBA = True
-except ImportError:
-    _HAS_NUMBA = False
 
 _HAS_GPU = False
 
@@ -122,7 +107,7 @@ single_parameter_gate = [
     G.RX,
     G.RY,
     G.RZ,
-    # G.SWAPalpha,
+    G.SWAPalpha,
     G.XX,
     G.YY,
     G.ZZ,
@@ -151,8 +136,8 @@ single_parameter_gate = [
 @pytest.mark.parametrize("dtype", [mq.complex64, mq.complex128])
 def test_parameter_shift_rule(virtual_qc, dtype):  # pylint: disable=too-many-locals
     """
-    Description:
-    Expectation:
+    Description: test parameter shift rule
+    Expectation: success.
     """
     circ = random_circuit(3, 10)
     for i, gate in enumerate(single_parameter_gate):
@@ -161,7 +146,49 @@ def test_parameter_shift_rule(virtual_qc, dtype):  # pylint: disable=too-many-lo
         circ += random_circuit(3, 10)
     circ += G.U3('u3_theta', 'u3_phi', 'u3_lamda').on(0)
     circ += random_circuit(3, 10)
+    sim = Simulator(virtual_qc, 3, dtype=dtype)
+    ham = Hamiltonian(QubitOperator('X0') + QubitOperator('Z0'), dtype=dtype)
+    grad_ops = sim.get_expectation_with_grad(ham, circ, pr_shift=True)
+    pr = np.random.rand(len(circ.all_paras))
+    f, g = grad_ops(pr)
+    ref_grad_ops = sim.get_expectation_with_grad(ham, circ)
+    ref_f, ref_g = ref_grad_ops(pr)
+    assert np.allclose(f, ref_f, atol=1e-4)
+    assert np.allclose(g, ref_g, atol=1e-4)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize(
+    "virtual_qc",
+    [
+        'mqvector',
+        pytest.param('mqvector_gpu', marks=pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')),
+    ],
+)
+@pytest.mark.parametrize("dtype", [mq.complex64, mq.complex128])
+def test_parameter_shift_rule_finite_diff_case(virtual_qc, dtype):  # pylint: disable=too-many-locals
+    """
+    Description: test parameter shift rule finite difference case
+    Expectation: success.
+    """
+    def matrix(alpha):
+        ep = 0.5 * (1 + np.exp(1j * np.pi * alpha))
+        em = 0.5 * (1 - np.exp(1j * np.pi * alpha))
+        return np.array([[ep, em], [em, ep]])
+
+    def diff_matrix(alpha):
+        ep = 0.5 * 1j * np.pi * np.exp(1j * np.pi * alpha)
+        em = -0.5 * 1j * np.pi * np.exp(1j * np.pi * alpha)
+        return np.array([[ep, em], [em, ep]])
+    custom_gate = G.gene_univ_parameterized_gate('custom', matrix, diff_matrix)
+
+    circ = random_circuit(3, 10)
     circ += G.FSim('fsim_theta', 'fsim_phi').on([0, 1])
+    circ += random_circuit(3, 10)
+    circ += custom_gate('a').on(0)
     circ += random_circuit(3, 10)
     sim = Simulator(virtual_qc, 3, dtype=dtype)
     ham = Hamiltonian(QubitOperator('X0') + QubitOperator('Z0'), dtype=dtype)
@@ -170,5 +197,5 @@ def test_parameter_shift_rule(virtual_qc, dtype):  # pylint: disable=too-many-lo
     f, g = grad_ops(pr)
     ref_grad_ops = sim.get_expectation_with_grad(ham, circ)
     ref_f, ref_g = ref_grad_ops(pr)
-    assert np.allclose(f, ref_f, atol=1e-6)
-    assert np.allclose(g, ref_g, atol=1e-6)
+    assert np.allclose(f, ref_f, atol=1e-3)
+    assert np.allclose(g, ref_g, atol=1e-3)

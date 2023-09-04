@@ -216,7 +216,7 @@ def test_get_expectation_with_grad(config):
     init_state = init_state / np.linalg.norm(init_state)
     circ0 = random_circuit(3, 100)
     circ1 = random_circuit(3, 100)
-    circ = circ0 + G.RX('a').on(0) + circ1
+    circ = circ0 + G.RX({'a': 1, 'b': 2}).on(0) + circ1
     sim = Simulator(virtual_qc, 3, dtype=dtype)
     sim.set_qs(init_state)
     ham0 = Hamiltonian(QubitOperator('X0 Y1'), dtype=dtype)
@@ -224,24 +224,29 @@ def test_get_expectation_with_grad(config):
     ham2 = Hamiltonian(csr_matrix(ham0.hamiltonian.matrix(3)), dtype=dtype)
     for ham in (ham0, ham1, ham2):
         grad_ops = sim.get_expectation_with_grad(ham, circ)
-        pr = np.random.rand()
-        f, g = grad_ops([pr])
+        pr = np.random.rand(2)
+        f, g = grad_ops(pr)
         ref_f = (
             init_state.T.conj()
-            @ circ.hermitian().matrix({'a': pr})
+            @ circ.hermitian().matrix({'a': pr[0], 'b': pr[1]})
             @ ham0.hamiltonian.matrix(3)
-            @ circ.matrix({'a': pr})
+            @ circ.matrix({'a': pr[0], 'b': pr[1]})
             @ init_state
         )
-        ref_g = (
-            init_state.T.conj()
-            @ circ.hermitian().matrix({'a': pr})
-            @ ham0.hamiltonian.matrix(3)
-            @ circ1.matrix()
-            @ np.kron(np.eye(4, 4), G.RX('a').diff_matrix({'a': pr}))
-            @ circ0.matrix()
-            @ init_state
-        ).real * 2
+        ref_g = []
+        for about_what in ('a', 'b'):
+            ref_g.append(
+                (
+                    init_state.T.conj()
+                    @ circ.hermitian().matrix({'a': pr[0], 'b': pr[1]})
+                    @ ham0.hamiltonian.matrix(3)
+                    @ circ1.matrix()
+                    @ np.kron(np.eye(4, 4), G.RX({'a': 1, 'b': 2}).diff_matrix({'a': pr[0], 'b': pr[1]}, about_what))
+                    @ circ0.matrix()
+                    @ init_state
+                ).real
+                * 2
+            )
         assert np.allclose(f, ref_f, atol=1e-6)
         assert np.allclose(g, ref_g, atol=1e-6)
 
@@ -262,7 +267,7 @@ def test_noise_get_expectation_with_grad(virtual_qc, dtype):
     init_dm = np.outer(init_state, init_state.conj())
     circ0 = random_circuit(3, 100, 1.0, 0.0)
     circ1 = random_circuit(3, 100, 1.0, 0.0)
-    circ = circ0 + G.RX('a').on(0) + circ1
+    circ = circ0 + G.RX({'a': 1, 'b': 2}).on(0) + circ1
     circ = circ.with_noise()
     ham0 = Hamiltonian(QubitOperator('X0 Y1'), dtype=dtype)
     ham1 = ham0.sparse(3)
@@ -271,39 +276,41 @@ def test_noise_get_expectation_with_grad(virtual_qc, dtype):
         sim = Simulator(virtual_qc, 3, dtype=dtype)
         sim.set_qs(init_dm)
         grad_ops = sim.get_expectation_with_grad(ham, circ)
-        pr = np.random.rand()
-        f, grad = grad_ops([pr])
-        sim.apply_circuit(circ, [pr])
+        pr = np.random.rand(2)
+        f, grad = grad_ops(pr)
+        sim.apply_circuit(circ, pr)
         dm = sim.get_qs()
         ref_f = np.trace(ham0.hamiltonian.matrix(3) @ dm)
-        dm = init_dm
-        for g in circ:
-            if g.parameterized:
-                dm = (
-                    np.kron(np.eye(4, 4), g.diff_matrix({'a': pr}))
-                    @ dm
-                    @ np.kron(np.eye(4, 4), g.hermitian().matrix({'a': pr}))
-                )
-            elif isinstance(g, G.NoiseGate):
-                tmp = np.zeros((8, 8), dtype=mq.to_np_type(dtype))
-                for m in g.matrix():
-                    if g.obj_qubits[0] == 0:
-                        big_m = np.kron(np.eye(4, 4), m)
-                    elif g.obj_qubits[0] == 1:
-                        big_m = np.kron(np.kron(np.eye(2, 2), m), np.eye(2, 2))
-                    else:
-                        big_m = np.kron(m, np.eye(4, 4))
-                    tmp += big_m @ dm @ big_m.conj().T
-                dm = tmp
-            else:
-                if g.obj_qubits[0] == 0:
-                    big_m = np.kron(np.eye(4, 4), g.matrix())
-                elif g.obj_qubits[0] == 1:
-                    big_m = np.kron(np.kron(np.eye(2, 2), g.matrix()), np.eye(2, 2))
+        ref_grad = []
+        for about_what in ('a', 'b'):
+            dm = init_dm
+            for g in circ:
+                if g.parameterized:
+                    dm = (
+                        np.kron(np.eye(4, 4), g.diff_matrix({'a': pr[0], 'b': pr[1]}, about_what))
+                        @ dm
+                        @ np.kron(np.eye(4, 4), g.hermitian().matrix({'a': pr[0], 'b': pr[1]}))
+                    )
+                elif isinstance(g, G.NoiseGate):
+                    tmp = np.zeros((8, 8), dtype=mq.to_np_type(dtype))
+                    for m in g.matrix():
+                        if g.obj_qubits[0] == 0:
+                            big_m = np.kron(np.eye(4, 4), m)
+                        elif g.obj_qubits[0] == 1:
+                            big_m = np.kron(np.kron(np.eye(2, 2), m), np.eye(2, 2))
+                        else:
+                            big_m = np.kron(m, np.eye(4, 4))
+                        tmp += big_m @ dm @ big_m.conj().T
+                    dm = tmp
                 else:
-                    big_m = np.kron(g.matrix(), np.eye(4, 4))
-                dm = big_m @ dm @ big_m.conj().T
-        ref_grad = np.trace(ham0.hamiltonian.matrix(3) @ dm).real * 2
+                    if g.obj_qubits[0] == 0:
+                        big_m = np.kron(np.eye(4, 4), g.matrix())
+                    elif g.obj_qubits[0] == 1:
+                        big_m = np.kron(np.kron(np.eye(2, 2), g.matrix()), np.eye(2, 2))
+                    else:
+                        big_m = np.kron(g.matrix(), np.eye(4, 4))
+                    dm = big_m @ dm @ big_m.conj().T
+            ref_grad.append(np.trace(ham0.hamiltonian.matrix(3) @ dm).real * 2)
         assert np.allclose(f, ref_f, atol=1e-6)
         assert np.allclose(grad, ref_grad, atol=1e-4)
 
