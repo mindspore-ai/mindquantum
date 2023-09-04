@@ -192,10 +192,10 @@ class MQSim(BackendBase):
                     f"The dtype of this simulator ({self.dtype}) is different"
                     f" with simulator_left ({simulator_left.dtype})"
                 )
-            if self.name != simulator_left.name:
+            if self.name != simulator_left.backend.name:
                 raise ValueError(
                     f"simulator_left should be the same type of this simulator ({self.name})"
-                    f" but get {simulator_left.name}."
+                    f" but get {simulator_left.backend.name}."
                 )
             if self.n_qubits != simulator_left.n_qubits:
                 raise ValueError(f"Require a {self.n_qubits} simulator, but get {simulator_left.n_qubits}.")
