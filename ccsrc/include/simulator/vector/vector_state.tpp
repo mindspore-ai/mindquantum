@@ -1117,7 +1117,7 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradMultiMulti(
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
     const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
-    parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread) -> VVT<py_qs_data_t> {
+    const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread) -> VVT<py_qs_data_t> {
     auto n_hams = hams.size();
     int max_thread = 15;
     if (n_thread == 0) {
@@ -1129,6 +1129,7 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
     if (n_thread > static_cast<int>(n_hams)) {
         n_thread = n_hams;
     }
+    auto tmp_pr{pr};
     VVT<py_qs_data_t> f_and_g(n_hams, VT<py_qs_data_t>((1 + p_map.size()), 0));
     VectorState<qs_policy_t> sim = *this;
     sim.ApplyCircuit(circ, pr);
@@ -1171,7 +1172,7 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
                         VT<py_qs_data_t> intrin_grad_list(p_gate->prs_.size());
                         for (int k = 0; k < p_gate->prs_.size(); k++) {
                             p_gate->prs_[k] += -pr_shift;
-                            if (gate->id_ == GateID::U3) {
+                            if (gate->id_ == GateID::U3 || gate->id_ == GateID::FSim) {
                                 parameter::tn::Tensor coeff;
                                 parameter::tn::Tensor tmp;
                                 std::string key;
@@ -1181,15 +1182,15 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
                                     tmp = pr.GetItem(key_);
                                 }
                                 tmp += -pr_shift / coeff;
-                                pr.SetItem(key, tmp);
+                                tmp_pr.SetItem(key, tmp);
                             }
                             sim_l = *this;
-                            sim_l.ApplyCircuit(circ, pr);
+                            sim_l.ApplyCircuit(circ, tmp_pr);
                             sim_rs[j - start] = sim_l;
                             sim_rs[j - start].ApplyHamiltonian(*hams[j]);
                             auto expect0 = qs_policy_t::Vdot(sim_l.qs, sim_rs[j - start].qs, dim);
                             p_gate->prs_[k] += 2 * pr_shift;
-                            if (gate->id_ == GateID::U3) {
+                            if (gate->id_ == GateID::U3 || gate->id_ == GateID::FSim) {
                                 parameter::tn::Tensor coeff;
                                 parameter::tn::Tensor tmp;
                                 std::string key;
@@ -1198,16 +1199,16 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
                                     coeff = v;
                                     tmp = pr.GetItem(key_);
                                 }
-                                tmp += 2 * pr_shift / coeff;
-                                pr.SetItem(key, tmp);
+                                tmp += pr_shift / coeff;
+                                tmp_pr.SetItem(key, tmp);
                             }
                             sim_l = *this;
-                            sim_l.ApplyCircuit(circ, pr);
+                            sim_l.ApplyCircuit(circ, tmp_pr);
                             sim_rs[j - start] = sim_l;
                             sim_rs[j - start].ApplyHamiltonian(*hams[j]);
                             auto expect1 = qs_policy_t::Vdot(sim_l.qs, sim_rs[j - start].qs, dim);
                             p_gate->prs_[k] += -pr_shift;
-                            if (gate->id_ == GateID::U3) {
+                            if (gate->id_ == GateID::U3 || gate->id_ == GateID::FSim) {
                                 parameter::tn::Tensor coeff;
                                 parameter::tn::Tensor tmp;
                                 std::string key;
@@ -1216,8 +1217,7 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
                                     coeff = v;
                                     tmp = pr.GetItem(key_);
                                 }
-                                tmp += -pr_shift / coeff;
-                                pr.SetItem(key, tmp);
+                                tmp_pr.SetItem(key, tmp);
                             }
                             intrin_grad_list[k] = {coeff * std::real(expect1 - expect0), 0};
                         }

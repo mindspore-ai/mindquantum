@@ -252,6 +252,29 @@ def test_get_expectation_with_grad(config):
         assert np.allclose(g, ref_g, atol=1e-6)
 
 
+def three_qubits_dm_evolution_in_py(dm, g, dtype):
+    if isinstance(g, G.NoiseGate):
+        tmp = np.zeros((8, 8), dtype=mq.to_np_type(dtype))
+        for m in g.matrix():
+            if g.obj_qubits[0] == 0:
+                big_m = np.kron(np.eye(4, 4), m)
+            elif g.obj_qubits[0] == 1:
+                big_m = np.kron(np.kron(np.eye(2, 2), m), np.eye(2, 2))
+            else:
+                big_m = np.kron(m, np.eye(4, 4))
+            tmp += big_m @ dm @ big_m.conj().T
+        dm = tmp
+    else:
+        if g.obj_qubits[0] == 0:
+            big_m = np.kron(np.eye(4, 4), g.matrix())
+        elif g.obj_qubits[0] == 1:
+            big_m = np.kron(np.kron(np.eye(2, 2), g.matrix()), np.eye(2, 2))
+        else:
+            big_m = np.kron(g.matrix(), np.eye(4, 4))
+        dm = big_m @ dm @ big_m.conj().T
+    return dm
+
+
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
@@ -292,25 +315,8 @@ def test_noise_get_expectation_with_grad(virtual_qc, dtype):
                         @ dm
                         @ np.kron(np.eye(4, 4), g.hermitian().matrix({'a': pr[0], 'b': pr[1]}))
                     )
-                elif isinstance(g, G.NoiseGate):
-                    tmp = np.zeros((8, 8), dtype=mq.to_np_type(dtype))
-                    for m in g.matrix():
-                        if g.obj_qubits[0] == 0:
-                            big_m = np.kron(np.eye(4, 4), m)
-                        elif g.obj_qubits[0] == 1:
-                            big_m = np.kron(np.kron(np.eye(2, 2), m), np.eye(2, 2))
-                        else:
-                            big_m = np.kron(m, np.eye(4, 4))
-                        tmp += big_m @ dm @ big_m.conj().T
-                    dm = tmp
                 else:
-                    if g.obj_qubits[0] == 0:
-                        big_m = np.kron(np.eye(4, 4), g.matrix())
-                    elif g.obj_qubits[0] == 1:
-                        big_m = np.kron(np.kron(np.eye(2, 2), g.matrix()), np.eye(2, 2))
-                    else:
-                        big_m = np.kron(g.matrix(), np.eye(4, 4))
-                    dm = big_m @ dm @ big_m.conj().T
+                    dm = three_qubits_dm_evolution_in_py(dm, g, dtype)
             ref_grad.append(np.trace(ham0.hamiltonian.matrix(3) @ dm).real * 2)
         assert np.allclose(f, ref_f, atol=1e-6)
         assert np.allclose(grad, ref_grad, atol=1e-4)

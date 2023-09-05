@@ -34,6 +34,17 @@ try:
 except FileNotFoundError:
     _HAS_GPU = False
 
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
+
+try:
+    importlib_metadata.import_module("numba")
+    _HAS_NUMBA = True
+except ImportError:
+    _HAS_NUMBA = False
+
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
@@ -228,6 +239,7 @@ def test_parameter_shift_rule(virtual_qc, dtype):  # pylint: disable=too-many-lo
     ],
 )
 @pytest.mark.parametrize("dtype", [mq.complex64, mq.complex128])
+@pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_parameter_shift_rule_finite_diff_case(virtual_qc, dtype):  # pylint: disable=too-many-locals
     """
     Description: test parameter shift rule finite difference case
