@@ -164,6 +164,7 @@ def demultiplex_pair(u1: np.ndarray, u2: np.ndarray, tqs: List[int], cq: int, wi
     u1u2h = u1 @ u2.conj().T
     if np.allclose(u1u2h, u1u2h.conj().T):  # is hermitian
         eigvals, v = linalg.eigh(u1u2h)
+        eigvals = eigvals.astype(np.complex128)
     else:
         evals, v = linalg.schur(u1u2h, output='complex')
         eigvals = np.diag(evals)
