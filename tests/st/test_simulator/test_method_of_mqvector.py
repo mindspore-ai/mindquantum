@@ -62,7 +62,7 @@ def test_get_expectation(virtual_qc, dtype):
     sim_left = Simulator(virtual_qc, 3, dtype=dtype)
     sim.set_qs(init_state)
     sim_left.set_qs(init_state_left)
-    ham0 = Hamiltonian(QubitOperator('X0 Y1'), dtype=dtype)
+    ham0 = Hamiltonian(QubitOperator('X0 Y1') + QubitOperator('Z0'), dtype=dtype)
     ham1 = ham0.sparse(3)
     ham2 = Hamiltonian(csr_matrix(ham0.hamiltonian.matrix(3)), dtype=dtype)
     for ham in (ham0, ham1, ham2):
@@ -101,6 +101,65 @@ def test_get_expectation(virtual_qc, dtype):
             @ init_state
         )
         assert np.allclose(f, ref_f, atol=1e-6)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize(
+    "virtual_qc",
+    [
+        'mqvector',
+        pytest.param('mqvector_gpu', marks=pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')),
+    ],
+)
+@pytest.mark.parametrize("dtype", [mq.complex64, mq.complex128])
+def test_non_hermitian_get_expectation_with_grad(virtual_qc, dtype):
+    """
+    Description: test get expectation
+    Expectation: success.
+    """
+    init_state = np.random.rand(8) + np.random.rand(8) * 1j
+    init_state = init_state / np.linalg.norm(init_state)
+    init_state_left = np.random.rand(8) + np.random.rand(8) * 1j
+    init_state_left = init_state_left / np.linalg.norm(init_state_left)
+    circ0 = random_circuit(3, 100)
+    pr_gate = G.RX({'a': 1, 'b': 2}).on(0)
+    circ1 = random_circuit(3, 100)
+    circ = circ0 + pr_gate + circ1
+    circ_left = random_circuit(3, 100)
+    sim = Simulator(virtual_qc, 3, dtype=dtype)
+    sim_left = Simulator(virtual_qc, 3, dtype=dtype)
+    sim.set_qs(init_state)
+    sim_left.set_qs(init_state_left)
+    pr = np.random.rand(2) * 2 * np.pi
+    ham0 = Hamiltonian(QubitOperator('X0 Y1') + QubitOperator('Z0'), dtype=dtype)
+    ham1 = ham0.sparse(3)
+    ham2 = Hamiltonian(csr_matrix(ham0.hamiltonian.matrix(3)), dtype=dtype)
+    for ham in (ham0, ham1, ham2):
+        grad_ops = sim.get_expectation_with_grad(ham, circ, circ_left, sim_left)
+        f, g = grad_ops(pr)
+        ref_f = (
+            init_state_left.T.conj()
+            @ circ_left.hermitian().matrix()
+            @ ham0.hamiltonian.matrix(3)
+            @ circ.matrix({'a': pr[0], 'b': pr[1]})
+            @ init_state
+        )
+        ref_g = []
+        for about_what in ('a', 'b'):
+            ref_g.append(
+                init_state_left.T.conj()
+                @ circ_left.hermitian().matrix()
+                @ ham0.hamiltonian.matrix(3)
+                @ circ1.matrix()
+                @ np.kron(np.eye(4, 4), pr_gate.diff_matrix({'a': pr[0], 'b': pr[1]}, about_what))
+                @ circ0.matrix()
+                @ init_state
+            )
+        assert np.allclose(f, ref_f, atol=1e-6)
+        assert np.allclose(g, ref_g, atol=1e-6)
 
 
 single_parameter_gate = [
@@ -149,7 +208,7 @@ def test_parameter_shift_rule(virtual_qc, dtype):  # pylint: disable=too-many-lo
     sim = Simulator(virtual_qc, 3, dtype=dtype)
     ham = Hamiltonian(QubitOperator('X0') + QubitOperator('Z0'), dtype=dtype)
     grad_ops = sim.get_expectation_with_grad(ham, circ, pr_shift=True)
-    pr = np.random.rand(len(circ.all_paras))
+    pr = np.random.rand(len(circ.all_paras)) * 2 * np.pi
     f, g = grad_ops(pr)
     ref_grad_ops = sim.get_expectation_with_grad(ham, circ)
     ref_f, ref_g = ref_grad_ops(pr)
@@ -174,6 +233,7 @@ def test_parameter_shift_rule_finite_diff_case(virtual_qc, dtype):  # pylint: di
     Description: test parameter shift rule finite difference case
     Expectation: success.
     """
+
     def matrix(alpha):
         ep = 0.5 * (1 + np.exp(1j * np.pi * alpha))
         em = 0.5 * (1 - np.exp(1j * np.pi * alpha))
@@ -183,8 +243,8 @@ def test_parameter_shift_rule_finite_diff_case(virtual_qc, dtype):  # pylint: di
         ep = 0.5 * 1j * np.pi * np.exp(1j * np.pi * alpha)
         em = -0.5 * 1j * np.pi * np.exp(1j * np.pi * alpha)
         return np.array([[ep, em], [em, ep]])
-    custom_gate = G.gene_univ_parameterized_gate('custom', matrix, diff_matrix)
 
+    custom_gate = G.gene_univ_parameterized_gate('custom', matrix, diff_matrix)
     circ = random_circuit(3, 10)
     circ += G.FSim('fsim_theta', 'fsim_phi').on([0, 1])
     circ += random_circuit(3, 10)
@@ -193,7 +253,7 @@ def test_parameter_shift_rule_finite_diff_case(virtual_qc, dtype):  # pylint: di
     sim = Simulator(virtual_qc, 3, dtype=dtype)
     ham = Hamiltonian(QubitOperator('X0') + QubitOperator('Z0'), dtype=dtype)
     grad_ops = sim.get_expectation_with_grad(ham, circ, pr_shift=True)
-    pr = np.random.rand(len(circ.all_paras))
+    pr = np.random.rand(len(circ.all_paras)) * 2 * np.pi
     f, g = grad_ops(pr)
     ref_grad_ops = sim.get_expectation_with_grad(ham, circ)
     ref_f, ref_g = ref_grad_ops(pr)

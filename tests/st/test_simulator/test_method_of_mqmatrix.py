@@ -190,7 +190,7 @@ def test_get_expectation(config):
     circ = random_circuit(3, 100)
     sim = Simulator(virtual_qc, 3, dtype=dtype)
     sim.set_qs(init_state)
-    ham0 = Hamiltonian(QubitOperator('X0 Y1'), dtype=dtype)
+    ham0 = Hamiltonian(QubitOperator('X0 Y1') + QubitOperator('Z0'), dtype=dtype)
     ham1 = ham0.sparse(3)
     ham2 = Hamiltonian(csr_matrix(ham0.hamiltonian.matrix(3)), dtype=dtype)
     for ham in (ham0, ham1, ham2):
@@ -216,15 +216,16 @@ def test_get_expectation_with_grad(config):
     init_state = init_state / np.linalg.norm(init_state)
     circ0 = random_circuit(3, 100)
     circ1 = random_circuit(3, 100)
-    circ = circ0 + G.RX({'a': 1, 'b': 2}).on(0) + circ1
+    pr_gate = G.RX({'a': 1, 'b': 2}).on(0)
+    circ = circ0 + pr_gate + circ1
     sim = Simulator(virtual_qc, 3, dtype=dtype)
     sim.set_qs(init_state)
-    ham0 = Hamiltonian(QubitOperator('X0 Y1'), dtype=dtype)
+    ham0 = Hamiltonian(QubitOperator('X0 Y1') + QubitOperator('Z0'), dtype=dtype)
     ham1 = ham0.sparse(3)
     ham2 = Hamiltonian(csr_matrix(ham0.hamiltonian.matrix(3)), dtype=dtype)
     for ham in (ham0, ham1, ham2):
         grad_ops = sim.get_expectation_with_grad(ham, circ)
-        pr = np.random.rand(2)
+        pr = np.random.rand(2) * 2 * np.pi
         f, g = grad_ops(pr)
         ref_f = (
             init_state.T.conj()
@@ -241,7 +242,7 @@ def test_get_expectation_with_grad(config):
                     @ circ.hermitian().matrix({'a': pr[0], 'b': pr[1]})
                     @ ham0.hamiltonian.matrix(3)
                     @ circ1.matrix()
-                    @ np.kron(np.eye(4, 4), G.RX({'a': 1, 'b': 2}).diff_matrix({'a': pr[0], 'b': pr[1]}, about_what))
+                    @ np.kron(np.eye(4, 4), pr_gate.diff_matrix({'a': pr[0], 'b': pr[1]}, about_what))
                     @ circ0.matrix()
                     @ init_state
                 ).real
@@ -269,14 +270,14 @@ def test_noise_get_expectation_with_grad(virtual_qc, dtype):
     circ1 = random_circuit(3, 100, 1.0, 0.0)
     circ = circ0 + G.RX({'a': 1, 'b': 2}).on(0) + circ1
     circ = circ.with_noise()
-    ham0 = Hamiltonian(QubitOperator('X0 Y1'), dtype=dtype)
+    ham0 = Hamiltonian(QubitOperator('X0 Y1') + QubitOperator('Z0'), dtype=dtype)
     ham1 = ham0.sparse(3)
     ham2 = Hamiltonian(csr_matrix(ham0.hamiltonian.matrix(3)), dtype=dtype)
     for ham in (ham0, ham1, ham2):
         sim = Simulator(virtual_qc, 3, dtype=dtype)
         sim.set_qs(init_dm)
         grad_ops = sim.get_expectation_with_grad(ham, circ)
-        pr = np.random.rand(2)
+        pr = np.random.rand(2) * 2 * np.pi
         f, grad = grad_ops(pr)
         sim.apply_circuit(circ, pr)
         dm = sim.get_qs()
