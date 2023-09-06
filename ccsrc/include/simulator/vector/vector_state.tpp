@@ -856,9 +856,9 @@ auto VectorState<qs_policy_t_>::LeftSizeGradOneMulti(const std::vector<std::shar
                         }
                     }
                 }
-                for (int j = start; j < end; j++) {
-                    sim_rs[j - start].ApplyGate(g, pr);
-                }
+            }
+            for (int j = start; j < end; j++) {
+                sim_rs[j - start].ApplyGate(g, pr);
             }
         }
     }
