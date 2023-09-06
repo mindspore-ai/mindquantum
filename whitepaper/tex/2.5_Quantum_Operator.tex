@@ -10,140 +10,110 @@
 %   b. 加上一个数
 % 2. Transfrom
 % \end{lstlisting}
+View demo code of this section: \democode{02}{2.4}
 
-We often see operators in the equations of quantum mechanics. Operators and wave functions are the cornerstones of quantum theory. The state of the quantum system is represented by the wave function; Observables are represented by operators. An operator acts on a quantum state as a linear transformation, mapping one quantum state to another.
+Simulating many-body physical systems was the initial application scenario proposed by Richard Feynman for quantum computers. Effective simulations of such systems can aid us in understanding and designing new materials. Among the various many-body physics models, we are particularly interested in the Heisenberg model and the Fermi-Hubbard model. The Hamiltonians for these models can be expressed as follows:
 
-In MindQuantum, quantum operators is a combination of basic gates, including unitary gates, measurements, and noisy channels. MindQuantum supplies a number of special operators natively, with the opportunity to extend these operators for more advanced use cases, including Fermion operators, Qubit operators, TimeEvolution operators, etc. Table \ref{operators_table} shows an overview of the three operators.
+\begin{align*}
+    H_\text{Heisenberg}    & = -J\sum_{<i,j>}\sigma_i\otimes \sigma_j-h\sum_i\sigma_i                                             \\
+    H_\text{Fermi-Hubbard} & = -\sum_{<i,j>,\sigma}\left(a_{i\sigma}^\dagger a_{j\sigma} + a_{j\sigma}^\dagger a_{i\sigma}\right) \\
+                           & + U\sum_i n_{i\uparrow}n_{i\downarrow}
+\end{align*}
 
+In \MindQuantum, it is straightforward for us to construct those hamiltonian with the help of \QubitOperator and \FermionOperator.
 
-\subsubsection{Common Operators in MindQuantum}
-\textbf{Fermion Operators}
+\subsubsection{Qubit Operators}
 
-In the microscopic world, many tiny particles are not fixed, but have "spin" characteristics, which can be understood as "the deflection of a magnet in a magnetic field". Spins can be large or small, but their values are quantized, and they can only take integer or half-integer multiples of Planck constant. Particles with different spins are divided into two types. Those with integer values are called bosons. Those with half-integer spin values are called fermions. Common photons are bosons, and electrons are fermions.
+In Heisenberg model, $\sigma_i$ represent the pauli operator. The matrix form of pauli operator is:
 
-In MindQuantum, fermion is represented by the fermion operator wrapped by the $mindquantum.core.operators.FermionOperator$, which are the basic operators to describe a fermionic system, including molecular system, and they follow the anti-commutation relationship.
+\begin{align*}
+    \sigma_X & = \begin{pmatrix}
+                     0 & 1 \\
+                     1 & 0
+                 \end{pmatrix}, \sigma_Y = \begin{pmatrix}
+                                               0 & -i \\
+                                               i & 0
+                                           \end{pmatrix} \\
+    \sigma_I & =\begin{pmatrix}
+                    1 & 0 \\
+                    0 & 1
+                \end{pmatrix}, \sigma_Z = \begin{pmatrix}
+                                              1 & 0  \\
+                                              0 & -1
+                                          \end{pmatrix}
+\end{align*}
+In \MindQuantum, \QubitOperator is used to build this kind of operator. Given a pauli operator $\sigma_{X,3}\otimes \sigma_{Y,1}\otimes \sigma_{Z,0}=X_3 Y_1 Z_0$, which means apply pauli $Z$, pauli $Y$ and pauli $X$ on qubit 3, 1 and 0,  we can easily construct it with:
 
-For example, \verb|FermionOperator('4^ 3 9 3^')| is used to represent the fermion $\alpha_4^\dagger \alpha_3 \alpha_9 \alpha_3^\dagger$. In particular, the zero operator and the identity operator are expressed in forms \verb|FermionOperator()| and \verb|FermionOperator('')|, respectively.
+\begin{lstlisting}
+from mindquantum.core.operators import QubitOperator
 
-In addition, a $FermionOperator$ object can be parameterized, and its second parameter represents the coefficient of the single fermion operator.
+ops = QubitOperator('Z0 Y1 X3')
+\end{lstlisting}
+Please note that since $[Z_0, Y_1]= [Z_0,X_3] = [Y_1, X_3]=0$, so the order of pauli word in the pauli string does not matters.
 
+\QubitOperator also support arithmetic operation, which can help you to build more complex operators:
+
+\begin{lstlisting}
+from mindquantum.core.operators import QubitOperator
+from mindquantum.core.parameterresolver import ParameterResolver as PR
+
+op1 = QubitOperator('X0')
+op2 = QubitOperator('Z1', 'a')
+op3 = QubitOperator('Y1')
+op4 = 2 * op1 * op2 + op3 * PR('b')
+print(op4)
+print(op4.subs({'a':1, 'b':2}).matrix().toarray())
+\end{lstlisting}
+The output is:
+\begin{lstlisting}
+2*a [X0 Z1] +
+  b [Y1]
+
+[[ 0.+0.j  2.+0.j  0.-2.j  0.+0.j]
+ [ 2.+0.j  0.+0.j  0.+0.j  0.-2.j]
+ [ 0.+2.j  0.+0.j  0.+0.j -2.+0.j]
+ [ 0.+0.j  0.+2.j -2.+0.j  0.+0.j]]
+\end{lstlisting}
+In the last line, we use \code{.subs} to set the value of parameters and get the csr format sparse matrix with \code{.matrix}.
+
+\subsubsection{Fermion Operators}
+
+In Fermi-Hubbard model, $a_i^\dagger$ and $a_i$ are creation and annihilation operators of fermion. Different from pauli operator, the fermion operator follows anti-commutation relation:
+\begin{align*}
+    \{a_i, a_j^\dagger\} & = a_ia_j^\dagger + a_j^\dagger a_i = \delta_{ij} \\
+    \{a_i, a_j\}         & = \{a_i^\dagger, a_j^\dagger\}=0
+\end{align*}
+In qubit system, the creation and annihilation operators acting on state $\ket{0}$ and $\ket{1}$ follows:
+\begin{align*}
+    a\ket{0}          & =0,        & a\ket{1}          & =\ket{0} \\
+    a^\dagger \ket{0} & = \ket{1}, & a^\dagger \ket{1} & =0
+\end{align*}
+
+The matrix form of creation and annihilation would be:
+
+\begin{align*}
+    a=\begin{pmatrix}
+          0 & 1 \\
+          0 & 0
+      \end{pmatrix},
+    a^\dagger=\begin{pmatrix}
+                  0 & 0 \\
+                  1 & 0
+              \end{pmatrix}
+\end{align*}
+In \MindQuantum, we use \FermionOperator to construct fermion operator. Suppose we first create a state on qubit 1 and annihilate a state on qubit 0, the operator will be $a_1^\dagger\otimes a_0$, and you can build it with:
 \begin{lstlisting}
 from mindquantum.core.operators import FermionOperator
-para_op = FermionOperator('0 1^', 'x')
-print(para_op)
-
-para_dt = {'x':2}
-op = para_op.subs(para_dt)
-print(op)
+op1 = FermionOperator('1^ 0')
 \end{lstlisting}
-Output:
-\begin{lstlisting}
--x [1^ 0]
--2 [1^ 0]
-\end{lstlisting}
-
-\textbf{Qubit Operators}
-
-$mindquantum.core.operators.QubitOperator$ is the wrapper of Qubit operators. A $QubitOperator$ is an operator acting on multiple qubits and can be represented as: $coefficient * operator_{local}[0] × … × operator_{local}[n-1]$, where $×$ represents the tensor product. An $operator_{local}$ is a Pauli operator ($'I'$, $'X'$, $'Y'$, or $'Z'$) which acts on one qubit.
-
-In mathematical notation a term of $QubitOperator$ can be, for example, $0.5 * ‘X1 X5’$, which means that a Pauli $X$ operator acts on qubit $1$ and qubit $5$, while the identity operator acts on all the other qubits. Terms like this add up to form a Hamiltonian, e.g., $0.5 * ‘X1$ $Y3’ + 0.3 * ‘X0$ $Z2’$, coded as \verb|QubitOperator('X1 Y3', 0.5) + 0.3 * QubitOpera-| \verb|tor('X0 Z2')|.The code below calculates the representing matrix of \verb|0.3 * QubitOperator('X0 Z2')| and shows that a $QubitOperator$ can is equivalent to a superposition of multiple Pauli operators:
-\begin{lstlisting}
-from numpy import kron
-from mindquantum.core.gates import X, Z, I
-op = 0.3 * kron(kron(Z.matrix(), I.matrix()), X.matrix())
-print(op)
-ham = 0.3 * QubitOperator('X0 Z2')
-print(ham.matrix())
-\end{lstlisting}
-Output:
-\begin{lstlisting}
-[[ 0.   0.3  0.   0.   0.   0.   0.   0. ]
- [ 0.3  0.   0.   0.   0.   0.   0.   0. ]
- [ 0.   0.   0.   0.3  0.   0.   0.   0. ]
- [ 0.   0.   0.3  0.   0.   0.   0.   0. ]
- [ 0.   0.   0.   0.   0.  -0.3  0.   0. ]
- [ 0.   0.   0.   0.  -0.3  0.   0.   0. ]
- [ 0.   0.   0.   0.   0.   0.   0.  -0.3]
- [ 0.   0.   0.   0.   0.   0.  -0.3  0. ]]
-  (0, 1)	(0.3+0j)
-  (1, 0)	(0.3+0j)
-  (2, 3)	(0.3+0j)
-  (3, 2)	(0.3+0j)
-  (4, 5)	(-0.3+0j)
-  (5, 4)	(-0.3+0j)
-  (6, 7)	(-0.3+0j)
-  (7, 6)	(-0.3+0j)
-\end{lstlisting}
-Notice that MindQuantum uses big-endian for qubit ordering. The ordering is the opposite of the tensor product structure of the state space. So a 3-qubit quantum register \textbf{qreg} with wave-function $\ket{\psi}=\ket{q_2\otimes q_1 \otimes q_0}=\ket{q_0 q_1 q_2}$  has qreg[0]=$\ket{q_0}$, qreg[1]=$\ket{q_1}$, qreg[2]=$\ket{q_2}$. Therefore, Similarly for representing unitary matrices of a circuit. $U=U_2 \otimes{U_1}\otimes{U_0}=U_2 U_1 U_0$ would have $U_2$ acting on qreg[0], $U_1$ acting on qreg[1] and $U_0$ acting on qreg[2]. In addition, a Hamiltonian composed of QubitOperators should be a hermitian operator, thus requires the coefficients of all terms must be real.
-
-\textbf{TimeEvolution Operators}
-
-In quantum mechanics, studying only fixed states allows us to have a deeper understanding of the basic principles of quantum mechanics. But in reality, all systems (except the Universe as a whole) interact at least somewhat with other systems, and the state $\ket{\phi}$ of a quantum mechanical system changes with time, so it is of great significance to study the time evolution of such state.
-
-MindQuantum supports the time evolution operator, $mindquantum.core.operators.TimeEvolution$, which will perform the following evolution: $\ket{\phi(t)} = e^{-iHt}\ket{\phi(t_0)}$, describing the evolution of the state of a closed quantum system in continuous time. The Hamiltonian $H$ should be either parametric or non-parametric $QubitOperator$. Besides, if the $QubitOperator$ has multiple terms, a first-order Trotter decomposition will be used. The code below shows how to use the operator $TimeEvolution$ to get the quantum circuit corresponding to a given Hamiltonian (see Fig.~\ref{2.5_TimeEvolution_circuit}):
-\begin{lstlisting}
-from mindquantum.core.operators import TimeEvolution, QubitOperator
-q1 = QubitOperator('Z0 Y1', 'a')
-q2 = QubitOperator('X0 Z1', 'b')
-ops1 = q1 + q2
-ops2 = q2 + q1
-TimeEvolution(ops1).circuit.svg()
-TimeEvolution(ops2).circuit.svg()
-\end{lstlisting}
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.7\linewidth]{2.5_figures/2.5_TimeEvolution_circuit.png}
-    \caption{quantum circuit obtained by $TimeEvolution$}
-    \label{2.5_TimeEvolution_circuit}
-\end{figure}
+In the fermion string, we use \verb|^| to represent $\dagger$ and the number to tell us on which qubit that we act. The arithmetic operation of \FermionOperator is very similar with \QubitOperator, and we will not discuss it more.
 
 
-\subsubsection{Operations of MindQuantum Operators}
+\subsubsection{Operator Functions}
 
-\textbf{Basic Operations}
-
-Mindquantum supports some basic arithmetic operations, including:
+Mindquantum also supplies a number of advanced functions for Operators. Here are some show case:
 \begin{itemize}
-    \item Multiply by another operator:
-          \begin{lstlisting}
-from mindquantum.core.operators import QubitOperator
-q1 = QubitOperator('X0 Y3', 0.5)
-q2 = QubitOperator('X0 Z1', 0.3)
-ops1 = q1 * q2
-    \end{lstlisting}
-    \item Add a number:
-          \begin{lstlisting}
-from mindquantum.core.operators import QubitOperator
-q1 = QubitOperator('X0')
-ops1 = q1 + 0.5
-print(ops1.matrix())
-q2 = QubitOperator('Z0')
-ops2 = q2 + 0.5
-print(ops2.matrix())
-    \end{lstlisting}
-          Output:
-          \begin{lstlisting}
-  (0, 0)	(0.5+0j)
-  (0, 1)	(1+0j)
-  (1, 0)	(1+0j)
-  (1, 1)	(0.5+0j)
-  (0, 0)	(1.5+0j)
-  (1, 1)	(-0.5+0j)
-\end{lstlisting}
-\end{itemize}
-
-\textbf{Other Operator Features}
-
-\begin{itemize}
-    \item Most Operators also have a unitary matrix representation, which can be accessed by Operator.$matrix()$.
-    \item Most Operators can be converted to a different data type version by using Operator.$astype()$.
-\end{itemize}
-
-\textbf{Operator Functions}
-
-Mindquantum also supplies a number of advanced functions for Operators in mindquantum.core.operators libraries. Here are some common ones:
-\begin{itemize}
-    \item $commutator()$: Calculate the commutator of two operators.
+    \item \methodcommutator{op1}{op2} : Calculate the commutator of two operators.
           \begin{lstlisting}
 from mindquantum.core.operators import QubitOperator, FermionOperator, commutator
 qub_op1 = QubitOperator("X1 Y2")
@@ -151,7 +121,7 @@ qub_op2 = QubitOperator("X1 Z2")
 commutator(qub_op1, qub_op1)  # 0
 commutator(qub_op1, qub_op2)  # (2j) [X2]
     \end{lstlisting}
-    \item $count\_qubits()$: Count the number of qubits before deleting unused qubits.
+    \item \methodcountqubits{op1} : Count the number of qubits before deleting unused qubits.
           \begin{lstlisting}
 from mindquantum.core.operators import QubitOperator,FermionOperator, count_qubits
 qubit_op = QubitOperator("X1 Y2")
@@ -159,14 +129,10 @@ count_qubits(qubit_op)  # 3
 fer_op = FermionOperator("1^")
 count_qubits(fer_op)  # 2
     \end{lstlisting}
-    \item $down\_index()$: Return the index order in spin-free orbit of a given spin-down orbital according its index number in spin-down orbitals. We set the default spin-free orbit to even-odd-even-odd (0,1,2,3,...). Spin-down orbitals ($\alpha$ orbitals) have odd indexes and spin-up orbitals have even ones.
+    \item \methodhermitianconj{op1} : Get the hermitian conjugation of given operator.
           \begin{lstlisting}
-from mindquantum.core.operators import down_index
-down_index(1)   # 3
-    \end{lstlisting}
-    \item $up\_index()$: Return the index order in spin-free orbit of a given spin-up orbital according its index number in spin-up orbitals.
-          \begin{lstlisting}
-from mindquantum.core.operators import up_index
-up_index(1)   # 2
+from mindquantum.core.operators import FermionOperator, hermitian_conjugated
+fer_op = FermionOperator("1^ 3")
+hermitian_conjugated(fer_op)
     \end{lstlisting}
 \end{itemize}
