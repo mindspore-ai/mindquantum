@@ -13,10 +13,10 @@
 # limitations under the License.
 # ============================================================================
 '''test DAG circuit'''
-import numpy as np
 import pytest
 
 from mindquantum.algorithm.compiler.dag import DAGCircuit
+from mindquantum.algorithm.compiler.decompose.utils import is_equiv_unitary
 from mindquantum.utils import random_circuit
 
 
@@ -30,4 +30,4 @@ def test_dag_circuit():
     circ = random_circuit(3, 100)
     dag = DAGCircuit(circ)
     new_circ = dag.to_circuit()
-    assert np.allclose(circ.matrix(), new_circ.matrix())
+    assert is_equiv_unitary(circ.matrix(), new_circ.matrix())

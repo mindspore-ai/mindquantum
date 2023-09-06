@@ -13,7 +13,6 @@
 # limitations under the License.
 # ============================================================================
 '''test compiler rules'''
-import numpy as np
 import pytest
 
 from mindquantum.algorithm.compiler import (
@@ -27,6 +26,7 @@ from mindquantum.algorithm.compiler import (
     CZBasedChipCompiler,
     DAGCircuit,
 )
+from mindquantum.algorithm.compiler.decompose.utils import is_equiv_unitary
 from mindquantum.utils import random_circuit
 
 
@@ -42,14 +42,14 @@ def test_basic_decompose():
     rule = BasicDecompose()
     rule.do(dag_circ)
     new_circ = dag_circ.to_circuit()
-    assert np.allclose(new_circ.matrix(), circ.matrix())
+    assert is_equiv_unitary(new_circ.matrix(), circ.matrix())
 
     circ = random_circuit(3, 100)
     dag_circ = DAGCircuit(circ)
     rule = BasicDecompose(True)
     rule.do(dag_circ)
     new_circ = dag_circ.to_circuit()
-    assert np.allclose(new_circ.matrix(), circ.matrix())
+    assert is_equiv_unitary(new_circ.matrix(), circ.matrix())
 
 
 @pytest.mark.level0
@@ -64,7 +64,7 @@ def test_sequential_compiler():
     rule = SequentialCompiler([BasicDecompose(), SimpleNeighborCanceler()])
     rule.do(dag_circ)
     new_circ = dag_circ.to_circuit()
-    assert np.allclose(new_circ.matrix(), circ.matrix())
+    assert is_equiv_unitary(new_circ.matrix(), circ.matrix())
 
 
 @pytest.mark.level0
@@ -76,10 +76,10 @@ def test_kronecker_seq_compiler():
     """
     circ = random_circuit(3, 100)
     dag_circ = DAGCircuit(circ)
-    rule = KroneckerSeqCompiler([BasicDecompose(),SimpleNeighborCanceler()])
+    rule = KroneckerSeqCompiler([BasicDecompose(), SimpleNeighborCanceler()])
     rule.do(dag_circ)
     new_circ = dag_circ.to_circuit()
-    assert np.allclose(new_circ.matrix(), circ.matrix())
+    assert is_equiv_unitary(new_circ.matrix(), circ.matrix())
 
 
 @pytest.mark.level0
@@ -94,7 +94,7 @@ def test_fully_neighbor_canceler():
     rule = FullyNeighborCanceler()
     rule.do(dag_circ)
     new_circ = dag_circ.to_circuit()
-    assert np.allclose(new_circ.matrix(), circ.matrix())
+    assert is_equiv_unitary(new_circ.matrix(), circ.matrix())
 
 
 @pytest.mark.level0
@@ -109,7 +109,7 @@ def test_cz_to_cx():
     rule = CZToCX()
     rule.do(dag_circ)
     new_circ = dag_circ.to_circuit()
-    assert np.allclose(new_circ.matrix(), circ.matrix())
+    assert is_equiv_unitary(new_circ.matrix(), circ.matrix())
 
 
 @pytest.mark.level0
@@ -124,7 +124,7 @@ def test_cx_to_cz():
     rule = CXToCZ()
     rule.do(dag_circ)
     new_circ = dag_circ.to_circuit()
-    assert np.allclose(new_circ.matrix(), circ.matrix())
+    assert is_equiv_unitary(new_circ.matrix(), circ.matrix())
 
 
 @pytest.mark.level0
@@ -139,4 +139,4 @@ def test_cz_based_chip_compiler():
     rule = CZBasedChipCompiler()
     rule.do(dag_circ)
     new_circ = dag_circ.to_circuit()
-    assert np.allclose(new_circ.matrix(), circ.matrix())
+    assert is_equiv_unitary(new_circ.matrix(), circ.matrix())
