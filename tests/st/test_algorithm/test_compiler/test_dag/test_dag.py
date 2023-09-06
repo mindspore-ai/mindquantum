@@ -12,18 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""MindQuantum compiler related modules."""
-import sys
+'''test DAG circuit'''
+import pytest
 
-sys.setrecursionlimit(20000)
-# pylint: disable=wrong-import-position
-from . import dag, decompose, rules  # noqa: E402
-from .dag import *  # noqa: E402
-from .decompose import *  # noqa: E402
-from .rules import *  # noqa: E402
+from mindquantum.algorithm.compiler.dag import DAGCircuit
+from mindquantum.algorithm.compiler.decompose.utils import is_equiv_unitary
+from mindquantum.utils import random_circuit
 
-__all__ = []
-__all__.extend(decompose.__all__)
-__all__.extend(rules.__all__)
-__all__.extend(dag.__all__)
-__all__.sort()
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_dag_circuit():
+    """
+    Description: Test DAG circuit
+    Expectation: success
+    """
+    circ = random_circuit(3, 100)
+    dag = DAGCircuit(circ)
+    new_circ = dag.to_circuit()
+    assert is_equiv_unitary(circ.matrix(), new_circ.matrix())
