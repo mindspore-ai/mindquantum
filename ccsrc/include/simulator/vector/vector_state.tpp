@@ -1129,6 +1129,7 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
     if (n_thread > static_cast<int>(n_hams)) {
         n_thread = n_hams;
     }
+    auto tmp_pr{pr};
     VVT<py_qs_data_t> f_and_g(n_hams, VT<py_qs_data_t>((1 + p_map.size()), 0));
     VectorState<qs_policy_t> sim = *this;
     sim.ApplyCircuit(circ, pr);
@@ -1155,27 +1156,72 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
                 calc_type pr_shift = M_PI_2;
                 calc_type coeff = 0.5;
                 if (gate->id_ == GateID::CUSTOM) {
-                    auto p_gate = static_cast<CustomGate*>(gate.get());
+                    pr_shift = 0.001;
+                    coeff = 0.5 / pr_shift;
+                }
+                if (gate->id_ == GateID::SWAPalpha) {
+                    pr_shift = 0.5;
+                    coeff = M_PI_2;
+                }
+                if (gate->id_ == GateID::FSim) {
                     pr_shift = 0.001;
                     coeff = 0.5 / pr_shift;
                 }
                 if (const auto& [title, jac] = p_gate->jacobi; title.size() != 0) {
                     for (int j = start; j < end; j++) {
-                        p_gate->prs_[0] += -pr_shift;
-                        sim_l = *this;
-                        sim_l.ApplyCircuit(circ, pr);
-                        sim_rs[j - start] = sim_l;
-                        sim_rs[j - start].ApplyHamiltonian(*hams[j]);
-                        auto expect0 = qs_policy_t::Vdot(sim_l.qs, sim_rs[j - start].qs, dim);
-                        p_gate->prs_[0] += 2 * pr_shift;
-                        sim_l = *this;
-                        sim_l.ApplyCircuit(circ, pr);
-                        sim_rs[j - start] = sim_l;
-                        sim_rs[j - start].ApplyHamiltonian(*hams[j]);
-                        auto expect1 = qs_policy_t::Vdot(sim_l.qs, sim_rs[j - start].qs, dim);
-                        p_gate->prs_[0] += -pr_shift;
-                        auto intrin_grad = tensor::Matrix(
-                            VVT<py_qs_data_t>({{{coeff * std::real(expect1 - expect0), 0}}}));
+                        VT<py_qs_data_t> intrin_grad_list(p_gate->prs_.size());
+                        for (int k = 0; k < p_gate->prs_.size(); k++) {
+                            p_gate->prs_[k] += -pr_shift;
+                            if (gate->id_ == GateID::U3 || gate->id_ == GateID::FSim) {
+                                parameter::tn::Tensor coeff;
+                                parameter::tn::Tensor tmp;
+                                std::string key;
+                                for (auto& [key_, v] : p_gate->prs_[k].data_) {
+                                    key = key_;
+                                    coeff = v;
+                                    tmp = pr.GetItem(key_);
+                                }
+                                tmp += -pr_shift / coeff;
+                                tmp_pr.SetItem(key, tmp);
+                            }
+                            sim_l = *this;
+                            sim_l.ApplyCircuit(circ, tmp_pr);
+                            sim_rs[j - start] = sim_l;
+                            sim_rs[j - start].ApplyHamiltonian(*hams[j]);
+                            auto expect0 = qs_policy_t::Vdot(sim_l.qs, sim_rs[j - start].qs, dim);
+                            p_gate->prs_[k] += 2 * pr_shift;
+                            if (gate->id_ == GateID::U3 || gate->id_ == GateID::FSim) {
+                                parameter::tn::Tensor coeff;
+                                parameter::tn::Tensor tmp;
+                                std::string key;
+                                for (auto& [key_, v] : p_gate->prs_[k].data_) {
+                                    key = key_;
+                                    coeff = v;
+                                    tmp = pr.GetItem(key_);
+                                }
+                                tmp += pr_shift / coeff;
+                                tmp_pr.SetItem(key, tmp);
+                            }
+                            sim_l = *this;
+                            sim_l.ApplyCircuit(circ, tmp_pr);
+                            sim_rs[j - start] = sim_l;
+                            sim_rs[j - start].ApplyHamiltonian(*hams[j]);
+                            auto expect1 = qs_policy_t::Vdot(sim_l.qs, sim_rs[j - start].qs, dim);
+                            p_gate->prs_[k] += -pr_shift;
+                            if (gate->id_ == GateID::U3 || gate->id_ == GateID::FSim) {
+                                parameter::tn::Tensor coeff;
+                                parameter::tn::Tensor tmp;
+                                std::string key;
+                                for (auto& [key_, v] : p_gate->prs_[k].data_) {
+                                    key = key_;
+                                    coeff = v;
+                                    tmp = pr.GetItem(key_);
+                                }
+                                tmp_pr.SetItem(key, tmp);
+                            }
+                            intrin_grad_list[k] = {coeff * std::real(expect1 - expect0), 0};
+                        }
+                        auto intrin_grad = tensor::Matrix(VVT<py_qs_data_t>{intrin_grad_list});
                         auto p_grad = tensor::ops::cpu::to_vector<py_qs_data_t>(tensor::ops::MatMul(intrin_grad, jac));
                         for (const auto& [name, idx] : title) {
                             f_and_g[j][1 + p_map.at(name)] += p_grad[0][idx];

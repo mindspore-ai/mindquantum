@@ -338,8 +338,8 @@ class Simulator:
                 batch in parallel threads. Default: ``None``.
             pr_shift (bool): Whether or not to use parameter-shift rule. Only available in "mqvector" simulator.
                 It will be enabled automatically when circuit contains noise channel. Noted that not every gate
-                uses the same shift value π/2, so the gradient of parameterized custom gate will be calculated
-                by finite difference method with gap 0.001. Default: ``False``.
+                uses the same shift value π/2, so the gradient of FSim gate and parameterized custom gate will be
+                calculated by finite difference method with gap 0.001. Default: ``False``.
 
         Returns:
             GradOpsWrapper, a grad ops wrapper than contains information to generate this grad ops.
