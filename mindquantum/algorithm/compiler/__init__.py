@@ -13,13 +13,17 @@
 # limitations under the License.
 # ============================================================================
 """MindQuantum compiler related modules."""
+import sys
 
-from . import decompose, rules
-from .dag import *
-from .decompose import *
-from .rules import *
+sys.setrecursionlimit(20000)
+# pylint: disable=wrong-import-position
+from . import dag, decompose, rules  # noqa: E402
+from .dag import *  # noqa: E402
+from .decompose import *  # noqa: E402
+from .rules import *  # noqa: E402
 
 __all__ = []
 __all__.extend(decompose.__all__)
 __all__.extend(rules.__all__)
+__all__.extend(dag.__all__)
 __all__.sort()
