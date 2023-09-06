@@ -97,7 +97,8 @@ def u1(lambd, qubit):
 
 def rccx(q0, q1, q2, circ):
     """Openqasm rccx gate."""
-    from mindquantum.core import gates as G
+    # pylint: disable=import-outside-toplevel
+    from mindquantum.core import gates as G  # noqa: N812
 
     circ.h(q2)
     circ += G.T.on(q2)
@@ -266,22 +267,19 @@ class OpenQASM:
                             ctrl = gate.ctrl_qubits[0]
                             self.cmds.append(f"c{gate.name.lower()} q[{ctrl}],q[{obj}];")
                             continue
-                        else:
-                            self.cmds.append(f"{gate.name.lower()} q[{obj}];")
-                            continue
-                    else:
-                        obj = gate.obj_qubits[0]
-                        param = gate.coeff
-                        if not param.is_const():
-                            raise ValueError(f"Cannot convert parameterized gate {gate} to OpenQASM.")
-                        param = param.const
-                        if gate.ctrl_qubits:
-                            ctrl = gate.ctrl_qubits[0]
-                            self.cmds.append(f"c{gate.name.lower()}({param}) q[{ctrl}],q[{obj}];")
-                            continue
-                        else:
-                            self.cmds.append(f"{gate.name.lower()}({param}) q[{obj}];")
-                            continue
+                        self.cmds.append(f"{gate.name.lower()} q[{obj}];")
+                        continue
+                    obj = gate.obj_qubits[0]
+                    param = gate.coeff
+                    if not param.is_const():
+                        raise ValueError(f"Cannot convert parameterized gate {gate} to OpenQASM.")
+                    param = param.const
+                    if gate.ctrl_qubits:
+                        ctrl = gate.ctrl_qubits[0]
+                        self.cmds.append(f"c{gate.name.lower()}({param}) q[{ctrl}],q[{obj}];")
+                        continue
+                    self.cmds.append(f"{gate.name.lower()}({param}) q[{obj}];")
+                    continue
                 if isgateinstance(gate, (double_np, double_p)):
                     if isinstance(gate, gates.SWAPGate):
                         obj = gate.obj_qubits
@@ -405,10 +403,10 @@ class OpenQASM:
                 out.append(cmd[:-1])
         return out, version
 
-    def _trans_v2(self, cmds):  # pylint: disable=too-many-branches
+    def _trans_v2(self, cmds):  # pylint: disable=too-many-branches,too-many-statements
         """Trans method for openqasm version 2."""
-        # pylint: disable=import-outside-toplevel,cyclic-import
-        from mindquantum.core import gates as G
+        # pylint: disable=import-outside-toplevel,cyclic-import,no-value-for-parameter
+        from mindquantum.core import gates as G  # noqa: N812
         from mindquantum.core.circuit import Circuit, controlled
 
         self.circuit = Circuit()
@@ -470,74 +468,3 @@ class OpenQASM:
                 rccx(*qubit, self.circuit)
             else:
                 raise ValueError(f"transfer cmd {cmd} not implement yet!")
-
-
-if __name__ == '__main__':
-    from qiskit import *
-    from qiskit.circuit.library.standard_gates import *
-
-    qreg = QuantumRegister(4)
-    circ = QuantumCircuit(qreg)
-    circ.ccx(qreg[0], qreg[1], qreg[2])
-    circ.ccz(qreg[0], qreg[1], qreg[2])
-    circ.ch(qreg[1], qreg[2])
-    circ.cnot(qreg[1], qreg[2])
-    circ.cp(1.0, qreg[1], qreg[2])
-    circ.crx(1.0, qreg[0], qreg[1])
-    circ.cry(1.0, qreg[0], qreg[1])
-    circ.crz(1.0, qreg[0], qreg[1])
-    circ.cs(qreg[0], qreg[1])
-    circ.csdg(qreg[0], qreg[1])
-    circ.cswap(qreg[0], qreg[1], qreg[2])
-    circ.csx(qreg[0], qreg[1])
-    circ.cu(1.0, 2.0, 3.0, 4.0, qreg[0], qreg[1])
-    circ.cx(qreg[0], qreg[1])
-    circ.cy(qreg[0], qreg[1])
-    circ.cz(qreg[0], qreg[1])
-    circ.dcx(qreg[0], qreg[1])
-    circ.ecr(qreg[0], qreg[1])
-    circ.fredkin(qreg[0], qreg[1], qreg[2])
-    circ.h(qreg[0])
-    circ.i(qreg[0])
-    circ.id(qreg[0])
-    circ.iswap(qreg[0], qreg[1])
-    circ.mcp(1.0, qreg[:2], qreg[3])
-    circ.mcrx(1.0, qreg[:2], qreg[3])
-    circ.mcry(1.0, qreg[:2], qreg[3])
-    circ.mcrz(1.0, qreg[:2], qreg[3])
-    circ.mct(qreg[:2], qreg[3])
-    circ.mcx(qreg[:2], qreg[3])
-    circ.ms(1.0, qreg[:2])
-    circ.p(0.1, qreg[0])
-    circ.r(0.1, 2.0, qreg[0])
-    circ.rcccx(qreg[0], qreg[1], qreg[2], qreg[3])
-    circ.rccx(qreg[0], qreg[1], qreg[2])
-    circ.rv(0.1, 0.2, 0.3, qreg[0])
-    circ.rx(0.1, qreg[0])
-    circ.ry(0.1, qreg[0])
-    circ.rz(0.1, qreg[0])
-    circ.rxx(0.1, qreg[0], qreg[1])
-    circ.ryy(0.1, qreg[0], qreg[1])
-    circ.rzx(0.1, qreg[0], qreg[1])
-    circ.rzz(0.1, qreg[0], qreg[1])
-    circ.s(qreg[0])
-    circ.sdg(qreg[0])
-    circ.swap(qreg[0], qreg[1])
-    circ.sx(qreg[0])
-    circ.sxdg(qreg[0])
-    circ.t(qreg[0])
-    circ.tdg(qreg[0])
-    circ.toffoli(qreg[0], qreg[1], qreg[2])
-    circ.u(0.1, 0.2, 0.3, qreg[0])
-    circ.x(qreg[0])
-    circ.y(qreg[0])
-    circ.z(qreg[0])
-    qiskit_s = circ.qasm()
-    print(qiskit_s)
-
-    mq_circ = OpenQASM().from_string(qiskit_s)
-    mq_s = OpenQASM().to_string(mq_circ)
-    print(circ)
-    print(mq_circ)
-    print(mq_s)
-    print(QuantumCircuit().from_qasm_str(mq_s))
