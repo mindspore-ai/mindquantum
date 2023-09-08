@@ -42,7 +42,7 @@ check_for_verbose "$@"
 # ------------------------------------------------------------------------------
 # Default values for this particular script
 
-python_extra_pkgs=('wheel-filename>1.2' 'build')
+python_extra_pkgs=('wheel-filename>1.2' 'build==0.9.0')
 
 if [ "$(uname)" == "Linux" ]; then
     LD_PATH_VAR=LD_LIBRARY_PATH
