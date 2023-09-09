@@ -35,6 +35,9 @@ template <typename derived_, typename calc_type_>
 auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::InitState(index_t dim, bool zero_state) -> qs_data_p_t {
     index_t n_elements = (dim * dim + dim) / 2;
     auto qs = reinterpret_cast<qs_data_p_t>(calloc(n_elements, sizeof(qs_data_t)));
+    if (qs == nullptr) {
+        throw std::runtime_error("Allocate memory for quantum state failed.");
+    }
     if (zero_state) {
         qs[0] = 1;
     }
