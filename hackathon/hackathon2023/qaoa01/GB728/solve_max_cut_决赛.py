@@ -79,8 +79,7 @@ def solve(sol, G):
     '''
     n = len(sol)
     g = rebuild_graph(G)
-    
-    # 多搞几下
+
     it = 0
     fin_result_solution = sol.copy()
     fin_result_score = calc_cut_x(G, fin_result_solution)
@@ -98,8 +97,7 @@ def solve(sol, G):
 
         result_solution = sol.copy()
         result_score = calc_cut_x(G, result_solution)
-        
-        # 乱搞求点的个数
+
         while int(step) > 1:
             # print(result_solution)
             n_sub = int(step)
