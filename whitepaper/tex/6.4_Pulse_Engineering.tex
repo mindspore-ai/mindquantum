@@ -1,1 +1,296 @@
-介绍使用方法
+\textit{Introduction} -- This section is about the open quantum system simulation including the dynamic of a quantum system and the quantum optimal control. In the following sections, we will demonstrate the implementation in each scenario.
+
+\textit{Basic operations} -- Before we start realizing specific algorithms, we will illustrate some basic operations. In every question, we always need to construct a Hamiltonian to describe the quantum system. In the general case, a quantum system often contains two parts of Hamiltonians. One is the drift part which is time-independent, and the other is the control Hamiltonian, which changes with time. Therefore, we use the following way to construct drift Hamiltonian and control Hamiltonian. Firstly, let's construct the drift Hamiltonian:
+\begin{equation}
+    H_{d}=\sum_{i\in\{x,y,z\}}\prod_{j=1}^{n}\sigma_{j}^{i}
+\end{equation}
+\begin{lstlisting}
+from mindquantum import QubitOperator as Q
+for i in range(qubit_num-1):
+    H_d=H_d*(Q('X{}'.format(i+1))\
+        +Q('Y{}'.format(i+1))\
+        +Q('z{}'.format(i+1)))
+H_d=H_d.matrix()
+\end{lstlisting}
+\textit{Unitary evolution} -- Based on this quantum system, We can study the characteristics of quantum systems in many ways. Firstly, we can study the dynamic of this quantum system in a closed environment. For a closed system, its evolution is governed by the Schrödinger equation.
+\begin{equation}
+    i\hbar\frac{\partial}{\partial t}\Psi=\hat{H}\Psi
+\end{equation}
+where the $\Psi$ is a wave function and $\hat{H}$ is the Hamiltonian of the quantum system. If we truncate the system into limited energy level $l$, the equation can be rewritten into:
+\begin{equation}
+    i\hbar\frac{d}{dt}\ket{\psi}=H\ket{\psi}
+    \label{shro}
+\end{equation}
+where $\ket{\psi}$ is the state vector of $l$ energy level and $H$ is the matrix representation of the Hamiltonian. In Mindquantum we can use a list to define the quantum state $\ket{\psi}$ as the initial state of the whole evolution progress. 
+\begin{lstlisting}
+    import numpy as np
+    psi0=np.zeros((1,2**qubit_num),dtype=complex)
+    psi0[0][0]=1+0j
+\end{lstlisting}
+Given a Hamiltonian, we can calculate the unitary (non-dissipative) time-evolution of an arbitrary initial state vector $\ket{\psi_{0}}$ using the Mindquantum function MQsesolve and we can get the result state in each time slot.
+\begin{lstlisting}
+    t_list=np.linspace(0.0,10.0,100)
+    H=[[H_d]]
+    result=MQsesolve(H,psi0,t_list)
+\end{lstlisting}
+The function MQsesolve calculates states in each time slot during the schrödinger unitary evolution. If we want to add control into the closed system, we could easily append the control Hamiltonian into the Hamiltonian list with the time function. The MQmesolve will identify scenarios by itself. We add a control Hamiltonian in the following form in the case of a two-qubit system.
+\begin{equation}
+    H_{c}=\sin(0.2\pi t)\sigma_{0}^{y}\sigma_{1}^{z}
+\end{equation}
+which we can easily realize in Mindquantum.
+\begin{lstlisting}
+    qubit_num=1
+    H_c=Q('Y0 Z1',qubit_num).matrix()
+    H=[[H_d],[H_c,np.sin(2*np.pu*0.1*t_list)]]
+    result=MQmeseolve(H,psi0,t_list,col_ops=[])
+\end{lstlisting}
+\textit{Non-unitary evolution} -- In more cases, we always have to consider the effect of the environment on an open quantum system. The effect from the bath will cause the energy leakage to a higher energy level or some uncertainty in the phase difference between states of the system. Therefore, we have to describe the state in such quantum systems in terms of density matrix. The density matrix is used to describe a probability distribution of a quantum state $\ket{\psi}$, which is $\rho=\sum_{k}p_{k}\ket{\psi_{k}}\bra{\psi_{k}}$. Here, $p_k$ is the probability of the state $\psi_k$.
+
+A typical approach to describe an open quantum system is often the Lindblad Master equation. It is derived from the von Neumann equation which expands the scope of the system to include the environment.
+\begin{equation}
+    \dot{\rho}_{tot}(t)=-\frac{i}{\hbar}\left[H_{tot},\rho_{tot}(t)\right]
+    \label{sysAndBath}
+\end{equation}
+where the total Hamiltonian is the combination of the Hamiltonian of the quantum system $H_sys$, environment Hamiltonian $H_{env}$, and Hamiltonian $H_{int}$ used to describe the interaction between the environment and the quantum system.
+\begin{equation}
+    H_{tot}=H_{sys}+H_{env}+H_{int}
+\end{equation}
+Because in quantum computing, most people only focus on the quantum system, we can partially trace the environment freedom degrees in (~\ref{sysAndBath}) to get a Lindblad master equation for the motion of the original system density matrix $\rho=\rm{Tr}_{env}(\rho_{tot})$.
+\begin{equation}
+\begin{split}
+\dot{\rho}&=-\frac{i}{\hbar}\left[H(t),\rho(t)\right]\\
+&+\sum_{n}\frac{1}{2}\left[2C_{n}\rho(t)C^{\dagger}_{n}-\rho(t)C_{n}^{\dagger}C_{n}-C_{n}^{\dagger}C_{n}\rho(t)\right]
+\end{split}
+\end{equation}
+where $C_{n}=\sqrt{\gamma_{n}}A_{n}$ and $A_n$ are collapse operators through which the environment couples to the system in $H_{int}$ with corresponding rates $\gamma_{n}$. In Mindquantum, we have no functions to derive collapse operators. Therefore, we have to design $C_{n}$ as followings:
+\begin{lstlisting}
+    G=0.5
+    g=0.04
+    dephase1=csr_matrix([[1,0],[0,0]],\
+        dtype=complex)
+    dephase2=csr_matrix([[0,0],[0,1]],\
+        dtype=complex)
+    decay=csr_matrix([[0,1],[0,0]],\ 
+        dtype=complex)
+    cl_ops=[[decay,np.sqrt(g)],[dephase1,\
+        np.sqrt(G-g/2)],[dephase2,np.sqrt(G-g/2)]]
+\end{lstlisting}
+For the non-unitary evolution of a quantum system, i.e., evolution that includes incoherent processes such as relaxation and dephasing, it is common to use master equations. In Mindquantum, we use MQmesolve for both. Though these two are different, MQmesolve can automatically determine which one is proper according to the input parameters.
+\begin{lstlisting}
+    result=MQmesolve(H,psi0,t_list,col_ops=cl_ops)
+\end{lstlisting}
+
+\textit{Quantum optimal control} -- In addition to quantum evolution, Mindquantum can also do tasks about quantum optimal control. There are three algorithms in Mindquantum that can be chosen: (1)grape, (2)crab, and (3)goat. The task of optimal control is always to minimize or maximize some functions that define how well a control pulse drives a quantum system to target in closed or open system. In the following sections.
+
+\textit{closed quantum system} -- We denote $U_{targ}$ as the target and $U_{T}$ as the actual unitary evolution operator. What we want to do is to maximize the overlap:
+\begin{equation}
+    \tau_{n}=\bra{n}\hat{U}_{targ}^{\dagger}\hat{U}(T)\ket{n}
+\end{equation}
+Consider two following functionals:
+\begin{equation}
+    \begin{split}
+        &J_{T,sm}=1-\frac{1}{N^{2}}\left|\sum_{n=1}^{N}\tau_{n}\right|^{2}=1-\frac{1}{N^{2}}\sum_{n=1}^{N}\sum_{m=1}^{N}\tau_{n}\tau_{m}^{\dagger}\\
+        &J_{T,re}=1-\frac{1}{N}Re\left[\sum_{n=1}^{N}\tau_{n}\right]
+    \end{split}
+    \label{close}
+\end{equation}
+If ${\ket{n}}$ is a  set of eignstates, $J_{T,sm}$ can be simply defined as $\left|Tr(\hat{U}_{targ}^{\dagger}\hat{U}(T))\right|^{2}$ and $J_{T,re}$ as $Re[Tr(\hat{U}^{\dagger}_{targ}\hat{U}(T))]$. Thus, $J_{T,sm}$ gets minimum when $\hat{U}(T)\ket{n}=e^{i\phi}\hat{U}_{targ}\ket{n}$ for all vectors $\ket{n}$ with arbitrary phase $\phi$. However, $J_{T,re}$ only gets minimal value when $\phi=0$. The functionals can be used in many scenarios, including gate optimization, state preparation, and optimal control for batch of state evolution.
+
+\textit{open quantum system} -- In an open quantum system, we have to use a mixed state because of the uncertainty caused by the bath environment. We have to adjust the Eq. (\ref{close}) to let it be able to characterize an evolution to a mixed state also. In this case, the function can be.
+\begin{equation}
+    \begin{split}
+        &J_{T,hs}=\frac{1}{2N}\sum_{n=1}^{N}Tr\left[(\hat{\rho}_{n,targ}-\hat{\rho}_{n}(T))^{2}\right]=\\
+        &\frac{1}{2N}\sum_{n=1}^{N}\left(Tr(\hat{\rho}^{2}_{n,targ})+Tr(\hat{\rho}^{2}_{n}(T))-2\mathrm{Re}[Tr(\hat{\rho}_{n,targ}\hat{\rho}_{n}(T))]\right)=\\
+        &\frac{1}{2N}\sum_{n=1}^{N}\braket{\hat{\rho}_{n,targ}|\hat{\rho}_{n,targ}}+\braket{\hat{\rho}_{n}(T)|\hat{\rho}_{n}(T)}-2\mathrm{Re}\braket{{\hat{\rho}_{n,targ}|\hat{\rho}_{n}(T)}}
+    \end{split}
+\end{equation}
+on the basis of squared Hilbert-Schmidt distance:
+\begin{equation}
+    D_{hs}=\sqrt{\mathrm{Tr}(\hat{\sigma}-\hat{\rho})^{2}}
+\end{equation}
+Moreover, the state can be rewritten as:
+\begin{equation}
+    \begin{split}
+        &\ket{\hat{\rho}_{n,targ}}=\hat{\hat{P}}_{targ}\ket{\hat{\rho}(0)}\\
+        &\ket{\hat{\rho}_{n}(T)}=\hat{\hat{P}}(T)\ket{\hat{\rho}_{n}(0)}
+    \end{split}
+\end{equation}
+where $\hat{\hat{P}}_{targ}$ is the transformation operator and $\hat{\hat{P}}(T)$ is the open system evolution operator.
+
+\textit{The gradients of functionals} -- Both algorithms GRAPE and GOAT methods need parameter derivatives to get results. Therefore, we have to induce the gradient of both closed and open quantum systems.
+
+For gate optimization in closed system (~\ref{close}), the gradient is as following:
+\begin{equation}
+\begin{split}
+    &\frac{\partial}{\partial \alpha}J_{T,sm}=-\frac{2}{N^{2}}\mathrm{Re}\left[\sum_{n=1}^{N}\sum_{m=1}^{N}\frac{\partial \tau_{n}}{\partial \alpha}\tau^{*}_{m}\right]\\
+    &\frac{\partial}{\partial \alpha}J_{T,re}=-\frac{1}{N}\mathrm{Re}\left[\sum_{n=1}^{N}\frac{\partial \tau_{n}}{\partial \alpha}\right]
+\end{split}
+\end{equation}
+where the $\alpha$ is a class of abstract parameters. The overlap between the target gate and the optimal result is:
+\begin{equation}
+    \begin{split}
+        \frac{\partial \tau_{n}}{\partial \alpha}&=\left<n\left|\hat{U}^{\dagger}_{targ}\frac{\partial\hat{U}(T)}{\partial \alpha}\right|n\right>\\
+        &=\left<n_{targ}\left|\frac{\partial \hat{U}(T)}{\partial \alpha}\right|n\right>
+    \end{split}
+\end{equation}
+and the trace of the density matrix can be:
+\begin{equation}
+    \begin{split}
+        \frac{\partial}{\partial \alpha}\braket{\hat{\rho}_{n}(T)|\hat{\rho}_{n}(T)}=2\mathrm{Re}\left<\hat{\rho}_{n}(T)|\frac{\partial \hat{\rho}(T)}{\partial \alpha}\right>
+    \end{split}
+    \label{overlap}
+\end{equation}
+Meanwhile, the gradient of the open system can be:
+\begin{equation}
+    \begin{split}
+        \frac{\partial}{\partial \alpha}J_{T,hs}&=\frac{1}{N}\mathrm{Re}\sum_{n=1}^{N}\left<\hat{\rho}_{n}\left|\left(\hat{\hat{P}}^{\dagger}(T)+\hat{\hat{P}}^{\dagger}_{targ}\right)\frac{\partial \hat{\hat{P}}(T)}{\partial \alpha}\right|\hat{\rho}_{n}\right>\\
+        &=\frac{1}{N}\mathrm{Re}\sum_{n=1}^{N}\left<\hat{\rho}_{n,targ}+\hat{\rho}_{n}(T)\left|\frac{\partial\hat{\hat{P}}(T)}{\partial \alpha}\right|\hat{\rho}_{n}\right>
+    \end{split}
+\end{equation}
+Here, the gradient is still available for vector $\bra{\hat{\rho}_{n,targ}+\hat{\rho}_{n}(T)}$.
+
+\textit{Gradient ascent pulse engineering} -- Gradient ascent pulse engineering(GRAPE) algorithm is used in pulse optimal control. It divides the evolution time into many time slots. In each slot, the pulse is controlled by a time-independent Hamiltonian. The whole evolution can be regarded as a piecewise function. The reason is that solving the time-independent Schrödinger equation costs less time complexity. We denote the control Hamiltonian as $H_{k}$, the unitary operator $\hat{U}_{m}$ in $m$'th slot can be:
+\begin{equation}
+    \hat{U}_{m}=\mathrm{exp}\left[-\frac{i}{\hbar}\Delta t\left(\hat{H}_{d}+\sum_{k=1}^{K}c_{k}^{(m)}\hat{H}_{k}\right)\right]
+\end{equation}
+where $c_{k}=c_{k}(t)$ is the constant coefficient in $m$'th slot for $k$'th control Hamiltonian. What we want is to adjust the parameter $c_{k}$ to find the optimal result of the control pulse and we can rewrite the equation (~\ref{overlap}) as follows:
+\begin{equation}
+    \begin{split}
+        &\frac{\partial}{\partial c_{k}^{m}}\braket{\psi_{T}|\psi(t_M)}\approx\\
+        &\bra{\psi_{T}}\hat{U}_{M}...\hat{U}_{m}(-i\Delta t\hat{H}_{k})\hat{U}_{m-1}...\hat{U}_{1}\ket{\psi(0)}=\\
+        &(\hat{U}_{m}^{\dagger}...\hat{U}_{M}^{\dagger}\ket{\psi_{T}})^{\dagger}(-i\Delta t\hat{H}_{k})(\hat{U}_{m-1}...\hat{U}_{1}\ket{\psi(0)})
+    \end{split}
+\end{equation}
+and use the approximate formula of transformation derivative to calculate the gradient:
+\begin{equation}
+    \begin{split}
+        \frac{\partial}{\partial c_{k}^{m}}&=\frac{\partial}{\partial c_{k}^{m}}e^{-\frac{i}{\hbar}\Delta t\left(\hat{H}_{d}+\sum_{k=1}^{K}c_{k}^{(m)}\hat{H}_{k}\right)}\\
+        &\approx e^{-\frac{i}{\hbar}\Delta t\left(\hat{H}_{d}+\sum_{k=1}^{K}c_{k}^{(m)}\hat{H}_{k}\right)}(-i\Delta t\hat{H}_{k})\\
+        &=\hat{U}_{m}(-i\Delta t\hat{H}_{k})
+    \end{split}
+\end{equation}
+It was shown that higher-order gradient approximation, a vital method for second-order differential optimization(like L-BFGS-B in package), can lead to faster and more precise convergence of GRAPE. The general equation for the gradient is:
+\begin{equation}
+    \begin{split}
+        \frac{\partial}{\partial c_{k}^{(m)}}\braket{\psi_{T}|\psi(t_{M})}&=(\hat{U}_{m}^{\dagger}...\hat{U}_{M}^{\dagger}\ket{\psi_{T}})^{\dagger}\times\\
+        &\left(\sum_{s=0}^{S}\frac{(i\Delta t)^{s+1}}{(s+1)!}[\hat{H}(t_m),\hat{H}_{k}]_s\right)\times\\
+        &(\hat{U}_{m-1}...\hat{U}_{1}\ket{\psi(0)})
+    \end{split}
+\end{equation}
+where
+\begin{equation}
+    \begin{split}
+        &\left[\hat{H}(t_m),\hat{H}_{k}\right]_{0}=\hat{H}_{k}\\
+        &\left[\hat{H}(t_m),\hat{H}_{k}\right]_{s}=\left[\hat{H}(t_m),\left[\hat{H}(t_m),\hat{H}_{k}\right]_{s-1}\right]
+    \end{split}
+\end{equation}
+in Mindquantum, the order of gradient function can be first order(S=0) or second order(S=1), which can fulfill most scenarios. Higher orders are computationally harder and have no significant improvement.
+
+If we want to use GRAPE an open system, we can adjust the formulas by following:
+\begin{equation}
+\begin{split}
+    \ket{\psi(t)}&\to \ket{\hat{\rho}(t)}\\
+    \hat{H}(t)&\to \hat{\hat{L}}(t)\\
+    \hat{U}_{n}&\to \hat{\hat{P}}_{n}\\
+\end{split}
+\end{equation}
+
+In Mindquantum, we provide two functions for state preparation and optimal gate control for both open and closed systems. Here, we illustrate the realization of Hadamard gate as an example. First, we need to define the target.
+\begin{lstlisting}
+    target=gen_target(qubit_num,\\
+                eigen_states,hadmamard)
+\end{lstlisting}
+Next, we need to give parameters required for evolution including qubit number, fidelity error, evolution time, max iteration number in optimization, and number of time slots.
+\begin{lstlisting}
+    evo_time=4
+    num_tslots=200
+    fid_err=1e-3
+\end{lstlisting}
+Then we can use $MQ\_opt\_unitary\_grape$ for unitary evolution and $MQ\_opt\_pulse\_grape$ for the open system as follows:
+\begin{lstlisting}
+    result_unitary=MQ_opt_unitary_grape\\
+        (drift=drift,\\
+            ctrls=ctrls,\\
+            target=target,\\
+            num_tslots=num_tslots,\\
+            evo_time=evo_time,\\
+            max_iter=1000,\\
+            fid_err=fid_err)
+
+    result_open=MQ_opt_pulse_grape(drift=drift,\\
+        ctrls=ctrls,\\
+        cl_op=cl_ops,\\
+        target=target,\\
+        num_tslots=num_tslots,\\
+        evo_time=evo_time,\\
+        max_iter=1000,\\
+        fid_err=fid_err)
+\end{lstlisting}
+Other than the parameters above, we provide more parameters for users to meet various requirements in optimization problems. However, because of the space limitation, we won't show more details here. 
+
+\textit{Chopped random-basis} -- Because of the limitation that GRAPE's result can't be used in the experiment directly, chopped random-basis(CRAB) was proposed. It takes into account real hardware restrictions and the result can be used in a real experiment.
+
+Since CRAB is a gradient-free algorithm, we use Nelder-Mead optimization method in this package. Moreover, we choose a Fourier basis with the possibility of Gaussian bounding to realize CRAB. In Fourier basis, $k$'th control function can be defined as:
+\begin{equation}
+    c_{k}(t)=\sum_{s=1}^{S}g_{k}(t)(A_{s,k}\mathrm{cos}(\omega_{s,k}t)+B_{s,k}\mathrm{sin}(\omega_{s,k}t))
+\end{equation}
+where $g_{k}(t)=exp\left[(t-t_{0})^{2}/\sigma^{2}\right]$ or $g_{k}(t)=1$ depends on the pulse shape limitation. Depending on the situation, $\omega_{s}$ also has two different options. Firstly, we have no idea of system resonance frequencies, the frequencies will be randomly chosen: $\omega_{s}=(1+r_s)(2\pi s/T)$. Here $2\pi s/T$ is the $s$'th principal frequency and $r_s$ is a uniform random number in the range of $[-0.5,0.5]$. Secondly, frequencies ${\omega_{s,k}}$ will be chosen according to system resonances and control limitations.
+
+The function of CRAB is similar to the GRAPE:
+\begin{lstlisting}
+    result_unitary=MQ_opt_unitary_grape\\
+        (drift=drift,\\
+            ctrls=ctrls,\\
+            target=target,\\
+            num_tslots=num_tslots,\\
+            evo_time=evo_time,\\
+            max_iter=1000,\\
+            fid_err=fid_err)
+
+    result_open=MQ_opt_pulse_grape(drift=drift,\\
+        ctrls=ctrls,\\
+        cl_op=cl_ops,\\
+        target=target,\\
+        num_tslots=num_tslots,\\
+        evo_time=evo_time,\\
+        max_iter=1000,\\
+        fid_err=fid_err)
+\end{lstlisting}
+
+\textit{Gradient optimization of analytic controls} -- Gradient optimization of analytic controls(GOAT) is the last method in Mindquantum for optimal control. The Hamiltonian of a controllable system is:
+\begin{equation}
+    \vec{H}(\vec{a},t)=\hat{H}_{0}+\sum_{k=1}c_{k}(\vec{a},t)\hat{H}_{k}
+\end{equation}
+Here, $\vec{a}$ is the parameter vector. We can get the following equations by calculating the gradient of equation (\ref{shro}) and the order changing of derivatives.
+\begin{equation}
+    i\hbar\partial_{t}
+    \begin{pmatrix}
+        \ket{\psi} \\
+        \ket{\partial_{a}\psi}
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+        \hat{H}(t) & 0 \\
+        \partial_{a}\hat{H}(t) & \hat{H}(t)
+    \end{pmatrix}
+    \begin{pmatrix}
+        \ket{\psi} \\
+        \ket{\partial_{a}\psi}
+    \end{pmatrix}
+    \label{Goat_diff}
+\end{equation}
+with initial value $\partial_{a}\psi(0)=0$. In this package, we use a modified version of GOAT. Equation (\ref{Goat_diff}) is split into two parts. The first part is the ordinary Schrödinger equation and the second part is the inhomogeneous equation:
+\begin{equation}
+    i\hbar\frac{d}{dt}\ket{\partial_{\vec{a}}\psi(t)}=\hat{H}(t)\ket{\partial_{\vec{a}}\psi(t)}+\partial_{\vec{a}}\hat{H}(t)\ket{\psi(t)}
+\end{equation}
+These two parts can be calculated in the size of Schrödinger equation rather than twice the lager size. This form avoids background propagation but needs forward propagation for each element in parameter vector $\ket{a}$. So far, we only realized the GOAT method in the closed system and we can implement as following:
+\begin{lstlisting}
+    result_unitary=MQ_opt_unitary_goat\\
+        (drift=drift,\\
+            ctrls=ctrls,\\
+            target=target,\\
+            num_tslots=num_tslots,\\
+            evo_time=evo_time,\\
+            max_iter=1000,\\
+            fid_err=fid_err)
+\end{lstlisting}
