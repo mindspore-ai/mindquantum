@@ -1,0 +1,325 @@
+import os
+os.environ['OMP_NUM_THREADS'] = '2'
+from itertools import count
+import numpy as np
+import time
+import copy
+import sys
+import random
+import matplotlib.pyplot as plt
+import pickle
+import numpy as np
+from utils import *
+from networkx.utils import BinaryHeap, not_implemented_for, py_random_state
+from networkx.algorithms.community.community_utils import is_partition
+
+'''
+本赛题旨在引领选手探索，在NISQ时代规模有限的量子计算机上，求解真实场景中的大规模图分割问题。
+min-cut: 使得ZiZj项的和最大，而不是最大割里使其最小化
+Hamiltonian: 最小化
+    -Sum_{ij in g.edges} ZiZj + penalty * (Sum Zi)^2
+    ~ -Sum_{ij in g.edges} ZiZj + penalty * (Sum_{i,j in N} ZiZj)
+'''
+
+import resource
+soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+resource.setrlimit(resource.RLIMIT_AS, (1024*1024*4000, hard)) #4G
+N_sub=15 # 量子比特的规模限制
+
+filelist=[ 'graphs/weight_p0.5_n40_cut238.txt', 'graphs/regular_d3_n80_cut111.txt','graphs/partition_n100_cut367.txt']
+
+
+
+def build_sub_qubo(solution,N_sub,J,h=None,C=0.0):
+    '''
+    自定义函数选取subqubo子问题。
+    例如可简单选择对cost影响最大的前N_sub个变量组合成为subqubo子问题。
+    【注】本函数非必须，仅供参考
+    
+    返回
+    subqubo问题变量的指标，和对应的J，h，C。
+    '''
+    delta_L=[]
+    for j in range(len(solution)):
+        copy_x=copy.deepcopy(solution)
+        #copy_x[j]=-copy_x[j]
+        b=copy_x[j].astype(bool)
+        b=~b
+        copy_x[j]=b.astype(np.int32)
+        x_flip=copy_x
+        sol_qubo=calc_qubo_x(J,solution,h=h,C=C)
+        x_flip_qubo=calc_qubo_x(J,x_flip,h=h,C=C)
+        delta=x_flip_qubo-sol_qubo
+        delta_L.append(delta)
+    delta_L=np.array(delta_L)
+    
+    sub_index = np.argpartition(delta_L, -N_sub)[-N_sub:] # subqubo子问题的变量们
+    #print(delta_L)
+    #print(sub_index)
+    J_sub,h_sub,C_sub = calc_subqubo(sub_index, solution, J, h=h,C=C )
+    return sub_index,J_sub,h_sub,C_sub
+
+
+
+def flip_to_keep_balanced(solution,unb,J,h=None,C=0.0):
+    
+    if unb>0:
+        plus_num=np.sum(solution==1)
+        minus_num=np.sum(solution==0)
+        if plus_num>minus_num:
+            a=np.int32(1)
+        else:
+            a=np.int32(0)
+       
+        delta_L=[]
+        ind = np.where(solution==a)
+        index =ind[0]
+        
+        for j in index:
+            copy_x=copy.deepcopy(solution)
+            b=copy_x[j].astype(bool)
+            b=~b
+            copy_x[j]=b.astype(np.int32)
+            x_flip=copy_x
+            sol_qubo=calc_qubo_x(J,solution,h=h,C=C)
+            x_flip_qubo=calc_qubo_x(J,x_flip,h=h,C=C)
+            delta=x_flip_qubo-sol_qubo
+            delta_L.append(delta)
+        delta_L=np.array(delta_L)
+        
+        index_flip=np.argpartition(-delta_L,-int(unb))[-int(unb):]
+        
+        for j in index[index_flip]:
+            solution[j]=(~a.astype(bool)).astype(np.int32)
+    
+    A=np.where(solution==1)
+    B=np.where(solution==0)
+    
+    return A[0],B[0]
+
+def solve(sol,G_mincut, G):
+    '''
+    输入：
+    sol （numpy.array）：初始随机0/1比特串，从左到右分别对应从第1到第N个问题变量。
+    G （matrix): QUBO问题矩阵
+    
+    输出：
+    sol （numpy.array）：求解结果的0/1比特串
+    cut_temp （float）：最终结果的cut值
+    '''
+    g_test = from_scipy_sparse_array(-2*G)
+    
+    i=0
+    while(i<5):
+#        print(f'---{i}---')
+        sub_index,J_sub,h_sub,C_sub=build_sub_qubo(sol,N_sub,G_mincut,h=None,C=0)
+        qubo_t=calc_qubo_x(G_mincut, sol)
+        plus_num=np.sum(sol==1)
+        minus_num=np.sum(sol==0)
+        unbalance=abs(plus_num-minus_num)/2
+        #print('before subqubo:',qubo_t,sol,'unb:',unbalance)
+        sol=solve_QAOA(J_sub,h_sub,C_sub,sub_index,sol,depth=3,tol=1e-5) 
+        #qubo_temp=calc_qubo_x(G_mincut, sol)
+        cut_temp =calc_cut_x(G, sol)
+#        print('after subqubo:',qubo_temp,'|cut:',cut_temp)
+        plus_num=np.sum(sol==1)
+        minus_num=np.sum(sol==0)
+        unbalance=abs(plus_num-minus_num)/2
+
+        A,B=flip_to_keep_balanced(sol,unbalance,G_mincut,h=None,C=0.0)
+        sol[A]=1
+        sol[B]=0
+        p=(A,B)
+        A,B=bisection_partition(g_test, p, max_iter=10, weight="weight", seed=np.random)
+        sol[list(A)]=1
+        sol[list(B)]=0
+        
+        plus_num=np.sum(sol==1)
+        minus_num=np.sum(sol==0)
+        unbalance=abs(plus_num-minus_num)/2
+       
+        i+=1
+    return sol, cut_temp, unbalance
+
+
+def build_mincut_G(G, penalty):
+    '''
+    Hamiltonian (minimize)
+    ~ -Sum_{ij in g.edges} ZiZj + penalty * (Sum Zi)^2
+    ~ -Sum_{ij in g.edges} ZiZj + penalty * (Sum_{i,j in N} ZiZj)
+    '''
+    penalty=penalty/3000
+
+    n,_=G.shape
+    G_mincut=G.copy()
+    for i in range(n):
+        for j in range(n):
+            if j>i:
+                G_mincut[i,j]+=penalty/2
+                G_mincut[j,i]+=penalty/2
+    return -G_mincut
+
+
+def cost_sweep(edges, side):
+
+    costs0, costs1 = costs = BinaryHeap(), BinaryHeap()
+    for u, side_u, edges_u in zip(count(), side, edges):
+        cost_u = sum(w if side[v] else -w for v, w in edges_u)
+        costs[side_u].insert(u, cost_u if side_u else -cost_u)
+
+    def _update_costs(costs_x, x):
+        for y, w in edges[x]:
+            costs_y = costs[side[y]]
+            cost_y = costs_y.get(y)
+            if cost_y is not None:
+                cost_y += 2 * (-w if costs_x is costs_y else w)
+                costs_y.insert(y, cost_y, True)
+
+    i = 0
+    totcost = 0
+    while costs0 and costs1:
+        u, cost_u = costs0.pop()
+        _update_costs(costs0, u)
+        v, cost_v = costs1.pop()
+        _update_costs(costs1, v)
+        totcost += cost_u + cost_v
+        i += 1
+        yield totcost, i, (u, v)
+
+
+def bisection_partition(G, partition=None, max_iter=10, weight="weight", seed=np.random):
+    
+    n = len(G)
+    labels = list(G)
+    seed.shuffle(labels)
+    index = {v: i for i, v in enumerate(labels)}
+
+    if partition is None:
+        side = [0] * (n // 2) + [1] * ((n + 1) // 2)
+    else:
+        try:
+            A, B = partition
+        except (TypeError, ValueError) as err:
+            raise nx.NetworkXError("partition must be two sets") from err
+        if not is_partition(G, (A, B)):
+            raise nx.NetworkXError("partition invalid")
+        side = [0] * n
+        for a in A:
+            side[index[a]] = 1
+
+    if G.is_multigraph():
+        edges = [
+            [
+                (index[u], sum(e.get(weight, 1) for e in d.values()))
+                for u, d in G[v].items()
+            ]
+            for v in labels
+        ]
+    else:
+        edges = [
+            [(index[u], e.get(weight, 1)) for u, e in G[v].items()] for v in labels
+        ]
+
+    for i in range(max_iter):
+        costs = list(cost_sweep(edges, side))
+        min_cost, min_i, _ = min(costs)
+        if min_cost >= 0:
+            break
+
+        for _, _, (u, v) in costs[:min_i]:
+            side[u] = 1
+            side[v] = 0
+
+    A = {u for u, s in zip(labels, side) if s == 0}
+    B = {u for u, s in zip(labels, side) if s == 1}
+    return A, B
+
+def from_scipy_sparse_array(
+    A, parallel_edges=False, create_using=None, edge_attribute="weight"
+):
+    
+    G = nx.empty_graph(0, create_using)
+    n, m = A.shape
+    if n != m:
+        raise nx.NetworkXError(f"Adjacency matrix not square: nx,ny={A.shape}")
+    # Make sure we get even the isolated nodes of the graph.
+    G.add_nodes_from(range(n))
+    # Create an iterable over (u, v, w) triples and for each triple, add an
+    # edge from u to v with weight w.
+    triples = _generate_weighted_edges(A)
+   
+    if A.dtype.kind in ("i", "u") and G.is_multigraph() and parallel_edges:
+        chain = itertools.chain.from_iterable
+       
+        triples = chain(((u, v, 1) for d in range(w)) for (u, v, w) in triples)
+    
+    if G.is_multigraph() and not G.is_directed():
+        triples = ((u, v, d) for u, v, d in triples if u <= v)
+    G.add_weighted_edges_from(triples, weight=edge_attribute)
+    return G
+
+def _generate_weighted_edges(A):
+    """Returns an iterable over (u, v, w) triples, where u and v are adjacent
+    vertices and w is the weight of the edge joining u and v.
+
+    `A` is a SciPy sparse array (in any format).
+
+    """
+    if A.format == "csr":
+        return _csr_gen_triples(A)
+    if A.format == "csc":
+        return _csc_gen_triples(A)
+    if A.format == "dok":
+        return _dok_gen_triples(A)
+    # If A is in any other format (including COO), convert it to COO format.
+    return _coo_gen_triples(A.tocoo())
+
+def _csr_gen_triples(A):
+    """Converts a SciPy sparse array in **Compressed Sparse Row** format to
+    an iterable of weighted edge triples.
+
+    """
+    nrows = A.shape[0]
+    data, indices, indptr = A.data, A.indices, A.indptr
+    for i in range(nrows):
+        for j in range(indptr[i], indptr[i + 1]):
+            yield i, indices[j], data[j]
+
+
+def run():
+    """
+    Main run function, for each graph need to run for 20 times to get the mean result.
+    Please do not change this function, we use this function to score your algorithm. 
+    """           
+    cut_list=[]
+    unb_list=[]
+    for filename in filelist[:]:
+        print(f'--------- File: {filename}--------')
+        g,G=read_graph(filename)
+        G_mincut= build_mincut_G(G, penalty=0.3) # 得到整体的Ising问题的矩阵，penlaty是哈密顿量中惩罚项前的系数
+        n=len(g.nodes) # 图整体规模
+        cuts=[]
+        unbs=[]
+        for turn in range(20):
+            print(f'------turn {turn}------')
+            sol=init_solution(n) # 随机初始化解 
+            qubo_start = calc_qubo_x(G_mincut, sol)
+            cut_start =calc_cut_x(G, sol)  
+            print('qubo start:',qubo_start,'cut start:',cut_start)
+            solution, cut, unbalance = solve(sol, G_mincut,G) 
+            cuts.append(cut)
+            unbs.append(unbalance)
+        cut_list.append(cuts)
+        unb_list.append(unbs)
+    return np.array(cut_list), np.array(unb_list) 
+        
+        
+
+if __name__== "__main__":   
+    #计算分数
+    cut_list, unb_list=run()
+    print(cut_list,unb_list)
+    edge_arr=np.array([384, 120, 534])
+    score=(edge_arr-(np.mean(cut_list,axis=1)+np.array([10,4,4])*np.mean(unb_list,axis=1)))
+    print('score:',np.sum(score))
+ 
