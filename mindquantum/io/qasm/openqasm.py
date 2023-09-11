@@ -13,6 +13,10 @@
 # limitations under the License.
 # ============================================================================
 """OpenQASM support module."""
+# pylint: disable=import-outside-toplevel
+import ast
+import operator as op
+import re
 
 import numpy as np
 
@@ -20,111 +24,445 @@ from mindquantum.utils import fdopen
 from mindquantum.utils.type_value_check import _check_input_type
 
 
-def _find_qubit_id(cmd):
-    """Find qubit id in openqasm cmd."""
-    left = []
-    right = []
-    for i, j in enumerate(cmd):
-        if j == '[':
-            left.append(i)
-        elif j == ']':
-            right.append(i)
-    if len(left) != len(right):
-        raise ValueError(f"Parsing failed for cmd {cmd}")
-    idx = []
-    for name_left, name_right in zip(left, right):
-        idx.append(int(cmd[name_left + 1 : name_right]))  # noqa: E203
-    return idx
+def join_qubit(gate):
+    """Convert qubit list to openqasm style."""
+    return ','.join(f'q[{i}]' for i in gate.ctrl_qubits + gate.obj_qubits)
 
 
-def _extr_parameter(cmd):
-    """Extra parameter for parameterized gate in openqasm cmd."""
-    param_start = cmd.find('(')
-    idx = cmd.find(')')
-    if param_start == -1 or idx == -1:
-        raise ValueError(f"no parameter found in cmd {cmd}")
-    all_expre = cmd[param_start + 1 : idx]  # noqa: E203
-    all_expre = all_expre.split(',')
-    out = []
-    for expre in all_expre:
-        if 'pi' in expre:
-            expre = expre.replace('pi', str(np.pi))
-        if '*' in expre:
-            tmp = expre.split('*')
-            if len(tmp) != 2:
-                raise ValueError(f"cannot parse cmd {cmd}")
-            expre = str(float(tmp[0]) * float(tmp[1]))
-        if '/' in expre:
-            tmp = expre.split('/')
-            if len(tmp) != 2:
-                raise ValueError(f"cannot parse cmd {cmd}")
-            try:
-                expre = str(float(tmp[0]) / float(tmp[1]))
-            except ZeroDivisionError as exc:
-                raise ZeroDivisionError(f"Wrong cmd: {cmd}") from exc
-        out.append(float(expre))
-    return out[0] if len(all_expre) == 1 else out
+def x_related(gate):
+    """Convert mindquantum gate to qasm."""
+    ctrl = gate.ctrl_qubits
+    jointed = join_qubit(gate)
+    if len(ctrl) == 1:
+        return f"cx {jointed};"
+    if not ctrl:
+        return f"x {jointed};"
+    if len(ctrl) == 2:
+        return f"ccx {join_qubit};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
 
 
-def _extr_measure(cmd):
-    """Extra info in measure gate."""
-    cmd = cmd.split('[')
-    q_id = int(cmd[1].split(']')[0])
-    c_id = int(cmd[2].split(']')[0])
-    return q_id, c_id
+def y_related(gate):
+    """Convert mindquantum gate to qasm."""
+    ctrl = gate.ctrl_qubits
+    jointed = join_qubit(gate)
+    if len(ctrl) == 1:
+        return f"cy {jointed};"
+    if not ctrl:
+        return f"y {jointed};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
 
 
-def u3(theta, psi, lambd, qubit):
-    """Decompose u3 gate."""
-    from mindquantum import (  # pylint: disable=import-outside-toplevel,cyclic-import
-        Circuit,
-    )
-
-    circ = Circuit().rz(psi + 3 * np.pi, qubit)
-    circ.rx(np.pi / 2, qubit).rz(theta + np.pi, qubit)
-    circ.rx(np.pi / 2, qubit).rz(lambd, qubit)
-    return circ
-
-
-def u1(lambd, qubit):
-    """Openqasm u1 gate."""
-    from mindquantum import (  # pylint: disable=import-outside-toplevel,cyclic-import
-        Circuit,
-    )
-
-    return Circuit().rz(lambd, qubit)
+def z_related(gate):
+    """Convert mindquantum gate to qasm."""
+    ctrl = gate.ctrl_qubits
+    jointed = join_qubit(gate)
+    if len(ctrl) == 1:
+        return f"cz {jointed};"
+    if not ctrl:
+        return f"z {jointed};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
 
 
-def rccx(q0, q1, q2, circ):
-    """Openqasm rccx gate."""
-    # pylint: disable=import-outside-toplevel
+def cnot_related(gate):
+    """Convert mindquantum gate to qasm."""
     from mindquantum.core import gates as G  # noqa: N812
 
-    circ.h(q2)
-    circ += G.T.on(q2)
-    circ.x(q2, q1)
-    circ += G.T.hermitian().on(q2)
-    circ.x(q2, q0)
-    circ += G.T.on(q2)
-    circ.x(q2, q1)
-    circ += G.T.hermitian().on(q2)
-    circ.h(q2)
+    return x_related(G.X.on(gate.obj_qubits[0], gate.obj_qubits[1:] + gate.ctrl_qubits))
 
 
-def isgateinstance(gate, gates):
-    """Check whether gate is any instance of supported gate type."""
-    if isinstance(gates, list):
-        gates = (gates,)
-    for gate_list in gates:
-        for gate_set in gate_list:
-            if isinstance(gate, gate_set):
-                return True
-    return False
+def global_phase_related(gate):
+    """Convert mindquantum gate to qasm."""
+    if len(gate.ctrl_qubits) == 1:
+        return f"p({-gate.coeff.const}) {gate.ctrl_qubits[0]};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
 
 
-def _gate_not_implement_to_openqasm(gate):
-    """Raise an error that cannot convert gate to openqasm."""
-    raise ValueError(f"cannot convert {gate} to openqasm.")
+def h_related(gate):
+    """Convert mindquantum gate to qasm."""
+    ctrl = gate.ctrl_qubits
+    jointed = join_qubit(gate)
+    if len(ctrl) == 1:
+        return f"ch {jointed};"
+    if not ctrl:
+        return f"h {jointed};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
+
+
+def i_related(gate):
+    """Convert mindquantum gate to qasm."""
+    return f"id {gate.obj_qubits[0]};"
+
+
+def phase_related(gate):
+    """Convert mindquantum gate to qasm."""
+    ctrl = gate.ctrl_qubits
+    jointed = join_qubit(gate)
+    coeff = gate.coeff.const
+    if len(ctrl) == 1:
+        return f"cp({coeff}) {jointed};"
+    if not ctrl:
+        return f"p({coeff}) {jointed};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
+
+
+def rx_related(gate):
+    """Convert mindquantum gate to qasm."""
+    ctrl = gate.ctrl_qubits
+    jointed = join_qubit(gate)
+    coeff = gate.coeff.const
+    if len(ctrl) == 1:
+        return f"crx({coeff}) {jointed};"
+    if not ctrl:
+        return f"rx({coeff}) {jointed};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
+
+
+def ry_related(gate):
+    """Convert mindquantum gate to qasm."""
+    ctrl = gate.ctrl_qubits
+    jointed = join_qubit(gate)
+    coeff = gate.coeff.const
+    if len(ctrl) == 1:
+        return f"cry({coeff}) {jointed};"
+    if not ctrl:
+        return f"ry({coeff}) {jointed};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
+
+
+def rz_related(gate):
+    """Convert mindquantum gate to qasm."""
+    ctrl = gate.ctrl_qubits
+    jointed = join_qubit(gate)
+    coeff = gate.coeff.const
+    if len(ctrl) == 1:
+        return f"crz({coeff}) {jointed};"
+    if not ctrl:
+        return f"rz({coeff}) {jointed};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
+
+
+def rxx_related(gate):
+    """Convert mindquantum gate to qasm."""
+    ctrl = gate.ctrl_qubits
+    jointed = join_qubit(gate)
+    coeff = gate.coeff.const
+    if not ctrl:
+        return f"rxx({coeff}) {jointed};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
+
+
+def rzz_related(gate):
+    """Convert mindquantum gate to qasm."""
+    ctrl = gate.ctrl_qubits
+    jointed = join_qubit(gate)
+    coeff = gate.coeff.const
+    if not ctrl:
+        return f"rzz({coeff}) {jointed};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
+
+
+def xx_related(gate):
+    """Convert mindquantum gate to qasm."""
+    ctrl = gate.ctrl_qubits
+    jointed = join_qubit(gate)
+    coeff = gate.coeff.const
+    if not ctrl:
+        return f"rxx({coeff*2}) {jointed};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
+
+
+def zz_related(gate):
+    """Convert mindquantum gate to qasm."""
+    ctrl = gate.ctrl_qubits
+    jointed = join_qubit(gate)
+    coeff = gate.coeff.const
+    if not ctrl:
+        return f"rzz({coeff*2}) {jointed};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
+
+
+def s_related(gate):
+    """Convert mindquantum gate to qasm."""
+    ctrl = gate.ctrl_qubits
+    jointed = join_qubit(gate)
+    if not ctrl:
+        if not gate.hermitianed:
+            return f"s {jointed};"
+        return f"sdg {jointed};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
+
+
+def t_related(gate):
+    """Convert mindquantum gate to qasm."""
+    ctrl = gate.ctrl_qubits
+    jointed = join_qubit(gate)
+    if not ctrl:
+        if not gate.hermitianed:
+            return f"t {jointed};"
+        return f"tdg {jointed};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
+
+
+def swap_related(gate):
+    """Convert mindquantum gate to qasm."""
+    ctrl = gate.ctrl_qubits
+    jointed = join_qubit(gate)
+    if len(ctrl) == 1:
+        return f"cswap {jointed};"
+    if not ctrl:
+        return f"swap {jointed};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
+
+
+def u3_related(gate):
+    """Convert mindquantum gate to qasm."""
+    p_0, p_1, p_2 = gate.prs
+    p_0 = p_0.const
+    p_1 = p_1.const
+    p_2 = p_2.const
+    ctrl = gate.ctrl_qubits
+    jointed = join_qubit(gate)
+    if len(ctrl) == 1:
+        return f"cu({p_0},{p_1},{p_2}) {jointed};"
+    if not ctrl:
+        return f"u({p_0},{p_1},{p_2}) {jointed};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
+
+
+def extra_qid(cmd):
+    """Get qubit id."""
+    matches = re.findall(r'\[(\d+)\]', cmd)
+    return [int(i) for i in matches]
+
+
+def extra_params(cmd, dtype=float):
+    """Get gate parameters."""
+    matches = re.findall(r'\((.*)\)', cmd)
+    out = []
+    for i in matches:
+        for j in i.split(','):
+            pr = j.strip()
+            if dtype == str:
+                out.append(pr)
+            else:
+                if '*' in pr:
+                    pr = pr.replace('pi', str(np.pi))
+                    pr = [float(i.strip()) for i in pr.split('*')]
+                    out.append(pr[0] * pr[1])
+                elif '/' in pr:
+                    pr = pr.replace('pi', str(np.pi))
+                    pr = [float(i.strip()) for i in pr.split('/')]
+                    out.append(pr[0] / pr[1])
+                else:
+                    out.append(float(pr))
+    return out
+
+
+def extra_gate_name(cmd: str):
+    """Get gate name."""
+    cmd = cmd.strip()
+    space_idx = cmd.find(' ')
+    if space_idx == -1:
+        raise ValueError(f"Wrong command: {cmd}")
+    sub_cmd = cmd[:space_idx]
+    if '(' in sub_cmd:
+        return sub_cmd[: sub_cmd.find('(')].strip()
+    return sub_cmd.strip()
+
+
+def parse_gate_cmd(cmd):
+    """Parse a gate command."""
+    try:
+        cmd = cmd.strip()
+        gate_name = extra_gate_name(cmd)
+        qid = extra_qid(cmd)
+        if gate_name == 'pauli':
+            params = extra_params(cmd, dtype=str)
+        else:
+            params = extra_params(cmd)
+        return gate_name, params, qid
+    except:  # pylint: disable=raise-missing-from # noqa: E722
+        raise ValueError(f"Cannot parse command: {cmd}")
+
+
+def extra_func_body(cmd):
+    """Get definition of custom gate."""
+    matches = re.findall(r'\{(.*)\}', cmd)
+    return [i.strip() for i in matches[0].strip().split(';')]
+
+
+def extra_func_head(cmd):
+    """Get gate name and parameters for custom gate."""
+    cmd = cmd.replace('gate ', '')
+    cmd = cmd[: cmd.find('{')].strip()
+    if '(' in cmd:
+        name = cmd[: cmd.find('(')].strip()
+        params = extra_params(cmd, dtype=str)
+        qid = re.findall(r'\)(.*)', cmd)[0].strip().split(',')
+        qid = [i.strip() for i in qid]
+        return name, params, qid
+    name = cmd[: cmd.find(' ')].strip()
+    qid = cmd[cmd.find(' ') :].strip().split(',')
+    qid = [i.strip() for i in qid]
+    return name, [], qid
+
+
+def eval_expr(expr):
+    """Safe eval of string expression."""
+    return eval_(ast.parse(expr, mode='eval').body)
+
+
+def eval_(node):
+    """Safe eval of string expression."""
+    operators = {
+        ast.Add: op.add,
+        ast.Sub: op.sub,
+        ast.Mult: op.mul,
+        ast.Div: op.truediv,
+        ast.Pow: op.pow,
+        ast.USub: op.neg,
+    }
+
+    if isinstance(node, ast.Num):
+        return node.n
+    if isinstance(node, ast.BinOp):
+        return operators[type(node.op)](eval_(node.left), eval_(node.right))
+    if isinstance(node, ast.UnaryOp):
+        return operators[type(node.op)](eval_(node.operand))
+    raise TypeError(node)
+
+
+def eval_pr(pr, prs, gate_params):
+    """Calculate the parameters."""
+    pr = pr.replace('pi', str(np.pi))
+    for idx, p in enumerate(gate_params):
+        pr = pr.replace(p, str(prs[idx]))
+    return eval_expr(pr)
+
+
+def generate_custom_gate(gate_def, custom_gate, gate_map_openqasm_mq):
+    """Generate a custom gate defined in openqasm."""
+    from mindquantum.core.circuit import Circuit
+
+    gate_name, gate_params, gate_qids = extra_func_head(gate_def)
+    body = extra_func_body(gate_def)
+
+    def gate(prs, qids):
+        circ = Circuit()
+        for cmd in body:
+            if not cmd:
+                continue
+            sub_gate_name = extra_gate_name(cmd)
+            sub_gate_params = extra_params(cmd, str)
+            if sub_gate_params:
+                sub_gate_qid = cmd[cmd.find(')') + 1 :]
+            else:
+                sub_gate_qid = cmd[cmd.find(' ') :]
+            sub_gate_qid = [i.strip() for i in sub_gate_qid.split(',')]
+            real_qid = [qids[gate_qids.index(i)] for i in sub_gate_qid]
+            real_prs = [eval_pr(i, prs, gate_params) for i in sub_gate_params]
+            if sub_gate_name not in gate_map_openqasm_mq:
+                if sub_gate_name not in custom_gate:
+                    raise ValueError(f"{sub_gate_name} not defined.")
+                circ += custom_gate[sub_gate_name](real_prs, real_qid)
+            else:
+                circ += gate_map_openqasm_mq[sub_gate_name](real_prs, real_qid)
+        return circ
+
+    custom_gate[gate_name] = gate
+
+
+def mq_to_qasm_v2(circ, gate_map_mq_openqasm, version: str = '2.0'):
+    """Convert mindquantum circuit to openqasm."""
+    from mindquantum.algorithm.compiler import BasicDecompose, compile_circuit
+    from mindquantum.core import gates as G  # noqa: N812
+    from mindquantum.core.circuit import Circuit
+
+    if version != '2.0':
+        raise ValueError(f"Only support qasm version {version}")
+    if circ.is_noise_circuit:
+        raise ValueError("Cannot convert noise circuit to qasm.")
+    cmds = ['OPENQASM 2.0;', 'include "qelib1.inc";', f'qreg q[{circ.n_qubits}];']
+    mea_qubits = sorted({m.obj_qubits[0] for m in circ.all_measures.keys()})
+    reg_map = {j: i for i, j in enumerate(mea_qubits)}
+    if mea_qubits:
+        cmds.append(f"creg c[{len(mea_qubits)}];")
+    for gate in circ:
+        gate: G.BasicGate
+        if isinstance(gate, G.BarrierGate):
+            obj = gate.obj_qubits
+            if not gate.obj_qubits:
+                obj = list(range(circ.n_qubits))
+            cmds.append(f"barrier {join_qubit(G.BARRIER.on(obj))};")
+            continue
+        if isinstance(gate, G.Measure):
+            cmds.append(f"measure q[{gate.obj_qubits[0]}] -> c[{reg_map[gate.obj_qubits[0]]}];")
+            continue
+        if gate.__class__ in gate_map_mq_openqasm:
+            cmds.append(gate_map_mq_openqasm[gate.__class__](gate))
+            continue
+        compiled_circ = compile_circuit(BasicDecompose(), Circuit([gate]))
+        for sub_gate in compiled_circ:
+            if sub_gate.__class__ in gate_map_mq_openqasm:
+                cmds.append(gate_map_mq_openqasm[sub_gate.__class__](sub_gate))
+            else:
+                raise ValueError(f"Cannot convert {sub_gate} to openqasm after decompose gate {gate}")
+    return '\n'.join(cmds)
+
+
+def prepare_qasm(qasm: str):
+    """Remove new line between bracket."""
+    new_qasm = ''
+    start_body = False
+    for i in qasm:
+        if i == '{':
+            start_body = True
+            new_qasm = new_qasm.strip()
+        if i == '\n' and start_body:
+            continue
+        if i == '}':
+            start_body = False
+        new_qasm += i
+    return [i.strip() for i in new_qasm.strip().split('\n')]
+
+
+def qasm_to_mq_v2(qasm: str, gate_map_openqasm_mq):
+    """Convert openqasm to mindquantum circuit."""
+    from mindquantum.core.circuit import Circuit
+
+    cmds = prepare_qasm(qasm)
+    circ = Circuit()
+    custom_gate = {}
+    measures = {}
+
+    for i in cmds:
+        if i.startswith('OPENQASM'):
+            if not i.endswith('2.0;'):
+                raise ValueError(f"OpenQASM version not supported: {i}")
+            continue
+        if i.startswith("include"):
+            if not i.endswith('"qelib1.inc";'):
+                raise ValueError(f"Include other head file not supported: {i}")
+            continue
+        if i.startswith('qreg') or i.startswith('creg') or not i:
+            continue
+        if i.startswith('gate '):
+            generate_custom_gate(i, custom_gate, gate_map_openqasm_mq)
+        else:
+            cmd = i.strip()
+            gate_name, params, qids = parse_gate_cmd(cmd)
+            if gate_name in gate_map_openqasm_mq:
+                mq_gate = gate_map_openqasm_mq[gate_name](params, qids)
+                if gate_name == 'measure':
+                    mq_gate.key = f"q{qids[0]}_{measures.get(qids[0], 0)}"
+                    measures[qids[0]] = measures.get(qids[0], 0) + 1
+                circ += mq_gate
+            elif gate_name in custom_gate:
+                circ += custom_gate[gate_name](params, qids)
+            else:
+                raise ValueError(f"{cmd} not implement.")
+    return circ
 
 
 class OpenQASM:
@@ -138,18 +476,116 @@ class OpenQASM:
         >>> circuit = Circuit().rx(0.3, 0).z(0, 1).zz(np.pi, [0, 1])
         >>> openqasm = OpenQASM()
         >>> circuit_str = openqasm.to_string(circuit)
-        >>> circuit_str[47:60]
-        'rx(0.3) q[0];'
+        >>> print(circuit_str)
+        OPENQASM 2.0;
+        include "qelib1.inc";
+        qreg q[2];
+        rx(0.3) q[0];
+        cz q[1],q[0];
+        rzz(6.283185307179586) q[0],q[1];
     """
 
     def __init__(self):
-        """Initialize an OpenQASM object."""
-        from mindquantum import (  # pylint: disable=import-outside-toplevel,cyclic-import
-            Circuit,
-        )
+        """Construct a openqasm parse."""
+        from mindquantum.core import gates as G  # noqa: N812
+        from mindquantum.core.circuit import Circuit
 
-        self.circuit = Circuit()
-        self.cmds = []
+        self.gate_map_openqasm_mq = {
+            'barrier': lambda prs, qids: Circuit([G.BarrierGate().on(i) for i in qids]),
+            'ccx': lambda prs, qids: G.X.on(qids[-1], qids[:-1]),
+            'ch': lambda prs, qids: G.H.on(qids[-1], qids[:-1]),
+            'cp': lambda prs, qids: G.PhaseShift(prs[0]).on(qids[-1], qids[:-1]),
+            'crx': lambda prs, qids: G.RX(prs[0]).on(qids[-1], qids[:-1]),
+            'cry': lambda prs, qids: G.RY(prs[0]).on(qids[-1], qids[:-1]),
+            'crz': lambda prs, qids: G.RZ(prs[0]).on(qids[-1], qids[:-1]),
+            'cswap': lambda prs, qids: G.SWAP.on(qids[1:], qids[0]),
+            'cx': lambda prs, qids: G.X.on(qids[1], qids[0]),
+            'csx': lambda prs, qids: Circuit(
+                [
+                    G.RX(np.pi / 2).on(qids[1], qids[0]),
+                    G.PhaseShift(np.pi / 2).on(qids[0]),
+                ]
+            ),
+            'cu': lambda prs, qids: Circuit(
+                [
+                    G.U3(prs[0], prs[1], prs[2]).on(qids[1], qids[0]),
+                    G.PhaseShift(prs[3]).on(qids[0]),
+                ]
+            ),
+            'cu1': lambda prs, qids: G.U3(0, 0, prs[0]).on(qids[1], qids[0]),
+            'cu3': lambda prs, qids: G.U3(prs[0], prs[1], prs[2]).on(qids[1], qids[0]),
+            'cy': lambda prs, qids: G.Y.on(qids[1], qids[0]),
+            'cz': lambda prs, qids: G.Z.on(qids[1], qids[0]),
+            'h': lambda prs, qids: G.H.on(qids[0]),
+            'id': lambda prs, qids: G.I.on(qids[0]),
+            'measure': lambda prs, qids: G.Measure().on(qids[0]),
+            'p': lambda prs, qids: G.PhaseShift(prs[0]).on(qids[0]),
+            'rccx': lambda prs, qids: Circuit(
+                [
+                    G.H.on(qids[2]),
+                    G.T.on(qids[2]),
+                    G.X.on(qids[2], qids[1]),
+                    G.T.on(qids[2]).hermitian(),
+                    G.X.on(qids[2], qids[0]),
+                    G.T.on(qids[2]),
+                    G.X.on(qids[2], qids[1]),
+                    G.T.on(qids[2]).hermitian(),
+                    G.H.on(qids[2]),
+                ]
+            ),
+            'rx': lambda prs, qids: G.RX(prs[0]).on(qids),
+            'ry': lambda prs, qids: G.RY(prs[0]).on(qids),
+            'rz': lambda prs, qids: G.RZ(prs[0]).on(qids),
+            'rxx': lambda prs, qids: G.Rxx(prs[0]).on(qids),
+            'ryy': lambda prs, qids: G.Ryy(prs[0]).on(qids),
+            'rzz': lambda prs, qids: G.Rzz(prs[0]).on(qids),
+            's': lambda prs, qids: G.S.on(qids),
+            'sdg': lambda prs, qids: G.S.on(qids).hermitian(),
+            'swap': lambda prs, qids: G.SWAP.on(qids),
+            'sx': lambda prs, qids: Circuit(
+                [
+                    G.RX(np.pi / 2).on(qids),
+                    G.GlobalPhase(-np.pi / 4).on(qids),
+                ]
+            ),
+            'sxdg': lambda prs, qids: Circuit(
+                [
+                    G.RX(-np.pi / 2).on(qids),
+                    G.GlobalPhase(-np.pi / 4).on(qids),
+                ]
+            ),
+            't': lambda prs, qids: G.T.on(qids),
+            'tdg': lambda prs, qids: G.T.on(qids).hermitian(),
+            'u': lambda prs, qids: G.U3(*prs).on(qids),
+            'u1': lambda prs, qids: G.U3(0, 0, prs[0]).on(qids),
+            'u2': lambda prs, qids: G.U3(np.pi / 2, prs[0], prs[1]).on(qids),
+            'u3': lambda prs, qids: G.U3(*prs).on(qids),
+            'x': lambda prs, qids: G.X.on(qids),
+            'y': lambda prs, qids: G.Y.on(qids),
+            'z': lambda prs, qids: G.Z.on(qids),
+        }
+
+        self.gate_map_mq_openqasm = {
+            G.XGate: x_related,
+            G.YGate: y_related,
+            G.ZGate: z_related,
+            G.CNOTGate: cnot_related,
+            G.GlobalPhase: global_phase_related,
+            G.HGate: h_related,
+            G.IGate: i_related,
+            G.PhaseShift: phase_related,
+            G.RX: rx_related,
+            G.RY: ry_related,
+            G.RZ: rz_related,
+            G.Rxx: rxx_related,
+            G.Rzz: rzz_related,
+            G.XX: xx_related,
+            G.ZZ: zz_related,
+            G.SGate: s_related,
+            G.TGate: t_related,
+            G.SWAPGate: swap_related,
+            G.U3: u3_related,
+        }
 
     def to_string(self, circuit, version="2.0"):  # pylint: disable=R0912,R0914,R0915
         """
@@ -168,148 +604,7 @@ class OpenQASM:
             NotImplementedError: if openqasm version not implement.
             ValueError: if gate not implement in this version.
         """
-        # pylint: disable=import-outside-toplevel,cyclic-import
-        from mindquantum import Circuit, gates
-
-        if not isinstance(circuit, Circuit):
-            raise TypeError(f"circuit requires Circuit, but get {type(circuit)}.")
-        if not isinstance(version, str):
-            raise TypeError(f"version requires a str, but get {type(version)}")
-        single_np = [gates.XGate, gates.YGate, gates.ZGate, gates.HGate, gates.SGate, gates.TGate, gates.IGate]
-        single_p = [gates.RX, gates.RY, gates.RZ, gates.PhaseShift, gates.U3, gates.GlobalPhase]
-        double_np = [gates.SWAPGate, gates.CNOTGate]
-        double_p = [gates.Rxx, gates.Ryy, gates.Rzz]
-        if version == "2.0":
-            self.circuit = circuit
-            self.cmds = [f"OPENQASM {version};", "include \"qelib1.inc\";"]
-            self.cmds.append(f"qreg q[{circuit.n_qubits}];")
-            m_idx = 0
-            if circuit.has_measure_gate:
-                self.cmds.append(f"creg c[{circuit.all_measures.size}];")
-            for gate in self.circuit:
-                if isgateinstance(gate, (single_np, single_p)):
-                    if isinstance(gate, gates.IGate):
-                        self.cmds.append(f"id q[{gate.obj_qubits[0]}];")
-                        continue
-                    if isinstance(gate, gates.XGate):
-                        if not gate.ctrl_qubits:
-                            self.cmds.append(f"x q[{gate.obj_qubits[0]}];")
-                            continue
-                        if len(gate.ctrl_qubits) == 1:
-                            self.cmds.append(f"cx q[{gate.ctrl_qubits[0]}],q[{gate.obj_qubits[0]}];")
-                            continue
-                        if len(gate.ctrl_qubits) == 2:
-                            ctrl0, ctrl1 = gate.ctrl_qubits
-                            obj0 = gate.obj_qubits[0]
-                            self.cmds.append(f"ccx q[{ctrl0}],q[{ctrl1}],q[{obj0}];")
-                            continue
-                        _gate_not_implement_to_openqasm(gate)
-                    if isinstance(gate, gates.TGate):
-                        t_name = 'tdg' if gate.hermitianed else 't'
-                        if not gate.ctrl_qubits:
-                            self.cmds.append(f"{t_name} q[{gate.obj_qubits[0]}];")
-                            continue
-                        _gate_not_implement_to_openqasm(gate)
-                    if isinstance(gate, gates.SGate):
-                        s_name = 'sdg' if gate.hermitianed else 's'
-                        if not gate.ctrl_qubits:
-                            self.cmds.append(f"{s_name} q[{gate.obj_qubits[0]}];")
-                            continue
-                        _gate_not_implement_to_openqasm(gate)
-                    if isinstance(gate, gates.HGate):
-                        if not gate.ctrl_qubits:
-                            self.cmds.append(f"h q[{gate.obj_qubits[0]}];")
-                            continue
-                        if len(gate.ctrl_qubits) == 1:
-                            self.cmds.append(f"ch q[{gate.ctrl_qubits[0]}],q[{gate.obj_qubits[0]}];")
-                            continue
-                        _gate_not_implement_to_openqasm(gate)
-                    if isinstance(gate, gates.PhaseShift):
-                        param = gate.coeff
-                        if not param.is_const():
-                            raise ValueError(f"Cannot convert parameterized gate {gate} to OpenQASM.")
-                        if not gate.ctrl_qubits:
-                            self.cmds.append(f"p({param.const}) q[{gate.obj_qubits[0]}];")
-                            continue
-                        if len(gate.ctrl_qubits) == 1:
-                            self.cmds.append(f"cp({param.const}) q[{gate.ctrl_qubits[0]}],q[{gate.obj_qubits[0]}];")
-                            continue
-                        _gate_not_implement_to_openqasm(gate)
-                    if isinstance(gate, gates.GlobalPhase):
-                        param = gate.coeff
-                        if not param.is_const():
-                            raise ValueError(f"Cannot convert parameterized gate {gate} to OpenQASM.")
-                        if not gate.ctrl_qubits:
-                            continue
-                        if len(gate.ctrl_qubits) == 1:
-                            self.cmds.append(f"p({-param.const}) q[{gate.ctrl_qubits[0]}];")
-                            continue
-                        _gate_not_implement_to_openqasm(gate)
-                    if isinstance(gate, gates.U3):
-                        theta, phi, lamda = gate.theta, gate.phi, gate.lamda
-                        if not theta.is_const() or not phi.is_const() or not lamda.is_const():
-                            raise ValueError(f"Cannot convert parameterized gate {gate} to OpenQASM.")
-                        if not gate.ctrl_qubits:
-                            self.cmds.append(f"u({theta.const},{phi.const},{lamda.const}) q[{gate.obj_qubits[0]}];")
-                            continue
-                        if len(gate.ctrl_qubits) == 1:
-                            self.cmds.append(
-                                f"cu({theta.const}, {phi.const}, {lamda.const}, 0) "
-                                f"q[{gate.ctrl_qubits[0]}], q[{gate.obj_qubits[0]}];"
-                            )
-                            continue
-                        _gate_not_implement_to_openqasm(gate)
-                    if len(gate.ctrl_qubits) > 1:
-                        raise ValueError(f"Multiple control for gate {gate} not implement")
-                    if isgateinstance(gate, single_np):
-                        obj = gate.obj_qubits[0]
-                        if gate.ctrl_qubits:
-                            ctrl = gate.ctrl_qubits[0]
-                            self.cmds.append(f"c{gate.name.lower()} q[{ctrl}],q[{obj}];")
-                            continue
-                        self.cmds.append(f"{gate.name.lower()} q[{obj}];")
-                        continue
-                    obj = gate.obj_qubits[0]
-                    param = gate.coeff
-                    if not param.is_const():
-                        raise ValueError(f"Cannot convert parameterized gate {gate} to OpenQASM.")
-                    param = param.const
-                    if gate.ctrl_qubits:
-                        ctrl = gate.ctrl_qubits[0]
-                        self.cmds.append(f"c{gate.name.lower()}({param}) q[{ctrl}],q[{obj}];")
-                        continue
-                    self.cmds.append(f"{gate.name.lower()}({param}) q[{obj}];")
-                    continue
-                if isgateinstance(gate, (double_np, double_p)):
-                    if isinstance(gate, gates.SWAPGate):
-                        obj = gate.obj_qubits
-                        if len(gate.ctrl_qubits) == 1:
-                            self.cmds.append(f"cswap q[{gate.ctrl_qubits[0]}],q[{obj[0]}],q[{obj[1]}];")
-                            continue
-                        if not gate.ctrl_qubits:
-                            self.cmds.append(f"swap q[{obj[0]}],q[{obj[1]}];")
-                            continue
-                        _gate_not_implement_to_openqasm(gate)
-                    if gate.ctrl_qubits:
-                        raise ValueError(f"control two qubits gate {gate} not implement")
-                    if isgateinstance(gate, double_np):
-                        obj = gate.obj_qubits
-                        if isinstance(gate, gates.CNOTGate):
-                            self.cmds.append(f"cx q[{obj[1]}],q[{obj[0]}];")
-                            continue
-                        _gate_not_implement_to_openqasm(gate)
-                    else:
-                        obj = gate.obj_qubits
-                        param = ",".join([str(i.const) for i in gate.get_parameters()])
-                        self.cmds.append(f"r{gate.name[1:].lower()}({param}) q[{obj[0]}],q[{obj[1]}];")
-                        continue
-                if isinstance(gate, gates.Measure):
-                    self.cmds.append(f"measure q[{gate.obj_qubits[0]}] -> c[{m_idx}];")
-                    m_idx += 1
-                _gate_not_implement_to_openqasm(gate)
-        else:
-            raise NotImplementedError(f"openqasm version {version} not implement")
-        return '\n'.join(self.cmds)
+        return mq_to_qasm_v2(circuit, self.gate_map_mq_openqasm, version)
 
     def to_file(self, file_name, circuit, version="2.0"):
         """
@@ -351,12 +646,7 @@ class OpenQASM:
         """
         with fdopen(file_name, 'r') as fd:
             cmds = fd.readlines()
-        self.cmds, version = self._filter(cmds)
-        if version == '2.0':
-            self._trans_v2(self.cmds)
-        else:
-            raise ValueError(f"OPENQASM {version} not implement yet")
-        return self.circuit
+        return qasm_to_mq_v2(cmds, self.gate_map_openqasm_mq)
 
     def from_string(self, string):
         """
@@ -379,92 +669,4 @@ class OpenQASM:
             q1: ──●────H──
         """
         _check_input_type('string', str, string)
-        cmds = string.split('\n')
-        self.cmds, version = self._filter(cmds)
-        if version == '2.0':
-            self._trans_v2(self.cmds)
-        else:
-            raise ValueError(f"OPENQASM {version} not implement yet")
-        return self.circuit
-
-    def _filter(self, cmds):
-        """Filter empty cmds and head."""
-        out = []
-        version = None
-        for cmd in cmds:
-            cmd = cmd.strip()
-            if not cmd or cmd.startswith('//') or cmd.startswith('include') or cmd.startswith("qreg"):
-                pass
-            elif cmd.startswith("creg"):
-                pass
-            elif cmd.startswith('OPENQASM'):
-                version = cmd.split(' ')[-1][:-1]
-            else:
-                out.append(cmd[:-1])
-        return out, version
-
-    def _trans_v2(self, cmds):  # pylint: disable=too-many-branches,too-many-statements
-        """Trans method for openqasm version 2."""
-        # pylint: disable=import-outside-toplevel,cyclic-import,no-value-for-parameter
-        from mindquantum.core import gates as G  # noqa: N812
-        from mindquantum.core.circuit import Circuit, controlled
-
-        self.circuit = Circuit()
-        for cmd in cmds:
-            qubit = _find_qubit_id(cmd)
-            if cmd.startswith("measure"):
-                q_id, c_id = _extr_measure(cmd)
-                self.circuit.measure(f"k{c_id}", q_id)
-            elif cmd.startswith("h ") or cmd.startswith("x ") or cmd.startswith("y ") or cmd.startswith("z "):
-                getattr(self.circuit, cmd[0])(qubit[0])
-            elif cmd.startswith("p("):
-                self.circuit += G.PhaseShift(_extr_parameter(cmd)).on(qubit[0])
-            elif cmd.startswith("cz ") or cmd.startswith("cy ") or cmd.startswith("cx ") or cmd.startswith("ch "):
-                getattr(self.circuit, cmd[1])(*qubit[::-1])
-            elif cmd.startswith("rz(") or cmd.startswith("ry(") or cmd.startswith("rx("):
-                getattr(self.circuit, cmd[:2])(_extr_parameter(cmd), qubit[0])
-            elif cmd.startswith("crx(") or cmd.startswith("cry(") or cmd.startswith("crz("):
-                getattr(self.circuit, f"{cmd[1]}{cmd[2]}")(_extr_parameter(cmd), qubit[1], qubit[0])
-            elif cmd.startswith("u3("):
-                self.circuit += u3(*_extr_parameter(cmd), qubit[0])
-            elif cmd.startswith("cu1("):
-                self.circuit += controlled(u1(_extr_parameter(cmd), qubit[1]))(qubit[0])
-            elif cmd.startswith("u("):
-                self.circuit += G.U3(*_extr_parameter(cmd)).on(qubit[0])
-            elif cmd.startswith("cu("):
-                params = _extr_parameter(cmd)
-                self.circuit += G.U3(*params[:3]).on(qubit[1], qubit[0])
-                self.circuit += G.GlobalPhase(-params[3]).on(qubit[1], qubit[0])
-            elif cmd.startswith("cp("):
-                self.circuit += G.PhaseShift(_extr_parameter(cmd)).on(qubit[1], qubit[0])
-            elif cmd.startswith("ccx "):
-                self.circuit.x(qubit[2], qubit[:2])
-            elif cmd.startswith("tdg "):
-                self.circuit += G.T.on(qubit[0]).hermitian()
-            elif cmd.startswith("t "):
-                self.circuit += G.T.on(qubit[0])
-            elif cmd.startswith("sdg "):
-                self.circuit += G.S.on(qubit[0]).hermitian()
-            elif cmd.startswith("s "):
-                self.circuit += G.S.on(qubit[0])
-            elif cmd.startswith("sxdg "):
-                self.circuit.rx(-np.pi / 2, qubit[0])
-                self.circuit += G.GlobalPhase(np.pi / 4).on(qubit[0])
-            elif cmd.startswith("sx "):
-                self.circuit.rx(np.pi / 2, qubit[0])
-                self.circuit += G.GlobalPhase(-np.pi / 4).on(qubit[0])
-            elif cmd.startswith("csx "):
-                self.circuit.rx(np.pi / 2, qubit[1], qubit[0])
-                self.circuit += G.PhaseShift(np.pi / 4).on(qubit[0])
-            elif cmd.startswith("swap "):
-                self.circuit += G.SWAP.on(qubit[:2])
-            elif cmd.startswith("cswap "):
-                self.circuit += G.SWAP.on(qubit[1:], qubit[0])
-            elif cmd.startswith("rzz(") or cmd.startswith("rxx(") or cmd.startswith("ryy("):
-                self.circuit += getattr(G, f"R{cmd[1]}{cmd[2]}")(_extr_parameter(cmd)).on(qubit[:2])
-            elif cmd.startswith("id "):
-                self.circuit += G.I.on(qubit[0])
-            elif cmd.startswith("rccx "):
-                rccx(*qubit, self.circuit)
-            else:
-                raise ValueError(f"transfer cmd {cmd} not implement yet!")
+        return qasm_to_mq_v2(string, self.gate_map_openqasm_mq)

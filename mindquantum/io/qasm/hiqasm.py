@@ -25,14 +25,41 @@ from mindquantum.utils.type_value_check import (
     _check_value_should_not_less,
 )
 
-from .openqasm import _find_qubit_id, u3
-
 HIQASM_GATE_SET = {
     '0.1': {
         'np': ['X', 'Y', 'Z', 'S', 'T', 'H', 'CNOT', 'CZ', 'ISWAP', 'CCNOT'],
         'p': ['RX', 'RY', 'RZ', 'U', 'CRX', 'CRY', 'CRZ', 'XX', 'YY', 'ZZ', 'CCRX', 'CCRY', 'CCRZ'],
     }
 }
+
+
+def _find_qubit_id(cmd):
+    """Find qubit id in openqasm cmd."""
+    left = []
+    right = []
+    for i, j in enumerate(cmd):
+        if j == '[':
+            left.append(i)
+        elif j == ']':
+            right.append(i)
+    if len(left) != len(right):
+        raise ValueError(f"Parsing failed for cmd {cmd}")
+    idx = []
+    for name_left, name_right in zip(left, right):
+        idx.append(int(cmd[name_left + 1 : name_right]))  # noqa: E203
+    return idx
+
+
+def u3(theta, psi, lambd, qubit):
+    """Decompose u3 gate."""
+    from mindquantum import (  # pylint: disable=import-outside-toplevel,cyclic-import
+        Circuit,
+    )
+
+    circ = Circuit().rz(psi + 3 * np.pi, qubit)
+    circ.rx(np.pi / 2, qubit).rz(theta + np.pi, qubit)
+    circ.rx(np.pi / 2, qubit).rz(lambd, qubit)
+    return circ
 
 
 def random_hiqasm(n_qubits, gate_num, version='0.1', seed=42):  # pylint: disable=too-many-branches,too-many-statements
