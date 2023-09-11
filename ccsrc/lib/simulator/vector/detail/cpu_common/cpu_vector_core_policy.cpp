@@ -38,6 +38,9 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::InitState(index_t dim, bool zero
         throw std::runtime_error("Dimension too large.");
     }
     auto qs = reinterpret_cast<qs_data_p_t>(calloc(dim, sizeof(qs_data_t)));
+    if (qs == nullptr) {
+        throw std::runtime_error("Allocate memory for quantum state failed.");
+    }
     if (zero_state) {
         qs[0] = 1;
     }
