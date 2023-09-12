@@ -490,7 +490,6 @@ def qasm_to_mq_v2(qasm: str, gate_map_openqasm_mq):
             cmd = i.strip()
             gate_name, params, qids = parse_gate_cmd(cmd, qregs, cregs)
             if gate_name == 'barrier':
-                print([q[0] for q in qids])
                 circ += gate_map_openqasm_mq['barrier'](params, [q[0] for q in qids])
                 continue
             for qid in qids:

@@ -16,7 +16,7 @@
 
 import numpy as np
 
-from mindquantum.core import UN, Circuit, X
+from mindquantum.core import U3, UN, Circuit, H, X
 from mindquantum.io import OpenQASM
 from mindquantum.simulator import Simulator
 from mindquantum.utils import random_circuit
@@ -40,7 +40,7 @@ def test_openqasm():
     assert np.allclose(test_cir.matrix(), cir.matrix())
 
 
-def test_openqasm_custom_gate():
+def test_openqasm_custom_gate1():
     """
     test custom gate in openqasm
     Description: test openqasm custom gate
@@ -121,6 +121,59 @@ measure cout[0] -> ans[4];
     exp_circ.measure(b[2])
     exp_circ.measure(b[3])
     exp_circ.measure(cout[0])
+    init = random_circuit(circ.n_qubits, 30, seed=42)
+    sim = Simulator('mqvector', circ.n_qubits)
+    s_1 = sim.sampling(init + circ, shots=50, seed=42)
+    s_2 = sim.sampling(init + exp_circ, shots=50, seed=42)
+    assert np.all(s_1.samples == s_2.samples)
+
+
+# pylint: disable=invalid-name
+def test_openqasm_custom_gate2():
+    """
+    test custom gate in openqasm
+    Description: test openqasm custom gate
+    Expectation: success
+    """
+    qasm = """
+// quantum Fourier transform
+OPENQASM 2.0;
+include "qelib1.inc";
+qreg q[4];
+creg c[4];
+x q[0];
+x q[2];
+barrier q;
+h q[0];
+cu1(pi/2) q[1],q[0];
+h q[1];
+cu1(pi/4) q[2],q[0];
+cu1(pi/2) q[2],q[1];
+h q[2];
+cu1(pi/8) q[3],q[0];
+cu1(pi/4) q[3],q[1];
+cu1(pi/2) q[3],q[2];
+h q[3];
+measure q -> c;
+    """
+    circ = OpenQASM().from_string(qasm)
+
+    q = [0, 1, 2, 3]
+    exp_circ = sum(
+        [
+            Circuit().x(q[0]).x(q[2]).barrier().h(q[0]),
+            U3(0, 0, np.pi / 2).on(q[0], q[1]),
+            H.on(q[1]),
+            U3(0, 0, np.pi / 4).on(q[0], q[2]),
+            U3(0, 0, np.pi / 2).on(q[1], q[2]),
+            H.on(q[2]),
+            U3(0, 0, np.pi / 8).on(q[0], q[3]),
+            U3(0, 0, np.pi / 4).on(q[1], q[3]),
+            U3(0, 0, np.pi / 2).on(q[2], q[3]),
+            H.on(q[3]),
+        ]
+    )
+    exp_circ.measure_all()
     init = random_circuit(circ.n_qubits, 30, seed=42)
     sim = Simulator('mqvector', circ.n_qubits)
     s_1 = sim.sampling(init + circ, shots=50, seed=42)
